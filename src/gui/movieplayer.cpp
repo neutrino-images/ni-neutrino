@@ -2228,7 +2228,7 @@ bool CMoviePlayerGui::mountIso(CFile *file)
 	return false;
 }
 
-void CMoviePlayerGui::makeScreenShot(bool autoshot, bool forcover)
+void CMoviePlayerGui::makeScreenShot(bool autoshot, bool /*forcover*/)
 {
 	if (autoshot && (autoshot_done || !g_settings.auto_cover))
 		return;

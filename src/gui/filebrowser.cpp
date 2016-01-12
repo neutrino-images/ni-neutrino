@@ -1437,7 +1437,7 @@ void CFileBrowser::paintSMSKey()
 
 	if(m_SMSKeyInput.getOldKey()!=0)
 	{
-		char cKey[2] = {m_SMSKeyInput.getOldKey(), 0};
+		char cKey[2] = {(char)m_SMSKeyInput.getOldKey(), 0};
 		cKey[0] = toupper(cKey[0]);
 		int len = fnt_small->getRenderWidth(cKey);
 		fnt_small->RenderString(x + width - skwidth, y + height - foheight + foheight/2 + skheight/2, len, cKey, COL_MENUHEAD_TEXT);

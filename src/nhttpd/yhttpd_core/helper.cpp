@@ -292,6 +292,8 @@ std::string json_out_error(std::string _error) {
 //-----------------------------------------------------------------------------
 // JSON: convert string to JSON-String
 //-----------------------------------------------------------------------------
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 std::string json_convert_string(std::string s) {
 	std::stringstream ss;
 	for (size_t i = 0; i < s.length(); ++i) {
@@ -305,4 +307,4 @@ std::string json_convert_string(std::string s) {
 	}
 	return ss.str();
 }
-
+#pragma GCC diagnostic pop
