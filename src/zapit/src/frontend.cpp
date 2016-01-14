@@ -1073,6 +1073,12 @@ uint32_t CFrontend::getFEBandwidth(fe_bandwidth_t bandwidth)
 	return bandwidth_hz;
 }
 
+void CFrontend::setName(const char* _name)
+{
+	memset(info.name, '\0', sizeof(info.name));
+	snprintf(info.name, sizeof(info.name)-1, "%s", _name);
+}
+
 bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_properties& cmdseq)
 {
 	fe_pilot_t pilot = PILOT_OFF;

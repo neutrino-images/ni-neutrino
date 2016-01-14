@@ -301,6 +301,7 @@ class CFrontend
 		static fe_delivery_system_t	getFEDeliverySystem(delivery_system_t Delsys);
 		static uint32_t			getFEBandwidth(fe_bandwidth_t bandwidth);
 		const char*			getName(void) const { return info.name; }
+		void				setName(const char* _name);
 private:
 		// DEPRECATED
 		fe_type_t			getType() { return info.type; }
