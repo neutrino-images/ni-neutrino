@@ -149,14 +149,15 @@ neutrino_LDADD += \
 endif
 
 if BOXTYPE_COOL
-neutrino_LDADD += -lcoolstream-mt -lca-sc \
-	$(top_builddir)/lib/libcoolstream/libhwcaps.a
+neutrino_LDADD += -lcoolstream-mt -lca-sc
 if ENABLE_TMSDK 
 else
 if BOXMODEL_APOLLO
-neutrino_LDADD += -lca-ci -llnxtmvssUsr -llnxUKAL -llnxplatUsr -llnxtmasUsr -llnxdvbciUsr -llnxpvrUsr -llnxcssUsr -llnxnotifyqUsr -ltmpvrDataManager-cst -ltmpvrIndexStorage -llnxscsUsr
+neutrino_LDADD += -lca-ci -llnxtmvssUsr -llnxUKAL -llnxplatUsr -llnxtmasUsr -llnxdvbciUsr -llnxpvrUsr -llnxcssUsr -llnxnotifyqUsr -ltmpvrDataManager-cst -ltmpvrIndexStorage -llnxscsUsr \
+	$(top_builddir)/lib/libcoolstream2/libhwcaps.a
 else
-neutrino_LDADD += -lnxp
+neutrino_LDADD += -lnxp \
+	$(top_builddir)/lib/libcoolstream/libhwcaps.a
 endif
 endif
 

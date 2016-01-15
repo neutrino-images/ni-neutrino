@@ -18,8 +18,14 @@ SUBDIRS += \
 endif
 
 if BOXTYPE_COOL
+if BOXMODEL_APOLLO
 SUBDIRS += \
-	libcoolstream \
+	libcoolstream2
+else
+SUBDIRS += \
+	libcoolstream
+endif
+SUBDIRS += \
 	libtuxtxt
 else
 SUBDIRS += \

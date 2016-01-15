@@ -323,6 +323,7 @@ lib/jsoncpp/Makefile
 lib/sectionsdclient/Makefile
 lib/timerdclient/Makefile
 lib/libcoolstream/Makefile
+lib/libcoolstream2/Makefile
 lib/libtuxtxt/Makefile
 lib/libtuxtxt_mp/Makefile
 lib/libdvbsub/Makefile

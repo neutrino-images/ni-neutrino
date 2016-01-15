@@ -9,8 +9,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/lib/libconfigfile \
-	-I$(top_srcdir)/lib/libcoolstream \
-	@HWLIB_CFLAGS@
+	-I$(top_srcdir)/lib/libcoolstream2
 
 libhwcaps_a_SOURCES = \
 	hardware_caps.cpp

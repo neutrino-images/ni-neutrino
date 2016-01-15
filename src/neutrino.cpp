@@ -2025,6 +2025,7 @@ TIMER_START();
 
 	InitZapitClient();
 	g_Zapit->setStandby(false);
+	g_info.hw_caps  = get_hwcaps();
 
 	CheckFastScan();
 
