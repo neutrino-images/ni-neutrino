@@ -4,6 +4,8 @@
 #ifndef _STACKTRACE_H_
 #define _STACKTRACE_H_
 
+#ifdef HAVE_BACKTRACE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <execinfo.h>
@@ -89,5 +91,11 @@ static inline void print_stacktrace(FILE *out = stderr, unsigned int max_frames 
     free(funcname);
     free(symbollist);
 }
+#else
+
+static inline void print_stacktrace(FILE*, unsigned int) {};
+static inline void print_stacktrace() {};
+
+#endif
 
 #endif // _STACKTRACE_H_

@@ -17,10 +17,6 @@ AM_CPPFLAGS = \
 	@AVFORMAT_CFLAGS@ \
 	@HWLIB_CFLAGS@
 
-AM_CPPFLAGS += \
-	@AVFORMAT_CFLAGS@ \
-	@HWLIB_CFLAGS@
-
 noinst_LIBRARIES = libneutrino_driver.a libneutrino_driver_netfile.a
 
 libneutrino_driver_a_SOURCES = \
@@ -31,10 +27,8 @@ libneutrino_driver_a_SOURCES = \
 	colorgradient.cpp \
 	fade.cpp \
 	fb_window.cpp \
-	fbaccel.cpp \
 	file.cpp \
 	fontrenderer.cpp \
-	framebuffer_ng.cpp \
 	genpsi.cpp \
 	moviecut.cpp \
 	neutrinofonts.cpp \
@@ -51,7 +45,12 @@ libneutrino_driver_a_SOURCES = \
 
 if BOXTYPE_COOL
 libneutrino_driver_a_SOURCES += \
+	framebuffer.cpp \
 	vfd.cpp
+else
+libneutrino_driver_a_SOURCES += \
+	fbaccel.cpp \
+	framebuffer_ng.cpp
 endif
 
 if BOXTYPE_TRIPLE

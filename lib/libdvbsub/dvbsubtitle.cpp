@@ -11,6 +11,10 @@
  * dvbsubtitle for HD1 ported by Coolstream LTD
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "dvbsubtitle.h"
 
 extern "C" {

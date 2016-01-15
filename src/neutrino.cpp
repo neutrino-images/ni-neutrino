@@ -3590,6 +3590,10 @@ void CNeutrinoApp::ExitRun(const bool /*write_si*/, int retcode)
 
 			printf("[neutrino] This is the end. exiting with code %d\n", retcode);
 			Cleanup();
+#if HAVE_COOL_HARDWARE
+			FILE *f = fopen("/tmp/.shutdown", "w");
+			fclose(f);
+#endif
 #ifdef __sh__
 			/* the sh4 gcc seems to dislike someting about openthreads... */
 			_exit(retcode);
