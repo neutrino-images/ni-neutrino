@@ -8,7 +8,6 @@ SUBDIRS = \
 	libnet \
 	xmltree \
 	jsoncpp \
-	libtuxtxt \
 	libiw \
 	libdvbsub \
 	luaclient
@@ -20,5 +19,9 @@ endif
 
 if BOXTYPE_COOL
 SUBDIRS += \
-	libcoolstream
+	libcoolstream \
+	libtuxtxt
+else
+SUBDIRS += \
+	libtuxtxt_mp
 endif

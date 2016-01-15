@@ -108,7 +108,6 @@ neutrino_LDADD = \
 	$(top_builddir)/lib/jsoncpp/libjsoncpp.a \
 	$(top_builddir)/lib/libnet/libtuxbox-net.a \
 	$(top_builddir)/lib/libmd5sum/libtuxbox-md5sum.a \
-	$(top_builddir)/lib/libtuxtxt/libtuxtxt.a \
 	$(top_builddir)/lib/libdvbsub/libdvbsub.a \
 	$(top_builddir)/lib/libiw/libiw.a \
 	@CURL_LIBS@ \
@@ -143,8 +142,15 @@ endif
 
 if BOXTYPE_COOL
 neutrino_LDADD += \
+	$(top_builddir)/lib/libtuxtxt/libtuxtxt.a
+else
+neutrino_LDADD += \
+	$(top_builddir)/lib/libtuxtxt_mp/libtuxtxt.a
+endif
+
+if BOXTYPE_COOL
+neutrino_LDADD += -lcoolstream-mt -lca-sc \
 	$(top_builddir)/lib/libcoolstream/libhwcaps.a
-neutrino_LDADD += -lcoolstream-mt -lca-sc
 if ENABLE_TMSDK 
 else
 if BOXMODEL_APOLLO

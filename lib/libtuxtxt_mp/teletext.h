@@ -1,12 +1,3 @@
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#if !HAVE_COOL_HARDWARE
-#include <libtuxtxt_mp/teletext.h>
-#else
-
 #ifndef __teletext_h__
 #define __teletext_h__
 
@@ -20,5 +11,4 @@ int tuxtx_subtitle_running(int *pid, int *page, int *running);
 void tuxtx_pause_subtitle(bool pause = 1);
 void tuxtx_set_pid(int pid, int page, const char * cc);
 
-#endif
 #endif

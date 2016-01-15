@@ -1,12 +1,3 @@
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#if !HAVE_COOL_HARDWARE
-#include <libtuxtxt_mp/tuxtxt_def.h>
-#else
-
 /******************************************************************************
  * definitions for plugin and lib                                             *
  ******************************************************************************/
@@ -377,4 +368,3 @@ signed int deh24(unsigned char *ph24)
 		((h24 & 0x7f0000) >> 5);
 }
 #endif /* table or serial */
-#endif

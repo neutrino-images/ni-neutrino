@@ -324,6 +324,7 @@ lib/sectionsdclient/Makefile
 lib/timerdclient/Makefile
 lib/libcoolstream/Makefile
 lib/libtuxtxt/Makefile
+lib/libtuxtxt_mp/Makefile
 lib/libdvbsub/Makefile
 lib/libupnpclient/Makefile
 lib/libiw/Makefile
