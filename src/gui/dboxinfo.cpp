@@ -353,6 +353,10 @@ void CDBoxInfoWidget::paint()
 	title += g_info.hw_caps->boxvendor;
 	title += " ";
 	title += g_info.hw_caps->boxname;
+#if HAVE_COOL_HARDWARE
+	title += " - ";
+	title += g_info.hw_caps->frontend;
+#endif
 
 	CComponentsHeader header(x, ypos, width, hheight, title, NEUTRINO_ICON_SHELL);
 	header.paint(CC_SAVE_SCREEN_NO);
