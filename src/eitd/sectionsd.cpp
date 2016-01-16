@@ -1380,7 +1380,7 @@ void CTimeThread::waitForTimeset(void)
 	time_mutex.unlock();
 }
 
-bool CTimeThread::setSystemTime(time_t tim, bool force)
+void CTimeThread::setSystemTime(time_t tim)
 {
 	struct timeval tv;
 	struct tm t;
@@ -1388,7 +1388,6 @@ bool CTimeThread::setSystemTime(time_t tim, bool force)
 	gettimeofday(&tv, NULL);
 	timediff = int64_t(tim * 1000000 - (tv.tv_usec + tv.tv_sec * 1000000));
 	localtime_r(&tv.tv_sec, &t);
-	int absdiff = abs(tim - tv.tv_sec);
 
 	xprintf("%s: timediff %" PRId64 ", current: %02d.%02d.%04d %02d:%02d:%02d, dvb: %s",
 		name.c_str(), timediff,
@@ -1400,9 +1399,9 @@ bool CTimeThread::setSystemTime(time_t tim, bool force)
 		return;
 	}
 #endif
-	if (absdiff < 1) /* do not bother for differences less than one second */
-		return true;
-	if (absdiff < 120) {
+	if (timediff == 0) /* very unlikely... :-) */
+		return;
+	if (timeset && abs(tim - tv.tv_sec) < 120) { /* abs() is int */
 		struct timeval oldd;
 		tv.tv_sec = time_t(timediff / 1000000LL);
 		tv.tv_usec = suseconds_t(timediff % 1000000LL);
@@ -1412,21 +1411,14 @@ bool CTimeThread::setSystemTime(time_t tim, bool force)
 			xprintf("difference is < 120s, using adjtime(%d, %d). oldd(%d, %d)\n",
 				(int)tv.tv_sec, (int)tv.tv_usec, (int)oldd.tv_sec, (int)oldd.tv_usec);
 			timediff = 0;
-			return true;
+			return;
 		}
-	} else if (timeset && ! force) {
-		xprintf("difference is > 120s, try again and set 'force=true'\n");
-		return false;
 	}
-	/* still fall through if adjtime() failed */
 
 	tv.tv_sec = tim;
 	tv.tv_usec = 0;
-	if (settimeofday(&tv, NULL) == 0)
-		return true;
-
-	perror("[sectionsd] settimeofday");
-	return false;
+	if (settimeofday(&tv, NULL) < 0)
+		perror("[sectionsd] settimeofday");
 }
 
 void CTimeThread::addFilters()

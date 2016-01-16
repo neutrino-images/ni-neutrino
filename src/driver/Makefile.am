@@ -13,7 +13,9 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib/connection \
 	-I$(top_srcdir)/lib/libeventserver \
 	@SIGC_CFLAGS@ \
-	@FREETYPE_CFLAGS@
+	@FREETYPE_CFLAGS@ \
+	@AVFORMAT_CFLAGS@ \
+	@HWLIB_CFLAGS@
 
 AM_CPPFLAGS += \
 	@AVFORMAT_CFLAGS@ \
@@ -50,8 +52,8 @@ libneutrino_driver_a_SOURCES = \
 if BOXTYPE_COOL
 libneutrino_driver_a_SOURCES += \
 	vfd.cpp
-
 endif
+
 if BOXTYPE_TRIPLE
 libneutrino_driver_a_SOURCES += \
 	newclock.cpp \
@@ -76,4 +78,3 @@ AM_CPPFLAGS += \
 endif
 
 libneutrino_driver_netfile_a_SOURCES = netfile.cpp
-
