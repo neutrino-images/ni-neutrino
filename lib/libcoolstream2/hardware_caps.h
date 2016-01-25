@@ -36,6 +36,7 @@ typedef struct hw_caps {
 	int can_set_display_brightness;
 	char boxvendor[64];
 	char boxname[64];
+	char boxarch[64];
 	char chipset[64];
 	char frontend[64];
 } hw_caps_t;

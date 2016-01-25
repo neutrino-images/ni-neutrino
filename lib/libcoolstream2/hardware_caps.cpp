@@ -10,6 +10,7 @@
 
 #include <global.h>
 #include <zapit/femanager.h>
+#include <sys/utsname.h>
 #include "hardware_caps.h"
 
 static int initialized = 0;
@@ -89,6 +90,7 @@ hw_caps_t *get_hwcaps(void)
 	if (initialized)
 		return &caps;
 
+	struct utsname u;
 	unsigned int system_rev = cs_get_revision();
 
 	caps.has_fan = 0;
@@ -157,6 +159,11 @@ hw_caps_t *get_hwcaps(void)
 			break;
 	}
 	strcpy(caps.chipset, chipset);
+
+	if (! uname(&u))
+		strncpy(caps.boxarch, u.machine, sizeof(caps.boxarch));
+	else
+		fprintf(stderr, "%s: uname() failed: %m\n", __func__);
 
 	initialized = 1;
 	return &caps;
