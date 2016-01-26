@@ -21,9 +21,8 @@
 	Boston, MA  02110-1301, USA.
 */
 
-#if !HAVE_COOL_HARDWARE
 #include "framebuffer_ng.h"
-#else
+#if 0
 
 #ifndef __framebuffer__
 #define __framebuffer__
