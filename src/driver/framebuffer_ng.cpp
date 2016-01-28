@@ -1254,7 +1254,9 @@ void * CFrameBuffer::convertRGBA2FB(unsigned char *rgbbuff, unsigned long x, uns
 
 void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp)
 {
+	checkFbArea(xoff, yoff, width, height, true);
 	accel->blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp);
+	checkFbArea(xoff, yoff, width, height, false);
 }
 
 void CFrameBuffer::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff)

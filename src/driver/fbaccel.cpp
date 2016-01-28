@@ -632,7 +632,22 @@ void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t x
 	xc = (width > fb->xRes) ? fb->xRes : width;
 	yc = (height > fb->yRes) ? fb->yRes : height;
 #endif
-#ifdef USE_NEVIS_GXA
+#if defined(FB_HW_ACCELERATION)
+	if(!(width%4)) {
+		fb_image image;
+		image.dx = xoff;
+		image.dy = yoff;
+		image.width = xc;
+		image.height = yc;
+		image.cmap.len = 0;
+		image.depth = 32;
+		image.data = (const char*)fbbuff;
+		ioctl(fb->fd, FBIO_IMAGE_BLT, &image);
+		//printf("\033[33m>>>>\033[0m [%s:%s:%d] FB_HW_ACCELERATION x: %d, y: %d, w: %d, h: %d\n", __file__, __func__, __LINE__, xoff, yoff, xc, yc);
+		return;
+	}
+	printf("\033[31m>>>>\033[0m [%s:%s:%d] Not use FB_HW_ACCELERATION x: %d, y: %d, w: %d, h: %d\n", __file__, __func__, __LINE__, xoff, yoff, xc, yc);
+#elif defined(USE_NEVIS_GXA)
 	(void)transp;
 	u32 cmd;
 	void *uKva;
@@ -699,7 +714,7 @@ void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t x
 	if (ioctl(fb->fd, STMFBIO_BLT_EXTERN, &blt_data) < 0)
 		perror("CFbAccel blit2FB STMFBIO_BLT_EXTERN");
 	return;
-#else
+#endif
 	fb_pixel_t *data = (fb_pixel_t *) fbbuff;
 
 	uint8_t *d = (uint8_t *)lbb + xoff * sizeof(fb_pixel_t) + fb->stride * yoff;
@@ -732,7 +747,6 @@ void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t x
 	for(int i = 0; i < yc; i++){
 		memmove(clfb + (i + yoff)*stride + xoff*4, ip + (i + yp)*width + xp, xc*4);
 	}
-#endif
 #endif
 }
 #else
