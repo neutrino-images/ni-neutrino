@@ -46,6 +46,7 @@
 #include <linux/hdreg.h>
 #include <linux/fs.h>
 #include "debug.h"
+#include <driver/framebuffer.h>
 #include <system/helpers.h>
 #include <gui/update_ext.h>
 using namespace std;

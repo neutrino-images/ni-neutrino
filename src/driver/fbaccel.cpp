@@ -1325,4 +1325,59 @@ void CFbAccel::paintBoxRel(const int x, const int y, const int dx, const int dy,
 	add_gxa_sync_marker();
 #endif
 }
+
+void CFbAccel::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff)
+{
+	uint32_t xc = (width > fb->getScreenWidth(true)) ? (uint32_t)fb->getScreenWidth(true) : width;
+	uint32_t yc = (height > fb->getScreenHeight(true)) ? (uint32_t)fb->getScreenHeight(true) : height;
+
+#if defined(FB_HW_ACCELERATION)
+	if (!(width%4)) {
+		fb_image image;
+		image.dx = xoff;
+		image.dy = yoff;
+		image.width = xc;
+		image.height = yc;
+		image.cmap.len = 0;
+		image.depth = 32;
+		image.data = (const char*)boxBuf;
+		ioctl(fb->fd, FBIO_IMAGE_BLT, &image);
+		//printf("\033[33m>>>>\033[0m [%s:%s:%d] FB_HW_ACCELERATION x: %d, y: %d, w: %d, h: %d\n", __file__, __func__, __LINE__, xoff, yoff, xc, yc);
+		return;
+	}
+	printf("\033[31m>>>>\033[0m [%s:%s:%d] Not use FB_HW_ACCELERATION x: %d, y: %d, w: %d, h: %d\n", __file__, __func__, __LINE__, xoff, yoff, xc, yc);
+#elif defined(USE_NEVIS_GXA)
+	void* uKva = cs_phys_addr((void*)boxBuf);
+	if(uKva != NULL) {
+		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+		u32 cmd = GXA_CMD_BLT | GXA_CMD_NOT_TEXT | GXA_SRC_BMP_SEL(1) | GXA_DST_BMP_SEL(2) | GXA_PARAM_COUNT(3);
+		_write_gxa(gxa_base, GXA_BMP1_TYPE_REG, (3 << 16) | width);
+		_write_gxa(gxa_base, GXA_BMP1_ADDR_REG, (unsigned int) uKva);
+		_write_gxa(gxa_base, cmd, GXA_POINT(xoff, yoff));
+		_write_gxa(gxa_base, cmd, GXA_POINT(xc, yc));
+		_write_gxa(gxa_base, cmd, GXA_POINT(0, 0));
+		//printf("\033[33m>>>>\033[0m [%s:%s:%d] USE_NEVIS_GXA x: %d, y: %d, w: %d, h: %d\n", __file__, __func__, __LINE__, xoff, yoff, xc, yc);
+		add_gxa_sync_marker();
+		return;
+	}
+	printf("\033[31m>>>>\033[0m [%s:%s:%d] Not use USE_NEVIS_GXA x: %d, y: %d, w: %d, h: %d\n", __file__, __func__, __LINE__, xoff, yoff, xc, yc);
 #endif
+	uint32_t swidth = fb->stride / sizeof(fb_pixel_t);
+	fb_pixel_t *fbp = fb->getFrameBufferPointer() + (swidth * yoff);
+	fb_pixel_t* data = (fb_pixel_t*)boxBuf;
+
+	uint32_t line = 0;
+	while (line < yc) {
+		fb_pixel_t *pixpos = &data[line * xc];
+		for (uint32_t pos = xoff; pos < xoff + xc; pos++) {
+			//don't paint backgroundcolor (*pixpos = 0x00000000)
+			if (*pixpos)
+				*(fbp + pos) = *pixpos;
+			pixpos++;
+		}
+		fbp += swidth;
+		line++;
+	}
+}
+
+#endif // #if HAVE_COOL_HARDWARE

@@ -368,11 +368,13 @@ fprintf(stderr, "CFrameBuffer::setMode avail: %d active: %d\n", available, activ
 	xRes = screeninfo.xres;
 	yRes = screeninfo.yres;
 	bpp  = screeninfo.bits_per_pixel;
-	printf("FB: %dx%dx%d line length %d. %s nevis GXA accelerator.\n", xRes, yRes, bpp, stride,
-#ifdef USE_NEVIS_GXA
-		"Using"
+	printf("FB: %dx%dx%d line length %d. %s accelerator.\n", xRes, yRes, bpp, stride,
+#if defined(USE_NEVIS_GXA)
+		"Using nevis GXA"
+#elif defined(BOXMODEL_APOLLO)
+		"Using fb hw graphics"
 #else
-		"Not using"
+		"Not using graphics"
 #endif
 	);
 	accel->update(); /* just in case we need to update stuff */
@@ -1262,7 +1264,9 @@ void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32
 void CFrameBuffer::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff)
 {
 	checkFbArea(xoff, yoff, width, height, true);
-
+#if HAVE_COOL_HARDWARE
+	accel->blitBox2FB(boxBuf, width, height, xoff, yoff);
+#else
 	uint32_t swidth = stride / sizeof(fb_pixel_t);
 	fb_pixel_t *fbp = getFrameBufferPointer() + (swidth * yoff);
 	fb_pixel_t* data = (fb_pixel_t*)boxBuf;
@@ -1280,7 +1284,7 @@ void CFrameBuffer::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t
 		line++;
 	}
 	accel->mark(xoff, yoff, xoff + width, yoff + height);
-
+#endif
 	checkFbArea(xoff, yoff, width, height, false);
 }
 
