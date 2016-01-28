@@ -89,6 +89,12 @@ class CFbAccel
 #ifdef USE_NEVIS_GXA
 		void setupGXA(void);
 #endif
+
+#if HAVE_COOL_HARDWARE
+		void paintVLineRelInternal(int x, int y, int dy, const fb_pixel_t col);
+		void paintHLineRelInternal(int x, int dx, int y, const fb_pixel_t col);
+		void paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius, int type);
+#endif
 };
 
 #endif

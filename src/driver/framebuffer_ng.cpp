@@ -119,7 +119,7 @@ static const int q_circle[541] = {
 	147, 144, 140, 136, 132, 128, 124, 120, 115, 111, 105, 101,  95,  89,  83,  77,  69,  61,  52,  40,
 	 23};
 
-static inline bool calcCorners(int *ofs, int *ofl, int *ofr, const int& dy, const int& line, const int& radius,
+bool CFrameBuffer::calcCorners(int *ofs, int *ofl, int *ofr, const int& dy, const int& line, const int& radius,
 				const bool& tl, const bool& tr, const bool& bl, const bool& br)
 {
 /* just a multiplicator for all math to reduce rounding errors */
@@ -155,7 +155,7 @@ static inline bool calcCorners(int *ofs, int *ofl, int *ofr, const int& dy, cons
 	return ret;
 }
 
-static inline int limitRadius(const int& dx, const int& dy, const int& radius)
+int CFrameBuffer::limitRadius(const int& dx, const int& dy, const int& radius)
 {
 	int m = std::min(dx, dy);
 	if (radius > m)
@@ -630,6 +630,12 @@ void CFrameBuffer::paintBoxRel(const int x, const int y, const int dx, const int
 	if (!getActive())
 		return;
 
+#if HAVE_COOL_HARDWARE
+	checkFbArea(x, y, dx, dy, true);
+	accel->paintBoxRel(x, y, dx, dy, col, radius, type);
+	checkFbArea(x, y, dx, dy, false);
+#else
+
 	bool corner_tl = !!(type & CORNER_TOP_LEFT);
 	bool corner_tr = !!(type & CORNER_TOP_RIGHT);
 	bool corner_bl = !!(type & CORNER_BOTTOM_LEFT);
@@ -670,6 +676,7 @@ void CFrameBuffer::paintBoxRel(const int x, const int y, const int dx, const int
 	}
 	checkFbArea(x, y, dx, dy, false);
 	accel->mark(x, y, x+dx, y+dy);
+#endif
 }
 
 void CFrameBuffer::paintPixel(const int x, const int y, const fb_pixel_t col)
@@ -692,22 +699,50 @@ void CFrameBuffer::paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t co
 
 void CFrameBuffer::paintVLine(int x, int ya, int yb, const fb_pixel_t col)
 {
+#if HAVE_COOL_HARDWARE
+#if defined(USE_NEVIS_GXA)
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+#endif
+	paintVLineRelInternal(x, ya, yb-ya, col);
+#else
 	paintLine(x, ya, x, yb, col);
+#endif
 }
 
 void CFrameBuffer::paintVLineRel(int x, int y, int dy, const fb_pixel_t col)
 {
+#if HAVE_COOL_HARDWARE
+#if defined(USE_NEVIS_GXA)
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+#endif
+	paintVLineRelInternal(x, y, dy, col);
+#else
 	paintLine(x, y, x, y + dy, col);
+#endif
 }
 
 void CFrameBuffer::paintHLine(int xa, int xb, int y, const fb_pixel_t col)
 {
+#if HAVE_COOL_HARDWARE
+#if defined(USE_NEVIS_GXA)
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+#endif
+	paintHLineRelInternal(xa, xb-xa, y, col);
+#else
 	paintLine(xa, y, xb, y, col);
+#endif
 }
 
 void CFrameBuffer::paintHLineRel(int x, int dx, int y, const fb_pixel_t col)
 {
+#if HAVE_COOL_HARDWARE
+#if defined(USE_NEVIS_GXA)
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+#endif
+	paintHLineRelInternal(x, dx, y, col);
+#else
 	paintLine(x, y, x + dx, y, col);
+#endif
 }
 
 void CFrameBuffer::setIconBasePath(const std::string & iconPath)
@@ -1384,3 +1419,15 @@ void CFrameBuffer::stopFrame()
 {
 	videoDecoder->StopPicture();
 }
+
+#if HAVE_COOL_HARDWARE
+void CFrameBuffer::paintVLineRelInternal(int x, int y, int dy, const fb_pixel_t col)
+{
+	accel->paintVLineRelInternal(x, y, dy, col);
+}
+
+void CFrameBuffer::paintHLineRelInternal(int x, int dx, int y, const fb_pixel_t col)
+{
+	accel->paintHLineRelInternal(x, dx, y, col);
+}
+#endif

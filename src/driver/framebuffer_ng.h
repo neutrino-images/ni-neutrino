@@ -312,6 +312,14 @@ class CFrameBuffer
 		void doPaintMuteIcon(bool mode) { do_paint_mute_icon = mode; }
 		/* blit() is unnecessary, but here to avoid patches to the neutrino code */
 		void blit(void) {}
+		bool calcCorners(int *ofs, int *ofl, int *ofr, const int& dy, const int& line, const int& radius,
+				const bool& tl, const bool& tr, const bool& bl, const bool& br);
+		int limitRadius(const int& dx, const int& dy, const int& radius);
+
+#if HAVE_COOL_HARDWARE
+		void paintVLineRelInternal(int x, int y, int dy, const fb_pixel_t col);
+		void paintHLineRelInternal(int x, int dx, int y, const fb_pixel_t col);
+#endif
 };
 
 #endif

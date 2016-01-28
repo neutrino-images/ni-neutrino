@@ -59,12 +59,22 @@ extern GLFramebuffer *glfb;
 #endif
 
 #include <driver/abstime.h>
+#include <system/debug.h>
 #include <system/set_threadname.h>
 
 #if HAVE_COOL_HARDWARE || HAVE_TRIPLEDRAGON
 #define NEED_BLIT_THREAD 0
 #else
 #define NEED_BLIT_THREAD 1
+#endif
+
+#ifdef BOXMODEL_APOLLO
+#ifndef FB_HW_ACCELERATION
+#define FB_HW_ACCELERATION
+#endif
+#endif
+#if defined(FB_HW_ACCELERATION) && defined(USE_NEVIS_GXA)
+#error
 #endif
 
 /* note that it is *not* enough to just change those values */
@@ -1127,3 +1137,178 @@ int CFbAccel::setMode(void)
 	(void) si;
 	return 0;
 }
+
+#if HAVE_COOL_HARDWARE
+
+void CFbAccel::paintVLineRelInternal(int x, int y, int dy, const fb_pixel_t col)
+{
+
+#if defined(FB_HW_ACCELERATION)
+	fb_fillrect fillrect;
+	fillrect.dx = x;
+	fillrect.dy = y;
+	fillrect.width = 1;
+	fillrect.height = dy;
+	fillrect.color = col;
+	fillrect.rop = ROP_COPY;
+	ioctl(fb->fd, FBIO_FILL_RECT, &fillrect);
+#elif defined(USE_NEVIS_GXA)
+	/* draw a single vertical line from point x/y with hight dx */
+	unsigned int cmd = GXA_CMD_NOT_TEXT | GXA_SRC_BMP_SEL(2) | GXA_DST_BMP_SEL(2) | GXA_PARAM_COUNT(2) | GXA_CMD_NOT_ALPHA;
+
+	_write_gxa(gxa_base, GXA_FG_COLOR_REG, (unsigned int) col);	/* setup the drawing color */
+	_write_gxa(gxa_base, GXA_LINE_CONTROL_REG, 0x00000404); 	/* X is major axis, skip last pixel */
+	_write_gxa(gxa_base, cmd, GXA_POINT(x, y + dy));		/* end point */
+	_write_gxa(gxa_base, cmd, GXA_POINT(x, y));			/* start point */
+#else /* USE_NEVIS_GXA */
+	uint8_t * pos = ((uint8_t *)getFrameBufferPointer()) + x * sizeof(fb_pixel_t) + stride * y;
+
+	for(int count=0;count<dy;count++) {
+		*(fb_pixel_t *)pos = col;
+		pos += stride;
+	}
+#endif /* USE_NEVIS_GXA */
+}
+
+void CFbAccel::paintHLineRelInternal(int x, int dx, int y, const fb_pixel_t col)
+{
+#if defined(FB_HW_ACCELERATION)
+	if (dx >= 10) {
+		fb_fillrect fillrect;
+		fillrect.dx = x;
+		fillrect.dy = y;
+		fillrect.width = dx;
+		fillrect.height = 1;
+		fillrect.color = col;
+		fillrect.rop = ROP_COPY;
+		ioctl(fb->fd, FBIO_FILL_RECT, &fillrect);
+		return;
+	}
+#endif
+#if defined(USE_NEVIS_GXA)
+	/* draw a single horizontal line from point x/y with width dx */
+	unsigned int cmd = GXA_CMD_NOT_TEXT | GXA_SRC_BMP_SEL(2) | GXA_DST_BMP_SEL(2) | GXA_PARAM_COUNT(2) | GXA_CMD_NOT_ALPHA;
+
+	_write_gxa(gxa_base, GXA_FG_COLOR_REG, (unsigned int) col);	/* setup the drawing color */
+	_write_gxa(gxa_base, GXA_LINE_CONTROL_REG, 0x00000404); 	/* X is major axis, skip last pixel */
+	_write_gxa(gxa_base, cmd, GXA_POINT(x + dx, y));		/* end point */
+	_write_gxa(gxa_base, cmd, GXA_POINT(x, y));			/* start point */
+#else /* USE_NEVIS_GXA */
+	uint8_t * pos = ((uint8_t *)fb->getFrameBufferPointer()) + x * sizeof(fb_pixel_t) + fb->stride * y;
+
+	fb_pixel_t * dest = (fb_pixel_t *)pos;
+	for (int i = 0; i < dx; i++)
+		*(dest++) = col;
+#endif /* USE_NEVIS_GXA */
+}
+
+void CFbAccel::paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius, int type)
+{
+	/* draw a filled rectangle (with additional round corners) */
+	if (dx == 0 || dy == 0) {
+		dprintf(DEBUG_NORMAL, "[CFbAccel] [%s - %d]: radius %d, start x %d y %d end x %d y %d\n", __FUNCTION__, __LINE__, radius, x, y, x+dx, y+dy);
+		return;
+	}
+
+	bool corner_tl = !!(type & CORNER_TOP_LEFT);
+	bool corner_tr = !!(type & CORNER_TOP_RIGHT);
+	bool corner_bl = !!(type & CORNER_BOTTOM_LEFT);
+	bool corner_br = !!(type & CORNER_BOTTOM_RIGHT);
+
+#if defined(FB_HW_ACCELERATION)
+	fb_fillrect fillrect;
+	fillrect.color	= col;
+	fillrect.rop	= ROP_COPY;
+#elif defined(USE_NEVIS_GXA)
+	if (!fb_no_check)
+		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	/* solid fill with background color */
+	unsigned int cmd = GXA_CMD_BLT | GXA_CMD_NOT_TEXT | GXA_SRC_BMP_SEL(7) | GXA_DST_BMP_SEL(2) | GXA_PARAM_COUNT(2) | GXA_CMD_NOT_ALPHA;
+	_write_gxa(gxa_base, GXA_BG_COLOR_REG, (unsigned int) col);	/* setup the drawing color */
+#endif
+
+	if (type && radius) {
+		radius = fb->limitRadius(dx, dy, radius);
+
+		int line = 0;
+		while (line < dy) {
+			int ofl, ofr;
+			if (fb->calcCorners(NULL, &ofl, &ofr, dy, line, radius,
+				corner_tl, corner_tr, corner_bl, corner_br)) {
+				//printf("3: x %d y %d dx %d dy %d rad %d line %d\n", x, y, dx, dy, radius, line);
+#if defined(FB_HW_ACCELERATION) || defined(USE_NEVIS_GXA)
+				int rect_height_mult = ((type & CORNER_TOP) && (type & CORNER_BOTTOM)) ? 2 : 1;
+#if defined(FB_HW_ACCELERATION)
+				fillrect.dx	= x;
+				fillrect.dy	= y + line;
+				fillrect.width	= dx;
+				fillrect.height	= dy - (radius * rect_height_mult);
+
+				ioctl(fb->fd, FBIO_FILL_RECT, &fillrect);
+#elif defined(USE_NEVIS_GXA)
+				_write_gxa(gxa_base, GXA_BLT_CONTROL_REG, 0);
+				_write_gxa(gxa_base, cmd, GXA_POINT(x, y + line));               /* destination x/y */
+				_write_gxa(gxa_base, cmd, GXA_POINT(dx, dy - (radius * rect_height_mult))); /* width/height */
+#endif
+				line += dy - (radius * rect_height_mult);
+				continue;
+#endif
+			}
+
+			if (dx-ofr-ofl < 1) {
+				if (dx-ofr-ofl == 0){
+					dprintf(DEBUG_INFO, "[CFbAccel] [%s - %d]: radius %d, start x %d y %d end x %d y %d\n", __func__, __LINE__, radius, x, y, x+dx-ofr-ofl, y+line);
+				}else{
+					dprintf(DEBUG_INFO, "[CFbAccel] [%s - %04d]: Calculated width: %d\n                      (radius %d, dx %d, offsetLeft %d, offsetRight %d).\n                      Width can not be less than 0, abort.\n",
+						__func__, __LINE__, dx-ofr-ofl, radius, dx, ofl, ofr);
+				}
+				line++;
+				continue;
+			}
+#ifdef USE_NEVIS_GXA
+			_write_gxa(gxa_base, GXA_BLT_CONTROL_REG, 0);
+			_write_gxa(gxa_base, cmd, GXA_POINT(x      + ofl, y + line));               /* destination x/y */
+			_write_gxa(gxa_base, cmd, GXA_POINT(dx-ofl-ofr,   1));                      /* width/height */
+#else
+			paintHLineRelInternal(x+ofl, dx-ofl-ofr, y+line, col);
+#endif
+			line++;
+		}
+	} else {
+#if defined(FB_HW_ACCELERATION)
+		/* FIXME small size faster to do by software */
+		if (dx > 10 || dy > 10) {
+			fillrect.dx	= x;
+			fillrect.dy	= y;
+			fillrect.width	= dx;
+			fillrect.height	= dy;
+			ioctl(fb->fd, FBIO_FILL_RECT, &fillrect);
+			return;
+		}
+#endif
+#if defined(USE_NEVIS_GXA)
+		_write_gxa(gxa_base, GXA_BLT_CONTROL_REG, 0);
+		_write_gxa(gxa_base, cmd, GXA_POINT(x,  y));   /* destination x/y */
+		_write_gxa(gxa_base, cmd, GXA_POINT(dx, dy));  /* width/height */
+#else
+		int swidth = fb->stride / sizeof(fb_pixel_t);
+		fb_pixel_t *fbp = fb->getFrameBufferPointer() + (swidth * y);
+		int line = 0;
+		while (line < dy) {
+			for (int pos = x; pos < x + dx; pos++)
+				*(fbp + pos) = col;
+
+			fbp += swidth;
+			line++;
+		}
+#endif
+	}
+#ifdef USE_NEVIS_GXA
+	_write_gxa(gxa_base, GXA_BG_COLOR_REG, (unsigned int) backgroundColor); //FIXME needed ?
+	/* the GXA seems to do asynchronous rendering, so we add a sync marker
+	 * to which the fontrenderer code can synchronize
+	 */
+	add_gxa_sync_marker();
+#endif
+}
+#endif
