@@ -407,6 +407,8 @@ void CInfoViewerBB::showBBButtons(bool paintFooter)
 			frameBuffer->SaveScreen(buf_x, buf_y, buf_w, buf_h, pixbuf);
 			paintFoot();
 			if (pixbuf != NULL) {
+				if (g_settings.theme.infobar_gradient_bottom)
+					frameBuffer->waitForIdle("CInfoViewerBB::showBBButtons");
 				frameBuffer->RestoreScreen(buf_x, buf_y, buf_w, buf_h, pixbuf);
 				delete [] pixbuf;
 			}
@@ -496,6 +498,7 @@ void CInfoViewerBB::paintFoot(int w)
 	foot->setColorBody(COL_INFOBAR_BUTTONS_BACKGROUND);
 	foot->enableColBodyGradient(g_settings.theme.infobar_gradient_bottom, COL_INFOBAR_PLUS_0, g_settings.theme.infobar_gradient_bottom_direction);
 	foot->setCorner(RADIUS_LARGE, CORNER_BOTTOM);
+	foot->enableGradientBgCleanUp();
 
 	foot->paint(CC_SAVE_SCREEN_NO);
 }

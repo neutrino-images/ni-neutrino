@@ -425,6 +425,7 @@ void CInfoViewer::paintHead()
 	header->setColorBody(g_settings.theme.infobar_gradient_top ? COL_MENUHEAD_PLUS_0 : COL_INFOBAR_PLUS_0);
 	header->enableColBodyGradient(g_settings.theme.infobar_gradient_top, COL_INFOBAR_PLUS_0, g_settings.theme.infobar_gradient_top_direction);
 	clock->setColorBody(header->getColorBody());
+	header->enableGradientBgCleanUp();
 
 	header->paint(CC_SAVE_SCREEN_NO);
 	header_height = header->getHeight();
@@ -432,15 +433,27 @@ void CInfoViewer::paintHead()
 
 void CInfoViewer::paintBody()
 {
-	int h_body = InfoHeightY - header_height + (g_settings.infobar_casystem_display < 2 ? infoViewerBB->bottom_bar_offset : 0);
+	int h_body = InfoHeightY - header_height - SHADOW_OFFSET;
+	if (!zap_mode)
+		h_body += infoViewerBB->bottom_bar_offset;
 
-	if(zap_mode)
-		h_body -= (g_settings.infobar_casystem_display < 2 ? infoViewerBB->bottom_bar_offset : 0);
+	int y_body = ChanNameY + header_height;
 
-	if (body == NULL)
-		body = new CComponentsShapeSquare(ChanInfoX, ChanNameY + header_height, BoxEndX-ChanInfoX, h_body);
-	else
-		body->setDimensionsAll(ChanInfoX, ChanNameY + header_height, BoxEndX-ChanInfoX, h_body);
+	if (body == NULL){
+		body = new CComponentsShapeSquare(ChanInfoX, y_body, BoxEndX-ChanInfoX, h_body);
+	}else{
+		if(txt_cur_event && txt_next_event){
+			if (h_body != body->getHeight() || y_body != body->getYPos()){
+				txt_cur_start->getCTextBoxObject()->clearScreenBuffer();
+				txt_cur_event->getCTextBoxObject()->clearScreenBuffer();
+				txt_cur_event_rest->getCTextBoxObject()->clearScreenBuffer();
+				txt_next_start->getCTextBoxObject()->clearScreenBuffer();
+				txt_next_event->getCTextBoxObject()->clearScreenBuffer();
+				txt_next_in->getCTextBoxObject()->clearScreenBuffer();
+			}
+		}
+		body->setDimensionsAll(ChanInfoX, y_body, BoxEndX-ChanInfoX, h_body);
+	}
 
 	//set corner and shadow modes, consider virtual zap mode
 	body->setCorner(RADIUS_LARGE, (zap_mode) ? CORNER_BOTTOM : CORNER_NONE);
@@ -448,6 +461,7 @@ void CInfoViewer::paintBody()
 
 	body->setColorBody(g_settings.theme.infobar_gradient_body ? COL_MENUHEAD_PLUS_0 : COL_INFOBAR_PLUS_0);
 	body->enableColBodyGradient(g_settings.theme.infobar_gradient_body, COL_INFOBAR_PLUS_0, g_settings.theme.infobar_gradient_body_direction);
+	body->enableGradientBgCleanUp();
 
 	body->paint(CC_SAVE_SCREEN_NO);
 }
@@ -668,6 +682,9 @@ void CInfoViewer::showTitle(t_channel_id chid, const bool calledFromNumZap, int 
 
 void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap, int epgpos)
 {
+	if(!calledFromNumZap && zap_mode != IV_MODE_DEFAULT)
+		resetSwitchMode();
+
 	std::string Channel = channel->getName();
 	t_satellite_position satellitePosition = channel->getSatellitePosition();
 	t_channel_id new_channel_id = channel->getChannelID();
@@ -1635,27 +1652,33 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 	bool colored_event_C = (g_settings.theme.colored_events_infobar == 1);
 	bool colored_event_N = (g_settings.theme.colored_events_infobar == 2);
 
+	bool restore = false;
+	if (txt_cur_event){
+		if (txt_cur_event_rest && txt_cur_event_rest->isPainted() && txt_cur_event && txt_cur_event->isPainted())
+			restore = true;
+	}
+
 	//current event
 	if (current && update_current){
 		if (txt_cur_event == NULL)
 			txt_cur_event = new CComponentsTextTransp(NULL, xStart, CurrInfoY - height, currTimeX - xStart - 5, height);
 		else
 			txt_cur_event->setDimensionsAll(xStart, CurrInfoY - height, currTimeX - xStart - 5, height);
+
 		txt_cur_event->setText(current, CTextBox::NO_AUTO_LINEBREAK, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO], colored_event_C ? COL_COLORED_EVENTS_TEXT : COL_INFOBAR_TEXT);
-
-		if (txt_cur_event_rest && txt_cur_event_rest->isPainted())
-			txt_cur_event_rest->hide();
-		if (txt_cur_event && txt_cur_event->isPainted())
+		if (restore)
 			txt_cur_event->hide();
-
 		txt_cur_event->paint(CC_SAVE_SCREEN_YES);
+
 		if (runningStart){
 			if (txt_cur_start == NULL)
 				txt_cur_start = new CComponentsTextTransp(NULL, InfoX, CurrInfoY - height, info_time_width, height);
 			else
 				txt_cur_start->setDimensionsAll(InfoX, CurrInfoY - height, info_time_width, height);
 			txt_cur_start->setText(runningStart, CTextBox::NO_AUTO_LINEBREAK, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO], colored_event_C ? COL_COLORED_EVENTS_TEXT : COL_INFOBAR_TEXT);
-			txt_cur_start->paint(CC_SAVE_SCREEN_NO);
+			if (restore)
+				txt_cur_event->hide();
+			txt_cur_start->paint(CC_SAVE_SCREEN_YES);
 		}
 
 		if (runningRest){
@@ -1664,6 +1687,8 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 			else
 				txt_cur_event_rest->setDimensionsAll(currTimeX, CurrInfoY - height, currTimeW, height);
 			txt_cur_event_rest->setText(runningRest, CTextBox::RIGHT, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO], colored_event_C ? COL_COLORED_EVENTS_TEXT : COL_INFOBAR_TEXT);
+			if (restore)
+				txt_cur_event_rest->hide();
 			txt_cur_event_rest->paint(CC_SAVE_SCREEN_YES);
 		}
 	}
@@ -1676,7 +1701,9 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 		else
 			txt_next_event->setDimensionsAll(xStart, NextInfoY, nextTimeX - xStart - 5, height);
 		txt_next_event->setText(next, CTextBox::NO_AUTO_LINEBREAK, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO], colored_event_N ? COL_COLORED_EVENTS_TEXT : COL_INFOBAR_TEXT);
-		txt_next_event->paint(CC_SAVE_SCREEN_NO);
+		if (restore)
+			txt_next_event->hide();
+		txt_next_event->paint(CC_SAVE_SCREEN_YES);
 
 		if (nextStart){
 			if (txt_next_start == NULL)
@@ -1684,7 +1711,9 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 			else
 				txt_next_start->setDimensionsAll(InfoX, NextInfoY, info_time_width, height);
 			txt_next_start->setText(nextStart, CTextBox::NO_AUTO_LINEBREAK, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO], colored_event_N ? COL_COLORED_EVENTS_TEXT : COL_INFOBAR_TEXT);
-			txt_next_start->paint(CC_SAVE_SCREEN_NO);
+			if (restore)
+				txt_next_start->hide();
+			txt_next_start->paint(CC_SAVE_SCREEN_YES);
 		}
 
 		if (nextDuration){
@@ -1693,7 +1722,9 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 			else
 				txt_next_in->setDimensionsAll(nextTimeX, NextInfoY, nextTimeW, height);
 			txt_next_in->setText(nextDuration, CTextBox::RIGHT, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO], colored_event_N ? COL_COLORED_EVENTS_TEXT : COL_INFOBAR_TEXT);
-			txt_next_in->paint(CC_SAVE_SCREEN_NO);
+			if (restore)
+				txt_next_in->hide();
+			txt_next_in->paint(CC_SAVE_SCREEN_YES);
 		}
 	}
 
@@ -1988,9 +2019,11 @@ void CInfoViewer::killTitle()
 	{
 		is_visible = false;
 		infoViewerBB->is_visible = false;
+#if 0 //unused
 		int bottom = BoxEndY + SHADOW_OFFSET + infoViewerBB->bottom_bar_offset;
 		if (showButtonBar)
 			bottom += infoViewerBB->InfoHeightY_Info;
+#endif
 		if (infoViewerBB->getFooter())
 			infoViewerBB->getFooter()->kill();
 		if (infoViewerBB->getCABar())
@@ -2012,11 +2045,11 @@ void CInfoViewer::killTitle()
 			clock->kill();
 #endif
 		body->kill();
+#if 0 //not really required to kill epg infos, body does this
 		if (txt_cur_event)
 			txt_cur_event->kill();
 		if (txt_cur_event_rest)
 			txt_cur_event_rest->kill();
-#if 0 //not really required to kill epg infos, body does this
 		if (txt_cur_start)
 			txt_cur_start->kill();
 		if (txt_next_start)

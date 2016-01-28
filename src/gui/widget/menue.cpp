@@ -811,6 +811,10 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 					if (titem->isSelectable()) {
 						items[selected]->paint( false );
 						selected= i;
+						if (selected > page_start[current_page + 1] || selected < page_start[current_page]) {
+							/* different page */
+							paintItems();
+						}
 						paintHint(selected);
 						pos = selected;
 						if (titem->directKeyOK)
@@ -1239,6 +1243,7 @@ void CMenuWidget::paint()
 	header->setColorShadow(COL_MENUCONTENTDARK_PLUS_0);
 	header->setCaptionColor(COL_MENUHEAD_TEXT);
 	header->enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_MENUCONTENT_PLUS_0);
+	header->enableGradientBgCleanUp(savescreen);
 	header->paint(CC_SAVE_SCREEN_NO);
 
 	// paint body shadow
@@ -1476,6 +1481,7 @@ void CMenuWidget::paintHint(int pos)
 	info_box->enableShadow();
 	info_box->setPicture(item->hintIcon ? item->hintIcon : "");
 	info_box->enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_INFOBAR_SHADOW_PLUS_1, g_settings.theme.menu_Hint_gradient_direction);// COL_INFOBAR_SHADOW_PLUS_1 is default footer color
+	info_box->enableGradientBgCleanUp();
 
 	//paint result
 	if (details_line)
