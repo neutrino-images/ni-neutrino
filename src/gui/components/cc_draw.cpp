@@ -71,7 +71,7 @@ CCDraw::CCDraw() : COSDFader(g_settings.theme.menu_Content_alpha)
 	cc_body_gradient_saturation 				= 0xC0;
 	cc_body_gradient_direction = cc_body_gradient_direction_old	= CFrameBuffer::gradientVertical;
 
-	cc_gradient_bg_cleanup = false;
+	cc_gradient_bg_cleanup = true;
 
 	v_fbdata.clear();
 }
@@ -676,7 +676,7 @@ void CCDraw::kill(const fb_pixel_t& bg_color, const int& corner_radius, const in
 		}
 	}
 
-	if (fblayer_type == CC_FBDATA_TYPE_BOX){
+	if (fblayer_type == CC_FBDATA_TYPES){
 		firstPaint = true;
 		is_painted = false;
 	}
