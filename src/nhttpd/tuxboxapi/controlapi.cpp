@@ -2182,7 +2182,8 @@ void CControlAPI::ReloadPluginsCGI(CyhookHandler *hh)
 
 void CControlAPI::ReloadChannelsCGI(CyhookHandler *hh)
 {
-	CServiceManager::getInstance()->SaveServices(true, true);
+	if(hh->ParamList["hardreload"].empty())
+		CServiceManager::getInstance()->SaveServices(true, true);
 	NeutrinoAPI->Zapit->reinitChannels();
 	CNeutrinoApp::getInstance()->SDTreloadChannels = false;
 	hh->SendOk();
