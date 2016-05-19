@@ -26,9 +26,9 @@ INSTALL
 .*.swp
 
 ### editor crap
-*.orig
-*.rej
-*~
+#*.orig
+#*.rej
+#*~
 
 ### binaries that fall out of the build
 lib/sectionsdclient/sectionsdcontrol
@@ -50,3 +50,4 @@ local_build_config.h
 .directory
 # kate
 *-swp
+compile

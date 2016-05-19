@@ -282,6 +282,8 @@ src/nhttpd/web/images/Makefile
 src/nhttpd/web/scripts/Makefile
 src/nhttpd/web/languages/Makefile
 src/nhttpd/web/styles/Makefile
+src/nhttpd/web/jquery/Makefile
+src/nhttpd/web/info/Makefile
 src/nhttpd/tuxboxapi/Makefile
 src/nhttpd/yhttpd_core/Makefile
 src/nhttpd/yhttpd_mods/Makefile
@@ -302,6 +304,7 @@ src/system/mtdutils/lib/Makefile
 data/Makefile
 data/fonts/Makefile
 data/icons/Makefile
+data/icons/screensaver/Makefile
 data/inetradio/Makefile
 data/initial/Makefile
 data/iso-codes/Makefile

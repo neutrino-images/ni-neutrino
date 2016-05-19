@@ -203,6 +203,7 @@
 #define NEUTRINO_ICON_HINT_SETTINGS	"hint_settings"
 #define NEUTRINO_ICON_HINT_SERVICE	"hint_service"
 #define NEUTRINO_ICON_HINT_SLEEPTIMER	"hint_sleeptimer"
+#define NEUTRINO_ICON_HINT_BLANK_SCREEN	"hint_blank_screen" //NI
 #define NEUTRINO_ICON_HINT_REBOOT	"hint_reboot"
 #define NEUTRINO_ICON_HINT_SHUTDOWN	"hint_shutdown"
 #define NEUTRINO_ICON_HINT_INFO		"hint_info"
@@ -231,6 +232,7 @@
 #define NEUTRINO_ICON_HINT_OSD		"hint_osd"
 #define NEUTRINO_ICON_HINT_VFD		"hint_vfd"
 #define NEUTRINO_ICON_HINT_HDD		"hint_hdd"
+#define NEUTRINO_ICON_HINT_HDD_INFO	"hint_hdd_info"
 #define NEUTRINO_ICON_HINT_KEYS		"hint_keys"
 #define NEUTRINO_ICON_HINT_A_PIC	"hint_a_pic"
 #define NEUTRINO_ICON_HINT_RASS		"hint_rass"
@@ -297,5 +299,16 @@
 #define NEUTRINO_ICON_EPG		"epg"
 
 #define NEUTRINO_ICON_BUTTON_LONGPRESS	"longpress"
+
+//NI
+#define NEUTRINO_ICON_HINT_IMAGELOGO	"hint_imagelogo"
+#define NEUTRINO_ICON_HINT_VTXT		"hint_vtxt"
+#define NEUTRINO_ICON_HINT_ICONSPKG0	"hint_iconsPKG0"
+#define NEUTRINO_ICON_HINT_ICONSPKG1	"hint_iconsPKG1"
+#define NEUTRINO_ICON_HINT_ICONSPKG2	"hint_iconsPKG2"
+#define NEUTRINO_ICON_HINT_ICONSPKG3	"hint_iconsPKG3"
+#define NEUTRINO_ICON_HINT_LCD4L	"hint_lcd4linux"
+#define NEUTRINO_ICON_HINT_FCM		"hint_FritzCallMonitor"
+#define NEUTRINO_ICON_HINT_EMMRD	"hint_emmrd"
 
 #endif /* __gui_widget_icons_h__ */

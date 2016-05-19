@@ -1,5 +1,8 @@
 SUBDIRS = images scripts languages styles
 
+# NI-yWeb
+SUBDIRS += info jquery
+
 installdir = $(PRIVATE_HTTPDDIR)
 
 install_DATA =	channels.js \
@@ -99,3 +102,26 @@ install_DATA +=	accordion.js \
 		Y_Filemgr.yhtm \
 		Y_Filemgr_Edit.yhtm \
 		Y_Filemgr_blocks.txt
+
+# NI-yWeb
+install_DATA += Y_NIlib.js \
+		Y_NI.css \
+		Y_NI_About.yhtm \
+		Y_NI_blank.yhtm \
+		Y_NI_Blocks.txt \
+		Y_NI_Camd-control.yhtm \
+		Y_NI_Dyn_Pages.yhtm \
+		Y_NI_Infoicons-control.yhtm \
+		Y_NI_m3uConInfo.yhtm \
+		Y_NI_m3uConvert.yhtm \
+		Y_NI_Menue.yhtm \
+		Y_NI_NetFS-control.yhtm \
+		Y_NI_NetFS-edit.yhtm \
+		Y_NI_NetFS-init.yhtm \
+		Y_NI_Plugin-control.yhtm \
+		Y_NI_PZapit-control.yhtm
+
+# NI-yWeb
+install-data-hook:
+	cp $(DESTDIR)$(PRIVATE_HTTPDDIR)/styles/Y_Dist-NI_dark.css $(DESTDIR)$(PRIVATE_HTTPDDIR)/Y_Dist.css
+	sed -i 's|version=\(.*\)|version=\1 by NI|' $(DESTDIR)$(PRIVATE_HTTPDDIR)/Y_Version.txt

@@ -106,7 +106,7 @@ function do_rename(){
 	position: absolute;
 	left: 100px;
 	top: 100px;
-	border: 1px solid #2188e0;
+	border: 1px solid #606060;
 	border-collapse: collapse;
 	background-color: white;
 	padding: 1em;

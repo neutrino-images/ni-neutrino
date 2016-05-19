@@ -1,0 +1,542 @@
+{=var-set:x_gbox={=script:Y_NI_Tools is_exec gbox=}=}
+{=var-set:x_cs2gbox={=script:Y_NI_Tools is_exec cs2gbox=}=}
+{=var-set:x_osemu={=script:Y_NI_Tools is_exec osemu=}=}
+{=var-set:x_oscam={=script:Y_NI_Tools is_exec oscam=}=}
+{=var-set:x_doscam={=script:Y_NI_Tools is_exec doscam=}=}
+{=var-set:x_mgcamd={=script:Y_NI_Tools is_exec mgcamd=}=}
+{=var-set:x_newcs={=script:Y_NI_Tools is_exec newcs=}=}
+
+{=var-set:r_gbox={=script:Y_NI_Tools is_running gbox=}=}
+{=var-set:r_cs2gbox={=script:Y_NI_Tools is_running cs2gbox=}=}
+{=var-set:r_osemu={=script:Y_NI_Tools is_running osemu=}=}
+{=var-set:r_oscam={=script:Y_NI_Tools is_running oscam=}=}
+{=var-set:r_doscam={=script:Y_NI_Tools is_running doscam=}=}
+{=var-set:r_mgcamd={=script:Y_NI_Tools is_running mgcamd=}=}
+{=var-set:r_newcs={=script:Y_NI_Tools is_running newcs=}=}
+
+{=var-set:oscamport={=script:Y_NI_Tools get_oscam_webif_port=}=}
+{=var-set:doscamport={=script:Y_NI_Tools get_doscam_webif_port=}=}
+
+{=include-block:Y_NI_Blocks.txt;head=}
+<style type="text/css">
+input[type="button"], .tools select {
+	width: 100%;
+}
+</style>
+</head>
+<body>
+{=var-set:wait_text={=L:ni.camd-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
+<div class="work_box">
+	<div class="work_box_head"><div class="work_box_head_h2">
+	{=var-set:menu={=L:ni.camd-control.title=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}
+	</div></div>
+	<div class="work_box_body">
+	<form action="">
+		<table class="y_invisible_table" cellpadding="5">
+			<tr>
+				<td class="y_form_header">{=L:ni.camd-control=}</td>
+				<td class="y_form_header">&nbsp;</td>
+				<td class="y_form_header">&nbsp;</td>
+				<td class="y_form_header">
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=}" onclick='Y_NI_Tools("softcamreset", 10000);' />
+				</td>
+				<td class="y_form_header">&nbsp;</td>
+			</tr>
+			<tr class="list">
+			{=var-set:camd=gbox=}
+				<td>
+					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
+					{=var-get:camd=}
+				</td>
+				<td>
+					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+				</td>
+			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
+				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+				<td>
+					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+				</td>
+				<td>	
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+				</td>
+				~
+				<td>
+					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+				</td>
+				<td>
+				</td>
+				=}
+			~
+				<td>
+				</td>
+				<td>
+				</td>
+			=}
+				<td>
+					<span class="tools">
+					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
+						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
+						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/gbox_cfg","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: gbox_cfg
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/conax","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: conax
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/constcw","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: constcw
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/crypto","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: crypto
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/cwshare.cfg","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: cwshare.cfg
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/ignore.list","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: ignore.list
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/irdeto","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: irdeto
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/nagra","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: nagra
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/nds","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: nds
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/seca","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: seca
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/softcam.cfg","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: softcam.cfg
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/via","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: via
+						</option>
+						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+						<option> {=L:ni.camd-tools.line=} </option>
+						<option onclick='Y_NI_Tools("ecminfo");'>
+							{=L:ni.camd-tools.ecminfo=}
+						</option>
+						<option onclick='Y_NI_Tools("pidinfo");'>
+							{=L:ni.camd-tools.pidinfo=}
+						</option>
+						<option onclick='Y_NI_Tools("sc01info");'>
+							{=L:ni.camd-tools.sc01info=}
+						</option>
+						<option onclick='Y_NI_Tools("sc02info");'>
+							{=L:ni.camd-tools.sc02info=}
+						</option>
+						<option onclick='Y_NI_Tools("shareinfo");'>
+							{=L:ni.camd-tools.shareinfo=}
+						</option>
+						<option onclick='Y_NI_Tools("shareonl");'>
+							{=L:ni.camd-tools.shareonl=}
+						</option>
+						<option onclick='Y_NI_Tools("countcards&amp;/tmp/share.info");'>
+							{=L:ni.camd-tools.countcards=}
+						</option>
+						~
+						=}
+					</select>
+					</span>
+				</td>
+			</tr>
+			<tr class="list">
+			{=var-set:camd=cs2gbox=}
+				<td>
+					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
+					{=var-get:camd=}
+				</td>
+				<td>
+					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+				</td>
+			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
+				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+				<td>
+					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+				</td>
+				<td>	
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+				</td>
+				~
+				<td>
+					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+				</td>
+				<td>
+				</td>
+				=}
+			~
+				<td>
+				</td>
+				<td>
+				</td>
+			=}
+				<td>
+					<span class="tools">
+					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
+						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
+						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/cs2gbox.cfg","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: cs2gbox.cfg
+						</option>
+						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+						<option> {=L:ni.camd-tools.line=} </option>
+						<option onclick='Y_NI_Tools("cs2gboxinfo");'>
+							{=L:ni.camd-tools.cs2gboxinfo=}
+						</option>
+						~
+						=}
+					</select>
+					</span>
+				</td>
+			</tr>
+			<tr class="list">
+			{=var-set:camd=osemu=}
+				<td>
+					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
+					{=var-get:camd=}
+				</td>
+				<td>
+					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+				</td>
+			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
+				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+				<td>
+					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+				</td>
+				<td>
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+				</td>
+				~
+				<td>
+					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+				</td>
+				<td>
+				</td>
+				=}
+			~
+				<td>
+				</td>
+				<td>
+				</td>
+			=}
+				<td>
+					<span class="tools">
+					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
+						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
+						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/bin/osemu.sh","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: osemu.sh
+						</option>
+						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+						<option> {=L:ni.camd-tools.line=} </option>
+						<option onclick='Y_NI_Tools("ecminfo");'>
+							{=L:ni.camd-tools.ecminfo=}
+						</option>
+						~
+						=}
+					</select>
+					</span>
+				</td>
+			</tr>
+			<tr class="list">
+			{=var-set:camd=oscam=}
+				<td>
+					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
+					{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+					<u><a href="#" onclick='goPort("{=var-get:oscamport=}");'>{=var-get:camd=}</a></u>
+					~
+					{=var-get:camd=}
+					=}
+				</td>
+				<td>
+					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+				</td>
+			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
+				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+				<td>
+					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+				</td>
+				<td>	
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+				</td>
+				~
+				<td>
+					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+				</td>
+				<td>
+				</td>
+				=}
+			~
+				<td>
+				</td>
+				<td>
+				</td>
+			=}
+				<td>
+					<span class="tools">
+					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
+						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
+						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.conf","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: oscam.conf
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: oscam.dvbapi
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.server","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: oscam.server
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.services","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: oscam.services
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.srvid","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: oscam.srvid
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.user","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: oscam.user
+						</option>
+						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+						<option> {=L:ni.camd-tools.line=} </option>
+						<option onclick='Y_NI_Tools("ecminfo");'>
+							{=L:ni.camd-tools.ecminfo=}
+						</option>
+						<option onclick='Y_NI_Tools("oscamversion");'>
+							{=L:ni.camd-tools.oscamversion=}
+						</option>
+						~
+						=}
+					</select>
+					</span>
+				</td>
+			</tr>
+			<tr class="list">
+			{=var-set:camd=doscam=}
+				<td>
+					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
+					{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+					<u><a href="#" onclick='goPort("{=var-get:doscamport=}");'>{=var-get:camd=}</a></u>
+					~
+					{=var-get:camd=}
+					=}
+				</td>
+				<td>
+					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+				</td>
+			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
+				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+				<td>
+					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+				</td>
+				<td>
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+				</td>
+				~
+				<td>
+					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+				</td>
+				<td>
+				</td>
+				=}
+			~
+				<td>
+				</td>
+				<td>
+				</td>
+			=}
+				<td>
+					<span class="tools">
+					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
+						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
+						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.cfg","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.cfg
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.ac","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.ac
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.dvbapi
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.guess","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.guess
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.provid","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.provid
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.services","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.services
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.srvid","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.srvid
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.tiers","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.tiers
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.whitelist","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: doscam.whitelist
+						</option>
+						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+						<option> {=L:ni.camd-tools.line=} </option>
+						<option onclick='Y_NI_Tools("ecminfo");'>
+							{=L:ni.camd-tools.ecminfo=}
+						</option>
+						<option onclick='Y_NI_Tools("doscamversion");'>
+							{=L:ni.camd-tools.doscamversion=}
+						</option>
+						~
+						=}
+					</select>
+					</span>
+				</td>
+			</tr>
+			<tr class="list">
+			{=var-set:camd=mgcamd=}
+				<td>
+					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
+					{=var-get:camd=}
+				</td>
+				<td>
+					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+				</td>
+			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
+				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+				<td>
+					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' /> 
+				</td>                                                                                                                                               
+				<td>	                                                                                                                                            
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+				</td>                                                                                                                                               
+				~                                                                                                                                                   
+				<td>                                                                                                                                                
+					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+				</td>
+				<td>
+				</td>
+				=}
+			~
+				<td>
+				</td>
+				<td>
+				</td>
+			=}
+				<td>
+					<span class="tools">
+					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
+						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
+						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/mg_cfg","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: mg_cfg
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/AutoRoll.Key","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: AutoRoll.Key
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/cccamd.list","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: cccamd.list
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/ignore.list","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: ignore.list
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/newcamd.list","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: newcamd.list
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/peer.cfg","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: peer.cfg
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/priority.list","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: priority.list
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/replace.list","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: replace.list
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/SoftCam.Key","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: SoftCam.Key
+						</option>
+						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+						<option> {=L:ni.camd-tools.line=} </option>
+						<option onclick='Y_NI_Tools("ecminfo");'>
+							{=L:ni.camd-tools.ecminfo=}
+						</option>
+						<option onclick='Y_NI_Tools("pidinfo");'>
+							{=L:ni.camd-tools.pidinfo=}
+						</option>
+						<option onclick='Y_NI_Tools("mginfo");'>
+							{=L:ni.camd-tools.mginfo=}
+						</option>
+						<option onclick='Y_NI_Tools("cccamdinfo");'>
+							{=L:ni.camd-tools.cccamdinfo=}
+						</option>
+						<option onclick='Y_NI_Tools("mgshareinfo");'>
+							{=L:ni.camd-tools.mgshareinfo=}
+						</option>
+						<option onclick='Y_NI_Tools("countcards /tmp/mg.info");'>
+							{=L:ni.camd-tools.countcards=}
+						</option>
+						~
+						=}
+					</select>
+					</span>
+				</td>
+			</tr>
+			<tr class="list">
+			{=var-set:camd=newcs=}
+				<td>
+					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
+					{=var-get:camd=}
+				</td>
+				<td>
+					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+				</td>
+			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
+				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+				<td>
+					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+				</td>
+				<td>	
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+				</td>
+				~
+				<td>
+					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+				</td>
+				<td>
+				</td>
+				=}
+			~
+				<td>
+				</td>
+				<td>
+				</td>
+			=}
+				<td>
+					<span class="tools">
+					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
+						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
+						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/newcs.xml","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: newcs.xml
+						</option>
+						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+						<option> {=L:ni.camd-tools.line=} </option>
+						<option>
+						</option>
+						~
+						=}
+					</select>
+					</span>
+				</td>
+			</tr>
+		</table>
+	</form>
+	</div>
+</div>
+<div class="work_box">
+	<div class="work_box_head"><div class="work_box_head_h2">
+	{=var-set:menu={=L:answer=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}</div></div>
+	<div class="work_box_body">
+		<div id="out"></div>
+	</div>
+</div>
+</body>
+</html>

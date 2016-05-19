@@ -107,6 +107,9 @@ function vlc() {
 					-->
 					<li><a target="base" href="Y_Dyn_Pages.yhtm?page=frame_info"
 						title="{=L:main.info_desc=}">{=L:main.info=}</a></li>
+					<!-- //NI -->
+					<li><a target="base" href="Y_NI_Dyn_Pages.yhtm?page=frame_NI"
+						title="{=L:main.ni_desc=}">{=L:main.ni=}</a></li>
 				</ul>
 			</td>
 			<td>
@@ -120,7 +123,8 @@ function vlc() {
 			<td align="right">
 				<span id="state" style="color : red;font-family: Courier New, Courier, monospace;">&nbsp;</span>
 				<span id="box_name" {=if-empty:{=ini-get:/var/tuxbox/config/Y-Web.conf;yweb_box_color=}~~style="color : #{=ini-get:/var/tuxbox/config/Y-Web.conf;yweb_box_color=};"=}>
-					{=ini-get:/var/tuxbox/config/Y-Web.conf;yweb_box_name=}</span>
+					<!-- //NI -->
+					{=if-equal:{=ini-get:/var/tuxbox/config/Y-Web.conf;yweb_box_name=}~${HOSTNAME}~{=script:Y_Tools get_hostname=}~{=ini-get:/var/tuxbox/config/Y-Web.conf;yweb_box_name=}=}</span>
 				<span id="clock">00:00</span>
 			</td>
 		</tr>

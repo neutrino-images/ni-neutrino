@@ -34,6 +34,13 @@
 #include <cs_api.h>
 #include <system/configure_network.h>
 
+//NI y-funcs
+#include "gui/plugins.h"
+extern CPlugins *g_PluginList;
+#include "gui/infoicons.h"
+extern CInfoIcons *InfoIcons; /* neutrino.cpp */
+#include "gui/netfs_setup.h"
+
 extern CBouquetManager *g_bouquetManager;
 
 //=============================================================================
@@ -126,6 +133,11 @@ const CNeutrinoYParser::TyFuncCall CNeutrinoYParser::yFuncCallList[]=
 	{"set_timer_form",				&CNeutrinoYParser::func_set_timer_form},
 	{"bouquet_editor_main",			&CNeutrinoYParser::func_bouquet_editor_main},
 	{"set_bouquet_edit_form",		&CNeutrinoYParser::func_set_bouquet_edit_form},
+	//NI y-funcs
+	{"infoicons_set_values",		&CNeutrinoYParser::func_infoicons_set_values},
+	{"netfs_set_values",			&CNeutrinoYParser::func_netfs_set_values},
+	{"netfs_read_config",			&CNeutrinoYParser::func_netfs_read_config},
+	{"netfs_write_config",			&CNeutrinoYParser::func_netfs_write_config},
 };
 //-------------------------------------------------------------------------
 // y-func : dispatching and executing
@@ -1310,4 +1322,179 @@ std::string  CNeutrinoYParser::func_set_bouquet_edit_form(CyhookHandler *hh, std
 	}
 	else
 		return "No Bouquet selected";
+}
+//-------------------------------------------------------------------------
+// NI y-func : infoicons_set_values
+//-------------------------------------------------------------------------
+std::string  CNeutrinoYParser::func_infoicons_set_values(CyhookHandler *hh, std::string)
+{
+	std::string yresult;
+
+	g_settings.mode_icons_flag[0] = hh->ParamList["mode_icons_flag0"];
+	g_settings.mode_icons_flag[1] = hh->ParamList["mode_icons_flag1"];
+	g_settings.mode_icons_flag[2] = hh->ParamList["mode_icons_flag2"];
+	g_settings.mode_icons_flag[3] = hh->ParamList["mode_icons_flag3"];
+	g_settings.mode_icons_flag[4] = hh->ParamList["mode_icons_flag4"];
+	g_settings.mode_icons_flag[5] = hh->ParamList["mode_icons_flag5"];
+	g_settings.mode_icons_flag[6] = hh->ParamList["mode_icons_flag6"];
+	g_settings.mode_icons_flag[7] = hh->ParamList["mode_icons_flag7"];
+
+	CConfigFile *Config = new CConfigFile(',');
+	Config->loadConfig(NEUTRINO_CONFIGFILE);
+	Config->setString("mode_icons_flag0",hh->ParamList["mode_icons_flag0"]);
+	Config->setString("mode_icons_flag1",hh->ParamList["mode_icons_flag1"]);
+	Config->setString("mode_icons_flag2",hh->ParamList["mode_icons_flag2"]);
+	Config->setString("mode_icons_flag3",hh->ParamList["mode_icons_flag3"]);
+	Config->setString("mode_icons_flag4",hh->ParamList["mode_icons_flag4"]);
+	Config->setString("mode_icons_flag5",hh->ParamList["mode_icons_flag5"]);
+	Config->setString("mode_icons_flag6",hh->ParamList["mode_icons_flag6"]);
+	Config->setString("mode_icons_flag7",hh->ParamList["mode_icons_flag7"]);
+	Config->saveConfig(NEUTRINO_CONFIGFILE);
+	delete Config;
+
+	return yresult;
+}
+//-------------------------------------------------------------------------
+// NI y-func : netfs_set_values
+//-------------------------------------------------------------------------
+std::string  CNeutrinoYParser::func_netfs_set_values(CyhookHandler *hh, std::string)
+{
+	std::string nr, mount_type_s;
+
+	nr = hh->ParamList["nr"];
+	mount_type_s = hh->ParamList["mount_type_s"];
+
+	CConfigFile *Config = new CConfigFile(',');
+	Config->loadConfig(NEUTRINO_CONFIGFILE);
+	Config->setString("netfs_"+mount_type_s+"_type_"+nr,hh->ParamList["type"]);
+	Config->setString("netfs_"+mount_type_s+"_ip_"+nr,hh->ParamList["ip"]);
+	Config->setString("netfs_"+mount_type_s+"_dir_"+nr,hh->ParamList["dir"]);
+	Config->setString("netfs_"+mount_type_s+"_local_dir_"+nr,hh->ParamList["localdir"]);
+	Config->setString("netfs_"+mount_type_s+"_mount_options1_"+nr,hh->ParamList["opt1"]);
+	Config->setString("netfs_"+mount_type_s+"_mount_options2_"+nr,hh->ParamList["opt2"]);
+	Config->setString("netfs_"+mount_type_s+"_username_"+nr,hh->ParamList["username"]);
+	Config->setString("netfs_"+mount_type_s+"_password_"+nr,hh->ParamList["password"]);
+	Config->setString("netfs_"+mount_type_s+"_dump_"+nr,hh->ParamList["dump"]);
+	Config->setString("netfs_"+mount_type_s+"_pass_"+nr,hh->ParamList["pass"]);
+	Config->setString("netfs_"+mount_type_s+"_active_"+nr,hh->ParamList["active"]);
+	Config->saveConfig(NEUTRINO_CONFIGFILE);
+
+	char cfg_key[81];
+	int mount_type, i;
+
+	mount_type = atoi(hh->ParamList["mount_type"].c_str());
+	i = atoi(nr.c_str());
+
+	sprintf(cfg_key, "netfs_%s_type_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].type = Config->getInt32( cfg_key, 0);
+	sprintf(cfg_key, "netfs_%s_ip_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].ip = Config->getString( cfg_key, "");
+	sprintf(cfg_key, "netfs_%s_dir_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].dir = Config->getString( cfg_key, "" );
+	sprintf(cfg_key, "netfs_%s_local_dir_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].local_dir = Config->getString( cfg_key, "" );
+	sprintf(cfg_key, "netfs_%s_mount_options1_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].options1 = Config->getString( cfg_key, "soft" );
+	sprintf(cfg_key, "netfs_%s_mount_options2_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].options2 = Config->getString( cfg_key, "nolock" );
+	sprintf(cfg_key, "netfs_%s_username_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].username = Config->getString( cfg_key, "" );
+	sprintf(cfg_key, "netfs_%s_password_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].password = Config->getString( cfg_key, "" );
+	sprintf(cfg_key, "netfs_%s_dump_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].dump = Config->getString( cfg_key, "0" );
+	sprintf(cfg_key, "netfs_%s_pass_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].pass = Config->getString( cfg_key, "0" );
+	sprintf(cfg_key, "netfs_%s_active_%d",mount_type_s.c_str(),i);
+	g_settings.netfs[mount_type][i].active = Config->getInt32( cfg_key, 0);
+
+	delete Config;
+
+	return "ok";
+}
+//-------------------------------------------------------------------------
+// NI y-func : netfs_read_config
+//-------------------------------------------------------------------------
+std::string  CNeutrinoYParser::func_netfs_read_config(CyhookHandler *, std::string para)
+{
+	if (para == "")
+		return "error";
+
+	std::string mount_type_s;
+
+	int mount_type = atoi(para.c_str());
+	switch (mount_type)
+	{
+		case SNeutrinoSettings::AUTOMOUNT:
+			mount_type_s = "automount";
+			break;
+		case SNeutrinoSettings::FSTAB:
+			mount_type_s = "fstab";
+			break;
+		default:
+			return "error";
+			break;
+	}
+
+	CNETFSSetup *netfs_setup = new CNETFSSetup();
+	netfs_setup->read_config(mount_type);
+	delete netfs_setup;
+
+	char cfg_key[81];
+
+	CConfigFile *Config = new CConfigFile(',');
+	Config->loadConfig(NEUTRINO_CONFIGFILE);
+	for(int i=0 ; i < NETFS_NR_OF_ENTRIES ; i++) {
+		sprintf(cfg_key, "netfs_%s_type_%d",mount_type_s.c_str(),i);
+		Config->setInt32(cfg_key,g_settings.netfs[mount_type][i].type);
+		sprintf(cfg_key, "netfs_%s_ip_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].ip);
+		sprintf(cfg_key, "netfs_%s_dir_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].dir);
+		sprintf(cfg_key, "netfs_%s_local_dir_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].local_dir);
+		sprintf(cfg_key, "netfs_%s_mount_options1_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].options1);
+		sprintf(cfg_key, "netfs_%s_mount_options2_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].options2);
+		sprintf(cfg_key, "netfs_%s_username_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].username);
+		sprintf(cfg_key, "netfs_%s_password_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].password);
+		sprintf(cfg_key, "netfs_%s_dump_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].dump);
+		sprintf(cfg_key, "netfs_%s_pass_%d",mount_type_s.c_str(),i);
+		Config->setString(cfg_key,g_settings.netfs[mount_type][i].pass);
+		sprintf(cfg_key, "netfs_%s_active_%d",mount_type_s.c_str(),i);
+		Config->setInt32(cfg_key,g_settings.netfs[mount_type][i].active);
+	}
+	Config->saveConfig(NEUTRINO_CONFIGFILE);
+	delete Config;
+
+	return "ok";
+}
+//-------------------------------------------------------------------------
+// NI y-func : netfs_write_config
+//-------------------------------------------------------------------------
+std::string  CNeutrinoYParser::func_netfs_write_config(CyhookHandler *, std::string para)
+{
+	if (para == "")
+		return "error";
+
+	int mount_type = atoi(para.c_str());
+	switch (mount_type)
+	{
+		case SNeutrinoSettings::AUTOMOUNT:
+		case SNeutrinoSettings::FSTAB:
+			break;
+		default:
+			return "error";
+			break;
+	}
+
+	CNETFSSetup *netfs_setup = new CNETFSSetup();
+	netfs_setup->write_config(mount_type);
+	delete netfs_setup;
+
+	return "ok";
 }

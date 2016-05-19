@@ -101,8 +101,10 @@ extern cVideo * videoDecoder;
 #define AUDIOPLAYER_START_SCRIPT CONFIGDIR "/audioplayer.start"
 #define AUDIOPLAYER_END_SCRIPT CONFIGDIR "/audioplayer.end"
 #define DEFAULT_RADIOSTATIONS_XMLFILE CONFIGDIR "/radio-stations.xml"
+#define DEFAULT_RADIOFAVORITES_XMLFILE CONFIGDIR "/radio-favorites.xml" //NI
 
 const char RADIO_STATION_XML_FILE[] = {DEFAULT_RADIOSTATIONS_XMLFILE};
+const char RADIO_FAVORITES_XML_FILE[] = {DEFAULT_RADIOFAVORITES_XMLFILE}; //NI
 
 CAudiofileExt::CAudiofileExt()
 		: CAudiofile(), firstChar('\0')
@@ -294,7 +296,11 @@ int CAudioPlayerGui::exec(CMenuTarget* parent, const std::string &actionKey)
 	CNeutrinoApp::getInstance()->handleMsg( NeutrinoMessages::CHANGEMODE , NeutrinoMessages::mode_audio );
 
 	// Stop sectionsd
-	g_Sectionsd->setPauseScanning(true);
+	//NI g_Sectionsd->setPauseScanning(true);
+
+	//NI
+	printf("[audioplayer.cpp] wakeup_hdd(%s)\n", g_settings.network_nfs_audioplayerdir.c_str());
+	wakeup_hdd(g_settings.network_nfs_audioplayerdir.c_str(),true);
 
 	puts("[audioplayer.cpp] executing " AUDIOPLAYER_START_SCRIPT ".");
 	if (my_system(AUDIOPLAYER_START_SCRIPT) != 0)
@@ -315,7 +321,7 @@ int CAudioPlayerGui::exec(CMenuTarget* parent, const std::string &actionKey)
 	//g_Zapit->unlockPlayBack();
 	CZapit::getInstance()->EnablePlayback(true);
 	// Start Sectionsd
-	g_Sectionsd->setPauseScanning(false);
+	//NI g_Sectionsd->setPauseScanning(false);
 	m_frameBuffer->stopFrame();
 	CNeutrinoApp::getInstance()->handleMsg( NeutrinoMessages::CHANGEMODE , m_LastMode );
 	g_RCInput->postMsg( NeutrinoMessages::SHOW_INFOBAR, 0 );
@@ -343,6 +349,20 @@ int CAudioPlayerGui::show()
 	bool update = true;
 	bool clear_before_update = false;
 	m_key_level = 0;
+
+	//NI auto-load favorites
+	if ((m_inetmode) && (m_playlist.empty()))
+	{
+		if (access(RADIO_FAVORITES_XML_FILE, F_OK) == 0)
+			scanXmlFile(RADIO_FAVORITES_XML_FILE);
+	}
+
+	//NI auto-play first entry from favorites
+	if (g_settings.inetradio_autostart)
+	{
+		if ((m_inetmode) && (!m_playlist.empty()))
+			play(m_selected);
+	}
 
 	while (loop)
 	{
@@ -406,6 +426,22 @@ int CAudioPlayerGui::show()
 				stop();
 			else
 				loop=false;
+		}
+		//NI - add RC_favorites for internetradio
+		else if ((msg == CRCInput::RC_favorites) && (m_inetmode))
+		{
+			if (m_key_level == 0)
+			{
+				// clear playlist and load RADIO_FAVORITES_XML_FILE
+				if (access(RADIO_FAVORITES_XML_FILE, F_OK) == 0)
+				{
+					if (!m_playlist.empty())
+						clearPlaylist();
+					scanXmlFile(RADIO_FAVORITES_XML_FILE);
+					clear_before_update = true;
+					update = true;
+				}
+			}
 		}
 		else if (msg == CRCInput::RC_left)
 		{

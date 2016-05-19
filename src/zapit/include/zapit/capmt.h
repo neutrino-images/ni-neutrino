@@ -94,6 +94,7 @@ class CCamManager
 		static CCamManager *	manager;
 		bool SetMode(t_channel_id id, enum runmode mode, bool enable, bool force_update = false);
 		void StopCam(t_channel_id id, CCam *cam);
+		bool useCI; //NI
 
 	public:
 		CCamManager();
@@ -104,6 +105,8 @@ class CCamManager
 		void SetCITuner(int tuner);
 		int  GetCITuner(void) { return tunerno; };
 		void EnableChannelFilter(bool enable) { filter_channels = enable; };
+		bool getUseCI() { return useCI; }; //NI
+		bool getChannelFilter() { return filter_channels; }; //NI
 
 };
 #endif /* __capmt_h__ */

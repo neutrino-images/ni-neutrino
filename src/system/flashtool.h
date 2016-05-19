@@ -53,6 +53,7 @@ class CFlashTool
 
 		bool getInfo();
 		bool erase(int globalProgressEnd=-1);
+		void stopDaemons(); //NI
 
 	public:
 		CFlashTool();
@@ -135,6 +136,7 @@ class CMTDInfo
 		int findMTDNumber(const std::string & filename);
 		int findMTDNumberFromName(const char* name);
 		std::string findMTDsystem();
+		std::string findMTDkernel(); //NI
 };
 
 

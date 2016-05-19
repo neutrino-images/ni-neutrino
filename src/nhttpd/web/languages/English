@@ -358,6 +358,7 @@ set.yweb.box_color_desc=Box Name color in Top-Menue. e.g. enter 2188e0 without #
 set.yweb.box_color=Color
 set.yweb.start_page=Start page
 set.yweb.remote=Remote
+set.yweb.screenshot_rc=RC in screenshot menu
 
 ========Settings Picture viewer
 set.pv.pictureviewer=Pictureviewer
@@ -621,3 +622,91 @@ rc.key_games=
 rc.key_time=
 rc.key_picsize=Pic Size
 rc.key_picmode=Pic Mode
+
+========= NI
+main.ni=NI-yWeb
+main.ni_desc=NI-yWeb extension
+
+ni.save=Save
+ni.cancel=Cancel
+ni.edit=Edit
+ni.remove=Remove
+ni.create=Create
+ni.start=Start
+ni.stop=Stop
+ni.reset=Reset
+ni.reload=Reload
+ni.configure=Configure
+ni.dblclick=Doubleclick required
+
+ni.about.your_image=Your NI-Image
+ni.about.actual_image=Actual NI-Image
+ni.about.image_upd_no=No update available
+ni.about.image_upd_yes=Update available
+
+ni.camd-control=Softcams
+ni.camd-control.title=Softcam-Control
+
+ni.camd-tools=Tools for
+ni.camd-tools.line=----------------------------------
+ni.camd-tools.ecminfo=ECM-Informations
+ni.camd-tools.countcards=Count available cards
+ni.camd-tools.sc01info=Card-details from slot1
+ni.camd-tools.sc02info=Card-details from slot2
+ni.camd-tools.shareinfo=CS-Informations
+ni.camd-tools.shareonl=Online-Share-Informations
+ni.camd-tools.mginfo=CS-Informations
+ni.camd-tools.cccamdinfo=CCCamd Lines
+ni.camd-tools.pidinfo=PID-Informations
+ni.camd-tools.mgshareinfo=NewCamd Lines
+ni.camd-tools.cs2gboxinfo=Common Informations
+ni.camd-tools.oscamversion=Common Informations
+ni.camd-tools.doscamversion=Common Informations
+
+ni.pzapit-control=PZapit
+ni.pzapit-control.title=PZapit-Control
+ni.pzapit-control.resolution=Resolution
+ni.pzapit-control.43mode=4:3 mode
+ni.pzapit-control.channellists=Channellists
+ni.pzapit-control.tuner=Tuner
+
+ni.plugin-control=Plugins
+ni.plugin-control.title=Plugin-Control
+ni.plugin-control.manage=Customize Plugins and Services
+ni.plugin-control.blue=Customize Blue Button Plugins
+ni.plugin-control.blue-show=show
+ni.plugin-control.blue-hide=hide
+
+ni.plugin-tools.fcm-addr=Edit Phonebook
+ni.plugin-tools.pat-rules=Edit Rules
+ni.plugin-tools.epgscan-dat=Edit Transponderlist
+
+ni.infoicons-control=Infoicons
+ni.infoicons-control.title=Infoicons-Control
+ni.infoicons-control.flagfile-control=Flag-Control
+ni.infoicons-control.flagfiles=Flag-Files
+ni.infoicons-control.static=Static
+ni.infoicons-control.popup=As a popup
+ni.infoicons-control.infoviewer=With Infoviewer
+
+ni.netfs-control=NetFS
+ni.netfs-0=fstab
+ni.netfs-1=auto.net
+ni.netfs-control.title=NetFS-Control
+ni.netfs-control.entrys=NetFS-Entrys
+ni.netfs-control.restart_menu=The NetFS-Menu will restart now
+ni.netfs-control.mount_all=Mount all
+ni.netfs-control.umount_all=Unmount all
+ni.netfs-control.mount=Mount
+ni.netfs-control.umount=Unmount
+ni.netfs-control.type=Typ
+ni.netfs-control.ip=Remote IP-Adress
+ni.netfs-control.dir=Remote directory
+ni.netfs-control.user=Username
+ni.netfs-control.password=Password
+ni.netfs-control.options=Options
+ni.netfs-control.dump=Dump
+ni.netfs-control.pass=Pass
+ni.netfs-control.local_dir=Local directory
+ni.netfs-control.active=Entry active
+ni.netfs-control.autofs_restart=Restart automounter

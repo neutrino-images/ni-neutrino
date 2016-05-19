@@ -323,7 +323,7 @@ void CZapit::LoadSettings()
 	config.makeRemainingChannelsBouquet	= 1;
 	config.scanPids				= configfile.getBool("scanPids", 0);
 	config.scanSDT				= configfile.getInt32("scanSDT", 0);
-	config.cam_ci				= configfile.getInt32("cam_ci", 2);
+	config.cam_ci				= configfile.getInt32("cam_ci", 1); //NI
 	config.rezapTimeout			= configfile.getInt32("rezapTimeout", 1);
 
 	config.feTimeout			= configfile.getInt32("feTimeout", 40);

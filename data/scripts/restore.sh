@@ -1,14 +1,19 @@
 #!/bin/sh
-echo Restore settings from $1
 
-tar t -f $1 | grep ^config/ > /dev/null
-if [ $? -eq 0 ]; then
-	cd /var/tuxbox
-else
-	cd /
-fi
+. /etc/init.d/globals
 
-tar xf $1
+BAKF="$1"
+E=0
+
 sync
+sleep 2
+killall start_neutrino;	E=$(($E+$?))
+killall neutrino;	E=$(($E+$?))
+sleep 3
+
+SHOWINFO "restore settings from "${BAKF}""
+cd / && tar -xzf "${BAKF}"
 sync
-reboot -f
+SHOWINFO "done."
+
+test $E -eq 0 && reboot || reboot -f

@@ -84,6 +84,7 @@ printf("url is %s\n", URL.c_str());
 		}
 		curl_easy_setopt(curl, CURLOPT_URL, URL.c_str() );
 		curl_easy_setopt(curl, CURLOPT_FILE, headerfile);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1); //NI IMDb
 		curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, show_progress);
 		curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, this);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);

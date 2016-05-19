@@ -35,6 +35,10 @@
 #include <gui/timeosd.h>
 #include "screensaver.h"
 
+//NI InfoIcons
+#include <gui/infoicons.h>
+extern CInfoIcons *InfoIcons;
+
 
 CTimeOSD::CTimeOSD():CComponentsFrmClock( 1, 1, NULL, "%H:%M:%S", NULL, false, 1, NULL, CC_SHADOW_ON, COL_LIGHT_GRAY, COL_MENUCONTENT_PLUS_0,COL_MENUCONTENTDARK_PLUS_0)
 {
@@ -146,17 +150,21 @@ void CTimeOSD::switchMode(int position, int duration)
 {
 	switch (m_mode) {
 		case MODE_ASC:
+			InfoIcons->enableInfoIcons(false); //NI InfoIcons
 			m_mode = MODE_DESC;
 			CComponents::kill();
 			break;
 		case MODE_DESC:
+			InfoIcons->enableInfoIcons(false); //NI InfoIcons
 			m_mode = MODE_BAR;
 			CComponents::kill();
 			break;
 		case MODE_BAR:
+			InfoIcons->enableInfoIcons(true); //NI InfoIcons
 			KillAndResetTimescale();
 			return;
 		default:
+			InfoIcons->enableInfoIcons(false); //NI InfoIcons
 			m_mode = MODE_ASC;
 	}
 

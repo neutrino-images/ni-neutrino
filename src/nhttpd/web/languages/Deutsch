@@ -355,6 +355,7 @@ set.yweb.box_color_desc=Farbe der Box Bezeichnung im Top-Menue. z.B. 2188e0 eing
 set.yweb.box_color=Farbe
 set.yweb.start_page=Startseite
 set.yweb.remote=Fernbedienung
+set.yweb.screenshot_rc=FB im Screenshot-Men&uuml;
 
 ========Settings Picture viewer
 set.pv.pictureviewer=Bildbetrachter
@@ -618,3 +619,91 @@ rc.key_games=
 rc.key_time=
 rc.key_picsize=Pic Size
 rc.key_picmode=Pic Mode
+
+========= NI
+main.ni=NI-yWeb
+main.ni_desc=NI-yWeb Erweiterung
+
+ni.save=Speichern
+ni.cancel=Abbrechen
+ni.edit=Bearbeiten
+ni.remove=L&ouml;schen
+ni.create=Anlegen
+ni.start=Start
+ni.stop=Stopp
+ni.reset=Reset
+ni.reload=Neu laden
+ni.configure=Konfigurieren
+ni.dblclick=Doppelklick erforderlich
+
+ni.about.your_image=Dein NI-Image
+ni.about.actual_image=Aktuelles NI-Image
+ni.about.image_upd_no=Kein Update verf&uuml;gbar
+ni.about.image_upd_yes=Update verf&uuml;gbar
+
+ni.camd-control=Softcams
+ni.camd-control.title=Softcam-Steuerung
+
+ni.camd-tools=Werkzeuge f&uuml;r
+ni.camd-tools.line=----------------------------------
+ni.camd-tools.ecminfo=ECM-Informationen
+ni.camd-tools.countcards=Verf&uuml;gbare Karten z&auml;hlen
+ni.camd-tools.sc01info=Kartendaten aus Slot1
+ni.camd-tools.sc02info=Kartendaten aus Slot2
+ni.camd-tools.shareinfo=CS-Informationen
+ni.camd-tools.shareonl=Online-Share-Informationen
+ni.camd-tools.mginfo=CS-Informationen
+ni.camd-tools.cccamdinfo=CCCamd Verbindungen
+ni.camd-tools.pidinfo=PID-Informationen
+ni.camd-tools.mgshareinfo=NewCamd Verbindungen
+ni.camd-tools.cs2gboxinfo=Allgemeine Informationen
+ni.camd-tools.oscamversion=Allgemeine Informationen
+ni.camd-tools.doscamversion=Allgemeine Informationen
+
+ni.pzapit-control=PZapit
+ni.pzapit-control.title=PZapit-Steuerung
+ni.pzapit-control.resolution=Aufl&ouml;sung
+ni.pzapit-control.43mode=4:3 Anzeigeverhalten
+ni.pzapit-control.channellists=Kanallisten
+ni.pzapit-control.tuner=Tuner
+
+ni.plugin-control=Plugins
+ni.plugin-control.title=Plugin-Steuerung
+ni.plugin-control.manage=Plugins und Services verwalten
+ni.plugin-control.blue=Plugins auf blauer Taste verwalten
+ni.plugin-control.blue-show=anzeigen
+ni.plugin-control.blue-hide=ausblenden
+
+ni.plugin-tools.fcm-addr=Telefonbuch bearbeiten
+ni.plugin-tools.pat-rules=Regeln bearbeiten
+ni.plugin-tools.epgscan-dat=Transponderliste bearbeiten
+
+ni.infoicons-control=Infoicons
+ni.infoicons-control.title=Infoicons-Steuerung
+ni.infoicons-control.flagfile-control=Benachrichtigungs-Einstellungen
+ni.infoicons-control.flagfiles=Benachrichtigungs-Dateien
+ni.infoicons-control.static=Statisch
+ni.infoicons-control.popup=Als Popup
+ni.infoicons-control.infoviewer=Mit Infoviewer
+
+ni.netfs-control=NetFS
+ni.netfs-0=fstab
+ni.netfs-1=auto.net
+ni.netfs-control.title=NetFS-Steuerung
+ni.netfs-control.entrys=NetFS-Eintr&auml;ge
+ni.netfs-control.restart_menu=Das NetFS-Men&uuml; wird nun erneut gestartet
+ni.netfs-control.mount_all=Alle einh&auml;ngen
+ni.netfs-control.umount_all=Alle aush&auml;ngen
+ni.netfs-control.mount=Einh&auml;ngen
+ni.netfs-control.umount=Aush&auml;ngen
+ni.netfs-control.type=Typ
+ni.netfs-control.ip=Entfernte IP-Adresse
+ni.netfs-control.dir=Entferntes Verzeichnis
+ni.netfs-control.user=Benutzername
+ni.netfs-control.password=Passwort
+ni.netfs-control.options=Optionen
+ni.netfs-control.dump=Dump
+ni.netfs-control.pass=Pass
+ni.netfs-control.local_dir=Lokales Verzeichnis
+ni.netfs-control.active=Eintrag aktiv
+ni.netfs-control.autofs_restart=automounter neu starten

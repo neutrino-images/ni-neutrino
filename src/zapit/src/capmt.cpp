@@ -172,6 +172,7 @@ CCamManager::CCamManager()
 	channel_map.clear();
 	tunerno = -1;
 	filter_channels = false;
+	useCI = false; //NI
 }
 
 CCamManager::~CCamManager()
@@ -199,6 +200,7 @@ void CCamManager::StopCam(t_channel_id channel_id, CCam *cam)
 
 bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start, bool force_update)
 {
+	useCI = false; //NI
 	if (IS_WEBTV(channel_id))
 		return false;
 
@@ -327,6 +329,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		} else if (filter_channels && !channel->bUseCI) {
 			INFO("CI: filter enabled, CI not used for [%s]\n", channel->getName().c_str());
 		} else {
+			useCI = true; //NI
 			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI);
 		}
 		//list = CCam::CAPMT_MORE;

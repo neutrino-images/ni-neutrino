@@ -46,6 +46,10 @@
 #include <video.h>
 extern cVideo * videoDecoder;
 
+//NI InfoIcons
+#include <gui/infoicons.h>
+extern CInfoIcons *InfoIcons;
+
 using namespace std;
 
 CScreenSaver::CScreenSaver()
@@ -55,6 +59,7 @@ CScreenSaver::CScreenSaver()
 	m_viewer	= new CPictureViewer();
 	index 		= 0;
 	status_mute	= CAudioMute::getInstance()->getStatus();
+	status_icons	= InfoIcons->getStatus(); //NI
 	scr_clock	= NULL;
 	clr.i_color	= COL_DARK_GRAY;
 	pip_channel_id	= 0;
@@ -90,6 +95,10 @@ void CScreenSaver::Start()
 
 	if(!CInfoClock::getInstance()->isBlocked())
 		CInfoClock::getInstance()->disableInfoClock();
+
+	//NI
+	status_icons = InfoIcons->getStatus();
+	InfoIcons->enableInfoIcons(false);
 
 #ifdef ENABLE_PIP
 	pip_channel_id = CZapit::getInstance()->GetPipChannelID();
@@ -140,6 +149,7 @@ void CScreenSaver::Stop()
 #endif
 
 	m_frameBuffer->paintBackground(); //clear entire screen
+	InfoIcons->enableInfoIcons(status_icons); //NI
 
 	CAudioMute::getInstance()->enableMuteIcon(status_mute);
 	if (!OnAfterStop.empty())
@@ -269,7 +279,7 @@ void CScreenSaver::paint()
 	}
 	else{
 		if (!scr_clock){
-			scr_clock = new CComponentsFrmClock(1, 1, NULL, "%H:%M:%S", "%H:%M %S", true);
+			scr_clock = new CComponentsFrmClock(1, 1, NULL, "%H:%M:%S", "%H:%M.%S", true); //NI
 			scr_clock->setClockFont(g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_NUMBER]);
 			scr_clock->disableSaveBg();
 			scr_clock->doPaintBg(false);

@@ -199,6 +199,7 @@ audioplayer.shuffle shuffle
 audioplayer.spectrum lcd a-spectrum
 audioplayer.stop Stop
 audioplayer.title_artist Title, Artist
+blank_screen Blank screen
 bookmarkmanager.delete delete
 bookmarkmanager.name bookmarks
 bookmarkmanager.rename rename
@@ -232,7 +233,30 @@ buildinfo.compiler_flags Compiler flags
 buildinfo.creator Creator
 buildinfo.kernel Kernel version
 buildinfo.menu Build information
+ca_init active CA-System
+ca_init_0 Conax-Card
+ca_init_1 CI module
+ca_init_2 Conax-Card and CI module
 cablesetup.provider cable provider
+camd_setup camd control
+camd_item_cs2gbox_hint cs2gbox - Newcamd bridge
+camd_item_cs2gbox_name cs2gbox
+camd_item_doscam_hint DOSCam - Softcam and emulator
+camd_item_doscam_name doscam
+camd_item_gbox_hint GBox - Softcam and emulator
+camd_item_gbox_name gbox
+camd_item_mgcamd_hint MGCamd - Emulator
+camd_item_mgcamd_name mgcamd
+camd_item_newcs_hint NewCS - Softcam
+camd_item_newcs_name newcs
+camd_item_oscam_hint OSCam - Softcam
+camd_item_oscam_name oscam
+camd_item_osemu_hint OSEmu - Emulator
+camd_item_osemu_name osemu
+camd_msg_reset camd will be restarted
+camd_msg_start camd will be started
+camd_msg_stop camd will be stopped
+camd_reset camd restart
 channellist.additional Additional informations
 channellist.additional_off off
 channellist.additional_on on
@@ -339,7 +363,7 @@ colorthememenu.head Select theme
 colorthememenu.head2 Load themes
 colorthememenu.menu_hints Hint box
 colorthememenu.name Theme name
-colorthememenu.neutrino_theme Neutrino Theme
+colorthememenu.neutrino_theme NI-Neutrino-HD Theme
 colorthememenu.question Use selected theme?
 colorthememenu.save Save current theme
 colorthememenu.select1 User Theme
@@ -348,6 +372,10 @@ cpu.freq CPU frequency
 cpu.freq_default Default frequency
 cpu.freq_normal Normal frequency
 cpu.freq_standby Standby frequency
+crossteam.hint_settings_teams Save and restore settings, which\nare compatible with participating Team-Images.
+crossteam.hint_settings_teams_backup Save cross-team settings
+crossteam.hint_settings_teams_help Help about cross-team settings
+crossteam.hint_settings_teams_restore Restore cross-team settings
 date.Apr  Apr
 date.Aug  Aug
 date.Dec  Dec
@@ -372,6 +400,10 @@ debug.level Level
 debug.level_1 normal
 debug.level_2 informative
 debug.level_3 verbose
+ecminfo ECM-Info
+ecminfo_null ECM-Info not available
+ecminfo_show Show ECM-Info
+empty 
 epg.saving Saving EPG
 epgextended.actors Actors
 epgextended.director Director
@@ -622,6 +654,7 @@ flashupdate.createimage_warning Now an image for the %s STB is created.\nThis im
 flashupdate.currentversion_sep Current version
 flashupdate.currentversiondate Date
 flashupdate.currentversiontime Time
+flashupdate.enter_flash_script Stopping services and softcams ...
 flashupdate.erasefailed erasure of flash failed
 flashupdate.erasing erasing flash
 flashupdate.experimentalimage The image you have selected is an untested version, this means\nyour box maybe fail to boot after update.\n\nDo you really want to update to this version?
@@ -656,6 +689,7 @@ flashupdate.namemode2_default <partition>+<time>.img
 flashupdate.namemode2_hostname_time <partition>+<time>+<hostname>.img
 flashupdate.new_found New image found !
 flashupdate.new_notfound No new images found
+flashupdate.ng_noflash USB-Image active, update canceled!
 flashupdate.noversion Version checks are currently only supported when updating over the web.\nAre you sure that you wish to install this image?
 flashupdate.programmingflash programming flash
 flashupdate.proxypassword Password
@@ -700,6 +734,7 @@ fontmenu.eventlist Eventlist
 fontmenu.head Font settings
 fontmenu.infobar Infobar
 fontmenu.menu Menu
+fontmenu.moviebrowser Moviebrowser
 fontmenu.other Other
 fontmenu.scaling Global Font Zoom Factor
 fontmenu.scaling_x Horizontal (in %)
@@ -724,6 +759,7 @@ fontsize.eventlist_title Title
 fontsize.filebrowser_item Filebrowser items
 fontsize.hint Initialising font,\nplease wait...
 fontsize.infobar_channame Channel name
+fontsize.infobar_ecminfo ECM-Info
 fontsize.infobar_info info
 fontsize.infobar_number Number
 fontsize.infobar_small Small
@@ -731,6 +767,9 @@ fontsize.menu Menu text
 fontsize.menu_hint Menu hints
 fontsize.menu_info Menu Info
 fontsize.menu_title Menu Title
+fontsize.moviebrowser_head Headers
+fontsize.moviebrowser_info Info window
+fontsize.moviebrowser_list List items
 fontsize.subtitles Text subtitles
 fsk.all off
 fsk.from_12 from 12
@@ -747,16 +786,30 @@ hdd_30min 30 min.
 hdd_5min 5 min.
 hdd_60min 60 min.
 hdd_activate Apply settings
+hdd_allow_set_recdir Allow recordings immediately
 hdd_check Check filesystem
-hdd_check_failed HDD-check failed!
+hdd_check_failed Device-check failed!
 hdd_check_format_bad Checking of disks with format %s is not supported.
-hdd_extended_settings Extended HDD-Settings
+hdd_extended_settings Extended Device-Settings
 hdd_fast Fast
 hdd_format Format device
 hdd_format_failed Formating failed! Make sure device not in use, reboot and try again
+hdd_format_on_mount_failed Format device when mount failed
 hdd_format_warn All data on device will be lost ! Continue with format ?
 hdd_fs Filesystem used to format
 hdd_fs_unknown unknown
+hdd_info_capacity Capacity
+hdd_info_firmware Firmware
+hdd_info_head HDD Info
+hdd_info_info Sampled with smartctl
+hdd_info_model Model
+hdd_info_model_family Model family
+hdd_info_rotation_rate Rotation rate
+hdd_info_sata_version SATA-version
+hdd_info_sector_size Sector size
+hdd_info_serial Serial
+hdd_info_temperature Temperature
+hdd_info_unknown unknown
 hdd_manage Manage device
 hdd_middle Mid
 hdd_mount Mount
@@ -764,7 +817,8 @@ hdd_mount_failed Failed to mount.
 hdd_mount_ok Device ready to use.
 hdd_mount_umount Mount/Unmount
 hdd_noise Acoustic-control (AAM)
-hdd_not_found No HDD found
+hdd_not_found No device found
+hdd_power Internal HDD-power
 hdd_removable_device Removable device
 hdd_set_recdir Use device for recording ?
 hdd_settings Data Storage
@@ -776,20 +830,55 @@ hdd_statfs_recording while recording only
 hdd_umount Unmount
 hdd_umount_warn unmount device
 hdd_umounted Device removed
+hdd_wakeup Internal wakeup function
+hdd_wakeup_msg wakeup function with message
+hdd_wakeup_start wakeup starting
 imageinfo.creator Creator:
 imageinfo.date Date:
 imageinfo.dokumentation Docs:
 imageinfo.forum Forum:
-imageinfo.head Image info:
+imageinfo.head Image informations
 imageinfo.homepage Home page:
 imageinfo.image Image:
 imageinfo.kernel Kernel:
 imageinfo.license License
 imageinfo.vcs Git:
 imageinfo.version Version:
+imdb.info IMDb-Info
+imdb.info_save save Cover
 inetradio.name Internetradio
+inetradio_autostart Internetradio auto-start
+infoicons_background Show background
+infoicons_flag_all Reset all
+infoicons_flag_del Flagfile deleted
+infoicons_flag_del_head Reset Flagfiles
+infoicons_flag_delall All Flagfiles are deleted
+infoicons_flag_head Customize Flagfiles
+infoicons_flag_name0 E-Mail Receipt
+infoicons_flag_name1 Answering Device
+infoicons_flag_name2 Serverconnection
+infoicons_flag_name3 Custom
+infoicons_flag_name4 Custom
+infoicons_flag_name5 Custom
+infoicons_flag_name6 Custom
+infoicons_flag_name7 Custom
+infoicons_head Infoicons Settings
+infoicons_infoviewer with Infoviewer
+infoicons_modeicon Infoicons
+infoicons_msg_start starting Infoicons
+infoicons_msg_stop stopping Infoicons
+infoicons_popup only on state changes
+infoicons_skin Infoicons skin
+infoicons_static permanent
+infoicons_switch_off Infoicons off
+infoicons_switch_on Infoicons on
 infoviewer.epgnotload EPG not loaded....
 infoviewer.epgwait waiting for EPG...
+infoviewer.iconset Iconset
+infoviewer.iconset_pkg0 Original
+infoviewer.iconset_pkg1 NI-Dark
+infoviewer.iconset_pkg2 NI-Bright
+infoviewer.iconset_pkg3 NI-Flat
 infoviewer.motor_moving Antenna positioning
 infoviewer.next next
 infoviewer.nocurrent No info for current program available
@@ -860,6 +949,20 @@ keychoosermenu.setnone no key
 languagesetup.head Language / Timezone
 languagesetup.osd OSD Language
 languagesetup.select OSD Language
+lcd4l_clock_a Analog clock in Standby-Mode
+lcd4l_logodir Channellogo-Directory
+lcd4l_skin Display-Style
+lcd4l_skin_0 Standard
+lcd4l_skin_1 Large
+lcd4l_skin_2 Small (SysInfo)
+lcd4l_skin_3 d-box2
+lcd4l_skin_4 User
+lcd4l_skin_radio Activate Radio-Style
+lcd4l_support LCD4Linux-Support
+lcd4l_support_auto automatic
+lcd4l_support_off off
+lcd4l_support_on on
+lcd4l_weather Weather in Standby-Mode
 lcd_info_line show in infoline
 lcd_info_line_channel Channelname
 lcd_info_line_clock clock
@@ -985,8 +1088,12 @@ menu.hint_back_brief Return to previous menu
 menu.hint_backlight Configure buttons backlight
 menu.hint_backup Backup configs and channels to selected dir
 menu.hint_bedit Edit favorites and bouquets
+menu.hint_blank_screen Turn off VideoDecoder until next event (keypress, timer etc.)
 menu.hint_buildinfo Information about compilers, compiler flags, kernel
+menu.hint_ca_init Configuration of CA-system hardware, CA-module and card slots
 menu.hint_cache_txt Start teletext caching after channel switch
+menu.hint_camd Softcam and emulator settings\nStart, stop, version info
+menu.hint_camd_reset Restart the active softcam and/or emulator
 menu.hint_cec_mode CEC mode
 menu.hint_cec_standby CEC standby
 menu.hint_cec_view_on CEC view ON
@@ -1051,14 +1158,20 @@ menu.hint_font_ttx Select font file to use for teletext
 menu.hint_fonts Configure GUI fonts and font sizes
 menu.hint_games Show list of installed games
 menu.hint_hdd Format / check data storage
+menu.hint_hdd_allow_set_recdir Allow to set new connected devices as a record medium
 menu.hint_hdd_apply Apply sleep/noise parameters
 menu.hint_hdd_check Check filesystem (fsck)
 menu.hint_hdd_fmt Select the data storage format
 menu.hint_hdd_format Create HDD partition and format it
+menu.hint_hdd_format_on_mount_failed Format HDD device when mount failed?
+menu.hint_hdd_info Device information about capacity, temperature and more...
 menu.hint_hdd_noise Set Automatic Acoustic Management\nnot all drives support this
+menu.hint_hdd_power Activate internal HDD power for Coolstream HD1 boxes
 menu.hint_hdd_sleep Select time to stop hdd on inactivity
 menu.hint_hdd_statfs Specify when the recording directory fill level in infoviewer and, if available, on VFD, may be updated
 menu.hint_hdd_tools Initialize HDD, check filesystem
+menu.hint_hdd_wakeup Turns the internal wakeup functions for connected drives on or off
+menu.hint_hdd_wakeup_msg Turns the messages while starting the wakeup function on or off
 menu.hint_head_back Change GUI title background color
 menu.hint_head_textcolor Change GUI window title text color
 menu.hint_imageinfo Information about installed software
@@ -1066,7 +1179,9 @@ menu.hint_inact_timer Shutdown box after inactivity
 menu.hint_inactive_back Change inactive item background color
 menu.hint_inactive_textcolor Change inactive item text color
 menu.hint_inet_radio Internet radio
+menu.hint_inetradio_autostart Start play of first entry from favorites automatically
 menu.hint_info Information about image, box cpu and storage,\nstream information
+menu.hint_infobar_analogclock Shows an analog clock instead of the digital display of the time
 menu.hint_infobar_back Change infobar background color
 menu.hint_infobar_buttons_usertitle Forces userdefined titles for the color keys
 menu.hint_infobar_casys On: display all with colored active, mini: single\nlocked icon, descreet: all active ca-systems
@@ -1074,8 +1189,10 @@ menu.hint_infobar_casys_color Change CA-System background color
 menu.hint_infobar_casys_dotmatrix on: CA-System with dot matrix in background
 menu.hint_infobar_casys_frame on: CA-System with frame
 menu.hint_infobar_dd Show DD icon
+menu.hint_infobar_ecminfo Show ecm-info while infobar is displayed
 menu.hint_infobar_filesys Show flash and HDD used space levels
 menu.hint_infobar_fonts Change infobar font sizes
+menu.hint_infobar_iconset Iconset selection for CA-Bar
 menu.hint_infobar_logo Logo, channelnumber and signal display; Options in [brackets] will be displayed in small infobox
 menu.hint_infobar_logo_dir Select directory to search for channels logo
 menu.hint_infobar_on_epg Show infobar on current EPG event change
@@ -1086,6 +1203,21 @@ menu.hint_infobar_setup Configure infobar options
 menu.hint_infobar_textcolor Change infobar text color
 menu.hint_infobar_tuner Show active tuner number icon
 menu.hint_infoclock_setup Configure info clock GUI options
+menu.hint_infoicons_background Determines whether the Infoicons should be shown with or without background
+menu.hint_infoicons_flag_all Reset all flagfiles
+menu.hint_infoicons_flag_del_head Reset several/all flagfiles for Infoicons
+menu.hint_infoicons_flag_head Change Flagfile
+menu.hint_infoicons_flag_name0 Flagfile entry
+menu.hint_infoicons_flag_name1 Flagfile entry
+menu.hint_infoicons_flag_name2 Flagfile entry
+menu.hint_infoicons_flag_name3 Flagfile entry
+menu.hint_infoicons_flag_name4 Flagfile entry
+menu.hint_infoicons_flag_name5 Flagfile entry
+menu.hint_infoicons_flag_name6 Flagfile entry
+menu.hint_infoicons_flag_name7 Flagfile entry
+menu.hint_infoicons_head Configuration of Infoicons
+menu.hint_infoicons_modeicon Activate/deactivate Infoicons
+menu.hint_infoicons_skin Infoicons modes
 menu.hint_keep_numbers Keep channel numbers over next scans\nand bouquets editing
 menu.hint_key_addrecord Assign button to add record timer\nfrom event list
 menu.hint_key_addremind Assign button to add zap timer\nfrom event list
@@ -1150,6 +1282,12 @@ menu.hint_language OSD language, timezone\nPreffered audio and subtitles languag
 menu.hint_last_radio Start box on selected channel\nif last mode is Radio
 menu.hint_last_tv Start box on selected channel\nif last mode is TV
 menu.hint_last_use Start box on last used channel
+menu.hint_lcd4l_clock_a Shows an analog clock instead of a digital clock on display at standby
+menu.hint_lcd4l_logodir Logo directory.\nFallback to default on invalid entry.
+menu.hint_lcd4l_skin Switch between modes\nDefault, Big, SysInfo, d-box2, User Defined
+menu.hint_lcd4l_skin_radio Switch the mode, when Radio-Mode is activated
+menu.hint_lcd4l_support Activate/deactivate LCD4Linux\nsupported display: Pearl DPF
+menu.hint_lcd4l_weather Shows first tuxwetter favorite on display at standby
 menu.hint_leds_blink Blink LEDS in deep-standby
 menu.hint_leds_deepstandby LEDs state in deeps-standby mode
 menu.hint_leds_record LEDs state when box recording
@@ -1168,6 +1306,7 @@ menu.hint_mbkey_cover Assign button to create movie cover while playback or dele
 menu.hint_media Play movies, audio files\nWatch pictures
 menu.hint_menu_fonts Change menu font sizes
 menu.hint_menu_hints Show this hints. Also you can switch\nit any time using 'help' button
+menu.hint_menu_hints_line Activate/deactivate the line from the menu to this hints
 menu.hint_menu_pos Select menu position
 menu.hint_menus Configure menu options
 menu.hint_misc_cec HDMI-CEC Options
@@ -1178,6 +1317,7 @@ menu.hint_misc_filebrowser Filesystem encoding, file rights\ndeny directory leav
 menu.hint_misc_general Start to standby, cache teletext, swp rotor\nplugin hdd dir
 menu.hint_misc_zapit Initial TV/Radio channels
 menu.hint_movie Play movies
+menu.hint_moviebrowser_fonts Change moviebrowser (My recordings) font sizes
 menu.hint_moviebrowser_setup Set selection and display options.
 menu.hint_movieplayer_plugin Choose a plugin that's executed with the one touch key in movieplayer mode
 menu.hint_net_broadcast Enter broadcast address\nif unsure, use IP address with last .255
@@ -1195,6 +1335,7 @@ menu.hint_net_netmask Enter network mask\nif unsure, use 255.255.255.0
 menu.hint_net_nfs_mount Configure and mount network shares
 menu.hint_net_nfs_umount Un-mount mounted shares
 menu.hint_net_ntp Configure time sync
+menu.hint_net_ntpatboot Enable time sync using NTP protocol while booting
 menu.hint_net_ntpenable Enable time sync using NTP protocol\nIf NTP sync not successfull, DVB will be used
 menu.hint_net_ntprefresh Time sync interval
 menu.hint_net_ntpserver Enter NTP server name
@@ -1213,10 +1354,19 @@ menu.hint_net_telnet Enable telnet login to your box
 menu.hint_net_test Test network connection: ping gateway,\n name server and external IP
 menu.hint_net_ushare Share connected HDD over uPnp
 menu.hint_net_xupnpd Share live channels over UPNP
+menu.hint_netfs_automount_write Save automount entries and write /etc/auto.net
+menu.hint_netfs_fstab_domount Mount fstab entries
+menu.hint_netfs_fstab_doumount Umount fstab entries
+menu.hint_netfs_fstab_write Save fstab entries and write /etc/fstab
+menu.hint_netfs_menu_main_automount Configure automount entries
+menu.hint_netfs_menu_main_fstab Configure fstab entries
+menu.hint_netfs_menu_main_head Fstab and automount configuration
+menu.hint_netfs_mounts NetFS entry
 menu.hint_network IP address, gateway, DNS, Time sync\nNetwork shares and services
 menu.hint_new_zap_mode Allow channel switch while browsing\n(toggle mode with 'mute' in channel list)
 menu.hint_next Continue to next menu\nPress menu key to close all menus
 menu.hint_next_brief Continue to next menu
+menu.hint_nimenu Configuration of softcams, plugins, tools and more
 menu.hint_numeric_adjust Adjust channel list mode on numeric zap
 menu.hint_opkg Install or update software packages
 menu.hint_opkg_feed_addresses_edit Edit feed addresses
@@ -1241,7 +1391,9 @@ menu.hint_plugin_type_games Show games in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_lua Show plugins in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_scripts Show scripts in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_tools Show tools in usermenu at selection 'Plugin types'
+menu.hint_plugins_control Configuration of installed plugins and services
 menu.hint_plugins_hdd_dir Select directory to load\nplugins from
+menu.hint_plugins_hide Hide or show integrated plugins or plugins in user menus
 menu.hint_power_leds Configure power-button LEDs behavior
 menu.hint_pref_lang Select preferred audio and EPG language\nselect 'none' to disable
 menu.hint_pref_subs Select preferred subtitle language\nselect 'none' to disable
@@ -1270,6 +1422,7 @@ menu.hint_record_data_vtxt VideoText stream
 menu.hint_record_dir Select directory to store recordings
 menu.hint_record_end Stop direct record after maximal time or after current event end time
 menu.hint_record_filename_template edit filename template
+menu.hint_record_fill_warn Show warning, when record medium is nearly full
 menu.hint_record_slow_warn Show warning, when record buffer is close to overflow
 menu.hint_record_startstop_msg Turns the message when recording start/end on or off.
 menu.hint_record_tdir Select directory to save timeshift recordings\nin temporary timeshift mode
@@ -1289,6 +1442,7 @@ menu.hint_recording Recording and timeshift options\nTimers safety, audio pids o
 menu.hint_reload_channels Reload channels from flash
 menu.hint_reload_plugins Reload plugins from flash
 menu.hint_reset Reset Neutrino-HD GUI settings to defaults\nTuner config and channels not affected
+menu.hint_restart_tuner Restart the internal tuner. This may help if you're experiencing reception problems
 menu.hint_restore Restore files from selected backup
 menu.hint_rotor_swap Swap rotor east/west directions\nin motor control
 menu.hint_rounded_corners Draw round or rectangular windows corners 
@@ -1365,6 +1519,7 @@ menu.hint_scan_usals USALS options
 menu.hint_scan_usals_repeat Repeat usals move rotor commands\nif you expirience unstable rotor move
 menu.hint_scan_usalsall Use USALS for all satellites on this frontend
 menu.hint_scan_useusals Use USALS for this satellite,\nif ON, rotor position ignored
+menu.hint_scart_osd_fix Screen-fix for some older TVs\nPAL/PAL widescreen resolution
 menu.hint_scrambled_message Show scrambled message, when channel cannot be decoded
 menu.hint_screen_setup Configure screen margins
 menu.hint_screensaver_delay Set the time (in minutes) after which the screensaver has to start or turn it off
@@ -1450,6 +1605,7 @@ menu.hint_volume_digits Numeric display of the volumebar on/off
 menu.hint_volume_pos Select volume indicator position
 menu.hint_volume_size Select volume indicator height
 menu.hint_webtv_setup WebTV channels configured here will be available in the standard channel lists.
+menu.hint_webtv_xml_auto Auto-load all existing XML files from %s/
 menu.hint_window_size Channellist, EPG-infos and some other windows are scaled by this factor
 menu.hint_ytplay Play selected youtube feeds
 menu.hint_ytplay_setup Configure YouTube-specific options, e.g. an upper limit for search results
@@ -1459,6 +1615,7 @@ messagebox.back Back
 messagebox.cancel Cancel
 messagebox.discard Discard changes?
 messagebox.error Error
+messagebox.exit Exit
 messagebox.feature_not_supported Feature is not supported. Please contact your firmware provider!
 messagebox.info Information
 messagebox.no No
@@ -1503,6 +1660,7 @@ miscsettings.epg_scan_standby Standby
 miscsettings.general General
 miscsettings.head Extended settings
 miscsettings.infobar Infobar
+miscsettings.infobar_analogclock Analog clock
 miscsettings.infobar_buttons_usertitle Usertitles for color keys
 miscsettings.infobar_casystem_display CA-System display
 miscsettings.infobar_casystem_dotmatrix CA display with dot matrix
@@ -1537,6 +1695,7 @@ miscsettings.progressbar_design_1 colored vertical lines
 miscsettings.progressbar_design_2 colored horizontal lines
 miscsettings.progressbar_design_3 colored bar
 miscsettings.progressbar_design_4 monochrome
+miscsettings.progressbar_design_5 graphical
 miscsettings.progressbar_design_long Design
 miscsettings.progressbar_gradient 3D effect
 miscsettings.progressbar_infobar_position Position
@@ -1670,6 +1829,7 @@ moviebrowser.hint_movieend Film end in 5 seconds\n'0' to cancel
 moviebrowser.hint_newbook_backward New jump back started\n'%s' to define endposition, '0' to cancel
 moviebrowser.hint_newbook_forward New jump forward started\n'%s' to define endposition, '0' to cancel
 moviebrowser.hint_truncate Truncating all data beyond the end-bookmark
+moviebrowser.imdb_data Get IMDb data
 moviebrowser.info_audio Audio
 moviebrowser.info_channel Channel
 moviebrowser.info_file File
@@ -1754,7 +1914,7 @@ moviebrowser.truncate Truncate movie?
 moviebrowser.truncate_failed Truncate failed.
 moviebrowser.truncate_failed_playing Impossible to truncate playing movie.
 moviebrowser.truncating Truncating movie, please wait ...
-moviebrowser.ts_only Show recordings only
+moviebrowser.ts_only Show all video formats
 moviebrowser.update_if_dest_empty_only Copy if destination is empty only
 moviebrowser.use_dir Use directory
 moviebrowser.use_movie_dir Use movie directory
@@ -1824,6 +1984,26 @@ mpkey.rewind Rewind
 mpkey.stop Stop
 mpkey.subtitle Subtitles
 mpkey.time Show time
+netfs.active_onoff Entry active
+netfs.automount_head NetFS settings
+netfs.automount_intro /etc/auto.net entries
+netfs.automount_intro_mounts edit NetFS mounts
+netfs.automount_write save settings and write auto.net
+netfs.automount_write_info auto.net written
+netfs.dump dump
+netfs.fstab_domount mount NetFS directory
+netfs.fstab_domount_info Running '/etc/init.d/fstab start_netfs'
+netfs.fstab_doumount unmount NetFS directory
+netfs.fstab_doumount_info Running '/etc/init.d/fstab stop_netfs'
+netfs.fstab_head NetFS settings
+netfs.fstab_intro /etc/fstab entries
+netfs.fstab_intro_mounts Edit NetFS mounts
+netfs.fstab_write save settings and write fstab
+netfs.fstab_write_info fstab written
+netfs.menu_main_edit Edit entries
+netfs.menu_main_head NetFS settings
+netfs.menu_main_intro Configuration of fstab and auto.net
+netfs.pass pass
 networkmenu.apply_settings Changes are applied...
 networkmenu.apply_settings_now Do you want to apply settings now?
 networkmenu.broadcast Broadcast
@@ -1838,6 +2018,7 @@ networkmenu.ipaddress IP address
 networkmenu.mount Edit network shares
 networkmenu.nameserver Name server
 networkmenu.netmask Netmask
+networkmenu.ntpatboot Sync time while booting
 networkmenu.ntpenable Syncronisation via
 networkmenu.ntprefresh NTP/DVB-Refresh
 networkmenu.ntprefresh_hint1 NTP/DVB-Time-Sync in minutes
@@ -1858,7 +2039,7 @@ networkmenu.ssid_scan WLAN network scan
 networkmenu.ssid_scan_error No WLAN networks are found.
 networkmenu.ssid_scan_wait WLAN network scan in progress...
 networkmenu.test Test network now
-neutrino_starting Neutrino-HD starting...
+neutrino_starting NI \o/
 nfs.alreadymounted directory already mounted
 nfs.automount Mount on startup
 nfs.dir directory/share
@@ -1882,6 +2063,8 @@ nfs.umount Umount Network volume
 nfs.umounterror error umounting volume
 nfs.username username
 nfsmenu.head NFS/CIFS/FTPFS settings
+nimenu.head NI-Settings
+nimenu.head_special Special settings
 nvod.percentage (%d%% over)
 nvod.starting (starting in %d min)
 nvodselector.directormode Director mode
@@ -1920,6 +2103,8 @@ options.off off
 options.on on
 options.on.without_messages Without msg
 options.serial serial
+options.start start
+options.stop stop
 parentallock.bouquetmode Bouquets are default
 parentallock.changepin change PIN code
 parentallock.changepin_hint1 Enter your new parental lock pin code here!
@@ -2015,7 +2200,35 @@ ping.socket is unreachable (socket error)
 ping.unreachable is unreachable
 pinprotection.head Enter PIN code
 pinprotection.wrongcode PIN-Code was wrong! Try again.
+plugin.hide_no Show
+plugin.hide_yes Hide
+plugin.item_crond_desc Cron daemon allows scheduled tasks
+plugin.item_crond_name crond
+plugin.item_djmount_desc UPnP AV Client allows to mount media-servers
+plugin.item_djmount_name djmount
+plugin.item_dropbear_desc SSH2 server und client
+plugin.item_dropbear_name Dropbear
+plugin.item_emmremind_desc Display different EMM's to the Infoicons
+plugin.item_emmremind_name EMM-Change Notification
+plugin.item_fcm_desc Shows FRITZ!Box call list and much more ...
+plugin.item_fcm_name FritzCallMonitor
+plugin.item_inadyn_desc DynDNS client
+plugin.item_inadyn_name Inadyn
+plugin.item_nfsserver_desc NFS kernel server
+plugin.item_nfsserver_name NFS-Server
+plugin.item_sambaserver_desc Server-Message-Block-Protokoll (SMB) implementation
+plugin.item_sambaserver_name Samba-Server
+plugin.item_tuxcald_desc Calender-plugin
+plugin.item_tuxcald_name TuxCal
+plugin.item_tuxmaild_desc Mailplugin (IMAP/SMTP)
+plugin.item_tuxmaild_name TuxMail
+plugin.item_ushare_desc A/V and DLNA Mediaserver
+plugin.item_ushare_name uShare
+plugin.item_xupnpd_desc eXtensible UPnP agent - DLNA Mediaserver for IPTV
+plugin.item_xupnpd_name xupnpd
+plugins.control Control plugins and services
 plugins.hdd_dir Plugin HDD dir.
+plugins.hide Hide or show plugins
 plugins.no_plugin No plugin
 plugins.result plugin output
 plugintype.disabled Disabled
@@ -2027,6 +2240,9 @@ rclock.locked Locked
 rclock.lockmsg Remote control will be locked.\nTo unlock, press\n[red] followed by [%s]\non your remote control.
 rclock.title Lock remote control
 rclock.unlockmsg Remote control unlocked
+recording.end Set record end
+recording.end_text Stop this record at the end of current show?
+recording.fill_text Record medium is filled up to %d%%. Nevertheless start record?
 recording.is_running This channel already recording. Start new record?
 recording.start Start recording, please wait...!
 recording.startstop_msg Message when recording is start/stop
@@ -2049,6 +2265,7 @@ recordingmenu.file direct (file)
 recordingmenu.filename_template filename template
 recordingmenu.filename_template_hint wildcards will be replaced
 recordingmenu.filename_template_hint2 %C = channel, %T = title, %I = info, %d = date, %t = time
+recordingmenu.fill_warn Show fill warning at
 recordingmenu.help Recording devices:\n--------------------------\nserver:\nusing streaming software on a PC\n\n(analog) vcr:\nusing the vcr outlet\n\ndirect (file):\ndirectly into an NFS mounted directory\nor onto an internal hard drive\nTS: use spts mode(dbox2)\nPES: do not use spts mode(dbox2)\n\n\nMax. file size:\n---------------------\nNFS V2: 2 GB (2048 MB)\nNFS V3: almost unlimited (0 MB)\nFAT: 2 GB (2048 MB)\nFAT32: 4 GB (4096 MB)
 recordingmenu.multimenu.ask_stop_all really stop all %d recordings?
 recordingmenu.multimenu.info_stop_all %d of %d recordings will be stopped.
@@ -2185,6 +2402,7 @@ scants.select_tp Select transponder
 scants.startnow start scan
 scants.test Test signal
 scants.transponders Transponders:
+scart_osd_fix CRT SCART OSD-Fix
 scrambled_channel Scrambled channel
 screensaver.delay Delay
 screensaver.dir Directory
@@ -2218,12 +2436,15 @@ servicemenu.reload_hint Reloading channel lists,\nplease be patient.
 servicemenu.restart Soft restart
 servicemenu.restart_hint Restarting, please wait
 servicemenu.restart_refused_recording Cant restart, recording in progress
+servicemenu.restart_tuner Restart tuner
+servicemenu.restarting_tuner Restarting tuner
 servicemenu.scants Servicescan
 servicemenu.update Software Update
-settings.backup Image-Settings: Backup
+settings.backup NI-Backup: save
 settings.backup_failed Backup failed!
 settings.help Help
 settings.menu_hints Show menu hints
+settings.menu_hints_line Show line to menu hints
 settings.menu_pos Menu position
 settings.menus Menus
 settings.missingoptionsconffile The Neutrino-HD settings have been updated.\nNew Options will be set to default.
@@ -2236,8 +2457,16 @@ settings.pos_higher_center higher center
 settings.pos_top_center top center
 settings.pos_top_left top left
 settings.pos_top_right top right
-settings.restore Image-Settings: Restore
+settings.restore NI-Backup: restore
 settings.restore_warn This will replace all settings and reboot\nContinue ?
+settings.teams Cross-Team Settings
+settings.teams.backup Save
+settings.teams.backup_failed Backup failed!
+settings.teams.backup_to Saving to 
+settings.teams.help Help
+settings.teams.help_text In this menu, settings can be saved and restored,\nwhich are compatible with these Team-Images:\n \n        - BluePeer HD\n        - NI CS-Image\n \nSaved will be:\n \n        * Channellists\n        * Timer and Timer-Settings\n        * Network-Settings (LAN and WLAN)
+settings.teams.restore Restore
+settings.teams.restore_warn This will replace all cross-team settings and reboot\nContinue ?
 shutdown.recording_query You really want to to stop record ?
 shutdowntimer.announce Box will shutdown in 1 min.\nCancel Shutdown ?
 sleeptimerbox.announce Box will standby in 1 min.\nCancel Standby ?
@@ -2257,7 +2486,7 @@ streaminfo.framerate_unknown unknown
 streaminfo.head Stream-Information
 streaminfo.not_available not available
 streaminfo.resolution Resolution
-streaminfo.signal Receipt signal
+streaminfo.signal Signal
 streaming.busy One or several recording processes are active.\nIf you encounter this message and no recording is active, please restart Neutrino-HD.
 streaming.dir_not_writable The recording directory is not writable.\nRecording will not work.
 streaming.overflow Record buffer overflow, consider to stop some records
@@ -2451,6 +2680,7 @@ videomenu.videomode Digital video mode
 webtv.head WebTV
 webtv.xml WebTV XML files
 webtv.xml.add Add XML file
+webtv.xml.auto Auto-load XML files
 webtv.xml.del Remove XML file
 window_size Window size in %
 wizard.initial_settings Initial settings found
@@ -2460,8 +2690,8 @@ wizard.setup_advanced Advanced
 wizard.setup_easy Easy
 wizard.setup_type Installation type
 wizard.setup_type_hint Easy to setup for CanalDigitaal/TéléSAT/TV Vlaanderen providers or simple cable scan
-wizard.welcome_head Welcome to the Setup Wizard
-wizard.welcome_text Next steps will guide you through initial installation of the device.\nImportant: Your CST set-top box can be conveniently controlled\nwith the web interface for timer management or live TV on the Web browser.\nDo not make it accessible to untrusted networks!\nDo you want to continue?
+wizard.welcome_head Welcome to the NI-Setup-Wizard
+wizard.welcome_text NI-Image Info:\nYour CST set-top box can be conveniently controlled\nwith the web interface for timer management or live TV on the Web browser.\nA root-password is not yet set!\nYou should catch up this by using the command "passwd" via telnet asap.\nDo you want to continue?
 word.from from
 word.in in
 zapit.scantype scan for services

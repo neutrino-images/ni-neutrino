@@ -42,6 +42,7 @@ class CScreenSaver : public sigc::trackable
 		unsigned int 	index;
 		t_channel_id	pip_channel_id;
 		bool		status_mute;
+		bool		status_icons; //NI
 
 		bool ReadDir();
 		void paint();

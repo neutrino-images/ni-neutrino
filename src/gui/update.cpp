@@ -78,6 +78,9 @@
 
 #include <cs_api.h>
 
+//NI softupdate
+#include <sys/stat.h>
+
 extern int allow_flash;
 
 //#define gTmpPath "/var/update/"
@@ -86,7 +89,7 @@ extern int allow_flash;
 
 #define LIST_OF_UPDATES_LOCAL_FILENAME "coolstream.list"
 #define UPDATE_LOCAL_FILENAME          "update.img"
-#define RELEASE_CYCLE                  "2.0"
+#define RELEASE_CYCLE                  "3.0"
 #define FILEBROWSER_UPDATE_FILTER      "img"
 
 #define MTD_OF_WHOLE_IMAGE             0
@@ -130,6 +133,20 @@ public:
 		}
 };
 
+//NI
+void CFlashUpdate::update_php(std::string &url, const char* type)
+{
+	if (url.find("update.php") != std::string::npos)
+	{
+		url += "?revision=" + to_string(cs_get_revision());
+#ifdef BOXMODEL_APOLLO
+		url += "&chip_type=" + to_string(cs_get_chip_type());
+#endif
+		url += "&image_type=" + (std::string)type;
+		printf("[update_php] url %s\n", url.c_str());
+	}
+}
+
 bool CFlashUpdate::checkOnlineVersion()
 {
 	CHTTPTool httpTool;
@@ -159,6 +176,7 @@ bool CFlashUpdate::checkOnlineVersion()
 		std::string host;
 		startpos = url.find("//");
 		if (startpos != std::string::npos) {
+			update_php(url, curInfo.getType()); //NI
 			startpos += 2;
 			endpos    = url.find('/', startpos);
 			host = url.substr(startpos, endpos - startpos);
@@ -210,9 +228,13 @@ bool CFlashUpdate::selectHttpImage(void)
 	showStatusMessageUTF(g_Locale->getText(LOCALE_FLASHUPDATE_GETINFOFILE)); // UTF-8
 
 	char current[200];
+#if 0
 	snprintf(current, 200, "%s: %s %s %s %s %s", g_Locale->getText(LOCALE_FLASHUPDATE_CURRENTVERSION_SEP), curInfo.getReleaseCycle(), 
 		g_Locale->getText(LOCALE_FLASHUPDATE_CURRENTVERSIONDATE), curInfo.getDate(), 
 		g_Locale->getText(LOCALE_FLASHUPDATE_CURRENTVERSIONTIME), curInfo.getTime());
+#endif
+	//NI
+	snprintf(current, 200, "%s %s %s %s", curInfo.getReleaseCycle(), curInfo.getType(), curInfo.getDate(), curInfo.getTime());
 
 	CMenuWidget SelectionWidget(LOCALE_FLASHUPDATE_SELECTIMAGE, NEUTRINO_ICON_UPDATE, listWidth, MN_WIDGET_ID_IMAGESELECTOR);
 
@@ -220,7 +242,7 @@ bool CFlashUpdate::selectHttpImage(void)
 	SelectionWidget.addItem(GenericMenuBack);
 	SelectionWidget.addItem(new CMenuSeparator(CMenuSeparator::LINE));
 
-	SelectionWidget.addItem(new CMenuForwarder(current, false));
+	SelectionWidget.addItem(new CMenuForwarder(current, false, g_Locale->getText(LOCALE_FLASHUPDATE_CURRENTVERSION_SEP))); //NI
 	std::ifstream urlFile(g_settings.softupdate_url_file.c_str());
 #ifdef DEBUG
 	printf("[update] file %s\n", g_settings.softupdate_url_file.c_str());
@@ -244,6 +266,7 @@ bool CFlashUpdate::selectHttpImage(void)
 		}
 		else
 		{
+			update_php(url, curInfo.getType()); //NI
 			//startpos += 2;
 			//endpos    = url.find('/', startpos);
 			startpos = url.find('/', startpos+2)+1;
@@ -252,7 +275,10 @@ bool CFlashUpdate::selectHttpImage(void)
 		}
 		//updates_lists.push_back(url.substr(startpos, endpos - startpos));
 
-		SelectionWidget.addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, updates_lists.rbegin()->c_str()));
+		//NI don't paint separator for lists with no entry
+		//NI SelectionWidget.addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, updates_lists.rbegin()->c_str()));
+		bool separator = false; //NI
+
 		if (httpTool.downloadFile(url, gTmpPath LIST_OF_UPDATES_LOCAL_FILENAME, 20))
 		{
 			std::ifstream in(gTmpPath LIST_OF_UPDATES_LOCAL_FILENAME);
@@ -288,6 +314,12 @@ bool CFlashUpdate::selectHttpImage(void)
 
 				descriptions.push_back(description); /* workaround since CMenuForwarder does not store the Option String itself */
 
+				//NI
+				if (!separator)
+				{
+					SelectionWidget.addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, updates_lists.rbegin()->c_str()));
+					separator = true;
+				}
 				//SelectionWidget.addItem(new CMenuForwarder(names[i].c_str(), enabled, descriptions[i].c_str(), new CUpdateMenuTarget(i, &selected)));
 				CUpdateMenuTarget * up = new CUpdateMenuTarget(i, &selected);
 				SelectionWidget.addItem(new CMenuDForwarder(descriptions[i].c_str(), enabled, names[i].c_str(), up));
@@ -319,7 +351,8 @@ bool CFlashUpdate::selectHttpImage(void)
 	newVersion = versions[selected];
 	file_md5 = md5s[selected];
 	fileType = fileTypes[selected];
-#ifdef BOXMODEL_APOLLO
+//NI #ifdef BOXMODEL_APOLLO
+#if 0
 	if(fileType < '3') {
 		int esize = CMTDInfo::getInstance()->getMTDEraseSize(sysfs);
 		printf("[update] erase size is %x\n", esize);
@@ -409,7 +442,14 @@ printf("[update] mode is %d\n", softupdate_mode);
 		CFileBrowser UpdatesBrowser;
 
 		CFileFilter UpdatesFilter;
-		if(allow_flash) UpdatesFilter.addFilter(FILEBROWSER_UPDATE_FILTER);
+		//NI
+		if (allow_flash) {
+			UpdatesFilter.addFilter(FILEBROWSER_UPDATE_FILTER);
+#ifdef BOXMODEL_APOLLO
+			if (CMTDInfo::getInstance()->getMTDEraseSize(sysfs) == 0x40000 /* Tank */)
+				UpdatesFilter.addFilter("256k");
+#endif
+		}
 
 		string filters[] = {"bin", "txt", "opk", "ipk"};
 		for(size_t i=0; i<sizeof(filters)/sizeof(filters[0]) ;i++)

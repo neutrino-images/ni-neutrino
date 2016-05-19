@@ -1,17 +1,46 @@
 #!/bin/sh
 
-DATE=$(date +%Y-%m-%d_%H-%M-%S)
+. /etc/init.d/globals
+
+DATE=$(hostname)_$(date +%Y-%m-%d_%H-%M-%S)
 USRF="/var/tuxbox/config/tobackup.conf"
+BAKF="$1/settings_$DATE.tar.gz"
+
+TOBACKUP="\
+	/share/tuxbox/neutrino/flex/flex_eigene_scripte.conf \
+	/var/tuxbox/config/FritzCallMonitor.addr \
+	/var/tuxbox/config/FritzCallMonitor.cfg \
+	/var/tuxbox/config/radio-favorites.xml \
+	/var/tuxbox/config/timerd.conf \
+	/var/tuxbox/config/tuxcal/ \
+	/var/tuxbox/config/tuxmail/ \
+	/var/tuxbox/config/zapit/ \
+	/var/tuxbox/config/doscam.* \
+	/var/tuxbox/config/neutrino.conf \
+	/var/tuxbox/config/oscam.* \
+	/var/tuxbox/config/oscammon.conf \
+	/var/tuxbox/config/scan.conf \
+	/var/bin/ \
+	/var/etc/ \
+	/var/keys/ \
+	/etc/auto.net \
+	/etc/exports \
+	/etc/fstab \
+	/etc/hostname \
+	/etc/resolv.conf \
+	/etc/profile.local \
+	/etc/network/interfaces \
+	/etc/wpa_supplicant.conf \
+	/etc/passwd \
+"
+
+SHOWINFO "backup to ${BAKF} ..."
 
 if [ -e "${USRF}" ]; then
-# read user-files from $USRF
-	TOBACKUP="${USRF}"
+	TOBACKUP="$TOBACKUP ${USRF}"
 	while read i
 		do [ "${i:0:1}" = "#" ] || TOBACKUP="$TOBACKUP ${i%%#*}"
 		done < $USRF
-
-else
-	TOBACKUP="/var/tuxbox/config/"
 fi
 
 # check existence
@@ -22,6 +51,6 @@ for i in $TOBACKUP
 
 TOBACKUP=$(echo $RES)
 
-echo Backup to $1/settings_$DATE.tar
+tar -czf "${BAKF}" $TOBACKUP 2>&1 >/dev/null
 
-tar -cf $1/settings_$DATE.tar $TOBACKUP 2>&1 >/dev/null
+SHOWINFO "done."

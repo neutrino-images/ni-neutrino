@@ -55,6 +55,10 @@
 extern cVideo * videoDecoder;
 extern CPictureViewer * g_PicViewer;
 
+//NI InfoIcons
+#include <gui/infoicons.h>
+extern CInfoIcons *InfoIcons;
+
 const struct button_label RescanButton = {NEUTRINO_ICON_BUTTON_BLUE  , LOCALE_UPNPBROWSER_RESCAN};
 const struct button_label BrowseButtons[] =
 {
@@ -151,7 +155,7 @@ int CUpnpBrowserGui::exec(CMenuTarget* parent, const std::string & /*actionKey*/
 	m_LastMode=(CNeutrinoApp::getInstance()->getLastMode());
 
 	// Stop sectionsd
-	g_Sectionsd->setPauseScanning(true);
+	//NI g_Sectionsd->setPauseScanning(true);
 
 	m_deviceliststart=0;
 	m_selecteddevice=0;
@@ -163,7 +167,7 @@ int CUpnpBrowserGui::exec(CMenuTarget* parent, const std::string & /*actionKey*/
 		CAudioPlayer::getInstance()->stop();
 
 	// Start Sectionsd
-	g_Sectionsd->setPauseScanning(false);
+	//NI g_Sectionsd->setPauseScanning(false);
 	m_frameBuffer->stopFrame();
 	m_frameBuffer->Clear();
 
@@ -489,6 +493,7 @@ void CUpnpBrowserGui::selectDevice()
 		return;
 
 	CAudioMute::getInstance()->enableMuteIcon(false);
+	InfoIcons->enableInfoIcons(false); //NI InfoIcons
 
 	while (loop)
 	{
@@ -559,6 +564,7 @@ printf("msg: %x\n", (int) msg);
 		}
 	}
 	CAudioMute::getInstance()->enableMuteIcon(true);
+	InfoIcons->enableInfoIcons(true); //NI InfoIcons
 }
 
 void CUpnpBrowserGui::playnext(void)

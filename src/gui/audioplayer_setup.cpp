@@ -140,6 +140,14 @@ int CAudioPlayerSetup::showAudioPlayerSetup()
 	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_SC_METADATA);
 	audioplayerSetup->addItem(mc);
 
+	//NI
+	audioplayerSetup->addItem(GenericMenuSeparator);
+
+	//NI internetradio autostart first entry from favorites
+	mc = new CMenuOptionChooser(LOCALE_INETRADIO_AUTOSTART, &g_settings.inetradio_autostart, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL);
+	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INETRADIO_AUTOSTART);
+	audioplayerSetup->addItem(mc);
+
 	int res = audioplayerSetup->exec (NULL, "");
 	delete audioplayerSetup;
 	return res;

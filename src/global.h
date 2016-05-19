@@ -24,6 +24,7 @@
 */
 
 #include <system/settings.h>
+#include <system/ansi.h> //NI
 
 #ifndef NEUTRINO_CPP
   #define NEUTRINO_CPP extern
@@ -42,10 +43,12 @@
 #define MOVIEPLAYER_START_SCRIPT        CONFIGDIR "/movieplayer.start"
 #define MOVIEPLAYER_END_SCRIPT          CONFIGDIR "/movieplayer.end"
 #define NEUTRINO_ENTER_FLASH_SCRIPT	CONFIGDIR "/flash.start"
+#define NEUTRINO_NI_MIGRATION_SCRIPT	CONFIGDIR "/ni-migration.sh" //NI
 
 #define NEUTRINO_SCAN_SETTINGS_FILE     CONFIGDIR "/scan.conf"
 #define NEUTRINO_PARENTALLOCKED_FILE    DATADIR   "/neutrino/.plocked"
 
+#define FONTDIR_VAR	"/var/tuxbox/fonts/" //NI
 #define ICONSDIR_VAR	"/var/tuxbox/icons/"
 #define LOCALEDIR_VAR	"/var/tuxbox/locale"
 #define THEMESDIR_VAR	"/var/tuxbox/themes"

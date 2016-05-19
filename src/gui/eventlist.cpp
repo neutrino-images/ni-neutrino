@@ -839,6 +839,14 @@ void CEventList::paintDescription(int index)
 	else
 		CEitManager::getInstance()->getActualEPGServiceKey(evtlist[index].channelID, &epgData );
 
+	//NI
+	infozone_text = "";
+	if (!epgData.info1.empty() && !epgData.info2.empty() && (epgData.info2.find(epgData.info1) != 0)) {
+		infozone_text += epgData.info1;
+		infozone_text += "\n";
+		infozone_text += epgData.info2;
+	}
+	else
 	if(!epgData.info2.empty()){
 		infozone_text = epgData.info2;
 	}
@@ -958,7 +966,7 @@ void  CEventList::showFunctionBar (bool show, t_channel_id channel_id)
 	CColorKeyHelper keyhelper; //user_menue.h
 	neutrino_msg_t dummy = CRCInput::RC_nokey;
 	const char * icon = NULL;
-	struct button_label buttons[5];
+	struct button_label buttons[6]; //NI
 	int btn_cnt = 0;
 
 	int tID = -1; //any value, not NULL
@@ -1015,6 +1023,11 @@ void  CEventList::showFunctionBar (bool show, t_channel_id channel_id)
 		buttons[btn_cnt].locale = LOCALE_EPGMENU_EVENTINFO;
 		btn_cnt++;
 	}
+
+	//NI timerlist button
+	buttons[btn_cnt].button = NEUTRINO_ICON_BUTTON_0;
+	buttons[btn_cnt].locale = LOCALE_TIMERLIST_NAME;
+	btn_cnt++;
 
 	::paintButtons(bx, by, bw, btn_cnt, buttons, bw, bh);
 }

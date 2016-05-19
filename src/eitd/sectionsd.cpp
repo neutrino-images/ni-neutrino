@@ -1248,7 +1248,9 @@ static void commandWriteSI2XML(int connfd, char *data, const unsigned dataLength
 
 	data[dataLength] = '\0';
 
+	xprintf("[sectionsd] writeEventsToFile started\n"); //NI
 	writeEventsToFile(data);
+	xprintf("[sectionsd] writeEventsToFile finished\n"); //NI
 
 	eventServer->sendEvent(CSectionsdClient::EVT_WRITE_SI_FINISHED, CEventServer::INITID_SECTIONSD);
 }

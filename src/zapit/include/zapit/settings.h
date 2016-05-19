@@ -49,6 +49,8 @@
 #define SATELLITES_XML  CONFIGDIR "/satellites.xml" 
 #define TERRESTRIAL_XML CONFIGDIR "/terrestrial.xml"
 #define WEBTV_XML	CONFIGDIR "/webtv_usr.xml"
+#define WEBTVDIR	DATADIR "/neutrino/webtv" //NI
+#define WEBTVDIR_VAR	"/var/tuxbox/webtv" //NI
 
 #define AUDIO_DEVICE          "/dev/dvb/adapter0/audio0"
 #define DEMUX_DEVICE          "/dev/dvb/adapter0/demux0"

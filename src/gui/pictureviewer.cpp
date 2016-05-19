@@ -67,6 +67,7 @@
 
 
 #include <system/settings.h>
+#include <system/helpers.h> //NI
 
 #include <algorithm>
 #include <sys/stat.h>
@@ -77,6 +78,10 @@
 #include <video.h>
 extern cVideo * videoDecoder;
 
+
+//NI InfoIcons
+#include <gui/infoicons.h>
+extern CInfoIcons *InfoIcons;
 
 //------------------------------------------------------------------------
 bool comparePictureByDate (const CPicture& a, const CPicture& b)
@@ -200,7 +205,7 @@ int CPictureViewerGui::exec(CMenuTarget* parent, const std::string & actionKey)
 		videoDecoder->setBlank(true);
 
 		// Stop Sectionsd
-		g_Sectionsd->setPauseScanning(true);
+		//NI g_Sectionsd->setPauseScanning(true);
 	}
 
 	// Save and Clear background
@@ -209,6 +214,10 @@ int CPictureViewerGui::exec(CMenuTarget* parent, const std::string & actionKey)
 		frameBuffer->saveBackgroundImage();
 		frameBuffer->Clear();
 	}
+
+	//NI
+	printf("[pictureviewer.cpp] wakeup_hdd(%s)\n", g_settings.network_nfs_picturedir.c_str());
+	wakeup_hdd(g_settings.network_nfs_picturedir.c_str(),true);
 
 	show();
 
@@ -220,7 +229,7 @@ int CPictureViewerGui::exec(CMenuTarget* parent, const std::string & actionKey)
 		CZapit::getInstance()->EnablePlayback(true);
 
 		// Start Sectionsd
-		g_Sectionsd->setPauseScanning(false);
+		//NI g_Sectionsd->setPauseScanning(false);
 	}
 
 	// Restore previous background
@@ -261,6 +270,7 @@ int CPictureViewerGui::show()
 
 	CAudioMute::getInstance()->enableMuteIcon(false);
 	CInfoClock::getInstance()->enableInfoClock(false);
+	InfoIcons->enableInfoIcons(false); //NI InfoIcons
 
 	while (loop)
 	{
@@ -647,6 +657,7 @@ int CPictureViewerGui::show()
 
 	CAudioMute::getInstance()->enableMuteIcon(true);
 	CInfoClock::getInstance()->enableInfoClock(true);
+	InfoIcons->enableInfoIcons(true); //NI InfoIcons
 
 	return(res);
 }

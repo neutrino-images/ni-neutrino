@@ -119,6 +119,13 @@ const CMenuOptionChooser::keyval MESSAGEBOX_YES_NO_OPTIONS[MESSAGEBOX_YES_NO_OPT
 	{ 1, LOCALE_MESSAGEBOX_YES }
 };
 
+//NI
+const CMenuOptionChooser::keyval MESSAGEBOX_YES_NO_INVERTED_OPTIONS[MESSAGEBOX_YES_NO_OPTIONS_COUNT] =
+{
+	{ 0, LOCALE_MESSAGEBOX_YES },
+	{ 1, LOCALE_MESSAGEBOX_NO }
+};
+
 #define MESSAGEBOX_PARENTAL_LOCK_OPTIONS_COUNT 3
 const CMenuOptionChooser::keyval MESSAGEBOX_PARENTAL_LOCK_OPTIONS[MESSAGEBOX_PARENTAL_LOCK_OPTIONS_COUNT] =
 {
@@ -519,6 +526,8 @@ void CMovieBrowser::init(void)
 	old_EpgId = 0;
 	m_doRefresh = false;
 	m_doLoadMovies = false;
+
+	imdb = CIMDB::getInstance(); //NI
 }
 
 void CMovieBrowser::initGlobalSettings(void)
@@ -826,6 +835,90 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 			return showMovieCutMenu();
 		}
 	}
+	//NI
+	else if (actionKey == "get_imdb_data")
+	{
+		if (m_movieSelectionHandler != NULL)
+		{
+			size_t pos;
+			std::string element;
+
+			CHintBox hintBox(LOCALE_MOVIEBROWSER_HEAD, g_Locale->getText(LOCALE_MOVIEBROWSER_IMDB_DATA));
+			hintBox.paint();
+
+			std::string title = m_movieSelectionHandler->epgTitle;
+			imdb->getIMDb(title);
+
+#if 0
+			element = "Title";
+			imdb->getIMDbElement(element);
+			if (element.compare("Title") != 0)
+			{
+				printf("Title\n");
+				printf("* old: %s\n", m_movieSelectionHandler->epgTitle.c_str());
+				m_movieSelectionHandler->epgTitle = element;
+				printf("* new: %s\n", m_movieSelectionHandler->epgTitle.c_str());
+			}
+
+			element = "Genre";
+			imdb->getIMDbElement(element);
+			if (element.compare("Genre") != 0)
+			{
+				printf("Genre\n");
+				printf("* old: %s\n", m_movieSelectionHandler->epgInfo1.c_str());
+				m_movieSelectionHandler->epgInfo1 = element;
+				printf("* new: %s\n", m_movieSelectionHandler->epgInfo1.c_str());
+			}
+#endif
+
+			element = "Year";
+			imdb->getIMDbElement(element);
+			if (element.compare("Year") != 0)
+			{
+				printf("Year\n");
+				printf("* old: %d\n", m_movieSelectionHandler->productionDate);
+				m_movieSelectionHandler->productionDate = atoi(element);
+				printf("* new: %d\n", m_movieSelectionHandler->productionDate);
+			}
+
+			element = "Country";
+			imdb->getIMDbElement(element);
+			if (element.compare("Country") != 0)
+			{
+				printf("Country\n");
+				printf("* old: %s\n", m_movieSelectionHandler->productionCountry.c_str());
+				m_movieSelectionHandler->productionCountry = element;
+				printf("* new: %s\n", m_movieSelectionHandler->productionCountry.c_str());
+			}
+
+			element = "imdbRating";
+			imdb->getIMDbElement(element);
+			if (element.compare("imdbRating") != 0 && element.compare("N/A") != 0)
+			{
+				if ((pos = element.find_first_of(",.")) != std::string::npos)
+					element.replace(pos, 1, ""); // change 8,1 or 8.1 to 81
+
+				printf("Rating\n");
+				printf("* old: %d\n", m_movieSelectionHandler->rating);
+				m_movieSelectionHandler->rating = atoi(element);
+				printf("* new: %d\n", m_movieSelectionHandler->rating);
+			}
+
+			std::string poster;
+			if ((pos = m_movieSelectionHandler->file.Name.rfind(".")) != std::string::npos)
+			{
+				printf("Poster\n");
+				poster = m_movieSelectionHandler->file.Name.substr(0, pos);
+				poster += ".jpg";
+				File_copy(imdb->posterfile.c_str(), poster.c_str());
+				printf("* poster: %s\n", poster.c_str());
+			}
+
+			//m_movieInfo.saveMovieInfo(*m_movieSelectionHandler);
+			hintBox.hide();
+		}
+
+	}
 	else if (actionKey == "save_movie_info")
 	{
 		m_movieInfo.saveMovieInfo(*m_movieSelectionHandler);
@@ -898,6 +991,7 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 	else if(actionKey == "show_menu")
 	{
 		showMenu(true);
+		saveSettings(&m_settings); //NI
 	}
 	else if(actionKey == "show_ytmenu")
 	{
@@ -1187,20 +1281,21 @@ int CMovieBrowser::paint(void)
 
 	//CVFD::getInstance()->setMode(CVFD::MODE_MENU_UTF8, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD));
 
-	Font* font = NULL;
+	Font* font = g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_LIST]; //NI
 
 	m_pcBrowser = new CListFrame(&m_browserListLines, font, CListFrame::SCROLL | CListFrame::HEADER_LINE,
-			&m_cBoxFrameBrowserList);
+			&m_cBoxFrameBrowserList, NULL,
+			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]); //NI
 	m_pcLastPlay = new CListFrame(&m_playListLines, font, CListFrame::SCROLL | CListFrame::HEADER_LINE | CListFrame::TITLE,
 			&m_cBoxFrameLastPlayList, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD_PLAYLIST),
-			g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]);
+			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]); //NI
 	m_pcLastRecord = new CListFrame(&m_recordListLines, font, CListFrame::SCROLL | CListFrame::HEADER_LINE | CListFrame::TITLE,
 			&m_cBoxFrameLastRecordList, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD_RECORDLIST),
-			g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]);
+			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]); //NI
 	m_pcFilter = new CListFrame(&m_FilterLines, font, CListFrame::SCROLL | CListFrame::TITLE,
 			&m_cBoxFrameFilter, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD_FILTER),
-			g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]);
-	m_pcInfo = new CTextBox(" ", NULL, CTextBox::TOP | CTextBox::SCROLL, &m_cBoxFrameInfo);
+			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]); //NI
+	m_pcInfo = new CTextBox(" ", g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_INFO], CTextBox::TOP | CTextBox::SCROLL, &m_cBoxFrameInfo); //NI
 
 
 	if (m_pcBrowser == NULL || m_pcLastPlay == NULL ||
@@ -1442,6 +1537,8 @@ void CMovieBrowser::refreshMovieInfo(void)
 	m_pcInfo->setText(&m_movieSelectionHandler->epgInfo2, m_cBoxFrameInfo.iWidth - flogo_w - 24);
 	if (pic)
 		pic->paint(CC_SAVE_SCREEN_NO);
+
+	updateInfoSelection(); //NI
 }
 
 void CMovieBrowser::info_hdd_level(bool paint_hdd)
@@ -1929,12 +2026,12 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 		else
 		{
 			showMenu();
-			if (m_doLoadMovies)
+			//NI if (m_doLoadMovies)
 				loadMovies();
-			if (m_doRefresh)
+			//NI if (m_doRefresh)
 				refresh();
 		}
-
+		saveSettings(&m_settings); //NI
 	}
 	else if (g_settings.sms_movie && (msg >= CRCInput::RC_1) && (msg <= CRCInput::RC_9))
 	{
@@ -2226,6 +2323,8 @@ bool CMovieBrowser::onButtonPressMovieInfoList(neutrino_msg_t msg)
 	else
 		result = false;
 
+	updateInfoSelection(); //NI
+
 	return (result);
 }
 
@@ -2493,6 +2592,7 @@ void CMovieBrowser::onSetFocus(MB_FOCUS new_focus)
 		m_pcFilter->showSelection(true);
 
 	updateMovieSelection();
+	updateInfoSelection(); //NI
 	refreshFoot();
 }
 
@@ -2844,6 +2944,16 @@ void CMovieBrowser::updateMovieSelection(void)
 	//TRACE("\n");
 }
 
+//NI
+void CMovieBrowser::updateInfoSelection(void)
+{
+	fb_pixel_t frame = COL_MENUCONTENT_PLUS_0;
+	if (m_windowFocus == MB_FOCUS_MOVIE_INFO)
+		frame = COL_MENUCONTENTSELECTED_PLUS_0;
+
+	framebuffer->paintBoxFrame(m_cBoxFrameInfo.iX, m_cBoxFrameInfo.iY, m_cBoxFrameInfo.iWidth, m_cBoxFrameInfo.iHeight, 1, frame);
+}
+
 void CMovieBrowser::updateFilterSelection(void)
 {
 	//TRACE("[mb]->updateFilterSelection \n");
@@ -3065,6 +3175,7 @@ int CMovieBrowser::showMovieInfoMenu(MI_MOVIE_INFO* movie_info)
 	movieInfoMenu.addIntroItems(LOCALE_MOVIEBROWSER_INFO_HEAD);
 	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_MENU_SAVE,     true, NULL, this, "save_movie_info",                                           CRCInput::RC_red));
 	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_INFO_HEAD_UPDATE, true, NULL,      &movieInfoMenuUpdate, NULL,                                CRCInput::RC_green));
+	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_IMDB_DATA,     true, NULL, this, "get_imdb_data",                                             CRCInput::RC_yellow)); //NI
 	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_BOOK_HEAD,           true, NULL,      &bookmarkMenu, NULL,                                    CRCInput::RC_blue));
 	movieInfoMenu.addItem(GenericMenuSeparatorLine);
 	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_INFO_TITLE,          true, movie_info->epgTitle,  &titelUserInput,NULL,                       CRCInput::RC_1));
@@ -3215,7 +3326,7 @@ bool CMovieBrowser::showMenu(bool calledExternally)
 	optionsMenu.addItem(new CMenuOptionChooser(LOCALE_MOVIEBROWSER_HIDE_SERIES,       (int*)(&m_settings.browser_serie_mode), MESSAGEBOX_YES_NO_OPTIONS, MESSAGEBOX_YES_NO_OPTIONS_COUNT, true));
 	optionsMenu.addItem(new CMenuOptionChooser(LOCALE_MOVIEBROWSER_SERIE_AUTO_CREATE, (int*)(&m_settings.serie_auto_create), MESSAGEBOX_YES_NO_OPTIONS, MESSAGEBOX_YES_NO_OPTIONS_COUNT, true));
 	int ts_only = m_settings.ts_only;
-	optionsMenu.addItem( new CMenuOptionChooser(LOCALE_MOVIEBROWSER_TS_ONLY,           (int*)(&m_settings.ts_only), MESSAGEBOX_YES_NO_OPTIONS, MESSAGEBOX_YES_NO_OPTIONS_COUNT, true ));
+	optionsMenu.addItem( new CMenuOptionChooser(LOCALE_MOVIEBROWSER_TS_ONLY,           (int*)(&m_settings.ts_only), MESSAGEBOX_YES_NO_INVERTED_OPTIONS, MESSAGEBOX_YES_NO_OPTIONS_COUNT, true )); //NI
 
 	//optionsMenu.addItem(GenericMenuSeparator);
 

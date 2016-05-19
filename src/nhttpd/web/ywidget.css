@@ -39,9 +39,9 @@
 	display:block;
 }
 .ycm ul a:hover{
-	border:1px solid #2188e0;
+	border:1px solid #606060;
 	background-color:#cceeff;
-	color:#2188e0;
+	color:#606060;
 }
 /*dialogs*/
 .ydiag
@@ -50,7 +50,7 @@
 	position: absolute;
 	left: 100px;
 	top: 100px;
-	border: 1px solid #2188e0;
+	border: 1px solid #606060;
 	border-collapse: collapse;
 	background-color: white;
 	padding: 1em;

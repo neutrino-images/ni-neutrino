@@ -161,7 +161,7 @@ void CFrameBuffer::waitForIdle(const char* func)
 		//fprintf(stderr, "%s: read  %02x, expected %02x\n", __FUNCTION__, cfg, _mark);
 	} while(++count < 2048); /* don't deadlock here if there is an error */
 
-	if (count > 512) /* more than 100 are unlikely, */{
+	if (count > 1024) /* more than 100 are unlikely, */{ //NI
 		if (func != NULL)
 			fprintf(stderr, "CFrameBuffer::waitForIdle: count is big (%04u) [%s]!\n", count, func);
 		else
@@ -200,6 +200,7 @@ CFrameBuffer::CFrameBuffer()
 	backgroundFilename = "";
 	fd  = 0;
 	tty = 0;
+	locked = false; //NI
 	m_transparent_default = CFrameBuffer::TM_BLACK; // TM_BLACK: Transparency when black content ('pseudo' transparency)
 							// TM_NONE:  No 'pseudo' transparency
 							// TM_INI:   Transparency depends on g_settings.infobar_alpha ???
@@ -382,16 +383,20 @@ nolfb:
 	lfb=0;
 }
 
-
-CFrameBuffer::~CFrameBuffer()
+//NI
+void CFrameBuffer::clearIconCache()
 {
 	std::map<std::string, rawIcon>::iterator it;
-
 	for(it = icon_cache.begin(); it != icon_cache.end(); ++it) {
 		/* printf("FB: delete cached icon %s: %x\n", it->first.c_str(), (int) it->second.data); */
 		cs_free_uncached(it->second.data);
 	}
 	icon_cache.clear();
+}
+
+CFrameBuffer::~CFrameBuffer()
+{
+	clearIconCache(); //NI
 
 	if (background) {
 		delete[] background;
@@ -819,7 +824,7 @@ void CFrameBuffer::paintBoxRel(const int x, const int y, const int dx, const int
 		return;
 
 	if (dx == 0 || dy == 0) {
-		dprintf(DEBUG_NORMAL, "[CFrameBuffer] [%s - %d]: radius %d, start x %d y %d end x %d y %d\n", __FUNCTION__, __LINE__, radius, x, y, x+dx, y+dy);
+		//NI dprintf(DEBUG_NORMAL, "[CFrameBuffer] [%s - %d]: radius %d, start x %d y %d end x %d y %d\n", __FUNCTION__, __LINE__, radius, x, y, x+dx, y+dy);
 		return;
 	}
 
@@ -1937,12 +1942,25 @@ void * CFrameBuffer::convertRGBA2FB(unsigned char *rgbbuff, unsigned long x, uns
 	return int_convertRGB2FB(rgbbuff, x, y, 0, true);
 }
 
-void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool /*transp*/)
+//NI
+void CFrameBuffer::blit2FB_unscaled(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t unscaled_w, uint32_t unscaled_h, uint32_t xp, uint32_t yp, bool transp)
+{
+	return blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp, unscaled_w, unscaled_h);
+}
+
+//NI
+void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool /*transp*/, uint32_t unscaled_w, uint32_t unscaled_h)
 {
 	int  xc, yc;
 
 	xc = (width > xRes) ? xRes : width;
 	yc = (height > yRes) ? yRes : height;
+
+	//NI
+	if(unscaled_w != 0 && (int)unscaled_w < xc)
+		xc = unscaled_w;
+	if(unscaled_h != 0 && (int)unscaled_h < yc)
+		yc = unscaled_h;
 
 #if defined(FB_HW_ACCELERATION)
 	if(!(width%4)) {
@@ -1953,10 +1971,10 @@ void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32
 		image.height = yc;
 		image.cmap.len = 0;
 		image.depth = 32;
-#if 1
+	if(unscaled_w == 0 && unscaled_h == 0) { //NI #if 1
 		image.data = (const char*)fbbuff;
 		ioctl(fd, FBIO_IMAGE_BLT, &image);
-#else
+	} else { //NI #else
 		for (int count = 0; count < yc; count++ ) {
 			fb_pixel_t*  data = (fb_pixel_t *) fbbuff;
 			fb_pixel_t *pixpos = &data[(count + yp) * width];
@@ -1965,7 +1983,7 @@ void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32
 			image.height = 1;
 			ioctl(fd, FBIO_IMAGE_BLT, &image);
 		}
-#endif
+	} //NI #endif
 		//printf("\033[34m>>>>\033[0m [%s:%s:%d] FB_HW_ACCELERATION (image) x: %d, y: %d, w: %d, h: %d\n", __file__, __func__, __LINE__, xoff, yoff, xc, yc);
 		return;
 	}
@@ -1983,7 +2001,6 @@ void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32
 
 		_write_gxa(gxa_base, GXA_BMP1_TYPE_REG, (3 << 16) | width);
 		_write_gxa(gxa_base, GXA_BMP1_ADDR_REG, (unsigned int) uKva);
-
 		_write_gxa(gxa_base, cmd, GXA_POINT(xoff, yoff));   /* destination pos */
 		_write_gxa(gxa_base, cmd, GXA_POINT(xc, yc));   /* source width, FIXME real or adjusted xc, yc ? */
 		_write_gxa(gxa_base, cmd, GXA_POINT(xp, yp));   /* source pos */

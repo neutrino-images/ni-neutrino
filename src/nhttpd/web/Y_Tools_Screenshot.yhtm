@@ -1,6 +1,6 @@
 {=var-set:fbshot={=find-exec:fbshot=}=}
 
-{=include-block:Y_Blocks.txt;head=}
+{=include-block:Y_NI_Blocks.txt;head=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
 <script type="text/javascript" src="/prototype.js"></script>
 <script type="text/javascript">
@@ -66,12 +66,18 @@ function do_clearshot(){
 	loadSyncURL("/control/exec?Y_Tools&screenshot_clear");
 }
 function do_switchrc(){
+	//NI
+	/*
 	if (id('remote').style.display == 'none')
 		$('remote').show();
 	else
 		$('remote').hide();
 
 	do_switchrc_txt();
+	*/
+	jQuery('#remote').toggle('slide', {direction: 'left'}, 'slow', function() {
+		do_switchrc_txt();
+	});
 }
 
 function do_switchrc_txt(){
@@ -112,7 +118,7 @@ function do_switchrc_txt(){
 
 		<table cellpadding="0" class="screenshot">
 		<tr>
-			<td id="remote" {=if-empty:{=noremote=}~~style="display: none"=}>
+			<td id="remote" {=if-equal:{=rc=}~false~style="display: none"~=}>
 				{=include-block:Y_Blocks.txt;remote=}
 			</td>
 			<td class="shot">

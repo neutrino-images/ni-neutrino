@@ -86,6 +86,14 @@ class CInfoViewerBB
 			bool active;
 		} bbButtonInfoStruct;
 
+		//NI
+		enum CAM_DECODE_NUM {UNKNOWN, NA, FTA, LOCAL, CARD, REMOTE};
+		void 		paint_cam_icons();
+		unsigned short int decode;
+		int		DecEndx;
+		int 		parse_ecmInfo(const char * file);
+		bool		camCI;
+
 		typedef struct
 		{
 			int x;

@@ -514,11 +514,13 @@ std::string CyParser::YWeb_cgi_cmd(CyhookHandler *hh, std::string ycmd) {
 				if (actionname == "add") {
 					std::fstream fout(filename.c_str(), std::fstream::out
 							| std::fstream::binary);
+					content += "\n"; //NI
 					fout << content;
 					fout.close();
 				} else if (actionname == "append") {
 					std::fstream fout(filename.c_str(), std::fstream::app
 							| std::fstream::binary);
+					content += "\n"; //NI
 					fout << content;
 					fout.close();
 				} else if (actionname == "delete") {

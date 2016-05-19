@@ -644,8 +644,8 @@ void CTimerManager::loadRecordingSafety()
 	{
 		/* set defaults if no configuration file exists */
 		dprintf("%s not found\n", TIMERDCONFIGFILE);
-		m_extraTimeStart = 300;
-		m_extraTimeEnd = 300;
+		m_extraTimeStart = 0; //NI
+		m_extraTimeEnd = 600; //NI
 		config.saveConfig(TIMERDCONFIGFILE);
 	}
 	else
@@ -716,6 +716,7 @@ bool CTimerManager::shutdown()
 		CTimerEvent *event = pos->second;
 		dprintf("shutdown: timer type %d state %d announceTime: %ld\n", event->eventType, event->eventState, event->announceTime);
 		if((event->eventType == CTimerd::TIMER_RECORD ||
+			 event->eventType == CTimerd::TIMER_EXEC_PLUGIN || //NI
 			 event->eventType == CTimerd::TIMER_ZAPTO ) &&
 			event->eventState < CTimerd::TIMERSTATE_ISRUNNING)
 		{
@@ -758,6 +759,7 @@ void CTimerManager::shutdownOnWakeup(int currEventID)
 	{
 		CTimerEvent *event = pos->second;
 		if((event->eventType == CTimerd::TIMER_RECORD ||
+		    event->eventType == CTimerd::TIMER_EXEC_PLUGIN || //NI
 		    event->eventType == CTimerd::TIMER_ZAPTO ) &&
 		   (event->eventState == CTimerd::TIMERSTATE_SCHEDULED ||
 		    event->eventState == CTimerd::TIMERSTATE_PREANNOUNCE ||

@@ -1,4 +1,4 @@
-AUDIOSelectMenue.head Auswahl der Tonspur
+AUDIOSelectMenue.head Tonoptionen
 EPGMenu.epgplus Vorschauübersicht
 EPGMenu.eventinfo Info zur Sendung
 EPGMenu.eventlist Vorschau aktuelles Programm
@@ -199,6 +199,7 @@ audioplayer.shuffle Zufällig
 audioplayer.spectrum LCD Skala
 audioplayer.stop Stopp
 audioplayer.title_artist Titel, Interpret
+blank_screen Blanker Bildschirm
 bookmarkmanager.delete Löschen
 bookmarkmanager.name Bookmarks
 bookmarkmanager.rename Umbenennen
@@ -232,7 +233,30 @@ buildinfo.compiler_flags Compiler Flags
 buildinfo.creator Ersteller
 buildinfo.kernel Kernel Version
 buildinfo.menu Build Informationen
+ca_init Aktives CA-System
+ca_init_0 Conax-Karte
+ca_init_1 CI-Modul
+ca_init_2 Conax-Karte und CI-Modul
 cablesetup.provider Kabelanbieter
+camd_control camd-Steuerung
+camd_item_cs2gbox_hint cs2gbox - Newcamd Bridge
+camd_item_cs2gbox_name cs2gbox
+camd_item_doscam_hint DOSCam - Softcam und Emulator
+camd_item_doscam_name doscam
+camd_item_gbox_hint GBox - Softcam und Emulator
+camd_item_gbox_name gbox
+camd_item_mgcamd_hint MGCamd - Emulator
+camd_item_mgcamd_name mgcamd
+camd_item_newcs_hint NewCS - Softcam
+camd_item_newcs_name newcs
+camd_item_oscam_hint OSCam - Softcam
+camd_item_oscam_name oscam
+camd_item_osemu_hint OSEmu - Emulator
+camd_item_osemu_name osemu
+camd_msg_reset camd wird neu gestartet
+camd_msg_start camd wird gestartet
+camd_msg_stop camd wird gestoppt
+camd_reset camd neu starten
 channellist.additional Zusatzinformationen
 channellist.additional_off aus
 channellist.additional_on ein
@@ -339,7 +363,7 @@ colorthememenu.head Theme auswählen
 colorthememenu.head2 Themes laden
 colorthememenu.menu_hints Hinweisfenster
 colorthememenu.name Themename
-colorthememenu.neutrino_theme Neutrino Theme
+colorthememenu.neutrino_theme NI-Neutrino-HD Theme
 colorthememenu.question Aktuelles Theme beibehalten?
 colorthememenu.save aktuelles Theme speichern
 colorthememenu.select1 Benutzer Theme
@@ -348,6 +372,10 @@ cpu.freq CPU Frequenz
 cpu.freq_default Standard Frequenz
 cpu.freq_normal Normale Frequenz
 cpu.freq_standby Standby Frequenz
+crossteam.hint_settings_teams Einstellungen sichern und wiederherstellen,\ndie zu teilnehmenden Team-Images kompatibel sind.
+crossteam.hint_settings_teams_backup Teamübergreifende Einstellungen sichern
+crossteam.hint_settings_teams_help Hilfe zu teamübergreifenden Einstellungen
+crossteam.hint_settings_teams_restore Teamübergreifende Einstellungen wiederherstellen
 date.Apr  Apr
 date.Aug  Aug
 date.Dec  Dez
@@ -372,6 +400,10 @@ debug.level Stufe
 debug.level_1 normal
 debug.level_2 informativ
 debug.level_3 ausführlich
+ecminfo ECM-Info
+ecminfo_null ECM-Info nicht vorhanden
+ecminfo_show ECM-Info anzeigen
+empty 
 epg.saving Speichere EPG
 epgextended.actors Darsteller
 epgextended.director Regie
@@ -622,6 +654,7 @@ flashupdate.createimage_warning Nachfolgend wird ein Image für die %s STB erste
 flashupdate.currentversion_sep Installierte Version
 flashupdate.currentversiondate Datum
 flashupdate.currentversiontime Uhrzeit
+flashupdate.enter_flash_script Stoppe laufende Dienste und Softcams ...
 flashupdate.erasefailed Flash löschen fehlgeschlagen
 flashupdate.erasing lösche Flash
 flashupdate.experimentalimage Sie haben einen Snapshot ausgewählt, bitte beachten Sie,\ndass diese Version ungetestet ist und u.U. Ihre Box\nnach dem Update nicht mehr funktionsfähig ist.\n\nSoll diese Version wirklich installiert werden?
@@ -656,6 +689,7 @@ flashupdate.namemode2_default <Partition>+<Zeit>.img
 flashupdate.namemode2_hostname_time <Partition>+<Zeit>+<Hostname>.img
 flashupdate.new_found Updates verfügbar!
 flashupdate.new_notfound Keine Updates verfügbar!
+flashupdate.ng_noflash USB-Image aktiv, Update nicht möglich!
 flashupdate.noversion Bei Updates werden Versionsüberprüfungen derzeit nur über Web-Updates unterstützt.\nWollen Sie das ausgewählte Image wirklich installieren?
 flashupdate.programmingflash programmiere Flash
 flashupdate.proxypassword Passwort
@@ -700,6 +734,7 @@ fontmenu.eventlist Event-Liste
 fontmenu.head Schrift
 fontmenu.infobar Infobar
 fontmenu.menu Menü
+fontmenu.moviebrowser Moviebrowser
 fontmenu.other Andere
 fontmenu.scaling Schriftgrößenfaktor
 fontmenu.scaling_x Horizontal (in %)
@@ -724,6 +759,7 @@ fontsize.eventlist_title Titel
 fontsize.filebrowser_item Dateibrowsereinträge
 fontsize.hint Schriftart wird initialisiert,\nbitte warten...
 fontsize.infobar_channame Kanalname
+fontsize.infobar_ecminfo ECM-Info
 fontsize.infobar_info Info
 fontsize.infobar_number Nummer
 fontsize.infobar_small Klein
@@ -731,6 +767,9 @@ fontsize.menu Menütext
 fontsize.menu_hint Menü-Hilfe
 fontsize.menu_info Menüinfo
 fontsize.menu_title Menütitel
+fontsize.moviebrowser_head Überschriften
+fontsize.moviebrowser_info Info-Fenster
+fontsize.moviebrowser_list Listen-Einträge
 fontsize.subtitles Text Untertitel
 fsk.all aus
 fsk.from_12 ab 12
@@ -747,35 +786,53 @@ hdd_30min 30 min.
 hdd_5min 5 min.
 hdd_60min 60 min.
 hdd_activate Übernehmen
+hdd_allow_set_recdir Erlaube sofort Aufnahmen
 hdd_check Dateisystemprüfung
 hdd_check_failed Datenträgerprüfung fehlgeschlagen
 hdd_check_format_bad Überprüfung von Datenträgern mit Format %s wird nicht unterstützt.
-hdd_extended_settings Erweiterte Festplatteneinstellungen
+hdd_extended_settings Erweiterte Datenträgereinstellungen
 hdd_fast Schnell
 hdd_format Formatiere Datenträger
 hdd_format_failed Formatierung fehlgeschlagen! Stellen Sie sicher, dass der Datenträger nicht in Verwendung ist und versuchen Sie es erneut.
+hdd_format_on_mount_failed Formatieren bei Einhänge-Fehler
 hdd_format_warn Alle Daten auf dem Datenträger werden gelöscht! Formatierung starten?
 hdd_fs Dateisystem zum formatieren
 hdd_fs_unknown unbekannt
-hdd_manage Laufwerke verwalten
+hdd_info_capacity Kapazität
+hdd_info_firmware Firmware
+hdd_info_head HDD Info
+hdd_info_info Ausgelesen mit smartctl
+hdd_info_model Modell
+hdd_info_model_family Modellreihe
+hdd_info_rotation_rate Rotationsrate
+hdd_info_sata_version SATA-Version
+hdd_info_sector_size Sektorengröße
+hdd_info_serial Seriennummer
+hdd_info_temperature Temperatur
+hdd_info_unknown unbekannt
+hdd_manage Datenträger verwalten
 hdd_middle Mittel
 hdd_mount Mount
-hdd_mount_failed Fehler! Überprüfen Sie ihre Laufwerkseinstellungen.
-hdd_mount_ok Laufwerk bereit
+hdd_mount_failed Fehler! Überprüfen Sie ihre Datenträgereinstellungen.
+hdd_mount_ok Datenträger bereit
 hdd_mount_umount Mount/Unmount
 hdd_noise Akustikkontrolle (AAM)
 hdd_not_found Kein Datenträger
+hdd_power Interne HDD-Stromversorgung
 hdd_removable_device Wechseldatenträger
 hdd_set_recdir Diesen Datenträger für die Aufnahme nutzen?
-hdd_settings Laufwerke
+hdd_settings Datenträger
 hdd_sleep Ausschalten nach...
 hdd_slow Langsam
 hdd_statfs Füllstandsabfrage
 hdd_statfs_always immer
 hdd_statfs_recording nur während Aufnahme
 hdd_umount Aushängen
-hdd_umount_warn Laufwerk aushängen
-hdd_umounted Laufwerk entfernt
+hdd_umount_warn Datenträger aushängen
+hdd_umounted Datenträger entfernt
+hdd_wakeup Interne Aufweckfunktion
+hdd_wakeup_msg Aufweckfunktion mit Nachricht 
+hdd_wakeup_start Aufweckfunktion wird gestartet
 imageinfo.creator Ersteller:
 imageinfo.date Datum:
 imageinfo.dokumentation Dokus:
@@ -787,9 +844,41 @@ imageinfo.kernel Kernel:
 imageinfo.license Lizenz
 imageinfo.vcs Git:
 imageinfo.version Version:
+imdb.info IMDb-Info
+imdb.info_save Bild speichern
 inetradio.name Internetradio
+inetradio_autostart Internetradio Auto-Start
+infoicons_background Hintergrund anzeigen
+infoicons_flag_all Alle zurücksetzen
+infoicons_flag_del Benachrichtigungsdatei wird gelöscht
+infoicons_flag_del_head Benachrichtigungen zurücksetzen
+infoicons_flag_delall Benachrichtigungsdateien werden gelöscht
+infoicons_flag_head Benachrichtigungsdatei einstellen
+infoicons_flag_name0 E-Mail Eingang
+infoicons_flag_name1 Anrufbeantworter
+infoicons_flag_name2 Serververbindung
+infoicons_flag_name3 Benutzerdefiniert
+infoicons_flag_name4 Benutzerdefiniert
+infoicons_flag_name5 Benutzerdefiniert
+infoicons_flag_name6 Benutzerdefiniert
+infoicons_flag_name7 Benutzerdefiniert
+infoicons_head Infoicons Einstellungen
+infoicons_infoviewer mit Infoviewer
+infoicons_modeicon Infoicons
+infoicons_msg_start Infoicons werden gestartet
+infoicons_msg_stop Infoicons werden gestoppt
+infoicons_popup nur bei Statusänderungen
+infoicons_skin Anzeige der Infoicons
+infoicons_static permanent
+infoicons_switch_off Infoicons ausblenden
+infoicons_switch_on Infoicons einblenden
 infoviewer.epgnotload Informationen noch nicht geladen...
 infoviewer.epgwait Warte auf EPG-Informationen...
+infoviewer.iconset Iconset
+infoviewer.iconset_pkg0 Original
+infoviewer.iconset_pkg1 NI-Dark
+infoviewer.iconset_pkg2 NI-Bright
+infoviewer.iconset_pkg3 NI-Flat
 infoviewer.motor_moving Antennenpositionierung
 infoviewer.next Später
 infoviewer.nocurrent Keine Info zu laufendem Programm
@@ -860,7 +949,21 @@ keychoosermenu.setnone Keine Taste
 languagesetup.head Sprache und Zeitzonen
 languagesetup.osd Menüsprache
 languagesetup.select Sprache
-lcd_info_line Zeige in Infozeile 
+lcd4l_clock_a Analog-Uhr im Standby-Modus
+lcd4l_logodir Senderlogo-Verzeichnis
+lcd4l_skin Display-Style
+lcd4l_skin_0 Standard
+lcd4l_skin_1 Groß
+lcd4l_skin_2 Klein (SysInfo)
+lcd4l_skin_3 d-box2
+lcd4l_skin_4 Benutzer
+lcd4l_skin_radio Radio-Style aktivieren
+lcd4l_support LCD4Linux-Unterstützung
+lcd4l_support_auto automatisch
+lcd4l_support_off aus
+lcd4l_support_on ein
+lcd4l_weather Wetter im Standby-Modus
+lcd_info_line Zeige in Infozeile
 lcd_info_line_channel Kanalname
 lcd_info_line_clock Uhrzeit
 lcdcontroler.brightness normale
@@ -985,8 +1088,12 @@ menu.hint_back_brief Zurück zum vorherigen Menü.
 menu.hint_backlight Konfigurieren Sie die Hintergrundbeleuchtung der Buttons
 menu.hint_backup Sichern von Konfigurationen und Kanallisten
 menu.hint_bedit Bearbeiten ihrer Favoriten und der Bouquets
+menu.hint_blank_screen Schaltet den VideoDecoder bis zum nächsten Event (Tastendruck, Timer o.ä.) ab
 menu.hint_buildinfo Informationen über Compiler, Compilerflags, Kernel
+menu.hint_ca_init Konfiguration der CA-Systemhardware, CA-Modul und Kartenschächte
 menu.hint_cache_txt Startet das Zwischenspeichern des Teletextes nach einem Kanalwechsel
+menu.hint_camd Softcam und Emulator Einstellungen\nStart, Stop, Versionsinfo
+menu.hint_camd_reset Aktive Softcam und/oder Emulator neu starten
 menu.hint_cec_mode CEC-Modus
 menu.hint_cec_standby CEC-Standby
 menu.hint_cec_view_on CEC view ON
@@ -1051,14 +1158,20 @@ menu.hint_font_ttx Wählen Sie die Schriftart für den Teletext
 menu.hint_fonts Konfigurieren Sie die Schriftart und die Schriftgrößen für die Menüs
 menu.hint_games Zeige Liste der installierten Spiele
 menu.hint_hdd Formatierung und Prüfung der Datenträger
+menu.hint_hdd_allow_set_recdir Erlaubt das sofortige Einstellen des neuen Datenträgers als Aufnahmemedium
 menu.hint_hdd_apply Die veränderten Einstellungen zum Sleep- und Akustik-Modus werden übernommen
 menu.hint_hdd_check Überprüft das Dateisystem und führt gegebenfalls eine Reparatur durch (fsck)
 menu.hint_hdd_fmt Wählen Sie das Datenträgerformat aus
 menu.hint_hdd_format Erstellt eine Partition auf dem Datenträger und formatiert diese
-menu.hint_hdd_noise Setzen Sie Parameter für das Automatic Acoustic Management.\nNicht alle Laufwerke unterstützen diese Funktion
+menu.hint_hdd_format_on_mount_failed Soll der Datenträger formatiert werden, wenn das Einhängen fehlschlägt?
+menu.hint_hdd_info Datenträger-Informationen über Kapazität, Temperatur und mehr
+menu.hint_hdd_noise Setzen Sie Parameter für das Automatic Acoustic Management.\nNicht alle Datenträger unterstützen diese Funktion
+menu.hint_hdd_power Interne HDD-Stromversorgung für die Coolstream HD1 Boxen aktivieren.
 menu.hint_hdd_sleep Dieser Wert definiert, nach wieviel Minuten die Festplatte bei Inaktivität in den Sleep-Modus geschaltet wird
 menu.hint_hdd_statfs Legen Sie fest, wann die Aufnahmeverzeichnis-Füllstandsanzeige im InfoViewer (und ggf. am VFD-Display) aktualisiert werden darf
 menu.hint_hdd_tools Formatieren Sie die gefundenen Datenträger bzw. überprüfen Sie deren Dateisystem
+menu.hint_hdd_wakeup Schaltet die internen Aufweckfunktionen für Festplatten ein oder aus
+menu.hint_hdd_wakeup_msg Schaltet die Benachrichtigung über den Start der Aufweckfunktion ein oder aus
 menu.hint_head_back Ändern Sie die Titel-Hintergrundfarbe
 menu.hint_head_textcolor Ändern Sie die Titel-Textfarbe
 menu.hint_imageinfo Informationen über die installierte Software
@@ -1066,7 +1179,9 @@ menu.hint_inact_timer Ausschalten der Box nach Inaktivität in Minuten.\nDie Box
 menu.hint_inactive_back Ändern Sie die Hintergrundfarbe für deaktivierte Fensterinhalte
 menu.hint_inactive_textcolor Ändern Sie die Textfarbe für deaktivierte Fensterinhalte
 menu.hint_inet_radio Internetradio
+menu.hint_inetradio_autostart Spielt automatisch den ersten Eintrag der Favoriten-Liste ab
 menu.hint_info Informationen über das Image, CPU, Arbeitsspeicher und Stream und mehr
+menu.hint_infobar_analogclock Zeigt eine Analoguhr anstatt der digitalen Anzeige der Zeit
 menu.hint_infobar_back Ändern Sie die Hintergrundfarbe für die Infobar
 menu.hint_infobar_buttons_usertitle Erzwingt die benutzerdefinierten Titel der Farbtasten
 menu.hint_infobar_casys ein: zeigt alle Aktiven farbig, Mini: einzelnes Symbol ob gesperrt, Diskret: alle Aktiven CA-Systeme
@@ -1074,8 +1189,10 @@ menu.hint_infobar_casys_color Ändern Sie die Hintergrundfarbe für die CA-Syste
 menu.hint_infobar_casys_dotmatrix ein: CA-Systemanzeige mit Punktematrix im Hintergrund
 menu.hint_infobar_casys_frame ein: CA-Systemanzeige mit Rahmen
 menu.hint_infobar_dd Zeigt ein Dolby Digital Icon bei Verfügbarkeit
+menu.hint_infobar_ecminfo Anzeigen der ECM-Info, während die Infobar eingeblendet ist
 menu.hint_infobar_filesys Zeigen den vom Flash- und einer HDD verwendeten Speicherplatz
 menu.hint_infobar_fonts Ändern Sie die Schriftgrößen in der Infobar
+menu.hint_infobar_iconset Auswahl der Iconsets für die CA-Anzeige
 menu.hint_infobar_logo Logo-, Kanalnummer- und Signal-Anzeige; Optionen in [Klammern] erscheinen in der kleinen Infobox
 menu.hint_infobar_logo_dir Wählen Sie das Verzeichnis für die Senderlogos
 menu.hint_infobar_on_epg Zeigt einen Hinweis bei EPG-Änderungen
@@ -1086,6 +1203,21 @@ menu.hint_infobar_setup Wählen Sie die Anzeigeoptionen für die Infobar aus
 menu.hint_infobar_textcolor Ändern Sie die Textfarbe für die Infobar
 menu.hint_infobar_tuner Zeigt den aktiven Tuner als Nummernicon
 menu.hint_infoclock_setup Wählen Sie die Anzeigeoptionen für die Info Uhr
+menu.hint_infoicons_background Legt fest, ob die Infoicons mit oder ohne Hintergrund gezeigt werden sollen
+menu.hint_infoicons_flag_all Alle Benachrichtigungen zurücksetzen
+menu.hint_infoicons_flag_del_head Einzelne oder alle Benachrichtigungen der Infoicons zurücksetzen
+menu.hint_infoicons_flag_head Benachrichtigungsdatei der Infoicons bearbeiten
+menu.hint_infoicons_flag_name0 Eintrag der Benachrichtigungsdatei
+menu.hint_infoicons_flag_name1 Eintrag der Benachrichtigungsdatei
+menu.hint_infoicons_flag_name2 Eintrag der Benachrichtigungsdatei
+menu.hint_infoicons_flag_name3 Eintrag der Benachrichtigungsdatei
+menu.hint_infoicons_flag_name4 Eintrag der Benachrichtigungsdatei
+menu.hint_infoicons_flag_name5 Eintrag der Benachrichtigungsdatei
+menu.hint_infoicons_flag_name6 Eintrag der Benachrichtigungsdatei
+menu.hint_infoicons_flag_name7 Eintrag der Benachrichtigungsdatei
+menu.hint_infoicons_head Konfiguration der Infoicons
+menu.hint_infoicons_modeicon Infoicons aktivieren/deaktivieren
+menu.hint_infoicons_skin Anzeigeverhalten der Infoicons
 menu.hint_keep_numbers Mit der Aktivierung werden den Sendern feste/dauerhafte Kanalnummern zugewiesen
 menu.hint_key_addrecord Weisen Sie eine Taste für das Starten und Markieren von Aufnahmen im EPG zu
 menu.hint_key_addremind Weisen Sie eine Taste für das Umschalten im EPG über den Timer zu
@@ -1150,6 +1282,12 @@ menu.hint_language Menü-Sprache, Zeitzone, bevorzugte Tonspuren, Untertitel-Spr
 menu.hint_last_radio Wählen Sie den Start-Sender im Radio-Modus
 menu.hint_last_tv Wählen Sie den Start-Sender im TV-Modus
 menu.hint_last_use Speichert den aktuellen Kanal beim Herunterfahren der Box
+menu.hint_lcd4l_clock_a Zeigt im Standby-Betrieb eine Analog-Uhr anstatt einer Digital-Uhr
+menu.hint_lcd4l_logodir Verzeichnis für Senderlogos\nBei ungültigem Eintrag Fallback auf Standard-Logoverzeichnis
+menu.hint_lcd4l_skin Auswahl der verfügbaren Darstellungsarten\nStandard, Groß, SysInfo, d-box2, Benutzerdefiniert
+menu.hint_lcd4l_skin_radio Wechselt die Darstellungsart, wenn der Radio-Modus aktiviert wird
+menu.hint_lcd4l_support LCD4Linux aktivieren/deaktivieren\nUnterstützte Displays: Pearl DPF
+menu.hint_lcd4l_weather Zeigt im Standby-Betrieb die entsprechenden Daten des ersten Favoriteneintrags von tuxwetter auf dem Display an
 menu.hint_leds_blink Die Power-LEDs blinken, wenn sich der Receiver im Deep-Standby befindet und ein Timer aktiv ist
 menu.hint_leds_deepstandby Definiert den Status der Power-LEDs im Deep-Standby
 menu.hint_leds_record Definiert, ob die Power-LEDs blinken sollen, wenn eine Aufnahme aktiv ist
@@ -1168,6 +1306,7 @@ menu.hint_mbkey_cover Weisen Sie eine Taste zu, um Filmcover während der Wieder
 menu.hint_media Abspielen von Musik, Internetradio und Filmen; Betrachten Sie Bilder
 menu.hint_menu_fonts Ändern Sie die Schriftgrößen im Menü
 menu.hint_menu_hints Zeigt Ihnen Hinweise zu den Menüpunkten an. Sie erreichen das auch jederzeit mit der Taste 'Hilfe'
+menu.hint_menu_hints_line Aktiviert/deaktiviert die Linie vom Menü zu diesen Hinweisen
 menu.hint_menu_pos Legen Sie die Anzeigeposition der Menüs fest
 menu.hint_menus Wählen Sie die Anzeigeoptionen für die Menüs
 menu.hint_misc_cec HDMI-CEC Optionen
@@ -1178,6 +1317,7 @@ menu.hint_misc_filebrowser Dateisystem, Dateirechte anzeigen im Dateibrowser, St
 menu.hint_misc_general Standby-, Teletext- und Rotor-Einstellungen, Pluginverzeichnis auf externem Datenträger
 menu.hint_misc_zapit Verwaltung der Start-Kanäle für den TV/Radio-Modus
 menu.hint_movie Wiedergabe von Filmen
+menu.hint_moviebrowser_fonts Ändern Sie die Schriftgrößen im Moviebrowser (Meine Aufnahmen)
 menu.hint_moviebrowser_setup Legen Sie Auswahl- und Anzeigeoptionen des MovieBrowsers fest
 menu.hint_movieplayer_plugin Wählen Sie ein Plugin, das mit einer Schnellstart-Taste im Movieplayer-Modus gestartet wird
 menu.hint_net_broadcast Ändern Sie die Broadcast-Adresse.\nWenn Sie unsicher sind, verwenden Sie zuletzt .255
@@ -1195,6 +1335,7 @@ menu.hint_net_netmask Geben Sie eine Netzwerkmaske ein\nStandart ist 255.255.255
 menu.hint_net_nfs_mount Bearbeiten Sie die Netzwerkfreigaben und deren Einhängepunkte
 menu.hint_net_nfs_umount Hängen Sie eingehängte Netzwerkfreigaben wieder aus
 menu.hint_net_ntp Ändern Sie den Zeitserver für die Zeitsynchronisation via Internet
+menu.hint_net_ntpatboot Aktiviert die Zeitsynchronisierung via NTP beim Hochfahren der Box
 menu.hint_net_ntpenable Aktiviert die Zeitsynchronisierung via NTP.\nWenn das NTP nicht erfolgreich ist, verwenden Sie DVB
 menu.hint_net_ntprefresh Stellen Sie den Interval zur Zeitsynchronisation ein
 menu.hint_net_ntpserver Geben Sie den NTP-Server ein
@@ -1213,10 +1354,19 @@ menu.hint_net_telnet Aktiviert Telnet auf Ihrer Box
 menu.hint_net_test Testet die Netzwerkverbindung:\nPing auf Gateway, Name-Server und externe IP-Adressen
 menu.hint_net_ushare Freigabe verbundener Datenträger über UPnP
 menu.hint_net_xupnpd Freigabe von Live Channels über UPNP
+menu.hint_netfs_automount_write automount Einträge speichern und %s schreiben
+menu.hint_netfs_fstab_domount fstab Einträge einhängen
+menu.hint_netfs_fstab_doumount fstab Einträge aushängen
+menu.hint_netfs_fstab_write fstab Einstellungen speichern und %s schreiben
+menu.hint_netfs_menu_main_automount Bearbeiten der automounter Einträge
+menu.hint_netfs_menu_main_fstab Bearbeiten der fstab Einträge
+menu.hint_netfs_menu_main_head Konfiguration von fstab und automounter
+menu.hint_netfs_mounts NetFS Eintrag
 menu.hint_network IP-Adresse, Gateway, DNS, Zeit-Sync, Netzwerk-Freigaben, Dienste und mehr
 menu.hint_new_zap_mode Aktiviert Quickzap in der Kanalliste. Nach Betätigen der Mute-Taste wird mit den Hoch/Runter-Tasten direkt umgeschalten
 menu.hint_next Weiter zum nächsten Menü.\nDie Taste 'Menü' schließt alle Menüs
 menu.hint_next_brief Weiter zum nächsten Menü
+menu.hint_nimenu Konfiguration von Softcams, Plugins, Tools und mehr
 menu.hint_numeric_adjust Bei numerischer Programmwahl die Kanalliste am neu gewählten Programm ausrichten
 menu.hint_opkg Software-Pakete installieren oder vorhandene aktualisieren
 menu.hint_opkg_feed_addresses_edit Bearbeiten von Feed-Adressen
@@ -1241,7 +1391,9 @@ menu.hint_plugin_type_games Legt fest, ob Spiele im Benutzermenü unter der Rubr
 menu.hint_plugin_type_lua Legt fest, ob Plugins im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_scripts Legt fest, ob Skripte im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_tools Legt fest, ob Werkzeuge im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
+menu.hint_plugins_control Verwaltung von installierten Plugins und Diensten
 menu.hint_plugins_hdd_dir Auswahl des Verzeichnisses zum Laden der Plugins von einem externen Datenträger
+menu.hint_plugins_hide Integrierte Plugins oder Plugins in den Benutzermenüs verstecken oder anzeigen
 menu.hint_power_leds Konfiguriert das Verhalten der LEDs an der Power-Taste
 menu.hint_pref_lang Wählen Sie ihre bevorzugte Tonspur und EPG-Sprache,\ndie Einstellung 'none' deaktiviert diese Option
 menu.hint_pref_subs Wählen Sie ihre bevorzugte Untertitel-Sprache,\ndie Einstellung 'none' deaktiviert diese Option
@@ -1270,6 +1422,7 @@ menu.hint_record_data_vtxt Teletext-Spur zu Aufnahme hinzufügen
 menu.hint_record_dir Wählen Sie das Aufnahmeverzeichnis
 menu.hint_record_end Wählen Sie zwischen maximaler Aufnahmezeit oder einem Aufnahmeende anhand der EPG-Daten
 menu.hint_record_filename_template Vorlagemuster für den Dateinamen bearbeiten
+menu.hint_record_fill_warn Zeige Warnung, wenn das Aufnahmemedium zu voll wird
 menu.hint_record_slow_warn Zeige Warnung, wenn der Aufnahmepuffer zu überlaufen droht
 menu.hint_record_startstop_msg Schaltet die Meldung bei Aufnahmestart/ende ein oder aus.
 menu.hint_record_tdir Wählen Sie ein Verzeichnis für Ihre Timeshift-Aufnahmen im temporären Timeshift-Modus
@@ -1289,6 +1442,7 @@ menu.hint_recording Aufnahme-, Timeshift- und Timer-Optionen, Einstellung von au
 menu.hint_reload_channels Kanallisten neu laden, um Änderungen wirksam zu machen
 menu.hint_reload_plugins Plugins neu laden, um Änderungen wirksam zu machen
 menu.hint_reset Zurücksetzen von Neutrino-HD-Einstellungen auf Standardwerte. Tuner-Einstellungen und Kanäle bleiben erhalten
+menu.hint_restart_tuner Führen Sie einen Neustart des internen Tuners durch. Das kann Empfangsprobleme beheben.
 menu.hint_restore Wiederherstellen von vorher erstellten Sicherungen
 menu.hint_rotor_swap Tauschen der Rotordrehrichtung Ost/West in den Motor-Einstellungen
 menu.hint_rounded_corners Aktiviert die Darstellung abgerundeter Ecken für die Menüs
@@ -1365,6 +1519,7 @@ menu.hint_scan_usals USALS Optionen
 menu.hint_scan_usals_repeat Geben Sie die USALS-Wiederholungen für den Rotor ein
 menu.hint_scan_usalsall Verwenden Sie USALS für alle Satelliten an diesem Tuner
 menu.hint_scan_useusals Verwenden Sie USALS für diesen Satelliten,\nwenn aktiv, wird Rotorposition ignoriert
+menu.hint_scart_osd_fix Anzeigefix für ältere Monitore\nPAL bzw. PAL-Breitbild Auflösung
 menu.hint_scrambled_message Bei aktivierter Option erscheint eine Meldung, wenn ein verschlüsselter Sender nicht entschlüsselt werden kann
 menu.hint_screen_setup Konfigurieren Sie den Bildschirmbereich für die Menüanzeige
 menu.hint_screensaver_delay Legen sie die Zeit (in Minuten) fest, nach der der Bildschirmschoner starten soll oder schaltet ihn aus
@@ -1450,6 +1605,7 @@ menu.hint_volume_digits Zifferndarstellung der Lautstärkeanzeige ein- oder auss
 menu.hint_volume_pos Wählen Sie die Position der Lautstärkeanzeige aus
 menu.hint_volume_size Wählen Sie die Höhe der Lautstärkeanzeige
 menu.hint_webtv_setup Hier konfigurierte WebTV-Kanäle finden Sie in der Kanalverwaltung.
+menu.hint_webtv_xml_auto Lädt automatisch alle XML-Dateien aus %s/
 menu.hint_window_size Kanalliste, EPG-Infos und einige andere Fenster werden mit diesem Faktor skaliert
 menu.hint_ytplay Wiedergabe von ausgewählten Youtube Feeds
 menu.hint_ytplay_setup Konfigurieren Sie YouTube-spezifische Optionen wie maximale Ergebnisse bei Suchen oder Cache-Verzeichnis
@@ -1459,6 +1615,7 @@ messagebox.back Zurück
 messagebox.cancel Abbruch
 messagebox.discard Wollen Sie die Änderungen verwerfen?
 messagebox.error Fehler
+messagebox.exit Beenden
 messagebox.feature_not_supported Funktion wird nicht unterstützt. Bitte wenden Sie sich an Ihren Firmware-Anbieter!
 messagebox.info Information
 messagebox.no Nein
@@ -1503,6 +1660,7 @@ miscsettings.epg_scan_standby Im Standby Modus
 miscsettings.general Allgemein
 miscsettings.head Erweitert
 miscsettings.infobar Infobar
+miscsettings.infobar_analogclock Analoguhr
 miscsettings.infobar_buttons_usertitle Benutzertitel für Farbtasten
 miscsettings.infobar_casystem_display CA-Systemanzeige
 miscsettings.infobar_casystem_dotmatrix CA-Anzeige mit Punktematrix
@@ -1537,6 +1695,7 @@ miscsettings.progressbar_design_1 vertikale Balken
 miscsettings.progressbar_design_2 horizontale Balken
 miscsettings.progressbar_design_3 Farbverlauf
 miscsettings.progressbar_design_4 monochrom
+miscsettings.progressbar_design_5 grafisch
 miscsettings.progressbar_design_long Design
 miscsettings.progressbar_gradient 3D-Effekt
 miscsettings.progressbar_infobar_position Position
@@ -1670,6 +1829,7 @@ moviebrowser.hint_movieend Filmende in 5 Sekunden\n'0' zum Weitersehen
 moviebrowser.hint_newbook_backward Neue Wiederholung gestartet.\n'%s' bestimmt die Endposition, '0' bricht ab.
 moviebrowser.hint_newbook_forward Neuer Werbesprung gestartet.\n'%s' bestimmt die Endposition, '0' bricht ab.
 moviebrowser.hint_truncate Entfernt den Filmteil hinter der Filmende-Markierung
+moviebrowser.imdb_data Lade IMDb-Daten
 moviebrowser.info_audio Audio
 moviebrowser.info_channel Kanal
 moviebrowser.info_file Datei
@@ -1723,7 +1883,7 @@ moviebrowser.menu_truncate Film kürzen
 moviebrowser.option_browser Anzeigeoptionen
 moviebrowser.reload_at_start Filminfos neu laden bei Start
 moviebrowser.remount_at_start Filmdepot verbinden bei Start
-moviebrowser.scan_for_movies Suche Filme ...
+moviebrowser.scan_for_movies Filminfos neu laden
 moviebrowser.serie_auto_create Serien automatisch zuordnen
 moviebrowser.serie_head Serie
 moviebrowser.serie_name Name ändern
@@ -1754,7 +1914,7 @@ moviebrowser.truncate Film kürzen?
 moviebrowser.truncate_failed Fehler beim Kürzen des Films
 moviebrowser.truncate_failed_playing Kürzen des Films während der Wiedergabe nicht möglich.
 moviebrowser.truncating Kürze Film, bitte warten ...
-moviebrowser.ts_only Nur Aufnahmen zeigen
+moviebrowser.ts_only Alle Videoformate zeigen
 moviebrowser.update_if_dest_empty_only Übernehmen nur wenn Ziel leer
 moviebrowser.use_dir Verzeichnis verwenden
 moviebrowser.use_movie_dir Wiedergabeverzeichnis verwenden
@@ -1824,6 +1984,26 @@ mpkey.rewind Rücklauf
 mpkey.stop Stopp
 mpkey.subtitle Untertitel
 mpkey.time Zeitanzeige
+netfs.active_onoff Eintrag aktiv
+netfs.automount_head NetFS Einstellungen
+netfs.automount_intro Einträge für auto.net
+netfs.automount_intro_mounts NetFS-Mounts bearbeiten
+netfs.automount_write Einstellungen speichern und auto.net schreiben
+netfs.automount_write_info auto.net wurde geschrieben
+netfs.dump Dump
+netfs.fstab_domount NetFS-Verzeichnisse anhängen (mount)
+netfs.fstab_domount_info '/etc/init.d/fstab start_netfs' wird ausgeführt
+netfs.fstab_doumount NetFS-Verzeichnisse aushängen (umount)
+netfs.fstab_doumount_info '/etc/init.d/fstab stop_netfs' wird ausgeführt
+netfs.fstab_head NetFS Einstellungen
+netfs.fstab_intro Einträge für fstab
+netfs.fstab_intro_mounts NetFS-Mounts bearbeiten
+netfs.fstab_write Einstellungen speichern und fstab schreiben
+netfs.fstab_write_info fstab wurde geschrieben
+netfs.menu_main_edit Einträge bearbeiten
+netfs.menu_main_head NetFS Einstellungen
+netfs.menu_main_intro Konfiguration von fstab und auto.net
+netfs.pass Pass
 networkmenu.apply_settings Änderungen werden übernommen...
 networkmenu.apply_settings_now Änderungen jetzt zuweisen?
 networkmenu.broadcast Broadcast
@@ -1838,6 +2018,7 @@ networkmenu.ipaddress IP
 networkmenu.mount Netzwerkfreigaben bearbeiten
 networkmenu.nameserver Nameserver
 networkmenu.netmask Netzmaske
+networkmenu.ntpatboot Zeit beim Booten synchr.
 networkmenu.ntpenable Zeit per INet synchronisieren
 networkmenu.ntprefresh NTP/DVB-Aktualisierung
 networkmenu.ntprefresh_hint1 NTP/DVB-Time-Sync [min]
@@ -1858,7 +2039,7 @@ networkmenu.ssid_scan WLAN-Netzwerke suchen
 networkmenu.ssid_scan_error Keine WLAN-Netzwerke gefunden.
 networkmenu.ssid_scan_wait WLAN-Netzwerke werden gesucht...
 networkmenu.test Netzwerk testen
-neutrino_starting Neutrino-HD wird gestartet...
+neutrino_starting NI \o/
 nfs.alreadymounted Verzeichnis bereits gemountet.
 nfs.automount Beim Start mounten
 nfs.dir Verzeichnis/Freigabe
@@ -1882,6 +2063,8 @@ nfs.umount Netzwerk Verzeichnis unmounten
 nfs.umounterror Umount-Fehler
 nfs.username Benutzername
 nfsmenu.head NFS/CIFS/FTPFS Einstellungen
+nimenu.head NI-Einstellungen
+nimenu.head_special Extra-Einstellungen
 nvod.percentage (%d%% vorbei)
 nvod.starting (Beginn in %d min)
 nvodselector.directormode Bildregie-Modus
@@ -1920,6 +2103,8 @@ options.off aus
 options.on ein
 options.on.without_messages ohne Msg
 options.serial seriell
+options.start starten
+options.stop stoppen
 parentallock.bouquetmode Bouquets sind standardmässig
 parentallock.changepin PIN-Code festlegen
 parentallock.changepin_hint1 Geben Sie hier Ihren neuen PIN-Code ein!
@@ -2000,7 +2185,7 @@ pictureviewer.help6 vorheriges Bild
 pictureviewer.help7 nächstes Bild
 pictureviewer.help8 Modus verlassen
 pictureviewer.help9 Anzeige-Modus
-pictureviewer.resize.color_average aufwendig
+pictureviewer.resize.color_average aufwändig
 pictureviewer.resize.none keine
 pictureviewer.resize.simple einfach
 pictureviewer.scaling Skalierung
@@ -2015,7 +2200,35 @@ ping.socket ist nicht erreichbar (Socket-Fehler)
 ping.unreachable ist nicht erreichbar (unerreichbar)
 pinprotection.head PIN-Abfrage
 pinprotection.wrongcode Geben Sie den Code nocheinmal ein!
+plugin.hide_no Anzeigen
+plugin.hide_yes Verstecken
+plugin.item_crond_desc cron Daemon kann zeitgesteuerte Aufgaben ausführen
+plugin.item_crond_name crond
+plugin.item_djmount_desc UPnP AV Client kann den Inhalt von Media-Servern mounten
+plugin.item_djmount_name djmount
+plugin.item_dropbear_desc SSH2 Server und Client
+plugin.item_dropbear_name Dropbear
+plugin.item_emmremind_desc Zeigt eine Änderung der EMM's in den Infoicons an
+plugin.item_emmremind_name EMM-Änderungsbenachrichtigung
+plugin.item_fcm_desc Zeigt die Anrufliste der FRITZ!Box und noch vieles mehr ...
+plugin.item_fcm_name FritzCallMonitor
+plugin.item_inadyn_desc DynDNS Client
+plugin.item_inadyn_name Inadyn
+plugin.item_nfsserver_desc NFS Kernel Server
+plugin.item_nfsserver_name NFS-Server
+plugin.item_sambaserver_desc Server-Message-Block-Protokoll (SMB) Implementierung
+plugin.item_sambaserver_name Samba-Server
+plugin.item_tuxcald_desc Kalenderplugin
+plugin.item_tuxcald_name TuxCal
+plugin.item_tuxmaild_desc Mailplugin (IMAP/SMTP)
+plugin.item_tuxmaild_name TuxMail
+plugin.item_ushare_desc A/V und DLNA Medienserver
+plugin.item_ushare_name uShare
+plugin.item_xupnpd_desc eXtensible UPnP agent - DLNA Medienserver für IPTV
+plugin.item_xupnpd_name xupnpd
+plugins.control Plugins und Services verwalten
 plugins.hdd_dir Externes Plugin-Verz.
+plugins.hide Plugins verstecken oder anzeigen
 plugins.no_plugin Kein Plugin
 plugins.result Pluginausgabe
 plugintype.disabled Deaktiviert
@@ -2027,6 +2240,9 @@ rclock.locked Gesperrt
 rclock.lockmsg Die Fernbedienung wird gesperrt.\nUm die Sperre aufzuheben, bitte\n[rot] gefolgt von [%s]\nauf der Fernbedienung drücken.
 rclock.title Fernbedienung sperren
 rclock.unlockmsg Fernbedienung reaktiviert
+recording.end Aufnahmeende festlegen
+recording.end_text Soll die Aufnahme zum Ende der aktuellen Sendung stoppen?
+recording.fill_text Das Aufnahmemedium ist zu %d%% gefüllt. Trotzdem aufnehmen?
 recording.is_running Folgende Aufnahme läuft bereits! Neue Aufnahme starten?
 recording.start Starte Aufnahme, bitte warten...!
 recording.startstop_msg Meldung bei Aufnahme Start/Ende
@@ -2049,6 +2265,7 @@ recordingmenu.file Direkt (Datei)
 recordingmenu.filename_template Vorlage für Dateiname
 recordingmenu.filename_template_hint Platzhalter werden durch folgende Werte ersetzt:
 recordingmenu.filename_template_hint2 %C = Kanal, %T = Titel, %I = Info, %d = Datum, %t = Zeit
+recordingmenu.fill_warn Warnung bei einem Füllstand von
 recordingmenu.help Aufnahmegeräte:\n-----------------------\nServer:\nauf PC mit Hilfe eines Streaming-Programmes\n\n(analoger) Videorekorder:\nüber VCR-Ausgang\n\nDirekt (Datei):\nauf ein per NFS gemountetes Verzeichnis\noder eine interne Festplatte\nTS: SPTS-Mode Treiber laden(dbox2)\nPES: SPTS-Mode Treiber nicht laden(dbox2)\n\n\nMaximale Dateigröße:\n----------------------\nNFS V2: 2 GB (2048 MB)\nNFS V3: fast unendlich (0 MB)\nFAT: 2 GB (2048 MB)\nFAT32: 4 GB (4096 MB)
 recordingmenu.multimenu.ask_stop_all Wirklich alle %d Aufnahmen beenden?
 recordingmenu.multimenu.info_stop_all %d von %d Aufnahmen werden beendet.
@@ -2074,9 +2291,9 @@ reset_channels Lösche Kanäle
 reset_confirm Sind Sie sich sicher?
 reset_removed Entferne gelöschte Kanäle
 reset_settings Einstellungen auf Standardwerte
-satsetup.auto_scan Automatisch einen gewählten %s
-satsetup.auto_scan_all Automatisch alle Satelliten
-satsetup.cable Kabel-Scan
+satsetup.auto_scan Automatischer Scan (%s)
+satsetup.auto_scan_all Automatischer Scan (alle Satelliten)
+satsetup.cable Erweiterter Kabel-Scan
 satsetup.cable_nid Netzwerk ID
 satsetup.comm_input Committed Input
 satsetup.diseqc DiSEqC
@@ -2185,6 +2402,7 @@ scants.select_tp Wählen Sie einen Transponder
 scants.startnow Kanalsuche starten
 scants.test Empfangstest
 scants.transponders Transponder:
+scart_osd_fix CRT SCART OSD-Fix
 scrambled_channel Verschlüsselung aktiv
 screensaver.delay Verzögerung
 screensaver.dir Verzeichnis
@@ -2218,12 +2436,15 @@ servicemenu.reload_hint Kanallisten werden neu geladen,\nbitte warten...
 servicemenu.restart Neutrino-HD neu starten
 servicemenu.restart_hint Neutrino-HD wird neu gestartet...
 servicemenu.restart_refused_recording Aufnahme läuft. Neustart nicht möglich.
+servicemenu.restart_tuner Tuner neu starten
+servicemenu.restarting_tuner Tuner wird neu gestartet
 servicemenu.scants Kanalsuche
 servicemenu.update Software-Aktualisierung
-settings.backup Image-Einstellungen: Sichern
+settings.backup NI-Backup: Sichern
 settings.backup_failed Sicherung fehlgeschlagen!
 settings.help Hilfe
 settings.menu_hints Hinweise anzeigen
+settings.menu_hints_line Zeige Linie zu den Menü-Hinweisen
 settings.menu_pos Position
 settings.menus Menüs
 settings.missingoptionsconffile Die Neutrino-HD Einstellungen wurden erweitert.\nDie neuen Werte werden auf Standard gesetzt.
@@ -2236,8 +2457,16 @@ settings.pos_higher_center höher zentriert
 settings.pos_top_center oben zentriert
 settings.pos_top_left oben links
 settings.pos_top_right oben rechts
-settings.restore Image-Einstellungen: Wiederherstellen
+settings.restore NI-Backup: Wiederherstellen
 settings.restore_warn Alle Settings werden ersetzt.\nDie Box wird neu gestartet.\nWeiter?
+settings.teams Team-übergreifende Einstellungen
+settings.teams.backup Sichern
+settings.teams.backup_failed Sicherung fehlgeschlagen!
+settings.teams.backup_to Sichern nach 
+settings.teams.help Hilfe
+settings.teams.help_text In diesem Menü können Einstellungen gesichert und\nwiederhergestellt werden, die zu folgenden Team-Images\nkompatibel sind:\n \n        - BluePeer HD\n        - NI CS-Image\n \nGesichert werden:\n \n        * Kanallisten\n        * Timer und Timer-Einstellungen\n        * Netzwerkeinstellungen (LAN und WLAN)
+settings.teams.restore Wiederherstellen
+settings.teams.restore_warn Team-übergreifende Einstellungen werden ersetzt.\nDie Box wird neu gestartet.\nWeiter?
 shutdown.recording_query Aufnahme läuft. Trotzdem beenden?
 shutdowntimer.announce Die Box wird in 1 Min. heruntergefahren.\nShutdown abbrechen?
 sleeptimerbox.announce Die Box wird in 1 Min. in Standby-Betrieb gehen.\nStandby-Betrieb abbrechen?
@@ -2257,13 +2486,13 @@ streaminfo.framerate_unknown unbekannt
 streaminfo.head Tech. Information
 streaminfo.not_available nicht verfügbar
 streaminfo.resolution Auflösung
-streaminfo.signal Empfangssignal
+streaminfo.signal Signal
 streaming.busy Ein oder mehrere Aufnahmeprozesse sind aktiv.\nSollte die Aufnahme eigentlich beendet sein,\nschafft ein Neustart von Neutrino-HD Abhilfe.
 streaming.dir_not_writable Das Aufnahmeverzeichnis ist nicht beschreibbar.\nAufnahmen sind daher nicht möglich.
 streaming.overflow Aufnahme-Puffer Überlauf! Bitte ggf. einige Aufnahmen beenden.
 streaming.slow System oder Datenträger zu langsam! Bitte ggf. einige Aufnahmen beenden.
 streaming.write_error Die Aufnahme wurde leider abgebrochen,\nda ein Fehler beim Schreiben der Daten auftrat.
-stringinput.backspace Rücklöschen
+stringinput.backspace Rücktaste
 stringinput.caps Groß / Klein
 stringinput.clear Alles löschen
 stringinput.insert Einfügen
@@ -2451,6 +2680,7 @@ videomenu.videomode Videosystem
 webtv.head WebTV
 webtv.xml WebTV-XML-Dateien
 webtv.xml.add XML-Datei hinzufügen
+webtv.xml.auto XML-Dateien automatisch laden
 webtv.xml.del XML-Datei entfernen
 window_size Fenstergröße in %
 wizard.initial_settings Grundeinstellungen gefunden
@@ -2460,8 +2690,8 @@ wizard.setup_advanced Erweitert
 wizard.setup_easy Einfach
 wizard.setup_type Installationstyp
 wizard.setup_type_hint Wählen Sie einfache Grundeinstellungen oder erweiterte Auswahlmöglichkeiten für die Installation
-wizard.welcome_head Willkommen zur Ersteinrichtung Ihres Receivers!
-wizard.welcome_text Wir gratulieren Ihnen zum Kauf Ihrer CST. In den nun folgenden\nSchritten begleiten wir Sie durch die Erstinstallation des Gerätes.\nWir wünschen Ihnen viel Freude mit dem wohl einzigartigsten Receiver!\nBeachten Sie: Ihre CST Set-Top-Box lässt sich bequem per Webinterface\nsteuern, um zum Beispiel die Timer-Verwaltung zu nutzen oder Live-TV im Web-Browser zu schauen.\nAchten Sie darauf, dass Ihre Gerät nicht von aussen zugänglich ist,\nda sonst ein Zugriff über das Internet nicht ausgeschlossen werden kann!\nNächster Schritt?
+wizard.welcome_head Willkommen beim NI-Setup-Assistenten!
+wizard.welcome_text NI-Image Info:\nIhre CST Set-Top-Box lässt sich bequem per Webinterface\nsteuern fuer z.B. Timer-Verwaltung oder Live-TV im Web-Browser.\nEin root-Passwort ist noch nicht gesetzt!\nDies sollte so bald wie möglich durch den Befehl "passwd"\nvia Telnet nachgeholt werden um Fremdzugriffe auf den Receiver zu verhindern.\nNächster Schritt?
 word.from ab
 word.in in
 zapit.scantype Service-Auswahl

@@ -56,6 +56,9 @@
 #include <eitd/sectionsd.h>
 #include <timerdclient/timerdclient.h>
 
+//NI
+#include <system/helpers.h>
+
 extern CPictureViewer * g_PicViewer;
 
 #define ICON_LARGE_WIDTH 26
@@ -122,6 +125,11 @@ CEpgData::CEpgData()
 	frameBuffer = CFrameBuffer::getInstance();
 	tmdbtoggle = false;
 	header     = NULL;
+	//NI
+	imdb = CIMDB::getInstance();
+	imdb_activ = false;
+	poster_w = 0;
+	poster_h = 0;
 }
 
 CEpgData::~CEpgData()
@@ -180,6 +188,11 @@ void CEpgData::processTextToArray(std::string text, int screening, bool has_cove
 	text += ' ';
 	char* text_= (char*) text.c_str();
 
+	//NI IMDb
+	int poster_offset = 0;
+	if (imdb_activ)
+		poster_offset += poster_w+35;
+
 	while (*text_!=0)
 	{
 		if ( (*text_==' ') || (*text_=='\n') || (*text_=='-') || (*text_=='.') )
@@ -192,7 +205,8 @@ void CEpgData::processTextToArray(std::string text, int screening, bool has_cove
 
 			// check the wordwidth - add to this line if size ok
 			int aktWordWidth = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth(aktWord);
-			if ((aktWordWidth+aktWidth)<(ox - 20 - 15 - (has_cover? (std::min((sb-10)*342/513,342)) :0)))
+			//NI if ((aktWordWidth+aktWidth)<(ox - 20 - 15 - (has_cover? (std::min((sb-10)*342/513,342)) :0)))
+			if ((aktWordWidth+aktWidth)<(ox - 20 - 15 - (has_cover? (std::min((sb-10)*342/513,342)) : poster_offset))) //NI IMDb
 			{//space ok, add
 				aktWidth += aktWordWidth;
 				aktLine += aktWord;
@@ -242,6 +256,13 @@ void CEpgData::showText(int startPos, int ypos, bool cover, bool fullClear)
 	int offset = 0, count = 0;
 	int max_mon_w = 0, max_wday_w = 0;
 	int digi = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth("29..");
+
+	//NI IMDb
+	int poster_offset = cover_offset;
+	if(imdb_activ){
+		poster_offset += poster_w+35;
+	}
+
 	for(int i = 0; i < 12;i++){
 		max_mon_w = std::max(max_mon_w, g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth(std::string(g_Locale->getText(CLocaleManager::getMonth(i))) + " "));
 		if(i > 6)
@@ -253,7 +274,8 @@ void CEpgData::showText(int startPos, int ypos, bool cover, bool fullClear)
 
 	if (cover) {
 		if (!g_PicViewer->DisplayImage("/tmp/tmdb.jpg",sx+3,y+3+((sb-cover_height)/2),cover_width,cover_height, CFrameBuffer::TM_NONE)) {
-			cover_offset = 0;
+			//NI cover_offset = 0;
+			cover_offset = poster_offset = 0; //NI
 			frameBuffer->paintBoxRel(sx, y, ox-15, sb, COL_MENUCONTENT_PLUS_0); // background of the text box
 		}
 	}
@@ -298,7 +320,8 @@ void CEpgData::showText(int startPos, int ypos, bool cover, bool fullClear)
 			count = 0;
 		}
 		else{
-			g_Font[( i< info1_lines ) ?SNeutrinoSettings::FONT_TYPE_EPG_INFO1:SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->RenderString(sx+10+cover_offset, y+medlineheight, ox- 15- 15, epgText[i].first, COL_MENUCONTENT_TEXT);
+			//NI g_Font[( i< info1_lines ) ?SNeutrinoSettings::FONT_TYPE_EPG_INFO1:SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->RenderString(sx+10+cover_offset, y+medlineheight, ox- 15- 15, epgText[i].first, COL_MENUCONTENT_TEXT);
+			g_Font[( i< info1_lines ) ?SNeutrinoSettings::FONT_TYPE_EPG_INFO1:SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->RenderString(sx+10+poster_offset, y+medlineheight, ox- 15- 15 -poster_offset, epgText[i].first, COL_MENUCONTENT_TEXT); //NI IMDb
 		}
 	}
 
@@ -789,6 +812,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				CNeutrinoApp::getInstance()->handleMsg(msg, data);
 				break;
 			case CRCInput::RC_left:
+				//NI
+				if(imdb_activ)
+					imdb_activ = false;
+
 				if ((prev_id != 0) && !call_fromfollowlist)
 				{
 					frameBuffer->paintBoxRel(sx+ 5, sy+ oy- botboxheight+ 4, botboxheight- 8, botboxheight- 8,  COL_MENUCONTENT_PLUS_1);
@@ -800,6 +827,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 
 			case CRCInput::RC_right:
+				//NI
+				if(imdb_activ)
+					imdb_activ = false;
+
 				if ((next_id != 0) && !call_fromfollowlist)
 				{
 					frameBuffer->paintBoxRel(sx+ ox- botboxheight+ 8- 5, sy+ oy- botboxheight+ 4, botboxheight- 8, botboxheight- 8,  COL_MENUCONTENT_PLUS_1);
@@ -811,6 +842,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 
 			case CRCInput::RC_down:
+				//NI
+				if(imdb_activ)
+					break;
+
 				if (showPos+scrollCount<textCount)
 				{
 					showPos += scrollCount;
@@ -819,6 +854,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 
 			case CRCInput::RC_up:
+				//NI
+				if(imdb_activ)
+					break;
+
 				if (showPos > 0) {
 					showPos -= scrollCount;
 					if (showPos < 0)
@@ -929,8 +968,15 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 						printf("timerd not available\n");
 				}
 				break;
+#if 0
 			case CRCInput::RC_info:
 			{
+				if (imdb_activ) {
+					imdb_activ = false;
+					showTimerEventBar (true); //show buttons
+					epgText = epgText_saved;
+					textCount = epgText.size();
+				}
 				showPos = 0;
 				if (!tmdbtoggle) {
 					cTmdb* tmdb = new cTmdb(epgData.title);
@@ -955,7 +1001,38 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				}
 				break;
 			}
+#endif
+			case CRCInput::RC_green: //NI
+			{
+#if 0
+				if (tmdbtoggle) {
+					tmdbtoggle = false;
+					epgText = epgText_saved;
+					textCount = epgText.size();
+					stars=0;
+				}
+#endif
+				if(!imdb_activ)
+				{
+					//show IMDb info
+					showIMDb(sy + toph, true); //show splashscreen only
+					imdb->getIMDb(epgData.title);
+					showIMDb(sy + toph);
+					showTimerEventBar (true); //show buttons
+					timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
+				}
+				else
+				{
+					imdb_activ = false;
+					std::string filename = imdb->getFilename(channel, epgData.eventID);
 
+					if (File_copy(imdb->posterfile.c_str(), filename.c_str()))
+						showTimerEventBar (true); //show buttons
+					else
+						perror( "IMDb: error copy file" );
+				}
+				break;
+			}
 				// 31.05.2002 dirch		zapto timer
 			case CRCInput::RC_yellow:
 			{
@@ -963,6 +1040,15 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				{
 					CAdZapMenu::getInstance()->exec(NULL, "enable");
 					loop = false;
+
+					//NI
+					std::string tmp_msg;
+					tmp_msg  = g_Locale->getText(LOCALE_ADZAP);
+					tmp_msg += " in ";
+					tmp_msg += to_string(g_settings.adzap_zapBackPeriod / 60);
+					tmp_msg += " ";
+					tmp_msg += g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE);
+					ShowMsg(tmp_msg, "", CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_INFO);
 				}
                                 //CTimerdClient timerdclient;
 				else if (g_Timerd->isTimerdAvailable())
@@ -981,6 +1067,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 			}
 			case CRCInput::RC_blue:
 			{	
+				//NI
+				if(imdb_activ)
+					imdb_activ = false;
+
 				if(!followlist.empty() && !call_fromfollowlist){
 					hide();
 					time_t tmp_sZeit  = epgData.epg_times.startzeit;
@@ -1024,6 +1114,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				showPos=0;
 				break;
 
+			case CRCInput::RC_info: //NI
 			case CRCInput::RC_ok:
 			case CRCInput::RC_timeout:
 				if(fader.StartFadeOut()) {
@@ -1083,6 +1174,10 @@ void CEpgData::hide()
 
 	frameBuffer->paintBackgroundBoxRel(sx, sy, ox, oy);
 	showTimerEventBar (false);
+
+	//NI
+	imdb_activ = false;
+	imdb->cleanup();
 }
 
 void CEpgData::GetEPGData(const t_channel_id channel_id, uint64_t id, time_t* startzeit, bool clear )
@@ -1227,11 +1322,16 @@ int CEpgData::FollowScreenings (const t_channel_id /*channel_id*/, const std::st
 // -- 2002-05-13 rasc
 //
 
-const struct button_label EpgButtons[] =
+//NI const struct button_label EpgButtons[] =
+struct button_label EpgButtons[] = //NI
 {
 	{ NEUTRINO_ICON_BUTTON_RED   , LOCALE_TIMERBAR_RECORDEVENT },
+	{ NEUTRINO_ICON_BUTTON_GREEN , LOCALE_IMDB_INFO }, //NI
 	{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TIMERBAR_CHANNELSWITCH },
+//NI
+#if 0
 	{ NEUTRINO_ICON_BUTTON_INFO_SMALL  , LOCALE_CHANNELLIST_ADDITIONAL },
+#endif
 	{ NEUTRINO_ICON_BUTTON_BLUE, LOCALE_EPGVIEWER_MORE_SCREENINGS_SHORT }
 
 };
@@ -1258,6 +1358,7 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap)
 	frameBuffer->paintBoxRel(sx,y,ox,h, COL_INFOBAR_SHADOW_PLUS_1, RADIUS_LARGE, CORNER_BOTTOM);//round
 	/* 2 * ICON_LARGE_WIDTH for potential 16:9 and DD icons */
 	int aw = ox - 20 - 2 * (ICON_LARGE_WIDTH + 2);
+	EpgButtons[1].locale = imdb_activ ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
 	std::string adzap_button;
 	if (adzap)
 	{
@@ -1266,9 +1367,9 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap)
 		adzap_button += g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE);
 	}
 	if (g_settings.recording_type != CNeutrinoApp::RECORDING_OFF)
-		::paintButtons(x, y, 0, (has_follow_screenings && !call_fromfollowlist) ? 4:3, EpgButtons, aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, adzap ? adzap_button.c_str() : NULL, 1);
+		::paintButtons(x, y, 0, (has_follow_screenings && !call_fromfollowlist) ? 4:3, EpgButtons, aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, adzap ? adzap_button.c_str() : NULL, 2); //NI
 	else
-		::paintButtons(x, y, 0, (has_follow_screenings && !call_fromfollowlist) ? 3:2, &EpgButtons[1], aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, adzap ? adzap_button.c_str() : NULL, 0);
+		::paintButtons(x, y, 0, (has_follow_screenings && !call_fromfollowlist) ? 3:2, &EpgButtons[1], aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, adzap ? adzap_button.c_str() : NULL, 1); //NI
 
 #if 0
 	// Button: Timer Record & Channelswitch
@@ -1283,6 +1384,93 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap)
 	frameBuffer->paintIcon(NEUTRINO_ICON_BUTTON_YELLOW, x+8+cellwidth*pos, y+h_offset );
 	g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->RenderString(x+29+cellwidth*pos, y+h-h_offset, w-30, g_Locale->getText(LOCALE_TIMERBAR_CHANNELSWITCH), COL_INFOBAR_TEXT);
 #endif
+}
+
+//NI start
+int CEpgData::showIMDb(int ypos, bool splash)
+{
+	fontIMDb = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1];
+	std::string txt;
+
+	int y		= ypos;
+	int stars_w = 0, stars_h = 0;
+
+	frameBuffer->paintBoxRel(sx, y, ox /*- 15*/, sb, COL_MENUCONTENT_PLUS_0);
+	if (splash)
+	{
+		fontIMDb->RenderString(sx+20, y+medlineheight, ox-20, "IMDb: Daten werden geladen ...", COL_MENUCONTENT_TEXT, 0, true); // UTF-8
+		return 0;
+	}
+
+	//titel
+	std::string title = "Title";
+	imdb->getIMDbElement(title);
+
+	if(((title.find("IMDb: URL (Seite) nicht gefunden")) != std::string::npos))
+		return 1;
+
+	//poster size
+	g_PicViewer->getSize(imdb->posterfile.c_str(), &poster_w, &poster_h);
+	if ((poster_w != 0) && (poster_h != 0))
+	{
+		int poster_max_w = ox/4; // max 25%
+		int poster_max_h = ((medlinecount-2)*medlineheight);
+		imdb_activ = true;
+
+		g_PicViewer->rescaleImageDimensions(&poster_w, &poster_h, poster_max_w, poster_max_h);
+	}
+
+	// calculate positions
+	int sx_h = sx+20+poster_w+(poster_w != 0 ? 20 : 0); // startpos
+	int ox_h = ox-20-poster_w-(poster_w != 0 ? 20 : 0)-20; // width
+
+	// clear epg array and add some blank lines
+	epgText_saved = epgText;
+	epgText.clear();
+	processTextToArray("\n");
+	processTextToArray(" "); //must be a space here
+
+	//data
+	txt.clear();
+	imdb->getIMDbData(txt);
+	processTextToArray(txt);
+	showText(0, y);
+
+	//paint title
+	fontIMDb->RenderString(sx+20, y+medlineheight, ox-20, title, COL_MENUCONTENT_TEXT, 0, true);
+
+	//rating
+	txt = "imdbRating";
+	imdb->getIMDbElement(txt);
+
+	std::string pgvalue = txt;
+	if(txt == "N/A"){
+		pgvalue = "0";
+		txt = "Keine Bewertung";
+	}
+	else
+		txt += "/10";
+
+	size_t pos = pgvalue.find_first_of(",.");
+	if(pos!= std::string::npos)
+		pgvalue.replace(pos,1,""); // change 8,1 or 8.1 to 81
+
+	g_PicViewer->getSize(imdb->stars_bg.c_str(), &stars_w, &stars_h);
+	int aktiv = stars_w * atoi(pgvalue.c_str()) / (atoi(pgvalue.c_str())<10?10.0:100.0);
+
+	g_PicViewer->DisplayImage(imdb->stars_bg.c_str(), sx_h, y+(2*medlineheight)+((medlineheight/2)-(stars_h/2)), stars_w, stars_h);
+	if(pgvalue != "0")
+		g_PicViewer->DisplayImage_unscaled(imdb->stars.c_str(), sx_h, y+(2*medlineheight)+((medlineheight/2)-(stars_h/2)), aktiv, stars_h);
+
+	fontIMDb->RenderString(sx_h+stars_w+20, y+(3*medlineheight), ox_h-stars_w-20, txt, COL_MENUCONTENT_TEXT, 0, true); // UTF-8
+
+	//paint poster
+	if ((poster_w != 0) && (poster_h != 0))
+	{
+		g_PicViewer->DisplayImage(imdb->posterfile.c_str(), sx+20, y+(2*medlineheight), poster_w, poster_h, /*No 'pseudo' transparency*/frameBuffer->TM_NONE);
+	}
+
+	return 0;
 }
 
 //  -- EPG Data Viewer Menu Handler Class

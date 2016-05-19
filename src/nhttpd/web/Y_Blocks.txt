@@ -29,6 +29,7 @@ start-block~yWeb_save_settings
 {=ini-set:/var/tuxbox/config/Y-Web.conf;wol_desc_2;{=wol_desc_2=}~cache=}
 {=ini-set:/var/tuxbox/config/Y-Web.conf;wol_desc_3;{=wol_desc_3=}~cache=}
 {=ini-set:/var/tuxbox/config/Y-Web.conf;fb;{=fb=}~cache=}
+{=ini-set:/var/tuxbox/config/Y-Web.conf;screenshot_rc;{=screenshot_rc=}~cache=}
 {=ini-set:/var/tuxbox/config/Y-Web.conf;start_page;{=start_page=}~cache=}
 {=ini-set:/var/tuxbox/config/Y-Web.conf;style;{=style=}~cache=}
 {=ini-set:/var/tuxbox/config/Y-Web.conf;yweb_box_name;{=yweb_box_name=}~cache=}
@@ -372,6 +373,7 @@ function do_submit()
 				<td>	<select name="start_page" title="{=L:set.yweb.start_page=}">
 					<option value="bouquets" selected="selected">{=L:bc.menue.bouquets=}</option>
 					<option value="control">{=L:bc.menue.control=}</option>
+					<option value="remote">{=L:bc.menue.remote=}</option>
 					<option value="none">{=L:empty=}</option>
 				</td>
 			</tr>
@@ -438,11 +440,14 @@ end-block~frame_secondary
 # ------- Lay-Frame Boxcontrol-Menu
 start-block~frame_boxcontrol
 {=var-set:sec_menu=Y_Boxcontrol_Menue.yhtm=}
-{=var-set:startpage={=ini-get:/var/tuxbox/config/Y-Web.conf;start_page;bouquets=}=}
+{=var-set:startpage={=ini-get:/var/tuxbox/config/Y-Web.conf;start_page;none=}=}
 {=var-set:work=
 	{=if-equal:{=var-get:startpage=}~bouquets~Y_Boxcontrol_Bouquets.yhtm
 	~
-		{=if-equal:{=var-get:startpage=}~control~Y_Tools_Boxcontrol.yhtm~Y_blank.htm=}
+		{=if-equal:{=var-get:startpage=}~control~Y_Tools_Boxcontrol.yhtm
+		~
+			{=if-equal:{=var-get:startpage=}~remote~Y_Tools_Rcsim.yhtm~Y_NI_blank.yhtm=}
+		=}
 	=}=}
 {=include-block:Y_Blocks.txt;frame_secondary=}
 end-block~frame_boxcontrol

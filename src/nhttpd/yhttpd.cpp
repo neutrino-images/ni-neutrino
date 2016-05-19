@@ -523,6 +523,14 @@ void Cyhttpd::ReadConfig(void) {
 	if (CLogging::getInstance()->LogLevel > 0)
 		CLogging::getInstance()->setDebug(true);
 
+//NI
+#if 0
+#ifdef Y_CONFIG_FEATURE_THREADING
+	Config->setBool("webserver.threading", true);
+	Config->saveConfig(HTTPD_CONFIGFILE);
+#endif
+#endif
+
 	// get variables
 	webserver->init(Config->getInt32("WebsiteMain.port", HTTPD_STANDARD_PORT),
 			Config->getBool("webserver.threading", true));

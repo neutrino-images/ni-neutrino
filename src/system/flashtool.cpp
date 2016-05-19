@@ -44,6 +44,10 @@
 #include <neutrino.h>
 #include <driver/display.h>
 
+//NI lcd4l-support
+#include "gui/lcd4l.h"
+extern CLCD4l *LCD4l;
+
 CFlashTool::CFlashTool()
 {
 	statusViewer = NULL;
@@ -230,6 +234,13 @@ bool CFlashTool::program( const std::string & filename, int globalProgressEndEra
 		return false;
 	}
 
+	//NI
+	if(statusViewer) {
+		statusViewer->showLocalStatus(0);
+		statusViewer->showStatusMessageUTF(g_Locale->getText(LOCALE_FLASHUPDATE_ENTER_FLASH_SCRIPT)); // UTF-8
+	}
+	stopDaemons(); //NI
+
 	if(statusViewer) {
 		statusViewer->showLocalStatus(0);
 		statusViewer->showStatusMessageUTF(g_Locale->getText(LOCALE_FLASHUPDATE_ERASING)); // UTF-8
@@ -336,6 +347,15 @@ bool CFlashTool::getInfo()
 	return true;
 }
 
+//NI
+void CFlashTool::stopDaemons()
+{
+	if (g_settings.lcd4l_support)
+		LCD4l->StopLCD4l();
+
+	CNeutrinoApp::getInstance()->stopDaemonsForFlash();
+}
+
 bool CFlashTool::erase(int globalProgressEnd)
 {
 	erase_info_t lerase;
@@ -353,7 +373,8 @@ bool CFlashTool::erase(int globalProgressEnd)
 		return false;
 	}
 
-	CNeutrinoApp::getInstance()->stopDaemonsForFlash();
+	//NI we're stopping daemons earlier in CFlashTool::stopDaemons()
+	//NI CNeutrinoApp::getInstance()->stopDaemonsForFlash();
 
 #ifndef VFD_UPDATE
 	CVFD::getInstance()->ShowText("Erase Flash");
@@ -685,6 +706,20 @@ std::string CMTDInfo::findMTDsystem()
 	for(int i = 0; i < getMTDCount(); i++) {
 		if(getMTDName(i) == sysfs) {
 printf("systemFS: %d dev %s\n", i, getMTDFileName(i).c_str());
+			return getMTDFileName(i);
+		}
+	}
+	return "";
+}
+
+//NI
+std::string CMTDInfo::findMTDkernel()
+{
+	std::string kernel = "kernel";
+
+	for(int i = 0; i < getMTDCount(); i++) {
+		if(getMTDName(i) == kernel) {
+printf("kernel: %d dev %s\n", i, getMTDFileName(i).c_str());
 			return getMTDFileName(i);
 		}
 	}

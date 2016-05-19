@@ -34,14 +34,16 @@
 #include <neutrino.h>
 #include <neutrino_menue.h>
 
+#include <cs_api.h> //NI
+#include <gui/hdd_info.h> //NI
 #include <gui/info_menue.h>
-#include <gui/imageinfo.h>
+#include <gui/imageinfo_ni.h> //NI
 #include <gui/dboxinfo.h>
 #include <gui/streaminfo2.h>
-
 #if 0
 #include <gui/buildinfo.h>
 #endif
+#include <gui/widget/messagebox.h> //NI
 
 #include <driver/screen_max.h>
 #include "gui/cam_menu.h"
@@ -50,19 +52,31 @@ extern CCAMMenuHandler * g_CamHandler;
 
 CInfoMenu::CInfoMenu()
 {
-	width = 40;
+	width = 35; //NI
 }
 
 CInfoMenu::~CInfoMenu()
 {
 }
 
-int CInfoMenu::exec(CMenuTarget* parent, const std::string &/*actionKey*/)
+int CInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey) //NI
 {
 	int   res = menu_return::RETURN_REPAINT;
 
 	if (parent != NULL)
 		parent->hide();
+
+	//NI
+	if (actionKey == "info")
+	{
+		char str[1024];
+		sprintf(str, "cs_get_revision(): 0x%02X\n", cs_get_revision());
+#ifdef BOXMODEL_APOLLO
+		sprintf(str, "%scs_get_chip_type(): 0x%04X\n", str, cs_get_chip_type());
+#endif
+		ShowMsg(LOCALE_MESSAGEBOX_INFO, str, CMessageBox::mbrBack, CMessageBox::mbBack);
+		return res;
+	}
 
 	res = showMenu();
 
@@ -72,11 +86,12 @@ int CInfoMenu::exec(CMenuTarget* parent, const std::string &/*actionKey*/)
 int CInfoMenu::showMenu()
 {
 	CMenuWidget *info = new CMenuWidget(LOCALE_MESSAGEBOX_INFO, NEUTRINO_ICON_INFO, width, MN_WIDGET_ID_INFOMENUE);
+	info->addKey(CRCInput::RC_info, this, "info"); //NI
 
-	CImageInfo imageinfo;
+	CImageInfoNI imageinfo; //NI
 	CDBoxInfoWidget boxinfo;
+	CHDDInfoMenu hddinfo; //NI
 	CStreamInfo2 streaminfo;
-
 
 	info->addIntroItems();
 	CMenuForwarder * mf = new CMenuForwarder(LOCALE_SERVICEMENU_IMAGEINFO,  true, NULL, &imageinfo, NULL, CRCInput::RC_red);
@@ -98,11 +113,16 @@ int CInfoMenu::showMenu()
 	info->addItem(mf);
 #endif
 
-	if (g_settings.easymenu) {
+	if (g_settings.easymenu) { //NI todo (remove blue button, we use it!)
 		mf = new CMenuForwarder(LOCALE_CI_SETTINGS, true, NULL, g_CamHandler,  NULL, CRCInput::RC_blue);
 		mf->setHint(NEUTRINO_ICON_HINT_CI, LOCALE_MENU_HINT_CI);
 		info->addItem(mf);
 	}
+
+	//NI
+	mf = new CMenuForwarder(LOCALE_HDD_INFO_HEAD, true, NULL, &hddinfo, NULL, CRCInput::RC_blue);
+	mf->setHint(NEUTRINO_ICON_HINT_HDD_INFO, LOCALE_MENU_HINT_HDD_INFO);
+	info->addItem(mf);
 
 	//add I_TYPE_INFORMATION plugins
 	info->integratePlugins(CPlugins::I_TYPE_INFORMATION, 1);

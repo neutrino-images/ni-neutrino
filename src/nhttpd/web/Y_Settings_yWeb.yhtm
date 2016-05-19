@@ -44,14 +44,40 @@ function do_init(){
 			break;
 	}
 	document.f.fb.selectedIndex = sel;
+	obj_set_radio_value('screenshot_rc', "{=ini-get:/var/tuxbox/config/Y-Web.conf;screenshot_rc;false~cache=}");
 	val = "{=ini-get:/var/tuxbox/config/Y-Web.conf;start_page;bouquets~cache=}";
-	var sel=2;
+	var sel=3;
 	switch(val){
 		case "bouquets": sel=0; break;
 		case "control": sel=1; break;
+		case "remote": sel=2; break;
 	}
 	document.f.start_page.selectedIndex = sel;
 	style_old = "{=ini-get:/var/tuxbox/config/Y-Web.conf;style~cache=}";
+	//NI
+	if ("{=ini-get:/var/tuxbox/config/Y-Web.conf;yweb_box_name=}" == "${HOSTNAME}") {
+		document.f.hostname.checked = true;
+		document.f.yweb_box_name.value = "${HOSTNAME}";
+		document.f.yweb_box_name.readOnly = true;
+		document.f.yweb_box_name.style.color='#aaaaaa'
+	}
+}
+//NI
+function do_switch_hostname()
+{
+	if(document.f.hostname.checked == true)
+	{
+		document.f.yweb_box_name.value = "${HOSTNAME}";
+		document.f.yweb_box_name.readOnly = true;
+		document.f.yweb_box_name.style.color='#aaaaaa'
+	}
+	else
+	{
+		document.f.yweb_box_name.value = "";
+		document.f.yweb_box_name.readOnly = false;
+		document.f.yweb_box_name.style.color='#555555'
+		document.f.yweb_box_name.focus();
+	}
 }
 //]]>
 </script>
@@ -101,8 +127,11 @@ select {
 			<tr><td class="y_form_header" colspan="4">{=L:set.yweb.box_tag=}</td></tr>
 			<tr>
 				<td>{=L:set.yweb.box_tag=}</td>
-				<td colspan="3"><input type="text" name="yweb_box_name" size="8" value="{=ini-get:/var/tuxbox/config/Y-Web.conf;yweb_box_name=}"
-					title="{=L:box_tag_desc=}"/></td>
+				<td colspan="3"><input type="text" name="yweb_box_name" size="17" value="{=ini-get:/var/tuxbox/config/Y-Web.conf;yweb_box_name=}"
+					title="{=L:box_tag_desc=}"/>
+					<!-- //NI -->
+					<input type="checkbox" name="hostname" value="Hostname" onclick="do_switch_hostname()"/> Hostname
+				</td>
 			</tr>
 			<tr>
 				<td>{=L:set.yweb.box_color=}</td>
@@ -112,7 +141,7 @@ select {
 			<tr><td class="y_form_header" colspan="4">{=L:others=}</td></tr>
 			<tr>
 				<td>{=L:set.yweb.remote=}</td>
-				<td colspan="3">
+				<td>
 					<select name="fb" title="{=L:remote=}">
 						<option value="-2">d-Box | Philips</option>
 						<option value="-1">d-Box | Nokia (alt)</option>
@@ -125,6 +154,11 @@ select {
 						<option value="6">CST HD-2 | Trinity</option>
 					</select>
 				</td>
+				<td>{=L:set.yweb.screenshot_rc=}</td>
+				<td>
+					<input type="radio" name="screenshot_rc" value="false" />{=L:off=}&nbsp;
+					<input type="radio" name="screenshot_rc" value="true" />{=L:on=}
+				</td>
 			</tr>
 			<tr>
 				<td>{=L:set.yweb.start_page=}</td>
@@ -132,6 +166,7 @@ select {
 					<select name="start_page" title="{=L:start_page=}">
 						<option value="bouquets" selected="selected">{=L:bc.menue.bouquets=}</option>
 						<option value="control">{=L:bc.menue.control=}</option>
+						<option value="remote">{=L:bc.menue.remote=}</option>
 						<option value="none">{=L:empty=}</option>
 					</select>
 				</td>

@@ -49,6 +49,7 @@
 #include <system/setting_helpers.h>
 #include <system/fsmounter.h>
 #include <system/helpers.h>
+#include <system/hddstat.h>
 
 
 #include <driver/record.h>
@@ -136,12 +137,15 @@ void CRecordInstance::WaitRecMsg(time_t StartTime, time_t WaitTime)
 		usleep(100000);
 }
 
+//NI
+#if 0
 int CRecordInstance::GetStatus()
 {
 	if (record)
 		return record->GetStatus();
 	return 0;
 }
+#endif
 
 record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 {
@@ -150,7 +154,7 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 	if ((!(autoshift && g_settings.auto_timeshift)) && g_settings.recording_startstop_msg)
 		hintBox.paint();
 
-	wakeup_hdd(Directory.c_str());
+	//NI wakeup_hdd(Directory.c_str());
 
 	std::string tsfile = std::string(filename) + ".ts";
 	printf("%s: file %s vpid %x apid %x\n", __FUNCTION__, tsfile.c_str(), allpids.PIDs.vpid, apids[0]);
@@ -273,7 +277,7 @@ bool CRecordInstance::Stop(bool remove_event)
         CCamManager::getInstance()->Stop(channel_id, CCamManager::RECORD);
 
         if((autoshift && g_settings.auto_delete) /* || autoshift_delete*/) {
-		snprintf(buf,sizeof(buf), "nice -n 20 rm -f \"%s.ts\" &", filename);
+		snprintf(buf,sizeof(buf), "nice -n 20 rm -f \"%s.ts\"", filename); //NI
 		my_system(3, "/bin/sh", "-c", buf);
 		snprintf(buf,sizeof(buf), "%s.xml", filename);
                 //autoshift_delete = false;
@@ -649,11 +653,11 @@ record_error_msg_t CRecordInstance::MakeFileName(CZapitChannel * channel)
 	std::string ext_channel_name;
 	unsigned int pos;
 
-	safe_mkdir(Directory.c_str());
+	//NI safe_mkdir(Directory.c_str());
 	if(check_dir(Directory.c_str())) {
 		/* check if Directory and network_nfs_recordingdir the same */
 		if(g_settings.network_nfs_recordingdir != Directory) {
-			safe_mkdir(g_settings.network_nfs_recordingdir.c_str());
+			//NI safe_mkdir(g_settings.network_nfs_recordingdir.c_str());
 			/* not the same, check network_nfs_recordingdir and return error if not ok */
 			if(check_dir(g_settings.network_nfs_recordingdir.c_str()))
 				return RECORD_INVALID_DIRECTORY;
@@ -705,6 +709,26 @@ record_error_msg_t CRecordInstance::MakeFileName(CZapitChannel * channel)
 	std::string ext_file_name = g_settings.recording_filename_template;
 	MakeExtFileName(channel, ext_file_name);
 	strcpy(&(filename[pos]), UTF8_TO_FILESYSTEM_ENCODING(ext_file_name.c_str()));
+
+	//NI auto change record filename
+	std::string tsfile = std::string(filename) + ".ts";
+	if (access(tsfile, F_OK) == 0) {
+		printf("CRecordInstance::%s: ts file already found: %s\n", __func__, tsfile.c_str());
+		char newname[FILENAMEBUFFERSIZE] = {0};
+		bool changed = false;
+		for (unsigned int i = 2; i < 1000; i++) {
+			snprintf(newname, sizeof(newname), "%s_%03d", filename, i);
+			tsfile = std::string(newname) + ".ts";
+			if (access(tsfile, F_OK) != 0) {
+				snprintf(filename, sizeof(filename), "%s", newname);
+				changed = true;
+				printf("CRecordInstance::%s: ts file changed to: %s\n", __func__, tsfile.c_str());
+				break;
+			}
+		}
+		if (!changed)
+			printf("CRecordInstance::%s: can't change ts file: %s\n", __func__, tsfile.c_str());
+	}
 
 	if(autoshift)
 		strncat(filename, "_temp",FILENAMEBUFFERSIZE - strlen(filename)-1);
@@ -778,7 +802,7 @@ void CRecordInstance::GetRecordString(std::string &str, std::string &dur)
 		return;
 	}
 	char stime[15];
-	int err = GetStatus();
+	//NI int err = GetStatus();
 	strftime(stime, sizeof(stime), "%H:%M:%S ", localtime(&start_time));
 	time_t duration = (time(0) - start_time) / 60;
 	char dtime[20];
@@ -786,7 +810,7 @@ void CRecordInstance::GetRecordString(std::string &str, std::string &dur)
 	int m = duration - (h * 60);
 	snprintf(dtime, sizeof(dtime), "(%d %s %02d %s)", h, h == 1 ? g_Locale->getText(LOCALE_RECORDING_TIME_HOUR) : g_Locale->getText(LOCALE_RECORDING_TIME_HOURS), 
 							  m, g_Locale->getText(LOCALE_RECORDING_TIME_MIN));
-	str = stime + channel->getName() + ": " + GetEpgTitle() + ((err & REC_STATUS_OVERFLOW) ? "  [!] " : " ");
+	str = stime + channel->getName() + ": " + GetEpgTitle(); //NI
 	dur = dtime;
 }
 
@@ -806,9 +830,12 @@ CRecordManager::CRecordManager()
 	durations.clear();
 	autoshift = false;
 	shift_timer = 0;
+//NI
+#if 0
 	check_timer = 0;
 	error_display = true;
 	warn_display = true;
+#endif
 }
 
 CRecordManager::~CRecordManager()
@@ -1036,12 +1063,15 @@ bool CRecordManager::Record(const CTimerd::RecordingInfo * const eventinfo, cons
 	mutex.unlock();
 
 	if (error_msg == RECORD_OK) {
+//NI
+#if 0
 		if (check_timer == 0)
 			check_timer = g_RCInput->addTimer(5*1000*1000, false);
 
 		/* set flag to show record error if any */
 		error_display = true;
 		warn_display = true;
+#endif
 		return true;
 	}
 
@@ -1247,8 +1277,11 @@ void CRecordManager::StopPostProcess()
 	RestoreNeutrino();
 	StartNextRecording();
 	RunStopScript();
+//NI
+#if 0
 	if(!RecordingStatus())
 		g_RCInput->killTimer(check_timer);
+#endif
 }
 
 bool CRecordManager::Update(const t_channel_id channel_id)
@@ -1282,6 +1315,8 @@ int CRecordManager::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t data
 				StartAutoRecord();
 			return messages_return::handled;
 		}
+//NI
+#if 0
 		else if(data == check_timer) {
 			if(CNeutrinoApp::getInstance()->getMode() != NeutrinoMessages::mode_standby) {
 				mutex.lock();
@@ -1303,6 +1338,7 @@ int CRecordManager::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t data
 				return messages_return::handled;
 			}
 		}
+#endif
 	}
 	return messages_return::unhandled;
 }
@@ -1388,6 +1424,28 @@ int CRecordManager::exec(CMenuTarget* parent, const std::string & actionKey )
 			title += duration;
 			tostart = (ShowMsg(LOCALE_RECORDING_IS_RUNNING, title.c_str(),
 						CMessageBox::mbrYes, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 30, false) == CMessageBox::mbrYes);
+		}
+		//NI
+		if (g_settings.recording_startstop_msg) {
+			int ret = ShowMsg(LOCALE_RECORDING_END, g_Locale->getText(LOCALE_RECORDING_END_TEXT),
+					g_settings.recording_epg_for_end ? CMessageBox::mbrYes : CMessageBox::mbrNo, CMessageBox::mbYes | CMessageBox::mbNo | CMessageBox::mbCancel, NULL, 450, 20, true);
+			if (ret == CMessageBox::mbrCancel)
+				return menu_return::RETURN_EXIT_ALL;
+			else
+				g_settings.recording_epg_for_end = (ret == CMessageBox::mbrYes);
+
+			cHddStat::getInstance()->statOnce();
+			if (cHddStat::getInstance()->getPercent() > g_settings.recording_fill_warning)
+			{
+				printf("[neutrino] fill is %d%% (warn %d%%)\n", cHddStat::getInstance()->getPercent(), g_settings.recording_fill_warning);
+				char txt[1024];
+				snprintf(txt, sizeof(txt)-1, g_Locale->getText(LOCALE_RECORDING_FILL_TEXT), cHddStat::getInstance()->getPercent());
+
+				ret = ShowMsg(LOCALE_HDD_STATFS, txt,
+						CMessageBox::mbrYes, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 20, true);
+				if (ret == CMessageBox::mbrNo)
+					return menu_return::RETURN_EXIT_ALL;
+			}
 		}
 		if (tostart) {
 			CRecordManager::getInstance()->Record(live_channel_id);
@@ -1553,6 +1611,10 @@ bool CRecordManager::RunStartScript(void)
 	//FIXME only if no recordings yet or always ?
 	if(RecordingStatus())
 		return false;
+
+	//NI
+	printf("CRecordManager::%s: wakeup hdd...\n", __func__);
+	wakeup_hdd(g_settings.network_nfs_recordingdir.c_str(),true);
 
 	puts("[neutrino.cpp] executing " NEUTRINO_RECORDING_START_SCRIPT ".");
 	if (my_system(NEUTRINO_RECORDING_START_SCRIPT) != 0) {
@@ -1847,7 +1909,7 @@ bool CRecordManager::LinkTimeshift()
 		char buf[512];
 		autoshift = false;
 		sprintf(buf, "ln %s/* %s", timeshiftDir, g_settings.network_nfs_recordingdir);
-		system(buf);
+		my_system(3, "/bin/sh", "-c", buf); //NI
 		autoshift_delete = true;
 	}
 }

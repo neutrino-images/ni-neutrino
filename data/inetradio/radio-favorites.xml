@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+	This file contains your own favorites of internet radio stations
+	and will be loaded automatically when you start internet radio
+-->
+<list>
+	<station
+		url="http://streams.br-online.de/bayern3_2.m3u"
+		name="Bayern 3"
+		/>
+</list>

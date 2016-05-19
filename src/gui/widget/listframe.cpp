@@ -99,7 +99,7 @@ CListFrame::CListFrame(	LF_LINES* lines, Font* font_text, const int pmode,
 			m_nNrOfRows = LF_MAX_ROWS;
 	}
 	if(font_text != NULL)	m_pcFontList = font_text;
-	if(font_text != NULL)	m_pcFontHeaderList = font_text;
+	if(font_title != NULL)	m_pcFontHeaderList = font_title; //NI
 	if(position != NULL) {
 		m_cFrame	= *position;
 		m_nMaxHeight = m_cFrame.iHeight;
@@ -360,7 +360,7 @@ void CListFrame::refreshTitle(void)
 	if( frameBuffer == NULL) return;
 
 	frameBuffer->paintBoxRel(m_cFrameTitleRel.iX+m_cFrame.iX, m_cFrameTitleRel.iY+m_cFrame.iY,
-			m_cFrameTitleRel.iWidth, m_cFrameTitleRel.iHeight, TITLE_BACKGROUND_COLOR);
+			m_cFrameTitleRel.iWidth, m_cFrameTitleRel.iHeight, g_settings.theme.menu_Head_gradient ? LIST_BACKGROUND_COLOR : TITLE_BACKGROUND_COLOR); //NI
 
 	m_pcFontTitle->RenderString(m_cFrameTitleRel.iX + TEXT_BORDER_WIDTH + m_cFrame.iX,
 			m_cFrameTitleRel.iY + m_cFrameTitleRel.iHeight + m_cFrame.iY,

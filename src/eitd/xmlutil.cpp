@@ -577,6 +577,8 @@ void writeEventsToFile(const char *epgdir)
 
 	tmpname  = (std::string)epgdir + "/index.tmp";
 
+	printf("[sectionsd] Try to open file: %s\n", tmpname.c_str()); //NI
+
 	if (!(indexfile = fopen(tmpname.c_str(), "w"))) {
 		printf("[sectionsd] unable to open %s for writing\n", tmpname.c_str());
 		return;

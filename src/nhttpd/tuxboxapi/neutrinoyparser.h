@@ -49,6 +49,11 @@ private:
 	std::string func_set_timer_form(CyhookHandler *hh, std::string para);
 	std::string func_bouquet_editor_main(CyhookHandler *hh, std::string para);
 	std::string func_set_bouquet_edit_form(CyhookHandler *hh, std::string para);
+	//NI y-funcs
+	std::string func_infoicons_set_values(CyhookHandler *hh, std::string para);
+	std::string func_netfs_set_values(CyhookHandler *hh, std::string para);
+	std::string func_netfs_read_config(CyhookHandler *hh, std::string para);
+	std::string func_netfs_write_config(CyhookHandler *hh, std::string para);
 
 protected:
 	CNeutrinoAPI	*NeutrinoAPI;

@@ -134,6 +134,7 @@ private:
 	std::string readMovies(CyhookHandler *hh, std::string path, std::string result, bool subdirs);
 	std::string getSubdirectories(CyhookHandler *hh, std::string path, std::string result);
 
+	void InfoIconsCGI(CyhookHandler *hh); //NI
 
 protected:
 	CNeutrinoAPI	*NeutrinoAPI;

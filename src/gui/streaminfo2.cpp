@@ -142,6 +142,7 @@ int CStreamInfo2::doSignalStrengthLoop ()
 	const int delay = 15;
 	int offset = g_Font[font_info]->getRenderWidth(g_Locale->getText (LOCALE_STREAMINFO_BITRATE));
 	int sw = g_Font[font_info]->getRenderWidth ("99999.999");
+	int dheight = g_Font[font_info]->getHeight (); //NI
 	maxb = minb = lastb = tmp_rate = 0;
 	ts_setup ();
 	while (1) {
@@ -161,7 +162,7 @@ int CStreamInfo2::doSignalStrengthLoop ()
 			
 			if (cnt < 12)
 				cnt++;
-			int dheight = g_Font[font_info]->getHeight ();
+			//NI int dheight = g_Font[font_info]->getHeight ();
 			int dx1 = x + 10;
 
 			if(!mp && delay_counter > delay + 1){
@@ -685,6 +686,13 @@ void CStreamInfo2::paint_techinfo(int xpos, int ypos)
 		int fontW = g_Font[font_small]->getWidth();
 		spaceoffset = 7 * fontW;
 		box_width2 = box_width-(spaceoffset+xpos);
+
+		//NI channellogo
+		ypos+= sheight;
+		sprintf(buf, "%llx.png", channel->getChannelID() & 0xFFFFFFFFFFFFULL);
+		g_Font[font_small]->RenderString(xpos, ypos, box_width, "Logo:" , COL_INFOBAR_TEXT);
+		g_Font[font_small]->RenderString(xpos+spaceoffset, ypos, box_width2, buf, COL_INFOBAR_TEXT);
+
 		//onid
 		ypos+= sheight;
 		snprintf(buf, sizeof(buf), "0x%04X (%i)", channel->getOriginalNetworkId(), channel->getOriginalNetworkId());

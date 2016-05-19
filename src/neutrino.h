@@ -108,6 +108,7 @@ private:
 	bool				channelList_allowed;
 	bool				channelList_painted;
 	int				first_mode_found;
+	bool				blank_screen; //NI
 
 	void SDT_ReloadChannels();
 	void setupNetwork( bool force= false );
@@ -119,7 +120,7 @@ private:
 	void standbyMode( bool bOnOff, bool fromDeepStandby = false );
 	void getAnnounceEpgName(CTimerd::RecordingInfo * eventinfo, std::string &name);
 
-	void ExitRun(const bool write_si = true, int retcode = 0);
+	//NI void ExitRun(const bool write_si = true, int retcode = 0);
 	void RealRun(CMenuWidget &mainSettings);
 	void InitZapper();
 	void InitTimerdClient();
@@ -160,6 +161,7 @@ public:
 
 	CUserMenu usermenu;
 
+	void ExitRun(const bool write_si = true, int retcode = 0); //NI cross-team settings
 	void saveSetup(const char * fname);
 	int loadSetup(const char * fname);
 	void upgradeSetup(const char * fname);
@@ -198,6 +200,7 @@ public:
 		return lastMode;
 	}
 	void switchTvRadioMode(const int prev_mode = mode_unknown);
+	void switchInfoIconsOnOff(); //NI
 
 	
 	bool isMuted() {return current_muted; }

@@ -219,7 +219,7 @@ int CRecordSetup::showRecordSetup()
 	if (g_settings.easymenu)
 		channel_rec_dir = new CMenuOptionChooser(LOCALE_RECORDINGMENU_SAVE_IN_CHANNELDIR, &g_settings.recording_save_in_channeldir, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::RC_blue);
 	else
-		channel_rec_dir = new CMenuOptionChooser(LOCALE_RECORDINGMENU_SAVE_IN_CHANNELDIR, &g_settings.recording_save_in_channeldir, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+		channel_rec_dir = new CMenuOptionChooser(LOCALE_RECORDINGMENU_SAVE_IN_CHANNELDIR, &g_settings.recording_save_in_channeldir, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::RC_red); //NI
 	channel_rec_dir->setHint("", LOCALE_MENU_HINT_RECORD_CHANDIR);
 	recordingSettings->addItem(channel_rec_dir);
 
@@ -238,6 +238,13 @@ int CRecordSetup::showRecordSetup()
 		CMenuOptionChooser* slow_warn = new CMenuOptionChooser(LOCALE_RECORDINGMENU_SLOW_WARN, &g_settings.recording_slow_warning, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
 		slow_warn->setHint("", LOCALE_MENU_HINT_RECORD_SLOW_WARN);
 		recordingSettings->addItem(slow_warn);
+
+		//NI
+		mc = new CMenuOptionNumberChooser(LOCALE_RECORDINGMENU_FILL_WARN, &g_settings.recording_fill_warning, true, 75, 99, this);
+		mc->setHint("", LOCALE_MENU_HINT_RECORD_FILL_WARN);
+		mc->setNumericInput(true);
+		mc->setNumberFormat("%d%%");
+		recordingSettings->addItem(mc);
 
 		CMenuOptionChooser* startstop_msg = new CMenuOptionChooser(LOCALE_RECORDING_STARTSTOP_MSG, &g_settings.recording_startstop_msg, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
 		startstop_msg->setHint("", LOCALE_MENU_HINT_RECORD_STARTSTOP_MSG);

@@ -82,6 +82,8 @@ class CInfoViewer
 	int            ChanWidth;
 	int            ChanHeight;
 	int            numbox_offset;
+	int            analogclock_size; //NI
+	int            analogclock_offset; //NI
 
 	CSectionsdClient::CurrentNextInfo info_CurrentNext;
 	CSectionsdClient::CurrentNextInfo oldinfo;
@@ -125,6 +127,7 @@ class CInfoViewer
 			  const char *nextStart = NULL, const char *nextDuration = NULL,
 			  bool update_current = true, bool update_next = true);
 	void initClock();
+	void showAnalogClock(int posx,int posy,int dia); //NI
 	void showRecordIcon(const bool show);
 	void showIcon_Tuner() const;
 
@@ -150,6 +153,8 @@ class CInfoViewer
 	void sendNoEpg(const t_channel_id channel_id);
 	bool showLivestreamInfo();
 
+	CComponentsWindowMax *ecmInfoBox; //NI
+
  public:
 	bool     chanready;
 	bool	 is_visible;
@@ -164,6 +169,11 @@ class CInfoViewer
 	int      ChanInfoX;
 	bool     showButtonBar;
 	bool     isVolscale;
+
+	//NI
+	std::string	md5_ecmInfo;
+	void ecmInfoBox_hide();
+	void ecmInfoBox_show(const char * txt, int w, int h, Font * font);
 
 	CInfoViewer();
 	~CInfoViewer();

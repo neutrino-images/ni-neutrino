@@ -75,6 +75,11 @@ const CMenuOptionChooser::keyval WIZARD_SETUP_TYPE[] =
 
 int CStartUpWizard::exec(CMenuTarget* parent, const string & /*actionKey*/)
 {
+	//NI remove menu-timeout during wizard
+	int default_timing_menu = g_settings.timing[SNeutrinoSettings::TIMING_MENU];
+	g_settings.timing[SNeutrinoSettings::TIMING_MENU] = 0;
+	//printf("[neutrino] Removing 'timing.menu' during wizard ...\n");
+
 	int res = menu_return::RETURN_REPAINT;
 	showBackgroundLogo();
 
@@ -165,6 +170,12 @@ int CStartUpWizard::exec(CMenuTarget* parent, const string & /*actionKey*/)
 			}
 			CScanSetup::getInstance()->setWizardMode(SNeutrinoSettings::WIZARD_OFF);
 		}
+	}
+
+	//NI reset menu-timeout to our default if user doesn't change the value
+	if (g_settings.timing[SNeutrinoSettings::TIMING_MENU] == 0) {
+		g_settings.timing[SNeutrinoSettings::TIMING_MENU] = default_timing_menu;
+		//printf("[neutrino] Set 'timing.menu' to default...\n");
 	}
 
 	killBackgroundLogo();

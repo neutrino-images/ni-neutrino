@@ -40,22 +40,24 @@ const struct personalize_settings_t personalize_settings[SNeutrinoSettings::P_SE
 	{"personalize_redbutton"		, CPersonalizeGui::PERSONALIZE_ACTIVE_MODE_ENABLED}, // epg/info
 	
 	//main menu
-	{"personalize_tv_mode"			, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, 
-	{"personalize_tv_radio_mode"		, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE}, //toggle
-	{"personalize_radio_mode"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, 
-	{"personalize_timer"			, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, 
-	{"personalize_media"			, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, 
+	{"personalize_tv_mode"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE}, //NI
+	{"personalize_tv_radio_mode"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, //toggle //NI
+	{"personalize_radio_mode"		, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE}, //NI
+	{"personalize_timer"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE}, //NI
+	{"personalize_media"			, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, //NI
 	
 	{"personalize_games"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},	
 	{"personalize_tools"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
 	{"personalize_scripts"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
 	{"personalize_lua"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
+	{"personalize_ni_menu"			, CPersonalizeGui::PERSONALIZE_PROTECT_MODE_NOT_PROTECTED}, //NI
 	{"personalize_settings"			, CPersonalizeGui::PERSONALIZE_PROTECT_MODE_NOT_PROTECTED},
 	{"personalize_service"			, CPersonalizeGui::PERSONALIZE_PROTECT_MODE_NOT_PROTECTED},
 	{"personalize_sleeptimer"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, 
 	{"personalize_standby"			, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
 	{"personalize_reboot"			, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
 	{"personalize_shutdown"			, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
+	{"personalize_blank_screen"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, //NI
 	{"personalize_infomenu_main"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
 	{"personalize_cisettings_main"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
 	
@@ -81,6 +83,7 @@ const struct personalize_settings_t personalize_settings[SNeutrinoSettings::P_SE
 	{"personalize_bouquet_edit"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
 	{"personalize_reset_channels"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, 
 	{"personalize_restart"			, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
+	{"personalize_restart_tuner"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, //NI
 	{"personalize_reload_plugins"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
 	{"personalize_infomenu_service"		, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
 	{"personalize_softupdate"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},

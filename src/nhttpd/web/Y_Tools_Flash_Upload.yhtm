@@ -38,7 +38,7 @@ function do_image_upload_ready()
 		<td>
 			<table width="250" style="border: 1px solid #0066cc;" cellspacing="0" cellpadding="0">
 			<tr>
-				<td width="0%" bgcolor="#2188e0" id="erasing_left" height="10"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
+				<td width="0%" bgcolor="#606060" id="erasing_left" height="10"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
 				<td id="erasing_right" width="100%"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
 			</tr>
 			</table>
@@ -47,7 +47,7 @@ function do_image_upload_ready()
 		<td>
 			<table width="250" style="border: 1px solid #0066cc;" cellspacing="0" cellpadding="0">
 			<tr>
-				<td id="writing_left" width="0%" bgcolor="#2188e0" height="10"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
+				<td id="writing_left" width="0%" bgcolor="#606060" height="10"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
 				<td id="writing_right" width="100%"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
 			</tr>
 			</table>
@@ -56,7 +56,7 @@ function do_image_upload_ready()
 		<td>
 			<table width="250" style="border: 1px solid #0066cc;" cellspacing="0" cellpadding="0">
 			<tr>
-				<td id="verifying_left" width="0%" bgcolor="#2188e0" height="10"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
+				<td id="verifying_left" width="0%" bgcolor="#606060" height="10"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
 				<td id="verifying_right" width="100%"><img src="/images/blank.gif" height="1" width="0" alt="blank"/></td>
 			</tr>
 			</table>

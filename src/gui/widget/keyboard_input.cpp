@@ -93,7 +93,7 @@ struct keyboard_layout keyboards[] =
 {
 	{ "English", "english", keys_english },
 	{ "Deutsch", "deutsch", keys_deutsch },
-	{ "Русский", "russkij", keys_russian },
+//NI	{ "Русский", "russkij", keys_russian },
 };
 #define LAYOUT_COUNT (sizeof(keyboards)/sizeof(struct keyboard_layout))
 
@@ -760,7 +760,7 @@ void CKeyboardInput::paintKey(int row, int column)
 
 	int radius = CORNER_RADIUS_SMALL;
 	frameBuffer->paintBoxRel(xpos, ypos, key_w, key_h, bgcolor, radius);
-	frameBuffer->paintBoxFrame(xpos, ypos, key_w, key_h, KEY_FRAME_WIDTH, COL_MENUCONTENT_PLUS_6, radius);
+	frameBuffer->paintBoxFrame(xpos, ypos, key_w, key_h, KEY_FRAME_WIDTH, COL_MENUCONTENT_PLUS_2, radius); //NI
 
 	if (keyboard[row][column].empty())
 		return;

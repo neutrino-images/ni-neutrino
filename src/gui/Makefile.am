@@ -6,8 +6,9 @@ version.h:
 	echo '#define BUILT_DATE "'`date`'"' > $@
 	@if test -d $(top_srcdir)/.git ; then \
 		pushd $(top_srcdir) ; \
+		GITTAG=$$(git tag -l "NG-*" | tail -n1); \
 		GITBRANCH=$$(git rev-parse --abbrev-ref HEAD) ; \
-		GITDESCRIBE=$$(git describe --always --tags --dirty || echo 'VCS failed') ; \
+		GITDESCRIBE=$$(git describe --always --dirty --tags --match $$GITTAG || echo 'VCS failed') ; \
 		popd ; \
 		echo '#define VCS "'$${GITDESCRIBE} [$${GITBRANCH}]'"' >> $@ ; \
 	fi
@@ -59,11 +60,13 @@ libneutrino_gui_a_SOURCES = \
 	eventlist.cpp \
 	favorites.cpp \
 	filebrowser.cpp \
-	imageinfo.cpp \
+	imageinfo_ni.cpp \
+	imdb.cpp \
 	info_menue.cpp \
 	infoviewer.cpp \
 	infoviewer_bb.cpp \
 	keybind_setup.cpp \
+	lcd4l.cpp \
 	mediaplayer.cpp \
 	mediaplayer_setup.cpp \
 	miscsettings_menu.cpp \
@@ -73,6 +76,7 @@ libneutrino_gui_a_SOURCES = \
 	network_service.cpp \
 	network_setup.cpp \
 	nfs.cpp \
+	ni_menu.cpp \
 	opkg_manager.cpp \
 	osd_progressbar_setup.cpp \
 	osd_setup.cpp \
@@ -84,6 +88,7 @@ libneutrino_gui_a_SOURCES = \
 	pipsetup.cpp \
 	pluginlist.cpp \
 	plugins.cpp \
+	plugins_hide.cpp \
 	proxyserver_setup.cpp \
 	rc_lock.cpp \
 	record_setup.cpp \
@@ -92,6 +97,7 @@ libneutrino_gui_a_SOURCES = \
 	screensaver.cpp \
 	screensetup.cpp \
 	settings_manager.cpp \
+	settings_manager_teams.cpp \
 	sleeptimer.cpp \
 	start_wizard.cpp \
 	streaminfo2.cpp \
@@ -119,9 +125,13 @@ endif
 libneutrino_gui2_a_SOURCES = \
 	cam_menu.cpp \
 	color.cpp \
+	hdd_info.cpp \
 	hdd_menu.cpp \
 	infoclock.cpp \
-	motorcontrol.cpp
+	infoicons.cpp \
+	infoicons_setup.cpp \
+	motorcontrol.cpp \
+	netfs_setup.cpp
 
 if ENABLE_UPNP
 libneutrino_gui2_a_SOURCES += \

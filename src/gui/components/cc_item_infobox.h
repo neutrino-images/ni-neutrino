@@ -41,7 +41,7 @@ InfoBox has been originally intended for displaying text information or menue hi
 but is also usable like each other CCItems.
 */
 
-#define INFO_BOX_Y_OFFSET	2
+#define INFO_BOX_Y_OFFSET	SHADOW_OFFSET //NI
 class CComponentsInfoBox : public CComponentsText
 {
 	private:

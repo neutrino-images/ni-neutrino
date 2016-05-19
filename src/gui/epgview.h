@@ -38,6 +38,7 @@
 #include <driver/fontrenderer.h>
 #include <system/settings.h>
 
+#include <gui/imdb.h> //NI
 #include <gui/color.h>
 #include "widget/menue.h"
 
@@ -57,6 +58,8 @@ class CEpgData
 		CChannelEventList	followlist;
 		CEPGData		epgData;
 		CComponentsShapeSquare* header;
+		CIMDB			*imdb; //NI
+
 		std::string 		epg_date;
 		std::string 		epg_start;
 		std::string 		epg_end;
@@ -92,6 +95,13 @@ class CEpgData
 		int FollowScreenings(const t_channel_id channel_id, const std::string & title);
 		void showTimerEventBar(bool show, bool adzap = false);
 		bool isCurrentEPG(const t_channel_id channel_id);
+
+		//NI
+		bool imdb_activ;
+		std::string epg_title;
+		int showIMDb(int ypos, bool splash = false);
+		int poster_w, poster_h;
+		Font *fontIMDb;
 
 	public:
 

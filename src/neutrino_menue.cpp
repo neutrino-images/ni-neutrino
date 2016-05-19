@@ -50,6 +50,7 @@
 #include "gui/dboxinfo.h"
 #include "gui/epgplus.h"
 #include "gui/favorites.h"
+#include "gui/hdd_info.h" //NI
 #include "gui/hdd_menu.h"
 #include "gui/imageinfo.h"
 #include "gui/info_menue.h"
@@ -81,6 +82,7 @@
 #include "driver/record.h"
 #include "driver/display.h"
 
+#include "gui/ni_menu.h" //NI
 
 extern CPlugins       * g_PluginList;
 extern CRemoteControl * g_RemoteControl;
@@ -116,7 +118,7 @@ void CNeutrinoApp::InitMenu()
 
 	//personalize: neutrino.h, neutrino.cpp
 	personalize.enableUsermenu();
-	personalize.enablePluginMenu();
+	//NI personalize.enablePluginMenu();
 	personalize.enablePinSetup();
 	personalize.addWidgets(menu_widgets, g_settings.easymenu ? MENU_MAX : 3);
 
@@ -145,7 +147,7 @@ void CNeutrinoApp::InitMenuMain()
 {
 	dprintf(DEBUG_DEBUG, "init mainmenue\n");
 
-	unsigned int system_rev = cs_get_revision();
+	//NI unsigned int system_rev = cs_get_revision();
 
 	// Dynamic renumbering
 	personalize.setShortcut();
@@ -229,6 +231,13 @@ void CNeutrinoApp::InitMenuMain()
 		personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_LUA]);
 	}
 
+	//NI-Menu section***********************************************************************************************
+	personalize.addSeparator(MENU_MAIN);
+
+	CMenuForwarder *ni_menu = new CMenuForwarder(LOCALE_NIMENU_HEAD, true, NULL, new CNIMenu(), NULL, CRCInput::RC_0, NEUTRINO_ICON_BUTTON_0);
+	ni_menu->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NIMENU);
+	personalize.addItem(MENU_MAIN, ni_menu, &g_settings.personalize[SNeutrinoSettings::P_MAIN_NI_MENU], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ACCESS_OPTION);
+
 	//separator
 	personalize.addSeparator(MENU_MAIN);
 
@@ -261,12 +270,22 @@ void CNeutrinoApp::InitMenuMain()
 		mf->setHint(NEUTRINO_ICON_HINT_REBOOT, LOCALE_MENU_HINT_REBOOT);
 		personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_REBOOT]);
 
+		//NI standby
+		mf = new CMenuForwarder(LOCALE_MAINMENU_STANDBY, true, NULL, this, "standby");
+		mf->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_STANDBY);
+		personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_STANDBY]);
+
 		//shutdown
-		if(system_rev >= 8) {
+		//NI if(system_rev >= 8) {
 			mf = new CMenuForwarder(LOCALE_MAINMENU_SHUTDOWN, true, NULL, this, "shutdown", CRCInput::RC_standby);
 			mf->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_SHUTDOWN);
 			personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SHUTDOWN]);
-		}
+		//NI }
+
+		//NI blank screen
+		mf = new CMenuForwarder(LOCALE_BLANK_SCREEN, true, NULL, this, "blank_screen", CRCInput::RC_pause);
+		mf->setHint(NEUTRINO_ICON_HINT_BLANK_SCREEN, LOCALE_MENU_HINT_BLANK_SCREEN);
+		personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_BLANK_SCREEN], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, NULL, DCOND_MODE_TS);
 	}
 
 	//separator
@@ -308,11 +327,17 @@ void CNeutrinoApp::InitMenuMain()
 		personalize.addItem(MENU_SHUTDOWN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_REBOOT]);
 
 		//shutdown
-		if(system_rev >= 8) {
+		//NI if(system_rev >= 8) {
 			mf = new CMenuForwarder(LOCALE_MAINMENU_SHUTDOWN, true, NULL, this, "shutdown", CRCInput::RC_blue);
 			mf->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_SHUTDOWN);
 			personalize.addItem(MENU_SHUTDOWN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SHUTDOWN]);
-		}
+		//NI }
+
+		//NI blank screen
+		mf = new CMenuForwarder(LOCALE_BLANK_SCREEN, true, NULL, this, "blank_screen", CRCInput::RC_pause);
+		mf->setHint(NEUTRINO_ICON_HINT_BLANK_SCREEN, LOCALE_MENU_HINT_BLANK_SCREEN);
+		personalize.addItem(MENU_SHUTDOWN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_BLANK_SCREEN], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, NULL, DCOND_MODE_TS);
+
 	}
 
 #ifdef ENABLE_TESTING
@@ -535,6 +560,11 @@ void CNeutrinoApp::InitMenuService()
 		mf = new CMenuForwarder(LOCALE_SERVICEMENU_RESTART   , true, NULL, this, "restart", CRCInput::RC_standby);
 		mf->setHint(NEUTRINO_ICON_HINT_SOFT_RESTART, LOCALE_MENU_HINT_SOFT_RESTART);
 		personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_RESTART]);
+
+		//NI restart tuner
+		mf = new CMenuForwarder(LOCALE_SERVICEMENU_RESTART_TUNER, true, NULL, this, "restarttuner");
+		mf->setHint(NEUTRINO_ICON_HINT_RELOAD_CHANNELS, LOCALE_MENU_HINT_RESTART_TUNER);
+		personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_RESTART_TUNER]);
 
 		//reload plugins
 		mf = new CMenuForwarder(LOCALE_SERVICEMENU_GETPLUGINS, true, NULL, this, "reloadplugins");

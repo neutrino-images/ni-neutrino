@@ -56,6 +56,11 @@ extern CPictureViewer *g_PicViewer;
 
 extern cVideo * videoDecoder;
 
+//NI
+#include <system/helpers.h>
+#include "gui/infoicons.h"
+extern CInfoIcons *InfoIcons; /* neutrino.cpp */
+
 extern CPlugins *g_PluginList;//for relodplugins
 extern CBouquetManager *g_bouquetManager;
 #define EVENTDEV "/dev/input/input0"
@@ -226,7 +231,9 @@ const CControlAPI::TyCgiCall CControlAPI::yCgiCallList[]=
 	{"file",		&CControlAPI::FileCGI,			"+xml"},
 	{"statfs",		&CControlAPI::StatfsCGI,		"+xml"},
 	{"getdir",		&CControlAPI::getDirCGI,		"+xml"},
-	{"getmovies",		&CControlAPI::getMoviesCGI,		"+xml"}
+	{"getmovies",		&CControlAPI::getMoviesCGI,		"+xml"},
+	//NI
+	{"infoicons",		&CControlAPI::InfoIconsCGI,		"text/plain"}
 };
 //-----------------------------------------------------------------------------
 // Main Dispatcher
@@ -2075,6 +2082,12 @@ void CControlAPI::ZaptoCGI(CyhookHandler *hh)
 			else
 				hh->SendError();
 		}
+		else if (hh->ParamList["subchannel"] != "")
+		{
+			NeutrinoAPI->ZapToSubService(hh->ParamList["subchannel"].c_str());
+
+			hh->SendOk();
+		}
 		else
 		{
 			NeutrinoAPI->ZapTo(hh->ParamList["1"].c_str());
@@ -3559,7 +3572,6 @@ std::string CControlAPI::getSubdirectories(CyhookHandler *hh, std::string path, 
 	return result;
 }
 
-
 //-----------------------------------------------------------------------------
 /** Get neutrino movies
  *
@@ -3675,4 +3687,76 @@ std::string CControlAPI::readMovies(CyhookHandler *hh, std::string path, std::st
 		}
 	}
 	return result;
+}
+
+//NI
+//-----------------------------------------------------------------------------
+void CControlAPI::InfoIconsCGI(CyhookHandler *hh)
+{
+	std::string result = "unknown";
+
+	if (hh->ParamList.empty() || hh->ParamList["1"] == "status")
+	{
+		if (g_settings.mode_icons)
+		{
+			if (g_settings.mode_icons_skin == INFOICONS_STATIC)
+				result = "static";
+			else if (g_settings.mode_icons_skin == INFOICONS_POPUP)
+				result = "popup";
+		}
+		else
+		{
+			if (g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
+				result = "infoviewer";
+			else
+				result = "off";
+		}
+		return hh->WriteLn(result);
+	}
+
+	int remember_mode_icons = g_settings.mode_icons;
+
+	if (hh->ParamList["1"] == "static")
+	{
+		g_settings.mode_icons=1;
+		g_settings.mode_icons_skin=INFOICONS_STATIC;
+	}
+	else if (hh->ParamList["1"] == "popup")
+	{
+		g_settings.mode_icons=1;
+		g_settings.mode_icons_skin=INFOICONS_POPUP;
+	}
+	else if (hh->ParamList["1"] == "infoviewer")
+	{
+		g_settings.mode_icons=0;
+		g_settings.mode_icons_skin=INFOICONS_INFOVIEWER;
+	}
+	else if (hh->ParamList["1"] == "off")
+	{
+		g_settings.mode_icons=0;
+		if (g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
+			g_settings.mode_icons_skin=INFOICONS_STATIC;
+	}
+	else
+	{
+		hh->SendError();
+		return;
+	}
+
+	CConfigFile *Config = new CConfigFile(',');
+	Config->loadConfig(NEUTRINO_CONFIGFILE);
+	Config->setInt32("mode_icons", g_settings.mode_icons);
+	Config->setInt32("mode_icons_skin", g_settings.mode_icons_skin);
+	Config->saveConfig(NEUTRINO_CONFIGFILE);
+	delete Config;
+
+	if (g_settings.mode_icons != remember_mode_icons)
+	{
+		if (remember_mode_icons)
+			InfoIcons->enableInfoIcons(false);
+		else
+			InfoIcons->enableInfoIcons(true);
+	}
+
+	hh->SendOk();
 }

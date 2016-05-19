@@ -40,6 +40,8 @@
 int my_system(const char * cmd);
 int my_system(int argc, const char *arg, ...); /* argc is number of arguments including command */
 
+//int ni_system(std::string cmd, bool noshell = true, bool background = false); //NI background
+
 FILE* my_popen( pid_t& pid, const char *cmdstring, const char *type);
 
 int safe_mkdir(const char * path);
@@ -48,7 +50,7 @@ inline int safe_mkdir(std::string path) { return safe_mkdir(path.c_str()); }
 //inline int mkdirhier(std::string path, mode_t mode = 0755) { return mkdirhier(path.c_str(), mode); }
 off_t file_size(const char *filename);
 bool file_exists(const char *filename);
-void wakeup_hdd(const char *hdd_dir);
+void wakeup_hdd(const char *hdd_dir, bool msg = false); //NI
 int check_dir(const char * dir, bool allow_tmp = false);
 bool get_fs_usage(const char * dir, uint64_t &btotal, uint64_t &bused, long *bsize=NULL);
 bool get_mem_usage(unsigned long &total, unsigned long &free);
@@ -118,5 +120,12 @@ bool split_config_string(const std::string &str, std::map<std::string,std::strin
 
 std::string getJFFS2MountPoint(int mtdPos);
 std::string Lang2ISO639_1(std::string& lang);
+
+//NI
+bool	File_copy(std::string rstr, std::string wstr);
+int	getpidof(const char *process);
+std::string	filehash(const char * file);
+std::string	get_path(const char * path);
+inline bool file_exists(const std::string file) { return file_exists(file.c_str()); }
 
 #endif

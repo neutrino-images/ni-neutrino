@@ -381,10 +381,13 @@ int CNetworkSetup::showNetworkSetup()
 		mf->setHint("", LOCALE_MENU_HINT_NET_PROXY);
 		networkSettings->addItem(mf);
 
+//NI
+#if 0
 		//services
 		mf = new CMenuForwarder(LOCALE_NETWORKMENU_SERVICES, true, NULL, &services, NULL, CRCInput::RC_1);
 		mf->setHint("", LOCALE_MENU_HINT_NET_SERVICES);
 		networkSettings->addItem(mf);
+#endif
 	}
 
 	int ret = 0;
@@ -415,15 +418,18 @@ void CNetworkSetup::showNetworkNTPSetup(CMenuWidget *menu_ntp)
 	CMenuOptionChooser *ntp1 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPENABLE, &g_settings.network_ntpenable, OPTIONS_NTPENABLE_OPTIONS, OPTIONS_NTPENABLE_OPTION_COUNT, true, sectionsdConfigNotifier);
 	CMenuForwarder *ntp2 = new CMenuDForwarder( LOCALE_NETWORKMENU_NTPSERVER, true , g_settings.network_ntpserver, networkSettings_NtpServer );
 	CMenuForwarder *ntp3 = new CMenuDForwarder( LOCALE_NETWORKMENU_NTPREFRESH, true , g_settings.network_ntprefresh, networkSettings_NtpRefresh );
+	CMenuOptionChooser *ntp9 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPATBOOT, &g_settings.network_ntpatboot, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true); //NI
 
 	ntp1->setHint("", LOCALE_MENU_HINT_NET_NTPENABLE);
 	ntp2->setHint("", LOCALE_MENU_HINT_NET_NTPSERVER);
 	ntp3->setHint("", LOCALE_MENU_HINT_NET_NTPREFRESH);
+	ntp9->setHint("", LOCALE_MENU_HINT_NET_NTPATBOOT); //NI
 
 	menu_ntp->addIntroItems(LOCALE_NETWORKMENU_NTPTITLE);
 	menu_ntp->addItem( ntp1);
 	menu_ntp->addItem( ntp2);
 	menu_ntp->addItem( ntp3);
+	menu_ntp->addItem( ntp9); //NI
 }
 
 #ifdef ENABLE_GUI_MOUNT
@@ -778,6 +784,13 @@ void CNetworkSetup::testNetworkSettings()
 			text += std::string(g_Locale->getText(LOCALE_NETWORKMENU_NTPSERVER)) + ":\n";
 			text += offset + g_settings.network_ntpserver + " " + mypinghost(g_settings.network_ntpserver) + "\n";
 		}
+		//NI
+		if (pinghost(our_nameserver.c_str()) == 1)
+		{
+			//testsite (or defaultsite)
+			text += testsite + ":\n";
+			text += offset + "via DNS: " + mypinghost(testsite) + "\n";
+		}
 		//Wiki
 		text += wiki_URL + ":\n";
 		text += offset + "via IP (" + wiki_IP + "): " + mypinghost(wiki_IP) + "\n";
@@ -785,8 +798,10 @@ void CNetworkSetup::testNetworkSettings()
 		{
 			text += offset + "via DNS: " + mypinghost(wiki_URL) + "\n";
 			//testsite (or defaultsite)
+#if 0
 			text += testsite + ":\n";
 			text += offset + "via DNS: " + mypinghost(testsite) + "\n";
+#endif
 		}
 	}
 

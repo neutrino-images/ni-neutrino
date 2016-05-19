@@ -35,6 +35,12 @@
 #include <neutrino_menue.h>
 #include "webtv_setup.h"
 
+//NI
+#include <dirent.h>
+#include <mymenu.h>
+#include <system/helpers.h>
+#include <zapit/settings.h>
+
 CWebTVSetup::CWebTVSetup()
 {
 	width = 55;
@@ -142,9 +148,26 @@ int CWebTVSetup::Show()
 
 	m->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_WEBTV_XML));
 
+	//NI
+	char hint_text[1024];
+	snprintf(hint_text, sizeof(hint_text)-1, g_Locale->getText(LOCALE_MENU_HINT_WEBTV_XML_AUTO), WEBTVDIR);
+	CMenuOptionChooser *oc = new CMenuOptionChooser(LOCALE_WEBTV_XML_AUTO, &g_settings.webtv_xml_auto, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
+	oc->setHint("", hint_text);
+	m->addItem(oc);
+	m->addItem(GenericMenuSeparator);
+
 	item_offset = m->getItemsCount();
 	for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); ++it)
+	{
+		//NI
+		if (
+			   (*it).empty()
+			|| ((*it).find(WEBTVDIR) != std::string::npos)
+			|| ((*it).find(WEBTVDIR_VAR) != std::string::npos)
+		)
+			continue;
 		m->addItem(new CMenuForwarder(*it, true, NULL, this, "c"));
+	}
 
 	m->setFooter(CWebTVSetupFooterButtons, CWebTVSetupFooterButtonCount); //Why we need here an extra buttonbar?
 
@@ -157,6 +180,7 @@ int CWebTVSetup::Show()
 				CMenuForwarder *f = static_cast<CMenuForwarder*>(item);
 				g_settings.webtv_xml.push_back(f->getName());
 			}
+			webtv_xml_auto(); //NI
 			g_Zapit->reinitChannels();
 			changed = false;
 	}
@@ -165,6 +189,61 @@ int CWebTVSetup::Show()
 
 	return res;
 }
+
+//NI
+bool CWebTVSetup::changeNotify(const neutrino_locale_t, void */*data*/)
+{
+	changed = true;
+	return false;
+}
+
+//NI
+int xml_filter(const struct dirent *entry)
+{
+	int len = strlen(entry->d_name);
+	if (len > 3 && entry->d_name[len-3] == 'x' && entry->d_name[len-2] == 'm' && entry->d_name[len-1] == 'l')
+		return 1;
+	return 0;
+}
+
+//NI
+void CWebTVSetup::webtv_xml_auto()
+{
+	if (g_settings.webtv_xml_auto)
+	{
+		const char *dirs[] = {WEBTVDIR_VAR, WEBTVDIR};
+		struct dirent **xml_list;
+		char xml_file[1024] = {0};
+		for (int i = 0; i < 2; i++)
+		{
+			int xml_cnt = scandir(dirs[i], &xml_list, xml_filter, alphasort);
+			if (xml_cnt > -1)
+			{
+				for (int count = 0; count < xml_cnt; count++)
+				{
+					snprintf(xml_file, sizeof(xml_file), "%s/%s", dirs[i], xml_list[count]->d_name);
+					if (file_size(xml_file))
+					{
+						bool found = false;
+						for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); it++)
+							found |= ((*it).find(xml_list[count]->d_name) != std::string::npos);
+
+						if (!found)
+						{
+							printf("[CWebTVSetup] loading: %s\n", xml_file);
+							g_settings.webtv_xml.push_back(xml_file);
+						}
+						else
+						{
+							printf("[CWebTVSetup] skipping: %s\n", xml_file);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 
 /* ## CWebTVResolution ############################################# */
 

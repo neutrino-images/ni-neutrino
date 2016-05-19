@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 // Set these to 'true' for debug output:
-static bool DebugConverter = true;
+static bool DebugConverter = false; //NI
 
 #define dbgconverter(a...) if (DebugConverter) sub_debug.print(Debug::VERBOSE, a)
 

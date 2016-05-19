@@ -76,6 +76,10 @@
 #include <iconv.h>
 #include <system/stacktrace.h>
 
+//NI InfoIcons
+#include <gui/infoicons.h>
+extern CInfoIcons *InfoIcons;
+
 extern cVideo * videoDecoder;
 extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
 
@@ -221,8 +225,8 @@ void CMoviePlayerGui::cutNeutrino()
 		return;
 
 	g_Zapit->lockPlayBack();
-	if (!isWebTV)
-		g_Sectionsd->setPauseScanning(true);
+	//NI if (!isWebTV)
+	//NI	g_Sectionsd->setPauseScanning(true);
 
 	m_LastMode = (CNeutrinoApp::getInstance()->getMode() /*| NeutrinoMessages::norezap*/);
 	if (isWebTV)
@@ -245,7 +249,7 @@ void CMoviePlayerGui::restoreNeutrino()
 
 	//g_Zapit->unlockPlayBack();
 	CZapit::getInstance()->EnablePlayback(true);
-	g_Sectionsd->setPauseScanning(false);
+	//NI g_Sectionsd->setPauseScanning(false);
 
 	printf("%s: restore mode %x\n", __func__, m_LastMode);fflush(stdout);
 #if 0
@@ -271,6 +275,19 @@ int CMoviePlayerGui::exec(CMenuTarget * parent, const std::string & actionKey)
 
 	if (parent)
 		parent->hide();
+
+	//NI
+	if (actionKey == "fileplayback" || actionKey == "tsmoviebrowser")
+	{
+		if(actionKey == "fileplayback") {
+			printf("[movieplayer] wakeup_hdd(%s) for %s\n", g_settings.network_nfs_moviedir.c_str(), actionKey.c_str());
+			wakeup_hdd(g_settings.network_nfs_moviedir.c_str(),true);
+		}
+		else {
+			printf("[movieplayer] wakeup_hdd(%s) for %s\n", g_settings.network_nfs_recordingdir.c_str(), actionKey.c_str());
+			wakeup_hdd(g_settings.network_nfs_recordingdir.c_str(),true);
+		}
+	}
 
 	puts("[movieplayer.cpp] executing " MOVIEPLAYER_START_SCRIPT ".");
 	if (my_system(MOVIEPLAYER_START_SCRIPT) != 0)
@@ -465,6 +482,7 @@ void CMoviePlayerGui::EnableClockAndMute(bool enable)
 {
 	CAudioMute::getInstance()->enableMuteIcon(enable);
 	CInfoClock::getInstance()->enableInfoClock(enable);
+	InfoIcons->enableInfoIcons(enable); //NI InfoIcons
 }
 
 void CMoviePlayerGui::makeFilename()
@@ -544,7 +562,7 @@ bool CMoviePlayerGui::SelectFile()
 		Path_local = g_settings.network_nfs_moviedir;
 
 	printf("CMoviePlayerGui::SelectFile: isBookmark %d timeshift %d isMovieBrowser %d\n", isBookmark, timeshift, isMovieBrowser);
-	wakeup_hdd(g_settings.network_nfs_recordingdir.c_str());
+	//NI wakeup_hdd(g_settings.network_nfs_recordingdir.c_str());
 
 	if (timeshift != TSHIFT_MODE_OFF) {
 		t_channel_id live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
@@ -924,7 +942,22 @@ bool CMoviePlayerGui::getLiveUrl(const t_channel_id chan, const std::string &url
 	std::string _script = script;
 
 	if (_script.find("/") == std::string::npos)
-		_script = g_settings.livestreamScriptPath + "/" + _script;
+		//NI
+		{
+			std::string _s = g_settings.livestreamScriptPath + "/" + _script;
+			printf("[%s:%s:%d] script: %s\n", __file__, __func__, __LINE__, _s.c_str());
+			if (!file_exists(_s.c_str()))
+			{
+				_s = string(WEBTVDIR_VAR) + "/" + _script;
+				printf("[%s:%s:%d] script: %s\n", __file__, __func__, __LINE__, _s.c_str());
+			}
+			if (!file_exists(_s.c_str()))
+			{
+				_s = string(WEBTVDIR) + "/" + _script;
+				printf("[%s:%s:%d] script: %s\n", __file__, __func__, __LINE__, _s.c_str());
+			}
+			_script = _s;
+		}
 
 	size_t pos = _script.find(".lua");
 	if (!file_exists(_script.c_str()) || (pos == std::string::npos) || (_script.length()-pos != 4)) {
@@ -1339,7 +1372,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				videoDecoder->setBlank(false);
 				screensaver(false);
 				//ignore first keypress stop - just quit the screensaver and call infoviewer
-				if (msg == CRCInput::RC_stop) {
+				if (msg <= CRCInput::RC_MaxRC) { //NI
 					g_RCInput->clearRCMsg();
 					callInfoViewer();
 					continue;
@@ -1350,7 +1383,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 
 		if (msg == (neutrino_msg_t) g_settings.mpkey_plugin) {
 			g_PluginList->startPlugin_by_name(g_settings.movieplayer_plugin.c_str ());
-		} else if (msg == (neutrino_msg_t) g_settings.mpkey_stop) {
+		} else if ((msg == (neutrino_msg_t) g_settings.mpkey_stop) || msg == CRCInput::RC_home) { //NI
 			playstate = CMoviePlayerGui::STOPPED;
 			keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_STOP;
 			ClearQueue();
@@ -1441,7 +1474,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				playback->SetSpeed(speed);
 			}
 			updateLcd();
-			if (timeshift == TSHIFT_MODE_OFF)
+			//NI if (timeshift == TSHIFT_MODE_OFF)
 				callInfoViewer();
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_bookmark) {
 			if (is_file_player)
@@ -1914,7 +1947,7 @@ void CMoviePlayerGui::handleMovieBrowser(neutrino_msg_t msg, int /*position*/)
 		newComHintBox.movePosition(newx, newy);
 		return;
 	}
-	else if (msg == (neutrino_msg_t) g_settings.mpkey_stop) {
+	else if ((msg == (neutrino_msg_t) g_settings.mpkey_stop) || msg == CRCInput::RC_home) { //NI
 		// if we have a movie information, try to save the stop position
 		printf("CMoviePlayerGui::handleMovieBrowser: stop, isMovieBrowser %d p_movie_info %x\n", isMovieBrowser, (int) p_movie_info);
 		if (isMovieBrowser && p_movie_info) {
@@ -2142,6 +2175,7 @@ void CMoviePlayerGui::handleMovieBrowser(neutrino_msg_t msg, int /*position*/)
 		if (restore)
 			FileTime.kill();
 		CInfoClock::getInstance()->enableInfoClock(false);
+		InfoIcons->enableInfoIcons(false); //NI InfoIcons
 
 		if (isLuaPlay && haveLuaInfoFunc) {
 			int xres = 0, yres = 0, aspectRatio = 0, framerate = -1;
@@ -2157,6 +2191,7 @@ void CMoviePlayerGui::handleMovieBrowser(neutrino_msg_t msg, int /*position*/)
 			cMovieInfo.showMovieInfo(*p_movie_info);
 
 		CInfoClock::getInstance()->enableInfoClock(true);
+		InfoIcons->enableInfoIcons(true); //NI InfoIcons
 		if (restore) {
 			FileTime.setMode(m_mode);
 			FileTime.update(position, duration);

@@ -48,6 +48,14 @@
 #include <gui/update_ext.h>
 using namespace std;
 
+//NI
+#include <global.h> /* to get g_settings */
+#include <vector>
+#include <fstream>
+#include <libmd5sum.h>
+#define MD5_DIGEST_LENGTH 16
+#include <gui/widget/hintbox.h>
+
 int mySleep(int sec) {
 	struct timeval timeout;
 
@@ -80,8 +88,25 @@ bool file_exists(const char *filename)
 	}
 }
 
-void  wakeup_hdd(const char *hdd_dir)
+void  wakeup_hdd(const char *hdd_dir, bool msg)
 {
+	//NI
+	CHintBox loadBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_HDD_WAKEUP_START));
+
+	if(!g_settings.hdd_wakeup_msg)
+		msg = false;
+	if(msg)
+		loadBox.paint();
+	std::string s = get_path("/bin/wakeup.sh");
+	my_system(2,s.c_str(),hdd_dir);
+
+	if (!g_settings.hdd_wakeup) {
+		printf("[hdd] internal wakeup disabled\n");
+		if(msg)
+			loadBox.hide();
+		return;
+	}
+
 	if(!check_dir(hdd_dir) && hdd_get_standby(hdd_dir)){
 		std::string wakeup_file = hdd_dir;
 		wakeup_file += "/.wakeup";
@@ -101,6 +126,9 @@ void  wakeup_hdd(const char *hdd_dir)
 		hdd_flush(hdd_dir);
 		remove(wakeup_file.c_str());
 	}
+	//NI
+	if(msg)
+		loadBox.hide();
 }
 //use for script with full path
 int my_system(const char * cmd)
@@ -113,6 +141,7 @@ int my_system(const char * cmd)
 
 int my_system(int argc, const char *arg, ...)
 {
+	static bool background = false;//NI
 	int i = 0, ret, childExit = 0;
 #define ARGV_MAX 64
 	/* static right now but could be made dynamic if necessary */
@@ -131,12 +160,23 @@ int my_system(int argc, const char *arg, ...)
 			return -1;
 		}
 		argv[i] = va_arg(args, const char *);
+
+		//NI
+		if(argv[i] != NULL && strstr(argv[i],"&") != 0) {
+			background = true;
+			printf("%s: start processes as background job\n",__func__);
+			argv[i] = NULL;
+		}
+
 	}
 	argv[i] = NULL; /* sentinel */
 	//fprintf(stderr,"%s:", __func__);for(i=0;argv[i];i++)fprintf(stderr," '%s'",argv[i]);fprintf(stderr,"\n");
 
 	pid_t pid;
 	int maxfd = getdtablesize();// sysconf(_SC_OPEN_MAX);
+	//NI
+	if (background)
+		signal(SIGCHLD, SIG_IGN);
 	switch (pid = vfork())
 	{
 		case -1: /* can't vfork */
@@ -145,6 +185,11 @@ int my_system(int argc, const char *arg, ...)
 			break;
 		case 0: /* child process */
 			ret = 0;
+
+			//NI
+			if (background)
+				signal(SIGCHLD, SIG_DFL);
+
 			for(i = 3; i < maxfd; i++)
 				close(i);
 			if (setsid() == -1)
@@ -166,6 +211,90 @@ int my_system(int argc, const char *arg, ...)
 	va_end(args);
 	return ret;
 }
+
+#if 0
+//NI version
+int ni_system(std::string cmd, bool noshell, bool background)
+{
+	//with noshell, no special characters allowed!!!
+
+	int maxfd = getdtablesize();// sysconf(_SC_OPEN_MAX);
+	int fd;
+
+	for (fd = 3; fd < maxfd; fd++)
+		fcntl(fd, F_SETFD, FD_CLOEXEC);
+
+#define NI_SYSTEM_VFORK
+#ifdef NI_SYSTEM_VFORK
+
+	int ret=0, childExit=0;
+	pid_t pid;
+
+	std::vector<std::string> token;
+	std::vector<char *> args;
+	std::string str;
+	std::stringstream ss(cmd);
+
+	if(noshell)
+	{
+		while(ss >> str) {
+			token.push_back(str);
+		}
+
+		//maybe std::transform is the better way?
+		for (std::vector<std::string>::iterator it = token.begin(); it != token.end(); ++it) {
+			args.push_back((char*)it->c_str());
+		}
+		args.push_back(NULL);
+	}
+
+	if(background)
+		signal(SIGCHLD, SIG_IGN);
+
+	switch (pid = vfork())
+	{
+		case -1: /* can't vfork */
+			fprintf(stderr, "[ni_system] vfork\n");
+			return -1;
+		case 0: /* child process */
+			if(noshell)
+			{
+				/*printf("[ni_system] forked, execvp");
+				for (std::vector<char *>::iterator it = args.begin(); it != args.end(); ++it) {
+					printf(" %s",*it);
+				}
+				printf("\n");*/
+
+				ret = execvp(args[0], &args[0]);
+			}
+			else {
+				//printf("[ni_system] forked, execlp \"%s\"\n", cmd.c_str());
+
+				ret = execlp("sh", "sh", "-c", cmd.c_str(), (char *)NULL);
+			}
+
+			if(ret)
+				fprintf(stderr, "[ni_system] exec return code: %d (%m)\n",ret);
+
+			_exit (ret); // terminate c h i l d proces s only
+		default: /* parent returns to calling process */
+			break;
+	}
+	if(background)
+		return (0);
+
+	//fprintf(stderr, "[ni_system] parent, waiting for child with pid %d...\n",pid);
+	waitpid(pid, &childExit, 0);
+	//fprintf(stderr, "[ni_system] parent, waitpid(pid %d) returned\n",pid);
+	/*if (WIFEXITED(childExit))
+		fprintf(stderr, "[ni_system] child returned with status %d\n",WEXITSTATUS(childExit));*/
+	return (childExit);
+#else
+	//printf("[ni_system] execute pure system()\n");
+	return system(cmd.c_str());
+#endif
+}
+#endif
 
 FILE* my_popen( pid_t& pid, const char *cmdstring, const char *type)
 {
@@ -976,4 +1105,148 @@ std::string Lang2ISO639_1(std::string& lang)
 		ret = "sv";
 
 	return ret;
+}
+
+//NI
+bool File_copy(std::string rstr, std::string wstr)
+{
+	char * buffer;
+	long size;
+
+	std::ifstream infile(rstr.c_str(), std::ifstream::binary);
+	if (infile)
+	{
+		std::ofstream outfile(wstr.c_str(), std::ofstream::binary);
+		if (outfile)
+		{
+			// get size of file
+			infile.seekg(0,std::ifstream::end);
+			size=infile.tellg();
+			infile.seekg(0);
+
+			buffer = new char [size];
+			infile.read (buffer,size);
+
+			outfile.write (buffer,size);
+
+			delete[] buffer;
+			outfile.close();
+		}
+		else
+		{
+			return false;
+		}
+		infile.close();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// rreturns the pid of the first process found in /proc
+int getpidof(const char *process)
+{
+	DIR *dp;
+	struct dirent *entry;
+	struct stat statbuf;
+
+	if ((dp = opendir("/proc")) == NULL)
+	{
+		fprintf(stderr, "Cannot open directory /proc\n");
+		return -1;
+	}
+
+	while ((entry = readdir(dp)) != NULL)
+	{
+		// get information about the file/folder
+		lstat(entry->d_name, &statbuf);
+		// files under /proc which start with a digit are processes
+		if (S_ISDIR(statbuf.st_mode) && isdigit(entry->d_name[0]))
+		{
+			// 14 chars for /proc//status + 0
+			char procpath[14 + strlen(entry->d_name)];
+			char procname[50];
+			FILE *file;
+
+			sprintf(procpath, "/proc/%s/status", entry->d_name);
+
+			if (! (file = fopen(procpath, "r")) ) {
+				continue;
+			}
+
+			fscanf(file,"%*s %s", procname);
+			fclose(file);
+
+			// only 15 char available
+			if (strncmp(procname, process, 15) == 0) {
+				return atoi(entry->d_name);
+			}
+		}
+	}
+	closedir (dp);
+	return 0;
+}
+
+std::string filehash(const char *file)
+{
+#if 0
+	int fd;
+	int i;
+	unsigned long size;
+	struct stat s_stat;
+	unsigned char hash[MD5_DIGEST_LENGTH];
+	void *buff;
+	std::ostringstream os;
+ 
+	memset(hash, 0, MD5_DIGEST_LENGTH);
+
+	fd = open(file, O_RDONLY | O_NONBLOCK);
+	if (fd > 0)
+	{
+		// Get the size of the file by its file descriptor
+		fstat(fd, &s_stat);
+		size = s_stat.st_size;
+
+		buff = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0);
+		MD5((const unsigned char *)buff, size, hash);
+		munmap(buff, size);
+
+		// Print the MD5 sum as hex-digits.
+		for(i = 0; i < MD5_DIGEST_LENGTH; ++i) {
+			os.width(2);
+			os.fill('0');
+			os << std::hex << static_cast<int>(hash[i]);
+		}
+		close(fd);
+	}
+	return os.str();
+#endif
+	int i;
+	unsigned char hash[MD5_DIGEST_LENGTH];
+	std::ostringstream os;
+
+	md5_file(file, 1, (unsigned char*) hash);
+	// Print the MD5 sum as hex-digits.
+	for(i = 0; i < MD5_DIGEST_LENGTH; ++i) {
+		os.width(2);
+		os.fill('0');
+		os << std::hex << static_cast<int>(hash[i]);
+	}
+	return os.str();
+}
+
+std::string get_path(const char *path)
+{
+	if(path[0] == '/' && strstr(path,"/var") == 0)
+	{
+		std::string varc = "/var";
+		varc += path;
+
+		if(file_exists(varc.c_str()))
+			return varc;
+	}
+
+	return path;
 }

@@ -54,6 +54,18 @@
 #include <zapit/zapit.h>
 #include <driver/abstime.h>
 
+//NI CA init
+extern Zapit_config zapitCfg;
+
+//NI
+const CMenuOptionChooser::keyval OPTIONS_CA_INIT_OPTIONS[] =
+{
+	{ 0, LOCALE_CA_INIT_0 },
+	{ 1, LOCALE_CA_INIT_1 },
+	{ 2, LOCALE_CA_INIT_2 }
+};
+#define OPTIONS_CA_INIT_OPTION_COUNT (sizeof(OPTIONS_CA_INIT_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
+
 void CCAMMenuHandler::init(void)
 {
 	hintBox = NULL;
@@ -108,6 +120,14 @@ int CCAMMenuHandler::doMainMenu()
 
 	CMenuWidget* cammenu = new CMenuWidget(LOCALE_CI_SETTINGS, NEUTRINO_ICON_SETTINGS);
 	cammenu->addIntroItems();
+
+	//NI CA init CI|CARD|BOTH
+	CZapit::getInstance()->GetConfig(zapitCfg);
+	CMenuOptionChooser *ca_init = new CMenuOptionChooser(LOCALE_CA_INIT, (int *)&zapitCfg.cam_ci, OPTIONS_CA_INIT_OPTIONS, OPTIONS_CA_INIT_OPTION_COUNT, true, NULL);
+	ca_init->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CA_INIT);
+	cammenu->addItem(ca_init);
+	cammenu->addItem(GenericMenuSeparator);
+
 #ifdef BOXMODEL_APOLLO
 	int fecount = CFEManager::getInstance()->getFrontendCount();
 	char fename[fecount+1][255];
@@ -204,6 +224,10 @@ int CCAMMenuHandler::doMainMenu()
 	ret = cammenu->exec(NULL, "");
 	delete cammenu;
 	in_menu = false;
+
+	//NI CA init
+	CZapit::getInstance()->SetConfig(&zapitCfg);
+
 	return ret;
 }
 

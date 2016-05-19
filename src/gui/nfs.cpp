@@ -123,8 +123,8 @@ int CNFSMountGui::exec( CMenuTarget* parent, const std::string & actionKey )
 			g_settings.network_nfs[i].type = 0;
 			g_settings.network_nfs[i].username = "";
 			g_settings.network_nfs[i].password = "";
-			g_settings.network_nfs[i].mount_options1 = "ro,soft,udp";
-			g_settings.network_nfs[i].mount_options2 = "nolock,rsize=8192,wsize=8192";
+			g_settings.network_nfs[i].mount_options1 = "soft"; //NI
+			g_settings.network_nfs[i].mount_options2 = "nolock"; //NI
 			g_settings.network_nfs[i].mac = "11:22:33:44:55:66";
 			m_entry[i] = getEntryString(i);
 			ISO_8859_1_entry[i] = ZapitTools::UTF8_to_Latin1(m_entry[i]);

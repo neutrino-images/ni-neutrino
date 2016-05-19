@@ -107,3 +107,13 @@ install_DATA +=	chmod.png \
 		text.png \
 		upload.png \
 		work.gif
+
+# NI-yWeb
+install_DATA += accept.png \
+		blank.png \
+		cancel.png \
+		colored_bar.png \
+		server_add.png \
+		server_delete.png \
+		server_edit.png \
+		server_link.png

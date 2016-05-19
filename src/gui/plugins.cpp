@@ -580,6 +580,9 @@ CPlugins::i_type_t CPlugins::getPluginIntegration(int integration)
 	case INTEGRATION_TYPE_INFORMATION:
 		return I_TYPE_INFORMATION;
 		break;
+	case INTEGRATION_TYPE_NI_MENU: //NI
+		return I_TYPE_NI_MENU;
+		break;
 	default:
 		return I_TYPE_DISABLED;
 	}

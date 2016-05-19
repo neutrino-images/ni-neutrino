@@ -47,6 +47,8 @@
 
 #include <gui/audiomute.h>
 #include <gui/infoclock.h>
+#include <gui/infoviewer_bb.h> //NI
+#include <gui/ni_menu.h> //NI
 #include <gui/widget/icons.h>
 #include <gui/widget/colorchooser.h>
 #include <gui/widget/stringinput.h>
@@ -88,6 +90,11 @@ COsdSetup::COsdSetup(int wizard_mode)
 	width = 40;
 	show_menu_hints = 0;
 	show_tuner_icon = 0;
+
+	//NI
+	infobarIconset = NULL;
+	infoviewer_icons = 0;
+	show_menu_hints_line = 0;
 }
 
 COsdSetup::~COsdSetup()
@@ -118,12 +125,13 @@ const SNeutrinoSettings::FONT_TYPES eventlist_font_sizes[5] =
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_EVENT
 };
 
-const SNeutrinoSettings::FONT_TYPES infobar_font_sizes[4] =
+const SNeutrinoSettings::FONT_TYPES infobar_font_sizes[5] =
 {
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_NUMBER,
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_CHANNAME,
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO,
-	SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL
+	SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL,
+	SNeutrinoSettings::FONT_TYPE_INFOBAR_ECMINFO //NI
 };
 
 const SNeutrinoSettings::FONT_TYPES epg_font_sizes[4] =
@@ -141,20 +149,28 @@ const SNeutrinoSettings::FONT_TYPES menu_font_sizes[4] =
 	SNeutrinoSettings::FONT_TYPE_MENU_INFO,
 	SNeutrinoSettings::FONT_TYPE_MENU_HINT
 };
+//NI
+const SNeutrinoSettings::FONT_TYPES moviebrowser_font_sizes[3] =
+{
+	SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD,
+	SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_LIST,
+	SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_INFO
+};
 const SNeutrinoSettings::FONT_TYPES other_font_sizes[2] =
 {
 	SNeutrinoSettings::FONT_TYPE_SUBTITLES,
 	SNeutrinoSettings::FONT_TYPE_FILEBROWSER_ITEM
 };
 
-#define FONT_GROUP_COUNT 6
+#define FONT_GROUP_COUNT 7 //NI
 font_sizes_groups font_sizes_groups[FONT_GROUP_COUNT] =
 {
 	{LOCALE_FONTMENU_MENU       , 4, menu_font_sizes       , "fontsize.dmen", LOCALE_MENU_HINT_MENU_FONTS },
 	{LOCALE_FONTMENU_CHANNELLIST, 5, channellist_font_sizes, "fontsize.dcha", LOCALE_MENU_HINT_CHANNELLIST_FONTS },
 	{LOCALE_FONTMENU_EVENTLIST  , 5, eventlist_font_sizes  , "fontsize.deve", LOCALE_MENU_HINT_EVENTLIST_FONTS },
 	{LOCALE_FONTMENU_EPG        , 4, epg_font_sizes        , "fontsize.depg", LOCALE_MENU_HINT_EPG_FONTS },
-	{LOCALE_FONTMENU_INFOBAR    , 4, infobar_font_sizes    , "fontsize.dinf", LOCALE_MENU_HINT_INFOBAR_FONTS },
+	{LOCALE_FONTMENU_INFOBAR    , 5, infobar_font_sizes    , "fontsize.dinf", LOCALE_MENU_HINT_INFOBAR_FONTS }, //NI
+	{LOCALE_FONTMENU_MOVIEBROWSER,3, moviebrowser_font_sizes,"fontsize.dmbr", LOCALE_MENU_HINT_MOVIEBROWSER_FONTS }, //NI
 	{LOCALE_FONTMENU_OTHER      , 2, other_font_sizes      , "fontsize.doth", LOCALE_MENU_HINT_OTHER_FONTS }
 };
 
@@ -181,8 +197,12 @@ font_sizes_struct neutrino_font[SNeutrinoSettings::FONT_TYPE_COUNT] =
 	{LOCALE_FONTSIZE_INFOBAR_CHANNAME   ,  30, CNeutrinoFonts::FONT_STYLE_BOLD   , 0},
 	{LOCALE_FONTSIZE_INFOBAR_INFO       ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
 	{LOCALE_FONTSIZE_INFOBAR_SMALL      ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
+	{LOCALE_FONTSIZE_INFOBAR_ECMINFO    ,  15, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
 	{LOCALE_FONTSIZE_FILEBROWSER_ITEM   ,  16, CNeutrinoFonts::FONT_STYLE_BOLD   , 1},
 	{LOCALE_FONTSIZE_MENU_HINT          ,  16, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
+	{LOCALE_FONTSIZE_MOVIEBROWSER_HEAD  ,  15, CNeutrinoFonts::FONT_STYLE_REGULAR, 2}, //NI
+	{LOCALE_FONTSIZE_MOVIEBROWSER_LIST  ,  17, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
+	{LOCALE_FONTSIZE_MOVIEBROWSER_INFO  ,  17, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
 	{LOCALE_FONTSIZE_SUBTITLES          ,  25, CNeutrinoFonts::FONT_STYLE_BOLD   , 0}
 };
 
@@ -489,8 +509,9 @@ const CMenuOptionChooser::keyval OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS[OPTIONS_
 #define _LOCALE_PROGRESSBAR_COLOR_HORIZONTAL    LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_2
 #define _LOCALE_PROGRESSBAR_COLOR_FULL          LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_3
 #define _LOCALE_PROGRESSBAR_COLOR_MONO          LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_4
+#define _LOCALE_PROGRESSBAR_COLOR_GRAPHIC       LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_5 //NI
 
-#define PROGRESSBAR_COLOR_OPTION_COUNT 6
+#define PROGRESSBAR_COLOR_OPTION_COUNT 7 //NI
 const CMenuOptionChooser::keyval PROGRESSBAR_COLOR_OPTIONS[PROGRESSBAR_COLOR_OPTION_COUNT] =
 {
 	{ CProgressBar::PB_OFF,         LOCALE_OPTIONS_OFF },
@@ -499,7 +520,18 @@ const CMenuOptionChooser::keyval PROGRESSBAR_COLOR_OPTIONS[PROGRESSBAR_COLOR_OPT
 	{ CProgressBar::PB_LINES_V,     _LOCALE_PROGRESSBAR_COLOR_VERTICAL },
 	{ CProgressBar::PB_LINES_H,     _LOCALE_PROGRESSBAR_COLOR_HORIZONTAL },
 	{ CProgressBar::PB_COLOR,       _LOCALE_PROGRESSBAR_COLOR_FULL },
+	{ CProgressBar::PB_GRAPHIC,     _LOCALE_PROGRESSBAR_COLOR_GRAPHIC } //NI
 };
+
+//NI iconsets
+const CMenuOptionChooser::keyval INFOVIEWER_ICONSET_OPTIONS[] =
+{
+	{ 0, LOCALE_INFOVIEWER_ICONSET_PKG0 },
+	{ 1, LOCALE_INFOVIEWER_ICONSET_PKG1 },
+	{ 2, LOCALE_INFOVIEWER_ICONSET_PKG2 },
+	{ 3, LOCALE_INFOVIEWER_ICONSET_PKG3 }
+};
+#define INFOVIEWER_ICONSET_OPTION_COUNT (sizeof(INFOVIEWER_ICONSET_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
 //show osd setup
 int COsdSetup::showOsdSetup()
@@ -611,6 +643,18 @@ int COsdSetup::showOsdSetup()
 	mc->setHint("", LOCALE_MENU_HINT_OSD_PRESET);
 	osd_menu->addItem(mc);
 
+//NI
+#if !defined BOXMODEL_APOLLO
+	int scart_osd_fix_exist = 0;
+	if (file_exists("/var/etc/.scart_osd_fix"))
+		scart_osd_fix_exist = 1;
+
+	CNITouchFileNotifier * scartFileNotifier = new CNITouchFileNotifier("scart_osd_fix");
+	mc = new CMenuOptionChooser(LOCALE_SCART_OSD_FIX, &scart_osd_fix_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, !g_settings.screen_preset, scartFileNotifier);
+	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_SCART_OSD_FIX);
+	osd_menu->addItem(mc);
+#endif
+
 	// round corners
 	mc = new CMenuOptionChooser(LOCALE_EXTRA_ROUNDED_CORNERS, &g_settings.rounded_corners, MENU_CORNERSETTINGS_TYPE_OPTIONS, MENU_CORNERSETTINGS_TYPE_OPTION_COUNT, true, this);
 	mc->setHint("", LOCALE_MENU_HINT_ROUNDED_CORNERS);
@@ -653,6 +697,27 @@ int COsdSetup::showOsdSetup()
 		CVolumeHelper::getInstance()->refresh();
 		if (CNeutrinoApp::getInstance()->isMuted())
 			CAudioMute::getInstance()->enableMuteIcon(true);
+	}
+
+	//NI
+	if (g_settings.infoviewer_icons != infoviewer_icons)
+	{
+		std::ostringstream buf;
+		buf.str("");
+		buf << ICONSDIR << "/iconsPKG" << g_settings.infoviewer_icons << ".tar.gz";
+		printf("[osd_setup.cpp] change infoviewer iconset Name=%s PKG=%i\n", g_Locale->getText(INFOVIEWER_ICONSET_OPTIONS[g_settings.infoviewer_icons].value), g_settings.infoviewer_icons);
+
+		if (my_system(8, "tar", "-z", "-x", "-v", "-f", buf.str().c_str(), "-C", ICONSDIR) != 0)
+		{
+			printf("[osd_setup.cpp] change infoviewer iconset failed\n");
+		}
+		else
+		{
+			CFrameBuffer::getInstance()->clearIconCache();
+			g_InfoViewer->Init();
+			CInfoViewerBB::getInstance()->Init();
+			g_InfoViewer->start();
+		}
 	}
 
 	delete colorInfoclockNotifier;
@@ -1015,6 +1080,12 @@ void COsdSetup::showOsdMenusSetup(CMenuWidget *menu_menus)
 	mc = new CMenuOptionChooser(LOCALE_SETTINGS_MENU_HINTS, &show_menu_hints, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
 	mc->setHint("", LOCALE_MENU_HINT_MENU_HINTS);
 	submenu_menus->addItem(mc);
+
+	//NI menu hints line (details_line) should always be last entry here
+	show_menu_hints_line = g_settings.show_menu_hints_line;
+	mc = new CMenuOptionChooser(LOCALE_SETTINGS_MENU_HINTS_LINE, &show_menu_hints_line, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
+	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_MENU_HINTS_LINE);
+	submenu_menus->addItem(mc);
 }
 
 #define HDD_STATFS_OPTION_COUNT 3
@@ -1024,6 +1095,16 @@ const CMenuOptionChooser::keyval HDD_STATFS_OPTIONS[HDD_STATFS_OPTION_COUNT] =
 	{ SNeutrinoSettings::HDD_STATFS_ALWAYS,         LOCALE_HDD_STATFS_ALWAYS },
 	{ SNeutrinoSettings::HDD_STATFS_RECORDING,      LOCALE_HDD_STATFS_RECORDING }
 };
+
+//NI ecm-Info
+const CMenuOptionChooser::keyval INFOVIEWER_ECMINFO_OPTIONS[] =
+{
+	{ 0, LOCALE_OPTIONS_OFF },
+	{ 1, LOCALE_SETTINGS_POS_TOP_LEFT },
+	{ 2, LOCALE_SETTINGS_POS_TOP_CENTER },
+	{ 3, LOCALE_SETTINGS_POS_TOP_RIGHT }
+};
+#define INFOVIEWER_ECMINFO_OPTION_COUNT (sizeof(INFOVIEWER_ECMINFO_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
 //infobar
 void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
@@ -1049,6 +1130,11 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	// buttons usertitle
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_BUTTONS_USERTITLE, &g_settings.infobar_buttons_usertitle, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_BUTTONS_USERTITLE);
+	menu_infobar->addItem(mc);
+
+	//NI analog clock
+	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_ANALOGCLOCK, &g_settings.infobar_analogclock, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
+	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_ANALOGCLOCK);
 	menu_infobar->addItem(mc);
 
 	menu_infobar->addItem(GenericMenuSeparator);
@@ -1093,6 +1179,11 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	menu_infobar->addItem(mc);
 	casystemActivate.Add(mc);
 
+	//NI ecm-Info
+	mc = new CMenuOptionChooser(LOCALE_ECMINFO_SHOW, &g_settings.show_ecm_pos, INFOVIEWER_ECMINFO_OPTIONS, INFOVIEWER_ECMINFO_OPTION_COUNT, true, this);
+	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOBAR_ECMINFO);
+	menu_infobar->addItem(mc);
+
 	menu_infobar->addItem(GenericMenuSeparator);
 
 	// flash/hdd statfs
@@ -1130,6 +1221,12 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_SHOW_DD_AVAILABLE, &g_settings.infobar_show_dd_available, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_DD);
 	menu_infobar->addItem(mc);
+
+	//NI iconsets
+	infoviewer_icons = g_settings.infoviewer_icons;
+	infobarIconset = new CMenuOptionChooser(LOCALE_INFOVIEWER_ICONSET, &g_settings.infoviewer_icons, INFOVIEWER_ICONSET_OPTIONS, INFOVIEWER_ICONSET_OPTION_COUNT, true, this);
+	changeNotify(LOCALE_INFOVIEWER_ICONSET, NULL); //setHint
+	menu_infobar->addItem(infobarIconset);
 
 	menu_infobar->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_MISCSETTINGS_PROGRESSBAR));
 	// progressbar position
@@ -1336,6 +1433,55 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 	else if(ARE_LOCALES_EQUAL(OptionName, LOCALE_EXTRA_VOLUME_DIGITS)) {
 		CVolumeHelper::getInstance()->refresh();
 		return false;
+	}
+	//NI menu_hints_line
+	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_SETTINGS_MENU_HINTS_LINE))
+	{
+		submenu_menus->hide();
+		g_settings.show_menu_hints_line = * (int*) data;
+		return true;
+	}
+	//NI ecm-Info
+	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_ECMINFO_SHOW))
+	{
+		printf("g_settings.show_ecm_pos: %d\n", g_settings.show_ecm_pos);
+		if (g_settings.show_ecm_pos == 0)
+			g_settings.show_ecm = 0;
+		else
+			g_settings.show_ecm = 1;
+
+	}
+	//NI iconsets
+	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_INFOVIEWER_ICONSET))
+	{
+		int value = g_settings.infoviewer_icons;
+		if (data)
+			value = (* (int *) data);
+
+		const char *icon = NEUTRINO_ICON_HINT_IMAGELOGO;
+		neutrino_locale_t txt = LOCALE_MENU_HINT_INFOBAR_ICONSET;
+
+		switch (value)
+		{
+			case 0:
+				icon = NEUTRINO_ICON_HINT_ICONSPKG0;
+				break;
+			case 1:
+				icon = NEUTRINO_ICON_HINT_ICONSPKG1;
+				break;
+			case 2:
+				icon = NEUTRINO_ICON_HINT_ICONSPKG2;
+				break;
+			case 3:
+				icon = NEUTRINO_ICON_HINT_ICONSPKG3;
+				break;
+			default:
+				break;
+		}
+		infobarIconset->setHint(icon, txt);
+
+		//return true for repaint hint
+		return true;
 	}
 	return false;
 }

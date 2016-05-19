@@ -46,6 +46,10 @@
 
 #include <cctype>
 
+//NI lcd4l-support
+#include "gui/lcd4l.h"
+extern CLCD4l *LCD4l;
+
 /* the following generic menu items are integrated into multiple menus at the same time */
 CMenuSeparator CGenericMenuSeparator(0, NONEXISTANT_LOCALE, true);
 CMenuSeparator CGenericMenuSeparatorLine(CMenuSeparator::LINE, NONEXISTANT_LOCALE, true);
@@ -216,9 +220,17 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 			char str[len];
 			snprintf(str, len, "%s %s", left_text, right_text);
 			CVFD::getInstance()->showMenuText(0, str, -1, true);
+			//NI lcd4l-support
+			if(g_settings.lcd4l_support)
+				LCD4l->CreateFile("/tmp/lcd/menu", str);
 		} 
 		else
+		{
 			CVFD::getInstance()->showMenuText(0, left_text, -1, true);
+			//NI lcd4l-support
+			if(g_settings.lcd4l_support)
+				LCD4l->CreateFile("/tmp/lcd/menu", left_text);
+		}
 	}
 	
 	//left text
@@ -260,7 +272,7 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 				right_frame_col = COL_MENUCONTENTINACTIVE_TEXT;
 			}
 			CComponentsShapeSquare col(stringstartposOption, y + 2, dx - stringstartposOption + x - 2, item_height - 4, NULL, false, right_frame_col, right_bg_col);
-			col.setFrameThickness(3);
+			col.setFrameThickness(2); //NI
 			col.setCorner(RADIUS_LARGE);
 			col.paint(false);
 		}
@@ -412,6 +424,9 @@ void CMenuItem::setIconName()
 			break;
 		case CRCInput::RC_info:
 			iconName = NEUTRINO_ICON_BUTTON_INFO_SMALL;
+			break;
+		case CRCInput::RC_pause: //NI
+			iconName = NEUTRINO_ICON_BUTTON_PAUSE;
 			break;
 		case CRCInput::RC_stop:
 			iconName = NEUTRINO_ICON_BUTTON_STOP;
@@ -1020,6 +1035,9 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 		if(oldLcdMode != CVFD::getInstance()->getMode())
 			CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 
+	//NI lcd4l-support
+	LCD4l->RemoveFile("/tmp/lcd/menu");
+
 	for (unsigned int count = 0; count < items.size(); count++) 
 	{
 		if(items[count] == GenericMenuNext) 
@@ -1275,13 +1293,13 @@ void CMenuWidget::setMenuPos(const int& menu_width)
 		case MENU_POS_CENTER:
 			x = offx + scr_x + ((scr_w - menu_width ) >> 1 );
 			y = offy + scr_y + ((scr_h - real_h) >> 1 );
-			x += ConnectLineBox_Width;
+			x += g_settings.show_menu_hints_line ? ConnectLineBox_Width : 0; //NI
 			break;
 			
 		case MENU_POS_TOP_LEFT: 
 			y = offy + scr_y + 10;
 			x = offx + scr_x + 10;
-			x += ConnectLineBox_Width;
+			x += g_settings.show_menu_hints_line ? ConnectLineBox_Width : 0; //NI
 			break;
 			
 		case MENU_POS_TOP_RIGHT: 
@@ -1292,7 +1310,7 @@ void CMenuWidget::setMenuPos(const int& menu_width)
 		case MENU_POS_BOTTOM_LEFT: 
 			y = /*offy +*/ scr_y + scr_h - real_h - 10;
 			x = offx + scr_x + 10;
-			x += ConnectLineBox_Width;
+			x += g_settings.show_menu_hints_line ? ConnectLineBox_Width : 0; //NI
 			break;
 			
 		case MENU_POS_BOTTOM_RIGHT: 
@@ -1475,11 +1493,12 @@ void CMenuWidget::paintHint(int pos)
 		info_box = new CComponentsInfoBox();
 
 	info_box->setDimensionsAll(x, ypos2, iwidth, hint_height);
-	info_box->setFrameThickness(2);
-	info_box->removeLineBreaks(str);
+	info_box->setFrameThickness(g_settings.show_menu_hints_line ? 1 : 0); //NI
+	//NI info_box->removeLineBreaks(str);
 	info_box->setText(str, CTextBox::AUTO_WIDTH, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_HINT], COL_MENUCONTENT_TEXT);
 	info_box->setCorner(RADIUS_LARGE);
 	info_box->setColorAll(COL_MENUCONTENT_PLUS_6, COL_MENUCONTENTDARK_PLUS_0, COL_MENUCONTENTDARK_PLUS_0);
+	info_box->setColorBody(COL_MENUCONTENT_PLUS_0); //NI
 	info_box->enableShadow();
 	info_box->setPicture(item->hintIcon ? item->hintIcon : "");
 	info_box->enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_INFOBAR_SHADOW_PLUS_1, g_settings.theme.menu_Hint_gradient_direction);// COL_INFOBAR_SHADOW_PLUS_1 is default footer color
@@ -2323,6 +2342,9 @@ int CMenuSeparator::paint(bool selected)
 			
  			frameBuffer->paintBoxRel(name_start_x-5, y, stringwidth+10, height, item_bgcolor);
 			
+			if ((type & LINE)) //NI - use COL_MENUHEAD_TEXT for CMenuSeparators defined with LINE and STRING
+				item_color = COL_MENUHEAD_TEXT;
+
 			paintItemCaption(selected);
 		}
 	}

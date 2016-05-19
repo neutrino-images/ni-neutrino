@@ -101,7 +101,7 @@ class CMoviePlayerGui : public CMenuTarget
 	CFrameBuffer * frameBuffer;
 	int            m_LastMode;	
 
-	std::string	file_name;
+//NI	std::string	file_name;
 	std::string	pretty_name;
 	std::string	cookie_header;
 	std::string	info_1, info_2;
@@ -154,7 +154,7 @@ class CMoviePlayerGui : public CMenuTarget
 	bool isYT;
 	bool showStartingHint;
 	static CMovieBrowser* moviebrowser;
-	MI_MOVIE_INFO * p_movie_info;
+//NI	MI_MOVIE_INFO * p_movie_info;
 	MI_MOVIE_INFO movie_info;
 	P_MI_MOVIE_LIST milist;
 	const static short MOVIE_HINT_BOX_TIMER = 5;	// time to show bookmark hints in seconds
@@ -266,6 +266,11 @@ class CMoviePlayerGui : public CMenuTarget
 	void setLuaInfoFunc(lua_State* L, bool func) { luaState = L; haveLuaInfoFunc = func; };
 	void getLivestreamInfo(std::string *i1, std::string *i2) { *i1=livestreamInfo1; *i2=livestreamInfo2; };
 	bool getLiveUrl(const t_channel_id chan, const std::string &url, const std::string &script, std::string &realUrl, std::string &_pretty_name, std::string &info1, std::string &info2, std::string &header);
+
+	//NI
+	MI_MOVIE_INFO *	p_movie_info;
+	std::string	file_name;
+	int getState()	{ return playstate; };
 };
 
 #endif

@@ -79,6 +79,8 @@ class CProgressBar : public CComponentsItem
 		///to evaluate values, these will be convert to the graph
 		int pb_value, pb_max_value;
 
+		std::string graphic_file; //NI graphic
+
 		int *pb_design, *pb_gradient;
 		int pb_type;
 
@@ -86,6 +88,8 @@ class CProgressBar : public CComponentsItem
 
 		///paints graph
 		void paintProgress(bool do_save_bg = CC_SAVE_SCREEN_NO);
+		void paintGraphic(); //NI graphic
+		void paintStarBar(); //NI starbar
 
 	public:
 		///parameters:
@@ -131,6 +135,9 @@ class CProgressBar : public CComponentsItem
 					const int w, const int h,
 					const int val, const int max_val){x=x_pos; y=y_pos; width=w; height=h; pb_value=val; pb_max_value=max_val;}
 
+		//NI graphic
+		void setGraphic(std::string graphic = "progressbar"){graphic_file = graphic;};
+
 		///force update on next paint
 		void reset() { pb_last_width = -1; }
 		void paint(bool do_save_bg = CC_SAVE_SCREEN_NO);
@@ -141,13 +148,15 @@ class CProgressBar : public CComponentsItem
 			PB_MATRIX,	/*  0 */
 			PB_LINES_V,	/*  1 */
 			PB_LINES_H,	/*  2 */
-			PB_COLOR	/*  3 */
+			PB_COLOR,	/*  3 */
+			PB_GRAPHIC	/*  4 */ //NI graphic
 		};
 
 		enum pb_type_t {
 			PB_REDLEFT = 0,
 			PB_REDRIGHT,
-			PB_TIMESCALE
+			PB_TIMESCALE,
+			PB_STARBAR, //NI starbar
 		};
 
 		void setType(pb_type_t type);

@@ -7,6 +7,7 @@ install_DATA = \
 	DVB2000.theme \
 	DarkBlue.theme \
 	DarkBrown.theme \
+	DarkOrange.theme \
 	Gray.theme \
 	Grey-Blue.theme \
 	MonoChrom.theme \

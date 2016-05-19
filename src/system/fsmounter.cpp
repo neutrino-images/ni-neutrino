@@ -176,6 +176,11 @@ bool CFSMounter::isMounted(const std::string &local_dir)
 	{
 		MountInfo mi;
 		in >> mi.device >> mi.mountPoint >> mi.type;
+
+		//NI
+		if (mi.type == "tmpfs")
+			continue;
+
 		if (strcmp(mi.mountPoint.c_str(),mount_point) == 0)
 		{   
 			return true;
@@ -223,8 +228,8 @@ CFSMounter::MountRes CFSMounter::mount(const std::string &ip, const std::string 
 	{
 		if(fstype == NFS)
 		{
-			options1 = "ro,soft,udp";
-			options2 = "nolock,rsize=8192,wsize=8192";
+			options1 = "soft"; //NI
+			options2 = "nolock"; //NI
 		}
 		else if(fstype == CIFS)
 		{

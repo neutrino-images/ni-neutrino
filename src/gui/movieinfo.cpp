@@ -50,6 +50,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include "gui/widget/hintbox.h" //NI
 #include <gui/widget/msgbox.h>
 #include <gui/movieinfo.h>
 #include <system/helpers.h>
@@ -68,6 +69,7 @@
 ************************************************************************/
 CMovieInfo::CMovieInfo()
 {
+	imdb = CIMDB::getInstance(); //NI
 	//TRACE("[mi] new\r\n");
 }
 
@@ -505,8 +507,58 @@ void CMovieInfo::showMovieInfo(MI_MOVIE_INFO & movie_info)
 	print_buffer += movie_info.file.Name;
 	print_buffer += "\n";
 
-	ShowMsg2UTF(movie_info.epgTitle.empty()? movie_info.file.getFileName().c_str() : movie_info.epgTitle.c_str(), print_buffer.c_str(), CMsgBox::mbrBack, CMsgBox::mbBack);	// UTF-8*/
+	//NI
+	imdb->showTextWindow(movie_info.epgTitle.empty() ? movie_info.file.getFileName() : movie_info.epgTitle, print_buffer);
 
+	while (1)
+	{
+		neutrino_msg_t msg;
+		neutrino_msg_data_t data;
+		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd_MS(100);
+		g_RCInput->getMsgAbsoluteTimeout( &msg, &data, &timeoutEnd );
+
+		if (msg == CRCInput::RC_home || msg == CRCInput::RC_ok || msg == CRCInput::RC_info) {
+			break;
+		}
+		else if (msg == CRCInput::RC_help) {
+			g_settings.bigFonts = !g_settings.bigFonts;
+			imdb->hideWindow(true /*keep_active*/);
+			if (imdb->isActive())
+				imdb->showIMDbWindow(movie_info.epgTitle);
+			else
+				imdb->showTextWindow(movie_info.epgTitle.empty() ? movie_info.file.getFileName() : movie_info.epgTitle, print_buffer);
+			g_RCInput->clearRCMsg();
+			continue;
+		}
+		else if ((msg == CRCInput::RC_up) || (msg == CRCInput::RC_page_up)) {
+			imdb->scroll(/*scrollUp*/ false);
+		}
+		else if ((msg == CRCInput::RC_down) || (msg == CRCInput::RC_page_down)) {
+			imdb->scroll(/*scrollDown*/ true);
+		}
+		else if (msg == CRCInput::RC_green)
+		{
+			if (imdb->isActive()) {
+				CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, "Speichere Bild");
+				hintBox->paint();
+				size_t pos;
+				std::string picname;
+				if((pos = movie_info.file.Name.rfind(".")) != std::string::npos){
+					picname = movie_info.file.Name.substr(0, pos);
+					picname += ".jpg";
+					File_copy(imdb->posterfile.c_str(), picname.c_str());
+					printf("   picname = %s\n",picname.c_str());
+				}
+				sleep(2);
+				hintBox->hide();
+			}
+			else {
+				imdb->hideWindow();
+				imdb->showIMDbWindow(movie_info.epgTitle);
+			}
+		}
+	}
+	imdb->hideWindow();
 }
 
 /************************************************************************

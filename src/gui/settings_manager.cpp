@@ -46,6 +46,8 @@
 
 #include <sys/vfs.h>
 
+#include <gui/widget/hintbox.h> //NI
+#include "gui/settings_manager_teams.h" //NI cross-team settings
 
 
 CSettingsManager::CSettingsManager(int wizard_mode)
@@ -111,9 +113,20 @@ int CSettingsManager::exec(CMenuTarget* parent, const std::string &actionKey)
 			int ret = ::statfs(fileBrowser.getSelectedFile()->Name.c_str(), &s);
 			if(ret == 0 && s.f_type != 0x72b6L) /*jffs2*/
 			{
+				//NI
+				CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SETTINGS_BACKUP));
+				hintBox->paint();
+				std::string fname = (std::string)"/bin/backup.sh " + fileBrowser.getSelectedFile()->Name;
+				printf("backup: executing [%s]\n", fname.c_str());
+				my_system(2, "/bin/backup.sh", fileBrowser.getSelectedFile()->Name.c_str());
+				hintBox->hide();
+				delete hintBox;
+//NI
+#if 0
 				const char backup_sh[] = "/bin/backup.sh";
 				printf("backup: executing [%s %s]\n",backup_sh, fileBrowser.getSelectedFile()->Name.c_str());
-				my_system(2, backup_sh, fileBrowser.getSelectedFile()->Name.c_str());
+				my_system(2, backup_sh, fileBrowser.getSelectedFile()->Name.c_str());*/
+#endif
 			}
 			else
 				ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(LOCALE_SETTINGS_BACKUP_FAILED),CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_ERROR);
@@ -123,6 +136,7 @@ int CSettingsManager::exec(CMenuTarget* parent, const std::string &actionKey)
 	else if(actionKey == "restore")
 	{
 		fileFilter.addFilter("tar");
+		fileFilter.addFilter("gz"); //NI
 		fileBrowser.Filter = &fileFilter;
 		if (fileBrowser.exec("/media") == true)
 		{
@@ -212,6 +226,13 @@ int CSettingsManager::showMenu()
 		mf = new CMenuForwarder(LOCALE_SETTINGS_RESTORE, true, NULL, this, "restore", CRCInput::RC_blue);
 
 	mf->setHint(NEUTRINO_ICON_HINT_RESTORE, LOCALE_MENU_HINT_RESTORE);
+	mset->addItem(mf);
+
+	//NI cross-team settings
+	mset->addItem(GenericMenuSeparatorLine);
+	CSettingsManagerTeams * teamsettings = new CSettingsManagerTeams();
+	mf = new CMenuForwarder(LOCALE_SETTINGS_TEAMS, true, NULL, teamsettings, NULL, CRCInput::convertDigitToKey(0));
+	mf->setHint("", LOCALE_CROSSTEAM_HINT_SETTINGS_TEAMS);
 	mset->addItem(mf);
 
 	if (g_settings.easymenu) {

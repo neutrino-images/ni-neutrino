@@ -66,6 +66,11 @@ class COsdSetup : public CMenuTarget, public CChangeObserver
 		int show_menu_hints;
 		int show_tuner_icon;
 
+		//NI
+		CMenuOptionChooser *infobarIconset;
+		int infoviewer_icons;
+		int show_menu_hints_line;
+
 		int showOsdSetup();
  		void showOsdMenueColorSetup(CMenuWidget *menu_colors);
 		void showOsdFontSizeSetup(CMenuWidget *menu_fonts);
@@ -101,7 +106,7 @@ class COsdSetup : public CMenuTarget, public CChangeObserver
 		COsdSetup(int wizard_mode = SNeutrinoSettings::WIZARD_OFF);
 		~COsdSetup();
 		int exec(CMenuTarget* parent, const std::string & actionKey);
-		bool changeNotify(const neutrino_locale_t OptionName, void * /*data*/);
+		bool changeNotify(const neutrino_locale_t OptionName, void * data); //NI
 		int showContextChanlistMenu(CChannelList *parent_channellist = NULL);
 };
 

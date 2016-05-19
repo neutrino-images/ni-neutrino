@@ -179,6 +179,10 @@ int toptext_getnext(int startpage, int up, int findgroup)
 	nextgrp = nextblk = 0;
 	current = startpage;
 
+	//NI
+	if (startpage == 0)
+		return 0;
+
 	do {
 		if (up)
 			tuxtxt_next_dec(&current);

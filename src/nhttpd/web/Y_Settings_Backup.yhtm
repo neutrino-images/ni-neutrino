@@ -56,7 +56,7 @@ function do_backup2()
 		<tr>
 			<td>
 				<form name="f" method="post" enctype="multipart/form-data" action="/control/exec?Y_Tools&amp;settings_backup_restore&amp;restore">
-					tar-File:&nbsp;<input type="file" name="filename" size="70"/>&nbsp;<br/>
+					tar.gz-File:&nbsp;<input type="file" name="filename" size="70"/>&nbsp;<br/>
 					<input type="button" name="su" value="{=L:set.settings.restore=}" title="{=L:set.settings.restore_desc=}" onclick="do_submit()"/>
 					<br/><br/>
 				</form>

@@ -44,6 +44,8 @@
 #include <neutrino_menue.h>
 #include "hdd_menu.h"
 
+#include <cs_api.h> //NI
+#include <gui/ni_menu.h> //NI
 #include <gui/widget/icons.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/messagebox.h>
@@ -61,7 +63,12 @@
 #define BLKID_BIN    "/sbin/blkid"
 #define EJECT_BIN    "/bin/eject"
 
+//NI
+#ifdef BOXMODEL_APOLLO
 #define MDEV_MOUNT	"/lib/mdev/fs/mount"
+#else
+#define MDEV_MOUNT	"/etc/mdev/mdev-mount.sh"
+#endif
 #define MOUNT_BASE	"/media/"
 
 #define HDD_NOISE_OPTION_COUNT 4
@@ -425,6 +432,10 @@ int CHDDMenuHandler::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t dat
 
 		if (added && !mounted && tmp != "sr") {
 			std::string message = dev + ": " + g_Locale->getText(LOCALE_HDD_MOUNT_FAILED);
+		    //NI
+		    if (!g_settings.hdd_format_on_mount_failed)
+			showHint(message);
+		    else {
 			message +=  std::string(" ") + g_Locale->getText(LOCALE_HDD_FORMAT) + std::string(" ?");
 			int res = ShowMsg(LOCALE_MESSAGEBOX_INFO, message, CMessageBox::mbrNo, CMessageBox::mbYes | CMessageBox::mbNo);
 			if(res == CMessageBox::mbrYes) {
@@ -435,12 +446,13 @@ int CHDDMenuHandler::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t dat
 					return messages_return::handled | messages_return::cancel_all;
 				}
 			}
+		    }
 		} else {
 			std::string message = dev + ": " + (added ?
 					g_Locale->getText(mounted ? LOCALE_HDD_MOUNT_OK : LOCALE_HDD_MOUNT_FAILED)
 					: g_Locale->getText(LOCALE_HDD_UMOUNTED));
 			showHint(message);
-			if (added && tmp != "sr")
+			if (added && tmp != "sr" && g_settings.hdd_allow_set_recdir) //NI
 				setRecordPath(dev);
 		}
 		if (in_menu && !lock_refresh) {
@@ -720,6 +732,32 @@ _show_menu:
 		hddmenu->addItem(mc);
 	}
 
+	//NI
+	hddmenu->addItem(new CMenuSeparator());
+	if (cs_get_revision() < 8) {
+		//NI HDD power (HD1/BSE only)
+		int flag_hddpower = file_exists(FLAG_DIR ".hddpower");
+
+		CNITouchFileNotifier * hddpowerNotifier = new CNITouchFileNotifier("hddpower");
+		mc = new CMenuOptionChooser(LOCALE_HDD_POWER, &flag_hddpower, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, hddpowerNotifier, CRCInput::RC_yellow);
+		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_HDD_POWER);
+		hddmenu->addItem(mc);
+		hddmenu->addItem(new CMenuSeparator());
+	}
+	mc = new CMenuOptionChooser(LOCALE_HDD_FORMAT_ON_MOUNT_FAILED, &g_settings.hdd_format_on_mount_failed, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	mc->setHint("", LOCALE_MENU_HINT_HDD_FORMAT_ON_MOUNT_FAILED);
+	hddmenu->addItem(mc);
+	mc = new CMenuOptionChooser(LOCALE_HDD_WAKEUP, &g_settings.hdd_wakeup, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	mc->setHint("", LOCALE_MENU_HINT_HDD_WAKEUP);
+	hddmenu->addItem(mc);
+	mc = new CMenuOptionChooser(LOCALE_HDD_WAKEUP_MSG, &g_settings.hdd_wakeup_msg, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	mc->setHint("", LOCALE_MENU_HINT_HDD_WAKEUP_MSG);
+	hddmenu->addItem(mc);
+	hddmenu->addItem(new CMenuSeparator());
+	mc = new CMenuOptionChooser(LOCALE_HDD_ALLOW_SET_RECDIR, &g_settings.hdd_allow_set_recdir, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	mc->setHint("", LOCALE_MENU_HINT_HDD_ALLOW_SET_RECDIR);
+	hddmenu->addItem(mc);
+
 	hddmenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_HDD_MANAGE));
 
 	for (std::map<std::string, std::string>::iterator it = devtitle.begin(); it != devtitle.end(); ++it) {
@@ -813,7 +851,7 @@ int CHDDMenuHandler::formatDevice(std::string dev)
 	if(res != CMessageBox::mbrYes)
 		return menu_return::RETURN_REPAINT;
 
-	bool srun = my_system(3, "killall", "-9", "smbd");
+	//NI bool srun = my_system(3, "killall", "-9", "smbd");
 
 	res = umount_all(dev);
 	printf("CHDDMenuHandler::formatDevice: umount res %d\n", res);
@@ -994,7 +1032,7 @@ _remount:
 		}
 	}
 _return:
-	if (!srun) my_system(1, "smbd");
+	//NI if (!srun) my_system(1, "smbd");
 	if (show_menu)
 		return menu_return::RETURN_EXIT_ALL;
 
@@ -1022,7 +1060,7 @@ int CHDDMenuHandler::checkDevice(std::string dev)
 	std::string cmd = devtool->fsck + " " + devtool->fsck_options + " " + devname;
 	printf("fsck cmd: [%s]\n", cmd.c_str());
 
-	bool srun = my_system(3, "killall", "-9", "smbd");
+	//NI bool srun = my_system(3, "killall", "-9", "smbd");
 
 	res = true;
 	if (is_mounted(dev.c_str()))
@@ -1087,7 +1125,7 @@ ret1:
 	res = mount_dev(dev);
 	printf("CHDDMenuHandler::checkDevice: mount res %d\n", res);
 
-	if (!srun) my_system(1, "smbd");
+	//NI if (!srun) my_system(1, "smbd");
 	return menu_return::RETURN_REPAINT;
 }
 

@@ -156,8 +156,6 @@ if BOXMODEL_APOLLO
 neutrino_LDADD += -liconv
 endif
 
-bin_PROGRAMS += drivertool
-drivertool_SOURCES = drivertool.c
 bin_PROGRAMS += dt
 dt_SOURCES = dt.c
 bin_PROGRAMS += rcsim

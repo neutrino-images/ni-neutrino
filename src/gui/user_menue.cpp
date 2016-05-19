@@ -54,7 +54,7 @@
 #include "movieplayer.h"
 #include "timerlist.h"
 #include "plugins.h"
-#include "imageinfo.h"
+#include "imageinfo_ni.h" //NI
 #include "dboxinfo.h"
 #if !HAVE_SPARK_HARDWARE
 #include "cam_menu.h"
@@ -92,6 +92,13 @@ extern CCAMMenuHandler * g_CamHandler;
 
 // 
 #include <system/debug.h>
+
+//NI
+#include <gui/ni_menu.h>
+#include <gui/infoicons_setup.h>
+
+#include <gui/infoicons.h>
+extern CInfoIcons *InfoIcons;
 
 CUserMenu::CUserMenu()
 {
@@ -159,6 +166,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 	// define classes
 	CSubChannelSelectMenu subchanselect;
 	CNeutrinoApp * neutrino	= CNeutrinoApp::getInstance();
+	CNIMenu *ni_menu = CNIMenu::getInstance(); //NI
 	
 	std::string txt = g_settings.usermenu[button]->title;
 	if (button < COL_BUTTONMAX && txt.empty())
@@ -351,11 +359,11 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 		case SNeutrinoSettings::ITEM_VTXT:
 			keyhelper.get(&key,&icon, feat_key[g_settings.personalize[SNeutrinoSettings::P_FEAT_KEY_VTXT]].key); //CRCInput::RC_blue
 			menu_item = new CMenuForwarder(LOCALE_USERMENU_ITEM_VTXT, true, NULL, CPluginsExec::getInstance(), "teletext", key, icon);
-			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+			menu_item->setHint(NEUTRINO_ICON_HINT_VTXT, LOCALE_USERMENU_ITEM_VTXT); //NI
 			break;
 		case SNeutrinoSettings::ITEM_IMAGEINFO:
 			keyhelper.get(&key,&icon);
-			menu_item = new CMenuDForwarder(LOCALE_SERVICEMENU_IMAGEINFO,  true, NULL, new CImageInfo, NULL, key, icon);
+			menu_item = new CMenuDForwarder(LOCALE_SERVICEMENU_IMAGEINFO,  true, NULL, new CImageInfoNI, NULL, key, icon); //NI
 			menu_item->setHint(NEUTRINO_ICON_HINT_IMAGEINFO, LOCALE_MENU_HINT_IMAGEINFO);
 			break;
 		case SNeutrinoSettings::ITEM_BOXINFO:
@@ -448,6 +456,24 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 			menu_item = new CMenuDForwarder(LOCALE_LIVESTREAM_RESOLUTION, true, NULL, new CWebTVResolution(), NULL, key, icon);
 			//menu_item->setHint(xx, yy);
 			break;
+		//NI
+		case SNeutrinoSettings::ITEM_CAMD_RESET:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuForwarder(LOCALE_CAMD_RESET, true, NULL, ni_menu, "camd_reset", key, icon);
+			break;
+		case SNeutrinoSettings::ITEM_ECMINFO:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuForwarder(LOCALE_ECMINFO_SHOW, file_size("/tmp/ecm.info"), NULL, ni_menu, "ecmInfo", key, icon);
+			break;
+		case SNeutrinoSettings::ITEM_INFOICONS:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuForwarder(!g_settings.mode_icons ? LOCALE_INFOICONS_SWITCH_ON : LOCALE_INFOICONS_SWITCH_OFF, g_settings.mode_icons_skin != INFOICONS_INFOVIEWER, NULL, new CInfoIconsSetup, "infoicons_switch", key, icon);
+			break;
+		case SNeutrinoSettings::ITEM_TUNER_RESTART:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuForwarder(LOCALE_SERVICEMENU_RESTART_TUNER, true, NULL, neutrino, "restarttuner", key, icon);
+			menu_item->setHint(NEUTRINO_ICON_HINT_RELOAD_CHANNELS, LOCALE_MENU_HINT_RESTART_TUNER);
+			break;
 		case -1: // plugin
 		    {
 			int number_of_plugins = g_PluginList->getNumberOfPlugins();
@@ -478,6 +504,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 	}
 
 	CInfoClock::getInstance()->enableInfoClock(false);
+	InfoIcons->enableInfoIcons(false); //NI
 	// show menu if there are more than 2 items only
 	// otherwise, we start the item directly (must be the last one)
 	if (menu_items > 1 )
@@ -486,6 +513,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 		last_menu_item->exec( NULL );
 	
 	CInfoClock::getInstance()->enableInfoClock(true);
+	InfoIcons->enableInfoIcons(true); //NI
 	CNeutrinoApp::getInstance()->StartSubtitles();
 
 	if (button < COL_BUTTONMAX)

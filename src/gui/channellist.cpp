@@ -79,6 +79,10 @@
 
 #include <eitd/sectionsd.h>
 
+//NI lcd4l-support
+#include "gui/lcd4l.h"
+extern CLCD4l *LCD4l;
+
 extern CBouquetList * bouquetList;       /* neutrino.cpp */
 extern CRemoteControl * g_RemoteControl; /* neutrino.cpp */
 extern CBouquetList   * AllFavBouquetList;
@@ -473,7 +477,7 @@ void CChannelList::calcSize()
 
 	pig_on_win = ( (g_settings.channellist_additional == 2) /* with miniTV */ && (CNeutrinoApp::getInstance()->getMode() != NeutrinoMessages::mode_ts) );
 	// calculate width
-	full_width = pig_on_win ? (frameBuffer->getScreenWidth()-2*ConnectLineBox_Width) : frameBuffer->getScreenWidthRel();
+	full_width = frameBuffer->getScreenWidthRel(); //NI
 
 	if (g_settings.channellist_additional)
 		width = full_width / 3 * 2;
@@ -485,7 +489,7 @@ void CChannelList::calcSize()
 		info_height = 2*fheight + fdescrheight + 10;
 	else
 		info_height = 0;
-	height = pig_on_win ?  frameBuffer->getScreenHeight(): frameBuffer->getScreenHeightRel();
+	height = frameBuffer->getScreenHeightRel(); //NI
 	height = height - info_height;
 
 	// calculate x position
@@ -742,7 +746,7 @@ int CChannelList::show()
 		else if (!empty && (msg == CRCInput::RC_up || (int)msg == g_settings.key_pageup ||
 				    msg == CRCInput::RC_down || (int)msg == g_settings.key_pagedown))
 		{
-			displayList = 1;
+			//NI displayList = 1;
 			int new_selected = UpDownKey((*chanlist), msg, listmaxshow, selected);
 			if (new_selected >= 0)
 				actzap = updateSelection(new_selected);
@@ -848,10 +852,17 @@ int CChannelList::show()
 				if (move_state != beMoving)
 					renameChannel();
 			} else {
+				//NI
+				if (g_settings.channellist_additional && !displayNext)
+					displayList = !displayList;
+				if (displayList)
+					displayNext = !displayNext;
+#if 0
 				if (g_settings.channellist_additional)
 					displayList = !displayList;
 				else
 					displayNext = !displayNext;
+#endif
 
 				paint();
 			}
@@ -923,6 +934,9 @@ int CChannelList::show()
 	if (edit_state)
 		editMode(false);
 
+	//NI lcd4l-support
+	LCD4l->RemoveFile("/tmp/lcd/menu");
+
 	if(!dont_hide){
 		if (new_zap_mode && (g_settings.channellist_new_zap_mode != new_zap_mode))
 			g_settings.channellist_new_zap_mode = new_zap_mode;
@@ -944,7 +958,7 @@ int CChannelList::show()
 	if(zapOnExit)
 		res = selected;
 
-	printf("CChannelList::show *********** res %d\n", res);
+	//NI printf("CChannelList::show *********** res %d\n", res);
 	return(res);
 }
 
@@ -963,8 +977,7 @@ void CChannelList::hide()
 		delete CChannelLogo;
 		CChannelLogo = NULL;
 	}
-
-	frameBuffer->paintBackgroundBoxRel(x, y, full_width, height + info_height);
+	frameBuffer->paintBackground(); //NI clear whole screen
 	clearItem2DetailsLine();
 	CInfoClock::getInstance()->enableInfoClock(!CInfoClock::getInstance()->isBlocked());
 }
@@ -1777,10 +1790,13 @@ void CChannelList::paintButtonBar(bool is_current)
 		if (i == 3) {
 			//manage now/next button
 			if (g_settings.channellist_additional) {
-				if (displayList)
+				//NI
+				if (displayNext)
+					Button[bcnt].locale = LOCALE_INFOVIEWER_NOW;
+				else if (displayList)
 					Button[bcnt].locale = LOCALE_FONTSIZE_CHANNELLIST_DESCR;
 				else
-					Button[bcnt].locale = LOCALE_FONTMENU_EVENTLIST;
+					Button[bcnt].locale = LOCALE_INFOVIEWER_NEXT;
 			} else {
 				if (displayNext)
 					Button[bcnt].locale = LOCALE_INFOVIEWER_NOW;
@@ -1863,8 +1879,8 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 	}
 	else if (getKey(curr) == CNeutrinoApp::getInstance()->channelList->getActiveChannelNumber()  && new_zap_mode != 2/*active*/)
 	{
-		color   = !displayNext ? COL_MENUCONTENT_TEXT  : COL_MENUCONTENTINACTIVE_TEXT;
-		bgcolor = !displayNext ? COL_MENUCONTENT_PLUS_1 : COL_MENUCONTENTINACTIVE_PLUS_0;
+		color   = COL_MENUCONTENT_TEXT; //NI
+		bgcolor = COL_MENUCONTENT_PLUS_1; //NI
 		c_rad_small = RADIUS_LARGE;
 	} else {
 		color = iscurrent ? COL_MENUCONTENT_TEXT : COL_MENUCONTENTINACTIVE_TEXT;
@@ -2032,13 +2048,28 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		else {
 			if(g_settings.channellist_progressbar_design != CProgressBar::PB_OFF) {
 				pb.setValues(0, pb_max);
+				if (g_settings.progressbar_design == CProgressBar::PB_GRAPHIC) //NI graphic
+					pb.setGraphic("progressbar_inactive");
 				pb.paint();
 			}
 			//name
 			g_Font[SNeutrinoSettings::FONT_TYPE_CHANNELLIST]->RenderString(x+ 5+ numwidth+ 10+prg_offset, ypos+ fheight, width- numwidth- 40- 15-prg_offset, nameAndDescription, color);
 		}
+
+		//NI do update VFD only when cursor on live channel
+		if ((curr == selected) && (getKey(curr) == CNeutrinoApp::getInstance()->channelList->getActiveChannelNumber())) { //NI
+			if (!(chan->currentEvent.description.empty())) {
+				snprintf(nameAndDescription, sizeof(nameAndDescription), "%s - %s",
+					 chan->getName().c_str(), p_event->description.c_str());
+				CVFD::getInstance()->showMenuText(0, nameAndDescription, -1, true); // UTF-8
+			} else
+				CVFD::getInstance()->showMenuText(0, chan->getName().c_str(), -1, true); // UTF-8
+		}
 		if (!firstpaint && curr == selected)
 			updateVfd();
+		//NI lcd4l-support
+		if(g_settings.lcd4l_support)
+			LCD4l->CreateFile("/tmp/lcd/menu", chan->getName().c_str());
 	}
 }
 
@@ -2162,8 +2193,11 @@ void CChannelList::paintBody()
 	frameBuffer->paintBoxRel(x, y+theight, width, height-footerHeight-theight, COL_MENUCONTENT_PLUS_0);
 	if (g_settings.channellist_additional)
 	{
+//NI
+#if 0
 		// disable displayNext
 		displayNext = false;
+#endif
 		// paint background for right box
 		frameBuffer->paintBoxRel(x+width,y+theight+pig_height,infozone_width,infozone_height,COL_MENUCONTENT_PLUS_0);
 	}

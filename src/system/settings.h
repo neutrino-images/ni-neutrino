@@ -172,6 +172,7 @@ struct SNeutrinoSettings
 	int infobar_show_channeldesc;
 	int infobar_subchan_disp_pos;
 	int infobar_buttons_usertitle;
+	int infobar_analogclock; //NI
 	int fan_speed;
 	int infobar_show;
 	int infobar_show_channellogo;
@@ -237,6 +238,7 @@ struct SNeutrinoSettings
 	std::string ci_pincode;
 	int radiotext_enable;
 	int easymenu;
+	int webtv_xml_auto; //NI
 
 	//screen saver
 	int screensaver_delay;
@@ -278,6 +280,7 @@ struct SNeutrinoSettings
 	std::string network_ntpserver;
 	std::string network_ntprefresh;
 	int network_ntpenable;
+	int network_ntpatboot; //NI
 	std::string ifname;
 
 	std::list<std::string> webtv_xml;
@@ -304,12 +307,14 @@ struct SNeutrinoSettings
 		P_MAIN_TOOLS,
 		P_MAIN_SCRIPTS,
 		P_MAIN_LUA,
+		P_MAIN_NI_MENU, //NI
 		P_MAIN_SETTINGS,
 		P_MAIN_SERVICE,
 		P_MAIN_SLEEPTIMER,
 		P_MAIN_STANDBY,
 		P_MAIN_REBOOT,
 		P_MAIN_SHUTDOWN,
+		P_MAIN_BLANK_SCREEN, //NI
 		P_MAIN_INFOMENU,
 		P_MAIN_CISETTINGS,
 
@@ -335,6 +340,7 @@ struct SNeutrinoSettings
 		P_MSER_BOUQUET_EDIT,
 		P_MSER_RESET_CHANNELS,
 		P_MSER_RESTART,
+		P_MSER_RESTART_TUNER, //NI
 		P_MSER_RELOAD_PLUGINS,
 		P_MSER_SERVICE_INFOMENU,
 		P_MSER_SOFTUPDATE,
@@ -438,6 +444,7 @@ struct SNeutrinoSettings
 	int recording_save_in_channeldir;
 	int recording_zap_on_announce;
 	int recording_slow_warning;
+	int recording_fill_warning; //NI
 	int recording_startstop_msg;
 	int shutdown_timer_record_type;
 	std::string recording_filename_template;
@@ -653,8 +660,12 @@ struct SNeutrinoSettings
 		FONT_TYPE_INFOBAR_CHANNAME,
 		FONT_TYPE_INFOBAR_INFO,
 		FONT_TYPE_INFOBAR_SMALL,
+		FONT_TYPE_INFOBAR_ECMINFO, //NI
 		FONT_TYPE_FILEBROWSER_ITEM,
 		FONT_TYPE_MENU_HINT,
+		FONT_TYPE_MOVIEBROWSER_HEAD, //NI
+		FONT_TYPE_MOVIEBROWSER_LIST, //NI
+		FONT_TYPE_MOVIEBROWSER_INFO, //NI
 		FONT_TYPE_SUBTITLES,
 		FONT_TYPE_COUNT
 	};
@@ -739,11 +750,52 @@ struct SNeutrinoSettings
 	int	hdd_fs;
 	enum { HDD_STATFS_OFF = 0, HDD_STATFS_ALWAYS, HDD_STATFS_RECORDING };
 	int	hdd_statfs_mode;
+	int	hdd_format_on_mount_failed; //NI
+	int	hdd_wakeup; //NI
+	int	hdd_wakeup_msg; //NI
+	int	hdd_allow_set_recdir; //NI
 	int	zap_cycle;
 	int	sms_channel;
 	int	sms_movie;
 	std::string	font_file;
 	std::string	ttx_font_file;
+
+	//NI
+	int		lcd4l_support;
+	std::string	lcd4l_logodir;
+	int		lcd4l_skin;
+	int		lcd4l_skin_radio;
+	int		ca_init;
+	int		show_menu_hints_line;
+	int		inetradio_autostart;
+	int		infoviewer_icons;
+#define MODE_ICONS_NR_OF_ENTRIES 8
+	int		mode_icons;
+	int		mode_icons_background;
+	int		mode_icons_skin;
+	std::string	mode_icons_flag[MODE_ICONS_NR_OF_ENTRIES];
+	int		show_ecm;
+	int		show_ecm_pos;
+#define NETFS_NR_OF_ENTRIES NETWORK_NFS_NR_OF_ENTRIES
+	typedef enum
+	{
+		FSTAB = 0,
+		AUTOMOUNT = 1,
+		NETFS_MOUNT_TYPE_COUNT
+	} NETFS_MOUNT_TYPE;
+	struct {
+		std::string ip;
+		std::string dir;
+		std::string local_dir;
+		int  type;
+		std::string username;
+		std::string password;
+		std::string options1;
+		std::string options2;
+		int  active;
+		std::string dump;
+		std::string pass;
+	} netfs[NETFS_MOUNT_TYPE_COUNT][NETFS_NR_OF_ENTRIES];
 
 	int		livestreamResolution;
 	std::string	livestreamScriptPath;
@@ -781,19 +833,23 @@ struct SNeutrinoSettings
 		ITEM_CLOCK = 19,
 		ITEM_GAMES = 20,
 		ITEM_SCRIPTS = 21,
-		ITEM_YOUTUBE = 22,
-		ITEM_FILEPLAY = 23,
-		ITEM_TOOLS = 24,
-		ITEM_LUA = 25,
+		ITEM_ECMINFO = 22,		//NI
+		ITEM_CAMD_RESET = 23,		//NI
+		ITEM_INFOICONS = 24,		//NI
+		ITEM_YOUTUBE = 25,
+		ITEM_FILEPLAY = 26,
+		ITEM_TOOLS = 27,
+		ITEM_LUA = 28,
+		ITEM_TUNER_RESTART = 29,        //NI
 
-		ITEM_HDDMENU = 26,
-		ITEM_AUDIOPLAY = 27,
-		ITEM_INETPLAY = 28,
-		ITEM_NETSETTINGS = 29,
-		ITEM_SWUPDATE = 30,
+		ITEM_HDDMENU = 30,
+		ITEM_AUDIOPLAY = 31,
+		ITEM_INETPLAY = 32,
+		ITEM_NETSETTINGS = 33,
+		ITEM_SWUPDATE = 34,
 
-		ITEM_LIVESTREAM_RESOLUTION = 31,
-		ITEM_ADZAP = 32,
+		ITEM_LIVESTREAM_RESOLUTION = 35,
+		ITEM_ADZAP = 36,
 
 		ITEM_MAX   // MUST be always the last in the list
 	} USER_ITEM;
@@ -832,11 +888,11 @@ typedef struct time_settings_t
 
 const time_settings_struct_t timing_setting[SNeutrinoSettings::TIMING_SETTING_COUNT] =
 {
-	{ 0,	LOCALE_TIMING_MENU        },
+	{ 180,	LOCALE_TIMING_MENU        }, //NI
 	{ 60,	LOCALE_TIMING_CHANLIST    },
-	{ 240,	LOCALE_TIMING_EPG         },
+	{ 60,	LOCALE_TIMING_EPG         }, //NI
 	{ 6,	LOCALE_TIMING_INFOBAR     },
- 	{ 0,	LOCALE_TIMING_INFOBAR_RADIO },
+ 	{ 60,	LOCALE_TIMING_INFOBAR_RADIO }, //NI
  	{ 6,	LOCALE_TIMING_INFOBAR_MOVIEPLAYER},
  	{ 3,	LOCALE_TIMING_VOLUMEBAR   },
 	{ 60,	LOCALE_TIMING_FILEBROWSER },

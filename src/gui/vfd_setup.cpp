@@ -85,12 +85,13 @@ int CVfdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 	return res;
 }
 
-#define LCDMENU_STATUSLINE_OPTION_COUNT 2
+#define LCDMENU_STATUSLINE_OPTION_COUNT 3 //NI
 const CMenuOptionChooser::keyval LCDMENU_STATUSLINE_OPTIONS[LCDMENU_STATUSLINE_OPTION_COUNT] =
 {
 	{ 0, LOCALE_LCDMENU_STATUSLINE_PLAYTIME },
 	{ 1, LOCALE_LCDMENU_STATUSLINE_VOLUME   }
 	//,{ 2, LOCALE_LCDMENU_STATUSLINE_BOTH     }
+	,{ 2, LOCALE_OPTIONS_OFF } //NI
 };
 
 #define LEDMENU_OPTION_COUNT 4
@@ -111,6 +112,8 @@ const CMenuOptionChooser::keyval LCD_INFO_OPTIONS[LCD_INFO_OPTION_COUNT] =
 
 int CVfdSetup::showSetup()
 {
+	int temp_lcd_settings_status = g_settings.lcd_setting[SNeutrinoSettings::LCD_SHOW_VOLUME]; //NI
+
 	CMenuWidget *vfds = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_LCD, width, MN_WIDGET_ID_VFDSETUP);
 	vfds->addIntroItems(LOCALE_LCDMENU_HEAD);
 
@@ -162,6 +165,30 @@ int CVfdSetup::showSetup()
 	}
 
 	int res = vfds->exec(NULL, "");
+
+	//NI
+	if (temp_lcd_settings_status != g_settings.lcd_setting[SNeutrinoSettings::LCD_SHOW_VOLUME])
+	{
+		if (g_settings.lcd_setting[SNeutrinoSettings::LCD_SHOW_VOLUME] == 2 /* off */)
+		{
+			// to lazy for a loop. the effect is the same.
+			CVFD::getInstance()->ShowIcon(FP_ICON_BAR8, false);
+			CVFD::getInstance()->ShowIcon(FP_ICON_BAR7, false);
+			CVFD::getInstance()->ShowIcon(FP_ICON_BAR6, false);
+			CVFD::getInstance()->ShowIcon(FP_ICON_BAR5, false);
+			CVFD::getInstance()->ShowIcon(FP_ICON_BAR4, false);
+			CVFD::getInstance()->ShowIcon(FP_ICON_BAR3, false);
+			CVFD::getInstance()->ShowIcon(FP_ICON_BAR2, false);
+			CVFD::getInstance()->ShowIcon(FP_ICON_BAR1, false);
+			CVFD::getInstance()->ShowIcon(FP_ICON_FRAME, false);
+		}
+		else
+		{
+			CVFD::getInstance()->ShowIcon(FP_ICON_FRAME, true);
+			CVFD::getInstance()->showVolume(g_settings.current_volume);
+			// CVFD::getInstance()->showPercentOver(???);
+		}
+	}
 
 	delete vfds;
 	return res;

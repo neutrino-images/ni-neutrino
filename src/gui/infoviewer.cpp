@@ -49,6 +49,8 @@
 #include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
+#include <math.h>
 
 #include <global.h>
 #include <neutrino.h>
@@ -74,6 +76,13 @@
 #include <zapit/zapit.h>
 #include <eitd/sectionsd.h>
 #include <video.h>
+
+//NI
+#include <driver/screen_max.h>
+
+//NI InfoIcons
+#include "gui/infoicons.h"
+extern CInfoIcons *InfoIcons; /* neutrino.cpp */
 
 extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
 extern CBouquetList * bouquetList;       /* neutrino.cpp */
@@ -102,6 +111,9 @@ CInfoViewer::CInfoViewer ()
 	clock = NULL;
 	frameBuffer = CFrameBuffer::getInstance();
 	infoViewerBB = CInfoViewerBB::getInstance();
+
+	ecmInfoBox = NULL; //NI
+	md5_ecmInfo = "0"; //NI
 	InfoHeightY = 0;
 	ButtonWidth = 0;
 	rt_dx = 0;
@@ -217,6 +229,11 @@ void CInfoViewer::start ()
 	initClock();
 	time_height = max(ChanHeight / 2, clock->getHeight());
 	time_width = clock->getWidth();
+
+	//NI
+	analogclock_offset = !g_settings.infobar_analogclock ? 0 : 10 ;
+	analogclock_size   = !g_settings.infobar_analogclock ? 0 : InfoHeightY - 2*analogclock_offset;
+	clock->setXPos(clock->getXPos() - analogclock_offset - analogclock_size);
 }
 
 void CInfoViewer::ResetPB()
@@ -342,7 +359,7 @@ void CInfoViewer::showRecordIcon (const bool show)
 		{
 			if (rec == NULL){ //TODO: full refactoring of this icon handler
 				rec = new CComponentsShapeSquare(box_x, box_y , box_w, box_h, NULL, CC_SHADOW_ON, COL_RED, COL_INFOBAR_PLUS_0);
-				rec->setFrameThickness(2);
+				rec->setFrameThickness(0); //NI
 				rec->setShadowWidth(SHADOW_OFFSET/2);
 				rec->setCorner(RADIUS_MIN, CORNER_ALL);
 			}
@@ -589,8 +606,14 @@ void CInfoViewer::showMovieTitle(const int playState, const t_channel_id &Channe
 	paintBackground(COL_INFOBAR_PLUS_0);
 
 	bool show_dot = true;
+	//NI
 	if (timeset)
-		clock->paint(CC_SAVE_SCREEN_NO);
+	{ 
+		if (g_settings.infobar_analogclock)
+			showAnalogClock(BoxEndX - analogclock_offset - analogclock_size/2, BoxEndY - analogclock_offset - analogclock_size/2, analogclock_size/2);
+		else
+			clock->paint(CC_SAVE_SCREEN_NO);
+	}
 	showRecordIcon (show_dot);
 	show_dot = !show_dot;
 
@@ -767,10 +790,20 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 	paintBackground(col_NumBox);
 
 	bool show_dot = true;
+	//NI
 	if (timeset)
-		clock->paint(CC_SAVE_SCREEN_NO);
+	{
+		if (g_settings.infobar_analogclock)
+			showAnalogClock(BoxEndX - analogclock_offset - analogclock_size/2, BoxEndY - analogclock_offset - analogclock_size/2, analogclock_size/2);
+		else
+			clock->paint(CC_SAVE_SCREEN_NO);
+	}
 	showRecordIcon (show_dot);
 	show_dot = !show_dot;
+
+	//NI InfoIcons
+	if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
+		InfoIcons->paintIcons(true);
 
 	if (showButtonBar) {
 		infoViewerBB->paintshowButtonBar();
@@ -1014,6 +1047,21 @@ void CInfoViewer::loop(bool show_dot)
 
 		showLivestreamInfo();
 
+		//NI
+		if (msg == CRCInput::RC_help) {
+			if (g_settings.show_ecm_pos) {
+				if (g_settings.show_ecm) {
+					g_settings.show_ecm = 0;
+					ecmInfoBox_hide();
+				} else {
+					g_settings.show_ecm = 1;
+					infoViewerBB->showIcon_CA_Status(0);
+				}
+			}
+			g_RCInput->clearRCMsg();
+			setInfobarTimeout();
+			continue;
+		} else
 #ifdef ENABLE_PIP
 		if ((msg == (neutrino_msg_t) g_settings.key_pip_close) || 
 		    (msg == (neutrino_msg_t) g_settings.key_pip_setup) || 
@@ -1028,7 +1076,7 @@ void CInfoViewer::loop(bool show_dot)
 		} else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
 			g_RCInput->postMsg (msg, 0);
 			res = messages_return::cancel_info;
-		} else if (msg == CRCInput::RC_help || msg == CRCInput::RC_info) {
+		} else if (msg == CRCInput::RC_info) { //NI
 			g_RCInput->postMsg (NeutrinoMessages::SHOW_EPG, 0);
 			res = messages_return::cancel_info;
 		} else if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer())) {
@@ -1065,8 +1113,14 @@ void CInfoViewer::loop(bool show_dot)
 			hideIt = true;
 		} else if ((msg == NeutrinoMessages::EVT_TIMER) && (data == sec_timer_id)) {
 			showSNR ();
+			//NI
 			if (timeset)
-				clock->paint(CC_SAVE_SCREEN_NO);
+			{
+				if (g_settings.infobar_analogclock)
+					showAnalogClock(BoxEndX - analogclock_offset - analogclock_size/2, BoxEndY - analogclock_offset - analogclock_size/2, analogclock_size/2);
+				else
+					clock->paint(CC_SAVE_SCREEN_NO);
+			}
 			showRecordIcon (show_dot);
 			show_dot = !show_dot;
 			showInfoFile();
@@ -1075,6 +1129,16 @@ void CInfoViewer::loop(bool show_dot)
 
 			infoViewerBB->showIcon_16_9();
 			//infoViewerBB->showIcon_CA_Status(0);
+			//NI
+			if(file_exists("/tmp/ecm.info"))
+			{
+				std::string md5_tmp = filehash((char *)"/tmp/ecm.info");
+				//printf("CInfoViewer::loop() ecm.info.tmp = %s\nCInfoViewer::loop() ecm.info     = %s\n",md5_ecmInfo.c_str(),md5_tmp.c_str());
+				if(md5_ecmInfo != md5_tmp) {
+					puts("CInfoViewer::loop() CA reload");
+					infoViewerBB->showIcon_CA_Status(0);
+				}
+			}
 			infoViewerBB->showIcon_Resolution();
 		} else if ((msg == NeutrinoMessages::EVT_RECORDMODE) && 
 			   (CMoviePlayerGui::getInstance().timeshift) && (CRecordManager::getInstance()->GetRecordCount() == 1)) {
@@ -1293,6 +1357,11 @@ void CInfoViewer::killRadiotext()
 		frameBuffer->paintBackgroundBox(rt_x, rt_y, rt_w, rt_h);
 	rt_x = rt_y = rt_h = rt_w = 0;
 	CInfoClock::getInstance()->enableInfoClock(true);
+	//NI InfoIcons
+	if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
+		InfoIcons->paintIcons(true);
+	else
+		InfoIcons->enableInfoIcons(true);
 }
 
 void CInfoViewer::showRadiotext()
@@ -1305,6 +1374,7 @@ void CInfoViewer::showRadiotext()
 
 	if (g_Radiotext->S_RtOsd) {
 		CInfoClock::getInstance()->enableInfoClock(false);
+		InfoIcons->enableInfoIcons(false); //NI InfoIcons
 		// dimensions of radiotext window
 		int /*yoff = 8,*/ ii = 0;
 		rt_dx = BoxEndX - BoxStartX;
@@ -1331,6 +1401,10 @@ void CInfoViewer::showRadiotext()
 				if ((lines) || (g_Radiotext->RT_PTY !=0)) {
 					sprintf(stext[0], g_Radiotext->RT_PTY == 0 ? "%s %s%s" : "%s (%s)%s", tr("Radiotext"), g_Radiotext->RT_PTY == 0 ? g_Radiotext->RDS_PTYN : g_Radiotext->ptynr2string(g_Radiotext->RT_PTY), ":");
 					
+					//NI InfoIcons
+					if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
+						InfoIcons->hideIcons();
+
 					// shadow
 					frameBuffer->paintBoxRel(rt_x+SHADOW_OFFSET, rt_y+SHADOW_OFFSET, rt_dx, rt_dy, COL_INFOBAR_SHADOW_PLUS_0, RADIUS_LARGE, CORNER_TOP);
 					frameBuffer->paintBoxRel(rt_x, rt_y, rt_dx, rt_dy, COL_INFOBAR_PLUS_0, RADIUS_LARGE, CORNER_TOP);
@@ -1709,7 +1783,7 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 	if (pb_pos > -1)
 	{
 		int pb_w = 112;
-		int pb_startx = BoxEndX - pb_w - SHADOW_OFFSET;
+		int pb_startx = BoxEndX - pb_w; //NI
 		int pb_starty = ChanNameY - (pb_h + 10);
 		int pb_shadow = COL_INFOBAR_SHADOW_PLUS_0;
 		timescale->enableShadow(!g_settings.infobar_progressbar);
@@ -1717,6 +1791,7 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 		if(g_settings.infobar_progressbar){
 			pb_startx = xStart;
 			pb_w = BoxEndX - 10 - xStart;
+			pb_w -= analogclock_size + analogclock_offset; //NI
 			pb_shadow = 0;
 		}
 		int tmpY = CurrInfoY - height - ChanNameY + header_height -
@@ -1759,7 +1834,9 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 	if (nextDuration)
 		nextTimeW = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO]->getRenderWidth(nextDuration)*2;
 	int currTimeX = BoxEndX - currTimeW - 10;
+	currTimeX -= analogclock_size + analogclock_offset; //NI
 	int nextTimeX = BoxEndX - nextTimeW - 10;
+	nextTimeX -= analogclock_size + analogclock_offset; //NI
 
 	//colored_events init
 	bool colored_event_C = (g_settings.theme.colored_events_infobar == 1);
@@ -2177,6 +2254,14 @@ void CInfoViewer::killTitle()
 			g_Radiotext->S_RtOsd = g_Radiotext->haveRadiotext() ? 1 : 0;
 			killRadiotext();
 		}
+
+		//NI show ecm.info
+		if (g_settings.show_ecm)
+			ecmInfoBox_hide();
+
+		//NI InfoIcons
+		if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
+			InfoIcons->hideIcons();
 	}
 	showButtonBar = false;
 	CInfoClock::getInstance()->enableInfoClock();
@@ -2336,6 +2421,50 @@ void CInfoViewer::setUpdateTimer(uint64_t interval)
 		lcdUpdateTimer = g_RCInput->addTimer(interval, false);
 }
 
+//NI
+void CInfoViewer::showAnalogClock(int posx,int posy,int dia)
+{
+	int ts,tm,th,sx,sy,mx,my,hx,hy;
+	double pi = 3.1415926535897932384626433832795, sAngleInRad, mAngleInRad, mAngleSave, hAngleInRad;
+
+	time_t now = time(0);
+	struct tm *tm_p = localtime(&now);
+
+	ts = tm_p->tm_sec;
+	tm = tm_p->tm_min;
+	th = tm_p->tm_hour;
+
+	sAngleInRad = ((6 * ts) * (2*pi / 360));
+	sAngleInRad -= pi/2;
+
+	sx = int((dia * 0.9 * cos(sAngleInRad)));
+	sy = int((dia * 0.9 * sin(sAngleInRad)));
+
+	mAngleInRad = ((6 * tm) * (2*pi / 360));
+	mAngleSave = mAngleInRad;
+	mAngleInRad -= pi/2;
+
+	mx = int((dia * 0.7 * cos(mAngleInRad)));
+	my = int((dia * 0.7 * sin(mAngleInRad)));
+
+	hAngleInRad = ((30 * th)* (2*pi / 360));
+	hAngleInRad += mAngleSave / 12;
+	hAngleInRad -= pi/2;
+
+	hx = int((dia * 0.6 * cos(hAngleInRad)));
+	hy = int((dia * 0.6 * sin(hAngleInRad)));
+
+	std::string clock_face = ICONSDIR_VAR "/clock_face.png";
+	if (access(clock_face.c_str(), F_OK) != 0)
+		clock_face = ICONSDIR "/clock_face.png";
+
+	g_PicViewer->DisplayImage(clock_face, posx-dia, posy-dia, 2*dia, 2*dia);
+
+	frameBuffer->paintLine(posx,posy,posx+hx,posy+hy,COL_MENUHEAD_TEXT);
+	frameBuffer->paintLine(posx,posy,posx+mx,posy+my,COL_MENUHEAD_TEXT);
+	frameBuffer->paintLine(posx,posy,posx+sx,posy+sy,COL_COLORED_EVENTS_TEXT);
+}
+
 #if 0
 int CInfoViewerHandler::exec (CMenuTarget * parent, const std::string & /*actionkey*/)
 {
@@ -2374,4 +2503,83 @@ void CInfoViewer::ResetModules()
 	ResetPB();
 	delete rec; 			rec 		= NULL;
 	infoViewerBB->ResetModules();
+}
+
+//NI
+void CInfoViewer::ecmInfoBox_show(const char * txt, int w, int h, Font * font)
+{
+	if (ecmInfoBox != NULL)
+		ecmInfoBox_hide();
+
+	// manipulate title font
+	int storedSize = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getSize();
+	g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->setSize((int)(font->getSize() * 150 / 100));
+
+	//create new window
+	ecmInfoBox = new CComponentsWindowMax(LOCALE_ECMINFO, NEUTRINO_ICON_INFO);
+
+	//calc available width (width of Infobar)
+	int max_w = BoxEndX - BoxStartX;
+	//calc available height (space between Top and Infobar)
+	int max_h = BoxStartY - frameBuffer->getScreenY() - 2*SHADOW_OFFSET;
+
+	//get window header object
+	CComponentsHeader* winheader = ecmInfoBox->getHeaderObject();
+	int h_header = winheader->getHeight();
+
+	//remove window footer object
+	ecmInfoBox->showFooter(false);
+
+	//set new window dimensions
+	int h_offset = 5;
+	int w_offset = 10;
+	ecmInfoBox->setWidth(min(max_w, w + 2*w_offset));
+	ecmInfoBox->setHeight(min(max_h, h_header + h + 2*h_offset));
+	ecmInfoBox->Refresh();
+
+	//calc window position
+	int pos_x;
+	switch (g_settings.show_ecm_pos) {
+		case 3: // right
+			pos_x = BoxEndX - ecmInfoBox->getWidth();
+			break;
+		case 1: // left
+			pos_x = BoxStartX;
+			break;
+		case 2: // center
+		default:
+			pos_x = frameBuffer->getScreenX() + (max_w/2) - (ecmInfoBox->getWidth()/2);
+			break;
+	}
+
+	int pos_y = frameBuffer->getScreenY() + (max_h/2) - (ecmInfoBox->getHeight()/2);
+	ecmInfoBox->setXPos(pos_x);
+	ecmInfoBox->setYPos(pos_y);
+
+	//get window body object
+	CComponentsForm* winbody = ecmInfoBox->getBodyObject();
+
+	// create textbox object
+	CComponentsText* ecmText = new CComponentsText(0, 0, winbody->getWidth(), winbody->getHeight());
+	ecmText->setTextBorderWidth(w_offset, h_offset);
+	ecmText->setText(txt, CTextBox::TOP | CTextBox::NO_AUTO_LINEBREAK, font);
+	ecmText->setCorner(RADIUS_LARGE, CORNER_BOTTOM);
+
+	// add textbox object to window
+	ecmInfoBox->addWindowItem(ecmText);
+	ecmInfoBox->enableShadow(CC_SHADOW_ON);
+	ecmInfoBox->paint(CC_SAVE_SCREEN_NO);
+
+	// restore title font
+	g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->setSize(storedSize);
+}
+
+//NI
+void CInfoViewer::ecmInfoBox_hide()
+{
+	if (ecmInfoBox != NULL) {
+		ecmInfoBox->kill();
+		delete ecmInfoBox;
+		ecmInfoBox = NULL;
+	}
 }

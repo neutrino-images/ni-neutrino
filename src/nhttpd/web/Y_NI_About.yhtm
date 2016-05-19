@@ -1,0 +1,206 @@
+{=include-block:Y_NI_Blocks.txt;head=}
+
+{=var-set:_mtd_info_dev={=script:Y_NI_Tools get_mtd_info dev=}=}
+{=var-set:_mtd_info_name={=script:Y_NI_Tools get_mtd_info name=}=}
+
+{=var-set:_root_used_percent={=script:Y_NI_Tools get_flash_info root used_percent=}=}
+{=var-set:_root_total={=script:Y_NI_Tools get_flash_info root total=}=}
+{=var-set:_root_used={=script:Y_NI_Tools get_flash_info root used=}=}
+{=var-set:_root_free={=script:Y_NI_Tools get_flash_info root free=}=}
+
+{=var-set:_var_used_percent={=script:Y_NI_Tools get_flash_info var used_percent=}=}
+{=var-set:_var_total={=script:Y_NI_Tools get_flash_info var total=}=}
+{=var-set:_var_used={=script:Y_NI_Tools get_flash_info var used=}=}
+{=var-set:_var_free={=script:Y_NI_Tools get_flash_info var free=}=}
+
+{=var-set:_mem_used_percent={=script:Y_NI_Tools get_mem_info used_percent=}=}
+{=var-set:_mem_total={=script:Y_NI_Tools get_mem_info total=}=}
+{=var-set:_mem_used={=script:Y_NI_Tools get_mem_info used=}=}
+{=var-set:_mem_free={=script:Y_NI_Tools get_mem_info free=}=}
+
+{=var-set:boxmodel={=func:get_boxmodel=}=}
+<script type="text/javascript">
+//<![CDATA[
+jQuery(document).ready(function(){
+        if ("{=ani=}" == "false")
+	{
+		jQuery('#_root_used_graph').css({ width: "{=var-get:_root_used_percent=}%"});
+		jQuery('#_var_used_graph').css({ width: "{=var-get:_var_used_percent=}%"});
+		jQuery('#_mem_used_graph').css({ width: "{=var-get:_mem_used_percent=}%"});
+	}
+	else
+	{
+		jQuery('#_root_used_graph').delay(750).animate({ width: "{=var-get:_root_used_percent=}%"}, 750);
+		jQuery('#_var_used_graph').delay(750).animate({ width: "{=var-get:_var_used_percent=}%"}, 750);
+		jQuery('#_mem_used_graph').delay(750).animate({ width: "{=var-get:_mem_used_percent=}%"}, 750);
+	}
+});
+//]]>
+</script>
+</head>
+<body>
+<div class="work_box">
+	<div class="work_box_head"><div class="work_box_head_h2">
+	{=var-set:menu={=L:info.About=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}
+	</div></div>
+	<div class="work_box_body">
+		<table border="0" cellpadding="2" cellspacing="4" width="100%">
+		<tr>
+			<td valign="bottom" width="22%">
+				<a href="http://{=ini-get:/.version;homepage=}" target="_blank">
+					<img border="0" src="/share/tuxbox/neutrino/icons/hint_imagelogo.png" alt=""/>
+				</a>
+			</td>
+			<td valign="bottom" colspan="3">
+			        <span class="ni_logo">NI-Imageinfo</span>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="4">
+				<hr/>
+			</td>
+		</tr>
+		<tr>
+			<td valign="top" width="22%">
+				<a href="http://{=ini-get:/.version;homepage=}" class="exlink" target="_blank">
+					{=ini-get:/.version;homepage=}
+				</a>
+			</td>
+			<td valign="top" width="10%">
+				<b>Image</b>:<br/>
+				Version:<br/>
+				Commits:<br/>
+				Datum:<br/>
+				Ersteller:<br/>
+			</td>
+			<td valign="top" width="28%">
+				{=ini-get:/.version;imagename=}<br/>
+				<abbr class="version" title="{=L:ni.about.your_image=}">
+				<script type="text/javascript">getVersion("{=ini-get:/.version;version=}");</script><br/>
+				NI: {=ini-get:/.version;origin-commit=}, CST: <a href="http://git.c00lstreamtech.de/?p=cst-public-gui-neutrino.git;a=commit;h={=ini-get:/.version;remote-commit=}" class="exlink" target="_blank" title="Coolstream GIT repositories">{=ini-get:/.version;remote-commit=}</a><br/>
+				<script type="text/javascript">getBuild("{=ini-get:/.version;version=}");</script><br/>
+				</abbr>
+				{=ini-get:/.version;creator=}<br/>
+			</td>
+			<td valign="top" width="38%">
+				{=if-file-exists:/tmp/NI_update.txt~
+				<script type="text/javascript">compareVersion("{=ini-get:/.version;version=}", "{=ini-get:/tmp/NI_update.txt;version=}");</script>
+				<span class="upd_no">{=L:ni.about.image_upd_no=}</span>
+				<span class="upd_yes">{=L:ni.about.image_upd_yes=}</span>
+				<br/>
+				<abbr class="version" title="{=L:ni.about.actual_image=}">
+				<script type="text/javascript">getVersion("{=ini-get:/tmp/NI_update.txt;version=}");</script><br/>
+				<br/>
+				<script type="text/javascript">getBuild("{=ini-get:/tmp/NI_update.txt;version=}");</script><br/>
+				</abbr>
+				<br/>
+				~
+				<input type="button" onclick='get_update_txt();' value="{=L:info.check_for_updates=}" />
+				=}
+			</td>
+		</tr>
+		<tr>
+			<td colspan="4">
+				<hr/>
+			</td>
+		</tr>
+		<tr>
+			<td valign="top" width="22%">
+			</td>
+			<td valign="top" width="10%">
+				<b>Root</b>:<br/>
+				Total:<br/>
+				Used:<br/>
+				Free:<br/>
+			</td>
+			<td valign="top" width="28%">
+				<span id="_root_used_percent">{=var-get:_root_used_percent=}</span>%<br/>
+				<span id="_root_total">{=var-get:_root_total=}</span> MB<br/>
+				<span id="_root_used">{=var-get:_root_used=}</span> MB<br/>
+				<span id="_root_free">{=var-get:_root_free=}</span> MB<br/>
+			</td>
+			<td valign="top" width="38%">
+				<div class="_used_graph">
+					<div id="_root_used_graph" class="_inner_graph"></div>
+				</div>
+			</td>
+		</tr>
+{=if-equal:{=var-get:boxmodel=}~Apollo~
+		<tr>
+			<td colspan="4">
+				<hr/>
+			</td>
+		</tr>
+		<tr>
+			<td valign="top" width="22%">
+			</td>
+			<td valign="top" width="10%">
+				<b>Var</b>:<br/>
+				Total:<br/>
+				Used:<br/>
+				Free:<br/>
+			</td>
+			<td valign="top" width="28%">
+				<span id="_var_used_percent">{=var-get:_var_used_percent=}</span>%<br/>
+				<span id="_var_total">{=var-get:_var_total=}</span> MB<br/>
+				<span id="_var_used">{=var-get:_var_used=}</span> MB<br/>
+				<span id="_var_free">{=var-get:_var_free=}</span> MB<br/>
+			</td>
+			<td valign="top" width="38%">
+				<div class="_used_graph">
+					<div id="_var_used_graph" class="_inner_graph"></div>
+				</div>
+			</td>
+		</tr>
+~=}
+		<tr>
+			<td colspan="4">
+				<hr/>
+			</td>
+		</tr>
+		<tr>
+			<td valign="top" width="22%">
+			</td>
+			<td valign="top" width="10%">
+				<b>Memory</b>:<br/>
+				Total:<br/>
+				Used:<br/>
+				Free:<br/>
+			</td>
+			<td valign="top" width="28%">
+				<span id="_mem_used_percent">{=var-get:_mem_used_percent=}</span>%<br/>
+				<span id="_mem_total">{=var-get:_mem_total=}</span> MB<br/>
+				<span id="_mem_used">{=var-get:_mem_used=}</span> MB<br/>
+				<span id="_mem_free">{=var-get:_mem_free=}</span> MB<br/>
+			</td>
+			<td valign="top" width="38%">
+				<div class="_used_graph">
+					<div id="_mem_used_graph" class="_inner_graph"></div>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="4">
+				<hr/>
+			</td>
+		</tr>
+		<tr>
+			<td valign="top" width="22%">
+			</td>
+			<td valign="top" width="10%">
+				{=var-get:_mtd_info_dev=}
+			</td>
+			<td valign="top" width="28%">
+				{=var-get:_mtd_info_name=}
+			</td>
+			<td valign="top" width="38%">
+			</td>
+		</tr>
+		</table>
+	</div>
+</div>
+<script type="text/javascript">
+	loadSyncURL("/control/exec?Y_NI_Tools&rm_update_txt");
+</script>
+</body>
+</html>
