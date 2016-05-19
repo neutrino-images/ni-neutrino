@@ -814,7 +814,7 @@ CTimerEvent::CTimerEvent( CTimerd::CTimerEventTypes evtype, time_t announcetime,
 	stopTime = stoptime;
 	repeatCount = repeatcount;
 	previousState = CTimerd::TIMERSTATE_SCHEDULED;
-
+#if 0 //never used
 	time_t diff = 0;
 	time_t mtime = time(NULL);
 	struct tm *tmtime = localtime(&mtime);
@@ -832,6 +832,7 @@ CTimerEvent::CTimerEvent( CTimerd::CTimerEventTypes evtype, time_t announcetime,
 	{
 		diff+=3600;
 	}
+#endif
 #if 0 //FIXME EPG vs manual timer ?
 	printf("############## CTimerEvent dst %d -> %d diff %d\n", isdst1, isdst2, diff);
 	alarmTime += diff;
@@ -1294,9 +1295,6 @@ void CTimerEvent_Zapto::announceEvent()
 //------------------------------------------------------------
 void CTimerEvent_Zapto::fireEvent()
 {
-	if(CTimerdClient::adzap_eventID == eventID)
-		CTimerdClient::adzap_eventID = 0;//reset adzap flag
-
 	CTimerManager::getInstance()->getEventServer()->sendEvent(CTimerdClient::EVT_ZAPTO,
 								  CEventServer::INITID_TIMERD,
 								  &eventInfo,

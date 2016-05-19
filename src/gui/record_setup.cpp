@@ -147,7 +147,7 @@ int CRecordSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 
 	return res;
 }
-
+#if 0 //not used
 #define RECORDINGMENU_RECORDING_TYPE_OPTION_COUNT 4
 const CMenuOptionChooser::keyval RECORDINGMENU_RECORDING_TYPE_OPTIONS[RECORDINGMENU_RECORDING_TYPE_OPTION_COUNT] =
 {
@@ -164,6 +164,7 @@ const CMenuOptionChooser::keyval CHOOSE_DIRECT_REC_DIR[RECORDINGMENU_RECORDING_T
 	{1, LOCALE_NFS_TYPE_NFS},
 	{2, LOCALE_NFS_LOCALDIR}
 };
+#endif
 
 #define END_OF_RECORDING_COUNT 2
 const CMenuOptionChooser::keyval END_OF_RECORDING[END_OF_RECORDING_COUNT] =

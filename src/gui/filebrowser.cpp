@@ -322,7 +322,7 @@ void CFileBrowser::ChangeDir(const std::string & filename, int selection)
 	readDir(newpath, &allfiles);
 	// filter
 	CFileList::iterator file = allfiles.begin();
-	for(; file != allfiles.end() ; file++)
+	for(; file != allfiles.end() ; ++file)
 	{
 		if (Filter != NULL && !file->isDir() && use_filter)
 		{
@@ -678,6 +678,7 @@ bool CFileBrowser::exec(const char * const dirname)
 			}
 		}
 		else if (msg == NeutrinoMessages::STANDBY_ON ||
+				msg == NeutrinoMessages::LEAVE_ALL ||
 				msg == NeutrinoMessages::SHUTDOWN ||
 				msg == NeutrinoMessages::SLEEPTIMER)
 		{
@@ -957,6 +958,7 @@ bool CFileBrowser::playlist_manager(CFileList &playlist, unsigned int playing)
 			loop = false;
 		}
 		else if (msg == NeutrinoMessages::STANDBY_ON ||
+				msg == NeutrinoMessages::LEAVE_ALL ||
 				msg == NeutrinoMessages::SHUTDOWN ||
 				msg == NeutrinoMessages::SLEEPTIMER)
 		{

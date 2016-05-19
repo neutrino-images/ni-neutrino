@@ -4,7 +4,7 @@
 	Copyright (C) 2001 Steffen Hehn 'McClean'
 	Homepage: http://dbox.cyberphoria.org/
 
-	Copyright (C) 2009-2014 Stefan Seyfried
+	Copyright (C) 2009-2016 Stefan Seyfried
 
 	License: GPL
 
@@ -116,10 +116,13 @@ CEventList::CEventList()
 	oldIndex = -1;
 	oldEventID = -1;
 	bgRightBoxPaint = false;
+	header = NULL;
 }
 
 CEventList::~CEventList()
 {
+	delete header;
+	header = NULL;
 }
 
 void CEventList::UpdateTimerList(void)
@@ -359,7 +362,6 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 			msg == CRCInput::RC_down || (int) msg == g_settings.key_pagedown)
 		{
 			bool paint_buttonbar = false; //function bar
-			int step = 0;
 			int prev_selected = selected;
 			// TODO: do we need this at all? Search button is always painted IIUC...
 			if ((g_settings.key_channelList_addremind != (int)CRCInput::RC_nokey) ||
@@ -367,27 +369,9 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 			    ((g_settings.recording_type != CNeutrinoApp::RECORDING_OFF) &&
 			     (g_settings.key_channelList_addrecord != (int)CRCInput::RC_nokey)))
 				paint_buttonbar = true;
-			
-			if (msg == CRCInput::RC_up || (int) msg == g_settings.key_pageup)
-			{
-				step = ((int) msg == g_settings.key_pageup) ? listmaxshow : 1;  // browse or step 1
-				selected -= step;
-				if((prev_selected-step) < 0)            // because of uint
-					selected = evtlist.size() - 1;
-				paintDescription(selected);
-			}
-			else if (msg == CRCInput::RC_down || (int) msg == g_settings.key_pagedown)
-			{
-				step = ((int) msg == g_settings.key_pagedown) ? listmaxshow : 1;  // browse or step 1
-				selected += step;
-
-				if(selected >= evtlist.size()) 
-				{
-					if (((evtlist.size() / listmaxshow) + 1) * listmaxshow == evtlist.size() + listmaxshow) // last page has full entries
-						selected = 0;
-					else
-						selected = ((step == (int)listmaxshow) && (selected < (((evtlist.size() / listmaxshow) + 1) * listmaxshow))) ? (evtlist.size() - 1) : 0;
-				}
+			int new_sel = UpDownKey(evtlist, msg, listmaxshow, selected);
+			if (new_sel >= 0) {
+				selected = new_sel;
 				paintDescription(selected);
 			}
 			paintItem(prev_selected - liststart, channel_id);
@@ -666,7 +650,7 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 			in_search = findEvents();
 			timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
 		}
-		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites) {
+		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
 			g_RCInput->postMsg (msg, 0);
 			res = menu_return::RETURN_EXIT_ALL;
 			loop = false;
@@ -876,16 +860,19 @@ void CEventList::paintHead(t_channel_id _channel_id, std::string _channelname, s
 	int font_mid = SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE;
 	int font_lr  = SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE;
 
-	CComponentsFrmChain header(x, y, full_width, theight);
-	header.enableColBodyGradient(g_settings.theme.menu_Head_gradient);
-	header.setCorner(RADIUS_LARGE, CORNER_TOP);
+	if (!header){
+		header = new CComponentsFrmChain(x, y, full_width, theight);
+		header->enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_MENUCONTENT_PLUS_0, g_settings.theme.menu_Head_gradient_direction);
+		header->setCorner(RADIUS_LARGE, CORNER_TOP);
+	}
+	header->clear();
 
 	int x_off = 10;
 	int mid_width = full_width * 40 / 100; // 40%
 	int side_width = ((full_width - mid_width) / 2) - (2 * x_off);
 
 	//create an logo object
-	CComponentsChannelLogo* midLogo = new CComponentsChannelLogo(0, 0, _channelname, _channel_id, &header);
+	CComponentsChannelLogoScalable* midLogo = new CComponentsChannelLogoScalable(0, 0, _channelname, _channel_id, header);
 	if (midLogo->hasLogo()) {
 		//if logo object has found a logo and was ititialized, the hand  it's size
  		int w_logo = midLogo->getWidth();
@@ -904,24 +891,24 @@ void CEventList::paintHead(t_channel_id _channel_id, std::string _channelname, s
 		side_width = ((full_width - w_logo) / 2) - (4 * x_off);
 	}
 	else {
-		header.removeCCItem(midLogo); //remove/destroy logo object, if it is not available
-		CComponentsText *midText = new CComponentsText(CC_CENTERED, CC_CENTERED, mid_width, theight, _channelname, CTextBox::CENTER, g_Font[font_mid], &header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
+		header->removeCCItem(midLogo); //remove/destroy logo object, if it is not available
+		CComponentsText *midText = new CComponentsText(CC_CENTERED, CC_CENTERED, mid_width, theight, _channelname, CTextBox::CENTER, g_Font[font_mid], CComponentsText::FONT_STYLE_REGULAR, header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
 		midText->doPaintBg(false);
 	}
 
 	if (!_channelname_prev.empty()) {
-		CComponentsText *lText = new CComponentsText(x_off, CC_CENTERED, side_width, theight, _channelname_prev, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], &header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
+		CComponentsText *lText = new CComponentsText(x_off, CC_CENTERED, side_width, theight, _channelname_prev, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], CComponentsText::FONT_STYLE_REGULAR, header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
 		lText->doPaintBg(false);
 	}
 
 	if (!_channelname_next.empty()) {
 		int name_w = std::min(g_Font[font_lr]->getRenderWidth(_channelname_next), side_width);
 		int x_pos = full_width - name_w - x_off;
-		CComponentsText *rText = new CComponentsText(x_pos, CC_CENTERED, name_w, theight, _channelname_next, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], &header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
+		CComponentsText *rText = new CComponentsText(x_pos, CC_CENTERED, name_w, theight, _channelname_next, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], CComponentsText::FONT_STYLE_REGULAR, header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
 		rText->doPaintBg(false);
 	}
 
-	header.paint(CC_SAVE_SCREEN_NO);
+	header->paint(CC_SAVE_SCREEN_NO);
 }
 
 void CEventList::paint(t_channel_id channel_id)
@@ -1163,7 +1150,7 @@ bool CEventList::findEvents(void)
 		if(!m_search_keyword.empty()){
 			g_settings.epg_search_history.push_front(m_search_keyword);
 			std::list<std::string>::iterator it = g_settings.epg_search_history.begin();
-			it++;
+			++it;
 			while (it != g_settings.epg_search_history.end()) {
 				if (*it == m_search_keyword)
 					it = g_settings.epg_search_history.erase(it);

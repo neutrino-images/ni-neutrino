@@ -271,7 +271,7 @@ int CMessageBox::exec(int timeout)
 		{
 			loop = false;
 		}
-		else if((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites))
+		else if((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites) || (msg == CRCInput::RC_www) || (msg == CRCInput::RC_spkr) )
 		{
 		}
 		else if (CNeutrinoApp::getInstance()->handleMsg(msg, data) & messages_return::cancel_all)
@@ -289,7 +289,10 @@ int CMessageBox::exec(int timeout)
 
 int ShowMsg(const neutrino_locale_t Caption, const char * const Text, const CMessageBox::result_ &Default, const uint32_t ShowButtons, const char * const Icon, const int Width, const int timeout, bool returnDefaultOnTimeout)
 {
-	CMessageBox* messageBox = new CMessageBox(Caption, Text, Width, Icon, Default, ShowButtons);
+	std::string tmpText = "msg error";
+	if(Text)
+		tmpText = Text;
+	CMessageBox* messageBox = new CMessageBox(Caption, tmpText.c_str(), Width, Icon, Default, ShowButtons);
 	messageBox->returnDefaultValueOnTimeout(returnDefaultOnTimeout);
 	messageBox->exec(timeout);
 	int res = messageBox->result;
@@ -300,7 +303,10 @@ int ShowMsg(const neutrino_locale_t Caption, const char * const Text, const CMes
 
 int ShowMsg(const std::string &Caption, const char * const Text, const CMessageBox::result_ &Default, const uint32_t ShowButtons, const char * const Icon, const int Width, const int timeout, bool returnDefaultOnTimeout)
 {
-   	CMessageBox* messageBox = new CMessageBox(Caption, Text, Width, Icon, Default, ShowButtons);
+	std::string tmpText = "msg error";
+	if(Text)
+		tmpText = Text;
+	CMessageBox* messageBox = new CMessageBox(Caption, tmpText.c_str(), Width, Icon, Default, ShowButtons);
 	messageBox->returnDefaultValueOnTimeout(returnDefaultOnTimeout);
 	messageBox->exec(timeout);
 	int res = messageBox->result;

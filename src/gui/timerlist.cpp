@@ -382,7 +382,8 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		return menu_return::RETURN_EXIT;
 	}
 	else if(actionKey == "rec_dir1") {
-		parent->hide();
+		if (parent)
+			parent->hide();
 		const char *action_str = "RecDir1";
 		if(chooserDir(timerlist[selected].recordingDir, true, action_str, sizeof(timerlist[selected].recordingDir)-1)) {
 			printf("[timerlist] new %s dir %s\n", action_str, timerlist[selected].recordingDir);
@@ -391,7 +392,8 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		return menu_return::RETURN_REPAINT;
 	}
 	else if(actionKey == "rec_dir2") {
-		parent->hide();
+		if (parent)
+			parent->hide();
 		const char *action_str = "RecDir2";
 		if(chooserDir(timerNew.recordingDir, true, action_str, sizeof(timerNew.recordingDir)-1)) {
 			printf("[timerlist] new %s dir %s\n", action_str, timerNew.recordingDir);
@@ -458,7 +460,7 @@ void CTimerList::updateEvents(void)
 		height = theight+listmaxshow*fheight*2+footerHeight;	// recalc height
 	}
 
-	if (selected==timerlist.size() && !(timerlist.empty()))
+	if (!timerlist.empty() && selected == (int)timerlist.size())
 	{
 		selected=timerlist.size()-1;
 		liststart = (selected/listmaxshow)*listmaxshow;
@@ -519,58 +521,22 @@ int CTimerList::show()
 				loop=false;
 
 		}
-		else if ((msg == CRCInput::RC_up || msg == (unsigned int)g_settings.key_pageup) && !(timerlist.empty()))
+		else if (!timerlist.empty() &&
+			 (msg == CRCInput::RC_up || (int)msg == g_settings.key_pageup ||
+			  msg == CRCInput::RC_down || (int)msg == g_settings.key_pagedown))
 		{
-			int step = 0;
 			int prev_selected = selected;
-
-			step = (msg == (unsigned int)g_settings.key_pageup) ? listmaxshow : 1;  // browse or step 1
-			selected -= step;
-			if((prev_selected-step) < 0)		// because of uint
-				selected = timerlist.size() - 1;
-
-			paintItem(prev_selected - liststart);
-			unsigned int oldliststart = liststart;
-			liststart = (selected/listmaxshow)*listmaxshow;
-			if (oldliststart!=liststart)
-			{
+			int oldliststart = liststart;
+			selected = UpDownKey(timerlist, msg, listmaxshow, selected);
+			if (selected < 0) /* UpDownKey error */
+				selected = prev_selected;
+			liststart = (selected / listmaxshow) * listmaxshow;
+			if (oldliststart != liststart)
 				paint();
-			}
-			else
-			{
+			else {
+				paintItem(prev_selected - liststart);
 				paintItem(selected - liststart);
 			}
-
-			paintFoot();
-		}
-		else if ((msg == CRCInput::RC_down || msg == (unsigned int)g_settings.key_pagedown) && !(timerlist.empty()))
-		{
-			unsigned int step = 0;
-			int prev_selected = selected;
-
-			step = (msg == (unsigned int)g_settings.key_pagedown) ? listmaxshow : 1;  // browse or step 1
-			selected += step;
-
-			if(selected >= timerlist.size())
-			{
-				if (((timerlist.size() / listmaxshow) + 1) * listmaxshow == timerlist.size() + listmaxshow) // last page has full entries
-					selected = 0;
-				else
-					selected = ((step == listmaxshow) && (selected < (((timerlist.size() / listmaxshow) + 1) * listmaxshow))) ? (timerlist.size() - 1) : 0;
-			}
-			paintItem(prev_selected - liststart);
-
-			unsigned int oldliststart = liststart;
-			liststart = (selected/listmaxshow)*listmaxshow;
-			if (oldliststart!=liststart)
-			{
-				paint();
-			}
-			else
-			{
-				paintItem(selected - liststart);
-			}
-
 			paintFoot();
 		}
 		else if ((msg == CRCInput::RC_right || msg == CRCInput::RC_ok || msg==CRCInput::RC_blue) && !(timerlist.empty()))
@@ -659,7 +625,7 @@ int CTimerList::show()
 			}
 			// help key
 		}
-		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites) {
+		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
 			g_RCInput->postMsg (msg, 0);
 			loop = false;
 			res = menu_return::RETURN_EXIT_ALL;
@@ -719,7 +685,7 @@ void CTimerList::paintItem(int pos)
 	//selected item
 	frameBuffer->paintBoxRel(x,ypos, real_width, 2*fheight, bgcolor, RADIUS_MID);
 
-	if (liststart+pos<timerlist.size())
+	if (liststart + pos < (int)timerlist.size())
 	{
 		CTimerd::responseGetTimer & timer = timerlist[liststart+pos];
 		char zAlarmTime[25] = {0};
@@ -870,8 +836,8 @@ void CTimerList::paintItem(int pos)
 
 void CTimerList::paintHead()
 {
-	CComponentsHeaderLocalized header(x, y, width, theight, LOCALE_TIMERLIST_NAME, NEUTRINO_ICON_TIMER);
-	header.setShadowOnOff(CC_SHADOW_ON);
+	CComponentsHeaderLocalized header(x, y, width, theight, LOCALE_TIMERLIST_NAME, NEUTRINO_ICON_TIMER, CComponentsHeader::CC_BTN_EXIT, NULL, CC_SHADOW_ON);
+	header.enableClock(true, "%d.%m.%Y %H:%M");
 	header.paint(CC_SAVE_SCREEN_NO);
 }
 
@@ -1090,19 +1056,18 @@ int CTimerList::modifyTimer()
 
 //printf("TIMER: rec dir %s len %s\n", timer->recordingDir, strlen(timer->recordingDir));
 
-	if (!strlen(timer->recordingDir))
-		strncpy(timer->recordingDir,g_settings.network_nfs_recordingdir.c_str(),sizeof(timer->recordingDir)-1);
-	timer_recordingDir = timer->recordingDir;
-
-	bool recDirEnabled = (g_settings.recording_type == RECORDING_FILE); // obsolete?
-	CMenuForwarder* m6 = new CMenuForwarder(LOCALE_TIMERLIST_RECORDING_DIR, recDirEnabled, timer_recordingDir, this, "rec_dir1", CRCInput::RC_green);
-
 	timerSettings.addItem(GenericMenuSeparatorLine);
 	timerSettings.addItem(m3);
 	timerSettings.addItem(m4);
 	timerSettings.addItem(m5);
 	if (timer->eventType == CTimerd::TIMER_RECORD)
 	{
+		if (!strlen(timer->recordingDir))
+			strncpy(timer->recordingDir,g_settings.network_nfs_recordingdir.c_str(),sizeof(timer->recordingDir)-1);
+		timer_recordingDir = timer->recordingDir;
+
+		bool recDirEnabled = (g_settings.recording_type == RECORDING_FILE); // obsolete?
+		CMenuForwarder* m6 = new CMenuForwarder(LOCALE_TIMERLIST_RECORDING_DIR, recDirEnabled, timer_recordingDir, this, "rec_dir1", CRCInput::RC_green);
 		timerSettings.addItem(GenericMenuSeparatorLine);
 		timerSettings.addItem(m6);
 	}

@@ -57,7 +57,7 @@ class CFrameBuffer;
 class CConfigFile;
 class CScanSettings;
 
-class CNeutrinoApp : public CMenuTarget, CChangeObserver, sigc::trackable
+class CNeutrinoApp : public CMenuTarget, CChangeObserver, public sigc::trackable
 {
 public:
 	enum
@@ -73,10 +73,10 @@ public:
 private:
 	CFrameBuffer * frameBuffer;
 
+	CMenuWidget			*mainMenu;
 	CConfigFile			configfile;
 	CScanSettings			scanSettings;
 	CPersonalizeGui			personalize;
-	CUserMenu 			usermenu;
 	int                             network_dhcp;
 	int                             network_automatic_start;
 
@@ -126,6 +126,8 @@ private:
 	void InitZapitClient();
 	void InitSectiondClient();
 
+	void migrateConfig(const char *fname);
+
 	//menues
 	void InitMenu();
  	void InitMenuMain();
@@ -151,12 +153,16 @@ public:
 		mode_ts = 7,
 		mode_off = 8,
 		mode_webtv = 9,
+		mode_upnp = 10,
 		mode_mask = 0xFF,
 		norezap = 0x100
 	};
 
+	CUserMenu usermenu;
+
 	void saveSetup(const char * fname);
 	int loadSetup(const char * fname);
+	void upgradeSetup(const char * fname);
 	void loadKeys(const char * fname = NULL);
 	void saveKeys(const char * fname = NULL);
 	void SetupTiming();
@@ -192,7 +198,7 @@ public:
 		return lastMode;
 	}
 	void switchTvRadioMode(const int prev_mode = mode_unknown);
-	void switchClockOnOff();
+
 	
 	bool isMuted() {return current_muted; }
 	void setCurrentMuted(int m) { current_muted = m; }
@@ -214,6 +220,7 @@ public:
 	bool StartPip(const t_channel_id channel_id);
 	void SelectSubtitles();
 	void showInfo(void);
+	void showMainMenu(void);
 	CConfigFile* getConfigFile() {return &configfile;};
 	bool 		SDTreloadChannels;
 
@@ -232,6 +239,8 @@ public:
 	void screensaver(bool);
 	//signal/event handler before restart of neutrino gui
 	sigc::signal<bool> OnBeforeRestart;
+	sigc::signal<void> OnAfterSetupFonts;
+	void channelRezap();
 };
 #endif
 

@@ -100,11 +100,11 @@ int CMiscMenue::exec(CMenuTarget* parent, const std::string &actionKey)
 	}
 	else if(actionKey == "movieplayer_plugin")
 	{
-		CMenuWidget MoviePluginSelector(LOCALE_MOVIEPLAYER_DEFPLUGIN, NEUTRINO_ICON_FEATURES);
+		CMenuWidget MoviePluginSelector(LOCALE_MOVIEPLAYER_PLUGIN, NEUTRINO_ICON_FEATURES);
 		MoviePluginSelector.addItem(GenericMenuSeparator);
-
+		MoviePluginSelector.addItem(new CMenuForwarder(LOCALE_PLUGINS_NO_PLUGIN, true, NULL, new CMoviePluginChangeExec(), "---", CRCInput::RC_red));
+		MoviePluginSelector.addItem(GenericMenuSeparatorLine);
 		char id[5];
-		int cnt = 0;
 		int enabled_count = 0;
 		for(unsigned int count=0;count < (unsigned int) g_PluginList->getNumberOfPlugins();count++)
 		{
@@ -112,8 +112,7 @@ int CMiscMenue::exec(CMenuTarget* parent, const std::string &actionKey)
 			{
 				sprintf(id, "%d", count);
 				enabled_count++;
-				MoviePluginSelector.addItem(new CMenuForwarder(g_PluginList->getName(count), true, NULL, new CMoviePluginChangeExec(), id, CRCInput::convertDigitToKey(count)), (cnt == 0));
-				cnt++;
+				MoviePluginSelector.addItem(new CMenuForwarder(g_PluginList->getName(count), true, NULL, new CMoviePluginChangeExec(), id, CRCInput::convertDigitToKey(count)));
 			}
 		}
 
@@ -140,7 +139,7 @@ int CMiscMenue::exec(CMenuTarget* parent, const std::string &actionKey)
 	return showMiscSettingsMenu();
 }
 
-
+#if 0 //not used
 #define MISCSETTINGS_FB_DESTINATION_OPTION_COUNT 3
 const CMenuOptionChooser::keyval MISCSETTINGS_FB_DESTINATION_OPTIONS[MISCSETTINGS_FB_DESTINATION_OPTION_COUNT] =
 {
@@ -148,6 +147,7 @@ const CMenuOptionChooser::keyval MISCSETTINGS_FB_DESTINATION_OPTIONS[MISCSETTING
 	{ 1, LOCALE_OPTIONS_SERIAL },
 	{ 2, LOCALE_OPTIONS_FB     }
 };
+#endif
 
 #define MISCSETTINGS_FILESYSTEM_IS_UTF8_OPTION_COUNT 2
 const CMenuOptionChooser::keyval MISCSETTINGS_FILESYSTEM_IS_UTF8_OPTIONS[MISCSETTINGS_FILESYSTEM_IS_UTF8_OPTION_COUNT] =

@@ -3,7 +3,7 @@
 	Copyright (C) 2001 by Steffen Hehn 'McClean'
 
 	Classes for generic GUI-related components.
-	Copyright (C) 2012-2014 Thilo Graf 'dbt'
+	Copyright (C) 2012-2016 Thilo Graf 'dbt'
 	Copyright (C) 2012, Michael Liebmann 'micha-bbg'
 
 	License: GPL
@@ -66,53 +66,53 @@ CComponentsWindow::CComponentsWindow(	const int& x_pos, const int& y_pos, const 
 					neutrino_locale_t locale_caption,
 					const string& iconname,
 					CComponentsForm *parent,
-					bool has_shadow,
+					int shadow_mode,
 					fb_pixel_t color_frame,
 					fb_pixel_t color_body,
 					fb_pixel_t color_shadow)
 {
 	string s_caption = locale_caption != NONEXISTANT_LOCALE ? g_Locale->getText(locale_caption) : "";
-	initVarWindow(x_pos, y_pos, w, h, s_caption, iconname, parent, has_shadow, color_frame, color_body, color_shadow);
+	initVarWindow(x_pos, y_pos, w, h, s_caption, iconname, parent, shadow_mode, color_frame, color_body, color_shadow);
 }
 
 CComponentsWindow::CComponentsWindow(	const int& x_pos, const int& y_pos, const int& w, const int& h,
 					const string& caption,
 					const string& iconname,
 					CComponentsForm *parent,
-					bool has_shadow,
+					int shadow_mode,
 					fb_pixel_t color_frame,
 					fb_pixel_t color_body,
 					fb_pixel_t color_shadow)
 {
-	initVarWindow(x_pos, y_pos, w, h, caption, iconname, parent, has_shadow, color_frame, color_body, color_shadow);
+	initVarWindow(x_pos, y_pos, w, h, caption, iconname, parent, shadow_mode, color_frame, color_body, color_shadow);
 }
 
 CComponentsWindowMax::CComponentsWindowMax(	const string& caption,
 						const string& iconname,
 						CComponentsForm *parent,
-						bool has_shadow,
+						int shadow_mode,
 						fb_pixel_t color_frame,
 						fb_pixel_t color_body,
 						fb_pixel_t color_shadow)
 						:CComponentsWindow(0, 0, 0, 0, caption,
-						iconname, parent, has_shadow, color_frame, color_body, color_shadow){};
+						iconname, parent, shadow_mode, color_frame, color_body, color_shadow){};
 
 CComponentsWindowMax::CComponentsWindowMax(	neutrino_locale_t locale_caption,
 						const string& iconname,
 						CComponentsForm *parent,
-						bool has_shadow,
+						int shadow_mode,
 						fb_pixel_t color_frame,
 						fb_pixel_t color_body,
 						fb_pixel_t color_shadow)
 						:CComponentsWindow(0, 0, 0, 0,
 						locale_caption != NONEXISTANT_LOCALE ? g_Locale->getText(locale_caption) : "",
-						iconname, parent, has_shadow, color_frame, color_body, color_shadow){};
+						iconname, parent, shadow_mode, color_frame, color_body, color_shadow){};
 
 void CComponentsWindow::initVarWindow(	const int& x_pos, const int& y_pos, const int& w, const int& h,
 					const string& caption,
 					const string& iconname,
 					CComponentsForm *parent,
-					bool has_shadow,
+					int shadow_mode,
 					fb_pixel_t color_frame,
 					fb_pixel_t color_body,
 					fb_pixel_t color_shadow)
@@ -134,7 +134,7 @@ void CComponentsWindow::initVarWindow(	const int& x_pos, const int& y_pos, const
 
 	dprintf(DEBUG_DEBUG, "[CComponentsWindow]   [%s - %d] icon name = %s\n", __func__, __LINE__, ccw_icon_name.c_str());
 
-	shadow		= has_shadow;
+	shadow		= shadow_mode;
 	col_frame	= color_frame;
 	col_body	= color_body;
 	col_shadow	= color_shadow;
@@ -144,6 +144,7 @@ void CComponentsWindow::initVarWindow(	const int& x_pos, const int& y_pos, const
 	ccw_right_sidebar= NULL;	
 	ccw_body	= NULL;
 	ccw_footer	= NULL;
+	ccw_button_font	= g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL];
 
 	ccw_buttons	= 0; //no header buttons
 	ccw_show_footer = true;
@@ -152,6 +153,9 @@ void CComponentsWindow::initVarWindow(	const int& x_pos, const int& y_pos, const
 	ccw_show_l_sideber = false;
 	ccw_show_r_sideber = false;
 	ccw_w_sidebar	= 40;
+	ccw_col_head 	= COL_MENUHEAD_PLUS_0;
+	ccw_col_head_text = COL_MENUHEAD_TEXT;
+	ccw_col_footer	= COL_INFOBAR_SHADOW_PLUS_1;
 
 	page_scroll_mode = PG_SCROLL_M_OFF; //permanent disabled here, only in body used!
 
@@ -197,9 +201,10 @@ void CComponentsWindow::initHeader()
 		ccw_head->setWidth(width-2*fr_thickness);
 		ccw_head->setPos(0, 0);
 		ccw_head->setIcon(ccw_icon_name);
-		ccw_head->setCaption(ccw_caption, ccw_align_mode);
+		ccw_head->setCaption(ccw_caption, ccw_align_mode, ccw_col_head_text);
 		ccw_head->setContextButton(ccw_buttons);
 		ccw_head->setCorner(corner_rad, CORNER_TOP);
+		ccw_head->setColorBody(ccw_col_head);
 	}
 }
 
@@ -212,8 +217,10 @@ void CComponentsWindow::initFooter()
 	if (ccw_footer){
 		ccw_footer->setPos(0, CC_APPEND);
 		ccw_footer->setWidth(width-2*fr_thickness);
-		ccw_footer->setShadowOnOff(shadow);
+		ccw_footer->enableShadow(shadow);
 		ccw_footer->setCorner(corner_rad, CORNER_BOTTOM);
+		ccw_footer->setButtonFont(ccw_button_font);
+		ccw_footer->setColorBody(ccw_col_footer);
 	}
 }
 
@@ -356,10 +363,11 @@ void CComponentsWindow::enableSidebar(const int& sidbar_type)
 	initCCWItems();
 }
 
-void CComponentsWindow::addWindowItem(CComponentsItem* cc_Item)
+int CComponentsWindow::addWindowItem(CComponentsItem* cc_Item)
 {
 	if (ccw_body)
-		ccw_body->addCCItem(cc_Item);
+		return ccw_body->addCCItem(cc_Item);
+	return -1;
 }
 
 void CComponentsWindow::setCurrentPage(const u_int8_t& current_page)

@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -282,7 +283,7 @@ int check_dir(const char * dir, bool allow_tmp)
 				ret = 0;	// ok
 		}
 		if(ret == -1)
-			printf("Wrong Filessystem Type: 0x%x\n",s.f_type);
+			printf("Wrong Filessystem Type: 0x%" PRIx32"\n",s.f_type);
 	}
 	return ret;
 }
@@ -853,6 +854,26 @@ bool split_config_string(const std::string &str, std::map<std::string,std::strin
 	return !smap.empty();
 }
 
+/* align for hw blit */
+uint32_t GetWidth4FB_HW_ACC(const uint32_t _x, const uint32_t _w, const bool max)
+{
+	uint32_t ret = _w;
+	static uint32_t xRes = 0;
+	if (xRes == 0)
+		xRes = CFrameBuffer::getInstance()->getScreenWidth(true);
+	if ((_x + ret) >= xRes)
+		ret = xRes-_x-1;
+	if (ret%4 == 0)
+		return ret;
+
+	int add = (max) ? 3 : 0;
+	ret = ((ret + add) / 4) * 4;
+	if ((_x + ret) >= xRes)
+		ret -= 4;
+
+	return ret;
+}
+
 std::vector<std::string> split(const std::string &s, char delim)
 {
 	std::vector<std::string> vec;
@@ -922,4 +943,37 @@ std::string getJFFS2MountPoint(int mtdPos)
 	}
 	fclose(fd);
 	return "";
+}
+
+std::string Lang2ISO639_1(std::string& lang)
+{
+	std::string ret = "";
+	if ((lang == "deutsch") || (lang == "bayrisch") || (lang == "ch-baslerdeutsch") || (lang == "ch-berndeutsch"))
+		ret = "de";
+	else if (lang == "english")
+		ret = "en";
+	else if (lang == "nederlands")
+		ret = "nl";
+	else if (lang == "slovak")
+		ret = "sk";
+	else if (lang == "bosanski")
+		ret = "bs";
+	else if (lang == "czech")
+		ret = "cs";
+	else if (lang == "francais")
+		ret = "fr";
+	else if (lang == "italiano")
+		ret = "it";
+	else if (lang == "polski")
+		ret = "pl";
+	else if (lang == "portugues")
+		ret = "pt";
+	else if (lang == "russkij")
+		ret = "ru";
+	else if (lang == "suomi")
+		ret = "fi";
+	else if (lang == "svenska")
+		ret = "sv";
+
+	return ret;
 }

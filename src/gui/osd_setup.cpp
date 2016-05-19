@@ -82,10 +82,7 @@ COsdSetup::COsdSetup(int wizard_mode)
 	mfTtxFontFile = NULL;
 	mfWindowSize = NULL;
 	win_demo = NULL;
-
-	ca_dotmatrix = NULL;
-	ca_frame = NULL;
-
+	osd_menu_colors = NULL;
 	is_wizard = wizard_mode;
 
 	width = 40;
@@ -98,6 +95,8 @@ COsdSetup::~COsdSetup()
 	delete colorSetupNotifier;
 	delete fontsizenotifier;
 	delete win_demo;
+	if (osd_menu_colors)
+		delete osd_menu_colors;
 }
 
 //font settings
@@ -253,7 +252,9 @@ int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 
 		if (xre != g_settings.screen_xres || yre != g_settings.screen_yres) {
 			printf("[neutrino] new font scale settings x: %d%% y: %d%%\n", g_settings.screen_xres, g_settings.screen_yres);
-			CNeutrinoApp::getInstance()->SetupFonts(CNeutrinoFonts::FONTSETUP_NEUTRINO_FONT | CNeutrinoFonts::FONTSETUP_NEUTRINO_FONT_INST);
+			CNeutrinoApp::getInstance()->SetupFonts(CNeutrinoFonts::FONTSETUP_NEUTRINO_FONT | CNeutrinoFonts::FONTSETUP_NEUTRINO_FONT_INST | CNeutrinoFonts::FONTSETUP_DYN_FONT);
+			if (CNeutrinoApp::getInstance()->channelList)
+				CNeutrinoApp::getInstance()->channelList->ResetModules(); //force re init of all modules
 		}
 		return res;
 	}
@@ -273,7 +274,6 @@ int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 				timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU] == 0 ? 0xFFFF : g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
 
 			if ( msg == CRCInput::RC_ok ) {
-				loop = false;
 				memset(window_size_value, 0, sizeof(window_size_value));
 				snprintf(window_size_value, sizeof(window_size_value), "%d / %d", g_settings.window_width, g_settings.window_height);
 				mfWindowSize->setOption(window_size_value);
@@ -370,14 +370,14 @@ const CMenuOptionChooser::keyval INFOBAR_CASYSTEM_MODE_OPTIONS[INFOBAR_CASYSTEM_
 	{ 2, LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_MINI },
 	{ 3, LOCALE_OPTIONS_OFF  },
 };
-
+#if 0 //not used
 #define SHOW_INFOMENU_MODE_OPTION_COUNT 2
 const CMenuOptionChooser::keyval SHOW_INFOMENU_MODE_OPTIONS[SHOW_INFOMENU_MODE_OPTION_COUNT] =
 {
 	{ 0, LOCALE_MAINMENU_HEAD },
 	{ 1, LOCALE_MAINMENU_SERVICE },
 };
-
+#endif
 #define MENU_CORNERSETTINGS_TYPE_OPTION_COUNT 2
 const CMenuOptionChooser::keyval MENU_CORNERSETTINGS_TYPE_OPTIONS[MENU_CORNERSETTINGS_TYPE_OPTION_COUNT] =
 {
@@ -447,7 +447,7 @@ const CMenuOptionChooser::keyval  CHANNELLIST_EPGTEXT_ALIGN_RIGHT_OPTIONS[CHANNE
 	{ 0 , LOCALE_CHANNELLIST_EPGTEXT_ALIGN_LEFT },
 	{ 1 , LOCALE_CHANNELLIST_EPGTEXT_ALIGN_RIGHT }
 };
-
+#if 0 //not used
 #define CHANNELLIST_EXTENDED_OPTIONS_COUNT 3
 const CMenuOptionChooser::keyval CHANNELLIST_EXTENDED_OPTIONS[CHANNELLIST_EXTENDED_OPTIONS_COUNT]=
 {
@@ -455,13 +455,32 @@ const CMenuOptionChooser::keyval CHANNELLIST_EXTENDED_OPTIONS[CHANNELLIST_EXTEND
 	{ 1, LOCALE_CHANNELLIST_EXTENDED_SIMPLE },	//unicolor
 	{ 2, LOCALE_CHANNELLIST_EXTENDED_COLORED }	//colored
 };
-
+#endif
 #define OPTIONS_COLORED_EVENTS_OPTION_COUNT 3
 const CMenuOptionChooser::keyval OPTIONS_COLORED_EVENTS_OPTIONS[OPTIONS_COLORED_EVENTS_OPTION_COUNT] =
 {
 	{ 0, LOCALE_MISCSETTINGS_COLORED_EVENTS_0 },	//none
 	{ 1, LOCALE_MISCSETTINGS_COLORED_EVENTS_1 },	//current
 	{ 2, LOCALE_MISCSETTINGS_COLORED_EVENTS_2 },	//next
+};
+
+#define OPTIONS_COL_GRADIENT_OPTIONS_COUNT CC_COLGRAD_TYPES 	//TODO: add modes for intensity
+const CMenuOptionChooser::keyval OPTIONS_COL_GRADIENT_OPTIONS[OPTIONS_COL_GRADIENT_OPTIONS_COUNT] =
+{
+	{ CC_COLGRAD_OFF			, LOCALE_OPTIONS_OFF },
+	{ CC_COLGRAD_COL_A_2_COL_B		, LOCALE_COLOR_GRADIENT_A2B  }, //color A to color B
+	{ CC_COLGRAD_COL_B_2_COL_A		, LOCALE_COLOR_GRADIENT_B2A  }, //color B to color A
+	{ CC_COLGRAD_LIGHT_2_DARK		, LOCALE_COLOR_GRADIENT_L2D  }, //light to dark
+	{ CC_COLGRAD_DARK_2_LIGHT		, LOCALE_COLOR_GRADIENT_D2L  }, //dark to light
+	{ CC_COLGRAD_COL_LIGHT_DARK_LIGHT	, LOCALE_COLOR_GRADIENT_LDL  }, //light dark light
+	{ CC_COLGRAD_COL_DARK_LIGHT_DARK	, LOCALE_COLOR_GRADIENT_DLD  }, //dark light dark
+};
+
+#define OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS_COUNT 2
+const CMenuOptionChooser::keyval OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS[OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS_COUNT] =
+{
+	{ CFrameBuffer::gradientHorizontal	, LOCALE_COLOR_GRADIENT_MODE_DIRECTION_HOR  }, 	//horizontal
+	{ CFrameBuffer::gradientVertical	, LOCALE_COLOR_GRADIENT_MODE_DIRECTION_VER }, 	//vertical
 };
 
 /* these are more descriptive... */
@@ -491,15 +510,16 @@ int COsdSetup::showOsdSetup()
 	osd_menu = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_COLORS, width, MN_WIDGET_ID_OSDSETUP);
 	osd_menu->setWizardMode(is_wizard);
 
-	//menu colors
-	CMenuWidget osd_menu_colors(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_COLORS, width, MN_WIDGET_ID_OSDSETUP_MENUCOLORS);
-
 	//intro with subhead and back button
 	osd_menu->addIntroItems(LOCALE_MAINSETTINGS_OSD);
 
 	//item menu colors
-	showOsdMenueColorSetup(&osd_menu_colors);
-	CMenuForwarder * mf = new CMenuForwarder(LOCALE_COLORMENU_MENUCOLORS, true, NULL, &osd_menu_colors, NULL, CRCInput::RC_red);
+	if (osd_menu_colors)
+		delete osd_menu_colors;
+	osd_menu_colors = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_COLORS, width, MN_WIDGET_ID_OSDSETUP_MENUCOLORS);
+	showOsdMenueColorSetup(osd_menu_colors);
+
+	CMenuForwarder * mf = new CMenuForwarder(LOCALE_COLORMENU_MENUCOLORS, true, NULL, osd_menu_colors, NULL, CRCInput::RC_red);
 	mf->setHint("", LOCALE_MENU_HINT_COLORS);
 	osd_menu->addItem(mf);
 
@@ -592,8 +612,7 @@ int COsdSetup::showOsdSetup()
 	osd_menu->addItem(mc);
 
 	// round corners
-	int rounded_corners = g_settings.rounded_corners;
-	mc = new CMenuOptionChooser(LOCALE_EXTRA_ROUNDED_CORNERS, &rounded_corners, MENU_CORNERSETTINGS_TYPE_OPTIONS, MENU_CORNERSETTINGS_TYPE_OPTION_COUNT, true, this);
+	mc = new CMenuOptionChooser(LOCALE_EXTRA_ROUNDED_CORNERS, &g_settings.rounded_corners, MENU_CORNERSETTINGS_TYPE_OPTIONS, MENU_CORNERSETTINGS_TYPE_OPTION_COUNT, true, this);
 	mc->setHint("", LOCALE_MENU_HINT_ROUNDED_CORNERS);
 	osd_menu->addItem(mc);
 
@@ -630,12 +649,10 @@ int COsdSetup::showOsdSetup()
 		CVolumeHelper::getInstance()->refresh();
 
 	if (oldInfoClockSize != g_settings.infoClockFontSize) {
-		CInfoClock::getInstance()->setClockFontSize(g_settings.infoClockFontSize);
+		CInfoClock::getInstance()->setHeight(g_settings.infoClockFontSize);
 		CVolumeHelper::getInstance()->refresh();
-		if (CNeutrinoApp::getInstance()->isMuted()) {
-			CAudioMute::getInstance()->enableMuteIcon(false);
+		if (CNeutrinoApp::getInstance()->isMuted())
 			CAudioMute::getInstance()->enableMuteIcon(true);
-		}
 	}
 
 	delete colorInfoclockNotifier;
@@ -680,11 +697,13 @@ void COsdSetup::showOsdMenueColorSetup(CMenuWidget *menu_colors)
 	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_COLORMENUSETUP_MENUHEAD));
 
 	CMenuOptionChooser *oj;
+#if 0
 	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT_C2C, &g_settings.theme.gradient_c2c, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true );
 	oj->OnAfterChangeOption.connect(slot_repaint);
 	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT_C2C);
 	menu_colors->addItem(oj);
 	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE));
+#endif
 
 	mf = new CMenuDForwarder(LOCALE_COLORMENU_BACKGROUND, true, NULL, chHeadcolor );
 	mf->setHint("", LOCALE_MENU_HINT_HEAD_BACK);
@@ -694,10 +713,16 @@ void COsdSetup::showOsdMenueColorSetup(CMenuWidget *menu_colors)
 	mf->setHint("", LOCALE_MENU_HINT_HEAD_TEXTCOLOR);
 	menu_colors->addItem(mf);
 
-	// head color gradient
-	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT, &g_settings.theme.menu_Head_gradient, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true );
+	// head color gradient //TODO: disable sub options if head gradient is disabled
+	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT, &g_settings.theme.menu_Head_gradient, OPTIONS_COL_GRADIENT_OPTIONS, OPTIONS_COL_GRADIENT_OPTIONS_COUNT, true );
 	oj->OnAfterChangeOption.connect(slot_repaint);
 	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT);
+	menu_colors->addItem(oj);
+
+	// head color gradient direction
+	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT_MODE_DIRECTION, &g_settings.theme.menu_Head_gradient_direction, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS_COUNT, true );
+	oj->OnAfterChangeOption.connect(slot_repaint);
+	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT_DIRECTION);
 	menu_colors->addItem(oj);
 
 	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_COLORMENUSETUP_MENUCONTENT));
@@ -729,9 +754,22 @@ void COsdSetup::showOsdMenueColorSetup(CMenuWidget *menu_colors)
 
 	// hintbox color gradient
 	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_COLORTHEMEMENU_MENU_HINTS));
-	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT, &t.menu_Hint_gradient, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT, &t.menu_Hint_gradient, OPTIONS_COL_GRADIENT_OPTIONS, OPTIONS_COL_GRADIENT_OPTIONS_COUNT, true);
 	oj->OnAfterChangeOption.connect(slot_repaint);
 	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT);
+	menu_colors->addItem(oj);
+
+	// hintbox color gradient direction
+	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT_MODE_DIRECTION, &t.menu_Hint_gradient_direction, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS_COUNT, true );
+	oj->OnAfterChangeOption.connect(slot_repaint);
+	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT_DIRECTION);
+	menu_colors->addItem(oj);
+
+	// menue separator line gradient enable
+	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE));
+	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT_SEPARATOR_ENABLE, &t.menu_Separator_gradient_enable, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true );
+	oj->OnAfterChangeOption.connect(slot_repaint);
+	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT_SEPARATOR_ENABLE);
 	menu_colors->addItem(oj);
 
 	// infoviewer color
@@ -751,19 +789,44 @@ void COsdSetup::showOsdMenueColorSetup(CMenuWidget *menu_colors)
 	mf->setHint("", LOCALE_MENU_HINT_INFOBAR_TEXTCOLOR);
 	menu_colors->addItem(mf);
 
-	mf = new CMenuDForwarder(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DISPLAY, g_settings.casystem_display < 2, NULL, chInfobarCASystem );
-	mf->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS_COLOR);
-	menu_colors->addItem(mf);
-
 	// infoviewer gradient top
-	oj = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_GRADIENT_TOP, &t.infobar_gradient_top, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE));
+	oj = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_GRADIENT_TOP, &t.infobar_gradient_top, OPTIONS_COL_GRADIENT_OPTIONS, OPTIONS_COL_GRADIENT_OPTIONS_COUNT, true);
 	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT);
+	menu_colors->addItem(oj);
+
+	// infoviewer gradient top direction
+	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT_MODE_DIRECTION, &t.infobar_gradient_top_direction, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS_COUNT, true );
+	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT_DIRECTION);
+	menu_colors->addItem(oj);
+
+	// infoviewer gradient body
+	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE));
+	oj = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_GRADIENT_BODY, &t.infobar_gradient_body, OPTIONS_COL_GRADIENT_OPTIONS, OPTIONS_COL_GRADIENT_OPTIONS_COUNT, true);
+	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT);
+	menu_colors->addItem(oj);
+
+	// infoviewer gradient body direction
+	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT_MODE_DIRECTION, &t.infobar_gradient_body_direction, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS_COUNT, true );
+	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT_DIRECTION);
 	menu_colors->addItem(oj);
 
 	// infoviewer gradient bottom
-	oj = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_GRADIENT_BOTTOM, &t.infobar_gradient_bottom, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE));
+	oj = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_GRADIENT_BOTTOM, &t.infobar_gradient_bottom, OPTIONS_COL_GRADIENT_OPTIONS, OPTIONS_COL_GRADIENT_OPTIONS_COUNT, true);
 	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT);
 	menu_colors->addItem(oj);
+
+	// infoviewer gradient bottom direction
+	oj = new CMenuOptionChooser(LOCALE_COLOR_GRADIENT_MODE_DIRECTION, &t.infobar_gradient_bottom_direction, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS, OPTIONS_COL_GRADIENT_DIRECTION_OPTIONS_COUNT, true );
+	oj->setHint("", LOCALE_MENU_HINT_COLOR_GRADIENT_DIRECTION);
+	menu_colors->addItem(oj);
+
+	// ca bar
+	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE));
+	mf = new CMenuDForwarder(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DISPLAY, g_settings.infobar_casystem_display < 2, NULL, chInfobarCASystem );
+	mf->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS_COLOR);
+	menu_colors->addItem(mf);
 
 	// colored events
 	CColorChooser* chColored_Events = new CColorChooser(LOCALE_COLORMENU_TEXTCOLOR,	&t.colored_events_red,
@@ -833,7 +896,8 @@ public:
 
 void COsdSetup::AddFontSettingItem(CMenuWidget &font_Settings, const SNeutrinoSettings::FONT_TYPES number_of_fontsize_entry)
 {
-	font_Settings.addItem(new CMenuNumberInput(neutrino_font[number_of_fontsize_entry].name, neutrino_font[number_of_fontsize_entry].defaultsize, fontsizenotifier, CNeutrinoApp::getInstance()->getConfigFile()));
+	CMenuNumberInput *ni = new CMenuNumberInput(neutrino_font[number_of_fontsize_entry].name, neutrino_font[number_of_fontsize_entry].defaultsize, fontsizenotifier, CNeutrinoApp::getInstance()->getConfigFile());
+	font_Settings.addItem(ni);
 }
 
 //font settings menu
@@ -891,6 +955,7 @@ void COsdSetup::showOsdFontSizeSetup(CMenuWidget *menu_fonts)
 		fontSettings->addItem(mf);
 		w_index++;
 	}
+	g_InfoViewer->ResetModules();
 }
 
 //osd timeouts
@@ -940,7 +1005,6 @@ void COsdSetup::showOsdMenusSetup(CMenuWidget *menu_menus)
 	CMenuOptionChooser * mc;
 
 	submenu_menus->addIntroItems(LOCALE_SETTINGS_MENUS);
-
 	// menu position
 	mc = new CMenuOptionChooser(LOCALE_SETTINGS_MENU_POS, &g_settings.menu_pos, MENU_DISP_POS_OPTIONS, MENU_DISP_POS_OPTIONS_COUNT, true, this);
 	mc->setHint("", LOCALE_MENU_HINT_MENU_POS);
@@ -967,6 +1031,7 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	menu_infobar->addIntroItems(LOCALE_MISCSETTINGS_INFOBAR);
 
 	infobarHddNotifier = new COnOffNotifier();
+	sigc::slot0<void> slot_ibar = sigc::mem_fun(g_InfoViewer, &CInfoViewer::ResetModules);
 
 	CMenuOptionChooser * mc;
 	CMenuForwarder * mf;
@@ -981,10 +1046,16 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_RADIOTEXT);
 	menu_infobar->addItem(mc);
 
+	// buttons usertitle
+	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_BUTTONS_USERTITLE, &g_settings.infobar_buttons_usertitle, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
+	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_BUTTONS_USERTITLE);
+	menu_infobar->addItem(mc);
+
 	menu_infobar->addItem(GenericMenuSeparator);
 
 	// display options
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_DISP, &g_settings.infobar_show_channellogo, LOCALE_MISCSETTINGS_INFOBAR_DISP_OPTIONS, LOCALE_MISCSETTINGS_INFOBAR_DISP_OPTIONS_COUNT, true);
+	mc->OnAfterChangeOption.connect(slot_ibar);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_LOGO);
 	menu_infobar->addItem(mc);
 
@@ -995,25 +1066,32 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 
 	// satellite/cable provider
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_SAT_DISPLAY, &g_settings.infobar_sat_display, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	mc->OnAfterChangeOption.connect(slot_ibar);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_SAT);
 	menu_infobar->addItem(mc);
 
 	menu_infobar->addItem(GenericMenuSeparator);
 
 	// CA system
-	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DISPLAY, &g_settings.casystem_display, INFOBAR_CASYSTEM_MODE_OPTIONS, INFOBAR_CASYSTEM_MODE_OPTION_COUNT, true, this);
+	casystemActivate.Clear(); //ensure empty activator object -> cleanup before add new items, prevents possible segfault!
+	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DISPLAY, &g_settings.infobar_casystem_display, INFOBAR_CASYSTEM_MODE_OPTIONS, INFOBAR_CASYSTEM_MODE_OPTION_COUNT, true, this);
+	mc->OnAfterChangeOption.connect(slot_ibar);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS);
 	menu_infobar->addItem(mc);
-
+#if 1
 	// CA system dotmatrix
-	ca_dotmatrix = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DOTMATRIX, &g_settings.casystem_dotmatrix, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.casystem_display < 2);
-	ca_dotmatrix->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS_DOTMATRIX);
-	menu_infobar->addItem(ca_dotmatrix);
-
+	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DOTMATRIX, &g_settings.infobar_casystem_dotmatrix, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.infobar_casystem_display < 2);
+	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS_DOTMATRIX);
+	menu_infobar->addItem(mc);
+	casystemActivate.Add(mc);
+#endif
+	
 	// CA system frame
-	ca_frame = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_FRAME, &g_settings.casystem_frame, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.casystem_display < 2);
-	ca_frame->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS_FRAME);
-	menu_infobar->addItem(ca_frame);
+	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_FRAME, &g_settings.infobar_casystem_frame, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.infobar_casystem_display < 2);
+	mc->OnAfterChangeOption.connect(slot_ibar);
+	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS_FRAME);
+	menu_infobar->addItem(mc);
+	casystemActivate.Add(mc);
 
 	menu_infobar->addItem(GenericMenuSeparator);
 
@@ -1039,6 +1117,7 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 		p_show_tuner_icon = &g_settings.infobar_show_tuner;
 	}
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_SHOW_TUNER, p_show_tuner_icon, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, mc_active);
+	mc->OnAfterChangeOption.connect(slot_ibar);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_TUNER);
 	menu_infobar->addItem(mc);
 
@@ -1055,6 +1134,7 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	menu_infobar->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_MISCSETTINGS_PROGRESSBAR));
 	// progressbar position
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_PROGRESSBAR_INFOBAR_POSITION, &g_settings.infobar_progressbar, PROGRESSBAR_INFOBAR_POSITION_OPTIONS, PROGRESSBAR_INFOBAR_POSITION_COUNT, true);
+	mc->OnAfterChangeOption.connect(slot_ibar);
 	mc->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_INFOBAR_POSITION);
 	menu_infobar->addItem(mc);
 }
@@ -1182,6 +1262,9 @@ void COsdSetup::showOsdInfoclockSetup(CMenuWidget *menu_infoclock)
 	mf->setHint("", LOCALE_MENU_HINT_CLOCK_TEXTCOLOR);
 	menu_infoclock->addItem(mf);
 	colorInfoclockNotifier->addItem(mf);
+
+	//ensure clock reinit after setup
+	CInfoClock::getInstance()->clear();
 }
 
 bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
@@ -1198,17 +1281,24 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 		g_settings.show_menu_hints = * (int*) data;
 		return true;
 	}
-	else if((ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DISPLAY)) ||
-		(ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_INFOBAR_SHOW_TUNER))) {
+	else if((ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DISPLAY))
+		||(ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_INFOBAR_SHOW_TUNER))) {
 		if (g_InfoViewer == NULL)
 			g_InfoViewer = new CInfoViewer;
 		g_InfoViewer->changePB();
-		if (ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DISPLAY))
-		{
-			ca_dotmatrix->setActive(g_settings.casystem_display < 2);
-			ca_frame->setActive(g_settings.casystem_display < 2);
-			return true;
+		if (ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DISPLAY)){
+			casystemActivate.Activate(g_settings.infobar_casystem_display < 2);
+			return false;
 		}
+		return false;
+	}
+	else if(ARE_LOCALES_EQUAL(OptionName, LOCALE_SCREENSAVER_DELAY)) {
+		screensaverActivate.Activate(g_settings.screensaver_delay != 0);
+		screensaverOptActivate.Activate(g_settings.screensaver_delay != 0 && g_settings.screensaver_mode == 0);
+		return false;
+	}
+	else if(ARE_LOCALES_EQUAL(OptionName, LOCALE_SCREENSAVER_MODE)) {
+		screensaverOptActivate.Activate(g_settings.screensaver_mode == 0);
 		return false;
 	}
 	else if(ARE_LOCALES_EQUAL(OptionName, LOCALE_COLORMENU_OSD_PRESET)) {
@@ -1250,11 +1340,16 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 	return false;
 }
 
-int COsdSetup::showContextChanlistMenu()
+int COsdSetup::showContextChanlistMenu(CChannelList *parent_channellist)
 {
 	static int cselected = -1;
 
 	CMenuWidget * menu_chanlist = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width);
+
+	//using native callback to ensure stop header clock in parent channellist before paint this menu window
+	if (parent_channellist && g_settings.menu_pos == CMenuWidget::MENU_POS_TOP_RIGHT)
+		menu_chanlist->OnBeforePaint.connect(sigc::mem_fun(parent_channellist->getHeaderObject()->getClockObject(), &CComponentsFrmClock::block));
+
 	menu_chanlist->enableSaveScreen(true);
 	menu_chanlist->enableFade(false);
 	menu_chanlist->setSelected(cselected);
@@ -1336,29 +1431,51 @@ void COsdSetup::showOsdScreenShotSetup(CMenuWidget *menu_screenshot)
 	menu_screenshot->addItem(mc);
 }
 
+#define SCREENSAVER_MODE_OPTION_COUNT 3
+const CMenuOptionChooser::keyval SCREENSAVER_MODE_OPTIONS[SCREENSAVER_MODE_OPTION_COUNT] =
+{
+	{ 0, LOCALE_SCREENSAVER_MODE_IMAGE },
+	{ 1, LOCALE_SCREENSAVER_MODE_CLOCK },
+	{ 2, LOCALE_SCREENSAVER_MODE_CLOCK_COLOR }
+};
+
 void COsdSetup::showOsdScreensaverSetup(CMenuWidget *menu_screensaver)
 {
 	menu_screensaver->addIntroItems(LOCALE_SCREENSAVER_MENU);
-	screensaverNotifier = new COnOffNotifier();
+
+	screensaverActivate.Clear();
+	screensaverOptActivate.Clear();
 
 	// screensaver delay
-	CMenuOptionNumberChooser* nc = new CMenuOptionNumberChooser(LOCALE_SCREENSAVER_DELAY, &g_settings.screensaver_delay, true, 0, 999, screensaverNotifier, CRCInput::RC_nokey, NULL, 0, 0, LOCALE_SCREENSAVER_OFF);
+	CMenuOptionNumberChooser* nc = new CMenuOptionNumberChooser(LOCALE_SCREENSAVER_DELAY, &g_settings.screensaver_delay, true, 0, 999, this, CRCInput::RC_nokey, NULL, 0, 0, LOCALE_SCREENSAVER_OFF);
 	nc->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE));
 	nc->setHint("", LOCALE_MENU_HINT_SCREENSAVER_DELAY);
 	menu_screensaver->addItem(nc);
+
+	// screensaver mode
+	CMenuOptionChooser* oc = new CMenuOptionChooser(LOCALE_SCREENSAVER_MODE, &g_settings.screensaver_mode, SCREENSAVER_MODE_OPTIONS, SCREENSAVER_MODE_OPTION_COUNT, (g_settings.screensaver_delay != 0), this);
+	oc->setHint("", LOCALE_MENU_HINT_SCREENSAVER_MODE);
+	menu_screensaver->addItem(oc);
+	screensaverActivate.Add(oc);
 
 	// screensaver timeout
 	nc = new CMenuOptionNumberChooser(LOCALE_SCREENSAVER_TIMEOUT, &g_settings.screensaver_timeout, (g_settings.screensaver_delay != 0), 0, 60, NULL, CRCInput::RC_nokey, NULL, 0, 0, LOCALE_OPTIONS_OFF);
 	nc->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_SECOND));
 	nc->setHint("", LOCALE_MENU_HINT_SCREENSAVER_TIMEOUT);
 	menu_screensaver->addItem(nc);
-	screensaverNotifier->addItem(nc);
+	screensaverActivate.Add(nc);
 
 	// screensaver_dir
-	CMenuForwarder *mf = new CMenuForwarder(LOCALE_SCREENSAVER_DIR, (g_settings.screensaver_delay != 0), g_settings.screensaver_dir, this, "screensaver_dir");
+	CMenuForwarder *mf = new CMenuForwarder(LOCALE_SCREENSAVER_DIR, (g_settings.screensaver_delay != 0 && g_settings.screensaver_mode == 0), g_settings.screensaver_dir, this, "screensaver_dir");
 	mf->setHint("", LOCALE_MENU_HINT_SCREENSAVER_DIR);
 	menu_screensaver->addItem(mf);
-	screensaverNotifier->addItem(mf);
+	screensaverOptActivate.Add(mf);
+
+	// screensaver random mode
+	oc = new CMenuOptionChooser(LOCALE_SCREENSAVER_RANDOM, &g_settings.screensaver_random, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, (g_settings.screensaver_delay != 0 && g_settings.screensaver_mode == 0));
+	oc->setHint("", LOCALE_MENU_HINT_SCREENSAVER_RANDOM);
+	menu_screensaver->addItem(oc);
+	screensaverOptActivate.Add(oc);
 }
 
 void COsdSetup::paintWindowSize(int w, int h)
@@ -1366,7 +1483,7 @@ void COsdSetup::paintWindowSize(int w, int h)
 	if (win_demo == NULL) {
 		win_demo = new CComponentsShapeSquare(0, 0, 0, 0);
 		win_demo->setFrameThickness(8);
-		win_demo->setShadowOnOff(CC_SHADOW_OFF);
+		win_demo->disableShadow();
 		win_demo->setColorBody(COL_BACKGROUND);
 		win_demo->setColorFrame(COL_RED);
 		win_demo->doPaintBg(true);

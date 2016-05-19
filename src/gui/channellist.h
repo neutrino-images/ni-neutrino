@@ -35,6 +35,7 @@
 
 #include <driver/framebuffer.h>
 #include <gui/widget/menue.h>
+#include <gui/widget/listhelpers.h>
 #include <gui/components/cc.h>
 #include <system/lastchannel.h>
 
@@ -49,6 +50,7 @@
 enum {
 	LIST_MODE_FAV,
 	LIST_MODE_PROV,
+	LIST_MODE_WEBTV,
 	LIST_MODE_SAT,
 	LIST_MODE_ALL,
 	LIST_MODE_LAST
@@ -63,7 +65,7 @@ enum {
 
 class CBouquet;
 
-class CChannelList
+class CChannelList : public CListHelpers
 {
 private:
 	enum state_
@@ -75,12 +77,11 @@ private:
 	bool edit_state;
 
 	CFrameBuffer		*frameBuffer;
-	CComponentsPIP		*cc_minitv;
+
 	unsigned int		selected, selected_in_new_mode;
 	unsigned int            origPosition;
 	unsigned int            newPosition;
 	bool			channelsChanged;
-	bool			favoritesChanged;
 
 	unsigned int		tuned;
 	t_channel_id		selected_chid;
@@ -127,7 +128,7 @@ private:
 
 	int ChannelList_Rec;
 
-	CComponentsChannelLogoScalable* CChannelLogo;
+
 	bool headerNew;
 
 	void paintDetails(int index);
@@ -243,5 +244,7 @@ public:
 	unsigned Size() { return (*chanlist).size(); }
 	ZapitChannelList &getChannels() { return channels; };
 	bool checkLockStatus(neutrino_msg_data_t data, bool pip = false);
+	CComponentsHeader* getHeaderObject();
+	void ResetModules();
 };
 #endif

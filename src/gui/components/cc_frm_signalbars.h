@@ -35,6 +35,7 @@
 #include <gui/components/cc_frm.h>
 #include <gui/components/cc_item_progressbar.h>
 #include <gui/components/cc_item_text.h>
+#include <gui/components/cc_text_screen.h>
 #include <zapit/include/zapit/frontend_c.h>
 #include <driver/neutrinofonts.h>
 
@@ -47,7 +48,7 @@ CSignalBar() and their sub classes based up CComponentsForm() and are usable lik
 CSignalBar() is intended to show signal rate.
 */
 
-class CSignalBar : public CComponentsForm
+class CSignalBar : public CComponentsForm, public CCTextScreen
 {
 	public:
 		///refresh current item properties, use this before paintScale().
@@ -90,7 +91,7 @@ class CSignalBar : public CComponentsForm
 		uint16_t sb_signal;
 
 		///initialize all needed basich attributes and objects
-		void initVarSigBar();
+		void initVarSigBar(const int& xpos, const int& ypos, const int& w, const int& h, CFrontend *frontend_ref, const std::string& sb_name, CComponentsForm *parent);
 		///initianlize position and dimensions of signalbar container
 		void initDimensions();
 		///initialize scale object
@@ -141,6 +142,27 @@ class CSignalBar : public CComponentsForm
 
 		//returns the current signal value
 		uint16_t getValue(void) { return sb_signal; }
+
+		/**Member to modify background behavior of embeded caption objects (value, name)
+		* @param[in]  mode
+		* 	@li bool, default = true
+		* @return
+		*	void
+		* @see
+		* 	Parent member: CCTextScreen::enableTboxSaveScreen()
+		* 	CTextBox::enableSaveScreen()
+		* 	disableTboxSaveScreen()
+		*/
+		void enableTboxSaveScreen(bool mode)
+		{
+			if (cc_txt_save_screen == mode)
+				return;
+			cc_txt_save_screen = mode;
+			for(size_t i=0; i<v_cc_items.size(); i++){
+				if (v_cc_items[i]->getItemType() == CC_ITEMTYPE_LABEL)
+					static_cast<CComponentsLabel*>(v_cc_items[i])->enableTboxSaveScreen(cc_txt_save_screen);
+			}
+		}
 };
 
 /// Sub class of CSignalBar()
@@ -160,8 +182,8 @@ class CSignalNoiseRatioBar : public CSignalBar
 		CSignalNoiseRatioBar(CComponentsForm *parent = NULL)
 					: CSignalBar(parent){};
 		///basic component class constructor for signal noise ratio.
-		CSignalNoiseRatioBar(const int& xpos, const int& ypos, const int& w, const int& h, CFrontend *frontend_ref, CComponentsForm *parent = NULL)
-					: CSignalBar(xpos, ypos, w, h, frontend_ref, "SNR", parent){};
+		CSignalNoiseRatioBar(const int& xpos, const int& ypos, const int& w, const int& h, CFrontend *frontend_ref, const std::string& snr_name = "SNR", CComponentsForm *parent = NULL)
+					: CSignalBar(xpos, ypos, w, h, frontend_ref, snr_name, parent){};
 };
 
 /// Class CSignalBox() provides CSignalBar(), CSignalNoiseRatioBar() scales at once.
@@ -237,7 +259,7 @@ void CSampleClass::hide ()
 
 */
 
-class CSignalBox : public CComponentsForm
+class CSignalBox : public CComponentsForm, public CCTextScreen
 {
 	private:
 		///object: current frontend
@@ -269,7 +291,7 @@ class CSignalBox : public CComponentsForm
 
 	public:
 		///class constructor for signal noise ratio.
-		CSignalBox(const int& xpos, const int& ypos, const int& w, const int& h, CFrontend *frontend_ref = NULL, const bool vertical = true, CComponentsForm *parent = NULL);
+		CSignalBox(const int& xpos, const int& ypos, const int& w, const int& h, CFrontend *frontend_ref = NULL, const bool vertical = true, CComponentsForm *parent = NULL, const std::string& sig_name = "SIG", const std::string& snr_name = "SNR" );
 
 		///returns the signal object, type = CSignalBar*
 		CSignalBar* getScaleObject(){return sbar;};
@@ -289,8 +311,27 @@ class CSignalBox : public CComponentsForm
 
 		///return current snr value
 		uint16_t getSNRValue(void) { return snrbar->getValue();}
-		
-		///return current snr value
+
+		/**Member to modify background behavior of embeded caption objects (value, name)
+		* @param[in]  mode
+		* 	@li bool, default = true
+		* @return
+		*	void
+		* @see
+		* 	Parent member: CCTextScreen::enableTboxSaveScreen()
+		* 	CTextBox::enableSaveScreen()
+		* 	disableTboxSaveScreen()
+		*/
+		void enableTboxSaveScreen(bool mode)
+		{
+			if (cc_txt_save_screen == mode)
+				return;
+			cc_txt_save_screen = mode;
+			for(size_t i=0; i<v_cc_items.size(); i++){
+				if (v_cc_items[i]->getItemType() == CC_ITEMTYPE_FRM_SIGNALBAR)
+					static_cast<CSignalBar*>(v_cc_items[i])->enableTboxSaveScreen(cc_txt_save_screen);
+			}
+		};
 };
 
 #endif

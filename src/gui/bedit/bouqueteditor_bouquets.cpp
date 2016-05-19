@@ -2,15 +2,7 @@
 	Neutrino-GUI  -   DBoxII-Project
 
 	Copyright (C) 2001 Steffen Hehn 'McClean'
-	Homepage: http://dbox.cyberphoria.org/
-
-	Kommentar:
-
-	Diese GUI wurde von Grund auf neu programmiert und sollte nun vom
-	Aufbau und auch den Ausbaumoeglichkeiten gut aussehen. Neutrino basiert
-	auf der Client-Server Idee, diese GUI ist also von der direkten DBox-
-	Steuerung getrennt. Diese wird dann von Daemons uebernommen.
-
+	Copyright (C) 2009,2011,2013,2016 Stefan Seyfried
 
 	License: GPL
 
@@ -155,7 +147,7 @@ const struct button_label CBEBouquetWidgetButtons[6] =
 void CBEBouquetWidget::paintFoot()
 {
 	size_t numbuttons = sizeof(CBEBouquetWidgetButtons)/sizeof(CBEBouquetWidgetButtons[0]);
-	footer.paintButtons(x, y+height, width, ButtonHeight, numbuttons, CBEBouquetWidgetButtons, width/numbuttons-20);
+	footer.paintButtons(x, y+height, width, ButtonHeight, numbuttons, CBEBouquetWidgetButtons, width/numbuttons-20, 0, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]);
 }
 
 void CBEBouquetWidget::hide()
@@ -166,7 +158,7 @@ void CBEBouquetWidget::hide()
 
 void CBEBouquetWidget::updateSelection(unsigned int newpos)
 {
-	if(newpos == selected)
+	if (newpos == selected || newpos == (unsigned int)-1)
 		return;
 
 	unsigned int prev_selected = selected;
@@ -272,36 +264,11 @@ int CBEBouquetWidget::exec(CMenuTarget* parent, const std::string & /*actionKey*
 				cancelMoveBouquet();
 			}
 		}
-		else if (msg==CRCInput::RC_up || msg==(neutrino_msg_t)g_settings.key_pageup)
+		else if (msg == CRCInput::RC_up || msg == (neutrino_msg_t)g_settings.key_pageup ||
+			 msg == CRCInput::RC_down || msg == (neutrino_msg_t)g_settings.key_pagedown)
 		{
-			if (!(Bouquets->empty())) {
-				int step = (msg == (neutrino_msg_t)g_settings.key_pageup) ? listmaxshow : 1;  // browse or step 1
-				int new_selected = selected - step;
-
-				if (new_selected < 0) {
-					if (selected != 0 && step != 1)
-						new_selected = 0;
-					else
-						new_selected = Bouquets->size() - 1;
-				}
-				updateSelection(new_selected);
-			}
-		}
-		else if (msg==CRCInput::RC_down || msg==(neutrino_msg_t)g_settings.key_pagedown)
-		{
-			if (!(Bouquets->empty())) {
-				int step =  ((int) msg == g_settings.key_pagedown) ? listmaxshow : 1;  // browse or step 1
-				int new_selected = selected + step;
-				if (new_selected >= (int) Bouquets->size()) {
-					if (((Bouquets->size() - listmaxshow -1 < selected) && (step != 1)) || (selected != (Bouquets->size() - 1)))
-						new_selected = Bouquets->size() - 1;
-					else if (((Bouquets->size() / listmaxshow) + 1) * listmaxshow == Bouquets->size() + listmaxshow) // last page has full entries
-						new_selected = 0;
-					else
-						new_selected = ((step == (int) listmaxshow) && (new_selected < (int) (((Bouquets->size() / listmaxshow)+1) * listmaxshow))) ? (Bouquets->size() - 1) : 0;
-				}
-				updateSelection(new_selected);
-			}
+			int new_selected = UpDownKey(*Bouquets, msg, listmaxshow, selected);
+			updateSelection(new_selected);
 		}
 		else if (msg == (neutrino_msg_t) g_settings.key_list_start || msg == (neutrino_msg_t) g_settings.key_list_end) {
 			if (!(Bouquets->empty())) {
@@ -399,7 +366,7 @@ int CBEBouquetWidget::exec(CMenuTarget* parent, const std::string & /*actionKey*
 				cancelMoveBouquet();
 			}
 		}
-		else if((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites)) {
+		else if((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites) || (msg == CRCInput::RC_www)) {
 		}
 		else
 		{

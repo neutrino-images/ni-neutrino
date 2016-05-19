@@ -76,7 +76,7 @@
 #include <zapit/zapit.h>
 #include <video.h>
 extern cVideo * videoDecoder;
-extern CInfoClock *InfoClock;
+
 
 //------------------------------------------------------------------------
 bool comparePictureByDate (const CPicture& a, const CPicture& b)
@@ -232,6 +232,8 @@ int CPictureViewerGui::exec(CMenuTarget* parent, const std::string & actionKey)
 
 	// Restore last mode
 	CNeutrinoApp::getInstance()->handleMsg( NeutrinoMessages::CHANGEMODE , m_LastMode );
+	if (m_LastMode == NeutrinoMessages::mode_ts)
+		videoDecoder->setBlank(false);
 
 	// always exit all
 	return menu_return::RETURN_REPAINT;
@@ -258,7 +260,7 @@ int CPictureViewerGui::show()
 		m_currentTitle = m_audioPlayer->getAudioPlayerM_current();
 
 	CAudioMute::getInstance()->enableMuteIcon(false);
-	InfoClock->enableInfoClock(false);
+	CInfoClock::getInstance()->enableInfoClock(false);
 
 	while (loop)
 	{
@@ -621,6 +623,7 @@ int CPictureViewerGui::show()
 		else if (msg == NeutrinoMessages::RECORD_START ||
 				msg == NeutrinoMessages::ZAPTO ||
 				msg == NeutrinoMessages::STANDBY_ON ||
+				msg == NeutrinoMessages::LEAVE_ALL ||
 				msg == NeutrinoMessages::SHUTDOWN ||
 				msg == NeutrinoMessages::SLEEPTIMER)
 		{
@@ -630,7 +633,7 @@ int CPictureViewerGui::show()
 			loop = false;
 			g_RCInput->postMsg(msg, data);
 		}
-		else if ((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites)) {
+		else if ((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites) || (msg == CRCInput::RC_www)) {
 		}
 		else
 		{
@@ -643,7 +646,7 @@ int CPictureViewerGui::show()
 	hide();
 
 	CAudioMute::getInstance()->enableMuteIcon(true);
-	InfoClock->enableInfoClock(true);
+	CInfoClock::getInstance()->enableInfoClock(true);
 
 	return(res);
 }
