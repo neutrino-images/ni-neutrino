@@ -6,7 +6,7 @@ version.h:
 	echo '#define BUILT_DATE "'`date`'"' > $@
 	@if test -d $(top_srcdir)/.git ; then \
 		pushd $(top_srcdir) ; \
-		GITTAG=$$(git tag -l "NG-*" | tail -n1); \
+		GITTAG=$$(git tag -l "NI-*" | tail -n1); \
 		GITBRANCH=$$(git rev-parse --abbrev-ref HEAD) ; \
 		GITDESCRIBE=$$(git describe --always --dirty --tags --match $$GITTAG || echo 'VCS failed') ; \
 		popd ; \
