@@ -1,9 +1,9 @@
 installdir = $(FONTDIR)
 
 install_DATA = \
+	md_khmurabi_10.ttf \
 	micron_bold.ttf \
 	micron.ttf \
-	neutrino.ttf \
 	pakenham.ttf \
 	DejaVuLGCSansMono-Bold.ttf \
 	tuxtxt.otb
@@ -14,4 +14,6 @@ endif
 
 #NI
 install-data-hook:
-	cd $(DESTDIR)$(FONTDIR) && ln -sf neutrino.ttf tuxtxt.ttf
+	cd $(DESTDIR)$(FONTDIR); \
+		mv md_khmurabi_10.ttf neutrino.ttf; \
+		ln -sf neutrino.ttf tuxtxt.ttf
