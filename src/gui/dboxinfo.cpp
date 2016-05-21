@@ -456,13 +456,11 @@ void CDBoxInfoWidget::paint()
 		unsigned int h = cpuload_y1 - cpuload_y0;
 		cpuload_y0 += y;
 		cpuload_y1 += y;
-		//NI frameBuffer->paintBoxRel(x + offsetw, cpuload_y0, pbw, h, COL_MENUCONTENT_PLUS_2);
 		frameBuffer->paintBoxRel(x + offsetw, cpuload_y0, pbw, h, COL_MENUHEAD_PLUS_0); //NI
 
 		int off = std::max(0, (int)sysload->data_avail - pbw);
 		for (unsigned int i = 0; i < sysload->data_avail - off; i++) {
 			if ((sysload->data[i + off] * h / 1000) > 0)
-				//NI frameBuffer->paintVLine(x+offsetw + i, cpuload_y1 - sysload->data[i + off] * h / 1000, cpuload_y1, COL_MENUCONTENT_PLUS_7);
 				frameBuffer->paintVLine(x+offsetw + i, cpuload_y1 - sysload->data[i + off] * h / 1000, cpuload_y1, COL_MENUHEAD_TEXT); //NI
 		}
 	}

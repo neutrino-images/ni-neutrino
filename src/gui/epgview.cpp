@@ -205,7 +205,6 @@ void CEpgData::processTextToArray(std::string text, int screening, bool has_cove
 
 			// check the wordwidth - add to this line if size ok
 			int aktWordWidth = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth(aktWord);
-			//NI if ((aktWordWidth+aktWidth)<(ox - 20 - 15 - (has_cover? (std::min((sb-10)*342/513,342)) :0)))
 			if ((aktWordWidth+aktWidth)<(ox - 20 - 15 - (has_cover? (std::min((sb-10)*342/513,342)) : poster_offset))) //NI IMDb
 			{//space ok, add
 				aktWidth += aktWordWidth;
@@ -274,8 +273,8 @@ void CEpgData::showText(int startPos, int ypos, bool cover, bool fullClear)
 
 	if (cover) {
 		if (!g_PicViewer->DisplayImage("/tmp/tmdb.jpg",sx+3,y+3+((sb-cover_height)/2),cover_width,cover_height, CFrameBuffer::TM_NONE)) {
-			//NI cover_offset = 0;
-			cover_offset = poster_offset = 0; //NI
+			cover_offset = 0;
+			poster_offset = 0; //NI
 			frameBuffer->paintBoxRel(sx, y, ox-15, sb, COL_MENUCONTENT_PLUS_0); // background of the text box
 		}
 	}
@@ -320,7 +319,6 @@ void CEpgData::showText(int startPos, int ypos, bool cover, bool fullClear)
 			count = 0;
 		}
 		else{
-			//NI g_Font[( i< info1_lines ) ?SNeutrinoSettings::FONT_TYPE_EPG_INFO1:SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->RenderString(sx+10+cover_offset, y+medlineheight, ox- 15- 15, epgText[i].first, COL_MENUCONTENT_TEXT);
 			g_Font[( i< info1_lines ) ?SNeutrinoSettings::FONT_TYPE_EPG_INFO1:SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->RenderString(sx+10+poster_offset, y+medlineheight, ox- 15- 15 -poster_offset, epgText[i].first, COL_MENUCONTENT_TEXT); //NI IMDb
 		}
 	}
@@ -1322,7 +1320,6 @@ int CEpgData::FollowScreenings (const t_channel_id /*channel_id*/, const std::st
 // -- 2002-05-13 rasc
 //
 
-//NI const struct button_label EpgButtons[] =
 struct button_label EpgButtons[] = //NI
 {
 	{ NEUTRINO_ICON_BUTTON_RED   , LOCALE_TIMERBAR_RECORDEVENT },

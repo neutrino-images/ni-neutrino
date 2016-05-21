@@ -471,6 +471,7 @@ void CProgressBar::paintProgress(bool do_save_bg)
 
 	//progress
 	bool pb_invert = (pb_type == PB_REDRIGHT) || ((pb_type == PB_TIMESCALE) && g_settings.progressbar_timescale_invert);
+
 	if (cc_allow_paint){
 		if (!is_painted || (pb_active_width != pb_last_width)) {
 			//NI start

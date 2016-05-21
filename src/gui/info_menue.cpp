@@ -40,6 +40,7 @@
 #include <gui/imageinfo_ni.h> //NI
 #include <gui/dboxinfo.h>
 #include <gui/streaminfo2.h>
+
 #if 0
 #include <gui/buildinfo.h>
 #endif

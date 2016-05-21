@@ -387,6 +387,7 @@ nolfb:
 void CFrameBuffer::clearIconCache()
 {
 	std::map<std::string, rawIcon>::iterator it;
+
 	for(it = icon_cache.begin(); it != icon_cache.end(); ++it) {
 		/* printf("FB: delete cached icon %s: %x\n", it->first.c_str(), (int) it->second.data); */
 		cs_free_uncached(it->second.data);
@@ -2001,6 +2002,7 @@ void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32
 
 		_write_gxa(gxa_base, GXA_BMP1_TYPE_REG, (3 << 16) | width);
 		_write_gxa(gxa_base, GXA_BMP1_ADDR_REG, (unsigned int) uKva);
+
 		_write_gxa(gxa_base, cmd, GXA_POINT(xoff, yoff));   /* destination pos */
 		_write_gxa(gxa_base, cmd, GXA_POINT(xc, yc));   /* source width, FIXME real or adjusted xc, yc ? */
 		_write_gxa(gxa_base, cmd, GXA_POINT(xp, yp));   /* source pos */
