@@ -238,7 +238,7 @@ ca_init_0 Conax-Card
 ca_init_1 CI module
 ca_init_2 Conax-Card and CI module
 cablesetup.provider cable provider
-camd_setup camd control
+camd_control camd control
 camd_item_cs2gbox_hint cs2gbox - Newcamd bridge
 camd_item_cs2gbox_name cs2gbox
 camd_item_doscam_hint DOSCam - Softcam and emulator
