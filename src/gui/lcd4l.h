@@ -7,6 +7,8 @@
 	Copyright (C) 2012-2016 'vanhofen'
 	Homepage: http://www.neutrino-images.de/
 
+	Modded    (C) 2016 'TangoCash'
+
 	License: GPL
 
 	This program is free software; you can redistribute it and/or modify
@@ -78,6 +80,7 @@ class CLCD4l
 		bool		GetLogoName(uint64_t channel_id, std::string channel_name, std::string & logo);
 
 		std::string	Int2String(int iconvert);
+		std::string	hexStr(unsigned char* data);
 		void		strReplace(std::string & orig, const char *fstr, const std::string rstr);
 		bool		WriteFile(const char *file, std::string content = "", bool convert = false);
 
@@ -106,6 +109,10 @@ class CLCD4l
 		std::string	m_Event;
 		int		m_Progress;
 		char		m_Duration[15];
+
+		std::string	m_font;
+		std::string	m_fgcolor;
+		std::string	m_bgcolor;
 };
 
 #endif

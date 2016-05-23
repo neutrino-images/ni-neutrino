@@ -7,6 +7,8 @@
 	Copyright (C) 2012-2016 'vanhofen'
 	Homepage: http://www.neutrino-images.de/
 
+	Modded    (C) 2016 'TangoCash'
+
 	License: GPL
 
 	This program is free software; you can redistribute it and/or modify
@@ -33,6 +35,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <unistd.h>
+#include <iomanip>
 
 #include <global.h>
 #include <neutrino.h>
@@ -87,6 +90,10 @@ extern CRemoteControl *g_RemoteControl;
 #define START			LCD_DATADIR "start"
 #define END			LCD_DATADIR "end"
 
+#define FONT			LCD_DATADIR "font"
+#define FGCOLOR			LCD_DATADIR "fgcolor"
+#define BGCOLOR			LCD_DATADIR "bgcolor"
+
 #define FLAG_LCD4LINUX		"/tmp/.lcd4linux"
 #define PIDFILE			"/tmp/lcd4linux.pid"
 
@@ -138,7 +145,7 @@ void CLCD4l::StopLCD4l()
 void CLCD4l::SwitchLCD4l()
 {
 	if (thrLCD4l)
-		StopLCD4l(); 
+		StopLCD4l();
 	else
 		StartLCD4l();
 }
@@ -166,7 +173,8 @@ int CLCD4l::RemoveFile(const char *file)
 
 	int ret = 0;
 
-	if (access(file, F_OK) == 0) {
+	if (access(file, F_OK) == 0)
+	{
 		if (unlink(file) != 0)
 			ret = 1;
 	}
@@ -199,7 +207,7 @@ void CLCD4l::Init()
 
 	m_Event		= "n/a";
 	m_Progress	= -1;
-	for (int i = 0; i < (int)sizeof(m_Duration); i++) 
+	for (int i = 0; i < (int)sizeof(m_Duration); i++)
 		m_Duration[i] = ' ';
 
 	if (!access(LCD_DATADIR, F_OK) == 0)
@@ -260,6 +268,44 @@ void* CLCD4l::LCD4lProc(void* arg)
 
 void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 {
+	SNeutrinoTheme &t = g_settings.theme;
+
+	std::string font = g_settings.font_file;
+
+	if (m_font.compare(font))
+	{
+		WriteFile(FONT, font);
+		m_font = font;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	std::string fgcolor	= hexStr(&t.infobar_Text_red)
+				+ hexStr(&t.infobar_Text_green)
+				+ hexStr(&t.infobar_Text_blue)
+				+ hexStr(&t.infobar_Text_alpha);
+
+	if (m_fgcolor.compare(fgcolor))
+	{
+		WriteFile(FGCOLOR, fgcolor);
+		m_fgcolor = fgcolor;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	std::string bgcolor	= hexStr(&t.infobar_red)
+				+ hexStr(&t.infobar_green)
+				+ hexStr(&t.infobar_blue)
+				+ hexStr(&t.infobar_alpha);
+
+	if (m_bgcolor.compare(bgcolor))
+	{
+		WriteFile(BGCOLOR, bgcolor);
+		m_bgcolor = bgcolor;
+	}
+
+	/* ----------------------------------------------------------------- */
+
 	int Tuner = 1 + CFEManager::getInstance()->getLiveFE()->getNumber();
 
 	if (m_Tuner != Tuner)
@@ -794,13 +840,22 @@ void CLCD4l::strReplace(std::string & orig, const char *fstr, const std::string 
 	}
 }
 
+std::string CLCD4l::hexStr(unsigned char* data)
+{
+	std::stringstream ss;
+	ss << std::hex;
+	for(int i=0; i<1; ++i)
+		ss << std::setw(2) << std::setfill('0') << (int)data[i];
+	return ss.str();
+}
+
 bool CLCD4l::GetLogoName(uint64_t channel_id, std::string channel_name, std::string &logo)
 {
 	int h, i, j;
 	char str_channel_id[16];
 	char *upper_name, *lower_name, *p;
 
-	upper_name = strdup(channel_name.c_str()); 
+	upper_name = strdup(channel_name.c_str());
 	for (p = upper_name; *p != '\0'; p++)
 		*p = (char) toupper(*p);
 
@@ -816,7 +871,7 @@ bool CLCD4l::GetLogoName(uint64_t channel_id, std::string channel_name, std::str
 	// first png, then jpg, then gif
 	std::string strLogoExt[3] = { ".png", ".jpg", ".gif" };
 
-	//printf("[CLCD4l] %s: ID: %s, Name: %s (u: %s, l: %s)\n", __FUNCTION__, str_channel_id, channel_name.c_str(), upper_name, lower_name);	
+	//printf("[CLCD4l] %s: ID: %s, Name: %s (u: %s, l: %s)\n", __FUNCTION__, str_channel_id, channel_name.c_str(), upper_name, lower_name);
 
 	for (h = 0; h < 4; h++)
 	{
