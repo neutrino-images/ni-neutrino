@@ -109,6 +109,8 @@ class CLCD4l
 		std::string	m_Event;
 		int		m_Progress;
 		char		m_Duration[15];
+		std::string	m_Start;
+		std::string	m_End;
 
 		std::string	m_font;
 		std::string	m_fgcolor;
