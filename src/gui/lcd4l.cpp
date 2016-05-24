@@ -695,12 +695,13 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	//}
 	else if (parseID == MODE_TS)
 	{
-		Event = "Movieplayer";
-
 		if (!CMoviePlayerGui::getInstance().pretty_name.empty())
 			Event = CMoviePlayerGui::getInstance().pretty_name;
 		else if (CMoviePlayerGui::getInstance().p_movie_info)
 			Event = CMoviePlayerGui::getInstance().p_movie_info->epgTitle;
+
+		if (Event.empty())
+			Event = "MOVIE";
 
 		if (!ModeTshift)
 		{
