@@ -79,7 +79,6 @@ class CLCD4l
 		bool		CompareParseID(uint64_t &i_ParseID);
 		bool		GetLogoName(uint64_t channel_id, std::string channel_name, std::string & logo);
 
-		std::string	Int2String(int iconvert);
 		std::string	hexStr(unsigned char* data);
 		void		strReplace(std::string & orig, const char *fstr, const std::string rstr);
 		bool		WriteFile(const char *file, std::string content = "", bool convert = false);
