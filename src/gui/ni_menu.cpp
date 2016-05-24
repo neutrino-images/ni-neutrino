@@ -368,7 +368,7 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			if (my_system(3, "service", filename, "stop") != 0)
 				printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
 		}
-	remove(flag.c_str());
+		remove(flag.c_str());
 	}
 	return menu_return::RETURN_REPAINT;
 }
