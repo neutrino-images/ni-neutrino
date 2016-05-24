@@ -37,6 +37,7 @@
 #include <neutrino_menue.h>
 
 #include <gui/infoicons_setup.h>
+#include <gui/lcd4l_setup.h>
 #include <gui/netfs_setup.h>
 #include <gui/filebrowser.h>
 #include <gui/plugins_hide.h>
@@ -49,28 +50,6 @@
 #include <system/helpers.h>
 
 #include <driver/screen_max.h>
-
-// lcd4l-support
-#include "gui/lcd4l.h"
-extern CLCD4l *LCD4l;
-
-const CMenuOptionChooser::keyval LCD4L_SUPPORT_OPTIONS[] =
-{
-	{ 0, LOCALE_LCD4L_SUPPORT_OFF },
-	{ 1, LOCALE_LCD4L_SUPPORT_AUTO },
-	{ 2, LOCALE_LCD4L_SUPPORT_ON }
-};
-#define LCD4L_SUPPORT_OPTION_COUNT (sizeof(LCD4L_SUPPORT_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
-
-const CMenuOptionChooser::keyval LCD4L_SKIN_OPTIONS[] =
-{
-	{ 0, LOCALE_LCD4L_SKIN_0 },
-	{ 1, LOCALE_LCD4L_SKIN_1 },
-	{ 2, LOCALE_LCD4L_SKIN_2 },
-	{ 3, LOCALE_LCD4L_SKIN_3 },
-	{ 4, LOCALE_LCD4L_SKIN_4 }
-};
-#define LCD4L_SKIN_OPTION_COUNT (sizeof(LCD4L_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
 typedef struct emu_menu_data_t
 {
@@ -198,17 +177,13 @@ int CNIMenu::exec(CMenuTarget* parent, const std::string &actionkey)
 
 		return menu_return::RETURN_EXIT_ALL;
 	}
-	else if (actionkey=="lcd4l_logodir") {
-		const char *action_str = "lcd4l_logodir";
-		chooserDir(g_settings.lcd4l_logodir, false, action_str);
-		return menu_return::RETURN_REPAINT;
-	}
 
 	res = show();
 
 	return res;
 }
 
+#if 0
 bool CNIMenu::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
 {
 #if 0
@@ -217,16 +192,9 @@ bool CNIMenu::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
 	if (data)
 		val = (*(int *)data);
 #endif
-
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_LCD4L_SUPPORT))
-	{
-		LCD4l->StopLCD4l();
-		if (g_settings.lcd4l_support)
-			LCD4l->StartLCD4l();
-	}
-
 	return false;
 }
+#endif
 
 bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 {
@@ -282,14 +250,6 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 					printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
 				sleep(1);
 				delete hintbox;
-			}
-			else if (strstr(filename, "lcd-weather"))
-			{
-				// do nothing
-			}
-			else if (strstr(filename, "lcd-clock_a"))
-			{
-				// do nothing
 			}
 			else if (strstr(filename, "hddpower"))
 			{
@@ -348,14 +308,6 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			sleep(1);
 			delete hintbox;
 		}
-		else if (strstr(filename, "lcd-weather"))
-		{
-			// do nothing
-		}
-		else if (strstr(filename, "lcd-clock_a"))
-		{
-			// do nothing
-		}
 		else if (strstr(filename, "hddpower"))
 		{
 			// do nothing
@@ -378,7 +330,6 @@ int CNIMenu::show()
 	int shortcut = 1;
 	int cam_shortcut = 1;
 	int plugin_shortcut = 0;
-	int lcd4l_shortcut = 1;
 
 	std::ostringstream buf;
 	char *buffer;
@@ -503,48 +454,8 @@ int CNIMenu::show()
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_CONTROL);
 	ni_menu->addItem(mf);
 
-	// lcd4l menu
-	CMenuWidget* lcd4lMenu = new CMenuWidget(LOCALE_LCD4L_SUPPORT, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_LCD4L_CONTROL);
-		lcd4lMenu->addIntroItems();
-
-		int temp_lcd4l_skin	= g_settings.lcd4l_skin;
-		int flag_lcd4l_weather	= file_exists(FLAG_DIR ".lcd-weather");
-		int flag_lcd4l_clock_a	= file_exists(FLAG_DIR ".lcd-clock_a");
-
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SUPPORT, &g_settings.lcd4l_support, LCD4L_SUPPORT_OPTIONS, LCD4L_SUPPORT_OPTION_COUNT, true, this, CRCInput::RC_red);
-		mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SUPPORT);
-		lcd4lMenu->addItem(mc);
-		lcd4lMenu->addItem(GenericMenuSeparatorLine);
-
-		mf = new CMenuForwarder(LOCALE_LCD4L_LOGODIR, true, g_settings.lcd4l_logodir, this, "lcd4l_logodir", CRCInput::convertDigitToKey(lcd4l_shortcut++));
-		mf->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_LOGODIR);
-		lcd4lMenu->addItem(mf);
-
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_SKIN_OPTIONS, LCD4L_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(lcd4l_shortcut++));
-		mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SKIN);
-		lcd4lMenu->addItem(mc);
-
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN_RADIO, &g_settings.lcd4l_skin_radio, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(lcd4l_shortcut++));
-		mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SKIN_RADIO);
-		lcd4lMenu->addItem(mc);
-
-		CNITouchFileNotifier * lcd_weatherFileNotifier = new CNITouchFileNotifier("lcd-weather");
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_WEATHER, &flag_lcd4l_weather, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, (file_exists("/share/lcd/scripts/weather")), lcd_weatherFileNotifier, CRCInput::convertDigitToKey(lcd4l_shortcut++));
-		mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_WEATHER);
-		lcd4lMenu->addItem(mc);
-
-		CNITouchFileNotifier * lcd_clock_aFileNotifier = new CNITouchFileNotifier("lcd-clock_a");
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_CLOCK_A, &flag_lcd4l_clock_a, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, lcd_clock_aFileNotifier, CRCInput::convertDigitToKey(lcd4l_shortcut++));
-		mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_CLOCK_A);
-		lcd4lMenu->addItem(mc);
-
-		lcd4lMenu->addItem(GenericMenuSeparator);
-
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_CONVERT, &g_settings.lcd4l_convert, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(lcd4l_shortcut++));
-		mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_CONVERT);
-		lcd4lMenu->addItem(mc);
-
-	mf = new CMenuForwarder(LOCALE_LCD4L_SUPPORT, true, NULL, lcd4lMenu, "", CRCInput::convertDigitToKey(shortcut++));
+	CLCD4lSetup lcd4lSetup;
+	mf = new CMenuForwarder(LOCALE_LCD4L_SUPPORT, true, NULL, &lcd4lSetup, "", CRCInput::convertDigitToKey(shortcut++));
 	mf->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SUPPORT);
 	ni_menu->addItem(mf);
 
@@ -557,15 +468,6 @@ int CNIMenu::show()
 	delete ni_menu;
 	delete emuMenu;
 	delete pluginMenu;
-	delete lcd4lMenu;
-
-	// the things to do on exit
-
-	if (g_settings.lcd4l_skin != temp_lcd4l_skin)
-	{
-		g_settings.lcd4l_skin = temp_lcd4l_skin;
-		LCD4l->InitLCD4l();
-	}
 
 	return res;
 }

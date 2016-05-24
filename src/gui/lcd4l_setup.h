@@ -1,8 +1,13 @@
 /*
-	ni_menu
+	lcd4l setup
 
-	(C) 2009-2016 NG-Team
-	(C) 2016 NI-Team
+	Copyright (C) 2012 'defans'
+	Homepage: http://www.bluepeercrew.us/
+
+	Copyright (C) 2012-2016 'vanhofen'
+	Homepage: http://www.neutrino-images.de/
+
+	Modded    (C) 2016 'TangoCash'
 
 	License: GPL
 
@@ -22,27 +27,13 @@
 
 */
 
-#ifndef __ni_menu__
-#define __ni_menu__
+
+#ifndef __lcd4l_setup__
+#define __lcd4l_setup__
 
 #include <gui/widget/menue.h>
 
-#define SCRIPT_DIR		"/etc/init.d/"
-#define EMU_DIR			"/var/bin/"
-#define FLAG_DIR		"/var/etc/"
-#define EMU_START_SCRIPT 	SCRIPT_DIR "emu"
-
-using namespace std;
-
-class CNITouchFileNotifier : public CChangeObserver
-{
-	const char * filename;
-	public:
-		inline CNITouchFileNotifier(const char * file_name) { filename = file_name; };
-		bool changeNotify(const neutrino_locale_t, void * data);
-};
-
-class CNIMenu : public CMenuTarget, CChangeObserver
+class CLCD4lSetup : public CMenuTarget, CChangeObserver
 {
 	private:
 		CMenuOptionChooser *mc;
@@ -52,13 +43,10 @@ class CNIMenu : public CMenuTarget, CChangeObserver
 		int show();
 
 	public:
-		CNIMenu();
-		~CNIMenu();
-		static CNIMenu* getInstance();
+		CLCD4lSetup();
+		~CLCD4lSetup();
 		int exec(CMenuTarget* parent, const std::string &actionkey);
-#if 0
 		virtual bool changeNotify(const neutrino_locale_t OptionName, void * /*data*/);
-#endif
 };
 
 #endif
