@@ -538,6 +538,12 @@ int CNIMenu::show()
 		mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_CLOCK_A);
 		lcd4lMenu->addItem(mc);
 
+		lcd4lMenu->addItem(GenericMenuSeparator);
+
+		mc = new CMenuOptionChooser(LOCALE_LCD4L_CONVERT, &g_settings.lcd4l_convert, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(lcd4l_shortcut++));
+		mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_CONVERT);
+		lcd4lMenu->addItem(mc);
+
 	mf = new CMenuForwarder(LOCALE_LCD4L_SUPPORT, true, NULL, lcd4lMenu, "", CRCInput::convertDigitToKey(shortcut++));
 	mf->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SUPPORT);
 	ni_menu->addItem(mf);

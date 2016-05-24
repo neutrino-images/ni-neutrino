@@ -641,7 +641,7 @@ void CBouquetList::paintItem(int pos)
 			CVFD::getInstance()->showMenuText(0, lname, -1, true);
 		//NI lcd4l-support
 		if(g_settings.lcd4l_support)
-			LCD4l->CreateFile("/tmp/lcd/menu", lname);
+			LCD4l->CreateFile("/tmp/lcd/menu", lname, g_settings.lcd4l_convert);
 	} else {
 		if(!favonly && (npos < (int) Bouquets.size()))
 			iscurrent = !Bouquets[npos]->channelList->isEmpty();

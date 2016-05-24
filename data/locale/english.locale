@@ -950,6 +950,7 @@ languagesetup.head Language / Timezone
 languagesetup.osd OSD Language
 languagesetup.select OSD Language
 lcd4l_clock_a Analog clock in Standby-Mode
+lcd4l_convert Convert umlauts
 lcd4l_logodir Channellogo-Directory
 lcd4l_skin Display-Style
 lcd4l_skin_0 Standard
@@ -1283,6 +1284,7 @@ menu.hint_last_radio Start box on selected channel\nif last mode is Radio
 menu.hint_last_tv Start box on selected channel\nif last mode is TV
 menu.hint_last_use Start box on last used channel
 menu.hint_lcd4l_clock_a Shows an analog clock instead of a digital clock on display at standby
+menu.hint_lcd4l_convert Convert umlauts for the built-in LCD4Linux font
 menu.hint_lcd4l_logodir Logo directory.\nFallback to default on invalid entry.
 menu.hint_lcd4l_skin Switch between modes\nDefault, Big, SysInfo, d-box2, User Defined
 menu.hint_lcd4l_skin_radio Switch the mode, when Radio-Mode is activated

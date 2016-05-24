@@ -2069,7 +2069,7 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 			updateVfd();
 		//NI lcd4l-support
 		if(g_settings.lcd4l_support)
-			LCD4l->CreateFile("/tmp/lcd/menu", chan->getName().c_str());
+			LCD4l->CreateFile("/tmp/lcd/menu", chan->getName().c_str(), g_settings.lcd4l_convert);
 	}
 }
 

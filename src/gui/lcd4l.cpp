@@ -730,7 +730,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	if (m_Event.compare(Event))
 	{
-		WriteFile(EVENT, Event, true);
+		WriteFile(EVENT, Event, g_settings.lcd4l_convert);
 		m_Event = Event;
 	}
 
@@ -768,7 +768,7 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 {
 	bool ret = true;
 
-	if (convert)
+	if (convert) // align to internal lcd4linux font
 	{
 		strReplace(content, "Ã¤", "á");
 		strReplace(content, "Ã¶", "ï");

@@ -222,14 +222,14 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 			CVFD::getInstance()->showMenuText(0, str, -1, true);
 			//NI lcd4l-support
 			if(g_settings.lcd4l_support)
-				LCD4l->CreateFile("/tmp/lcd/menu", str);
+				LCD4l->CreateFile("/tmp/lcd/menu", str, g_settings.lcd4l_convert);
 		} 
 		else
 		{
 			CVFD::getInstance()->showMenuText(0, left_text, -1, true);
 			//NI lcd4l-support
 			if(g_settings.lcd4l_support)
-				LCD4l->CreateFile("/tmp/lcd/menu", left_text);
+				LCD4l->CreateFile("/tmp/lcd/menu", left_text, g_settings.lcd4l_convert);
 		}
 	}
 	

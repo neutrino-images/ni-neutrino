@@ -47,7 +47,7 @@ class CLCD4l
 		void	StopLCD4l();
 		void	SwitchLCD4l();
 
-		int	CreateFile(const char *file, std::string content = "", bool convert = true);
+		int	CreateFile(const char *file, std::string content = "", bool convert = false);
 		int	RemoveFile(const char *file);
 
 	private:

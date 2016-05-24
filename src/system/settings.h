@@ -765,6 +765,7 @@ struct SNeutrinoSettings
 	std::string	lcd4l_logodir;
 	int		lcd4l_skin;
 	int		lcd4l_skin_radio;
+	int		lcd4l_convert;
 	int		ca_init;
 	int		show_menu_hints_line;
 	int		inetradio_autostart;
