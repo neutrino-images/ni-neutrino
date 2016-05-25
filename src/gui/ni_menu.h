@@ -29,7 +29,6 @@
 
 #define SCRIPT_DIR		"/etc/init.d/"
 #define EMU_DIR			"/var/bin/"
-#define FLAG_DIR		"/var/etc/"
 #define EMU_START_SCRIPT 	SCRIPT_DIR "emu"
 
 using namespace std;

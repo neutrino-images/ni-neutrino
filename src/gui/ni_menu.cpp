@@ -200,7 +200,7 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 {
 	std::ostringstream buf;
 
-	buf << FLAG_DIR << "." << filename;
+	buf << FLAGDIR << "/." << filename;
 	std::string flag = buf.str();
 
 	if ((*(int *)data) != 0)
@@ -250,10 +250,6 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 					printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
 				sleep(1);
 				delete hintbox;
-			}
-			else if (strstr(filename, "hddpower"))
-			{
-				// do nothing
 			}
 			else
 			{
@@ -307,10 +303,6 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 				printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
 			sleep(1);
 			delete hintbox;
-		}
-		else if (strstr(filename, "hddpower"))
-		{
-			// do nothing
 		}
 		else
 		{
