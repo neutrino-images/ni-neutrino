@@ -814,6 +814,14 @@ void CInfoViewerBB::paint_ca_icons(int caid, const char *icon, int &icon_space_o
 
 void CInfoViewerBB::showIcon_CA_Status(int notfirst)
 {
+	//NI - check ecm.info
+	int acaid = 0;
+	bool got_ecmInfo = File_copy("/tmp/ecm.info", "/tmp/ecm.info.tmp");
+	if (got_ecmInfo) {
+		g_InfoViewer->md5_ecmInfo = filehash((char *)"/tmp/ecm.info.tmp");
+		acaid = parse_ecmInfo("/tmp/ecm.info.tmp");
+	}
+
 	if (g_settings.infobar_casystem_display == 3)
 		return;
 	if(NeutrinoMessages::mode_ts == CNeutrinoApp::getInstance()->getMode() && !CMoviePlayerGui::getInstance().timeshift){
@@ -865,15 +873,9 @@ void CInfoViewerBB::showIcon_CA_Status(int notfirst)
 			icon_space_offset = 0;
 		}
 #endif
-		//NI - check ecm.info
-		int acaid = 0;
-		if (File_copy("/tmp/ecm.info", "/tmp/ecm.info.tmp")) {
-			g_InfoViewer->md5_ecmInfo = filehash((char *)"/tmp/ecm.info.tmp");
-			acaid = parse_ecmInfo("/tmp/ecm.info.tmp");
-		}
-		else
-			if(camCI)
-				decode = CARD;
+		//NI
+		if (!got_ecmInfo && camCI)
+			decode = CARD;
 
 		//NI - map betacrypt to nagra
 		if((acaid & 0xFF00)== 0x1700 && (caids[3]& 0xFF00) == 0x1800)
@@ -1139,7 +1141,7 @@ int CInfoViewerBB::parse_ecmInfo(const char * file)
 			}
 		}
 		fclose(fh);
-		remove("/tmp/ecm.info.tmp");
+		remove(file);
 		if(buffer)
 			free(buffer);
 	}
