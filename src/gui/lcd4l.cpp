@@ -240,9 +240,9 @@ void* CLCD4l::LCD4lProc(void* arg)
 			if (g_settings.lcd4l_support == 1) // automatic
 			{
 #endif
-			//printf("[CLCD4l] %s: waiting for lcd4linux\n", __FUNCTION__);
-			sleep(10);
-			continue;
+				//printf("[CLCD4l] %s: waiting for lcd4linux\n", __FUNCTION__);
+				sleep(10);
+				continue;
 #ifdef NI
 			}
 #endif
@@ -480,7 +480,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		{
 			if (ModeTshift)
 				Service = g_Locale->getText(LOCALE_RECORDINGMENU_TIMESHIFT);
-			else if (CMoviePlayerGui::getInstance().p_movie_info)
+			else if (!CMoviePlayerGui::getInstance().p_movie_info->epgChannel.empty())
 				Service = CMoviePlayerGui::getInstance().p_movie_info->epgChannel;
 
 			if (Service.empty())
@@ -498,14 +498,9 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 					Logo = ICONSDIR "/" NEUTRINO_ICON_PAUSE ICONSEXT;
 					break;
 				case 3: /* play */
-					if (ModeTshift) /* show channel-logo */
-					{
-						GetLogoName(
-							CMoviePlayerGui::getInstance().p_movie_info->epgId,
-							CMoviePlayerGui::getInstance().p_movie_info->epgChannel,
-							Logo);
-					}
-					else /* show play-icon */
+					if (!GetLogoName(CMoviePlayerGui::getInstance().p_movie_info->epgId,
+							 CMoviePlayerGui::getInstance().p_movie_info->epgChannel,
+							 Logo))
 						Logo = ICONSDIR "/" NEUTRINO_ICON_PLAY ICONSEXT;
 					break;
 				default: /* show movieplayer-icon */
@@ -697,7 +692,8 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	{
 		if (!CMoviePlayerGui::getInstance().pretty_name.empty())
 			Event = CMoviePlayerGui::getInstance().pretty_name;
-		else if (CMoviePlayerGui::getInstance().p_movie_info)
+
+		if (!CMoviePlayerGui::getInstance().p_movie_info->epgTitle.empty())
 			Event = CMoviePlayerGui::getInstance().p_movie_info->epgTitle;
 
 		if (Event.empty())
