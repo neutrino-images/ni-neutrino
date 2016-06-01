@@ -2,9 +2,10 @@
 
 . /etc/init.d/globals
 
-DATE=$(hostname)_$(date +%Y-%m-%d_%H-%M-%S)
+HOST=$(hostname)
+DATE=$(date +%Y-%m-%d_%H-%M-%S)
 USRF="/var/tuxbox/config/tobackup.conf"
-BAKF="$1/settings_$DATE.tar.gz"
+BAKF="$1/settings_${HOST}_${DATE}.tar.gz"
 
 TOBACKUP="\
 	/share/tuxbox/neutrino/flex/flex_eigene_scripte.conf \
