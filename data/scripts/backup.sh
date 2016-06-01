@@ -17,9 +17,18 @@ TOBACKUP="\
 	/var/tuxbox/config/zapit/ \
 	/var/tuxbox/config/doscam.* \
 	/var/tuxbox/config/neutrino.conf \
+	/var/tuxbox/config/moviebrowser.conf \
+	/var/tuxbox/config/settingsupdate.conf \
 	/var/tuxbox/config/oscam.* \
 	/var/tuxbox/config/oscammon.conf \
 	/var/tuxbox/config/scan.conf \
+	/var/tuxbox/config/pr-auto-timer.* \
+	/var/tuxbox/fonts/ \
+	/var/tuxbox/icons/ \
+	/var/tuxbox/locale/ \
+	/var/tuxbox/plugins/ \
+	/var/tuxbox/themes/ \
+	/var/tuxbox/webtv/ \
 	/var/bin/ \
 	/var/etc/ \
 	/var/keys/ \
