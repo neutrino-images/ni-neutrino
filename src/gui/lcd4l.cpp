@@ -45,6 +45,7 @@
 
 #include <driver/record.h>
 #include <driver/audioplay.h>
+#include <zapit/capmt.h>
 #include <zapit/zapit.h>
 #include <gui/movieplayer.h>
 #include <eitd/sectionsd.h>
@@ -74,6 +75,7 @@ extern CRemoteControl *g_RemoteControl;
 #define MODE_TSHIFT		LCD_DATADIR "mode_tshift"
 #define MODE_TIMER		LCD_DATADIR "mode_timer"
 #define MODE_ECM		LCD_DATADIR "mode_ecm"
+#define MODE_CAM		LCD_DATADIR "mode_cam"
 #ifdef BP
 #define MODE_NEWS		LCD_DATADIR "mode_news"
 #endif
@@ -194,6 +196,7 @@ void CLCD4l::Init()
 	m_ModeTshift	= -1;
 	m_ModeTimer	= -1;
 	m_ModeEcm	= -1;
+	m_ModeCam	= -1;
 #ifdef BP
 	m_ModeNews	= -1;
 #endif
@@ -405,6 +408,19 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	{
 		WriteFile(MODE_ECM, ModeEcm ? "on" : "off");
 		m_ModeEcm = ModeEcm;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	int ModeCam = 0;
+
+	if (CCamManager::getInstance()->getUseCI())
+		ModeCam = 1;
+
+	if (m_ModeCam != ModeCam)
+	{
+		WriteFile(MODE_CAM, ModeCam ? "on" : "off");
+		m_ModeCam = ModeCam;
 	}
 
 	/* ----------------------------------------------------------------- */
