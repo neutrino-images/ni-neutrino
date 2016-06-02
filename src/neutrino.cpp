@@ -687,6 +687,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.recording_slow_warning	   = configfile.getBool("recording_slow_warning"     , false); //NI
 	g_settings.recording_fill_warning	   = configfile.getInt32("recording_fill_warning", 95); //NI
 	g_settings.recording_startstop_msg	   = configfile.getBool("recording_startstop_msg"     , true);
+	g_settings.recording_already_found_check   = configfile.getBool("recording_already_found_check", false);
 
 	// default plugin for movieplayer
 	g_settings.movieplayer_plugin = configfile.getString( "movieplayer_plugin", "---" );
@@ -1249,6 +1250,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setBool  ("recording_slow_warning"             , g_settings.recording_slow_warning         );
 	configfile.setInt32 ("recording_fill_warning"             , g_settings.recording_fill_warning         ); //NI
 	configfile.setBool  ("recording_startstop_msg"             , g_settings.recording_startstop_msg       );
+	configfile.setBool  ("recording_already_found_check"      , g_settings.recording_already_found_check  );
 
 	// default plugin for movieplayer
 	configfile.setString ( "movieplayer_plugin", g_settings.movieplayer_plugin );
