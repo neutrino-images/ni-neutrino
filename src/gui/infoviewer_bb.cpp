@@ -816,7 +816,7 @@ void CInfoViewerBB::showIcon_CA_Status(int notfirst)
 {
 	//NI
 	int acaid = 0;
-	if (g_settings.show_ecm)
+	if (g_settings.show_ecm && notfirst)
 		acaid = check_ecmInfo();
 
 	if (g_settings.infobar_casystem_display == 3){
