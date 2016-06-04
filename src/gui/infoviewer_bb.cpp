@@ -1152,7 +1152,7 @@ int CInfoViewerBB::parse_ecmInfo(const char * file)
 			}
 		}
 		fclose(fh);
-		remove("/tmp/ecm.info.tmp");
+		remove(file);
 		if(buffer)
 			free(buffer);
 	}
