@@ -453,6 +453,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.ci_save_pincode = configfile.getInt32("ci_save_pincode", 0);
 	g_settings.ci_pincode = configfile.getString("ci_pincode", "");
 	g_settings.ci_tuner = configfile.getInt32("ci_tuner", -1);
+	g_settings.ci_rec_zapto = configfile.getInt32("ci_rec_zapto", 0); //NI
 
 #ifndef CPU_FREQ
 	g_settings.cpufreq = 0;
@@ -686,6 +687,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.recording_slow_warning	   = configfile.getBool("recording_slow_warning"     , false); //NI
 	g_settings.recording_fill_warning	   = configfile.getInt32("recording_fill_warning", 95); //NI
 	g_settings.recording_startstop_msg	   = configfile.getBool("recording_startstop_msg"     , true);
+	g_settings.recording_already_found_check   = configfile.getBool("recording_already_found_check", false);
 
 	// default plugin for movieplayer
 	g_settings.movieplayer_plugin = configfile.getString( "movieplayer_plugin", "---" );
@@ -1071,6 +1073,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("ci_save_pincode", g_settings.ci_save_pincode);
 	configfile.setString("ci_pincode", g_settings.ci_pincode);
 	configfile.setInt32("ci_tuner", g_settings.ci_tuner);
+	configfile.setInt32("ci_rec_zapto", g_settings.ci_rec_zapto); //NI
 
 	configfile.setInt32( "make_hd_list", g_settings.make_hd_list);
 	configfile.setInt32( "make_webtv_list", g_settings.make_webtv_list);
@@ -1247,6 +1250,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setBool  ("recording_slow_warning"             , g_settings.recording_slow_warning         );
 	configfile.setInt32 ("recording_fill_warning"             , g_settings.recording_fill_warning         ); //NI
 	configfile.setBool  ("recording_startstop_msg"             , g_settings.recording_startstop_msg       );
+	configfile.setBool  ("recording_already_found_check"      , g_settings.recording_already_found_check  );
 
 	// default plugin for movieplayer
 	configfile.setString ( "movieplayer_plugin", g_settings.movieplayer_plugin );
@@ -3252,7 +3256,12 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 			if((eventinfo->channel_id != live_channel_id) && !(SAME_TRANSPONDER(live_channel_id, eventinfo->channel_id)))
 				zapTo(eventinfo->channel_id);
 		}
-
+		//NI zap to CI Channel
+		if(g_settings.ci_rec_zapto){
+			CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(eventinfo->channel_id);
+			if (ch && ch->bUseCI && (eventinfo->channel_id != live_channel_id))
+				zapTo(eventinfo->channel_id);
+		}
 		if (g_settings.recording_type != CNeutrinoApp::RECORDING_OFF) {
 			CRecordManager::getInstance()->Record(eventinfo);
 			autoshift = CRecordManager::getInstance()->TimeshiftOnly();

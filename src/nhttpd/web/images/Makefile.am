@@ -109,8 +109,7 @@ install_DATA +=	chmod.png \
 		work.gif
 
 # NI-yWeb
-install_DATA += accept.png \
-		blank.png \
+install_DATA += blank.png \
 		cancel.png \
 		colored_bar.png \
 		server_add.png \

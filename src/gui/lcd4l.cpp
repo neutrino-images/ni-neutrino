@@ -45,6 +45,7 @@
 
 #include <driver/record.h>
 #include <driver/audioplay.h>
+#include <zapit/capmt.h>
 #include <zapit/zapit.h>
 #include <gui/movieplayer.h>
 #include <eitd/sectionsd.h>
@@ -74,6 +75,7 @@ extern CRemoteControl *g_RemoteControl;
 #define MODE_TSHIFT		LCD_DATADIR "mode_tshift"
 #define MODE_TIMER		LCD_DATADIR "mode_timer"
 #define MODE_ECM		LCD_DATADIR "mode_ecm"
+#define MODE_CAM		LCD_DATADIR "mode_cam"
 #ifdef BP
 #define MODE_NEWS		LCD_DATADIR "mode_news"
 #endif
@@ -194,6 +196,7 @@ void CLCD4l::Init()
 	m_ModeTshift	= -1;
 	m_ModeTimer	= -1;
 	m_ModeEcm	= -1;
+	m_ModeCam	= -1;
 #ifdef BP
 	m_ModeNews	= -1;
 #endif
@@ -240,9 +243,9 @@ void* CLCD4l::LCD4lProc(void* arg)
 			if (g_settings.lcd4l_support == 1) // automatic
 			{
 #endif
-			//printf("[CLCD4l] %s: waiting for lcd4linux\n", __FUNCTION__);
-			sleep(10);
-			continue;
+				//printf("[CLCD4l] %s: waiting for lcd4linux\n", __FUNCTION__);
+				sleep(10);
+				continue;
 #ifdef NI
 			}
 #endif
@@ -409,6 +412,19 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	/* ----------------------------------------------------------------- */
 
+	int ModeCam = 0;
+
+	if (CCamManager::getInstance()->getUseCI())
+		ModeCam = 1;
+
+	if (m_ModeCam != ModeCam)
+	{
+		WriteFile(MODE_CAM, ModeCam ? "on" : "off");
+		m_ModeCam = ModeCam;
+	}
+
+	/* ----------------------------------------------------------------- */
+
 #ifdef BP
 	int ModeNews = 0;
 
@@ -481,7 +497,10 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 			if (ModeTshift)
 				Service = g_Locale->getText(LOCALE_RECORDINGMENU_TIMESHIFT);
 			else if (CMoviePlayerGui::getInstance().p_movie_info)
-				Service = CMoviePlayerGui::getInstance().p_movie_info->epgChannel;
+			{
+				if (!CMoviePlayerGui::getInstance().p_movie_info->epgChannel.empty())
+					Service = CMoviePlayerGui::getInstance().p_movie_info->epgChannel;
+			}
 
 			if (Service.empty())
 				Service = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
@@ -498,15 +517,13 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 					Logo = ICONSDIR "/" NEUTRINO_ICON_PAUSE ICONSEXT;
 					break;
 				case 3: /* play */
-					if (ModeTshift) /* show channel-logo */
+					if (CMoviePlayerGui::getInstance().p_movie_info)
 					{
-						GetLogoName(
-							CMoviePlayerGui::getInstance().p_movie_info->epgId,
-							CMoviePlayerGui::getInstance().p_movie_info->epgChannel,
-							Logo);
+						if (!GetLogoName(CMoviePlayerGui::getInstance().p_movie_info->epgId,
+								 CMoviePlayerGui::getInstance().p_movie_info->epgChannel,
+								 Logo))
+							Logo = ICONSDIR "/" NEUTRINO_ICON_PLAY ICONSEXT;
 					}
-					else /* show play-icon */
-						Logo = ICONSDIR "/" NEUTRINO_ICON_PLAY ICONSEXT;
 					break;
 				default: /* show movieplayer-icon */
 					Logo = ICONSDIR "/" NEUTRINO_ICON_MOVIEPLAYER ICONSEXT;
@@ -695,10 +712,13 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	//}
 	else if (parseID == MODE_TS)
 	{
-		if (!CMoviePlayerGui::getInstance().pretty_name.empty())
+		if (CMoviePlayerGui::getInstance().p_movie_info)
+		{
+			if (!CMoviePlayerGui::getInstance().p_movie_info->epgTitle.empty())
+				Event = CMoviePlayerGui::getInstance().p_movie_info->epgTitle;
+		}
+		else if (!CMoviePlayerGui::getInstance().pretty_name.empty())
 			Event = CMoviePlayerGui::getInstance().pretty_name;
-		else if (CMoviePlayerGui::getInstance().p_movie_info)
-			Event = CMoviePlayerGui::getInstance().p_movie_info->epgTitle;
 
 		if (Event.empty())
 			Event = "MOVIE";
