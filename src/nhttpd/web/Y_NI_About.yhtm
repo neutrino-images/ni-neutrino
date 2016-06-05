@@ -77,7 +77,8 @@ jQuery(document).ready(function(){
 				{=ini-get:/.version;imagename=}<br/>
 				<abbr class="version" title="{=L:ni.about.your_image=}">
 				<script type="text/javascript">getVersion("{=ini-get:/.version;version=}");</script><br/>
-				NI: {=ini-get:/.version;origin-commit=}, CST: <a href="http://git.c00lstreamtech.de/?p=cst-public-gui-neutrino.git;a=commit;h={=ini-get:/.version;remote-commit=}" class="exlink" target="_blank" title="Coolstream GIT repositories">{=ini-get:/.version;remote-commit=}</a><br/>
+				NI: <a href="https://bitbucket.org/neutrino-images/ni-neutrino-hd/commits/{=ini-get:/.version;origin-commit=}" class="exlink" target="_blank" title="NI-Neutrino-HD Sources">{=ini-get:/.version;origin-commit=}</a>;
+				CST: <a href="http://git.c00lstreamtech.de/?p=cst-public-gui-neutrino.git;a=commit;h={=ini-get:/.version;remote-commit=}" class="exlink" target="_blank" title="Coolstream GIT repositories">{=ini-get:/.version;remote-commit=}</a><br/>
 				<script type="text/javascript">getBuild("{=ini-get:/.version;version=}");</script><br/>
 				</abbr>
 				{=ini-get:/.version;creator=}<br/>
