@@ -816,12 +816,11 @@ void CInfoViewerBB::showIcon_CA_Status(int notfirst)
 {
 	//NI
 	int acaid = 0;
-	if (g_settings.show_ecm && notfirst)
+	if (g_settings.show_ecm && (notfirst || g_settings.infobar_casystem_display > 1)) //bad mess :(
 		acaid = check_ecmInfo();
 
-	if (g_settings.infobar_casystem_display == 3){
+	if (g_settings.infobar_casystem_display == 3)
 		return;
-	}
 	if(NeutrinoMessages::mode_ts == CNeutrinoApp::getInstance()->getMode() && !CMoviePlayerGui::getInstance().timeshift){
 		if (g_settings.infobar_casystem_display == 2) {
 			fta = true;
