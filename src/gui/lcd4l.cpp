@@ -517,13 +517,15 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 					Logo = ICONSDIR "/" NEUTRINO_ICON_PAUSE ICONSEXT;
 					break;
 				case 3: /* play */
-					if (CMoviePlayerGui::getInstance().p_movie_info)
+					if (ModeTshift && CMoviePlayerGui::getInstance().p_movie_info) /* show channel-logo */
 					{
 						if (!GetLogoName(CMoviePlayerGui::getInstance().p_movie_info->epgId,
 								 CMoviePlayerGui::getInstance().p_movie_info->epgChannel,
 								 Logo))
 							Logo = ICONSDIR "/" NEUTRINO_ICON_PLAY ICONSEXT;
 					}
+					else /* show play-icon */
+						Logo = ICONSDIR "/" NEUTRINO_ICON_PLAY ICONSEXT;
 					break;
 				default: /* show movieplayer-icon */
 					Logo = ICONSDIR "/" NEUTRINO_ICON_MOVIEPLAYER ICONSEXT;
