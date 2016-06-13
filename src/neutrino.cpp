@@ -541,10 +541,17 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.auto_subs = configfile.getInt32( "auto_subs", 0 );
 
 	for(int i = 0; i < 3; i++) {
+		//NI
+		std::string _lang = "none";
+		switch (i) {
+			case 0: _lang = "German" ; break;
+			case 1: _lang = "English"; break;
+			case 2: _lang = "French" ; break;
+		}
 		sprintf(cfg_key, "pref_lang_%d", i);
-		g_settings.pref_lang[i] = configfile.getString(cfg_key, (i == 0) ? "German" : "none"); //NI
+		g_settings.pref_lang[i] = configfile.getString(cfg_key, _lang); //NI
 		sprintf(cfg_key, "pref_subs_%d", i);
-		g_settings.pref_subs[i] = configfile.getString(cfg_key, (i == 0) ? "German" : "none"); //NI
+		g_settings.pref_subs[i] = configfile.getString(cfg_key, _lang); //NI
 	}
 	g_settings.subs_charset = configfile.getString("subs_charset", "CP1252");
 	g_settings.zap_cycle = configfile.getInt32( "zap_cycle", 0 );
