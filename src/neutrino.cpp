@@ -759,8 +759,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.channellist_show_numbers = configfile.getInt32("channellist_show_numbers", 1);
 
 	//screen configuration
-	g_settings.screen_xres = configfile.getInt32("screen_xres", 112); //NI
-	g_settings.screen_yres = configfile.getInt32("screen_yres", 112); //NI
+	g_settings.screen_xres = configfile.getInt32("screen_xres", 105); //NI
+	g_settings.screen_yres = configfile.getInt32("screen_yres", 105); //NI
 	g_settings.screen_StartX_crt = configfile.getInt32( "screen_StartX_crt", DEFAULT_X_START_SD);
 	g_settings.screen_StartY_crt = configfile.getInt32( "screen_StartY_crt", DEFAULT_Y_START_SD );
 	g_settings.screen_EndX_crt = configfile.getInt32( "screen_EndX_crt", DEFAULT_X_END_SD);
