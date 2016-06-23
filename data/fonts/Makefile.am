@@ -1,7 +1,11 @@
 installdir = $(FONTDIR)
 
 install_DATA = \
-	md_khmurabi_10.ttf \
+	SFFourcheCondensedItalic.ttf \
+	ubuntu-l-webfont.ttf \
+	ubuntu-r-webfont.ttf \
+	ubuntumono-b-webfont.ttf \
+	Roboto-Regular.ttf \
 	micron_bold.ttf \
 	micron.ttf \
 	pakenham.ttf \
@@ -15,5 +19,5 @@ endif
 #NI
 install-data-hook:
 	cd $(DESTDIR)$(FONTDIR); \
-		mv md_khmurabi_10.ttf neutrino.ttf; \
+		mv Roboto-Regular.ttf neutrino.ttf; \
 		ln -sf neutrino.ttf tuxtxt.ttf
