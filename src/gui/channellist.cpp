@@ -2265,6 +2265,10 @@ bool CChannelList::SameTP(CZapitChannel * channel)
 		if (IS_WEBTV(channel->getChannelID()))
 			return true;
 
+		//NI
+		if(channel->bUseCI && CRecordManager::getInstance()->getUseCI())
+			return false;
+
 		iscurrent = CFEManager::getInstance()->canTune(channel);
 	}
 	return iscurrent;

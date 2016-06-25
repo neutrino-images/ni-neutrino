@@ -233,6 +233,7 @@ class CRecordManager : public CMenuTarget /*, public CChangeObserver*/
 		void StartTimeshift();
 		int GetRecordMode(const t_channel_id channel_id=0);
 		CRecordInstance* getRecordInstance(std::string file);
+		CRecordInstance* getUseCI(); //NI
 		// old code
 #if 0
 		bool MountDirectory(const char *recordingDir);
