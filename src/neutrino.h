@@ -121,7 +121,7 @@ private:
 	void getAnnounceEpgName(CTimerd::RecordingInfo * eventinfo, std::string &name);
 
 	//NI void ExitRun(const bool write_si = true, int retcode = 0);
-	void RealRun(CMenuWidget &mainSettings);
+	void RealRun();
 	void InitZapper();
 	void InitTimerdClient();
 	void InitZapitClient();
