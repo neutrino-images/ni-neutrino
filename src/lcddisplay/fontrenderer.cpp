@@ -69,7 +69,7 @@ void LcdFontRenderClass::InitFontCache()
 {
 	printf("[LCDFONT] Intializing font cache...");
 	fflush(stdout);
-	if (FTC_Manager_New(library, 3, 0, 0, myFTC_Face_Requester, this, &cacheManager))
+	if (FTC_Manager_New(library, 0, 0, 0, myFTC_Face_Requester, this, &cacheManager))
 	{
 		printf(" manager failed!\n");
 		return;
