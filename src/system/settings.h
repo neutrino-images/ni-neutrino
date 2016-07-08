@@ -291,6 +291,7 @@ struct SNeutrinoSettings
 #endif
 	int ci_ignore_messages;
 	int ci_save_pincode;
+	int ci_check_live;
 	int ci_tuner;
 	int ci_rec_zapto; //NI
 	int ci_mode; //NI
