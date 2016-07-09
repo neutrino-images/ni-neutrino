@@ -58,7 +58,7 @@ int CHTTPTool::show_progress( void *clientp, double dltotal, double dlnow, doubl
 	return 0;
 }
 //#define DEBUG
-bool CHTTPTool::downloadFile(const std::string & URL, const char * const downloadTarget, int globalProgressEnd)
+bool CHTTPTool::downloadFile(const std::string & URL, const char * const downloadTarget, int globalProgressEnd,/*NI*/int connecttimeout,/*NI*/int timeout)
 {
 	CURL *curl;
 	CURLcode res;
@@ -90,8 +90,8 @@ printf("url is %s\n", URL.c_str());
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent.c_str());
 		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1800);
-		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout); //NI
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, connecttimeout); //NI
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
 #ifdef DEBUG
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
