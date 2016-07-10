@@ -45,6 +45,8 @@
 #include <gui/widget/messagebox.h>
 #include <gui/timerlist.h>
 
+#include <zapit/zapit.h> //NI
+
 #include <global.h>
 #include <neutrino.h>
 
@@ -98,14 +100,18 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 #endif
 							return menu_return::RETURN_REPAINT;
 						}
-						if (!SAME_TRANSPONDER(channel_id, i->channel_id)) {
+						if (!SAME_TRANSPONDER(channel_id, i->channel_id) ||/*NI*/CZapit::getInstance()->getUseChannelFilter()) {
 							if (!askUserOnTimerConflict(start, stop, channel_id))
 								return menu_return::RETURN_REPAINT;
+							else
+								break; //NI - show conflicts only once
 						}
 					}
+				//NI
+				CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(channel_id);
 
 				if (g_Timerd->addRecordTimerEvent(channel_id, e->startTime, e->startTime + e->duration, e->eventID,
-								  e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, recDir, true) == -1) {
+								  e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, recDir, true,/*NI*/ch->bUseCI) == -1) {
 					//FIXME -- no error handling, but this shouldn't happen ...
 				} else {
 #if 0

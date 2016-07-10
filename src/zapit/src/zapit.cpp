@@ -2469,6 +2469,11 @@ static bool zapit_parse_command(CBasicMessage::Header &rmsg, int connfd)
 {
 	return CZapit::getInstance()->ParseCommand(rmsg, connfd);
 }
+//NI
+bool CZapit::getUseChannelFilter()
+{
+	return CCamManager::getInstance()->getChannelFilter();
+}
 
 void CZapit::run()
 {

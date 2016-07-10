@@ -737,6 +737,7 @@ void CTimerList::paintItem(int pos)
 		case CTimerd::TIMER_RECORD :
 		{
 			zAddData = convertChannelId2String(timer.channel_id); // UTF-8
+			zAddData += timer.channel_ci?"(CI)":""; //NI
 			if (timer.apids != TIMERD_APIDS_CONF)
 			{
 				std::string sep = "";
@@ -1263,7 +1264,11 @@ int CTimerList::newTimer()
 
 bool askUserOnTimerConflict(time_t announceTime, time_t stopTime, t_channel_id channel_id)
 {
-	if (CFEManager::getInstance()->getEnabledCount() == 1) {
+	//NI
+	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
+	bool useCI = channel->bUseCI;
+
+	if (CFEManager::getInstance()->getEnabledCount() == 1 || /*NI*/useCI) {
 		CTimerdClient Timer;
 		CTimerd::TimerList overlappingTimers = Timer.getOverlappingTimers(announceTime,stopTime);
 		//printf("[CTimerdClient] attention\n%d\t%d\t%d conflicts with:\n",timerNew.announceTime,timerNew.alarmTime,timerNew.stopTime);
@@ -1272,7 +1277,10 @@ bool askUserOnTimerConflict(time_t announceTime, time_t stopTime, t_channel_id c
 		if (channel_id) {
 			CTimerd::TimerList::iterator i;
 			for (i = overlappingTimers.begin(); i != overlappingTimers.end(); i++)
-				if ((i->eventType != CTimerd::TIMER_RECORD || !SAME_TRANSPONDER(channel_id, i->channel_id)))
+				//NI if ((i->eventType != CTimerd::TIMER_RECORD || !SAME_TRANSPONDER(channel_id, i->channel_id)))
+				if ((i->eventType != CTimerd::TIMER_RECORD ||
+				    (!SAME_TRANSPONDER(channel_id, i->channel_id) && !useCI) ||
+				    (useCI && i->channel_ci)))
 					break;
 			if (i == overlappingTimers.end())
 				return true; // yes, add timer
@@ -1283,6 +1291,10 @@ bool askUserOnTimerConflict(time_t announceTime, time_t stopTime, t_channel_id c
 		for (CTimerd::TimerList::iterator it = overlappingTimers.begin();
 				it != overlappingTimers.end(); ++it)
 		{
+			//NI
+			if(useCI && !it->channel_ci)
+				continue;
+
 			timerbuf += CTimerList::convertTimerType2String(it->eventType);
 			timerbuf += " (";
 			timerbuf += CTimerList::convertChannelId2String(it->channel_id); // UTF-8

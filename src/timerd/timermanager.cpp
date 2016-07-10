@@ -1134,13 +1134,14 @@ CTimerEvent_Record::CTimerEvent_Record(time_t announce_Time, time_t alarm_Time, 
 				       event_id_t epgID,
 				       time_t epg_starttime, unsigned char apids,
 				       CTimerd::CTimerEventRepeat evrepeat,
-				       uint32_t repeatcount, const std::string &recDir) :
+				       uint32_t repeatcount, const std::string &recDir,/*NI*/bool channel_ci) :
 	CTimerEvent(getEventType(), announce_Time, alarm_Time, stop_Time, evrepeat, repeatcount)
 {
 	eventInfo.epgID = epgID;
 	eventInfo.epg_starttime = epg_starttime;
 	eventInfo.channel_id = channel_id;
 	eventInfo.apids = apids;
+	eventInfo.channel_ci = channel_ci; //NI
 	recordingDir = recDir;
 	epgTitle="";
 	CShortEPGData epgdata;
@@ -1172,6 +1173,9 @@ CTimerEvent_Record::CTimerEvent_Record(CConfigFile *config, int iId):
 
 	epgTitle = config->getString("EPG_TITLE_"+id);
 	dprintf("read EPG_TITLE_%s %s (%p)\n",id.c_str(),epgTitle.c_str(),&epgTitle);
+	//NI
+	eventInfo.channel_ci = config->getBool("EVENT_INFO_CHANNEL_CI_"+id);
+	dprintf("read EVENT_INFO_CHANNEL_CI_%s %i\n",id.c_str(),eventInfo.channel_ci);
 }
 //------------------------------------------------------------
 void CTimerEvent_Record::fireEvent()
@@ -1238,6 +1242,9 @@ void CTimerEvent_Record::saveToConfig(CConfigFile *config)
 
 	config->setString("EPG_TITLE_"+id,epgTitle);
 	dprintf("set EPG_TITLE_%s to %s (%p)\n",id.c_str(),epgTitle.c_str(), &epgTitle);
+	//NI
+	config->setBool("EVENT_INFO_CHANNEL_CI_"+id, eventInfo.channel_ci);
+	dprintf("set EVENT_INFO_CHANNEL_CI_%s to %i\n",id.c_str(),eventInfo.channel_ci);
 }
 //------------------------------------------------------------
 void CTimerEvent_Record::Reschedule()
