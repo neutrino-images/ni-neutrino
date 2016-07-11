@@ -330,6 +330,7 @@ int CTimerdClient::addTimerEvent( CTimerd::CTimerEventTypes evType, void* data, 
 		tri.epg_starttime	= ri->epg_starttime;
 		tri.epgID = ri->epgID;
 		tri.recordingSafety = ri->recordingSafety;
+		tri.channel_ci = ri->channel_ci; //NI
 		strncpy(tri.recordingDir, ri->recordingDir, RECORD_DIR_MAXLEN-1);
 		length = sizeof( CTimerd::TransferRecordingInfo);
 		data = &tri;
@@ -418,7 +419,6 @@ CTimerd::TimerList CTimerdClient::getOverlappingTimers(time_t& startTime, time_t
 	}
 	return overlapping;
 }
-
 //-------------------------------------------------------------------------
 
 bool CTimerdClient::shutdown()

@@ -273,5 +273,7 @@ class CZapit : public OpenThreads::Thread
 		void unlockPlayBack(const bool sendpmt = true);
 		void Rezap();
 		std::list<std::string> *GetWebTVXML(void) { return webtv_xml; }
+		//NI
+		bool getUseChannelFilter();
 };
 #endif /* __zapit_h__ */

@@ -223,6 +223,11 @@ std::string CIMDB::googleIMDb(std::string searchStr)
 	std::string httpString	= "imdb+";
 	char* searchStr_	= (char*) searchStr.c_str();
 
+	m.clear();
+	unlink(soutfile.c_str());
+	unlink(IMDbAPI.c_str());
+	unlink(posterfile.c_str());
+
 	while (*searchStr_!=0)
 	{
 		if ( (*searchStr_==' ') )
@@ -293,7 +298,7 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 
 	std::string url = IMDburl + imdb_ID;
 
-	if(httpTool.downloadFile(url, IMDbAPI.c_str()))
+	if(httpTool.downloadFile(url, IMDbAPI.c_str(), -1, /*connecttimeout*/2, /*timeout*/5))
 	{
 		initMap(m);
 
@@ -306,13 +311,17 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 		//	std::cout << it->first << " => " << it->second << '\n';
 
 		//download Poster
-		if(httpTool.downloadFile(m["Poster"], posterfile.c_str()))
-			ret = 2;
-		else {
-			ret = 1;
-			if (access(posterfile.c_str(), F_OK) == 0)
-				unlink(posterfile.c_str());
+		if(m["Poster"] != "N/A")
+		{
+			if(httpTool.downloadFile(m["Poster"], posterfile.c_str()))
+				return 2;
+			else {
+				return 1;
+				if (access(posterfile.c_str(), F_OK) == 0)
+					unlink(posterfile.c_str());
+			}
 		}
+		ret=2;
 	}
 
 	return ret;
@@ -328,6 +337,9 @@ void CIMDB::getIMDbData(std::string& txt)
 	txt += "Regisseur: "+m["Director"]+"\n";
 	txt += "Drehbuch: "+m["Writer"]+"\n\n";
 	txt += "Darsteller: "+m["Actors"]+"\n";
+
+	if(m["imdbID"].empty() || m["Response"]!="True")
+		txt = "Keine Daten gefunden";
 }
 
 std::string CIMDB::getFilename(CZapitChannel * channel, uint64_t id)

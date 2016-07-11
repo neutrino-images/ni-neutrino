@@ -115,6 +115,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 						resp.apids = ev->eventInfo.apids;
 						strcpy(resp.recordingDir, ev->recordingDir.substr(0,sizeof(resp.recordingDir)-1).c_str());
 						strcpy(resp.epgTitle, ev->epgTitle.substr(0,sizeof(resp.epgTitle)-1).c_str());
+						resp.channel_ci = ev->eventInfo.channel_ci; //NI
 					}
 					else if(event->eventType == CTimerd::TIMER_ZAPTO)
 					{
@@ -184,6 +185,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 						lresp.apids = ev->eventInfo.apids;
 						strcpy(lresp.recordingDir, ev->recordingDir.substr(0,sizeof(lresp.recordingDir)-1).c_str());
 						strcpy(lresp.epgTitle, ev->epgTitle.substr(0,sizeof(lresp.epgTitle)-1).c_str());
+						lresp.channel_ci = ev->eventInfo.channel_ci; //NI
 					}
 					else if(event->eventType == CTimerd::TIMER_ZAPTO)
 					{
@@ -321,7 +323,8 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 						recInfo.apids,
 						msgAddTimer.eventRepeat,
 						msgAddTimer.repeatCount,
-						recInfo.recordingDir);
+						recInfo.recordingDir,
+						recInfo.channel_ci); //NI
 					rspAddTimer.eventID = CTimerManager::getInstance()->addEvent(event);
 
 					break;
