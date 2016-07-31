@@ -518,7 +518,6 @@ bool CEpgData::isCurrentEPG(const t_channel_id channel_id)
 	return false;
 }
 
-#if 0
 int CEpgData::show_mp(MI_MOVIE_INFO *mp_movie_info, int /*mp_position*/, int /*mp_duration*/, bool doLoop)
 {
 	int res = menu_return::RETURN_REPAINT;
@@ -856,7 +855,6 @@ int CEpgData::show_mp(MI_MOVIE_INFO *mp_movie_info, int /*mp_position*/, int /*m
 
 	return res;
 }
-#endif
 
 int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_startzeit, bool doLoop, bool callFromfollowlist )
 {

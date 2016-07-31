@@ -110,9 +110,7 @@ class CEpgData
 		~CEpgData();
 		void start( );
 		int show(const t_channel_id channel_id, uint64_t id = 0, time_t* startzeit = NULL, bool doLoop = true, bool callFromfollowlist = false );
-#if 0
 		int show_mp(MI_MOVIE_INFO *mp_movie_info, int mp_position = 1, int mp_duration = 1, bool doLoop = true);
-#endif
 		void hide();
 };
 
