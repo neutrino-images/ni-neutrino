@@ -1524,20 +1524,15 @@ int CEpgData::showIMDb(int ypos, bool splash)
 	int sx_h = sx+10+poster_w+(poster_w != 0 ? 10 : 0); // startpos
 	int ox_h = ox-10-poster_w-(poster_w != 0 ? 10 : 0)-10; // width
 
-	// clear epg array and add some blank lines
+	// clear epg array
 	epgText_saved = epgText;
 	epgText.clear();
-	processTextToArray("\n");
-	processTextToArray(" "); //must be a space here
 
 	//data
 	txt.clear();
 	imdb->getIMDbData(txt);
 	processTextToArray(txt);
-	showText(0, y);
-
-	//paint title
-	fontIMDb->RenderString(sx+10, y+medlineheight, ox-10, title, COL_MENUCONTENT_TEXT, 0, true);
+	showText(0, y+medlineheight);
 
 	//rating
 	txt = "imdbRating";
@@ -1558,15 +1553,15 @@ int CEpgData::showIMDb(int ypos, bool splash)
 	g_PicViewer->getSize(imdb->stars_bg.c_str(), &stars_w, &stars_h);
 	int aktiv = stars_w * atoi(pgvalue.c_str()) / (atoi(pgvalue.c_str())<10?10.0:100.0);
 
-	g_PicViewer->DisplayImage(imdb->stars_bg.c_str(), sx_h, y+(2*medlineheight)+((medlineheight/2)-(stars_h/2)), stars_w, stars_h);
+	g_PicViewer->DisplayImage(imdb->stars_bg.c_str(), sx_h, y+((medlineheight/2)-(stars_h/2)), stars_w, stars_h);
 	if(pgvalue != "0")
-		g_PicViewer->DisplayImage_unscaled(imdb->stars.c_str(), sx_h, y+(2*medlineheight)+((medlineheight/2)-(stars_h/2)), aktiv, stars_h);
+		g_PicViewer->DisplayImage_unscaled(imdb->stars.c_str(), sx_h, y+((medlineheight/2)-(stars_h/2)), aktiv, stars_h);
 
-	fontIMDb->RenderString(sx_h+stars_w+10, y+(3*medlineheight), ox_h-stars_w-10, txt, COL_MENUCONTENT_TEXT, 0, true); // UTF-8
+	fontIMDb->RenderString(sx_h+stars_w+10, y+(medlineheight), ox_h-stars_w-10, txt, COL_MENUCONTENT_TEXT, 0, true); // UTF-8
 
 	//paint poster
 	if ((poster_w != 0) && (poster_h != 0))
-		g_PicViewer->DisplayImage(imdb->posterfile.c_str(), sx+10, y+(2*medlineheight), poster_w, poster_h, frameBuffer->TM_NONE);
+		g_PicViewer->DisplayImage(imdb->posterfile.c_str(), sx+10, y, poster_w, poster_h, frameBuffer->TM_NONE);
 
 	return 0;
 }
