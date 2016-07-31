@@ -329,7 +329,7 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 
 void CIMDB::getIMDbData(std::string& txt)
 {
-	txt += "Metascore: "+m["Metascore"]+"/100\n";
+	txt += "Metascore: "+m["Metascore"]+(m["Metascore"] == "N/A" ? "\n" : "/100\n");
 	txt += "Stimmen: "+m["imdbVotes"]+"\n";
 	txt += "Datum: "+m["Released"]+" | "+m["Country"]+" | "+m["Runtime"]+"\n";
 	txt += "Genre: "+m["Genre"]+"\n";
