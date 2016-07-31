@@ -162,6 +162,7 @@ class CTimerd
 			char              recordingDir[RECORD_DIR_MAXLEN];       //only filled if applicable
 			char              epgTitle[EPG_TITLE_MAXLEN];       //only filled if applicable
 			bool              channel_ci; //NI
+			
 			bool operator< (const responseGetTimer& a) const
 			{
 				return this->alarmTime < a.alarmTime ;

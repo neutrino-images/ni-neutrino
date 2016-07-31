@@ -1077,6 +1077,7 @@ void CInfoViewer::loop(bool show_dot)
 			g_RCInput->postMsg (msg, 0);
 			res = messages_return::cancel_info;
 		} else if (msg == CRCInput::RC_info) { //NI
+//NI
 #if 0
 			if (fileplay)
 			{

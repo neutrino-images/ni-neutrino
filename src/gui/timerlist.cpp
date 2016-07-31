@@ -1268,7 +1268,7 @@ bool askUserOnTimerConflict(time_t announceTime, time_t stopTime, t_channel_id c
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
 	bool useCI = channel->bUseCI;
 
-	if (CFEManager::getInstance()->getEnabledCount() == 1 || /*NI*/useCI) {
+	if (CFEManager::getInstance()->getEnabledCount() == 1 || useCI) { //NI
 		CTimerdClient Timer;
 		CTimerd::TimerList overlappingTimers = Timer.getOverlappingTimers(announceTime,stopTime);
 		//printf("[CTimerdClient] attention\n%d\t%d\t%d conflicts with:\n",timerNew.announceTime,timerNew.alarmTime,timerNew.stopTime);

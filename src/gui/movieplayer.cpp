@@ -1560,6 +1560,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				SetPosition(1000 * (hh * 3600 + mm * 60 + ss), true);
 
 		} else if (msg == CRCInput::RC_help || msg == CRCInput::RC_info) {
+//NI
 #if 0
 			if (fromInfoviewer)
 			{

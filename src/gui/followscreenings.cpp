@@ -100,7 +100,7 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 #endif
 							return menu_return::RETURN_REPAINT;
 						}
-						if (!SAME_TRANSPONDER(channel_id, i->channel_id) ||/*NI*/CZapit::getInstance()->getUseChannelFilter()) {
+						if (!SAME_TRANSPONDER(channel_id, i->channel_id) || CZapit::getInstance()->getUseChannelFilter()) { //NI
 							if (!askUserOnTimerConflict(start, stop, channel_id))
 								return menu_return::RETURN_REPAINT;
 							else
@@ -111,7 +111,7 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 				CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(channel_id);
 
 				if (g_Timerd->addRecordTimerEvent(channel_id, e->startTime, e->startTime + e->duration, e->eventID,
-								  e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, recDir, true,/*NI*/ch->bUseCI) == -1) {
+								  e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, recDir, true, ch->bUseCI) == -1) { //NI
 					//FIXME -- no error handling, but this shouldn't happen ...
 				} else {
 #if 0

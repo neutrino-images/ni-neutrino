@@ -111,7 +111,7 @@ class CTimerdClient:private CBasicClient
 		// adds new record timer event
 		int addRecordTimerEvent(const t_channel_id channel_id, time_t alarmtime, time_t stoptime,
 					uint64_t epgID=0, time_t epg_starttime=0, time_t announcetime = 0,
-					unsigned char apids=TIMERD_APIDS_STD, bool safety=false,std::string recDir="", bool forceAdd=true,/*NI*/bool channel_ci=false)
+					unsigned char apids=TIMERD_APIDS_STD, bool safety=false,std::string recDir="", bool forceAdd=true, bool channel_ci=false) //NI
 		{
 			CTimerd::RecordingInfo eventInfo;
 			eventInfo.channel_id = channel_id;
