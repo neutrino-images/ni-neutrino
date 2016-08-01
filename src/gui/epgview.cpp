@@ -193,7 +193,7 @@ void CEpgData::processTextToArray(std::string text, int screening, bool has_cove
 	//NI IMDb
 	int poster_offset = 0;
 	if (imdb_activ && (poster_w != 0))
-		poster_offset += poster_w + 10;
+		poster_offset = poster_w + 10;
 
 	while (*text_!=0)
 	{
@@ -270,9 +270,9 @@ void CEpgData::showText(int startPos, int ypos, bool cover, bool fullClear)
 	int digi = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth("29..");
 
 	//NI IMDb
-	int poster_offset = cover_offset;
+	int poster_offset = 0;
 	if (imdb_activ && (poster_w != 0))
-		poster_offset += poster_w + 10;
+		poster_offset = poster_w + 10;
 
 	for(int i = 0; i < 12;i++){
 		max_mon_w = std::max(max_mon_w, g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth(std::string(g_Locale->getText(CLocaleManager::getMonth(i))) + " "));
@@ -1561,7 +1561,7 @@ int CEpgData::showIMDb(int ypos, bool splash)
 
 	//paint poster
 	if ((poster_w != 0) && (poster_h != 0))
-		g_PicViewer->DisplayImage(imdb->posterfile.c_str(), sx+10, y, poster_w, poster_h, frameBuffer->TM_NONE);
+		g_PicViewer->DisplayImage(imdb->posterfile.c_str(), sx+10, y+10, poster_w, poster_h, frameBuffer->TM_NONE);
 
 	return 0;
 }
