@@ -557,7 +557,7 @@ int CEpgData::show_mp(MI_MOVIE_INFO *mp_movie_info, int /*mp_position*/, int /*m
 }
 #endif
 
-int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_startzeit, bool doLoop, bool callFromfollowlist,bool mp_info )
+int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_startzeit, bool doLoop, bool callFromfollowlist, bool mp_info )
 {
 	int res = menu_return::RETURN_REPAINT;
 	static uint64_t id = 0;
@@ -576,8 +576,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
 	if (channel)
 		epg_id = channel->getEpgID();
-	if(!mp_info)
-		GetEPGData(epg_id, id, &startzeit );
+	if (!mp_info)
+		GetEPGData(epg_id, id, &startzeit);
 
 	epgTextSwitch.clear();
 	if (doLoop)
@@ -793,10 +793,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 	textCount = epgText.size();
 	showText(showPos, sy + toph);
 	// show Timer Event Buttons
-	showTimerEventBar (true, isCurrentEPG(channel_id), mp_info);
+	showTimerEventBar(true, isCurrentEPG(channel_id), mp_info);
 	
 	//show progressbar
-	if ( !mp_info && epg_done!= -1 )
+	if (!mp_info && epg_done!= -1)
 	{
 		int pbx = sx + 10 + widthl + 10 + ((ox-104-widthr-widthl-10-10-20)>>1);
 		CProgressBar pb(pbx, sy+oy-height, 104, height-6);
@@ -840,23 +840,24 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 			switch ( msg )
 			{
 			case NeutrinoMessages::EVT_TIMER:
-				if(!mp_info){
-				if (data == g_InfoViewer->getUpdateTimer()) {
-					GetEPGData(channel_id, id, &startzeit, false);
-					if ( epg_done!= -1 ) {
- 						int pbx = sx + 10 + widthl + 10 + ((ox-104-widthr-widthl-10-10-20)>>1);
-						CProgressBar pb(pbx, sy+oy-height, 104, height-6);
-						pb.setType(CProgressBar::PB_TIMESCALE);
-						pb.setValues(epg_done, 100);
-						pb.paint(false);
+				if (!mp_info)
+				{
+					if (data == g_InfoViewer->getUpdateTimer()) {
+						GetEPGData(channel_id, id, &startzeit, false);
+						if ( epg_done!= -1 ) {
+ 							int pbx = sx + 10 + widthl + 10 + ((ox-104-widthr-widthl-10-10-20)>>1);
+							CProgressBar pb(pbx, sy+oy-height, 104, height-6);
+							pb.setType(CProgressBar::PB_TIMESCALE);
+							pb.setValues(epg_done, 100);
+							pb.paint(false);
+						}
 					}
-				}
-				if(data == fader.GetFadeTimer()) {
-					if(fader.FadeDone())
-						loop = false;
-				}
-				else
-					CNeutrinoApp::getInstance()->handleMsg(msg, data);
+					if (data == fader.GetFadeTimer()) {
+						if (fader.FadeDone())
+							loop = false;
+					}
+					else
+						CNeutrinoApp::getInstance()->handleMsg(msg, data);
 				}
 				break;
 			case NeutrinoMessages::EVT_CURRENTNEXT_EPG:
@@ -880,7 +881,6 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					showPos=0;
 				}
 				break;
-
 			case CRCInput::RC_right:
 				//NI
 				if(imdb_activ)
@@ -895,7 +895,6 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					showPos=0;
 				}
 				break;
-
 			case CRCInput::RC_down:
 				//NI
 				if(imdb_activ)
@@ -907,7 +906,6 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					showText(showPos, sy + toph, tmdbtoggle, false);
 				}
 				break;
-
 			case CRCInput::RC_up:
 				//NI
 				if(imdb_activ)
@@ -942,14 +940,14 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					showTimerEventBar(true, true);
 				}
 				break;
-
-				// 31.05.2002 dirch		record timer
 			case CRCInput::RC_red:
-				if (mp_info){
+				if (mp_info)
+				{
 					epgTextSwitchClear = false;
 					loop = false;
 					break;
-				}else if (!g_settings.minimode && (g_settings.recording_type != CNeutrinoApp::RECORDING_OFF))
+				}
+				else if (!g_settings.minimode && (g_settings.recording_type != CNeutrinoApp::RECORDING_OFF))
 				{
 					std::string recDir;
 					//CTimerdClient timerdclient;
@@ -1061,7 +1059,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					epgText = epgText_saved;
 					textCount = epgText.size();
 				}
-				if (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"){
+				if (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+				{
 					showPos = 0;
 					if (!tmdbtoggle) {
 						cTmdb* tmdb = new cTmdb(epgData.title);
@@ -1124,10 +1123,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				}
 				break;
 			}
-				// 31.05.2002 dirch		zapto timer
 			case CRCInput::RC_yellow:
 			{
-				if (!mp_info){
+				if (!mp_info)
+				{
 					if (isCurrentEPG(channel_id))
 					{
 						CAdZapMenu::getInstance()->exec(NULL, "enable");
@@ -1206,7 +1205,6 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				show(channel_id, id, &startzeit, false, call_fromfollowlist);
 				showPos=0;
 				break;
-
 			case CRCInput::RC_info: //NI
 			case CRCInput::RC_ok:
 			case CRCInput::RC_timeout:
@@ -1224,9 +1222,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					loop = false;
 				}
 				break;
-
 			default:
-				// konfigurierbare Keys handlen...
 				if (msg == (neutrino_msg_t)g_settings.key_channelList_cancel) {
 					if(fader.StartFadeOut()) {
 						timeoutEnd = CRCInput::calcTimeoutEnd( 1 );
@@ -1431,7 +1427,6 @@ struct button_label EpgButtons[] = //NI
 };
 
 void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
-
 {
 	int  x,y,h,fh;
         int icol_w, icol_h;

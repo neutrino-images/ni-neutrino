@@ -1569,7 +1569,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			}
 			else
 #endif
-			callInfoViewer();
+				callInfoViewer();
 			update_lcd = true;
 			clearSubtitle();
 		} else if (timeshift != TSHIFT_MODE_OFF && (msg == CRCInput::RC_text || msg == CRCInput::RC_epg || msg == NeutrinoMessages::SHOW_EPG)) {
