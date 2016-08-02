@@ -125,7 +125,7 @@ CEpgData::CEpgData()
 {
 	bigFonts = false;
 	frameBuffer = CFrameBuffer::getInstance();
-	tmdbtoggle = false;
+	tmdb_active = false;
 	header     = NULL;
 	//NI
 	imdb = CIMDB::getInstance();
@@ -294,7 +294,7 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 		}
 	}
 	int logo_offset = 0;
-	if (tmdbtoggle && startPos == 0) {
+	if (tmdb_active && startPos == 0) {
 		int icon_w,icon_h;
 		frameBuffer->getIconSize(NEUTRINO_ICON_TMDB, &icon_w, &icon_h);
 		frameBuffer->paintIcon(NEUTRINO_ICON_TMDB, sx+10+cover_offset, ypos+10);
@@ -567,7 +567,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 		startzeit=*a_startzeit;
 	id=a_id;
 
-	tmdbtoggle = false;
+	tmdb_active = false;
 	stars = 0;
 
 	int height = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_DATE]->getHeight();
@@ -903,7 +903,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				if (showPos+scrollCount<textCount)
 				{
 					showPos += scrollCount;
-					showText(showPos, sy + toph, tmdbtoggle, false);
+					showText(showPos, sy + toph, tmdb_active, false);
 				}
 				break;
 			case CRCInput::RC_up:
@@ -915,7 +915,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					showPos -= scrollCount;
 					if (showPos < 0)
 						showPos = 0;
-					showText(showPos, sy + toph, tmdbtoggle, false);
+					showText(showPos, sy + toph, tmdb_active, false);
 				}
 				break;
 			case CRCInput::RC_page_up:
@@ -1062,12 +1062,12 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				if (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 				{
 					showPos = 0;
-					if (!tmdbtoggle) {
+					if (!tmdb_active) {
 						cTmdb* tmdb = new cTmdb(epgData.title);
 						if ((tmdb->getResults() > 0) && (!tmdb->getDescription().empty())) {
 							epgText_saved = epgText;
 							epgText.clear();
-							tmdbtoggle = !tmdbtoggle;
+							tmdb_active = !tmdb_active;
 
 							epgTextSwitch = tmdb->getDescription();
 							if (!tmdb->getCast().empty())
@@ -1076,7 +1076,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 							processTextToArray(tmdb->CreateEPGText(), 0, tmdb->hasCover());
 							textCount = epgText.size();
 							stars = tmdb->getStars();
-							showText(showPos, sy + toph, tmdbtoggle);
+							showText(showPos, sy + toph, tmdb_active);
 						} else {
 							ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_EPGVIEWER_NODETAILED, CMessageBox::mbrOk , CMessageBox::mbrOk);
 						}
@@ -1084,7 +1084,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					} else {
 						epgText = epgText_saved;
 						textCount = epgText.size();
-						tmdbtoggle = !tmdbtoggle;
+						tmdb_active = !tmdb_active;
 						stars=0;
 						showText(showPos, sy + toph);
 					}
@@ -1095,8 +1095,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 			case CRCInput::RC_green: //NI
 			{
 #if 0
-				if (tmdbtoggle) {
-					tmdbtoggle = false;
+				if (tmdb_active) {
+					tmdb_active = false;
 					epgText = epgText_saved;
 					textCount = epgText.size();
 					stars=0;
