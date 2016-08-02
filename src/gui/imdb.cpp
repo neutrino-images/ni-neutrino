@@ -316,9 +316,9 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 			if(httpTool.downloadFile(m["Poster"], posterfile.c_str()))
 				return 2;
 			else {
-				return 1;
 				if (access(posterfile.c_str(), F_OK) == 0)
 					unlink(posterfile.c_str());
+				return 1;
 			}
 		}
 		ret=2;
