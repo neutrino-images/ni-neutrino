@@ -49,8 +49,8 @@ CIMDB::CIMDB()
 	surl		= "http://www.google.de/search?q=";
 	soutfile	= "/tmp/google.out";
 	IMDburl		= "http://www.omdbapi.com/?plot=full&r=json&i=";
-	IMDbAPI		= "/tmp/IMDb.json";
-	posterfile	= "/tmp/poster.jpg";
+	IMDbAPI		= "/tmp/imdb.json";
+	posterfile	= "/tmp/imdb.jpg";
 	stars_bg	= ICONSDIR "/stars_bg.png";
 	stars		= ICONSDIR "/stars.png";
 
