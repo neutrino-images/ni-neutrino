@@ -863,7 +863,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	//Movie-Player
 	g_settings.movieplayer_repeat_on = configfile.getInt32("movieplayer_repeat_on", CMoviePlayerGui::REPEAT_OFF);
 	g_settings.youtube_dev_id = configfile.getString("youtube_dev_id","AIzaSyBLdZe7M3rpNMZqSj-3IEvjbb2hATWJIdM"); //NI
-	g_settings.tmdb_api_key = configfile.getString("tmdb_api_key","XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	g_settings.tmdb_api_key = configfile.getString("tmdb_api_key","7270f1b571c4ecbb5b204ddb7f8939b1"); //NI
 
 	//Filebrowser
 	g_settings.filebrowser_showrights =  configfile.getInt32("filebrowser_showrights", 1);
