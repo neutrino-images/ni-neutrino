@@ -130,8 +130,6 @@ CEpgData::CEpgData()
 	//NI
 	imdb = CIMDB::getInstance();
 	imdb_active = false;
-	poster_w = 0;
-	poster_h = 0;
 }
 
 CEpgData::~CEpgData()
@@ -190,11 +188,6 @@ void CEpgData::processTextToArray(std::string text, int screening, bool has_cove
 	text += ' ';
 	char* text_= (char*) text.c_str();
 
-	//NI IMDb
-	int poster_offset = 0;
-	if (imdb_active && (poster_w != 0))
-		poster_offset += poster_w + 10;
-
 	while (*text_!=0)
 	{
 		if ( (*text_==' ') || (*text_=='\n') || (*text_=='-') || (*text_=='.') )
@@ -207,7 +200,7 @@ void CEpgData::processTextToArray(std::string text, int screening, bool has_cove
 
 			// check the wordwidth - add to this line if size ok
 			int aktWordWidth = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth(aktWord);
-			if ((aktWordWidth+aktWidth)<(ox - 20 - 15 - (has_cover? ((ox/4)+10) : poster_offset))) //NI
+			if ((aktWordWidth+aktWidth)<(ox - 20 - 15 - (has_cover? ((ox/4)+10) :0)))
 			{//space ok, add
 				aktWidth += aktWordWidth;
 				aktLine += aktWord;
@@ -257,6 +250,10 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 
 	if (has_cover)
 	{
+		//NI
+		if (imdb_active)
+			cover = imdb->posterfile;
+
 		g_PicViewer->getSize(cover.c_str(), &cover_width, &cover_height);
 		if (cover_width && cover_height)
 		{
@@ -272,11 +269,6 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 	int max_mon_w = 0, max_wday_w = 0;
 	int digi = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth("29..");
 
-	//NI IMDb
-	int poster_offset = cover_offset;
-	if (imdb_active && (poster_w != 0))
-		poster_offset += poster_w + 10;
-
 	for(int i = 0; i < 12;i++){
 		max_mon_w = std::max(max_mon_w, g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getRenderWidth(std::string(g_Locale->getText(CLocaleManager::getMonth(i))) + " "));
 		if(i > 6)
@@ -289,7 +281,6 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 	if (has_cover) {
 		if (!g_PicViewer->DisplayImage(cover ,sx+10 ,y+10, cover_width, cover_height, CFrameBuffer::TM_NONE)) { //NI
 			cover_offset = 0;
-			poster_offset = 0; //NI
 			frameBuffer->paintBoxRel(sx, y, ox-15, sb, COL_MENUCONTENT_PLUS_0); // background of the text box
 		}
 	}
@@ -302,6 +293,14 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 		frameBuffer->paintIcon(NEUTRINO_ICON_TMDB, sx+10+cover_offset, y+(medlineheight-icon_h)/2);
 		logo_offset = icon_w + 10;
 	}
+	//NI
+	if (imdb_active && startPos == 0)
+	{
+		frameBuffer->getIconSize(NEUTRINO_ICON_IMDB, &icon_w, &icon_h);
+		frameBuffer->paintIcon(NEUTRINO_ICON_IMDB, sx+10+cover_offset, y+(medlineheight-icon_h)/2);
+		logo_offset = icon_w + 10;
+	}
+	/* //NI - we use our starbar
 	if (stars > 0 && startPos == 0)
 	{
 		frameBuffer->getIconSize(NEUTRINO_ICON_STAR_OFF, &icon_w, &icon_h);
@@ -309,6 +308,30 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 			frameBuffer->paintIcon(NEUTRINO_ICON_STAR_OFF, sx+10+cover_offset+logo_offset + i*(icon_w+3), y+(medlineheight-icon_h)/2);
 		for (int i = 0; i < stars; i++)
 			frameBuffer->paintIcon(NEUTRINO_ICON_STAR_ON, sx+10+cover_offset+logo_offset + i*(icon_w+3), y+(medlineheight-icon_h)/2);
+	}
+	*/
+	//NI starbar
+	if ((stars > 0 || imdb_stars > 0) && (tmdb_active || imdb_active) && startPos == 0)
+	{
+		if (stars <= 10)
+			stars *= 10; // recalculate stars value for starbar
+
+		int stars_w = 0, stars_h = 0;
+		g_PicViewer->getSize(imdb->stars_bg.c_str(), &stars_w, &stars_h);
+
+		//create starbar item
+		CProgressBar *cc_starbar = new CProgressBar();
+		cc_starbar->setProgress(sx+10+cover_offset+logo_offset, y+(medlineheight-stars_h)/2, stars_w, medlineheight, imdb_active ? imdb_stars : stars, 100);
+		cc_starbar->setType(CProgressBar::PB_STARBAR);
+		cc_starbar->paint();
+
+		if (imdb_active)
+		{
+			int _x = sx+10+cover_offset+logo_offset+stars_w+10;
+			int _w = ox-10-cover_offset-logo_offset-stars_w-10;
+			g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->RenderString(_x, y+medlineheight, _w, imdb_rating, COL_MENUCONTENT_TEXT, 0, true);
+		}
+>>>>>>>
 	}
 	for (int i = startPos; i < textSize && i < startPos + medlinecount; i++, y += medlineheight)
 	{
@@ -336,7 +359,7 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 			count = 0;
 		}
 		else{
-			g_Font[( i< info1_lines ) ?SNeutrinoSettings::FONT_TYPE_EPG_INFO1:SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->RenderString(sx+10+poster_offset, y+medlineheight, ox-15-15-poster_offset, epgText[i].first, COL_MENUCONTENT_TEXT); //NI IMDb
+			g_Font[( i< info1_lines ) ?SNeutrinoSettings::FONT_TYPE_EPG_INFO1:SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->RenderString(sx+10+cover_offset, y+medlineheight, ox-15-15-cover_offset, epgText[i].first, COL_MENUCONTENT_TEXT);
 		}
 	}
 

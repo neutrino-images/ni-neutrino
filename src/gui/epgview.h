@@ -100,9 +100,10 @@ class CEpgData
 
 		//NI
 		bool imdb_active;
+		int imdb_stars;
+		std::string imdb_rating;
 		std::string epg_title;
-		int showIMDb(int ypos, bool splash = false);
-		int poster_w, poster_h;
+		int showIMDb(bool splash = false);
 		Font *fontIMDb;
 
 	public:
