@@ -25,6 +25,8 @@
 #ifndef __imdb__
 #define __imdb__
 
+#include <unistd.h>
+
 #include <gui/components/cc.h>
 
 class CIMDB
@@ -54,6 +56,7 @@ class CIMDB
 		void	showTextWindow(const std::string title, const std::string txt);
 		void	scroll(bool scrollDown);
 		bool	isActive() { return imdb_active; };
+		bool	gotPoster() { return (access(posterfile.c_str(), F_OK) == 0); };
 
 		virtual void getIMDbElement(std::string& element)  { element = m[element]; };
 
