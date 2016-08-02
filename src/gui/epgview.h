@@ -99,7 +99,7 @@ class CEpgData
 		bool isCurrentEPG(const t_channel_id channel_id);
 
 		//NI
-		bool imdb_activ;
+		bool imdb_active;
 		std::string epg_title;
 		int showIMDb(int ypos, bool splash = false);
 		int poster_w, poster_h;

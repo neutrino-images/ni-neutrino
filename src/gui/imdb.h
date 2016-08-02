@@ -53,7 +53,7 @@ class CIMDB
 		void	showIMDbWindow(const std::string title);
 		void	showTextWindow(const std::string title, const std::string txt);
 		void	scroll(bool scrollDown);
-		bool	isActive() { return imdb_activ; };
+		bool	isActive() { return imdb_active; };
 
 		virtual void getIMDbElement(std::string& element)  { element = m[element]; };
 
@@ -73,7 +73,7 @@ class CIMDB
 		int	h_body, w_body, h_offset, v_offset;
 		int	h_footer;
 		int	btn_start, btn_width, btn_height;
-		bool 	imdb_activ;
+		bool 	imdb_active;
 		void 	initFrame();
 		void	initMap(std::map<std::string, std::string>& my);
 		void	bigFonts(bool on);

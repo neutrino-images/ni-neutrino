@@ -57,7 +57,7 @@ CIMDB::CIMDB()
 	cc_win		= NULL;
 	cc_txt		= NULL;
 
-	imdb_activ	= false;
+	imdb_active	= false;
 
 	//initFrame(); /*not use for epginfo
 }
@@ -66,7 +66,7 @@ CIMDB::~CIMDB()
 {
 	cleanup();
 
-	imdb_activ = false;
+	imdb_active = false;
 	if(cc_win)
 		delete cc_win;
 }
@@ -418,7 +418,7 @@ void CIMDB::cleanup()
 		unlink(soutfile.c_str());
 	if (access(posterfile.c_str(), F_OK) == 0)
 		unlink(posterfile.c_str());
-	imdb_activ = false;
+	imdb_active = false;
 }
 
 void CIMDB::initFrame()
@@ -522,7 +522,7 @@ void CIMDB::showTextWindow(const std::string title, const std::string txt)
 void CIMDB::hideWindow(bool keep_active)
 {
 	if (!keep_active)
-		imdb_activ = false;
+		imdb_active = false;
 
 	cc_win->kill();
 
@@ -574,7 +574,7 @@ void CIMDB::showIMDbWindow(const std::string title)
 	int w_starbar		= 160; //starbar picture width
 	int h_starbar		= fontheight;
 	std::string pg_value	= "0";
-	imdb_activ		= true;
+	imdb_active		= true;
 
 	//show splash
 	cc_win->setWindowCaption("IMDb: Daten werden geladen ...");

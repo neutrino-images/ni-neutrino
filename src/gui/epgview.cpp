@@ -129,7 +129,7 @@ CEpgData::CEpgData()
 	header     = NULL;
 	//NI
 	imdb = CIMDB::getInstance();
-	imdb_activ = false;
+	imdb_active = false;
 	poster_w = 0;
 	poster_h = 0;
 }
@@ -192,7 +192,7 @@ void CEpgData::processTextToArray(std::string text, int screening, bool has_cove
 
 	//NI IMDb
 	int poster_offset = 0;
-	if (imdb_activ && (poster_w != 0))
+	if (imdb_active && (poster_w != 0))
 		poster_offset += poster_w + 10;
 
 	while (*text_!=0)
@@ -274,7 +274,7 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 
 	//NI IMDb
 	int poster_offset = cover_offset;
-	if (imdb_activ && (poster_w != 0))
+	if (imdb_active && (poster_w != 0))
 		poster_offset += poster_w + 10;
 
 	for(int i = 0; i < 12;i++){
@@ -869,8 +869,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 			case CRCInput::RC_left:
 				//NI
-				if(imdb_activ)
-					imdb_activ = false;
+				if(imdb_active)
+					imdb_active = false;
 
 				if ((prev_id != 0) && !call_fromfollowlist)
 				{
@@ -883,8 +883,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 			case CRCInput::RC_right:
 				//NI
-				if(imdb_activ)
-					imdb_activ = false;
+				if(imdb_active)
+					imdb_active = false;
 
 				if ((next_id != 0) && !call_fromfollowlist)
 				{
@@ -897,7 +897,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 			case CRCInput::RC_down:
 				//NI
-				if(imdb_activ)
+				if(imdb_active)
 					break;
 
 				if (showPos+scrollCount<textCount)
@@ -908,7 +908,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 			case CRCInput::RC_up:
 				//NI
-				if(imdb_activ)
+				if(imdb_active)
 					break;
 
 				if (showPos > 0) {
@@ -1053,8 +1053,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 #if 0
 			case CRCInput::RC_info:
 			{
-				if (imdb_activ) {
-					imdb_activ = false;
+				if (imdb_active) {
+					imdb_active = false;
 					showTimerEventBar (true); //show buttons
 					epgText = epgText_saved;
 					textCount = epgText.size();
@@ -1102,7 +1102,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					stars=0;
 				}
 #endif
-				if(!imdb_activ)
+				if(!imdb_active)
 				{
 					//show IMDb info
 					showIMDb(sy + toph, true); //show splashscreen only
@@ -1113,7 +1113,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				}
 				else
 				{
-					imdb_activ = false;
+					imdb_active = false;
 					std::string filename = imdb->getFilename(channel, epgData.eventID);
 
 					if (File_copy(imdb->posterfile.c_str(), filename.c_str()))
@@ -1160,8 +1160,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 			case CRCInput::RC_blue:
 			{	
 				//NI
-				if(imdb_activ)
-					imdb_activ = false;
+				if(imdb_active)
+					imdb_active = false;
 
 				if(!followlist.empty() && !call_fromfollowlist){
 					hide();
@@ -1267,7 +1267,7 @@ void CEpgData::hide()
 	showTimerEventBar (false);
 
 	//NI
-	imdb_activ = false;
+	imdb_active = false;
 	imdb->cleanup();
 }
 
@@ -1447,7 +1447,7 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 	frameBuffer->paintBoxRel(sx,y,ox,h, COL_INFOBAR_SHADOW_PLUS_1, RADIUS_LARGE, CORNER_BOTTOM);//round
 	/* 2 * ICON_LARGE_WIDTH for potential 16:9 and DD icons */
 	int aw = ox - 20 - 2 * (ICON_LARGE_WIDTH + 2);
-	EpgButtons[1].locale = imdb_activ ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
+	EpgButtons[1].locale = imdb_active ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
 	std::string adzap_button;
 	if (adzap)
 	{
@@ -1513,7 +1513,7 @@ int CEpgData::showIMDb(int ypos, bool splash)
 	{
 		int poster_max_w = ox/4; // max 25%
 		int poster_max_h = ((medlinecount-2)*medlineheight);
-		imdb_activ = true;
+		imdb_active = true;
 
 		g_PicViewer->rescaleImageDimensions(&poster_w, &poster_h, poster_max_w, poster_max_h);
 	}
