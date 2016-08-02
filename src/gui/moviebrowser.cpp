@@ -1956,7 +1956,6 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 					refresh();
 				}
 			}
-#if 0
 			else if (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 			{
 				//add TMDB Cover
@@ -1979,7 +1978,6 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 						delete tmdb;
 				}
 			}
-#endif
 		}
 	}
 	else if (msg == CRCInput::RC_home)
@@ -2048,12 +2046,9 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 	{
 		if (m_movieSelectionHandler != NULL)
 		{
-//NI
-#if 0
 			if (m_settings.gui == MB_GUI_MOVIE_INFO &&  m_windowFocus == MB_FOCUS_MOVIE_INFO)
 				g_EpgData->show_mp(m_movieSelectionHandler,0,0);
 			else
-#endif
 				m_movieInfo.showMovieInfo(*m_movieSelectionHandler);
 			refresh();
 		}

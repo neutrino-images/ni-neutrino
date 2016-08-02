@@ -1560,15 +1560,12 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				SetPosition(1000 * (hh * 3600 + mm * 60 + ss), true);
 
 		} else if (msg == CRCInput::RC_help || msg == CRCInput::RC_info) {
-//NI
-#if 0
 			if (fromInfoviewer)
 			{
 				g_EpgData->show_mp(p_movie_info,GetPosition(),GetDuration());
 				fromInfoviewer = false;
 			}
 			else
-#endif
 				callInfoViewer();
 			update_lcd = true;
 			clearSubtitle();
