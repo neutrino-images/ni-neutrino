@@ -1978,8 +1978,8 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 					if (tmdb)
 						delete tmdb;
 				}
-#endif
 			}
+#endif
 		}
 	}
 	else if (msg == CRCInput::RC_home)
