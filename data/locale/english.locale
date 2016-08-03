@@ -2594,6 +2594,7 @@ timing.infobar_radio Infobar (radio mode)
 timing.menu Menu
 timing.numericzap Numeric Zap
 timing.volumebar Volume bar
+tmdb.info TMDb-Info
 tmdb.read_data Search TMDB Data...
 unicable.lnb Unicable Input
 unicable.qrg Unicable Frequency
