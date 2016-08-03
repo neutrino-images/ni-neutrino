@@ -51,7 +51,7 @@ class CHTTPTool
 		CHTTPTool();
 		void setStatusViewer( CProgressWindow* statusview );
 
-		bool downloadFile( const std::string & URL, const char * const downloadTarget, int globalProgressEnd=-1,/*NI*/int connecttimeout=10,/*NI*/int timeout=1800);
+		bool downloadFile( const std::string & URL, const char * const downloadTarget, int globalProgressEnd=-1, int connecttimeout=10, int timeout=1800); //NI
 
 };
 

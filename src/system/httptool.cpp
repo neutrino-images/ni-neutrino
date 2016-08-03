@@ -58,7 +58,7 @@ int CHTTPTool::show_progress( void *clientp, double dltotal, double dlnow, doubl
 	return 0;
 }
 //#define DEBUG
-bool CHTTPTool::downloadFile(const std::string & URL, const char * const downloadTarget, int globalProgressEnd,/*NI*/int connecttimeout,/*NI*/int timeout)
+bool CHTTPTool::downloadFile(const std::string & URL, const char * const downloadTarget, int globalProgressEnd, int connecttimeout, int timeout) //NI
 {
 	CURL *curl;
 	CURLcode res;
