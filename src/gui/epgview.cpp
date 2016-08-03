@@ -1063,8 +1063,9 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 						printf("timerd not available\n");
 				}
 				break;
-			case CRCInput::RC_info:
+			case CRCInput::RC_0: //NI
 			{
+				//NI
 				if (imdb_active) {
 					imdb_active = false;
 					showTimerEventBar (true); //show buttons
@@ -1216,7 +1217,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				show(channel_id, id, &startzeit, false, call_fromfollowlist);
 				showPos=0;
 				break;
-			//case CRCInput::RC_info: //NI
+			case CRCInput::RC_info: //NI
 			case CRCInput::RC_ok:
 			case CRCInput::RC_timeout:
 				if(fader.StartFadeOut()) {
@@ -1432,17 +1433,17 @@ struct button_label EpgButtons[][EpgButtonsMax] =
 		{ NEUTRINO_ICON_BUTTON_GREEN, LOCALE_IMDB_INFO }, //NI
 		{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TIMERBAR_CHANNELSWITCH },
 		{ NEUTRINO_ICON_BUTTON_BLUE, LOCALE_EPGVIEWER_MORE_SCREENINGS_SHORT },
-		{ NEUTRINO_ICON_BUTTON_INFO_SMALL, LOCALE_CHANNELLIST_ADDITIONAL }
+		{ NEUTRINO_ICON_BUTTON_0, LOCALE_CHANNELLIST_ADDITIONAL } //NI
 	},
 	{ // w/o followscreenings
 		{ NEUTRINO_ICON_BUTTON_RED, LOCALE_TIMERBAR_RECORDEVENT },
 		{ NEUTRINO_ICON_BUTTON_GREEN, LOCALE_IMDB_INFO }, //NI
 		{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TIMERBAR_CHANNELSWITCH },
-		{ NEUTRINO_ICON_BUTTON_INFO_SMALL, LOCALE_CHANNELLIST_ADDITIONAL }
+		{ NEUTRINO_ICON_BUTTON_0, LOCALE_CHANNELLIST_ADDITIONAL } //NI
 	},
 	{ // movieplayer mode
 		{ NEUTRINO_ICON_BUTTON_RED, LOCALE_EPG_SAVING },
-		{ NEUTRINO_ICON_BUTTON_INFO_SMALL, LOCALE_CHANNELLIST_ADDITIONAL }
+		{ NEUTRINO_ICON_BUTTON_0, LOCALE_CHANNELLIST_ADDITIONAL } //NI
 	}
 };
 
