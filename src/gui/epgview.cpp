@@ -1424,14 +1424,26 @@ int CEpgData::FollowScreenings (const t_channel_id /*channel_id*/, const std::st
 // -- 2002-05-13 rasc
 //
 
-struct button_label EpgButtons[] = //NI
+#define EpgButtonsMax 5 //NI
+struct button_label EpgButtons[][EpgButtonsMax] =
 {
-	{ NEUTRINO_ICON_BUTTON_RED   , LOCALE_TIMERBAR_RECORDEVENT },
-	{ NEUTRINO_ICON_BUTTON_GREEN , LOCALE_IMDB_INFO }, //NI
-	{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TIMERBAR_CHANNELSWITCH },
-	{ NEUTRINO_ICON_BUTTON_INFO_SMALL  , LOCALE_CHANNELLIST_ADDITIONAL },
-	{ NEUTRINO_ICON_BUTTON_BLUE, LOCALE_EPGVIEWER_MORE_SCREENINGS_SHORT }
-
+	{ // full view
+		{ NEUTRINO_ICON_BUTTON_RED, LOCALE_TIMERBAR_RECORDEVENT },
+		{ NEUTRINO_ICON_BUTTON_GREEN, LOCALE_IMDB_INFO }, //NI
+		{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TIMERBAR_CHANNELSWITCH },
+		{ NEUTRINO_ICON_BUTTON_BLUE, LOCALE_EPGVIEWER_MORE_SCREENINGS_SHORT },
+		{ NEUTRINO_ICON_BUTTON_INFO_SMALL, LOCALE_CHANNELLIST_ADDITIONAL }
+	},
+	{ // w/o followscreenings
+		{ NEUTRINO_ICON_BUTTON_RED, LOCALE_TIMERBAR_RECORDEVENT },
+		{ NEUTRINO_ICON_BUTTON_GREEN, LOCALE_IMDB_INFO }, //NI
+		{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TIMERBAR_CHANNELSWITCH },
+		{ NEUTRINO_ICON_BUTTON_INFO_SMALL, LOCALE_CHANNELLIST_ADDITIONAL }
+	},
+	{ // movieplayer mode
+		{ NEUTRINO_ICON_BUTTON_RED, LOCALE_EPG_SAVING },
+		{ NEUTRINO_ICON_BUTTON_INFO_SMALL, LOCALE_CHANNELLIST_ADDITIONAL }
+	}
 };
 
 void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
@@ -1455,7 +1467,6 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 	frameBuffer->paintBoxRel(sx,y,ox,h, COL_INFOBAR_SHADOW_PLUS_1, RADIUS_LARGE, CORNER_BOTTOM);//round
 	/* 2 * ICON_LARGE_WIDTH for potential 16:9 and DD icons */
 	int aw = ox - 20 - 2 * (ICON_LARGE_WIDTH + 2);
-	EpgButtons[1].locale = imdb_active ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
 	std::string adzap_button;
 	if (adzap)
 	{
@@ -1463,33 +1474,23 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 		adzap_button += " " + to_string(g_settings.adzap_zapBackPeriod / 60) + " ";
 		adzap_button += g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE);
 	}
-	if (!mp_info && g_settings.recording_type != CNeutrinoApp::RECORDING_OFF)
-		::paintButtons(x, y, 0, (has_follow_screenings && !call_fromfollowlist) ? 5:4, EpgButtons, aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, adzap ? adzap_button.c_str() : NULL, 2); //NI
-	else if (mp_info){
-		const struct button_label Button[] =
-		{
-			{ NEUTRINO_ICON_BUTTON_RED   , LOCALE_EPG_SAVING },
-			{ NEUTRINO_ICON_BUTTON_INFO_SMALL  , LOCALE_CHANNELLIST_ADDITIONAL }
-		};
-		if (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"){
-			::paintButtons(x , y, 0, 2, Button, aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, NULL, 1);
-		}
-	}else
-		::paintButtons(x, y, 0, (has_follow_screenings && !call_fromfollowlist) ? 4:3, &EpgButtons[1], aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, adzap ? adzap_button.c_str() : NULL, 1); //NI
-
-#if 0
-	// Button: Timer Record & Channelswitch
-	if (g_settings.recording_type != CNeutrinoApp::RECORDING_OFF)
+	bool tmdb = (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	bool fscr = (has_follow_screenings && !call_fromfollowlist);
+	EpgButtons[fscr ? 0 : 1][1].locale = imdb_active ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
+	if (mp_info)
+		::paintButtons(x, y, 0, tmdb ? 2 : 1, EpgButtons[2], aw, h);
+	else
 	{
-		pos = 0;
-		frameBuffer->paintIcon(NEUTRINO_ICON_BUTTON_RED, x+8+cellwidth*pos, y+h_offset );
-		g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->RenderString(x+29+cellwidth*pos, y+h-h_offset, w-30, g_Locale->getText(LOCALE_TIMERBAR_RECORDEVENT), COL_INFOBAR_TEXT);
+		int c = EpgButtonsMax;
+		if (!tmdb)
+			c--; // reduce tmdb button
+		if (!fscr)
+			c--; // reduce blue button
+		if (g_settings.recording_type != CNeutrinoApp::RECORDING_OFF)
+			::paintButtons(x, y, 0, c, EpgButtons[fscr ? 0 : 1], aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, adzap ? adzap_button.c_str() : NULL, 1);
+		else
+			::paintButtons(x, y, 0, c, &EpgButtons[fscr ? 0 : 1][1], aw, h, "", false, COL_INFOBAR_SHADOW_TEXT, adzap ? adzap_button.c_str() : NULL, 0);
 	}
-	// Button: Timer Channelswitch
-	pos = 2;
-	frameBuffer->paintIcon(NEUTRINO_ICON_BUTTON_YELLOW, x+8+cellwidth*pos, y+h_offset );
-	g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->RenderString(x+29+cellwidth*pos, y+h-h_offset, w-30, g_Locale->getText(LOCALE_TIMERBAR_CHANNELSWITCH), COL_INFOBAR_TEXT);
-#endif
 }
 
 //NI start
