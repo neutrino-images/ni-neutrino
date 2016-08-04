@@ -1003,6 +1003,11 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		if (g_settings.screen_yres == 112)
 			g_settings.screen_yres = 105;
 	}
+	else if (g_settings.version_pseudo < "20160804110000")
+	{
+		if (g_settings.tmdb_api_key == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+			g_settings.tmdb_api_key = "7270f1b571c4ecbb5b204ddb7f8939b1";
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
