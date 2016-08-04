@@ -337,8 +337,11 @@ void CIMDB::getIMDbData(std::string& txt)
 	txt += "Genre: "+m["Genre"]+"\n";
 	txt += "Awards: "+m["Awards"]+"\n";
 	txt += "Regisseur: "+m["Director"]+"\n";
-	txt += "Drehbuch: "+m["Writer"]+"\n\n";
+	txt += "Drehbuch: "+m["Writer"]+"\n";
+	txt += "\n";
 	txt += "Darsteller: "+m["Actors"]+"\n";
+	txt += "\n";
+	txt += m["Plot"];
 
 	if(m["imdbID"].empty() || m["Response"]!="True")
 		txt = "Keine Daten gefunden";
