@@ -1525,17 +1525,6 @@ int CEpgData::showIMDb(bool splash)
 	processTextToArray(" ", 0, imdb->gotPoster()); // empty line to get space for the rating stars
 	processTextToArray(txt, 0, imdb->gotPoster());
 
-	if (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-	{
-		cTmdb* tmdb = new cTmdb(epgData.title);
-		if ((tmdb->getResults() > 0) && (!tmdb->getDescription().empty()))
-		{
-			processTextToArray("themoviedb.org:", 0, imdb->gotPoster());
-			processTextToArray(tmdb->getDescription(), 0, imdb->gotPoster());
-		}
-		delete tmdb;
-	}
-
 	textCount = epgText.size();
 
 	//rating
