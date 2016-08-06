@@ -130,6 +130,7 @@ CEpgData::CEpgData()
 	//NI
 	imdb = CIMDB::getInstance();
 	imdb_active = false;
+	movie_filename.clear(); //NI
 }
 
 CEpgData::~CEpgData()
@@ -561,6 +562,7 @@ int CEpgData::show_mp(MI_MOVIE_INFO *mp_movie_info, int /*mp_position*/, int /*m
 	epgData.title = mp_movie_info->epgTitle;
 	epgData.info1 = mp_movie_info->epgInfo1;
 	epgData.info2 = mp_movie_info->epgInfo2;
+	movie_filename = mp_movie_info->file.Name; //NI
 
 	epgData.itemDescriptions.clear();
 	epgData.items.clear();
@@ -1123,13 +1125,26 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				}
 				else
 				{
+					CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, LOCALE_IMDB_INFO_SAVE);
+					hintBox->paint();
 					imdb_active = false;
-					std::string filename = imdb->getFilename(channel, epgData.eventID);
 
-					if (File_copy(imdb->posterfile.c_str(), filename.c_str()))
-						showTimerEventBar (true); //show buttons
+					std::string picname;
+					if (mp_info)
+					{
+						size_t _pos;
+						if ((_pos = movie_filename.rfind(".")) != std::string::npos)
+							picname = movie_filename.substr(0, _pos) + ".jpg";
+					}
 					else
+						picname = imdb->getFilename(channel, epgData.eventID);
+
+					if (!File_copy(imdb->posterfile.c_str(), picname.c_str()))
 						perror( "IMDb: error copy file" );
+
+					sleep(2);
+					hintBox->hide();
+					showTimerEventBar (true); //show buttons
 				}
 				break;
 			}

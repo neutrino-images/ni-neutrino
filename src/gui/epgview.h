@@ -103,6 +103,7 @@ class CEpgData
 		int imdb_stars;
 		std::string imdb_rating;
 		std::string epg_title;
+		std::string movie_filename;
 		int showIMDb(bool splash = false);
 		Font *fontIMDb;
 
