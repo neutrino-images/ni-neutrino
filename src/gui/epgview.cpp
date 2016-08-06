@@ -1443,6 +1443,7 @@ struct button_label EpgButtons[][EpgButtonsMax] =
 	},
 	{ // movieplayer mode
 		{ NEUTRINO_ICON_BUTTON_RED, LOCALE_EPG_SAVING },
+		{ NEUTRINO_ICON_BUTTON_GREEN, LOCALE_IMDB_INFO }, //NI
 		{ NEUTRINO_ICON_BUTTON_0, LOCALE_TMDB_INFO } //NI
 	}
 };
@@ -1478,7 +1479,7 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 	bool fscr = (has_follow_screenings && !call_fromfollowlist);
 	EpgButtons[fscr ? 0 : 1][1].locale = imdb_active ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
 	if (mp_info)
-		::paintButtons(x, y, w, tmdb ? 2 : 1, EpgButtons[2], w, h);
+		::paintButtons(x, y, w, tmdb ? 3 : 2, EpgButtons[2], w, h); //NI
 	else
 	{
 		int c = EpgButtonsMax;
