@@ -1072,7 +1072,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					epgText = epgText_saved;
 					textCount = epgText.size();
 				}
-				if (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+				if (g_settings.tmdb_enabled)
 				{
 					showPos = 0;
 					if (!tmdb_active) {
@@ -1475,7 +1475,7 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 		adzap_button += " " + to_string(g_settings.adzap_zapBackPeriod / 60) + " ";
 		adzap_button += g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE);
 	}
-	bool tmdb = (g_settings.tmdb_api_key != "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	bool tmdb = g_settings.tmdb_enabled;
 	bool fscr = (has_follow_screenings && !call_fromfollowlist);
 	EpgButtons[fscr ? 0 : 1][1].locale = imdb_active ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
 	if (mp_info)
