@@ -31,8 +31,6 @@
 
 #include <global.h>
 #include <driver/screen_max.h>
-#include <gui/components/cc.h>
-#include <gui/epgview.h> //bigFonts
 #include <system/httptool.h>
 #include <system/helpers.h>
 #include <eitd/sectionsd.h>
@@ -44,8 +42,6 @@
 
 CIMDB::CIMDB()
 {
-	frameBuffer = CFrameBuffer::getInstance();
-
 	surl		= "http://www.google.de/search?q=";
 	soutfile	= "/tmp/google.out";
 	IMDburl		= "http://www.omdbapi.com/?plot=full&r=json&i=";
@@ -53,22 +49,11 @@ CIMDB::CIMDB()
 	posterfile	= "/tmp/imdb.jpg";
 	stars_bg	= ICONSDIR "/stars_bg.png";
 	stars		= ICONSDIR "/stars.png";
-
-	cc_win		= NULL;
-	cc_txt		= NULL;
-
-	imdb_active	= false;
-
-	//initFrame(); /*not use for epginfo
 }
 
 CIMDB::~CIMDB()
 {
 	cleanup();
-
-	imdb_active = false;
-	if(cc_win)
-		delete cc_win;
 }
 
 CIMDB* CIMDB::getInstance()
@@ -216,6 +201,7 @@ std::string CIMDB::parseFile(std::string search1, std::string search2, const cha
 
 	return(ret);
 }
+
 std::string CIMDB::googleIMDb(std::string searchStr)
 {
 	CHTTPTool httpTool;
@@ -421,290 +407,4 @@ void CIMDB::cleanup()
 		unlink(soutfile.c_str());
 	if (access(posterfile.c_str(), F_OK) == 0)
 		unlink(posterfile.c_str());
-	imdb_active = false;
-}
-
-void CIMDB::initFrame()
-{
-	printf("[CIMDB::%s] \r\n", __FUNCTION__);
-
-	fontheight	= g_Font[SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE]->getHeight();
-	h_offset	= 10;
-	v_offset	= 10;
-
-	//create window object to get window positions
-	if (cc_win == NULL){
-		cc_win = new CComponentsWindow();
-
-		//recalc window
-		int w = frameBuffer->getScreenWidthRel();
-		int h = frameBuffer->getScreenHeightRel();
-		int x = getScreenStartX(w);
-		int y = getScreenStartY(h);
-
-		//set new dimensions;
-		cc_win->setDimensionsAll(x, y, w, h);
-		cc_win->Refresh();
-
-		//get window footer object
-		CComponentsFooter *winfooter = cc_win->getFooterObject();
-		winfooter = cc_win->getFooterObject();
-		h_footer = winfooter->getHeight();
-
-		//get window body object
-		CComponentsForm *winbody = cc_win->getBodyObject();
-		h_body = winbody->getHeight();
-		w_body = winbody->getWidth();
-	}
-
-	//calc button position
-	btn_start = 10;
-	btn_width = (cc_win->getWidth()-2*btn_start)/4;
-	btn_height = h_footer-(h_footer/4);
-}
-
-void CIMDB::showTextWindow(const std::string title, const std::string txt)
-{
-	if(cc_win == NULL){
-		initFrame();
-	}
-
-	printf("[CIMDB::%s] \r\n", __FUNCTION__);
-
-	bigFonts(true);
-
-	//set window header
-	cc_win->setWindowCaption(title);
-	cc_win->setWindowIcon(NEUTRINO_ICON_INFO);
-	cc_win->setWindowHeaderButtons(CComponentsHeader::CC_BTN_EXIT);
-
-	//create text item
-	if(cc_txt == NULL){
-		cc_txt = new CComponentsText();
-	}
-
-	cc_txt->setDimensionsAll(0, 0, w_body, h_body);
-	cc_txt->setTextBorderWidth(h_offset, 0);
-	cc_txt->setText(txt, CTextBox::TOP | CTextBox::SCROLL, g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]);
-
-	/*add text item to window body object ...
-	* CComponentsForm *winbody = cc_win->getBodyObject();
-	* winbody->addCCItem(cc_txt);
-	*
-	*...or directly with addWindowItem(cc_txt);
-	*/
-	cc_win->addWindowItem(cc_txt);
-
-	//get window footer object
-	CComponentsForm *winfooter = cc_win->getFooterObject();
-	winfooter->setColorBody(COL_INFOBAR_SHADOW_PLUS_1);
-
-	//create button items
-	CComponentsButtonGreen	*cc_button_gn = new CComponentsButtonGreen(btn_start, CC_CENTERED, btn_width, btn_height, LOCALE_IMDB_INFO,
-		/*parent*/		NULL,
-		/*selected*/		false,
-		/*enabled*/		true,
-		/*has_shadow*/		false,
-		/*color_frame*/		winfooter->getColorBody(),
-		/*color_body*/		winfooter->getColorBody(),
-		/*color_shadow*/	COL_MENUCONTENTDARK_PLUS_0);
-	cc_button_gn->doPaintBg(false);
-	cc_button_gn->setButtonTextColor(COL_INFOBAR_SHADOW_TEXT);
-	cc_button_gn->setColBodyGradient(CC_COLGRAD_OFF);
-	cc_button_gn->setFrameThickness(0);
-
-	//add button object to window footer
-	winfooter->addCCItem(cc_button_gn);
-
-	//show window
-	cc_win->paint();
-
-	bigFonts(false);
-}
-
-void CIMDB::hideWindow(bool keep_active)
-{
-	if (!keep_active)
-		imdb_active = false;
-
-	cc_win->kill();
-
-	//deallocate window object, dletes added cc_items also
-	if(cc_win)
-		delete cc_win;
-
-	cc_win		= NULL;
-	cc_txt		= NULL;
-}
-
-//scroll text
-void CIMDB::scroll(bool scrollDown)
-{
-	bigFonts(true);
-
-	//get the textbox instance and use CTexBbox scroll methods
-	CTextBox* ctb = NULL;
-	if (cc_txt)
-		ctb = cc_txt->getCTextBoxObject();
-	if (ctb)
-	{
-		ctb->enableBackgroundPaint(true);
-		if (scrollDown)
-			ctb->scrollPageDown(1);
-		else
-			ctb->scrollPageUp(1);
-		ctb->enableBackgroundPaint(false);
-	}
-
-	bigFonts(false);
-}
-
-void CIMDB::showIMDbWindow(const std::string title)
-{
-	if(cc_win == NULL){
-		initFrame();
-	}
-	printf("[CIMDB::%s] \r\n", __FUNCTION__);
-
-	bigFonts(true);
-
-	std::string print_buffer;
-	item_top		= v_offset;
-	int h_imdbtitle		= fontheight;
-	int left_offset		= h_offset+ 20;
-	int w_poster_max	= w_body/4; // max 25%
-	int h_poster_max	= h_body- item_top- ((h_imdbtitle+ fontheight)*2 /*space from top to starbar*/);
-	int w_starbar		= 160; //starbar picture width
-	int h_starbar		= fontheight;
-	std::string pg_value	= "0";
-	imdb_active		= true;
-
-	//show splash
-	cc_win->setWindowCaption("IMDb: Daten werden geladen ...");
-	cc_win->setWindowIcon(NEUTRINO_ICON_INFO);
-	cc_win->setWindowHeaderButtons(CComponentsHeader::CC_BTN_EXIT);
-	//get window footer object
-	CComponentsForm *winfooter = cc_win->getFooterObject();
-	winfooter->setColorBody(COL_INFOBAR_SHADOW_PLUS_1);
-	cc_win->paint();
-
-	//google, get IMDb-html and poster
-	getIMDb(title);
-
-	//get title from IMDb
-	print_buffer = "Title";
-	getIMDbElement(print_buffer);
-
-	//set window caption
-	cc_win->setWindowCaption(title);
-
-	//create title item
-	CComponentsText *cc_title = new CComponentsText();
-	cc_title->setDimensionsAll(left_offset, item_top, w_body-left_offset, h_imdbtitle);
-	cc_title->setText(print_buffer, CTextBox::TOP, g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]);
-	//cc_title->setColorBody(COL_MENUCONTENTSELECTED_PLUS_0); /*display text body*/
-
-	//add title item to window object
-	cc_win->addWindowItem(cc_title);
-
-	item_top += h_imdbtitle+ fontheight;
-
-	//create poster item
-	CComponentsPicture *cc_pic = new CComponentsPicture(left_offset, item_top, w_poster_max, h_poster_max, posterfile);
-#if 0
-	cc_pic->setMaxWidth(w_poster_max);
-	cc_pic->setMaxHeight(h_poster_max);
-	cc_pic->setPictureAlign(CC_ALIGN_TOP | CC_ALIGN_LEFT);
-#endif
-	cc_pic->setColorBody(COL_MENUCONTENT_PLUS_0);
-
-	//get picture size
-	int w_pic = 0, h_pic = 0;
-	cc_pic->getSize(&w_pic, &h_pic);
-	printf("FIXME! cc_pic->getSize(&w_pic, &h_pic); *** w_pic = %i, h_pic = %i\n",w_pic, h_pic);
-	//the Fix
-	w_pic = 0;
-	h_pic = 0;
-	extern CPictureViewer * g_PicViewer;
-	g_PicViewer->getSize(posterfile.c_str(), &w_pic, &h_pic);
-        printf("THE FIX g_PicViewer->getSize(posterfile.c_str(), &w_pic, &h_pic); *** w_pic = %i, h_pic = %i\n",w_pic, h_pic);
-
-
-	//add poster item to window object
-	cc_win->addWindowItem(cc_pic);
-
-	//rating
-	print_buffer = "imdbRating";
-	getIMDbElement(print_buffer);
-
-	pg_value = print_buffer;
-	if(print_buffer == "N/A"){
-		pg_value = "1";
-		print_buffer = "Keine Bewertung\n";
-	}
-	else
-		print_buffer += "/10\n";
-
-	size_t pos = pg_value.find_first_of(",.");
-	if(pos!= std::string::npos)
-		pg_value.replace(pos,1,""); // change 8,1 or 8.1 to 81
-
-	//get IMDb text data
-	getIMDbData(print_buffer);
-
-	left_offset += w_pic+ (w_pic == 0 ? 0 : 30);
-
-	//create starbar item
-	CProgressBar *cc_starbar = new CProgressBar();
-	cc_starbar->setProgress(left_offset, item_top, w_starbar, h_starbar, atoi(pg_value.c_str()), 100);
-	cc_starbar->setType(CProgressBar::PB_STARBAR);
-	cc_starbar->setFrameThickness(0);
-
-	//add starbar item to window body object
-	cc_win->addWindowItem(cc_starbar);
-
-	item_top += h_starbar;
-	int h_txt =  h_body- v_offset- h_imdbtitle- fontheight- h_starbar;
-
-	//create imdbtext item
-	if (cc_txt == NULL)
-		cc_txt = new CComponentsText();
-	cc_txt->setDimensionsAll(left_offset, item_top, w_body-left_offset, h_txt);
-	cc_txt->setText(print_buffer, CTextBox::TOP | CTextBox::SCROLL, g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]);
-	//cc_imdbtext->setColorBody(COL_MENUCONTENTSELECTED_PLUS_0); /*display text body*/
-
-	//add imdbtext item to window body object
-	cc_win->addWindowItem(cc_txt);
-
-	//create button items
-	CComponentsButtonGreen	*cc_button_gn = new CComponentsButtonGreen(btn_start, 0, btn_width, btn_height, "Bild speichern",
-		/*parent*/		NULL,
-		/*selected*/		false,
-		/*enabled*/		true,
-		/*has_shadow*/		false,
-		/*color_frame*/		winfooter->getColorBody(),
-		/*color_body*/		winfooter->getColorBody(),
-		/*color_shadow*/	COL_MENUCONTENTDARK_PLUS_0);
-	cc_button_gn->doPaintBg(false);
-	cc_button_gn->setButtonTextColor(COL_INFOBAR_SHADOW_TEXT);
-	cc_button_gn->setColBodyGradient(CC_COLGRAD_OFF);
-	cc_button_gn->setFrameThickness(0);
-
-	//add button object to window footer
-	winfooter->addCCItem(cc_button_gn);
-
-	cc_win->paint();
-
-	bigFonts(false);
-}
-
-void CIMDB::bigFonts(bool on)
-{
-	if (g_settings.bigFonts)
-	{
-		if (on)
-			g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->setSize((int)(g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->getSize() * BIG_FONT_FAKTOR));
-		else
-			g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->setSize((int)(g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->getSize() / BIG_FONT_FAKTOR));
-	}
 }

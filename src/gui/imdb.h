@@ -36,7 +36,6 @@ class CIMDB
 		~CIMDB();
 		static CIMDB* getInstance();
 
-		CFrameBuffer *frameBuffer;
 		std::string surl;
 		std::string soutfile;
 		std::string IMDbAPI;
@@ -51,11 +50,6 @@ class CIMDB
 
 		void getIMDbData(std::string& txt);
 
-		void 	hideWindow(bool keep_active = false);
-		void	showIMDbWindow(const std::string title);
-		void	showTextWindow(const std::string title, const std::string txt);
-		void	scroll(bool scrollDown);
-		bool	isActive() { return imdb_active; };
 		bool	gotPoster() { return (access(posterfile.c_str(), F_OK) == 0); };
 
 		virtual void getIMDbElement(std::string& element)  { element = m[element]; };
@@ -69,17 +63,7 @@ class CIMDB
 		std::string parseFile(std::string search1, std::string search2, const char* file, std::string firstline="", int line_offset=0);
 		std::map<std::string, std::string> m;
 
-		CComponentsWindow  	*cc_win;
-		CComponentsText		*cc_txt;
-
-		int	item_top, fontheight;
-		int	h_body, w_body, h_offset, v_offset;
-		int	h_footer;
-		int	btn_start, btn_width, btn_height;
-		bool 	imdb_active;
-		void 	initFrame();
 		void	initMap(std::map<std::string, std::string>& my);
-		void	bigFonts(bool on);
 };
 
 #endif
