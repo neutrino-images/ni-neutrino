@@ -1001,7 +1001,7 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 			configfile.setString("usermenu_tv_yellow", g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items);
 		}
 	}
-	else if (g_settings.version_pseudo < "20160623110000")
+	if (g_settings.version_pseudo < "20160623110000")
 	{
 		if (g_settings.screen_xres == 112)
 			g_settings.screen_xres = 105;
@@ -1009,7 +1009,7 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		if (g_settings.screen_yres == 112)
 			g_settings.screen_yres = 105;
 	}
-	else if (g_settings.version_pseudo < "20160804110000")
+	if (g_settings.version_pseudo < "20160804110000")
 	{
 		if (g_settings.tmdb_api_key == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 			g_settings.tmdb_api_key = "7270f1b571c4ecbb5b204ddb7f8939b1";
