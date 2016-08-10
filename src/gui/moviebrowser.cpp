@@ -1550,7 +1550,7 @@ void CMovieBrowser::refreshMovieInfo(void)
 
 void CMovieBrowser::info_hdd_level(bool paint_hdd)
 {
-	if (show_mode == MB_SHOW_YT)
+	if (show_mode == MB_SHOW_YT || !g_settings.infobar_show_sysfs_hdd)
 		return;
 
 	struct statfs s;
@@ -1562,9 +1562,6 @@ void CMovieBrowser::info_hdd_level(bool paint_hdd)
 			blocks_percent_used = (long)(blocks_used * 100.0 / (blocks_used + s.f_bavail) + 0.5);
 		}
 	}
-
-	if (paint_hdd)
-		paint_hdd = g_settings.infobar_show_sysfs_hdd; // don't paint if disabled by user
 
 	if (tmp_blocks_percent_used != blocks_percent_used || paint_hdd) {
 		tmp_blocks_percent_used = blocks_percent_used;
