@@ -1201,7 +1201,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				//NI
 				if (imdb_active) {
 					imdb_active = false;
-					showTimerEventBar (true); //show buttons
+					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
 					epgText = epgText_saved;
 					textCount = epgText.size();
 				}
@@ -1245,20 +1245,21 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					textCount = epgText.size();
 					stars=0;
 				}
-				if(!imdb_active)
+				if (!imdb_active)
 				{
 					//show IMDb info
+					imdb_active = true;
 					showIMDb(true); //show splashscreen only
 					imdb->getIMDb(epgData.title);
 					showIMDb();
-					showTimerEventBar (true); //show buttons
+					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
 					timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
 				}
 				else
 				{
+					imdb_active = false;
 					CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, LOCALE_IMDB_INFO_SAVE);
 					hintBox->paint();
-					imdb_active = false;
 
 					std::string picname;
 					if (mp_info)
@@ -1275,7 +1276,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 
 					sleep(2);
 					hintBox->hide();
-					showTimerEventBar (true); //show buttons
+					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
 				}
 				break;
 			}
@@ -1642,7 +1643,7 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 	}
 	bool tmdb = g_settings.tmdb_enabled;
 	bool fscr = (has_follow_screenings && !call_fromfollowlist);
-	EpgButtons[fscr ? 0 : 1][1].locale = imdb_active ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
+	EpgButtons[mp_info ? 2 : (fscr ? 0 : 1)][1].locale = imdb_active ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
 	if (mp_info)
 		::paintButtons(x, y, w, tmdb ? 3 : 2, EpgButtons[2], w, h); //NI
 	else
@@ -1677,8 +1678,6 @@ int CEpgData::showIMDb(bool splash)
 
 	if(((title.find("IMDb: URL (Seite) nicht gefunden")) != std::string::npos))
 		return 1;
-
-	imdb_active = true;
 
 	// clear epg array
 	epgText_saved = epgText;
