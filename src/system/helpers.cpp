@@ -97,7 +97,7 @@ void  wakeup_hdd(const char *hdd_dir, bool msg)
 		msg = false;
 	if(msg)
 		loadBox.paint();
-	std::string s = get_path("/bin/wakeup.sh");
+	std::string s = check_var("/bin/wakeup.sh");
 	my_system(2,s.c_str(),hdd_dir);
 
 	if (!g_settings.hdd_wakeup) {
@@ -1202,16 +1202,16 @@ std::string filehash(const char *file)
 	return os.str();
 }
 
-std::string get_path(const char *path)
+std::string check_var(const char *file)
 {
-	if(path[0] == '/' && strstr(path,"/var") == 0)
+	std::string var = "/var";
+	if(file[0] == '/' && strstr(file, var.c_str()) == 0)
 	{
-		std::string varc = "/var";
-		varc += path;
+		std::string varfile = var + file;
 
-		if(file_exists(varc.c_str()))
-			return varc;
+		if (file_exists(varfile))
+			return varfile;
 	}
 
-	return path;
+	return file;
 }
