@@ -59,9 +59,6 @@
 #include <eitd/sectionsd.h>
 #include <timerdclient/timerdclient.h>
 
-//NI
-#include <system/helpers.h>
-
 extern CPictureViewer * g_PicViewer;
 
 #define ICON_LARGE_WIDTH 26
@@ -1272,7 +1269,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					else
 						picname = imdb->getFilename(channel, epgData.eventID);
 
-					if (!File_copy(imdb->posterfile.c_str(), picname.c_str()))
+					CFileHelpers fh;
+					if (!fh.copyFile(imdb->posterfile.c_str(), picname.c_str()))
 						perror( "IMDb: error copy file" );
 
 					sleep(2);

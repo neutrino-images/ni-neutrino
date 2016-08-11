@@ -911,8 +911,11 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 				printf("Poster\n");
 				poster = m_movieSelectionHandler->file.Name.substr(0, pos);
 				poster += ".jpg";
-				File_copy(imdb->posterfile.c_str(), poster.c_str());
-				printf("* poster: %s\n", poster.c_str());
+				CFileHelpers fh;
+				if (fh.copyFile(imdb->posterfile.c_str(), poster.c_str()))
+					printf("* poster: %s\n", poster.c_str());
+				else
+					printf("* poster: copy error\n");
 			}
 
 			//m_movieInfo.saveMovieInfo(*m_movieSelectionHandler);

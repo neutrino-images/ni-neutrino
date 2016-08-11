@@ -1110,44 +1110,7 @@ std::string Lang2ISO639_1(std::string& lang)
 }
 
 //NI
-bool File_copy(std::string rstr, std::string wstr)
-{
-	char * buffer;
-	long size;
-
-	std::ifstream infile(rstr.c_str(), std::ifstream::binary);
-	if (infile)
-	{
-		std::ofstream outfile(wstr.c_str(), std::ofstream::binary);
-		if (outfile)
-		{
-			// get size of file
-			infile.seekg(0,std::ifstream::end);
-			size=infile.tellg();
-			infile.seekg(0);
-
-			buffer = new char [size];
-			infile.read (buffer,size);
-
-			outfile.write (buffer,size);
-
-			delete[] buffer;
-			outfile.close();
-		}
-		else
-		{
-			return false;
-		}
-		infile.close();
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-// rreturns the pid of the first process found in /proc
+// returns the pid of the first process found in /proc
 int getpidof(const char *process)
 {
 	DIR *dp;
