@@ -2037,6 +2037,7 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 
 			TRACE("[mb]->new sorting %d,%s\n",m_settings.sorting.item,g_Locale->getText(m_localizedItemName[m_settings.sorting.item]));
 			refreshBrowserList();
+			refreshMovieInfo();
 			refreshFoot();
 		}
 	}
@@ -2325,19 +2326,20 @@ bool CMovieBrowser::onButtonPressMovieInfoList(neutrino_msg_t msg)
 	return (result);
 }
 
-std::string CMovieBrowser::formatDeleteMsg(MI_MOVIE_INFO *movieinfo, Font *msgFont, const int boxWidth)
+std::string CMovieBrowser::formatDeleteMsg(MI_MOVIE_INFO *movieinfo, int msgFont, const int boxWidth)
 {
+	Font *msgFont_ = g_Font[msgFont];
 	int msgWidth = boxWidth - 20;
 	std::string msg = g_Locale->getText(LOCALE_FILEBROWSER_DODELETE1);
 	msg += "\n";
 
 	if (!movieinfo->epgTitle.empty()) {
-		int titleW = msgFont->getRenderWidth(movieinfo->epgTitle);
+		int titleW = msgFont_->getRenderWidth(movieinfo->epgTitle);
 		int infoW = 0;
 		int zW = 0;
 		if (!movieinfo->epgInfo1.empty()) {
-			infoW = msgFont->getRenderWidth(movieinfo->epgInfo1);
-			zW = msgFont->getRenderWidth(" ()");
+			infoW = msgFont_->getRenderWidth(movieinfo->epgInfo1);
+			zW = msgFont_->getRenderWidth(" ()");
 		}
 
 		if ((titleW+infoW+zW) <= msgWidth) {
@@ -2374,7 +2376,7 @@ bool CMovieBrowser::onDeleteFile(MI_MOVIE_INFO *movieinfo, bool skipAsk)
 	bool result = false;
 
 	/* default font for ShowMsg */
-	Font *msgFont = g_Font[SNeutrinoSettings::FONT_TYPE_MENU];
+	int msgFont = SNeutrinoSettings::FONT_TYPE_MENU;
 	/* default width for ShowMsg */
 	int msgBoxWidth = 450;
 
