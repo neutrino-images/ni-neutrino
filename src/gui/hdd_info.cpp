@@ -373,7 +373,7 @@ void CHDDInfoWidget::paint(const std::string &Key)
 	// paint backgrounds
 	frameBuffer->paintBoxRel(x, y, width, hheight, COL_MENUHEAD_PLUS_0, RADIUS_LARGE, CORNER_TOP);
 	frameBuffer->paintBoxRel(x, y+ hheight, width, bheight, COL_MENUCONTENT_PLUS_0);
-	frameBuffer->paintBoxRel(x, y+ hheight+ bheight, width, fheight, COL_SHADOW_PLUS_1, RADIUS_LARGE, CORNER_BOTTOM);
+	frameBuffer->paintBoxRel(x, y+ hheight+ bheight, width, fheight, COL_MENUFOOT_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
 
 	// header
 	int xpos = x + offset/2;
