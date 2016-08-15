@@ -107,7 +107,7 @@ COsdSetup::~COsdSetup()
 }
 
 //font settings
-const SNeutrinoSettings::FONT_TYPES channellist_font_sizes[5] =
+const SNeutrinoSettings::FONT_TYPES channellist_font_sizes[] =
 {
 	SNeutrinoSettings::FONT_TYPE_CHANNELLIST,
 	SNeutrinoSettings::FONT_TYPE_CHANNELLIST_DESCR,
@@ -115,8 +115,9 @@ const SNeutrinoSettings::FONT_TYPES channellist_font_sizes[5] =
 	SNeutrinoSettings::FONT_TYPE_CHANNELLIST_EVENT,
 	SNeutrinoSettings::FONT_TYPE_CHANNEL_NUM_ZAP
 };
+size_t channellist_font_items = sizeof(channellist_font_sizes)/sizeof(channellist_font_sizes[0]);
 
-const SNeutrinoSettings::FONT_TYPES eventlist_font_sizes[5] =
+const SNeutrinoSettings::FONT_TYPES eventlist_font_sizes[] =
 {
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE,
@@ -124,8 +125,9 @@ const SNeutrinoSettings::FONT_TYPES eventlist_font_sizes[5] =
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_DATETIME,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_EVENT
 };
+size_t eventlist_font_items = sizeof(eventlist_font_sizes)/sizeof(eventlist_font_sizes[0]);
 
-const SNeutrinoSettings::FONT_TYPES infobar_font_sizes[5] =
+const SNeutrinoSettings::FONT_TYPES infobar_font_sizes[] =
 {
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_NUMBER,
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_CHANNAME,
@@ -133,16 +135,18 @@ const SNeutrinoSettings::FONT_TYPES infobar_font_sizes[5] =
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL,
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_ECMINFO //NI
 };
+size_t infobar_font_items = sizeof(infobar_font_sizes)/sizeof(infobar_font_sizes[0]);
 
-const SNeutrinoSettings::FONT_TYPES epg_font_sizes[4] =
+const SNeutrinoSettings::FONT_TYPES epg_font_sizes[] =
 {
 	SNeutrinoSettings::FONT_TYPE_EPG_TITLE,
 	SNeutrinoSettings::FONT_TYPE_EPG_INFO1,
 	SNeutrinoSettings::FONT_TYPE_EPG_INFO2,
 	SNeutrinoSettings::FONT_TYPE_EPG_DATE
 };
+size_t epg_font_items = sizeof(epg_font_sizes)/sizeof(epg_font_sizes[0]);
 
-const SNeutrinoSettings::FONT_TYPES menu_font_sizes[5] =
+const SNeutrinoSettings::FONT_TYPES menu_font_sizes[] =
 {
 	SNeutrinoSettings::FONT_TYPE_MENU_TITLE,
 	SNeutrinoSettings::FONT_TYPE_MENU,
@@ -150,30 +154,35 @@ const SNeutrinoSettings::FONT_TYPES menu_font_sizes[5] =
 	SNeutrinoSettings::FONT_TYPE_MENU_FOOT,
 	SNeutrinoSettings::FONT_TYPE_MENU_HINT
 };
+size_t menu_font_items = sizeof(menu_font_sizes)/sizeof(menu_font_sizes[0]);
+
 //NI
-const SNeutrinoSettings::FONT_TYPES moviebrowser_font_sizes[3] =
+const SNeutrinoSettings::FONT_TYPES moviebrowser_font_sizes[] =
 {
 	SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD,
 	SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_LIST,
 	SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_INFO
 };
-const SNeutrinoSettings::FONT_TYPES other_font_sizes[2] =
+size_t moviebrowser_font_items = sizeof(moviebrowser_font_sizes)/sizeof(moviebrowser_font_sizes[0]);
+
+const SNeutrinoSettings::FONT_TYPES other_font_sizes[] =
 {
 	SNeutrinoSettings::FONT_TYPE_SUBTITLES,
 	SNeutrinoSettings::FONT_TYPE_FILEBROWSER_ITEM
 };
+size_t other_font_items = sizeof(other_font_sizes)/sizeof(other_font_sizes[0]);
 
-#define FONT_GROUP_COUNT 7 //NI
-font_sizes_groups font_sizes_groups[FONT_GROUP_COUNT] =
+font_sizes_groups font_sizes_groups[] =
 {
-	{LOCALE_FONTMENU_MENU       , 5, menu_font_sizes       , "fontsize.dmen", LOCALE_MENU_HINT_MENU_FONTS },
-	{LOCALE_FONTMENU_CHANNELLIST, 5, channellist_font_sizes, "fontsize.dcha", LOCALE_MENU_HINT_CHANNELLIST_FONTS },
-	{LOCALE_FONTMENU_EVENTLIST  , 5, eventlist_font_sizes  , "fontsize.deve", LOCALE_MENU_HINT_EVENTLIST_FONTS },
-	{LOCALE_FONTMENU_EPG        , 4, epg_font_sizes        , "fontsize.depg", LOCALE_MENU_HINT_EPG_FONTS },
-	{LOCALE_FONTMENU_INFOBAR    , 5, infobar_font_sizes    , "fontsize.dinf", LOCALE_MENU_HINT_INFOBAR_FONTS }, //NI
-	{LOCALE_FONTMENU_MOVIEBROWSER,3, moviebrowser_font_sizes,"fontsize.dmbr", LOCALE_MENU_HINT_MOVIEBROWSER_FONTS }, //NI
-	{LOCALE_FONTMENU_OTHER      , 2, other_font_sizes      , "fontsize.doth", LOCALE_MENU_HINT_OTHER_FONTS }
+	{LOCALE_FONTMENU_MENU       , menu_font_items       , menu_font_sizes       , "fontsize.dmen", LOCALE_MENU_HINT_MENU_FONTS },
+	{LOCALE_FONTMENU_CHANNELLIST, channellist_font_items, channellist_font_sizes, "fontsize.dcha", LOCALE_MENU_HINT_CHANNELLIST_FONTS },
+	{LOCALE_FONTMENU_EVENTLIST  , eventlist_font_items  , eventlist_font_sizes  , "fontsize.deve", LOCALE_MENU_HINT_EVENTLIST_FONTS },
+	{LOCALE_FONTMENU_EPG        , epg_font_items        , epg_font_sizes        , "fontsize.depg", LOCALE_MENU_HINT_EPG_FONTS },
+	{LOCALE_FONTMENU_INFOBAR    , infobar_font_items    , infobar_font_sizes    , "fontsize.dinf", LOCALE_MENU_HINT_INFOBAR_FONTS },
+	{LOCALE_FONTMENU_MOVIEBROWSER,moviebrowser_font_items,moviebrowser_font_sizes,"fontsize.dmbr", LOCALE_MENU_HINT_MOVIEBROWSER_FONTS }, //NI
+	{LOCALE_FONTMENU_OTHER      , other_font_items      , other_font_sizes      , "fontsize.doth", LOCALE_MENU_HINT_OTHER_FONTS }
 };
+#define FONT_GROUP_COUNT (sizeof(font_sizes_groups)/sizeof(font_sizes_groups[0]))
 
 font_sizes_struct neutrino_font[SNeutrinoSettings::FONT_TYPE_COUNT] =
 {
@@ -357,7 +366,7 @@ int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 		return res;
 	}
 	else if(strncmp(actionKey.c_str(), "fontsize.d", 10) == 0) {
-		for (int i = 0; i < FONT_GROUP_COUNT; i++) {
+		for (unsigned int i = 0; i < FONT_GROUP_COUNT; i++) {
 			if (actionKey == font_sizes_groups[i].actionkey) {
 				for (unsigned int j = 0; j < font_sizes_groups[i].count; j++) {
 					SNeutrinoSettings::FONT_TYPES k = font_sizes_groups[i].content[j];
@@ -1019,7 +1028,7 @@ void COsdSetup::showOsdFontSizeSetup(CMenuWidget *menu_fonts)
 	//fontSettings->addItem( new CMenuForwarder(LOCALE_EPGPLUS_SELECT_FONT_NAME, true, NULL, this, "select_font"));
 
 	mn_widget_id_t w_index = MN_WIDGET_ID_OSDSETUP_FONTSIZE_MENU;
-	for (int i = 0; i < FONT_GROUP_COUNT; i++)
+	for (unsigned int i = 0; i < FONT_GROUP_COUNT; i++)
 	{
 		CMenuWidget *fontSettingsSubMenu = new CMenuWidget(LOCALE_FONTMENU_HEAD, NEUTRINO_ICON_KEYBINDING, width, w_index);
 
