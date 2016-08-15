@@ -1179,6 +1179,7 @@ menu.hint_hdd_tools Formatieren Sie die gefundenen Datenträger bzw. überprüfe
 menu.hint_hdd_wakeup Schaltet die internen Aufweckfunktionen für Festplatten ein oder aus
 menu.hint_hdd_wakeup_msg Schaltet die Benachrichtigung über den Start der Aufweckfunktion ein oder aus
 menu.hint_foot_back Ändern Sie die Fußleisten-Hintergrundfarbe
+menu.hint_foot_textcolor Ändern Sie die Fußleisten-Textfarbe
 menu.hint_head_back Ändern Sie die Titel-Hintergrundfarbe
 menu.hint_head_textcolor Ändern Sie die Titel-Textfarbe
 menu.hint_imageinfo Informationen über die installierte Software

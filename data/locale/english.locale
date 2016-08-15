@@ -1179,6 +1179,7 @@ menu.hint_hdd_tools Initialize HDD, check filesystem
 menu.hint_hdd_wakeup Turns the internal wakeup functions for connected drives on or off
 menu.hint_hdd_wakeup_msg Turns the messages while starting the wakeup function on or off
 menu.hint_foot_back Change GUI footer background color
+menu.hint_foot_textcolor Change GUI window footer text color
 menu.hint_head_back Change GUI title background color
 menu.hint_head_textcolor Change GUI window title text color
 menu.hint_imageinfo Information about installed software
