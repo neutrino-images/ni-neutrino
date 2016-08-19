@@ -786,6 +786,18 @@ void CFrameBuffer::setIconBasePath(const std::string & iconPath)
 	iconBasePath += "/";
 }
 
+std::string CFrameBuffer::getIconPath(std::string icon_name, std::string file_type)
+{
+	std::string path, filetype;
+	filetype = "." + file_type;
+	path = std::string(ICONSDIR_VAR) + "/" + icon_name + filetype;
+	if (access(path.c_str(), F_OK))
+		path = iconBasePath + "/" + icon_name + filetype;
+	if (icon_name.find("/", 0) != std::string::npos)
+		path = icon_name;
+	return path;
+}
+
 void CFrameBuffer::getIconSize(const char * const filename, int* width, int *height)
 {
 	*width = 0;
@@ -865,12 +877,10 @@ bool CFrameBuffer::paintIcon(const std::string & filename, const int x, const in
 			     const int h, const unsigned char offset, bool paint, bool paintBg, const fb_pixel_t colBg)
 {
 	struct rawHeader header;
-	int         width, height;
-	int              lfd;
+	int	 width, height;
 	fb_pixel_t * data;
 	struct rawIcon tmpIcon;
 	std::map<std::string, rawIcon>::iterator it;
-	int dsize;
 
 	if (!getActive())
 		return false;
@@ -878,24 +888,16 @@ bool CFrameBuffer::paintIcon(const std::string & filename, const int x, const in
 	int  yy = y;
 	//printf("CFrameBuffer::paintIcon: load %s\n", filename.c_str());fflush(stdout);
 
-	if (filename.empty())
-		return false; /* nothing to do */
 	/* we cache and check original name */
 	it = icon_cache.find(filename);
 	if(it == icon_cache.end()) {
-		std::string newname = filename;
-		/* if it is not an absolute path, search in configured paths */
-		if (filename.find("/", 0) == std::string::npos) {
-			newname = ICONSDIR_VAR + filename + ".png";
-			if (access(newname.c_str(), F_OK))
-				newname = iconBasePath + filename + ".png";
-		}
+		std::string newname = getIconPath(filename);
 		//printf("CFrameBuffer::paintIcon: check for %s\n", newname.c_str());fflush(stdout);
 
 		data = g_PicViewer->getIcon(newname, &width, &height);
 
-		if(data) {
-			dsize = width*height*sizeof(fb_pixel_t);
+		if(data) { //TODO: intercepting of possible full icon cache, that could cause strange behavior while painting of uncached icons
+			int dsize = width*height*sizeof(fb_pixel_t);
 			//printf("CFrameBuffer::paintIcon: %s found, data %x size %d x %d\n", newname.c_str(), data, width, height);fflush(stdout);
 			if(cache_size+dsize < ICON_CACHE_SIZE) {
 				cache_size += dsize;
@@ -908,22 +910,35 @@ bool CFrameBuffer::paintIcon(const std::string & filename, const int x, const in
 			goto _display;
 		}
 
-		newname = ICONSDIR_VAR + filename + ".raw";
-		if (access(newname.c_str(), F_OK))
-			newname = iconBasePath + filename + ".raw";
+		newname = getIconPath(filename, "raw");
 
-		lfd = open(newname.c_str(), O_RDONLY);
+		int lfd = open(newname.c_str(), O_RDONLY);
 
 		if (lfd == -1) {
 			//printf("paintIcon: error while loading icon: %s\n", newname.c_str());
 			return false;
 		}
-		read(lfd, &header, sizeof(struct rawHeader));
+
+		ssize_t s = read(lfd, &header, sizeof(struct rawHeader));
+		if (s < 0) {
+			perror("read");
+			return false;
+		}
+
+		if (s < (ssize_t) sizeof(rawHeader)){
+			printf("paintIcon: error while loading icon: %s, header too small\n", newname.c_str());
+			return false;
+		}
+
 
 		tmpIcon.width = width  = (header.width_hi  << 8) | header.width_lo;
 		tmpIcon.height = height = (header.height_hi << 8) | header.height_lo;
+		if (!width || !height) {
+			printf("paintIcon: error while loading icon: %s, wrong dimensions (%dHx%dW)\n", newname.c_str(), height, width);
+			return false;
+		}
 
-		dsize = width*height*sizeof(fb_pixel_t);
+		int dsize = width*height*sizeof(fb_pixel_t);
 
 		tmpIcon.data = (fb_pixel_t*) cs_malloc_uncached(dsize);
 		data = tmpIcon.data;
@@ -972,10 +987,9 @@ _display:
 	checkFbArea(x, yy, width, height, true);
 	if (paintBg)
 		paintBoxRel(x, yy, width, height, colBg);
-	blit2FB(data, width, height, x, yy);
+	blit2FB(data, width, height, x, yy, 0, 0, true);
 	checkFbArea(x, yy, width, height, false);
 	return true;
- 
 }
 
 void CFrameBuffer::loadPal(const std::string & filename, const unsigned char offset, const unsigned char endidx)
