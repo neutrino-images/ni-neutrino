@@ -34,6 +34,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <sigc++/signal.h>
 
 #define fb_pixel_t uint32_t
 
@@ -75,7 +76,7 @@ typedef struct gradientData_t
 
 class CFbAccel;
 /** Ausfuehrung als Singleton */
-class CFrameBuffer
+class CFrameBuffer : public sigc::trackable
 {
 	friend class CFbAccel;
 	private:
@@ -323,6 +324,7 @@ class CFrameBuffer
 		void paintVLineRelInternal(int x, int y, int dy, const fb_pixel_t col);
 		void paintHLineRelInternal(int x, int dx, int y, const fb_pixel_t col);
 #endif
+		sigc::signal<void> OnAfterSetPallette;
 };
 
 #endif
