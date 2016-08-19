@@ -34,7 +34,7 @@
 #define VALGRIND_PARANOIA(x) {}
 #endif
 
-int CTimerdClient::adzap_eventID = 0;
+//int CTimerdClient::adzap_eventID = 0;
 
 unsigned char   CTimerdClient::getVersion   () const
 {

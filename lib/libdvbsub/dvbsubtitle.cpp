@@ -135,7 +135,7 @@ void cDvbSubtitleBitmaps::Draw(int &min_x, int &min_y, int &max_x, int &max_y)
 	double yc = (double) CFrameBuffer::getInstance()->getScreenHeight(true)/(double) 576;
 	xc = yc; //FIXME should we scale also to full width ?
 	int xf = int(xc * (double) 720);
-
+#endif
 	for (i = 0; i < Count(); i++) {
 		uint32_t * colors = (uint32_t *) sub.rects[i]->pict.data[1];
 		int width = sub.rects[i]->w;
