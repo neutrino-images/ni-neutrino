@@ -33,6 +33,8 @@
 #include <gui/eventlist.h>
 #include <gui/epgplus.h>
 #include <gui/epgview.h>
+#include <gui/followscreenings.h>
+#include <gui/moviebrowser.h>
 #include <gui/timerlist.h>
 #include <gui/user_menue.h>
 
@@ -116,10 +118,13 @@ CEventList::CEventList()
 	oldIndex = -1;
 	oldEventID = -1;
 	bgRightBoxPaint = false;
+	header = NULL;
 }
 
 CEventList::~CEventList()
 {
+	delete header;
+	header = NULL;
 }
 
 void CEventList::UpdateTimerList(void)
@@ -267,7 +272,7 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 
 	// Calculate iheight (we assume the red button is the largest one?)
 	struct button_label tmp_button[1] = { { NEUTRINO_ICON_BUTTON_RED, LOCALE_EVENTLISTBAR_RECORDEVENT } };
-	iheight = ::paintButtons(0, 0, 0, 1, tmp_button, 0, 0, "", false, COL_INFOBAR_SHADOW_TEXT, NULL, 0, false);
+	iheight = ::paintButtons(0, 0, 0, 1, tmp_button, 0, 0, "", false, COL_MENUFOOT_TEXT, NULL, 0, false);
 
 	// Calculate theight
 	theight = g_Font[SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE]->getHeight();
@@ -463,35 +468,32 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 					else
 						recDir = "";
 				}
-				t_channel_id used_id = IS_WEBTV(channel_id) ? channel_id : evtlist[selected].channelID;
-				if (!recDir.empty()) //add/remove recording timer events and check/warn for conflicts
+				bool doRecord = true;
+				if (g_settings.recording_already_found_check)
 				{
-					if (g_Timerd->addRecordTimerEvent(used_id,
-								evtlist[selected].startTime,
-								evtlist[selected].startTime + evtlist[selected].duration,
-								evtlist[selected].eventID, evtlist[selected].startTime,
-								evtlist[selected].startTime - (ANNOUNCETIME + 120),
-								TIMERD_APIDS_CONF, true, recDir,false) == -1)
+					CHintBox loadBox(LOCALE_RECORDING_ALREADY_FOUND_CHECK, LOCALE_MOVIEBROWSER_SCAN_FOR_MOVIES);
+					loadBox.paint();
+					CMovieBrowser moviebrowser;
+					const char *rec_title = evtlist[selected].description.c_str();
+					bool already_found = moviebrowser.gotMovie(rec_title);
+					loadBox.hide();
+					if (already_found)
 					{
-						if(askUserOnTimerConflict(evtlist[selected].startTime - (ANNOUNCETIME + 120), evtlist[selected].startTime + evtlist[selected].duration)) //check for timer conflict
-						{
-							g_Timerd->addRecordTimerEvent(used_id,
-									evtlist[selected].startTime,
-									evtlist[selected].startTime + evtlist[selected].duration,
-									evtlist[selected].eventID, evtlist[selected].startTime,
-									evtlist[selected].startTime - (ANNOUNCETIME + 120),
-									TIMERD_APIDS_CONF, true, recDir,true);
-									
-							//ask user whether the timer event should be set anyway
-							ShowMsg(LOCALE_TIMER_EVENTRECORD_TITLE, LOCALE_TIMER_EVENTRECORD_MSG, CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_INFO);
-							timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
-						}
-					} 
-					else 
-					{
-						//ShowMsg(LOCALE_TIMER_EVENTRECORD_TITLE, LOCALE_TIMER_EVENTRECORD_MSG, CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_INFO);
-						timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
+						printf("already found in moviebrowser: %s\n", rec_title);
+						char message[1024];
+						snprintf(message, sizeof(message)-1, g_Locale->getText(LOCALE_RECORDING_ALREADY_FOUND), rec_title);
+						doRecord = (ShowMsg(LOCALE_RECORDING_ALREADY_FOUND_CHECK, message, CMessageBox::mbrYes, CMessageBox::mbYes | CMessageBox::mbNo) == CMessageBox::mbrYes);
 					}
+				}
+				t_channel_id used_id = IS_WEBTV(channel_id) ? channel_id : evtlist[selected].channelID;
+				if (!recDir.empty() && doRecord) //add/remove recording timer events and check/warn for conflicts
+				{
+					CFollowScreenings m(channel_id,
+						evtlist[selected].startTime,
+						evtlist[selected].startTime + evtlist[selected].duration,
+						evtlist[selected].description, evtlist[selected].eventID, TIMERD_APIDS_CONF, true, "", &evtlist);
+					m.exec(NULL, "");
+					timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
 				}
 				timerlist.clear();
 				g_Timerd->getTimerList (timerlist);
@@ -599,10 +601,13 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 		}
 		else if (msg == CRCInput::RC_epg)
 		{
-			hide();
-			CEPGplusHandler eplus;
-			eplus.exec(NULL, "");
-			loop = false;
+			if (g_settings.eventlist_epgplus)
+			{
+				hide();
+				CEPGplusHandler eplus;
+				eplus.exec(NULL, "");
+				loop = false;
+			}
 		}
 		else if (msg==CRCInput::RC_help || msg==CRCInput::RC_ok || msg==CRCInput::RC_info)
 		{
@@ -644,10 +649,10 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 			oldIndex = -1;
 			oldEventID = -1;
 			bgRightBoxPaint = false;
-			in_search = findEvents();
+			in_search = findEvents(channel_id, channelname);
 			timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
 		}
-		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites) {
+		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
 			g_RCInput->postMsg (msg, 0);
 			res = menu_return::RETURN_EXIT_ALL;
 			loop = false;
@@ -857,16 +862,19 @@ void CEventList::paintHead(t_channel_id _channel_id, std::string _channelname, s
 	int font_mid = SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE;
 	int font_lr  = SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE;
 
-	CComponentsFrmChain header(x, y, full_width, theight);
-	header.enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_MENUCONTENT_PLUS_0, g_settings.theme.menu_Head_gradient_direction);
-	header.setCorner(RADIUS_LARGE, CORNER_TOP);
+	if (!header){
+		header = new CComponentsFrmChain(x, y, full_width, theight);
+		header->enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_MENUCONTENT_PLUS_0, g_settings.theme.menu_Head_gradient_direction);
+		header->setCorner(RADIUS_LARGE, CORNER_TOP);
+	}
+	header->clear();
 
 	int x_off = 10;
 	int mid_width = full_width * 40 / 100; // 40%
 	int side_width = ((full_width - mid_width) / 2) - (2 * x_off);
 
 	//create an logo object
-	CComponentsChannelLogo* midLogo = new CComponentsChannelLogo(0, 0, _channelname, _channel_id, &header);
+	CComponentsChannelLogoScalable* midLogo = new CComponentsChannelLogoScalable(0, 0, _channelname, _channel_id, header);
 	if (midLogo->hasLogo()) {
 		//if logo object has found a logo and was ititialized, the hand  it's size
  		int w_logo = midLogo->getWidth();
@@ -885,24 +893,24 @@ void CEventList::paintHead(t_channel_id _channel_id, std::string _channelname, s
 		side_width = ((full_width - w_logo) / 2) - (4 * x_off);
 	}
 	else {
-		header.removeCCItem(midLogo); //remove/destroy logo object, if it is not available
-		CComponentsText *midText = new CComponentsText(CC_CENTERED, CC_CENTERED, mid_width, theight, _channelname, CTextBox::CENTER, g_Font[font_mid], CComponentsText::FONT_STYLE_REGULAR, &header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
+		header->removeCCItem(midLogo); //remove/destroy logo object, if it is not available
+		CComponentsText *midText = new CComponentsText(CC_CENTERED, CC_CENTERED, mid_width, theight, _channelname, CTextBox::CENTER, g_Font[font_mid], CComponentsText::FONT_STYLE_REGULAR, header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
 		midText->doPaintBg(false);
 	}
 
 	if (!_channelname_prev.empty()) {
-		CComponentsText *lText = new CComponentsText(x_off, CC_CENTERED, side_width, theight, _channelname_prev, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], CComponentsText::FONT_STYLE_REGULAR, &header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
+		CComponentsText *lText = new CComponentsText(x_off, CC_CENTERED, side_width, theight, _channelname_prev, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], CComponentsText::FONT_STYLE_REGULAR, header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
 		lText->doPaintBg(false);
 	}
 
 	if (!_channelname_next.empty()) {
 		int name_w = std::min(g_Font[font_lr]->getRenderWidth(_channelname_next), side_width);
 		int x_pos = full_width - name_w - x_off;
-		CComponentsText *rText = new CComponentsText(x_pos, CC_CENTERED, name_w, theight, _channelname_next, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], CComponentsText::FONT_STYLE_REGULAR, &header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
+		CComponentsText *rText = new CComponentsText(x_pos, CC_CENTERED, name_w, theight, _channelname_next, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], CComponentsText::FONT_STYLE_REGULAR, header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
 		rText->doPaintBg(false);
 	}
 
-	header.paint(CC_SAVE_SCREEN_NO);
+	header->paint(CC_SAVE_SCREEN_NO);
 }
 
 void CEventList::paint(t_channel_id channel_id)
@@ -1028,12 +1036,11 @@ int CEventListHandler::exec(CMenuTarget* parent, const std::string &/*actionkey*
 }
 
 /************************************************************************************************/
-bool CEventList::findEvents(void)
+bool CEventList::findEvents(t_channel_id channel_id, std::string channelname)
 /************************************************************************************************/
 {
 	bool res = false;
 	int event = 0;
-	t_channel_id channel_id = 0;
 
 	if((m_search_keyword.empty() || m_search_keyword == m_search_autokeyword) && evtlist[selected].eventID != 0)
 	{
@@ -1124,14 +1131,11 @@ bool CEventList::findEvents(void)
 		}
 		if(evtlist.empty())
 		{
-			if ( evtlist.empty() )
-			{
-				CChannelEvent evt;
-				//evt.description = m_search_keyword + ": " + g_Locale->getText(LOCALE_EPGVIEWER_NOTFOUND);
-				evt.description = g_Locale->getText(LOCALE_EPGVIEWER_NOTFOUND);
-				evt.eventID = 0;
-				evtlist.push_back(evt);
-			}
+			CChannelEvent evt;
+			//evt.description = m_search_keyword + ": " + g_Locale->getText(LOCALE_EPGVIEWER_NOTFOUND);
+			evt.description = g_Locale->getText(LOCALE_EPGVIEWER_NOTFOUND);
+			evt.eventID = 0;
+			evtlist.push_back(evt);
 		}
 		if (current_event == (unsigned int)-1)
 			current_event = 0;
@@ -1144,7 +1148,7 @@ bool CEventList::findEvents(void)
 		if(!m_search_keyword.empty()){
 			g_settings.epg_search_history.push_front(m_search_keyword);
 			std::list<std::string>::iterator it = g_settings.epg_search_history.begin();
-			it++;
+			++it;
 			while (it != g_settings.epg_search_history.end()) {
 				if (*it == m_search_keyword)
 					it = g_settings.epg_search_history.erase(it);
@@ -1157,7 +1161,10 @@ bool CEventList::findEvents(void)
 		}
 
 	}
-	paintHead(0, search_head_name);
+	if(event)
+		paintHead(0, search_head_name);
+	else
+		paintHead(channel_id, channelname);
 	paint();
 	showFunctionBar(true, channel_id);
 	return(res);

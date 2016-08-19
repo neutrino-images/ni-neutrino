@@ -131,8 +131,6 @@ class CCDraw : public COSDFader, public CComponentsSignals
 		///property: background gradient direction
 		int cc_body_gradient_direction, cc_body_gradient_direction_old;
 
-		//TODO: move into layers
-		int old_gradient_color;
 		///property: background gradient 2nd color
 		fb_pixel_t cc_body_gradient_2nd_col, cc_body_gradient_2nd_col_old;
 
@@ -238,7 +236,7 @@ class CCDraw : public COSDFader, public CComponentsSignals
 
 		///set corner types
 		///Possible corner types are defined in CFrameBuffer (see: driver/framebuffer.h)
-		///Note: default values are given from settings
+		///Note: default values are given from settings and corner radius sizes are predefined in /system/settings.h
 		virtual void setCornerType(const int& type);
 		///set corner radius and type
 		virtual void setCorner(const int& radius, const int& type = CORNER_ALL);

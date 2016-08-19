@@ -263,7 +263,7 @@ void CFileBrowser::fontInit()
 {
 	fnt_title = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE];
 	fnt_item  = g_Font[SNeutrinoSettings::FONT_TYPE_FILEBROWSER_ITEM];
-	fnt_small = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL];
+	fnt_foot  = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT];
 	width = frameBuffer->getScreenWidthRel();
 	height = frameBuffer->getScreenHeightRel();
 	x = getScreenStartX(width);
@@ -272,7 +272,7 @@ void CFileBrowser::fontInit()
 	fheight = fnt_item->getHeight();
 	if (fheight == 0)
 		fheight = 1; /* avoid div by zero on invalid font */
-	//foheight = fnt_small->getHeight()+6; //initial height value for buttonbar; TODO get value from buttonbar
+	//foheight = fnt_foot->getHeight()+6; //initial height value for buttonbar; TODO get value from buttonbar
 	foheight = paintFoot(false);
 	skwidth = 26;
 
@@ -323,7 +323,7 @@ void CFileBrowser::ChangeDir(const std::string & filename, int selection)
 	readDir(newpath, &allfiles);
 	// filter
 	CFileList::iterator file = allfiles.begin();
-	for(; file != allfiles.end() ; file++)
+	for(; file != allfiles.end() ; ++file)
 	{
 		if (Filter != NULL && !file->isDir() && use_filter)
 		{
@@ -1375,10 +1375,10 @@ int CFileBrowser::paintFoot(bool show)
 	std::string sort_text = g_Locale->getText(LOCALE_MOVIEBROWSER_FOOT_SORT);
 	sort_text += g_Locale->getText(sortByNames[g_settings.filebrowser_sortmethod]);
 
-	int sort_text_len = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getRenderWidth(g_Locale->getText(LOCALE_MOVIEBROWSER_FOOT_SORT));
+	int sort_text_len = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getRenderWidth(g_Locale->getText(LOCALE_MOVIEBROWSER_FOOT_SORT));
 	int len = 0;
 	for (int i = 0; i < FILEBROWSER_NUMBER_OF_SORT_VARIANTS; i++)
-		len = std::max(len, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getRenderWidth(g_Locale->getText(sortByNames[i])));
+		len = std::max(len, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getRenderWidth(g_Locale->getText(sortByNames[i])));
 
 	sort_text_len += len;
 
@@ -1417,7 +1417,7 @@ int CFileBrowser::paintFoot(bool show)
 
 
 	if (filelist.empty()) {
-		frameBuffer->paintBoxRel(x, y + height - foheight, width, foheight, COL_INFOBAR_SHADOW_PLUS_1, RADIUS_MID, CORNER_BOTTOM);
+		frameBuffer->paintBoxRel(x, y + height - foheight, width, foheight, COL_MENUFOOT_PLUS_0, RADIUS_MID, CORNER_BOTTOM);
 		return foheight;
 	}
 	if (playlistmode)
@@ -1430,17 +1430,17 @@ int CFileBrowser::paintFoot(bool show)
 
 void CFileBrowser::paintSMSKey()
 {
-	int skheight = fnt_small->getHeight();
+	int skheight = fnt_foot->getHeight();
 
 	//background
-	frameBuffer->paintBoxRel(x + width - skwidth, y + height - foheight, skwidth, foheight, COL_INFOBAR_SHADOW_PLUS_1, RADIUS_MID, CORNER_BOTTOM_RIGHT);
+	frameBuffer->paintBoxRel(x + width - skwidth, y + height - foheight, skwidth, foheight, COL_MENUFOOT_PLUS_0, RADIUS_MID, CORNER_BOTTOM_RIGHT);
 
 	if(m_SMSKeyInput.getOldKey()!=0)
 	{
 		char cKey[2] = {(char)m_SMSKeyInput.getOldKey(), 0};
 		cKey[0] = toupper(cKey[0]);
-		int len = fnt_small->getRenderWidth(cKey);
-		fnt_small->RenderString(x + width - skwidth, y + height - foheight + foheight/2 + skheight/2, len, cKey, COL_MENUHEAD_TEXT);
+		int len = fnt_foot->getRenderWidth(cKey);
+		fnt_foot->RenderString(x + width - skwidth, y + height - foheight + foheight/2 + skheight/2, len, cKey, COL_MENUHEAD_TEXT);
 	}
 }
 

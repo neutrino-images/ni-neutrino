@@ -120,7 +120,7 @@ private:
 	void getAnnounceEpgName(CTimerd::RecordingInfo * eventinfo, std::string &name);
 
 	void ExitRun(const bool write_si = true, int retcode = 0);
-	void RealRun(CMenuWidget &mainSettings);
+	void RealRun();
 	void InitZapper();
 	void InitTimerdClient();
 	void InitZapitClient();
@@ -162,6 +162,7 @@ public:
 
 	void saveSetup(const char * fname);
 	int loadSetup(const char * fname);
+	void upgradeSetup(const char * fname);
 	void loadKeys(const char * fname = NULL);
 	void saveKeys(const char * fname = NULL);
 	void SetupTiming();
@@ -238,6 +239,7 @@ public:
 	void screensaver(bool);
 	//signal/event handler before restart of neutrino gui
 	sigc::signal<bool> OnBeforeRestart;
+	sigc::signal<void> OnAfterSetupFonts;
 	void channelRezap();
 };
 #endif

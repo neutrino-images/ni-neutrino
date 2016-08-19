@@ -46,7 +46,7 @@
 #include <linux/hdreg.h>
 #include <linux/fs.h>
 #include "debug.h"
-#include <driver/framebuffer.h>
+#include <global.h>
 #include <system/helpers.h>
 #include <gui/update_ext.h>
 using namespace std;
@@ -441,6 +441,28 @@ std::string trim(std::string &str, const std::string &trimChars /*= " \n\r\t"*/)
 	return result.erase(0, result.find_first_not_of(trimChars));
 }
 
+std::string cutString(const std::string str, int msgFont, const int width)
+{
+	Font *msgFont_ = g_Font[msgFont];
+	std::string ret = str;
+	ret = trim(ret);
+	int sw = msgFont_->getRenderWidth(ret);
+	if (sw <= width)
+		return ret;
+	else {
+		std::string z = "...";
+		int zw = msgFont_->getRenderWidth(z);
+		if (width <= 2*zw)
+			return ret;
+		do {
+			ret = ret.substr(0, ret.length()-1);
+			sw = msgFont_->getRenderWidth(ret);
+		} while (sw+zw > width);
+		ret = trim(ret) + z;
+	}
+	return ret;
+}
+
 std::string strftime(const char *format, const struct tm *tm)
 {
 	char buf[4096];
@@ -490,6 +512,8 @@ std::string& htmlEntityDecode(std::string& text)
 	};
 	decode_table dt[] =
 	{
+		{"\n", "&#x0a;"},
+		{"\n", "&#x0d;"},
 		{" ",  "&nbsp;"},
 		{"&",  "&amp;"},
 		{"<",  "&lt;"},
@@ -910,4 +934,37 @@ std::string getJFFS2MountPoint(int mtdPos)
 	}
 	fclose(fd);
 	return "";
+}
+
+std::string Lang2ISO639_1(std::string& lang)
+{
+	std::string ret = "";
+	if ((lang == "deutsch") || (lang == "bayrisch") || (lang == "ch-baslerdeutsch") || (lang == "ch-berndeutsch"))
+		ret = "de";
+	else if (lang == "english")
+		ret = "en";
+	else if (lang == "nederlands")
+		ret = "nl";
+	else if (lang == "slovak")
+		ret = "sk";
+	else if (lang == "bosanski")
+		ret = "bs";
+	else if (lang == "czech")
+		ret = "cs";
+	else if (lang == "francais")
+		ret = "fr";
+	else if (lang == "italiano")
+		ret = "it";
+	else if (lang == "polski")
+		ret = "pl";
+	else if (lang == "portugues")
+		ret = "pt";
+	else if (lang == "russkij")
+		ret = "ru";
+	else if (lang == "suomi")
+		ret = "fi";
+	else if (lang == "svenska")
+		ret = "sv";
+
+	return ret;
 }

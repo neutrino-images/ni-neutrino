@@ -111,8 +111,8 @@ void CComponentsItem::paintInit(bool do_save_bg)
 			{true, CC_FBDATA_TYPE_BGSCREEN,		ix,		iy, 		width+isw/2, 	height+isw/2, 	0, 		0, 		0,				0, 	NULL, NULL, NULL, false}, //buffered bg
 			{sh_r, CC_FBDATA_TYPE_SHADOW_BOX, 	ixsr,		iy+isw/2,	isw, 		height, 	col_shadow, 	corner_rad,	corner_type & CORNER_RIGHT,	0, 	NULL, NULL, NULL, false}, //shadow right
 			{sh_b, CC_FBDATA_TYPE_SHADOW_BOX, 	ix+isw/2,	iysb, 		width, 		isw, 		col_shadow, 	corner_rad,	corner_type & CORNER_BOTTOM,	0, 	NULL, NULL, NULL, false}, //shadow bottom
-			{true, CC_FBDATA_TYPE_FRAME,		ix,		iy, 		width, 		height, 	col_frame_cur, 	corner_rad,	corner_type,			th, 	NULL, NULL, NULL, false}, //frame
 			{true, CC_FBDATA_TYPE_BOX,		ix+th,  	iy+th,  	width-2*th,     height-2*th,    col_body,       rad,		corner_type,			0, 	NULL, NULL, NULL, false}, //body
+			{true, CC_FBDATA_TYPE_FRAME,		ix,		iy, 		width, 		height, 	col_frame_cur, 	corner_rad,	corner_type,			th, 	NULL, NULL, NULL, false}  //frame
 		};
 
 		for(size_t i =0; i< (sizeof(fbdata) / sizeof(fbdata[0])) ;i++) {
@@ -145,7 +145,7 @@ void CComponentsItem::kill(const fb_pixel_t& bg_color, bool ignore_parent, const
 void CComponentsItem::syncSysColors()
 {
 	col_body 	= COL_MENUCONTENT_PLUS_0;
-	col_shadow 	= COL_MENUCONTENTDARK_PLUS_0;
+	col_shadow 	= COL_SHADOW_PLUS_0;
 	col_frame 	= COL_MENUCONTENT_PLUS_6;
 }
 

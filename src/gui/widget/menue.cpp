@@ -379,7 +379,7 @@ void CMenuItem::paintItemButton(const bool select_mode, int item_height, const c
 
 		if (icon_w>0 && icon_h>0)
 		{
-			icon_painted = frameBuffer->paintIcon(iconName_Info_right, dx + icon_start_x - (icon_w + 20), y+ ((item_height/2- icon_h/2)) );
+			frameBuffer->paintIcon(iconName_Info_right, dx + icon_start_x - (icon_w + 20), y+ ((item_height/2- icon_h/2)) );
 		}
 	}
 }
@@ -677,8 +677,10 @@ void CMenuWidget::resetWidget(bool delete_items)
 {
 	for(unsigned int count=0;count<items.size();count++) {
 		CMenuItem * item = items[count];
-		if (delete_items && !item->isStatic)
+		if (delete_items && !item->isStatic){
 			delete item;
+			item = NULL;
+		}
 	}
 	
 	items.clear();
@@ -966,6 +968,7 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 
 			case (CRCInput::RC_sat):
 			case (CRCInput::RC_favorites):
+			case (CRCInput::RC_www):
 				g_RCInput->postMsg (msg, 0);
 				//close any menue on dbox-key
 			case (CRCInput::RC_setup):
@@ -1240,14 +1243,13 @@ void CMenuWidget::paint()
 		header->setOffset(10);
 	}
 	header->setColorBody(COL_MENUHEAD_PLUS_0);
-	header->setColorShadow(COL_MENUCONTENTDARK_PLUS_0);
 	header->setCaptionColor(COL_MENUHEAD_TEXT);
 	header->enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_MENUCONTENT_PLUS_0);
 	header->enableGradientBgCleanUp(savescreen);
 	header->paint(CC_SAVE_SCREEN_NO);
 
 	// paint body shadow
-	frameBuffer->paintBoxRel(x+SHADOW_OFFSET, y + hheight + SHADOW_OFFSET, width + sb_width, height - hheight + RADIUS_LARGE + (fbutton_count ? fbutton_height : 0), COL_MENUCONTENTDARK_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
+	frameBuffer->paintBoxRel(x+SHADOW_OFFSET, y + hheight + SHADOW_OFFSET, width + sb_width, height - hheight + RADIUS_LARGE + (fbutton_count ? fbutton_height : 0), COL_SHADOW_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
 	// paint body background
 	frameBuffer->paintBoxRel(x, y+hheight, width + sb_width, height-hheight + RADIUS_LARGE, COL_MENUCONTENT_PLUS_0, RADIUS_LARGE, (fbutton_count ? CORNER_NONE : CORNER_BOTTOM));
 
@@ -1307,9 +1309,9 @@ void CMenuWidget::paintItems()
 	//Item not currently on screen
 	if (selected >= 0)
 	{
-		while (selected < page_start[current_page])
+		while (current_page > 0 && selected < page_start[current_page])
 			current_page--;
-		while (selected >= page_start[current_page + 1])
+		while (current_page+1 < page_start.size() && selected >= page_start[current_page + 1])
 			current_page++;
 	}
 
@@ -1425,7 +1427,8 @@ void CMenuWidget::paintHint(int pos)
 		/* clear info box */
 		if ((info_box) && (pos < 0))
 			savescreen ? info_box->hide() : info_box->kill();
-		hint_painted = false;
+		if (info_box)
+			hint_painted = info_box->isPainted();
 	}
 	if (pos < 0)
 		return;
@@ -1435,7 +1438,7 @@ void CMenuWidget::paintHint(int pos)
 	if (!item->hintIcon && item->hint == NONEXISTANT_LOCALE && item->hintText.empty()) {
 		if (info_box) {
 			savescreen ? info_box->hide() : info_box->kill();
-			hint_painted = false;
+			hint_painted = info_box->isPainted();
 		}
 		return;
 	}
@@ -1477,10 +1480,10 @@ void CMenuWidget::paintHint(int pos)
 	info_box->removeLineBreaks(str);
 	info_box->setText(str, CTextBox::AUTO_WIDTH, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_HINT], COL_MENUCONTENT_TEXT);
 	info_box->setCorner(RADIUS_LARGE);
-	info_box->setColorAll(COL_MENUCONTENT_PLUS_6, COL_MENUCONTENTDARK_PLUS_0, COL_MENUCONTENTDARK_PLUS_0);
+	info_box->setColorAll(COL_MENUCONTENT_PLUS_6, COL_MENUCONTENTDARK_PLUS_0);
 	info_box->enableShadow();
 	info_box->setPicture(item->hintIcon ? item->hintIcon : "");
-	info_box->enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_INFOBAR_SHADOW_PLUS_1, g_settings.theme.menu_Hint_gradient_direction);// COL_INFOBAR_SHADOW_PLUS_1 is default footer color
+	info_box->enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_MENUFOOT_PLUS_0, g_settings.theme.menu_Hint_gradient_direction);// COL_MENUFOOT_PLUS_0 is default footer color
 
 	//paint result
 	if (details_line)
@@ -1994,12 +1997,11 @@ int CMenuOptionChooser::paint( bool selected)
 
 int CMenuOptionChooser::getWidth(void)
 {
-	int ow = 0;
 	int tw = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(getName());
 	int width = tw;
 
 	for(unsigned int count = 0; count < options.size(); count++) {
-		ow = 0;
+		int ow = 0;
 		if (options[count].valname)
 			ow = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(options[count].valname);
 		else
@@ -2256,7 +2258,7 @@ CMenuSeparator::CMenuSeparator(const int Type, const neutrino_locale_t Text, boo
 	nameString	= "";
 }
 
-CMenuSeparator::CMenuSeparator(const int Type, const std::string Text, bool IsStatic) : CMenuItem(false, CRCInput::RC_nokey, NULL, NULL, IsStatic)
+CMenuSeparator::CMenuSeparator(const int Type, const std::string &Text, bool IsStatic) : CMenuItem(false, CRCInput::RC_nokey, NULL, NULL, IsStatic)
 {
 	type		= Type;
 	name		= NONEXISTANT_LOCALE;

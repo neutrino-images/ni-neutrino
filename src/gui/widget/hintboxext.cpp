@@ -47,9 +47,7 @@ CHintBoxExt::CHintBoxExt(const neutrino_locale_t Caption, const char * const Tex
 {
 	m_message = strdup(Text);
 
-	char *begin   = m_message;
-
-	begin = strtok(m_message, "\n");
+	char *begin = strtok(m_message, "\n");
 	while (begin != NULL)
 	{
 		std::vector<Drawable*> oneLine;
@@ -67,9 +65,7 @@ CHintBoxExt::CHintBoxExt(const std::string &CaptionString, const char * const Te
 {
 	m_message = strdup(Text);
 
-	char *begin   = m_message;
-
-	begin = strtok(m_message, "\n");
+	char *begin = strtok(m_message, "\n");
 	while (begin != NULL)
 	{
 		std::vector<Drawable*> oneLine;
@@ -271,7 +267,7 @@ void CHintBoxExt::refresh(bool toround)
 	
 	if (!bgPainted) {
 		// bottom, right shadow
-		m_window->paintBoxRel(SHADOW_OFFSET, SHADOW_OFFSET, m_width, m_height, COL_INFOBAR_SHADOW_PLUS_0, RADIUS_LARGE, toround ? CORNER_ALL : CORNER_BOTTOM | CORNER_TOP_RIGHT);
+		m_window->paintBoxRel(SHADOW_OFFSET, SHADOW_OFFSET, m_width, m_height, COL_SHADOW_PLUS_0, RADIUS_LARGE, toround ? CORNER_ALL : CORNER_BOTTOM | CORNER_TOP_RIGHT);
 		bgPainted = true;
 	}
 

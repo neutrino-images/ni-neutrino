@@ -58,6 +58,23 @@ restriced_by_management_ip=Zugriff verwehrt wg. ManagementIP
 automatic=automatisch
 show=zeigen
 hide=verstecken
+unknown=Unbekannt
+
+# ========== Dates
+date.su=So
+date.sunday=Sonntag
+date.mo=Mo
+date.monday=Montag
+date.tu=Di
+date.tuesday=Dienstag
+date.we=Mi
+date.wednesday=Mittwoch
+date.th=Do
+date.thursday=Donnerstag
+date.fr=Fr
+date.friday=Freitag
+date.sa=Sa
+date.saturday=Samstag
 
 # ==========Main Menue
 main.boxcontrol=Boxsteuerung
@@ -520,6 +537,7 @@ live.timer_edit.plugin=Plugin
 live.timer_edit.rec_dir=Aufnahmeverzeichnis
 live.timer_edit.description=Beschreibung
 live.timer_edit.type=Typ
+live.timer_edit.message=Nachricht
 
 =========== LIVE Timer Sync
 live.timer-sync.get_timer=Timer holen.
@@ -597,6 +615,7 @@ rc.key_stop=Stop
 rc.key_record=Record
 rc.key_pause=Pause
 rc.key_games=
+rc.key_trsp=Trsp
 rc.key_time=
 rc.key_picsize=Pic Size
 rc.key_picmode=Pic Mode

@@ -382,7 +382,8 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		return menu_return::RETURN_EXIT;
 	}
 	else if(actionKey == "rec_dir1") {
-		parent->hide();
+		if (parent)
+			parent->hide();
 		const char *action_str = "RecDir1";
 		if(chooserDir(timerlist[selected].recordingDir, true, action_str, sizeof(timerlist[selected].recordingDir)-1)) {
 			printf("[timerlist] new %s dir %s\n", action_str, timerlist[selected].recordingDir);
@@ -391,7 +392,8 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		return menu_return::RETURN_REPAINT;
 	}
 	else if(actionKey == "rec_dir2") {
-		parent->hide();
+		if (parent)
+			parent->hide();
 		const char *action_str = "RecDir2";
 		if(chooserDir(timerNew.recordingDir, true, action_str, sizeof(timerNew.recordingDir)-1)) {
 			printf("[timerlist] new %s dir %s\n", action_str, timerNew.recordingDir);
@@ -623,7 +625,7 @@ int CTimerList::show()
 			}
 			// help key
 		}
-		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites) {
+		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
 			g_RCInput->postMsg (msg, 0);
 			loop = false;
 			res = menu_return::RETURN_EXIT_ALL;
@@ -879,8 +881,10 @@ void CTimerList::paint()
 		int ypos = y+ theight;
 		int sb = 2*fheight* listmaxshow;
 		frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb, COL_MENUCONTENT_PLUS_1);
-
-		int sbc= ((timerlist.size()- 1)/ listmaxshow)+ 1;
+		unsigned  int  tmp_max  =  listmaxshow;
+		if(!tmp_max)
+			tmp_max  =  1;
+		int sbc= ((timerlist.size()- 1)/ tmp_max)+ 1;
 
 		frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ page_nr * (sb-4)/sbc, 11, (sb-4)/sbc, COL_MENUCONTENT_PLUS_3, RADIUS_SMALL);
 	}
@@ -1054,19 +1058,18 @@ int CTimerList::modifyTimer()
 
 //printf("TIMER: rec dir %s len %s\n", timer->recordingDir, strlen(timer->recordingDir));
 
-	if (!strlen(timer->recordingDir))
-		strncpy(timer->recordingDir,g_settings.network_nfs_recordingdir.c_str(),sizeof(timer->recordingDir)-1);
-	timer_recordingDir = timer->recordingDir;
-
-	bool recDirEnabled = (g_settings.recording_type == RECORDING_FILE); // obsolete?
-	CMenuForwarder* m6 = new CMenuForwarder(LOCALE_TIMERLIST_RECORDING_DIR, recDirEnabled, timer_recordingDir, this, "rec_dir1", CRCInput::RC_green);
-
 	timerSettings.addItem(GenericMenuSeparatorLine);
 	timerSettings.addItem(m3);
 	timerSettings.addItem(m4);
 	timerSettings.addItem(m5);
 	if (timer->eventType == CTimerd::TIMER_RECORD)
 	{
+		if (!strlen(timer->recordingDir))
+			strncpy(timer->recordingDir,g_settings.network_nfs_recordingdir.c_str(),sizeof(timer->recordingDir)-1);
+		timer_recordingDir = timer->recordingDir;
+
+		bool recDirEnabled = (g_settings.recording_type == RECORDING_FILE); // obsolete?
+		CMenuForwarder* m6 = new CMenuForwarder(LOCALE_TIMERLIST_RECORDING_DIR, recDirEnabled, timer_recordingDir, this, "rec_dir1", CRCInput::RC_green);
 		timerSettings.addItem(GenericMenuSeparatorLine);
 		timerSettings.addItem(m6);
 	}
@@ -1258,12 +1261,22 @@ int CTimerList::newTimer()
 	return ret;
 }
 
-bool askUserOnTimerConflict(time_t announceTime, time_t stopTime)
+bool askUserOnTimerConflict(time_t announceTime, time_t stopTime, t_channel_id channel_id)
 {
 	if (CFEManager::getInstance()->getEnabledCount() == 1) {
 		CTimerdClient Timer;
 		CTimerd::TimerList overlappingTimers = Timer.getOverlappingTimers(announceTime,stopTime);
 		//printf("[CTimerdClient] attention\n%d\t%d\t%d conflicts with:\n",timerNew.announceTime,timerNew.alarmTime,timerNew.stopTime);
+
+		// Don't ask if there are overlapping timers on the same transponder.
+		if (channel_id) {
+			CTimerd::TimerList::iterator i;
+			for (i = overlappingTimers.begin(); i != overlappingTimers.end(); i++)
+				if ((i->eventType != CTimerd::TIMER_RECORD || !SAME_TRANSPONDER(channel_id, i->channel_id)))
+					break;
+			if (i == overlappingTimers.end())
+				return true; // yes, add timer
+		}
 
 		std::string timerbuf = g_Locale->getText(LOCALE_TIMERLIST_OVERLAPPING_TIMER);
 		timerbuf += "\n";
@@ -1287,20 +1300,13 @@ bool askUserOnTimerConflict(time_t announceTime, time_t stopTime)
 					timerbuf += it->epgTitle;
 				}
 			}
-			timerbuf += ")";
+			timerbuf += "):\n";
 
-			timerbuf += ":\n";
-			char at[25] = {0};
 			struct tm *annTime = localtime(&(it->announceTime));
-			strftime(at,20,"%d.%m. %H:%M",annTime);
-			timerbuf += at;
-			timerbuf += " - ";
+			timerbuf += strftime("%d.%m. %H:%M\n",annTime);
 
-			char st[25] = {0};
 			struct tm *sTime = localtime(&(it->stopTime));
-			strftime(st,20,"%d.%m. %H:%M",sTime);
-			timerbuf += st;
-			timerbuf += "\n";
+			timerbuf += strftime("%d.%m. %H:%M\n",sTime);
 			//printf("%d\t%d\t%d\n",it->announceTime,it->alarmTime,it->stopTime);
 		}
 		//printf("message:\n%s\n",timerbuf.c_str());

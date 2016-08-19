@@ -90,12 +90,16 @@ class CKeybindSetup : public CMenuTarget, public CChangeObserver
 			NKEY_PIC_MODE,
 			NKEY_PIC_SIZE,
 			NKEY_RECORD,
+			MBKEY_COPY_ONEFILE,
+			MBKEY_COPY_SEVERAL,
+			MBKEY_CUT,
+			MBKEY_TRUNCATE,
+			MBKEY_COVER,
 			
 			KEYBINDS_COUNT
 		};
 
 	private:
-		CFrameBuffer *frameBuffer;
 		CKeyChooser *keychooser[KEYBINDS_COUNT];
 		int width;
 
@@ -105,6 +109,7 @@ class CKeybindSetup : public CMenuTarget, public CChangeObserver
 		void showKeyBindChannellistSetup(CMenuWidget *bindSettings_chlist);
 		void showKeyBindQuickzapSetup(CMenuWidget *bindSettings_qzap);
 		void showKeyBindMovieplayerSetup(CMenuWidget *bindSettings_mplayer);
+		void showKeyBindMoviebrowserSetup(CMenuWidget *bindSettings_mbrowser);
 		void showKeyBindSpecialSetup(CMenuWidget *bindSettings_special);
 
 	public:				

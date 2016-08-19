@@ -108,7 +108,7 @@ CChannelList::CChannelList(const char * const pName, bool phistoryMode, bool _vl
 	vlist = _vlist;
 	new_zap_mode = 0;
 	selected_chid = 0;
-	footerHeight = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight()+6; //initial height value for buttonbar
+	footerHeight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight()+6; //initial height value for buttonbar
 	theight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
 	fheight = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNELLIST]->getHeight();
 	fdescrheight = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNELLIST_DESCR]->getHeight();
@@ -311,6 +311,7 @@ int CChannelList::doChannelMenu(void)
 
 	bool empty = (*chanlist).empty();
 	bool allow_edit = (bouquet && bouquet->zapitBouquet && !bouquet->zapitBouquet->bOther && !bouquet->zapitBouquet->bWebtv);
+	bool got_history = (CNeutrinoApp::getInstance()->channelList->getLastChannels().size() > 1);
 
 	int i = 0;
 	snprintf(cnt, sizeof(cnt), "%d", i);
@@ -327,6 +328,10 @@ int CChannelList::doChannelMenu(void)
 	bool reset_all = !empty && (name == g_Locale->getText(LOCALE_BOUQUETNAME_NEW));
 	snprintf(cnt, sizeof(cnt), "%d", i);
 	menu->addItem(new CMenuForwarder(LOCALE_CHANNELLIST_RESET_ALL, reset_all, NULL, selector, cnt, CRCInput::convertDigitToKey(shortcut++)), old_selected == i++);
+
+	menu->addItem(GenericMenuSeparator);
+	snprintf(cnt, sizeof(cnt), "%d", i);
+	menu->addItem(new CMenuForwarder(LOCALE_CHANNELLIST_HISTORY_CLEAR, got_history, NULL, selector, cnt, CRCInput::convertDigitToKey(shortcut++)), old_selected == i++);
 
 	menu->addItem(new CMenuSeparator(CMenuSeparator::LINE));
 	snprintf(cnt, sizeof(cnt), "%d", i);
@@ -411,7 +416,14 @@ int CChannelList::doChannelMenu(void)
 			if(g_settings.make_new_list)
 				CNeutrinoApp::getInstance()->MarkChannelsInit();
 			break;
-		case 5: // settings
+		case 5: // clear channel history
+			{
+				CNeutrinoApp::getInstance()->channelList->getLastChannels().clear();
+				printf("%s:%d lastChList cleared\n", __FUNCTION__, __LINE__);
+				ret = -2; // exit channellist
+			}
+			break;
+		case 6: // settings
 			{
 				previous_channellist_additional = g_settings.channellist_additional;
 				COsdSetup osd_setup;
@@ -457,7 +469,7 @@ void CChannelList::calcSize()
 
 	if (fheight == 0)
 		fheight = 1; /* avoid div-by-zero crash on invalid font */
-	footerHeight = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight()+6;
+	footerHeight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight()+6;
 
 	pig_on_win = ( (g_settings.channellist_additional == 2) /* with miniTV */ && (CNeutrinoApp::getInstance()->getMode() != NeutrinoMessages::mode_ts) );
 	// calculate width
@@ -701,7 +713,7 @@ int CChannelList::show()
 				loop = false;
 			}
 		}
-		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites) {
+		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
 			if (!edit_state) {
 				int newmode = msg == CRCInput::RC_sat ? LIST_MODE_SAT : LIST_MODE_FAV;
 				CNeutrinoApp::getInstance()->SetChannelMode(newmode);
@@ -717,10 +729,13 @@ int CChannelList::show()
 				if (selected + 1 < (*chanlist).size())
 					selected++;
 			}
-			if (ret != 0) {
-				paint();
+			if (ret == -2) // exit channellist
+				loop = false;
+			else {
+				if (ret != 0)
+					paint();
+				timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_CHANLIST]);
 			}
-			timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_CHANLIST]);
 		}
 		else if (!empty && msg == (neutrino_msg_t) g_settings.key_list_start) {
 			actzap = updateSelection(0);
@@ -1286,6 +1301,7 @@ int CChannelList::numericZap(int key)
 	bool showEPG = false;
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
+	g_InfoViewer->setSwitchMode(CInfoViewer::IV_MODE_NUMBER_ZAP);
 
 	while(1) {
 		if (lastchan != chn) {
@@ -1310,7 +1326,7 @@ int CChannelList::numericZap(int key)
 			doZap = true;
 			break;
 		}
-		else if (msg == CRCInput::RC_favorites || msg == CRCInput::RC_sat || msg == CRCInput::RC_right) {
+		else if (msg == CRCInput::RC_favorites || msg == CRCInput::RC_sat || msg == CRCInput::RC_www || msg == CRCInput::RC_right) {
 		}
 		else if (CRCInput::isNumeric(msg)) {
 			if (pos == 4) {
@@ -1369,6 +1385,7 @@ int CChannelList::numericZap(int key)
 		if (chan && showEPG)
 			g_EventList->exec(chan->getChannelID(), chan->getName());
 	}
+	g_InfoViewer->resetSwitchMode();
 	return res;
 }
 
@@ -1377,7 +1394,7 @@ CZapitChannel* CChannelList::getPrevNextChannel(int key, unsigned int &sl)
 	if(sl >= (*chanlist).size())
 		sl = (*chanlist).size()-1;
 
-	CZapitChannel* channel = (*chanlist)[sl];
+	CZapitChannel* channel = NULL;
 	int bsize = bouquetList->Bouquets.size();
 	int bactive = bouquetList->getActiveBouquetNumber();
 
@@ -2167,9 +2184,9 @@ void CChannelList::paintBody()
 	const int ypos = y+ theight;
 	const int sb = height - theight - footerHeight; // paint scrollbar over full height of main box
 	frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb,  COL_MENUCONTENT_PLUS_1);
-
-	int sbc= (((*chanlist).size()- 1)/ listmaxshow)+ 1;
-	const int sbs= (selected/listmaxshow);
+	unsigned int listmaxshow_tmp = listmaxshow ? listmaxshow : 1;//avoid division by zero
+	int sbc= (((*chanlist).size()- 1)/ listmaxshow_tmp)+ 1;
+	const int sbs= (selected/listmaxshow_tmp);
 	if (sbc < 1)
 		sbc = 1;
 

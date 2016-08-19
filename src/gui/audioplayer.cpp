@@ -255,7 +255,7 @@ int CAudioPlayerGui::exec(CMenuTarget* parent, const std::string &actionKey)
 	m_width = m_frameBuffer->getScreenWidthRel();
 	m_height = m_frameBuffer->getScreenHeightRel();
 
-	m_sheight = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight();
+	m_sheight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight();
 
 	m_buttonHeight = std::max(25, m_sheight);
 	m_theight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
@@ -642,12 +642,10 @@ int CAudioPlayerGui::show()
 					InputSelector.addItem(new CMenuForwarder(
 								      LOCALE_AUDIOPLAYER_ADD_IC, true, NULL, InetRadioInputChanger,
 								      cnt, CRCInput::convertDigitToKey(count + 1)), old_select == count);
-					if(g_settings.shoutcast_dev_id != "XXXXXXXXXXXXXXXX"){
-						sprintf(cnt, "%d", ++count);
-						InputSelector.addItem(new CMenuForwarder(
-								      LOCALE_AUDIOPLAYER_ADD_SC, true, NULL, InetRadioInputChanger,
+					sprintf(cnt, "%d", ++count);
+					InputSelector.addItem(new CMenuForwarder(
+								      LOCALE_AUDIOPLAYER_ADD_SC, g_settings.shoutcast_enabled, NULL, InetRadioInputChanger,
 								      cnt, CRCInput::convertDigitToKey(count + 1)), old_select == count);
-					}
 
 					//InputSelector.addItem(GenericMenuSeparator);
 					hide();
@@ -1653,8 +1651,8 @@ void CAudioPlayerGui::paintFoot()
 	else
 		top = m_y + (m_height - 2 * m_buttonHeight);
 
-	m_frameBuffer->paintBoxRel(m_x, top, m_width, 2 * m_buttonHeight, COL_INFOBAR_SHADOW_PLUS_1, c_rad_mid, (m_show_playlist ? CORNER_BOTTOM : CORNER_ALL));
-	// why? m_frameBuffer->paintHLine(m_x, m_x + m_width, top, COL_INFOBAR_SHADOW_PLUS_1);
+	m_frameBuffer->paintBoxRel(m_x, top, m_width, 2 * m_buttonHeight, COL_MENUFOOT_PLUS_0, c_rad_mid, (m_show_playlist ? CORNER_BOTTOM : CORNER_ALL));
+	// why? m_frameBuffer->paintHLine(m_x, m_x + m_width, top, COL_MENUFOOT_PLUS_0);
 
 	int bwidth = m_width - (2*c_rad_mid);
 	if (!m_playlist.empty())
@@ -1794,7 +1792,10 @@ void CAudioPlayerGui::paint()
 {
 	if (m_show_playlist)
 	{
-		m_liststart = (m_selected / m_listmaxshow) * m_listmaxshow;
+		unsigned int tmp_max = m_listmaxshow;
+		if(!tmp_max)
+			tmp_max = 1;
+		m_liststart = (m_selected / tmp_max) * m_listmaxshow;
 		paintHead();
 		for (unsigned int count=0; count<m_listmaxshow; count++)
 			paintItem(count);
@@ -1803,8 +1804,8 @@ void CAudioPlayerGui::paint()
 		int sb = m_fheight * m_listmaxshow;
 		m_frameBuffer->paintBoxRel(m_x + m_width - 15, ypos, 15, sb, COL_MENUCONTENT_PLUS_1);
 
-		int sbc = ((m_playlist.size() - 1) / m_listmaxshow) + 1;
-		int sbs = (m_selected / m_listmaxshow);
+		int sbc = ((m_playlist.size() - 1) / tmp_max) + 1;
+		int sbs = (m_selected / tmp_max);
 		if (sbc < 1)
 			sbc = 1;
 

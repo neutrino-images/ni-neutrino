@@ -413,7 +413,7 @@ int CBouquetList::show(bool bShowChannelList)
 	favonly = !bShowChannelList;
 
 	for(unsigned int count = 0; count < sizeof(CBouquetListButtons)/sizeof(CBouquetListButtons[0]);count++){
-		int w_text = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getRenderWidth(g_Locale->getText(CBouquetListButtons[count].locale));
+		int w_text = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getRenderWidth(g_Locale->getText(CBouquetListButtons[count].locale));
 		w_max_text = std::max(w_max_text, w_text);
 		frameBuffer->getIconSize(CBouquetListButtons[count].button, &icol_w, &icol_h);
 		w_max_icon = std::max(w_max_icon, icol_w);
@@ -427,7 +427,7 @@ int CBouquetList::show(bool bShowChannelList)
 	width  = w_max (need_width, 20);
 	height = h_max (16 * fheight, 40);
 
-	footerHeight = std::max(h_max_icon+8, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight()+8);
+	footerHeight = std::max(h_max_icon+8, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight()+8);
 	theight     = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
 	listmaxshow = (height - theight - footerHeight)/fheight;
 	height      = theight + footerHeight + listmaxshow * fheight; // recalc height
@@ -498,6 +498,12 @@ int CBouquetList::show(bool bShowChannelList)
 		} else if(msg == CRCInput::RC_blue) {
 			if(!favonly && bShowChannelList && CNeutrinoApp::getInstance()->GetChannelMode() != LIST_MODE_ALL) {
 				CNeutrinoApp::getInstance()->SetChannelMode(LIST_MODE_ALL);
+				hide();
+				return CHANLIST_CHANGE_MODE;
+			}
+		} else if(msg == CRCInput::RC_www) {
+			if(!favonly && bShowChannelList && CNeutrinoApp::getInstance()->GetChannelMode() != LIST_MODE_WEBTV) {
+				CNeutrinoApp::getInstance()->SetChannelMode(LIST_MODE_WEBTV);
 				hide();
 				return CHANLIST_CHANGE_MODE;
 			}
@@ -698,7 +704,7 @@ void CBouquetList::paint()
 	::paintButtons(x, y + (height - footerHeight), width, numbuttons, CBouquetListButtons, width, footerHeight);
 #endif
 	if (favonly)
-		frameBuffer->paintBoxRel(x, y + (height - footerHeight), width, footerHeight, COL_INFOBAR_SHADOW_PLUS_1, RADIUS_LARGE, CORNER_BOTTOM); //round
+		frameBuffer->paintBoxRel(x, y + (height - footerHeight), width, footerHeight, COL_MENUFOOT_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM); //round
 	else 
 		::paintButtons(x, y + (height - footerHeight), width, numbuttons, CBouquetListButtons, width, footerHeight);
 
@@ -712,9 +718,9 @@ void CBouquetList::paint()
 	int ypos = y+ theight;
 	int sb = fheight* listmaxshow;
 	frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb,  COL_MENUCONTENT_PLUS_1);
-
-	int sbc= ((bsize - 1)/ listmaxshow)+ 1; /* bsize is > 0, so sbc is also > 0 */
-	int sbs= (selected/listmaxshow);
+	int listmaxshow_tmp = listmaxshow ? listmaxshow : 1;//avoid division by zero
+	int sbc= ((bsize - 1)/ listmaxshow_tmp)+ 1; /* bsize is > 0, so sbc is also > 0 */
+	int sbs= (selected/listmaxshow_tmp);
 
 	frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs * (sb-4)/sbc, 11, (sb-4)/sbc, COL_MENUCONTENT_PLUS_3);
 }

@@ -257,7 +257,7 @@ int CExtendedInput::exec( CMenuTarget* parent, const std::string & )
 					*cancel = true;
 			}
 		}
-		else if ((msg ==CRCInput::RC_sat) || (msg == CRCInput::RC_favorites))
+		else if ((msg ==CRCInput::RC_sat) || (msg == CRCInput::RC_favorites) || (msg == CRCInput::RC_www))
 		{
 		}
 		else if ( CNeutrinoApp::getInstance()->handleMsg( msg, data ) & messages_return::cancel_all )
@@ -310,7 +310,6 @@ void CExtendedInput::paint()
 			tmp_y += iheight;
 			g_Font[SNeutrinoSettings::FONT_TYPE_MENU_INFO]->RenderString(x+ offset, tmp_y, width- 2*offset, g_Locale->getText(hint_2), COL_MENUCONTENT_TEXT);
 		}
-		tmp_y += offset;
 	}
 
 	for(unsigned int i=0; i<inputFields.size();i++)

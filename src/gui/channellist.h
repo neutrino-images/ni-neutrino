@@ -50,6 +50,7 @@
 enum {
 	LIST_MODE_FAV,
 	LIST_MODE_PROV,
+	LIST_MODE_WEBTV,
 	LIST_MODE_SAT,
 	LIST_MODE_ALL,
 	LIST_MODE_LAST
@@ -81,7 +82,6 @@ private:
 	unsigned int            origPosition;
 	unsigned int            newPosition;
 	bool			channelsChanged;
-	bool			favoritesChanged;
 
 	unsigned int		tuned;
 	t_channel_id		selected_chid;

@@ -32,6 +32,7 @@ AM_CPPFLAGS += \
 	-I$(top_srcdir)/lib/connection \
 	-I$(top_srcdir)/lib/xmltree \
 	-I$(top_srcdir)/lib/libupnpclient \
+	-I$(top_srcdir)/lib/jsoncpp/include \
 	@SIGC_CFLAGS@ \
 	@CURL_CFLAGS@ \
 	@FREETYPE_CFLAGS@ \
@@ -41,6 +42,7 @@ AM_CPPFLAGS += \
 noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a
 
 libneutrino_gui_a_SOURCES = \
+	adzap.cpp \
 	audio_select.cpp \
 	audio_setup.cpp \
 	audiomute.cpp \
@@ -57,6 +59,7 @@ libneutrino_gui_a_SOURCES = \
 	eventlist.cpp \
 	favorites.cpp \
 	filebrowser.cpp \
+	followscreenings.cpp \
 	imageinfo.cpp \
 	info_menue.cpp \
 	infoviewer.cpp \
@@ -96,6 +99,7 @@ libneutrino_gui_a_SOURCES = \
 	subchannel_select.cpp \
 	themes.cpp \
 	timeosd.cpp \
+	tmdb.cpp \
 	update.cpp \
 	update_menue.cpp \
 	update_settings.cpp \

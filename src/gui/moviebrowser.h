@@ -114,7 +114,8 @@ typedef enum
 	MB_INFO_AUDIO 			= 17,
 	MB_INFO_LENGTH 			= 18,
 	MB_INFO_SIZE 			= 19,
-	MB_INFO_MAX_NUMBER		= 20 	// MUST be allways the last item in the list
+	MB_INFO_RATING			= 20,
+	MB_INFO_MAX_NUMBER		= 21 	// MUST be allways the last item in the list
 }MB_INFO_ITEM;
 
 
@@ -386,6 +387,7 @@ class CMovieBrowser : public CMenuTarget
 				m_file_info_stale = true;
 			show_mode = mode; 
 		}
+		bool gotMovie(const char *rec_title);
 
 	private: //Functions
 		///// MovieBrowser init ///////////////
@@ -426,6 +428,7 @@ class CMovieBrowser : public CMenuTarget
 		void onSetGUIWindowNext(void);
 		void onSetGUIWindowPrev(void);
 		bool onDelete(bool cursor_only = false);
+		std::string formatDeleteMsg(MI_MOVIE_INFO *movieinfo, int msgFont, const int boxWidth = 450);
 		bool onDeleteFile(MI_MOVIE_INFO *movieinfo, bool skipAsk = false);  // P4
 		bool onSortMovieInfoHandleList(std::vector<MI_MOVIE_INFO*>& pv_handle_list, MB_INFO_ITEM sort_type, MB_DIRECTION direction);
 
