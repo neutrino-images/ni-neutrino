@@ -1538,8 +1538,8 @@ void CChannelList::paintDetails(int index)
 	bool colored_event_C = (g_settings.theme.colored_events_channellist == 1);
 	bool colored_event_N = (g_settings.theme.colored_events_channellist == 2);
 
-	frameBuffer->paintBoxRel(x+1, y + height + 1, full_width-2, info_height - 2, COL_MENUCONTENTDARK_PLUS_0, RADIUS_LARGE);//round
-	frameBuffer->paintBoxFrame(x, y + height, full_width, info_height, 2, COL_MENUCONTENT_PLUS_6, RADIUS_LARGE);
+	frameBuffer->paintBoxRel(x, y + height, full_width, info_height, COL_MENUCONTENTDARK_PLUS_0, RADIUS_LARGE);//round //NI
+	frameBuffer->paintBoxFrame(x, y + height, full_width, info_height, 1, COL_MENUCONTENT_PLUS_1, RADIUS_LARGE); //NI
 
 	if ((*chanlist).empty())
 		return;
@@ -1981,21 +1981,21 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		int pb_max = pb_space - 4;
 		if (g_settings.progressbar_design != CProgressBar::PB_MONO) {
 			if (liststart + pos != selected) {
-				fb_pixel_t pbgcol = COL_MENUCONTENT_PLUS_1;
+				fb_pixel_t pbgcol = COL_MENUCONTENT_PLUS_2; //NI
 				if (pbgcol == bgcolor)
 					pbgcol = COL_MENUCONTENT_PLUS_0;
 				pb.setStatusColors(COL_MENUCONTENT_PLUS_3, pbgcol);
 			} else {
-				fb_pixel_t pbgcol = COL_MENUCONTENTSELECTED_PLUS_0;
+				fb_pixel_t pbgcol = COL_MENUCONTENTSELECTED_PLUS_1; //NI
 				if (pbgcol == bgcolor)
 					pbgcol = COL_MENUCONTENT_PLUS_0;
 				pb.setStatusColors(COL_MENUCONTENTSELECTED_PLUS_2, pbgcol);
 			}
 		} else {
 			if (liststart + pos != selected)
-				pb.setStatusColors(COL_MENUCONTENT_PLUS_3, COL_MENUCONTENT_PLUS_1);
+				pb.setStatusColors(COL_MENUCONTENT_PLUS_3, COL_MENUCONTENT_PLUS_2); //NI
 			else
-				pb.setStatusColors(COL_MENUCONTENTSELECTED_PLUS_2, COL_MENUCONTENTSELECTED_PLUS_0);
+				pb.setStatusColors(COL_MENUCONTENTSELECTED_PLUS_2, COL_MENUCONTENTSELECTED_PLUS_1); //NI
 		}
 
 		if (!(p_event->description.empty())) {

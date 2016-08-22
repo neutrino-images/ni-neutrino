@@ -935,7 +935,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 	showText(showPos, sy + toph);
 
 	// small bottom box
-	frameBuffer->paintBoxRel(sx, sy+oy-botboxheight, ox, botboxheight, COL_MENUHEAD_PLUS_0);
+	frameBuffer->paintBoxRel(sx, sy+oy-botboxheight, ox, botboxheight, COL_MENUFOOT_PLUS_0);
 	if (!mp_info)
 	{
 		static int iw = 0, ih = 0, io = 0;

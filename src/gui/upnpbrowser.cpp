@@ -91,21 +91,21 @@ void CUpnpBrowserGui::Init()
 {
 	font_item = SNeutrinoSettings::FONT_TYPE_MENU;
 
-	topbox.enableFrame(true, 2);
+	topbox.enableFrame(true, 1); //NI
 	topbox.setCorner(RADIUS_LARGE);
-	topbox.setColorAll(COL_MENUCONTENT_PLUS_6, COL_MENUHEAD_PLUS_0, COL_SHADOW_PLUS_0, COL_MENUHEAD_TEXT);
+	topbox.setColorAll(COL_MENUCONTENT_PLUS_1, COL_MENUHEAD_PLUS_0, COL_SHADOW_PLUS_0, COL_MENUHEAD_TEXT);
 	topbox.setTextFont(g_Font[SNeutrinoSettings::FONT_TYPE_MENU_INFO]);
 	topbox.enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_SHADOW_PLUS_0, g_settings.theme.menu_Head_gradient_direction);
 	topbox.enableShadow(CC_SHADOW_ON, -1, true);
 
-	infobox.enableFrame(true, 2);
+	infobox.enableFrame(true, 1); //NI
 	infobox.setCorner(RADIUS_LARGE);
 	infobox.setColorAll(topbox.getColorFrame(), COL_MENUCONTENTDARK_PLUS_0);
 	infobox.setTextFont(g_Font[SNeutrinoSettings::FONT_TYPE_MENU]);
 	infobox.enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_SHADOW_PLUS_0, g_settings.theme.menu_Hint_gradient_direction);
 	infobox.enableShadow(CC_SHADOW_ON, -1, true);
 
-	timebox.enableFrame(true, 2);
+	timebox.enableFrame(true, 1); //NI
 	timebox.setCorner(RADIUS_LARGE);
 	timebox.setColorAll(infobox.getColorFrame(), infobox.getColorBody());
 	timebox.setTextFont(g_Font[SNeutrinoSettings::FONT_TYPE_MENU]);

@@ -265,14 +265,14 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 			fb_pixel_t right_frame_col, right_bg_col;
 			if (active) {
 				right_bg_col = right_bgcol;
-				right_frame_col = COL_MENUCONTENT_PLUS_6;
+				right_frame_col = COL_MENUCONTENT_PLUS_1; //NI
 			}
 			else {
 				right_bg_col = COL_MENUCONTENTINACTIVE_TEXT;
 				right_frame_col = COL_MENUCONTENTINACTIVE_TEXT;
 			}
 			CComponentsShapeSquare col(stringstartposOption, y + 2, dx - stringstartposOption + x - 2, item_height - 4, NULL, false, right_frame_col, right_bg_col);
-			col.setFrameThickness(2); //NI
+			col.setFrameThickness(1); //NI
 			col.setCorner(RADIUS_LARGE);
 			col.paint(false);
 		}
@@ -1499,8 +1499,7 @@ void CMenuWidget::paintHint(int pos)
 	//NI info_box->removeLineBreaks(str);
 	info_box->setText(str, CTextBox::AUTO_WIDTH, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_HINT], COL_MENUCONTENT_TEXT);
 	info_box->setCorner(RADIUS_LARGE);
-	info_box->setColorAll(COL_MENUCONTENT_PLUS_6, COL_MENUCONTENTDARK_PLUS_0);
-	info_box->setColorBody(COL_MENUCONTENT_PLUS_0); //NI
+	info_box->setColorAll(COL_MENUCONTENT_PLUS_1, COL_MENUCONTENT_PLUS_0); //NI
 	info_box->enableShadow();
 	info_box->setPicture(item->hintIcon ? item->hintIcon : "");
 	info_box->enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_MENUFOOT_PLUS_0, g_settings.theme.menu_Hint_gradient_direction);// COL_MENUFOOT_PLUS_0 is default footer color
@@ -2324,7 +2323,7 @@ int CMenuSeparator::paint(bool selected)
 	if ((type & LINE))
 	{
 		int grad = g_settings.theme.menu_Separator_gradient_enable ? CC_COLGRAD_COL_DARK_LIGHT_DARK : CC_COLGRAD_OFF;
-		paintBoxRel(x+10, y+(height>>1), dx-20, 2, COL_MENUCONTENT_PLUS_3, 0, CORNER_NONE, grad, COL_MENUCONTENT_PLUS_0, CFrameBuffer::gradientHorizontal, CColorGradient::light);
+		paintBoxRel(x+10, y+(height>>1), dx-20, 1, COL_MENUCONTENT_PLUS_1, 0, CORNER_NONE, grad, COL_MENUCONTENT_PLUS_0, CFrameBuffer::gradientHorizontal, CColorGradient::light); //NI
 	}
 	if ((type & STRING))
 	{

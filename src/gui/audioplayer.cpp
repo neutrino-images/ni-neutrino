@@ -1765,8 +1765,8 @@ void CAudioPlayerGui::paintInfo()
 		if (!m_show_playlist) // no playlist -> smaller Info-Box
 			title_height -= m_fheight;
 
-		m_frameBuffer->paintBoxRel(m_x + 1, m_y + 1 , m_width - 2, title_height - 12, COL_MENUCONTENTSELECTED_PLUS_0, c_rad_mid);
-		m_frameBuffer->paintBoxFrame(m_x, m_y, m_width, title_height - 10, 2, COL_MENUCONTENT_PLUS_6, c_rad_mid);
+		m_frameBuffer->paintBoxRel(m_x, m_y, m_width, title_height - 10, COL_MENUCONTENTSELECTED_PLUS_0, c_rad_mid); //NI
+		m_frameBuffer->paintBoxFrame(m_x, m_y, m_width, title_height - 10, 1, COL_MENUCONTENT_PLUS_6, c_rad_mid); //NI
 
 		paintCover();
 
