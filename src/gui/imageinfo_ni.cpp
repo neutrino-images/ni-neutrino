@@ -552,7 +552,7 @@ void CImageInfoNI::get_DF_Info()
 		printf("[read_df] popen error\n" );
 
 #ifdef BOXMODEL_APOLLO
-	strcpy(mtd_info[systemfs].dev,"mtd:root0");
+	strcpy(mtd_info[systemfs].dev, ("mtd:"+get_systemRoot()).c_str());
 #endif
 
  	while ((read = getline(&buffer, &len, pipe_reader)) != -1)
