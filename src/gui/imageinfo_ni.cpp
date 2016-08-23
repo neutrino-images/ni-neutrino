@@ -49,6 +49,7 @@
 #include <gui/customcolor.h>
 #include <gui/components/cc.h>
 #include <system/debug.h>
+#include <cs_api.h>
 
 #include <linux/version.h>
 
@@ -809,7 +810,9 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	 * 104857600	Bit
 	 */
 #ifdef BOXMODEL_APOLLO
-	int max_bit	= 1073741824;
+	int max_bit	= 104857600;	/* Shiner, Kronos */
+	if (cs_get_revision() == 9)
+		max_bit	= 1073741824;	/* Apollo */
 #else
 	int max_bit	= 104857600;
 #endif
