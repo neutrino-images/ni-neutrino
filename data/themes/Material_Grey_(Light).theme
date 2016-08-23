@@ -1,0 +1,116 @@
+# https://material.google.com/style/color.html#color-color-palette
+# http://maettig.com/?page=PHP/CSS_Color_Converter
+
+# 800
+menu_Head_red=26
+menu_Head_green=26
+menu_Head_blue=26
+menu_Head_alpha=10
+
+menu_Head_gradient=0
+menu_Head_gradient_direction=1
+
+# 600
+menu_Content_red=46
+menu_Content_green=46
+menu_Content_blue=46
+menu_Content_alpha=10
+
+# 700
+menu_Content_Selected_red=38
+menu_Content_Selected_green=38
+menu_Content_Selected_blue=38
+menu_Content_Selected_alpha=10
+
+# 600
+menu_Content_inactive_red=46
+menu_Content_inactive_green=46
+menu_Content_inactive_blue=46
+menu_Content_inactive_alpha=10
+
+menu_Separator_gradient_enable=0
+
+# 700
+menu_Foot_red=38
+menu_Foot_green=38
+menu_Foot_blue=38
+menu_Foot_alpha=10
+
+menu_ButtonBar_gradient=0
+menu_ButtonBar_gradient_direction=1
+
+menu_Hint_gradient=0
+menu_Hint_gradient_direction=1
+
+# 600
+infobar_red=46
+infobar_green=46
+infobar_blue=46
+infobar_alpha=10
+
+# 600
+infobar_casystem_red=46
+infobar_casystem_green=46
+infobar_casystem_blue=46
+infobar_casystem_alpha=10
+
+infobar_gradient_top=0
+infobar_gradient_top_direction=1
+
+infobar_gradient_body=0
+infobar_gradient_body_direction=1
+
+infobar_gradient_bottom=0
+infobar_gradient_bottom_direction=1
+
+# 400
+clock_Digit_red=74
+clock_Digit_green=74
+clock_Digit_blue=74
+clock_Digit_alpha=0
+
+# 400
+colored_events_red=74
+colored_events_green=74
+colored_events_blue=74
+colored_events_alpha=0
+
+colored_events_channellist=2
+colored_events_infobar=2
+
+# 100
+menu_Head_Text_red=96
+menu_Head_Text_green=96
+menu_Head_Text_blue=96
+menu_Head_Text_alpha=0
+
+# 100
+menu_Content_Text_red=96
+menu_Content_Text_green=96
+menu_Content_Text_blue=96
+menu_Content_Text_alpha=0
+
+# 100
+menu_Content_Selected_Text_red=96
+menu_Content_Selected_Text_green=96
+menu_Content_Selected_Text_blue=96
+menu_Content_Selected_Text_alpha=0
+
+# 400
+menu_Content_inactive_Text_red=74
+menu_Content_inactive_Text_green=74
+menu_Content_inactive_Text_blue=74
+menu_Content_inactive_Text_alpha=0
+
+# 100
+menu_Foot_Text_red=96
+menu_Foot_Text_green=96
+menu_Foot_Text_blue=96
+menu_Foot_Text_alpha=0
+
+# 100
+infobar_Text_red=96
+infobar_Text_green=96
+infobar_Text_blue=96
+
+infobar_Text_alpha=0

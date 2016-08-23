@@ -10,6 +10,9 @@ install_DATA = \
 	DarkOrange.theme \
 	Gray.theme \
 	Grey-Blue.theme \
+	Material_Blue-Grey.theme \
+	Material_Grey_(Dark).theme \
+	Material_Grey_(Light).theme \
 	MonoChrom.theme \
 	Neutrino-3.0.theme \
 	Olive.theme \

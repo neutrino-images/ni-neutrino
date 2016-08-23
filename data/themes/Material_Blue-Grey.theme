@@ -1,0 +1,115 @@
+# https://material.google.com/style/color.html#color-color-palette
+# http://maettig.com/?page=PHP/CSS_Color_Converter
+
+# 900
+menu_Head_red=15
+menu_Head_green=20
+menu_Head_blue=22
+menu_Head_alpha=10
+
+menu_Head_gradient=0
+menu_Head_gradient_direction=1
+
+# 500
+menu_Content_red=38
+menu_Content_green=49
+menu_Content_blue=55
+menu_Content_alpha=10
+
+# 700
+menu_Content_Selected_red=27
+menu_Content_Selected_green=35
+menu_Content_Selected_blue=39
+menu_Content_Selected_alpha=10
+
+# 500
+menu_Content_inactive_red=38
+menu_Content_inactive_green=49
+menu_Content_inactive_blue=55
+menu_Content_inactive_alpha=10
+
+menu_Separator_gradient_enable=0
+
+# 700
+menu_Foot_red=27
+menu_Foot_green=35
+menu_Foot_blue=39
+menu_Foot_alpha=10
+
+menu_ButtonBar_gradient=0
+menu_ButtonBar_gradient_direction=1
+
+menu_Hint_gradient=0
+menu_Hint_gradient_direction=1
+
+# 500
+infobar_red=38
+infobar_green=49
+infobar_blue=55
+infobar_alpha=10
+
+# 500
+infobar_casystem_red=38
+infobar_casystem_green=49
+infobar_casystem_blue=55
+infobar_casystem_alpha=10
+
+infobar_gradient_top=0
+infobar_gradient_top_direction=1
+
+infobar_gradient_body=0
+infobar_gradient_body_direction=1
+
+infobar_gradient_bottom=0
+infobar_gradient_bottom_direction=1
+
+# 200
+clock_Digit_red=69
+clock_Digit_green=75
+clock_Digit_blue=77
+clock_Digit_alpha=0
+
+#200
+colored_events_red=69
+colored_events_green=75
+colored_events_blue=77
+colored_events_alpha=0
+
+colored_events_channellist=2
+colored_events_infobar=2
+
+# 50
+menu_Head_Text_red=93
+menu_Head_Text_green=94
+menu_Head_Text_blue=95
+menu_Head_Text_alpha=0
+
+# 50
+menu_Content_Text_red=93
+menu_Content_Text_green=94
+menu_Content_Text_blue=95
+menu_Content_Text_alpha=0
+
+# 50
+menu_Content_Selected_Text_red=93
+menu_Content_Selected_Text_green=94
+menu_Content_Selected_Text_blue=95
+menu_Content_Selected_Text_alpha=0
+
+# 300
+menu_Content_inactive_Text_red=56
+menu_Content_inactive_Text_green=64
+menu_Content_inactive_Text_blue=68
+menu_Content_inactive_Text_alpha=0
+
+# 50
+menu_Foot_Text_red=93
+menu_Foot_Text_green=94
+menu_Foot_Text_blue=95
+menu_Foot_Text_alpha=0
+
+# 50
+infobar_Text_red=93
+infobar_Text_green=94
+infobar_Text_blue=95
+infobar_Text_alpha=0
