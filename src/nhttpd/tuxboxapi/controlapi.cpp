@@ -3051,7 +3051,7 @@ void CControlAPI::xmltvepgCGI(CyhookHandler *hh)
 {
 	int mode = NeutrinoAPI->Zapit->getMode();
 	hh->ParamList["format"] = "xml";
-	TOutType outType = hh->outStart();
+	hh->outStart();
 
 	t_channel_id channel_id;
 	std::string result = "";
@@ -3123,8 +3123,7 @@ void CControlAPI::xmltvepgCGI(CyhookHandler *hh)
 
 void CControlAPI::xmltvm3uCGI(CyhookHandler *hh)
 {
-
-    TOutType outType = hh->outStart();
+    hh->outStart();
     std::string result = "";
 
     int mode = NeutrinoAPI->Zapit->getMode();
