@@ -168,9 +168,10 @@ void CComponentsWindow::initWindowSize()
 	if (cc_parent)
 		return;
 
-	if (width == 0)
+	if (width == 0 || (unsigned)width > frameBuffer->getScreenWidth())
 		width = frameBuffer->getScreenWidth();
-	if (height == 0)
+
+	if (height == 0 || (unsigned)height > frameBuffer->getScreenHeight())
 		height = frameBuffer->getScreenHeight();
 }
 
@@ -218,7 +219,7 @@ void CComponentsWindow::initFooter()
 		ccw_footer->setPos(0, cc_yr + height - ccw_footer->getHeight()- fr_thickness);
 		ccw_footer->setWidth(width-2*fr_thickness);
 		ccw_footer->enableShadow(false/*shadow*/);
-		ccw_footer->setCorner(corner_rad-fr_thickness/2, CORNER_BOTTOM);
+		ccw_footer->setCorner(corner_rad-fr_thickness, CORNER_BOTTOM);
 		ccw_footer->setButtonFont(ccw_button_font);
 		ccw_footer->setColorBody(ccw_col_footer);
 		ccw_footer->doPaintBg(true);
