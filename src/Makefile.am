@@ -146,7 +146,7 @@ neutrino_LDADD += \
 	$(top_builddir)/lib/libtuxtxt/libtuxtxt.a
 else
 neutrino_LDADD += \
-	$(top_builddir)/lib/libtuxtxt_mp/libtuxtxt.a
+	$(top_builddir)/lib/libtuxtxt/libtuxtxt.a
 endif
 
 if BOXTYPE_COOL
