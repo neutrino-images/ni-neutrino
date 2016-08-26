@@ -355,12 +355,14 @@ void CDBoxInfoWidget::paint()
 		title += ": ";
 		title + cpuinfo["machine"];
 	}
+#endif
 //NI
 #if 0
 	char ss[17];
 	sprintf(ss, "%016llx", cs_get_serial());
 	title += ", S/N ";
 	title += ss;
+	width = max(width, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(title, true) + 50);
 #endif
 	title += ": ";
 	title += g_info.hw_caps->boxvendor;
@@ -371,8 +373,6 @@ void CDBoxInfoWidget::paint()
 	title += g_info.hw_caps->boxarch;
 	title += ") - ";
 	title += g_info.hw_caps->frontend;
-#endif
-	width = max(width, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(title, true) + 50);
 #endif
 	x = getScreenStartX(width);
 
