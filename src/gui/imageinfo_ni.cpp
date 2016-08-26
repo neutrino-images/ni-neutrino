@@ -298,20 +298,6 @@ void CImageInfoNI::paint()
 	ypos+= sheight;
 
 	paint_Stat_Info_Box(xcpu, ycpu, width/3, height/3);
-
-	if (access(ICONSDIR "/astrasat.png", F_OK) == 0) {
-		int logoBox_x = xcpu;
-		int logoBox_y = ycpu + height/3 + sheight;
-		int logoBox_w = width/3;
-		int logoBox_h = height - logoBox_y;
-		CComponentsPicture *logoBox = new CComponentsPicture(logoBox_x, logoBox_y, logoBox_w, logoBox_h, ICONSDIR "/astrasat.png");
-		int logo_w = 0, logo_h = 0;
-		logoBox->getSize(&logo_w, &logo_h);
-		if (logo_w < logoBox_w)
-			logoBox->setXPos(logoBox_x + (logoBox_w/2) - (logo_w/2));
-		logoBox->setColorBody(COL_INFOBAR_PLUS_0);
-		logoBox->paint(CC_SAVE_SCREEN_NO);
-	}
 }
 
 void* CImageInfoNI::InfoProc(void *arg)
