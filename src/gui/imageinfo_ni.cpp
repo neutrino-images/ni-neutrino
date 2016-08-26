@@ -246,7 +246,6 @@ void CImageInfoNI::paint()
 	const char * creator   = config.getString("creator",   "NI-Team").c_str();
 	const char * version   = config.getString("version",   "no version").c_str();
 	const char * origin_commit = config.getString("origin-commit", "no commit").c_str();
-	const char * remote_commit = config.getString("remote-commit", "no commit").c_str();
 	const char * builddate = config.getString("builddate", "no builddate").c_str();
 
 	static CFlashVersionInfo versionInfo(version);
@@ -255,7 +254,7 @@ void CImageInfoNI::paint()
 	struct utsname uts_info;
 
 	imageversion << releaseCycle << " (" << versionInfo.getType() << ")";
-	commits << "NI: " << origin_commit << ", CST: " << remote_commit;
+	commits << "NI: " << origin_commit;
 
 	ypos += iheight;
 	paintLine(xpos    , font_info, g_Locale->getText(LOCALE_IMAGEINFO_IMAGE));
@@ -266,7 +265,7 @@ void CImageInfoNI::paint()
 	paintLine(xpos+offset, font_info, imageversion.str().c_str());
 
 	ypos += iheight;
-	paintLine(xpos    , font_info, "Commits:");
+	paintLine(xpos    , font_info, "Commit:");
 	paintLine(xpos+offset, font_info, commits.str().c_str());
 
 	ypos += iheight;
