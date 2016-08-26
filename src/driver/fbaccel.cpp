@@ -625,12 +625,18 @@ void CFbAccel::paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t col)
 }
 
 #if !HAVE_TRIPLEDRAGON
-void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp)
+void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
 #if !HAVE_SPARK_HARDWARE
 	int  xc, yc;
 	xc = (width > fb->xRes) ? fb->xRes : width;
 	yc = (height > fb->yRes) ? fb->yRes : height;
+
+	//NI
+	if (unscaled_w != 0 && (int)unscaled_w < xc)
+		xc = unscaled_w;
+	if (unscaled_h != 0 && (int)unscaled_h < yc)
+		yc = unscaled_h;
 #endif
 #if defined(FB_HW_ACCELERATION)
 	if(!(width%4)) {
@@ -641,8 +647,19 @@ void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t x
 		image.height = yc;
 		image.cmap.len = 0;
 		image.depth = 32;
+	if (unscaled_w == 0 && unscaled_h == 0) { //NI
 		image.data = (const char*)fbbuff;
 		ioctl(fb->fd, FBIO_IMAGE_BLT, &image);
+	} else { //NI
+		for (int count = 0; count < yc; count++ ) {
+			fb_pixel_t*  data = (fb_pixel_t *) fbbuff;
+			fb_pixel_t *pixpos = &data[(count + yp) * width];
+			image.data = (const char*) pixpos; //fbbuff +(count + yp)*width;
+			image.dy = yoff+count;
+			image.height = 1;
+			ioctl(fb->fd, FBIO_IMAGE_BLT, &image);
+		}
+	} //NI
 		//printf("\033[33m>>>>\033[0m [%s:%s:%d] FB_HW_ACCELERATION x: %d, y: %d, w: %d, h: %d\n", __file__, __func__, __LINE__, xoff, yoff, xc, yc);
 		return;
 	}
@@ -750,7 +767,7 @@ void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t x
 #endif
 }
 #else
-void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp)
+void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
 	DFBRectangle src;
 	DFBResult err;

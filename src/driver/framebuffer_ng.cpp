@@ -253,9 +253,9 @@ void CFrameBuffer::init(const char * const)
 }
 
 
-CFrameBuffer::~CFrameBuffer()
+//NI
+void CFrameBuffer::clearIconCache()
 {
-	active = false; /* keep people/infoclocks from accessing */
 	std::map<std::string, rawIcon>::iterator it;
 
 	for(it = icon_cache.begin(); it != icon_cache.end(); ++it) {
@@ -263,6 +263,12 @@ CFrameBuffer::~CFrameBuffer()
 		cs_free_uncached(it->second.data);
 	}
 	icon_cache.clear();
+}
+
+CFrameBuffer::~CFrameBuffer()
+{
+	active = false; /* keep people/infoclocks from accessing */
+	clearIconCache(); //NI
 
 	if (background) {
 		delete[] background;
@@ -1300,11 +1306,17 @@ void * CFrameBuffer::convertRGBA2FB(unsigned char *rgbbuff, unsigned long x, uns
 	return int_convertRGB2FB(rgbbuff, x, y, 0, true);
 }
 
-void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp)
+void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
 	checkFbArea(xoff, yoff, width, height, true);
-	accel->blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp);
+	accel->blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp, unscaled_w, unscaled_h); //NI
 	checkFbArea(xoff, yoff, width, height, false);
+}
+
+//NI
+void CFrameBuffer::blit2FB_unscaled(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t unscaled_w, uint32_t unscaled_h, uint32_t xp, uint32_t yp, bool transp)
+{
+	return blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp, unscaled_w, unscaled_h);
 }
 
 void CFrameBuffer::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff)
