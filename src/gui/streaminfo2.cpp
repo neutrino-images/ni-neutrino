@@ -152,10 +152,12 @@ int CStreamInfo2::doSignalStrengthLoop ()
 	int dx1 = x + 10;
 	ts_setup ();
 	while (1) {
+#if 0
 		neutrino_msg_data_t data;
 
 		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd_MS (100);
 		g_RCInput->getMsgAbsoluteTimeout (&msg, &data, &timeoutEnd);
+#endif
 
 		if (!mp) {
 			signal.sig = frontend->getSignalStrength() & 0xFFFF;
@@ -169,7 +171,6 @@ int CStreamInfo2::doSignalStrengthLoop ()
 			if (cnt < 12)
 				cnt++;
 			//NI int dheight = g_Font[font_info]->getHeight ();
-			int dx1 = x + 10;
 
 			if(!mp && delay_counter > delay + 1){
 				CZapitChannel * channel = CZapit::getInstance()->GetCurrentChannel();
