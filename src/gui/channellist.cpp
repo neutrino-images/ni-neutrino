@@ -482,7 +482,11 @@ void CChannelList::calcSize()
 	if (g_settings.channellist_additional)
 		width = full_width / 3 * 2;
 	else
+	{
+		/* don't use 100% of screen if additional info / minitv is not used */
+		full_width = full_width * 76 / 99; /* same width as the old code with my settings :-) */
 		width = full_width;
+	}
 
 	// calculate height (the infobox below mainbox is handled outside height)
 	if (g_settings.channellist_show_infobox)
@@ -1083,10 +1087,12 @@ bool CChannelList::checkLockStatus(neutrino_msg_data_t data, bool pip)
 out:
 	if (startvideo) {
 		if(pip) {
+#ifdef ENABLE_PIP
 			if (CNeutrinoApp::getInstance()->StartPip((*chanlist)[selected]->getChannelID())) {
 				calcSize();
 				paintBody();
 			}
+#endif
 		} else
 			g_RemoteControl->startvideo();
 		return true;
@@ -1159,7 +1165,9 @@ bool CChannelList::zapTo_ChannelID(const t_channel_id channel_id, bool force)
 bool CChannelList::showEmptyError()
 {
 	if ((*chanlist).empty()) {
-		DisplayErrorMessage(g_Locale->getText(LOCALE_CHANNELLIST_NONEFOUND)); // UTF-8
+		/* No error message when the frontend is only simulated */
+		if (!getenv("SIMULATE_FE"))
+			DisplayErrorMessage(g_Locale->getText(LOCALE_CHANNELLIST_NONEFOUND)); // UTF-8
 		return true;
 	}
 	return false;
@@ -1429,8 +1437,8 @@ CZapitChannel* CChannelList::getPrevNextChannel(int key, unsigned int &sl)
 		}
 		sl = cactive;
 		channel = bouquetList->Bouquets[bactive]->channelList->getChannelFromIndex(cactive);
-		printf("CChannelList::getPrevNextChannel: selected %u total %d active bouquet %d total %d channel %x (%s)\n",
-				cactive, (*chanlist).size(), bactive, bsize, (int) channel, channel ? channel->getName().c_str(): "");
+		printf("CChannelList::getPrevNextChannel: selected %d total %d active bouquet %d total %d channel %p (%s)\n",
+				(int)cactive, (int)(*chanlist).size(), bactive, bsize, channel, channel ? channel->getName().c_str(): "");
 	} else {
 		if ((key == g_settings.key_quickzap_down) || (key == CRCInput::RC_left)) {
 			if(sl == 0)

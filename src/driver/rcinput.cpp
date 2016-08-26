@@ -65,7 +65,17 @@
 
 #define ENABLE_REPEAT_CHECK
 
+#if HAVE_SPARK_HARDWARE
+/* this relies on event0 being the AOTOM frontpanel driver device
+ * TODO: what if another input device is present? */
+const char * const RC_EVENT_DEVICE[NUMBER_OF_EVENT_DEVICES] = {"/dev/input/nevis_ir", "/dev/input/event0"};
+#elif HAVE_GENERIC_HARDWARE
+/* the FIFO created by libstb-hal */
+const char * const RC_EVENT_DEVICE[NUMBER_OF_EVENT_DEVICES] = {"/tmp/neutrino.input"};
+#else
+//const char * const RC_EVENT_DEVICE[NUMBER_OF_EVENT_DEVICES] = {"/dev/input/nevis_ir", "/dev/input/event0"};
 const char * const RC_EVENT_DEVICE[NUMBER_OF_EVENT_DEVICES] = {"/dev/input/nevis_ir"};
+#endif
 typedef struct input_event t_input_event;
 
 #ifdef KEYBOARD_INSTEAD_OF_REMOTE_CONTROL
@@ -543,7 +553,6 @@ void CRCInput::getMsg_us(neutrino_msg_t * msg, neutrino_msg_data_t * data, uint6
 	uint64_t getKeyBegin = time_monotonic_us();
 
 	while(1) {
-		/* we later check for ev.type = EV_SYN which is 0x00, so set something invalid here... */
 		timer_id = 0;
 		if ( !timers.empty() )
 		{
@@ -1213,6 +1222,9 @@ void CRCInput::getMsg_us(neutrino_msg_t * msg, neutrino_msg_data_t * data, uint6
 		for (int i = 0; i < NUMBER_OF_EVENT_DEVICES; i++) {
 			if ((fd_rc[i] != -1) && (FD_ISSET(fd_rc[i], &rfds))) {
 				t_input_event ev;
+				memset(&ev, 0, sizeof(ev));
+				/* we later check for ev.type = EV_SYN = 0x00, so set something invalid here... */
+				ev.type = EV_MAX;
 				int ret = read(fd_rc[i], &ev, sizeof(t_input_event));
 				if (ret != sizeof(t_input_event)) {
 					if (errno == ENODEV) {
@@ -1231,8 +1243,8 @@ void CRCInput::getMsg_us(neutrino_msg_t * msg, neutrino_msg_data_t * data, uint6
 				}
 
 				uint32_t trkey = translate(ev.code);
-#ifdef DEBUG
-				printf("%d key: %04x value %d, translate: %04x -%s-\n", ev.value, ev.code, ev.value, trkey, getKeyName(trkey).c_str());
+#ifdef _DEBUG
+				printf("key: %04x value %d, translate: %04x -%s-\n", ev.code, ev.value, trkey, getKeyName(trkey).c_str());
 #endif
 				if (trkey == RC_nokey)
 					continue;
@@ -1278,7 +1290,7 @@ void CRCInput::getMsg_us(neutrino_msg_t * msg, neutrino_msg_data_t * data, uint6
 					if (trkey == rc_last_key) {
 						/* only allow selected keys to be repeated */
 						if (mayRepeat(trkey, bAllowRepeatLR) ||
-						    (g_settings.shutdown_real_rcdelay && ((trkey == RC_standby) && (cs_get_revision() > 7))) )
+						    (g_settings.shutdown_real_rcdelay && ((trkey == RC_standby) && (g_info.hw_caps->can_shutdown))))
 						{
 #ifdef ENABLE_REPEAT_CHECK
 							if (rc_last_repeat_key != trkey) {
@@ -1597,6 +1609,16 @@ int CRCInput::translate(int code)
 			return RC_up;
 		case 0x101: // FIXME -- needed?
 			return RC_down;
+#ifdef HAVE_AZBOX_HARDWARE
+		case KEY_HOME:
+			return RC_favorites;
+		case KEY_TV:
+			return RC_stop;
+		case KEY_RADIO:
+			return RC_record;
+		case KEY_PLAY:
+			return RC_pause;
+#endif
 		default:
 			break;
 	}

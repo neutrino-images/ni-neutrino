@@ -374,7 +374,7 @@ int CCAMMenuHandler::handleCamMsg(const neutrino_msg_t msg, neutrino_msg_data_t 
 				char * tptr = sptr;
 				int bpos = 0;
 				for(int li = 0; li < slen; li++) {
-					if((tptr[li] == 0x8A) || ((bpos > 38) && (tptr[li] == 0x20)) ) {
+					if(((unsigned char)tptr[li] == 0x8A) || ((bpos > 38) && (tptr[li] == 0x20)) ) {
 						bpos = 0;
 						tptr[li] = 0;
 						printf("CCAMMenuHandler::handleCamMsg: subtitle: %s\n", sptr);
@@ -528,7 +528,7 @@ int CCAMMenuHandler::doMenu(int slot, CA_SLOT_TYPE slotType)
 				g_Locale->getText(slotType == CA_SLOT_TYPE_CI ? LOCALE_CI_WAITING : LOCALE_SC_WAITING));
 
 			g_RCInput->getMsgAbsoluteTimeout (&msg, &data, &timeoutEnd);
-			printf("CCAMMenuHandler::doMenu: msg %x data %x\n", msg, data);
+			printf("CCAMMenuHandler::doMenu: msg %lx data %lx\n", msg, data);
 			if (msg == CRCInput::RC_timeout) {
 				printf("CCAMMenuHandler::doMenu: menu timeout\n");
 				hideHintBox();

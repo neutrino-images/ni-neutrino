@@ -15,7 +15,6 @@ AM_CPPFLAGS += \
 	@AVFORMAT_CFLAGS@ \
 	@HWLIB_CFLAGS@
 
-
 noinst_LIBRARIES = libneutrino_daemonc.a
 
 libneutrino_daemonc_a_SOURCES = remotecontrol.cpp

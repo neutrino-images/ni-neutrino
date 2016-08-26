@@ -346,7 +346,7 @@ colormenu.background Hintergrundfarbe
 colormenu.clock_textcolor Ziffernfarbe
 colormenu.contrast_fonts Schriftkontrast
 colormenu.fade Ein-/Ausblenden
-colormenu.font Neutrino-HD Schriftart
+colormenu.font Neutrino Schriftart
 colormenu.font_ttx Teletext Schriftart
 colormenu.hd_preset LCD
 colormenu.menucolors Farben
@@ -494,7 +494,7 @@ extra.key_timeshift Timeshift
 extra.key_unlock Entsperrtaste
 extra.ladirection Breitengrad-Ausrichtung
 extra.latitude Breitengrad
-extra.loadconfig Neutrino-HD Einstellungen: Laden von
+extra.loadconfig Neutrino Einstellungen: Laden von
 extra.loadkeys Lade Tastenbelegung von
 extra.lodirection Längengrad-Ausrichtung
 extra.longitude Längengrad
@@ -506,7 +506,7 @@ extra.rotor_swap Rotor dreht Ost/West
 extra.rounded_corners Eckendarstellung
 extra.rounded_corners_off eckig
 extra.rounded_corners_on abgerundet
-extra.saveconfig Neutrino-HD Einstellungen: Sichern als
+extra.saveconfig Neutrino Einstellungen: Sichern als
 extra.savekeys Speichere Tastenbelegung als
 extra.scrambled_message Verschlüsselung melden
 extra.show_mute_icon Mute-Icon bei Lautstärke 0
@@ -1303,7 +1303,7 @@ menu.hint_leds_deepstandby Definiert den Status der Power-LEDs im Deep-Standby
 menu.hint_leds_record Definiert, ob die Power-LEDs blinken sollen, wenn eine Aufnahme aktiv ist
 menu.hint_leds_standby Definiert den Status der Power-LEDs im Standby
 menu.hint_leds_tv Definiert den Status der Power-LEDs im TV-Modus
-menu.hint_load Laden der Neutrino-HD-Einstellungen aus einer Datei
+menu.hint_load Laden der Neutrino Einstellungen aus einer Datei
 menu.hint_longkeypress_duration Tasten, die länger als die angegebene Zeit betätigt werden, werden als "langer Tastendruck" behandelt.
 menu.hint_lua Plugins ausführen
 menu.hint_make_hdlist Bei aktiver Option wird ein Bouquet namens 'HD' erzeugt, in dem alle HD-Sender zusammengefasst sind
@@ -1459,7 +1459,7 @@ menu.hint_restore Wiederherstellen von vorher erstellten Sicherungen
 menu.hint_rotor_swap Tauschen der Rotordrehrichtung Ost/West in den Motor-Einstellungen
 menu.hint_rounded_corners Aktiviert die Darstellung abgerundeter Ecken für die Menüs
 menu.hint_save_settings Speichert ihre Einstellungen
-menu.hint_saveas Speichern der Neutrino-HD-Einstellungen in eine Datei
+menu.hint_saveas Speichern der Neutrino Einstellungen in eine Datei
 menu.hint_scan_auto Automatischer Suchlauf ausgewählter Anbieter
 menu.hint_scan_autoall Automatischer Suchlauf aller ausgewählten Anbieter
 menu.hint_scan_autoall_select Suchlauf nur in ausgewählten Satelliten
@@ -1578,7 +1578,7 @@ menu.hint_standby Receiver in den Standby Modus versetzen
 menu.hint_start_tostandby Aktiviert den Standby-Modus direkt nach dem Starten der Box
 menu.hint_streaminfo Aktuelle Sender-Informationen über PIDs, SNR-Verhältnis, Bitrate und mehr
 menu.hint_subchannel_pos Wählen Sie die Anzeigeposition der Unterkanäle aus
-menu.hint_sw_update Neutrino-HD aktualisieren, Image sichern und wiederherstellen
+menu.hint_sw_update Neutrino aktualisieren, Image sichern und wiederherstellen
 menu.hint_theme Wählen Sie ein vordefiniertes Farbschema, speichern oder laden Sie ihre eigenen Farbschemata
 menu.hint_timeouts Gibt an, nach welcher Zeit in Sekunden die Menüs oder Infofenster sich automatisch schließen (0 deaktiviert)
 menu.hint_timers Hinzufügen, entfernen und bearbeiten geplanter Aufnahmen oder anderer Timer
@@ -2257,6 +2257,7 @@ plugintype.script Skript
 plugintype.tool Werkzeug
 rclock.locked Gesperrt
 rclock.lockmsg Die Fernbedienung wird gesperrt.\nUm die Sperre aufzuheben, bitte\n[rot] gefolgt von [%s]\nauf der Fernbedienung drücken.
+rclock.menueadd FB sperren
 rclock.title Fernbedienung sperren
 rclock.unlockmsg Fernbedienung reaktiviert
 recording.already_found %s\nwurde bereits gefunden. Trotzdem aufnehmen?

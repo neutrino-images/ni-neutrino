@@ -898,9 +898,21 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 		has_follow_screenings = true;
 	}
 
+/* merge conflict */
+#if 0
+	/* neat for debugging duplicate event issues etc. */
+	char *epgid;
+	if (asprintf(&epgid, "EPG ID:%04X.%02X", (int)((epgData.eventID)&0x0FFFF), epgData.table_id) >= 0)
+	{
+		processTextToArray(""); // UTF-8
+		processTextToArray(epgid);
+		free(epgid);
+	}
+#else
 	// show extended movie info
 	if (mp_info && !extMovieInfo.empty())
 		processTextToArray(extMovieInfo);
+#endif
 
 	COSDFader fader(g_settings.theme.menu_Content_alpha);
 	fader.StartFadeIn();
@@ -1629,7 +1641,7 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 	h = std::max(fh, icol_h+4);
 
 	// hide only?
-	if (! pshow){ 
+	if (! pshow) {
 		frameBuffer->paintBackgroundBoxRel(sx,y,ox,h);
 		return;
 	}

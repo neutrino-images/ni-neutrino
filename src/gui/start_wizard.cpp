@@ -93,11 +93,17 @@ int CStartUpWizard::exec(CMenuTarget* parent, const string & /*actionKey*/)
 	languageSettings.showLanguageSetup(&osdl_setup);
 	osdl_setup.exec(NULL, "");
 
+	/* hack to ensure system's view of timezone is the same as neutrino's */
+	CTZChangeNotifier tzn;
+	tzn.changeNotify(NONEXISTANT_LOCALE, (void *)"dummy");
+
 	//restore backup
 	CSettingsManager settingsManager(SNeutrinoSettings::WIZARD_START);
 	settingsManager.exec(NULL, "");
 
+#if 0
 	if(ShowMsg (LOCALE_WIZARD_WELCOME_HEAD, g_Locale->getText(LOCALE_WIZARD_WELCOME_TEXT), CMessageBox::mbrYes, CMessageBox::mbYes | CMessageBox::mbrCancel) == CMessageBox::mbrYes)
+#endif
 	{
 		int advanced = 1;
 #ifdef ENABLE_FASTSCAN

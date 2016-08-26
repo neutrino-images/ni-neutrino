@@ -11,6 +11,7 @@
 	Copyright (C) 2011 T. Graf 'dbt'
 	Homepage: http://www.dbox2-tuning.net/
 
+	Copyright (C) 2013-2014 Stefan Seyfried
 
         License: GPL
 
@@ -407,7 +408,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 			menu_item->setHint(NEUTRINO_ICON_HINT_NKPLAY, LOCALE_MENU_HINT_NKPLAY);
 			break;
 #endif
-#if HAVE_SPARK_HARDWARE
+#if 0
 		case SNeutrinoSettings::ITEM_THREE_D_MODE:
 			keyhelper.get(&key,&icon);
 			menu_item = new CMenuForwarder(LOCALE_THREE_D_SETTINGS, true, NULL, neutrino, "3dmode", key, icon);

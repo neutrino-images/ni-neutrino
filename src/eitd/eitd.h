@@ -114,6 +114,8 @@ class CSectionThread : public OpenThreads::Thread, public DMX
 		int		skipTime;
 		bool		sendToSleepNow;
 
+		std::string	threadName;
+
 		/* should thread wait for time set before process loop */
 		bool	wait_for_time;
 		/* time in seconds to sleep when requested, wait forever if 0 */
@@ -296,7 +298,7 @@ class CTimeThread : public CSectionThread
 		OpenThreads::Condition time_cond;
 
 		void sendTimeEvent(bool dvb, time_t tim = 0);
-		void setSystemTime(time_t tim);
+		bool setSystemTime(time_t tim, bool force = false);
 		void run();
 	public:
 		CTimeThread();

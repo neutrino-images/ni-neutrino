@@ -52,10 +52,12 @@
 #define WEBTVDIR	DATADIR "/neutrino/webtv" //NI
 #define WEBTVDIR_VAR	"/var/tuxbox/webtv" //NI
 
+#if HAVE_TRIPLEDRAGON == 0
 #define AUDIO_DEVICE          "/dev/dvb/adapter0/audio0"
 #define DEMUX_DEVICE          "/dev/dvb/adapter0/demux0"
 #define FRONTEND_DEVICE       "/dev/dvb/adapter0/frontend0"
 #define VIDEO_DEVICE          "/dev/dvb/adapter0/video0"
+#endif
 
 #define CAMD_UDS_NAME  "/tmp/camd.socket"
 

@@ -30,7 +30,7 @@
 	Author: Günther@tuxbox.berlios.org
 		based on code of Steffen Hehn 'McClean'
 
-	(C) 2009-2014 Stefan Seyfried
+	(C) 2009-2015 Stefan Seyfried
 
 ****************************************************************************/
 
@@ -1442,7 +1442,7 @@ std::string CMovieBrowser::getScreenshotName(std::string movie, bool is_dir)
 
 void CMovieBrowser::refreshMovieInfo(void)
 {
-	TRACE("[mb]->%s m_vMovieInfo.size %d\n", __func__, m_vMovieInfo.size());
+	TRACE("[mb]->%s m_vMovieInfo.size %d\n", __func__, (int)m_vMovieInfo.size());
 	//reset text before new init, m_pcInfo must be clean
 	std::string emptytext = " ";
 	m_pcInfo->setText(&emptytext);
@@ -1562,7 +1562,7 @@ void CMovieBrowser::info_hdd_level(bool paint_hdd)
 	if (getSelectedFile() != NULL) {
 		if (::statfs(getSelectedFile()->Name.c_str(), &s) == 0) {
 			long blocks_used = s.f_blocks - s.f_bfree;
-			blocks_percent_used = (long)(blocks_used * 100.0 / (blocks_used + s.f_bavail) + 0.5);
+			blocks_percent_used = (blocks_used * 1000 / (blocks_used + s.f_bavail) + 5)/10;
 		}
 	}
 

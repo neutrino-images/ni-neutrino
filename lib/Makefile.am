@@ -18,7 +18,12 @@ SUBDIRS += \
 	libupnpclient
 endif
 
-if BOXTYPE_TRIPLE
+if BOXTYPE_COOL
+if BOXMODEL_APOLLO
 SUBDIRS += \
-	libtriple
+	libcoolstream2
+else
+SUBDIRS += \
+	libcoolstream
+endif
 endif

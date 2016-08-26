@@ -120,7 +120,11 @@ typedef struct {
 	unsigned short		xres, yres;
 	unsigned int		segment_count;
 	fp_display_text_type_t	text_support;
+#ifdef __cplusplus
 	bool			number_support;
+#else
+	int			number_support;
+#endif
 } fp_display_caps_t;
 
 #define IOC_FP_SET_BRIGHT	_IOW(0xDE,  1, unsigned char)	/* set the display brighness in 16 steps between 0 to 15 */

@@ -13,19 +13,27 @@ AC_PROG_CXX
 AC_DISABLE_STATIC
 AM_PROG_LIBTOOL
 
-# Add build information to config.h
-# ---------------------------------
-
-# Add host to config.h
-AC_DEFINE_UNQUOTED(USED_BUILD, ["$build"], [Build system under which the program was compiled on.])
-
-# Add used CXXFLAGS to config.h
-AC_DEFINE_UNQUOTED(USED_CXXFLAGS, ["$CXXFLAGS"], [Define to the used CXXFLAGS to compile this package.])
-
-# Get compiler (version)
-AH_TEMPLATE(USED_COMPILER, [Define to name and version of used compiler])
+# Add build information to local_build_config.h.tmp
+# -------------------------------------------------
+rm -f local_build_config.h.tmp
+cat > local_build_config.h.tmp << EOF
+/* Build system under which the program was compiled on. */
+#define USED_BUILD "$build"
+/* Define to the used CXXFLAGS to compile this package. */
+#define USED_CXXFLAGS "$CXXFLAGS"
+EOF
 if COMPILER=`$CC --version | head -n 1`; then
-    AC_DEFINE_UNQUOTED(USED_COMPILER, ["$COMPILER"])
+	cat >> local_build_config.h.tmp <<-EOF
+	/* Define to name and version of used compiler */
+	#define USED_COMPILER "$COMPILER"
+	EOF
+fi
+# only update header if it differs to avoid unnecessary rebuilds
+if ! diff local_build_config.h.tmp local_build_config.h >/dev/null 2>&1; then
+	rm -f local_build_config.h
+	mv local_build_config.h.tmp local_build_config.h
+else
+	rm -f local_build_config.h.tmp
 fi
 
 AC_ARG_ENABLE(ffmpegdec,
@@ -89,14 +97,31 @@ fi
 AM_CONDITIONAL(USE_TREMOR, test "$TREMOR" = "yes")
 
 # TUXBOX_APPS_LIB_PKGCONFIG(OPENSSL,openssl)
-TUXBOX_APPS_LIB_CONFIG(CURL,curl-config)
-TUXBOX_APPS_LIB_CONFIG(FREETYPE,freetype-config)
+TUXBOX_APPS_LIB_PKGCONFIG(CURL,libcurl)
+TUXBOX_APPS_LIB_PKGCONFIG(FREETYPE,freetype2)
+# fallback to curl-config (which is ugly for cross-compilation)
+if test -z "$CURL_LIBS" -a -z "$CURL_CFLAGS"; then
+	TUXBOX_APPS_LIB_CONFIG(CURL,curl-config)
+fi
+# fallback to freetype-config (which is ugly for cross-compilation)
+if test -z "$FREETYPE_LIBS" -a -z "$FREETYPE_CFLAGS"; then
+	TUXBOX_APPS_LIB_CONFIG(FREETYPE,freetype-config)
+fi
 
 TUXBOX_APPS_LIB_PKGCONFIG(PNG,libpng)
 TUXBOX_APPS_LIB_PKGCONFIG(AVFORMAT,libavformat)
 TUXBOX_APPS_LIB_PKGCONFIG(AVCODEC,libavcodec)
 TUXBOX_APPS_LIB_PKGCONFIG(AVUTIL,libavutil)
-TUXBOX_APPS_LIB_PKGCONFIG(BLURAY,libbluray)
+if test "$BOXTYPE" = "coolstream"; then
+	TUXBOX_APPS_LIB_PKGCONFIG(BLURAY,libbluray)
+fi
+
+if test "$BOXTYPE" = "coolstream" ||
+   test "$BOXTYPE" = "tripledragon" ||
+   test "$BOXTYPE" = "spark"; then
+	AC_DEFINE(SCREENSHOT,1,[Define to 1 if the platform supports screenshots])
+fi
+
 TUXBOX_APPS_LIB_PKGCONFIG(SIGC,sigc++-2.0)
 
 #TUXBOX_APPS_LIB_PKGCONFIG(CONFIGFILE,tuxbox-configfile)
@@ -171,10 +196,35 @@ if test "$enable_upnp" = "yes"; then
 	AC_DEFINE(ENABLE_UPNP,1,[include UPNP support - currently broken])
 fi
 
+AC_ARG_ENABLE(extupdate,
+	AS_HELP_STRING(--enable-extupdate,include extended update routine),
+	,[enable_extupdate=no])
+
+AM_CONDITIONAL(ENABLE_EXTUPDATE,test "$enable_extupdate" = "yes")
+if test "$enable_extupdate" = "yes"; then
+	AC_DEFINE(ENABLE_EXTUPDATE,1,[include extended update routine])
+fi
+
+AC_ARG_WITH(stb-hal-includes,
+	[  --with-stb-hal-includes=PATH  path for libstb-hal includes [[NONE]]],
+	[STB_HAL_INC="$withval"],[STB_HAL_INC=""])
+AC_ARG_WITH(stb-hal-build,
+	[  --with-stb-hal-build=PATH   path where libstb-hal is built [[NONE]]],
+	[STB_HAL_LIB="-L$withval"],[STB_HAL_LIB=""])
+
+AM_CONDITIONAL(USE_STB_HAL, test "$BOXTYPE" != "coolstream")
+if test "$BOXTYPE" != coolstream; then
+	AC_DEFINE(USE_STB_HAL, 1,[use libstb-hal])
+	if test "$STB_HAL_INC" = ""; then
+		AC_MSG_ERROR([need libstb-hal includes path with --with-stb-hal-includes=...])
+	fi
+	HWLIB_CFLAGS="-I$STB_HAL_INC"
+fi
+
 # Lua - embeddable scripting language
 AC_ARG_ENABLE(lua,
-	AS_HELP_STRING(--enable-lua,include Lua support),
-	,[enable_lua=no])
+	AS_HELP_STRING(--disable-lua,disable Lua support),
+	,[enable_lua=yes])
 
 AM_CONDITIONAL(ENABLE_LUA,test "$enable_lua" = "yes")
 if test "$enable_lua" = "yes"; then
@@ -212,9 +262,10 @@ if test "$BOXTYPE" = "coolstream"; then
 if test -e ${srcdir}/lib/libcoolstream/nevis_ir.h; then
 	AC_DEFINE(HAVE_COOLSTREAM_NEVIS_IR_H,1,[Define to 1 if you have the <nevis_ir.h> header file.])
 fi
-HWLIB_CFLAGS='-I$(top_srcdir)/lib/libcoolstream'
+HWLIB_CFLAGS='-I$(top_srcdir)/lib/libcoolstream -I$(top_srcdir)/src/zapit/include/private'
 
 if test "$BOXMODEL" = "apollo"; then
+HWLIB_CFLAGS='-I$(top_srcdir)/lib/libcoolstream2'
 if test -e ${srcdir}/lib/libcoolstream2/cs_ir_generic.h; then
 	AC_DEFINE(HAVE_COOLSTREAM_CS_IR_GENERIC_H,1,[Define to 1 if you have the <cs_ir_generic.h> header file.])
 fi
@@ -253,6 +304,8 @@ AC_SUBST(FREETYPE_CFLAGS)
 AC_SUBST(FREETYPE_LIBS)
 AC_SUBST(VORBISIDEC_CFLAGS)
 AC_SUBST(VORBISIDEC_LIBS)
+AC_SUBST(STB_HAL_INC)
+AC_SUBST(STB_HAL_LIB)
 AC_SUBST(LUA_CFLAGS)
 AC_SUBST(LUA_LIBS)
 AC_SUBST(BLURAY_LIBS)
@@ -269,7 +322,8 @@ lib/xmltree/Makefile
 lib/jsoncpp/Makefile
 lib/sectionsdclient/Makefile
 lib/timerdclient/Makefile
-lib/libtriple/Makefile
+lib/libcoolstream/Makefile
+lib/libcoolstream2/Makefile
 lib/libtuxtxt/Makefile
 lib/libdvbsub/Makefile
 lib/libupnpclient/Makefile

@@ -4,6 +4,8 @@
   Copyright (C) 2001 Steffen Hehn 'McClean'
   Homepage: http://dbox.cyberphoria.org/
 
+  Copyright (C) 2007-2012 Stefan Seyfried
+
   Kommentar:
 
   Diese GUI wurde von Grund auf neu programmiert und sollte nun vom
@@ -39,13 +41,15 @@
 #include <zapit/client/zapittools.h>
 #include <eitd/edvbstring.h> // UTF8
 
+#include <hardware_caps.h>
+
 #include <string>
 #include <list>
 
 #ifdef BOXMODEL_APOLLO
 #define VIDEOMENU_VIDEOMODE_OPTION_COUNT 16
 #else
-#define VIDEOMENU_VIDEOMODE_OPTION_COUNT 12
+#define VIDEOMENU_VIDEOMODE_OPTION_COUNT 13
 #endif
 
 struct SNeutrinoTheme
@@ -698,7 +702,7 @@ struct SNeutrinoSettings
 		LCD_SHOW_VOLUME        ,
 		LCD_AUTODIMM           ,
 		LCD_DEEPSTANDBY_BRIGHTNESS,
-#if HAVE_TRIPLEDRAGON
+#if HAVE_TRIPLEDRAGON || USE_STB_HAL
 		LCD_EPGMODE            ,
 #endif
 		LCD_SETTING_COUNT
@@ -946,8 +950,8 @@ const time_settings_struct_t timing_setting[SNeutrinoSettings::TIMING_SETTING_CO
 struct SglobalInfo
 {
 	unsigned char     box_Type;
-	delivery_system_t delivery_system;
 	bool has_fan;
+	hw_caps_t *hw_caps;
 };
 
 const int RECORDING_OFF    = 0;

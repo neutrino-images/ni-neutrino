@@ -21,6 +21,8 @@
 	Boston, MA  02110-1301, USA.
 */
 
+#include "framebuffer_ng.h"
+#if 0
 
 #ifndef __framebuffer__
 #define __framebuffer__
@@ -331,7 +333,9 @@ class CFrameBuffer : public sigc::trackable
 		void fbNoCheck(bool noCheck) { fb_no_check = noCheck; }
 		void doPaintMuteIcon(bool mode) { do_paint_mute_icon = mode; }
 		void blit(void) {}
+		void mark(int, int, int, int) {}
 		sigc::signal<void> OnAfterSetPallette;
 };
 
+#endif
 #endif

@@ -27,9 +27,10 @@ libneutrino_driver_a_SOURCES = \
 	colorgradient.cpp \
 	fade.cpp \
 	fb_window.cpp \
+	fbaccel.cpp \
 	file.cpp \
 	fontrenderer.cpp \
-	framebuffer.cpp \
+	framebuffer_ng.cpp \
 	genpsi.cpp \
 	moviecut.cpp \
 	neutrinofonts.cpp \
@@ -53,6 +54,23 @@ if BOXTYPE_TRIPLE
 libneutrino_driver_a_SOURCES += \
 	newclock.cpp \
 	lcdd.cpp
+endif
+
+if BOXTYPE_SPARK
+libneutrino_driver_a_SOURCES += \
+	simple_display.cpp
+endif
+if BOXTYPE_AZBOX
+libneutrino_driver_a_SOURCES += \
+	simple_display.cpp
+endif
+if BOXTYPE_GENERIC
+libneutrino_driver_a_SOURCES += \
+	simple_display.cpp
+endif
+if USE_STB_HAL
+AM_CPPFLAGS += \
+	@DIRECTFB_CFLAGS@
 endif
 
 libneutrino_driver_netfile_a_SOURCES = netfile.cpp

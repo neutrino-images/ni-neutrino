@@ -11,7 +11,7 @@ AC_ARG_WITH(target,
 
 AC_ARG_WITH(targetprefix,
 	[  --with-targetprefix=PATH  prefix relative to target root (only applicable in cdk mode)],
-	[TARGET_PREFIX="$withval"],[TARGET_PREFIX="NONE"])
+	[TARGET_PREFIX="$withval"],[TARGET_PREFIX=""])
 
 AC_ARG_WITH(debug,
 	[  --without-debug         disable debugging code],
@@ -82,21 +82,33 @@ check_path () {
 
 ])
 
+dnl expand nested ${foo}/bar
+AC_DEFUN([TUXBOX_EXPAND_VARIABLE],[__$1="$2"
+	for __CNT in false false false false true; do dnl max 5 levels of indirection
+
+		$1=`eval echo "$__$1"`
+		echo ${$1} | grep -q '\$' || break # 'grep -q' is POSIX, exit if no $ in variable
+		__$1="${$1}"
+	done
+	$__CNT && AC_MSG_ERROR([can't expand variable $1=$2]) dnl bail out if we did not expand
+])
+
 AC_DEFUN([TUXBOX_APPS_DIRECTORY_ONE],[
 AC_ARG_WITH($1,[  $6$7 [[PREFIX$4$5]]],[
 	_$2=$withval
 	if test "$TARGET" = "cdk"; then
-		$2=`eval echo "$TARGET_PREFIX$withval"`
+		$2=`eval echo "$TARGET_PREFIX$withval"` # no indirection possible IMNSHO
 	else
 		$2=$withval
 	fi
 	TARGET_$2=${$2}
 ],[
-	$2="\${$3}$5"
+	# RFC 1925: "you can always add another level of indirection..."
+	TUXBOX_EXPAND_VARIABLE($2,"${$3}$5")
 	if test "$TARGET" = "cdk"; then
-		_$2=`eval echo "${target$3}$5"`
+		TUXBOX_EXPAND_VARIABLE(_$2,"${target$3}$5")
 	else
-		_$2=`eval echo "${$3}$5"`
+		_$2=${$2}
 	fi
 	TARGET_$2=$_$2
 ])
@@ -120,6 +132,8 @@ if test "$TARGET" = "cdk"; then
 	targetlocalstatedir="\${TARGET_PREFIX}/var"
 	targetlibdir="\${TARGET_PREFIX}/lib"
 	targetmntdir="\${TARGET_PREFIX}/mnt"
+else
+	mntdir="/mnt" # hack
 fi
 
 TUXBOX_APPS_DIRECTORY_ONE(configdir,CONFIGDIR,localstatedir,/var,/tuxbox/config,
@@ -146,17 +160,17 @@ TUXBOX_APPS_DIRECTORY_ONE(luaplugindir,LUAPLUGINDIR,libdir,/lib,/tuxbox/luaplugi
 TUXBOX_APPS_DIRECTORY_ONE(localedir,LOCALEDIR,datadir,/share, /tuxbox/neutrino/locale,
 	[--with-localedir=PATH     ],[where to find the locale])
 
-TUXBOX_APPS_DIRECTORY_ONE(themesdir,THEMESDIR,datadir,/share, /tuxbox/neutrino/themes,
-	[--with-themesdir=PATH     ],[where to find the themes])
+TUXBOX_APPS_DIRECTORY_ONE(themesdir,THEMESDIR,datadir,/share,/tuxbox/neutrino/themes,
+	[--with-themesdir=PATH   ],[where to find the themes])
 
-TUXBOX_APPS_DIRECTORY_ONE(iconsdir,ICONSDIR,datadir,/share, /tuxbox/neutrino/icons,
-	[--with-iconsdir=PATH     ],[where to find the icons])
+TUXBOX_APPS_DIRECTORY_ONE(iconsdir,ICONSDIR,datadir,/share,/tuxbox/neutrino/icons,
+	[--with-iconsdir=PATH    ],[where to find the icons])
 
 TUXBOX_APPS_DIRECTORY_ONE(private_httpddir,PRIVATE_HTTPDDIR,datadir,/share,/tuxbox/neutrino/httpd,
-	[--with-private_httpddir=PATH     ],[where to find the the private httpd files])
+	[--with-private_httpddir=PATH   ],[where to find the the private httpd files])
 
 TUXBOX_APPS_DIRECTORY_ONE(public_httpddir,PUBLIC_HTTPDDIR,localstatedir,/var,/httpd,
-	[--with-public_httpddir=PATH     ],[where to find the the public httpd files])
+	[--with-public_httpddir=PATH    ],[where to find the the public httpd files])
 
 TUXBOX_APPS_DIRECTORY_ONE(hosted_httpddir,HOSTED_HTTPDDIR,mntdir,/mnt,/hosted,
 	[--with-hosted_httpddir=PATH     ],[where to find the the hosted files])
@@ -289,8 +303,13 @@ _TUXBOX_APPS_LIB_CONFIG($1,$2,WARN)
 ])
 
 AC_DEFUN([TUXBOX_APPS_PKGCONFIG],[
-AC_PATH_PROG(PKG_CONFIG, pkg-config,no)
-if test "$PKG_CONFIG" = "no" ; then
+m4_pattern_forbid([^_?PKG_[A-Z_]+$])
+m4_pattern_allow([^PKG_CONFIG(_PATH)?$])
+AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])dnl
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
+fi
+if test x"$PKG_CONFIG" = x"" ; then
 	AC_MSG_ERROR([could not find pkg-config]);
 fi
 ])
@@ -302,6 +321,7 @@ if $PKG_CONFIG --exists "$2" ; then
 	AC_MSG_RESULT(yes)
 	$1_CFLAGS=$($PKG_CONFIG --cflags "$2")
 	$1_LIBS=$($PKG_CONFIG --libs "$2")
+	$1_EXISTS=yes
 else
 	AC_MSG_RESULT(no)
 fi
@@ -312,7 +332,7 @@ AC_SUBST($1_LIBS)
 
 AC_DEFUN([TUXBOX_APPS_LIB_PKGCONFIG],[
 _TUXBOX_APPS_LIB_PKGCONFIG($1,$2)
-if test -z "$$1_CFLAGS" ; then
+if test x"$$1_EXISTS" != xyes; then
 	AC_MSG_ERROR([could not find package $2]);
 fi
 ])
@@ -426,9 +446,9 @@ AC_SUBST(CATALOGS)
 
 AC_DEFUN([TUXBOX_BOXTYPE],[
 AC_ARG_WITH(boxtype,
-	[  --with-boxtype          valid values: dbox2,tripledragon,dreambox,ipbox,coolstream,generic],
+	[  --with-boxtype          valid values: dbox2,tripledragon,dreambox,ipbox,coolstream,spark,azbox,generic],
 	[case "${withval}" in
-		dbox2|dreambox|ipbox|tripledragon|coolstream|generic)
+		dbox2|dreambox|ipbox|tripledragon|coolstream|spark|azbox|generic)
 			BOXTYPE="$withval"
 			;;
 		dm*)
@@ -465,6 +485,13 @@ AC_ARG_WITH(boxmodel,
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 			;;
+		raspi)
+			if test "$BOXTYPE" = "generic"; then
+				BOXMODEL="$withval"
+			else
+				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
+			fi
+			;;
 		*)
 			AC_MSG_ERROR([unsupported value $withval for --with-boxmodel])
 			;;
@@ -476,11 +503,13 @@ AC_ARG_WITH(boxmodel,
 AC_SUBST(BOXTYPE)
 AC_SUBST(BOXMODEL)
 
+AM_CONDITIONAL(BOXTYPE_AZBOX, test "$BOXTYPE" = "azbox")
 AM_CONDITIONAL(BOXTYPE_DBOX2, test "$BOXTYPE" = "dbox2")
 AM_CONDITIONAL(BOXTYPE_TRIPLE, test "$BOXTYPE" = "tripledragon")
 AM_CONDITIONAL(BOXTYPE_DREAMBOX, test "$BOXTYPE" = "dreambox")
 AM_CONDITIONAL(BOXTYPE_IPBOX, test "$BOXTYPE" = "ipbox")
 AM_CONDITIONAL(BOXTYPE_COOL, test "$BOXTYPE" = "coolstream")
+AM_CONDITIONAL(BOXTYPE_SPARK, test "$BOXTYPE" = "spark")
 AM_CONDITIONAL(BOXTYPE_GENERIC, test "$BOXTYPE" = "generic")
 
 AM_CONDITIONAL(BOXMODEL_NEVIS,test "$BOXMODEL" = "nevis")
@@ -497,8 +526,12 @@ AM_CONDITIONAL(BOXMODEL_IP250,test "$BOXMODEL" = "ip250")
 AM_CONDITIONAL(BOXMODEL_IP350,test "$BOXMODEL" = "ip350")
 AM_CONDITIONAL(BOXMODEL_IP400,test "$BOXMODEL" = "ip400")
 
+AM_CONDITIONAL(BOXMODEL_RASPI,test "$BOXMODEL" = "raspi")
+
 if test "$BOXTYPE" = "dbox2"; then
 	AC_DEFINE(HAVE_DBOX_HARDWARE, 1, [building for a dbox2])
+elif test "$BOXTYPE" = "azbox"; then
+	AC_DEFINE(HAVE_AZBOX_HARDWARE, 1, [building for an azbox])
 elif test "$BOXTYPE" = "tripledragon"; then
 	AC_DEFINE(HAVE_TRIPLEDRAGON, 1, [building for a tripledragon])
 elif test "$BOXTYPE" = "dreambox"; then
@@ -507,6 +540,8 @@ elif test "$BOXTYPE" = "ipbox"; then
 	AC_DEFINE(HAVE_IPBOX_HARDWARE, 1, [building for an ipbox])
 elif test "$BOXTYPE" = "coolstream"; then
 	AC_DEFINE(HAVE_COOL_HARDWARE, 1, [building for a coolstream])
+elif test "$BOXTYPE" = "spark"; then
+	AC_DEFINE(HAVE_SPARK_HARDWARE, 1, [building for a goldenmedia 990 or edision pingulux])
 elif test "$BOXTYPE" = "generic"; then
 	AC_DEFINE(HAVE_GENERIC_HARDWARE, 1, [building for a generic device like a standard PC])
 fi
@@ -526,6 +561,8 @@ elif test "$BOXMODEL" = "ip350"; then
 	AC_DEFINE(BOXMODEL_IP350, 1, [ipbox 350])
 elif test "$BOXMODEL" = "ip400"; then
 	AC_DEFINE(BOXMODEL_IP400, 1, [ipbox 400])
+elif test "$BOXMODEL" = "raspi"; then
+	AC_DEFINE(BOXMODEL_RASPI, 1, [Raspberry pi])
 fi
 ])
 

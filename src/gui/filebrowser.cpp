@@ -41,6 +41,7 @@
 #include <neutrino.h>
 #include <driver/display.h>
 #include <driver/screen_max.h>
+#include <driver/display.h>
 
 #include <unistd.h>
 #include <stdio.h>
@@ -60,7 +61,7 @@
 #include <xmltree/xmlinterface.h>
 
 #ifndef __USE_FILE_OFFSET64
-#error not using 64 bit file offsets
+//#error not using 64 bit file offsets
 #endif
 
 #define SMSKEY_TIMEOUT 2000
@@ -1436,7 +1437,7 @@ void CFileBrowser::paintSMSKey()
 
 	if(m_SMSKeyInput.getOldKey()!=0)
 	{
-		char cKey[2] = {m_SMSKeyInput.getOldKey(), 0};
+		char cKey[2] = {(char)m_SMSKeyInput.getOldKey(), 0};
 		cKey[0] = toupper(cKey[0]);
 		int len = fnt_foot->getRenderWidth(cKey);
 		fnt_foot->RenderString(x + width - skwidth, y + height - foheight + foheight/2 + skheight/2, len, cKey, COL_MENUHEAD_TEXT);

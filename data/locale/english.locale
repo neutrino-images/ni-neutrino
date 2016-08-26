@@ -494,7 +494,7 @@ extra.key_timeshift Timeshift
 extra.key_unlock Unlock key
 extra.ladirection LaDirection
 extra.latitude Latitude
-extra.loadconfig Neutrino-HD Settings: Load from
+extra.loadconfig Neutrino Settings: Load from
 extra.loadkeys Load keys from
 extra.lodirection LoDirection
 extra.longitude Longitude
@@ -506,7 +506,7 @@ extra.rotor_swap Swap rotor east/west
 extra.rounded_corners Shape of corners
 extra.rounded_corners_off angular
 extra.rounded_corners_on rounded
-extra.saveconfig Neutrino-HD Settings: Save as
+extra.saveconfig Neutrino Settings: Save as
 extra.savekeys Save keys as
 extra.scrambled_message Scrambled Message
 extra.show_mute_icon mute-icon at volume 0
@@ -1303,7 +1303,7 @@ menu.hint_leds_deepstandby LEDs state in deeps-standby mode
 menu.hint_leds_record LEDs state when box recording
 menu.hint_leds_standby LEDs state in soft-standby mode
 menu.hint_leds_tv Working LEDs state
-menu.hint_load Load Neutrino-HD GUI settings from file
+menu.hint_load Load Neutrino GUI settings from file
 menu.hint_longkeypress_duration A key press will be considered as "long key press" if it's pressed longer than the specified time.
 menu.hint_lua Run Lua Plugins
 menu.hint_make_hdlist Auto-create HD channel list based on\nchannel type and name
@@ -1391,7 +1391,7 @@ menu.hint_other_fonts Change other font sizes
 menu.hint_parentallock_changepin Change PIN code
 menu.hint_parentallock_lockage Select age allowed to watch
 menu.hint_parentallock_menu Lock menus with pin code
-menu.hint_parentallock_prompt Configure when Neutrino-HD will ask you\nfor PIN code
+menu.hint_parentallock_prompt Configure when Neutrino will ask you\nfor PIN code
 menu.hint_personalize Enable, disable or Protect menu items\nConfigure color-buttons user menus
 menu.hint_pictureviewer_defdir Default picture viewer directory
 menu.hint_pictureviewer_scaling Picture scaling algorithm
@@ -1459,7 +1459,7 @@ menu.hint_restore Restore files from selected backup
 menu.hint_rotor_swap Swap rotor east/west directions\nin motor control
 menu.hint_rounded_corners Draw round or rectangular windows corners 
 menu.hint_save_settings Save all settings to flash
-menu.hint_saveas Save Neutrino-HD GUI settings to file
+menu.hint_saveas Save Neutrino GUI settings to file
 menu.hint_scan_auto Auto-scan selected provider
 menu.hint_scan_autoall Scan several selected providers at once
 menu.hint_scan_autoall_select Add selected satellites to scan
