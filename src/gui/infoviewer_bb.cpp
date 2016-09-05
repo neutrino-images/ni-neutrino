@@ -1084,7 +1084,7 @@ int CInfoViewerBB::check_ecmInfo()
 {
 	int caid = 0;
 	CFileHelpers fh;
-	if (fh.copyFile("/tmp/ecm.info", "/tmp/ecm.info.tmp")) {
+	if (fh.copyFile("/tmp/ecm.info", "/tmp/ecm.info.tmp", 644)) {
 		g_InfoViewer->md5_ecmInfo = filehash((char *)"/tmp/ecm.info.tmp");
 		caid = parse_ecmInfo("/tmp/ecm.info.tmp");
 	}
