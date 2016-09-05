@@ -44,10 +44,12 @@
 #include "lua_cc_window.h"
 #include "lua_configfile.h"
 #include "lua_curl.h"
+#include "lua_filehelpers.h"
 #include "lua_hintbox.h"
 #include "lua_menue.h"
 #include "lua_messagebox.h"
 #include "lua_misc.h"
+#include "lua_stringinput.h"
 #include "lua_threads.h"
 #include "lua_video.h"
 
@@ -621,9 +623,11 @@ void LuaInstRegisterFunctions(lua_State *L, bool fromThreads/*=false*/)
 	CLuaInstCCWindow::getInstance()->CCWindowRegister(L);
 	CLuaInstConfigFile::getInstance()->LuaConfigFileRegister(L);
 	CLuaInstCurl::getInstance()->LuaCurlRegister(L);
+	CLuaInstFileHelpers::getInstance()->LuaFileHelpersRegister(L);
 	CLuaInstHintbox::getInstance()->HintboxRegister(L);
 	CLuaInstMenu::getInstance()->MenuRegister(L);
 	CLuaInstMessagebox::getInstance()->MessageboxRegister(L);
+	CLuaInstStringInput::getInstance()->StringInputRegister(L);
 	CLuaInstMisc::getInstance()->LuaMiscRegister(L);
 	CLuaInstVideo::getInstance()->LuaVideoRegister(L);
 	if (!fromThreads)

@@ -76,6 +76,13 @@ time_t toEpoch(std::string &date);
 std::string& str_replace(const std::string &search, const std::string &replace, std::string &text);
 std::string& htmlEntityDecode(std::string& text);
 
+struct helpersDebugInfo {
+	std::string msg;
+	std::string file;
+	std::string func;
+	int line;
+};
+
 class CFileHelpers
 {
 	private:
@@ -83,16 +90,27 @@ class CFileHelpers
 		char *FileBuf;
 		int fd1, fd2;
 
+		bool ConsoleQuiet;
+		helpersDebugInfo DebugInfo;
+		void setDebugInfo(const char* msg, const char* file, const char* func, int line);
+		void printDebugInfo();
+
 	public:
 		CFileHelpers();
 		~CFileHelpers();
 		static CFileHelpers* getInstance();
 		bool doCopyFlag;
 
-		bool copyFile(const char *Src, const char *Dst, mode_t mode);
+		void clearDebugInfo();
+		void readDebugInfo(helpersDebugInfo* di);
+		void setConsoleQuiet(bool q) { ConsoleQuiet = q; };
+		bool getConsoleQuiet() { return ConsoleQuiet; };
+
+		bool cp(const char *Src, const char *Dst, const char *Flags="");
+		bool copyFile(const char *Src, const char *Dst, mode_t forceMode=0);
 		bool copyDir(const char *Src, const char *Dst, bool backupMode=false);
-		static bool createDir(std::string& Dir, mode_t mode = 755);
-		static bool createDir(const char *Dir, mode_t mode = 755){std::string dir = std::string(Dir);return createDir(dir, mode);}
+		static bool createDir(std::string& Dir, mode_t mode = 0755);
+		static bool createDir(const char *Dir, mode_t mode = 0755){std::string dir = std::string(Dir);return createDir(dir, mode);}
 		static bool removeDir(const char *Dir);
 		static uint64_t getDirSize(const char *dir);
 		static uint64_t getDirSize(const std::string& dir){return getDirSize(dir.c_str());};
@@ -106,6 +124,8 @@ std::string to_string(long);
 std::string to_string(unsigned long);
 std::string to_string(long long);
 std::string to_string(unsigned long long);
+
+std::string itoa(int value, int base);
 
 inline int atoi(std::string &s) { return atoi(s.c_str()); }
 inline int atoi(const std::string &s) { return atoi(s.c_str()); }

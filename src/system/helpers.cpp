@@ -667,6 +667,8 @@ CFileHelpers::CFileHelpers()
 	FileBufSize	= 0xFFFF;
 	FileBuf		= new char[FileBufSize];
 	doCopyFlag	= true;
+	ConsoleQuiet	= false;
+	clearDebugInfo();
 }
 
 CFileHelpers::~CFileHelpers()
@@ -683,12 +685,188 @@ CFileHelpers* CFileHelpers::getInstance()
 	return FileHelpers;
 }
 
-bool CFileHelpers::copyFile(const char *Src, const char *Dst, mode_t mode)
+void CFileHelpers::clearDebugInfo()
+{
+	DebugInfo.msg.clear();
+	DebugInfo.file.clear();
+	DebugInfo.func.clear();
+	DebugInfo.line = 0;
+}
+
+void CFileHelpers::setDebugInfo(const char* msg, const char* file, const char* func, int line)
+{
+	DebugInfo.msg  = msg;
+	DebugInfo.file = file;
+	DebugInfo.func = func;
+	DebugInfo.line = line;
+}
+
+void CFileHelpers::readDebugInfo(helpersDebugInfo* di)
+{
+	di->msg  = DebugInfo.msg;
+	di->file = DebugInfo.file;
+	di->func = DebugInfo.func;
+	di->line = DebugInfo.line;
+}
+
+void CFileHelpers::printDebugInfo()
+{
+	if (!ConsoleQuiet)
+		printf(">>>> [%s:%d] %s\n", DebugInfo.func.c_str(), DebugInfo.line, DebugInfo.msg.c_str());
+}
+
+bool CFileHelpers::cp(const char *Src, const char *Dst, const char *Flags/*=""*/)
+{
+	clearDebugInfo();
+	if ((Src == NULL) || (Dst == NULL)) {
+		setDebugInfo("One or more parameters are NULL", __path_file__, __func__, __LINE__);
+		printDebugInfo();
+		return false;
+	}
+
+	std::string src = Src;
+	src = trim(src);
+	if (src.find_first_of("/") != 0)
+		src = "./" + src;
+	size_t pos = src.find_last_of("/");
+	if (pos == src.length()-1)
+		src = src.substr(0, pos);
+
+	std::string dst = Dst;
+	dst = trim(dst);
+	if (dst.find_first_of("/") != 0)
+		dst = "./" + dst;
+	pos = dst.find_last_of("/");
+	if (pos == dst.length()-1)
+		dst = dst.substr(0, pos);
+
+	bool wildcards      = (src.find("*") != std::string::npos);
+	bool recursive      = ((strchr(Flags, 'r') != NULL) || (strchr(Flags, 'a') != NULL));
+	bool no_dereference = ((strchr(Flags, 'd') != NULL) || (strchr(Flags, 'a') != NULL));
+
+	static struct stat FileInfo;
+	char buf[PATH_MAX];
+	if (wildcards == false) {
+		if (!file_exists(src.c_str())) {
+			setDebugInfo("Source file not exist", __path_file__, __func__, __LINE__);
+			printDebugInfo();
+			return false;
+		}
+		if (lstat(src.c_str(), &FileInfo) == -1) {
+			setDebugInfo("lstat error", __path_file__, __func__, __LINE__);
+			printDebugInfo();
+			return false;
+		}
+
+		pos = src.find_last_of("/");
+		std::string fname = src.substr(pos);
+
+		static struct stat FileInfo2;
+		// is symlink
+		if (S_ISLNK(FileInfo.st_mode)) {
+			int len = readlink(src.c_str(), buf, sizeof(buf)-1);
+			if (len != -1) {
+				buf[len] = '\0';
+				if (!no_dereference) { /* copy */
+					std::string buf_ = (std::string)buf;
+					char buf2[PATH_MAX + 1];
+					if (buf[0] != '/')
+						buf_ = getPathName(src) + "/" + buf_;
+					buf_ = (std::string)realpath(buf_.c_str(), buf2);
+					//printf("\n>>>> RealPath: %s\n \n", buf_.c_str());
+					if (file_exists(dst.c_str()) && (lstat(dst.c_str(), &FileInfo2) != -1)){
+						if (S_ISDIR(FileInfo2.st_mode))
+							copyFile(buf_.c_str(), (dst + fname).c_str());
+						else {
+							unlink(dst.c_str());
+							copyFile(buf_.c_str(), dst.c_str());
+						}
+					}
+					else
+						copyFile(buf_.c_str(), dst.c_str());
+				}
+				else { /* link */
+					if (file_exists(dst.c_str()) && (lstat(dst.c_str(), &FileInfo2) != -1)){
+						if (S_ISDIR(FileInfo2.st_mode))
+							symlink(buf, (dst + fname).c_str());
+						else {
+							unlink(dst.c_str());
+							symlink(buf, dst.c_str());
+						}
+					}
+					else
+						symlink(buf, dst.c_str());
+				}
+			}
+		}
+		// is directory
+		else if (S_ISDIR(FileInfo.st_mode)) {
+			if (recursive)
+				copyDir(src.c_str(), dst.c_str());
+			else {
+				setDebugInfo("'recursive flag' must be set to copy dir.", __path_file__, __func__, __LINE__);
+				printDebugInfo();
+				return false;
+			}
+		}
+		// is file
+		else if (S_ISREG(FileInfo.st_mode)) {
+			if (file_exists(dst.c_str()) && (lstat(dst.c_str(), &FileInfo2) != -1)){
+				if (S_ISDIR(FileInfo2.st_mode))
+					copyFile(src.c_str(), (dst + fname).c_str());
+				else {
+					unlink(dst.c_str());
+					copyFile(src.c_str(), dst.c_str());
+				}
+			}
+			else
+				copyFile(src.c_str(), dst.c_str());
+		}
+		else {
+			setDebugInfo("Currently unsupported st_mode.", __path_file__, __func__, __LINE__);
+			printDebugInfo();
+			return false;
+		}
+	}
+	else {
+		setDebugInfo("Wildcard feature not yet realized.", __path_file__, __func__, __LINE__);
+		printDebugInfo();
+		return false;
+	}
+
+	return true;
+}
+
+bool CFileHelpers::copyFile(const char *Src, const char *Dst, mode_t forceMode/*=0*/)
 {
 	doCopyFlag = true;
-	unlink(Dst);
+
+	/*
+	set mode for Dst
+	----------------
+	when forceMode==0 (default) then
+	    when Dst exists
+	        mode = mode from Dst
+	    else
+	        mode = mode from Src
+	else
+	    mode = forceMode
+	*/
+	mode_t mode = forceMode & 0x0FFF;
+	if (mode == 0) {
+		static struct stat FileInfo;
+		const char *f = Dst;
+		if (!file_exists(Dst))
+			f = Src;
+		if (lstat(f, &FileInfo) == -1)
+			return false;
+		mode = FileInfo.st_mode & 0x0FFF;
+	}
+
 	if ((fd1 = open(Src, O_RDONLY)) < 0)
 		return false;
+	if (file_exists(Dst))
+		unlink(Dst);
 	if ((fd2 = open(Dst, O_WRONLY | O_CREAT, mode)) < 0) {
 		close(fd1);
 		return false;
@@ -821,7 +999,7 @@ bool CFileHelpers::copyDir(const char *Src, const char *Dst, bool backupMode)
 				std::string save = "";
 				if (backupMode && (CExtUpdate::getInstance()->isBlacklistEntry(srcPath)))
 					save = ".save";
-				copyFile(srcPath, (dstPath + save).c_str(), FileInfo.st_mode & 0x0FFF);
+				copyFile(srcPath, (dstPath + save).c_str()); /* mode is set by copyFile */
 			}
 		}
 	}
@@ -833,6 +1011,8 @@ bool CFileHelpers::copyDir(const char *Src, const char *Dst, bool backupMode)
 //		 false - errno is set
 bool CFileHelpers::createDir(string& Dir, mode_t mode)
 {
+	CFileHelpers* fh = CFileHelpers::getInstance();
+	fh->clearDebugInfo();
 	int res = 0;
 	for(string::iterator iter = Dir.begin() ; iter != Dir.end();) {
 		string::iterator newIter = find(iter, Dir.end(), '/' );
@@ -846,7 +1026,12 @@ bool CFileHelpers::createDir(string& Dir, mode_t mode)
 					// We can assume that if an error
 					// occured, following will fail too,
 					// so break here.
-					dprintf(DEBUG_NORMAL, "[CFileHelpers %s] creating directory %s: %s\n", __func__, newPath.c_str(), strerror(errno));
+					if (!fh->getConsoleQuiet())
+						dprintf(DEBUG_NORMAL, "[CFileHelpers %s] creating directory %s: %s\n", __func__, newPath.c_str(), strerror(errno));
+					char buf[1024];
+					memset(buf, '\0', sizeof(buf));
+					snprintf(buf, sizeof(buf)-1, "creating directory %s: %s", newPath.c_str(), strerror(errno));
+					fh->setDebugInfo(buf, __path_file__, __func__, __LINE__);
 					break;
 				}
 			}
@@ -861,13 +1046,16 @@ bool CFileHelpers::createDir(string& Dir, mode_t mode)
 
 bool CFileHelpers::removeDir(const char *Dir)
 {
+	CFileHelpers* fh = CFileHelpers::getInstance();
+	fh->clearDebugInfo();
 	DIR *dir;
 	struct dirent *entry;
 	char path[PATH_MAX];
 
 	dir = opendir(Dir);
 	if (dir == NULL) {
-		printf("Error opendir()\n");
+		fh->setDebugInfo("Error opendir().", __path_file__, __func__, __LINE__);
+		fh->printDebugInfo();
 		return false;
 	}
 	while ((entry = readdir(dir)) != NULL) {
@@ -1078,6 +1266,38 @@ std::string to_string(unsigned long long i)
 	std::stringstream s;
 	s << i;
 	return s.str();
+}
+
+/**
+ * C++ version 0.4 std::string style "itoa":
+ * Contributions from Stuart Lowe, Ray-Yuan Sheu,
+
+ * Rodrigo de Salvo Braz, Luc Gallant, John Maloney
+ * and Brian Hunt
+ */
+std::string itoa(int value, int base)
+{
+	std::string buf;
+
+	// check that the base if valid
+	if (base < 2 || base > 16) return buf;
+
+	enum { kMaxDigits = 35 };
+	buf.reserve( kMaxDigits ); // Pre-allocate enough space.
+
+	int quotient = value;
+
+	// Translating number to string with base:
+	do {
+		buf += "0123456789abcdef"[ std::abs( quotient % base ) ];
+		quotient /= base;
+	} while ( quotient );
+
+	// Append the negative sign
+	if ( value < 0) buf += '-';
+
+	std::reverse( buf.begin(), buf.end() );
+	return buf;
 }
 
 std::string getJFFS2MountPoint(int mtdPos)
