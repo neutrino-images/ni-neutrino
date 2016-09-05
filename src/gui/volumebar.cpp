@@ -189,15 +189,12 @@ void CVolumeBar::initVolumeBarScale()
 
 	vb_pb->setType(CProgressBar::PB_REDRIGHT);
 	vb_pb->setRgb(85, 75, 100);
-	vb_pb->setFrameThickness(2);
+	vb_pb->setFrameThickness(0); //NI
 	vb_pb->setProgress(vb_pbx, vb_pby, vb_pbw, vb_pbh, *vb_vol, 100);
 
 	//NI
 	if (g_settings.progressbar_design == CProgressBar::PB_GRAPHIC)
-	{
 		vb_pb->setGraphic("volumebar");
-		vb_pb->setFrameThickness(0);
-	}
 
 	//add progressbar to container
 	addCCItem(vb_pb);
