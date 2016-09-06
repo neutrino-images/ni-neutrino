@@ -61,7 +61,7 @@ void CComponentsDetailLine::initVarDline(	const int& x_pos, const int& y_pos_top
 	shadow_w	= 1;
 
 	//CComponentsDetailLine
-	thickness 	= 4;
+	thickness 	= 2; //NI
 	cc_body_gradient_enable = false;
 }
 

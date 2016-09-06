@@ -912,7 +912,7 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 				poster = m_movieSelectionHandler->file.Name.substr(0, pos);
 				poster += ".jpg";
 				CFileHelpers fh;
-				if (fh.copyFile(imdb->posterfile.c_str(), poster.c_str()))
+				if (fh.copyFile(imdb->posterfile.c_str(), poster.c_str(), 644))
 					printf("* poster: %s\n", poster.c_str());
 				else
 					printf("* poster: copy error\n");

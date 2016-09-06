@@ -44,10 +44,12 @@
 #include "lua_cc_window.h"
 #include "lua_configfile.h"
 #include "lua_curl.h"
+#include "lua_filehelpers.h"
 #include "lua_hintbox.h"
 #include "lua_menue.h"
 #include "lua_messagebox.h"
 #include "lua_misc.h"
+#include "lua_stringinput.h"
 #include "lua_threads.h"
 #include "lua_video.h"
 
@@ -149,6 +151,7 @@ static void set_lua_variables(lua_State *L)
 		{ "prog3",		CRCInput::RC_prog3 },
 		{ "prog4",		CRCInput::RC_prog4 },
 #endif
+		{ "timeout",		(lua_Integer)CRCInput::RC_timeout },
 		/* to check if it is in our range */
 		{ "MaxRC",		CRCInput::RC_MaxRC },
 		{ NULL, 0 }
@@ -621,9 +624,11 @@ void LuaInstRegisterFunctions(lua_State *L, bool fromThreads/*=false*/)
 	CLuaInstCCWindow::getInstance()->CCWindowRegister(L);
 	CLuaInstConfigFile::getInstance()->LuaConfigFileRegister(L);
 	CLuaInstCurl::getInstance()->LuaCurlRegister(L);
+	CLuaInstFileHelpers::getInstance()->LuaFileHelpersRegister(L);
 	CLuaInstHintbox::getInstance()->HintboxRegister(L);
 	CLuaInstMenu::getInstance()->MenuRegister(L);
 	CLuaInstMessagebox::getInstance()->MessageboxRegister(L);
+	CLuaInstStringInput::getInstance()->StringInputRegister(L);
 	CLuaInstMisc::getInstance()->LuaMiscRegister(L);
 	CLuaInstVideo::getInstance()->LuaVideoRegister(L);
 	if (!fromThreads)
