@@ -48,11 +48,12 @@ function do_init(){
 	document.f.fb.selectedIndex = sel;
 	obj_set_radio_value('screenshot_rc', "{=ini-get:/var/tuxbox/config/Y-Web.conf;screenshot_rc;false~cache=}");
 	val = "{=ini-get:/var/tuxbox/config/Y-Web.conf;start_page;bouquets~cache=}";
-	var sel=3;
+	var sel=4;
 	switch(val){
 		case "bouquets": sel=0; break;
 		case "control": sel=1; break;
 		case "remote": sel=2; break;
+		case "screenshot": sel=3; break;
 	}
 	document.f.start_page.selectedIndex = sel;
 	style_old = "{=ini-get:/var/tuxbox/config/Y-Web.conf;style~cache=}";
@@ -171,6 +172,7 @@ select {
 						<option value="bouquets" selected="selected">{=L:bc.menue.bouquets=}</option>
 						<option value="control">{=L:bc.menue.control=}</option>
 						<option value="remote">{=L:bc.menue.remote=}</option>
+						<option value="screenshot">{=L:bc.menue.screenshot=}</option>
 						<option value="none">{=L:empty=}</option>
 					</select>
 				</td>
