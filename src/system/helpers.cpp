@@ -675,8 +675,21 @@ CFileHelpers::CFileHelpers()
 
 CFileHelpers::~CFileHelpers()
 {
-	if (FileBuf != NULL)
-		delete [] FileBuf;
+}
+
+char* CFileHelpers::initFileBuf(char* buf, uint32_t size)
+{
+	if (buf == NULL)
+		buf = new char[size];
+	return buf;
+}
+
+char* CFileHelpers::deleteFileBuf(char* buf)
+{
+	if (buf != NULL)
+		delete [] buf;
+	buf = NULL;
+	return buf;
 }
 
 CFileHelpers* CFileHelpers::getInstance()
