@@ -1270,7 +1270,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 						picname = imdb->getFilename(channel, epgData.eventID);
 
 					CFileHelpers fh;
-					if (!fh.copyFile(imdb->posterfile.c_str(), picname.c_str(), 644))
+					if (!fh.copyFile(imdb->posterfile.c_str(), picname.c_str(), 0644))
 						perror( "IMDb: error copy file" );
 
 					sleep(2);
