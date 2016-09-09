@@ -519,7 +519,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 				case 3: /* play */
 					if (ModeTshift && CMoviePlayerGui::getInstance().p_movie_info) /* show channel-logo */
 					{
-						if (!GetLogoName(CMoviePlayerGui::getInstance().p_movie_info->epgId,
+						if (!GetLogoName(CMoviePlayerGui::getInstance().p_movie_info->channelId,
 								 CMoviePlayerGui::getInstance().p_movie_info->channelName,
 								 Logo))
 							Logo = ICONSDIR "/" NEUTRINO_ICON_PLAY ICONSEXT;
