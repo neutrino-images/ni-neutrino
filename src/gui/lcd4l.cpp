@@ -498,8 +498,8 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 				Service = g_Locale->getText(LOCALE_RECORDINGMENU_TIMESHIFT);
 			else if (CMoviePlayerGui::getInstance().p_movie_info)
 			{
-				if (!CMoviePlayerGui::getInstance().p_movie_info->epgChannel.empty())
-					Service = CMoviePlayerGui::getInstance().p_movie_info->epgChannel;
+				if (!CMoviePlayerGui::getInstance().p_movie_info->channelName.empty())
+					Service = CMoviePlayerGui::getInstance().p_movie_info->channelName;
 			}
 
 			if (Service.empty())
@@ -520,7 +520,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 					if (ModeTshift && CMoviePlayerGui::getInstance().p_movie_info) /* show channel-logo */
 					{
 						if (!GetLogoName(CMoviePlayerGui::getInstance().p_movie_info->epgId,
-								 CMoviePlayerGui::getInstance().p_movie_info->epgChannel,
+								 CMoviePlayerGui::getInstance().p_movie_info->channelName,
 								 Logo))
 							Logo = ICONSDIR "/" NEUTRINO_ICON_PLAY ICONSEXT;
 					}
