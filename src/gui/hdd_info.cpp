@@ -128,7 +128,9 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 				} else
 					doLoop = false;
 			}
-			else if((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites)) {
+			else if (CNeutrinoApp::getInstance()->listModeKey(msg))
+			{
+				// do nothing
 			}
 			else
 			{
