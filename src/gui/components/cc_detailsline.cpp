@@ -142,6 +142,6 @@ void CComponentsDetailLine::paint(bool do_save_bg)
 //so you can ensure correct applied system colors in relevant objects with unchanged instances.
 void CComponentsDetailLine::syncSysColors()
 {
-	col_body 	= COL_MENUCONTENT_PLUS_6;
+	col_body 	= COL_MENUCONTENT_PLUS_1; //NI
 	col_shadow 	= COL_SHADOW_PLUS_0;
 }
