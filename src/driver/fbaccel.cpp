@@ -625,7 +625,7 @@ void CFbAccel::paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t col)
 }
 
 #if !HAVE_TRIPLEDRAGON
-void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
+void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool /*transp*/, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
 #if !HAVE_SPARK_HARDWARE
 	int  xc, yc;
@@ -742,7 +742,7 @@ void CFbAccel::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t x
 		d2 = (fb_pixel_t *) d;
 		for (int count2 = 0; count2 < xc; count2++ ) {
 			fb_pixel_t pix = *(pixpos + xp);
-			if (transp || (pix & 0xff000000) == 0xff000000)
+			if ((pix & 0xff000000) == 0xff000000)
 				*d2 = pix;
 			else {
 				uint8_t *in = (uint8_t *)(pixpos + xp);
