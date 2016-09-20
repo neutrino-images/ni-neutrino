@@ -374,6 +374,7 @@ function do_submit()
 					<option value="bouquets" selected="selected">{=L:bc.menue.bouquets=}</option>
 					<option value="control">{=L:bc.menue.control=}</option>
 					<option value="remote">{=L:bc.menue.remote=}</option>
+					<option value="screenshot">{=L:bc.menue.screenshot=}</option>
 					<option value="none">{=L:empty=}</option>
 				</td>
 			</tr>
@@ -446,9 +447,16 @@ start-block~frame_boxcontrol
 	~
 		{=if-equal:{=var-get:startpage=}~control~Y_Tools_Boxcontrol.yhtm
 		~
-			{=if-equal:{=var-get:startpage=}~remote~Y_Tools_Rcsim.yhtm~Y_NI_blank.yhtm=}
+			{=if-equal:{=var-get:startpage=}~remote~Y_Tools_Rcsim.yhtm
+			~
+				{=if-equal:{=var-get:startpage=}~screenshot~Y_Tools_Screenshot.yhtm?osd=1
+				~
+					Y_NI_blank.yhtm
+				=}
+			=}
 		=}
-	=}=}
+	=}
+=}
 {=include-block:Y_Blocks.txt;frame_secondary=}
 end-block~frame_boxcontrol
 

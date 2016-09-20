@@ -111,7 +111,7 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 				CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(channel_id);
 
 				if (g_Timerd->addRecordTimerEvent(channel_id, e->startTime, e->startTime + e->duration, e->eventID,
-								  e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, recDir, true, ch->bUseCI) == -1) { //NI
+								  e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, e->startTime - (ANNOUNCETIME + 120) > time(NULL), recDir, true, ch->bUseCI) == -1) { //NI
 					//FIXME -- no error handling, but this shouldn't happen ...
 				} else {
 #if 0

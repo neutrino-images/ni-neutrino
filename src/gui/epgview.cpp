@@ -1182,7 +1182,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 											  epgData.epg_times.startzeit + epgData.epg_times.dauer,
 											  epgData.eventID, epgData.epg_times.startzeit,
 											  epgData.epg_times.startzeit - (ANNOUNCETIME + 120 ),
-											  TIMERD_APIDS_CONF, true, recDir,false) == -1)
+											  TIMERD_APIDS_CONF, true, epgData.epg_times.startzeit - (ANNOUNCETIME + 120) > time(NULL), recDir, false) == -1)
 							{
 								if (askUserOnTimerConflict(epgData.epg_times.startzeit - (ANNOUNCETIME + 120),
 											   epgData.epg_times.startzeit + epgData.epg_times.dauer))
@@ -1192,7 +1192,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 												      epgData.epg_times.startzeit + epgData.epg_times.dauer,
 												      epgData.eventID, epgData.epg_times.startzeit,
 												      epgData.epg_times.startzeit - (ANNOUNCETIME + 120 ),
-												      TIMERD_APIDS_CONF, true, recDir,true);
+												      TIMERD_APIDS_CONF, true, epgData.epg_times.startzeit - (ANNOUNCETIME + 120) > time(NULL), recDir, true);
 									ShowMsg(LOCALE_TIMER_EVENTRECORD_TITLE, LOCALE_TIMER_EVENTRECORD_MSG, CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_INFO);
 									timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
 								}
@@ -1282,7 +1282,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 						picname = imdb->getFilename(channel, epgData.eventID);
 
 					CFileHelpers fh;
-					if (!fh.copyFile(imdb->posterfile.c_str(), picname.c_str(), 644))
+					if (!fh.copyFile(imdb->posterfile.c_str(), picname.c_str(), 0644))
 						perror( "IMDb: error copy file" );
 
 					sleep(2);

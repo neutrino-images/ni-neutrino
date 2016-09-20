@@ -305,7 +305,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 
 					CTimerd::TransferRecordingInfo recInfo;
 					CBasicServer::receive_data(connfd, &recInfo, sizeof(CTimerd::TransferRecordingInfo));
-				   if(recInfo.recordingSafety)
+					if(recInfo.recordingSafety)
 					{
 						int pre,post;
 						CTimerManager::getInstance()->getRecordingSafety(pre,post);
@@ -324,6 +324,8 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 						msgAddTimer.eventRepeat,
 						msgAddTimer.repeatCount,
 						recInfo.recordingDir,
+						recInfo.recordingSafety,
+						recInfo.autoAdjustToEPG,
 						recInfo.channel_ci); //NI
 					rspAddTimer.eventID = CTimerManager::getInstance()->addEvent(event);
 

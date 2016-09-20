@@ -157,7 +157,7 @@ int CNIMenu::exec(CMenuTarget* parent, const std::string &actionkey)
 
 		buffer=NULL;
 		CFileHelpers fhlp;
-		if (fhlp.copyFile("/tmp/ecm.info", "/tmp/ecm.info.tmp", 644))
+		if (fhlp.copyFile("/tmp/ecm.info", "/tmp/ecm.info.tmp", 0644))
 		{
 			if ((fh = fopen("/tmp/ecm.info.tmp", "r")))
 			{
