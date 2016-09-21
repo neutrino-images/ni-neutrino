@@ -296,7 +296,10 @@ class CSignalBox : public CComponentsForm, public CCTextScreen
 		///returns the signal object, type = CSignalBar*
 		CSignalBar* getScaleObject(){return sbar;};
 		///returns the signal noise ratio object, type = CSignalNoiseRatioBar*
-		CSignalNoiseRatioBar* getLabelObject(){return snrbar;};
+		CSignalNoiseRatioBar* getLabelObject(){return snrbar;}
+
+		///assigns the current used frontend, simplified a tuner object, see frontend_c.h
+		void setFrontEnd(CFrontend *frontend_ref){sbx_frontend = frontend_ref;}
 
 		///sets the caption color of signalbars, see also property 'sbx_caption_color'
 		void setTextColor(const fb_pixel_t& caption_color){ sbx_caption_color = caption_color;};
