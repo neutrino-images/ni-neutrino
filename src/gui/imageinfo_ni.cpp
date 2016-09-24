@@ -289,6 +289,7 @@ void CImageInfoNI::paint()
 
 	ypos += sheight;
 
+#ifndef HAVE_GENERIC_HARDWARE
 	get_MTD_Info();
 	//paint_MTD_Info(xpos);
 	//ypos+= sheight;
@@ -296,6 +297,7 @@ void CImageInfoNI::paint()
 	paint_DF_Info(xpos);
 
 	ypos+= sheight;
+#endif
 
 	paint_Stat_Info_Box(xcpu, ycpu, width/3, height/3);
 }
