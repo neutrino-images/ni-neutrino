@@ -353,6 +353,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		//file existiert nicht
 		erg = 1;
 	} else {
+#ifndef HAVE_GENERIC_HARDWARE
 		/* try to detect bad / broken config file */
 		if (!configfile.getInt32("screen_EndX_crt", 0) ||
 				!configfile.getInt32("screen_EndY_crt", 0) ||
@@ -360,9 +361,9 @@ int CNeutrinoApp::loadSetup(const char * fname)
 				!configfile.getInt32("screen_EndY_lcd", 0)) {
 			printf("[neutrino] config file %s is broken, using defaults\n", fname);
 			configfile.clear();
-		} else {
+		} else
+#endif
 			migrateConfig(fname);
-		}
 	}
 	parentallocked = !access(NEUTRINO_PARENTALLOCKED_FILE, R_OK);
 
