@@ -57,6 +57,8 @@ class CImageInfoNI : public CMenuTarget
 		int font_head;
 		int font_info;
 		int font_small;
+		std::string netIfName;
+		int netMaxBit;
 
 		void paint();
 		void paint_pig(int x, int y, int w, int h);

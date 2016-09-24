@@ -128,6 +128,9 @@ void CImageInfoNI::Init(void)
 		}
 	}
 	offset		= offset + 15;
+
+	netIfName	= "eth0";
+	netMaxBit	= 104857600;
 }
 
 CImageInfoNI::~CImageInfoNI()
@@ -702,11 +705,13 @@ void CImageInfoNI::get_NET_Info(uint64_t *read_akt, long *read_packet, long *dum
 	FILE *file		= NULL;
 	char *ptr;
 	char *line_buffer	= NULL;
-	char interface[20]	= "eth0";
 	long *packet_ptr[3]	= {read_packet, write_packet, dummy};
 	uint64_t *byte_ptr[2]	= {read_akt, write_akt};
 	ssize_t read;
 	size_t len;
+	char interface[20];
+	memset(interface, '\0', sizeof(interface));
+	snprintf(interface, sizeof(interface)-1, "%s", netIfName.c_str());
 
 	if ((file = fopen("/proc/net/dev","r"))==NULL)
 	{
@@ -741,8 +746,10 @@ void CImageInfoNI::get_NET_Info(uint64_t *read_akt, long *read_packet, long *dum
 
 void CImageInfoNI::paint_NET_Info(int posx, int posy)
 {
+#ifndef HAVE_GENERIC_HARDWARE
 	if (g_settings.ifname != "eth0")
 		return;
+#endif
 
 	uint64_t read_akt	=0;
 	uint64_t write_akt	=0;
@@ -796,12 +803,16 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	 * 13107200	Byte
 	 * 104857600	Bit
 	 */
-#ifdef BOXMODEL_APOLLO
+#ifdef HAVE_GENERIC_HARDWARE
+	int max_bit	= netMaxBit;	/* PC */
+#else
+# ifdef BOXMODEL_APOLLO
 	int max_bit	= 104857600;	/* Shiner, Kronos */
 	if (cs_get_revision() == 9)
 		max_bit	= 1073741824;	/* Apollo */
-#else
+# else ifdef
 	int max_bit	= 104857600;
+# endif
 #endif
 	int percent	= ((rbit_s+wbit_s)*100/max_bit);
 
@@ -820,7 +831,7 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 		(int)(net_best*100/max_bit)
 	);
 
-	sprintf(temp_string,"Interface eth0 (%d%%):",percent);
+	sprintf(temp_string,"Interface %s (%d%%):", netIfName.c_str(), percent);
 	// progressbar ist in same line - so we not can use max_text_width
 	frameBuffer->paintBoxRel(posx-10,posy-sheight,boxX-posx+10,sheight, COL_INFOBAR_PLUS_0);
 	g_Font[font_small]->RenderString(posx, posy, boxX-posx, temp_string, COL_INFOBAR_TEXT);
