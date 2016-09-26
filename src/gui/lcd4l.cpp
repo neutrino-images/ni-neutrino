@@ -792,9 +792,9 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 
 	if (convert) // align to internal lcd4linux font
 	{
-		strReplace(content, "ä", "\xe1\0");
-		strReplace(content, "ö", "\xef\0");
-		strReplace(content, "ü", "\xf5\0");
+		strReplace(content, "ä", "\xe4\0");
+		strReplace(content, "ö", "\xf6\0");
+		strReplace(content, "ü", "\xfc\0");
 		strReplace(content, "Ä", "\xc4\0");
 		strReplace(content, "Ö", "\xd6\0");
 		strReplace(content, "Ü", "\xdc\0");
