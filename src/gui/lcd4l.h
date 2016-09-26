@@ -80,7 +80,7 @@ class CLCD4l
 		bool		GetLogoName(uint64_t channel_id, std::string channel_name, std::string & logo);
 
 		std::string	hexStr(unsigned char* data);
-		void		strReplace(std::string & orig, const char *fstr, const std::string rstr);
+		void		strReplace(std::string &orig, const std::string &fstr, const std::string &rstr);
 		bool		WriteFile(const char *file, std::string content = "", bool convert = false);
 
 		// Variables

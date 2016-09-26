@@ -792,13 +792,13 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 
 	if (convert) // align to internal lcd4linux font
 	{
-		strReplace(content, "ä", "�");
-		strReplace(content, "ö", "�");
-		strReplace(content, "ü", "�");
-		strReplace(content, "Ä", "Ae");
-		strReplace(content, "Ö", "Oe");
-		strReplace(content, "Ü", "Ue");
-		strReplace(content, "ß", "�");
+		strReplace(content, "ä", "\xe1\0");
+		strReplace(content, "ö", "\xef\0");
+		strReplace(content, "ü", "\xf5\0");
+		strReplace(content, "Ä", "\xc4\0");
+		strReplace(content, "Ö", "\xd6\0");
+		strReplace(content, "Ü", "\xdc\0");
+		strReplace(content, "ß", "\xe2\0");
 		strReplace(content, "é", "e");
 	}
 
@@ -853,17 +853,13 @@ bool CLCD4l::CompareParseID(uint64_t &i_ParseID)
 	return ret;
 }
 
-// stolen from gui/movieinfo.cpp
-void CLCD4l::strReplace(std::string & orig, const char *fstr, const std::string rstr)
+void CLCD4l::strReplace(std::string &orig, const std::string &fstr, const std::string &rstr)
 {
-	unsigned int index = 0;
-	unsigned int fstrlen = strlen(fstr);
-	int rstrlen = rstr.size();
-
-	while ((index = orig.find(fstr, index)) != std::string::npos)
+	size_t pos = 0;
+	while ((pos = orig.find(fstr, pos)) != std::string::npos)
 	{
-		orig.replace(index, fstrlen, rstr);
-		index += rstrlen;
+		orig.replace(pos, fstr.length(), rstr);
+		pos += rstr.length();
 	}
 }
 
