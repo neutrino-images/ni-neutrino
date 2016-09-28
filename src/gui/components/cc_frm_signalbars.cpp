@@ -339,9 +339,10 @@ void CSignalBox::paintScale()
 void CSignalBox::paint(bool do_save_bg)
 {
 	//paint frame and body
-	initSignalItems();
-	if (!is_painted)
+	if (!is_painted){
+		initSignalItems();
 		paintForm(do_save_bg);
+	}
 
 	//paint current signal value
 	paintScale();
