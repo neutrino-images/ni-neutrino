@@ -37,6 +37,7 @@
 #include <neutrino.h>
 
 #include <driver/abstime.h>
+#include <driver/fade.h>
 #include <driver/display.h>
 #include <driver/fontrenderer.h>
 #include <driver/rcinput.h>
@@ -59,7 +60,7 @@ extern cAudio * audioDecoder;
 
 extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
 
-CStreamInfo2::CStreamInfo2 ()
+CStreamInfo2::CStreamInfo2() : fader(g_settings.theme.menu_Content_alpha)
 {
 	frameBuffer = CFrameBuffer::getInstance ();
 	pip        	= NULL;
@@ -125,9 +126,11 @@ int CStreamInfo2::exec (CMenuTarget * parent, const std::string &)
 
 	frontend = CFEManager::getInstance()->getLiveFE();
 
+	fader.StartFadeIn();
 	paint (paint_mode);
 	int res = doSignalStrengthLoop ();
 	hide ();
+	fader.StopFade();
 	return res;
 }
 
@@ -137,7 +140,9 @@ int CStreamInfo2::doSignalStrengthLoop ()
 #define BAR_HEIGHT 12
 	int res = menu_return::RETURN_REPAINT;
 	
+	bool fadeout = false;
 	neutrino_msg_t msg;
+	neutrino_msg_t postmsg = 0;
 	uint64_t maxb, minb, lastb, tmp_rate;
 	unsigned int current_pmt_version = (unsigned int)-1;
 	int cnt = 0;
@@ -152,12 +157,31 @@ int CStreamInfo2::doSignalStrengthLoop ()
 	int dx1 = x + 10;
 	ts_setup ();
 	while (1) {
-#if 0
 		neutrino_msg_data_t data;
 
 		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd_MS (100);
 		g_RCInput->getMsgAbsoluteTimeout (&msg, &data, &timeoutEnd);
-#endif
+
+		if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer()))
+		{
+			if (fader.FadeDone())
+			{
+				break;
+			}
+			continue;
+		}
+		if (fadeout && msg == CRCInput::RC_timeout)
+		{
+			if (fader.StartFadeOut())
+			{
+				msg = 0;
+				continue;
+			}
+			else
+			{
+				break;
+			}
+		}
 
 		if (!mp) {
 			signal.sig = frontend->getSignalStrength() & 0xFFFF;
@@ -247,12 +271,12 @@ int CStreamInfo2::doSignalStrengthLoop ()
 		}
 		else if(msg == CRCInput::RC_setup) {
 			res = menu_return::RETURN_EXIT_ALL;
-			break;
+			fadeout = true;
 		}
 		else if(CNeutrinoApp::getInstance()->listModeKey(msg)) {
-			g_RCInput->postMsg (msg, 0);
+			postmsg = msg;
 			res = menu_return::RETURN_EXIT_ALL;
-			break;
+			fadeout = true;
 		}
 		else if (msg == (neutrino_msg_t) g_settings.key_screenshot) {
 			CNeutrinoApp::getInstance ()->handleMsg (msg, data);
@@ -261,7 +285,7 @@ int CStreamInfo2::doSignalStrengthLoop ()
 
 		// -- any key --> abort
 		if (msg <= CRCInput::RC_MaxRC)
-			break;
+			fadeout = true;
 
 		// -- push other events
 		if (msg > CRCInput::RC_MaxRC && msg != CRCInput::RC_timeout)
@@ -270,6 +294,12 @@ int CStreamInfo2::doSignalStrengthLoop ()
 	delete signalbox;
 	signalbox = NULL;
 	ts_close ();
+
+	if (postmsg)
+	{
+		g_RCInput->postMsg(postmsg, 0);
+	}
+
 	return res;
 }
 
