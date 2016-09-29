@@ -258,7 +258,6 @@ int CStreamInfo2::doSignalStrengthLoop ()
 		signal.old_snr = signal.snr;
 		signal.old_ber = signal.ber;
 
-		neutrino_msg_data_t data;
 		/* rate limiting is done in update_rate */
 		g_RCInput->getMsg_us(&msg, &data, 0);
 
