@@ -2154,9 +2154,9 @@ TIMER_START();
 	CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_NEUTRINO_STARTING));
 
 	//NI show startlogo
-	bool ng_startlogo = false;
+	bool startlogo = false;
 	if (!show_startwizard) {
-		ng_startlogo = true;
+		startlogo = true;
 	}
 	else {
 		hintBox->paint();
@@ -2204,7 +2204,7 @@ TIMER_START();
 	g_videoSettings->setVideoSettings();
 
 	 //NI show startlogo
-	if (ng_startlogo) {
+	if (startlogo) {
 		frameBuffer->showFrame("start.jpg");
 	}
 
@@ -2326,8 +2326,8 @@ TIMER_START();
 	}
 
 	//NI - show startlogo
-	if(ng_startlogo) {
-		ng_startlogo = false;
+	if (startlogo) {
+		startlogo = false;
 		sleep(3);
 		frameBuffer->stopFrame();
 	}
