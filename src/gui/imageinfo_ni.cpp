@@ -31,6 +31,7 @@
 #include <global.h>
 #include <neutrino.h>
 
+#include <driver/fade.h>
 #include <driver/fontrenderer.h>
 #include <driver/rcinput.h>
 #include <driver/screen_max.h>
@@ -143,45 +144,72 @@ int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
 		parent->hide();
 
 	neutrino_msg_t msg;
-	_stat cpu;
+	neutrino_msg_t postmsg = 0;
 
+	_stat cpu;
 	cpu.usr		= 0;
 	cpu.nice	= 0;
 	cpu.system	= 0;
 	cpu.idle	= 0;
+
 	sigBox_pos	= 0;
 
+	COSDFader fader(g_settings.theme.menu_Content_alpha);
+	fader.StartFadeIn();
+	bool fadeout = false;
 	paint();
-	paint_pig (xcpu, y + 10, width/3, height/3);
+	paint_pig(xcpu, y + 10, width/3, height/3);
 	StartInfoThread();
 
 	while (1)
 	{
 		neutrino_msg_data_t data;
 		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd_MS(100);
-		g_RCInput->getMsgAbsoluteTimeout( &msg, &data, &timeoutEnd );
+		g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd);
 
-		if(msg == CRCInput::RC_setup) {
-			res = menu_return::RETURN_EXIT_ALL;
-			break;
+		if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer()))
+		{
+			if (fader.FadeDone())
+			{
+				break;
+			}
 		}
-		else if (CNeutrinoApp::getInstance()->listModeKey(msg)) {
-			g_RCInput->postMsg (msg, 0);
+		else if (msg == CRCInput::RC_setup)
+		{
 			res = menu_return::RETURN_EXIT_ALL;
-			break;
+			fadeout = true;
 		}
-		else if (msg == (neutrino_msg_t) g_settings.key_screenshot) {
-			CNeutrinoApp::getInstance ()->handleMsg (msg, data);
+		else if (CNeutrinoApp::getInstance()->listModeKey(msg))
+		{
+			postmsg = msg;
+			res = menu_return::RETURN_EXIT_ALL;
+			fadeout = true;
+		}
+		else if (msg == (neutrino_msg_t) g_settings.key_screenshot)
+		{
+			CNeutrinoApp::getInstance()->handleMsg(msg, data);
 			continue;
 		}
 		else if (msg <= CRCInput::RC_MaxRC)
 		{
-			break;
+			fadeout = true;
 		}
 
-		if ( msg >  CRCInput::RC_MaxRC && msg != CRCInput::RC_timeout)
+		if (msg > CRCInput::RC_MaxRC && msg != CRCInput::RC_timeout)
 		{
-			CNeutrinoApp::getInstance()->handleMsg( msg, data );
+			CNeutrinoApp::getInstance()->handleMsg(msg, data);
+		}
+
+		if (fadeout && msg == CRCInput::RC_timeout)
+		{
+			if (fader.StartFadeOut())
+			{
+				msg = 0;
+			}
+			else
+			{
+				break;
+			}
 		}
 
 		Stat_Info(&cpu);
@@ -189,7 +217,14 @@ int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
 	}
 
 	StopInfoThread();
+
 	hide();
+	fader.StopFade();
+
+	if (postmsg)
+	{
+		g_RCInput->postMsg(postmsg, 0);
+	}
 
 	return res;
 }
