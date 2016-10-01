@@ -134,6 +134,12 @@ TUXBOX_APPS_DIRECTORY_ONE(fontdir,FONTDIR,datadir,/share,/fonts,
 TUXBOX_APPS_DIRECTORY_ONE(fontdir_var,FONTDIR_VAR,localstatedir,/var,/tuxbox/fonts,
 	[--with-fontdir_var=PATH       ],[where to find the fonts in /var])
 
+TUXBOX_APPS_DIRECTORY_ONE(webtvdir,WEBTVDIR,datadir,/share,/neutrino/webtv,
+	[--with-webtvdir=PATH          ],[where to find the webtv content])
+
+TUXBOX_APPS_DIRECTORY_ONE(webtvdir_var,WEBTVDIR_VAR,localstatedir,/var,/tuxbox/webtv,
+	[--with-webtvdir_var=PATH      ],[where to find the webtv content /var])
+
 TUXBOX_APPS_DIRECTORY_ONE(gamesdir,GAMESDIR,localstatedir,/var,/tuxbox/games,
 	[--with-gamesdir=PATH          ],[where games data is stored])
 
