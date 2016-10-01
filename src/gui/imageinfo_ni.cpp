@@ -271,7 +271,7 @@ void CImageInfoNI::paint()
 	ypos += iheight/2;
 
 	CConfigFile config('\t');
-	config.loadConfig("/.version");
+	config.loadConfig(TARGET_PREFIX "/.version");
 
 	std::string imagename	= config.getString("imagename", "NI-Neutrino-HD");
 	std::string homepage	= config.getString("homepage",  "www.neutrino-images.de");
