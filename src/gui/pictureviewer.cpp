@@ -682,12 +682,15 @@ void CPictureViewerGui::paintItem(int pos)
 	fb_pixel_t color;
 	fb_pixel_t bgcolor;
 
+//NI - don't darken every second entry
+#if 0
 	if ((liststart+pos < playlist.size()) && (pos & 1) )
 	{
 		color   = COL_MENUCONTENTDARK_TEXT;
 		bgcolor = COL_MENUCONTENTDARK_PLUS_0;
 	}
 	else
+#endif
 	{
 		color	= COL_MENUCONTENT_TEXT;
 		bgcolor = COL_MENUCONTENT_PLUS_0;
