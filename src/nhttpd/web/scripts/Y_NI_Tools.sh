@@ -107,7 +107,7 @@ is_mount()
 is_exec()
 {
         F=$1
-	test -x /var/bin/$F
+	test -x $y_path_varbin/$F
 	return $?
 }
 
@@ -265,7 +265,7 @@ case "$action" in
 	newcsreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh newcs_reset;;
 
 	vinfo)
-	        if ! [ -x /var/bin/$1 ]; then
+	        if ! [ -x $y_path_varbin/$1 ]; then
 	        	printf "%s" "n/a"
 	        	exit
 	        fi
@@ -273,7 +273,7 @@ case "$action" in
 		if [ "$CAM" = "GBOX" ]; then
 			CAM=GBOX.NET
 		fi
-		V=$(/bin/vinfo $CAM /var/bin/$1)
+		V=$($y_path_bin/vinfo $CAM $y_path_varbin/$1)
 		printf "%s" "${V//keine Informationen gefunden/}"
 	;;
 
