@@ -1542,6 +1542,8 @@ void CAudioPlayerGui::paintItem(int pos)
 	}
 	else
 	{
+//NI - don't darken every second entry
+#if 0
 		if (((pos + m_liststart) < m_playlist.size()) && (pos & 1))
 		{
 			if ((pos + m_liststart) == (unsigned)m_current)
@@ -1556,6 +1558,7 @@ void CAudioPlayerGui::paintItem(int pos)
 			}
 		}
 		else
+#endif
 		{
 			if ((pos + m_liststart) == (unsigned)m_current)
 			{
