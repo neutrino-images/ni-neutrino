@@ -64,7 +64,7 @@
 				<p>Dazu muss zuerst unter Punkt 4 der Dateiname angeben werden (default: webtv_usr.xml). Dieser Name wird für die drei Möglichkeiten entsprechend genutzt.</p>
 				<p><LI><p><b><u>Datei online bearbeiten/erstellen</u></b>: Existiert auf der Box bereits eine Datei mit diesem Namen, wird diese im separaten Editor Fenster geöffndet. Hier hat man nun die Möglichkeit neue Links aus der Inputbox direkt per Copy/Paste einzufügen, Sortierung zu ändern etc. In dem Editorfenster, kann man mit dem Speichern Button die Datei wieder zurück auf die Box schreiben.</p>
 				       <p>Wenn es auf der Box KEINE Datei mit diesem Namen gibt, wird über diesen Weg eine neue leere Datei auf der Box angelegt!</p>
-				       <p>Man kann den Ort der Datei wählen: /var/tuxbox/webtv/ = hier wird die Datei automatisch nach Boxstart geladen  ODER /var/tuxbox/config/ = hier muss die Datei manuell im Menü angemeldet werden (siehe unten)!</p></LI>
+				       <p>Man kann den Ort der Datei wählen: %(WEBTVDIR_VAR)/ = hier wird die Datei automatisch nach Boxstart geladen  ODER %(CONFIGDIR)/ = hier muss die Datei manuell im Menü angemeldet werden (siehe unten)!</p></LI>
 			     <LI><b><u>Download auf PC</u></b>: Der komplette Inhalt der Inputbox wird über die Download-Funktion vom Internetbrowser auf dem PC gespeichert. </LI>
 			  </p>
 			  <p>Wenn egal über welchen Weg, neue webtv-Dateien auf die Box übertragen werden, muss im Menü der Box unter -Einstellungen - Multimedia - WebTV- die neue Datei hinzugefügt werden.<br>

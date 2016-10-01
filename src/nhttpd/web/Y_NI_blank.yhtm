@@ -6,7 +6,7 @@
 	{=var-set:menu={=L:main.ni_desc=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}
 	</div></div>
 	<div class="work_box_body">
-		<img id="startjpg" src="/share/tuxbox/neutrino/icons/start.jpg" alt="" />
+		<img id="startjpg" src="%(ICONSDIR)/start.jpg" alt="" />
 	</div>
 </div>
 </body>

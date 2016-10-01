@@ -36,10 +36,10 @@
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/FritzCallMonitor.cfg","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/FritzCallMonitor.cfg","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.plugin-tools.fcm-addr=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/FritzCallMonitor.addr","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.plugin-tools.fcm-addr=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/FritzCallMonitor.addr","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- nfs-server -->
@@ -94,7 +94,7 @@
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/tuxcal/tuxcal.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/tuxcal/tuxcal.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -113,7 +113,7 @@
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/tuxmail/tuxmail.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/tuxmail/tuxmail.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -252,10 +252,10 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/EPGscan.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/EPGscan.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.plugin-tools.epgscan-dat=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/EPGscan.dat","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.plugin-tools.epgscan-dat=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/EPGscan.dat","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- pr-auto-timer -->
@@ -268,10 +268,10 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/pr-auto-timer.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/pr-auto-timer.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.plugin-tools.pat-rules=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/pr-auto-timer.rules","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.plugin-tools.pat-rules=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/pr-auto-timer.rules","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- dyndnslogon -->
@@ -284,7 +284,7 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/dyndnslogon.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/dyndnslogon.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 					&nbsp;

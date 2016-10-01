@@ -7,16 +7,16 @@ if echo "$@" | grep -q "%20"; then
 	exit
 fi
 
-. /share/tuxbox/neutrino/httpd/scripts/_Y_Globals.sh
-. /share/tuxbox/neutrino/httpd/scripts/_Y_Library.sh
+. %(PRIVATE_HTTPDDIR)/scripts/_Y_Globals.sh
+. %(PRIVATE_HTTPDDIR)/scripts/_Y_Library.sh
 
 BNAME=${0##*/}
 
-PLUGIN_DIRS="/lib/tuxbox/plugins /var/tuxbox/plugins /mnt/plugins $(config_get_value_direct $y_config_neutrino 'plugin_hdd_dir')"
+PLUGIN_DIRS="%(PLUGINDIR) %(PLUGINDIR_VAR) %(PLUGINDIR_MNT) $(config_get_value_direct $y_config_neutrino 'plugin_hdd_dir')"
 
 getLanguage()
 {
-	Y_LANG=$(cat /var/tuxbox/config/nhttpd.conf | grep "^Language.selected=" | cut -d= -f2)
+	Y_LANG=$(cat %(CONFIGDIR)/nhttpd.conf | grep "^Language.selected=" | cut -d= -f2)
 }
 
 file2msg() # $1 = file to show; $2 = short description; $3 = maketable or empty
@@ -239,30 +239,30 @@ case "$action" in
 		esac
 	;;
 	# camd-control
-	#softcamstop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh stop;;
-	#softcamstart)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh start;;
-	softcamreset)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh reset;;
-	mgcamdstop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh mgcamd_stop;;  
-	mgcamdstart)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh mgcamd_start;;
-	mgcamdreset)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh mgcamd_reset;;
-	gboxstop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh gbox_stop;;
-	gboxstart)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh gbox_start;;
-	gboxreset)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh gbox_reset;;
-	cs2gboxstop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh cs2gbox_stop;;
-	cs2gboxstart)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh cs2gbox_start;;
-	cs2gboxreset)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh cs2gbox_reset;;
-	osemustop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh osemu_stop;;
-	osemustart)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh osemu_start;;
-	osemureset)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh osemu_reset;;
-	oscamstop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh oscam_stop;;
-	oscamstart)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh oscam_start;;
-	oscamreset)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh oscam_reset;;
-	doscamstop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh doscam_stop;;
-	doscamstart)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh doscam_start;;
-	doscamreset)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh doscam_reset;;
-	newcsstop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh newcs_stop;;
-	newcsstart)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh newcs_start;;
-	newcsreset)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Camd-control.sh newcs_reset;;
+	#softcamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh stop;;
+	#softcamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh start;;
+	softcamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh reset;;
+	mgcamdstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh mgcamd_stop;;
+	mgcamdstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh mgcamd_start;;
+	mgcamdreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh mgcamd_reset;;
+	gboxstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_stop;;
+	gboxstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_start;;
+	gboxreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_reset;;
+	cs2gboxstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_stop;;
+	cs2gboxstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_start;;
+	cs2gboxreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_reset;;
+	osemustop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osemu_stop;;
+	osemustart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osemu_start;;
+	osemureset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osemu_reset;;
+	oscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_stop;;
+	oscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_start;;
+	oscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_reset;;
+	doscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_stop;;
+	doscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_start;;
+	doscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_reset;;
+	newcsstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh newcs_stop;;
+	newcsstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh newcs_start;;
+	newcsreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh newcs_reset;;
 
 	vinfo)
 	        if ! [ -x /var/bin/$1 ]; then
@@ -292,16 +292,16 @@ case "$action" in
 	doscamversion)	file2msg /tmp/.doscam/doscam.version "doscam-info";;
 
 	get_oscam_webif_port)
-		if [ -e /var/tuxbox/config/oscam.conf ]; then
-			_port=$(grep -m 1 -i "^[:space:]*httpport" /var/tuxbox/config/oscam.conf | cut -d'=' -f2)
+		if [ -e %(CONFIGDIR)/oscam.conf ]; then
+			_port=$(grep -m 1 -i "^[:space:]*httpport" %(CONFIGDIR)/oscam.conf | cut -d'=' -f2)
 			_port=$(echo $_port | dos2unix -u)
 		fi
 		printf "%s" ${_port:-8080}
 	;;
 
 	get_doscam_webif_port)
-		if [ -e /var/tuxbox/config/doscam.cfg ]; then
-			_port=$(grep -m 1 -i "^[:space:]*httpport" /var/tuxbox/config/doscam.cfg | cut -d'=' -f2)
+		if [ -e %(CONFIGDIR)/doscam.cfg ]; then
+			_port=$(grep -m 1 -i "^[:space:]*httpport" %(CONFIGDIR)/doscam.cfg | cut -d'=' -f2)
 			_port=$(echo $_port | dos2unix -u)
 		fi
 		printf "%s" ${_port:-8080}
@@ -444,28 +444,28 @@ case "$action" in
 		printf "%s" "$S"
 	;;
 	# plugin-control
-	p_fcm_start)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh fcm_start;;
-	p_fcm_stop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh fcm_stop;;
-	p_nfs_start)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh nfs_start;;
-	p_nfs_stop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh nfs_stop;;
-	p_smb_start)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh smb_start;;
-	p_smb_stop)	/share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh smb_stop;;
-	p_txc_start)    /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh txc_start;;
-	p_txc_stop)     /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh txc_stop;;
-	p_txm_start)    /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh txm_start;;
-	p_txm_stop)     /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh txm_stop;;
-	p_ina_start)    /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh ina_start;;
-	p_ina_stop)     /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh ina_stop;;
-	p_drop_start)   /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh drop_start;;
-	p_drop_stop)    /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh drop_stop;;
-	p_ush_start)    /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh ush_start;;
-	p_ush_stop)     /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh ush_stop;;
-	p_djm_start)    /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh djm_start;;
-	p_djm_stop)     /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh djm_stop;;
-	p_xud_start)    /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh xud_start;;
-	p_xud_stop)     /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh xud_stop;;
-	p_cro_start)    /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh cro_start;;
-	p_cro_stop)     /share/tuxbox/neutrino/httpd/scripts/Y_NI_Plugin-control.sh cro_stop;;
+	p_fcm_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh fcm_start;;
+	p_fcm_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh fcm_stop;;
+	p_nfs_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh nfs_start;;
+	p_nfs_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh nfs_stop;;
+	p_smb_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh smb_start;;
+	p_smb_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh smb_stop;;
+	p_txc_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh txc_start;;
+	p_txc_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh txc_stop;;
+	p_txm_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh txm_start;;
+	p_txm_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh txm_stop;;
+	p_ina_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ina_start;;
+	p_ina_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ina_stop;;
+	p_drop_start)   %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh drop_start;;
+	p_drop_stop)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh drop_stop;;
+	p_ush_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ush_start;;
+	p_ush_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ush_stop;;
+	p_djm_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh djm_start;;
+	p_djm_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh djm_stop;;
+	p_xud_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh xud_start;;
+	p_xud_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh xud_stop;;
+	p_cro_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh cro_start;;
+	p_cro_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh cro_stop;;
 	# plugins on blue-button
 	p_show)
 		PLUGIN=$1

@@ -71,9 +71,9 @@ function init(){
 					<a target="work" href="Y_Tools_Timer_Sync.yhtm">{=L:live.timer_sync=}</a>
 				</li>
 				<!-- //NI -->
-				{=if-file-exists:/var/tuxbox/config/pr-auto-timer.rules~
+				{=if-file-exists:%(CONFIGDIR)/pr-auto-timer.rules~
 				<li>
-					<a target="work" href="Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/pr-auto-timer.rules" title="{=L:ng.plugin-tools.pat-rules=}">Auto Timer</a>
+					<a target="work" href="Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/pr-auto-timer.rules" title="{=L:ng.plugin-tools.pat-rules=}">Auto Timer</a>
 				</li>
 				~=}
 			</ul>

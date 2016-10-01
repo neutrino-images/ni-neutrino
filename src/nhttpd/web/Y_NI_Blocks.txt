@@ -51,7 +51,7 @@ end-block~include_jquery
 
 # ------- NI NetFS
 start-block~netfs_local_dir
-{=var-set:local_dir_{=var-get:nr=}={=ini-get:/var/tuxbox/config/neutrino.conf;netfs_{=mount_type_s=}_local_dir_{=var-get:nr=}~open=}=}
+{=var-set:local_dir_{=var-get:nr=}={=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_local_dir_{=var-get:nr=}~open=}=}
 end-block~netfs_local_dir
 
 start-block~netfs_is_mount

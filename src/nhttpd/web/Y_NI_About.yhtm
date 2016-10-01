@@ -48,7 +48,7 @@ jQuery(document).ready(function(){
 		<tr>
 			<td valign="bottom" width="22%">
 				<a href="http://{=ini-get:/.version;homepage=}" target="_blank">
-					<img border="0" src="/share/tuxbox/neutrino/icons/hint_imagelogo.png" alt=""/>
+					<img border="0" src="%(ICONSDIR)/hint_imagelogo.png" alt=""/>
 				</a>
 			</td>
 			<td valign="bottom" colspan="3">
