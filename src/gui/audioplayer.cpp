@@ -1766,7 +1766,7 @@ void CAudioPlayerGui::paintInfo()
 			title_height -= m_fheight;
 
 		m_frameBuffer->paintBoxRel(m_x, m_y, m_width, title_height - 10, COL_MENUCONTENTSELECTED_PLUS_0, c_rad_mid); //NI
-		m_frameBuffer->paintBoxFrame(m_x, m_y, m_width, title_height - 10, 1, COL_MENUCONTENT_PLUS_6, c_rad_mid); //NI
+		m_frameBuffer->paintBoxFrame(m_x, m_y, m_width, title_height - 10, 1, COL_MENUCONTENT_PLUS_1, c_rad_mid); //NI
 
 		paintCover();
 
@@ -1880,8 +1880,9 @@ void CAudioPlayerGui::paintItemID3DetailsLine (int pos)
 		// paint id3 infobox
 		if (ibox == NULL){
 			ibox = new CComponentsInfoBox(m_x, ypos2, m_width, m_info_height);
-			ibox->setFrameThickness(2);
+			ibox->setFrameThickness(1); //NI
 			ibox->setCorner(RADIUS_LARGE);
+			ibox->setColorFrame(COL_MENUCONTENT_PLUS_1); //NI
 			ibox->setColorBody(COL_MENUCONTENTDARK_PLUS_0);
 			ibox->forceTextPaint(false);
 		}
