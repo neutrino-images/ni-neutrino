@@ -121,7 +121,15 @@ install_DATA += Y_NIlib.js \
 		Y_NI_Plugin-control.yhtm \
 		Y_NI_PZapit-control.yhtm
 
-# NI-yWeb
 install-data-hook:
+	@# Badass hack, I know. If anyone knows a better way -- please send patch!
+	find $(DESTDIR)$(PRIVATE_HTTPDDIR)/ -type f -print0 | xargs --no-run-if-empty -0 \
+		sed -i \
+			-e 's|%(CONFIGDIR)|$(CONFIGDIR)|g' \
+			-e 's|%(PLUGINDIR_VAR)|$(PLUGINDIR_VAR)|g' \
+			-e 's|%(PRIVATE_HTTPDDIR)|$(PRIVATE_HTTPDDIR)|g' \
+			-e 's|%(PUBLIC_HTTPDDIR)|$(PUBLIC_HTTPDDIR)|g' \
+	;
+	@# NI-yWeb
 	cp $(DESTDIR)$(PRIVATE_HTTPDDIR)/styles/Y_Dist-NI_dark.css $(DESTDIR)$(PRIVATE_HTTPDDIR)/Y_Dist.css
 	sed -i 's|version=\(.*\)|version=\1 by NI|' $(DESTDIR)$(PRIVATE_HTTPDDIR)/Y_Version.txt
