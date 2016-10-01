@@ -1183,7 +1183,7 @@ void CFileBrowser::paintItem(unsigned int pos)
 	actual_file = &filelist[curr];
 	if (curr == selected)
 	{
-		color   = actual_file->Marked ? COL_MENUCONTENTINACTIVE_TEXT : COL_MENUCONTENTSELECTED_TEXT;
+		color   = COL_MENUCONTENTSELECTED_TEXT; //NI
 		bgcolor = actual_file->Marked ? COL_MENUCONTENTSELECTED_PLUS_2 : COL_MENUCONTENTSELECTED_PLUS_0;
 		c_rad_small = RADIUS_SMALL;
 	}
