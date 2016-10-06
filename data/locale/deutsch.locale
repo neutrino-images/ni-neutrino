@@ -838,6 +838,7 @@ hdd_umounted Datenträger entfernt
 hdd_wakeup Interne Aufweckfunktion
 hdd_wakeup_msg Aufweckfunktion mit Nachricht 
 hdd_wakeup_start Aufweckfunktion wird gestartet
+imageinfo.api API:
 imageinfo.creator Ersteller:
 imageinfo.date Datum:
 imageinfo.dokumentation Dokus:
