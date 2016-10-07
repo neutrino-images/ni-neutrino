@@ -62,7 +62,6 @@
 #include <pwrmngr.h>
 #include <audio_cs.h>
 #include <video_cs.h>
-#include <ca_cs.h>
 #endif
 #if HAVE_TRIPLEDRAGON
 #include <video_td.h>
