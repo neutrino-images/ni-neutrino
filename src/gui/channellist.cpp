@@ -2277,8 +2277,10 @@ bool CChannelList::SameTP(CZapitChannel * channel)
 			return true;
 
 		//NI
-		if(channel->bUseCI && CRecordManager::getInstance()->getUseCI())
-			return false;
+		if(g_settings.ci_mode == 1) {
+			if(channel->bUseCI && CRecordManager::getInstance()->getUseCI())
+				return (CRecordManager::getInstance()->SameTransponder(channel->getChannelID()));
+		}
 
 		iscurrent = CFEManager::getInstance()->canTune(channel);
 	}
