@@ -63,6 +63,7 @@
 #include <gui/movieplayer.h>
 #include <gui/infoclock.h>
 #include <system/settings.h>
+#include <system/set_threadname.h>
 #include <gui/customcolor.h>
 
 #include <gui/bouquetlist.h>
@@ -112,7 +113,7 @@ CChannelList::CChannelList(const char * const pName, bool phistoryMode, bool _vl
 	vlist = _vlist;
 	new_zap_mode = 0;
 	selected_chid = 0;
-	footerHeight = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight()+6; //initial height value for buttonbar
+	footerHeight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight()+6; //initial height value for buttonbar
 	theight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
 	fheight = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNELLIST]->getHeight();
 	fdescrheight = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNELLIST_DESCR]->getHeight();
@@ -130,6 +131,8 @@ CChannelList::CChannelList(const char * const pName, bool phistoryMode, bool _vl
 	move_state = beDefault;
 	edit_state = false;
 	channelsChanged = false;
+
+	paint_events_index = -2;
 }
 
 CChannelList::~CChannelList()
@@ -161,6 +164,8 @@ void CChannelList::updateEvents(unsigned int from, unsigned int to)
 		return;
 
 	size_t chanlist_size = to - from;
+	if (chanlist_size <= 0) // WTF???
+		return;
 
 	CChannelEventList events;
 	if (displayNext) {
@@ -188,16 +193,18 @@ void CChannelList::updateEvents(unsigned int from, unsigned int to)
 		for (uint32_t count = 0; count < chanlist_size; count++)
 			p_requested_channels[count] = (*chanlist)[count + from]->getEpgID();
 
-		CEitManager::getInstance()->getChannelEvents(events, p_requested_channels, chanlist_size);
+		CChannelEventList levents;
+		CEitManager::getInstance()->getChannelEvents(levents, p_requested_channels, chanlist_size);
 		for (uint32_t count=0; count < chanlist_size; count++) {
 			(*chanlist)[count + from]->currentEvent = CChannelEvent();
-			for (CChannelEventList::iterator e = events.begin(); e != events.end(); ++e) {
+			for (CChannelEventList::iterator e = levents.begin(); e != levents.end(); ++e) {
 				if (((*chanlist)[count + from]->getEpgID()&0xFFFFFFFFFFFFULL) == e->get_channel_id()) {
 					(*chanlist)[count + from]->currentEvent = *e;
 					break;
 				}
 			}
 		}
+		levents.clear();
 		delete[] p_requested_channels;
 	}
 }
@@ -473,7 +480,7 @@ void CChannelList::calcSize()
 
 	if (fheight == 0)
 		fheight = 1; /* avoid div-by-zero crash on invalid font */
-	footerHeight = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight()+6;
+	footerHeight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight()+6;
 
 	pig_on_win = ( (g_settings.channellist_additional == 2) /* with miniTV */ && (CNeutrinoApp::getInstance()->getMode() != NeutrinoMessages::mode_ts) );
 	// calculate width
@@ -713,8 +720,9 @@ int CChannelList::show()
 				loop = false;
 			}
 		}
-		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
+		else if (CNeutrinoApp::getInstance()->listModeKey(msg)) {
 			if (!edit_state) {
+				//FIXME: what about LIST_MODE_WEBTV?
 				int newmode = msg == CRCInput::RC_sat ? LIST_MODE_SAT : LIST_MODE_FAV;
 				CNeutrinoApp::getInstance()->SetChannelMode(newmode);
 				res = CHANLIST_CHANGE_MODE;
@@ -928,6 +936,8 @@ int CChannelList::show()
 			}
 		}
 	}
+
+	paint_events(-2); // cancel paint_events thread
 
 	if (move_state == beMoving)
 		cancelMoveChannel();
@@ -1331,7 +1341,8 @@ int CChannelList::numericZap(int key)
 			doZap = true;
 			break;
 		}
-		else if (msg == CRCInput::RC_favorites || msg == CRCInput::RC_sat || msg == CRCInput::RC_www || msg == CRCInput::RC_right) {
+		else if (CNeutrinoApp::getInstance()->listModeKey(msg) || msg == CRCInput::RC_right) {
+			// do nothing
 		}
 		else if (CRCInput::isNumeric(msg)) {
 			if (pos == 4) {
@@ -1538,8 +1549,8 @@ void CChannelList::paintDetails(int index)
 	bool colored_event_C = (g_settings.theme.colored_events_channellist == 1);
 	bool colored_event_N = (g_settings.theme.colored_events_channellist == 2);
 
-	frameBuffer->paintBoxRel(x+1, y + height + 1, full_width-2, info_height - 2, COL_MENUCONTENTDARK_PLUS_0, RADIUS_LARGE);//round
-	frameBuffer->paintBoxFrame(x, y + height, full_width, info_height, 2, COL_MENUCONTENT_PLUS_6, RADIUS_LARGE);
+	frameBuffer->paintBoxRel(x, y + height, full_width, info_height, COL_MENUCONTENTDARK_PLUS_0, RADIUS_LARGE);//round //NI
+	frameBuffer->paintBoxFrame(x, y + height, full_width, info_height, 1, COL_MENUCONTENT_PLUS_1, RADIUS_LARGE); //NI
 
 	if ((*chanlist).empty())
 		return;
@@ -1665,13 +1676,13 @@ void CChannelList::paintItem2DetailsLine (int pos)
 		return;
 
 	int xpos  = x - ConnectLineBox_Width;
-	int ypos1 = y + theight + pos*fheight + (fheight/2)-2;
-	int ypos2 = y + height + (info_height/2)-2;
+	int ypos1 = y + theight + pos*fheight + (fheight/2);
+	int ypos2 = y + height + (info_height/2);
 
 	// paint Line if detail info (and not valid list pos)
 	if (pos >= 0) {
 		if (dline == NULL)
-			dline = new CComponentsDetailLine(xpos, ypos1, ypos2, fheight/2+1, info_height-RADIUS_LARGE*2);
+			dline = new CComponentsDetailLine(xpos, ypos1, ypos2, fheight/2, info_height-RADIUS_LARGE*2);
 		dline->paint(false);
 	}
 }
@@ -1981,21 +1992,21 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		int pb_max = pb_space - 4;
 		if (g_settings.progressbar_design != CProgressBar::PB_MONO) {
 			if (liststart + pos != selected) {
-				fb_pixel_t pbgcol = COL_MENUCONTENT_PLUS_1;
+				fb_pixel_t pbgcol = COL_MENUCONTENT_PLUS_2; //NI
 				if (pbgcol == bgcolor)
 					pbgcol = COL_MENUCONTENT_PLUS_0;
 				pb.setStatusColors(COL_MENUCONTENT_PLUS_3, pbgcol);
 			} else {
-				fb_pixel_t pbgcol = COL_MENUCONTENTSELECTED_PLUS_0;
+				fb_pixel_t pbgcol = COL_MENUCONTENTSELECTED_PLUS_1; //NI
 				if (pbgcol == bgcolor)
 					pbgcol = COL_MENUCONTENT_PLUS_0;
 				pb.setStatusColors(COL_MENUCONTENTSELECTED_PLUS_2, pbgcol);
 			}
 		} else {
 			if (liststart + pos != selected)
-				pb.setStatusColors(COL_MENUCONTENT_PLUS_3, COL_MENUCONTENT_PLUS_1);
+				pb.setStatusColors(COL_MENUCONTENT_PLUS_3, COL_MENUCONTENT_PLUS_2); //NI
 			else
-				pb.setStatusColors(COL_MENUCONTENTSELECTED_PLUS_2, COL_MENUCONTENTSELECTED_PLUS_0);
+				pb.setStatusColors(COL_MENUCONTENTSELECTED_PLUS_2, COL_MENUCONTENTSELECTED_PLUS_1); //NI
 		}
 
 		if (!(p_event->description.empty())) {
@@ -2306,8 +2317,69 @@ void CChannelList::paintPig (int _x, int _y, int w, int h)
 
 void CChannelList::paint_events(int index)
 {
+	if (index == -2 && paint_events_index > -2) {
+		pthread_mutex_lock(&paint_events_mutex);
+		paint_events_index = index;
+		sem_post(&paint_events_sem);
+		pthread_join(paint_events_thr, NULL);
+		sem_destroy(&paint_events_sem);
+		pthread_mutex_unlock(&paint_events_mutex);
+	} else if (paint_events_index == -2) {
+		if (index == -2)
+			return;
+		// First paint_event. No need to lock.
+		pthread_mutexattr_t attr;
+		pthread_mutexattr_init(&attr);
+		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);
+		pthread_mutex_init(&paint_events_mutex, &attr);
+
+		sem_init(&paint_events_sem, 0, 0);
+		paint_events_index = index;
+		if (!pthread_create(&paint_events_thr, NULL, paint_events, (void *) this))
+			sem_post(&paint_events_sem);
+		else
+			paint_events_index = -2;
+	} else {
+		pthread_mutex_lock(&paint_events_mutex);
+		paint_events_index = index;
+		pthread_mutex_unlock(&paint_events_mutex);
+		sem_post(&paint_events_sem);
+	}
+}
+
+void *CChannelList::paint_events(void *arg)
+{
+	CChannelList *me = (CChannelList *) arg;
+	me->paint_events();
+	pthread_exit(NULL);
+}
+
+void CChannelList::paint_events()
+{
+	set_threadname(__func__);
+
+	while (paint_events_index != -2) {
+		sem_wait(&paint_events_sem);
+		if (paint_events_index < 0)
+			continue;
+		while(!sem_trywait(&paint_events_sem));
+		int current_index = paint_events_index;
+
+		CChannelEventList evtlist;
+		readEvents((*chanlist)[current_index]->getChannelID(), evtlist);
+		if (current_index == paint_events_index) {
+			pthread_mutex_lock(&paint_events_mutex);
+			if (current_index == paint_events_index)
+				paint_events_index = -1;
+			pthread_mutex_unlock(&paint_events_mutex);
+			paint_events(evtlist);
+		}
+	}
+}
+
+void CChannelList::paint_events(CChannelEventList &evtlist)
+{
 	ffheight = g_Font[eventFont]->getHeight();
-	readEvents((*chanlist)[index]->getEpgID());
 	frameBuffer->paintBoxRel(x+ width,y+ theight+pig_height, infozone_width, infozone_height,COL_MENUCONTENT_PLUS_0);
 
 	char startTime[10];
@@ -2369,8 +2441,6 @@ void CChannelList::paint_events(int index)
 		}
 		i++;
 	}
-	if ( !evtlist.empty() )
-		evtlist.clear();
 }
 
 static bool sortByDateTime (const CChannelEvent& a, const CChannelEvent& b)
@@ -2378,7 +2448,7 @@ static bool sortByDateTime (const CChannelEvent& a, const CChannelEvent& b)
 	return a.startTime < b.startTime;
 }
 
-void CChannelList::readEvents(const t_channel_id channel_id)
+void CChannelList::readEvents(const t_channel_id channel_id, CChannelEventList &evtlist)
 {
 	CEitManager::getInstance()->getEventsServiceKey(channel_id , evtlist);
 

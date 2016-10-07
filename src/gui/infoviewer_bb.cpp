@@ -66,7 +66,7 @@
 extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
 extern cVideo * videoDecoder;
 
-#define COL_INFOBAR_BUTTONS_BACKGROUND (COL_INFOBAR_SHADOW_PLUS_1)
+#define COL_INFOBAR_BUTTONS_BACKGROUND (COL_MENUFOOT_PLUS_0)
 
 CInfoViewerBB::CInfoViewerBB()
 {
@@ -125,7 +125,7 @@ void CInfoViewerBB::Init()
 		bbButtonInfo[i].x   = -1;
 	}
 
-	InfoHeightY_Info = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight() + 5;
+	InfoHeightY_Info = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight() + 5;
 	initBBOffset();
 
 	changePB();
@@ -163,7 +163,7 @@ void CInfoViewerBB::getBBIconInfo()
 	bbIconMaxH 		= 0;
 	initBBOffset();
 	BBarY 			= g_InfoViewer->BoxEndY + bottom_bar_offset;
-	BBarFontY 		= BBarY + InfoHeightY_Info - (InfoHeightY_Info - g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight()) / 2; /* center in buttonbar */
+	BBarFontY 		= BBarY + InfoHeightY_Info - (InfoHeightY_Info - g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight()) / 2; /* center in buttonbar */
 	bbIconMinX 		= g_InfoViewer->BoxEndX - 8; //should be 10px, but 2px will be reduced for each icon
 	CNeutrinoApp* neutrino	= CNeutrinoApp::getInstance();
 
@@ -303,7 +303,7 @@ void CInfoViewerBB::getBBButtonInfo()
 			if (text == g_Locale->getText(LOCALE_MPKEY_AUDIO) && !g_settings.infobar_buttons_usertitle)
 				text = CMoviePlayerGui::getInstance(false).CurrentAudioName(); // use instance_mp
 		}
-		bbButtonInfo[i].w = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getRenderWidth(text) + w + 10;
+		bbButtonInfo[i].w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getRenderWidth(text) + w + 10;
 		bbButtonInfo[i].cx = w + 5;
 		bbButtonInfo[i].h = h;
 		bbButtonInfo[i].text = text;
@@ -448,8 +448,8 @@ void CInfoViewerBB::showBBButtons(bool paintFooter)
 				if (bbButtonInfo[i].active) {
 					frameBuffer->paintIcon(bbButtonInfo[i].icon, bbButtonInfo[i].x, BBarY, InfoHeightY_Info);
 
-					g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->RenderString(bbButtonInfo[i].x + bbButtonInfo[i].cx, BBarFontY, 
-							bbButtonInfo[i].w - bbButtonInfo[i].cx, bbButtonInfo[i].text, COL_INFOBAR_TEXT);
+					g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->RenderString(bbButtonInfo[i].x + bbButtonInfo[i].cx, BBarFontY,
+							bbButtonInfo[i].w - bbButtonInfo[i].cx, bbButtonInfo[i].text, COL_MENUFOOT_TEXT);
 				}
 			}
 		}
@@ -1083,7 +1083,8 @@ void CInfoViewerBB::paint_cam_icons()
 int CInfoViewerBB::check_ecmInfo()
 {
 	int caid = 0;
-	if (File_copy("/tmp/ecm.info", "/tmp/ecm.info.tmp")) {
+	CFileHelpers fh;
+	if (fh.copyFile("/tmp/ecm.info", "/tmp/ecm.info.tmp", 0644)) {
 		g_InfoViewer->md5_ecmInfo = filehash((char *)"/tmp/ecm.info.tmp");
 		caid = parse_ecmInfo("/tmp/ecm.info.tmp");
 	}

@@ -44,10 +44,12 @@
 #include "lua_cc_window.h"
 #include "lua_configfile.h"
 #include "lua_curl.h"
+#include "lua_filehelpers.h"
 #include "lua_hintbox.h"
 #include "lua_menue.h"
 #include "lua_messagebox.h"
 #include "lua_misc.h"
+#include "lua_stringinput.h"
 #include "lua_threads.h"
 #include "lua_video.h"
 
@@ -149,6 +151,7 @@ static void set_lua_variables(lua_State *L)
 		{ "prog3",		CRCInput::RC_prog3 },
 		{ "prog4",		CRCInput::RC_prog4 },
 #endif
+		{ "timeout",		(lua_Integer)CRCInput::RC_timeout },
 		/* to check if it is in our range */
 		{ "MaxRC",		CRCInput::RC_MaxRC },
 		{ NULL, 0 }
@@ -159,13 +162,15 @@ static void set_lua_variables(lua_State *L)
 	{
 		{ "COLORED_EVENTS_CHANNELLIST",	MAGIC_COLOR | (COL_COLORED_EVENTS_CHANNELLIST) },
 		{ "COLORED_EVENTS_INFOBAR",	MAGIC_COLOR | (COL_COLORED_EVENTS_INFOBAR) },
-		{ "INFOBAR_SHADOW",		MAGIC_COLOR | (COL_INFOBAR_SHADOW) },
+		{ "SHADOW",			MAGIC_COLOR | (COL_SHADOW) },
+/* obsolete */	{ "INFOBAR_SHADOW",		MAGIC_COLOR | (COL_SHADOW) }, // just here to stay backward compatible
 		{ "INFOBAR",			MAGIC_COLOR | (COL_INFOBAR) },
 		{ "MENUHEAD",			MAGIC_COLOR | (COL_MENUHEAD) },
 		{ "MENUCONTENT",		MAGIC_COLOR | (COL_MENUCONTENT) },
 		{ "MENUCONTENTDARK",		MAGIC_COLOR | (COL_MENUCONTENTDARK) },
 		{ "MENUCONTENTSELECTED",	MAGIC_COLOR | (COL_MENUCONTENTSELECTED) },
 		{ "MENUCONTENTINACTIVE",	MAGIC_COLOR | (COL_MENUCONTENTINACTIVE) },
+		{ "MENUFOOT",			MAGIC_COLOR | (COL_MENUFOOT) },
 		{ "BACKGROUND",			MAGIC_COLOR | (COL_BACKGROUND) },
 		{ "DARK_RED",			MAGIC_COLOR | (COL_DARK_RED0) },
 		{ "DARK_GREEN",			MAGIC_COLOR | (COL_DARK_GREEN0) },
@@ -182,7 +187,7 @@ static void set_lua_variables(lua_State *L)
 		{ "BLACK",			MAGIC_COLOR | (COL_BLACK0) },
 		{ "COLORED_EVENTS_TEXT",	(lua_Unsigned) (COL_COLORED_EVENTS_TEXT) },
 		{ "INFOBAR_TEXT",		(lua_Unsigned) (COL_INFOBAR_TEXT) },
-		{ "INFOBAR_SHADOW_TEXT",	(lua_Unsigned) (COL_INFOBAR_SHADOW_TEXT) },
+/* obsolete */	{ "INFOBAR_SHADOW_TEXT",	(lua_Unsigned) (COL_MENUFOOT_TEXT) }, // just here to stay backward compatible
 		{ "MENUHEAD_TEXT",		(lua_Unsigned) (COL_MENUHEAD_TEXT) },
 		{ "MENUCONTENT_TEXT",		(lua_Unsigned) (COL_MENUCONTENT_TEXT) },
 		{ "MENUCONTENT_TEXT_PLUS_1",	(lua_Unsigned) (COL_MENUCONTENT_TEXT_PLUS_1) },
@@ -195,6 +200,8 @@ static void set_lua_variables(lua_State *L)
 		{ "MENUCONTENTSELECTED_TEXT_PLUS_1",	(lua_Unsigned) (COL_MENUCONTENTSELECTED_TEXT_PLUS_1) },
 		{ "MENUCONTENTSELECTED_TEXT_PLUS_2",	(lua_Unsigned) (COL_MENUCONTENTSELECTED_TEXT_PLUS_2) },
 		{ "MENUCONTENTINACTIVE_TEXT",		(lua_Unsigned) (COL_MENUCONTENTINACTIVE_TEXT) },
+		{ "MENUFOOT_TEXT",			(lua_Unsigned) (COL_MENUFOOT_TEXT) },
+		{ "SHADOW_PLUS_0",			(lua_Unsigned) (COL_SHADOW_PLUS_0) },
 		{ "MENUHEAD_PLUS_0",			(lua_Unsigned) (COL_MENUHEAD_PLUS_0) },
 		{ "MENUCONTENT_PLUS_0",			(lua_Unsigned) (COL_MENUCONTENT_PLUS_0) },
 		{ "MENUCONTENT_PLUS_1",			(lua_Unsigned) (COL_MENUCONTENT_PLUS_1) },
@@ -209,6 +216,7 @@ static void set_lua_variables(lua_State *L)
 		{ "MENUCONTENTSELECTED_PLUS_0",		(lua_Unsigned) (COL_MENUCONTENTSELECTED_PLUS_0) },
 		{ "MENUCONTENTSELECTED_PLUS_2",		(lua_Unsigned) (COL_MENUCONTENTSELECTED_PLUS_2) },
 		{ "MENUCONTENTINACTIVE_PLUS_0",		(lua_Unsigned) (COL_MENUCONTENTINACTIVE_PLUS_0) },
+		{ "MENUFOOT_PLUS_0",			(lua_Unsigned) (COL_MENUFOOT_PLUS_0) },
 		{ NULL, 0 }
 	};
 
@@ -616,9 +624,11 @@ void LuaInstRegisterFunctions(lua_State *L, bool fromThreads/*=false*/)
 	CLuaInstCCWindow::getInstance()->CCWindowRegister(L);
 	CLuaInstConfigFile::getInstance()->LuaConfigFileRegister(L);
 	CLuaInstCurl::getInstance()->LuaCurlRegister(L);
+	CLuaInstFileHelpers::getInstance()->LuaFileHelpersRegister(L);
 	CLuaInstHintbox::getInstance()->HintboxRegister(L);
 	CLuaInstMenu::getInstance()->MenuRegister(L);
 	CLuaInstMessagebox::getInstance()->MessageboxRegister(L);
+	CLuaInstStringInput::getInstance()->StringInputRegister(L);
 	CLuaInstMisc::getInstance()->LuaMiscRegister(L);
 	CLuaInstVideo::getInstance()->LuaVideoRegister(L);
 	if (!fromThreads)

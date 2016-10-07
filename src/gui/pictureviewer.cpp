@@ -167,13 +167,12 @@ int CPictureViewerGui::exec(CMenuTarget* parent, const std::string & actionKey)
 	width = frameBuffer->getScreenWidthRel();
 	height = frameBuffer->getScreenHeightRel();
 
-	sheight = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight();
 	theight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
 	fheight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getHeight();
 
         //get footerHeight from paintButtons
-	buttons1Height = ::paintButtons(0, 0, 0, PictureViewerButtons1Count, PictureViewerButtons1, 0, 0, "", false, COL_INFOBAR_SHADOW_TEXT, NULL, 0, false);
-	buttons2Height = ::paintButtons(0, 0, 0, PictureViewerButtons2Count, PictureViewerButtons2, 0, 0, "", false, COL_INFOBAR_SHADOW_TEXT, NULL, 0, false);
+	buttons1Height = ::paintButtons(0, 0, 0, PictureViewerButtons1Count, PictureViewerButtons1, 0, 0, "", false, COL_MENUFOOT_TEXT, NULL, 0, false);
+	buttons2Height = ::paintButtons(0, 0, 0, PictureViewerButtons2Count, PictureViewerButtons2, 0, 0, "", false, COL_MENUFOOT_TEXT, NULL, 0, false);
 	footerHeight = buttons1Height + buttons2Height;
 
 	listmaxshow = (height-theight-footerHeight)/(fheight);
@@ -643,7 +642,8 @@ int CPictureViewerGui::show()
 			loop = false;
 			g_RCInput->postMsg(msg, data);
 		}
-		else if ((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites) || (msg == CRCInput::RC_www)) {
+		else if (CNeutrinoApp::getInstance()->listModeKey(msg)) {
+			// do nothing
 		}
 		else
 		{
@@ -682,12 +682,15 @@ void CPictureViewerGui::paintItem(int pos)
 	fb_pixel_t color;
 	fb_pixel_t bgcolor;
 
+//NI - don't darken every second entry
+#if 0
 	if ((liststart+pos < playlist.size()) && (pos & 1) )
 	{
 		color   = COL_MENUCONTENTDARK_TEXT;
 		bgcolor = COL_MENUCONTENTDARK_PLUS_0;
 	}
 	else
+#endif
 	{
 		color	= COL_MENUCONTENT_TEXT;
 		bgcolor = COL_MENUCONTENT_PLUS_0;
@@ -739,7 +742,7 @@ void CPictureViewerGui::paintFoot()
 	else
 		PictureViewerButtons2[0].locale = LOCALE_PICTUREVIEWER_SORTORDER_DATE;
 
-	frameBuffer->paintBoxRel(x, y + (height - footerHeight), width, footerHeight, COL_INFOBAR_SHADOW_PLUS_1, RADIUS_LARGE, CORNER_BOTTOM);
+	frameBuffer->paintBoxRel(x, y + (height - footerHeight), width, footerHeight, COL_MENUFOOT_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
 
 	if (!playlist.empty())
 	{

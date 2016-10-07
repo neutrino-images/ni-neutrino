@@ -128,7 +128,9 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 				} else
 					doLoop = false;
 			}
-			else if((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites)) {
+			else if (CNeutrinoApp::getInstance()->listModeKey(msg))
+			{
+				// do nothing
 			}
 			else
 			{
@@ -238,7 +240,7 @@ void CHDDInfoWidget::paint(const std::string &Key)
 
 	int hheight	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
 	int mheight	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getHeight();
-	int sheight	= g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getHeight();
+	int sheight	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight();
 
 	int offset	= 20;
 	int bheight	= offset + locale_itemsCount*mheight + offset;	// body height
@@ -373,7 +375,7 @@ void CHDDInfoWidget::paint(const std::string &Key)
 	// paint backgrounds
 	frameBuffer->paintBoxRel(x, y, width, hheight, COL_MENUHEAD_PLUS_0, RADIUS_LARGE, CORNER_TOP);
 	frameBuffer->paintBoxRel(x, y+ hheight, width, bheight, COL_MENUCONTENT_PLUS_0);
-	frameBuffer->paintBoxRel(x, y+ hheight+ bheight, width, fheight, COL_INFOBAR_SHADOW_PLUS_1, RADIUS_LARGE, CORNER_BOTTOM);
+	frameBuffer->paintBoxRel(x, y+ hheight+ bheight, width, fheight, COL_MENUFOOT_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
 
 	// header
 	int xpos = x + offset/2;
@@ -401,10 +403,10 @@ void CHDDInfoWidget::paint(const std::string &Key)
 	}
 
 	// footer with centered content
-	int wtmp = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getRenderWidth(g_Locale->getText(LOCALE_HDD_INFO_INFO));
+	int wtmp = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getRenderWidth(g_Locale->getText(LOCALE_HDD_INFO_INFO));
 	xpos = x + width/2 - wtmp/2;
 	ypos = y + hheight + bheight + offset/4 + sheight;
-	g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->RenderString(xpos, ypos, wtmp, g_Locale->getText(LOCALE_HDD_INFO_INFO), COL_MENUCONTENTINACTIVE_TEXT);
+	g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->RenderString(xpos, ypos, wtmp, g_Locale->getText(LOCALE_HDD_INFO_INFO), COL_MENUCONTENTINACTIVE_TEXT);
 
 	// finally paint data
 	xpos = x + offset + locwidth + sepwidth;

@@ -87,6 +87,7 @@ class CTimerd
 			t_channel_id  channel_id;
 			unsigned char apids;
 			bool          recordingSafety;
+			bool          autoAdjustToEPG;
 			bool          channel_ci; //NI - channel is member of CI bouquet?
 		};
 
@@ -97,6 +98,7 @@ class CTimerd
 			t_channel_id  channel_id;
 			unsigned char apids;
 			bool          recordingSafety;
+			bool          autoAdjustToEPG;
 			bool          channel_ci; //NI - channel is member of CI bouquet?
 		};
 
@@ -118,6 +120,7 @@ class CTimerd
 						epgID = e.epgID;
 						epg_starttime = e.epg_starttime;
 						recordingSafety = e.recordingSafety;
+						autoAdjustToEPG = e.autoAdjustToEPG;
 						channel_ci = e.channel_ci; //NI
 					};
 				RecordingInfo& operator = (EventInfo& e)
@@ -127,6 +130,7 @@ class CTimerd
 						epgID = e.epgID;
 						epg_starttime = e.epg_starttime;
 						recordingSafety = e.recordingSafety;
+						autoAdjustToEPG = e.autoAdjustToEPG;
 						channel_ci = e.channel_ci; //NI
 						return *this;
 					}
@@ -162,6 +166,7 @@ class CTimerd
 			char              recordingDir[RECORD_DIR_MAXLEN];       //only filled if applicable
 			char              epgTitle[EPG_TITLE_MAXLEN];       //only filled if applicable
 			bool              channel_ci; //NI
+			
 			bool operator< (const responseGetTimer& a) const
 			{
 				return this->alarmTime < a.alarmTime ;

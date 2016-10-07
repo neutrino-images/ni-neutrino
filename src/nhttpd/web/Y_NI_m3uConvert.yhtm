@@ -72,9 +72,9 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 					<div><input type="radio" id="utf8" name="SourceEncoding" value="UTF-8"><label for="utf8"> UTF-8</label></div>
 				</td>
 			</tr>   
-			<tr><td class="y_form_header" colspan="2">2. Beschreibung angeben:</td></tr>
+			<tr><td class="y_form_header" colspan="2">2. Stream-Infos und Beschreibung angeben:</td></tr>
 				<td>
-					<input id="inputDescription" title="Variablenwert Description in der Datei ... description='Stream'..." value="Stream"></input>
+					Titel: <input id="inputTitel" title="Variablenwert Titel der webtv-Datei ... webtv [xyz]" value="eigene Streams"></input>  Beschreibung: <input id="inputDescription" title="Variablenwert Description in der Datei ... description='Stream'..." value="webtv"></input>  Genre: <input id="inputGenre" title="Variablenwert Genre in der Datei ... genre='Movie'..." value="Movie"></input>
 				</td>
 			</tr>   
 			<tr><td class="y_form_header" colspan="2">3. Inputbox umwandeln in xml-Format:</td></tr>
@@ -89,8 +89,8 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 			</tr>
 			<tr><td class="y_form_header" colspan="2">5. Export mit obigem Dateinamen:</td></tr>
 				<td>
-					<div><button onclick="oeffnenXML();" title="Datei mit obigem Namen auf der Box &ouml;ffnen oder erstellen">Datei online bearbeiten/erstellen</button>
-						<button onclick="saveXML()" title="Download">Download auf PC</button>
+					<div>Datei online bearbeiten/erstellen: <button onclick="oeffnenXML2();" title="Datei mit obigem Namen auf der Box &ouml;ffnen oder erstellen">unter %(WEBTVDIR_VAR)/ (autoload)</button> . <button onclick="oeffnenXML();" title="Datei mit obigem Namen auf der Box &ouml;ffnen oder erstellen">unter %(CONFIGDIR)/ (manuell)</button>
+						Download: <button onclick="saveXML()" title="Download">Download auf PC</button>
 					</div></td>
 			</tr>
 		</table>   
@@ -113,8 +113,12 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 		{
 			e = document.getElementById("InputOutputField");
 			descri = document.getElementById("inputDescription").value;
+			genre = document.getElementById("inputGenre").value;
+			titel = document.getElementById("inputTitel").value;
 			l = e.value.split("\n");
-			s = '<?xml version="1.0"?>\n<webtvs>\n';
+			s = '<?xml version="1.0"?>\n<webtvs name="[';
+			s += titel;
+			s += '] ">\n';
 			name = '';
 			if (l.length > 1)
 			{
@@ -144,7 +148,9 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 						s += '    <webtv title="';
 						s += name + '" url="';
 						s += url;
-						s += '" epgid="" description="';
+						s += '" epgid="" genre="';
+						s += genre;
+						s += '" description="';
 						s += descri;
 						s += '" />\n';
 						name = '';
@@ -168,7 +174,20 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 		var form = document.createElement('form');
 		form.setAttribute('method', 'post');
 		form.target = 'Map';
-		form.setAttribute('action', '/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/' +
+		form.setAttribute('action', '/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/' +
+			fileNameToSaveAs);
+		document.body.appendChild(form);
+		window.open('', 'Map', 'status=0,title=0,height=0,width=1000,scrollbars=0');
+		form.submit();
+	}
+
+	function oeffnenXML2()
+	{
+		var fileNameToSaveAs = document.getElementById("inputFileNameToSaveAs").value;
+		var form = document.createElement('form');
+		form.setAttribute('method', 'post');
+		form.target = 'Map';
+		form.setAttribute('action', '/Y_Filemgr_Edit.yhtm?file=%(WEBTVDIR_VAR)/' +
 			fileNameToSaveAs);
 		document.body.appendChild(form);
 		window.open('', 'Map', 'status=0,title=0,height=0,width=1000,scrollbars=0');

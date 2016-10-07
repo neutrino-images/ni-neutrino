@@ -498,8 +498,8 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 				Service = g_Locale->getText(LOCALE_RECORDINGMENU_TIMESHIFT);
 			else if (CMoviePlayerGui::getInstance().p_movie_info)
 			{
-				if (!CMoviePlayerGui::getInstance().p_movie_info->epgChannel.empty())
-					Service = CMoviePlayerGui::getInstance().p_movie_info->epgChannel;
+				if (!CMoviePlayerGui::getInstance().p_movie_info->channelName.empty())
+					Service = CMoviePlayerGui::getInstance().p_movie_info->channelName;
 			}
 
 			if (Service.empty())
@@ -519,8 +519,8 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 				case 3: /* play */
 					if (ModeTshift && CMoviePlayerGui::getInstance().p_movie_info) /* show channel-logo */
 					{
-						if (!GetLogoName(CMoviePlayerGui::getInstance().p_movie_info->epgId,
-								 CMoviePlayerGui::getInstance().p_movie_info->epgChannel,
+						if (!GetLogoName(CMoviePlayerGui::getInstance().p_movie_info->channelId,
+								 CMoviePlayerGui::getInstance().p_movie_info->channelName,
 								 Logo))
 							Logo = ICONSDIR "/" NEUTRINO_ICON_PLAY ICONSEXT;
 					}
@@ -792,13 +792,13 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 
 	if (convert) // align to internal lcd4linux font
 	{
-		strReplace(content, "ä", "�");
-		strReplace(content, "ö", "�");
-		strReplace(content, "ü", "�");
-		strReplace(content, "Ä", "Ae");
-		strReplace(content, "Ö", "Oe");
-		strReplace(content, "Ü", "Ue");
-		strReplace(content, "ß", "�");
+		strReplace(content, "ä", "\xe4\0");
+		strReplace(content, "ö", "\xf6\0");
+		strReplace(content, "ü", "\xfc\0");
+		strReplace(content, "Ä", "\xc4\0");
+		strReplace(content, "Ö", "\xd6\0");
+		strReplace(content, "Ü", "\xdc\0");
+		strReplace(content, "ß", "\xe2\0");
 		strReplace(content, "é", "e");
 	}
 
@@ -853,17 +853,13 @@ bool CLCD4l::CompareParseID(uint64_t &i_ParseID)
 	return ret;
 }
 
-// stolen from gui/movieinfo.cpp
-void CLCD4l::strReplace(std::string & orig, const char *fstr, const std::string rstr)
+void CLCD4l::strReplace(std::string &orig, const std::string &fstr, const std::string &rstr)
 {
-	unsigned int index = 0;
-	unsigned int fstrlen = strlen(fstr);
-	int rstrlen = rstr.size();
-
-	while ((index = orig.find(fstr, index)) != std::string::npos)
+	size_t pos = 0;
+	while ((pos = orig.find(fstr, pos)) != std::string::npos)
 	{
-		orig.replace(index, fstrlen, rstr);
-		index += rstrlen;
+		orig.replace(pos, fstr.length(), rstr);
+		pos += rstr.length();
 	}
 }
 

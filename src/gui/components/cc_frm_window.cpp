@@ -144,7 +144,7 @@ void CComponentsWindow::initVarWindow(	const int& x_pos, const int& y_pos, const
 	ccw_right_sidebar= NULL;	
 	ccw_body	= NULL;
 	ccw_footer	= NULL;
-	ccw_button_font	= g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL];
+	ccw_button_font	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT];
 
 	ccw_buttons	= 0; //no header buttons
 	ccw_show_footer = true;
@@ -155,7 +155,7 @@ void CComponentsWindow::initVarWindow(	const int& x_pos, const int& y_pos, const
 	ccw_w_sidebar	= 40;
 	ccw_col_head 	= COL_MENUHEAD_PLUS_0;
 	ccw_col_head_text = COL_MENUHEAD_TEXT;
-	ccw_col_footer	= COL_INFOBAR_SHADOW_PLUS_1;
+	ccw_col_footer	= COL_MENUFOOT_PLUS_0;
 
 	page_scroll_mode = PG_SCROLL_M_OFF; //permanent disabled here, only in body used!
 
@@ -168,9 +168,10 @@ void CComponentsWindow::initWindowSize()
 	if (cc_parent)
 		return;
 
-	if (width == 0)
+	if (width == 0 || (unsigned)width > frameBuffer->getScreenWidth())
 		width = frameBuffer->getScreenWidth();
-	if (height == 0)
+
+	if (height == 0 || (unsigned)height > frameBuffer->getScreenHeight())
 		height = frameBuffer->getScreenHeight();
 }
 
@@ -218,7 +219,7 @@ void CComponentsWindow::initFooter()
 		ccw_footer->setPos(0, cc_yr + height - ccw_footer->getHeight()- fr_thickness);
 		ccw_footer->setWidth(width-2*fr_thickness);
 		ccw_footer->enableShadow(false/*shadow*/);
-		ccw_footer->setCorner(corner_rad-fr_thickness/2, CORNER_BOTTOM);
+		ccw_footer->setCorner(corner_rad-fr_thickness, CORNER_BOTTOM);
 		ccw_footer->setButtonFont(ccw_button_font);
 		ccw_footer->setColorBody(ccw_col_footer);
 		ccw_footer->doPaintBg(true);

@@ -141,9 +141,9 @@
 #include <lib/libdvbsub/dvbsub.h>
 #include <lib/libtuxtxt/teletext.h>
 #include <eitd/sectionsd.h>
-
+#ifdef ENABLE_LUA
 #include <system/luaserver.h>
-
+#endif
 int old_b_id = -1;
 
 CInfoClock      *InfoClock;
@@ -749,6 +749,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.spectrum         = configfile.getBool("spectrum"          , false);
 	g_settings.channellist_additional = configfile.getInt32("channellist_additional", 1); //NI
 	g_settings.eventlist_additional = configfile.getInt32("eventlist_additional", 1); //NI
+	g_settings.eventlist_epgplus = configfile.getInt32("eventlist_epgplus", 1);
 	g_settings.channellist_epgtext_align_right	= configfile.getBool("channellist_epgtext_align_right"          , false);
 	g_settings.channellist_progressbar_design = configfile.getInt32("channellist_progressbar_design", g_settings.progressbar_design);
 	g_settings.channellist_foot	= configfile.getInt32("channellist_foot"          , 1);//default next Event
@@ -859,11 +860,17 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.audioplayer_show_playlist = configfile.getInt32("audioplayer_show_playlist",1);
 	g_settings.audioplayer_enable_sc_metadata = configfile.getInt32("audioplayer_enable_sc_metadata",1);
 	g_settings.shoutcast_dev_id = configfile.getString("shoutcast_dev_id","fa1669MuiRPorUBw"); //NI
+	g_settings.shoutcast_enabled = configfile.getInt32("shoutcast_enabled", 1);
+	g_settings.shoutcast_enabled = check_shoutcast_dev_id();
 
 	//Movie-Player
 	g_settings.movieplayer_repeat_on = configfile.getInt32("movieplayer_repeat_on", CMoviePlayerGui::REPEAT_OFF);
 	g_settings.youtube_dev_id = configfile.getString("youtube_dev_id","AIzaSyBLdZe7M3rpNMZqSj-3IEvjbb2hATWJIdM"); //NI
-	g_settings.tmdb_api_key = configfile.getString("tmdb_api_key","XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	g_settings.youtube_enabled = configfile.getInt32("youtube_enabled", 1);
+	g_settings.youtube_enabled = check_youtube_dev_id();
+	g_settings.tmdb_api_key = configfile.getString("tmdb_api_key","7270f1b571c4ecbb5b204ddb7f8939b1"); //NI
+	g_settings.tmdb_enabled = configfile.getInt32("tmdb_enabled", 1);
+	g_settings.tmdb_enabled = check_tmdb_api_key();
 
 	//Filebrowser
 	g_settings.filebrowser_showrights =  configfile.getInt32("filebrowser_showrights", 1);
@@ -994,13 +1001,18 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 			configfile.setString("usermenu_tv_yellow", g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items);
 		}
 	}
-	else if (g_settings.version_pseudo < "20160623110000")
+	if (g_settings.version_pseudo < "20160623110000")
 	{
 		if (g_settings.screen_xres == 112)
 			g_settings.screen_xres = 105;
 
 		if (g_settings.screen_yres == 112)
 			g_settings.screen_yres = 105;
+	}
+	if (g_settings.version_pseudo < "20160804110000")
+	{
+		if (g_settings.tmdb_api_key == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+			g_settings.tmdb_api_key = "7270f1b571c4ecbb5b204ddb7f8939b1";
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
@@ -1320,6 +1332,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32( "zapto_pre_time", g_settings.zapto_pre_time );
 	configfile.setBool("spectrum", g_settings.spectrum);
 	configfile.setInt32("eventlist_additional", g_settings.eventlist_additional);
+	configfile.setInt32("eventlist_epgplus", g_settings.eventlist_epgplus);
 	configfile.setInt32("channellist_additional", g_settings.channellist_additional);
 	configfile.setBool("channellist_epgtext_align_right", g_settings.channellist_epgtext_align_right);
 	configfile.setInt32("channellist_progressbar_design", g_settings.channellist_progressbar_design);
@@ -1405,11 +1418,14 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32( "audioplayer_show_playlist", g_settings.audioplayer_show_playlist );
 	configfile.setInt32( "audioplayer_enable_sc_metadata", g_settings.audioplayer_enable_sc_metadata );
 	configfile.setString( "shoutcast_dev_id", g_settings.shoutcast_dev_id );
+	configfile.setInt32( "shoutcast_enabled", g_settings.shoutcast_enabled );
 
 	//Movie-Player
 	configfile.setInt32( "movieplayer_repeat_on", g_settings.movieplayer_repeat_on );
 	configfile.setString( "youtube_dev_id", g_settings.youtube_dev_id );
+	configfile.setInt32( "youtube_enabled", g_settings.youtube_enabled );
 	configfile.setString( "tmdb_api_key", g_settings.tmdb_api_key );
+	configfile.setInt32( "tmdb_enabled", g_settings.tmdb_enabled );
 
 	//Filebrowser
 	configfile.setInt32("filebrowser_showrights", g_settings.filebrowser_showrights);
@@ -2087,9 +2103,9 @@ TIMER_START();
 	CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_NEUTRINO_STARTING));
 
 	//NI show startlogo
-	bool ng_startlogo = false;
+	bool startlogo = false;
 	if (!show_startwizard) {
-		ng_startlogo = true;
+		startlogo = true;
 	}
 	else {
 		hintBox->paint();
@@ -2137,7 +2153,7 @@ TIMER_START();
 	g_videoSettings->setVideoSettings();
 
 	 //NI show startlogo
-	if (ng_startlogo) {
+	if (startlogo) {
 		frameBuffer->showFrame("start.jpg");
 	}
 
@@ -2250,8 +2266,8 @@ TIMER_START();
 	}
 
 	//NI - show startlogo
-	if(ng_startlogo) {
-		ng_startlogo = false;
+	if (startlogo) {
+		startlogo = false;
 		sleep(3);
 		frameBuffer->stopFrame();
 	}
@@ -2417,9 +2433,9 @@ void CNeutrinoApp::RealRun()
 		standbyMode(true, true);
 
 	//cCA::GetInstance()->Ready(true);
-
+#ifdef ENABLE_LUA
 	CLuaServer *luaServer = CLuaServer::getInstance();
-
+#endif
 	g_PluginList->startPlugin("startup");
 	if (!g_PluginList->getScriptOutput().empty()) {
 		ShowMsg(LOCALE_PLUGINS_RESULT, g_PluginList->getScriptOutput(), CMessageBox::mbrBack,CMessageBox::mbBack,NEUTRINO_ICON_SHELL);
@@ -2430,10 +2446,14 @@ void CNeutrinoApp::RealRun()
 	m_screensaver	= false;
 
 	while( true ) {
+#ifdef ENABLE_LUA
 		luaServer->UnBlock();
+#endif
 		g_RCInput->getMsg(&msg, &data, 100, ((g_settings.mode_left_right_key_tv == SNeutrinoSettings::VOLUME) && (g_RemoteControl->subChannels.size() < 1)) ? true : false);	// 10 secs..
+#ifdef ENABLE_LUA
 		if (luaServer->Block(msg, data))
 			continue;
+#endif
 
 		if (mode == mode_radio) {
 			bool ignored_msg = (
@@ -2934,6 +2954,17 @@ void CNeutrinoApp::lockPlayBack(bool blank)
 		videoDecoder->setBlank(true);
 }
 
+bool CNeutrinoApp::listModeKey(const neutrino_msg_t msg)
+{
+	if (
+		   msg == CRCInput::RC_sat
+		|| msg == CRCInput::RC_favorites
+		|| msg == CRCInput::RC_www
+	)
+		return true;
+	return false;
+}
+
 int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 {
 	int res = 0;
@@ -3029,7 +3060,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	}
 
 	/* ================================== KEYS ================================================ */
-	if( msg == CRCInput::RC_ok || (!g_InfoViewer->getSwitchMode() && (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www))) {
+	if( msg == CRCInput::RC_ok || (!g_InfoViewer->getSwitchMode() && CNeutrinoApp::getInstance()->listModeKey(msg))) {
 		if( (mode == mode_tv) || (mode == mode_radio) || (mode == mode_ts) || (mode == mode_webtv)) {
 			showChannelList(msg);
 			return messages_return::handled;

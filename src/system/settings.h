@@ -94,6 +94,16 @@ struct SNeutrinoTheme
 	unsigned char menu_Content_inactive_Text_green;
 	unsigned char menu_Content_inactive_Text_blue;
 
+	unsigned char menu_Foot_alpha;
+	unsigned char menu_Foot_red;
+	unsigned char menu_Foot_green;
+	unsigned char menu_Foot_blue;
+
+	unsigned char menu_Foot_Text_alpha;
+	unsigned char menu_Foot_Text_red;
+	unsigned char menu_Foot_Text_green;
+	unsigned char menu_Foot_Text_blue;
+
 	int menu_Hint_gradient;
 	int menu_Hint_gradient_direction;
 	int menu_ButtonBar_gradient;
@@ -569,6 +579,7 @@ struct SNeutrinoSettings
 	int window_width;
 	int window_height;
 	int eventlist_additional;
+	int eventlist_epgplus;
 	int channellist_additional;
 	int channellist_epgtext_align_right;
 	int channellist_progressbar_design;
@@ -644,6 +655,7 @@ struct SNeutrinoSettings
 		FONT_TYPE_MENU = 0,
 		FONT_TYPE_MENU_TITLE,
 		FONT_TYPE_MENU_INFO,
+		FONT_TYPE_MENU_FOOT,
 		FONT_TYPE_EPG_TITLE,
 		FONT_TYPE_EPG_INFO1,
 		FONT_TYPE_EPG_INFO2,
@@ -725,6 +737,8 @@ struct SNeutrinoSettings
 	int   audioplayer_show_playlist;
 	int   audioplayer_enable_sc_metadata;
 	std::string shoutcast_dev_id;
+	int shoutcast_enabled;
+
 	//Filebrowser
 	int filebrowser_showrights;
 	int filebrowser_sortmethod;
@@ -733,7 +747,9 @@ struct SNeutrinoSettings
 	//movieplayer
 	int   movieplayer_repeat_on;
 	std::string youtube_dev_id;
+	int youtube_enabled;
 	std::string tmdb_api_key;
+	int tmdb_enabled;
 
 	//zapit setup
 	std::string StartChannelTV;
@@ -892,13 +908,13 @@ typedef struct time_settings_t
 const time_settings_struct_t timing_setting[SNeutrinoSettings::TIMING_SETTING_COUNT] =
 {
 	{ 180,	LOCALE_TIMING_MENU        }, //NI
-	{ 60,	LOCALE_TIMING_CHANLIST    },
-	{ 60,	LOCALE_TIMING_EPG         }, //NI
+	{ 180,	LOCALE_TIMING_CHANLIST    }, //NI
+	{ 180,	LOCALE_TIMING_EPG         }, //NI
 	{ 6,	LOCALE_TIMING_INFOBAR     },
- 	{ 60,	LOCALE_TIMING_INFOBAR_RADIO }, //NI
+ 	{ 0,	LOCALE_TIMING_INFOBAR_RADIO },
  	{ 6,	LOCALE_TIMING_INFOBAR_MOVIEPLAYER},
  	{ 3,	LOCALE_TIMING_VOLUMEBAR   },
-	{ 60,	LOCALE_TIMING_FILEBROWSER },
+	{ 180,	LOCALE_TIMING_FILEBROWSER }, //NI
 	{ 3,	LOCALE_TIMING_NUMERICZAP  }
 };
 

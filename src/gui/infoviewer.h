@@ -84,6 +84,7 @@ class CInfoViewer
 	int            numbox_offset;
 	int            analogclock_size; //NI
 	int            analogclock_offset; //NI
+	fb_pixel_t*    analogclock_buf; //NI
 
 	CSectionsdClient::CurrentNextInfo info_CurrentNext;
 	CSectionsdClient::CurrentNextInfo oldinfo;

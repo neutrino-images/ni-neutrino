@@ -148,7 +148,7 @@ void CInfoIcons::paintBackground()
 {
 	if (g_settings.mode_icons_background)
 	{
-		frameBuffer->paintBoxRel(x + SHADOW_OFFSET, y + SHADOW_OFFSET, width, height, COL_INFOBAR_SHADOW_PLUS_0, RADIUS_SMALL);
+		frameBuffer->paintBoxRel(x + SHADOW_OFFSET, y + SHADOW_OFFSET, width, height, COL_SHADOW_PLUS_0, RADIUS_SMALL);
 		frameBuffer->paintBoxRel(x, y, width, height, COL_MENUCONTENT_PLUS_0, RADIUS_SMALL);
 	}
 	else

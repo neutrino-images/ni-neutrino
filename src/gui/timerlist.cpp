@@ -316,6 +316,7 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		eventinfo.channel_id=timerNew.channel_id;
 		eventinfo.apids = TIMERD_APIDS_CONF;
 		eventinfo.recordingSafety = false;
+		eventinfo.autoAdjustToEPG = false;
 		timerNew.standby_on = (timerNew_standby_on == 1);
 		void *data=NULL;
 		if (timerNew.eventType == CTimerd::TIMER_STANDBY)
@@ -333,6 +334,7 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 				recinfo.channel_id=timerNew.channel_id;
 				recinfo.apids=TIMERD_APIDS_CONF;
 				recinfo.recordingSafety = false;
+				recinfo.autoAdjustToEPG = false; // FIXME -- add GUI option?
 
 				timerNew.announceTime-= 120; // 2 more mins for rec timer
 				strncpy(recinfo.recordingDir,timerNew.recordingDir,sizeof(recinfo.recordingDir)-1);
@@ -623,9 +625,8 @@ int CTimerList::show()
 						paint();
 				}
 			}
-			// help key
 		}
-		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
+		else if (CNeutrinoApp::getInstance()->listModeKey(msg)) {
 			g_RCInput->postMsg (msg, 0);
 			loop = false;
 			res = menu_return::RETURN_EXIT_ALL;
@@ -1268,7 +1269,7 @@ bool askUserOnTimerConflict(time_t announceTime, time_t stopTime, t_channel_id c
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
 	bool useCI = channel->bUseCI;
 
-	if (CFEManager::getInstance()->getEnabledCount() == 1 || /*NI*/useCI) {
+	if (CFEManager::getInstance()->getEnabledCount() == 1 || useCI) { //NI
 		CTimerdClient Timer;
 		CTimerd::TimerList overlappingTimers = Timer.getOverlappingTimers(announceTime,stopTime);
 		//printf("[CTimerdClient] attention\n%d\t%d\t%d conflicts with:\n",timerNew.announceTime,timerNew.alarmTime,timerNew.stopTime);

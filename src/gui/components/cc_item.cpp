@@ -55,6 +55,8 @@ CComponentsItem::CComponentsItem(CComponentsForm* parent)
 
 void CComponentsItem::initParent(CComponentsForm* parent)
 {
+	if (cc_parent == parent)
+		return;
 	cc_parent = parent;
 	if (cc_parent)
 		cc_parent->addCCItem(this);
@@ -145,7 +147,7 @@ void CComponentsItem::kill(const fb_pixel_t& bg_color, bool ignore_parent, const
 void CComponentsItem::syncSysColors()
 {
 	col_body 	= COL_MENUCONTENT_PLUS_0;
-	col_shadow 	= COL_MENUCONTENTDARK_PLUS_0;
+	col_shadow 	= COL_SHADOW_PLUS_0;
 	col_frame 	= COL_MENUCONTENT_PLUS_6;
 }
 

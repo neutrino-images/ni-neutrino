@@ -100,7 +100,7 @@ void CComponentsButton::initVarButton(	const int& x_pos, const int& y_pos, const
 	width 		= w;
 	height	 	= h;
 	shadow		= shadow_mode;
-	shadow_w	= SHADOW_OFFSET;
+	shadow_w	= shadow ? SHADOW_OFFSET/2 : 0; //buttons are mostly small elements, so these elements should have a reasonable shadow width
 
 	cc_body_gradient_enable = CC_COLGRAD_OFF/*g_settings.gradiant*/; //TODO: gradient is prepared for use but disabled at the moment till some other parts of gui parts are provide gradient
 	setColBodyGradient(cc_body_gradient_enable/*CColorGradient::gradientLight2Dark*/, CFrameBuffer::gradientVertical, CColorGradient::light);
@@ -110,12 +110,12 @@ void CComponentsButton::initVarButton(	const int& x_pos, const int& y_pos, const
 
 	cc_item_enabled  = enabled;
 	cc_item_selected = selected;
-	fr_thickness 	= 3; //TODO: parts of the GUI still don't use framed buttons
+	fr_thickness 	= 0; //TODO: parts of the GUI still don't use framed buttons
 	append_x_offset = 6;
 	append_y_offset = 0;
-	corner_rad	= 0;
+	corner_rad	= RADIUS_SMALL;
 	
-	cc_btn_capt_col		= cc_body_gradient_enable ? COL_BUTTON_TEXT_ENABLED : COL_INFOBAR_SHADOW_TEXT;
+	cc_btn_capt_col		= cc_body_gradient_enable ? COL_BUTTON_TEXT_ENABLED : COL_MENUFOOT_TEXT;
 	cc_btn_capt_disable_col = cc_body_gradient_enable ? COL_BUTTON_TEXT_DISABLED : COL_MENUCONTENTINACTIVE_TEXT;
 	cc_btn_icon_obj	= NULL;
 	cc_btn_capt_obj = NULL;
@@ -127,8 +127,8 @@ void CComponentsButton::initVarButton(	const int& x_pos, const int& y_pos, const
 	cc_btn_result	= -1;
 	cc_btn_alias	= -1;
 
-	initParent(parent);
 	initCCBtnItems();
+	initParent(parent);
 }
 
 void CComponentsButton::initIcon()
@@ -192,7 +192,7 @@ void CComponentsButton::initCaption()
 		x_cap += cc_btn_icon_obj ? cc_btn_icon_obj->getWidth() : 0;
 
 		int w_cap = width - fr_thickness - append_x_offset - x_cap - fr_thickness;
-		int h_cap = height*85/100/* - 2*fr_thickness*/;
+		int h_cap = height*65/100 /*- 2*fr_thickness*/;
 
 		/*NOTE:
 			paint of centered text in y direction without y_offset

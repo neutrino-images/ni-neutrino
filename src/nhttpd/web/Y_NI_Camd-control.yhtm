@@ -279,22 +279,22 @@ input[type="button"], .tools select {
 					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
 						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.conf","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.conf","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: oscam.conf
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: oscam.dvbapi
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.server","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.server","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: oscam.server
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.services","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.services","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: oscam.services
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.srvid","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.srvid","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: oscam.srvid
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/oscam.user","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.user","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: oscam.user
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
@@ -350,31 +350,31 @@ input[type="button"], .tools select {
 					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
 						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.cfg","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.cfg","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.cfg
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.ac","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.ac","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.ac
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.dvbapi
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.guess","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.guess","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.guess
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.provid","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.provid","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.provid
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.services","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.services","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.services
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.srvid","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.srvid","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.srvid
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.tiers","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.tiers","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.tiers
 						</option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/doscam.whitelist","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.whitelist","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: doscam.whitelist
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
@@ -514,7 +514,7 @@ input[type="button"], .tools select {
 					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
 						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/newcs.xml","edit", "width=800,height=600,resizable=yes");'>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/newcs.xml","edit", "width=800,height=600,resizable=yes");'>
 							{=L:ni.edit=}: newcs.xml
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~

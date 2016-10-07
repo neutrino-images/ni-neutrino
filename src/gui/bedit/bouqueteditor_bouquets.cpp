@@ -147,7 +147,7 @@ const struct button_label CBEBouquetWidgetButtons[6] =
 void CBEBouquetWidget::paintFoot()
 {
 	size_t numbuttons = sizeof(CBEBouquetWidgetButtons)/sizeof(CBEBouquetWidgetButtons[0]);
-	footer.paintButtons(x, y+height, width, ButtonHeight, numbuttons, CBEBouquetWidgetButtons, width/numbuttons-20, 0, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]);
+	footer.paintButtons(x, y+height, width, ButtonHeight, numbuttons, CBEBouquetWidgetButtons, width/numbuttons-20);
 }
 
 void CBEBouquetWidget::hide()
@@ -366,12 +366,13 @@ int CBEBouquetWidget::exec(CMenuTarget* parent, const std::string & /*actionKey*
 				cancelMoveBouquet();
 			}
 		}
-		else if((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites) || (msg == CRCInput::RC_www)) {
+		else if (CNeutrinoApp::getInstance()->listModeKey(msg))
+		{
+			// do nothing
 		}
 		else
 		{
 			CNeutrinoApp::getInstance()->handleMsg( msg, data );
-			// kein canceling...
 		}
 	}
 	hide();

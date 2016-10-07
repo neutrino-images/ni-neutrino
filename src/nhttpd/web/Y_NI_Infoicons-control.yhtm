@@ -1,12 +1,12 @@
-{=var-set:icons_flag0={=ini-get:/var/tuxbox/config/neutrino.conf;mode_icons_flag0~open=}=}
-{=var-set:icons_flag1={=ini-get:/var/tuxbox/config/neutrino.conf;mode_icons_flag1~cache=}=}
-{=var-set:icons_flag2={=ini-get:/var/tuxbox/config/neutrino.conf;mode_icons_flag2~cache=}=}
-{=var-set:icons_flag3={=ini-get:/var/tuxbox/config/neutrino.conf;mode_icons_flag3~cache=}=}
-{=var-set:icons_flag4={=ini-get:/var/tuxbox/config/neutrino.conf;mode_icons_flag4~cache=}=}
-{=var-set:icons_flag5={=ini-get:/var/tuxbox/config/neutrino.conf;mode_icons_flag5~cache=}=}
-{=var-set:icons_flag6={=ini-get:/var/tuxbox/config/neutrino.conf;mode_icons_flag6~cache=}=}
-{=var-set:icons_flag7={=ini-get:/var/tuxbox/config/neutrino.conf;mode_icons_flag7~cache=}=}
-{=var-set:icons_dir=/share/tuxbox/neutrino/icons=}
+{=var-set:icons_flag0={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag0~open=}=}
+{=var-set:icons_flag1={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag1~cache=}=}
+{=var-set:icons_flag2={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag2~cache=}=}
+{=var-set:icons_flag3={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag3~cache=}=}
+{=var-set:icons_flag4={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag4~cache=}=}
+{=var-set:icons_flag5={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag5~cache=}=}
+{=var-set:icons_flag6={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag6~cache=}=}
+{=var-set:icons_flag7={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag7~cache=}=}
+{=var-set:icons_dir=%(ICONSDIR)=}
 {=include-block:Y_NI_Blocks.txt;head=}
 <script type="text/javascript">
 //<![CDATA[

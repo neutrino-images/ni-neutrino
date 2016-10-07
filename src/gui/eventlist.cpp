@@ -34,7 +34,7 @@
 #include <gui/epgplus.h>
 #include <gui/epgview.h>
 #include <gui/followscreenings.h>
-#include <gui/moviebrowser.h>
+#include <gui/moviebrowser/mb.h>
 #include <gui/timerlist.h>
 #include <gui/user_menue.h>
 
@@ -272,7 +272,7 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 
 	// Calculate iheight (we assume the red button is the largest one?)
 	struct button_label tmp_button[1] = { { NEUTRINO_ICON_BUTTON_RED, LOCALE_EVENTLISTBAR_RECORDEVENT } };
-	iheight = ::paintButtons(0, 0, 0, 1, tmp_button, 0, 0, "", false, COL_INFOBAR_SHADOW_TEXT, NULL, 0, false);
+	iheight = ::paintButtons(0, 0, 0, 1, tmp_button, 0, 0, "", false, COL_MENUFOOT_TEXT, NULL, 0, false);
 
 	// Calculate theight
 	theight = g_Font[SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE]->getHeight();
@@ -601,10 +601,13 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 		}
 		else if (msg == CRCInput::RC_epg)
 		{
-			hide();
-			CEPGplusHandler eplus;
-			eplus.exec(NULL, "");
-			loop = false;
+			if (g_settings.eventlist_epgplus)
+			{
+				hide();
+				CEPGplusHandler eplus;
+				eplus.exec(NULL, "");
+				loop = false;
+			}
 		}
 		else if (msg==CRCInput::RC_help || msg==CRCInput::RC_ok || msg==CRCInput::RC_info)
 		{
@@ -649,11 +652,12 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 			in_search = findEvents(channel_id, channelname);
 			timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
 		}
-		else if (msg == CRCInput::RC_sat || msg == CRCInput::RC_favorites || msg == CRCInput::RC_www) {
+		else if (CNeutrinoApp::getInstance()->listModeKey(msg)) {
 			g_RCInput->postMsg (msg, 0);
 			res = menu_return::RETURN_EXIT_ALL;
 			loop = false;
-		} else if (msg == NeutrinoMessages::EVT_SERVICESCHANGED || msg == NeutrinoMessages::EVT_BOUQUETSCHANGED) {
+		}
+		else if (msg == NeutrinoMessages::EVT_SERVICESCHANGED || msg == NeutrinoMessages::EVT_BOUQUETSCHANGED) {
 			g_RCInput->postMsg(msg, data);
 			loop = false;
 			res = menu_return::RETURN_EXIT_ALL;

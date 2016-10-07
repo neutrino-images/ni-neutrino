@@ -153,6 +153,7 @@ install_DATA += \
 	icon_red.png \
 	icon_yellow.png \
 	icon_ytplay.png \
+	imdb.png \
 	important.png \
 	info.png \
 	info_small.png \

@@ -25,7 +25,6 @@
 #include <config.h>
 #endif
 
-#include <global.h>
 #include <neutrino.h>
 #include "cc_frm_footer.h"
 #include <system/debug.h>
@@ -37,7 +36,7 @@ using namespace std;
 CComponentsFooter::CComponentsFooter(CComponentsForm* parent)
 {
 	//CComponentsFooter
-	initVarFooter(1, 1, 0, 0, 0, parent);
+	initVarFooter(1, 1, 0, 0, 0, parent, CC_SHADOW_OFF, COL_MENUCONTENT_PLUS_6, COL_MENUFOOT_PLUS_0, COL_SHADOW_PLUS_0);
 }
 
 CComponentsFooter::CComponentsFooter(	const int& x_pos, const int& y_pos, const int& w, const int& h,
@@ -69,7 +68,6 @@ void CComponentsFooter::initVarFooter(	const int& x_pos, const int& y_pos, const
 	width 	= w == 0 ? frameBuffer->getScreenWidth(true) : w;
 
 	//init footer height
-	cch_font 	= g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL];
 	height 		= max(h, cch_font->getHeight());
 
 	shadow		= shadow_mode;
@@ -118,7 +116,7 @@ void CComponentsFooter::setButtonLabels(const struct button_label_s * const cont
 	//footer as primary container (in this context '=this') and the parent for the button label container (chain object),
 	//button label container (chain object) itself is concurrent the parent object for button objects.
 	if (chain == NULL){
-		chain = new CComponentsFrmChain(x_chain, CC_CENTERED, w_chain, height, 0, CC_DIR_X, this);
+		chain = new CComponentsFrmChain(x_chain, CC_CENTERED, w_chain, height, 0, CC_DIR_X, this, CC_SHADOW_OFF, COL_MENUCONTENT_PLUS_6, col_body);
 		chain->setCorner(this->corner_rad, this->corner_type);
 		chain->doPaintBg(false);
 	}
@@ -134,19 +132,19 @@ void CComponentsFooter::setButtonLabels(const struct button_label_s * const cont
 	//generate and add button objects passed from button label content with default width to chain object.
 	for (size_t i= 0; i< label_count; i++){
 		string txt = content[i].text;
-		string btn_name = string(content[i].button);
+		string icon_name = string(content[i].button);
 
 		//ignore item, if no text and icon are defined;
-		if (txt.empty() && btn_name.empty()){
+		if (txt.empty() && icon_name.empty()){
 			dprintf(DEBUG_INFO, "[CComponentsFooter]   [%s - %d]  ignore item [%d], no icon and text defined!\n", __func__, __LINE__, i);
 			continue;
 		}
 
-		CComponentsButton *btn = new CComponentsButton(0, CC_CENTERED, w_btn_min, (btn_contour ? height-2*fr_thickness : height), txt, btn_name);
+		CComponentsButton *btn = new CComponentsButton(0, CC_CENTERED, w_btn_min, (btn_contour ? height-2*fr_thickness : height), txt, icon_name);
 		btn->setButtonFont(ccf_btn_font);
 		btn->doPaintBg(btn_contour);
 		btn->enableFrame(btn_contour);
-		btn->setButtonTextColor(COL_INFOBAR_SHADOW_TEXT);
+		btn->setButtonTextColor(COL_MENUFOOT_TEXT);
 		btn->setButtonEventMsg(content[i].btn_msg);
 		btn->setButtonResult(content[i].btn_result);
 		btn->setButtonAlias(content[i].btn_alias);
@@ -154,13 +152,13 @@ void CComponentsFooter::setButtonLabels(const struct button_label_s * const cont
 		//set button frames to icon color, predefined for available color buttons
 		if (btn_auto_frame_col){
 			fb_pixel_t f_col = btn->getColorFrame();
-			if (btn_name == NEUTRINO_ICON_BUTTON_RED)
+			if (icon_name == NEUTRINO_ICON_BUTTON_RED)
 				f_col = COL_DARK_RED;
-			if (btn_name == NEUTRINO_ICON_BUTTON_GREEN)
+			if (icon_name == NEUTRINO_ICON_BUTTON_GREEN)
 				f_col = COL_DARK_GREEN;
-			if (btn_name == NEUTRINO_ICON_BUTTON_YELLOW)
+			if (icon_name == NEUTRINO_ICON_BUTTON_YELLOW)
 				f_col = COL_OLIVE;
-			if (btn_name == NEUTRINO_ICON_BUTTON_BLUE)
+			if (icon_name == NEUTRINO_ICON_BUTTON_BLUE)
 				f_col = COL_DARK_BLUE;
 			btn->setColorFrame(f_col);
 		}

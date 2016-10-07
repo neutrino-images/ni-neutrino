@@ -191,6 +191,7 @@ public:
 // 	//onchange
  	bool changeNotify(const neutrino_locale_t OptionName, void *);
 
+	bool listModeKey(const neutrino_msg_t msg);
 	int handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t data);
 
 	int getMode() {
@@ -244,6 +245,8 @@ public:
 	sigc::signal<bool> OnBeforeRestart;
 	sigc::signal<void> OnAfterSetupFonts;
 	void channelRezap();
+
+	void g_settings_video_Mode(int value) { g_settings.video_Mode = value; }
 };
 #endif
 

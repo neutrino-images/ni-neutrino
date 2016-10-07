@@ -157,7 +157,7 @@ audiomenu.volume_step Lautstärke Schrittweite
 audioplayer.add Hinzufügen
 audioplayer.add_ic Icecast
 audioplayer.add_loc Lokale Radioliste
-audioplayer.add_sc Shoutcast
+audioplayer.add_sc SHOUTcast
 audioplayer.artist_title Interpret, Titel
 audioplayer.building_search_index Erstelle Suchindex
 audioplayer.button_select_title_by_id Suche n. ID
@@ -166,7 +166,7 @@ audioplayer.defdir Start-Verz.
 audioplayer.delete entfernen
 audioplayer.deleteall Alle entfernen
 audioplayer.display_order Anzeige
-audioplayer.enable_sc_metadata Aktiviere Shoutcast Meta-Daten Parsing
+audioplayer.enable_sc_metadata Aktiviere SHOUTcast Meta-Daten Parsing
 audioplayer.fastforward schneller Vorl.
 audioplayer.follow Selektiere akt. Track
 audioplayer.head Audio Playlist
@@ -358,6 +358,7 @@ colormenu.timing Timeouts
 colormenusetup.menucontent Fensterinhalt
 colormenusetup.menucontent_inactive Fensterinhalt deaktiviert
 colormenusetup.menucontent_selected Fensterinhalt selektiert
+colormenusetup.menufoot Fußleiste
 colormenusetup.menuhead Titelleiste
 colorstatusbar.text Infobar
 colorthememenu.head Theme auswählen
@@ -435,6 +436,7 @@ eventfinder.search_within_list Suche innerhalb Text
 eventfinder.searching Suche...
 eventfinder.start_search Suche starten
 eventlist.additional Zusatzinformationen
+eventlist.epgplus EPG Plus anzeigen
 eventlist.name Eventliste
 eventlistbar.channelswitch Umschalten
 eventlistbar.eventsort Sortieren
@@ -766,6 +768,7 @@ fontsize.infobar_info Info
 fontsize.infobar_number Nummer
 fontsize.infobar_small Klein
 fontsize.menu Menütext
+fontsize.menu_foot Fußleiste (in allen GUI-Elementen)
 fontsize.menu_hint Menü-Hilfe
 fontsize.menu_info Menüinfo
 fontsize.menu_title Menütitel
@@ -835,6 +838,7 @@ hdd_umounted Datenträger entfernt
 hdd_wakeup Interne Aufweckfunktion
 hdd_wakeup_msg Aufweckfunktion mit Nachricht 
 hdd_wakeup_start Aufweckfunktion wird gestartet
+imageinfo.api API:
 imageinfo.creator Ersteller:
 imageinfo.date Datum:
 imageinfo.dokumentation Dokus:
@@ -1145,6 +1149,7 @@ menu.hint_epg_save_standby Speichert die EPG-Daten auch, wenn in den Standby-Mod
 menu.hint_epg_scan Zu scannende Bouquets wählen. Aktuelles Bouquet beim Umschalten, markierte Bouquets oder alle Favoriten
 menu.hint_epg_scan_mode Aktivieren Sie den Hintergrundscan der EPG-Daten, wenn ein freier Tuner vorhanden ist
 menu.hint_eventlist_additional Definiert, ob zusätzliche Informationen im Hauptfenster angezeigt werden sollen
+menu.hint_eventlist_epgplus Definiert, ob EPG Plus (Vorschau-Übersicht) mit der EPG-Taste angezeigt werden sollen
 menu.hint_eventlist_fonts Ändern Sie die Schriftgröße in der Event-Liste
 menu.hint_eventlist_setup Wählen Sie die Anzeigeoptionen für die Event-Liste
 menu.hint_extended Energiespar-, EPG-Speicher- und Lade-Optionen, HDMI-CEC, Startkanal und mehr
@@ -1159,6 +1164,8 @@ menu.hint_font_gui Wählen Sie die Schriftart für die Menüs
 menu.hint_font_scaling Legen Sie die vertikale und horizontale Skalierung der Menüschrift fest
 menu.hint_font_ttx Wählen Sie die Schriftart für den Teletext
 menu.hint_fonts Konfigurieren Sie die Schriftart und die Schriftgrößen für die Menüs
+menu.hint_foot_back Ändern Sie die Fußleisten-Hintergrundfarbe
+menu.hint_foot_textcolor Ändern Sie die Fußleisten-Textfarbe
 menu.hint_games Zeige Liste der installierten Spiele
 menu.hint_hdd Formatierung und Prüfung der Datenträger
 menu.hint_hdd_allow_set_recdir Erlaubt das sofortige Einstellen des neuen Datenträgers als Aufnahmemedium
@@ -1319,6 +1326,7 @@ menu.hint_misc_energy Energieverbrauchs- und Standby-Optionen, verzögertes Auss
 menu.hint_misc_epg Diverse EPG-Einstellungen und Speicherverzeichnis für EPG-Daten
 menu.hint_misc_filebrowser Dateisystem, Dateirechte anzeigen im Dateibrowser, Startverzeichnisoptionen
 menu.hint_misc_general Standby-, Teletext- und Rotor-Einstellungen, Pluginverzeichnis auf externem Datenträger
+menu.hint_misc_onlineservices Konfigurieren und steuern von Online-Diensten wie YouTube, SHOUTCast und TMDb
 menu.hint_misc_zapit Verwaltung der Start-Kanäle für den TV/Radio-Modus
 menu.hint_movie Wiedergabe von Filmen
 menu.hint_moviebrowser_fonts Ändern Sie die Schriftgrößen im Moviebrowser (Meine Aufnahmen)
@@ -1547,6 +1555,8 @@ menu.hint_selected_text Ändern Sie die Textfarbe für ausgewählte Fensterinhal
 menu.hint_service Sendersuchlauf, Bouquet-Verwaltung, Software-Aktualisierung und mehr
 menu.hint_service_scan Automatischer / manueller Service Suchlauf
 menu.hint_settings Konfigurieren von Neutrino-HD,\nNetzwerk, Video, Audio, OSD und mehr
+menu.hint_shoutcast_dev_id Geben Sie die SHOUTcast Dev ID ein. Eine leere Eingabe schaltet die SHOUTcast-Unterstützung aus
+menu.hint_shoutcast_enabled Schaltet die SHOUTcast-Unterstützung ein oder aus
 menu.hint_show_mute_icon Definiert, ob bei einem Lautstärkewert von 0 das Stumm-Symbol eingeblendet werden soll
 menu.hint_shutdown Setzen Sie Ihre Box in den Standby-Modus oder schalten Sie die Box komplett aus
 menu.hint_shutdown_count Die Zeit zum Herunterfahren in den Deep-Standby, wenn die Box im Standby-Modus ist
@@ -1574,6 +1584,8 @@ menu.hint_theme Wählen Sie ein vordefiniertes Farbschema, speichern oder laden 
 menu.hint_timeouts Gibt an, nach welcher Zeit in Sekunden die Menüs oder Infofenster sich automatisch schließen (0 deaktiviert)
 menu.hint_timers Hinzufügen, entfernen und bearbeiten geplanter Aufnahmen oder anderer Timer
 menu.hint_timezone Wählen Sie ihre Zeitzone aus
+menu.hint_tmdb_api_key Geben Sie den TMDb API Schlüssel ein. Eine leere Eingabe schaltet die TMDb-Unterstützung aus
+menu.hint_tmdb_enabled Schaltet die TMDb-Unterstützung (themoviedb.org) ein bzw. aus
 menu.hint_tools Werkzeuge ausführen
 menu.hint_tvmode Schaltet zum TV-Modus
 menu.hint_tvradio_switch Schaltet zwischen TV- und Radio-Modus um
@@ -1612,7 +1624,9 @@ menu.hint_volume_size Wählen Sie die Höhe der Lautstärkeanzeige
 menu.hint_webtv_setup Hier konfigurierte WebTV-Kanäle finden Sie in der Kanalverwaltung.
 menu.hint_webtv_xml_auto Lädt automatisch alle XML-Dateien aus %s/
 menu.hint_window_size Kanalliste, EPG-Infos und einige andere Fenster werden mit diesem Faktor skaliert
-menu.hint_ytplay Wiedergabe von ausgewählten Youtube Feeds
+menu.hint_youtube_dev_id Geben Sie die YouTube Dev ID ein. Eine leere Eingabe schaltet die YouTube-Unterstützung aus
+menu.hint_youtube_enabled Schaltet die YouTube-Unterstützung ein oder aus
+menu.hint_ytplay Wiedergabe von ausgewählten YouTube Feeds
 menu.hint_ytplay_setup Konfigurieren Sie YouTube-spezifische Optionen wie maximale Ergebnisse bei Suchen oder Cache-Verzeichnis
 menu.hint_zap_cycle Wählen Sie, ob nur innerhalb des aktiven Bouquets umgeschaltet werden kann
 menu.next Weiter
@@ -1692,6 +1706,7 @@ miscsettings.infobar_show_res_simple einfach
 miscsettings.infobar_show_sysfs_hdd Füllstandsanzeige (SysFS und HDD)
 miscsettings.infobar_show_tuner Aktiven Tuner anzeigen
 miscsettings.infoclock Uhr
+miscsettings.onlineservices Online-Dienste
 miscsettings.progressbar Fortschrittsbalken
 miscsettings.progressbar_color Farbe
 miscsettings.progressbar_design Design
@@ -1931,7 +1946,7 @@ moviebrowser.yt_cancel_transfer Download abbrechen?
 moviebrowser.yt_clear Liste leeren
 moviebrowser.yt_completed Vollständige Downloads
 moviebrowser.yt_concurrent_connections Gleichzeitige Verbindungen
-moviebrowser.yt_error Fehler beim Laden des Youtube-Feeds
+moviebrowser.yt_error Fehler beim Laden des YouTube-Feeds
 moviebrowser.yt_failed Fehlgeschlagene Downloads
 moviebrowser.yt_history Frühere Suchen
 moviebrowser.yt_max_history Max. Anzahl früherer Suchen
@@ -1976,7 +1991,7 @@ movieplayer.tshelp7 ca. 1 Minute vor
 movieplayer.tshelp8 ca. 5 Minuten zurück
 movieplayer.tshelp9 ca. 5 Minuten vor
 movieplayer.tsplayback TS Abspielen
-movieplayer.ytplayback Youtube-Feed Wiedergabe
+movieplayer.ytplayback YouTube-Feed Wiedergabe
 mpkey.audio Tonspuren
 mpkey.bookmark Markierungen
 mpkey.forward Vorlauf
@@ -2475,6 +2490,8 @@ settings.teams.help Hilfe
 settings.teams.help_text In diesem Menü können Einstellungen gesichert und\nwiederhergestellt werden, die zu folgenden Team-Images\nkompatibel sind:\n \n        - BluePeer HD\n        - NI CS-Image\n \nGesichert werden:\n \n        * Kanallisten\n        * Timer und Timer-Einstellungen\n        * Netzwerkeinstellungen (LAN und WLAN)
 settings.teams.restore Wiederherstellen
 settings.teams.restore_warn Team-übergreifende Einstellungen werden ersetzt.\nDie Box wird neu gestartet.\nWeiter?
+shoutcast.dev_id SHOUTcast Dev ID
+shoutcast.enabled SHOUTcast-Unterstützung
 shutdown.recording_query Aufnahme läuft. Trotzdem beenden?
 shutdowntimer.announce Die Box wird in 1 Min. heruntergefahren.\nShutdown abbrechen?
 sleeptimerbox.announce Die Box wird in 1 Min. in Standby-Betrieb gehen.\nStandby-Betrieb abbrechen?
@@ -2594,6 +2611,9 @@ timing.infobar_radio Infobar (Radiobetrieb)
 timing.menu Menü
 timing.numericzap Umschalten mit Zifferntasten
 timing.volumebar Lautstärkeanzeige
+tmdb.api_key TMDb API Schlüssel
+tmdb.enabled TMDb-Unterstützung
+tmdb.info TMDb-Info
 tmdb.read_data Suche TMDB Daten...
 unicable.lnb Unicable Eingang
 unicable.qrg Unicable Frequenz
@@ -2690,6 +2710,7 @@ webtv.xml WebTV-XML-Dateien
 webtv.xml.add XML-Datei hinzufügen
 webtv.xml.auto XML-Dateien automatisch laden
 webtv.xml.del XML-Datei entfernen
+webtv.xml.reload XML-Dateien neu laden
 window_size Fenstergröße in %
 wizard.initial_settings Grundeinstellungen gefunden
 wizard.install_settings Kanalliste für Astra 19.2°E installieren?
@@ -2702,6 +2723,8 @@ wizard.welcome_head Willkommen beim NI-Setup-Assistenten!
 wizard.welcome_text NI-Image Info:\nIhre CST Set-Top-Box lässt sich bequem per Webinterface\nsteuern fuer z.B. Timer-Verwaltung oder Live-TV im Web-Browser.\nEin root-Passwort ist noch nicht gesetzt!\nDies sollte so bald wie möglich durch den Befehl "passwd"\nvia Telnet nachgeholt werden um Fremdzugriffe auf den Receiver zu verhindern.\nNächster Schritt?
 word.from ab
 word.in in
+youtube.dev_id YouTube Dev ID
+youtube.enabled YouTube-Unterstützung
 zapit.scantype Service-Auswahl
 zapit.scantype.all Alle Services
 zapit.scantype.radio Nur Radio

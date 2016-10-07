@@ -31,10 +31,11 @@
 #include <global.h>
 #include <neutrino.h>
 
+#include <driver/fade.h>
 #include <driver/fontrenderer.h>
 #include <driver/rcinput.h>
 #include <driver/screen_max.h>
-#include <driver/vfd.h>
+#include <driver/display.h>
 
 #include <sys/utsname.h>
 
@@ -49,6 +50,7 @@
 #include <gui/customcolor.h>
 #include <gui/components/cc.h>
 #include <system/debug.h>
+#include <cs_api.h>
 
 #include <linux/version.h>
 
@@ -142,45 +144,72 @@ int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
 		parent->hide();
 
 	neutrino_msg_t msg;
-	_stat cpu;
+	neutrino_msg_t postmsg = 0;
 
+	_stat cpu;
 	cpu.usr		= 0;
 	cpu.nice	= 0;
 	cpu.system	= 0;
 	cpu.idle	= 0;
+
 	sigBox_pos	= 0;
 
+	COSDFader fader(g_settings.theme.menu_Content_alpha);
+	fader.StartFadeIn();
+	bool fadeout = false;
 	paint();
-	paint_pig (xcpu, y + 10, width/3, height/3);
+	paint_pig(xcpu, y + 10, width/3, height/3);
 	StartInfoThread();
 
 	while (1)
 	{
 		neutrino_msg_data_t data;
 		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd_MS(100);
-		g_RCInput->getMsgAbsoluteTimeout( &msg, &data, &timeoutEnd );
+		g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd);
 
-		if(msg == CRCInput::RC_setup) {
-			res = menu_return::RETURN_EXIT_ALL;
-			break;
+		if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer()))
+		{
+			if (fader.FadeDone())
+			{
+				break;
+			}
 		}
-		else if((msg == CRCInput::RC_sat) || (msg == CRCInput::RC_favorites)) {
-			g_RCInput->postMsg (msg, 0);
+		else if (msg == CRCInput::RC_setup)
+		{
 			res = menu_return::RETURN_EXIT_ALL;
-			break;
+			fadeout = true;
 		}
-		else if (msg == (neutrino_msg_t) g_settings.key_screenshot) {
-			CNeutrinoApp::getInstance ()->handleMsg (msg, data);
+		else if (CNeutrinoApp::getInstance()->listModeKey(msg))
+		{
+			postmsg = msg;
+			res = menu_return::RETURN_EXIT_ALL;
+			fadeout = true;
+		}
+		else if (msg == (neutrino_msg_t) g_settings.key_screenshot)
+		{
+			CNeutrinoApp::getInstance()->handleMsg(msg, data);
 			continue;
 		}
 		else if (msg <= CRCInput::RC_MaxRC)
 		{
-			break;
+			fadeout = true;
 		}
 
-		if ( msg >  CRCInput::RC_MaxRC && msg != CRCInput::RC_timeout)
+		if (msg > CRCInput::RC_MaxRC && msg != CRCInput::RC_timeout)
 		{
-			CNeutrinoApp::getInstance()->handleMsg( msg, data );
+			CNeutrinoApp::getInstance()->handleMsg(msg, data);
+		}
+
+		if (fadeout && msg == CRCInput::RC_timeout)
+		{
+			if (fader.StartFadeOut())
+			{
+				msg = 0;
+			}
+			else
+			{
+				break;
+			}
 		}
 
 		Stat_Info(&cpu);
@@ -188,7 +217,14 @@ int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
 	}
 
 	StopInfoThread();
+
 	hide();
+	fader.StopFade();
+
+	if (postmsg)
+	{
+		g_RCInput->postMsg(postmsg, 0);
+	}
 
 	return res;
 }
@@ -205,7 +241,7 @@ void CImageInfoNI::paint_pig(int px, int py, int w, int h)
 	g_PicViewer->DisplayImage(ICONSDIR "/start.jpg", px, py, w, h, frameBuffer->TM_NONE);
 }
 
-void CImageInfoNI::paintLine(int xpos, int font, const char* text)
+void CImageInfoNI::paintLine(int xpos, int font, std::string text)
 {
 	g_Font[font]->RenderString(xpos, ypos, max_text_width, text, COL_INFOBAR_TEXT);
 }
@@ -221,9 +257,6 @@ void CImageInfoNI::paint()
 	const char * head_string;
 	int  xpos = x+10;
 
-	std::ostringstream imageversion;
-	std::ostringstream commits;
-
 	ypos = y;
 
 	head_string = g_Locale->getText(LOCALE_IMAGEINFO_HEAD);
@@ -238,55 +271,58 @@ void CImageInfoNI::paint()
 	ypos += iheight/2;
 
 	CConfigFile config('\t');
-	config.loadConfig("/.version");
+	config.loadConfig(TARGET_PREFIX "/.version");
 
-	const char * imagename = config.getString("imagename", "NI-Neutrino-HD").c_str();
-	const char * homepage  = config.getString("homepage",  "www.neutrino-images.de").c_str();
-	const char * creator   = config.getString("creator",   "NI-Team").c_str();
-	const char * version   = config.getString("version",   "no version").c_str();
-	const char * origin_commit = config.getString("origin-commit", "no commit").c_str();
-	const char * remote_commit = config.getString("remote-commit", "no commit").c_str();
-	const char * builddate = config.getString("builddate", "no builddate").c_str();
+	std::string imagename	= config.getString("imagename", "NI-Neutrino-HD");
+	std::string homepage	= config.getString("homepage",  "www.neutrino-images.de");
+	std::string creator	= config.getString("creator",   "NI-Team");
+	std::string version	= config.getString("version",   "n/a");
+	std::string commit	= config.getString("commit",    "n/a");
+	std::string builddate	= config.getString("builddate", "n/a");
 
-	static CFlashVersionInfo versionInfo(version);
-	const char * releaseCycle = versionInfo.getReleaseCycle();
-	
-	struct utsname uts_info;
+	std::ostringstream imageversion;
+	imageversion.str("n/a");
 
-	imageversion << releaseCycle << " (" << versionInfo.getType() << ")";
-	commits << "NI: " << origin_commit << ", CST: " << remote_commit;
+	if (version.compare("n/a") != 0)
+	{
+		static CFlashVersionInfo versionInfo(version);
+		std::string releaseCycle = versionInfo.getReleaseCycle();
+		imageversion.str("");
+		imageversion << releaseCycle << " (" << versionInfo.getType() << ")";
+	}
 
 	ypos += iheight;
-	paintLine(xpos    , font_info, g_Locale->getText(LOCALE_IMAGEINFO_IMAGE));
+	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_IMAGE));
 	paintLine(xpos+offset, font_info, imagename);
 
 	ypos += iheight;
-	paintLine(xpos    , font_info, g_Locale->getText(LOCALE_IMAGEINFO_VERSION));
-	paintLine(xpos+offset, font_info, imageversion.str().c_str());
+	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_VERSION));
+	paintLine(xpos+offset, font_info, imageversion.str());
 
 	ypos += iheight;
-	paintLine(xpos    , font_info, "Commits:");
-	paintLine(xpos+offset, font_info, commits.str().c_str());
+	paintLine(xpos, font_info, "Commit:");
+	paintLine(xpos+offset, font_info, commit);
+
+	struct utsname uts_info;
 
 	ypos += iheight;
-	paintLine(xpos    , font_info, "Kernel:");
+	paintLine(xpos, font_info, "Kernel:");
 	paintLine(xpos+offset, font_info, uname(&uts_info) < 0 ? "n/a" : uts_info.release);
 
 	ypos += iheight;
 
-	paintLine(xpos    , font_info, g_Locale->getText(LOCALE_IMAGEINFO_DATE));
+	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_DATE));
 	paintLine(xpos+offset, font_info, builddate );
 	
 	ypos += iheight;
-	paintLine(xpos    , font_info, g_Locale->getText(LOCALE_IMAGEINFO_CREATOR));
+	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_CREATOR));
 	paintLine(xpos+offset, font_info, creator);
 
 	ypos += iheight;
-	paintLine(xpos    , font_info, g_Locale->getText(LOCALE_IMAGEINFO_HOMEPAGE));
+	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_HOMEPAGE));
 	paintLine(xpos+offset, font_info, homepage);
 
 	ypos += iheight;
-
 	ypos += sheight;
 
 	get_MTD_Info();
@@ -298,20 +334,6 @@ void CImageInfoNI::paint()
 	ypos+= sheight;
 
 	paint_Stat_Info_Box(xcpu, ycpu, width/3, height/3);
-
-	if (access(ICONSDIR "/astrasat.png", F_OK) == 0) {
-		int logoBox_x = xcpu;
-		int logoBox_y = ycpu + height/3 + sheight;
-		int logoBox_w = width/3;
-		int logoBox_h = height - logoBox_y;
-		CComponentsPicture *logoBox = new CComponentsPicture(logoBox_x, logoBox_y, logoBox_w, logoBox_h, ICONSDIR "/astrasat.png");
-		int logo_w = 0, logo_h = 0;
-		logoBox->getSize(&logo_w, &logo_h);
-		if (logo_w < logoBox_w)
-			logoBox->setXPos(logoBox_x + (logoBox_w/2) - (logo_w/2));
-		logoBox->setColorBody(COL_INFOBAR_PLUS_0);
-		logoBox->paint(CC_SAVE_SCREEN_NO);
-	}
 }
 
 void* CImageInfoNI::InfoProc(void *arg)
@@ -551,7 +573,7 @@ void CImageInfoNI::get_DF_Info()
 		printf("[read_df] popen error\n" );
 
 #ifdef BOXMODEL_APOLLO
-	strcpy(mtd_info[systemfs].dev,"mtd:root0");
+	strcpy(mtd_info[systemfs].dev, ("mtd:"+get_systemRoot()).c_str());
 #endif
 
  	while ((read = getline(&buffer, &len, pipe_reader)) != -1)
@@ -580,7 +602,7 @@ void CImageInfoNI::paint_DF_Info(int posx)
 	get_DF_Info();
 
 	buf << "Imagesize (" << image_size.percent << " Percent):";
-	paintLine(posx, font_small, buf.str().c_str());
+	paintLine(posx, font_small, buf.str());
 
 	CProgressBar pb(boxX, boxY, boxW, boxH);
 	pb.setFrameThickness(0);
@@ -609,7 +631,7 @@ void CImageInfoNI::paint_DF_Info(int posx)
 	}
 
 	ypos+= sheight;
-	paintLine(posx, font_small, buf.str().c_str());
+	paintLine(posx, font_small, buf.str());
 
 	buf.str("");
 	if (image_size.available > 1024)
@@ -618,7 +640,7 @@ void CImageInfoNI::paint_DF_Info(int posx)
 		buf << "Free: " << image_size.available << " KB";
 
 	ypos += sheight;
-	paintLine(posx, font_small, buf.str().c_str());
+	paintLine(posx, font_small, buf.str());
 }
 
 int CImageInfoNI::get_MEM_Info()
@@ -809,7 +831,9 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	 * 104857600	Bit
 	 */
 #ifdef BOXMODEL_APOLLO
-	int max_bit	= 1073741824;
+	int max_bit	= 104857600;	/* Shiner, Kronos */
+	if (cs_get_revision() == 9)
+		max_bit	= 1073741824;	/* Apollo */
 #else
 	int max_bit	= 104857600;
 #endif

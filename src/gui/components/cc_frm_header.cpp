@@ -43,7 +43,7 @@ using namespace std;
 CComponentsHeader::CComponentsHeader(CComponentsForm* parent)
 {
 	//CComponentsHeader
-	initVarHeader(1, 1, 0, 0, "", "", 0, parent);
+	initVarHeader(1, 1, 0, 0, "", "", 0, parent, CC_SHADOW_OFF, COL_MENUCONTENT_PLUS_6, COL_MENUHEAD_PLUS_0, COL_SHADOW_PLUS_0);
 }
 
 CComponentsHeader::CComponentsHeader(	const int& x_pos, const int& y_pos, const int& w, const int& h,
@@ -86,6 +86,7 @@ void CComponentsHeader::initVarHeader(	const int& x_pos, const int& y_pos, const
 					fb_pixel_t color_shadow)
 {
 	cc_item_type 		= CC_ITEMTYPE_FRM_HEADER;
+	clear();
 	cc_txt_save_screen	= false;
 	x	= x_old = x_pos;
 	y	= y_old = y_pos;
@@ -194,7 +195,7 @@ void CComponentsHeader::setIcon(const char* icon_name)
 
 void CComponentsHeader::setIcon(const std::string& icon_name)
 {
-	cch_icon_name 	= icon_name;
+	cch_icon_name = icon_name;
 	initIcon();
 }
 
@@ -203,10 +204,8 @@ void CComponentsHeader::initIcon()
 	//init cch_icon_obj only if an icon available
 	if (cch_icon_name.empty()) {
 		cch_icon_w = 0;
-		if (cch_icon_obj){
-			delete cch_icon_obj;
-			cch_icon_obj = NULL;
-		}
+		if (cch_icon_obj)
+			removeCCItem(cch_icon_obj);
 		return;
 	}
 
@@ -395,7 +394,7 @@ void CComponentsHeader::initClock()
 	//set clock form properties
 	if (cch_cl_obj){
 		cch_cl_obj->setYPos(cch_items_y);
-		cch_cl_obj->setHeight(height);
+		cch_cl_obj->setHeight(height - 1); //NI
 
 		//disallow paint of clock, if disabled and exit method
 		if (!cch_cl_enable){

@@ -60,7 +60,7 @@ class CImageInfoNI : public CMenuTarget
 
 		void paint();
 		void paint_pig(int x, int y, int w, int h);
-		void paintLine(int xpos, int font, const char* text);
+		void paintLine(int xpos, int font, std::string text);
 		void clearLine(int xpos, int font);
 
 		typedef struct {
