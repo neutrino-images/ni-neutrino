@@ -122,7 +122,7 @@
 #endif
 
 // some wrappers to get more readability
-#define COL_FRAME COL_MENUCONTENT_PLUS_6
+#define COL_FRAME COL_MENUCONTENT_PLUS_1 //NI
 #define COL_FRAME_PLUS_0 COL_FRAME
 
 #define COL_SCROLLBAR_ACTIVE COL_MENUCONTENT_PLUS_3
