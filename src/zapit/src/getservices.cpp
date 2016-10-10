@@ -262,6 +262,12 @@ CZapitChannel* CServiceManager::FindChannelFuzzy(const t_channel_id channel_id,
 	return NULL;
 }
 
+//NI
+CZapitChannel* CServiceManager::GetCurrentChannel(void)
+{
+	return CZapit::getInstance()->GetCurrentChannel();
+}
+
 bool CServiceManager::GetAllRadioChannels(ZapitChannelList &list, int flags)
 {
 	list.clear();
