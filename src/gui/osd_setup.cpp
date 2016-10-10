@@ -46,6 +46,7 @@
 #include "osd_progressbar_setup.h"
 
 #include <gui/audiomute.h>
+#include <gui/color_custom.h>
 #include <gui/infoclock.h>
 #include <gui/infoviewer_bb.h> //NI
 #include <gui/ni_menu.h> //NI

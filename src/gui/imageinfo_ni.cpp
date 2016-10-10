@@ -47,7 +47,7 @@
 
 #include <fstream>
 #include <sstream>
-#include <gui/customcolor.h>
+#include <gui/color_custom.h>
 #include <gui/components/cc.h>
 #include <system/debug.h>
 #include <cs_api.h>

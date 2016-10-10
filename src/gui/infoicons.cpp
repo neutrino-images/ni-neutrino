@@ -148,7 +148,7 @@ void CInfoIcons::paintBackground()
 {
 	if (g_settings.mode_icons_background)
 	{
-		frameBuffer->paintBoxRel(x + SHADOW_OFFSET, y + SHADOW_OFFSET, width, height, COL_SHADOW_PLUS_0, RADIUS_SMALL);
+		frameBuffer->paintBoxRel(x + OFFSET_SHADOW, y + OFFSET_SHADOW, width, height, COL_SHADOW_PLUS_0, RADIUS_SMALL);
 		frameBuffer->paintBoxRel(x, y, width, height, COL_MENUCONTENT_PLUS_0, RADIUS_SMALL);
 	}
 	else
@@ -250,7 +250,7 @@ void CInfoIcons::paintIcons(bool first)
 
 void CInfoIcons::hideIcons()
 {
-	frameBuffer->paintBackgroundBoxRel(x, y, width + SHADOW_OFFSET, height + SHADOW_OFFSET);
+	frameBuffer->paintBackgroundBoxRel(x, y, width + OFFSET_SHADOW, height + OFFSET_SHADOW);
 }
 
 void* CInfoIcons::TimerProc(void *arg)
