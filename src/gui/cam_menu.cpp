@@ -65,6 +65,12 @@ const CMenuOptionChooser::keyval OPTIONS_CA_INIT_OPTIONS[] =
 	{ 2, LOCALE_CA_INIT_2 }
 };
 #define OPTIONS_CA_INIT_OPTION_COUNT (sizeof(OPTIONS_CA_INIT_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
+const CMenuOptionChooser::keyval OPTIONS_CI_MODE_OPTIONS[] =
+{
+	{ 0, LOCALE_CI_MODE_0 },
+	{ 1, LOCALE_CI_MODE_1 }
+};
+#define OPTIONS_CI_MODE_OPTION_COUNT (sizeof(OPTIONS_CI_MODE_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
 void CCAMMenuHandler::init(void)
 {
@@ -141,6 +147,9 @@ int CCAMMenuHandler::doMainMenu()
 		cammenu->addItem( new CMenuOptionChooser(LOCALE_CI_SAVE_PINCODE, &g_settings.ci_save_pincode, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
 		//NI
 		cammenu->addItem( new CMenuOptionChooser(LOCALE_CI_REC_ZAPTO, &g_settings.ci_rec_zapto, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
+		CMenuOptionChooser *ci_mode = new CMenuOptionChooser(LOCALE_CI_MODE, &g_settings.ci_mode, OPTIONS_CI_MODE_OPTIONS, OPTIONS_CI_MODE_OPTION_COUNT, true, NULL);
+		ci_mode->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CI_MODE);
+		cammenu->addItem(ci_mode);
 
 #ifdef BOXMODEL_APOLLO
 		CMenuOptionChooser::keyval_ext feselect[fecount+1];

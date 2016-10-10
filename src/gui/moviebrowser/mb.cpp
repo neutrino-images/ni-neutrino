@@ -1,25 +1,25 @@
-/***************************************************************************
-	Neutrino-GUI  -   DBoxII-Project
+/*
+	Based up Neutrino-GUI - Tuxbox-Project
+	Copyright (C) 2001 by Steffen Hehn 'McClean'
 
 	License: GPL
 
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2 of the License, or
-	(at your option) any later version.
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public
+	License as published by the Free Software Foundation; either
+	version 2 of the License, or (at your option) any later version.
 
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 	***********************************************************
 
-	Module Name: moviebrowser.cpp .
+	Module Name: mb.cpp
 
 	Description: Implementation of the CMovieBrowser class
 	             This class provides a filebrowser window to view, select and start a movies from HD.
@@ -27,12 +27,14 @@
 
 	Date:	   Nov 2005
 
-	Author: GÃ¼nther@tuxbox.berlios.org
+	Author: Guenther@tuxbox.berlios.org
 		based on code of Steffen Hehn 'McClean'
 
 	(C) 2009-2015 Stefan Seyfried
 
-****************************************************************************/
+	outsourced:
+	(C) 2016, Thilo Graf 'dbt'
+*/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -45,11 +47,11 @@
 //#include <cstdlib>
 #include "mb.h"
 #include "mb_functions.h"
+#include "mb_help.h"
 #include <gui/filebrowser.h>
 #include <gui/tmdb.h>
 #include <gui/epgview.h>
 #include <gui/widget/hintbox.h>
-#include <gui/widget/helpbox.h>
 #include <gui/widget/icons.h>
 #include <gui/components/cc.h>
 #include <gui/widget/messagebox.h>
@@ -65,7 +67,6 @@
 #include <utime.h>
 //#include <unistd.h>
 #include <gui/pictureviewer.h>
-#include <gui/customcolor.h>
 #include <driver/record.h>
 #include <driver/display.h>
 //#include <system/helpers.h>
@@ -152,8 +153,6 @@ const CMenuOptionChooser::keyval MESSAGEBOX_PARENTAL_LOCKAGE_OPTIONS[MESSAGEBOX_
 
 #define TITLE_FONT g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]
 #define FOOT_FONT g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]
-
-#define INTER_FRAME_SPACE 4  // space between e.g. upper and lower window
 
 const neutrino_locale_t m_localizedItemName[MB_INFO_MAX_NUMBER+1] =
 {
@@ -518,18 +517,18 @@ void CMovieBrowser::initFrames(void)
 
 	m_cBoxFrameLastPlayList.iX = 		m_cBoxFrameBrowserList.iX;
 	m_cBoxFrameLastPlayList.iY = 		m_cBoxFrameBrowserList.iY ;
-	m_cBoxFrameLastPlayList.iWidth = 	(m_cBoxFrameBrowserList.iWidth>>1) - (INTER_FRAME_SPACE>>1);
+	m_cBoxFrameLastPlayList.iWidth = 	(m_cBoxFrameBrowserList.iWidth>>1) - (OFFSET_INTER>>1);
 	m_cBoxFrameLastPlayList.iHeight = 	m_cBoxFrameBrowserList.iHeight;
 
-	m_cBoxFrameLastRecordList.iX = 		m_cBoxFrameLastPlayList.iX + m_cBoxFrameLastPlayList.iWidth + INTER_FRAME_SPACE;
+	m_cBoxFrameLastRecordList.iX = 		m_cBoxFrameLastPlayList.iX + m_cBoxFrameLastPlayList.iWidth + OFFSET_INTER;
 	m_cBoxFrameLastRecordList.iY = 		m_cBoxFrameLastPlayList.iY;
-	m_cBoxFrameLastRecordList.iWidth = 	m_cBoxFrame.iWidth - m_cBoxFrameLastPlayList.iWidth - INTER_FRAME_SPACE;
+	m_cBoxFrameLastRecordList.iWidth = 	m_cBoxFrame.iWidth - m_cBoxFrameLastPlayList.iWidth - OFFSET_INTER;
 	m_cBoxFrameLastRecordList.iHeight =	m_cBoxFrameLastPlayList.iHeight;
 
 	m_cBoxFrameInfo.iX = 			m_cBoxFrameBrowserList.iX;
-	m_cBoxFrameInfo.iY = 			m_cBoxFrameBrowserList.iY + m_cBoxFrameBrowserList.iHeight + INTER_FRAME_SPACE;
+	m_cBoxFrameInfo.iY = 			m_cBoxFrameBrowserList.iY + m_cBoxFrameBrowserList.iHeight + OFFSET_INTER;
 	m_cBoxFrameInfo.iWidth = 		m_cBoxFrameBrowserList.iWidth;
-	m_cBoxFrameInfo.iHeight = 		m_cBoxFrame.iHeight - m_cBoxFrameBrowserList.iHeight - INTER_FRAME_SPACE - m_cBoxFrameFootRel.iHeight - m_cBoxFrameTitleRel.iHeight;
+	m_cBoxFrameInfo.iHeight = 		m_cBoxFrame.iHeight - m_cBoxFrameBrowserList.iHeight - OFFSET_INTER - m_cBoxFrameFootRel.iHeight - m_cBoxFrameTitleRel.iHeight;
 
 	m_cBoxFrameFilter.iX = 			m_cBoxFrameInfo.iX;
 	m_cBoxFrameFilter.iY = 			m_cBoxFrameInfo.iY;
@@ -1361,7 +1360,7 @@ void CMovieBrowser::refreshMovieInfo(void)
 	//printf("refreshMovieInfo: EpgId %llx id %llx y %d\n", m_movieSelectionHandler->epgId, m_movieSelectionHandler->channelId, m_cBoxFrameTitleRel.iY);
 	int lx = 0;//never read m_cBoxFrame.iX+m_cBoxFrameTitleRel.iX+m_cBoxFrameTitleRel.iWidth-logo_w-10;
 	int ly = 0;//never read m_cBoxFrameTitleRel.iY+m_cBoxFrame.iY+ (m_cBoxFrameTitleRel.iHeight-logo_h)/2;
-	short pb_hdd_offset = g_settings.infobar_show_sysfs_hdd ? 104 : 0;
+	short pb_hdd_offset = 104;
 	if (show_mode == MB_SHOW_YT)
 		pb_hdd_offset = 0;
 
@@ -1439,7 +1438,7 @@ void CMovieBrowser::refreshMovieInfo(void)
 
 void CMovieBrowser::info_hdd_level(bool paint_hdd)
 {
-	if (show_mode == MB_SHOW_YT || !g_settings.infobar_show_sysfs_hdd)
+	if (show_mode == MB_SHOW_YT)
 		return;
 
 	struct statfs s;
@@ -4082,24 +4081,7 @@ int CMenuSelector::paint(bool selected)
 	return y+height;
 }
 
-int CMovieHelp::exec(CMenuTarget* /*parent*/, const std::string & /*actionKey*/)
-{
-	Helpbox helpbox;
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_RED,	g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_RED));
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_GREEN,	g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_GREEN));
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_YELLOW,	g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_YELLOW));
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_BLUE,	g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_BLUE));
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_MENU_SMALL,g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_MENU));
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_PLAY,	g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_PLAY));
-	helpbox.addLine("");
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_OKAY,	g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_OKAY));
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_MUTE_SMALL,g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_MUTE));
-	helpbox.addLine("");
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_LEFT,	g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_LEFT));
-	helpbox.addLine(NEUTRINO_ICON_BUTTON_RIGHT,	g_Locale->getText(LOCALE_MOVIEBROWSER_HELP_BUTTON_RIGHT));
-	helpbox.show(LOCALE_MESSAGEBOX_INFO);
-	return(0);
-}
+
 /////////////////////////////////////////////////
 // MenuTargets
 ////////////////////////////////////////////////

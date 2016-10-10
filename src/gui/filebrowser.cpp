@@ -1184,7 +1184,7 @@ void CFileBrowser::paintItem(unsigned int pos)
 	actual_file = &filelist[curr];
 	if (curr == selected)
 	{
-		color   = actual_file->Marked ? COL_MENUCONTENTINACTIVE_TEXT : COL_MENUCONTENTSELECTED_TEXT;
+		color   = COL_MENUCONTENTSELECTED_TEXT; //NI
 		bgcolor = actual_file->Marked ? COL_MENUCONTENTSELECTED_PLUS_2 : COL_MENUCONTENTSELECTED_PLUS_0;
 		c_rad_small = RADIUS_SMALL;
 	}
@@ -1456,14 +1456,14 @@ void CFileBrowser::paint()
 	//scrollbar
 	int ypos = y+ theight;
 	int sb = fheight* listmaxshow;
-	frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb,  COL_MENUCONTENT_PLUS_1);
+	frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb,  COL_SCROLLBAR_PASSIVE_PLUS_0);
 
 	int sbc= ((filelist.size()- 1)/ listmaxshow)+ 1;
 	int sbs= (selected/listmaxshow);
 	if (sbc < 1)
 		sbc = 1;
 
-	frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs*(sb-4)/sbc, 11, (sb-4)/sbc, COL_MENUCONTENT_PLUS_3, RADIUS_SMALL);
+	frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs*(sb-4)/sbc, 11, (sb-4)/sbc, COL_SCROLLBAR_ACTIVE_PLUS_0, RADIUS_SMALL);
 }
 
 void CFileBrowser::SMSInput(const neutrino_msg_t msg)

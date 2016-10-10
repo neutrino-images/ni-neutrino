@@ -157,7 +157,7 @@ void CBEChannelWidget::paint()
 
 	int ypos = y+ theight;
 	int sb = iheight* listmaxshow;
-	frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb,  COL_MENUCONTENT_PLUS_1);
+	frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb,  COL_SCROLLBAR_PASSIVE_PLUS_0);
 
 	int sbc= ((Channels->size()- 1)/ listmaxshow)+ 1;
 	int sbs= (selected/listmaxshow);
@@ -165,9 +165,8 @@ void CBEChannelWidget::paint()
 		sbc = 1;
 	int sbh= (sb- 4)/ sbc;
 
-	if (sbh == 0)
-		return;
-	frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs * sbh, 11, sbh, COL_MENUCONTENT_PLUS_3);
+	if (sbh)
+		frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs * sbh, 11, sbh, COL_MENUCONTENT_PLUS_3);
 }
 
 void CBEChannelWidget::paintHead()
@@ -228,7 +227,7 @@ void CBEChannelWidget::initItem2DetailsLine (int pos, int /*ch_index*/)
 {
 	int xpos  = x - ConnectLineBox_Width;
 	int ypos1 = y + theight+0 + pos*iheight;
-	int ypos2 = y + height + INFO_BOX_Y_OFFSET;
+	int ypos2 = y + height + OFFSET_INTER;
 	int ypos1a = ypos1 + (fheight/2);
 	int ypos2a = ypos2 + (info_height/2);
 	

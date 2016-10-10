@@ -158,10 +158,10 @@ function get_data(){
 				</li>
 				~=}
 				<li>
-					<a target="work" title="OSD-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot.yhtm?osd=1&rc={=ini-get:/var/tuxbox/config/Y-Web.conf;screenshot_rc;false=}">OSD-{=L:bc.menue.screenshot=}</a>
+					<a target="work" title="OSD-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot.yhtm?osd=1&rc={=ini-get:%(CONFIGDIR)/Y-Web.conf;screenshot_rc;false=}">OSD-{=L:bc.menue.screenshot=}</a>
 				</li>
 				<li>
-					<a target="work" title="TV-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot.yhtm?video=1&rc={=ini-get:/var/tuxbox/config/Y-Web.conf;screenshot_rc;false=}">TV-{=L:bc.menue.screenshot=}</a>
+					<a target="work" title="TV-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot.yhtm?video=1&rc={=ini-get:%(CONFIGDIR)/Y-Web.conf;screenshot_rc;false=}">TV-{=L:bc.menue.screenshot=}</a>
 				</li>
 			</ul>
 		</div>
@@ -232,14 +232,14 @@ function get_data(){
 		</center>
 	</div>
 </div>
-{=if-empty:{=ini-get:/var/tuxbox/config/Y-Web.conf;slavebox=}~~
+{=if-empty:{=ini-get:%(CONFIGDIR)/Y-Web.conf;slavebox=}~~
 <div class="y_menu_sec_box">
 	<div class="y_menu_sec_box_head"><h2>Switch to</h2></div>
 	<div class="y_menu_sec_box_body">
 		<div class="y_menu_sec">
 			<ul>
 				<li>
-					<a target="_top" title="{=L:bc.menue.webinf_slavebox=}" href="http://{=ini-get:/var/tuxbox/config/Y-Web.conf;slavebox=}/">{=ini-get:/var/tuxbox/config/Y-Web.conf;slavebox=}</a>
+					<a target="_top" title="{=L:bc.menue.webinf_slavebox=}" href="http://{=ini-get:%(CONFIGDIR)/Y-Web.conf;slavebox=}/">{=ini-get:%(CONFIGDIR)/Y-Web.conf;slavebox=}</a>
 				</li>
 			</ul>
 		</div>

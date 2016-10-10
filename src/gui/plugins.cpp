@@ -420,10 +420,12 @@ void CPlugins::startLuaPlugin(int number)
 		       script, plugin_list[number].cfgfile.c_str());
 		return;
 	}
+#ifdef ENABLE_LUA
 	CLuaInstance *lua = new CLuaInstance();
 	lua->runScript(script);
 	delete lua;
-#if 0
+#endif
+#if HAVE_SPARK_HARDWARE
 	frameBuffer->ClearFB();
 #endif
 	videoDecoder->Pig(-1, -1, -1, -1);

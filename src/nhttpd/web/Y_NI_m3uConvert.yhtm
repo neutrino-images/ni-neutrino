@@ -89,7 +89,7 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 			</tr>
 			<tr><td class="y_form_header" colspan="2">5. Export mit obigem Dateinamen:</td></tr>
 				<td>
-					<div>Datei online bearbeiten/erstellen: <button onclick="oeffnenXML2();" title="Datei mit obigem Namen auf der Box &ouml;ffnen oder erstellen">unter /var/tuxbox/webtv/ (autoload)</button> . <button onclick="oeffnenXML();" title="Datei mit obigem Namen auf der Box &ouml;ffnen oder erstellen">unter /var/tuxbox/config/ (manuell)</button>
+					<div>Datei online bearbeiten/erstellen: <button onclick="oeffnenXML2();" title="Datei mit obigem Namen auf der Box &ouml;ffnen oder erstellen">unter %(WEBTVDIR_VAR)/ (autoload)</button> . <button onclick="oeffnenXML();" title="Datei mit obigem Namen auf der Box &ouml;ffnen oder erstellen">unter %(CONFIGDIR)/ (manuell)</button>
 						Download: <button onclick="saveXML()" title="Download">Download auf PC</button>
 					</div></td>
 			</tr>
@@ -174,7 +174,7 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 		var form = document.createElement('form');
 		form.setAttribute('method', 'post');
 		form.target = 'Map';
-		form.setAttribute('action', '/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/' +
+		form.setAttribute('action', '/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/' +
 			fileNameToSaveAs);
 		document.body.appendChild(form);
 		window.open('', 'Map', 'status=0,title=0,height=0,width=1000,scrollbars=0');
@@ -187,7 +187,7 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 		var form = document.createElement('form');
 		form.setAttribute('method', 'post');
 		form.target = 'Map';
-		form.setAttribute('action', '/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/webtv/' +
+		form.setAttribute('action', '/Y_Filemgr_Edit.yhtm?file=%(WEBTVDIR_VAR)/' +
 			fileNameToSaveAs);
 		document.body.appendChild(form);
 		window.open('', 'Map', 'status=0,title=0,height=0,width=1000,scrollbars=0');

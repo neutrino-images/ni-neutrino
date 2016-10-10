@@ -683,12 +683,15 @@ void CPictureViewerGui::paintItem(int pos)
 	fb_pixel_t color;
 	fb_pixel_t bgcolor;
 
+//NI - don't darken every second entry
+#if 0
 	if ((liststart+pos < playlist.size()) && (pos & 1) )
 	{
 		color   = COL_MENUCONTENTDARK_TEXT;
 		bgcolor = COL_MENUCONTENTDARK_PLUS_0;
 	}
 	else
+#endif
 	{
 		color	= COL_MENUCONTENT_TEXT;
 		bgcolor = COL_MENUCONTENT_PLUS_0;
@@ -771,7 +774,7 @@ void CPictureViewerGui::paint()
 
 	int ypos = y+ theight;
 	int sb = fheight* listmaxshow;
-	frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb,  COL_MENUCONTENT_PLUS_1);
+	frameBuffer->paintBoxRel(x+ width- 15,ypos, 15, sb,  COL_SCROLLBAR_PASSIVE_PLUS_0);
 
 	unsigned int tmp_max = listmaxshow;
 	if(!tmp_max)
@@ -781,7 +784,7 @@ void CPictureViewerGui::paint()
 	if (sbc < 1)
 		sbc = 1;
 
-	frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs * (sb-4)/sbc, 11, (sb-4)/sbc,  COL_MENUCONTENT_PLUS_3);
+	frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs * (sb-4)/sbc, 11, (sb-4)/sbc,  COL_SCROLLBAR_ACTIVE_PLUS_0);
 
 	paintFoot();
 	paintInfo();

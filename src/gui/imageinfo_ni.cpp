@@ -47,7 +47,7 @@
 
 #include <fstream>
 #include <sstream>
-#include <gui/customcolor.h>
+#include <gui/color_custom.h>
 #include <gui/components/cc.h>
 #include <system/debug.h>
 #include <cs_api.h>
@@ -176,8 +176,22 @@ int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
 			{
 				break;
 			}
+			continue;
 		}
-		else if (msg == CRCInput::RC_setup)
+		if (fadeout && msg == CRCInput::RC_timeout)
+		{
+			if (fader.StartFadeOut())
+			{
+				msg = 0;
+				continue;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		if (msg == CRCInput::RC_setup)
 		{
 			res = menu_return::RETURN_EXIT_ALL;
 			fadeout = true;
@@ -201,18 +215,6 @@ int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
 		if (msg > CRCInput::RC_MaxRC && msg != CRCInput::RC_timeout)
 		{
 			CNeutrinoApp::getInstance()->handleMsg(msg, data);
-		}
-
-		if (fadeout && msg == CRCInput::RC_timeout)
-		{
-			if (fader.StartFadeOut())
-			{
-				msg = 0;
-			}
-			else
-			{
-				break;
-			}
 		}
 
 		Stat_Info(&cpu);
@@ -274,7 +276,7 @@ void CImageInfoNI::paint()
 	ypos += iheight/2;
 
 	CConfigFile config('\t');
-	config.loadConfig("/.version");
+	config.loadConfig(TARGET_PREFIX "/.version");
 
 	std::string imagename	= config.getString("imagename", "NI-Neutrino-HD");
 	std::string homepage	= config.getString("homepage",  "www.neutrino-images.de");

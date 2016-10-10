@@ -140,9 +140,9 @@
 #include <lib/libdvbsub/dvbsub.h>
 #include <lib/libtuxtxt/teletext.h>
 #include <eitd/sectionsd.h>
-
+#ifdef ENABLE_LUA
 #include <system/luaserver.h>
-
+#endif
 int old_b_id = -1;
 
 CInfoClock      *InfoClock;
@@ -479,6 +479,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.ci_pincode = configfile.getString("ci_pincode", "");
 	g_settings.ci_tuner = configfile.getInt32("ci_tuner", -1);
 	g_settings.ci_rec_zapto = configfile.getInt32("ci_rec_zapto", 0); //NI
+	g_settings.ci_mode = configfile.getInt32("ci_mode", 0); //NI
 
 #ifndef CPU_FREQ
 	g_settings.cpufreq = 0;
@@ -1136,6 +1137,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setString("ci_pincode", g_settings.ci_pincode);
 	configfile.setInt32("ci_tuner", g_settings.ci_tuner);
 	configfile.setInt32("ci_rec_zapto", g_settings.ci_rec_zapto); //NI
+	configfile.setInt32("ci_mode", g_settings.ci_mode); //NI
 
 	configfile.setInt32( "make_hd_list", g_settings.make_hd_list);
 	configfile.setInt32( "make_webtv_list", g_settings.make_webtv_list);
@@ -2493,9 +2495,9 @@ void CNeutrinoApp::RealRun()
 		standbyMode(true, true);
 
 	//cCA::GetInstance()->Ready(true);
-
+#ifdef ENABLE_LUA
 	CLuaServer *luaServer = CLuaServer::getInstance();
-
+#endif
 	g_PluginList->startPlugin("startup");
 	if (!g_PluginList->getScriptOutput().empty()) {
 		ShowMsg(LOCALE_PLUGINS_RESULT, g_PluginList->getScriptOutput(), CMessageBox::mbrBack,CMessageBox::mbBack,NEUTRINO_ICON_SHELL);
@@ -2506,10 +2508,14 @@ void CNeutrinoApp::RealRun()
 	m_screensaver	= false;
 
 	while( true ) {
+#ifdef ENABLE_LUA
 		luaServer->UnBlock();
+#endif
 		g_RCInput->getMsg(&msg, &data, 100, ((g_settings.mode_left_right_key_tv == SNeutrinoSettings::VOLUME) && (g_RemoteControl->subChannels.size() < 1)) ? true : false);	// 10 secs..
+#ifdef ENABLE_LUA
 		if (luaServer->Block(msg, data))
 			continue;
+#endif
 
 		if (mode == mode_radio) {
 			bool ignored_msg = (
