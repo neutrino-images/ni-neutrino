@@ -71,7 +71,6 @@
 #define COL_MENUCONTENTDARK_PLUS_0      (COL_MENUCONTENTDARK + 0)
 #define COL_MENUCONTENTDARK_PLUS_2      (COL_MENUCONTENTDARK + 2)
 #define COL_MENUCONTENTSELECTED_PLUS_0  (COL_MENUCONTENTSELECTED + 0)
-#define COL_MENUCONTENTSELECTED_PLUS_1  (COL_MENUCONTENTSELECTED + 1) //NI
 #define COL_MENUCONTENTSELECTED_PLUS_2  (COL_MENUCONTENTSELECTED + 2)
 #define COL_MENUCONTENTINACTIVE_PLUS_0  (COL_MENUCONTENTINACTIVE + 0)
 #define COL_MENUFOOT_PLUS_0             (COL_MENUFOOT + 0)
@@ -96,7 +95,6 @@
 #define COL_MENUCONTENTDARK_PLUS_0      (CFrameBuffer::getInstance()->realcolor[(COL_MENUCONTENTDARK + 0)])
 #define COL_MENUCONTENTDARK_PLUS_2      (CFrameBuffer::getInstance()->realcolor[(COL_MENUCONTENTDARK + 2)])
 #define COL_MENUCONTENTSELECTED_PLUS_0  (CFrameBuffer::getInstance()->realcolor[(COL_MENUCONTENTSELECTED + 0)])
-#define COL_MENUCONTENTSELECTED_PLUS_1  (CFrameBuffer::getInstance()->realcolor[(COL_MENUCONTENTSELECTED + 1)]) //NI
 #define COL_MENUCONTENTSELECTED_PLUS_2  (CFrameBuffer::getInstance()->realcolor[(COL_MENUCONTENTSELECTED + 2)])
 #define COL_MENUCONTENTINACTIVE_PLUS_0  (CFrameBuffer::getInstance()->realcolor[(COL_MENUCONTENTINACTIVE + 0)])
 #define COL_MENUFOOT_PLUS_0             (CFrameBuffer::getInstance()->realcolor[(COL_MENUFOOT + 0)])
@@ -162,5 +160,7 @@ uint8_t SysColor2Hsv(fb_pixel_t color, HsvColor *hsv);
 
 void Hsv2Rgb(HsvColor *hsv, RgbColor *rgb);
 void Rgb2Hsv(RgbColor *rgb, HsvColor *hsv);
+
+void getItemColors(fb_pixel_t &t, fb_pixel_t &b, bool selected = false, bool marked = false, bool switch_background = false);
 
 #endif
