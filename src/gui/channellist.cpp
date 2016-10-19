@@ -1900,6 +1900,8 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		paintbuttons = true;
 	}
 
+//NI
+#if 0
 	if (displayNext)
 	{
 		/*
@@ -1911,6 +1913,7 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		else
 			ecolor = COL_MENUCONTENTINACTIVE_TEXT;
 	}
+#endif
 
 	if (!is_available)
 		color = COL_MENUCONTENTINACTIVE_TEXT;
