@@ -354,7 +354,7 @@ void CListFrame::refreshTitle(void)
 	if( frameBuffer == NULL) return;
 
 	frameBuffer->paintBoxRel(m_cFrameTitleRel.iX+m_cFrame.iX, m_cFrameTitleRel.iY+m_cFrame.iY,
-			m_cFrameTitleRel.iWidth, m_cFrameTitleRel.iHeight, g_settings.theme.menu_Head_gradient ? LIST_BACKGROUND_COLOR : TITLE_BACKGROUND_COLOR); //NI
+			m_cFrameTitleRel.iWidth, m_cFrameTitleRel.iHeight, g_settings.theme.menu_Head_gradient ? COL_MENUCONTENT_PLUS_0 : TITLE_BACKGROUND_COLOR); //NI
 
 	m_pcFontTitle->RenderString(m_cFrameTitleRel.iX + TEXT_BORDER_WIDTH + m_cFrame.iX,
 			m_cFrameTitleRel.iY + m_cFrameTitleRel.iHeight + m_cFrame.iY,
