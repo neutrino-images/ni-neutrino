@@ -101,6 +101,7 @@ void CUpnpBrowserGui::Init()
 	infobox.enableFrame(true, 1); //NI
 	infobox.setCorner(RADIUS_LARGE);
 	infobox.setColorAll(topbox.getColorFrame(), COL_MENUCONTENTDARK_PLUS_0);
+	infobox.setTextColor(COL_MENUCONTENTDARK_TEXT);
 	infobox.setTextFont(g_Font[SNeutrinoSettings::FONT_TYPE_MENU]);
 	infobox.enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_SHADOW_PLUS_0, g_settings.theme.menu_Hint_gradient_direction);
 	infobox.enableShadow(CC_SHADOW_ON, -1, true);
@@ -108,6 +109,7 @@ void CUpnpBrowserGui::Init()
 	timebox.enableFrame(true, 1); //NI
 	timebox.setCorner(RADIUS_LARGE);
 	timebox.setColorAll(infobox.getColorFrame(), infobox.getColorBody());
+	timebox.setTextColor(infobox.getTextColor());
 	timebox.setTextFont(g_Font[SNeutrinoSettings::FONT_TYPE_MENU]);
 	timebox.enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_SHADOW_PLUS_0, g_settings.theme.menu_Hint_gradient_direction);
 	timebox.enableShadow(CC_SHADOW_ON, -1, true);
