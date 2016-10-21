@@ -1247,7 +1247,7 @@ void CTimerList::paintFoot()
 	if (timerlist.empty())
 		::paintButtons(x, y + height - footerHeight, width, 2, &(TimerListButtons[1]), width);
 	else
-		::paintButtons(x, y + height - footerHeight, width, TimerListButtonsCount, TimerListButtons, width);
+		::paintButtons(x, y + height - footerHeight, width, (int) TimerListButtonsCount, TimerListButtons, width);
 }
 
 void CTimerList::paint()
