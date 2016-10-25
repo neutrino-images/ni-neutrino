@@ -540,7 +540,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	g_settings.infobar_sat_display   = configfile.getBool("infobar_sat_display"  , true );
 	g_settings.infobar_show_channeldesc   = configfile.getBool("infobar_show_channeldesc"  , false );
-	g_settings.infobar_subchan_disp_pos = configfile.getInt32("infobar_subchan_disp_pos"  , 0 );
+	g_settings.infobar_subchan_disp_pos = configfile.getInt32("infobar_subchan_disp_pos", 4); // subchan display in infobar
 	g_settings.infobar_buttons_usertitle = configfile.getBool("infobar_buttons_usertitle", false );
 	g_settings.progressbar_gradient = configfile.getBool("progressbar_gradient", true );
 	g_settings.progressbar_design =  configfile.getInt32("progressbar_design", CProgressBar::PB_GRAPHIC); //NI
@@ -592,7 +592,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		g_settings.pref_subs[i] = configfile.getString(cfg_key, _lang); //NI
 	}
 	g_settings.subs_charset = configfile.getString("subs_charset", "CP1252");
-	g_settings.zap_cycle = configfile.getInt32( "zap_cycle", 0 );
+	g_settings.zap_cycle = configfile.getInt32("zap_cycle", 1); /* stay in bouquet by default */
 
 	//screen saver
 	g_settings.screensaver_delay = configfile.getInt32("screensaver_delay", 1);

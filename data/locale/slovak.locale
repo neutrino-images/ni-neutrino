@@ -1397,6 +1397,7 @@ menu.hint_sleeptimer Nastavenie časovača pre prechod prijímača do pohotovost
 menu.hint_sleeptimer_min Prednastavené nastavenia pre časovač vypnutia
 menu.hint_sms_channel Ak povolené, číselné klávesy v zozname kanálov budú použité pre vyhľadávanie kanálu v štýle SMS
 menu.hint_sms_movie Ak povolené, číselné klávesy v prehliadači filmov budú použité pre vyhľadávanie filmu v štýle SMS
+menu.hint_soft_restart Reštartovanie Neutrino bez rebootu
 menu.hint_soft_restart Reštartovanie Neutrino-HD bez rebootu
 menu.hint_softupdate_check Kontrola dostupných aktualizácií, stiahnutie a naprogramovanie firmware
 menu.hint_softupdate_check_local Výber a programovanie firmware z lokálneho súboru

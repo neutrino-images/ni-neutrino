@@ -169,8 +169,9 @@ void CBEChannelWidget::paint()
 		sbc = 1;
 	int sbh= (sb- 4)/ sbc;
 
-	if (sbh)
-		frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs * sbh, 11, sbh, COL_MENUCONTENT_PLUS_3);
+	if (sbh == 0)
+		return;
+	frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ sbs * sbh, 11, sbh, COL_SCROLLBAR_ACTIVE_PLUS_0);
 }
 
 void CBEChannelWidget::paintHead()

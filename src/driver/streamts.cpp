@@ -188,6 +188,7 @@ bool CStreamInstance::Open()
 void CStreamInstance::run()
 {
 	printf("CStreamInstance::run: %" PRIx64 "\n", channel_id);
+	set_threadname("n:streaminstance");
 
 	/* pids here cannot be empty */
 	stream_pids_t::iterator it = pids.begin();

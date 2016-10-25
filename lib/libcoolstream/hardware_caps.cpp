@@ -2,7 +2,7 @@
  * determine the capabilities of the hardware.
  * part of libstb-hal
  *
- * (C) 2010-2012 Stefan Seyfried
+ * (C) 2010-2012,2016 Stefan Seyfried
  * (C)      2016 M. Liebmann
  *
  * License: GPL v2 or later

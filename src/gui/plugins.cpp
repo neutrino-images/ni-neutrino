@@ -425,7 +425,7 @@ void CPlugins::startLuaPlugin(int number)
 	lua->runScript(script);
 	delete lua;
 #endif
-#if HAVE_SPARK_HARDWARE
+#if 0
 	frameBuffer->ClearFB();
 #endif
 	videoDecoder->Pig(-1, -1, -1, -1);

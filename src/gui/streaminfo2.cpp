@@ -261,6 +261,27 @@ int CStreamInfo2::doSignalStrengthLoop ()
 		/* rate limiting is done in update_rate */
 		g_RCInput->getMsg_us(&msg, &data, 0);
 
+		if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer()))
+		{
+			if (fader.FadeDone())
+			{
+				break;
+			}
+			continue;
+		}
+		if (fadeout && msg == CRCInput::RC_timeout)
+		{
+			if (fader.StartFadeOut())
+			{
+				msg = 0;
+				continue;
+			}
+			else
+			{
+				break;
+			}
+		}
+
 		// switch paint mode
 		if (msg == CRCInput::RC_red || msg == CRCInput::RC_blue || msg == CRCInput::RC_green || msg == CRCInput::RC_yellow) {
 			hide ();

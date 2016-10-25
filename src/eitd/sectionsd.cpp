@@ -1390,7 +1390,6 @@ bool CTimeThread::setSystemTime(time_t tim, bool force)
 	gettimeofday(&tv, NULL);
 	timediff = int64_t(tim * 1000000 - (tv.tv_usec + tv.tv_sec * 1000000));
 	localtime_r(&tv.tv_sec, &t);
-	int absdiff = abs(tim - tv.tv_sec);
 
 	xprintf("%s: timediff %" PRId64 ", current: %02d.%02d.%04d %02d:%02d:%02d, dvb: %s",
 		name.c_str(), timediff,
@@ -1402,9 +1401,7 @@ bool CTimeThread::setSystemTime(time_t tim, bool force)
 		return;
 	}
 #endif
-	if (absdiff < 1) /* do not bother for differences less than one second */
-		return true;
-	if (absdiff < 120) {
+	if (timeset && abs(tim - tv.tv_sec) < 120) { /* abs() is int */
 		struct timeval oldd;
 		tv.tv_sec = time_t(timediff / 1000000LL);
 		tv.tv_usec = suseconds_t(timediff % 1000000LL);
@@ -1508,7 +1505,8 @@ void CTimeThread::run()
 					dvb_time = st.getTime();
 					success = true;
 				}
-			}
+			} else
+				retry = false; /* reset bogon detector after invalid read() */
 		}
 		/* default sleep time */
 		sleep_time = ntprefresh * 60;
@@ -1723,10 +1721,21 @@ bool CCNThread::shouldSleep()
 	if (eit_version != 0xff)
 		return true;
 
-	if (++eit_retry > 1) {
-		xprintf("%s::%s eit_retry > 1 (%d) -> going to sleep\n", name.c_str(), __func__, eit_retry);
+	/* on first retry, restart the demux. I'm not sure if it is a driver bug
+	 * or a bug in our logic, but without this, I'm sometimes missing CN events
+	 * and / or the eit_version and thus the update filter will stop working */
+	if (++eit_retry < 2) {
+		xprintf("%s::%s first retry (%d) -> restart demux\n", name.c_str(), __func__, eit_retry);
+		change(0); /* this also resets lastChanged */
+	}
+	/* ugly, this has been checked before. But timeoutsDMX can be < 0 for multiple reasons,
+	 * and only skipTime should send CNThread finally to sleep if eit_version is not found */
+	time_t since = time_monotonic() - lastChanged;
+	if (since > skipTime) {
+		xprintf("%s::%s timed out after %lds -> going to sleep\n", name.c_str(), __func__, since);
 		return true;
 	}
+	/* retry */
 	sendToSleepNow = false;
 	return false;
 }

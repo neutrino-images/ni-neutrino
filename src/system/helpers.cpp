@@ -669,7 +669,6 @@ std::string& htmlEntityDecode(std::string& text)
 CFileHelpers::CFileHelpers()
 {
 	FileBufMaxSize	= 0xFFFF;
-	doCopyFlag	= true;
 	ConsoleQuiet	= false;
 	clearDebugInfo();
 }
