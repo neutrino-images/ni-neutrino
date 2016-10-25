@@ -279,7 +279,7 @@ void CMovieBrowser::clearListLines()
 	m_browserListLines.Icon.clear();
 	m_browserListLines.marked.clear();
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		m_recordListLines.lineArray[i].clear();
 		m_playListLines.lineArray[i].clear();
@@ -545,21 +545,29 @@ void CMovieBrowser::initRows(void)
 {
 	//TRACE("[mb]->%s\n", __func__);
 
+	/*
+	   The "last played" / "last recorded" windows have only half the width, so
+	   multiply the relative width with 2 and add 1 percent for safety to date row.
+	   This addition is just usefull for l a r g e font settings.
+	*/
+
 	/***** Last Play List **************/
-	m_settings.lastPlayRowNr = 2;
+	m_settings.lastPlayRowNr = 3;
 	m_settings.lastPlayRow[0] = MB_INFO_TITLE;
-	m_settings.lastPlayRow[1] = MB_INFO_PREVPLAYDATE;
-	/* the "last played" / "last recorded" windows have only half the width, so
-	   multiply the relative width with 2 */
-	m_settings.lastPlayRowWidth[1] = m_defaultRowWidth[m_settings.lastPlayRow[1]] * 2 + 1;
-	m_settings.lastPlayRowWidth[0] = 100 - m_settings.lastPlayRowWidth[1];
+	m_settings.lastPlayRow[1] = MB_INFO_SPACER;
+	m_settings.lastPlayRow[2] = MB_INFO_PREVPLAYDATE;
+	m_settings.lastPlayRowWidth[2] = m_defaultRowWidth[m_settings.lastPlayRow[2]] * 2 + 1;
+	m_settings.lastPlayRowWidth[1] = m_defaultRowWidth[m_settings.lastPlayRow[1]] * 2;
+	m_settings.lastPlayRowWidth[0] = 100 - m_settings.lastPlayRowWidth[1] - m_settings.lastPlayRowWidth[2];
 
 	/***** Last Record List **************/
-	m_settings.lastRecordRowNr = 2;
+	m_settings.lastRecordRowNr = 3;
 	m_settings.lastRecordRow[0] = MB_INFO_TITLE;
-	m_settings.lastRecordRow[1] = MB_INFO_RECORDDATE;
-	m_settings.lastRecordRowWidth[1] = m_defaultRowWidth[m_settings.lastRecordRow[1]] * 2 + 1;
-	m_settings.lastRecordRowWidth[0] = 100 - m_settings.lastRecordRowWidth[1];
+	m_settings.lastRecordRow[1] = MB_INFO_SPACER;
+	m_settings.lastRecordRow[2] = MB_INFO_RECORDDATE;
+	m_settings.lastRecordRowWidth[2] = m_defaultRowWidth[m_settings.lastRecordRow[2]] * 2 + 1;
+	m_settings.lastRecordRowWidth[1] = m_defaultRowWidth[m_settings.lastRecordRow[1]] * 2;
+	m_settings.lastRecordRowWidth[0] = 100 - m_settings.lastRecordRowWidth[1] - m_settings.lastRecordRowWidth[2];
 }
 
 void CMovieBrowser::defaultSettings(MB_SETTINGS* /*settings*/)
@@ -1177,21 +1185,22 @@ int CMovieBrowser::paint(void)
 
 	//CVFD::getInstance()->setMode(CVFD::MODE_MENU_UTF8, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD));
 
-	Font* font = g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_LIST]; //NI
+	Font* font = g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_LIST];
 	m_movieSelectionHandler = NULL;
+
 	m_pcBrowser = new CListFrame(&m_browserListLines, font, CListFrame::SCROLL | CListFrame::HEADER_LINE,
 			&m_cBoxFrameBrowserList, NULL,
-			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]); //NI
+			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]);
 	m_pcLastPlay = new CListFrame(&m_playListLines, font, CListFrame::SCROLL | CListFrame::HEADER_LINE | CListFrame::TITLE,
 			&m_cBoxFrameLastPlayList, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD_PLAYLIST),
-			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]); //NI
+			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]);
 	m_pcLastRecord = new CListFrame(&m_recordListLines, font, CListFrame::SCROLL | CListFrame::HEADER_LINE | CListFrame::TITLE,
 			&m_cBoxFrameLastRecordList, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD_RECORDLIST),
-			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]); //NI
+			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]);
 	m_pcFilter = new CListFrame(&m_FilterLines, font, CListFrame::SCROLL | CListFrame::TITLE,
 			&m_cBoxFrameFilter, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD_FILTER),
-			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]); //NI
-	m_pcInfo = new CTextBox(" ", g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_INFO], CTextBox::TOP | CTextBox::SCROLL, &m_cBoxFrameInfo); //NI
+			g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD]);
+	m_pcInfo = new CTextBox(" ", g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_INFO], CTextBox::TOP | CTextBox::SCROLL, &m_cBoxFrameInfo);
 
 
 	if (m_pcBrowser == NULL || m_pcLastPlay == NULL ||
@@ -1434,7 +1443,7 @@ void CMovieBrowser::refreshMovieInfo(void)
 	}
 	if (pic)
 		flogo_w = pic->getWidth();
-	m_pcInfo->setText(&m_movieSelectionHandler->epgInfo2, m_cBoxFrameInfo.iWidth - flogo_w - 24);
+	m_pcInfo->setText(&m_movieSelectionHandler->epgInfo2, m_cBoxFrameInfo.iWidth - flogo_w - (flogo_w ? 24 : 0));
 	if (pic)
 		pic->paint(CC_SAVE_SCREEN_NO);
 
