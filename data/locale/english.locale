@@ -312,6 +312,7 @@ ci.inserted CAM inserted in slot
 ci.mode Usable CI channel while recording
 ci.mode_0 all channels
 ci.mode_1 same transponder
+ci.mode_2 no other CI channel
 ci.rec_zapto Zap when recording needs CAM
 ci.removed CAM removed from slot
 ci.reset Reset
