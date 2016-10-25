@@ -56,10 +56,7 @@
 #include <driver/streamts.h>
 #include <driver/record.h>
 #include <driver/genpsi.h>
-/* merge conflict */
-#if 0
 #include <system/set_threadname.h>
-#endif
 #include <gui/movieplayer.h>
 #include <cs_api.h>
 
@@ -168,12 +165,8 @@ void CStreamInstance::RemoveClient(int clientfd)
 
 bool CStreamInstance::Open()
 {
-/* merge conflict */
-#if 0
 	printf("CStreamInstance::run: %" PRIx64 "\n", channel_id);
 	set_threadname("n:streaminstance");
-
-#endif
 
 	CZapitChannel * tmpchan = CServiceManager::getInstance()->FindChannel(channel_id);
 	if (!tmpchan)
