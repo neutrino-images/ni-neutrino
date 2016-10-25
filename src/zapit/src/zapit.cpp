@@ -2474,6 +2474,11 @@ bool CZapit::getUseChannelFilter()
 {
 	return CCamManager::getInstance()->getChannelFilter();
 }
+//NI
+void CZapit::setMoviePlayer(bool enable)
+{
+	CCamManager::getInstance()->enableMoviePlayer(enable);
+}
 
 void CZapit::run()
 {

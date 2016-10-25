@@ -172,8 +172,10 @@ CCamManager::CCamManager()
 	channel_map.clear();
 	tunerno = -1;
 	filter_channels = false;
-	useCI = false; //NI
-	rmode = CI_OFF; //NI
+	//NI
+	useCI = false;
+	rmode = CI_OFF;
+	mp = false;
 }
 
 CCamManager::~CCamManager()
@@ -283,11 +285,13 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		CZapitChannel * chan = CServiceManager::getInstance()->GetCurrentChannel();
 		INFO("    ##NI: GetCurrentChannel (%s)\n",chan->getName().c_str());
 
-		//NI - this is a hack for rezaping to the recording channel
-		if((!mode || (mode && !chan->scrambled)) && (!start && rmode==CI_ON)){
+		//NI - this is a hack for rezaping to the recording channe
+		//if commig from movieplayer, disable hack
+		if(!mp && ( (!mode || (mode && !chan->scrambled)) && (!start && rmode==CI_ON)) ){
 			INFO("    ##NI: HACK: disabling TS\n");
 			cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
 		}
+		mp = false;
 #endif
 	}
 
