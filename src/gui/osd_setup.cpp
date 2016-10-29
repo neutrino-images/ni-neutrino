@@ -976,6 +976,7 @@ public:
 		while (value.length() < 3)
 			value = " " + value;
 		CStringInput input(name, &value, 3, LOCALE_IPSETUP_HINT_1, LOCALE_IPSETUP_HINT_2, "0123456789 ", this);
+		input.forceSaveScreen(true);
 		return input.exec(parent, action_Key);
 	}
 
@@ -1524,7 +1525,7 @@ int COsdSetup::showContextChanlistMenu(CChannelList *parent_channellist)
 	CMenuWidget * menu_chanlist = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width);
 
 	//using native callback to ensure stop header clock in parent channellist before paint this menu window
-	if (parent_channellist && g_settings.menu_pos == CMenuWidget::MENU_POS_TOP_RIGHT)
+	if (parent_channellist)
 		menu_chanlist->OnBeforePaint.connect(sigc::mem_fun(parent_channellist->getHeaderObject()->getClockObject(), &CComponentsFrmClock::block));
 
 	menu_chanlist->enableSaveScreen(true);
