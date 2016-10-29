@@ -1107,6 +1107,12 @@ void CTimerList::paintItem(int pos)
 	if (currpos < timerlist.size())
 	{
 		CTimerd::responseGetTimer & timer = timerlist[currpos];
+		//NI
+		if (timer.eventType == CTimerd::TIMER_REMOTEBOX)
+		{
+			color = COL_MENUCONTENTINACTIVE_TEXT;
+			bgcolor = COL_MENUCONTENTINACTIVE_PLUS_0;
+		}
 		char zAlarmTime[25] = {0};
 		struct tm *alarmTime = localtime(&(timer.alarmTime));
 		strftime(zAlarmTime,20,"%d.%m. %H:%M",alarmTime);
