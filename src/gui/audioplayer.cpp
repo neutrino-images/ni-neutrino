@@ -1755,7 +1755,7 @@ void CAudioPlayerGui::paintInfo()
 		if (xstart < 10)
 			xstart = 10;
 		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(m_x + xstart, m_y + 4 + 1*m_fheight, m_width - 20,
-				tmp, COL_MENUCONTENTSELECTED_TEXT);
+				tmp, COL_MENUHEAD_TEXT); //NI
 
 		// second line (Artist/Title...)
 		GetMetaData(m_curr_audiofile);
@@ -1780,7 +1780,7 @@ void CAudioPlayerGui::paintInfo()
 		xstart=(m_width-w)/2;
 		if (xstart < 10)
 			xstart=10;
-		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(m_x+xstart, m_y +4+ 2*m_fheight, m_width- 20, tmp, COL_MENUCONTENTSELECTED_TEXT);
+		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(m_x+xstart, m_y +4+ 2*m_fheight, m_width- 20, tmp, COL_MENUHEAD_TEXT); //NI
 
 		// reset so fields get painted always
 		m_metainfo.clear();
@@ -2119,7 +2119,7 @@ void CAudioPlayerGui::updateMetaData()
 		int xstart = ((m_width - 20 - g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getRenderWidth(m_metainfo))/2)+10;
 		g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]
 		->RenderString(m_x + xstart, m_y + 4 + 2*m_fheight + m_sheight,
-			       m_width- 2*xstart, m_metainfo, COL_MENUCONTENTSELECTED_TEXT);
+			       m_width- 2*xstart, m_metainfo, COL_MENUHEAD_TEXT); //NI
 	}
 }
 
@@ -2164,7 +2164,7 @@ void CAudioPlayerGui::updateTimes(const bool force)
 							   m_fheight, COL_MENUHEAD_PLUS_0); //NI
 				if (m_time_total > 0)
 					g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(m_x + m_width - w1 - 10, m_y + 4 + m_fheight,
-							w1, tot_time, COL_MENUCONTENTSELECTED_TEXT);
+							w1, tot_time, COL_MENUHEAD_TEXT); //NI
 			}
 			if (updatePlayed || (m_state == CAudioPlayerGui::PAUSE))
 			{
@@ -2176,7 +2176,7 @@ void CAudioPlayerGui::updateTimes(const bool force)
 				if ((m_state != CAudioPlayerGui::PAUSE) || (tv.tv_sec & 1))
 				{
 					g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(m_x + m_width - w1 - w2 - 11, m_y + 4 + m_fheight,
-							w2+4, play_time, COL_MENUCONTENTSELECTED_TEXT);
+							w2+4, play_time, COL_MENUHEAD_TEXT); //NI
 				}
 			}
 		}
