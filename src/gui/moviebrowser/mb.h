@@ -97,6 +97,7 @@ typedef struct
 	int browserRowNr;
 	MB_INFO_ITEM browserRowItem[MB_MAX_ROWS];
 	int browserRowWidth[MB_MAX_ROWS];
+	int browserAdditional;
 
 	// to be added to config later
 	int lastPlayMaxItems;
@@ -145,22 +146,28 @@ class CMovieBrowser : public CMenuTarget
 
 	private: // Variables
 		CFrameBuffer * framebuffer;
-		CComponentsPicture *pic;
+
 		CListFrame* m_pcBrowser;
 		CListFrame* m_pcLastPlay;
 		CListFrame* m_pcLastRecord;
-		CTextBox* m_pcInfo;
+		CTextBox* m_pcInfo1; // bottom box
+		CTextBox* m_pcInfo2; // right box
 		CListFrame* m_pcFilter;
 
 		CBox m_cBoxFrame;
 		CBox m_cBoxFrameLastPlayList;
 		CBox m_cBoxFrameLastRecordList;
 		CBox m_cBoxFrameBrowserList;
-		CBox m_cBoxFrameInfo;
+		CBox m_cBoxFrameInfo1;
+		CBox m_cBoxFrameInfo2;
 		CBox m_cBoxFrameBookmarkList;
 		CBox m_cBoxFrameFilter;
 		CBox m_cBoxFrameFootRel;
 		CBox m_cBoxFrameTitleRel;
+
+		CComponentsDetailLine *m_detailsLine;
+		CComponentsChannelLogo *m_channelLogo;
+		CComponentsPicture *m_movieCover;
 
 		LF_LINES m_browserListLines;
 		LF_LINES m_recordListLines;
@@ -215,7 +222,6 @@ class CMovieBrowser : public CMenuTarget
 		CFileList::iterator filelist_it;
 		P_MI_MOVIE_LIST movielist;
 
-		CComponentsChannelLogo* CChannelLogo;
 		uint64_t old_EpgId;
 		int movieInfoUpdateAll[MB_INFO_MAX_NUMBER];
 		int movieInfoUpdateAllIfDestEmptyOnly;
@@ -286,10 +292,16 @@ class CMovieBrowser : public CMenuTarget
 		void refreshBrowserList(void); //P1
 		void refreshFilterList(void); //P1
 		void refreshMovieInfo(void); //P1
+		void refreshChannelLogo(void); //P1
+		void initMovieCover(void); //P1
+		void refreshMovieCover(void); //P1
+		void hideMovieCover(void); //P1
 		int refreshFoot(bool show = true); //P2
 		void refreshTitle(void); //P2
 		void refreshInfo(void); // P2
 		void refreshLCD(void); // P2
+		void refreshDetailsLine(int pos);
+		void hideDetailsLine();
 
 		///// Events ///////////////////////////
 		bool onButtonPress(neutrino_msg_t msg); // P1
@@ -341,7 +353,7 @@ class CMovieBrowser : public CMenuTarget
 		bool isParentalLock(MI_MOVIE_INFO& movie_info);
 		bool getMovieInfoItem(MI_MOVIE_INFO& movie_info, MB_INFO_ITEM item, std::string* item_string);
 		void updateMovieSelection(void);
-		void updateInfoSelection(void); //NI
+		void updateInfoSelection(void);
 		void updateFilterSelection(void);
 		void updateSerienames(void);
 		void autoFindSerie(void);
@@ -355,7 +367,6 @@ class CMovieBrowser : public CMenuTarget
 		bool addFile(CFile &file, int dirItNr);
 };
 
-
 // I tried a lot to use the menu.cpp as ListBox selection, and I got three solution which are all garbage.
 //Might be replaced by somebody who is familiar with this stuff .
 
@@ -367,7 +378,6 @@ class CSelectedMenu : public CMenuTarget
 		CSelectedMenu(void){selected = false;};
 		inline	int exec(CMenuTarget* /*parent*/, const std::string & /*actionKey*/){selected = true; return menu_return::RETURN_EXIT;};
 };
-
 
 // This Class creates a menue item, which writes its caption to an given string (or an given int value to an given variable).
 // The programm could use this class to verify, what menu was selected.
@@ -400,7 +410,6 @@ class CMenuWidgetSelection : public CMenuWidget
 		int getSelectedLine(void){return exit_pressed ? -1 : selected;};
 };
 
-
 class CFileChooser : public CMenuWidget
 {
 	private:
@@ -410,8 +419,6 @@ class CFileChooser : public CMenuWidget
 		CFileChooser(std::string* path){dirPath= path;};
 		int exec(CMenuTarget* parent, const std::string & actionKey);
 };
-
-
 
 class CDirMenu : public CMenuWidget
 {
@@ -430,8 +437,5 @@ class CDirMenu : public CMenuWidget
 		int show(void);
 		bool isChanged(){return changed;};
 };
-
-
-
 
 #endif /*MOVIEBROWSER_H_*/

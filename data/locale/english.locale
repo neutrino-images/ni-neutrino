@@ -312,6 +312,7 @@ ci.inserted CAM inserted in slot
 ci.mode Usable CI channel while recording
 ci.mode_0 all channels
 ci.mode_1 same transponder
+ci.mode_2 no other CI channel
 ci.rec_zapto Zap when recording needs CAM
 ci.removed CAM removed from slot
 ci.reset Reset
@@ -1443,6 +1444,7 @@ menu.hint_record_fill_warn Show warning, when record medium is nearly full
 menu.hint_record_slow_warn Show warning, when record buffer is close to overflow
 menu.hint_record_startstop_msg Turns the message when recording start/end on or off.
 menu.hint_record_tdir Select directory to save timeshift recordings\nin temporary timeshift mode
+menu.hint_record_tevents When choosing recording from EPG, view Timer list even no further entries found
 menu.hint_record_time Record duration before stop when\nusing direct record with record button
 menu.hint_record_time_ts Timeshift duration before stop when\ntemporary timeshift enabled
 menu.hint_record_timeafter Stop record after event end\nin minutes
@@ -1795,6 +1797,7 @@ moviebrowser.book_position Position:
 moviebrowser.book_type Jump (<0 back , >0 for):
 moviebrowser.book_type_backward Repeat
 moviebrowser.book_type_forward jump over
+moviebrowser.browser_additional Additional informations
 moviebrowser.browser_frame_high Browser height [%]
 moviebrowser.browser_row_head Row settings
 moviebrowser.browser_row_item Row item
@@ -1823,10 +1826,11 @@ moviebrowser.edit_book_type_info1 Enter new jump length (s)
 moviebrowser.edit_book_type_info2 <0 back , >0 for, 0: none
 moviebrowser.edit_serie Enter name of serie
 moviebrowser.error_no_movies No movies found
+moviebrowser.filter_off Filter off
 moviebrowser.foot_filter Filter:
 moviebrowser.foot_focus Switch window
 moviebrowser.foot_options Options
-moviebrowser.foot_play Start movie
+moviebrowser.foot_play Playback
 moviebrowser.foot_refresh Refresh list
 moviebrowser.foot_sort Sort:
 moviebrowser.head My recordings
@@ -2309,6 +2313,7 @@ recordingmenu.server server
 recordingmenu.server_mac MAC address
 recordingmenu.setupnow Activate changes
 recordingmenu.slow_warn Enable slow record warning
+recordingmenu.tevents Always show timer pick list
 recordingmenu.timeshift Timeshift
 recordingmenu.tsdir Timeshift directory
 recordingmenu.vcr vcr
@@ -2319,8 +2324,12 @@ remotebox_add add
 remotebox_channel_na Channel not available on Remote-Box
 remotebox_del delete
 remotebox_head Remote-Boxes
-remotebox_ip Remote-Box IP
 remotebox_mod modify
+remotebox_pass Password
+remotebox_port Port
+remotebox_rbaddr Address
+remotebox_rbname Screenname
+remotebox_user User
 reset_all Factory reset and reboot
 reset_channels Delete all channels
 reset_confirm Are you sure ?

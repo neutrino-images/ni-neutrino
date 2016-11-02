@@ -312,6 +312,7 @@ ci.inserted CAM im Slot
 ci.mode CI Kanäle während einer Aufnahme
 ci.mode_0 alle Kanäle
 ci.mode_1 gleicher Transponder
+ci.mode_2 keine CI Kanäle
 ci.rec_zapto Umschalten bei Aufnahmen mit CAM
 ci.removed CAM entfernt -> Slot
 ci.reset Reset
@@ -1443,6 +1444,7 @@ menu.hint_record_fill_warn Zeige Warnung, wenn das Aufnahmemedium zu voll wird
 menu.hint_record_slow_warn Zeige Warnung, wenn der Aufnahmepuffer zu überlaufen droht
 menu.hint_record_startstop_msg Schaltet die Meldung bei Aufnahmestart/ende ein oder aus.
 menu.hint_record_tdir Wählen Sie ein Verzeichnis für Ihre Timeshift-Aufnahmen im temporären Timeshift-Modus
+menu.hint_record_tevents Beim wählen der Aufnahme aus dem EPG heraus, Timerliste anzeigen auch wenn keine weiteren Termine vorhanden sind
 menu.hint_record_time Aufzeichnungsdauer vor dem Stopp bei der Verwendung von Direktaufzeichnung mit Record-Taste.
 menu.hint_record_time_ts Timeshiftdauer vor dem Stopp, wenn temporäres Timeshift aktiviert.
 menu.hint_record_timeafter Stellen Sie die Nachlaufzeit für Timer-Aufnahmen ein\nEin Wert von 2 beendet die Aufnahme 2 Minuten nach dem Sendungsende
@@ -1795,6 +1797,7 @@ moviebrowser.book_position Position:
 moviebrowser.book_type Sprung (<0 zurück, >0 vor):
 moviebrowser.book_type_backward Wiederholung
 moviebrowser.book_type_forward Überspringen
+moviebrowser.browser_additional Zusätzliche Informationen
 moviebrowser.browser_frame_high Anzeigehöhe oberes Fenster [%]
 moviebrowser.browser_row_head Spalten Einstellungen
 moviebrowser.browser_row_item Spalteninfo
@@ -1823,11 +1826,12 @@ moviebrowser.edit_book_type_info1 Neue Sprunglänge (s)
 moviebrowser.edit_book_type_info2 <0 zurück , >0 vor, 0: kein
 moviebrowser.edit_serie Name der Serie
 moviebrowser.error_no_movies Keine Filme gefunden
+moviebrowser.filter_off Filter aus
 moviebrowser.foot_filter Filter:
-moviebrowser.foot_focus Fenster umschalten
+moviebrowser.foot_focus Fenster wechseln
 moviebrowser.foot_options Optionen
-moviebrowser.foot_play Film starten
-moviebrowser.foot_refresh Liste neu laden
+moviebrowser.foot_play Wiedergabe
+moviebrowser.foot_refresh Neu laden
 moviebrowser.foot_sort Sortieren:
 moviebrowser.head Meine Aufnahmen
 moviebrowser.head_filter Filme nach Kategorie filtern:
@@ -2310,6 +2314,7 @@ recordingmenu.server Server
 recordingmenu.server_mac MAC-Adresse
 recordingmenu.setupnow Einstellungen jetzt übernehmen
 recordingmenu.slow_warn Warnung bei langsamen Aufnahmemedien
+recordingmenu.tevents Timer Auswahlliste immer anzeigen
 recordingmenu.timeshift Timeshift
 recordingmenu.tsdir Timeshift Aufnahmeverzeichnis
 recordingmenu.vcr Videorekorder
@@ -2320,8 +2325,12 @@ remotebox_add hinzufügen
 remotebox_channel_na Kanal auf Remote-Box nicht verfügbar
 remotebox_del löschen
 remotebox_head Remote-Boxen
-remotebox_ip Remote-Box IP
 remotebox_mod bearbeiten
+remotebox_pass Passwort
+remotebox_port Port
+remotebox_rbaddr Adresse
+remotebox_rbname Anzeigename
+remotebox_user Benutzer
 reset_all Werkseinstellungen und Reboot
 reset_channels Lösche Kanäle
 reset_confirm Sind Sie sich sicher?

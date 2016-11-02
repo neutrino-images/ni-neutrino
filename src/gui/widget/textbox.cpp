@@ -353,12 +353,13 @@ void CTextBox::refreshTextLineArray(void)
 	m_cLineArray.clear();
 	m_nNrOfLines = 0;
 
+	int MaxWidth = m_nMaxWidth - m_cFrameScrollRel.iWidth - 2*text_Hborder_width;
 	if( m_nMode & AUTO_WIDTH){
 		/* In case of autowidth, we calculate the max allowed width of the textbox */
-		lineBreakWidth = m_nMaxWidth - m_cFrameScrollRel.iWidth - 2*text_Hborder_width;
+		lineBreakWidth = MaxWidth;
 	}else{
 		/* If not autowidth, we just take the actuall textframe width */
-		lineBreakWidth = std::max(m_nMaxWidth, m_cFrameTextRel.iWidth - 2*text_Hborder_width);
+		lineBreakWidth = std::max(MaxWidth, m_cFrameTextRel.iWidth - 2*text_Hborder_width);
 	}
 
 	if(m_nMaxTextWidth)
@@ -586,7 +587,7 @@ void CTextBox::refreshText(void)
 	//bg variables
 	int ax = m_cFrameTextRel.iX+m_cFrame.iX;
 	int ay = m_cFrameTextRel.iY+m_cFrame.iY;
-	int dx = m_old_cText != m_cText || m_nNrOfPages>1 ? m_cFrameTextRel.iWidth : m_nMaxTextWidth;
+	int dx = m_old_cText != m_cText || m_nNrOfPages>1 ? m_cFrameTextRel.iWidth : m_nMaxTextWidth - m_nBgRadius;
 	int dy = m_cFrameTextRel.iHeight;
 	
 	//avoid artefacts in transparent cornes
@@ -833,6 +834,16 @@ void CTextBox::hide (void)
 		frameBuffer->paintBackgroundBoxRel(m_cFrame.iX, m_cFrame.iY, m_cFrame.iWidth, m_cFrame.iHeight);
 
 	frameBuffer = NULL;
+}
+
+void CTextBox::clear(void)
+{
+	//TRACE("[CTextBox] %s Line %d\r\n", __FUNCTION__, __LINE__);
+	if (frameBuffer == NULL)
+		return;
+
+	std::string clear(" ");
+	setText(&clear);
 }
 
 bool CTextBox::clearScreenBuffer()

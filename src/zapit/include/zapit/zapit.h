@@ -272,5 +272,6 @@ class CZapit : public OpenThreads::Thread
 		std::list<std::string> *GetWebTVXML(void) { return webtv_xml; }
 		//NI
 		bool getUseChannelFilter();
+		void setMoviePlayer(bool enable);
 };
 #endif /* __zapit_h__ */

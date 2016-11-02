@@ -527,14 +527,26 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.sleeptimer_min = configfile.getInt32("sleeptimer_min", 0);
 
 	g_settings.timer_remotebox_ip.clear();
-	int timer_remotebox_ip_count = configfile.getInt32("timer_remotebox_ip_count", 0);
-	if (timer_remotebox_ip_count) {
-		for (int i = 0; i < timer_remotebox_ip_count; i++) {
-			std::string k = "timer_remotebox_ip_" + to_string(i);
-			std::string timer_remotebox_ip = configfile.getString(k, "");
-			if (timer_remotebox_ip.empty())
+	int timer_remotebox_itemcount = configfile.getInt32("timer_remotebox_ip_count", 0);
+	if (timer_remotebox_itemcount) {
+		for (int i = 0; i < timer_remotebox_itemcount; i++) {
+			timer_remotebox_item timer_rb;
+			std::string k;
+			k = "timer_remotebox_ip_" + to_string(i);
+			timer_rb.rbaddress = configfile.getString(k, "");
+			if (timer_rb.rbaddress.empty())
 				continue;
-			g_settings.timer_remotebox_ip.push_back(timer_remotebox_ip);
+			k = "timer_remotebox_port_" + to_string(i);
+			timer_rb.port = configfile.getInt32(k, 80);
+			k = "timer_remotebox_user_" + to_string(i);
+			timer_rb.user = configfile.getString(k, "");
+			k = "timer_remotebox_pass_" + to_string(i);
+			timer_rb.pass = configfile.getString(k, "");
+			k = "timer_remotebox_rbname_" + to_string(i);
+			timer_rb.rbname = configfile.getString(k, "");
+			if (timer_rb.rbname.empty())
+				timer_rb.rbname = timer_rb.rbaddress;
+			g_settings.timer_remotebox_ip.push_back(timer_rb);
 		}
 	}
 
@@ -729,8 +741,9 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.recording_epg_for_filename      = configfile.getBool("recording_epg_for_filename"         , true);
 	g_settings.recording_epg_for_end           = configfile.getBool("recording_epg_for_end"              , true);
 	g_settings.recording_save_in_channeldir    = configfile.getBool("recording_save_in_channeldir"         , false);
-	g_settings.recording_slow_warning	   = configfile.getBool("recording_slow_warning"     , false); //NI
-	g_settings.recording_fill_warning	   = configfile.getInt32("recording_fill_warning", 95); //NI
+	g_settings.recording_slow_warning		= configfile.getBool("recording_slow_warning"     , false); //NI
+	g_settings.recording_fill_warning		= configfile.getInt32("recording_fill_warning", 95); //NI
+	g_settings.recording_tevents			= configfile.getBool("recording_tevents", false); //NI
 	g_settings.recording_startstop_msg	   = configfile.getBool("recording_startstop_msg"     , true);
 	g_settings.recording_already_found_check   = configfile.getBool("recording_already_found_check", false);
 
@@ -1186,11 +1199,20 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("shutdown_min"  , g_settings.shutdown_min  );
 	configfile.setInt32("sleeptimer_min", g_settings.sleeptimer_min);
 
-	int timer_remotebox_ip_count = 0;
-	for (std::list<std::string>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it) {
-		std::string k = "timer_remotebox_ip_" + to_string(timer_remotebox_ip_count);
-		configfile.setString(k, *it);
-		timer_remotebox_ip_count++;
+	int timer_remotebox_itemcount = 0;
+	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it) {
+		std::string k;
+		k = "timer_remotebox_ip_" + to_string(timer_remotebox_itemcount);
+		configfile.setString(k, it->rbaddress);
+		k = "timer_remotebox_rbname_" + to_string(timer_remotebox_itemcount);
+		configfile.setString(k, it->rbname);
+		k = "timer_remotebox_user_" + to_string(timer_remotebox_itemcount);
+		configfile.setString(k, it->user);
+		k = "timer_remotebox_pass_" + to_string(timer_remotebox_itemcount);
+		configfile.setString(k, it->pass);
+		k = "timer_remotebox_port_" + to_string(timer_remotebox_itemcount);
+		configfile.setInt32(k, it->port);
+		timer_remotebox_itemcount++;
 	}
 	configfile.setInt32 ( "timer_remotebox_ip_count", g_settings.timer_remotebox_ip.size());
 
@@ -1334,6 +1356,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setBool  ("recording_save_in_channeldir"       , g_settings.recording_save_in_channeldir   );
 	configfile.setBool  ("recording_slow_warning"             , g_settings.recording_slow_warning         );
 	configfile.setInt32 ("recording_fill_warning"             , g_settings.recording_fill_warning         ); //NI
+	configfile.setBool  ("recording_tevents"                  , g_settings.recording_tevents              ); //NI
 	configfile.setBool  ("recording_startstop_msg"             , g_settings.recording_startstop_msg       );
 	configfile.setBool  ("recording_already_found_check"      , g_settings.recording_already_found_check  );
 

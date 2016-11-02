@@ -240,6 +240,9 @@ void CMoviePlayerGui::cutNeutrino()
 	if (isUPNP)
 		return;
 
+	//NI
+	CZapit::getInstance()->setMoviePlayer(true);// let CCamManager::SetMode know, the call is from MoviePlayer
+
 	g_Zapit->lockPlayBack();
 	//NI if (!isWebTV)
 	//NI	g_Sectionsd->setPauseScanning(true);

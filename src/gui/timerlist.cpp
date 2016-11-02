@@ -278,6 +278,7 @@ CTimerList::CTimerList()
 	Timer = new CTimerdClient();
 	timerNew_message = "";
 	timerNew_pluginName = "";
+	httpConnectTimeout = 3;
 
 	/* most probable default */
 	saved_dispmode = (int)CVFD::MODE_TVRADIO;
@@ -294,11 +295,41 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 	const char * key = actionKey.c_str();
 
 	if(actionKey == "add_ip") {
-		std::string remoteip;
-		CIPInput remotebox_NetworkIP(LOCALE_REMOTEBOX_IP  , &remoteip);
-		if ((remotebox_NetworkIP.exec(NULL,"") == true) && (!remoteip.empty())) {
-			remboxmenu->addItem(new CMenuForwarder(remoteip, true, NULL, this, "cha_ip"));
-			remotebox_NetworkIP.hide();
+		std::string rbname,rbaddress,user,pass = "";
+		std::string port = "80";
+		CKeyboardInput remotebox_name(LOCALE_REMOTEBOX_RBNAME  , &rbname, 25);
+		remotebox_name.forceSaveScreen(true);
+		CKeyboardInput remotebox_address(LOCALE_REMOTEBOX_RBADDR  , &rbaddress, 50);
+		remotebox_address.forceSaveScreen(true);
+		CStringInput   remotebox_port(LOCALE_REMOTEBOX_PORT  , &port, 5);
+		remotebox_port.forceSaveScreen(true);
+		CKeyboardInput remotebox_user(LOCALE_REMOTEBOX_USER  , &user, 15);
+		remotebox_user.forceSaveScreen(true);
+		CKeyboardInput remotebox_pass(LOCALE_REMOTEBOX_PASS  , &pass, 15);
+		remotebox_pass.forceSaveScreen(true);
+		CMenuWidget * rbsetup = new CMenuWidget(LOCALE_REMOTEBOX_HEAD, NEUTRINO_ICON_TIMER);
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_RBNAME, true, rbname, &remotebox_name));
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_RBADDR, true, rbaddress, &remotebox_address));
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_PORT, true, port, &remotebox_port));
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_USER, true, user, &remotebox_user));
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_PASS, true, pass, &remotebox_pass));
+		rbsetup->enableSaveScreen(true);
+		if ((rbsetup->exec(NULL,"") == true) && (!rbaddress.empty())) {
+			remboxmenu->addItem(new CMenuForwarder(rbname, true, NULL, this, "cha_ip"));
+			rbsetup->hide();
+			remboxmenu->enableSaveScreen(false);
+			remboxmenu->hide();
+			timer_remotebox_item timer_rb;
+			timer_rb.rbaddress = rbaddress;
+			if (!timer_rb.rbaddress.empty()) {
+			timer_rb.port = atoi(port);
+			timer_rb.user = user;
+			timer_rb.pass = pass;
+			timer_rb.rbname = rbname;
+			if (timer_rb.rbname.empty())
+				timer_rb.rbname = timer_rb.rbaddress;
+			g_settings.timer_remotebox_ip.push_back(timer_rb);
+			}
 			changed = true;
 		}
 		return menu_return::RETURN_REPAINT;
@@ -308,7 +339,8 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		bselected = remboxmenu->getSelected();
 		if (bselected >= item_offset) {
 			remboxmenu->removeItem(bselected);
-		    remboxmenu->hide();
+			remboxmenu->enableSaveScreen(false);
+			remboxmenu->hide();
 			bselected = remboxmenu->getSelected();
 			changed = true;
 		}
@@ -319,11 +351,32 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		bselected = remboxmenu->getSelected();
 		CMenuItem* item = remboxmenu->getItem(bselected);
 		CMenuForwarder *f = static_cast<CMenuForwarder*>(item);
-		std::string remoteip = f->getName();
-		CIPInput remotebox_NetworkIP(LOCALE_REMOTEBOX_IP  , &remoteip);
-		if (remotebox_NetworkIP.exec(NULL,"") == true) {
-			f->setName(remoteip);
-			remotebox_NetworkIP.hide();
+		std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin();
+		std::advance(it,bselected-item_offset);
+		std::string port = to_string(it->port);
+		CKeyboardInput remotebox_name(LOCALE_REMOTEBOX_RBNAME  , &it->rbname, 25);
+		remotebox_name.forceSaveScreen(true);
+		CKeyboardInput remotebox_address(LOCALE_REMOTEBOX_RBADDR  , &it->rbaddress, 50);
+		remotebox_address.forceSaveScreen(true);
+		CStringInput   remotebox_port(LOCALE_REMOTEBOX_PORT  , &port, 5);
+		remotebox_port.forceSaveScreen(true);
+		CKeyboardInput remotebox_user(LOCALE_REMOTEBOX_USER  , &it->user, 15);
+		remotebox_user.forceSaveScreen(true);
+		CKeyboardInput remotebox_pass(LOCALE_REMOTEBOX_PASS  , &it->pass, 15);
+		remotebox_pass.forceSaveScreen(true);
+		CMenuWidget * rbsetup = new CMenuWidget(LOCALE_REMOTEBOX_HEAD, NEUTRINO_ICON_TIMER);
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_RBNAME, true, it->rbname, &remotebox_name));
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_RBADDR, true, it->rbaddress, &remotebox_address));
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_PORT, true, port, &remotebox_port));
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_USER, true, it->user, &remotebox_user));
+		rbsetup->addItem(new CMenuForwarder(LOCALE_REMOTEBOX_PASS, true, it->pass, &remotebox_pass));
+		rbsetup->enableSaveScreen(true);
+		if ((rbsetup->exec(NULL,"") == true) && (!it->rbaddress.empty())) {
+			it->port = atoi(port);
+			f->setName(it->rbname);
+			rbsetup->hide();
+			remboxmenu->enableSaveScreen(false);
+			remboxmenu->hide();
 			changed = true;
 		}
 		return menu_return::RETURN_REPAINT;
@@ -352,7 +405,7 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 			CHTTPTool httpTool;
 			std::string r_url;
 			r_url  = "http://";
-			r_url += timerlist[selected].remotebox_ip;
+			r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
 			r_url += "/control/timer?action=new&update=1";
 			r_url += "&alarm=" + to_string((int)timerlist[selected].alarmTime);
 			r_url += "&stop=" + to_string((int)timerlist[selected].stopTime);
@@ -362,7 +415,7 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 			r_url += "&rs=on";
 			r_url += "&id=" + to_string((int)timerlist[selected].eventID);
 			//printf("[remotetimer] url:%s\n",r_url.c_str());
-			r_url = httpTool.downloadString(r_url);
+			r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 			//printf("[remotetimer] status:%s\n",r_url.c_str());
 		} else
 		{
@@ -373,12 +426,12 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		}
 		return menu_return::RETURN_EXIT;
 	}
-	else if ((strcmp(key, "send_remotetimer") == 0) && remoteChanExists(timerlist[selected].channel_id))
+	else if ((strcmp(key, "send_remotetimer") == 0) && RemoteBoxChanExists(timerlist[selected].channel_id))
 	{
 		CHTTPTool httpTool;
 		std::string r_url;
 		r_url  = "http://";
-		r_url += timerlist[selected].remotebox_ip;
+		r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
 		r_url += "/control/timer?action=new";
 		r_url += "&alarm=" + to_string((int)timerlist[selected].alarmTime + timerlist[selected].rem_pre);
 		r_url += "&stop=" + to_string((int)timerlist[selected].stopTime - timerlist[selected].rem_post);
@@ -387,16 +440,16 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		r_url += "&aj=on";
 		r_url += "&rs=on";
 		//printf("[remotetimer] url:%s\n",r_url.c_str());
-		r_url = httpTool.downloadString(r_url);
+		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 		//printf("[remotetimer] status:%s\n",r_url.c_str());
 		if (r_url=="ok")
 			Timer->removeTimerEvent(timerlist[selected].eventID);
 	}
-	else if ((strcmp(key, "fetch_remotetimer") == 0) && localChanExists(timerlist[selected].channel_id))
+	else if ((strcmp(key, "fetch_remotetimer") == 0) && LocalBoxChanExists(timerlist[selected].channel_id))
 	{
 		int pre,post;
 		Timer->getRecordingSafety(pre,post);
-		std::string remotebox_ip = timerlist[selected].remotebox_ip;
+		std::string remotebox_name = timerlist[selected].remotebox_name;
 		std::string eventID = to_string((int)timerlist[selected].eventID);
 
 		int res = Timer->addRecordTimerEvent(timerlist[selected].channel_id, timerlist[selected].alarmTime + pre,
@@ -418,12 +471,12 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		CHTTPTool httpTool;
 		std::string r_url;
 		r_url  = "http://";
-		r_url += remotebox_ip;
+		r_url += RemoteBoxConnectUrl(remotebox_name);
 		r_url += "/control/timer?action=remove";
 		r_url += "&id=" + eventID;
 		//printf("[remotetimer] url:%s\n",r_url.c_str());
 		if (res > 0)
-		r_url = httpTool.downloadString(r_url);
+		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 		//printf("[remotetimer] status:%s\n",r_url.c_str());
 	}
 	else if (strcmp(key, "del_remotetimer") == 0)
@@ -431,11 +484,11 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		CHTTPTool httpTool;
 		std::string r_url;
 		r_url  = "http://";
-		r_url += timerlist[selected].remotebox_ip;
+		r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
 		r_url += "/control/timer?action=remove";
 		r_url += "&id=" + to_string((int)timerlist[selected].eventID);
 		//printf("[remotetimer] url:%s\n",r_url.c_str());
-		r_url = httpTool.downloadString(r_url);
+		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 		//printf("[remotetimer] status:%s\n",r_url.c_str());
 	}
 	else if (strcmp(key, "update_remotetimer") == 0)
@@ -443,7 +496,7 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		CHTTPTool httpTool;
 		std::string r_url;
 		r_url  = "http://";
-		r_url += timerlist[selected].remotebox_ip;
+		r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
 		r_url += "/control/timer?action=new&update=1";
 		r_url += "&alarm=" + to_string((int)timerlist[selected].alarmTime);
 		r_url += "&stop=" + to_string((int)timerlist[selected].stopTime);
@@ -452,7 +505,7 @@ int CTimerList::exec(CMenuTarget* parent, const std::string & actionKey)
 		r_url += "&aj=on";
 		r_url += "&rs=on";
 		//printf("[remotetimer] url:%s\n",r_url.c_str());
-		r_url = httpTool.downloadString(r_url);
+		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 		//printf("[remotetimer] status:%s\n",r_url.c_str());
 	}
 	else if (strcmp(key, "newtimer") == 0)
@@ -602,7 +655,7 @@ void CTimerList::updateEvents(void)
 {
 	timerlist.clear();
 	Timer->getTimerList (timerlist);
-	remoteTimerList (timerlist);
+	RemoteBoxTimerList (timerlist);
 	sort(timerlist.begin(), timerlist.end());
 
 	theight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
@@ -633,40 +686,41 @@ void CTimerList::updateEvents(void)
 	y = getScreenStartY(height);
 }
 
-void CTimerList::select_remotebox_ip()
+void CTimerList::RemoteBoxSelect()
 {
 	int select = 0;
 	CMenuWidget *m = new CMenuWidget(LOCALE_REMOTEBOX_HEAD, NEUTRINO_ICON_TIMER);
 	CMenuSelectorTarget * selector = new CMenuSelectorTarget(&select);
 
-	for (std::list<std::string>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it)
-		m->addItem(new CMenuForwarder(*it, true, NULL, selector, to_string(std::distance(g_settings.timer_remotebox_ip.begin(),it)).c_str()));
+	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it)
+		m->addItem(new CMenuForwarder(it->rbname, true, NULL, selector, to_string(std::distance(g_settings.timer_remotebox_ip.begin(),it)).c_str()));
 
+	m->enableSaveScreen(true);
 	m->exec(NULL, "");
 
 	delete selector;
 
-	std::list<std::string>::iterator it = g_settings.timer_remotebox_ip.begin();
+	std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin();
 	std::advance(it,select);
-	if (askUserOnRemoteTimerConflict(timerlist[selected].announceTime, timerlist[selected].stopTime, (char*) it->c_str()))
+	if (askUserOnRemoteTimerConflict(timerlist[selected].announceTime, timerlist[selected].stopTime, (char*) it->rbname.c_str()))
 	{
-	strncpy(timerlist[selected].remotebox_ip,it->c_str(),sizeof(timerlist[selected].remotebox_ip));
-	timerlist[selected].remotebox_ip[sizeof(timerlist[selected].remotebox_ip) - 1] = 0;
+	strncpy(timerlist[selected].remotebox_name,it->rbname.c_str(),sizeof(timerlist[selected].remotebox_name));
+	timerlist[selected].remotebox_name[sizeof(timerlist[selected].remotebox_name) - 1] = 0;
 	}
 }
 
-bool CTimerList::remoteChanExists(t_channel_id channel_id)
+bool CTimerList::RemoteBoxChanExists(t_channel_id channel_id)
 {
-	if (strcmp(timerlist[selected].remotebox_ip,"") == 0)
+	if (strcmp(timerlist[selected].remotebox_name,"") == 0)
 		return false;
 
 	CHTTPTool httpTool;
 	std::string r_url;
 	r_url  = "http://";
-	r_url += timerlist[selected].remotebox_ip;
+	r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
 	r_url += "/control/getchannel?format=json&id=";
 	r_url += string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id);
-	r_url = httpTool.downloadString(r_url);
+	r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 
 	Json::Value root;
 	Json::Reader reader;
@@ -685,7 +739,7 @@ bool CTimerList::remoteChanExists(t_channel_id channel_id)
 	return (r_url == "true");
 }
 
-bool CTimerList::localChanExists(t_channel_id channel_id)
+bool CTimerList::LocalBoxChanExists(t_channel_id channel_id)
 {
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
 	if (channel)
@@ -694,19 +748,35 @@ bool CTimerList::localChanExists(t_channel_id channel_id)
 		return false;
 }
 
-void CTimerList::remoteTimerList(CTimerd::TimerList &rtimerlist)
+std::string CTimerList::RemoteBoxConnectUrl(std::string _rbname)
+{
+	std::string c_url = "";
+	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin();
+									 it != g_settings.timer_remotebox_ip.end(); ++it) {
+		if (it->rbname == _rbname) {
+			if (!it->user.empty() && !it->pass.empty())
+				c_url += it->user + ":" + it->pass +"@";
+			c_url += it->rbaddress;
+			c_url += ":" + to_string(it->port);
+			break;
+		}
+	}
+	return c_url;
+}
+
+void CTimerList::RemoteBoxTimerList(CTimerd::TimerList &rtimerlist)
 {
 	if (g_settings.timer_remotebox_ip.size() == 0)
 		return;
 
 	CHTTPTool httpTool;
 	std::string r_url;
-	for (std::list<std::string>::iterator it = g_settings.timer_remotebox_ip.begin();
+	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin();
 									 it != g_settings.timer_remotebox_ip.end(); ++it) {
 	r_url  = "http://";
-		r_url += *it;
+		r_url += RemoteBoxConnectUrl(it->rbname);
 	r_url += "/control/timer?format=json";
-	r_url = httpTool.downloadString(r_url);
+	r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 	//printf("[remotetimer] timers:%s\n",r_url.c_str());
 
 	Json::Value root;
@@ -728,8 +798,8 @@ void CTimerList::remoteTimerList(CTimerd::TimerList &rtimerlist)
 	for (unsigned int i= 0; i<remotetimers.size();i++) {
 			CTimerd::responseGetTimer rtimer;
 			if ( atoi(remotetimers[i].get("type_number","").asString()) == 5) {
-					strncpy(rtimer.remotebox_ip,it->c_str(),sizeof(rtimer.remotebox_ip));
-					rtimer.remotebox_ip[sizeof(rtimer.remotebox_ip) - 1] = 0;
+					strncpy(rtimer.remotebox_name,it->rbname.c_str(),sizeof(rtimer.remotebox_name));
+					rtimer.remotebox_name[sizeof(rtimer.remotebox_name) - 1] = 0;
 					rtimer.rem_pre = rem_pre;
 					rtimer.rem_post = rem_post;
 				rtimer.eventID = atoi(remotetimers[i].get("id","").asString());
@@ -838,7 +908,7 @@ int CTimerList::show()
 		else if ((msg == CRCInput::RC_play) && !(timerlist.empty()) && (g_settings.timer_remotebox_ip.size() > 0))
 		{
 			if (timerlist[selected].eventType == CTimerd::TIMER_RECORD ) {
-				select_remotebox_ip();
+				RemoteBoxSelect();
 				if (exec(this,"send_remotetimer"))
 				{
 					res=menu_return::RETURN_EXIT_ALL;
@@ -904,8 +974,7 @@ int CTimerList::show()
 		}
 		else if (msg==CRCInput::RC_setup)
 		{
-			enterRemoteBox();
-			update=true;
+			update = RemoteBoxSetup();
 		}
 		else if (msg==CRCInput::RC_yellow)
 		{
@@ -928,9 +997,10 @@ int CTimerList::show()
 				if (timer->eventType == CTimerd::TIMER_RECORD || timer->eventType == CTimerd::TIMER_REMOTEBOX || timer->eventType == CTimerd::TIMER_ZAPTO)
 				{
 					hide();
-					if (timer->epgID != 0)
+					if (timer->epgID != 0){
 						res = g_EpgData->show(timer->channel_id, timer->epgID, &timer->epg_starttime);
-					else
+						update=true;
+					}else
 						ShowHint(LOCALE_MESSAGEBOX_INFO, LOCALE_EPGVIEWER_NOTFOUND);
 					if (res==menu_return::RETURN_EXIT_ALL)
 						loop=false;
@@ -968,8 +1038,9 @@ void CTimerList::hide()
 	}
 }
 
-void CTimerList::enterRemoteBox()
+bool CTimerList::RemoteBoxSetup()
 {
+	bool ret = false;
 	remboxmenu = new CMenuWidget(LOCALE_REMOTEBOX_HEAD, NEUTRINO_ICON_TIMER);
 	remboxmenu->addKey(CRCInput::RC_red, this, "del_ip");
 	remboxmenu->addKey(CRCInput::RC_green, this, "add_ip");
@@ -977,24 +1048,30 @@ void CTimerList::enterRemoteBox()
 	remboxmenu->addIntroItems();
 
 	item_offset = remboxmenu->getItemsCount();
-	for (std::list<std::string>::iterator it = g_settings.timer_remotebox_ip.begin();
+	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin();
 									 it != g_settings.timer_remotebox_ip.end(); ++it)
-		remboxmenu->addItem(new CMenuForwarder(*it, true, NULL, this, "cha_ip"));
+		remboxmenu->addItem(new CMenuForwarder(it->rbname, true, NULL, this, "cha_ip"));
 
 	remboxmenu->setFooter(RemoteBoxFooterButtons, RemoteBoxFooterButtonCount);
 
+	remboxmenu->enableSaveScreen(true);
 	remboxmenu->exec(NULL, "");
-	remboxmenu->hide();
 	if (changed) {
+			std::vector<timer_remotebox_item> old_timer_remotebox_ip = g_settings.timer_remotebox_ip;
 			g_settings.timer_remotebox_ip.clear();
 			for (int i = item_offset; i < remboxmenu->getItemsCount(); i++) {
 				CMenuItem *item = remboxmenu->getItem(i);
 				CMenuForwarder *f = static_cast<CMenuForwarder*>(item);
-				g_settings.timer_remotebox_ip.push_back(f->getName());
+				for (std::vector<timer_remotebox_item>::iterator it = old_timer_remotebox_ip.begin();
+									 it != old_timer_remotebox_ip.end(); ++it)
+					if (it->rbname == f->getName()) {
+						g_settings.timer_remotebox_ip.push_back(*it);}
 			}
 			changed = false;
+			ret = true;
 	}
 	delete remboxmenu;
+	return ret;
 }
 
 void CTimerList::paintItem(int pos)
@@ -1031,6 +1108,12 @@ void CTimerList::paintItem(int pos)
 	if (currpos < timerlist.size())
 	{
 		CTimerd::responseGetTimer & timer = timerlist[currpos];
+		//NI
+		if (timer.eventType == CTimerd::TIMER_REMOTEBOX)
+		{
+			color = COL_MENUCONTENTINACTIVE_TEXT;
+			bgcolor = COL_MENUCONTENTINACTIVE_PLUS_0;
+		}
 		char zAlarmTime[25] = {0};
 		struct tm *alarmTime = localtime(&(timer.alarmTime));
 		strftime(zAlarmTime,20,"%d.%m. %H:%M",alarmTime);
@@ -1056,7 +1139,7 @@ void CTimerList::paintItem(int pos)
 				sprintf(srepeatcount,"%ux",timer.repeatCount);
 			g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(x+fw*13+(real_width-fw*23)/2,ypos+fheight, (real_width-fw*13)/2-5, srepeatcount, color, fheight);
 		}
-		std::string t_type = (timer.eventType == CTimerd::TIMER_REMOTEBOX) ? std::string(convertTimerType2String(timer.eventType)) + " (" + std::string(timer.remotebox_ip) + ")" : convertTimerType2String(timer.eventType);
+		std::string t_type = (timer.eventType == CTimerd::TIMER_REMOTEBOX) ? std::string(convertTimerType2String(timer.eventType)) + " (" + std::string(timer.remotebox_name) + ")" : convertTimerType2String(timer.eventType);
 		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(x+fw*13+(real_width-fw*13)/2,ypos+fheight, (real_width-fw*13)/2-5, t_type, color, fheight);
 
 		// paint rec icon when recording in progress
@@ -1139,10 +1222,10 @@ void CTimerList::paintItem(int pos)
 			CHTTPTool httpTool;
 			std::string r_url;
 			r_url  = "http://";
-			r_url += std::string(timer.remotebox_ip);
+			r_url += RemoteBoxConnectUrl(timer.remotebox_name);
 			r_url += "/control/getchannel?format=json&id=";
 			r_url += string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer.channel_id);
-			r_url = httpTool.downloadString(r_url);
+			r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 
 			Json::Value root;
 			Json::Reader reader;
@@ -1671,7 +1754,7 @@ int CTimerList::newTimer()
 	return ret;
 }
 
-bool CTimerList::askUserOnRemoteTimerConflict(time_t announceTime, time_t stopTime, char * remotebox_ip)
+bool CTimerList::askUserOnRemoteTimerConflict(time_t announceTime, time_t stopTime, char * remotebox_name)
 {
 	CTimerd::TimerList overlappingTimers;
 	int pre,post;
@@ -1681,7 +1764,7 @@ bool CTimerList::askUserOnRemoteTimerConflict(time_t announceTime, time_t stopTi
 	     it != timerlist.end();++it)
 	{
 
-	if (strcmp(it->remotebox_ip,remotebox_ip) == 0) {
+	if (strcmp(it->remotebox_name,remotebox_name) == 0) {
 
 		if(it->stopTime != 0 && stopTime != 0)
 		{
