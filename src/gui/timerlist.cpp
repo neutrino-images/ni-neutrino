@@ -1822,8 +1822,10 @@ bool CTimerList::askUserOnRemoteTimerConflict(time_t announceTime, time_t stopTi
 bool askUserOnTimerConflict(time_t announceTime, time_t stopTime, t_channel_id channel_id)
 {
 	//NI
+	bool useCI = false;
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
-	bool useCI = channel->bUseCI;
+	if (channel)
+		useCI = channel->bUseCI;
 
 	if (CFEManager::getInstance()->getEnabledCount() == 1 || useCI) { //NI
 		CTimerdClient Timer;
