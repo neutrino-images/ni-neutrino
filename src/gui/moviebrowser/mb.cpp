@@ -1379,6 +1379,7 @@ void CMovieBrowser::refreshChannelLogo(void)
 	TRACE("[mb]->%s:%d\n", __func__, __LINE__);
 
 	int w_logo_max = m_cBoxFrameTitleRel.iWidth / 4;
+	int h_logo_max = m_cBoxFrameTitleRel.iHeight - 2*OFFSET_INNER_MIN;
 	short pb_hdd_offset = 100 + OFFSET_INNER_MID;
 
 	if (show_mode == MB_SHOW_YT)
@@ -1405,12 +1406,10 @@ void CMovieBrowser::refreshChannelLogo(void)
 	{
 		// scale image if required, TODO: move into an own handler, eg. header, so channel logo should be paint in header object
 		int h_logo = m_channelLogo->getHeight();
-		if (h_logo > m_cBoxFrameTitleRel.iHeight)
+		if (h_logo > h_logo_max)
 		{
-			uint8_t ratio = m_cBoxFrameTitleRel.iHeight*100/h_logo;
-			m_channelLogo->setHeight(m_cBoxFrameTitleRel.iHeight);
-			int w_logo = ratio*m_channelLogo->getWidth()/100;
-			m_channelLogo->setWidth(min(w_logo, w_logo_max));
+			m_channelLogo->setWidth(0); // force recalculation
+			m_channelLogo->setHeight(h_logo_max, true);
 		}
 
 		int x = m_cBoxFrame.iX + m_cBoxFrameTitleRel.iX + m_cBoxFrameTitleRel.iWidth - m_channelLogo->getWidth() - OFFSET_INNER_MID;
@@ -1619,10 +1618,9 @@ void CMovieBrowser::refreshDetailsLine(int pos)
 		int fheight = g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_LIST]->getHeight();
 		int hheight = m_pcBrowser->getHeaderListHeight();
 		int theight = m_pcBrowser->getTitleHeight();
-		int bheight = 8 /*TEXT_BORDER_WIDTH*/;
 
 		int xpos  = m_cBoxFrameBrowserList.iX - ConnectLineBox_Width;
-		int ypos1 = m_cBoxFrameBrowserList.iY + hheight + theight + bheight + pos*fheight + (fheight/2);
+		int ypos1 = m_cBoxFrameBrowserList.iY + hheight + theight + OFFSET_INNER_MID + pos*fheight + (fheight/2);
 		int ypos2 = m_cBoxFrameInfo1.iY + (m_cBoxFrameInfo1.iHeight/2);
 
 		if (m_detailsLine == NULL)
@@ -1655,8 +1653,8 @@ void CMovieBrowser::info_hdd_level(bool paint_hdd)
 		pb.setValues(blocks_percent_used, 100);
 		pb.paint(false);
 	}
-
 }
+
 void CMovieBrowser::refreshLCD(void)
 {
 	if (m_vMovieInfo.empty() || m_movieSelectionHandler == NULL)
