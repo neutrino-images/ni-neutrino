@@ -1249,6 +1249,8 @@ int CMovieBrowser::paint(void)
 		return (false);
 	}
 
+	m_pcFilter->setBackGroundRadius(RADIUS_LARGE);
+
 	m_pcInfo1->setBackGroundColor(COL_MENUCONTENTDARK_PLUS_0);
 	m_pcInfo1->setTextColor(COL_MENUCONTENTDARK_TEXT);
 	m_pcInfo1->setBackGroundRadius(RADIUS_LARGE);
