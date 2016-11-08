@@ -296,8 +296,8 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 	if (imdb_active && startPos == 0)
 	{
 		frameBuffer->getIconSize(NEUTRINO_ICON_IMDB, &icon_w, &icon_h);
-		frameBuffer->paintIcon(NEUTRINO_ICON_IMDB, sx+10+cover_offset, y+(medlineheight-icon_h)/2);
-		logo_offset = icon_w + 10;
+		frameBuffer->paintIcon(NEUTRINO_ICON_IMDB, sx+OFFSET_INNER_MID+cover_offset, y+(medlineheight-icon_h)/2);
+		logo_offset = icon_w + OFFSET_INNER_MID;
 	}
 	/* //NI - we use our starbar
 	if (stars > 0 && startPos == 0)
@@ -320,14 +320,14 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 
 		//create starbar item
 		CProgressBar *cc_starbar = new CProgressBar();
-		cc_starbar->setProgress(sx+10+cover_offset+logo_offset, y+(medlineheight-stars_h)/2, stars_w, medlineheight, imdb_active ? imdb_stars : stars, 100);
+		cc_starbar->setProgress(sx+OFFSET_INNER_MID+cover_offset+logo_offset, y+(medlineheight-stars_h)/2, stars_w, medlineheight, imdb_active ? imdb_stars : stars, 100);
 		cc_starbar->setType(CProgressBar::PB_STARBAR);
 		cc_starbar->paint();
 
 		if (imdb_active)
 		{
-			int _x = sx+10+cover_offset+logo_offset+stars_w+10;
-			int _w = ox-10-cover_offset-logo_offset-stars_w-10;
+			int _x = sx+OFFSET_INNER_MID+cover_offset+logo_offset+stars_w+OFFSET_INNER_MID;
+			int _w = ox-OFFSET_INNER_MID-cover_offset-logo_offset-stars_w-OFFSET_INNER_MID;
 			g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->RenderString(_x, y+medlineheight, _w, imdb_rating, COL_MENUCONTENT_TEXT, 0, true);
 		}
 	}
@@ -1671,7 +1671,7 @@ int CEpgData::showIMDb(bool splash)
 	frameBuffer->paintBoxRel(sx, sy+toph, ox /*- 15*/, sb, COL_MENUCONTENT_PLUS_0);
 	if (splash)
 	{
-		fontIMDb->RenderString(sx+10, sy+toph+medlineheight, ox-10, "IMDb: Daten werden geladen ...", COL_MENUCONTENT_TEXT, 0, true);
+		fontIMDb->RenderString(sx+OFFSET_INNER_MID, sy+toph+medlineheight, ox-OFFSET_INNER_MID, "IMDb: Daten werden geladen ...", COL_MENUCONTENT_TEXT, 0, true);
 		return 0;
 	}
 
