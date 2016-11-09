@@ -1827,9 +1827,9 @@ void CControlAPI::SendFoundEvents(CyhookHandler *hh, bool xml_format)
 			if( (eventIterator->startTime+eventIterator->duration) < u_azeit)
 				continue;
 
-			t_channel_id channel_id = eventIterator->channelID;
-			t_channel_id epg_id = channel_id;
-			CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(channel_id);
+			t_channel_id chan_id = eventIterator->channelID;
+			t_channel_id epg_id = chan_id;
+			CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(chan_id);
 			if (ch)
 				epg_id = ch->getEpgID();
 
@@ -1837,7 +1837,7 @@ void CControlAPI::SendFoundEvents(CyhookHandler *hh, bool xml_format)
 			item.clear();
 			if (hh->outType == json || hh->outType == xml)
 			{
-				item += hh->outPair("channelname", NeutrinoAPI->GetServiceName(channel_id), true);
+				item += hh->outPair("channelname", NeutrinoAPI->GetServiceName(chan_id), true);
 				item += hh->outPair("epgtitle", hh->outValue(epg.title), true);
 				if (return_epginfo) {
 					item += hh->outPair("info1", hh->outValue(epg.info1), true);
@@ -1861,7 +1861,7 @@ void CControlAPI::SendFoundEvents(CyhookHandler *hh, bool xml_format)
 				strftime(tmpstr, sizeof(tmpstr), "%H:%M", tmStartZeit );
 				item += hh->outPair("time", tmpstr, true);
 				item += hh->outPair("duration", string_printf("%d", eventIterator->duration / 60), true);
-				item += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id), true);
+				item += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, chan_id), true);
 				item += hh->outPair("epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, epg_id), true);
 				item += hh->outPair("eventid", string_printf("%llu", eventIterator->eventID), false);
 
@@ -1880,7 +1880,7 @@ void CControlAPI::SendFoundEvents(CyhookHandler *hh, bool xml_format)
 				datetimer_str += tmpstr;
 
 				result += hh->outSingle(datetimer_str);
-				result += hh->outSingle(NeutrinoAPI->GetServiceName(channel_id));
+				result += hh->outSingle(NeutrinoAPI->GetServiceName(chan_id));
 				result += hh->outSingle(epg.title);
 				if (return_epginfo) {
 					if(!epg.info1.empty())
