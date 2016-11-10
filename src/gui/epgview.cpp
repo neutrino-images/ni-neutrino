@@ -1036,6 +1036,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 
 				if ((prev_id != 0) && !call_fromfollowlist && !mp_info)
 				{
+					toph = topboxheight;
 					show(channel_id, prev_id, &prev_zeit, false);
 					showPos=0;
 				}
@@ -1047,6 +1048,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 
 				if ((next_id != 0) && !call_fromfollowlist && !mp_info)
 				{
+					toph = topboxheight;
 					show(channel_id, next_id, &next_zeit, false);
 					showPos=0;
 				}
