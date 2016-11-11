@@ -1006,6 +1006,16 @@ void CEventList::showFunctionBar(t_channel_id channel_id)
 	buttons[btn_cnt].locale = LOCALE_TIMERLIST_NAME;
 	btn_cnt++;
 
+	//NI left button
+	buttons[btn_cnt].button = NEUTRINO_ICON_BUTTON_LEFT;
+	buttons[btn_cnt].locale = NONEXISTANT_LOCALE;
+	btn_cnt++;
+
+	//NI right button
+	buttons[btn_cnt].button = NEUTRINO_ICON_BUTTON_RIGHT;
+	buttons[btn_cnt].locale = NONEXISTANT_LOCALE;
+	btn_cnt++;
+
 	::paintButtons(bx, by, bw, btn_cnt, buttons, bw, bh);
 }
 
