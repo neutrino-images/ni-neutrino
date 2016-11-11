@@ -462,7 +462,7 @@ void CMovieBrowser::initGlobalSettings(void)
 	}
 
 	/***** Browser List **************/
-	m_settings.browserFrameHeight = 50; /* percent */
+	m_settings.browserFrameHeight = 65; /* percent */
 
 	m_settings.browserRowNr = 6;
 	m_settings.browserRowItem[0] = MB_INFO_CHANNEL;
@@ -475,12 +475,12 @@ void CMovieBrowser::initGlobalSettings(void)
 	m_settings.browserRowItem[7] = MB_INFO_MAX_NUMBER;
 	m_settings.browserRowItem[8] = MB_INFO_MAX_NUMBER;
 
-	m_settings.browserRowWidth[0] = m_defaultRowWidth[m_settings.browserRowItem[0]];		//300;
-	m_settings.browserRowWidth[1] = m_defaultRowWidth[m_settings.browserRowItem[1]]; 		//100;
-	m_settings.browserRowWidth[2] = m_defaultRowWidth[m_settings.browserRowItem[2]]; 		//80;
-	m_settings.browserRowWidth[3] = m_defaultRowWidth[m_settings.browserRowItem[3]]; 		//50;
-	m_settings.browserRowWidth[4] = m_defaultRowWidth[m_settings.browserRowItem[4]]; 		//30;
-	m_settings.browserRowWidth[5] = m_defaultRowWidth[m_settings.browserRowItem[5]]; 		//30;
+	m_settings.browserRowWidth[0] = m_defaultRowWidth[m_settings.browserRowItem[0]];
+	m_settings.browserRowWidth[1] = m_defaultRowWidth[m_settings.browserRowItem[1]];
+	m_settings.browserRowWidth[2] = m_defaultRowWidth[m_settings.browserRowItem[2]];
+	m_settings.browserRowWidth[3] = m_defaultRowWidth[m_settings.browserRowItem[3]];
+	m_settings.browserRowWidth[4] = m_defaultRowWidth[m_settings.browserRowItem[4]];
+	m_settings.browserRowWidth[5] = m_defaultRowWidth[m_settings.browserRowItem[5]];
 	m_settings.browserRowWidth[6] = m_defaultRowWidth[m_settings.browserRowItem[6]];
 	m_settings.browserRowWidth[7] = m_defaultRowWidth[m_settings.browserRowItem[7]];
 	m_settings.browserRowWidth[8] = m_defaultRowWidth[m_settings.browserRowItem[8]];
@@ -1379,6 +1379,7 @@ void CMovieBrowser::refreshChannelLogo(void)
 	TRACE("[mb]->%s:%d\n", __func__, __LINE__);
 
 	int w_logo_max = m_cBoxFrameTitleRel.iWidth / 4;
+	int h_logo_max = m_cBoxFrameTitleRel.iHeight - 2*OFFSET_INNER_MIN;
 	short pb_hdd_offset = 100 + OFFSET_INNER_MID;
 
 	if (show_mode == MB_SHOW_YT)
@@ -1403,15 +1404,10 @@ void CMovieBrowser::refreshChannelLogo(void)
 
 	if (m_channelLogo && m_channelLogo->hasLogo())
 	{
-		// scale image if required, TODO: move into an own handler, eg. header, so channel logo should be paint in header object
-		int h_logo = m_channelLogo->getHeight();
-		if (h_logo > m_cBoxFrameTitleRel.iHeight)
-		{
-			uint8_t ratio = m_cBoxFrameTitleRel.iHeight*100/h_logo;
-			m_channelLogo->setHeight(m_cBoxFrameTitleRel.iHeight);
-			int w_logo = ratio*m_channelLogo->getWidth()/100;
-			m_channelLogo->setWidth(min(w_logo, w_logo_max));
-		}
+		// TODO: move into an own handler, eg. header, so channel logo should be paint in header object
+		m_channelLogo->setWidth(min(m_channelLogo->getWidth(), w_logo_max), true);
+		if (m_channelLogo->getHeight() > h_logo_max)
+			m_channelLogo->setHeight(h_logo_max, true);
 
 		int x = m_cBoxFrame.iX + m_cBoxFrameTitleRel.iX + m_cBoxFrameTitleRel.iWidth - m_channelLogo->getWidth() - OFFSET_INNER_MID;
 		int y = m_cBoxFrame.iY + m_cBoxFrameTitleRel.iY + (m_cBoxFrameTitleRel.iHeight - m_channelLogo->getHeight())/2;
@@ -1619,10 +1615,9 @@ void CMovieBrowser::refreshDetailsLine(int pos)
 		int fheight = g_Font[SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_LIST]->getHeight();
 		int hheight = m_pcBrowser->getHeaderListHeight();
 		int theight = m_pcBrowser->getTitleHeight();
-		int bheight = 8 /*TEXT_BORDER_WIDTH*/;
 
 		int xpos  = m_cBoxFrameBrowserList.iX - ConnectLineBox_Width;
-		int ypos1 = m_cBoxFrameBrowserList.iY + hheight + theight + bheight + pos*fheight + (fheight/2);
+		int ypos1 = m_cBoxFrameBrowserList.iY + hheight + theight + OFFSET_INNER_MID + pos*fheight + (fheight/2);
 		int ypos2 = m_cBoxFrameInfo1.iY + (m_cBoxFrameInfo1.iHeight/2);
 
 		if (m_detailsLine == NULL)
@@ -1655,8 +1650,8 @@ void CMovieBrowser::info_hdd_level(bool paint_hdd)
 		pb.setValues(blocks_percent_used, 100);
 		pb.paint(false);
 	}
-
 }
+
 void CMovieBrowser::refreshLCD(void)
 {
 	if (m_vMovieInfo.empty() || m_movieSelectionHandler == NULL)

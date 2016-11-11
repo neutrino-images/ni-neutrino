@@ -174,7 +174,7 @@ CCamManager::CCamManager()
 	filter_channels = false;
 	//NI
 	useCI = false;
-	rmode = CI_OFF;
+	rmode = false;
 	mp = false;
 }
 
@@ -312,7 +312,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 		//NI - this is a hack for rezaping to the recording channe
 		//if commig from movieplayer, disable hack
-		if(!mp && ( (!mode || (mode && !chan->scrambled)) && (!start && rmode==CI_ON)) ){
+		if(!mp && ( (!mode || (mode && !chan->scrambled)) && (!start && rmode)) ){
 			INFO("    ##NI: HACK: disabling TS\n");
 			cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
 		}
@@ -320,13 +320,18 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 #endif
 	}
 
-	//NI
+//NI
+#ifdef BOXMODEL_APOLLO
 	if(mode) {
-		if(start)
-			rmode = CHECK;
-		else
-			rmode = CI_OFF;
+		if(start) {
+			if ((tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) || (filter_channels && channel->bUseCI)) {
+				rmode = true;
+				INFO("    ##NI: rmode\n");
+			}
+		} else
+			rmode = false;
 	}
+#endif
 
 	//NI
 	if(oldmask == newmask) {
@@ -397,11 +402,6 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			} else if (filter_channels && !channel->bUseCI) {
 				INFO("CI: filter enabled, CI not used for [%s]\n", channel->getName().c_str());
 			} else {
-
-				//NI
-				if(rmode==CHECK)
-					rmode=CI_ON; //mode using CI
-
 				useCI = true; //NI
 				INFO("CI: use CI for [%s]\n", channel->getName().c_str());
 				cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI);

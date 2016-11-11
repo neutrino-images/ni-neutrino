@@ -97,12 +97,7 @@ class CCamManager
 		//NI
 		bool mp;
 		bool useCI;
-		unsigned int rmode;
-		enum ci_aktive {
-			CI_OFF,
-			CI_ON,
-			CHECK
-		};//NI
+		bool rmode;
 
 	public:
 		CCamManager();

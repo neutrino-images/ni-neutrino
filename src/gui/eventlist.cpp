@@ -856,35 +856,31 @@ void CEventList::paintHead(t_channel_id _channel_id, std::string _channelname, s
 	int font_mid = SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE;
 	int font_lr  = SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE;
 
-	if (!header){
-		header = new CComponentsFrmChain(x, y, full_width, theight);
-		header->enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_MENUCONTENT_PLUS_0, g_settings.theme.menu_Head_gradient_direction);
-		header->setCorner(RADIUS_LARGE, CORNER_TOP);
-	}
+	if (!header)
+		header = new CComponentsFrmChain();
+
+	header->setDimensionsAll(x, y, full_width, theight);
+	header->enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_MENUCONTENT_PLUS_0, g_settings.theme.menu_Head_gradient_direction);
+	header->setCorner(RADIUS_LARGE, CORNER_TOP);
 	header->clear();
 
-	int x_off = 10;
+	int x_off = OFFSET_INNER_MID;
 	int mid_width = full_width * 40 / 100; // 40%
+	int max_height = theight - 2*OFFSET_INNER_MIN;
 	int side_width = ((full_width - mid_width) / 2) - (2 * x_off);
 
 	//create an logo object
 	CComponentsChannelLogoScalable* midLogo = new CComponentsChannelLogoScalable(0, 0, _channelname, _channel_id, header);
-	if (midLogo->hasLogo()) {
-		//if logo object has found a logo and was ititialized, the hand  it's size
- 		int w_logo = midLogo->getWidth();
+	if (midLogo->hasLogo())
+	{
+		midLogo->setWidth(min(midLogo->getWidth(), mid_width), true);
+		if (midLogo->getHeight() > max_height)
+			midLogo->setHeight(max_height, true);
 
-		//scale image if required, TODO: move into an own handler, eg. header, so channel logo should be paint in header object
-		int h_logo = midLogo->getHeight();
-		if (h_logo > theight){
-			uint8_t h_ratio = uint8_t(theight*100/h_logo);
-			midLogo->setHeight(theight);
-			w_logo = h_ratio*w_logo/100;
-			midLogo->setWidth(w_logo);
-		}	
 		midLogo->setPos(CC_CENTERED, CC_CENTERED);
 
 		// recalc widths
-		side_width = ((full_width - w_logo) / 2) - (4 * x_off);
+		side_width = ((full_width - midLogo->getWidth()) / 2) - (4 * x_off);
 	}
 	else {
 		header->removeCCItem(midLogo); //remove/destroy logo object, if it is not available
@@ -898,9 +894,8 @@ void CEventList::paintHead(t_channel_id _channel_id, std::string _channelname, s
 	}
 
 	if (!_channelname_next.empty()) {
-		int name_w = std::min(g_Font[font_lr]->getRenderWidth(_channelname_next), side_width);
-		int x_pos = full_width - name_w - x_off;
-		CComponentsText *rText = new CComponentsText(x_pos, CC_CENTERED, name_w, theight, _channelname_next, CTextBox::NO_AUTO_LINEBREAK, g_Font[font_lr], CComponentsText::FONT_STYLE_REGULAR, header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
+		int x_pos = full_width - side_width - x_off;
+		CComponentsText *rText = new CComponentsText(x_pos, CC_CENTERED, side_width, theight, _channelname_next, CTextBox::NO_AUTO_LINEBREAK | CTextBox::RIGHT, g_Font[font_lr], CComponentsText::FONT_STYLE_REGULAR, header, CC_SHADOW_OFF, COL_MENUHEAD_TEXT);
 		rText->doPaintBg(false);
 	}
 
@@ -1009,6 +1004,16 @@ void CEventList::showFunctionBar(t_channel_id channel_id)
 	//NI timerlist button
 	buttons[btn_cnt].button = NEUTRINO_ICON_BUTTON_0;
 	buttons[btn_cnt].locale = LOCALE_TIMERLIST_NAME;
+	btn_cnt++;
+
+	//NI left button
+	buttons[btn_cnt].button = NEUTRINO_ICON_BUTTON_LEFT;
+	buttons[btn_cnt].locale = NONEXISTANT_LOCALE;
+	btn_cnt++;
+
+	//NI right button
+	buttons[btn_cnt].button = NEUTRINO_ICON_BUTTON_RIGHT;
+	buttons[btn_cnt].locale = NONEXISTANT_LOCALE;
 	btn_cnt++;
 
 	::paintButtons(bx, by, bw, btn_cnt, buttons, bw, bh);
