@@ -718,9 +718,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.recording_epg_for_filename      = configfile.getBool("recording_epg_for_filename"         , true);
 	g_settings.recording_epg_for_end           = configfile.getBool("recording_epg_for_end"              , true);
 	g_settings.recording_save_in_channeldir    = configfile.getBool("recording_save_in_channeldir"         , false);
-	g_settings.recording_slow_warning		= configfile.getBool("recording_slow_warning"     , false); //NI
-	g_settings.recording_fill_warning		= configfile.getInt32("recording_fill_warning", 95); //NI
-	g_settings.recording_tevents			= configfile.getBool("recording_tevents", false); //NI
+	g_settings.recording_slow_warning	   = configfile.getBool("recording_slow_warning"     , false); //NI
+	g_settings.recording_fill_warning	   = configfile.getInt32("recording_fill_warning", 95); //NI
 	g_settings.recording_startstop_msg	   = configfile.getBool("recording_startstop_msg"     , true);
 	g_settings.recording_already_found_check   = configfile.getBool("recording_already_found_check", false);
 
@@ -1324,7 +1323,6 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setBool  ("recording_save_in_channeldir"       , g_settings.recording_save_in_channeldir   );
 	configfile.setBool  ("recording_slow_warning"             , g_settings.recording_slow_warning         );
 	configfile.setInt32 ("recording_fill_warning"             , g_settings.recording_fill_warning         ); //NI
-	configfile.setBool  ("recording_tevents"                  , g_settings.recording_tevents              ); //NI
 	configfile.setBool  ("recording_startstop_msg"             , g_settings.recording_startstop_msg       );
 	configfile.setBool  ("recording_already_found_check"      , g_settings.recording_already_found_check  );
 

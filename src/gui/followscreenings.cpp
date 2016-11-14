@@ -155,7 +155,7 @@ void CFollowScreenings::show()
 
 	getFollowScreenings();
 
-	if (followlist.size() == 1 && !g_settings.recording_tevents) { //NI
+	if (followlist.size() == 1) {
 		snprintf(actionstr, sizeof(actionstr), "%lu", followlist.front().startTime);
 		exec(NULL, actionstr);
 	} else {

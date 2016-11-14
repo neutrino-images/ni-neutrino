@@ -466,7 +466,6 @@ struct SNeutrinoSettings
 	int recording_zap_on_announce;
 	int recording_slow_warning;
 	int recording_fill_warning; //NI
-	int recording_tevents; //NI
 	int recording_startstop_msg;
 	int shutdown_timer_record_type;
 	std::vector<timer_remotebox_item> timer_remotebox_ip;

@@ -266,11 +266,6 @@ int CRecordSetup::showRecordSetup()
 	cover->setHint("", LOCALE_MENU_HINT_RECORD_AUTO_COVER);
 	recordingSettings->addItem(cover);
 
-	//NI configure timer events in followcreening
-	CMenuOptionChooser* tevents = new CMenuOptionChooser(LOCALE_RECORDINGMENU_TEVENTS, &g_settings.recording_tevents, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	tevents->setHint("", LOCALE_MENU_HINT_RECORD_TEVENTS);
-	recordingSettings->addItem(tevents);
-
 	recordingSettings->addItem(GenericMenuSeparatorLine);
 
 	if (!g_settings.easymenu) {

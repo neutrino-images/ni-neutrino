@@ -1444,7 +1444,6 @@ menu.hint_record_fill_warn Zeige Warnung, wenn das Aufnahmemedium zu voll wird
 menu.hint_record_slow_warn Zeige Warnung, wenn der Aufnahmepuffer zu überlaufen droht
 menu.hint_record_startstop_msg Schaltet die Meldung bei Aufnahmestart/ende ein oder aus.
 menu.hint_record_tdir Wählen Sie ein Verzeichnis für Ihre Timeshift-Aufnahmen im temporären Timeshift-Modus
-menu.hint_record_tevents Beim wählen der Aufnahme aus dem EPG heraus, Timerliste anzeigen auch wenn keine weiteren Termine vorhanden sind
 menu.hint_record_time Aufzeichnungsdauer vor dem Stopp bei der Verwendung von Direktaufzeichnung mit Record-Taste.
 menu.hint_record_time_ts Timeshiftdauer vor dem Stopp, wenn temporäres Timeshift aktiviert.
 menu.hint_record_timeafter Stellen Sie die Nachlaufzeit für Timer-Aufnahmen ein\nEin Wert von 2 beendet die Aufnahme 2 Minuten nach dem Sendungsende
@@ -2314,7 +2313,6 @@ recordingmenu.server Server
 recordingmenu.server_mac MAC-Adresse
 recordingmenu.setupnow Einstellungen jetzt übernehmen
 recordingmenu.slow_warn Warnung bei langsamen Aufnahmemedien
-recordingmenu.tevents Timer Auswahlliste immer anzeigen
 recordingmenu.timeshift Timeshift
 recordingmenu.tsdir Timeshift Aufnahmeverzeichnis
 recordingmenu.vcr Videorekorder
