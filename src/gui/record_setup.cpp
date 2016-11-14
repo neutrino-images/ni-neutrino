@@ -173,6 +173,15 @@ const CMenuOptionChooser::keyval END_OF_RECORDING[END_OF_RECORDING_COUNT] =
 	{1, LOCALE_RECORDINGMENU_END_OF_RECORDING_EPG}
 };
 
+//NI
+const CMenuOptionChooser::keyval timer_followscreenings_options[] =
+{
+	{0, LOCALE_OPTIONS_OFF},
+	{1, LOCALE_OPTIONS_ON},
+	{2, LOCALE_OPTIONS_ALWAYS}
+};
+size_t timer_followscreenings_options_count = sizeof(timer_followscreenings_options)/sizeof(CMenuOptionChooser::keyval);
+
 int CRecordSetup::showRecordSetup()
 {
 	CMenuForwarder * mf;
@@ -349,7 +358,7 @@ void CRecordSetup::showRecordTimerSetup(CMenuWidget *menu_timersettings)
 	menu_timersettings->addItem(GenericMenuSeparatorLine);
 
 	//allow followscreenings
-	CMenuOptionChooser* followscreenings = new CMenuOptionChooser(LOCALE_TIMERSETTINGS_FOLLOWSCREENINGS, &g_settings.timer_followscreenings, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	CMenuOptionChooser* followscreenings = new CMenuOptionChooser(LOCALE_TIMERSETTINGS_FOLLOWSCREENINGS, &g_settings.timer_followscreenings, timer_followscreenings_options, timer_followscreenings_options_count, true); //NI
 	followscreenings->setHint("", LOCALE_MENU_HINT_TIMER_FOLLOWSCREENINGS);
 	menu_timersettings->addItem(followscreenings);
 }

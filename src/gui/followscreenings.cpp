@@ -155,7 +155,7 @@ void CFollowScreenings::show()
 
 	getFollowScreenings();
 
-	if (followlist.size() == 1) {
+	if (followlist.size() == 1 && g_settings.timer_followscreenings < 2 /*always*/) { //NI
 		snprintf(actionstr, sizeof(actionstr), "%lu", followlist.front().startTime);
 		exec(NULL, actionstr);
 	} else {

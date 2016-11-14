@@ -1027,6 +1027,7 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 			configfile.setString("usermenu_tv_yellow", g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items);
 		}
 	}
+	//NI
 	if (g_settings.version_pseudo < "20160623110000")
 	{
 		if (g_settings.screen_xres == 112)
@@ -1035,10 +1036,20 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		if (g_settings.screen_yres == 112)
 			g_settings.screen_yres = 105;
 	}
+	//NI
 	if (g_settings.version_pseudo < "20160804110000")
 	{
 		if (g_settings.tmdb_api_key == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 			g_settings.tmdb_api_key = "7270f1b571c4ecbb5b204ddb7f8939b1";
+	}
+	//NI
+	if (g_settings.version_pseudo < "20161411235900")
+	{
+		//convert and remove obsolete recording_tevents key
+		bool recording_tevents = configfile.getBool("recording_tevents", false);
+		if (recording_tevents)
+			g_settings.timer_followscreenings = 2 /*always*/;
+		configfile.deleteKey("recording_tevents");
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
