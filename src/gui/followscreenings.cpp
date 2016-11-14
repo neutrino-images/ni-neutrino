@@ -68,6 +68,9 @@ CChannelEventList *CFollowScreenings::getFollowScreenings(void)
 			if (e->description != title)
 				continue;
 			followlist.push_back(*e);
+
+			if (followlist.size() == 1 && !g_settings.timer_followscreenings)
+				break;
 		}
 	}
 	return &followlist;
@@ -89,7 +92,7 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 					if (i->eventType == CTimerd::TIMER_RECORD) {
 						if (channel_id == i->channel_id && e->startTime == i->epg_starttime) {
 							Timer.removeTimerEvent(i->eventID);
-							if (!forwarders.empty())
+							if (!forwarders.empty() && followlist.size() > 1)
 								forwarders[ix]->iconName_Info_right = "";
 #if 0
 							else
@@ -112,13 +115,11 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 								  e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, e->startTime - (ANNOUNCETIME + 120) > time(NULL), recDir, true, ch->bUseCI) == -1) { //NI
 					//FIXME -- no error handling, but this shouldn't happen ...
 				} else {
-					if (!forwarders.empty())
+					if (!forwarders.empty() && followlist.size() > 1)
 						forwarders[ix]->iconName_Info_right = NEUTRINO_ICON_REC;
-#if 0
 					else
 						ShowMsg(LOCALE_TIMER_EVENTRECORD_TITLE, LOCALE_TIMER_EVENTRECORD_MSG,
 							CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_INFO);
-#endif
 					return menu_return::RETURN_REPAINT;
 				}
 				break; // for
