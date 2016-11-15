@@ -1820,10 +1820,14 @@ CRecordInstance* CRecordManager::getUseCI()
 	mutex.lock();
 	for(recmap_iterator_t it = recmap.begin(); it != recmap.end(); it++) {
 		CRecordInstance * inst = it->second;
-		CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(inst->GetChannelId());
-		if (channel->bUseCI) {
-			mutex.unlock();
-			return inst;
+		if (inst)
+		{
+			CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(inst->GetChannelId());
+			if (channel && channel->bUseCI)
+			{
+				mutex.unlock();
+				return inst;
+			}
 		}
 	}
 	mutex.unlock();
