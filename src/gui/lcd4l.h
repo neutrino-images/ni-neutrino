@@ -88,6 +88,10 @@ class CLCD4l
 		int		m_Mode;
 		int		m_ModeChannel;
 
+		std::string	m_Resolution;
+		std::string	m_AspectRatio;
+		int		m_Videotext;
+		std::string	m_DolbyDigital;
 		int		m_Tuner;
 		int		m_Volume;
 		int		m_ModeRec;
