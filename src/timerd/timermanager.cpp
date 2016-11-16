@@ -1147,7 +1147,7 @@ CTimerEvent_Record::CTimerEvent_Record(time_t announce_Time, time_t alarm_Time, 
 	eventInfo.channel_ci = channel_ci; //NI
 	recordingDir = recDir;
 	epgTitle="";
-	autoAdjustToEPG = _autoAdjustToEPG;
+	autoAdjustToEPG = (evrepeat == CTimerd::TIMERREPEAT_ONCE) ? _autoAdjustToEPG : false;
 	recordingSafety = _recordingSafety;
 	CShortEPGData epgdata;
 	if (CEitManager::getInstance()->getEPGidShort(epgID, &epgdata))
