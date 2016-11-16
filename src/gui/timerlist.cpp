@@ -1418,6 +1418,8 @@ void CTimerList::paint()
 	CVFD::getInstance()->setMode(CVFD::MODE_MENU_UTF8, g_Locale->getText(LOCALE_TIMERLIST_NAME));
 
 	paintHead();
+	frameBuffer->paintBoxRel(x, y + theight, width, height - theight - footerHeight, COL_MENUCONTENT_PLUS_0); //NI
+	paintFoot(); //NI
 	for (unsigned int count=0; count<listmaxshow; count++)
 	{
 		paintItem(count);
@@ -1436,7 +1438,7 @@ void CTimerList::paint()
 		frameBuffer->paintBoxRel(x+ width- 13, ypos+ 2+ page_nr * (sb-4)/sbc, 11, (sb-4)/sbc, COL_SCROLLBAR_ACTIVE_PLUS_0, RADIUS_SMALL);
 	}
 
-	paintFoot();
+	//NI paintFoot();
 	visible = true;
 }
 
