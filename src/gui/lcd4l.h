@@ -98,6 +98,7 @@ class CLCD4l
 		int		m_ModeTshift;
 		int		m_ModeTimer;
 		int		m_ModeEcm;
+		bool		m_ModeCamPresent;
 		int		m_ModeCam;
 #ifdef BP
 		int		m_ModeNews;

@@ -206,6 +206,7 @@ void CLCD4l::Init()
 	m_ModeTshift	= -1;
 	m_ModeTimer	= -1;
 	m_ModeEcm	= -1;
+	m_ModeCamPresent= false;
 	m_ModeCam	= -1;
 #ifdef BP
 	m_ModeNews	= -1;
@@ -492,11 +493,13 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	/* ----------------------------------------------------------------- */
 
-	bool modulePresent = false;
-	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++)
-		modulePresent |= cCA::GetInstance()->ModulePresent(CA_SLOT_TYPE_CI, i);
+	if (firstRun) //FIXME; what if module is added/removed while lcd4l is running?
+	{
+		for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++)
+			m_ModeCamPresent |= cCA::GetInstance()->ModulePresent(CA_SLOT_TYPE_CI, i);
+	}
 
-	int ModeCam = (modulePresent && CCamManager::getInstance()->getUseCI());
+	int ModeCam = (m_ModeCamPresent && CCamManager::getInstance()->getUseCI());
 
 	if (m_ModeCam != ModeCam)
 	{
