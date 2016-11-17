@@ -1444,7 +1444,6 @@ menu.hint_record_fill_warn Zeige Warnung, wenn das Aufnahmemedium zu voll wird
 menu.hint_record_slow_warn Zeige Warnung, wenn der Aufnahmepuffer zu überlaufen droht
 menu.hint_record_startstop_msg Schaltet die Meldung bei Aufnahmestart/ende ein oder aus.
 menu.hint_record_tdir Wählen Sie ein Verzeichnis für Ihre Timeshift-Aufnahmen im temporären Timeshift-Modus
-menu.hint_record_tevents Beim Wählen der Aufnahme aus dem EPG heraus die Terminliste anzeigen, auch wenn keine weiteren Termine vorhanden sind
 menu.hint_record_time Aufzeichnungsdauer vor dem Stopp bei der Verwendung von Direktaufzeichnung mit Record-Taste.
 menu.hint_record_time_ts Timeshiftdauer vor dem Stopp, wenn temporäres Timeshift aktiviert.
 menu.hint_record_timeafter Stellen Sie die Nachlaufzeit für Timer-Aufnahmen ein\nEin Wert von 2 beendet die Aufnahme 2 Minuten nach dem Sendungsende
@@ -1588,6 +1587,7 @@ menu.hint_subchannel_pos Wählen Sie die Anzeigeposition der Unterkanäle aus
 menu.hint_sw_update Neutrino aktualisieren, Image sichern und wiederherstellen
 menu.hint_theme Wählen Sie ein vordefiniertes Farbschema, speichern oder laden Sie ihre eigenen Farbschemata
 menu.hint_timeouts Gibt an, nach welcher Zeit in Sekunden die Menüs oder Infofenster sich automatisch schließen (0 deaktiviert)
+menu.hint_timer_followscreenings Zeige Terminauswahl mit Folge-Events zur Timerprogrammierung. "Immer" zeigt die Auswahl auch dann, wenn nur ein Event gefunden wurde.
 menu.hint_timers Hinzufügen, entfernen und bearbeiten geplanter Aufnahmen oder anderer Timer
 menu.hint_timezone Wählen Sie ihre Zeitzone aus
 menu.hint_tmdb_api_key Geben Sie den TMDb API Schlüssel ein. Eine leere Eingabe schaltet die TMDb-Unterstützung aus
@@ -1794,7 +1794,7 @@ moviebrowser.book_name Name:
 moviebrowser.book_new Neue Markierung
 moviebrowser.book_no_end Keine Endmarkierung gefunden
 moviebrowser.book_position Position:
-moviebrowser.book_type Sprung (<0 zurück, >0 vor):
+moviebrowser.book_type Sprung (<0: zurück, >0: vor):
 moviebrowser.book_type_backward Wiederholung
 moviebrowser.book_type_forward Überspringen
 moviebrowser.browser_additional Zusätzliche Informationen
@@ -1817,13 +1817,13 @@ moviebrowser.delete_screenshot Lösche Screenshot?
 moviebrowser.dir Pfad
 moviebrowser.directories Verzeichnisse
 moviebrowser.directories_additional Zusätzliche Verzeichnisse
-moviebrowser.edit_book Bookmark Ändern
+moviebrowser.edit_book Markierung ändern
 moviebrowser.edit_book_name_info1 Neuer Markierungsname
-moviebrowser.edit_book_name_info2 Markierungsname info2
+moviebrowser.edit_book_name_info2 
 moviebrowser.edit_book_pos_info1 Neue Position (s)
 moviebrowser.edit_book_pos_info2 
 moviebrowser.edit_book_type_info1 Neue Sprunglänge (s)
-moviebrowser.edit_book_type_info2 <0 zurück , >0 vor, 0: kein
+moviebrowser.edit_book_type_info2 <0: zurück, >0: vor, 0: kein
 moviebrowser.edit_serie Name der Serie
 moviebrowser.error_no_movies Keine Filme gefunden
 moviebrowser.filter_off Filter aus
@@ -2123,6 +2123,7 @@ opkg.update.check Prüfe auf Updates...
 opkg.update.reading_lists Paketlisten werden eingelesen...
 opkg.upgrade Installierte Pakete aktualisieren
 opkg.warning_3rdparty_packages Drittanbieter-Pakete könnten Ihr System beschädigen! Sind Sie sicher, dieses Paket zu installieren?
+options.always immer
 options.default Voreinstellungen benutzen
 options.fb framebuffer
 options.hint_default Setzen Sie die Werte auf die Voreinstellung zurück.
@@ -2314,7 +2315,6 @@ recordingmenu.server Server
 recordingmenu.server_mac MAC-Adresse
 recordingmenu.setupnow Einstellungen jetzt übernehmen
 recordingmenu.slow_warn Warnung bei langsamen Aufnahmemedien
-recordingmenu.tevents Timer Auswahlliste immer anzeigen
 recordingmenu.timeshift Timeshift
 recordingmenu.tsdir Timeshift Aufnahmeverzeichnis
 recordingmenu.vcr Videorekorder
@@ -2616,6 +2616,7 @@ timerlist.type.zapto Umschalten
 timerlist.weekdays Wochentage
 timerlist.weekdays.hint_1 Mo Di Mi Do Fr Sa So
 timerlist.weekdays.hint_2 'X'=Timer '-' kein Timer
+timersettings.followscreenings Zeige Terminauswahl
 timersettings.record_safety_time_after Aufnahmeende-Korrektur
 timersettings.record_safety_time_after.hint_1 Korrekturzeit in Min. (00=aus), die auf die End-
 timersettings.record_safety_time_after.hint_2 zeit des jeweiligen Timers addiert wird

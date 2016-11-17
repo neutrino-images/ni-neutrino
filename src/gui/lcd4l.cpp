@@ -49,6 +49,7 @@
 #include <zapit/zapit.h>
 #include <gui/movieplayer.h>
 #include <eitd/sectionsd.h>
+#include <video.h>
 
 #include "lcd4l.h"
 
@@ -57,6 +58,7 @@ extern int bc_popup_icon;
 #endif
 
 extern CRemoteControl *g_RemoteControl;
+extern cVideo *videoDecoder;
 
 #define LCD_DATADIR		"/tmp/lcd/"
 
@@ -69,6 +71,10 @@ extern CRemoteControl *g_RemoteControl;
 
 #define LOGO_DUMMY		LCD_ICONSDIR "blank.png"
 
+#define RESOLUTION		LCD_DATADIR "resolution"
+#define ASPECTRATIO		LCD_DATADIR "aspectratio"
+#define VIDEOTEXT		LCD_DATADIR "videotext"
+#define DOLBYDIGITAL		LCD_DATADIR "dolbydigital"
 #define TUNER			LCD_DATADIR "tuner"
 #define VOLUME			LCD_DATADIR "volume"
 #define MODE_REC		LCD_DATADIR "mode_rec"
@@ -190,12 +196,17 @@ void CLCD4l::Init()
 {
 	m_ParseID	= 0;
 
+	m_Resolution	= "n/a";
+	m_AspectRatio	= "n/a";
+	m_Videotext	= -1;
+	m_DolbyDigital	= "n/a";
 	m_Tuner		= -1;
 	m_Volume	= -1;
 	m_ModeRec	= -1;
 	m_ModeTshift	= -1;
 	m_ModeTimer	= -1;
 	m_ModeEcm	= -1;
+	m_ModeCamPresent= false;
 	m_ModeCam	= -1;
 #ifdef BP
 	m_ModeNews	= -1;
@@ -311,6 +322,76 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	/* ----------------------------------------------------------------- */
 
+	int x_res, y_res, framerate;
+	videoDecoder->getPictureInfo(x_res, y_res, framerate);
+
+	std::string Resolution = to_string(x_res) + "x" + to_string(y_res);
+	//Resolution += "\n" + to_string(framerate); //TODO
+
+	if (m_Resolution.compare(Resolution))
+	{
+		WriteFile(RESOLUTION, Resolution);
+		m_Resolution = Resolution;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	std::string AspectRatio;
+	switch (videoDecoder->getAspectRatio())
+	{
+		case 0:
+			AspectRatio = "n/a";
+			break;
+		case 1:
+			AspectRatio = "4:3";
+			break;
+		case 2:
+			AspectRatio = "14:9";
+			break;
+		case 3:
+			AspectRatio = "16:9";
+			break;
+		case 4:
+			AspectRatio = "20:9";
+			break;
+		default:
+			AspectRatio = "n/k";
+			break;
+	}
+
+	if (m_AspectRatio.compare(AspectRatio))
+	{
+		WriteFile(ASPECTRATIO, AspectRatio);
+		m_AspectRatio = AspectRatio;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	int Videotext = g_RemoteControl->current_PIDs.PIDs.vtxtpid;
+
+	if (m_Videotext != Videotext)
+	{
+		WriteFile(VIDEOTEXT, Videotext ? "yes" : "no");
+		m_Videotext = Videotext;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	std::string DolbyDigital;
+	if ((g_RemoteControl->current_PIDs.PIDs.selected_apid < g_RemoteControl->current_PIDs.APIDs.size()) &&
+	    (g_RemoteControl->current_PIDs.APIDs[g_RemoteControl->current_PIDs.PIDs.selected_apid].is_ac3))
+		DolbyDigital = "yes";
+	else
+		DolbyDigital = g_RemoteControl->has_ac3 ? "available" : "no";
+
+	if (m_DolbyDigital.compare(DolbyDigital))
+	{
+		WriteFile(DOLBYDIGITAL, DolbyDigital);
+		m_DolbyDigital = DolbyDigital;
+	}
+
+	/* ----------------------------------------------------------------- */
+
 	int Tuner = 1 + CFEManager::getInstance()->getLiveFE()->getNumber();
 
 	if (m_Tuner != Tuner)
@@ -412,10 +493,13 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	/* ----------------------------------------------------------------- */
 
-	int ModeCam = 0;
+	if (firstRun) //FIXME; what if module is added/removed while lcd4l is running?
+	{
+		for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++)
+			m_ModeCamPresent |= cCA::GetInstance()->ModulePresent(CA_SLOT_TYPE_CI, i);
+	}
 
-	if (CCamManager::getInstance()->getUseCI())
-		ModeCam = 1;
+	int ModeCam = (m_ModeCamPresent && CCamManager::getInstance()->getUseCI());
 
 	if (m_ModeCam != ModeCam)
 	{

@@ -549,6 +549,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 			g_settings.timer_remotebox_ip.push_back(timer_rb);
 		}
 	}
+	g_settings.timer_followscreenings = configfile.getInt32( "timer_followscreenings", 1 );
 
 	g_settings.infobar_sat_display   = configfile.getBool("infobar_sat_display"  , true );
 	g_settings.infobar_show_channeldesc   = configfile.getBool("infobar_show_channeldesc"  , false );
@@ -741,9 +742,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.recording_epg_for_filename      = configfile.getBool("recording_epg_for_filename"         , true);
 	g_settings.recording_epg_for_end           = configfile.getBool("recording_epg_for_end"              , true);
 	g_settings.recording_save_in_channeldir    = configfile.getBool("recording_save_in_channeldir"         , false);
-	g_settings.recording_slow_warning		= configfile.getBool("recording_slow_warning"     , false); //NI
-	g_settings.recording_fill_warning		= configfile.getInt32("recording_fill_warning", 95); //NI
-	g_settings.recording_tevents			= configfile.getBool("recording_tevents", false); //NI
+	g_settings.recording_slow_warning	   = configfile.getBool("recording_slow_warning"     , false); //NI
+	g_settings.recording_fill_warning	   = configfile.getInt32("recording_fill_warning", 95); //NI
 	g_settings.recording_startstop_msg	   = configfile.getBool("recording_startstop_msg"     , true);
 	g_settings.recording_already_found_check   = configfile.getBool("recording_already_found_check", false);
 
@@ -1061,6 +1061,7 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 			configfile.setString("usermenu_tv_yellow", g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items);
 		}
 	}
+	//NI
 	if (g_settings.version_pseudo < "20160623110000")
 	{
 		if (g_settings.screen_xres == 112)
@@ -1069,10 +1070,20 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		if (g_settings.screen_yres == 112)
 			g_settings.screen_yres = 105;
 	}
+	//NI
 	if (g_settings.version_pseudo < "20160804110000")
 	{
 		if (g_settings.tmdb_api_key == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 			g_settings.tmdb_api_key = "7270f1b571c4ecbb5b204ddb7f8939b1";
+	}
+	//NI
+	if (g_settings.version_pseudo < "20161411235900")
+	{
+		//convert and remove obsolete recording_tevents key
+		bool recording_tevents = configfile.getBool("recording_tevents", false);
+		if (recording_tevents)
+			g_settings.timer_followscreenings = 2 /*always*/;
+		configfile.deleteKey("recording_tevents");
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
@@ -1215,6 +1226,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 		timer_remotebox_itemcount++;
 	}
 	configfile.setInt32 ( "timer_remotebox_ip_count", g_settings.timer_remotebox_ip.size());
+	configfile.setInt32 ("timer_followscreenings", g_settings.timer_followscreenings);
 
 	configfile.setBool("infobar_sat_display"  , g_settings.infobar_sat_display  );
 	configfile.setBool("infobar_show_channeldesc"  , g_settings.infobar_show_channeldesc  );
@@ -1356,7 +1368,6 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setBool  ("recording_save_in_channeldir"       , g_settings.recording_save_in_channeldir   );
 	configfile.setBool  ("recording_slow_warning"             , g_settings.recording_slow_warning         );
 	configfile.setInt32 ("recording_fill_warning"             , g_settings.recording_fill_warning         ); //NI
-	configfile.setBool  ("recording_tevents"                  , g_settings.recording_tevents              ); //NI
 	configfile.setBool  ("recording_startstop_msg"             , g_settings.recording_startstop_msg       );
 	configfile.setBool  ("recording_already_found_check"      , g_settings.recording_already_found_check  );
 
