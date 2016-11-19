@@ -2070,7 +2070,7 @@ networkmenu.ssid_scan WLAN-Netzwerke suchen
 networkmenu.ssid_scan_error Keine WLAN-Netzwerke gefunden.
 networkmenu.ssid_scan_wait WLAN-Netzwerke werden gesucht...
 networkmenu.test Netzwerk testen
-neutrino_starting NI \o/
+neutrino_starting %s %s wird gestartet...
 nfs.alreadymounted Verzeichnis bereits gemountet.
 nfs.automount Beim Start mounten
 nfs.dir Verzeichnis/Freigabe
@@ -2094,6 +2094,7 @@ nfs.umount Netzwerk Verzeichnis unmounten
 nfs.umounterror Umount-Fehler
 nfs.username Benutzername
 nfsmenu.head NFS/CIFS/FTPFS Einstellungen
+ni NI \o/
 nimenu.head NI-Einstellungen
 nimenu.head_special Extra-Einstellungen
 nvod.percentage (%d%% vorbei)

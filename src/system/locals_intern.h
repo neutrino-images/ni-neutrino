@@ -2121,6 +2121,7 @@ const char * locale_real_names[] =
 	"nfs.umounterror",
 	"nfs.username",
 	"nfsmenu.head",
+	"ni",
 	"nimenu.head",
 	"nimenu.head_special",
 	"nvod.percentage",

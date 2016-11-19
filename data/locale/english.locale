@@ -2070,7 +2070,7 @@ networkmenu.ssid_scan WLAN network scan
 networkmenu.ssid_scan_error No WLAN networks are found.
 networkmenu.ssid_scan_wait WLAN network scan in progress...
 networkmenu.test Test network now
-neutrino_starting NI \o/
+neutrino_starting %s %s starting...
 nfs.alreadymounted directory already mounted
 nfs.automount Mount on startup
 nfs.dir directory/share
@@ -2094,6 +2094,7 @@ nfs.umount Umount Network volume
 nfs.umounterror error umounting volume
 nfs.username username
 nfsmenu.head NFS/CIFS/FTPFS settings
+ni NI \o/
 nimenu.head NI-Settings
 nimenu.head_special Special settings
 nvod.percentage (%d%% over)

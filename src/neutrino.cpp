@@ -2173,7 +2173,7 @@ TIMER_START();
 
 	CVFD::getInstance()->init(neutrinoFonts->fontDescr.filename.c_str(), neutrinoFonts->fontDescr.name.c_str());
 	CVFD::getInstance()->Clear();
-	CVFD::getInstance()->ShowText(start_text);
+	CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_NI)); //NI
 	CVFD::getInstance()->setBacklight(g_settings.backlight_tv);
 
 	if (!scanSettings.loadSettings(NEUTRINO_SCAN_SETTINGS_FILE))
