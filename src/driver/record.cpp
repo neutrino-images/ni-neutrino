@@ -43,7 +43,7 @@
 #include <gui/movieplayer.h>
 #include <gui/nfs.h>
 #include <gui/widget/hintbox.h>
-#include <gui/widget/messagebox.h>
+#include <gui/widget/msgbox.h>
 #include <gui/widget/mountchooser.h>
 #include <daemonc/remotecontrol.h>
 #include <system/setting_helpers.h>
@@ -1421,7 +1421,7 @@ int CRecordManager::exec(CMenuTarget* parent, const std::string & actionKey )
 		snprintf(rec_msg1, sizeof(rec_msg1)-1, "%s", g_Locale->getText(LOCALE_RECORDINGMENU_MULTIMENU_ASK_STOP_ALL));
 		snprintf(rec_msg, sizeof(rec_msg)-1, rec_msg1, records);
 		if(ShowMsg(LOCALE_SHUTDOWN_RECORDING_QUERY, rec_msg,
-			CMessageBox::mbrYes, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 30, false) == CMessageBox::mbrYes)
+			CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, 30) == CMsgBox::mbrYes)
 		{
 			snprintf(rec_msg1, sizeof(rec_msg1)-1, "%s", g_Locale->getText(LOCALE_RECORDINGMENU_MULTIMENU_INFO_STOP_ALL));
 
@@ -1454,16 +1454,16 @@ int CRecordManager::exec(CMenuTarget* parent, const std::string & actionKey )
 			inst->GetRecordString(title, duration);
 			title += duration;
 			tostart = (ShowMsg(LOCALE_RECORDING_IS_RUNNING, title.c_str(),
-						CMessageBox::mbrYes, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 30, false) == CMessageBox::mbrYes);
+						CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, 30) == CMsgBox::mbrYes);
 		}
 		//NI
 		if (g_settings.recording_startstop_msg) {
 			int ret = ShowMsg(LOCALE_RECORDING_END, g_Locale->getText(LOCALE_RECORDING_END_TEXT),
-					g_settings.recording_epg_for_end ? CMessageBox::mbrYes : CMessageBox::mbrNo, CMessageBox::mbYes | CMessageBox::mbNo | CMessageBox::mbCancel, NULL, 450, 20, true);
-			if (ret == CMessageBox::mbrCancel)
+					g_settings.recording_epg_for_end ? CMsgBox::mbrYes : CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel, NULL, 450, 20, true);
+			if (ret == CMsgBox::mbrCancel)
 				return menu_return::RETURN_EXIT_ALL;
 			else
-				g_settings.recording_epg_for_end = (ret == CMessageBox::mbrYes);
+				g_settings.recording_epg_for_end = (ret == CMsgBox::mbrYes);
 
 			cHddStat::getInstance()->statOnce();
 			if (cHddStat::getInstance()->getPercent() > g_settings.recording_fill_warning)
@@ -1473,8 +1473,8 @@ int CRecordManager::exec(CMenuTarget* parent, const std::string & actionKey )
 				snprintf(txt, sizeof(txt)-1, g_Locale->getText(LOCALE_RECORDING_FILL_TEXT), cHddStat::getInstance()->getPercent());
 
 				ret = ShowMsg(LOCALE_HDD_STATFS, txt,
-						CMessageBox::mbrYes, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 20, true);
-				if (ret == CMessageBox::mbrNo)
+						CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, 20, true);
+				if (ret == CMsgBox::mbrNo)
 					return menu_return::RETURN_EXIT_ALL;
 			}
 		}
@@ -1623,7 +1623,7 @@ bool CRecordManager::AskToStop(const t_channel_id channel_id, const int recid)
 		return false;
 
 	if(ShowMsg(LOCALE_SHUTDOWN_RECORDING_QUERY, title.c_str(),
-				CMessageBox::mbrYes, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 30, false) == CMessageBox::mbrYes) {
+				CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, 30) == CMsgBox::mbrYes) {
 		mutex.lock();
 		if (recid)
 			inst = FindInstanceID(recid);
@@ -1940,7 +1940,7 @@ bool CRecordManager::MountDirectory(const char *recordingDir)
 					strcat(msg,recordingDir);
 
 					ShowMsg(LOCALE_MESSAGEBOX_ERROR, msg,
-							CMessageBox::mbrBack, CMessageBox::mbBack,NEUTRINO_ICON_ERROR, 450, 10); // UTF-8
+							CMsgBox::mbrBack, CMsgBox::mbBack,NEUTRINO_ICON_ERROR, 450, 10); // UTF-8
 					ret = false;
 				}
 				break;

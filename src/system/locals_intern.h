@@ -869,6 +869,7 @@ const char * locale_real_names[] =
 	"hdd_wakeup",
 	"hdd_wakeup_msg",
 	"hdd_wakeup_start",
+	"help_box_title",
 	"imageinfo.api",
 	"imageinfo.creator",
 	"imageinfo.date",
