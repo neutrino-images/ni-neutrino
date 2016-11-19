@@ -132,7 +132,7 @@ void CHintBox::init(const std::string& Text, const int& Width, const std::string
 	timeout		= HINTBOX_DEFAULT_TIMEOUT;
 	w_indentation	= indent;
 
-	hb_font		= g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO];
+	hb_font		= g_Font[SNeutrinoSettings::FONT_TYPE_MENU]; //NI
 
 	//enable shadow
 	shadow = true;
@@ -321,7 +321,7 @@ void CHintBox::setMsgText(const std::string& Text, const uint& hint_id, const in
 	CComponentsInfoBox	*obj_text = static_cast<CComponentsInfoBox*>(ccw_body->getCCItem(id));
 
 	//set required font and line size
-	Font* font = font_text == NULL ? g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO] : font_text;
+	Font* font = font_text == NULL ? g_Font[SNeutrinoSettings::FONT_TYPE_MENU] : font_text; //NI
 	if (obj_text)
 		obj_text->setText(Text, mode, font, color_text, style);
 }

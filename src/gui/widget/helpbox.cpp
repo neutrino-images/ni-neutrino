@@ -54,7 +54,7 @@ Helpbox::Helpbox(	const string& Title,
 
 	hbox_font = default_font_text;
 	if (default_font_text == NULL)
-		hbox_font = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO];
+		hbox_font = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]; //NI
 
 	if (!Default_Text.empty())
 		addLine(Default_Text.c_str(), Default_Text, text_mode, line_space, HELPBOX_DEFAULT_LINE_INDENT ,hbox_font);
