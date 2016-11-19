@@ -1224,7 +1224,7 @@ CTimerEvent_Record::CTimerEvent_Record(CConfigFile *config, int iId):
 //------------------------------------------------------------
 void CTimerEvent_Record::fireEvent()
 {
-	if (adjustToCurrentEPG())
+	if ((adjustToCurrentEPG()) && (alarmTime > time(NULL)))
 		return;
 	getEpgId();
 	CTimerd::RecordingInfo ri=eventInfo;
@@ -1240,7 +1240,7 @@ void CTimerEvent_Record::fireEvent()
 //------------------------------------------------------------
 void CTimerEvent_Record::announceEvent()
 {
-	if (adjustToCurrentEPG())
+	if ((adjustToCurrentEPG()) && (announceTime > time(NULL)))
 		return;
 	Refresh();
 	CTimerd::RecordingInfo ri=eventInfo;
@@ -1344,6 +1344,9 @@ void CTimerEvent_Record::Refresh()
 //------------------------------------------------------------
 bool CTimerEvent_Record::adjustToCurrentEPG()
 {
+	if (!(access(CONFIGDIR"/.adjust", F_OK) == 0))
+		return false;
+
 	if (!autoAdjustToEPG)
 		return false;
 
@@ -1380,9 +1383,11 @@ bool CTimerEvent_Record::adjustToCurrentEPG()
 		_stopTime += post;
 	}
 
-	if ((_alarmTime != alarmTime) || (_announceTime != announceTime) || (_stopTime != stopTime))
+	if ((_alarmTime != alarmTime) || (_announceTime != announceTime) || (_stopTime != stopTime)) {
+		alarmTime = _alarmTime; announceTime = _announceTime; stopTime = _stopTime;
 		if (CTimerManager::getInstance()->adjustEvent(eventID, _announceTime, _alarmTime, _stopTime))
 			return true;
+		}
 
 	return false;
 }
