@@ -943,7 +943,7 @@ void CEventList::showFunctionBar(t_channel_id channel_id)
 	CColorKeyHelper keyhelper; //user_menue.h
 	neutrino_msg_t dummy = CRCInput::RC_nokey;
 	const char * icon = NULL;
-	struct button_label buttons[6]; //NI
+	struct button_label buttons[8]; //NI
 	int btn_cnt = 0;
 
 	int tID = -1; //any value, not NULL
