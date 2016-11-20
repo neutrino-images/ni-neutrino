@@ -164,15 +164,14 @@ void CSettingsManagerTeams::doBackup()
 		int ret = ::statfs(TDirectory.c_str(), &s);
 		if(objectCounter && ret == 0 && s.f_type != 0x72b6L/* && s.f_type != 0x858458f6L*/) /*jffs2 and ramfs*/
 		{
-			CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, hintBoxContent.c_str());
-			hintBox->paint();
+			CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, hintBoxContent.c_str());
+			hintBox.paint();
 			char buf[256];
 			sprintf(buf, SYSCALLBACKUP " %s/" TARCHIVE "%s", TDirectory.c_str(), objects.c_str());
 			//printf("CSettingsManagerTeams::doBackup: %s/%s\n", TDirectory.c_str(), TARCHIVE);
 			if (system(buf) != 0)
 				printf("CSettingsManagerTeams::Backup: failed\n");
-			hintBox->hide();
-			delete hintBox;
+			hintBox.hide();
 		}
 		else
 		ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(LOCALE_SETTINGS_TEAMS_BACKUP_FAILED),CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_ERROR);
