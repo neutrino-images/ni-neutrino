@@ -612,8 +612,9 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	g_settings.epg_save = configfile.getBool("epg_save", false);
 	g_settings.epg_save_standby = configfile.getBool("epg_save_standby", true);
-	g_settings.epg_save_frequently = configfile.getInt32("epg_save_frequently", false);
+	g_settings.epg_save_frequently = configfile.getInt32("epg_save_frequently", 0);
 	g_settings.epg_read = configfile.getBool("epg_read", g_settings.epg_save);
+	g_settings.epg_read_frequently = configfile.getInt32("epg_read_frequently", 0);
 	g_settings.epg_scan = configfile.getInt32("epg_scan", CEpgScan::SCAN_CURRENT);
 	g_settings.epg_scan_mode = configfile.getInt32("epg_scan_mode", CEpgScan::MODE_OFF);
 	// backward-compatible check
@@ -1254,6 +1255,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setBool("epg_save_standby", g_settings.epg_save_standby);
 	configfile.setInt32("epg_save_frequently", g_settings.epg_save_frequently);
 	configfile.setBool("epg_read", g_settings.epg_read);
+	configfile.setInt32("epg_read_frequently", g_settings.epg_read_frequently);
 	configfile.setInt32("epg_scan", g_settings.epg_scan);
 	configfile.setInt32("epg_scan_mode", g_settings.epg_scan_mode);
 	configfile.setInt32("epg_save_mode", g_settings.epg_save_mode);
@@ -1957,6 +1959,7 @@ void CNeutrinoApp::MakeSectionsdConfig(CSectionsdClient::epg_config& config)
 	config.epg_max_events           = g_settings.epg_max_events;
 	config.epg_extendedcache        = g_settings.epg_extendedcache;
 	config.epg_save_frequently      = g_settings.epg_save ? g_settings.epg_save_frequently : 0;
+	config.epg_read_frequently      = g_settings.epg_read ? g_settings.epg_read_frequently : 0;
 	config.epg_dir                  = g_settings.epg_dir;
 	config.network_ntpserver        = g_settings.network_ntpserver;
 	config.network_ntprefresh       = atoi(g_settings.network_ntprefresh.c_str());
@@ -1975,6 +1978,7 @@ void CNeutrinoApp::InitZapper()
 	struct stat my_stat;
 
 	g_InfoViewer->start();
+	SendSectionsdConfig();
 	if (g_settings.epg_read) {
 		if(stat(g_settings.epg_dir.c_str(), &my_stat) == 0)
 			g_Sectionsd->readSIfromXML(g_settings.epg_dir.c_str());
@@ -2380,6 +2384,7 @@ TIMER_STOP("################################## after all #######################
 			//flash.enableNotify(false);
 			flash.exec(NULL, "inet");
 		}
+		hintBox->hide();
 		delete hintBox;
 	}
 	RealRun();
@@ -4259,8 +4264,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		returnval = menu_return::RETURN_EXIT_ALL;
 	}
 	else if(actionKey=="savesettings") {
-		CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT)); // UTF-8
-		hintBox->paint();
+		CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT)); // UTF-8
+		hintBox.paint();
 
 		saveSetup(NEUTRINO_SETTINGS_FILE);
 
@@ -4272,20 +4277,18 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		//g_Sectionsd->setEventsAreOldInMinutes((unsigned short) (g_settings.epg_old_hours*60));
 		//g_Sectionsd->setHoursToCache((unsigned short) (g_settings.epg_cache_days*24));
 
-		hintBox->hide();
-		delete hintBox;
+		hintBox.hide();
 	}
 	else if(actionKey=="recording") {
 		setupRecordingDevice();
 	}
 	else if(actionKey=="reloadplugins") {
-		CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SERVICEMENU_GETPLUGINS_HINT));
-		hintBox->paint();
+		CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SERVICEMENU_GETPLUGINS_HINT));
+		hintBox.paint();
 
 		g_PluginList->loadPlugins();
 
-		hintBox->hide();
-		delete hintBox;
+		hintBox.hide();
 	}
 	//NI
 	else if (actionKey=="restarttuner")
@@ -4978,7 +4981,9 @@ void CNeutrinoApp::CheckFastScan(bool standby, bool reload)
 				scanSettings.fst_version = CServiceScan::getInstance()->GetFstVersion();
 				scanSettings.saveSettings(NEUTRINO_SCAN_SETTINGS_FILE);
 			}
-			delete fhintbox;
+			if (fhintbox){
+				fhintbox->hide(); delete fhintbox;
+			}
 			if (standby)
 				CVFD::getInstance()->setMode(CVFD::MODE_STANDBY);
 		}
