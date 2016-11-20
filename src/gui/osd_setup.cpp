@@ -223,7 +223,7 @@ font_sizes_struct neutrino_font[SNeutrinoSettings::FONT_TYPE_COUNT] =
 	{LOCALE_FONTSIZE_MOVIEBROWSER_LIST  ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
 	{LOCALE_FONTSIZE_MOVIEBROWSER_INFO  ,  16, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
 	{LOCALE_FONTSIZE_SUBTITLES          ,  25, CNeutrinoFonts::FONT_STYLE_BOLD   , 0}
-	{LOCALE_FONTSIZE_MESSAGE_TEXT       ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 1}
+	{LOCALE_FONTSIZE_MESSAGE_TEXT       ,  20, CNeutrinoFonts::FONT_STYLE_BOLD   , 0}  //NI
 };
 
 int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
