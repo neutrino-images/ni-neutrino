@@ -42,7 +42,6 @@
 #include <neutrino_menue.h>
 
 #include <gui/filebrowser.h>
-#include <gui/widget/hintbox.h>
 #include <gui/widget/icons.h>
 #include <gui/widget/menue.h>
 
