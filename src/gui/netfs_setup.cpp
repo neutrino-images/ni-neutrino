@@ -439,8 +439,8 @@ int CNETFSMountGui::exec( CMenuTarget* parent, const std::string & actionKey )
 				perror("autofs failed");
 
 			//FIXME please wait ...
-			CHintBox * hintBox = new CHintBox(LOCALE_NETFS_AUTOMOUNT_HEAD,g_Locale->getText(LOCALE_AUDIOPLAYER_RECEIVING_LIST));
-			hintBox->paint();
+			CHintBox hintBox(LOCALE_NETFS_AUTOMOUNT_HEAD,g_Locale->getText(LOCALE_AUDIOPLAYER_RECEIVING_LIST));
+			hintBox.paint();
 			sleep(3); //give automounter a few seconds
 
 			for(int i=0 ; i < NETFS_NR_OF_ENTRIES ; i++)
@@ -460,8 +460,7 @@ int CNETFSMountGui::exec( CMenuTarget* parent, const std::string & actionKey )
 					mountMenuEntry[i]->iconName = NEUTRINO_ICON_NOT_MOUNTED;
 				}
 			}
-			hintBox->hide();
-			delete hintBox;
+			hintBox.hide();
 		}
 		returnval = menu_return::RETURN_REPAINT;
 	}
@@ -511,8 +510,8 @@ int CNETFSMountGui::menu(int mt)
 	mountMenuW.addItem(GenericMenuSeparatorLine);
 
 	//FIXME please wait ...
-	CHintBox * hintBox = new CHintBox(LOCALE_NETFS_AUTOMOUNT_HEAD,g_Locale->getText(LOCALE_AUDIOPLAYER_RECEIVING_LIST));
-	hintBox->paint();
+	CHintBox hintBox(LOCALE_NETFS_AUTOMOUNT_HEAD,g_Locale->getText(LOCALE_AUDIOPLAYER_RECEIVING_LIST));
+	hintBox.paint();
 
 	for(int i=0 ; i < NETFS_NR_OF_ENTRIES ; i++)
 	{
@@ -542,8 +541,7 @@ int CNETFSMountGui::menu(int mt)
 		}
 		mountMenuW.addItem(mountMenuEntry[i]);
 	}
-	hintBox->hide();
-	delete hintBox;
+	hintBox.hide();
 
 	int ret=mountMenuW.exec(this,"");
 	return ret;

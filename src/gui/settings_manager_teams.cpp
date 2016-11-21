@@ -36,7 +36,7 @@
 #include "gui/settings_manager_teams.h"
 
 #include "gui/widget/hintbox.h"
-#include "gui/widget/messagebox.h"
+#include "gui/widget/msgbox.h"
 #include "gui/widget/stringinput.h"
 
 #include <driver/screen_max.h>
@@ -136,7 +136,7 @@ int CSettingsManagerTeams::showMenu()
 
 void CSettingsManagerTeams::showHelp()
 {
-	ShowMsg(LOCALE_SETTINGS_TEAMS_HELP, g_Locale->getText(LOCALE_SETTINGS_TEAMS_HELP_TEXT), CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_INFO); // UTF-8
+	ShowMsg(LOCALE_SETTINGS_TEAMS_HELP, g_Locale->getText(LOCALE_SETTINGS_TEAMS_HELP_TEXT), CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_INFO); // UTF-8
 	return;
 }
 
@@ -164,18 +164,17 @@ void CSettingsManagerTeams::doBackup()
 		int ret = ::statfs(TDirectory.c_str(), &s);
 		if(objectCounter && ret == 0 && s.f_type != 0x72b6L/* && s.f_type != 0x858458f6L*/) /*jffs2 and ramfs*/
 		{
-			CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, hintBoxContent.c_str());
-			hintBox->paint();
+			CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, hintBoxContent.c_str());
+			hintBox.paint();
 			char buf[256];
 			sprintf(buf, SYSCALLBACKUP " %s/" TARCHIVE "%s", TDirectory.c_str(), objects.c_str());
 			//printf("CSettingsManagerTeams::doBackup: %s/%s\n", TDirectory.c_str(), TARCHIVE);
 			if (system(buf) != 0)
 				printf("CSettingsManagerTeams::Backup: failed\n");
-			hintBox->hide();
-			delete hintBox;
+			hintBox.hide();
 		}
 		else
-		ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(LOCALE_SETTINGS_TEAMS_BACKUP_FAILED),CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_ERROR);
+		ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(LOCALE_SETTINGS_TEAMS_BACKUP_FAILED),CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_ERROR);
 	}
 	return;
 }
@@ -188,8 +187,8 @@ void CSettingsManagerTeams::doRestore()
 	if(fileBrowser.exec("/media") == true)
 	{
 		std::string TFile = fileBrowser.getSelectedFile()->Name.c_str();
-		int result = ShowMsg(LOCALE_SETTINGS_TEAMS_RESTORE, g_Locale->getText(LOCALE_SETTINGS_TEAMS_RESTORE_WARN), CMessageBox::mbrNo, CMessageBox::mbYes | CMessageBox::mbNo);
-		if(result == CMessageBox::mbrYes)
+		int result = ShowMsg(LOCALE_SETTINGS_TEAMS_RESTORE, g_Locale->getText(LOCALE_SETTINGS_TEAMS_RESTORE_WARN), CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo);
+		if(result == CMsgBox::mbrYes)
 		{
 			char buf[256];
 			sprintf(buf, SYSCALLRESTORE " %s", TFile.c_str());

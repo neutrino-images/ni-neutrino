@@ -288,6 +288,7 @@ struct SNeutrinoSettings
 	int epg_save_standby;
 	int epg_save_frequently;
 	int epg_read;
+	int epg_read_frequently;
 	int epg_cache;
 	int epg_old_events;
 	int epg_max_events;
@@ -697,6 +698,7 @@ struct SNeutrinoSettings
 		FONT_TYPE_MOVIEBROWSER_LIST,
 		FONT_TYPE_MOVIEBROWSER_INFO,
 		FONT_TYPE_SUBTITLES,
+		FONT_TYPE_MESSAGE_TEXT,
 		FONT_TYPE_COUNT
 	};
 

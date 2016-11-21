@@ -98,7 +98,7 @@
 #include "gui/widget/hintbox.h"
 #include "gui/widget/icons.h"
 #include "gui/widget/menue.h"
-#include "gui/widget/messagebox.h"
+#include "gui/widget/msgbox.h"
 #include "gui/infoclock.h"
 #include "gui/parentallock_setup.h"
 #ifdef ENABLE_PIP
@@ -636,8 +636,9 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	g_settings.epg_save = configfile.getBool("epg_save", false);
 	g_settings.epg_save_standby = configfile.getBool("epg_save_standby", true);
-	g_settings.epg_save_frequently = configfile.getInt32("epg_save_frequently", false);
+	g_settings.epg_save_frequently = configfile.getInt32("epg_save_frequently", 0);
 	g_settings.epg_read = configfile.getBool("epg_read", g_settings.epg_save);
+	g_settings.epg_read_frequently = configfile.getInt32("epg_read_frequently", 0);
 	g_settings.epg_scan = configfile.getInt32("epg_scan", CEpgScan::SCAN_CURRENT);
 	g_settings.epg_scan_mode = configfile.getInt32("epg_scan_mode", CEpgScan::MODE_OFF);
 	// backward-compatible check
@@ -1288,6 +1289,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setBool("epg_save_standby", g_settings.epg_save_standby);
 	configfile.setInt32("epg_save_frequently", g_settings.epg_save_frequently);
 	configfile.setBool("epg_read", g_settings.epg_read);
+	configfile.setInt32("epg_read_frequently", g_settings.epg_read_frequently);
 	configfile.setInt32("epg_scan", g_settings.epg_scan);
 	configfile.setInt32("epg_scan_mode", g_settings.epg_scan_mode);
 	configfile.setInt32("epg_save_mode", g_settings.epg_save_mode);
@@ -1991,6 +1993,7 @@ void CNeutrinoApp::MakeSectionsdConfig(CSectionsdClient::epg_config& config)
 	config.epg_max_events           = g_settings.epg_max_events;
 	config.epg_extendedcache        = g_settings.epg_extendedcache;
 	config.epg_save_frequently      = g_settings.epg_save ? g_settings.epg_save_frequently : 0;
+	config.epg_read_frequently      = g_settings.epg_read ? g_settings.epg_read_frequently : 0;
 	config.epg_dir                  = g_settings.epg_dir;
 	config.network_ntpserver        = g_settings.network_ntpserver;
 	config.network_ntprefresh       = atoi(g_settings.network_ntprefresh.c_str());
@@ -2009,6 +2012,7 @@ void CNeutrinoApp::InitZapper()
 	struct stat my_stat;
 
 	g_InfoViewer->start();
+	SendSectionsdConfig();
 	if (g_settings.epg_read) {
 		if(stat(g_settings.epg_dir.c_str(), &my_stat) == 0)
 			g_Sectionsd->readSIfromXML(g_settings.epg_dir.c_str());
@@ -2208,7 +2212,10 @@ TIMER_START();
 	g_PicViewer = new CPictureViewer();
 	CColorSetupNotifier::setPalette();
 
-	CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_NEUTRINO_STARTING));
+	char start_text [100];
+	snprintf(start_text, sizeof(start_text), g_Locale->getText(LOCALE_NEUTRINO_STARTING), PACKAGE_NAME, PACKAGE_VERSION );
+	start_text[99] = '\0';
+	CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, start_text);
 
 	//NI show startlogo
 	bool startlogo = false;
@@ -2221,7 +2228,7 @@ TIMER_START();
 
 	CVFD::getInstance()->init(neutrinoFonts->fontDescr.filename.c_str(), neutrinoFonts->fontDescr.name.c_str());
 	CVFD::getInstance()->Clear();
-	CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_NEUTRINO_STARTING));
+	CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_NI)); //NI
 	CVFD::getInstance()->setBacklight(g_settings.backlight_tv);
 
 	if (!scanSettings.loadSettings(NEUTRINO_SCAN_SETTINGS_FILE))
@@ -2437,6 +2444,7 @@ TIMER_STOP("################################## after all #######################
 			//flash.enableNotify(false);
 			flash.exec(NULL, "inet");
 		}
+		hintBox->hide();
 		delete hintBox;
 	}
 	RealRun();
@@ -2555,7 +2563,7 @@ void CNeutrinoApp::RealRun()
 #endif
 	g_PluginList->startPlugin("startup");
 	if (!g_PluginList->getScriptOutput().empty()) {
-		ShowMsg(LOCALE_PLUGINS_RESULT, g_PluginList->getScriptOutput(), CMessageBox::mbrBack,CMessageBox::mbBack,NEUTRINO_ICON_SHELL);
+		ShowMsg(LOCALE_PLUGINS_RESULT, g_PluginList->getScriptOutput(), CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_SHELL);
 	}
 	g_RCInput->clearRCMsg();
 
@@ -2964,8 +2972,8 @@ _repeat:
 	}
 	if (channels_changed || favorites_changed || bouquets_changed || channels_init) {
 		neutrino_locale_t loc = channels_init ? LOCALE_SERVICEMENU_RELOAD_HINT : LOCALE_BOUQUETEDITOR_SAVINGCHANGES;
-		CHintBox* hintBox= new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(loc));
-		hintBox->paint();
+		CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(loc));
+		hintBox.paint();
 
 		if (favorites_changed) {
 			g_bouquetManager->saveUBouquets();
@@ -2993,7 +3001,7 @@ _repeat:
 		if(!live_channel_id)
 			live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 		adjustToChannelID(live_channel_id);//FIXME what if deleted ?
-		delete hintBox;
+		hintBox.hide();
 	}
 	if (g_settings.easymenu) {
 		CBouquetList * blist = (mode == mode_radio) ? RADIOfavList : TVfavList;
@@ -3539,14 +3547,14 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	}
 	else if( msg == NeutrinoMessages::ANNOUNCE_SLEEPTIMER) {
 		if( mode != mode_scart && mode != mode_standby)
-			skipSleepTimer = (ShowMsg(LOCALE_MESSAGEBOX_INFO, g_settings.shutdown_real ? LOCALE_SHUTDOWNTIMER_ANNOUNCE:LOCALE_SLEEPTIMERBOX_ANNOUNCE,CMessageBox::mbrNo, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 30, true) == CMessageBox::mbrYes);
+			skipSleepTimer = (ShowMsg(LOCALE_MESSAGEBOX_INFO, g_settings.shutdown_real ? LOCALE_SHUTDOWNTIMER_ANNOUNCE:LOCALE_SLEEPTIMERBOX_ANNOUNCE,CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, 30, true) == CMsgBox::mbrYes);
 		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::SLEEPTIMER) {
 		if(data) {//INACTIVITY SLEEPTIMER
 			skipShutdownTimer =
 				(ShowMsg(LOCALE_MESSAGEBOX_INFO, g_settings.shutdown_real ? LOCALE_SHUTDOWNTIMER_ANNOUNCE:LOCALE_SLEEPTIMERBOX_ANNOUNCE,
-				      CMessageBox::mbrNo, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 30, true) == CMessageBox::mbrYes);//FIXME
+				      CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, 30, true) == CMsgBox::mbrYes);//FIXME
 			if(skipShutdownTimer) {
 				printf("NeutrinoMessages::INACTIVITY SLEEPTIMER: skiping\n");
 				skipShutdownTimer = false;
@@ -3600,7 +3608,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	}
 	else if( msg == NeutrinoMessages::ANNOUNCE_SHUTDOWN) {
 		if( mode != mode_scart )
-			skipShutdownTimer = (ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_SHUTDOWNTIMER_ANNOUNCE, CMessageBox::mbrNo, CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 5) == CMessageBox::mbrYes);
+			skipShutdownTimer = (ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_SHUTDOWNTIMER_ANNOUNCE, CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, 5) == CMsgBox::mbrYes);
 	}
 	else if( msg == NeutrinoMessages::SHUTDOWN ) {
 		if(!skipShutdownTimer) {
@@ -3618,21 +3626,21 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	}
 	else if (msg == NeutrinoMessages::EVT_POPUP || msg == NeutrinoMessages::EVT_EXTMSG) {
 		if (mode != mode_scart && mode != mode_standby) {
-			std::string timeout="-1";
+			int timeout = HINTBOX_DEFAULT_TIMEOUT;
 			std::string text = (char*)data;
 			std::string::size_type pos;
 
 			pos = text.find("&timeout=", 0);
 			if (pos != std::string::npos) {
-				timeout = text.substr( pos+9, text.length()+1 );
+				std::string tmp = text.substr( pos+9, text.length()+1 );
 				text[pos] = '\0';
+				timeout = atoi(tmp.c_str());
 			}
 
 			if (msg == NeutrinoMessages::EVT_POPUP)
-				ShowHint(LOCALE_MESSAGEBOX_INFO, text.c_str(), 0, atoi(timeout.c_str()));
+				ShowHint(LOCALE_MESSAGEBOX_INFO, text.c_str(), 0, timeout);
 			else if (msg == NeutrinoMessages::EVT_EXTMSG)
-				ShowMsg(LOCALE_MESSAGEBOX_INFO, text, CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_INFO, 0, atoi(timeout.c_str()));
-
+				ShowMsg(LOCALE_MESSAGEBOX_INFO, text, CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_INFO, 500, timeout);
 		}
 		delete[] (unsigned char*) data;
 		return messages_return::handled;
@@ -3653,7 +3661,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 			text[pos] = '\n';
 		}
 		if( mode != mode_scart )
-			ShowMsg(LOCALE_TIMERLIST_TYPE_REMIND, text, CMessageBox::mbrBack, CMessageBox::mbBack, NEUTRINO_ICON_INFO); // UTF-8
+			ShowMsg(LOCALE_TIMERLIST_TYPE_REMIND, text, CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_INFO); // UTF-8
 		delete[] (unsigned char*) data;
 		return messages_return::handled;
 	}
@@ -3725,7 +3733,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	else if (msg == NeutrinoMessages::EVT_START_PLUGIN) {
 		g_PluginList->startPlugin((const char *)data);
 		if (!g_PluginList->getScriptOutput().empty()) {
-			ShowMsg(LOCALE_PLUGINS_RESULT, g_PluginList->getScriptOutput(), CMessageBox::mbrBack,CMessageBox::mbBack,NEUTRINO_ICON_SHELL);
+			ShowMsg(LOCALE_PLUGINS_RESULT, g_PluginList->getScriptOutput(), CMsgBox::mbrBack,CMsgBox::mbBack,NEUTRINO_ICON_SHELL);
 		}
 
 		delete[] (unsigned char*) data;
@@ -3739,7 +3747,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		}
 		return messages_return::handled;
 //		ShowHint(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_EXTRA_ZAPIT_SDT_CHANGED),
-//				CMessageBox::mbrBack,CMessageBox::mbBack, NEUTRINO_ICON_INFO);
+//				CMsgBox::mbrBack,CMsgBox::mbBack, NEUTRINO_ICON_INFO);
 	}
 	else if (msg == NeutrinoMessages::EVT_HDMI_CEC_VIEW_ON) {
 		if(g_settings.hdmi_cec_view_on)
@@ -3780,8 +3788,8 @@ void CNeutrinoApp::ExitRun(const bool /*write_si*/, int retcode)
 	CRecordManager::getInstance()->StopAutoRecord();
 	if(CRecordManager::getInstance()->RecordingStatus() || cYTCache::getInstance()->isActive()) {
 		do_shutdown =
-			(ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_SHUTDOWN_RECORDING_QUERY, CMessageBox::mbrNo,
-					CMessageBox::mbYes | CMessageBox::mbNo, NULL, 450, 30, true) == CMessageBox::mbrYes);
+			(ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_SHUTDOWN_RECORDING_QUERY, CMsgBox::mbrNo,
+					CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, 30, true) == CMsgBox::mbrYes);
 	}
 
 	if(do_shutdown) {
@@ -4364,7 +4372,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	int returnval = menu_return::RETURN_REPAINT;
 
 	if(actionKey == "help_recording") {
-		ShowMsg(LOCALE_SETTINGS_HELP, LOCALE_RECORDINGMENU_HELP, CMessageBox::mbrBack, CMessageBox::mbBack);
+		ShowMsg(LOCALE_SETTINGS_HELP, LOCALE_RECORDINGMENU_HELP, CMsgBox::mbrBack, CMsgBox::mbBack);
 	}
 	else if(actionKey=="shutdown") {
 		ExitRun(true, 1);
@@ -4402,8 +4410,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		returnval = menu_return::RETURN_EXIT_ALL;
 	}
 	else if(actionKey=="savesettings") {
-		CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT)); // UTF-8
-		hintBox->paint();
+		CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT)); // UTF-8
+		hintBox.paint();
 
 		saveSetup(NEUTRINO_SETTINGS_FILE);
 
@@ -4415,20 +4423,18 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		//g_Sectionsd->setEventsAreOldInMinutes((unsigned short) (g_settings.epg_old_hours*60));
 		//g_Sectionsd->setHoursToCache((unsigned short) (g_settings.epg_cache_days*24));
 
-		hintBox->hide();
-		delete hintBox;
+		hintBox.hide();
 	}
 	else if(actionKey=="recording") {
 		setupRecordingDevice();
 	}
 	else if(actionKey=="reloadplugins") {
-		CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SERVICEMENU_GETPLUGINS_HINT));
-		hintBox->paint();
+		CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SERVICEMENU_GETPLUGINS_HINT));
+		hintBox.paint();
 
 		g_PluginList->loadPlugins();
 
-		hintBox->hide();
-		delete hintBox;
+		hintBox.hide();
 	}
 	//NI
 	else if (actionKey=="restarttuner")
@@ -4473,8 +4479,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		if (recordingstatus)
 			DisplayErrorMessage(g_Locale->getText(LOCALE_SERVICEMENU_RESTART_REFUSED_RECORDING));
 		else {
-			CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SERVICEMENU_RESTART_HINT));
-			hintBox->paint();
+			CHint * hint = new CHint(LOCALE_SERVICEMENU_RESTART_HINT);
+			hint->paint();
 
 			stop_lcd4l_support(); //NI lcd4l-support
 
@@ -4487,7 +4493,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 			delete g_fontRenderer;
 			delete g_dynFontRenderer;
 
-			delete hintBox;
+			delete hint;
 
 			stop_daemons(true);
 			delete CVFD::getInstance();
@@ -4528,8 +4534,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 			if (parent)
 				parent->hide();
 
-			std::string text = "Easy menu switched " + string(g_settings.easymenu?"OFF":"ON") + string(", when restart neutrino.\nRestart now?"); //NI
-			if (ShowMsg(LOCALE_MESSAGEBOX_INFO, text, CMessageBox::mbrNo, CMessageBox::mbYes | CMessageBox::mbNo, NEUTRINO_ICON_INFO, 0) == CMessageBox::mbrYes) {
+			std::string text = "Easy menu switched " + string(g_settings.easymenu?"OFF":"ON") + string(", when restart gui.\nRestart now?"); //NI
+			if (ShowMsg(LOCALE_MESSAGEBOX_INFO, text, CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_INFO, 0) == CMsgBox::mbrYes) {
 				g_settings.easymenu = (g_settings.easymenu == 0) ? 1 : 0;
 				INFO("change easymenu to %d\n", g_settings.easymenu);
 				exec(NULL, "restart"); //NI
@@ -5130,7 +5136,9 @@ void CNeutrinoApp::CheckFastScan(bool standby, bool reload)
 				scanSettings.fst_version = CServiceScan::getInstance()->GetFstVersion();
 				scanSettings.saveSettings(NEUTRINO_SCAN_SETTINGS_FILE);
 			}
-			delete fhintbox;
+			if (fhintbox){
+				fhintbox->hide(); delete fhintbox;
+			}
 			if (standby)
 				CVFD::getInstance()->setMode(CVFD::MODE_STANDBY);
 		}

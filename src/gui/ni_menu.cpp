@@ -132,8 +132,8 @@ int CNIMenu::exec(CMenuTarget* parent, const std::string &actionkey)
 
 	if (actionkey == "camd_reset")
 	{
-		CHintBox * hintbox = new CHintBox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_RESET));
-		hintbox->paint();
+		CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_RESET));
+		hintbox.paint();
 
 		buf.str("");
 		buf << EMU_START_SCRIPT << " restart";
@@ -142,19 +142,24 @@ int CNIMenu::exec(CMenuTarget* parent, const std::string &actionkey)
 		if (my_system(2, EMU_START_SCRIPT, "restart") != 0)
 			printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
 		sleep(1);
-		delete hintbox;
+
+		hintbox.hide();
 
 		return menu_return::RETURN_EXIT_ALL;
 	}
-	else if(actionkey == "savesettings") {
-		CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT)); // UTF-8
-		hintBox->paint();
+	else if(actionkey == "savesettings")
+	{
+		CHintBox hintbox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT));
+		hintbox.paint();
+
 		CNeutrinoApp::getInstance()->saveSetup(NEUTRINO_SETTINGS_FILE);
-		delete hintBox;
+
+		hintbox.hide();
+
 		return res;
 	}
-	else if(actionkey == "ecmInfo") {
-
+	else if(actionkey == "ecmInfo")
+	{
 		buffer=NULL;
 		CFileHelpers fhlp;
 		if (fhlp.copyFile("/tmp/ecm.info", "/tmp/ecm.info.tmp", 0644))
@@ -240,8 +245,8 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 				strstr(filename, "cs2gbox")	||
 				strstr(filename, "gbox"))
 			{
-				CHintBox * hintbox = new CHintBox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_START));
-				hintbox->paint();
+				CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_START));
+				hintbox.paint();
 
 				buf.str("");
 				buf << EMU_START_SCRIPT << " start " << filename;
@@ -250,7 +255,8 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 				if (my_system(3, EMU_START_SCRIPT, "start", filename) != 0)
 					printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
 				sleep(1);
-				delete hintbox;
+
+				hintbox.hide();
 			}
 			else
 			{
@@ -295,15 +301,16 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			strstr(filename, "cs2gbox")	||
 			strstr(filename, "gbox"))
 		{
-			CHintBox * hintbox = new CHintBox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_STOP));
-			hintbox->paint();
+			CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_STOP));
+			hintbox.paint();
 
 			buf << EMU_START_SCRIPT << " stop " << filename;
 			printf("[ni_menu.cpp] executing %s\n", buf.str().c_str());
 			if (my_system(3, EMU_START_SCRIPT, "stop", filename) != 0)
 				printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
 			sleep(1);
-			delete hintbox;
+
+			hintbox.hide();
 		}
 		else
 		{
