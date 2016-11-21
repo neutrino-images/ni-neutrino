@@ -1071,7 +1071,7 @@ menu.hint_adzap_active AdZap is active. With a new call it will be deactivated.
 menu.hint_adzap_setup Settings for the AdZap service
 menu.hint_adzap_writedata Write data according to adzap status to /tmp/adzap.data
 menu.hint_aplay Audio player
-menu.hint_aplay_setup Change title display, start directory, screen saver and more
+menu.hint_aplay_setup Change title display, start directory, screen saver etc.
 menu.hint_audio Audio output, DD\nSRS True volume options
 menu.hint_audio_adjust_vol_ac3 Channel specific volume adjustment for AC3 streams
 menu.hint_audio_adjust_vol_clear Clear all saved values for PCM and AC3 streams
@@ -1182,7 +1182,7 @@ menu.hint_hdd_check Check filesystem (fsck)
 menu.hint_hdd_fmt Select the data storage format
 menu.hint_hdd_format Create HDD partition and format it
 menu.hint_hdd_format_on_mount_failed Format HDD device when mount failed?
-menu.hint_hdd_info Device information about capacity, temperature and more...
+menu.hint_hdd_info Device information about capacity, temperature etc.
 menu.hint_hdd_noise Set Automatic Acoustic Management\nnot all drives support this
 menu.hint_hdd_power Activate internal HDD power for Coolstream HD1 boxes
 menu.hint_hdd_sleep Select time to stop hdd on inactivity
@@ -1387,7 +1387,7 @@ menu.hint_network IP address, gateway, DNS, Time sync\nNetwork shares and servic
 menu.hint_new_zap_mode Allow channel switch while browsing\n(toggle mode with 'mute' in channel list)
 menu.hint_next Continue to next menu\nPress menu key to close all menus
 menu.hint_next_brief Continue to next menu
-menu.hint_nimenu Configuration of softcams, plugins, tools and more
+menu.hint_nimenu Configuration of softcams, plugins, tools etc.
 menu.hint_numeric_adjust Adjust channel list mode on numeric zap
 menu.hint_opkg Install or update software packages
 menu.hint_opkg_feed_addresses_edit Edit feed addresses
@@ -1563,7 +1563,7 @@ menu.hint_selected_back Change selected item background color
 menu.hint_selected_text Change selected item text color
 menu.hint_service Tuner setup, service scan,\nbouquet editor, software upgrade
 menu.hint_service_scan Auto and manual service scan
-menu.hint_settings Configure System\nNetwork, audio, video, OSD and more
+menu.hint_settings Configure System\nNetwork, audio, video, OSD etc.
 menu.hint_shoutcast_dev_id Type your SHOUTcast Dev ID. An empty input disables SHOUTcast support
 menu.hint_shoutcast_enabled Enable or disable SHOUTcast support
 menu.hint_show_mute_icon Show mute icon, when volume set to 0

@@ -1182,7 +1182,7 @@ menu.hint_hdd_check Überprüft das Dateisystem und führt gegebenfalls eine Rep
 menu.hint_hdd_fmt Wählen Sie das Datenträgerformat aus
 menu.hint_hdd_format Erstellt eine Partition auf dem Datenträger und formatiert diese
 menu.hint_hdd_format_on_mount_failed Soll der Datenträger formatiert werden, wenn das Einhängen fehlschlägt?
-menu.hint_hdd_info Datenträger-Informationen über Kapazität, Temperatur und mehr
+menu.hint_hdd_info Datenträger-Informationen über Kapazität, Temperatur usw.
 menu.hint_hdd_noise Setzen Sie Parameter für das Automatic Acoustic Management.\nNicht alle Datenträger unterstützen diese Funktion
 menu.hint_hdd_power Interne HDD-Stromversorgung für die Coolstream HD1 Boxen aktivieren.
 menu.hint_hdd_sleep Dieser Wert definiert, nach wieviel Minuten die Festplatte bei Inaktivität in den Sleep-Modus geschaltet wird
@@ -1387,7 +1387,7 @@ menu.hint_network IP-Adresse, Gateway, DNS, Zeit-Sync, Netzwerk-Freigaben, Diens
 menu.hint_new_zap_mode Aktiviert Quickzap in der Kanalliste. Nach Betätigen der Mute-Taste wird mit den Hoch/Runter-Tasten direkt umgeschalten
 menu.hint_next Weiter zum nächsten Menü.\nDie Taste 'Menü' schließt alle Menüs
 menu.hint_next_brief Weiter zum nächsten Menü
-menu.hint_nimenu Konfiguration von Softcams, Plugins, Tools und mehr
+menu.hint_nimenu Konfiguration von Softcams, Plugins, Tools usw.
 menu.hint_numeric_adjust Bei numerischer Programmwahl die Kanalliste am neu gewählten Programm ausrichten
 menu.hint_opkg Software-Pakete installieren oder vorhandene aktualisieren
 menu.hint_opkg_feed_addresses_edit Bearbeiten von Feed-Adressen
