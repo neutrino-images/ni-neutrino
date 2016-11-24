@@ -228,8 +228,6 @@ void CMoviePlayerGui::cutNeutrino()
 	CZapit::getInstance()->setMoviePlayer(true);// let CCamManager::SetMode know, the call is from MoviePlayer
 
 	g_Zapit->lockPlayBack();
-	//NI if (!isWebTV)
-	//NI	g_Sectionsd->setPauseScanning(true);
 
 	m_LastMode = (CNeutrinoApp::getInstance()->getMode() /*| NeutrinoMessages::norezap*/);
 	if (isWebTV)
@@ -252,7 +250,6 @@ void CMoviePlayerGui::restoreNeutrino()
 
 	//g_Zapit->unlockPlayBack();
 	CZapit::getInstance()->EnablePlayback(true);
-	//NI g_Sectionsd->setPauseScanning(false);
 
 	printf("%s: restore mode %x\n", __func__, m_LastMode);fflush(stdout);
 #if 0
