@@ -1566,6 +1566,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				if (restore)
 					FileTime.kill();
 				CInfoClock::getInstance()->enableInfoClock(false);
+				InfoIcons->enableInfoIcons(false); //NI InfoIcons
 #ifdef ENABLE_LUA
 				if (isLuaPlay && haveLuaInfoFunc) {
 					int xres = 0, yres = 0, aspectRatio = 0, framerate = -1;
@@ -1585,6 +1586,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 #endif
 				fromInfoviewer = false;
 				CInfoClock::getInstance()->enableInfoClock(true);
+				InfoIcons->enableInfoIcons(true); //NI InfoIcons
 				if (restore) {
 					FileTime.setMode(m_mode);
 					FileTime.update(position, duration);
