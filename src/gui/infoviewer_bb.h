@@ -69,8 +69,8 @@ class CInfoViewerBB
 			ICON_DD		= 3,
 			ICON_16_9	= 4,
 			ICON_RES	= 5,
-			ICON_CA		= 6,
-			ICON_TUNER	= 7,
+			ICON_TUNER	= 6, //NI
+			ICON_CA		= 7, //NI; ICON_CA should always be the last in this enum
 			ICON_MAX	= 8
 		};
 

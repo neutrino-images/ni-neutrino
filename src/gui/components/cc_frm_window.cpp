@@ -59,7 +59,7 @@ using namespace std;
 //sub class CComponentsWindow inherit from CComponentsForm
 CComponentsWindow::CComponentsWindow(CComponentsForm *parent)
 {
-	initVarWindow(0, 0, 800, 600, "", "", parent);
+	initVarWindow(0, 0, 800, 600, "", "", parent, CC_SHADOW_OFF, COL_FRAME_PLUS_0, COL_MENUCONTENT_PLUS_0, COL_SHADOW_PLUS_0);
 }
 
 CComponentsWindow::CComponentsWindow(	const int& x_pos, const int& y_pos, const int& w, const int& h,
@@ -297,6 +297,7 @@ void CComponentsWindow::initBody()
 
 		ccw_body->setDimensionsAll(x_body, h_header, w_body, h_body);
 		ccw_body->doPaintBg(true);
+		ccw_body->setColorBody(col_body);
 
 		//handle corner behavior
 		if (!ccw_show_header)
