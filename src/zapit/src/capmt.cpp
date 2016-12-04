@@ -34,7 +34,7 @@
 #include <dvbsi++/program_map_section.h>
 #include <dvbsi++/ca_program_map_section.h>
 
-#include <neutrino.h> //NI
+#include <global.h> //NI /* to get g_settings */
 
 //#define DEBUG_CAPMT
 
