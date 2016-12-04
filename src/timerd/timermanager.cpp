@@ -1176,7 +1176,10 @@ CTimerEvent_Record::CTimerEvent_Record(time_t announce_Time, time_t alarm_Time, 
 	eventInfo.epg_starttime = epg_starttime;
 	eventInfo.channel_id = channel_id;
 	eventInfo.apids = apids;
+	eventInfo.autoAdjustToEPG = _autoAdjustToEPG;
+	eventInfo.recordingSafety = _recordingSafety;
 	eventInfo.channel_ci = channel_ci; //NI
+
 	recordingDir = recDir;
 	epgTitle="";
 	autoAdjustToEPG = _autoAdjustToEPG;
