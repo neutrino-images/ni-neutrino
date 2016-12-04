@@ -34,6 +34,8 @@
 #include <dvbsi++/program_map_section.h>
 #include <dvbsi++/ca_program_map_section.h>
 
+#include <neutrino.h> //NI
+
 //#define DEBUG_CAPMT
 
 CCam::CCam()
@@ -293,7 +295,8 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 //NI
 #ifdef BOXMODEL_APOLLO
-	if(mode) {
+	// disable if option "usable CI channel while recording" set to "all channels"
+	if(mode && g_settings.ci_mode != 0 /*all channels*/) {
 		if(start) {
 			if ((tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) || (filter_channels && channel->bUseCI)) {
 				rmode = true;
