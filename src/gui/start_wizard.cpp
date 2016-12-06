@@ -101,7 +101,9 @@ int CStartUpWizard::exec(CMenuTarget* parent, const string & /*actionKey*/)
 	CSettingsManager settingsManager(SNeutrinoSettings::WIZARD_START);
 	settingsManager.exec(NULL, "");
 
+#if 0
 	if(ShowMsg (LOCALE_WIZARD_WELCOME_HEAD, g_Locale->getText(LOCALE_WIZARD_WELCOME_TEXT), CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbrCancel) == CMsgBox::mbrYes)
+#endif
 	{
 		int advanced = 1;
 #ifdef ENABLE_FASTSCAN
