@@ -848,7 +848,7 @@ void CBouquetManager::loadWebtv()
 							if (channel)
 							{
 								epg_id = channel->getChannelID();
-								INFO("* auto epg_id found for %s: " PRINTF_CHANNEL_ID_TYPE "\n", title, epg_id);
+								INFO("* auto epg_id found for %s: " PRINTF_CHANNEL_ID_TYPE "", title, epg_id);
 							}
 						}
 						else

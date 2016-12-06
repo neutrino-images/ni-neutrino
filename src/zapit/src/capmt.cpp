@@ -34,6 +34,8 @@
 #include <dvbsi++/program_map_section.h>
 #include <dvbsi++/ca_program_map_section.h>
 
+#include <global.h> //NI /* to get g_settings */
+
 //#define DEBUG_CAPMT
 
 CCam::CCam()
@@ -290,13 +292,11 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 	if((oldmask != newmask) || force_update) {
 		INFO("    ##NI: (oldmask != newmask) || force_update)\n");
-		if(start) {
-			cam->setCaMask(newmask);
-			cam->setSource(source);
-			if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
-				cam->makeCaPmt(channel, true);
-				cam->setCaPmt(true);
-			}
+		cam->setCaMask(newmask);
+		cam->setSource(source);
+		if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
+			cam->makeCaPmt(channel, true);
+			cam->setCaPmt(true);
 		}
 	}
 
@@ -308,7 +308,6 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		StopCam(channel_id, cam);
 #ifdef BOXMODEL_APOLLO
 		CZapitChannel * chan = CServiceManager::getInstance()->GetCurrentChannel();
-		INFO("    ##NI: GetCurrentChannel (%s)\n",chan->getName().c_str());
 
 		//NI - this is a hack for rezaping to the recording channe
 		//if commig from movieplayer, disable hack
@@ -322,93 +321,80 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 //NI
 #ifdef BOXMODEL_APOLLO
-	if(mode) {
+	// disable if option "usable CI channel while recording" set to "all channels"
+	if(mode && g_settings.ci_mode != 0 /*all channels*/) {
 		if(start) {
 			if ((tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) || (filter_channels && channel->bUseCI)) {
 				rmode = true;
 				INFO("    ##NI: rmode\n");
 			}
+
 		} else
 			rmode = false;
 	}
 #endif
 
-	//NI
-	if(oldmask == newmask) {
-		INFO("    ##NI: (oldmask == newmask) do nothing yet\n");
-	}
-
-	if(start) { //NI
-		INFO("    ##NI: (start)\n");
-		CaIdVector caids;
-		cCA::GetInstance()->GetCAIDS(caids);
-		//uint8_t list = CCam::CAPMT_FIRST;
-		uint8_t list = CCam::CAPMT_ONLY;
-		if (channel_map.size() > 1)
-			list = CCam::CAPMT_ADD;
+	CaIdVector caids;
+	cCA::GetInstance()->GetCAIDS(caids);
+	//uint8_t list = CCam::CAPMT_FIRST;
+	uint8_t list = CCam::CAPMT_ONLY;
+	if (channel_map.size() > 1)
+		list = CCam::CAPMT_ADD;
 
 #ifdef BOXMODEL_APOLLO
-		INFO("    ##NI: channel_map.size() %d\n",channel_map.size());
+	INFO("    ##NI: channel_map.size() %d\n",channel_map.size());
+	int ci_use_count = 0;
+	for (it = channel_map.begin(); it != channel_map.end(); ++it)
+	{
+		cam = it->second;
+		channel = CServiceManager::getInstance()->FindChannel(it->first);
 
-		int ci_use_count = 0;
-		bool ts_use = false; //NI
-		for (it = channel_map.begin(); it != channel_map.end(); ++it)
-		{
-			cam = it->second;
-			channel = CServiceManager::getInstance()->FindChannel(it->first);
-
-			if(!channel || !channel->scrambled) {//NI
-				INFO("CI: skip, channel not scrambled [%s]\n",channel->getName().c_str());
-				continue;
-			}
-			ts_use = true; //NI
-
-			if (tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) {
-				cCA::GetInstance()->SetTS((CA_DVBCI_TS_INPUT)tunerno);
+		if (tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) {
+			cCA::GetInstance()->SetTS((CA_DVBCI_TS_INPUT)tunerno);
+			ci_use_count++;
+			break;
+		} else if (filter_channels) {
+			if (channel && channel->bUseCI)
 				ci_use_count++;
-				break;
-			} else if (filter_channels) {
-				if (channel && channel->bUseCI)
-					ci_use_count++;
-			} else
-				ci_use_count++;
-		}
-		if (ci_use_count == 0 && ts_use) { //NI - don't disable TS if SetTS wouldn't call
-			INFO("CI: not used for [%s], disabling TS\n",channel->getName().c_str());
-			cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
-		}
+		} else
+			ci_use_count++;
+	}
+	if (ci_use_count == 0) {
+		INFO("CI: not used for [%s], disabling TS\n",channel->getName().c_str());
+		cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
+	}
 #endif
 
-		for (it = channel_map.begin(); it != channel_map.end(); /*++it*/)
-		{
-			cam = it->second;
-			channel = CServiceManager::getInstance()->FindChannel(it->first);
-			++it;
-			if(!channel || !channel->scrambled) //NI
-				continue;
+	for (it = channel_map.begin(); it != channel_map.end(); /*++it*/)
+	{
+		cam = it->second;
+		channel = CServiceManager::getInstance()->FindChannel(it->first);
+		++it;
+		if(!channel)
+			continue;
 
 #if 0
-			if (it == channel_map.end())
-				list |= CCam::CAPMT_LAST; // FIRST->ONLY or MORE->LAST
+		if (it == channel_map.end())
+			list |= CCam::CAPMT_LAST; // FIRST->ONLY or MORE->LAST
 #endif
 
-			cam->makeCaPmt(channel, false, list, caids);
-			int len;
-			unsigned char * buffer = channel->getRawPmt(len);
-			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_SMARTCARD);
+		cam->makeCaPmt(channel, false, list, caids);
+		int len;
+		unsigned char * buffer = channel->getRawPmt(len);
+		cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_SMARTCARD);
 
-			if (tunerno >= 0 && tunerno != cDemux::GetSource(cam->getSource())) {
-				INFO("CI: configured tuner %d do not match %d, skip [%s]\n", tunerno, cam->getSource(), channel->getName().c_str());
-			} else if (filter_channels && !channel->bUseCI) {
-				INFO("CI: filter enabled, CI not used for [%s]\n", channel->getName().c_str());
-			} else {
-				useCI = true; //NI
-				INFO("CI: use CI for [%s]\n", channel->getName().c_str());
-				cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI);
-			}
-			//list = CCam::CAPMT_MORE;
+		if (tunerno >= 0 && tunerno != cDemux::GetSource(cam->getSource())) {
+			INFO("CI: configured tuner %d do not match %d, skip [%s]\n", tunerno, cam->getSource(), channel->getName().c_str());
+		} else if (filter_channels && !channel->bUseCI) {
+			INFO("CI: filter enabled, CI not used for [%s]\n", channel->getName().c_str());
+		} else {
+			useCI = true; //NI
+			INFO("CI: use CI for [%s]\n", channel->getName().c_str());
+			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI);
 		}
-	} //NI
+		//list = CCam::CAPMT_MORE;
+	}
+
 	return true;
 }
 

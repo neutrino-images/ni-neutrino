@@ -1,39 +1,39 @@
 # https://material.google.com/style/color.html#color-color-palette
 # http://maettig.com/?page=PHP/CSS_Color_Converter
 
-# black
-menu_Head_red=0
-menu_Head_green=0
-menu_Head_blue=0
+# 900
+menu_Head_red=13
+menu_Head_green=13
+menu_Head_blue=13
 menu_Head_alpha=10
 
 menu_Head_gradient=0
 menu_Head_gradient_direction=1
 
-# 900
-menu_Content_red=13
-menu_Content_green=13
-menu_Content_blue=13
+# 800
+menu_Content_red=26
+menu_Content_green=26
+menu_Content_blue=26
 menu_Content_alpha=10
 
-# 800
-menu_Content_Selected_red=26
-menu_Content_Selected_green=26
-menu_Content_Selected_blue=26
+# 700
+menu_Content_Selected_red=38
+menu_Content_Selected_green=38
+menu_Content_Selected_blue=38
 menu_Content_Selected_alpha=10
 
-# 900
-menu_Content_inactive_red=13
-menu_Content_inactive_green=13
-menu_Content_inactive_blue=13
+# 800
+menu_Content_inactive_red=26
+menu_Content_inactive_green=26
+menu_Content_inactive_blue=26
 menu_Content_inactive_alpha=10
 
 menu_Separator_gradient_enable=0
 
-# black
-menu_Foot_red=0
-menu_Foot_green=0
-menu_Foot_blue=0
+# 900
+menu_Foot_red=13
+menu_Foot_green=13
+menu_Foot_blue=13
 menu_Foot_alpha=10
 
 menu_ButtonBar_gradient=0
@@ -42,16 +42,16 @@ menu_ButtonBar_gradient_direction=1
 menu_Hint_gradient=0
 menu_Hint_gradient_direction=1
 
-# 900
-infobar_red=13
-infobar_green=13
-infobar_blue=13
+# 800
+infobar_red=26
+infobar_green=26
+infobar_blue=26
 infobar_alpha=10
 
-# 900
-infobar_casystem_red=13
-infobar_casystem_green=13
-infobar_casystem_blue=13
+# 800
+infobar_casystem_red=26
+infobar_casystem_green=26
+infobar_casystem_blue=26
 infobar_casystem_alpha=10
 
 infobar_gradient_top=0
