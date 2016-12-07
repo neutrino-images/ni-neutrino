@@ -310,7 +310,9 @@ data/icons/slider/Makefile
 data/icons/status/Makefile
 data/icons/status/ca/Makefile
 data/icons/status/channel/Makefile
+data/icons/status/info/Makefile
 data/icons/status/markers/Makefile
+data/icons/status/progress/Makefile
 data/icons/status/various/Makefile
 data/icons/various/Makefile
 data/inetradio/Makefile
