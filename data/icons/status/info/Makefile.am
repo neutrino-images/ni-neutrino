@@ -1,7 +1,7 @@
 installdir = $(ICONSDIR)
 
 # NI Infoicons
-install_DATA += \
+install_DATA = \
 	info0_off.png \
 	info0_on.png \
 	info1_off.png \

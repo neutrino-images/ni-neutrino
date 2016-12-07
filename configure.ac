@@ -305,7 +305,6 @@ data/icons/hints/Makefile
 data/icons/locale/Makefile
 data/icons/movieplayer/Makefile
 data/icons/radar/Makefile
-data/icons/screensaver/Makefile
 data/icons/slider/Makefile
 data/icons/status/Makefile
 data/icons/status/ca/Makefile
