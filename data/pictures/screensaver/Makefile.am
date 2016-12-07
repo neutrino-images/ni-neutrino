@@ -1,4 +1,6 @@
 installdir = $(ICONSDIR)/screensaver
 
+resolution = 1280x720
+
 install_DATA = \
-	black.jpg
+	$(resolution)/black.jpg
