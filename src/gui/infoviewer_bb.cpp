@@ -985,7 +985,7 @@ void CInfoViewerBB::ResetModules()
 
 void CInfoViewerBB::initBBOffset()
 {
-	bottom_bar_offset = (g_settings.infobar_casystem_display < 2) ? (g_settings.infobar_casystem_frame ? 36 : 22) : 0;
+	bottom_bar_offset = (g_settings.infobar_casystem_display < 2) ? (g_settings.infobar_casystem_frame ? 38 : 24) : 0; //NI
 }
 
 void* CInfoViewerBB::scrambledThread(void *arg)
