@@ -2113,16 +2113,6 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 			//name
 			g_Font[SNeutrinoSettings::FONT_TYPE_CHANNELLIST]->RenderString(x+ 5+ numwidth+ 10+prg_offset, ypos+ fheight, width- numwidth- 40- 15-prg_offset, nameAndDescription, color);
 		}
-
-		//NI do update VFD only when cursor on live channel
-		if ((curr == selected) && (getKey(curr) == CNeutrinoApp::getInstance()->channelList->getActiveChannelNumber())) { //NI
-			if (!(chan->currentEvent.description.empty())) {
-				snprintf(nameAndDescription, sizeof(nameAndDescription), "%s - %s",
-					 chan->getName().c_str(), p_event->description.c_str());
-				CVFD::getInstance()->showMenuText(0, nameAndDescription, -1, true); // UTF-8
-			} else
-				CVFD::getInstance()->showMenuText(0, chan->getName().c_str(), -1, true); // UTF-8
-		}
 		if (!firstpaint && curr == selected)
 			updateVfd();
 		//NI lcd4l-support
