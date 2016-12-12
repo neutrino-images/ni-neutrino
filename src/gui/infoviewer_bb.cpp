@@ -928,7 +928,8 @@ void CInfoViewerBB::paint_ca_bar()
 	{
 		paintBoxRel(g_InfoViewer->ChanInfoX, g_InfoViewer->BoxEndY, ca_width , bottom_bar_offset, COL_INFOBAR_CASYSTEM_PLUS_0);
 	}
-#if 1
+//NI
+#if 0
 	if (g_settings.infobar_casystem_dotmatrix)
 	{
 		int xcnt = (g_InfoViewer->BoxEndX - g_InfoViewer->ChanInfoX - (g_settings.infobar_casystem_frame ? 24 : 0)) / 4;
