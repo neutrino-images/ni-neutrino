@@ -641,7 +641,7 @@ void CBouquetList::paintItem(int pos)
 		i_radius = RADIUS_LARGE;
 
 	if (i_radius)
-		frameBuffer->paintBoxRel(x, ypos, width- 15, fheight, bgcolor);
+		frameBuffer->paintBoxRel(x, ypos, width- 15, fheight, COL_MENUCONTENT_PLUS_0);
 	frameBuffer->paintBoxRel(x, ypos, width- 15, fheight, bgcolor, i_radius);
 
 	if (npos < (int) Bouquets.size())
@@ -701,7 +701,8 @@ void CBouquetList::paintItem(int pos)
 
 void CBouquetList::paintHead()
 {
-	CComponentsHeader header(x, y, width, theight, name);
+	std::string icon("");
+	CComponentsHeader header(x, y, width, theight, name, icon, CComponentsHeader::CC_BTN_LEFT | CComponentsHeader::CC_BTN_RIGHT | CComponentsHeader::CC_BTN_MENU);
 	header.paint(CC_SAVE_SCREEN_NO);
 }
 

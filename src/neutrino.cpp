@@ -3626,7 +3626,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	}
 	else if (msg == NeutrinoMessages::EVT_POPUP || msg == NeutrinoMessages::EVT_EXTMSG) {
 		if (mode != mode_scart && mode != mode_standby) {
-			int timeout = NO_TIMEOUT;
+			int timeout = DEFAULT_TIMEOUT;
 			std::string text = (char*)data;
 			std::string::size_type pos;
 
@@ -3668,6 +3668,11 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	else if (msg == NeutrinoMessages::LOCK_RC)
 	{
 		CRCLock::getInstance()->exec(NULL, CRCLock::NO_USER_INPUT);
+		return messages_return::handled;
+	}
+	else if (msg == NeutrinoMessages::LOCK_RC_EXTERN || msg == NeutrinoMessages::UNLOCK_RC_EXTERN)
+	{
+		printf("CNeutrinoApp::handleMsg: RC is %s now\n", msg == NeutrinoMessages::LOCK_RC_EXTERN ? "LOCKED" : "UNLOCKED");
 		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::CHANGEMODE ) {
