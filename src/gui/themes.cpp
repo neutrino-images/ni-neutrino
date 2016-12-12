@@ -325,93 +325,93 @@ void CThemes::setTheme(CConfigFile &configfile)
 
 void CThemes::getTheme(CConfigFile &configfile)
 {
-	t.menu_Head_alpha = configfile.getInt32( "menu_Head_alpha", 0x08 );
-	t.menu_Head_red = configfile.getInt32( "menu_Head_red", 0x00 );
-	t.menu_Head_green = configfile.getInt32( "menu_Head_green", 0x00 );
-	t.menu_Head_blue = configfile.getInt32( "menu_Head_blue", 0x00 );
-	t.menu_Head_Text_alpha = configfile.getInt32( "menu_Head_Text_alpha", 0x00 );
-	t.menu_Head_Text_red = configfile.getInt32( "menu_Head_Text_red", 0x5f );
-	t.menu_Head_Text_green = configfile.getInt32( "menu_Head_Text_green", 0x46 );
-	t.menu_Head_Text_blue = configfile.getInt32( "menu_Head_Text_blue", 0x00 );
+	t.menu_Head_alpha = configfile.getInt32( "menu_Head_alpha", 10 );
+	t.menu_Head_red = configfile.getInt32( "menu_Head_red", 0 );
+	t.menu_Head_green = configfile.getInt32( "menu_Head_green", 0 );
+	t.menu_Head_blue = configfile.getInt32( "menu_Head_blue", 0 );
+	t.menu_Head_Text_alpha = configfile.getInt32( "menu_Head_Text_alpha", 0 );
+	t.menu_Head_Text_red = configfile.getInt32( "menu_Head_Text_red", 99 );
+	t.menu_Head_Text_green = configfile.getInt32( "menu_Head_Text_green", 43 );
+	t.menu_Head_Text_blue = configfile.getInt32( "menu_Head_Text_blue", 7 );
 
-	t.menu_Head_gradient = configfile.getInt32( "menu_Head_gradient", CC_COLGRAD_COL_B_2_COL_A);
+	t.menu_Head_gradient = configfile.getInt32( "menu_Head_gradient", CC_COLGRAD_OFF);
 	t.menu_Head_gradient_direction = configfile.getInt32( "menu_Head_gradient_direction", CFrameBuffer::gradientVertical);
 	t.menu_Separator_gradient_enable = configfile.getInt32( "menu_Separator_gradient_enable", 0);
 
-	t.menu_Content_alpha = configfile.getInt32( "menu_Content_alpha", 0x08 );
-	t.menu_Content_red = configfile.getInt32( "menu_Content_red", 0x0c );
-	t.menu_Content_green = configfile.getInt32( "menu_Content_green", 0x0c );
-	t.menu_Content_blue = configfile.getInt32( "menu_Content_blue", 0x0c );
-	t.menu_Content_Text_alpha = configfile.getInt32( "menu_Content_Text_alpha", 0x00 );
-	t.menu_Content_Text_red = configfile.getInt32( "menu_Content_Text_red", 0x64 );
-	t.menu_Content_Text_green = configfile.getInt32( "menu_Content_Text_green", 0x64 );
-	t.menu_Content_Text_blue = configfile.getInt32( "menu_Content_Text_blue", 0x64 );
-	t.menu_Content_Selected_alpha = configfile.getInt32( "menu_Content_Selected_alpha", 0x08 );
-	t.menu_Content_Selected_red = configfile.getInt32( "menu_Content_Selected_red", 0x5f );
-	t.menu_Content_Selected_green = configfile.getInt32( "menu_Content_Selected_green", 0x46 );
-	t.menu_Content_Selected_blue = configfile.getInt32( "menu_Content_Selected_blue", 0x00 );
-	t.menu_Content_Selected_Text_alpha = configfile.getInt32( "menu_Content_Selected_Text_alpha", 0x00 );
-	t.menu_Content_Selected_Text_red = configfile.getInt32( "menu_Content_Selected_Text_red", 0x00 );
-	t.menu_Content_Selected_Text_green = configfile.getInt32( "menu_Content_Selected_Text_green", 0x00 );
-	t.menu_Content_Selected_Text_blue = configfile.getInt32( "menu_Content_Selected_Text_blue", 0x00 );
-	t.menu_Content_inactive_alpha = configfile.getInt32( "menu_Content_inactive_alpha", 0x08 );
-	t.menu_Content_inactive_red = configfile.getInt32( "menu_Content_inactive_red", 0x0c );
-	t.menu_Content_inactive_green = configfile.getInt32( "menu_Content_inactive_green", 0x0c );
-	t.menu_Content_inactive_blue = configfile.getInt32( "menu_Content_inactive_blue", 0x0c );
-	t.menu_Content_inactive_Text_alpha = configfile.getInt32( "menu_Content_inactive_Text_alpha", 0x00 );
-	t.menu_Content_inactive_Text_red = configfile.getInt32( "menu_Content_inactive_Text_red", 50 );
-	t.menu_Content_inactive_Text_green = configfile.getInt32( "menu_Content_inactive_Text_green", 50 );
-	t.menu_Content_inactive_Text_blue = configfile.getInt32( "menu_Content_inactive_Text_blue", 50 );
+	t.menu_Content_alpha = configfile.getInt32( "menu_Content_alpha", 10 );
+	t.menu_Content_red = configfile.getInt32( "menu_Content_red", 13 );
+	t.menu_Content_green = configfile.getInt32( "menu_Content_green", 13 );
+	t.menu_Content_blue = configfile.getInt32( "menu_Content_blue", 13 );
+	t.menu_Content_Text_alpha = configfile.getInt32( "menu_Content_Text_alpha", 0 );
+	t.menu_Content_Text_red = configfile.getInt32( "menu_Content_Text_red", 98 );
+	t.menu_Content_Text_green = configfile.getInt32( "menu_Content_Text_green", 98 );
+	t.menu_Content_Text_blue = configfile.getInt32( "menu_Content_Text_blue", 98 );
+	t.menu_Content_Selected_alpha = configfile.getInt32( "menu_Content_Selected_alpha", 10 );
+	t.menu_Content_Selected_red = configfile.getInt32( "menu_Content_Selected_red", 99 );
+	t.menu_Content_Selected_green = configfile.getInt32( "menu_Content_Selected_green", 43 );
+	t.menu_Content_Selected_blue = configfile.getInt32( "menu_Content_Selected_blue", 7 );
+	t.menu_Content_Selected_Text_alpha = configfile.getInt32( "menu_Content_Selected_Text_alpha", 0 );
+	t.menu_Content_Selected_Text_red = configfile.getInt32( "menu_Content_Selected_Text_red", 13 );
+	t.menu_Content_Selected_Text_green = configfile.getInt32( "menu_Content_Selected_Text_green", 13 );
+	t.menu_Content_Selected_Text_blue = configfile.getInt32( "menu_Content_Selected_Text_blue", 13 );
+	t.menu_Content_inactive_alpha = configfile.getInt32( "menu_Content_inactive_alpha", 10 );
+	t.menu_Content_inactive_red = configfile.getInt32( "menu_Content_inactive_red", 13 );
+	t.menu_Content_inactive_green = configfile.getInt32( "menu_Content_inactive_green", 13 );
+	t.menu_Content_inactive_blue = configfile.getInt32( "menu_Content_inactive_blue", 13 );
+	t.menu_Content_inactive_Text_alpha = configfile.getInt32( "menu_Content_inactive_Text_alpha", 0 );
+	t.menu_Content_inactive_Text_red = configfile.getInt32( "menu_Content_inactive_Text_red", 62 );
+	t.menu_Content_inactive_Text_green = configfile.getInt32( "menu_Content_inactive_Text_green", 62 );
+	t.menu_Content_inactive_Text_blue = configfile.getInt32( "menu_Content_inactive_Text_blue", 62 );
 
-	t.menu_Hint_gradient = configfile.getInt32( "menu_Hint_gradient", CC_COLGRAD_COL_B_2_COL_A);
+	t.menu_Hint_gradient = configfile.getInt32( "menu_Hint_gradient", CC_COLGRAD_OFF);
 	t.menu_Hint_gradient_direction = configfile.getInt32( "menu_Hint_gradient_direction", CFrameBuffer::gradientVertical);
-	t.menu_ButtonBar_gradient = configfile.getInt32( "menu_ButtonBar_gradient", CC_COLGRAD_COL_A_2_COL_B);
+	t.menu_ButtonBar_gradient = configfile.getInt32( "menu_ButtonBar_gradient", CC_COLGRAD_OFF);
 	t.menu_ButtonBar_gradient_direction = configfile.getInt32( "menu_ButtonBar_gradient_direction", CFrameBuffer::gradientVertical);
 
-	t.infobar_alpha = configfile.getInt32( "infobar_alpha", 0x08 );
-	t.infobar_red = configfile.getInt32( "infobar_red", 0x0c );
-	t.infobar_green = configfile.getInt32( "infobar_green", 0x0c );
-	t.infobar_blue = configfile.getInt32( "infobar_blue", 0x0c );
+	t.infobar_alpha = configfile.getInt32( "infobar_alpha", 10 );
+	t.infobar_red = configfile.getInt32( "infobar_red", 13 );
+	t.infobar_green = configfile.getInt32( "infobar_green", 13 );
+	t.infobar_blue = configfile.getInt32( "infobar_blue", 13 );
 
 	//t.menu_Foot default historically depends on t.infobar
-	t.menu_Foot_alpha = configfile.getInt32( "menu_Foot_alpha", t.infobar_alpha );
-	t.menu_Foot_red = configfile.getInt32( "menu_Foot_red", int(t.infobar_red*0.4)+14 );
-	t.menu_Foot_green = configfile.getInt32( "menu_Foot_green", int(t.infobar_green*0.4)+14 );
-	t.menu_Foot_blue = configfile.getInt32( "menu_Foot_blue", int(t.infobar_blue*0.4)+14 );
+	t.menu_Foot_alpha = configfile.getInt32( "menu_Foot_alpha", 10 );
+	t.menu_Foot_red = configfile.getInt32( "menu_Foot_red", 0 );
+	t.menu_Foot_green = configfile.getInt32( "menu_Foot_green", 0 );
+	t.menu_Foot_blue = configfile.getInt32( "menu_Foot_blue", 0 );
 
-	t.infobar_gradient_top = configfile.getInt32( "infobar_gradient_top", CC_COLGRAD_COL_B_2_COL_A );
+	t.infobar_gradient_top = configfile.getInt32( "infobar_gradient_top", CC_COLGRAD_OFF );
 	t.infobar_gradient_top_direction = configfile.getInt32( "infobar_gradient_top_direction", CFrameBuffer::gradientVertical );
 	t.infobar_gradient_body = configfile.getInt32( "infobar_gradient_body", CC_COLGRAD_OFF);
 	t.infobar_gradient_body_direction = configfile.getInt32( "infobar_gradient_body_direction", CFrameBuffer::gradientVertical );
-	t.infobar_gradient_bottom = configfile.getInt32( "infobar_gradient_bottom", CC_COLGRAD_COL_A_2_COL_B );
+	t.infobar_gradient_bottom = configfile.getInt32( "infobar_gradient_bottom", CC_COLGRAD_OFF );
 	t.infobar_gradient_bottom_direction = configfile.getInt32( "infobar_gradient_bottom_direction", CFrameBuffer::gradientVertical );
 
-	t.infobar_casystem_alpha = configfile.getInt32( "infobar_casystem_alpha", 0x08 );
-	t.infobar_casystem_red = configfile.getInt32( "infobar_casystem_red", 0x0c );
-	t.infobar_casystem_green = configfile.getInt32( "infobar_casystem_green", 0x0c );
-	t.infobar_casystem_blue = configfile.getInt32( "infobar_casystem_blue", 0x0c );
-	t.infobar_Text_alpha = configfile.getInt32( "infobar_Text_alpha", 0x00 );
-	t.infobar_Text_red = configfile.getInt32( "infobar_Text_red", 0x64 );
-	t.infobar_Text_green = configfile.getInt32( "infobar_Text_green", 0x64 );
-	t.infobar_Text_blue = configfile.getInt32( "infobar_Text_blue", 0x64 );
+	t.infobar_casystem_alpha = configfile.getInt32( "infobar_casystem_alpha", 10 );
+	t.infobar_casystem_red = configfile.getInt32( "infobar_casystem_red", 13 );
+	t.infobar_casystem_green = configfile.getInt32( "infobar_casystem_green", 13 );
+	t.infobar_casystem_blue = configfile.getInt32( "infobar_casystem_blue", 13 );
+	t.infobar_Text_alpha = configfile.getInt32( "infobar_Text_alpha", 0 );
+	t.infobar_Text_red = configfile.getInt32( "infobar_Text_red", 98 );
+	t.infobar_Text_green = configfile.getInt32( "infobar_Text_green", 98 );
+	t.infobar_Text_blue = configfile.getInt32( "infobar_Text_blue", 98 );
 
 	//t.menu_Foot_Text default historically depends on t.infobar_Text
-	t.menu_Foot_Text_alpha = configfile.getInt32( "menu_Foot_Text_alpha", 0x00 );
-	t.menu_Foot_Text_red = configfile.getInt32( "menu_Foot_Text_red", int(t.infobar_Text_red*0.6) );
-	t.menu_Foot_Text_green = configfile.getInt32( "menu_Foot_Text_green", int(t.infobar_Text_green*0.6) );
-	t.menu_Foot_Text_blue = configfile.getInt32( "menu_Foot_Text_blue", int(t.infobar_Text_blue*0.6) );
+	t.menu_Foot_Text_alpha = configfile.getInt32( "menu_Foot_Text_alpha", 0 );
+	t.menu_Foot_Text_red = configfile.getInt32( "menu_Foot_Text_red", 98 );
+	t.menu_Foot_Text_green = configfile.getInt32( "menu_Foot_Text_green", 98 );
+	t.menu_Foot_Text_blue = configfile.getInt32( "menu_Foot_Text_blue", 98 );
 
-	t.colored_events_alpha = configfile.getInt32( "colored_events_alpha", 0x00 );
-	t.colored_events_red = configfile.getInt32( "colored_events_red", 95 );
-	t.colored_events_green = configfile.getInt32( "colored_events_green", 70 );
-	t.colored_events_blue = configfile.getInt32( "colored_events_blue", 0 );
+	t.colored_events_alpha = configfile.getInt32( "colored_events_alpha", 0 );
+	t.colored_events_red = configfile.getInt32( "colored_events_red", 99 );
+	t.colored_events_green = configfile.getInt32( "colored_events_green", 43 );
+	t.colored_events_blue = configfile.getInt32( "colored_events_blue", 7 );
 	t.colored_events_channellist = configfile.getInt32( "colored_events_channellist", 1 );
 
 	t.colored_events_infobar = configfile.getInt32( "colored_events_infobar", 1 );
-	t.clock_Digit_alpha = configfile.getInt32( "clock_Digit_alpha", t.menu_Content_Text_alpha );
-	t.clock_Digit_red = configfile.getInt32( "clock_Digit_red", t.menu_Content_Text_red );
-	t.clock_Digit_green = configfile.getInt32( "clock_Digit_green", t.menu_Content_Text_green );
-	t.clock_Digit_blue = configfile.getInt32( "clock_Digit_blue", t.menu_Content_Text_blue );
+	t.clock_Digit_alpha = configfile.getInt32( "clock_Digit_alpha", 0 );
+	t.clock_Digit_red = configfile.getInt32( "clock_Digit_red", 62 );
+	t.clock_Digit_green = configfile.getInt32( "clock_Digit_green", 62 );
+	t.clock_Digit_blue = configfile.getInt32( "clock_Digit_blue", 62 );
 }
 
 void CThemes::move_userDir()
