@@ -546,7 +546,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.infobar_progressbar   = configfile.getInt32("infobar_progressbar"  , 2 ); //NI
 	g_settings.infobar_casystem_display = configfile.getInt32("infobar_casystem_display", 0 ); //NI
 	g_settings.infobar_casystem_dotmatrix = configfile.getInt32("infobar_casystem_dotmatrix", 0 );
-	g_settings.infobar_casystem_frame = configfile.getInt32("infobar_casystem_frame", 1 );
+	g_settings.infobar_casystem_frame = configfile.getInt32("infobar_casystem_frame", 0 ); //NI
 	g_settings.scrambled_message = configfile.getBool("scrambled_message", false ); //NI
 	g_settings.volume_pos = configfile.getInt32("volume_pos", CVolumeBar::VOLUMEBAR_POS_BOTTOM_CENTER ); //NI
 	g_settings.volume_digits = configfile.getBool("volume_digits", true);
