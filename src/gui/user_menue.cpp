@@ -72,6 +72,7 @@
 #include <gui/network_setup.h>
 #include <gui/update_menue.h>
 #include <gui/hdd_menu.h>
+#include <gui/test_menu.h> //NI
 #include <gui/webtv_setup.h>
 
 #include <driver/radiotext.h>
@@ -473,6 +474,10 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 			keyhelper.get(&key,&icon);
 			menu_item = new CMenuForwarder(LOCALE_SERVICEMENU_RESTART_TUNER, true, NULL, neutrino, "restarttuner", key, icon);
 			menu_item->setHint(NEUTRINO_ICON_HINT_RELOAD_CHANNELS, LOCALE_MENU_HINT_RESTART_TUNER);
+			break;
+		case SNeutrinoSettings::ITEM_TESTMENU:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuDForwarder(LOCALE_TESTMENU, true, NULL, new CTestMenu(), NULL, key, icon);
 			break;
 		case -1: // plugin
 		    {

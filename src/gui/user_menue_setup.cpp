@@ -117,6 +117,7 @@ static keyvals usermenu_items[] =
 	{ SNeutrinoSettings::ITEM_ECMINFO,		LOCALE_ECMINFO_SHOW,			usermenu_show },
 	{ SNeutrinoSettings::ITEM_INFOICONS,		LOCALE_INFOICONS_SWITCH_ON,		usermenu_show },
 	{ SNeutrinoSettings::ITEM_TUNER_RESTART,	LOCALE_SERVICEMENU_RESTART_TUNER,	usermenu_show },
+	{ SNeutrinoSettings::ITEM_TESTMENU,		LOCALE_TESTMENU,			usermenu_show },
 	{ SNeutrinoSettings::ITEM_MAX,			NONEXISTANT_LOCALE,			usermenu_show }
 };
 

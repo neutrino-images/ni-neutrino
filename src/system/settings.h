@@ -875,7 +875,7 @@ struct SNeutrinoSettings
 		ITEM_FILEPLAY = 26,
 		ITEM_TOOLS = 27,
 		ITEM_LUA = 28,
-		ITEM_TUNER_RESTART = 29,        //NI
+		ITEM_TUNER_RESTART = 29,	//NI
 
 		ITEM_HDDMENU = 30,
 		ITEM_AUDIOPLAY = 31,
@@ -885,6 +885,7 @@ struct SNeutrinoSettings
 
 		ITEM_LIVESTREAM_RESOLUTION = 35,
 		ITEM_ADZAP = 36,
+		ITEM_TESTMENU = 37,		//NI
 
 		ITEM_MAX   // MUST be always the last in the list
 	} USER_ITEM;

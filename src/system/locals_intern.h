@@ -2586,6 +2586,7 @@ const char * locale_real_names[] =
 	"subtitles.stop",
 	"terrestrialsetup.area",
 	"terrestrialsetup.provider",
+	"testmenu",
 	"timer.eventrecord.msg",
 	"timer.eventrecord.title",
 	"timer.eventtimed.msg",
