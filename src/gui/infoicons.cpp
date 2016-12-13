@@ -112,14 +112,10 @@ void CInfoIcons::Init()
 	{
 		int icon_sizeW	= 0;
 		int icon_sizeH	= 0;
-		buf.str("");
-		buf << ICONSDIR << "/" << icon[i].name << "_on.png";
 		// we assume the _off-partner exist and has same dimensions
-		if (access(buf.str().c_str(), F_OK) == 0) {
-			buf.str("");
-			buf << icon[i].name << "_on";
-			frameBuffer->getIconSize(buf.str().c_str(), &icon_sizeW, &icon_sizeH);
-		}
+		buf.str("");
+		buf << icon[i].name << "_on";
+		frameBuffer->getIconSize(buf.str().c_str(), &icon_sizeW, &icon_sizeH);
 
 		if (icon_sizeW && icon_sizeH)
 		{
