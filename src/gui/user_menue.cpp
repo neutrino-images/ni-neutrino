@@ -369,6 +369,24 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 			menu_item = new CMenuDForwarder(LOCALE_MAINMENU_SCRIPTS, g_PluginList->hasPlugin(CPlugins::P_TYPE_SCRIPT), NULL, new CPluginList(LOCALE_MAINMENU_SCRIPTS,CPlugins::P_TYPE_SCRIPT), "-1", key, icon );
 			menu_item->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_SCRIPTS);
 			break;
+		//NI
+		case SNeutrinoSettings::ITEM_ECMINFO:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuForwarder(LOCALE_ECMINFO_SHOW, file_size("/tmp/ecm.info"), NULL, ni_menu, "ecmInfo", key, icon);
+			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+			break;
+		//NI
+		case SNeutrinoSettings::ITEM_CAMD_RESET:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuForwarder(LOCALE_CAMD_RESET, true, NULL, ni_menu, "camd_reset", key, icon);
+			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+			break;
+		//NI
+		case SNeutrinoSettings::ITEM_INFOICONS:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuForwarder(!g_settings.mode_icons ? LOCALE_INFOICONS_SWITCH_ON : LOCALE_INFOICONS_SWITCH_OFF, g_settings.mode_icons_skin != INFOICONS_INFOVIEWER, NULL, new CInfoIconsSetup, "infoicons_switch", key, icon);
+			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+			break;
 		case SNeutrinoSettings::ITEM_YOUTUBE:
 			keyhelper.get(&key,&icon);
 			menu_item = new CMenuForwarder(LOCALE_MOVIEPLAYER_YTPLAYBACK, !_mode_ts, NULL, neutrino, "ytplayback", key, icon);
@@ -388,6 +406,12 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 			keyhelper.get(&key,&icon);
 			menu_item = new CMenuDForwarder(LOCALE_MAINMENU_LUA, g_PluginList->hasPlugin(CPlugins::P_TYPE_LUA), NULL, new CPluginList(LOCALE_MAINMENU_LUA,CPlugins::P_TYPE_LUA), "-1", key, icon );
 			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+			break;
+		//NI
+		case SNeutrinoSettings::ITEM_TUNER_RESTART:
+			keyhelper.get(&key,&icon);
+			menu_item = new CMenuForwarder(LOCALE_SERVICEMENU_RESTART_TUNER, true, NULL, neutrino, "restarttuner", key, icon);
+			menu_item->setHint(NEUTRINO_ICON_HINT_RELOAD_CHANNELS, LOCALE_MENU_HINT_RESTART_TUNER);
 			break;
 		case SNeutrinoSettings::ITEM_HDDMENU:
 			keyhelper.get(&key,&icon);
@@ -427,26 +451,10 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 			menu_item->setHint(NEUTRINO_ICON_HINT_ADZAP, adzap_active ? LOCALE_MENU_HINT_ADZAP_ACTIVE : LOCALE_MENU_HINT_ADZAP);
 			break;
 		//NI
-		case SNeutrinoSettings::ITEM_CAMD_RESET:
-			keyhelper.get(&key,&icon);
-			menu_item = new CMenuForwarder(LOCALE_CAMD_RESET, true, NULL, ni_menu, "camd_reset", key, icon);
-			break;
-		case SNeutrinoSettings::ITEM_ECMINFO:
-			keyhelper.get(&key,&icon);
-			menu_item = new CMenuForwarder(LOCALE_ECMINFO_SHOW, file_size("/tmp/ecm.info"), NULL, ni_menu, "ecmInfo", key, icon);
-			break;
-		case SNeutrinoSettings::ITEM_INFOICONS:
-			keyhelper.get(&key,&icon);
-			menu_item = new CMenuForwarder(!g_settings.mode_icons ? LOCALE_INFOICONS_SWITCH_ON : LOCALE_INFOICONS_SWITCH_OFF, g_settings.mode_icons_skin != INFOICONS_INFOVIEWER, NULL, new CInfoIconsSetup, "infoicons_switch", key, icon);
-			break;
-		case SNeutrinoSettings::ITEM_TUNER_RESTART:
-			keyhelper.get(&key,&icon);
-			menu_item = new CMenuForwarder(LOCALE_SERVICEMENU_RESTART_TUNER, true, NULL, neutrino, "restarttuner", key, icon);
-			menu_item->setHint(NEUTRINO_ICON_HINT_RELOAD_CHANNELS, LOCALE_MENU_HINT_RESTART_TUNER);
-			break;
 		case SNeutrinoSettings::ITEM_TESTMENU:
 			keyhelper.get(&key,&icon);
 			menu_item = new CMenuDForwarder(LOCALE_TESTMENU, true, NULL, new CTestMenu(), NULL, key, icon);
+			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
 			break;
 		case -1: // plugin
 		{
