@@ -888,7 +888,7 @@ infoicons_switch_on Infoicons on
 infoviewer.epgnotload EPG not loaded ...
 infoviewer.epgwait waiting for EPG ...
 infoviewer.iconset Iconset
-infoviewer.iconset_pkg0 Original
+infoviewer.iconset_pkg0 NI-Material-Design
 infoviewer.iconset_pkg1 NI-Dark
 infoviewer.iconset_pkg2 NI-Bright
 infoviewer.iconset_pkg3 NI-Flat
@@ -2559,6 +2559,7 @@ subtitles.head Subtitles
 subtitles.stop Stop subtitles
 terrestrialsetup.area Area
 terrestrialsetup.provider Terrestrial Provider
+testmenu Testmenu
 timer.eventrecord.msg The event is scheduled for recording.\nTo edit the schedule open the timer list.
 timer.eventrecord.title Schedule Record
 timer.eventtimed.msg The event is scheduled.\nThe box will power on and \nswitch to this channel at the given time.

@@ -1215,7 +1215,8 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	mc->OnAfterChangeOption.connect(slot_ibar);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS);
 	menu_infobar->addItem(mc);
-#if 1
+//NI
+#if 0
 	// CA system dotmatrix
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DOTMATRIX, &g_settings.infobar_casystem_dotmatrix, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.infobar_casystem_display < 2);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS_DOTMATRIX);
