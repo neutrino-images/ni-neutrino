@@ -2714,6 +2714,7 @@ const char * locale_real_names[] =
 	"usermenu.title_green",
 	"usermenu.title_red",
 	"usermenu.title_yellow",
+	"usermenus.head",
 	"video_mode_ok",
 	"videomenu.43mode",
 	"videomenu.analog_auto",
