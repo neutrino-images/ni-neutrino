@@ -351,9 +351,9 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.menu_Content_Selected_green = configfile.getInt32( "menu_Content_Selected_green", 43 );
 	t.menu_Content_Selected_blue = configfile.getInt32( "menu_Content_Selected_blue", 7 );
 	t.menu_Content_Selected_Text_alpha = configfile.getInt32( "menu_Content_Selected_Text_alpha", 0 );
-	t.menu_Content_Selected_Text_red = configfile.getInt32( "menu_Content_Selected_Text_red", 13 );
-	t.menu_Content_Selected_Text_green = configfile.getInt32( "menu_Content_Selected_Text_green", 13 );
-	t.menu_Content_Selected_Text_blue = configfile.getInt32( "menu_Content_Selected_Text_blue", 13 );
+	t.menu_Content_Selected_Text_red = configfile.getInt32( "menu_Content_Selected_Text_red", 0 );
+	t.menu_Content_Selected_Text_green = configfile.getInt32( "menu_Content_Selected_Text_green", 0 );
+	t.menu_Content_Selected_Text_blue = configfile.getInt32( "menu_Content_Selected_Text_blue", 0 );
 	t.menu_Content_inactive_alpha = configfile.getInt32( "menu_Content_inactive_alpha", 10 );
 	t.menu_Content_inactive_red = configfile.getInt32( "menu_Content_inactive_red", 13 );
 	t.menu_Content_inactive_green = configfile.getInt32( "menu_Content_inactive_green", 13 );
