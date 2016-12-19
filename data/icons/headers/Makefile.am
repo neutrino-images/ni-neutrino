@@ -21,6 +21,7 @@ install_DATA = \
 	multimedia.png \
 	network.png \
 	personalize.png \
+	pictureviewer.png \
 	recording.png \
 	settings.png \
 	shell.png \
