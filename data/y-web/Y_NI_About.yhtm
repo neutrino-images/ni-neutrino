@@ -69,7 +69,8 @@ jQuery(document).ready(function(){
 			<td valign="top" width="10%">
 				<b>Image</b>:<br/>
 				Version:<br/>
-				Commits:<br/>
+				Branch:<br/>
+				Commit:<br/>
 				Datum:<br/>
 				Ersteller:<br/>
 			</td>
@@ -77,28 +78,31 @@ jQuery(document).ready(function(){
 				{=ini-get:/.version;imagename=}<br/>
 				<abbr class="version" title="{=L:ni.about.your_image=}">
 				<script type="text/javascript">getVersion("{=ini-get:/.version;version=}");</script><br/>
-				NI: <a href="https://bitbucket.org/neutrino-images/ni-neutrino-hd/commits/{=ini-get:/.version;origin-commit=}" class="exlink" target="_blank" title="NI-Neutrino-HD Sources">{=ini-get:/.version;origin-commit=}</a>;
-				CST: <a href="http://git.c00lstreamtech.de/?p=cst-public-gui-neutrino.git;a=commit;h={=ini-get:/.version;remote-commit=}" class="exlink" target="_blank" title="Coolstream GIT repositories">{=ini-get:/.version;remote-commit=}</a><br/>
+				{=ini-get:/.version;branch=}<br/>
+				<a href="https://bitbucket.org/neutrino-images/ni-neutrino-hd/commits/{=ini-get:/.version;commit=}" class="exlink" target="_blank" title="NI-Neutrino-HD Sources">{=ini-get:/.version;commit=}</a><br/>
 				<script type="text/javascript">getBuild("{=ini-get:/.version;version=}");</script><br/>
 				</abbr>
 				{=ini-get:/.version;creator=}<br/>
 			</td>
+			<!--
 			<td valign="top" width="38%">
-				{=if-file-exists:/tmp/NI_update.txt~
-				<script type="text/javascript">compareVersion("{=ini-get:/.version;version=}", "{=ini-get:/tmp/NI_update.txt;version=}");</script>
+				{=if-file-exists:/tmp/update.txt~
+				<script type="text/javascript">compareVersion("{=ini-get:/.version;version=}", "{=ini-get:/tmp/update.txt;version=}");</script>
 				<span class="upd_no">{=L:ni.about.image_upd_no=}</span>
 				<span class="upd_yes">{=L:ni.about.image_upd_yes=}</span>
 				<br/>
 				<abbr class="version" title="{=L:ni.about.actual_image=}">
-				<script type="text/javascript">getVersion("{=ini-get:/tmp/NI_update.txt;version=}");</script><br/>
+				<script type="text/javascript">getVersion("{=ini-get:/tmp/update.txt;version=}");</script>
 				<br/>
-				<script type="text/javascript">getBuild("{=ini-get:/tmp/NI_update.txt;version=}");</script><br/>
+				<br/>
+				<script type="text/javascript">getBuild("{=ini-get:/tmp/update.txt;version=}");</script><br/>
 				</abbr>
 				<br/>
 				~
 				<input type="button" onclick='get_update_txt();' value="{=L:info.check_for_updates=}" />
 				=}
 			</td>
+			-->
 		</tr>
 		<tr>
 			<td colspan="4">

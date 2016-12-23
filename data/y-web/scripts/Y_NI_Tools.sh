@@ -139,13 +139,14 @@ case "$action" in
 	;;
 	get_update_txt)
 		version="n/a"
-		wget -O /tmp/NI_release.txt "http://neutrino-images.de/neutrino-images/release/release.txt"
-		test -e /tmp/NI_release.txt && version=$(cat /tmp/NI_release.txt | grep ".img" | cut -d" " -f2)
-		echo "version=${version// /}" > /tmp/NI_update.txt
-		rm -f /tmp/NI_release.txt
+		#FIXME align url to box specs
+		wget -O /tmp/release.txt "http://neutrino-images.de/neutrino-images/update.php"
+		test -e /tmp/release.txt && version=$(cat /tmp/release.txt | grep ".img" | cut -d" " -f2)
+		echo "version=${version// /}" > /tmp/update.txt
+		rm -f /tmp/release.txt
 	;;
 	rm_update_txt)
-		rm -f /tmp/NI_update.txt
+		rm -f /tmp/update.txt
 	;;
 	get_flash_info)
 		MTPT=""
