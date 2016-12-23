@@ -138,6 +138,7 @@ private:
 	std::string getSubdirectories(CyhookHandler *hh, std::string path, std::string result);
 
 	void InfoIconsCGI(CyhookHandler *hh); //NI
+	void UpdateInfoCGI(CyhookHandler *hh); //NI
 
 protected:
 	CNeutrinoAPI	*NeutrinoAPI;

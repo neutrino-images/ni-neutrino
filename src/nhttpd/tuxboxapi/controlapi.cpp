@@ -61,6 +61,9 @@ extern cVideo * videoDecoder;
 #include "gui/infoicons.h"
 extern CInfoIcons *InfoIcons; /* neutrino.cpp */
 
+//NI
+#include "gui/update.h"
+
 extern CPlugins *g_PluginList;//for relodplugins
 extern CBouquetManager *g_bouquetManager;
 #define EVENTDEV "/dev/input/input0"
@@ -237,7 +240,8 @@ const CControlAPI::TyCgiCall CControlAPI::yCgiCallList[]=
 	{"getdir",		&CControlAPI::getDirCGI,		"+xml"},
 	{"getmovies",		&CControlAPI::getMoviesCGI,		"+xml"},
 	//NI
-	{"infoicons",		&CControlAPI::InfoIconsCGI,		"text/plain"}
+	{"infoicons",		&CControlAPI::InfoIconsCGI,		"text/plain"},
+	{"updateinfo",		&CControlAPI::UpdateInfoCGI,		""}
 };
 //-----------------------------------------------------------------------------
 // Main Dispatcher
@@ -3961,4 +3965,32 @@ void CControlAPI::InfoIconsCGI(CyhookHandler *hh)
 	}
 
 	hh->SendOk();
+}
+
+//NI
+//-------------------------------------------------------------------------
+/** Display update info
+ *
+ * @param hh CyhookHandler
+ *
+ * @par nhttpd-usage
+ * @code
+ * /control/updateinfo[?format=plain|json|xml]
+ * @endcode
+ *
+ */
+//-----------------------------------------------------------------------------
+void CControlAPI::UpdateInfoCGI(CyhookHandler *hh)
+{
+	hh->outStart();
+	std::string result = "";
+
+	CFlashUpdate update;
+	if (update.checkOnlineVersion())
+		result = hh->outPair("available", "yes", false);
+	else
+		result = hh->outPair("available", "no", false);
+
+	result = hh->outObject("update", result);
+	hh->SendResult(result);
 }
