@@ -22,7 +22,7 @@
 <script type="text/javascript">
 //<![CDATA[
 jQuery(document).ready(function(){
-        if ("{=ani=}" == "false")
+	if ("{=ani=}" == "false")
 	{
 		jQuery('#_root_used_graph').css({ width: "{=var-get:_root_used_percent=}%"});
 		jQuery('#_var_used_graph').css({ width: "{=var-get:_var_used_percent=}%"});
@@ -52,7 +52,7 @@ jQuery(document).ready(function(){
 				</a>
 			</td>
 			<td valign="bottom" colspan="3">
-			        <span class="ni_logo">NI-Imageinfo</span>
+				<span class="ni_logo">NI-Imageinfo</span>
 			</td>
 		</tr>
 		<tr>
