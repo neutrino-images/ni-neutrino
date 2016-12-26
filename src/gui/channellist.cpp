@@ -2043,7 +2043,7 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		pb.setType(CProgressBar::PB_TIMESCALE);
 		pb.setDesign(g_settings.channellist_progressbar_design);
 		pb.setCornerType(0);
-		pb.setStatusColors(COL_MENUCONTENT_PLUS_3, COL_MENUCONTENT_PLUS_1);
+		pb.setStatusColors(COL_PROGRESSBAR_ACTIVE_PLUS_0, COL_PROGRESSBAR_PASSIVE_PLUS_0); //NI
 		int pb_frame = 0;
 		if (g_settings.channellist_progressbar_design == CProgressBar::PB_MONO && !g_settings.progressbar_gradient)
 		{

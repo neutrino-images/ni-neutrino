@@ -782,6 +782,12 @@ void COsdSetup::showOsdMenueColorSetup(CMenuWidget *menu_colors)
 			&t.menu_Foot_alpha, colorSetupNotifier);
 	CColorChooser* chFootTextcolor = new CColorChooser(LOCALE_COLORMENU_TEXTCOLOR, &t.menu_Foot_Text_red, &t.menu_Foot_Text_green, &t.menu_Foot_Text_blue,
 			NULL, colorSetupNotifier);
+	//NI
+	CColorChooser* chProgressbar_passive = new CColorChooser(LOCALE_COLORMENU_PROGRESSBAR_PASSIVE, &t.progressbar_passive_red, &t.progressbar_passive_green, &t.progressbar_passive_blue,
+			NULL, colorSetupNotifier);
+	//NI
+	CColorChooser* chProgressbar_active = new CColorChooser(LOCALE_COLORMENU_PROGRESSBAR_ACTIVE, &t.progressbar_active_red, &t.progressbar_active_green, &t.progressbar_active_blue,
+			NULL, colorSetupNotifier);
 
 	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_COLORMENUSETUP_MENUHEAD));
 
@@ -947,6 +953,19 @@ void COsdSetup::showOsdMenueColorSetup(CMenuWidget *menu_colors)
 	oj = new CMenuOptionChooser(LOCALE_MISCSETTINGS_COLORED_EVENTS_INFOBAR, &t.colored_events_infobar, OPTIONS_COLORED_EVENTS_OPTIONS, OPTIONS_COLORED_EVENTS_OPTION_COUNT, true);
 	oj->setHint("", LOCALE_MENU_HINT_COLORED_EVENTS);
 	menu_colors->addItem(oj);
+
+	//NI progressbar
+	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_MISCSETTINGS_PROGRESSBAR));
+
+	//NI - progressbar passive
+	mf = new CMenuDForwarder(LOCALE_COLORMENU_PROGRESSBAR_PASSIVE, true, NULL, chProgressbar_passive );
+	mf->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_PASSIVE);
+	menu_colors->addItem(mf);
+
+	//NI - progressbar aktive
+	mf = new CMenuDForwarder(LOCALE_COLORMENU_PROGRESSBAR_ACTIVE, true, NULL, chProgressbar_active );
+	mf->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_ACTIVE);
+	menu_colors->addItem(mf);
 }
 
 /* for font size setup */

@@ -143,6 +143,14 @@ struct SNeutrinoTheme
 	unsigned char clock_Digit_red;
 	unsigned char clock_Digit_green;
 	unsigned char clock_Digit_blue;
+
+	//NI
+	unsigned char progressbar_active_red;
+	unsigned char progressbar_active_green;
+	unsigned char progressbar_active_blue;
+	unsigned char progressbar_passive_red;
+	unsigned char progressbar_passive_green;
+	unsigned char progressbar_passive_blue;
 };
 
 struct timer_remotebox_item
