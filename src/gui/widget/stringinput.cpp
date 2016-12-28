@@ -47,36 +47,14 @@
 
 CStringInput::CStringInput(const neutrino_locale_t Name, std::string* Value, int Size, const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2, const char * const Valid_Chars, CChangeObserver* Observ, const char * const Icon)
 {
-	title = g_Locale->getText(Name);
-        valueString = Value;
-	lower_bound = -1;
-	upper_bound = -1;
-        size = Size;
-
-        hint_1 = Hint_1;
-        hint_2 = Hint_2;
-        validchars = Valid_Chars;
-        iconfile = Icon ? Icon : "";
-
-        observ = Observ;
-        init();
+	name = Name;
+	init(g_Locale->getText(name), Value, Size, Hint_1, Hint_2, Valid_Chars, Observ, Icon);
 }
 
 CStringInput::CStringInput(const std::string &Name, std::string *Value, int Size, const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2, const char * const Valid_Chars, CChangeObserver* Observ, const char * const Icon)
 {
-        title = Name;
-        valueString = Value;
-	lower_bound = -1;
-	upper_bound = -1;
-        size =  Size;
-
-        hint_1 = Hint_1;
-        hint_2 = Hint_2;
-        validchars = Valid_Chars;
-        iconfile = Icon ? Icon : "";
-
-        observ = Observ;
-        init();
+	name = NONEXISTANT_LOCALE;
+        init(Name, Value, Size, Hint_1, Hint_2, Valid_Chars, Observ, Icon);
 }
 
 CStringInput::~CStringInput()
@@ -97,9 +75,22 @@ const struct button_label CStringInputSMSButtons[CStringInputSMSButtonsCount] =
 	{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_STRINGINPUT_CLEAR }
 };
 
-void CStringInput::init()
+void CStringInput::init(const std::string &Name, std::string *Value, int Size, const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2, const char * const Valid_Chars, CChangeObserver* Observ, const char * const Icon)
 {
 	frameBuffer = CFrameBuffer::getInstance();
+
+        head = Name;
+        valueString = Value;
+	lower_bound = -1;
+	upper_bound = -1;
+        size =  Size;
+
+        hint_1 = Hint_1;
+        hint_2 = Hint_2;
+        validchars = Valid_Chars;
+        iconfile = Icon ? Icon : "";
+
+        observ = Observ;
 
 #ifdef DEBUG_STRINGINPUT
 	printf("HEAD: %s (len: %d)\n", head, strlen(head));
@@ -113,7 +104,7 @@ void CStringInput::init()
 
 	width = std::max(size*input_w + 2*offset, (int) frameBuffer->getScreenWidth() / 100 * 45);
 
-	int tmp_w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(title);
+	int tmp_w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(head);
 
 	if (!(iconfile.empty()))
 	{
@@ -494,8 +485,9 @@ int CStringInput::exec( CMenuTarget* parent, const std::string & )
 		}
 		else if ( (msg==CRCInput::RC_home) || (msg==CRCInput::RC_timeout) )
 		{
+			string tmp_name = name == NONEXISTANT_LOCALE ? head : g_Locale->getText(name);
 			if ((trim (*valueString) != trim(oldval)) &&
-			     (ShowMsg(title, LOCALE_MESSAGEBOX_DISCARD, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbCancel) == CMsgBox::mbrCancel)) {
+			     (ShowMsg(tmp_name, LOCALE_MESSAGEBOX_DISCARD, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbCancel) == CMsgBox::mbrCancel)) {
 				timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU] == 0 ? 0xFFFF : g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
 				continue;
 			}
@@ -540,7 +532,7 @@ int CStringInput::exec( CMenuTarget* parent, const std::string & )
 
         if ( (observ) && (msg==CRCInput::RC_ok) )
         {
-                observ->changeNotify(title, (void *) valueString->c_str());
+                observ->changeNotify(name, (void *) valueString->c_str());
         }
 	return res;
 }
@@ -561,7 +553,7 @@ void CStringInput::paint(bool sms)
 	frameBuffer->paintBoxRel(x + OFFSET_SHADOW, y + OFFSET_SHADOW, width, height, COL_SHADOW_PLUS_0, RADIUS_LARGE, CORNER_ALL); //round
 	frameBuffer->paintBoxRel(x, y + hheight, width, bheight, COL_MENUCONTENT_PLUS_0, sms ? 0 : RADIUS_LARGE, CORNER_BOTTOM);
 
-	CComponentsHeader header(x, y, width, hheight, title, iconfile);
+	CComponentsHeader header(x, y, width, hheight, head, iconfile);
 	header.paint(CC_SAVE_SCREEN_NO);
 
 	int tmp_y = y+ hheight+ offset+ input_h+ offset;
@@ -859,7 +851,7 @@ int CPINInput::exec( CMenuTarget* parent, const std::string & )
 
 	if ( (observ) && (msg==CRCInput::RC_ok) )
 	{
-		observ->changeNotify(title, (void *) valueString->c_str());
+		observ->changeNotify(name, (void *) valueString->c_str());
 	}
 
 	return res;

@@ -53,7 +53,8 @@ class CStringInput : public CMenuTarget
 
 		uint32_t smstimer;
 
-		std::string  title;
+		std::string  head;
+		neutrino_locale_t name;
 		neutrino_locale_t hint_1, hint_2;
 		std::string iconfile;
 		const char * validchars;
@@ -63,7 +64,7 @@ class CStringInput : public CMenuTarget
 		bool force_saveScreen;
 		fb_pixel_t *pixBuf;
 
-		virtual void init();
+		virtual void init(const std::string &Name, std::string *Value, int Size, const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2, const char * const Valid_Chars, CChangeObserver* Observ, const char * const Icon);
 
 		virtual void paint(bool sms = false);
 		virtual void paintChar(int pos, char c);
