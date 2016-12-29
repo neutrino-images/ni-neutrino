@@ -441,9 +441,9 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.progressbar_active_red = configfile.getInt32( "progressbar_active_red", 98 );
 	t.progressbar_active_green = configfile.getInt32( "progressbar_active_green", 98 );
 	t.progressbar_active_blue = configfile.getInt32( "progressbar_active_blue", 98 );
-	t.progressbar_passive_red = configfile.getInt32( "progressbar_passive_red", 60 );
-	t.progressbar_passive_green = configfile.getInt32( "progressbar_passive_green", 60 );
-	t.progressbar_passive_blue = configfile.getInt32( "progressbar_passive_blue", 60 );
+	t.progressbar_passive_red = configfile.getInt32( "progressbar_passive_red", 62 );
+	t.progressbar_passive_green = configfile.getInt32( "progressbar_passive_green", 62 );
+	t.progressbar_passive_blue = configfile.getInt32( "progressbar_passive_blue", 62 );
 }
 
 void CThemes::move_userDir()
