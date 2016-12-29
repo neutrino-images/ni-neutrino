@@ -429,7 +429,7 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.clock_Digit_green = configfile.getInt32( "clock_Digit_green", 62 );
 	t.clock_Digit_blue = configfile.getInt32( "clock_Digit_blue", 62 );
 
-	t.progressbar_design = configfile.getInt32("progressbar_design", CProgressBar::PB_COLOR);
+	t.progressbar_design = configfile.getInt32("progressbar_design", CProgressBar::PB_MONO);
 	t.progressbar_design_channellist = configfile.getInt32("progressbar_design_channellist", t.progressbar_design);
 	t.progressbar_gradient = configfile.getInt32("progressbar_gradient", 1);
 	t.progressbar_timescale_red = configfile.getInt32("progressbar_timescale_red", 0);
