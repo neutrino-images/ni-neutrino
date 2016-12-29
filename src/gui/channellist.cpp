@@ -1925,7 +1925,7 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		int prg_offset = 0;
 		int title_offset = 0;
 		int rec_mode;
-		if(g_settings.channellist_progressbar_design != CProgressBar::PB_OFF)
+		if(g_settings.theme.progressbar_design_channellist != CProgressBar::PB_OFF)
 		{
 			prg_offset = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNELLIST_NUMBER]->getRenderWidth("00:00");
 			title_offset = OFFSET_INNER_SMALL;
@@ -2047,11 +2047,11 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		int pb_height = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNELLIST_NUMBER]->getDigitHeight();
 		CProgressBar pb(x + OFFSET_INNER_SMALL + numwidth + title_offset, ypos + (fheight-pb_height)/2, pb_space + 2, pb_height, COL_MENUCONTENT_PLUS_0);
 		pb.setType(CProgressBar::PB_TIMESCALE);
-		pb.setDesign(g_settings.channellist_progressbar_design);
+		pb.setDesign(g_settings.theme.progressbar_design_channellist);
 		pb.setCornerType(0);
-		pb.setStatusColors(COL_MENUCONTENT_PLUS_3, COL_MENUCONTENT_PLUS_1);
+		pb.setStatusColors(COL_PROGRESSBAR_ACTIVE_PLUS_0, COL_PROGRESSBAR_PASSIVE_PLUS_0); //NI
 		int pb_frame = 0;
-		if (g_settings.channellist_progressbar_design == CProgressBar::PB_MONO && !g_settings.progressbar_gradient)
+		if (g_settings.theme.progressbar_design_channellist == CProgressBar::PB_MONO && !g_settings.theme.progressbar_gradient)
 		{
 			// add small frame to mono progressbars w/o gradient for a better visibility
 			pb_frame = 1;
@@ -2073,7 +2073,7 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 			if ((int) ch_desc_len > max_desc_len)
 				ch_desc_len = max_desc_len;
 
-			if(g_settings.channellist_progressbar_design != CProgressBar::PB_OFF) {
+			if(g_settings.theme.progressbar_design_channellist != CProgressBar::PB_OFF) {
 				if(displayNext)
 				{
 					struct tm *pStartZeit = localtime(&p_event->startTime);
@@ -2108,10 +2108,10 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		}
 		else
 		{
-			if (g_settings.channellist_progressbar_design != CProgressBar::PB_OFF)
+			if (g_settings.theme.progressbar_design_channellist != CProgressBar::PB_OFF)
 			{
 				pb.setValues(0, pb_max);
-				if (g_settings.progressbar_design == CProgressBar::PB_GRAPHIC) //NI graphic
+				if (g_settings.theme.progressbar_design == CProgressBar::PB_GRAPHIC) //NI graphic
 					pb.setGraphic("progressbar_inactive");
 				pb.paint();
 			}

@@ -34,6 +34,7 @@
 #include <neutrino.h>
 #include <gui/infoclock.h>
 #include <driver/neutrinofonts.h>
+#include <system/debug.h>
 
 using namespace std;
 
@@ -193,7 +194,7 @@ void CVolumeBar::initVolumeBarScale()
 	vb_pb->setProgress(vb_pbx, vb_pby, vb_pbw, vb_pbh, *vb_vol, 100);
 
 	//NI
-	if (g_settings.progressbar_design == CProgressBar::PB_GRAPHIC)
+	if (g_settings.theme.progressbar_design == CProgressBar::PB_GRAPHIC)
 		vb_pb->setGraphic("volumebar");
 
 	//add progressbar to container
@@ -264,7 +265,21 @@ CVolumeHelper::CVolumeHelper()
 
 	frameBuffer = CFrameBuffer::getInstance();
 
+	CNeutrinoApp::getInstance()->OnAfterSetupFonts.connect(sigc::mem_fun(this, &CVolumeHelper::resetFont));
+
 	Init();
+}
+
+void CVolumeHelper::resetFont()
+{
+	if (vb_font){
+		vb_font		= NULL;
+		dprintf(DEBUG_INFO, "\033[33m[CVolumeHelper][%s - %d] reset vb font \033[0m\n", __func__, __LINE__);
+	}
+	if (clock_font){
+		clock_font	= NULL;
+		dprintf(DEBUG_INFO, "\033[33m[CVolumeHelper][%s - %d] reset clock font \033[0m\n", __func__, __LINE__);
+	}
 }
 
 void CVolumeHelper::Init(Font* font)
@@ -289,10 +304,7 @@ void CVolumeHelper::initInfoClock(Font* font)
 		else
 			clock_font = font;
 	}
-	else {
-		if (font != NULL)
-			clock_font = font;
-	}
+
 	digit_offset = (clock_font)->getDigitOffset();
 	digit_h      = (clock_font)->getDigitHeight();
 	int t1       = (clock_font)->getMaxDigitWidth();

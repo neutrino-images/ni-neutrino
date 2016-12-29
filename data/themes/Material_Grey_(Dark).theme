@@ -113,3 +113,21 @@ infobar_Text_red=98
 infobar_Text_green=98
 infobar_Text_blue=98
 infobar_Text_alpha=0
+
+progressbar_design=-1
+progressbar_design_channellist=-1
+progressbar_gradient=1
+progressbar_timescale_red=0
+progressbar_timescale_yellow=70
+progressbar_timescale_green=100
+progressbar_timescale_invert=0
+
+# 500
+progressbar_active_red=62
+progressbar_active_green=62
+progressbar_active_blue=62
+
+# 900
+progressbar_passive_red=13
+progressbar_passive_green=13
+progressbar_passive_blue=13

@@ -321,6 +321,22 @@ void CThemes::setTheme(CConfigFile &configfile)
 	configfile.setInt32( "clock_Digit_red", t.clock_Digit_red );
 	configfile.setInt32( "clock_Digit_green", t.clock_Digit_green );
 	configfile.setInt32( "clock_Digit_blue", t.clock_Digit_blue );
+
+	configfile.setInt32( "progressbar_design", t.progressbar_design);
+	configfile.setInt32( "progressbar_design_channellist", t.progressbar_design_channellist);
+	configfile.setInt32( "progressbar_gradient", t.progressbar_gradient);
+	configfile.setInt32( "progressbar_timescale_red", t.progressbar_timescale_red);
+	configfile.setInt32( "progressbar_timescale_green", t.progressbar_timescale_green);
+	configfile.setInt32( "progressbar_timescale_yellow", t.progressbar_timescale_yellow);
+	configfile.setInt32( "progressbar_timescale_invert", t.progressbar_timescale_invert);
+
+	//NI
+	configfile.setInt32( "progressbar_active_red", t.progressbar_active_red );
+	configfile.setInt32( "progressbar_active_green", t.progressbar_active_green );
+	configfile.setInt32( "progressbar_active_blue", t.progressbar_active_blue );
+	configfile.setInt32( "progressbar_passive_red", t.progressbar_passive_red );
+	configfile.setInt32( "progressbar_passive_green", t.progressbar_passive_green );
+	configfile.setInt32( "progressbar_passive_blue", t.progressbar_passive_blue );
 }
 
 void CThemes::getTheme(CConfigFile &configfile)
@@ -351,9 +367,9 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.menu_Content_Selected_green = configfile.getInt32( "menu_Content_Selected_green", 43 );
 	t.menu_Content_Selected_blue = configfile.getInt32( "menu_Content_Selected_blue", 7 );
 	t.menu_Content_Selected_Text_alpha = configfile.getInt32( "menu_Content_Selected_Text_alpha", 0 );
-	t.menu_Content_Selected_Text_red = configfile.getInt32( "menu_Content_Selected_Text_red", 13 );
-	t.menu_Content_Selected_Text_green = configfile.getInt32( "menu_Content_Selected_Text_green", 13 );
-	t.menu_Content_Selected_Text_blue = configfile.getInt32( "menu_Content_Selected_Text_blue", 13 );
+	t.menu_Content_Selected_Text_red = configfile.getInt32( "menu_Content_Selected_Text_red", 0 );
+	t.menu_Content_Selected_Text_green = configfile.getInt32( "menu_Content_Selected_Text_green", 0 );
+	t.menu_Content_Selected_Text_blue = configfile.getInt32( "menu_Content_Selected_Text_blue", 0 );
 	t.menu_Content_inactive_alpha = configfile.getInt32( "menu_Content_inactive_alpha", 10 );
 	t.menu_Content_inactive_red = configfile.getInt32( "menu_Content_inactive_red", 13 );
 	t.menu_Content_inactive_green = configfile.getInt32( "menu_Content_inactive_green", 13 );
@@ -412,6 +428,22 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.clock_Digit_red = configfile.getInt32( "clock_Digit_red", 62 );
 	t.clock_Digit_green = configfile.getInt32( "clock_Digit_green", 62 );
 	t.clock_Digit_blue = configfile.getInt32( "clock_Digit_blue", 62 );
+
+	t.progressbar_design = configfile.getInt32("progressbar_design", CProgressBar::PB_MONO);
+	t.progressbar_design_channellist = configfile.getInt32("progressbar_design_channellist", t.progressbar_design);
+	t.progressbar_gradient = configfile.getInt32("progressbar_gradient", 1);
+	t.progressbar_timescale_red = configfile.getInt32("progressbar_timescale_red", 0);
+	t.progressbar_timescale_green = configfile.getInt32("progressbar_timescale_green", 100);
+	t.progressbar_timescale_yellow = configfile.getInt32("progressbar_timescale_yellow", 70);
+	t.progressbar_timescale_invert = configfile.getInt32("progressbar_timescale_invert", 0);
+
+	//NI
+	t.progressbar_active_red = configfile.getInt32( "progressbar_active_red", 98 );
+	t.progressbar_active_green = configfile.getInt32( "progressbar_active_green", 98 );
+	t.progressbar_active_blue = configfile.getInt32( "progressbar_active_blue", 98 );
+	t.progressbar_passive_red = configfile.getInt32( "progressbar_passive_red", 62 );
+	t.progressbar_passive_green = configfile.getInt32( "progressbar_passive_green", 62 );
+	t.progressbar_passive_blue = configfile.getInt32( "progressbar_passive_blue", 62 );
 }
 
 void CThemes::move_userDir()

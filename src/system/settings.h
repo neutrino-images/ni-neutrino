@@ -147,6 +147,22 @@ struct SNeutrinoTheme
 	unsigned char clock_Digit_red;
 	unsigned char clock_Digit_green;
 	unsigned char clock_Digit_blue;
+
+	int progressbar_design;
+	int progressbar_design_channellist;
+	int progressbar_gradient;
+	int progressbar_timescale_red;
+	int progressbar_timescale_green;
+	int progressbar_timescale_yellow;
+	int progressbar_timescale_invert;
+
+	//NI
+	unsigned char progressbar_active_red;
+	unsigned char progressbar_active_green;
+	unsigned char progressbar_active_blue;
+	unsigned char progressbar_passive_red;
+	unsigned char progressbar_passive_green;
+	unsigned char progressbar_passive_blue;
 };
 
 struct timer_remotebox_item
@@ -200,12 +216,6 @@ struct SNeutrinoSettings
 	int infobar_show;
 	int infobar_show_channellogo;
 	int infobar_progressbar;
-	int progressbar_design;
-	int progressbar_gradient;
-	int progressbar_timescale_red;
-	int progressbar_timescale_green;
-	int progressbar_timescale_yellow;
-	int progressbar_timescale_invert;
 	int infobar_casystem_display;
 	int infobar_casystem_dotmatrix;
 	int infobar_casystem_frame;
@@ -601,7 +611,6 @@ struct SNeutrinoSettings
 	int eventlist_epgplus;
 	int channellist_additional;
 	int channellist_epgtext_align_right;
-	int channellist_progressbar_design;
 	int channellist_foot;
 	int channellist_new_zap_mode;
 	int channellist_sort_mode;
@@ -975,6 +984,8 @@ const time_settings_struct_t timing_setting[SNeutrinoSettings::TIMING_SETTING_CO
 #define OFFSET_INNER_SMALL	5
 #define OFFSET_INNER_MIN	2
 #define OFFSET_INNER_NONE	0
+
+#define SCROLLBAR_WIDTH		OFFSET_INNER_MID + 2*OFFSET_INNER_MIN
 
 struct SglobalInfo
 {
