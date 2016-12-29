@@ -69,7 +69,7 @@ clock_Digit_green=75
 clock_Digit_blue=77
 clock_Digit_alpha=0
 
-#200
+# 200
 colored_events_red=69
 colored_events_green=75
 colored_events_blue=77
@@ -113,3 +113,21 @@ infobar_Text_red=93
 infobar_Text_green=94
 infobar_Text_blue=95
 infobar_Text_alpha=0
+
+progressbar_design=-1
+progressbar_design_channellist=-1
+progressbar_gradient=1
+progressbar_timescale_red=0
+progressbar_timescale_yellow=70
+progressbar_timescale_green=100
+progressbar_timescale_invert=0
+
+# 200
+progressbar_active_red=69
+progressbar_active_green=75
+progressbar_active_blue=77
+
+# 500
+progressbar_passive_red=38
+progressbar_passive_green=49
+progressbar_passive_blue=55
