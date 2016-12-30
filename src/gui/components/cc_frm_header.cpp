@@ -96,6 +96,7 @@ void CComponentsHeader::initVarHeader(	const int& x_pos, const int& y_pos, const
 	height 	= height_old = h;
 
 	cch_font		= NULL;
+	initDefaultFonts();
 	cch_size_mode		= CC_HEADER_SIZE_LARGE;
 	CNeutrinoApp::getInstance()->OnAfterSetupFonts.connect(sigc::mem_fun(this, &CComponentsHeader::resetFont));
 
@@ -165,16 +166,20 @@ void CComponentsHeader::setCaptionFont(Font* font)
 void CComponentsHeader::resetFont()
 {
 	if (cch_font){
-		cch_font = NULL;
 		dprintf(DEBUG_DEBUG, "\033[33m[CComponentsHeader][%s - %d] reset header font \033[0m\n", __func__, __LINE__);
+		cch_font = NULL;
 	}
+	initDefaultFonts();
+}
+
+void CComponentsHeader::initDefaultFonts()
+{
+	l_font 	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE];
+	s_font 	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU];
 }
 
 void CComponentsHeader::initCaptionFont()
 {
-	Font *l_font = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE];
-	Font *s_font = g_Font[SNeutrinoSettings::FONT_TYPE_MENU];
-
 	if (cch_font == NULL){
 		cch_font = (cch_size_mode == CC_HEADER_SIZE_LARGE? l_font : s_font);
 		//select matching height
