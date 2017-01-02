@@ -208,7 +208,7 @@ void CInfoViewerBB::getBBIconInfo()
 		}
 		if (iconView) {
 			if (i > 0)
-				bbIconMinX -= OFFSET_INNER_MIN;
+				bbIconMinX -= OFFSET_INNER_SMALL; //NI
 			bbIconMinX -= w;
 			bbIconInfo[i].x = bbIconMinX;
 			bbIconInfo[i].h = h;
@@ -221,7 +221,7 @@ void CInfoViewerBB::getBBIconInfo()
 			bbIconMaxH = std::max(bbIconMaxH, bbIconInfo[i].h);
 	}
 	if (g_settings.infobar_show_sysfs_hdd)
-		bbIconMinX -= hddwidth + OFFSET_INNER_MIN;
+		bbIconMinX -= hddwidth + OFFSET_INNER_MID; //NI
 }
 
 void CInfoViewerBB::getBBButtonInfo()
