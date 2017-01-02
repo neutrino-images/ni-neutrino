@@ -799,7 +799,7 @@ void CInfoViewerBB::paint_ca_icons(int caid, const char *icon, int &icon_space_o
 	} else {
 		icon_space_offset += icon_sizeW[icon_map[caid].first];
 		px = endx - icon_space_offset;
-		icon_space_offset += 4;
+		icon_space_offset += icon_space; //NI
 	}
 
 	if (px) {
