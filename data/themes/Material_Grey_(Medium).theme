@@ -128,6 +128,6 @@ progressbar_active_green=62
 progressbar_active_blue=62
 
 # 800
-progressbar_passive_red=26
-progressbar_passive_green=26
-progressbar_passive_blue=26
+progressbar_passive_red=38
+progressbar_passive_green=38
+progressbar_passive_blue=38
