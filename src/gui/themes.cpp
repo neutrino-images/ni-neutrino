@@ -438,12 +438,12 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.progressbar_timescale_invert = configfile.getInt32("progressbar_timescale_invert", 0);
 
 	//NI
-	t.progressbar_active_red = configfile.getInt32( "progressbar_active_red", 98 );
-	t.progressbar_active_green = configfile.getInt32( "progressbar_active_green", 98 );
-	t.progressbar_active_blue = configfile.getInt32( "progressbar_active_blue", 98 );
-	t.progressbar_passive_red = configfile.getInt32( "progressbar_passive_red", 62 );
-	t.progressbar_passive_green = configfile.getInt32( "progressbar_passive_green", 62 );
-	t.progressbar_passive_blue = configfile.getInt32( "progressbar_passive_blue", 62 );
+	t.progressbar_active_red = configfile.getInt32( "progressbar_active_red", 62 );
+	t.progressbar_active_green = configfile.getInt32( "progressbar_active_green", 62 );
+	t.progressbar_active_blue = configfile.getInt32( "progressbar_active_blue", 62 );
+	t.progressbar_passive_red = configfile.getInt32( "progressbar_passive_red", 26 );
+	t.progressbar_passive_green = configfile.getInt32( "progressbar_passive_green", 26 );
+	t.progressbar_passive_blue = configfile.getInt32( "progressbar_passive_blue", 26 );
 }
 
 void CThemes::move_userDir()
