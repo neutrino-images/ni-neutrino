@@ -130,6 +130,8 @@ install-data-hook:
 			-e 's|%(PLUGINDIR)|$(PLUGINDIR)|g' \
 			-e 's|%(PLUGINDIR_VAR)|$(PLUGINDIR_VAR)|g' \
 			-e 's|%(PLUGINDIR_MNT)|$(PLUGINDIR_MNT)|g' \
+			-e 's|%(WEBTVDIR)|$(WEBTVDIR)|g' \
+			-e 's|%(WEBTVDIR_VAR)|$(WEBTVDIR_VAR)|g' \
 			-e 's|%(PRIVATE_HTTPDDIR)|$(PRIVATE_HTTPDDIR)|g' \
 			-e 's|%(PUBLIC_HTTPDDIR)|$(PUBLIC_HTTPDDIR)|g' \
 	;
