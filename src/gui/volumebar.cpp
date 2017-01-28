@@ -47,7 +47,7 @@ CVolumeBar::CVolumeBar()
 void CVolumeBar::initVarVolumeBar()
 {
 	col_body 	= COL_MENUCONTENT_PLUS_0;
-
+	corner_rad 	= CORNER_RADIUS_MID;
 	vb_item_offset 	= 4;
 	height 		= g_settings.volume_size; //default height
 
@@ -84,7 +84,7 @@ void CVolumeBar::initVolumeBarSize()
 	cvh->getDimensions(&x, &y, &sw, &sh, &vb_icon_w, &vb_digit_w);
 	cvh->getVolBarDimensions(&y, &height);
 
-	vb_digit_w += cornerRad()/2;
+	//vb_digit_w += corner_rad/2;
 
 	//scale
 	vb_pbw 		= 200;
@@ -177,7 +177,7 @@ void CVolumeBar::initVolumeBarIcon()
 	vb_icon = new CComponentsPicture(vb_icon_x, CC_CENTERED, vb_icon_w, height, NEUTRINO_ICON_VOLUME);
 
 	vb_icon->setColorBody(col_body);
-	vb_icon->setCorner(cornerRad(), CORNER_LEFT);
+	vb_icon->setCorner(corner_rad, CORNER_LEFT);
 
 	//add icon to container
 	addCCItem(vb_icon);
@@ -210,7 +210,7 @@ void CVolumeBar::initVolumeBarDigit()
 
 	vb_digit->setDimensionsAll(vb_digit_x, 0, vb_digit_w, height);
 	vb_digit->setTextColor(COL_MENUCONTENT_TEXT);
-	vb_digit->setCorner(cornerRad(), CORNER_RIGHT);
+	vb_digit->setCorner(corner_rad, CORNER_RIGHT);
 	vb_digit->doPaintTextBoxBg(true);
 	initVolumeBarDigitValue();
 
