@@ -649,12 +649,16 @@ void CStreamInfo2::paint_techinfo(int xpos, int ypos)
 	average_bitrate_pos = ypos += iheight;
 	//AUDIOTYPE
 	ypos += iheight;
-	int type, layer, freq, mode, lbitrate;
-	audioDecoder->getAudioInfo(type, layer, freq, lbitrate, mode);
-printf("\n**** mode: %d\n\n", mode);
 
 	snprintf(buf, sizeof(buf), "%s:", g_Locale->getText (LOCALE_STREAMINFO_AUDIOTYPE));
 	g_Font[font_info]->RenderString (xpos, ypos, box_width, buf, COL_MENUCONTENT_TEXT);
+
+	int type, layer, freq, mode, lbitrate;
+	/*
+	   audioDecoder->getAudioInfo() seems broken in libcoolstream2.
+	   ddmode is always 1 ("CH1/CH2").
+	*/
+	audioDecoder->getAudioInfo(type, layer, freq, lbitrate, mode);
 
 	if (type == AUDIO_FMT_MPEG)
 	{
