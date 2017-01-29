@@ -3898,6 +3898,7 @@ void CNeutrinoApp::ExitRun(const bool /*write_si*/, int retcode)
 
 				my_system("/etc/init.d/rcK");
 				sync();
+				CFSMounter::umount(); // unreachable NFS server
 				//NI my_system(2,"/bin/umount", "-a");
 				//NI sleep(1);
 

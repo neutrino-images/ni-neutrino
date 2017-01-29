@@ -101,7 +101,7 @@ TUXBOX_APPS_LIB_PKGCONFIG(CURL,libcurl)
 TUXBOX_APPS_LIB_PKGCONFIG(FREETYPE,freetype2)
 AC_MSG_CHECKING([whether FreeType version is 2.5.0 or higher])
 	AC_TRY_CPP([
-		#include <ft2build.h>
+		#include <freetype2/ft2build.h>
 		#include FT_FREETYPE_H
 		#if FREETYPE_MAJOR < 2 || (FREETYPE_MAJOR == 2 && FREETYPE_MINOR < 5)
 		#error Freetype version too low.

@@ -11,7 +11,7 @@
 	Adaptions:
 	Copyright (C) 2013 martii
 	gitorious.org/neutrino-mp/martiis-neutrino-mp
-	Copyright (C) 2015-2016 Stefan Seyfried
+	Copyright (C) 2015-2017 Stefan Seyfried
 
 	License: GPL
 
@@ -79,6 +79,11 @@
 #define OPKG_CONFIG_FILE "/etc/opkg/opkg.conf.borken"
 #endif
 
+/* script to call instead of "opkg upgrade"
+ * opkg fails to gracefully self-upgrade, and additionally has some ordering issues
+ */
+#define SYSTEM_UPDATE "system-update"
+
 using namespace std;
 
 enum
@@ -97,7 +102,7 @@ enum
 	OM_MAX
 };
 
-static const string pkg_types[OM_MAX] =
+static string pkg_types[OM_MAX] =
 {
 	OPKG_CL " list ",
 	OPKG_CL " list-installed ",
@@ -216,7 +221,10 @@ int COPKGManager::exec(CMenuTarget* parent, const string &actionKey)
 		{
 			string pkg_name = fileBrowser.getSelectedFile()->Name;
 			if (!installPackage(pkg_name))
+				showError(g_Locale->getText(LOCALE_OPKG_FAILURE_INSTALL), "", pkg_name);
+				/* errno is never set properly, the string is totally useless.
 				showError(g_Locale->getText(LOCALE_OPKG_FAILURE_INSTALL), strerror(errno), pkg_name);
+				 */
 
 			*local_dir = fileBrowser.getCurrentDir();
 		refreshMenu();
@@ -228,7 +236,10 @@ int COPKGManager::exec(CMenuTarget* parent, const string &actionKey)
 			parent->hide();
 		int r = execCmd(actionKey, CShellWindow::VERBOSE | CShellWindow::ACKNOWLEDGE_EVENT);
 		if (r) {
+			/* errno is never set properly, the string is totally useless.
 			showError(g_Locale->getText(LOCALE_OPKG_FAILURE_UPGRADE), strerror(errno), actionKey);
+			 */
+			showError(g_Locale->getText(LOCALE_OPKG_FAILURE_UPGRADE), "", actionKey);
 		} else
 			installed = true;
 		refreshMenu();
@@ -622,6 +633,11 @@ bool COPKGManager::hasOpkgSupport()
 		return false;
 	}
 
+	if (! find_executable(SYSTEM_UPDATE).empty()) {
+		dprintf(DEBUG_NORMAL, "[COPKGManager] [%s - %d] " SYSTEM_UPDATE " script found\n", __func__, __LINE__);
+		pkg_types[OM_UPGRADE] = SYSTEM_UPDATE;
+	}
+
 #if 0
 	/* If directory /var/lib/opkg resp. /opt/opkg
 	   does not exist, it is created by opkg itself */
@@ -779,6 +795,8 @@ void COPKGManager::getPkgData(const int pkg_content_id)
 		}
 	}
 
+	waitpid(pid, NULL, 0); /* beware of the zombie apocalypse! */
+
 	fclose(f);
 }
 
@@ -884,9 +902,12 @@ void COPKGManager::handleShellOutput(string* cur_line, int* res, bool* ok)
 	if (pos2 != string::npos)
 		has_err = true;
 
+	dprintf(DEBUG_NORMAL, "[COPKGManager:%d] %s\n", __LINE__, line.c_str());
 	//check for collected errors and set res value
 	if (has_err){
+		/* all lines printed already
 		dprintf(DEBUG_NORMAL,  "[COPKGManager] [%s - %d]  result: %s\n", __func__, __LINE__, line.c_str());
+		 */
 
 		/*duplicate option cache: option is defined in OPKG_CL_CONFIG_OPTIONS,
 		 * NOTE: if found first cache option in the opkg.conf file, this will be preferred and it's not really an error!
@@ -911,13 +932,13 @@ void COPKGManager::handleShellOutput(string* cur_line, int* res, bool* ok)
 		//download error:
 		if (line.find("opkg_download:") != string::npos){
 			*res = OM_DOWNLOAD_ERR;
-			*ok = false;
+			//*ok = false;
 			return;
 		}
 		//not enough space
 		if (line.find("No space left on device") != string::npos){
 			*res = OM_OUT_OF_SPACE_ERR;
-			*ok = false;
+			//*ok = false;
 			return;
 		}
 		//deps
@@ -926,18 +947,28 @@ void COPKGManager::handleShellOutput(string* cur_line, int* res, bool* ok)
 			*ok = false;
 			return;
 		}
+		/* hack */
+		if (line.find("system-update: err_reset") != string::npos) {
+			*res = OM_SUCCESS;
+			*ok = true;
+			has_err = false;
+			return;
+		}
 		//unknown error
 		if (*ok){
-			dprintf(DEBUG_NORMAL,  "[COPKGManager] [%s - %d]  ERROR: unhandled error %s\n", __func__, __LINE__, line.c_str());
+			dprintf(DEBUG_DEBUG, "[COPKGManager] [%s - %d]  ERROR: unhandled error %s\n", __func__, __LINE__, line.c_str());
 			*res = OM_UNKNOWN_ERR;
-			*ok = false;
+			//*ok = false;
 			return;
 		}
 
+#if 0
+		/* never reached */
 		if (!has_err){
 			*ok = true;
 			*res = OM_SUCCESS;
 		}
+#endif
 	}
 
 	*res = _res;
@@ -985,7 +1016,10 @@ bool COPKGManager::installPackage(const string& pkg_name, string options, bool f
 					break;
 				}
 				default:
+					showError(g_Locale->getText(LOCALE_OPKG_FAILURE_INSTALL), "", pkg_types[OM_INSTALL] + opts + pkg_name);
+					/* errno / strerror considered useless here
 					showError(g_Locale->getText(LOCALE_OPKG_FAILURE_INSTALL), strerror(errno), pkg_types[OM_INSTALL] + opts + pkg_name);
+					 */
 			}
 		}else{
 			if (force_configure)
