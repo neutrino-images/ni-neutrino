@@ -1458,6 +1458,8 @@ void CMenuWidget::paintHint(int pos)
 		if (info_box) {
 			savescreen ? info_box->hide() : info_box->kill();
 			hint_painted = info_box->isPainted();
+			if (details_line)
+				details_line->hide();
 		}
 		return;
 	}
