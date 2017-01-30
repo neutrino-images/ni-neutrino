@@ -2286,6 +2286,10 @@ TIMER_START();
 	g_RemoteControl = new CRemoteControl;
 	g_EpgData = new CEpgData;
 	InfoClock = CInfoClock::getInstance();
+	//NI InfoIcons
+	InfoIcons = CInfoIcons::getInstance();
+	if(g_settings.mode_icons)
+		InfoIcons->StartIcons();
 	FileTimeOSD = CTimeOSD::getInstance();
 	g_InfoViewer = new CInfoViewer;
 	g_EventList = new CEventList;
@@ -2494,11 +2498,6 @@ void CNeutrinoApp::RealRun()
 	neutrino_msg_data_t data;
 
 	dprintf(DEBUG_NORMAL, "initialized everything\n");
-
-	//NI InfoIcons
-	InfoIcons = CInfoIcons::getInstance();
-	if(g_settings.mode_icons)
-		InfoIcons->StartIcons();
 
 	if(g_settings.power_standby || init_cec_setting)
 		standbyMode(true, true);
