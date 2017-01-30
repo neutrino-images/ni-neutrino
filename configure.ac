@@ -99,6 +99,7 @@ AM_CONDITIONAL(USE_TREMOR, test "$TREMOR" = "yes")
 # TUXBOX_APPS_LIB_PKGCONFIG(OPENSSL,openssl)
 TUXBOX_APPS_LIB_PKGCONFIG(CURL,libcurl)
 TUXBOX_APPS_LIB_PKGCONFIG(FREETYPE,freetype2)
+CPPFLAGS=`freetype-config --cflags`
 AC_MSG_CHECKING([whether FreeType version is 2.5.0 or higher])
 	AC_TRY_CPP([
 		#include <freetype2/ft2build.h>
