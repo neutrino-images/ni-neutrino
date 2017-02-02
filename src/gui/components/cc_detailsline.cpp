@@ -91,8 +91,6 @@ void CComponentsDetailLine::paint(bool do_save_bg)
 	//NI
 	if (!g_settings.show_menu_hints_line) return;
 
-	cc_save_bg = do_save_bg;
-
 	hide();
 	if (hasChanges())
 		clearFbData();

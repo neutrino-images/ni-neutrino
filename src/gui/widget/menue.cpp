@@ -1274,6 +1274,8 @@ void CMenuWidget::paint()
 	header->setCaptionColor(COL_MENUHEAD_TEXT);
 	header->enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_MENUCONTENT_PLUS_0);
 	header->enableGradientBgCleanUp(savescreen);
+	if (header->isPainted())
+		header->kill(header->getColorBody());
 	header->paint(CC_SAVE_SCREEN_NO);
 
 	// paint body shadow
@@ -1473,6 +1475,8 @@ void CMenuWidget::paintHint(int pos)
 		if (info_box) {
 			savescreen ? info_box->hide() : info_box->kill();
 			hint_painted = info_box->isPainted();
+			if (details_line)
+				details_line->hide();
 		}
 		return;
 	}
