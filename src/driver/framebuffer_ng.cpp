@@ -624,8 +624,8 @@ fb_pixel_t* CFrameBuffer::paintBoxRel(const int x, const int y, const int dx, co
 	fb_pixel_t *bp        = boxBuf;
 	fb_pixel_t *gra       = gradientData->gradientBuf;
 	gradientData->boxBuf  = boxBuf;
-	gradientData->x       = x - offs_align;
-	gradientData->dx      = w_align;
+	gradientData->x       = x;
+	gradientData->dx      = dx;
 
 	if (gradientData->direction == gradientVertical) {
 		// vertical

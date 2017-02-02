@@ -794,8 +794,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.eventlist_additional = configfile.getInt32("eventlist_additional", 1); //NI
 	g_settings.eventlist_epgplus = configfile.getInt32("eventlist_epgplus", 1);
 	g_settings.channellist_epgtext_align_right	= configfile.getBool("channellist_epgtext_align_right"          , false);
-	g_settings.channellist_foot	= configfile.getInt32("channellist_foot"          , 1);//default next Event
-	g_settings.channellist_new_zap_mode = configfile.getInt32("channellist_new_zap_mode", 0); //NI
+	g_settings.channellist_foot = configfile.getInt32("channellist_foot", 1); //NI default next Event
+	g_settings.channellist_new_zap_mode = configfile.getInt32("channellist_new_zap_mode", 0);
 	g_settings.channellist_sort_mode  = configfile.getInt32("channellist_sort_mode", 0);//sort mode: alpha, freq, sat
 	g_settings.channellist_numeric_adjust  = configfile.getInt32("channellist_numeric_adjust", 0);
 	g_settings.channellist_show_channellogo = configfile.getInt32("channellist_show_channellogo", 1);
@@ -1083,12 +1083,12 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	{
 		//convert and remove obsolete progressbar_* keys
 
-		g_settings.theme.progressbar_design = configfile.getInt32("progressbar_design", CProgressBar::PB_COLOR);
+		g_settings.theme.progressbar_design = configfile.getInt32("progressbar_design", CProgressBar::PB_MONO);
 		bool pb_color = configfile.getBool("progressbar_color", true );
 		if (!pb_color)
 			g_settings.theme.progressbar_design = CProgressBar::PB_MONO;
 		g_settings.theme.progressbar_design_channellist = configfile.getInt32("channellist_progressbar_design", g_settings.theme.progressbar_design);
-		g_settings.theme.progressbar_gradient = configfile.getBool("progressbar_gradient", true );
+		g_settings.theme.progressbar_gradient = configfile.getBool("progressbar_gradient", false);
 		g_settings.theme.progressbar_timescale_red = configfile.getInt32("progressbar_timescale_red", 0);
 		g_settings.theme.progressbar_timescale_green = configfile.getInt32("progressbar_timescale_green", 100);
 		g_settings.theme.progressbar_timescale_yellow = configfile.getInt32("progressbar_timescale_yellow", 70);
