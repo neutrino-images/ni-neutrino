@@ -1173,7 +1173,7 @@ int CHDDDestExec::exec(CMenuTarget* /*parent*/, const std::string&)
 			my_system(3, hdidle, "-i", to_string(sleep_seconds).c_str());
 
 		while (n--)
-			free(namelist[i]);
+			free(namelist[n]);
 		free(namelist);
 		return menu_return::RETURN_NONE;
 	}
@@ -1183,7 +1183,7 @@ int CHDDDestExec::exec(CMenuTarget* /*parent*/, const std::string&)
 	if (!have_hdparm)
 	{
 		while (n--)
-			free(namelist[i]);
+			free(namelist[n]);
 		free(namelist);
 		return menu_return::RETURN_NONE;
 	}
