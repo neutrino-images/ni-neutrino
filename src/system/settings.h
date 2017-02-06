@@ -168,6 +168,7 @@ struct timer_remotebox_item
 		std::string pass;
 		std::string rbname;
 		std::string rbaddress;
+		bool online;
 };
 
 struct SNeutrinoSettings
