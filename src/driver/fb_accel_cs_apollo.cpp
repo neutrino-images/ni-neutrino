@@ -152,7 +152,7 @@ void CFbAccelCSApollo::paintBoxRel(const int x, const int y, const int dx, const
 	checkFbArea(x, y, dx, dy, false);
 }
 
-void CFbAccelCSApollo::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp)
+void CFbAccelCSApollo::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
 	int  xc, yc;
 	xc = (width > xRes) ? xRes : width;
@@ -171,7 +171,7 @@ void CFbAccelCSApollo::blit2FB(void *fbbuff, uint32_t width, uint32_t height, ui
 //printf(">>>>>[%s:%d] Use HW accel\n", __func__, __LINE__);
 		return;
 	}
-	CFrameBuffer::blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp);
+	CFrameBuffer::blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp, unscaled_w, unscaled_h); //NI
 //printf(">>>>>[%s:%d] NO HW accel\n", __func__, __LINE__);
 }
 

@@ -253,7 +253,7 @@ nolfb:
 }
 
 
-CFrameBuffer::~CFrameBuffer()
+void CFrameBuffer::clearIconCache()
 {
 	std::map<std::string, rawIcon>::iterator it;
 
@@ -262,6 +262,11 @@ CFrameBuffer::~CFrameBuffer()
 		cs_free_uncached(it->second.data);
 	}
 	icon_cache.clear();
+}
+
+CFrameBuffer::~CFrameBuffer()
+{
+	clearIconCache(); //NI
 
 	if (background) {
 		delete[] background;
@@ -1677,12 +1682,21 @@ void * CFrameBuffer::convertRGBA2FB(unsigned char *rgbbuff, unsigned long x, uns
 	return int_convertRGB2FB(rgbbuff, x, y, 0, true);
 }
 
-void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool /*transp*/)
+void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool /*transp*/, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
 	int  xc, yc;
 
 	xc = (width > xRes) ? xRes : width;
 	yc = (height > yRes) ? yRes : height;
+
+//FIXME
+#if 0
+	//NI
+	if(unscaled_w != 0 && (int)unscaled_w < xc)
+		xc = unscaled_w;
+	if(unscaled_h != 0 && (int)unscaled_h < yc)
+		yc = unscaled_h;
+#endif
 
 	fb_pixel_t*  data = (fb_pixel_t *) fbbuff;
 

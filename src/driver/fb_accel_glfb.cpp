@@ -75,9 +75,9 @@ CFbAccelGLFB::~CFbAccelGLFB()
 	}
 }
 
-void CFbAccelGLFB::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp)
+void CFbAccelGLFB::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
-	CFrameBuffer::blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp);
+	CFrameBuffer::blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp, unscaled_w, unscaled_h); //NI
 	blit();
 }
 

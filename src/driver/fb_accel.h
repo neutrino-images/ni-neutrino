@@ -98,7 +98,7 @@ class CFbAccelCSNevis
 		void paintRect(const int x, const int y, const int dx, const int dy, const fb_pixel_t col);
 		void paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t col);
 		void paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius = 0, int type = CORNER_ALL);
-		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp = 0, uint32_t yp = 0, bool transp = false);
+		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp = 0, uint32_t yp = 0, bool transp = false, uint32_t unscaled_w = 0, uint32_t unscaled_h = 0); //NI
 		void blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff);
 		void waitForIdle(const char *func = NULL);
 		fb_pixel_t * getBackBufferPointer() const;
@@ -121,7 +121,7 @@ class CFbAccelCSApollo
 
 		void paintHLineRelInternal(int x, int dx, int y, const fb_pixel_t col);
 		void paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius = 0, int type = CORNER_ALL);
-		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp = 0, uint32_t yp = 0, bool transp = false);
+		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp = 0, uint32_t yp = 0, bool transp = false, uint32_t unscaled_w = 0, uint32_t unscaled_h = 0); //NI
 		void blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff);
 		void setBlendMode(uint8_t);
 		void setBlendLevel(int);

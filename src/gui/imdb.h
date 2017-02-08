@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include <gui/components/cc.h>
+#include <zapit/zapit.h>
 
 class CIMDB
 {

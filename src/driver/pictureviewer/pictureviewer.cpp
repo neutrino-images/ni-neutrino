@@ -644,8 +644,13 @@ bool CPictureViewer::DisplayImage(const std::string & name, int posx, int posy, 
 //NI
 bool CPictureViewer::DisplayImage_unscaled(const std::string & name, int posx, int posy, int width, int height, int transp)
 {
-	int fb_w = width;
-	int fb_h = height;
+	if(width < 1 || height < 1){
+		dprintf(DEBUG_NORMAL,  "[CPictureViewer] [%s - %d] Error: width %i height %i \n", __func__, __LINE__, width, height);
+		return false;
+	}
+
+	int unscaled_w = width;
+	int unscaled_h = height;
 
 	CFrameBuffer* frameBuffer = CFrameBuffer::getInstance();
 	if (transp > CFrameBuffer::TM_EMPTY)
@@ -658,7 +663,7 @@ bool CPictureViewer::DisplayImage_unscaled(const std::string & name, int posx, i
 		frameBuffer->SetTransparentDefault();
 
 	if(data) {
-		frameBuffer->blit2FB_unscaled(data, width, height, posx, posy, fb_w, fb_h);
+		frameBuffer->blit2FB(data, width, height, posx, posy, 0, 0, transp, unscaled_w, unscaled_h);
 		cs_free_uncached(data);
 		return true;
 	}

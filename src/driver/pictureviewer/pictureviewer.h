@@ -76,7 +76,7 @@ class CPictureViewer
 	void getSupportedImageFormats(std::vector<std::string>& erw);
 
 	//NI
-	bool DisplayImage_unscaled(const std::string & name, int posx, int posy, int width, int height, int transp=CFrameBuffer::TM_EMPTY);
+	bool DisplayImage_unscaled(const std::string & name, int posx, int posy, int width, int height, int transp=0 /*CFrameBuffer::TM_EMPTY*/);
 
  private:
 	CFormathandler *fh_root;
