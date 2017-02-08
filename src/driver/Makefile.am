@@ -26,10 +26,11 @@ libneutrino_driver_a_SOURCES = \
 	audioplay.cpp \
 	colorgradient.cpp \
 	fade.cpp \
+	fb_accel.cpp \
 	fb_window.cpp \
+	fb_generic.cpp \
 	file.cpp \
 	fontrenderer.cpp \
-	framebuffer.cpp \
 	genpsi.cpp \
 	moviecut.cpp \
 	neutrinofonts.cpp \
@@ -45,14 +46,33 @@ libneutrino_driver_a_SOURCES = \
 	volume.cpp
 
 if BOXTYPE_COOL
+if BOXMODEL_APOLLO
 libneutrino_driver_a_SOURCES += \
+	fb_accel_cs_apollo.cpp \
 	vfd.cpp
+else
+libneutrino_driver_a_SOURCES += \
+	fb_accel_cs_nevis.cpp \
+	vfd.cpp
+endif
 endif
 
 if BOXTYPE_TRIPLE
 libneutrino_driver_a_SOURCES += \
 	newclock.cpp \
 	lcdd.cpp
+endif
+
+#if BOXTYPE_SPARK
+#libneutrino_driver_a_SOURCES += \
+#	fb_accel_sti.cpp \
+#	simple_display.cpp
+#endif
+
+if BOXTYPE_GENERIC
+libneutrino_driver_a_SOURCES += \
+	fb_accel_glfb.cpp \
+	simple_display.cpp
 endif
 
 libneutrino_driver_netfile_a_SOURCES = netfile.cpp
