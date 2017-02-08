@@ -22,26 +22,7 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <driver/fb_generic.h>
-#include <driver/fb_accel.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <memory.h>
-#include <limits.h>
-#include <gui/color.h>
-#include <system/debug.h>
-
-#include <cs_api.h>
-#include <cnxtfb.h>
+#include "fb_accel_cs_hdx_inc.h"
 
 /*******************************************************************************/
 #define GXA_POINT(x, y)         (((y) & 0x0FFF) << 16) | ((x) & 0x0FFF)
@@ -78,7 +59,7 @@
 #define GXA_CFG_REG             0x0030
 #define GXA_CFG2_REG            0x00FC
 
-#define LOGTAG "[fb_accel_gxa] "
+#define LOGTAG "[fb_accel_cs_hd1] "
 /*
 static unsigned int _read_gxa(volatile unsigned char *base_addr, unsigned int offset)
 {
@@ -95,7 +76,7 @@ static void _write_gxa(volatile unsigned char *base_addr, unsigned int offset, u
 
 /* this adds a tagged marker into the GXA queue. Once this comes out
    of the other end of the queue, all commands before it are finished */
-void CFbAccelCSNevis::add_gxa_sync_marker(void)
+void CFbAccelCSHD1::add_gxa_sync_marker(void)
 {
 	unsigned int cmd = GXA_CMD_QMARK | GXA_PARAM_COUNT(1);
 	// TODO: locking?
@@ -106,7 +87,7 @@ void CFbAccelCSNevis::add_gxa_sync_marker(void)
 }
 
 /* wait until the current marker comes out of the GXA command queue */
-void CFbAccelCSNevis::waitForIdle(const char *func)
+void CFbAccelCSHD1::waitForIdle(const char *func)
 {
 	unsigned int cfg, count = 0;
 	do {
@@ -124,12 +105,12 @@ void CFbAccelCSNevis::waitForIdle(const char *func)
 		fprintf(stderr, LOGTAG "waitForIdle: count is big (%d) [%s]!\n", count, func?func:"");
 }
 
-CFbAccelCSNevis::CFbAccelCSNevis()
+CFbAccelCSHD1::CFbAccelCSHD1()
 {
-	fb_name = "Coolstream NEVIS GXA framebuffer";
+	fb_name = "Coolstream HD1 framebuffer";
 }
 
-void CFbAccelCSNevis::init(const char * const)
+void CFbAccelCSHD1::init(const char * const)
 {
 fprintf(stderr, ">FBACCEL::INIT\n");
 	CFrameBuffer::init();
@@ -163,7 +144,7 @@ fprintf(stderr, ">FBACCEL::INIT\n");
 	;
 };
 
-CFbAccelCSNevis::~CFbAccelCSNevis()
+CFbAccelCSHD1::~CFbAccelCSHD1()
 {
 	if (gxa_base != MAP_FAILED)
 		munmap((void *)gxa_base, 0x40000);
@@ -175,7 +156,7 @@ CFbAccelCSNevis::~CFbAccelCSNevis()
 		close(fd);
 }
 
-void CFbAccelCSNevis::setColor(fb_pixel_t col)
+void CFbAccelCSHD1::setColor(fb_pixel_t col)
 {
 	if (col == lastcol)
 		return;
@@ -183,7 +164,7 @@ void CFbAccelCSNevis::setColor(fb_pixel_t col)
 	lastcol = col;
 }
 
-void CFbAccelCSNevis::paintRect(const int x, const int y, const int dx, const int dy, const fb_pixel_t col)
+void CFbAccelCSHD1::paintRect(const int x, const int y, const int dx, const int dy, const fb_pixel_t col)
 {
 	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
 	unsigned int cmd = GXA_CMD_BLT | GXA_CMD_NOT_TEXT | GXA_CMD_NOT_ALPHA |
@@ -200,13 +181,15 @@ void CFbAccelCSNevis::paintRect(const int x, const int y, const int dx, const in
 	add_gxa_sync_marker();
 }
 
-void CFbAccelCSNevis::paintPixel(const int x, const int y, const fb_pixel_t col)
+void CFbAccelCSHD1::paintPixel(const int x, const int y, const fb_pixel_t col)
 {
 	paintLine(x, y, x + 1, y, col);
 }
 
-void CFbAccelCSNevis::paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t col)
+void CFbAccelCSHD1::paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t col)
 {
+	if (!getActive())
+		return;
 	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
 	/* draw a single vertical line from point xa/ya to xb/yb */
 	unsigned int cmd = GXA_CMD_NOT_TEXT | GXA_SRC_BMP_SEL(2) | GXA_DST_BMP_SEL(2) | GXA_PARAM_COUNT(2) | GXA_CMD_NOT_ALPHA;
@@ -217,7 +200,7 @@ void CFbAccelCSNevis::paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t
 	_write_gxa(gxa_base, cmd, GXA_POINT(xa, ya));		/* start point */
 }
 
-void CFbAccelCSNevis::paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius, int type)
+void CFbAccelCSHD1::paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius, int type)
 {
 	/* draw a filled rectangle (with additional round corners) */
 
@@ -225,11 +208,11 @@ void CFbAccelCSNevis::paintBoxRel(const int x, const int y, const int dx, const 
 		return;
 
 	if (dx == 0 || dy == 0) {
-		dprintf(DEBUG_DEBUG, "[CFbAccelCSNevis] [%s - %d]: radius %d, start x %d y %d end x %d y %d\n", __func__, __LINE__, radius, x, y, x+dx, y+dy);
+		dprintf(DEBUG_DEBUG, "[CFbAccelCSHD1] [%s - %d]: radius %d, start x %d y %d end x %d y %d\n", __func__, __LINE__, radius, x, y, x+dx, y+dy);
 		return;
 	}
 	if (radius < 0)
-		dprintf(DEBUG_NORMAL, "[CFbAccelCSNevis] [%s - %d]: WARNING! radius < 0 [%d] FIXME\n", __func__, __LINE__, radius);
+		dprintf(DEBUG_NORMAL, "[CFbAccelCSHD1] [%s - %d]: WARNING! radius < 0 [%d] FIXME\n", __func__, __LINE__, radius);
 
 	checkFbArea(x, y, dx, dy, true);
 
@@ -247,7 +230,6 @@ void CFbAccelCSNevis::paintBoxRel(const int x, const int y, const int dx, const 
 		while (line < dy) {
 			int ofl, ofr;
 			if (calcCorners(NULL, &ofl, &ofr, dy, line, radius, type)) {
-				//printf("3: x %d y %d dx %d dy %d rad %d line %d\n", x, y, dx, dy, radius, line);
 				int rect_height_mult = ((type & CORNER_TOP) && (type & CORNER_BOTTOM)) ? 2 : 1;
 				_write_gxa(gxa_base, GXA_BLT_CONTROL_REG, 0);
 				_write_gxa(gxa_base, cmd, GXA_POINT(x, y + line));               /* destination x/y */
@@ -258,9 +240,9 @@ void CFbAccelCSNevis::paintBoxRel(const int x, const int y, const int dx, const 
 
 			if (dx-ofr-ofl < 1) {
 				if (dx-ofr-ofl == 0){
-					dprintf(DEBUG_INFO, "[CFbAccelCSNevis] [%s - %d]: radius %d, start x %d y %d end x %d y %d\n", __func__, __LINE__, radius, x, y, x+dx-ofr-ofl, y+line);
+					dprintf(DEBUG_INFO, "[CFbAccelCSHD1] [%s - %d]: radius %d, start x %d y %d end x %d y %d\n", __func__, __LINE__, radius, x, y, x+dx-ofr-ofl, y+line);
 				}else{
-					dprintf(DEBUG_INFO, "[CFbAccelCSNevis] [%s - %04d]: Calculated width: %d\n                      (radius %d, dx %d, offsetLeft %d, offsetRight %d).\n                      Width can not be less than 0, abort.\n",
+					dprintf(DEBUG_INFO, "[CFbAccelCSHD1] [%s - %04d]: Calculated width: %d\n                      (radius %d, dx %d, offsetLeft %d, offsetRight %d).\n                      Width can not be less than 0, abort.\n",
 						__func__, __LINE__, dx-ofr-ofl, radius, dx, ofl, ofr);
 				}
 				line++;
@@ -284,7 +266,7 @@ void CFbAccelCSNevis::paintBoxRel(const int x, const int y, const int dx, const 
 	checkFbArea(x, y, dx, dy, false);
 }
 
-void CFbAccelCSNevis::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
+void CFbAccelCSHD1::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
 	int  xc, yc;
 	xc = (width > xRes) ? xRes : width;
@@ -293,7 +275,6 @@ void CFbAccelCSNevis::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uin
 	void *uKva;
 
 	uKva = cs_phys_addr(fbbuff);
-	//printf("CFbAccelCSNevis::blit2FB: data %x Kva %x\n", (int) fbbuff, (int) uKva);
 
 	if (uKva != NULL) {
 		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
@@ -305,14 +286,12 @@ void CFbAccelCSNevis::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uin
 		_write_gxa(gxa_base, cmd, GXA_POINT(xoff, yoff)); /* destination pos */
 		_write_gxa(gxa_base, cmd, GXA_POINT(xc, yc));     /* source width, FIXME real or adjusted xc, yc ? */
 		_write_gxa(gxa_base, cmd, GXA_POINT(xp, yp));     /* source pos */
-//printf(">>>>>[%s:%d] Use HW accel\n", __func__, __LINE__);
 		return;
 	}
 	CFrameBuffer::blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp, unscaled_w, unscaled_h); //NI
-//printf(">>>>>[%s:%d] NO HW accel\n", __func__, __LINE__);
 }
 
-void CFbAccelCSNevis::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff)
+void CFbAccelCSHD1::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff)
 {
 	if(width <1 || height <1 || !boxBuf )
 		return;
@@ -330,14 +309,12 @@ void CFbAccelCSNevis::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint3
 		_write_gxa(gxa_base, cmd, GXA_POINT(xc, yc));
 		_write_gxa(gxa_base, cmd, GXA_POINT(0, 0));
 		add_gxa_sync_marker();
-//printf(">>>>>[%s:%d] Use HW accel\n", __func__, __LINE__);
 		return;
 	}
 	CFrameBuffer::blitBox2FB(boxBuf, width, height, xoff, yoff);
-//printf(">>>>>[%s:%d] NO HW accel\n", __func__, __LINE__);
 }
 
-void CFbAccelCSNevis::setupGXA()
+void CFbAccelCSHD1::setupGXA()
 {
 	// We (re)store the GXA regs here in case DFB override them and was not
 	// able to restore them.
@@ -353,7 +330,7 @@ void CFbAccelCSNevis::setupGXA()
 }
 
 /* wrong name... */
-int CFbAccelCSNevis::setMode(unsigned int, unsigned int, unsigned int)
+int CFbAccelCSHD1::setMode(unsigned int, unsigned int, unsigned int)
 {
 	fb_fix_screeninfo _fix;
 
@@ -367,7 +344,7 @@ int CFbAccelCSNevis::setMode(unsigned int, unsigned int, unsigned int)
 	xRes = screeninfo.xres;
 	yRes = screeninfo.yres;
 	bpp  = screeninfo.bits_per_pixel;
-	printf(LOGTAG "%dx%dx%d line length %d. using nevis gxa graphics accelerator.\n", xRes, yRes, bpp, stride);
+	printf(LOGTAG "%dx%dx%d line length %d. using hd1 graphics accelerator.\n", xRes, yRes, bpp, stride);
 	int needmem = stride * yRes * 2;
 	if (available >= needmem)
 	{
@@ -379,18 +356,18 @@ int CFbAccelCSNevis::setMode(unsigned int, unsigned int, unsigned int)
 	return 0; /* dont fail because of this */
 }
 
-fb_pixel_t * CFbAccelCSNevis::getBackBufferPointer() const
+fb_pixel_t * CFbAccelCSHD1::getBackBufferPointer() const
 {
 	return backbuffer;
 }
 
-void CFbAccelCSNevis::setBlendMode(uint8_t mode)
+void CFbAccelCSHD1::setBlendMode(uint8_t mode)
 {
 	if (ioctl(fd, FBIO_SETBLENDMODE, mode))
 		printf("FBIO_SETBLENDMODE failed.\n");
 }
 
-void CFbAccelCSNevis::setBlendLevel(int level)
+void CFbAccelCSHD1::setBlendLevel(int level)
 {
 	unsigned char value = 0xFF;
 	if (level >= 0 && level <= 100)

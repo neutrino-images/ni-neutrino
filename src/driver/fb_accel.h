@@ -78,7 +78,7 @@ class CFbAccelSTi
 		void setBlendLevel(int);
 };
 
-class CFbAccelCSNevis
+class CFbAccelCSHD1
 	: public CFbAccel
 {
 	private:
@@ -90,13 +90,15 @@ class CFbAccelCSNevis
 		void run(void);
 		fb_pixel_t *backbuffer;
 	public:
-		CFbAccelCSNevis();
-		~CFbAccelCSNevis();
+		CFbAccelCSHD1();
+		~CFbAccelCSHD1();
 		void init(const char * const);
 		int setMode(unsigned int xRes, unsigned int yRes, unsigned int bpp);
 		void paintPixel(int x, int y, const fb_pixel_t col);
 		void paintRect(const int x, const int y, const int dx, const int dy, const fb_pixel_t col);
 		void paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t col);
+		inline void paintHLineRel(int x, int dx, int y, const fb_pixel_t col) { paintLine(x, y, x+dx, y, col); };
+		inline void paintVLineRel(int x, int y, int dy, const fb_pixel_t col) { paintLine(x, y, x, y+dy, col); };
 		void paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius = 0, int type = CORNER_ALL);
 		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp = 0, uint32_t yp = 0, bool transp = false, uint32_t unscaled_w = 0, uint32_t unscaled_h = 0); //NI
 		void blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff);
@@ -108,18 +110,18 @@ class CFbAccelCSNevis
 		void setupGXA(void);
 };
 
-class CFbAccelCSApollo
+class CFbAccelCSHD2
 	: public CFbAccel
 {
 	private:
 		fb_pixel_t *backbuffer;
 
 	public:
-		CFbAccelCSApollo();
-//		~CFbAccelCSApollo();
+		CFbAccelCSHD2();
+//		~CFbAccelCSHD2();
 		int setMode(unsigned int xRes, unsigned int yRes, unsigned int bpp);
-
-		void paintHLineRelInternal(int x, int dx, int y, const fb_pixel_t col);
+		void paintHLineRel(int x, int dx, int y, const fb_pixel_t col);
+		void paintVLineRel(int x, int y, int dy, const fb_pixel_t col);
 		void paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius = 0, int type = CORNER_ALL);
 		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp = 0, uint32_t yp = 0, bool transp = false, uint32_t unscaled_w = 0, uint32_t unscaled_h = 0); //NI
 		void blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff);
