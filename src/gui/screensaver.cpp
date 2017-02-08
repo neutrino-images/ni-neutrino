@@ -154,10 +154,12 @@ void CScreenSaver::Stop()
 	InfoIcons->enableInfoIcons(status_icons); //NI
 
 	CAudioMute::getInstance()->enableMuteIcon(status_mute);
-	if (!OnAfterStop.empty())
+	if (!OnAfterStop.empty()){
 		OnAfterStop();
-	else
+	}else{
+		CInfoClock::getInstance()->ClearDisplay(); //provokes reinit
 		CInfoClock::getInstance()->enableInfoClock();
+	}
 }
 
 void* CScreenSaver::ScreenSaverPrg(void* arg)
