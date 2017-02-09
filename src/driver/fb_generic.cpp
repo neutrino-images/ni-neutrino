@@ -134,6 +134,9 @@ CFrameBuffer* CFrameBuffer::getInstance()
 #if HAVE_GENERIC_HARDWARE
 		frameBuffer = new CFbAccelGLFB();
 #endif
+#if HAVE_TRIPLEDRAGON
+		frameBuffer = new CFbAccelTD();
+#endif
 		if (!frameBuffer)
 			frameBuffer = new CFrameBuffer();
 		printf("[neutrino] %s Instance created\n", frameBuffer->fb_name);
@@ -145,7 +148,7 @@ void CFrameBuffer::init(const char * const fbDevice)
 {
 	int tr = 0xFF;
 
-	fd = open(fbDevice, O_RDWR);
+	fd = open(fbDevice, O_RDWR|O_CLOEXEC);
 
 	if (fd<0) {
 		perror(fbDevice);
@@ -157,17 +160,14 @@ void CFrameBuffer::init(const char * const fbDevice)
 		goto nolfb;
 	}
 
-	memmove(&oldscreen, &screeninfo, sizeof(screeninfo));
-
 	if (ioctl(fd, FBIOGET_FSCREENINFO, &fix)<0) {
 		perror("FBIOGET_FSCREENINFO");
 		goto nolfb;
 	}
 
 	available=fix.smem_len;
-	printf("[fb_generic] %dk video mem\n", available/1024);
+	printf("[fb_generic] [%s] framebuffer %dk video mem\n", fix.id, available/1024);
 	lbb = lfb = (fb_pixel_t*)mmap(0, available, PROT_WRITE|PROT_READ, MAP_SHARED, fd, 0);
-
 	if (!lfb) {
 		perror("mmap");
 		goto nolfb;
@@ -199,52 +199,6 @@ void CFrameBuffer::init(const char * const fbDevice)
 
 	useBackground(false);
 	m_transparent = m_transparent_default;
-#if 0
-	if ((tty=open("/dev/vc/0", O_RDWR))<0) {
-		perror("open (tty)");
-		goto nolfb;
-	}
-
-	struct sigaction act;
-
-	memset(&act,0,sizeof(act));
-	act.sa_handler  = switch_signal;
-	sigemptyset(&act.sa_mask);
-	sigaction(SIGUSR1,&act,NULL);
-	sigaction(SIGUSR2,&act,NULL);
-
-	struct vt_mode mode;
-
-	if (-1 == ioctl(tty,KDGETMODE, &kd_mode)) {
-		perror("ioctl KDGETMODE");
-		goto nolfb;
-	}
-
-	if (-1 == ioctl(tty,VT_GETMODE, &vt_mode)) {
-		perror("ioctl VT_GETMODE");
-		goto nolfb;
-	}
-
-	if (-1 == ioctl(tty,VT_GETMODE, &mode)) {
-		perror("ioctl VT_GETMODE");
-		goto nolfb;
-	}
-
-	mode.mode   = VT_PROCESS;
-	mode.waitv  = 0;
-	mode.relsig = SIGUSR1;
-	mode.acqsig = SIGUSR2;
-
-	if (-1 == ioctl(tty,VT_SETMODE, &mode)) {
-		perror("ioctl VT_SETMODE");
-		goto nolfb;
-	}
-
-	if (-1 == ioctl(tty,KDSETMODE, KD_GRAPHICS)) {
-		perror("ioctl KDSETMODE");
-		goto nolfb;
-	}
-#endif
 
 	return;
 
@@ -284,13 +238,6 @@ CFrameBuffer::~CFrameBuffer()
 		q_circle = NULL;
 	}
 
-#if 0
-	if (-1 == ioctl(tty,VT_SETMODE, &vt_mode))
-		perror("ioctl VT_SETMODE");
-
-	if (available)
-		ioctl(fd, FBIOPUT_VSCREENINFO, &oldscreen);
-#endif
 	if (lfb)
 		munmap(lfb, available);
 
@@ -386,31 +333,6 @@ int CFrameBuffer::setMode(unsigned int /*nxRes*/, unsigned int /*nyRes*/, unsign
 {
 	if (!available&&!active)
 		return -1;
-
-#if 0
-	screeninfo.xres_virtual=screeninfo.xres=nxRes;
-	screeninfo.yres_virtual=screeninfo.yres=nyRes;
-	screeninfo.height=0;
-	screeninfo.width=0;
-	screeninfo.xoffset=screeninfo.yoffset=0;
-	screeninfo.bits_per_pixel=nbpp;
-
-	if (ioctl(fd, FBIOPUT_VSCREENINFO, &screeninfo)<0) {
-		perror("FBIOPUT_VSCREENINFO");
-	}
-
-	if(1) {
-		printf("SetMode: %dbits, red %d:%d green %d:%d blue %d:%d transp %d:%d\n",
-		screeninfo.bits_per_pixel, screeninfo.red.length, screeninfo.red.offset, screeninfo.green.length, screeninfo.green.offset, screeninfo.blue.length, screeninfo.blue.offset, screeninfo.transp.length, screeninfo.transp.offset);
-	}
-	if ((screeninfo.xres!=nxRes) && (screeninfo.yres!=nyRes) && (screeninfo.bits_per_pixel!=nbpp))
-	{
-		printf("SetMode failed: wanted: %dx%dx%d, got %dx%dx%d\n",
-			   nxRes, nyRes, nbpp,
-			   screeninfo.xres, screeninfo.yres, screeninfo.bits_per_pixel);
-		return -1;
-	}
-#endif
 
 	xRes = screeninfo.xres;
 	yRes = screeninfo.yres;
@@ -1560,33 +1482,6 @@ void CFrameBuffer::RestoreScreen(int x, int y, int dx, int dy, fb_pixel_t * cons
 	mark(x, y, x + dx, y + dy);
 	checkFbArea(x, y, dx, dy, false);
 }
-#if 0
-//never used
-void CFrameBuffer::switch_signal (int signal)
-{
-	CFrameBuffer * thiz = CFrameBuffer::getInstance();
-	if (signal == SIGUSR1) {
-		if (virtual_fb != NULL)
-			delete[] virtual_fb;
-		virtual_fb = new uint8_t[thiz->stride * thiz->yRes];
-		thiz->active = false;
-		if (virtual_fb != NULL)
-			memmove(virtual_fb, thiz->lfb, thiz->stride * thiz->yRes);
-		ioctl(thiz->tty, VT_RELDISP, 1);
-		printf ("release display\n");
-	}
-	else if (signal == SIGUSR2) {
-		ioctl(thiz->tty, VT_RELDISP, VT_ACKACQ);
-		thiz->active = true;
-		printf ("acquire display\n");
-		thiz->paletteSet(NULL);
-		if (virtual_fb != NULL)
-			memmove(thiz->lfb, virtual_fb, thiz->stride * thiz->yRes);
-		else
-			memset(thiz->lfb, 0, thiz->stride * thiz->yRes);
-	}
-}
-#endif
 
 void CFrameBuffer::Clear()
 {

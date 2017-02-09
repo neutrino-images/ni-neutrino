@@ -803,8 +803,6 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.channellist_show_numbers = configfile.getInt32("channellist_show_numbers", 1);
 
 	//screen configuration
-	g_settings.screen_xres = configfile.getInt32("screen_xres", 105); //NI
-	g_settings.screen_yres = configfile.getInt32("screen_yres", 105); //NI
 	g_settings.screen_StartX_crt = configfile.getInt32( "screen_StartX_crt", DEFAULT_X_START_SD);
 	g_settings.screen_StartY_crt = configfile.getInt32( "screen_StartY_crt", DEFAULT_Y_START_SD );
 	g_settings.screen_EndX_crt = configfile.getInt32( "screen_EndX_crt", DEFAULT_X_END_SD);
@@ -825,8 +823,14 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd : g_settings.screen_EndX_crt;
 	g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd : g_settings.screen_EndY_crt;
 
-	g_settings.screen_width = configfile.getInt32("screen_width", 0);
-	g_settings.screen_height = configfile.getInt32("screen_height", 0);
+	g_settings.screen_width = frameBuffer->getScreenWidth(true);
+	g_settings.screen_height = frameBuffer->getScreenHeight(true);
+
+	// avoid configuration mismatch
+	if (g_settings.screen_EndX > g_settings.screen_width)
+		g_settings.screen_EndX = g_settings.screen_width;
+	if (g_settings.screen_EndY > g_settings.screen_height)
+		g_settings.screen_EndY = g_settings.screen_height;
 
 	g_settings.bigFonts = configfile.getInt32("bigFonts", 1); //NI
 	g_settings.window_size = configfile.getInt32("window_size", 100);
@@ -874,6 +878,9 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.font_file = configfile.getString("font_file", FONTDIR"/neutrino.ttf");
 	g_settings.ttx_font_file = configfile.getString( "ttx_font_file", FONTDIR"/DejaVuLGCSansMono-Bold.ttf");
 	ttx_font_file = g_settings.ttx_font_file.c_str();
+
+	g_settings.font_scaling_x = configfile.getInt32("font_scaling_x", 105); //NI
+	g_settings.font_scaling_y = configfile.getInt32("font_scaling_y", 105); //NI
 
 	g_settings.update_dir = configfile.getString("update_dir", "/tmp");
 	g_settings.update_dir_opkg = configfile.getString("update_dir_opkg", g_settings.update_dir);
@@ -997,17 +1004,6 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		erg = 2;
 	}
 
-	/* in case FB resolution changed */
-	if((g_settings.screen_width && g_settings.screen_width != (int) frameBuffer->getScreenWidth(true))
-			|| (g_settings.screen_height && g_settings.screen_height != (int) frameBuffer->getScreenHeight(true))) {
-		g_settings.screen_StartX = g_settings.screen_preset ? DEFAULT_X_START_HD : DEFAULT_X_START_SD;
-		g_settings.screen_StartY = g_settings.screen_preset ? DEFAULT_Y_START_HD : DEFAULT_Y_START_SD;
-		g_settings.screen_EndX = g_settings.screen_preset ? DEFAULT_X_END_HD : DEFAULT_X_END_SD;
-		g_settings.screen_EndY = g_settings.screen_preset ? DEFAULT_Y_END_HD : DEFAULT_Y_END_SD;
-
-		g_settings.screen_width = frameBuffer->getScreenWidth(true);
-		g_settings.screen_height = frameBuffer->getScreenHeight(true);
-	}
 #ifdef BOXMODEL_APOLLO
 	g_settings.brightness = configfile.getInt32("brightness", 0);
 	g_settings.contrast = configfile.getInt32("contrast", 0);
@@ -1056,15 +1052,6 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		}
 	}
 	//NI
-	if (g_settings.version_pseudo < "20160623110000")
-	{
-		if (g_settings.screen_xres == 112)
-			g_settings.screen_xres = 105;
-
-		if (g_settings.screen_yres == 112)
-			g_settings.screen_yres = 105;
-	}
-	//NI
 	if (g_settings.version_pseudo < "20160804110000")
 	{
 		if (g_settings.tmdb_api_key == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
@@ -1102,6 +1089,23 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		configfile.deleteKey("progressbar_timescale_green");
 		configfile.deleteKey("progressbar_timescale_yellow");
 		configfile.deleteKey("progressbar_timescale_invert");
+	}
+	if (g_settings.version_pseudo < "20170209181001")
+	{
+		//convert screen_x/yres keys to font_scaling_x/y
+
+		g_settings.font_scaling_x = configfile.getInt32("screen_xres", 100);
+		g_settings.font_scaling_y = configfile.getInt32("screen_yres", 100);
+
+		configfile.deleteKey("screen_xres");
+		configfile.deleteKey("screen_yres");
+	}
+	if (g_settings.version_pseudo < "20170209181002")
+	{
+		//remove screen_width/height keys
+
+		configfile.deleteKey("screen_width");
+		configfile.deleteKey("screen_height");
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
@@ -1449,8 +1453,6 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("channellist_show_numbers", g_settings.channellist_show_numbers);
 
 	//screen configuration
-	configfile.setInt32( "screen_xres", g_settings.screen_xres);
-	configfile.setInt32( "screen_yres", g_settings.screen_yres);
 	configfile.setInt32( "screen_StartX_lcd", g_settings.screen_StartX_lcd );
 	configfile.setInt32( "screen_StartY_lcd", g_settings.screen_StartY_lcd );
 	configfile.setInt32( "screen_EndX_lcd", g_settings.screen_EndX_lcd );
@@ -1460,8 +1462,6 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32( "screen_EndX_crt", g_settings.screen_EndX_crt );
 	configfile.setInt32( "screen_EndY_crt", g_settings.screen_EndY_crt );
 	configfile.setInt32( "screen_preset", g_settings.screen_preset );
-	configfile.setInt32( "screen_width", g_settings.screen_width);
-	configfile.setInt32( "screen_height", g_settings.screen_height);
 
 	//Software-update
 	configfile.setInt32 ("softupdate_mode"          , g_settings.softupdate_mode          );
@@ -1489,6 +1489,9 @@ void CNeutrinoApp::saveSetup(const char * fname)
 
 	configfile.setString("font_file", g_settings.font_file);
 	configfile.setString("ttx_font_file", g_settings.ttx_font_file);
+
+	configfile.setInt32( "font_scaling_x", g_settings.font_scaling_x);
+	configfile.setInt32( "font_scaling_y", g_settings.font_scaling_y);
 
 	//parentallock
 	configfile.setInt32( "parentallock_prompt", g_settings.parentallock_prompt );
