@@ -56,7 +56,6 @@
 #include <gui/movieinfo.h>
 #include <driver/file.h>
 #include <driver/fb_window.h>
-#include <driver/pictureviewer/pictureviewer.h>
 #include <system/ytparser.h>
 #include <gui/imdb.h> //NI
 

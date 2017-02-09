@@ -41,7 +41,7 @@
 #include <neutrino.h>
 #include <driver/display.h>
 #include <driver/screen_max.h>
-#include <driver/display.h>
+#include <driver/fontrenderer.h>
 
 #include <unistd.h>
 #include <stdio.h>

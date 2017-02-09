@@ -98,7 +98,6 @@ AM_CONDITIONAL(USE_TREMOR, test "$TREMOR" = "yes")
 
 # TUXBOX_APPS_LIB_PKGCONFIG(OPENSSL,openssl)
 TUXBOX_APPS_LIB_PKGCONFIG(CURL,libcurl)
-PKG_CHECK_MODULES([FREETYPE], [freetype2 >= 2.5.0], echo "freetype2 >= 2.5.0 found")
 
 # fallback to curl-config (which is ugly for cross-compilation)
 if test -z "$CURL_LIBS" -a -z "$CURL_CFLAGS"; then
@@ -107,7 +106,7 @@ fi
 # fallback to freetype-config (which is ugly for cross-compilation)
 if test -z "$FREETYPE_LIBS" -a -z "$FREETYPE_CFLAGS"; then
 	TUXBOX_APPS_LIB_CONFIG(FREETYPE,freetype-config)
-	CPPFLAGS+="$FREETYPE_CFLAGS"
+	CPPFLAGS+=" $FREETYPE_CFLAGS"
 	AC_MSG_CHECKING([whether FreeType version is 2.5.0 or higher])
 		AC_TRY_CPP([
 			#include <ft2build.h>
@@ -152,10 +151,6 @@ TUXBOX_APPS_LIB_PKGCONFIG(SIGC,sigc++-2.0)
 AC_ARG_ENABLE(keyboard-no-rc,
          [  --enable-keyboard-no-rc             enable keyboard control, disable rc control],
          [AC_DEFINE(KEYBOARD_INSTEAD_OF_REMOTE_CONTROL,1,[enable keyboard control, disable rc control])])
-
-AC_ARG_ENABLE(restore-prev-mode,
-         [  --enable-restore-prev-mode          enable return from graphics mode],
-         [AC_DEFINE(RETURN_FROM_GRAPHICS_MODE,1,[enable return from graphics mode])])
 
 AC_ARG_ENABLE(mdev,
 	[  --enable-mdev disable broken neutrino mount hack, use with mdev],
@@ -287,6 +282,9 @@ fi
 HWLIB_CFLAGS='-I$(top_srcdir)/lib/libcoolstream2 -I$(top_srcdir)/src/zapit/include/private'
 fi
 fi
+
+# hack, so that framebuffer.h does not need to be included everywhere...
+AC_DEFINE(fb_pixel_t, uint32_t, [hack, so that framebuffer.h does not need to be included everywhere...])
 
 # hack to define a short filename also for out-of-tree build
 if test `dirname $0` = `pwd` || test "$0" = ./configure; then

@@ -467,10 +467,14 @@ void CFlashTool::reboot()
 }
 
 //-----------------------------------------------------------------------------------------------------------------
-CFlashVersionInfo::CFlashVersionInfo(const std::string & versionString)
+CFlashVersionInfo::CFlashVersionInfo(const std::string & _versionString)
 {
 	//SBBBYYYYMMTTHHMM -- formatsting
-
+	std::string versionString = _versionString;
+	/* just to make sure the string is long enough for the following code
+	 * trailing chars don't matter -- will just be ignored */
+	if (versionString.size() < 16)
+		versionString.append(16, '0');
 	// recover type
 	snapshot = versionString[0];
 
@@ -543,6 +547,8 @@ const char *CFlashVersionInfo::getReleaseCycle(void) const
 
 const char *CFlashVersionInfo::getType(void) const
 {
+	// TODO: localize it
+
 	switch (snapshot)
 	{
 	case '0':
@@ -557,6 +563,8 @@ const char *CFlashVersionInfo::getType(void) const
 		return "Settings";
 	case 'A':
 		return "Addon";
+	case 'U':
+		return "Update";
 	case 'T':
 		return "Text";
 	default:

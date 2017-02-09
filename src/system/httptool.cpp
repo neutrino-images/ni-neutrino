@@ -18,10 +18,7 @@
 	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA
 */
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
-
 #include <cstring>
 #include <system/httptool.h>
 
@@ -70,7 +67,7 @@ int CHTTPTool::show_progress( void *clientp, double dltotal, double dlnow, doubl
 	return 0;
 }
 //#define DEBUG
-bool CHTTPTool::downloadFile(const std::string & URL, const char * const downloadTarget, int globalProgressEnd, int connecttimeout/*=10*/, int timeout/*=1800*/)
+bool CHTTPTool::downloadFile(const std::string & URL, const char * const downloadTarget, int globalProgressEnd, int connecttimeout/*=10000*/, int timeout/*=1800*/)
 {
 	CURL *curl;
 	CURLcode res;
@@ -103,7 +100,7 @@ printf("url is %s\n", URL.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent.c_str());
 		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 		curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
-		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, connecttimeout);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, connecttimeout);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false); //NI
 #ifdef DEBUG
@@ -142,7 +139,7 @@ printf("download code %d\n", res);
 	return res==CURLE_OK;
 }
 
-std::string CHTTPTool::downloadString(const std::string & URL, int globalProgressEnd, int connecttimeout/*=10*/, int timeout/*=1800*/)
+std::string CHTTPTool::downloadString(const std::string & URL, int globalProgressEnd, int connecttimeout/*=10000*/, int timeout/*=1800*/)
 {
 	CURL *curl;
 	CURLcode res;
@@ -168,7 +165,7 @@ printf("url is %s\n", URL.c_str());
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent.c_str());
 		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 		curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
-		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, connecttimeout);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, connecttimeout);
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 #ifdef DEBUG

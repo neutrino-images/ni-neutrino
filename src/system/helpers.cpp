@@ -50,6 +50,7 @@
 #include <driver/fontrenderer.h>
 #include <global.h>
 #include <driver/fontrenderer.h>
+#include <driver/framebuffer.h>
 #include <system/helpers.h>
 #include <gui/update_ext.h>
 using namespace std;
