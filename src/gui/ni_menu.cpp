@@ -234,8 +234,8 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 
 				g_settings.screen_height = 576;
 				g_settings.screen_width = 720;
-				g_settings.screen_xres = 100;
-				g_settings.screen_yres = 100;
+				g_settings.font_scaling_x = 100;
+				g_settings.font_scaling_y = 100;
 			}
 			else if (strstr(filename, "mgcamd")	||
 				strstr(filename, "newcs")	||
@@ -290,8 +290,8 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 
 			g_settings.screen_height = 720;
 			g_settings.screen_width = 1280;
-			g_settings.screen_xres = 112;
-			g_settings.screen_yres = 112;
+			g_settings.font_scaling_x = 105;
+			g_settings.font_scaling_y = 105;
 		}
 		else if (strstr(filename, "mgcamd")	||
 			strstr(filename, "newcs")	||

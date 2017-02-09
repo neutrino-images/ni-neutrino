@@ -1018,15 +1018,6 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		}
 	}
 	//NI
-	if (g_settings.version_pseudo < "20160623110000")
-	{
-		if (g_settings.screen_xres == 112)
-			g_settings.screen_xres = 105;
-
-		if (g_settings.screen_yres == 112)
-			g_settings.screen_yres = 105;
-	}
-	//NI
 	if (g_settings.version_pseudo < "20160804110000")
 	{
 		if (g_settings.tmdb_api_key == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
