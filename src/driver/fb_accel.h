@@ -146,7 +146,7 @@ class CFbAccelGLFB
 		~CFbAccelGLFB();
 		void init(const char * const);
 		int setMode(unsigned int xRes, unsigned int yRes, unsigned int bpp);
-		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp);
+		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp = false, uint32_t unscaled_w = 0, uint32_t unscaled_h = 0); //NI
 		fb_pixel_t * getBackBufferPointer() const;
 };
 
