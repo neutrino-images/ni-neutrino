@@ -4069,6 +4069,7 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
                 if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
 			InfoIcons->saveIconstate();
 
+		CEpgScan::getInstance()->Start(true);
 		bool alive = recordingstatus || CEpgScan::getInstance()->Running() ||
 			CStreamManager::getInstance()->StreamStatus();
 		if(!alive)
@@ -4081,7 +4082,6 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 		frameBuffer->setActive(false);
 		// Active standby on
 		powerManager->SetStandby(false, false);
-		CEpgScan::getInstance()->Start(true);
 		if (scansettings.fst_update)
 			fst_timer = g_RCInput->addTimer(30*1000*1000, true);
 	} else {
