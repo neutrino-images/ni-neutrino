@@ -420,7 +420,7 @@ int CImageInfoNI::get_MTD_Info()
 	if (!(fh=fopen("/proc/mtd", "r")))
 		return false;
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	std::string sysfs = get_systemRoot();
 #else
 	std::string sysfs = "systemFS";
@@ -579,7 +579,7 @@ void CImageInfoNI::get_DF_Info()
 	if (!(pipe_reader = popen ("df", "r")))
 		printf("[read_df] popen error\n" );
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	strcpy(mtd_info[systemfs].dev, ("mtd:"+get_systemRoot()).c_str());
 #endif
 
@@ -844,7 +844,7 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 #ifdef HAVE_GENERIC_HARDWARE
 	int max_bit	= netMaxBit;	/* PC */
 #else
-# ifdef BOXMODEL_APOLLO
+# ifdef BOXMODEL_CS_HD2
 	int max_bit	= 104857600;	/* Shiner, Kronos */
 	if (cs_get_revision() == 9)
 		max_bit	= 1073741824;	/* Apollo */

@@ -306,7 +306,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		 * (see CMD_SB_LOCK / UNLOCK PLAYBACK */
 		//channel->setRawPmt(NULL);//FIXME
 		StopCam(channel_id, cam);
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		CZapitChannel * chan = CServiceManager::getInstance()->GetCurrentChannel();
 
 		//NI - this is a hack for rezaping to the recording channe
@@ -320,7 +320,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	}
 
 //NI
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	// disable if option "usable CI channel while recording" set to "all channels"
 	if(mode && g_settings.ci_mode != 0 /*all channels*/) {
 		if(start) {
@@ -341,7 +341,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	if (channel_map.size() > 1)
 		list = CCam::CAPMT_ADD;
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	INFO("    ##NI: channel_map.size() %d\n",channel_map.size());
 	int ci_use_count = 0;
 	for (it = channel_map.begin(); it != channel_map.end(); ++it)
@@ -401,7 +401,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 void CCamManager::SetCITuner(int tuner)
 {
 	tunerno = tuner;
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	if (tunerno >= 0)
 		cCA::GetInstance()->SetTS((CA_DVBCI_TS_INPUT)tunerno);
 #endif

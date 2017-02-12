@@ -1004,7 +1004,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		erg = 2;
 	}
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	g_settings.brightness = configfile.getInt32("brightness", 0);
 	g_settings.contrast = configfile.getInt32("contrast", 0);
 	g_settings.saturation = configfile.getInt32("saturation", 0);
@@ -1579,7 +1579,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("window_size", g_settings.window_size);
 	configfile.setInt32("window_width", g_settings.window_width);
 	configfile.setInt32("window_height", g_settings.window_height);
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	configfile.setInt32("brightness", g_settings.brightness );
 	configfile.setInt32("contrast", g_settings.contrast );
 	configfile.setInt32("enable_sd_osd", g_settings.enable_sd_osd );
@@ -4612,7 +4612,7 @@ void stop_daemons(bool stopall, bool for_flash)
 		CVFD::getInstance()->ShowText("Stop daemons...");
 		g_settings.epg_scan_mode = CEpgScan::MODE_OFF;
 //NI
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		system("/bin/backup_flash.sh"); //don't fork
 #endif
 		my_system(NEUTRINO_ENTER_FLASH_SCRIPT);

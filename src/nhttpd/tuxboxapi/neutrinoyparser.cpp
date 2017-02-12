@@ -864,7 +864,7 @@ std::string CNeutrinoYParser::func_get_boxtype(CyhookHandler *, std::string)
 			if( boxname == "Armas ")
 				boxname += "TripleDragon";
 			break;
-#ifdef BOXMODEL_NEVIS
+#ifdef BOXMODEL_CS_HD1
 		case 6:
 			boxname += "HD1";
 			break;
@@ -880,7 +880,7 @@ std::string CNeutrinoYParser::func_get_boxtype(CyhookHandler *, std::string)
 			boxname += "Zee";
 			break;
 #endif
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		case 9:
 			boxname += "Tank";
 			break;
@@ -928,7 +928,7 @@ std::string CNeutrinoYParser::func_get_boxmodel(CyhookHandler *, std::string)
 
 	switch(system_rev)
 	{
-#ifdef BOXMODEL_NEVIS
+#ifdef BOXMODEL_CS_HD1
 		case 6:
 		case 7:
 		case 8:
@@ -936,7 +936,7 @@ std::string CNeutrinoYParser::func_get_boxmodel(CyhookHandler *, std::string)
 			boxmodel = "Nevis";
 			break;
 #endif
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		case 9:
 			boxmodel = "Apollo";
 			break;
