@@ -304,7 +304,6 @@ class CFrameBuffer : public sigc::trackable
 		typedef std::vector<fb_area_t> v_fbarea_t;
 		typedef v_fbarea_t::iterator fbarea_iterator_t;
 		v_fbarea_t v_fbarea;
-		bool fb_no_check;
 		bool do_paint_mute_icon;
 
 		bool _checkFbArea(int _x, int _y, int _dx, int _dy, bool prev);
