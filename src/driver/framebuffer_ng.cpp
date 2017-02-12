@@ -378,7 +378,7 @@ fprintf(stderr, "CFrameBuffer::setMode avail: %d active: %d\n", available, activ
 	printf("FB: %dx%dx%d line length %d. %s accelerator.\n", xRes, yRes, bpp, stride,
 #if defined(USE_NEVIS_GXA)
 		"Using nevis GXA"
-#elif defined(BOXMODEL_APOLLO)
+#elif defined(BOXMODEL_CS_HD2)
 		"Using fb hw graphics"
 #else
 		"Not using graphics"
@@ -600,7 +600,7 @@ fb_pixel_t* CFrameBuffer::paintBoxRel(const int x, const int y, const int dx, co
 	int w_align;
 	int offs_align;
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	if (_dx%4 != 0) {
 		w_align = GetWidth4FB_HW_ACC(x, _dx, true);
 		if (w_align < _dx)

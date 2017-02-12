@@ -19,7 +19,7 @@ SUBDIRS += \
 endif
 
 if BOXTYPE_COOL
-if BOXMODEL_APOLLO
+if BOXMODEL_CS_HD2
 SUBDIRS += \
 	libcoolstream2
 else

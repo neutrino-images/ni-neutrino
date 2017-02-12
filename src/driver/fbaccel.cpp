@@ -68,7 +68,7 @@ extern GLFramebuffer *glfb;
 #define NEED_BLIT_THREAD 1
 #endif
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 #ifndef FB_HW_ACCELERATION
 #define FB_HW_ACCELERATION
 #endif

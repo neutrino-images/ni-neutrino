@@ -199,7 +199,7 @@ endif
 if BOXTYPE_COOL
 bin_PROGRAMS += uncooloff
 uncooloff_SOURCES = uncooloff.c
-if BOXMODEL_APOLLO
+if BOXMODEL_CS_HD2
 else
 noinst_PROGRAMS = uncoolinit
 uncoolinit_SOURCES = uncoolinit.cpp
