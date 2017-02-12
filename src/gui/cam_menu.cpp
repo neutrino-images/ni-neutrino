@@ -135,7 +135,7 @@ int CCAMMenuHandler::doMainMenu()
 	cammenu->addItem(ca_init);
 	cammenu->addItem(GenericMenuSeparator);
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	int fecount = CFEManager::getInstance()->getFrontendCount();
 	char fename[fecount+1][255];
 #endif
@@ -152,7 +152,7 @@ int CCAMMenuHandler::doMainMenu()
 		ci_mode->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CI_MODE);
 		cammenu->addItem(ci_mode);
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		CMenuOptionChooser::keyval_ext feselect[fecount+1];
 		feselect[0].key = -1;
 		feselect[0].value = NONEXISTANT_LOCALE;
