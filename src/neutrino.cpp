@@ -4,7 +4,7 @@
 	Copyright (C) 2001 Steffen Hehn 'McClean'
 							 and some other guys
 
-	Copyright (C) 2006-2014 Stefan Seyfried
+	Copyright (C) 2006-2017 Stefan Seyfried
 
 	Copyright (C) 2011 CoolStream International Ltd
 
@@ -238,14 +238,14 @@ CNeutrinoApp::CNeutrinoApp()
 : configfile('\t')
 {
 	standby_pressed_at.tv_sec = 0;
-
-	frameBuffer = CFrameBuffer::getInstance();
-	frameBuffer->setIconBasePath(ICONSDIR);
 #if HAVE_TRIPLEDRAGON || USE_STB_HAL
 	/* this needs to happen before the framebuffer is set up */
 	init_td_api();
 	// shutdown_td_api();
 #endif
+
+	frameBuffer = CFrameBuffer::getInstance();
+	frameBuffer->setIconBasePath(ICONSDIR);
 	SetupFrameBuffer();
 
 	mode 			= mode_unknown;
@@ -5132,6 +5132,7 @@ void CNeutrinoApp::Cleanup()
 #endif
 }
 
+#if ENABLE_FASTSCAN
 void CNeutrinoApp::CheckFastScan(bool standby, bool reload)
 {
 	if (scansettings.fst_update) {
@@ -5163,6 +5164,11 @@ void CNeutrinoApp::CheckFastScan(bool standby, bool reload)
 		}
 	}
 }
+#else
+void CNeutrinoApp::CheckFastScan(bool, bool)
+{
+}
+#endif
 
 bool CNeutrinoApp::adjustToChannelID(const t_channel_id channel_id)
 {

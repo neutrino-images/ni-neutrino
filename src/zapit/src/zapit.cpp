@@ -2620,7 +2620,8 @@ void CZapit::setMoviePlayer(bool enable)
 
 void CZapit::run()
 {
-#if HAVE_SPARK_HARDWARE
+//if HAVE_SPARK_HARDWARE
+#if 0
 	bool v_stopped = false;
 #endif
 	set_threadname("zap:main");
@@ -2668,7 +2669,8 @@ void CZapit::run()
 					SendEvent(CZapitClient::EVT_PMT_CHANGED, &channel_id, sizeof(channel_id));
 				}
 			}
-#if HAVE_SPARK_HARDWARE
+//if HAVE_SPARK_HARDWARE
+#if 0
 			/* hack: stop videodecoder if the tuner looses lock
 			 * at least the h264 decoder seems unhappy if he runs out of data...
 			 * ...until we fix the driver, let's work around it here.
