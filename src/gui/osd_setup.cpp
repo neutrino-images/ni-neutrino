@@ -668,7 +668,7 @@ int COsdSetup::showOsdSetup()
 	osd_menu->addItem(mc);
 
 //NI
-#if !defined BOXMODEL_APOLLO
+#if !defined BOXMODEL_CS_HD2
 	int scart_osd_fix_exist = 0;
 	if (file_exists("/var/etc/.scart_osd_fix"))
 		scart_osd_fix_exist = 1;

@@ -280,7 +280,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		 * (see CMD_SB_LOCK / UNLOCK PLAYBACK */
 		//channel->setRawPmt(NULL);//FIXME
 		StopCam(channel_id, cam);
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		CZapitChannel * chan = CServiceManager::getInstance()->GetCurrentChannel();
 
 		//NI - this is a hack for rezaping to the recording channe
@@ -294,7 +294,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	}
 
 //NI
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 	// disable if option "usable CI channel while recording" set to "all channels"
 	if(mode && g_settings.ci_mode != 0 /*all channels*/) {
 		if(start) {

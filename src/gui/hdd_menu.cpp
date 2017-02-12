@@ -63,7 +63,7 @@
 #define EJECT_BIN    "/bin/eject"
 
 //NI
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 #define MDEV_MOUNT	"/lib/mdev/fs/mount"
 #else
 #define MDEV_MOUNT	"/etc/mdev/mdev-mount.sh"

@@ -4465,7 +4465,7 @@ void stop_daemons(bool stopall, bool for_flash)
 		CVFD::getInstance()->ShowText("Stop daemons...");
 		g_settings.epg_scan_mode = CEpgScan::MODE_OFF;
 //NI
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		system("/bin/backup_flash.sh"); //don't fork
 #endif
 		my_system(NEUTRINO_ENTER_FLASH_SCRIPT);

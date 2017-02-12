@@ -139,7 +139,7 @@ void CFlashUpdate::update_php(std::string &url, const char* type)
 	if (url.find("update.php") != std::string::npos)
 	{
 		url += "?revision=" + to_string(cs_get_revision());
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		url += "&chip_type=" + to_string(cs_get_chip_type());
 #endif
 		url += "&image_type=" + (std::string)type;
@@ -447,7 +447,7 @@ printf("[update] mode is %d\n", softupdate_mode);
 		//NI
 		if (allow_flash) {
 			UpdatesFilter.addFilter(FILEBROWSER_UPDATE_FILTER);
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 			if (CMTDInfo::getInstance()->getMTDEraseSize(sysfs) == 0x40000 /* Tank */)
 				UpdatesFilter.addFilter("256k");
 #endif

@@ -72,7 +72,7 @@ int CInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey) //NI
 	{
 		char str[1024];
 		sprintf(str, "cs_get_revision(): 0x%02X\n", cs_get_revision());
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 		sprintf(str, "%scs_get_chip_type(): 0x%04X\n", str, cs_get_chip_type());
 #endif
 		ShowMsg(LOCALE_MESSAGEBOX_INFO, str, CMsgBox::mbrBack, CMsgBox::mbBack);
