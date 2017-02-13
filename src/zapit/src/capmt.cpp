@@ -291,7 +291,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	}
 
 	if((oldmask != newmask) || force_update) {
-		INFO("    ##NI: (oldmask != newmask) || force_update)\n");
+		INFO("    ##NI: (oldmask != newmask) || force_update)");
 		cam->setCaMask(newmask);
 		cam->setSource(source);
 		if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
@@ -301,7 +301,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	}
 
 	if(newmask == 0) {
-		INFO("    ##NI: (newmask == 0)\n");
+		INFO("    ##NI: (newmask == 0)");
 		/* FIXME: back to live channel from playback dont parse pmt and call setCaPmt
 		 * (see CMD_SB_LOCK / UNLOCK PLAYBACK */
 		//channel->setRawPmt(NULL);//FIXME
@@ -312,7 +312,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		//NI - this is a hack for rezaping to the recording channe
 		//if commig from movieplayer, disable hack
 		if(!mp && ( (!mode || (mode && !chan->scrambled)) && (!start && rmode)) ){
-			INFO("    ##NI: HACK: disabling TS\n");
+			INFO("    ##NI: HACK: disabling TS");
 			cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
 		}
 		mp = false;
@@ -326,7 +326,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		if(start) {
 			if ((tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) || (filter_channels && channel->bUseCI)) {
 				rmode = true;
-				INFO("    ##NI: rmode\n");
+				INFO("    ##NI: rmode");
 			}
 
 		} else
@@ -342,7 +342,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		list = CCam::CAPMT_ADD;
 
 #ifdef BOXMODEL_CS_HD2
-	INFO("    ##NI: channel_map.size() %d\n",channel_map.size());
+	INFO("    ##NI: channel_map.size() %d",channel_map.size());
 	int ci_use_count = 0;
 	for (it = channel_map.begin(); it != channel_map.end(); ++it)
 	{
