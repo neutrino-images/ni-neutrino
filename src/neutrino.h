@@ -108,6 +108,7 @@ private:
 	bool				channelList_allowed;
 	bool				channelList_painted;
 	int				first_mode_found;
+	int				osd_resolution_tmp;
 	bool				blank_screen; //NI
 
 	void SDT_ReloadChannels();
@@ -164,6 +165,7 @@ public:
 	void ExitRun(const bool write_si = true, int retcode = 0); //NI cross-team settings
 	void saveSetup(const char * fname);
 	int loadSetup(const char * fname);
+	void setScreenSettings();
 	void upgradeSetup(const char * fname);
 	void loadKeys(const char * fname = NULL);
 	void saveKeys(const char * fname = NULL);

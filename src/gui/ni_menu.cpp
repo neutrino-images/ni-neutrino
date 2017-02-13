@@ -218,17 +218,17 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			if (strstr(filename, "scart_osd_fix"))
 			{
 				//change to scart-osd-fix values
-				g_settings.screen_StartX_crt = 29;
-				g_settings.screen_StartY_crt = 43;
-				g_settings.screen_EndX_crt = 693;
-				g_settings.screen_EndY_crt = 535;
+				g_settings.screen_StartX_crt_0 = 29;
+				g_settings.screen_StartY_crt_0 = 43;
+				g_settings.screen_EndX_crt_0 = 693;
+				g_settings.screen_EndY_crt_0 = 535;
 				g_settings.screen_preset = 0;
 
 				//set values
-				g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd : g_settings.screen_StartX_crt;
-				g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd : g_settings.screen_StartY_crt;
-				g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd : g_settings.screen_EndX_crt;
-				g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd : g_settings.screen_EndY_crt;
+				g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd_0 : g_settings.screen_StartX_crt_0;
+				g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd_0 : g_settings.screen_StartY_crt_0;
+				g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd_0 : g_settings.screen_EndX_crt_0;
+				g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd_0 : g_settings.screen_EndY_crt_0;
 
 				CFrameBuffer::getInstance()->Clear();
 
@@ -273,16 +273,16 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 		if (strstr(filename, "scart_osd_fix"))
 		{
 			//reset to defaults
-			g_settings.screen_StartX_crt = 60;
-			g_settings.screen_StartY_crt = 20;
-			g_settings.screen_EndX_crt = 1220;
-			g_settings.screen_EndY_crt = 560;
+			g_settings.screen_StartX_crt_0 = 60;
+			g_settings.screen_StartY_crt_0 = 20;
+			g_settings.screen_EndX_crt_0 = 1220;
+			g_settings.screen_EndY_crt_0 = 560;
 
 			//set values
-			g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd : g_settings.screen_StartX_crt;
-			g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd : g_settings.screen_StartY_crt;
-			g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd : g_settings.screen_EndX_crt;
-			g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd : g_settings.screen_EndY_crt;
+			g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd_0 : g_settings.screen_StartX_crt_0;
+			g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd_0 : g_settings.screen_StartY_crt_0;
+			g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd_0 : g_settings.screen_EndX_crt_0;
+			g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd_0 : g_settings.screen_EndY_crt_0;
 
 			CFrameBuffer::getInstance()->Clear();
 

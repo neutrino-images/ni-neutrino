@@ -185,21 +185,77 @@ void CFbAccelCSHD2::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_
 	CFrameBuffer::blitBox2FB(boxBuf, width, height, xoff, yoff);
 }
 
-int CFbAccelCSHD2::setMode(unsigned int, unsigned int, unsigned int)
+void CFbAccelCSHD2::setOsdResolutions()
 {
+	/* FIXME: Infos available in driver? */
+	osd_resolution_t res;
+	osd_resolutions.clear();
+	res.xRes = 1280;
+	res.yRes = 720;
+	res.bpp  = 32;
+	osd_resolutions.push_back(res);
+	if (fullHdAvailable()) {
+		res.xRes = 1920;
+		res.yRes = 1080;
+		res.bpp  = 32;
+		osd_resolutions.push_back(res);
+	}
+}
+
+int CFbAccelCSHD2::setMode(unsigned int nxRes, unsigned int nyRes, unsigned int nbpp)
+{
+	if (!available&&!active)
+		return -1;
+
+	if (osd_resolutions.empty())
+		setOsdResolutions();
+
+	if (fullHdAvailable()) {
+		screeninfo.xres_virtual=screeninfo.xres=nxRes;
+		screeninfo.yres_virtual=screeninfo.yres=nyRes;
+		screeninfo.height=0;
+		screeninfo.width=0;
+		screeninfo.xoffset=screeninfo.yoffset=0;
+		screeninfo.bits_per_pixel=nbpp;
+
+		if (ioctl(fd, FBIOPUT_VSCREENINFO, &screeninfo)<0)
+			perror(LOGTAG "FBIOPUT_VSCREENINFO");
+
+		printf(LOGTAG "SetMode: %dbits, red %d:%d green %d:%d blue %d:%d transp %d:%d\n",
+		screeninfo.bits_per_pixel, screeninfo.red.length, screeninfo.red.offset, screeninfo.green.length, screeninfo.green.offset, screeninfo.blue.length, screeninfo.blue.offset, screeninfo.transp.length, screeninfo.transp.offset);
+		if ((screeninfo.xres != nxRes) ||
+		    (screeninfo.yres != nyRes) ||
+		    (screeninfo.bits_per_pixel != nbpp)) {
+			printf(LOGTAG "SetMode failed: wanted: %dx%dx%d, got %dx%dx%d\n",
+				   nxRes, nyRes, nbpp,
+				   screeninfo.xres, screeninfo.yres, screeninfo.bits_per_pixel);
+			return -1;
+		}
+	}
+
 	fb_fix_screeninfo _fix;
 
 	if (ioctl(fd, FBIOGET_FSCREENINFO, &_fix) < 0) {
-		perror("FBIOGET_FSCREENINFO");
+		perror(LOGTAG "FBIOGET_FSCREENINFO");
 		return -1;
 	}
 	stride = _fix.line_length;
 	if (ioctl(fd, FBIOBLANK, FB_BLANK_UNBLANK) < 0)
-		printf("screen unblanking failed\n");
+		printf(LOGTAG "screen unblanking failed\n");
 	xRes = screeninfo.xres;
 	yRes = screeninfo.yres;
 	bpp  = screeninfo.bits_per_pixel;
-	printf(LOGTAG "%dx%dx%d line length %d. using hd2 graphics accelerator.\n", xRes, yRes, bpp, stride);
+	printf(LOGTAG "%dx%dx%d line length %d. using %s graphics accelerator.\n", xRes, yRes, bpp, stride, _fix.id);
+
+/*
+max res 1280x720
+	available	14745600
+	stride		5120
+max res 1920x1080
+	available	16588800
+	stride		7680
+*/
+
 	int needmem = stride * yRes * 2;
 	if (available >= needmem)
 	{
@@ -227,4 +283,19 @@ void CFbAccelCSHD2::setBlendLevel(int level)
 		printf("FBIO_SETOPACITY failed.\n");
 	if (level == 100) // TODO: sucks.
 		usleep(20000);
+}
+
+int CFbAccelCSHD2::scaleFont(int size)
+{
+	if (screeninfo.xres == 1920)
+		size += size/2;
+
+	return size;
+}
+
+bool CFbAccelCSHD2::fullHdAvailable()
+{
+	if (available >= 16588800) /* new fb driver with maxres 1920x1080(*8) */
+		return true;
+	return false;
 }
