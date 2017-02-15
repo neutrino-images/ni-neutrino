@@ -2131,7 +2131,7 @@ int Init(int source)
 			return 0;
 		}
 
-		if ((error = FTC_Manager_New(library, 0, 0, 1024*1024, &MyFaceRequester, NULL, &manager)))
+		if ((error = FTC_Manager_New(library, 7, 2, 1024*1024, &MyFaceRequester, NULL, &manager)))
 		{
 			FT_Done_FreeType(library);
 			printf("TuxTxt <FTC_Manager_New: 0x%.2X>\n", error);
