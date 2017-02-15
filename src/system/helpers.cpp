@@ -50,7 +50,7 @@
 #include <driver/fontrenderer.h>
 #include <global.h>
 #include <driver/fontrenderer.h>
-#include <driver/framebuffer.h>
+//#include <driver/framebuffer.h>
 #include <system/helpers.h>
 #include <gui/update_ext.h>
 using namespace std;
@@ -1247,6 +1247,7 @@ bool split_config_string(const std::string &str, std::map<std::string,std::strin
 	return !smap.empty();
 }
 
+#if 0
 /* align for hw blit */
 uint32_t GetWidth4FB_HW_ACC(const uint32_t _x, const uint32_t _w, const bool max)
 {
@@ -1266,6 +1267,7 @@ uint32_t GetWidth4FB_HW_ACC(const uint32_t _x, const uint32_t _w, const bool max
 
 	return ret;
 }
+#endif
 
 std::vector<std::string> split(const std::string &s, char delim)
 {
