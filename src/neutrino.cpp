@@ -328,11 +328,15 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	int erg = 0;
 
 	configfile.clear();
-	//settings laden - und dabei Defaults setzen!
-	if(!configfile.loadConfig(fname)) {
-		//file existiert nicht
+	// load settings; setup defaults
+	if (!configfile.loadConfig(fname))
+	{
+		// file doesn't exist
 		erg = 1;
-	} else {
+	}
+	else
+	{
+#if 0
 		/* try to detect bad / broken config file */
 		if (!configfile.getInt32("screen_EndX_crt_0", 0) ||
 				!configfile.getInt32("screen_EndY_crt_0", 0) ||
@@ -340,10 +344,11 @@ int CNeutrinoApp::loadSetup(const char * fname)
 				!configfile.getInt32("screen_EndY_lcd_0", 0)) {
 			printf("[neutrino] config file %s is broken, using defaults\n", fname);
 			configfile.clear();
-		} else {
+		} else
+#endif
 			migrateConfig(fname);
-		}
 	}
+
 	parentallocked = !access(NEUTRINO_PARENTALLOCKED_FILE, R_OK);
 
 	//theme/color options
