@@ -21,6 +21,14 @@ if test "$DEBUG" = "yes"; then
 	AC_DEFINE(DEBUG,1,[Enable debug messages])
 fi
 
+AC_ARG_WITH(libcoolstream-static-dir,
+	[  --with-libcoolstream-static-dir=PATH  path for static libcoolstream],
+	[LIBCOOLSTREAM_STATIC_DIR="$withval"],[LIBCOOLSTREAM_STATIC_DIR=""])
+
+AC_ARG_ENABLE(libcoolstream-static,
+	AS_HELP_STRING(--enable-libcoolstream-static,[libcoolstream static linked for testing]))
+AM_CONDITIONAL(ENABLE_LIBCOOLSTREAM_STATIC,test "$enable_libcoolstream_static" = "yes")
+
 AC_ARG_ENABLE(reschange,
        AS_HELP_STRING(--enable-reschange,enable change the osd resolution (default for hd2)))
 

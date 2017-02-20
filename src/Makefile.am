@@ -142,7 +142,13 @@ neutrino_LDADD += \
 endif
 
 if BOXTYPE_COOL
+if ENABLE_LIBCOOLSTREAM_STATIC
+neutrino_LDADD += -lca-sc
+neutrino_LDADD += @LIBCOOLSTREAM_STATIC_DIR@/libcoolstream-mt.a
+else
 neutrino_LDADD += -lcoolstream-mt -lca-sc
+endif
+
 if ENABLE_TMSDK 
 else
 if BOXMODEL_CS_HD2
