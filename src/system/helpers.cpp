@@ -1402,6 +1402,16 @@ std::string Lang2ISO639_1(std::string& lang)
 	return ret;
 }
 
+string readLink(string lnk)
+{
+	char buf[PATH_MAX];
+	memset(buf, 0, sizeof(buf)-1);
+	if (readlink(lnk.c_str(), buf, sizeof(buf)-1) != -1)
+		return (string)buf;
+
+	return "";
+}
+
 //NI
 // returns the pid of the first process found in /proc
 int getpidof(const char *process)
