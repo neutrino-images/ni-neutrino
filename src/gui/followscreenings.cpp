@@ -151,14 +151,20 @@ void CFollowScreenings::updateRightIcon(int ix, time_t start, unsigned int durat
 
 void CFollowScreenings::show()
 {
+	if (channel_id == 0)
+		return;
+
 	char actionstr[32];
 
 	getFollowScreenings();
 
-	if (followlist.size() == 1 && g_settings.timer_followscreenings < 2 /*always*/) { //NI
+	if (followlist.size() == 1 && g_settings.timer_followscreenings < 2 /*always*/) //NI
+	{
 		snprintf(actionstr, sizeof(actionstr), "%lu", followlist.front().startTime);
 		exec(NULL, actionstr);
-	} else {
+	}
+	else if (followlist.size() > 1)
+	{
 		CMenuWidget m(LOCALE_EPGVIEWER_SELECT_SCREENING, NEUTRINO_ICON_SETTINGS);
 		const char *icon = NEUTRINO_ICON_BUTTON_RED;
 		neutrino_msg_t directKey = CRCInput::RC_red;
@@ -183,4 +189,3 @@ void CFollowScreenings::show()
 		m.exec(NULL, "");
 	}
 }
-

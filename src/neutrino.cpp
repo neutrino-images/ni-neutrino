@@ -2211,7 +2211,11 @@ void CNeutrinoApp::InitSectiondClient()
 	dprintf(DEBUG_NORMAL, "had to wait %ld ms for sectionsd to start up\n", time_monotonic_ms() - t);
 #endif
 	g_Sectionsd = new CSectionsdClient;
-	g_Sectionsd->registerEvent(CSectionsdClient::EVT_TIMESET, 222, NEUTRINO_UDS_NAME);
+	struct timespec t;
+	if (clock_gettime(CLOCK_MONOTONIC, &t)) {
+		dprintf(DEBUG_NORMAL, "CLOCK_MONOTONIC not supported? (%m), falling back to EVT_TIMESET\n");
+		g_Sectionsd->registerEvent(CSectionsdClient::EVT_TIMESET, 222, NEUTRINO_UDS_NAME);
+	}
 	g_Sectionsd->registerEvent(CSectionsdClient::EVT_GOT_CN_EPG, 222, NEUTRINO_UDS_NAME);
 	g_Sectionsd->registerEvent(CSectionsdClient::EVT_EIT_COMPLETE, 222, NEUTRINO_UDS_NAME);
 	g_Sectionsd->registerEvent(CSectionsdClient::EVT_WRITE_SI_FINISHED, 222, NEUTRINO_UDS_NAME);
@@ -3516,7 +3520,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 			if (rec_mode == CRecordManager::RECMODE_OFF || rec_mode == CRecordManager::RECMODE_TSHIFT)
 				CRecordManager::getInstance()->Record(live_channel_id);
 			delete[] (unsigned char*) data;
-			return messages_return::handled | messages_return::cancel_all;
+			return messages_return::handled;
 		}
 		if(mode == mode_standby){
 			if((eventinfo->channel_id != live_channel_id) && !(SAME_TRANSPONDER(live_channel_id, eventinfo->channel_id)))
@@ -3534,7 +3538,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		}
 
 		delete[] (unsigned char*) data;
-		return messages_return::handled | messages_return::cancel_all;
+		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::RECORD_STOP) {
 		CTimerd::RecordingStopInfo* recinfo = (CTimerd::RecordingStopInfo*)data;
