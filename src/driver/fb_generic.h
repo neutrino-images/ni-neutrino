@@ -183,7 +183,7 @@ class CFrameBuffer : public sigc::trackable
 		virtual fb_pixel_t * getBackBufferPointer() const;  // pointer to backbuffer
 		virtual unsigned int getStride() const;             // size of a single line in the framebuffer (in bytes)
 		unsigned int getScreenWidth(bool real = false);
-		unsigned int getScreenHeight(bool real = false); 
+		unsigned int getScreenHeight(bool real = false);
 		unsigned int getScreenWidthRel(bool force_small = false);
 		unsigned int getScreenHeightRel(bool force_small = false);
 		unsigned int getScreenX();
@@ -192,7 +192,6 @@ class CFrameBuffer : public sigc::trackable
 		bool getActive() const;                     // is framebuffer active?
 		void setActive(bool enable);                     // is framebuffer active?
 		virtual void setupGXA() { return; };             // reinitialize stuff
-		virtual void add_gxa_sync_marker() { return; };
 		virtual bool needAlign4Blit() { return false; };
 		virtual uint32_t getWidth4FB_HW_ACC(const uint32_t x, const uint32_t w, const bool max=true);
 
@@ -235,7 +234,7 @@ class CFrameBuffer : public sigc::trackable
 
 		void getIconSize(const char * const filename, int* width, int *height);
 		/* h is the height of the target "window", if != 0 the icon gets centered in that window */
-		bool paintIcon (const std::string & filename, const int x, const int y, 
+		bool paintIcon (const std::string & filename, const int x, const int y,
 				const int h = 0, const unsigned char offset = 1, bool paint = true, bool paintBg = false, const fb_pixel_t colBg = 0);
 		bool paintIcon8(const std::string & filename, const int x, const int y, const unsigned char offset = 0);
 		void loadPal   (const std::string & filename, const unsigned char offset = 0, const unsigned char endidx = 255);

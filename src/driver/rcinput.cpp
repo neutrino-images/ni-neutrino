@@ -535,6 +535,8 @@ int CRCInput::checkTimers()
 	return _id;
 }
 
+
+
 int64_t CRCInput::calcTimeoutEnd(const int timeout_in_seconds)
 {
 	return time_monotonic_us() + ((uint64_t)timeout_in_seconds * (uint64_t) 1000000);

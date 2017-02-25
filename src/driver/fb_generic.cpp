@@ -384,7 +384,7 @@ void CFrameBuffer::setBlendLevel(int /*level*/)
 {
 }
 
-#if 0 
+#if 0
 //never used
 void CFrameBuffer::setAlphaFade(int in, int num, int tr)
 {
@@ -1210,7 +1210,7 @@ void CFrameBuffer::paintLine(int xa, int ya, int xb, int yb, const fb_pixel_t co
 	}
 	mark(xa, ya, xb, yb);
 }
-#if 0 
+#if 0
 //never used
 void CFrameBuffer::setBackgroundColor(const fb_pixel_t color)
 {
