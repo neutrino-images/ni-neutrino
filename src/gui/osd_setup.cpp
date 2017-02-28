@@ -39,6 +39,7 @@
 #include <neutrino_menue.h>
 
 #include "osd_setup.h"
+#include "osd_helpers.h"
 #include "themes.h"
 #include "screensetup.h"
 #include "osdlang_setup.h"
@@ -680,7 +681,11 @@ int COsdSetup::showOsdSetup()
 		kext[0].valname = "-";
 		resCount = 1;
 	}
-	CMenuOptionChooser * osd_res = new CMenuOptionChooser(LOCALE_COLORMENU_OSD_RESOLUTION, &g_settings.osd_resolution, kext, resCount, (resCount>1), this);
+	int videoSystem = COsdHelpers::getInstance()->getVideoSystem();
+	bool enable = ((resCount > 1) &&
+			COsdHelpers::getInstance()->isVideoSystem1080(videoSystem) &&
+			(g_settings.video_Mode != VIDEO_STD_AUTO));
+	CMenuOptionChooser * osd_res = new CMenuOptionChooser(LOCALE_COLORMENU_OSD_RESOLUTION, &g_settings.osd_resolution, kext, resCount, enable, this);
 	osd_res->setHint("", LOCALE_MENU_HINT_OSD_RESOLUTION);
 	osd_menu->addItem(osd_res);
 #endif
@@ -1495,6 +1500,13 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 #ifdef ENABLE_CHANGE_OSD_RESOLUTION
         else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_COLORMENU_OSD_RESOLUTION))
 	{
+		if (frameBuffer->osd_resolutions.empty())
+			return true;
+		osd_menu->hide();
+		uint32_t osd_mode = (uint32_t)*(int*)data;
+		COsdHelpers::getInstance()->g_settings_osd_resolution_save = osd_mode;
+		COsdHelpers::getInstance()->changeOsdResolution(osd_mode);
+#if 0
 		if (frameBuffer->fullHdAvailable()) {
 			if (frameBuffer->osd_resolutions.empty())
 				return true;
@@ -1524,6 +1536,7 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 					g_InfoViewer->ResetModules();
 			}
 		}
+#endif
 		return true;
 	}
 #endif

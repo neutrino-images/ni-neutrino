@@ -79,6 +79,7 @@ libneutrino_gui_a_SOURCES = \
 	nfs.cpp \
 	ni_menu.cpp \
 	opkg_manager.cpp \
+	osd_helpers.cpp \
 	osd_progressbar_setup.cpp \
 	osd_setup.cpp \
 	osdlang_setup.cpp \
