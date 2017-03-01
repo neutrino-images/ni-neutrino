@@ -36,7 +36,7 @@
 
 //NI y-funcs
 #include "gui/plugins.h"
-extern CPlugins *g_PluginList;
+extern CPlugins *g_Plugins;
 #include "gui/infoicons.h"
 extern CInfoIcons *InfoIcons; /* neutrino.cpp */
 #include "gui/netfs_setup.h"
