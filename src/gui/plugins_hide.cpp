@@ -41,7 +41,7 @@
 #include "gui/pluginlist.h"
 #include "gui/plugins.h"
 
-extern CPlugins *g_PluginList;
+extern CPlugins *g_Plugins;
 
 const CMenuOptionChooser::keyval PLUGIN_HIDE_OPTIONS[] =
 {
@@ -72,15 +72,15 @@ int CPluginsHideMenu::menu()
 	CMenuWidget* pluginsHideMenu = new CMenuWidget(LOCALE_PLUGINS_HIDE, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_PLUGINS_HIDE);
 	pluginsHideMenu->addIntroItems();
 
-	unsigned int maxPlugins = g_PluginList->getNumberOfPlugins();
+	unsigned int maxPlugins = g_Plugins->getNumberOfPlugins();
 	int isHidden[maxPlugins];
 	std::string file[maxPlugins];
 
 	for (unsigned int i = 0; i < maxPlugins; i++)
 	{
-		std::string tmp = g_PluginList->getName(i);
-		file[i] = g_PluginList->getCfgFile(i);
-		isHidden[i] = g_PluginList->isHidden(i);
+		std::string tmp = g_Plugins->getName(i);
+		file[i] = g_Plugins->getCfgFile(i);
+		isHidden[i] = g_Plugins->isHidden(i);
 
 		CPluginsHideNotifier * pluginsNotifier = new CPluginsHideNotifier(file[i].c_str());
 		CMenuOptionChooser * mc = new CMenuOptionChooser(tmp.c_str(), &isHidden[i], PLUGIN_HIDE_OPTIONS, PLUGIN_HIDE_OPTIONS_COUNT, true, pluginsNotifier);
@@ -136,7 +136,7 @@ bool CPluginsHideNotifier::changeNotify(const neutrino_locale_t, void * data)
 	f << cfg << endl;
 	f.close();
 
-	g_PluginList->loadPlugins();
+	g_Plugins->loadPlugins();
 
 	return menu_return::RETURN_REPAINT;
 }
