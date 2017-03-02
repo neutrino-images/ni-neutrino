@@ -511,7 +511,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	if (timer_remotebox_itemcount) {
 		for (int i = 0; i < timer_remotebox_itemcount; i++) {
 			timer_remotebox_item timer_rb;
-			//NI memset(&timer_rb, 0, sizeof(struct timer_remotebox_item));
+			memset(&timer_rb, 0, sizeof(struct timer_remotebox_item));
 			std::string k;
 			k = "timer_remotebox_ip_" + to_string(i);
 			timer_rb.rbaddress = configfile.getString(k, "");
