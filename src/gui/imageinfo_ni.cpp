@@ -849,12 +849,10 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	 * 13107200	Byte
 	 * 104857600	Bit
 	 */
-#ifdef BOXMODEL_CS_HD2
-	int max_bit	= 104857600;	/* Shiner, Kronos */
-	if (revision == 9)
-		max_bit	= 1073741824;	/* Apollo */
-#else
 	int max_bit	= 104857600;
+#ifdef BOXMODEL_CS_HD2
+	if (revision == 9) /* Apollo */
+		max_bit	= 1073741824;
 #endif
 	int percent	= ((rbit_s+wbit_s)*100/max_bit);
 
