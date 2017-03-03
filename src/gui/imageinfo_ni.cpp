@@ -2,7 +2,7 @@
 	imageinfo_ni
 
 	(C) 2009-2016 NG-Team
-	(C) 2016 NI-Team
+	(C) 2016,2017 NI-Team
 
 	License: GPL
 
@@ -81,7 +81,7 @@ CImageInfoNI::CImageInfoNI()
 	Init();
 }
 
-static const neutrino_locale_t info_items[8] =
+static const neutrino_locale_t info_items[] =
 {
 	LOCALE_IMAGEINFO_IMAGE,
 	LOCALE_IMAGEINFO_DATE,
@@ -92,6 +92,7 @@ static const neutrino_locale_t info_items[8] =
 	LOCALE_IMAGEINFO_FORUM,
 	LOCALE_IMAGEINFO_LICENSE
 };
+int info_items_count = sizeof(info_items)/sizeof(info_items[0]);
 
 void CImageInfoNI::Init(void)
 {
@@ -109,10 +110,10 @@ void CImageInfoNI::Init(void)
 	max_width	= frameBuffer->getScreenWidth(true);
 	max_height	= frameBuffer->getScreenHeight(true);
 
-	width		= frameBuffer->getScreenWidth() - 10;
-	height		= frameBuffer->getScreenHeight() - 10;
-	x		= getScreenStartX( width );
-	y		= getScreenStartY( height );
+	width		= frameBuffer->getScreenWidth() - 2*OFFSET_INNER_MID;
+	height		= frameBuffer->getScreenHeight() - 2*OFFSET_INNER_MID;
+	x		= getScreenStartX(width);
+	y		= getScreenStartY(height);
 
 	systemfs	= 0;
 	revision	= cs_get_revision();
@@ -122,18 +123,17 @@ void CImageInfoNI::Init(void)
 	read_old	= 0;
 	write_old	= 0;
 	net_best	= 0;
-	xcpu		= width - width/3 - 10;
-	ycpu		= y + 10 + (height/3 /* pig-box height */) + (2 * iheight);
-	max_text_width	= xcpu - x - 2*10;
+	xcpu		= width - width/3 - OFFSET_INNER_MID;
+	ycpu		= y + OFFSET_INNER_MID + (height/3 /* pig-box height */) + (2 * iheight);
+	max_text_width	= xcpu - x - 2*OFFSET_INNER_MID;
 
 	offset		= 0;
-	for (int i = 0; i < 8; i++) {
-		int tmpoffset = g_Font[font_info]->getRenderWidth(g_Locale->getText (info_items[i]));
-		if (tmpoffset > offset) {
+	for (int i = 0; i < info_items_count; i++) {
+		int tmpoffset = g_Font[font_info]->getRenderWidth(g_Locale->getText(info_items[i]));
+		if (tmpoffset > offset)
 			offset = tmpoffset;
-		}
 	}
-	offset		= offset + 15;
+	offset		= offset + OFFSET_INNER_MID;
 }
 
 CImageInfoNI::~CImageInfoNI()
@@ -163,7 +163,7 @@ int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
 	fader.StartFadeIn();
 	bool fadeout = false;
 	paint();
-	paint_pig(xcpu, y + 10, width/3, height/3);
+	paint_pig(xcpu, y + OFFSET_INNER_MID, width/3, height/3);
 	StartInfoThread();
 
 	while (1)
@@ -244,7 +244,7 @@ void CImageInfoNI::hide()
 
 void CImageInfoNI::paint_pig(int px, int py, int w, int h)
 {
-	frameBuffer->paintBoxRel(px-10,py-10,w+20,h+20, COL_INFOBAR_PLUS_0);
+	frameBuffer->paintBoxRel(px - OFFSET_INNER_MID, py - OFFSET_INNER_MID, w + 2*OFFSET_INNER_MID, h + 2*OFFSET_INNER_MID, COL_INFOBAR_PLUS_0);
 	g_PicViewer->DisplayImage(ICONSDIR "/start.jpg", px, py, w, h, frameBuffer->TM_NONE);
 }
 
@@ -262,7 +262,7 @@ void CImageInfoNI::clearLine(int xpos, int font)
 void CImageInfoNI::paint()
 {
 	const char * head_string;
-	int  xpos = x+10;
+	int xpos = x + OFFSET_INNER_MID;
 
 	ypos = y;
 
@@ -360,8 +360,8 @@ void* CImageInfoNI::InfoProc(void *arg)
 	CImageInfoNI *imageInfo = (CImageInfoNI*) arg;
 
 	while(1) {
-		imageInfo->paint_MEM_Info(imageInfo->x+10, imageInfo->ypos);
-		imageInfo->paint_NET_Info(imageInfo->x+10, imageInfo->ypos);
+		imageInfo->paint_MEM_Info(imageInfo->x + OFFSET_INNER_MID, imageInfo->ypos);
+		imageInfo->paint_NET_Info(imageInfo->x + OFFSET_INNER_MID, imageInfo->ypos);
 		sleep(1);
 	}
 	return 0;
@@ -525,7 +525,7 @@ int CImageInfoNI::CPU_Percent(_stat *cpu)
 
 void CImageInfoNI::paint_Stat_Info_Box(int InfoB_x, int InfoB_y, int InfoB_w, int InfoB_h)
 {
-	frameBuffer->paintBoxRel(InfoB_x-10,InfoB_y-10,InfoB_w+20,InfoB_h+20, COL_INFOBAR_PLUS_0);
+	frameBuffer->paintBoxRel(InfoB_x - OFFSET_INNER_MID, InfoB_y - OFFSET_INNER_MID, InfoB_w + 2*OFFSET_INNER_MID, InfoB_h + 2*OFFSET_INNER_MID, COL_INFOBAR_PLUS_0);
 	g_Font[font_info]->RenderString(InfoB_x, InfoB_y, InfoB_w, "CPU-Load", COL_INFOBAR_TEXT);
 
 	sigBox_x = InfoB_x;
@@ -610,10 +610,10 @@ void CImageInfoNI::get_DF_Info()
 void CImageInfoNI::paint_DF_Info(int posx)
 {
 	std::ostringstream buf;
-	int boxH = sheight-4;
+	int boxH = sheight - 2*OFFSET_INNER_MIN;
 	int boxW = swidth*8;
-	int boxX = posx+width/3-boxW;
-	int boxY = ypos-sheight+2;
+	int boxX = posx + width/3 - boxW;
+	int boxY = ypos - sheight + OFFSET_INNER_MIN;
 
 	get_DF_Info();
 
@@ -707,17 +707,17 @@ void CImageInfoNI::paint_MEM_Info(int posx, int posy)
 
 	posy += sheight/2;
 
-	int boxH = sheight-4;
+	int boxH = sheight - 2*OFFSET_INNER_MIN;
 	int boxW = swidth*8;
-	int boxX = posx+width/3-boxW;
-	int boxY = posy-sheight+2;
+	int boxX = posx + width/3 - boxW;
+	int boxY = posy - sheight + OFFSET_INNER_MIN ;
 
 	get_MEM_Info();
 	int mem_percent = get_MEM_Percent(mem_info.total, mem_info.used);
 
 	buf << "Memory (" << mem_percent << " Percent):";
 	// progressbar ist in same line - so we not can use max_text_width
-	frameBuffer->paintBoxRel(posx-10,posy-sheight,boxX-posx+10,sheight, COL_INFOBAR_PLUS_0);
+	frameBuffer->paintBoxRel(posx - OFFSET_INNER_MID, posy - sheight, boxX - posx + OFFSET_INNER_MID, sheight, COL_INFOBAR_PLUS_0);
 	g_Font[font_small]->RenderString(posx, posy, boxX-posx, buf.str().c_str(), COL_INFOBAR_TEXT);
 
 	CProgressBar pb(boxX, boxY, boxW, boxH);
@@ -731,7 +731,7 @@ void CImageInfoNI::paint_MEM_Info(int posx, int posy)
 	buf.str("");
 	buf.precision(2);
 	buf << fixed << "Total: " << (mem_info.total/1024.0) << " MB   Used: " << (mem_info.used/1024.0) << " MB";
-	frameBuffer->paintBoxRel(posx-10,posy-sheight,max_text_width+10,sheight, COL_INFOBAR_PLUS_0);
+	frameBuffer->paintBoxRel(posx - OFFSET_INNER_MID, posy - sheight, max_text_width + OFFSET_INNER_MID, sheight, COL_INFOBAR_PLUS_0);
 	g_Font[font_small]->RenderString(posx, posy, max_text_width, buf.str().c_str(), COL_INFOBAR_TEXT);
 
 	posy+= sheight;
@@ -743,7 +743,7 @@ void CImageInfoNI::paint_MEM_Info(int posx, int posy)
 		<< "Cached: " << (mem_info.cached < 1024 ? mem_info.cached : (mem_info.cached/1024.0))
 		<< (mem_info.cached < 1024?" KB":" MB)");
 
-	frameBuffer->paintBoxRel(posx-10,posy-sheight,max_text_width+10,sheight, COL_INFOBAR_PLUS_0);
+	frameBuffer->paintBoxRel(posx - OFFSET_INNER_MID, posy - sheight, max_text_width + OFFSET_INNER_MID, sheight, COL_INFOBAR_PLUS_0);
 	g_Font[font_small]->RenderString(posx, posy, max_text_width, buf.str().c_str(), COL_INFOBAR_TEXT);
 }
 
@@ -806,10 +806,10 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	posy += sheight/2;
 	posy += 3*sheight + sheight/2; //height meminfo above that
 
-	int boxH = sheight-4;
+	int boxH = sheight - 2*OFFSET_INNER_MIN;
 	int boxW = swidth*8;
-	int boxX = posx+width/3-boxW;
-	int boxY = posy-sheight+2;
+	int boxX = posx + width/3 - boxW;
+	int boxY = posy - sheight + OFFSET_INNER_MIN ;
 
 	/*
 	 * write testing:
@@ -872,7 +872,7 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 
 	sprintf(temp_string,"Interface eth0 (%d%%):",percent);
 	// progressbar ist in same line - so we not can use max_text_width
-	frameBuffer->paintBoxRel(posx-10,posy-sheight,boxX-posx+10,sheight, COL_INFOBAR_PLUS_0);
+	frameBuffer->paintBoxRel(posx - OFFSET_INNER_MID, posy - sheight, boxX - posx + OFFSET_INNER_MID, sheight, COL_INFOBAR_PLUS_0);
 	g_Font[font_small]->RenderString(posx, posy, boxX-posx, temp_string, COL_INFOBAR_TEXT);
 
 	CProgressBar pb(boxX, boxY, boxW, boxH);
@@ -885,13 +885,13 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	posy+= sheight;
 
 	sprintf(temp_string,"Receive: %llu bit/s   Transmit: %llu bit/s",(long long unsigned int)rbit_s,(long long unsigned int)wbit_s);
-	frameBuffer->paintBoxRel(posx-10,posy-sheight,max_text_width+10,sheight, COL_INFOBAR_PLUS_0);
+	frameBuffer->paintBoxRel(posx - OFFSET_INNER_MID, posy - sheight, max_text_width + OFFSET_INNER_MID, sheight, COL_INFOBAR_PLUS_0);
 	g_Font[font_small]->RenderString(posx, posy, max_text_width, temp_string, COL_INFOBAR_TEXT);
 
 	posy+= sheight;
 
 	sprintf(temp_string,"Maximal: %llu bit/s - %.2f MB/s (%d%%)",(long long unsigned int)net_best,net_best/(8.0*1024.0*1024.0),(int)((net_best*100)/max_bit));
-	frameBuffer->paintBoxRel(posx-10,posy-sheight,max_text_width+10,sheight, COL_INFOBAR_PLUS_0);
+	frameBuffer->paintBoxRel(posx - OFFSET_INNER_MID, posy - sheight, max_text_width + OFFSET_INNER_MID, sheight, COL_INFOBAR_PLUS_0);
 	g_Font[font_small]->RenderString(posx, posy, max_text_width, temp_string, COL_INFOBAR_TEXT);
 
 	last_tv.tv_sec	= tv.tv_sec;
