@@ -142,6 +142,8 @@ class CImageInfoNI : public CMenuTarget
 		void get_NET_Info(uint64_t *read_akt, long *read_packet, long *dummy, uint64_t *write_akt, long *write_packet);
 		void paint_NET_Info(int posx, int posy);
 
+		std::string getYWebVersion();
+
 	public:
 
 		CImageInfoNI();
