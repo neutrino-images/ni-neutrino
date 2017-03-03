@@ -115,6 +115,7 @@ void CImageInfoNI::Init(void)
 	y		= getScreenStartY( height );
 
 	systemfs	= 0;
+	revision	= cs_get_revision();
 	old_x		= 0;
 	old_y		= 0;
 	InfoThread	= 0;
@@ -369,7 +370,7 @@ void* CImageInfoNI::InfoProc(void *arg)
 void CImageInfoNI::StartInfoThread()
 {
 	if(!InfoThread) {
-		printf("CImageInfoNI::StartInfoThrea\n");
+		printf("CImageInfoNI::StartInfoThread\n");
 		pthread_create (&InfoThread, NULL, InfoProc, (void*) this) ;
 		pthread_detach(InfoThread);
 	}
@@ -847,7 +848,7 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	 */
 #ifdef BOXMODEL_CS_HD2
 	int max_bit	= 104857600;	/* Shiner, Kronos */
-	if (cs_get_revision() == 9)
+	if (revision == 9)
 		max_bit	= 1073741824;	/* Apollo */
 #else
 	int max_bit	= 104857600;

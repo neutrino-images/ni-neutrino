@@ -109,6 +109,7 @@ class CImageInfoNI : public CMenuTarget
 		void 		StopInfoThread();
 
 		int systemfs;
+		int revision;
 
 		int old_x;
 		int old_y;
