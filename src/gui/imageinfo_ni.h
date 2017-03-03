@@ -61,7 +61,7 @@ class CImageInfoNI : public CMenuTarget
 		int netMaxBit;
 
 		void paint();
-		void paint_pig(int x, int y, int w, int h);
+		void paint_pic(int x, int y, int w, int h);
 		void paintLine(int xpos, int font, std::string text);
 		void clearLine(int xpos, int font);
 
@@ -111,6 +111,7 @@ class CImageInfoNI : public CMenuTarget
 		void 		StopInfoThread();
 
 		int systemfs;
+		int revision;
 
 		int old_x;
 		int old_y;
