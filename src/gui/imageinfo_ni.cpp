@@ -138,8 +138,7 @@ void CImageInfoNI::Init(void)
 	}
 	offset		= offset + OFFSET_INNER_MID;
 
-	netIfName	= "eth0";
-	netMaxBit	= 104857600;
+	netIfName	= "eth0"; //FIXME; What about the other ports?
 }
 
 CImageInfoNI::~CImageInfoNI()
@@ -858,16 +857,10 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	 * 13107200	Byte
 	 * 104857600	Bit
 	 */
-#ifdef HAVE_GENERIC_HARDWARE
-	int max_bit	= netMaxBit;	/* PC */
-#else
-# ifdef BOXMODEL_CS_HD2
-	int max_bit	= 104857600;	/* Shiner, Kronos */
-	if (revision == 9)
-		max_bit	= 1073741824;	/* Apollo */
-# else ifdef
 	int max_bit	= 104857600;
-# endif
+#ifdef BOXMODEL_CS_HD2
+	if (revision == 9) /* Apollo */
+		max_bit	= 1073741824;
 #endif
 	int percent	= ((rbit_s+wbit_s)*100/max_bit);
 

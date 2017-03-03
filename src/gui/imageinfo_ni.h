@@ -57,8 +57,6 @@ class CImageInfoNI : public CMenuTarget
 		int font_head;
 		int font_info;
 		int font_small;
-		std::string netIfName;
-		int netMaxBit;
 
 		void paint();
 		void paint_pic(int x, int y, int w, int h);
@@ -104,6 +102,7 @@ class CImageInfoNI : public CMenuTarget
 		uint64_t read_old;
 		uint64_t write_old;
 		uint64_t net_best;
+		std::string netIfName;
 
 		pthread_t	InfoThread;
 		static void*	InfoProc(void *arg);
