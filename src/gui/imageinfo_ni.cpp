@@ -58,8 +58,6 @@
 
 #include <linux/version.h>
 
-extern cVideo * videoDecoder;
-
 extern CRemoteControl * g_RemoteControl; /* neutrino.cpp */
 
 #include <gui/pictureviewer.h>
@@ -84,13 +82,14 @@ CImageInfoNI::CImageInfoNI()
 static const neutrino_locale_t info_items[] =
 {
 	LOCALE_IMAGEINFO_IMAGE,
-	LOCALE_IMAGEINFO_DATE,
 	LOCALE_IMAGEINFO_VERSION,
+	/* Commit: */
+	LOCALE_IMAGEINFO_KERNEL,
+	/* Lua-API: */
+	/* yWeb: */
+	LOCALE_IMAGEINFO_DATE,
 	LOCALE_IMAGEINFO_CREATOR,
-	LOCALE_IMAGEINFO_HOMEPAGE,
-	LOCALE_IMAGEINFO_DOKUMENTATION,
-	LOCALE_IMAGEINFO_FORUM,
-	LOCALE_IMAGEINFO_LICENSE
+	LOCALE_IMAGEINFO_HOMEPAGE
 };
 int info_items_count = sizeof(info_items)/sizeof(info_items[0]);
 
@@ -139,7 +138,6 @@ void CImageInfoNI::Init(void)
 CImageInfoNI::~CImageInfoNI()
 {
 	StopInfoThread();
-	videoDecoder->Pig(-1, -1, -1, -1);
 }
 
 int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
@@ -239,7 +237,6 @@ int CImageInfoNI::exec(CMenuTarget* parent, const std::string &)
 void CImageInfoNI::hide()
 {
 	frameBuffer->paintBackground();
-	videoDecoder->Pig(-1, -1, -1, -1);
 }
 
 void CImageInfoNI::paint_pig(int px, int py, int w, int h)
@@ -313,7 +310,7 @@ void CImageInfoNI::paint()
 	struct utsname uts_info;
 
 	ypos += iheight;
-	paintLine(xpos, font_info, "Kernel:");
+	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_KERNEL));
 	paintLine(xpos+offset, font_info, uname(&uts_info) < 0 ? "n/a" : uts_info.release);
 
 #ifdef ENABLE_LUA
