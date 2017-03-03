@@ -322,6 +322,10 @@ void CImageInfoNI::paint()
 #endif
 
 	ypos += iheight;
+	paintLine(xpos, font_info, "yWeb:");
+	paintLine(xpos+offset, font_info, getYWebVersion());
+
+	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_DATE));
 	paintLine(xpos+offset, font_info, builddate );
 	
@@ -893,4 +897,11 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	last_tv.tv_usec	= tv.tv_usec;
 	read_old	= read_akt;
 	write_old	= write_akt;
+}
+
+string CImageInfoNI::getYWebVersion()
+{
+	CConfigFile yV('=', false);
+	yV.loadConfig(PRIVATE_HTTPDDIR "/Y_Version.txt");
+	return yV.getString("version", "n/a");
 }
