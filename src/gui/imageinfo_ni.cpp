@@ -49,6 +49,10 @@
 #include <sstream>
 #include <gui/color_custom.h>
 #include <gui/components/cc.h>
+#ifdef ENABLE_LUA
+#include <gui/lua/lua_api_version.h>
+#endif
+#include <system/helpers.h>
 #include <system/debug.h>
 #include <cs_api.h>
 
@@ -311,8 +315,13 @@ void CImageInfoNI::paint()
 	paintLine(xpos, font_info, "Kernel:");
 	paintLine(xpos+offset, font_info, uname(&uts_info) < 0 ? "n/a" : uts_info.release);
 
+#ifdef ENABLE_LUA
 	ypos += iheight;
+	paintLine(xpos, font_info, "Lua-API:");
+	paintLine(xpos+offset, font_info, to_string(LUA_API_VERSION_MAJOR) + "." + to_string(LUA_API_VERSION_MINOR));
+#endif
 
+	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_DATE));
 	paintLine(xpos+offset, font_info, builddate );
 	
