@@ -62,7 +62,13 @@ void COsdHelpers::changeOsdResolution(uint32_t mode, bool automode/*=false*/, bo
 		modeNew = OSDMODE_720;
 	idx = frameBuffer->getIndexOsdResolution(modeNew);
 	resetOsd = (modeNew != getOsdResolution()) ? true : false;
-
+#if 1
+	printf(">>>>>[%s:%d] osd mode: %s => %s, automode: %s, forceOsdReset: %s\n", __func__, __LINE__,
+		(g_settings.osd_resolution == OSDMODE_720)?"OSDMODE_720":"OSDMODE_1080",
+		(modeNew == OSDMODE_720)?"OSDMODE_720":"OSDMODE_1080",
+		(automode)?"true":"false",
+		(forceOsdReset)?"true":"false");
+#endif
 	if (forceOsdReset)
 		resetOsd = true;
 
@@ -111,24 +117,11 @@ void COsdHelpers::changeOsdResolution(uint32_t mode, bool automode/*=false*/, bo
 		}
 	}
 }
-
-void COsdHelpers::resetOsdResolution(int newSystem)
-{
-	int videoSystem = getVideoSystem();
-	if ((isVideoSystem1080(videoSystem)) && (!isVideoSystem1080(newSystem))) {
-		CFrameBuffer::getInstance()->setMode(1280, 720, 32);
-	}
-}
 #else
 void COsdHelpers::changeOsdResolution(uint32_t, bool, bool)
 {
 }
-
-void COsdHelpers::resetOsdResolution(int)
-{
-}
 #endif
-
 
 int COsdHelpers::isVideoSystem1080(int res)
 {
@@ -180,4 +173,45 @@ uint32_t COsdHelpers::getOsdResolution()
 			return frameBuffer->osd_resolutions[i].mode;
 	}
 	return 0;
+}
+
+#define DEBUGINFO_SETVIDEOSYSTEM
+
+int COsdHelpers::setVideoSystem(int newSystem, bool remember/* = true*/)
+{
+	if ((newSystem < 0) || (newSystem > VIDEO_STD_MAX))
+		return -1;
+
+	if (newSystem == getVideoSystem())
+		return 0;
+
+#ifdef DEBUGINFO_SETVIDEOSYSTEM
+	int fd = CFrameBuffer::getInstance()->getFileHandle();
+	fb_var_screeninfo var;
+	fb_fix_screeninfo fix;
+
+	ioctl(fd, FBIOGET_VSCREENINFO, &var);
+	ioctl(fd, FBIOGET_FSCREENINFO, &fix);
+	printf(">>>>>[%s - %s:%d] before SetVideoSystem:\n"
+				"                var.xres        : %4d, var.yres    : %4d, var.yres_virtual: %4d\n"
+				"                fix.line_length : %4d, fix.smem_len: %d Byte\n",
+				__path_file__, __func__, __LINE__,
+				var.xres, var.yres, var.yres_virtual,
+				fix.line_length, fix.smem_len);
+#endif
+
+	int ret = videoDecoder->SetVideoSystem(newSystem, remember);
+
+#ifdef DEBUGINFO_SETVIDEOSYSTEM
+	ioctl(fd, FBIOGET_VSCREENINFO, &var);
+	ioctl(fd, FBIOGET_FSCREENINFO, &fix);
+	printf(">>>>>[%s - %s:%d] after SetVideoSystem:\n"
+				"                var.xres        : %4d, var.yres    : %4d, var.yres_virtual: %4d\n"
+				"                fix.line_length : %4d, fix.smem_len: %d Byte\n",
+				__path_file__, __func__, __LINE__,
+				var.xres, var.yres, var.yres_virtual,
+				fix.line_length, fix.smem_len);
+#endif
+
+	return ret;
 }
