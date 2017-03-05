@@ -523,7 +523,7 @@ bool CZapit::ZapIt(const t_channel_id channel_id, bool forupdate, bool startplay
 
 	if (IS_WEBTV(newchannel->getChannelID()) && !newchannel->getUrl().empty()) {
 		dvbsub_stop();
-		if (current_channel->getChannelID() == newchannel->getChannelID() && !newchannel->getScriptName().empty()){
+		if (current_channel && current_channel->getChannelID() == newchannel->getChannelID() && !newchannel->getScriptName().empty()){
 			INFO("[zapit] stop rezap to channel %s id %" PRIx64 ")", newchannel->getName().c_str(), newchannel->getChannelID());
 			return true;
 		}
@@ -1723,7 +1723,7 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
         case CZapitMessages::CMD_SET_VIDEO_SYSTEM: {
 		CZapitMessages::commandInt msg;
 		CBasicServer::receive_data(connfd, &msg, sizeof(msg));
-		videoDecoder->SetVideoSystem(msg.val);
+		COsdHelpers::getInstance()->setVideoSystem(msg.val);
 		COsdHelpers::getInstance()->changeOsdResolution(0, true);
 		CNeutrinoApp::getInstance()->g_settings_video_Mode(msg.val);
                 break;
@@ -2483,7 +2483,7 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 	audioDecoder = cAudio::GetDecoder(0);
 
 	videoDecoder->SetDemux(videoDemux);
-	videoDecoder->SetVideoSystem(video_mode);
+	COsdHelpers::getInstance()->setVideoSystem(video_mode);
 	uint32_t osd_resolution = ZapStart_arg->osd_resolution;
 	COsdHelpers::getInstance()->changeOsdResolution(osd_resolution);
 	videoDecoder->Standby(false);
