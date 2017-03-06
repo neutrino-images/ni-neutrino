@@ -228,7 +228,7 @@ std::string CIMDB::googleIMDb(std::string searchStr)
 
 	std::string url = surl + "IMDb+" + utf82url(httpString);
 
-	if(httpTool.downloadFile(url, soutfile.c_str()))
+	if (httpTool.downloadFile(url, soutfile.c_str()))
 	{
 		ret = parseFile("http://www.imdb.com/title/", ">", soutfile.c_str());
 
@@ -284,7 +284,7 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 
 	std::string url = IMDburl + imdb_ID;
 
-	if(httpTool.downloadFile(url, IMDbAPI.c_str(), -1, /*connecttimeout*/2, /*timeout*/5))
+	if (httpTool.downloadFile(url, IMDbAPI.c_str()))
 	{
 		initMap(m);
 
@@ -299,7 +299,7 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 		//download Poster
 		if(m["Poster"] != "N/A")
 		{
-			if(httpTool.downloadFile(m["Poster"], posterfile.c_str()))
+			if (httpTool.downloadFile(m["Poster"], posterfile.c_str()))
 				return 2;
 			else {
 				if (access(posterfile.c_str(), F_OK) == 0)
