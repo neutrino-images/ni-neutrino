@@ -142,6 +142,8 @@ neutrino_LDADD += \
 endif
 
 if BOXTYPE_COOL
+neutrino_LDADD += \
+	$(top_builddir)/lib/hardware/coolstream/libhwcaps.a
 if ENABLE_LIBCOOLSTREAM_STATIC
 neutrino_LDADD += -lca-sc
 neutrino_LDADD += @LIBCOOLSTREAM_STATIC_DIR@/libcoolstream-mt.a
