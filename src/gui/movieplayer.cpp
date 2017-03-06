@@ -1349,9 +1349,9 @@ void CMoviePlayerGui::PlayFileLoop(void)
 	bool first_start = true;
 	bool update_lcd = true;
 	int eof = 0;
+	int lastpos = 0;
 	int eof2 = 0;
 	int position_tmp = 0;
-	int lastpos = 0;
 	bool at_eof = !(playstate >= CMoviePlayerGui::PLAY);;
 	keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_NORMAL;
 
