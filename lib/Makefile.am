@@ -19,11 +19,6 @@ SUBDIRS += \
 endif
 
 if BOXTYPE_COOL
-if BOXMODEL_CS_HD2
 SUBDIRS += \
-	libcoolstream2
-else
-SUBDIRS += \
-	libcoolstream
-endif
+	hardware/coolstream
 endif

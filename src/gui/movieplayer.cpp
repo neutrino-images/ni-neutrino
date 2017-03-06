@@ -1391,12 +1391,12 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				}
 #endif
 				/* in case ffmpeg report incorrect values */
-				if((playstate == CMoviePlayerGui::PLAY) && (speed == 1)){
+				if(file_prozent > 96 && (playstate == CMoviePlayerGui::PLAY) && (speed == 1)){
 					if(position_tmp != position){
 						position_tmp = position ;
 						eof2 = 0;
 					}else{
-						if (++eof2 > 6) {
+						if (++eof2 > 12) {
 							at_eof = true;
 							break;
 						}
