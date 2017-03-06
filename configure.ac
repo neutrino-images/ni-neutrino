@@ -361,8 +361,6 @@ lib/connection/Makefile
 lib/hardware/coolstream/Makefile
 lib/jsoncpp/Makefile
 lib/libconfigfile/Makefile
-lib/libcoolstream/Makefile
-lib/libcoolstream2/Makefile
 lib/libdvbsub/Makefile
 lib/libeventserver/Makefile
 lib/libiw/Makefile
