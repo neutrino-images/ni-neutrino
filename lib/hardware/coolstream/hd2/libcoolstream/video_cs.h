@@ -256,7 +256,6 @@ public:
 	void GetVideoSystemFormatName(cs_vs_format_t* format, int system = -1);
 
 	/* set video_system */
-	int GetVideoSystem();
 	int SetVideoSystem(int video_system, bool remember = true);
 	int SetStreamType(VIDEO_FORMAT type);
 	void SetSyncMode(AVSYNC_TYPE mode);
