@@ -175,8 +175,24 @@ typedef struct cc_string_ext_txt_t
 	Font* font;
 } cc_string_ext_txt_struct_t;
 
-#define CC_WIDTH_MIN		16
-#define CC_HEIGHT_MIN		16
+
+//for 'button_label' type with string
+typedef struct button_label_cc
+{
+	const char *		button;
+	std::string 		text;
+	neutrino_locale_t 	locale;
+	neutrino_msg_t 		directKey;
+	neutrino_msg_t 		directKeyAlt;
+	int 			btn_result;
+	int 			btn_alias;
+	std::string 		bg_image;
+	std::string 		hint;
+	button_label_cc(): button(NULL), text(std::string()), locale(NONEXISTANT_LOCALE){}
+} button_label_cc_struct;
+
+#define CC_WIDTH_MIN		CFrameBuffer::getInstance()->scale2Res(16)
+#define CC_HEIGHT_MIN		CC_WIDTH_MIN
 
 #define CC_SHADOW_OFF 			0x0
 #define CC_SHADOW_RIGHT 		0x2

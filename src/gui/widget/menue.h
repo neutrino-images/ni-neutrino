@@ -494,7 +494,7 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 	private: 
 		mn_widget_id_t 		widget_index;
 		CMenuGlobal		*mglobal;
-		CComponentsDetailLine	*details_line;
+		CComponentsDetailsLine	*details_line;
 		CComponentsInfoBox	*info_box;
 		int			hint_height;
 		CComponentsHeader 	*header;
@@ -513,6 +513,7 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		std::string		iconfile;
 
 		int			min_width;
+		int			mwidth_save;
 		int			width;
 		int			height;
 		int			hheight; // header

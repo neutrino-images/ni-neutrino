@@ -615,6 +615,7 @@ void CMenuWidget::Init(const std::string &NameString, const std::string &Icon, c
 	selected = (widget_index == NO_WIDGET_ID ? preselected : mglobal->v_selected[widget_index]);
 
 	//dimension
+	mwidth_save = mwidth;
 	min_width = 0;
 	width = 0; /* is set in paint() */
 	if (mwidth > 100){
@@ -1113,6 +1114,13 @@ void CMenuWidget::checkHints()
 
 void CMenuWidget::calcSize()
 {
+	// recalc min_width
+	min_width = 0;
+	int mwidth = std::min(mwidth_save, 100);
+	min_width = frameBuffer->getScreenWidth(true) * mwidth / 100;
+	if (min_width > (int)frameBuffer->getScreenWidth())
+		min_width = frameBuffer->getScreenWidth();
+
 	width = min_width;
 
 	int wi, hi;
@@ -1121,35 +1129,35 @@ void CMenuWidget::calcSize()
 		if (items[i]->iconName_Info_right) {
 			frameBuffer->getIconSize(items[i]->iconName_Info_right, &wi, &hi);
 			if ((wi > 0) && (hi > 0))
-				wi += 10;
+				wi += OFFSET_INNER_MID;
 			else
 				wi = 0;
 		}
-		int tmpw = items[i]->getWidth() + 10 + 10 + wi; /* 10 pixels to the left and right of the text */
+		int tmpw = items[i]->getWidth() + 2*OFFSET_INNER_MID + wi; /* 10 pixels to the left and right of the text */
 		if (tmpw > width)
 			width = tmpw;
 	}
 	hint_height = 0;
 	if(g_settings.show_menu_hints && has_hints) {
-		hint_height = 60; //TODO: rework calculation of hint_height
+		hint_height = frameBuffer->scale2Res(60); //TODO: rework calculation of hint_height
 		int fheight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_HINT]->getHeight();
-		int h_tmp = 16 + 2*fheight;
+		int h_tmp = OFFSET_INNER_LARGE + 2*fheight;
 		/* assuming all hint icons has the same size ! */
 		int iw, ih;
 		frameBuffer->getIconSize(NEUTRINO_ICON_HINT_TVMODE, &iw, &ih);
-		h_tmp = std::max(h_tmp, ih+10);
+		h_tmp = std::max(h_tmp, ih+OFFSET_INNER_MID);
 		hint_height = std::max(h_tmp, hint_height);
 	}
 	/* set the max height to 9/10 of usable screen height
 	   debatable, if the callers need a possibility to set this */
 	height = (frameBuffer->getScreenHeight() - fbutton_height - hint_height) / 20 * 18; /* make sure its a multiple of 2 */
 
-	if(height > ((int)frameBuffer->getScreenHeight() - 10))
-		height = frameBuffer->getScreenHeight() - 10;
+	if(height > ((int)frameBuffer->getScreenHeight() - OFFSET_INNER_MID))
+		height = frameBuffer->getScreenHeight() - OFFSET_INNER_MID;
 
 	int neededWidth = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(getName());
-	if (neededWidth > width-48) {
-		width= neededWidth+ 49;
+	if (neededWidth > width - frameBuffer->scale2Res(48)) {
+		width = neededWidth + frameBuffer->scale2Res(48)+1;
 	}
 	hheight = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
 
@@ -1183,7 +1191,7 @@ void CMenuWidget::calcSize()
 				iconOffset = w;
 		}
 
-	iconOffset += 10;
+	iconOffset += OFFSET_INNER_MID;
 	width += iconOffset;
 
 	if (fbutton_count)
@@ -1200,13 +1208,13 @@ void CMenuWidget::calcSize()
 	if(total_pages > 1)
 		sb_width=SCROLLBAR_WIDTH;
 
-	full_width = /*ConnectLineBox_Width+*/width+sb_width+OFFSET_SHADOW;
+	full_width = /*DETAILSLINE_WIDTH+*/width+sb_width+OFFSET_SHADOW;
 	full_height = height+RADIUS_LARGE+OFFSET_SHADOW*2 /*+hint_height+OFFSET_INTER*/;
-	/* + ConnectLineBox_Width for the hintbox connection line
+	/* + DETAILSLINE_WIDTH for the hintbox connection line
 	 * + center_offset for symmetry
 	 * + 20 for setMenuPos calculates 10 pixels border left and right */
-	int center_offset = (g_settings.menu_pos == MENU_POS_CENTER) ? ConnectLineBox_Width : 0;
-	int max_possible = (int)frameBuffer->getScreenWidth() - ConnectLineBox_Width - center_offset - 20;
+	int center_offset = (g_settings.menu_pos == MENU_POS_CENTER) ? DETAILSLINE_WIDTH : 0;
+	int max_possible = (int)frameBuffer->getScreenWidth() - DETAILSLINE_WIDTH - center_offset - 20;
 	if (full_width > max_possible)
 	{
 		width = max_possible - sb_width - OFFSET_SHADOW;
@@ -1286,13 +1294,13 @@ void CMenuWidget::setMenuPos(const int& menu_width)
 		case MENU_POS_CENTER:
 			x = offx + scr_x + ((scr_w - menu_width ) >> 1 );
 			y = offy + scr_y + ((scr_h - real_h) >> 1 );
-			x += g_settings.show_menu_hints_line ? ConnectLineBox_Width : 0; //NI
+			x += g_settings.show_menu_hints_line ? DETAILSLINE_WIDTH : 0; //NI
 			break;
 			
 		case MENU_POS_TOP_LEFT: 
 			y = offy + scr_y + 10;
 			x = offx + scr_x + 10;
-			x += g_settings.show_menu_hints_line ? ConnectLineBox_Width : 0; //NI
+			x += g_settings.show_menu_hints_line ? DETAILSLINE_WIDTH : 0; //NI
 			break;
 			
 		case MENU_POS_TOP_RIGHT: 
@@ -1303,7 +1311,7 @@ void CMenuWidget::setMenuPos(const int& menu_width)
 		case MENU_POS_BOTTOM_LEFT: 
 			y = /*offy +*/ scr_y + scr_h - real_h - 10;
 			x = offx + scr_x + 10;
-			x += g_settings.show_menu_hints_line ? ConnectLineBox_Width : 0; //NI
+			x += g_settings.show_menu_hints_line ? DETAILSLINE_WIDTH : 0; //NI
 			break;
 			
 		case MENU_POS_BOTTOM_RIGHT: 
@@ -1403,14 +1411,14 @@ void CMenuWidget::saveScreen()
 	saveScreen_x = x;
 	background = new fb_pixel_t [saveScreen_height * saveScreen_width];
 	if(background)
-		frameBuffer->SaveScreen(saveScreen_x /*-ConnectLineBox_Width*/, saveScreen_y, saveScreen_width, saveScreen_height, background);
+		frameBuffer->SaveScreen(saveScreen_x /*-DETAILSLINE_WIDTH*/, saveScreen_y, saveScreen_width, saveScreen_height, background);
 }
 
 void CMenuWidget::restoreScreen()
 {
 	if(background) {
 		if(savescreen)
-			frameBuffer->RestoreScreen(saveScreen_x /*-ConnectLineBox_Width*/, saveScreen_y, saveScreen_width, saveScreen_height, background);
+			frameBuffer->RestoreScreen(saveScreen_x /*-DETAILSLINE_WIDTH*/, saveScreen_y, saveScreen_width, saveScreen_height, background);
 	}
 }
 
@@ -1467,7 +1475,7 @@ void CMenuWidget::paintHint(int pos)
 	
 	int iheight = item->getHeight();
 	int rad = RADIUS_LARGE;
-	int xpos  = x - ConnectLineBox_Width;
+	int xpos  = x - DETAILSLINE_WIDTH;
 	int ypos2 = y + height + fbutton_height + rad + OFFSET_SHADOW + OFFSET_INTER;
 	int iwidth = width+sb_width;
 	
@@ -1480,7 +1488,7 @@ void CMenuWidget::paintHint(int pos)
 	
 	//init details line
 	if (details_line == NULL)
-		details_line = new CComponentsDetailLine();
+		details_line = new CComponentsDetailsLine();
 
 	details_line->setXPos(xpos);
 	details_line->setYPos(ypos1a);
