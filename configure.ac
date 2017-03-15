@@ -129,6 +129,7 @@ if test "$BOXTYPE" = "coolstream"; then
 fi
 
 if test "$BOXTYPE" = "coolstream" ||
+   test "$BOXTYPE" = "generic" ||
    test "$BOXTYPE" = "tripledragon" ||
    test "$BOXTYPE" = "spark"; then
 	AC_DEFINE(SCREENSHOT,1,[Define to 1 if the platform supports screenshots])
