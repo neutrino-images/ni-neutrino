@@ -143,14 +143,6 @@ endif
 
 if BOXTYPE_COOL
 neutrino_LDADD += \
-	$(top_builddir)/lib/libtuxtxt/libtuxtxt.a
-else
-neutrino_LDADD += \
-	$(top_builddir)/lib/libtuxtxt/libtuxtxt.a
-endif
-
-if BOXTYPE_COOL
-neutrino_LDADD += \
 	$(top_builddir)/lib/hardware/coolstream/libhwcaps.a
 if ENABLE_LIBCOOLSTREAM_STATIC
 neutrino_LDADD += -lca-sc
@@ -162,11 +154,9 @@ endif
 if ENABLE_TMSDK 
 else
 if BOXMODEL_CS_HD2
-neutrino_LDADD += -lca-ci -llnxtmvssUsr -llnxUKAL -llnxplatUsr -llnxtmasUsr -llnxdvbciUsr -llnxpvrUsr -llnxcssUsr -llnxnotifyqUsr -ltmpvrDataManager-cst -ltmpvrIndexStorage -llnxscsUsr \
-	$(top_builddir)/lib/libcoolstream2/libhwcaps.a
+neutrino_LDADD += -lca-ci -llnxtmvssUsr -llnxUKAL -llnxplatUsr -llnxtmasUsr -llnxdvbciUsr -llnxpvrUsr -llnxcssUsr -llnxnotifyqUsr -ltmpvrDataManager-cst -ltmpvrIndexStorage -llnxscsUsr
 else
-neutrino_LDADD += -lnxp \
-	$(top_builddir)/lib/libcoolstream/libhwcaps.a
+neutrino_LDADD += -lnxp
 endif
 endif
 
@@ -174,6 +164,8 @@ if BOXMODEL_CS_HD2
 neutrino_LDADD += -liconv
 endif
 
+#NI bin_PROGRAMS += drivertool
+#NI drivertool_SOURCES = drivertool.c
 bin_PROGRAMS += dt
 dt_SOURCES = dt.c
 endif
