@@ -99,6 +99,17 @@ AM_CONDITIONAL(USE_TREMOR, test "$TREMOR" = "yes")
 # TUXBOX_APPS_LIB_PKGCONFIG(OPENSSL,openssl)
 TUXBOX_APPS_LIB_PKGCONFIG(CURL,libcurl)
 
+## For the check you must use the corresponding libtool number as version number,
+## see freetype source code docs/VERSIONS.TXT
+PKG_CHECK_MODULES([FREETYPE], [freetype2 >= 16.2.10],
+	[echo "freetype2 >= 2.5.0 found"], [
+	## If freetype is not found:
+	## Activate this line if you want to search with freetype-config instead
+	[echo "freetype2 >= 2.5.0 not found, use alternative search method with freetype-config"]
+	## Activate this line if you want to abort
+#	AC_MSG_ERROR([freetype2 >= 2.5.0 not found])
+	])
+
 # fallback to curl-config (which is ugly for cross-compilation)
 if test -z "$CURL_LIBS" -a -z "$CURL_CFLAGS"; then
 	TUXBOX_APPS_LIB_CONFIG(CURL,curl-config)
@@ -303,6 +314,7 @@ else
 	HWLIB_CFLAGS="$HWLIB_CFLAGS "'-D__file__="\"$(subst $(srcdir)/,,$(abspath $<))\""'
 	HWLIB_CFLAGS="$HWLIB_CFLAGS "'-D__path_file__="\"$(subst $(top_srcdir)/,,$(abspath $<))\""'
 fi
+
 AC_SUBST(HWLIB_CFLAGS)
 AC_SUBST(FREETYPE_CFLAGS)
 AC_SUBST(FREETYPE_LIBS)
