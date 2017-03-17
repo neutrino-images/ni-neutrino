@@ -170,7 +170,7 @@ bool CScreenShot::GetData()
 	/* sort of hack. GXA used to transfer/convert live image to RGB,
 	 * so setup GXA back */
 	CFrameBuffer::getInstance()->setupGXA();
-	//CFrameBuffer::getInstance()->add_gxa_sync_marker();
+	CFrameBuffer::getInstance()->add_gxa_sync_marker();
 	CFrameBuffer::getInstance()->setActive(true);
 #endif
 	pthread_mutex_unlock(&getData_mutex);
