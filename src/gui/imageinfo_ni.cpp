@@ -39,8 +39,6 @@
 
 #include <sys/utsname.h>
 
-#include <daemonc/remotecontrol.h>
-
 #include <system/flashtool.h>
 #include <video.h>
 #include <unistd.h>
@@ -57,8 +55,6 @@
 #include <cs_api.h>
 
 #include <linux/version.h>
-
-extern CRemoteControl * g_RemoteControl; /* neutrino.cpp */
 
 #include <gui/pictureviewer.h>
 extern CPictureViewer * g_PicViewer;
