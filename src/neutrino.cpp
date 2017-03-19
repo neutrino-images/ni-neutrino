@@ -2290,7 +2290,6 @@ TIMER_START();
 
 	g_info.hw_caps  = get_hwcaps();
 	can_deepstandby = g_info.hw_caps->can_shutdown;
-	g_info.has_fan  = g_info.hw_caps->has_fan;
 
 	g_Locale        = new CLocaleManager;
 
