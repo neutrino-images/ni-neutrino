@@ -13,5 +13,3 @@ libtoolize --force
 autoconf --force
 autoheader  --force
 automake --add-missing --force-missing --foreign
-
-autoreconf -fi
