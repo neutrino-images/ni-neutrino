@@ -37,7 +37,7 @@
 #include <system/settings.h>
 
 #include <gui/imdb.h> //NI
-#include <gui/movieinfo.h>
+#include <driver/movieinfo.h>
 #include "widget/menue.h"
 
 #include <vector>

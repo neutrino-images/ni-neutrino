@@ -122,7 +122,7 @@ private:
 	void standbyMode( bool bOnOff, bool fromDeepStandby = false );
 	void getAnnounceEpgName(CTimerd::RecordingInfo * eventinfo, std::string &name);
 
-	//NI void ExitRun(const bool write_si = true, int retcode = 0);
+	//NI void ExitRun(int can_shutdown = 0);
 	void RealRun();
 	void InitZapper();
 	void InitTimerdClient();
@@ -163,7 +163,7 @@ public:
 
 	CUserMenu usermenu;
 
-	void ExitRun(const bool write_si = true, int retcode = 0); //NI cross-team settings
+	void ExitRun(int can_shutdown = 0); //NI cross-team settings
 	void saveSetup(const char * fname);
 	int loadSetup(const char * fname);
 	void setScreenSettings();
