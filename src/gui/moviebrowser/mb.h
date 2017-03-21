@@ -53,7 +53,7 @@
 
 #include <gui/widget/textbox.h>
 #include <gui/widget/listframe.h>
-#include <gui/movieinfo.h>
+#include <driver/movieinfo.h>
 #include <driver/file.h>
 #include <driver/fb_window.h>
 #include <system/ytparser.h>
@@ -163,7 +163,7 @@ class CMovieBrowser : public CMenuTarget
 		CBox m_cBoxFrameTitleRel;
 
 		CComponentsHeader *m_header;
-		CComponentsDetailLine *m_detailsLine;
+		CComponentsDetailsLine *m_detailsLine;
 		CComponentsChannelLogo *m_channelLogo;
 		CComponentsPicture *m_movieCover;
 

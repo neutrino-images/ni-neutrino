@@ -11,6 +11,8 @@
 #include <string.h>
 #include "hardware_caps.h"
 
+#include <zapit/femanager.h>
+
 static int initialized = 0;
 static hw_caps_t caps;
 
@@ -18,7 +20,8 @@ hw_caps_t *get_hwcaps(void) {
 	if (initialized)
 		return &caps;
 	int rev = cs_get_revision();
-	caps.has_fan = (rev < 8);
+	int chip = cs_get_chip_type();
+	caps.has_fan = (rev < 8 && CFEManager::getInstance()->getFE(0)->hasSat()); // only SAT-HD1 before rev 8 has fan
 	caps.has_HDMI = 1;
 	caps.has_SCART = (rev != 10);
 	caps.has_SCART_input = 0;
@@ -33,16 +36,23 @@ hw_caps_t *get_hwcaps(void) {
 	caps.can_ps_14_9 = 1;
 	caps.force_tuner_2G = 0;
 	strcpy(caps.boxvendor, "Coolstream");
-	/* list of boxnames from neutrinoyparser.cpp */
-	strcpy(caps.boxarch, "Nevis");
 	switch (rev) {
 	case 6:
 	case 7: // Black Stallion Edition
 		strcpy(caps.boxname, "HD1");
+		strcpy(caps.boxarch, "Nevis");
 		caps.force_tuner_2G = 1;
 		break;
 	case 8:
-		strcpy(caps.boxname, "Neo");
+		if (CFEManager::getInstance()->getFrontendCount() < 2)
+		{
+			strcpy(caps.boxname, "Neo");
+		}
+		else
+		{
+			strcpy(caps.boxname, "Neo Twin");
+		}
+		strcpy(caps.boxarch, "Nevis");
 		caps.force_tuner_2G = 1;
 		break;
 	case 9:
@@ -51,14 +61,31 @@ hw_caps_t *get_hwcaps(void) {
 		break;
 	case 10:
 		strcpy(caps.boxname, "Zee");
+		strcpy(caps.boxarch, "Nevis");
 		caps.force_tuner_2G = 1;
 		break;
 	case 11:
-		strcpy(caps.boxname, "Trinity");
-		strcpy(caps.boxarch, "Shiner");
+		if (chip == CS_CHIP_SHINER)
+		{
+			strcpy(caps.boxname, "Trinity");
+			strcpy(caps.boxarch, "Shiner");
+		}
+		else
+		{
+			strcpy(caps.boxname, "Trinity V2");
+			strcpy(caps.boxarch, "Kronos");
+		}
 		break;
 	case 12:
 		strcpy(caps.boxname, "Zee2");
+		strcpy(caps.boxarch, "Kronos");
+		break;
+	case 13:
+		strcpy(caps.boxname, "Link");
+		strcpy(caps.boxarch, "Kronos");
+		break;
+	case 14:
+		strcpy(caps.boxname, "Trinity Duo");
 		strcpy(caps.boxarch, "Kronos");
 		break;
 	default:
@@ -69,4 +96,3 @@ hw_caps_t *get_hwcaps(void) {
 	initialized = 1;
 	return &caps;
 }
-
