@@ -917,7 +917,11 @@ uint64_t CLCD4l::GetParseID()
 		if (m_ModeChannel > 1)
 			ID = g_RemoteControl->subChannels[g_RemoteControl->selected_subchannel].getChannelID();
 		else
-			ID = CZapit::getInstance()->GetCurrentChannelID();
+		{
+			CZapitChannel * channel = CZapit::getInstance()->GetCurrentChannel();
+			if (channel)
+				ID = channel->getEpgID();
+		}
 	}
 	//printf("[CLCD4l] %s: %llx\n", __FUNCTION__, ID);
 	return ID;
