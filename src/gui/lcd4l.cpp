@@ -722,8 +722,14 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	if (m_ModeChannel)
 	{
+		t_channel_id channel_id = parseID & 0xFFFFFFFFFFFFULL;
+
+		CZapitChannel * channel = CZapit::getInstance()->GetCurrentChannel();
+		if (channel)
+			channel_id = channel->getEpgID();
+
 		CSectionsdClient::CurrentNextInfo CurrentNext;
-		CEitManager::getInstance()->getCurrentNextServiceKey(parseID & 0xFFFFFFFFFFFFULL, CurrentNext);
+		CEitManager::getInstance()->getCurrentNextServiceKey(channel_id, CurrentNext);
 
 		if (CSectionsdClient::epgflags::has_current)
 		{
@@ -907,7 +913,7 @@ uint64_t CLCD4l::GetParseID()
 	m_Mode = (int) ID;
 	m_ModeChannel = 0;
 
-	if (ID == MODE_TV || ID == MODE_RADIO)
+	if (ID == MODE_TV || ID == MODE_WEBTV || ID == MODE_RADIO)
 	{
 		if (!(g_RemoteControl->subChannels.empty()) && (g_RemoteControl->selected_subchannel > 0))
 			m_ModeChannel = 2;
@@ -917,11 +923,7 @@ uint64_t CLCD4l::GetParseID()
 		if (m_ModeChannel > 1)
 			ID = g_RemoteControl->subChannels[g_RemoteControl->selected_subchannel].getChannelID();
 		else
-		{
-			CZapitChannel * channel = CZapit::getInstance()->GetCurrentChannel();
-			if (channel)
-				ID = channel->getEpgID();
-		}
+			ID = CZapit::getInstance()->GetCurrentChannelID();
 	}
 	//printf("[CLCD4l] %s: %llx\n", __FUNCTION__, ID);
 	return ID;

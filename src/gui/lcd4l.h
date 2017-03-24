@@ -62,6 +62,8 @@ class CLCD4l
 			MODE_PIC = 6,
 			MODE_TS = 7,
 			MODE_OFF = 8,
+			MODE_WEBTV = 9,
+			MODE_UPNP = 10,
 			MODE_MASK = 0xFF,
 			NOREZAP = 0x100
 		};
