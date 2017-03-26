@@ -615,6 +615,10 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 					Logo = ICONSDIR "/" NEUTRINO_ICON_MOVIEPLAYER ICONSEXT;
 			}
 		}
+		else if (parseID == MODE_UPNP)
+		{
+			Service = g_Locale->getText(LOCALE_UPNPBROWSER_HEAD);
+		}
 		else if (parseID == MODE_STANDBY)
 		{
 			Service = "STANDBY";
@@ -722,8 +726,14 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	if (m_ModeChannel)
 	{
+		t_channel_id channel_id = parseID & 0xFFFFFFFFFFFFULL;
+
+		CZapitChannel * channel = CZapit::getInstance()->GetCurrentChannel();
+		if (channel)
+			channel_id = channel->getEpgID();
+
 		CSectionsdClient::CurrentNextInfo CurrentNext;
-		CEitManager::getInstance()->getCurrentNextServiceKey(parseID & 0xFFFFFFFFFFFFULL, CurrentNext);
+		CEitManager::getInstance()->getCurrentNextServiceKey(channel_id, CurrentNext);
 
 		if (CSectionsdClient::epgflags::has_current)
 		{
@@ -792,10 +802,12 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 		snprintf(Start, sizeof(Start), "%02d:%02d", tm_struct->tm_hour, tm_struct->tm_min);
 	}
-	//else if (parseID == MODE_PIC)
-	//{
+#if 0
+	else if (parseID == MODE_PIC)
+	{
 		// TODO: Event = Bildname
-	//}
+	}
+#endif
 	else if (parseID == MODE_TS)
 	{
 		if (CMoviePlayerGui::getInstance().p_movie_info)
@@ -803,8 +815,8 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 			if (!CMoviePlayerGui::getInstance().p_movie_info->epgTitle.empty())
 				Event = CMoviePlayerGui::getInstance().p_movie_info->epgTitle;
 		}
-		else if (!CMoviePlayerGui::getInstance().pretty_name.empty())
-			Event = CMoviePlayerGui::getInstance().pretty_name;
+		else if (!CMoviePlayerGui::getInstance().GetFile().empty())
+			Event = CMoviePlayerGui::getInstance().GetFile();
 
 		if (Event.empty())
 			Event = "MOVIE";
@@ -829,7 +841,12 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 		snprintf(End, sizeof(End), "%02d:%02d", tm_struct->tm_hour, tm_struct->tm_min);
 	}
-
+#if 0
+	else if (parseID == MODE_UPNP)
+	{
+		// TODO?
+	}
+#endif
 	/* ----------------------------------------------------------------- */
 
 	Event += "\n"; // make sure we have at least two lines in event-file
@@ -907,7 +924,7 @@ uint64_t CLCD4l::GetParseID()
 	m_Mode = (int) ID;
 	m_ModeChannel = 0;
 
-	if (ID == MODE_TV || ID == MODE_RADIO)
+	if (ID == MODE_TV || ID == MODE_WEBTV || ID == MODE_RADIO)
 	{
 		if (!(g_RemoteControl->subChannels.empty()) && (g_RemoteControl->selected_subchannel > 0))
 			m_ModeChannel = 2;

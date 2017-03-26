@@ -102,7 +102,7 @@ class CMoviePlayerGui : public CMenuTarget
 	int            m_LastMode;	
 
 //NI	std::string	file_name;
-//NI	std::string	pretty_name;
+	std::string	pretty_name;
 	std::string	cookie_header;
 	std::string	info_1, info_2;
 	std::string    	currentaudioname;
@@ -118,6 +118,8 @@ class CMoviePlayerGui : public CMenuTarget
 	int startposition;
 	int position;
 	int duration;
+	int currentVideoSystem;
+	uint32_t currentOsdResolution;
 
 	unsigned short numpida;
 	unsigned short vpid;
@@ -269,7 +271,6 @@ class CMoviePlayerGui : public CMenuTarget
 	//NI
 	MI_MOVIE_INFO *	p_movie_info;
 	std::string	file_name;
-	std::string	pretty_name;
 	int getState()	{ return playstate; };
 };
 
