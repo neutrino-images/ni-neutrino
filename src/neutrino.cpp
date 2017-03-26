@@ -2248,7 +2248,7 @@ int CNeutrinoApp::run(int argc, char **argv)
 TIMER_START();
 	cs_api_init();
 	cs_register_messenger(CSSendMessage);
-#ifdef BOXMODEL_CS_HD2
+#if defined(HAVE_COOL_HARDWARE) && defined(ENABLE_CHANGE_OSD_RESOLUTION)
 	cs_new_auto_videosystem();
 #endif
 
@@ -3187,16 +3187,11 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		printf(">>>>>[CNeutrinoApp::%s:%d] Receive EVT_AUTO_SET_VIDEOSYSTEM message\n", __func__, __LINE__);
 		COsdHelpers *coh = COsdHelpers::getInstance();
 		int videoSystem = (int)data;
-		if (coh->getVideoSystem() == videoSystem)
-			return messages_return::handled;
-
-		if (!frameBufferInitialized) {
+		if (coh->getVideoSystem() != videoSystem) {
 			coh->setVideoSystem(videoSystem, false);
-			return messages_return::handled;
+			if (frameBufferInitialized)
+				coh->changeOsdResolution(0, true, false);
 		}
-
-		coh->setVideoSystem(videoSystem, false);
-		coh->changeOsdResolution(0, true, false);
 		return messages_return::handled;
 	}
 	if(msg == NeutrinoMessages::EVT_ZAP_COMPLETE) {
