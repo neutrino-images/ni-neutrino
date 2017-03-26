@@ -95,6 +95,8 @@ CMenuItem::CMenuItem(bool Active, neutrino_msg_t DirectKey, const char * const I
 	height = 0;
 	actObserv	= NULL;
 	parent_widget	= NULL;
+
+	lcd4l_text	= ""; //NI lcd4l-support
 }
 
 void CMenuItem::init(const int X, const int Y, const int DX, const int OFFX)
@@ -222,15 +224,19 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 			CVFD::getInstance()->showMenuText(0, str, -1, true);
 			//NI lcd4l-support
 			if(g_settings.lcd4l_support)
-				LCD4l->CreateFile("/tmp/lcd/menu", str, g_settings.lcd4l_convert);
+				lcd4l_text = str;
 		} 
 		else
 		{
 			CVFD::getInstance()->showMenuText(0, left_text, -1, true);
 			//NI lcd4l-support
-			if(g_settings.lcd4l_support)
-				LCD4l->CreateFile("/tmp/lcd/menu", left_text, g_settings.lcd4l_convert);
+			if (g_settings.lcd4l_support)
+				lcd4l_text = left_text;
 		}
+
+		//NI lcd4l-support
+		if (g_settings.lcd4l_support)
+			LCD4l->CreateFile("/tmp/lcd/menu", lcd4l_text, g_settings.lcd4l_convert);
 	}
 	
 	//left text
@@ -938,6 +944,9 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 			case (CRCInput::RC_ok):
 				{
 					if(hasItem() && selected > -1 && (int)items.size() > selected) {
+						//NI lcd4l-support
+						LCD4l->RemoveFile("/tmp/lcd/menu");
+
 						//exec this item...
 						CMenuItem* item = items[selected];
 						if (!item->isSelectable())
@@ -945,6 +954,11 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 						item->msg = msg;
 						fader.StopFade();
 						int rv = item->exec( this );
+
+						//NI lcd4l-support
+						if (g_settings.lcd4l_support)
+							LCD4l->CreateFile("/tmp/lcd/menu", item->lcd4l_text, g_settings.lcd4l_convert);
+
 						switch ( rv ) {
 							case menu_return::RETURN_EXIT_ALL:
 								retval = menu_return::RETURN_EXIT_ALL;

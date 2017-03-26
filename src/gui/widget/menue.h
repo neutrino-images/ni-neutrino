@@ -197,6 +197,9 @@ class CMenuItem : public  CComponentsSignals
 		void activateNotify(void);
 		virtual void disableByCondition(const menu_item_disable_cond_t& condition);
 		void setParentWidget(CMenuWidget* parent){parent_widget = parent;}
+
+		//NI lcd4l-support
+		std::string lcd4l_text;
 };
 
 class CMenuSeparator : public CMenuItem
