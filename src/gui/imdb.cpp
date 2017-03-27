@@ -259,17 +259,32 @@ void CIMDB::initMap( std::map<std::string, std::string>& my )
 	{
 		std::cout << "Failed to parse JSON\n";
 		std::cout << reader.getFormattedErrorMessages() << std::endl;
-	}
- 
-	for(Json::Value::iterator it = root.begin(); it !=root.end(); ++it)
-	{
-		Json::Value key = it.key();
-		Json::Value value = (*it);
 
-		std::string skey = key.asString();
-		std::string svalue = value.asString();
-		my[skey] = svalue;
+		my["Response"] = "False"; // we fake a false response
+		return;
 	}
+
+	/*
+	   we grab only what we need to avoid bad surprises
+	   when api is changed
+	*/
+
+	my["Actors"]	= root.get("Actors", "").asString();
+	my["Awards"]	= root.get("Awards", "").asString();
+	my["Country"]	= root.get("Country", "").asString();
+	my["Director"]	= root.get("Director", "").asString();
+	my["Genre"]	= root.get("Genre", "").asString();
+	my["imdbID"]	= root.get("imdbID", "").asString();
+	my["imdbRating"]= root.get("imdbRating", "").asString();
+	my["imdbVotes"]	= root.get("imdbVotes", "").asString();
+	my["Metascore"]	= root.get("Metascore", "N/A").asString();
+	my["Plot"]	= root.get("Plot", "").asString();
+	my["Poster"]	= root.get("Poster", "N/A").asString();
+	my["Released"]	= root.get("Released", "").asString();
+	my["Response"]	= root.get("Response", "False").asString();
+	my["Runtime"]	= root.get("Runtime", "").asString();
+	my["Title"]	= root.get("Title", "").asString();
+	my["Writer"]	= root.get("Writer", "").asString();
 }
 
 int CIMDB::getIMDb(const std::string& epgTitle)
@@ -315,6 +330,12 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 
 void CIMDB::getIMDbData(std::string& txt)
 {
+	if (m["imdbID"].empty() || m["Response"] != "True")
+	{
+		txt = "Keine Daten gefunden";
+		return;
+	}
+
 	//TODO: localize
 	txt += "Stimmen: "+m["imdbVotes"]+"\n";
 	txt += "Metascore: "+m["Metascore"]+(m["Metascore"] == "N/A" ? "\n" : "/100\n");
@@ -328,9 +349,6 @@ void CIMDB::getIMDbData(std::string& txt)
 	txt += "Darsteller: "+m["Actors"]+"\n";
 	txt += "\n";
 	txt += m["Plot"];
-
-	if(m["imdbID"].empty() || m["Response"]!="True")
-		txt = "Keine Daten gefunden";
 }
 
 std::string CIMDB::getFilename(CZapitChannel * channel, uint64_t id)
