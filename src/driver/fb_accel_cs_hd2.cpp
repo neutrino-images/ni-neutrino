@@ -169,6 +169,12 @@ void CFbAccelCSHD2::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint3
 	xc = (width > xRes) ? xRes : width;
 	yc = (height > yRes) ? yRes : height;
 
+	//NI
+	if (unscaled_w != 0 && (int)unscaled_w < xc)
+		xc = unscaled_w;
+	if (unscaled_h != 0 && (int)unscaled_h < yc)
+		yc = unscaled_h;
+
 	if(!(width%4)) {
 		fb_image image;
 		image.dx = xoff;

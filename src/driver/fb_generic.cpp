@@ -1673,14 +1673,11 @@ void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32
 	xc = (width > xRes) ? xRes : width;
 	yc = (height > yRes) ? yRes : height;
 
-//FIXME
-#if 0
 	//NI
-	if(unscaled_w != 0 && (int)unscaled_w < xc)
+	if (unscaled_w != 0 && (int)unscaled_w < xc)
 		xc = unscaled_w;
-	if(unscaled_h != 0 && (int)unscaled_h < yc)
+	if (unscaled_h != 0 && (int)unscaled_h < yc)
 		yc = unscaled_h;
-#endif
 
 	fb_pixel_t*  data = (fb_pixel_t *) fbbuff;
 

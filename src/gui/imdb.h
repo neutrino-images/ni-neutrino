@@ -53,6 +53,7 @@ class CIMDB
 
 		bool	gotPoster() { return (access(posterfile.c_str(), F_OK) == 0); };
 
+		//FIXME: what if m[element] doesn't exist?
 		virtual void getIMDbElement(std::string& element)  { element = m[element]; };
 
 	private:
