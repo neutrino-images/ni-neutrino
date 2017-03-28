@@ -306,6 +306,12 @@ void CFbAccelCSHD1::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_
 	uint32_t xc = (width > xRes) ? (uint32_t)xRes : width;
 	uint32_t yc = (height > yRes) ? (uint32_t)yRes : height;
 
+	//NI
+	if (unscaled_w != 0 && (int)unscaled_w < xc)
+		xc = unscaled_w;
+	if (unscaled_h != 0 && (int)unscaled_h < yc)
+		yc = unscaled_h;
+
 	void* uKva = cs_phys_addr((void*)boxBuf);
 	if(uKva != NULL) {
 		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
