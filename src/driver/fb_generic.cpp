@@ -820,6 +820,7 @@ bool CFrameBuffer::paintIcon(const std::string & filename, const int x, const in
 		return false;
 
 	int  yy = y;
+	bool freeicondata = false;
 	//printf("CFrameBuffer::paintIcon: load %s\n", filename.c_str());fflush(stdout);
 
 	/* we cache and check original name */
@@ -904,6 +905,8 @@ bool CFrameBuffer::paintIcon(const std::string & filename, const int x, const in
 			cache_size += dsize;
 			icon_cache.insert(std::pair <std::string, rawIcon> (filename, tmpIcon));
 			//printf("Cached %s, cache size %d\n", newname.c_str(), cache_size);
+		}else{
+			freeicondata = true;
 		}
 	} else {
 		data = it->second.data;
@@ -912,9 +915,13 @@ bool CFrameBuffer::paintIcon(const std::string & filename, const int x, const in
 		//printf("paintIcon: already cached %s %d x %d\n", newname.c_str(), width, height);
 	}
 _display:
-	if(!paint)
+	if(!paint){
+		if(freeicondata){
+			free(data);
+			data = NULL;
+		}
 		return true;
-
+	}
 	if (h != 0)
 		yy += (h - height) / 2;
 
@@ -1383,7 +1390,7 @@ void CFrameBuffer::useBackground(bool ub)
 	useBackgroundPaint = ub;
 	if(!useBackgroundPaint) {
 		delete[] background;
-		background=0;
+		background=NULL;
 	}
 }
 
@@ -1406,10 +1413,11 @@ void CFrameBuffer::saveBackgroundImage(void)
 
 void CFrameBuffer::restoreBackgroundImage(void)
 {
-	fb_pixel_t * tmp = background;
+	fb_pixel_t * tmp = NULL;
 
 	if (backupBackground != NULL)
 	{
+		tmp = background;
 		background = backupBackground;
 		backupBackground = NULL;
 	}
