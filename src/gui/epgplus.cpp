@@ -365,6 +365,7 @@ EpgPlus::ChannelEntry::~ChannelEntry()
 
 	if (this->detailsLine)
 	{
+		this->detailsLine->kill();
 		delete this->detailsLine;
 		this->detailsLine = NULL;
 	}
@@ -423,6 +424,14 @@ void EpgPlus::ChannelEntry::paint(bool isSelected, time_t _selectedTime)
 		(*It)->paint(isSelected && (*It)->isSelected(_selectedTime), toggleColor);
 
 		toggleColor = !toggleColor;
+	}
+
+	// kill detailsline
+	if (detailsLine)
+	{
+		detailsLine->kill();
+		delete detailsLine;
+		detailsLine = NULL;
 	}
 
 	// paint detailsline
