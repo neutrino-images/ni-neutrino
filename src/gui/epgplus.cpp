@@ -485,7 +485,7 @@ int EpgPlus::Footer::getUsedHeight()
 void EpgPlus::Footer::paintEventDetails(const std::string & description, const std::string & info1)
 {
 	int yPos = this->y;
-	int frame_thickness = 2;
+	int frame_thickness = 1; //NI
 
 	// clear the whole footer
 	this->frameBuffer->paintBoxRel(this->x, yPos, this->width, this->getUsedHeight(), COL_MENUCONTENTDARK_PLUS_0, RADIUS_LARGE);
