@@ -76,7 +76,7 @@
 #define COL_MENUCONTENTINACTIVE_PLUS_0  (COL_MENUCONTENTINACTIVE + 0)
 #define COL_MENUFOOT_PLUS_0             (COL_MENUFOOT + 0)
 #define COL_BACKGROUND_PLUS_0           (COL_BACKGROUND + 0)
-#define COL_PROGRESSBAR_PASSIVE_PLUS_0  (COL_PROGRESSBAR + 0)
+#define COL_PROGRESSBAR_PASSIVE_PLUS_0  (COL_PROGRESSBAR + 0) //NI
 #else
 #define COL_SHADOW_PLUS_0               (CFrameBuffer::getInstance()->realcolor[(COL_SHADOW + 0)])
 #define COL_INFOBAR_PLUS_0              (CFrameBuffer::getInstance()->realcolor[(COL_INFOBAR + 0)])
@@ -101,7 +101,7 @@
 #define COL_MENUCONTENTINACTIVE_PLUS_0  (CFrameBuffer::getInstance()->realcolor[(COL_MENUCONTENTINACTIVE + 0)])
 #define COL_MENUFOOT_PLUS_0             (CFrameBuffer::getInstance()->realcolor[(COL_MENUFOOT + 0)])
 #define COL_BACKGROUND_PLUS_0           (CFrameBuffer::getInstance()->realcolor[(COL_BACKGROUND + 0)])
-#define COL_PROGRESSBAR_PASSIVE_PLUS_0  (CFrameBuffer::getInstance()->realcolor[(COL_PROGRESSBAR + 0)])
+#define COL_PROGRESSBAR_PASSIVE_PLUS_0  (CFrameBuffer::getInstance()->realcolor[(COL_PROGRESSBAR + 0)]) //NI
 
 // text colors
 #define COL_COLORED_EVENTS_TEXT			(CFrameBuffer::getInstance()->realcolor[(COL_NEUTRINO_TEXT + 0)])
