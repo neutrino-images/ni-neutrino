@@ -32,6 +32,8 @@
 #include "cc_frm_clock.h"
 #include <driver/colorgradient.h>
 
+#define DEFAULT_LOGO_ALIGN CComponentsHeader::CC_LOGO_CENTER
+
 //! Sub class of CComponentsForm. Shows a header with prepared items.
 /*!
 CComponentsHeader provides prepared items like icon, caption and context button icons, mostly for usage in menues or simple windows
@@ -297,7 +299,7 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		virtual void paint(bool do_save_bg = CC_SAVE_SCREEN_YES);
 
 		///hides item, arg: no_restore see hideCCItem()
-		void hide(){disableClock(); CComponents::hide();}
+		void hide(){disableClock(); CComponentsForm::hide();}
 		///erase current screen without restore of background, it's similar to paintBackgroundBoxRel() from CFrameBuffer
 		void kill(const fb_pixel_t& bg_color = COL_BACKGROUND_PLUS_0, const int& corner_radius = -1, const int& fblayer_type = CC_FBDATA_TYPES, bool disable_clock = true);
 
@@ -317,10 +319,11 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		* 		CC_LOGO_RIGHT \n
 		* @param[in]  	dy
 		* 		@li optional logo height, default = -1 (auto)
+		* @note 	In auto mode, logo use full height minus inner offset but not larger than original logo height.
 		*/
 		void setChannelLogo(	const uint64_t& channelId,
 					const std::string& channelName,
-					cc_logo_alignment_t alignment = CC_LOGO_CENTER,
+					cc_logo_alignment_t alignment = DEFAULT_LOGO_ALIGN,
 					const int& dy = -1)
 					{cch_logo.Id = channelId; cch_logo.Name = channelName, cch_logo.Align = alignment, cch_logo.dy_max = dy; initCCItems();}
 		/**Methode to get channel logo object for direct access to its properties and methodes
