@@ -127,7 +127,6 @@ CChannelList::CChannelList(const char * const pName, bool phistoryMode, bool _vl
 	eventFont = SNeutrinoSettings::FONT_TYPE_CHANNELLIST_EVENT;
 	dline = NULL;
 	cc_minitv = NULL;
-	logo_off = 0;
 	minitv_is_active = false;
 	headerNew = true;
 	bouquet = NULL;
@@ -137,6 +136,7 @@ CChannelList::CChannelList(const char * const pName, bool phistoryMode, bool _vl
 	channelsChanged = false;
 
 	paint_events_index = -2;
+	CFrameBuffer::getInstance()->OnAfterSetPallette.connect(sigc::mem_fun(this, &CChannelList::ResetModules));
 }
 
 CChannelList::~CChannelList()
@@ -443,8 +443,9 @@ int CChannelList::doChannelMenu(void)
 				previous_channellist_additional = g_settings.channellist_additional;
 				COsdSetup osd_setup;
 				osd_setup.showContextChanlistMenu(this);
-				//FIXME check font/options changed ?
 				hide();
+				ResetModules();
+				//FIXME check font/options changed ?
 				calcSize();
 				ret = -1;
 			}
@@ -974,7 +975,11 @@ void CChannelList::hide()
 		header->kill();
 
 	frameBuffer->paintBackground(); //NI clear whole screen
-	clearItem2DetailsLine();
+
+	//remove details line
+	if (dline)
+		dline->kill();
+
 	CInfoClock::getInstance()->enableInfoClock(!CInfoClock::getInstance()->isBlocked());
 }
 
@@ -1658,12 +1663,6 @@ void CChannelList::clearItem2DetailsLine()
 
 void CChannelList::paintItem2DetailsLine (int pos)
 {
-	if (dline){
-		dline->kill(); //kill details line
-		delete dline;
-		dline = NULL;
-	}
-
 	if (!g_settings.channellist_show_infobox)
 		return;
 
@@ -1673,9 +1672,15 @@ void CChannelList::paintItem2DetailsLine (int pos)
 
 	// paint Line if detail info (and not valid list pos)
 	if (pos >= 0) {
-		if (dline == NULL)
+		if (!dline){
 			dline = new CComponentsDetailsLine(xpos, ypos1, ypos2, fheight/2, info_height-RADIUS_LARGE*2);
-		dline->paint(false);
+		}else{
+			dline->setPos(xpos, ypos1);
+			dline->setYPosDown(ypos2);
+			dline->setHMarkTop(fheight/2);
+			dline->setHMarkDown(info_height-RADIUS_LARGE*2);
+		}
+		dline->paint();
 	}
 }
 
@@ -2161,7 +2166,6 @@ void CChannelList::paintHead()
 				if (!header->getContextBtnObject()->empty())
 					header->removeContextButtons();
 			header->enableClock(true, "%H:%M", "%H %M", true);
-			logo_off = header->getClockObject()->getWidth() + OFFSET_INNER_MID;
 
 			header->getClockObject()->setCorner(RADIUS_LARGE, CORNER_TOP_RIGHT);
 		}else{
@@ -2171,8 +2175,6 @@ void CChannelList::paintHead()
 			}
 		}
 	}
-	else
-		logo_off = OFFSET_INNER_MID;
 
 	if(g_settings.channellist_show_channellogo){
 		//ensure to have clean background
