@@ -20,7 +20,9 @@ hw_caps_t *get_hwcaps(void) {
 	if (initialized)
 		return &caps;
 	int rev = cs_get_revision();
+#ifdef BOXMODEL_CS_HD2
 	int chip = cs_get_chip_type();
+#endif
 	caps.has_fan = (rev < 8 && CFEManager::getInstance()->getFE(0)->hasSat()); // only SAT-HD1 before rev 8 has fan
 	caps.has_HDMI = 1;
 	caps.has_SCART = (rev != 10);
@@ -55,6 +57,7 @@ hw_caps_t *get_hwcaps(void) {
 		strcpy(caps.boxarch, "Nevis");
 		caps.force_tuner_2G = 1;
 		break;
+#ifdef BOXMODEL_CS_HD2
 	case 9:
 		strcpy(caps.boxname, "Tank");
 		strcpy(caps.boxarch, "Apollo");
@@ -88,6 +91,7 @@ hw_caps_t *get_hwcaps(void) {
 		strcpy(caps.boxname, "Trinity Duo");
 		strcpy(caps.boxarch, "Kronos");
 		break;
+#endif
 	default:
 		strcpy(caps.boxname, "UNKNOWN_BOX");
 		strcpy(caps.boxarch, "Unknown");

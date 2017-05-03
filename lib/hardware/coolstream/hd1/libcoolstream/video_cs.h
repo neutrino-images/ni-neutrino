@@ -9,11 +9,9 @@
 #ifndef __VIDEO_CS_H_
 #define __VIDEO_CS_H_
 
-#include <stdint.h>
 #include <cs_vfd.h>
 #include <control.h>
 #include <dmx_cs.h>
-#include <linux/fb.h>
 
 #include "cs_types.h"
 
@@ -125,18 +123,6 @@ typedef enum
    VIDEO_CONTROL_MAX = VIDEO_CONTROL_SHARPNESS
 } VIDEO_CONTROL;
 
-typedef struct cs_vs_format_t
-{
-	char format[16];
-} cs_vs_format_struct_t;
-
-enum {
-	CS_FBCOPY_BB2FB  = 0,
-	CS_FBCOPY_FB2FB  = 1,
-	CS_FBCOPY_MEM2FB = 2,
-	CS_FBCOPY_FB2MEM = 3
-};
-
 class cVideo {
 private:
 	CS_VIDEO_PDATA		*privateData;
@@ -169,11 +155,6 @@ private:
 	vfd_icon		mode_icon;
 	unsigned int		unit;
 	cDemux			*demux;
-	int			current_video_system;
-	bool			isReadScreeninfo;
-	fb_var_screeninfo	varScreeninfo;
-	fb_fix_screeninfo	fixScreeninfo;
-
 	//
 	int SelectAutoFormat();
 	void ScalePic();
@@ -182,9 +163,6 @@ public:
 	cVideo(int mode, void * hChannel, void * hBuffer, unsigned int Unit = 0);
 	~cVideo(void);
 
-	/* Important!
-	   Call this function when osd resolution has been changed */
-	void   updateOsdScreenInfo();
 	void * GetDRM(void);
 	void * GetTVEnc();
 	void * GetTVEncSD();
@@ -229,11 +207,6 @@ public:
 	int64_t GetPTS(void);
 	int Flush(void);
 
-	/* get video system infos */
-	int GetVideoSystem();
-	/* when system = -1 then use current video system */
-	void GetVideoSystemFormatName(cs_vs_format_t* format, int system = -1);
-
 	/* set video_system */
 	int SetVideoSystem(int video_system, bool remember = true);
 	int SetStreamType(VIDEO_FORMAT type);
@@ -261,8 +234,6 @@ public:
 	int  StartVBI(unsigned short pid);
 	int  StopVBI(void);
 	bool GetScreenImage(unsigned char * &data, int &xres, int &yres, bool get_video = true, bool get_osd = false, bool scale_to_video = false);
-	int  fbCopy(uint32_t *mem_p, int width, int height, int dst_x, int dst_y, int src_x, int src_y, int mode);
-	int  fbFill(int sx, int sy, int width, int height, fb_pixel_t col, int mode=0);
 	void SetDemux(cDemux *Demux);
 };
 
