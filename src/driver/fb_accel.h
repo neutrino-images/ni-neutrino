@@ -86,8 +86,11 @@ class CFbAccelCSHDx
 	protected:
 		OpenThreads::Mutex mutex;
 
+/* Function temporarily disabled for HD1 */
+#if BOXMODEL_CS_HD2
 		int fbCopy(uint32_t *mem_p, int width, int height, int dst_x, int dst_y, int src_x, int src_y, int mode);
 		int fbFill(int sx, int sy, int width, int height, fb_pixel_t color, int mode=0);
+#endif
 
 	public:
 		CFbAccelCSHDx();
@@ -124,7 +127,8 @@ class CFbAccelCSHD1
 		inline void paintHLineRel(int x, int dx, int y, const fb_pixel_t col) { paintLine(x, y, x+dx, y, col); };
 		inline void paintVLineRel(int x, int y, int dy, const fb_pixel_t col) { paintLine(x, y, x, y+dy, col); };
 		void paintBoxRel(const int x, const int y, const int dx, const int dy, const fb_pixel_t col, int radius = 0, int type = CORNER_ALL);
-		void fbCopyArea(uint32_t width, uint32_t height, uint32_t dst_x, uint32_t dst_y, uint32_t src_x, uint32_t src_y);
+/* Function temporarily disabled for HD1 */
+//		void fbCopyArea(uint32_t width, uint32_t height, uint32_t dst_x, uint32_t dst_y, uint32_t src_x, uint32_t src_y);
 		void blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp = 0, uint32_t yp = 0, bool transp = false, uint32_t unscaled_w = 0, uint32_t unscaled_h = 0); //NI
 		void blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff);
 		void waitForIdle(const char *func = NULL);
