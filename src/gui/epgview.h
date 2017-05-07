@@ -39,7 +39,7 @@
 #include <gui/imdb.h> //NI
 #include <driver/movieinfo.h>
 #include "widget/menue.h"
-
+#include "widget/navibar.h"
 #include <vector>
 #include <string>
 
@@ -54,10 +54,9 @@ class CEpgData
 		CIMDB			*imdb; //NI
 
 		CComponentsHeader	*header;
-		CComponentsFrmChain 	*Bottombox;
-		CComponentsPictureScalable *lpic, *rpic;
-		CComponentsText 	*lText, *rText;
+		CNaviBar 		*Bottombox;
 		CProgressBar 		*pb;
+		Font			*font_title;
 		std::string 		epg_date;
 		std::string 		epg_start;
 		std::string 		epg_end;
