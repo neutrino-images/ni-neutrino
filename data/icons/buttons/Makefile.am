@@ -22,6 +22,8 @@ install_DATA = \
 	down.png \
 	dummy.png \
 	dummy_small.png \
+	epg.png \
+	epg_small.png \
 	gelb.png \
 	gruen.png \
 	help.png \
