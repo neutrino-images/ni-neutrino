@@ -36,8 +36,6 @@ CFbAccelCSHDx::~CFbAccelCSHDx()
 }
 */
 
-/* Function temporarily disabled for HD1 */
-#if BOXMODEL_CS_HD2
 int CFbAccelCSHDx::fbCopy(uint32_t *mem_p, int width, int height,
 			  int dst_x, int dst_y, int src_x, int src_y, int mode)
 {
@@ -60,10 +58,7 @@ int CFbAccelCSHDx::fbCopy(uint32_t *mem_p, int width, int height,
 	mutex.unlock();
 	return ret;
 }
-#endif
 
-/* Function temporarily disabled for HD1 */
-#if BOXMODEL_CS_HD2
 int CFbAccelCSHDx::fbFill(int sx, int sy, int width, int height, fb_pixel_t color, int mode/*=0*/)
 {
 	if (videoDecoder == NULL) {
@@ -79,7 +74,6 @@ int CFbAccelCSHDx::fbFill(int sx, int sy, int width, int height, fb_pixel_t colo
 	mutex.unlock();
 	return ret;
 }
-#endif
 
 #if 0
 /* TODO: Run this functions with hardware acceleration */

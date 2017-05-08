@@ -262,8 +262,6 @@ void CFbAccelCSHD1::paintBoxRel(const int x, const int y, const int dx, const in
 	checkFbArea(x, y, dx, dy, false);
 }
 
-/* Function temporarily disabled for HD1 */
-#if 0
 void CFbAccelCSHD1::fbCopyArea(uint32_t width, uint32_t height, uint32_t dst_x, uint32_t dst_y, uint32_t src_x, uint32_t src_y)
 {
 	if ((width == 0) || (height == 0))
@@ -282,7 +280,6 @@ void CFbAccelCSHD1::fbCopyArea(uint32_t width, uint32_t height, uint32_t dst_x, 
 	fbCopy(NULL, w_, h_, dst_x, dst_y, src_x, src_y_, mode);
 //	printf("\033[31m>>>>\033[0m%s hw blit w: %d, h: %d, dst_x: %d, dst_y: %d, src_x: %d, src_y: %d\n", __func_ext__, w_, h_, dst_x, dst_y, src_x, src_y);
 }
-#endif
 
 void CFbAccelCSHD1::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
 {
@@ -389,11 +386,8 @@ int CFbAccelCSHD1::setMode(unsigned int, unsigned int, unsigned int)
 	bpp  = screeninfo.bits_per_pixel;
 	printf(LOGTAG "%dx%dx%d line length %d. using %s graphics accelerator.\n", xRes, yRes, bpp, stride, _fix.id);
 
-/* Function temporarily disabled for HD1 */
-#if 0
 	if (videoDecoder != NULL)
 		videoDecoder->updateOsdScreenInfo();
-#endif
 
 	int needmem = stride * yRes * 2;
 	if (available >= needmem)
