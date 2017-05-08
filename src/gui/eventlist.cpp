@@ -985,7 +985,7 @@ void CEventList::showFunctionBar(t_channel_id channel_id)
 	CColorKeyHelper keyhelper; //user_menue.h
 	neutrino_msg_t dummy = CRCInput::RC_nokey;
 	const char * icon = NULL;
-	struct button_label buttons[6]; //NI
+	struct button_label buttons[7]; //NI
 	int btn_cnt = 0;
 
 	int tID = -1; //any value, not NULL
@@ -1042,6 +1042,11 @@ void CEventList::showFunctionBar(t_channel_id channel_id)
 		buttons[btn_cnt].locale = LOCALE_EPGMENU_EVENTINFO;
 		btn_cnt++;
 	}
+
+	//NI epg button for epg-plus
+	buttons[btn_cnt].button = NEUTRINO_ICON_BUTTON_EPG_SMALL;
+	buttons[btn_cnt].locale = LOCALE_EPGPLUS_HEAD;
+	btn_cnt++;
 
 	//NI timerlist button
 	buttons[btn_cnt].button = NEUTRINO_ICON_BUTTON_0;
