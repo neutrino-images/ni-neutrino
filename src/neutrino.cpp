@@ -512,14 +512,22 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.hdd_wakeup_msg = configfile.getInt32( "hdd_wakeup_msg", 1); //NI
 	g_settings.hdd_allow_set_recdir = configfile.getInt32( "hdd_allow_set_recdir", 1); //NI
 
+	/*
+	   hw_caps uses CFEManager and CFEManager needs g_settings.
+	   So g_settings cannot use hw_caps.
+
+	   For this reason we need this workaround.
+	*/
+	bool can_shutdown = (cs_get_revision() > 7);
+
 	g_settings.shutdown_real = false;
-	if (g_info.hw_caps->can_shutdown)
+	if (can_shutdown) //(g_info.hw_caps->can_shutdown)
 		g_settings.shutdown_real = configfile.getBool("shutdown_real"        , false );
 	g_settings.shutdown_real_rcdelay = configfile.getBool("shutdown_real_rcdelay", false );
 	g_settings.shutdown_count = configfile.getInt32("shutdown_count", 0);
 
 	g_settings.shutdown_min = 0;
-	if (g_info.hw_caps->can_shutdown || cs_get_revision() == 1)
+	if (can_shutdown || cs_get_revision() == 1) //(g_info.hw_caps->can_shutdown || cs_get_revision() == 1)
 		g_settings.shutdown_min = configfile.getInt32("shutdown_min", 000); //NI
 	g_settings.sleeptimer_min = configfile.getInt32("sleeptimer_min", 0);
 
@@ -2287,8 +2295,6 @@ TIMER_START();
 	cs_new_auto_videosystem();
 #endif
 
-	g_info.hw_caps  = get_hwcaps();
-
 	g_Locale        = new CLocaleManager;
 
 	int loadSettingsErg = loadSetup(NEUTRINO_SETTINGS_FILE);
@@ -2389,6 +2395,9 @@ TIMER_START();
 	g_info.hw_caps  = get_hwcaps();
 
 	CheckFastScan();
+
+	// init hw_caps *after* zapit start!
+	g_info.hw_caps = get_hwcaps();
 
 	//timer start
 	long timerd_signal = 0;
