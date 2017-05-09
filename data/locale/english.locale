@@ -1,5 +1,5 @@
 AUDIOSelectMenue.head Audio Selection
-EPGMenu.epgplus Eventlist overview
+EPGMenu.epgplus Eventlist overview (EPG Plus)
 EPGMenu.eventinfo Details current program
 EPGMenu.eventlist Eventlist current programm
 EPGMenu.head EPG - Program information
@@ -7,7 +7,7 @@ EPGMenu.streaminfo Technical information
 EPGPlus.actions Actions
 EPGPlus.bybouquet_mode by bouquet
 EPGPlus.bypage_mode by page
-EPGPlus.head Eventlist overview (EPG Plus)
+EPGPlus.head EPG Plus
 EPGPlus.next_bouquet Next bouquet
 EPGPlus.options Options
 EPGPlus.page_down Page down
