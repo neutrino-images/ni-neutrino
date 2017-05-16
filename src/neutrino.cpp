@@ -1143,6 +1143,12 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		configfile.deleteKey("screen_width");
 		configfile.deleteKey("screen_height");
 	}
+	//NI
+	if (g_settings.version_pseudo < "20170516150000")
+	{
+		if (g_settings.movieplayer_bisection_jump == 1)
+			g_settings.movieplayer_bisection_jump = 5;
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
