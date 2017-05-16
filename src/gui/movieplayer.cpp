@@ -1355,6 +1355,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 	//NI - bisectional jumps
 	int bisection_jump = 300;
 	int bisection_loop = -1;
+	int bisection_loop_max = 5;
 
 	while (playstate >= CMoviePlayerGui::PLAY)
 	{
@@ -1374,7 +1375,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 		//NI - bisectional jumps
 		if (bisection_loop > -1)
 			bisection_loop++;
-		if (bisection_loop > 10)
+		if (bisection_loop > bisection_loop_max)
 			bisection_loop = -1;
 
 		if ((playstate >= CMoviePlayerGui::PLAY) && (timeshift != TSHIFT_MODE_OFF || (playstate != CMoviePlayerGui::PAUSE))) {
@@ -1635,7 +1636,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 
 			if (g_settings.movieplayer_bisection_jump)
 			{
-				if ((lastmsg == CRCInput::RC_page_up || lastmsg == CRCInput::RC_page_down) && (bisection_loop > -1 && bisection_loop <= 10))
+				if ((lastmsg == CRCInput::RC_page_up || lastmsg == CRCInput::RC_page_down) && (bisection_loop > -1 && bisection_loop <= bisection_loop_max))
 					bisection_jump /= 2;
 				else
 					bisection_jump = 300;
