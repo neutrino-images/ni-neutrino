@@ -789,6 +789,7 @@ struct SNeutrinoSettings
 
 	//movieplayer
 	int   movieplayer_repeat_on;
+	int movieplayer_bisection_jump; //NI
 	std::string youtube_dev_id;
 	int youtube_enabled;
 	std::string tmdb_api_key;

@@ -1,25 +1,25 @@
 AUDIOSelectMenue.head Audio Selection
-EPGMenu.epgplus Eventlist overview
+EPGMenu.epgplus Eventlist overview (EPG Plus)
 EPGMenu.eventinfo Details current program
 EPGMenu.eventlist Eventlist current programm
-EPGMenu.head EPG - Program Information
-EPGMenu.streaminfo technical information
+EPGMenu.head EPG - Program information
+EPGMenu.streaminfo Technical information
 EPGPlus.actions Actions
 EPGPlus.bybouquet_mode by bouquet
 EPGPlus.bypage_mode by page
-EPGPlus.head Eventlist Overview (EPG Plus)
-EPGPlus.next_bouquet next bouquet
-EPGPlus.options options
-EPGPlus.page_down page down
-EPGPlus.page_up page up
-EPGPlus.prev_bouquet prev bouquet
+EPGPlus.head EPG Plus
+EPGPlus.next_bouquet Next bouquet
+EPGPlus.options Options
+EPGPlus.page_down Page down
+EPGPlus.page_up Page up
+EPGPlus.prev_bouquet Prev bouquet
 EPGPlus.record Record
 EPGPlus.refresh_epg Refresh
 EPGPlus.remind Schedule
-EPGPlus.scroll_mode Scroll Mode
-EPGPlus.stretch_mode Stretch Mode
-EPGPlus.swap_mode swap mode
-EPGPlus.view_mode view mode
+EPGPlus.scroll_mode Scroll mode
+EPGPlus.stretch_mode Stretch mode
+EPGPlus.swap_mode Swap mode
+EPGPlus.view_mode View mode
 GENRE.ALL off
 GENRE.ARTS Arts
 GENRE.ARTS.0 arts/culture
@@ -1352,6 +1352,7 @@ menu.hint_misc_zapit Initial TV/Radio channels
 menu.hint_movie Play movies
 menu.hint_moviebrowser_fonts Change moviebrowser (My recordings) font sizes
 menu.hint_moviebrowser_setup Set selection and display options.
+menu.hint_movieplayer_bisection_jump Use bisectional mode to jump forward/backward with page up/down
 menu.hint_movieplayer_plugin Choose a plugin that's executed with the one touch key in movieplayer mode
 menu.hint_net_broadcast Enter broadcast address\nif unsure, use IP address with last .255
 menu.hint_net_dhcp Use DHCP server to auto-configure
@@ -1999,6 +2000,7 @@ moviebrowser.yt_region Region
 moviebrowser.yt_related Related videos
 moviebrowser.yt_search Search keyword
 moviecut.cancel Cancel movie editing?
+movieplayer.bisection_jump Bisectional jumps
 movieplayer.bookmark Bookmarks
 movieplayer.bookmarkname Bookmarkname
 movieplayer.bookmarkname_hint1 Enter a name for your new bookmark

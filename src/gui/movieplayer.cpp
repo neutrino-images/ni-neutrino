@@ -1379,6 +1379,12 @@ void CMoviePlayerGui::PlayFileLoop(void)
 	int position_tmp = 0;
 	bool at_eof = !(playstate >= CMoviePlayerGui::PLAY);;
 	keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_NORMAL;
+	neutrino_msg_t lastmsg = 0; //NI
+
+	//NI - bisectional jumps
+	int bisection_jump = g_settings.movieplayer_bisection_jump * 60;
+	int bisection_loop = -1;
+	int bisection_loop_max = 5;
 
 	while (playstate >= CMoviePlayerGui::PLAY)
 	{
@@ -1394,6 +1400,12 @@ void CMoviePlayerGui::PlayFileLoop(void)
 		neutrino_msg_t msg;
 		neutrino_msg_data_t data;
 		g_RCInput->getMsg(&msg, &data, 10);	// 1 secs..
+
+		//NI - bisectional jumps
+		if (bisection_loop > -1)
+			bisection_loop++;
+		if (bisection_loop > bisection_loop_max)
+			bisection_loop = -1;
 
 		if ((playstate >= CMoviePlayerGui::PLAY) && (timeshift != TSHIFT_MODE_OFF || (playstate != CMoviePlayerGui::PAUSE))) {
 			if (playback->GetPosition(position, duration)) {
@@ -1642,10 +1654,30 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			SetPosition(duration/2, true);
 		} else if (msg == CRCInput::RC_8) {	// goto end
 			SetPosition(duration - 60 * 1000, true);
+//NI
+#if 0
 		} else if (msg == CRCInput::RC_page_up) {
 			SetPosition(10 * 1000);
 		} else if (msg == CRCInput::RC_page_down) {
 			SetPosition(-10 * 1000);
+#endif
+		//NI - bisectional jumps
+		} else if (msg == CRCInput::RC_page_up || msg == CRCInput::RC_page_down) {
+			int direction = (msg == CRCInput::RC_page_up) ? 1 : -1;
+			int jump = 10;
+
+			if (g_settings.movieplayer_bisection_jump)
+			{
+				if ((lastmsg == CRCInput::RC_page_up || lastmsg == CRCInput::RC_page_down) && (bisection_loop > -1 && bisection_loop <= bisection_loop_max))
+					bisection_jump /= 2;
+				else
+					bisection_jump = g_settings.movieplayer_bisection_jump * 60;
+
+				bisection_loop = 0;
+				jump = bisection_jump;
+			}
+
+			SetPosition(direction*jump * 1000);
 		} else if (msg == CRCInput::RC_0) {	// cancel bookmark jump
 			handleMovieBrowser(CRCInput::RC_0, position);
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_goto) {
@@ -1768,6 +1800,9 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				clearSubtitle();
 			}
 		}
+		//NI
+		if (msg < CRCInput::RC_MaxRC)
+			lastmsg = msg;
 	}
 	printf("CMoviePlayerGui::PlayFile: exit, isMovieBrowser %d p_movie_info %p\n", isMovieBrowser, p_movie_info);
 	playstate = CMoviePlayerGui::STOPPED;

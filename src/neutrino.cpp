@@ -513,8 +513,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.hdd_allow_set_recdir = configfile.getInt32( "hdd_allow_set_recdir", 1); //NI
 
 	/*
-	   hw_caps uses CFEManager and CFEManager needs g_settings.
-	   So g_settings cannot use hw_caps.
+	   hw_caps needs CFEManager and CFEManager needs g_settings.
+	   So loadSetup() cannot use hw_caps to init g_settings.
 
 	   For this reason we need this workaround.
 	*/
@@ -928,6 +928,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	//Movie-Player
 	g_settings.movieplayer_repeat_on = configfile.getInt32("movieplayer_repeat_on", CMoviePlayerGui::REPEAT_OFF);
+	g_settings.movieplayer_bisection_jump = configfile.getInt32("movieplayer_bisection_jump", 5); //NI
 	g_settings.youtube_dev_id = configfile.getString("youtube_dev_id","AIzaSyBLdZe7M3rpNMZqSj-3IEvjbb2hATWJIdM"); //NI
 	g_settings.youtube_enabled = configfile.getInt32("youtube_enabled", 1);
 	g_settings.youtube_enabled = check_youtube_dev_id();
@@ -1593,6 +1594,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 
 	//Movie-Player
 	configfile.setInt32( "movieplayer_repeat_on", g_settings.movieplayer_repeat_on );
+	configfile.setInt32( "movieplayer_bisection_jump", g_settings.movieplayer_bisection_jump ); //NI
 	configfile.setString( "youtube_dev_id", g_settings.youtube_dev_id );
 	configfile.setInt32( "youtube_enabled", g_settings.youtube_enabled );
 	configfile.setString( "tmdb_api_key", g_settings.tmdb_api_key );

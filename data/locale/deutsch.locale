@@ -1,5 +1,5 @@
 AUDIOSelectMenue.head Tonoptionen
-EPGMenu.epgplus Vorschauübersicht
+EPGMenu.epgplus Vorschau-Übersicht (EPG Plus)
 EPGMenu.eventinfo Info zur Sendung
 EPGMenu.eventlist Vorschau aktuelles Programm
 EPGMenu.head EPG - Programminformation
@@ -7,7 +7,7 @@ EPGMenu.streaminfo Technische Information
 EPGPlus.actions Aktionen
 EPGPlus.bybouquet_mode bouquetweise
 EPGPlus.bypage_mode seitenweise
-EPGPlus.head Vorschau Übersicht (EPG Plus)
+EPGPlus.head EPG Plus
 EPGPlus.next_bouquet Bouquet vor
 EPGPlus.options Optionen
 EPGPlus.page_down Seite zurück
@@ -19,7 +19,7 @@ EPGPlus.remind Vormerken
 EPGPlus.scroll_mode Scroll-Modus
 EPGPlus.stretch_mode Stretch-Modus
 EPGPlus.swap_mode Blättern
-EPGPlus.view_mode Modus
+EPGPlus.view_mode Ansicht
 GENRE.ALL aus
 GENRE.ARTS Kultur
 GENRE.ARTS.0 Kunst/Kultur
@@ -1351,7 +1351,8 @@ menu.hint_misc_onlineservices Konfigurieren und steuern von Online-Diensten wie 
 menu.hint_misc_zapit Verwaltung der Start-Kanäle für den TV/Radio-Modus
 menu.hint_movie Wiedergabe von Filmen
 menu.hint_moviebrowser_fonts Ändern Sie die Schriftgrößen im Moviebrowser (Meine Aufnahmen)
-menu.hint_moviebrowser_setup Legen Sie Auswahl- und Anzeigeoptionen des MovieBrowsers fest
+menu.hint_moviebrowser_setup Legen Sie Auswahl- und Anzeigeoptionen des Moviebrowsers fest
+menu.hint_movieplayer_bisection_jump Für das Vor- und Zurückspringen mit Seite hoch/runter wird ein bisektionaler Modus verwendet
 menu.hint_movieplayer_plugin Wählen Sie ein Plugin, das mit einer Schnellstart-Taste im Movieplayer-Modus gestartet wird
 menu.hint_net_broadcast Ändern Sie die Broadcast-Adresse.\nWenn Sie unsicher sind, verwenden Sie zuletzt .255
 menu.hint_net_dhcp Verwenden Sie einen DHCP-Server für die automatische Vergabe einer IP-Adresse im Netzwerk
@@ -1999,6 +2000,7 @@ moviebrowser.yt_region Region
 moviebrowser.yt_related Passende Videos
 moviebrowser.yt_search Suche nach Stichwort
 moviecut.cancel Bearbeiten des Filmes abbrechen?
+movieplayer.bisection_jump Bisektionale Sprünge
 movieplayer.bookmark Bookmarks
 movieplayer.bookmarkname Bookmark Name
 movieplayer.bookmarkname_hint1 Geben Sie den Namen für das neue Lesezeichen ein
