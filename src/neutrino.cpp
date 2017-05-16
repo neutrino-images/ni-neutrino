@@ -906,7 +906,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	//Movie-Player
 	g_settings.movieplayer_repeat_on = configfile.getInt32("movieplayer_repeat_on", CMoviePlayerGui::REPEAT_OFF);
-	g_settings.movieplayer_bisection_jump = configfile.getInt32("movieplayer_bisection_jump", 1); //NI
+	g_settings.movieplayer_bisection_jump = configfile.getInt32("movieplayer_bisection_jump", 5); //NI
 	g_settings.youtube_dev_id = configfile.getString("youtube_dev_id","AIzaSyBLdZe7M3rpNMZqSj-3IEvjbb2hATWJIdM"); //NI
 	g_settings.youtube_enabled = configfile.getInt32("youtube_enabled", 1);
 	g_settings.youtube_enabled = check_youtube_dev_id();

@@ -516,9 +516,10 @@ void CKeybindSetup::showKeyBindMovieplayerSetup(CMenuWidget *bindSettings_mplaye
 	bindSettings_mplayer->addItem(GenericMenuSeparatorLine); //NI
 
 	//NI - bisectional jumps
-	CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_MOVIEPLAYER_BISECTION_JUMP, &g_settings.movieplayer_bisection_jump, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_BISECTION_JUMP);
-	bindSettings_mplayer->addItem(mc);
+	CMenuOptionNumberChooser* nc = new CMenuOptionNumberChooser(LOCALE_MOVIEPLAYER_BISECTION_JUMP, &g_settings.movieplayer_bisection_jump, true, 0, 10, this, CRCInput::RC_nokey, NULL, 0, 0, LOCALE_OPTIONS_OFF);
+	nc->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE));
+	nc->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_BISECTION_JUMP);
+	bindSettings_mplayer->addItem(nc);
 }
 
 void CKeybindSetup::showKeyBindMoviebrowserSetup(CMenuWidget *bindSettings_mbrowser)
