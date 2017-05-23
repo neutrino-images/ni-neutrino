@@ -1134,6 +1134,7 @@ menu.hint_channellist_show_channellogo Show channel logos in channel list
 menu.hint_channellist_show_channelnumber Show channel number in channel list
 menu.hint_channellist_show_empty_favs Show or hide empty bouquets in favorites
 menu.hint_channellist_show_infobox Show or hide bottom infobox of channellist
+menu.hint_channellogos_setup Configure global channelogos options
 menu.hint_channels Open channel list
 menu.hint_ci Conditional access menu\nto setup your CI CAM or embeded Conax card
 menu.hint_ci_mode Allow switching to these channels while CI recording
@@ -1669,6 +1670,7 @@ messagebox.ok Ok
 messagebox.yes Yes
 miscsettings.channellist Channellist
 miscsettings.channellist_epgtext_align Programtext Align
+miscsettings.channellogos Channellogos
 miscsettings.colored_events Program colored
 miscsettings.colored_events_0 none
 miscsettings.colored_events_1 current
