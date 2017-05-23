@@ -123,7 +123,7 @@ size_t channellist_font_items = sizeof(channellist_font_sizes)/sizeof(channellis
 
 const SNeutrinoSettings::FONT_TYPES eventlist_font_sizes[] =
 {
-	SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE,
+	//NI SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMSMALL,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_DATETIME,
@@ -143,7 +143,7 @@ size_t infobar_font_items = sizeof(infobar_font_sizes)/sizeof(infobar_font_sizes
 
 const SNeutrinoSettings::FONT_TYPES epg_font_sizes[] =
 {
-	SNeutrinoSettings::FONT_TYPE_EPG_TITLE,
+	//NI SNeutrinoSettings::FONT_TYPE_EPG_TITLE,
 	SNeutrinoSettings::FONT_TYPE_EPG_INFO1,
 	SNeutrinoSettings::FONT_TYPE_EPG_INFO2,
 	SNeutrinoSettings::FONT_TYPE_EPG_DATE,
