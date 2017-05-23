@@ -462,7 +462,9 @@ bool CFlashTool::check_md5( const std::string & filename, const std::string & sm
 
 void CFlashTool::reboot()
 {
+	printf("CFlashTool::reboot: start\n"); //NI
 	::reboot(RB_AUTOBOOT);
+	printf("CFlashTool::reboot: done\n"); //NI
 	::exit(0);
 }
 

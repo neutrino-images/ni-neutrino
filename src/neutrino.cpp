@@ -1165,6 +1165,12 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		configfile.deleteKey("screen_width");
 		configfile.deleteKey("screen_height");
 	}
+	//NI
+	if (g_settings.version_pseudo < "20170516150000")
+	{
+		if (g_settings.movieplayer_bisection_jump == 1)
+			g_settings.movieplayer_bisection_jump = 5;
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
@@ -4145,9 +4151,11 @@ void CNeutrinoApp::saveEpg(bool cvfd_mode)
 		}
 		printf("[neutrino] Saving EPG to %s...\n", g_settings.epg_dir.c_str());
 
-		CVFD::getInstance()->Clear();
-		//NI CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
-		CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_EPG_SAVING));
+		if(!cvfd_mode){
+			CVFD::getInstance()->Clear();
+			//NI CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
+			CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_EPG_SAVING));
+		}
 
 		g_Sectionsd->writeSI2XML(g_settings.epg_dir.c_str());
 

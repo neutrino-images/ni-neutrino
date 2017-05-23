@@ -116,7 +116,7 @@
 #define EXTRASDOCUMENTROOT				HOSTED_HTTPDDIR"/extras"
 #define EXTRASDOCUMENTURL				"/hosted/extras"
 #define ZAPITXMLPATH					CONFIGDIR"/zapit"
-#define TUXBOX_LOGOS_URL				ICONSDIR"/logo"
+#define TUXBOX_LOGOS_URL				LOGODIR //NI
 
 // switch for Box differences
 #ifdef CONFIG_SYSTEM_TUXBOX
