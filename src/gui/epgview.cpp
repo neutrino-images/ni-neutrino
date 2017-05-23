@@ -146,7 +146,7 @@ void CEpgData::start()
 	ox = frameBuffer->getScreenWidthRel(bigFonts ? false /* big */ : true /* small */);
 	oy = frameBuffer->getScreenHeightRel(bigFonts ? false /* big */ : true /* small */);
 
-	font_title   = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_TITLE];
+	font_title   = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]; //NI
 	topheight    = font_title->getHeight();
 	topboxheight = topheight + 6;
 	botboxheight = g_Font[SNeutrinoSettings::FONT_TYPE_EPG_DATE]->getHeight() + 6;
