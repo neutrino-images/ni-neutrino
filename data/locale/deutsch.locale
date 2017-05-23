@@ -747,7 +747,7 @@ flashupdate.writeflashmtd einzelne Partition einspielen
 flashupdate.wrongbase Abweichende Release-Information\nFortfahren?
 fontmenu.channellist Kanalliste
 fontmenu.epg EPG (Programmführer)
-fontmenu.eventlist Event-Liste
+fontmenu.eventlist Eventliste
 fontmenu.head Schrift
 fontmenu.infobar Infobar
 fontmenu.menu Menü
@@ -772,7 +772,7 @@ fontsize.epg_info2 EPG Info 2
 fontsize.epg_title EPG Titel
 fontsize.epgplus_item EPG-Plus Listeneintrag
 fontsize.eventlist_datetime Datum/Zeit
-fontsize.eventlist_event Event Info
+fontsize.eventlist_event Eventinfo
 fontsize.eventlist_itemlarge Groß
 fontsize.eventlist_itemsmall Klein
 fontsize.eventlist_title Titel

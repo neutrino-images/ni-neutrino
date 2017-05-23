@@ -761,7 +761,7 @@ fontmenu.scaling_y Vertical (in %)
 fontmenu.scaling_y_hint2 Vertical (in %) min 50 / max 200
 fontmenu.sizes Font sizes
 fontsize.button_text Button text
-fontsize.channel_num_zap direct selection
+fontsize.channel_num_zap Direct selection
 fontsize.channellist Channellist
 fontsize.channellist_descr Description
 fontsize.channellist_event Event list
@@ -772,7 +772,7 @@ fontsize.epg_info2 EPG Info 2
 fontsize.epg_title EPG Title
 fontsize.epgplus_item EPG-Plus item
 fontsize.eventlist_datetime Date and time
-fontsize.eventlist_event Event Info
+fontsize.eventlist_event Event info
 fontsize.eventlist_itemlarge Large
 fontsize.eventlist_itemsmall Small
 fontsize.eventlist_title Title
