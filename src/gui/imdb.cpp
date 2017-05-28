@@ -46,6 +46,7 @@ CIMDB::CIMDB()
 	soutfile	= "/tmp/google.out";
 	IMDburl		= "http://www.omdbapi.com/?plot=full&r=json&i=";
 	IMDbAPI		= "/tmp/imdb.json";
+	omdbapiKey	= "&apikey=20711f9e";
 	posterfile	= "/tmp/imdb.jpg";
 	stars_bg	= ICONSDIR "/stars_bg.png";
 	stars		= ICONSDIR "/stars.png";
@@ -269,22 +270,30 @@ void CIMDB::initMap( std::map<std::string, std::string>& my )
 	   when api is changed
 	*/
 
-	my["Actors"]	= root.get("Actors", "").asString();
-	my["Awards"]	= root.get("Awards", "").asString();
-	my["Country"]	= root.get("Country", "").asString();
-	my["Director"]	= root.get("Director", "").asString();
-	my["Genre"]	= root.get("Genre", "").asString();
-	my["imdbID"]	= root.get("imdbID", "").asString();
-	my["imdbRating"]= root.get("imdbRating", "").asString();
-	my["imdbVotes"]	= root.get("imdbVotes", "").asString();
-	my["Metascore"]	= root.get("Metascore", "N/A").asString();
-	my["Plot"]	= root.get("Plot", "").asString();
-	my["Poster"]	= root.get("Poster", "N/A").asString();
-	my["Released"]	= root.get("Released", "").asString();
-	my["Response"]	= root.get("Response", "False").asString();
-	my["Runtime"]	= root.get("Runtime", "").asString();
-	my["Title"]	= root.get("Title", "").asString();
-	my["Writer"]	= root.get("Writer", "").asString();
+	my["Actors"]		= root.get("Actors", "").asString();
+	my["Awards"]		= root.get("Awards", "").asString();
+	my["BoxOffice"]		= root.get("BoxOffice", "").asString();
+	my["Country"]		= root.get("Country", "").asString();
+	my["Director"]		= root.get("Director", "").asString();
+	my["Genre"]		= root.get("Genre", "").asString();
+	my["imdbID"]		= root.get("imdbID", "").asString();
+	my["imdbRating"]	= root.get("imdbRating", "").asString();
+	my["imdbVotes"]		= root.get("imdbVotes", "").asString();
+	my["Metascore"]		= root.get("Metascore", "N/A").asString();
+	my["Plot"]		= root.get("Plot", "").asString();
+	my["Poster"]		= root.get("Poster", "N/A").asString();
+	my["Production"]	= root.get("Production", "").asString();
+	my["Released"]		= root.get("Released", "").asString();
+	my["Response"]		= root.get("Response", "False").asString();
+	my["Runtime"]		= root.get("Runtime", "").asString();
+	my["Title"]		= root.get("Title", "").asString();
+	my["Website"]		= root.get("Website", "").asString();
+	my["Writer"]		= root.get("Writer", "").asString();
+
+	// currently unused
+	//my["Year"]		= root.get("Year", "").asString();
+	//my["Rated"]		= root.get("Rated", "").asString();
+	//my["Type"]		= root.get("Type", "").asString();
 }
 
 int CIMDB::getIMDb(const std::string& epgTitle)
@@ -297,7 +306,7 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 	if(((imdb_ID.find("IMDb: ")) != std::string::npos))
 		return ret;
 
-	std::string url = IMDburl + imdb_ID;
+	std::string url = IMDburl + imdb_ID + omdbapiKey;
 
 	if (httpTool.downloadFile(url, IMDbAPI.c_str()))
 	{
@@ -345,6 +354,9 @@ void CIMDB::getIMDbData(std::string& txt)
 	txt += "Awards: "+m["Awards"]+"\n";
 	txt += "Regisseur: "+m["Director"]+"\n";
 	txt += "Drehbuch: "+m["Writer"]+"\n";
+	txt += "Produktionsfirma: "+m["Production"]+"\n";
+	txt += "Webseite: "+m["Website"]+"\n";
+	txt += "Einspielergebnis: "+m["BoxOffice"]+"\n";
 	txt += "\n";
 	txt += "Darsteller: "+m["Actors"]+"\n";
 	txt += "\n";

@@ -59,6 +59,7 @@ class CIMDB
 	private:
 		int acc;
 		std::string IMDburl;
+		std::string omdbapiKey;
 		std::string googleIMDb(std::string searchStr);
 		std::string utf82url(std::string s);
 		std::string parseString(std::string search1, std::string search2, std::string str);
