@@ -1643,8 +1643,7 @@ int CEpgData::showIMDb(bool splash)
 	}
 
 	//titel
-	std::string title = "Title";
-	imdb->getIMDbElement(title);
+	std::string title = imdb->getIMDbElement("Title");
 
 	if(((title.find("IMDb: URL (Seite) nicht gefunden")) != std::string::npos))
 		return 1;
@@ -1663,8 +1662,7 @@ int CEpgData::showIMDb(bool splash)
 	textCount = epgText.size();
 
 	//rating
-	imdb_rating = "imdbRating";
-	imdb->getIMDbElement(imdb_rating);
+	imdb_rating = imdb->getIMDbElement("imdbRating");
 
 	std::string value = imdb_rating;
 	if (imdb_rating == "N/A")
@@ -1674,13 +1672,6 @@ int CEpgData::showIMDb(bool splash)
 	}
 	else
 		imdb_rating += "/10";
-
-#if 0
-	std::string votes = "imdbVotes";
-	imdb->getIMDbElement(votes);
-	if (votes != "N/A")
-		imdb_rating += " (Stimmen: " + votes + ")";
-#endif
 
 	size_t pos = value.find_first_of(",.");
 	if (pos != std::string::npos)
