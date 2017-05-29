@@ -787,9 +787,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 			imdb->getIMDb(title);
 
 #if 0
-			element = "Title";
-			imdb->getIMDbElement(element);
-			if (element.compare("Title") != 0)
+			element = imdb->getIMDbElement("Title");
+			if (!element.empty())
 			{
 				printf("Title\n");
 				printf("* old: %s\n", m_movieSelectionHandler->epgTitle.c_str());
@@ -797,9 +796,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 				printf("* new: %s\n", m_movieSelectionHandler->epgTitle.c_str());
 			}
 
-			element = "Genre";
-			imdb->getIMDbElement(element);
-			if (element.compare("Genre") != 0)
+			element = imdb->getIMDbElement("Genre");
+			if (!element.empty())
 			{
 				printf("Genre\n");
 				printf("* old: %s\n", m_movieSelectionHandler->epgInfo1.c_str());
@@ -808,9 +806,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 			}
 #endif
 
-			element = "Year";
-			imdb->getIMDbElement(element);
-			if (element.compare("Year") != 0)
+			element = imdb->getIMDbElement("Year");
+			if (!element.empty())
 			{
 				printf("Year\n");
 				printf("* old: %d\n", m_movieSelectionHandler->productionDate);
@@ -818,9 +815,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 				printf("* new: %d\n", m_movieSelectionHandler->productionDate);
 			}
 
-			element = "Country";
-			imdb->getIMDbElement(element);
-			if (element.compare("Country") != 0)
+			element = imdb->getIMDbElement("Country");
+			if (!element.empty())
 			{
 				printf("Country\n");
 				printf("* old: %s\n", m_movieSelectionHandler->productionCountry.c_str());
@@ -828,9 +824,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 				printf("* new: %s\n", m_movieSelectionHandler->productionCountry.c_str());
 			}
 
-			element = "imdbRating";
-			imdb->getIMDbElement(element);
-			if (element.compare("imdbRating") != 0 && element.compare("N/A") != 0)
+			element = imdb->getIMDbElement("imdbRating");
+			if (!element.empty())
 			{
 				if ((pos = element.find_first_of(",.")) != std::string::npos)
 					element.replace(pos, 1, ""); // change 8,1 or 8.1 to 81

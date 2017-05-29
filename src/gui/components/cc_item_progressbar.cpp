@@ -153,7 +153,7 @@ class CProgressBarCache
 
 		static inline unsigned int make16color(__u32 rgb){return 0xFF000000 | rgb;};
 
-		void pbcPaintBoxRel(int x, int y, int dx, int dy, fb_pixel_t *pixbuf, fb_pixel_t col);
+		void pbcPaintBoxRel(int x, int y, int dx, int dy, fb_pixel_t *pixbuf, fb_pixel_t col) const;
 		void pbcApplyGradient(fb_pixel_t *pixbuf);
 		void pbcCreateBitmaps();
 
@@ -185,7 +185,7 @@ class CProgressBarCache
 		}
 		void pbcClear();
 	public:
-		void pbcPaint(int x, int y, int pbc_active_width, int pbc_passive_width);
+		void pbcPaint(int x, int y, int pbc_active_width, int pbc_passive_width) const;
 		static CProgressBarCache *pbcLookup(	int dy,
 							int dx,
 							int active_col,
@@ -230,7 +230,7 @@ CProgressBarCache *CProgressBarCache::pbcLookup(int dy, int dx, int active_col, 
 	return pbc;
 }
 
-void CProgressBarCache::pbcPaint(int x, int y, int pbc_active_width, int pbc_passive_width)
+void CProgressBarCache::pbcPaint(int x, int y, int pbc_active_width, int pbc_passive_width) const
 {
 	y += yoff;
 	static CFrameBuffer *frameBuffer = CFrameBuffer::getInstance();
@@ -258,7 +258,7 @@ void CProgressBarCache::pbcPaint(int x, int y, int pbc_active_width, int pbc_pas
 	frameBuffer->mark(x, y, x + pbc_width, y + pbc_height);
 }
 
-void CProgressBarCache::pbcPaintBoxRel(int x, int y, int dx, int dy, fb_pixel_t *pixbuf, fb_pixel_t col)
+void CProgressBarCache::pbcPaintBoxRel(int x, int y, int dx, int dy, fb_pixel_t *pixbuf, fb_pixel_t col) const
 {
 	if (x < 0) {
 		dx -= x;
@@ -509,23 +509,8 @@ void CProgressBar::paintProgress(bool do_save_bg)
 //NI graphic
 void CProgressBar::paintGraphic()
 {
-	std::ostringstream buf;
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << ".png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << ".png";
-	}
-	std::string pb_active_graphic(buf.str());
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << "_passive.png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << "_passive.png";
-	}
-	std::string pb_passive_graphic(buf.str());
+	std::string pb_active_graphic(frameBuffer->getIconPath(graphic_file));
+	std::string pb_passive_graphic(frameBuffer->getIconPath(graphic_file + "_passive"));
 
 	//printf("**** %04d::%04d: pb_last_width: %d, pb_active_width: %d, pb_max_width %d\n", pb_x, pb_y, pb_last_width, pb_active_width, pb_max_width);
 
@@ -548,24 +533,8 @@ void CProgressBar::paintGraphic()
 //NI starbar
 void CProgressBar::paintStarBar()
 {
-	std::ostringstream buf;
-	graphic_file = "stars";
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << ".png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << ".png";
-	}
-	std::string pb_active_graphic(buf.str());
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << "_bg.png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << "_bg.png";
-	}
-	std::string pb_passive_graphic(buf.str());
+	std::string pb_active_graphic(frameBuffer->getIconPath(NEUTRINO_ICON_STARS));
+	std::string pb_passive_graphic(frameBuffer->getIconPath(NEUTRINO_ICON_STARS_BG));
 
 	int stars_w = 0, stars_h = 0;
 	g_PicViewer->getSize(pb_passive_graphic.c_str(), &stars_w, &stars_h);

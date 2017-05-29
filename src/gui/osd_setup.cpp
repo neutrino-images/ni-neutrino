@@ -125,7 +125,7 @@ size_t channellist_font_items = sizeof(channellist_font_sizes)/sizeof(channellis
 
 const SNeutrinoSettings::FONT_TYPES eventlist_font_sizes[] =
 {
-	SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE,
+	//NI SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMSMALL,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_DATETIME,
@@ -145,7 +145,7 @@ size_t infobar_font_items = sizeof(infobar_font_sizes)/sizeof(infobar_font_sizes
 
 const SNeutrinoSettings::FONT_TYPES epg_font_sizes[] =
 {
-	SNeutrinoSettings::FONT_TYPE_EPG_TITLE,
+	//NI SNeutrinoSettings::FONT_TYPE_EPG_TITLE,
 	SNeutrinoSettings::FONT_TYPE_EPG_INFO1,
 	SNeutrinoSettings::FONT_TYPE_EPG_INFO2,
 	SNeutrinoSettings::FONT_TYPE_EPG_DATE,
@@ -225,7 +225,7 @@ font_sizes_struct neutrino_font[SNeutrinoSettings::FONT_TYPE_COUNT] =
 	{LOCALE_FONTSIZE_INFOBAR_INFO       ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
 	{LOCALE_FONTSIZE_INFOBAR_SMALL      ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
 	{LOCALE_FONTSIZE_INFOBAR_ECMINFO    ,  15, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
-	{LOCALE_FONTSIZE_FILEBROWSER_ITEM   ,  16, CNeutrinoFonts::FONT_STYLE_BOLD   , 1},
+	{LOCALE_FONTSIZE_FILEBROWSER_ITEM   ,  17, CNeutrinoFonts::FONT_STYLE_REGULAR, 1}, //NI
 	{LOCALE_FONTSIZE_MENU_HINT          ,  16, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
 	{LOCALE_FONTSIZE_MOVIEBROWSER_HEAD  ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 2}, //NI
 	{LOCALE_FONTSIZE_MOVIEBROWSER_LIST  ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI

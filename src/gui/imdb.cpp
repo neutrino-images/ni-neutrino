@@ -42,13 +42,13 @@
 
 CIMDB::CIMDB()
 {
-	surl		= "http://www.google.de/search?q=";
-	soutfile	= "/tmp/google.out";
-	IMDburl		= "http://www.omdbapi.com/?plot=full&r=json&i=";
-	IMDbAPI		= "/tmp/imdb.json";
+	search_url	= "http://www.google.de/search?q=";
+	search_outfile	= "/tmp/google.out";
+	search_error	= "IMDb: Google download failed";
+	imdb_url	= "http://www.omdbapi.com/?plot=full&r=json&i=";
+	imdb_outfile	= "/tmp/imdb.json";
+	omdb_apikey	= "&apikey=20711f9e";
 	posterfile	= "/tmp/imdb.jpg";
-	stars_bg	= ICONSDIR "/stars_bg.png";
-	stars		= ICONSDIR "/stars.png";
 }
 
 CIMDB::~CIMDB()
@@ -202,38 +202,39 @@ std::string CIMDB::parseFile(std::string search1, std::string search2, const cha
 	return(ret);
 }
 
-std::string CIMDB::googleIMDb(std::string searchStr)
+std::string CIMDB::googleIMDb(std::string s)
 {
 	CHTTPTool httpTool;
-	std::string ret		= "IMDb: google download fehlgeschlagen";
-	std::string httpString	= "imdb+";
-	char* searchStr_	= (char*) searchStr.c_str();
+	std::string ret = search_error;
+	std::string search_string("title+");
+	char* search_char = (char*) s.c_str();
 
 	m.clear();
-	unlink(soutfile.c_str());
-	unlink(IMDbAPI.c_str());
+	unlink(search_outfile.c_str());
+	unlink(imdb_outfile.c_str());
 	unlink(posterfile.c_str());
 
-	while (*searchStr_!=0)
+	while (*search_char != 0)
 	{
-		if ( (*searchStr_==' ') )
+		if (*search_char == ' ')
 		{
-			httpString += '+';
-		} else
-		{
-			httpString += *searchStr_;
+			search_string += '+';
 		}
-		searchStr_++;
+		else
+		{
+			search_string += *search_char;
+		}
+		search_char++;
 	}
 
-	std::string url = surl + "IMDb+" + utf82url(httpString);
+	std::string url = search_url + utf82url(search_string) + "%20site:www.imdb.com";
 
-	if (httpTool.downloadFile(url, soutfile.c_str()))
+	if (httpTool.downloadFile(url, search_outfile.c_str()))
 	{
-		ret = parseFile("http://www.imdb.com/title/", ">", soutfile.c_str());
+		ret = parseFile("http://www.imdb.com/title/", ">", search_outfile.c_str());
 
 		if(ret.empty())
-			ret = parseFile("http://www.imdb.de/title/", ">", soutfile.c_str());
+			ret = parseFile("http://www.imdb.de/title/", ">", search_outfile.c_str());
 
 		std::string delimiters = "/&;";
 		size_t next = ret.find_first_of(delimiters, 0);
@@ -249,7 +250,7 @@ void CIMDB::initMap( std::map<std::string, std::string>& my )
 	Json::Reader reader;
 
 	std::ostringstream ss;
-	std::ifstream fh(IMDbAPI.c_str(),std::ifstream::in);
+	std::ifstream fh(imdb_outfile.c_str(),std::ifstream::in);
 	ss << fh.rdbuf();
 	std::string filedata = ss.str();
 
@@ -269,22 +270,30 @@ void CIMDB::initMap( std::map<std::string, std::string>& my )
 	   when api is changed
 	*/
 
-	my["Actors"]	= root.get("Actors", "").asString();
-	my["Awards"]	= root.get("Awards", "").asString();
-	my["Country"]	= root.get("Country", "").asString();
-	my["Director"]	= root.get("Director", "").asString();
-	my["Genre"]	= root.get("Genre", "").asString();
-	my["imdbID"]	= root.get("imdbID", "").asString();
-	my["imdbRating"]= root.get("imdbRating", "").asString();
-	my["imdbVotes"]	= root.get("imdbVotes", "").asString();
-	my["Metascore"]	= root.get("Metascore", "N/A").asString();
-	my["Plot"]	= root.get("Plot", "").asString();
-	my["Poster"]	= root.get("Poster", "N/A").asString();
-	my["Released"]	= root.get("Released", "").asString();
-	my["Response"]	= root.get("Response", "False").asString();
-	my["Runtime"]	= root.get("Runtime", "").asString();
-	my["Title"]	= root.get("Title", "").asString();
-	my["Writer"]	= root.get("Writer", "").asString();
+	my["Actors"]		= root.get("Actors", "").asString();
+	my["Awards"]		= root.get("Awards", "").asString();
+	my["BoxOffice"]		= root.get("BoxOffice", "").asString();
+	my["Country"]		= root.get("Country", "").asString();
+	my["Director"]		= root.get("Director", "").asString();
+	my["Genre"]		= root.get("Genre", "").asString();
+	my["imdbID"]		= root.get("imdbID", "").asString();
+	my["imdbRating"]	= root.get("imdbRating", "N/A").asString();
+	my["imdbVotes"]		= root.get("imdbVotes", "").asString();
+	my["Metascore"]		= root.get("Metascore", "N/A").asString();
+	my["Plot"]		= root.get("Plot", "").asString();
+	my["Poster"]		= root.get("Poster", "N/A").asString();
+	my["Production"]	= root.get("Production", "").asString();
+	my["Released"]		= root.get("Released", "").asString();
+	my["Response"]		= root.get("Response", "False").asString();
+	my["Runtime"]		= root.get("Runtime", "").asString();
+	my["Title"]		= root.get("Title", "").asString();
+	my["Website"]		= root.get("Website", "").asString();
+	my["Writer"]		= root.get("Writer", "").asString();
+	my["Year"]		= root.get("Year", "").asString();
+
+	// currently unused
+	//my["Rated"]		= root.get("Rated", "").asString();
+	//my["Type"]		= root.get("Type", "").asString();
 }
 
 int CIMDB::getIMDb(const std::string& epgTitle)
@@ -292,14 +301,14 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 	CHTTPTool httpTool;
 	int ret = 0;
 
-	std::string imdb_ID = googleIMDb(epgTitle);
+	std::string imdb_id = googleIMDb(epgTitle);
 
-	if(((imdb_ID.find("IMDb: ")) != std::string::npos))
+	if(((imdb_id.find(search_error)) != std::string::npos))
 		return ret;
 
-	std::string url = IMDburl + imdb_ID;
+	std::string url = imdb_url + imdb_id + omdb_apikey;
 
-	if (httpTool.downloadFile(url, IMDbAPI.c_str()))
+	if (httpTool.downloadFile(url, imdb_outfile.c_str()))
 	{
 		initMap(m);
 
@@ -314,6 +323,16 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 		//download Poster
 		if(m["Poster"] != "N/A")
 		{
+			// if possible load bigger image
+			std::string origURL ("300");
+			std::string replURL ("600");
+
+			if (m["Poster"].compare(m["Poster"].size()-7,3,origURL) == 0){
+				//std::cout << "########## " << m["Poster"] << " contains " << origURL << '\n';
+				m["Poster"].replace(m["Poster"].size()-7,3,replURL);
+				//std::cout << "########## New string: " << m["Poster"] << '\n';
+			}
+
 			if (httpTool.downloadFile(m["Poster"], posterfile.c_str()))
 				return 2;
 			else {
@@ -328,27 +347,54 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 	return ret;
 }
 
+bool CIMDB::checkIMDbElement(std::string element)
+{
+	if (m[element].empty() || m[element].compare("N/A") == 0)
+		return false;
+	else
+		return true;
+}
+
 void CIMDB::getIMDbData(std::string& txt)
 {
 	if (m["imdbID"].empty() || m["Response"] != "True")
 	{
-		txt = "Keine Daten gefunden";
+		txt = g_Locale->getText(LOCALE_IMDB_DATA_FAILED);
 		return;
 	}
 
-	//TODO: localize
-	txt += "Stimmen: "+m["imdbVotes"]+"\n";
-	txt += "Metascore: "+m["Metascore"]+(m["Metascore"] == "N/A" ? "\n" : "/100\n");
-	txt += "Original-Titel: "+m["Title"]+"\n";
-	txt += "Datum: "+m["Released"]+" | "+m["Country"]+" | "+m["Runtime"]+"\n";
-	txt += "Genre: "+m["Genre"]+"\n";
-	txt += "Awards: "+m["Awards"]+"\n";
-	txt += "Regisseur: "+m["Director"]+"\n";
-	txt += "Drehbuch: "+m["Writer"]+"\n";
-	txt += "\n";
-	txt += "Darsteller: "+m["Actors"]+"\n";
-	txt += "\n";
-	txt += m["Plot"];
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_VOTES) + ": " + m["imdbVotes"] + "\n";
+	if (checkIMDbElement("Metascore"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_METASCORE) + ": " + m["Metascore"] + "/100\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_TITLE) + ": " + m["Title"] + "\n";
+	if (checkIMDbElement("Released"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_RELEASED) + ": " + m["Country"] + ", " + m["Released"] + "\n";
+	if (checkIMDbElement("Runtime"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_RUNTIME) + ": " + m["Runtime"] + "\n";
+	if (checkIMDbElement("Genre"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_GENRE) + ": " + m["Genre"] + "\n";
+	if (checkIMDbElement("Awards"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_AWARDS) + ": " + m["Awards"] + "\n";
+	if (checkIMDbElement("Director"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_DIRECTOR) + ": " + m["Director"] + "\n";
+	if (checkIMDbElement("Writer"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_WRITER) + ": " + m["Writer"] + "\n";
+	if (checkIMDbElement("Production"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_PRODUCTION) + ": " + m["Production"] + "\n";
+	if (checkIMDbElement("Website"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_WEBSITE) + ": " + m["Website"] + "\n";
+	if (checkIMDbElement("BoxOffice"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_BOXOFFICE) + ": " + m["BoxOffice"] + "\n";
+	if (checkIMDbElement("Actors"))
+	{
+		txt += "\n";
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_ACTORS) + ": " + m["Actors"] + "\n";
+	}
+	if (checkIMDbElement("Plot"))
+	{
+		txt += "\n";
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_PLOT) + ": " + m["Plot"];
+	}
 }
 
 std::string CIMDB::getFilename(CZapitChannel * channel, uint64_t id)
@@ -421,8 +467,8 @@ void CIMDB::StringReplace(std::string &str, const std::string search, const std:
 
 void CIMDB::cleanup()
 {
-	if (access(soutfile.c_str(), F_OK) == 0)
-		unlink(soutfile.c_str());
+	if (access(search_outfile.c_str(), F_OK) == 0)
+		unlink(search_outfile.c_str());
 	if (access(posterfile.c_str(), F_OK) == 0)
 		unlink(posterfile.c_str());
 }

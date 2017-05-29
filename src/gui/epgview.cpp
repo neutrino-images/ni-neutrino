@@ -321,7 +321,7 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 			stars *= 10; // recalculate stars value for starbar
 
 		int stars_w = 0, stars_h = 0;
-		g_PicViewer->getSize(imdb->stars_bg.c_str(), &stars_w, &stars_h);
+		frameBuffer->getIconSize(NEUTRINO_ICON_STARS_BG, &stars_w, &stars_h);
 
 		//create starbar item
 		CProgressBar *cc_starbar = new CProgressBar();
@@ -331,8 +331,8 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 
 		if (imdb_active)
 		{
-			int _x = sx+OFFSET_INNER_MID+cover_offset+logo_offset+stars_w+OFFSET_INNER_MID;
-			int _w = ox-OFFSET_INNER_MID-cover_offset-logo_offset-stars_w-OFFSET_INNER_MID;
+			int _x = sx+OFFSET_INNER_MID+cover_offset+logo_offset+cc_starbar->getWidth()+OFFSET_INNER_MID;
+			int _w = ox-OFFSET_INNER_MID-cover_offset-logo_offset-cc_starbar->getWidth()-OFFSET_INNER_MID;
 			g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->RenderString(_x, y+medlineheight, _w, imdb_rating, COL_MENUCONTENT_TEXT, 0, true);
 		}
 	}
@@ -1655,10 +1655,9 @@ int CEpgData::showIMDb(bool splash)
 	}
 
 	//titel
-	std::string title = "Title";
-	imdb->getIMDbElement(title);
+	std::string title = imdb->getIMDbElement("Title");
 
-	if(((title.find("IMDb: URL (Seite) nicht gefunden")) != std::string::npos))
+	if(((title.find(imdb->search_error)) != std::string::npos))
 		return 1;
 
 	// clear epg array
@@ -1675,24 +1674,16 @@ int CEpgData::showIMDb(bool splash)
 	textCount = epgText.size();
 
 	//rating
-	imdb_rating = "imdbRating";
-	imdb->getIMDbElement(imdb_rating);
+	imdb_rating = imdb->getIMDbElement("imdbRating");
 
 	std::string value = imdb_rating;
 	if (imdb_rating == "N/A")
 	{
 		value = "0";
-		imdb_rating = "Keine Bewertung";
+		imdb_rating = g_Locale->getText(LOCALE_IMDB_DATA_RATING_FAILED);
 	}
 	else
 		imdb_rating += "/10";
-
-#if 0
-	std::string votes = "imdbVotes";
-	imdb->getIMDbElement(votes);
-	if (votes != "N/A")
-		imdb_rating += " (Stimmen: " + votes + ")";
-#endif
 
 	size_t pos = value.find_first_of(",.");
 	if (pos != std::string::npos)

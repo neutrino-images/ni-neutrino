@@ -631,11 +631,11 @@ filebrowser.prevpage Seite zurück
 filebrowser.scan Durchsuche Verzeichnisse
 filebrowser.select Auswählen
 filebrowser.showrights Dateirechte anzeigen
-filebrowser.sort.date (Datum)
-filebrowser.sort.name (Dateiname)
-filebrowser.sort.namedirsfirst (Dateiname2)
-filebrowser.sort.size (Größe)
-filebrowser.sort.type (Typ)
+filebrowser.sort.date Datum
+filebrowser.sort.name Name
+filebrowser.sort.namedirsfirst Name, Verz. zuerst
+filebrowser.sort.size Größe
+filebrowser.sort.type Typ
 filesystem.is.utf8 Dateisystem
 filesystem.is.utf8.option.iso8859.1 ISO-8859-1
 filesystem.is.utf8.option.utf8 UTF-8
@@ -747,7 +747,7 @@ flashupdate.writeflashmtd einzelne Partition einspielen
 flashupdate.wrongbase Abweichende Release-Information\nFortfahren?
 fontmenu.channellist Kanalliste
 fontmenu.epg EPG (Programmführer)
-fontmenu.eventlist Event-Liste
+fontmenu.eventlist Eventliste
 fontmenu.head Schrift
 fontmenu.infobar Infobar
 fontmenu.menu Menü
@@ -772,7 +772,7 @@ fontsize.epg_info2 EPG Info 2
 fontsize.epg_title EPG Titel
 fontsize.epgplus_item EPG-Plus Listeneintrag
 fontsize.eventlist_datetime Datum/Zeit
-fontsize.eventlist_event Event Info
+fontsize.eventlist_event Eventinfo
 fontsize.eventlist_itemlarge Groß
 fontsize.eventlist_itemsmall Klein
 fontsize.eventlist_title Titel
@@ -868,6 +868,22 @@ imageinfo.kernel Kernel:
 imageinfo.license Lizenz
 imageinfo.vcs Git:
 imageinfo.version Version:
+imdb.data_actors Darsteller
+imdb.data_awards Awards
+imdb.data_boxoffice Einspielergebnis
+imdb.data_director Regisseur
+imdb.data_failed Keine Daten gefunden
+imdb.data_genre Genre
+imdb.data_metascore Metascore
+imdb.data_plot Handlung
+imdb.data_production Produktion
+imdb.data_rating_failed Keine Bewertung
+imdb.data_released Veröffentlicht
+imdb.data_runtime Spieldauer
+imdb.data_title Originaltitel
+imdb.data_votes Stimmen
+imdb.data_website Webseite
+imdb.data_writer Drehbuchautor
 imdb.info IMDb-Info
 imdb.info_save Bild speichern
 inetradio.name Internetradio

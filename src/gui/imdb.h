@@ -37,12 +37,11 @@ class CIMDB
 		~CIMDB();
 		static CIMDB* getInstance();
 
-		std::string surl;
-		std::string soutfile;
-		std::string IMDbAPI;
+		std::string search_url;
+		std::string search_outfile;
+		std::string search_error;
+		std::string imdb_outfile;
 		std::string posterfile;
-		std::string stars_bg;
-		std::string stars;
 
 		int getIMDb(const std::string& epgTitle);
 		std::string getFilename(CZapitChannel * channel, uint64_t id);
@@ -51,15 +50,17 @@ class CIMDB
 
 		void getIMDbData(std::string& txt);
 
-		bool	gotPoster() { return (access(posterfile.c_str(), F_OK) == 0); };
+		bool gotPoster() { return (access(posterfile.c_str(), F_OK) == 0); };
 
+		bool checkIMDbElement(std::string element);
 		//FIXME: what if m[element] doesn't exist?
-		virtual void getIMDbElement(std::string& element)  { element = m[element]; };
+		std::string getIMDbElement(std::string element)  { return m[element]; };
 
 	private:
 		int acc;
-		std::string IMDburl;
-		std::string googleIMDb(std::string searchStr);
+		std::string imdb_url;
+		std::string omdb_apikey;
+		std::string googleIMDb(std::string s);
 		std::string utf82url(std::string s);
 		std::string parseString(std::string search1, std::string search2, std::string str);
 		std::string parseFile(std::string search1, std::string search2, const char* file, std::string firstline="", int line_offset=0);

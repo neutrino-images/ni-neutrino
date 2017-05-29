@@ -2529,9 +2529,7 @@ void CInfoViewer::showAnalogClock(int posx,int posy,int dia)
 	hy = int((dia * 0.6 * sin(hAngleInRad)));
 
 	if (analogclock_buf == NULL) {
-		std::string clock_face = ICONSDIR_VAR "/clock_face.png";
-		if (access(clock_face.c_str(), F_OK) != 0)
-			clock_face = ICONSDIR "/clock_face.png";
+		std::string clock_face = frameBuffer->getIconPath("clock_face");
 		g_PicViewer->DisplayImage(clock_face, posx-dia, posy-dia, 2*dia, 2*dia);
 
 		analogclock_buf = new fb_pixel_t[2*dia * 2*dia];

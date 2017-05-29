@@ -631,11 +631,11 @@ filebrowser.prevpage Prev. Page
 filebrowser.scan Scaning folder
 filebrowser.select Select
 filebrowser.showrights Show file rights
-filebrowser.sort.date (date)
-filebrowser.sort.name (name)
-filebrowser.sort.namedirsfirst (name, dir first)
-filebrowser.sort.size (Size)
-filebrowser.sort.type (type)
+filebrowser.sort.date Date
+filebrowser.sort.name Name
+filebrowser.sort.namedirsfirst Name, dirs first
+filebrowser.sort.size Size
+filebrowser.sort.type Type
 filesystem.is.utf8 file system
 filesystem.is.utf8.option.iso8859.1 ISO-8859-1
 filesystem.is.utf8.option.utf8 UTF-8
@@ -761,7 +761,7 @@ fontmenu.scaling_y Vertical (in %)
 fontmenu.scaling_y_hint2 Vertical (in %) min 50 / max 200
 fontmenu.sizes Font sizes
 fontsize.button_text Button text
-fontsize.channel_num_zap direct selection
+fontsize.channel_num_zap Direct selection
 fontsize.channellist Channellist
 fontsize.channellist_descr Description
 fontsize.channellist_event Event list
@@ -772,7 +772,7 @@ fontsize.epg_info2 EPG Info 2
 fontsize.epg_title EPG Title
 fontsize.epgplus_item EPG-Plus item
 fontsize.eventlist_datetime Date and time
-fontsize.eventlist_event Event Info
+fontsize.eventlist_event Event info
 fontsize.eventlist_itemlarge Large
 fontsize.eventlist_itemsmall Small
 fontsize.eventlist_title Title
@@ -868,6 +868,22 @@ imageinfo.kernel Kernel:
 imageinfo.license License
 imageinfo.vcs Git:
 imageinfo.version Version:
+imdb.data_actors Actors
+imdb.data_awards Awards
+imdb.data_boxoffice Boxoffice
+imdb.data_director Director
+imdb.data_failed No data found
+imdb.data_genre Genre
+imdb.data_metascore Metascore
+imdb.data_plot Plot
+imdb.data_production Production
+imdb.data_rating_failed No rating
+imdb.data_released Released
+imdb.data_runtime Runtime
+imdb.data_title Original title
+imdb.data_votes Votes
+imdb.data_website Website
+imdb.data_writer Screenplay author
 imdb.info IMDb-Info
 imdb.info_save save Cover
 inetradio.name Internetradio
