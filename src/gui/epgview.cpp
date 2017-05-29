@@ -1645,7 +1645,7 @@ int CEpgData::showIMDb(bool splash)
 	//titel
 	std::string title = imdb->getIMDbElement("Title");
 
-	if(((title.find("IMDb: URL (Seite) nicht gefunden")) != std::string::npos))
+	if(((title.find("IMDb: Google Download fehlgeschlagen")) != std::string::npos))
 		return 1;
 
 	// clear epg array

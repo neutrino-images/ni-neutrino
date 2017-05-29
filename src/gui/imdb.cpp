@@ -206,7 +206,7 @@ std::string CIMDB::parseFile(std::string search1, std::string search2, const cha
 std::string CIMDB::googleIMDb(std::string searchStr)
 {
 	CHTTPTool httpTool;
-	std::string ret		= "IMDb: google download fehlgeschlagen";
+	std::string ret		= "IMDb: Google Download fehlgeschlagen";
 	std::string httpString	= "imdb+";
 	char* searchStr_	= (char*) searchStr.c_str();
 
@@ -227,7 +227,7 @@ std::string CIMDB::googleIMDb(std::string searchStr)
 		searchStr_++;
 	}
 
-	std::string url = surl + "IMDb+" + utf82url(httpString);
+	std::string url = surl + utf82url(httpString) + "%20site:www.imdb.com";
 
 	if (httpTool.downloadFile(url, soutfile.c_str()))
 	{
