@@ -136,7 +136,7 @@ class CProgressBar : public CComponentsItem
 					const int val, const int max_val){x=x_pos; y=y_pos; width=w; height=h; pb_value=val; pb_max_value=max_val;}
 
 		//NI graphic
-		void setGraphic(std::string graphic = "progressbar"){graphic_file = graphic;};
+		void setGraphic(std::string graphic) { graphic_file = graphic; }
 
 		///force update on next paint
 		void reset() { pb_last_width = -1; }

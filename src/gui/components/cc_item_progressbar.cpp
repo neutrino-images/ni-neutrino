@@ -508,23 +508,8 @@ void CProgressBar::paintProgress(bool do_save_bg)
 //NI graphic
 void CProgressBar::paintGraphic()
 {
-	std::ostringstream buf;
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << ".png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << ".png";
-	}
-	std::string pb_active_graphic(buf.str());
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << "_passive.png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << "_passive.png";
-	}
-	std::string pb_passive_graphic(buf.str());
+	std::string pb_active_graphic(frameBuffer->getIconPath(graphic_file));
+	std::string pb_passive_graphic(frameBuffer->getIconPath(graphic_file + "_passive"));
 
 	//printf("**** %04d::%04d: pb_last_width: %d, pb_active_width: %d, pb_max_width %d\n", pb_x, pb_y, pb_last_width, pb_active_width, pb_max_width);
 
