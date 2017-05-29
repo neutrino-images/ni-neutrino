@@ -875,6 +875,7 @@ imdb.data_director Regisseur
 imdb.data_failed Keine Daten gefunden
 imdb.data_genre Genre
 imdb.data_metascore Metascore
+imdb.data_plot Handlung
 imdb.data_production Produktion
 imdb.data_rating_failed Keine Bewertung
 imdb.data_released Veröffentlicht

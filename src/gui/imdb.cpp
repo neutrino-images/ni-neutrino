@@ -380,7 +380,7 @@ void CIMDB::getIMDbData(std::string& txt)
 	if (checkIMDbElement("Plot"))
 	{
 		txt += "\n";
-		txt += m["Plot"];
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_PLOT) + ": " + m["Plot"];
 	}
 }
 
