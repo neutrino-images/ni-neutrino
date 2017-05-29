@@ -93,8 +93,6 @@
 #define NEUTRINO_ICON_EPGINFO		"epginfo"
 #define NEUTRINO_ICON_ERROR		"error"
 #define NEUTRINO_ICON_FEATURES		"features"
-#define NEUTRINO_ICON_FILE		"file"
-#define NEUTRINO_ICON_FOLDER		"folder"
 #define NEUTRINO_ICON_GAMES		"games"
 #define NEUTRINO_ICON_INFO		"information"
 #define NEUTRINO_ICON_IMPORTANT		"important"
@@ -103,8 +101,6 @@
 #define NEUTRINO_ICON_LOCK_PASSIVE	"lock_passive"
 #define NEUTRINO_ICON_HIDDEN		"hidden"
 #define NEUTRINO_ICON_MOUNTED		"mounted"
-#define NEUTRINO_ICON_MOVIE		"movie"
-#define NEUTRINO_ICON_MP3		"mp3"
 #define NEUTRINO_ICON_MULTIMEDIA	"multimedia"
 #define NEUTRINO_ICON_MOVIEPLAYER	"icon_movieplayer"
 #define NEUTRINO_ICON_NKPLAY		"icon_nkplay"
@@ -188,7 +184,6 @@
 #define NEUTRINO_ICON_STARS		"stars" //NI
 #define NEUTRINO_ICON_TMDB		"tmdb"
 #define NEUTRINO_ICON_IMDB		"imdb"
-#define NEUTRINO_ICON_PICTURE		"picture"
 #define NEUTRINO_ICON_PICTUREVIEWER	"pictureviewer"
 
 #define DUMMY_ICON			"dummy"
@@ -268,6 +263,13 @@
 #define NEUTRINO_ICON_HINT_BACKUP	"hint_backup"
 #define NEUTRINO_ICON_HINT_RESTORE	"hint_restore"
 #define NEUTRINO_ICON_HINT_FACTORY	"hint_factory"
+
+/* filetypes */
+#define NEUTRINO_ICON_FILE		"file"
+#define NEUTRINO_ICON_FOLDER		"folder"
+#define NEUTRINO_ICON_MOVIE		"movie"
+#define NEUTRINO_ICON_MP3		"mp3"
+#define NEUTRINO_ICON_PICTURE		"picture"
 
 /* plugins */
 #define NEUTRINO_ICON_HINT_PLUGIN	"hint_plugin"
