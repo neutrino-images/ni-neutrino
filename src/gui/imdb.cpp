@@ -206,7 +206,7 @@ std::string CIMDB::googleIMDb(std::string s)
 {
 	CHTTPTool httpTool;
 	std::string ret = search_error;
-	std::string search_string("");
+	std::string search_string("title+");
 	char* search_char = (char*) s.c_str();
 
 	m.clear();
@@ -323,6 +323,16 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 		//download Poster
 		if(m["Poster"] != "N/A")
 		{
+			// if possible load bigger image
+			std::string origURL ("300");
+			std::string replURL ("600");
+
+			if (m["Poster"].compare(m["Poster"].size()-7,3,origURL) == 0){
+				//std::cout << "########## " << m["Poster"] << " contains " << origURL << '\n';
+				m["Poster"].replace(m["Poster"].size()-7,3,replURL);
+				//std::cout << "########## New string: " << m["Poster"] << '\n';
+			}
+
 			if (httpTool.downloadFile(m["Poster"], posterfile.c_str()))
 				return 2;
 			else {
