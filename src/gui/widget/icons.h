@@ -187,6 +187,7 @@
 #define NEUTRINO_ICON_STARS		"stars" //NI
 #define NEUTRINO_ICON_TMDB		"tmdb"
 #define NEUTRINO_ICON_IMDB		"imdb"
+#define NEUTRINO_ICON_PICTURE		"picture"
 #define NEUTRINO_ICON_PICTUREVIEWER	"pictureviewer"
 
 #define DUMMY_ICON			"dummy"
