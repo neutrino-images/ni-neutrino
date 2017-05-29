@@ -48,8 +48,6 @@ CIMDB::CIMDB()
 	IMDbAPI		= "/tmp/imdb.json";
 	omdbapiKey	= "&apikey=20711f9e";
 	posterfile	= "/tmp/imdb.jpg";
-	stars_bg	= ICONSDIR "/stars_bg.png";
-	stars		= ICONSDIR "/stars.png";
 }
 
 CIMDB::~CIMDB()
