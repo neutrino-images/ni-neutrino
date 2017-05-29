@@ -42,14 +42,13 @@
 
 CIMDB::CIMDB()
 {
-	surl		= "http://www.google.de/search?q=";
-	soutfile	= "/tmp/google.out";
-	IMDburl		= "http://www.omdbapi.com/?plot=full&r=json&i=";
-	IMDbAPI		= "/tmp/imdb.json";
-	omdbapiKey	= "&apikey=20711f9e";
+	search_url	= "http://www.google.de/search?q=";
+	search_outfile	= "/tmp/google.out";
+	search_error	= "IMDb: Google download failed";
+	imdb_url	= "http://www.omdbapi.com/?plot=full&r=json&i=";
+	imdb_outfile	= "/tmp/imdb.json";
+	omdb_apikey	= "&apikey=20711f9e";
 	posterfile	= "/tmp/imdb.jpg";
-	stars_bg	= ICONSDIR "/stars_bg.png";
-	stars		= ICONSDIR "/stars.png";
 }
 
 CIMDB::~CIMDB()
@@ -203,38 +202,39 @@ std::string CIMDB::parseFile(std::string search1, std::string search2, const cha
 	return(ret);
 }
 
-std::string CIMDB::googleIMDb(std::string searchStr)
+std::string CIMDB::googleIMDb(std::string s)
 {
 	CHTTPTool httpTool;
-	std::string ret		= "IMDb: Google Download fehlgeschlagen";
-	std::string httpString	= "imdb+";
-	char* searchStr_	= (char*) searchStr.c_str();
+	std::string ret = search_error;
+	std::string search_string("");
+	char* search_char = (char*) s.c_str();
 
 	m.clear();
-	unlink(soutfile.c_str());
-	unlink(IMDbAPI.c_str());
+	unlink(search_outfile.c_str());
+	unlink(imdb_outfile.c_str());
 	unlink(posterfile.c_str());
 
-	while (*searchStr_!=0)
+	while (*search_char != 0)
 	{
-		if ( (*searchStr_==' ') )
+		if (*search_char == ' ')
 		{
-			httpString += '+';
-		} else
-		{
-			httpString += *searchStr_;
+			search_string += '+';
 		}
-		searchStr_++;
+		else
+		{
+			search_string += *search_char;
+		}
+		search_char++;
 	}
 
-	std::string url = surl + utf82url(httpString) + "%20site:www.imdb.com";
+	std::string url = search_url + utf82url(search_string) + "%20site:www.imdb.com";
 
-	if (httpTool.downloadFile(url, soutfile.c_str()))
+	if (httpTool.downloadFile(url, search_outfile.c_str()))
 	{
-		ret = parseFile("http://www.imdb.com/title/", ">", soutfile.c_str());
+		ret = parseFile("http://www.imdb.com/title/", ">", search_outfile.c_str());
 
 		if(ret.empty())
-			ret = parseFile("http://www.imdb.de/title/", ">", soutfile.c_str());
+			ret = parseFile("http://www.imdb.de/title/", ">", search_outfile.c_str());
 
 		std::string delimiters = "/&;";
 		size_t next = ret.find_first_of(delimiters, 0);
@@ -250,7 +250,7 @@ void CIMDB::initMap( std::map<std::string, std::string>& my )
 	Json::Reader reader;
 
 	std::ostringstream ss;
-	std::ifstream fh(IMDbAPI.c_str(),std::ifstream::in);
+	std::ifstream fh(imdb_outfile.c_str(),std::ifstream::in);
 	ss << fh.rdbuf();
 	std::string filedata = ss.str();
 
@@ -301,14 +301,14 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 	CHTTPTool httpTool;
 	int ret = 0;
 
-	std::string imdb_ID = googleIMDb(epgTitle);
+	std::string imdb_id = googleIMDb(epgTitle);
 
-	if(((imdb_ID.find("IMDb: ")) != std::string::npos))
+	if(((imdb_id.find(search_error)) != std::string::npos))
 		return ret;
 
-	std::string url = IMDburl + imdb_ID + omdbapiKey;
+	std::string url = imdb_url + imdb_id + omdb_apikey;
 
-	if (httpTool.downloadFile(url, IMDbAPI.c_str()))
+	if (httpTool.downloadFile(url, imdb_outfile.c_str()))
 	{
 		initMap(m);
 
@@ -467,8 +467,8 @@ void CIMDB::StringReplace(std::string &str, const std::string search, const std:
 
 void CIMDB::cleanup()
 {
-	if (access(soutfile.c_str(), F_OK) == 0)
-		unlink(soutfile.c_str());
+	if (access(search_outfile.c_str(), F_OK) == 0)
+		unlink(search_outfile.c_str());
 	if (access(posterfile.c_str(), F_OK) == 0)
 		unlink(posterfile.c_str());
 }

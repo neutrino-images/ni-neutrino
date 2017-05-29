@@ -508,23 +508,8 @@ void CProgressBar::paintProgress(bool do_save_bg)
 //NI graphic
 void CProgressBar::paintGraphic()
 {
-	std::ostringstream buf;
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << ".png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << ".png";
-	}
-	std::string pb_active_graphic(buf.str());
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << "_passive.png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << "_passive.png";
-	}
-	std::string pb_passive_graphic(buf.str());
+	std::string pb_active_graphic(frameBuffer->getIconPath(graphic_file));
+	std::string pb_passive_graphic(frameBuffer->getIconPath(graphic_file + "_passive"));
 
 	//printf("**** %04d::%04d: pb_last_width: %d, pb_active_width: %d, pb_max_width %d\n", pb_x, pb_y, pb_last_width, pb_active_width, pb_max_width);
 
@@ -547,24 +532,8 @@ void CProgressBar::paintGraphic()
 //NI starbar
 void CProgressBar::paintStarBar()
 {
-	std::ostringstream buf;
-	graphic_file = "stars";
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << ".png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << ".png";
-	}
-	std::string pb_active_graphic(buf.str());
-
-	buf.str("");
-	buf << ICONSDIR_VAR << "/" << graphic_file << "_bg.png";
-	if (access(buf.str().c_str(), F_OK) != 0) {
-		buf.str("");
-		buf << ICONSDIR << "/" << graphic_file << "_bg.png";
-	}
-	std::string pb_passive_graphic(buf.str());
+	std::string pb_active_graphic(frameBuffer->getIconPath(NEUTRINO_ICON_STARS));
+	std::string pb_passive_graphic(frameBuffer->getIconPath(NEUTRINO_ICON_STARS_BG));
 
 	int stars_w = 0, stars_h = 0;
 	g_PicViewer->getSize(pb_passive_graphic.c_str(), &stars_w, &stars_h);
