@@ -354,20 +354,34 @@ void CIMDB::getIMDbData(std::string& txt)
 	}
 
 	txt += g_Locale->getString(LOCALE_IMDB_DATA_VOTES) + ": " + m["imdbVotes"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_METASCORE) + ": " + m["Metascore"] + (m["Metascore"] == "N/A" ? "\n" : "/100\n");
+	if (checkIMDbElement("Metascore"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_METASCORE) + ": " + m["Metascore"] + "/100\n";
 	txt += g_Locale->getString(LOCALE_IMDB_DATA_TITLE) + ": " + m["Title"] + "\n";
 	txt += g_Locale->getString(LOCALE_IMDB_DATA_RELEASED) + ": " + m["Released"] + " | " + m["Country"] + " | " + m["Runtime"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_GENRE) + ": " + m["Genre"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_AWARDS) + ": " + m["Awards"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_DIRECTOR) + ": " + m["Director"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_WRITER) + ": " + m["Writer"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_PRODUCTION) + ": " + m["Production"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_WEBSITE) + ": " + m["Website"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_BOXOFFICE) + ": " + m["BoxOffice"] + "\n";
-	txt += "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_ACTORS) + ": " + m["Actors"] + "\n";
-	txt += "\n";
-	txt += m["Plot"];
+	if (checkIMDbElement("Genre"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_GENRE) + ": " + m["Genre"] + "\n";
+	if (checkIMDbElement("Awards"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_AWARDS) + ": " + m["Awards"] + "\n";
+	if (checkIMDbElement("Director"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_DIRECTOR) + ": " + m["Director"] + "\n";
+	if (checkIMDbElement("Writer"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_WRITER) + ": " + m["Writer"] + "\n";
+	if (checkIMDbElement("Production"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_PRODUCTION) + ": " + m["Production"] + "\n";
+	if (checkIMDbElement("Website"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_WEBSITE) + ": " + m["Website"] + "\n";
+	if (checkIMDbElement("BoxOffice"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_BOXOFFICE) + ": " + m["BoxOffice"] + "\n";
+	if (checkIMDbElement("Actors"))
+	{
+		txt += "\n";
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_ACTORS) + ": " + m["Actors"] + "\n";
+	}
+	if (checkIMDbElement("Plot"))
+	{
+		txt += "\n";
+		txt += m["Plot"];
+	}
 }
 
 std::string CIMDB::getFilename(CZapitChannel * channel, uint64_t id)
