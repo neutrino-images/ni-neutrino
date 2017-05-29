@@ -51,8 +51,9 @@ class CIMDB
 
 		void getIMDbData(std::string& txt);
 
-		bool	gotPoster() { return (access(posterfile.c_str(), F_OK) == 0); };
+		bool gotPoster() { return (access(posterfile.c_str(), F_OK) == 0); };
 
+		bool checkIMDbElement(std::string element);
 		//FIXME: what if m[element] doesn't exist?
 		std::string getIMDbElement(std::string element)  { return m[element]; };
 

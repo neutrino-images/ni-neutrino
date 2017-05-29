@@ -337,6 +337,14 @@ int CIMDB::getIMDb(const std::string& epgTitle)
 	return ret;
 }
 
+bool CIMDB::checkIMDbElement(std::string element)
+{
+	if (m[element].empty() || m[element].compare("N/A") == 0)
+		return false;
+	else
+		return true;
+}
+
 void CIMDB::getIMDbData(std::string& txt)
 {
 	if (m["imdbID"].empty() || m["Response"] != "True")
