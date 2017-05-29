@@ -321,7 +321,7 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 			stars *= 10; // recalculate stars value for starbar
 
 		int stars_w = 0, stars_h = 0;
-		g_PicViewer->getSize(NEUTRINO_ICON_STARS_BG, &stars_w, &stars_h);
+		g_PicViewer->getSize(imdb->stars_bg.c_str(), &stars_w, &stars_h);
 
 		//create starbar item
 		CProgressBar *cc_starbar = new CProgressBar();

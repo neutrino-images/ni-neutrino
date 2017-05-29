@@ -41,6 +41,8 @@ class CIMDB
 		std::string soutfile;
 		std::string IMDbAPI;
 		std::string posterfile;
+		std::string stars_bg;
+		std::string stars;
 
 		int getIMDb(const std::string& epgTitle);
 		std::string getFilename(CZapitChannel * channel, uint64_t id);
