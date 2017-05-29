@@ -251,6 +251,12 @@ const char * CLocaleManager::getText(const neutrino_locale_t keyName) const
 	return localeData[keyName];
 }
 
+//NI
+std::string CLocaleManager::getString(const neutrino_locale_t keyName) const
+{
+	return (std::string) localeData[keyName];
+}
+
 static const neutrino_locale_t locale_weekday[7] =
 {
 	LOCALE_DATE_SUN,
