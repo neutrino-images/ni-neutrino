@@ -277,7 +277,7 @@ void CIMDB::initMap( std::map<std::string, std::string>& my )
 	my["Director"]		= root.get("Director", "").asString();
 	my["Genre"]		= root.get("Genre", "").asString();
 	my["imdbID"]		= root.get("imdbID", "").asString();
-	my["imdbRating"]	= root.get("imdbRating", "").asString();
+	my["imdbRating"]	= root.get("imdbRating", "N/A").asString();
 	my["imdbVotes"]		= root.get("imdbVotes", "").asString();
 	my["Metascore"]		= root.get("Metascore", "N/A").asString();
 	my["Plot"]		= root.get("Plot", "").asString();
