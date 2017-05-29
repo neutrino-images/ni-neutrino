@@ -879,6 +879,7 @@ imdb.data_plot Handlung
 imdb.data_production Produktion
 imdb.data_rating_failed Keine Bewertung
 imdb.data_released Veröffentlicht
+imdb.data_runtime Spieldauer
 imdb.data_title Originaltitel
 imdb.data_votes Stimmen
 imdb.data_website Webseite

@@ -357,7 +357,10 @@ void CIMDB::getIMDbData(std::string& txt)
 	if (checkIMDbElement("Metascore"))
 		txt += g_Locale->getString(LOCALE_IMDB_DATA_METASCORE) + ": " + m["Metascore"] + "/100\n";
 	txt += g_Locale->getString(LOCALE_IMDB_DATA_TITLE) + ": " + m["Title"] + "\n";
-	txt += g_Locale->getString(LOCALE_IMDB_DATA_RELEASED) + ": " + m["Released"] + " | " + m["Country"] + " | " + m["Runtime"] + "\n";
+	if (checkIMDbElement("Released"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_RELEASED) + ": " + m["Country"] + ", " + m["Released"] + "\n";
+	if (checkIMDbElement("Runtime"))
+		txt += g_Locale->getString(LOCALE_IMDB_DATA_RUNTIME) + ": " + m["Runtime"] + "\n";
 	if (checkIMDbElement("Genre"))
 		txt += g_Locale->getString(LOCALE_IMDB_DATA_GENRE) + ": " + m["Genre"] + "\n";
 	if (checkIMDbElement("Awards"))

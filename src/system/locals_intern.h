@@ -906,6 +906,7 @@ const char * locale_real_names[] =
 	"imdb.data_production",
 	"imdb.data_rating_failed",
 	"imdb.data_released",
+	"imdb.data_runtime",
 	"imdb.data_title",
 	"imdb.data_votes",
 	"imdb.data_website",
