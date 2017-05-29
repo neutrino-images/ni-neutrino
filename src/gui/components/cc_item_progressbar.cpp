@@ -153,7 +153,7 @@ class CProgressBarCache
 
 		static inline unsigned int make16color(__u32 rgb){return 0xFF000000 | rgb;};
 
-		void pbcPaintBoxRel(int x, int y, int dx, int dy, fb_pixel_t *pixbuf, fb_pixel_t col);
+		void pbcPaintBoxRel(int x, int y, int dx, int dy, fb_pixel_t *pixbuf, fb_pixel_t col) const;
 		void pbcApplyGradient(fb_pixel_t *pixbuf);
 		void pbcCreateBitmaps();
 
@@ -185,7 +185,7 @@ class CProgressBarCache
 		}
 		void pbcClear();
 	public:
-		void pbcPaint(int x, int y, int pbc_active_width, int pbc_passive_width);
+		void pbcPaint(int x, int y, int pbc_active_width, int pbc_passive_width) const;
 		static CProgressBarCache *pbcLookup(	int dy,
 							int dx,
 							int active_col,
@@ -230,7 +230,7 @@ CProgressBarCache *CProgressBarCache::pbcLookup(int dy, int dx, int active_col, 
 	return pbc;
 }
 
-void CProgressBarCache::pbcPaint(int x, int y, int pbc_active_width, int pbc_passive_width)
+void CProgressBarCache::pbcPaint(int x, int y, int pbc_active_width, int pbc_passive_width) const
 {
 	y += yoff;
 	static CFrameBuffer *frameBuffer = CFrameBuffer::getInstance();
@@ -257,7 +257,7 @@ void CProgressBarCache::pbcPaint(int x, int y, int pbc_active_width, int pbc_pas
 	}
 }
 
-void CProgressBarCache::pbcPaintBoxRel(int x, int y, int dx, int dy, fb_pixel_t *pixbuf, fb_pixel_t col)
+void CProgressBarCache::pbcPaintBoxRel(int x, int y, int dx, int dy, fb_pixel_t *pixbuf, fb_pixel_t col) const
 {
 	if (x < 0) {
 		dx -= x;
