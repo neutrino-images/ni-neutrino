@@ -289,9 +289,9 @@ void CIMDB::initMap( std::map<std::string, std::string>& my )
 	my["Title"]		= root.get("Title", "").asString();
 	my["Website"]		= root.get("Website", "").asString();
 	my["Writer"]		= root.get("Writer", "").asString();
+	my["Year"]		= root.get("Year", "").asString();
 
 	// currently unused
-	//my["Year"]		= root.get("Year", "").asString();
 	//my["Rated"]		= root.get("Rated", "").asString();
 	//my["Type"]		= root.get("Type", "").asString();
 }
