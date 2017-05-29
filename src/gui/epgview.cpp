@@ -1668,7 +1668,7 @@ int CEpgData::showIMDb(bool splash)
 	if (imdb_rating == "N/A")
 	{
 		value = "0";
-		imdb_rating = "Keine Bewertung";
+		imdb_rating = g_Locale->getText(LOCALE_IMDB_DATA_RATING_FAILED);
 	}
 	else
 		imdb_rating += "/10";

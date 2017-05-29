@@ -868,6 +868,20 @@ imageinfo.kernel Kernel:
 imageinfo.license Lizenz
 imageinfo.vcs Git:
 imageinfo.version Version:
+imdb.data_actors Darsteller
+imdb.data_awards Awards
+imdb.data_boxoffice Einspielergebnis
+imdb.data_director Regisseur
+imdb.data_failed Keine Daten gefunden
+imdb.data_genre Genre
+imdb.data_metascore Metascore
+imdb.data_production Produktion
+imdb.data_rating_failed Keine Bewertung
+imdb.data_released Veröffentlicht
+imdb.data_title Originaltitel
+imdb.data_votes Stimmen
+imdb.data_website Webseite
+imdb.data_writer Drehbuchautor
 imdb.info IMDb-Info
 imdb.info_save Bild speichern
 inetradio.name Internetradio

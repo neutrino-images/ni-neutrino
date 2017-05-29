@@ -341,24 +341,23 @@ void CIMDB::getIMDbData(std::string& txt)
 {
 	if (m["imdbID"].empty() || m["Response"] != "True")
 	{
-		txt = "Keine Daten gefunden";
+		txt = g_Locale->getText(LOCALE_IMDB_DATA_FAILED);
 		return;
 	}
 
-	//TODO: localize
-	txt += "Stimmen: "+m["imdbVotes"]+"\n";
-	txt += "Metascore: "+m["Metascore"]+(m["Metascore"] == "N/A" ? "\n" : "/100\n");
-	txt += "Original-Titel: "+m["Title"]+"\n";
-	txt += "Datum: "+m["Released"]+" | "+m["Country"]+" | "+m["Runtime"]+"\n";
-	txt += "Genre: "+m["Genre"]+"\n";
-	txt += "Awards: "+m["Awards"]+"\n";
-	txt += "Regisseur: "+m["Director"]+"\n";
-	txt += "Drehbuch: "+m["Writer"]+"\n";
-	txt += "Produktionsfirma: "+m["Production"]+"\n";
-	txt += "Webseite: "+m["Website"]+"\n";
-	txt += "Einspielergebnis: "+m["BoxOffice"]+"\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_VOTES) + ": " + m["imdbVotes"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_METASCORE) + ": " + m["Metascore"] + (m["Metascore"] == "N/A" ? "\n" : "/100\n");
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_TITLE) + ": " + m["Title"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_RELEASED) + ": " + m["Released"] + " | " + m["Country"] + " | " + m["Runtime"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_GENRE) + ": " + m["Genre"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_AWARDS) + ": " + m["Awards"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_DIRECTOR) + ": " + m["Director"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_WRITER) + ": " + m["Writer"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_PRODUCTION) + ": " + m["Production"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_WEBSITE) + ": " + m["Website"] + "\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_BOXOFFICE) + ": " + m["BoxOffice"] + "\n";
 	txt += "\n";
-	txt += "Darsteller: "+m["Actors"]+"\n";
+	txt += g_Locale->getString(LOCALE_IMDB_DATA_ACTORS) + ": " + m["Actors"] + "\n";
 	txt += "\n";
 	txt += m["Plot"];
 }
