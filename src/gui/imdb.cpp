@@ -206,7 +206,7 @@ std::string CIMDB::googleIMDb(std::string s)
 {
 	CHTTPTool httpTool;
 	std::string ret = search_error;
-	std::string search_string("");
+	std::string search_string("title+");
 	char* search_char = (char*) s.c_str();
 
 	m.clear();
