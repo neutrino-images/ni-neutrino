@@ -77,6 +77,7 @@
 #include "gui/eventlist.h"
 #include "gui/favorites.h"
 #include "gui/filebrowser.h"
+#include "gui/followscreenings.h" //NI
 #include "gui/hdd_menu.h"
 #include "gui/infoviewer.h"
 #include "gui/mediaplayer.h"
@@ -389,7 +390,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		g_settings.easymenu = 1;
 		g_settings.softupdate_autocheck = 1;
 	}
-	dprintf(DEBUG_NORMAL, "g_settings.easymenu %d\n", g_settings.easymenu);
+	//NI dprintf(DEBUG_NORMAL, "g_settings.easymenu %d\n", g_settings.easymenu);
 
 	// video
 	g_settings.video_Mode = configfile.getInt32("video_Mode", VIDEO_STD_1080I50); // VIDEO_STD_720P50
@@ -543,7 +544,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 			g_settings.timer_remotebox_ip.push_back(timer_rb);
 		}
 	}
-	g_settings.timer_followscreenings = configfile.getInt32( "timer_followscreenings", 1 );
+	g_settings.timer_followscreenings = configfile.getInt32( "timer_followscreenings", CFollowScreenings::FOLLOWSCREENINGS_ON ); //NI
 
 	g_settings.infobar_sat_display   = configfile.getBool("infobar_sat_display"  , true );
 	g_settings.infobar_show_channeldesc   = configfile.getBool("infobar_show_channeldesc"  , false );
