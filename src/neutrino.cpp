@@ -390,7 +390,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		g_settings.easymenu = 1;
 		g_settings.softupdate_autocheck = 1;
 	}
-	dprintf(DEBUG_NORMAL, "g_settings.easymenu %d\n", g_settings.easymenu);
+	//NI dprintf(DEBUG_NORMAL, "g_settings.easymenu %d\n", g_settings.easymenu);
 
 	// video
 	g_settings.video_Mode = configfile.getInt32("video_Mode", VIDEO_STD_1080I50); // VIDEO_STD_720P50
