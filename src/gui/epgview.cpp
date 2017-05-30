@@ -1220,7 +1220,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
 					timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_EPG]);
 				}
-				else
+				else if (imdb_active && imdb->gotPoster())
 				{
 					imdb_active = false;
 					CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, LOCALE_IMDB_INFO_SAVE);
@@ -1613,7 +1613,17 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 	}
 	bool tmdb = g_settings.tmdb_enabled;
 	bool fscr = (has_follow_screenings && !call_fromfollowlist);
-	EpgButtons[mp_info ? 2 : (fscr ? 0 : 1)][1].locale = imdb_active ? LOCALE_IMDB_INFO_SAVE : LOCALE_IMDB_INFO; //NI
+	//NI
+	if (imdb_active)
+	{
+		EpgButtons[mp_info ? 2 : (fscr ? 0 : 1)][1].button = (imdb->gotPoster()) ? NEUTRINO_ICON_BUTTON_GREEN : NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
+		EpgButtons[mp_info ? 2 : (fscr ? 0 : 1)][1].locale = LOCALE_IMDB_INFO_SAVE;
+	}
+	else
+	{
+		EpgButtons[mp_info ? 2 : (fscr ? 0 : 1)][1].button = NEUTRINO_ICON_BUTTON_GREEN;
+		EpgButtons[mp_info ? 2 : (fscr ? 0 : 1)][1].locale = LOCALE_IMDB_INFO;
+	}
 	if (mp_info)
 		::paintButtons(x, y, w, tmdb ? 3 : 2, EpgButtons[2], w, h); //NI
 	else
