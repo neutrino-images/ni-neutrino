@@ -1150,6 +1150,14 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		if (g_settings.movieplayer_bisection_jump == 1)
 			g_settings.movieplayer_bisection_jump = 5;
 	}
+	//NI
+	if (g_settings.version_pseudo < "20170606000000")
+	{
+		//remove CProgressBar::PB_GRAPHIC
+
+		if (g_settings.theme.progressbar_design == 4 /*CProgressBar::PB_GRAPHIC*/)
+			g_settings.theme.progressbar_design = CProgressBar::PB_MONO;
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
