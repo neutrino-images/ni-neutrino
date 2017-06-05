@@ -96,9 +96,8 @@ void CProgressWindow::Init(	signal<void, size_t, size_t, string> *statusSignal,
 	//create local_bar object
 	local_bar = getProgressItem();
 
-	//NI - create global_bar object only if needed
-	if (globalSignal)
-		global_bar = getProgressItem();
+	//create global_bar object
+	global_bar = getProgressItem();
 
 	//set window height
 	h_height = ccw_head->getHeight();
