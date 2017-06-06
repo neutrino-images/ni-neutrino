@@ -1154,12 +1154,18 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	if (g_settings.version_pseudo < "20170606000000")
 	{
 		//remove CProgressBar::PB_GRAPHIC
-
 		if (g_settings.theme.progressbar_design == 4 /*CProgressBar::PB_GRAPHIC*/)
 		{
 			g_settings.theme.progressbar_design = CProgressBar::PB_MONO;
 			g_settings.theme.progressbar_gradient = 1;
 		}
+	}
+	//NI
+	if (g_settings.version_pseudo < "20170606215500")
+	{
+		//align fontsize.filebrowser_item to new default
+		if (configfile.getInt32("fontsize.filebrowser_item", 16) == 16)
+			configfile.setInt32("fontsize.filebrowser_item", 17);
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
