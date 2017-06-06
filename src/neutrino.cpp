@@ -1156,7 +1156,10 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		//remove CProgressBar::PB_GRAPHIC
 
 		if (g_settings.theme.progressbar_design == 4 /*CProgressBar::PB_GRAPHIC*/)
+		{
 			g_settings.theme.progressbar_design = CProgressBar::PB_MONO;
+			g_settings.theme.progressbar_gradient = 1;
+		}
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
