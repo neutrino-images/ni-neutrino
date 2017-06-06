@@ -51,7 +51,7 @@ CVolumeBar::CVolumeBar()
 void CVolumeBar::initVarVolumeBar()
 {
 	col_body 	= COL_MENUCONTENT_PLUS_0;
-	corner_rad 	= CORNER_RADIUS_MID;
+	corner_rad 	= RADIUS_MID; //NI
 	vb_item_offset 	= OFFSET_INNER_SMALL;
 	height          = CFrameBuffer::getInstance()->scale2Res(g_settings.volume_size);
 
