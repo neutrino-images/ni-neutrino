@@ -59,12 +59,11 @@ class CFollowScreenings : public CMenuTarget
 		std::vector<CMenuForwarder *> forwarders;
 		void updateRightIcon(int i, time_t start, unsigned int duration);
 	public:
-		//NI
 		enum
 		{
 			FOLLOWSCREENINGS_OFF	= 0,
 			FOLLOWSCREENINGS_ON	= 1,
-			FOLLOWSCREENINGS_ALWAYS	= 2
+			FOLLOWSCREENINGS_ALWAYS	= 2 //NI
 		};
 
                 CFollowScreenings(const t_channel_id Channel_id, time_t Starttime, time_t Stoptime, const std::string &Title, uint64_t EpgID=0,

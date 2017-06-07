@@ -41,7 +41,7 @@
 
 #include "record_setup.h"
 #include <gui/filebrowser.h>
-#include <gui/followscreenings.h> //NI
+#include <gui/followscreenings.h>
 
 #include <gui/widget/icons.h>
 #include <gui/widget/msgbox.h>
@@ -174,12 +174,11 @@ const CMenuOptionChooser::keyval END_OF_RECORDING[END_OF_RECORDING_COUNT] =
 	{1, LOCALE_RECORDINGMENU_END_OF_RECORDING_EPG}
 };
 
-//NI
 const CMenuOptionChooser::keyval timer_followscreenings_options[] =
 {
-	{CFollowScreenings::FOLLOWSCREENINGS_OFF    , LOCALE_OPTIONS_OFF   },
-	{CFollowScreenings::FOLLOWSCREENINGS_ON     , LOCALE_OPTIONS_ON    },
-	{CFollowScreenings::FOLLOWSCREENINGS_ALWAYS , LOCALE_OPTIONS_ALWAYS}
+	{CFollowScreenings::FOLLOWSCREENINGS_OFF	,LOCALE_OPTIONS_OFF	},
+	{CFollowScreenings::FOLLOWSCREENINGS_ON		,LOCALE_OPTIONS_ON	},
+	{CFollowScreenings::FOLLOWSCREENINGS_ALWAYS	,LOCALE_OPTIONS_ALWAYS	} //NI
 };
 size_t timer_followscreenings_options_count = sizeof(timer_followscreenings_options)/sizeof(CMenuOptionChooser::keyval);
 
