@@ -5,6 +5,7 @@ install_DATA = \
 	ubuntu-l-webfont.ttf \
 	ubuntu-r-webfont.ttf \
 	ubuntumono-b-webfont.ttf \
+	ubuntumono-r-webfont.ttf \
 	Roboto-Regular.ttf \
 	micron_bold.ttf \
 	micron.ttf \
