@@ -3,5 +3,4 @@ SUBDIRS = \
 	channel \
 	info \
 	markers \
-	progress \
 	various

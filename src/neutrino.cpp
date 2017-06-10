@@ -76,6 +76,7 @@
 #include "gui/eventlist.h"
 #include "gui/favorites.h"
 #include "gui/filebrowser.h"
+#include "gui/followscreenings.h"
 #include "gui/hdd_menu.h"
 #include "gui/infoviewer.h"
 #include "gui/mediaplayer.h"
@@ -393,7 +394,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		g_settings.easymenu = 1;
 		g_settings.softupdate_autocheck = 1;
 	}
-	dprintf(DEBUG_NORMAL, "g_settings.easymenu %d\n", g_settings.easymenu);
+	//NI dprintf(DEBUG_NORMAL, "g_settings.easymenu %d\n", g_settings.easymenu);
 
 	// video
 #if HAVE_TRIPLEDRAGON
@@ -556,7 +557,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 			g_settings.timer_remotebox_ip.push_back(timer_rb);
 		}
 	}
-	g_settings.timer_followscreenings = configfile.getInt32( "timer_followscreenings", 1 );
+	g_settings.timer_followscreenings = configfile.getInt32( "timer_followscreenings", CFollowScreenings::FOLLOWSCREENINGS_ON );
 
 	g_settings.infobar_sat_display   = configfile.getBool("infobar_sat_display"  , true );
 	g_settings.infobar_show_channeldesc   = configfile.getBool("infobar_show_channeldesc"  , false );
@@ -938,7 +939,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	//Filebrowser
 	g_settings.filebrowser_showrights =  configfile.getInt32("filebrowser_showrights", 1);
-	g_settings.filebrowser_sortmethod = configfile.getInt32("filebrowser_sortmethod", 1); //NI
+	g_settings.filebrowser_sortmethod = configfile.getInt32("filebrowser_sortmethod", 1);
 	if ((g_settings.filebrowser_sortmethod < 0) || (g_settings.filebrowser_sortmethod >= FILEBROWSER_NUMBER_OF_SORT_VARIANTS))
 		g_settings.filebrowser_sortmethod = 0;
 	g_settings.filebrowser_denydirectoryleave = configfile.getBool("filebrowser_denydirectoryleave", false);
@@ -1170,6 +1171,23 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	{
 		if (g_settings.movieplayer_bisection_jump == 1)
 			g_settings.movieplayer_bisection_jump = 5;
+	}
+	//NI
+	if (g_settings.version_pseudo < "20170606000000")
+	{
+		//remove CProgressBar::PB_GRAPHIC
+		if (g_settings.theme.progressbar_design == 4 /*CProgressBar::PB_GRAPHIC*/)
+		{
+			g_settings.theme.progressbar_design = CProgressBar::PB_MONO;
+			g_settings.theme.progressbar_gradient = 1;
+		}
+	}
+	//NI
+	if (g_settings.version_pseudo < "20170606215500")
+	{
+		//align fontsize.filebrowser_item to new default
+		if (configfile.getInt32("fontsize.filebrowser_item", 16) == 16)
+			configfile.setInt32("fontsize.filebrowser_item", 17);
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;

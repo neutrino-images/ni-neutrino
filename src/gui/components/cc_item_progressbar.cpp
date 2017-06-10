@@ -39,9 +39,7 @@
 #define GREEN  0x00FF00
 #define YELLOW 0xFFFF00
 
-//NI graphic
-#include <sstream>
-#include <unistd.h>
+//NI starbar
 #include <gui/pictureviewer.h>
 extern CPictureViewer * g_PicViewer;
 
@@ -85,8 +83,6 @@ CProgressBar::CProgressBar(	const int x_pos,
 	pb_last_width 		= -1;
 	pb_value		= 0;
 	pb_max_value		= 0;
-
-	graphic_file	= "progressbar"; //NI graphic
 
 	// init start positions x/y active bar
 	pb_x 			= x + fr_thickness;
@@ -480,10 +476,6 @@ void CProgressBar::paintProgress(bool do_save_bg)
 				paintStarBar();
 				is_painted = true;
 			}
-			else if(*pb_design == PB_GRAPHIC) {
-				paintGraphic();
-				is_painted = true;
-			}
 			else {
 			CProgressBarCache *pbc = CProgressBarCache::pbcLookup(pb_height, pb_max_width, pb_active_col, pb_passive_col, *pb_design, pb_invert, *pb_gradient, pb_red, pb_yellow, pb_green);
 			if (pbc)
@@ -503,31 +495,6 @@ void CProgressBar::paintProgress(bool do_save_bg)
 		if (duration)
 			fprintf(stderr, "\033[33m[CProgressBar] %s: %" PRIu64 " ms to paint progress \033[0m\n",__func__, duration);
 	}
-}
-
-
-//NI graphic
-void CProgressBar::paintGraphic()
-{
-	std::string pb_active_graphic(frameBuffer->getIconPath(graphic_file));
-	std::string pb_passive_graphic(frameBuffer->getIconPath(graphic_file + "_passive"));
-
-	//printf("**** %04d::%04d: pb_last_width: %d, pb_active_width: %d, pb_max_width %d\n", pb_x, pb_y, pb_last_width, pb_active_width, pb_max_width);
-
-	if (pb_last_width == -1 ) {
-		if (pb_active_width <= pb_max_width && pb_passive_width > 0)
-			g_PicViewer->DisplayImage(pb_passive_graphic, pb_start_x_passive, pb_y, pb_passive_width, pb_height); // passive bar
-	}
-
-	if (pb_active_width > pb_last_width) {
-		// we have to paint the passive graphic in all cases to satisfy the CProgresswindow
-		if (pb_passive_width > 0)
-			g_PicViewer->DisplayImage(pb_passive_graphic, pb_start_x_passive, pb_y, pb_passive_width, pb_height); // passive bar
-		if (pb_active_width > 0)
-			g_PicViewer->DisplayImage(pb_active_graphic, pb_x, pb_y, pb_active_width, pb_height); // active bar
-	}
-	else if (pb_active_width <= pb_max_width && pb_passive_width > 0)
-		g_PicViewer->DisplayImage(pb_passive_graphic, pb_start_x_passive, pb_y, pb_passive_width, pb_height); // passive bar
 }
 
 //NI starbar

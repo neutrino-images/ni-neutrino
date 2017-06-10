@@ -564,10 +564,7 @@ void CStreamManager::run()
 	int poll_timeout = -1;
 
 	printf("Starting STREAM thread keeper, tid %ld\n", syscall(__NR_gettid));
-/* merge conflict */
-#if 0
 	set_threadname("n:streammanager");
-#endif
 
 	while (running) {
 		mutex.lock();

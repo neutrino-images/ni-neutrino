@@ -51,7 +51,7 @@ CVolumeBar::CVolumeBar()
 void CVolumeBar::initVarVolumeBar()
 {
 	col_body 	= COL_MENUCONTENT_PLUS_0;
-	corner_rad 	= CORNER_RADIUS_MID;
+	corner_rad 	= RADIUS_MID; //NI
 	vb_item_offset 	= OFFSET_INNER_SMALL;
 	height          = CFrameBuffer::getInstance()->scale2Res(g_settings.volume_size);
 
@@ -202,10 +202,6 @@ void CVolumeBar::initVolumeBarScale()
 	vb_pb->setRgb(85, 75, 100);
 	vb_pb->setFrameThickness(0); //NI
 	vb_pb->setProgress(vb_pbx, vb_pby, vb_pbw, vb_pbh, *vb_vol, 100);
-
-	//NI
-	if (g_settings.theme.progressbar_design == CProgressBar::PB_GRAPHIC)
-		vb_pb->setGraphic("volumebar");
 }
 
 //set digit text with current volume value

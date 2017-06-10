@@ -2101,8 +2101,6 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 			if (g_settings.theme.progressbar_design_channellist != CProgressBar::PB_OFF)
 			{
 				pb.setValues(0, pb_width);
-				if (g_settings.theme.progressbar_design == CProgressBar::PB_GRAPHIC) //NI graphic
-					pb.setGraphic("progressbar_inactive");
 				pb.paint();
 			}
 			//name
