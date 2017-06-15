@@ -897,7 +897,7 @@ void CEventList::paintHead(t_channel_id _channel_id, std::string _channelname, s
 		header->getChannelLogoObject()->hide();
 	if (g_settings.channellist_show_channellogo) //NI
 		header->setChannelLogo(_channel_id,_channelname);
-	header->setCaption(_channelname); //NI
+	header->setCaption(_channelname, CCHeaderTypes::CC_TITLE_LEFT);
 
 	header->paint(CC_SAVE_SCREEN_NO);
 

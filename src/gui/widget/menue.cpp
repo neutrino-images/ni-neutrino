@@ -2346,7 +2346,7 @@ int CMenuSeparator::paint(bool selected)
 	if ((type & LINE))
 	{
 		int grad = g_settings.theme.menu_Separator_gradient_enable ? CC_COLGRAD_COL_DARK_LIGHT_DARK : CC_COLGRAD_OFF;
-		paintBoxRel(x+OFFSET_INNER_MID, y+(height>>1), dx-2*OFFSET_INNER_MID, 1, COL_MENUCONTENT_PLUS_1, 0, CORNER_NONE, grad, COL_MENUCONTENT_PLUS_0, CFrameBuffer::gradientHorizontal, CColorGradient::light); //NI
+		paintBoxRel(x+OFFSET_INNER_MID, y+(height>>1), dx-2*OFFSET_INNER_MID, 1, COL_MENUCONTENT_PLUS_1, 0, CORNER_NONE, grad, COL_MENUCONTENT_PLUS_0, CFrameBuffer::gradientHorizontal, CColorGradient::light);
 	}
 	if ((type & STRING))
 	{

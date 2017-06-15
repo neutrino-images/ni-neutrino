@@ -712,7 +712,7 @@ void CPictureViewerGui::paintItem(int pos)
 
 void CPictureViewerGui::paintHead()
 {
-	CComponentsHeaderLocalized header(x, y, width, header_height, LOCALE_PICTUREVIEWER_HEAD, NEUTRINO_ICON_PICTUREVIEWER, CComponentsHeaderLocalized::CC_BTN_HELP); //NI
+	CComponentsHeaderLocalized header(x, y, width, header_height, LOCALE_PICTUREVIEWER_HEAD, NEUTRINO_ICON_PICTUREVIEWER, CComponentsHeaderLocalized::CC_BTN_HELP);
 
 #ifdef ENABLE_GUI_MOUNT
 	header.setContextButton(NEUTRINO_ICON_BUTTON_MENU);
