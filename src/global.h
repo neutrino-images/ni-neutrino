@@ -43,6 +43,7 @@
 #define MOVIEPLAYER_START_SCRIPT        CONFIGDIR "/movieplayer.start"
 #define MOVIEPLAYER_END_SCRIPT          CONFIGDIR "/movieplayer.end"
 #define NEUTRINO_ENTER_FLASH_SCRIPT	CONFIGDIR "/flash.start"
+#define NEUTRINO_APP_START_SCRIPT	CONFIGDIR "/neutrino.start"
 #define NEUTRINO_NI_MIGRATION_SCRIPT	CONFIGDIR "/ni-migration.sh" //NI
 
 #define NEUTRINO_SCAN_SETTINGS_FILE     CONFIGDIR "/scan.conf"
