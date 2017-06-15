@@ -27,6 +27,7 @@
 #include <driver/rcinput.h>
 #include <driver/screen_max.h>
 #include <driver/pictureviewer/pictureviewer.h>
+#include <system/helpers.h>
 #include <system/httptool.h>
 #include <gui/color.h>
 #include <gui/widget/icons.h>
