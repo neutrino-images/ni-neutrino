@@ -50,7 +50,7 @@ static void clear_queue();
 int dvbsub_init() {
 	int trc;
 
-	sub_debug.set_level(2);
+	sub_debug.set_level(3);
 
 	reader_running = true;
 	dvbsub_stopped = 1;
