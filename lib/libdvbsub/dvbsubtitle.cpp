@@ -36,7 +36,7 @@ extern "C" {
 #endif
 
 // Set these to 'true' for debug output:
-static bool DebugConverter = false;
+static bool DebugConverter = true;
 
 #define dbgconverter(a...) if (DebugConverter) sub_debug.print(Debug::VERBOSE, a)
 
@@ -131,7 +131,9 @@ void cDvbSubtitleBitmaps::Draw(int &min_x, int &min_y, int &max_x, int &max_y)
 	uint32_t *sublfb = CFrameBuffer::getInstance()->getFrameBufferPointer();
 #endif
 
-//	dbgconverter("cDvbSubtitleBitmaps::Draw: %d bitmaps, x= %d, width= %d yend=%d stride %d\n", Count(), xstart, wd, yend, stride);
+#if 0
+	dbgconverter("cDvbSubtitleBitmaps::Draw: %d bitmaps, x= %d, width= %d yend=%d stride %d\n", Count(), xstart, wd, yend, stride);
+#endif
 
 	int sw = CFrameBuffer::getInstance()->getScreenWidth(true);
 	int sh = CFrameBuffer::getInstance()->getScreenHeight(true);
@@ -141,6 +143,7 @@ void cDvbSubtitleBitmaps::Draw(int &min_x, int &min_y, int &max_x, int &max_y)
 	xc = yc; //FIXME should we scale also to full width ?
 	int xf = int(xc * (double) 720);
 #endif
+
 	for (i = 0; i < Count(); i++) {
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(57, 5, 0)
 		uint32_t * colors = (uint32_t *) sub.rects[i]->pict.data[1];
@@ -165,14 +168,19 @@ void cDvbSubtitleBitmaps::Draw(int &min_x, int &min_y, int &max_x, int &max_y)
 				yoff = ystart;
 		}
 #endif
-		int h2 = (width == 1280) ? 720 : 576;
+		int h2 = 576;
+		switch (width)
+		{
+			case 1280:	h2 = 720;  break;
+			case 1920:	h2 = 1080; break;
+		}
 		xoff = sub.rects[i]->x * sw / width;
 		yoff = sub.rects[i]->y * sh / h2;
 		int nw = width * sw / width;
 		int nh = height * sh / h2;
 
-//		dbgconverter("cDvbSubtitleBitmaps::Draw: #%d at %d,%d size %dx%d colors %d (x=%d y=%d w=%d h=%d) \n", i+1, 
-//				sub.rects[i]->x, sub.rects[i]->y, sub.rects[i]->w, sub.rects[i]->h, sub.rects[i]->nb_colors, xoff, yoff, nw, nh);
+		dbgconverter("cDvbSubtitleBitmaps::Draw: #%d at %d,%d size %dx%d colors %d (x=%d y=%d w=%d h=%d) \n", i+1, 
+				sub.rects[i]->x, sub.rects[i]->y, sub.rects[i]->w, sub.rects[i]->h, sub.rects[i]->nb_colors, xoff, yoff, nw, nh);
 
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(57, 5, 0)
 		fb_pixel_t * newdata = simple_resize32 (sub.rects[i]->pict.data[0], colors, sub.rects[i]->nb_colors, width, height, nw, nh);
@@ -203,9 +211,9 @@ void cDvbSubtitleBitmaps::Draw(int &min_x, int &min_y, int &max_x, int &max_y)
 			max_y = yoff + nh;
 	}
 
-//	if(Count())
-//		dbgconverter("cDvbSubtitleBitmaps::Draw: finish, min/max screen: x=% d y= %d, w= %d, h= %d\n", min_x, min_y, max_x-min_x, max_y-min_y);
-//	dbgconverter("\n");
+	if(Count())
+		dbgconverter("cDvbSubtitleBitmaps::Draw: finish, min/max screen: x=% d y= %d, w= %d, h= %d\n", min_x, min_y, max_x-min_x, max_y-min_y);
+	dbgconverter("\n");
 }
 
 static int screen_w, screen_h, screen_x, screen_y;
@@ -358,10 +366,7 @@ void dvbsub_get_stc(int64_t * STC);
 int cDvbSubtitleConverter::Action(void)
 {
 	int WaitMs = WAITMS;
-#if 0
- retry:
-	bool shown = false;
-#endif
+
 	if (!running)
 		return 0;
 
@@ -382,8 +387,8 @@ int cDvbSubtitleConverter::Action(void)
 
 		if (Delta <= MAXDELTA) {
 			if (Delta <= SHOW_DELTA) {
-dbgconverter("cDvbSubtitleConverter::Action: PTS: %012llx STC: %012llx (%lld) timeout: %d bmp %d/%d\n", sb->Pts(), STC, Delta, sb->Timeout(), bitmaps->Count(), sb->Index() + 1);
-//				dbgconverter("cDvbSubtitleConverter::Action: Got %d bitmaps, showing #%d\n", bitmaps->Count(), sb->Index() + 1);
+				dbgconverter("cDvbSubtitleConverter::Action: PTS: %012llx STC: %012llx (%lld) timeout: %d bmp %d/%d\n", sb->Pts(), STC, Delta, sb->Timeout(), bitmaps->Count(), sb->Index() + 1);
+				dbgconverter("cDvbSubtitleConverter::Action: Got %d bitmaps, showing #%d\n", bitmaps->Count(), sb->Index() + 1);
 				if (running) {
 					Clear();
 					sb->Draw(min_x, min_y, max_x, max_y);
@@ -392,7 +397,6 @@ dbgconverter("cDvbSubtitleConverter::Action: PTS: %012llx STC: %012llx (%lld) ti
 				if(sb->Count())
 					WaitMs = MIN_DISPLAY_TIME;
 				bitmaps->Del(sb, true);
-//				shown = true;
 			}
 			else if (Delta < WaitMs)
 				WaitMs = int((Delta > SHOW_DELTA) ? Delta - SHOW_DELTA : Delta);
@@ -410,10 +414,6 @@ dbgconverter("cDvbSubtitleConverter::Action: PTS: %012llx STC: %012llx (%lld) ti
 		}
 	}
 	Unlock();
-#if 0
-if (shown)
-	goto retry;
-#endif
 	if(WaitMs != WAITMS)
 		dbgconverter("cDvbSubtitleConverter::Action: finish, WaitMs %d\n", WaitMs);
 
