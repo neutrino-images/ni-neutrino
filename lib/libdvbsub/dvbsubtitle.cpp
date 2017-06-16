@@ -11,10 +11,6 @@
  * dvbsubtitle for HD1 ported by Coolstream LTD
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include "dvbsubtitle.h"
 
 extern "C" {
@@ -66,7 +62,7 @@ cDvbSubtitleBitmaps::cDvbSubtitleBitmaps(int64_t pPts)
 
 cDvbSubtitleBitmaps::~cDvbSubtitleBitmaps()
 {
-//    dbgconverter("cDvbSubtitleBitmaps::delete: PTS: %lld rects %d\n", pts, Count());
+    dbgconverter("cDvbSubtitleBitmaps::delete: PTS: %lld rects %d\n", pts, Count());
     int i;
 
     if(sub.rects) {
@@ -293,7 +289,7 @@ void cDvbSubtitleConverter::Pause(bool pause)
 
 void cDvbSubtitleConverter::Clear(void)
 {
-//	dbgconverter("cDvbSubtitleConverter::Clear: x=% d y= %d, w= %d, h= %d\n", min_x, min_y, max_x-min_x, max_y-min_y);
+	dbgconverter("cDvbSubtitleConverter::Clear: x=% d y= %d, w= %d, h= %d\n", min_x, min_y, max_x-min_x, max_y-min_y);
 	if(running && (max_x-min_x > 0) && (max_y-min_y > 0)) {
 		CFrameBuffer::getInstance()->paintBackgroundBoxRel (min_x, min_y, max_x-min_x, max_y-min_y);
 		/* reset area to clear */
@@ -334,18 +330,18 @@ int cDvbSubtitleConverter::Convert(const uchar *Data, int Length, int64_t pts)
 	avpkt.data = (uint8_t*) Data;
 	avpkt.size = Length;
 
-//	dbgconverter("cDvbSubtitleConverter::Convert: sub %x pkt %x pts %lld\n", sub, &avpkt, pts);
+	dbgconverter("cDvbSubtitleConverter::Convert: sub %x pkt %x pts %lld\n", sub, &avpkt, pts);
 	//avctx->sub_id = (anc_page << 16) | comp_page; //FIXME not patched ffmpeg needs this !
 
 	avcodec_decode_subtitle2(avctx, sub, &got_subtitle, &avpkt);
-//	dbgconverter("cDvbSubtitleConverter::Convert: pts %lld subs ? %s, %d bitmaps\n", pts, got_subtitle? "yes" : "no", sub->num_rects);
+	dbgconverter("cDvbSubtitleConverter::Convert: pts %lld subs ? %s, %d bitmaps\n", pts, got_subtitle? "yes" : "no", sub->num_rects);
 
 	if(got_subtitle) {
 		if(DebugConverter) {
 			unsigned int i;
 			for(i = 0; i < sub->num_rects; i++) {
-//				dbgconverter("cDvbSubtitleConverter::Convert: #%d at %d,%d size %d x %d colors %d\n", i+1, 
-//						sub->rects[i]->x, sub->rects[i]->y, sub->rects[i]->w, sub->rects[i]->h, sub->rects[i]->nb_colors);
+				dbgconverter("cDvbSubtitleConverter::Convert: #%d at %d,%d size %d x %d colors %d\n", i+1, 
+						sub->rects[i]->x, sub->rects[i]->y, sub->rects[i]->w, sub->rects[i]->h, sub->rects[i]->nb_colors);
 			}
 		}
 		bitmaps->Add(Bitmaps);
@@ -383,7 +379,7 @@ int cDvbSubtitleConverter::Action(void)
 
 		Delta = LimitTo32Bit(sb->Pts()) - LimitTo32Bit(STC);
 		Delta /= 90; // STC and PTS are in 1/90000s
-//		dbgconverter("cDvbSubtitleConverter::Action: PTS: %016llx STC: %016llx (%lld) timeout: %d\n", sb->Pts(), STC, Delta, sb->Timeout());
+		dbgconverter("cDvbSubtitleConverter::Action: PTS: %016llx STC: %016llx (%lld) timeout: %d\n", sb->Pts(), STC, Delta, sb->Timeout());
 
 		if (Delta <= MAXDELTA) {
 			if (Delta <= SHOW_DELTA) {
