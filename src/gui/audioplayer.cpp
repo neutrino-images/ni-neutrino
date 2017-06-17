@@ -19,8 +19,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifdef HAVE_CONFIG_H
@@ -841,8 +840,8 @@ int CAudioPlayerGui::show()
 					int y1=(g_settings.screen_EndY- g_settings.screen_StartY)/2 + g_settings.screen_StartY;
 					int h = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNEL_NUM_ZAP]->getHeight();
 					w = std::max(w, g_Font[SNeutrinoSettings::FONT_TYPE_CHANNEL_NUM_ZAP]->getRenderWidth(selectedKey));
-					m_frameBuffer->paintBoxRel(x1 - 7, y1 - h - 5, w + 14, h + 10, COL_FRAME_PLUS_0, RADIUS_SMALL); //NI
-					m_frameBuffer->paintBoxRel(x1 - 6, y1 - h - 4, w + 12, h +  8, COL_MENUCONTENTSELECTED_PLUS_0, RADIUS_SMALL); //NI
+					m_frameBuffer->paintBoxRel(x1 - 7, y1 - h - 5, w + 14, h + 10, COL_FRAME_PLUS_0, RADIUS_SMALL);
+					m_frameBuffer->paintBoxRel(x1 - 6, y1 - h - 4, w + 12, h +  8, COL_MENUCONTENTSELECTED_PLUS_0, RADIUS_SMALL);
 					g_Font[SNeutrinoSettings::FONT_TYPE_CHANNEL_NUM_ZAP]->RenderString(x1,y1,w+1,selectedKey,COL_MENUCONTENTSELECTED_TEXT);
 
 					g_RCInput->getMsg_ms(&msg, &data, AUDIOPLAYERGUI_SMSKEY_TIMEOUT - 200);
@@ -1730,7 +1729,7 @@ void CAudioPlayerGui::paintTitleBox()
 		m_frameBuffer->paintBackgroundBoxRel(m_x, m_y, m_width, m_title_height);
 	else
 	{
-		m_frameBuffer->paintBoxRel(m_x, m_y, m_width, m_title_height, COL_MENUHEAD_PLUS_0, RADIUS_MID); //NI
+		m_frameBuffer->paintBoxRel(m_x, m_y, m_width, m_title_height, COL_MENUHEAD_PLUS_0, RADIUS_MID);
 		m_frameBuffer->paintBoxFrame(m_x, m_y, m_width, m_title_height, 1, COL_FRAME_PLUS_0, RADIUS_MID); //NI
 
 		paintCover();
@@ -2107,7 +2106,7 @@ void CAudioPlayerGui::updateMetaData()
 			paintCover();
 	}
 	if (CAudioPlayer::getInstance()->hasMetaDataChanged() != 0)
-		updateLcd = true;
+	updateLcd = true;
 
 	//printf("CAudioPlayerGui::updateMetaData: updateLcd %d\n", updateLcd);
 	if (updateLcd)
@@ -2119,9 +2118,9 @@ void CAudioPlayerGui::updateMetaData()
 	if (updateMeta || updateScreen)
 	{
 		int cover_width = m_title_height + 2*OFFSET_INNER_MID;
-		m_frameBuffer->paintBoxRel(m_x + cover_width, m_y + OFFSET_INNER_SMALL + 2*m_item_height + OFFSET_INNER_SMALL, m_width - cover_width - OFFSET_INNER_MID, m_meta_height, COL_MENUHEAD_PLUS_0); //NI
+		m_frameBuffer->paintBoxRel(m_x + cover_width, m_y + OFFSET_INNER_SMALL + 2*m_item_height + OFFSET_INNER_SMALL, m_width - cover_width - OFFSET_INNER_MID, m_meta_height, COL_MENUHEAD_PLUS_0);
 		int xstart = ((m_width - 2*OFFSET_INNER_MID - g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->getRenderWidth(m_metainfo))/2);
-		g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->RenderString(m_x + xstart, m_y + OFFSET_INNER_SMALL + 2*m_item_height + OFFSET_INNER_SMALL + m_meta_height, m_width - 2*xstart, m_metainfo, COL_MENUHEAD_TEXT); //NI
+		g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL]->RenderString(m_x + xstart, m_y + OFFSET_INNER_SMALL + 2*m_item_height + OFFSET_INNER_SMALL + m_meta_height, m_width - 2*xstart, m_metainfo, COL_MENUHEAD_TEXT);
 	}
 }
 
@@ -2172,20 +2171,20 @@ void CAudioPlayerGui::updateTimes(const bool force)
 
 			if (updateTotal && !m_inetmode)
 			{
-				m_frameBuffer->paintBoxRel(x_total_time, y_times, w_total_time + OFFSET_INNER_MID, m_item_height, COL_MENUHEAD_PLUS_0); //NI
+				m_frameBuffer->paintBoxRel(x_total_time, y_times, w_total_time + OFFSET_INNER_MID, m_item_height, COL_MENUHEAD_PLUS_0);
 				if (m_time_total > 0)
 				{
-					g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(x_total_time, y_times + m_item_height, w_total_time, total_time, COL_MENUHEAD_TEXT); //NI
+					g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(x_total_time, y_times + m_item_height, w_total_time, total_time, COL_MENUHEAD_TEXT);
 				}
 			}
 			if (updatePlayed || (m_state == CAudioPlayerGui::PAUSE))
 			{
-				m_frameBuffer->paintBoxRel(x_faked_time, y_times, w_faked_time, m_item_height, COL_MENUHEAD_PLUS_0); //NI
+				m_frameBuffer->paintBoxRel(x_faked_time, y_times, w_faked_time, m_item_height, COL_MENUHEAD_PLUS_0);
 				struct timeval tv;
 				gettimeofday(&tv, NULL);
 				if ((m_state != CAudioPlayerGui::PAUSE) || (tv.tv_sec & 1))
 				{
-					g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(x_played_time, y_times + m_item_height, w_played_time, played_time, COL_MENUHEAD_TEXT); //NI
+					g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(x_played_time, y_times + m_item_height, w_played_time, played_time, COL_MENUHEAD_TEXT);
 				}
 			}
 		}
@@ -2288,8 +2287,8 @@ bool CAudioPlayerGui::getNumericInput(neutrino_msg_t& msg, int& val)
 		sprintf(str, "%d", val);
 		int w = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNEL_NUM_ZAP]->getRenderWidth(str);
 		int h = g_Font[SNeutrinoSettings::FONT_TYPE_CHANNEL_NUM_ZAP]->getHeight();
-		m_frameBuffer->paintBoxRel(x1 - 7, y1 - h - 5, w + 14, h + 10, COL_FRAME_PLUS_0); //NI
-		m_frameBuffer->paintBoxRel(x1 - 6, y1 - h - 4, w + 12, h +  8, COL_MENUCONTENTSELECTED_PLUS_0); //NI
+		m_frameBuffer->paintBoxRel(x1 - 7, y1 - h - 5, w + 14, h + 10, COL_FRAME_PLUS_0);
+		m_frameBuffer->paintBoxRel(x1 - 6, y1 - h - 4, w + 12, h +  8, COL_MENUCONTENTSELECTED_PLUS_0);
 		g_Font[SNeutrinoSettings::FONT_TYPE_CHANNEL_NUM_ZAP]->RenderString(x1, y1, w + 1, str, COL_MENUCONTENTSELECTED_TEXT);
 		while (true)
 		{
