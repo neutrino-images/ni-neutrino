@@ -4,6 +4,7 @@
 	Copyright (C) 2001 Steffen Hehn 'McClean'
 	Copyright (C) 2002-2008 the tuxbox project contributors
 	Copyright (C) 2008 Novell, Inc. Author: Stefan Seyfried
+	Copyright (C) 2011-2013 Stefan Seyfried
 	Copyright (C) 2017 Sven Hoefer
 
 	License: GPL
