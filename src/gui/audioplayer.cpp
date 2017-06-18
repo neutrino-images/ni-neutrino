@@ -394,7 +394,6 @@ int CAudioPlayerGui::show()
 	while (loop)
 	{
 		updateMetaData();
-
 		updateTimes();
 
 		// stop if mode was changed in another thread
@@ -2165,13 +2164,13 @@ void CAudioPlayerGui::updateTimes(const bool force)
 			int x_total_time = m_x + m_width - OFFSET_INNER_MID - w_total_time;
 			// played time offset to align this value on the right side
 			int o_played_time = std::max(w_faked_time - w_played_time, 0);
-			int x_faked_time = m_x + m_width - OFFSET_INNER_MID - w_total_time - w_faked_time;
+			int x_faked_time = x_total_time - w_faked_time;
 			int x_played_time = x_faked_time + o_played_time;
 			int y_times = m_y + OFFSET_INNER_SMALL;
 
 			if (updateTotal && !m_inetmode)
 			{
-				m_frameBuffer->paintBoxRel(x_total_time, y_times, w_total_time + OFFSET_INNER_MID, m_item_height, COL_MENUHEAD_PLUS_0);
+				m_frameBuffer->paintBoxRel(x_total_time, y_times, w_total_time, m_item_height, COL_MENUHEAD_PLUS_0);
 				if (m_time_total > 0)
 				{
 					g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(x_total_time, y_times + m_item_height, w_total_time, total_time, COL_MENUHEAD_TEXT);
