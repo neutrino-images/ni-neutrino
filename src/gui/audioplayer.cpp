@@ -1855,32 +1855,43 @@ void CAudioPlayerGui::paintDetailsLine(int pos)
 			m_infobox->forceTextPaint(false);
 		}
 
-		//title
-		std::string text_info = m_playlist[m_selected].MetaData.title;
+		// first line
+		std::string text_info("");
+		getFileInfoToDisplay(text_info, m_playlist[m_selected]);
 
-		//date, genre
-		if (m_playlist[m_selected].MetaData.genre.empty())
-			text_info = m_playlist[m_selected].MetaData.date;
-		else if (m_playlist[m_selected].MetaData.date.empty())
-			text_info = m_playlist[m_selected].MetaData.genre;
+		text_info += "\n";
+
+		// second line; url or date and genre
+		if (m_inetmode)
+		{
+			if (!m_playlist[m_selected].MetaData.url.empty())
+			{
+				text_info += m_playlist[m_selected].MetaData.url;
+			}
+			else
+				text_info += " ";
+		}
 		else
 		{
-			text_info = m_playlist[m_selected].MetaData.genre;
-			text_info += " / ";
-			text_info += m_playlist[m_selected].MetaData.date;
-		}
+			bool got_date = false;
+			if (!m_playlist[m_selected].MetaData.date.empty())
+			{
+				got_date = true;
+				text_info += m_playlist[m_selected].MetaData.date;
+			}
 
-		//artist, album
-		text_info = m_playlist[m_selected].MetaData.artist;
-		if (!(m_playlist[m_selected].MetaData.album.empty()))
-		{
-			text_info += " (";
-			text_info += m_playlist[m_selected].MetaData.album;
-			text_info += ')';
-		}
+			bool got_genre = false;
+			if (!m_playlist[m_selected].MetaData.genre.empty())
+			{
+				got_genre = true;
+				if (got_date)
+					text_info += " / ";
+				text_info += m_playlist[m_selected].MetaData.genre;
+			}
 
-		// 'simulate' a second line; maybe usefull for some more informations e.g. url or so
-		text_info += "\n ";
+			if (!got_date && !got_genre)
+				text_info += " ";
+		}
 
 		m_infobox->setText(text_info, CTextBox::AUTO_WIDTH, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO], COL_MENUCONTENTDARK_TEXT);
 		m_infobox->paint(false);
@@ -2308,13 +2319,12 @@ bool CAudioPlayerGui::getNumericInput(neutrino_msg_t& msg, int& val)
 
 void CAudioPlayerGui::getFileInfoToDisplay(std::string &fileInfo, CAudiofileExt &file)
 {
-	//std::string fileInfo;
 	std::string artist;
 	std::string title;
 
 	if (!m_inetmode)
 	{
-		artist ="Artist?";
+		artist = "Artist?";
 		title = "Title?";
 	}
 
@@ -2329,28 +2339,30 @@ void CAudioPlayerGui::getFileInfoToDisplay(std::string &fileInfo, CAudiofileExt 
 	if (g_settings.audioplayer_display == TITLE_ARTIST)
 	{
 		fileInfo += title;
-		if (!title.empty() && !artist.empty()) fileInfo += ", ";
+		if (!title.empty() && !artist.empty())
+			fileInfo += " - ";
 		fileInfo += artist;
 	}
 	else //if (g_settings.audioplayer_display == ARTIST_TITLE)
 	{
 		fileInfo += artist;
-		if (!title.empty() && !artist.empty()) fileInfo += ", ";
+		if (!title.empty() && !artist.empty())
+			fileInfo += " - ";
 		fileInfo += title;
 	}
 
 	if (!file.MetaData.album.empty())
 	{
-		fileInfo += " (";
+		fileInfo += " - ";
 		fileInfo += file.MetaData.album;
-		fileInfo += ')';
 	}
+
 	if (fileInfo.empty())
 	{
 		fileInfo += "Unknown";
 	}
+
 	file.firstChar = (char)tolower(fileInfo[0]);
-	//info += fileInfo;
 }
 
 void CAudioPlayerGui::addToPlaylist(CAudiofileExt &file)
@@ -2358,7 +2370,7 @@ void CAudioPlayerGui::addToPlaylist(CAudiofileExt &file)
 	//printf("add2Playlist: %s\n", file.Filename.c_str());
 	if (m_select_title_by_name)
 	{
-		std::string t = "";
+		std::string t("");
 		getFileInfoToDisplay(t,file);
 	}
 	else
@@ -2540,8 +2552,8 @@ unsigned char CAudioPlayerGui::getFirstChar(CAudiofileExt &file)
 {
 	if (file.firstChar == '\0')
 	{
-		std::string info;
-		getFileInfoToDisplay(info,file);
+		std::string info("");
+		getFileInfoToDisplay(info, file);
 	}
 	//printf("getFirstChar: %c\n",file.firstChar);
 	return file.firstChar;
