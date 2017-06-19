@@ -64,6 +64,7 @@ CAudioMetaData::CAudioMetaData( const CAudioMetaData& src )
 	hasInfoOrXingTag( src.hasInfoOrXingTag ), artist( src.artist ),
 	title( src.title ), album( src.album ), sc_station( src.sc_station ),
 	date( src.date ), genre( src.genre ), track( src.track ),cover(src.cover),
+	url( src.url ),
 	cover_temporary( false ),
 	changed( src.changed )
 {
@@ -97,8 +98,8 @@ void CAudioMetaData::operator=( const CAudioMetaData& src )
 	genre = src.genre;
 	track = src.track;
 	cover = src.cover;
+	url = src.url;
 	sc_station = src.sc_station;
-	changed = src.changed;
 	changed = src.changed;
 	cover_temporary = false;
 }
@@ -125,6 +126,7 @@ void CAudioMetaData::clear()
 	if (cover_temporary && !cover.empty())
 		unlink(cover.c_str());
 	cover.clear();
+	url.clear();
 	cover_temporary=false;
 	changed=false;
 }
