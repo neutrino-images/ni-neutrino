@@ -318,7 +318,7 @@ int CEventList::exec(const t_channel_id channel_id, const std::string& channelna
 	height = frameBuffer->getScreenHeightRel();
 
 	// Calculate header_height
-	header_height = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight(); //NI
+	header_height = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
 	footer_height = header_height;
 	const int pic_h = 39;
 	header_height = std::max(header_height, pic_h);
@@ -851,7 +851,6 @@ void CEventList::paintDescription(int index)
 	else
 		CEitManager::getInstance()->getActualEPGServiceKey(evtlist[index].channelID, &epgData );
 
-	//NI
 	infozone_text = "";
 	if (!epgData.info1.empty() && !epgData.info2.empty() && (epgData.info2.find(epgData.info1) != 0)) {
 		infozone_text += epgData.info1;
@@ -890,7 +889,7 @@ void CEventList::paintHead(t_channel_id _channel_id, std::string _channelname, s
 
 	if (header->isPainted())
 		header->getChannelLogoObject()->hide();
-	if (g_settings.channellist_show_channellogo) //NI
+	if (g_settings.channellist_show_channellogo)
 		header->setChannelLogo(_channel_id,_channelname);
 	header->setCaption(_channelname, CCHeaderTypes::CC_TITLE_LEFT);
 
@@ -991,7 +990,7 @@ void CEventList::paintFoot(t_channel_id channel_id)
 	CColorKeyHelper keyhelper; //user_menue.h
 	neutrino_msg_t dummy = CRCInput::RC_nokey;
 	const char * icon = NULL;
-	struct button_label buttons[7]; //NI
+	struct button_label buttons[7]; //NI //TODO dbt: add directly into footer object with setButtonLabels()
 	int btn_cnt = 0;
 
 	int tID = -1; //any value, not NULL
