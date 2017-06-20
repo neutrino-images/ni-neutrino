@@ -1235,7 +1235,7 @@ void CTimerList::paintItem(int pos)
 		case CTimerd::TIMER_RECORD :
 		{
 			zAddData = convertChannelId2String(timer.channel_id); // UTF-8
-			zAddData += timer.channel_ci?"(CI)":""; //NI
+			zAddData += timer.channel_ci ? " (CI)" : ""; //NI
 			if (timer.apids != TIMERD_APIDS_CONF)
 			{
 				std::string sep = "";
