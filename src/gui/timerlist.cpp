@@ -1430,6 +1430,9 @@ void CTimerList::paint()
 	CVFD::getInstance()->setMode(CVFD::MODE_MENU_UTF8, g_Locale->getText(LOCALE_TIMERLIST_NAME));
 
 	paintHead();
+	// paint plain background and footer first to avoid flicker effects while timerlist construction
+	frameBuffer->paintBoxRel(x, y + header_height, width, item_height*listmaxshow, COL_MENUCONTENT_PLUS_0);
+	paintFoot();
 	for (unsigned int count=0; count<listmaxshow; count++)
 	{
 		paintItem(count);
@@ -1443,7 +1446,7 @@ void CTimerList::paint()
 		paintScrollBar(x + width - SCROLLBAR_WIDTH, y + header_height, SCROLLBAR_WIDTH, item_height*listmaxshow, total_pages, current_page);
 	}
 
-	paintFoot();
+	//paintFoot();
 	visible = true;
 }
 
