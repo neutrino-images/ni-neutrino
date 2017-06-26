@@ -94,7 +94,7 @@ void CComponentsScrollBar::initVarSbForm(const int& count, const fb_pixel_t& col
 	sb_down_obj	= NULL;
 	sb_segments_obj = NULL;
 
-	setCorner(RADIUS_NONE, CORNER_ALL); //NI
+	corner_type = CORNER_NONE;
 
 	sb_up_icon	= frameBuffer->getIconPath(NEUTRINO_ICON_BUTTON_UP) ;
 	sb_down_icon	= frameBuffer->getIconPath(NEUTRINO_ICON_BUTTON_DOWN);

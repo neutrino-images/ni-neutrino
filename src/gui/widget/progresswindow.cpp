@@ -124,6 +124,7 @@ CProgressBar* CProgressWindow::getProgressItem()
 	pBar->setActiveColor(COL_PROGRESSBAR_ACTIVE_PLUS_0);
 	pBar->setFrameThickness(1);
 	pBar->setColorFrame(COL_PROGRESSBAR_ACTIVE_PLUS_0);
+	pBar->setType(CProgressBar::PB_TIMESCALE);
 	addWindowItem(pBar);
 
 	return pBar;
@@ -132,7 +133,6 @@ CProgressBar* CProgressWindow::getProgressItem()
 void CProgressWindow::initStatus(const unsigned int prog, const unsigned int max, const string &statusText, CProgressBar *pBar)
 {
 	pBar->allowPaint(true);
-	unsigned int cur_perc = prog*100/(max+1);
 	pBar->setValues(prog, (int)max);
 	if (!statusText.empty() && (cur_statusText != statusText)){
 		showStatusMessageUTF(statusText);

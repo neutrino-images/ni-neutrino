@@ -133,7 +133,7 @@ void CBEBouquetWidget::paint()
 
 void CBEBouquetWidget::paintHead()
 {
-	CComponentsHeaderLocalized header(x, y, width, theight, LOCALE_BOUQUETLIST_HEAD, "" /*no header icon*/, CComponentsHeaderLocalized::CC_BTN_EXIT);
+	CComponentsHeader header(x, y, width, theight, LOCALE_BOUQUETLIST_HEAD, "" /*no header icon*/, CComponentsHeader::CC_BTN_EXIT);
 	header.paint(CC_SAVE_SCREEN_NO);
 }
 
@@ -150,7 +150,7 @@ const struct button_label CBEBouquetWidgetButtons[6] =
 void CBEBouquetWidget::paintFoot()
 {
 	size_t numbuttons = sizeof(CBEBouquetWidgetButtons)/sizeof(CBEBouquetWidgetButtons[0]);
-	footer.paintButtons(x, y+height, width, ButtonHeight, numbuttons, CBEBouquetWidgetButtons, width/numbuttons-2*OFFSET_INNER_MID, 0, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]);
+	footer.paintButtons(x, y+height, width, ButtonHeight, numbuttons, CBEBouquetWidgetButtons, width/numbuttons-2*OFFSET_INNER_MID);
 }
 
 void CBEBouquetWidget::hide()

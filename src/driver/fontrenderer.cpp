@@ -69,7 +69,7 @@ FBFontRenderClass::FBFontRenderClass(const int xr, const int yr)
 	int maxbytes= 4 *1024*1024;
 	dprintf(DEBUG_INFO, "[FONT] Intializing font cache, using max. %dMB...\n", maxbytes/1024/1024);
 	fflush(stdout);
-	if (FTC_Manager_New(library, 0, 0, maxbytes, myFTC_Face_Requester, this, &cacheManager))
+	if (FTC_Manager_New(library, 10, 20, maxbytes, myFTC_Face_Requester, this, &cacheManager))
 	{
 		dprintf(DEBUG_NORMAL, "[FONT] manager failed!\n");
 		return;
