@@ -61,6 +61,7 @@ extern CPictureViewer * g_PicViewer;
 #include <gui/infoclock.h>
 #include <system/settings.h>
 #include <system/helpers.h>
+#include <system/httptool.h>
 #include <driver/screen_max.h>
 
 #include <algorithm>
@@ -1021,19 +1022,23 @@ bool CAudioPlayerGui::shufflePlaylist(void)
 	return(result);
 }
 
-void CAudioPlayerGui::addUrl2Playlist(const char *url, const char *name, const time_t bitrate)
+void CAudioPlayerGui::addUrl2Playlist(const char *url, const char *name, const char *logo, const time_t bitrate)
 {
 	CAudiofileExt mp3(url, CFile::STREAM_AUDIO);
 	//printf("[addUrl2Playlist], name = %s, url = %s\n", name, url);
 	if (name != NULL)
-	{
 		mp3.MetaData.title = name;
-	}
 	else
 	{
-		std::string tmp = mp3.Filename.substr(mp3.Filename.rfind('/')+1);
-		mp3.MetaData.title = tmp;
+		std::string filename = mp3.Filename.substr(mp3.Filename.rfind('/') + 1);
+		mp3.MetaData.title = filename;
 	}
+
+	if (logo != NULL)
+		mp3.MetaData.logo = logo;
+	else
+		mp3.MetaData.logo.clear();
+
 	if (bitrate)
 		mp3.MetaData.total_time = bitrate;
 	else
@@ -1045,7 +1050,7 @@ void CAudioPlayerGui::addUrl2Playlist(const char *url, const char *name, const t
 		addToPlaylist(mp3);
 }
 
-void CAudioPlayerGui::processPlaylistUrl(const char *url, const char *name, const time_t tim)
+void CAudioPlayerGui::processPlaylistUrl(const char *url, const char *name, const char *logo, const time_t tim)
 {
 	CURL *curl_handle;
 	struct MemoryStruct chunk;
@@ -1120,7 +1125,7 @@ void CAudioPlayerGui::processPlaylistUrl(const char *url, const char *name, cons
 						tmp = strchr(line, '\n');
 						if (tmp != NULL)
 							*tmp = '\0';
-						addUrl2Playlist(ptr, name, tim);
+						addUrl2Playlist(ptr, name, logo, tim);
 					}
 				}
 			}
@@ -1177,7 +1182,7 @@ void CAudioPlayerGui::readDir_ic(void)
 	{
 		xmlDocPtr answer_parser = parseXml(answer.c_str());
 		scanBox->hide();
-		scanXmlData(answer_parser, "listen_url", "server_name", "bitrate", true);
+		scanXmlData(answer_parser, "listen_url", "server_name", NULL, "bitrate", true);
 	}
 	else
 		scanBox->hide();
@@ -1188,10 +1193,10 @@ void CAudioPlayerGui::readDir_ic(void)
 void CAudioPlayerGui::scanXmlFile(std::string filename)
 {
 	xmlDocPtr answer_parser = parseXmlFile(filename.c_str());
-	scanXmlData(answer_parser, "url", "name");
+	scanXmlData(answer_parser, "url", "name", "logo");
 }
 
-void CAudioPlayerGui::scanXmlData(xmlDocPtr answer_parser, const char *urltag, const char *nametag, const char *bitratetag, bool usechild)
+void CAudioPlayerGui::scanXmlData(xmlDocPtr answer_parser, const char *urltag, const char *nametag, const char *logotag, const char *bitratetag, bool usechild)
 {
 #define IC_typetag "server_type"
 
@@ -1224,8 +1229,9 @@ void CAudioPlayerGui::scanXmlData(xmlDocPtr answer_parser, const char *urltag, c
 			while (element && msg != CRCInput::RC_home)
 			{
 				const char *ptr = NULL;
-				const char *name = NULL;
 				const char *url = NULL;
+				const char *name = NULL;
+				const char *logo = NULL;
 				time_t bitrate = 0;
 				bool skip = true;
 				listPos++;
@@ -1243,10 +1249,12 @@ void CAudioPlayerGui::scanXmlData(xmlDocPtr answer_parser, const char *urltag, c
 					xmlNodePtr child = xmlChildrenNode(element);
 					while (child)
 					{
-						if (strcmp(xmlGetName(child), nametag) == 0)
-							name = xmlGetData(child);
-						else if (strcmp(xmlGetName(child), urltag) == 0)
+						if (strcmp(xmlGetName(child), urltag) == 0)
 							url = xmlGetData(child);
+						else if (strcmp(xmlGetName(child), nametag) == 0)
+							name = xmlGetData(child);
+						else if (strcmp(xmlGetName(child), logotag) == 0)
+							logo = xmlGetData(child);
 						else if (strcmp(xmlGetName(child), IC_typetag) == 0)
 							type = xmlGetData(child);
 						else if (bitratetag && strcmp(xmlGetName(child), bitratetag) == 0)
@@ -1269,6 +1277,7 @@ void CAudioPlayerGui::scanXmlData(xmlDocPtr answer_parser, const char *urltag, c
 				{
 					url = xmlGetAttribute(element, urltag);
 					name = xmlGetAttribute(element, nametag);
+					logo = xmlGetAttribute(element, logotag);
 					if (bitratetag)
 					{
 						ptr = xmlGetAttribute(element, bitratetag);
@@ -1283,13 +1292,12 @@ void CAudioPlayerGui::scanXmlData(xmlDocPtr answer_parser, const char *urltag, c
 					progress.showStatusMessageUTF(url);
 					//printf("Processing %s, %s\n", url, name);
 					if (strstr(url, ".m3u") || strstr(url, ".pls"))
-						processPlaylistUrl(url, name);
+						processPlaylistUrl(url, name, logo);
 					else
-						addUrl2Playlist(url, name, bitrate);
+						addUrl2Playlist(url, name, logo, bitrate);
 				}
 				element = xmlNextNode(element);
 				g_RCInput->getMsg(&msg, &data, 0);
-
 			}
 			progress.hide();
 		}
@@ -1402,7 +1410,7 @@ bool CAudioPlayerGui::openFilebrowser(void)
 							if (strstr(url, ".m3u") || strstr(url, ".pls"))
 								processPlaylistUrl(url);
 							else
-								addUrl2Playlist(url, name, duration);
+								addUrl2Playlist(url, name, NULL, duration);
 						}
 						else if ((url = strstr(cLine, "icy://")) != NULL)
 						{
@@ -1545,7 +1553,7 @@ bool CAudioPlayerGui::openSCbrowser(void)
 #endif // LCD_UPDATE
 			}
 			//printf("processPlaylistUrl(%s, %s)\n", files->Url.c_str(), files->Name.c_str());
-			processPlaylistUrl(files->Url.c_str(), files->Name.c_str(), files->Time);
+			processPlaylistUrl(files->Url.c_str(), files->Name.c_str(), NULL, files->Time);
 			g_RCInput->getMsg(&msg, &data, 0);
 		}
 		if (m_select_title_by_name)
@@ -1719,12 +1727,54 @@ void CAudioPlayerGui::paintCover()
 {
 	const CAudioMetaData meta = CAudioPlayer::getInstance()->getMetaData();
 
+	// try folder.jpg first
 	std::string cover = m_curr_audiofile.Filename.substr(0, m_curr_audiofile.Filename.rfind('/')) + "/folder.jpg";
+	bool stationlogo = false;
+
+	// try cover from tag
 	if (!meta.cover.empty())
 		cover = meta.cover;
+	// try station logo
+	else if (!meta.logo.empty())
+	{
+		std::size_t found_url = meta.logo.find("://");
+		if (found_url != std::string::npos)
+		{
+			mkdir(COVERDIR, 0755);
+
+			std::string filename(meta.logo);
+			const size_t last_slash_idx = filename.find_last_of("/");
+			if (last_slash_idx != std::string::npos)
+				filename.erase(0, last_slash_idx + 1);
+
+			std::string fullname(COVERDIR);
+			fullname += "/" + filename;
+
+			CHTTPTool httptool;
+			if (httptool.downloadFile(meta.logo, fullname.c_str()))
+			{
+				cover = fullname;
+				stationlogo = true;
+			}
+			else
+				cover.clear();
+		}
+	}
 
 	if (access(cover.c_str(), F_OK) == 0)
+	{
 		g_PicViewer->DisplayImage(cover, m_x + OFFSET_INNER_MID, m_y + OFFSET_INNER_SMALL, m_title_height - 2*OFFSET_INNER_SMALL, m_title_height - 2*OFFSET_INNER_SMALL, m_frameBuffer->TM_NONE);
+
+		/*
+			Some guys use this covers for the screensaver.
+			So we need to keep this station-logo until the
+			stream is stopped.
+			Until this is coded we delete the station-logo
+			immediately.
+		*/
+		if (stationlogo)
+			unlink(cover.c_str());
+	}
 }
 
 void CAudioPlayerGui::paintTitleBox()
