@@ -282,6 +282,13 @@ int CAudioPlayerGui::exec(CMenuTarget* parent, const std::string &actionKey)
 		m_select_title_by_name = g_settings.audioplayer_select_title_by_name;
 	}
 
+	//NI auto-load favorites
+	if ((m_inetmode) && (m_playlist.empty()))
+	{
+		if (access(RADIO_FAVORITES_XML_FILE, F_OK) == 0)
+			scanXmlFile(RADIO_FAVORITES_XML_FILE);
+	}
+
 	if (m_playlist.empty())
 		m_current = -1;
 	else
@@ -378,18 +385,15 @@ int CAudioPlayerGui::show()
 	bool clear_before_update = false;
 	m_key_level = 0;
 
-	//NI auto-load favorites
-	if ((m_inetmode) && (m_playlist.empty()))
-	{
-		if (access(RADIO_FAVORITES_XML_FILE, F_OK) == 0)
-			scanXmlFile(RADIO_FAVORITES_XML_FILE);
-	}
-
 	//NI auto-play first entry from favorites
 	if (g_settings.inetradio_autostart)
 	{
 		if ((m_inetmode) && (!m_playlist.empty()))
+		{
+			m_current = 0;
+			m_selected = 0;
 			play(m_selected);
+		}
 	}
 
 	while (loop)
