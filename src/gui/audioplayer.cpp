@@ -709,6 +709,10 @@ int CAudioPlayerGui::show()
 					// -- setup menue for inetradio input
 					sprintf(cnt, "%d", count);
 					InputSelector.addItem(new CMenuForwarder(
+								LOCALE_AUDIOPLAYER_ADD_FAV, true, NULL, InetRadioInputChanger,
+								cnt, CRCInput::convertDigitToKey(count + 1)), old_select == count);
+					sprintf(cnt, "%d", ++count);
+					InputSelector.addItem(new CMenuForwarder(
 								LOCALE_AUDIOPLAYER_ADD_LOC, true, NULL, InetRadioInputChanger,
 								cnt, CRCInput::convertDigitToKey(count + 1)), old_select == count);
 					sprintf(cnt, "%d", ++count);
@@ -731,21 +735,28 @@ int CAudioPlayerGui::show()
 					switch (select)
 					{
 						case 0:
-							scanXmlFile(RADIO_STATION_XML_FILE);
+							scanXmlFile(RADIO_FAVORITES_XML_FILE);
 							CVFD::getInstance()->setMode(CVFD::MODE_AUDIO);
 							paintLCD();
 							break;
 						case 1:
-							readDir_ic();
+							scanXmlFile(RADIO_STATION_XML_FILE);
 							CVFD::getInstance()->setMode(CVFD::MODE_AUDIO);
 							paintLCD();
 							break;
 						case 2:
+							readDir_ic();
+							CVFD::getInstance()->setMode(CVFD::MODE_AUDIO);
+							paintLCD();
+							break;
+						case 3:
 							openSCbrowser();
 							break;
 						default:
 							break;
 					}
+					m_current = 0;
+					m_selected = 0;
 					update=true;
 				}
 				else if (shufflePlaylist())

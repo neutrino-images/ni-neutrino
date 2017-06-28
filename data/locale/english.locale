@@ -155,6 +155,7 @@ audiomenu.volume_adjustment_pcm PCM streams
 audiomenu.volume_start Start volume
 audiomenu.volume_step Volume step
 audioplayer.add Add
+audioplayer.add_fav Local radio favorites
 audioplayer.add_ic Icecast
 audioplayer.add_loc Local radio list
 audioplayer.add_sc SHOUTcast
