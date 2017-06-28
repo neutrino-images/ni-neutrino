@@ -126,8 +126,8 @@ void CUpnpBrowserGui::Init()
 
 	m_header_height = _title_height;
 	m_footer_height = _title_height;
-	m_topbox_height = _top_height*3 + OFFSET_INNER_MID; // topbox: 3 lines + inner offset
-	m_infobox_height = _info_height*2 + OFFSET_INNER_LARGE; // infobox/timebox: 2 lines + inner offset
+	m_topbox_height = 3*_top_height + 2*OFFSET_INNER_SMALL; // topbox: 3 lines + inner offset
+	m_infobox_height = 2*_info_height + 2*OFFSET_INNER_SMALL; // infobox/timebox: 2 lines + inner offset
 
 	/* From top to bottom we have:
 	 *
@@ -1131,7 +1131,7 @@ void CUpnpBrowserGui::paintItemInfo(UPnPEntry *entry)
 		if(lastname != entry->albumArtURI){
 			tmpname = lastname = entry->albumArtURI.c_str();
 			tmpname = g_PicViewer->DownloadImage(tmpname);
-			int h_image = infobox.getHeight() - OFFSET_INTER - infobox.getCornerRadius();
+			int h_image = infobox.getHeight() - 2*OFFSET_INNER_SMALL - infobox.getCornerRadius();
 			int y_image = infobox.getYPos() + infobox.getHeight()/2 - h_image/2;
 			if (!image){
 				image = new CComponentsPicture(0, y_image, tmpname, NULL, CC_SHADOW_OFF, COL_MENUCONTENTDARK_PLUS_0);
@@ -1140,7 +1140,7 @@ void CUpnpBrowserGui::paintItemInfo(UPnPEntry *entry)
 			}
 			image->setPicture(tmpname);
 			image->setHeight(h_image, true);
-			int x_image = infobox.getXPos() + infobox.getWidth() - image->getWidth() - OFFSET_INTER - infobox.getCornerRadius();
+			int x_image = infobox.getXPos() + infobox.getWidth() - infobox.getCornerRadius() - OFFSET_INNER_MID - image->getWidth();
 			image->setXPos(x_image);
 		}
 	}else{
