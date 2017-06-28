@@ -1571,6 +1571,7 @@ bool CAudioPlayerGui::openSCbrowser(void)
 #endif
 		result = true;
 	}
+	m_idletime = time(NULL);
 	CVFD::getInstance()->setMode(CVFD::MODE_AUDIO);
 	paintLCD();
 	// if playlist is turned off -> start playing immediately
