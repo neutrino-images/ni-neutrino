@@ -735,9 +735,19 @@ void CBouquetList::paint()
 	// no buttons in favonly mode
 	int numButtons = (favonly) ? 0 : sizeof(CBouquetListButtons)/sizeof(CBouquetListButtons[0]);
 
+	// FIXME: CComponentsFooter crashes again with 0 buttons as it seems
+	if (favonly)
+	{
+		// show an empty footer
+		frameBuffer->paintBoxRel(x + OFFSET_SHADOW, y + height - footer_height + OFFSET_SHADOW, width, footer_height, COL_SHADOW_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
+		frameBuffer->paintBoxRel(x, y + height - footer_height, width, footer_height, COL_MENUFOOT_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
+	}
+	else
+	{
 	CComponentsFooter footer;
 	footer.enableShadow(CC_SHADOW_ON, -1, true);
 	footer.paintButtons(x, y + height - footer_height, width, footer_height, numButtons, CBouquetListButtons);
+	}
 
 	if (!Bouquets.empty())
 	{
