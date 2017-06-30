@@ -1317,6 +1317,11 @@ bool CMoviePlayerGui::SetPosition(int pos, bool absolute)
 {
 	clearSubtitle();
 	bool res = playback->SetPosition(pos, absolute);
+	if(is_file_player && res && speed == 0 && playstate == CMoviePlayerGui::PAUSE){
+		playstate = CMoviePlayerGui::PLAY;
+		speed = 1;
+		playback->SetSpeed(speed);
+	}
 	return res;
 }
 
@@ -1614,7 +1619,8 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			makeScreenShot();
 		} else if ((msg == (neutrino_msg_t) g_settings.mpkey_rewind) ||
 				(msg == (neutrino_msg_t) g_settings.mpkey_forward)) {
-			int newspeed;
+			int newspeed = 0;
+			bool setSpeed = false;
 			if (msg == (neutrino_msg_t) g_settings.mpkey_rewind) {
 				newspeed = (speed >= 0) ? -1 : speed - 1;
 			} else {
@@ -1627,9 +1633,10 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				if (playstate != CMoviePlayerGui::PAUSE)
 					playstate = msg == (neutrino_msg_t) g_settings.mpkey_rewind ? CMoviePlayerGui::REW : CMoviePlayerGui::FF;
 				updateLcd();
+				setSpeed = true;
 			}
 
-			if (!FileTimeOSD->IsVisible() && !time_forced) {
+			if (!FileTimeOSD->IsVisible() && !time_forced && setSpeed) {
 				FileTimeOSD->switchMode(position, duration);
 				time_forced = true;
 			}
