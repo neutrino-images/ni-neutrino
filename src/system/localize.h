@@ -70,6 +70,7 @@ class CLocaleManager
 
 		const char * getText(const neutrino_locale_t keyName) const;
 		std::string getString(const neutrino_locale_t keyName) const; //NI
+		std::string getTextAsString(const neutrino_locale_t keyName) const {return (static_cast<std::string>(getText(keyName)));}
 
 		static neutrino_locale_t getMonth  (const struct tm * struct_tm_p);
 		static neutrino_locale_t getMonth  (const int mon);
