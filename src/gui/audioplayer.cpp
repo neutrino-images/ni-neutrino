@@ -1798,7 +1798,6 @@ void CAudioPlayerGui::paintCover()
 		if (cover_object)
 		{
 			cover_object->doPaintBg(false);
-			cover_object->SetTransparent(CFrameBuffer::TM_BLACK);
 			cover_object->setHeight(m_title_height - 2*OFFSET_INNER_SMALL, true);
 			cover_object->paint();
 
