@@ -90,7 +90,7 @@
 #undef HTTPD_NAME
 #define HTTPD_NAME 						"nhttpd"
 #define HTTPD_STANDARD_PORT				80
-#define HTTPD_MAX_CONNECTIONS			10
+#define HTTPD_MAX_CONNECTIONS			50
 #define HTTPD_REQUEST_LOG 				"/tmp/httpd_log"
 #define SSL_PEMFILE						HTTPD_CONFIGDIR "/server.pem"
 #define SSL_CA_FILE						HTTPD_CONFIGDIR "/cacert.pem"
