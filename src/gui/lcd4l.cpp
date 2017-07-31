@@ -93,6 +93,8 @@ extern cVideo *videoDecoder;
 #define LAYOUT			LCD_DATADIR "layout"
 
 #define EVENT			LCD_DATADIR "event"
+#define INFO1			LCD_DATADIR "info1"
+#define INFO2			LCD_DATADIR "info2"
 #define PROGRESS		LCD_DATADIR "progress"
 #define DURATION		LCD_DATADIR "duration"
 #define START			LCD_DATADIR "start"
@@ -220,6 +222,8 @@ void CLCD4l::Init()
 	m_Layout	= "n/a";
 
 	m_Event		= "n/a";
+	m_Info1		= "n/a";
+	m_Info2		= "n/a";
 	m_Progress	= -1;
 	for (int i = 0; i < (int)sizeof(m_Duration); i++)
 		m_Duration[i] = ' ';
@@ -719,6 +723,8 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	/* ----------------------------------------------------------------- */
 
 	std::string Event = "";
+	std::string Info1 = "";
+	std::string Info2 = "";
 	int Progress = 0;
 	char Duration[sizeof(m_Duration)] = {0};
 	char Start[6] = {0};
@@ -739,6 +745,13 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		{
 			if (!CurrentNext.current_name.empty())
 				Event = CurrentNext.current_name;
+
+			CShortEPGData shortEpgData;
+			if (CEitManager::getInstance()->getEPGidShort(CurrentNext.current_uniqueKey, &shortEpgData))
+			{
+				Info1 = shortEpgData.info1;
+				Info2 = shortEpgData.info2;
+			}
 
 			if ((CurrentNext.current_zeit.dauer > 0) && (CurrentNext.current_zeit.dauer < 86400))
 			{
@@ -787,6 +800,12 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 			if ( !meta.title.empty() )
 				Event += meta.title;
 
+			if (!meta.album.empty())
+				Info1 = meta.album;
+
+			if (!meta.genre.empty())
+				Info2 = meta.genre;
+
 			time_t total = meta.total_time;
 			time_t done = CAudioPlayer::getInstance()->getTimePlayed();
 
@@ -814,6 +833,12 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		{
 			if (!CMoviePlayerGui::getInstance().p_movie_info->epgTitle.empty())
 				Event = CMoviePlayerGui::getInstance().p_movie_info->epgTitle;
+
+			if (!CMoviePlayerGui::getInstance().p_movie_info->epgInfo1.empty())
+				Info1 = CMoviePlayerGui::getInstance().p_movie_info->epgInfo1;
+
+			if (!CMoviePlayerGui::getInstance().p_movie_info->epgInfo2.empty())
+				Info2 = CMoviePlayerGui::getInstance().p_movie_info->epgInfo2;
 		}
 		else if (!CMoviePlayerGui::getInstance().GetFile().empty())
 			Event = CMoviePlayerGui::getInstance().GetFile();
@@ -855,6 +880,18 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	{
 		WriteFile(EVENT, Event, g_settings.lcd4l_convert);
 		m_Event = Event;
+	}
+
+	if (m_Info1.compare(Info1))
+	{
+		WriteFile(INFO1, Info1, g_settings.lcd4l_convert);
+		m_Info1 = Info1;
+	}
+
+	if (m_Info2.compare(Info2))
+	{
+		WriteFile(INFO2, Info2, g_settings.lcd4l_convert);
+		m_Info2 = Info2;
 	}
 
 	if (m_Start.compare(Start))
