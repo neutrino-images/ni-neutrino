@@ -2327,6 +2327,9 @@ TIMER_START();
 	cs_new_auto_videosystem();
 #endif
 
+#if !HAVE_COOL_HARDWARE
+	g_info.hw_caps = get_hwcaps();
+#endif
 	g_Locale        = new CLocaleManager;
 
 	int loadSettingsErg = loadSetup(NEUTRINO_SETTINGS_FILE);
@@ -2428,8 +2431,10 @@ TIMER_START();
 
 	CheckFastScan();
 
+#if HAVE_COOL_HARDWARE
 	// init hw_caps *after* zapit start!
 	g_info.hw_caps = get_hwcaps();
+#endif
 
 	//timer start
 	long timerd_signal = 0;
