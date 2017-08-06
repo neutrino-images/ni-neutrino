@@ -269,16 +269,16 @@ channellist.epgtext_align_right right
 channellist.extended Show event progress
 channellist.extended_colored with colored progressbar
 channellist.extended_simple with simple progressbar
-channellist.favs Favoriten
-channellist.foot Channel Information
-channellist.foot_freq Sat/Freq Info
-channellist.foot_next next Event
+channellist.favs Favorites
+channellist.foot Channel information
+channellist.foot_freq Sat/Freq info
+channellist.foot_next Next event
 channellist.foot_off off
 channellist.foot_sort_alpha sorted[alpha]
 channellist.foot_sort_chnum sorted[number]
 channellist.foot_sort_freq sorted[freq]
 channellist.foot_sort_sat sorted[sat]
-channellist.head All Services
+channellist.head All services
 channellist.history History
 channellist.history_clear Clear history
 channellist.keep_numbers Persistent channel numbers
