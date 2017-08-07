@@ -327,6 +327,22 @@ static SNeutrinoSettings::usermenu_t usermenu_default[] = {
 /**************************************************************************************
 *          CNeutrinoApp -  loadSetup, load the application-settings                   *
 **************************************************************************************/
+#if HAVE_TRIPLEDRAGON || HAVE_SPARK_HARDWARE || HAVE_GENERIC_HARDWARE
+#define DEFAULT_X_START_SD	32
+#define DEFAULT_Y_START_SD	26
+#define DEFAULT_X_END_SD	694
+#define DEFAULT_Y_END_SD	570
+#else
+#define DEFAULT_X_START_SD	60
+#define DEFAULT_Y_START_SD	20
+#define DEFAULT_X_END_SD	1220
+#define DEFAULT_Y_END_SD	560
+#endif
+
+#define DEFAULT_X_START_HD	40   //5
+#define DEFAULT_Y_START_HD	25   //5
+#define DEFAULT_X_END_HD	1235 //1275
+#define DEFAULT_Y_END_HD	690  //715
 
 std::string ttx_font_file = "";
 
@@ -528,8 +544,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.shutdown_count = configfile.getInt32("shutdown_count", 0);
 
 	g_settings.shutdown_min = 0;
-	if (can_shutdown || cs_get_revision() == 1) //(g_info.hw_caps->can_shutdown || cs_get_revision() == 1)
-		g_settings.shutdown_min = configfile.getInt32("shutdown_min", 000); //NI
+	if (g_info.hw_caps->can_shutdown || cs_get_revision() == 1)
+		g_settings.shutdown_min = configfile.getInt32("shutdown_min", 000);
 	g_settings.sleeptimer_min = configfile.getInt32("sleeptimer_min", 0);
 
 	g_settings.timer_remotebox_ip.clear();
