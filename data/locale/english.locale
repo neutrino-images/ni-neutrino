@@ -355,7 +355,7 @@ colormenu.font_ttx Select Teletext font
 colormenu.menucolors Colors
 colormenu.osd_preset TV preset
 colormenu.osd_resolution OSD resolution
-colormenu.progressbar_active Aktive part color
+colormenu.progressbar_active Active part color
 colormenu.progressbar_passive Background
 colormenu.shadow_color Shadow Color
 colormenu.textcolor Text color
