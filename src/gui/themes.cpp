@@ -330,6 +330,11 @@ void CThemes::setTheme(CConfigFile &configfile)
 	configfile.setInt32( "progressbar_timescale_yellow", t.progressbar_timescale_yellow);
 	configfile.setInt32( "progressbar_timescale_invert", t.progressbar_timescale_invert);
 
+	configfile.setInt32( "shadow_alpha", t.shadow_alpha );
+	configfile.setInt32( "shadow_red", t.shadow_red );
+	configfile.setInt32( "shadow_green", t.shadow_green );
+	configfile.setInt32( "shadow_blue", t.shadow_blue );
+
 	//NI
 	configfile.setInt32( "progressbar_active_red", t.progressbar_active_red );
 	configfile.setInt32( "progressbar_active_green", t.progressbar_active_green );
@@ -436,6 +441,11 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.progressbar_timescale_green = configfile.getInt32("progressbar_timescale_green", 100);
 	t.progressbar_timescale_yellow = configfile.getInt32("progressbar_timescale_yellow", 70);
 	t.progressbar_timescale_invert = configfile.getInt32("progressbar_timescale_invert", 0);
+
+	t.shadow_alpha = configfile.getInt32( "shadow_alpha", 0 );
+	t.shadow_red = configfile.getInt32( "shadow_red", 8 );
+	t.shadow_green = configfile.getInt32( "shadow_green", 8);
+	t.shadow_blue = configfile.getInt32( "shadow_blue", 8 );
 
 	//NI
 	t.progressbar_active_red = configfile.getInt32( "progressbar_active_red", 62 );

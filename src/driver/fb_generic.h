@@ -239,6 +239,7 @@ class CFrameBuffer : public sigc::trackable
 				const int h = 0, const unsigned char offset = 1, bool paint = true, bool paintBg = false, const fb_pixel_t colBg = 0);
 		bool paintIcon8(const std::string & filename, const int x, const int y, const unsigned char offset = 0);
 		void loadPal   (const std::string & filename, const unsigned char offset = 0, const unsigned char endidx = 255);
+		void clearIconCache();
 
 		bool loadPicture2Mem        (const std::string & filename, fb_pixel_t * const memp);
 		bool loadPicture2FrameBuffer(const std::string & filename);
@@ -285,9 +286,6 @@ class CFrameBuffer : public sigc::trackable
 		virtual void setOsdResolutions();
 		std::vector<osd_resolution_t> osd_resolutions;
 		size_t getIndexOsdResolution(uint32_t mode);
-
-		//NI
-		void clearIconCache();
 
 		enum
 			{
