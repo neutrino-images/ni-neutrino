@@ -337,7 +337,7 @@ int CNETFSMountGui::write_config(int mt)
 							<< g_settings.netfs[mt][i].options1
 							<< (g_settings.netfs[mt][i].options2.empty() 	? "" : ",")
 							<< g_settings.netfs[mt][i].options2 << '\t' << '\t'
-							<< "//" << ((g_settings.netfs[mt][i].ip.empty()) 	? "0.0.0.0" : g_settings.netfs[mt][i].ip)
+							<< "://" << ((g_settings.netfs[mt][i].ip.empty()) 	? "0.0.0.0" : g_settings.netfs[mt][i].ip)
 							<< (((!g_settings.netfs[mt][i].dir.empty()) && g_settings.netfs[mt][i].dir[0]!='/') ? "/" : "")
 							<< ((g_settings.netfs[mt][i].dir.empty()) 		? "netfsDir" : g_settings.netfs[mt][i].dir) << '\n';
 				}
