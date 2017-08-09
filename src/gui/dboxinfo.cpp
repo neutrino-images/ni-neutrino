@@ -371,8 +371,7 @@ void CDBoxInfoWidget::paint()
 #if HAVE_COOL_HARDWARE
 	title += " (";
 	title += g_info.hw_caps->boxarch;
-	title += ") - ";
-	title += g_info.hw_caps->frontend;
+	title += ")";
 #endif
 	x = getScreenStartX(width);
 
