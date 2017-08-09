@@ -156,6 +156,11 @@ struct SNeutrinoTheme
 	int progressbar_timescale_yellow;
 	int progressbar_timescale_invert;
 
+	unsigned char shadow_alpha;
+	unsigned char shadow_red;
+	unsigned char shadow_green;
+	unsigned char shadow_blue;
+
 	//NI
 	unsigned char progressbar_active_red;
 	unsigned char progressbar_active_green;
@@ -1010,6 +1015,8 @@ const time_settings_struct_t timing_setting[SNeutrinoSettings::TIMING_SETTING_CO
 #define FRAME_WIDTH_MIN		1
 
 #define DETAILSLINE_WIDTH	CFrameBuffer::getInstance()->scale2Res(16)
+
+#define SIDEBAR_WIDTH		CFrameBuffer::getInstance()->scale2Res(40)
 
 #define BIGFONT_FACTOR		1.5
 
