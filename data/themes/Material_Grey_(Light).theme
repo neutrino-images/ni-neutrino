@@ -132,3 +132,8 @@ progressbar_active_blue=74
 progressbar_passive_red=46
 progressbar_passive_green=46
 progressbar_passive_blue=46
+
+shadow_red=0
+shadow_green=0
+shadow_blue=0
+shadow_alpha=25
