@@ -264,7 +264,7 @@ int CNETFSMountGui::write_config(int mt)
 	{
 		if(mt == SNeutrinoSettings::FSTAB)
 		{
-			config_file	<< "# /etc/fstab: static file system information (generated from NetFS setup).\n"
+			config_file	<< "# " << fstabPath << ": static file system information (generated from NetFS setup).\n"
 					<< "#\n"
 					<< "# <file system> <mount point> <type> <options> <dump> <pass>\n";
 
@@ -306,7 +306,7 @@ int CNETFSMountGui::write_config(int mt)
 		}
 		else
 		{
-			config_file	<< "# /etc/auto.net: dynamic file system information (generated from NetFS setup).\n"
+			config_file	<< "# " << autoPath << ": dynamic file system information (generated from NetFS setup).\n"
 					<< "#\n"
 					<< "# Every single mount point below will be available in /mnt/autofs during start\n"
 					<< "# or possibly even later if you request it.\n"
