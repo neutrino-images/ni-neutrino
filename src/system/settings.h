@@ -462,6 +462,7 @@ struct SNeutrinoSettings
 		std::string password;
 	} network_nfs[NETWORK_NFS_NR_OF_ENTRIES];
 	std::string network_nfs_audioplayerdir;
+	std::string network_nfs_streamripperdir;
 	std::string network_nfs_picturedir;
 	std::string network_nfs_moviedir;
 	std::string network_nfs_recordingdir;
