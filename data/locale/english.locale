@@ -203,6 +203,7 @@ audioplayer.streamripper_start Start streamripper
 audioplayer.streamripper_stop Stop streamripper
 audioplayer.stop Stop
 audioplayer.title_artist Title, artist
+audioplayer_internetradio.name Audioplayer and Internetradio
 blank_screen Blank screen
 bookmarkmanager.delete delete
 bookmarkmanager.name bookmarks
