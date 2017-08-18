@@ -198,10 +198,10 @@ audioplayer.select_title_by_name Titelsuche nach Name (SMS)
 audioplayer.show_playlist Playlist anzeigen
 audioplayer.shuffle Zufällig
 audioplayer.spectrum LCD Skala
+audioplayer.stop Stopp
 audioplayer.streamripper_dir Streamripper-Verzeichnis
 audioplayer.streamripper_start Streamripper starten
 audioplayer.streamripper_stop Streamripper stoppen
-audioplayer.stop Stopp
 audioplayer.title_artist Titel, Interpret
 audioplayer_internetradio.name Audioplayer und Internetradio
 blank_screen Blanker Bildschirm
