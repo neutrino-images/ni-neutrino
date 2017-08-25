@@ -1684,9 +1684,14 @@ const char * CRCInput::getSpecialKeyName(const unsigned int key)
 
 std::string CRCInput::getKeyName(const unsigned int key)
 {
-	std::string res(getKeyNameC(key & ~RC_Repeat));
-	if ((key & RC_Repeat) && res != "unknown")
-		res += " (long)";
+	std::string res;
+	if (key > RC_MaxRC)
+		res = getKeyNameC(key); /* will only resolve RC_nokey or "unknown" */
+	else {
+		res = (getKeyNameC(key & ~RC_Repeat));
+		if ((key & RC_Repeat) && res != "unknown")
+			res += " (long)";
+	}
 	return res;
 }
 
@@ -1719,6 +1724,10 @@ int CRCInput::translate(int code)
 			return RC_record;
 		case KEY_PLAY:
 			return RC_pause;
+		case KEY_CHANNELUP:
+			return RC_page_up;
+		case KEY_CHANNELDOWN:
+			return RC_page_down;
 #endif
 		default:
 			break;

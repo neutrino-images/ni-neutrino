@@ -209,6 +209,7 @@ bool CScreenShot::startThread()
 
 void* CScreenShot::initThread(void *arg)
 {
+	set_threadname("n:screenshot");
 	CScreenShot *scs = static_cast<CScreenShot*>(arg);
 	pthread_cleanup_push(cleanupThread, scs);
 //	printf("[CScreenShot::%s:%d] thread: %p\n", __func__, __LINE__, scs);
@@ -243,7 +244,6 @@ void CScreenShot::cleanupThread(void *arg)
 /* start ::run in new thread to save file in selected format */
 bool CScreenShot::Start()
 {
-	set_threadname("n:screenshot");
 	bool ret = false;
 	if (GetData())
 		ret = startThread();
