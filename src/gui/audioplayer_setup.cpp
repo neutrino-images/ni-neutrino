@@ -80,6 +80,15 @@ int CAudioPlayerSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 		return res;
 	}
 
+	if(actionKey == "streamripperdir")
+	{
+		CFileBrowser b;
+		b.Dir_Mode=true;
+		if (b.exec(g_settings.network_nfs_streamripperdir.c_str()))
+			g_settings.network_nfs_streamripperdir = b.getSelectedFile()->Name;
+		return res;
+	}
+
 	res = showAudioPlayerSetup();
 
 	return res;
@@ -102,7 +111,7 @@ int CAudioPlayerSetup::showAudioPlayerSetup()
 
 	CMenuWidget* audioplayerSetup = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_AUDIOSETUP);
 
-	audioplayerSetup->addIntroItems(LOCALE_AUDIOPLAYER_NAME);
+	audioplayerSetup->addIntroItems(LOCALE_AUDIOPLAYER_INTERNETRADIO_NAME);
 
 	// display order
 	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_DISPLAY_ORDER, &g_settings.audioplayer_display, AUDIOPLAYER_DISPLAY_ORDER_OPTIONS, AUDIOPLAYER_DISPLAY_ORDER_OPTION_COUNT, true);
@@ -136,17 +145,20 @@ int CAudioPlayerSetup::showAudioPlayerSetup()
 	mf->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_DEFDIR);
 	audioplayerSetup->addItem(mf);
 
+	audioplayerSetup->addItem(GenericMenuSeparatorLine);
+
+	// internetradio autostart first entry from favorites
+	mc = new CMenuOptionChooser(LOCALE_INETRADIO_AUTOSTART, &g_settings.inetradio_autostart, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL);
+	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INETRADIO_AUTOSTART);
+	audioplayerSetup->addItem(mc);
+
 	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_ENABLE_SC_METADATA, &g_settings.audioplayer_enable_sc_metadata, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true);
 	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_SC_METADATA);
 	audioplayerSetup->addItem(mc);
 
-	//NI
-	audioplayerSetup->addItem(GenericMenuSeparator);
-
-	//NI internetradio autostart first entry from favorites
-	mc = new CMenuOptionChooser(LOCALE_INETRADIO_AUTOSTART, &g_settings.inetradio_autostart, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL);
-	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INETRADIO_AUTOSTART);
-	audioplayerSetup->addItem(mc);
+	mf = new CMenuForwarder(LOCALE_AUDIOPLAYER_STREAMRIPPER_DIR, true, g_settings.network_nfs_streamripperdir, this, "streamripperdir");
+	mf->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_STREAMRIPPER_DIR);
+	audioplayerSetup->addItem(mf);
 
 	int res = audioplayerSetup->exec (NULL, "");
 	delete audioplayerSetup;

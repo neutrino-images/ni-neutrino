@@ -218,7 +218,7 @@ CAudioPlayerGui::~CAudioPlayerGui()
 	delete m_titlebox;
 }
 
-const struct button_label AudioPlayerButtons[][4] =
+/*const*/ struct button_label AudioPlayerButtons[][4] =
 {
 	{
 		{ NEUTRINO_ICON_BUTTON_STOP	, LOCALE_AUDIOPLAYER_STOP			},
@@ -251,6 +251,7 @@ const struct button_label AudioPlayerButtons[][4] =
 	{
 		{ NEUTRINO_ICON_BUTTON_STOP	, LOCALE_AUDIOPLAYER_STOP			},
 		{ NEUTRINO_ICON_BUTTON_PAUSE	, LOCALE_AUDIOPLAYER_PAUSE			},
+		{ NEUTRINO_ICON_BUTTON_RECORD_ACTIVE, LOCALE_AUDIOPLAYER_STREAMRIPPER_START	},
 	},
 	{
 		{ NEUTRINO_ICON_BUTTON_GREEN	, LOCALE_AUDIOPLAYER_ADD			},
@@ -322,6 +323,9 @@ int CAudioPlayerGui::exec(CMenuTarget* parent, const std::string &actionKey)
 
 	m_idletime = time(NULL);
 	m_screensaver = false;
+
+	m_streamripper_available = !find_executable("streamripper").empty() && !find_executable("streamripper.sh").empty();
+	m_streamripper_active = false;
 
 	if (parent)
 		parent->hide();
@@ -418,6 +422,13 @@ int CAudioPlayerGui::show()
 		{
 			if (m_curr_audiofile.FileType != CFile::STREAM_AUDIO)
 				playNext();
+		}
+
+		if (m_streamripper_active && !getpidof("streamripper"))
+		{
+			printf("streamripper should but doesn't work.\n");
+			m_streamripper_active = false;
+			update = true;
 		}
 
 		if (update)
@@ -838,6 +849,32 @@ int CAudioPlayerGui::show()
 			{
 				m_selected = m_current;
 				update = true;
+			}
+		}
+		else if (msg == (neutrino_msg_t) g_settings.key_record)
+		{
+			if (m_key_level == 1)
+			{
+				if (m_curr_audiofile.FileType == CFile::STREAM_AUDIO && m_streamripper_available)
+				{
+					if (m_streamripper_active)
+					{
+						ShowHint(LOCALE_MESSAGEBOX_INFO, LOCALE_AUDIOPLAYER_STREAMRIPPER_STOP, HINTBOX_MIN_WIDTH, 2);
+						my_system(2, "streamripper.sh", "stop");
+						m_streamripper_active = false;
+					}
+					else
+					{
+						ShowHint(LOCALE_MESSAGEBOX_INFO, LOCALE_AUDIOPLAYER_STREAMRIPPER_START, HINTBOX_MIN_WIDTH, 2);
+						printf("streamripper.sh start \"%s\"\n", m_playlist[m_current].MetaData.url.c_str());
+						puts("[audioplayer.cpp] executing streamripper");
+						if (my_system(3, "streamripper.sh", "start", m_playlist[m_current].MetaData.url.c_str()) != 0)
+							perror("[audioplayer.cpp]: streamripper.sh failed\n");
+						else
+							m_streamripper_active = true;
+					}
+					update = true;
+				}
 			}
 		}
 		else if (CRCInput::isNumeric(msg) && !(m_playlist.empty()))
@@ -1732,7 +1769,18 @@ void CAudioPlayerGui::paintFoot()
 		if (m_curr_audiofile.FileType != CFile::STREAM_AUDIO)
 			::paintButtons(button_x, button_y, button_width, 4, AudioPlayerButtons[0], button_width, m_button_height);
 		else
-			::paintButtons(button_x, button_y, button_width, 2, AudioPlayerButtons[6], button_width, m_button_height);
+		{
+			int b = 2;
+			if (m_streamripper_available)
+			{
+				b = 3;
+				if (m_streamripper_active)
+					AudioPlayerButtons[6][2].locale = LOCALE_AUDIOPLAYER_STREAMRIPPER_STOP;
+				else
+					AudioPlayerButtons[6][2].locale = LOCALE_AUDIOPLAYER_STREAMRIPPER_START;
+			}
+			::paintButtons(button_x, button_y, button_width, b, AudioPlayerButtons[6], button_width, m_button_height);
+		}
 	}
 	else // key_level == 2
 	{
@@ -2030,6 +2078,13 @@ void CAudioPlayerGui::stop()
 
 	if (CAudioPlayer::getInstance()->getState() != CBaseDec::STOP)
 		CAudioPlayer::getInstance()->stop();
+
+	if (m_streamripper_active)
+	{
+		ShowHint(LOCALE_MESSAGEBOX_INFO, LOCALE_AUDIOPLAYER_STREAMRIPPER_STOP, HINTBOX_MIN_WIDTH, 2);
+		my_system(2, "streamripper.sh", "stop");
+		m_streamripper_active = false;
+	}
 }
 
 void CAudioPlayerGui::pause()

@@ -529,23 +529,15 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.hdd_wakeup_msg = configfile.getInt32( "hdd_wakeup_msg", 1); //NI
 	g_settings.hdd_allow_set_recdir = configfile.getInt32( "hdd_allow_set_recdir", 1); //NI
 
-	/*
-	   hw_caps needs CFEManager and CFEManager needs g_settings.
-	   So loadSetup() cannot use hw_caps to init g_settings.
-
-	   For this reason we need this workaround.
-	*/
-	bool can_shutdown = (cs_get_revision() > 7);
-
 	g_settings.shutdown_real = false;
-	if (can_shutdown) //(g_info.hw_caps->can_shutdown)
+	if (g_info.hw_caps->can_shutdown)
 		g_settings.shutdown_real = configfile.getBool("shutdown_real"        , false );
 	g_settings.shutdown_real_rcdelay = configfile.getBool("shutdown_real_rcdelay", false );
 	g_settings.shutdown_count = configfile.getInt32("shutdown_count", 0);
 
 	g_settings.shutdown_min = 0;
-	if (g_info.hw_caps->can_shutdown || cs_get_revision() == 1)
-		g_settings.shutdown_min = configfile.getInt32("shutdown_min", 000);
+	if (g_info.hw_caps->can_shutdown)
+		g_settings.shutdown_min = configfile.getInt32("shutdown_min", 000); //NI
 	g_settings.sleeptimer_min = configfile.getInt32("sleeptimer_min", 0);
 
 	g_settings.timer_remotebox_ip.clear();
@@ -691,6 +683,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		g_settings.network_nfs[i].mac = configfile.getString("network_nfs_mac_" + i_str, "11:22:33:44:55:66");
 	}
 	g_settings.network_nfs_audioplayerdir = configfile.getString( "network_nfs_audioplayerdir", "/media/sda1/music" );
+	g_settings.network_nfs_streamripperdir = configfile.getString( "network_nfs_streamripperdir", "/media/sda1/music/streamripper" );
 	g_settings.network_nfs_picturedir = configfile.getString( "network_nfs_picturedir", "/media/sda1/pictures" );
 	g_settings.network_nfs_moviedir = configfile.getString( "network_nfs_moviedir", "/media/sda1/movies" );
 	g_settings.network_nfs_recordingdir = configfile.getString( "network_nfs_recordingdir", "/media/sda1/movies" );
@@ -1458,6 +1451,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 		configfile.setString(cfg_key, g_settings.network_nfs[i].mac);
 	}
 	configfile.setString( "network_nfs_audioplayerdir", g_settings.network_nfs_audioplayerdir);
+	configfile.setString( "network_nfs_streamripperdir", g_settings.network_nfs_streamripperdir);
 	configfile.setString( "network_nfs_picturedir", g_settings.network_nfs_picturedir);
 	configfile.setString( "network_nfs_moviedir", g_settings.network_nfs_moviedir);
 	configfile.setString( "network_nfs_recordingdir", g_settings.network_nfs_recordingdir);
@@ -2343,9 +2337,8 @@ TIMER_START();
 	cs_new_auto_videosystem();
 #endif
 
-#if !HAVE_COOL_HARDWARE
 	g_info.hw_caps = get_hwcaps();
-#endif
+
 	g_Locale        = new CLocaleManager;
 
 	int loadSettingsErg = loadSetup(NEUTRINO_SETTINGS_FILE);
@@ -2446,10 +2439,19 @@ TIMER_START();
 
 	CheckFastScan();
 
-#if HAVE_COOL_HARDWARE
-	// init hw_caps *after* zapit start!
-	g_info.hw_caps = get_hwcaps();
-#endif
+	// dirty part of hw_caps - specify some details after zapit start
+	if (strcmp(g_info.hw_caps->boxname, "HD1") == 0)
+	{
+		// only SAT-HD1 has fan
+		if (!CFEManager::getInstance()->getFE(0)->hasSat())
+			g_info.hw_caps->has_fan = 0;
+	}
+	if (strcmp(g_info.hw_caps->boxname, "Neo") == 0)
+	{
+		// detecting Neo Twin by counting frontends
+		if (CFEManager::getInstance()->getFrontendCount() > 1)
+			strcpy(g_info.hw_caps->boxname, "Neo Twin");
+	}
 
 	//timer start
 	long timerd_signal = 0;

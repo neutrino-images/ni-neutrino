@@ -199,7 +199,11 @@ audioplayer.show_playlist Playlist anzeigen
 audioplayer.shuffle Zufällig
 audioplayer.spectrum LCD Skala
 audioplayer.stop Stopp
+audioplayer.streamripper_dir Streamripper-Verzeichnis
+audioplayer.streamripper_start Streamripper starten
+audioplayer.streamripper_stop Streamripper stoppen
 audioplayer.title_artist Titel, Interpret
+audioplayer_internetradio.name Audioplayer und Internetradio
 blank_screen Blanker Bildschirm
 bookmarkmanager.delete Löschen
 bookmarkmanager.name Bookmarks
@@ -1123,6 +1127,7 @@ menu.hint_audioplayer_order Ändern der Sortierreihenfolge der Wiedergabeliste
 menu.hint_audioplayer_playlist Aktiviert die Anzeige der Titel in der Wiedergabeliste
 menu.hint_audioplayer_repeat Aktiviert das Wiederholen der Wiedergabeliste, wenn das Ende erreicht ist
 menu.hint_audioplayer_sc_metadata Aktiviert das Anzeigen der Audio-Metadaten
+menu.hint_audioplayer_streamripper_dir Wählen Sie das Aufnahmeverzeichnis für den Streamripper
 menu.hint_audioplayer_title Aktivieren Sie die Titelsuche (SMS-Stil) in der Playliste
 menu.hint_auto_lang Wählen Sie, ob automatisch ihre bevorzugte Tonspur ausgewählt wird, wenn sie vorhanden ist
 menu.hint_auto_subs Automatische Anzeige der Untertitel in Ihrer bevorzugten Sprache
