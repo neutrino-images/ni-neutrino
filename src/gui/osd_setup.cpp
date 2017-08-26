@@ -50,6 +50,7 @@
 #include <gui/color_custom.h>
 #include <gui/infoclock.h>
 #include <gui/timeosd.h>
+#include <gui/ni_menu.h> //NI
 #include <gui/widget/icons.h>
 #include <gui/widget/colorchooser.h>
 #include <gui/widget/stringinput.h>
