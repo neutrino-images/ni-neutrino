@@ -236,7 +236,7 @@ void EpgPlus::TimeLine::paintGrid()
 	for (int i = 0; i < numberOfTicks; ++i, xPos += tickDist)
 	{
 		// display a line for the tick
-		this->frameBuffer->paintVLineRel(xPos, this->y, this->font->getHeight(), COL_MENUCONTENTDARK_PLUS_0);
+		this->frameBuffer->paintVLineRel(xPos, this->y, this->font->getHeight(), COL_MENUCONTENT_TEXT);
 	}
 }
 
@@ -292,7 +292,7 @@ void EpgPlus::TimeLine::paintMark(time_t _startTime, int pduration, int px, int 
 	if (separationLineThickness > 0)
 	{
 		this->frameBuffer->paintBoxRel(this->x, this->y + this->font->getHeight() + this->font->getHeight(),
-					this->width, this->separationLineThickness, COL_MENUCONTENTDARK_PLUS_0);
+					this->width, this->separationLineThickness, COL_MENUCONTENT_TEXT);
 	}
 }
 
@@ -305,7 +305,7 @@ void EpgPlus::TimeLine::clearMark()
 	if (separationLineThickness > 0)
 	{
 		this->frameBuffer->paintBoxRel(this->x, this->y + this->font->getHeight() + this->font->getHeight(),
-					this->width, this->separationLineThickness, COL_MENUCONTENTDARK_PLUS_0);
+					this->width, this->separationLineThickness, COL_MENUCONTENT_TEXT);
 	}
 }
 
@@ -365,11 +365,11 @@ void EpgPlus::ChannelEventEntry::paint(bool pisSelected, bool toggleColor)
 	{
 		// left side
 		this->frameBuffer->paintBoxRel(this->x, this->y,
-					this->separationLineThickness, this->font->getHeight(), COL_MENUCONTENTDARK_PLUS_0);
+					this->separationLineThickness, this->font->getHeight(), COL_MENUCONTENT_TEXT);
 
 		// bottom
 		this->frameBuffer->paintBoxRel(this->x, this->y + this->font->getHeight(),
-					this->width, this->separationLineThickness, COL_MENUCONTENTDARK_PLUS_0);
+					this->width, this->separationLineThickness, COL_MENUCONTENT_TEXT);
 	}
 
 	if (pisSelected)
@@ -510,7 +510,7 @@ void EpgPlus::ChannelEntry::paint(bool isSelected, time_t _selectedTime)
 	if (separationLineThickness > 0)
 	{
 		this->frameBuffer->paintBoxRel(this->x, this->y + this->font->getHeight(),
-						this->width, this->separationLineThickness, COL_MENUCONTENTDARK_PLUS_0);
+						this->width, this->separationLineThickness, COL_MENUCONTENT_TEXT);
 	}
 
 	bool toggleColor = false;
