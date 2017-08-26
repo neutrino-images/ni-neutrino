@@ -960,10 +960,12 @@ int EpgPlus::exec(CChannelList * pchannelList, int selectedChannelIndex, CBouque
 					loop = false;
 			}
 			else if (msg == CRCInput::RC_epg)
+#if 0
 			{
 				loop = false;
 			}
 			else if (msg == CRCInput::RC_help)
+#endif
 			{
 				//fprintf(stderr, "RC_help, bigfont = %d\n", bigfont);
 				hide();
