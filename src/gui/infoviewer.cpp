@@ -695,15 +695,15 @@ void CInfoViewer::check_channellogo_ca_SettingsChange()
 	}
 }
 
-void CInfoViewer::showTitle(t_channel_id chid, const bool calledFromNumZap, int epgpos)
+void CInfoViewer::showTitle(t_channel_id chid, const bool calledFromNumZap, int epgpos, bool forcePaintButtonBar/*=false*/)
 {
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(chid);
 
 	if(channel)
-		showTitle(channel, calledFromNumZap, epgpos);
+		showTitle(channel, calledFromNumZap, epgpos, forcePaintButtonBar);
 }
 
-void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap, int epgpos)
+void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap, int epgpos, bool forcePaintButtonBar/*=false*/)
 {
 	if(!calledFromNumZap && !(zap_mode & IV_MODE_DEFAULT))
 		resetSwitchMode();
@@ -727,7 +727,8 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 	check_channellogo_ca_SettingsChange();
 	aspectRatio = 0;
 	last_curr_id = last_next_id = 0;
-	showButtonBar = !calledFromNumZap;
+	showButtonBar = (!calledFromNumZap || forcePaintButtonBar);
+	bool noTimer  = (calledFromNumZap && forcePaintButtonBar);
 
 	fileplay = (ChanNum == 0);
 	newfreq = true;
@@ -777,7 +778,7 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 	show_dot = !show_dot;
 
 	if (showButtonBar) {
-		infoViewerBB->paintshowButtonBar();
+		infoViewerBB->paintshowButtonBar(noTimer);
 	}
 
 	int ChanNumWidth = 0;
@@ -947,7 +948,7 @@ bool CInfoViewer::showLivestreamInfo()
 		CMoviePlayerGui::getInstance().getLivestreamInfo(&livestreamInfo1, &tmp1);
 
 		if (!(videoDecoder->getBlank())) {
-			int xres, yres, framerate;
+			int xres = 0, yres = 0, framerate = 0;
 			std::string tmp2;
 			videoDecoder->getPictureInfo(xres, yres, framerate);
 			switch (framerate) {
@@ -976,6 +977,7 @@ bool CInfoViewer::showLivestreamInfo()
 					tmp2 = "60fps";
 					break;
 				default:
+					framerate = 0;
 					tmp2 = g_Locale->getText(LOCALE_STREAMINFO_FRAMERATE_UNKNOWN);
 					break;
 			}
@@ -1068,7 +1070,6 @@ void CInfoViewer::loop(bool show_dot)
 				//printf("%s:%d: imitate VZAP; RC_left/right\n", __func__, __LINE__);
 				CMoviePlayerGui::getInstance().setFromInfoviewer(true);
 				g_RCInput->postMsg (msg, data);
-				hideIt = true;
 			}
 			else
 				setSwitchMode(IV_MODE_VIRTUAL_ZAP);

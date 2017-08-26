@@ -208,10 +208,11 @@ int CLuaInstCCText::CCTextSetText(lua_State *L)
 	std::string text = "";
 	lua_Integer mode = D->mode;
 	lua_Integer font_text = D->font_text;
-	tableLookup(L, "text", text);
-	tableLookup(L, "mode", mode);
-	tableLookup(L, "font_text", font_text);
-
+	if (lua_istable(L, -1)){
+		tableLookup(L, "text", text);
+		tableLookup(L, "mode", mode);
+		tableLookup(L, "font_text", font_text);
+	}
 	D->ct->setText(text, mode, g_Font[font_text]);
 	return 0;
 }
@@ -228,6 +229,7 @@ int CLuaInstCCText::CCTextGetLines(lua_State *L)
 	}
 	else {
 		CTextBox* ctb = D->ct->getCTextBoxObject();
+		D->ct->initCCText();
 		if (ctb)
 			lines = (lua_Integer)ctb->getLines();
 	}

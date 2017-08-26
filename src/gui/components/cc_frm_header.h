@@ -32,11 +32,47 @@
 #include "cc_frm_clock.h"
 #include <driver/colorgradient.h>
 
+#define DEFAULT_LOGO_ALIGN CCHeaderTypes::CC_LOGO_RIGHT
+#define DEFAULT_TITLE_ALIGN CCHeaderTypes::CC_TITLE_LEFT
+
+class CCHeaderTypes
+{
+	public:
+		///logo position options
+		typedef enum
+		{
+			CC_LOGO_RIGHT 	= 0x01,
+			CC_LOGO_LEFT 	= 0x02,
+			CC_LOGO_CENTER  = 0x04
+		}cc_logo_alignment_t;
+
+		///title position options
+		typedef enum
+		{	/*for compatibilty use CTextBox enums values*/
+			CC_TITLE_LEFT 	= 0x400,
+			CC_TITLE_CENTER	= 0x40 ,
+			CC_TITLE_RIGHT	= 0x80
+		}cc_title_alignment_t;
+
+	protected:
+		///required logo data type
+		typedef struct cch_logo_t
+		{
+			uint64_t Id;
+			std::string Name;
+			int32_t	dx_max;
+			int32_t	dy_max;
+			cc_logo_alignment_t Align;
+		} cch_logo_struct_t;
+};
+
+
 //! Sub class of CComponentsForm. Shows a header with prepared items.
 /*!
 CComponentsHeader provides prepared items like icon, caption and context button icons, mostly for usage in menues or simple windows
 */
-class CComponentsHeader : public CComponentsForm, public CCTextScreen
+
+class CComponentsHeader : public CComponentsForm, public CCTextScreen, CCHeaderTypes
 {
 	private:
 		///member: init genaral variables, parameters for mostly used properties
@@ -59,6 +95,11 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		CComponentsIconForm * cch_btn_obj;
 		///object: clock object
 		CComponentsFrmClock * cch_cl_obj;
+		///object: logo object
+		CComponentsChannelLogoScalable * cch_logo_obj;
+
+		///attributes for logos
+		cch_logo_t cch_logo;
 
 		///property: caption text, see also setCaption()
 		std::string cch_text;
@@ -89,8 +130,8 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		std::vector<std::string> v_cch_btn;
 		///property: size of header, possible values are CC_HEADER_SIZE_LARGE, CC_HEADER_SIZE_SMALL
 		int cch_size_mode;
-		///property: alignment of caption within header, see also setCaptionAlignment(), possible values are CTextBox::CENTER, default = CTextBox::NO_AUTO_LINEBREAK (left)
-		int cch_caption_align;
+		///property: alignment of caption within header, see also setCaptionAlignment()
+		cc_title_alignment_t cch_caption_align;
 		///property: enable/disable of clock, see also enableClock()
 		bool cch_cl_enable;
 		///property: clock format
@@ -112,6 +153,9 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		void initButtons();
 		///sub: init clock object
 		void initClock();
+		///sub: init logo object
+		void initLogo();
+
 		///int repaint slot
 		void initRepaintSlot();
 
@@ -126,7 +170,17 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		CComponentsHeader(CComponentsForm *parent = NULL);
 		CComponentsHeader(	const int& x_pos, const int& y_pos, const int& w, const int& h = 0,
 					const std::string& caption = std::string(),
-					const std::string& = std::string(),
+					const std::string& icon_name = std::string(),
+					const int& buttons = 0,
+					CComponentsForm *parent = NULL,
+					int shadow_mode = CC_SHADOW_OFF,
+					fb_pixel_t color_frame = COL_FRAME_PLUS_0,
+					fb_pixel_t color_body = COL_MENUHEAD_PLUS_0,
+					fb_pixel_t color_shadow = COL_SHADOW_PLUS_0);
+
+		CComponentsHeader(	const int& x_pos, const int& y_pos, const int& w, const int& h = 0,
+					neutrino_locale_t caption_locale = NONEXISTANT_LOCALE,
+					const std::string& icon_name = std::string(),
 					const int& buttons = 0,
 					CComponentsForm *parent = NULL,
 					int shadow_mode = CC_SHADOW_OFF,
@@ -137,12 +191,12 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		virtual ~CComponentsHeader();
 
 		///set caption text, parameters: string, int align_mode (default left) 
-		virtual void setCaption(const std::string& caption, const int& align_mode = CTextBox::NO_AUTO_LINEBREAK, const fb_pixel_t& text_color = COL_MENUHEAD_TEXT);
+		virtual void setCaption(const std::string& caption, const cc_title_alignment_t& align_mode = DEFAULT_TITLE_ALIGN, const fb_pixel_t& text_color = COL_MENUHEAD_TEXT);
 		///set caption text, parameters: loacle, int align_mode (default left)
-		virtual void setCaption(neutrino_locale_t caption_locale, const int& align_mode = CTextBox::NO_AUTO_LINEBREAK, const fb_pixel_t& text_color = COL_MENUHEAD_TEXT);
+		virtual void setCaption(neutrino_locale_t caption_locale, const cc_title_alignment_t& align_mode = DEFAULT_TITLE_ALIGN, const fb_pixel_t& text_color = COL_MENUHEAD_TEXT);
 
-		///set alignment of caption within header, possible paramters are CTextBox::CENTER, CTextBox::NO_AUTO_LINEBREAK
-		virtual void setCaptionAlignment(const int& align_mode){cch_caption_align = align_mode;}
+		///set alignment of caption within header, possible paramters are CComponentsHeader::CC_TITLE_LEFT, CComponentsHeader::CC_TITLE_RIGHT, CComponentsHeader::CC_TITLE_CENTER
+		virtual void setCaptionAlignment(const cc_title_alignment_t& align_mode){cch_caption_align = align_mode;}
 
 		/**Set text font for title.
 		 * Internal default font is g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE] and
@@ -258,7 +312,7 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		}
 
 		///returns the clock object
-		virtual CComponentsFrmClock* getClockObject(){return cch_cl_obj;}
+		CComponentsFrmClock* getClockObject(){return cch_cl_obj;}
 
 		///enable display of clock, parameter bool enable, const char* format, bool run
 		virtual void enableClock(bool enable = true, const char* format = "%H:%M", const char* sec_format_str = NULL, bool run = false);
@@ -269,31 +323,37 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen
 		virtual void paint(bool do_save_bg = CC_SAVE_SCREEN_YES);
 
 		///hides item, arg: no_restore see hideCCItem()
-		void hide(){disableClock(); CComponents::hide();}
+		void hide(){disableClock(); CComponentsForm::hide();}
 		///erase current screen without restore of background, it's similar to paintBackgroundBoxRel() from CFrameBuffer
-		void kill(const fb_pixel_t& bg_color = COL_BACKGROUND_PLUS_0, const int& corner_radius = -1, const int& fblayer_type = CC_FBDATA_TYPES, bool disable_clock = true);
+		void kill(const fb_pixel_t& bg_color = COL_BACKGROUND_PLUS_0, const int& corner_radius = -1, const int& fblayer_type = ~CC_FBDATA_TYPES, bool disable_clock = true);
 
 		///set color gradient on/off, returns true if gradient mode was changed
 		virtual bool enableColBodyGradient(const int& enable_mode, const fb_pixel_t& sec_color = 255 /*=COL_BACKGROUND*/, const int& direction = -1);
-};
 
-//! Sub class of CComponentsHeader.
-/*!
-CComponentsHeaderLocalized provides prepared items like icon, caption and context button icons, mostly for usage in menues or simple windows
-Caption is defined with locales.
-*/
-class CComponentsHeaderLocalized : public CComponentsHeader
-{
-	public:
-		CComponentsHeaderLocalized(	const int& x_pos, const int& y_pos, const int& w, const int& h = 0,
-						neutrino_locale_t caption_locale = NONEXISTANT_LOCALE,
-						const std::string& = "",
-						const int& buttons = 0,
-						CComponentsForm *parent = NULL,
-						int shadow_mode = CC_SHADOW_OFF,
-						fb_pixel_t color_frame = COL_FRAME_PLUS_0,
-						fb_pixel_t color_body = COL_MENUHEAD_PLUS_0,
-						fb_pixel_t color_shadow = COL_SHADOW_PLUS_0);
+		/**Methode to set channel logo into header body via id and/or channel name
+		* @param[in]  	channelId
+		* 		@li required channel id as uint64_t
+		* @param[in]  	channelIName
+		* 		@li required channel name as std::string
+		* @param[in]  	alignment
+		* 		@li optional alingment parameter as cc_logo_alignment_t (enum)\n
+		* 		Possible values are:\n
+		* 		CC_LOGO_RIGHT \n
+		* 		CC_LOGO_CENTER (default)\n
+		* 		CC_LOGO_RIGHT \n
+		* @param[in]  	dy
+		* 		@li optional logo height, default = -1 (auto)
+		* @note 	In auto mode, logo use full height minus inner offset but not larger than original logo height.
+		*/
+		void setChannelLogo(	const uint64_t& channelId,
+					const std::string& channelName,
+					cc_logo_alignment_t alignment = DEFAULT_LOGO_ALIGN,
+					const int& dy = -1)
+					{cch_logo.Id = channelId; cch_logo.Name = channelName, cch_logo.Align = alignment, cch_logo.dy_max = dy; initCCItems();}
+		/**Methode to get channel logo object for direct access to its properties and methodes
+		* @return  	CComponentsChannelLogoScalable*
+		*/
+		CComponentsChannelLogoScalable* getChannelLogoObject(){return cch_logo_obj;}
 };
 
 #endif

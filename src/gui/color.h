@@ -120,18 +120,20 @@
 #endif
 
 // some wrappers to get more readability
-#define COL_FRAME COL_MENUCONTENT_PLUS_6
-#define COL_FRAME_PLUS_0 COL_FRAME
+#define COL_FRAME			COL_MENUCONTENT_PLUS_6
+#define COL_FRAME_PLUS_0		COL_FRAME
 
-#define COL_SCROLLBAR_ACTIVE COL_MENUCONTENT_PLUS_3
-#define COL_SCROLLBAR_ACTIVE_PLUS_0 COL_SCROLLBAR_ACTIVE
-#define COL_SCROLLBAR_PASSIVE COL_MENUCONTENT_PLUS_1
-#define COL_SCROLLBAR_PASSIVE_PLUS_0 COL_SCROLLBAR_PASSIVE
+#define COL_SCROLLBAR			COL_MENUCONTENT_PLUS_1
+#define COL_SCROLLBAR_PLUS_0		COL_SCROLLBAR
+#define COL_SCROLLBAR_ACTIVE		COL_MENUCONTENT_PLUS_3
+#define COL_SCROLLBAR_ACTIVE_PLUS_0	COL_SCROLLBAR_ACTIVE
+#define COL_SCROLLBAR_PASSIVE		COL_MENUCONTENT_PLUS_2
+#define COL_SCROLLBAR_PASSIVE_PLUS_0	COL_SCROLLBAR_PASSIVE
 
-#define COL_PROGRESSBAR_ACTIVE COL_MENUCONTENT_PLUS_7
-#define COL_PROGRESSBAR_ACTIVE_PLUS_0 COL_PROGRESSBAR_ACTIVE
-#define COL_PROGRESSBAR_PASSIVE COL_MENUCONTENT_PLUS_1
-#define COL_PROGRESSBAR_PASSIVE_PLUS_0 COL_PROGRESSBAR_PASSIVE
+#define COL_PROGRESSBAR_ACTIVE		COL_MENUCONTENT_PLUS_7
+#define COL_PROGRESSBAR_ACTIVE_PLUS_0	COL_PROGRESSBAR_ACTIVE
+#define COL_PROGRESSBAR_PASSIVE		COL_MENUCONTENT_PLUS_1
+#define COL_PROGRESSBAR_PASSIVE_PLUS_0	COL_PROGRESSBAR_PASSIVE
 
 int convertSetupColor2RGB(unsigned char r, unsigned char g, unsigned char b);
 int convertSetupAlpha2Alpha(unsigned char alpha);
@@ -161,6 +163,6 @@ uint8_t SysColor2Hsv(fb_pixel_t color, HsvColor *hsv);
 void Hsv2Rgb(HsvColor *hsv, RgbColor *rgb);
 void Rgb2Hsv(RgbColor *rgb, HsvColor *hsv);
 
-void getItemColors(fb_pixel_t &t, fb_pixel_t &b, bool selected = false, bool marked = false, bool switch_background = false);
+void getItemColors(fb_pixel_t &t, fb_pixel_t &b, bool selected = false, bool marked = false, bool toggle_background = false, bool toggle_enlighten = false);
 
 #endif

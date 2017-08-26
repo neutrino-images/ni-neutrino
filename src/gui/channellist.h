@@ -67,7 +67,7 @@ enum {
 class CFrameBuffer;
 class CBouquet;
 
-class CChannelList : public CListHelpers
+class CChannelList : public CListHelpers, public sigc::trackable
 {
 private:
 	enum state_
@@ -112,7 +112,6 @@ private:
 	int			info_height; // the infobox below mainbox is handled outside height
 	int			x;
 	int			y;
-	int			logo_off;
 	int			pig_width;
 	int			pig_height;
 	int			infozone_width;
@@ -131,7 +130,7 @@ private:
 	bool vlist; // "virtual" list, not bouquet
 	bool displayNext;
 	bool displayList;
-	bool pig_on_win;
+	bool minitv_is_active;
 
 	bool headerNew;
 

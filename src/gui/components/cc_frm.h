@@ -28,7 +28,7 @@
 #include "config.h"
 #include "cc_base.h"
 #include "cc_item.h"
-#include "cc_frm_scrollbar.h"
+
 
 class CComponentsForm : public CComponentsItem
 {
@@ -81,6 +81,16 @@ class CComponentsForm : public CComponentsItem
 		///NOTE: Items always have parent bindings to "this" and use the parent background color as default! Set parameter 'ignore_parent=true' to ignore parent background color!
 		virtual void killCCItems(const fb_pixel_t& bg_color, bool ignore_parent);
 
+		/**
+		 Removes possible contained items and finally removes
+		 current form from screen and
+		 restores last displayed background before form was painted.
+		*/
+		void hide(){hideCCItems(); CCDraw::hide();}
+
+		///restore background for all items inside form,
+		void hideCCItems();
+
 		///add an item to form collection, returns id
 		virtual int addCCItem(CComponentsItem* cc_Item);
 		///add items from a vector to form collection, returns size/count of items
@@ -96,8 +106,39 @@ class CComponentsForm : public CComponentsItem
 		virtual void replaceCCItem(CComponentsItem* old_cc_Item, CComponentsItem* new_cc_Item);
 		virtual void exchangeCCItem(const uint& item_id_a, const uint& item_id_b);
 		virtual void exchangeCCItem(CComponentsItem* item_a, CComponentsItem* item_b);
-		virtual int getCCItemId(CComponentsItem* cc_Item);
-		virtual CComponentsItem* getCCItem(const uint& cc_item_id);
+
+		/**Function to get current item id from passed item.
+		* @param[in]  cc_Item
+		* 	@li CComponentsItem*
+		* @return
+		*	int, in case of not found item returns -1
+		*/
+		int getCCItemId(CComponentsItem* cc_Item);
+
+		/**Function to get current item from item collection.
+		* @param[in]  cc_item_id
+		* 	@li item id as unsigned int
+		* @return
+		*	CComponentsItem*, in case of not found item returns NULL
+		*/
+		CComponentsItem* getCCItem(const uint& cc_item_id);
+
+		/**Function to get previous item from item collection.
+		* @param[in]  current_cc_item
+		* 	@li CComponentsItem*
+		* @return
+		*	CComponentsItem*, in case of not found item returns NULL
+		*/
+		CComponentsItem* getPrevCCItem(CComponentsItem* current_cc_item);
+
+		/**Function to get next item from item collection.
+		* @param[in]  current_cc_item
+		* 	@li CComponentsItem*
+		* @return
+		*	CComponentsItem*, in case of not found item returns NULL
+		*/
+		CComponentsItem* getNextCCItem(CComponentsItem* current_cc_item);
+
 		virtual void paintCCItems();
 
 		///clean up and deallocate existant items from v_cc_items at once
@@ -142,12 +183,37 @@ class CComponentsForm : public CComponentsItem
 		virtual void setScrollBarWidth(const int& scrollbar_width){w_sb = scrollbar_width;};
 		///returns id of selected item, return value as int, returns -1: if is nothing selected
 		virtual int getSelectedItem();
+
+		/**Function to get consumed  space of items inside form in y direction.
+		* @return
+		*	int, used lines
+		*/
+		int getUsedDY();
+
+		/**Function to get consumed  space of items inside form in x direction.
+		* @return
+		*	int, used lines
+		*/
+		int getUsedDX();
+
+		/**Function to get free usable space of items inside form in y direction.
+		* @return
+		*	int, free lines
+		*/
+		int getFreeDY(){return height - getUsedDY();}
+
+		/**Function to get free usable space of items inside form in x direction.
+		* @return
+		*	int, free lines
+		*/
+		int getFreeDX(){return width - getUsedDX();}
+
 		///returns pointer to selected item, return value as CComponentsItem*, returns NULL: if is nothing selected
 		virtual CComponentsItem* getSelectedItemObject();
 		///select a definied item, parameter1 as size_t
 		virtual void setSelectedItem(	int item_id,
 						const fb_pixel_t& sel_frame_col = COL_MENUCONTENTSELECTED_PLUS_0,
-						const fb_pixel_t& frame_col = COL_SHADOW_PLUS_0,
+						const fb_pixel_t& frame_col = COL_FRAME_PLUS_0,
 						const fb_pixel_t& sel_body_col = COL_MENUCONTENT_PLUS_0,
 						const fb_pixel_t& body_col = COL_MENUCONTENT_PLUS_0,
 						const int& frame_w = 3,
@@ -155,7 +221,7 @@ class CComponentsForm : public CComponentsItem
 		///select a definied item, parameter1 as CComponentsItem*
 		virtual void setSelectedItem(	CComponentsItem* cc_item,
 						const fb_pixel_t& sel_frame_col = COL_MENUCONTENTSELECTED_PLUS_0,
-						const fb_pixel_t& frame_col = COL_SHADOW_PLUS_0,
+						const fb_pixel_t& frame_col = COL_FRAME_PLUS_0,
 						const fb_pixel_t& sel_body_col = COL_MENUCONTENT_PLUS_0,
 						const fb_pixel_t& body_col = COL_MENUCONTENT_PLUS_0,
 						const int& frame_w = 3,

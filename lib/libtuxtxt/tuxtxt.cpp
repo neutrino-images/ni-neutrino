@@ -47,6 +47,9 @@ static int cfg_national_subset;
 
 static int screen_x, screen_y, screen_w, screen_h;
 
+void FillRect(int x, int y, int w, int h, fb_pixel_t color, bool modeFullColor=false);
+void FillBorder(fb_pixel_t color, bool modeFullColor=false);
+
 fb_pixel_t *getFBp(int *y)
 {
 	if (*y < (int)var_screeninfo.yres)
@@ -56,30 +59,31 @@ fb_pixel_t *getFBp(int *y)
 	return lbb;
 }
 
-void FillRect(int x, int y, int w, int h, int color)
+void FillRect(int x, int y, int w, int h, fb_pixel_t color, bool modeFullColor/*=false*/)
 {
 	fb_pixel_t *p = getFBp(&y);
 	MARK_FB(x, y, w, h);
 	p += x + y * stride;
-	if (w > 0)
+	if (w > 0) {
+		fb_pixel_t col = (modeFullColor) ? color : bgra[color];
 		for (int count = 0; count < h; count++) {
 			fb_pixel_t *dest0 = p;
 			for (int i = 0; i < w; i++)
-				*(dest0++) = bgra[color];
+				*(dest0++) = col;
 			p += stride;
 		}
+	}
 }
 
-
-void FillBorder(int color)
+void FillBorder(fb_pixel_t color, bool modeFullColor/*=false*/)
 {
 	int ys =  (var_screeninfo.yres-var_screeninfo.yoffset);
-	FillRect(0     , ys                     ,StartX      ,var_screeninfo.yres                       ,color);
-	FillRect(StartX, ys                     ,displaywidth,StartY                                    ,color);
-	FillRect(StartX, ys+StartY+25*fontheight,displaywidth,var_screeninfo.yres-(StartY+25*fontheight),color);
+	FillRect(0     , ys                     ,StartX      ,var_screeninfo.yres                       ,color, modeFullColor);
+	FillRect(StartX, ys                     ,displaywidth,StartY                                    ,color, modeFullColor);
+	FillRect(StartX, ys+StartY+25*fontheight,displaywidth,var_screeninfo.yres-(StartY+25*fontheight),color, modeFullColor);
 
 	if (screenmode == 0 )
-		FillRect(StartX+displaywidth, ys,var_screeninfo.xres-(StartX+displaywidth),var_screeninfo.yres   ,color);
+		FillRect(StartX+displaywidth, ys,var_screeninfo.xres-(StartX+displaywidth),var_screeninfo.yres   ,color, modeFullColor);
 }
 
 int getIndexOfPageInHotlist()
@@ -254,7 +258,7 @@ void RenderClearMenuLineBB(char *p, tstPageAttr *attrcol, tstPageAttr *attr)
 	memset(p-TOPMENUCHARS, ' ', TOPMENUCHARS); /* init with spaces */
 }
 
-void ClearBB(int color)
+void ClearBB(fb_pixel_t color)
 {
 	FillRect(0, (var_screeninfo.yres - var_screeninfo.yoffset), var_screeninfo.xres, var_screeninfo.yres, color);
 }
@@ -266,7 +270,7 @@ void ClearFB(int /*color*/)
 }
 #if 0 
 //never used
-void ClearB(int color)
+void ClearB(fb_pixel_t color)
 {
 	FillRect(0,                   0, var_screeninfo.xres, var_screeninfo.yres, color); /* framebuffer */
 	FillRect(0, var_screeninfo.yres, var_screeninfo.xres, var_screeninfo.yres, color); /* backbuffer */
@@ -837,7 +841,7 @@ int eval_triplet(int iOData, tstCachedPage *pstCachedPage,
 			{
 				*pAPy = RowAddress2Row(iAddress);	/* new Active Row */
 
-				int color = iData & 0x1f;
+				fb_pixel_t color = iData & 0x1f;
 				int row = *pAPy0 + *pAPy;
 				int maxrow;
 #if TUXTXT_DEBUG
@@ -888,7 +892,7 @@ int eval_triplet(int iOData, tstCachedPage *pstCachedPage,
 				*pAPx = *pAPy = 0; /* new Active Position 0,0 */
 				if (*endcol == 40) /* active object */
 				{
-					int color = iData & 0x1f;
+					fb_pixel_t color = iData & 0x1f;
 					int row = *pAPy0; // + *pAPy;
 					int maxrow;
 
@@ -4092,7 +4096,7 @@ void RenderDRCS( //FIX ME
 }
 
 
-void DrawVLine(int x, int y, int l, int color)
+void DrawVLine(int x, int y, int l, fb_pixel_t color)
 {
 	fb_pixel_t *p = getFBp(&y);
 	MARK_FB(x, y, 0, l);
@@ -4105,7 +4109,7 @@ void DrawVLine(int x, int y, int l, int color)
 	}
 }
 
-void DrawHLine(int x, int y, int l, int color)
+void DrawHLine(int x, int y, int l, fb_pixel_t color)
 {
 	int ltmp;
 	fb_pixel_t *p = getFBp(&y);
@@ -4126,7 +4130,7 @@ void FillRectMosaicSeparated(int x, int y, int w, int h, int fgcolor, int bgcolo
 	}
 }
 
-void FillTrapez(int x0, int y0, int l0, int xoffset1, int h, int l1, int color)
+void FillTrapez(int x0, int y0, int l0, int xoffset1, int h, int l1, fb_pixel_t color)
 {
 	fb_pixel_t *p = getFBp(&y0);
 	MARK_FB(x0, y0, l0, h);
@@ -4785,7 +4789,7 @@ void RenderChar(int Char, tstPageAttr *Attribute, int zoom, int yoffset)
 		{
 			for (Bit = 0x80; Bit; Bit >>= 1)
 			{
-				int color;
+				fb_pixel_t color;
 
 				if (--pixtodo < 0)
 					break;
@@ -5234,7 +5238,7 @@ void RenderPage()
 			{
 				page_atrb[32].fg = yellow;
 				page_atrb[32].bg = menu1;
-				int showpage = tuxtxt_cache.page_receiving;
+				int showpage = tuxtxt_cache.page_receiving < 0 ? 0 : tuxtxt_cache.page_receiving;
 				int showsubpage = tuxtxt_cache.subpagetable[showpage];
 				if (showsubpage!=0xff)
 				{
@@ -5524,7 +5528,7 @@ void CopyBB2FB()
 {
 	fb_pixel_t *src, *dst, *topsrc;
 	int fillcolor, i, screenwidth, swtmp;
-#if defined(HAVE_SPARK_HARDWARE) || defined(BOXMODEL_CS_HD2)
+#if defined(HAVE_SPARK_HARDWARE) || defined(HAVE_COOL_HARDWARE)
 	CFrameBuffer *f = CFrameBuffer::getInstance();
 #endif
 
@@ -5537,15 +5541,25 @@ void CopyBB2FB()
 	{
 #ifdef HAVE_SPARK_HARDWARE
 		f->blit2FB(lbb, var_screeninfo.xres, var_screeninfo.yres, 0, 0, 0, 0, true);
-#elif defined BOXMODEL_CS_HD2
+#elif defined(HAVE_COOL_HARDWARE)
 		f->fbCopyArea(var_screeninfo.xres, var_screeninfo.yres, 0, 0, 0, var_screeninfo.yres);
 #else
-		memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
+		if ((uint32_t)stride > var_screeninfo.xres) {
+			fb_pixel_t *lfb_ = lfb;
+			fb_pixel_t *lbb_ = lbb;
+			for (uint32_t i1 = 0; i1 < var_screeninfo.yres; i1++) {
+				memcpy(lfb_, lbb_, var_screeninfo.xres * sizeof(fb_pixel_t));
+				lfb_ += stride;
+				lbb_ += stride;
+			}
+		}
+		else
+			memcpy(lfb, lbb, fix_screeninfo.line_length*var_screeninfo.yres);
 #endif
 
 		/* adapt background of backbuffer if changed */
 		if (StartX > 0 && *lfb != *lbb) {
-			FillBorder(*lbb);
+			FillBorder(*lbb, true);
 //			 ClearBB(*(lfb + var_screeninfo.xres * var_screeninfo.yoffset));
 		}
 
@@ -5576,7 +5590,7 @@ void CopyBB2FB()
 	if (screenmode == 1)
 	{
 		screenwidth = ( TV43STARTX );
-#if defined(HAVE_SPARK_HARDWARE) || defined(BOXMODEL_CS_HD2)
+#if defined(HAVE_SPARK_HARDWARE)
 		int cx = var_screeninfo.xres - TV43STARTX;	/* x start */
 		int cw = TV43STARTX;				/* width */
 		int cy = StartY;
@@ -5584,8 +5598,6 @@ void CopyBB2FB()
 #endif
 #ifdef HAVE_SPARK_HARDWARE
 		f->blit2FB(lbb, cw, ch, cx, cy, cx, cy, true);
-#elif defined BOXMODEL_CS_HD2
-		f->fbCopyArea(cw, ch, cx, cy, cx, cy+var_screeninfo.yres);
 #else
 		fb_pixel_t *topdst = dst;
 		size_t width = (ex - screenwidth) * sizeof(fb_pixel_t);

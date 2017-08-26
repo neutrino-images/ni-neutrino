@@ -68,7 +68,7 @@ CComponentsForm::CComponentsForm(	const int x_pos, const int y_pos, const int w,
 	page_count	= 1;
 	cur_page	= 0;
 	sb 		= NULL;
-	w_sb		= 15;
+	w_sb		= SCROLLBAR_WIDTH;
 
 	page_scroll_mode = PG_SCROLL_M_UP_DOWN_KEY;
 
@@ -186,9 +186,7 @@ void CComponentsForm::clear()
 
 	for(size_t i=0; i<v_cc_items.size(); i++) {
 		if (v_cc_items[i]){
-
-		dprintf(DEBUG_DEBUG, "[CComponentsForm] %s... delete form cc-item %d of %d (type=%d)\n", __func__, (int)i+1, (int)v_cc_items.size(), v_cc_items[i]->getItemType());
-
+			dprintf(DEBUG_DEBUG, "[CComponentsForm] %s... delete form cc-item %d of %d (type=%d)\taddress = %p\n", __func__, (int)i+1, (int)v_cc_items.size(), v_cc_items[i]->getItemType(), v_cc_items[i]);
 			delete v_cc_items[i];
 			v_cc_items[i] = NULL;
 		}
@@ -257,6 +255,16 @@ CComponentsItem* CComponentsForm::getCCItem(const uint& cc_item_id)
 	if (v_cc_items[cc_item_id])
 		return v_cc_items[cc_item_id];
 	return NULL;
+}
+
+CComponentsItem* CComponentsForm::getPrevCCItem(CComponentsItem* current_cc_item)
+{
+	return getCCItem(getCCItemId(current_cc_item) - 1);
+}
+
+CComponentsItem* CComponentsForm::getNextCCItem(CComponentsItem* current_cc_item)
+{
+	return getCCItem(getCCItemId(current_cc_item) + 1);
 }
 
 void CComponentsForm::replaceCCItem(const uint& cc_item_id, CComponentsItem* new_cc_Item)
@@ -375,6 +383,7 @@ void CComponentsForm::paintCCItems()
 	if (cc_parent){
 		this_x = auto_x = cc_xr;
 		this_y = auto_y = cc_yr;
+		w_parent_frame = cc_parent->getFrameThickness();
 	}
 
 	//init and handle scrollbar
@@ -482,7 +491,7 @@ void CComponentsForm::paintCCItems()
 		//Is it too wide or too high, it will be shortened and displayed in the log.
 		//This should be avoid!
 		//checkwidth and adapt if required
-		int right_frm = (cc_parent ? cc_xr : x) + this_w - 2*fr_thickness;
+		int right_frm = (cc_parent ? cc_xr : x) + this_w/* - 2*fr_thickness*/;
 		int right_item = cc_item->getRealXPos() + w_item;
 		int w_diff = right_item - right_frm;
 		int new_w = w_item - w_diff;
@@ -517,7 +526,7 @@ void CComponentsForm::paintCCItems()
 
 		//finally paint current item, but only required contents of page
 		if (cc_item->getPageNumber() == cur_page)
-			cc_item->paint(CC_SAVE_SCREEN_NO);
+			cc_item->paint(cc_item->SaveBg());
 
 		//restore defined old visibility mode of item after paint
 		cc_item->allowPaint(item_visible);
@@ -529,6 +538,12 @@ void CComponentsForm::killCCItems(const fb_pixel_t& bg_color, bool ignore_parent
 {
 	for(size_t i=0; i<v_cc_items.size(); i++)
 		v_cc_items[i]->kill(bg_color, ignore_parent);
+}
+
+void CComponentsForm::hideCCItems()
+{
+	for(size_t i=0; i<v_cc_items.size(); i++)
+		v_cc_items[i]->hide();
 }
 
 void CComponentsForm::setPageCount(const u_int8_t& pageCount)
@@ -679,4 +694,22 @@ bool CComponentsForm::enableColBodyGradient(const int& enable_mode, const fb_pix
 		return true;
 	}
 	return false;
+}
+
+int CComponentsForm::getUsedDY()
+{
+	int y_res = 0;
+	for (size_t i= 0; i< v_cc_items.size(); i++)
+		y_res  = max(v_cc_items[i]->getYPos() + v_cc_items[i]->getHeight(), y_res);
+
+	return y_res;
+}
+
+int CComponentsForm::getUsedDX()
+{
+	int x_res = 0;
+	for (size_t i= 0; i< v_cc_items.size(); i++)
+		x_res  = max(v_cc_items[i]->getXPos() + v_cc_items[i]->getWidth(), x_res);
+
+	return x_res;
 }

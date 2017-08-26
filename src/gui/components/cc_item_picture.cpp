@@ -74,8 +74,9 @@ void CComponentsPicture::init(	const int &x_pos, const int &y_pos, const int &w,
 	//CComponents
 	x =	x_old	= x_pos;
 	y =	y_old	= y_pos;
-	width	= dx = dxc = w;
-	height	= dy = dyc = h;
+	width	= width_old = dx = dxc = w;
+	height	= height_old = dy = dyc = h;
+	dx_orig = dy_orig = 0;
 	pic_name = pic_name_old = image_name;
 	shadow		= shadow_mode;
 	shadow_w	= OFFSET_SHADOW;
@@ -128,9 +129,9 @@ void CComponentsPicture::setPicture(const char* picture_name)
 
 void CComponentsPicture::setWidth(const int& w, bool keep_aspect)
 {
-	CComponentsItem::setWidth(w);
 	if (w == width && keep_aspect == keep_dy_aspect)
 		return;
+	CComponentsItem::setWidth(w);
 	need_init = true;
 	do_scale = true;
 	keep_dy_aspect = keep_aspect;
@@ -139,12 +140,30 @@ void CComponentsPicture::setWidth(const int& w, bool keep_aspect)
 
 void CComponentsPicture::setHeight(const int& h, bool keep_aspect)
 {
-	CComponentsItem::setHeight(h);
 	if (h == height && keep_aspect == keep_dx_aspect)
 		return;
+	CComponentsItem::setHeight(h);
 	need_init = true;
 	do_scale = true;
 	keep_dx_aspect = keep_aspect;
+	initCCItem();
+}
+
+void CComponentsPicture::setXPos(const int& xpos)
+{
+	CComponentsItem::setXPos(xpos);
+	if (xpos == x)
+		return;
+	need_init = true;
+	initCCItem();
+}
+
+void CComponentsPicture::setYPos(const int& ypos)
+{
+	CComponentsItem::setYPos(ypos);
+	if (ypos == y)
+		return;
+	need_init = true;
 	initCCItem();
 }
 
@@ -183,6 +202,9 @@ void CComponentsPicture::initCCItem()
 			if (height == 0)
 				height = dy_tmp;
 		}
+		dx_orig = width;
+		dy_orig = height;
+
 		/* leave init methode here if we in no scale mode
 		 * otherwise goto next step!
 		*/
@@ -193,8 +215,12 @@ void CComponentsPicture::initCCItem()
 		 * check internal dimension values (dx/dy) and ensure that values are >0
 		 * real image size
 		*/
-		if  ((dx != width || dy != height) || (dx == 0 || dy == 0))
-			g_PicViewer->getSize(pic_name.c_str(), &dx, &dy);
+		g_PicViewer->getSize(pic_name.c_str(), &dx_orig, &dy_orig);
+		if  ((dx != width || dy != height) || (dx == 0 || dy == 0)){
+			dx = dx_orig;
+			dy = dy_orig;
+			//g_PicViewer->getSize(pic_name.c_str(), &dx, &dy);
+		}
 	}
 
 	/* on next step check item dimensions (width/height) for 0 values
@@ -251,11 +277,11 @@ void CComponentsPicture::initPosition(int *x_position, int *y_position)
 }
 
 
-// void CComponentsPicture::getSize(int* width_image, int *height_image)
-// {
-// 	*width_image = width;
-// 	*height_image = height;
-// }
+void CComponentsPicture::getRealSize(int* dx_original, int *dy_original)
+{
+	*dx_original = dx_orig; 
+	*dy_original = dy_orig;
+}
 
 int CComponentsPicture::getWidth()
 {
@@ -385,6 +411,7 @@ CComponentsChannelLogo::CComponentsChannelLogo( const int &x_pos, const int &y_p
 
 void CComponentsChannelLogo::init(const uint64_t& channelId, const std::string& channelName, bool allow_scale)
 {
+	cc_item_type 	= CC_ITEMTYPE_CHANNEL_LOGO;
 	channel_name = "";
 	channel_id = 0;
 	alt_pic_name = "";
@@ -415,6 +442,8 @@ void CComponentsChannelLogo::setAltLogo(const char* picture_name)
 void CComponentsChannelLogo::setChannel(const uint64_t& channelId, const std::string& channelName)
 {
 	need_init = true;
+	string image = pic_name;
+
 	if (channelId || !channelName.empty()){
 		if ((channel_id == channelId) && (channel_name == channelName))
 			need_init = false;
@@ -425,16 +454,16 @@ void CComponentsChannelLogo::setChannel(const uint64_t& channelId, const std::st
 
 	int dummy;
 
-	has_logo = g_PicViewer->GetLogoName(channel_id, channel_name, pic_name, &dummy, &dummy);
+	has_logo = g_PicViewer->GetLogoName(channel_id, channel_name, image, &dummy, &dummy);
 
 	if (!has_logo)//no logo was found, use altrenate icon or logo
-		pic_name = alt_pic_name;
+		image = alt_pic_name;
 
 	//if logo or alternate image still not available, set has logo to false
-	has_logo = !pic_name.empty();
+	has_logo = !image.empty();
 
 	//refresh object
-	initCCItem();
+	setPicture(image);
 
 	//set has_logo to false if no dimensions were detected
 	if (width && height)

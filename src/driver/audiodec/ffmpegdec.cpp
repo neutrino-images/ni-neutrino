@@ -33,15 +33,19 @@
 #include <cstring>
 #include <errno.h>
 #include <sstream>
+
+#include <global.h>
 #include <driver/audioplay.h>
 #include <zapit/include/audio.h>
 #include <eitd/edvbstring.h> // UTF8
 #include "ffmpegdec.h"
+
 extern "C" {
 #include <libavutil/opt.h>
 #include <libavutil/samplefmt.h>
 #include <libswresample/swresample.h>
 }
+
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55, 28, 1)
 #define av_frame_alloc	avcodec_alloc_frame
 #define av_frame_unref	avcodec_get_frame_defaults
@@ -62,8 +66,6 @@ extern cAudio * audioDecoder;
 //#define FFDEC_DEBUG
 
 #define ProgName "FfmpegDec"
-
-#define COVERDIR "/tmp/cover"
 
 static OpenThreads::Mutex mutex;
 
@@ -223,7 +225,7 @@ CBaseDec::RetCode CFfmpegDec::Decoder(FILE *_in, int /*OutputFd*/, State* state,
 		Status=DATA_ERR;
 		return Status;
 	}
-#if (LIBAVCODEC_VERSION_INT < AV_VERSION_INT( 57,5,0 ))
+#if (LIBAVFORMAT_VERSION_INT < AV_VERSION_INT( 57,25,101 ))
 	AVCodecContext *c = avc->streams[best_stream]->codec;
 #else
 	AVCodecContext *c = avcodec_alloc_context3(codec);
@@ -456,7 +458,7 @@ bool CFfmpegDec::SetMetaData(FILE *_in, CAudioMetaData* m, bool save_cover)
 		if (!is_stream) {
 			GetMeta(avc->metadata);
 			for(unsigned int i = 0; i < avc->nb_streams; i++) {
-#if (LIBAVCODEC_VERSION_INT < AV_VERSION_INT( 57,5,0 ))
+#if (LIBAVFORMAT_VERSION_INT < AV_VERSION_INT( 57,25,101 ))
 				if (avc->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
 #else
 				if (avc->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
@@ -477,7 +479,7 @@ bool CFfmpegDec::SetMetaData(FILE *_in, CAudioMetaData* m, bool save_cover)
 			DeInit();
 			return false;
 		}
-#if (LIBAVCODEC_VERSION_INT < AV_VERSION_INT( 57,5,0 ))
+#if (LIBAVFORMAT_VERSION_INT < AV_VERSION_INT( 57,25,101 ))
 		if (!codec)
 			codec = avcodec_find_decoder(avc->streams[best_stream]->codec->codec_id);
 		samplerate = avc->streams[best_stream]->codec->sample_rate;
@@ -507,7 +509,7 @@ bool CFfmpegDec::SetMetaData(FILE *_in, CAudioMetaData* m, bool save_cover)
 		printf("CFfmpegDec: format %s (%s) duration %ld\n", avc->iformat->name, type_info.c_str(), total_time);
 
 		for(unsigned int i = 0; i < avc->nb_streams; i++) {
-#if (LIBAVCODEC_VERSION_INT < AV_VERSION_INT( 57,5,0 ))
+#if (LIBAVFORMAT_VERSION_INT < AV_VERSION_INT( 57,25,101 ))
 			if (avc->streams[i]->codec->bit_rate > 0)
 				bitrate += avc->streams[i]->codec->bit_rate;
 #else
@@ -517,7 +519,7 @@ bool CFfmpegDec::SetMetaData(FILE *_in, CAudioMetaData* m, bool save_cover)
 			if (save_cover && (avc->streams[i]->disposition & AV_DISPOSITION_ATTACHED_PIC)) {
 				mkdir(COVERDIR, 0755);
 				std::string cover(COVERDIR);
-				cover += "/" + to_string(cover_count++) + ".jpg";
+				cover += "/cover_" + to_string(cover_count++) + ".jpg";
 				FILE *f = fopen(cover.c_str(), "wb");
 				if (f) {
 					AVPacket *pkt = &avc->streams[i]->attached_pic;

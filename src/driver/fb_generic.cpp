@@ -46,6 +46,7 @@
 
 #include <gui/audiomute.h>
 #include <gui/color.h>
+#include <gui/osd_helpers.h>
 #include <gui/pictureviewer.h>
 #include <system/debug.h>
 #include <global.h>
@@ -206,16 +207,9 @@ nolfb:
 	lbb = lfb = NULL;
 }
 
-
 CFrameBuffer::~CFrameBuffer()
 {
-	std::map<std::string, rawIcon>::iterator it;
-
-	for(it = icon_cache.begin(); it != icon_cache.end(); ++it) {
-		/* printf("FB: delete cached icon %s: %x\n", it->first.c_str(), (int) it->second.data); */
-		cs_free_uncached(it->second.data);
-	}
-	icon_cache.clear();
+	clearIconCache();
 
 	if (background) {
 		delete[] background;
@@ -350,8 +344,34 @@ int CFrameBuffer::setMode(unsigned int /*nxRes*/, unsigned int /*nyRes*/, unsign
 	if (ioctl(fd, FBIOBLANK, FB_BLANK_UNBLANK) < 0) {
 		printf("screen unblanking failed\n");
 	}
+
 	return 0;
 }
+
+void CFrameBuffer::setOsdResolutions()
+{
+	/* FIXME: Infos available in driver? */
+	osd_resolution_t res;
+	osd_resolutions.clear();
+	res.xRes = 1280;
+	res.yRes = 720;
+	res.bpp  = 32;
+	res.mode = OSDMODE_720;
+	osd_resolutions.push_back(res);
+}
+
+size_t CFrameBuffer::getIndexOsdResolution(uint32_t mode)
+{
+	if (osd_resolutions.size() == 1)
+		return 0;
+
+	for (size_t i = 0; i < osd_resolutions.size(); i++) {
+		if (osd_resolutions[i].mode == mode)
+			return i;
+	}
+	return 0;
+}
+
 #if 0
 //never used
 void CFrameBuffer::setTransparency( int /*tr*/ )
@@ -892,6 +912,17 @@ _display:
 	blit2FB(data, width, height, x, yy);
 	checkFbArea(x, yy, width, height, false);
 	return true;
+}
+
+void CFrameBuffer::clearIconCache()
+{
+	std::map<std::string, rawIcon>::iterator it;
+
+	for(it = icon_cache.begin(); it != icon_cache.end(); ++it) {
+		/* printf("FB: delete cached icon %s: %x\n", it->first.c_str(), (int) it->second.data); */
+		cs_free_uncached(it->second.data);
+	}
+	icon_cache.clear();
 }
 
 void CFrameBuffer::loadPal(const std::string & filename, const unsigned char offset, const unsigned char endidx)

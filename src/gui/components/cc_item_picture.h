@@ -54,9 +54,10 @@ class CComponentsPicture : public CComponentsItem
 		///screen cache content for painted image
 		fb_pixel_t *image_cache;
 
-		///current original image dimensions
+		///current image dimensions
 		int dx, dy;
-
+		///original image dimensions
+		int dx_orig, dy_orig;
 		///cached image dimensions
 		int dxc, dyc;
 
@@ -146,8 +147,8 @@ class CComponentsPicture : public CComponentsItem
 		///returns current assigned image name
 		std::string getPictureName(){return pic_name;}
 
-// 		///handle image size
-// 		void getSize(int* width_image, int *height_image);
+		///get original image size
+		void getRealSize(int* dx_orig, int *dy_orig);
 		///return width of item
 		int getWidth();
 		///return height of item
@@ -161,6 +162,11 @@ class CComponentsPicture : public CComponentsItem
 		virtual void setWidthP(const uint8_t& w_percent){CComponentsItem::setWidthP(w_percent), do_scale = true; need_init = hasChanges(); initCCItem();}
 		///set height of object and image related to current screen size, see also CComponentsItem::setHeightP(), parameter as uint8_t
 		virtual void setHeightP(const uint8_t& h_percent){CComponentsItem::setHeightP(h_percent), do_scale = true; need_init = hasChanges(); initCCItem();}
+
+		///set screen x-position, parameter as int
+		virtual void setXPos(const int& xpos);
+		///set screen y-position, parameter as int
+		virtual void setYPos(const int& ypos);
 
 		///return paint mode of internal image, true=image was painted, please do not to confuse with isPainted()! isPainted() is related to item itself.
 		virtual inline bool isPicPainted(){return is_image_painted;};
@@ -202,7 +208,8 @@ class 	CComponentsPictureScalable : public CComponentsPicture
 						fb_pixel_t color_background = 0,
 						fb_pixel_t color_shadow = COL_SHADOW_PLUS_0,
 						int transparent = CFrameBuffer::TM_NONE)
-						: CComponentsPicture(x_pos, y_pos, 0, 0, image_name, parent, shadow_mode, color_frame, color_background, color_shadow, transparent){};
+						: CComponentsPicture(x_pos, y_pos, 0, 0, image_name, parent, shadow_mode, color_frame, color_background, color_shadow, transparent)
+		{cc_item_type 	= CC_ITEMTYPE_PICTURE_SCALABLE;};
 };
 
 class CComponentsChannelLogo : public CComponentsPicture
@@ -286,7 +293,8 @@ class 	CComponentsChannelLogoScalable : public CComponentsChannelLogo
 						fb_pixel_t color_background = 0,
 						fb_pixel_t color_shadow = COL_SHADOW_PLUS_0,
 						int transparent = CFrameBuffer::TM_BLACK)
-						: CComponentsChannelLogo(x_pos, y_pos, 0, 0, channelName, channelId, parent, shadow_mode, color_frame, color_background, color_shadow, transparent){};
+						: CComponentsChannelLogo(x_pos, y_pos, 0, 0, channelName, channelId, parent, shadow_mode, color_frame, color_background, color_shadow, transparent)
+		{cc_item_type 	= CC_ITEMTYPE_CHANNEL_LOGO_SCALABLE;};
 };
 
 #endif

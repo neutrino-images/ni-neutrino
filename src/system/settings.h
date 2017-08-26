@@ -155,6 +155,11 @@ struct SNeutrinoTheme
 	int progressbar_timescale_green;
 	int progressbar_timescale_yellow;
 	int progressbar_timescale_invert;
+
+	unsigned char shadow_alpha;
+	unsigned char shadow_red;
+	unsigned char shadow_green;
+	unsigned char shadow_blue;
 };
 
 struct timer_remotebox_item
@@ -295,6 +300,7 @@ struct SNeutrinoSettings
 	std::string epg_dir;
 	int epg_scan;
 	int epg_scan_mode;
+	int epg_scan_rescan;
 	int epg_save_mode;
 
 	int epg_search_history_size;
@@ -590,6 +596,13 @@ struct SNeutrinoSettings
 	int window_height;
 	int eventlist_additional;
 	int eventlist_epgplus;
+
+	enum CHANNELLIST_ADDITIONAL_MODES
+	{
+		CHANNELLIST_ADDITIONAL_MODE_OFF		= 0,
+		CHANNELLIST_ADDITIONAL_MODE_EPG 	= 1,
+		CHANNELLIST_ADDITIONAL_MODE_MINITV	= 2
+	};
 	int channellist_additional;
 	int channellist_epgtext_align_right;
 	int channellist_foot;
@@ -611,14 +624,23 @@ struct SNeutrinoSettings
 	int screen_StartY;
 	int screen_EndX;
 	int screen_EndY;
-	int screen_StartX_crt;
-	int screen_StartY_crt;
-	int screen_EndX_crt;
-	int screen_EndY_crt;
-	int screen_StartX_lcd;
-	int screen_StartY_lcd;
-	int screen_EndX_lcd;
-	int screen_EndY_lcd;
+	int screen_StartX_crt_0;
+	int screen_StartY_crt_0;
+	int screen_EndX_crt_0;
+	int screen_EndY_crt_0;
+	int screen_StartX_lcd_0;
+	int screen_StartY_lcd_0;
+	int screen_EndX_lcd_0;
+	int screen_EndY_lcd_0;
+	int screen_StartX_crt_1;
+	int screen_StartY_crt_1;
+	int screen_EndX_crt_1;
+	int screen_EndY_crt_1;
+	int screen_StartX_lcd_1;
+	int screen_StartY_lcd_1;
+	int screen_EndX_lcd_1;
+	int screen_EndY_lcd_1;
+	int osd_resolution;
 	int screen_preset;
 	int screen_width;
 	int screen_height;
@@ -901,30 +923,34 @@ const time_settings_struct_t timing_setting[SNeutrinoSettings::TIMING_SETTING_CO
 #define DEFAULT_LCD_AUTODIMM			0x00
 #define DEFAULT_LCD_SHOW_VOLUME			0x01
 
-#define CORNER_RADIUS_LARGE	11
-#define CORNER_RADIUS_MID	7
-#define CORNER_RADIUS_SMALL	5
-#define CORNER_RADIUS_MIN	3
+#define CORNER_RADIUS_LARGE	CFrameBuffer::getInstance()->scale2Res(11)
+#define CORNER_RADIUS_MID	CFrameBuffer::getInstance()->scale2Res(7)
+#define CORNER_RADIUS_SMALL	CFrameBuffer::getInstance()->scale2Res(5)
+#define CORNER_RADIUS_MIN	CFrameBuffer::getInstance()->scale2Res(3)
 #define CORNER_RADIUS_NONE	0
 
-#define RADIUS_LARGE	(g_settings.rounded_corners ? CORNER_RADIUS_LARGE : 0)
-#define RADIUS_MID	(g_settings.rounded_corners ? CORNER_RADIUS_MID : 0)
-#define RADIUS_SMALL	(g_settings.rounded_corners ? CORNER_RADIUS_SMALL : 0)
-#define RADIUS_MIN	(g_settings.rounded_corners ? CORNER_RADIUS_MIN : 0)
+#define RADIUS_LARGE	(g_settings.rounded_corners ? CORNER_RADIUS_LARGE : CORNER_RADIUS_NONE)
+#define RADIUS_MID	(g_settings.rounded_corners ? CORNER_RADIUS_MID   : CORNER_RADIUS_NONE)
+#define RADIUS_SMALL	(g_settings.rounded_corners ? CORNER_RADIUS_SMALL : CORNER_RADIUS_NONE)
+#define RADIUS_MIN	(g_settings.rounded_corners ? CORNER_RADIUS_MIN   : CORNER_RADIUS_NONE)
 #define RADIUS_NONE	0
 
 // offsets
-#define OFFSET_SHADOW		6
-#define OFFSET_INTER		6
-#define OFFSET_INNER_LARGE	20
-#define OFFSET_INNER_MID	10
-#define OFFSET_INNER_SMALL	5
-#define OFFSET_INNER_MIN	2
+#define OFFSET_SHADOW		CFrameBuffer::getInstance()->scale2Res(6)
+#define OFFSET_INTER		CFrameBuffer::getInstance()->scale2Res(6)
+#define OFFSET_INNER_LARGE	CFrameBuffer::getInstance()->scale2Res(20)
+#define OFFSET_INNER_MID	CFrameBuffer::getInstance()->scale2Res(10)
+#define OFFSET_INNER_SMALL	CFrameBuffer::getInstance()->scale2Res(5)
+#define OFFSET_INNER_MIN	CFrameBuffer::getInstance()->scale2Res(2)
 #define OFFSET_INNER_NONE	0
 
-#define SCROLLBAR_WIDTH		OFFSET_INNER_MID + 2*OFFSET_INNER_MIN
+#define SCROLLBAR_WIDTH		(OFFSET_INNER_MID + 2*OFFSET_INNER_MIN)
 
-#define DETAILSLINE_WIDTH	16 // TODO: scale2Res() ?
+#define FRAME_WIDTH_MIN		CFrameBuffer::getInstance()->scale2Res(2)
+
+#define DETAILSLINE_WIDTH	CFrameBuffer::getInstance()->scale2Res(16)
+
+#define SIDEBAR_WIDTH		CFrameBuffer::getInstance()->scale2Res(40)
 
 #define BIGFONT_FACTOR		1.5
 

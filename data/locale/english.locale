@@ -2,24 +2,24 @@ AUDIOSelectMenue.head Audio Selection
 EPGMenu.epgplus Eventlist overview
 EPGMenu.eventinfo Details current program
 EPGMenu.eventlist Eventlist current programm
-EPGMenu.head EPG - Program Information
-EPGMenu.streaminfo technical information
+EPGMenu.head EPG - Program information
+EPGMenu.streaminfo Technical information
 EPGPlus.actions Actions
 EPGPlus.bybouquet_mode by bouquet
 EPGPlus.bypage_mode by page
-EPGPlus.head Eventlist Overview (EPG Plus)
-EPGPlus.next_bouquet next bouquet
-EPGPlus.options options
-EPGPlus.page_down page down
-EPGPlus.page_up page up
-EPGPlus.prev_bouquet prev bouquet
+EPGPlus.head Eventlist overview (EPG Plus)
+EPGPlus.next_bouquet Next bouquet
+EPGPlus.options Options
+EPGPlus.page_down Page down
+EPGPlus.page_up Page up
+EPGPlus.prev_bouquet Prev bouquet
 EPGPlus.record Record
 EPGPlus.refresh_epg Refresh
 EPGPlus.remind Schedule
-EPGPlus.scroll_mode Scroll Mode
-EPGPlus.stretch_mode Stretch Mode
-EPGPlus.swap_mode swap mode
-EPGPlus.view_mode view mode
+EPGPlus.scroll_mode Scroll mode
+EPGPlus.stretch_mode Stretch mode
+EPGPlus.swap_mode Swap mode
+EPGPlus.view_mode View mode
 GENRE.ALL off
 GENRE.ARTS Arts
 GENRE.ARTS.0 arts/culture
@@ -159,46 +159,46 @@ audioplayer.add_ic Icecast
 audioplayer.add_loc Local radio list
 audioplayer.add_sc SHOUTcast
 audioplayer.artist_title Artist, Title
-audioplayer.building_search_index building search index
-audioplayer.button_select_title_by_id search by ID
-audioplayer.button_select_title_by_name search by name
-audioplayer.defdir start dir.
+audioplayer.building_search_index Building search index
+audioplayer.button_select_title_by_id Search by ID
+audioplayer.button_select_title_by_name Search by name
+audioplayer.defdir Start directory
 audioplayer.delete Remove
-audioplayer.deleteall remove all
-audioplayer.display_order display order
-audioplayer.enable_sc_metadata enable SHOUTcast meta data parsing
-audioplayer.fastforward fast forw.
-audioplayer.follow auto select current
+audioplayer.deleteall Remove all
+audioplayer.display_order Display order
+audioplayer.enable_sc_metadata Enable SHOUTcast meta data parsing
+audioplayer.fastforward Fast forward
+audioplayer.follow Auto select current
 audioplayer.head Audio Playlist
 audioplayer.highprio High decode priority
-audioplayer.jump_backwards jump backwards
+audioplayer.jump_backwards Jump backwards
 audioplayer.jump_dialog_hint1 Please enter jump target
 audioplayer.jump_dialog_hint2 (relative, in seconds)
 audioplayer.jump_dialog_title Enter jump target
-audioplayer.jump_forwards jump forwards
-audioplayer.keylevel key level
+audioplayer.jump_forwards Jump forwards
+audioplayer.keylevel Key level
 audioplayer.load_radio_stations Load internet radios
 audioplayer.name Audioplayer
-audioplayer.pause pause
+audioplayer.pause Pause
 audioplayer.play Play
-audioplayer.playing Current Track
+audioplayer.playing Current track
 audioplayer.playlist_fileerror_msg File could not be created:
 audioplayer.playlist_fileoverwrite_msg Do you want to overwrite this file:
 audioplayer.playlist_fileoverwrite_title Overwrite?
-audioplayer.playlist_name filename of the play list
+audioplayer.playlist_name Filename of the play list
 audioplayer.playlist_name_hint1 Please enter the filename of the playlist
 audioplayer.playlist_name_hint2 The extension .m3u will be added automatically
-audioplayer.reading_files reading files
-audioplayer.receiving_list Receiving list, please wait
-audioplayer.repeat_on enable repeat mode
-audioplayer.rewind rewind
-audioplayer.save_playlist save play list
-audioplayer.select_title_by_name search title by name (SMS)
-audioplayer.show_playlist Show Playlist
-audioplayer.shuffle shuffle
-audioplayer.spectrum lcd a-spectrum
+audioplayer.reading_files Reading files
+audioplayer.receiving_list Receiving list, please wait ...
+audioplayer.repeat_on Enable repeat mode
+audioplayer.rewind Rewind
+audioplayer.save_playlist Save play list
+audioplayer.select_title_by_name Search title by name (SMS)
+audioplayer.show_playlist Show playlist
+audioplayer.shuffle Shuffle
+audioplayer.spectrum LCD spectrum
 audioplayer.stop Stop
-audioplayer.title_artist Title, Artist
+audioplayer.title_artist Title, artist
 bookmarkmanager.delete delete
 bookmarkmanager.name bookmarks
 bookmarkmanager.rename rename
@@ -233,52 +233,52 @@ buildinfo.creator Creator
 buildinfo.kernel Kernel version
 buildinfo.menu Build information
 cablesetup.provider cable provider
-channellist.additional Additional informations
-channellist.additional_off off
-channellist.additional_on on
-channellist.additional_on_minitv on (with MiniTV)
-channellist.current_tp Current transponder
+channellist.additional Additional Informations
+channellist.additional_off Off
+channellist.additional_on On
+channellist.additional_on_minitv On (with MiniTV)
+channellist.current_tp Current Transponder
 channellist.edit Edit
-channellist.epgtext_align_left left
-channellist.epgtext_align_right right
-channellist.extended Show event progress
+channellist.epgtext_align_left Left
+channellist.epgtext_align_right Right
+channellist.extended Show Event Progress
 channellist.extended_colored with colored progressbar
 channellist.extended_simple with simple progressbar
-channellist.favs Favoriten
+channellist.favs Favorites
 channellist.foot Channel Information
 channellist.foot_freq Sat/Freq Info
-channellist.foot_next next Event
-channellist.foot_off off
-channellist.foot_sort_alpha sorted[alpha]
-channellist.foot_sort_chnum sorted[number]
-channellist.foot_sort_freq sorted[freq]
-channellist.foot_sort_sat sorted[sat]
+channellist.foot_next Next Event
+channellist.foot_off Off
+channellist.foot_sort_alpha Sorted[Alpha]
+channellist.foot_sort_chnum Sorted[Number]
+channellist.foot_sort_freq Sorted[Freq]
+channellist.foot_sort_sat Sorted[Sat]
 channellist.head All Services
 channellist.history History
-channellist.history_clear Clear history
-channellist.keep_numbers Persistent channel numbers
+channellist.history_clear Clear History
+channellist.keep_numbers Persistent Channel Numbers
 channellist.make_hdlist Create list of HD channels
 channellist.make_newlist Create list of new channels
 channellist.make_removedlist Create list of removed channels
 channellist.make_webtvlist Create list of WebTV channels
-channellist.new_zap_mode Quickzap in list
-channellist.new_zap_mode_active active
-channellist.new_zap_mode_allow allow
-channellist.new_zap_mode_off off
+channellist.new_zap_mode Quickzap in List
+channellist.new_zap_mode_active Active
+channellist.new_zap_mode_allow Allow
+channellist.new_zap_mode_off Off
 channellist.nonefound No channels were found!\nPlease execute a scan\n(MENU-key -> service)
-channellist.numeric_adjust Numeric zap adjust
+channellist.numeric_adjust Numeric Zap Adjust
 channellist.provs Providers
 channellist.recording_not_possible Recording not possible!
 channellist.remember Last used
 channellist.reset_all Reset 'new' flag for all channels
 channellist.reset_flags Reset 'new' channel flag
 channellist.sats Satellites
-channellist.show_channellogo Show channel logos
-channellist.show_channelnumber Show channel numbers
-channellist.show_empty_favs Show empty favorites bouquets
-channellist.show_infobox Show bottom infobox
-channellist.since since
-channellist.start starts
+channellist.show_channellogo Show Channel Logos
+channellist.show_channelnumber Show Channel Numbers
+channellist.show_empty_favs Show empty Favorites Bouquets
+channellist.show_infobox Show Bottom Infobox
+channellist.since Since
+channellist.start Starts
 ci.clock CI clock (Mhz)
 ci.empty No CAM in slot
 ci.ignore_msg Ignore CA messages
@@ -322,10 +322,10 @@ colormenu.clock_textcolor Digit color
 colormenu.fade Fade GUI
 colormenu.font Select GUI font
 colormenu.font_ttx Select Teletext font
-colormenu.hd_preset LCD
 colormenu.menucolors Colors
 colormenu.osd_preset TV preset
-colormenu.sd_preset CRT
+colormenu.osd_resolution OSD resolution
+colormenu.shadow_color Shadow Color
 colormenu.textcolor Text color
 colormenu.themeselect Select theme
 colormenu.timing Timeouts
@@ -593,11 +593,11 @@ filebrowser.prevpage Prev. Page
 filebrowser.scan Scaning folder
 filebrowser.select Select
 filebrowser.showrights Show file rights
-filebrowser.sort.date (date)
-filebrowser.sort.name (name)
-filebrowser.sort.namedirsfirst (name, dir first)
-filebrowser.sort.size (Size)
-filebrowser.sort.type (type)
+filebrowser.sort.date Date
+filebrowser.sort.name Name
+filebrowser.sort.namedirsfirst Name, dirs first
+filebrowser.sort.size Size
+filebrowser.sort.type Type
 filesystem.is.utf8 file system
 filesystem.is.utf8.option.iso8859.1 ISO-8859-1
 filesystem.is.utf8.option.utf8 UTF-8
@@ -885,9 +885,9 @@ languagesetup.select OSD Language
 lcd_info_line show in infoline
 lcd_info_line_channel Channelname
 lcd_info_line_clock clock
-lcdcontroler.brightness normal Brightness
-lcdcontroler.brightnessdeepstandby DeepStandby Brightness
-lcdcontroler.brightnessstandby Standby Brightness
+lcdcontroler.brightness Normal mode
+lcdcontroler.brightnessdeepstandby Deep standby
+lcdcontroler.brightnessstandby Standby
 lcdmenu.dim_brightness Brightness after dim timeout
 lcdmenu.dim_time Dim timeout
 lcdmenu.head VFD/LED Settings
@@ -1037,6 +1037,7 @@ menu.hint_color_gradient_separator_enable Disable/enable color gradient for menu
 menu.hint_colored_events Use different color for current or next event
 menu.hint_colored_events_textcolor Change color for colored events in channellist and infobar
 menu.hint_colors Configure GUI colors
+menu.hint_colors_shadow Setup for shadow color.
 menu.hint_content_back Change GUI window background color
 menu.hint_content_textcolor Change GUI window text color
 menu.hint_dboxinfo Information about box cpu and storage
@@ -1172,7 +1173,7 @@ menu.hint_key_volumedown Assign button to decrease volume
 menu.hint_key_volumeup Assign button to increase volume
 menu.hint_keys Remote control repeat rate\nEdit key bindings
 menu.hint_lang_pref Configure preferred audio, EPG\nand subtitle languages
-menu.hint_language OSD language, timezone\nPreffered audio and subtitles languages
+menu.hint_language OSD language, timezone\nPrefered audio and subtitles languages
 menu.hint_last_radio Start box on selected channel\nif last mode is Radio
 menu.hint_last_tv Start box on selected channel\nif last mode is TV
 menu.hint_last_use Start box on last used channel
@@ -1254,6 +1255,7 @@ menu.hint_opkg_upgrade Updates all installed packages to the most recent version
 menu.hint_osd Colors, fonts, screen size\nGUI look and feel options
 menu.hint_osd_language Select OSD language
 menu.hint_osd_preset Pre-configured screen margins for CRT and LCD TV
+menu.hint_osd_resolution Change OSD resolution
 menu.hint_osd_timing After this time the OSD will be faded out
 menu.hint_other_fonts Change other font sizes
 menu.hint_parentallock_changepin Change PIN code
@@ -1669,6 +1671,7 @@ moviebrowser.cut_failed Cut failed, are there jump bookmarks and enough free spa
 moviebrowser.cutting Cutting movie, please wait ...
 moviebrowser.delete_all Delete all selected movies without any questions?
 moviebrowser.delete_info Delete files, please wait ...
+moviebrowser.delete_movie Delete movie
 moviebrowser.delete_screenshot Delete screenshot?
 moviebrowser.dir Path
 moviebrowser.directories Directories
@@ -2021,14 +2024,14 @@ personalize.usermenu_plugin_types Choose Plugin types to show
 personalize.usermenu_preferred_buttons Assigning of preferred keys
 personalize.usermenu_show_cancel Show "Cancel"-Button
 personalize.visible Visible
-pictureviewer.defdir start dir.
+pictureviewer.defdir Start directory
 pictureviewer.head Picture viewer
 pictureviewer.help1 menu mode
 pictureviewer.help10 reread image
 pictureviewer.help11 previous image
 pictureviewer.help12 next image
-pictureviewer.help13 Zoom out
-pictureviewer.help14 Zoom in
+pictureviewer.help13 zoom out
+pictureviewer.help14 zoom in
 pictureviewer.help15 scroll up
 pictureviewer.help16 scroll left
 pictureviewer.help17 scroll right
@@ -2051,12 +2054,12 @@ pictureviewer.help9 show mode
 pictureviewer.resize.color_average advanced
 pictureviewer.resize.none none
 pictureviewer.resize.simple simple
-pictureviewer.scaling scaling
-pictureviewer.show show
-pictureviewer.slide_time slideshow display time
-pictureviewer.slideshow slideshow
-pictureviewer.sortorder.date change sort order (date)
-pictureviewer.sortorder.filename change sort order (filename)
+pictureviewer.scaling Scaling
+pictureviewer.show Show
+pictureviewer.slide_time Slideshow display time
+pictureviewer.slideshow Slideshow
+pictureviewer.sortorder.date Sort order: Date
+pictureviewer.sortorder.filename Sort order: Filename
 ping.ok is reachable (ping)
 ping.protocol is unreachable (host or protocol error)
 ping.socket is unreachable (socket error)
@@ -2320,9 +2323,11 @@ streaminfo.framerate Framerate
 streaminfo.framerate_unknown unknown
 streaminfo.head Stream-Information
 streaminfo.not_available not available
+streaminfo.osd_resolution OSD resolution
 streaminfo.resolution Resolution
 streaminfo.signal Receipt signal
-streaming.busy One or several recording processes are active.\nIf you encounter this message and no recording is active, please restart Neutrino.
+streaminfo.videosystem Videosystem
+streaming.busy One or several recording processes are active.\nIf you encounter this message and no recording is active, please restart GUI.
 streaming.dir_not_writable The recording directory is not writable.\nRecording will not work.
 streaming.overflow Record buffer overflow, consider to stop some records
 streaming.slow System/hdd too slow, consider to stop some records

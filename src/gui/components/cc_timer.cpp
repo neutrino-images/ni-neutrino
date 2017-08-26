@@ -64,7 +64,7 @@ void CComponentsTimer::runSharedTimerAction()
 		tm_mutex.lock();
 		OnTimer();
 		if (!tm_enable_nano)
-			mySleep(tm_interval);
+			sleep(tm_interval);
 		else
 			usleep((useconds_t)tm_interval);
 		tm_mutex.unlock();
@@ -144,8 +144,11 @@ bool CComponentsTimer::stopTimer()
 {
 	tm_enable = false;
 	stopThread();
-	if(tm_thread == 0)
+	if(tm_thread == 0){
+		if (!OnTimer.empty())
+			OnTimer.clear();
 		return true;
+	}
 
 	return false;
 }

@@ -42,9 +42,12 @@
 #define MOVIEPLAYER_START_SCRIPT        CONFIGDIR "/movieplayer.start"
 #define MOVIEPLAYER_END_SCRIPT          CONFIGDIR "/movieplayer.end"
 #define NEUTRINO_ENTER_FLASH_SCRIPT	CONFIGDIR "/flash.start"
+#define NEUTRINO_APP_START_SCRIPT	CONFIGDIR "/neutrino.start"
 
 #define NEUTRINO_SCAN_SETTINGS_FILE     CONFIGDIR "/scan.conf"
 #define NEUTRINO_PARENTALLOCKED_FILE    DATADIR   "/neutrino/.plocked"
+
+#define COVERDIR	"/tmp/cover"
 
 #define LOGODIR		ICONSDIR "/logo"
 #define LOGODIR_VAR	ICONSDIR_VAR "/logo"

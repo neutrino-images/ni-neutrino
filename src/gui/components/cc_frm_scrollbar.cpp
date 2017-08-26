@@ -32,29 +32,39 @@
 using namespace std;
 
 /* base schema
-		x,y
-		+-----------------+
-		|+---------------+|
-		||sb_up_obj 	 ||
-		||          	 ||
-		|+---------------+|
-		|+---------------+|
-		||sb_segments_obj||
-		||+-------------+||
-		||| segment	|||
-		||| id 0	|||
-		|||          	|||
-		||+-------------+||
-		||| segment	|||
-		||| id 1	|||
-		|||          	|||
-		||+-------------+||
-		|+---------------+|
-		|+---------------+|
-		||sb_up_obj 	 ||
-		||          	 ||
-		|+---------------+|
-		+-----------------+
+
+		  x,y              width (w)
+		/(x_pos, y_pos)       ^
+		+---------------------+
+		| +-----------------+ |
+		| | sb_up_obj (icon)| |/color_frame
+		| |       /\        | |
+		| +-----------------+ | |/color_shadow
+		|      col_body       | |
+		|                     |
+		| +-sb_segments_obj+  |
+		| |                 | |
+		| | +---segment---+ | |
+		| | |    id 0     | | |
+		| | |   active    | | |
+		| | | color_select| | |
+		| | +-------------+ | |
+		| | append_y_offset | |
+		| | +---segment---+ | |
+		| | |     id 1    | | |
+		| | |   passive   | | |
+		| | |color_passive| | |
+		| | +-------------+ | |
+		| |   (count = 2)   | |
+		| | other segments  | |
+		| |  are possible   | |
+		| +-----------------+ |
+		|                     |
+		| +-----------------+ |
+		| | sb_up_obj (icon)| |
+		| |       \/        | |
+		| +-----------------+ |
+		+---------------------+-> height (h)
 */
 
 //sub class CComponentsScrollBar inherit from CComponentsFrmChain
@@ -64,13 +74,15 @@ CComponentsScrollBar::CComponentsScrollBar(	const int &x_pos, const int &y_pos, 
 						int shadow_mode,
 						fb_pixel_t color_frame,
 						fb_pixel_t color_body,
-						fb_pixel_t color_shadow)
+						fb_pixel_t color_shadow,
+						fb_pixel_t color_select,
+						fb_pixel_t color_passive)
 						:CComponentsFrmChain(x_pos, y_pos, w, h, NULL, CC_DIR_Y, parent, shadow_mode, color_frame, color_body, color_shadow)
 {
-	initVarSbForm(count);
+	initVarSbForm(count, color_select, color_passive);
 }
 
-void CComponentsScrollBar::initVarSbForm(const int& count)
+void CComponentsScrollBar::initVarSbForm(const int& count, const fb_pixel_t& color_select, const fb_pixel_t& color_passive)
 {
 	cc_item_type 	= CC_ITEMTYPE_FRM_SCROLLBAR;
 	fr_thickness	= 0;
@@ -82,13 +94,17 @@ void CComponentsScrollBar::initVarSbForm(const int& count)
 	sb_down_obj	= NULL;
 	sb_segments_obj = NULL;
 
-	setCorner(RADIUS_MIN, CORNER_ALL);
+	corner_type = CORNER_NONE;
 
 	sb_up_icon	= frameBuffer->getIconPath(NEUTRINO_ICON_BUTTON_UP) ;
 	sb_down_icon	= frameBuffer->getIconPath(NEUTRINO_ICON_BUTTON_DOWN);
 
 	sb_segments_count = count;
 	sb_mark_id	= 0;
+
+	sb_visual_enable = false;
+	sb_segment_col_sel = color_select;
+	sb_segment_col	= color_passive;
 
 	initCCItems();
 }
@@ -131,14 +147,10 @@ void CComponentsScrollBar::initBottomNaviIcon()
 void CComponentsScrollBar::initSegments()
 {
 	//init dimensions for segments
-	int w_seg = width - 2*fr_thickness - 2*append_x_offset;
-	if (w_seg < 0)
-		w_seg = 0;
+	int w_seg = max(0, width - 2*fr_thickness - 2*append_x_offset);
 
 	//calculate height of segment container
-	int h_seg_obj = height - 2*fr_thickness - 2*sb_up_obj->getHeight()  - 2*append_y_offset;
-	if (h_seg_obj < 0)
-		h_seg_obj = 0;
+	int h_seg_obj = max(0, height - 2*fr_thickness - 2*sb_up_obj->getHeight()  - 2*append_y_offset);
 
 	//init segment container
 	if (sb_segments_obj == NULL){
@@ -153,40 +165,78 @@ void CComponentsScrollBar::initSegments()
 	//clean up segment container before add new segments
 	sb_segments_obj->clear();
 
+	//hold segment count in this scope
+	uint32_t tmp_segments = sb_segments_count;
+
 	//set y position of 1st segment and set height of segments
 	int y_seg = append_y_offset;
-	int h_seg = sb_segments_obj->getHeight()/sb_segments_count - append_y_offset;
-	if (h_seg < 0)
-		h_seg = 0;
+	int h_seg = max(0, int(sb_segments_obj->getHeight()/tmp_segments - append_y_offset));
+
+	//reduce required segment count and create a moderate segment height for better visibility of slider if we have very much segments.
+	uint32_t tmp_quot = 1;
+	if (h_seg == 0){
+		h_seg = w_seg - append_y_offset;
+		tmp_segments = max(1, sb_segments_obj->getHeight() / (h_seg+append_y_offset));
+		tmp_quot = uint32_t((float)sb_segments_count/(float)tmp_segments + 0.5);
+	}
+
+	fb_pixel_t passive_col = sb_visual_enable ? sb_segment_col : col_body;
 
 	//create and add segments to segment container
-	for(u_int8_t i=0; i<sb_segments_count; i++){
+	for(uint32_t i=0; i<tmp_segments; i++){
 		CComponentsShapeSquare *item = new CComponentsShapeSquare(0, y_seg, w_seg, h_seg, sb_segments_obj, false);
 		y_seg += h_seg + append_y_offset;
 
 		int id = sb_segments_obj->getCCItemId(item);
 
 		//set color for marked id
-		if (sb_mark_id == id){
-			item->setColorBody(COL_SCROLLBAR_ACTIVE);
+		if ((tmp_segments == sb_segments_count && sb_mark_id == id) || (tmp_segments != sb_segments_count && int(sb_mark_id/tmp_quot) == id))
+		{
+			item->setColorBody(sb_segment_col_sel);
 #if 0
 			item->enableColBodyGradient(CC_COLGRAD_COL_A_2_COL_B);
 			item->setColBodyGradient(CColorGradient::gradientDark2Light2Dark, CFrameBuffer::gradientHorizontal);
 #endif
 		}
-		else{
-			item->setColorBody(COL_SCROLLBAR_PASSIVE);
+		else
+		{
+			item->setColorBody(passive_col);
 #if 0
 			item->disableColBodyGradient();
 #endif
 		}
-	}
 
-	//set corner types
-	sb_segments_obj->front()->setCorner(RADIUS_MIN, CORNER_TOP);
-	sb_segments_obj->back()->setCorner(RADIUS_MIN, CORNER_BOTTOM);
+		//set different corner types for segments with possible conditions
+		if (passive_col == col_body){
+			item->setCorner(RADIUS_MIN, CORNER_ALL);
+			continue;
+		}else if (tmp_segments == 1){
+			item->setCorner(RADIUS_MIN, CORNER_ALL);
+			break;
+		}else if(i == 0){
+			item->setCorner(RADIUS_MIN, CORNER_TOP);
+			continue;
+		}else if(i == tmp_segments - 1){
+			item->setCorner(RADIUS_MIN, CORNER_BOTTOM);
+			break;
+		}else if((i > 0 && i < tmp_segments - 1)){
+			item->setCorner(RADIUS_NONE, CORNER_NONE);
+		}else{
+			item->setCorner(RADIUS_NONE, CORNER_NONE);
+		}
+	}
 }
 
+void getScrollBarData(int *total_pages, int *current_page, int total_items, int items_per_page, int selected_item)
+{
+	// avoid divison by zero and fix wrong values
+	total_items	= std::max(total_items, 1);
+	items_per_page	= std::max(items_per_page, 1);
+	selected_item	= std::max(selected_item, 0);
+
+	*total_pages	= ((total_items - 1) / items_per_page) + 1;
+	*current_page	= selected_item / items_per_page;
+}
 
 void paintScrollBar(	const int &x_pos,
 			const int &y_pos,
@@ -197,9 +247,11 @@ void paintScrollBar(	const int &x_pos,
 			int shadow_mode,
 			fb_pixel_t color_frame,
 			fb_pixel_t color_body,
-			fb_pixel_t color_shadow)
+			fb_pixel_t color_shadow,
+			fb_pixel_t color_select,
+			fb_pixel_t color_passive)
 {
-	CComponentsScrollBar scrollbar(x_pos, y_pos, w, h, count, NULL, shadow_mode, color_frame, color_body, color_shadow);
+	CComponentsScrollBar scrollbar(x_pos, y_pos, w, h, count, NULL, shadow_mode, color_frame, color_body, color_shadow, color_select, color_passive);
 	scrollbar.setMarkID(current_num);
 	scrollbar.paint0();
 }

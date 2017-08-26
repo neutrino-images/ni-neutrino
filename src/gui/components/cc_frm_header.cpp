@@ -31,6 +31,9 @@
 #include "cc_frm_header.h"
 #include <system/debug.h>
 #include <driver/fontrenderer.h>
+#include <driver/pictureviewer/pictureviewer.h>
+
+extern CPictureViewer * g_PicViewer;
 
 
 using namespace std;
@@ -62,21 +65,18 @@ CComponentsHeader::CComponentsHeader(	const int& x_pos, const int& y_pos, const 
 	initVarHeader(x_pos, y_pos, w, h, caption, icon_name, buttons, parent, shadow_mode, color_frame, color_body, color_shadow);
 }
 
-CComponentsHeaderLocalized::CComponentsHeaderLocalized(	const int& x_pos, const int& y_pos, const int& w, const int& h,
-							neutrino_locale_t caption_locale,
-							const std::string& icon_name,
-							const int& buttons,
-							CComponentsForm* parent,
-							int shadow_mode,
-							fb_pixel_t color_frame,
-							fb_pixel_t color_body,
-							fb_pixel_t color_shadow)
-							:CComponentsHeader(	x_pos, y_pos, w, h,
-										g_Locale->getText(caption_locale),
-										icon_name, buttons,
-										parent,
-										shadow_mode,
-										color_frame, color_body, color_shadow){};
+CComponentsHeader::CComponentsHeader(	const int& x_pos, const int& y_pos, const int& w, const int& h,
+					neutrino_locale_t caption_locale,
+					const std::string& icon_name,
+					const int& buttons,
+					CComponentsForm* parent,
+					int shadow_mode,
+					fb_pixel_t color_frame,
+					fb_pixel_t color_body,
+					fb_pixel_t color_shadow)
+{
+	initVarHeader(x_pos, y_pos, w, h, g_Locale->getText(caption_locale), icon_name, buttons, parent, shadow_mode, color_frame, color_body, color_shadow);
+};
 
 void CComponentsHeader::initVarHeader(	const int& x_pos, const int& y_pos, const int& w, const int& h,
 					const std::string& caption,
@@ -91,8 +91,8 @@ void CComponentsHeader::initVarHeader(	const int& x_pos, const int& y_pos, const
 	cc_item_type 		= CC_ITEMTYPE_FRM_HEADER;
 	clear();
 	cc_txt_save_screen	= false;
-	x	= x_old = x_pos;
-	y	= y_old = y_pos;
+	x = cc_xr = x_old 	= x_pos;
+	y = cc_yr = y_old 	= y_pos;
 
 	//init header width
 	width 	= width_old = w == 0 ? frameBuffer->getScreenWidth(true) : w;
@@ -121,8 +121,13 @@ void CComponentsHeader::initVarHeader(	const int& x_pos, const int& y_pos, const
 	cch_text_obj		= NULL;
 	cch_btn_obj		= NULL;
 	cch_cl_obj		= NULL;
+	cch_logo_obj		= NULL;
+	cch_logo.Id		= 0;
+	cch_logo.Name		= "";
+	cch_logo.dy_max		= -1;
+	cch_logo.Align		= DEFAULT_LOGO_ALIGN;
 	cch_col_text		= COL_MENUHEAD_TEXT;
-	cch_caption_align	= CTextBox::NO_AUTO_LINEBREAK;
+	cch_caption_align	= DEFAULT_TITLE_ALIGN;
 	cch_items_y 		= CC_CENTERED;
 	cch_offset		= OFFSET_INNER_MID;
 	cch_icon_x 		= cch_offset;
@@ -155,7 +160,7 @@ CComponentsHeader::~CComponentsHeader()
 	v_cch_btn.clear();
 }
 
-void CComponentsHeader::setCaption(const std::string& caption, const int& align_mode, const fb_pixel_t& text_color)
+void CComponentsHeader::setCaption(const std::string& caption, const cc_title_alignment_t& align_mode, const fb_pixel_t& text_color)
 {
 	if (cch_cl_obj)
 		cch_cl_obj->Stop();
@@ -164,7 +169,7 @@ void CComponentsHeader::setCaption(const std::string& caption, const int& align_
 	cch_col_text 		= text_color;
 }
 
-void CComponentsHeader::setCaption(neutrino_locale_t caption_locale, const int& align_mode, const fb_pixel_t& text_color)
+void CComponentsHeader::setCaption(neutrino_locale_t caption_locale, const cc_title_alignment_t& align_mode, const fb_pixel_t& text_color)
 {
 	setCaption(string(g_Locale->getText(caption_locale)), align_mode, text_color);
 }
@@ -224,8 +229,10 @@ void CComponentsHeader::initIcon()
 	//init cch_icon_obj only if an icon available
 	if (cch_icon_name.empty()) {
 		cch_icon_w = 0;
-		if (cch_icon_obj)
+		if (cch_icon_obj){
 			removeCCItem(cch_icon_obj);
+			cch_icon_obj = NULL;
+		}
 		return;
 	}
 
@@ -248,7 +255,7 @@ void CComponentsHeader::initIcon()
 
 		//set corner mode of icon item
 		int cc_icon_corner_type = CORNER_LEFT;
-		if (corner_type == CORNER_TOP_LEFT || corner_type == CORNER_TOP)
+		if (corner_type & CORNER_TOP_LEFT || corner_type & CORNER_TOP)
 			cc_icon_corner_type = CORNER_TOP_LEFT;
 
 		cch_icon_obj->setCorner(corner_rad-fr_thickness, cc_icon_corner_type);
@@ -261,6 +268,97 @@ void CComponentsHeader::initIcon()
 
 //		//re-assign height of icon object, for the case of changed height
 // 		cch_icon_obj->setHeight(height);
+	}
+}
+
+void CComponentsHeader::initLogo()
+{
+	// init logo with required height and logo
+	int h_logo = cch_logo.dy_max == -1 ? height - 2*OFFSET_INNER_MIN : cch_logo.dy_max;
+
+	if(!cch_logo_obj)
+		cch_logo_obj = new CComponentsChannelLogoScalable(1, height/2 - h_logo/2, cch_logo.Name, cch_logo.Id, this);
+	else
+		cch_logo_obj->setChannel(cch_logo.Id, cch_logo.Name);
+
+	// use value 1 as initial value for logo width, ensures downscale with stupid available logo space
+	cch_logo_obj->setHeight(1, true);
+
+	//ensure logo is not larger than original size if in auto mode
+	if (cch_logo.dy_max == -1){
+		int dx_orig = 0, dy_orig = 0 ;
+		cch_logo_obj->getRealSize(&dx_orig, &dy_orig);
+		if (h_logo > dy_orig)
+			h_logo = dy_orig;
+	}
+
+	// manage logo position
+	if (cch_logo_obj->hasLogo()){
+		cch_logo_obj->setHeight(h_logo, true);
+
+		/* Detect next and previous items,
+		 * current item is logo item.
+		*/
+		int logo_id = getCCItemId(cch_logo_obj);
+		CComponentsItem *prev_item = getCCItem((cch_caption_align & CC_TITLE_RIGHT) ? logo_id - 2 : logo_id - 1);
+		CComponentsItem *next_item = getCCItem((cch_caption_align & CC_TITLE_RIGHT) ? logo_id - 1 : logo_id + 1);
+
+		/*
+		 * FIXME: Workaround to fix next item in case of wrong order of items.
+		*/
+		if (next_item){
+			if (next_item->getItemType() == CC_ITEMTYPE_FRM_ICONFORM)
+				next_item = cch_cl_obj;
+		}
+
+		/*
+		 * Adjust usable space for logo.
+		*/
+		int x_logo_left = prev_item ? prev_item->getXPos() + prev_item->getWidth() : cch_offset;
+		int x_logo_right = next_item ? next_item->getXPos() : width - cch_offset;
+		int logo_space = x_logo_right - x_logo_left;
+
+		/*
+		 * Reduce logo width if logo space too small
+		 * and adjust logo new width if required.
+		*/
+		int w_logo = min(cch_logo_obj->getWidth(), logo_space);
+		cch_logo_obj->setWidth(w_logo, true);
+
+		/*
+		 * Adjust logo x position depends of align parameters.
+		*/
+		int x_logo = x_logo_left;
+		if (cch_logo.Align & CC_LOGO_RIGHT)
+			x_logo = x_logo_right - w_logo;
+
+		if (cch_logo.Align & CC_LOGO_LEFT)
+			x_logo = x_logo_left;
+
+		if (cch_logo.Align & CC_LOGO_CENTER){
+			x_logo = logo_space/2 - w_logo/2;
+			/*
+			* We are using centered mode as default,
+			* but we must notice possible overlapp
+			* with previous or next item.
+			*/
+			if (cch_caption_align & CC_TITLE_LEFT){
+				int left_tag = prev_item->getXPos() + prev_item->getWidth();
+				if (x_logo <= left_tag)
+					x_logo = left_tag + logo_space/2 - w_logo/2;
+			}
+
+			if (cch_caption_align & CC_TITLE_RIGHT){
+				if (x_logo + w_logo >= next_item->getXPos())
+					x_logo = next_item->getXPos() - logo_space/2 - w_logo/2;
+			}
+		}
+
+		/*
+		 * Finally set logo x position
+		*/
+		cch_logo_obj->setXPos(x_logo);
+		cch_logo_obj->setYPos(height/2 - cch_logo_obj->getHeight()/2);
 	}
 }
 
@@ -344,8 +442,9 @@ void CComponentsHeader::initButtons()
 	//set button form properties
 	if (cch_btn_obj){
 		cch_btn_obj->setYPos(cch_items_y);
-		cch_btn_obj->doPaintBg(false);
+		cch_btn_obj->doPaintBg(false);;
 		cch_btn_obj->setAppendOffset(cch_buttons_space, 0);
+		cch_btn_obj->setRightOffset(cch_buttons_space);
 		cch_btn_obj->removeAllIcons();
 		cch_btn_obj->addIcon(v_cch_btn);
 
@@ -408,12 +507,12 @@ void CComponentsHeader::initClock()
 	if (cch_cl_obj == NULL){
 		dprintf(DEBUG_DEBUG, "[CComponentsHeader]\n    [%s - %d] init clock...\n", __func__, __LINE__);
 		cch_cl_obj = new CComponentsFrmClock(0, cch_items_y, cch_font, cch_cl_format, NULL, false, 1, this);
+		cch_cl_obj->disableForceSegmentPaint();
 		cch_cl_obj->doPaintBg(false);
 	}
 
 	//set clock form properties
 	if (cch_cl_obj){
-		cch_cl_obj->setYPos(cch_items_y);
 		cch_cl_obj->setHeight(height);
 
 		//disallow paint of clock, if disabled and exit method
@@ -451,7 +550,7 @@ void CComponentsHeader::initCaption()
 	}
 
 	//calc width of text object in header
-	cc_text_w = width-cch_text_x-cch_offset;
+	cc_text_w = width-cch_text_x/*-cch_offset*/;
 
 	//context buttons
 	int buttons_w = 0;
@@ -463,7 +562,7 @@ void CComponentsHeader::initCaption()
 		cch_btn_obj->setXPos(width - buttons_w);
 
 		//set required width of caption object
-		cc_text_w -= (buttons_w + cch_offset);
+		cc_text_w -= buttons_w;
 	}
 
 	//clock
@@ -475,10 +574,10 @@ void CComponentsHeader::initCaption()
 		int clock_w = cch_cl_enable ? cch_cl_obj->getWidth() : 0;
 
 		//set x position of clock
-		cch_cl_obj->setXPos(width - buttons_w - clock_w - cch_offset);
+		cch_cl_obj->setXPos(width - buttons_w - clock_w);
 
 		//set required width of caption object
-		cc_text_w -= (clock_w + cch_offset);
+		cc_text_w -= clock_w;
 
 		//stop clock if disabled or option run is disabled and clock is running
 		if (cch_cl_enable){
@@ -502,17 +601,26 @@ void CComponentsHeader::initCaption()
 
 	//set header text properties
 	if (cch_text_obj){
+		int w_free = cc_text_w;
+
+		//recalc caption width
+		cc_text_w = min(cc_text_w, cch_font->getRenderWidth(cch_text)) + cch_offset;
+
 		//set alignment of text item in dependency from text alignment
-		if (cch_caption_align == CTextBox::CENTER)
-			cch_text_x = CC_CENTERED;
+		if (cch_caption_align & CC_TITLE_CENTER)
+			cch_text_x = width/2 - cc_text_w/2;
+
+		if (cch_caption_align & CC_TITLE_RIGHT){ //FIXME: does not work correct with some conditions, but still not used at the moment
+			cch_text_x += w_free;
+			cch_text_x -= max(cc_text_w, cch_font->getRenderWidth(cch_text));
+		}
 
 		//assign general properties
 		cch_text_obj->setDimensionsAll(cch_text_x, cch_items_y, cc_text_w, height);
 		cch_text_obj->setColorBody(col_body);
 		if (cc_body_gradient_enable != cc_body_gradient_enable_old)
 			cch_text_obj->getCTextBoxObject()->clearScreenBuffer();
-		cch_text_obj->setTextColor(cch_col_text);
-		cch_text_obj->setText(cch_text, cch_caption_align, cch_font);
+		cch_text_obj->setText(cch_text, cch_caption_align, cch_font, cch_col_text);
 		cch_text_obj->enableTboxSaveScreen(cc_body_gradient_enable || cc_txt_save_screen);
 
 		//corner of text item
@@ -549,6 +657,9 @@ void CComponentsHeader::initCCItems()
 
 	//init text
 	initCaption();
+
+	//init logo
+	initLogo();
 }
 
 void CComponentsHeader::paint(bool do_save_bg)

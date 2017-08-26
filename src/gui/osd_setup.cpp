@@ -40,6 +40,7 @@
 #include <neutrino_menue.h>
 
 #include "osd_setup.h"
+#include "osd_helpers.h"
 #include "themes.h"
 #include "screensetup.h"
 #include "osdlang_setup.h"
@@ -200,7 +201,7 @@ font_sizes_struct neutrino_font[SNeutrinoSettings::FONT_TYPE_COUNT] =
 	{LOCALE_FONTSIZE_EPG_INFO1          ,  17, CNeutrinoFonts::FONT_STYLE_ITALIC , 2},
 	{LOCALE_FONTSIZE_EPG_INFO2          ,  17, CNeutrinoFonts::FONT_STYLE_REGULAR, 2},
 	{LOCALE_FONTSIZE_EPG_DATE           ,  15, CNeutrinoFonts::FONT_STYLE_REGULAR, 2},
-	{LOCALE_FONTSIZE_EPGPLUS_ITEM       ,  18, CNeutrinoFonts::FONT_STYLE_REGULAR, 2},
+	{LOCALE_FONTSIZE_EPGPLUS_ITEM       ,  17, CNeutrinoFonts::FONT_STYLE_REGULAR, 2},
 	{LOCALE_FONTSIZE_EVENTLIST_TITLE    ,  30, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
 	{LOCALE_FONTSIZE_EVENTLIST_ITEMLARGE,  20, CNeutrinoFonts::FONT_STYLE_BOLD   , 1},
 	{LOCALE_FONTSIZE_EVENTLIST_ITEMSMALL,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
@@ -215,7 +216,7 @@ font_sizes_struct neutrino_font[SNeutrinoSettings::FONT_TYPE_COUNT] =
 	{LOCALE_FONTSIZE_INFOBAR_CHANNAME   ,  30, CNeutrinoFonts::FONT_STYLE_BOLD   , 0},
 	{LOCALE_FONTSIZE_INFOBAR_INFO       ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
 	{LOCALE_FONTSIZE_INFOBAR_SMALL      ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
-	{LOCALE_FONTSIZE_FILEBROWSER_ITEM   ,  16, CNeutrinoFonts::FONT_STYLE_BOLD   , 1},
+	{LOCALE_FONTSIZE_FILEBROWSER_ITEM   ,  17, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
 	{LOCALE_FONTSIZE_MENU_HINT          ,  16, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
 	{LOCALE_FONTSIZE_MOVIEBROWSER_HEAD  ,  15, CNeutrinoFonts::FONT_STYLE_REGULAR, 2},
 	{LOCALE_FONTSIZE_MOVIEBROWSER_LIST  ,  17, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
@@ -316,6 +317,7 @@ int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 				memset(window_size_value, 0, sizeof(window_size_value));
 				snprintf(window_size_value, sizeof(window_size_value), "%d / %d", g_settings.window_width, g_settings.window_height);
 				mfWindowSize->setOption(window_size_value);
+				CNeutrinoApp::getInstance()->channelList->ResetModules();
 				break;
 			} else if ((msg == CRCInput::RC_home) || (msg == CRCInput::RC_timeout)) {
 				g_settings.window_width = old_window_width;
@@ -393,12 +395,11 @@ int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 	return res;
 }
 
-
 #define OSD_PRESET_OPTIONS_COUNT 2
-const CMenuOptionChooser::keyval OSD_PRESET_OPTIONS[OSD_PRESET_OPTIONS_COUNT] =
+const CMenuOptionChooser::keyval_ext OSD_PRESET_OPTIONS[] =
 {
-	{ 0, LOCALE_COLORMENU_SD_PRESET },
-	{ 1, LOCALE_COLORMENU_HD_PRESET }
+	{ COsdSetup::PRESET_CRT, NONEXISTANT_LOCALE, "CRT" },
+	{ COsdSetup::PRESET_LCD, NONEXISTANT_LOCALE, "LCD" }
 };
 
 #define INFOBAR_CASYSTEM_MODE_OPTION_COUNT 4
@@ -647,6 +648,35 @@ int COsdSetup::showOsdSetup()
 
 	osd_menu->addItem(GenericMenuSeparatorLine);
 
+#ifdef ENABLE_CHANGE_OSD_RESOLUTION
+	// osd resolution
+	size_t resCount = frameBuffer->osd_resolutions.size();
+	struct CMenuOptionChooser::keyval_ext kext[resCount];
+	char valname[resCount][255];
+	if (resCount > 0) {
+		for (size_t i = 0; i < resCount; i++) {
+			kext[i].key = i;
+			kext[i].value = NONEXISTANT_LOCALE;
+			snprintf(valname[i], sizeof(valname[resCount]), "%dx%d", frameBuffer->osd_resolutions[i].xRes, frameBuffer->osd_resolutions[i].yRes);
+			kext[i].valname = valname[i];
+		}
+	}
+	else {
+		kext[0].key = 0;
+		kext[0].value = NONEXISTANT_LOCALE;
+		kext[0].valname = "-";
+		resCount = 1;
+	}
+	int videoSystem = COsdHelpers::getInstance()->getVideoSystem();
+	bool enable = ((resCount > 1) &&
+			COsdHelpers::getInstance()->isVideoSystem1080(videoSystem) &&
+			(g_settings.video_Mode != VIDEO_STD_AUTO));
+	CMenuOptionChooser * osd_res = new CMenuOptionChooser(LOCALE_COLORMENU_OSD_RESOLUTION, &g_settings.osd_resolution, kext, resCount, enable, this);
+	osd_res->OnAfterChangeOption.connect(sigc::mem_fun(frameBuffer->getInstance(), &CFrameBuffer::clearIconCache));
+	osd_res->setHint("", LOCALE_MENU_HINT_OSD_RESOLUTION);
+	osd_menu->addItem(osd_res);
+#endif
+
 	//monitor
 	CMenuOptionChooser *mc;
 	if (cs_get_revision() != 1) { /* 1 == Tripledragon */
@@ -654,6 +684,8 @@ int COsdSetup::showOsdSetup()
 		mc->setHint("", LOCALE_MENU_HINT_OSD_PRESET);
 		osd_menu->addItem(mc);
 	}
+
+	osd_menu->addItem(GenericMenuSeparatorLine);
 
 	// round corners
 	mc = new CMenuOptionChooser(LOCALE_EXTRA_ROUNDED_CORNERS, &g_settings.rounded_corners, MENU_CORNERSETTINGS_TYPE_OPTIONS, MENU_CORNERSETTINGS_TYPE_OPTION_COUNT, true, this);
@@ -741,6 +773,8 @@ void COsdSetup::showOsdMenueColorSetup(CMenuWidget *menu_colors)
 			&t.menu_Foot_alpha, colorSetupNotifier);
 	CColorChooser* chFootTextcolor = new CColorChooser(LOCALE_COLORMENU_TEXTCOLOR, &t.menu_Foot_Text_red, &t.menu_Foot_Text_green, &t.menu_Foot_Text_blue,
 			NULL, colorSetupNotifier);
+	CColorChooser* chShadowColor = new CColorChooser(LOCALE_COLORMENU_SHADOW_COLOR, &t.shadow_red, &t.shadow_green, &t.shadow_blue,
+			&t.menu_Head_alpha, colorSetupNotifier);
 
 	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_COLORMENUSETUP_MENUHEAD));
 
@@ -906,6 +940,13 @@ void COsdSetup::showOsdMenueColorSetup(CMenuWidget *menu_colors)
 	oj = new CMenuOptionChooser(LOCALE_MISCSETTINGS_COLORED_EVENTS_INFOBAR, &t.colored_events_infobar, OPTIONS_COLORED_EVENTS_OPTIONS, OPTIONS_COLORED_EVENTS_OPTION_COUNT, true);
 	oj->setHint("", LOCALE_MENU_HINT_COLORED_EVENTS);
 	menu_colors->addItem(oj);
+
+	// shadow
+	menu_colors->addItem( new CMenuSeparator(CMenuSeparator::LINE));
+
+	mf = new CMenuDForwarder(LOCALE_COLORMENU_SHADOW_COLOR, true, NULL, chShadowColor );
+	mf->setHint("", LOCALE_MENU_HINT_COLORS_SHADOW);
+	menu_colors->addItem(mf);
 }
 
 /* for font size setup */
@@ -1371,16 +1412,56 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 		int preset = * (int *) data;
 		printf("preset %d (setting %d)\n", preset, g_settings.screen_preset);
 
-		g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd : g_settings.screen_StartX_crt;
-		g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd : g_settings.screen_StartY_crt;
-		g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd : g_settings.screen_EndX_crt;
-		g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd : g_settings.screen_EndY_crt;
+		CNeutrinoApp::getInstance()->setScreenSettings();
 		osd_menu->hide();
 		if (g_InfoViewer == NULL)
 			g_InfoViewer = new CInfoViewer;
 		g_InfoViewer->changePB();
 		return true;
 	}
+#ifdef ENABLE_CHANGE_OSD_RESOLUTION
+        else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_COLORMENU_OSD_RESOLUTION))
+	{
+		if (frameBuffer->osd_resolutions.empty())
+			return true;
+		osd_menu->hide();
+		uint32_t osd_mode = (uint32_t)*(int*)data;
+		COsdHelpers::getInstance()->g_settings_osd_resolution_save = osd_mode;
+		COsdHelpers::getInstance()->changeOsdResolution(osd_mode);
+#if 0
+		if (frameBuffer->fullHdAvailable()) {
+			if (frameBuffer->osd_resolutions.empty())
+				return true;
+
+			size_t index = (size_t)*(int*)data;
+			size_t resCount = frameBuffer->osd_resolutions.size();
+			if (index >= resCount)
+				index = 0;
+
+			uint32_t resW = frameBuffer->osd_resolutions[index].xRes;
+			uint32_t resH = frameBuffer->osd_resolutions[index].yRes;
+			uint32_t bpp  = frameBuffer->osd_resolutions[index].bpp;
+			int switchFB = frameBuffer->setMode(resW, resH, bpp);
+
+			if (switchFB == 0) {
+//printf("\n>>>>>[%s:%d] New res: %dx%dx%d\n \n", __func__, __LINE__, resW, resH, bpp);
+				osd_menu->hide();
+				frameBuffer->Clear();
+				CNeutrinoApp::getInstance()->setScreenSettings();
+				CNeutrinoApp::getInstance()->SetupFonts(CNeutrinoFonts::FONTSETUP_NEUTRINO_FONT);
+				CVolumeHelper::getInstance()->refresh();
+				CInfoClock::getInstance()->ClearDisplay();
+				FileTimeOSD->Init();
+				if (CNeutrinoApp::getInstance()->channelList)
+					CNeutrinoApp::getInstance()->channelList->ResetModules();
+				if (g_InfoViewer)
+					g_InfoViewer->ResetModules();
+			}
+		}
+#endif
+		return true;
+	}
+#endif
 	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_EXTRA_ROUNDED_CORNERS)) {
 		osd_menu->hide();
 		g_settings.rounded_corners = * (int*) data;

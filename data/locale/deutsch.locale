@@ -1,5 +1,5 @@
 AUDIOSelectMenue.head Auswahl der Tonspur
-EPGMenu.epgplus Vorschauübersicht
+EPGMenu.epgplus Vorschau-Übersicht
 EPGMenu.eventinfo Info zur Sendung
 EPGMenu.eventlist Vorschau aktuelles Programm
 EPGMenu.head EPG - Programminformation
@@ -7,7 +7,7 @@ EPGMenu.streaminfo Technische Information
 EPGPlus.actions Aktionen
 EPGPlus.bybouquet_mode bouquetweise
 EPGPlus.bypage_mode seitenweise
-EPGPlus.head Vorschau Übersicht (EPG Plus)
+EPGPlus.head Vorschau-Übersicht (EPG Plus)
 EPGPlus.next_bouquet Bouquet vor
 EPGPlus.options Optionen
 EPGPlus.page_down Seite zurück
@@ -19,7 +19,7 @@ EPGPlus.remind Vormerken
 EPGPlus.scroll_mode Scroll-Modus
 EPGPlus.stretch_mode Stretch-Modus
 EPGPlus.swap_mode Blättern
-EPGPlus.view_mode Modus
+EPGPlus.view_mode Ansicht
 GENRE.ALL aus
 GENRE.ARTS Kultur
 GENRE.ARTS.0 Kunst/Kultur
@@ -160,10 +160,10 @@ audioplayer.add_loc Lokale Radioliste
 audioplayer.add_sc SHOUTcast
 audioplayer.artist_title Interpret, Titel
 audioplayer.building_search_index Erstelle Suchindex
-audioplayer.button_select_title_by_id Suche n. ID
-audioplayer.button_select_title_by_name Suche n. Name
-audioplayer.defdir Start-Verz.
-audioplayer.delete entfernen
+audioplayer.button_select_title_by_id Suche nach ID
+audioplayer.button_select_title_by_name Suche nach Name
+audioplayer.defdir Start-Verzeichnis
+audioplayer.delete Entfernen
 audioplayer.deleteall Alle entfernen
 audioplayer.display_order Anzeige
 audioplayer.enable_sc_metadata Aktiviere SHOUTcast Meta-Daten Parsing
@@ -322,10 +322,10 @@ colormenu.clock_textcolor Ziffernfarbe
 colormenu.fade Ein-/Ausblenden
 colormenu.font Verwendete Schriftart
 colormenu.font_ttx Teletext Schriftart
-colormenu.hd_preset LCD
 colormenu.menucolors Farben
 colormenu.osd_preset Monitor Auswahl
-colormenu.sd_preset CRT
+colormenu.osd_resolution OSD-Auflösung
+colormenu.shadow_color Schattenfarbe
 colormenu.textcolor Textfarbe
 colormenu.themeselect Theme auswählen
 colormenu.timing Timeouts
@@ -593,11 +593,11 @@ filebrowser.prevpage Seite zurück
 filebrowser.scan Durchsuche Verzeichnisse
 filebrowser.select Auswählen
 filebrowser.showrights Dateirechte anzeigen
-filebrowser.sort.date (Datum)
-filebrowser.sort.name (Dateiname)
-filebrowser.sort.namedirsfirst (Dateiname2)
-filebrowser.sort.size (Größe)
-filebrowser.sort.type (Typ)
+filebrowser.sort.date Datum
+filebrowser.sort.name Name
+filebrowser.sort.namedirsfirst Name, Verz. zuerst
+filebrowser.sort.size Größe
+filebrowser.sort.type Typ
 filesystem.is.utf8 Dateisystem
 filesystem.is.utf8.option.iso8859.1 ISO-8859-1
 filesystem.is.utf8.option.utf8 UTF-8
@@ -885,7 +885,7 @@ languagesetup.select Sprache
 lcd_info_line Zeige in Infozeile 
 lcd_info_line_channel Kanalname
 lcd_info_line_clock Uhrzeit
-lcdcontroler.brightness normale
+lcdcontroler.brightness Normalbetrieb
 lcdcontroler.brightnessdeepstandby Deep-Standby
 lcdcontroler.brightnessstandby Standby
 lcdmenu.dim_brightness nach Dimm-Timeout
@@ -1037,6 +1037,7 @@ menu.hint_color_gradient_separator_enable Farbverlauf für Menü-Trennlinien akt
 menu.hint_colored_events Definiert, ob die aktuelle oder nächste Sendung in einer anderen Farbe dargestellt werden soll
 menu.hint_colored_events_textcolor Ändern Sie die Farbe für farbige Events in der Kanalliste und der Infobar
 menu.hint_colors Konfigurieren Sie die Menü-Farben
+menu.hint_colors_shadow Einstellen der Schattenfarbe
 menu.hint_content_back Ändern Sie die Hintergrundfarbe für den Fensterinhalt
 menu.hint_content_textcolor Ändern Sie die Textfarbe für den Fensterinhalt
 menu.hint_dboxinfo Informationen über CPU und Arbeitsspeicher der Box
@@ -1254,6 +1255,7 @@ menu.hint_opkg_upgrade Aktualisiert alle installierten Pakete auf die neueste ve
 menu.hint_osd Farben, Schriftarten, Anzeigegröße, Ansichtsoptionen der Menüs usw.
 menu.hint_osd_language Wählen Sie ihre Menü-Sprache
 menu.hint_osd_preset Wählen Sie zwischen Röhren-TV (CRT) oder Flachbildschirm (LCD)
+menu.hint_osd_resolution Wählen Sie eine OSD-Auflösung
 menu.hint_osd_timing Einblendzeit, die das OSD auf dem TV angezeigt wird
 menu.hint_other_fonts Ändern Sie andere Schriftgrößen
 menu.hint_parentallock_changepin Geben Sie den 4-stelligen PIN-Code ein, der dann ggf. abgefragt wird
@@ -1669,6 +1671,7 @@ moviebrowser.cut_failed Fehler beim Schneiden. Sind Sprungmarken und genug freie
 moviebrowser.cutting Schneide Film, bitte warten ...
 moviebrowser.delete_all Alle markierten Filme ohne weitere Nachfrage löschen?
 moviebrowser.delete_info Lösche Dateien, bitte warten ...
+moviebrowser.delete_movie Film löschen
 moviebrowser.delete_screenshot Lösche Screenshot?
 moviebrowser.dir Pfad
 moviebrowser.directories Verzeichnisse
@@ -2021,7 +2024,7 @@ personalize.usermenu_plugin_types Anzuzeigende Plugin-Typen wählen
 personalize.usermenu_preferred_buttons Bevorzugte Tasten zuweisen
 personalize.usermenu_show_cancel Zeige Schalter "Abbrechen"
 personalize.visible sichtbar
-pictureviewer.defdir Start-Verz.
+pictureviewer.defdir Start-Verzeichnis
 pictureviewer.head Bildbetrachter
 pictureviewer.help1 Menü-Modus
 pictureviewer.help10 Bild neu einlesen
@@ -2055,8 +2058,8 @@ pictureviewer.scaling Skalierung
 pictureviewer.show Anzeigen
 pictureviewer.slide_time Diaschau-Anzeigedauer
 pictureviewer.slideshow Diaschau
-pictureviewer.sortorder.date Sortierreihenf. ändern (Datum)
-pictureviewer.sortorder.filename Sortierreihenf. ändern (Dateiname)
+pictureviewer.sortorder.date Sortierreihenfolge: Datum
+pictureviewer.sortorder.filename Sortierreihenfolge: Dateiname
 ping.ok ist erreichbar (ping)
 ping.protocol ist nicht erreichbar (Host- oder Protokoll-Fehler)
 ping.socket ist nicht erreichbar (Socket-Fehler)
@@ -2320,9 +2323,11 @@ streaminfo.framerate Bildrate
 streaminfo.framerate_unknown unbekannt
 streaminfo.head Tech. Information
 streaminfo.not_available nicht verfügbar
+streaminfo.osd_resolution OSD-Auflösung
 streaminfo.resolution Auflösung
 streaminfo.signal Empfangssignal
-streaming.busy Ein oder mehrere Aufnahmeprozesse sind aktiv.\nSollte die Aufnahme eigentlich beendet sein,\nschafft ein Neustart von Neutrino Abhilfe.
+streaminfo.videosystem Videosystem
+streaming.busy Einer oder mehrere Aufnahmeprozesse sind aktiv.\nSollte die Aufnahme eigentlich beendet sein,\nschafft ein Neustart der GUI Abhilfe.
 streaming.dir_not_writable Das Aufnahmeverzeichnis ist nicht beschreibbar.\nAufnahmen sind daher nicht möglich.
 streaming.overflow Aufnahme-Puffer Überlauf! Bitte ggf. einige Aufnahmen beenden.
 streaming.slow System oder Datenträger zu langsam! Bitte ggf. einige Aufnahmen beenden.

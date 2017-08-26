@@ -19,7 +19,7 @@ hw_caps_t *get_hwcaps(void) {
 		return &caps;
 	int rev = cs_get_revision();
 	int chip = cs_get_chip_type();
-	caps.has_fan = (rev < 8);
+	caps.has_fan = (rev < 8); // see dirty part of hw_caps in neutrino.cpp
 	caps.has_HDMI = 1;
 	caps.has_SCART = (rev != 10);
 	caps.has_SCART_input = 0;
@@ -41,8 +41,9 @@ hw_caps_t *get_hwcaps(void) {
 		strcpy(caps.boxname, "HD1");
 		caps.force_tuner_2G = 1;
 		break;
-	case 8: // TODO: Neo2 - Twin
-		strcpy(caps.boxname, "Neo");
+	case 8:
+		strcpy(caps.boxname, "Neo"); // see dirty part of hw_caps in neutrino.cpp
+		strcpy(caps.boxarch, "Nevis");
 		caps.force_tuner_2G = 1;
 		break;
 	case 9:
@@ -64,6 +65,7 @@ hw_caps_t *get_hwcaps(void) {
 			strcpy(caps.boxname, "Trinity V2");
 			strcpy(caps.boxarch, "Kronos");
 		}
+		caps.can_set_display_brightness = 0;
 		break;
 	case 12:
 		strcpy(caps.boxname, "Zee2");
@@ -76,6 +78,7 @@ hw_caps_t *get_hwcaps(void) {
 	case 14:
 		strcpy(caps.boxname, "Trinity Duo");
 		strcpy(caps.boxarch, "Kronos");
+		caps.can_set_display_brightness = 0;
 		break;
 	default:
 		strcpy(caps.boxname, "UNKNOWN_BOX");

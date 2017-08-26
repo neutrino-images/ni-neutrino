@@ -38,7 +38,7 @@
 
 #include <driver/movieinfo.h>
 #include "widget/menue.h"
-
+#include "widget/navibar.h"
 #include <vector>
 #include <string>
 
@@ -50,7 +50,10 @@ class CEpgData
 		CChannelEventList	evtlist;
 		CChannelEventList	followlist;
 		CEPGData		epgData;
-		CComponentsShapeSquare* header;
+		CComponentsHeader	*header;
+		CNaviBar 		*Bottombox;
+		CProgressBar 		*pb;
+		Font			*font_title;
 		std::string 		epg_date;
 		std::string 		epg_start;
 		std::string 		epg_end;
@@ -100,6 +103,7 @@ class CEpgData
 		int show(const t_channel_id channel_id, uint64_t id = 0, time_t* startzeit = NULL, bool doLoop = true, bool callFromfollowlist = false, bool mp_info = false );
 		int show_mp(MI_MOVIE_INFO *mi, int mp_position = 0, int mp_duration = 0, bool doLoop = true);
 		void hide();
+		void ResetModules();
 };
 
 

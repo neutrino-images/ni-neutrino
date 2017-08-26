@@ -51,6 +51,7 @@
 #include <xmlinterface.h>
 
 #include <gui/widget/msgbox.h>
+#include <gui/widget/progresswindow.h>
 #include <gui/scan.h>
 #include <gui/scan_setup.h>
 #include <zapit/zapit.h>
@@ -748,11 +749,11 @@ int CTestMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 	else if (actionKey == "window"){
 		if (window == NULL){
 			window = new CComponentsWindow();
-			window->setWindowCaption("|........HEADER........|", CTextBox::CENTER);
+			window->setWindowCaption("|........HEADER........|", CCHeaderTypes::CC_TITLE_CENTER);
 			window->setDimensionsAll(50, 50, 500, 500);
 			window->setWindowIcon(NEUTRINO_ICON_INFO);
 			window->enableShadow();
-			window->getFooterObject()->setCaption("|........FOOTER........|", CTextBox::CENTER);
+			window->getFooterObject()->setCaption("|........FOOTER........|", CCHeaderTypes::CC_TITLE_CENTER);
 
 			CComponentsShapeCircle *c10 = new CComponentsShapeCircle(0, 0, 28);
 			CComponentsShapeCircle *c11 = new CComponentsShapeCircle(0, CC_APPEND, 28);
@@ -840,6 +841,55 @@ int CTestMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 			clock = NULL;
 		}
 		return res;
+	}
+	else if (actionKey == "progress_window"){
+		//classical
+		CProgressWindow pw0("Progress Single Test");
+		pw0.paint();
+		size_t max = 3;
+		for(size_t i = 0; i< max; i++){
+			pw0.showStatus(i, max, to_string(i));
+			sleep(1);
+		}
+		pw0.hide();
+
+		CProgressWindow pw1("Progress Local/Global Test");
+		pw1.paint();
+		for(size_t i = 0; i< max; i++){
+			pw1.showGlobalStatus(i, max, to_string(i));
+			for(size_t j = 0; j< max; j++){
+				pw1.showLocalStatus(j, max, to_string(j));
+				sleep(1);
+			}
+		}
+		pw1.hide();
+
+		//with signals
+		sigc::signal<void, size_t, size_t, std::string> OnProgress0, OnProgress1;
+		CProgressWindow pw2("Progress Single Test -> single Signal", CCW_PERCENT 50, CCW_PERCENT 30, &OnProgress0);
+		pw2.paint();
+
+		for(size_t i = 0; i< max; i++){
+			OnProgress0(i, max, to_string(i));
+			sleep(1);
+		}
+		pw2.hide();
+
+		OnProgress0.clear();
+		OnProgress1.clear();
+		CProgressWindow pw3("Progress Single Test -> dub Signal", CCW_PERCENT 50, CCW_PERCENT 20, NULL, &OnProgress0, &OnProgress1);
+		pw3.paint();
+
+		for(size_t i = 0; i< max; i++){
+			OnProgress1(i, max, to_string(i));
+				for(size_t j = 0; j< max; j++){
+					OnProgress0(j, max, to_string(j));
+					sleep(1);
+				}
+		}
+		pw3.hide();
+
+		return menu_return::RETURN_REPAINT;
 	}
 	else if (actionKey == "hintbox_test")
 	{
@@ -986,7 +1036,7 @@ void CTestMenu::showRecords()
 			recline->doPaintBg(true);
 			recline->setColorBody(COL_INFOBAR_PLUS_0);
 			recline->enableShadow(CC_SHADOW_ON, w_shadow);
-			recline->setCorner(CORNER_RADIUS_MID);
+			recline->setCorner(RADIUS_MID);
 			recordsbox->addCCItem(recline);
 
 			CComponentsPicture *iconf = new CComponentsPicture(OFFSET_INNER_MID, CC_CENTERED, NEUTRINO_ICON_REC, recline, CC_SHADOW_OFF, COL_RED, COL_INFOBAR_PLUS_0);
@@ -1085,6 +1135,7 @@ int CTestMenu::showTestMenu()
 void CTestMenu::showCCTests(CMenuWidget *widget)
 {
 	widget->addIntroItems();
+	widget->addItem(new CMenuForwarder("Progress Window", true, NULL, this, "progress_window"));
 	widget->addItem(new CMenuForwarder("Running Clock", true, NULL, this, "running_clock"));
 	widget->addItem(new CMenuForwarder("Clock", true, NULL, this, "clock"));
 	widget->addItem(new CMenuForwarder("Button", true, NULL, this, "button"));

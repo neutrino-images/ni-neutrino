@@ -61,6 +61,7 @@
 #include <system/debug.h>
 #include <gui/color.h>
 #include "textbox.h"
+#include <gui/components/cc.h>
 #include <gui/widget/icons.h>
 #include <driver/fontrenderer.h>
 #ifdef VISUAL_DEBUG
@@ -68,14 +69,14 @@
 #endif
 #include <sstream>
 
-#define	SCROLL_FRAME_WIDTH	10
-#define	SCROLL_MARKER_BORDER	 2
+#define	SCROLL_FRAME_WIDTH	SCROLLBAR_WIDTH
+#define	SCROLL_MARKER_BORDER	OFFSET_INNER_MIN
 
-#define MAX_WINDOW_WIDTH  (g_settings.screen_EndX - g_settings.screen_StartX - 40)
-#define MAX_WINDOW_HEIGHT (g_settings.screen_EndY - g_settings.screen_StartY - 40)
+#define MAX_WINDOW_WIDTH  (g_settings.screen_EndX - g_settings.screen_StartX - CFrameBuffer::getInstance()->scale2Res(40))
+#define MAX_WINDOW_HEIGHT (g_settings.screen_EndY - g_settings.screen_StartY - CFrameBuffer::getInstance()->scale2Res(40))
 
 #define MIN_WINDOW_WIDTH  ((g_settings.screen_EndX - g_settings.screen_StartX)>>1)
-#define MIN_WINDOW_HEIGHT 40
+#define MIN_WINDOW_HEIGHT CFrameBuffer::getInstance()->scale2Res(40)
 
 CTextBox::CTextBox(const char * text, Font* font_text, const int pmode,
 		   const CBox* position, CFBWindow::color_t textBackgroundColor)
@@ -525,14 +526,9 @@ void CTextBox::refreshScroll(void)
 
 	if (m_nNrOfPages > 1)
 	{
-		frameBuffer->paintBoxRel(m_cFrameScrollRel.iX+m_cFrame.iX, m_cFrameScrollRel.iY+m_cFrame.iY,
+		paintScrollBar(m_cFrameScrollRel.iX+m_cFrame.iX, m_cFrameScrollRel.iY+m_cFrame.iY,
 				m_cFrameScrollRel.iWidth, m_cFrameScrollRel.iHeight,
-				COL_SCROLLBAR_PASSIVE_PLUS_0, RADIUS_MIN);
-		unsigned int marker_size = (m_cFrameScrollRel.iHeight - 2*SCROLL_MARKER_BORDER) / m_nNrOfPages;
-		frameBuffer->paintBoxRel(m_cFrameScrollRel.iX + SCROLL_MARKER_BORDER + m_cFrame.iX,
-				m_cFrameScrollRel.iY + SCROLL_MARKER_BORDER + m_nCurrentPage * marker_size + m_cFrame.iY,
-				m_cFrameScrollRel.iWidth - 2*SCROLL_MARKER_BORDER,
-				marker_size, COL_SCROLLBAR_ACTIVE_PLUS_0, RADIUS_MIN);
+				m_nNrOfPages, m_nCurrentPage);
 		m_has_scrolled = true;
 	}
 	else
@@ -898,6 +894,16 @@ int CTextBox::getLines(const std::string& text)
 		count++;
 
 	return count;
+}
+
+int CTextBox::getLines()
+{
+	if (m_cText.empty())
+		return 0;
+
+	refreshTextLineArray();
+
+	return m_nNrOfLines;
 }
 
 int CTextBox::getMaxLineWidth(const std::string& text, Font* font)

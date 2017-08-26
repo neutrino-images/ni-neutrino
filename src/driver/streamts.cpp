@@ -57,6 +57,7 @@
 #include <driver/record.h>
 #include <driver/genpsi.h>
 #include <system/set_threadname.h>
+
 #include <gui/movieplayer.h>
 #include <cs_api.h>
 
@@ -849,7 +850,7 @@ bool CStreamStream::Open()
 	av_dict_copy(&ofcx->metadata, ifcx->metadata, 0);
 	int stid = 0x200;
 	for (unsigned i = 0; i < ifcx->nb_streams; i++) {
-#if (LIBAVCODEC_VERSION_INT < AV_VERSION_INT( 57,5,0 ))
+#if (LIBAVFORMAT_VERSION_INT < AV_VERSION_INT( 57,25,101 ))
 		AVCodecContext * iccx = ifcx->streams[i]->codec;
 		AVStream *ost = avformat_new_stream(ofcx, iccx->codec);
 		avcodec_copy_context(ost->codec, iccx);
@@ -922,7 +923,7 @@ void CStreamStream::run()
 		if (pkt.stream_index < 0)
 			continue;
 
-#if (LIBAVCODEC_VERSION_INT < AV_VERSION_INT( 57,5,0 ))
+#if (LIBAVFORMAT_VERSION_INT < AV_VERSION_INT( 57,25,101 ))
 		AVCodecContext *codec = ifcx->streams[pkt.stream_index]->codec;
 #else
 		AVCodecParameters *codec = ifcx->streams[pkt.stream_index]->codecpar;

@@ -39,6 +39,14 @@
 
 typedef struct fb_var_screeninfo t_fb_var_screeninfo;
 
+typedef struct osd_resolution_t
+{
+	uint32_t yRes;
+	uint32_t xRes;
+	uint32_t bpp;
+	uint32_t mode;
+} osd_resolution_struct_t;
+
 typedef struct gradientData_t
 {
 	fb_pixel_t* gradientBuf;
@@ -184,6 +192,7 @@ class CFrameBuffer : public sigc::trackable
 		bool getActive() const;                     // is framebuffer active?
 		void setActive(bool enable);                     // is framebuffer active?
 		virtual void setupGXA() { return; };             // reinitialize stuff
+		virtual void add_gxa_sync_marker() { return; };
 		virtual bool needAlign4Blit() { return false; };
 		virtual uint32_t getWidth4FB_HW_ACC(const uint32_t x, const uint32_t w, const bool max=true);
 
@@ -230,6 +239,7 @@ class CFrameBuffer : public sigc::trackable
 				const int h = 0, const unsigned char offset = 1, bool paint = true, bool paintBg = false, const fb_pixel_t colBg = 0);
 		bool paintIcon8(const std::string & filename, const int x, const int y, const unsigned char offset = 0);
 		void loadPal   (const std::string & filename, const unsigned char offset = 0, const unsigned char endidx = 255);
+		void clearIconCache();
 
 		bool loadPicture2Mem        (const std::string & filename, fb_pixel_t * const memp);
 		bool loadPicture2FrameBuffer(const std::string & filename);
@@ -269,6 +279,13 @@ class CFrameBuffer : public sigc::trackable
 		virtual void blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff);
 
 		virtual void mark(int x, int y, int dx, int dy);
+/* Remove this when pu/fb-setmode branch is merged to master */
+#define SCALE2RES_DEFINED
+		virtual int scale2Res(int size) { return size; };
+		virtual bool fullHdAvailable() { return false; };
+		virtual void setOsdResolutions();
+		std::vector<osd_resolution_t> osd_resolutions;
+		size_t getIndexOsdResolution(uint32_t mode);
 
 		enum
 			{

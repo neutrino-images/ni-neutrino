@@ -27,6 +27,8 @@
 #include <driver/rcinput.h>
 #include <driver/screen_max.h>
 #include <driver/pictureviewer/pictureviewer.h>
+#include <system/httptool.h>
+#include <system/helpers.h>
 #include <gui/color.h>
 #include <gui/widget/icons.h>
 #include <gui/movieplayer.h>
@@ -464,7 +466,7 @@ int CNeutrinoAPI::setVideoAspectRatioAsString(std::string newRatioString)
 //-------------------------------------------------------------------------
 std::string CNeutrinoAPI::getVideoResolutionAsString(void)
 {
-	int xres, yres, framerate;
+	int xres = 0, yres = 0, framerate = 0;
 	videoDecoder->getPictureInfo(xres, yres, framerate);
 	std::stringstream out;
 	out << xres << "x" << yres;
@@ -474,7 +476,7 @@ std::string CNeutrinoAPI::getVideoResolutionAsString(void)
 //-------------------------------------------------------------------------
 std::string CNeutrinoAPI::getVideoFramerateAsString(void)
 {
-	int xres, yres, framerate;
+	int xres = 0, yres = 0, framerate = 0;
 	std::string sframerate = "{=L:unknown=}";
 	videoDecoder->getPictureInfo(xres, yres, framerate);
 	switch(framerate){
@@ -489,7 +491,7 @@ std::string CNeutrinoAPI::getVideoFramerateAsString(void)
 //-------------------------------------------------------------------------
 std::string CNeutrinoAPI::getAudioInfoAsString(void)
 {
-	int type, layer, freq, mode, lbitrate;
+	int type = 0, layer = 0, freq = 0, mode = 0, lbitrate = 0;
 	audioDecoder->getAudioInfo(type, layer, freq, lbitrate, mode);
 	std::stringstream out;
 	if(type == 0)
@@ -529,4 +531,54 @@ std::string CNeutrinoAPI::getLogoFile(t_channel_id channelId)
 	if (g_PicViewer->GetLogoName(channelId, channelName, logoString, NULL, NULL))
 		return logoString;
 	return "";
+}
+
+std::string CNeutrinoAPI::GetRemoteBoxIP(std::string _rbname)
+{
+	std::string c_url = "";
+	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it)
+	{
+		if (it->rbname == _rbname)
+		{
+			if (!it->user.empty() && !it->pass.empty())
+				c_url += it->user + ":" + it->pass +"@";
+			c_url += it->rbaddress;
+			c_url += ":" + to_string(it->port);
+			break;
+		}
+	}
+	return c_url;
+}
+
+void CNeutrinoAPI::SendAllTimers(std::string url, bool force)
+{
+	CTimerd::TimerList timerlist;
+	timerlist.clear();
+	Timerd->getTimerList(timerlist);
+	sort(timerlist.begin(), timerlist.end());
+
+	int pre = 0,post = 0;
+	Timerd->getRecordingSafety(pre,post);
+	CHTTPTool httpTool;
+	std::string r_url;
+
+	for(CTimerd::TimerList::iterator timer = timerlist.begin(); timer != timerlist.end(); ++timer)
+	{
+		if (timer->eventType == CTimerd::TIMER_RECORD) {
+			r_url = "http://";
+			r_url += url;
+			r_url += "/control/timer?action=new";
+			r_url += "&alarm=" + to_string((int)timer->alarmTime + pre);
+			r_url += "&stop=" + to_string((int)timer->stopTime - post);
+			r_url += "&announce=" + to_string((int)timer->announceTime + pre);
+			r_url += "&channel_id=" + string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer->channel_id);
+			r_url += "&aj=on";
+			r_url += "&rs=on";
+
+			r_url = httpTool.downloadString(r_url, -1, 300);
+
+			if ((r_url=="ok") || force)
+				Timerd->removeTimerEvent(timer->eventID);
+		}
+	}
 }
