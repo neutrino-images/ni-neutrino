@@ -367,7 +367,6 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.lcd4l_skin_radio = configfile.getInt32("lcd4l_skin_radio" , 0);
 	g_settings.lcd4l_convert = configfile.getInt32("lcd4l_convert", 1);
 	g_settings.show_menu_hints_line = configfile.getBool("show_menu_hints_line", false);
-	g_settings.infoviewer_icons = configfile.getInt32("infoviewer_icons" , 1);
 	g_settings.mode_icons = configfile.getInt32( "mode_icons", 0);
 	g_settings.mode_icons_background = configfile.getInt32( "mode_icons_background", 0);
 	g_settings.mode_icons_skin = configfile.getInt32( "mode_icons_skin", 0);
@@ -1190,7 +1189,6 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("lcd4l_skin_radio" , g_settings.lcd4l_skin_radio);
 	configfile.setInt32("lcd4l_convert" , g_settings.lcd4l_convert);
 	configfile.setBool("show_menu_hints_line" , g_settings.show_menu_hints_line);
-	configfile.setInt32("infoviewer_icons" , g_settings.infoviewer_icons);
 	configfile.setInt32("mode_icons", g_settings.mode_icons );
 	configfile.setInt32("mode_icons_background", g_settings.mode_icons_background);
 	configfile.setInt32("mode_icons_skin", g_settings.mode_icons_skin);

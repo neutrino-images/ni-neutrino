@@ -66,8 +66,6 @@ class COsdSetup : public CMenuTarget, public CChangeObserver
 		int show_tuner_icon;
 
 		//NI
-		CMenuOptionChooser *infobarIconset;
-		int infoviewer_icons;
 		int show_menu_hints_line;
 
 		int showOsdSetup();

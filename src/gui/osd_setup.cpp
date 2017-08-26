@@ -50,8 +50,6 @@
 #include <gui/color_custom.h>
 #include <gui/infoclock.h>
 #include <gui/timeosd.h>
-#include <gui/infoviewer_bb.h> //NI
-#include <gui/ni_menu.h> //NI
 #include <gui/widget/icons.h>
 #include <gui/widget/colorchooser.h>
 #include <gui/widget/stringinput.h>
@@ -96,8 +94,6 @@ COsdSetup::COsdSetup(int wizard_mode)
 	show_tuner_icon = 0;
 
 	//NI
-	infobarIconset = NULL;
-	infoviewer_icons = 0;
 	show_menu_hints_line = 0;
 }
 
@@ -548,16 +544,6 @@ const CMenuOptionChooser::keyval PROGRESSBAR_COLOR_OPTIONS[PROGRESSBAR_COLOR_OPT
 	{ CProgressBar::PB_COLOR,       _LOCALE_PROGRESSBAR_COLOR_FULL }
 };
 
-//NI iconsets
-const CMenuOptionChooser::keyval INFOVIEWER_ICONSET_OPTIONS[] =
-{
-	{ 0, LOCALE_INFOVIEWER_ICONSET_PKG0 },
-	{ 1, LOCALE_INFOVIEWER_ICONSET_PKG1 },
-	{ 2, LOCALE_INFOVIEWER_ICONSET_PKG2 },
-	{ 3, LOCALE_INFOVIEWER_ICONSET_PKG3 }
-};
-#define INFOVIEWER_ICONSET_OPTION_COUNT (sizeof(INFOVIEWER_ICONSET_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
-
 //show osd setup
 int COsdSetup::showOsdSetup()
 {
@@ -760,27 +746,6 @@ int COsdSetup::showOsdSetup()
 		CVolumeHelper::getInstance()->refresh();
 		if (CNeutrinoApp::getInstance()->isMuted())
 			CAudioMute::getInstance()->enableMuteIcon(true);
-	}
-
-	//NI
-	if (g_settings.infoviewer_icons != infoviewer_icons)
-	{
-		std::ostringstream buf;
-		buf.str("");
-		buf << ICONSDIR << "/iconsPKG" << g_settings.infoviewer_icons << ".tar.gz";
-		printf("[osd_setup.cpp] change infoviewer iconset Name=%s PKG=%i\n", g_Locale->getText(INFOVIEWER_ICONSET_OPTIONS[g_settings.infoviewer_icons].value), g_settings.infoviewer_icons);
-
-		if (my_system(8, "tar", "-z", "-x", "-v", "-f", buf.str().c_str(), "-C", ICONSDIR) != 0)
-		{
-			printf("[osd_setup.cpp] change infoviewer iconset failed\n");
-		}
-		else
-		{
-			CFrameBuffer::getInstance()->clearIconCache();
-			g_InfoViewer->Init();
-			CInfoViewerBB::getInstance()->Init();
-			g_InfoViewer->start();
-		}
 	}
 
 	delete colorInfoclockNotifier;
@@ -1349,12 +1314,6 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_DD);
 	menu_infobar->addItem(mc);
 
-	//NI iconsets
-	infoviewer_icons = g_settings.infoviewer_icons;
-	infobarIconset = new CMenuOptionChooser(LOCALE_INFOVIEWER_ICONSET, &g_settings.infoviewer_icons, INFOVIEWER_ICONSET_OPTIONS, INFOVIEWER_ICONSET_OPTION_COUNT, true, this);
-	changeNotify(LOCALE_INFOVIEWER_ICONSET, NULL); //setHint
-	menu_infobar->addItem(infobarIconset);
-
 	menu_infobar->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_MISCSETTINGS_PROGRESSBAR));
 	// progressbar position
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_PROGRESSBAR_INFOBAR_POSITION, &g_settings.infobar_progressbar, PROGRESSBAR_INFOBAR_POSITION_OPTIONS, PROGRESSBAR_INFOBAR_POSITION_COUNT, true);
@@ -1623,38 +1582,6 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 		else
 			g_settings.show_ecm = 1;
 
-	}
-	//NI iconsets
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_INFOVIEWER_ICONSET))
-	{
-		int value = g_settings.infoviewer_icons;
-		if (data)
-			value = (* (int *) data);
-
-		const char *icon = NEUTRINO_ICON_HINT_IMAGELOGO;
-		neutrino_locale_t txt = LOCALE_MENU_HINT_INFOBAR_ICONSET;
-
-		switch (value)
-		{
-			case 0:
-				icon = NEUTRINO_ICON_HINT_ICONSPKG0;
-				break;
-			case 1:
-				icon = NEUTRINO_ICON_HINT_ICONSPKG1;
-				break;
-			case 2:
-				icon = NEUTRINO_ICON_HINT_ICONSPKG2;
-				break;
-			case 3:
-				icon = NEUTRINO_ICON_HINT_ICONSPKG3;
-				break;
-			default:
-				break;
-		}
-		infobarIconset->setHint(icon, txt);
-
-		//return true for repaint hint
-		return true;
 	}
 	else if ((ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_INFOCLOCK)) ||
 		 (ARE_LOCALES_EQUAL(OptionName, LOCALE_CLOCK_SIZE_HEIGHT)) ||

@@ -920,11 +920,6 @@ infoicons_switch_off Infoicons off
 infoicons_switch_on Infoicons on
 infoviewer.epgnotload EPG not loaded ...
 infoviewer.epgwait waiting for EPG ...
-infoviewer.iconset Iconset
-infoviewer.iconset_pkg0 NI-Material-Design
-infoviewer.iconset_pkg1 NI-Dark
-infoviewer.iconset_pkg2 NI-Bright
-infoviewer.iconset_pkg3 NI-Flat
 infoviewer.motor_moving Antenna positioning
 infoviewer.next next
 infoviewer.nocurrent No info for current program available
@@ -1247,7 +1242,6 @@ menu.hint_infobar_dd Show DD icon
 menu.hint_infobar_ecminfo Show ecm-info while infobar is displayed
 menu.hint_infobar_filesys Show flash and HDD used space levels
 menu.hint_infobar_fonts Change infobar font sizes
-menu.hint_infobar_iconset Iconset selection for CA-Bar
 menu.hint_infobar_logo Logo, channelnumber and signal display; Options in [brackets] will be displayed in small infobox
 menu.hint_infobar_logo_dir Select external directory to search for channels logo
 menu.hint_infobar_on_epg Show infobar on current EPG event change
