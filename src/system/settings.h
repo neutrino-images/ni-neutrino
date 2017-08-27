@@ -842,7 +842,6 @@ struct SNeutrinoSettings
 	int		ca_init;
 	int		show_menu_hints_line;
 	int		inetradio_autostart;
-	int		infoviewer_icons;
 #define MODE_ICONS_NR_OF_ENTRIES 8
 	int		mode_icons;
 	int		mode_icons_background;

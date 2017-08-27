@@ -920,11 +920,6 @@ infoicons_switch_off Infoicons ausblenden
 infoicons_switch_on Infoicons einblenden
 infoviewer.epgnotload Informationen noch nicht geladen ...
 infoviewer.epgwait Warte auf EPG-Informationen ...
-infoviewer.iconset Iconset
-infoviewer.iconset_pkg0 NI-Material-Design
-infoviewer.iconset_pkg1 NI-Dark
-infoviewer.iconset_pkg2 NI-Bright
-infoviewer.iconset_pkg3 NI-Flat
 infoviewer.motor_moving Antennenpositionierung
 infoviewer.next Später
 infoviewer.nocurrent Keine Info zu laufendem Programm
@@ -1247,7 +1242,6 @@ menu.hint_infobar_dd Zeigt ein Dolby Digital Icon bei Verfügbarkeit
 menu.hint_infobar_ecminfo Anzeigen der ECM-Info, während die Infobar eingeblendet ist
 menu.hint_infobar_filesys Zeigen den vom Flash- und einer HDD verwendeten Speicherplatz
 menu.hint_infobar_fonts Ändern Sie die Schriftgrößen in der Infobar
-menu.hint_infobar_iconset Auswahl der Iconsets für die CA-Anzeige
 menu.hint_infobar_logo Logo-, Kanalnummer- und Signal-Anzeige; Optionen in [Klammern] erscheinen in der kleinen Infobox
 menu.hint_infobar_logo_dir Wählen Sie das externe Verzeichnis für die Senderlogos
 menu.hint_infobar_on_epg Zeigt einen Hinweis bei EPG-Änderungen
