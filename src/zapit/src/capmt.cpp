@@ -291,7 +291,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	}
 
 	if((oldmask != newmask) || force_update) {
-		INFO("    ##NI: (oldmask != newmask) || force_update)");
+		//INFO("    ##NI: (oldmask != newmask) || force_update)");
 		cam->setCaMask(newmask);
 		cam->setSource(source);
 		if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
@@ -301,7 +301,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	}
 
 	if(newmask == 0) {
-		INFO("    ##NI: (newmask == 0)");
+		//INFO("    ##NI: (newmask == 0)");
 		/* FIXME: back to live channel from playback dont parse pmt and call setCaPmt
 		 * (see CMD_SB_LOCK / UNLOCK PLAYBACK */
 		//channel->setRawPmt(NULL);//FIXME
@@ -326,7 +326,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		if(start) {
 			if ((tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) || (filter_channels && channel->bUseCI)) {
 				rmode = true;
-				INFO("    ##NI: rmode");
+				//INFO("    ##NI: rmode");
 			}
 
 		} else
@@ -342,7 +342,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		list = CCam::CAPMT_ADD;
 
 #ifdef BOXMODEL_CS_HD2
-	INFO("    ##NI: channel_map.size() %d",channel_map.size());
+	//INFO("    ##NI: channel_map.size() %d",channel_map.size());
 	int ci_use_count = 0;
 	for (it = channel_map.begin(); it != channel_map.end(); ++it)
 	{
@@ -360,7 +360,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			ci_use_count++;
 	}
 	if (ci_use_count == 0) {
-		INFO("CI: not used for [%s], disabling TS\n",channel->getName().c_str());
+		INFO("CI: not used for [%s], disabling TS",channel->getName().c_str());
 		cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
 	}
 #endif
@@ -384,12 +384,12 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_SMARTCARD);
 
 		if (tunerno >= 0 && tunerno != cDemux::GetSource(cam->getSource())) {
-			INFO("CI: configured tuner %d do not match %d, skip [%s]\n", tunerno, cam->getSource(), channel->getName().c_str());
+			INFO("CI: configured tuner %d do not match %d, skip [%s]", tunerno, cam->getSource(), channel->getName().c_str());
 		} else if (filter_channels && !channel->bUseCI) {
-			INFO("CI: filter enabled, CI not used for [%s]\n", channel->getName().c_str());
+			INFO("CI: filter enabled, CI not used for [%s]", channel->getName().c_str());
 		} else {
 			useCI = true; //NI
-			INFO("CI: use CI for [%s]\n", channel->getName().c_str());
+			INFO("CI: use CI for [%s]", channel->getName().c_str());
 			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI);
 		}
 		//list = CCam::CAPMT_MORE;
