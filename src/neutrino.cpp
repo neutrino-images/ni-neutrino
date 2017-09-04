@@ -94,6 +94,7 @@
 #include "gui/start_wizard.h"
 #include "gui/update_ext.h"
 #include "gui/update.h"
+#include "gui/update_check.h"
 #include "gui/videosettings.h"
 #include "gui/audio_select.h"
 #include "gui/webtv_setup.h" //NI
@@ -376,6 +377,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		else if	(i==1)	sprintf(cfg_value, "/var/etc/.call");
 		else if	(i==2)	sprintf(cfg_value, "/var/etc/.srv");
 		else if	(i==3)	sprintf(cfg_value, "/var/etc/.card");
+		else if	(i==4)	sprintf(cfg_value, "/var/etc/.update");
 		else		strcpy(cfg_value, "");
 		g_settings.mode_icons_flag[i] = configfile.getString(cfg_key, cfg_value);
 	}
@@ -1081,13 +1083,11 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 			configfile.setString("usermenu_tv_yellow", g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items);
 		}
 	}
-	//NI
 	if (g_settings.version_pseudo < "20160804110000")
 	{
 		if (g_settings.tmdb_api_key == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 			g_settings.tmdb_api_key = "7270f1b571c4ecbb5b204ddb7f8939b1";
 	}
-	//NI
 	if (g_settings.version_pseudo < "20161411235900")
 	{
 		//convert and remove obsolete recording_tevents key
@@ -1137,13 +1137,11 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		configfile.deleteKey("screen_width");
 		configfile.deleteKey("screen_height");
 	}
-	//NI
 	if (g_settings.version_pseudo < "20170516150000")
 	{
 		if (g_settings.movieplayer_bisection_jump == 1)
 			g_settings.movieplayer_bisection_jump = 5;
 	}
-	//NI
 	if (g_settings.version_pseudo < "20170606000000")
 	{
 		//remove CProgressBar::PB_GRAPHIC
@@ -1153,12 +1151,17 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 			g_settings.theme.progressbar_gradient = 1;
 		}
 	}
-	//NI
 	if (g_settings.version_pseudo < "20170606215500")
 	{
 		//align fontsize.filebrowser_item to new default
 		if (configfile.getInt32("fontsize.filebrowser_item", 16) == 16)
 			configfile.setInt32("fontsize.filebrowser_item", 17);
+	}
+	if (g_settings.version_pseudo < "20170904080000")
+	{
+		//add flagfile for periodically update-check
+		if (g_settings.mode_icons_flag[4].empty())
+			g_settings.mode_icons_flag[4] = FLAGDIR "/.update";
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
@@ -2551,6 +2554,7 @@ TIMER_START();
 
 TIMER_STOP("################################## after all ##################################");
 	if (g_settings.softupdate_autocheck) {
+#if 0
 		hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_FLASHUPDATE_CHECKUPDATE_INTERNET));
 		hintBox->paint();
 		CFlashUpdate flash;
@@ -2561,6 +2565,8 @@ TIMER_STOP("################################## after all #######################
 		}
 		hintBox->hide();
 		delete hintBox;
+#endif
+		CFlashUpdateCheck::getInstance()->startThread();
 	}
 	RealRun();
 
@@ -4719,6 +4725,8 @@ void stop_daemons(bool stopall, bool for_flash)
 		}
 		cs_deregister_messenger();
 	}
+
+	delete CFlashUpdateCheck::getInstance();
 
 	if (for_flash) {
 		delete cHddStat::getInstance();
