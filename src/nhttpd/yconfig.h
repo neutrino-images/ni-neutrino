@@ -125,7 +125,7 @@
 #endif
 
 #ifdef CONFIG_SYSTEM_TUXBOX_COOLSTREAM
-#define AUTHPASSWORD					"coolstream"
+#define AUTHPASSWORD					"ni"
 #define PRIVATEDOCUMENTROOT				PRIVATE_HTTPDDIR
 #undef Y_CONFIG_BUILD_AS_DAEMON			// No Daemon
 #endif
