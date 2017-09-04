@@ -39,7 +39,6 @@ class CFlashUpdateCheck
 
 		pthread_t	c4u_thread;
 		static void*	c4u_proc(void *arg);
-
 };
 
 #endif // __update_check__

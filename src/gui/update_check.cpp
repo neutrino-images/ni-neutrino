@@ -88,11 +88,11 @@ void* CFlashUpdateCheck::c4u_proc(void*)
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, 0);
 
+	CFlashUpdate flashupdate;
+
 	//printf("[CFlashUpdateCheck] %s: starting loop\n", __FUNCTION__);
 	while(1)
 	{
-		CFlashUpdate flashupdate;
-
 		//printf("[CFlashUpdateCheck]: check for updates\n");
 		if (flashupdate.checkOnlineVersion())
 		{
