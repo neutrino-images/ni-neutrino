@@ -102,7 +102,7 @@
 #define HTTPD_SENDFILE_EXT				"htm:text/html,html:text/html,xml:text/xml,txt:text/plain,jpg:image/jpeg,jpeg:image/jpeg,gif:image/gif,png:image/png,bmp:image/bmp,css:text/css,js:text/plain,yjs:text/plain,img:application/octet-stream,ico:image/x-icon,m3u:application/octet-stream,tar:application/octet-stream,gz:text/x-gzip,ts:video/MP2T,mkv:video/x-matroska,avi:video/avi,mp3:audio/mpeg,ogg:audio/ogg"
 #define HTTPD_SENDFILE_ALL				"true"
 #define HTTPD_LANGUAGEDIR 				"languages"
-#define HTTPD_DEFAULT_LANGUAGE 			"English"
+#define HTTPD_DEFAULT_LANGUAGE 			"Deutsch"
 #define AUTHUSER						"root"
 
 #define HTTPD_CONFIGDIR 				CONFIGDIR
