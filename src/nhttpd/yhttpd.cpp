@@ -250,11 +250,6 @@ void Cyhttpd::hooks_attach() {
 	CyhookHandler::attach(auth);
 #endif
 
-#ifdef Y_CONFIG_USE_TESTHOOK
-	testhook = new CTesthook();
-	CyhookHandler::attach(testhook);
-#endif
-
 #ifdef CONFIG_SYSTEM_TUXBOX
 	NeutrinoAPI = new CNeutrinoAPI();
 	CyhookHandler::attach(NeutrinoAPI->NeutrinoYParser);
@@ -286,11 +281,6 @@ void Cyhttpd::hooks_detach() {
 #ifdef Y_CONFIG_USE_AUTHHOOK
 	CyhookHandler::detach(auth);
 	delete auth;
-#endif
-
-#ifdef Y_CONFIG_USE_TESTHOOK
-	CyhookHandler::detach(testhook);
-	delete testhook;
 #endif
 
 #ifdef CONFIG_SYSTEM_TUXBOX
