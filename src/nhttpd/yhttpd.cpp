@@ -56,7 +56,8 @@ static CmodCache mod_cache; // static instance
 #endif
 
 //-----------------------------------------------------------------------------
-#if defined(CONFIG_SYSTEM_TUXBOX) || defined(CONFIG_SYSTEM_TUXBOX_COOLSTREAM)
+
+#ifdef CONFIG_SYSTEM_TUXBOX
 #include "neutrinoapi.h"
 #include <config.h>
 static CNeutrinoAPI *NeutrinoAPI;
@@ -254,7 +255,7 @@ void Cyhttpd::hooks_attach() {
 	CyhookHandler::attach(testhook);
 #endif
 
-#if defined(CONFIG_SYSTEM_TUXBOX) || defined(CONFIG_SYSTEM_TUXBOX_COOLSTREAM)
+#ifdef CONFIG_SYSTEM_TUXBOX
 	NeutrinoAPI = new CNeutrinoAPI();
 	CyhookHandler::attach(NeutrinoAPI->NeutrinoYParser);
 	CyhookHandler::attach(NeutrinoAPI->ControlAPI);
@@ -292,7 +293,7 @@ void Cyhttpd::hooks_detach() {
 	delete testhook;
 #endif
 
-#if defined(CONFIG_SYSTEM_TUXBOX) || defined(CONFIG_SYSTEM_TUXBOX_COOLSTREAM)
+#ifdef CONFIG_SYSTEM_TUXBOX
 	CyhookHandler::detach(NeutrinoAPI->NeutrinoYParser);
 #else
 #ifdef Y_CONFIG_USE_YPARSER
