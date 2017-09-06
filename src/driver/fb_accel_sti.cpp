@@ -42,6 +42,9 @@
 
 #include <stdlib.h>
 
+#include <pthread.h>
+#include <time.h>
+
 #include <linux/stmfb.h>
 #include <bpamem.h>
 
@@ -59,6 +62,56 @@ static size_t lbb_sz = 1920 * 1080;	/* offset from fb start in 'pixels' */
 static size_t lbb_off = lbb_sz * sizeof(fb_pixel_t);	/* same in bytes */
 static int backbuf_sz = 0;
 
+static char lockfunc[256];
+static pthread_mutex_t mymutex = PTHREAD_MUTEX_INITIALIZER;
+
+#if 1
+#define mutex __invalid_mutex__
+#define LOCK_WAIT_MS 5
+#define NS_IN_SEC 1000000000LL
+#define NS_IN_MS  1000000
+#define TRYLOCK_RET(m) \
+	do { \
+		struct timespec wait; \
+		clock_gettime(CLOCK_REALTIME, &wait); \
+		wait.tv_nsec += (LOCK_WAIT_MS * NS_IN_MS); \
+		wait.tv_sec  += wait.tv_nsec % NS_IN_SEC; \
+		wait.tv_nsec %= NS_IN_SEC; \
+		int status = pthread_mutex_timedlock(&mymutex, &wait); \
+		if (status) { \
+			printf(LOGTAG "::%s timedlock failed: %d (%s) locked: '%s'\n", __func__, \
+					status, strerror(status), lockfunc); \
+			return; \
+		} \
+		strcpy(lockfunc, __func__); \
+	} while(0)
+
+#define UNLOCK(m) pthread_mutex_unlock(&mymutex)
+
+#else
+#define TRYLOCK_RET(m) \
+	do { \
+		time_t _start = time_monotonic_ms(); \
+		time_t _now = _start; \
+		while (true) { \
+			int status = m.trylock(); \
+			if (status == 0) \
+				break; \
+			_now = time_monotonic_ms(); \
+			usleep(1000); \
+			if (_now - _start < LOCK_WAIT_MS) \
+				continue; \
+			printf(LOGTAG "::%s trylock failed after %dms: %d (%s) locked '%s'\n", __func__, \
+				LOCK_WAIT_MS, status, (status > 0) ? strerror(status) : strerror(errno), \
+				lockfunc); \
+			return; \
+		} \
+		strcpy(lockfunc, __func__); \
+	} while(0)
+
+#define UNLOCK(m) m.unlock()
+#endif
+
 void CFbAccelSTi::waitForIdle(const char *)
 {
 #if 0	/* blits too often and does not seem to be necessary */
@@ -71,8 +124,10 @@ void CFbAccelSTi::waitForIdle(const char *)
 	}
 	blit_mutex.unlock();
 #endif
-	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+//	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	TRYLOCK_RET(mutex);
 	ioctl(fd, STMFBIO_SYNC_BLITTER);
+	UNLOCK(mutex);
 }
 
 CFbAccelSTi::CFbAccelSTi()
@@ -271,10 +326,12 @@ void CFbAccelSTi::paintRect(const int x, const int y, const int dx, const int dy
 	bltData.colour     = col;
 
 	mark(xx, yy, bltData.dst_right, bltData.dst_bottom);
-	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+//	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	TRYLOCK_RET(mutex);
 	if (ioctl(fd, STMFBIO_BLT, &bltData ) < 0)
 		fprintf(stderr, "blitRect FBIO_BLIT: %m x:%d y:%d w:%d h:%d s:%d\n", xx,yy,width,height,stride);
 	blit();
+	UNLOCK(mutex);
 }
 
 void CFbAccelSTi::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp)
@@ -314,7 +371,8 @@ void CFbAccelSTi::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_
 	blt_data.dstMemSize = stride * yRes + lbb_off;
 
 	mark(x, y, blt_data.dst_right, blt_data.dst_bottom);
-	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+//	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	TRYLOCK_RET(mutex);
 	ioctl(fd, STMFBIO_SYNC_BLITTER);
 	if (fbbuff != backbuffer)
 		memmove(backbuffer, fbbuff, mem_sz);
@@ -323,7 +381,7 @@ void CFbAccelSTi::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_
 
 	if (ioctl(fd, STMFBIO_BLT_EXTERN, &blt_data) < 0)
 		perror(LOGTAG "blit2FB STMFBIO_BLT_EXTERN");
-	return;
+	UNLOCK(mutex);
 }
 
 #define BLIT_INTERVAL_MIN 40
@@ -377,10 +435,13 @@ void CFbAccelSTi::_blit()
 	printf("%s %ld\n", __func__, now - last);
 	last = now;
 #endif
-	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+//	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	TRYLOCK_RET(mutex);
 #ifdef PARTIAL_BLIT
-	if (to_blit.xs == INT_MAX)
+	if (to_blit.xs == INT_MAX) {
+		UNLOCK(mutex);
 		return;
+	}
 
 	int srcXa = to_blit.xs;
 	int srcYa = to_blit.ys;
@@ -467,13 +528,15 @@ void CFbAccelSTi::_blit()
 	to_blit.xs = to_blit.ys = INT_MAX;
 	to_blit.xe = to_blit.ye = 0;
 #endif
+	UNLOCK(mutex);
 }
 
 /* not really used yet */
 #ifdef PARTIAL_BLIT
 void CFbAccelSTi::mark(int xs, int ys, int xe, int ye)
 {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+//	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	TRYLOCK_RET(mutex);
 	if (xs < to_blit.xs)
 		to_blit.xs = xs;
 	if (ys < to_blit.ys)
@@ -502,6 +565,7 @@ void CFbAccelSTi::mark(int xs, int ys, int xe, int ye)
 		*kill = 1; /* oh my */
 	}
 #endif
+	UNLOCK(mutex);
 }
 #else
 void CFbAccelSTi::mark(int, int, int, int)
