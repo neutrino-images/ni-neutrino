@@ -9,4 +9,6 @@ install_DATA = \
 	info2_off.png \
 	info2_on.png \
 	info3_off.png \
-	info3_on.png
+	info3_on.png \
+	info4_off.png \
+	info4_on.png

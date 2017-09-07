@@ -553,7 +553,7 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		int			preselected;
 		int			selected;
 		int 			iconOffset;
-		int			sb_width;
+		int			scrollbar_width;
 		fb_pixel_t		*background;
 		int			full_width, full_height;
 		bool			savescreen;

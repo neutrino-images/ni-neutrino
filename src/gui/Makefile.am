@@ -107,6 +107,7 @@ libneutrino_gui_a_SOURCES = \
 	timeosd.cpp \
 	tmdb.cpp \
 	update.cpp \
+	update_check.cpp \
 	update_menue.cpp \
 	update_settings.cpp \
 	user_menue.cpp \

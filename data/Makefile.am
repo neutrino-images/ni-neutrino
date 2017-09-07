@@ -10,6 +10,7 @@ SUBDIRS = \
 	pictures \
 	scripts \
 	themes \
+	webtv \
 	y-web
 
 if BOXTYPE_TRIPLE
