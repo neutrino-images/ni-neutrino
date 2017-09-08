@@ -16,10 +16,6 @@ install_DATA = \
 	hint_games.png \
 	hint_hdd.png \
 	hint_hdd_info.png \
-	hint_iconsPKG0.png \
-	hint_iconsPKG1.png \
-	hint_iconsPKG2.png \
-	hint_iconsPKG3.png \
 	hint_imageinfo.png \
 	hint_imagelogo.png \
 	hint_inetradio.png \
