@@ -1226,7 +1226,7 @@ void CMenuWidget::calcSize()
 	//scrollbar width
 	scrollbar_width=0;
 	if (total_pages > 1)
-		scrollbar_width = scrollbar_width;
+		scrollbar_width = SCROLLBAR_WIDTH;
 
 	full_width = width + scrollbar_width + OFFSET_SHADOW;
 	full_height = height + fbutton_height + OFFSET_SHADOW + OFFSET_INTER; // hintbox is handled separately
