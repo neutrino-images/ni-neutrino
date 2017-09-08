@@ -1058,7 +1058,7 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 	return retval;
 }
 
-void CMenuWidget::integratePlugins(CPlugins::i_type_t integration, const unsigned int shortcut, bool enabled)
+void CMenuWidget::integratePlugins(int integration, const unsigned int shortcut, bool enabled)
 {
 	bool separatorline = false;
 	unsigned int number_of_plugins = (unsigned int) g_Plugins->getNumberOfPlugins();
@@ -1225,7 +1225,7 @@ void CMenuWidget::calcSize()
 	//scrollbar width
 	scrollbar_width=0;
 	if (total_pages > 1)
-		scrollbar_width = scrollbar_width;
+		scrollbar_width = SCROLLBAR_WIDTH;
 
 	full_width = width + scrollbar_width + OFFSET_SHADOW;
 	full_height = height + fbutton_height + OFFSET_SHADOW + OFFSET_INTER; // hintbox is handled separately
