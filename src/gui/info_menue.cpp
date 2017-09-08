@@ -123,8 +123,8 @@ int CInfoMenu::showMenu()
 	mf->setHint(NEUTRINO_ICON_HINT_HDD_INFO, LOCALE_MENU_HINT_HDD_INFO);
 	info->addItem(mf);
 
-	//add I_TYPE_INFORMATION plugins
-	info->integratePlugins(CPlugins::I_TYPE_INFORMATION, 1);
+	//add PLUGIN_INTEGRATION_INFORMATION plugins
+	info->integratePlugins(PLUGIN_INTEGRATION_INFORMATION, 1);
 
 	int res = info->exec(NULL, "");
 	delete info;

@@ -455,8 +455,8 @@ int CNIMenu::show()
 	mf->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SUPPORT);
 	ni_menu->addItem(mf);
 
-	//add I_TYPE_NI_MENU plugins
-	ni_menu->integratePlugins(CPlugins::I_TYPE_NI_MENU, shortcut);
+	//add PLUGIN_INTEGRATION_NI_MENU plugins
+	ni_menu->integratePlugins(PLUGIN_INTEGRATION_NI_MENU, shortcut);
 
 	int res = ni_menu->exec(NULL, "");
 
