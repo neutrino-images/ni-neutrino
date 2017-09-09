@@ -279,6 +279,8 @@ const char * locale_real_names[] =
 	"camd_item_gbox_name",
 	"camd_item_mgcamd_hint",
 	"camd_item_mgcamd_name",
+	"camd_item_ncam_hint",
+	"camd_item_ncam_name",
 	"camd_item_newcs_hint",
 	"camd_item_newcs_name",
 	"camd_item_oscam_hint",

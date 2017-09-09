@@ -662,6 +662,7 @@ ni.camd-tools.pidinfo=PID-Informations
 ni.camd-tools.mgshareinfo=NewCamd Lines
 ni.camd-tools.cs2gboxinfo=Common Informations
 ni.camd-tools.oscamversion=Common Informations
+ni.camd-tools.ncamversion=Common Informations
 ni.camd-tools.doscamversion=Common Informations
 
 ni.pzapit-control=PZapit

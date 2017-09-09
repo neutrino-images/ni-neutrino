@@ -65,6 +65,7 @@ emu_menu_data_t emu_menu[]=
 {
 	{LOCALE_CAMD_ITEM_MGCAMD_NAME,	LOCALE_CAMD_ITEM_MGCAMD_HINT,	"MGCAMD",	"mgcamd",	0, 0},
 	{LOCALE_CAMD_ITEM_DOSCAM_NAME,	LOCALE_CAMD_ITEM_DOSCAM_HINT,	"DOSCAM",	"doscam",	0, 0},
+	{LOCALE_CAMD_ITEM_NCAM_NAME,	LOCALE_CAMD_ITEM_NCAM_HINT,	"NCAM",		"ncam",		0, 0},
 	{LOCALE_CAMD_ITEM_OSCAM_NAME,	LOCALE_CAMD_ITEM_OSCAM_HINT,	"OSCAM",	"oscam",	0, 0},
 	{LOCALE_CAMD_ITEM_OSEMU_NAME,	LOCALE_CAMD_ITEM_OSEMU_HINT,	"OSEMU",	"osemu",	0, 0},
 	{LOCALE_CAMD_ITEM_NEWCS_NAME,	LOCALE_CAMD_ITEM_NEWCS_HINT,	"NEWCS",	"newcs",	0, 0},
@@ -239,6 +240,7 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 				strstr(filename, "newcs")	||
 				strstr(filename, "osemu")	||
 				strstr(filename, "doscam")	||
+				strstr(filename, "ncam")	||
 				strstr(filename, "oscam")	||
 				strstr(filename, "cs2gbox")	||
 				strstr(filename, "gbox"))
@@ -293,6 +295,7 @@ bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			strstr(filename, "newcs")	||
 			strstr(filename, "osemu")	||
 			strstr(filename, "doscam")	||
+			strstr(filename, "ncam")	||
 			strstr(filename, "oscam")	||
 			strstr(filename, "cs2gbox")	||
 			strstr(filename, "gbox"))
