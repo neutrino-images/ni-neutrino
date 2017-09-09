@@ -2557,7 +2557,7 @@ settings.teams.backup Save
 settings.teams.backup_failed Backup failed!
 settings.teams.backup_to Saving to 
 settings.teams.help Help
-settings.teams.help_text In this menu, settings can be saved and restored,\nwhich are compatible with these Team-Images:\n \n        - BluePeer HD\n        - NI CS-Image\n \nSaved will be:\n \n        * Channellists\n        * Timer and Timer-Settings\n        * Network-Settings (LAN and WLAN)
+settings.teams.help_text In this menu can settings be saved and restored,\nwhich are compatible with following Team-Images:\n \n        - BluePeer HD\n        - NI-Image\n \nSaved will be:\n \n        * Channellists\n        * Timer and timer-settings\n        * Network-settings (LAN and WLAN)
 settings.teams.restore Restore
 settings.teams.restore_warn This will replace all cross-team settings and reboot\nContinue ?
 shoutcast.dev_id SHOUTcast Dev ID

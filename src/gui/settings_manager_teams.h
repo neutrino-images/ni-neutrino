@@ -37,7 +37,6 @@ class CSettingsManagerTeams : public CMenuTarget
 {
 	private:
 		int width;
-//		static int selected;
 
 		int showMenu();
 		void showHelp();
