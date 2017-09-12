@@ -54,6 +54,7 @@ libneutrino_gui_a_SOURCES = \
 	buildinfo.cpp \
 	channellist.cpp \
 	cec_setup.cpp \
+	daemon_control.cpp \
 	dboxinfo.cpp \
 	epgplus.cpp \
 	epgview.cpp \

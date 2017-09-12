@@ -46,6 +46,7 @@
 #include "gui/audio_select.h"
 #include "gui/bedit/bouqueteditor_bouquets.h"
 #include "gui/bouquetlist.h"
+#include <gui/daemon_control.h>
 #include "gui/cam_menu.h"
 #include "gui/dboxinfo.h"
 #include "gui/epgplus.h"
@@ -540,6 +541,9 @@ void CNeutrinoApp::InitMenuService()
 	//separator
 	personalize.addSeparator(MENU_SERVICE);
 
+	mf = new CMenuForwarder(LOCALE_DAEMON_CONTROL, true, NULL, new CDaemonControlMenu(), NULL);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_DAEMON_CONTROL);
+	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_DAEMON_CONTROL]);
 
 	if (!g_settings.easymenu) {
 		personalize.addSeparator(MENU_SERVICE);

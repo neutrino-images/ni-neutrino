@@ -390,6 +390,32 @@ crossteam.hint_settings_teams Einstellungen sichern und wiederherstellen,\ndie z
 crossteam.hint_settings_teams_backup Team-übergreifende Einstellungen sichern
 crossteam.hint_settings_teams_help Hilfe zu den Team-übergreifenden Einstellungen
 crossteam.hint_settings_teams_restore Team-übergreifende Einstellungen wiederherstellen
+daemon_control Daemon-Steuerung
+daemon_item.crond_desc cron Daemon kann zeitgesteuerte Aufgaben ausführen
+daemon_item.crond_name crond
+daemon_item.djmount_desc UPnP AV Client kann den Inhalt von Media-Servern mounten
+daemon_item.djmount_name djmount
+daemon_item.dropbear_desc SSH2 Server und Client
+daemon_item.dropbear_name Dropbear
+daemon_item.emmremind_desc Zeigt eine Änderung der EMM's in den Infoicons an
+daemon_item.emmremind_name EMM-Änderungsbenachrichtigung
+daemon_item.fcm_desc Zeigt die Anrufliste der FRITZ!Box und noch vieles mehr ...
+daemon_item.fcm_name FritzCallMonitor
+daemon_item.inadyn_desc DynDNS Client
+daemon_item.inadyn_name Inadyn
+daemon_item.nfsserver_desc NFS Kernel Server
+daemon_item.nfsserver_name NFS-Server
+daemon_item.sambaserver_desc Server-Message-Block-Protokoll (SMB) Implementierung
+daemon_item.sambaserver_name Samba-Server
+daemon_item.tuxcald_desc Kalenderplugin Dienstprogramm
+daemon_item.tuxcald_name TuxCal
+daemon_item.tuxmaild_desc Mailplugin (IMAP/SMTP) Dienstprogramm
+daemon_item.tuxmaild_name TuxMail
+daemon_item.ushare_desc A/V und DLNA Medienserver
+daemon_item.ushare_name uShare
+daemon_item.xupnpd_desc eXtensible UPnP agent - DLNA Medienserver für IPTV
+daemon_item.xupnpd_name xupnpd
+>>>>>>>
 date.Apr  Apr
 date.Aug  Aug
 date.Dec  Dez
@@ -1172,6 +1198,7 @@ menu.hint_colors Konfigurieren Sie die Menü-Farben
 menu.hint_colors_shadow Einstellen der Schattenfarbe
 menu.hint_content_back Ändern Sie die Hintergrundfarbe für den Fensterinhalt
 menu.hint_content_textcolor Ändern Sie die Textfarbe für den Fensterinhalt
+menu.hint_daemon_control An- und Abschalten von System-Diensten
 menu.hint_dboxinfo Informationen über CPU und Arbeitsspeicher der Box
 menu.hint_delete_channels Löschen aller Kanäle
 menu.hint_delete_removed Lösche das Bouquet 'Gelöschte Kanäle'
@@ -2283,30 +2310,6 @@ pinprotection.head PIN-Abfrage
 pinprotection.wrongcode Geben Sie den Code nocheinmal ein!
 plugin.hide_no Anzeigen
 plugin.hide_yes Verstecken
-plugin.item_crond_desc cron Daemon kann zeitgesteuerte Aufgaben ausführen
-plugin.item_crond_name crond
-plugin.item_djmount_desc UPnP AV Client kann den Inhalt von Media-Servern mounten
-plugin.item_djmount_name djmount
-plugin.item_dropbear_desc SSH2 Server und Client
-plugin.item_dropbear_name Dropbear
-plugin.item_emmremind_desc Zeigt eine Änderung der EMM's in den Infoicons an
-plugin.item_emmremind_name EMM-Änderungsbenachrichtigung
-plugin.item_fcm_desc Zeigt die Anrufliste der FRITZ!Box und noch vieles mehr ...
-plugin.item_fcm_name FritzCallMonitor
-plugin.item_inadyn_desc DynDNS Client
-plugin.item_inadyn_name Inadyn
-plugin.item_nfsserver_desc NFS Kernel Server
-plugin.item_nfsserver_name NFS-Server
-plugin.item_sambaserver_desc Server-Message-Block-Protokoll (SMB) Implementierung
-plugin.item_sambaserver_name Samba-Server
-plugin.item_tuxcald_desc Kalenderplugin
-plugin.item_tuxcald_name TuxCal
-plugin.item_tuxmaild_desc Mailplugin (IMAP/SMTP)
-plugin.item_tuxmaild_name TuxMail
-plugin.item_ushare_desc A/V und DLNA Medienserver
-plugin.item_ushare_name uShare
-plugin.item_xupnpd_desc eXtensible UPnP agent - DLNA Medienserver für IPTV
-plugin.item_xupnpd_name xupnpd
 plugins.control Plugins und Services verwalten
 plugins.hdd_dir Externes Plugin-Verz.
 plugins.hide Plugins verstecken oder anzeigen

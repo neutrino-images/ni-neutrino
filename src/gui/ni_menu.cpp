@@ -73,33 +73,6 @@ emu_menu_data_t emu_menu[]=
 };
 #define MAXEMU (sizeof(emu_menu)/sizeof(struct emu_menu_data_t))
 
-typedef struct plugin_menu_data_t
-{
-	neutrino_locale_t name;
-	neutrino_locale_t desc;
-	const char * icon;
-	const char * flag;
-	int plugin_exist;
-	int flag_exist;
-} plugin_menu_data_struct;
-
-plugin_menu_data_t plugin_menu[]=
-{
-	{LOCALE_PLUGIN_ITEM_FCM_NAME,		LOCALE_PLUGIN_ITEM_FCM_DESC,		NEUTRINO_ICON_HINT_FCM,		"fritzcallmonitor",	0, 0},
-	{LOCALE_PLUGIN_ITEM_NFSSERVER_NAME,	LOCALE_PLUGIN_ITEM_NFSSERVER_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"nfsd",			0, 0},
-	{LOCALE_PLUGIN_ITEM_SAMBASERVER_NAME,	LOCALE_PLUGIN_ITEM_SAMBASERVER_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"samba",		0, 0},
-	{LOCALE_PLUGIN_ITEM_TUXCALD_NAME,	LOCALE_PLUGIN_ITEM_TUXCALD_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"tuxcald",		0, 0},
-	{LOCALE_PLUGIN_ITEM_TUXMAILD_NAME,	LOCALE_PLUGIN_ITEM_TUXMAILD_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"tuxmaild",		0, 0},
-	{LOCALE_PLUGIN_ITEM_EMMREMIND_NAME,	LOCALE_PLUGIN_ITEM_EMMREMIND_DESC,	NEUTRINO_ICON_HINT_EMMRD,	"emmrd",		0, 0},
-	{LOCALE_PLUGIN_ITEM_INADYN_NAME,	LOCALE_PLUGIN_ITEM_INADYN_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"inadyn",		0, 0},
-	{LOCALE_PLUGIN_ITEM_DROPBEAR_NAME,	LOCALE_PLUGIN_ITEM_DROPBEAR_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"dropbear",		0, 0},
-	{LOCALE_PLUGIN_ITEM_DJMOUNT_NAME,	LOCALE_PLUGIN_ITEM_DJMOUNT_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"djmount",		0, 0},
-	{LOCALE_PLUGIN_ITEM_USHARE_NAME,	LOCALE_PLUGIN_ITEM_USHARE_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"ushare",		0, 0},
-	{LOCALE_PLUGIN_ITEM_XUPNPD_NAME,	LOCALE_PLUGIN_ITEM_XUPNPD_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"xupnpd",		0, 0},
-	{LOCALE_PLUGIN_ITEM_CROND_NAME,		LOCALE_PLUGIN_ITEM_CROND_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"crond",		0, 0}
-};
-#define MAXPLUGIN (sizeof(plugin_menu)/sizeof(struct plugin_menu_data_t))
-
 CNIMenu::CNIMenu()
 {
 	width = 40;
@@ -202,7 +175,6 @@ int CNIMenu::show()
 {
 	int shortcut = 1;
 	int cam_shortcut = 1;
-	int plugin_shortcut = 0;
 
 	std::ostringstream buf;
 	char *buffer;
@@ -307,21 +279,6 @@ int CNIMenu::show()
 		mf = new CMenuForwarder(LOCALE_PLUGINS_HIDE, true, NULL, &pluginsHideMenu, NULL, CRCInput::RC_blue);
 		mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_HIDE);
 		pluginMenu->addItem(mf);
-		pluginMenu->addItem(GenericMenuSeparatorLine);
-
-		// Plugin service
-		for (unsigned int i = 0; i < MAXPLUGIN; i++)
-		{
-			buf.str("");
-			buf << "/var/etc/." << plugin_menu[i].flag;
-
-			plugin_menu[i].flag_exist=file_exists(buf.str().c_str());
-			CFlagFileNotifier * pluginFileNotifier = new CFlagFileNotifier(plugin_menu[i].flag);
-
-			mc = new CMenuOptionChooser(plugin_menu[i].name, &plugin_menu[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, pluginFileNotifier, CRCInput::convertDigitToKey(plugin_shortcut++));
-			mc->setHint(plugin_menu[i].icon, plugin_menu[i].desc);
-			pluginMenu->addItem(mc);
-		}
 
 	mf = new CMenuForwarder(LOCALE_PLUGINS_CONTROL, true, NULL, pluginMenu, "", CRCInput::convertDigitToKey(shortcut++));
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_CONTROL);

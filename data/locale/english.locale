@@ -390,6 +390,31 @@ crossteam.hint_settings_teams Save and restore settings, which\nare compatible w
 crossteam.hint_settings_teams_backup Save cross-team settings
 crossteam.hint_settings_teams_help Help about cross-team settings
 crossteam.hint_settings_teams_restore Restore cross-team settings
+daemon_control Daemon control
+daemon_item.crond_desc Cron daemon allows scheduled tasks
+daemon_item.crond_name crond
+daemon_item.djmount_desc UPnP AV client allows to mount media-servers
+daemon_item.djmount_name djmount
+daemon_item.dropbear_desc SSH2 server and client
+daemon_item.dropbear_name Dropbear
+daemon_item.emmremind_desc Show different EMM's in the Infoicons
+daemon_item.emmremind_name EMM-Change Notification
+daemon_item.fcm_desc Shows FRITZ!Box call list and much more ...
+daemon_item.fcm_name FritzCallMonitor
+daemon_item.inadyn_desc DynDNS client
+daemon_item.inadyn_name Inadyn
+daemon_item.nfsserver_desc NFS kernel server
+daemon_item.nfsserver_name NFS server
+daemon_item.sambaserver_desc Server-Message-Block-Protocol (SMB) implementation
+daemon_item.sambaserver_name Samba server
+daemon_item.tuxcald_desc Calender plugin daemon
+daemon_item.tuxcald_name TuxCal
+daemon_item.tuxmaild_desc Mailplugin (IMAP/SMTP) daemon
+daemon_item.tuxmaild_name TuxMail
+daemon_item.ushare_desc A/V and DLNA Mediaserver
+daemon_item.ushare_name uShare
+daemon_item.xupnpd_desc eXtensible UPnP agent - DLNA Mediaserver for IPTV
+daemon_item.xupnpd_name xupnpd
 date.Apr  Apr
 date.Aug  Aug
 date.Dec  Dec
@@ -1172,6 +1197,7 @@ menu.hint_colors Configure GUI colors
 menu.hint_colors_shadow Setup for shadow color.
 menu.hint_content_back Change GUI window background color
 menu.hint_content_textcolor Change GUI window text color
+menu.hint_daemon_control Start and stop system-daemons
 menu.hint_dboxinfo Information about box cpu and storage
 menu.hint_delete_channels Remove all channels
 menu.hint_delete_removed Delete the channels in the 'Removed channels' boquet
@@ -2283,30 +2309,6 @@ pinprotection.head Enter PIN code
 pinprotection.wrongcode PIN-Code was wrong! Try again.
 plugin.hide_no Show
 plugin.hide_yes Hide
-plugin.item_crond_desc Cron daemon allows scheduled tasks
-plugin.item_crond_name crond
-plugin.item_djmount_desc UPnP AV Client allows to mount media-servers
-plugin.item_djmount_name djmount
-plugin.item_dropbear_desc SSH2 server und client
-plugin.item_dropbear_name Dropbear
-plugin.item_emmremind_desc Display different EMM's to the Infoicons
-plugin.item_emmremind_name EMM-Change Notification
-plugin.item_fcm_desc Shows FRITZ!Box call list and much more ...
-plugin.item_fcm_name FritzCallMonitor
-plugin.item_inadyn_desc DynDNS client
-plugin.item_inadyn_name Inadyn
-plugin.item_nfsserver_desc NFS kernel server
-plugin.item_nfsserver_name NFS-Server
-plugin.item_sambaserver_desc Server-Message-Block-Protokoll (SMB) implementation
-plugin.item_sambaserver_name Samba-Server
-plugin.item_tuxcald_desc Calender-plugin
-plugin.item_tuxcald_name TuxCal
-plugin.item_tuxmaild_desc Mailplugin (IMAP/SMTP)
-plugin.item_tuxmaild_name TuxMail
-plugin.item_ushare_desc A/V and DLNA Mediaserver
-plugin.item_ushare_name uShare
-plugin.item_xupnpd_desc eXtensible UPnP agent - DLNA Mediaserver for IPTV
-plugin.item_xupnpd_name xupnpd
 plugins.control Control plugins and services
 plugins.hdd_dir Plugin HDD dir.
 plugins.hide Hide or show plugins
