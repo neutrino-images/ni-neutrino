@@ -1448,7 +1448,6 @@ menu.hint_network IP-Adresse, Gateway, DNS, Zeit-Sync, Netzwerk-Freigaben, Diens
 menu.hint_new_zap_mode Aktiviert Quickzap in der Kanalliste. Nach Betätigen der Mute-Taste wird mit den Hoch/Runter-Tasten direkt umgeschalten
 menu.hint_next Weiter zum nächsten Menü.\nDie Taste 'Menü' schließt alle Menüs
 menu.hint_next_brief Weiter zum nächsten Menü
-menu.hint_nimenu Konfiguration von Softcams, Plugins, Tools usw.
 menu.hint_numeric_adjust Bei numerischer Programmwahl die Kanalliste am neu gewählten Programm ausrichten
 menu.hint_opkg Software-Pakete installieren oder vorhandene aktualisieren
 menu.hint_opkg_feed_addresses_edit Bearbeiten von Feed-Adressen
@@ -2172,8 +2171,6 @@ nfs.umounterror Umount-Fehler
 nfs.username Benutzername
 nfsmenu.head NFS/CIFS/FTPFS Einstellungen
 ni NI \o/
-nimenu.head NI-Einstellungen
-nimenu.head_special Extra-Einstellungen
 nvod.percentage (%d%% vorbei)
 nvod.starting (Beginn in %d min)
 nvodselector.directormode Bildregie-Modus

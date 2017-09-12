@@ -83,8 +83,6 @@
 #include "driver/record.h"
 #include "driver/display.h"
 
-#include "gui/ni_menu.h" //NI
-
 extern CPlugins       * g_Plugins;
 extern CRemoteControl * g_RemoteControl;
 extern CCAMMenuHandler * g_CamHandler;
@@ -219,13 +217,6 @@ void CNeutrinoApp::InitMenuMain()
 		mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_LUA);
 		personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_LUA]);
 	}
-
-	//NI-Menu section***********************************************************************************************
-	personalize.addSeparator(MENU_MAIN);
-
-	CMenuForwarder *ni_menu = new CMenuForwarder(LOCALE_NIMENU_HEAD, true, NULL, new CNIMenu(), NULL, CRCInput::RC_0, NEUTRINO_ICON_BUTTON_0);
-	ni_menu->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NIMENU);
-	personalize.addItem(MENU_MAIN, ni_menu, &g_settings.personalize[SNeutrinoSettings::P_MAIN_NI_MENU], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ACCESS_OPTION);
 
 	//separator
 	personalize.addSeparator(MENU_MAIN);

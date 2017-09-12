@@ -1447,7 +1447,6 @@ menu.hint_network IP address, gateway, DNS, Time sync\nNetwork shares and servic
 menu.hint_new_zap_mode Allow channel switch while browsing\n(toggle mode with 'mute' in channel list)
 menu.hint_next Continue to next menu\nPress menu key to close all menus
 menu.hint_next_brief Continue to next menu
-menu.hint_nimenu Configuration of softcams, plugins, tools etc.
 menu.hint_numeric_adjust Adjust channel list mode on numeric zap
 menu.hint_opkg Install or update software packages
 menu.hint_opkg_feed_addresses_edit Edit feed addresses
@@ -2171,8 +2170,6 @@ nfs.umounterror error umounting volume
 nfs.username username
 nfsmenu.head NFS/CIFS/FTPFS settings
 ni NI \o/
-nimenu.head NI-Settings
-nimenu.head_special Special settings
 nvod.percentage (%d%% over)
 nvod.starting (starting in %d min)
 nvodselector.directormode Director mode
