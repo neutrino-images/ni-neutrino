@@ -473,7 +473,7 @@ int CNETFSMountGui::exec( CMenuTarget* parent, const std::string & actionKey )
 
 int CNETFSMountGui::menu(int mt)
 {
-	std::string hint = SNeutrinoSettings::FSTAB ? g_Locale->getText(LOCALE_MENU_HINT_NETFS_FSTAB_WRITE) : g_Locale->getText(LOCALE_MENU_HINT_NETFS_AUTOMOUNT_WRITE);
+	std::string hint = (mt == SNeutrinoSettings::FSTAB) ? g_Locale->getText(LOCALE_MENU_HINT_NETFS_FSTAB_WRITE) : g_Locale->getText(LOCALE_MENU_HINT_NETFS_AUTOMOUNT_WRITE);
 	std::string txt;
 
 	CMenuWidget mountMenuW(mt == SNeutrinoSettings::FSTAB ? LOCALE_NETFS_FSTAB_HEAD : LOCALE_NETFS_AUTOMOUNT_HEAD, NEUTRINO_ICON_NETWORK, width, mt == SNeutrinoSettings::FSTAB ? MN_WIDGET_ID_NETFS_FSTAB : MN_WIDGET_ID_NETFS_AUTOMOUNT);
