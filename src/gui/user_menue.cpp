@@ -95,7 +95,6 @@ extern CCAMMenuHandler * g_CamHandler;
 #include <system/debug.h>
 
 //NI
-#include <gui/ni_menu.h>
 #include <gui/infoicons_setup.h>
 
 #include <gui/infoicons.h>
@@ -167,7 +166,6 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 	// define classes
 	CSubChannelSelectMenu subchanselect;
 	CNeutrinoApp * neutrino	= CNeutrinoApp::getInstance();
-	CNIMenu *ni_menu = CNIMenu::getInstance(); //NI
 	
 	std::string txt = g_settings.usermenu[button]->title;
 	if (button < COL_BUTTONMAX && txt.empty())
@@ -417,7 +415,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 		case SNeutrinoSettings::ITEM_ECMINFO:
 		{
 			keyhelper.get(&key,&icon);
-			menu_item = new CMenuForwarder(LOCALE_ECMINFO_SHOW, file_size("/tmp/ecm.info"), NULL, ni_menu, "ecmInfo", key, icon);
+			menu_item = new CMenuForwarder(LOCALE_ECMINFO_SHOW, file_size("/tmp/ecm.info"), NULL, neutrino, "ecmInfo", key, icon);
 			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
 			break;
 		}
@@ -425,7 +423,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 		case SNeutrinoSettings::ITEM_CAMD_RESET:
 		{
 			keyhelper.get(&key,&icon);
-			menu_item = new CMenuForwarder(LOCALE_CAMD_RESET, true, NULL, ni_menu, "camd_reset", key, icon);
+			menu_item = new CMenuForwarder(LOCALE_CAMD_RESET, true, NULL, neutrino, "camd_reset", key, icon);
 			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
 			break;
 		}

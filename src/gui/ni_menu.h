@@ -39,7 +39,6 @@ class CNIMenu : public CMenuTarget, CChangeObserver
 	public:
 		CNIMenu();
 		~CNIMenu();
-		static CNIMenu* getInstance();
 		int exec(CMenuTarget* parent, const std::string &actionkey);
 #if 0
 		virtual bool changeNotify(const neutrino_locale_t OptionName, void * /*data*/);

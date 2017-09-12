@@ -79,65 +79,13 @@ CNIMenu::~CNIMenu()
 {
 }
 
-CNIMenu* CNIMenu::getInstance()
-{
-	static CNIMenu* NIMenu = NULL;
-	if (!NIMenu)
-		NIMenu = new CNIMenu();
-	return NIMenu;
-}
-
 int CNIMenu::exec(CMenuTarget* parent, const std::string &actionkey)
 {
 	printf("CNIMenu::exec: actionkey %s\n", actionkey.c_str());
 	int res = menu_return::RETURN_REPAINT;
-	char *buffer;
-	ssize_t read;
-	size_t len;
-	FILE *fh;
 
         if (parent)
                 parent->hide();
-
-	if (actionkey == "camd_reset")
-	{
-		CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_RESET));
-		hintbox.paint();
-
-		printf("[ni_menu.cpp] executing \"service emu restart\"\n");
-		if (my_system(3, "service", "emu", "restart") != 0)
-			printf("[ni_menu.cpp] executing failed\n");
-		sleep(1);
-
-		hintbox.hide();
-
-		return menu_return::RETURN_EXIT_ALL;
-	}
-	else if(actionkey == "ecmInfo")
-	{
-		buffer=NULL;
-		CFileHelpers fhlp;
-		if (fhlp.copyFile("/tmp/ecm.info", "/tmp/ecm.info.tmp", 0644))
-		{
-			if ((fh = fopen("/tmp/ecm.info.tmp", "r")))
-			{
-				std::string str = "";
-				while ((read = getline(&buffer, &len, fh)) != -1)
-				{
-					str += buffer;
-				}
-				fclose(fh);
-				remove("/tmp/ecm.info.tmp");
-				if(buffer)
-					free(buffer);
-				ShowHint(LOCALE_ECMINFO, str.c_str(), 450, 20);
-			}
-		}
-		else
-			ShowHint(LOCALE_ECMINFO, LOCALE_ECMINFO_NULL, 450, 20);
-
-		return menu_return::RETURN_EXIT_ALL;
-	}
 
 	res = show();
 
