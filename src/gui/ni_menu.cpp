@@ -36,7 +36,6 @@
 #include <mymenu.h>
 #include <neutrino_menue.h>
 
-#include <gui/netfs_setup.h>
 #include <gui/widget/hintbox.h>
 #include <gui/widget/icons.h>
 
@@ -84,18 +83,8 @@ bool CNIMenu::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
 
 int CNIMenu::show()
 {
-	int shortcut = 1;
-
-	std::ostringstream buf;
-
 	CMenuWidget* ni_menu = new CMenuWidget(LOCALE_NIMENU_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_NI_MENU);
 	ni_menu->addIntroItems();
-
-	// NetFS Setup
-	CNETFSSetup netfs_setup;
-	mf = new CMenuForwarder(LOCALE_NETFS_MENU_MAIN_HEAD, true, NULL, &netfs_setup, NULL, CRCInput::convertDigitToKey(shortcut++));
-	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NETFS_MENU_MAIN_HEAD);
-	ni_menu->addItem(mf);
 
 	int res = ni_menu->exec(NULL, "");
 

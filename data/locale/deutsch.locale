@@ -2091,12 +2091,14 @@ mpkey.stop Stopp
 mpkey.subtitle Untertitel
 mpkey.time Zeitanzeige
 netfs.active_onoff Eintrag aktiv
+netfs.automount_edit auto.net bearbeiten
 netfs.automount_head NetFS Einstellungen
 netfs.automount_intro Einträge für auto.net
 netfs.automount_intro_mounts NetFS-Mounts bearbeiten
 netfs.automount_write Einstellungen speichern und auto.net schreiben
 netfs.automount_write_info auto.net wurde geschrieben
 netfs.dump Dump
+netfs.fstab_edit fstab bearbeiten
 netfs.fstab_domount NetFS-Verzeichnisse anhängen (mount)
 netfs.fstab_domount_info '/etc/init.d/fstab start_netfs' wird ausgeführt
 netfs.fstab_doumount NetFS-Verzeichnisse aushängen (umount)

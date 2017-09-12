@@ -46,6 +46,7 @@
 #include <gui/widget/msgbox.h>
 
 #include <gui/network_service.h>
+#include <gui/netfs_setup.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -442,6 +443,20 @@ void CNetworkSetup::showNetworkNFSMounts(CMenuWidget *menu_nfs)
 	mf = new CMenuDForwarder(LOCALE_NFS_UMOUNT, true, NULL, new CNFSUmountGui(), NULL, CRCInput::RC_green);
 	mf->setHint("", LOCALE_MENU_HINT_NET_NFS_UMOUNT);
 	menu_nfs->addItem(mf);
+
+	menu_nfs->addItem(GenericMenuSeparatorLine);
+
+	CNETFSMountGui *netfsMountGui = new CNETFSMountGui();
+	const char *used_fstab = netfsMountGui->fstabPath.c_str();
+	const char *used_autonet = netfsMountGui->autoPath.c_str();
+
+	CMenuForwarder *fstab = new CMenuForwarder(LOCALE_NETFS_FSTAB_EDIT, true, used_fstab, netfsMountGui, "menu fstab", CRCInput::RC_yellow);
+	fstab->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NETFS_MENU_MAIN_FSTAB);
+	menu_nfs->addItem(fstab);
+
+	CMenuForwarder *automount = new CMenuForwarder(LOCALE_NETFS_AUTOMOUNT_EDIT, true, used_autonet, netfsMountGui, "menu automount", CRCInput::RC_blue);
+	automount->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NETFS_MENU_MAIN_AUTOMOUNT);
+	menu_nfs->addItem(automount);
 }
 #endif
 
