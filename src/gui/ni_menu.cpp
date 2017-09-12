@@ -114,17 +114,6 @@ int CNIMenu::exec(CMenuTarget* parent, const std::string &actionkey)
 
 		return menu_return::RETURN_EXIT_ALL;
 	}
-	else if(actionkey == "savesettings")
-	{
-		CHintBox hintbox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT));
-		hintbox.paint();
-
-		CNeutrinoApp::getInstance()->saveSetup(NEUTRINO_SETTINGS_FILE);
-
-		hintbox.hide();
-
-		return res;
-	}
 	else if(actionkey == "ecmInfo")
 	{
 		buffer=NULL;
@@ -182,11 +171,6 @@ int CNIMenu::show()
 
 	CMenuWidget* ni_menu = new CMenuWidget(LOCALE_NIMENU_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_NI_MENU);
 	ni_menu->addIntroItems();
-
-	//apply settings
-	mf = new CMenuForwarder(LOCALE_MAINSETTINGS_SAVESETTINGSNOW, true, NULL, this, "savesettings", CRCInput::RC_red);
-	mf->setHint(NEUTRINO_ICON_HINT_SAVE_SETTINGS, LOCALE_MENU_HINT_SAVE_SETTINGS);
-	ni_menu->addItem(mf);
 
 	// --- camd settings ---
 	ni_menu->addItem(new CMenuSeparator(CMenuSeparator::ALIGN_CENTER | CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_CAMD_CONTROL));
