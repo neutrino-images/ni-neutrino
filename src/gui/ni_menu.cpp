@@ -260,9 +260,6 @@ int CNIMenu::show()
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_CONTROL);
 	ni_menu->addItem(mf);
 
-	//add PLUGIN_INTEGRATION_NI_MENU plugins
-	ni_menu->integratePlugins(PLUGIN_INTEGRATION_NI_MENU, shortcut);
-
 	int res = ni_menu->exec(NULL, "");
 
 	ni_menu->hide();
