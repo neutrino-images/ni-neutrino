@@ -27,20 +27,6 @@
 
 #include <gui/widget/menue.h>
 
-#define SCRIPT_DIR		"/etc/init.d/"
-#define EMU_DIR			"/var/bin/"
-#define EMU_START_SCRIPT 	SCRIPT_DIR "emu"
-
-using namespace std;
-
-class CNITouchFileNotifier : public CChangeObserver
-{
-	const char * filename;
-	public:
-		inline CNITouchFileNotifier(const char * file_name) { filename = file_name; };
-		bool changeNotify(const neutrino_locale_t, void * data);
-};
-
 class CNIMenu : public CMenuTarget, CChangeObserver
 {
 	private:

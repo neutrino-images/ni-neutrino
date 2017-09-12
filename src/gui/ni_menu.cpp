@@ -39,15 +39,14 @@
 #include <gui/infoicons_setup.h>
 #include <gui/lcd4l_setup.h>
 #include <gui/netfs_setup.h>
-#include <gui/filebrowser.h>
 #include <gui/plugins_hide.h>
 #include <gui/widget/hintbox.h>
 #include <gui/widget/icons.h>
-#include <gui/widget/menue.h>
 
 #include <gui/ni_menu.h>
 
 #include <system/helpers.h>
+#include <system/setting_helpers.h>
 
 #include <driver/screen_max.h>
 
@@ -126,7 +125,6 @@ int CNIMenu::exec(CMenuTarget* parent, const std::string &actionkey)
 	ssize_t read;
 	size_t len;
 	FILE *fh;
-	std::ostringstream buf;
 
         if (parent)
                 parent->hide();
@@ -136,12 +134,9 @@ int CNIMenu::exec(CMenuTarget* parent, const std::string &actionkey)
 		CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_RESET));
 		hintbox.paint();
 
-		buf.str("");
-		buf << EMU_START_SCRIPT << " restart";
-
-		printf("[ni_menu.cpp] executing %s\n", buf.str().c_str());
-		if (my_system(2, EMU_START_SCRIPT, "restart") != 0)
-			printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
+		printf("[ni_menu.cpp] executing \"service emu restart\"\n");
+		if (my_system(3, "service", "emu", "restart") != 0)
+			printf("[ni_menu.cpp] executing failed\n");
 		sleep(1);
 
 		hintbox.hide();
@@ -202,127 +197,6 @@ bool CNIMenu::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
 	return false;
 }
 #endif
-
-bool CNITouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
-{
-	std::ostringstream buf;
-
-	buf << FLAGDIR << "/." << filename;
-	std::string flag = buf.str();
-
-	if ((*(int *)data) != 0)
-	{
-		FILE * fd = fopen(flag.c_str(), "w");
-		if (fd)
-		{
-			fclose(fd);
-			if (strstr(filename, "scart_osd_fix"))
-			{
-				//change to scart-osd-fix values
-				g_settings.screen_StartX_crt_0 = 29;
-				g_settings.screen_StartY_crt_0 = 43;
-				g_settings.screen_EndX_crt_0 = 693;
-				g_settings.screen_EndY_crt_0 = 535;
-				g_settings.screen_preset = 0;
-
-				//set values
-				g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd_0 : g_settings.screen_StartX_crt_0;
-				g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd_0 : g_settings.screen_StartY_crt_0;
-				g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd_0 : g_settings.screen_EndX_crt_0;
-				g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd_0 : g_settings.screen_EndY_crt_0;
-
-				CFrameBuffer::getInstance()->Clear();
-
-				g_settings.font_scaling_x = 100;
-				g_settings.font_scaling_y = 100;
-			}
-			else if (strstr(filename, "mgcamd")	||
-				strstr(filename, "newcs")	||
-				strstr(filename, "osemu")	||
-				strstr(filename, "doscam")	||
-				strstr(filename, "ncam")	||
-				strstr(filename, "oscam")	||
-				strstr(filename, "cs2gbox")	||
-				strstr(filename, "gbox"))
-			{
-				CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_START));
-				hintbox.paint();
-
-				buf.str("");
-				buf << EMU_START_SCRIPT << " start " << filename;
-
-				printf("[ni_menu.cpp] executing %s\n", buf.str().c_str());
-				if (my_system(3, EMU_START_SCRIPT, "start", filename) != 0)
-					printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
-				sleep(1);
-
-				hintbox.hide();
-			}
-			else
-			{
-				buf.str("");
-				buf << "service " << filename << " start";
-				printf("[ni_menu.cpp] executing %s\n", buf.str().c_str());
-
-				if (my_system(3, "service", filename, "start") != 0)
-					printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
-			}
-		}
-	}
-	else
-	{
-		buf.str("");
-		if (strstr(filename, "scart_osd_fix"))
-		{
-			//reset to defaults
-			g_settings.screen_StartX_crt_0 = 60;
-			g_settings.screen_StartY_crt_0 = 20;
-			g_settings.screen_EndX_crt_0 = 1220;
-			g_settings.screen_EndY_crt_0 = 560;
-
-			//set values
-			g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd_0 : g_settings.screen_StartX_crt_0;
-			g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd_0 : g_settings.screen_StartY_crt_0;
-			g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd_0 : g_settings.screen_EndX_crt_0;
-			g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd_0 : g_settings.screen_EndY_crt_0;
-
-			CFrameBuffer::getInstance()->Clear();
-
-			g_settings.font_scaling_x = 105;
-			g_settings.font_scaling_y = 105;
-		}
-		else if (strstr(filename, "mgcamd")	||
-			strstr(filename, "newcs")	||
-			strstr(filename, "osemu")	||
-			strstr(filename, "doscam")	||
-			strstr(filename, "ncam")	||
-			strstr(filename, "oscam")	||
-			strstr(filename, "cs2gbox")	||
-			strstr(filename, "gbox"))
-		{
-			CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_STOP));
-			hintbox.paint();
-
-			buf << EMU_START_SCRIPT << " stop " << filename;
-			printf("[ni_menu.cpp] executing %s\n", buf.str().c_str());
-			if (my_system(3, EMU_START_SCRIPT, "stop", filename) != 0)
-				printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
-			sleep(1);
-
-			hintbox.hide();
-		}
-		else
-		{
-			buf << "service " << filename << " stop";
-			printf("[ni_menu.cpp] executing %s\n", buf.str().c_str());
-
-			if (my_system(3, "service", filename, "stop") != 0)
-				printf("[ni_menu.cpp] executing %s failed\n", buf.str().c_str());
-		}
-		remove(flag.c_str());
-	}
-	return menu_return::RETURN_REPAINT;
-}
 
 int CNIMenu::show()
 {
@@ -400,7 +274,7 @@ int CNIMenu::show()
 			std::string hint(g_Locale->getText(emu_menu[i].hint));
 			hint.append("\nvinfo: " + vinfo);
 
-			mc = new CMenuOptionChooser(emu_menu[i].name, &emu_menu[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, emu_menu[i].cam_exist, new CNITouchFileNotifier(emu_menu[i].cam_file), CRCInput::convertDigitToKey(cam_shortcut++));
+			mc = new CMenuOptionChooser(emu_menu[i].name, &emu_menu[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, emu_menu[i].cam_exist, new CFlagFileNotifier(emu_menu[i].cam_file), CRCInput::convertDigitToKey(cam_shortcut++));
 			mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, hint);
 			emuMenu->addItem(mc);
 		}
@@ -442,7 +316,7 @@ int CNIMenu::show()
 			buf << "/var/etc/." << plugin_menu[i].flag;
 
 			plugin_menu[i].flag_exist=file_exists(buf.str().c_str());
-			CNITouchFileNotifier * pluginFileNotifier = new CNITouchFileNotifier(plugin_menu[i].flag);
+			CFlagFileNotifier * pluginFileNotifier = new CFlagFileNotifier(plugin_menu[i].flag);
 
 			mc = new CMenuOptionChooser(plugin_menu[i].name, &plugin_menu[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, pluginFileNotifier, CRCInput::convertDigitToKey(plugin_shortcut++));
 			mc->setHint(plugin_menu[i].icon, plugin_menu[i].desc);

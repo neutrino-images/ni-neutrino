@@ -137,6 +137,117 @@ bool CTouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 	return true;
 }
 
+bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
+{
+	std::ostringstream buf;
+	buf << FLAGDIR << "/." << filename;
+
+	const char *flagfile = buf.str().c_str();
+
+	if ((*(int *)data) != 0)
+	{
+		FILE * fd = fopen(flagfile, "w");
+		if (fd)
+		{
+			fclose(fd);
+			if (strstr(filename, "scart_osd_fix"))
+			{
+				//change to scart-osd-fix values
+				g_settings.screen_StartX_crt_0 = 29;
+				g_settings.screen_StartY_crt_0 = 43;
+				g_settings.screen_EndX_crt_0 = 693;
+				g_settings.screen_EndY_crt_0 = 535;
+				g_settings.screen_preset = 0;
+
+				//set values
+				g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd_0 : g_settings.screen_StartX_crt_0;
+				g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd_0 : g_settings.screen_StartY_crt_0;
+				g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd_0 : g_settings.screen_EndX_crt_0;
+				g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd_0 : g_settings.screen_EndY_crt_0;
+
+				CFrameBuffer::getInstance()->Clear();
+
+				g_settings.font_scaling_x = 100;
+				g_settings.font_scaling_y = 100;
+			}
+			else if (strstr(filename, "mgcamd")	||
+				strstr(filename, "newcs")	||
+				strstr(filename, "osemu")	||
+				strstr(filename, "doscam")	||
+				strstr(filename, "ncam")	||
+				strstr(filename, "oscam")	||
+				strstr(filename, "cs2gbox")	||
+				strstr(filename, "gbox"))
+			{
+				CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_START));
+				hintbox.paint();
+
+				printf("[CFlagFileNotifier] executing \"service emu start %s\"\n", filename);
+				if (my_system(4, "service", "emu", "start", filename) != 0)
+					printf("[CFlagFileNotifier] executing failed\n");
+				sleep(1);
+
+				hintbox.hide();
+			}
+			else
+			{
+				printf("[CFlagFileNotifier] executing \"service %s start\"\n", filename);
+				if (my_system(3, "service", filename, "start") != 0)
+					printf("[CFlagFileNotifier] executing failed\n");
+			}
+		}
+	}
+	else
+	{
+		if (strstr(filename, "scart_osd_fix"))
+		{
+			//reset to defaults
+			g_settings.screen_StartX_crt_0 = 60;
+			g_settings.screen_StartY_crt_0 = 20;
+			g_settings.screen_EndX_crt_0 = 1220;
+			g_settings.screen_EndY_crt_0 = 560;
+
+			//set values
+			g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_lcd_0 : g_settings.screen_StartX_crt_0;
+			g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_lcd_0 : g_settings.screen_StartY_crt_0;
+			g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_lcd_0 : g_settings.screen_EndX_crt_0;
+			g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_lcd_0 : g_settings.screen_EndY_crt_0;
+
+			CFrameBuffer::getInstance()->Clear();
+
+			g_settings.font_scaling_x = 105;
+			g_settings.font_scaling_y = 105;
+		}
+		else if (strstr(filename, "mgcamd")	||
+			strstr(filename, "newcs")	||
+			strstr(filename, "osemu")	||
+			strstr(filename, "doscam")	||
+			strstr(filename, "ncam")	||
+			strstr(filename, "oscam")	||
+			strstr(filename, "cs2gbox")	||
+			strstr(filename, "gbox"))
+		{
+			CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_STOP));
+			hintbox.paint();
+
+			printf("[CFlagFileNotifier] executing \"service emu stop %s\"\n", filename);
+			if (my_system(4, "service", "emu", "stop", filename) != 0)
+				printf("[CFlagFileNotifier] executing failed\n");
+			sleep(1);
+
+			hintbox.hide();
+		}
+		else
+		{
+			printf("[CFlagFileNotifier] executing \"service %s stop\"\n", filename);
+			if (my_system(3, "service", filename, "stop") != 0)
+				printf("[CFlagFileNotifier] executing failed\n");
+		}
+		remove(flagfile);
+	}
+	return menu_return::RETURN_REPAINT;
+}
+
 void CColorSetupNotifier::setPalette()
 {
 	CFrameBuffer *frameBuffer = CFrameBuffer::getInstance();

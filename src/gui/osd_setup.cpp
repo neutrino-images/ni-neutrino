@@ -50,7 +50,6 @@
 #include <gui/color_custom.h>
 #include <gui/infoclock.h>
 #include <gui/timeosd.h>
-#include <gui/ni_menu.h> //NI
 #include <gui/widget/icons.h>
 #include <gui/widget/colorchooser.h>
 #include <gui/widget/stringinput.h>
@@ -64,6 +63,7 @@
 #include <zapit/femanager.h>
 #include <system/debug.h>
 #include <system/helpers.h>
+#include <system/setting_helpers.h>
 
 extern CRemoteControl * g_RemoteControl;
 
@@ -696,7 +696,7 @@ int COsdSetup::showOsdSetup()
 	if (file_exists("/var/etc/.scart_osd_fix"))
 		scart_osd_fix_exist = 1;
 
-	CNITouchFileNotifier * scartFileNotifier = new CNITouchFileNotifier("scart_osd_fix");
+	CFlagFileNotifier * scartFileNotifier = new CFlagFileNotifier("scart_osd_fix");
 	mc = new CMenuOptionChooser(LOCALE_SCART_OSD_FIX, &scart_osd_fix_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, !g_settings.screen_preset, scartFileNotifier);
 	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_SCART_OSD_FIX);
 	osd_menu->addItem(mc);
