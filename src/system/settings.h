@@ -276,7 +276,6 @@ struct SNeutrinoSettings
 	int ci_mode; //NI
 	std::string ci_pincode;
 	int radiotext_enable;
-	int easymenu;
 	int webtv_xml_auto; //NI
 
 	//screen saver
