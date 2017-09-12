@@ -46,6 +46,7 @@
 #include <gui/widget/msgbox.h>
 
 #include <gui/network_service.h>
+#include <gui/netfs_setup.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -416,20 +417,20 @@ void CNetworkSetup::showNetworkNTPSetup(CMenuWidget *menu_ntp)
 	CStringInput * networkSettings_NtpRefresh = new CStringInput(LOCALE_NETWORKMENU_NTPREFRESH, &g_settings.network_ntprefresh, 3,LOCALE_NETWORKMENU_NTPREFRESH_HINT1, LOCALE_NETWORKMENU_NTPREFRESH_HINT2 , "0123456789 ", sectionsdConfigNotifier);
 
 	CMenuOptionChooser *ntp1 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPENABLE, &g_settings.network_ntpenable, OPTIONS_NTPENABLE_OPTIONS, OPTIONS_NTPENABLE_OPTION_COUNT, true, sectionsdConfigNotifier);
+	CMenuOptionChooser *ntp9 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPATBOOT, &g_settings.network_ntpatboot, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true); //NI
 	CMenuForwarder *ntp2 = new CMenuDForwarder( LOCALE_NETWORKMENU_NTPSERVER, true , g_settings.network_ntpserver, networkSettings_NtpServer );
 	CMenuForwarder *ntp3 = new CMenuDForwarder( LOCALE_NETWORKMENU_NTPREFRESH, true , g_settings.network_ntprefresh, networkSettings_NtpRefresh );
-	CMenuOptionChooser *ntp9 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPATBOOT, &g_settings.network_ntpatboot, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true); //NI
 
 	ntp1->setHint("", LOCALE_MENU_HINT_NET_NTPENABLE);
+	ntp9->setHint("", LOCALE_MENU_HINT_NET_NTPATBOOT); //NI
 	ntp2->setHint("", LOCALE_MENU_HINT_NET_NTPSERVER);
 	ntp3->setHint("", LOCALE_MENU_HINT_NET_NTPREFRESH);
-	ntp9->setHint("", LOCALE_MENU_HINT_NET_NTPATBOOT); //NI
 
 	menu_ntp->addIntroItems(LOCALE_NETWORKMENU_NTPTITLE);
 	menu_ntp->addItem( ntp1);
+	menu_ntp->addItem( ntp9); //NI
 	menu_ntp->addItem( ntp2);
 	menu_ntp->addItem( ntp3);
-	menu_ntp->addItem( ntp9); //NI
 }
 
 #ifdef ENABLE_GUI_MOUNT
@@ -442,6 +443,20 @@ void CNetworkSetup::showNetworkNFSMounts(CMenuWidget *menu_nfs)
 	mf = new CMenuDForwarder(LOCALE_NFS_UMOUNT, true, NULL, new CNFSUmountGui(), NULL, CRCInput::RC_green);
 	mf->setHint("", LOCALE_MENU_HINT_NET_NFS_UMOUNT);
 	menu_nfs->addItem(mf);
+
+	menu_nfs->addItem(GenericMenuSeparatorLine);
+
+	CNETFSMountGui *netfsMountGui = new CNETFSMountGui();
+	const char *used_fstab = netfsMountGui->fstabPath.c_str();
+	const char *used_autonet = netfsMountGui->autoPath.c_str();
+
+	CMenuForwarder *fstab = new CMenuForwarder(LOCALE_NETFS_FSTAB_EDIT, true, used_fstab, netfsMountGui, "menu fstab", CRCInput::RC_yellow);
+	fstab->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NETFS_MENU_MAIN_FSTAB);
+	menu_nfs->addItem(fstab);
+
+	CMenuForwarder *automount = new CMenuForwarder(LOCALE_NETFS_AUTOMOUNT_EDIT, true, used_autonet, netfsMountGui, "menu automount", CRCInput::RC_blue);
+	automount->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NETFS_MENU_MAIN_AUTOMOUNT);
+	menu_nfs->addItem(automount);
 }
 #endif
 

@@ -30,6 +30,7 @@ install_DATA = \
 	nagra_green.png \
 	nagra_white.png \
 	nagra_yellow.png \
+	ncam_green.png \
 	nds_green.png \
 	nds_white.png \
 	nds_yellow.png \

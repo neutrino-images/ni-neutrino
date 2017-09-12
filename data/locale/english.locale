@@ -252,6 +252,8 @@ camd_item_gbox_hint GBox - Softcam and emulator
 camd_item_gbox_name gbox
 camd_item_mgcamd_hint MGCamd - Emulator
 camd_item_mgcamd_name mgcamd
+camd_item_ncam_hint NCam - Softcam and emulator
+camd_item_ncam_name ncam
 camd_item_newcs_hint NewCS - Softcam
 camd_item_newcs_name newcs
 camd_item_oscam_hint OSCam - Softcam
@@ -388,6 +390,31 @@ crossteam.hint_settings_teams Save and restore settings, which\nare compatible w
 crossteam.hint_settings_teams_backup Save cross-team settings
 crossteam.hint_settings_teams_help Help about cross-team settings
 crossteam.hint_settings_teams_restore Restore cross-team settings
+daemon_control Daemon control
+daemon_item.crond_desc Cron daemon allows scheduled tasks
+daemon_item.crond_name crond
+daemon_item.djmount_desc UPnP AV client allows to mount media-servers
+daemon_item.djmount_name djmount
+daemon_item.dropbear_desc SSH2 server and client
+daemon_item.dropbear_name Dropbear
+daemon_item.emmremind_desc Show different EMM's in the Infoicons
+daemon_item.emmremind_name EMM-Change Notification
+daemon_item.fcm_desc Shows FRITZ!Box call list and much more ...
+daemon_item.fcm_name FritzCallMonitor
+daemon_item.inadyn_desc DynDNS client
+daemon_item.inadyn_name Inadyn
+daemon_item.nfsserver_desc NFS kernel server
+daemon_item.nfsserver_name NFS server
+daemon_item.sambaserver_desc Server-Message-Block-Protocol (SMB) implementation
+daemon_item.sambaserver_name Samba server
+daemon_item.tuxcald_desc Calender plugin daemon
+daemon_item.tuxcald_name TuxCal
+daemon_item.tuxmaild_desc Mailplugin (IMAP/SMTP) daemon
+daemon_item.tuxmaild_name TuxMail
+daemon_item.ushare_desc A/V and DLNA Mediaserver
+daemon_item.ushare_name uShare
+daemon_item.xupnpd_desc eXtensible UPnP agent - DLNA Mediaserver for IPTV
+daemon_item.xupnpd_name xupnpd
 date.Apr  Apr
 date.Aug  Aug
 date.Dec  Dec
@@ -908,7 +935,7 @@ infoicons_flag_name4 Custom
 infoicons_flag_name5 Custom
 infoicons_flag_name6 Custom
 infoicons_flag_name7 Custom
-infoicons_head Infoicons Settings
+infoicons_head Infoicons
 infoicons_infoviewer with Infoviewer
 infoicons_modeicon Infoicons
 infoicons_msg_start starting Infoicons
@@ -1135,7 +1162,7 @@ menu.hint_blank_screen Turn off VideoDecoder until next event (keypress, timer e
 menu.hint_buildinfo Information about compilers, compiler flags, kernel
 menu.hint_ca_init Configuration of CA-system hardware, CA-module and card slots
 menu.hint_cache_txt Start teletext caching after channel switch
-menu.hint_camd Softcam and emulator settings\nStart, stop, version info
+menu.hint_camd_control Softcams and emulators\nStart, stop, version info
 menu.hint_camd_reset Restart the active softcam and/or emulator
 menu.hint_cec_mode CEC mode
 menu.hint_cec_standby CEC standby
@@ -1170,6 +1197,7 @@ menu.hint_colors Configure GUI colors
 menu.hint_colors_shadow Setup for shadow color.
 menu.hint_content_back Change GUI window background color
 menu.hint_content_textcolor Change GUI window text color
+menu.hint_daemon_control Start and stop system-daemons
 menu.hint_dboxinfo Information about box cpu and storage
 menu.hint_delete_channels Remove all channels
 menu.hint_delete_removed Delete the channels in the 'Removed channels' boquet
@@ -1419,7 +1447,6 @@ menu.hint_network IP address, gateway, DNS, Time sync\nNetwork shares and servic
 menu.hint_new_zap_mode Allow channel switch while browsing\n(toggle mode with 'mute' in channel list)
 menu.hint_next Continue to next menu\nPress menu key to close all menus
 menu.hint_next_brief Continue to next menu
-menu.hint_nimenu Configuration of softcams, plugins, tools etc.
 menu.hint_numeric_adjust Adjust channel list mode on numeric zap
 menu.hint_opkg Install or update software packages
 menu.hint_opkg_feed_addresses_edit Edit feed addresses
@@ -1445,7 +1472,7 @@ menu.hint_plugin_type_games Show games in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_lua Show plugins in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_scripts Show scripts in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_tools Show tools in usermenu at selection 'Plugin types'
-menu.hint_plugins_control Configuration of installed plugins and services
+menu.hint_plugins_control Plugin settings and management of installed plugins
 menu.hint_plugins_hdd_dir Select directory to load\nplugins from
 menu.hint_plugins_hide Hide or show integrated plugins or plugins in user menus
 menu.hint_power_leds Configure power-button LEDs behavior
@@ -2062,12 +2089,14 @@ mpkey.stop Stop
 mpkey.subtitle Subtitles
 mpkey.time Show time
 netfs.active_onoff Entry active
+netfs.automount_edit Edit auto.net
 netfs.automount_head NetFS settings
 netfs.automount_intro /etc/auto.net entries
 netfs.automount_intro_mounts edit NetFS mounts
 netfs.automount_write save settings and write auto.net
 netfs.automount_write_info auto.net written
 netfs.dump dump
+netfs.fstab_edit Edit fstab
 netfs.fstab_domount mount NetFS directory
 netfs.fstab_domount_info Running '/etc/init.d/fstab start_netfs'
 netfs.fstab_doumount unmount NetFS directory
@@ -2095,7 +2124,7 @@ networkmenu.ipaddress IP address
 networkmenu.mount Edit network shares
 networkmenu.nameserver Name server
 networkmenu.netmask Netmask
-networkmenu.ntpatboot Sync time while booting
+networkmenu.ntpatboot Syncronize time at boot
 networkmenu.ntpenable Syncronisation via
 networkmenu.ntprefresh NTP/DVB-Refresh
 networkmenu.ntprefresh_hint1 NTP/DVB-Time-Sync in minutes
@@ -2141,8 +2170,6 @@ nfs.umounterror error umounting volume
 nfs.username username
 nfsmenu.head NFS/CIFS/FTPFS settings
 ni NI \o/
-nimenu.head NI-Settings
-nimenu.head_special Special settings
 nvod.percentage (%d%% over)
 nvod.starting (starting in %d min)
 nvodselector.directormode Director mode
@@ -2281,32 +2308,8 @@ pinprotection.head Enter PIN code
 pinprotection.wrongcode PIN-Code was wrong! Try again.
 plugin.hide_no Show
 plugin.hide_yes Hide
-plugin.item_crond_desc Cron daemon allows scheduled tasks
-plugin.item_crond_name crond
-plugin.item_djmount_desc UPnP AV Client allows to mount media-servers
-plugin.item_djmount_name djmount
-plugin.item_dropbear_desc SSH2 server und client
-plugin.item_dropbear_name Dropbear
-plugin.item_emmremind_desc Display different EMM's to the Infoicons
-plugin.item_emmremind_name EMM-Change Notification
-plugin.item_fcm_desc Shows FRITZ!Box call list and much more ...
-plugin.item_fcm_name FritzCallMonitor
-plugin.item_inadyn_desc DynDNS client
-plugin.item_inadyn_name Inadyn
-plugin.item_nfsserver_desc NFS kernel server
-plugin.item_nfsserver_name NFS-Server
-plugin.item_sambaserver_desc Server-Message-Block-Protokoll (SMB) implementation
-plugin.item_sambaserver_name Samba-Server
-plugin.item_tuxcald_desc Calender-plugin
-plugin.item_tuxcald_name TuxCal
-plugin.item_tuxmaild_desc Mailplugin (IMAP/SMTP)
-plugin.item_tuxmaild_name TuxMail
-plugin.item_ushare_desc A/V and DLNA Mediaserver
-plugin.item_ushare_name uShare
-plugin.item_xupnpd_desc eXtensible UPnP agent - DLNA Mediaserver for IPTV
-plugin.item_xupnpd_name xupnpd
-plugins.control Control plugins and services
-plugins.hdd_dir Plugin HDD dir.
+plugins.control Control plugins
+plugins.hdd_dir External plugin directory
 plugins.hide Hide or show plugins
 plugins.no_plugin No plugin
 plugins.result plugin output
@@ -2557,7 +2560,7 @@ settings.teams.backup Save
 settings.teams.backup_failed Backup failed!
 settings.teams.backup_to Saving to 
 settings.teams.help Help
-settings.teams.help_text In this menu, settings can be saved and restored,\nwhich are compatible with these Team-Images:\n \n        - BluePeer HD\n        - NI CS-Image\n \nSaved will be:\n \n        * Channellists\n        * Timer and Timer-Settings\n        * Network-Settings (LAN and WLAN)
+settings.teams.help_text In this menu can settings be saved and restored,\nwhich are compatible with following Team-Images:\n \n        - BluePeer HD\n        - NI-Image\n \nSaved will be:\n \n        * Channellists\n        * Timer and timer-settings\n        * Network-settings (LAN and WLAN)
 settings.teams.restore Restore
 settings.teams.restore_warn This will replace all cross-team settings and reboot\nContinue ?
 shoutcast.dev_id SHOUTcast Dev ID

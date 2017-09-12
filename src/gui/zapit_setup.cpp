@@ -60,8 +60,8 @@ int CZapitSetup::exec(CMenuTarget* parent, const std::string &/*actionKey*/)
 int CZapitSetup::showMenu()
 {
 	//menue init
-	CMenuWidget *zapit = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_ZAPIT);
-	zapit->addIntroItems(LOCALE_ZAPITSETUP_INFO);
+	CMenuWidget *zapit = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_ZAPIT);
+	zapit->addIntroItems(LOCALE_ZAPITSETUP_HEAD);
 	COnOffNotifier* miscZapitNotifier = new COnOffNotifier(1);
 	//zapit
 	CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_ZAPITSETUP_LAST_USE, &g_settings.uselastchannel, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, miscZapitNotifier, CRCInput::RC_red);

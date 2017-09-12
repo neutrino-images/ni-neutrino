@@ -40,6 +40,7 @@
 #include "gui/audio_select.h"
 #include "gui/bedit/bouqueteditor_bouquets.h"
 #include "gui/bouquetlist.h"
+#include <gui/daemon_control.h>
 #include "gui/cam_menu.h"
 #include "gui/dboxinfo.h"
 #include "gui/epgplus.h"
@@ -75,8 +76,6 @@
 #include "gui/videosettings.h"
 #include "driver/record.h"
 #include "driver/display.h"
-
-#include "gui/ni_menu.h" //NI
 
 extern CPlugins       * g_Plugins;
 extern CRemoteControl * g_RemoteControl;
@@ -219,13 +218,6 @@ void CNeutrinoApp::InitMenuMain()
 		personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_LUA]);
 #endif
 	}
-
-	//NI-Menu section***********************************************************************************************
-	personalize.addSeparator(MENU_MAIN);
-
-	CMenuForwarder *ni_menu = new CMenuForwarder(LOCALE_NIMENU_HEAD, true, NULL, new CNIMenu(), NULL, CRCInput::RC_0, NEUTRINO_ICON_BUTTON_0);
-	ni_menu->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NIMENU);
-	personalize.addItem(MENU_MAIN, ni_menu, &g_settings.personalize[SNeutrinoSettings::P_MAIN_NI_MENU], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ACCESS_OPTION);
 
 	//separator
 	personalize.addSeparator(MENU_MAIN);
@@ -545,6 +537,13 @@ void CNeutrinoApp::InitMenuService()
 	//separator
 	personalize.addSeparator(MENU_SERVICE);
 
+	mf = new CMenuForwarder(LOCALE_DAEMON_CONTROL, true, NULL, new CDaemonControlMenu(), NULL);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_DAEMON_CONTROL);
+	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_DAEMON_CONTROL]);
+
+	mf = new CMenuForwarder(LOCALE_CAMD_CONTROL, true, NULL, new CCamdControlMenu(), NULL);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CAMD_CONTROL);
+	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_CAMD_CONTROL]);
 
 	if (!g_settings.easymenu) {
 		personalize.addSeparator(MENU_SERVICE);

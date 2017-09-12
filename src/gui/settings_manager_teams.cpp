@@ -4,7 +4,7 @@
 	Copyright (C) 2011 'defans'
 	Homepage: http://www.bluepeercrew.us/
 
-	Copyright (C) 2011 'vanhofen'
+	Copyright (C) 2017 'vanhofen'
 	Homepage: http://www.neutrino-images.de/
 
 	License: GPL
@@ -37,7 +37,6 @@
 
 #include "gui/widget/hintbox.h"
 #include "gui/widget/msgbox.h"
-#include "gui/widget/stringinput.h"
 
 #include <driver/screen_max.h>
 #include <system/setting_helpers.h>
@@ -51,8 +50,7 @@
 #define SYSCALLBACKUP	"tar -cz -f"
 #define SYSCALLRESTORE	"cd /; tar -xz -f"
 
-#define OBJECT_COUNT 6
-const char * object[OBJECT_COUNT] =
+const char * object[] =
 {
 	CONFIGDIR "/cables.xml",
 	CONFIGDIR "/satellites.xml",
@@ -61,8 +59,7 @@ const char * object[OBJECT_COUNT] =
 	"/etc/network/interfaces",
 	"/etc/wpa_supplicant.conf"
 };
-
-//int CSettingsManagerTeams::selected = -1; // remember location in old style
+const int OBJECT_COUNT = sizeof(object) / sizeof(object[0]);
 
 CSettingsManagerTeams::CSettingsManagerTeams()
 {
@@ -105,14 +102,12 @@ int CSettingsManagerTeams::showMenu()
 	//printf("[neutrino] CSettingsManagerTeams call %s...\n", __FUNCTION__);
 
 	CMenuWidget * teamset = new CMenuWidget(LOCALE_SETTINGS_TEAMS, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_TEAMS_SETTINGS);
-//	CMenuWidget * teamset = new CMenuWidget(LOCALE_SETTINGS_TEAMS, NEUTRINO_ICON_SETTINGS, width);
-//	teamset->setSelected(selected);
 
 	teamset->addIntroItems();
 
 	CMenuForwarder * mf;
 
-	mf = new CMenuForwarder(LOCALE_SETTINGS_TEAMS_HELP, true, NULL, this, "help", CRCInput::RC_help, NEUTRINO_ICON_BUTTON_HELP_SMALL); //ToDo?
+	mf = new CMenuForwarder(LOCALE_SETTINGS_TEAMS_HELP, true, NULL, this, "help");
 	mf->setHint("", LOCALE_CROSSTEAM_HINT_SETTINGS_TEAMS_HELP);
 	teamset->addItem(mf);
 
@@ -128,7 +123,6 @@ int CSettingsManagerTeams::showMenu()
 
 	int res = teamset->exec(NULL, "");
 	teamset->hide();
-//	selected = teamset->getSelected();
 	delete teamset;
 
 	return res;
@@ -136,7 +130,8 @@ int CSettingsManagerTeams::showMenu()
 
 void CSettingsManagerTeams::showHelp()
 {
-	ShowMsg(LOCALE_SETTINGS_TEAMS_HELP, g_Locale->getText(LOCALE_SETTINGS_TEAMS_HELP_TEXT), CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_INFO); // UTF-8
+	ShowMsg(LOCALE_SETTINGS_TEAMS_HELP, LOCALE_SETTINGS_TEAMS_HELP_TEXT, CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_INFO,
+			MSGBOX_MIN_WIDTH, NO_TIMEOUT, false, (CMsgBox::AUTO_WIDTH | CMsgBox::AUTO_HIGH));
 	return;
 }
 
@@ -204,10 +199,6 @@ void CSettingsManagerTeams::doRestore()
 
 void CSettingsManagerTeams::doReboot()
 {
-	FILE *f = fopen("/tmp/.reboot", "w");
-	fclose(f);
-	// we need a public ExitRun() in src/neutrino.h
-	CNeutrinoApp::getInstance()->ExitRun(true);
-	unlink("/tmp/.reboot");
+	CNeutrinoApp::getInstance()->exec(NULL, "reboot");
 	return;
 }

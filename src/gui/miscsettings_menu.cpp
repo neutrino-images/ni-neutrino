@@ -39,8 +39,11 @@
 #include <gui/miscsettings_menu.h>
 #include <gui/cec_setup.h>
 #include <gui/filebrowser.h>
+#include <gui/infoicons_setup.h>
 #include <gui/keybind_setup.h>
+#include <gui/lcd4l_setup.h>
 #include <gui/plugins.h>
+#include <gui/plugins_hide.h>
 #include <gui/sleeptimer.h>
 #include <gui/zapit_setup.h>
 
@@ -142,6 +145,10 @@ int CMiscMenue::exec(CMenuTarget* parent, const std::string &actionKey)
 	else if(actionKey == "onlineservices")
 	{
 		return showMiscSettingsMenuOnlineServices();
+	}
+	else if(actionKey == "plugins")
+	{
+		return showMiscSettingsMenuPlugins();
 	}
 	else if(actionKey == "epg_read_now")
 	{
@@ -304,6 +311,23 @@ int CMiscMenue::showMiscSettingsMenu()
 	misc_menue.addItem( new CMenuForwarder("CPU", true, NULL, &misc_menue_cpu, NULL, CRCInput::RC_5));
 #endif /*CPU_FREQ*/
 
+	// Infoicons Setup
+	CInfoIconsSetup infoicons_setup;
+	mf = new CMenuForwarder(LOCALE_INFOICONS_HEAD, true, NULL, &infoicons_setup, NULL, CRCInput::RC_6);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOICONS_HEAD);
+	misc_menue.addItem(mf);
+
+	// LCD4Linux Setup
+	CLCD4lSetup lcd4lSetup;
+	mf = new CMenuForwarder(LOCALE_LCD4L_SUPPORT, true, NULL, &lcd4lSetup, NULL, CRCInput::RC_7);
+	mf->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SUPPORT);
+	misc_menue.addItem(mf);
+
+	// plugins
+	mf = new CMenuForwarder(LOCALE_PLUGINS_CONTROL, true, NULL, this, "plugins", CRCInput::RC_8);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_CONTROL);
+	misc_menue.addItem(mf);
+
 	int res = misc_menue.exec(NULL, "");
 
 	delete fanNotifier;
@@ -339,16 +363,6 @@ void CMiscMenue::showMiscSettingsMenuGeneral(CMenuWidget *ms_general)
 		mn->setHint("", LOCALE_MENU_HINT_FAN_SPEED);
 		ms_general->addItem(mn);
 	}
-
-	ms_general->addItem(GenericMenuSeparatorLine);
-
-	CMenuForwarder * mf = new CMenuForwarder(LOCALE_PLUGINS_HDD_DIR, true, g_settings.plugin_hdd_dir, this, "plugin_dir");
-	mf->setHint("", LOCALE_MENU_HINT_PLUGINS_HDD_DIR);
-	ms_general->addItem(mf);
-
-	mf = new CMenuForwarder(LOCALE_MPKEY_PLUGIN, true, g_settings.movieplayer_plugin, this, "movieplayer_plugin");
-	mf->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_PLUGIN);
-	ms_general->addItem(mf);
 
 	//set debug level
 	ms_general->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_DEBUG));
@@ -614,6 +628,32 @@ int CMiscMenue::showMiscSettingsMenuOnlineServices()
 
 	int res = ms_oservices->exec(NULL, "");
 	delete ms_oservices;
+	return res;
+}
+
+// plugins
+int CMiscMenue::showMiscSettingsMenuPlugins()
+{
+	CMenuWidget *ms_plugins = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_MISCSETUP_PLUGINS);
+	ms_plugins->addIntroItems(LOCALE_PLUGINS_CONTROL);
+
+	CMenuForwarder * mf = new CMenuForwarder(LOCALE_PLUGINS_HDD_DIR, true, g_settings.plugin_hdd_dir, this, "plugin_dir");
+	mf->setHint("", LOCALE_MENU_HINT_PLUGINS_HDD_DIR);
+	ms_plugins->addItem(mf);
+
+	mf = new CMenuForwarder(LOCALE_MPKEY_PLUGIN, true, g_settings.movieplayer_plugin, this, "movieplayer_plugin");
+	mf->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_PLUGIN);
+	ms_plugins->addItem(mf);
+
+	ms_plugins->addItem(GenericMenuSeparatorLine);
+
+	CPluginsHideMenu pluginsHideMenu;
+	mf = new CMenuForwarder(LOCALE_PLUGINS_HIDE, true, NULL, &pluginsHideMenu, NULL, CRCInput::RC_red);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_HIDE);
+	ms_plugins->addItem(mf);
+
+	int res = ms_plugins->exec(NULL, "");
+	delete ms_plugins;
 	return res;
 }
 

@@ -659,6 +659,7 @@ ni.camd-tools.pidinfo=PID-Informationen
 ni.camd-tools.mgshareinfo=NewCamd Verbindungen
 ni.camd-tools.cs2gboxinfo=Allgemeine Informationen
 ni.camd-tools.oscamversion=Allgemeine Informationen
+ni.camd-tools.ncamversion=Allgemeine Informationen
 ni.camd-tools.doscamversion=Allgemeine Informationen
 
 ni.pzapit-control=PZapit

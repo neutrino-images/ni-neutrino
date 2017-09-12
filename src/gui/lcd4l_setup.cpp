@@ -127,8 +127,8 @@ int CLCD4lSetup::show()
 	int temp_lcd4l_skin	= g_settings.lcd4l_skin;
 
 	// lcd4l setup
-	CMenuWidget* lcd4lSetup = new CMenuWidget(LOCALE_LCD4L_SUPPORT, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_LCD4L_SETUP);
-	lcd4lSetup->addIntroItems();
+	CMenuWidget* lcd4lSetup = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_LCD4L_SETUP);
+	lcd4lSetup->addIntroItems(LOCALE_LCD4L_SUPPORT);
 
 	mc = new CMenuOptionChooser(LOCALE_LCD4L_SUPPORT, &g_settings.lcd4l_support, LCD4L_SUPPORT_OPTIONS, LCD4L_SUPPORT_OPTION_COUNT, true, this, CRCInput::RC_red);
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SUPPORT);

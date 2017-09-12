@@ -88,6 +88,20 @@ case "$1" in
 		echo "[$BNAME] oscam-reset"
 		/etc/init.d/emu reset oscam >/dev/console
 	;;
+	ncam_start)
+		echo "[$BNAME] ncam-start"
+		touch /var/etc/.ncam
+		/etc/init.d/emu start ncam >/dev/console
+	;;
+	ncam_stop)
+		echo "[$BNAME] ncam-stop"
+		rm -rf /var/etc/.ncam
+		/etc/init.d/emu stop ncam >/dev/console
+	;;
+	ncam_reset)
+		echo "[$BNAME] ncam-reset"
+		/etc/init.d/emu reset ncam >/dev/console
+	;;
 	doscam_start)
 		echo "[$BNAME] doscam-start"
 		touch /var/etc/.doscam

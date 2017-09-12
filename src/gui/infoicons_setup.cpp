@@ -147,8 +147,8 @@ int CInfoIconsSetup::menu()
 	int shortcut_delflag = 0;
 	int shortcut_flagname = 0;
 
-	CMenuWidget* infoiconsMenu = new CMenuWidget(LOCALE_INFOICONS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_INFOICONS);
-	infoiconsMenu->addIntroItems();
+	CMenuWidget* infoiconsMenu = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_INFOICONS);
+	infoiconsMenu->addIntroItems(LOCALE_INFOICONS_HEAD);
 
 	//FIXME if Iconbar is active, set selected from LOCALE_INFOICONS_SKIN to LOCALE_INFOICONS_MODEICON
 	if(g_settings.mode_icons && (infoiconsMenu->getSelected() == 4))

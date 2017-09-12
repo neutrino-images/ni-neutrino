@@ -54,7 +54,6 @@ CNETFSMountGui::CNETFSMountGui()
 	// FIXME #warning move probing from exec() to fsmounter
 	m_nfs_sup = CFSMounter::FS_UNPROBED;
 	m_cifs_sup = CFSMounter::FS_UNPROBED;
-	m_lufs_sup = CFSMounter::FS_UNPROBED;
 	
 	width = 50;
 
@@ -77,7 +76,6 @@ std::string CNETFSMountGui::getEntryString(int mt, int i)
 	switch(g_settings.netfs[mt][i].type) {
 		case CFSMounter::NFS: res = "NFS "     + g_settings.netfs[mt][i].ip + ":"; break;
 		case CFSMounter::CIFS: res = "CIFS //" + g_settings.netfs[mt][i].ip + "/"; break;
-		case CFSMounter::LUFS: res = "FTPS "   + g_settings.netfs[mt][i].ip + "/"; break;
 	}
 	if (g_settings.netfs[mt][i].dir.empty() || g_settings.netfs[mt][i].local_dir.empty())
 		return "";
@@ -362,10 +360,7 @@ int CNETFSMountGui::exec( CMenuTarget* parent, const std::string & actionKey )
 	if (m_cifs_sup == CFSMounter::FS_UNPROBED)
 		m_cifs_sup = CFSMounter::fsSupported(CFSMounter::CIFS);
 
-	if (m_lufs_sup == CFSMounter::FS_UNPROBED)
-		m_lufs_sup = CFSMounter::fsSupported(CFSMounter::LUFS);
-
-	printf("SUPPORT: NFS: %d, CIFS: %d, LUFS: %d\n", m_nfs_sup, m_cifs_sup, m_lufs_sup);
+	printf("SUPPORT: NFS: %d, CIFS: %d\n", m_nfs_sup, m_cifs_sup);
 
 	if (actionKey.empty() || actionKey.substr(0,4)=="menu")
 	{
@@ -478,7 +473,7 @@ int CNETFSMountGui::exec( CMenuTarget* parent, const std::string & actionKey )
 
 int CNETFSMountGui::menu(int mt)
 {
-	std::string hint = SNeutrinoSettings::FSTAB ? g_Locale->getText(LOCALE_MENU_HINT_NETFS_FSTAB_WRITE) : g_Locale->getText(LOCALE_MENU_HINT_NETFS_AUTOMOUNT_WRITE);
+	std::string hint = (mt == SNeutrinoSettings::FSTAB) ? g_Locale->getText(LOCALE_MENU_HINT_NETFS_FSTAB_WRITE) : g_Locale->getText(LOCALE_MENU_HINT_NETFS_AUTOMOUNT_WRITE);
 	std::string txt;
 
 	CMenuWidget mountMenuW(mt == SNeutrinoSettings::FSTAB ? LOCALE_NETFS_FSTAB_HEAD : LOCALE_NETFS_AUTOMOUNT_HEAD, NEUTRINO_ICON_NETWORK, width, mt == SNeutrinoSettings::FSTAB ? MN_WIDGET_ID_NETFS_FSTAB : MN_WIDGET_ID_NETFS_AUTOMOUNT);
@@ -550,8 +545,7 @@ int CNETFSMountGui::menu(int mt)
 const CMenuOptionChooser::keyval NFS_TYPE_OPTIONS[] =
 {
 	{ CFSMounter::NFS , LOCALE_NFS_TYPE_NFS },
-	{ CFSMounter::CIFS, LOCALE_NFS_TYPE_CIFS } /*,
-	{ CFSMounter::LUFS, LOCALE_NFS_TYPE_LUFS } */
+	{ CFSMounter::CIFS, LOCALE_NFS_TYPE_CIFS }
 };
 #define NFS_TYPE_OPTION_COUNT (sizeof(NFS_TYPE_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 

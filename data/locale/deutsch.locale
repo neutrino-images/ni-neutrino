@@ -252,6 +252,8 @@ camd_item_gbox_hint GBox - Softcam und Emulator
 camd_item_gbox_name gbox
 camd_item_mgcamd_hint MGCamd - Emulator
 camd_item_mgcamd_name mgcamd
+camd_item_ncam_hint NCam - Softcam und Emulator
+camd_item_ncam_name ncam
 camd_item_newcs_hint NewCS - Softcam
 camd_item_newcs_name newcs
 camd_item_oscam_hint OSCam - Softcam
@@ -385,9 +387,35 @@ cpu.freq_default Standard Frequenz
 cpu.freq_normal Normale Frequenz
 cpu.freq_standby Standby Frequenz
 crossteam.hint_settings_teams Einstellungen sichern und wiederherstellen,\ndie zu teilnehmenden Team-Images kompatibel sind.
-crossteam.hint_settings_teams_backup Teamübergreifende Einstellungen sichern
-crossteam.hint_settings_teams_help Hilfe zu teamübergreifenden Einstellungen
-crossteam.hint_settings_teams_restore Teamübergreifende Einstellungen wiederherstellen
+crossteam.hint_settings_teams_backup Team-übergreifende Einstellungen sichern
+crossteam.hint_settings_teams_help Hilfe zu den Team-übergreifenden Einstellungen
+crossteam.hint_settings_teams_restore Team-übergreifende Einstellungen wiederherstellen
+daemon_control Daemon-Steuerung
+daemon_item.crond_desc cron Daemon kann zeitgesteuerte Aufgaben ausführen
+daemon_item.crond_name crond
+daemon_item.djmount_desc UPnP AV Client kann den Inhalt von Media-Servern mounten
+daemon_item.djmount_name djmount
+daemon_item.dropbear_desc SSH2 Server und Client
+daemon_item.dropbear_name Dropbear
+daemon_item.emmremind_desc Zeigt eine Änderung der EMM's in den Infoicons an
+daemon_item.emmremind_name EMM-Änderungsbenachrichtigung
+daemon_item.fcm_desc Zeigt die Anrufliste der FRITZ!Box und noch vieles mehr ...
+daemon_item.fcm_name FritzCallMonitor
+daemon_item.inadyn_desc DynDNS Client
+daemon_item.inadyn_name Inadyn
+daemon_item.nfsserver_desc NFS Kernel Server
+daemon_item.nfsserver_name NFS-Server
+daemon_item.sambaserver_desc Server-Message-Block-Protokoll (SMB) Implementierung
+daemon_item.sambaserver_name Samba-Server
+daemon_item.tuxcald_desc Kalenderplugin Dienstprogramm
+daemon_item.tuxcald_name TuxCal
+daemon_item.tuxmaild_desc Mailplugin (IMAP/SMTP) Dienstprogramm
+daemon_item.tuxmaild_name TuxMail
+daemon_item.ushare_desc A/V und DLNA Medienserver
+daemon_item.ushare_name uShare
+daemon_item.xupnpd_desc eXtensible UPnP agent - DLNA Medienserver für IPTV
+daemon_item.xupnpd_name xupnpd
+>>>>>>>
 date.Apr  Apr
 date.Aug  Aug
 date.Dec  Dez
@@ -908,7 +936,7 @@ infoicons_flag_name4 Benutzerdefiniert
 infoicons_flag_name5 Benutzerdefiniert
 infoicons_flag_name6 Benutzerdefiniert
 infoicons_flag_name7 Benutzerdefiniert
-infoicons_head Infoicons Einstellungen
+infoicons_head Infoicons
 infoicons_infoviewer mit Infoviewer
 infoicons_modeicon Infoicons
 infoicons_msg_start Infoicons werden gestartet
@@ -1135,7 +1163,7 @@ menu.hint_blank_screen Schaltet den VideoDecoder bis zum nächsten Event (Tasten
 menu.hint_buildinfo Informationen über Compiler, Compilerflags, Kernel
 menu.hint_ca_init Konfiguration der CA-Systemhardware, CA-Modul und Kartenschächte
 menu.hint_cache_txt Startet das Zwischenspeichern des Teletextes nach einem Kanalwechsel
-menu.hint_camd Softcam und Emulator Einstellungen\nStart, Stop, Versionsinfo
+menu.hint_camd_control Softcams und Emulatoren\nStart, Stop, Versionsinfo
 menu.hint_camd_reset Aktive Softcam und/oder Emulator neu starten
 menu.hint_cec_mode CEC-Modus
 menu.hint_cec_standby CEC-Standby
@@ -1170,6 +1198,7 @@ menu.hint_colors Konfigurieren Sie die Menü-Farben
 menu.hint_colors_shadow Einstellen der Schattenfarbe
 menu.hint_content_back Ändern Sie die Hintergrundfarbe für den Fensterinhalt
 menu.hint_content_textcolor Ändern Sie die Textfarbe für den Fensterinhalt
+menu.hint_daemon_control An- und Abschalten von System-Diensten
 menu.hint_dboxinfo Informationen über CPU und Arbeitsspeicher der Box
 menu.hint_delete_channels Löschen aller Kanäle
 menu.hint_delete_removed Lösche das Bouquet 'Gelöschte Kanäle'
@@ -1419,7 +1448,6 @@ menu.hint_network IP-Adresse, Gateway, DNS, Zeit-Sync, Netzwerk-Freigaben, Diens
 menu.hint_new_zap_mode Aktiviert Quickzap in der Kanalliste. Nach Betätigen der Mute-Taste wird mit den Hoch/Runter-Tasten direkt umgeschalten
 menu.hint_next Weiter zum nächsten Menü.\nDie Taste 'Menü' schließt alle Menüs
 menu.hint_next_brief Weiter zum nächsten Menü
-menu.hint_nimenu Konfiguration von Softcams, Plugins, Tools usw.
 menu.hint_numeric_adjust Bei numerischer Programmwahl die Kanalliste am neu gewählten Programm ausrichten
 menu.hint_opkg Software-Pakete installieren oder vorhandene aktualisieren
 menu.hint_opkg_feed_addresses_edit Bearbeiten von Feed-Adressen
@@ -1445,7 +1473,7 @@ menu.hint_plugin_type_games Legt fest, ob Spiele im Benutzermenü unter der Rubr
 menu.hint_plugin_type_lua Legt fest, ob Plugins im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_scripts Legt fest, ob Skripte im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_tools Legt fest, ob Werkzeuge im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
-menu.hint_plugins_control Verwaltung von installierten Plugins und Diensten
+menu.hint_plugins_control Plugin-Einstellungen und Verwaltung von installierten Plugins
 menu.hint_plugins_hdd_dir Auswahl des Verzeichnisses zum Laden der Plugins von einem externen Datenträger
 menu.hint_plugins_hide Integrierte Plugins oder Plugins in den Benutzermenüs verstecken oder anzeigen
 menu.hint_power_leds Konfiguriert das Verhalten der LEDs an der Power-Taste
@@ -2062,12 +2090,14 @@ mpkey.stop Stopp
 mpkey.subtitle Untertitel
 mpkey.time Zeitanzeige
 netfs.active_onoff Eintrag aktiv
+netfs.automount_edit auto.net bearbeiten
 netfs.automount_head NetFS Einstellungen
 netfs.automount_intro Einträge für auto.net
 netfs.automount_intro_mounts NetFS-Mounts bearbeiten
 netfs.automount_write Einstellungen speichern und auto.net schreiben
 netfs.automount_write_info auto.net wurde geschrieben
 netfs.dump Dump
+netfs.fstab_edit fstab bearbeiten
 netfs.fstab_domount NetFS-Verzeichnisse anhängen (mount)
 netfs.fstab_domount_info '/etc/init.d/fstab start_netfs' wird ausgeführt
 netfs.fstab_doumount NetFS-Verzeichnisse aushängen (umount)
@@ -2095,8 +2125,8 @@ networkmenu.ipaddress IP
 networkmenu.mount Netzwerkfreigaben bearbeiten
 networkmenu.nameserver Nameserver
 networkmenu.netmask Netzmaske
-networkmenu.ntpatboot Zeit beim Booten synchr.
-networkmenu.ntpenable Zeit per INet synchronisieren
+networkmenu.ntpatboot Zeit beim Booten synchronisieren
+networkmenu.ntpenable Zeit synchronisieren per
 networkmenu.ntprefresh NTP/DVB-Aktualisierung
 networkmenu.ntprefresh_hint1 NTP/DVB-Time-Sync [min]
 networkmenu.ntprefresh_hint2 braucht Reboot oder EPG-Reset
@@ -2141,8 +2171,6 @@ nfs.umounterror Umount-Fehler
 nfs.username Benutzername
 nfsmenu.head NFS/CIFS/FTPFS Einstellungen
 ni NI \o/
-nimenu.head NI-Einstellungen
-nimenu.head_special Extra-Einstellungen
 nvod.percentage (%d%% vorbei)
 nvod.starting (Beginn in %d min)
 nvodselector.directormode Bildregie-Modus
@@ -2281,32 +2309,8 @@ pinprotection.head PIN-Abfrage
 pinprotection.wrongcode Geben Sie den Code nocheinmal ein!
 plugin.hide_no Anzeigen
 plugin.hide_yes Verstecken
-plugin.item_crond_desc cron Daemon kann zeitgesteuerte Aufgaben ausführen
-plugin.item_crond_name crond
-plugin.item_djmount_desc UPnP AV Client kann den Inhalt von Media-Servern mounten
-plugin.item_djmount_name djmount
-plugin.item_dropbear_desc SSH2 Server und Client
-plugin.item_dropbear_name Dropbear
-plugin.item_emmremind_desc Zeigt eine Änderung der EMM's in den Infoicons an
-plugin.item_emmremind_name EMM-Änderungsbenachrichtigung
-plugin.item_fcm_desc Zeigt die Anrufliste der FRITZ!Box und noch vieles mehr ...
-plugin.item_fcm_name FritzCallMonitor
-plugin.item_inadyn_desc DynDNS Client
-plugin.item_inadyn_name Inadyn
-plugin.item_nfsserver_desc NFS Kernel Server
-plugin.item_nfsserver_name NFS-Server
-plugin.item_sambaserver_desc Server-Message-Block-Protokoll (SMB) Implementierung
-plugin.item_sambaserver_name Samba-Server
-plugin.item_tuxcald_desc Kalenderplugin
-plugin.item_tuxcald_name TuxCal
-plugin.item_tuxmaild_desc Mailplugin (IMAP/SMTP)
-plugin.item_tuxmaild_name TuxMail
-plugin.item_ushare_desc A/V und DLNA Medienserver
-plugin.item_ushare_name uShare
-plugin.item_xupnpd_desc eXtensible UPnP agent - DLNA Medienserver für IPTV
-plugin.item_xupnpd_name xupnpd
-plugins.control Plugins und Services verwalten
-plugins.hdd_dir Externes Plugin-Verz.
+plugins.control Plugins verwalten
+plugins.hdd_dir Externes Plugin-Verzeichnis
 plugins.hide Plugins verstecken oder anzeigen
 plugins.no_plugin Kein Plugin
 plugins.result Pluginausgabe
@@ -2557,7 +2561,7 @@ settings.teams.backup Sichern
 settings.teams.backup_failed Sicherung fehlgeschlagen!
 settings.teams.backup_to Sichern nach 
 settings.teams.help Hilfe
-settings.teams.help_text In diesem Menü können Einstellungen gesichert und\nwiederhergestellt werden, die zu folgenden Team-Images\nkompatibel sind:\n \n        - BluePeer HD\n        - NI CS-Image\n \nGesichert werden:\n \n        * Kanallisten\n        * Timer und Timer-Einstellungen\n        * Netzwerkeinstellungen (LAN und WLAN)
+settings.teams.help_text In diesem Menü können Einstellungen\ngesichert und wiederhergestellt werden,\ndie zu folgenden Team-Images kompatibel sind:\n \n        - BluePeer HD\n        - NI-Image\n \nGesichert werden:\n \n        * Kanallisten\n        * Timer und Timer-Einstellungen\n        * Netzwerkeinstellungen (LAN und WLAN)
 settings.teams.restore Wiederherstellen
 settings.teams.restore_warn Team-übergreifende Einstellungen werden ersetzt.\nDie Box wird neu gestartet.\nWeiter?
 shoutcast.dev_id SHOUTcast Dev ID

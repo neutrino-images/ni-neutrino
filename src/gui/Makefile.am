@@ -54,6 +54,7 @@ libneutrino_gui_a_SOURCES = \
 	buildinfo.cpp \
 	channellist.cpp \
 	cec_setup.cpp \
+	daemon_control.cpp \
 	dboxinfo.cpp \
 	epgplus.cpp \
 	epgview.cpp \
@@ -76,7 +77,6 @@ libneutrino_gui_a_SOURCES = \
 	network_service.cpp \
 	network_setup.cpp \
 	nfs.cpp \
-	ni_menu.cpp \
 	opkg_manager.cpp \
 	osd_helpers.cpp \
 	osd_progressbar_setup.cpp \

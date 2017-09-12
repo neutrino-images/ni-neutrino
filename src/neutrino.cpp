@@ -4646,6 +4646,49 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		hintBox->hide();
 		delete hintBox;
 	}
+	else if (actionKey == "camd_reset")
+	{
+		CHintBox hintbox(LOCALE_CAMD_CONTROL, LOCALE_CAMD_MSG_RESET);
+		hintbox.paint();
+
+		printf("[neutrino.cpp] executing \"service emu restart\"\n");
+		if (my_system(3, "service", "emu", "restart") != 0)
+			printf("[neutrino.cpp] executing failed\n");
+		sleep(1);
+
+		hintbox.hide();
+
+		return menu_return::RETURN_EXIT_ALL;
+	}
+	else if (actionKey == "ecmInfo")
+	{
+		char *buffer = NULL;
+		ssize_t read;
+		size_t len;
+		FILE *fh;
+
+		CFileHelpers fhlp;
+		if (fhlp.copyFile("/tmp/ecm.info", "/tmp/ecm.info.tmp", 0644))
+		{
+			if ((fh = fopen("/tmp/ecm.info.tmp", "r")))
+			{
+				std::string str = "";
+				while ((read = getline(&buffer, &len, fh)) != -1)
+				{
+					str += buffer;
+				}
+				fclose(fh);
+				remove("/tmp/ecm.info.tmp");
+				if(buffer)
+					free(buffer);
+				ShowHint(LOCALE_ECMINFO, str.c_str(), 450, 20);
+			}
+		}
+		else
+			ShowHint(LOCALE_ECMINFO, LOCALE_ECMINFO_NULL, 450, 20);
+
+		return menu_return::RETURN_EXIT_ALL;
+	}
 	else if(actionKey=="nkplayback" || actionKey=="ytplayback" || actionKey=="tsmoviebrowser" || actionKey=="fileplayback") {
 		frameBuffer->Clear();
 		if(mode == NeutrinoMessages::mode_radio )
