@@ -2125,8 +2125,8 @@ networkmenu.ipaddress IP
 networkmenu.mount Netzwerkfreigaben bearbeiten
 networkmenu.nameserver Nameserver
 networkmenu.netmask Netzmaske
-networkmenu.ntpatboot Zeit beim Booten synchr.
-networkmenu.ntpenable Zeit per INet synchronisieren
+networkmenu.ntpatboot Zeit beim Booten synchronisieren
+networkmenu.ntpenable Zeit synchronisieren per
 networkmenu.ntprefresh NTP/DVB-Aktualisierung
 networkmenu.ntprefresh_hint1 NTP/DVB-Time-Sync [min]
 networkmenu.ntprefresh_hint2 braucht Reboot oder EPG-Reset

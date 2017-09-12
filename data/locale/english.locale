@@ -2124,7 +2124,7 @@ networkmenu.ipaddress IP address
 networkmenu.mount Edit network shares
 networkmenu.nameserver Name server
 networkmenu.netmask Netmask
-networkmenu.ntpatboot Sync time while booting
+networkmenu.ntpatboot Syncronize time at boot
 networkmenu.ntpenable Syncronisation via
 networkmenu.ntprefresh NTP/DVB-Refresh
 networkmenu.ntprefresh_hint1 NTP/DVB-Time-Sync in minutes
