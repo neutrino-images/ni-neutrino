@@ -204,6 +204,9 @@ TUXBOX_APPS_DIRECTORY_ONE(public_httpddir,PUBLIC_HTTPDDIR,localstatedir,/var,/ht
 
 TUXBOX_APPS_DIRECTORY_ONE(hosted_httpddir,HOSTED_HTTPDDIR,mntdir,/mnt,/hosted,
 	[--with-hosted_httpddir=PATH   ],[where to find the the hosted files])
+
+TUXBOX_APPS_DIRECTORY_ONE(flagdir,FLAGDIR,localstatedir,/var,/etc,
+	[--with-flagdir=PATH           ],[where to find the the flagfiles])
 ])
 
 dnl automake <= 1.6 needs this specifications
@@ -229,6 +232,7 @@ AC_SUBST(ICONSDIR_VAR)
 AC_SUBST(PRIVATE_HTTPDDIR)
 AC_SUBST(PUBLIC_HTTPDDIR)
 AC_SUBST(HOSTED_HTTPDDIR)
+AC_SUBST(FLAGDIR)
 dnl end workaround
 
 AC_DEFUN([_TUXBOX_APPS_LIB_CONFIG],[
