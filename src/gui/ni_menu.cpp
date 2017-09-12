@@ -36,7 +36,6 @@
 #include <mymenu.h>
 #include <neutrino_menue.h>
 
-#include <gui/lcd4l_setup.h>
 #include <gui/netfs_setup.h>
 #include <gui/plugins_hide.h>
 #include <gui/widget/hintbox.h>
@@ -275,11 +274,6 @@ int CNIMenu::show()
 
 	mf = new CMenuForwarder(LOCALE_PLUGINS_CONTROL, true, NULL, pluginMenu, "", CRCInput::convertDigitToKey(shortcut++));
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_CONTROL);
-	ni_menu->addItem(mf);
-
-	CLCD4lSetup lcd4lSetup;
-	mf = new CMenuForwarder(LOCALE_LCD4L_SUPPORT, true, NULL, &lcd4lSetup, "", CRCInput::convertDigitToKey(shortcut++));
-	mf->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SUPPORT);
 	ni_menu->addItem(mf);
 
 	//add PLUGIN_INTEGRATION_NI_MENU plugins
