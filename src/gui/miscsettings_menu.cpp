@@ -39,6 +39,7 @@
 #include <gui/miscsettings_menu.h>
 #include <gui/cec_setup.h>
 #include <gui/filebrowser.h>
+#include <gui/infoicons_setup.h>
 #include <gui/keybind_setup.h>
 #include <gui/plugins.h>
 #include <gui/sleeptimer.h>
@@ -295,6 +296,12 @@ int CMiscMenue::showMiscSettingsMenu()
 	showMiscSettingsMenuCPUFreq(&misc_menue_cpu);
 	misc_menue.addItem( new CMenuForwarder("CPU", true, NULL, &misc_menue_cpu, NULL, CRCInput::RC_5));
 #endif /*CPU_FREQ*/
+
+	// Infoicons Setup
+	CInfoIconsSetup infoicons_setup;
+	mf = new CMenuForwarder(LOCALE_INFOICONS_HEAD, true, NULL, &infoicons_setup, NULL, CRCInput::RC_6);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOICONS_HEAD);
+	misc_menue.addItem(mf);
 
 	int res = misc_menue.exec(NULL, "");
 

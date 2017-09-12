@@ -36,7 +36,6 @@
 #include <mymenu.h>
 #include <neutrino_menue.h>
 
-#include <gui/infoicons_setup.h>
 #include <gui/lcd4l_setup.h>
 #include <gui/netfs_setup.h>
 #include <gui/plugins_hide.h>
@@ -257,12 +256,6 @@ int CNIMenu::show()
 
 	// --- Special settings ---
 	ni_menu->addItem(new CMenuSeparator(CMenuSeparator::ALIGN_CENTER | CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_NIMENU_HEAD_SPECIAL));
-
-	// Infoicons Setup
-	CInfoIconsSetup infoicons_setup;
-	mf = new CMenuForwarder(LOCALE_INFOICONS_HEAD, true, NULL, &infoicons_setup, NULL, CRCInput::convertDigitToKey(shortcut++));
-	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOICONS_HEAD);
-	ni_menu->addItem(mf);
 
 	// NetFS Setup
 	CNETFSSetup netfs_setup;
