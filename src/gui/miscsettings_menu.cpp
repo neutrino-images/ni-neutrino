@@ -43,6 +43,7 @@
 #include <gui/keybind_setup.h>
 #include <gui/lcd4l_setup.h>
 #include <gui/plugins.h>
+#include <gui/plugins_hide.h>
 #include <gui/sleeptimer.h>
 #include <gui/zapit_setup.h>
 
@@ -636,6 +637,11 @@ int CMiscMenue::showMiscSettingsMenuPlugins()
 	ms_plugins->addItem(mf);
 
 	ms_plugins->addItem(GenericMenuSeparatorLine);
+
+	CPluginsHideMenu pluginsHideMenu;
+	mf = new CMenuForwarder(LOCALE_PLUGINS_HIDE, true, NULL, &pluginsHideMenu, NULL, CRCInput::RC_red);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_HIDE);
+	ms_plugins->addItem(mf);
 
 	int res = ms_plugins->exec(NULL, "");
 	delete ms_plugins;
