@@ -1162,7 +1162,7 @@ menu.hint_blank_screen Turn off VideoDecoder until next event (keypress, timer e
 menu.hint_buildinfo Information about compilers, compiler flags, kernel
 menu.hint_ca_init Configuration of CA-system hardware, CA-module and card slots
 menu.hint_cache_txt Start teletext caching after channel switch
-menu.hint_camd Softcam and emulator settings\nStart, stop, version info
+menu.hint_camd_control Softcams and emulators\nStart, stop, version info
 menu.hint_camd_reset Restart the active softcam and/or emulator
 menu.hint_cec_mode CEC mode
 menu.hint_cec_standby CEC standby

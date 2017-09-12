@@ -107,3 +107,121 @@ int CDaemonControlMenu::show()
 	daemonControlMenu->hide();
 	return res;
 }
+
+// ----------------------------------------------------------------------------
+
+CCamdControlMenu::CCamdControlMenu()
+{
+	width = 40;
+}
+
+CCamdControlMenu::~CCamdControlMenu()
+{
+}
+
+int CCamdControlMenu::exec(CMenuTarget* parent, const std::string & /*actionKey*/)
+{
+	if (parent)
+		parent->hide();
+
+	return show();
+}
+
+typedef struct camds_data_t
+{
+	neutrino_locale_t name;
+	neutrino_locale_t desc;
+	const char * camd_name;
+	const char * camd_file;
+	int camd_exist;
+	int camd_runs;
+}
+camds_data_struct;
+
+camds_data_t camds_data[]=
+{
+	{LOCALE_CAMD_ITEM_MGCAMD_NAME,	LOCALE_CAMD_ITEM_MGCAMD_HINT,	"MGCAMD",	"mgcamd",	0, 0},
+	{LOCALE_CAMD_ITEM_DOSCAM_NAME,	LOCALE_CAMD_ITEM_DOSCAM_HINT,	"DOSCAM",	"doscam",	0, 0},
+	{LOCALE_CAMD_ITEM_NCAM_NAME,	LOCALE_CAMD_ITEM_NCAM_HINT,	"NCAM",		"ncam",		0, 0},
+	{LOCALE_CAMD_ITEM_OSCAM_NAME,	LOCALE_CAMD_ITEM_OSCAM_HINT,	"OSCAM",	"oscam",	0, 0},
+	{LOCALE_CAMD_ITEM_OSEMU_NAME,	LOCALE_CAMD_ITEM_OSEMU_HINT,	"OSEMU",	"osemu",	0, 0},
+	{LOCALE_CAMD_ITEM_NEWCS_NAME,	LOCALE_CAMD_ITEM_NEWCS_HINT,	"NEWCS",	"newcs",	0, 0},
+	{LOCALE_CAMD_ITEM_GBOX_NAME,	LOCALE_CAMD_ITEM_GBOX_HINT,	"GBOX.NET",	"gbox",		0, 0},
+	{LOCALE_CAMD_ITEM_CS2GBOX_NAME,	LOCALE_CAMD_ITEM_CS2GBOX_HINT,	"CS2GBOX",	"cs2gbox",	0, 0}
+};
+#define CAMDS_COUNT (sizeof(camds_data)/sizeof(struct camds_data_t))
+
+int CCamdControlMenu::show()
+{
+	int camd_shortcut = 0;
+
+	std::ostringstream buf;
+	char *buffer;
+	ssize_t read;
+	size_t len;
+	FILE *fh;
+
+	CMenuWidget* camdControlMenu = new CMenuWidget(LOCALE_CAMD_CONTROL, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_CAMD_CONTROL);
+	camdControlMenu->addIntroItems();
+
+	// camd reset
+	CMenuForwarder *mf = new CMenuForwarder(LOCALE_CAMD_RESET, true, NULL, CNeutrinoApp::getInstance(), "camd_reset", CRCInput::RC_red);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CAMD_RESET);
+	camdControlMenu->addItem(mf);
+
+	camdControlMenu->addItem(GenericMenuSeparatorLine);
+
+	CMenuOptionChooser *mc;
+	for (unsigned int i = 0; i < CAMDS_COUNT; i++)
+	{
+		std::string vinfo = "";
+
+		buf.str("");
+		buf << "/var/bin/" << camds_data[i].camd_file;
+
+		camds_data[i].camd_exist = file_exists(buf.str().c_str());
+
+		if (camds_data[i].camd_exist)
+		{
+			buf.str("");
+			buf << "vinfo " << camds_data[i].camd_name << " /var/bin/" << camds_data[i].camd_file;
+
+			buffer = NULL;
+			if ((fh = popen(buf.str().c_str(), "r")))
+			{
+				while ((read = getline(&buffer, &len, fh)) != -1)
+					vinfo += buffer;
+				pclose(fh);
+				if (buffer)
+					free(buffer);
+			}
+			else
+				printf("[vinfo] popen error\n" );
+		}
+
+		if (getpidof(camds_data[i].camd_file))
+			camds_data[i].camd_runs = 1;
+		else
+			camds_data[i].camd_runs = 0;
+
+		//remove linebreaks from vinfo output
+		std::string::size_type spos = vinfo.find_first_of("\r\n");
+		while (spos != std::string::npos)
+		{
+			vinfo.replace(spos, 1, " ");
+			spos = vinfo.find_first_of("\r\n");
+		}
+		std::string hint(g_Locale->getText(camds_data[i].desc));
+		hint.append("\nvinfo: " + vinfo);
+
+		CFlagFileNotifier * flagFileNotifier = new CFlagFileNotifier(camds_data[i].camd_file);
+
+		mc = new CMenuOptionChooser(camds_data[i].name, &camds_data[i].camd_runs, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, camds_data[i].camd_exist, flagFileNotifier, CRCInput::convertDigitToKey(camd_shortcut++));
+		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, hint);
+		camdControlMenu->addItem(mc);
+	}
+
+	int res = camdControlMenu->exec(NULL,"");
+	camdControlMenu->hide();
+	return res;
+}

@@ -47,29 +47,6 @@
 
 #include <driver/screen_max.h>
 
-typedef struct emu_menu_data_t
-{
-	neutrino_locale_t name;
-	neutrino_locale_t hint;
-	const char * cam_name;
-	const char * cam_file;
-	int cam_exist;
-	int flag_exist;
-} emu_menu_data_struct;
-
-emu_menu_data_t emu_menu[]=
-{
-	{LOCALE_CAMD_ITEM_MGCAMD_NAME,	LOCALE_CAMD_ITEM_MGCAMD_HINT,	"MGCAMD",	"mgcamd",	0, 0},
-	{LOCALE_CAMD_ITEM_DOSCAM_NAME,	LOCALE_CAMD_ITEM_DOSCAM_HINT,	"DOSCAM",	"doscam",	0, 0},
-	{LOCALE_CAMD_ITEM_NCAM_NAME,	LOCALE_CAMD_ITEM_NCAM_HINT,	"NCAM",		"ncam",		0, 0},
-	{LOCALE_CAMD_ITEM_OSCAM_NAME,	LOCALE_CAMD_ITEM_OSCAM_HINT,	"OSCAM",	"oscam",	0, 0},
-	{LOCALE_CAMD_ITEM_OSEMU_NAME,	LOCALE_CAMD_ITEM_OSEMU_HINT,	"OSEMU",	"osemu",	0, 0},
-	{LOCALE_CAMD_ITEM_NEWCS_NAME,	LOCALE_CAMD_ITEM_NEWCS_HINT,	"NEWCS",	"newcs",	0, 0},
-	{LOCALE_CAMD_ITEM_GBOX_NAME,	LOCALE_CAMD_ITEM_GBOX_HINT,	"GBOX.NET",	"gbox",		0, 0},
-	{LOCALE_CAMD_ITEM_CS2GBOX_NAME,	LOCALE_CAMD_ITEM_CS2GBOX_HINT,	"CS2GBOX",	"cs2gbox",	0, 0}
-};
-#define MAXEMU (sizeof(emu_menu)/sizeof(struct emu_menu_data_t))
-
 CNIMenu::CNIMenu()
 {
 	width = 40;
@@ -108,84 +85,11 @@ bool CNIMenu::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
 int CNIMenu::show()
 {
 	int shortcut = 1;
-	int cam_shortcut = 1;
 
 	std::ostringstream buf;
-	char *buffer;
-	ssize_t read;
-	size_t len;
-	FILE *fh;
 
 	CMenuWidget* ni_menu = new CMenuWidget(LOCALE_NIMENU_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_NI_MENU);
 	ni_menu->addIntroItems();
-
-	// --- camd settings ---
-	ni_menu->addItem(new CMenuSeparator(CMenuSeparator::ALIGN_CENTER | CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_CAMD_CONTROL));
-
-	// camd reset
-	mf =  new CMenuForwarder(LOCALE_CAMD_RESET, true, NULL, this, "camd_reset", CRCInput::convertDigitToKey(shortcut++));
-	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CAMD_RESET);
-	ni_menu->addItem(mf);
-
-	// camd settings
-	CMenuWidget* emuMenu = new CMenuWidget(LOCALE_CAMD_CONTROL, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_CAMD_CONTROL);
-		emuMenu->addIntroItems();
-
-		for (unsigned int i = 0; i < MAXEMU; i++)
-		{
-			std::string vinfo = "";
-
-			buf.str("");
-			buf << "/var/bin/" << emu_menu[i].cam_file;
-
-			emu_menu[i].cam_exist = file_exists(buf.str().c_str());
-
-			if (emu_menu[i].cam_exist)
-			{
-				buf.str("");
-				buf << "vinfo " << emu_menu[i].cam_name << " /var/bin/" << emu_menu[i].cam_file;
-
-				buffer=NULL;
-				if ((fh = popen(buf.str().c_str(), "r")))
-				{
-					while ((read = getline(&buffer, &len, fh)) != -1)
-						vinfo += buffer;
-					pclose(fh);
-					if (buffer)
-						free(buffer);
-				}
-				else
-					printf("[vinfo] popen error\n" );
-			}
-
-			if (getpidof(emu_menu[i].cam_file))
-				emu_menu[i].flag_exist = 1;
-			else
-				emu_menu[i].flag_exist = 0;
-
-			//remove linebreaks from vinfo output
-			std::string::size_type spos = vinfo.find_first_of("\r\n");
-			while (spos != std::string::npos)
-			{
-				vinfo.replace(spos, 1, " ");
-				spos = vinfo.find_first_of("\r\n");
-			}
-
-
-			std::string hint(g_Locale->getText(emu_menu[i].hint));
-			hint.append("\nvinfo: " + vinfo);
-
-			mc = new CMenuOptionChooser(emu_menu[i].name, &emu_menu[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, emu_menu[i].cam_exist, new CFlagFileNotifier(emu_menu[i].cam_file), CRCInput::convertDigitToKey(cam_shortcut++));
-			mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, hint);
-			emuMenu->addItem(mc);
-		}
-
-	mf = new CMenuForwarder(LOCALE_CAMD_CONTROL, true, NULL, emuMenu, "", CRCInput::convertDigitToKey(shortcut++));
-	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CAMD);
-	ni_menu->addItem(mf);
-
-	// --- Special settings ---
-	ni_menu->addItem(new CMenuSeparator(CMenuSeparator::ALIGN_CENTER | CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_NIMENU_HEAD_SPECIAL));
 
 	// NetFS Setup
 	CNETFSSetup netfs_setup;
@@ -197,7 +101,6 @@ int CNIMenu::show()
 
 	ni_menu->hide();
 	delete ni_menu;
-	delete emuMenu;
 
 	return res;
 }

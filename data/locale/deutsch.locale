@@ -1163,7 +1163,7 @@ menu.hint_blank_screen Schaltet den VideoDecoder bis zum nächsten Event (Tasten
 menu.hint_buildinfo Informationen über Compiler, Compilerflags, Kernel
 menu.hint_ca_init Konfiguration der CA-Systemhardware, CA-Modul und Kartenschächte
 menu.hint_cache_txt Startet das Zwischenspeichern des Teletextes nach einem Kanalwechsel
-menu.hint_camd Softcam und Emulator Einstellungen\nStart, Stop, Versionsinfo
+menu.hint_camd_control Softcams und Emulatoren\nStart, Stop, Versionsinfo
 menu.hint_camd_reset Aktive Softcam und/oder Emulator neu starten
 menu.hint_cec_mode CEC-Modus
 menu.hint_cec_standby CEC-Standby

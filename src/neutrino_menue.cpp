@@ -545,6 +545,10 @@ void CNeutrinoApp::InitMenuService()
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_DAEMON_CONTROL);
 	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_DAEMON_CONTROL]);
 
+	mf = new CMenuForwarder(LOCALE_CAMD_CONTROL, true, NULL, new CCamdControlMenu(), NULL);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CAMD_CONTROL);
+	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_CAMD_CONTROL]);
+
 	if (!g_settings.easymenu) {
 		personalize.addSeparator(MENU_SERVICE);
 

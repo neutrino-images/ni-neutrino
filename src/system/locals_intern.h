@@ -1189,7 +1189,7 @@ const char * locale_real_names[] =
 	"menu.hint_buildinfo",
 	"menu.hint_ca_init",
 	"menu.hint_cache_txt",
-	"menu.hint_camd",
+	"menu.hint_camd_control",
 	"menu.hint_camd_reset",
 	"menu.hint_cec_mode",
 	"menu.hint_cec_standby",

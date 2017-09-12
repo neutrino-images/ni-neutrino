@@ -38,5 +38,20 @@ class CDaemonControlMenu : public CMenuTarget
 		int exec(CMenuTarget* parent, const std::string & actionKey);
 };
 
+// ----------------------------------------------------------------------------
+
+class CCamdControlMenu : public CMenuTarget
+{
+	private:
+		int show();
+
+	protected:
+		int width;
+
+	public:
+		CCamdControlMenu();
+		~CCamdControlMenu();
+		int exec(CMenuTarget* parent, const std::string & actionKey);
+};
 
 #endif
