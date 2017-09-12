@@ -69,6 +69,7 @@ class CMiscMenue : public CMenuTarget, CChangeObserver
 		int showMiscSettingsMenuEnergy();
 		int showMiscSettingsMenuChanlist();
 		int showMiscSettingsMenuOnlineServices();
+		int showMiscSettingsMenuPlugins();
 #ifdef CPU_FREQ
 		void showMiscSettingsMenuCPUFreq(CMenuWidget *ms_cpu);
 #endif /*CPU_FREQ*/

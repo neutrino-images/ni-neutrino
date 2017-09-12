@@ -1473,7 +1473,7 @@ menu.hint_plugin_type_games Show games in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_lua Show plugins in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_scripts Show scripts in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_tools Show tools in usermenu at selection 'Plugin types'
-menu.hint_plugins_control Configuration of installed plugins and services
+menu.hint_plugins_control Plugin settings and management of installed plugins
 menu.hint_plugins_hdd_dir Select directory to load\nplugins from
 menu.hint_plugins_hide Hide or show integrated plugins or plugins in user menus
 menu.hint_power_leds Configure power-button LEDs behavior
@@ -2309,8 +2309,8 @@ pinprotection.head Enter PIN code
 pinprotection.wrongcode PIN-Code was wrong! Try again.
 plugin.hide_no Show
 plugin.hide_yes Hide
-plugins.control Control plugins and services
-plugins.hdd_dir Plugin HDD dir.
+plugins.control Control plugins
+plugins.hdd_dir External plugin directory
 plugins.hide Hide or show plugins
 plugins.no_plugin No plugin
 plugins.result plugin output

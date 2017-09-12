@@ -1474,7 +1474,7 @@ menu.hint_plugin_type_games Legt fest, ob Spiele im Benutzermenü unter der Rubr
 menu.hint_plugin_type_lua Legt fest, ob Plugins im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_scripts Legt fest, ob Skripte im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_tools Legt fest, ob Werkzeuge im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
-menu.hint_plugins_control Verwaltung von installierten Plugins und Diensten
+menu.hint_plugins_control Plugin-Einstellungen und Verwaltung von installierten Plugins
 menu.hint_plugins_hdd_dir Auswahl des Verzeichnisses zum Laden der Plugins von einem externen Datenträger
 menu.hint_plugins_hide Integrierte Plugins oder Plugins in den Benutzermenüs verstecken oder anzeigen
 menu.hint_power_leds Konfiguriert das Verhalten der LEDs an der Power-Taste
@@ -2310,8 +2310,8 @@ pinprotection.head PIN-Abfrage
 pinprotection.wrongcode Geben Sie den Code nocheinmal ein!
 plugin.hide_no Anzeigen
 plugin.hide_yes Verstecken
-plugins.control Plugins und Services verwalten
-plugins.hdd_dir Externes Plugin-Verz.
+plugins.control Plugins verwalten
+plugins.hdd_dir Externes Plugin-Verzeichnis
 plugins.hide Plugins verstecken oder anzeigen
 plugins.no_plugin Kein Plugin
 plugins.result Pluginausgabe

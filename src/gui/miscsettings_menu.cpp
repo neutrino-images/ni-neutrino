@@ -145,6 +145,10 @@ int CMiscMenue::exec(CMenuTarget* parent, const std::string &actionKey)
 	{
 		return showMiscSettingsMenuOnlineServices();
 	}
+	else if(actionKey == "plugins")
+	{
+		return showMiscSettingsMenuPlugins();
+	}
 	else if(actionKey == "epg_read_now")
 	{
 		printf("Reading epg cache from %s....\n", g_settings.epg_dir.c_str());
@@ -310,6 +314,11 @@ int CMiscMenue::showMiscSettingsMenu()
 	mf->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SUPPORT);
 	misc_menue.addItem(mf);
 
+	// plugins
+	mf = new CMenuForwarder(LOCALE_PLUGINS_CONTROL, true, NULL, this, "plugins", CRCInput::RC_8);
+	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_CONTROL);
+	misc_menue.addItem(mf);
+
 	int res = misc_menue.exec(NULL, "");
 
 	delete fanNotifier;
@@ -345,16 +354,6 @@ void CMiscMenue::showMiscSettingsMenuGeneral(CMenuWidget *ms_general)
 		mn->setHint("", LOCALE_MENU_HINT_FAN_SPEED);
 		ms_general->addItem(mn);
 	}
-
-	ms_general->addItem(GenericMenuSeparatorLine);
-
-	CMenuForwarder * mf = new CMenuForwarder(LOCALE_PLUGINS_HDD_DIR, true, g_settings.plugin_hdd_dir, this, "plugin_dir");
-	mf->setHint("", LOCALE_MENU_HINT_PLUGINS_HDD_DIR);
-	ms_general->addItem(mf);
-
-	mf = new CMenuForwarder(LOCALE_MPKEY_PLUGIN, true, g_settings.movieplayer_plugin, this, "movieplayer_plugin");
-	mf->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_PLUGIN);
-	ms_general->addItem(mf);
 
 	//set debug level
 	ms_general->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_DEBUG));
@@ -619,6 +618,27 @@ int CMiscMenue::showMiscSettingsMenuOnlineServices()
 
 	int res = ms_oservices->exec(NULL, "");
 	delete ms_oservices;
+	return res;
+}
+
+// plugins
+int CMiscMenue::showMiscSettingsMenuPlugins()
+{
+	CMenuWidget *ms_plugins = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_MISCSETUP_PLUGINS);
+	ms_plugins->addIntroItems(LOCALE_PLUGINS_CONTROL);
+
+	CMenuForwarder * mf = new CMenuForwarder(LOCALE_PLUGINS_HDD_DIR, true, g_settings.plugin_hdd_dir, this, "plugin_dir");
+	mf->setHint("", LOCALE_MENU_HINT_PLUGINS_HDD_DIR);
+	ms_plugins->addItem(mf);
+
+	mf = new CMenuForwarder(LOCALE_MPKEY_PLUGIN, true, g_settings.movieplayer_plugin, this, "movieplayer_plugin");
+	mf->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_PLUGIN);
+	ms_plugins->addItem(mf);
+
+	ms_plugins->addItem(GenericMenuSeparatorLine);
+
+	int res = ms_plugins->exec(NULL, "");
+	delete ms_plugins;
 	return res;
 }
 
