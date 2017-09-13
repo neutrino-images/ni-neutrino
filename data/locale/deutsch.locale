@@ -696,7 +696,7 @@ flashupdate.createimage_warning Nachfolgend wird ein Image für die %s STB erste
 flashupdate.currentversion_sep Installierte Version
 flashupdate.currentversiondate Datum
 flashupdate.currentversiontime Uhrzeit
-flashupdate.enter_flash_script Stoppe laufende Dienste und Softcams ...
+flashupdate.enter_flash_script Stoppe laufende Dienste ...
 flashupdate.erasefailed Flash löschen fehlgeschlagen
 flashupdate.erasing lösche Flash
 flashupdate.experimentalimage Sie haben einen Snapshot ausgewählt, bitte beachten Sie,\ndass diese Version ungetestet ist und u.U. Ihre Box\nnach dem Update nicht mehr funktionsfähig ist.\n\nSoll diese Version wirklich installiert werden?
@@ -732,7 +732,7 @@ flashupdate.namemode2_hostname_time <Partition>+<Zeit>+<Hostname>.img
 flashupdate.new_found Updates verfügbar!
 flashupdate.new_notfound Keine Updates verfügbar!
 flashupdate.ng_noflash USB-Image aktiv, Update nicht möglich!
-flashupdate.noversion Eine Versionsüberprüfungen ist nur über das Online-Update möglich.\nWollen Sie das ausgewählte Image trotzdem installieren?
+flashupdate.noversion Eine Versionsüberprüfung ist nur über das Online-Update möglich.\nWollen Sie das ausgewählte Image trotzdem installieren?
 flashupdate.programmingflash programmiere Flash
 flashupdate.proxypassword Passwort
 flashupdate.proxypassword_hint1 Geben sie das Proxy-Passwort ein
