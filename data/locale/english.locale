@@ -695,7 +695,7 @@ flashupdate.createimage_warning Now an image for the %s STB is created.\nThis im
 flashupdate.currentversion_sep Current version
 flashupdate.currentversiondate Date
 flashupdate.currentversiontime Time
-flashupdate.enter_flash_script Stopping services and softcams ...
+flashupdate.enter_flash_script Stopping services ...
 flashupdate.erasefailed erasure of flash failed
 flashupdate.erasing erasing flash
 flashupdate.experimentalimage The image you have selected is an untested version, this means\nyour box maybe fail to boot after update.\n\nDo you really want to update to this version?
