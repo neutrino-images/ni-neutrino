@@ -1153,6 +1153,11 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		if (g_settings.mode_icons_flag[4].empty())
 			g_settings.mode_icons_flag[4] = FLAGDIR "/.update";
 	}
+	if (g_settings.version_pseudo < "20170913110000")
+	{
+		//remove easymenu
+		configfile.deleteKey("easymenu");
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
