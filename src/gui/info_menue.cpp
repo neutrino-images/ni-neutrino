@@ -112,12 +112,6 @@ int CInfoMenu::showMenu()
 	info->addItem(mf);
 #endif
 
-	if (g_settings.easymenu) { //NI todo (remove blue button, we use it!)
-		mf = new CMenuForwarder(LOCALE_CI_SETTINGS, true, NULL, g_CamHandler,  NULL, CRCInput::RC_blue);
-		mf->setHint(NEUTRINO_ICON_HINT_CI, LOCALE_MENU_HINT_CI);
-		info->addItem(mf);
-	}
-
 	//NI
 	mf = new CMenuForwarder(LOCALE_HDD_INFO_HEAD, true, NULL, &hddinfo, NULL, CRCInput::RC_blue);
 	mf->setHint(NEUTRINO_ICON_HINT_HDD_INFO, LOCALE_MENU_HINT_HDD_INFO);
