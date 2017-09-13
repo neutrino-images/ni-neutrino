@@ -123,8 +123,6 @@ int CCAMMenuHandler::doMainMenu()
 	char name1[255]={0};
 	char str1[255]={0};
 
-	int CiSlots = ca ? ca->GetNumberCISlots() : 0;
-
 	CMenuWidget* cammenu = new CMenuWidget(LOCALE_CI_SETTINGS, NEUTRINO_ICON_SETTINGS);
 	cammenu->addIntroItems();
 
@@ -135,11 +133,7 @@ int CCAMMenuHandler::doMainMenu()
 	cammenu->addItem(ca_init);
 	cammenu->addItem(GenericMenuSeparator);
 
-#ifdef BOXMODEL_CS_HD2
-	int fecount = CFEManager::getInstance()->getFrontendCount();
-	char fename[fecount+1][255];
-#endif
-
+	int CiSlots = ca ? ca->GetNumberCISlots() : 0;
 	if(CiSlots) {
 		cammenu->addItem( new CMenuOptionChooser(LOCALE_CI_RESET_STANDBY, &g_settings.ci_standby_reset, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true));
 		cammenu->addItem( new CMenuOptionNumberChooser(LOCALE_CI_CLOCK, &g_settings.ci_clock, true, 6, 12, this));
@@ -153,6 +147,9 @@ int CCAMMenuHandler::doMainMenu()
 	cammenu->addItem(ci_mode);
 
 #ifdef BOXMODEL_CS_HD2
+	int fecount = CFEManager::getInstance()->getFrontendCount();
+	char fename[fecount+1][255];
+
 	CMenuOptionChooser::keyval_ext feselect[fecount+1];
 	feselect[0].key = -1;
 	feselect[0].value = NONEXISTANT_LOCALE;

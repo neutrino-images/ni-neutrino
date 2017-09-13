@@ -2989,19 +2989,10 @@ void CNeutrinoApp::RealRun()
 				as.exec(NULL, "-1");
 				StartSubtitles();
 			}
-#if 0
-			else if( (msg == CRCInput::RC_audio) && g_settings.audio_run_player) {
-				//open mediaplayer menu in audio mode, user can select between audioplayer and internetradio
-				CMediaPlayerMenu * media = CMediaPlayerMenu::getInstance();
-				media->setMenuTitel(LOCALE_MAINMENU_AUDIOPLAYER);
-				media->setUsageMode(CMediaPlayerMenu::MODE_AUDIO);
-				media->exec(NULL, "");
-			}
-#endif
 			else if( msg == CRCInput::RC_video || msg == CRCInput::RC_play ) {
 				//open moviebrowser via media player menu object
 				if (g_settings.recording_type != CNeutrinoApp::RECORDING_OFF)
-					CMediaPlayerMenu::getInstance()->exec(NULL,"movieplayer");
+					CMediaPlayerMenu::getInstance()->exec(NULL, "moviebrowser");
 			}
 			else if( ( msg == CRCInput::RC_help ) || ( msg == CRCInput::RC_info) ||
 						( msg == NeutrinoMessages::SHOW_INFOBAR ) )
@@ -4679,7 +4670,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 
 		return menu_return::RETURN_EXIT_ALL;
 	}
-	else if(actionKey=="nkplayback" || actionKey=="ytplayback" || actionKey=="tsmoviebrowser" || actionKey=="fileplayback") {
+	else if(actionKey=="ytplayback" || actionKey=="tsmoviebrowser" || actionKey=="fileplayback") {
 		frameBuffer->Clear();
 		if(mode == NeutrinoMessages::mode_radio )
 			frameBuffer->stopFrame();
