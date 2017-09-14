@@ -53,6 +53,8 @@
 //#include <driver/framebuffer.h>
 #include <system/helpers.h>
 #include <gui/update_ext.h>
+#include <libmd5sum.h>
+#define MD5_DIGEST_LENGTH 16
 using namespace std;
 
 //NI
@@ -651,6 +653,61 @@ std::string& str_replace(const std::string &search, const std::string &replace, 
 		text.replace(pos, searchLen, replace);
 	}
 	return text;
+}
+
+/*
+ * ported from:
+ * https://stackoverflow.com/questions/779875/what-is-the-function-to-replace-string-in-c
+ *
+ * You must delete the result if result is non-NULL
+ */
+const char *cstr_replace(const char *search, const char *replace, const char *text)
+{
+	const char *result;	// the return string
+	const char *ins;	// the next insert point
+	char *tmp;		// varies
+	int len_search;		// length of search (the string to remove)
+	int len_replace;	// length of replace (the string to replace search with)
+	int len_front;		// distance between search and end of last search
+	int count;		// number of replacements
+
+	// sanity checks and initialization
+	if (!text || !search)
+		return NULL;
+	len_search = strlen(search);
+	if (len_search == 0)
+		return NULL; // empty search causes infinite loop during count
+	if (!replace)
+		replace = "";
+	len_replace = strlen(replace);
+
+	// count the number of replacements needed
+	ins = text;
+	for (count = 0; (tmp = (char*)strstr(ins, search)); ++count)
+		ins = tmp + len_search;
+
+	int len_tmp = strlen(text) + (len_replace - len_search) * count + 1;
+	tmp = new char[len_tmp];
+	memset(tmp, '\0', len_tmp);
+	result = (const char*)tmp;
+
+	if (!result)
+		return NULL;
+
+	// first time through the loop, all the variable are set correctly
+	// from here on,
+	//    tmp points to the end of the result string
+	//    ins points to the next occurrence of search in text
+	//    text points to the remainder of text after "end of search"
+	while (count--) {
+		ins = strstr(text, search);
+		len_front = ins - text;
+		tmp = strncpy(tmp, text, len_front) + len_front;
+		tmp = strncpy(tmp, replace, len_replace) + len_replace;
+		text += len_front + len_search; // move to next "end of search"
+	}
+	strncpy(tmp, text, strlen(text));
+	return result;
 }
 
 std::string& htmlEntityDecode(std::string& text)
@@ -1407,17 +1464,6 @@ std::string Lang2ISO639_1(std::string& lang)
 	return ret;
 }
 
-string readLink(string lnk)
-{
-	char buf[PATH_MAX];
-	memset(buf, 0, sizeof(buf)-1);
-	if (readlink(lnk.c_str(), buf, sizeof(buf)-1) != -1)
-		return (string)buf;
-
-	return "";
-}
-
-//NI
 // returns the pid of the first process found in /proc
 int getpidof(const char *process)
 {
@@ -1510,6 +1556,20 @@ std::string filehash(const char *file)
 	return os.str();
 }
 
+std::string get_path(const char *path)
+{
+	if(path[0] == '/' && strstr(path,"/var") == 0)
+	{
+		std::string varc = "/var";
+		varc += path;
+
+		if(file_exists(varc.c_str()))
+			return varc;
+	}
+
+	return path;
+}
+
 std::string check_var(const char *file)
 {
 	std::string var = "/var";
@@ -1522,4 +1582,14 @@ std::string check_var(const char *file)
 	}
 
 	return file;
+}
+
+string readLink(string lnk)
+{
+	char buf[PATH_MAX];
+	memset(buf, 0, sizeof(buf)-1);
+	if (readlink(lnk.c_str(), buf, sizeof(buf)-1) != -1)
+		return (string)buf;
+
+	return "";
 }
