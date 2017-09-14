@@ -60,6 +60,7 @@ CUpdateSettings::~CUpdateSettings()
 #endif
 }
 
+#if ENABLE_EXTUPDATE
 #define SOFTUPDATE_NAME_MODE1_OPTION_COUNT 3
 const CMenuOptionChooser::keyval SOFTUPDATE_NAME_MODE1_OPTIONS[SOFTUPDATE_NAME_MODE1_OPTION_COUNT] =
 {
