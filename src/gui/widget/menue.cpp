@@ -1348,7 +1348,7 @@ void CMenuWidget::setMenuPos(const int& menu_width)
 		case MENU_POS_CENTER:
 			x = offx + scr_x + ((scr_w - menu_width ) >> 1 );
 			y = offy + scr_y + ((scr_h - real_h) >> 1 );
-			x += g_settings.show_menu_hints_line ? DETAILSLINE_WIDTH : 0; //NI
+			//x += DETAILSLINE_WIDTH;
 			break;
 			
 		case MENU_POS_TOP_LEFT: 
