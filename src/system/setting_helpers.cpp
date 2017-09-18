@@ -144,13 +144,14 @@ bool CTouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 {
 	std::ostringstream buf;
+	buf.str("");
 	buf << FLAGDIR << "/." << filename;
 
-	const char *flagfile = buf.str().c_str();
+	std::string flagfile = buf.str();
 
 	if ((*(int *)data) != 0)
 	{
-		FILE * fd = fopen(flagfile, "w");
+		FILE * fd = fopen(flagfile.c_str(), "w");
 		if (fd)
 		{
 			fclose(fd);
@@ -247,7 +248,7 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			if (my_system(3, "service", filename, "stop") != 0)
 				printf("[CFlagFileNotifier] executing failed\n");
 		}
-		remove(flagfile);
+		remove(flagfile.c_str());
 	}
 	return menu_return::RETURN_REPAINT;
 }
