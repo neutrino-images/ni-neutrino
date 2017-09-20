@@ -469,7 +469,7 @@ int CRCInput::addTimer(uint64_t Interval, bool oneshot, bool correct_time )
 
 	_newtimer.correct_time = correct_time;
 
-printf("adding timer %d (0x%llx, 0x%llx)\n", _newtimer.id, _newtimer.times_out, Interval);
+printf("adding timer %d (0x%lu, 0x%lu)\n", _newtimer.id, _newtimer.times_out, Interval);
 
 	std::vector<timer>::iterator e;
 	for ( e= timers.begin(); e!= timers.end(); ++e )
