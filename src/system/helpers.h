@@ -155,4 +155,6 @@ std::string get_path(const char * path);
 std::string check_var(const char * file);
 inline bool file_exists(const std::string file) { return file_exists(file.c_str()); }
 
+std::string readFile(std::string file);
+
 #endif
