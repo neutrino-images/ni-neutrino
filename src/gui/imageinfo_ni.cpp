@@ -624,7 +624,7 @@ void CImageInfoNI::paint_DF_Info(int posx)
 	paintLine(posx, font_small, buf.str());
 
 	CProgressBar pb(boxX, boxY, boxW, boxH);
-	pb.setFrameThickness(0);
+	pb.setFrameThickness(FRAME_WIDTH_NONE);
 	pb.setRgb(70, 100, 90);
 	pb.setType(CProgressBar::PB_REDRIGHT);
 	pb.setValues(image_size.percent, 100);
@@ -724,7 +724,7 @@ void CImageInfoNI::paint_MEM_Info(int posx, int posy)
 	g_Font[font_small]->RenderString(posx, posy, boxX - posx, buf.str().c_str(), COL_INFOBAR_TEXT);
 
 	CProgressBar pb(boxX, boxY, boxW, boxH);
-	pb.setFrameThickness(0);
+	pb.setFrameThickness(FRAME_WIDTH_NONE);
 	pb.setRgb(70, 100, 90);
 	pb.setType(CProgressBar::PB_REDRIGHT);
 	pb.setValues(mem_percent, 100);
@@ -881,7 +881,7 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	g_Font[font_small]->RenderString(posx, posy, boxX - posx, temp_string, COL_INFOBAR_TEXT);
 
 	CProgressBar pb(boxX, boxY, boxW, boxH);
-	pb.setFrameThickness(0);
+	pb.setFrameThickness(FRAME_WIDTH_NONE);
 	pb.setRgb(70, 100, 90);
 	pb.setType(CProgressBar::PB_REDRIGHT);
 	pb.setValues(percent, 100);
