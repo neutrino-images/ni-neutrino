@@ -88,9 +88,9 @@ extern CCAMMenuHandler * g_CamHandler;
 
 const mn_widget_struct_t menu_widgets[MENU_MAX] =
 {
-	{LOCALE_MAINMENU_HEAD, 		NEUTRINO_ICON_MAINMENU, 	MENU_WIDTH},	/* 0 = MENU_MAIN */
-	{LOCALE_MAINSETTINGS_HEAD, 	NEUTRINO_ICON_SETTINGS, 	MENU_WIDTH},	/* 1 = MENU_SETTINGS */
-	{LOCALE_SERVICEMENU_HEAD,	NEUTRINO_ICON_SETTINGS, 	MENU_WIDTH}	/* 2 = MENU_SERVICE */
+	{LOCALE_MAINMENU_HEAD, 		NEUTRINO_ICON_MAINMENU, 	MENU_WIDTH},	/* 0 = MENU_MAIN*/
+	{LOCALE_MAINSETTINGS_HEAD, 	NEUTRINO_ICON_SETTINGS, 	MENU_WIDTH},	/* 1 = MENU_SETTINGS*/
+	{LOCALE_SERVICEMENU_HEAD,	NEUTRINO_ICON_SETTINGS, 	MENU_WIDTH} 	/* 2 = MENU_SERVICE*/
 };
 
 //init all menues
@@ -162,7 +162,7 @@ void CNeutrinoApp::InitMenuMain()
 	media->setHint(NEUTRINO_ICON_HINT_MEDIA, LOCALE_MENU_HINT_MEDIA);
 	personalize.addItem(MENU_MAIN, media, &g_settings.personalize[SNeutrinoSettings::P_MAIN_MEDIA]);
 
-	CMenuForwarder *mf;
+	CMenuForwarder * mf;
 	//games
 	bool show_games = g_Plugins->hasPlugin(CPlugins::P_TYPE_GAME);
 	mf = new CMenuForwarder(LOCALE_MAINMENU_GAMES, show_games, NULL, new CPluginList(LOCALE_MAINMENU_GAMES,CPlugins::P_TYPE_GAME));
@@ -288,6 +288,7 @@ void CNeutrinoApp::InitMenuSettings()
 	// settings manager
 	mf = new CMenuForwarder(LOCALE_MAINSETTINGS_MANAGE, true, NULL, new CSettingsManager(), NULL, CRCInput::RC_green);
 	personalize.addItem(MENU_SETTINGS, mf, &g_settings.personalize[SNeutrinoSettings::P_MSET_SETTINGS_MANAGER], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ACCESS_OPTION);
+
 	mf->setHint(NEUTRINO_ICON_HINT_MANAGE_SETTINGS, LOCALE_MENU_HINT_MANAGE_SETTINGS);
 
 	// personalize
@@ -356,6 +357,8 @@ void CNeutrinoApp::InitMenuSettings()
 		personalize.addItem(MENU_SETTINGS, mf, &g_settings.personalize[SNeutrinoSettings::P_MSET_DRIVES]);
 	}
 
+	// energy
+
 	// cisettings
 	mf = new CMenuForwarder(LOCALE_CI_SETTINGS, true, NULL, g_CamHandler);
 	mf->setHint(NEUTRINO_ICON_HINT_CI, LOCALE_MENU_HINT_CI);
@@ -401,7 +404,7 @@ void CNeutrinoApp::InitMenuService()
 	mf->setHint(NEUTRINO_ICON_HINT_SERVICE_SCAN, LOCALE_MENU_HINT_SERVICE_SCAN);
 	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_SCANTS], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, NULL, DCOND_MODE_TS);
 
-	//reload channels
+		//reload channels
 	mf = new CMenuForwarder(LOCALE_SERVICEMENU_RELOAD    , true, NULL, CScanSetup::getInstance(), "reloadchannels", CRCInput::RC_yellow);
 	mf->setHint(NEUTRINO_ICON_HINT_RELOAD_CHANNELS, LOCALE_MENU_HINT_RELOAD_CHANNELS);
 	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_RELOAD_CHANNELS]);
@@ -412,12 +415,14 @@ void CNeutrinoApp::InitMenuService()
 	lf = new CLockedMenuForwarder(LOCALE_BOUQUETEDITOR_NAME, g_settings.parentallock_pincode, g_settings.parentallock_prompt == PARENTALLOCK_PROMPT_CHANGETOLOCKED, true, NULL, new CBEBouquetWidget(), NULL, CRCInput::RC_blue);
 	/* does not work with CLockedMenuForwarder yet?
 	lf->setHint(NEUTRINO_ICON_HINT_BEDIT, LOCALE_MENU_HINT_BEDIT);
-	 */
+	*/
+
 	personalize.addItem(MENU_SERVICE, lf, &g_settings.personalize[SNeutrinoSettings::P_MSER_BOUQUET_EDIT]);
 
 	//channel reset
 	CDataResetNotifier *resetNotifier = new CDataResetNotifier();
 	mf = new CMenuForwarder(LOCALE_RESET_CHANNELS    , true, NULL, resetNotifier, "channels");
+
 	mf->setHint(NEUTRINO_ICON_HINT_DELETE_CHANNELS, LOCALE_MENU_HINT_DELETE_CHANNELS);
 	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_RESET_CHANNELS]);
 
@@ -466,6 +471,7 @@ void CNeutrinoApp::InitMenuService()
 
 	//firmware update
 	mf = new CMenuForwarder(LOCALE_SERVICEMENU_UPDATE, true, NULL, new CSoftwareUpdate());
+
 	mf->setHint(NEUTRINO_ICON_HINT_SW_UPDATE, LOCALE_MENU_HINT_SW_UPDATE);
 	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_SOFTUPDATE], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, NULL, DCOND_MODE_TS);
 }

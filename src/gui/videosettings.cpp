@@ -429,7 +429,7 @@ int CVideoSettings::showVideoSetup()
 	if (vs_videomodes_fw != NULL)
 		videosetup->addItem(vs_videomodes_fw);	  //video modes submenue
 #ifdef BOXMODEL_CS_HD2
-	videosetup->addItem(vs_automodes_fw);	  //video auto modes submenue
+		videosetup->addItem(vs_automodes_fw);	  //video auto modes submenue
 #endif
 
 #ifdef BOXMODEL_CS_HD2
