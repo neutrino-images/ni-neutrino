@@ -456,6 +456,7 @@ fe_code_rate_t CFrontend::getCodeRate(const uint8_t fec_inner, delivery_system_t
 		default:
 			if (zapit_debug)
 				printf("no valid fec for DVB-%c set.. assume auto\n", (delsys == DVB_S ? 'S' : (delsys == DVB_C ? 'C' : 'T')));
+			/* fall through */
 		case fAuto:
 			fec = FEC_AUTO;
 			break;
@@ -492,6 +493,7 @@ fe_code_rate_t CFrontend::getCodeRate(const uint8_t fec_inner, delivery_system_t
 		default:
 			if (zapit_debug)
 				printf("no valid fec for DVB-S2 set.. !!\n");
+			/* fall through */
 		case fAuto:
 			fec = FEC_AUTO;
 			break;
@@ -814,6 +816,7 @@ void CFrontend::getXMLDelsysFEC(fe_code_rate_t xmlfec, delivery_system_t & delsy
 		break;
 	default:
 		printf("[frontend] getXMLDelsysFEC: unknown FEC: %d !!!\n", xmlfec);
+		/* fall through */
 	case FEC_S2_AUTO:
 	case FEC_AUTO:
 		fec = FEC_AUTO;
@@ -890,7 +893,7 @@ void CFrontend::getDelSys(delivery_system_t delsys, int f, int m, const char *&f
 				mod = "QPSK"; // AKA QAM_4
 				break;
 			}
-			/* fallthrouh for FE_QAM... */
+			/* fall through */
 		case QAM_AUTO:
 		default:
 			mod = "QAM_AUTO";
