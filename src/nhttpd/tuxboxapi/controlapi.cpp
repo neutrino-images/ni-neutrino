@@ -23,7 +23,6 @@
 #include <time.h>
 #include <locale.h>
 #include <langinfo.h>
-#include <unistd.h>
 #include <dirent.h>
 // tuxbox
 #include <global.h>
@@ -34,7 +33,6 @@
 #include <configfile.h>
 #include <system/configure_network.h>
 #include <cs_api.h>
-#include <global.h>
 #include <gui/plugins.h>//for relodplugins
 #include <neutrino.h>
 #include <driver/screenshot.h>
@@ -2089,18 +2087,21 @@ void CControlAPI::ScreenshotCGI(CyhookHandler *hh)
 	if(!hh->ParamList["name"].empty())
 		filename = hh->ParamList["name"];
 
-	CScreenShot * sc = new CScreenShot("/tmp/" + filename + ".png", (CScreenShot::screenshot_format_t)0 /*PNG*/);
-	sc->EnableOSD(enableOSD);
-	sc->EnableVideo(enableVideo);
+	CScreenShot * screenshot = new CScreenShot("/tmp/" + filename + ".png", (CScreenShot::screenshot_format_t)0 /*PNG*/);
+	if(screenshot){
+		screenshot->EnableOSD(enableOSD);
+		screenshot->EnableVideo(enableVideo);
 #if 0
-	sc->Start();
-	hh->SendOk(); // FIXME what if sc->Start() failed?
+	screenshot->Start();
+	hh->SendOk(); // FIXME what if screenshot->Start() failed?
 #else
-	if (sc->StartSync())
-		hh->SendOk();
-	else
-		hh->SendError();
+		if (screenshot->StartSync())
+			hh->SendOk();
+		else
+			hh->SendError();
 #endif
+		delete screenshot;
+	}
 }
 #endif
 

@@ -314,9 +314,6 @@ colorchooser.alpha alpha
 colorchooser.blue blue
 colorchooser.green green
 colorchooser.red red
-colorchooser.save Save
-colormenu.advanced_mode_off Default options
-colormenu.advanced_mode_on Advanced options
 colormenu.background Background
 colormenu.clock_textcolor Digit color
 colormenu.fade Fade GUI
@@ -408,7 +405,6 @@ eventlistbar.channelswitch schedule
 eventlistbar.eventsort sorting
 eventlistbar.recordevent record
 extra.add_to_bouquet Add to bouquet
-extra.audio_run_player Audio key start player
 extra.auto_delete Auto-delete
 extra.auto_timeshift Auto-record, sec (0 = disable)
 extra.cache_txt Cache teletext
@@ -452,7 +448,6 @@ extra.key_pic_size 4:3 Display behavior
 extra.key_pip_close Stop/Start PiP
 extra.key_pip_setup Configure PiP
 extra.key_pip_swap Swap PiP/live
-extra.key_plugin One touch plugin
 extra.key_record Record key
 extra.key_screenshot Screenshot key
 extra.key_switchformat Next resolution
@@ -460,8 +455,8 @@ extra.key_timeshift Timeshift
 extra.key_unlock Unlock key
 extra.ladirection LaDirection
 extra.latitude Latitude
-extra.loadconfig Settings: Load from
-extra.loadkeys Load keys from
+extra.loadconfig Load settings
+extra.loadkeys Load keybindings
 extra.lodirection LoDirection
 extra.longitude Longitude
 extra.menu_left_exit "Left" = menu back
@@ -472,8 +467,8 @@ extra.rotor_swap Swap rotor east/west
 extra.rounded_corners Shape of corners
 extra.rounded_corners_off angular
 extra.rounded_corners_on rounded
-extra.saveconfig Settings: Save as
-extra.savekeys Save keys as
+extra.saveconfig Save settings
+extra.savekeys Save keybindings
 extra.scrambled_message Scrambled Message
 extra.show_mute_icon mute-icon at volume 0
 extra.sms_channel SMS-mode channel
@@ -497,7 +492,6 @@ extra.tp_delsys Delivery system
 extra.tp_delsys_dss DSS
 extra.tp_delsys_dtmb DTMB
 extra.tp_delsys_dvbc DVB-C
-extra.tp_delsys_dvbc2 DVB-C2
 extra.tp_delsys_dvbs DVB-S
 extra.tp_delsys_dvbs2 DVB-S2
 extra.tp_delsys_dvbt DVB-T
@@ -564,7 +558,6 @@ extra.west West
 extra.zap_cycle Zap cycle
 extra.zapit_fe_timeout Tune timeout
 extra.zapit_hvoltage 18V for rotor moving 
-extra.zapit_make_bouquet Make Remaining Channels list
 extra.zapit_motor_speed Motor moving speed
 extra.zapit_scanpids Scan/Use pids
 extra.zapit_sdt_changed Channels changed, reload settings.
@@ -606,7 +599,7 @@ flashupdate.apply_settings Import current settings into new image?
 flashupdate.autocheck Auto-check updates on boot
 flashupdate.cantopenfile can't open file
 flashupdate.cantopenmtd can't open MTD
-flashupdate.checkupdate_internet Check for online updates
+flashupdate.checkupdate_internet Online update
 flashupdate.checkupdate_local Local update
 flashupdate.copy_image Copy Image to main memory
 flashupdate.createimage Save image
@@ -635,7 +628,6 @@ flashupdate.getinfofile getting versioninfo
 flashupdate.getinfofileerror Can't get update versioninfo!
 flashupdate.getupdatefile getting update
 flashupdate.getupdatefileerror Can't get update!
-flashupdate.globalprogress Global Progress:
 flashupdate.head Software Update
 flashupdate.install_image Flash downloaded image?
 flashupdate.install_package Install downloadad pack?
@@ -647,7 +639,6 @@ flashupdate.mkfs_create_image Create backup
 flashupdate.mkfs_preparing_files Preparing files and directories
 flashupdate.mkfs_using_sumtool Using sumtool
 flashupdate.msgbox Found the following new file:\nDate: %s, %s\nBaseImage: %s\nType: %s\n\nDo you want to download and install this version now?
-flashupdate.msgbox_manual Found the following new image:\nDate: %s, %s\nBaseImage: %s\nImageType: %s\n\nDo you want to install this version now?
 flashupdate.mtdselector Partition-Selector
 flashupdate.namemode1 Filename settingsfile
 flashupdate.namemode1_default <org.name>+settings.img
@@ -658,7 +649,7 @@ flashupdate.namemode2_default <partition>+<time>.img
 flashupdate.namemode2_hostname_time <partition>+<time>+<hostname>.img
 flashupdate.new_found New image found !
 flashupdate.new_notfound No new images found
-flashupdate.noversion Version checks are currently only supported when updating over the web.\nAre you sure that you wish to install this image?
+flashupdate.noversion Version check is only supported via Online update.\nAre you sure that you want to install this image?
 flashupdate.programmingflash programming flash
 flashupdate.proxypassword Password
 flashupdate.proxypassword_hint1 enter the proxyserver password
@@ -695,7 +686,6 @@ flashupdate.update_with_settings_del_skipped Folder [%s] can not be deleted. Ent
 flashupdate.update_with_settings_error Flash Error!\n \nNew Image only has %ld KB (out of %ld KB) left. Not\nenough space to complete this operation.\n \nCanceling operation!
 flashupdate.update_with_settings_processed Image is being processed ...
 flashupdate.update_with_settings_skipped Folder [%s] can not be saved. Entry is skipped.
-flashupdate.update_with_settings_successfully Setting takeover successfully.\nThe image can now be flashed.
 flashupdate.update_with_settings_warning Flash Warning!\n \nNew Image only has %ld KB (out of %ld KB) left. Probably not\nenough space to complete this operation ...\n \nDo you really want to proceed?
 flashupdate.updatemode Updatemode
 flashupdate.updatemode_internet internet
@@ -769,14 +759,12 @@ hdd_60min 60 min.
 hdd_activate Apply settings
 hdd_check Check filesystem
 hdd_check_failed HDD-check failed!
-hdd_check_format_bad Checking of disks with format %s is not supported.
 hdd_extended_settings Extended HDD-Settings
 hdd_fast Fast
 hdd_format Format device
 hdd_format_failed Formating failed! Make sure device not in use, reboot and try again
 hdd_format_warn All data on device will be lost ! Continue with format ?
 hdd_fs Filesystem used to format
-hdd_fs_unknown unknown
 hdd_manage Manage device
 hdd_middle Mid
 hdd_mount Mount
@@ -785,7 +773,6 @@ hdd_mount_ok Device ready to use.
 hdd_mount_umount Mount/Unmount
 hdd_noise Acoustic-control (AAM)
 hdd_not_found No HDD found
-hdd_removable_device Removable device
 hdd_set_recdir Use device for recording ?
 hdd_settings Data Storage
 hdd_sleep Switch off after
@@ -818,13 +805,11 @@ infoviewer.nocurrent No info for current program available
 infoviewer.noepg EPG not available
 infoviewer.notavailable Channel not available
 infoviewer.now now
-infoviewer.selecttime Timeselection
 infoviewer.subchan_disp_pos Subchannel display
 infoviewer.subchan_infobar Full infobar
 infoviewer.waittime Waiting for time ...
 ipsetup.hint_1 Use 0..9, or use Up/Down,
 ipsetup.hint_2 OK saves, Exit aborts
-keybindingmenu.RC Tune Remote-Control
 keybindingmenu.addrecord add record timer
 keybindingmenu.addremind add zapto timer
 keybindingmenu.allchannels_on_ok all-services
@@ -837,8 +822,8 @@ keybindingmenu.cancel close channellist
 keybindingmenu.channeldown channel down
 keybindingmenu.channellist Channellist
 keybindingmenu.channelup channel up
-keybindingmenu.edit Edit
-keybindingmenu.head Edit Keybindings
+keybindingmenu.edit Edit keybindings
+keybindingmenu.head Keybindings
 keybindingmenu.lastchannel Quick Zap
 keybindingmenu.longkeypress_duration Long key-press
 keybindingmenu.misc Misc
@@ -873,9 +858,8 @@ keybindingmenu.volume Volume
 keybindingmenu.volumedown Decrease
 keybindingmenu.volumeup Increase
 keybindingmenu.zaphistory Zapping History Bouquet
-keychooser.head Setup new Key
-keychooser.text1 Please press the new key
-keychooser.text2 wait a few seconds for abort
+keychooser.head Setup new key
+keychooser.text Press new key.\nWait a few seconds to abort ...
 keychoosermenu.currentkey current key
 keychoosermenu.setnew setup new key
 keychoosermenu.setnone no key
@@ -942,7 +926,6 @@ mainmenu.scripts Scripts
 mainmenu.service Installation (service)
 mainmenu.settings System settings
 mainmenu.shutdown Shutdown (deep standby)
-mainmenu.shutdown_menu Shutdown
 mainmenu.sleeptimer SleepTimer
 mainmenu.standby Standby
 mainmenu.tools Tools
@@ -973,7 +956,6 @@ menu.cancel Cancel
 menu.hint_a_pic Configure audio player and picture viewer
 menu.hint_adzap AdZap will switch back to the current channel when the selected time is up
 menu.hint_adzap_active AdZap is active. With a new call it will be deactivated.
-menu.hint_adzap_setup Settings for the AdZap service
 menu.hint_adzap_writedata Write data according to adzap status to /tmp/adzap.data
 menu.hint_aplay Audio player
 menu.hint_aplay_setup Change title display, start directory, screen saver and more
@@ -1116,7 +1098,6 @@ menu.hint_infoclock_setup Configure info clock GUI options
 menu.hint_keep_numbers Keep channel numbers over next scans\nand bouquets editing
 menu.hint_key_addrecord Assign button to add record timer\nfrom event list
 menu.hint_key_addremind Assign button to add zap timer\nfrom event list
-menu.hint_key_audio On: 'audio' button start show audio-play menu\nOff: 'audio' button show Audio selection
 menu.hint_key_binding Re-define keys used for common operations
 menu.hint_key_bouquetdown Assign button to switch channel list\nto previous bouquet
 menu.hint_key_bouquetup Assign button to switch channel list\nto next bouquet
@@ -1151,15 +1132,13 @@ menu.hint_key_pic_mode_active Disable/enable key for the screen format
 menu.hint_key_pic_size_active Disable/enable key for the 4:3 display behavior
 menu.hint_key_pip_close Assign button to stop PiP\nor start it for current channel
 menu.hint_key_pip_setup Assign button to configure PiP
-menu.hint_key_pip_swap Assign button to swap PiP and live channel
-menu.hint_key_plugin Assign button to execute the one touch plugin
 menu.hint_key_poweroff Assign button to switch power state\n (standby/deepstandby <-> running)
 menu.hint_key_quickzap Configure keybingdings for quick\nchannel switch
 menu.hint_key_record Assign button to start a recording
 menu.hint_key_repeatblock Delay after button press and before\nfirst key repeat
 menu.hint_key_repeatblockgeneric Delay between key repeats\nwhile button pressed
 menu.hint_key_right Select function for 'left' and 'right' keys in live TV/Radio mode and movieplayer mode
-menu.hint_key_save Save keybindings to file
+menu.hint_key_save Save keybindings to a file named keys.conf
 menu.hint_key_screenshot Assign button to save GUI and/or TV screenshot
 menu.hint_key_sort Assign button to change channel list sort order
 menu.hint_key_special_active Disable or enable some special keys
@@ -1325,7 +1304,7 @@ menu.hint_restore Restore files from selected backup
 menu.hint_rotor_swap Swap rotor east/west directions\nin motor control
 menu.hint_rounded_corners Draw round or rectangular windows corners 
 menu.hint_save_settings Save all settings to flash
-menu.hint_saveas Save GUI settings to file
+menu.hint_saveas Save GUI settings to a file named neutrino.conf
 menu.hint_scan_auto Auto-scan selected provider
 menu.hint_scan_autoall Scan several selected providers at once
 menu.hint_scan_autoall_select Add selected satellites to scan
@@ -1424,7 +1403,6 @@ menu.hint_shoutcast_enabled Enable or disable SHOUTcast support
 menu.hint_show_mute_icon Show mute icon, when volume set to 0
 menu.hint_shutdown Put your box in deep standby mode\nNo confirmation
 menu.hint_shutdown_count Time to put box in deep-standby\nfrom soft-standby mode
-menu.hint_shutdown_menu Put you receiver in sleep or deep standby mode, set sleep timer
 menu.hint_shutdown_rcdelay Enable deep-standby, if power button\npressed more than 1 second
 menu.hint_shutdown_real Enable soft-standby mode\nIf disabled, power button put box to deep-standby
 menu.hint_sleeptimer Set timer to put your box\nin sleep mode
@@ -1573,7 +1551,6 @@ miscsettings.infobar_show_tuner Display active tuner
 miscsettings.infoclock Clock
 miscsettings.onlineservices Online services
 miscsettings.progressbar Progressbar
-miscsettings.progressbar_color Color
 miscsettings.progressbar_design Design
 miscsettings.progressbar_design_0 colored points
 miscsettings.progressbar_design_1 colored vertical lines
@@ -1684,7 +1661,6 @@ moviebrowser.edit_book_pos_info2
 moviebrowser.edit_book_type_info1 Enter new jump length (s)
 moviebrowser.edit_book_type_info2 <0: backward, >0: forward, 0: none
 moviebrowser.edit_serie Enter name of serie
-moviebrowser.error_no_movies No movies found
 moviebrowser.filter_off Filter off
 moviebrowser.foot_filter Filter:
 moviebrowser.foot_focus Switch window
@@ -1754,7 +1730,6 @@ moviebrowser.menu_copy_several Copy and split movie
 moviebrowser.menu_cut Cut movie
 moviebrowser.menu_cut_head Copy, cut and truncate
 moviebrowser.menu_directories_head Directories de/activate
-moviebrowser.menu_help_head Help
 moviebrowser.menu_main_bookmarks Bookmarks
 moviebrowser.menu_main_head Settings
 moviebrowser.menu_nfs_head NFS settings
@@ -1821,7 +1796,6 @@ moviebrowser.yt_max_history Max search history size
 moviebrowser.yt_max_results Max results to fetch
 moviebrowser.yt_most_popular Most popular today
 moviebrowser.yt_most_popular_all_time Most popular
-moviebrowser.yt_next_results Next results
 moviebrowser.yt_orderby Order by
 moviebrowser.yt_orderby.published publishing date
 moviebrowser.yt_orderby.rating rating
@@ -1829,8 +1803,6 @@ moviebrowser.yt_orderby.relevance relevance
 moviebrowser.yt_orderby.viewcount view count
 moviebrowser.yt_pending Pending downloads
 moviebrowser.yt_pref_quality Prefered quality
-moviebrowser.yt_prev_results Previous results
-moviebrowser.yt_recently_featured Recently featured
 moviebrowser.yt_region Region
 moviebrowser.yt_related Related videos
 moviebrowser.yt_search Search keyword
@@ -2021,7 +1993,6 @@ personalize.pinprotect Yes
 personalize.pinstatus Require PIN
 personalize.plugins Plugins
 personalize.usermenu_plugin_types Choose Plugin types to show
-personalize.usermenu_preferred_buttons Assigning of preferred keys
 personalize.usermenu_show_cancel Show "Cancel"-Button
 personalize.visible Visible
 pictureviewer.defdir Start directory
@@ -2174,11 +2145,6 @@ satsetup.fastscan_prov_tvv_sd TV Vlaanderen (SD)
 satsetup.fastscan_sd SD only
 satsetup.fastscan_type Scan type
 satsetup.fastscan_update Auto update
-satsetup.fe_delsys_mode Delivery system mode
-satsetup.fe_delsys_mode_auto Auto
-satsetup.fe_delsys_mode_cable Cable
-satsetup.fe_delsys_mode_sat Satellite
-satsetup.fe_delsys_mode_terrestrial Terrestrial
 satsetup.fe_mode Tuner mode
 satsetup.fe_mode_independent Independent
 satsetup.fe_mode_link_loop Loop
@@ -2244,7 +2210,6 @@ scants.numberofradioservices Radio
 scants.numberoftotalservices Total
 scants.numberoftvservices TV
 scants.preverences_receiving_system Preferences
-scants.preverences_scan Scanmode
 scants.provider Provider:
 scants.select_tp Select transponder
 scants.startnow start scan
@@ -2411,17 +2376,11 @@ timerlist.weekdays.hint_1 Mo Tu We Th Fr Sa Su
 timerlist.weekdays.hint_2 'X'=timer '-' no timer
 timersettings.followscreenings Show screening selection
 timersettings.record_safety_time_after Record stop time correction
-timersettings.record_safety_time_after.hint_1 Correction time in min. (00=off). This time
-timersettings.record_safety_time_after.hint_2 will added to stop time of every record timer.
 timersettings.record_safety_time_before Record start time correction
-timersettings.record_safety_time_before.hint_1 Correction time in min. (00=off). This time
-timersettings.record_safety_time_before.hint_2 will be deducted of every record timer.
 timersettings.separator Timer
 timing.chanlist Channellist
 timing.epg Epg
 timing.filebrowser Filebrowser
-timing.hint_1 Time in sec. After this time the
-timing.hint_2 infobar will be faded out.
 timing.infobar Infobar
 timing.infobar_movieplayer Infobar (movie mode)
 timing.infobar_radio Infobar (radio mode)
@@ -2461,7 +2420,6 @@ usermenu.items Menu items
 usermenu.key Key
 usermenu.key_select Assign key
 usermenu.msg_info_is_empty You don't have definied a name for this menu!\nUsing default name:\n
-usermenu.msg_warning_name You have more than one items created for this menu,\nbut none new name for this menue defined.\nIt is recommended to enter a new name!
 usermenu.msg_warning_no_items No items defined!\nThe menu name is reset!
 usermenu.name Name
 usermenu.title_blue Features
@@ -2517,8 +2475,6 @@ videomenu.sdosd SD OSD
 videomenu.sharpness Sharpness
 videomenu.tv-scart Video
 videomenu.vcrsignal VCR Output Signal Type
-videomenu.vcrsignal_composite CVBS
-videomenu.vcrsignal_svideo S-Video
 videomenu.videoformat Format
 videomenu.videoformat_149 14:9
 videomenu.videoformat_169 16:9

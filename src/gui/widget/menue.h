@@ -197,6 +197,8 @@ class CMenuItem : public  CComponentsSignals
 		void activateNotify(void);
 		virtual void disableByCondition(const menu_item_disable_cond_t& condition);
 		void setParentWidget(CMenuWidget* parent){parent_widget = parent;}
+		void setInfoIconRight(const char * const IconName_Info_right);
+		const char* getInfoIconRight(){return iconName_Info_right;}
 };
 
 class CMenuSeparator : public CMenuItem
@@ -525,6 +527,7 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		CComponentsInfoBox	*info_box;
 		int			hint_height;
 		CComponentsHeader 	*header;
+		CComponentsFooter 	*footer;
 		unsigned int saveScreen_width ;
 		unsigned int saveScreen_height;
 		unsigned int saveScreen_y;
@@ -550,7 +553,7 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		int			preselected;
 		int			selected;
 		int 			iconOffset;
-		int			sb_width;
+		int			scrollbar_width;
 		fb_pixel_t		*background;
 		int			full_width, full_height;
 		bool			savescreen;
@@ -558,8 +561,8 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		bool			brief_hints;
 		bool			hint_painted; // is hint painted
 
-		int			fbutton_width;
-		int			fbutton_height;
+		int			footer_width;
+		int			footer_height;
 		int			fbutton_count;
 		const struct button_label	*fbutton_labels;
 
@@ -613,7 +616,7 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		virtual void hide();
 		virtual int exec(CMenuTarget* parent, const std::string & actionKey);
 		virtual const char *getName();
-		virtual void integratePlugins(CPlugins::i_type_t integration, const unsigned int shortcut=CRCInput::RC_nokey, bool enabled=true);
+		virtual void integratePlugins(int integration, const unsigned int shortcut=CRCInput::RC_nokey, bool enabled=true);
 		void setSelected(const int &Preselected){ selected = Preselected; };
 		void initSelectable();
 		int getSelected()const { return selected; };
@@ -688,7 +691,6 @@ class CLockedMenuForwarder : public CMenuForwarder, public CPINProtection
 					: CMenuForwarder(Text, Active, Option, Target, ActionKey, DirectKey, IconName, IconName_Info_right) ,CPINProtection(_validPIN)
 					{
 						Ask = ask;
-						
 						//if we in ask mode then show NEUTRINO_ICON_SCRAMBLED as default info icon or no icon, 
 						//but use always an info icon if defined in parameter 'IconName_Info_right'
 						if (IconName_Info_right || ask)

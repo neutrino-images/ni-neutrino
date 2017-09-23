@@ -43,11 +43,11 @@ CComponentsTimer::CComponentsTimer(const int& interval, bool is_nano)
 	tm_thread 		= 0;
 	tm_interval 		= interval;
 	tm_enable_nano		= is_nano;
-
+	tm_enable 		= false;
 	sl_stop_timer 		= sigc::mem_fun(*this, &CComponentsTimer::stopTimer);
 
 	if (interval > 0)
-		startTimer();
+		tm_enable = startTimer();
 }
 
 CComponentsTimer::~CComponentsTimer()
@@ -58,7 +58,7 @@ CComponentsTimer::~CComponentsTimer()
 void CComponentsTimer::runSharedTimerAction()
 {
 	//start loop
-	string tn = "cc:"+name;
+	tn = "cc:"+name;
 	set_threadname(tn.c_str());
 	while(tm_enable && tm_interval > 0) {
 		tm_mutex.lock();
@@ -87,9 +87,6 @@ void* CComponentsTimer::initThreadAction(void *arg)
 //start up running timer with own thread, return true on succses
 void CComponentsTimer::initThread()
 {
-	if (!tm_enable)
-		return;
-
 	if(!tm_thread) {
 		void *ptr = static_cast<void*>(this);
 
@@ -132,12 +129,11 @@ void CComponentsTimer::stopThread()
 
 bool CComponentsTimer::startTimer()
 {
-	tm_enable = true;
 	initThread();
 	if(tm_thread)
-		return true;
+		tm_enable = true;
 
-	return false;
+	return tm_enable;
 }
 
 bool CComponentsTimer::stopTimer()

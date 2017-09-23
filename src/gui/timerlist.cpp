@@ -69,6 +69,7 @@
 #include <system/settings.h>
 #include <system/fsmounter.h>
 #include <system/helpers.h>
+#include <system/helpers-json.h>
 #include <system/httptool.h>
 
 #include <json/json.h>
@@ -739,16 +740,15 @@ bool CTimerList::RemoteBoxChanExists(t_channel_id channel_id)
 	r_url += string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id);
 	r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 
+	string errMsg = "";
 	Json::Value root;
-	Json::Reader reader;
-	bool parsedSuccess = reader.parse(r_url, root, false);
-	if (!parsedSuccess) {
+	bool ok = parseJsonFromString(r_url, &root, &errMsg);
+	if (!ok) {
 		printf("Failed to parse JSON\n");
-		printf("%s\n", reader.getFormattedErrorMessages().c_str());
+		printf("%s\n", errMsg.c_str());
 	}
 
 	r_url = root.get("success","false").asString();
-
 	if (r_url == "false")
 		ShowMsg(LOCALE_REMOTEBOX_CHANNEL_NA, convertChannelId2String(channel_id),
 				CMsgBox::mbrOk, CMsgBox::mbOk, NULL, 450, 30, false);
@@ -797,13 +797,12 @@ void CTimerList::RemoteBoxTimerList(CTimerd::TimerList &rtimerlist)
 		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 		//printf("[remotetimer] timers:%s\n",r_url.c_str());
 
+		string errMsg = "";
 		Json::Value root;
-		Json::Reader reader;
-		bool parsedSuccess = reader.parse(r_url, root, false);
-		if (!parsedSuccess)
-		{
+		bool ok = parseJsonFromString(r_url, &root, &errMsg);
+		if (!ok) {
 			printf("Failed to parse JSON\n");
-			printf("%s\n", reader.getFormattedErrorMessages().c_str());
+			printf("%s\n", errMsg.c_str());
 			it->online = false;
 		} else
 			it->online = true;
@@ -1287,13 +1286,12 @@ void CTimerList::paintItem(int pos)
 			r_url += string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer.channel_id);
 			r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
 
+			string errMsg = "";
 			Json::Value root;
-			Json::Reader reader;
-			bool parsedSuccess = reader.parse(r_url, root, false);
-			if (!parsedSuccess)
-			{
+			bool ok = parseJsonFromString(r_url, &root, &errMsg);
+			if (!ok) {
 				printf("Failed to parse JSON\n");
-				printf("%s\n", reader.getFormattedErrorMessages().c_str());
+				printf("%s\n", errMsg.c_str());
 			}
 
 			Json::Value remotechannel = root["data"]["channel"][0];
@@ -1387,7 +1385,8 @@ void CTimerList::paintHead()
 		header = new CComponentsHeader(x, y, width, header_height, LOCALE_TIMERLIST_NAME, NEUTRINO_ICON_TIMER, CComponentsHeader::CC_BTN_MENU | CComponentsHeader::CC_BTN_EXIT, NULL, CC_SHADOW_ON);
 		header->enableClock(true, " %d.%m.%Y - %H:%M ", NULL, false);
 	}
-	header->paint(CC_SAVE_SCREEN_NO);
+	if(!header->isPainted())
+		header->paint(CC_SAVE_SCREEN_NO);
 }
 
 void CTimerList::paintFoot()
@@ -1413,9 +1412,9 @@ void CTimerList::paintFoot()
 	footer.enableShadow(CC_SHADOW_ON, -1, true);
 
 	if (timerlist.empty())
-		footer.paintButtons(x, y + height - OFFSET_SHADOW - footer_height, width, footer_height, 2, &(TimerListButtons[1]));
+		footer.paintButtons(x, y + height - OFFSET_SHADOW - footer_height, width, footer_height, 2, &(TimerListButtons[1]), width/(2+1));
 	else
-		footer.paintButtons(x, y + height - OFFSET_SHADOW - footer_height, width, footer_height, c, TimerListButtons);
+		footer.paintButtons(x, y + height - OFFSET_SHADOW - footer_height, width, footer_height, c, TimerListButtons, width/(c-1));
 }
 
 void CTimerList::paint()

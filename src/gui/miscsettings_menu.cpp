@@ -357,13 +357,6 @@ void CMiscMenue::showMiscSettingsMenuGeneral(CMenuWidget *ms_general)
 	ms_general->addItem(md);
 }
 
-#define VIDEOMENU_HDMI_CEC_MODE_OPTION_COUNT 2
-const CMenuOptionChooser::keyval VIDEOMENU_HDMI_CEC_MODE_OPTIONS[VIDEOMENU_HDMI_CEC_MODE_OPTION_COUNT] =
-{
-	{ VIDEO_HDMI_CEC_MODE_OFF       , LOCALE_OPTIONS_OFF   },
-	{ VIDEO_HDMI_CEC_MODE_TUNER     , LOCALE_OPTIONS_ON    }
-};
-
 //energy and shutdown settings
 int CMiscMenue::showMiscSettingsMenuEnergy()
 {
@@ -398,12 +391,6 @@ int CMiscMenue::showMiscSettingsMenuEnergy()
 	CMenuOptionChooser * m4 = new CMenuOptionChooser(LOCALE_MISCSETTINGS_SLEEPTIMER_MIN, &g_settings.sleeptimer_min, SLEEPTIMER_MIN_OPTIONS, SLEEPTIMER_MIN_OPTION_COUNT, true);
 	m4->setHint("", LOCALE_MENU_HINT_SLEEPTIMER_MIN);
 	ms_energy->addItem(m4);
-
-	if (g_settings.easymenu) {
-		CMenuOptionChooser *cec_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_HDMI_CEC, &g_settings.hdmi_cec_mode, VIDEOMENU_HDMI_CEC_MODE_OPTIONS, VIDEOMENU_HDMI_CEC_MODE_OPTION_COUNT, true, this);
-		cec_ch->setHint("", LOCALE_MENU_HINT_CEC_MODE);
-		ms_energy->addItem(cec_ch);
-	}
 
 	int res = ms_energy->exec(NULL, "");
 

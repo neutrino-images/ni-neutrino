@@ -57,10 +57,10 @@
 #include <driver/display.h>
 #include <driver/abstime.h>
 #include <driver/record.h>
-#include <driver/volume.h>
 #include <driver/fontrenderer.h>
 #include <eitd/edvbstring.h>
 #include <system/helpers.h>
+#include <system/helpers-json.h>
 
 #include <src/mymenu.h>
 
@@ -843,12 +843,12 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 		return false;
 	}
 
+	string errMsg = "";
 	Json::Value root;
-	Json::Reader reader;
-	bool parsedSuccess = reader.parse(result_string, root, false);
-	if (!parsedSuccess) {
+	bool ok = parseJsonFromString(result_string, &root, &errMsg);
+	if (!ok) {
 		printf("Failed to parse JSON\n");
-		printf("%s\n", reader.getFormattedErrorMessages().c_str());
+		printf("%s\n", errMsg.c_str());
 		if (box != NULL) {
 			box->hide();
 			delete box;
@@ -1980,13 +1980,13 @@ void CMoviePlayerGui::selectAudioPid()
 						0, 999, CVolume::getInstance()));
 		}
 	}
-	if (!g_settings.easymenu) {
-		APIDSelector.addItem(new CMenuSeparator(CMenuSeparator::LINE));
-		extern CAudioSetupNotifier     * audioSetupNotifier;
-		APIDSelector.addItem( new CMenuOptionChooser(LOCALE_AUDIOMENU_ANALOG_OUT, &g_settings.analog_out,
-					OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT,
-					true, audioSetupNotifier, CRCInput::RC_green, NEUTRINO_ICON_BUTTON_GREEN) );
-	}
+
+	APIDSelector.addItem(new CMenuSeparator(CMenuSeparator::LINE));
+	extern CAudioSetupNotifier     * audioSetupNotifier;
+	APIDSelector.addItem( new CMenuOptionChooser(LOCALE_AUDIOMENU_ANALOG_OUT, &g_settings.analog_out,
+				OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT,
+				true, audioSetupNotifier, CRCInput::RC_green, NEUTRINO_ICON_BUTTON_GREEN) );
+
 	APIDSelector.exec(NULL, "");
 	delete selector;
 	printf("CMoviePlayerGui::selectAudioPid: selected %d (%x) current %x\n", select, (select >= 0) ? apids[select] : -1, currentapid);

@@ -67,11 +67,13 @@ CStartUpWizard::~CStartUpWizard()
 {
 }
 
+#ifdef ENABLE_FASTSCAN
 const CMenuOptionChooser::keyval WIZARD_SETUP_TYPE[] =
 {
 	{ 0, LOCALE_WIZARD_SETUP_EASY },
 	{ 1, LOCALE_WIZARD_SETUP_ADVANCED },
 };
+#endif
 
 int CStartUpWizard::exec(CMenuTarget* parent, const string & /*actionKey*/)
 {
@@ -120,7 +122,7 @@ int CStartUpWizard::exec(CMenuTarget* parent, const string & /*actionKey*/)
 			res = g_videoSettings->exec(NULL, "");
 			g_videoSettings->setWizardMode(SNeutrinoSettings::WIZARD_OFF);
 		}
-		if(!g_settings.easymenu && advanced && res != menu_return::RETURN_EXIT_ALL)
+		if(advanced && res != menu_return::RETURN_EXIT_ALL)
 		{
 			COsdSetup osdSettings(SNeutrinoSettings::WIZARD_ON);
 			res = osdSettings.exec(NULL, "");

@@ -69,10 +69,7 @@ CMenuItem::CMenuItem(bool Active, neutrino_msg_t DirectKey, const char * const I
 	else
 		setIconName();
 
-	if (IconName_Info_right && *IconName_Info_right)
-		iconName_Info_right = IconName_Info_right;
-	else
-		iconName_Info_right = NULL;
+	setInfoIconRight(IconName_Info_right);
 
 	hintIcon	= NULL;
 
@@ -100,8 +97,8 @@ void CMenuItem::init(const int X, const int Y, const int DX, const int OFFX)
 	dx		= DX;
 	offx		= OFFX;
 	name_start_x	= x + offx + icon_frame_w;
-	item_color	= COL_MENUCONTENT_TEXT;
-	item_bgcolor	= COL_MENUCONTENT_PLUS_0;
+
+	getItemColors(item_color, item_bgcolor);
 }
 
 void CMenuItem::setActive(const bool Active)
@@ -156,6 +153,13 @@ void CMenuItem::disableByCondition(const menu_item_disable_cond_t& condition)
 	}
 }
 
+void CMenuItem::setInfoIconRight(const char * const IconName_Info_right){
+	if (IconName_Info_right && *IconName_Info_right)
+		iconName_Info_right = IconName_Info_right;
+	else
+		iconName_Info_right = NULL;
+}
+
 void CMenuItem::setMarked(const bool Marked)
 {
 	marked = Marked;
@@ -180,25 +184,12 @@ void CMenuItem::setItemButton(const char * const icon_Name, const bool is_select
 
 void CMenuItem::initItemColors(const bool select_mode)
 {
-	if (select_mode)
-	{
-		item_color   = COL_MENUCONTENTSELECTED_TEXT;
-		item_bgcolor = COL_MENUCONTENTSELECTED_PLUS_0;
-	}
-	else if (!active || inert)
+	getItemColors(item_color, item_bgcolor, select_mode, marked);
+
+	if (!active || inert)
 	{
 		item_color   = COL_MENUCONTENTINACTIVE_TEXT;
 		item_bgcolor = COL_MENUCONTENTINACTIVE_PLUS_0;
-	}
-	else if (marked)
-	{
-		item_color   = COL_MENUCONTENT_TEXT;
-		item_bgcolor = COL_MENUCONTENT_PLUS_1;
-	}
-	else
-	{
-		item_color   = COL_MENUCONTENT_TEXT;
-		item_bgcolor = COL_MENUCONTENT_PLUS_0;
 	}
 }
 
@@ -259,8 +250,8 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 				right_bg_col = COL_MENUCONTENTINACTIVE_TEXT;
 				right_frame_col = COL_MENUCONTENTINACTIVE_TEXT;
 			}
-			CComponentsShapeSquare col(stringstartposOption, y + 2, dx - stringstartposOption + x - 2, item_height - 4, NULL, false, right_frame_col, right_bg_col);
-			col.setFrameThickness(3);
+			CComponentsShapeSquare col(stringstartposOption, y + OFFSET_INNER_SMALL, dx - stringstartposOption + x - OFFSET_INNER_MID, item_height - 2*OFFSET_INNER_SMALL, NULL, false, right_frame_col, right_bg_col);
+			col.setFrameThickness(FRAME_WIDTH_MIN);
 			col.setCorner(RADIUS_SMALL);
 			col.paint(false);
 		}
@@ -286,25 +277,45 @@ void CMenuItem::prepareItem(const bool select_mode, const int &item_height)
 void CMenuItem::paintItemSlider( const bool select_mode, const int &item_height, const int &optionvalue, const int &factor, const char * left_text, const char * right_text)
 {
 	CFrameBuffer *frameBuffer = CFrameBuffer::getInstance();
-	int slider_lenght = 0, h = 0;
-	frameBuffer->getIconSize(NEUTRINO_ICON_VOLUMEBODY, &slider_lenght, &h);
-	if(slider_lenght == 0 || factor < optionvalue )
-		return;
-	int stringwidth = 0;
-	if (right_text != NULL) {
-		stringwidth = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth("U999");
-	}
-	int stringwidth2 = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(left_text);
 
-	int maxspace = dx - stringwidth - icon_frame_w - stringwidth2 - OFFSET_INNER_MID;
-	if(maxspace < slider_lenght)
+	// assuming all sliders have same dimensions
+	int slider_width, dummy;
+	frameBuffer->getIconSize(NEUTRINO_ICON_SLIDER_ALPHA, &slider_width, &dummy);
+
+	int bar_width = frameBuffer->scale2Res(100);
+	/*
+	   We have a half slider_width before and after the bar
+	   to get the middle of the slider at the point of choise
+	*/
+	int bar_offset = slider_width/2;
+	int bar_full = bar_width + slider_width;
+
+	// avoid division by zero
+	if (factor < optionvalue || factor < 1)
+		return;
+
+	int right_needed = 0;
+	if (right_text != NULL)
+	{
+		right_needed = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth("U999");
+	}
+	int left_needed = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(left_text);
+
+	int space = dx - right_needed - icon_frame_w - left_needed - OFFSET_INNER_MID;
+	if (space < bar_full)
 		return ;
 
-	int stringstartposOption = x + dx - stringwidth - slider_lenght;
+	int bar_x = x + dx - right_needed - bar_full;
+
+	// FIXME: negative optionvalues falsifies the slider on the right side
 	int optionV = (optionvalue < 0) ? 0 : optionvalue;
-	frameBuffer->paintBoxRel(stringstartposOption, y, slider_lenght, item_height, item_bgcolor);
-	frameBuffer->paintIcon(NEUTRINO_ICON_VOLUMEBODY, stringstartposOption, y+2+item_height/4);
-	frameBuffer->paintIcon(select_mode ? NEUTRINO_ICON_VOLUMESLIDER2BLUE : NEUTRINO_ICON_VOLUMESLIDER2, (stringstartposOption + (optionV * 100 / factor)), y+item_height/4);
+
+	// clear area
+	frameBuffer->paintBoxRel(bar_x, y, bar_full, item_height, item_bgcolor);
+	// paint bar
+	frameBuffer->paintBoxFrame(bar_x + bar_offset, y + item_height/3, bar_width, item_height/3, 1, COL_MENUCONTENT_TEXT);
+	// paint slider
+	frameBuffer->paintIcon(select_mode ? NEUTRINO_ICON_SLIDER_ALPHA : NEUTRINO_ICON_SLIDER_INACTIVE, bar_x + (optionV*bar_width / factor), y, item_height);
 }
 
 void CMenuItem::paintItemButton(const bool select_mode, int item_height, const char * const icon_Name)
@@ -561,7 +572,7 @@ void CMenuWidget::Init(const std::string &NameString, const std::string &Icon, c
 	offx = offy 	= 0;
 	from_wizard 	= SNeutrinoSettings::WIZARD_OFF;
 	fade 		= true;
-	sb_width	= 0;
+	scrollbar_width	= 0;
 	savescreen	= false;
 	preselected 	= -1;
 	nextShortcut	= 1;
@@ -572,8 +583,8 @@ void CMenuWidget::Init(const std::string &NameString, const std::string &Icon, c
 	hint_height	= 0;
 	fbutton_count	= 0;
 	fbutton_labels	= NULL;
-	fbutton_width	= 0;
-	fbutton_height	= 0;
+	footer_width	= 0;
+	footer_height	= 0;
 	saveScreen_width = 0;
 	saveScreen_height = 0;
 
@@ -582,6 +593,7 @@ void CMenuWidget::Init(const std::string &NameString, const std::string &Icon, c
 	details_line	= NULL;
 	info_box	= NULL;
 	header 		= NULL;
+	footer		= NULL;
 	frameBuffer 	= CFrameBuffer::getInstance();
 	mglobal 	= CMenuGlobal::getInstance(); //create CMenuGlobal instance only here
 
@@ -642,6 +654,11 @@ void CMenuWidget::ResetModules()
 		info_box->kill();
 		delete info_box;
 		info_box = NULL;
+	}
+	if (footer){
+		footer->kill();
+		delete footer;
+		footer = NULL;
 	}
 }
 
@@ -1026,7 +1043,7 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 	return retval;
 }
 
-void CMenuWidget::integratePlugins(CPlugins::i_type_t integration, const unsigned int shortcut, bool enabled)
+void CMenuWidget::integratePlugins(int integration, const unsigned int shortcut, bool enabled)
 {
 	bool separatorline = false;
 	unsigned int number_of_plugins = (unsigned int) g_Plugins->getNumberOfPlugins();
@@ -1051,16 +1068,17 @@ void CMenuWidget::integratePlugins(CPlugins::i_type_t integration, const unsigne
 
 void CMenuWidget::hide()
 {
-	if(savescreen && background)
+	if(savescreen && background) {
+		ResetModules();
 		restoreScreen();//FIXME
-	else {
+	} else {
 		if (header)
 			header->kill();
 		if (info_box)
 			info_box->kill();
 		if (details_line)
 			details_line->hide();
-		frameBuffer->paintBackgroundBoxRel(x, y, full_width, full_height + fbutton_height);
+		frameBuffer->paintBackgroundBoxRel(x, y, full_width, full_height/* + footer_height*/);	// full_height includes footer_height : see calcSize
 		//paintHint(-1);
 	}
 	paintHint(-1);
@@ -1131,10 +1149,10 @@ void CMenuWidget::calcSize()
 	}
 	/* set the max height to 9/10 of usable screen height
 	   debatable, if the callers need a possibility to set this */
-	height = (frameBuffer->getScreenHeight() - fbutton_height - hint_height) / 20 * 18; /* make sure its a multiple of 2 */
+	height = (frameBuffer->getScreenHeight() - footer_height - hint_height) / 20 * 18; /* make sure its a multiple of 2 */
 
-	if(height > ((int)frameBuffer->getScreenHeight() - OFFSET_INNER_MID))
-		height = frameBuffer->getScreenHeight() - OFFSET_INNER_MID;
+	if (height > ((int)frameBuffer->getScreenHeight() - 2*OFFSET_INNER_MID))
+		height = frameBuffer->getScreenHeight() - 2*OFFSET_INNER_MID;
 
 	int neededWidth = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(getName());
 	if (neededWidth > width - frameBuffer->scale2Res(48)) {
@@ -1176,21 +1194,28 @@ void CMenuWidget::calcSize()
 	width += iconOffset;
 
 	if (fbutton_count)
-		width = std::max(width, fbutton_width);
+		width = std::max(width, footer_width);
 
 	if (width > (int)frameBuffer->getScreenWidth())
 		width = frameBuffer->getScreenWidth();
 
 	// shrink menu if less items
 	height = std::min(height, hheight + maxItemHeight);
+	/*
+	   Always add a bottom offset.
+	   Most menus has an upper offset too,
+	   which is added with the intro-items
+	*/
+	height += OFFSET_INNER_MID;
 	
 	//scrollbar width
-	sb_width=0;
-	if(total_pages > 1)
-		sb_width=SCROLLBAR_WIDTH;
+	scrollbar_width=0;
+	if (total_pages > 1)
+		scrollbar_width = SCROLLBAR_WIDTH;
 
-	full_width = /*DETAILSLINE_WIDTH+*/width+sb_width+OFFSET_SHADOW;
-	full_height = height+RADIUS_LARGE+OFFSET_SHADOW*2 /*+hint_height+OFFSET_INTER*/;
+	full_width = width + scrollbar_width + OFFSET_SHADOW;
+	full_height = height + footer_height + OFFSET_SHADOW/* + OFFSET_INTER*/; // hintbox is handled separately
+
 	/* + DETAILSLINE_WIDTH for the hintbox connection line
 	 * + center_offset for symmetry
 	 * + 20 for setMenuPos calculates 10 pixels border left and right */
@@ -1198,7 +1223,7 @@ void CMenuWidget::calcSize()
 	int max_possible = (int)frameBuffer->getScreenWidth() - DETAILSLINE_WIDTH - center_offset - 2*OFFSET_INNER_MID;
 	if (full_width > max_possible)
 	{
-		width = max_possible - sb_width - OFFSET_SHADOW;
+		width = max_possible - scrollbar_width - OFFSET_SHADOW;
 		full_width = max_possible + center_offset; /* symmetry in MENU_POS_CENTER case */
 	}
 
@@ -1233,11 +1258,17 @@ void CMenuWidget::paint()
 	calcSize();
 	CVFD::getInstance()->setMode(CVFD::MODE_MENU_UTF8 /*, nameString.c_str()*/);
 
+	/* prepare footer:
+	 * We must prepare footer, to get current footer dimensions,
+	 * otherwise footer will paint on wrong position
+	*/
+	setFooter(fbutton_labels, fbutton_count);
+
 	OnBeforePaint();
 
 	// paint head
 	if (header == NULL){
-		header = new CComponentsHeader(x, y, width + sb_width, hheight, getName(), iconfile);
+		header = new CComponentsHeader(x, y, width + scrollbar_width, hheight, getName(), iconfile);
 		header->enableShadow(CC_SHADOW_RIGHT | CC_SHADOW_CORNER_TOP_RIGHT | CC_SHADOW_CORNER_BOTTOM_RIGHT);
 		header->setOffset(OFFSET_INNER_MID);
 	}
@@ -1248,16 +1279,17 @@ void CMenuWidget::paint()
 	header->enableGradientBgCleanUp(savescreen);
 	header->paint(CC_SAVE_SCREEN_NO);
 
-	// paint body shadow
-	frameBuffer->paintBoxRel(x+OFFSET_SHADOW, y + hheight + OFFSET_SHADOW, width + sb_width, height - hheight + RADIUS_LARGE + (fbutton_count ? fbutton_height : 0), COL_SHADOW_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
 	// paint body background
-	frameBuffer->paintBoxRel(x, y+hheight, width + sb_width, height-hheight + RADIUS_LARGE, COL_MENUCONTENT_PLUS_0, RADIUS_LARGE, (fbutton_count ? CORNER_NONE : CORNER_BOTTOM));
+	PaintBoxRel(x, y+hheight, width + scrollbar_width, height-hheight, COL_MENUCONTENT_PLUS_0, RADIUS_LARGE,
+				(fbutton_count ? CORNER_NONE : CORNER_BOTTOM), footer && fbutton_count ? CC_SHADOW_RIGHT_CORNER_ALL : CC_SHADOW_ON);
 
 	item_start_y = y+hheight;
 	paintItems();
 	washidden = false;
-	if (fbutton_count)
-		::paintButtons(x, y + height + RADIUS_LARGE, width + sb_width, fbutton_count, fbutton_labels, width, fbutton_height);
+
+	// Finally paint footer if buttons are defined.
+	if (footer && fbutton_count)
+		footer->paint(CC_SAVE_SCREEN_NO);
 }
 
 void CMenuWidget::setMenuPos(const int& menu_width)
@@ -1266,7 +1298,7 @@ void CMenuWidget::setMenuPos(const int& menu_width)
 	int scr_y = frameBuffer->getScreenY();
 	int scr_w = frameBuffer->getScreenWidth();
 	int scr_h = frameBuffer->getScreenHeight();
-	int real_h = full_height + fbutton_height + hint_height;
+	int real_h = full_height/* + footer_height*/ + hint_height;		// full_height includes footer_height : see calcSize
 	int x_old = x;
 	int y_old = y;
 	//configured positions 
@@ -1318,11 +1350,11 @@ void CMenuWidget::paintItems()
 	// Scrollbar
 	if(total_pages>1)
 	{
-		int item_height=height-(item_start_y-y);
-		paintScrollBar(x+ width, item_start_y, sb_width, item_height, total_pages, current_page);
+		int scrollbar_height = height - hheight - OFFSET_INNER_MID;
+		paintScrollBar(x + width, item_start_y, scrollbar_width, scrollbar_height, total_pages, current_page);
 		/* background of menu items, paint every time because different items can have
 		 * different height and this might leave artifacts otherwise after changing pages */
-		frameBuffer->paintBoxRel(x,item_start_y, width,item_height, COL_MENUCONTENT_PLUS_0);
+		frameBuffer->paintBoxRel(x, item_start_y, width, scrollbar_height, COL_MENUCONTENT_PLUS_0);
 	}
 
 	int ypos=item_start_y;
@@ -1386,7 +1418,7 @@ void CMenuWidget::saveScreen()
 		return;
 
 	delete[] background;
-	saveScreen_height = full_height+fbutton_height;
+	saveScreen_height = full_height/* + footer_height*/;	// full_height includes footer_height : see calcSize
 	saveScreen_width = full_width;
 	saveScreen_y = y;
 	saveScreen_x = x;
@@ -1419,7 +1451,7 @@ void CMenuWidget::enableSaveScreen(bool enable)
 void CMenuWidget::paintHint(int pos)
 {
 	if (!g_settings.show_menu_hints){
-		ResetModules(); //ensure clean up on changed setting
+		//ResetModules(); //ensure clean up on changed setting
 		return;
 	}
 
@@ -1453,17 +1485,17 @@ void CMenuWidget::paintHint(int pos)
 	
 	if (item->hint == NONEXISTANT_LOCALE && item->hintText.empty())
 		item->hintText = " ";
-	
+
 	int iheight = item->getHeight();
-	int rad = RADIUS_LARGE;
 	int xpos  = x - DETAILSLINE_WIDTH;
-	int ypos2 = y + height + fbutton_height + rad + OFFSET_SHADOW + OFFSET_INTER;
-	int iwidth = width+sb_width;
+	int ypos2 = y + height + footer_height + OFFSET_SHADOW + OFFSET_INTER;
+	int iwidth = width + scrollbar_width;
 	
 	//init details line and infobox dimensions
 	int ypos1 = item->getYPosition();
 	int ypos1a = ypos1 + (iheight/2);
 	int ypos2a = ypos2 + (hint_height/2);
+	int rad = RADIUS_LARGE;
 	int markh = hint_height > rad*2 ? hint_height - rad*2 : hint_height;
 	int imarkh = iheight/2;
 	
@@ -1484,10 +1516,10 @@ void CMenuWidget::paintHint(int pos)
 		info_box = new CComponentsInfoBox();
 
 	info_box->setDimensionsAll(x, ypos2, iwidth, hint_height);
-	info_box->setFrameThickness(2);
+	info_box->setFrameThickness(FRAME_WIDTH_MIN);
 	info_box->removeLineBreaks(str);
 	info_box->setText(str, CTextBox::AUTO_WIDTH, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_HINT], COL_MENUCONTENT_TEXT);
-	info_box->setCorner(RADIUS_LARGE);
+	info_box->setCorner(rad);
 	info_box->setColorAll(COL_FRAME_PLUS_0, COL_MENUCONTENTDARK_PLUS_0);
 	info_box->setTextColor(COL_MENUCONTENTDARK_TEXT);
 	info_box->enableShadow();
@@ -1514,10 +1546,21 @@ void CMenuWidget::setFooter(const struct button_label *_fbutton_labels, const in
 	fbutton_count = _fbutton_count;
 	fbutton_labels = _fbutton_labels;
 
-	fbutton_width = 0;
-	fbutton_height = 0;
-	if (fbutton_count)
-		paintButtons(fbutton_labels, fbutton_count, 0, 0, 0, 0, 0, false, &fbutton_width, &fbutton_height);
+	if (fbutton_count){
+		if (!footer)
+			footer = new CComponentsFooter(x, y + height, width + scrollbar_width, 0, 0, NULL, CC_SHADOW_ON);
+		footer->setWidth(width + scrollbar_width);
+		footer->setButtonLabels(fbutton_labels, fbutton_count, 0, width/fbutton_count);
+		footer_height = footer->getHeight();
+		footer_width = footer->getWidth();
+	}else{
+		if (footer){
+			delete footer; footer = NULL;
+		}
+		footer_width = 0;
+		footer_height = 0;
+	}
+
 	if (repaint)
 		paint();
 }
@@ -2279,7 +2322,7 @@ int CMenuSeparator::paint(bool selected)
 		item_bgcolor = COL_MENUCONTENT_PLUS_0;
 	}
 
-	frameBuffer->paintBoxRel(x,y, dx, height, item_bgcolor);
+	frameBuffer->paintBoxRel(x, y, dx, height, item_bgcolor);
 	if ((type & LINE))
 	{
 		int grad = g_settings.theme.menu_Separator_gradient_enable ? CC_COLGRAD_COL_DARK_LIGHT_DARK : CC_COLGRAD_OFF;
