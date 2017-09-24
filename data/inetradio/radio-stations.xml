@@ -20,6 +20,31 @@
 		/>
 
 	<station
+		url="http://streams.radiobob.de/bob-live/mp3-192/mediaplayer"
+		name="Radio BOB!"
+		/>
+
+	<station
+		url="http://streams.radiobob.de/bob-classicrock/mp3-128/mediaplayer"
+		name="Radio BOB! Classic Rock"
+		/>
+
+	<station
+		url="http://streams.radiobob.de/bob-alternative/mp3-128/mediaplayer"
+		name="Radio BOB! Alternative Rock"
+		/>
+
+	<station
+		url="http://streams.radiobob.de/bob-hartesaite/mp3-128/mediaplayer"
+		name="Radio BOB! Harte Saite"
+		/>
+
+	<station
+		url="http://streams.radiobob.de/bob-acdc/mp3-192/mediaplayer"
+		name="Radio BOB! AC/DC Collection"
+		/>
+
+	<station
 		url="http://metafiles.gl-systemhaus.de/hr/hr1_2.m3u"
 		name="HR 1"
 		/>
