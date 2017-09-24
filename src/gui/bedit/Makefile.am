@@ -18,5 +18,5 @@ noinst_LIBRARIES = libneutrino_gui_bedit.a
 libneutrino_gui_bedit_a_SOURCES = \
 	bouqueteditor_bouquets.cpp \
 	bouqueteditor_channels.cpp \
-	bouqueteditor_chanselect.cpp
-
+	bouqueteditor_chanselect.cpp \
+	bouqueteditor_globals.cpp
