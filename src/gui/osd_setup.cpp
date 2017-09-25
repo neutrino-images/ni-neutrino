@@ -750,6 +750,9 @@ int COsdSetup::showOsdSetup()
 			CAudioMute::getInstance()->enableMuteIcon(true);
 	}
 
+#if !defined BOXMODEL_CS_HD2
+	delete scartFileNotifier;
+#endif
 	delete colorInfoclockNotifier;
 	delete screensaverNotifier;
 	delete channellistNotifier;
