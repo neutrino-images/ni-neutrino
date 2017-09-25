@@ -1240,6 +1240,7 @@ void CMenuWidget::calcSize()
 	*/
 	CMenuItem *separator = new CMenuSeparator();
 	height += separator->getHeight();
+	delete separator;
 	
 	//scrollbar width
 	scrollbar_width=0;
