@@ -820,6 +820,7 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 				switch ( rv ) {
 					case menu_return::RETURN_EXIT_ALL:
 						retval = menu_return::RETURN_EXIT_ALL;
+						/* fall through */
 					case menu_return::RETURN_EXIT:
 						msg = CRCInput::RC_timeout;
 						break;
@@ -911,6 +912,7 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 						break;
 					case CRCInput::RC_up:
 						dir = -1;
+						/* fall through */
 					default: /* fallthrough or RC_down => dir = 1 */
 						pos += dir;
 						if (pos < 0 || pos >= (int)items.size())
@@ -979,6 +981,7 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 						switch ( rv ) {
 							case menu_return::RETURN_EXIT_ALL:
 								retval = menu_return::RETURN_EXIT_ALL;
+								/* fall through */
 							case menu_return::RETURN_EXIT:
 								msg = CRCInput::RC_timeout;
 								break;
