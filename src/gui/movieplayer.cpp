@@ -2918,6 +2918,8 @@ void CMoviePlayerGui::makeScreenShot(bool autoshot, bool
 		}
 	}
 	sc->Start();
+#else
+	(void)forcover;
 #endif
 	if (autoshot)
 		autoshot_done = true;

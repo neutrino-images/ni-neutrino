@@ -411,8 +411,10 @@ void CNeutrinoApp::InitMenuService()
 
 	//bouquet edit
 	// TODO: this needs a neutrino restart after changing parentallock_prompt to activate :-(
+	// TODO:2 check if this deviation from upstream is still needed
 	CLockedMenuForwarder *lf;
 	lf = new CLockedMenuForwarder(LOCALE_BOUQUETEDITOR_NAME, g_settings.parentallock_pincode, g_settings.parentallock_prompt == PARENTALLOCK_PROMPT_CHANGETOLOCKED, true, NULL, new CBEBouquetWidget(), NULL, CRCInput::RC_blue);
+	// TODO:2 end
 	/* does not work with CLockedMenuForwarder yet?
 	lf->setHint(NEUTRINO_ICON_HINT_BEDIT, LOCALE_MENU_HINT_BEDIT);
 	*/
