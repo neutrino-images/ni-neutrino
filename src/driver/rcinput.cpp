@@ -75,6 +75,9 @@ static bool          saved_orig_termio = false;
 static bool input_stopped = false;
 static struct timespec devinput_mtime = { 0, 0 };
 
+static unsigned int _start_ms = 0;
+static unsigned int _repeat_ms = 0;
+
 #ifdef RCDEBUG
 #define d_printf printf
 #else
@@ -243,6 +246,7 @@ void CRCInput::open(bool recheck)
 		indev.push_back(id);
 	}
 	closedir(dir);
+	setKeyRepeatDelay(0, 0);
 	id.path = "/tmp/neutrino.input";
 	if (! checkpath(id)) {
 		id.fd = ::open(id.path.c_str(), O_RDWR|O_NONBLOCK|O_CLOEXEC);
@@ -1737,6 +1741,13 @@ int CRCInput::translate(int code)
 
 void CRCInput::setKeyRepeatDelay(unsigned int start_ms, unsigned int repeat_ms)
 {
+	if (start_ms == 0 && repeat_ms == 0) {
+		start_ms = _start_ms;
+		repeat_ms = _repeat_ms;
+	} else {
+		_start_ms = start_ms;
+		_repeat_ms = repeat_ms;
+	}
 	for (std::vector<in_dev>::iterator it = indev.begin(); it != indev.end(); ++it) {
 		int fd = (*it).fd;
 		std::string path = (*it).path;
