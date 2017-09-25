@@ -33,6 +33,7 @@
 #include <driver/screen_max.h>
 #include <system/httptool.h>
 #include <system/helpers.h>
+#include <system/helpers-json.h>
 #include <eitd/sectionsd.h>
 
 #include <json/json.h>
@@ -246,20 +247,20 @@ std::string CIMDB::googleIMDb(std::string s)
 
 void CIMDB::initMap( std::map<std::string, std::string>& my )
 {
+	string errMsg = "";
 	Json::Value root;
-	Json::Reader reader;
 
 	std::ostringstream ss;
 	std::ifstream fh(imdb_outfile.c_str(),std::ifstream::in);
 	ss << fh.rdbuf();
 	std::string filedata = ss.str();
 
-	bool parsedSuccess = reader.parse(filedata,root,false);
+	bool parsedSuccess = parseJsonFromString(filedata, &root, &errMsg);
 
 	if(!parsedSuccess)
 	{
 		std::cout << "Failed to parse JSON\n";
-		std::cout << reader.getFormattedErrorMessages() << std::endl;
+		std::cout << errMsg << std::endl;
 
 		my["Response"] = "False"; // we fake a false response
 		return;
