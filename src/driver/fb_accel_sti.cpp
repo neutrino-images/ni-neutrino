@@ -39,6 +39,7 @@
 #include <errno.h>
 #include <inttypes.h>
 
+#include <inttypes.h>
 #include <linux/kd.h>
 
 #include <stdlib.h>
