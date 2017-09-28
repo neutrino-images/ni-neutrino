@@ -220,34 +220,43 @@ CHDDInfoWidget::~CHDDInfoWidget()
 
 }
 
-#define locale_itemsCount 9
-static const neutrino_locale_t locale_items[locale_itemsCount] =
+typedef struct items_data_t
 {
-	LOCALE_HDD_INFO_MODEL_FAMILY	,
-	LOCALE_HDD_INFO_MODEL		,
-	LOCALE_HDD_INFO_SERIAL		,
-	LOCALE_HDD_INFO_FIRMWARE		,
-	LOCALE_HDD_INFO_CAPACITY		,
-	LOCALE_HDD_INFO_SECTOR_SIZE	,
-	LOCALE_HDD_INFO_ROTATION_RATE	,
-	LOCALE_HDD_INFO_SATA_VERSION	,
-	LOCALE_HDD_INFO_TEMPERATURE
+	neutrino_locale_t locale;
+	char value[128];
+}
+items_data_struct;
+
+items_data_t items_data[] =
+{
+	{ LOCALE_HDD_INFO_MODEL_FAMILY	, "" }, // 0
+	{ LOCALE_HDD_INFO_MODEL		, "" }, // 1
+	{ LOCALE_HDD_INFO_SERIAL	, "" }, // 2
+	{ LOCALE_HDD_INFO_FIRMWARE	, "" }, // 3
+	{ LOCALE_HDD_INFO_CAPACITY	, "" }, // 4
+	{ LOCALE_HDD_INFO_SECTOR_SIZE	, "" }, // 5
+	{ LOCALE_HDD_INFO_ROTATION_RATE	, "" }, // 6
+	{ LOCALE_HDD_INFO_SATA_VERSION	, "" }, // 7
+	{ LOCALE_HDD_INFO_TEMPERATURE	, "" }  // 8
 };
+#define items_count (sizeof(items_data)/sizeof(struct items_data_t))
 
 void CHDDInfoWidget::paint(const std::string &Key)
 {
 	frameBuffer = CFrameBuffer::getInstance();
 
-	int hheight	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
-	int mheight	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getHeight();
-	int sheight	= g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getHeight();
+	CComponentsHeader header;
+	CComponentsFooter footer;
 
-	int offset	= 20;
-	int bheight	= offset + locale_itemsCount*mheight + offset;	// body height
-	int fheight	= sheight + offset/2;				// footer height
+	Font *item_font = g_Font[SNeutrinoSettings::FONT_TYPE_MENU];
 
-	width	= frameBuffer->getScreenWidth() / 100 * 50;
-	height	= hheight + bheight + fheight;
+	int header_height = header.getHeight();
+	int item_height = item_font->getHeight();
+	int body_height = items_count*item_height + 2*OFFSET_INNER_SMALL;
+	int footer_height = header.getHeight();
+
+	width	= frameBuffer->getScreenWidth()/2;
+	height	= header_height + body_height + footer_height;
 
 	x	= getScreenStartX(width);
 	y	= getScreenStartY(height);
@@ -261,42 +270,32 @@ void CHDDInfoWidget::paint(const std::string &Key)
 	unsigned long long mb;
 	std::ostringstream buf;
 
-	char model_family[128]	= "";
-	char model[128]		= "";
-	char serial[128]	= "";
-	char firmware[128]	= "";
-	char capacity[128]	= "";
-	char sector_size[128]	= "";
-	char rotation_rate[128]	= "";
-	char sata_version[128]	= "";
-	char temperature[128]	= "";
-
 	buf << "smartctl --all /dev/" << Key;
 
-	buffer=NULL;
+	buffer = NULL;
 
 	if((pipe_reader = popen(buf.str().c_str(), "r")))
 	{
 		while ((read = getline(&buffer, &len, pipe_reader)) != -1)
 		{
 			if ((found = strstr(buffer, "Model Family:")))
-				sscanf(found+18, "%127[^\n]", (char *) &model_family);
+				sscanf(found+18, "%127[^\n]", (char *) &items_data[0].value);
 			else if ((found = strstr(buffer, "Device Model:")))
-				sscanf(found+18, "%127[^\n]", (char *) &model);
+				sscanf(found+18, "%127[^\n]", (char *) &items_data[1].value);
 			else if ((found = strstr(buffer, "Serial Number:")))
-				sscanf(found+18, "%127[^\n]", (char *) &serial);
+				sscanf(found+18, "%127[^\n]", (char *) &items_data[2].value);
 			else if ((found = strstr(buffer, "Firmware Version:")))
-				sscanf(found+18, "%127[^\n]", (char *) &firmware);
+				sscanf(found+18, "%127[^\n]", (char *) &items_data[3].value);
 			else if ((found = strstr(buffer, "User Capacity:")))
-				sscanf(found+18, "%127[^\n]", (char *) &capacity);
+				sscanf(found+18, "%127[^\n]", (char *) &items_data[4].value);
 			else if ((found = strstr(buffer, "Sector Size:")))
-				sscanf(found+18, "%127[^\n]", (char *) &sector_size);
+				sscanf(found+18, "%127[^\n]", (char *) &items_data[5].value);
 			else if ((found = strstr(buffer, "Rotation Rate:")))
-				sscanf(found+18, "%127[^\n]", (char *) &rotation_rate);
+				sscanf(found+18, "%127[^\n]", (char *) &items_data[6].value);
 			else if ((found = strstr(buffer, "SATA Version is:")))
-				sscanf(found+18, "%127[^\n]", (char *) &sata_version);
+				sscanf(found+18, "%127[^\n]", (char *) &items_data[7].value);
 			else if ((found = strstr(buffer, "Temperature_Celsius")))
-				sscanf(found+83, "%3[^\n]", (char *) &temperature);
+				sscanf(found+83, "%3[^\n]", (char *) &items_data[8].value);
 		}
 		pclose(pipe_reader);
 	}
@@ -307,7 +306,7 @@ void CHDDInfoWidget::paint(const std::string &Key)
 		free(buffer);
 
 	// manipulating capacity
-	str_capacity = capacity;
+	str_capacity = items_data[4].value;
 	str_capacity.erase(std::remove(str_capacity.begin(), str_capacity.end(), ','), str_capacity.end());
 	mb = strtoull(str_capacity.c_str(),NULL,0)/1000000;
 	buf.str("");
@@ -318,147 +317,85 @@ void CHDDInfoWidget::paint(const std::string &Key)
 		else
 			buf << mb/1000 << " GB";
 	}
-	snprintf(capacity, sizeof(capacity), "%s", buf.str().c_str());
+	snprintf(items_data[4].value, sizeof(items_data[4].value), "%s", buf.str().c_str());
 
 	// manipulating temperature
 	buf.str("");
-	if (strcmp(temperature, "") != 0)
+	if (strcmp(items_data[8].value, "") != 0)
 	{
-		buf << trim(temperature) << " Grad Celsius";
-		snprintf(temperature, sizeof(temperature), "%s", buf.str().c_str());
+		buf << trim(items_data[8].value) << " Grad Celsius";
+		snprintf(items_data[8].value, sizeof(items_data[8].value), "%s", buf.str().c_str());
 	}
 
-	// calculate max width of used LOCALES
-	int locwidth = 0;
-	for (int i = 0; i < locale_itemsCount; i++) {
-		int w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(g_Locale->getText(locale_items[i]));
-		locwidth = std::max(locwidth, w);
+	// calculate max width of locales
+	int w_loc = 0, w_tmp = 0;
+	for (unsigned int i = 0; i < items_count; i++)
+	{
+		w_tmp = item_font->getRenderWidth(g_Locale->getText(items_data[i].locale));
+		w_loc = std::max(w_loc, w_tmp);
 	}
 
 	// calculate width of separator
-	std::string separator	= " : ";
-	int sepwidth = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(separator);
+	std::string separator = ":";
+	int w_sep = item_font->getRenderWidth(separator);
 
-	// calculate max width of data
-	int datwidth = 0, w = 0;
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(model_family));
-	datwidth = std::max(datwidth, w);
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(model));
-	datwidth = std::max(datwidth, w);
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(serial));
-	datwidth = std::max(datwidth, w);
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(firmware));
-	datwidth = std::max(datwidth, w);
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(capacity));
-	datwidth = std::max(datwidth, w);
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(sector_size));
-	datwidth = std::max(datwidth, w);
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(rotation_rate));
-	datwidth = std::max(datwidth, w);
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(sata_version));
-	datwidth = std::max(datwidth, w);
-	w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(trim(temperature));
-	datwidth = std::max(datwidth, w);
+	// calculate max width of values
+	int w_val = 0;
+	for (unsigned int i = 0; i < items_count; i++)
+	{
+		if (strcmp(items_data[i].value, "") == 0)
+			snprintf(items_data[i].value, sizeof(items_data[i].value), "%s", g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN));
+		w_tmp = item_font->getRenderWidth(trim(items_data[i].value));
+		w_val = std::max(w_val, w_tmp);
+	}
 
 	// recalculate width and xpos
-	width = std::max(width, offset + locwidth + sepwidth + datwidth + offset);
+	width = std::max(width, w_loc + w_sep + w_val + 4*OFFSET_INNER_MID);
 	if (width > (int) frameBuffer->getScreenWidth())
 	{
 		// should only happen with very big fonts
 		width = frameBuffer->getScreenWidth();
-		datwidth = width - offset - locwidth - sepwidth - offset;
+		w_val = width - w_loc - w_sep - 4*OFFSET_INNER_MID;
 	}
 	x = getScreenStartX(width);
 
-	fprintf(stderr, "CHDDInfoWidget::CHDDInfoWidget() x = %d, y = %d, width = %d, height = %d\n", x, y, width, height);
-
-	// paint backgrounds
-	frameBuffer->paintBoxRel(x, y, width, hheight, COL_MENUHEAD_PLUS_0, RADIUS_LARGE, CORNER_TOP);
-	frameBuffer->paintBoxRel(x, y+ hheight, width, bheight, COL_MENUCONTENT_PLUS_0);
-	frameBuffer->paintBoxRel(x, y+ hheight+ bheight, width, fheight, COL_MENUFOOT_PLUS_0, RADIUS_LARGE, CORNER_BOTTOM);
-
 	// header
-	int xpos = x + offset/2;
-	int ypos = y + hheight;
-	int icol_w = 0, icol_h = 0, icol_o = 0;
-
-	frameBuffer->getIconSize(NEUTRINO_ICON_SETTINGS, &icol_w, &icol_h);
-	if ( (icol_w) && (icol_h) )
-	{
-		frameBuffer->paintIcon(NEUTRINO_ICON_SETTINGS, xpos, y, hheight);
-		icol_o = icol_w + offset/2;
-	}
-
 	buf.str("");
 	buf << g_Locale->getText(LOCALE_HDD_INFO_HEAD) << " (" << Key << ")";
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->RenderString(xpos + icol_o, ypos, width - offset - icol_o, buf.str(), COL_MENUHEAD_TEXT);
+	header.setCaption(buf.str());
+	header.setIcon(NEUTRINO_ICON_SETTINGS);
+	header.setDimensionsAll(x, y, width, header_height);
+	header.addContextButton(CComponentsHeader::CC_BTN_EXIT);
+	header.enableShadow(CC_SHADOW_RIGHT | CC_SHADOW_CORNER_TOP_RIGHT | CC_SHADOW_CORNER_BOTTOM_RIGHT, -1, true);
+	header.paint(CC_SAVE_SCREEN_NO);
 
-	// locale
-	xpos = x + offset;
-	ypos += offset;
-	for (int i = 0; i < locale_itemsCount; i++) {
-		ypos += mheight;
-		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, locwidth, g_Locale->getText(locale_items[i]), COL_MENUCONTENTINACTIVE_TEXT);
-		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos + locwidth, ypos, sepwidth, separator, COL_MENUCONTENTINACTIVE_TEXT);
+	// body
+	PaintBoxRel(x, y + header_height, width, body_height, COL_MENUCONTENT_PLUS_0, RADIUS_NONE, CORNER_NONE, CC_SHADOW_ON);
+
+	// footer
+	const struct button_label buttons[] =
+	{
+		{ "", LOCALE_HDD_INFO_INFO }
+	};
+	footer.enableShadow(CC_SHADOW_ON, -1, true);
+	footer.paintButtons(x, y + header_height + body_height, width, footer_height, 1, buttons);
+
+	// paint items
+	int x_loc = x + OFFSET_INNER_MID;
+	int x_sep = x_loc + w_loc + OFFSET_INNER_MID;
+	int x_val = x_sep + w_sep + OFFSET_INNER_MID;
+	int y_item = y + header_height + OFFSET_INNER_SMALL;
+
+	for (unsigned int i = 0; i < items_count; i++)
+	{
+		y_item += item_height;
+		item_font->RenderString(x_loc, y_item, w_loc, g_Locale->getText(items_data[i].locale), COL_MENUCONTENTINACTIVE_TEXT);
+		item_font->RenderString(x_sep, y_item, w_sep, separator, COL_MENUCONTENTINACTIVE_TEXT);
+		item_font->RenderString(x_val, y_item, w_val, items_data[i].value, COL_MENUCONTENT_TEXT);
 	}
-
-	// footer with centered content
-	int wtmp = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->getRenderWidth(g_Locale->getText(LOCALE_HDD_INFO_INFO));
-	xpos = x + width/2 - wtmp/2;
-	ypos = y + hheight + bheight + offset/4 + sheight;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]->RenderString(xpos, ypos, wtmp, g_Locale->getText(LOCALE_HDD_INFO_INFO), COL_MENUCONTENTINACTIVE_TEXT);
-
-	// finally paint data
-	xpos = x + offset + locwidth + sepwidth;
-	ypos = y + hheight + offset;
-
-	ypos += mheight;
-	buf.str("");
-	buf << model_family;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(model_family, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
-
-	ypos += mheight;
-	buf.str("");
-	buf << model;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(model, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
-
-	ypos += mheight;
-	buf.str("");
-	buf << serial;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(serial, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
-
-	ypos += mheight;
-	buf.str("");
-	buf << firmware;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(firmware, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
-
-	ypos += mheight;
-	buf.str("");
-	buf << capacity;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(capacity, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
-
-	ypos += mheight;
-	buf.str("");
-	buf << sector_size;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(sector_size, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
-
-	ypos += mheight;
-	buf.str("");
-	buf << rotation_rate;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(rotation_rate, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
-
-	ypos += mheight;
-	buf.str("");
-	buf << sata_version;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(sata_version, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
-
-	ypos += mheight;
-	buf.str("");
-	buf <<  temperature;
-	g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(xpos, ypos, datwidth, (!strcmp(temperature, "") ? g_Locale->getText(LOCALE_HDD_INFO_UNKNOWN) : buf.str().c_str()), COL_MENUCONTENT_TEXT);
 }
 
 void CHDDInfoWidget::hide()
 {
-	frameBuffer->paintBackgroundBoxRel(x, y, width, height);
+	frameBuffer->paintBackgroundBoxRel(x, y, width + OFFSET_SHADOW, height + OFFSET_SHADOW);
 }
