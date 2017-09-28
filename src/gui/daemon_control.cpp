@@ -88,6 +88,7 @@ int CDaemonControlMenu::show()
 	daemonControlMenu->addIntroItems();
 
 	CMenuOptionChooser *mc;
+	CFlagFileNotifier * flagFileNotifier[DAEMONS_COUNT];
 	for (unsigned int i = 0; i < DAEMONS_COUNT; i++)
 	{
 		buf.str("");
@@ -96,15 +97,18 @@ int CDaemonControlMenu::show()
 
 		daemons_data[i].flag_exist = file_exists(flagfile);
 
-		CFlagFileNotifier * flagFileNotifier = new CFlagFileNotifier(daemons_data[i].flag);
+		flagFileNotifier[i] = new CFlagFileNotifier(daemons_data[i].flag);
 
-		mc = new CMenuOptionChooser(daemons_data[i].name, &daemons_data[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, flagFileNotifier, CRCInput::convertDigitToKey(daemon_shortcut++));
+		mc = new CMenuOptionChooser(daemons_data[i].name, &daemons_data[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, flagFileNotifier[i], CRCInput::convertDigitToKey(daemon_shortcut++));
 		mc->setHint(daemons_data[i].icon, daemons_data[i].desc);
 		daemonControlMenu->addItem(mc);
 	}
 
 	int res = daemonControlMenu->exec(NULL,"");
 	daemonControlMenu->hide();
+	for (unsigned int i = 0; i < DAEMONS_COUNT; i++)
+		delete flagFileNotifier[i];
+	delete daemonControlMenu;
 	return res;
 }
 
@@ -172,6 +176,7 @@ int CCamdControlMenu::show()
 	camdControlMenu->addItem(GenericMenuSeparatorLine);
 
 	CMenuOptionChooser *mc;
+	CFlagFileNotifier * flagFileNotifier[CAMDS_COUNT];
 	for (unsigned int i = 0; i < CAMDS_COUNT; i++)
 	{
 		std::string vinfo = "";
@@ -214,14 +219,17 @@ int CCamdControlMenu::show()
 		std::string hint(g_Locale->getText(camds_data[i].desc));
 		hint.append("\nvinfo: " + vinfo);
 
-		CFlagFileNotifier * flagFileNotifier = new CFlagFileNotifier(camds_data[i].camd_file);
+		flagFileNotifier[i] = new CFlagFileNotifier(camds_data[i].camd_file);
 
-		mc = new CMenuOptionChooser(camds_data[i].name, &camds_data[i].camd_runs, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, camds_data[i].camd_exist, flagFileNotifier, CRCInput::convertDigitToKey(camd_shortcut++));
+		mc = new CMenuOptionChooser(camds_data[i].name, &camds_data[i].camd_runs, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, camds_data[i].camd_exist, flagFileNotifier[i], CRCInput::convertDigitToKey(camd_shortcut++));
 		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, hint);
 		camdControlMenu->addItem(mc);
 	}
 
 	int res = camdControlMenu->exec(NULL,"");
 	camdControlMenu->hide();
+	for (unsigned int i = 0; i < CAMDS_COUNT; i++)
+		delete flagFileNotifier[i];
+	delete camdControlMenu;
 	return res;
 }

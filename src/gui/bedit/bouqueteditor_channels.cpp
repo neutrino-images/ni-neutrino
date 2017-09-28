@@ -70,6 +70,8 @@ CBEChannelWidget::CBEChannelWidget(const std::string & Caption, unsigned int Bou
 	status_icon_width = std::max(status_icon_width, iw);
 	frameBuffer->getIconSize(NEUTRINO_ICON_LOCK, &iw, &ih);
 	status_icon_width = std::max(status_icon_width, iw);
+
+	header.addContextButton(CComponentsHeader::CC_BTN_LEFT | CComponentsHeader::CC_BTN_RIGHT);
 }
 
 CBEChannelWidget::~CBEChannelWidget()
@@ -93,7 +95,7 @@ void CBEChannelWidget::paintItem(int pos)
 
 	if (i_selected)
 	{
-		if (current < Channels->size())
+		if (current < Channels->size() || Channels->empty())
 			paintDetails(pos, current);
 
 		i_radius = RADIUS_LARGE;
@@ -237,6 +239,9 @@ void CBEChannelWidget::hide()
 std::string CBEChannelWidget::getInfoText(int index)
 {
 	std::string res = "";
+
+	if (Channels->empty())
+		return res;
 
 	std::string satname = CServiceManager::getInstance()->GetSatelliteName((*Channels)[index]->getSatellitePosition());
 	if (IS_WEBTV((*Channels)[index]->getChannelID()))
@@ -409,6 +414,34 @@ int CBEChannelWidget::exec(CMenuTarget* parent, const std::string & /*actionKey*
 			}
 
 			Channels = mode == CZapitClient::MODE_TV ? &(g_bouquetManager->Bouquets[bouquet]->tvChannels) : &(g_bouquetManager->Bouquets[bouquet]->radioChannels);
+
+			selected = 0;
+			paintHead();
+			paintBody();
+			paintFoot();
+			paintItems();
+		}
+		else if (msg == CRCInput::RC_left || msg == CRCInput::RC_right)
+		{
+			unsigned int bouquet_size = g_bouquetManager->Bouquets.size();
+
+			if (msg == CRCInput::RC_left)
+			{
+				if (bouquet == 0)
+					bouquet = bouquet_size - 1;
+				else
+					bouquet--;
+			}
+			else
+			{
+				if (bouquet < bouquet_size - 1)
+					bouquet++;
+				else
+					bouquet = 0;
+			}
+
+			Channels = mode == CZapitClient::MODE_TV ? &(g_bouquetManager->Bouquets[bouquet]->tvChannels) : &(g_bouquetManager->Bouquets[bouquet]->radioChannels);
+			caption = g_bouquetManager->Bouquets[bouquet]->bFav ? g_Locale->getText(LOCALE_FAVORITES_BOUQUETNAME) : g_bouquetManager->Bouquets[bouquet]->Name;
 
 			selected = 0;
 			paintHead();

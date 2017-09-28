@@ -795,12 +795,14 @@ _show_menu:
 	}
 
 	//NI
+	int fake_hddpower = 0;
+	CTouchFileNotifier * hddpowerNotifier = NULL;
 	hddmenu->addItem(new CMenuSeparator());
 	if (cs_get_revision() < 8) {
 		//NI HDD power (HD1/BSE only)
 		const char *flag_hddpower = FLAGDIR "/.hddpower";
-		int fake_hddpower = file_exists(flag_hddpower);
-		CTouchFileNotifier * hddpowerNotifier = new CTouchFileNotifier(flag_hddpower);
+		fake_hddpower = file_exists(flag_hddpower);
+		hddpowerNotifier = new CTouchFileNotifier(flag_hddpower);
 		mc = new CMenuOptionChooser(LOCALE_HDD_POWER, &fake_hddpower, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, hddpowerNotifier, CRCInput::RC_yellow);
 		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_HDD_POWER);
 		hddmenu->addItem(mc);
@@ -873,7 +875,8 @@ _show_menu:
 	}
 
 	int ret = hddmenu->exec(NULL, "");
-
+	if (hddpowerNotifier)
+		delete hddpowerNotifier;
 	delete hddmenu;
 	hdd_list.clear();
 	devtitle.clear();

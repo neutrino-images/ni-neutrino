@@ -210,6 +210,8 @@ int CInfoIconsSetup::menu()
 	infoiconsMenu->hide();
 	delete infoiconsMenu;
 	delete delFlagMenu;
+	for (int i = 0 ; i < MODE_ICONS_NR_OF_ENTRIES; i++)
+		delete flagchooser[i];
 	delete flagMenu;
 	return res;
 }
