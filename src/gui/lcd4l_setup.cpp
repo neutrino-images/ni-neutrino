@@ -166,6 +166,8 @@ int CLCD4lSetup::show()
 	int res = lcd4lSetup->exec(NULL, "");
 
 	lcd4lSetup->hide();
+	delete lcd_clock_a;
+	delete lcd_weather;
 	delete lcd4lSetup;
 
 	// the things to do on exit
