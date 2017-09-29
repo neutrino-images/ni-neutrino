@@ -107,8 +107,7 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 		bool doLoop = true;
 
 		int timeout = g_settings.timing[SNeutrinoSettings::TIMING_MENU];
-
-		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd( timeout == 0 ? 0xFFFF : timeout);
+		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
 
 		while (doLoop)
 		{
@@ -123,7 +122,7 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 				( msg == CRCInput::RC_home ) ||
 				( msg == CRCInput::RC_ok ) ) {
 				if(fader.StartFadeOut()) {
-					timeoutEnd = CRCInput::calcTimeoutEnd( 1 );
+					timeoutEnd = CRCInput::calcTimeoutEnd(1);
 					msg = 0;
 				} else
 					doLoop = false;
@@ -146,7 +145,7 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 					if ((msg <= CRCInput::RC_MaxRC) &&
 						(data == 0))                     /* <- button pressed */
 					{
-						timeoutEnd = CRCInput::calcTimeoutEnd( timeout );
+						timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
 					}
 				}
 			}
