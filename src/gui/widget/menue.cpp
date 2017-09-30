@@ -948,54 +948,47 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 				break;
 			}
 			case (CRCInput::RC_left):
-				{
-					if(hasItem() && selected > -1 && (int)items.size() > selected) {
-						CMenuItem* itemX = items[selected];
-						if (!itemX->isMenueOptionChooser()) {
-							if (g_settings.menu_left_exit)
-								msg = CRCInput::RC_timeout;
-							break;
-						}
-					}
-				}
 			case (CRCInput::RC_right):
 			case (CRCInput::RC_ok):
-				{
-					if(hasItem() && selected > -1 && (int)items.size() > selected) {
-						//NI lcd4l-support
-						LCD4l->RemoveFile("/tmp/lcd/menu");
+				if (hasItem() && selected > -1 && (int)items.size() > selected) {
+					//NI lcd4l-support
+					LCD4l->RemoveFile("/tmp/lcd/menu");
 
-						//exec this item...
-						CMenuItem* item = items[selected];
-						if (!item->isSelectable())
-							break;
-						item->msg = msg;
-						fader.StopFade();
-						int rv = item->exec( this );
-
-						//NI lcd4l-support
-						if (g_settings.lcd4l_support)
-							LCD4l->CreateFile("/tmp/lcd/menu", item->lcd4l_text, g_settings.lcd4l_convert);
-
-						switch ( rv ) {
-							case menu_return::RETURN_EXIT_ALL:
-								retval = menu_return::RETURN_EXIT_ALL;
-								/* fall through */
-							case menu_return::RETURN_EXIT:
-								msg = CRCInput::RC_timeout;
-								break;
-							case menu_return::RETURN_REPAINT:
-							case menu_return::RETURN_EXIT_REPAINT:
-								if (fade && washidden)
-									fader.StartFadeIn();
-								checkHints();
-								pos = selected;
-								paint();
-								break;
-						}
-					} else
+					//exec this item...
+					CMenuItem* item = items[selected];
+					if (msg == CRCInput::RC_left && g_settings.menu_left_exit &&
+						!item->isMenueOptionChooser()) {
 						msg = CRCInput::RC_timeout;
-				}
+						break;
+					}
+					if (!item->isSelectable())
+						break;
+					item->msg = msg;
+					fader.StopFade();
+					int rv = item->exec( this );
+
+					//NI lcd4l-support
+					if (g_settings.lcd4l_support)
+						LCD4l->CreateFile("/tmp/lcd/menu", item->lcd4l_text, g_settings.lcd4l_convert);
+
+					switch ( rv ) {
+						case menu_return::RETURN_EXIT_ALL:
+							retval = menu_return::RETURN_EXIT_ALL;
+							/* fall through */
+						case menu_return::RETURN_EXIT:
+							msg = CRCInput::RC_timeout;
+							break;
+						case menu_return::RETURN_REPAINT:
+						case menu_return::RETURN_EXIT_REPAINT:
+							if (fade && washidden)
+								fader.StartFadeIn();
+							checkHints();
+							pos = selected;
+							paint();
+							break;
+					}
+				} else
+					msg = CRCInput::RC_timeout;
 				break;
 
 			case (CRCInput::RC_home):
