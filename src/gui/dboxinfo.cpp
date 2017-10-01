@@ -281,10 +281,10 @@ void CDBoxInfoWidget::paint()
 		while (getline(in, line)) {
 			size_t firstslash = line.find_first_of('/');
 			size_t firstspace = line.find_first_of(' ');
-			if ( (firstspace != string::npos && firstslash != string::npos && firstslash < firstspace) || (line.find("rootfs") == 0) ) {
+			if ( (firstspace != std::string::npos && firstslash != std::string::npos && firstslash < firstspace) || (line.find("rootfs") == 0) ) {
 				firstspace++;
 				size_t nextspace = line.find_first_of(' ', firstspace);
-				if (nextspace == string::npos || line.find("nodev", nextspace + 1) != string::npos)
+				if (nextspace == std::string::npos || line.find("nodev", nextspace + 1) != std::string::npos)
 					continue;
 				std::string mountpoint = line.substr(firstspace, nextspace - firstspace);
 				struct stat st;
@@ -358,7 +358,7 @@ void CDBoxInfoWidget::paint()
 	title += g_info.hw_caps->boxvendor;
 	title += " ";
 	title += g_info.hw_caps->boxname;
-	width = max(width, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(title, true) + 50);
+	width = std::max(width, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(title, true) + 50);
 	x = getScreenStartX(width);
 
 	if (!header)
