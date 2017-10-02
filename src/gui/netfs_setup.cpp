@@ -61,7 +61,7 @@ CNETFSMountGui::CNETFSMountGui()
 	autoPath = checkVarPath("/etc/auto.net");
 }
 
-std::string CNETFSMountGui::checkVarPath(const string &file)
+std::string CNETFSMountGui::checkVarPath(const std::string &file)
 {
 	std::string var = "/var" + file;
 	if(file_exists(var.c_str()))

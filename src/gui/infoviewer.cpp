@@ -2573,8 +2573,8 @@ void CInfoViewer::ecmInfoBox_show(const char * txt, int w, int h, Font * font)
 	//set new window dimensions
 	int h_offset = 5;
 	int w_offset = 10;
-	ecmInfoBox->setWidth(min(max_w, w + 2*w_offset));
-	ecmInfoBox->setHeight(min(max_h, h_header + h + 2*h_offset));
+	ecmInfoBox->setWidth(std::min(max_w, w + 2*w_offset));
+	ecmInfoBox->setHeight(std::min(max_h, h_header + h + 2*h_offset));
 	ecmInfoBox->Refresh();
 
 	//calc window position

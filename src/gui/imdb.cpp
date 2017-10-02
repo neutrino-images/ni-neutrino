@@ -247,7 +247,7 @@ std::string CIMDB::googleIMDb(std::string s)
 
 void CIMDB::initMap( std::map<std::string, std::string>& my )
 {
-	string errMsg = "";
+	std::string errMsg = "";
 	Json::Value root;
 
 	std::ostringstream ss;
