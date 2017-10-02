@@ -450,7 +450,7 @@ bool CFlashUpdate::checkVersion4Update()
 #endif
 		}
 
-		string filters[] = {"bin", "txt", "opk", "ipk"};
+		std::string filters[] = {"bin", "txt", "opk", "ipk"};
 		for(size_t i=0; i<sizeof(filters)/sizeof(filters[0]) ;i++)
 			UpdatesFilter.addFilter(filters[i]);
 
