@@ -386,15 +386,15 @@ void CImageInfoNI::StopInfoThread()
 	}
 }
 
-string CImageInfoNI::get_systemRoot()
+std::string CImageInfoNI::get_systemRoot()
 {
-	fstream fh;
-	string s;
-	string root ="";
-	const string file = "/proc/cmdline";
-	const string str = "root=mtd:";
+	std::fstream fh;
+	std::string s;
+	std::string root = "";
+	const std::string file = "/proc/cmdline";
+	const std::string str = "root=mtd:";
 
-	fh.open(file.c_str(), ios::in);
+	fh.open(file.c_str(), std::ios::in);
 
 	if(!fh.is_open())
 	{
@@ -405,8 +405,8 @@ string CImageInfoNI::get_systemRoot()
 	{
 		getline(fh, s);
 
-		string::size_type begin = s.find(str) + str.length();
-		string::size_type end = s.find(' ', begin);
+		std::string::size_type begin = s.find(str) + str.length();
+		std::string::size_type end = s.find(' ', begin);
 		root = s.substr(begin, end - begin);
 
 		if(!root.empty())
@@ -632,7 +632,7 @@ void CImageInfoNI::paint_DF_Info(int posx)
 
 	buf.str("");
 	buf.precision(2);
-	buf << fixed;
+	buf << std::fixed;
 
 	if (image_size.blocks > 1024)
 	{
@@ -733,7 +733,7 @@ void CImageInfoNI::paint_MEM_Info(int posx, int posy)
 	posy+= sheight;
 	buf.str("");
 	buf.precision(2);
-	buf << fixed << "Total: " << (mem_info.total/1024.0) << " MB   Used: " << (mem_info.used/1024.0) << " MB";
+	buf << std::fixed << "Total: " << (mem_info.total/1024.0) << " MB   Used: " << (mem_info.used/1024.0) << " MB";
 	frameBuffer->paintBoxRel(posx, posy - sheight, max_text_width, sheight, COL_INFOBAR_PLUS_0);
 	g_Font[font_small]->RenderString(posx, posy, max_text_width, buf.str().c_str(), COL_INFOBAR_TEXT);
 
@@ -905,7 +905,7 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	write_old	= write_akt;
 }
 
-string CImageInfoNI::getYWebVersion()
+std::string CImageInfoNI::getYWebVersion()
 {
 	CConfigFile yV('=', false);
 	yV.loadConfig(PRIVATE_HTTPDDIR "/Y_Version.txt");
