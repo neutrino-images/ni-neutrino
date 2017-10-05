@@ -73,7 +73,7 @@ void LcdFontRenderClass::InitFontCache()
 {
 	printf("[LCDFONT] Intializing font cache...");
 	fflush(stdout);
-	if (FTC_Manager_New(library, 0, 0, 0, myFTC_Face_Requester, this, &cacheManager))
+	if (FTC_Manager_New(library, 3, 0, 0, myFTC_Face_Requester, this, &cacheManager))
 	{
 		printf(" manager failed!\n");
 		return;
@@ -320,11 +320,6 @@ void LcdFont::RenderString(int x, int y, const int width, const char * text, con
 	}
 	pthread_mutex_unlock(&renderer->render_mutex);
 }
-
-int LcdFont::getRenderWidth(const std::string &text, const bool utf8_encoded)
-{
-	return getRenderWidth(text.c_str(), utf8_encoded);
-};
 
 int LcdFont::getRenderWidth(const char * text, const bool utf8_encoded)
 {
