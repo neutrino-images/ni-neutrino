@@ -143,6 +143,10 @@ int CLCD4lSetup::show()
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SKIN);
 	lcd4lSetup->addItem(mc);
 
+	mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN_RADIO, &g_settings.lcd4l_skin_radio, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SKIN_RADIO);
+	lcd4lSetup->addItem(mc);
+
 	const char *flag_lcd4l_weather = FLAGDIR "/.lcd-weather";
 	int fake_lcd4l_weather = file_exists(flag_lcd4l_weather);
 	CTouchFileNotifier * lcd_weather = new CTouchFileNotifier(flag_lcd4l_weather);
