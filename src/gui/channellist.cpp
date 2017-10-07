@@ -2109,9 +2109,6 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		}
 		if (!firstpaint && curr == selected)
 			updateVfd();
-		//NI lcd4l-support
-		if(g_settings.lcd4l_support)
-			LCD4l->CreateFile("/tmp/lcd/menu", chan->getName().c_str(), g_settings.lcd4l_convert);
 	}
 }
 
@@ -2135,6 +2132,10 @@ void CChannelList::updateVfd()
 		CVFD::getInstance()->showMenuText(0, nameAndDescription, -1, true); // UTF-8
 	} else
 		CVFD::getInstance()->showMenuText(0, chan->getName().c_str(), -1, true); // UTF-8
+
+	//NI lcd4l-support
+	if (g_settings.lcd4l_support)
+		LCD4l->CreateFile("/tmp/lcd/menu", chan->getName().c_str(), g_settings.lcd4l_convert);
 }
 
 void CChannelList::paint()
