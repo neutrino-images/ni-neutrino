@@ -4301,7 +4301,7 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 		if ( FILE *f = fopen("/tmp/.ni-standby", "w") )
 			fclose(f);
 
-		CVFD::getInstance()->ShowText("standby...        ");
+		CVFD::getInstance()->ShowText("Standby ...");
 		if( mode == mode_scart ) {
 			//g_Controld->setScartMode( 0 );
 		}
@@ -4386,7 +4386,7 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 		// Active standby off
 		powerManager->SetStandby(false, false);
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
-		CVFD::getInstance()->ShowText("resume...        ");
+		CVFD::getInstance()->ShowText("Resume ...");
 		cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
 		videoDecoder->Standby(false);
 		CEpgScan::getInstance()->Stop();
