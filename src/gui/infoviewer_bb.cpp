@@ -601,6 +601,9 @@ void CInfoViewerBB::showIcon_Resolution()
 	const char *icon_name = NULL;
 #if 0
 	if ((scrambledNoSig) || ((!fta) && (scrambledErr)))
+#endif
+#if HAVE_ARM_HARDWARE
+	if (!g_InfoViewer->chanready)
 #else
 	if (!g_InfoViewer->chanready || videoDecoder->getBlank())
 #endif
