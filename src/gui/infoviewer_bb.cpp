@@ -611,6 +611,9 @@ void CInfoViewerBB::showIcon_Resolution()
 		if (g_settings.infobar_show_res == 0) {//show resolution icon on infobar
 			videoDecoder->getPictureInfo(xres, yres, framerate);
 			switch (yres) {
+			case 2160:
+				icon_name = NEUTRINO_ICON_RESOLUTION_2160;
+			break;
 			case 1920:
 				icon_name = NEUTRINO_ICON_RESOLUTION_1920;
 				break;
@@ -658,7 +661,9 @@ void CInfoViewerBB::showIcon_Resolution()
 		}
 		if (g_settings.infobar_show_res == 1) {//show simple resolution icon on infobar
 			videoDecoder->getPictureInfo(xres, yres, framerate);
-			if (yres > 704)
+			if (yres > 1088)
+				icon_name = NEUTRINO_ICON_RESOLUTION_UHD;
+			else if (yres > 704)
 				icon_name = NEUTRINO_ICON_RESOLUTION_HD;
 			else if (yres >= 288)
 				icon_name = NEUTRINO_ICON_RESOLUTION_SD;
