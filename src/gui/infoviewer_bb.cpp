@@ -666,7 +666,7 @@ void CInfoViewerBB::showIcon_Resolution()
 			videoDecoder->getPictureInfo(xres, yres, framerate);
 			if (yres > 1088)
 				icon_name = NEUTRINO_ICON_RESOLUTION_UHD;
-			else if (yres > 576)
+			else if (yres > 704)
 				icon_name = NEUTRINO_ICON_RESOLUTION_HD;
 			else if (yres > 0)
 				icon_name = NEUTRINO_ICON_RESOLUTION_SD;
