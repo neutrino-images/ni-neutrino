@@ -312,10 +312,6 @@
 //NI
 #define NEUTRINO_ICON_HINT_IMAGELOGO	"hint_imagelogo"
 #define NEUTRINO_ICON_HINT_VTXT		"hint_vtxt"
-#define NEUTRINO_ICON_HINT_ICONSPKG0	"hint_iconsPKG0"
-#define NEUTRINO_ICON_HINT_ICONSPKG1	"hint_iconsPKG1"
-#define NEUTRINO_ICON_HINT_ICONSPKG2	"hint_iconsPKG2"
-#define NEUTRINO_ICON_HINT_ICONSPKG3	"hint_iconsPKG3"
 #define NEUTRINO_ICON_HINT_LCD4L	"hint_lcd4linux"
 #define NEUTRINO_ICON_HINT_FCM		"hint_FritzCallMonitor"
 #define NEUTRINO_ICON_HINT_EMMRD	"hint_emmrd"
