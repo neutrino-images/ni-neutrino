@@ -375,14 +375,10 @@ void CComponentsFooter::paintButtons(const int& x_pos,
 				     Font* font,
 				     bool do_save_bg)
 {
-	int lw = label_width;
-	if (label_count > 0 && label_width == 0)
-		  lw = (w/label_count) - 2*cch_offset;
-
 	this->setDimensionsAll(x_pos, y_pos, w, h);
 	this->setButtonFont(font);
 	this->setContextButton(context_buttons);
-	this->setButtonLabels(content, label_count, 0, lw);
+	this->setButtonLabels(content, label_count, 0, label_width);
 	this->paint(do_save_bg);
 }
 
