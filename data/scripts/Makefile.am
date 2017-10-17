@@ -11,6 +11,10 @@ install_DATA += \
 	backup_flash.sh \
 	restore_flash.sh
 endif
+if BOXTYPE_ARMBOX
+install_DATA += \
+	restore_flash.sh
+endif
 
 install-data-hook:
 	chmod 0755 $(DESTDIR)$(bindir)/backup.sh
@@ -19,5 +23,8 @@ install-data-hook:
 	chmod 0755 $(DESTDIR)$(bindir)/install.sh
 if BOXMODEL_CS_HD2
 	chmod 0755 $(DESTDIR)$(bindir)/backup_flash.sh
+	chmod 0755 $(DESTDIR)$(bindir)/restore_flash.sh
+endif
+if BOXTYPE_ARMBOX
 	chmod 0755 $(DESTDIR)$(bindir)/restore_flash.sh
 endif
