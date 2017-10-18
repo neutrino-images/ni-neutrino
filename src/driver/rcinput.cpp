@@ -263,8 +263,8 @@ void CRCInput::open(bool recheck)
 	//+++++++++++++++++++++++++++++++++++++++
 #ifdef KEYBOARD_INSTEAD_OF_REMOTE_CONTROL
 	fd_keyb = STDIN_FILENO;
-	if (fd_rc[0] < 0)
-		fd_rc[0] = fd_keyb;
+	if (indev[0].fd < 0)
+		indev[0].fd = fd_keyb;
 #else
 	fd_keyb = 0;
 #endif /* KEYBOARD_INSTEAD_OF_REMOTE_CONTROL */
@@ -1349,7 +1349,7 @@ void CRCInput::getMsg_us(neutrino_msg_t * msg, neutrino_msg_data_t * data, uint6
 				}
 
 				uint32_t trkey = translate(ev.code);
-				printf("key: %04x value %d, translate: %04x -%s-\n", ev.code, ev.value, trkey, getKeyName(trkey).c_str());
+				d_printf("key: %04x value %d, translate: %04x -%s-\n", ev.code, ev.value, trkey, getKeyName(trkey).c_str());
 				if (trkey == RC_nokey)
 					continue;
 
@@ -1393,13 +1393,7 @@ void CRCInput::getMsg_us(neutrino_msg_t * msg, neutrino_msg_data_t * data, uint6
 					if (trkey == rc_last_key) {
 						/* only allow selected keys to be repeated */
 						if (mayRepeat(trkey, bAllowRepeatLR) ||
-						    (g_settings.shutdown_real_rcdelay && ((trkey == RC_standby) &&
-#if HAVE_COOL_HARDWARE
-						    (cs_get_revision() > 7)
-#else
-						    (g_info.hw_caps->can_shutdown)
-#endif
-						)))
+						    (g_settings.shutdown_real_rcdelay && ((trkey == RC_standby) && (g_info.hw_caps->can_shutdown))))
 						{
 #ifdef ENABLE_REPEAT_CHECK
 							if (rc_last_repeat_key != trkey) {
@@ -1730,6 +1724,10 @@ int CRCInput::translate(int code)
 			return RC_record;
 		case KEY_PLAY:
 			return RC_pause;
+		case KEY_CHANNELUP:
+			return RC_page_up;
+		case KEY_CHANNELDOWN:
+			return RC_page_down;
 #endif
 		default:
 			break;

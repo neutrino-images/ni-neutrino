@@ -355,7 +355,7 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.menu_Head_Text_green = configfile.getInt32( "menu_Head_Text_green", 43 );
 	t.menu_Head_Text_blue = configfile.getInt32( "menu_Head_Text_blue", 7 );
 
-	t.menu_Head_gradient = configfile.getInt32( "menu_Head_gradient", CC_COLGRAD_OFF);
+	t.menu_Head_gradient = configfile.getInt32("menu_Head_gradient", CC_COLGRAD_OFF); /* no bling */
 	t.menu_Head_gradient_direction = configfile.getInt32( "menu_Head_gradient_direction", CFrameBuffer::gradientVertical);
 	t.menu_Separator_gradient_enable = configfile.getInt32( "menu_Separator_gradient_enable", 0);
 

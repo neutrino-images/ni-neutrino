@@ -37,8 +37,8 @@
 #include <math.h>
 #include <limits.h>
 #include <errno.h>
-
 #include <inttypes.h>
+
 #include <linux/kd.h>
 
 #include <stdlib.h>

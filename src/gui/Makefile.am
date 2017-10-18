@@ -109,7 +109,6 @@ libneutrino_gui_a_SOURCES = \
 	tmdb.cpp \
 	update.cpp \
 	update_check.cpp \
-	update_ext.cpp \
 	update_menue.cpp \
 	update_settings.cpp \
 	user_menue.cpp \
@@ -119,6 +118,11 @@ libneutrino_gui_a_SOURCES = \
 	volumebar.cpp \
 	webtv_setup.cpp \
 	zapit_setup.cpp
+
+if ENABLE_EXTUPDATE
+libneutrino_gui_a_SOURCES += \
+	update_ext.cpp
+endif
 
 #NI if ENABLE_TESTING
 libneutrino_gui_a_SOURCES += \
