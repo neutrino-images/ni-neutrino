@@ -46,7 +46,6 @@
 #include <driver/record.h>
 
 #include <zapit/femanager.h>
-//NI #include <cs_api.h>
 
 #include <sys/sysinfo.h>
 #include <sys/vfs.h>
@@ -355,23 +354,11 @@ void CDBoxInfoWidget::paint()
 		title + cpuinfo["machine"];
 	}
 #endif
-//NI
-#if 0
-	char ss[17];
-	sprintf(ss, "%016llx", cs_get_serial());
-	title += ", S/N ";
-	title += ss;
-	width = std::max(width, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(title, true) + 50);
-#endif
 	title += ": ";
 	title += g_info.hw_caps->boxvendor;
 	title += " ";
 	title += g_info.hw_caps->boxname;
-#if HAVE_COOL_HARDWARE
-	title += " (";
-	title += g_info.hw_caps->boxarch;
-	title += ")";
-#endif
+	width = std::max(width, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getRenderWidth(title, true) + 50);
 	x = getScreenStartX(width);
 
 	if (!header)

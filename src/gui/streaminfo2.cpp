@@ -148,7 +148,7 @@ int CStreamInfo2::doSignalStrengthLoop ()
 	int cnt = 0;
 	int delay_counter = 0;
 	const int delay = 15;
-	int sw = g_Font[font_info]->getRenderWidth ("99999.999");
+	int sw = g_Font[font_info]->getRenderWidth("99999.999");
 	maxb = minb = lastb = tmp_rate = 0;
 	std::string br_str = std::string(g_Locale->getText(LOCALE_STREAMINFO_BITRATE)) + ":";
 	std::string avg_str = "(" + std::string(g_Locale->getText(LOCALE_STREAMINFO_AVERAGE_BITRATE)) + ")";
@@ -194,7 +194,6 @@ int CStreamInfo2::doSignalStrengthLoop ()
 			
 			if (cnt < 12)
 				cnt++;
-			//NI int dheight = g_Font[font_info]->getHeight ();
 
 			if(!mp && delay_counter > delay + 1){
 				CZapitChannel * channel = CZapit::getInstance()->GetCurrentChannel();
@@ -204,6 +203,7 @@ int CStreamInfo2::doSignalStrengthLoop ()
 					delay_counter = 0;
 				}
 			}
+
 			if (ret && (lastb != bit_s)) {
 				lastb = bit_s;
 

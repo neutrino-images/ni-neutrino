@@ -95,9 +95,14 @@ bool glcd_play = false;
 
 #include <system/stacktrace.h>
 
+#ifndef HAVE_COOL_HARDWARE
+#define LCD_MODE CVFD::MODE_MOVIE
+#else
+#define LCD_MODE CVFD::MODE_MENU_UTF8
+#endif
+
 //NI InfoIcons
 #include <gui/infoicons.h>
-
 
 extern cVideo * videoDecoder;
 extern cAudio * audioDecoder;
@@ -3072,7 +3077,6 @@ void CMoviePlayerGui::showSubtitle(neutrino_msg_data_t data)
 #endif
 
 			frameBuffer->blit2FB(newdata, nw, nh, xoff, yoff);
-			free(newdata);
 
 			min_x = std::min(min_x, xoff);
 			max_x = std::max(max_x, xoff + nw);

@@ -404,7 +404,7 @@ void CNeutrinoApp::InitMenuService()
 	mf->setHint(NEUTRINO_ICON_HINT_SERVICE_SCAN, LOCALE_MENU_HINT_SERVICE_SCAN);
 	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_SCANTS], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, NULL, DCOND_MODE_TS);
 
-		//reload channels
+	//reload channels
 	mf = new CMenuForwarder(LOCALE_SERVICEMENU_RELOAD    , true, NULL, CScanSetup::getInstance(), "reloadchannels", CRCInput::RC_yellow);
 	mf->setHint(NEUTRINO_ICON_HINT_RELOAD_CHANNELS, LOCALE_MENU_HINT_RELOAD_CHANNELS);
 	personalize.addItem(MENU_SERVICE, mf, &g_settings.personalize[SNeutrinoSettings::P_MSER_RELOAD_CHANNELS]);

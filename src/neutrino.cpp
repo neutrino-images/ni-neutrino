@@ -419,10 +419,10 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.audio_volume_percent_ac3 = configfile.getInt32("audio_volume_percent_ac3", 100);
 	g_settings.audio_volume_percent_pcm = configfile.getInt32("audio_volume_percent_pcm", 100);
 
-	g_settings.channel_mode = configfile.getInt32("channel_mode", LIST_MODE_PROV);
-	g_settings.channel_mode_radio = configfile.getInt32("channel_mode_radio", LIST_MODE_PROV);
-	g_settings.channel_mode_initial = configfile.getInt32("channel_mode_initial", LIST_MODE_FAV); //NI
-	g_settings.channel_mode_initial_radio = configfile.getInt32("channel_mode_initial_radio", LIST_MODE_FAV); //NI
+	g_settings.channel_mode = configfile.getInt32("channel_mode", LIST_MODE_FAV);
+	g_settings.channel_mode_radio = configfile.getInt32("channel_mode_radio", LIST_MODE_FAV);
+	g_settings.channel_mode_initial = configfile.getInt32("channel_mode_initial", LIST_MODE_FAV);
+	g_settings.channel_mode_initial_radio = configfile.getInt32("channel_mode_initial_radio", LIST_MODE_FAV);
 	if (g_settings.channel_mode_initial > -1)
 		g_settings.channel_mode = g_settings.channel_mode_initial;
 	if (g_settings.channel_mode_initial_radio > -1)
@@ -474,7 +474,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.standby_cpufreq = 50;
 #endif
 
-	g_settings.make_hd_list = configfile.getInt32("make_hd_list", 0); //NI
+	g_settings.make_hd_list = configfile.getInt32("make_hd_list", 0);
 	g_settings.make_webtv_list = configfile.getInt32("make_webtv_list", 1);
 	g_settings.make_new_list = configfile.getInt32("make_new_list", 1);
 	g_settings.make_removed_list = configfile.getInt32("make_removed_list", 1);
@@ -555,7 +555,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.infobar_casystem_dotmatrix = configfile.getInt32("infobar_casystem_dotmatrix", 0 );
 	g_settings.infobar_casystem_frame = configfile.getInt32("infobar_casystem_frame", 0 ); //NI
 	g_settings.scrambled_message = configfile.getBool("scrambled_message", false ); //NI
-	g_settings.volume_pos = configfile.getInt32("volume_pos", CVolumeBar::VOLUMEBAR_POS_BOTTOM_CENTER ); //NI
+	g_settings.volume_pos = configfile.getInt32("volume_pos", CVolumeBar::VOLUMEBAR_POS_BOTTOM_CENTER );
 	g_settings.volume_digits = configfile.getBool("volume_digits", true);
 	g_settings.volume_size = configfile.getInt32("volume_size", 26 );
 	g_settings.menu_pos = configfile.getInt32("menu_pos", CMenuWidget::MENU_POS_CENTER);
@@ -778,11 +778,11 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.mode_clock = configfile.getInt32( "mode_clock",  0);
 	g_settings.zapto_pre_time = configfile.getInt32( "zapto_pre_time",  0);
 	g_settings.spectrum         = configfile.getBool("spectrum"          , false);
-	g_settings.channellist_additional = configfile.getInt32("channellist_additional", 1); //NI
+	g_settings.channellist_additional = configfile.getInt32("channellist_additional", 1); //default no minitv
 	g_settings.eventlist_additional = configfile.getInt32("eventlist_additional", 1); //NI
 	g_settings.eventlist_epgplus = configfile.getInt32("eventlist_epgplus", 1);
 	g_settings.channellist_epgtext_align_right	= configfile.getBool("channellist_epgtext_align_right"          , false);
-	g_settings.channellist_foot = configfile.getInt32("channellist_foot", 1); //NI default next Event
+	g_settings.channellist_foot = configfile.getInt32("channellist_foot", 1); //default next Event
 	g_settings.channellist_new_zap_mode = configfile.getInt32("channellist_new_zap_mode", 0);
 	g_settings.channellist_sort_mode  = configfile.getInt32("channellist_sort_mode", 0);//sort mode: alpha, freq, sat
 	g_settings.channellist_numeric_adjust  = configfile.getInt32("channellist_numeric_adjust", 0);
@@ -822,7 +822,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	if (g_settings.screen_EndY >= g_settings.screen_height)
 		g_settings.screen_EndY = g_settings.screen_height - 1;
 
-	g_settings.bigFonts = configfile.getInt32("bigFonts", 1); //NI
+	g_settings.bigFonts = configfile.getInt32("bigFonts", 1);
 	g_settings.window_size = configfile.getInt32("window_size", 100);
 	g_settings.window_width = configfile.getInt32("window_width", g_settings.window_size);
 	g_settings.window_height = configfile.getInt32("window_height", g_settings.window_size);
