@@ -8,40 +8,47 @@ USRF="/var/tuxbox/config/tobackup.conf"
 BAKF="$1/${2:-settings_${HOST}_${DATE}.tar.gz}"
 
 TOBACKUP="\
+	/etc/auto.net \
+	/etc/exports \
+	/etc/fstab \
+	/etc/hostname \
+	/etc/network/interfaces \
+	/etc/passwd \
+	/etc/profile.local \
+	/etc/resolv.conf \
+	/etc/samba/smb.conf \
+	/etc/wpa_supplicant.conf \
 	/share/tuxbox/neutrino/flex/flex_eigene_scripte.conf \
+	/var/bin/ \
+	/var/etc/ \
+	/var/keys/ \
+	/var/log/ \
+	/var/root/ \
+	/var/tuxbox/config/doscam.* \
 	/var/tuxbox/config/FritzCallMonitor.addr \
 	/var/tuxbox/config/FritzCallMonitor.cfg \
+	/var/tuxbox/config/moviebrowser.conf \
+	/var/tuxbox/config/neutrino.conf \
+	/var/tuxbox/config/oscam.* \
+	/var/tuxbox/config/oscammon.conf \
+	/var/tuxbox/config/pr-auto-timer.* \
 	/var/tuxbox/config/radio-favorites.xml \
+	/var/tuxbox/config/scan.conf \
+	/var/tuxbox/config/settingsupdate.conf \
+	/var/tuxbox/config/smarthomeinfo.conf \
 	/var/tuxbox/config/timerd.conf \
 	/var/tuxbox/config/tuxcal/ \
 	/var/tuxbox/config/tuxmail/ \
+	/var/tuxbox/config/webtv_usr.xml \
+	/var/tuxbox/config/Y-Web.conf \
 	/var/tuxbox/config/zapit/ \
-	/var/tuxbox/config/doscam.* \
-	/var/tuxbox/config/neutrino.conf \
-	/var/tuxbox/config/moviebrowser.conf \
-	/var/tuxbox/config/settingsupdate.conf \
-	/var/tuxbox/config/oscam.* \
-	/var/tuxbox/config/oscammon.conf \
-	/var/tuxbox/config/scan.conf \
-	/var/tuxbox/config/pr-auto-timer.* \
 	/var/tuxbox/fonts/ \
 	/var/tuxbox/icons/ \
 	/var/tuxbox/locale/ \
 	/var/tuxbox/plugins/ \
 	/var/tuxbox/themes/ \
 	/var/tuxbox/webtv/ \
-	/var/bin/ \
-	/var/etc/ \
-	/var/keys/ \
-	/etc/auto.net \
-	/etc/exports \
-	/etc/fstab \
-	/etc/hostname \
-	/etc/resolv.conf \
-	/etc/profile.local \
-	/etc/network/interfaces \
-	/etc/wpa_supplicant.conf \
-	/etc/passwd \
+	/var/xupnpd/ \
 "
 
 SHOWINFO "backup to ${BAKF} ..."
