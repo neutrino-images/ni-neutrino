@@ -8,3 +8,8 @@ install_DATA = \
 	$(resolution)/scan.jpg \
 	$(resolution)/shutdown.jpg \
 	$(resolution)/start.jpg
+
+if BOXTYPE_ARMBOX
+install_DATA += \
+	$(resolution)/bootlogo.m2v
+endif
