@@ -1,4 +1,4 @@
-AC_INIT(Neutrino-MP,3.5.1)
+AC_INIT(Neutrino-MP,3.6.0)
 AM_INIT_AUTOMAKE([1.0.1 nostdinc])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
@@ -139,6 +139,7 @@ if test "$BOXTYPE" = "coolstream"; then
 fi
 
 if test "$BOXTYPE" = "coolstream" ||
+   test "$BOXTYPE" = "generic" ||
    test "$BOXTYPE" = "tripledragon" ||
    test "$BOXTYPE" = "spark"; then
 	AC_DEFINE(SCREENSHOT,1,[Define to 1 if the platform supports screenshots])

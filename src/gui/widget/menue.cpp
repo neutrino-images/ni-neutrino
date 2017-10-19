@@ -1454,10 +1454,8 @@ void CMenuWidget::enableSaveScreen(bool enable)
 
 void CMenuWidget::paintHint(int pos)
 {
-	if (!g_settings.show_menu_hints){
-		//ResetModules(); //ensure clean up on changed setting
+	if (!g_settings.show_menu_hints)
 		return;
-	}
 
 	if (pos < 0 && !hint_painted)
 		return;
@@ -1554,7 +1552,7 @@ void CMenuWidget::setFooter(const struct button_label *_fbutton_labels, const in
 		if (!footer)
 			footer = new CComponentsFooter(x, y + height, width + scrollbar_width, 0, 0, NULL, CC_SHADOW_ON);
 		footer->setWidth(width + scrollbar_width);
-		footer->setButtonLabels(fbutton_labels, fbutton_count, 0, width/fbutton_count);
+		footer->setButtonLabels(fbutton_labels, fbutton_count);
 		footer_height = footer->getHeight();
 		footer_width = footer->getWidth();
 	}else{

@@ -2246,7 +2246,7 @@ servicemenu.imageinfo Image info
 servicemenu.reload Reload channel lists
 servicemenu.reload_hint Reloading channel lists,\nplease be patient.
 servicemenu.restart Soft restart
-servicemenu.restart_hint Restarting, please wait
+servicemenu.restart_hint Restarting, please wait ...
 servicemenu.restart_refused_recording Cant restart, recording in progress
 servicemenu.scants Servicescan
 servicemenu.update Software Update
@@ -2321,6 +2321,7 @@ timerlist.bouquetselect choose bouquet
 timerlist.channel Channel
 timerlist.channelselect choose channel
 timerlist.delete Delete
+timerlist.info Info
 timerlist.menumodify Modify timer
 timerlist.menunew New timer
 timerlist.message Message
@@ -2356,6 +2357,7 @@ timerlist.repeatcount repeats
 timerlist.repeatcount.hint_1 Amount of timer repeats
 timerlist.repeatcount.hint_2 0 for unlimited repeats
 timerlist.save Save timer
+timerlist.send.timer Send Timer
 timerlist.standby Action
 timerlist.standby.off Leave standby
 timerlist.standby.on Enter standby

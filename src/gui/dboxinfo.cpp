@@ -338,7 +338,7 @@ void CDBoxInfoWidget::paint()
 		std::string line;
 		while (getline(in, line)) {
 			size_t colon = line.find_first_of(':');
-			if (colon != string::npos && colon > 1) {
+			if (colon != std::string::npos && colon > 1) {
 				std::string key = line.substr(0, colon - 1);
 				std::string val = line.substr(colon + 1);
 				cpuinfo[trim(key)] = trim(val);

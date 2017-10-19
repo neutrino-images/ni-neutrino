@@ -217,9 +217,6 @@ CNeutrinoFonts * neutrinoFonts = NULL;
 bool parentallocked = false;
 static char **global_argv;
 
-/* hack until we have real platform abstraction... */
-static bool can_deepstandby = false;
-
 extern const char * locale_real_names[]; /* #include <system/locals_intern.h> */
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -470,7 +467,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.shutdown_count = configfile.getInt32("shutdown_count", 0);
 
 	g_settings.shutdown_min = 0;
-	if (can_deepstandby || cs_get_revision() == 1)
+	if (g_info.hw_caps->can_shutdown)
 		g_settings.shutdown_min = configfile.getInt32("shutdown_min", 180);
 	g_settings.sleeptimer_min = configfile.getInt32("sleeptimer_min", 0);
 
@@ -2183,8 +2180,7 @@ TIMER_START();
 	cs_new_auto_videosystem();
 #endif
 
-	g_info.hw_caps  = get_hwcaps();
-	can_deepstandby = g_info.hw_caps->can_shutdown;
+	g_info.hw_caps = get_hwcaps();
 
 	g_Locale        = new CLocaleManager;
 
@@ -2265,6 +2261,8 @@ TIMER_START();
 	//init video settings
 	g_videoSettings = new CVideoSettings;
 	g_videoSettings->setVideoSettings();
+
+	frameBuffer->showFrame(LOGODIR "/logo.jpg");
 
 	g_RCInput = new CRCInput();
 
@@ -3493,7 +3491,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 				return messages_return::handled;
 			}
 		}
-		if (g_settings.shutdown_real && can_deepstandby)
+		if (g_settings.shutdown_real)
 			g_RCInput->postMsg(NeutrinoMessages::SHUTDOWN, 0);
 		else
 			g_RCInput->postMsg(NeutrinoMessages::STANDBY_ON, 0);
@@ -3716,7 +3714,6 @@ extern bool timer_is_rec;//timermanager.cpp
 void CNeutrinoApp::ExitRun(int can_shutdown)
 {
 	/* can_shutdown is actually our exit code */
-	printf("[neutrino] %s can_deep: %d\n", __func__, can_deepstandby);
 	printf("[neutrino] %s can_shutdown: %d\n", __func__, can_shutdown);
 
 	bool do_shutdown = true;

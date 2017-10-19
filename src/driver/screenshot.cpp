@@ -147,7 +147,6 @@ bool CScreenShot::GetData()
 #endif
 	if (videoDecoder->getBlank()) 
 		get_video = false;
-
 #ifdef BOXMODEL_CS_HD2
 	if (extra_osd && !get_video) {
 		uint32_t memSize = xres * yres * sizeof(fb_pixel_t) * 2;

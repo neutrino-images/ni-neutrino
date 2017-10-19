@@ -57,7 +57,6 @@
 #include <driver/record.h>
 #include <driver/genpsi.h>
 #include <system/set_threadname.h>
-
 #include <gui/movieplayer.h>
 #include <cs_api.h>
 
@@ -265,8 +264,11 @@ bool CStreamManager::Stop()
 	if (!running)
 		return false;
 	running = false;
-	cancel();
-	bool ret = (OpenThreads::Thread::join() == 0);
+	bool ret = false;
+	if (OpenThreads::Thread::CurrentThread() == this) {
+		cancel();
+		ret = (OpenThreads::Thread::join() == 0);
+	}
 	StopAll();
 	return ret;
 }

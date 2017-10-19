@@ -59,7 +59,7 @@
 #include <cs_api.h>
 #include <video.h>
 
-#ifdef BOXMODEL_APOLLO
+#ifdef BOXMODEL_CS_HD2
 #include <cnxtfb.h>
 #endif
 
@@ -119,7 +119,7 @@ const CMenuOptionChooser::keyval VIDEOMENU_43MODE_OPTIONS[] =
 };
 #define VIDEOMENU_43MODE_OPTION_COUNT (sizeof(VIDEOMENU_43MODE_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
-#ifndef BOXMODEL_APOLLO
+#ifndef BOXMODEL_CS_HD2
 #define VIDEOMENU_VIDEOSIGNAL_TD_OPTION_COUNT 2
 const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_TD_OPTIONS[VIDEOMENU_VIDEOSIGNAL_TD_OPTION_COUNT] =
 {
@@ -347,7 +347,7 @@ int CVideoSettings::showVideoSetup()
 		vs_chinch_ch->setHint("", LOCALE_MENU_HINT_VIDEO_CINCH_MODE);
 #endif
 	}
-#ifndef BOXMODEL_APOLLO
+#ifndef BOXMODEL_CS_HD2
 	else if (g_info.hw_caps->has_SCART) /* TRIPLEDRAGON hack... :-) TODO: SPARK? */
 	{
 		vs_scart_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_SCART, &g_settings.analog_mode1, VIDEOMENU_VIDEOSIGNAL_TD_OPTIONS, VIDEOMENU_VIDEOSIGNAL_TD_OPTION_COUNT, true, this);
@@ -366,14 +366,14 @@ int CVideoSettings::showVideoSetup()
 	CMenuOptionChooser * vs_videomodes_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_VIDEOMODE, &g_settings.video_Mode, vmode_options, vmode_option_count, true, this, CRCInput::RC_nokey, "", true);
 	vs_videomodes_ch->setHint("", LOCALE_MENU_HINT_VIDEO_MODE);
 
-	CMenuOptionChooser * vs_dbdropt_ch = NULL;
-	CMenuForwarder * vs_videomodes_fw = NULL;
+	CMenuOptionChooser *vs_dbdropt_ch = NULL;
 	CMenuWidget videomodes(LOCALE_MAINSETTINGS_VIDEO, NEUTRINO_ICON_SETTINGS);
 #ifdef BOXMODEL_CS_HD2
 	CMenuForwarder * vs_automodes_fw = NULL;
 	CMenuWidget automodes(LOCALE_MAINSETTINGS_VIDEO, NEUTRINO_ICON_SETTINGS);
 #endif
 	CAutoModeNotifier anotify;
+	CMenuForwarder *vs_videomodes_fw = NULL;
 	//dbdr options
 	if (system_rev != 0x01)	/* dbdr options only on COOLSTREAM */
 	{
@@ -388,7 +388,7 @@ int CVideoSettings::showVideoSetup()
 
 		for (int i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
 			if (VIDEOMENU_VIDEOMODE_OPTIONS[i].key != -1)
-			videomodes.addItem(new CMenuOptionChooser(VIDEOMENU_VIDEOMODE_OPTIONS[i].valname, &g_settings.enabled_video_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &anotify));
+				videomodes.addItem(new CMenuOptionChooser(VIDEOMENU_VIDEOMODE_OPTIONS[i].valname, &g_settings.enabled_video_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &anotify));
 
 		vs_videomodes_fw = new CMenuForwarder(LOCALE_VIDEOMENU_ENABLED_MODES, true, NULL, &videomodes, NULL, CRCInput::RC_red);
 		vs_videomodes_fw->setHint("", LOCALE_MENU_HINT_VIDEO_MODES);
@@ -429,7 +429,7 @@ int CVideoSettings::showVideoSetup()
 	if (vs_videomodes_fw != NULL)
 		videosetup->addItem(vs_videomodes_fw);	  //video modes submenue
 #ifdef BOXMODEL_CS_HD2
-	videosetup->addItem(vs_automodes_fw);	  //video auto modes submenue
+		videosetup->addItem(vs_automodes_fw);	  //video auto modes submenue
 #endif
 
 #ifdef BOXMODEL_CS_HD2
