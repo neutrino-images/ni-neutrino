@@ -18,7 +18,7 @@ TOBACKUP="\
 	/etc/resolv.conf \
 	/etc/samba/smb.conf \
 	/etc/wpa_supplicant.conf \
-	/share/tuxbox/neutrino/flex/flex_eigene_scripte.conf \
+	/share/tuxbox/neutrino/flex/flex_user.conf \
 	/var/bin/ \
 	/var/etc/ \
 	/var/keys/ \
