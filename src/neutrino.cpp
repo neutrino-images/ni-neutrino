@@ -2586,9 +2586,6 @@ TIMER_START();
 
 	SHTDCNT::getInstance()->init();
 
-	hintBox->hide();
-	delete hintBox;
-
 	//NI lcd4l-support
 	LCD4l = new CLCD4l();
 	if(g_settings.lcd4l_support)
