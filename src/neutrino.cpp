@@ -2572,6 +2572,9 @@ TIMER_START();
 	hdd->exec(NULL, "");
 	delete hdd;
 
+	hintBox->hide(); // InitZapper also displays a hintbox
+	delete hintBox;
+
 	cCA::GetInstance()->Ready(true);
 	//InitZapper();
 
