@@ -312,9 +312,9 @@ _TUXBOX_APPS_LIB_PKGCONFIG($1,$2)
 
 AC_DEFUN([TUXBOX_BOXTYPE],[
 AC_ARG_WITH(boxtype,
-	[  --with-boxtype          valid values: tripledragon,coolstream,spark,azbox,generic,axtech],
+	[  --with-boxtype          valid values: tripledragon,coolstream,spark,azbox,generic,armbox],
 	[case "${withval}" in
-		tripledragon|coolstream|spark|azbox|generic|axtech)
+		tripledragon|coolstream|spark|azbox|generic|armbox)
 			BOXTYPE="$withval"
 			;;
 		*)
@@ -323,7 +323,7 @@ AC_ARG_WITH(boxtype,
 
 AC_ARG_WITH(boxmodel,
 	[  --with-boxmodel         valid for coolstream: hd1, hd2
-                          valid for axtech: ax
+                          valid for armbox: hd51
                           valid for generic: raspi],
 	[case "${withval}" in
 		hd1|hd2)
@@ -345,8 +345,8 @@ AC_ARG_WITH(boxmodel,
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 			;;
-		ax)
-			if test "$BOXTYPE" = "axtech"; then
+		hd51)
+			if test "$BOXTYPE" = "armbox"; then
 				BOXMODEL="$withval"
 			else
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
@@ -373,7 +373,7 @@ AM_CONDITIONAL(BOXTYPE_TRIPLE, test "$BOXTYPE" = "tripledragon")
 AM_CONDITIONAL(BOXTYPE_COOL, test "$BOXTYPE" = "coolstream")
 AM_CONDITIONAL(BOXTYPE_SPARK, test "$BOXTYPE" = "spark")
 AM_CONDITIONAL(BOXTYPE_GENERIC, test "$BOXTYPE" = "generic")
-AM_CONDITIONAL(BOXTYPE_ARMBOX, test "$BOXTYPE" = "axtech")
+AM_CONDITIONAL(BOXTYPE_ARMBOX, test "$BOXTYPE" = "armbox")
 
 AM_CONDITIONAL(BOXMODEL_CS_HD1,test "$BOXMODEL" = "hd1")
 AM_CONDITIONAL(BOXMODEL_CS_HD2,test "$BOXMODEL" = "hd2")
@@ -390,8 +390,8 @@ elif test "$BOXTYPE" = "spark"; then
 	AC_DEFINE(HAVE_SPARK_HARDWARE, 1, [building for a goldenmedia 990 or edision pingulux])
 elif test "$BOXTYPE" = "generic"; then
 	AC_DEFINE(HAVE_GENERIC_HARDWARE, 1, [building for a generic device like a standard PC])
-elif test "$BOXTYPE" = "axtech"; then
-	AC_DEFINE(HAVE_ARM_HARDWARE, 1, [building for an axtech])
+elif test "$BOXTYPE" = "armbox"; then
+	AC_DEFINE(HAVE_ARM_HARDWARE, 1, [building for an armbox])
 fi
 
 # TODO: do we need more defines?
@@ -400,7 +400,7 @@ if test "$BOXMODEL" = "hd1"; then
 elif test "$BOXMODEL" = "hd2"; then
 	AC_DEFINE(BOXMODEL_CS_HD2, 1, [coolstream tank/trinity/trinity v2/trinity duo/zee2/link])
 	AC_DEFINE(ENABLE_CHANGE_OSD_RESOLUTION,1,[enable change the osd resolution])
-elif test "$BOXMODEL" = "ax"; then
+elif test "$BOXMODEL" = "hd51"; then
 	AC_DEFINE(ENABLE_CHANGE_OSD_RESOLUTION,1,[enable change the osd resolution])
 elif test "$BOXMODEL" = "raspi"; then
 	AC_DEFINE(BOXMODEL_RASPI, 1, [Raspberry pi])
