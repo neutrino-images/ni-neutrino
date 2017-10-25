@@ -21,6 +21,7 @@ TOBACKUP="\
 	/share/tuxbox/neutrino/flex/flex_user.conf \
 	/var/bin/ \
 	/var/etc/ \
+	/var/httpd/ \
 	/var/keys/ \
 	/var/log/ \
 	/var/root/ \
