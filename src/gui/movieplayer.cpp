@@ -938,7 +938,6 @@ void* CMoviePlayerGui::bgPlayThread(void *arg)
 #if 0
 			printf("CMoviePlayerGui::bgPlayThread: position %d duration %d (%d)\n", mp->position, mp->duration, mp->duration-mp->position);
 #endif
-#if HAVE_COOL_HARDWARE
 			if (pos == mp->position)
 				eof++;
 			else
@@ -949,7 +948,6 @@ void* CMoviePlayerGui::bgPlayThread(void *arg)
 				chidused = true;
 				break;
 			}
-#endif
 			pos = mp->position;
 		}
 		bgmutex.lock();
