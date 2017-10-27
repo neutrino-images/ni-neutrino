@@ -1533,7 +1533,7 @@ bool CMoviePlayerGui::SetPosition(int pos, bool absolute)
 
 void CMoviePlayerGui::quickZap(neutrino_msg_t msg)
 {
-	if ((msg == CRCInput::RC_right) || msg == (neutrino_msg_t) g_settings.key_quickzap_up)
+	if (msg == CRCInput::RC_right || msg == CRCInput::RC_nextsong || msg == (neutrino_msg_t) g_settings.key_quickzap_up)
 	{
 		//printf("CMoviePlayerGui::%s: CRCInput::RC_right or g_settings.key_quickzap_up\n", __func__);
 		if (isLuaPlay || isUPNP)
@@ -1560,7 +1560,7 @@ void CMoviePlayerGui::quickZap(neutrino_msg_t msg)
 			}
 		}
 	}
-	else if ((msg == CRCInput::RC_left) || msg == (neutrino_msg_t) g_settings.key_quickzap_down)
+	else if (msg == CRCInput::RC_left || msg == CRCInput::RC_previoussong || msg == (neutrino_msg_t) g_settings.key_quickzap_down)
 	{
 		//printf("CMoviePlayerGui::%s: CRCInput::RC_left or g_settings.key_quickzap_down\n", __func__);
 		if (isLuaPlay || isUPNP)
