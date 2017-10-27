@@ -492,7 +492,7 @@ int CAudioPlayerGui::show()
 				}
 			}
 		}
-		else if (msg == CRCInput::RC_left)
+		else if (msg == CRCInput::RC_left || msg == CRCInput::RC_previoussong)
 		{
 			if (m_key_level == 1)
 			{
@@ -519,7 +519,7 @@ int CAudioPlayerGui::show()
 			}
 
 		}
-		else if (msg == CRCInput::RC_right)
+		else if (msg == CRCInput::RC_right || msg == CRCInput::RC_nextsong)
 		{
 			if (m_key_level == 1)
 			{
