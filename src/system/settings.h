@@ -400,7 +400,8 @@ struct SNeutrinoSettings
 
 		//movieplayer menu
 		P_MPLAYER_MBROWSER,
-		P_MPLAYER_FILEPLAY,
+		P_MPLAYER_FILEPLAY_VIDEO,
+		P_MPLAYER_FILEPLAY_AUDIO,
 		P_MPLAYER_YTPLAY,
 
 		//feature keys
@@ -915,7 +916,7 @@ struct SNeutrinoSettings
 		ITEM_CAMD_RESET = 23,		//NI
 		ITEM_INFOICONS = 24,		//NI
 		ITEM_YOUTUBE = 25,
-		ITEM_FILEPLAY = 26,
+		ITEM_FILEPLAY_VIDEO = 26,
 		ITEM_TOOLS = 27,
 		ITEM_LUA = 28,
 		ITEM_TUNER_RESTART = 29,	//NI
