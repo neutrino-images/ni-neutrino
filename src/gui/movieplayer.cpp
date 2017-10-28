@@ -1652,6 +1652,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			updateLcd();
 		}
 		if (first_start) {
+			usleep(50000);
 			callInfoViewer();
 			first_start = false;
 		}
@@ -2319,7 +2320,7 @@ void CMoviePlayerGui::callInfoViewer(bool init_vzap_it)
 
 	if (p_movie_info) {
 
-		if(duration == 0)
+		if(duration <= 0)
 			UpdatePosition();
 
 		MI_MOVIE_INFO *mi;
@@ -2346,14 +2347,12 @@ void CMoviePlayerGui::callInfoViewer(bool init_vzap_it)
 
 		g_InfoViewer->showMovieTitle(playstate, mi->epgId >>16, channelName, mi->epgTitle, mi->epgInfo1,
 			duration, position, repeat_mode, init_vzap_it ? 0 /*IV_MODE_DEFAULT*/ : 1 /*IV_MODE_VIRTUAL_ZAP*/);
-		unlink("/tmp/cover.jpg");
 		return;
 	}
 
 	/* not moviebrowser => use the filename as title */
 	CVFD::getInstance()->ShowText(pretty_name.c_str());
 	g_InfoViewer->showMovieTitle(playstate, 0, pretty_name, info_1, info_2, duration, position, repeat_mode);
-	unlink("/tmp/cover.jpg");
 }
 
 bool CMoviePlayerGui::getAudioName(int apid, std::string &apidtitle)
@@ -2808,7 +2807,7 @@ void CMoviePlayerGui::handleMovieBrowser(neutrino_msg_t msg, int /*position*/)
 
 void CMoviePlayerGui::UpdatePosition()
 {
-	if (playback->GetPosition(position, duration)) {
+	while (!playback->GetPosition(position, duration)) {
 		if (duration > 100)
 			file_prozent = (unsigned char) (position / (duration / 100));
 		FileTimeOSD->update(position, duration);
