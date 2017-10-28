@@ -1269,12 +1269,12 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 
 						//NI
 						std::string tmp_msg;
-						tmp_msg  = g_Locale->getText(LOCALE_ADZAP);
-						tmp_msg += " in ";
+						tmp_msg  = g_Locale->getText(LOCALE_WORD_IN);
+						tmp_msg += " ";
 						tmp_msg += to_string(g_settings.adzap_zapBackPeriod / 60);
 						tmp_msg += " ";
 						tmp_msg += g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE);
-						ShowMsg(tmp_msg, "", CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_INFO);
+						ShowMsg(LOCALE_ADZAP, tmp_msg, CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_INFO);
 					}
 					//CTimerdClient timerdclient;
 					else if (g_Timerd->isTimerdAvailable())
