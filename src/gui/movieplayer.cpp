@@ -1786,6 +1786,8 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			}
 		} else if (msg == (neutrino_msg_t) g_settings.key_quickzap_up || msg == (neutrino_msg_t) g_settings.key_quickzap_down) {
 			quickZap(msg);
+		} else if (msg == CRCInput::RC_previoussong || msg == CRCInput::RC_nextsong) {
+			quickZap(msg);
 		} else if (fromInfoviewer && msg == CRCInput::RC_ok && !filelist.empty()) {
 			printf("CMoviePlayerGui::%s: start playlist movie #%d\n", __func__, (int)(vzap_it - filelist.begin()));
 			fromInfoviewer = false;
