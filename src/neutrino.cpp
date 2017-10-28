@@ -2938,7 +2938,18 @@ void CNeutrinoApp::RealRun()
 				StartSubtitles();
 			}
 			else if (((msg == CRCInput::RC_tv) || (msg == CRCInput::RC_radio)) && (g_settings.key_tvradio_mode == (int)CRCInput::RC_nokey)) {
-				switchTvRadioMode();//used with defined default tv/radio rc key
+				if (msg == CRCInput::RC_tv)
+				{
+					if (mode == mode_radio)
+						tvMode();
+				}
+				else if (msg == CRCInput::RC_radio)
+				{
+					if (mode == mode_tv || mode == mode_webtv)
+						radioMode();
+				}
+				else
+					switchTvRadioMode(); //used with defined default tv/radio rc key
 			}
 			/* in case key_subchannel_up/down redefined */
 			else if( msg == CRCInput::RC_left || msg == CRCInput::RC_right) {
