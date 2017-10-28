@@ -2595,6 +2595,7 @@ TIMER_START();
 	CFileHelpers::createDir(THEMESDIR_VAR);
 	CFileHelpers::createDir(PLUGINDIR_VAR);
 	CFileHelpers::createDir(WEBTVDIR_VAR);
+	CFileHelpers::createDir(PUBLIC_HTTPDDIR);
 
 TIMER_STOP("################################## after all ##################################");
 	if (g_settings.softupdate_autocheck) {
