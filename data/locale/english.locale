@@ -651,9 +651,9 @@ filebrowser.filter.active Filter on
 filebrowser.filter.inactive Filter off
 filebrowser.head Filebrowser
 filebrowser.mark Mark
-filebrowser.nextpage Next Page
-filebrowser.pm Playlist Manager
-filebrowser.prevpage Prev. Page
+filebrowser.nextpage Next page
+filebrowser.pm Playlist manager
+filebrowser.prevpage Prev. page
 filebrowser.scan Scaning folder
 filebrowser.select Select
 filebrowser.showrights Show file rights
