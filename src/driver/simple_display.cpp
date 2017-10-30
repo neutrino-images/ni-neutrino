@@ -493,6 +493,7 @@ void CLCD::setMode(const MODES m, const char * const)
 {
 	mode = m;
 
+	setlcdparameter();
 	switch (m) {
 	case MODE_TVRADIO:
 		if (g_info.hw_caps->display_type == HW_DISPLAY_LINE_TEXT)
