@@ -2541,7 +2541,7 @@ TIMER_START();
 
 	g_audioMute->AudioMute(current_muted, true);
 	CZapit::getInstance()->SetVolumePercent(g_settings.audio_volume_percent_ac3, g_settings.audio_volume_percent_pcm);
-	CVFD::getInstance()->showVolume(g_settings.current_volume);
+	CVFD::getInstance()->showVolume(g_settings.current_volume, false);
 	CVFD::getInstance()->setMuted(current_muted);
 
 	if (show_startwizard) {
@@ -4434,7 +4434,7 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->setBacklight(g_settings.backlight_tv);
-		CVFD::getInstance()->showVolume(g_settings.current_volume, true);
+		CVFD::getInstance()->showVolume(g_settings.current_volume, false);
 
 		CZapit::getInstance()->EnablePlayback(true);
 		g_Zapit->setStandby(false);
