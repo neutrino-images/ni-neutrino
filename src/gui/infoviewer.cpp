@@ -965,7 +965,7 @@ void CInfoViewer::setInfobarTimeout(int timeout_ext)
 				timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_INFOBAR_RADIO] + timeout_ext);
 				break;
 		case NeutrinoMessages::mode_ts:
-				if (CMoviePlayerGui::getInstance().IsAudioPlayer())
+				if (CMoviePlayerGui::getInstance().IsAudioPlaying())
 					timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_INFOBAR_MEDIA_AUDIO] + timeout_ext);
 				else
 					timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_INFOBAR_MEDIA_VIDEO] + timeout_ext);

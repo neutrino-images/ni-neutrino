@@ -188,6 +188,7 @@ void CMoviePlayerGui::Init(void)
 	stopped = true;
 	currentVideoSystem = -1;
 	currentOsdResolution = 0;
+	is_audio_playing = false;
 
 	frameBuffer = CFrameBuffer::getInstance();
 
@@ -315,9 +316,6 @@ void CMoviePlayerGui::cutNeutrino()
 	g_Zapit->setStandby(true);
 #endif
 
-	if (is_audio_player)
-		frameBuffer->showFrame("mp3.jpg");
-
 	m_LastMode = (CNeutrinoApp::getInstance()->getMode() /*| NeutrinoMessages::norezap*/);
 	if (isWebTV)
 		m_LastMode |= NeutrinoMessages::norezap;
@@ -431,13 +429,13 @@ int CMoviePlayerGui::exec(CMenuTarget * parent, const std::string & actionKey)
 	}
 #endif
 	else if (actionKey == "fileplayback_video") {
-		is_audio_player = false;
+		is_audio_playing = false;
 		if (filebrowser)
 			filebrowser->Filter = &filefilter_video;
 		//wakeup_hdd(g_settings.network_nfs_moviedir.c_str());
 	}
 	else if (actionKey == "fileplayback_audio") {
-		is_audio_player = true;
+		is_audio_playing = true;
 		if (filebrowser)
 			filebrowser->Filter = &filefilter_audio;
 		//wakeup_hdd(g_settings.network_nfs_audioplayerdir.c_str());
@@ -691,7 +689,7 @@ void CMoviePlayerGui::ClearFlags()
 	isWebTV = false;
 	isYT = false;
 	is_file_player = false;
-	is_audio_player = false;
+	is_audio_playing = false;
 	timeshift = TSHIFT_MODE_OFF;
 }
 
@@ -796,7 +794,7 @@ bool CMoviePlayerGui::SelectFile()
 	cookie_header.clear();
 	//reinit Path_local for webif reloadsetup
 	Path_local = "/";
-	if (is_audio_player)
+	if (is_audio_playing)
 	{
 		if (!g_settings.network_nfs_audioplayerdir.empty())
 			Path_local = g_settings.network_nfs_audioplayerdir;
@@ -807,7 +805,7 @@ bool CMoviePlayerGui::SelectFile()
 			Path_local = g_settings.network_nfs_moviedir;
 	}
 
-	printf("CMoviePlayerGui::SelectFile: isBookmark %d timeshift %d isMovieBrowser %d is_audio_player %d\n", isBookmark, timeshift, isMovieBrowser, is_audio_player);
+	printf("CMoviePlayerGui::SelectFile: isBookmark %d timeshift %d isMovieBrowser %d is_audio_playing %d\n", isBookmark, timeshift, isMovieBrowser, is_audio_playing);
 	//NI wakeup_hdd(g_settings.network_nfs_recordingdir.c_str());
 
 	if (timeshift != TSHIFT_MODE_OFF) {
@@ -878,7 +876,7 @@ bool CMoviePlayerGui::SelectFile()
 		menu_ret = filebrowser->getMenuRet();
 		enableOsdElements(MUTE);
 	}
-	if (!is_audio_player)
+	if (!is_audio_playing)
 		g_settings.network_nfs_moviedir = Path_local;
 
 	return ret;
@@ -1448,6 +1446,15 @@ bool CMoviePlayerGui::PlayFileStart(void)
 		showStartingHint = true;
 		pthread_create(&thrStartHint, NULL, CMoviePlayerGui::ShowStartHint, this);
 	}
+
+	if (filefilter_audio.matchFilter(file_name))
+	{
+		frameBuffer->showFrame("mp3.jpg");
+		is_audio_playing = true;
+	}
+	else
+		is_audio_playing = false;
+
 	bool res = playback->Start((char *) file_name.c_str(), vpid, vtype, currentapid, currentac3, duration);
 
 	if (thrStartHint) {
@@ -1652,7 +1659,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			updateLcd();
 		}
 		if (first_start) {
-			usleep(50000);
+			usleep(80000);
 			callInfoViewer();
 			first_start = false;
 		}
@@ -1784,7 +1791,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			pfile = &(*filelist_it);
 			int selected = std::distance( filelist.begin(), filelist_it );
 			filelist_it = filelist.end();
-			if (playlist->playlist_manager(filelist, selected, is_audio_player))
+			if (playlist->playlist_manager(filelist, selected, is_audio_playing))
 			{
 				playstate = CMoviePlayerGui::STOPPED;
 				CFile *sfile = NULL;
@@ -1878,7 +1885,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				CFile *pfile = NULL;
 				int selected = std::distance( filelist.begin(), filelist_it );
 				filelist_it = filelist.end();
-				if (playlist->playlist_manager(filelist, selected, is_audio_player))
+				if (playlist->playlist_manager(filelist, selected, is_audio_playing))
 				{
 					playstate = CMoviePlayerGui::STOPPED;
 					CFile *sfile = NULL;
