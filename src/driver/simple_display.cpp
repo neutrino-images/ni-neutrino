@@ -265,6 +265,8 @@ void CLCD::setlcdparameter(void)
 
 void CLCD::showServicename(std::string name, bool)
 {
+	if (g_info.hw_caps->display_type == HW_DISPLAY_LED_NUM)
+		return;
 	servicename = name;
 	if (mode != MODE_TVRADIO)
 		return;
