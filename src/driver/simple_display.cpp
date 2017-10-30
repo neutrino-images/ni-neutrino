@@ -205,7 +205,7 @@ void CLCD::wake_up()
 			setPower(1);
 
 		if (g_settings.lcd_info_line)
-			switch_name_time_cnt = g_settings.timing[SNeutrinoSettings::TIMING_INFOBAR] + 10;
+			switch_name_time_cnt = 10;
 	}
 }
 
@@ -216,11 +216,11 @@ void* CLCD::TimeThread(void *)
 		sleep(1);
 		if (g_info.hw_caps->display_type == HW_DISPLAY_LINE_TEXT) {
 			struct stat buf;
-                if (stat("/tmp/vfd.locked", &buf) == -1) {
-                        CLCD::getInstance()->showTime();
-                        CLCD::getInstance()->count_down();
-                } else
-                        CLCD::getInstance()->wake_up();
+			if (stat("/tmp/vfd.locked", &buf) == -1) {
+				CLCD::getInstance()->showTime();
+				CLCD::getInstance()->count_down();
+			} else
+				CLCD::getInstance()->wake_up();
 		} else
 			CLCD::getInstance()->showTime();
 #if 0
@@ -265,10 +265,8 @@ void CLCD::setlcdparameter(void)
 
 void CLCD::showServicename(std::string name, bool)
 {
-	if (g_info.hw_caps->display_type == HW_DISPLAY_LED_NUM)
-		return;
 	servicename = name;
-	if (mode != MODE_TVRADIO && mode != MODE_AUDIO)
+	if (mode != MODE_TVRADIO)
 		return;
 	replace_umlauts(name);
 	strncpy(display_text, name.c_str(), sizeof(display_text) - 1);
@@ -355,7 +353,7 @@ void CLCD::showTime(bool force)
 		static int hour = 0, minute = 0;
 
 		t = localtime(&now);
-		if (force || last_display || (hour != t->tm_hour) || (minute != t->tm_min)) {
+		if (force || last_display || (switch_name_time_cnt == 0 && ((hour != t->tm_hour) || (minute != t->tm_min)))) {
 			hour = t->tm_hour;
 			minute = t->tm_min;
 			int ret = -1;
@@ -377,7 +375,7 @@ void CLCD::showTime(bool force)
 			close(fd);
 #endif
 #if HAVE_ARM_HARDWARE
-			if (mode == MODE_STANDBY || ( g_settings.lcd_info_line && (MODE_TVRADIO == mode)))
+			if (mode == MODE_STANDBY || (g_settings.lcd_info_line && mode == MODE_TVRADIO))
 #else
 			if (ret < 0 && servicename.empty())
 #endif
@@ -391,8 +389,10 @@ void CLCD::showTime(bool force)
 			else
 			{
 				if (vol_active)
-					showServicename(servicename);
-				vol_active = false;
+				{
+					display(display_text);
+					vol_active = false;
+				}
 			}
 			last_display = 0;
 		}
@@ -475,7 +475,11 @@ void CLCD::showAudioTrack(const std::string &, const std::string & title, const 
 {
 	if (mode != MODE_AUDIO)
 		return;
-	ShowText(title.c_str());
+	std::string tmp = title;
+	replace_umlauts(tmp);
+	strncpy(display_text, tmp.c_str(), sizeof(display_text) - 1);
+	display_text[sizeof(display_text) - 1] = '\0';
+	upd_display = true;
 #if HAVE_ARM_HARDWARE
 	wake_up();
 #endif
@@ -508,6 +512,8 @@ void CLCD::setMode(const MODES m, const char * const)
 			upd_display = true;
 		}
 		showTime();
+		if (g_settings.lcd_info_line)
+			switch_name_time_cnt = 10;
 		break;
 	case MODE_SHUTDOWN:
 		showclock = false;
@@ -679,7 +685,8 @@ void CLCD::Clear()
 }
 #endif
 
-void CLCD::count_down() {
+void CLCD::count_down()
+{
 	if (timeout_cnt > 0) {
 		timeout_cnt--;
 		if (timeout_cnt == 0 ) {
@@ -694,7 +701,7 @@ void CLCD::count_down() {
 		}
 	}
 	if (g_settings.lcd_info_line && switch_name_time_cnt > 0) {
-	  switch_name_time_cnt--;
+		switch_name_time_cnt--;
 		if (switch_name_time_cnt == 0) {
 			if (g_settings.lcd_setting_dim_brightness > -1) {
 				CLCD::getInstance()->showTime(true);
