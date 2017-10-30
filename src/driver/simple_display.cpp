@@ -191,17 +191,21 @@ CLCD* CLCD::getInstance()
 
 void CLCD::wake_up()
 {
-	if (g_info.hw_caps->display_type == HW_DISPLAY_LINE_TEXT) {
-		if (atoi(g_settings.lcd_setting_dim_time.c_str()) > 0) {
+	if (g_info.hw_caps->display_type == HW_DISPLAY_LINE_TEXT)
+	{
+		if (atoi(g_settings.lcd_setting_dim_time.c_str()) > 0)
+		{
 			timeout_cnt = atoi(g_settings.lcd_setting_dim_time.c_str());
-			g_settings.lcd_setting_dim_brightness > -1 ?
-			setBrightness(g_settings.lcd_setting[SNeutrinoSettings::LCD_BRIGHTNESS]) : setPower(1);
+			if (g_settings.lcd_setting_dim_brightness > -1)
+				setBrightness(g_settings.lcd_setting[SNeutrinoSettings::LCD_BRIGHTNESS]);
+			else
+				setPower(1);
 		}
 		else
 			setPower(1);
-		if(g_settings.lcd_info_line){
+
+		if (g_settings.lcd_info_line)
 			switch_name_time_cnt = g_settings.timing[SNeutrinoSettings::TIMING_INFOBAR] + 10;
-		}
 	}
 }
 
@@ -246,10 +250,16 @@ void CLCD::init(const char *, const char *, const char *, const char *, const ch
 
 void CLCD::setlcdparameter(void)
 {
-	if (g_info.hw_caps->display_type == HW_DISPLAY_LINE_TEXT) {
+	if (g_info.hw_caps->display_type == HW_DISPLAY_LINE_TEXT)
+	{
 		last_toggle_state_power = g_settings.lcd_setting[SNeutrinoSettings::LCD_POWER];
-		setlcdparameter((mode == MODE_STANDBY) ? g_settings.lcd_setting[SNeutrinoSettings::LCD_STANDBY_BRIGHTNESS] : (mode == MODE_SHUTDOWN) ? g_settings.lcd_setting[SNeutrinoSettings::LCD_DEEPSTANDBY_BRIGHTNESS] : g_settings.lcd_setting[SNeutrinoSettings::LCD_BRIGHTNESS],
-				last_toggle_state_power);
+
+		if (mode == MODE_STANDBY)
+			setlcdparameter(g_settings.lcd_setting[SNeutrinoSettings::LCD_STANDBY_BRIGHTNESS], last_toggle_state_power);
+		else if (mode == MODE_SHUTDOWN)
+			setlcdparameter(g_settings.lcd_setting[SNeutrinoSettings::LCD_DEEPSTANDBY_BRIGHTNESS], last_toggle_state_power);
+		else
+			setlcdparameter(g_settings.lcd_setting[SNeutrinoSettings::LCD_BRIGHTNESS], last_toggle_state_power);
 	}
 }
 
