@@ -425,7 +425,7 @@ void CVFD::showRCLock(int duration)
 
 	display(g_Locale->getText(LOCALE_RCLOCK_LOCKED));
 	sleep(duration);
-	display(display_text);
+	display(servicename.c_str());
 }
 
 /* update is default true, the mute code sets it to false
