@@ -874,7 +874,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 		has_follow_screenings = true;
 	}
 
-/* merge conflict */
+	// show extended movie info
+	if (mp_info && !extMovieInfo.empty())
+		processTextToArray(extMovieInfo);
+
 #if 0
 	/* neat for debugging duplicate event issues etc. */
 	char *epgid;
@@ -884,10 +887,6 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 		processTextToArray(epgid);
 		free(epgid);
 	}
-#else
-	// show extended movie info
-	if (mp_info && !extMovieInfo.empty())
-		processTextToArray(extMovieInfo);
 #endif
 
 	COSDFader fader(g_settings.theme.menu_Content_alpha);
