@@ -66,21 +66,16 @@ static int proc_put(const char *path, bool state)
 {
 	int ret, ret2;
 	int pfd = open(path, O_WRONLY);
-	char *value;
-	if (state)
-		value="1";
-	else
-		value="0";
 	if (pfd < 0)
 		return pfd;
-	ret = write(pfd, value, 1);
+	ret = write(pfd, state ? "1" : "0", 1);
 	ret2 = close(pfd);
 	if (ret2 < 0)
 		return ret2;
 	return ret;
 }
 #else
-static int proc_put(const char *path, bool state) {}
+static int proc_put(const char, bool) {}
 #endif
 
 static char volume = 0;
@@ -728,14 +723,14 @@ void CLCD::count_down()
 	}
 }
 
-void CLCD::setlcdparameter(int dimm, const int power)
+void CLCD::setlcdparameter(int dimm, const int _power)
 {
 	if(dimm < 0)
 		dimm = 0;
 	else if(dimm > 15)
 		dimm = 15;
 
-	if(!power)
+	if(!_power)
 		dimm = 0;
 
 	if(brightness == dimm)
@@ -743,13 +738,13 @@ void CLCD::setlcdparameter(int dimm, const int power)
 
 	brightness = dimm;
 
-	printf("CLCD::%s(dimm %d power %d)\n", __func__, dimm, power);
+	printf("CLCD::%s(dimm %d power %d)\n", __func__, dimm, _power);
 	setBrightness(dimm);
 }
 
+#if HAVE_SPARK_HARDWARE
 void CLCD::SetIcons(int icon, bool on)
 {
-#if HAVE_SPARK_HARDWARE
 	struct aotom_ioctl_data d;
 	d.u.icon.icon_nr = icon;
 	if (on == true)
@@ -764,10 +759,12 @@ void CLCD::SetIcons(int icon, bool on)
 			perror("[neutrino] CLCD::SetIcons() VFDICONDISPLAYONOFF");
 		close(fd);
 	}
-#else
-	//nothing
-#endif
 }
+#else
+void CLCD::SetIcons(int, bool)
+{
+}
+#endif
 void CLCD::ShowDiskLevel()
 {
 #if !HAVE_GENERIC_HARDWARE && !HAVE_ARM_HARDWARE
