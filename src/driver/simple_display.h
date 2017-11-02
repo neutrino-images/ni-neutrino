@@ -23,10 +23,10 @@
 	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#ifndef __lcdd__
-#define __lcdd__
+#ifndef __simple_display__
+#define __simple_display__
 
-#define LCDDIR_VAR "/var/share/tuxbox/neutrino/lcdd"
+#define CVFD CLCD
 
 typedef enum
 {
@@ -67,7 +67,6 @@ typedef enum
 	FP_ICON_DD,
 	FP_ICON_LOCK
 } fp_icon;
-#define CVFD CLCD
 
 typedef enum
 {
@@ -105,27 +104,9 @@ typedef enum
 	SPARK_ALL = 46
 } spark_icon;
 
-#ifdef LCD_UPDATE
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-// TODO Why is USE_FILE_OFFSET64 not defined, if file.h is included here????
-#ifndef __USE_FILE_OFFSET64
-#define __USE_FILE_OFFSET64 1
-#endif
-#include "driver/file.h"
-#endif // LCD_UPDATE
-
 #include <pthread.h>
 #include <string>
 
-#ifdef HAVE_TRIPLEDRAGON
-#include <lcddisplay/fontrenderer.h>
-
-
-class CLCDPainter;
-class LcdFontRenderClass;
-#endif
 class CLCD
 {
 	public:
@@ -139,12 +120,6 @@ class CLCD
 			MODE_MENU_UTF8,
 			MODE_AUDIO,
 			MODE_MOVIE
-#ifdef LCD_UPDATE
-		,	MODE_FILEBROWSER,
-			MODE_PROGRESSBAR,
-			MODE_PROGRESSBAR2,
-			MODE_INFOBOX
-#endif // LCD_UPDATE
 		};
 		enum AUDIOMODES
 		{
@@ -155,58 +130,8 @@ class CLCD
 			AUDIO_MODE_REV
 		};
 
-
 	private:
 
-#ifdef HAVE_TRIPLEDRAGON
-		class FontsDef
-		{
-			public:
-				LcdFont *channelname;
-				LcdFont *time; 
-				LcdFont *menutitle;
-				LcdFont *menu;
-		};
-
-		CLCDDisplay			display;
-		LcdFontRenderClass		*fontRenderer;
-		FontsDef			fonts;
-
-#define LCD_NUMBER_OF_BACKGROUNDS 5
-		raw_display_t                   background[LCD_NUMBER_OF_BACKGROUNDS];
-
-		MODES				mode;
-		AUDIOMODES			movie_playmode;
-
-		std::string			servicename;
-		std::string			epg_title;
-		std::string			movie_big;
-		std::string			movie_small;
-		std::string			menutitle;
-		char				volume;
-		unsigned char			percentOver;
-		bool				muted;
-		bool				showclock;
-		bool				movie_centered;
-		bool				movie_is_ac3;
-		pthread_t			thrTime;
-		bool				thread_started;
-		int                             last_toggle_state_power;
-		int				clearClock;
-		unsigned int                    timeout_cnt;
-
-		void count_down();
-
-		CLCD();
-
-		static void* TimeThread(void*);
-		bool lcdInit(const char * fontfile1, const char * fontname1, 
-		             const char * fontfile2=NULL, const char * fontname2=NULL,
-		             const char * fontfile3=NULL, const char * fontname3=NULL);
-		void setlcdparameter(int dimm, int contrast, int power, int inverse, int bias);
-		void displayUpdate();
-		void showTextScreen(const std::string & big, const std::string & small, int showmode, bool perform_wakeup, bool centered = false);
-#else
 		CLCD();
 		std::string	menutitle;
 		std::string	servicename;
@@ -215,13 +140,12 @@ class CLCD
 		static void	*TimeThread(void *);
 		pthread_t	thrTime;
 		bool		thread_running;
-		int			last_toggle_state_power;
-		int			brightness;
+		int		last_toggle_state_power;
+		int		brightness;
 		unsigned int	timeout_cnt;
 		unsigned int	switch_name_time_cnt;
-		void		setlcdparameter(int dimm, int _power);
+		void		setlcdparameter(int dimm, int power);
 		void		count_down();
-#endif
 
 	public:
 		bool has_lcd;
@@ -254,11 +178,13 @@ class CLCD
 		void showAudioTrack(const std::string & artist, const std::string & title, const std::string & album);
 		void showAudioPlayMode(AUDIOMODES m=AUDIO_MODE_PLAY);
 		void showAudioProgress(const char perc, bool isMuted = false);
+
 		void setBrightness(int);
 		int getBrightness();
-
 		void setBrightnessStandby(int);
 		int getBrightnessStandby();
+		void setBrightnessDeepStandby(int) { return ; };
+		int getBrightnessDeepStandby() { return 0; };
 
 		void setContrast(int);
 		int getContrast();
@@ -273,8 +199,6 @@ class CLCD
 
 		void setAutoDimm(int);
 		int getAutoDimm();
-		void setBrightnessDeepStandby(int) { return ; };
-		int getBrightnessDeepStandby() { return 0; };
 		void repaintIcons() { return; };
 		void setMuted(bool);
 
@@ -291,29 +215,6 @@ class CLCD
 		void ShowIcon(fp_icon icon, bool show);
 		void ShowText(const char *s) { showServicename(std::string(s), true); };
 		~CLCD();
-#ifdef LCD_UPDATE
-	private:
-		CFileList* m_fileList;
-		int m_fileListPos;
-		std::string m_fileListHeader;
-
-		std::string m_infoBoxText;
-		std::string m_infoBoxTitle;
-		int m_infoBoxTimer;   // for later use
-		bool m_infoBoxAutoNewline;
-		
-		bool m_progressShowEscape;
-		std::string  m_progressHeaderGlobal;
-		std::string  m_progressHeaderLocal;
-		int m_progressGlobal;
-		int m_progressLocal;
-	public:
-		void showFilelist(int flist_pos = -1,CFileList* flist = NULL,const char * const mainDir=NULL);
-		void showInfoBox(const char * const title = NULL,const char * const text = NULL,int autoNewline = -1,int timer = -1);
-		void showProgressBar(int global = -1,const char * const text = NULL,int show_escape = -1,int timer = -1);
-		void showProgressBar2(int local = -1,const char * const text_local = NULL,int global = -1,const char * const text_global = NULL,int show_escape = -1);
-#endif // LCD_UPDATE
 };
 
-
-#endif
+#endif // __simple_display__

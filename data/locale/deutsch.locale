@@ -1,5 +1,6 @@
 AUDIOSelectMenue.head Tonoptionen
-EPGMenu.epgplus Vorschau-Übersicht (EPG Plus)
+AUDIOSelectMenue.volume Tonspur und Lautstärkeanpassung
+EPGMenu.epgplus EPG-Zeitlinien (EPG Plus)
 EPGMenu.eventinfo Info zur Sendung
 EPGMenu.eventlist Vorschau aktuelles Programm
 EPGMenu.head EPG - Programminformation
@@ -231,6 +232,7 @@ bouquetname.hdtv HD-Kanäle
 bouquetname.new Neue Kanäle
 bouquetname.other Unbekannter Provider
 bouquetname.removed Gelöschte Kanäle
+bouquetname.uhdtv UHD-Kanäle
 bouquetname.webtv WebTV-Kanäle
 buildinfo.compiled_on Build Host
 buildinfo.compiled_with Compiler Version
@@ -288,7 +290,7 @@ channellist.head Alle Kanäle
 channellist.history Verlauf
 channellist.history_clear Verlauf löschen
 channellist.keep_numbers Dauerhafte Kanalnummern
-channellist.make_hdlist Erzeuge Bouquet mit HD-Kanälen
+channellist.make_hdlist Erzeuge Bouquets mit HD- und UHD-Kanälen
 channellist.make_newlist Erzeuge Bouquet mit neuen Kanälen
 channellist.make_removedlist Erzeuge Bouquet mit gelöschten Kanälen
 channellist.make_webtvlist Erzeuge Bouquet mit WebTV-Kanälen
@@ -374,7 +376,7 @@ colorthememenu.head Theme auswählen
 colorthememenu.head2 Themes laden
 colorthememenu.menu_hints Hinweisfenster
 colorthememenu.name Themename
-colorthememenu.neutrino_theme NI-Neutrino-HD Theme
+colorthememenu.neutrino_theme Theme zurücksetzen
 colorthememenu.question Aktuelles Theme beibehalten?
 colorthememenu.save aktuelles Theme speichern
 colorthememenu.select1 Benutzer Theme
@@ -673,7 +675,9 @@ flashupdate.cantopenfile kann Datei nicht öffnen
 flashupdate.cantopenmtd kann MTD nicht öffnen
 flashupdate.checkupdate_internet Online-Update
 flashupdate.checkupdate_local Lokales Update
+flashupdate.choose_partition Partition wählen
 flashupdate.copy_image Kopiere Image in den Arbeitsspeicher
+flashupdate.copy_settings Einstellungen ins neue Image übernehmen?
 flashupdate.createimage Image speichern
 flashupdate.createimage_add_env 'env' hinzufügen
 flashupdate.createimage_add_kernel 'kernel' hinzufügen
@@ -723,7 +727,7 @@ flashupdate.namemode2_hostname_time <Partition>+<Zeit>+<Hostname>.img
 flashupdate.new_found Updates verfügbar!
 flashupdate.new_notfound Keine Updates verfügbar!
 flashupdate.ng_noflash USB-Image aktiv, Update nicht möglich!
-flashupdate.noversion Eine Versionsüberprüfung ist nur über das Online-Update möglich.\nWollen Sie das ausgewählte Image trotzdem installieren?
+flashupdate.noversion Die Versionsüberprüfung ist nur bei Online-Aktualisierungen möglich.\nTrotzdem fortfahren?
 flashupdate.programmingflash programmiere Flash
 flashupdate.proxypassword Passwort
 flashupdate.proxypassword_hint1 Geben sie das Proxy-Passwort ein
@@ -745,6 +749,8 @@ flashupdate.reallyflashmtd Wollen Sie den Flashvorgang wirklich durchführen?\n\
 flashupdate.savesuccess Das Image wurde erfolgreich unter dem\nDateinamen %s gespeichert.
 flashupdate.selectimage Verfügbare Images und Updates
 flashupdate.settings Update-Einstellungen
+flashupdate.start_ofgwrite Starte ofgwrite ...
+flashupdate.start_selected_partition Starte ausgewählte Partition?
 flashupdate.titlereadflash Flash auslesen
 flashupdate.titlewriteflash Flash schreiben
 flashupdate.type_addon Erweiterung
@@ -835,7 +841,7 @@ hdd_activate Übernehmen
 hdd_allow_set_recdir Erlaube sofort Aufnahmen
 hdd_check Dateisystemprüfung
 hdd_check_failed Datenträgerprüfung fehlgeschlagen
-hdd_extended_settings Erweiterte Datenträgereinstellungen
+hdd_extended_settings Erweiterte Einstellungen
 hdd_fast Schnell
 hdd_format Formatiere Datenträger
 hdd_format_failed Formatierung fehlgeschlagen! Stellen Sie sicher, dass der Datenträger nicht in Verwendung ist und versuchen Sie es erneut.
@@ -857,7 +863,7 @@ hdd_info_unknown unbekannt
 hdd_manage Datenträger verwalten
 hdd_middle Mittel
 hdd_mount Mount
-hdd_mount_failed Fehler! Überprüfen Sie ihre Datenträgereinstellungen.
+hdd_mount_failed Fehler! Bitte Datenträgereinstellungen überprüfen.
 hdd_mount_ok Datenträger bereit
 hdd_mount_umount Mount/Unmount
 hdd_noise Akustikkontrolle (AAM)
@@ -872,7 +878,7 @@ hdd_statfs_always immer
 hdd_statfs_recording nur während Aufnahme
 hdd_umount Aushängen
 hdd_umount_warn Datenträger aushängen
-hdd_umounted Datenträger entfernt
+hdd_umounted Gerät entfernt
 hdd_wakeup Interne Aufweckfunktion
 hdd_wakeup_msg Aufweckfunktion mit Nachricht 
 hdd_wakeup_start Aufweckfunktion wird gestartet
@@ -1158,7 +1164,7 @@ menu.hint_channellist_foot Definiert, welche Informationen im unteren Sendungsfe
 menu.hint_channellist_mode Wählen Sie die Start-Kanalliste im TV-Modus
 menu.hint_channellist_mode_radio Wählen Sie die Start-Kanalliste im Radio-Modus
 menu.hint_channellist_setup Wählen Sie die Anzeigeoptionen für die Kanalliste
-menu.hint_channellist_show_channellogo Zeigt Senderlogos in Kanalliste, Eventliste, EPG-Plus, EPG-Ansicht und Moviebrowser.
+menu.hint_channellist_show_channellogo Senderlogos aktivieren/deaktivieren.
 menu.hint_channellist_show_channelnumber Zeigt Kanalnummer in der Kanalliste.
 menu.hint_channellist_show_empty_favs Zeigt oder versteckt leere Bouquets in den Favoriten
 menu.hint_channellist_show_infobox Zeigt oder versteckt das untere Sendungsfenster
@@ -1241,7 +1247,7 @@ menu.hint_inactive_back Ändern Sie die Hintergrundfarbe für deaktivierte Fenst
 menu.hint_inactive_textcolor Ändern Sie die Textfarbe für deaktivierte Fensterinhalte
 menu.hint_inet_radio Internetradio
 menu.hint_inetradio_autostart Spielt automatisch den ersten Eintrag der Favoriten-Liste ab
-menu.hint_info Informationen über das Image, CPU, Arbeitsspeicher, Stream usw.
+menu.hint_info Systeminformationen anzeigen.
 menu.hint_infobar_analogclock Zeigt eine Analoguhr anstatt der digitalen Anzeige der Zeit
 menu.hint_infobar_back Ändern Sie die Hintergrundfarbe für die Infobar
 menu.hint_infobar_buttons_usertitle Erzwingt die benutzerdefinierten Titel der Farbtasten
@@ -1254,7 +1260,7 @@ menu.hint_infobar_ecminfo Anzeigen der ECM-Info, während die Infobar eingeblend
 menu.hint_infobar_filesys Zeigen den vom Flash- und einer HDD verwendeten Speicherplatz
 menu.hint_infobar_fonts Ändern Sie die Schriftgrößen in der Infobar
 menu.hint_infobar_logo Logo-, Kanalnummer- und Signal-Anzeige; Optionen in [Klammern] erscheinen in der kleinen Infobox
-menu.hint_infobar_logo_dir Wählen Sie das externe Verzeichnis für die Senderlogos
+menu.hint_infobar_logo_dir Verzeichnis für Senderlogos festlegen.
 menu.hint_infobar_on_epg Zeigt einen Hinweis bei EPG-Änderungen
 menu.hint_infobar_radiotext Zeigt Radiotext in einen Fenster, wenn verfügbar
 menu.hint_infobar_res Zeige die gesendete Auflösung in Symbolen
@@ -1354,7 +1360,7 @@ menu.hint_leds_tv Definiert den Status der Power-LEDs im TV-Modus
 menu.hint_load Laden der Einstellungen aus einer Datei
 menu.hint_longkeypress_duration Tasten, die länger als die angegebene Zeit betätigt werden, werden als "langer Tastendruck" behandelt.
 menu.hint_lua Plugins ausführen
-menu.hint_make_hdlist Bei aktiver Option wird ein Bouquet namens 'HD' erzeugt, in dem alle HD-Sender zusammengefasst sind
+menu.hint_make_hdlist Bei aktiver Option werden Bouquets namens 'HD' und 'UHD' erzeugt, in denen alle HD- bzw. UHD-Sender zusammengefasst sind
 menu.hint_make_newlist Nach einer Kanalsuche wird ein Bouquet namens 'neue Kanäle' erzeugt
 menu.hint_make_removedlist Nach einer Kanalsuche wird ein Bouquet namens 'gelöschte Kanäle' erzeugt
 menu.hint_make_webtvlist Bei aktiver Option wird ein Bouquet namens 'WebTV' erzeugt, in dem alle WebTV-Sender zusammengefasst sind
@@ -1378,7 +1384,7 @@ menu.hint_misc_onlineservices Konfigurieren und steuern von Online-Diensten wie 
 menu.hint_misc_zapit Verwaltung der Start-Kanäle für den TV/Radio-Modus
 menu.hint_movie Wiedergabe von Filmen
 menu.hint_moviebrowser_fonts Ändern Sie die Schriftgrößen im Moviebrowser (Meine Aufnahmen)
-menu.hint_moviebrowser_setup Legen Sie Auswahl- und Anzeigeoptionen des Moviebrowsers fest
+menu.hint_moviebrowser_setup Auswahl- und Anzeigeoptionen einstellen.
 menu.hint_movieplayer_bisection_jump Startwert für den bisektionalen Modus, um mit Seite hoch/runter vor- bzw. zurückzuspringen
 menu.hint_movieplayer_plugin Wählen Sie ein Plugin, das mit einer Schnellstart-Taste im Movieplayer-Modus gestartet wird
 menu.hint_net_broadcast Ändern Sie die Broadcast-Adresse.\nWenn Sie unsicher sind, verwenden Sie zuletzt .255
@@ -1633,7 +1639,7 @@ menu.hint_sw_update System aktualisieren, Image sichern und wiederherstellen
 menu.hint_theme Wählen Sie ein vordefiniertes Farbschema, speichern oder laden Sie ihre eigenen Farbschemata
 menu.hint_timeouts Anzeigedauer für Menüs oder Infofenster, die sich automatisch schließen (0 deaktiviert)
 menu.hint_timeouts_static_messages Anzeigedauer für bestimmte Meldungen mit Benutzerinteraktion
-menu.hint_timer_followscreenings Zeige Terminauswahl mit Folge-Events zur Timerprogrammierung. "Immer" zeigt die Auswahl auch dann, wenn nur ein Event gefunden wurde.
+menu.hint_timer_followscreenings Zeige weitere Termine für Timerprogrammierung. "Immer" zeigt die Auswahl auch dann, wenn nur ein Event gefunden wurde.
 menu.hint_timers Hinzufügen, entfernen und bearbeiten geplanter Aufnahmen oder anderer Timer
 menu.hint_timezone Wählen Sie ihre Zeitzone aus
 menu.hint_tmdb_api_key Geben Sie den TMDb API Schlüssel ein. Eine leere Eingabe schaltet die TMDb-Unterstützung aus
@@ -1958,7 +1964,7 @@ moviebrowser.menu_truncate Film kürzen
 moviebrowser.option_browser Anzeigeoptionen
 moviebrowser.reload_at_start Filminfos neu laden bei Start
 moviebrowser.remount_at_start Filmdepot verbinden bei Start
-moviebrowser.scan_for_movies Filminfos neu laden
+moviebrowser.scan_for_movies Suche Aufnahmen ...
 moviebrowser.serie_auto_create Serien automatisch zuordnen
 moviebrowser.serie_head Serie
 moviebrowser.serie_name Name ändern
@@ -2358,9 +2364,9 @@ reset_channels Lösche Kanäle
 reset_confirm Sind Sie sich sicher?
 reset_removed Entferne gelöschte Kanäle
 reset_settings Einstellungen auf Standardwerte
-satsetup.auto_scan Automatischer Scan (%s)
-satsetup.auto_scan_all Automatischer Scan (alle Satelliten)
-satsetup.cable Erweiterter Kabel-Scan
+satsetup.auto_scan Automatische Suche (%s)
+satsetup.auto_scan_all Automatische Suche (alle Satelliten)
+satsetup.cable Kabel-Suchlauf
 satsetup.cable_nid Netzwerk ID
 satsetup.comm_input Committed Input
 satsetup.diseqc DiSEqC
@@ -2759,8 +2765,8 @@ wizard.setup_advanced Erweitert
 wizard.setup_easy Einfach
 wizard.setup_type Installationstyp
 wizard.setup_type_hint Wählen Sie einfache Grundeinstellungen oder erweiterte Auswahlmöglichkeiten für die Installation
-wizard.welcome_head Willkommen beim NI-Einrichtungs-Assistenten!
-wizard.welcome_text NI-Image Info:\nIhre Set-Top-Box lässt sich bequem per Webinterface\nsteuern fuer z.B. Timer-Verwaltung oder Live-TV im Web-Browser.\nEin root-Passwort ist noch nicht gesetzt!\nDies sollte so bald wie möglich durch den Befehl "passwd"\nvia Telnet nachgeholt werden um Fremdzugriffe auf den Receiver zu verhindern.\nNächster Schritt?
+wizard.welcome_head Willkommen zur Ersteinrichtung Ihres Receivers!
+wizard.welcome_text Neutrino ist eine von der Tuxbox-Community entwickelte und gepflegte Benutzeroberfläche für Set-Top-Boxen und lebt von der Unterstützung der Nutzer und vielen freiwilligen beitragenden Helfern.\nSollten Sie Hilfe benötigen, Anregungen bzw. Verbesserungsvorschläge haben oder Fehler bemerken,\nkönnen Sie sich gerne auf unseren Supportseiten melden oder Kontakt aufnehmen. Kontakt- bzw. Webaddressen entnehmen Sie bitte hierfür im Hauptmenü unter "Informationen". \nIn den folgenden Schritten wird Sie Neutrino durch die Ersteinrichtung führen.\nSicherheitshinweis:\n Ihre Set-Top-Box lässt sich auch per Webinterface steuern, um zum Beispiel die Timer-Verwaltung zu nutzen oder Live-TV im Web-Browser zu schauen.\nAchten Sie bitte darauf, dass Ihr Gerät nicht von aussen zugänglich ist,\nda sonst ein unbefugter Zugriff über das Internet nicht ausgeschlossen werden kann!\nNächster Schritt?
 word.from ab
 word.in in
 youtube.dev_id YouTube Dev ID

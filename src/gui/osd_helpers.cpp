@@ -14,7 +14,12 @@
 #include <gui/volumebar.h>
 #include <gui/osd_helpers.h>
 
+#if HAVE_COOL_HARDWARE
 #include <video_cs.h>
+#endif
+#if USE_STB_HAL
+#include <video_hal.h>
+#endif
 
 extern CInfoClock *InfoClock;
 extern CTimeOSD *FileTimeOSD;
@@ -144,6 +149,16 @@ int COsdHelpers::isVideoSystem1080(int res)
 	    (res == VIDEO_STD_1080P60) ||
 	    (res == VIDEO_STD_1080P2397) ||
 	    (res == VIDEO_STD_1080P2997))
+		return true;
+#endif
+
+#if HAVE_ARM_HARDWARE
+	if ((res == VIDEO_STD_1080P50) ||
+	    (res == VIDEO_STD_1080P60) ||
+	    (res == VIDEO_STD_2160P24) ||
+	    (res == VIDEO_STD_2160P25) ||
+	    (res == VIDEO_STD_2160P30) ||
+	    (res == VIDEO_STD_2160P50))
 		return true;
 #endif
 
