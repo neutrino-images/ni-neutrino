@@ -320,9 +320,7 @@ class CMoviePlayerGui : public CMenuTarget
 	bool getLiveUrl(const std::string &url, const std::string &script, std::string &realUrl, std::string &_pretty_name, std::string &info1, std::string &info2, std::string &header);
 
 	//NI
-	MI_MOVIE_INFO *	p_movie_info;
 	std::string	file_name;
-	int getState()	{ return playstate; };
 };
 
 #endif
