@@ -70,6 +70,7 @@ extern CRemoteControl * g_RemoteControl; /* neutrino.cpp */
 
 bool invert = false;
 char g_str[64];
+
 bool blocked = false;
 int blocked_counter = 0;
 int file_vfd = -1;
@@ -255,6 +256,14 @@ void* CVFD::ThreadScrollText(void * arg)
 
 CVFD::CVFD()
 {
+	text[0] = 0;
+	g_str[0] = 0;
+	clearClock = 0;
+	mode = MODE_TVRADIO;
+	switch_name_time_cnt = 0;
+	timeout_cnt = 0;
+	service_number = -1;
+
 #ifdef VFD_UPDATE
         m_fileList = NULL;
         m_fileListPos = 0;

@@ -104,5 +104,10 @@ function init() {
 		<div id="out"></div>
 	</div>
 </div>
+<script type="text/javascript">
+//<![CDATA[
+	init();
+	window.setInterval("get_data();",5000);
+//]]>
 </body>
 </html>

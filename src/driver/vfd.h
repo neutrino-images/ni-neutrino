@@ -101,6 +101,7 @@ class CVFD
 		int fd;
 		int brightness;
 		std::string text;
+		char 				g_str[64];
 
 		void count_down();
 

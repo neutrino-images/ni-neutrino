@@ -95,10 +95,8 @@ bool glcd_play = false;
 
 #include <system/stacktrace.h>
 
-#ifndef HAVE_COOL_HARDWARE
-#define LCD_MODE CVFD::MODE_MOVIE
-#else
-#define LCD_MODE CVFD::MODE_MENU_UTF8
+#if 0
+#include <gui/infoicons.h>
 #endif
 
 //NI InfoIcons
@@ -806,8 +804,9 @@ bool CMoviePlayerGui::SelectFile()
 	}
 
 	printf("CMoviePlayerGui::SelectFile: isBookmark %d timeshift %d isMovieBrowser %d is_audio_playing %d\n", isBookmark, timeshift, isMovieBrowser, is_audio_playing);
-	//NI wakeup_hdd(g_settings.network_nfs_recordingdir.c_str());
-
+#if 0
+	wakeup_hdd(g_settings.network_nfs_recordingdir.c_str());
+#endif
 	if (timeshift != TSHIFT_MODE_OFF) {
 		t_channel_id live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 		p_movie_info = CRecordManager::getInstance()->GetMovieInfo(live_channel_id);
@@ -1936,6 +1935,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				playback->SetSpeed(speed);
 			}
 			updateLcd();
+
 			//NI if (timeshift == TSHIFT_MODE_OFF)
 				callInfoViewer();
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_bookmark) {
@@ -2356,12 +2356,14 @@ void CMoviePlayerGui::callInfoViewer(bool init_vzap_it)
 
 		g_InfoViewer->showMovieTitle(playstate, mi->epgId >>16, channelName, mi->epgTitle, mi->epgInfo1,
 			duration, position, repeat_mode, init_vzap_it ? 0 /*IV_MODE_DEFAULT*/ : 1 /*IV_MODE_VIRTUAL_ZAP*/);
+		unlink("/tmp/cover.jpg");
 		return;
 	}
 
 	/* not moviebrowser => use the filename as title */
 	CVFD::getInstance()->ShowText(pretty_name.c_str());
 	g_InfoViewer->showMovieTitle(playstate, 0, pretty_name, info_1, info_2, duration, position, repeat_mode);
+	unlink("/tmp/cover.jpg");
 }
 
 bool CMoviePlayerGui::getAudioName(int apid, std::string &apidtitle)
@@ -2829,6 +2831,27 @@ void CMoviePlayerGui::UpdatePosition()
 	FileTimeOSD->update(position, duration);
 #ifdef DEBUG
 	printf("CMoviePlayerGui::%s: spd %d pos %d/%d (%d, %d%%)\n", __func__, speed, position, duration, duration-position, file_prozent);
+#endif
+}
+
+void CMoviePlayerGui::StopSubtitles(bool enable_glcd_mirroring __attribute__((unused)))
+{
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
+	printf("[CMoviePlayerGui] %s\n", __FUNCTION__);
+	int ttx, ttxpid, ttxpage;
+
+	int current_sub = playback->GetSubtitlePid();
+	if (current_sub > -1)
+		dvbsub_pause();
+	tuxtx_subtitle_running(&ttxpid, &ttxpage, &ttx);
+	if (ttx) {
+		tuxtx_pause_subtitle(true);
+		frameBuffer->paintBackground();
+	}
+#ifdef ENABLE_GRAPHLCD
+	if (enable_glcd_mirroring)
+		nGLCD::MirrorOSD(g_settings.glcd_mirror_osd);
+#endif
 #endif
 }
 
@@ -3569,7 +3592,11 @@ void CMoviePlayerGui::makeScreenShot(bool autoshot, bool forcover)
 			sc->SetSize(w, h);
 		}
 	}
+#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 	sc->Start("-r 320 -j 75");
+#else
+	sc->Start();
+#endif
 	if (autoshot)
 		autoshot_done = true;
 }

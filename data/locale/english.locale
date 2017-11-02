@@ -1,6 +1,6 @@
-AUDIOSelectMenue.head Audio Selection
+AUDIOSelectMenue.head Audio Options
 AUDIOSelectMenue.volume Audio selection and volume adjustment
-EPGMenu.epgplus Eventlist overview (EPG Plus)
+EPGMenu.epgplus EPG-Timelines (EPG Plus)
 EPGMenu.eventinfo Details current program
 EPGMenu.eventlist Eventlist current programm
 EPGMenu.head EPG - Program information
@@ -376,7 +376,7 @@ colorthememenu.head Select theme
 colorthememenu.head2 Load themes
 colorthememenu.menu_hints Hint box
 colorthememenu.name Theme name
-colorthememenu.neutrino_theme NI-Neutrino-HD Theme
+colorthememenu.neutrino_theme Reset theme
 colorthememenu.question Use selected theme?
 colorthememenu.save Save current theme
 colorthememenu.select1 User Theme
@@ -726,7 +726,7 @@ flashupdate.namemode2_hostname_time <partition>+<time>+<hostname>.img
 flashupdate.new_found New image found !
 flashupdate.new_notfound No new images found
 flashupdate.ng_noflash USB-Image active, update canceled!
-flashupdate.noversion Version check is only supported via Online update.\nAre you sure that you want to install this image?
+flashupdate.noversion Version check is only supported via online updates.\nAre you sure that you want to continue?
 flashupdate.programmingflash programming flash
 flashupdate.proxypassword Password
 flashupdate.proxypassword_hint1 enter the proxyserver password
@@ -839,8 +839,8 @@ hdd_60min 60 min.
 hdd_activate Apply settings
 hdd_allow_set_recdir Allow recordings immediately
 hdd_check Check filesystem
-hdd_check_failed Device-check failed!
-hdd_extended_settings Extended Device-Settings
+hdd_check_failed Filesystem-check failed!
+hdd_extended_settings Extended Settings
 hdd_fast Fast
 hdd_format Format device
 hdd_format_failed Formating failed! Make sure device not in use, reboot and try again
@@ -876,7 +876,7 @@ hdd_statfs Fill level query
 hdd_statfs_always always
 hdd_statfs_recording while recording only
 hdd_umount Unmount
-hdd_umount_warn unmount device
+hdd_umount_warn Unmount device
 hdd_umounted Device removed
 hdd_wakeup Internal wakeup function
 hdd_wakeup_msg wakeup function with message
@@ -1164,7 +1164,7 @@ menu.hint_channellist_foot Show additional information\nin bottom box
 menu.hint_channellist_mode Use the selected channel list mode on startup if last mode is TV
 menu.hint_channellist_mode_radio Use the selected channel list mode on startup if last mode is Radio
 menu.hint_channellist_setup Configure channel list GUI options
-menu.hint_channellist_show_channellogo Show channel logos in channellist, eventlist, EPG Plus, EPG-viewer and moviebrowser
+menu.hint_channellist_show_channellogo Enable/disable channel logos.
 menu.hint_channellist_show_channelnumber Show channel number in channel list
 menu.hint_channellist_show_empty_favs Show or hide empty bouquets in favorites
 menu.hint_channellist_show_infobox Show or hide bottom infobox of channellist
@@ -1247,7 +1247,7 @@ menu.hint_inactive_back Change inactive item background color
 menu.hint_inactive_textcolor Change inactive item text color
 menu.hint_inet_radio Internet radio
 menu.hint_inetradio_autostart Start play of first entry from favorites automatically
-menu.hint_info Information about image, box cpu and storage,\nstream information
+menu.hint_info Show system informations.
 menu.hint_infobar_analogclock Shows an analog clock instead of the digital display of the time
 menu.hint_infobar_back Change infobar background color
 menu.hint_infobar_buttons_usertitle Forces userdefined titles for the color keys
@@ -1260,7 +1260,7 @@ menu.hint_infobar_ecminfo Show ecm-info while infobar is displayed
 menu.hint_infobar_filesys Show flash and HDD used space levels
 menu.hint_infobar_fonts Change infobar font sizes
 menu.hint_infobar_logo Logo, channelnumber and signal display; Options in [brackets] will be displayed in small infobox
-menu.hint_infobar_logo_dir Select external directory to search for channels logo
+menu.hint_infobar_logo_dir Set folder for channel logos.
 menu.hint_infobar_on_epg Show infobar on current EPG event change
 menu.hint_infobar_radiotext Show radiotext window
 menu.hint_infobar_res Show channel resolution icons
@@ -1964,7 +1964,7 @@ moviebrowser.menu_truncate Truncate movie
 moviebrowser.option_browser Browser Options
 moviebrowser.reload_at_start Reload movie info at start
 moviebrowser.remount_at_start Remount at start
-moviebrowser.scan_for_movies Scan for Movies ...
+moviebrowser.scan_for_movies Scan for recordings...
 moviebrowser.serie_auto_create Serie auto create
 moviebrowser.serie_head Serie
 moviebrowser.serie_name Change name
@@ -2767,8 +2767,8 @@ wizard.setup_advanced Advanced
 wizard.setup_easy Easy
 wizard.setup_type Installation type
 wizard.setup_type_hint Easy to setup for CanalDigitaal/TéléSAT/TV Vlaanderen providers or simple cable scan
-wizard.welcome_head Welcome to the NI-Setup-Wizard
-wizard.welcome_text NI-Image Info:\nYour set-top box can be conveniently controlled\nwith the web interface for timer management or live TV on the Web browser.\nA root-password is not yet set!\nYou should catch up this by using the command "passwd" via telnet asap.\nDo you want to continue?
+wizard.welcome_head Welcome to the Setup Wizard
+wizard.welcome_text Neutrino is designed for set-top boxes and is maintained by the Tuxbox community and lives from the support of users and many volontary contributors./nIf you need help or have  suggestions, found bugs, please feel free to contact us.\nSupport pages or Contact and / or Web addresses can be found in the main menu under "Information".\nNext steps will guide you through initial installation of the device.\nImportant: Your set-top box can be conveniently controlled\nwith the web interface for timer management or live TV on the Web browser.\nDo not make it accessible to untrusted networks!\nDo you want to continue?
 word.from from
 word.in in
 youtube.dev_id YouTube Dev ID
