@@ -410,7 +410,7 @@ void CLCD::showTime(bool force)
 			setled(red, green);
 }
 
-void CVFD::showRCLock(int duration)
+void CLCD::showRCLock(int duration)
 {
 	if (g_info.hw_caps->display_type != HW_DISPLAY_LINE_TEXT || !g_settings.lcd_notify_rclock)
 	{
