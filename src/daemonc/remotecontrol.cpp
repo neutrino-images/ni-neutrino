@@ -768,6 +768,7 @@ void CRemoteControl::stopvideo()
 
 void CRemoteControl::radioMode()
 {
+printf("CRemoteControl::radioMode\n");
 	g_Zapit->setMode( CZapitClient::MODE_RADIO );
 }
 
