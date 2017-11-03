@@ -1052,7 +1052,9 @@ void CVFD::setMode(const MODES m, const char * const title)
 		ShowIcon(FP_ICON_COL1, true);
 		ShowIcon(FP_ICON_COL2, true);
 #endif
+#if ! HAVE_COOL_HARDWARE
 		ClearIcons();
+#endif
 		ShowIcon(FP_ICON_USB, false);
 		ShowIcon(FP_ICON_HDD, false);
 		showclock = true;
