@@ -1964,7 +1964,7 @@ void CNeutrinoApp::SetChannelMode(int newmode)
 			else
 				bouquetList = TVsatList;
 			break;
-		case LIST_MODE_WEBTV:
+		case LIST_MODE_WEB:
 			if (isRadioMode)
 				bouquetList = RADIOwebList;
 			else
@@ -3130,7 +3130,7 @@ int CNeutrinoApp::showChannelList(const neutrino_msg_t _msg, bool from_menu)
 			SetChannelMode(LIST_MODE_PROV);
 		nNewChannel = bouquetList->exec(true);
 	} else if(msg == CRCInput::RC_www) {
-		SetChannelMode(LIST_MODE_WEBTV);
+		SetChannelMode(LIST_MODE_WEB);
 		if (bouquetList->Bouquets.empty())
 			SetChannelMode(LIST_MODE_PROV);
 		nNewChannel = bouquetList->exec(true);
@@ -5446,12 +5446,12 @@ bool CNeutrinoApp::adjustToChannelID(const t_channel_id channel_id)
 		if (has_channel && first_mode_found < 0)
 			first_mode_found = LIST_MODE_PROV;
 		if(!has_channel && old_mode == LIST_MODE_PROV)
-			new_mode = LIST_MODE_WEBTV;
+			new_mode = LIST_MODE_WEB;
 
 		has_channel = TVwebList->adjustToChannelID(channel_id);
 		if (has_channel && first_mode_found < 0)
-			first_mode_found = LIST_MODE_WEBTV;
-		if(!has_channel && old_mode == LIST_MODE_WEBTV)
+			first_mode_found = LIST_MODE_WEB;
+		if(!has_channel && old_mode == LIST_MODE_WEB)
 			new_mode = LIST_MODE_SAT;
 
 		has_channel = TVsatList->adjustToChannelID(channel_id);
@@ -5474,12 +5474,12 @@ bool CNeutrinoApp::adjustToChannelID(const t_channel_id channel_id)
 		if (has_channel && first_mode_found < 0)
 			first_mode_found = LIST_MODE_PROV;
 		if(!has_channel && old_mode == LIST_MODE_PROV)
-			new_mode = LIST_MODE_WEBTV;
+			new_mode = LIST_MODE_WEB;
 
 		has_channel = RADIOwebList->adjustToChannelID(channel_id);
 		if (has_channel && first_mode_found < 0)
-			first_mode_found = LIST_MODE_WEBTV;
-		if(!has_channel && old_mode == LIST_MODE_WEBTV)
+			first_mode_found = LIST_MODE_WEB;
+		if(!has_channel && old_mode == LIST_MODE_WEB)
 			new_mode = LIST_MODE_SAT;
 
 		has_channel = RADIOsatList->adjustToChannelID(channel_id);
