@@ -1,6 +1,6 @@
 #!/bin/sh
 
-package="tuxbox-neutrino"
+package="ni-neutrino"
 
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
