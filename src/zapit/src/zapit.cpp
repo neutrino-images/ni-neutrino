@@ -2463,6 +2463,7 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 	current_volume = ZapStart_arg->volume;
 
 	webtv_xml = ZapStart_arg->webtv_xml;
+	webradio_xml = ZapStart_arg->webradio_xml;
 
 	videoDemux = new cDemux();
 	videoDemux->Open(DMX_VIDEO_CHANNEL);

@@ -476,6 +476,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	g_settings.make_hd_list = configfile.getInt32("make_hd_list", 0);
 	g_settings.make_webtv_list = configfile.getInt32("make_webtv_list", 1);
+	g_settings.make_webradio_list = configfile.getInt32("make_webradio_list", 1);
 	g_settings.make_new_list = configfile.getInt32("make_new_list", 1);
 	g_settings.make_removed_list = configfile.getInt32("make_removed_list", 1);
 	g_settings.keep_channel_numbers = configfile.getInt32("keep_channel_numbers", 0);
@@ -756,9 +757,14 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		if (file_size(webtv_xml.c_str()))
 			g_settings.webtv_xml.push_back(webtv_xml);
 	}
+
 	//NI
 	CWebTVSetup webtvsetup;
 	webtvsetup.webtv_xml_auto();
+
+	std::string webradio_xml = configfile.getString("webradio_xml", WEBRADIO_XML);
+	if (file_size(webradio_xml.c_str()))
+		g_settings.webradio_xml.push_back(webradio_xml);
 
 	loadKeys();
 
@@ -1273,6 +1279,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 
 	configfile.setInt32( "make_hd_list", g_settings.make_hd_list);
 	configfile.setInt32( "make_webtv_list", g_settings.make_webtv_list);
+	configfile.setInt32( "make_webradio_list", g_settings.make_webradio_list);
 	configfile.setInt32( "make_new_list", g_settings.make_new_list);
 	configfile.setInt32( "make_removed_list", g_settings.make_removed_list);
 	configfile.setInt32( "keep_channel_numbers", g_settings.keep_channel_numbers);
@@ -1724,19 +1731,18 @@ void CNeutrinoApp::channelsInit(bool bOnly)
 	if(RADIOwebList) delete RADIOwebList;
 
 	TVchannelList = new CChannelList(g_Locale->getText(LOCALE_CHANNELLIST_HEAD), false, true);
-	RADIOchannelList = new CChannelList(g_Locale->getText(LOCALE_CHANNELLIST_HEAD), false, true);
-
 	TVbouquetList = new CBouquetList(g_Locale->getText(LOCALE_CHANNELLIST_PROVS));
 	TVfavList = new CBouquetList(g_Locale->getText(LOCALE_CHANNELLIST_FAVS));
 	TVwebList = new CBouquetList(g_Locale->getText(LOCALE_BOUQUETNAME_WEBTV));
-	RADIOwebList = new CBouquetList(g_Locale->getText(LOCALE_BOUQUETNAME_WEBTV));
 
+	RADIOchannelList = new CChannelList(g_Locale->getText(LOCALE_CHANNELLIST_HEAD), false, true);
 	RADIObouquetList = new CBouquetList(g_Locale->getText(LOCALE_CHANNELLIST_PROVS));
 	RADIOfavList = new CBouquetList(g_Locale->getText(LOCALE_CHANNELLIST_FAVS));
+	RADIOwebList = new CBouquetList(g_Locale->getText(LOCALE_BOUQUETNAME_WEBRADIO));
 
 	int tvi = 0, ri = 0;
 
-	ZapitChannelList zapitList, webtvList;
+	ZapitChannelList zapitList, webtvList, webradioList;
 
 	/* all TV channels */
 	CServiceManager::getInstance()->GetAllTvChannels(zapitList);
@@ -1814,6 +1820,20 @@ void CNeutrinoApp::channelsInit(bool bOnly)
 				printf("[neutrino] got %d WebTV channels\n", (int)webtvList.size()); fflush(stdout);
 			}
 		}
+		/* all WebRadio channels */
+		if (g_settings.make_webradio_list) {
+			if (CServiceManager::getInstance()->GetAllWebRadioChannels(webradioList)) {
+				/* all channels */
+				CBouquet* webradioBouquet = new CBouquet(0, g_Locale->getText(LOCALE_BOUQUETNAME_WEBRADIO), false, true);
+				webradioBouquet->channelList->SetChannelList(&webradioList);
+				RADIOallList->Bouquets.push_back(webradioBouquet);
+				/* "satellite" */
+				webradioBouquet = new CBouquet(0, g_Locale->getText(LOCALE_BOUQUETNAME_WEBRADIO), false, true);
+				webradioBouquet->channelList->SetChannelList(&webradioList);
+				RADIOsatList->Bouquets.push_back(webradioBouquet);
+				printf("[neutrino] got %d WebRadio channels\n", (int)webradioList.size()); fflush(stdout);
+			}
+		}
 		/* all HD channels */
 		if (g_settings.make_hd_list) {
 			if (CServiceManager::getInstance()->GetAllHDChannels(zapitList)) {
@@ -1884,7 +1904,7 @@ void CNeutrinoApp::channelsInit(bool bOnly)
 				if (b->getRadioChannels(zapitList) || (g_settings.show_empty_favorites && b->bUser)) {
 					if(b->bUser)
 						tmp = RADIOfavList->addBouquet(b);
-					else if(b->bWebtv)
+					else if(b->bWebradio)
 						tmp = RADIOwebList->addBouquet(b);
 					else
 						tmp = RADIObouquetList->addBouquet(b);
@@ -2389,6 +2409,7 @@ TIMER_START();
 	ZapStart_arg.ci_clock = g_settings.ci_clock;
 	ZapStart_arg.volume = g_settings.current_volume;
 	ZapStart_arg.webtv_xml = &g_settings.webtv_xml;
+	ZapStart_arg.webradio_xml = &g_settings.webradio_xml;
 
 	ZapStart_arg.osd_resolution = g_settings.osd_resolution;
 
@@ -2777,7 +2798,7 @@ void CNeutrinoApp::RealRun()
 			}
 		}
 
-		if( ( mode == mode_tv ) ||  ( mode == mode_radio )  || ( mode == mode_webtv ) ) {
+		if( ( mode == mode_tv ) || ( mode == mode_radio ) || ( mode == mode_webtv ) || ( mode == mode_webradio ) ) {
 			//NI
 			if (blank_screen) {
 				if (!videoDecoder->getBlank()) {
@@ -2941,7 +2962,7 @@ void CNeutrinoApp::RealRun()
 			else if (((msg == CRCInput::RC_tv) || (msg == CRCInput::RC_radio)) && (g_settings.key_tvradio_mode == (int)CRCInput::RC_nokey)) {
 				if (msg == CRCInput::RC_tv)
 				{
-					if (mode == mode_radio)
+					if (mode == mode_radio || mode == mode_webradio)
 						tvMode();
 				}
 				else if (msg == CRCInput::RC_radio)
@@ -3269,7 +3290,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 					delete [] (unsigned char*) data;
 				else
 				{
-					if (mode == mode_webtv)
+					if (mode == mode_webtv || mode == mode_webradio)
 						videoDecoder->setBlank(true);
 					g_RCInput->postMsg(NeutrinoMessages::EVT_ZAP_FAILED, data);
 				}
@@ -3361,7 +3382,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 
 	/* ================================== KEYS ================================================ */
 	if( msg == CRCInput::RC_ok || (!g_InfoViewer->getSwitchMode() && CNeutrinoApp::getInstance()->listModeKey(msg))) {
-		if( (mode == mode_tv) || (mode == mode_radio) || (mode == mode_ts) || (mode == mode_webtv)) {
+		if( (mode == mode_tv) || (mode == mode_radio) || (mode == mode_ts) || (mode == mode_webtv) || (mode == mode_webradio)) {
 			showChannelList(msg);
 			return messages_return::handled;
 		}
@@ -3662,7 +3683,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 
 				dvbsub_stop();
 
-				if ((!isTVMode) && (mode != mode_radio)) {
+				if ((!isTVMode) && (mode != mode_radio) && (mode != mode_webradio)) {
 					radioMode(true);
 				}
 				else if (isTVMode && (mode != mode_tv) && (mode != mode_webtv)) {
@@ -3749,8 +3770,9 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	else if( msg == NeutrinoMessages::RELOAD_SETUP ) {
 		bool tmp1 = g_settings.make_hd_list;
 		bool tmp2 = g_settings.make_webtv_list;
+		bool tmp3 = g_settings.make_webradio_list;
 		loadSetup(NEUTRINO_SETTINGS_FILE);
-		if(tmp1 != g_settings.make_hd_list || tmp2 != g_settings.make_webtv_list)
+		if(tmp1 != g_settings.make_hd_list || tmp2 != g_settings.make_webtv_list || tmp3 != g_settings.make_webradio_list)
 			g_Zapit->reinitChannels();
 
 		SendSectionsdConfig();
@@ -3884,9 +3906,12 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 			lastMode=mode;
 			mode=mode_ts;
 		}
-		if((data & mode_mask)== mode_webtv) {
+		if((data & mode_mask)== mode_webtv || (data & mode_mask)== mode_webradio) {
 			lastMode=mode;
-			mode=mode_webtv;
+			if ((data & mode_mask) == mode_webtv)
+				mode=mode_webtv;
+			else
+				mode=mode_webradio;
 			if ((data & norezap) != norezap) {
 				CZapitChannel * cc = CZapit::getInstance()->GetCurrentChannel();
 				if (cc && IS_WEBTV(cc->getChannelID())) {
@@ -4249,7 +4274,7 @@ void CNeutrinoApp::tvMode( bool rezap )
 		CRecordManager::getInstance()->StopAutoRecord();
 	}
 #endif
-	if (mode != mode_webtv) {
+	if (mode != mode_webtv || mode != mode_webradio) {
 		frameBuffer->useBackground(false);
 		frameBuffer->paintBackground();
 	}
@@ -4292,7 +4317,7 @@ void CNeutrinoApp::scartMode( bool bOnOff )
 #endif
 		mode = mode_unknown;
 		//re-set mode
-		if( lastMode == mode_radio ) {
+		if( lastMode == mode_radio || lastMode == mode_webradio) {
 			radioMode( false );
 		}
 		else if( lastMode == mode_tv || lastMode == mode_webtv) {
@@ -4487,7 +4512,7 @@ void CNeutrinoApp::radioMode( bool rezap)
 {
 	//printf("radioMode: rezap %s\n", rezap ? "yes" : "no");
 	INFO("rezap %d current mode %d", rezap, mode);
-	if (mode == mode_webtv) {
+	if (mode == mode_webtv || mode == mode_webradio) {
 		CMoviePlayerGui::getInstance().setLastMode(mode_unknown);
 		CMoviePlayerGui::getInstance().stopPlayBack();
 		CVFD::getInstance()->ShowIcon(FP_ICON_TV, false);
@@ -4512,7 +4537,7 @@ void CNeutrinoApp::radioMode( bool rezap)
 #endif
 	CRecordManager::getInstance()->StopAutoRecord();
 
-	if (mode != mode_webtv) {
+	if (mode != mode_webtv || mode != mode_webradio) {
 		frameBuffer->useBackground(false);
 		frameBuffer->paintBackground();
 	}
@@ -4554,7 +4579,7 @@ void CNeutrinoApp::switchTvRadioMode(const int prev_mode)
 		else if(prev_mode == mode_radio && mode != mode_radio)
 			radioMode();
 	} else {
-		if (mode == mode_radio )
+		if (mode == mode_radio || mode == mode_webradio)
 			tvMode();
 		else if(mode == mode_tv || mode == mode_webtv)
 			radioMode();
@@ -5435,7 +5460,8 @@ bool CNeutrinoApp::adjustToChannelID(const t_channel_id channel_id)
 
 		TVallList->adjustToChannelID(channel_id);
 	}
-	else if(CNeutrinoApp::getInstance()->getMode() == NeutrinoMessages::mode_radio) {
+	else if(CNeutrinoApp::getInstance()->getMode() == NeutrinoMessages::mode_radio
+			|| CNeutrinoApp::getInstance()->getMode() == NeutrinoMessages::mode_webradio) {
 		has_channel = RADIOfavList->adjustToChannelID(channel_id);
 		if (has_channel && first_mode_found < 0)
 			first_mode_found = LIST_MODE_FAV;
