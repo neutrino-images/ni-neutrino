@@ -74,7 +74,9 @@ CScreenShot::CScreenShot(const std::string fname, screenshot_format_t fmt)
 	yres = 0;
 	get_video = g_settings.screenshot_mode & 1;
 	get_osd = g_settings.screenshot_mode & 2;
-#if HAVE_GENERIC_HARDWARE || HAVE_ARM_HARDWARE
+#if HAVE_COOL_HARDWARE
+	scale_to_video = g_settings.screenshot_scale;
+#elif HAVE_GENERIC_HARDWARE || HAVE_ARM_HARDWARE
 	scale_to_video = (g_settings.screenshot_mode == 3);
 #else
 	scale_to_video = (g_settings.screenshot_mode == 3) & (g_settings.screenshot_res & 1);
@@ -257,9 +259,15 @@ void CScreenShot::cleanupThread(void *arg)
 }
 #endif
 
+#if HAVE_COOL_HARDWARE
+/* start ::run in new thread to save file in selected format */
+bool CScreenShot::Start()
+{
+#else
 /* start ::run in new thread to save file in selected format */
 bool CScreenShot::Start(const std::string custom_cmd)
 {
+#endif
 #if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
 	std::string cmd = "/bin/grab ";
 	if (get_osd && !get_video)
