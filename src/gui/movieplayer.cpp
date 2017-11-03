@@ -2855,27 +2855,6 @@ void CMoviePlayerGui::StopSubtitles(bool enable_glcd_mirroring __attribute__((un
 #endif
 }
 
-void CMoviePlayerGui::StopSubtitles(bool enable_glcd_mirroring __attribute__((unused)))
-{
-#if HAVE_SPARK_HARDWARE || HAVE_DUCKBOX_HARDWARE
-	printf("[CMoviePlayerGui] %s\n", __FUNCTION__);
-	int ttx, ttxpid, ttxpage;
-
-	int current_sub = playback->GetSubtitlePid();
-	if (current_sub > -1)
-		dvbsub_pause();
-	tuxtx_subtitle_running(&ttxpid, &ttxpage, &ttx);
-	if (ttx) {
-		tuxtx_pause_subtitle(true);
-		frameBuffer->paintBackground();
-	}
-#ifdef ENABLE_GRAPHLCD
-	if (enable_glcd_mirroring)
-		nGLCD::MirrorOSD(g_settings.glcd_mirror_osd);
-#endif
-#endif
-}
-
 void CMoviePlayerGui::showHelp()
 {
 	Helpbox helpbox(g_Locale->getText(LOCALE_MESSAGEBOX_INFO));
