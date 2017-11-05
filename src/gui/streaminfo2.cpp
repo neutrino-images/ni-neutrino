@@ -157,32 +157,6 @@ int CStreamInfo2::doSignalStrengthLoop ()
 	int dx1 = x + 10;
 	ts_setup ();
 	while (1) {
-		neutrino_msg_data_t data;
-
-		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd_MS (100);
-		g_RCInput->getMsgAbsoluteTimeout (&msg, &data, &timeoutEnd);
-
-		if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer()))
-		{
-			if (fader.FadeDone())
-			{
-				break;
-			}
-			continue;
-		}
-		if (fadeout && msg == CRCInput::RC_timeout)
-		{
-			if (fader.StartFadeOut())
-			{
-				msg = 0;
-				continue;
-			}
-			else
-			{
-				break;
-			}
-		}
-
 		if (!mp) {
 			signal.sig = frontend->getSignalStrength() & 0xFFFF;
 			signal.snr = frontend->getSignalNoiseRatio() & 0xFFFF;
@@ -258,6 +232,7 @@ int CStreamInfo2::doSignalStrengthLoop ()
 		signal.old_snr = signal.snr;
 		signal.old_ber = signal.ber;
 
+		neutrino_msg_data_t data;
 		/* rate limiting is done in update_rate */
 		g_RCInput->getMsg_us(&msg, &data, 0);
 
