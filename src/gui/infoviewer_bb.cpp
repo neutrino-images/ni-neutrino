@@ -1045,7 +1045,7 @@ void CInfoViewerBB::paint_cam_icons()
 		if ( getpidof(icon_name[i]) ) {
 			buf.str("");
 			buf << icon_name[i] << "_green";
-			if(strstr(icon_name[i], "doscam")) {
+			if(strstr(icon_name[i], "doscam") || strstr(icon_name[i], "oscam")) {
 				if(camCI && useCI && filter_channels) {
 					buf.str("");
 					buf << icon_name[i] << "_yellow";

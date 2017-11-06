@@ -36,6 +36,7 @@ install_DATA = \
 	nds_yellow.png \
 	newcs_green.png \
 	oscam_green.png \
+	oscam_yellow.png \
 	osemu_green.png \
 	powervu_green.png \
 	powervu_white.png \
