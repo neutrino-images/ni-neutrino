@@ -184,13 +184,14 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 				strstr(filename, "ncam")	||
 				strstr(filename, "oscam")	||
 				strstr(filename, "cs2gbox")	||
+				strstr(filename, "ciplushelper")||
 				strstr(filename, "gbox"))
 			{
 				CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_START));
 				hintbox.paint();
 
-				printf("[CFlagFileNotifier] executing \"service emu start %s\"\n", filename);
-				if (my_system(4, "service", "emu", "start", filename) != 0)
+				printf("[CFlagFileNotifier] executing \"service camd start %s\"\n", filename);
+				if (my_system(4, "service", "camd", "start", filename) != 0)
 					printf("[CFlagFileNotifier] executing failed\n");
 				sleep(1);
 
@@ -232,13 +233,14 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			strstr(filename, "ncam")	||
 			strstr(filename, "oscam")	||
 			strstr(filename, "cs2gbox")	||
+			strstr(filename, "ciplushelper")||
 			strstr(filename, "gbox"))
 		{
 			CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_STOP));
 			hintbox.paint();
 
-			printf("[CFlagFileNotifier] executing \"service emu stop %s\"\n", filename);
-			if (my_system(4, "service", "emu", "stop", filename) != 0)
+			printf("[CFlagFileNotifier] executing \"service camd stop %s\"\n", filename);
+			if (my_system(4, "service", "camd", "stop", filename) != 0)
 				printf("[CFlagFileNotifier] executing failed\n");
 			sleep(1);
 
