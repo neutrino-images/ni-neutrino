@@ -503,8 +503,8 @@ void CRemoteControl::processAPIDnames()
 #endif
 	for(unsigned int count=0; count< current_PIDs.APIDs.size(); count++)
 	{
-#ifdef APID_DEBUG
 		const char *iso = getISO639Description(current_PIDs.APIDs[count].desc);
+#ifdef APID_DEBUG
 		printf("apid=%04x/%s/%s ", current_PIDs.APIDs[count].pid, current_PIDs.APIDs[count].desc, iso);
 #endif
 		if ( current_PIDs.APIDs[count].component_tag != 0xFF )
@@ -514,15 +514,8 @@ void CRemoteControl::processAPIDnames()
 		std::string tmp_desc = current_PIDs.APIDs[count].desc;
 		if ( tmp_desc.size() == 3 )
 		{
-			// unaufgeloeste Sprache...
-/* merge conflict */
-#if 0
-			/* getISO639Description returns same pointer as input if nothing is found */
-			if (current_PIDs.APIDs[count].desc != iso)
-				strcpy(current_PIDs.APIDs[count].desc, iso);
-#else
-			tmp_desc = getISO639Description( current_PIDs.APIDs[count].desc );
-#endif
+			// unresolved language
+			tmp_desc = iso;
 		}
 
 		if ( current_PIDs.APIDs[count].is_ac3 )
