@@ -2415,6 +2415,7 @@ TIMER_START();
 	CVFD::getInstance()->Clear();
 	CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_NI)); //NI
 	CVFD::getInstance()->setBacklight(g_settings.backlight_tv);
+	CVFD::getInstance()->setScrollMode(g_settings.lcd_scroll);
 
 	if (!scanSettings.loadSettings(NEUTRINO_SCAN_SETTINGS_FILE))
 		dprintf(DEBUG_NORMAL, "Loading of scan settings failed. Using defaults.\n");
