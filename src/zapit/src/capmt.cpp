@@ -312,23 +312,15 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		cam->setCaMask(newmask);
 		cam->setSource(source);
 		if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
+			INFO("    ##NI: socket only");
 			cam->makeCaPmt(channel, true);
 			cam->setCaPmt(true);
-#if ! HAVE_COOL_HARDWARE
-			// CI
-			CaIdVector caids;
-			cCA::GetInstance()->GetCAIDS(caids);
-			uint8_t list = CCam::CAPMT_ONLY;
-			cam->makeCaPmt(channel, false, list, caids);
-			int len;
-			unsigned char * buffer = channel->getRawPmt(len);
-			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI, channel->scrambled, channel->camap, mode, start);
-#endif
 		}
 	}
 #if ! HAVE_COOL_HARDWARE
 	// CI
 	if(oldmask == newmask) {
+		INFO("    ##NI: (oldmask == newmask)");
 		if (mode) {
 			if(start) {
 				CaIdVector caids;
@@ -350,6 +342,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	}
 #endif
 	if(newmask == 0) {
+		INFO("    ##NI: (newmask == 0)");
 		/* FIXME: back to live channel from playback dont parse pmt and call setCaPmt
 		 * (see CMD_SB_LOCK / UNLOCK PLAYBACK */
 		//channel->setRawPmt(NULL);//FIXME
@@ -378,77 +371,87 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 #if ! HAVE_COOL_HARDWARE
 	// CI
 	if (mode && !start) {
-#endif
-		CaIdVector caids;
-		cCA::GetInstance()->GetCAIDS(caids);
-		//uint8_t list = CCam::CAPMT_FIRST;
-		uint8_t list = CCam::CAPMT_ONLY;
-		if (channel_map.size() > 1)
-			list = CCam::CAPMT_ADD;
-
-#ifdef BOXMODEL_CS_HD2
-		int ci_use_count = 0;
-		for (it = channel_map.begin(); it != channel_map.end(); ++it)
-		{
-			cam = it->second;
-			channel = CServiceManager::getInstance()->FindChannel(it->first);
-
-			if (tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) {
-				cCA::GetInstance()->SetTS((CA_DVBCI_TS_INPUT)tunerno);
-				ci_use_count++;
-				break;
-			} else if (filter_channels) {
-				if (channel && channel->bUseCI)
-					ci_use_count++;
-			} else
-				ci_use_count++;
-		}
-		if (ci_use_count == 0) {
-			INFO("CI: not used, disabling TS\n");
-			cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
-		}
-#endif
-
-		for (it = channel_map.begin(); it != channel_map.end(); /*++it*/)
-		{
-			cam = it->second;
-			channel = CServiceManager::getInstance()->FindChannel(it->first);
-			++it;
-			if(!channel)
-				continue;
-			if(!channel->scrambled)
-				continue;
-
-#if 0
-			if (it == channel_map.end())
-				list |= CCam::CAPMT_LAST; // FIRST->ONLY or MORE->LAST
-#endif
-
-			cam->makeCaPmt(channel, false, list, caids);
-			int len;
-			unsigned char * buffer = channel->getRawPmt(len);
-#if ! HAVE_COOL_HARDWARE
-			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI, channel->scrambled, channel->camap, 0, true);
-#else
-			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_SMARTCARD);
-#endif
-
-#if HAVE_COOL_HARDWARE
-			if (tunerno >= 0 && tunerno != cDemux::GetSource(cam->getSource())) {
-				INFO("CI: configured tuner %d do not match %d, skip [%s]", tunerno, cam->getSource(), channel->getName().c_str());
-			} else if (filter_channels && !channel->bUseCI) {
-				INFO("CI: filter enabled, CI not used for [%s]", channel->getName().c_str());
-			} else {
-				useCI = true; //NI
-				INFO("CI: use CI for [%s]", channel->getName().c_str());
-				cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI);
-			}
-			//list = CCam::CAPMT_MORE;
-#endif
-		}
-#if ! HAVE_COOL_HARDWARE
+		INFO("    ##NI: (mode && !start) do we realy need this?");
 	}
 #endif
+
+	CaIdVector caids;
+	cCA::GetInstance()->GetCAIDS(caids);
+	//uint8_t list = CCam::CAPMT_FIRST;
+	uint8_t list = CCam::CAPMT_ONLY;
+	if (channel_map.size() > 1)
+		list = CCam::CAPMT_ADD;
+
+#ifdef BOXMODEL_CS_HD2
+	int ci_use_count = 0;
+	for (it = channel_map.begin(); it != channel_map.end(); ++it)
+	{
+		cam = it->second;
+		channel = CServiceManager::getInstance()->FindChannel(it->first);
+
+		if (tunerno >= 0 && tunerno == cDemux::GetSource(cam->getSource())) {
+			cCA::GetInstance()->SetTS((CA_DVBCI_TS_INPUT)tunerno);
+			ci_use_count++;
+			break;
+		} else if (filter_channels) {
+			if (channel && channel->bUseCI)
+				ci_use_count++;
+		} else
+			ci_use_count++;
+	}
+	if (ci_use_count == 0) {
+		INFO("CI: not used, disabling TS\n");
+		cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
+	}
+#endif
+
+	for (it = channel_map.begin(); it != channel_map.end(); /*++it*/)
+	{
+		cam = it->second;
+		channel = CServiceManager::getInstance()->FindChannel(it->first);
+		++it;
+		if(!channel)
+			continue;
+		if(!channel->scrambled)
+			continue;
+
+#if 0
+		if (it == channel_map.end())
+			list |= CCam::CAPMT_LAST; // FIRST->ONLY or MORE->LAST
+#endif
+
+		cam->makeCaPmt(channel, false, list, caids);
+		int len;
+		unsigned char * buffer = channel->getRawPmt(len);
+#if HAVE_COOL_HARDWARE
+		cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_SMARTCARD);
+#endif
+		if (tunerno >= 0 && tunerno != cDemux::GetSource(cam->getSource())) {
+			INFO("CI: configured tuner %d do not match %d, skip [%s]", tunerno, cam->getSource(), channel->getName().c_str());
+		} else if (filter_channels && !channel->bUseCI) {
+			INFO("CI: filter enabled, CI not used for [%s]", channel->getName().c_str());
+		} else {
+			useCI = true; //NI
+			INFO("CI: use CI for [%s]", channel->getName().c_str());
+#if HAVE_COOL_HARDWARE
+			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI);
+#endif
+		}
+		//list = CCam::CAPMT_MORE;
+#if ! HAVE_COOL_HARDWARE
+		if((oldmask != newmask) || force_update) {
+			if(useCI) {
+				INFO("    ##NI: (oldmask != newmask) || force_update)");
+				cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI, channel->scrambled, channel->camap, 0, true);
+			} else {
+				INFO("    ##NI: (oldmask != newmask) || force_update) - no CI needed");
+				//no CI needed
+				ca_map_t no_camap;
+				cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI, false /*channel->scrambled*/, no_camap /*channel->camap*/, mode, start);
+			}
+		}
+#endif
+	}
 
 	return true;
 }
