@@ -562,6 +562,8 @@ void CLCD::setBrightness(int dimm)
 	if (pfd)
 		write(pfd, value.c_str(), value.length());
 	close(pfd);
+#else
+	(void)dimm; // avoid compiler warning
 #endif
 }
 
