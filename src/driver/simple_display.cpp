@@ -490,6 +490,9 @@ void CLCD::setMode(const MODES m, const char * const)
 		if (g_settings.lcd_info_line)
 			switch_name_time_cnt = 10;
 		break;
+	case MODE_MENU_UTF8:
+		showclock = false;
+		break;
 	case MODE_SHUTDOWN:
 		showclock = false;
 		Clear();
