@@ -4661,6 +4661,12 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	else if(actionKey=="shutdown") {
 		ExitRun(1);
 	}
+	else if(actionKey=="need_reboot")
+	{
+		int reboot_now = ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_MESSAGEBOX_NEED_REBOOT, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_SETTINGS);
+		if (reboot_now == CMsgBox::mbrYes)
+			CNeutrinoApp::getInstance()->exec(NULL, "reboot");
+	}
 	else if(actionKey=="reboot")
 	{
 		FILE *f = fopen("/tmp/.reboot", "w");
