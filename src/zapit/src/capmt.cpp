@@ -34,8 +34,6 @@
 #include <dvbsi++/program_map_section.h>
 #include <dvbsi++/ca_program_map_section.h>
 
-#include <global.h> //NI /* to get g_settings */
-
 //#define DEBUG_CAPMT
 
 CCam::CCam()
@@ -182,7 +180,6 @@ CCamManager::CCamManager()
 	channel_map.clear();
 	tunerno = -1;
 	filter_channels = false;
-	//NI
 	useCI = false;
 	rmode = false;
 	mp = false;
@@ -213,7 +210,7 @@ void CCamManager::StopCam(t_channel_id channel_id, CCam *cam)
 
 bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start, bool force_update)
 {
-	useCI = false; //NI
+	useCI = false;
 	if (IS_WEBCHAN(channel_id))
 		return false;
 
@@ -243,7 +240,9 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	//INFO("channel %llx [%s] mode %d %s update %d", channel_id, channel->getName().c_str(), mode, start ? "START" : "STOP", force_update);
 
 	/* FIXME until proper demux management */
+#if ! HAVE_COOL_HARDWARE
 	CFrontend *frontend = CFEManager::getInstance()->getFrontend(channel);
+#endif
 	switch(mode) {
 		case PLAY:
 #if HAVE_COOL_HARDWARE
@@ -285,8 +284,9 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			mode, start ? "START" : "STOP", source, oldmask, newmask, force_update, rmode);
 
 	//INFO("source %d old mask %d new mask %d force update %s", source, oldmask, newmask, force_update ? "yes" : "no");
-#if ! HAVE_COOL_HARDWARE
+
 	/* stop decoding if record stops unless it's the live channel. TODO:PIP? */
+#if ! HAVE_COOL_HARDWARE
 	/* all the modes: RECORD, STREAM, PIP except PLAY now stopping here !! */
 	if (mode && start == false && source != cDemux::GetSource(0)) {
 		INFO("MODE not PLAY:(%d) start=false, src %d getsrc %d", mode, source, cDemux::GetSource(0));
@@ -305,7 +305,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		cam->setCaMask(newmask);
 		cam->setSource(source);
 		if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
-			INFO("    ##NI: socket only");
+			INFO("\033[33m socket only\033[0m");
 			cam->makeCaPmt(channel, true);
 			cam->setCaPmt(true);
 		}
@@ -313,7 +313,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 #if ! HAVE_COOL_HARDWARE
 	// CI
 	if(oldmask == newmask) {
-		INFO("    ##NI: (oldmask == newmask)");
+		INFO("\033[33m (oldmask == newmask)\033[0m");
 		if (mode) {
 			if(start) {
 				CaIdVector caids;
@@ -335,19 +335,19 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	}
 #endif
 	if(newmask == 0) {
-		INFO("    ##NI: (newmask == 0)");
+		INFO("\033[33m (newmask == 0)\033[0m");
 		/* FIXME: back to live channel from playback dont parse pmt and call setCaPmt
 		 * (see CMD_SB_LOCK / UNLOCK PLAYBACK */
 		//channel->setRawPmt(NULL);//FIXME
 #if HAVE_COOL_HARDWARE
 		StopCam(channel_id, cam);
 #ifdef BOXMODEL_CS_HD2
-		//NI - this is a hack for rezaping to the recording channel
+		// hack for rezaping to the recording channel
 		CZapitChannel * chan = CServiceManager::getInstance()->GetCurrentChannel();
 
 		//if commig from movieplayer, disable hack
 		if(!mp && ( (!mode || (mode && !chan->scrambled)) && (!start && rmode)) ){
-			INFO("    ##NI: HACK: disabling TS");
+			INFO("\033[33m HACK: disabling TS\033[0m");
 			cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
 		}
 		mp = false;
@@ -364,7 +364,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 #if ! HAVE_COOL_HARDWARE
 	// CI
 	if (mode && !start) {
-		INFO("    ##NI: (mode && !start) do we realy need this?");
+		INFO("\033[33m (mode && !start) do we really need this?\033[0m");
 	}
 #endif
 
@@ -393,7 +393,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			ci_use_count++;
 	}
 	if (ci_use_count == 0) {
-		INFO("CI: not used, disabling TS\n");
+		INFO("CI: not used, disabling TS");
 		cCA::GetInstance()->SetTS(CA_DVBCI_TS_INPUT_DISABLED);
 	}
 #endif
@@ -424,7 +424,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		} else if (filter_channels && !channel->bUseCI) {
 			INFO("CI: filter enabled, CI not used for [%s]", channel->getName().c_str());
 		} else {
-			useCI = true; //NI
+			useCI = true;
 			INFO("CI: use CI for [%s]", channel->getName().c_str());
 #if HAVE_COOL_HARDWARE
 			cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI);
@@ -434,10 +434,10 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 #if ! HAVE_COOL_HARDWARE
 		if((oldmask != newmask) || force_update) {
 			if(useCI) {
-				INFO("    ##NI: (oldmask != newmask) || force_update)");
+				INFO("\033[33m (oldmask != newmask) || force_update)\033[0m");
 				cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI, channel->scrambled, channel->camap, 0, true);
 			} else {
-				INFO("    ##NI: (oldmask != newmask) || force_update) - no CI needed");
+				INFO("\033[33m (oldmask != newmask) || force_update) - no CI needed\033[0m");
 				//no CI needed
 				ca_map_t no_camap;
 				cam->sendCaPmt(channel->getChannelID(), buffer, len, CA_SLOT_TYPE_CI, false /*channel->scrambled*/, no_camap /*channel->camap*/, mode, start);

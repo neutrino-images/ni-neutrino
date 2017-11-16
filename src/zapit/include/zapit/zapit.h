@@ -279,7 +279,6 @@ class CZapit : public OpenThreads::Thread
 		void Rezap();
 		std::list<std::string> *GetWebTVXML(void) { return webtv_xml; }
 		std::list<std::string> *GetWebRadioXML(void) { return webradio_xml; }
-		//NI
 		bool getUseChannelFilter();
 		void setMoviePlayer(bool enable);
 };

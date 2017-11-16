@@ -111,16 +111,15 @@ class CFEManager
 		bool		Init();
 		void		Close();
 		void		Open();
-
 		CFrontend *	getFE(int index = 0);
 		CFrontend *	getLiveFE() { return livefe; };
 		void		setLiveFE(CFrontend * fe);
 
 		CFrontend *	allocateFE(CZapitChannel * channel, bool forrecord = false);
-		CFrontend *	getFrontend(CZapitChannel * channel);
 
 		fe_mode_t	getMode() { return mode; };
 
+		CFrontend *	getFrontend(CZapitChannel * channel);
 		int		getFrontendCount() { return femap.size(); };
 		int		getEnabledCount();
 

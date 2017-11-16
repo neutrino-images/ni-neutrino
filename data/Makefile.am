@@ -20,7 +20,6 @@ endif
 configdir = $(CONFIGDIR)
 config_DATA = cables.xml satellites.xml encoding.conf tobackup.conf providermap.xml settingsupdate.conf terrestrial.xml bad_package_pattern.list.sample
 
-#NI
 config_DATA += epglanguages.conf webtv_usr.xml webradio_usr.xml
 
 install-data-hook:

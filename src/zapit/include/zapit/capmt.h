@@ -98,7 +98,7 @@ class CCamManager
 		static CCamManager *	manager;
 		bool SetMode(t_channel_id id, enum runmode mode, bool enable, bool force_update = false);
 		void StopCam(t_channel_id id, CCam *cam);
-		//NI
+
 		bool mp;
 		bool useCI;
 		bool rmode;
