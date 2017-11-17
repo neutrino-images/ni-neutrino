@@ -2990,6 +2990,7 @@ void CNeutrinoApp::RealRun()
 				StartSubtitles();
 			}
 			else if (((msg == CRCInput::RC_tv) || (msg == CRCInput::RC_radio)) && (g_settings.key_tvradio_mode == (int)CRCInput::RC_nokey)) {
+#if HAVE_ARM_HARDWARE
 				if (msg == CRCInput::RC_tv)
 				{
 					if (mode == mode_radio || mode == mode_webradio)
@@ -3001,6 +3002,7 @@ void CNeutrinoApp::RealRun()
 						radioMode();
 				}
 				else
+#endif
 					switchTvRadioMode(); //used with defined default tv/radio rc key
 			}
 			/* in case key_subchannel_up/down redefined */
