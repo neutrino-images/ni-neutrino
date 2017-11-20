@@ -336,7 +336,7 @@ void CEpgScan::EnterStandby()
 
 		//NI
 		if (g_settings.epg_save && g_settings.epg_save_standby)
-			CNeutrinoApp::getInstance()->saveEpg(false); //false CVFD::MODE_STANDBY
+			CNeutrinoApp::getInstance()->saveEpg(NeutrinoModes::mode_standby);
 	}
 }
 
