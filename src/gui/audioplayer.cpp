@@ -340,7 +340,7 @@ int CAudioPlayerGui::exec(CMenuTarget* parent, const std::string &actionKey)
 
 	// tell neutrino we're in audio mode
 	m_LastMode = CNeutrinoApp::getInstance()->getMode();
-	CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE , NeutrinoMessages::mode_audio);
+	CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE , NeutrinoModes::mode_audio);
 
 	//NI
 	printf("[audioplayer.cpp] wakeup_hdd(%s)\n", g_settings.network_nfs_audioplayerdir.c_str());
@@ -410,7 +410,7 @@ int CAudioPlayerGui::show()
 		updateTimes();
 
 		// stop if mode was changed in another thread
-		if (CNeutrinoApp::getInstance()->getMode() != NeutrinoMessages::mode_audio)
+		if (CNeutrinoApp::getInstance()->getMode() != NeutrinoModes::mode_audio)
 			loop = false;
 
 		if (
@@ -935,7 +935,7 @@ int CAudioPlayerGui::show()
 #endif
 		else if (msg == NeutrinoMessages::CHANGEMODE)
 		{
-			if ((data & NeutrinoMessages::mode_mask) != NeutrinoMessages::mode_audio)
+			if ((data & NeutrinoModes::mode_mask) != NeutrinoModes::mode_audio)
 			{
 				loop = false;
 				m_LastMode=data;
