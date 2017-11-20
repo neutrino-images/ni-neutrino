@@ -4043,6 +4043,10 @@ void CNeutrinoApp::ExitRun(int can_shutdown)
 
 	stop_lcd4l_support(); //NI lcd4l-support
 
+	//NI InfoIcons
+	if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
+		InfoIcons->saveIconstate();
+
 	if(SDTreloadChannels)
 		SDT_ReloadChannels();
 
@@ -4073,24 +4077,14 @@ void CNeutrinoApp::ExitRun(int can_shutdown)
 	g_settings.shutdown_timer_record_type = timer_is_rec;
 	saveSetup(NEUTRINO_SETTINGS_FILE);
 
-#if 0
-	if (can_shutdown)
-	{
-#endif
-		puts("[neutrino.cpp] executing " NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT ".");
-		if (my_system(NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT) != 0)
-			perror(NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT " failed");
+	puts("[neutrino.cpp] executing " NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT ".");
+	if (my_system(NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT) != 0)
+		perror(NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT " failed");
 
-		//NI InfoIcons
-		if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
-			InfoIcons->saveIconstate();
+	printf("entering off state\n");
+	printf("timer_minutes: %ld\n", timer_minutes);
+	mode = NeutrinoModes::mode_off;
 
-		printf("entering off state\n");
-		printf("timer_minutes: %ld\n", timer_minutes);
-		mode = NeutrinoModes::mode_off;
-#if 0
-	}
-#endif
 	int leds = 0;
 	int bright = 0;
 #if HAVE_COOL_HARDWARE
