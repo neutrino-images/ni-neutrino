@@ -4040,6 +4040,7 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	if (!do_exiting)
 		return;
 
+#if 0
 	/*
 	   For compatibility: /tmp/.reboot is not really needed anymore
 	   if we use the defined exit code 2 instead of this flagfile.
@@ -4053,6 +4054,7 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	}
 	else
 		unlink("/tmp/.reboot");
+#endif
 
 	printf("[neutrino] %s(int %d)\n", __func__, exit_code);
 	printf("[neutrino] hw_caps->can_shutdown: %d\n", g_info.hw_caps->can_shutdown);
