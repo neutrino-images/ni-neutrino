@@ -1,10 +1,9 @@
 #!/bin/sh
 
-## kill neutrino start-script first ########
+# kill start script first to ignore neutrino's exit codes
 killall start_neutrino
 
-## create flagfile #########################
-touch /tmp/.${0##*/}
+touch /tmp/.flash.start
 
-## run shutdown routine ####################
+# run shutdown routine depending on flagfile
 /etc/init.d/rcK
