@@ -4065,7 +4065,7 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
 		InfoIcons->saveIconstate();
 
-	if(SDTreloadChannels)
+	if (SDTreloadChannels)
 		SDT_ReloadChannels();
 
 	dprintf(DEBUG_INFO, "exit\n");
