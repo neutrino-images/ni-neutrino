@@ -1151,23 +1151,21 @@ bool CMoviePlayerGui::getLiveUrl(const std::string &url, const std::string &scri
 	std::string _script = script;
 
 	if (_script.find("/") == std::string::npos)
-		//NI
+	{
+		std::string _s = g_settings.livestreamScriptPath + "/" + _script;
+		printf("[%s:%s:%d] script: %s\n", __file__, __func__, __LINE__, _s.c_str());
+		if (!file_exists(_s.c_str()))
 		{
-			std::string _s = g_settings.livestreamScriptPath + "/" + _script;
+			_s = std::string(WEBTVDIR_VAR) + "/" + _script;
 			printf("[%s:%s:%d] script: %s\n", __file__, __func__, __LINE__, _s.c_str());
-			if (!file_exists(_s.c_str()))
-			{
-				_s = std::string(WEBTVDIR_VAR) + "/" + _script;
-				printf("[%s:%s:%d] script: %s\n", __file__, __func__, __LINE__, _s.c_str());
-			}
-			if (!file_exists(_s.c_str()))
-			{
-				_s = std::string(WEBTVDIR) + "/" + _script;
-				printf("[%s:%s:%d] script: %s\n", __file__, __func__, __LINE__, _s.c_str());
-			}
-			_script = _s;
 		}
-
+		if (!file_exists(_s.c_str()))
+		{
+			_s = std::string(WEBTVDIR) + "/" + _script;
+			printf("[%s:%s:%d] script: %s\n", __file__, __func__, __LINE__, _s.c_str());
+		}
+		_script = _s;
+	}
 	size_t pos = _script.find(".lua");
 	if (!file_exists(_script.c_str()) || (pos == std::string::npos) || (_script.length()-pos != 4)) {
 		printf(">>>>> [%s:%s:%d] script error\n", __file__, __func__, __LINE__);
