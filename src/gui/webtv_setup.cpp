@@ -180,20 +180,22 @@ int CWebTVSetup::Show()
 
 	int res = m->exec(NULL, "");
 	m->hide();
-	if (changed) {
-			g_settings.webtv_xml.clear();
-			for (int i = item_offset; i < m->getItemsCount(); i++) {
-				CMenuItem *item = m->getItem(i);
-				CMenuForwarder *f = static_cast<CMenuForwarder*>(item);
-				g_settings.webtv_xml.push_back(f->getName());
-			}
-			webtv_xml_auto(); //NI
-			g_Zapit->reinitChannels();
-			changed = false;
+
+	if (changed)
+	{
+		g_settings.webtv_xml.clear();
+		for (int i = item_offset; i < m->getItemsCount(); i++)
+		{
+			CMenuItem *item = m->getItem(i);
+			CMenuForwarder *f = static_cast<CMenuForwarder*>(item);
+			g_settings.webtv_xml.push_back(f->getName());
+		}
+		webtv_xml_auto(); //NI
+		g_Zapit->reinitChannels();
+		changed = false;
 	}
 
 	delete m;
-
 	return res;
 }
 
