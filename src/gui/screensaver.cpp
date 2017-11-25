@@ -64,6 +64,7 @@ CScreenSaver::CScreenSaver()
 	scr_clock	= NULL;
 	clr.i_color	= COL_DARK_GRAY;
 	pip_channel_id	= 0;
+	idletime	= time(NULL);
 }
 
 CScreenSaver::~CScreenSaver()
@@ -135,6 +136,7 @@ void CScreenSaver::Stop()
 		pthread_cancel(thrScreenSaver);
 		thrScreenSaver = 0;
 	}
+	resetIdleTime();
 
 	if (scr_clock){
 		scr_clock->Stop();
@@ -322,7 +324,7 @@ void CScreenSaver::paint()
 	}
 }
 
-bool CScreenSaver::IsRun()
+bool CScreenSaver::isActive()
 {
 	if(thrScreenSaver)
 		return true;
