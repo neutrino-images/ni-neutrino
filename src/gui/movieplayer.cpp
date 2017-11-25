@@ -277,8 +277,8 @@ void CMoviePlayerGui::Init(void)
 	isLuaPlay = false;
 	haveLuaInfoFunc = false;
 	blockedFromPlugin = false;
-	m_screensaver = false;
-	m_idletime = time(NULL);
+
+	CScreenSaver::getInstance()->resetIdleTime();
 }
 
 void CMoviePlayerGui::cutNeutrino()
@@ -1716,24 +1716,27 @@ void CMoviePlayerGui::PlayFileLoop(void)
 		showSubtitle(0);
 #endif
 
+		if (msg <= CRCInput::RC_MaxRC)
+			CScreenSaver::getInstance()->resetIdleTime();
+
 		if (playstate == CMoviePlayerGui::PAUSE && (msg == CRCInput::RC_timeout || msg == NeutrinoMessages::EVT_TIMER))
 		{
-			int delay = time(NULL) - m_idletime;
-			int screensaver_delay = g_settings.screensaver_delay;
-			if (screensaver_delay != 0 && delay > screensaver_delay*60 && !m_screensaver) {
+			time_t delay = time(NULL) - CScreenSaver::getInstance()->getIdleTime();
+			if (g_settings.screensaver_delay && delay > g_settings.screensaver_delay*60 && !CScreenSaver::getInstance()->isActive())
+			{
 				videoDecoder->setBlank(true);
-				screensaver(true);
+				CScreenSaver::getInstance()->Start();
 			}
 		}
 		else
 		{
-			m_idletime = time(NULL);
-			if (m_screensaver)
+			if (CScreenSaver::getInstance()->isActive())
 			{
 				videoDecoder->setBlank(false);
-				screensaver(false);
-				//ignore first keypress stop - just quit the screensaver and call infoviewer
-				if (msg <= CRCInput::RC_MaxRC) { //NI
+				CScreenSaver::getInstance()->Stop();
+				if (msg <= CRCInput::RC_MaxRC)
+				{
+					//ignore first keypress - just quit the screensaver and call infoviewer
 					g_RCInput->clearRCMsg();
 					callInfoViewer();
 					continue;
@@ -3554,19 +3557,4 @@ size_t CMoviePlayerGui::GetReadCount()
 		res = this_read - last_read;
 	last_read = this_read;
 	return (size_t) res;
-}
-
-void CMoviePlayerGui::screensaver(bool on)
-{
-	if (on)
-	{
-		m_screensaver = true;
-		CScreenSaver::getInstance()->Start();
-	}
-	else
-	{
-		CScreenSaver::getInstance()->Stop();
-		m_screensaver = false;
-		m_idletime = time(NULL);
-	}
 }
