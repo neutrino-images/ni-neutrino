@@ -50,7 +50,7 @@ static void clear_queue();
 int dvbsub_init() {
 	int trc;
 
-	sub_debug.set_level(3);
+	sub_debug.set_level(2);
 
 	reader_running = true;
 	dvbsub_stopped = 1;
@@ -244,7 +244,11 @@ static void* reader_thread(void * /*arg*/)
 	set_threadname("dvbsub:reader");
 
         dmx = new cDemux(0);
+#if HAVE_TRIPLEDRAGON
+	dmx->Open(DMX_PES_CHANNEL, NULL, 16*1024);
+#else
         dmx->Open(DMX_PES_CHANNEL, NULL, 64*1024);
+#endif
 
 	while (reader_running) {
 		if(dvbsub_stopped /*dvbsub_paused*/) {

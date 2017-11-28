@@ -387,14 +387,14 @@ int CVideoSettings::showVideoSetup()
 	CMenuOptionChooser * vs_videomodes_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_VIDEOMODE, &g_settings.video_Mode, vmode_options, vmode_option_count, true, this, CRCInput::RC_nokey, "", true);
 	vs_videomodes_ch->setHint("", LOCALE_MENU_HINT_VIDEO_MODE);
 
-	CMenuOptionChooser * vs_dbdropt_ch = NULL;
-	CMenuForwarder * vs_videomodes_fw = NULL;
+	CMenuOptionChooser *vs_dbdropt_ch = NULL;
 	CMenuWidget videomodes(LOCALE_MAINSETTINGS_VIDEO, NEUTRINO_ICON_SETTINGS);
 #ifdef BOXMODEL_CS_HD2
 	CMenuForwarder * vs_automodes_fw = NULL;
 	CMenuWidget automodes(LOCALE_MAINSETTINGS_VIDEO, NEUTRINO_ICON_SETTINGS);
 #endif
 	CAutoModeNotifier anotify;
+	CMenuForwarder *vs_videomodes_fw = NULL;
 	//dbdr options
 	if (system_rev != 0x01)	/* dbdr options only on COOLSTREAM */
 	{

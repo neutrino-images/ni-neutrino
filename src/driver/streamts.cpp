@@ -57,7 +57,6 @@
 #include <driver/record.h>
 #include <driver/genpsi.h>
 #include <system/set_threadname.h>
-
 #include <gui/movieplayer.h>
 #include <cs_api.h>
 

@@ -34,7 +34,6 @@ class CFrameBuffer;
 class CPlugins
 {
 	public:
-		// neutrino-internal plugin-type conversion
 		typedef enum p_type
 		{
 			P_TYPE_DISABLED = 0x1,
