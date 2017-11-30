@@ -78,6 +78,7 @@ CInfoIcons::CInfoIcons()
 
 	thrTimer	= 0;
 	status		= false;
+	is_painted	= false;
 
 	Init();
 }
@@ -242,11 +243,16 @@ void CInfoIcons::paintIcons(bool first)
 			startx += icon[i].sizeW;
 		}
 	}
+	is_painted = true;
 }
 
 void CInfoIcons::hideIcons()
 {
-	frameBuffer->paintBackgroundBoxRel(x, y, width + OFFSET_SHADOW, height + OFFSET_SHADOW);
+	if (is_painted)
+	{
+		frameBuffer->paintBackgroundBoxRel(x, y, width + OFFSET_SHADOW, height + OFFSET_SHADOW);
+		is_painted = false;
+	}
 }
 
 void* CInfoIcons::TimerProc(void *arg)

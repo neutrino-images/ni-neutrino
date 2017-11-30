@@ -48,7 +48,7 @@ class CInfoIcons
 		pthread_t	thrTimer;
 		int		x, y, width, height, offset;
 		int 		start_i, m_entries, popup;
-		bool		status;
+		bool		status, is_painted;
 		static void	CleanUpProc(void* arg);
 		static void*	TimerProc(void *arg);
 
