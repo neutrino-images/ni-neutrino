@@ -45,6 +45,7 @@
 
 #include <driver/record.h>
 #include <driver/audioplay.h>
+#include <driver/radiotext.h>
 #include <zapit/capmt.h>
 #include <zapit/zapit.h>
 #include <gui/movieplayer.h>
@@ -74,6 +75,7 @@ extern cVideo *videoDecoder;
 #define RESOLUTION		LCD_DATADIR "resolution"
 #define ASPECTRATIO		LCD_DATADIR "aspectratio"
 #define VIDEOTEXT		LCD_DATADIR "videotext"
+#define RADIOTEXT		LCD_DATADIR "radiotext"
 #define DOLBYDIGITAL		LCD_DATADIR "dolbydigital"
 #define TUNER			LCD_DATADIR "tuner"
 #define VOLUME			LCD_DATADIR "volume"
@@ -201,6 +203,7 @@ void CLCD4l::Init()
 	m_Resolution	= "n/a";
 	m_AspectRatio	= "n/a";
 	m_Videotext	= -1;
+	m_Radiotext	= -1;
 	m_DolbyDigital	= "n/a";
 	m_Tuner		= -1;
 	m_Volume	= -1;
@@ -377,6 +380,18 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	{
 		WriteFile(VIDEOTEXT, Videotext ? "yes" : "no");
 		m_Videotext = Videotext;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	int Radiotext = 0;
+	if (m_Mode == NeutrinoModes::mode_radio && g_settings.radiotext_enable && g_Radiotext)
+		Radiotext = g_Radiotext->haveRadiotext();
+
+	if (m_Radiotext != Radiotext)
+	{
+		WriteFile(RADIOTEXT, Radiotext ? "yes" : "no");
+		m_Radiotext = Radiotext;
 	}
 
 	/* ----------------------------------------------------------------- */

@@ -76,6 +76,7 @@ class CLCD4l
 		std::string	m_Resolution;
 		std::string	m_AspectRatio;
 		int		m_Videotext;
+		int		m_Radiotext;
 		std::string	m_DolbyDigital;
 		int		m_Tuner;
 		int		m_Volume;
