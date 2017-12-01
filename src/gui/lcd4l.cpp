@@ -667,7 +667,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 			Layout = "standby";
 		}
 #ifdef NI
-		else if ((g_settings.lcd4l_skin_radio) && (m_Mode == NeutrinoModes::mode_radio))
+		else if ((g_settings.lcd4l_skin_radio) && (m_Mode == NeutrinoModes::mode_radio || m_Mode == NeutrinoModes::mode_webradio))
 		{
 			Layout = "radio";
 		}
@@ -961,7 +961,7 @@ uint64_t CLCD4l::GetParseID()
 	m_Mode = (int) ID;
 	m_ModeChannel = 0;
 
-	if (ID == NeutrinoModes::mode_tv || ID == NeutrinoModes::mode_webtv || ID == NeutrinoModes::mode_radio)
+	if (ID == NeutrinoModes::mode_tv || ID == NeutrinoModes::mode_webtv || ID == NeutrinoModes::mode_radio || ID == NeutrinoModes::mode_webradio)
 	{
 		if (!(g_RemoteControl->subChannels.empty()) && (g_RemoteControl->selected_subchannel > 0))
 			m_ModeChannel = 2;
