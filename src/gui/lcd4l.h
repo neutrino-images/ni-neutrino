@@ -51,23 +51,6 @@ class CLCD4l
 		int	RemoveFile(const char *file);
 
 	private:
-		enum 
-		{
-			MODE_UNKNOWN = -1,
-			MODE_TV = 1,
-			MODE_RADIO = 2,
-			MODE_SCART = 3,
-			MODE_STANDBY = 4,
-			MODE_AUDIO = 5,
-			MODE_PIC = 6,
-			MODE_TS = 7,
-			MODE_OFF = 8,
-			MODE_WEBTV = 9,
-			MODE_UPNP = 10,
-			MODE_MASK = 0xFF,
-			NOREZAP = 0x100
-		};
-
 		pthread_t	thrLCD4l;
 		static void*	LCD4lProc(void *arg);
 
