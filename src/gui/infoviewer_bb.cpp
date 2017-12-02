@@ -899,7 +899,7 @@ void CInfoViewerBB::paint_ca_bar()
 	if (g_settings.infobar_casystem_frame)
 	{
 		if (ca_bar == NULL)
-			ca_bar = new CComponentsShapeSquare(ca_x, ca_y, ca_w, ca_h, NULL, CC_SHADOW_ON, COL_INFOBAR_CASYSTEM_PLUS_2, COL_INFOBAR_CASYSTEM_PLUS_0); //NI
+			ca_bar = new CComponentsShapeSquare(ca_x, ca_y, ca_w, ca_h, NULL, CC_SHADOW_ON, COL_INFOBAR_CASYSTEM_PLUS_2, COL_INFOBAR_CASYSTEM_PLUS_0);
 		ca_bar->enableShadow(CC_SHADOW_ON, OFFSET_SHADOW/2, true);
 		ca_bar->setFrameThickness(FRAME_WIDTH_MIN);
 		ca_bar->setCorner(RADIUS_SMALL, CORNER_ALL);
