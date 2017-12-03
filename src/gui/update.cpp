@@ -688,6 +688,7 @@ int CFlashUpdate::exec(CMenuTarget* parent, const std::string &actionKey)
 				c[0] = fgetc(f);
 				printf("[update] Current partition: %s\n", c);
 			}
+			fclose(f);
 		}
 
 		// select partition
