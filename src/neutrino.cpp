@@ -4693,8 +4693,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		CHintBox hintbox(LOCALE_CAMD_CONTROL, LOCALE_CAMD_MSG_RESET);
 		hintbox.paint();
 
-		printf("[neutrino.cpp] executing \"service emu restart\"\n");
-		if (my_system(3, "service", "emu", "restart") != 0)
+		printf("[neutrino.cpp] executing \"service camd restart\"\n");
+		if (my_system(3, "service", "camd", "restart") != 0)
 			printf("[neutrino.cpp] executing failed\n");
 		sleep(1);
 
