@@ -1,19 +1,31 @@
-export LD_LIBRARY_PATH=/var/lib
+#!/bin/sh
+
 export PATH=${PATH}:/var/bin:/var/plugins
 
-echo "### Starting NEUTRINO ###"
+# Neutrino's exit codes
+ERROR=-1
+NORMAL=0
+SHUTDOWN=1
+REBOOT=2
+
+echo "Starting Neutrino"
 
 cd /tmp
-/bin/neutrino > /dev/null 2> /dev/null
+/bin/neutrino >/dev/null 2>&1; RET=$?
+sync
 
-/bin/sync
-/bin/sync
+echo "Neutrino exited with exit code $RET"
 
-if [ -e /tmp/.reboot ] ; then
-    /bin/dt -t"Rebooting..."
-    /sbin/reboot -f
+if [ $RET -eq $NORMAL ]; then
+	# do nothing
+elif [ $RET -eq $SHUTDOWN ]; then
+	dt -t"Shutdown ..."
+	poweroff
+elif [ $RET -eq $REBOOT ]; then
+	dt -t"Reboot ..."
+	reboot
 else
-    /bin/dt -t"Panic..."
-    sleep 5
-    /sbin/reboot -f
+	dt -t"Panic ..."
+	sleep 5
+	reboot -f
 fi
