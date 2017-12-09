@@ -2599,7 +2599,7 @@ timerbar.recordevent Aufnehmen
 timerlist.alarmtime Alarmzeit
 timerlist.apids Audio PIDs
 timerlist.apids_dflt Voreingestellte Tonspuren aufn.
-timerlist.ask_to_delete Das Löschen des Timers beendet auch die laufende Aufnahme!\n%sTrotzdem fortsetzen?
+timerlist.ask_to_delete Das Löschen des Timers beendet auch die laufende Aufnahme!\n%sTimer trotzdem löschen?
 timerlist.bouquetselect Bouquet wählen
 timerlist.channel Kanal
 timerlist.channelselect Kanal wählen
