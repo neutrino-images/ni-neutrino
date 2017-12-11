@@ -734,10 +734,10 @@ void CInfoViewerBB::paint_ca_icons(int caid, const char *icon, int &icon_space_o
 	int py = g_InfoViewer->BoxEndY + OFFSET_INNER_SMALL;
 	int px = 0;
 	static std::map<int, std::pair<int,const char*> > icon_map;
-	const int icon_space = OFFSET_INNER_SMALL, icon_number = 11; //NI
+	const int icon_space = OFFSET_INNER_SMALL, icon_number = 12;
 
-	static int icon_offset[icon_number] = {0,0,0,0,0,0,0,0,0,0,0}; //NI
-	static int icon_sizeW [icon_number] = {0,0,0,0,0,0,0,0,0,0,0}; //NI
+	static int icon_offset[icon_number] = {0,0,0,0,0,0,0,0,0,0,0,0};
+	static int icon_sizeW [icon_number] = {0,0,0,0,0,0,0,0,0,0,0,0};
 	static bool init_flag = false;
 
 	if (!init_flag) {
@@ -755,7 +755,8 @@ void CInfoViewerBB::paint_ca_icons(int caid, const char *icon, int &icon_space_o
 		icon_map[0x1800] = std::make_pair(index++,"nagra");
 		icon_map[0x0B00] = std::make_pair(index++,"conax");
 		icon_map[0x0D00] = std::make_pair(index++,"cw");
-		icon_map[0x0900] = std::make_pair(index  ,"nds");
+		icon_map[0x0900] = std::make_pair(index++,"nds");
+		icon_map[0x1000] = std::make_pair(index  ,"tan");
 
 		for (it=icon_map.begin(); it!=icon_map.end(); ++it) {
 			snprintf(buf, sizeof(buf), "%s_%s", (*it).second.second, (*it).second.first==0 ? "na" : "white"); //NI
@@ -808,7 +809,7 @@ void CInfoViewerBB::showIcon_CA_Status(int notfirst)
 		return;
 	}
 
-	int caids[] = {  0x900, 0xD00, 0xB00, 0x1800, 0x0500, 0x0100, 0x600,  0x2600, 0x4a00, 0x0E00, 0x0000 }; //NI
+	int caids[] = { 0x1000, 0x900, 0xD00, 0xB00, 0x1800, 0x0500, 0x0100, 0x600,  0x2600, 0x4a00, 0x0E00, 0x0000 };
 	const char *green = "green"; //NI
 	const char *white = "white";
 	const char *yellow = "yellow";
