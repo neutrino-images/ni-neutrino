@@ -46,6 +46,9 @@ install_DATA = \
 	seca_white.png \
 	seca_yellow.png \
 	srv_green.png \
+	tan_green.png \
+	tan_white.png \
+	tan_yellow.png \
 	via_green.png \
 	via_white.png \
 	via_yellow.png \
