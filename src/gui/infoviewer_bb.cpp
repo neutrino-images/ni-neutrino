@@ -755,16 +755,16 @@ void CInfoViewerBB::paint_ca_icons(int caid, const char *icon, int &icon_space_o
 
 		icon_map[0x0000] = std::make_pair(index++,"dec"); //NI
 		icon_map[0x0E00] = std::make_pair(index++,"powervu");
-		icon_map[0x4A00] = std::make_pair(index++,"d");
+		icon_map[0x1000] = std::make_pair(index++,"tan");
 		icon_map[0x2600] = std::make_pair(index++,"biss");
+		icon_map[0x4A00] = std::make_pair(index++,"d");
 		icon_map[0x0600] = std::make_pair(index++,"ird");
 		icon_map[0x0100] = std::make_pair(index++,"seca");
 		icon_map[0x0500] = std::make_pair(index++,"via");
 		icon_map[0x1800] = std::make_pair(index++,"nagra");
 		icon_map[0x0B00] = std::make_pair(index++,"conax");
 		icon_map[0x0D00] = std::make_pair(index++,"cw");
-		icon_map[0x0900] = std::make_pair(index++,"nds");
-		icon_map[0x1000] = std::make_pair(index  ,"tan");
+		icon_map[0x0900] = std::make_pair(index  ,"nds");
 
 		for (it=icon_map.begin(); it!=icon_map.end(); ++it) {
 			snprintf(buf, sizeof(buf), "%s_%s", (*it).second.second, (*it).second.first==0 ? "na" : "white"); //NI
@@ -817,7 +817,7 @@ void CInfoViewerBB::showIcon_CA_Status(int notfirst)
 		return;
 	}
 
-	int caids[] = { 0x1000, 0x900, 0xD00, 0xB00, 0x1800, 0x0500, 0x0100, 0x600,  0x2600, 0x4a00, 0x0E00, 0x0000 };
+	int caids[] = {  0x900, 0xD00, 0xB00, 0x1800, 0x0500, 0x0100, 0x600, 0x4a00, 0x2600, 0x1000, 0x0E00, 0x0000 };
 	const char *green = "green"; //NI
 	const char *white = "white";
 	const char *yellow = "yellow";
