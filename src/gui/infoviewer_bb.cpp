@@ -743,10 +743,12 @@ void CInfoViewerBB::paint_ca_icon(int caid, const char *icon, int &icon_space_of
 	int py = g_InfoViewer->BoxEndY + OFFSET_INNER_SMALL;
 	int px = 0;
 	static std::map<int, std::pair<int,const char*> > icon_map;
+
 	const int icon_space = OFFSET_INNER_SMALL, icon_number = 12;
 
 	static int icon_offset[icon_number] = {0,0,0,0,0,0,0,0,0,0,0,0};
 	static int icon_sizeW [icon_number] = {0,0,0,0,0,0,0,0,0,0,0,0};
+
 	static bool init_flag = false;
 
 	if (!init_flag) {
