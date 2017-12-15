@@ -2522,6 +2522,7 @@ servicemenu.restarting_tuner Restarting tuner
 servicemenu.scants Servicescan
 servicemenu.update Software Update
 settings.backup Save NI-Backup
+settings.backup_dir Save to %s?\n"No" chooses another directory.
 settings.backup_failed Backup failed!
 settings.help Help
 settings.menu_hints Show menu hints
