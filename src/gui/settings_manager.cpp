@@ -117,17 +117,11 @@ int CSettingsManager::exec(CMenuTarget* parent, const std::string &actionKey)
 				//NI
 				CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SETTINGS_BACKUP));
 				hintBox->paint();
-				std::string fname = (std::string)"/bin/backup.sh " + fileBrowser.getSelectedFile()->Name;
-				printf("backup: executing [%s]\n", fname.c_str());
-				my_system(2, "/bin/backup.sh", fileBrowser.getSelectedFile()->Name.c_str());
+				const char backup_sh[] = "/bin/backup.sh";
+				printf("backup: executing [%s %s]\n", backup_sh, fileBrowser.getSelectedFile()->Name.c_str());
+				my_system(2, backup_sh, fileBrowser.getSelectedFile()->Name.c_str());
 				hintBox->hide();
 				delete hintBox;
-//NI
-#if 0
-				const char backup_sh[] = "/bin/backup.sh";
-				printf("backup: executing [%s %s]\n",backup_sh, fileBrowser.getSelectedFile()->Name.c_str());
-				my_system(2, backup_sh, fileBrowser.getSelectedFile()->Name.c_str());*/
-#endif
 			}
 			else
 				ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(LOCALE_SETTINGS_BACKUP_FAILED),CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_ERROR);
