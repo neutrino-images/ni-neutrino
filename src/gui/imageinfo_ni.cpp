@@ -298,6 +298,13 @@ void CImageInfoNI::paint()
 		imageversion.str("");
 		imageversion << releaseCycle << " (" << versionInfo.getType() << ")";
 	}
+#ifdef PACKAGE_VERSION
+	else
+	{
+		imageversion.str("");
+		imageversion << PACKAGE_VERSION;
+	}
+#endif
 
 	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_IMAGE));
