@@ -893,6 +893,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	g_settings.backup_dir = configfile.getString("backup_dir", "/media");
 
+	g_settings.backup_dir = configfile.getString("backup_dir", "/media");
+
 	g_settings.update_dir = configfile.getString("update_dir", "/tmp");
 	g_settings.update_dir_opkg = configfile.getString("update_dir_opkg", g_settings.update_dir);
 
