@@ -24,6 +24,7 @@ install_DATA = \
 	hint_inetradio.png \
 	hint_info.png \
 	hint_keys.png \
+	hint_lcd4linux.png \
 	hint_language.png \
 	hint_load.png \
 	hint_manage.png \
