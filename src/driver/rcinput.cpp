@@ -1692,6 +1692,8 @@ const char * CRCInput::getSpecialKeyName(const unsigned int key)
 				return "bookmarks";
 			case RC_program:
 				return "program";
+			case RC_playpause:
+				return "play / pause";
 			default:
 				printf("unknown key: %d (0x%x) \n", key, key);
 				return "unknown";
@@ -1731,8 +1733,6 @@ int CRCInput::translate(int code)
 			return RC_up;
 		case 0x101: // FIXME -- needed?
 			return RC_down;
-		case KEY_PLAYPAUSE:
-			return RC_play;
 		case KEY_CHANNELUP:
 			return RC_page_up;
 		case KEY_CHANNELDOWN:
