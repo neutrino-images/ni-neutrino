@@ -933,6 +933,7 @@ struct SNeutrinoSettings
 		ITEM_LIVESTREAM_RESOLUTION = 35,
 		ITEM_ADZAP = 36,
 		ITEM_TESTMENU = 37,		//NI
+		ITEM_FILEPLAY_AUDIO = 38,
 		ITEM_MAX // MUST be always the last in the list
 	} USER_ITEM;
 
