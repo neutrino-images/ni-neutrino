@@ -1363,21 +1363,9 @@ bool CMoviePlayerGui::PlayFileStart(void)
 		duration = p_movie_info->length * 60 * 1000;
 		int percent = CZapit::getInstance()->GetPidVolume(p_movie_info->channelId, currentapid, currentac3 == 1);
 		CZapit::getInstance()->SetVolumePercent(percent);
-#if HAVE_SPARK_HARDWARE
-		CScreenSetup cSS;
-		cSS.showBorder(p_movie_info->epgId);
-#endif
-	} else {
-#if HAVE_SPARK_HARDWARE
-		CScreenSetup cSS;
-		cSS.showBorder(0);
-#endif
 	}
 
 	file_prozent = 0;
-#if HAVE_SPARK_HARDWARE
-	old3dmode = frameBuffer->get3DMode();
-#endif
 	pthread_t thrStartHint = 0;
 	if (is_file_player) {
 		showStartingHint = true;
@@ -1788,10 +1776,6 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				repeat_mode = REPEAT_OFF;
 			g_settings.movieplayer_repeat_on = repeat_mode;
 			callInfoViewer();
-#if HAVE_SPARK_HARDWARE
-		} else if (msg == (neutrino_msg_t) g_settings.mpkey_next3dmode) {
-			frameBuffer->set3DMode((CFrameBuffer::Mode3D)(((frameBuffer->get3DMode()) + 1) % CFrameBuffer::Mode3D_SIZE));
-#endif
 		} else if (msg == (neutrino_msg_t) g_settings.key_next43mode) {
 			g_videoSettings->next43Mode();
 		} else if (msg == (neutrino_msg_t) g_settings.key_switchformat) {
@@ -2168,11 +2152,6 @@ void CMoviePlayerGui::PlayFileEnd(bool restore)
 
 	playback->SetSpeed(1);
 	playback->Close();
-#if HAVE_SPARK_HARDWARE
-	frameBuffer->set3DMode(old3dmode);
-	CScreenSetup cSS;
-	cSS.showBorder(CZapit::getInstance()->GetCurrentChannelID());
-#endif
 	if (iso_file) {
 		iso_file = false;
 		if (umount2(ISO_MOUNT_POINT, MNT_FORCE))
