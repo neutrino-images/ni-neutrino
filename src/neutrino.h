@@ -91,6 +91,8 @@ private:
 	int				lastChannelMode;
 	struct timeval                  standby_pressed_at;
 
+	time_t				neutrino_start_time;
+
 	int				current_muted;
 
 	bool				skipShutdownTimer;
@@ -188,6 +190,7 @@ public:
 	void switchTvRadioMode(const int prev_mode = NeutrinoModes::mode_unknown);
 	void switchInfoIconsOnOff(); //NI
 
+	time_t getStartTime() { return neutrino_start_time; }
 	
 	bool isMuted() {return current_muted; }
 	void setCurrentMuted(int m) { current_muted = m; }
