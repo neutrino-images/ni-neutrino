@@ -95,10 +95,6 @@ bool glcd_play = false;
 
 #include <system/stacktrace.h>
 
-#if 0
-#include <gui/infoicons.h>
-#endif
-
 //NI InfoIcons
 #include <gui/infoicons.h>
 
