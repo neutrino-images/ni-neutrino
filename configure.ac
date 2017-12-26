@@ -3,7 +3,7 @@ define(ver_minor, 50)
 define(ver_micro, 0)
 
 AC_INIT(NI-Neutrino, ver_major.ver_minor.ver_micro)
-AM_INIT_AUTOMAKE([1.0.1 nostdinc])
+AM_INIT_AUTOMAKE([nostdinc foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
 AC_DEFINE(RELEASE_CYCLE, "ver_major.0", [Release cycle information; used in update code])
