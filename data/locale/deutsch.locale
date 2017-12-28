@@ -417,7 +417,6 @@ daemon_item.ushare_desc A/V und DLNA Medienserver
 daemon_item.ushare_name uShare
 daemon_item.xupnpd_desc eXtensible UPnP agent - DLNA Medienserver für IPTV
 daemon_item.xupnpd_name xupnpd
->>>>>>>
 date.Apr  Apr
 date.Aug  Aug
 date.Dec  Dez
