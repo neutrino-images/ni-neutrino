@@ -1995,12 +1995,15 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			showHelp();
 			enableOsdElements(NO_MUTE);
 		} else if (msg == CRCInput::RC_info) {
-			if (fromInfoviewer) {
+			if (fromInfoviewer)
+			{
 				disableOsdElements(NO_MUTE);
 #ifdef ENABLE_LUA
-				if (isLuaPlay && haveLuaInfoFunc) {
+				if (isLuaPlay && haveLuaInfoFunc)
+				{
 					int xres = 0, yres = 0, aspectRatio = 0, framerate = -1;
-					if (!videoDecoder->getBlank()) {
+					if (!videoDecoder->getBlank())
+					{
 						videoDecoder->getPictureInfo(xres, yres, framerate);
 						if (yres == 1088)
 							yres = 1080;
@@ -2008,12 +2011,10 @@ void CMoviePlayerGui::PlayFileLoop(void)
 					}
 					CLuaInstVideo::getInstance()->execLuaInfoFunc(luaState, xres, yres, aspectRatio, framerate);
 				}
-				else {
+				else
 #endif
 					g_EpgData->show_mp(p_movie_info,GetPosition(),GetDuration());
-#ifdef ENABLE_LUA
-				}
-#endif
+
 				fromInfoviewer = false;
 				enableOsdElements(NO_MUTE);
 			}
