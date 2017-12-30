@@ -443,7 +443,8 @@ int CMoviePlayerGui::exec(CMenuTarget * parent, const std::string & actionKey)
 	else if (actionKey == "rtimeshift") {
 		timeshift = TSHIFT_MODE_REWIND;
 	}
-#if 0 // TODO ?
+#if 0
+	// TODO - not supported
 	else if (actionKey == "bookmarkplayback") {
 		isBookmark = true;
 	}
@@ -740,9 +741,8 @@ bool CMoviePlayerGui::SelectFile()
 	}
 
 	printf("CMoviePlayerGui::SelectFile: isBookmark %d timeshift %d isMovieBrowser %d is_audio_playing %d\n", isBookmark, timeshift, isMovieBrowser, is_audio_playing);
-#if 0
-	wakeup_hdd(g_settings.network_nfs_recordingdir.c_str());
-#endif
+	//wakeup_hdd(g_settings.network_nfs_recordingdir.c_str());
+
 	if (timeshift != TSHIFT_MODE_OFF) {
 		t_channel_id live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 		p_movie_info = CRecordManager::getInstance()->GetMovieInfo(live_channel_id);
@@ -751,7 +751,8 @@ bool CMoviePlayerGui::SelectFile()
 		makeFilename();
 		ret = true;
 	}
-#if 0 // TODO
+#if 0
+	// TODO - not supported
 	else if (isBookmark) {
 		const CBookmark * theBookmark = bookmarkmanager->getBookmark(NULL);
 		if (theBookmark == NULL) {
@@ -2597,7 +2598,8 @@ void CMoviePlayerGui::handleMovieBrowser(neutrino_msg_t msg, int /*position*/)
 
 			CMenuWidget bookStartMenu(LOCALE_MOVIEBROWSER_MENU_MAIN_BOOKMARKS, NEUTRINO_ICON_STREAMING);
 			bookStartMenu.addIntroItems();
-#if 0 // not supported, TODO
+#if 0
+			// TODO - not supported
 			bookStartMenu.addItem(new CMenuForwarder(LOCALE_MOVIEPLAYER_HEAD, !isMovieBrowser, NULL, &cSelectedMenuBookStart[0]));
 			bookStartMenu.addItem(GenericMenuSeparatorLine);
 #endif
@@ -2629,7 +2631,8 @@ void CMoviePlayerGui::handleMovieBrowser(neutrino_msg_t msg, int /*position*/)
 
 			// next seems return menu_return::RETURN_EXIT, if something selected
 			bookStartMenu.exec(NULL, "none");
-#if 0 // not supported, TODO
+#if 0
+			// TODO - not supported
 			if (cSelectedMenuBookStart[0].selected == true) {
 				/* Movieplayer bookmark */
 				if (bookmarkmanager->getBookmarkCount() < bookmarkmanager->getMaxBookmarkCount()) {
