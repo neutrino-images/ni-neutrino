@@ -735,7 +735,7 @@ start-block~map_rc_cst_v3_v4
   <area shape="circle" href="javascript:rcsim('KEY_BLUE')" coords="129,447,11" alt="blue" title="{=L:rc.key_blue=}" />
 
   <area shape="circle" href="javascript:rcsim('KEY_WWW')" coords="39,487,9" alt="w" title="{=L:rc.key_www=}" />
-  <!-- area shape="circle" coords="68,487,9" alt="sub" / -->
+  <area shape="circle" href="javascript:rcsim('KEY_SUBTITLES')" coords="68,487,9" alt="sub" title="{=L:rc.key_sub=}" />
   <!-- area shape="circle" coords="96,487,9" alt="recall" / -->
   <!-- area shape="circle" coords="125,487,9" alt="pos" / -->
 
@@ -788,7 +788,7 @@ start-block~rc_cst_v5
   <area shape="rect" href="javascript:rcsim('KEY_INFO')" coords="124,216,166,244" alt="info" title="{=L:rc.key_info=}" />
   <area shape="rect" href="javascript:rcsim('KEY_HOME')" coords="124,280,166,308" alt="exit" title="{=L:rc.key_home=}" />
 
-  <!-- area shape="rect" coords="24,321,66,349" alt="sub" / -->
+  <area shape="rect" href="javascript:rcsim('KEY_SUBTITLES')" coords="24,321,66,349" alt="sub" title="{=L:rc.key_sub=}" />
   <area shape="rect" href="javascript:rcsim('KEY_PREVIOUS')" coords="76,321,118,349" alt="picmode" title="{=L:rc.key_picmode=}" />
   <area shape="rect" href="javascript:rcsim('KEY_FAVORITES')" coords="128,321,170,349" alt="fav" title="{=L:rc.key_favorites=}" />
 
@@ -840,7 +840,7 @@ start-block~rc_cst_v6
   <area shape="circle" coords="73,204,14" alt="t/s" href="javascript:rcsim('KEY_TIME')" title="{=L:rc.key_time=}" />
   <area shape="circle" coords="114,171,14" alt="audio" href="javascript:rcsim('KEY_AUDIO')" title="{=L:rc.key_audio=}" />
   <area shape="circle" coords="114,204,14" alt="text" href="javascript:rcsim('KEY_TEXT')" title="{=L:rc.key_text=}" />
-  <!-- area shape="circle" coords="34,183,14" alt="sub" / -->
+  <area shape="circle"  coords="34,183,14" alt="sub" href="javascript:rcsim('KEY_SUBTITLES')" title="{=L:rc.key_sub=}" />
   <area shape="circle" coords="34,217,14" alt="trsp" href="javascript:rcsim('KEY_GAMES')" title="{=L:rc.key_trsp=}" />
   <area shape="circle" coords="154,183,14" alt="help" href="javascript:rcsim('KEY_HELP')" title="{=L:rc.key_help=}" />
   <!-- area shape="circle" coords="154,217,14" alt="recall" / -->
@@ -964,7 +964,7 @@ start-block~rc_ax_hd51
 <area shape="rect" coords="88,80,114,98" href="javascript:rcsim('KEY_RADIO')" />
 <area shape="rect" coords="122,81,146,98" href="javascript:rcsim('KEY_HELP')" />
 <area shape="rect" coords="21,109,54,132" href="javascript:rcsim('KEY_AUDIO')" />
-<!-- area shape="rect" coords="69,109,101,130" alt="subtitle" / -->
+<area shape="rect" coords="69,109,101,130" href="javascript:rcsim('KEY_SUBTITLE')" />
 <area shape="rect" coords="115,111,146,130" href="javascript:rcsim('KEY_TEXT')" />
 <area shape="rect" coords="23,142,55,163" href="javascript:rcsim('KEY_1')" />
 <area shape="rect" coords="68,141,101,163" href="javascript:rcsim('KEY_2')" />
@@ -1020,7 +1020,7 @@ start-block~rc_mutant_hd51
 <area shape="rect" coords="87,63,114,80" href="javascript:rcsim('KEY_RADIO')" />
 <area shape="rect" coords="121,63,148,80" href="javascript:rcsim('KEY_HELP')" />
 <area shape="rect" coords="20,90,55,111" href="javascript:rcsim('KEY_AUDIO')" />
-<!-- area shape="rect" coords="65,90,102,111" alt="subtitle" / -->
+<area shape="rect" coords="65,90,102,111" href="javascript:rcsim('KEY_SUBTITLE')" />
 <area shape="rect" coords="111,90,148,111" href="javascript:rcsim('KEY_TEXT')" />
 <area shape="rect" coords="20,121,55,144" href="javascript:rcsim('KEY_1')" />
 <area shape="rect" coords="65,121,102,144" href="javascript:rcsim('KEY_2')" />
