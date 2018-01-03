@@ -2014,16 +2014,6 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			StartSubtitles(true);
 			if (restore)
 				FileTimeOSD->show(position);
-#if 0
-		} else if (msg == CRCInput::RC_red) {
-			bool restore = FileTimeOSD->IsVisible();
-			FileTimeOSD->kill();
-			CStreamInfo2 streaminfo;
-			streaminfo.exec(NULL, "");
-			if (restore)
-				FileTimeOSD->show(position);
-			update_lcd = true;
-#endif
 		} else if (msg == NeutrinoMessages::SHOW_EPG) {
 			handleMovieBrowser(NeutrinoMessages::SHOW_EPG, position);
 		} else if (msg == NeutrinoMessages::EVT_SUBT_MESSAGE) {
