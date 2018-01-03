@@ -1940,7 +1940,10 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			if (g_settings.movieplayer_bisection_jump)
 			{
 				if ((lastmsg == CRCInput::RC_page_up || lastmsg == CRCInput::RC_page_down) && (bisection_loop > -1 && bisection_loop <= bisection_loop_max))
-					bisection_jump /= 2;
+				{
+					if (msg != lastmsg)
+						bisection_jump /= 2;
+				}
 				else
 					bisection_jump = g_settings.movieplayer_bisection_jump * 60;
 
