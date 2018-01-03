@@ -60,7 +60,6 @@ extern CPictureViewer * g_PicViewer;
 
 //NI InfoIcons
 #include <gui/infoicons.h>
-extern CInfoIcons *InfoIcons;
 
 const struct button_label RescanButton = {NEUTRINO_ICON_BUTTON_BLUE  , LOCALE_UPNPBROWSER_RESCAN};
 const struct button_label BrowseButtons[] =
@@ -521,7 +520,7 @@ void CUpnpBrowserGui::selectDevice()
 		return;
 
 	CAudioMute::getInstance()->enableMuteIcon(false);
-	InfoIcons->enableInfoIcons(false); //NI InfoIcons
+	CInfoIcons::getInstance()->enableInfoIcons(false); //NI InfoIcons
 
 	while (loop)
 	{
@@ -593,7 +592,7 @@ void CUpnpBrowserGui::selectDevice()
 		}
 	}
 	CAudioMute::getInstance()->enableMuteIcon(true);
-	InfoIcons->enableInfoIcons(true); //NI InfoIcons
+	CInfoIcons::getInstance()->enableInfoIcons(true); //NI InfoIcons
 }
 
 void CUpnpBrowserGui::playnext(void)

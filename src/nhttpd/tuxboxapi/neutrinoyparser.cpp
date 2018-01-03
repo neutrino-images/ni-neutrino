@@ -38,7 +38,6 @@
 #include "gui/plugins.h"
 extern CPlugins *g_Plugins;
 #include "gui/infoicons.h"
-extern CInfoIcons *InfoIcons; /* neutrino.cpp */
 #include "gui/netfs_setup.h"
 
 extern CBouquetManager *g_bouquetManager;

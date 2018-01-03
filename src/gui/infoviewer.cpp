@@ -83,7 +83,6 @@
 
 //NI InfoIcons
 #include "gui/infoicons.h"
-extern CInfoIcons *InfoIcons; /* neutrino.cpp */
 
 extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
 extern CBouquetList * bouquetList;       /* neutrino.cpp */
@@ -794,7 +793,7 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 
 	//NI InfoIcons
 	if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
-		InfoIcons->paintIcons(true);
+		CInfoIcons::getInstance()->paintIcons(true);
 
 	if (showButtonBar) {
 		infoViewerBB->paintshowButtonBar(noTimer);
@@ -1384,9 +1383,9 @@ void CInfoViewer::killRadiotext()
 	CInfoClock::getInstance()->enableInfoClock(true);
 	//NI InfoIcons
 	if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
-		InfoIcons->paintIcons(true);
+		CInfoIcons::getInstance()->paintIcons(true);
 	else
-		InfoIcons->enableInfoIcons(true);
+		CInfoIcons::getInstance()->enableInfoIcons(true);
 }
 
 void CInfoViewer::showRadiotext()
@@ -1409,9 +1408,9 @@ void CInfoViewer::showRadiotext()
 		CInfoClock::getInstance()->enableInfoClock(false);
 		//NI InfoIcons
 		if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
-			InfoIcons->hideIcons();
+			CInfoIcons::getInstance()->hideIcons();
 		else
-			InfoIcons->enableInfoIcons(false);
+			CInfoIcons::getInstance()->enableInfoIcons(false);
 
 		int rt_font = SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO;
 		int item_h = g_Font[rt_font]->getHeight();
@@ -2163,7 +2162,7 @@ void CInfoViewer::killTitle()
 
 		//NI InfoIcons
 		if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
-			InfoIcons->hideIcons();
+			CInfoIcons::getInstance()->hideIcons();
 	}
 	showButtonBar = false;
 	CInfoClock::getInstance()->enableInfoClock();

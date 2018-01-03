@@ -99,7 +99,6 @@ extern CCAMMenuHandler * g_CamHandler;
 #include <gui/infoicons_setup.h>
 
 #include <gui/infoicons.h>
-extern CInfoIcons *InfoIcons;
 
 CUserMenu::CUserMenu()
 {
@@ -571,7 +570,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 	}
 
 	CInfoClock::getInstance()->enableInfoClock(false);
-	InfoIcons->enableInfoIcons(false); //NI
+	CInfoIcons::getInstance()->enableInfoIcons(false); //NI
 	// show menu if there are more than 2 items only
 	// otherwise, we start the item directly (must be the last one)
 	if (menu_items > 1 )
@@ -580,7 +579,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 		last_menu_item->exec( NULL );
 	
 	CInfoClock::getInstance()->enableInfoClock(true);
-	InfoIcons->enableInfoIcons(true); //NI
+	CInfoIcons::getInstance()->enableInfoIcons(true); //NI
 	CNeutrinoApp::getInstance()->StartSubtitles();
 
 	if (button < COL_BUTTONMAX)

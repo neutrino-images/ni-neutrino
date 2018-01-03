@@ -57,7 +57,6 @@ extern cVideo * videoDecoder;
 
 //NI InfoIcons
 #include <gui/infoicons.h>
-extern CInfoIcons *InfoIcons;
 
 CMediaPlayerMenu::CMediaPlayerMenu()
 {
@@ -108,7 +107,7 @@ int CMediaPlayerMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 	{
 		audiomute->enableMuteIcon(false);
 		CInfoClock::getInstance()->enableInfoClock(false);
-		InfoIcons->enableInfoIcons(false); //NI InfoIcons
+		CInfoIcons::getInstance()->enableInfoIcons(false); //NI InfoIcons
 		int mode = CNeutrinoApp::getInstance()->getMode();
 		if( mode == NeutrinoModes::mode_radio )
 			CFrameBuffer::getInstance()->stopFrame();
@@ -117,7 +116,7 @@ int CMediaPlayerMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 			CFrameBuffer::getInstance()->showFrame("radiomode.jpg");
 		audiomute->enableMuteIcon(true);
 		CInfoClock::getInstance()->enableInfoClock(true);
-		InfoIcons->enableInfoIcons(true); //NI InfoIcons
+		CInfoIcons::getInstance()->enableInfoIcons(true); //NI InfoIcons
 		return res;
 	}
 	

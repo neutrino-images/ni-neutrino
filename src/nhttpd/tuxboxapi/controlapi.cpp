@@ -57,7 +57,6 @@ extern cVideo * videoDecoder;
 //NI
 #include <system/helpers.h>
 #include "gui/infoicons.h"
-extern CInfoIcons *InfoIcons; /* neutrino.cpp */
 
 //NI
 #include "gui/update.h"
@@ -4003,9 +4002,9 @@ void CControlAPI::InfoIconsCGI(CyhookHandler *hh)
 	if (g_settings.mode_icons != remember_mode_icons)
 	{
 		if (remember_mode_icons)
-			InfoIcons->enableInfoIcons(false);
+			CInfoIcons::getInstance()->enableInfoIcons(false);
 		else
-			InfoIcons->enableInfoIcons(true);
+			CInfoIcons::getInstance()->enableInfoIcons(true);
 	}
 
 	hh->SendOk();

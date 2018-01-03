@@ -38,7 +38,6 @@
 
 //NI InfoIcons
 #include <gui/infoicons.h>
-extern CInfoIcons *InfoIcons;
 
 
 CTimeOSD::CTimeOSD():CComponentsFrmClock( 1, 1, NULL, "%H:%M:%S", NULL, false, 1, NULL, CC_SHADOW_ON)
@@ -158,21 +157,21 @@ void CTimeOSD::switchMode(int position, int duration)
 	switch (m_mode) {
 		case MODE_ASC:
 		case MODE_TMP:
-			InfoIcons->enableInfoIcons(false); //NI InfoIcons
+			CInfoIcons::getInstance()->enableInfoIcons(false); //NI InfoIcons
 			m_mode = MODE_DESC;
 			CComponents::kill();
 			break;
 		case MODE_DESC:
-			InfoIcons->enableInfoIcons(false); //NI InfoIcons
+			CInfoIcons::getInstance()->enableInfoIcons(false); //NI InfoIcons
 			m_mode = MODE_BAR;
 			CComponents::kill();
 			break;
 		case MODE_BAR:
-			InfoIcons->enableInfoIcons(true); //NI InfoIcons
+			CInfoIcons::getInstance()->enableInfoIcons(true); //NI InfoIcons
 			KillAndResetTimescale();
 			return;
 		default:
-			InfoIcons->enableInfoIcons(false); //NI InfoIcons
+			CInfoIcons::getInstance()->enableInfoIcons(false); //NI InfoIcons
 			m_mode = MODE_ASC;
 	}
 

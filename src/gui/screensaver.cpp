@@ -49,7 +49,6 @@ extern cVideo * videoDecoder;
 
 //NI InfoIcons
 #include <gui/infoicons.h>
-extern CInfoIcons *InfoIcons;
 
 using namespace std;
 
@@ -60,7 +59,7 @@ CScreenSaver::CScreenSaver()
 	m_viewer	= new CPictureViewer();
 	index 		= 0;
 	status_mute	= CAudioMute::getInstance()->getStatus();
-	status_icons	= InfoIcons->getStatus(); //NI
+	status_icons	= CInfoIcons::getInstance()->getStatus(); //NI
 	scr_clock	= NULL;
 	clr.i_color	= COL_DARK_GRAY;
 	pip_channel_id	= 0;
@@ -99,8 +98,8 @@ void CScreenSaver::Start()
 		CInfoClock::getInstance()->disableInfoClock();
 
 	//NI
-	status_icons = InfoIcons->getStatus();
-	InfoIcons->enableInfoIcons(false);
+	status_icons = CInfoIcons::getInstance()->getStatus();
+	CInfoIcons::getInstance()->enableInfoIcons(false);
 
 #ifdef ENABLE_PIP
 	pip_channel_id = CZapit::getInstance()->GetPipChannelID();
@@ -152,7 +151,7 @@ void CScreenSaver::Stop()
 #endif
 
 	m_frameBuffer->paintBackground(); //clear entire screen
-	InfoIcons->enableInfoIcons(status_icons); //NI
+	CInfoIcons::getInstance()->enableInfoIcons(status_icons); //NI
 
 	CAudioMute::getInstance()->enableMuteIcon(status_mute);
 	if (!OnAfterStop.empty()){

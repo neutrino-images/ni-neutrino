@@ -38,7 +38,6 @@
 #include <driver/screen_max.h>
 
 #include <gui/infoicons.h>
-extern CInfoIcons *InfoIcons; /* neutrino.cpp */
 
 typedef struct menu_data_t
 {
@@ -106,7 +105,7 @@ int CInfoIconsSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 		res = menu_return::RETURN_EXIT;
 	}
 	else if(actionKey.substr(0,18) == "infoicons_switch") {
-		InfoIcons->switchInfoIconsOnOff();
+		CInfoIcons::getInstance()->switchInfoIconsOnOff();
 		res = menu_return::RETURN_EXIT_ALL;
 	}
 
