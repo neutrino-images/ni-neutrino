@@ -37,6 +37,7 @@ class CTimeOSD : public CComponentsFrmClock
 			MODE_ASC,
 			MODE_DESC,
 			MODE_BAR,
+			MODE_TMP,
 			MODE_HIDE
 		};
 	

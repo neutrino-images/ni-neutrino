@@ -107,6 +107,7 @@ class CMoviePlayerGui : public CMenuTarget
 	std::string    	currentaudioname;
 	bool		playing;
 	bool		time_forced;
+	int FileTimeOSD_tmp;
 	CMoviePlayerGui::state playstate;
 	int keyPressed;
 	bool isLuaPlay;
