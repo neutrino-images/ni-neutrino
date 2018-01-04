@@ -281,8 +281,6 @@
 /* misc */
 #define NEUTRINO_ICON_HINT_YTPLAY	"hint_ytplay"
 
-#define NEUTRINO_ICON_EPG		"epg"
-
 #define NEUTRINO_ICON_BUTTON_LONGPRESS	"longpress"
 
 //NI
