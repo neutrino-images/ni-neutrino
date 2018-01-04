@@ -22,8 +22,7 @@
  *
  */
 
-/* icon files */
-
+/* buttons */
 #define NEUTRINO_ICON_BUTTON_DUMMY		"dummy"
 #define NEUTRINO_ICON_BUTTON_DUMMY_SMALL	"dummy_small"
 
@@ -76,26 +75,30 @@
 #define NEUTRINO_ICON_BUTTON_MUTE_ZAP_ACTIVE	"mute_zap_green"
 #define NEUTRINO_ICON_BUTTON_MUTE_ZAP_INACTIVE	"mute_zap_gray"
 
+/* headers */
 #define NEUTRINO_ICON_BLUE		"icon_blue"
 #define NEUTRINO_ICON_GREEN		"icon_green"
 #define NEUTRINO_ICON_RED		"icon_red"
 #define NEUTRINO_ICON_YELLOW		"icon_yellow"
 
 #define NEUTRINO_ICON_AUDIO		"audio"
-#define NEUTRINO_ICON_AUDIOPLAY		"audioplay"
+#define NEUTRINO_ICON_BOOKMARK_MANAGER	"bookmarkmanager"
 #define NEUTRINO_ICON_COLORS		"colors"
 #define NEUTRINO_ICON_ERROR		"error"
 #define NEUTRINO_ICON_FEATURES		"features"
 #define NEUTRINO_ICON_GAMES		"games"
 #define NEUTRINO_ICON_INFO		"information"
 #define NEUTRINO_ICON_KEYBINDING	"keybinding"
+#define NEUTRINO_ICON_LANGUAGE		"language"
+#define NEUTRINO_ICON_LCD		"lcd"
 #define NEUTRINO_ICON_LOCK		"lock"
-#define NEUTRINO_ICON_MOUNTED		"mounted"
-#define NEUTRINO_ICON_MULTIMEDIA	"multimedia"
+#define NEUTRINO_ICON_MAINMENU		"mainmenue"
 #define NEUTRINO_ICON_MOVIEPLAYER	"icon_movieplayer"
-#define NEUTRINO_ICON_YTPLAY		"icon_ytplay"
-#define NEUTRINO_ICON_NOT_MOUNTED	"not_mounted"
-#define NEUTRINO_ICON_QUESTION		"question"
+#define NEUTRINO_ICON_MULTIMEDIA	"multimedia"
+#define NEUTRINO_ICON_NETWORK		"network"
+#define NEUTRINO_ICON_PERSONALIZE	"personalize"
+#define NEUTRINO_ICON_PICTUREVIEWER	"pictureviewer"
+#define NEUTRINO_ICON_QUESTION		"question" // FIXME - icon is missing
 #define NEUTRINO_ICON_RECORDING		"recording"
 #define NEUTRINO_ICON_SETTINGS		"settings"
 #define NEUTRINO_ICON_SHELL		"shell"
@@ -104,13 +107,7 @@
 #define NEUTRINO_ICON_UPDATE		"softupdate"
 #define NEUTRINO_ICON_UPNP		"upnp"
 #define NEUTRINO_ICON_VIDEO		"video"
-#define NEUTRINO_ICON_BOOKMARK_MANAGER	"bookmarkmanager"
-#define NEUTRINO_ICON_MAINMENU		"mainmenue"
-#define NEUTRINO_ICON_LANGUAGE		"language"
-#define NEUTRINO_ICON_NETWORK		"network"
-#define NEUTRINO_ICON_LCD		"lcd"
-#define NEUTRINO_ICON_PERSONALIZE	"personalize"
-#define NEUTRINO_ICON_PICTUREVIEWER	"pictureviewer"
+#define NEUTRINO_ICON_YTPLAY		"icon_ytplay"
 
 /* volumebar */
 #define NEUTRINO_ICON_VOLUME		"volume"
@@ -127,6 +124,7 @@
 #define NEUTRINO_ICON_HINT_DEFAULT	"hint_default"
 #define NEUTRINO_ICON_HINT_BACK		"hint_back"
 #define NEUTRINO_ICON_HINT_NEXT		"hint_next"
+
 /* main menu */
 #define NEUTRINO_ICON_HINT_TVRADIO_SWITCH	"hint_tvradio_switch"
 #define NEUTRINO_ICON_HINT_TVMODE	"hint_tvmode"
@@ -144,6 +142,7 @@
 #define NEUTRINO_ICON_HINT_INFO		"hint_info"
 #define NEUTRINO_ICON_HINT_CI		"hint_ci"
 #define NEUTRINO_ICON_HINT_ADZAP	"hint_adzap"
+
 /* media */
 #define NEUTRINO_ICON_HINT_APLAY	"hint_aplay"
 #define NEUTRINO_ICON_HINT_INET_RADIO	"hint_inetradio"
@@ -220,6 +219,9 @@
 #define NEUTRINO_ICON_MARKER_TV		"marker_tv"
 #define NEUTRINO_ICON_MARKER_ZAP	"marker_zap"
 
+#define NEUTRINO_ICON_MOUNTED		"mounted"
+#define NEUTRINO_ICON_NOT_MOUNTED	"not_mounted"
+
 /* infoviewer */
 #define NEUTRINO_ICON_AUTO_SHIFT	"ats"
 #define NEUTRINO_ICON_AUTO_SHIFT_GRAY	"ats_gray"
@@ -275,9 +277,11 @@
 /* misc */
 #define NEUTRINO_ICON_MUTED		"muted"
 #define NEUTRINO_ICON_RCLOCK		"rclock"
+#define NEUTRINO_ICON_AUDIOPLAY		"audioplay" // FIXME - icon is missing
 
 #define NEUTRINO_ICON_BORDER_UL		"border_ul"
 #define NEUTRINO_ICON_BORDER_LR		"border_lr"
+
 #define NEUTRINO_ICON_NUMERIC_PAD	"numericpad"
 
 #define NEUTRINO_ICON_STAR_ON		"star-on"
