@@ -127,7 +127,6 @@
 #define NEUTRINO_ICON_SUBT		"subt"
 #define NEUTRINO_ICON_SUBT_GREY		"subt_gray"
 #define NEUTRINO_ICON_NUMERIC_PAD	"numericpad"
-#define NEUTRINO_ICON_SCRAMBLED		"ca"
 #define NEUTRINO_ICON_SCRAMBLED2	"ca2"
 #define NEUTRINO_ICON_SCRAMBLED2_GREY	"ca2_gray"
 #define NEUTRINO_ICON_BOOKMARK_MANAGER	"bookmarkmanager"
