@@ -696,10 +696,10 @@ class CLockedMenuForwarder : public CMenuForwarder, public CPINProtection
 					: CMenuForwarder(Text, Active, Option, Target, ActionKey, DirectKey, IconName, IconName_Info_right) ,CPINProtection(_validPIN)
 					{
 						Ask = ask;
-						//if we in ask mode then show NEUTRINO_ICON_SCRAMBLED as default info icon or no icon, 
+						//if we in ask mode then show NEUTRINO_ICON_MARKER_LOCK as default info icon or no icon,
 						//but use always an info icon if defined in parameter 'IconName_Info_right'
 						if (IconName_Info_right || ask)
-							iconName_Info_right = IconName_Info_right ? IconName_Info_right : NEUTRINO_ICON_LOCK; 
+							iconName_Info_right = IconName_Info_right ? IconName_Info_right : NEUTRINO_ICON_MARKER_LOCK;
 					};
 
 		virtual int exec(CMenuTarget* parent);
