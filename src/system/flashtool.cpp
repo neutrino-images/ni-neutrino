@@ -549,26 +549,28 @@ const char *CFlashVersionInfo::getReleaseCycle(void) const
 
 const char *CFlashVersionInfo::getType(void) const
 {
+	// TODO: localize it
+
 	switch (snapshot)
 	{
 	case '0':
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_RELEASE);
+		return "Release";
 	case '1':
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_BETA);
+		return "Beta";
 	case '2':
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_INTERNAL);
+		return "Internal";
 	case 'L':
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_LOCALE);
+		return "Locale";
 	case 'S':
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_SETTINGS);
+		return "Settings";
 	case 'A':
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_ADDON);
+		return "Addon";
 	case 'U':
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_UPDATE);
+		return "Update";
 	case 'T':
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_TEXT);
+		return "Text";
 	default:
-		return g_Locale->getText(LOCALE_FLASHUPDATE_TYPE_UNKNOWN);
+		return "Unknown";
 	}
 }
 
