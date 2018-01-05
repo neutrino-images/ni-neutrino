@@ -556,7 +556,7 @@ const char *CFlashVersionInfo::getType(void) const
 	case '1':
 		return "Beta";
 	case '2':
-		return "Internal";
+		return "Nightly";
 	case 'L':
 		return "Locale";
 	case 'S':
