@@ -435,18 +435,10 @@ bool CFlashUpdate::checkVersion4Update()
 	else
 	{
 		CFileBrowser UpdatesBrowser;
-
 		CFileFilter UpdatesFilter;
 
-		//NI
 		if (allow_flash)
-		{
 			UpdatesFilter.addFilter(FILEBROWSER_UPDATE_FILTER);
-#ifdef BOXMODEL_CS_HD2
-			if (CMTDInfo::getInstance()->getMTDEraseSize(sysfs) == 0x40000 /* Tank */)
-				UpdatesFilter.addFilter("256k");
-#endif
-		}
 
 		std::string filters[] = {"bin", "txt", "opk", "ipk"};
 		for(size_t i=0; i<sizeof(filters)/sizeof(filters[0]) ;i++)
