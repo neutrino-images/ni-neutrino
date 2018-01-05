@@ -549,8 +549,6 @@ const char *CFlashVersionInfo::getReleaseCycle(void) const
 
 const char *CFlashVersionInfo::getType(void) const
 {
-	// TODO: localize it
-
 	switch (snapshot)
 	{
 	case '0':
