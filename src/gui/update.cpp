@@ -405,8 +405,6 @@ bool CFlashUpdate::checkVersion4Update()
 
 		dprintf(DEBUG_NORMAL, "[update] internet version: %s\n", newVersion.c_str());
 
-		showLocalStatus(100);
-		showGlobalStatus(20);
 		hide();
 
 		msg_body = LOCALE_FLASHUPDATE_MSGBOX;
