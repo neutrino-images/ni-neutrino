@@ -309,7 +309,9 @@ bool CFlashUpdate::selectHttpImage(void)
 				//NI
 				if (!separator)
 				{
-					SelectionWidget.addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, updates_lists.rbegin()->c_str()));
+					std::string updates_list = updates_lists.rbegin()->c_str();
+					updates_list = updates_list.substr(0, updates_list.find("?", 0)); // truncate updates list
+					SelectionWidget.addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, updates_list));
 					separator = true;
 				}
 				CUpdateMenuTarget * up = new CUpdateMenuTarget(i, &selected);
