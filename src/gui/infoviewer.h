@@ -79,6 +79,7 @@ class CInfoViewer
 	int            ChanWidth;
 	int            ChanHeight;
 	int            numbox_offset;
+	int            numbox_maxtxtwidth;
 	int            analogclock_size; //NI
 	int            analogclock_offset; //NI
 	fb_pixel_t*    analogclock_buf; //NI
