@@ -239,7 +239,7 @@ void CInfoViewer::start ()
 	time_width = clock->getWidth();
 
 	//NI
-	analogclock_offset = !g_settings.infobar_analogclock ? 0 : 10 ;
+	analogclock_offset = !g_settings.infobar_analogclock ? 0 : OFFSET_INNER_MID;
 	analogclock_size   = !g_settings.infobar_analogclock ? 0 : InfoHeightY - 2*analogclock_offset;
 	clock->setXPos(clock->getXPos() - analogclock_offset - analogclock_size);
 }
@@ -2465,8 +2465,8 @@ void CInfoViewer::ecmInfoBox_show(const char * txt, int w, int h, Font * font)
 	ecmInfoBox->showFooter(false);
 
 	//set new window dimensions
-	int h_offset = 5;
-	int w_offset = 10;
+	int h_offset = OFFSET_INNER_SMALL;
+	int w_offset = OFFSET_INNER_MID;
 	ecmInfoBox->setWidth(std::min(max_w, w + 2*w_offset));
 	ecmInfoBox->setHeight(std::min(max_h, h_header + h + 2*h_offset));
 	ecmInfoBox->Refresh();
