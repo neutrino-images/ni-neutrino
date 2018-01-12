@@ -38,6 +38,7 @@
 #include <mymenu.h>
 #include <neutrino_menue.h>
 #include <gui/filebrowser.h>
+#include <gui/update_check.h>
 #include <gui/update_ext.h>
 #include <gui/update_settings.h>
 #include <gui/widget/icons.h>
@@ -143,7 +144,7 @@ int CUpdateSettings::initMenu()
 	OnOffNotifier->addItem(apply_kernel);
 #endif
 
-	CMenuOptionChooser *autocheck = new CMenuOptionChooser(LOCALE_FLASHUPDATE_AUTOCHECK, &g_settings.softupdate_autocheck, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, OnOffNotifier);
+	CMenuOptionChooser *autocheck = new CMenuOptionChooser(LOCALE_FLASHUPDATE_AUTOCHECK, &g_settings.softupdate_autocheck, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
 //	apply_settings->setHint("", LOCALE_MENU_HINT_XXX);
 
 	w_upsettings.addItem(fw_update_dir);
@@ -166,4 +167,16 @@ int CUpdateSettings::initMenu()
 	delete OnOffNotifier;
 
 	return res;
+}
+
+bool CUpdateSettings::changeNotify(const neutrino_locale_t OptionName, void * /* data */)
+{
+	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_FLASHUPDATE_AUTOCHECK))
+	{
+		CFlashUpdateCheck::getInstance()->stopThread();
+		if (g_settings.softupdate_autocheck)
+			CFlashUpdateCheck::getInstance()->startThread();
+	}
+
+	return false;
 }

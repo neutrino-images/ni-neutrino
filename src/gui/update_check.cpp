@@ -79,6 +79,9 @@ void CFlashUpdateCheck::stopThread()
 		pthread_cancel(c4u_thread);
 	}
 	c4u_thread = 0;
+
+	if (access(C4U_FLAGFILE, F_OK) == 0)
+		unlink(C4U_FLAGFILE);
 }
 
 void* CFlashUpdateCheck::c4u_proc(void*)
