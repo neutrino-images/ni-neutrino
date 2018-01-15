@@ -4650,6 +4650,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		//g_Sectionsd->setEventsAreOldInMinutes((unsigned short) (g_settings.epg_old_hours*60));
 		//g_Sectionsd->setHoursToCache((unsigned short) (g_settings.epg_cache_days*24));
 
+		sleep(1); // small delay for very fast hardware
 		hintBox.hide();
 	}
 	else if(actionKey=="recording") {
