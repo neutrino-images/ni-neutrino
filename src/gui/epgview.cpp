@@ -1629,9 +1629,9 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 	{
 		// check tmdb button
 		if (g_settings.tmdb_enabled)
-			EpgButtons[TV_BUTTONS][4].button = NEUTRINO_ICON_BUTTON_0;
+			EpgButtons[MP_BUTTONS][2].button = NEUTRINO_ICON_BUTTON_0;
 		else
-			EpgButtons[TV_BUTTONS][4].button = NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
+			EpgButtons[MP_BUTTONS][2].button = NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
 
 		::paintButtons(x, y, w, MaxButtons, EpgButtons[MP_BUTTONS], w, h);
 	}
