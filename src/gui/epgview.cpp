@@ -935,6 +935,8 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 
 	//paint bottombox contents
 	Bottombox->paint(false);
+	// small separator line
+	frameBuffer->paintHLineRel(sx, ox, sy + oy - 1, COL_FRAME);
 	showProgressBar();
 
 	// show Timer Event Buttons
