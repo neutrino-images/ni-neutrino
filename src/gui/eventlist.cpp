@@ -920,6 +920,9 @@ void CEventList::paintNaviBar(std::string _channelname_prev, std::string _channe
 
 	// shadow
 	frameBuffer->paintBoxRel(x + full_width, navibar_y + OFFSET_SHADOW, OFFSET_SHADOW, navibar_height, COL_SHADOW_PLUS_0);
+
+	// small separator line
+	frameBuffer->paintHLineRel(x, full_width, navibar_y + navibar_height - 1, COL_FRAME);
 }
 
 void CEventList::showProgressBar(int pos)
