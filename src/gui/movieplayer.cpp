@@ -279,9 +279,6 @@ void CMoviePlayerGui::cutNeutrino()
 	if (isUPNP)
 		return;
 
-	//NI
-	CZapit::getInstance()->setMoviePlayer(true);// let CCamManager::SetMode know, the call is from MoviePlayer
-
 	g_Zapit->lockPlayBack();
 
 #ifdef HAVE_AZBOX_HARDWARE
@@ -337,6 +334,10 @@ void CMoviePlayerGui::restoreNeutrino()
 
 	if (isUPNP)
 		return;
+
+	//NI
+	CZapit::getInstance()->setMoviePlayer(true);// let CCamManager::SetMode know, the call is from MoviePlayer
+
 #if ! HAVE_COOL_HARDWARE
 	g_Zapit->unlockPlayBack();
 #else
