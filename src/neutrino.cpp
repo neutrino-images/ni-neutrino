@@ -883,7 +883,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	}
 
 	g_settings.font_file = configfile.getString("font_file", FONTDIR"/neutrino.ttf");
-	g_settings.ttx_font_file = configfile.getString( "ttx_font_file", FONTDIR"/DejaVuLGCSansMono-Bold.ttf");
+	g_settings.ttx_font_file = configfile.getString( "ttx_font_file", FONTDIR"/tuxtxt.ttf");
 	ttx_font_file = g_settings.ttx_font_file.c_str();
 
 	g_settings.font_scaling_x = configfile.getInt32("font_scaling_x", 105); //NI
