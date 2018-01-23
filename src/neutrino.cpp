@@ -883,7 +883,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	}
 
 	g_settings.font_file = configfile.getString("font_file", FONTDIR"/neutrino.ttf");
-	g_settings.ttx_font_file = configfile.getString( "ttx_font_file", FONTDIR"/DejaVuLGCSansMono-Bold.ttf");
+	g_settings.ttx_font_file = configfile.getString( "ttx_font_file", FONTDIR"/tuxtxt.ttf");
 	ttx_font_file = g_settings.ttx_font_file.c_str();
 
 	g_settings.font_scaling_x = configfile.getInt32("font_scaling_x", 105); //NI
@@ -1198,6 +1198,12 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	{
 		//remove easymenu
 		configfile.deleteKey("easymenu");
+	}
+	if (g_settings.version_pseudo < "20180123160000")
+	{
+		// apply tuxtxt font changes
+		if (g_settings.ttx_font_file == FONTDIR "/DejaVuLGCSansMono-Bold.ttf")
+			g_settings.ttx_font_file = FONTDIR "/tuxtxt.ttf";
 	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;

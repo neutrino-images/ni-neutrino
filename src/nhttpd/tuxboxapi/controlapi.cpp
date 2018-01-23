@@ -890,13 +890,58 @@ void CControlAPI::RebootCGI(CyhookHandler *hh)
 }
 
 //-----------------------------------------------------------------------------
-int CControlAPI::rc_send(int ev, unsigned int code, unsigned int value)
+unsigned int revert_translate(unsigned int code)
 {
-	struct input_event iev;
-	iev.type=EV_KEY;
-	iev.code=code;
-	iev.value=value;
-	return write(ev,&iev,sizeof(iev));
+	switch(code)
+	{
+		case RC_page_up:
+			return KEY_CHANNELUP;
+		case RC_page_down:
+			return KEY_CHANNELDOWN;
+#ifdef HAVE_ARM_HARDWARE
+		case RC_play:
+		case RC_pause:
+			return KEY_PLAYPAUSE;
+		case RC_favorites:
+			return KEY_VIDEO;
+		case RC_forward:
+			return KEY_FASTFORWARD;
+#endif
+#ifdef HAVE_AZBOX_HARDWARE
+		case RC_favorites:
+			return KEY_HOME;
+		case RC_stop:
+			return KEY_TV;
+		case RC_record:
+			return KEY_RADIO;
+		case RC_pause:
+			return KEY_PLAY;
+#endif
+		default:
+			break;
+	}
+	return code;
+}
+
+void CControlAPI::rc_sync(int fd)
+{
+	struct input_event ev;
+
+	gettimeofday(&ev.time, NULL);
+	ev.type = EV_SYN;
+	ev.code = SYN_REPORT;
+	ev.value = 0;
+	write(fd, &ev, sizeof(ev));
+}
+
+int CControlAPI::rc_send(int fd, unsigned int code, unsigned int value)
+{
+	struct input_event ev;
+
+	ev.type = EV_KEY;
+	ev.code = code;
+	ev.value = value;
+	return write(fd, &ev, sizeof(ev));
 }
 
 //-----------------------------------------------------------------------------
@@ -937,18 +982,21 @@ void CControlAPI::RCEmCGI(CyhookHandler *hh)
 		hh->SendError();
 		return;
 	}
+	sendcode = revert_translate(sendcode);
 	if (rc_send(evd, sendcode, KEY_PRESSED) < 0) {
 		perror("writing 'KEY_PRESSED' event failed");
 		hh->SendError();
 		close(evd);
 		return;
 	}
+	rc_sync(evd);
 	if (rc_send(evd, sendcode, KEY_RELEASED) < 0) {
 		perror("writing 'KEY_RELEASED' event failed");
 		hh->SendError();
 		close(evd);
 		return;
 	}
+	rc_sync(evd);
 	close(evd);
 #else
 	/* 0 == KEY_PRESSED in rcinput.cpp */
