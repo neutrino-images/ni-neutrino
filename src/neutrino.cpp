@@ -1199,6 +1199,12 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		//remove easymenu
 		configfile.deleteKey("easymenu");
 	}
+	if (g_settings.version_pseudo < "20180123160000")
+	{
+		// apply tuxtxt font changes
+		if (g_settings.ttx_font_file == FONTDIR "/DejaVuLGCSansMono-Bold.ttf")
+			g_settings.ttx_font_file = FONTDIR "/tuxtxt.ttf";
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
