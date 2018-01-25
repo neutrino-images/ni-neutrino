@@ -21,6 +21,7 @@
 
 #include <config.h>
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,6 +57,7 @@ extern void tuxtxt_decode_adip(); /* additional information table */
 extern void tuxtxt_compress_page(int p, int sp, unsigned char* buffer);
 extern void tuxtxt_decompress_page(int p, int sp, unsigned char* buffer);
 extern void tuxtxt_clear_p26(tstExtData* extData);
+extern void tuxtxt_clear_cache(void);
 #if TUXTXT_DEBUG
 extern int tuxtxt_get_zipsize(int p, int sp);
 #endif
@@ -211,11 +213,9 @@ const char *ObjectType[] =
 #define NoServicesFound 3
 
 /* framebuffer stuff */
-static fb_pixel_t *lfb = 0;
-static fb_pixel_t *lbb = 0;
+static fb_pixel_t *lfb = NULL;
+static fb_pixel_t *lbb = NULL;
 struct fb_var_screeninfo var_screeninfo;
-struct fb_fix_screeninfo fix_screeninfo;
-int stride;
 
 /* freetype stuff */
 FT_Library      library;
@@ -557,11 +557,13 @@ char versioninfo[16];
 int hotlist[10];
 int maxhotlist;
 
+int rc;
 int sx, ex, sy, ey;
 int PosX, PosY, StartX, StartY;
 int lastpage;
 int inputcounter;
-int zoommode, screenmode, transpmode, hintmode, boxed, nofirst, savedscreenmode, showflof, show39, showl25, prevscreenmode;
+int zoommode[2], screenmode[2], transpmode[2], hintmode, nofirst, savedscreenmode[2], showflof, show39, showl25, prevscreenmode[2];
+bool boxed, oldboxed;
 char dumpl25;
 int catch_row, catch_col, catched_page, pagecatching;
 int prev_100, prev_10, next_10, next_100;
@@ -1211,8 +1213,18 @@ const unsigned short defaultcolors[] =	/* 0x0bgr */
 	0x420, 0x210, 0x420, 0x000, 0x000
 };
 
-/* filled in setcolors() */
-fb_pixel_t bgra[SIZECOLTABLE];
+fb_pixel_t argb[] = {
+	0xff000000, 0xff000000, 0xff000000, 0xff000000,
+	0xff000000, 0xff000000, 0xff000000, 0xff000000,
+	0xff000000, 0xff000000, 0xff000000, 0xff000000,
+	0xff000000, 0xff000000, 0xff000000, 0xff000000,
+	0xff000000, 0xff000000, 0xff000000, 0xff000000,
+	0xff000000, 0xff000000, 0xff000000, 0xff000000,
+	0xff000000, 0xff000000, 0xff000000, 0xff000000,
+	0xff000000, 0xff000000, 0xff000000, 0xff000000,
+	0xff000000, 0xff000000, 0xc0000000, 0x00000000,
+	0x33000000
+};
 
 /* old 8bit color table */
 unsigned short rd0[] = {0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0x00<<8, 0x00<<8, 0x00<<8, 0,      0      };
