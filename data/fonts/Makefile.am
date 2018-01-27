@@ -22,4 +22,5 @@ install_DATA = \
 install-data-hook:
 	cd $(DESTDIR)$(FONTDIR); \
 		mv $(neutrino_ttf) neutrino.ttf; \
-		mv $(tuxtxt_ttf) tuxtxt.ttf
+		mv $(tuxtxt_ttf) tuxtxt.ttf; \
+		ln -sf tuxtxt.ttf shell.ttf
