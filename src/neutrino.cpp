@@ -4775,6 +4775,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 			delete g_RemoteControl;
 			delete g_fontRenderer;
 			delete g_dynFontRenderer;
+			delete g_shellFontRenderer;
 
 			delete hint;
 
@@ -5326,6 +5327,7 @@ void CNeutrinoApp::Cleanup()
 	printf("cleanup 11\n");fflush(stdout);
 	delete g_fontRenderer; g_fontRenderer = NULL;
 	delete g_dynFontRenderer; g_dynFontRenderer = NULL;
+	delete g_shellFontRenderer; g_shellFontRenderer = NULL;
 	printf("cleanup 12\n");fflush(stdout);
 	delete g_PicViewer; g_PicViewer = NULL;
 	printf("cleanup 13\n");fflush(stdout);
@@ -5378,6 +5380,7 @@ void CNeutrinoApp::Cleanup()
 	}
 	printf("cleanup 2\n");fflush(stdout);
 	delete g_SignalFont; g_SignalFont = NULL;
+	delete g_ShellFont; g_ShellFont = NULL;
 	printf("cleanup 3\n");fflush(stdout);
 	configfile.clear();
 
