@@ -82,8 +82,6 @@ int CDaemonControlMenu::show()
 {
 	int daemon_shortcut = 0;
 
-	std::ostringstream buf;
-
 	CMenuWidget* daemonControlMenu = new CMenuWidget(LOCALE_DAEMON_CONTROL, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_PLUGINS_HIDE);
 	daemonControlMenu->addIntroItems();
 
@@ -91,11 +89,11 @@ int CDaemonControlMenu::show()
 	CFlagFileNotifier * flagFileNotifier[DAEMONS_COUNT];
 	for (unsigned int i = 0; i < DAEMONS_COUNT; i++)
 	{
-		buf.str("");
-		buf << FLAGDIR << "/." << daemons_data[i].flag;
-		const char *flagfile = buf.str().c_str();
+		std::string flagfile = FLAGDIR;
+		flagfile += "/.";
+		flagfile += daemons_data[i].flag;
 
-		daemons_data[i].flag_exist = file_exists(flagfile);
+		daemons_data[i].flag_exist = file_exists(flagfile.c_str());
 
 		flagFileNotifier[i] = new CFlagFileNotifier(daemons_data[i].flag);
 
@@ -159,7 +157,6 @@ int CCamdControlMenu::show()
 {
 	int camd_shortcut = 0;
 
-	std::ostringstream buf;
 	char *buffer;
 	ssize_t read;
 	size_t len;
@@ -180,19 +177,20 @@ int CCamdControlMenu::show()
 	for (unsigned int i = 0; i < CAMDS_COUNT; i++)
 	{
 		std::string vinfo = "";
+		std::string camd_binary = "/var/bin/";
+		camd_binary += camds_data[i].camd_file;
 
-		buf.str("");
-		buf << "/var/bin/" << camds_data[i].camd_file;
-
-		camds_data[i].camd_exist = file_exists(buf.str().c_str());
+		camds_data[i].camd_exist = file_exists(camd_binary.c_str());
 
 		if (camds_data[i].camd_exist)
 		{
-			buf.str("");
-			buf << "vinfo " << camds_data[i].camd_name << " /var/bin/" << camds_data[i].camd_file;
+			std::string vinfo_call = "vinfo ";
+			vinfo_call += camds_data[i].camd_name;
+			vinfo_call += " /var/bin/";
+			vinfo_call += camds_data[i].camd_file;
 
 			buffer = NULL;
-			if ((fh = popen(buf.str().c_str(), "r")))
+			if ((fh = popen(vinfo_call.c_str(), "r")))
 			{
 				while ((read = getline(&buffer, &len, fh)) != -1)
 					vinfo += buffer;
