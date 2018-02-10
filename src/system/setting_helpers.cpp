@@ -143,11 +143,9 @@ bool CTouchFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 
 bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 {
-	std::ostringstream buf;
-	buf.str("");
-	buf << FLAGDIR << "/." << filename;
-
-	std::string flagfile = buf.str();
+	std::string flagfile = FLAGDIR;
+	flagfile += "/.";
+	flagfile += filename;
 
 	if ((*(int *)data) != 0)
 	{
