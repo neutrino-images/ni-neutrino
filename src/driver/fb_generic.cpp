@@ -68,7 +68,6 @@ void CFrameBuffer::waitForIdle(const char *)
 
 /*******************************************************************************/
 
-static uint8_t * virtual_fb = NULL;
 inline unsigned int make16color(uint16_t r, uint16_t g, uint16_t b, uint16_t t,
 				  uint32_t  /*rl*/ = 0, uint32_t  /*ro*/ = 0,
 				  uint32_t  /*gl*/ = 0, uint32_t  /*go*/ = 0,
@@ -235,10 +234,6 @@ CFrameBuffer::~CFrameBuffer()
 		munmap(lfb, available);
 	lfb = NULL;
 
-	if (virtual_fb){
-		delete[] virtual_fb;
-		virtual_fb = NULL;
-	}
 	close(fd);
 	fd = -1;
 
@@ -296,10 +291,7 @@ unsigned int CFrameBuffer::getScreenY()
 
 fb_pixel_t * CFrameBuffer::getFrameBufferPointer() const
 {
-	if (active || (virtual_fb == NULL))
-		return lbb;
-	else
-		return (fb_pixel_t *) virtual_fb;
+	return lbb;
 }
 
 /* dummy if not implemented in CFbAccel */
@@ -310,7 +302,7 @@ fb_pixel_t * CFrameBuffer::getBackBufferPointer() const
 
 bool CFrameBuffer::getActive() const
 {
-	return (active || (virtual_fb != NULL));
+	return active;
 }
 
 void CFrameBuffer::setActive(bool enable)
