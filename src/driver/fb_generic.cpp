@@ -1704,9 +1704,9 @@ void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32
 	yc = (height > yRes) ? yRes : height;
 
 	//NI
-	if (unscaled_w != 0 && (int)unscaled_w < xc)
+	if (unscaled_w != 0 && unscaled_w < xc)
 		xc = unscaled_w;
-	if (unscaled_h != 0 && (int)unscaled_h < yc)
+	if (unscaled_h != 0 && unscaled_h < yc)
 		yc = unscaled_h;
 
 	if (xp >= xc || yp >= yc) {
