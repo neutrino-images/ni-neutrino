@@ -332,6 +332,9 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	int x_res, y_res, framerate;
 	videoDecoder->getPictureInfo(x_res, y_res, framerate);
 
+	if (y_res == 1088)
+		y_res = 1080;
+
 	std::string Resolution = to_string(x_res) + "x" + to_string(y_res);
 	//Resolution += "\n" + to_string(framerate); //TODO
 
