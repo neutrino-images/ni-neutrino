@@ -4,6 +4,7 @@ install_DATA = \
 	biss_green.png \
 	biss_white.png \
 	biss_yellow.png \
+	cccam_green.png \
 	ci+_green.png \
 	ci+_grey.png \
 	conax_green.png \

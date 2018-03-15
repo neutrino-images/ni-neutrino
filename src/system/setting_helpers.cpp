@@ -179,6 +179,7 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 				strstr(filename, "doscam")	||
 				strstr(filename, "ncam")	||
 				strstr(filename, "oscam")	||
+				strstr(filename, "cccam")	||
 				strstr(filename, "cs2gbox")	||
 				strstr(filename, "gbox"))
 			{
@@ -227,6 +228,7 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			strstr(filename, "doscam")	||
 			strstr(filename, "ncam")	||
 			strstr(filename, "oscam")	||
+			strstr(filename, "cccam")	||
 			strstr(filename, "cs2gbox")	||
 			strstr(filename, "gbox"))
 		{

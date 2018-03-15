@@ -274,6 +274,8 @@ const char * locale_real_names[] =
 	"ca_init_2",
 	"cablesetup.provider",
 	"camd_control",
+	"camd_item_cccam_hint",
+	"camd_item_cccam_name",
 	"camd_item_cs2gbox_hint",
 	"camd_item_cs2gbox_name",
 	"camd_item_doscam_hint",
