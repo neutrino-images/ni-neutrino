@@ -1038,7 +1038,7 @@ void CInfoViewerBB::paint_cam_icons()
 	std::ostringstream buf;
 	int emu_pic_startx = g_InfoViewer->ChanInfoX + OFFSET_INNER_MID + (g_settings.infobar_casystem_frame ? FRAME_WIDTH_MIN + OFFSET_INNER_SMALL : 0);
 	int py = g_InfoViewer->BoxEndY + OFFSET_INNER_SMALL;
-	const char *icon_name[] = {"mgcamd","doscam","ncam","oscam","osemu","newcs","gbox"};
+	const char *icon_name[] = {"mgcamd","doscam","ncam","oscam","osemu","cccam","newcs","gbox"};
 	const int icon_space = OFFSET_INNER_SMALL;
 	int icon_sizeH = 0;
 	int icon_sizeW = 0;

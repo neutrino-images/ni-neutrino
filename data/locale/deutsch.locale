@@ -247,7 +247,7 @@ ca_init_1 CI-Modul
 ca_init_2 Conax-Karte und CI-Modul
 cablesetup.provider Kabelanbieter
 camd_control camd-Steuerung
-camd_item_cccam_hint CCCam - Softcam
+camd_item_cccam_hint CCcam - Softcam
 camd_item_cccam_name cccam
 camd_item_cs2gbox_hint cs2gbox - Newcamd Bridge
 camd_item_cs2gbox_name cs2gbox
