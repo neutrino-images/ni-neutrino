@@ -1116,6 +1116,7 @@ int CInfoViewerBB::parse_ecmInfo(const char * file)
 			} 
 			else if ( strstr(buffer, "source:") ||		//mgcamd
 				  strstr(buffer, "decode:") ||		//gbox
+				  strstr(buffer, "address:") ||		//cccam
 				  strstr(buffer, "protocol:") ||	//doscam or oscam constcw
 				  strstr(buffer, "from:"))		//oscam
 			{
@@ -1126,6 +1127,7 @@ int CInfoViewerBB::parse_ecmInfo(const char * file)
 					decode = LOCAL;
 				}
 				else if ( strstr(buffer, "slot") ||	//gbox
+					  strstr(buffer, "/dev/sci") ||	//cccam
 					  strstr(buffer, "local") ||	//oscam
 					  strstr(buffer, "com"))
 				{
