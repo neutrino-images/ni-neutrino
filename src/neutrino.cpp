@@ -2716,7 +2716,7 @@ void CNeutrinoApp::quickZap(int msg)
 void CNeutrinoApp::numericZap(int msg)
 {
 	StopSubtitles();
-	int res = channelList->numericZap( msg );
+	int res = channelList->numericZap(msg);
 	StartSubtitles(res < 0);
 	if (res >= 0 && CRCInput::isNumeric(msg)) {
 		if (g_settings.channellist_numeric_adjust && first_mode_found >= 0) {
@@ -2914,17 +2914,20 @@ void CNeutrinoApp::RealRun()
 				else
 					quickZap( msg );
 			}
-			else if( msg == (neutrino_msg_t) g_settings.key_zaphistory ) {
-				//NI InfoIcons
-				if(g_settings.key_zaphistory == CRCInput::RC_home) {
-					if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP) {
+			else if (msg == (neutrino_msg_t) g_settings.key_lastchannel) {
+				numericZap(msg);
+			}
+			else if (msg == (neutrino_msg_t) g_settings.key_zaphistory || msg == (neutrino_msg_t) g_settings.key_current_transponder) {
+				//NI InfoIcons; hide, if one of the keys above is assigned to RC_home
+				if (msg == CRCInput::RC_home)
+				{
+					if (g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
 						InfoIcons->hideIcons();
-					}
 				}
-				// Zap-History "Bouquet"
+
 				InfoClock->enableInfoClock(false);
 				InfoIcons->enableInfoIcons(false); //NI InfoIcons
-				numericZap( msg );
+				numericZap(msg);
 				InfoClock->enableInfoClock(true);
 				InfoIcons->enableInfoIcons(true); //NI InfoIcons
 			}
@@ -2937,10 +2940,6 @@ void CNeutrinoApp::RealRun()
 				}
 			}
 #endif
-			else if( msg == (neutrino_msg_t) g_settings.key_lastchannel ) {
-				// Quick Zap
-				numericZap( msg );
-			}
 			else if(msg == (neutrino_msg_t) g_settings.key_timeshift) {
 #if 0
 				if (mode == NeutrinoModes::mode_webtv) {
@@ -2948,13 +2947,6 @@ void CNeutrinoApp::RealRun()
 				} else
 #endif
 					CRecordManager::getInstance()->StartTimeshift();
-			}
-			else if (msg == (neutrino_msg_t) g_settings.key_current_transponder) {
-				InfoClock->enableInfoClock(false);
-				InfoIcons->enableInfoIcons(false); //NI InfoIcons
-				numericZap( msg );
-				InfoClock->enableInfoClock(true);
-				InfoIcons->enableInfoIcons(true); //NI InfoIcons
 			}
 #ifdef ENABLE_PIP
 			else if (msg == (neutrino_msg_t) g_settings.key_pip_close) {
@@ -3188,6 +3180,8 @@ int CNeutrinoApp::showChannelList(const neutrino_msg_t _msg, bool from_menu)
 		if (bouquetList->Bouquets.empty())
 			SetChannelMode(LIST_MODE_PROV);
 		nNewChannel = bouquetList->exec(true);
+	} else if (msg == (neutrino_msg_t) g_settings.key_zaphistory || msg == (neutrino_msg_t) g_settings.key_current_transponder) {
+		channelList->numericZap(msg);
 	}
 _repeat:
 	printf("CNeutrinoApp::showChannelList: nNewChannel %d\n", nNewChannel);fflush(stdout);
@@ -3436,7 +3430,8 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	}
 
 	/* ================================== KEYS ================================================ */
-	if( msg == CRCInput::RC_ok || (!g_InfoViewer->getSwitchMode() && CNeutrinoApp::getInstance()->listModeKey(msg))) {
+	if( msg == CRCInput::RC_ok || msg == (neutrino_msg_t) g_settings.key_zaphistory || msg == (neutrino_msg_t) g_settings.key_current_transponder
+			|| (!g_InfoViewer->getSwitchMode() && CNeutrinoApp::getInstance()->listModeKey(msg))) {
 		if( (mode == NeutrinoModes::mode_tv) || (mode == NeutrinoModes::mode_radio) || (mode == NeutrinoModes::mode_ts) || (mode == NeutrinoModes::mode_webtv) || (mode == NeutrinoModes::mode_webradio)) {
 			showChannelList(msg);
 			return messages_return::handled;
