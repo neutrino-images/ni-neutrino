@@ -4351,8 +4351,6 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 			SDT_ReloadChannels();
 			//SDTreloadChannels = false;
 		}
-		frameBuffer->useBackground(false);
-		frameBuffer->paintBackground();
 
 		/* wasshift = */ CRecordManager::getInstance()->StopAutoRecord();
 
@@ -4415,7 +4413,12 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 		if (g_info.hw_caps->has_fan)
 			CFanControlNotifier::setSpeed(1);
 
+		if (g_InfoViewer->is_visible)
+			g_InfoViewer->killTitle();
+		frameBuffer->useBackground(false);
+		frameBuffer->paintBackground();
 		frameBuffer->setActive(false);
+
 		// Active standby on
 		powerManager->SetStandby(false, false);
 		if (scansettings.fst_update)
@@ -4443,7 +4446,9 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 			g_CamHandler->exec(NULL, "ca_ci_reset0");
 			g_CamHandler->exec(NULL, "ca_ci_reset1");
 		}
+
 		frameBuffer->setActive(true);
+
 		//fan speed
 		if (g_info.hw_caps->has_fan)
 			CFanControlNotifier::setSpeed(g_settings.fan_speed);
