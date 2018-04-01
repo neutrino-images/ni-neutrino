@@ -313,16 +313,16 @@ const lcd_setting_struct_t lcd_setting[SNeutrinoSettings::LCD_SETTING_COUNT] =
 };
 
 static SNeutrinoSettings::usermenu_t usermenu_default[] = {
-	{ CRCInput::RC_red,             "2,3,4,13,1,23,22",                     "",     "red"           }, //NI
+	{ CRCInput::RC_red,             "2,3,4,13,1,23,22",                     "",     "red"           },
 	{ CRCInput::RC_green,           "6",                                    "",     "green"         },
 	{ CRCInput::RC_yellow,          "7,35",                                 "",     "yellow"        },
-	{ CRCInput::RC_blue,            "27,28,21,20,1,24,19,14,10,11",         "",     "blue"          }, //NI
+	{ CRCInput::RC_blue,            "27,28,21,20,1,24,19,14,10,11",         "",     "blue"          },
 #if HAVE_ARM_HARDWARE
 	{ CRCInput::RC_playpause,       "9",                                    "",     "5"             },
 #else
 	{ CRCInput::RC_play,            "9",                                    "",     "5"             },
 #endif
-	{ CRCInput::RC_audio,           "6",                                    "",     "6"             }, //NI
+	{ CRCInput::RC_audio,           "6",                                    "",     "6"             },
 	{ CRCInput::RC_nokey,           "",                                     "",     ""              },
 };
 
