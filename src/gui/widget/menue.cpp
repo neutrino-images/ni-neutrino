@@ -1644,7 +1644,8 @@ void CMenuOptionNumberChooser::init(	const neutrino_locale_t& lName,
 	lower_bound		= min_value;
 	upper_bound		= max_value;
 	display_offset		= print_offset;
-	setLocalizedValue (special_value, special_value_name);
+	localized_value		= special_value;
+	localized_value_name 	= special_value_name;
 	observ			= Observ;
 	slider_on		= sliderOn;
 
@@ -1708,24 +1709,18 @@ int CMenuOptionNumberChooser::paint(bool selected)
 	const char * l_option;
 	char option_value[40];
 
-	for (size_t i = 0; i < localized.size(); i++)
+	if ((localized_value_name == NONEXISTANT_LOCALE) || ((*optionValue) != localized_value))
 	{
-		if ((localized[i].value_name == NONEXISTANT_LOCALE) || ((*optionValue) != localized[i].value))
-		{
-			if (numberFormatFunction) {
-				std::string s = numberFormatFunction(*optionValue + display_offset);
-				strncpy(option_value, s.c_str(), sizeof(option_value));
-			} else
-				sprintf(option_value, numberFormat.c_str(), *optionValue + display_offset);
-			l_option = option_value;
-		}
-		else
-		{
-			l_option = g_Locale->getText(localized[i].value_name);
-			break;
-		}
+		if (numberFormatFunction) {
+			std::string s = numberFormatFunction(*optionValue + display_offset);
+			strncpy(option_value, s.c_str(), sizeof(option_value));
+		} else
+			sprintf(option_value, numberFormat.c_str(), *optionValue + display_offset);
+		l_option = option_value;
 	}
-
+	else
+		l_option = g_Locale->getText(localized_value_name);
+	
 	//paint item
 	prepareItem(selected, height);
 
