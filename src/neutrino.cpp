@@ -363,7 +363,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	parentallocked = !access(NEUTRINO_PARENTALLOCKED_FILE, R_OK);
 
 	//theme/color options
-	g_settings.theme_name = configfile.getString("theme_name","");
+	g_settings.theme_name = configfile.getString("theme_name", !access(NEUTRINO_SETTINGS_FILE, F_OK) ? MIGRATE_THEME_NAME : "");
 	CThemes::getInstance()->getTheme(configfile);
 
 	//NI
