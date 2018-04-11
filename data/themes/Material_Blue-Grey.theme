@@ -132,6 +132,7 @@ progressbar_passive_red=38
 progressbar_passive_green=49
 progressbar_passive_blue=55
 
+# black
 shadow_red=0
 shadow_green=0
 shadow_blue=0

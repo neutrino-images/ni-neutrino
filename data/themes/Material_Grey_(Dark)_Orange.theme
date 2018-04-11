@@ -16,10 +16,10 @@ menu_Content_green=13
 menu_Content_blue=13
 menu_Content_alpha=10
 
-# 800
-menu_Content_Selected_red=26
-menu_Content_Selected_green=26
-menu_Content_Selected_blue=26
+# NI orange
+menu_Content_Selected_red=99
+menu_Content_Selected_green=43
+menu_Content_Selected_blue=7
 menu_Content_Selected_alpha=10
 
 # 900
@@ -69,19 +69,19 @@ clock_Digit_green=62
 clock_Digit_blue=62
 clock_Digit_alpha=0
 
-# 500
-colored_events_red=62
-colored_events_green=62
-colored_events_blue=62
+# NI orange
+colored_events_red=99
+colored_events_green=43
+colored_events_blue=7
 colored_events_alpha=0
 
 colored_events_channellist=2
 colored_events_infobar=2
 
-# 50
-menu_Head_Text_red=98
-menu_Head_Text_green=98
-menu_Head_Text_blue=98
+# NI orange
+menu_Head_Text_red=99
+menu_Head_Text_green=43
+menu_Head_Text_blue=7
 menu_Head_Text_alpha=0
 
 # 50
@@ -90,10 +90,10 @@ menu_Content_Text_green=98
 menu_Content_Text_blue=98
 menu_Content_Text_alpha=0
 
-# 50
-menu_Content_Selected_Text_red=98
-menu_Content_Selected_Text_green=98
-menu_Content_Selected_Text_blue=98
+# black
+menu_Content_Selected_Text_red=0
+menu_Content_Selected_Text_green=0
+menu_Content_Selected_Text_blue=0
 menu_Content_Selected_Text_alpha=0
 
 # 500
@@ -113,24 +113,6 @@ infobar_Text_red=98
 infobar_Text_green=98
 infobar_Text_blue=98
 infobar_Text_alpha=0
-
-progressbar_design=-1
-progressbar_design_channellist=-1
-progressbar_gradient=1
-progressbar_timescale_red=0
-progressbar_timescale_yellow=70
-progressbar_timescale_green=100
-progressbar_timescale_invert=0
-
-# 500
-progressbar_active_red=62
-progressbar_active_green=62
-progressbar_active_blue=62
-
-# 900
-progressbar_passive_red=26
-progressbar_passive_green=26
-progressbar_passive_blue=26
 
 # black
 shadow_red=0
