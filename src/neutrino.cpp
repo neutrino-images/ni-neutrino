@@ -363,8 +363,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	parentallocked = !access(NEUTRINO_PARENTALLOCKED_FILE, R_OK);
 
 	//theme/color options
-	CThemes::getTheme(configfile);
 	g_settings.theme_name = configfile.getString("theme_name","");
+	CThemes::getInstance()->getTheme(configfile);
 
 	//NI
 	g_settings.inetradio_autostart = configfile.getInt32("inetradio_autostart" , 0);
@@ -1234,8 +1234,8 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	}
 
 	//theme/color options
-	configfile.getString( "theme_name",g_settings.theme_name );
-	CThemes::setTheme(configfile);
+	CThemes::getInstance()->setTheme(configfile);
+	configfile.setString( "theme_name", g_settings.theme_name );
 
 	//NI
 	configfile.setInt32("inetradio_autostart" , g_settings.inetradio_autostart);
