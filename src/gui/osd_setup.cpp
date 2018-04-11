@@ -176,6 +176,7 @@ size_t moviebrowser_font_items = sizeof(moviebrowser_font_sizes)/sizeof(moviebro
 
 const SNeutrinoSettings::FONT_TYPES other_font_sizes[] =
 {
+	SNeutrinoSettings::FONT_TYPE_WINDOW_GENERAL,
 	SNeutrinoSettings::FONT_TYPE_SUBTITLES,
 	SNeutrinoSettings::FONT_TYPE_FILEBROWSER_ITEM,
 	SNeutrinoSettings::FONT_TYPE_BUTTON_TEXT
@@ -235,7 +236,8 @@ font_sizes_struct neutrino_font[SNeutrinoSettings::FONT_TYPE_COUNT] =
 	{LOCALE_FONTSIZE_MOVIEBROWSER_INFO  ,  16, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
 	{LOCALE_FONTSIZE_SUBTITLES          ,  25, CNeutrinoFonts::FONT_STYLE_BOLD   , 0},
 	{LOCALE_FONTSIZE_MESSAGE_TEXT       ,  20, CNeutrinoFonts::FONT_STYLE_BOLD   , 0}, //NI
-	{LOCALE_FONTSIZE_BUTTON_TEXT        ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}
+	{LOCALE_FONTSIZE_BUTTON_TEXT        ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
+	{LOCALE_FONTSIZE_GENERAL_WINDOW_TEXT,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 1}
 };
 
 int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
