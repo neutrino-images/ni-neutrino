@@ -335,7 +335,7 @@ void CThemes::setTheme(CConfigFile &configfile)
 	configfile.setInt32( "shadow_green", t.shadow_green );
 	configfile.setInt32( "shadow_blue", t.shadow_blue );
 
-	//NI
+	// progressbar
 	configfile.setInt32( "progressbar_active_red", t.progressbar_active_red );
 	configfile.setInt32( "progressbar_active_green", t.progressbar_active_green );
 	configfile.setInt32( "progressbar_active_blue", t.progressbar_active_blue );
@@ -447,7 +447,7 @@ void CThemes::getTheme(CConfigFile &configfile)
 	t.shadow_green = configfile.getInt32( "shadow_green", 0 );
 	t.shadow_blue = configfile.getInt32( "shadow_blue", 0 );
 
-	//NI
+	// progressbar
 	t.progressbar_active_red = configfile.getInt32( "progressbar_active_red", 62 );
 	t.progressbar_active_green = configfile.getInt32( "progressbar_active_green", 62 );
 	t.progressbar_active_blue = configfile.getInt32( "progressbar_active_blue", 62 );

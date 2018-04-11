@@ -1740,8 +1740,8 @@ void CInfoViewer::showSNR ()
 			sigbox = new CSignalBox(BoxStartX + sigbox_offset, y_numbox+ChanHeight/2, ChanWidth - 2*sigbox_offset, ChanHeight/2, NULL, true, NULL, "S", "Q");
 			sigbox->setItemName("SIGBOX");
 			sigbox->setTextColor(COL_INFOBAR_TEXT);
-			sigbox->setActiveColor(COL_PROGRESSBAR_ACTIVE_PLUS_0); //NI
-			sigbox->setPassiveColor(COL_PROGRESSBAR_PASSIVE_PLUS_0); //NI
+			sigbox->setActiveColor(COL_PROGRESSBAR_ACTIVE_PLUS_0);
+			sigbox->setPassiveColor(COL_PROGRESSBAR_PASSIVE_PLUS_0);
 			sigbox->setColorBody(numbox->getColorBody());
 			sigbox->doPaintBg(false);
 			sigbox->enableTboxSaveScreen(numbox->getColBodyGradientMode());
@@ -1831,8 +1831,8 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 			pb_p = pb_w;
 
 		timescale->setDimensionsAll(pb_startx, pb_starty, pb_w, pb_h);
-		timescale->setActiveColor(COL_PROGRESSBAR_ACTIVE_PLUS_0); //NI
-		timescale->setPassiveColor(g_settings.infobar_progressbar ? COL_PROGRESSBAR_PASSIVE_PLUS_0 : COL_INFOBAR_PLUS_0); //NI
+		timescale->setActiveColor(COL_PROGRESSBAR_ACTIVE_PLUS_0);
+		timescale->setPassiveColor(g_settings.infobar_progressbar ? COL_PROGRESSBAR_PASSIVE_PLUS_0 : COL_INFOBAR_PLUS_0);
 		timescale->enableShadow(!g_settings.infobar_progressbar ? CC_SHADOW_ON : CC_SHADOW_OFF, OFFSET_SHADOW/2);
 		timescale->setValues(pb_p, pb_w);
 	}else{

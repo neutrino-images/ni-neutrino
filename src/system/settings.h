@@ -163,7 +163,6 @@ struct SNeutrinoTheme
 	unsigned char shadow_green;
 	unsigned char shadow_blue;
 
-	//NI
 	unsigned char progressbar_active_red;
 	unsigned char progressbar_active_green;
 	unsigned char progressbar_active_blue;

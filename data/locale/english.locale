@@ -1489,7 +1489,7 @@ menu.hint_progressbar_active Change color of active progress bar part
 menu.hint_progressbar_color Change appearance of progress bars
 menu.hint_progressbar_gradient Add a vertical brightness gradient to progress bars
 menu.hint_progressbar_infobar_position Selects the options of progressbar in the infobar
-menu.hint_progressbar_passive Change color of passive progress bar part 
+menu.hint_progressbar_passive Change color of passive progress bar part
 menu.hint_progressbar_preview Use OK to change the current progressbar state
 menu.hint_progressbar_timescale_green Choose the green portion of colored progressbars
 menu.hint_progressbar_timescale_invert Select your preferred color gradient
