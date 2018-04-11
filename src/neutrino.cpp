@@ -364,6 +364,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	//theme/color options
 	CThemes::getTheme(configfile);
+	g_settings.theme_name = configfile.getString("theme_name","");
 
 	//NI
 	g_settings.inetradio_autostart = configfile.getInt32("inetradio_autostart" , 0);
@@ -1233,6 +1234,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	}
 
 	//theme/color options
+	configfile.getString( "theme_name",g_settings.theme_name );
 	CThemes::setTheme(configfile);
 
 	//NI
