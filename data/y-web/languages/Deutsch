@@ -622,6 +622,8 @@ rc.key_time=
 rc_key_sub=Subtitle
 rc.key_picsize=Pic Size
 rc.key_picmode=Pic Mode
+rc.key_pos=Pos
+rc.key_recall=Recall
 
 ========= NI
 main.ni=NI-yWeb
