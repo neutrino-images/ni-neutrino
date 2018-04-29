@@ -35,7 +35,7 @@
 
 #include <system/settings.h>
 
-#include <gui/imdb.h> //NI
+#include <gui/imdb.h>
 #include <driver/movieinfo.h>
 #include "widget/menue.h"
 #include "widget/navibar.h"
@@ -52,7 +52,7 @@ class CEpgData
 		CChannelEventList	evtlist;
 		CChannelEventList	followlist;
 		CEPGData		epgData;
-		CIMDB			*imdb; //NI
+		CIMDB			*imdb;
 
 		CComponentsHeader	*header;
 		CNaviBar 		*Bottombox;
@@ -99,7 +99,7 @@ class CEpgData
 		void showProgressBar();
 		bool isCurrentEPG(const t_channel_id channel_id);
 
-		//NI
+
 		bool imdb_active;
 		int imdb_stars;
 		std::string imdb_rating;
