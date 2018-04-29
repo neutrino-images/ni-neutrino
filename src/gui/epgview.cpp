@@ -287,30 +287,58 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 
 	// recalculate
 	medlineheight = font->getHeight();
+	medlinecount = sb / medlineheight;
 
-	// show ranking
-	if ((stars > 0 || imdb_stars > 0) && (tmdb_active || imdb_active) && startPos == 0)
+	if (startPos == 0 && (tmdb_active || imdb_active))
 	{
 		std::string provider_logo = "";
+		int stars = 0;
 
-		if (tmdb_active && startPos == 0)
+		if (tmdb_active)
+		{
 			provider_logo = NEUTRINO_ICON_TMDB;
-		if (imdb_active && startPos == 0)
+			if (tmdb_stars <= 10)
+				tmdb_stars *= 10; // recalculate tmdb_stars value for starbar
+			stars = tmdb_stars;
+		}
+		else if (imdb_active)
+		{
 			provider_logo = NEUTRINO_ICON_IMDB;
+			stars = imdb_stars;
+		}
 
-		int max_stars = 10;
-		if (imdb_active && imdb_stars) //TODO: unify imdb and tmdb
-			stars = imdb_stars / max_stars; // recalculate stars value for starbar
+		int logo_offset = 0;
+		int logo_w = 0;
+		int logo_h = 0;
+		if (!provider_logo.empty())
+		{
+			frameBuffer->getIconSize(provider_logo.c_str(), &logo_w, &logo_h);
+			frameBuffer->paintIcon(provider_logo.c_str(), sx+OFFSET_INNER_MID+cover_offset, y+(medlineheight-logo_h)/2);
+			logo_offset = logo_w + OFFSET_INNER_MID;
+		}
 
-		//create and paint ranking banner
-		CEPGRateBanner rate_bar(sx+OFFSET_INNER_MID+cover_offset, y+OFFSET_INNER_MID, (size_t)stars, (size_t)max_stars, provider_logo);
-		rate_bar.paint();
+		// show ranking
+		if (stars > 0)
+		{
+			int stars_w = 0, stars_h = 0;
+			frameBuffer->getIconSize(NEUTRINO_ICON_STARS_BG, &stars_w, &stars_h);
 
-		if (imdb_active) //TODO: unify imdb and tmdb
-			paintTextBoxRel(imdb_rating, sx + 2*OFFSET_INNER_MID + cover_offset + rate_bar.getWidth(), y + OFFSET_INNER_MID + rate_bar.getHeight()/2 - font->getHeight()/2, 0, rate_bar.getHeight(), font );
+			//create starbar item
+			CProgressBar *cc_starbar = new CProgressBar();
+			cc_starbar->setProgress(sx+OFFSET_INNER_MID+cover_offset+logo_offset, y+(medlineheight-stars_h)/2, stars_w, medlineheight, stars, 100);
+			cc_starbar->setType(CProgressBar::PB_STARBAR);
+			cc_starbar->paint();
 
-		medlinecount = (sb - rate_bar.getHeight() - 2*OFFSET_INNER_MID) / medlineheight;
-		y = rate_bar.getYPos() + rate_bar.getHeight();
+			if (imdb_active)
+			{
+				int _x = sx+OFFSET_INNER_MID+cover_offset+logo_offset+cc_starbar->getWidth()+OFFSET_INNER_MID;
+				int _w = ox-OFFSET_INNER_MID-cover_offset-logo_offset-cc_starbar->getWidth()-OFFSET_INNER_MID;
+				g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->RenderString(_x, y+medlineheight, _w, imdb_rating, COL_MENUCONTENT_TEXT, 0, true);
+			}
+
+			medlinecount = (sb - cc_starbar->getHeight()) / medlineheight;
+			y += cc_starbar->getHeight();
+		}
 	}
 
 	for (int i = startPos; i < textSize && i < startPos + medlinecount; i++, y += medlineheight)
@@ -696,7 +724,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 	id=a_id;
 
 	tmdb_active = false;
-	stars = 0;
+	tmdb_stars = 0;
 
 	t_channel_id epg_id = channel_id;
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
@@ -1173,7 +1201,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 
 							processTextToArray(tmdb->CreateEPGText(), 0, tmdb->hasCover());
 							textCount = epgText.size();
-							stars = tmdb->getStars();
+							tmdb_stars = tmdb->getStars();
 							showText(showPos, sy + toph, tmdb_active || (imdb_active && imdb->gotPoster()));
 						} else {
 							ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_EPGVIEWER_NODETAILED, CMsgBox::mbrOk , CMsgBox::mbrOk);
@@ -1183,7 +1211,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 						epgText = epgText_saved;
 						textCount = epgText.size();
 						tmdb_active = !tmdb_active;
-						stars=0;
+						tmdb_stars=0;
 						showText(showPos, sy + toph);
 					}
 				}
@@ -1195,7 +1223,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					tmdb_active = false;
 					epgText = epgText_saved;
 					textCount = epgText.size();
-					stars=0;
+					tmdb_stars=0;
 				}
 				if (!imdb_active)
 				{

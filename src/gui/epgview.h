@@ -66,7 +66,7 @@ class CEpgData
 		bool 			has_follow_screenings;
 		bool 			call_fromfollowlist;
 		bool			tmdb_active;
-		int			stars;
+		int			tmdb_stars;
 		time_t			tmp_curent_zeit;
 
 		uint64_t		prev_id;
