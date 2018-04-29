@@ -125,7 +125,6 @@ const CMenuOptionChooser::keyval MESSAGEBOX_YES_NO_OPTIONS[MESSAGEBOX_YES_NO_OPT
 	{ 1, LOCALE_MESSAGEBOX_YES }
 };
 
-//NI
 const CMenuOptionChooser::keyval MESSAGEBOX_YES_NO_INVERTED_OPTIONS[MESSAGEBOX_YES_NO_OPTIONS_COUNT] =
 {
 	{ 0, LOCALE_MESSAGEBOX_YES },
@@ -429,7 +428,7 @@ void CMovieBrowser::init(void)
 	m_doRefresh = false;
 	m_doLoadMovies = false;
 
-	imdb = CIMDB::getInstance(); //NI
+	imdb = CIMDB::getInstance();
 }
 
 void CMovieBrowser::initGlobalSettings(void)
@@ -470,22 +469,22 @@ void CMovieBrowser::initGlobalSettings(void)
 	m_settings.browserFrameHeight = 65; /* percent */
 
 	m_settings.browserRowNr = 6;
-	m_settings.browserRowItem[0] = MB_INFO_TITLE; //NI
-	m_settings.browserRowItem[1] = MB_INFO_SPACER; //NI
-	m_settings.browserRowItem[2] = MB_INFO_INFO1; //NI
-	m_settings.browserRowItem[3] = MB_INFO_SPACER; //NI
+	m_settings.browserRowItem[0] = MB_INFO_TITLE;
+	m_settings.browserRowItem[1] = MB_INFO_SPACER;
+	m_settings.browserRowItem[2] = MB_INFO_INFO1;
+	m_settings.browserRowItem[3] = MB_INFO_SPACER;
 	m_settings.browserRowItem[4] = MB_INFO_LENGTH;
-	m_settings.browserRowItem[5] = MB_INFO_RECORDDATE; //NI
+	m_settings.browserRowItem[5] = MB_INFO_RECORDDATE;
 	m_settings.browserRowItem[6] = MB_INFO_MAX_NUMBER;
 	m_settings.browserRowItem[7] = MB_INFO_MAX_NUMBER;
 	m_settings.browserRowItem[8] = MB_INFO_MAX_NUMBER;
 
-	m_settings.browserRowWidth[0] = 36; //NI - title
-	m_settings.browserRowWidth[1] = 1;  //NI - spacer
-	m_settings.browserRowWidth[2] = 36; //NI - info1
-	m_settings.browserRowWidth[3] = 1;  //NI - spacer
-	m_settings.browserRowWidth[4] = 11; //NI - length
-	m_settings.browserRowWidth[5] = 14; //NI - recorddate
+	m_settings.browserRowWidth[0] = 36; // title
+	m_settings.browserRowWidth[1] = 1;  // spacer
+	m_settings.browserRowWidth[2] = 36; // info1
+	m_settings.browserRowWidth[3] = 1;  // spacer
+	m_settings.browserRowWidth[4] = 11; // length
+	m_settings.browserRowWidth[5] = 14; // recorddate
 	m_settings.browserRowWidth[6] = m_defaultRowWidth[m_settings.browserRowItem[6]];
 	m_settings.browserRowWidth[7] = m_defaultRowWidth[m_settings.browserRowItem[7]];
 	m_settings.browserRowWidth[8] = m_defaultRowWidth[m_settings.browserRowItem[8]];
@@ -772,7 +771,6 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 			return showMovieCutMenu();
 		}
 	}
-	//NI
 	else if (actionKey == "get_imdb_data")
 	{
 		if (m_movieSelectionHandler != NULL)
@@ -926,7 +924,7 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 	else if(actionKey == "show_menu")
 	{
 		showMenu(true);
-		saveSettings(&m_settings); //NI
+		saveSettings(&m_settings);
 	}
 	else if(actionKey == "show_ytmenu")
 	{
@@ -1388,7 +1386,6 @@ std::string CMovieBrowser::getScreenshotName(std::string movie, bool is_dir)
 
 void CMovieBrowser::refreshChannelLogo(void)
 {
-	//NI
 	if (!g_settings.channellist_show_channellogo)
 	{
 		if (m_channelLogo)
@@ -2216,12 +2213,12 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 		else
 		{
 			showMenu();
-			//NI if (m_doLoadMovies)
+			//if (m_doLoadMovies)
 				loadMovies();
-			//NI if (m_doRefresh)
+			//if (m_doRefresh)
 				refresh();
 		}
-		saveSettings(&m_settings); //NI
+		saveSettings(&m_settings);
 	}
 	else if (g_settings.sms_movie && (msg >= CRCInput::RC_1) && (msg <= CRCInput::RC_9))
 	{
@@ -3012,7 +3009,6 @@ bool CMovieBrowser::loadTsFileNamesFromDir(const std::string & dirname)
 			} else {
 				result |= addFile(flist[i], dirItNr);
 			}
-//NI
 #if 0
 			if (result)
 				OnLocalProgress(i, count, dirname );
@@ -3258,7 +3254,7 @@ void CMovieBrowser::loadMovies(bool doRefresh)
 	struct timeval t1, t2;
 	gettimeofday(&t1, NULL);
 
-	CProgressWindow loadBox((show_mode == MB_SHOW_YT) ? LOCALE_MOVIEPLAYER_YTPLAYBACK : LOCALE_MOVIEBROWSER_SCAN_FOR_MOVIES, CCW_PERCENT 50, CCW_PERCENT 10, NULL, show_mode == MB_SHOW_YT ? &ytparser.OnProgress : /* //NI &OnLocalProgress, */ &OnGlobalProgress);
+	CProgressWindow loadBox((show_mode == MB_SHOW_YT) ? LOCALE_MOVIEPLAYER_YTPLAYBACK : LOCALE_MOVIEBROWSER_SCAN_FOR_MOVIES, CCW_PERCENT 50, CCW_PERCENT 10, NULL, show_mode == MB_SHOW_YT ? &ytparser.OnProgress : /* &OnLocalProgress, */ &OnGlobalProgress);
 	loadBox.enableShadow();
 	loadBox.paint();
 
@@ -3406,7 +3402,7 @@ int CMovieBrowser::showMovieInfoMenu(MI_MOVIE_INFO* movie_info)
 	movieInfoMenu.addIntroItems(LOCALE_MOVIEBROWSER_INFO_HEAD);
 	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_MENU_SAVE,           true, NULL, this,                    "save_movie_info",                  CRCInput::RC_red));
 	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_INFO_HEAD_UPDATE,    true, NULL,                          &movieInfoMenuUpdate, NULL,         CRCInput::RC_green));
-	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_IMDB_DATA,           true, NULL, this,                    "get_imdb_data",                    CRCInput::RC_yellow)); //NI
+	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_IMDB_DATA,           true, NULL, this,                    "get_imdb_data",                    CRCInput::RC_yellow));
 	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_BOOK_HEAD,           true, NULL,                          &bookmarkMenu, NULL,                CRCInput::RC_blue));
 	movieInfoMenu.addItem(GenericMenuSeparatorLine);
 	movieInfoMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_INFO_TITLE,          true, movie_info->epgTitle,          &titelUserInput, NULL,              CRCInput::RC_1));
@@ -3558,7 +3554,7 @@ bool CMovieBrowser::showMenu(bool calledExternally)
 	optionsMenu.addItem(new CMenuOptionChooser(LOCALE_MOVIEBROWSER_HIDE_SERIES,       (int*)(&m_settings.browser_serie_mode), MESSAGEBOX_YES_NO_OPTIONS, MESSAGEBOX_YES_NO_OPTIONS_COUNT, true));
 	optionsMenu.addItem(new CMenuOptionChooser(LOCALE_MOVIEBROWSER_SERIE_AUTO_CREATE, (int*)(&m_settings.serie_auto_create), MESSAGEBOX_YES_NO_OPTIONS, MESSAGEBOX_YES_NO_OPTIONS_COUNT, true));
 	int ts_only = m_settings.ts_only;
-	optionsMenu.addItem( new CMenuOptionChooser(LOCALE_MOVIEBROWSER_TS_ONLY,           (int*)(&m_settings.ts_only), MESSAGEBOX_YES_NO_INVERTED_OPTIONS, MESSAGEBOX_YES_NO_OPTIONS_COUNT, true )); //NI
+	optionsMenu.addItem( new CMenuOptionChooser(LOCALE_MOVIEBROWSER_TS_ONLY,           (int*)(&m_settings.ts_only), MESSAGEBOX_YES_NO_INVERTED_OPTIONS, MESSAGEBOX_YES_NO_OPTIONS_COUNT, true ));
 
 	//optionsMenu.addItem(GenericMenuSeparator);
 
