@@ -370,6 +370,7 @@ void CIMDB::getIMDbData(std::string& txt)
 	txt += g_Locale->getString(LOCALE_IMDB_DATA_VOTES) + ": " + m["imdbVotes"] + "\n";
 	if (checkIMDbElement("Metascore"))
 		txt += g_Locale->getString(LOCALE_IMDB_DATA_METASCORE) + ": " + m["Metascore"] + "/100\n";
+	txt += "\n";
 	txt += g_Locale->getString(LOCALE_IMDB_DATA_TITLE) + ": " + m["Title"] + "\n";
 	if (checkIMDbElement("Released"))
 		txt += g_Locale->getString(LOCALE_IMDB_DATA_RELEASED) + ": " + m["Country"] + ", " + m["Released"] + "\n";

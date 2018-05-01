@@ -311,7 +311,7 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 		if (!provider_logo.empty())
 		{
 			frameBuffer->getIconSize(provider_logo.c_str(), &logo_w, &logo_h);
-			frameBuffer->paintIcon(provider_logo.c_str(), sx+OFFSET_INNER_MID+cover_offset, y+(medlineheight-logo_h)/2);
+			frameBuffer->paintIcon(provider_logo.c_str(), sx+OFFSET_INNER_MID+cover_offset, y, medlineheight);
 			logo_offset = logo_w + OFFSET_INNER_MID;
 		}
 
@@ -335,8 +335,8 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 			}
 
 			medlinecount = (sb - cc_starbar->getHeight()) / medlineheight;
-			y += cc_starbar->getHeight();
 		}
+		y += medlineheight;
 	}
 
 	for (int i = startPos; i < textSize && i < startPos + medlinecount; i++, y += medlineheight)
@@ -1682,7 +1682,6 @@ int CEpgData::showIMDb(bool splash)
 	std::string txt;
 	txt.clear();
 	imdb->getIMDbData(txt);
-	processTextToArray(" ", 0, imdb->gotPoster()); // empty line to get space for the rating stars
 	processTextToArray(txt, 0, imdb->gotPoster());
 
 	textCount = epgText.size();
