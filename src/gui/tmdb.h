@@ -73,7 +73,7 @@ class cTmdb
 		bool        getBigCover(std::string cover)	{ return DownloadUrl("http://image.tmdb.org/t/p/w342" + minfo.poster_path, cover);}
 		bool        getSmallCover(std::string cover)	{ return DownloadUrl("http://image.tmdb.org/t/p/w185" + minfo.poster_path, cover);}
 		int         getResults()			{ return minfo.result;}
-		int         getStars()				{ return (int) (atof(minfo.vote_average.c_str())+0.5);}
+		int         getStars()				{ return (int) (atof(minfo.vote_average.c_str())*10);}
 };
 
 #endif

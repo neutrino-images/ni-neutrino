@@ -297,8 +297,6 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 		if (tmdb_active)
 		{
 			provider_logo = NEUTRINO_ICON_TMDB;
-			if (tmdb_stars <= 10)
-				tmdb_stars *= 10; // recalculate tmdb_stars value for starbar
 			stars = tmdb_stars;
 		}
 		else if (imdb_active)
