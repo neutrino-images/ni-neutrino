@@ -44,7 +44,7 @@
 #include <string>
 
 class CFrameBuffer;
-class CEPGRateBanner;
+//class CEPGRateBanner;
 class CEpgData
 {
 	private:
@@ -128,6 +128,7 @@ class CEPGDataHandler : public CMenuTarget
 
 };
 
+#if 0
 class CEPGRateBanner : public CComponentsIconForm
 {
 	private:
@@ -160,7 +161,7 @@ class CEPGRateBanner : public CComponentsIconForm
 				init(quote_icon, quote_icon_bg, quote, quote_max, provider_logo);
 			};
 };
-
+#endif
 
 
 #endif
