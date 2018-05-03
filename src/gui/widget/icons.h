@@ -301,7 +301,7 @@
 /* status */
 #define NEUTRINO_ICON_MARKER_DIALOG_OK		"marker_dialog_ok"
 #define NEUTRINO_ICON_MARKER_DIALOG_OFF		"marker_dialog_off"
-#define NEUTRINO_ICON_MARKER_UPDATE_AVAILABLE	"marker_update_available.png"
+#define NEUTRINO_ICON_MARKER_UPDATE_AVAILABLE	"marker_update_available"
 
 //NI
 #define NEUTRINO_ICON_HINT_IMAGELOGO	"hint_imagelogo"
