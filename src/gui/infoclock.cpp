@@ -36,6 +36,9 @@
 #include <gui/infoclock.h>
 #include <gui/timeosd.h>
 
+#include <unistd.h>
+#include <system/helpers.h>
+
 extern CTimeOSD *FileTimeOSD;
 
 CInfoClock::CInfoClock():CComponentsFrmClock( 1, 1, NULL, "%H:%M:%S", NULL, false, 1, NULL, CC_SHADOW_ON)
@@ -142,6 +145,22 @@ bool CInfoClock::enableInfoClock(bool enable)
 				if (FileTimeOSD->getRestore())
 					FileTimeOSD->kill();
 			}
+		}
+	}
+
+	// badass hack to control logomask plugin
+	if (getpidof("logomask"))
+	{
+		const char *logomask_pause = "/tmp/.logomask_pause";
+		if (enable)
+		{
+			if (access(logomask_pause, F_OK) == 0)
+				unlink(logomask_pause);
+		}
+		else
+		{
+			if (FILE *f = fopen(logomask_pause, "w"))
+				fclose(f);
 		}
 	}
 
