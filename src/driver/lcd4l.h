@@ -4,7 +4,7 @@
 	Copyright (C) 2012 'defans'
 	Homepage: http://www.bluepeercrew.us/
 
-	Copyright (C) 2012-2016 'vanhofen'
+	Copyright (C) 2012-2018 'vanhofen'
 	Homepage: http://www.neutrino-images.de/
 
 	Modded    (C) 2016 'TangoCash'
@@ -29,9 +29,6 @@
 
 #ifndef __lcd4l__
 #define __lcd4l__
-
-//#define BP
-#define NI
 
 #include <string>
 
@@ -86,9 +83,6 @@ class CLCD4l
 		int		m_ModeEcm;
 		bool		m_ModeCamPresent;
 		int		m_ModeCam;
-#ifdef BP
-		int		m_ModeNews;
-#endif
 
 		std::string	m_Service;
 		int		m_ChannelNr;

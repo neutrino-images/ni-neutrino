@@ -4,7 +4,7 @@
 	Copyright (C) 2012 'defans'
 	Homepage: http://www.bluepeercrew.us/
 
-	Copyright (C) 2012-2016 'vanhofen'
+	Copyright (C) 2012-2018 'vanhofen'
 	Homepage: http://www.neutrino-images.de/
 
 	Modded    (C) 2016 'TangoCash'
@@ -54,20 +54,12 @@
 
 #include "lcd4l.h"
 
-#ifdef BP
-extern int bc_popup_icon;
-#endif
-
 extern CRemoteControl *g_RemoteControl;
 extern cVideo *videoDecoder;
 
 #define LCD_DATADIR		"/tmp/lcd/"
 
-#ifdef BP
-#define LCD_ICONSDIR		"/var/lcd/icons/"
-#else
 #define LCD_ICONSDIR		"/share/lcd/icons/"
-#endif
 #define ICONSEXT		".png"
 
 #define LOGO_DUMMY		LCD_ICONSDIR "blank.png"
@@ -84,9 +76,6 @@ extern cVideo *videoDecoder;
 #define MODE_TIMER		LCD_DATADIR "mode_timer"
 #define MODE_ECM		LCD_DATADIR "mode_ecm"
 #define MODE_CAM		LCD_DATADIR "mode_cam"
-#ifdef BP
-#define MODE_NEWS		LCD_DATADIR "mode_news"
-#endif
 
 #define SERVICE			LCD_DATADIR "service"
 #define CHANNELNR		LCD_DATADIR "channelnr"
@@ -213,9 +202,6 @@ void CLCD4l::Init()
 	m_ModeEcm	= -1;
 	m_ModeCamPresent= false;
 	m_ModeCam	= -1;
-#ifdef BP
-	m_ModeNews	= -1;
-#endif
 
 	m_Service	= "n/a";
 	m_ChannelNr	= -1;
@@ -257,16 +243,12 @@ void* CLCD4l::LCD4lProc(void* arg)
 	{
 		if ( (!access(PIDFILE, F_OK) == 0) && (!FirstRun) )
 		{
-#ifdef NI
 			if (g_settings.lcd4l_support == 1) // automatic
 			{
-#endif
 				//printf("[CLCD4l] %s: waiting for lcd4linux\n", __FUNCTION__);
 				sleep(10);
 				continue;
-#ifdef NI
 			}
-#endif
 		}
 
 		for (int i = 0; i < 10; i++)
@@ -531,21 +513,6 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	/* ----------------------------------------------------------------- */
 
-#ifdef BP
-	int ModeNews = 0;
-
-	if (bc_popup_icon)
-		ModeNews = 1;
-
-	if (m_ModeNews != ModeNews)
-	{
-		WriteFile(MODE_NEWS, ModeNews ? "on" : "off");
-		m_ModeNews = ModeNews;
-	}
-#endif
-
-	/* ----------------------------------------------------------------- */
-
 	if (newID || parseID == NeutrinoModes::mode_audio || parseID == NeutrinoModes::mode_ts)
 	{
 		std::string Service = "";
@@ -684,29 +651,17 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		{
 			Layout = "standby";
 		}
-#ifdef NI
 		else if ((g_settings.lcd4l_skin_radio) && (m_Mode == NeutrinoModes::mode_radio || m_Mode == NeutrinoModes::mode_webradio))
 		{
 			Layout = "radio";
 		}
-#endif
 		else
 		{
 			switch (g_settings.lcd4l_skin)
 			{
-#ifdef BP
-				case 5:
-					Layout = "user";
-					break;
-				case 4:
-					Layout = "oscam";
-					break;
-#endif
-#ifdef NI
 				case 4:
 					Layout = "user";
 					break;
-#endif
 				case 3:
 					Layout = "d-box2";
 					break;
@@ -725,7 +680,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		{
 			WriteFile(LAYOUT, Layout);
 			m_Layout = Layout;
-#ifdef NI
+
 			if (!firstRun)
 			{
 				const char *buf = "service lcd4linux reload";
@@ -734,7 +689,6 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 				if (my_system(3,"service", "lcd4linux", "reload") != 0)
 					printf("[CLCD4l] %s: executing '%s' failed\n", __FUNCTION__, buf);
 			}
-#endif
 		}
 	}
 
@@ -783,11 +737,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 					done = 0;
 					todo = CurrentNext.current_zeit.dauer / 60;
 				}
-#ifdef NI
 				snprintf(Duration, sizeof(Duration), "%d/%d", done, total);
-#else
-				snprintf(Duration, sizeof(Duration), "%d/%d", done, todo);
-#endif
 			}
 
 			tm_struct = localtime(&CurrentNext.current_zeit.startzeit);
