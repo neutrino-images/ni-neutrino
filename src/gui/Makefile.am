@@ -69,7 +69,6 @@ libneutrino_gui_a_SOURCES = \
 	infoviewer.cpp \
 	infoviewer_bb.cpp \
 	keybind_setup.cpp \
-	lcd4l.cpp \
 	lcd4l_setup.cpp \
 	mediaplayer.cpp \
 	mediaplayer_setup.cpp \

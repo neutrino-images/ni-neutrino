@@ -33,6 +33,7 @@ libneutrino_driver_a_SOURCES = \
 	file.cpp \
 	fontrenderer.cpp \
 	genpsi.cpp \
+	lcd4l.cpp \
 	moviecut.cpp \
 	movieinfo.cpp \
 	neutrinofonts.cpp \

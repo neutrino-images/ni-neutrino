@@ -52,7 +52,7 @@
 #include <driver/screen_max.h>
 
 // lcd4l-support
-#include "gui/lcd4l.h"
+#include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
 
 const CMenuOptionChooser::keyval LCD4L_SUPPORT_OPTIONS[] =

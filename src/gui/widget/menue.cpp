@@ -47,7 +47,7 @@
 #include <cctype>
 
 //NI lcd4l-support
-#include "gui/lcd4l.h"
+#include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
 
 /* the following generic menu items are integrated into multiple menus at the same time */

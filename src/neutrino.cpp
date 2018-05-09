@@ -162,7 +162,7 @@ CTimeOSD	*FileTimeOSD;
 CInfoIcons	*InfoIcons;
 
 //NI lcd4l-support
-#include "gui/lcd4l.h"
+#include "driver/lcd4l.h"
 CLCD4l		*LCD4l;
 
 int allow_flash = 1;

@@ -57,7 +57,7 @@
 #include <zapit/getservices.h>
 
 //NI lcd4l-support
-#include "gui/lcd4l.h"
+#include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
 
 extern CBouquetManager *g_bouquetManager;

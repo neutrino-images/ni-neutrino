@@ -87,7 +87,7 @@
 #include <eitd/sectionsd.h>
 
 //NI lcd4l-support
-#include "gui/lcd4l.h"
+#include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
 
 extern CBouquetList * bouquetList;       /* neutrino.cpp */
