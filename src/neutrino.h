@@ -187,6 +187,7 @@ public:
 	int getLastMode() {
 		return lastMode;
 	}
+	int getVideoFormat() { return g_settings.video_Format; }
 	void switchTvRadioMode(const int prev_mode = NeutrinoModes::mode_unknown);
 	void switchInfoIconsOnOff(); //NI
 
