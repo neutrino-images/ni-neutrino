@@ -157,7 +157,7 @@ void Helpbox::addSeparatorLine(const int& line_height, const int& line_indent)
 	addWindowItem(line);
 }
 
-void Helpbox::addSeparator(const int& line_height)
+void Helpbox::addSeparator(const int& line_height, const int& line_indent)
 {
 	CComponentsItem *pre_item = !ccw_body->empty() ? ccw_body->back() : NULL; //get the last current item
 
