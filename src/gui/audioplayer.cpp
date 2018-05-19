@@ -1255,7 +1255,7 @@ void CAudioPlayerGui::readDir_ic(void)
 	{
 		xmlDocPtr answer_parser = parseXml(answer.c_str());
 		scanBox->hide();
-		scanXmlData(answer_parser, "listen_url", "server_name", NULL, "bitrate", true);
+		scanXmlData(answer_parser, "listen_url", "server_name", "", "bitrate", true);
 	}
 	else
 		scanBox->hide();
