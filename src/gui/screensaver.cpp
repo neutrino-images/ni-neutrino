@@ -116,6 +116,7 @@ void CScreenSaver::Start()
 		m_viewer->SetAspectRatio(float(4.0/3));
 
 	m_viewer->Cleanup();
+	m_frameBuffer->showFrame("blackscreen.jpg"); // hack to get sure we have a blank screen
 	m_frameBuffer->stopFrame();
 
 	if(!thrScreenSaver)
