@@ -323,6 +323,9 @@ int CAudioPlayerGui::exec(CMenuTarget* parent, const std::string &actionKey)
 	m_idletime = time(NULL);
 	m_screensaver = false;
 
+	m_cover.clear();
+	m_stationlogo = false;
+
 	m_streamripper_available = !find_executable("streamripper").empty() && !find_executable("streamripper.sh").empty();
 	m_streamripper_active = false;
 
@@ -1825,12 +1828,12 @@ void CAudioPlayerGui::paintCover()
 	const CAudioMetaData meta = CAudioPlayer::getInstance()->getMetaData();
 
 	// try folder.jpg first
-	std::string cover = m_curr_audiofile.Filename.substr(0, m_curr_audiofile.Filename.rfind('/')) + "/folder.jpg";
-	bool stationlogo = false;
+	m_cover = m_curr_audiofile.Filename.substr(0, m_curr_audiofile.Filename.rfind('/')) + "/folder.jpg";
+	m_stationlogo = false;
 
 	// try cover from tag
 	if (!meta.cover.empty())
-		cover = meta.cover;
+		m_cover = meta.cover;
 	// try station logo
 	else if (!meta.logo.empty())
 	{
@@ -1850,20 +1853,20 @@ void CAudioPlayerGui::paintCover()
 			CHTTPTool httptool;
 			if (httptool.downloadFile(meta.logo, fullname.c_str()))
 			{
-				cover = fullname;
-				stationlogo = true;
+				m_cover = fullname;
+				m_stationlogo = true;
 			}
 			else
-				cover.clear();
+				m_cover.clear();
 		}
 	}
 
-	if (access(cover.c_str(), F_OK) == 0)
+	if (access(m_cover.c_str(), F_OK) == 0)
 	{
 		int cover_x = m_x + OFFSET_INNER_MID;
 		int cover_y = m_y + OFFSET_INNER_SMALL;
 		m_cover_width = 0;
-		CComponentsPicture *cover_object = new CComponentsPicture(cover_x, cover_y, cover);
+		CComponentsPicture *cover_object = new CComponentsPicture(cover_x, cover_y, m_cover);
 		if (cover_object)
 		{
 			cover_object->doPaintBg(false);
@@ -1872,16 +1875,6 @@ void CAudioPlayerGui::paintCover()
 
 			m_cover_width = cover_object->getWidth() + OFFSET_INNER_MID;
 		}
-
-		/*
-			Some guys use this covers for the screensaver.
-			So we need to keep this station-logo until the
-			stream is stopped.
-			Until this is coded we delete the station-logo
-			immediately.
-		*/
-		if (stationlogo)
-			unlink(cover.c_str());
 	}
 }
 
@@ -2097,6 +2090,12 @@ void CAudioPlayerGui::stop()
 
 	if (CAudioPlayer::getInstance()->getState() != CBaseDec::STOP)
 		CAudioPlayer::getInstance()->stop();
+
+	if (m_stationlogo)
+	{
+		unlink(m_cover.c_str());
+		m_stationlogo = false;
+	}
 
 	if (m_streamripper_active)
 	{
