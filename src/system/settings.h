@@ -804,6 +804,7 @@ struct SNeutrinoSettings
 	int   audioplayer_repeat_on;
 	int   audioplayer_show_playlist;
 	int   audioplayer_enable_sc_metadata;
+	int   audioplayer_cover_as_screensaver;
 
 	//Filebrowser
 	int filebrowser_showrights;

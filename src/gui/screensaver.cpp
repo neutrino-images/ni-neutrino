@@ -188,7 +188,11 @@ void* CScreenSaver::ScreenSaverPrg(void* arg)
 
 bool CScreenSaver::ReadDir()
 {
-	string d = g_settings.screensaver_dir;
+	string d;
+	if (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_audio && g_settings.audioplayer_cover_as_screensaver)
+		d = COVERDIR;
+	else
+		d = g_settings.screensaver_dir;
 	if (d.length() > 1)
 	{
 		//remove trailing slash
