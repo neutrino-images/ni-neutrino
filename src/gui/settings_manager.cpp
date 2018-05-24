@@ -49,7 +49,6 @@
 #include <sys/vfs.h>
 
 #include <gui/widget/hintbox.h> //NI
-#include "gui/settings_manager_teams.h" //NI cross-team settings
 
 CSettingsManager::CSettingsManager(int wizard_mode)
 {
@@ -237,13 +236,6 @@ int CSettingsManager::showMenu()
 
 	mf = new CMenuForwarder(LOCALE_SETTINGS_RESTORE, true, NULL, this, "restore", CRCInput::RC_blue);
 	mf->setHint(NEUTRINO_ICON_HINT_RESTORE, LOCALE_MENU_HINT_RESTORE);
-	mset->addItem(mf);
-
-	//NI cross-team settings
-	mset->addItem(GenericMenuSeparatorLine);
-	CSettingsManagerTeams * teamsettings = new CSettingsManagerTeams();
-	mf = new CMenuForwarder(LOCALE_SETTINGS_TEAMS, true, NULL, teamsettings, NULL, CRCInput::convertDigitToKey(0));
-	mf->setHint("", LOCALE_CROSSTEAM_HINT_SETTINGS_TEAMS);
 	mset->addItem(mf);
 
 	mset->addItem(GenericMenuSeparatorLine);

@@ -395,10 +395,6 @@ cpu.freq CPU Frequenz
 cpu.freq_default Standard Frequenz
 cpu.freq_normal Normale Frequenz
 cpu.freq_standby Standby Frequenz
-crossteam.hint_settings_teams Einstellungen sichern und wiederherstellen,\ndie zu teilnehmenden Team-Images kompatibel sind.
-crossteam.hint_settings_teams_backup Team-übergreifende Einstellungen sichern
-crossteam.hint_settings_teams_help Hilfe zu den Team-übergreifenden Einstellungen
-crossteam.hint_settings_teams_restore Team-übergreifende Einstellungen wiederherstellen
 daemon_control Daemon-Steuerung
 daemon_item.crond_desc cron Daemon kann zeitgesteuerte Aufgaben ausführen
 daemon_item.crond_name crond
@@ -2558,14 +2554,6 @@ settings.pos_top_left oben links
 settings.pos_top_right oben rechts
 settings.restore NI-Backup wiederherstellen
 settings.restore_warn Alle Settings werden ersetzt.\nDie Box wird neu gestartet.\nWeiter?
-settings.teams Team-übergreifende Einstellungen
-settings.teams.backup Sichern
-settings.teams.backup_failed Sicherung fehlgeschlagen!
-settings.teams.backup_to Sichern nach 
-settings.teams.help Hilfe
-settings.teams.help_text In diesem Menü können Einstellungen\ngesichert und wiederhergestellt werden,\ndie zu folgenden Team-Images kompatibel sind:\n \n        - BluePeer HD\n        - NI-Image\n \nGesichert werden:\n \n        * Kanallisten\n        * Timer und Timer-Einstellungen\n        * Netzwerkeinstellungen (LAN und WLAN)
-settings.teams.restore Wiederherstellen
-settings.teams.restore_warn Team-übergreifende Einstellungen werden ersetzt.\nDie Box wird neu gestartet.\nWeiter?
 shoutcast.dev_id SHOUTcast Dev ID
 shoutcast.enabled SHOUTcast-Unterstützung
 shutdown.recording_query Aufnahme läuft. Trotzdem beenden?

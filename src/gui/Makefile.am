@@ -98,7 +98,6 @@ libneutrino_gui_a_SOURCES = \
 	screensaver.cpp \
 	screensetup.cpp \
 	settings_manager.cpp \
-	settings_manager_teams.cpp \
 	sleeptimer.cpp \
 	start_wizard.cpp \
 	subchannel_select.cpp \

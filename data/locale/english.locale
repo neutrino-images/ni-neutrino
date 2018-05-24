@@ -395,10 +395,6 @@ cpu.freq CPU frequency
 cpu.freq_default Default frequency
 cpu.freq_normal Normal frequency
 cpu.freq_standby Standby frequency
-crossteam.hint_settings_teams Save and restore settings, which\nare compatible with participating Team-Images.
-crossteam.hint_settings_teams_backup Save cross-team settings
-crossteam.hint_settings_teams_help Help about cross-team settings
-crossteam.hint_settings_teams_restore Restore cross-team settings
 daemon_control Daemon control
 daemon_item.crond_desc Cron daemon allows scheduled tasks
 daemon_item.crond_name crond
@@ -2558,14 +2554,6 @@ settings.pos_top_left top left
 settings.pos_top_right top right
 settings.restore Load NI-Backup
 settings.restore_warn This will replace all settings and reboot\nContinue ?
-settings.teams Cross-Team Settings
-settings.teams.backup Save
-settings.teams.backup_failed Backup failed!
-settings.teams.backup_to Saving to 
-settings.teams.help Help
-settings.teams.help_text In this menu can settings be saved and restored,\nwhich are compatible with following Team-Images:\n \n        - BluePeer HD\n        - NI-Image\n \nSaved will be:\n \n        * Channellists\n        * Timer and timer-settings\n        * Network-settings (LAN and WLAN)
-settings.teams.restore Restore
-settings.teams.restore_warn This will replace all cross-team settings and reboot\nContinue ?
 shoutcast.dev_id SHOUTcast Dev ID
 shoutcast.enabled SHOUTcast support
 shutdown.recording_query You really want to to stop record ?
