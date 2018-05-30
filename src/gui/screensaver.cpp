@@ -116,8 +116,14 @@ void CScreenSaver::Start()
 		m_viewer->SetAspectRatio(float(4.0/3));
 
 	m_viewer->Cleanup();
+#if HAVE_ARM_HARDWARE
+	/*
+	   Hack to get sure we have a blank screen.
+	   stopFrame()-function seems not work correctly on ARM_HARDWARE
+	*/
+	m_frameBuffer->showFrame("blackscreen.jpg");
+#endif
 	m_frameBuffer->stopFrame();
-	m_viewer->ShowImage(ICONSDIR "/blackscreen.jpg", false /*unscaled*/); // hack to get sure we have a blank screen
 
 	if(!thrScreenSaver)
 	{
@@ -188,8 +194,21 @@ void* CScreenSaver::ScreenSaverPrg(void* arg)
 
 bool CScreenSaver::ReadDir()
 {
-	string d;
+	bool show_audiocover = false;
+
 	if (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_audio && g_settings.audioplayer_cover_as_screensaver)
+	{
+		if (access(COVERDIR, F_OK) == 0)
+		{
+			struct dirent **coverlist;
+			int n = scandir(COVERDIR, &coverlist, 0, alphasort);
+			if (n > 2) // we always have the "." and ".." entrys
+				show_audiocover = true;
+		}
+	}
+
+	string d;
+	if (show_audiocover)
 		d = COVERDIR;
 	else
 		d = g_settings.screensaver_dir;
