@@ -42,6 +42,7 @@ class CScreenSaver : public sigc::trackable
 		std::vector<std::string> v_bg_files;
 		unsigned int 	index;
 		t_channel_id	pip_channel_id;
+		bool		force_refresh;
 		bool		status_mute;
 		bool		status_icons; //NI
 
@@ -78,6 +79,7 @@ class CScreenSaver : public sigc::trackable
 
 		void resetIdleTime() { idletime = time(NULL); }
 		time_t getIdleTime() { return idletime; }
+		void forceRefresh() { force_refresh = true; }
 };
 
 #endif // __CSCREENSAVER_H__
