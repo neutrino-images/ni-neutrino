@@ -2719,6 +2719,7 @@ TIMER_START();
 	//NI create userdirs
 	CFileHelpers::createDir(FONTDIR_VAR);
 	CFileHelpers::createDir(ICONSDIR_VAR);
+	CFileHelpers::createDir(LOGODIR_VAR);
 	CFileHelpers::createDir(LOCALEDIR_VAR);
 	CFileHelpers::createDir(THEMESDIR_VAR);
 	CFileHelpers::createDir(PLUGINDIR_VAR);
