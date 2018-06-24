@@ -73,7 +73,7 @@ void FillRect(int x, int y, int w, int h, fb_pixel_t color, bool modeFullColor)
 void FillBorder(fb_pixel_t color, bool modeFullColor = false);
 void FillBorder(fb_pixel_t color, bool modeFullColor)
 {
-	int ys =  (var_screeninfo.yres-var_screeninfo.yoffset);
+	int ys = var_screeninfo.yres;
 	FillRect(0     , ys                     ,StartX      ,var_screeninfo.yres                       ,color, modeFullColor);
 	FillRect(StartX, ys                     ,displaywidth,StartY                                    ,color, modeFullColor);
 	FillRect(StartX, ys+StartY+25*fontheight,displaywidth,var_screeninfo.yres-(StartY+25*fontheight),color, modeFullColor);
@@ -255,7 +255,7 @@ void RenderClearMenuLineBB(char *p, tstPageAttr *attrcol, tstPageAttr *attr)
 
 void ClearBB(fb_pixel_t color)
 {
-	FillRect(0, var_screeninfo.yres - var_screeninfo.yoffset, var_screeninfo.xres, var_screeninfo.yres, color);
+	FillRect(0, var_screeninfo.yres, var_screeninfo.xres, var_screeninfo.yres, color);
 }
 
 void ClearFB(int /*color*/)
@@ -1636,8 +1636,6 @@ int tuxtx_main(int pid, int page, int source)
 	var = fbp->getScreenInfo();
 	memcpy(&var_screeninfo, var, sizeof(struct fb_var_screeninfo));
 
-	/* set variable screeninfo for double buffering */
-	var_screeninfo.yoffset      = 0;
 #if 0
 	sx = x + 10;
 	sy = y + 10;
@@ -2151,7 +2149,7 @@ int Init(int source)
 	printf("TuxTxt <screen real %d*%d, virtual %d*%d, offset %d>\n",
 			var_screeninfo.xres, var_screeninfo.yres,
 			var_screeninfo.xres_virtual, var_screeninfo.yres_virtual,
-			var_screeninfo.yoffset);
+			0);
 #endif
 
 	/* set new colormap */
@@ -4922,7 +4920,7 @@ void RenderChar(int Char, tstPageAttr *Attribute, int zoom, int yoffset)
 
 void RenderCharFB(int Char, tstPageAttr *Attribute)
 {
-	RenderChar(Char, Attribute, zoommode[boxed], var_screeninfo.yoffset);
+	RenderChar(Char, Attribute, zoommode[boxed], 0);
 }
 
 /******************************************************************************
@@ -4931,7 +4929,7 @@ void RenderCharFB(int Char, tstPageAttr *Attribute)
 
 void RenderCharBB(int Char, tstPageAttr *Attribute)
 {
-	RenderChar(Char, Attribute, 0, var_screeninfo.yres-var_screeninfo.yoffset);
+	RenderChar(Char, Attribute, 0, var_screeninfo.yres);
 }
 
 /******************************************************************************
@@ -5790,7 +5788,7 @@ void DecodePage()
 					RenderDRCS(
 						page_char + 20 * (DRCSCOLS * row + col + 2),
 						lfb
-						+ (StartY + fontheight + DRCSYSPC * row + var_screeninfo.yres - var_screeninfo.yoffset) * var_screeninfo.xres
+						+ (StartY + fontheight + DRCSYSPC * row + var_screeninfo.yres) * var_screeninfo.xres
 						+ (StartX + DRCSXSPC * col),
 						ax, white, black);
 
