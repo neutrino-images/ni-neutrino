@@ -3688,6 +3688,7 @@ int CMovieBrowser::showStartPosSelectionMenu(void) // P2
 
 	if (m_movieSelectionHandler->bookmarks.start != 0)
 	{
+		got_start_pos = true;
 		startPosSelectionMenu.addItem(new CMenuForwarder(LOCALE_MOVIEBROWSER_BOOK_MOVIESTART, true, start_pos), true);
 		position[menu_nr++] = m_movieSelectionHandler->bookmarks.start;
 	}
