@@ -1634,9 +1634,17 @@ void CMoviePlayerGui::PlayFileLoop(void)
 		if (msg == (neutrino_msg_t) g_settings.mpkey_plugin) {
 			g_Plugins->startPlugin_by_name(g_settings.movieplayer_plugin.c_str ());
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_stop) {
-			playstate = CMoviePlayerGui::STOPPED;
-			keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_STOP;
-			ClearQueue();
+			bool timeshift_stopped = false;
+
+			if (timeshift != TSHIFT_MODE_OFF)
+				timeshift_stopped = CRecordManager::getInstance()->ShowMenu();
+
+			if (timeshift == TSHIFT_MODE_OFF || timeshift_stopped)
+			{
+				playstate = CMoviePlayerGui::STOPPED;
+				keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_STOP;
+				ClearQueue();
+			}
 		} else if (msg == CRCInput::RC_left || msg == CRCInput::RC_right) {
 			bool reset_vzap_it = true;
 			switch (g_settings.mode_left_right_key_tv)
