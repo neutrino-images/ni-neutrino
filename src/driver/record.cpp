@@ -1163,7 +1163,10 @@ bool CRecordManager::StopAutoRecord(bool lock)
 
 	CRecordInstance * inst = FindTimeshift();
 	if (inst)
+	{
 		StopInstance(inst);
+		CMoviePlayerGui::getInstance().timeshift = TSHIFT_MODE_OFF;
+	}
 
 	if (lock)
 		mutex.unlock();
