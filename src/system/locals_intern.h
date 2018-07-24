@@ -2592,6 +2592,7 @@ const char * locale_real_names[] =
 	"shoutcast.dev_id",
 	"shoutcast.enabled",
 	"shutdown.recording_query",
+	"shutdown.timeshift_query",
 	"shutdowntimer.announce",
 	"sleeptimerbox.announce",
 	"sleeptimerbox.hint1",
