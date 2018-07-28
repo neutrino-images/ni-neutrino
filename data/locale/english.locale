@@ -2364,11 +2364,11 @@ recordingmenu.filename_template_hint wildcards will be replaced
 recordingmenu.filename_template_hint2 %C = channel, %T = title, %I = info, %d = date, %t = time
 recordingmenu.fill_warn Show fill warning at
 recordingmenu.help Recording devices:\n--------------------------\nserver:\nusing streaming software on a PC\n\n(analog) vcr:\nusing the vcr outlet\n\ndirect (file):\ndirectly into an NFS mounted directory\nor onto an internal hard drive\nTS: use spts mode(dbox2)\nPES: do not use spts mode(dbox2)\n\n\nMax. file size:\n---------------------\nNFS V2: 2 GB (2048 MB)\nNFS V3: almost unlimited (0 MB)\nFAT: 2 GB (2048 MB)\nFAT32: 4 GB (4096 MB)
-recordingmenu.multimenu.ask_stop_all really stop all %d recordings?
+recordingmenu.multimenu.ask_stop_all Really stop all %d recordings?
 recordingmenu.multimenu.info_stop_all %d of %d recordings will be stopped.
-recordingmenu.multimenu.rec_akt record current channel
-recordingmenu.multimenu.stop_all stop all recordings
-recordingmenu.multimenu.timeshift Timeshift
+recordingmenu.multimenu.rec_akt Start recording
+recordingmenu.multimenu.stop_all Stop all recordings
+recordingmenu.multimenu.timeshift Start timeshift
 recordingmenu.off off
 recordingmenu.record_is_not_running No record is running!
 recordingmenu.record_is_running Record is running!
