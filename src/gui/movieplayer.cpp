@@ -850,8 +850,8 @@ bool CMoviePlayerGui::StartWebtv(void)
 	playback->Open(is_file_player ? PLAYMODE_FILE : PLAYMODE_TS);
 
 	bool res = playback->Start((char *) file_name.c_str(), cookie_header);//url with cookies
-
-	playback->SetSpeed(1);
+	if (res)
+		playback->SetSpeed(1);
 	if (!res) {
 		playback->Close();
 	} else {
