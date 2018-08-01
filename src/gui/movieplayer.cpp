@@ -1381,6 +1381,7 @@ bool CMoviePlayerGui::PlayFileStart(void)
 			} else {
 				if (g_settings.timeshift_pause)
 				{
+					speed = 0;
 					playstate = CMoviePlayerGui::PAUSE;
 #if HAVE_SPARK_HARDWARE
 					CVFD::getInstance()->ShowIcon(FP_ICON_PLAY, false);
