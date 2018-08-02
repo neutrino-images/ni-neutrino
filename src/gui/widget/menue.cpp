@@ -42,7 +42,6 @@
 
 #include <driver/fade.h>
 #include <driver/display.h>
-#include <driver/record.h>
 #include <system/helpers.h>
 
 #include <cctype>
@@ -134,7 +133,6 @@ bool CMenuItem::initModeCondition(const int& stb_mode)
 void CMenuItem::disableByCondition(const menu_item_disable_cond_t& condition)
 {
 	int stb_mode = CNeutrinoApp::getInstance()->getMode();
-	int rec_mode = CRecordManager::getInstance()->GetRecordMode();
 
 	if (condition & DCOND_MODE_TS){
 		if (stb_mode == NeutrinoModes::mode_ts)
@@ -149,11 +147,6 @@ void CMenuItem::disableByCondition(const menu_item_disable_cond_t& condition)
 	if (condition & DCOND_MODE_TV){
 		if (stb_mode == NeutrinoModes::mode_tv)
 			if (initModeCondition(stb_mode))
-				return;
-	}
-	if (condition & DCOND_MODE_REC){
-		if (rec_mode & CRecordManager::RECMODE_REC)
-			if (initModeCondition(rec_mode))
 				return;
 	}
 
