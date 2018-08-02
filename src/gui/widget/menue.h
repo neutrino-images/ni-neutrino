@@ -78,7 +78,8 @@ enum
 
 	DCOND_MODE_TV 		= 2,
 	DCOND_MODE_RADIO  	= 4,
-	DCOND_MODE_TS 		= 8
+	DCOND_MODE_TS 		= 8,
+	DCOND_MODE_REC 		= 16
 }/*menu_item_disable_cond_t*/;
 
 class CChangeObserver
