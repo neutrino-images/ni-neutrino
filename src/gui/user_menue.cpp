@@ -198,6 +198,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 	bool _mode_webtv = (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_webtv) &&
 				(!CZapit::getInstance()->GetCurrentChannel()->getScriptName().empty());
 
+	int rec_mode = (CRecordManager::getInstance()->GetRecordMode() & CRecordManager::RECMODE_REC);
 	bool timeshift = CMoviePlayerGui::getInstance().timeshift;
 	bool adzap_active = CAdZapMenu::getInstance()->isActive();
 
@@ -437,7 +438,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 		case SNeutrinoSettings::ITEM_CAMD_RESET:
 		{
 			keyhelper.get(&key,&icon);
-			menu_item = new CMenuForwarder(LOCALE_CAMD_RESET, true, NULL, neutrino, "camd_reset", key, icon);
+			menu_item = new CMenuForwarder(LOCALE_CAMD_RESET, !rec_mode, NULL, neutrino, "camd_reset", key, icon);
 			// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
 			break;
 		}
