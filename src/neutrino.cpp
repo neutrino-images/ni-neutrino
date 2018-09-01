@@ -775,18 +775,6 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	CWebTVSetup webtvsetup;
 	webtvsetup.webtv_xml_auto();
 
-	g_settings.webepg_xml.clear();
-	int webepg_count = configfile.getInt32("webepg_xml_count", 0);
-	if (webepg_count) {
-		for (int i = 0; i < webepg_count; i++) {
-			std::string k = "webepg_xml_" + to_string(i);
-			std::string webepg_xml = configfile.getString(k, "");
-			if (webepg_xml.empty())
-				continue;
-			g_settings.webepg_xml.push_back(webepg_xml);
-		}
-	}
-
 	g_settings.webradio_xml.clear();
 #ifndef BOXMODEL_CS_HD1
 	/*
@@ -798,6 +786,18 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	if (file_size(webradio_xml.c_str()))
 		g_settings.webradio_xml.push_back(webradio_xml);
 #endif
+
+	g_settings.xmltv_xml.clear();
+	int xmltv_count = configfile.getInt32("xmltv_xml_count", 0);
+	if (xmltv_count) {
+		for (int i = 0; i < xmltv_count; i++) {
+			std::string k = "xmltv_xml_" + to_string(i);
+			std::string xmltv_xml = configfile.getString(k, "");
+			if (xmltv_xml.empty())
+				continue;
+			g_settings.xmltv_xml.push_back(xmltv_xml);
+		}
+	}
 
 	loadKeys();
 
@@ -1574,13 +1574,13 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	}
 	configfile.setInt32 ( "webtv_xml_count", webtv_count); //NI
 
-	int webepg_count = 0;
-	for (std::list<std::string>::iterator it = g_settings.webepg_xml.begin(); it != g_settings.webepg_xml.end(); ++it) {
-		std::string k = "webepg_xml_" + to_string(webepg_count);
+	int xmltv_count = 0;
+	for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); ++it) {
+		std::string k = "xmltv_xml_" + to_string(xmltv_count);
 		configfile.setString(k, *it);
-		webepg_count++;
+		xmltv_count++;
 	}
-	configfile.setInt32 ( "webepg_xml_count", g_settings.webepg_xml.size());
+	configfile.setInt32 ( "xmltv_xml_count", g_settings.xmltv_xml.size());
 
 	saveKeys();
 
@@ -2774,7 +2774,7 @@ TIMER_STOP("################################## after all #######################
 		CFlashUpdateCheck::getInstance()->startThread();
 	}
 
-	for (std::list<std::string>::iterator it = g_settings.webepg_xml.begin(); it != g_settings.webepg_xml.end(); ++it)
+	for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); ++it)
 		g_Sectionsd->readSIfromXMLTV((*it).c_str());
 
 	RealRun();
