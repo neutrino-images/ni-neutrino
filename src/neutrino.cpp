@@ -2284,13 +2284,9 @@ void CNeutrinoApp::InitZapper()
 
 	g_InfoViewer->start();
 	SendSectionsdConfig();
-	if (g_settings.epg_read)
-	{
-		if (stat(g_settings.epg_dir.c_str(), &my_stat) == 0)
+	if (g_settings.epg_read) {
+		if(stat(g_settings.epg_dir.c_str(), &my_stat) == 0)
 			g_Sectionsd->readSIfromXML(g_settings.epg_dir.c_str());
-
-		for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); ++it)
-			g_Sectionsd->readSIfromXMLTV((*it).c_str());
 	}
 	int tvmode = CZapit::getInstance()->getMode() & CZapitClient::MODE_TV;
 	lastChannelMode = tvmode ? g_settings.channel_mode : g_settings.channel_mode_radio;
@@ -2777,6 +2773,9 @@ TIMER_STOP("################################## after all #######################
 #endif
 		CFlashUpdateCheck::getInstance()->startThread();
 	}
+
+	for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); ++it)
+		g_Sectionsd->readSIfromXMLTV((*it).c_str());
 
 	RealRun();
 	ExitRun(g_info.hw_caps->can_shutdown);
