@@ -1122,6 +1122,7 @@ int CInfoViewerBB::parse_ecmInfo(const char * file)
 			{
 				if ( strstr(buffer, "emu") ||		//mgcamd
 					strstr(buffer, "constcw") ||	//doscam or oscam constcw
+					strstr(buffer, "cache3") ||	//oscam with cacheex
 					strstr(buffer, "Internal"))	//gbox
 				{
 					decode = LOCAL;
