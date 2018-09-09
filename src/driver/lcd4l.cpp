@@ -96,7 +96,7 @@ extern cVideo *videoDecoder;
 #define BGCOLOR			LCD_DATADIR "bgcolor"
 
 #define FLAG_LCD4LINUX		"/tmp/.lcd4linux"
-#define PIDFILE			"/tmp/lcd4linux.pid"
+#define PIDFILE			"/var/run/lcd4linux.pid"
 
 /* ----------------------------------------------------------------- */
 
