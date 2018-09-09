@@ -915,7 +915,7 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 		strReplace(content, "Ä", "\xc4\0");
 		strReplace(content, "Ö", "\xd6\0");
 		strReplace(content, "Ü", "\xdc\0");
-		strReplace(content, "ß", "\xe2\0");
+		if (g_settings.lcd4l_display_type == 0) strReplace(content, "ß", "\xe2\0");
 		strReplace(content, "é", "e");
 	}
 
