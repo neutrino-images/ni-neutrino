@@ -370,6 +370,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.inetradio_autostart = configfile.getInt32("inetradio_autostart" , 0);
 	g_settings.lcd4l_support = configfile.getInt32("lcd4l_support" , 0);
 	g_settings.lcd4l_logodir = configfile.getString("lcd4l_logodir", LOGODIR);
+	g_settings.lcd4l_display_type = configfile.getInt32("lcd4l_display_type", 0);
 	g_settings.lcd4l_skin = configfile.getInt32("lcd4l_skin" , 0);
 	g_settings.lcd4l_skin_radio = configfile.getInt32("lcd4l_skin_radio" , 0);
 	g_settings.lcd4l_convert = configfile.getInt32("lcd4l_convert", 1);
@@ -1298,6 +1299,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("inetradio_autostart" , g_settings.inetradio_autostart);
 	configfile.setInt32("lcd4l_support" , g_settings.lcd4l_support);
 	configfile.setString("lcd4l_logodir" , g_settings.lcd4l_logodir);
+	configfile.setInt32("lcd4l_display_type" , g_settings.lcd4l_display_type);
 	configfile.setInt32("lcd4l_skin" , g_settings.lcd4l_skin);
 	configfile.setInt32("lcd4l_skin_radio" , g_settings.lcd4l_skin_radio);
 	configfile.setInt32("lcd4l_convert" , g_settings.lcd4l_convert);

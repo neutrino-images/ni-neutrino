@@ -647,32 +647,43 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 		std::string Layout;
 
+		std::string DISPLAY_Type;
+		switch (g_settings.lcd4l_display_type) {
+			case 1:
+				DISPLAY_Type = "Samsung_";
+				break;
+			case 0:
+			default:
+				DISPLAY_Type = "Pearl_";
+				break;
+		}
+
 		if (ModeStandby)
 		{
-			Layout = "standby";
+			Layout = DISPLAY_Type + "standby";
 		}
 		else if ((g_settings.lcd4l_skin_radio) && (m_Mode == NeutrinoModes::mode_radio || m_Mode == NeutrinoModes::mode_webradio))
 		{
-			Layout = "radio";
+			Layout = DISPLAY_Type + "radio";
 		}
 		else
 		{
 			switch (g_settings.lcd4l_skin)
 			{
 				case 4:
-					Layout = "user";
+					Layout = DISPLAY_Type + "user";
 					break;
 				case 3:
-					Layout = "d-box2";
+					Layout = DISPLAY_Type + "d-box2";
 					break;
 				case 2:
-					Layout = "small";
+					Layout = DISPLAY_Type + "small";
 					break;
 				case 1:
-					Layout = "large";
+					Layout = DISPLAY_Type + "large";
 					break;
 				default:
-					Layout = "standard";
+					Layout = DISPLAY_Type + "standard";
 			}
 		}
 

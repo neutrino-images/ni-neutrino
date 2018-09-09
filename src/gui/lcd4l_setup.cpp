@@ -63,6 +63,13 @@ const CMenuOptionChooser::keyval LCD4L_SUPPORT_OPTIONS[] =
 };
 #define LCD4L_SUPPORT_OPTION_COUNT (sizeof(LCD4L_SUPPORT_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
+const CMenuOptionChooser::keyval_ext LCD4L_DISPLAY_TYPE_OPTIONS[] =
+{
+	{ 0, NONEXISTANT_LOCALE, "Pearl"},
+	{ 1, NONEXISTANT_LOCALE, "Samsung"}
+};
+#define LCD4L_DISPLAY_TYPE_OPTION_COUNT (sizeof(LCD4L_DISPLAY_TYPE_OPTIONS)/sizeof(CMenuOptionChooser::keyval_ext))
+
 const CMenuOptionChooser::keyval LCD4L_SKIN_OPTIONS[] =
 {
 	{ 0, LOCALE_LCD4L_SKIN_0 },
@@ -124,7 +131,8 @@ int CLCD4lSetup::show()
 {
 	int shortcut = 1;
 
-	int temp_lcd4l_skin	= g_settings.lcd4l_skin;
+	int temp_lcd4l_display_type = g_settings.lcd4l_display_type;
+	int temp_lcd4l_skin = g_settings.lcd4l_skin;
 
 	// lcd4l setup
 	CMenuWidget* lcd4lSetup = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_LCD4L_SETUP);
@@ -138,6 +146,10 @@ int CLCD4lSetup::show()
 	mf = new CMenuForwarder(LOCALE_LCD4L_LOGODIR, true, g_settings.lcd4l_logodir, this, "lcd4l_logodir", CRCInput::convertDigitToKey(shortcut++));
 	mf->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_LOGODIR);
 	lcd4lSetup->addItem(mf);
+
+	mc = new CMenuOptionChooser(LOCALE_LCD4L_DISPLAY_TYPE, &temp_lcd4l_display_type, LCD4L_DISPLAY_TYPE_OPTIONS, LCD4L_DISPLAY_TYPE_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
+//	mc->setHint("", LOCALE_MENU_HINT_LCD4L_DISPLAY_TYPE);
+	lcd4lSetup->addItem(mc);
 
 	mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_SKIN_OPTIONS, LCD4L_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SKIN);
@@ -175,6 +187,12 @@ int CLCD4lSetup::show()
 	delete lcd4lSetup;
 
 	// the things to do on exit
+
+	if (g_settings.lcd4l_display_type != temp_lcd4l_display_type)
+	{
+		g_settings.lcd4l_display_type = temp_lcd4l_display_type;
+		LCD4l->InitLCD4l();
+	}
 
 	if (g_settings.lcd4l_skin != temp_lcd4l_skin)
 	{
