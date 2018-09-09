@@ -38,6 +38,13 @@ class CLCD4l
 		CLCD4l();
 		~CLCD4l();
 
+		// Displays
+		enum
+		{
+			PEARL		= 0,
+			SAMSUNG 	= 1
+		};
+
 		// Functions
 		void	InitLCD4l();
 		void	StartLCD4l();

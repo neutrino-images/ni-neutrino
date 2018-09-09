@@ -665,45 +665,47 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 		/* --- */
 
-		std::string Layout;
+		std::string DisplayType;
 
-		std::string DISPLAY_Type;
-		switch (g_settings.lcd4l_display_type) {
-			case 1:
-				DISPLAY_Type = "Samsung_";
+		switch (g_settings.lcd4l_display_type)
+		{
+			case SAMSUNG:
+				DisplayType = "Samsung_";
 				break;
-			case 0:
+			case PEARL:
 			default:
-				DISPLAY_Type = "Pearl_";
+				DisplayType = "Pearl_";
 				break;
 		}
+
+		std::string Layout;
 
 		if (ModeStandby)
 		{
-			Layout = DISPLAY_Type + "standby";
+			Layout = DisplayType + "standby";
 		}
 		else if ((g_settings.lcd4l_skin_radio) && (m_Mode == NeutrinoModes::mode_radio || m_Mode == NeutrinoModes::mode_webradio))
 		{
-			Layout = DISPLAY_Type + "radio";
+			Layout = DisplayType + "radio";
 		}
 		else
 		{
 			switch (g_settings.lcd4l_skin)
 			{
 				case 4:
-					Layout = DISPLAY_Type + "user";
+					Layout = DisplayType + "user";
 					break;
 				case 3:
-					Layout = DISPLAY_Type + "d-box2";
+					Layout = DisplayType + "d-box2";
 					break;
 				case 2:
-					Layout = DISPLAY_Type + "small";
+					Layout = DisplayType + "small";
 					break;
 				case 1:
-					Layout = DISPLAY_Type + "large";
+					Layout = DisplayType + "large";
 					break;
 				default:
-					Layout = DISPLAY_Type + "standard";
+					Layout = DisplayType + "standard";
 			}
 		}
 
@@ -935,7 +937,7 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 		strReplace(content, "Ä", "\xc4\0");
 		strReplace(content, "Ö", "\xd6\0");
 		strReplace(content, "Ü", "\xdc\0");
-		if (g_settings.lcd4l_display_type == 0) strReplace(content, "ß", "\xe2\0");
+		if (g_settings.lcd4l_display_type == PEARL) strReplace(content, "ß", "\xe2\0");
 		strReplace(content, "é", "e");
 	}
 

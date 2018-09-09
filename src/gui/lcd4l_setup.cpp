@@ -65,8 +65,8 @@ const CMenuOptionChooser::keyval LCD4L_SUPPORT_OPTIONS[] =
 
 const CMenuOptionChooser::keyval_ext LCD4L_DISPLAY_TYPE_OPTIONS[] =
 {
-	{ 0, NONEXISTANT_LOCALE, "Pearl"},
-	{ 1, NONEXISTANT_LOCALE, "Samsung"}
+	{ CLCD4l::PEARL,   NONEXISTANT_LOCALE, "Pearl"},
+	{ CLCD4l::SAMSUNG, NONEXISTANT_LOCALE, "Samsung"}
 };
 #define LCD4L_DISPLAY_TYPE_OPTION_COUNT (sizeof(LCD4L_DISPLAY_TYPE_OPTIONS)/sizeof(CMenuOptionChooser::keyval_ext))
 
