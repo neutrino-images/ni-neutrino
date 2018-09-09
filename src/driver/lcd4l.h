@@ -70,6 +70,8 @@ class CLCD4l
 		int		m_Mode;
 		int		m_ModeChannel;
 
+		int		m_Brightness;
+		int		m_Brightness_standby;
 		std::string	m_Resolution;
 		std::string	m_AspectRatio;
 		int		m_Videotext;

@@ -373,6 +373,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.lcd4l_display_type = configfile.getInt32("lcd4l_display_type", 0);
 	g_settings.lcd4l_skin = configfile.getInt32("lcd4l_skin" , 0);
 	g_settings.lcd4l_skin_radio = configfile.getInt32("lcd4l_skin_radio" , 0);
+	g_settings.lcd4l_brightness = configfile.getInt32("lcd4l_brightness", 7);
+	g_settings.lcd4l_brightness_standby = configfile.getInt32("lcd4l_brightness_standby", 3);
 	g_settings.lcd4l_convert = configfile.getInt32("lcd4l_convert", 1);
 	g_settings.show_menu_hints_line = configfile.getBool("show_menu_hints_line", false);
 	g_settings.mode_icons = configfile.getInt32( "mode_icons", 0);
@@ -1302,6 +1304,8 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("lcd4l_display_type" , g_settings.lcd4l_display_type);
 	configfile.setInt32("lcd4l_skin" , g_settings.lcd4l_skin);
 	configfile.setInt32("lcd4l_skin_radio" , g_settings.lcd4l_skin_radio);
+	configfile.setInt32("lcd4l_brightness", g_settings.lcd4l_brightness);
+	configfile.setInt32("lcd4l_brightness_standby", g_settings.lcd4l_brightness_standby);
 	configfile.setInt32("lcd4l_convert" , g_settings.lcd4l_convert);
 	configfile.setBool("show_menu_hints_line" , g_settings.show_menu_hints_line);
 	configfile.setInt32("mode_icons", g_settings.mode_icons );

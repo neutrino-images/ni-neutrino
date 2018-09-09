@@ -36,6 +36,7 @@
 class CLCD4lSetup : public CMenuTarget, CChangeObserver
 {
 	private:
+		CMenuOptionNumberChooser *nc;
 		CMenuOptionChooser *mc;
 		CMenuForwarder * mf;
 

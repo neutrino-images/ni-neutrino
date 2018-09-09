@@ -1030,6 +1030,8 @@ keychoosermenu.setnone No key
 languagesetup.head Language and timezone
 languagesetup.osd OSD language
 languagesetup.select OSD language
+lcd4l_brightness Brightness
+lcd4l_brightness_standby Brightness in standby
 lcd4l_clock_a Analog clock in standby mode
 lcd4l_convert Convert umlauts
 lcd4l_display_type Display Type

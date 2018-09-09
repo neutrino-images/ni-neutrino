@@ -1030,6 +1030,8 @@ keychoosermenu.setnone Keine Taste
 languagesetup.head Sprache und Zeitzonen
 languagesetup.osd Menüsprache
 languagesetup.select Sprache
+lcd4l_brightness Helligkeit
+lcd4l_brightness_standby Helligkeit im Standby-Modus
 lcd4l_clock_a Analog-Uhr im Standby-Modus
 lcd4l_convert Konvertiere Umlaute
 lcd4l_display_type Display-Typ
