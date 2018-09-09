@@ -320,8 +320,6 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	{
 		WriteFile(BRIGHTNESS, to_string(Brightness));
 		m_Brightness = Brightness;
-		lcd4linux(false);
-		lcd4linux(true);
 	}
 
 	int Brightness_standby = g_settings.lcd4l_brightness_standby;
@@ -329,8 +327,6 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	{
 		WriteFile(BRIGHTNESS_STANDBY, to_string(Brightness_standby));
 		m_Brightness_standby = Brightness_standby;
-		lcd4linux(false);
-		lcd4linux(true);
 	}
 
 	/* ----------------------------------------------------------------- */
