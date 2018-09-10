@@ -149,7 +149,7 @@ int CLCD4lSetup::show()
 	lcd4lSetup->addItem(mf);
 
 	mc = new CMenuOptionChooser(LOCALE_LCD4L_DISPLAY_TYPE, &temp_lcd4l_display_type, LCD4L_DISPLAY_TYPE_OPTIONS, LCD4L_DISPLAY_TYPE_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
-//	mc->setHint("", LOCALE_MENU_HINT_LCD4L_DISPLAY_TYPE);
+	mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_DISPLAY_TYPE);
 	lcd4lSetup->addItem(mc);
 
 	mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_SKIN_OPTIONS, LCD4L_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
@@ -161,11 +161,11 @@ int CLCD4lSetup::show()
 	lcd4lSetup->addItem(mc);
 
 	nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS, (int *)&temp_lcd4l_brightness, true, 1, 7, this);
-	nc->setHint("", LOCALE_MENU_HINT_LCD4L_BRIGHTNESS);
+	nc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS);
 	lcd4lSetup->addItem(nc);
 
 	nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS_STANDBY, (int *)&g_settings.lcd4l_brightness_standby, true, 1, 7, this);
-	nc->setHint("", LOCALE_MENU_HINT_LCD4L_BRIGHTNESS_STANDBY);
+	nc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS_STANDBY);
 	lcd4lSetup->addItem(nc);
 
 	const char *flag_lcd4l_weather = FLAGDIR "/.lcd-weather";

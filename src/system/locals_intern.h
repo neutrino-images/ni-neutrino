@@ -1409,6 +1409,7 @@ const char * locale_real_names[] =
 	"menu.hint_lcd4l_brightness_standby",
 	"menu.hint_lcd4l_clock_a",
 	"menu.hint_lcd4l_convert",
+	"menu.hint_lcd4l_display_type",
 	"menu.hint_lcd4l_logodir",
 	"menu.hint_lcd4l_skin",
 	"menu.hint_lcd4l_skin_radio",
