@@ -1363,7 +1363,7 @@ menu.hint_key_save Save keybindings to a file named keys.conf
 menu.hint_key_screenshot Assign button to save GUI and/or TV screenshot
 menu.hint_key_sort Assign button to change channel list sort order
 menu.hint_key_special_active Disable or enable some special keys
-menu.hint_key_standby_add Assign additional button to leave standby mode
+menu.hint_key_standbyoff_add Assign additional button to leave standby mode
 menu.hint_key_subchanneldown Assign button for fast switch\n to previous subchannel
 menu.hint_key_subchannelup Assign button for fast switch\n to next subchannel
 menu.hint_key_timeshift Assign button to start timeshift
