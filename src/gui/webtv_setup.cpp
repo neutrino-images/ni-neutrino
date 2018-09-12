@@ -211,10 +211,15 @@ bool CWebTVSetup::changeNotify(const neutrino_locale_t, void */*data*/)
 }
 
 //NI
-int xml_filter(const struct dirent *entry)
+int filefilter(const struct dirent *entry)
 {
 	int len = strlen(entry->d_name);
-	if (len > 3 && entry->d_name[len-3] == 'x' && entry->d_name[len-2] == 'm' && entry->d_name[len-1] == 'l')
+	if (len > 3 && (
+		   (entry->d_name[len-3] == 'x' && entry->d_name[len-2] == 'm' && entry->d_name[len-1] == 'l')
+		|| (entry->d_name[len-3] == 'm' && entry->d_name[len-2] == '3' && entry->d_name[len-1] == 'u')
+		|| (                               entry->d_name[len-2] == 't' && entry->d_name[len-1] == 'v')
+		)
+	)
 		return 1;
 	return 0;
 }
@@ -225,30 +230,30 @@ void CWebTVSetup::webtv_xml_auto()
 	if (g_settings.webtv_xml_auto)
 	{
 		const char *dirs[] = {WEBTVDIR_VAR, WEBTVDIR};
-		struct dirent **xml_list;
-		char xml_file[1024] = {0};
+		struct dirent **filelist;
+		char webtv_file[1024] = {0};
 		for (int i = 0; i < 2; i++)
 		{
-			int xml_cnt = scandir(dirs[i], &xml_list, xml_filter, alphasort);
-			if (xml_cnt > -1)
+			int file_count = scandir(dirs[i], &filelist, filefilter, alphasort);
+			if (file_count > -1)
 			{
-				for (int count = 0; count < xml_cnt; count++)
+				for (int count = 0; count < file_count; count++)
 				{
-					snprintf(xml_file, sizeof(xml_file), "%s/%s", dirs[i], xml_list[count]->d_name);
-					if (file_size(xml_file))
+					snprintf(webtv_file, sizeof(webtv_file), "%s/%s", dirs[i], filelist[count]->d_name);
+					if (file_size(webtv_file))
 					{
 						bool found = false;
 						for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); it++)
-							found |= ((*it).find(xml_list[count]->d_name) != std::string::npos);
+							found |= ((*it).find(filelist[count]->d_name) != std::string::npos);
 
 						if (!found)
 						{
-							printf("[CWebTVSetup] loading: %s\n", xml_file);
-							g_settings.webtv_xml.push_back(xml_file);
+							printf("[CWebTVSetup] loading: %s\n", webtv_file);
+							g_settings.webtv_xml.push_back(webtv_file);
 						}
 						else
 						{
-							printf("[CWebTVSetup] skipping: %s\n", xml_file);
+							printf("[CWebTVSetup] skipping: %s\n", webtv_file);
 						}
 					}
 				}
