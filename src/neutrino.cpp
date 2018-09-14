@@ -1578,16 +1578,13 @@ void CNeutrinoApp::saveSetup(const char * fname)
 
 	configfile.setString ( "logo_hdd_dir", g_settings.logo_hdd_dir );
 
+	CWebTVSetup webtvsetup;
 	configfile.setInt32("webtv_xml_auto", g_settings.webtv_xml_auto); //NI
 	int webtv_count = 0;
 	for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); ++it) {
 		std::string k = "webtv_xml_" + to_string(webtv_count);
 		//NI
-		if (
-			   (*it).empty()
-			|| ((*it).find(WEBTVDIR) != std::string::npos)
-			|| ((*it).find(WEBTVDIR_VAR) != std::string::npos)
-		)
+		if (webtvsetup.webtv_xml_autodir((*it)))
 			continue;
 		configfile.setString(k, *it);
 		webtv_count++;

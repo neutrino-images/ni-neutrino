@@ -171,11 +171,7 @@ int CWebTVSetup::Show()
 	for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); ++it)
 	{
 		//NI
-		if (
-			   (*it).empty()
-			|| ((*it).find(WEBTVDIR) != std::string::npos)
-			|| ((*it).find(WEBTVDIR_VAR) != std::string::npos)
-		)
+		if (webtv_xml_autodir((*it)))
 			continue;
 		m->addItem(new CMenuForwarder(*it, true, NULL, this, "c"));
 	}
@@ -262,6 +258,17 @@ void CWebTVSetup::webtv_xml_auto()
 	}
 }
 
+
+bool CWebTVSetup::webtv_xml_autodir(std::string directory)
+{
+	if (
+		   (directory.empty())
+		|| (directory.find(WEBTVDIR) != std::string::npos)
+		|| (directory.find(WEBTVDIR_VAR) != std::string::npos)
+	)
+		return true;
+	return false;
+}
 
 /* ## CWebTVResolution ############################################# */
 
