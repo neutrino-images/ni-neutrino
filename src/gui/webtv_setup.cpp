@@ -75,7 +75,7 @@ int CWebTVSetup::exec(CMenuTarget* parent, const std::string & actionKey)
 		selected = m->getSelected();
 		if (selected >= item_offset) {
 			m->removeItem(selected);
-		    m->hide();
+			m->hide();
 			selected = m->getSelected();
 			changed = true;
 		}
@@ -159,7 +159,7 @@ int CWebTVSetup::Show()
 
 	m->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_WEBTV_XML));
 
-	//NI
+	// TODO: show/hide autoloaded content when switching g_settings.webtv_xml_auto
 	char hint_text[1024];
 	snprintf(hint_text, sizeof(hint_text)-1, g_Locale->getText(LOCALE_MENU_HINT_WEBTV_XML_AUTO), WEBTVDIR, WEBTVDIR_VAR);
 	CMenuOptionChooser *oc = new CMenuOptionChooser(LOCALE_WEBTV_XML_AUTO, &g_settings.webtv_xml_auto, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
@@ -168,12 +168,21 @@ int CWebTVSetup::Show()
 	m->addItem(GenericMenuSeparator);
 
 	item_offset = m->getItemsCount();
+	// show autoloaded webtv files
 	for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); ++it)
 	{
-		//NI
 		if (webtv_xml_autodir((*it)))
-			continue;
-		m->addItem(new CMenuForwarder(*it, true, NULL, this, "c"));
+			m->addItem(new CMenuForwarder(*it, false, "auto"));
+	}
+	if (item_offset < m->getItemsCount())
+		m->addItem(GenericMenuSeparator);
+
+	item_offset = m->getItemsCount();
+	// show users webtv files
+	for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); ++it)
+	{
+		if (!webtv_xml_autodir((*it)))
+			m->addItem(new CMenuForwarder(*it, true, NULL, this, "c"));
 	}
 
 	m->setFooter(CWebTVSetupFooterButtons, CWebTVSetupFooterButtonCount); //Why we need here an extra buttonbar?
