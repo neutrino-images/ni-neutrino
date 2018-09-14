@@ -1718,7 +1718,7 @@ menu.hint_volume_digits Numeric display of the volumebar on/off
 menu.hint_volume_pos Select volume indicator position
 menu.hint_volume_size Select volume indicator height
 menu.hint_webtv_setup WebTV channels configured here will be available in the standard channel lists.
-menu.hint_webtv_xml_auto Auto-load all existing XML files from %s/ and %s/
+menu.hint_webtv_xml_auto Auto-load all existing WebTV files from %s/ and %s/
 menu.hint_window_size Channellist, EPG-infos and some other windows are scaled by this factor
 menu.hint_youtube_dev_id Type your YouTube Dev ID. An empty input disables YouTube support
 menu.hint_youtube_enabled Enable or disable YouTube support
@@ -2803,11 +2803,11 @@ videomenu.videoformat_169 16:9
 videomenu.videoformat_43 4:3
 videomenu.videomode Digital video mode
 webtv.head WebTV
-webtv.xml WebTV XML files
-webtv.xml.add Add XML file
-webtv.xml.auto Auto-load XML files
-webtv.xml.del Remove XML file
-webtv.xml.reload Reload XML files
+webtv.xml WebTV files
+webtv.xml.add Add WebTV file
+webtv.xml.auto Auto-load WebTV files
+webtv.xml.del Remove WebTV file
+webtv.xml.reload Reload WebTV files
 window_size Window size in %
 wizard.initial_settings Initial settings found
 wizard.install_settings Do you want to install channels for Astra 19.2°E?
