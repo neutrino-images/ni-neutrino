@@ -208,10 +208,10 @@ bool CScreenSaver::ReadDir()
 
 	if (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_audio && g_settings.audioplayer_cover_as_screensaver)
 	{
-		if (access(COVERDIR, F_OK) == 0)
+		if (access(COVERDIR_TMP, F_OK) == 0)
 		{
 			struct dirent **coverlist;
-			int n = scandir(COVERDIR, &coverlist, 0, alphasort);
+			int n = scandir(COVERDIR_TMP, &coverlist, 0, alphasort);
 			if (n > 2) // we always have the "." and ".." entrys
 				show_audiocover = true;
 		}
@@ -219,7 +219,7 @@ bool CScreenSaver::ReadDir()
 
 	string d;
 	if (show_audiocover)
-		d = COVERDIR;
+		d = COVERDIR_TMP;
 	else
 		d = g_settings.screensaver_dir;
 	if (d.length() > 1)
