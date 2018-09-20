@@ -209,10 +209,17 @@ int CWebTVSetup::Show()
 }
 
 //NI
-bool CWebTVSetup::changeNotify(const neutrino_locale_t, void */*data*/)
+bool CWebTVSetup::changeNotify(const neutrino_locale_t OptionName, void */*data*/)
 {
-	changed = true;
-	return false;
+	int ret = menu_return::RETURN_NONE;
+
+	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_WEBTV_XML_AUTO))
+	{
+		changed = true;
+		ret = menu_return::RETURN_REPAINT;
+	}
+
+	return ret;
 }
 
 //NI
