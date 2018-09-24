@@ -1172,34 +1172,38 @@ void CInfoViewer::loop(bool show_dot)
 			res = messages_return::cancel_all;
 			hideIt = true;
 		} else if ((msg == NeutrinoMessages::EVT_TIMER) && (data == sec_timer_id)) {
-			showSNR ();
-			//NI
-			if (timeset)
+			if (frameBuffer->getActive())
 			{
-				if (g_settings.infobar_analogclock)
-					showAnalogClock(BoxEndX - analogclock_offset - analogclock_size/2, BoxEndY - analogclock_offset - analogclock_size/2, analogclock_size/2);
-				else
-					clock->paint(CC_SAVE_SCREEN_NO);
-			}
-			showRecordIcon (show_dot);
-			show_dot = !show_dot;
-			showInfoFile();
-			if ((g_settings.radiotext_enable) && (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_radio))
-				showRadiotext();
-
-			infoViewerBB->showIcon_16_9();
-			//infoViewerBB->paint_ca_icons(0);
-			//NI
-			if(file_exists("/tmp/ecm.info"))
-			{
-				std::string md5_tmp = filehash((char *)"/tmp/ecm.info");
-				//printf("CInfoViewer::loop() ecm.info.tmp = %s\nCInfoViewer::loop() ecm.info     = %s\n",md5_ecmInfo.c_str(),md5_tmp.c_str());
-				if(md5_ecmInfo != md5_tmp) {
-					puts("CInfoViewer::loop() CA reload");
-					infoViewerBB->paint_ca_icons(0);
+				showSNR ();
+				//NI
+				if (timeset)
+				{
+					if (g_settings.infobar_analogclock)
+						showAnalogClock(BoxEndX - analogclock_offset - analogclock_size/2, BoxEndY - analogclock_offset - analogclock_size/2, analogclock_size/2);
+					else
+						clock->paint(CC_SAVE_SCREEN_NO);
 				}
+				showRecordIcon (show_dot);
+				show_dot = !show_dot;
+				showInfoFile();
+				if ((g_settings.radiotext_enable) && (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_radio))
+					showRadiotext();
+
+				infoViewerBB->showIcon_16_9();
+				//infoViewerBB->paint_ca_icons(0);
+				//NI
+				if(file_exists("/tmp/ecm.info"))
+				{
+					std::string md5_tmp = filehash((char *)"/tmp/ecm.info");
+					//printf("CInfoViewer::loop() ecm.info.tmp = %s\nCInfoViewer::loop() ecm.info     = %s\n",md5_ecmInfo.c_str(),md5_tmp.c_str());
+					if (md5_ecmInfo != md5_tmp)
+					{
+						puts("CInfoViewer::loop() CA reload");
+						infoViewerBB->paint_ca_icons(0);
+					}
+				}
+				infoViewerBB->showIcon_Resolution();
 			}
-			infoViewerBB->showIcon_Resolution();
 		} else if ((msg == NeutrinoMessages::EVT_RECORDMODE) && 
 			   (CMoviePlayerGui::getInstance().timeshift) && (CRecordManager::getInstance()->GetRecordCount() == 1)) {
 			res = CNeutrinoApp::getInstance()->handleMsg(msg, data);
