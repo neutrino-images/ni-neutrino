@@ -2778,6 +2778,7 @@ TIMER_START();
 	CFileHelpers::createDir(LOCALEDIR_VAR);
 	CFileHelpers::createDir(THEMESDIR_VAR);
 	CFileHelpers::createDir(PLUGINDIR_VAR);
+	CFileHelpers::createDir(WEBRADIODIR_VAR);
 	CFileHelpers::createDir(WEBTVDIR_VAR);
 	CFileHelpers::createDir(PUBLIC_HTTPDDIR);
 
