@@ -937,7 +937,7 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 		strReplace(content, "Ä", "\xc4\0");
 		strReplace(content, "Ö", "\xd6\0");
 		strReplace(content, "Ü", "\xdc\0");
-		
+
 		strReplace(content, "Ą", "\x41\0");
 		strReplace(content, "ą", "\x61\0");
 		strReplace(content, "Ć", "\x43\0");
@@ -956,7 +956,7 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 		strReplace(content, "ź", "\x7a\0");
 		strReplace(content, "Ź", "\x5a\0");
 		strReplace(content, "ż", "\x7a\0");
-		
+
 		if (g_settings.lcd4l_display_type == PEARL) strReplace(content, "ß", "\xe2\0");
 		strReplace(content, "é", "e");
 	}
