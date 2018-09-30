@@ -160,11 +160,18 @@ int CLCD4lSetup::show()
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_SKIN_RADIO);
 	lcd4lSetup->addItem(mc);
 
-	nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS, (int *)&temp_lcd4l_brightness, true, 1, 7, this);
+	if (g_settings.lcd4l_display_type == 2)
+		nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS, (int *)&temp_lcd4l_brightness, true, 1, 10, this);
+	else
+		nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS, (int *)&temp_lcd4l_brightness, true, 1, 7, this);
+	
 	nc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS);
 	lcd4lSetup->addItem(nc);
 
-	nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS_STANDBY, (int *)&g_settings.lcd4l_brightness_standby, true, 1, 7, this);
+	if (g_settings.lcd4l_display_type == 2)
+		nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS_STANDBY, (int *)&g_settings.lcd4l_brightness_standby, true, 1, 10, this);
+	else
+		nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS_STANDBY, (int *)&g_settings.lcd4l_brightness_standby, true, 1, 7, this);
 	nc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS_STANDBY);
 	lcd4lSetup->addItem(nc);
 
