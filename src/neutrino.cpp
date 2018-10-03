@@ -586,7 +586,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.radiotext_enable = configfile.getBool("radiotext_enable"          , true); //NI
 	//audio
 	g_settings.audio_AnalogMode = configfile.getInt32( "audio_AnalogMode", 0 );
-	g_settings.audio_DolbyDigital    = configfile.getBool("audio_DolbyDigital"   , true); //NI
+	g_settings.audio_DolbyDigital    = configfile.getBool("audio_DolbyDigital"   , true);
 
 	g_settings.auto_lang = configfile.getInt32( "auto_lang", 1 ); //NI
 	g_settings.auto_subs = configfile.getInt32( "auto_subs", 0 );
