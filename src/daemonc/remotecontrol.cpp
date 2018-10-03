@@ -159,7 +159,7 @@ int CRemoteControl::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t data
 		{
 //printf("[neutrino] EVT_ZAP current %llx data %llx\n", current_channel_id, *(t_channel_id *)data);
 			g_InfoViewer->chanready = 1;
-			// warte auf keine Meldung vom ZAPIT -> jemand anderer hat das zappen ausgelöst...
+			// wait for no message from ZAPIT -> someone else has triggered zapping
 			if ((*(t_channel_id *)data) != current_channel_id) {
 				t_channel_id new_id = *(t_channel_id *)data;
 				CZapitChannel* channel = CServiceManager::getInstance()->FindChannel(new_id);
