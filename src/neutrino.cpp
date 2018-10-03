@@ -2562,14 +2562,12 @@ TIMER_START();
 	start_text[99] = '\0';
 	CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, start_text);
 
-	//NI show startlogo
+	// show startlogo
 	bool startlogo = false;
-	if (!show_startwizard) {
+	if (!show_startwizard)
 		startlogo = true;
-	}
-	else {
+	else
 		hintBox->paint();
-	}
 
 	CVFD::getInstance()->init(neutrinoFonts->fontDescr.filename.c_str(), neutrinoFonts->fontDescr.name.c_str());
 	CVFD::getInstance()->Clear();
@@ -2624,10 +2622,9 @@ TIMER_START();
 	g_videoSettings = new CVideoSettings;
 	g_videoSettings->setVideoSettings();
 
-	 //NI show startlogo
-	if (startlogo) {
-		frameBuffer->showFrame("start.jpg");
-	}
+	 // show startlogo
+	if (startlogo)
+		startlogo = frameBuffer->showFrame("start.jpg");
 
 	g_RCInput = new CRCInput();
 
@@ -2759,8 +2756,9 @@ TIMER_START();
 		startwizard.exec(NULL, "");
 	}
 
-	//NI - show startlogo
-	if (startlogo) {
+	// clean up startlogo
+	if (startlogo)
+	{
 		startlogo = false;
 		sleep(3);
 		frameBuffer->stopFrame();
