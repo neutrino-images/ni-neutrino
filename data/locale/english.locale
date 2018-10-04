@@ -1741,6 +1741,7 @@ messagebox.no No
 messagebox.ok Ok
 messagebox.yes Yes
 miscsettings.channellist Channellist
+miscsettings.channellist_enablesdt Transponder Backgroundupdate
 miscsettings.channellist_epgtext_align Programtext Align
 miscsettings.channellogos Channellogos
 miscsettings.colored_events Program colored
