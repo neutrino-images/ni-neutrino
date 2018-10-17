@@ -21,10 +21,10 @@ TOBACKUP="\
 	/share/tuxbox/neutrino/flex/flex_user.conf \
 	/var/bin/ \
 	/var/etc/ \
-	/var/httpd/ \
 	/var/keys/ \
 	/var/log/ \
 	/var/root/ \
+	/var/tuxbox/config/auto-record-cleaner.* \
 	/var/tuxbox/config/doscam.* \
 	/var/tuxbox/config/FritzCallMonitor.addr \
 	/var/tuxbox/config/FritzCallMonitor.cfg \
@@ -45,10 +45,12 @@ TOBACKUP="\
 	/var/tuxbox/config/Y-Web.conf \
 	/var/tuxbox/config/zapit/ \
 	/var/tuxbox/fonts/ \
+	/var/tuxbox/httpd/ \
 	/var/tuxbox/icons/ \
 	/var/tuxbox/locale/ \
 	/var/tuxbox/plugins/ \
 	/var/tuxbox/themes/ \
+	/var/tuxbox/webradio/ \
 	/var/tuxbox/webtv/ \
 	/var/xupnpd/ \
 "
