@@ -296,7 +296,7 @@ void CImageInfoNI::paint()
 		static CFlashVersionInfo versionInfo(version);
 		std::string releaseCycle = versionInfo.getReleaseCycle();
 		imageversion.str("");
-		imageversion << releaseCycle << " (" << versionInfo.getType() << ")";
+		imageversion << releaseCycle << " (" << versionInfo.getType(true) << ")";
 	}
 #ifdef PACKAGE_VERSION
 	else
