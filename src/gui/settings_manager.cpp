@@ -37,6 +37,7 @@
 #include <gui/settings_manager.h>
 #include <gui/filebrowser.h>
 #include <gui/widget/msgbox.h>
+#include <gui/widget/hintbox.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/keyboard_input.h>
 
@@ -47,8 +48,6 @@
 #include <system/debug.h>
 
 #include <sys/vfs.h>
-
-#include <gui/widget/hintbox.h> //NI
 
 CSettingsManager::CSettingsManager(int wizard_mode)
 {
@@ -158,7 +157,7 @@ int CSettingsManager::exec(CMenuTarget* parent, const std::string &actionKey)
 	else if(actionKey == "restore")
 	{
 		fileFilter.addFilter("tar");
-		fileFilter.addFilter("gz"); //NI
+		fileFilter.addFilter("gz");
 		fileBrowser.Filter = &fileFilter;
 		if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
 		{
