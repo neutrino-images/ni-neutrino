@@ -419,10 +419,6 @@ AC_ARG_WITH(boxtype,
 		tripledragon|coolstream|spark|azbox|generic|armbox)
 			BOXTYPE="$withval"
 		;;
-		hd60)
-			BOXTYPE="armbox"
-			BOXMODEL="$withval"
-		;;
 		*)
 			AC_MSG_ERROR([bad value $withval for --with-boxtype])
 		;;
@@ -453,14 +449,7 @@ AS_HELP_STRING([], [valid for generic: raspi]),
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 		;;
-		hd51)
-			if test "$BOXTYPE" = "armbox"; then
-				BOXMODEL="$withval"
-			else
-				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
-			fi
-		;;
-		hd60)
+		hd51|hd60)
 			if test "$BOXTYPE" = "armbox"; then
 				BOXMODEL="$withval"
 			else
