@@ -9,6 +9,7 @@ SUBDIRS = \
 	locale \
 	neutrino-scripts \
 	pictures \
+	policy \
 	scripts \
 	themes \
 	webradio \
