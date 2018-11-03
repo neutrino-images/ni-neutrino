@@ -8,17 +8,20 @@ installdir = $(FONTDIR)
 neutrino_ttf = Roboto-Regular.ttf
 tuxtxt_ttf = DejaVuLGCSansMono-Bold.ttf
 
+# default fonts
 install_DATA = \
 	$(neutrino_ttf) \
 	$(tuxtxt_ttf) \
 	pakenham.ttf \
+	tuxtxt.otb
+
+# additional fonts
+install_DATA += \
 	ubuntu-l-webfont.ttf \
 	ubuntu-r-webfont.ttf \
 	ubuntumono-b-webfont.ttf \
-	ubuntumono-r-webfont.ttf \
-	tuxtxt.otb
+	ubuntumono-r-webfont.ttf
 
-#NI
 install-data-hook:
 	cd $(DESTDIR)$(FONTDIR); \
 		mv $(neutrino_ttf) neutrino.ttf; \
