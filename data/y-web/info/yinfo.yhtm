@@ -17,7 +17,7 @@
 {=var-set:volume={=script:Y_NI_Tools getline /tmp/lcd/volume=}=}
 
 {=include-block:Y_NI_Blocks.txt;head=}
-<meta http-equiv="refresh" content="15; URL=page.yhtm">
+<meta http-equiv="refresh" content="15; URL=yinfo.yhtm">
 <script type="text/javascript">
 //<![CDATA[
 jQuery(document).ready(function(){
@@ -31,15 +31,15 @@ jQuery(document).ready(function(){
 
 	jQuery('#_progress_graph').css({ width: "{=var-get:progress=}%"});
 	jQuery('#clock').html(hours+':'+minutes);
-	jQuery('html head').find('title').text("yWeb - NI - Info");
+	jQuery('html head').find('title').text("yInfo");
 });
 //-->//]]>
 </script>
 <style type="text/css">
 /*<![CDATA[*/
 body {
-	background-color: #000;
-	color: #c0c0c0;
+	background-color: #212121;
+	color: #bdbdbd;
 }
 .NIinfo {
 	width: 780px;
@@ -56,23 +56,23 @@ body {
 	margin: 10px 0;
 }
 .NIinfo .status span {
-	color: #444;
+	color: #424242;
 	margin-left: 10px;
 	letter-spacing: 4px;
 }
 .NIinfo .top {
 }
 .NIinfo .status .ecm {
-	color: {=if-equal:{=var-get:mode_ecm=}~on~orange~#444=}
+	color: {=if-equal:{=var-get:mode_ecm=}~on~#ff9800~#424242=}
 }
 .NIinfo .status .timer {
-	color: {=if-equal:{=var-get:mode_timer=}~on~yellow~#444=}
+	color: {=if-equal:{=var-get:mode_timer=}~on~#ffeb3b~#424242=}
 }
 .NIinfo .status .rec {
-	color: {=if-equal:{=var-get:mode_rec=}~on~red~#444=}
+	color: {=if-equal:{=var-get:mode_rec=}~on~#f44336~#424242=}
 }
 .NIinfo .status .ts {
-	color: {=if-equal:{=var-get:mode_tshift=}~on~red~#444=}
+	color: {=if-equal:{=var-get:mode_tshift=}~on~#f44336~#424242=}
 }
 .NIinfo .logo,
 .NIinfo .event {
@@ -97,23 +97,20 @@ body {
 }
 .NIinfo ._outer_graph {
 	height: 45px;
-	border: 1px solid #333;
-	border-radius: 10px;
-	margin-left: -1px;
+	background-color: #424242;
 }
 .NIinfo ._inner_graph {
 	float: left;
-	background-color: #c0c0c0;
+	background-color: #bdbdbd;
 	width: 0;
 	height: 100%;
-	border-radius: 9px;
 }
 .NIinfo .percent {
 	text-align: center;
 	position: absolute;
-	margin-top: -56px;
-	color: #909090;
-	text-shadow: 0 -1px #000, 1px 0 #000, 0 1px #000, -1px 0 #000, 0 0 3px #000;
+	margin-top: 0;
+	color: #bdbdbd;
+	text-shadow: 0 -1px #212121, 1px 0 #212121, 0 1px #212121, -1px 0 #212121;
 }
 .NIinfo .bottom {
 }
@@ -125,7 +122,7 @@ body {
 	<div class="NIinfo">
 		<div class="fullwidth status top">
 			<div class="left">
-				STATUS: <span class="ecm">ECM</span>
+				<span class="ecm">ECM</span>
 			</div>
 			<div class="right">
 				<span class="timer">TIMER</span>
@@ -146,13 +143,13 @@ body {
 			{=var-get:event_curr=}
 		</div>
 		<div class="fullwidth status _outer_graph">
-			 <div id="_progress_graph" class="_inner_graph"></div>
-		</div>
-		<div class="fullwidth status percent">
-		{=if-equal:{=var-get:progress=}~0~
-		~
-			{=var-get:progress=} %
-		=}
+			<div id="_progress_graph" class="_inner_graph"></div>
+			<div class="fullwidth status percent">
+			{=if-equal:{=var-get:progress=}~0~
+			~
+				{=var-get:progress=} %
+			=}
+			</div>
 		</div>
 		<div class="fullwidth status bottom">
 			<div class="left" id="clock">
