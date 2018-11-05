@@ -37,7 +37,7 @@ jQuery(document).ready(function(){
 	if (minutes < 10)
 		minutes = "0" + minutes;
 
-	jQuery('#_progress_graph').css({ width: "{=var-get:progress=}%"});
+	jQuery('#graph_progress').css({ width: "{=var-get:progress=}%"});
 	jQuery('#clock').html(hours+':'+minutes);
 	jQuery('html head').find('title').text("yInfo");
 });
@@ -45,90 +45,103 @@ jQuery(document).ready(function(){
 </script>
 <style type="text/css">
 /*<![CDATA[*/
+
+/* globals */
+html {
+	margin: 0;
+	padding: 0;
+}
 body {
 	background-color: #212121;
 	color: #bdbdbd;
+	height: 100%;
+	margin: 5% 2.5%;
 }
-.NIinfo {
-	width: 780px;
+.yinfo {
 	margin: 0 auto;
-	font-size: 35px;
-	padding: 10px;
+	font-size: 5vh;
+	padding: 0;
 }
-.NIinfo .fullwidth {
-	width: 780px;
-	max-width: 780px;
+.yinfo .left {
+	float: left;
 }
-.NIinfo .status {
-	height: 40px;
-	margin: 10px 0;
+.yinfo .right {
+	float: right;
 }
-.NIinfo .status span {
+
+/* positions */
+.yinfo .fullwidth {
+	position: fixed;
+	width: 95%;
+}
+.yinfo .status {
+	top: 5%;
+}
+.yinfo .logo {
+	top: 20%;
+}
+.yinfo .event {
+	top: 50%;
+}
+.yinfo .graph {
+	top: 70%;
+}
+.yinfo .time {
+	bottom: 5%;
+}
+
+/* design */
+.yinfo .status span {
 	color: #424242;
-	margin-left: 10px;
-	letter-spacing: 4px;
+	letter-spacing: .1em;
 }
-.NIinfo .top {
-}
-.NIinfo .status .ecm {
+.yinfo .status .ecm {
 	color: {=if-equal:{=var-get:mode_ecm=}~on~#ff9800~#424242=}
 }
-.NIinfo .status .timer {
+.yinfo .status .timer {
 	color: {=if-equal:{=var-get:mode_timer=}~on~#ffeb3b~#424242=}
 }
-.NIinfo .status .rec {
+.yinfo .status .rec {
 	color: {=if-equal:{=var-get:mode_rec=}~on~#f44336~#424242=}
 }
-.NIinfo .status .ts {
+.yinfo .status .ts {
 	color: {=if-equal:{=var-get:mode_tshift=}~on~#f44336~#424242=}
 }
-.NIinfo .logo,
-.NIinfo .event {
+.yinfo .logo,
+.yinfo .event {
 	vertical-align: middle;
 	text-align: center;
-	height: 100px;
-	line-height: 100px;
-	font-size: 50px;
+	font-size: 200%;
 	font-weight: bold;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	width: 780px !important;
 }
-.NIinfo .logo {
+.yinfo .logo img {
+	display: block;
+	margin: 0 auto;
+	height: 20vh;
+	max-width: 100%;
+	object-fit: contain;
 }
-.NIinfo .event {
-}
-.NIinfo .logo img {
-	height: 80px;
-	margin: 10px 0;
-}
-.NIinfo ._outer_graph {
-	height: 45px;
+.yinfo .graph_outer {
+	height: 10vh;
 	background-color: #424242;
 }
-.NIinfo ._inner_graph {
+.yinfo .graph_inner {
 	float: left;
 	background-color: #bdbdbd;
 	width: 0;
 	height: 100%;
-}
-.NIinfo .percent {
-	text-align: center;
-	position: absolute;
-	margin-top: 0;
-	color: #bdbdbd;
-	text-shadow: 0 -1px #212121, 1px 0 #212121, 0 1px #212121, -1px 0 #212121;
-}
-.NIinfo .bottom {
 }
 /*]]>*/
 </style>
 </head>
 
 <body>
-	<div class="NIinfo">
-		<div class="fullwidth status top">
+	<div class="yinfo">
+
+		<div class="fullwidth status">
 			<div class="left">
 				<span class="ecm">ECM</span>
 			</div>
@@ -137,8 +150,9 @@ body {
 				<span class="rec">REC</span>
 				<span class="ts">TS</span>
 			</div>
-			<div class="clear"></div>
 		</div>
+		<div class="clear"></div>
+
 		<div class="fullwidth logo">
 		{=if-equal:{=var-get:mode_logo=}~1~
 			<img src="{=var-get:logo=}" alt="{=var-get:service=}">
@@ -147,27 +161,26 @@ body {
 		=}
 		</div>
 		<div class="clear"></div>
+
 		<div class="fullwidth event">
 			{=var-get:event_curr=}
 		</div>
-		<div class="fullwidth status _outer_graph">
-			<div id="_progress_graph" class="_inner_graph"></div>
-			<div class="fullwidth status percent">
-			{=if-equal:{=var-get:progress=}~0~
-			~
-				{=var-get:progress=} %
-			=}
+
+		<div class="fullwidth graph">
+			<div class="graph_outer">
+				<div id="graph_progress" class="graph_inner"></div>
 			</div>
 		</div>
-		<div class="fullwidth status bottom">
+
+		<div class="fullwidth time">
 			<div class="left" id="clock">
 				00:00
 			</div>
 			<div class="right">
 				{=var-get:duration=}
 			</div>
-			<div class="clear"></div>
 		</div>
+		<div class="clear"></div>
 	</div>
 </body>
 </html>
