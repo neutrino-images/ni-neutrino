@@ -1,5 +1,5 @@
 define(ver_major, 3)
-define(ver_minor, 50)
+define(ver_minor, 60)
 define(ver_micro, 0)
 
 AC_INIT(NI-Neutrino, ver_major.ver_minor.ver_micro)
