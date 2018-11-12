@@ -1,6 +1,12 @@
+# Keep in sync with git tags! Set tag with 'git tag NI-3.60'.
 define(ver_major, 3)
 define(ver_minor, 60)
-define(ver_micro, 0)
+# ver_micro counts commits since last tag
+define(ver_micro, m4_esyscmd([
+	GITTAG=$(git tag -l "NI-*" | tail -n1);
+	GITREV=$(git rev-list $GITTAG..HEAD --count);
+	printf "$GITREV"
+]))
 
 AC_INIT(NI-Neutrino, ver_major.ver_minor.ver_micro)
 AM_INIT_AUTOMAKE([nostdinc foreign])
