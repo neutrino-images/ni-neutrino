@@ -3,14 +3,13 @@ AM_CPPFLAGS = -fno-rtti -D__STDC_FORMAT_MACROS
 BUILT_SOURCES = version.h
 version.h:
 	@rm -f $@; \
-	echo '#define BUILT_DATE "'`date`'"' > $@
+	echo "#define BUILT_DATE \"$$(date)\"" > $@
 	@if test -d $(top_srcdir)/.git ; then \
 		pushd $(top_srcdir) ; \
 		GITTAG=$$(git tag -l "NI-*" | tail -n1); \
-		GITBRANCH=$$(git rev-parse --abbrev-ref HEAD) ; \
-		GITDESCRIBE=$$(git describe --always --tags --dirty --match $$GITTAG || echo 'VCS failed') ; \
+		GITDESCRIBE=$$(git describe --always --long --tags --match $$GITTAG | sed 's/-/./2' || echo "VCS failed") ; \
 		popd ; \
-		echo '#define VCS "'$${GITDESCRIBE} [$${GITBRANCH}]'"' >> $@ ; \
+		echo "#define VCS \"$${GITDESCRIBE}\"" >> $@ ; \
 	fi
 noinst_HEADERS = version.h
 .PHONY: version.h
