@@ -54,6 +54,9 @@
 #include <system/debug.h>
 #include <cs_api.h>
 
+// version.h is located in $(top_builddir)
+#include <src/gui/version.h>
+
 #include <linux/version.h>
 
 #include <gui/pictureviewer.h>
@@ -79,8 +82,8 @@ static const neutrino_locale_t info_items[] =
 {
 	LOCALE_IMAGEINFO_IMAGE,
 	LOCALE_IMAGEINFO_VERSION,
-	/* Commit: */
 	LOCALE_IMAGEINFO_KERNEL,
+	LOCALE_IMAGEINFO_GUI,
 	/* Lua-API: */
 	/* yWeb: */
 	LOCALE_IMAGEINFO_DATE,
@@ -281,13 +284,14 @@ void CImageInfoNI::paint()
 	CConfigFile config('\t');
 	config.loadConfig(TARGET_PREFIX "/.version");
 
-	std::string imagename	= config.getString("imagename", "NI-Neutrino-HD");
-	std::string homepage	= config.getString("homepage",  "www.neutrino-images.de");
-	std::string creator	= config.getString("creator",   "NI-Team");
-	std::string version	= config.getString("version",   "n/a");
-	std::string commit	= config.getString("commit",    "n/a");
-	std::string builddate	= config.getString("builddate", "n/a");
+	std::string imagename	= config.getString("imagename",	"NI \\o/ Neutrino-Image");
+	std::string version	= config.getString("version",	"n/a");
+	std::string describe	= config.getString("describe",	"n/a");
+	std::string builddate	= config.getString("builddate",	"n/a");
+	std::string creator	= config.getString("creator",	"NI-Team");
+	std::string homepage	= config.getString("homepage",	"www.neutrino-images.de");
 
+#if 0
 	std::ostringstream imageversion;
 	imageversion.str("n/a");
 
@@ -298,12 +302,17 @@ void CImageInfoNI::paint()
 		imageversion.str("");
 		imageversion << releaseCycle << " (" << versionInfo.getType(true) << ")";
 	}
-#ifdef PACKAGE_VERSION
-	else
-	{
-		imageversion.str("");
-		imageversion << PACKAGE_VERSION;
-	}
+#endif
+
+	std::ostringstream guiversion;
+	guiversion.str("");
+
+#ifdef VCS
+	guiversion << VCS;
+#elif defined PACKAGE_VERSION
+	guiversion << PACKAGE_VERSION;
+#else
+	guiversion.str("n/a");
 #endif
 
 	ypos += iheight;
@@ -312,17 +321,25 @@ void CImageInfoNI::paint()
 
 	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_VERSION));
+#if 0
 	paintLine(xpos+offset, font_info, imageversion.str());
+#else
+	paintLine(xpos+offset, font_info, describe);
+#endif
 
 	ypos += iheight;
-	paintLine(xpos, font_info, "Commit:");
-	paintLine(xpos+offset, font_info, commit);
+	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_DATE));
+	paintLine(xpos+offset, font_info, builddate);
 
 	struct utsname uts_info;
 
 	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_KERNEL));
 	paintLine(xpos+offset, font_info, uname(&uts_info) < 0 ? "n/a" : uts_info.release);
+
+	ypos += iheight;
+	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_GUI));
+	paintLine(xpos+offset, font_info, guiversion.str());
 
 #ifdef ENABLE_LUA
 	ypos += iheight;
@@ -334,10 +351,6 @@ void CImageInfoNI::paint()
 	paintLine(xpos, font_info, "yWeb:");
 	paintLine(xpos+offset, font_info, getYWebVersion());
 
-	ypos += iheight;
-	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_DATE));
-	paintLine(xpos+offset, font_info, builddate );
-	
 	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_CREATOR));
 	paintLine(xpos+offset, font_info, creator);
