@@ -116,13 +116,13 @@ libneutrino_gui_a_SOURCES = \
 	xmltv_setup.cpp \
 	zapit_setup.cpp
 
-#if BOXTYPE_ARMBOX
-#libneutrino_gui_a_SOURCES += \
-#	streaminfo2.cpp
-#else
+if BOXTYPE_COOL
 libneutrino_gui_a_SOURCES += \
 	streaminfo1.cpp
-#endif
+else
+libneutrino_gui_a_SOURCES += \
+	streaminfo2.cpp
+endif
 
 if ENABLE_EXTUPDATE
 libneutrino_gui_a_SOURCES += \
