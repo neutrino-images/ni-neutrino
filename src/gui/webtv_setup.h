@@ -31,7 +31,7 @@
 #define WEBTV_XML	CONFIGDIR "/webtv_usr.xml"
 #define WEBRADIO_XML	CONFIGDIR "/webradio_usr.xml"
 
-class CWebTVSetup : public CMenuTarget, CChangeObserver //NI
+class CWebTVSetup : public CMenuTarget, CChangeObserver
 {
 	private:
 		bool webradio;
@@ -44,7 +44,7 @@ class CWebTVSetup : public CMenuTarget, CChangeObserver //NI
 		CWebTVSetup();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
 		int Show();
-		bool changeNotify(const neutrino_locale_t OptionName, void *data); //NI
+		bool changeNotify(const neutrino_locale_t OptionName, void *data);
 
 		void webradio_xml_auto();
 		bool webradio_xml_autodir(std::string directory);

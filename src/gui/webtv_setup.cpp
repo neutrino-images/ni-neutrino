@@ -36,7 +36,6 @@
 #include <neutrino_menue.h>
 #include "webtv_setup.h"
 
-//NI
 #include <dirent.h>
 #include <mymenu.h>
 #include <system/helpers.h>
@@ -280,7 +279,6 @@ int CWebTVSetup::Show()
 	return res;
 }
 
-//NI
 bool CWebTVSetup::changeNotify(const neutrino_locale_t OptionName, void */*data*/)
 {
 	int ret = menu_return::RETURN_NONE;
@@ -294,7 +292,6 @@ bool CWebTVSetup::changeNotify(const neutrino_locale_t OptionName, void */*data*
 	return ret;
 }
 
-//NI
 int filefilter(const struct dirent *entry)
 {
 	int len = strlen(entry->d_name);
