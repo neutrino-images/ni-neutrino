@@ -30,8 +30,7 @@ config_DATA = \
 	settingsupdate.conf \
 	terrestrial.xml \
 	tobackup.conf \
-	webradio_usr.xml \
-	webtv_usr.xml
+	webradio_usr.xml
 
 install-data-hook:
 	$(INSTALL) -d $(DESTDIR)/$(CONFIGDIR)/zapit
