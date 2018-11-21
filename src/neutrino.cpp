@@ -338,6 +338,11 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	char cfg_value[20]; //NI mode_icons_flag
 	int erg = 0;
 
+	// execute migration script before loading configfile
+	puts("[neutrino.cpp] executing " NEUTRINO_CONF_MIGRATION_SCRIPT ".");
+	if (my_system(NEUTRINO_CONF_MIGRATION_SCRIPT) != 0)
+		perror(NEUTRINO_CONF_MIGRATION_SCRIPT " failed");
+
 	configfile.clear();
 	// load settings; setup defaults
 	if (!configfile.loadConfig(fname))
@@ -5685,9 +5690,4 @@ void CNeutrinoApp::migrateConfig(const char *fname)
 		configfile.deleteKey(from);
 	}
 	/* more complex migration, including converting values etc. could be done here */
-
-	//NI
-	puts("[neutrino.cpp] executing " NEUTRINO_NI_MIGRATION_SCRIPT ".");
-	if (my_system(NEUTRINO_NI_MIGRATION_SCRIPT) != 0)
-		perror(NEUTRINO_NI_MIGRATION_SCRIPT " failed");
 }

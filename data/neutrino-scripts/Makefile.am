@@ -1,10 +1,8 @@
-
 installdir = $(CONFIGDIR)
-install_DATA = flash.start
 
-#NI
-install_DATA += \
-	ni-migration.sh \
+install_DATA = \
+	flash.start \
+	migration.sh \
 	movieplayer.start \
 	movieplayer.end \
 	recording.start \
@@ -14,7 +12,7 @@ install_DATA += \
 
 install-data-hook:
 	chmod 0755 $(DESTDIR)$(CONFIGDIR)/flash.start
-	chmod 0755 $(DESTDIR)$(CONFIGDIR)/ni-migration.sh
+	chmod 0755 $(DESTDIR)$(CONFIGDIR)/migration.sh
 	chmod 0755 $(DESTDIR)$(CONFIGDIR)/movieplayer.start
 	chmod 0755 $(DESTDIR)$(CONFIGDIR)/movieplayer.end
 	chmod 0755 $(DESTDIR)$(CONFIGDIR)/recording.start
