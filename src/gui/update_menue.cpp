@@ -89,6 +89,7 @@ int CSoftwareUpdate::showSoftwareUpdate()
 	}
 
 	CFlashUpdate flash;
+	flash.enableNotify(false);
 	//online update
 	if (file_exists(g_settings.softupdate_url_file.c_str())) {
 		update_item = new CMenuForwarder(LOCALE_FLASHUPDATE_CHECKUPDATE_INTERNET, true, NULL, &flash, "inet", inetkey);
