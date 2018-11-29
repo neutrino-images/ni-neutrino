@@ -123,6 +123,7 @@ CFlashUpdate::CFlashUpdate()
 		sysfs = MTD_DEVICE_OF_UPDATE_PART;
 	dprintf(DEBUG_NORMAL, "[update] mtd partition to update: %s\n", sysfs.c_str());
 	notify = true;
+	gotImage = false;
 }
 
 
@@ -349,9 +350,11 @@ bool CFlashUpdate::selectHttpImage(void)
 	newVersion = versions[selected];
 	file_md5 = md5s[selected];
 	fileType = fileTypes[selected];
+	gotImage = (fileType <= '9');
 //NI #ifdef BOXMODEL_CS_HD2
 #if 0
-	if(fileType <= '2') {
+	if (gotImage)
+	{
 		int esize = CMTDInfo::getInstance()->getMTDEraseSize(sysfs);
 		dprintf(DEBUG_NORMAL, "[update] erase size is %x\n", esize);
 		if (esize == 0x40000) {
@@ -360,7 +363,7 @@ bool CFlashUpdate::selectHttpImage(void)
 	}
 #endif
 #if HAVE_ARM_HARDWARE
-	if ((fileType <= '2') && (filename.substr(filename.find_last_of(".") + 1) == "tgz"))
+	if (gotImage && (filename.substr(filename.find_last_of(".") + 1) == "tgz"))
 	{
 		// manipulate fileType for tgz-packages
 		fileType = 'Z';
@@ -413,7 +416,7 @@ bool CFlashUpdate::checkVersion4Update()
 		versionInfo = new CFlashVersionInfo(newVersion);//Memory leak: versionInfo
 		sprintf(msg, g_Locale->getText(msg_body), versionInfo->getType(true), versionInfo->getVersionString(), versionInfo->getDate(), versionInfo->getTime());
 
-		if (fileType <= '2')
+		if (gotImage)
 		{
 			if ((strncmp(RELEASE_CYCLE, versionInfo->getReleaseCycle(), 2) != 0) &&
 			    (ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_FLASHUPDATE_WRONGBASE, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_UPDATE) != CMsgBox::mbrYes))
@@ -569,7 +572,7 @@ int CFlashUpdate::exec(CMenuTarget* parent, const std::string &actionKey)
 		return menu_return::RETURN_REPAINT;
 	}
 	if(softupdate_mode==1) { //internet-update
-		if ( ShowMsg(LOCALE_MESSAGEBOX_INFO, ((fileType <= '2') || (fileType == 'Z')) ? LOCALE_FLASHUPDATE_INSTALL_IMAGE : LOCALE_FLASHUPDATE_INSTALL_PACKAGE, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_UPDATE) != CMsgBox::mbrYes)
+		if ( ShowMsg(LOCALE_MESSAGEBOX_INFO, gotImage ? LOCALE_FLASHUPDATE_INSTALL_IMAGE : LOCALE_FLASHUPDATE_INSTALL_PACKAGE, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_UPDATE) != CMsgBox::mbrYes)
 		{
 			hide();
 			return menu_return::RETURN_REPAINT;
@@ -579,7 +582,8 @@ int CFlashUpdate::exec(CMenuTarget* parent, const std::string &actionKey)
 	showGlobalStatus(60);
 
 	dprintf(DEBUG_NORMAL, "[update] flash/install filename %s type %c\n", filename.c_str(), fileType);
-	if(fileType <= '2') {
+	if (gotImage)
+	{
 		//flash it...
 #if ENABLE_EXTUPDATE
 #ifndef BOXMODEL_CS_HD2
