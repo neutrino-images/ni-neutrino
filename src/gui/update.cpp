@@ -324,7 +324,7 @@ bool CFlashUpdate::selectHttpImage(void)
 				CUpdateMenuTarget * up = new CUpdateMenuTarget(i, &selected);
 				mf = new CMenuDForwarder(descriptions[i].c_str(), enabled, names[i].c_str(), up);
 				//TODO mf->setHint(NEUTRINO_ICON_HINT_SW_UPDATE, "");
-				SelectionWidget.addItem(mf);
+				SelectionWidget.addItem(mf, i == 0); // first entry is preselected
 				i++;
 			}
 		}
