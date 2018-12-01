@@ -123,7 +123,7 @@ CFlashUpdate::CFlashUpdate()
 		sysfs = MTD_DEVICE_OF_UPDATE_PART;
 	dprintf(DEBUG_NORMAL, "[update] mtd partition to update: %s\n", sysfs.c_str());
 	notify = true;
-	gotImage = false;
+	gotImage = false; // NOTE: local update can't set gotImage variable!
 }
 
 
@@ -583,7 +583,7 @@ int CFlashUpdate::exec(CMenuTarget* parent, const std::string &actionKey)
 
 	dprintf(DEBUG_NORMAL, "[update] flash/install filename %s type %c\n", filename.c_str(), fileType);
 
-	if (gotImage && (fileType <= '9')) // flashing image
+	if (fileType <= '9') // flashing image
 	{
 #if ENABLE_EXTUPDATE
 #ifndef BOXMODEL_CS_HD2
@@ -617,7 +617,7 @@ int CFlashUpdate::exec(CMenuTarget* parent, const std::string &actionKey)
 		ft.reboot();
 	}
 #if HAVE_ARM_HARDWARE
-	else if (gotImage && (fileType == 'Z')) // flashing image with ofgwrite
+	else if (fileType == 'Z') // flashing image with ofgwrite
 	{
 		showGlobalStatus(100);
 
