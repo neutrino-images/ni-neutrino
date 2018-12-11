@@ -374,7 +374,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	//NI
 	g_settings.inetradio_autostart = configfile.getInt32("inetradio_autostart" , 0);
 	g_settings.lcd4l_support = configfile.getInt32("lcd4l_support" , 0);
-	g_settings.lcd4l_logodir = configfile.getString("lcd4l_logodir", LOGODIR);
+	g_settings.lcd4l_logodir = configfile.getString("lcd4l_logodir", "/media/sda1/logos");
 	g_settings.lcd4l_display_type = configfile.getInt32("lcd4l_display_type", 0);
 	g_settings.lcd4l_skin = configfile.getInt32("lcd4l_skin" , 0);
 	g_settings.lcd4l_skin_radio = configfile.getInt32("lcd4l_skin_radio" , 0);
