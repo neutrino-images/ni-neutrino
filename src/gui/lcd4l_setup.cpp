@@ -89,15 +89,16 @@ CLCD4lSetup::~CLCD4lSetup()
 {
 }
 
-int CLCD4lSetup::exec(CMenuTarget* parent, const std::string &actionkey)
+int CLCD4lSetup::exec(CMenuTarget *parent, const std::string &actionkey)
 {
 	printf("CLCD4lSetup::exec: actionkey %s\n", actionkey.c_str());
 	int res = menu_return::RETURN_REPAINT;
 
-        if (parent)
-                parent->hide();
+	if (parent)
+		parent->hide();
 
-	if (actionkey == "lcd4l_logodir") {
+	if (actionkey == "lcd4l_logodir")
+	{
 		const char *action_str = "lcd4l_logodir";
 		chooserDir(g_settings.lcd4l_logodir, false, action_str);
 		return menu_return::RETURN_REPAINT;
@@ -136,7 +137,7 @@ int CLCD4lSetup::show()
 	int temp_lcd4l_brightness = g_settings.lcd4l_brightness;
 
 	// lcd4l setup
-	CMenuWidget* lcd4lSetup = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_LCD4L_SETUP);
+	CMenuWidget *lcd4lSetup = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_LCD4L_SETUP);
 	lcd4lSetup->addIntroItems(LOCALE_LCD4L_SUPPORT);
 
 	mc = new CMenuOptionChooser(LOCALE_LCD4L_SUPPORT, &g_settings.lcd4l_support, LCD4L_SUPPORT_OPTIONS, LCD4L_SUPPORT_OPTION_COUNT, true, this, CRCInput::RC_red);
@@ -176,14 +177,14 @@ int CLCD4lSetup::show()
 
 	const char *flag_lcd4l_weather = FLAGDIR "/.lcd-weather";
 	int fake_lcd4l_weather = file_exists(flag_lcd4l_weather);
-	CTouchFileNotifier * lcd_weather = new CTouchFileNotifier(flag_lcd4l_weather);
+	CTouchFileNotifier *lcd_weather = new CTouchFileNotifier(flag_lcd4l_weather);
 	mc = new CMenuOptionChooser(LOCALE_LCD4L_WEATHER, &fake_lcd4l_weather, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, (file_exists("/share/lcd/scripts/weather")), lcd_weather, CRCInput::convertDigitToKey(shortcut++));
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_WEATHER);
 	lcd4lSetup->addItem(mc);
 
 	const char *flag_lcd4l_clock_a = FLAGDIR "/.lcd-clock_a";
 	int fake_lcd4l_clock_a = file_exists(flag_lcd4l_clock_a);
-	CTouchFileNotifier * lcd_clock_a = new CTouchFileNotifier(flag_lcd4l_clock_a);
+	CTouchFileNotifier *lcd_clock_a = new CTouchFileNotifier(flag_lcd4l_clock_a);
 	mc = new CMenuOptionChooser(LOCALE_LCD4L_CLOCK_A, &fake_lcd4l_clock_a, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, lcd_clock_a, CRCInput::convertDigitToKey(shortcut++));
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4L, LOCALE_MENU_HINT_LCD4L_CLOCK_A);
 	lcd4lSetup->addItem(mc);

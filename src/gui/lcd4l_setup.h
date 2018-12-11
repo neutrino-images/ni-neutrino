@@ -38,7 +38,7 @@ class CLCD4lSetup : public CMenuTarget, CChangeObserver
 	private:
 		CMenuOptionNumberChooser *nc;
 		CMenuOptionChooser *mc;
-		CMenuForwarder * mf;
+		CMenuForwarder *mf;
 
 		int width;
 		int show();
@@ -46,7 +46,7 @@ class CLCD4lSetup : public CMenuTarget, CChangeObserver
 	public:
 		CLCD4lSetup();
 		~CLCD4lSetup();
-		int exec(CMenuTarget* parent, const std::string &actionkey);
+		int exec(CMenuTarget *parent, const std::string &actionkey);
 		virtual bool changeNotify(const neutrino_locale_t OptionName, void * /*data*/);
 };
 
