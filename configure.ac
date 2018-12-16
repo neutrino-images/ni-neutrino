@@ -320,6 +320,7 @@ AC_SUBST(LIBCOOLSTREAM_STATIC_DIR)
 AC_OUTPUT([
 Makefile
 data/Makefile
+data/config/Makefile
 data/fonts/Makefile
 data/icons/Makefile
 data/icons/buttons/Makefile
