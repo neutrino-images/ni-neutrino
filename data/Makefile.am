@@ -12,7 +12,8 @@ SUBDIRS = \
 	themes \
 	webradio \
 	webtv \
-	y-web
+	y-web \
+	zapit
 
 if BOXTYPE_TRIPLE
 SUBDIRS += lcd
@@ -30,11 +31,3 @@ config_DATA = \
 	settingsupdate.conf \
 	terrestrial.xml \
 	tobackup.conf
-
-zapitdir = $(CONFIGDIR)/zapit
-
-zapit_DATA = \
-	myservices.xml
-
-#install-data-hook:
-#	$(INSTALL) -d $(DESTDIR)/$(CONFIGDIR)/zapit

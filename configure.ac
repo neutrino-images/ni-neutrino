@@ -369,6 +369,7 @@ data/y-web/jquery/Makefile
 data/y-web/languages/Makefile
 data/y-web/scripts/Makefile
 data/y-web/styles/Makefile
+data/zapit/Makefile
 lib/Makefile
 lib/connection/Makefile
 lib/hardware/coolstream/Makefile
