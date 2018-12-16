@@ -1301,6 +1301,14 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		if (g_settings.ttx_font_file == FONTDIR "/DejaVuLGCSansMono-Bold.ttf")
 			g_settings.ttx_font_file = FONTDIR "/tuxtxt.ttf";
 	}
+	if (g_settings.version_pseudo < "20181216000000")
+	{
+		// apply key changes; KEY_EXIT => KEY_HOME
+		if (g_settings.key_channelList_cancel == 174)
+			g_settings.key_channelList_cancel = 102;
+		if (g_settings.key_zaphistory == 174)
+			g_settings.key_zaphistory = 102;
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
@@ -5152,10 +5160,6 @@ void CNeutrinoApp::loadKeys(const char * fname)
 	g_settings.key_pageup = tconfig.getInt32( "key_channelList_pageup",  CRCInput::RC_page_up );
 	g_settings.key_pagedown = tconfig.getInt32( "key_channelList_pagedown", CRCInput::RC_page_down );
 	g_settings.key_channelList_cancel = tconfig.getInt32( "key_channelList_cancel",  CRCInput::RC_home );
-	// backward-compatible check
-	if (g_settings.key_channelList_cancel == 174) { /* KEY_EXIT */
-		g_settings.key_channelList_cancel = 102;    /* KEY_HOME */
-	}
 	g_settings.key_channelList_sort = tconfig.getInt32( "key_channelList_sort",  CRCInput::RC_blue );
 	g_settings.key_channelList_addrecord = tconfig.getInt32( "key_channelList_addrecord",  CRCInput::RC_red );
 	g_settings.key_channelList_addremind = tconfig.getInt32( "key_channelList_addremind",  CRCInput::RC_yellow );
