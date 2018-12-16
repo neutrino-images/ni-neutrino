@@ -2436,6 +2436,7 @@ const char * locale_real_names[] =
 	"remotebox_del",
 	"remotebox_head",
 	"remotebox_mod",
+	"remotebox_onoff",
 	"remotebox_pass",
 	"remotebox_port",
 	"remotebox_rbaddr",
