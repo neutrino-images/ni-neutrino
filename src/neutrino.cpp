@@ -2825,6 +2825,7 @@ TIMER_START();
 	CFileHelpers::createDir(FONTDIR_VAR);
 	CFileHelpers::createDir(ICONSDIR_VAR);
 	CFileHelpers::createDir(LOGODIR_VAR);
+	CFileHelpers::createDir(LOGODIR_VAR "/events");
 	CFileHelpers::createDir(LOCALEDIR_VAR);
 	CFileHelpers::createDir(THEMESDIR_VAR);
 	CFileHelpers::createDir(PLUGINDIR_VAR);
