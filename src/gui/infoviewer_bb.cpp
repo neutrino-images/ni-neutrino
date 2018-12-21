@@ -61,7 +61,7 @@
 #include <zapit/zapit.h>
 #include <zapit/capmt.h> //NI
 
-#include <video.h>
+#include <hardware/video.h>
 
 extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
 extern cVideo * videoDecoder;

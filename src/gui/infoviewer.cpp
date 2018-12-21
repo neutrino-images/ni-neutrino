@@ -76,7 +76,7 @@
 #include <zapit/femanager.h>
 #include <zapit/zapit.h>
 #include <eitd/sectionsd.h>
-#include <video.h>
+#include <hardware/video.h>
 
 //NI
 #include <driver/screen_max.h>

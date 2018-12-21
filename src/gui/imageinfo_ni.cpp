@@ -40,7 +40,7 @@
 #include <sys/utsname.h>
 
 #include <system/flashtool.h>
-#include <video.h>
+#include <hardware/video.h>
 #include <unistd.h>
 
 #include <fstream>
