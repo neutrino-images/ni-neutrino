@@ -99,6 +99,10 @@ extern CPictureViewer *g_PicViewer;
 #define FGCOLOR			LCD_DATADIR "fgcolor"
 #define BGCOLOR			LCD_DATADIR "bgcolor"
 
+#define FCOLOR1			LCD_DATADIR "fcolor1"
+#define FCOLOR2			LCD_DATADIR "fcolor2"
+#define PBCOLOR			LCD_DATADIR "pbcolor"
+
 #define FLAG_LCD4LINUX		"/tmp/.lcd4linux"
 #define PIDFILE			"/var/run/lcd4linux.pid"
 
@@ -290,6 +294,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	}
 
 	/* ----------------------------------------------------------------- */
+
 	std::string fgcolor	= hexStr(t.infobar_Text_red)
 				+ hexStr(t.infobar_Text_green)
 				+ hexStr(t.infobar_Text_blue)
@@ -312,6 +317,48 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	{
 		WriteFile(BGCOLOR, bgcolor);
 		m_bgcolor = bgcolor;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	std::string fcolor1	= hexStr(t.infobar_Text_red)
+				+ hexStr(t.infobar_Text_green)
+				+ hexStr(t.infobar_Text_blue)
+				+ hexStr(t.infobar_Text_alpha);
+
+	if (m_fcolor1.compare(fcolor1))
+	{
+		WriteFile(FCOLOR1, fcolor1);
+		m_fcolor1 = fcolor1;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	std::string fcolor2	= hexStr(t.colored_events_red)
+				+ hexStr(t.colored_events_green)
+				+ hexStr(t.colored_events_blue)
+				+ hexStr(t.colored_events_alpha);
+
+	if (!t.colored_events_infobar)
+		fcolor2 = fcolor1;
+
+	if (m_fcolor2.compare(fcolor2))
+	{
+		WriteFile(FCOLOR2, fcolor2);
+		m_fcolor2 = fcolor2;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	std::string pbcolor	= hexStr(t.menu_Content_Selected_red)
+				+ hexStr(t.menu_Content_Selected_green)
+				+ hexStr(t.menu_Content_Selected_blue)
+				+ hexStrA2A(t.menu_Content_Selected_alpha);
+
+	if (m_pbcolor.compare(pbcolor))
+	{
+		WriteFile(PBCOLOR, pbcolor);
+		m_pbcolor = pbcolor;
 	}
 
 	/* ----------------------------------------------------------------- */
