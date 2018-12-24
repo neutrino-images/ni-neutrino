@@ -68,6 +68,7 @@ class CLCD4l
 		bool		CompareParseID(uint64_t &i_ParseID);
 
 		std::string	hexStr(unsigned char data);
+		std::string	hexStrA2A(unsigned char data);
 		void		strReplace(std::string &orig, const std::string &fstr, const std::string &rstr);
 		bool		WriteFile(const char *file, std::string content = "", bool convert = false);
 

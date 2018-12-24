@@ -293,7 +293,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	std::string fgcolor	= hexStr(t.infobar_Text_red)
 				+ hexStr(t.infobar_Text_green)
 				+ hexStr(t.infobar_Text_blue)
-				+ hexStr(t.infobar_Text_alpha);
+				+ hexStrA2A(t.infobar_Text_alpha);
 
 	if (m_fgcolor.compare(fgcolor))
 	{
@@ -306,7 +306,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	std::string bgcolor	= hexStr(t.infobar_red)
 				+ hexStr(t.infobar_green)
 				+ hexStr(t.infobar_blue)
-				+ hexStr(t.infobar_alpha);
+				+ hexStrA2A(t.infobar_alpha);
 
 	if (m_bgcolor.compare(bgcolor))
 	{
@@ -1028,5 +1028,20 @@ std::string CLCD4l::hexStr(unsigned char data)
 {
 	char hexstr[3];
 	snprintf(hexstr, sizeof hexstr, "%02x", (int)data * 255 / 100);
+	return std::string(hexstr);
+}
+
+std::string CLCD4l::hexStrA2A(unsigned char data)
+{
+	char hexstr[3];
+	int a = 100 - data;
+	int ret = a * 0xFF / 100;
+
+	if(data == 0)
+		ret = 0xFF;
+	else if(data >= 100)
+		ret = 0x00;
+
+	snprintf(hexstr, sizeof hexstr, "%02x", ret);
 	return std::string(hexstr);
 }
