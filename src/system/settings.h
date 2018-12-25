@@ -969,6 +969,7 @@ struct SNeutrinoSettings
 		ITEM_TESTMENU = 37,		//NI
 		ITEM_FILEPLAY_AUDIO = 38,
 		ITEM_TIMESHIFT = 39,
+		ITEM_LCD4LINUX = 40,
 		ITEM_MAX // MUST be always the last in the list
 	} USER_ITEM;
 
