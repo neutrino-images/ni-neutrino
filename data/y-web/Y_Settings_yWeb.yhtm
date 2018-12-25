@@ -164,7 +164,7 @@ select {
 						<option value="9">AX | HD51</option>
 						<option value="10">Mutant | HD51</option>
 						<option value="11">WWIO | BRE2ZE 4K</option>
-						<option value="12">VU+ | Solo 4K</option>
+						<option value="12">VU | Solo 4K</option>
 					</select>
 				</td>
 				<td>{=L:set.yweb.screenshot_rc=}</td>
