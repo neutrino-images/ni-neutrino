@@ -474,8 +474,13 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		g_settings.enabled_auto_modes[i] = configfile.getInt32(cfg_key, 1);
 	}
 
+#ifdef CPU_FREQ
 	g_settings.cpufreq = configfile.getInt32("cpufreq", 0);
 	g_settings.standby_cpufreq = configfile.getInt32("standby_cpufreq", 100);
+#else
+	g_settings.cpufreq = 0;
+	g_settings.standby_cpufreq = 50;
+#endif
 	g_settings.rounded_corners = configfile.getInt32("rounded_corners", 0); //NI
 	g_settings.ci_standby_reset = configfile.getInt32("ci_standby_reset", 0);
 #if HAVE_ARM_HARDWARE
@@ -489,11 +494,6 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.ci_tuner = configfile.getInt32("ci_tuner", -1);
 	g_settings.ci_rec_zapto = configfile.getInt32("ci_rec_zapto", 0); //NI
 	g_settings.ci_mode = configfile.getInt32("ci_mode", 0); //NI
-
-#ifndef CPU_FREQ
-	g_settings.cpufreq = 0;
-	g_settings.standby_cpufreq = 50;
-#endif
 
 	g_settings.make_hd_list = configfile.getInt32("make_hd_list", 0);
 	g_settings.make_webtv_list = configfile.getInt32("make_webtv_list", 1);
