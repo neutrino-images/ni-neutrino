@@ -26,7 +26,6 @@
 
 #include <linux/types.h>
 #ifndef __KERNEL__
-#include <stdint.h>
 #include <time.h>
 #endif
 
@@ -154,7 +153,7 @@ struct video_status {
 
 
 struct video_still_picture {
-	char *iFrame;        /* pointer to a single iframe in memory */
+	char __user *iFrame;        /* pointer to a single iframe in memory */
 	__s32 size;
 };
 
@@ -187,7 +186,7 @@ typedef struct video_spu {
 
 typedef struct video_spu_palette {      /* SPU Palette information */
 	int length;
-	__u8 *palette;
+	__u8 __user *palette;
 } video_spu_palette_t;
 
 
