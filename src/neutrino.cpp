@@ -237,10 +237,9 @@ CNeutrinoApp::CNeutrinoApp()
 : configfile('\t')
 {
 	standby_pressed_at.tv_sec = 0;
-#if HAVE_TRIPLEDRAGON || USE_STB_HAL
+#if USE_STB_HAL
 	/* this needs to happen before the framebuffer is set up */
-	init_td_api();
-	// shutdown_td_api();
+	hal_api_init();
 #endif
 	osd_resolution_tmp        = -1;
 	frameBufferInitialized    = false;
