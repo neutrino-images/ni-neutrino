@@ -8,18 +8,16 @@ define(ver_micro, m4_esyscmd([
 	GITREV=$(git rev-list $GITTAG..HEAD --count);
 	printf "$GITREV"
 ]))
-define(neutrino_rel_cycle, ver_major.ver_minor)
+define(rel_cycle, "ver_major.0")
 
 AC_INIT(NI-Neutrino, ver_major.ver_minor.ver_micro)
 AM_INIT_AUTOMAKE([nostdinc foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
-AC_DEFINE(RELEASE_CYCLE, "ver_major.0", [Release cycle information; used in update code; only relevant for flash image releases ])
-
 AC_DEFINE(PACKAGE_VERSION_MAJOR, ver_major, [Major version number])
 AC_DEFINE(PACKAGE_VERSION_MINOR, ver_minor, [Minor version number])
 AC_DEFINE(PACKAGE_VERSION_MICRO, ver_micro, [Micro version number])
-AC_DEFINE(PACKAGE_VERSION_NEUTRINO_REL_CYCLE, neutrino_rel_cycle, [Neutrino release cycle])
+AC_DEFINE(PACKAGE_RELEASE_CYCLE, rel_cycle, [Release cycle information; used in update code; only relevant for flash image releases ])
 
 TUXBOX_APPS
 TUXBOX_APPS_DIRECTORY
