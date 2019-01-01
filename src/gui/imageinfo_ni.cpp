@@ -26,6 +26,10 @@
 #include <config.h>
 #endif
 
+#if HAVE_CONFIG_HAL_H
+#include <version_hal.h>
+#endif
+
 #include <gui/imageinfo_ni.h>
 
 #include <global.h>
@@ -82,11 +86,12 @@ static const neutrino_locale_t info_items[] =
 {
 	LOCALE_IMAGEINFO_IMAGE,
 	LOCALE_IMAGEINFO_VERSION,
+	LOCALE_IMAGEINFO_DATE,
 	LOCALE_IMAGEINFO_KERNEL,
 	LOCALE_IMAGEINFO_GUI,
+	/* libstb-hal: */
 	/* Lua-API: */
 	/* yWeb: */
-	LOCALE_IMAGEINFO_DATE,
 	LOCALE_IMAGEINFO_CREATOR,
 	LOCALE_IMAGEINFO_HOMEPAGE
 };
@@ -340,6 +345,12 @@ void CImageInfoNI::paint()
 	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_GUI));
 	paintLine(xpos+offset, font_info, guiversion.str());
+
+#if HAVE_CONFIG_HAL_H
+	ypos += iheight;
+	paintLine(xpos, font_info, "libstb-hal:");
+	paintLine(xpos+offset, font_info, getPackageVersion());
+#endif
 
 #ifdef ENABLE_LUA
 	ypos += iheight;
