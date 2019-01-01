@@ -327,7 +327,7 @@ int CMiscMenue::showMiscSettingsMenu()
 
 	// LCD4Linux Setup
 	CLCD4lSetup lcd4lSetup;
-	mf = new CMenuForwarder(LOCALE_LCD4L_SUPPORT, true, NULL, &lcd4lSetup, NULL, CRCInput::RC_7);
+	mf = new CMenuForwarder(LOCALE_LCD4L_SUPPORT, !find_executable("lcd4linux").empty(), NULL, &lcd4lSetup, NULL, CRCInput::RC_7);
 	mf->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SUPPORT);
 	misc_menue.addItem(mf);
 
