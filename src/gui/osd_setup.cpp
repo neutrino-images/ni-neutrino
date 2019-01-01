@@ -100,10 +100,8 @@ COsdSetup::COsdSetup(int wizard_mode)
 
 	width = 50;
 	show_menu_hints = 0;
-	show_tuner_icon = 0;
-
-	//NI
 	show_menu_hints_line = 0;
+	show_tuner_icon = 0;
 }
 
 COsdSetup::~COsdSetup()
@@ -128,7 +126,7 @@ size_t channellist_font_items = sizeof(channellist_font_sizes)/sizeof(channellis
 
 const SNeutrinoSettings::FONT_TYPES eventlist_font_sizes[] =
 {
-	//NI SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE,
+	//SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMSMALL,
 	SNeutrinoSettings::FONT_TYPE_EVENTLIST_DATETIME,
@@ -142,13 +140,13 @@ const SNeutrinoSettings::FONT_TYPES infobar_font_sizes[] =
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_CHANNAME,
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO,
 	SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL,
-	SNeutrinoSettings::FONT_TYPE_INFOBAR_ECMINFO //NI
+	SNeutrinoSettings::FONT_TYPE_INFOBAR_ECMINFO
 };
 size_t infobar_font_items = sizeof(infobar_font_sizes)/sizeof(infobar_font_sizes[0]);
 
 const SNeutrinoSettings::FONT_TYPES epg_font_sizes[] =
 {
-	//NI SNeutrinoSettings::FONT_TYPE_EPG_TITLE,
+	//SNeutrinoSettings::FONT_TYPE_EPG_TITLE,
 	SNeutrinoSettings::FONT_TYPE_EPG_INFO1,
 	SNeutrinoSettings::FONT_TYPE_EPG_INFO2,
 	SNeutrinoSettings::FONT_TYPE_EPG_DATE,
@@ -228,14 +226,14 @@ font_sizes_struct neutrino_font[SNeutrinoSettings::FONT_TYPE_COUNT] =
 	{LOCALE_FONTSIZE_INFOBAR_CHANNAME   ,  30, CNeutrinoFonts::FONT_STYLE_BOLD   , 0},
 	{LOCALE_FONTSIZE_INFOBAR_INFO       ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
 	{LOCALE_FONTSIZE_INFOBAR_SMALL      ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
-	{LOCALE_FONTSIZE_INFOBAR_ECMINFO    ,  15, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
+	{LOCALE_FONTSIZE_INFOBAR_ECMINFO    ,  15, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
 	{LOCALE_FONTSIZE_FILEBROWSER_ITEM   ,  17, CNeutrinoFonts::FONT_STYLE_REGULAR, 1},
 	{LOCALE_FONTSIZE_MENU_HINT          ,  16, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
-	{LOCALE_FONTSIZE_MOVIEBROWSER_HEAD  ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 2}, //NI
-	{LOCALE_FONTSIZE_MOVIEBROWSER_LIST  ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
-	{LOCALE_FONTSIZE_MOVIEBROWSER_INFO  ,  16, CNeutrinoFonts::FONT_STYLE_REGULAR, 0}, //NI
+	{LOCALE_FONTSIZE_MOVIEBROWSER_HEAD  ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 2},
+	{LOCALE_FONTSIZE_MOVIEBROWSER_LIST  ,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
+	{LOCALE_FONTSIZE_MOVIEBROWSER_INFO  ,  16, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
 	{LOCALE_FONTSIZE_SUBTITLES          ,  25, CNeutrinoFonts::FONT_STYLE_BOLD   , 0},
-	{LOCALE_FONTSIZE_MESSAGE_TEXT       ,  20, CNeutrinoFonts::FONT_STYLE_BOLD   , 0}, //NI
+	{LOCALE_FONTSIZE_MESSAGE_TEXT       ,  20, CNeutrinoFonts::FONT_STYLE_BOLD   , 0},
 	{LOCALE_FONTSIZE_BUTTON_TEXT        ,  14, CNeutrinoFonts::FONT_STYLE_REGULAR, 0},
 	{LOCALE_FONTSIZE_GENERAL_WINDOW_TEXT,  20, CNeutrinoFonts::FONT_STYLE_REGULAR, 1}
 };
@@ -615,7 +613,7 @@ int COsdSetup::showOsdSetup()
 	mf->setHint("", LOCALE_MENU_HINT_PROGRESSBAR);
 	osd_menu->addItem(mf);
 
-	//NI channellogos
+	//channellogos
 	CMenuWidget osd_menu_channellogos(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_OSDSETUP_CHANNELLOGOS);
 	showOsdChannellogosSetup(&osd_menu_channellogos);
 	mf = new CMenuForwarder(LOCALE_MISCSETTINGS_CHANNELLOGOS, true, NULL, &osd_menu_channellogos, NULL, CRCInput::convertDigitToKey(shortcut++));
@@ -712,7 +710,6 @@ int COsdSetup::showOsdSetup()
 		osd_menu->addItem(mc);
 	}
 
-//NI
 #if !defined BOXMODEL_CS_HD2
 	int scart_osd_fix_exist = 0;
 	if (file_exists("/var/etc/.scart_osd_fix"))
@@ -1194,7 +1191,7 @@ void COsdSetup::showOsdMenusSetup(CMenuWidget *menu_menus)
 	mc->setHint("", LOCALE_MENU_HINT_MENU_HINTS);
 	submenu_menus->addItem(mc);
 
-	//NI menu hints line (details_line) should always be last entry here
+	// menu hints line (details_line) should always be last entry here
 	show_menu_hints_line = g_settings.show_menu_hints_line;
 	mc = new CMenuOptionChooser(LOCALE_SETTINGS_MENU_HINTS_LINE, &show_menu_hints_line, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
 	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_MENU_HINTS_LINE);
@@ -1209,7 +1206,7 @@ const CMenuOptionChooser::keyval HDD_STATFS_OPTIONS[HDD_STATFS_OPTION_COUNT] =
 	{ SNeutrinoSettings::HDD_STATFS_RECORDING,      LOCALE_HDD_STATFS_RECORDING }
 };
 
-//NI ecm-Info
+// ecm-Info
 const CMenuOptionChooser::keyval INFOVIEWER_ECMINFO_OPTIONS[] =
 {
 	{ 0, LOCALE_OPTIONS_OFF },
@@ -1219,7 +1216,7 @@ const CMenuOptionChooser::keyval INFOVIEWER_ECMINFO_OPTIONS[] =
 };
 #define INFOVIEWER_ECMINFO_OPTION_COUNT (sizeof(INFOVIEWER_ECMINFO_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
-//NI channellogos
+// channellogos
 void COsdSetup::showOsdChannellogosSetup(CMenuWidget *menu_channellogos)
 {
 	menu_channellogos->addIntroItems(LOCALE_MISCSETTINGS_CHANNELLOGOS);
@@ -1272,7 +1269,7 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_BUTTONS_USERTITLE);
 	menu_infobar->addItem(mc);
 
-	//NI analog clock
+	// analog clock
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_ANALOGCLOCK, &g_settings.infobar_analogclock, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_ANALOGCLOCK);
 	menu_infobar->addItem(mc);
@@ -1299,7 +1296,7 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	mc->OnAfterChangeOption.connect(slot_ibar);
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_CASYS);
 	menu_infobar->addItem(mc);
-//NI
+
 #if 0
 	// CA system dotmatrix
 	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_CASYSTEM_DOTMATRIX, &g_settings.infobar_casystem_dotmatrix, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.infobar_casystem_display < 2);
@@ -1315,7 +1312,7 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	menu_infobar->addItem(mc);
 	casystemActivate.Add(mc);
 
-	//NI ecm-Info
+	// ecm-Info
 	mc = new CMenuOptionChooser(LOCALE_ECMINFO_SHOW, &g_settings.show_ecm_pos, INFOVIEWER_ECMINFO_OPTIONS, INFOVIEWER_ECMINFO_OPTION_COUNT, true, this);
 	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOBAR_ECMINFO);
 	menu_infobar->addItem(mc);
@@ -1607,14 +1604,14 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 		CVolumeHelper::getInstance()->refresh();
 		return false;
 	}
-	//NI menu_hints_line
+	// menu_hints_line
 	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_SETTINGS_MENU_HINTS_LINE))
 	{
 		submenu_menus->hide();
 		g_settings.show_menu_hints_line = * (int*) data;
 		return true;
 	}
-	//NI ecm-Info
+	// ecm-Info
 	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_ECMINFO_SHOW))
 	{
 		printf("g_settings.show_ecm_pos: %d\n", g_settings.show_ecm_pos);
