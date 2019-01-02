@@ -191,6 +191,24 @@ int CLCD4l::RemoveFile(const char *file)
 	return ret;
 }
 
+int CLCD4l::GetMaxBrightness()
+{
+	int max_brightness;
+
+	switch (g_settings.lcd4l_display_type)
+	{
+		case SAMSUNG:
+			max_brightness = 10;
+			break;
+		case PEARL:
+		default:
+			max_brightness = 7;
+			break;
+	}
+
+	return max_brightness;
+}
+
 /* ----------------------------------------------------------------- */
 
 void CLCD4l::Init()
