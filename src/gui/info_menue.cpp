@@ -34,10 +34,10 @@
 #include <neutrino.h>
 #include <neutrino_menue.h>
 
-#include <cs_api.h> //NI
-#include <gui/hdd_info.h> //NI
+#include <cs_api.h>
+#include <gui/hdd_info.h>
 #include <gui/info_menue.h>
-#include <gui/imageinfo_ni.h> //NI
+#include <gui/imageinfo_ni.h>
 #include <gui/dboxinfo.h>
 #if HAVE_COOL_HARDWARE
 #include <gui/streaminfo1.h>
@@ -47,37 +47,43 @@
 #if 0
 #include <gui/buildinfo.h>
 #endif
-#include <gui/widget/msgbox.h> //NI
+#include <gui/widget/msgbox.h>
 
 #include <driver/screen_max.h>
 #include "gui/cam_menu.h"
 
-extern CCAMMenuHandler * g_CamHandler;
+extern CCAMMenuHandler *g_CamHandler;
 
 CInfoMenu::CInfoMenu()
 {
-	width = 35; //NI
+	width = 35;
 }
 
 CInfoMenu::~CInfoMenu()
 {
 }
 
-int CInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey) //NI
+int CInfoMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 {
-	int   res = menu_return::RETURN_REPAINT;
+	int res = menu_return::RETURN_REPAINT;
 
 	if (parent != NULL)
 		parent->hide();
 
-	//NI
-	if (actionKey == "info")
+	if (actionKey == "cs_get_info")
 	{
+#if HAVE_COOL_HARDWARE
 		char str[1024];
 		sprintf(str, "cs_get_revision(): 0x%02X\n", cs_get_revision());
 		sprintf(str, "%scs_get_chip_type(): 0x%04X\n", str, cs_get_chip_type());
 		ShowMsg(LOCALE_MESSAGEBOX_INFO, str, CMsgBox::mbrBack, CMsgBox::mbBack);
 		return res;
+#endif
+	}
+	else if (actionKey == "imageinfo")
+	{
+		CImageInfoNI imageinfo;
+		return imageinfo.exec(NULL, "");
 	}
 
 	res = showMenu();
@@ -88,19 +94,20 @@ int CInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey) //NI
 int CInfoMenu::showMenu()
 {
 	CMenuWidget *info = new CMenuWidget(LOCALE_MESSAGEBOX_INFO, NEUTRINO_ICON_INFO, width, MN_WIDGET_ID_INFOMENUE);
-	info->addKey(CRCInput::RC_info, this, "info"); //NI
+	info->addKey(CRCInput::RC_help, this, "cs_get_info");
+	info->addKey(CRCInput::RC_info, this, "imageinfo");
 
-	CImageInfoNI imageinfo; //NI
+	CImageInfoNI imageinfo;
 	CDBoxInfoWidget boxinfo;
-	CHDDInfoMenu hddinfo; //NI
+	CHDDInfoMenu hddinfo;
 	CStreamInfo2 streaminfo;
 
 	info->addIntroItems();
-	CMenuForwarder * mf = new CMenuForwarder(LOCALE_SERVICEMENU_IMAGEINFO,  true, NULL, &imageinfo, NULL, CRCInput::RC_red);
+	CMenuForwarder *mf = new CMenuForwarder(LOCALE_SERVICEMENU_IMAGEINFO, true, NULL, &imageinfo, NULL, CRCInput::RC_red);
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGEINFO, LOCALE_MENU_HINT_IMAGEINFO);
 	info->addItem(mf);
 
-	mf = new CMenuForwarder(LOCALE_EXTRA_DBOXINFO,         true, NULL, &boxinfo, NULL, CRCInput::RC_green);
+	mf = new CMenuForwarder(LOCALE_EXTRA_DBOXINFO, true, NULL, &boxinfo, NULL, CRCInput::RC_green);
 	mf->setHint(NEUTRINO_ICON_HINT_DBOXINFO, LOCALE_MENU_HINT_DBOXINFO);
 	info->addItem(mf);
 
@@ -108,13 +115,14 @@ int CInfoMenu::showMenu()
 	mf = new CMenuForwarder(LOCALE_STREAMINFO_HEAD, _mode_ts || !CNeutrinoApp::getInstance()->channelList->isEmpty(), NULL, &streaminfo, NULL, CRCInput::RC_yellow);
 	mf->setHint(NEUTRINO_ICON_HINT_STREAMINFO, LOCALE_MENU_HINT_STREAMINFO);
 	info->addItem(mf);
+
 #if 0
 	CBuildInfo buildinfo;
-	mf = new CMenuForwarder(LOCALE_BUILDINFO_MENU,  true, NULL, &buildinfo, NULL, CRCInput::RC_blue);
+	mf = new CMenuForwarder(LOCALE_BUILDINFO_MENU, true, NULL, &buildinfo, NULL, CRCInput::RC_blue);
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGEINFO, LOCALE_MENU_HINT_BUILDINFO);
 	info->addItem(mf);
 #endif
-	//NI
+
 	mf = new CMenuForwarder(LOCALE_HDD_INFO_HEAD, true, NULL, &hddinfo, NULL, CRCInput::RC_blue);
 	mf->setHint(NEUTRINO_ICON_HINT_HDD_INFO, LOCALE_MENU_HINT_HDD_INFO);
 	info->addItem(mf);

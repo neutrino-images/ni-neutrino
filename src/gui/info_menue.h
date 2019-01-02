@@ -39,14 +39,14 @@ class CInfoMenu : public CMenuTarget
 {
 	private:
 		int width;
-		
+
 		int showMenu();
-		
-	public:	
+
+	public:
 		CInfoMenu();
 		~CInfoMenu();
-		
-		int exec(CMenuTarget* parent, const std::string & actionKey = "");
+
+		int exec(CMenuTarget *parent, const std::string &actionKey = "");
 };
 
 #endif
