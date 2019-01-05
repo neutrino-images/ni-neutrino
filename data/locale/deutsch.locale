@@ -1038,6 +1038,7 @@ lcd4l_brightness_standby Helligkeit im Standby-Modus
 lcd4l_clock_a Analog-Uhr im Standby-Modus
 lcd4l_convert Konvertiere Umlaute
 lcd4l_display_type Display-Typ
+lcd4l_display_type_setup Display-Typ einstellen
 lcd4l_logodir Senderlogo-Verzeichnis
 lcd4l_skin Display-Style
 lcd4l_skin_0 Standard
@@ -1388,9 +1389,10 @@ menu.hint_lcd4l_brightness Regelt die Helligkeit des externen Displays im Normal
 menu.hint_lcd4l_brightness_standby Regelt die Helligkeit des externen Displays im Standby-Modus
 menu.hint_lcd4l_clock_a Zeigt im Standby-Betrieb eine Analog-Uhr anstatt einer Digital-Uhr
 menu.hint_lcd4l_convert Konvertiert Umlaute für die eingebaute LCD4Linux-Schriftart
-menu.hint_lcd4l_display_type Wählen Sie den Typ den externen Displays
+menu.hint_lcd4l_display_type Wählen Sie den Typ des externen Displays
+menu.hint_lcd4l_display_type_setup Einstellungen für den Typ des externen Displays
 menu.hint_lcd4l_logodir Verzeichnis für eigene Senderlogos. Bei ungültigem Eintrag werden die Standard-Logos benutzt.
-menu.hint_lcd4l_skin Auswahl der verfügbaren Darstellungsarten\nStandard, Groß, SysInfo, d-box2, Benutzerdefiniert
+menu.hint_lcd4l_skin Auswahl der verfügbaren Darstellungsarten\nStandard, Benutzerdefiniert, etc.
 menu.hint_lcd4l_skin_radio Wechselt die Darstellungsart, wenn der Radio-Modus aktiviert wird
 menu.hint_lcd4l_support LCD4Linux aktivieren/deaktivieren\nUnterstützte Displays: Pearl DPF, Samsung SPF
 menu.hint_lcd4l_weather Zeigt im Standby-Betrieb die entsprechenden Daten des ersten Favoriteneintrags von tuxwetter auf dem Display an
