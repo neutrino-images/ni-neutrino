@@ -1309,6 +1309,12 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		if (g_settings.key_zaphistory == 174)
 			g_settings.key_zaphistory = 102;
 	}
+	if (g_settings.version_pseudo < "20190106000000")
+	{
+		// move lcd4linux user skin from value 4 to value 100
+		if (g_settings.lcd4l_skin == 4)
+			g_settings.lcd4l_skin = 100;
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);

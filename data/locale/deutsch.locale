@@ -1045,7 +1045,7 @@ lcd4l_skin_0 Standard
 lcd4l_skin_1 Groß
 lcd4l_skin_2 Klein (SysInfo)
 lcd4l_skin_3 d-box2
-lcd4l_skin_4 Benutzer
+lcd4l_skin_100 Benutzer
 lcd4l_skin_radio Radio-Style aktivieren
 lcd4l_support LCD4Linux-Unterstützung
 lcd4l_support_auto automatisch
