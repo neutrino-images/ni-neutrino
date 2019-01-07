@@ -770,6 +770,9 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 				case 100:
 					Layout = DisplayType + "user";
 					break;
+				case 4:
+					Layout = DisplayType + "xcam";
+					break;
 				case 3:
 					Layout = DisplayType + "d-box2";
 					break;

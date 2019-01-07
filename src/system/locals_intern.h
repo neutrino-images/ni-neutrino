@@ -1072,6 +1072,7 @@ const char * locale_real_names[] =
 	"lcd4l_skin_1",
 	"lcd4l_skin_2",
 	"lcd4l_skin_3",
+	"lcd4l_skin_4",
 	"lcd4l_skin_100",
 	"lcd4l_skin_radio",
 	"lcd4l_support",

@@ -78,6 +78,7 @@ const CMenuOptionChooser::keyval LCD4L_PEARL_SKIN_OPTIONS[] =
 	{ 1, LOCALE_LCD4L_SKIN_1 },
 	{ 2, LOCALE_LCD4L_SKIN_2 },
 	{ 3, LOCALE_LCD4L_SKIN_3 },
+	{ 4, LOCALE_LCD4L_SKIN_4 },
 	{ 100, LOCALE_LCD4L_SKIN_100 }
 };
 #define LCD4L_PEARL_SKIN_OPTION_COUNT (sizeof(LCD4L_PEARL_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
@@ -85,6 +86,7 @@ const CMenuOptionChooser::keyval LCD4L_PEARL_SKIN_OPTIONS[] =
 const CMenuOptionChooser::keyval LCD4L_SAMSUNG_SKIN_OPTIONS[] =
 {
 	{ 0, LOCALE_LCD4L_SKIN_0 },
+	{ 4, LOCALE_LCD4L_SKIN_4 },
 	{ 100, LOCALE_LCD4L_SKIN_100 }
 };
 #define LCD4L_SAMSUNG_SKIN_OPTION_COUNT (sizeof(LCD4L_SAMSUNG_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
