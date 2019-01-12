@@ -1433,6 +1433,7 @@ menu.hint_moviebrowser_setup Auswahl- und Anzeigeoptionen einstellen.
 menu.hint_movieplayer_bisection_jump Startwert für den bisektionalen Modus, um mit Seite hoch/runter vor- bzw. zurückzuspringen
 menu.hint_movieplayer_display_playtime Zeigt während der Wiedergabe die Spielzeit anstatt des Fimtitels im VFD
 menu.hint_movieplayer_plugin Wählen Sie ein Plugin, das mit einer Schnellstart-Taste im Movieplayer-Modus gestartet wird
+menu.hint_movieplayer_timeosd_while_searching Zeigt während des Spulens die aktuelle Spielzeit kurz auf dem OSD an
 menu.hint_net_broadcast Ändern Sie die Broadcast-Adresse.\nWenn Sie unsicher sind, verwenden Sie zuletzt .255
 menu.hint_net_dhcp Verwenden Sie einen DHCP-Server für die automatische Vergabe einer IP-Adresse im Netzwerk
 menu.hint_net_djmount Mountet UPnP-Geräte als Dateisystem unter /media/00upnp
@@ -2111,6 +2112,7 @@ movieplayer.help_button_pause Pause / Weiter
 movieplayer.help_button_stop Stopp
 movieplayer.plugin Movieplayer-Plugin
 movieplayer.starting Wiedergabe starten ...
+movieplayer.timeosd_while_searching Zeige Spielzeit während des Spulens
 movieplayer.titles Titel
 movieplayer.toomanybookmarks Sie haben bereits zu viele Lesezeichen angelegt.\nEs muß erst ein anderes gelöscht werden.
 movieplayer.tsplayback TS Abspielen

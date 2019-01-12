@@ -1433,6 +1433,7 @@ menu.hint_moviebrowser_setup Set selection and display options.
 menu.hint_movieplayer_bisection_jump Start value for bisectional mode to jump forward/backward with page up/down
 menu.hint_movieplayer_display_playtime While playback show playtime instead of movietitle on VFD
 menu.hint_movieplayer_plugin Choose a plugin that's executed with the one touch key in movieplayer mode
+menu.hint_movieplayer_timeosd_while_searching Shows playtime while searching for a short time on OSD
 menu.hint_net_broadcast Enter broadcast address\nif unsure, use IP address with last .255
 menu.hint_net_dhcp Use DHCP server to auto-configure
 menu.hint_net_djmount Mount UPnP devices as filesystem\nunder /media/00upnp
@@ -2111,6 +2112,7 @@ movieplayer.help_button_pause Pause / Continue
 movieplayer.help_button_stop Stop
 movieplayer.plugin Movieplayer plugin
 movieplayer.starting Starting playback ...
+movieplayer.timeosd_while_searching Show playtime while searching
 movieplayer.titles Titles
 movieplayer.toomanybookmarks There are too many bookmarks.\nYou need to delete one of them first.
 movieplayer.tsplayback Play TS

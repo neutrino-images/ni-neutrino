@@ -1586,7 +1586,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			if (playback->GetPosition(position, duration)) {
 				FileTimeOSD->update(position, duration);
 
-				if (FileTimeOSD_tmp > -1 && !FileTimeOSD->IsVisible())
+				if (FileTimeOSD_tmp > -1 && !FileTimeOSD->IsVisible() && g_settings.movieplayer_timeosd_while_searching)
 				{
 					FileTimeOSD->setMode(CTimeOSD::MODE_TMP);
 					FileTimeOSD->show(position);
