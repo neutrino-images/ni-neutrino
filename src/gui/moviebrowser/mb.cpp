@@ -2226,9 +2226,9 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 		else
 		{
 			showMenu();
-			//if (m_doLoadMovies)
+			if (m_doLoadMovies)
 				loadMovies();
-			//if (m_doRefresh)
+			if (m_doRefresh)
 				refresh();
 		}
 		saveSettings(&m_settings);
