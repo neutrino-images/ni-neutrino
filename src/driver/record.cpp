@@ -134,6 +134,7 @@ CRecordInstance::CRecordInstance(const CTimerd::RecordingInfo * const eventinfo,
 
 	Directory = dir;
 	autoshift = timeshift;
+	move_ts2rec = false;
 	numpids = 0;
 
 	cMovieInfo = new CMovieInfo();
@@ -324,7 +325,9 @@ bool CRecordInstance::Stop(bool remove_event)
 
 	CCamManager::getInstance()->Stop(channel_id, CCamManager::RECORD);
 
-	if (autoshift && g_settings.auto_delete)
+	if (autoshift && move_ts2rec)
+		CMoviePlayerGui::getInstance().moveTimeshift();
+	else if (autoshift && g_settings.auto_delete)
 		CMoviePlayerGui::getInstance().deleteTimeshift();
 
 	if(recording_id && remove_event) {
@@ -874,6 +877,7 @@ CRecordManager::CRecordManager()
 	durations.clear();
 	autoshift = false;
 	shift_timer = 0;
+	menu = NULL;
 //NI
 #if 0
 	check_timer = 0;
@@ -1512,6 +1516,20 @@ int CRecordManager::exec(CMenuTarget* parent, const std::string & actionKey )
 	{
 		StartTimeshift();
 		return menu_return::RETURN_EXIT_ALL;
+	} else if(actionKey == "Timeshift2Record")
+	{
+		for (recmap_iterator_t it = recmap.begin(); it != recmap.end(); it++)
+		{
+			CRecordInstance *inst = it->second;
+			if (inst->Timeshift())
+			{
+				inst->move_ts2rec = !inst->move_ts2rec;
+				CMenuItem* item = menu->getItem(menu->getSelected());
+				CMenuForwarder *f = static_cast<CMenuForwarder*>(item);
+				f->setInfoIconRight(inst->move_ts2rec ? NEUTRINO_ICON_MARKER_DIALOG_OK : NEUTRINO_ICON_MARKER_DIALOG_OFF);
+			}
+		}
+		return menu_return::RETURN_REPAINT;
 	} else if(actionKey == "Stop_record")
 	{
 		if (!CRecordManager::getInstance()->RecordingStatus())
@@ -1540,10 +1558,10 @@ bool CRecordManager::ShowMenu(void)
 
 	CMenuSelectorTarget * selector = new CMenuSelectorTarget(&select);
 
-	CMenuWidget menu(LOCALE_MAINMENU_RECORDING, NEUTRINO_ICON_RECORDING /*, width*/);
+	menu = new CMenuWidget(LOCALE_MAINMENU_RECORDING, NEUTRINO_ICON_RECORDING /*, width*/);
 	if (rec_count == 0)
-		menu.addKey(CRCInput::RC_stop, this, "Exit");
-	menu.addIntroItems(NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, CMenuWidget::BTN_TYPE_CANCEL);
+		menu->addKey(CRCInput::RC_stop, this, "Exit");
+	menu->addIntroItems(NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, CMenuWidget::BTN_TYPE_CANCEL);
 
 	// Record / Timeshift
 	t_channel_id live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
@@ -1553,19 +1571,31 @@ bool CRecordManager::ShowMenu(void)
 	//bool status_rec		= rec_mode & RECMODE_REC;
 
 	//record item
-	iteml = new CMenuForwarder(LOCALE_RECORDINGMENU_MULTIMENU_REC_AKT, true /*!status_rec*/, NULL,
-			this, "Record", CRCInput::RC_red);
+	iteml = new CMenuForwarder(LOCALE_RECORDINGMENU_MULTIMENU_REC_AKT, true /*!status_rec*/, NULL, this, "Record", CRCInput::RC_red);
 	//if no recordings are running, set the focus to the record menu item
-	menu.addItem(iteml, rec_count == 0 ? true: false);
+	menu->addItem(iteml, rec_count == 0 ? true: false);
 
-	//timeshift item
-	iteml = new CMenuForwarder(LOCALE_RECORDINGMENU_MULTIMENU_TIMESHIFT, !status_ts, NULL,
-			this, "Timeshift", CRCInput::RC_yellow);
-	menu.addItem(iteml, false);
-
-	if(rec_count > 0)
+	if (!status_ts)
 	{
-		menu.addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_MAINMENU_RECORDING_STOP));
+		//timeshift item
+		iteml = new CMenuForwarder(LOCALE_RECORDINGMENU_MULTIMENU_TIMESHIFT, true /*!status_ts*/, NULL, this, "Timeshift", CRCInput::RC_yellow);
+	}
+	else
+	{
+		//keep timeshift record
+		iteml = new CMenuForwarder(LOCALE_RECORDINGMENU_MULTIMENU_TIMESHIFT2RECORD, true /*status_ts*/, NULL, this, "Timeshift2Record", CRCInput::RC_yellow);
+		for (recmap_iterator_t it = recmap.begin(); it != recmap.end(); it++)
+		{
+			CRecordInstance *inst = it->second;
+			if (inst->Timeshift())
+				iteml->setInfoIconRight(inst->move_ts2rec ? NEUTRINO_ICON_MARKER_DIALOG_OK : NEUTRINO_ICON_MARKER_DIALOG_OFF);
+		}
+	}
+	menu->addItem(iteml, false);
+
+	if (rec_count > 0)
+	{
+		menu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_MAINMENU_RECORDING_STOP));
 		mutex.lock();
 
 		int i = 0 , shortcut = 1;
@@ -1587,7 +1617,8 @@ bool CRecordManager::ShowMenu(void)
 			//define stop key if only one record is running, otherwise define shortcuts
 			neutrino_msg_t rc_key = CRCInput::convertDigitToKey(shortcut++);
 			const char * btn_icon = NEUTRINO_ICON_BUTTON_OKAY;
-			if (rec_count == 1){
+			if (rec_count == 1)
+			{
 				rc_key = CRCInput::RC_stop;
 				btn_icon = NEUTRINO_ICON_BUTTON_STOP;
 			}
@@ -1595,25 +1626,24 @@ bool CRecordManager::ShowMenu(void)
 			item->setItemButton(btn_icon, true);
 
 			//if only one recording is running, set the focus to this menu item
-			menu.addItem(item, rec_count == 1 ? true: false);
+			menu->addItem(item, rec_count == 1 ? true: false);
 			i++;
 			if (i >= RECORD_MAX_COUNT)
 				break;
 		}
-		if(i > 1) //menu item "stopp all records"
+		if (i > 1) //menu item "stopp all records"
 		{
-			menu.addItem(GenericMenuSeparatorLine);
-			iteml = new CMenuForwarder(LOCALE_RECORDINGMENU_MULTIMENU_STOP_ALL, true, NULL,
-					this, "StopAll", CRCInput::RC_stop);
+			menu->addItem(GenericMenuSeparatorLine);
+			iteml = new CMenuForwarder(LOCALE_RECORDINGMENU_MULTIMENU_STOP_ALL, true, NULL, this, "StopAll", CRCInput::RC_stop);
 			iteml->setItemButton(NEUTRINO_ICON_BUTTON_STOP, true);
 
 			//if more than one recording is running, set the focus to menu item 'stopp all records'
-			menu.addItem(iteml, rec_count > 1 ? true: false);
+			menu->addItem(iteml, rec_count > 1 ? true: false);
 		}
 		mutex.unlock();
 	}
 
-	menu.exec(NULL, "");
+	menu->exec(NULL, "");
 	delete selector;
 
 	if (select >= 0 && select < RECORD_MAX_COUNT) {

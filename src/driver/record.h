@@ -131,6 +131,7 @@ class CRecordInstance
 		const char * GetFileName() { return filename; };
 		bool Timeshift() { return autoshift; };
 		int tshift_mode;
+		bool move_ts2rec;
 		void SetStopMessage(const char* text) {rec_stop_msg = text;} ;
 //NI
 #if 0
@@ -164,6 +165,8 @@ class CRecordManager : public CMenuTarget /*, public CChangeObserver*/
 		int		last_mode;
 		bool		autoshift;
 		uint32_t	shift_timer;
+		CMenuWidget	*menu;
+
 //NI
 #if 0
 		uint32_t	check_timer;

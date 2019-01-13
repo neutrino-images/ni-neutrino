@@ -596,6 +596,7 @@ void CMoviePlayerGui::Cleanup()
 	p_movie_info = NULL;
 	autoshot_done = false;
 	timeshift_deletion = false;
+	timeshift_to_record = false;
 	currentaudioname = "Unk";
 }
 
@@ -2072,18 +2073,47 @@ void CMoviePlayerGui::PlayFileEnd(bool restore)
 	stopped = true;
 	printf("%s: stopped\n", __func__);
 
-	if (timeshift_deletion && (file_name.find("_temp.ts") == file_name.size() - 8))
+	if (file_name.find("_temp.ts") == file_name.size() - 8)
 	{
-		std::string file = file_name;
-		printf("%s: delete %s\n", __func__, file.c_str());
-		unlink(file.c_str());
+		std::string ts_src = file_name;
+		std::string xml_src = file_name;
 		CMovieInfo mi;
-		if (mi.convertTs2XmlName(file))
+		if (!mi.convertTs2XmlName(xml_src))
+			xml_src.clear();
+
+		if (timeshift_to_record)
 		{
-			printf("%s: delete %s\n", __func__, file.c_str());
-			unlink(file.c_str());
+			if (g_settings.timeshiftdir != g_settings.network_nfs_recordingdir)
+			{
+				std::string ts_dst = g_settings.network_nfs_recordingdir + "/" + ts_src.substr(ts_src.find_last_of('/') + 1);
+				std::string xml_dst = g_settings.network_nfs_recordingdir + "/" + xml_src.substr(xml_src.find_last_of('/') + 1);;
+
+				str_replace("_temp", "_ts", ts_dst);
+				str_replace("_temp", "_ts", xml_dst);
+
+				printf("%s: move %s\n", __func__, ts_src.c_str());
+				printf("%s:   to %s\n", __func__, ts_dst.c_str());
+				rename(ts_src.c_str(), ts_dst.c_str());
+				if (!xml_src.empty())
+				{
+					printf("%s: move %s\n", __func__, xml_src.c_str());
+					printf("%s:   to %s\n", __func__, xml_dst.c_str());
+					rename(xml_src.c_str(), xml_dst.c_str());
+				}
+			}
+			timeshift_to_record = false;
 		}
-		timeshift_deletion = false;
+		else if (timeshift_deletion)
+		{
+			printf("%s: delete %s\n", __func__, ts_src.c_str());
+			unlink(ts_src.c_str());
+			if (!xml_src.empty())
+			{
+				printf("%s: delete %s\n", __func__, xml_src.c_str());
+				unlink(xml_src.c_str());
+			}
+			timeshift_deletion = false;
+		}
 	}
 
 	if (!filelist.empty() && filelist_it != filelist.end()) {
