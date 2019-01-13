@@ -1109,17 +1109,15 @@ void CInfoViewer::loop(bool show_dot)
 		showLivestreamInfo();
 
 		//NI
-		if (msg == CRCInput::RC_help && g_settings.show_ecm_pos)
-		{
-			if (g_settings.show_ecm)
-			{
-				g_settings.show_ecm = 0;
-				ecmInfoBox_hide();
-			}
-			else
-			{
-				g_settings.show_ecm = 1;
-				infoViewerBB->paint_ca_icons(0);
+		if (msg == CRCInput::RC_help) {
+			if (g_settings.show_ecm_pos) {
+				if (g_settings.show_ecm) {
+					g_settings.show_ecm = 0;
+					ecmInfoBox_hide();
+				} else {
+					g_settings.show_ecm = 1;
+					infoViewerBB->paint_ca_icons(0);
+				}
 			}
 			g_RCInput->clearRCMsg();
 			setInfobarTimeout();

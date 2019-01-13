@@ -2425,7 +2425,6 @@ const char * locale_real_names[] =
 	"recordingmenu.multimenu.rec_akt",
 	"recordingmenu.multimenu.stop_all",
 	"recordingmenu.multimenu.timeshift",
-	"recordingmenu.multimenu.timeshift2record",
 	"recordingmenu.off",
 	"recordingmenu.record_is_not_running",
 	"recordingmenu.record_is_running",
