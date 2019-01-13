@@ -2398,6 +2398,7 @@ recordingmenu.multimenu.info_stop_all %d von %d Aufnahmen werden beendet.
 recordingmenu.multimenu.rec_akt Starte Aufnahme
 recordingmenu.multimenu.stop_all Alle Aufnahmen beenden
 recordingmenu.multimenu.timeshift Starte Timeshift
+recordingmenu.multimenu.timeshift2record Behalte Timeshift-Aufnahme nach Beendigung
 recordingmenu.off aus
 recordingmenu.record_is_not_running Keine laufende Aufnahme verfügbar!
 recordingmenu.record_is_running Aufnahme läuft!

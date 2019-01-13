@@ -596,6 +596,7 @@ void CMoviePlayerGui::Cleanup()
 	p_movie_info = NULL;
 	autoshot_done = false;
 	timeshift_deletion = false;
+	timeshift_to_record = false;
 	currentaudioname = "Unk";
 }
 
@@ -2072,18 +2073,36 @@ void CMoviePlayerGui::PlayFileEnd(bool restore)
 	stopped = true;
 	printf("%s: stopped\n", __func__);
 
-	if (timeshift_deletion && (file_name.find("_temp.ts") == file_name.size() - 8))
+	if (file_name.find("_temp.ts") == file_name.size() - 8)
 	{
-		std::string file = file_name;
-		printf("%s: delete %s\n", __func__, file.c_str());
-		unlink(file.c_str());
+		std::string ts_file = file_name;
+		std::string xml_file;
 		CMovieInfo mi;
-		if (mi.convertTs2XmlName(file))
+		if (!mi.convertTs2XmlName(xml_file))
+			xml_file.clear();
+
+		if (timeshift_to_record)
 		{
-			printf("%s: delete %s\n", __func__, file.c_str());
-			unlink(file.c_str());
+			printf("%s: move %s\n", __func__, ts_file.c_str());
+			//move here
+			if (!xml_file.empty())
+			{
+				printf("%s: move %s\n", __func__, xml_file.c_str());
+				//move here
+			}
+			timeshift_to_record = false;
 		}
-		timeshift_deletion = false;
+		else if (timeshift_deletion)
+		{
+			printf("%s: delete %s\n", __func__, ts_file.c_str());
+			unlink(ts_file.c_str());
+			if (!xml_file.empty())
+			{
+				printf("%s: delete %s\n", __func__, xml_file.c_str());
+				unlink(xml_file.c_str());
+			}
+			timeshift_deletion = false;
+		}
 	}
 
 	if (!filelist.empty() && filelist_it != filelist.end()) {

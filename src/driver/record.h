@@ -131,6 +131,7 @@ class CRecordInstance
 		const char * GetFileName() { return filename; };
 		bool Timeshift() { return autoshift; };
 		int tshift_mode;
+		bool move_ts2rec;
 		void SetStopMessage(const char* text) {rec_stop_msg = text;} ;
 //NI
 #if 0
