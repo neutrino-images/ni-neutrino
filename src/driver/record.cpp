@@ -176,6 +176,18 @@ void CRecordInstance::WaitRecMsg(time_t StartTime, time_t WaitTime)
 		usleep(100000);
 }
 
+#if HAVE_ARM_HARDWARE
+void recordingFailureHelper(void *data)
+{
+	CRecordInstance *inst = (CRecordInstance *) data;
+	std::string errormsg = std::string(g_Locale->getText(LOCALE_RECORDING_FAILED)) + "\n" + std::string(inst->GetFileName());
+	CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, errormsg.c_str());
+	hintBox.paint();
+	sleep(3);
+	hintBox.hide();
+}
+#endif
+
 //NI
 #if 0
 int CRecordInstance::GetStatus()
@@ -263,8 +275,15 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 		apids[numpids++] = allpids.PIDs.pmtpid;
 #endif
 
+#if HAVE_ARM_HARDWARE
+	if(record == NULL) {
+		record = new cRecord(channel->getRecordDemux(), g_settings.recording_bufsize_dmx * 1024 * 1024, g_settings.recording_bufsize * 1024 * 1024);
+		record->setFailureCallback(&recordingFailureHelper, this);
+	}
+#else
 	if(record == NULL)
 		record = new cRecord(channel->getRecordDemux() /*RECORD_DEMUX*/);
+#endif
 
 	record->Open();
 
