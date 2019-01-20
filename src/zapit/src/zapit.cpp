@@ -2347,13 +2347,14 @@ bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 	audioDemux->Stop();
 	audioDecoder->Stop();
 #else
+	videoDecoder->Stop(false);
 	videoDemux->Stop();
 	audioDemux->Stop();
 	pcrDemux->Stop();
 	audioDecoder->Stop();
 
 	/* hack. if standby, dont blank video -> for paused timeshift */
-	videoDecoder->Stop(standby ? false : blank);
+	//videoDecoder->Stop(standby ? false : blank);
 #endif
 #ifdef USE_VBI
 	videoDecoder->StopVBI();
