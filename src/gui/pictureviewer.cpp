@@ -79,9 +79,11 @@
 #include <hardware/video.h>
 extern cVideo * videoDecoder;
 
-
 //NI InfoIcons
 #include <gui/infoicons.h>
+
+#define PICTUREVIEWER_START_SCRIPT CONFIGDIR "/pictureviewer.start"
+#define PICTUREVIEWER_END_SCRIPT CONFIGDIR "/pictureviewer.end"
 
 //------------------------------------------------------------------------
 bool comparePictureByDate (const CPicture& a, const CPicture& b)
@@ -192,6 +194,10 @@ int CPictureViewerGui::exec(CMenuTarget* parent, const std::string & actionKey)
 	if (parent)
 		parent->hide();
 
+	puts("[pictureviewer.cpp] executing " PICTUREVIEWER_START_SCRIPT ".");
+	if (my_system(PICTUREVIEWER_START_SCRIPT) != 0)
+		perror(PICTUREVIEWER_START_SCRIPT " failed");
+
 	// remember last mode
 	m_LastMode = CNeutrinoApp::getInstance()->getMode();
 	// tell neutrino we're in pic_mode
@@ -224,6 +230,10 @@ int CPictureViewerGui::exec(CMenuTarget* parent, const std::string & actionKey)
 		//g_Zapit->unlockPlayBack();
 		CZapit::getInstance()->EnablePlayback(true);
 	}
+
+	puts("[pictureviewer.cpp] executing " PICTUREVIEWER_END_SCRIPT ".");
+	if (my_system(PICTUREVIEWER_END_SCRIPT) != 0)
+		perror(PICTUREVIEWER_END_SCRIPT " failed");
 
 	// Restore previous background
 	if (usedBackground) {
