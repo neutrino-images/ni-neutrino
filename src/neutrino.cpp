@@ -2843,6 +2843,7 @@ TIMER_START();
 	cHddStat::getInstance();
 
 	//NI create userdirs
+	CFileHelpers::createDir(CONTROLDIR_VAR);
 	CFileHelpers::createDir(FONTDIR_VAR);
 	CFileHelpers::createDir(ICONSDIR_VAR);
 	CFileHelpers::createDir(LOGODIR_VAR);
