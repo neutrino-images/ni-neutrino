@@ -44,6 +44,7 @@ TOBACKUP="\
 	/var/tuxbox/config/webtv_usr.xml \
 	/var/tuxbox/config/Y-Web.conf \
 	/var/tuxbox/config/zapit/ \
+	/var/tuxbox/control/ \
 	/var/tuxbox/fonts/ \
 	/var/tuxbox/httpd/ \
 	/var/tuxbox/icons/ \
