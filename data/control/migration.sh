@@ -22,3 +22,35 @@ if [ -e neutrino.conf ]; then
 	sort neutrino.conf > neutrino.sort
 	mv neutrino.sort neutrino.conf
 fi
+
+controlscripts="\
+	audioplayer.start \
+	audioplayer.end \
+	deepstandby.on \
+	deepstandby.off \
+	inactivity.on \
+	movieplayer.start \
+	movieplayer.end \
+	neutrino.start \
+	pictureviewer.start \
+	pictureviewer.end \
+	recording.timer \
+	recording.start \
+	recording.end \
+	scan.start \
+	scan.stop \
+	standby.on \
+	standby.off \
+"
+
+mkdir -p /var/tuxbox/control/
+for controlscript in $controlscripts; do
+	echo $controlscript
+	if [ -e $controlscript ]; then
+		mv $controlscript /var/tuxbox/control/
+	fi
+done
+
+# these control scripts hasn't counterparts in /var
+rm -f migration.sh
+rm -f flash.start
