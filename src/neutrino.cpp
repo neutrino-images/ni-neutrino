@@ -338,9 +338,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	int erg = 0;
 
 	// execute migration script before loading configfile
-	puts("[neutrino.cpp] executing " NEUTRINO_CONF_MIGRATION_SCRIPT ".");
-	if (my_system(NEUTRINO_CONF_MIGRATION_SCRIPT) != 0)
-		perror(NEUTRINO_CONF_MIGRATION_SCRIPT " failed");
+	my_system(NEUTRINO_CONF_MIGRATION_SCRIPT);
 
 	configfile.clear();
 	// load settings; setup defaults
@@ -2551,11 +2549,7 @@ bool is_wakeup()
 	printf("[timerd] wakeup from standby: %s\n", wakeup ? "yes" : "no");
 
 	if (!wakeup)
-	{
-		puts("[neutrino.cpp] executing " NEUTRINO_LEAVE_DEEPSTANDBY_SCRIPT ".");
-		if (my_system(NEUTRINO_LEAVE_DEEPSTANDBY_SCRIPT) != 0)
-			perror(NEUTRINO_LEAVE_DEEPSTANDBY_SCRIPT " failed");
-	}
+		exec_controlscript(NEUTRINO_LEAVE_DEEPSTANDBY_SCRIPT);
 
 	return wakeup;
 }
@@ -2564,9 +2558,7 @@ int CNeutrinoApp::run(int argc, char **argv)
 {
 	neutrino_start_time = time_monotonic();
 
-	puts("[neutrino] executing " NEUTRINO_APP_START_SCRIPT ".");
-	if (my_system(NEUTRINO_APP_START_SCRIPT) != 0)
-		perror(NEUTRINO_APP_START_SCRIPT " failed");
+	exec_controlscript(NEUTRINO_APP_START_SCRIPT);
 
 	CmdParser(argc, argv);
 
@@ -3937,7 +3929,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::ANNOUNCE_RECORD) {
-		my_system(NEUTRINO_RECORDING_TIMER_SCRIPT);
+		exec_controlscript(NEUTRINO_RECORDING_TIMER_SCRIPT);
 		CTimerd::RecordingInfo * eventinfo = (CTimerd::RecordingInfo *) data;
 		if (g_settings.recording_type == RECORDING_FILE) {
 			char * recordingDir = eventinfo->recordingDir;
@@ -4278,9 +4270,7 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	g_settings.shutdown_timer_record_type = timer_is_rec;
 	saveSetup(NEUTRINO_SETTINGS_FILE);
 
-	puts("[neutrino.cpp] executing " NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT ".");
-	if (my_system(NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT) != 0)
-		perror(NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT " failed");
+	exec_controlscript(NEUTRINO_ENTER_DEEPSTANDBY_SCRIPT);
 
 	printf("entering off state\n");
 	mode = NeutrinoModes::mode_off;
@@ -4579,9 +4569,7 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 		//remember tuned channel-id
 		standby_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 
-		puts("[neutrino.cpp] executing " NEUTRINO_ENTER_STANDBY_SCRIPT ".");
-		if (my_system(NEUTRINO_ENTER_STANDBY_SCRIPT) != 0)
-			perror(NEUTRINO_ENTER_STANDBY_SCRIPT " failed");
+		exec_controlscript(NEUTRINO_ENTER_STANDBY_SCRIPT);
 
 		//NI InfoIcons
                 if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
@@ -4637,9 +4625,7 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 		if (g_info.hw_caps->has_fan)
 			CFanControlNotifier::setSpeed(g_settings.fan_speed);
 
-		puts("[neutrino.cpp] executing " NEUTRINO_LEAVE_STANDBY_SCRIPT ".");
-		if (my_system(NEUTRINO_LEAVE_STANDBY_SCRIPT) != 0)
-			perror(NEUTRINO_LEAVE_STANDBY_SCRIPT " failed");
+		exec_controlscript(NEUTRINO_LEAVE_STANDBY_SCRIPT);
 
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->setBacklight(g_settings.backlight_tv);
