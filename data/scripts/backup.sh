@@ -40,8 +40,6 @@ TOBACKUP="\
 	/var/tuxbox/config/timerd.conf \
 	/var/tuxbox/config/tuxcal/ \
 	/var/tuxbox/config/tuxmail/ \
-	/var/tuxbox/config/webradio_usr.xml \
-	/var/tuxbox/config/webtv_usr.xml \
 	/var/tuxbox/config/Y-Web.conf \
 	/var/tuxbox/config/zapit/ \
 	/var/tuxbox/control/ \
