@@ -45,7 +45,6 @@ controlscripts="\
 
 mkdir -p /var/tuxbox/control/
 for controlscript in $controlscripts; do
-	echo $controlscript
 	if [ -e $controlscript ]; then
 		mv $controlscript /var/tuxbox/control/
 	fi
