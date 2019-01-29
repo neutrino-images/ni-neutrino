@@ -1,4 +1,3 @@
-version=2.9.0.40
-date=01.03.2017
-type=Release
+version=2.9.0.41
+date=29.01.2019
 info=NI-Neutrino

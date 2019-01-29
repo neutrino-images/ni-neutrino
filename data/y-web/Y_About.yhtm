@@ -15,7 +15,7 @@
 		</tr><tr>			
 			<td valign="top">&nbsp;</td>
 			<td valign="top">
-				v{=ini-get:{=var-get:vf=};version=} - {=ini-get:{=var-get:vf=};date=} - {=ini-get:{=var-get:vf=};type=} - {=ini-get:{=var-get:vf=};info=}
+				v{=ini-get:{=var-get:vf=};version=} - {=ini-get:{=var-get:vf=};date=} - {=ini-get:{=var-get:vf=};info=}
 				<br/><br/>
 			</td>
 		</tr>

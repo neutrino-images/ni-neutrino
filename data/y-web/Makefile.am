@@ -156,4 +156,3 @@ install-data-hook:
 	;
 	@# NI-yWeb
 	cp $(DESTDIR)$(PRIVATE_HTTPDDIR)/styles/Y_Dist-NI_dark.css $(DESTDIR)$(PRIVATE_HTTPDDIR)/Y_Dist.css
-	sed -i 's|version=\(.*\)|version=\1 by NI|' $(DESTDIR)$(PRIVATE_HTTPDDIR)/Y_Version.txt
