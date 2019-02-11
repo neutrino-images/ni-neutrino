@@ -138,3 +138,5 @@ shadow_red=0
 shadow_green=0
 shadow_blue=0
 shadow_alpha=25
+
+rounded_corners=0
