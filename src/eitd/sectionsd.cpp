@@ -1274,9 +1274,9 @@ static void commandWriteSI2XML(int connfd, char *data, const unsigned dataLength
 
 	data[dataLength] = '\0';
 
-	xprintf("[sectionsd] writeEventsToFile started\n"); //NI
+	debug(DEBUG_INFO, "[sectionsd] writeEventsToFile started");
 	writeEventsToFile(data);
-	xprintf("[sectionsd] writeEventsToFile finished\n"); //NI
+	debug(DEBUG_INFO, "[sectionsd] writeEventsToFile finished\n");
 
 	eventServer->sendEvent(CSectionsdClient::EVT_WRITE_SI_FINISHED, CEventServer::INITID_SECTIONSD);
 }
@@ -2131,7 +2131,7 @@ bool CSdtThread::addServices()
 /* helper function for the housekeeping-thread */
 static void print_meminfo(void)
 {
-	if (!sections_debug >= DEBUG_DEBUG)
+	if (!(sections_debug >= DEBUG_DEBUG))
 		return;
 
 	comp_malloc_stats(NULL);
