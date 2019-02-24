@@ -101,9 +101,9 @@ void CImageInfoNI::Init(void)
 {
 	frameBuffer	= CFrameBuffer::getInstance();
 
-	font_head	= SNeutrinoSettings::FONT_TYPE_INFOBAR_CHANNAME;;
-	font_small	= SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL;
+	font_head	= SNeutrinoSettings::FONT_TYPE_MENU_TITLE;
 	font_info	= SNeutrinoSettings::FONT_TYPE_MENU;
+	font_small	= SNeutrinoSettings::FONT_TYPE_MENU_INFO;
 
 	hheight		= g_Font[font_head]->getHeight();
 	iheight		= g_Font[font_info]->getHeight();
