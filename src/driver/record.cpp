@@ -68,7 +68,9 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
-#if (LIBAVCODEC_VERSION_INT < AV_VERSION_INT( 57, 8, 0 ))
+#if (LIBAVCODEC_VERSION_MAJOR > 55)
+#define	av_free_packet av_packet_unref
+#else
 #define av_packet_unref	av_free_packet
 #endif
 
@@ -2259,8 +2261,10 @@ bool CStreamRec::Open(CZapitChannel * channel)
 	}
 
 	//av_log_set_level(AV_LOG_VERBOSE);
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 9, 100)
 	av_register_all();
 	avcodec_register_all();
+#endif
 	avformat_network_init();
 	printf("%s: Open input [%s]....\n", __FUNCTION__, url.c_str());
 
