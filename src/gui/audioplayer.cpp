@@ -1837,6 +1837,7 @@ void CAudioPlayerGui::paintCover()
 			cover_object->paint();
 
 			m_cover_width = cover_object->getWidth() + OFFSET_INNER_MID;
+			delete cover_object;
 		}
 	}
 }
@@ -1963,6 +1964,7 @@ void CAudioPlayerGui::paintDetailsLine(int pos)
 	if (m_detailsline != NULL)
 	{
 		m_detailsline->kill();
+		delete m_detailsline;
 		m_detailsline = NULL;
 	}
 
