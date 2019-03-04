@@ -273,6 +273,8 @@ camd_msg_start camd wird gestartet
 camd_msg_stop camd wird gestoppt
 camd_reset camd neu starten
 channellist.additional Zusatzinformationen
+channellist.additional_desc Beschreibung
+channellist.additional_list Event-Liste
 channellist.additional_off aus
 channellist.additional_on ein
 channellist.additional_on_minitv ein (mit MiniTV)

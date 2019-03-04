@@ -300,6 +300,8 @@ const char * locale_real_names[] =
 	"camd_msg_stop",
 	"camd_reset",
 	"channellist.additional",
+	"channellist.additional_desc",
+	"channellist.additional_list",
 	"channellist.additional_off",
 	"channellist.additional_on",
 	"channellist.additional_on_minitv",
