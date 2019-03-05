@@ -1328,6 +1328,10 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		g_settings.timeshift_delete = configfile.getInt32("auto_delete", 1);
 		configfile.deleteKey("auto_delete");
 	}
+	if (g_settings.version_pseudo < "20190305000000")
+	{
+		configfile.deleteKey("channellist_primetime");
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
