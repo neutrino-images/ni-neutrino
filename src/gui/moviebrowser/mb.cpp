@@ -2094,7 +2094,11 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 								refresh();
 					}
 					if (tmdb)
+					{
+						tmdb->cleanup();
 						delete tmdb;
+						tmdb = NULL;
+					}
 				}
 			}
 		}
