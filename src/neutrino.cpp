@@ -94,6 +94,7 @@
 #include "gui/update_check.h"
 #include "gui/videosettings.h"
 #include "gui/audio_select.h"
+#include <gui/weather.h>
 #include "gui/webtv_setup.h" //NI
 
 #include "gui/widget/hintbox.h"
@@ -1007,10 +1008,21 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.movieplayer_timeosd_while_searching = configfile.getInt32("movieplayer_timeosd_while_searching", 1);
 
 	//online services
+	///weather
+	g_settings.weather_api_key = WEATHER_DEV_KEY;
+#if ENABLE_WEATHER_KEY_MANAGE
+	g_settings.weather_api_key = configfile.getString("weather_api_key", g_settings.weather_api_key.empty() ? "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" : g_settings.weather_api_key);
+#endif
+	g_settings.weather_enabled = configfile.getInt32("weather_enabled", 1);
+	g_settings.weather_enabled = g_settings.weather_enabled && CApiKey::check_weather_api_key();
+
+	g_settings.weather_location = configfile.getString("weather_location", "52.52,13.40" );
+	g_settings.weather_city = configfile.getString("weather_city", "Berlin" );
+
 	///youtube
 	g_settings.youtube_dev_id = YT_DEV_KEY;
 #if ENABLE_YOUTUBE_KEY_MANAGE
-	g_settings.youtube_dev_id = configfile.getString("youtube_dev_id", g_settings.youtube_dev_id .empty() ? "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" : g_settings.youtube_dev_id);
+	g_settings.youtube_dev_id = configfile.getString("youtube_dev_id", g_settings.youtube_dev_id.empty() ? "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" : g_settings.youtube_dev_id);
 #endif
 	g_settings.youtube_enabled = configfile.getInt32("youtube_enabled", 1);
 	g_settings.youtube_enabled = g_settings.youtube_enabled && CApiKey::check_youtube_dev_id();
@@ -1811,6 +1823,14 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32( "movieplayer_timeosd_while_searching", g_settings.movieplayer_timeosd_while_searching );
 
 	//online services
+#if ENABLE_WEATHER_KEY_MANAGE
+	configfile.setString( "weather_api_key", g_settings.weather_api_key );
+#endif
+	configfile.setInt32( "weather_enabled", g_settings.weather_enabled );
+
+	configfile.setString( "weather_location", g_settings.weather_location );
+	configfile.setString( "weather_city", g_settings.weather_city );
+
 #if ENABLE_YOUTUBE_KEY_MANAGE
 	configfile.setString( "youtube_dev_id", g_settings.youtube_dev_id );
 #endif
@@ -2872,6 +2892,8 @@ TIMER_START();
 	CFileHelpers::createDir(WEBRADIODIR_VAR);
 	CFileHelpers::createDir(WEBTVDIR_VAR);
 	CFileHelpers::createDir(PUBLIC_HTTPDDIR);
+
+	CWeather::getInstance()->setCoords(g_settings.weather_location, g_settings.weather_city);
 
 TIMER_STOP("################################## after all ##################################");
 	if (g_settings.softupdate_autocheck) {
