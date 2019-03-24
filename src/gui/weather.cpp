@@ -97,7 +97,7 @@ bool CWeather::GetWeatherDetails()
 	if (!g_settings.weather_enabled)
 		return false;
 
-	std::string data = "https://api.darksky.net/forecast/" + key + "/" + coords + "?units=si&lang=de&exclude=minutely,hourly,flags,alerts";
+	std::string data = "https://api.darksky.net/forecast/" + key + "/" + coords + "?units=ca&lang=de&exclude=minutely,hourly,flags,alerts";
 	std::string answer;
 	double found = 0;
 
