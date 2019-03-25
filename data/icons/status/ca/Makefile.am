@@ -4,9 +4,6 @@ install_DATA = \
 	biss_green.png \
 	biss_white.png \
 	biss_yellow.png \
-	cccam_green.png \
-	ci+_green.png \
-	ci+_grey.png \
 	conax_green.png \
 	conax_white.png \
 	conax_yellow.png \
@@ -16,37 +13,21 @@ install_DATA = \
 	d_green.png \
 	d_white.png \
 	d_yellow.png \
-	dec_card.png \
-	dec_fta.png \
-	dec_int.png \
-	dec_na.png \
-	dec_net.png \
-	doscam_green.png \
-	doscam_yellow.png \
-	gbox_green.png \
 	ird_green.png \
 	ird_white.png \
 	ird_yellow.png \
-	mgcamd_green.png \
 	nagra_green.png \
 	nagra_white.png \
 	nagra_yellow.png \
-	ncam_green.png \
 	nds_green.png \
 	nds_white.png \
 	nds_yellow.png \
-	newcs_green.png \
-	oscam_green.png \
-	oscam_yellow.png \
-	osemu_green.png \
-	osemu_yellow.png \
 	powervu_green.png \
 	powervu_white.png \
 	powervu_yellow.png \
 	seca_green.png \
 	seca_white.png \
 	seca_yellow.png \
-	srv_green.png \
 	tan_green.png \
 	tan_white.png \
 	tan_yellow.png \
