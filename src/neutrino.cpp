@@ -4406,7 +4406,7 @@ void CNeutrinoApp::saveEpg(int _mode)
 	{
 		if (_mode == NeutrinoModes::mode_standby)
 		{
-			// skip save epg in standby mode, if last saveepg time < 15 Min.
+			// skip save epg in standby mode, if last saveepg time < 15 minutes
 			std::string index_xml = g_settings.epg_dir.c_str();
 			index_xml += "/index.xml";
 			time_t t=0;
@@ -4415,10 +4415,11 @@ void CNeutrinoApp::saveEpg(int _mode)
 				if (difftime(time(&t), my_stat.st_ctime) < 900)
 					return;
 			}
-			CVFD::getInstance()->Clear();
-			//NI CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
-			CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_EPG_SAVING));
 		}
+
+		CVFD::getInstance()->Clear();
+		//NI CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
+		CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_EPG_SAVING));
 
 		printf("[neutrino] Saving EPG to %s...\n", g_settings.epg_dir.c_str());
 		g_Sectionsd->writeSI2XML(g_settings.epg_dir.c_str());
