@@ -1026,6 +1026,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 				m_doRefresh = true;
 				returnval = menu_return::RETURN_EXIT;
 			}
+			if (m_windowFocus == MB_FOCUS_LAST_PLAY)
+				m_pcLastPlay->setSelectedLine(0);
 		}
 	}
 	return returnval;
@@ -2208,6 +2210,8 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 		if (m_movieSelectionHandler != NULL)
 		{
 			onDelete();
+			if (m_windowFocus == MB_FOCUS_LAST_PLAY)
+				m_pcLastPlay->setSelectedLine(0);
 		}
 	}
 	else if (msg == CRCInput::RC_help)
