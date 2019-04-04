@@ -574,6 +574,9 @@ bool CPictureViewer::GetLogoName(const uint64_t &ChannelID, const std::string &C
 		EventName = str_replace(";", "-", EventName);
 		EventName = str_replace(":", "-", EventName);
 		EventName = str_replace("+", "-", EventName);
+		EventName = str_replace("'", "-", EventName);
+		EventName = str_replace("?", "-", EventName);
+		EventName = str_replace("!", "-", EventName);
 		EventName = str_replace("&", "-", EventName);
 		EventName = str_replace("ä", "ae", EventName);
 		EventName = str_replace("ö", "oe", EventName);
