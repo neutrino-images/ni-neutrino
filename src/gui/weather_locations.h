@@ -44,6 +44,7 @@ const weather_loc WEATHER_LOCATION_OPTIONS[] =
 	{ "Bamberg",			"50.87,9.70"	},
 	{ "Barweiler",			"50.35,6.98"	},
 	{ "Bayreuth",			"49.95,11.56"	},
+	{ "Bedburg",			"50.98,6.57"	},
 	{ "Bergen auf Rügen",		"54.42,13.44"	},
 	{ "Bergisch-Gladbach",		"49.94,11.57"	},
 	{ "Berlin",			"52.52,13.40"	},
