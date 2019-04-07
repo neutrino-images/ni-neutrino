@@ -65,7 +65,6 @@
 #define BLKID_BIN    "/sbin/blkid"
 #define EJECT_BIN    "/bin/eject"
 
-//NI
 #define MDEV_MOUNT	"/lib/mdev/fs/mdev-mount"
 #define MOUNT_BASE	"/media/"
 
@@ -1230,7 +1229,7 @@ _remount:
 #ifndef ASSUME_MDEV
 	f = fopen("/proc/sys/kernel/hotplug", "w");
 	if(f) {
-		fprintf(f, "/sbin/hotplug\n");
+		fprintf(f, "/sbin/mdev\n");
 		fclose(f);
 	}
 #endif
