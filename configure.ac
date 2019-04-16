@@ -10,7 +10,7 @@ define(ver_micro, m4_esyscmd([
 ]))
 define(rel_cycle, "ver_major.0")
 
-AC_INIT(NI-Neutrino, ver_major.ver_minor.ver_micro)
+AC_INIT([NI-Neutrino], [ver_major.ver_minor.ver_micro], [https://www.neutrino-images.de])
 AM_INIT_AUTOMAKE([nostdinc foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
