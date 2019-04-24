@@ -10,7 +10,7 @@ define(ver_micro, m4_esyscmd([
 ]))
 define(rel_cycle, "ver_major.0")
 
-AC_INIT([NI-Neutrino], [ver_major.ver_minor.ver_micro], [https://www.neutrino-images.de])
+AC_INIT([NI-Neutrino],[ver_major.ver_minor.ver_micro],[https://www.neutrino-images.de])
 AM_INIT_AUTOMAKE([nostdinc foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
@@ -27,7 +27,7 @@ TUXBOX_BOXTYPE
 AC_PROG_CC
 AC_PROG_CXX
 AC_DISABLE_STATIC
-AM_PROG_LIBTOOL
+LT_INIT
 
 # Add build information to local_build_config.h.tmp
 # -------------------------------------------------
@@ -322,7 +322,7 @@ AC_SUBST(LUA_LIBS)
 AC_SUBST(BLURAY_LIBS)
 AC_SUBST(LIBCOOLSTREAM_STATIC_DIR)
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
 data/Makefile
 data/config/Makefile
@@ -422,3 +422,5 @@ src/zapit/Makefile
 src/zapit/lib/Makefile
 src/zapit/src/Makefile
 ])
+
+AC_OUTPUT
