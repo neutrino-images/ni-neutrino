@@ -101,7 +101,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 #if 0
 					else if(event->eventType == CTimerd::TIMER_NEXTPROGRAM)
 					{
-						resp.epgID = static_cast<CTimerEvent_NextProgram*>(event)->eventInfo.epgID;
+						resp.epg_id = static_cast<CTimerEvent_NextProgram*>(event)->eventInfo.epg_id;
 						resp.epg_starttime = static_cast<CTimerEvent_NextProgram*>(event)->eventInfo.epg_starttime;
 						resp.channel_id = static_cast<CTimerEvent_NextProgram*>(event)->eventInfo.channel_id;
 						resp.apids = static_cast<CTimerEvent_Record*>(event)->eventInfo.apids;
@@ -110,7 +110,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 					else if(event->eventType == CTimerd::TIMER_RECORD)
 					{
 						CTimerEvent_Record* ev= static_cast<CTimerEvent_Record*>(event);
-						resp.epgID = ev->eventInfo.epgID;
+						resp.epg_id = ev->eventInfo.epg_id;
 						resp.epg_starttime = ev->eventInfo.epg_starttime;
 						resp.channel_id = ev->eventInfo.channel_id;
 						resp.apids = ev->eventInfo.apids;
@@ -121,7 +121,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 					else if(event->eventType == CTimerd::TIMER_ZAPTO)
 					{
 						CTimerEvent_Zapto* ev= static_cast<CTimerEvent_Zapto*>(event);
-						resp.epgID = ev->eventInfo.epgID;
+						resp.epg_id = ev->eventInfo.epg_id;
 						resp.epg_starttime = ev->eventInfo.epg_starttime;
 						resp.channel_id = ev->eventInfo.channel_id;
 						resp.apids = ev->eventInfo.apids;
@@ -171,7 +171,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 #if 0
 					else if(event->eventType == CTimerd::TIMER_NEXTPROGRAM)
 					{
-						lresp.epgID = static_cast<CTimerEvent_NextProgram*>(event)->eventInfo.epgID;
+						lresp.epg_id = static_cast<CTimerEvent_NextProgram*>(event)->eventInfo.epg_id;
 						lresp.epg_starttime = static_cast<CTimerEvent_NextProgram*>(event)->eventInfo.epg_starttime;
 						lresp.channel_id = static_cast<CTimerEvent_NextProgram*>(event)->eventInfo.channel_id;
 						lresp.apids = static_cast<CTimerEvent_Record*>(event)->eventInfo.apids;
@@ -180,7 +180,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 					else if(event->eventType == CTimerd::TIMER_RECORD)
 					{
 						CTimerEvent_Record* ev= static_cast<CTimerEvent_Record*>(event);
-						lresp.epgID = ev->eventInfo.epgID;
+						lresp.epg_id = ev->eventInfo.epg_id;
 						lresp.epg_starttime = ev->eventInfo.epg_starttime;
 						lresp.channel_id = ev->eventInfo.channel_id;
 						lresp.apids = ev->eventInfo.apids;
@@ -191,7 +191,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 					else if(event->eventType == CTimerd::TIMER_ZAPTO)
 					{
 						CTimerEvent_Zapto* ev= static_cast<CTimerEvent_Zapto*>(event);
-						lresp.epgID = ev->eventInfo.epgID;
+						lresp.epg_id = ev->eventInfo.epg_id;
 						lresp.epg_starttime = ev->eventInfo.epg_starttime;
 						lresp.channel_id = ev->eventInfo.channel_id;
 						lresp.apids = ev->eventInfo.apids;
@@ -319,7 +319,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 						msgAddTimer.alarmTime,
 						msgAddTimer.stopTime,
 						recInfo.channel_id,
-						recInfo.epgID,
+						recInfo.epg_id,
 						recInfo.epg_starttime,
 						recInfo.apids,
 						msgAddTimer.eventRepeat,
@@ -339,7 +339,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 						msgAddTimer.alarmTime,
 						msgAddTimer.stopTime,
 						evInfo.channel_id,
-						evInfo.epgID,
+						evInfo.epg_id,
 						evInfo.epg_starttime,
 						evInfo.apids,
 						msgAddTimer.eventRepeat,
@@ -356,7 +356,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 							msgAddTimer.announceTime,
 							msgAddTimer.alarmTime,
 							evInfo.channel_id,
-							evInfo.epgID,
+							evInfo.epg_id,
 							evInfo.epg_starttime,
 							msgAddTimer.eventRepeat,
 							msgAddTimer.repeatCount);
