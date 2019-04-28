@@ -117,11 +117,9 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 				} else {
 					if (!forwarders.empty() && (followlist.size() > 1 || g_settings.timer_followscreenings == FOLLOWSCREENINGS_ALWAYS)) //NI
 						forwarders[ix]->iconName_Info_right = NEUTRINO_ICON_MARKER_RECORD;
-					/*
-					else if (g_settings.timer_followscreenings != FOLLOWSCREENINGS_ALWAYS) //NI
+					else if (notify && g_settings.timer_followscreenings != FOLLOWSCREENINGS_ALWAYS)
 						ShowMsg(LOCALE_TIMER_EVENTRECORD_TITLE, LOCALE_TIMER_EVENTRECORD_MSG,
 							CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_INFO);
-					*/
 					return menu_return::RETURN_REPAINT;
 				}
 				break; // for
