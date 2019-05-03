@@ -159,6 +159,7 @@ fi
 
 if test "$BOXTYPE" = "coolstream" ||
    test "$BOXTYPE" = "armbox" ||
+   test "$BOXTYPE" = "mipsbox" ||
    test "$BOXTYPE" = "generic" ||
    test "$BOXTYPE" = "tripledragon" ||
    test "$BOXTYPE" = "spark"; then
