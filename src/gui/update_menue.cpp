@@ -108,7 +108,7 @@ int CSoftwareUpdate::showSoftwareUpdate()
 	mf->setHint("", LOCALE_MENU_HINT_SOFTUPDATE_SETTINGS);
 	softUpdate.addItem(mf);
 
-#if !HAVE_ARM_HARDWARE
+#if !HAVE_ARM_HARDWARE && !HAVE_MIPS_HARDWARE
 	softUpdate.addItem(GenericMenuSeparatorLine);
 
 	//expert-functions
