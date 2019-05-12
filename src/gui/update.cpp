@@ -645,6 +645,8 @@ int CFlashUpdate::exec(CMenuTarget* parent, const std::string &actionKey)
 			if (fseek(f, -2, SEEK_END) == 0)
 			{
 				c[0] = fgetc(f);
+				if (strcmp(c, "l") == 0)
+					c[0] = '1';
 				dprintf(DEBUG_NORMAL, "[update] Current partition: %s\n", c);
 			}
 			fclose(f);
