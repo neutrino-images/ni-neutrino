@@ -270,8 +270,6 @@ camd_item_newcs_hint NewCS - Softcam
 camd_item_newcs_name newcs
 camd_item_oscam_hint OSCam - Softcam
 camd_item_oscam_name oscam
-camd_item_osemu_hint OSEmu - Emulator
-camd_item_osemu_name osemu
 camd_msg_reset camd wird neu gestartet
 camd_msg_start camd wird gestartet
 camd_msg_stop camd wird gestoppt

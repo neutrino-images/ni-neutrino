@@ -175,7 +175,6 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			}
 			else if (strstr(filename, "mgcamd")	||
 				strstr(filename, "newcs")	||
-				strstr(filename, "osemu")	||
 				strstr(filename, "doscam")	||
 				strstr(filename, "ncam")	||
 				strstr(filename, "oscam")	||
@@ -224,7 +223,6 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 		}
 		else if (strstr(filename, "mgcamd")	||
 			strstr(filename, "newcs")	||
-			strstr(filename, "osemu")	||
 			strstr(filename, "doscam")	||
 			strstr(filename, "ncam")	||
 			strstr(filename, "oscam")	||

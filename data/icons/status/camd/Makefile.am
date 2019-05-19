@@ -17,6 +17,4 @@ install_DATA = \
 	ncam_yellow.png \
 	newcs_green.png \
 	oscam_green.png \
-	oscam_yellow.png \
-	osemu_green.png \
-	osemu_yellow.png
+	oscam_yellow.png

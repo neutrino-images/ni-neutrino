@@ -1,6 +1,5 @@
 {=var-set:x_gbox={=script:Y_NI_Tools is_exec gbox=}=}
 {=var-set:x_cs2gbox={=script:Y_NI_Tools is_exec cs2gbox=}=}
-{=var-set:x_osemu={=script:Y_NI_Tools is_exec osemu=}=}
 {=var-set:x_oscam={=script:Y_NI_Tools is_exec oscam=}=}
 {=var-set:x_ncam={=script:Y_NI_Tools is_exec ncam=}=}
 {=var-set:x_doscam={=script:Y_NI_Tools is_exec doscam=}=}
@@ -9,7 +8,6 @@
 
 {=var-set:r_gbox={=script:Y_NI_Tools is_running gbox=}=}
 {=var-set:r_cs2gbox={=script:Y_NI_Tools is_running cs2gbox=}=}
-{=var-set:r_osemu={=script:Y_NI_Tools is_running osemu=}=}
 {=var-set:r_oscam={=script:Y_NI_Tools is_running oscam=}=}
 {=var-set:r_ncam={=script:Y_NI_Tools is_running ncam=}=}
 {=var-set:r_doscam={=script:Y_NI_Tools is_running doscam=}=}
@@ -187,55 +185,6 @@ input[type="button"], .tools select {
 						<option> {=L:ni.camd-tools.line=} </option>
 						<option onclick='Y_NI_Tools("cs2gboxinfo");'>
 							{=L:ni.camd-tools.cs2gboxinfo=}
-						</option>
-						~
-						=}
-					</select>
-					</span>
-				</td>
-			</tr>
-			<tr class="list">
-			{=var-set:camd=osemu=}
-				<td>
-					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
-					{=var-get:camd=}
-				</td>
-				<td>
-					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
-				</td>
-			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
-				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
-				<td>
-					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
-				</td>
-				<td>
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
-				</td>
-				~
-				<td>
-					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
-				</td>
-				<td>
-				</td>
-				=}
-			~
-				<td>
-				</td>
-				<td>
-				</td>
-			=}
-				<td>
-					<span class="tools">
-					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
-						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
-						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
-						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/bin/osemu.sh","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: osemu.sh
-						</option>
-						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
-						<option> {=L:ni.camd-tools.line=} </option>
-						<option onclick='Y_NI_Tools("ecminfo");'>
-							{=L:ni.camd-tools.ecminfo=}
 						</option>
 						~
 						=}

@@ -297,8 +297,6 @@ const char * locale_real_names[] =
 	"camd_item_newcs_name",
 	"camd_item_oscam_hint",
 	"camd_item_oscam_name",
-	"camd_item_osemu_hint",
-	"camd_item_osemu_name",
 	"camd_msg_reset",
 	"camd_msg_start",
 	"camd_msg_stop",

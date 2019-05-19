@@ -252,9 +252,6 @@ case "$action" in
 	cs2gboxstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_stop;;
 	cs2gboxstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_start;;
 	cs2gboxreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_reset;;
-	osemustop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osemu_stop;;
-	osemustart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osemu_start;;
-	osemureset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osemu_reset;;
 	oscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_stop;;
 	oscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_start;;
 	oscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_reset;;

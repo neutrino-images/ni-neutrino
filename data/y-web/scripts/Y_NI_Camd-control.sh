@@ -60,20 +60,6 @@ case "$1" in
 		echo "[$BNAME] cs2gbox-reset"
 		/etc/init.d/camd reset cs2gbox >/dev/console
 	;;
-	osemu_start)
-		echo "[$BNAME] osemu-start"
-		touch /var/etc/.osemu
-		/etc/init.d/camd start osemu >/dev/console
-	;;
-	osemu_stop)
-		echo "[$BNAME] osemu-stop"
-		rm -rf /var/etc/.osemu
-		/etc/init.d/camd stop osemu >/dev/console
-	;;
-	osemu_reset)
-		echo "[$BNAME] osemu-reset"
-		/etc/init.d/camd reset osemu >/dev/console
-	;;
 	oscam_start)
 		echo "[$BNAME] oscam-start"
 		touch /var/etc/.oscam
