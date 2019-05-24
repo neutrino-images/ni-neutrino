@@ -39,7 +39,11 @@ TOBACKUP="\
 	/var/tuxbox/config/smarthomeinfo.conf \
 	/var/tuxbox/config/timerd.conf \
 	/var/tuxbox/config/tuxcal/ \
+	/var/tuxbox/config/tuxcom/ \
 	/var/tuxbox/config/tuxmail/ \
+	/var/tuxbox/config/tuxtxt/tuxtxt2.conf \
+	/var/tuxbox/config/tuxwetter/tuxwetter.conf \
+	/var/tuxbox/config/tuxwetter/tuxwetter.mcfg \
 	/var/tuxbox/config/Y-Web.conf \
 	/var/tuxbox/config/zapit/ \
 	/var/tuxbox/control/ \
