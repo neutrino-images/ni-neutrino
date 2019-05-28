@@ -363,9 +363,9 @@ bool CFlashUpdate::selectHttpImage(void)
 	}
 #endif
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	if (gotImage && (filename.substr(filename.find_last_of(".") + 1) == "tgz"))
+	if (gotImage && (filename.substr(filename.find_last_of(".") + 1) == "tgz" || filename.substr(filename.find_last_of(".") + 1) == "zip"))
 	{
-		// manipulate fileType for tgz-packages
+		// manipulate fileType for tgz- or zip-packages
 		fileType = 'Z';
 	}
 #endif
@@ -442,7 +442,12 @@ bool CFlashUpdate::checkVersion4Update()
 		CFileFilter UpdatesFilter;
 
 		if (allow_flash)
+		{
 			UpdatesFilter.addFilter(FILEBROWSER_UPDATE_FILTER);
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+			UpdatesFilter.addFilter("zip");
+#endif
+		}
 
 		std::string filters[] = {"bin", "txt", "opk", "ipk"};
 		for(size_t i=0; i<sizeof(filters)/sizeof(filters[0]) ;i++)
@@ -499,6 +504,8 @@ bool CFlashUpdate::checkVersion4Update()
 			else if(!strcmp(ptr, "txt"))
 				fileType = 'T';
 			else if(!strcmp(ptr, "tgz"))
+				fileType = 'Z';
+			else if(!strcmp(ptr, "zip"))
 				fileType = 'Z';
 			else if(!allow_flash)
 				return false;
@@ -734,18 +741,18 @@ int CFlashUpdate::exec(CMenuTarget* parent, const std::string &actionKey)
 			ShowHint(LOCALE_MESSAGEBOX_INFO, LOCALE_FLASHUPDATE_START_OFGWRITE);
 		hide();
 
-		const char ofgwrite_tgz[] = "/bin/ofgwrite_tgz";
-		dprintf(DEBUG_NORMAL, "[update] calling %s %s %s %s\n", ofgwrite_tgz, g_settings.update_dir.c_str(), filename.c_str(), ofgwrite_options.c_str());
+		const char ofgwrite_caller[] = "/bin/ofgwrite_caller";
+		dprintf(DEBUG_NORMAL, "[update] calling %s %s %s %s\n", ofgwrite_caller, g_settings.update_dir.c_str(), filename.c_str(), ofgwrite_options.c_str());
 #ifndef DRYRUN
 		if (flashing)
-			my_system(4, ofgwrite_tgz, g_settings.update_dir.c_str(), filename.c_str(), ofgwrite_options.c_str());
+			my_system(4, ofgwrite_caller, g_settings.update_dir.c_str(), filename.c_str(), ofgwrite_options.c_str());
 
 		/*
 		   TODO: fix osd-flickering
 		   Neutrino is clearing framebuffer, so ofgwrite's gui is cleared too.
 		*/
 
-		dprintf(DEBUG_NORMAL, "[update] %s done\n", ofgwrite_tgz);
+		dprintf(DEBUG_NORMAL, "[update] %s done\n", ofgwrite_caller);
 
 		if (restart == CMsgBox::mbrYes)
 			CNeutrinoApp::getInstance()->exec(NULL, "reboot");
