@@ -2111,6 +2111,7 @@ const char * locale_real_names[] =
 	"moviebrowser.yt_clear",
 	"moviebrowser.yt_completed",
 	"moviebrowser.yt_concurrent_connections",
+	"moviebrowser.yt_dl_dir",
 	"moviebrowser.yt_error",
 	"moviebrowser.yt_failed",
 	"moviebrowser.yt_history",
