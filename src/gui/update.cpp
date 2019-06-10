@@ -153,6 +153,7 @@ void CFlashUpdate::update_php(std::string &url, const char* type)
 	if (url.find("update.php") != std::string::npos)
 	{
 		url += "?revision=" + to_string(cs_get_revision());
+		url += "&boxname=" + g_info.hw_caps->boxname;
 		url += "&chip_type=" + to_string(cs_get_chip_type());
 		url += "&image_type=" + (std::string)type;
 		printf("[update_php] url %s\n", url.c_str());
