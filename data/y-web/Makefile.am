@@ -141,6 +141,7 @@ install-data-hook:
 			-e 's|%(PLUGINDIR_MNT)|$(PLUGINDIR_MNT)|g' \
 			-e 's|%(PLUGINDIR_VAR)|$(PLUGINDIR_VAR)|g' \
 			-e 's|%(LUAPLUGINDIR)|$(LUAPLUGINDIR)|g' \
+			-e 's|%(LUAPLUGINDIR_VAR)|$(LUAPLUGINDIR_VAR)|g' \
 			-e 's|%(THEMESDIR)|$(THEMESDIR)|g' \
 			-e 's|%(THEMESDIR_VAR)|$(THEMESDIR_VAR)|g' \
 			-e 's|%(WEBRADIODIR)|$(WEBRADIODIR)|g' \
