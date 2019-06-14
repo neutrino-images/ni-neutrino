@@ -111,7 +111,10 @@ bool CWeather::GetWeatherDetails()
 
 	answer.clear();
 	if (!getUrl(data, answer))
+	{
+		delete reader;
 		return false;
+	}
 
 	bool parsedSuccess = reader->parse(answer.c_str(), answer.c_str() + answer.size(), &DataValues, &formattedErrors);
 	delete reader;
