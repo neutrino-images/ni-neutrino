@@ -79,7 +79,7 @@ jQuery(document).ready(function(){
 				<abbr class="version" title="{=L:ni.about.your_image=}">
 				<script type="text/javascript">getVersion("{=ini-get:/.version;version=}");</script><br/>
 				{=ini-get:/.version;branch=}<br/>
-				<a href="https://bitbucket.org/neutrino-images/ni-neutrino-hd/commits/{=ini-get:/.version;commit=}" class="exlink" target="_blank" title="NI-Neutrino-HD Sources">{=ini-get:/.version;commit=}</a><br/>
+				<a href="https://bitbucket.org/neutrino-images/ni-neutrino/commits/{=ini-get:/.version;commit=}" class="exlink" target="_blank" title="NI-Neutrino Sources">{=ini-get:/.version;commit=}</a><br/>
 				<script type="text/javascript">getBuild("{=ini-get:/.version;version=}");</script><br/>
 				</abbr>
 				{=ini-get:/.version;creator=}<br/>
