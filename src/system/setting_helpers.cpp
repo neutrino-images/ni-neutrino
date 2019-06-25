@@ -174,12 +174,11 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 				g_settings.font_scaling_y = 100;
 			}
 			else if (strstr(filename, "mgcamd")	||
-				strstr(filename, "newcs")	||
 				strstr(filename, "doscam")	||
 				strstr(filename, "ncam")	||
+				strstr(filename, "osmod")	||
 				strstr(filename, "oscam")	||
 				strstr(filename, "cccam")	||
-				strstr(filename, "cs2gbox")	||
 				strstr(filename, "gbox"))
 			{
 				CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_START));
@@ -222,12 +221,11 @@ bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void * data)
 			g_settings.font_scaling_y = 105;
 		}
 		else if (strstr(filename, "mgcamd")	||
-			strstr(filename, "newcs")	||
 			strstr(filename, "doscam")	||
 			strstr(filename, "ncam")	||
+			strstr(filename, "osmod")	||
 			strstr(filename, "oscam")	||
 			strstr(filename, "cccam")	||
-			strstr(filename, "cs2gbox")	||
 			strstr(filename, "gbox"))
 		{
 			CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_STOP));

@@ -249,21 +249,18 @@ case "$action" in
 	gboxstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_stop;;
 	gboxstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_start;;
 	gboxreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_reset;;
-	cs2gboxstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_stop;;
-	cs2gboxstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_start;;
-	cs2gboxreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cs2gbox_reset;;
 	oscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_stop;;
 	oscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_start;;
 	oscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_reset;;
+	osmodstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osmod_stop;;
+	osmodstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osmod_start;;
+	osmodreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osmod_reset;;
 	ncamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_stop;;
 	ncamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_start;;
 	ncamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_reset;;
 	doscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_stop;;
 	doscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_start;;
 	doscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_reset;;
-	newcsstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh newcs_stop;;
-	newcsstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh newcs_start;;
-	newcsreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh newcs_reset;;
 
 	vinfo)
 	        if ! [ -x $y_path_varbin/$1 ]; then
@@ -282,7 +279,6 @@ case "$action" in
 	mgshareinfo)	file2msg /tmp/mgshare.info "n-lines" maketable;;
 	mginfo)		file2msg /tmp/mg.info "cs-info" maketable;;
 	cccamdinfo)	file2msg /tmp/cccamd.info "c-lines" maketable;;
-	cs2gboxinfo)	file2msg /tmp/cs2gbox.info "cs2gbox-info";;
 	shareonl)	file2msg /tmp/share.onl "online-share-info" maketable;;
 	shareinfo)	file2msg /tmp/share.info "cs-info" maketable;;
 	sc01info)	file2msg /tmp/sc01.info "slot1-info";;

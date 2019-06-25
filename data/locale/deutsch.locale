@@ -256,8 +256,6 @@ cablesetup.provider Kabelanbieter
 camd_control camd-Steuerung
 camd_item_cccam_hint CCcam - Softcam
 camd_item_cccam_name cccam
-camd_item_cs2gbox_hint cs2gbox - Newcamd Bridge
-camd_item_cs2gbox_name cs2gbox
 camd_item_doscam_hint DOSCam - Softcam und Emulator
 camd_item_doscam_name doscam
 camd_item_gbox_hint GBox - Softcam und Emulator
@@ -266,8 +264,8 @@ camd_item_mgcamd_hint MGCamd - Emulator
 camd_item_mgcamd_name mgcamd
 camd_item_ncam_hint NCam - Softcam und Emulator
 camd_item_ncam_name ncam
-camd_item_newcs_hint NewCS - Softcam
-camd_item_newcs_name newcs
+camd_item_osmod_hint OSMod - Softcam und Emulator
+camd_item_osmod_name oscam-smod
 camd_item_oscam_hint OSCam - Softcam
 camd_item_oscam_name oscam
 camd_msg_reset camd wird neu gestartet

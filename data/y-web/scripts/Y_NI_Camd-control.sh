@@ -46,20 +46,6 @@ case "$1" in
 		echo "[$BNAME] gbox-reset"
 		/etc/init.d/camd reset gbox >/dev/console
 	;;
-	cs2gbox_start)
-		echo "[$BNAME] cs2gbox-start"
-		touch /var/etc/.cs2gbox
-		/etc/init.d/camd start cs2gbox >/dev/console
-	;;
-	cs2gbox_stop)
-		echo "[$BNAME] cs2gbox-stop"
-		rm -rf /var/etc/.cs2gbox
-		/etc/init.d/camd stop cs2gbox >/dev/console
-	;;
-	cs2gbox_reset)
-		echo "[$BNAME] cs2gbox-reset"
-		/etc/init.d/camd reset cs2gbox >/dev/console
-	;;
 	oscam_start)
 		echo "[$BNAME] oscam-start"
 		touch /var/etc/.oscam
@@ -73,6 +59,20 @@ case "$1" in
 	oscam_reset)
 		echo "[$BNAME] oscam-reset"
 		/etc/init.d/camd reset oscam >/dev/console
+	;;
+	osmod_start)
+		echo "[$BNAME] osmod-start"
+		touch /var/etc/.osmod
+		/etc/init.d/camd start osmod >/dev/console
+	;;
+	osmod_stop)
+		echo "[$BNAME] osmod-stop"
+		rm -rf /var/etc/.osmod
+		/etc/init.d/camd stop osmod >/dev/console
+	;;
+	osmod_reset)
+		echo "[$BNAME] osmod-reset"
+		/etc/init.d/camd reset osmod >/dev/console
 	;;
 	ncam_start)
 		echo "[$BNAME] ncam-start"
@@ -101,20 +101,6 @@ case "$1" in
 	doscam_reset)
 		echo "[$BNAME] doscam-reset"
 		/etc/init.d/camd reset doscam >/dev/console
-	;;
-	newcs_start)
-		echo "[$BNAME] newcs-start"
-		touch /var/etc/.newcs
-		/etc/init.d/camd start newcs >/dev/console
-	;;
-	newcs_stop)
-		echo "[$BNAME] newcs-stop"
-		rm -rf /var/etc/.newcs
-		/etc/init.d/camd stop newcs >/dev/console
-	;;
-	newcs_reset)
-		echo "[$BNAME] newcs-reset"
-		/etc/init.d/camd reset newcs >/dev/console
 	;;
 	*)
 		echo "[$BNAME] Parameter wrong: $*"
