@@ -301,6 +301,14 @@ case "$action" in
 		printf "%s" ${_port:-8080}
 	;;
 
+	get_osmod_webif_port)
+		if [ -e %(CONFIGDIR)/oscam.conf ]; then
+			_port=$(grep -m 1 -i "^[:space:]*httpport" %(CONFIGDIR)/oscam.conf | cut -d'=' -f2)
+			_port=$(echo $_port | dos2unix -u)
+		fi
+		printf "%s" ${_port:-8888}
+	;;
+
 	get_ncam_webif_port)
 		if [ -e %(CONFIGDIR)/ncam.conf ]; then
 			_port=$(grep -m 1 -i "^[:space:]*httpport" %(CONFIGDIR)/ncam.conf | cut -d'=' -f2)

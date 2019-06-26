@@ -15,6 +15,7 @@
 {=var-set:r_mgcamd={=script:Y_NI_Tools is_running mgcamd=}=}
 
 {=var-set:oscamport={=script:Y_NI_Tools get_oscam_webif_port=}=}
+{=var-set:osmodport={=script:Y_NI_Tools get_osmod_webif_port=}=}
 {=var-set:ncamport={=script:Y_NI_Tools get_ncam_webif_port=}=}
 {=var-set:cccamport={=script:Y_NI_Tools get_cccam_webif_port=}=}
 {=var-set:doscamport={=script:Y_NI_Tools get_doscam_webif_port=}=}
@@ -220,7 +221,7 @@ input[type="button"], .tools select {
 				<td>
 					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
 					{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
-					<u><a href="#" onclick='goPort("{=var-get:oscamport=}");'>{=var-get:camd=}</a></u>
+					<u><a href="#" onclick='goPort("{=var-get:osmodport=}");'>{=var-get:camd=}</a></u>
 					~
 					{=var-get:camd=}
 					=}
