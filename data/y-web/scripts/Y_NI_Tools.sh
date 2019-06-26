@@ -258,6 +258,9 @@ case "$action" in
 	ncamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_stop;;
 	ncamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_start;;
 	ncamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_reset;;
+	cccamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ccccam_stop;;
+	cccamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ccccam_start;;
+	cccamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cccam_reset;;
 	doscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_stop;;
 	doscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_start;;
 	doscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_reset;;
@@ -287,6 +290,7 @@ case "$action" in
 	pidinfo)	file2msg /tmp/pid.info "pid-info";;
 	oscamversion)	file2msg /tmp/.oscam/oscam.version "oscam-info";;
 	ncamversion)	file2msg /tmp/.ncam/ncam.version "ncam-info";;
+	ccccamversion)	file2msg /tmp/.cccam/cccam.version "cccam-info";;
 	doscamversion)	file2msg /tmp/.doscam/doscam.version "doscam-info";;
 
 	get_oscam_webif_port)
@@ -303,6 +307,14 @@ case "$action" in
 			_port=$(echo $_port | dos2unix -u)
 		fi
 		printf "%s" ${_port:-8181}
+	;;
+
+	get_cccam_webif_port)
+		if [ -e %(CONFIGDIR)/CCcam.cfg ]; then
+			_port=$(grep -m 1 -i "^[:space:]*WEBINFO LISTEN PORT" /var/etc/CCcam.cfg | cut -d':' -f2)
+			_port=$(echo $_port | dos2unix -u)
+		fi
+		printf "%s" ${_port:-16001}
 	;;
 
 	get_doscam_webif_port)

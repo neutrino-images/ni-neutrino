@@ -2,6 +2,7 @@
 {=var-set:x_oscam={=script:Y_NI_Tools is_exec oscam=}=}
 {=var-set:x_osmod={=script:Y_NI_Tools is_exec osmod=}=}
 {=var-set:x_ncam={=script:Y_NI_Tools is_exec ncam=}=}
+{=var-set:x_cccam={=script:Y_NI_Tools is_exec cccam=}=}
 {=var-set:x_doscam={=script:Y_NI_Tools is_exec doscam=}=}
 {=var-set:x_mgcamd={=script:Y_NI_Tools is_exec mgcamd=}=}
 
@@ -9,11 +10,13 @@
 {=var-set:r_oscam={=script:Y_NI_Tools is_running oscam=}=}
 {=var-set:r_osmod={=script:Y_NI_Tools is_running osmod=}=}
 {=var-set:r_ncam={=script:Y_NI_Tools is_running ncam=}=}
+{=var-set:r_cccam={=script:Y_NI_Tools is_running cccam=}=}
 {=var-set:r_doscam={=script:Y_NI_Tools is_running doscam=}=}
 {=var-set:r_mgcamd={=script:Y_NI_Tools is_running mgcamd=}=}
 
 {=var-set:oscamport={=script:Y_NI_Tools get_oscam_webif_port=}=}
 {=var-set:ncamport={=script:Y_NI_Tools get_ncam_webif_port=}=}
+{=var-set:cccamport={=script:Y_NI_Tools get_cccam_webif_port=}=}
 {=var-set:doscamport={=script:Y_NI_Tools get_doscam_webif_port=}=}
 
 {=include-block:Y_NI_Blocks.txt;head=}
@@ -347,6 +350,71 @@ input[type="button"], .tools select {
 						</option>
 						<option onclick='Y_NI_Tools("ncamversion");'>
 							{=L:ni.camd-tools.ncamversion=}
+						</option>
+						~
+						=}
+					</select>
+					</span>
+				</td>
+			</tr>
+			<tr class="list">
+			{=var-set:camd=cccam=}
+				<td>
+					<img src="images/{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~check_green~x_red=}.png" class="status">
+					{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+					<u><a href="#" onclick='goPort("{=var-get:cccamport=}");'>{=var-get:camd=}</a></u>
+					~
+					{=var-get:camd=}
+					=}
+				</td>
+				<td>
+					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+				</td>
+			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
+				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+				<td>
+					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+				</td>
+				<td>
+					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+				</td>
+				~
+				<td>
+					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+				</td>
+				<td>
+				</td>
+				=}
+			~
+				<td>
+				</td>
+				<td>
+				</td>
+			=}
+				<td>
+					<span class="tools">
+					<select name="{=var-get:camd=}_tools" size="1" onchange="this.options[this.selectedIndex].onclick();">
+						<option onclick='return false;' selected>{=L:ni.camd-tools=} {=var-get:camd=}</option>
+						<option onclick='return false;'> {=L:ni.camd-tools.line=} </option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/etc/CCcam.cfg","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: CCcam.cfg
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/etc/CCcam.channelinfo","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: CCcam.channelinfo
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/etc/CCcam.prio","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: CCcam.prio
+						</option>
+						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/etc/CCcam.providers","edit", "width=800,height=600,resizable=yes");'>
+							{=L:ni.edit=}: CCcam.providers
+						</option>
+						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
+						<option> {=L:ni.camd-tools.line=} </option>
+						<option onclick='Y_NI_Tools("ecminfo");'>
+							{=L:ni.camd-tools.ecminfo=}
+						</option>
+						<option onclick='Y_NI_Tools("cccamversion");'>
+							{=L:ni.camd-tools.cccamversion=}
 						</option>
 						~
 						=}
