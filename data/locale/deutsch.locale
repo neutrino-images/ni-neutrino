@@ -264,8 +264,8 @@ camd_item_mgcamd_hint MGCamd - Emulator
 camd_item_mgcamd_name mgcamd
 camd_item_ncam_hint NCam - Softcam und Emulator
 camd_item_ncam_name ncam
-camd_item_osmod_hint OSMod - Softcam und Emulator
-camd_item_osmod_name oscam-smod
+camd_item_osmod_hint OSCam-smod - Softcam und Emulator
+camd_item_osmod_name osmod
 camd_item_oscam_hint OSCam - Softcam
 camd_item_oscam_name oscam
 camd_msg_reset camd wird neu gestartet
