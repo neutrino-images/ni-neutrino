@@ -157,6 +157,8 @@ void CFlashUpdate::update_php(std::string &url, const char* type)
 		url += g_info.hw_caps->boxname;
 		url += "&chip_type=" + to_string(cs_get_chip_type());
 		url += "&image_type=" + (std::string)type;
+
+		url = str_replace(" ", "%20", url);
 		printf("[update_php] url %s\n", url.c_str());
 	}
 }
