@@ -1822,10 +1822,10 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			//NI if (timeshift == TSHIFT_MODE_OFF)
 				callInfoViewer();
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_bookmark) {
-#if HAVE_COOL_HARDWARE
-			if (is_file_player)
-				selectChapter();
-			else
+#if HAVE_COOL_HARDWARE || HAVE_ARM_HARDWARE
+                        if (is_file_player)
+                                selectChapter();
+                        else
 #endif
 				handleMovieBrowser((neutrino_msg_t) g_settings.mpkey_bookmark, position);
 			update_lcd = true;
