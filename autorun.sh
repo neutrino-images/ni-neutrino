@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export PATH=${PATH}:/var/bin:/var/plugins
+# Simple Neutrino start script
 
 # Neutrino's exit codes
 ERROR=-1
@@ -19,13 +19,9 @@ echo "Neutrino exited with exit code $RET"
 if [ $RET -eq $NORMAL ]; then
 	# do nothing
 elif [ $RET -eq $SHUTDOWN ]; then
-	dt -t"Shutdown ..."
 	poweroff
 elif [ $RET -eq $REBOOT ]; then
-	dt -t"Reboot ..."
 	reboot
-else
-	dt -t"Panic ..."
-	sleep 5
+else # $RET -eq $ERROR
 	reboot -f
 fi
