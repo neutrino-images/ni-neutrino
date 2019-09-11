@@ -1233,7 +1233,7 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 	case FEC_2_3:
 		fec = FEC_2_3;
 		if (feparams->delsys == DVB_S2 && feparams->modulation == PSK_8)
-#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K
+#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUULTIMO4K || BOXMODEL_VUZERO4K
 			pilot = PILOT_AUTO;
 #else
 			pilot = PILOT_ON;
@@ -1242,7 +1242,11 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 	case FEC_3_4:
 		fec = FEC_3_4;
 		if (feparams->delsys == DVB_S2 && feparams->modulation == PSK_8)
+#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUULTIMO4K || BOXMODEL_VUZERO4K
+			pilot = PILOT_AUTO;
+#else
 			pilot = PILOT_ON;
+#endif
 		break;
 	case FEC_4_5:
 		fec = FEC_4_5;
@@ -1250,7 +1254,11 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 	case FEC_5_6:
 		fec = FEC_5_6;
 		if (feparams->delsys == DVB_S2 && feparams->modulation == PSK_8)
+#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUULTIMO4K || BOXMODEL_VUZERO4K
+			pilot = PILOT_AUTO;
+#else
 			pilot = PILOT_ON;
+#endif
 		break;
 	case FEC_6_7:
 		fec = FEC_6_7;
@@ -1264,7 +1272,11 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 	case FEC_3_5:
 		fec = FEC_3_5;
 		if (feparams->delsys == DVB_S2 && feparams->modulation == PSK_8)
+#if BOXMODEL_VUSOLO4K || BOXMODEL_VUDUO4K || BOXMODEL_VUULTIMO4K || BOXMODEL_VUZERO4K
+			pilot = PILOT_AUTO;
+#else
 			pilot = PILOT_ON;
+#endif
 		break;
 	case FEC_9_10:
 		fec = FEC_9_10;
