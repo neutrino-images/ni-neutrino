@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zapit api="4">
-	<sat name="Sat 19.2 E" position="192" diseqc="-1" uncommited="-1">
+	<sat name="Astra 1KR/1L/1M/1N (19.2E)" flags="0" position="192">
 		<TS id="03ea" on="0001" frq="11229000" inv="2" sr="22000000" fec="2" pol="1" mod="9" sys="1">
 			<S i="1389" n="BBC World News Europe HD" t="1" s="0" num="0" f="0"/>
 			<S i="1392" n="INSIGHT TV HD" t="19" s="1" num="0" f="0"/>
