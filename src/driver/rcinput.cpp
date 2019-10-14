@@ -475,8 +475,9 @@ int CRCInput::addTimer(uint64_t Interval, bool oneshot, bool correct_time )
 		_newtimer.times_out = Interval;
 
 	_newtimer.correct_time = correct_time;
-
 //printf("adding timer %d (0x%" PRIx64 ", 0x%" PRIx64 ")\n", _newtimer.id, _newtimer.times_out, Interval);
+
+	timer_mutex.lock();
 
 	std::vector<timer>::iterator e;
 	for ( e= timers.begin(); e!= timers.end(); ++e )
@@ -484,6 +485,8 @@ int CRCInput::addTimer(uint64_t Interval, bool oneshot, bool correct_time )
 			break;
 
 	timers.insert(e, _newtimer);
+
+	timer_mutex.unlock();
 	return _newtimer.id;
 }
 
@@ -493,6 +496,7 @@ void CRCInput::killTimer(uint32_t &id)
 	if(id == 0)
 		return;
 
+	timer_mutex.lock();
 	std::vector<timer>::iterator e;
 	for ( e= timers.begin(); e!= timers.end(); ++e )
 		if ( e->id == id )
@@ -501,12 +505,14 @@ void CRCInput::killTimer(uint32_t &id)
 			break;
 		}
 	id = 0;
+	timer_mutex.unlock();
 }
 
 int CRCInput::checkTimers()
 {
 	int _id = 0;
 	uint64_t timeNow = time_monotonic_us();
+	timer_mutex.lock();
 	std::vector<timer>::iterator e;
 	for ( e= timers.begin(); e!= timers.end(); ++e )
 		if ( e->times_out< timeNow+ 2000 )
@@ -529,8 +535,7 @@ int CRCInput::checkTimers()
 					if ( e->times_out> _newtimer.times_out )
 						break;
 
-				if(e != timers.end())
-					timers.insert(e, _newtimer);
+				timers.insert(e, _newtimer);
 			}
 			else
 				timers.erase(e);
@@ -540,6 +545,7 @@ int CRCInput::checkTimers()
 //        else
 //    		printf("skipped timer %d %llx %llx\n",e->id,e->times_out, timeNow );
 //printf("checkTimers: return %d\n", _id);
+	timer_mutex.unlock();
 	return _id;
 }
 
