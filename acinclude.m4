@@ -525,7 +525,7 @@ AM_CONDITIONAL(BOXMODEL_VUULTIMO4K, test "$BOXMODEL" = "vuultimo4k")
 AM_CONDITIONAL(BOXMODEL_VUUNO4K, test "$BOXMODEL" = "vuuno4k")
 AM_CONDITIONAL(BOXMODEL_VUUNO4KSE, test "$BOXMODEL" = "vuuno4kse")
 AM_CONDITIONAL(BOXMODEL_VUZERO4K, test "$BOXMODEL" = "vuzero4k")
-AM_CONDITIONAL(BOXMODEL_ZGEMMAH7, test "$BOXMODEL" = "zgemmah7")
+AM_CONDITIONAL(BOXMODEL_H7, test "$BOXMODEL" = "h7")
 
 # mipsbox
 AM_CONDITIONAL(BOXMODEL_VUDUO, test "$BOXMODEL" = "vuduo")
@@ -573,8 +573,8 @@ elif test "$BOXMODEL" = "vuuno4kse"; then
 	AC_DEFINE(BOXMODEL_VUUNO4KSE, 1, [vuuno4kse])
 elif test "$BOXMODEL" = "vuzero4k"; then
 	AC_DEFINE(BOXMODEL_VUZERO4K, 1, [vuzero4k])
-elif test "$BOXMODEL" = "vuzero4k"; then
-	AC_DEFINE(BOXMODEL_ZGEMMAH7, 1, [zgemmah7])
+elif test "$BOXMODEL" = "h7"; then
+	AC_DEFINE(BOXMODEL_H7, 1, [h7])
 elif test "$BOXMODEL" = "vuduo"; then
 	AC_DEFINE(BOXMODEL_VUDUO, 1, [vuduo])
 fi
