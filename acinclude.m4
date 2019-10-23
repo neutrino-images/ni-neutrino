@@ -447,7 +447,7 @@ AC_ARG_WITH(boxtype,
 AC_ARG_WITH(boxmodel,
 	AS_HELP_STRING([--with-boxmodel], [valid for generic: generic, raspi])
 AS_HELP_STRING([], [valid for coolstream: hd1, hd2])
-AS_HELP_STRING([], [valid for armbox: hd51, hd60, bre2ze4k, vusolo4k, vuduo4k, vuultimo4k, vuuno4k, vuuno4kse, vuzero4k])
+AS_HELP_STRING([], [valid for armbox: hd51, hd60, bre2ze4k, vusolo4k, vuduo4k, vuultimo4k, vuuno4k, vuuno4kse, vuzero4k, h7])
 AS_HELP_STRING([], [valid for mipsbox: vuduo]),
 	[case "${withval}" in
 		generic|raspi)
@@ -476,7 +476,7 @@ AS_HELP_STRING([], [valid for mipsbox: vuduo]),
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 		;;
-		hd51|hd60|bre2ze4k|vusolo4k|vuduo4k|vuultimo4k|vuuno4k|vuuno4kse|vuzero4k)
+		hd51|hd60|bre2ze4k|vusolo4k|vuduo4k|vuultimo4k|vuuno4k|vuuno4kse|vuzero4k|h7)
 			if test "$BOXTYPE" = "armbox"; then
 				BOXMODEL="$withval"
 			else
@@ -525,6 +525,7 @@ AM_CONDITIONAL(BOXMODEL_VUULTIMO4K, test "$BOXMODEL" = "vuultimo4k")
 AM_CONDITIONAL(BOXMODEL_VUUNO4K, test "$BOXMODEL" = "vuuno4k")
 AM_CONDITIONAL(BOXMODEL_VUUNO4KSE, test "$BOXMODEL" = "vuuno4kse")
 AM_CONDITIONAL(BOXMODEL_VUZERO4K, test "$BOXMODEL" = "vuzero4k")
+AM_CONDITIONAL(BOXMODEL_ZGEMMAH7, test "$BOXMODEL" = "zgemmah7")
 
 # mipsbox
 AM_CONDITIONAL(BOXMODEL_VUDUO, test "$BOXMODEL" = "vuduo")
@@ -572,6 +573,8 @@ elif test "$BOXMODEL" = "vuuno4kse"; then
 	AC_DEFINE(BOXMODEL_VUUNO4KSE, 1, [vuuno4kse])
 elif test "$BOXMODEL" = "vuzero4k"; then
 	AC_DEFINE(BOXMODEL_VUZERO4K, 1, [vuzero4k])
+elif test "$BOXMODEL" = "vuzero4k"; then
+	AC_DEFINE(BOXMODEL_ZGEMMAH7, 1, [zgemmah7])
 elif test "$BOXMODEL" = "vuduo"; then
 	AC_DEFINE(BOXMODEL_VUDUO, 1, [vuduo])
 fi
@@ -602,7 +605,7 @@ AM_CONDITIONAL(BOXMODEL_VUPLUS4K, test "$vuplus4k" = "true")
 
 # BOXMODELs that allows to change osd resolution
 case "$BOXMODEL" in
-	hd2|hd51|hd60|bre2ze4k|vusolo4k|vuduo4k|vuultimo4k|vuuno4k|vuuno4kse|vuzero4k|vuduo)
+	hd2|hd51|hd60|bre2ze4k|vusolo4k|vuduo4k|vuultimo4k|vuuno4k|vuuno4kse|vuzero4k|vuduo|h7)
 		AC_DEFINE(ENABLE_CHANGE_OSD_RESOLUTION, 1, [enable to change osd resolution])
 	;;
 esac
