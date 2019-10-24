@@ -44,6 +44,13 @@ function do_init(){
 		case "10":	// mutant hd51
 		case "11":	// wwio bre2ze4k
 		case "12":	// vu solo4k
+		case "13":	// vu duo4k
+		case "14":	// vu ultimo4k
+		case "15":	// vu uno4k
+		case "16":	// vu uno4kse
+		case "17":	// vu zero4k
+		case "18":	// vu duo
+		case "19":	// zgemma h7
 			sel=(sel*1+val*1);
 			break;
 		default:
@@ -165,6 +172,13 @@ select {
 						<option value="10">Mutant | HD51</option>
 						<option value="11">WWIO | BRE2ZE 4K</option>
 						<option value="12">VU+ | Solo 4K</option>
+						<option value="13">VU+ | Duo 4K</option>
+						<option value="14">VU+ | Ultimo 4K</option>
+						<option value="15">VU+ | Uno 4K</option>
+						<option value="16">VU+ | Uno 4K SE</option>
+						<option value="17">VU+ | Zero 4K</option>
+						<option value="18">VU+ | Duo</option>
+						<option value="19">Zgemma | H7</option>
 					</select>
 				</td>
 				<td>{=L:set.yweb.screenshot_rc=}</td>
