@@ -86,7 +86,6 @@
 
 #include <eitd/sectionsd.h>
 
-//NI lcd4l-support
 #include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
 
@@ -967,7 +966,9 @@ int CChannelList::show()
 	if (edit_state)
 		editMode(false);
 
-	//NI lcd4l-support
+#ifdef ENABLE_GRAPHLCD
+	nGLCD::unlockChannel();
+#endif
 	LCD4l->RemoveFile("/tmp/lcd/menu");
 
 	if(!dont_hide){
@@ -2248,7 +2249,10 @@ void CChannelList::updateVfd()
 	} else
 		CVFD::getInstance()->showMenuText(0, chan->getName().c_str(), -1, true); // UTF-8
 
-	//NI lcd4l-support
+#ifdef ENABLE_GRAPHLCD
+	if(g_settings.glcd_enable)
+		nGLCD::lockChannel(g_Locale->getText(LOCALE_BOUQUETLIST_HEAD), chan->getName().c_str(), 0);
+#endif
 	if (g_settings.lcd4l_support)
 		LCD4l->CreateFile("/tmp/lcd/menu", chan->getName().c_str(), g_settings.lcd4l_convert);
 }

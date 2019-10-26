@@ -48,6 +48,11 @@ libneutrino_driver_a_SOURCES = \
 	streamts.cpp \
 	volume.cpp
 
+if ENABLE_GRAPHLCD
+libneutrino_driver_a_SOURCES += \
+	nglcd.cpp
+endif
+
 if BOXTYPE_COOL
 libneutrino_driver_a_SOURCES += \
 	fb_accel_cs_hdx.cpp

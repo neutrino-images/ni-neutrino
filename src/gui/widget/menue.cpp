@@ -47,7 +47,6 @@
 
 #include <cctype>
 
-//NI lcd4l-support
 #include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
 
@@ -93,7 +92,10 @@ CMenuItem::CMenuItem(bool Active, neutrino_msg_t DirectKey, const char * const I
 	actObserv	= NULL;
 	parent_widget	= NULL;
 
-	lcd4l_text	= ""; //NI lcd4l-support
+#ifdef ENABLE_GRAPHLCD
+	graphlcd_text	= "";
+#endif
+	lcd4l_text	= "";
 }
 
 void CMenuItem::init(const int X, const int Y, const int DX, const int OFFX)
@@ -240,19 +242,28 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 			char str[len];
 			snprintf(str, len, "%s %s", left_text, right_text);
 			CVFD::getInstance()->showMenuText(0, str, -1, true);
-			//NI lcd4l-support
-			if(g_settings.lcd4l_support)
+#ifdef ENABLE_GRAPHLCD
+			if (g_settings.glcd_enable)
+				graphlcd_text = str;
+#endif
+			if (g_settings.lcd4l_support)
 				lcd4l_text = str;
 		} 
 		else
 		{
 			CVFD::getInstance()->showMenuText(0, left_text, -1, true);
-			//NI lcd4l-support
+#ifdef ENABLE_GRAPHLCD
+			if (g_settings.glcd_enable)
+				graphlcd_text = left_text;
+#endif
 			if (g_settings.lcd4l_support)
 				lcd4l_text = left_text;
 		}
 
-		//NI lcd4l-support
+#ifdef ENABLE_GRAPHLCD
+		if (g_settings.glcd_enable)
+			nGLCD::lockChannel(g_Locale->getText(LOCALE_MAINMENU_HEAD), graphlcd_text, 0);
+#endif
 		if (g_settings.lcd4l_support)
 			LCD4l->CreateFile("/tmp/lcd/menu", lcd4l_text, g_settings.lcd4l_convert);
 	}
@@ -1020,7 +1031,9 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 			case (CRCInput::RC_right):
 			case (CRCInput::RC_ok):
 				if (hasItem() && selected > -1 && (int)items.size() > selected) {
-					//NI lcd4l-support
+#ifdef ENABLE_GRAPHLCD
+					nGLCD::unlockChannel();
+#endif
 					LCD4l->RemoveFile("/tmp/lcd/menu");
 
 					//exec this item...
@@ -1036,7 +1049,10 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 					fader.StopFade();
 					int rv = item->exec( this );
 
-					//NI lcd4l-support
+#ifdef ENABLE_GRAPHLCD
+					if (g_settings.glcd_enable)
+						nGLCD::lockChannel(g_Locale->getText(LOCALE_MAINMENU_HEAD), item->graphlcd_text, 0);
+#endif
 					if (g_settings.lcd4l_support)
 						LCD4l->CreateFile("/tmp/lcd/menu", item->lcd4l_text, g_settings.lcd4l_convert);
 
@@ -1124,7 +1140,9 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 		if(oldLcdMode != CVFD::getInstance()->getMode())
 			CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 
-	//NI lcd4l-support
+#ifdef ENABLE_GRAPHLCD
+	nGLCD::unlockChannel();
+#endif
 	LCD4l->RemoveFile("/tmp/lcd/menu");
 
 	for (unsigned int count = 0; count < items.size(); count++) 

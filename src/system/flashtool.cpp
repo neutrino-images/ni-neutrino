@@ -49,7 +49,6 @@
 #define writesize oobsize
 #endif
 
-//NI lcd4l-support
 #include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
 

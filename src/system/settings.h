@@ -796,6 +796,36 @@ struct SNeutrinoSettings
 	int infoClockSeconds;
 	int infoClockBackground;
 
+	// graphlcd
+	int glcd_enable;
+	uint32_t glcd_color_fg;
+	uint32_t glcd_color_bg;
+	uint32_t glcd_color_bar;
+	std::string glcd_font;
+	int glcd_percent_channel;
+	int glcd_percent_epg;
+	int glcd_percent_bar;
+	int glcd_percent_time;
+	int glcd_percent_time_standby;
+	int glcd_percent_logo;
+	int glcd_mirror_osd;
+	int glcd_mirror_video;
+	int glcd_time_in_standby;
+	int glcd_show_logo;
+	int glcd_brightness;
+	int glcd_brightness_standby;
+	int glcd_scroll_speed;
+
+	// lcd4linux
+	int lcd4l_support;
+	std::string lcd4l_logodir;
+	int lcd4l_brightness;
+	int lcd4l_brightness_standby;
+	int lcd4l_display_type;
+	int lcd4l_skin;
+	int lcd4l_skin_radio;
+	int lcd4l_convert;
+
 	// lcdd
 	enum LCD_SETTINGS {
 		LCD_BRIGHTNESS         = 0,
@@ -903,16 +933,6 @@ struct SNeutrinoSettings
 
 	int font_scaling_x;
 	int font_scaling_y;
-
-	// lcd4linux
-	int lcd4l_support;
-	std::string lcd4l_logodir;
-	int lcd4l_brightness;
-	int lcd4l_brightness_standby;
-	int lcd4l_display_type;
-	int lcd4l_skin;
-	int lcd4l_skin_radio;
-	int lcd4l_convert;
 
 	int		ca_init;
 	int		show_menu_hints_line;

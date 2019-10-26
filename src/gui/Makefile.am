@@ -117,6 +117,11 @@ libneutrino_gui_a_SOURCES = \
 	xmltv_setup.cpp \
 	zapit_setup.cpp
 
+if ENABLE_GRAPHLCD
+libneutrino_gui_a_SOURCES += \
+	glcdsetup.cpp
+endif
+
 if BOXTYPE_COOL
 libneutrino_gui_a_SOURCES += \
 	streaminfo1.cpp

@@ -84,6 +84,10 @@
 //NI InfoIcons
 #include <gui/infoicons.h>
 
+#ifdef ENABLE_GRAPHLCD
+bool glcd_play = false;
+#endif
+
 #if HAVE_COOL_HARDWARE || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 #define LCD_MODE CVFD::MODE_MENU_UTF8
 #else
@@ -1354,6 +1358,16 @@ bool CMoviePlayerGui::PlayFileStart(void)
 		CZapit::getInstance()->SetVolumePercent(percent);
 	}
 
+#ifdef ENABLE_GRAPHLCD
+	nGLCD::MirrorOSD(false);
+	if (p_movie_info)
+		nGLCD::lockChannel(p_movie_info->channelName, p_movie_info->epgTitle);
+	else {
+		glcd_play = true;
+		nGLCD::lockChannel(g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD), file_name.c_str(), file_prozent);
+	}
+#endif
+
 	file_prozent = 0;
 	pthread_t thrStartHint = 0;
 	if (is_file_player) {
@@ -1546,6 +1560,14 @@ void CMoviePlayerGui::PlayFileLoop(void)
 
 	while (playstate >= CMoviePlayerGui::PLAY)
 	{
+#ifdef ENABLE_GRAPHLCD
+		if (p_movie_info)
+			nGLCD::lockChannel(p_movie_info->channelName, p_movie_info->epgTitle, duration ? (100 * position / duration) : 0);
+		else {
+			glcd_play = true;
+			nGLCD::lockChannel(g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD), file_name.c_str(), file_prozent);
+		}
+#endif
 		if (update_lcd || g_settings.movieplayer_display_playtime) {
 			update_lcd = false;
 			updateLcd(g_settings.movieplayer_display_playtime);
@@ -2051,6 +2073,12 @@ void CMoviePlayerGui::PlayFileEnd(bool restore)
 
 	playback->SetSpeed(1);
 	playback->Close();
+#ifdef ENABLE_GRAPHLCD
+	if (p_movie_info || glcd_play == true) {
+		glcd_play = false;
+		nGLCD::unlockChannel();
+	}
+#endif
 	if (iso_file) {
 		iso_file = false;
 		if (umount2(ISO_MOUNT_POINT, MNT_FORCE))
@@ -2199,6 +2227,10 @@ void CMoviePlayerGui::callInfoViewer(bool init_vzap_it)
 		}
 		if (!movie_info.channelName.empty() || !movie_info.epgTitle.empty())
 			p_movie_info = &movie_info;
+#ifdef ENABLE_GRAPHLCD
+		if (p_movie_info)
+			nGLCD::lockChannel(p_movie_info->channelName, p_movie_info->epgTitle);
+#endif
 	}
 
 	if (p_movie_info) {
