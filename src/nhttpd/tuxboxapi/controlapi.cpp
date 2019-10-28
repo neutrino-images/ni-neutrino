@@ -66,6 +66,8 @@ extern CBouquetManager *g_bouquetManager;
 
 #if HAVE_COOL_HARDWARE
 	#define RC_DEVICE "/dev/input/nevis_ir"
+#elif BOXMODEL_H7
+	#define RC_DEVICE "/dev/input/event2"
 #else
 	#define RC_DEVICE "/dev/input/event1"
 #endif
