@@ -375,6 +375,10 @@ void CFrontend::getFEInfo(void)
 				deliverySystemMask |= DVB_S2;
 				isMultistream = info.caps & FE_CAN_MULTISTREAM;
 				break;
+			case SYS_DVBS2X:
+				deliverySystemMask |= DVB_S2X;
+				isMultistream = info.caps & FE_CAN_MULTISTREAM;
+				break;
 			case SYS_DTMB:
 				deliverySystemMask |= DTMB;
 				break;
@@ -956,6 +960,15 @@ void CFrontend::getDelSys(delivery_system_t delsys, int f, int m, const char *&f
 		case PSK_8:
 			mod = "8PSK";
 			break;
+		case APSK_8:
+			mod = "8APSK";
+			break;
+		case APSK_16:
+			mod = "16APSK";
+			break;
+		case APSK_32:
+			mod = "32APSK";
+			break;
 		default:
 			printf("[frontend] unknown modulation %d!\n", m);
 			mod = "UNKNOWN";
@@ -1083,6 +1096,9 @@ fe_delivery_system_t CFrontend::getFEDeliverySystem(delivery_system_t Delsys)
 	case DVB_S2:
 		delsys = SYS_DVBS2;
 		break;
+	case DVB_S2X:
+		delsys = SYS_DVBS2X;
+		break;
 	case DVB_T:
 		delsys = SYS_DVBT;
 		break;
@@ -1171,6 +1187,9 @@ uint32_t CFrontend::getXMLDeliverySystem(delivery_system_t delsys)
 		break;
 	case ISDBT:
 		delnr = 11;
+		break;
+	case DVB_S2X:
+		delnr = 12;
 		break;
 	default:
 		printf("%s: unknown delivery system (%d)\n", __FUNCTION__, delsys);
