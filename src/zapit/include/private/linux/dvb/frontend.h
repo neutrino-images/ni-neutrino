@@ -169,7 +169,7 @@ typedef enum fe_code_rate {
 
 
 typedef enum fe_modulation {
-	QPSK,		// mod=1
+	QPSK,
 	QAM_16,
 	QAM_32,
 	QAM_64,
@@ -178,12 +178,11 @@ typedef enum fe_modulation {
 	QAM_AUTO,
 	VSB_8,
 	VSB_16,
-	PSK_8,		// mod=2 ==> S2(X)
-	APSK_16,	// mod=4 ==> S2(X)   16APSK
-	APSK_32,	// mod=5 ==> S2(X)   32APSK ==> ?? 64APSK, 128APSK, 256APSK (mod= 6,7,8)
+	PSK_8,
+	APSK_16,
+	APSK_32,
 	DQPSK,
-	QAM_4_NR,
-	APSK_8		// mod=3 ==> S2(X)    8APSK
+	QAM_4_NR
 } fe_modulation_t;
 
 typedef enum fe_transmit_mode {
