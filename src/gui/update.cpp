@@ -233,8 +233,14 @@ bool CFlashUpdate::selectHttpImage(void)
 
 	CConfigFile _configfile('\t');
 	std::string versionString = "????????????????";
+	std::string imagedescription = "";
+	std::string imageversion = "n/a";
 	if (_configfile.loadConfig(TARGET_PREFIX "/.version"))
+	{
 		versionString = _configfile.getString("version", "????????????????");
+		imagedescription = _configfile.getString("imagedescription", "");
+		imageversion = _configfile.getString("imageversion", "n/a");
+	}
 
 	CFlashVersionInfo curInfo(versionString.c_str());
 	dprintf(DEBUG_NORMAL, "[update] current flash-version: %s (%d) date %s (%ld)\n", versionString.c_str(), curInfo.getVersion(), curInfo.getDate(), curInfo.getDateTime());
@@ -243,16 +249,18 @@ bool CFlashUpdate::selectHttpImage(void)
 	httpTool.setStatusViewer(this);
 	showStatusMessageUTF(g_Locale->getText(LOCALE_FLASHUPDATE_GETINFOFILE));
 
-	char current[200];
-	snprintf(current, 200, "%s %s - %s, %s", curInfo.getType(true), curInfo.getVersionString(), curInfo.getDate(), curInfo.getTime());
+	char currentleft[200];
+	char currentright[200];
+	snprintf(currentleft, 200, "%s %s - %s, %s", curInfo.getType(true), curInfo.getVersionString(), curInfo.getDate(), curInfo.getTime());
+	snprintf(currentright, 200, "%s %s", imagedescription.c_str(), imageversion.c_str());
 
 	CMenuWidget SelectionWidget(LOCALE_FLASHUPDATE_SELECTIMAGE, NEUTRINO_ICON_UPDATE, listWidth, MN_WIDGET_ID_IMAGESELECTOR);
 
 	SelectionWidget.addItem(GenericMenuSeparator);
 	SelectionWidget.addItem(GenericMenuBack);
-	SelectionWidget.addItem(new CMenuSeparator(CMenuSeparator::LINE));
+	SelectionWidget.addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, g_Locale->getText(LOCALE_FLASHUPDATE_CURRENTVERSION_SEP)));
+	SelectionWidget.addItem(new CMenuForwarder(currentleft, false, currentright));
 
-	SelectionWidget.addItem(new CMenuForwarder(current, false, g_Locale->getText(LOCALE_FLASHUPDATE_CURRENTVERSION_SEP))); //NI
 	std::ifstream urlFile(g_settings.softupdate_url_file.c_str());
 	dprintf(DEBUG_NORMAL, "[update] file %s\n", g_settings.softupdate_url_file.c_str());
 
