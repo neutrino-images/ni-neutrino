@@ -2953,6 +2953,7 @@ TIMER_START();
 	CFileHelpers::createDir(WEBRADIODIR_VAR);
 	CFileHelpers::createDir(WEBTVDIR_VAR);
 	CFileHelpers::createDir(PUBLIC_HTTPDDIR);
+	CFileHelpers::createDir(PUBLIC_HTTPDDIR "/logo");
 
 	CWeather::getInstance()->setCoords(g_settings.weather_location, g_settings.weather_city);
 
