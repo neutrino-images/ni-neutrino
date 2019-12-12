@@ -4,7 +4,7 @@
 //<![CDATA[
 function automount_edit()
 {
-	var mstr = loadSyncURL("/control/exec?Y_Tools&automount_getline&{=if-file-exists:/var/etc/auto.net~/var/etc/auto.net~/etc/auto.net=}&{=R1=}");
+	var mstr = loadSyncURL("/control/exec?Y_Tools&automount_getline&/var/etc/auto.net&{=R1=}");
 	mstr = mstr.replace(/\t/gi," ");
 	mstr = mstr.replace(/[ ]+/gi," ");
 
@@ -108,8 +108,7 @@ function do_save2()
 	show_waitbox(false);
 	mstr = mstr.replace(/=/gi,",,");
 
-	//NI var _url ="/control/exec?Y_Tools&automount_setline&/var/etc/auto.net&"+mountname+"&"+mstr;
-	var _url ="/control/exec?Y_Tools&automount_setline&{=if-file-exists:/var/etc/auto.net~/var/etc/auto.net~/etc/auto.net=}&"+mountname+"&"+mstr;
+	var _url ="/control/exec?Y_Tools&automount_setline&/var/etc/auto.net&"+mountname+"&"+mstr;
 	var res = loadSyncURL(_url);
 	window.document.location.href="/Y_Settings_automount_liste.yhtm";
 }

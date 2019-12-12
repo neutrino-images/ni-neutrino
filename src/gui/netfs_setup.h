@@ -46,7 +46,6 @@ class CNETFSMountGui : public CMenuTarget
 		CFSMounter::FS_Support m_cifs_sup;
 
 		int vinit(int mt);
-		std::string checkVarPath(const std::string &file); /// returns path for persistent var partitions
 
 	protected:
 		int width;

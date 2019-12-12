@@ -1442,10 +1442,10 @@ menu.hint_net_telnet Použitie telnet prihlásenia do vášho prijímača
 menu.hint_net_test Test sieťového pripojenia: ping brány,\n názov servera a externé IP
 menu.hint_net_ushare Zdielanie pripojeného HDD cez uPnp
 menu.hint_net_xupnpd Zdielanie "Živých kanálov" cez uPnp
-menu.hint_netfs_automount_write Uloženie autopripojených záznamov a zapísanie /etc/auto.net
+menu.hint_netfs_automount_write Uloženie autopripojených záznamov a zapísanie %s
 menu.hint_netfs_fstab_domount Pripojenie fstab záznamov
 menu.hint_netfs_fstab_doumount Odpojenie fstab záznamov
-menu.hint_netfs_fstab_write Uloženie fstab záznamov a zapísanie /etc/fstab
+menu.hint_netfs_fstab_write Uloženie fstab záznamov a zapísanie %s
 menu.hint_netfs_menu_main_automount Konfigurácia automount záznamov
 menu.hint_netfs_menu_main_fstab Konfigurácia fstab záznamov
 menu.hint_netfs_menu_main_head Fstab a automount konfigurácia
@@ -2100,18 +2100,18 @@ mpkey.time Zobrazenie času
 netfs.active_onoff Aktivovať
 netfs.automount_edit Upraviť auto.net
 netfs.automount_head NetFS nastavenia
-netfs.automount_intro /etc/auto.net záznamov
+netfs.automount_intro auto.net záznamov
 netfs.automount_intro_mounts Upraviť NetFS pripojenia
 netfs.automount_write Uložiť nastavenia a uložiť auto.net
 netfs.automount_write_info Súbor auto.net uložený
 netfs.dump Výpis
 netfs.fstab_edit Upraviť fstab
 netfs.fstab_domount Pripojiť NetFS zložku
-netfs.fstab_domount_info NGfstab beží
+netfs.fstab_domount_info '/etc/init.d/fstab start_netfs' beží
 netfs.fstab_doumount Odpojiť NetFS zložku
-netfs.fstab_doumount_info NGfstab beží
+netfs.fstab_doumount_info '/etc/init.d/fstab start_netfs' beží
 netfs.fstab_head NetFS nastavenia
-netfs.fstab_intro /etc/fstab záznamy
+netfs.fstab_intro fstab záznamy
 netfs.fstab_intro_mounts Upraviť NetFS pripojenia
 netfs.fstab_write Uložiť nastavenia a uloženie fstab
 netfs.fstab_write_info Súbor fstab uložený

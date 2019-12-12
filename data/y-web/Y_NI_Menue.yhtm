@@ -11,8 +11,8 @@
 				<li><a target="work" href="Y_NI_Infoicons-control.yhtm">{=L:ni.infoicons-control=}</a></li>
 				<li>{=L:ni.netfs-control=}</li>
 				<ul style="margin-left: 1em">
-					<li><a target="work" href="Y_NI_NetFS-init.yhtm?mount_type=0&mount_type_s=fstab">{=if-file-exists:/var/etc/fstab~/var/etc/fstab~/etc/fstab=}</a></li>
-					<li><a target="work" href="Y_NI_NetFS-init.yhtm?mount_type=1&mount_type_s=automount">{=if-file-exists:/var/etc/auto.net~/var/etc/auto.net~/etc/auto.net=}</a></li>
+					<li><a target="work" href="Y_NI_NetFS-init.yhtm?mount_type=0&mount_type_s=fstab">/var/etc/fstab</a></li>
+					<li><a target="work" href="Y_NI_NetFS-init.yhtm?mount_type=1&mount_type_s=automount">/var/etc/auto.net</a></li>
 				</ul>
 				<li><a target="work" href="Y_NI_Plugin-control.yhtm">{=L:ni.plugin-control=}</a></li>
 				<li><a target="work" href="Y_NI_Camd-control.yhtm">{=L:ni.camd-control=}</a></li>

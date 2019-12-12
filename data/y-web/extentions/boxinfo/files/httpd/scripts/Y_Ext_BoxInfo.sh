@@ -55,8 +55,8 @@ case "$1" in
 			if [ -e /etc/smb.conf ]; then
 				do_cmd 'Samba Server configuration' cat /etc/smb.conf
 			fi
-			if [ -e /etc/auto.net ]; then
-				do_cmd 'auto mounter configuration' cat /etc/auto.net
+			if [ -e /var/etc/auto.net ]; then
+				do_cmd 'auto mounter configuration' cat /var/etc/auto.net
 			fi
 		fi
 		;;

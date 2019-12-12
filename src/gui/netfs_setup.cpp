@@ -57,17 +57,8 @@ CNETFSMountGui::CNETFSMountGui()
 	
 	width = 50;
 
-	fstabPath = checkVarPath("/etc/fstab");
-	autoPath = checkVarPath("/etc/auto.net");
-}
-
-std::string CNETFSMountGui::checkVarPath(const std::string &file)
-{
-	std::string var = "/var" + file;
-	if(file_exists(var.c_str()))
-		return(var);
-	else
-		return(file);
+	fstabPath = "/var/etc/fstab";
+	autoPath = "/var/etc/auto.net";
 }
 
 std::string CNETFSMountGui::getEntryString(int mt, int i)

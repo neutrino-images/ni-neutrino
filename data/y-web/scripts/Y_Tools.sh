@@ -306,7 +306,7 @@ do_automount_getline()
 do_automount_setline()
 {
 	if ! [ -e $1 ]; then
-		cp /etc/auto.net $1
+		cp /var/etc/auto.net $1
 	fi
 	filename=$1
 	mountname=`echo "$2"|sed -e "s;---;;g"`

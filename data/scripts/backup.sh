@@ -8,9 +8,7 @@ USRF="/var/tuxbox/config/tobackup.conf"
 BAKF="$1/${2:-settings_${HOST}_${DATE}.tar.gz}"
 
 TOBACKUP="\
-	/etc/auto.net \
 	/etc/exports \
-	/etc/fstab \
 	/etc/hostname \
 	/etc/network/interfaces \
 	/etc/passwd \

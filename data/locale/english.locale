@@ -1516,10 +1516,10 @@ menu.hint_net_telnet Enable telnet login to your box
 menu.hint_net_test Test network connection: ping gateway,\n name server and external IP
 menu.hint_net_ushare Share connected HDD over uPnp
 menu.hint_net_xupnpd Share live channels over UPNP
-menu.hint_netfs_automount_write Save automount entries and write /etc/auto.net
+menu.hint_netfs_automount_write Save automount entries and write %s
 menu.hint_netfs_fstab_domount Mount fstab entries
 menu.hint_netfs_fstab_doumount Umount fstab entries
-menu.hint_netfs_fstab_write Save fstab entries and write /etc/fstab
+menu.hint_netfs_fstab_write Save fstab entries and write %s
 menu.hint_netfs_menu_main_automount Configure automount entries
 menu.hint_netfs_menu_main_fstab Configure fstab entries
 menu.hint_netfs_menu_main_head Fstab and automount configuration
@@ -2193,7 +2193,7 @@ mpkey.time Show time
 netfs.active_onoff Entry active
 netfs.automount_edit Edit auto.net
 netfs.automount_head NetFS settings
-netfs.automount_intro /etc/auto.net entries
+netfs.automount_intro auto.net entries
 netfs.automount_intro_mounts edit NetFS mounts
 netfs.automount_write save settings and write auto.net
 netfs.automount_write_info auto.net written
@@ -2204,7 +2204,7 @@ netfs.fstab_domount_info Running '/etc/init.d/fstab start_netfs'
 netfs.fstab_doumount unmount NetFS directory
 netfs.fstab_doumount_info Running '/etc/init.d/fstab stop_netfs'
 netfs.fstab_head NetFS settings
-netfs.fstab_intro /etc/fstab entries
+netfs.fstab_intro fstab entries
 netfs.fstab_intro_mounts Edit NetFS mounts
 netfs.fstab_write save settings and write fstab
 netfs.fstab_write_info fstab written

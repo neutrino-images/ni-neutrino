@@ -7,7 +7,7 @@ VAR="/var/"
 USRF="/var/tuxbox/config/tobackup.conf"
 BAKF="/var/backup_flash.tar.gz"
 
-TOBACKUP="/etc/auto.net*"
+TOBACKUP=""
 
 SHOWINFO "backup to ${BAKF} ..."
 
