@@ -324,6 +324,13 @@ const CMenuOptionChooser::keyval OPTIONS_EAST0_WEST1_OPTIONS[OPTIONS_EAST0_WEST1
 	{ 1, LOCALE_EXTRA_WEST }
 };
 
+#define NOSAMEFE_SCAN_OPTIONS_COUNT 2
+const CMenuOptionChooser::keyval NOSAMEFE_SCAN_OPTIONS[NOSAMEFE_SCAN_OPTIONS_COUNT] =
+{
+	{ 0, LOCALE_OPTIONS_OFF },
+	{ 1, LOCALE_OPTIONS_ON  }
+};
+
 #define DISEQC_ORDER_OPTION_COUNT 2
 const CMenuOptionChooser::keyval DISEQC_ORDER_OPTIONS[DISEQC_ORDER_OPTION_COUNT] =
 {
@@ -345,8 +352,8 @@ const CMenuOptionChooser::keyval SATSETUP_FRONTEND_MODE[SATSETUP_FRONTEND_MODE_C
 const CMenuOptionChooser::keyval FRONTEND_FORCE_MODE[FRONTEND_FORCE_MODE_COUNT] =
 {
 	{ 0, LOCALE_TUNERSETUP_HYBRID },
-	{ 1, LOCALE_TUNERSETUP_CABLE },
-	{ 2, LOCALE_TUNERSETUP_TERR }
+	{ 1, LOCALE_TUNERSETUP_CABLE  },
+	{ 2, LOCALE_TUNERSETUP_TERR   }
 };
 
 #define SATSETUP_SCANTP_PLM_COUNT 4
@@ -376,7 +383,7 @@ CScanSetup::CScanSetup(int wizard_mode)
 	linkfe		= NULL;
 	in_menu		= false;
 	allow_start	= true;
-	tsp			= NULL;
+	tsp		= NULL;
 	if (CFEManager::getInstance()->haveCable())
 		nid = new CIntInput(LOCALE_SATSETUP_CABLE_NID, (int*) &scansettings.cable_nid, 5, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE);
 }
@@ -634,12 +641,8 @@ int CScanSetup::showScanMenu()
 		r_system = ALL_CABLE;
 
 		//tune timeout
-		if(CFEManager::getInstance()->getFrontendCount() <= 1) {
-			CMenuOptionNumberChooser * nc = new CMenuOptionNumberChooser(LOCALE_EXTRA_ZAPIT_FE_TIMEOUT, (int *)&zapitCfg.feTimeout, true, 6, 100);
-			nc->setNumberFormat(std::string("%d00 ") + g_Locale->getText(LOCALE_UNIT_SHORT_MILLISECOND));
-			nc->setHint("", LOCALE_MENU_HINT_SCAN_FETIMEOUT);
-			settings->addItem(nc);
-		}
+		if(CFEManager::getInstance()->getFrontendCount() <= 1)
+			addScanMenuFrontendOptions(settings);
 		//nid = new CIntInput(LOCALE_SATSETUP_CABLE_NID, (int&) scansettings.cable_nid, 5, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE);
 
 		//auto scan
@@ -672,11 +675,8 @@ int CScanSetup::showScanMenu()
 	if (CFEManager::getInstance()->haveTerr()) {
 		r_system = ALL_TERR;
 		// tune timeout, "Setup tuner" is not shown for only one non-sat tuner
-		if (CFEManager::getInstance()->getFrontendCount() <= 1) {
-			CMenuOptionNumberChooser * nc = new CMenuOptionNumberChooser(LOCALE_EXTRA_ZAPIT_FE_TIMEOUT, (int *)&zapitCfg.feTimeout, true, 6, 100);
-			nc->setHint("", LOCALE_MENU_HINT_SCAN_FETIMEOUT);
-			settings->addItem(nc);
-		}
+		if (CFEManager::getInstance()->getFrontendCount() <= 1)
+			addScanMenuFrontendOptions(settings);
 
 		//auto scan
 		char autoscan[64];
@@ -751,6 +751,22 @@ neutrino_locale_t CScanSetup::getModeLocale(int mode)
 	return lmode;
 }
 
+void CScanSetup::addScanMenuFrontendOptions(CMenuWidget *m)
+{
+	CMenuOptionNumberChooser * nc = new CMenuOptionNumberChooser(LOCALE_EXTRA_ZAPIT_FE_TIMEOUT, (int *)&zapitCfg.feTimeout, true, 6, 100);
+	nc->setNumberFormat(std::string("%d00 ") + g_Locale->getText(LOCALE_UNIT_SHORT_MILLISECOND));
+	nc->setHint("", LOCALE_MENU_HINT_SCAN_FETIMEOUT);
+	m->addItem(nc);
+
+	nc = new CMenuOptionNumberChooser(LOCALE_EXTRA_ZAPIT_FE_RETRIES, (int *)&zapitCfg.feRetries, true, 0, 9);
+	nc->setHint("", LOCALE_MENU_HINT_SCAN_FERETRIES);
+	m->addItem(nc);
+
+	CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_EXTRA_ZAPIT_FE_NO_SAME,  (int *)&zapitCfg.noSameFE, NOSAMEFE_SCAN_OPTIONS, NOSAMEFE_SCAN_OPTIONS_COUNT, true, NULL);
+	mc->setHint("", LOCALE_MENU_HINT_SCAN_FENOSAME);
+	m->addItem(mc);
+}
+
 int CScanSetup::showScanMenuFrontendSetup()
 {
 	CMenuForwarder * mf;
@@ -797,10 +813,7 @@ int CScanSetup::showScanMenuFrontendSetup()
 		if(i != 0)
 			frontendSetup = mf;
 	}
-	CMenuOptionNumberChooser * nc = new CMenuOptionNumberChooser(LOCALE_EXTRA_ZAPIT_FE_TIMEOUT, (int *)&zapitCfg.feTimeout, true, 6, 100);
-	nc->setNumberFormat(std::string("%d00 ") + g_Locale->getText(LOCALE_UNIT_SHORT_MILLISECOND));
-	nc->setHint("", LOCALE_MENU_HINT_SCAN_FETIMEOUT);
-	setupMenu->addItem(nc);
+	addScanMenuFrontendOptions(setupMenu);
 
 	std::string zapit_lat_str;
 	std::string zapit_long_str;
@@ -833,7 +846,7 @@ int CScanSetup::showScanMenuFrontendSetup()
 		mf->setHint("", LOCALE_MENU_HINT_SCAN_LONGITUDE);
 		rotorMenu->addItem(mf);
 
-		nc = new CMenuOptionNumberChooser(LOCALE_SATSETUP_USALS_REPEAT, (int *)&zapitCfg.repeatUsals, true, 0, 10, NULL, CRCInput::convertDigitToKey(shortcut++), NULL, 0, 0, LOCALE_OPTIONS_OFF);
+		CMenuOptionNumberChooser * nc = new CMenuOptionNumberChooser(LOCALE_SATSETUP_USALS_REPEAT, (int *)&zapitCfg.repeatUsals, true, 0, 10, NULL, CRCInput::convertDigitToKey(shortcut++), NULL, 0, 0, LOCALE_OPTIONS_OFF);
 		nc->setHint("", LOCALE_MENU_HINT_SCAN_USALS_REPEAT);
 		rotorMenu->addItem(nc);
 
