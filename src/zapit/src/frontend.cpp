@@ -966,7 +966,7 @@ void CFrontend::getDelSys(delivery_system_t delsys, int f, int m, const char *&f
 	case DTMB:
 		switch(delsys) {
 		case DVB_C:
-			sys = "DVB-C(Annex A)";
+			sys = "DVB-C (Annex A)";
 			break;
 		case DVB_T:
 			sys = "DVB-T";
