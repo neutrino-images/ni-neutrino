@@ -214,33 +214,34 @@ static fe_sec_voltage_t unicable_lowvolt = SEC_VOLTAGE_13;
 CFrontend::CFrontend(int Number, int Adapter)
 {
 	DBG("[fe%d/%d] New frontend on adapter %d\n", Adapter, Number, Adapter);
-	fd		= -1;
-	fenumber	= Number;
-	adapter		= Adapter;
-	slave		= false; /* is set in frontend->setMasterSlave() */
-	standby		= true;
-	locked		= false;
-	usecount	= 0;
+	fd			= -1;
+	fenumber		= Number;
+	adapter			= Adapter;
+	slave			= false; /* is set in frontend->setMasterSlave() */
+	standby			= true;
+	locked			= false;
+	usecount		= 0;
 
-	femode		= FE_MODE_INDEPENDENT;
-	masterkey	= 0;
+	femode			= FE_MODE_INDEPENDENT;
+	masterkey		= 0;
 
-	tuned					= false;
-	uncommitedInput				= 255;
+	tuned			= false;
+	uncommitedInput		= 255;
 
 	currentDiseqc		= 255;
 	config.diseqcType	= NO_DISEQC;
 	config.diseqcRepeats	= 0;
-	config.uni_scr = 0;        /* the unicable SCR address 0-7 */
-	config.uni_qrg = 0;        /* the unicable frequency in MHz */
-	config.uni_lnb = 0;        /* for two-position switches */
-	config.uni_pin = -1;       /* for MDU setups */
-	config.highVoltage = false;
-	config.motorRotationSpeed = 0; //in 0.1 degrees per second
+	config.uni_scr		= 0;		/* the unicable SCR address 0-7 */
+	config.uni_qrg		= 0;		/* the unicable frequency in MHz */
+	config.uni_lnb		= 0;		/* for two-position switches */
+	config.uni_pin		= -1;		/* for MDU setups */
+	config.highVoltage	= false;
+	config.motorRotationSpeed = 0;		//in 0.1 degrees per second
 
-	feTimeout = 40;
-	currentVoltage = SEC_VOLTAGE_OFF;
-	currentToneMode = SEC_TONE_ON;
+	feTimeout		= 40;
+	currentVoltage		= SEC_VOLTAGE_OFF;
+	currentToneMode		= SEC_TONE_ON;
+
 	/* some broken hardware (a coolstream neo on my desk) does not lower
 	 * the voltage below 18V without enough DC load on the coax cable.
 	 * with unicable bus setups, there is no DC load on the coax... leading
