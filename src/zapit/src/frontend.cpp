@@ -90,76 +90,76 @@ extern int zapit_debug;
 
 /* stolen from dvb.c from vlc */
 static const struct dtv_property dvbs_cmdargs[] = {
-	{ DTV_CLEAR,		{0,0,0}, { 0			},0 },
-	{ DTV_FREQUENCY,	{0,0,0}, { 0			},0 },
-	{ DTV_MODULATION,	{0,0,0}, { QPSK			},0 },
-	{ DTV_INVERSION,	{0,0,0}, { INVERSION_AUTO	},0 },
-	{ DTV_SYMBOL_RATE,	{0,0,0}, { 27500000		},0 },
-	{ DTV_DELIVERY_SYSTEM,	{0,0,0}, { SYS_DVBS		},0 },
-	{ DTV_INNER_FEC,	{0,0,0}, { FEC_AUTO		},0 },
-	{ DTV_TUNE,		{0,0,0}, { 0			},0 },
+	{ DTV_CLEAR,		{0,0,0}, { 0			}, 0 },
+	{ DTV_FREQUENCY,	{0,0,0}, { 0			}, 0 },
+	{ DTV_MODULATION,	{0,0,0}, { QPSK			}, 0 },
+	{ DTV_INVERSION,	{0,0,0}, { INVERSION_AUTO	}, 0 },
+	{ DTV_SYMBOL_RATE,	{0,0,0}, { 27500000		}, 0 },
+	{ DTV_DELIVERY_SYSTEM,	{0,0,0}, { SYS_DVBS		}, 0 },
+	{ DTV_INNER_FEC,	{0,0,0}, { FEC_AUTO		}, 0 },
+	{ DTV_TUNE,		{0,0,0}, { 0			}, 0 }
 };
 
 static const struct dtv_property dvbs2_cmdargs[] = {
-	{ DTV_CLEAR,		{0,0,0}, { 0			},0 },
-	{ DTV_FREQUENCY,	{}, { 0			},0 },
-	{ DTV_MODULATION,	{}, { PSK_8		} ,0},
-	{ DTV_INVERSION,	{}, { INVERSION_AUTO	} ,0},
-	{ DTV_SYMBOL_RATE,	{}, { 27500000		} ,0},
-	{ DTV_DELIVERY_SYSTEM,	{}, { SYS_DVBS2		} ,0},
-	{ DTV_INNER_FEC,	{}, { FEC_AUTO		} ,0},
-	{ DTV_PILOT,		{}, { PILOT_AUTO	} ,0},
-	{ DTV_ROLLOFF,		{}, { ROLLOFF_AUTO	} ,0},
+	{ DTV_CLEAR,		{0,0,0}, { 0			}, 0 },
+	{ DTV_FREQUENCY,	{}     , { 0			}, 0 },
+	{ DTV_MODULATION,	{}     , { PSK_8		}, 0 },
+	{ DTV_INVERSION,	{}     , { INVERSION_AUTO	}, 0 },
+	{ DTV_SYMBOL_RATE,	{}     , { 27500000		}, 0 },
+	{ DTV_DELIVERY_SYSTEM,	{}     , { SYS_DVBS2		}, 0 },
+	{ DTV_INNER_FEC,	{}     , { FEC_AUTO		}, 0 },
+	{ DTV_PILOT,		{}     , { PILOT_AUTO		}, 0 },
+	{ DTV_ROLLOFF,		{}     , { ROLLOFF_AUTO		}, 0 },
 #if ! HAVE_COOL_HARDWARE
-	{ DTV_STREAM_ID,	{}, { NO_STREAM_ID_FILTER } ,0},
+	{ DTV_STREAM_ID,	{}     , { NO_STREAM_ID_FILTER	}, 0 },
 #endif
-	{ DTV_TUNE,		{}, { 0			} ,0 }
+	{ DTV_TUNE,		{}     , { 0			}, 0 }
 };
 
 static const struct dtv_property dvbc_cmdargs[] = {
-	{ DTV_CLEAR,		{0,0,0}, { 0		} ,0},
-	{ DTV_FREQUENCY,	{}, { 0			} ,0},
-	{ DTV_MODULATION,	{}, { QAM_AUTO		} ,0},
-	{ DTV_INVERSION,	{}, { INVERSION_AUTO	} ,0},
-	{ DTV_SYMBOL_RATE,	{}, { 27500000		} ,0},
-	{ DTV_DELIVERY_SYSTEM,	{}, { SYS_DVBC_ANNEX_AC	} ,0},
-	{ DTV_INNER_FEC,	{}, { FEC_AUTO		} ,0},
-	{ DTV_TUNE,		{}, { 0			}, 0},
+	{ DTV_CLEAR,		{0,0,0}, { 0			}, 0 },
+	{ DTV_FREQUENCY,	{}     , { 0			}, 0 },
+	{ DTV_MODULATION,	{}     , { QAM_AUTO		}, 0 },
+	{ DTV_INVERSION,	{}     , { INVERSION_AUTO	}, 0 },
+	{ DTV_SYMBOL_RATE,	{}     , { 27500000		}, 0 },
+	{ DTV_DELIVERY_SYSTEM,	{}     , { SYS_DVBC_ANNEX_AC	}, 0 },
+	{ DTV_INNER_FEC,	{}     , { FEC_AUTO		}, 0 },
+	{ DTV_TUNE,		{}     , { 0			}, 0 }
 };
 
 static const struct dtv_property dvbt_cmdargs[] = {
-	{ DTV_CLEAR,		{0,0,0}, { 0		} ,0},
-	{ DTV_FREQUENCY,	{}, { 0			} ,0},
-	{ DTV_MODULATION,	{}, { QAM_AUTO		} ,0},
-	{ DTV_INVERSION,	{}, { INVERSION_AUTO	} ,0},
-	{ DTV_BANDWIDTH_HZ,	{}, { 8000000		} ,0},
-	{ DTV_DELIVERY_SYSTEM,	{}, { SYS_DVBT		} ,0},
-	{ DTV_CODE_RATE_HP,	{}, { FEC_AUTO		} ,0},
-	{ DTV_CODE_RATE_LP,	{}, { FEC_AUTO		} ,0},
-	{ DTV_TRANSMISSION_MODE,{}, { TRANSMISSION_MODE_AUTO}, 0},
-	{ DTV_GUARD_INTERVAL,	{}, { GUARD_INTERVAL_AUTO}, 0},
-	{ DTV_HIERARCHY,	{}, { HIERARCHY_AUTO	}, 0},
-	{ DTV_TUNE,		{}, { 0			}, 0},
+	{ DTV_CLEAR,		{0,0,0}, { 0			}, 0 },
+	{ DTV_FREQUENCY,	{}     , { 0			}, 0 },
+	{ DTV_MODULATION,	{}     , { QAM_AUTO		}, 0 },
+	{ DTV_INVERSION,	{}     , { INVERSION_AUTO	}, 0 },
+	{ DTV_BANDWIDTH_HZ,	{}     , { 8000000		}, 0 },
+	{ DTV_DELIVERY_SYSTEM,	{}     , { SYS_DVBT		}, 0 },
+	{ DTV_CODE_RATE_HP,	{}     , { FEC_AUTO		}, 0 },
+	{ DTV_CODE_RATE_LP,	{}     , { FEC_AUTO		}, 0 },
+	{ DTV_TRANSMISSION_MODE,{}     , { TRANSMISSION_MODE_AUTO }, 0 },
+	{ DTV_GUARD_INTERVAL,	{}     , { GUARD_INTERVAL_AUTO	}, 0 },
+	{ DTV_HIERARCHY,	{}     , { HIERARCHY_AUTO	}, 0 },
+	{ DTV_TUNE,		{}     , { 0			}, 0 }
 };
 
 static const struct dtv_property dvbt2_cmdargs[] = {
-	{ DTV_CLEAR,		{0,0,0}, { 0		} ,0},
-	{ DTV_FREQUENCY,	{}, { 0			} ,0},
-	{ DTV_MODULATION,	{}, { QAM_AUTO		} ,0},
-	{ DTV_INVERSION,	{}, { INVERSION_AUTO	} ,0},
-	{ DTV_BANDWIDTH_HZ,	{}, { 8000000		} ,0},
-	{ DTV_DELIVERY_SYSTEM,	{}, { SYS_DVBT2		} ,0},
-	{ DTV_CODE_RATE_HP,	{}, { FEC_AUTO		} ,0},
-	{ DTV_CODE_RATE_LP,	{}, { FEC_AUTO		} ,0},
-	{ DTV_TRANSMISSION_MODE,{}, { TRANSMISSION_MODE_AUTO}, 0},
-	{ DTV_GUARD_INTERVAL,	{}, { GUARD_INTERVAL_AUTO}, 0},
-	{ DTV_HIERARCHY,	{}, { HIERARCHY_AUTO	}, 0},
+	{ DTV_CLEAR,		{0,0,0}, { 0			}, 0 },
+	{ DTV_FREQUENCY,	{}     , { 0			}, 0 },
+	{ DTV_MODULATION,	{}     , { QAM_AUTO		}, 0 },
+	{ DTV_INVERSION,	{}     , { INVERSION_AUTO	}, 0 },
+	{ DTV_BANDWIDTH_HZ,	{}     , { 8000000		}, 0 },
+	{ DTV_DELIVERY_SYSTEM,	{}     , { SYS_DVBT2		}, 0 },
+	{ DTV_CODE_RATE_HP,	{}     , { FEC_AUTO		}, 0 },
+	{ DTV_CODE_RATE_LP,	{}     , { FEC_AUTO		}, 0 },
+	{ DTV_TRANSMISSION_MODE,{}     , { TRANSMISSION_MODE_AUTO }, 0 },
+	{ DTV_GUARD_INTERVAL,	{}     , { GUARD_INTERVAL_AUTO	}, 0 },
+	{ DTV_HIERARCHY,	{}     , { HIERARCHY_AUTO	}, 0 },
 #if defined DTV_STREAM_ID
-	{ DTV_STREAM_ID,	{}, { NO_STREAM_ID_FILTER } ,0},
+	{ DTV_STREAM_ID,	{}     , { NO_STREAM_ID_FILTER	}, 0 },
 #elif defined DTV_DVBT2_PLP_ID
-	{ DTV_DVBT2_PLP_ID,	{}, { NO_STREAM_ID_FILTER } ,0},
+	{ DTV_DVBT2_PLP_ID,	{}     , { NO_STREAM_ID_FILTER	}, 0 },
 #endif
-	{ DTV_TUNE,		{}, { 0			}, 0}
+	{ DTV_TUNE,		{}     , { 0			}, 0 }
 };
 
 #define diff(x,y)	(max(x,y) - min(x,y))
