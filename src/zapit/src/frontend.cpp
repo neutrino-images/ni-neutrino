@@ -2337,9 +2337,7 @@ double calcAzimuth(double SatLon, double SiteLat, double SiteLon, int Height_ove
 
 double calcDeclination(double SiteLat, double Azimuth, double Elevation)
 {
-	return Deg(ASIN(SIN(Radians(Elevation)) * SIN(Radians(SiteLat)) + COS(Radians(Elevation)) * COS(Radians(SiteLat)) + COS(Radians(Azimuth))
-		   )
-	    );
+	return Deg(ASIN(SIN(Radians(Elevation)) * SIN(Radians(SiteLat)) + COS(Radians(Elevation)) * COS(Radians(SiteLat)) + COS(Radians(Azimuth))));
 }
 
 double calcSatHourangle(double Azimuth, double Elevation, double Declination, double Lat)

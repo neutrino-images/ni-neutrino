@@ -857,7 +857,7 @@ void CZapit::SetPidVolume(t_channel_id channel_id, int pid, int percent)
 	if (!channel_id)
 		channel_id = live_channel_id;
 
-	if (!pid && (channel_id == live_channel_id) && current_channel)
+	if ((pid < 0) && (channel_id == live_channel_id) && current_channel)
 		pid = current_channel->getAudioPid();
 	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(vol_map_mutex);
 INFO("############################### channel %" PRIx64 " pid %x map size %d percent %d", channel_id, pid, (int)vol_map.size(), percent);
@@ -879,7 +879,7 @@ int CZapit::GetPidVolume(t_channel_id channel_id, int pid, bool ac3)
 	if (!channel_id)
 		channel_id = live_channel_id;
 
-	if (!pid && (channel_id == live_channel_id) && current_channel)
+	if ((pid < 0) && (channel_id == live_channel_id) && current_channel)
 		pid = current_channel->getAudioPid();
 
 	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(vol_map_mutex);
