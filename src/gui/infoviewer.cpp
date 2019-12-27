@@ -476,8 +476,8 @@ void CInfoViewer::paintBody()
 		body = new CComponentsShapeSquare(ChanInfoX, y_body, BoxEndX-ChanInfoX, h_body);
 		body->setItemName("body");
 	} else {
-		if (txt_curr_event && txt_curr_start && txt_curr_rest &&
-				txt_next_event && txt_next_start && txt_next_in) {
+		if (txt_curr_start && txt_curr_event && txt_curr_rest &&
+				txt_next_start && txt_next_event && txt_next_in) {
 			if (h_body != body->getHeight() || y_body != body->getYPos()){
 				txt_curr_start->getCTextBoxObject()->clearScreenBuffer();
 				txt_curr_event->getCTextBoxObject()->clearScreenBuffer();
@@ -2234,12 +2234,12 @@ void CInfoViewer::killTitle()
 
 		body->kill();
 
+		if (txt_curr_start)
+			txt_curr_start->kill();
 		if (txt_curr_event)
 			txt_curr_event->kill();
 		if (txt_curr_rest)
 			txt_curr_rest->kill();
-		if (txt_curr_start)
-			txt_curr_start->kill();
 		if (txt_next_start)
 			txt_next_start->kill();
 		if (txt_next_event)
