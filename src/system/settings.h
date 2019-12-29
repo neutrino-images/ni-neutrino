@@ -798,6 +798,7 @@ struct SNeutrinoSettings
 	int infoClockSeconds;
 	int infoClockBackground;
 
+#ifdef ENABLE_GRAPHLCD
 	// graphlcd
 	int glcd_enable;
 	uint32_t glcd_color_fg;
@@ -817,6 +818,8 @@ struct SNeutrinoSettings
 	int glcd_brightness;
 	int glcd_brightness_standby;
 	int glcd_scroll_speed;
+	int glcd_selected_config;
+#endif
 
 	// lcd4linux
 	int lcd4l_support;
