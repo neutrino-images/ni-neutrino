@@ -32,6 +32,7 @@
 #include <daemonc/remotecontrol.h>
 #include <driver/nglcd.h>
 #include <driver/screen_max.h>
+#include <system/helpers.h>
 #include "glcdsetup.h"
 #include <mymenu.h>
 
