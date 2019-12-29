@@ -15,7 +15,7 @@ install_DATA += \
 	$(res0)/bootlogo.m2v
 endif
 
-res1 = 1920x1080
+#res1 = 1920x1080
 
-install_DATA += \
-	$(res1)/logo.jpg
+#install_DATA += \
+#	$(res1)/logo.jpg
