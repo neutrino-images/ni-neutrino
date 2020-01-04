@@ -372,7 +372,9 @@ void CWebTVSetup::webchannels_auto()
 					{
 						printf("[CWebTVSetup] skipping: %s\n", webchannel_file);
 					}
+					free(filelist[count]);
 				}
+				free(filelist);
 			}
 		}
 	}
