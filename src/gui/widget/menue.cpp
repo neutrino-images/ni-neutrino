@@ -1392,7 +1392,7 @@ void CMenuWidget::paint()
 	}
 
 	if (CInfoClock::getInstance()->isRun())
-		CInfoClock::getInstance()->disableInfoClock();
+		CInfoClock::getInstance()->block();
 
 	calcSize();
 
