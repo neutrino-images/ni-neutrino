@@ -28,6 +28,9 @@
 #include <vector>
 #include <string>
 #include <gui/components/cc.h>
+#include <mutex>
+#include <thread>
+
 
 class CFrameBuffer;
 class CPictureViewer;
@@ -36,15 +39,22 @@ class CScreenSaver : public sigc::trackable
 	private:
 		CFrameBuffer 	*m_frameBuffer;
 		CPictureViewer	*m_viewer;
-		CComponentsFrmClock *scr_clock;
-		pthread_t	thrScreenSaver;
-		static void*	ScreenSaverPrg(void *arg);
+
+		std::thread	*thrScreenSaver;
+		static void	ScreenSaverPrg(CScreenSaver *scr);
+		bool thr_exit;
+		std::mutex	scr_mutex;
+
 		std::vector<std::string> v_bg_files;
 		unsigned int 	index;
 		t_channel_id	pip_channel_id;
 		bool		force_refresh;
 		bool		status_mute;
 		bool		status_icons; //NI
+		uint 		seed[6];
+
+		void		handleRadioText();
+		void		hideRadioText();
 
 		bool ReadDir();
 		void paint();
@@ -59,6 +69,8 @@ class CScreenSaver : public sigc::trackable
 		};
 
 		u_color clr;
+		void thrExit();
+		sigc::slot<void> sl_scr_stop;
 
 	public:
 		enum
@@ -76,11 +88,13 @@ class CScreenSaver : public sigc::trackable
 		void Stop();
 		bool ignoredMsg(neutrino_msg_t msg);
 		sigc::signal<void> OnBeforeStart;
+		sigc::signal<void> OnAfterStart;
 		sigc::signal<void> OnAfterStop;
 
 		void resetIdleTime() { idletime = time(NULL); }
 		time_t getIdleTime() { return idletime; }
 		void forceRefresh() { force_refresh = true; }
+		static CComponentsFrmClock* getClockObject();
 };
 
 #endif // __CSCREENSAVER_H__
