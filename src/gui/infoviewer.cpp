@@ -2103,12 +2103,6 @@ void CInfoViewer::killTitle()
 		is_visible = false;
 		infoViewerBB->is_visible = false;
 
-		if (g_settings.radiotext_enable && g_Radiotext)
-		{
-			g_Radiotext->S_RtOsd = g_Radiotext->haveRadiotext() ? 1 : 0;
-			killRadiotext();
-		}
-
 		//NI InfoIcons
 		if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
 			CInfoIcons::getInstance()->hideIcons();
