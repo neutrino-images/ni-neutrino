@@ -43,6 +43,7 @@
 #include <system/debug.h>
 #include <gui/color_custom.h>
 #include <gui/infoclock.h>
+#include <gui/infoviewer.h>
 #include <zapit/zapit.h>
 #include <driver/pictureviewer/pictureviewer.h>
 #include <system/set_threadname.h>
@@ -487,7 +488,8 @@ void CScreenSaver::handleRadioText()
 	//check position and size, use only possible available screen size
 	int x_rt, y_rt, w_rt, h_rt;
 	g_RadiotextWin->getDimensions(&x_rt, &y_rt, &w_rt, &h_rt);
-	int rt_x_random = rand_r(&seed[4]) % ((g_settings.screen_EndX - w_rt - g_settings.screen_StartX - OFFSET_SHADOW) + 1) + g_settings.screen_StartX;
+	//int rt_x_random = rand_r(&seed[4]) % ((g_settings.screen_EndX - w_rt - g_settings.screen_StartX - OFFSET_SHADOW) + 1) + g_settings.screen_StartX;
+	int rt_x_random = g_InfoViewer->BoxStartX;
 	int rt_y_random = rand_r(&seed[5]) % ((g_settings.screen_EndY - h_rt - g_settings.screen_StartY - OFFSET_SHADOW) + 1) + g_settings.screen_StartY;
 	g_RadiotextWin->setPos(rt_x_random, rt_y_random);
 	g_RadiotextWin->allowPaint(true);
