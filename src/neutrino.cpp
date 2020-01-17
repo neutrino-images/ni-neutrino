@@ -487,6 +487,9 @@ int CNeutrinoApp::loadSetup(const char * fname)
 #else
 	g_settings.ci_clock = configfile.getInt32("ci_clock", 9);
 #endif
+#if BOXMODEL_VUPLUS
+	g_settings.ci_delay = configfile.getInt32("ci_delay", 256);
+#endif
 	g_settings.ci_ignore_messages = configfile.getInt32("ci_ignore_messages", 0);
 	g_settings.ci_save_pincode = configfile.getInt32("ci_save_pincode", 0);
 	g_settings.ci_pincode = configfile.getString("ci_pincode", "");
@@ -1475,6 +1478,9 @@ void CNeutrinoApp::saveSetup(const char * fname)
 
 	configfile.setInt32("ci_standby_reset", g_settings.ci_standby_reset);
 	configfile.setInt32("ci_clock", g_settings.ci_clock);
+#if BOXMODEL_VUPLUS
+	configfile.setInt32("ci_delay", g_settings.ci_delay);
+#endif
 	configfile.setInt32("ci_ignore_messages", g_settings.ci_ignore_messages);
 	configfile.setInt32("ci_save_pincode", g_settings.ci_save_pincode);
 	configfile.setString("ci_pincode", g_settings.ci_pincode);
@@ -2737,6 +2743,9 @@ TIMER_START();
 	ZapStart_arg.uselastchannel = g_settings.uselastchannel;
 	ZapStart_arg.video_mode = g_settings.video_Mode;
 	ZapStart_arg.ci_clock = g_settings.ci_clock;
+#if BOXMODEL_VUPLUS
+	ZapStart_arg.ci_delay = g_settings.ci_delay;
+#endif
 	ZapStart_arg.volume = g_settings.hdmi_cec_volume ? 85 : g_settings.current_volume;
 	ZapStart_arg.webtv_xml = &g_settings.webtv_xml;
 	ZapStart_arg.webradio_xml = &g_settings.webradio_xml;
