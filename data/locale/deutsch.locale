@@ -326,6 +326,7 @@ channellist.show_res_icon Auflösung signalisieren
 channellist.since seit
 channellist.start Start
 ci.clock CI Takt (Mhz)
+ci.clock_extra_high extra hoch
 ci.clock_high hoch
 ci.clock_normal normal
 ci.empty Kein CAM im Slot
