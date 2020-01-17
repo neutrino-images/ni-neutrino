@@ -286,7 +286,7 @@ struct SNeutrinoSettings
 	int clockrec;
 	int ci_standby_reset;
 	int ci_clock;
-#if BOXMODEL_VUPLUS_ALL
+#if BOXMODEL_VUPLUS
 	int ci_delay;
 #endif
 	int ci_ignore_messages;

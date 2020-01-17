@@ -45,7 +45,7 @@ typedef struct ZAPIT_start_arg
 	uint32_t osd_resolution;
 	int volume;
 	int ci_clock;
-#if BOXMODEL_VUPLUS_ALL
+#if BOXMODEL_VUPLUS
 	int ci_delay;
 #endif
 	std::list<std::string> *webtv_xml;
