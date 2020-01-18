@@ -2600,6 +2600,8 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 #if BOXMODEL_VUPLUS
 	//dvb wait delay for ci response
 	ca->SetCIDelay(ZapStart_arg->ci_delay);
+	/// relevant pids routing
+	ca->SetCIRelevantPidsRouting(ZapStart_arg->ci_rpr);
 #endif
 
 	eventServer = new CEventServer;
