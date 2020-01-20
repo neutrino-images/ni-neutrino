@@ -2595,7 +2595,11 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 
 	// set ci clock to ZapStart_arg->ci_clock
 	for (unsigned int i = 0; i < ca->GetNumberCISlots(); i++) {
+#if HAVE_LIBSTB_HAL
 		ca->SetTSClock(ZapStart_arg->ci_clock[i] * 1000000, i);
+#else
+		ca->SetTSClock(ZapStart_arg->ci_clock[i] * 1000000);
+#endif
 	}
 
 #if BOXMODEL_VUPLUS
