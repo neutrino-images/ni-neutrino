@@ -644,7 +644,7 @@ void LuaInstRegisterFunctions(lua_State *L, bool fromThreads/*=false*/)
 		{ NULL, NULL }
 	};
 // ------------------------------------------
-	int top;
+	int top = 0;
 	if (fromThreads)
 		top = lua_gettop(L);
 
