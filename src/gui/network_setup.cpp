@@ -389,7 +389,9 @@ int CNetworkSetup::showNetworkSetup()
 
 	dhcpDisable.Clear();
 	wlanEnable.Clear();
+#ifdef ENABLE_GUI_MOUNT
 	delete netfsMountGui;
+#endif
 	delete networkSettings;
 	delete sectionsdConfigNotifier;
 	return ret;
