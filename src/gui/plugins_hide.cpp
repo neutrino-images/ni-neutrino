@@ -75,21 +75,26 @@ int CPluginsHideMenu::menu()
 	unsigned int maxPlugins = g_Plugins->getNumberOfPlugins();
 	int isHidden[maxPlugins];
 	std::string file[maxPlugins];
-
+	CPluginsHideNotifier * pluginsNotifier[maxPlugins];
 	for (unsigned int i = 0; i < maxPlugins; i++)
 	{
 		std::string tmp = g_Plugins->getName(i);
 		file[i] = g_Plugins->getCfgFile(i);
 		isHidden[i] = g_Plugins->isHidden(i);
 
-		CPluginsHideNotifier * pluginsNotifier = new CPluginsHideNotifier(file[i].c_str());
-		CMenuOptionChooser * mc = new CMenuOptionChooser(tmp.c_str(), &isHidden[i], PLUGIN_HIDE_OPTIONS, PLUGIN_HIDE_OPTIONS_COUNT, true, pluginsNotifier);
+		pluginsNotifier[i] = new CPluginsHideNotifier(file[i].c_str());
+		CMenuOptionChooser * mc = new CMenuOptionChooser(tmp.c_str(), &isHidden[i], PLUGIN_HIDE_OPTIONS, PLUGIN_HIDE_OPTIONS_COUNT, true, pluginsNotifier[i]);
 		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_HIDE);
 		pluginsHideMenu->addItem(mc);
 	}
 
 	int res = pluginsHideMenu->exec(NULL,"");
 	pluginsHideMenu->hide();
+	for (unsigned int i = 0; i < maxPlugins; i++)
+	{
+		if(pluginsNotifier[i])
+			delete pluginsNotifier[i];
+	}
 	delete pluginsHideMenu;
 	return res;
 }
