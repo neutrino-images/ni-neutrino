@@ -46,7 +46,6 @@
 #include <gui/widget/msgbox.h>
 
 #include <gui/network_service.h>
-#include <gui/netfs_setup.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -363,7 +362,8 @@ int CNetworkSetup::showNetworkSetup()
 	mf = new CMenuForwarder(LOCALE_NETWORKMENU_MOUNT, true, NULL, &networkmounts, NULL, CRCInput::RC_blue);
 	mf->setHint("", LOCALE_MENU_HINT_NET_MOUNT);
 	networkSettings->addItem(mf);
-	showNetworkNFSMounts(&networkmounts);
+	CNETFSMountGui *netfsMountGui = new CNETFSMountGui();
+	showNetworkNFSMounts(&networkmounts,netfsMountGui);
 #endif
 
 	//proxyserver submenu
@@ -389,6 +389,7 @@ int CNetworkSetup::showNetworkSetup()
 
 	dhcpDisable.Clear();
 	wlanEnable.Clear();
+	delete netfsMountGui;
 	delete networkSettings;
 	delete sectionsdConfigNotifier;
 	return ret;
@@ -419,7 +420,7 @@ void CNetworkSetup::showNetworkNTPSetup(CMenuWidget *menu_ntp)
 }
 
 #ifdef ENABLE_GUI_MOUNT
-void CNetworkSetup::showNetworkNFSMounts(CMenuWidget *menu_nfs)
+void CNetworkSetup::showNetworkNFSMounts(CMenuWidget *menu_nfs,CNETFSMountGui *netfsMountGui)
 {
 	menu_nfs->addIntroItems(LOCALE_NETWORKMENU_MOUNT);
 	CMenuForwarder * mf = new CMenuDForwarder(LOCALE_NFS_MOUNT , true, NULL, new CNFSMountGui(), NULL, CRCInput::RC_red);
@@ -431,7 +432,6 @@ void CNetworkSetup::showNetworkNFSMounts(CMenuWidget *menu_nfs)
 
 	menu_nfs->addItem(GenericMenuSeparatorLine);
 
-	CNETFSMountGui *netfsMountGui = new CNETFSMountGui();
 	const char *used_fstab = netfsMountGui->fstabPath.c_str();
 	const char *used_autonet = netfsMountGui->autoPath.c_str();
 

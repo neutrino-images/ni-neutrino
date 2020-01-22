@@ -35,6 +35,7 @@
 
 #include <system/setting_helpers.h>
 #include <system/configure_network.h>
+#include <gui/netfs_setup.h>
 
 #include <string>
 
@@ -84,7 +85,7 @@ class CNetworkSetup : public CMenuTarget, CChangeObserver
 		void backupNetworkSettings();
 		int showNetworkSetup();
 		void showNetworkNTPSetup(CMenuWidget *menu_ntp);
-		void showNetworkNFSMounts(CMenuWidget *menu_nfs);
+		void showNetworkNFSMounts(CMenuWidget *menu_nfs,CNETFSMountGui *netfsMountGui);
 		int saveChangesDialog();
 		void applyNetworkSettings();
 		void saveNetworkSettings();
