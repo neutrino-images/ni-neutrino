@@ -193,12 +193,13 @@ void CScreenSaver::Stop()
 #endif
 
 	m_frameBuffer->paintBackground(); //clear entire screen
-	CInfoIcons::getInstance()->enableInfoIcons(status_icons); //NI
 
 	CAudioMute::getInstance()->enableMuteIcon(status_mute);
 
 	CInfoClock::getInstance()->ClearDisplay(); //provokes reinit
 	CInfoClock::getInstance()->enableInfoClock();
+
+	CInfoIcons::getInstance()->enableInfoIcons(status_icons); //NI
 
 	if (g_RadiotextWin)
 		g_Radiotext->OnAfterDecodeLine.unblock();
@@ -476,6 +477,8 @@ void CScreenSaver::paint()
 
 void CScreenSaver::handleRadioText()
 {
+	return; // disable display of radiotext
+
 	if (!g_RadiotextWin)
 		return;
 
