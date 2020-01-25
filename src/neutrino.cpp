@@ -482,25 +482,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 #endif
 
 	g_settings.ci_standby_reset = configfile.getInt32("ci_standby_reset", 0);
-
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++) {
-		sprintf(cfg_key, "ci_clock_%d", i);
-		g_settings.ci_clock[i] = configfile.getInt32(cfg_key, 6);
-	}
-#else
-	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++) {
-		sprintf(cfg_key, "ci_clock_%d", i);
-		g_settings.ci_clock[i] = configfile.getInt32(cfg_key, 9);
-	}
-#endif
-
 #if BOXMODEL_VUPLUS
 	g_settings.ci_delay = configfile.getInt32("ci_delay", 256);
-	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++) {
-		sprintf(cfg_key, "ci_rpr_%d", i);
-		g_settings.ci_rpr[i] = configfile.getInt32(cfg_key, 9);
-	}
 #endif
 	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++) {
 		sprintf(cfg_key, "ci_ignore_messages_%d", i);
@@ -509,6 +492,16 @@ int CNeutrinoApp::loadSetup(const char * fname)
 		g_settings.ci_save_pincode[i] = configfile.getInt32(cfg_key, 0);
 		sprintf(cfg_key, "ci_pincode_%d", i);
 		g_settings.ci_pincode[i] = configfile.getString(cfg_key, "");
+		sprintf(cfg_key, "ci_clock_%d", i);
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+		g_settings.ci_clock[i] = configfile.getInt32(cfg_key, 6);
+#else
+		g_settings.ci_clock[i] = configfile.getInt32(cfg_key, 9);
+#endif
+#if BOXMODEL_VUPLUS
+		sprintf(cfg_key, "ci_rpr_%d", i);
+		g_settings.ci_rpr[i] = configfile.getInt32(cfg_key, 9);
+#endif
 	}
 	g_settings.ci_check_live = configfile.getInt32("ci_check_live", 0);
 	g_settings.ci_tuner = configfile.getInt32("ci_tuner", -1);
@@ -1495,17 +1488,8 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32( "standby_cpufreq", g_settings.standby_cpufreq);
 
 	configfile.setInt32("ci_standby_reset", g_settings.ci_standby_reset);
-	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++) {
-		sprintf(cfg_key, "ci_clock_%d", i);
-		configfile.setInt32(cfg_key, g_settings.ci_clock[i]);
-	}
-
 #if BOXMODEL_VUPLUS
 	configfile.setInt32("ci_delay", g_settings.ci_delay);
-	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++) {
-		sprintf(cfg_key, "ci_rpr_%d", i);
-		configfile.setInt32(cfg_key, g_settings.ci_rpr[i]);
-	}
 #endif
 	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++) {
 		sprintf(cfg_key, "ci_ignore_messages_%d", i);
@@ -1514,6 +1498,12 @@ void CNeutrinoApp::saveSetup(const char * fname)
 		configfile.setInt32(cfg_key, g_settings.ci_save_pincode[i]);
 		sprintf(cfg_key, "ci_pincode_%d", i);
 		configfile.setString(cfg_key, g_settings.ci_pincode[i]);
+		sprintf(cfg_key, "ci_clock_%d", i);
+		configfile.setInt32(cfg_key, g_settings.ci_clock[i]);
+#if BOXMODEL_VUPLUS
+		sprintf(cfg_key, "ci_rpr_%d", i);
+		configfile.setInt32(cfg_key, g_settings.ci_rpr[i]);
+#endif
 	}
 
 	configfile.setInt32("ci_check_live", g_settings.ci_check_live);
