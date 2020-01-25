@@ -38,7 +38,7 @@ class CScreenSaver : public sigc::trackable
 {
 	private:
 		CFrameBuffer 	*m_frameBuffer;
-		//CPictureViewer	*m_viewer;
+		CPictureViewer	*m_viewer;
 
 		std::thread	*thrScreenSaver;
 		static void	ScreenSaverPrg(CScreenSaver *scr);
