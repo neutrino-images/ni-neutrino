@@ -547,7 +547,6 @@ bool CScreenSaver::ignoredMsg(neutrino_msg_t msg)
 		   msg == NeutrinoMessages::EVT_CURRENTEPG
 		|| msg == NeutrinoMessages::EVT_NEXTEPG
 		|| msg == NeutrinoMessages::EVT_CURRENTNEXT_EPG
-		|| msg == NeutrinoMessages::EVT_GOT_CN_EPG
 		|| msg == NeutrinoMessages::EVT_NOEPG_YET
 		|| msg == NeutrinoMessages::EVT_TIMESET
 		|| msg == NeutrinoMessages::EVT_PROGRAMLOCKSTATUS
@@ -556,6 +555,7 @@ bool CScreenSaver::ignoredMsg(neutrino_msg_t msg)
 		|| msg == NeutrinoMessages::EVT_ZAP_GOTPIDS
 		|| msg == NeutrinoMessages::EVT_EIT_COMPLETE
 		|| msg == NeutrinoMessages::EVT_BACK_ZAP_COMPLETE
+		|| msg == CSectionsdClient::EVT_GOT_CN_EPG
 	)
 		return true;
 
