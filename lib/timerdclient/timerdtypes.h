@@ -34,7 +34,7 @@
 
 #define REMINDER_MESSAGE_MAXLEN 31
 #define EXEC_PLUGIN_NAME_MAXLEN 256
-#define RECORD_DIR_MAXLEN 1024
+#define RECORD_DIR_MAXLEN 1025
 #define EPG_TITLE_MAXLEN 51
 
 #define TIMERD_APIDS_CONF 0x00
@@ -46,14 +46,14 @@
 class CTimerd
 {
 	public:
-		enum CTimerEventRepeat 
-		{ 
+		enum CTimerEventRepeat
+		{
 			TIMERREPEAT_ONCE = 0,
-			TIMERREPEAT_DAILY, 
-			TIMERREPEAT_WEEKLY, 
-			TIMERREPEAT_BIWEEKLY, 
-			TIMERREPEAT_FOURWEEKLY, 
-			TIMERREPEAT_MONTHLY, 
+			TIMERREPEAT_DAILY,
+			TIMERREPEAT_WEEKLY,
+			TIMERREPEAT_BIWEEKLY,
+			TIMERREPEAT_FOURWEEKLY,
+			TIMERREPEAT_MONTHLY,
 			TIMERREPEAT_BYEVENTDESCRIPTION,
 			TIMERREPEAT_WEEKDAYS = 0x100 // Bits 9-15 specify weekdays (9=mo,10=di,...)
 		};
@@ -71,14 +71,14 @@ class CTimerd
 			TIMER_IMMEDIATE_RECORD,
 			TIMER_REMOTEBOX
 		};
-		
-		enum CTimerEventStates 
-		{ 
-			TIMERSTATE_SCHEDULED, 
-			TIMERSTATE_PREANNOUNCE, 
-			TIMERSTATE_ISRUNNING, 
-			TIMERSTATE_HASFINISHED, 
-			TIMERSTATE_TERMINATED 
+
+		enum CTimerEventStates
+		{
+			TIMERSTATE_SCHEDULED,
+			TIMERSTATE_PREANNOUNCE,
+			TIMERSTATE_ISRUNNING,
+			TIMERSTATE_HASFINISHED,
+			TIMERSTATE_TERMINATED
 		};
 
 		struct EventInfo
@@ -148,7 +148,7 @@ class CTimerd
 		};
 
 		struct responseGetTimer
-		{		
+		{
 			int               eventID;
 			CTimerEventTypes  eventType;
 			CTimerEventStates eventState;
@@ -170,13 +170,13 @@ class CTimerd
 			int               rem_pre;
 			int               rem_post;
 			bool              channel_ci; //NI
-			
+
 			bool operator< (const responseGetTimer& a) const
 			{
 				return this->alarmTime < a.alarmTime ;
 			}
 		};
-		
+
 		typedef std::vector<responseGetTimer> TimerList;
 };
 #endif
