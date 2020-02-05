@@ -636,7 +636,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.screensaver_timeout = configfile.getInt32("screensaver_timeout", 10);
 	g_settings.screensaver_random = configfile.getInt32("screensaver_random", 0);
 	g_settings.screensaver_mode = configfile.getInt32("screensaver_mode", CScreenSaver::SCR_MODE_CLOCK); //NI
-	g_settings.screensaver_mode_text = configfile.getInt32("screensaver_mode_text", CScreenSaver::SCR_MODE_TEXT_ON);
+	g_settings.screensaver_mode_text = configfile.getInt32("screensaver_mode_text", CScreenSaver::SCR_MODE_TEXT_OFF);
 
 	//vcr
 	g_settings.vcr_AutoSwitch = configfile.getBool("vcr_AutoSwitch"       , true );

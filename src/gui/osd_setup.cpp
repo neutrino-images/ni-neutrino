@@ -1836,11 +1836,13 @@ void COsdSetup::showOsdScreensaverSetup(CMenuWidget *menu_screensaver)
 	menu_screensaver->addItem(oc);
 	screensaverOptActivate.Add(oc);
 
+#if 0
 	// screensaver text mode
 	oc = new CMenuOptionChooser(LOCALE_SCREENSAVER_ENABLE_TEXT_INFO, &g_settings.screensaver_mode_text, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, (g_settings.screensaver_delay != 0), this);
 	oc->setHint("", LOCALE_MENU_HINT_SCREENSAVER_ENABLE_TEXT_INFO);
 	menu_screensaver->addItem(oc);
 	screensaverActivate.Add(oc);
+#endif
 }
 
 void COsdSetup::paintWindowSize(int w, int h)
