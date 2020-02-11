@@ -477,9 +477,6 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	g_settings.ci_standby_reset = configfile.getInt32("ci_standby_reset", 0);
 
-	// just for debugging
-	dprintf(DEBUG_NORMAL, "cCA::GetInstance()->GetNumberCISlots(): %d\n", cCA::GetInstance()->GetNumberCISlots());
-
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 	for (unsigned int i = 0; i < cCA::GetInstance()->GetNumberCISlots(); i++) {
 		sprintf(cfg_key, "ci_clock_%d", i);
@@ -2980,9 +2977,6 @@ TIMER_START();
 #if HAVE_LIBSTB_HAL
 	cCA::GetInstance()->setCheckLiveSlot(g_settings.ci_check_live);
 #endif
-	// just for debugging
-	dprintf(DEBUG_NORMAL, "cCA::GetInstance()->GetNumberCISlots(): %d\n", cCA::GetInstance()->GetNumberCISlots());
-
 	//InitZapper();
 
 	SHTDCNT::getInstance()->init();
