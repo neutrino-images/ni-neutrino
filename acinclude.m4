@@ -521,7 +521,7 @@ AM_CONDITIONAL(BOXMODEL_HD60, test "$BOXMODEL" = "hd60")
 AM_CONDITIONAL(BOXMODEL_BRE2ZE4K, test "$BOXMODEL" = "bre2ze4k")
 AM_CONDITIONAL(BOXMODEL_H7, test "$BOXMODEL" = "h7")
 AM_CONDITIONAL(BOXMODEL_OSMIO4K, test "$BOXMODEL" = "osmio4k")
-AM_CONDITIONAL(BOXMODEL_OSMIOPLUS4K, test "$BOXMODEL" = "osmioplus4k")
+AM_CONDITIONAL(BOXMODEL_OSMIO4KPLUS, test "$BOXMODEL" = "osmio4kplus")
 AM_CONDITIONAL(BOXMODEL_VUSOLO4K, test "$BOXMODEL" = "vusolo4k")
 AM_CONDITIONAL(BOXMODEL_VUDUO4K, test "$BOXMODEL" = "vuduo4k")
 AM_CONDITIONAL(BOXMODEL_VUULTIMO4K, test "$BOXMODEL" = "vuultimo4k")
@@ -579,8 +579,8 @@ elif test "$BOXMODEL" = "h7"; then
 	AC_DEFINE(BOXMODEL_H7, 1, [h7])
 elif test "$BOXMODEL" = "osmio4k"; then
         AC_DEFINE(BOXMODEL_OSMIO4K, 1, [osmio4k])
-elif test "$BOXMODEL" = "osmioplus4k"; then
-        AC_DEFINE(BOXMODEL_OSMIOPLUS4K, 1, [osmioplus4k])
+elif test "$BOXMODEL" = "osmio4kplus"; then
+        AC_DEFINE(BOXMODEL_OSMIO4KPLUS, 1, [osmio4kplus])
 elif test "$BOXMODEL" = "vusolo4k"; then
 	AC_DEFINE(BOXMODEL_VUSOLO4K, 1, [vusolo4k])
 elif test "$BOXMODEL" = "vuduo4k"; then
