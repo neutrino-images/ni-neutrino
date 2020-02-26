@@ -335,6 +335,7 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 			}
 
 			medlinecount = (sb - cc_starbar->getHeight()) / medlineheight;
+			delete cc_starbar;
 		}
 		y += medlineheight;
 	}
