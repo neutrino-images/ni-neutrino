@@ -684,6 +684,8 @@ ni.plugin-control.blue-hide=ausblenden
 ni.plugin-tools.fcm-addr=Telefonbuch bearbeiten
 ni.plugin-tools.pat-rules=Regeln bearbeiten
 ni.plugin-tools.epgscan-dat=Transponderliste bearbeiten
+ni.plugin-tools.rssreader-conf=RSS-Feeds bearbeiten
+ni.plugin-tools.2webtvxmlurls-conf=WebTV-URLs bearbeiten
 
 ni.infoicons-control=Infoicons
 ni.infoicons-control.title=Infoicons-Steuerung
