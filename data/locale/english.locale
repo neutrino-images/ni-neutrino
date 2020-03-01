@@ -419,8 +419,8 @@ daemon_item.emmremind_desc Show different EMM's in the Infoicons
 daemon_item.emmremind_name EMM-Change Notification
 daemon_item.fcm_desc Shows FRITZ!Box call list and much more ...
 daemon_item.fcm_name FritzCallMonitor
-daemon_item.inadyn_desc DynDNS client
-daemon_item.inadyn_name Inadyn
+daemon_item.inadyn_desc Internet Automated Dynamic DNS Client
+daemon_item.inadyn_name In-a-Dyn
 daemon_item.nfsserver_desc NFS kernel server
 daemon_item.nfsserver_name NFS server
 daemon_item.sambaserver_desc Server-Message-Block-Protocol (SMB) implementation

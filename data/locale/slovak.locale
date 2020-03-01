@@ -403,8 +403,8 @@ daemon_item.emmremind_desc Zobraziť odlišné EMM do Infoikon
 daemon_item.emmremind_name Notifikácia zmeny EMM
 daemon_item.fcm_desc Zobraziť FRITZ!Box zoznam volaní a veľa iného ...
 daemon_item.fcm_name FritzCallMonitor
-daemon_item.inadyn_desc DynDNS klient
-daemon_item.inadyn_name Inadyn
+daemon_item.inadyn_desc Internet Automated Dynamic DNS Client
+daemon_item.inadyn_name In-a-Dyn
 daemon_item.nfsserver_desc NFS kernel server
 daemon_item.nfsserver_name NFS-Server
 daemon_item.sambaserver_desc Server-Správa-Blokovanie-Protokol (SMB) implementácia
