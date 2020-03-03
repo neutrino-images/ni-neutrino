@@ -91,6 +91,7 @@ libneutrino_gui_a_SOURCES = \
 	plugins_hide.cpp \
 	proxyserver_setup.cpp \
 	radiotext_window.cpp \
+	rate_banner.cpp \
 	rc_lock.cpp \
 	record_setup.cpp \
 	scan.cpp \

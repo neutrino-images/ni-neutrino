@@ -26,9 +26,11 @@
 #endif
 
 #include <algorithm>
-#include <gui/adzap.h>
-#include <gui/epgview.h>
-#include <gui/eventlist.h>
+#include <unistd.h>
+#include "adzap.h"
+#include "epgview.h"
+#include "eventlist.h"
+#include "rate_banner.h"
 
 #include <gui/widget/buttons.h>
 #include <gui/widget/hintbox.h>
@@ -36,7 +38,7 @@
 #include <gui/widget/msgbox.h>
 #include <gui/widget/mountchooser.h>
 
-#include <gui/timerlist.h>
+#include "timerlist.h"
 #include <zapit/zapit.h>
 #include <system/helpers.h>
 
