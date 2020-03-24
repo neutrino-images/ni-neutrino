@@ -1707,6 +1707,8 @@ const char * CRCInput::getSpecialKeyName(const unsigned int key)
 				return "program";
 			case RC_playpause:
 				return "play / pause";
+			case RC_pvr:
+				return "pvr";
 			default:
 				printf("unknown key: %d (0x%x) \n", key, key);
 				return "unknown";
@@ -1759,6 +1761,9 @@ int CRCInput::translate(int code)
 #elif BOXMODEL_OSMIO4K || BOXMODEL_OSMIO4KPLUS
 		case KEY_VIDEO:
 			return RC_mode;
+		case KEY_PVR:
+			return RC_pvr;
+
 #endif
 		case KEY_SWITCHVIDEOMODE:
 			return RC_mode;
