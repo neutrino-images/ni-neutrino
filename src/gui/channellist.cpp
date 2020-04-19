@@ -2532,6 +2532,10 @@ void CChannelList::paint_events(CChannelEventList &evtlist)
 	ffheight = g_Font[eventFont]->getHeight();
 	frameBuffer->paintBoxRel(x+ width,y+ theight+pig_height, infozone_width, infozone_height,COL_MENUCONTENT_PLUS_0);
 
+#if BOXMODEL_HD51 || BOXMODEL_HD60 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7
+	usleep(300); // because of CFbAccelARM::paintRect()
+#endif
+
 	char startTime[10];
 	int eventStartTimeWidth = 4 * g_Font[eventFont]->getMaxDigitWidth() + g_Font[eventFont]->getRenderWidth(":") + OFFSET_INNER_SMALL; // use a fixed value
 	int startTimeWidth = 0;
