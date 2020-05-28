@@ -250,7 +250,7 @@ CFrontend::CFrontend(int Number, int Adapter)
 	config.diseqcType	= NO_DISEQC;
 	config.diseqcRepeats	= 0;
 	config.uni_scr		= 0;		/* the unicable SCR address 0-7 */
-	config.uni_qrg		= 0;		/* the unicable frequency in MHz */
+	config.uni_freq		= 0;		/* the unicable frequency in MHz */
 	config.uni_lnb		= 0;		/* for two-position switches */
 	config.uni_pin		= -1;		/* for MDU setups */
 	config.highVoltage	= false;
@@ -1981,7 +1981,7 @@ void CFrontend::setInput(t_satellite_position satellitePosition, uint32_t freque
 uint32_t CFrontend::sendEN50494TuningCommand(const uint32_t frequency, const int high_band,
 					     const int horizontal, const int bank)
 {
-	uint32_t bpf = config.uni_qrg;
+	uint32_t bpf = config.uni_freq;
 	int pin = config.uni_pin;
 	if (config.uni_scr < 0 || config.uni_scr > 7) {
 		WARN("uni_scr out of range (%d)", config.uni_scr);
@@ -2003,7 +2003,7 @@ uint32_t CFrontend::sendEN50494TuningCommand(const uint32_t frequency, const int
 		cmd.msg_len = 6;
 	}
 	uint32_t ret = (t + 350) * 4000 - frequency;
-	INFO("[fe%d/%d] 18V=%d 22k=%d freq=%d qrg=%d scr=%d bank=%d pin=%d ret=%d",
+	INFO("[fe%d/%d] 18V=%d 22k=%d freq=%d uni_freq=%d scr=%d bank=%d pin=%d ret=%d",
 		adapter, fenumber, horizontal, high_band, frequency, bpf, config.uni_scr, bank, pin, ret);
 	if (!slave && info.type == FE_QPSK) {
 		cmd.msg[3] = (config.uni_scr << 5);		/* adress */
@@ -2024,7 +2024,7 @@ uint32_t CFrontend::sendEN50494TuningCommand(const uint32_t frequency, const int
 
 uint32_t CFrontend::sendEN50607TuningCommand(const uint32_t frequency, const int high_band, const int horizontal, const int bank)
 {
-	uint32_t bpf = config.uni_qrg;
+	uint32_t bpf = config.uni_freq;
 	int pin = config.uni_pin;
 	struct dvb_diseqc_master_cmd cmd = { {0x70, 0x00, 0x00, 0x00, 0x00, 0x00}, 4 };
 
@@ -2038,7 +2038,7 @@ uint32_t CFrontend::sendEN50607TuningCommand(const uint32_t frequency, const int
 	if (t < 0x800 && config.uni_scr >= 0 && config.uni_scr < 32)
 	{
 		uint32_t ret = bpf * 1000;
-		INFO("[unicable-JESS] 18V=%d TONE=%d, freq=%d qrg=%d scr=%d bank=%d pin=%d ret=%d", currentVoltage == SEC_VOLTAGE_18, currentToneMode == SEC_TONE_ON, frequency, bpf, config.uni_scr, bank, pin, ret);
+		INFO("[unicable-JESS] 18V=%d TONE=%d, freq=%d uni_freq=%d scr=%d bank=%d pin=%d ret=%d", currentVoltage == SEC_VOLTAGE_18, currentToneMode == SEC_TONE_ON, frequency, bpf, config.uni_scr, bank, pin, ret);
 		if (!slave && info.type == FE_QPSK)
 		{
 			cmd.msg[1] = ((config.uni_scr & 0x1F) << 3)	|	/* user band adress ( 0 to 31) */
