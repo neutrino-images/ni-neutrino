@@ -23,6 +23,11 @@ if [ -e neutrino.conf ]; then
 	mv neutrino.sort neutrino.conf
 fi
 
+if [ -e zapit/frontend.conf ]; then
+	# uni_qrg was renamed to uni_freq
+	sed -i "s|_uni_qrg=|_uni_freq=|g" /var/tuxbox/config/zapit/frontend.conf
+fi
+
 controlscripts="\
 	audioplayer.start \
 	audioplayer.end \
