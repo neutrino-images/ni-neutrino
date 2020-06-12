@@ -396,7 +396,7 @@ void CNeutrinoApp::InitMenuService()
 	//1st section***************************************************************************************************
 
 	bool force_fesetup = false;
-#if BOXMODEL_VUPLUS
+#if BOXMODEL_VUPLUS_ALL
 	if (CFEManager::getInstance()->haveCable() || CFEManager::getInstance()->haveTerr())
 		force_fesetup = true;
 #endif

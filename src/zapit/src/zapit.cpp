@@ -2602,7 +2602,7 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 #endif
 	}
 
-#if BOXMODEL_VUPLUS
+#if BOXMODEL_VUPLUS_ALL
 	// dvb wait delay for ci response
 	ca->SetCIDelay(ZapStart_arg->ci_delay);
 
