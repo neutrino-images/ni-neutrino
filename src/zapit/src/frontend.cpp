@@ -344,7 +344,7 @@ void CFrontend::getFEInfo(void)
 			if ((line.find("Name:") != std::string::npos) && found)
 			{
 				//printf("NIM SOCKET: %s\n",line.substr(line.find_first_of(":")+2).c_str());
-#if BOXMODEL_VUPLUS
+#if BOXMODEL_VUPLUS_ALL
 				sprintf(info.name,"%s", line.substr(line.find_first_of(":") + 9).c_str());
 #else
 				std::string tmp = info.name;
@@ -1454,7 +1454,7 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 	case FEC_2_3:
 		fec = FEC_2_3;
 		if (feparams->delsys == DVB_S2 && feparams->modulation == PSK_8)
-#if BOXMODEL_VUPLUS4K
+#if BOXMODEL_VUPLUS_ARM
 			pilot = PILOT_AUTO;
 #else
 			pilot = PILOT_ON;
@@ -1463,7 +1463,7 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 	case FEC_3_4:
 		fec = FEC_3_4;
 		if (feparams->delsys == DVB_S2 && feparams->modulation == PSK_8)
-#if BOXMODEL_VUPLUS4K
+#if BOXMODEL_VUPLUS_ARM
 			pilot = PILOT_AUTO;
 #else
 			pilot = PILOT_ON;
@@ -1475,7 +1475,7 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 	case FEC_5_6:
 		fec = FEC_5_6;
 		if (feparams->delsys == DVB_S2 && feparams->modulation == PSK_8)
-#if BOXMODEL_VUPLUS4K
+#if BOXMODEL_VUPLUS_ARM
 			pilot = PILOT_AUTO;
 #else
 			pilot = PILOT_ON;
@@ -1493,7 +1493,7 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 	case FEC_3_5:
 		fec = FEC_3_5;
 		if (feparams->delsys == DVB_S2 && feparams->modulation == PSK_8)
-#if BOXMODEL_VUPLUS4K
+#if BOXMODEL_VUPLUS_ARM
 			pilot = PILOT_AUTO;
 #else
 			pilot = PILOT_ON;
