@@ -1400,6 +1400,12 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	{
 		configfile.deleteKey("channellist_primetime");
 	}
+	if (g_settings.version_pseudo < "20200615000000")
+	{
+		// disable analog clock in standby mode
+		if (g_settings.glcd_time_in_standby > 1)
+			g_settings.glcd_time_in_standby = 1;
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
