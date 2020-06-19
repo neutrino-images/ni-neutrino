@@ -55,6 +55,7 @@ install_DATA =	channels.js \
 		Y_Settings_automount.yhtm \
 		Y_Settings_Backup.yhtm \
 		Y_Settings_buttons.yhtm \
+		Y_Settings_glcd.yhtm \
 		Y_Settings_lcd.yhtm \
 		Y_Settings_Live.yhtm \
 		Y_Settings_Menue.yhtm \
@@ -79,6 +80,7 @@ install_DATA =	channels.js \
 		Y_Tools_Cmd.yhtm \
 		Y_Tools_Flash_Menue.yhtm \
 		Y_Tools_Flash_Upload.yhtm \
+		Y_Tools_Glcd_Screenshot.yhtm \
 		Y_Tools_Info_Menue.yhtm \
 		Y_Tools_Installer.yhtm \
 		Y_Tools_lcshot.yhtm \

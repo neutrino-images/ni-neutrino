@@ -50,7 +50,13 @@ libneutrino_driver_a_SOURCES = \
 
 if ENABLE_GRAPHLCD
 libneutrino_driver_a_SOURCES += \
-	nglcd.cpp
+	analogclock.cpp \
+	digitalclock.cpp \
+	lcdclock.cpp \
+	ledclock.cpp \
+	simpleclock.cpp \
+	weather.cpp \
+	glcd.cpp
 endif
 
 if BOXTYPE_COOL

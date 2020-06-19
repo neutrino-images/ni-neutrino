@@ -115,6 +115,16 @@ class CMoviePlayerGui : public CMenuTarget
 	int            m_LastMode;
 	int            m_ThisMode;
 
+#ifdef ENABLE_GRAPHLCD
+	struct		tm *tm_struct;
+	int		glcd_position;
+	std::string	channel;
+	std::string	epg;
+	std::string	glcd_duration;
+	std::string	start;
+	std::string	end;
+#endif
+
 	std::string	cookie_header;
 	std::string	info_1, info_2;
 	std::string    	currentaudioname;

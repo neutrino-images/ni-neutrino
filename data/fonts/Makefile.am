@@ -18,6 +18,12 @@ install_DATA += \
 	ubuntumono-b-webfont.ttf \
 	ubuntumono-r-webfont.ttf
 
+if ENABLE_GRAPHLCD
+install_DATA += \
+	led.ttf \
+	lcd.ttf
+endif
+
 install-data-hook:
 	cd $(DESTDIR)$(FONTDIR); \
 		mv $(neutrino_ttf) neutrino.ttf; \
