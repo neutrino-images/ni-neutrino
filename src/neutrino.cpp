@@ -3057,7 +3057,7 @@ TIMER_STOP("################################## after all #######################
 		CFlashUpdateCheck::getInstance()->startThread();
 	}
 
-	for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); ++it)
+	for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); it++)
 		g_Sectionsd->readSIfromXMLTV((*it).c_str());
 
 	RealRun();
