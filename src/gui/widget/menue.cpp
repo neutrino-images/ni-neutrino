@@ -92,10 +92,7 @@ CMenuItem::CMenuItem(bool Active, neutrino_msg_t DirectKey, const char * const I
 	actObserv	= NULL;
 	parent_widget	= NULL;
 
-#ifdef ENABLE_GRAPHLCD
-	graphlcd_text	= "";
-#endif
-	lcd4l_text	= "";
+	lcd_text	= "";
 }
 
 void CMenuItem::init(const int X, const int Y, const int DX, const int OFFX)
@@ -242,30 +239,20 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 			char str[len];
 			snprintf(str, len, "%s %s", left_text, right_text);
 			CVFD::getInstance()->showMenuText(0, str, -1, true);
-#ifdef ENABLE_GRAPHLCD
-			if (g_settings.glcd_enable)
-				graphlcd_text = str;
-#endif
-			if (g_settings.lcd4l_support)
-				lcd4l_text = str;
+			lcd_text = str;
 		} 
 		else
 		{
 			CVFD::getInstance()->showMenuText(0, left_text, -1, true);
-#ifdef ENABLE_GRAPHLCD
-			if (g_settings.glcd_enable)
-				graphlcd_text = left_text;
-#endif
-			if (g_settings.lcd4l_support)
-				lcd4l_text = left_text;
+			lcd_text = left_text;
 		}
 
 #ifdef ENABLE_GRAPHLCD
 		if (g_settings.glcd_enable)
-			cGLCD::lockChannel(g_Locale->getText(LOCALE_MAINMENU_HEAD), graphlcd_text, 0);
+			cGLCD::lockChannel(g_Locale->getText(LOCALE_MAINMENU_HEAD), lcd_text, 0);
 #endif
 		if (g_settings.lcd4l_support)
-			LCD4l->CreateFile("/tmp/lcd/menu", lcd4l_text, g_settings.lcd4l_convert);
+			LCD4l->CreateFile("/tmp/lcd/menu", lcd_text, g_settings.lcd4l_convert);
 	}
 	
 	//left text
@@ -1055,10 +1042,10 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 
 #ifdef ENABLE_GRAPHLCD
 					if (g_settings.glcd_enable)
-						cGLCD::lockChannel(g_Locale->getText(LOCALE_MAINMENU_HEAD), item->graphlcd_text, 0);
+						cGLCD::lockChannel(g_Locale->getText(LOCALE_MAINMENU_HEAD), item->lcd_text, 0);
 #endif
 					if (g_settings.lcd4l_support)
-						LCD4l->CreateFile("/tmp/lcd/menu", item->lcd4l_text, g_settings.lcd4l_convert);
+						LCD4l->CreateFile("/tmp/lcd/menu", item->lcd_text, g_settings.lcd4l_convert);
 
 					switch ( rv ) {
 						case menu_return::RETURN_EXIT_ALL:
