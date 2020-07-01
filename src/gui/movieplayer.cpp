@@ -391,11 +391,11 @@ int CMoviePlayerGui::exec(CMenuTarget * parent, const std::string & actionKey)
 	if (!bgThread) {
 		cGLCD::MirrorOSD(false);
 
-		channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
+		glcd_channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
+		glcd_epg = g_Locale->getText(LOCALE_MPKEY_STOP);
 
-		epg = g_Locale->getText(LOCALE_MPKEY_STOP);
 		cGLCD::ShowLcdIcon(false);
-		cGLCD::lockChannel(channel, epg, 0);
+		cGLCD::lockChannel(glcd_channel, glcd_epg, 0);
 		cGLCD::lockDuration("00/00");
 		cGLCD::lockStart("00:00");
 		cGLCD::lockEnd("00:00");
@@ -521,15 +521,15 @@ void CMoviePlayerGui::updateLcd(bool display_playtime)
 		if (CMoviePlayerGui::getInstance().p_movie_info)
 		{
 			if (!CMoviePlayerGui::getInstance().p_movie_info->channelName.empty())
-				channel = CMoviePlayerGui::getInstance().p_movie_info->channelName;
+				glcd_channel = CMoviePlayerGui::getInstance().p_movie_info->channelName;
 			if (!CMoviePlayerGui::getInstance().p_movie_info->epgTitle.empty())
-				epg = CMoviePlayerGui::getInstance().p_movie_info->epgTitle;
+				glcd_epg = CMoviePlayerGui::getInstance().p_movie_info->epgTitle;
 		} else if (!CMoviePlayerGui::getInstance().GetFile().empty()) {
-			epg = CMoviePlayerGui::getInstance().GetFile();
+			glcd_epg = CMoviePlayerGui::getInstance().GetFile();
 		}
 
-		if (channel.empty())
-			channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
+		if (glcd_channel.empty())
+			glcd_channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
 	}
 #endif
 	char tmp[20];
@@ -557,12 +557,11 @@ void CMoviePlayerGui::updateLcd(bool display_playtime)
 			case CMoviePlayerGui::STOPPED:
 #ifdef ENABLE_GRAPHLCD
 				if (!bgThread) {
-					channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
-
-					epg = g_Locale->getText(LOCALE_MPKEY_STOP);
+					glcd_channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
+					glcd_epg = g_Locale->getText(LOCALE_MPKEY_STOP);
 
 					cGLCD::ShowLcdIcon(false);
-					cGLCD::lockChannel(channel, epg, 0);
+					cGLCD::lockChannel(glcd_channel, glcd_epg, 0);
 					cGLCD::lockDuration("00/00");
 					cGLCD::lockStart("00:00");
 					cGLCD::lockEnd("00:00");
@@ -572,11 +571,11 @@ void CMoviePlayerGui::updateLcd(bool display_playtime)
 			case CMoviePlayerGui::PAUSE:
 #ifdef ENABLE_GRAPHLCD
 				if (!bgThread) {
-					channel = "";
-					cGLCD::lockChannel(channel, epg, glcd_position);
+					glcd_channel = "";
+					cGLCD::lockChannel(glcd_channel, glcd_epg, glcd_position);
 					cGLCD::lockDuration(glcd_duration);
-					cGLCD::lockStart(start);
-					cGLCD::lockEnd(end);
+					cGLCD::lockStart(glcd_start);
+					cGLCD::lockEnd(glcd_end);
 					cGLCD::ShowLcdIcon(true);
 				}
 #endif
@@ -596,11 +595,11 @@ void CMoviePlayerGui::updateLcd(bool display_playtime)
 			case CMoviePlayerGui::REW:
 #ifdef ENABLE_GRAPHLCD
 				if (!bgThread) {
-					channel = "";
-					cGLCD::lockChannel(channel, epg, glcd_position);
+					glcd_channel = "";
+					cGLCD::lockChannel(glcd_channel, glcd_epg, glcd_position);
 					cGLCD::lockDuration(glcd_duration);
-					cGLCD::lockStart(start);
-					cGLCD::lockEnd(end);
+					cGLCD::lockStart(glcd_start);
+					cGLCD::lockEnd(glcd_end);
 					cGLCD::ShowLcdIcon(true);
 				}
 #endif
@@ -610,11 +609,11 @@ void CMoviePlayerGui::updateLcd(bool display_playtime)
 			case CMoviePlayerGui::FF:
 #ifdef ENABLE_GRAPHLCD
 				if (!bgThread) {
-					channel = "";
-					cGLCD::lockChannel(channel, epg, glcd_position);
+					glcd_channel = "";
+					cGLCD::lockChannel(glcd_channel, glcd_epg, glcd_position);
 					cGLCD::lockDuration(glcd_duration);
-					cGLCD::lockStart(start);
-					cGLCD::lockEnd(end);
+					cGLCD::lockStart(glcd_start);
+					cGLCD::lockEnd(glcd_end);
 					cGLCD::ShowLcdIcon(true);
 				}
 #endif
@@ -624,11 +623,11 @@ void CMoviePlayerGui::updateLcd(bool display_playtime)
 			case CMoviePlayerGui::PLAY:
 #ifdef ENABLE_GRAPHLCD
 				if (!bgThread) {
-					channel = "";
-					cGLCD::lockChannel(channel, epg, glcd_position);
+					glcd_channel = "";
+					cGLCD::lockChannel(glcd_channel, glcd_epg, glcd_position);
 					cGLCD::lockDuration(glcd_duration);
-					cGLCD::lockStart(start);
-					cGLCD::lockEnd(end);
+					cGLCD::lockStart(glcd_start);
+					cGLCD::lockEnd(glcd_end);
 					cGLCD::ShowLcdIcon(true);
 				}
 #endif
@@ -1388,12 +1387,11 @@ void CMoviePlayerGui::stopPlayBack(void)
 			playback->RequestAbort();
 #ifdef ENABLE_GRAPHLCD
 		if (!bgThread) {
-			channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
-
-			epg = g_Locale->getText(LOCALE_MPKEY_STOP);
+			glcd_channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
+			glcd_epg = g_Locale->getText(LOCALE_MPKEY_STOP);
 
 			cGLCD::ShowLcdIcon(false);
-			cGLCD::lockChannel(channel, epg, 0);
+			cGLCD::lockChannel(glcd_channel, glcd_epg, 0);
 			cGLCD::lockDuration("00/00");
 			cGLCD::lockStart("00:00");
 			cGLCD::lockEnd("00:00");
@@ -1734,8 +1732,10 @@ void CMoviePlayerGui::PlayFileLoop(void)
 
 #ifdef ENABLE_GRAPHLCD
 				if (!bgThread) {
+					/*
 					int pos = position / (60 * 1000);
 					int dur = duration / (60 * 1000);
+					*/
 
 					glcd_duration = to_string(position / (60 * 1000)) + "/" + to_string(duration / (60 * 1000));
 					//glcd_duration = to_string(pos/10) + to_string(pos%10) + "/" + to_string(dur/10) + to_string(dur%10);
@@ -1743,19 +1743,19 @@ void CMoviePlayerGui::PlayFileLoop(void)
 					time_t sTime = time(NULL);
 					sTime -= (position / 1000);
 					tm_struct = localtime(&sTime);
-					start = to_string(tm_struct->tm_hour/10) + to_string(tm_struct->tm_hour%10) + ":" + to_string(tm_struct->tm_min/10) + to_string(tm_struct->tm_min%10);
+					glcd_start = to_string(tm_struct->tm_hour/10) + to_string(tm_struct->tm_hour%10) + ":" + to_string(tm_struct->tm_min/10) + to_string(tm_struct->tm_min%10);
 
 					time_t eTime = time(NULL);
 					eTime += (duration / 1000) - (position / 1000);
 					tm_struct = localtime(&eTime);
-					end = to_string(tm_struct->tm_hour/10) + to_string(tm_struct->tm_hour%10) + ":" + to_string(tm_struct->tm_min/10) + to_string(tm_struct->tm_min%10);
+					glcd_end = to_string(tm_struct->tm_hour/10) + to_string(tm_struct->tm_hour%10) + ":" + to_string(tm_struct->tm_min/10) + to_string(tm_struct->tm_min%10);
 
 					//glcd_position = duration ? 100 * (position / duration) : 0;
 					glcd_position = file_prozent;
-					cGLCD::lockChannel(channel, epg, glcd_position);
+					cGLCD::lockChannel(glcd_channel, glcd_epg, glcd_position);
 					cGLCD::lockDuration(glcd_duration);
-					cGLCD::lockStart(start);
-					cGLCD::lockEnd(end);
+					cGLCD::lockStart(glcd_start);
+					cGLCD::lockEnd(glcd_end);
 				}
 #endif
 				CVFD::getInstance()->showPercentOver(file_prozent);
@@ -2218,12 +2218,11 @@ void CMoviePlayerGui::PlayFileEnd(bool restore)
 	playback->Close();
 #ifdef ENABLE_GRAPHLCD
 	if (!bgThread) {
-		channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
-
-		epg = g_Locale->getText(LOCALE_MPKEY_STOP);
+		glcd_channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);
+		glcd_epg = g_Locale->getText(LOCALE_MPKEY_STOP);
 
 		cGLCD::ShowLcdIcon(false);
-		cGLCD::lockChannel(channel, epg, 0);
+		cGLCD::lockChannel(glcd_channel, glcd_epg, 0);
 		cGLCD::lockDuration("00/00");
 		cGLCD::lockStart("00:00");
 		cGLCD::lockEnd("00:00");
