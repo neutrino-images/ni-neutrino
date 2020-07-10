@@ -699,7 +699,6 @@ int CNeutrinoApp::loadSetup(const char * fname)
 
 	g_settings.glcd_mirror_osd = configfile.getInt32("glcd_mirror_osd", 0);
 	g_settings.glcd_mirror_video = configfile.getInt32("glcd_mirror_video", 0);
-	g_settings.glcd_show_logo = configfile.getInt32("glcd_show_logo", 1);
 	g_settings.glcd_brightness = configfile.getInt32("glcd_brightness", GLCD_DEFAULT_BRIGHTNESS);
 	g_settings.glcd_brightness_dim = configfile.getInt32("glcd_brightness_dim", GLCD_DEFAULT_BRIGHTNESS_DIM);
 	g_settings.glcd_brightness_standby = configfile.getInt32("glcd_brightness_standby", GLCD_DEFAULT_BRIGHTNESS_STANDBY);
@@ -1399,12 +1398,10 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	{
 		configfile.deleteKey("channellist_primetime");
 	}
-	if (g_settings.version_pseudo < "20200615000000")
+	if (g_settings.version_pseudo < "20170711000000")
 	{
 #ifdef ENABLE_GRAPHLCD
-		// disable analog clock in standby mode
-		if (g_settings.glcd_time_in_standby > 1)
-			g_settings.glcd_time_in_standby = 1;
+		configfile.deleteKey("glcd_show_logo");
 #endif
 	}
 
@@ -1677,7 +1674,6 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("glcd_standby_weather", g_settings.glcd_standby_weather);
 	configfile.setInt32("glcd_mirror_osd", g_settings.glcd_mirror_osd);
 	configfile.setInt32("glcd_mirror_video", g_settings.glcd_mirror_video);
-	configfile.setInt32("glcd_show_logo", g_settings.glcd_show_logo);
 	configfile.setInt32("glcd_brightness", g_settings.glcd_brightness);
 	configfile.setInt32("glcd_brightness_dim", g_settings.glcd_brightness_dim);
 	configfile.setInt32("glcd_brightness_standby", g_settings.glcd_brightness_standby);
