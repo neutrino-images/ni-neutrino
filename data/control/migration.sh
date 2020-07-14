@@ -19,6 +19,11 @@ if [ -e neutrino.conf ]; then
 		mv /var/tuxbox/config/webtv_usr.xml /var/tuxbox/webtv/
 	fi
 
+	# remove all old glcd_ keywords; neutrino will add the new ones
+	if ! grep -q glcd_foreground_color neutrino.conf ; then
+		sed -i "/^glcd_/d" neutrino.conf
+	fi
+
 	sort neutrino.conf > neutrino.sort
 	mv neutrino.sort neutrino.conf
 fi
