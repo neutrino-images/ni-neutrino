@@ -137,6 +137,11 @@ libneutrino_gui_a_SOURCES += \
 	update_ext.cpp
 endif
 
+if BOXTYPE_ARMBOX
+libneutrino_gui_a_SOURCES += \
+	psisetup.cpp
+endif
+
 #NI if ENABLE_TESTING
 libneutrino_gui_a_SOURCES += \
 	test_menu.cpp
