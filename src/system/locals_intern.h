@@ -1887,6 +1887,7 @@ const char * locale_real_names[] =
 	"menu.hint_video_modes",
 	"menu.hint_video_modes_auto",
 	"menu.hint_video_pip",
+	"menu.hint_video_psi",
 	"menu.hint_video_psi_step",
 	"menu.hint_video_saturation",
 	"menu.hint_video_scart_mode",
