@@ -1067,7 +1067,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	//Movie-Player
 	g_settings.movieplayer_repeat_on = configfile.getInt32("movieplayer_repeat_on", CMoviePlayerGui::REPEAT_OFF);
 	g_settings.movieplayer_bisection_jump = configfile.getInt32("movieplayer_bisection_jump", 5); //NI
-	g_settings.movieplayer_display_playtime = configfile.getInt32("movieplayer_display_playtime", 0);
+	g_settings.movieplayer_display_playtime = configfile.getInt32("movieplayer_display_playtime", g_info.hw_caps->display_type == HW_DISPLAY_LED_NUM);
 	g_settings.movieplayer_timeosd_while_searching = configfile.getInt32("movieplayer_timeosd_while_searching", 1);
 
 	//online services
