@@ -1,5 +1,6 @@
 SUBDIRS = \
-	Grey-Blue/icons/buttons \
+	Neutrino-3.0/icons/buttons \
+	Grey-3.0/icons/buttons \
 	Neutrino-3.0/icons/buttons \
 	Olive-3.0/icons/buttons
 
@@ -14,7 +15,8 @@ install_DATA = \
 	DarkBlue.theme \
 	DarkBrown.theme \
 	DarkOrange.theme \
-	Gray.theme \
+	Grey.theme \
+	Grey-3.0.theme \
 	Grey-Blue.theme \
 	Material_Blue-Grey.theme \
 	Material_Grey_(Dark).theme \
