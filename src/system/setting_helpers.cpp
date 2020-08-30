@@ -743,7 +743,8 @@ extern cCpuFreqManager * cpuFreq;
 	printf("CCpuFreqNotifier: %d Mhz\n", freq);
 	freq *= 1000*1000;
 
-	cpuFreq->SetCpuFreq(freq);
+	if (cpuFreq)
+		cpuFreq->SetCpuFreq(freq);
 	return false;
 }
 

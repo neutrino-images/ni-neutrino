@@ -486,13 +486,8 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.zappingmode = configfile.getInt32( "zappingmode", 0);
 #endif
 
-#ifdef CPU_FREQ
-	g_settings.cpufreq = configfile.getInt32("cpufreq", 0);
-	g_settings.standby_cpufreq = configfile.getInt32("standby_cpufreq", 100);
-#else
-	g_settings.cpufreq = 0;
-	g_settings.standby_cpufreq = 50;
-#endif
+	g_settings.cpufreq = g_info.hw_caps->can_cpufreq ? configfile.getInt32("cpufreq", 0) : 0;
+	g_settings.standby_cpufreq = g_info.hw_caps->can_cpufreq ? configfile.getInt32("standby_cpufreq", 100) : 50;
 
 	// ci-settings
 	g_settings.ci_standby_reset = configfile.getInt32("ci_standby_reset", 0);
@@ -2895,8 +2890,9 @@ TIMER_START();
 	powerManager = new cPowerManager;
 	powerManager->Open();
 
-	cpuFreq = new cCpuFreqManager();
-	cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
+	cpuFreq = g_info.hw_caps->can_cpufreq ? new cCpuFreqManager() : NULL;
+	if (cpuFreq)
+		cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
 
 	//fan speed
 	if (g_info.hw_caps->has_fan)
@@ -3644,7 +3640,8 @@ bool CNeutrinoApp::wakeupFromStandby(void)
 		CStreamManager::getInstance()->StreamStatus();
 
 	if ((mode == NeutrinoModes::mode_standby) && !alive) {
-		cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
+		if (cpuFreq)
+			cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
 		if(g_settings.ci_standby_reset) {
 			g_CamHandler->exec(NULL, "ca_ci_reset0");
 			g_CamHandler->exec(NULL, "ca_ci_reset1");
@@ -3671,7 +3668,8 @@ void CNeutrinoApp::standbyToStandby(void)
 		}
 		g_Zapit->setStandby(true);
 		g_Sectionsd->setPauseScanning(true);
-		cpuFreq->SetCpuFreq(g_settings.standby_cpufreq * 1000 * 1000);
+		if (cpuFreq)
+			cpuFreq->SetCpuFreq(g_settings.standby_cpufreq * 1000 * 1000);
 	}
 }
 
@@ -4847,9 +4845,8 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 			InfoIcons->saveIconstate();
 
 		CEpgScan::getInstance()->Start(true);
-		bool alive = recordingstatus || CEpgScan::getInstance()->Running() ||
-			CStreamManager::getInstance()->StreamStatus();
-		if(!alive)
+		bool alive = recordingstatus || CEpgScan::getInstance()->Running() || CStreamManager::getInstance()->StreamStatus();
+		if (!alive && cpuFreq)
 			cpuFreq->SetCpuFreq(g_settings.standby_cpufreq * 1000 * 1000);
 
 		//fan speed
@@ -4871,7 +4868,8 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 		powerManager->SetStandby(false, false);
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->ShowText("Resume ...");
-		cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
+		if (cpuFreq)
+			cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
 		videoDecoder->Standby(false);
 		CEpgScan::getInstance()->Stop();
 		CSectionsdClient::CurrentNextInfo dummy;
