@@ -93,12 +93,11 @@ int CSoftwareUpdate::showSoftwareUpdate()
 
 	CFlashUpdate flash;
 	flash.enableNotify(false);
+
 	//online update
-	if (file_exists(g_settings.softupdate_url_file.c_str())) {
-		update_item = new CMenuForwarder(LOCALE_FLASHUPDATE_CHECKUPDATE_INTERNET, allow_update, NULL, &flash, "inet", inetkey);
-		update_item->setHint("", LOCALE_MENU_HINT_SOFTUPDATE_CHECK);
-		softUpdate.addItem(update_item);
-	}
+	update_item = new CMenuForwarder(LOCALE_FLASHUPDATE_CHECKUPDATE_INTERNET, allow_update && file_exists(g_settings.softupdate_url_file.c_str()), NULL, &flash, "inet", inetkey);
+	update_item->setHint("", LOCALE_MENU_HINT_SOFTUPDATE_CHECK);
+	softUpdate.addItem(update_item);
 
 	//local update
 	update_item = new CMenuForwarder(LOCALE_FLASHUPDATE_CHECKUPDATE_LOCAL, allow_update, NULL, &flash, "local", CRCInput::RC_green);
