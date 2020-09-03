@@ -1408,7 +1408,7 @@ void CRCInput::getMsg_us(neutrino_msg_t * msg, neutrino_msg_data_t * data, uint6
 						/* only allow selected keys to be repeated */
 						if (mayRepeat(trkey, bAllowRepeatLR) ||
 						    (g_settings.shutdown_real_rcdelay && ((trkey == RC_standby) &&
-#if HAVE_COOL_HARDWARE
+#if HAVE_CST_HARDWARE
 						    (cs_get_revision() > 7)
 #else
 						    (g_info.hw_caps->can_shutdown)

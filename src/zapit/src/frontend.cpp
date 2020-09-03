@@ -79,7 +79,7 @@ extern int zapit_debug;
 
 #define FE_COMMON_PROPS	2
 #define FE_DVBS_PROPS	6
-#if HAVE_COOL_HARDWARE
+#if HAVE_CST_HARDWARE
 	#define FE_DVBS2_PROPS	8
 #else
 	#define FE_DVBS2_PROPS	9
@@ -110,7 +110,7 @@ static const struct dtv_property dvbs2_cmdargs[] = {
 	{ DTV_INNER_FEC,	{}     , { FEC_AUTO		}, 0 },
 	{ DTV_PILOT,		{}     , { PILOT_AUTO		}, 0 },
 	{ DTV_ROLLOFF,		{}     , { ROLLOFF_AUTO		}, 0 },
-#if ! HAVE_COOL_HARDWARE
+#if ! HAVE_CST_HARDWARE
 	{ DTV_STREAM_ID,	{}     , { NO_STREAM_ID_FILTER	}, 0 },
 #endif
 	{ DTV_TUNE,		{}     , { 0			}, 0 }
@@ -1597,7 +1597,7 @@ bool CFrontend::buildProperties(const FrontendParameters *feparams, struct dtv_p
 			cmdseq.props[MODULATION].u.data	= feparams->modulation;
 			cmdseq.props[ROLLOFF].u.data	= feparams->rolloff;
 			cmdseq.props[PILOTS].u.data	= pilot;
-#if ! HAVE_COOL_HARDWARE
+#if ! HAVE_CST_HARDWARE
 			cmdseq.props[MIS].u.data	= feparams->plp_id | (feparams->pls_code << 8) | (feparams->pls_mode << 26);
 #endif
 			if (zapit_debug)

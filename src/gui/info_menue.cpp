@@ -39,7 +39,7 @@
 #include <gui/info_menue.h>
 #include <gui/imageinfo_ni.h>
 #include <gui/dboxinfo.h>
-#if HAVE_COOL_HARDWARE
+#if HAVE_CST_HARDWARE
 #include <gui/streaminfo1.h>
 #else
 #include <gui/streaminfo2.h>
@@ -72,7 +72,7 @@ int CInfoMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 
 	if (actionKey == "cs_get_info")
 	{
-#if HAVE_COOL_HARDWARE
+#if HAVE_CST_HARDWARE
 		char str[1024];
 		sprintf(str, "cs_get_revision(): 0x%02X\n", cs_get_revision());
 		sprintf(str, "%scs_get_chip_type(): 0x%04X\n", str, cs_get_chip_type());
