@@ -6,7 +6,7 @@ install_SCRIPTS = \
 	wakeup.sh \
 	install.sh 
 
-if BOXMODEL_CS_HD2
+if BOXMODEL_CST_HD2
 install_SCRIPTS += \
 	backup_flash.sh \
 	restore_flash.sh

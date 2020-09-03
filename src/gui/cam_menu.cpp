@@ -170,7 +170,7 @@ int CCAMMenuHandler::doMainMenu()
 	ci_mode->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CI_MODE);
 	cammenu->addItem(ci_mode);
 
-#ifdef BOXMODEL_CS_HD2
+#ifdef BOXMODEL_CST_HD2
 	int fecount = CFEManager::getInstance()->getFrontendCount();
 	char fename[fecount+1][255];
 

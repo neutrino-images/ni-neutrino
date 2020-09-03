@@ -55,7 +55,7 @@ libneutrino_driver_a_SOURCES = \
 if BOXTYPE_COOL
 libneutrino_driver_a_SOURCES += \
 	fb_accel_cs_hdx.cpp
-if BOXMODEL_CS_HD2
+if BOXMODEL_CST_HD2
 libneutrino_driver_a_SOURCES += \
 	fb_accel_cs_hd2.cpp \
 	vfd.cpp

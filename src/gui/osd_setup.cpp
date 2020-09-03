@@ -725,7 +725,7 @@ int COsdSetup::showOsdSetup()
 		osd_menu->addItem(mc);
 	}
 
-#if !defined BOXMODEL_CS_HD2
+#if !defined BOXMODEL_CST_HD2
 	int scart_osd_fix_exist = 0;
 	if (file_exists("/var/etc/.scart_osd_fix"))
 		scart_osd_fix_exist = 1;
@@ -777,7 +777,7 @@ int COsdSetup::showOsdSetup()
 			CAudioMute::getInstance()->enableMuteIcon(true);
 	}
 
-#if !defined BOXMODEL_CS_HD2
+#if !defined BOXMODEL_CST_HD2
 	delete scartFileNotifier;
 #endif
 	delete colorInfoclockNotifier;
