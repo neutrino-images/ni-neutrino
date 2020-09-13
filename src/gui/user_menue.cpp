@@ -80,7 +80,7 @@
 #include <gui/update_menue.h>
 #include <gui/hdd_menu.h>
 #include <gui/test_menu.h> //NI
-#include <gui/webtv_setup.h>
+#include <gui/webchannels_setup.h>
 #include <gui/miscsettings_menu.h>
 
 #include <driver/radiotext.h>
