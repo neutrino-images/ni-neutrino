@@ -124,7 +124,7 @@ libneutrino_gui_a_SOURCES += \
 	glcdthemes.cpp
 endif
 
-if BOXTYPE_COOL
+if BOXTYPE_CST
 libneutrino_gui_a_SOURCES += \
 	streaminfo1.cpp
 else

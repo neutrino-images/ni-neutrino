@@ -52,7 +52,7 @@ libneutrino_driver_a_SOURCES = \
 	streamts.cpp \
 	volume.cpp
 
-if BOXTYPE_COOL
+if BOXTYPE_CST
 libneutrino_driver_a_SOURCES += \
 	fb_accel_cs_hdx.cpp
 if BOXMODEL_CST_HD2
