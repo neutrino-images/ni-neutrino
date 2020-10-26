@@ -2805,7 +2805,7 @@ TIMER_START();
 	ZapStart_arg.ci_delay = g_settings.ci_delay;
 	memcpy(ZapStart_arg.ci_rpr, g_settings.ci_rpr, sizeof(g_settings.ci_rpr));
 #endif
-	ZapStart_arg.volume = g_settings.hdmi_cec_volume ? 100 : g_settings.current_volume;
+	ZapStart_arg.volume = g_settings.hdmi_cec_volume ? 75 : g_settings.current_volume;
 	ZapStart_arg.webtv_xml = &g_settings.webtv_xml;
 	ZapStart_arg.webradio_xml = &g_settings.webradio_xml;
 
