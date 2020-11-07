@@ -120,7 +120,7 @@ typedef enum {
 	PLS_Default_Root_Code
 } fe_pls_code_t;
 
-enum {
+typedef enum {
 	No_T2MI_PLP_Id = NO_STREAM_ID_FILTER,
 	T2MI_Default_Pid = 4096
 } fe_t2mi_pid_t;
