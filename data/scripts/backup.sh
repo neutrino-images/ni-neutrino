@@ -3,7 +3,7 @@
 . /etc/init.d/globals
 
 HOST=$(hostname)
-DATE=$(date +%Y-%m-%d_%H-%M-%S)
+DATE=$(date +%Y%m%d_%H%M)
 USRF="/var/tuxbox/config/tobackup.conf"
 BAKF="$1/${2:-settings_${HOST}_${DATE}.tar.gz}"
 
