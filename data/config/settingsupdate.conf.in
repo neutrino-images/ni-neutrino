@@ -25,34 +25,36 @@
 ## vor der Sicherung aus dem neuen Image zu löschende Dateien/Verzeichnisse,
 ## gekennzeichnet durch ein vorangestelltes ~
 # z.B.
-# ~/share/tuxbox/neutrino/themes/Classic.theme
+# ~@THEMESDIR@/Classic.theme
 #---------------------------------------------------------------------------
 
 
 #-------------------------
 ## NI Standard-Sicherungen
 #-------------------------
-/var/tuxbox/config/tobackup.conf
-/var/tuxbox/config/settingsupdate.conf
+@CONFIGDIR@/tobackup.conf
+@CONFIGDIR@/settingsupdate.conf
 
-/var/tuxbox/config/cables.xml
-/var/tuxbox/config/FritzCallMonitor.addr
-/var/tuxbox/config/FritzCallMonitor.cfg
-/var/tuxbox/config/radio-favorites.xml
-/var/tuxbox/config/radio-stations.xml
-/var/tuxbox/config/timerd.conf
-/var/tuxbox/config/satellites.xml
-/var/tuxbox/config/tuxcal/
-/var/tuxbox/config/tuxmail/
-/var/tuxbox/config/zapit/
-/var/tuxbox/config/oscam.*
-/var/tuxbox/config/oscammon.conf
-/var/tuxbox/config/scan.conf
-/var/tuxbox/config/srv.conf
-/var/tuxbox/config/flex/flex_eigene_scripte.conf
+@CONFIGDIR@/cables.xml
+@CONFIGDIR@/FritzCallMonitor.addr
+@CONFIGDIR@/FritzCallMonitor.cfg
+@CONFIGDIR@/radio-favorites.xml
+@CONFIGDIR@/radio-stations.xml
+@CONFIGDIR@/timerd.conf
+@CONFIGDIR@/satellites.xml
+@CONFIGDIR@/tuxcal/
+@CONFIGDIR@/tuxmail/
+@CONFIGDIR@/zapit/
+@CONFIGDIR@/oscam.*
+@CONFIGDIR@/oscammon.conf
+@CONFIGDIR@/scan.conf
+@CONFIGDIR@/srv.conf
+@CONFIGDIR@/flex/flex_eigene_scripte.conf
+
 /var/bin/
 /var/etc/
 /var/keys/
+
 /etc/exports
 /etc/hostname
 /etc/hosts
