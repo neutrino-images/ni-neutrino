@@ -142,3 +142,5 @@ shadow_blue=0
 shadow_alpha=25
 
 rounded_corners=0
+
+font_file=@FONTDIR@/neutrino.ttf

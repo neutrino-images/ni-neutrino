@@ -401,6 +401,7 @@ data/pictures/screensaver/Makefile
 data/policy/Makefile
 data/scripts/Makefile
 data/themes/Makefile
+data/themes/Material_Blue-Grey.theme
 data/themes/Grey-Blue/Makefile
 data/themes/Grey-Blue/icons/Makefile
 data/themes/Grey-Blue/icons/buttons/Makefile

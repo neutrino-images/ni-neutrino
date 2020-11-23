@@ -1,3 +1,6 @@
+EXTRA_DIST = \
+	Material_Blue-Grey.theme Material_Blue-Grey.theme.in
+
 SUBDIRS = \
 	Grey-3.0/icons/buttons \
 	Grey-Blue/icons/buttons \
