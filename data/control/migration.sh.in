@@ -1,22 +1,22 @@
 #!/bin/sh
 
-cd /var/tuxbox/config
+cd @CONFIGDIR@
 if [ -e neutrino.conf ]; then
 	# remove NG leftovers
 	sed -i 's|ng_netfs_\(.*\)|netfs_\1|' neutrino.conf
 
 	# webradio_usr.xml was moved
-	sed -i "s|/var/tuxbox/config/webradio_usr.xml|/var/tuxbox/webradio/webradio_usr.xml|" neutrino.conf
-	mkdir -p /var/tuxbox/webradio/
-	if [ -e /var/tuxbox/config/webradio_usr.xml ]; then
-		mv /var/tuxbox/config/webradio_usr.xml /var/tuxbox/webradio/
+	sed -i "s|@CONFIGDIR@/webradio_usr.xml|@WEBRADIODIR_VAR@/webradio_usr.xml|" neutrino.conf
+	mkdir -p @WEBRADIODIR_VAR@/
+	if [ -e @CONFIGDIR@/webradio_usr.xml ]; then
+		mv @CONFIGDIR@/webradio_usr.xml @WEBRADIODIR_VAR@/
 	fi
 
 	# webtv_usr.xml was moved
-	sed -i "s|/var/tuxbox/config/webtv_usr.xml|/var/tuxbox/webtv/webtv_usr.xml|" neutrino.conf
-	mkdir -p /var/tuxbox/webtv/
-	if [ -e /var/tuxbox/config/webtv_usr.xml ]; then
-		mv /var/tuxbox/config/webtv_usr.xml /var/tuxbox/webtv/
+	sed -i "s|@CONFIGDIR@/webtv_usr.xml|@WEBTVDIR_VAR@/webtv_usr.xml|" neutrino.conf
+	mkdir -p @WEBTVDIR_VAR@/
+	if [ -e @CONFIGDIR@/webtv_usr.xml ]; then
+		mv @CONFIGDIR@/webtv_usr.xml @WEBTVDIR_VAR@/
 	fi
 
 	# remove all old glcd_ keywords; neutrino will add the new ones
@@ -30,7 +30,7 @@ fi
 
 if [ -e zapit/frontend.conf ]; then
 	# uni_qrg was renamed to uni_freq
-	sed -i "s|_uni_qrg=|_uni_freq=|g" /var/tuxbox/config/zapit/frontend.conf
+	sed -i "s|_uni_qrg=|_uni_freq=|g" @CONFIGDIR@/zapit/frontend.conf
 fi
 
 controlscripts="\
@@ -53,13 +53,13 @@ controlscripts="\
 	standby.off \
 "
 
-mkdir -p /var/tuxbox/control/
+mkdir -p @CONTROLDIR_VAR@/
 for controlscript in $controlscripts; do
 	if [ -e $controlscript ]; then
-		mv $controlscript /var/tuxbox/control/
+		mv $controlscript @CONTROLDIR_VAR@/
 	fi
 done
 
-# these control scripts hasn't counterparts in /var
+# these control scripts hasn't counterparts in @CONTROLDIR_VAR@
 rm -f migration.sh
 rm -f flash.start
