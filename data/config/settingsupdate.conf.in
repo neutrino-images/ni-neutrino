@@ -51,9 +51,13 @@
 @CONFIGDIR@/srv.conf
 @CONFIGDIR@/flex/flex_eigene_scripte.conf
 
+@FLAGDIR@/
+
 /var/bin/
-/var/etc/
 /var/keys/
+/var/log/
+/var/root/
+/var/xupnpd/
 
 /etc/exports
 /etc/hostname
@@ -62,6 +66,7 @@
 /etc/passwd
 /etc/profile.local
 /etc/resolv.conf
+/etc/samba/smb.conf
 /etc/wpa_supplicant.conf
 
 ## Persönliche Sicherungen

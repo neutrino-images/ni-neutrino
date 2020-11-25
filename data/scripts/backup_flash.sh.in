@@ -4,7 +4,7 @@
 
 RES=""
 VAR="/var/"
-USRF="/var/tuxbox/config/tobackup.conf"
+USRF="@CONFIGDIR@/tobackup.conf"
 BAKF="/var/backup_flash.tar.gz"
 
 TOBACKUP=""

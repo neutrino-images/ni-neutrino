@@ -1,0 +1,87 @@
+#!/bin/sh
+
+. /etc/init.d/globals
+
+HOST=$(hostname)
+DATE=$(date +%Y%m%d_%H%M)
+USRF="@CONFIGDIR@/tobackup.conf"
+BAKF="$1/${2:-settings_${HOST}_${DATE}}.tar.gz"
+
+TOBACKUP="\
+	@CONFIGDIR@/settingsupdate.conf \
+	\
+	@CONFIGDIR@/auto-record-cleaner.* \
+	@CONFIGDIR@/doscam.* \
+	@CONFIGDIR@/FritzCallMonitor.addr \
+	@CONFIGDIR@/FritzCallMonitor.cfg \
+	@CONFIGDIR@/moviebrowser.conf \
+	@CONFIGDIR@/neutrino.conf \
+	@CONFIGDIR@/oscam.* \
+	@CONFIGDIR@/oscammon.conf \
+	@CONFIGDIR@/pr-auto-timer.* \
+	@CONFIGDIR@/radio-favorites.xml \
+	@CONFIGDIR@/scan.conf \
+	@CONFIGDIR@/smarthomeinfo.conf \
+	@CONFIGDIR@/timerd.conf \
+	@CONFIGDIR@/tuxcal/ \
+	@CONFIGDIR@/tuxcom/ \
+	@CONFIGDIR@/tuxmail/ \
+	@CONFIGDIR@/tuxtxt/tuxtxt2.conf \
+	@CONFIGDIR@/tuxwetter/tuxwetter.conf \
+	@CONFIGDIR@/tuxwetter/tuxwetter.mcfg \
+	@CONFIGDIR@/Y-Web.conf \
+	@CONFIGDIR@/zapit/ \
+	\
+	@FLAGDIR@/ \
+	\
+	/var/bin/ \
+	/var/keys/ \
+	/var/log/ \
+	/var/root/ \
+	/var/xupnpd/ \
+	\
+	/etc/exports \
+	/etc/hostname \
+	/etc/hosts \
+	/etc/network/interfaces \
+	/etc/passwd \
+	/etc/profile.local \
+	/etc/resolv.conf \
+	/etc/samba/smb.conf \
+	/etc/wpa_supplicant.conf \
+	\
+	@DATADIR@/neutrino/flex/flex_user.conf \
+	@DATADIR_VAR@/flex/flex_user.conf \
+	\
+	@CONTROLDIR_VAR@/ \
+	@FONTDIR_VAR@/ \
+	@ICONSDIR_VAR@/ \
+	@LOCALEDIR_VAR@/ \
+	@LUAPLUGINDIR_VAR@/ \
+	@PLUGINDIR_VAR@/ \
+	@PUBLIC_HTTPDDIR@/ \
+	@THEMESDIR_VAR@/ \
+	@WEBRADIODIR_VAR@/ \
+	@WEBTVDIR_VAR@/ \
+"
+
+SHOWINFO "backup to ${BAKF} ..."
+
+if [ -e "${USRF}" ]; then
+	TOBACKUP="$TOBACKUP ${USRF}"
+	while read i
+		do [ "${i:0:1}" = "#" ] || TOBACKUP="$TOBACKUP ${i%%#*}"
+		done < $USRF
+fi
+
+# check existence
+RES=""
+for i in $TOBACKUP
+	do [ -e "$i" ] && RES="$RES $i"
+	done
+
+TOBACKUP=$(echo $RES)
+
+tar -czf "${BAKF}" $TOBACKUP 2>&1 >/dev/null
+
+SHOWINFO "done."
