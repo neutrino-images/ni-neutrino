@@ -287,7 +287,7 @@ void CImageInfoNI::paint()
 	ypos += iheight/2;
 
 	CConfigFile config('\t');
-	config.loadConfig(TARGET_PREFIX "/.version");
+	config.loadConfig(IMAGE_VERSION_FILE);
 
 	std::string imagename	= config.getString("imagename",	"NI \\o/ Neutrino-Image");
 	std::string version	= config.getString("version",	"n/a");
