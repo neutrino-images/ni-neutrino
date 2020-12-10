@@ -110,16 +110,18 @@ void  wakeup_hdd(const char *hdd_dir, bool msg)
 	//NI
 	CHintBox loadBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_HDD_WAKEUP_START));
 
-	if(!g_settings.hdd_wakeup_msg)
+	if (!g_settings.hdd_wakeup_msg)
 		msg = false;
-	if(msg)
+	if (msg)
 		loadBox.paint();
-	std::string s = check_var("/bin/wakeup.sh");
-	my_system(2,s.c_str(),hdd_dir);
+
+	std::string wakeup_sh = find_executable("wakeup.sh");
+	if (!wakeup_sh.empty())
+		my_system(2, wakeup_sh.c_str(), hdd_dir);
 
 	if (!g_settings.hdd_wakeup) {
 		printf("[hdd] internal wakeup disabled\n");
-		if(msg)
+		if (msg)
 			loadBox.hide();
 		return;
 	}
@@ -144,9 +146,10 @@ void  wakeup_hdd(const char *hdd_dir, bool msg)
 		remove(wakeup_file.c_str());
 	}
 	//NI
-	if(msg)
+	if (msg)
 		loadBox.hide();
 }
+
 //use for script with full path
 int my_system(const char * cmd)
 {
