@@ -177,6 +177,11 @@ if test "$BOXTYPE" = "coolstream" ||
 	AC_DEFINE(SCREENSHOT, 1, [Define to 1 if the platform supports screenshots])
 fi
 
+AC_ARG_ENABLE(graphlcd,
+	AS_HELP_STRING([--enable-graphlcd], [enable GraphLCD support @<:@default=no@:>@]),
+	AC_DEFINE(ENABLE_GRAPHLCD, 1, [enable GraphLCD support]))
+AM_CONDITIONAL(ENABLE_GRAPHLCD, test "$enable_graphlcd" = "yes")
+
 AC_ARG_ENABLE(keyboard-no-rc,
 	AS_HELP_STRING([--enable-keyboard-no-rc], [enable keyboard control, disable rc control @<:@default=no@:>@]),
 	AC_DEFINE(KEYBOARD_INSTEAD_OF_REMOTE_CONTROL, 1, [enable keyboard control, disable rc control]))
