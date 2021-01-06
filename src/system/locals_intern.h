@@ -450,6 +450,8 @@ const char * locale_real_names[] =
 	"daemon_item.fcm_name",
 	"daemon_item.inadyn_desc",
 	"daemon_item.inadyn_name",
+	"daemon_item.minidlna_desc",
+	"daemon_item.minidlna_name",
 	"daemon_item.nfsserver_desc",
 	"daemon_item.nfsserver_name",
 	"daemon_item.sambaserver_desc",

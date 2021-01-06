@@ -194,6 +194,25 @@
 				<td>
 				</td>
 			</tr>
+			<!-- minidlna -->
+			<tr class="list">
+				<td>
+					<img src="images/{=if-file-exists:/var/etc/.minidlnad~check_green~x_red=}.png" class="status">
+					djmount
+				</td>
+				<td>
+					{=if-file-exists:/var/etc/.minidlnad~
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_minidlna_stop", 5000);'/>
+					~
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_minidlna_start", 5000);'/>
+					=}
+				</td>
+				<td>
+					&nbsp;
+				</td>
+				<td>
+				</td>
+			</tr>
 			<!-- xupnpd -->
 			<tr class="list">
 				<td>

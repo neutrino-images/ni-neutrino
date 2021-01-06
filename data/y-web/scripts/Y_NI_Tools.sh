@@ -488,6 +488,8 @@ case "$action" in
 	p_ush_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ush_stop;;
 	p_djm_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh djm_start;;
 	p_djm_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh djm_stop;;
+	p_minidlna_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh minidlna_start;;
+	p_minidlna_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh minidlna_stop;;
 	p_xud_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh xud_start;;
 	p_xud_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh xud_stop;;
 	p_cro_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh cro_start;;

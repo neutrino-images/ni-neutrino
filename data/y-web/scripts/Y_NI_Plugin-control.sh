@@ -102,6 +102,16 @@ case "$1" in
 		$y_path_sbin/service djmount stop >/dev/console
 		rm -f /var/etc/.djmount
 	;;
+	minidlna_start)
+		echo "[$BNAME] minidlna start"
+		touch /var/etc/.minidlnad
+		$y_path_sbin/service minidlnad start >/dev/console
+	;;
+	minidlna_stop)
+		echo "[$BNAME] minidlna stop"
+		$y_path_sbin/service minidlnad stop >/dev/console
+		rm -f /var/etc/.minidlnad
+	;;
 	xud_start)
 		echo "[$BNAME] xupnpd start"
 		touch /var/etc/.xupnpd

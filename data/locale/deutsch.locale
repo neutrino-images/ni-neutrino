@@ -423,6 +423,8 @@ daemon_item.fcm_desc Zeigt die Anrufliste der FRITZ!Box und noch vieles mehr ...
 daemon_item.fcm_name FritzCallMonitor
 daemon_item.inadyn_desc Internet Automated Dynamic DNS Client
 daemon_item.inadyn_name In-a-Dyn
+daemon_item.minidlna_desc Einfacher DLNA-Server
+daemon_item.minidlna_name ReadyMedia (MiniDLNA)
 daemon_item.nfsserver_desc NFS Kernel Server
 daemon_item.nfsserver_name NFS-Server
 daemon_item.sambaserver_desc Server-Message-Block-Protokoll (SMB) Implementierung
