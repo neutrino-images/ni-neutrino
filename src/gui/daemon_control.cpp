@@ -55,27 +55,28 @@ typedef struct daemons_data_t
 	neutrino_locale_t name;
 	neutrino_locale_t desc;
 	const char * icon;
+	const char * daemon;
+	int daemon_exist;
 	const char * flag;
-	int daemon_exist; // currently unused
 	int flag_exist;
 }
 daemons_data_struct;
 
 daemons_data_t daemons_data[]=
 {
-	{LOCALE_DAEMON_ITEM_FCM_NAME,		LOCALE_DAEMON_ITEM_FCM_DESC,		NEUTRINO_ICON_HINT_FCM,		"fritzcallmonitor",	0 ,0},
-	{LOCALE_DAEMON_ITEM_NFSSERVER_NAME,	LOCALE_DAEMON_ITEM_NFSSERVER_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"nfsd",			0 ,0},
-	{LOCALE_DAEMON_ITEM_SAMBASERVER_NAME,	LOCALE_DAEMON_ITEM_SAMBASERVER_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"samba",		0 ,0},
-	{LOCALE_DAEMON_ITEM_TUXCALD_NAME,	LOCALE_DAEMON_ITEM_TUXCALD_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"tuxcald",		0 ,0},
-	{LOCALE_DAEMON_ITEM_TUXMAILD_NAME,	LOCALE_DAEMON_ITEM_TUXMAILD_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"tuxmaild",		0 ,0},
-	{LOCALE_DAEMON_ITEM_EMMREMIND_NAME,	LOCALE_DAEMON_ITEM_EMMREMIND_DESC,	NEUTRINO_ICON_HINT_EMMRD,	"emmrd",		0 ,0},
-	{LOCALE_DAEMON_ITEM_INADYN_NAME,	LOCALE_DAEMON_ITEM_INADYN_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"inadyn",		0 ,0},
-	{LOCALE_DAEMON_ITEM_DROPBEAR_NAME,	LOCALE_DAEMON_ITEM_DROPBEAR_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"dropbear",		0 ,0},
-	{LOCALE_DAEMON_ITEM_DJMOUNT_NAME,	LOCALE_DAEMON_ITEM_DJMOUNT_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"djmount",		0 ,0},
-	{LOCALE_DAEMON_ITEM_USHARE_NAME,	LOCALE_DAEMON_ITEM_USHARE_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"ushare",		0 ,0},
-	{LOCALE_DAEMON_ITEM_MINIDLNA_NAME,	LOCALE_DAEMON_ITEM_MINIDLNA_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"minidlnad",		0 ,0},
-	{LOCALE_DAEMON_ITEM_XUPNPD_NAME,	LOCALE_DAEMON_ITEM_XUPNPD_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"xupnpd",		0 ,0},
-	{LOCALE_DAEMON_ITEM_CROND_NAME,		LOCALE_DAEMON_ITEM_CROND_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"crond",		0 ,0}
+	{LOCALE_DAEMON_ITEM_FCM_NAME,		LOCALE_DAEMON_ITEM_FCM_DESC,		NEUTRINO_ICON_HINT_FCM,		"FritzCallMonitor",	0 ,"fritzcallmonitor",	0},
+	{LOCALE_DAEMON_ITEM_NFSSERVER_NAME,	LOCALE_DAEMON_ITEM_NFSSERVER_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"rpc.nfsd",		0 ,"nfsd",		0},
+	{LOCALE_DAEMON_ITEM_SAMBASERVER_NAME,	LOCALE_DAEMON_ITEM_SAMBASERVER_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"smbd",			0 ,"samba",		0},
+	{LOCALE_DAEMON_ITEM_TUXCALD_NAME,	LOCALE_DAEMON_ITEM_TUXCALD_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"tuxcald",		0 ,"tuxcald",		0},
+	{LOCALE_DAEMON_ITEM_TUXMAILD_NAME,	LOCALE_DAEMON_ITEM_TUXMAILD_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"tuxmaild",		0 ,"tuxmaild",		0},
+	{LOCALE_DAEMON_ITEM_EMMREMIND_NAME,	LOCALE_DAEMON_ITEM_EMMREMIND_DESC,	NEUTRINO_ICON_HINT_EMMRD,	"emmrd",		0 ,"emmrd",		0},
+	{LOCALE_DAEMON_ITEM_INADYN_NAME,	LOCALE_DAEMON_ITEM_INADYN_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"inadyn",		0 ,"inadyn",		0},
+	{LOCALE_DAEMON_ITEM_DROPBEAR_NAME,	LOCALE_DAEMON_ITEM_DROPBEAR_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"dropbear",		0 ,"dropbear",		0},
+	{LOCALE_DAEMON_ITEM_DJMOUNT_NAME,	LOCALE_DAEMON_ITEM_DJMOUNT_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"djmount",		0 ,"djmount",		0},
+	{LOCALE_DAEMON_ITEM_USHARE_NAME,	LOCALE_DAEMON_ITEM_USHARE_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"ushare",		0 ,"ushare",		0},
+	{LOCALE_DAEMON_ITEM_MINIDLNA_NAME,	LOCALE_DAEMON_ITEM_MINIDLNA_DESC,	NEUTRINO_ICON_HINT_IMAGELOGO,	"minidlnad",		0 ,"minidlnad",		0},
+	{LOCALE_DAEMON_ITEM_XUPNPD_NAME,	LOCALE_DAEMON_ITEM_XUPNPD_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"xupnpd",		0 ,"xupnpd",		0},
+	{LOCALE_DAEMON_ITEM_CROND_NAME,		LOCALE_DAEMON_ITEM_CROND_DESC,		NEUTRINO_ICON_HINT_IMAGELOGO,	"crond",		0 ,"crond",		0}
 };
 #define DAEMONS_COUNT (sizeof(daemons_data)/sizeof(struct daemons_data_t))
 
@@ -95,10 +96,17 @@ int CDaemonControlMenu::show()
 		flagfile += daemons_data[i].flag;
 
 		daemons_data[i].flag_exist = file_exists(flagfile.c_str());
+		daemons_data[i].daemon_exist = !find_executable(daemons_data[i].daemon).empty();
+
+		if (!daemons_data[i].daemon_exist && daemons_data[i].flag_exist)
+		{
+			remove(flagfile.c_str());
+			daemons_data[i].flag_exist = 0;
+		}
 
 		flagFileNotifier[i] = new CFlagFileNotifier(daemons_data[i].flag);
 
-		mc = new CMenuOptionChooser(daemons_data[i].name, &daemons_data[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, flagFileNotifier[i], CRCInput::convertDigitToKey(daemon_shortcut++));
+		mc = new CMenuOptionChooser(daemons_data[i].name, &daemons_data[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, daemons_data[i].daemon_exist, flagFileNotifier[i], CRCInput::convertDigitToKey(daemon_shortcut++));
 		mc->setHint(daemons_data[i].icon, daemons_data[i].desc);
 		daemonControlMenu->addItem(mc);
 	}
