@@ -274,7 +274,7 @@ case "$action" in
 		if [ "$CAM" = "GBOX" ]; then
 			CAM=GBOX.NET
 		fi
-		V=$($y_path_bin/vinfo $CAM $y_path_varbin/$1)
+		V=$(vinfo $CAM $y_path_varbin/$1)
 		printf "%s" "${V//keine Informationen gefunden/}"
 	;;
 
