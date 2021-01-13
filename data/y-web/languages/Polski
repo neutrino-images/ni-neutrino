@@ -89,7 +89,7 @@ bc.menue.remote_desc=Pilot zdalnego sterowania
 bc.menue.remote=Pilot
 bc.menue.lcd_screenshot_desc=Tworzenie zrzutu ekranu LCD
 bc.menue.lcd_screenshot=Zrzut ekranu LCD
-bc.menue.lcd_screenshot_desc_ni=lcshot nie jest zainstalowane w katalogu /bin lub /var/bin
+bc.menue.lcd_screenshot_desc_ni=lcshot nie jest zainstalowane
 bc.menue.screenshot=Zrzut ekranu
 bc.menue.screenshot_desc=Zrzut ekranu OSD i/lub obrazu telewizyjnego
 

@@ -110,7 +110,7 @@ bc.menue.glcd_screenshot_desc=take a GLCD screenshot
 bc.menue.glcd_screenshot=GLCD Screenshot
 bc.menue.lcd_screenshot_desc=take a lcd screenshot
 bc.menue.lcd_screenshot=LCD Screenshot
-bc.menue.lcd_screenshot_desc_ni=lcshot not installed at /bin or /var/bin
+bc.menue.lcd_screenshot_desc_ni=lcshot not installed
 bc.menue.screenshot=Screenshot
 bc.menue.screenshot_desc=make screenshots from OSD and/or TV
 

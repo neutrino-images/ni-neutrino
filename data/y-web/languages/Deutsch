@@ -108,7 +108,7 @@ bc.menue.glcd_screenshot_desc=GLCD Screenshot erstellen
 bc.menue.glcd_screenshot=GLCD Screenshot
 bc.menue.lcd_screenshot_desc=LCD Screenshot erstellen
 bc.menue.lcd_screenshot=LCD Screenshot
-bc.menue.lcd_screenshot_desc_ni=lcshot nicht installiert in /bin oder /var/bin
+bc.menue.lcd_screenshot_desc_ni=lcshot nicht installiert in
 bc.menue.screenshot=Screenshot
 bc.menue.screenshot_desc=Screenshot des OSDs und/oder des TV-Bildes erstellen
 

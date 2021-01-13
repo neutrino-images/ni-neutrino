@@ -106,7 +106,7 @@ bc.menue.remote_desc=Webovský Diaľkový ovládač
 bc.menue.remote=Ovládač
 bc.menue.lcd_screenshot_desc=Vytvorí obrázok OSD zobrazenia v mierke
 bc.menue.lcd_screenshot=Zosnímanie OSD obrazovky
-bc.menue.lcd_screenshot_desc_ni=lcshot nie je inštalovaný v /bin alebo /var/bin
+bc.menue.lcd_screenshot_desc_ni=lcshot nie je inštalovaný
 bc.menue.screenshot=Zosnímanie TV obrazovky
 bc.menue.screenshot_desc=Vytvorí obrázok z osd a/alebo TV bez mierky
 

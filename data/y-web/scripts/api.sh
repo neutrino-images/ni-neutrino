@@ -12,8 +12,10 @@ API_VERSION_TEXT="$API_VERSION_MAJOR.$API_VERSION_MINOR"
 path_httpd=".."
 path_scripts="$path_httpd/scripts"
 path_bin="/bin"
+path_usrbin="/usr/bin"
 path_varbin="/var/bin"
 path_sbin="/sbin"
+path_usrsbin="/usr/sbin"
 path_config="%(CONFIGDIR)"
 path_tmp="/tmp"
 
@@ -27,9 +29,7 @@ do_udp_stream()
 	if [ -e $path_varbin/udpstreamts ];	then
 		up="$path_varbin/udpstreamts"
 	else
-		if [ -e $path_sbin/udpstreamts ]; then
-			up="$path_sbin/udpstreamts"
-		fi
+		up="udpstreamts"
 	fi
 
 	case "$1" in
