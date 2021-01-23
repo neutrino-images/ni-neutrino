@@ -341,10 +341,11 @@ bool CRecordInstance::Stop(bool remove_event)
 	/* Stop do close fd - if started */
 	record->Stop();
 
-	if(!autoshift)
-		CFEManager::getInstance()->unlockFrontend(frontend, true);//FIXME testing
 
 	CCamManager::getInstance()->Stop(channel_id, CCamManager::RECORD);
+
+	if(!autoshift)
+		CFEManager::getInstance()->unlockFrontend(frontend, true);//FIXME testing
 
 	if (autoshift && move_ts2rec)
 		CMoviePlayerGui::getInstance().moveTimeshift();
