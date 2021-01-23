@@ -333,6 +333,14 @@ case "$action" in
 		printf "%s" ${_port:-8080}
 	;;
 
+	get_minidlnad_webif_port)
+		if [ -e /etc/minidlna.conf ]; then
+			_port=$(grep -m 1 "^[:space:]*port=" /etc/minidlna.conf | cut -d'=' -f2)
+			_port=$(echo $_port | dos2unix -u)
+		fi
+		printf "%s" $_port
+	;;
+
 	get_xupnpd_webif_port)
 		if [ -e /share/xupnpd/xupnpd.lua ]; then
 			_port=$(grep -m 1 "^[:space:]*cfg.http_port" /share/xupnpd/xupnpd.lua | cut -d'=' -f2)

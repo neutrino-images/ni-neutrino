@@ -2,6 +2,9 @@
 {=var-set:_p_list_sh={=script:Y_NI_Tools p_list sh=}=}
 {=var-set:_p_list_lua={=script:Y_NI_Tools p_list lua=}=}
 
+{=var-set:r_minidlnad={=script:Y_NI_Tools is_running minidlnad=}=}
+{=var-set:minidlnadport={=script:Y_NI_Tools get_minidlnad_webif_port=}=}
+
 {=var-set:r_xupnpd={=script:Y_NI_Tools is_running xupnpd=}=}
 {=var-set:xupnpdport={=script:Y_NI_Tools get_xupnpd_webif_port=}=}
 
@@ -192,6 +195,10 @@
 					&nbsp;
 				</td>
 				<td>
+					{=if-equal:{=var-get:r_minidlnad=}~true~
+					<input type="button" value="WebInterface" onclick='goPort("{=var-get:minidlnadport=}");' />
+					~
+					=}
 				</td>
 			</tr>
 			<!-- djmount -->
