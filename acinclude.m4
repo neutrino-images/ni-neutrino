@@ -494,7 +494,7 @@ AS_HELP_STRING([], [valid for mipsbox: vuduo, vuduo2]),
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 		;;
-		vuduo, vuduo2, gb800se, osnino, osninoplus, osninopro)
+		vuduo|vuduo2|gb800se|osnino|osninoplus|osninopro)
 			if test "$BOXTYPE" = "mipsbox"; then
 				BOXMODEL="$withval"
 			else
