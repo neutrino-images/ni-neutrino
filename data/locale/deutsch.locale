@@ -1002,6 +1002,9 @@ hdd_format_failed Formatierung fehlgeschlagen! Stellen Sie sicher, dass der Date
 hdd_format_on_mount_failed Formatieren bei Einhänge-Fehler
 hdd_format_warn Alle Daten auf dem Datenträger werden gelöscht! Formatierung starten?
 hdd_fs Dateisystem zum formatieren
+hdd_label Datenträger-Bezeichnung
+hdd_label_hint1 Datenträger-Bezeichnung eingeben und mit Speichern übernehmen
+hdd_label_hint2 Nur bei "%s" (Aufnahme-Medium) werden die nötigen Verzeichnisse auf den Datenträger geschrieben
 hdd_info_capacity Kapazität
 hdd_info_firmware Firmware
 hdd_info_head HDD Info
@@ -1410,6 +1413,7 @@ menu.hint_hdd_fmt Wählen Sie das Datenträgerformat aus
 menu.hint_hdd_format Erstellt eine Partition auf dem Datenträger und formatiert diese
 menu.hint_hdd_format_on_mount_failed Soll der Datenträger formatiert werden, wenn das Einhängen fehlschlägt?
 menu.hint_hdd_info Datenträger-Informationen über Kapazität, Temperatur usw.
+menu.hint_hdd_label Geben Sie die Datenträger-Bezeichnung ein
 menu.hint_hdd_noise Setzen Sie Parameter für das Automatic Acoustic Management.\nNicht alle Datenträger unterstützen diese Funktion
 menu.hint_hdd_power Interne HDD-Stromversorgung für die Coolstream HD1 Boxen aktivieren.
 menu.hint_hdd_sleep Dieser Wert definiert, nach wieviel Minuten die Festplatte bei Inaktivität in den Sleep-Modus geschaltet wird
