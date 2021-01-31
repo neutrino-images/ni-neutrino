@@ -67,7 +67,6 @@ libneutrino_gui_a_SOURCES = \
 	infoviewer.cpp \
 	infoviewer_bb.cpp \
 	keybind_setup.cpp \
-	lcd4l_setup.cpp \
 	mediaplayer.cpp \
 	mediaplayer_setup.cpp \
 	miscsettings_menu.cpp \
@@ -117,6 +116,11 @@ libneutrino_gui_a_SOURCES = \
 	webchannels_setup.cpp \
 	xmltv_setup.cpp \
 	zapit_setup.cpp
+
+if ENABLE_LCD4LINUX
+libneutrino_gui_a_SOURCES += \
+	lcd4l_setup.cpp
+endif
 
 if ENABLE_GRAPHLCD
 libneutrino_gui_a_SOURCES += \

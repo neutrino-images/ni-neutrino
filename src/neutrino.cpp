@@ -167,10 +167,12 @@ CTimeOSD	*FileTimeOSD;
 
 //NI InfoIcons
 #include "gui/infoicons.h"
-CInfoIcons	*InfoIcons;
+CInfoIcons *InfoIcons;
 
+#ifdef ENABLE_LCD4LINUX
 #include "driver/lcd4l.h"
-CLCD4l		*LCD4l;
+CLCD4l *LCD4l;
+#endif
 
 int allow_flash = 1;
 Zapit_config zapitCfg;
@@ -199,7 +201,9 @@ extern cAudio * audioDecoder;
 cPowerManager *powerManager;
 cCpuFreqManager * cpuFreq;
 
+#ifdef ENABLE_LCD4LINUX
 void stop_lcd4l_support(void);
+#endif
 void stop_daemons(bool stopall = true, bool for_flash = false);
 void stop_video(void);
 
@@ -370,8 +374,7 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	CGLCDThemes::getInstance()->getTheme(configfile);
 #endif
 
-	//NI
-	g_settings.inetradio_autostart = configfile.getInt32("inetradio_autostart" , 0);
+#ifdef ENABLE_LCD4LINUX
 	g_settings.lcd4l_support = configfile.getInt32("lcd4l_support" , 0);
 	g_settings.lcd4l_logodir = configfile.getString("lcd4l_logodir", "/media/sda1/logos");
 	g_settings.lcd4l_display_type = configfile.getInt32("lcd4l_display_type", 0);
@@ -380,6 +383,9 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.lcd4l_brightness = configfile.getInt32("lcd4l_brightness", 7);
 	g_settings.lcd4l_brightness_standby = configfile.getInt32("lcd4l_brightness_standby", 3);
 	g_settings.lcd4l_convert = configfile.getInt32("lcd4l_convert", 1);
+#endif
+
+	g_settings.inetradio_autostart = configfile.getInt32("inetradio_autostart" , 0);
 	g_settings.show_menu_hints_line = configfile.getBool("show_menu_hints_line", false);
 	g_settings.mode_icons = configfile.getInt32( "mode_icons", 0);
 	g_settings.mode_icons_background = configfile.getInt32( "mode_icons_background", 0);
@@ -1387,9 +1393,11 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	}
 	if (g_settings.version_pseudo < "20190106000000")
 	{
+#ifdef ENABLE_LCD4LINUX
 		// move lcd4linux user skin from value 4 to value 100
 		if (g_settings.lcd4l_skin == 4)
 			g_settings.lcd4l_skin = 100;
+#endif
 	}
 	if (g_settings.version_pseudo < "20190115220100")
 	{
@@ -1445,8 +1453,7 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setString( "glcd_theme_name", g_settings.glcd_theme_name );
 #endif
 
-	//NI
-	configfile.setInt32("inetradio_autostart" , g_settings.inetradio_autostart);
+#ifdef ENABLE_LCD4LINUX
 	configfile.setInt32("lcd4l_support" , g_settings.lcd4l_support);
 	configfile.setString("lcd4l_logodir" , g_settings.lcd4l_logodir);
 	configfile.setInt32("lcd4l_display_type" , g_settings.lcd4l_display_type);
@@ -1455,6 +1462,9 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32("lcd4l_brightness", g_settings.lcd4l_brightness);
 	configfile.setInt32("lcd4l_brightness_standby", g_settings.lcd4l_brightness_standby);
 	configfile.setInt32("lcd4l_convert" , g_settings.lcd4l_convert);
+#endif
+
+	configfile.setInt32("inetradio_autostart" , g_settings.inetradio_autostart);
 	configfile.setBool("show_menu_hints_line" , g_settings.show_menu_hints_line);
 	configfile.setInt32("mode_icons", g_settings.mode_icons );
 	configfile.setInt32("mode_icons_background", g_settings.mode_icons_background);
@@ -3032,9 +3042,11 @@ TIMER_START();
 #endif
 	SHTDCNT::getInstance()->init();
 
+#ifdef ENABLE_LCD4LINUX
 	LCD4l = new CLCD4l();
 	if(g_settings.lcd4l_support)
 		LCD4l->StartLCD4l();
+#endif
 
 	CZapit::getInstance()->SetScanSDT(g_settings.enable_sdt);
 
@@ -4490,7 +4502,9 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	printf("[neutrino] %s(int %d)\n", __func__, exit_code);
 	printf("[neutrino] hw_caps->can_shutdown: %d\n", g_info.hw_caps->can_shutdown);
 
+#ifdef ENABLE_LCD4LINUX
 	stop_lcd4l_support();
+#endif
 
 	//NI InfoIcons
 	if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
@@ -5209,7 +5223,9 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 			CHint * hint = new CHint(LOCALE_SERVICEMENU_RESTART_HINT);
 			hint->paint();
 
+#ifdef ENABLE_LCD4LINUX
 			stop_lcd4l_support();
+#endif
 
 			saveSetup(NEUTRINO_SETTINGS_FILE);
 
@@ -5289,6 +5305,7 @@ void CNeutrinoApp::stopDaemonsForFlash()
 /**************************************************************************************
 *          Main programm - no function here                                           *
 **************************************************************************************/
+#ifdef ENABLE_LCD4LINUX
 void stop_lcd4l_support()
 {
 	if(LCD4l) {
@@ -5299,6 +5316,7 @@ void stop_lcd4l_support()
 	}
 	LCD4l = NULL;
 }
+#endif
 
 void stop_daemons(bool stopall, bool for_flash)
 {
@@ -5407,7 +5425,9 @@ void sighandler (int signum)
 	switch (signum) {
 	case SIGTERM:
 	case SIGINT:
+#ifdef ENABLE_LCD4LINUX
 		stop_lcd4l_support();
+#endif
 		delete cHddStat::getInstance();
 		delete CRecordManager::getInstance();
 		//CNeutrinoApp::getInstance()->saveSetup(NEUTRINO_SETTINGS_FILE);

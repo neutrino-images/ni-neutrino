@@ -937,6 +937,7 @@ struct SNeutrinoSettings
 	int glcd_selected_config;
 #endif
 
+#ifdef ENABLE_LCD4LINUX
 	// lcd4linux
 	int lcd4l_support;
 	std::string lcd4l_logodir;
@@ -946,6 +947,7 @@ struct SNeutrinoSettings
 	int lcd4l_skin;
 	int lcd4l_skin_radio;
 	int lcd4l_convert;
+#endif
 
 	// lcdd
 	enum LCD_SETTINGS {
