@@ -147,6 +147,8 @@ void CLCD4l::StartLCD4l()
 		pthread_create(&thrLCD4l, NULL, LCD4lProc, (void*) this);
 		pthread_detach(thrLCD4l);
 	}
+	if (g_settings.lcd4l_support)
+		exec_initscript("lcd4linux", "start");
 }
 
 void CLCD4l::StopLCD4l()
@@ -157,6 +159,7 @@ void CLCD4l::StopLCD4l()
 		pthread_cancel(thrLCD4l);
 		thrLCD4l = 0;
 	}
+	exec_initscript("lcd4linux", "stop");
 }
 
 void CLCD4l::SwitchLCD4l()
