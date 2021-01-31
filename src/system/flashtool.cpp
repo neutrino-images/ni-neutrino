@@ -44,8 +44,10 @@
 #include <neutrino.h>
 #include <driver/display.h>
 
+#ifdef ENABLE_LCD4LINUX
 #include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
+#endif
 
 CFlashTool::CFlashTool()
 {
@@ -349,8 +351,10 @@ bool CFlashTool::getInfo()
 //NI
 void CFlashTool::stopDaemons()
 {
+#ifdef ENABLE_LCD4LINUX
 	if (g_settings.lcd4l_support)
 		LCD4l->StopLCD4l();
+#endif
 
 	CNeutrinoApp::getInstance()->stopDaemonsForFlash();
 }

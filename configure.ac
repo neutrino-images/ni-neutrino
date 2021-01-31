@@ -177,6 +177,11 @@ if test "$BOXTYPE" = "coolstream" ||
 	AC_DEFINE(SCREENSHOT, 1, [Define to 1 if the platform supports screenshots])
 fi
 
+AC_ARG_ENABLE(lcd4linux,
+	AS_HELP_STRING([--enable-lcd4linux], [enable LCD4Linux support @<:@default=no@:>@]),
+	AC_DEFINE(ENABLE_LCD4LINUX, 1, [enable LCD4Linux support]))
+AM_CONDITIONAL(ENABLE_LCD4LINUX, test "$enable_lcd4linux" = "yes")
+
 AC_ARG_ENABLE(graphlcd,
 	AS_HELP_STRING([--enable-graphlcd], [enable GraphLCD support @<:@default=no@:>@]),
 	AC_DEFINE(ENABLE_GRAPHLCD, 1, [enable GraphLCD support]))

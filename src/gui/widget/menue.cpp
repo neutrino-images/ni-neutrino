@@ -47,8 +47,10 @@
 
 #include <cctype>
 
+#ifdef ENABLE_LCD4LINUX
 #include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
+#endif
 
 /* the following generic menu items are integrated into multiple menus at the same time */
 CMenuSeparator CGenericMenuSeparator(0, NONEXISTANT_LOCALE, true);
@@ -251,8 +253,10 @@ void CMenuItem::paintItemCaption(const bool select_mode, const char * right_text
 		if (g_settings.glcd_enable)
 			cGLCD::lockChannel(g_Locale->getText(LOCALE_MAINMENU_HEAD), lcd_text, 0);
 #endif
+#ifdef ENABLE_LCD4LINUX
 		if (g_settings.lcd4l_support)
 			LCD4l->CreateFile("/tmp/lcd/menu", lcd_text, g_settings.lcd4l_convert);
+#endif
 	}
 	
 	//left text
@@ -1025,7 +1029,9 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 #ifdef ENABLE_GRAPHLCD
 					cGLCD::unlockChannel();
 #endif
+#ifdef ENABLE_LCD4LINUX
 					LCD4l->RemoveFile("/tmp/lcd/menu");
+#endif
 
 					//exec this item...
 					CMenuItem* item = items[selected];
@@ -1044,8 +1050,10 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 					if (g_settings.glcd_enable)
 						cGLCD::lockChannel(g_Locale->getText(LOCALE_MAINMENU_HEAD), item->lcd_text, 0);
 #endif
+#ifdef ENABLE_LCD4LINUX
 					if (g_settings.lcd4l_support)
 						LCD4l->CreateFile("/tmp/lcd/menu", item->lcd_text, g_settings.lcd4l_convert);
+#endif
 
 					switch ( rv ) {
 						case menu_return::RETURN_EXIT_ALL:
@@ -1134,7 +1142,9 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 #ifdef ENABLE_GRAPHLCD
 	cGLCD::unlockChannel();
 #endif
+#ifdef ENABLE_LCD4LINUX
 	LCD4l->RemoveFile("/tmp/lcd/menu");
+#endif
 
 	for (unsigned int count = 0; count < items.size(); count++) 
 	{

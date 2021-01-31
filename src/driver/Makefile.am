@@ -37,7 +37,6 @@ libneutrino_driver_a_SOURCES = \
 	file.cpp \
 	fontrenderer.cpp \
 	genpsi.cpp \
-	lcd4l.cpp \
 	moviecut.cpp \
 	movieinfo.cpp \
 	neutrinofonts.cpp \
@@ -51,6 +50,11 @@ libneutrino_driver_a_SOURCES = \
 	shutdown_count.cpp \
 	streamts.cpp \
 	volume.cpp
+
+if ENABLE_LCD4LINUX
+libneutrino_driver_a_SOURCES += \
+	lcd4l.cpp
+endif
 
 if BOXTYPE_CST
 libneutrino_driver_a_SOURCES += \

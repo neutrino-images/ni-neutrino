@@ -56,8 +56,10 @@
 #include <mymenu.h>
 #include <zapit/getservices.h>
 
+#ifdef ENABLE_LCD4LINUX
 #include "driver/lcd4l.h"
 extern CLCD4l *LCD4l;
+#endif
 
 extern CBouquetManager *g_bouquetManager;
 
@@ -595,7 +597,9 @@ int CBouquetList::show(bool bShowChannelList)
 #ifdef ENABLE_GRAPHLCD
 	cGLCD::unlockChannel();
 #endif
+#ifdef ENABLE_LCD4LINUX
 	LCD4l->RemoveFile("/tmp/lcd/menu");
+#endif
 
 	fader.StopFade();
 
@@ -658,8 +662,10 @@ void CBouquetList::paintItem(int pos)
 		if(g_settings.glcd_enable)
 			cGLCD::lockChannel(g_Locale->getText(LOCALE_BOUQUETLIST_HEAD), lname, 0);
 #endif
+#ifdef ENABLE_LCD4LINUX
 		if(g_settings.lcd4l_support)
 			LCD4l->CreateFile("/tmp/lcd/menu", lname, g_settings.lcd4l_convert);
+#endif
 	}
 	else
 	{
