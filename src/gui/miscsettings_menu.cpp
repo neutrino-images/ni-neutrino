@@ -42,7 +42,6 @@
 #include <gui/filebrowser.h>
 #include <gui/infoicons_setup.h>
 #include <gui/keybind_setup.h>
-#include <gui/lcd4l_setup.h>
 #include <gui/plugins.h>
 #include <gui/plugins_hide.h>
 #include <gui/sleeptimer.h>
@@ -347,12 +346,6 @@ int CMiscMenue::showMiscSettingsMenu()
 	CInfoIconsSetup infoicons_setup;
 	mf = new CMenuForwarder(LOCALE_INFOICONS_HEAD, true, NULL, &infoicons_setup, NULL, CRCInput::convertDigitToKey(shortcut++));
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOICONS_HEAD);
-	misc_menue.addItem(mf);
-
-	// LCD4Linux Setup
-	CLCD4lSetup lcd4lSetup;
-	mf = new CMenuForwarder(LOCALE_LCD4L_SUPPORT, !find_executable("lcd4linux").empty(), NULL, &lcd4lSetup, NULL, CRCInput::convertDigitToKey(shortcut++));
-	mf->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SUPPORT);
 	misc_menue.addItem(mf);
 
 	// plugins
