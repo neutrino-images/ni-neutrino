@@ -1432,8 +1432,6 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
-
-	saveSetup(NEUTRINO_SETTINGS_FILE);
 }
 
 /**************************************************************************************
