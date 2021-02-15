@@ -3214,7 +3214,7 @@ void CNeutrinoApp::RealRun()
 		{
 			if (msg == CRCInput::RC_timeout || msg == NeutrinoMessages::EVT_TIMER)
 			{
-				if (CScreenSaver::getInstance()->canStart() && !CScreenSaver::getInstance()->isActive())
+				if (!blank_screen && CScreenSaver::getInstance()->canStart() && !CScreenSaver::getInstance()->isActive())
 				{
 					CScreenSaver::getInstance()->Start();
 				}
@@ -3245,11 +3245,15 @@ void CNeutrinoApp::RealRun()
 				if (!videoDecoder->getBlank()) {
 					INFO("blank_screen auto off");
 					blank_screen = false;
+					if (mode == NeutrinoModes::mode_radio || mode == NeutrinoModes::mode_webradio)
+						frameBuffer->showFrame("radiomode.jpg");
 				}
 				else if (msg <= CRCInput::RC_MaxRC) {
 					INFO("blank_screen manual off");
 					blank_screen = false;
 					videoDecoder->setBlank(blank_screen);
+					if (mode == NeutrinoModes::mode_radio || mode == NeutrinoModes::mode_webradio)
+						frameBuffer->showFrame("radiomode.jpg");
 					//eat key - just leave blank screen
 					g_RCInput->clearRCMsg();
 					continue;
@@ -5278,6 +5282,15 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	else if (actionKey == "blank_screen") {
 		INFO("blank_screen on");
 		blank_screen = true;
+		frameBuffer->paintBackground(); //clear entire screen
+#if HAVE_ARM_HARDWARE
+		/*
+		   Hack to get sure we have a blank screen.
+		   stopFrame()-function seems not work correctly on ARM_HARDWARE
+		*/
+		frameBuffer->showFrame("blackscreen.jpg");
+#endif
+		frameBuffer->stopFrame();
 		videoDecoder->setBlank(blank_screen);
 		returnval = menu_return::RETURN_EXIT_ALL;
 	}
