@@ -46,6 +46,7 @@ TOBACKUP="\
 	/etc/network/interfaces \
 	/etc/passwd \
 	/etc/profile.local \
+	/etc/rc.local \
 	/etc/resolv.conf \
 	/etc/samba/smb.conf \
 	/etc/wpa_supplicant.conf \
