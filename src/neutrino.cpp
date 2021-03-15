@@ -5345,7 +5345,11 @@ void stop_lcd4l_support()
 void stop_daemons(bool stopall, bool for_flash)
 {
 	CMoviePlayerGui::getInstance().stopPlayBack();
-	if (for_flash) {
+	if (for_flash)
+	{
+		if ( FILE *f = fopen("/tmp/.flash.start", "w") )
+			fclose(f);
+
 		CVFD::getInstance()->Clear();
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->ShowText("Stop daemons...");

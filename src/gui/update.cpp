@@ -733,6 +733,9 @@ int CFlashUpdate::exec(CMenuTarget* parent, const std::string &actionKey)
 #ifndef DRYRUN
 		if (flashing)
 		{
+			if ( FILE *f = fopen("/tmp/.flash.start", "w") )
+				fclose(f);
+
 			CVFD::getInstance()->setMode(CVFD::MODE_MENU_UTF8);
 			CVFD::getInstance()->showMenuText(0, "ofgwrite Flashing Tool", -1, true);
 			my_system(4, ofgwrite_caller.c_str(), g_settings.update_dir.c_str(), filename.c_str(), ofgwrite_options.c_str());
