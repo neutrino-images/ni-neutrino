@@ -2448,6 +2448,8 @@ const char * locale_real_names[] =
 	"options.serial",
 	"options.start",
 	"options.stop",
+	"osd.preset_screen_a",
+	"osd.preset_screen_b",
 	"parentallock.bouquetmode",
 	"parentallock.changepin",
 	"parentallock.changepin_hint1",
