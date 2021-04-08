@@ -58,8 +58,8 @@ class CIMDB
 		void StringReplace(std::string &str, const std::string search, const std::string rstr);
 		void cleanup();
 
-		std::string CreateEPGText();
-		std::string CreateMovieText();
+		std::string getEPGText();
+		std::string getMovieText();
 
 		std::string getPoster()	{ return posterfile;}
 		bool hasPoster() { return (access(posterfile.c_str(), F_OK) == 0); }
