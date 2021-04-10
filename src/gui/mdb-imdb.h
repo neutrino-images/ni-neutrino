@@ -1,5 +1,5 @@
 /*
-	imdb
+	Movie Database - OMDb/IMDb
 
 	(C) 2009-2016 NG-Team
 	(C) 2016 NI-Team

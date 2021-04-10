@@ -1,4 +1,6 @@
 /*
+	Movie Database - TMDb
+
 	Copyright (C) 2015-2020 TangoCash
 
 	License: GPLv2
@@ -17,8 +19,8 @@
 	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#ifndef __TMDB__
-#define __TMDB__
+#ifndef __tmdb__
+#define __tmdb__
 
 #include <string>
 #include "system/helpers.h"
@@ -46,7 +48,7 @@ typedef struct {
 	std::string cast;
 }tmdbinfo;
 
-class cTmdb
+class CTMDB
 {
 	private:
 		tmdbinfo minfo;
@@ -57,9 +59,9 @@ class cTmdb
 		void selectResult(Json::Value elements, int results, int &used_result);
 
 	public:
-		cTmdb();
-		~cTmdb();
-		static cTmdb* getInstance();
+		CTMDB();
+		~CTMDB();
+		static CTMDB* getInstance();
 		void        setTitle(std::string epgtitle);
 		std::string CreateEPGText();
 		std::string CreateMovieText();

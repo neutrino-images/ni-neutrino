@@ -62,11 +62,12 @@ libneutrino_gui_a_SOURCES = \
 	filebrowser.cpp \
 	followscreenings.cpp \
 	imageinfo_ni.cpp \
-	imdb.cpp \
 	info_menue.cpp \
 	infoviewer.cpp \
 	infoviewer_bb.cpp \
 	keybind_setup.cpp \
+	mdb-imdb.cpp \
+	mdb-tmdb.cpp \
 	mediaplayer.cpp \
 	mediaplayer_setup.cpp \
 	miscsettings_menu.cpp \
@@ -102,7 +103,6 @@ libneutrino_gui_a_SOURCES = \
 	subchannel_select.cpp \
 	themes.cpp \
 	timeosd.cpp \
-	tmdb.cpp \
 	update.cpp \
 	update_check.cpp \
 	update_menue.cpp \
