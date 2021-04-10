@@ -358,7 +358,7 @@ bool CIMDB::checkIMDbElement(std::string element)
 		return true;
 }
 
-std::string CIMDB::CreateEPGText()
+std::string CIMDB::getEPGText()
 {
 	if (m["imdbID"].empty() || m["Response"] != "True")
 		return g_Locale->getText(LOCALE_IMDB_DATA_FAILED);
@@ -402,7 +402,7 @@ std::string CIMDB::CreateEPGText()
 	return epgtext;
 }
 
-std::string CIMDB::CreateMovieText()
+std::string CIMDB::getMovieText()
 {
 	std::string movietext("");
 

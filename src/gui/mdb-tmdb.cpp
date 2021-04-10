@@ -184,7 +184,7 @@ bool CTMDB::GetMovieDetails(std::string lang, bool second)
 	return false;
 }
 
-std::string CTMDB::CreateEPGText()
+std::string CTMDB::getEPGText()
 {
 	std::string epgtext("");
 
@@ -207,7 +207,7 @@ std::string CTMDB::CreateEPGText()
 	return epgtext;
 }
 
-std::string CTMDB::CreateMovieText()
+std::string CTMDB::getMovieText()
 {
 	std::string movietext("");
 
