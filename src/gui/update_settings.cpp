@@ -161,8 +161,8 @@ int CUpdateSettings::initMenu()
 	autocheck = new CMenuOptionChooser(LOCALE_FLASHUPDATE_AUTOCHECK, &g_settings.softupdate_autocheck, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
 	autocheck->setHint("", LOCALE_MENU_HINT_AUTO_UPDATE_CHECK);
 
-#if 0
 	CMenuOptionChooser *package_autocheck = NULL;
+#if 0
 	if (COPKGManager::hasOpkgSupport()){
 		package_autocheck = new CMenuOptionChooser(LOCALE_FLASHUPDATE_AUTOCHECK_PACKAGES, &g_settings.softupdate_autocheck_packages, AUTOUPDATE_CHECK_OPTIONS, auto_update_options_count, true, this);
 		package_autocheck->setHint("", LOCALE_MENU_HINT_AUTO_UPDATE_CHECK);
