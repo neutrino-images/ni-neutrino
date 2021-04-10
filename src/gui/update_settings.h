@@ -60,11 +60,11 @@ class CUpdateSettings : public CMenuTarget, CChangeObserver
 	private:
 		int width;
 		int initMenu();
-		
+
 #ifdef USE_SMS_INPUT
 		CStringInputSMS *input_url_file;
 #endif
-	
+
 	public:	
 		CUpdateSettings();
 		~CUpdateSettings();

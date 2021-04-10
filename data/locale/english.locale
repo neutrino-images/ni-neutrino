@@ -212,6 +212,12 @@ audioplayer.streamripper_start Start streamripper
 audioplayer.streamripper_stop Stop streamripper
 audioplayer.title_artist Title, artist
 audioplayer_internetradio.name Audioplayer and Internetradio
+auto_update_check_6_hours every 6 hours
+auto_update_check_daily daily
+auto_update_check_monthly monthly
+auto_update_check_off off
+auto_update_check_on_start_only only on start
+auto_update_check_weekly weekly
 blank_screen Blank screen
 bookmarkmanager.delete delete
 bookmarkmanager.name bookmarks
@@ -725,7 +731,8 @@ filesystem.is.utf8.option.iso8859.1 ISO-8859-1
 filesystem.is.utf8.option.utf8 UTF-8
 flashupdate.actionreadflash reading
 flashupdate.apply_settings Import current settings into new image?
-flashupdate.autocheck Check updates periodically
+flashupdate.autocheck Check for updates periodically
+flashupdate.autocheck_packages Check for package updates
 flashupdate.cantopenfile can't open file
 flashupdate.cantopenmtd can't open MTD
 flashupdate.checkupdate_internet Online update
@@ -1319,6 +1326,7 @@ menu.hint_audioplayer_streamripper_dir Default streamripper target directory
 menu.hint_audioplayer_title Enable SMS-style title search in playlist
 menu.hint_auto_lang Auto-switch audio to preferred language
 menu.hint_auto_subs Auto-start subtitles for preferred language
+menu.hint_auto_update_check Set interval mode for update checks.
 menu.hint_back Return to previous menu\nPress menu key to close all menus
 menu.hint_back_brief Return to previous menu
 menu.hint_backlight Configure buttons backlight
