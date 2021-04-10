@@ -98,7 +98,9 @@
 #include "gui/update_ext.h"
 #include "gui/update.h"
 #include "gui/update_check.h"
+#if ENABLE_PKG_MANAGEMENT
 #include "gui/update_check_packages.h"
+#endif
 #include "gui/videosettings.h"
 #include "gui/audio_select.h"
 #include "gui/weather.h"
@@ -405,7 +407,9 @@ int CNeutrinoApp::loadSetup(const char * fname)
 	g_settings.show_ecm_pos = configfile.getInt32("show_ecm_pos" , 0);
 
 	g_settings.softupdate_autocheck = configfile.getBool("softupdate_autocheck" , false);
+#if ENABLE_PKG_MANAGEMENT
 	g_settings.softupdate_autocheck_packages = configfile.getInt32("softupdate_autocheck_packages" , false);
+#endif
 
 	// video
 	int vid_Mode_default = VIDEO_STD_720P50;
@@ -1944,7 +1948,9 @@ void CNeutrinoApp::saveSetup(const char * fname)
 	configfile.setInt32 ("softupdate_name_mode_apply", g_settings.softupdate_name_mode_apply);
 	configfile.setInt32 ("softupdate_name_mode_backup", g_settings.softupdate_name_mode_backup);
 	configfile.setBool("softupdate_autocheck", g_settings.softupdate_autocheck);
+#if ENABLE_PKG_MANAGEMENT
 	configfile.setInt32("softupdate_autocheck_packages", g_settings.softupdate_autocheck_packages);
+#endif
 
 	configfile.setInt32("flashupdate_createimage_add_var",    g_settings.flashupdate_createimage_add_var);
 	configfile.setInt32("flashupdate_createimage_add_root1",  g_settings.flashupdate_createimage_add_root1);
@@ -3132,7 +3138,6 @@ TIMER_START();
 TIMER_STOP("################################## after all ##################################");
 	if (g_settings.softupdate_autocheck) {
 #if 0
-
 		hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_FLASHUPDATE_CHECKUPDATE_INTERNET));
 		hintBox->paint();
 		CFlashUpdate flash;
@@ -3147,7 +3152,7 @@ TIMER_STOP("################################## after all #######################
 		CFlashUpdateCheck::getInstance()->startThread();
 		//CUpdateCheck::getInstance()->startThread();
 	}
-#if 0
+#if ENABLE_PKG_MANAGEMENT
 	if (g_settings.softupdate_autocheck_packages)
 		CUpdateCheckPackages::getInstance()->startThread();
 #endif

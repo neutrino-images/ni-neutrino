@@ -41,7 +41,9 @@
 
 #include "update_menue.h"
 #include "update_settings.h"
+#if ENABLE_PKG_MANAGEMENT
 #include "gui/opkg_manager.h"
+#endif
 #include <gui/widget/icons.h>
 #include <driver/screen_max.h>
 #include <driver/record.h>
@@ -81,6 +83,7 @@ int CSoftwareUpdate::showSoftwareUpdate()
 	softUpdate.addIntroItems(LOCALE_SERVICEMENU_UPDATE);
 
 	unsigned int inetkey = CRCInput::RC_red;
+#if ENABLE_PKG_MANAGEMENT
 	if (COPKGManager::hasOpkgSupport()) {
 		//firmware update via opkg
 		mf = new CMenuDForwarder(LOCALE_OPKG_TITLE, true, NULL, new COPKGManager(), NULL, CRCInput::RC_red);
@@ -88,6 +91,7 @@ int CSoftwareUpdate::showSoftwareUpdate()
 		softUpdate.addItem(mf);
 		inetkey = CRCInput::convertDigitToKey(1);
 	}
+#endif
 
 	bool allow_update = !CRecordManager::getInstance()->RecordingStatus() || CRecordManager::getInstance()->TimeshiftOnly();
 
