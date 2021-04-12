@@ -3150,7 +3150,6 @@ TIMER_STOP("################################## after all #######################
 		delete hintBox;
 #endif
 		CFlashUpdateCheck::getInstance()->startThread();
-		//CUpdateCheck::getInstance()->startThread();
 	}
 #if ENABLE_PKG_MANAGEMENT
 	if (g_settings.softupdate_autocheck_packages)
