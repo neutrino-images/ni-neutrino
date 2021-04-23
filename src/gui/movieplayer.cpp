@@ -2550,7 +2550,7 @@ void CMoviePlayerGui::selectAudioPid()
 #if HAVE_CST_HARDWARE
 	char cnt[5];
 	sprintf(cnt, "%d", count);
-	std::string apidtitle = (currentac3 == 0) ? g_Locale->getText(LOCALE_AUDIOMENU_AC3_atype1) : g_Locale->getText(LOCALE_AUDIOMENU_AC3_atype0);
+	std::string apidtitle = (currentac3 == 0) ? g_Locale->getText(LOCALE_AUDIOMENU_AC3_ATYPE1) : g_Locale->getText(LOCALE_AUDIOMENU_AC3_ATYPE0);
 	CMenuForwarder * item = new CMenuForwarder(apidtitle.c_str(), true, NULL, selector, cnt, CRCInput::convertDigitToKey(count + 1));
 	APIDSelector.addItem(item, false);
 #endif
