@@ -2449,7 +2449,6 @@ const char * locale_real_names[] =
 	"options.ntp_on",
 	"options.off",
 	"options.on",
-	"options.on.without_messages",
 	"options.start",
 	"options.stop",
 	"osd.preset_screen_a",
