@@ -1110,6 +1110,7 @@ const char * locale_real_names[] =
 	"imdb.data_writer",
 	"imdb.info",
 	"imdb.info_save",
+	"imdb.read_data",
 	"inetradio.name",
 	"inetradio_autostart",
 	"infoicons_background",
