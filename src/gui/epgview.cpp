@@ -293,20 +293,20 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 	medlineheight = font->getHeight();
 	medlinecount = sb / medlineheight;
 
-	if (startPos == 0 && (tmdb_active || imdb_active))
+	if (startPos == 0 && (imdb_active || tmdb_active))
 	{
 		std::string provider_logo = "";
 		int stars = 0;
 
-		if (tmdb_active)
-		{
-			provider_logo = NEUTRINO_ICON_TMDB;
-			stars = tmdb_stars;
-		}
-		else if (imdb_active)
+		if (imdb_active)
 		{
 			provider_logo = NEUTRINO_ICON_IMDB;
 			stars = imdb_stars;
+		}
+		else if (tmdb_active)
+		{
+			provider_logo = NEUTRINO_ICON_TMDB;
+			stars = tmdb_stars;
 		}
 
 		int logo_offset = 0;
@@ -330,13 +330,6 @@ void CEpgData::showText(int startPos, int ypos, bool has_cover, bool fullClear)
 			cc_starbar->setProgress(sx+OFFSET_INNER_MID+cover_offset+logo_offset, y+(medlineheight-stars_h)/2, stars_w, medlineheight, stars, 100);
 			cc_starbar->setType(CProgressBar::PB_STARBAR);
 			cc_starbar->paint();
-
-			if (imdb_active)
-			{
-				int _x = sx+OFFSET_INNER_MID+cover_offset+logo_offset+cc_starbar->getWidth()+OFFSET_INNER_MID;
-				int _w = ox-OFFSET_INNER_MID-cover_offset-logo_offset-cc_starbar->getWidth()-OFFSET_INNER_MID;
-				g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->RenderString(_x, y+medlineheight, _w, imdb_rating, COL_MENUCONTENT_TEXT, 0, true);
-			}
 
 			medlinecount = (sb - cc_starbar->getHeight()) / medlineheight;
 			delete cc_starbar;
@@ -1037,7 +1030,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				if (showPos+scrollCount<textCount)
 				{
 					showPos += scrollCount;
-					showText(showPos, sy + toph, (tmdb_active && tmdb->hasPoster()) || (imdb_active && imdb->hasPoster()), false);
+					showText(showPos, sy + toph, (imdb_active && imdb->hasPoster()) || (tmdb_active && tmdb->hasPoster()), false);
 				}
 				break;
 			case CRCInput::RC_up:
@@ -1045,7 +1038,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 					showPos -= scrollCount;
 					if (showPos < 0)
 						showPos = 0;
-					showText(showPos, sy + toph, (tmdb_active && tmdb->hasPoster()) || (imdb_active && imdb->hasPoster()), false);
+					showText(showPos, sy + toph, (imdb_active && imdb->hasPoster()) || (tmdb_active && tmdb->hasPoster()), false);
 				}
 				break;
 			case CRCInput::RC_page_up:
@@ -1181,48 +1174,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 						printf("timerd not available\n");
 				}
 				break;
-			case CRCInput::RC_0: //tmdb
-			{
-				if (imdb_active)
-				{
-					imdb_active = false;
-					imdb_stars = 0;
-					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
-					epgText = epgText_saved;
-					textCount = epgText.size();
-				}
-				if (g_settings.tmdb_enabled)
-				{
-					showPos = 0;
-					if (!tmdb_active)
-					{
-						tmdb->setTitle(epgData.title);
-						if ((tmdb->getResults() > 0) && (!tmdb->getDescription().empty()))
-						{
-							tmdb_active = true;
-							tmdb_stars = tmdb->getStars();
-							epgText_saved = epgText;
-							epgText.clear();
-							epgTextSwitch = tmdb->getMovieText();
-							processTextToArray(tmdb->getEPGText(), 0, tmdb->hasPoster());
-							textCount = epgText.size();
-							showText(showPos, sy + toph, tmdb->hasPoster());
-							timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
-						}
-						else
-							ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_EPGVIEWER_NODETAILED, CMsgBox::mbrOk , CMsgBox::mbrOk);
-					}
-					else
-					{
-						tmdb_active = false;
-						tmdb_stars = 0;
-						epgText = epgText_saved;
-						textCount = epgText.size();
-						showText(showPos, sy + toph);
-					}
-				}
-				break;
-			}
+			// imdb/omdb info
 			case CRCInput::RC_green:
 			{
 				if (tmdb_active)
@@ -1289,7 +1241,79 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				}
 				break;
 			}
+			// tmdb info
 			case CRCInput::RC_yellow:
+			{
+				if (imdb_active)
+				{
+					imdb_active = false;
+					imdb_stars = 0;
+					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
+					epgText = epgText_saved;
+					textCount = epgText.size();
+				}
+				if (g_settings.tmdb_enabled)
+				{
+					showPos = 0;
+					if (!tmdb_active)
+					{
+						tmdb->setTitle(epgData.title);
+						if ((tmdb->getResults() > 0) && (!tmdb->getDescription().empty()))
+						{
+							tmdb_active = true;
+							tmdb_stars = tmdb->getStars();
+							epgText_saved = epgText;
+							epgText.clear();
+							epgTextSwitch = tmdb->getMovieText();
+							processTextToArray(tmdb->getEPGText(), 0, tmdb->hasPoster());
+							textCount = epgText.size();
+							showText(showPos, sy + toph, tmdb->hasPoster());
+							timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
+						}
+						else
+							ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_EPGVIEWER_NODETAILED, CMsgBox::mbrOk , CMsgBox::mbrOk);
+					}
+					else
+					{
+						tmdb_active = false;
+						tmdb_stars = 0;
+						epgText = epgText_saved;
+						textCount = epgText.size();
+						showText(showPos, sy + toph);
+					}
+				}
+				break;
+			}
+			case CRCInput::RC_blue:
+			{	
+				imdb_active = false;
+				imdb_stars = 0;
+				tmdb_active = false;
+				tmdb_stars = 0;
+
+				if(!followlist.empty() && !call_fromfollowlist){
+					hide();
+					time_t tmp_sZeit  = epgData.epg_times.startzeit;
+					uint64_t  tmp_eID = epgData.eventID;
+
+					CEventList *ee = new CEventList;
+					res = ee->exec(channel_id, g_Locale->getText(LOCALE_EPGVIEWER_MORE_SCREENINGS_SHORT),"","",followlist); // UTF-8
+					delete ee;
+					if (res == menu_return::RETURN_EXIT_ALL)
+						loop = false;
+					else {
+						if (!bigFonts && g_settings.bigFonts) {
+							g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->setSize((int)(g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->getSize() * BIGFONT_FACTOR));
+							g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->setSize((int)(g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getSize() * BIGFONT_FACTOR));
+						}
+						bigFonts = g_settings.bigFonts;
+						show(channel_id,tmp_eID,&tmp_sZeit,false);
+						showPos=0;
+					}
+				}
+				break;
+			}
+			case CRCInput::RC_0:
 			{
 				if (!mp_info)
 				{
@@ -1324,42 +1348,18 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				}
 				break;
 			}
-			case CRCInput::RC_blue:
-			{	
-				if(imdb_active)
-					imdb_active = false;
-
-				if(!followlist.empty() && !call_fromfollowlist){
-					hide();
-					time_t tmp_sZeit  = epgData.epg_times.startzeit;
-					uint64_t  tmp_eID = epgData.eventID;
-
-					CEventList *ee = new CEventList;
-					res = ee->exec(channel_id, g_Locale->getText(LOCALE_EPGVIEWER_MORE_SCREENINGS_SHORT),"","",followlist); // UTF-8
-					delete ee;
-					if (res == menu_return::RETURN_EXIT_ALL)
-						loop = false;
-					else {
-						if (!bigFonts && g_settings.bigFonts) {
-							g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->setSize((int)(g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->getSize() * BIGFONT_FACTOR));
-							g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->setSize((int)(g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO2]->getSize() * BIGFONT_FACTOR));
-						}
-						bigFonts = g_settings.bigFonts;
-						show(channel_id,tmp_eID,&tmp_sZeit,false);
-						showPos=0;
-					}
-				}
-				break;
-			}
 			case CRCInput::RC_help:
+				imdb_active = false;
+				imdb_stars = 0;
+				tmdb_active = false;
+				tmdb_stars = 0;
+
 				bigFonts = bigFonts ? false : true;
 				ResetModules();
 				frameBuffer->paintBackgroundBoxRel(sx, sy, ox, oy);
-				tmdb_active = false; // reset tmdb
-				imdb_active = false; // reset imdb
 				showTimerEventBar (false);
-//				textypos = sy;
-//printf("bigFonts %d\n", bigFonts);
+				//textypos = sy;
+				//printf("bigFonts %d\n", bigFonts);
 				if (bigFonts)
 				{
 					g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->setSize((int)(g_Font[SNeutrinoSettings::FONT_TYPE_EPG_INFO1]->getSize() * BIGFONT_FACTOR));
@@ -1615,15 +1615,15 @@ struct button_label EpgButtons[][5] =
 		// TV_BUTTONS
 		{ NEUTRINO_ICON_BUTTON_RED, LOCALE_TIMERBAR_RECORDEVENT },
 		{ NEUTRINO_ICON_BUTTON_GREEN, LOCALE_IMDB_INFO },
-		{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TIMERBAR_CHANNELSWITCH },
+		{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TMDB_INFO },
 		{ NEUTRINO_ICON_BUTTON_BLUE, LOCALE_EPGVIEWER_MORE_SCREENINGS_SHORT },
-		{ NEUTRINO_ICON_BUTTON_0, LOCALE_TMDB_INFO }
+		{ NEUTRINO_ICON_BUTTON_0, LOCALE_TIMERBAR_CHANNELSWITCH }
 	},
 	{
 		// MP_BUTTONS
 		{ NEUTRINO_ICON_BUTTON_RED, LOCALE_EPG_SAVING },
 		{ NEUTRINO_ICON_BUTTON_GREEN, LOCALE_IMDB_INFO },
-		{ NEUTRINO_ICON_BUTTON_0, LOCALE_TMDB_INFO }
+		{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_TMDB_INFO }
 	}
 };
 
@@ -1655,45 +1655,45 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 	}
 
 
-	if (imdb_active)
+	// check imdb button
+	if (g_settings.omdb_enabled)
 	{
-		EpgButtons[UsedButtons][1].button = (imdb->hasPoster()) ? NEUTRINO_ICON_BUTTON_GREEN : NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
-		EpgButtons[UsedButtons][1].locale = LOCALE_IMDB_INFO_SAVE;
+		if (imdb_active)
+		{
+			EpgButtons[UsedButtons][1].button = (imdb->hasPoster()) ? NEUTRINO_ICON_BUTTON_GREEN : NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
+			EpgButtons[UsedButtons][1].locale = LOCALE_IMDB_INFO_SAVE;
+		}
+		else
+		{
+			EpgButtons[UsedButtons][1].button = NEUTRINO_ICON_BUTTON_GREEN;
+			EpgButtons[UsedButtons][1].locale = LOCALE_IMDB_INFO;
+		}
 	}
 	else
-	{
-		EpgButtons[UsedButtons][1].button = NEUTRINO_ICON_BUTTON_GREEN;
-		EpgButtons[UsedButtons][1].locale = LOCALE_IMDB_INFO;
-	}
+		EpgButtons[UsedButtons][1].button = NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
+
+	// check tmdb button
+	if (g_settings.tmdb_enabled)
+		EpgButtons[UsedButtons][2].button = NEUTRINO_ICON_BUTTON_YELLOW;
+	else
+		EpgButtons[UsedButtons][2].button = NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
 
 	if (mp_info)
 	{
-		// check tmdb button
-		if (g_settings.tmdb_enabled)
-			EpgButtons[MP_BUTTONS][2].button = NEUTRINO_ICON_BUTTON_0;
-		else
-			EpgButtons[MP_BUTTONS][2].button = NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
-
 		::paintButtons(x, y, w, MaxButtons, EpgButtons[MP_BUTTONS], w, h);
 	}
 	else
 	{
 		// check followscreenings button
 		if (has_follow_screenings && !call_fromfollowlist)
-			EpgButtons[TV_BUTTONS][3].button = NEUTRINO_ICON_BUTTON_BLUE;
-		else
-			EpgButtons[TV_BUTTONS][3].button = NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
-
-		// check tmdb button
-		if (g_settings.tmdb_enabled)
 			EpgButtons[TV_BUTTONS][4].button = NEUTRINO_ICON_BUTTON_0;
 		else
 			EpgButtons[TV_BUTTONS][4].button = NEUTRINO_ICON_BUTTON_DUMMY_SMALL;
 
 		if (g_settings.recording_type != CNeutrinoApp::RECORDING_OFF)
-			::paintButtons(x, y, w, MaxButtons, EpgButtons[TV_BUTTONS], w, h, "", false, COL_MENUFOOT_TEXT, adzap ? adzap_button.c_str() : NULL, 2);
+			::paintButtons(x, y, w, MaxButtons, EpgButtons[TV_BUTTONS], w, h, "", false, COL_MENUFOOT_TEXT, adzap ? adzap_button.c_str() : NULL, 4);
 		else // don't show recording button
-			::paintButtons(x, y, w, MaxButtons, &EpgButtons[TV_BUTTONS][1], w, h, "", false, COL_MENUFOOT_TEXT, adzap ? adzap_button.c_str() : NULL, 1);
+			::paintButtons(x, y, w, MaxButtons, &EpgButtons[TV_BUTTONS][1], w, h, "", false, COL_MENUFOOT_TEXT, adzap ? adzap_button.c_str() : NULL, 3);
 	}
 }
 
