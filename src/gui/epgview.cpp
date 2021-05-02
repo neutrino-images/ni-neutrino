@@ -1183,8 +1183,10 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 			case CRCInput::RC_0: //tmdb
 			{
-				if (imdb_active) {
+				if (imdb_active)
+				{
 					imdb_active = false;
+					imdb_stars = 0;
 					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
 					epgText = epgText_saved;
 					textCount = epgText.size();
@@ -1192,25 +1194,30 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				if (g_settings.tmdb_enabled)
 				{
 					showPos = 0;
-					if (!tmdb_active) {
+					if (!tmdb_active)
+					{
 						tmdb->setTitle(epgData.title);
-						if ((tmdb->getResults() > 0) && (!tmdb->getDescription().empty())) {
+						if ((tmdb->getResults() > 0) && (!tmdb->getDescription().empty()))
+						{
+							tmdb_active = true;
+							tmdb_stars = tmdb->getStars();
 							epgText_saved = epgText;
 							epgText.clear();
-							tmdb_active = true;
 							epgTextSwitch = tmdb->getMovieText();
 							processTextToArray(tmdb->getEPGText(), 0, tmdb->hasPoster());
 							textCount = epgText.size();
-							tmdb_stars = tmdb->getStars();
 							showText(showPos, sy + toph, tmdb->hasPoster());
-						} else {
-							ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_EPGVIEWER_NODETAILED, CMsgBox::mbrOk , CMsgBox::mbrOk);
+							timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
 						}
-					} else {
+						else
+							ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_EPGVIEWER_NODETAILED, CMsgBox::mbrOk , CMsgBox::mbrOk);
+					}
+					else
+					{
+						tmdb_active = false;
+						tmdb_stars = 0;
 						epgText = epgText_saved;
 						textCount = epgText.size();
-						tmdb_active = false;
-						tmdb_stars=0;
 						showText(showPos, sy + toph);
 					}
 				}
@@ -1218,44 +1225,67 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 			}
 			case CRCInput::RC_green:
 			{
-				if (tmdb_active) {
+				if (tmdb_active)
+				{
 					tmdb_active = false;
+					tmdb_stars = 0;
 					epgText = epgText_saved;
 					textCount = epgText.size();
-					tmdb_stars=0;
 				}
-				if (!imdb_active)
+				if (g_settings.omdb_enabled)
 				{
-					//show IMDb info
-					imdb_active = true;
-					imdb->setTitle(epgData.title);
-					showIMDb();
-					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
-					timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
-				}
-				else if (imdb_active && imdb->hasPoster())
-				{
-					imdb_active = false;
-					CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, LOCALE_IMDB_INFO_SAVE);
-					hintBox->paint();
-
-					std::string picname;
-					if (mp_info)
+					showPos = 0;
+					if (!imdb_active)
 					{
-						size_t _pos;
-						if ((_pos = movie_filename.rfind(".")) != std::string::npos)
-							picname = movie_filename.substr(0, _pos) + ".jpg";
+						imdb->setTitle(epgData.title);
+						if (((imdb->getIMDbElement("Title").find(imdb->search_error)) == std::string::npos))
+						{
+							imdb_active = true;
+							imdb_stars = imdb->getStars();
+							epgText_saved = epgText;
+							epgText.clear();
+							epgTextSwitch = imdb->getMovieText();
+							processTextToArray(imdb->getEPGText(), 0, imdb->hasPoster());
+							textCount = epgText.size();
+							showText(0, sy + toph, imdb->hasPoster());
+							showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
+							timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
+						}
+						else
+							ShowMsg(LOCALE_MESSAGEBOX_INFO, LOCALE_EPGVIEWER_NODETAILED, CMsgBox::mbrOk , CMsgBox::mbrOk);
+					}
+					else if (imdb_active && imdb->hasPoster())
+					{
+						imdb_active = false;
+						CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, LOCALE_IMDB_INFO_SAVE);
+						hintBox->paint();
+
+						std::string picname;
+						if (mp_info)
+						{
+							size_t _pos;
+							if ((_pos = movie_filename.rfind(".")) != std::string::npos)
+								picname = movie_filename.substr(0, _pos) + ".jpg";
+						}
+						else
+							picname = imdb->getFilename(channel, epgData.eventID);
+
+						CFileHelpers fh;
+						if (!fh.copyFile(imdb->posterfile.c_str(), picname.c_str(), 0644))
+							perror( "IMDb: error copy file" );
+
+						sleep(2);
+						hintBox->hide();
+						showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
 					}
 					else
-						picname = imdb->getFilename(channel, epgData.eventID);
-
-					CFileHelpers fh;
-					if (!fh.copyFile(imdb->posterfile.c_str(), picname.c_str(), 0644))
-						perror( "IMDb: error copy file" );
-
-					sleep(2);
-					hintBox->hide();
-					showTimerEventBar(true, !mp_info && isCurrentEPG(channel_id), mp_info); //show buttons
+					{
+						imdb_active = false;
+						imdb_stars = 0;
+						epgText = epgText_saved;
+						textCount = epgText.size();
+						showText(showPos, sy + toph);
+					}
 				}
 				break;
 			}
@@ -1665,32 +1695,6 @@ void CEpgData::showTimerEventBar (bool pshow, bool adzap, bool mp_info)
 		else // don't show recording button
 			::paintButtons(x, y, w, MaxButtons, &EpgButtons[TV_BUTTONS][1], w, h, "", false, COL_MENUFOOT_TEXT, adzap ? adzap_button.c_str() : NULL, 1);
 	}
-}
-
-//imdb start
-int CEpgData::showIMDb()
-{
-	//title
-	std::string title = imdb->getIMDbElement("Title");
-
-	if(((title.find(imdb->search_error)) != std::string::npos))
-		return 1;
-
-	// clear epg array
-	epgText_saved = epgText;
-	epgText.clear();
-
-	//data
-	epgTextSwitch = imdb->getMovieText();
-	processTextToArray(imdb->getEPGText(), 0, imdb->hasPoster());
-
-	textCount = epgText.size();
-
-	//rating
-	imdb_stars = imdb->getStars();
-
-	showText(0, sy + toph, imdb->hasPoster());
-	return 0;
 }
 
 void CEpgData::ResetModules()

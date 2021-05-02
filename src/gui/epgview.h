@@ -101,14 +101,11 @@ class CEpgData
 		void showProgressBar();
 		bool isCurrentEPG(const t_channel_id channel_id);
 
-
 		bool imdb_active;
 		int imdb_stars;
 		std::string imdb_rating;
 		std::string epg_title;
 		std::string movie_filename;
-		int showIMDb();
-		Font *fontIMDb;
 
 	public:
 
