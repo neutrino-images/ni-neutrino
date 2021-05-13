@@ -41,28 +41,6 @@
 
 #define STARTUPREFRESH 3
 
-typedef struct icon_data_t
-{
-	int last_stat;
-	int sizeW;
-	int sizeH;
-	int space;
-	const char * name;
-	const char * flag;
-} icon_data_struct;
-
-static icon_data_t icon[MODE_ICONS_NR_OF_ENTRIES]=
-{
-	{-1, 0, 0, OFFSET_INNER_NONE , "info0", ""},
-	{-1, 0, 0, OFFSET_INNER_SMALL, "info1", ""},
-	{-1, 0, 0, OFFSET_INNER_SMALL, "info2", ""},
-	{-1, 0, 0, OFFSET_INNER_SMALL, "info3", ""},
-	{-1, 0, 0, OFFSET_INNER_SMALL, "info4", ""},
-	{-1, 0, 0, OFFSET_INNER_SMALL, "info5", ""},
-	{-1, 0, 0, OFFSET_INNER_SMALL, "info6", ""},
-	{-1, 0, 0, OFFSET_INNER_SMALL, "info7", ""}
-};
-
 CInfoIcons::CInfoIcons()
 {
 	frameBuffer	= CFrameBuffer::getInstance();
@@ -101,6 +79,15 @@ CInfoIcons* CInfoIcons::getInstance()
 void CInfoIcons::Init()
 {
 	std::ostringstream buf;
+
+	icon[0] = {-1, 0, 0, OFFSET_INNER_NONE , "info0", ""};
+	icon[1] = {-1, 0, 0, OFFSET_INNER_SMALL, "info1", ""};
+	icon[2] = {-1, 0, 0, OFFSET_INNER_SMALL, "info2", ""};
+	icon[3] = {-1, 0, 0, OFFSET_INNER_SMALL, "info3", ""};
+	icon[4] = {-1, 0, 0, OFFSET_INNER_SMALL, "info4", ""};
+	icon[5] = {-1, 0, 0, OFFSET_INNER_SMALL, "info5", ""};
+	icon[6] = {-1, 0, 0, OFFSET_INNER_SMALL, "info6", ""};
+	icon[7] = {-1, 0, 0, OFFSET_INNER_SMALL, "info7", ""};
 
 	x	= frameBuffer->getScreenX() + OFFSET_INNER_MID;
 	y	= frameBuffer->getScreenY();

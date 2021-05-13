@@ -43,6 +43,16 @@ enum INFOICONS
 class CInfoIcons
 {
 	private:
+		struct icon_data_t
+		{
+			int last_stat;
+			int sizeW;
+			int sizeH;
+			int space;
+			const char* name;
+			const char* flag;
+		};
+
 		CFrameBuffer * 	frameBuffer;
 
 		pthread_t	thrTimer;
@@ -51,6 +61,7 @@ class CInfoIcons
 		bool		status, is_painted;
 		static void	CleanUpProc(void* arg);
 		static void*	TimerProc(void *arg);
+		icon_data_t		icon[MODE_ICONS_NR_OF_ENTRIES];
 
 		void	Init();
 		void 	paintBackground();
