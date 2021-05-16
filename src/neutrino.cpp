@@ -282,7 +282,7 @@ CNeutrinoApp::CNeutrinoApp()
 	blank_screen		= false; //NI
 
 #ifdef ENABLE_PIP
-#if !HAVE_CST_HARDWARE
+#if !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
 	avinput_pip = false;
 #endif
 #endif
@@ -3428,7 +3428,7 @@ void CNeutrinoApp::RealRun()
 						StartPip(CZapit::getInstance()->GetCurrentChannelID());
 				}
 			}
-#if !HAVE_CST_HARDWARE
+#if !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
 			else if ((msg == (neutrino_msg_t) g_settings.key_pip_close_avinput) && ((g_info.hw_caps->has_SCART_input) || (g_info.hw_caps->has_HDMI_input))) {
 				int boxmode = getBoxMode();
 				if (boxmode > -1 && boxmode != 12)
@@ -4851,7 +4851,7 @@ void CNeutrinoApp::AVInputMode(bool bOnOff)
 {
 	//printf( (bOnOff) ? "mode: avinput on\n" : "mode: avinput off\n" );
 
-#if !HAVE_CST_HARDWARE
+#if !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
 	if (bOnOff) {
 		// AVInput AN
 		frameBuffer->useBackground(false);
@@ -4889,7 +4889,7 @@ void CNeutrinoApp::AVInputMode(bool bOnOff)
 	}
 #else
 	(void)bOnOff; // avoid compiler warning
-#endif // !HAVE_CST_HARDWARE
+#endif // !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
 }
 
 void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
@@ -5164,7 +5164,7 @@ void CNeutrinoApp::switchTvRadioMode(const int prev_mode)
 }
 
 #ifdef ENABLE_PIP
-#if !HAVE_CST_HARDWARE
+#if !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
 void CNeutrinoApp::StartAVInputPiP() {
 	if (!pipDemux) {
 		pipDemux = new cDemux(1);
@@ -5246,7 +5246,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	}
 
 #ifdef ENABLE_PIP
-#if !HAVE_CST_HARDWARE
+#if !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
 	else if (actionKey=="avinput_pip") {
 		if (CZapit::getInstance()->GetPipChannelID())
 			CZapit::getInstance()->StopPip();
