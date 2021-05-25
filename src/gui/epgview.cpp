@@ -133,9 +133,8 @@ CEpgData::CEpgData()
 
 
 	imdb = CIMDB::getInstance();
-	imdb_active = false;
 	tmdb = CTMDB::getInstance();
-	tmdb_active = false;
+	ResetMDb();
 	movie_filename.clear();
 }
 
@@ -731,10 +730,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 		startzeit=*a_startzeit;
 	id=a_id;
 
-	imdb_active = false;
-	imdb_stars = 0;
-	tmdb_active = false;
-	tmdb_stars = 0;
+	ResetMDb();
 
 	t_channel_id epg_id = channel_id;
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
@@ -1271,10 +1267,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 			}
 			case CRCInput::RC_blue:
 			{	
-				imdb_active = false;
-				imdb_stars = 0;
-				tmdb_active = false;
-				tmdb_stars = 0;
+				ResetMDb();
 
 				if(!followlist.empty() && !call_fromfollowlist){
 					hide();
@@ -1334,10 +1327,7 @@ int CEpgData::show(const t_channel_id channel_id, uint64_t a_id, time_t* a_start
 				break;
 			}
 			case CRCInput::RC_help:
-				imdb_active = false;
-				imdb_stars = 0;
-				tmdb_active = false;
-				tmdb_stars = 0;
+				ResetMDb();
 
 				bigFonts = bigFonts ? false : true;
 				ResetModules();
@@ -1458,13 +1448,9 @@ void CEpgData::hide()
 	frameBuffer->paintBackgroundBoxRel(sx, sy, ox, oy);
 	showTimerEventBar (false);
 
-	// imdb
-	imdb_active = false;
 	imdb->cleanup();
-
-	// tmdb
-	tmdb_active = false;
 	tmdb->cleanup();
+	ResetMDb();
 }
 
 void CEpgData::GetEPGData(const t_channel_id channel_id, uint64_t id, time_t* startzeit, bool clear )
@@ -1711,6 +1697,14 @@ void CEpgData::ResetModules()
 	if (pb){
 		delete pb; pb = NULL;
 	}
+}
+
+void CEpgData::ResetMDb()
+{
+	imdb_active = false;
+	imdb_stars = 0;
+	tmdb_active = false;
+	tmdb_stars = 0;
 }
 
 //  -- EPG Data Viewer Menu Handler Class
