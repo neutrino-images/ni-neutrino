@@ -344,7 +344,7 @@ static SNeutrinoSettings::usermenu_t usermenu_default[] = {
 	{ CRCInput::RC_green,           "6",                                    "",     "green"         },
 	{ CRCInput::RC_yellow,          "7,35",                                 "",     "yellow"        },
 	{ CRCInput::RC_blue,            "27,28,21,20,1,39,10,11,24,19,14",      "",     "blue"          },
-#if BOXMODEL_HD51 || BOXMODEL_HD60 || BOXMODEL_HD61 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7
+#if BOXMODEL_HD51 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7 || BOXMODEL_HD60 || BOXMODEL_HD61 || BOXMODEL_MULTIBOXSE
 	{ CRCInput::RC_playpause,       "9",                                    "",     "5"             },
 #else
 	{ CRCInput::RC_play,            "9",                                    "",     "5"             },
@@ -3422,7 +3422,7 @@ void CNeutrinoApp::RealRun()
 					CRecordManager::getInstance()->StartTimeshift();
 			}
 #ifdef ENABLE_PIP
-			else if (msg == (neutrino_msg_t) g_settings.key_pip_close) {
+			else if ((msg == (neutrino_msg_t) g_settings.key_pip_close) && g_info.hw_caps->can_pip) {
 				int boxmode = getBoxMode();
 				if (boxmode > -1 && boxmode != 12)
 					ShowMsg(LOCALE_MESSAGEBOX_ERROR, LOCALE_BOXMODE12_NOT_ACTIVATED, CMsgBox::mbrOk, CMsgBox::mbOk, NEUTRINO_ICON_ERROR);
@@ -3436,7 +3436,7 @@ void CNeutrinoApp::RealRun()
 				}
 			}
 #if !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
-			else if ((msg == (neutrino_msg_t) g_settings.key_pip_close_avinput) && ((g_info.hw_caps->has_SCART_input) || (g_info.hw_caps->has_HDMI_input))) {
+			else if ((msg == (neutrino_msg_t) g_settings.key_pip_close_avinput) && ((g_info.hw_caps->has_SCART_input) || (g_info.hw_caps->has_HDMI_input)) && g_info.hw_caps->can_pip) {
 				int boxmode = getBoxMode();
 				if (boxmode > -1 && boxmode != 12)
 					ShowMsg(LOCALE_MESSAGEBOX_ERROR, LOCALE_BOXMODE12_NOT_ACTIVATED, CMsgBox::mbrOk, CMsgBox::mbOk, NEUTRINO_ICON_ERROR);
@@ -3452,11 +3452,11 @@ void CNeutrinoApp::RealRun()
 				}
 			}
 #endif
-			else if (msg == (neutrino_msg_t) g_settings.key_pip_setup) {
+			else if ((msg == (neutrino_msg_t) g_settings.key_pip_setup) && g_info.hw_caps->can_pip) {
 				CPipSetup pipsetup;
 				pipsetup.exec(NULL, "");
 			}
-			else if (msg == (neutrino_msg_t) g_settings.key_pip_swap) {
+			else if ((msg == (neutrino_msg_t) g_settings.key_pip_swap) && g_info.hw_caps->can_pip) {
 				t_channel_id pip_channel_id = CZapit::getInstance()->GetPipChannelID();
 				t_channel_id live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 				if (pip_channel_id && (pip_channel_id != live_channel_id)) {
@@ -4826,9 +4826,12 @@ void CNeutrinoApp::tvMode( bool rezap )
 	}
 
 #ifdef ENABLE_PIP
-	pipDecoder->Pig(g_settings.pip_x, g_settings.pip_y,
+	if (g_info.hw_caps->can_pip)
+	{
+		pipDecoder->Pig(g_settings.pip_x, g_settings.pip_y,
 			g_settings.pip_width, g_settings.pip_height,
 			frameBuffer->getScreenWidth(true), frameBuffer->getScreenHeight(true));
+	}
 #endif
 #if 0
 	if(mode != NeutrinoModes::mode_ts /*&& autoshift*/) {
@@ -5107,9 +5110,12 @@ void CNeutrinoApp::radioMode( bool rezap)
 	}
 
 #ifdef ENABLE_PIP
-	pipDecoder->Pig(g_settings.pip_radio_x, g_settings.pip_radio_y,
+	if (g_info.hw_caps->can_pip)
+	{
+		pipDecoder->Pig(g_settings.pip_radio_x, g_settings.pip_radio_y,
 			g_settings.pip_radio_width, g_settings.pip_radio_height,
 			frameBuffer->getScreenWidth(true), frameBuffer->getScreenHeight(true));
+	}
 #endif
 	CRecordManager::getInstance()->StopAutoRecord();
 
@@ -5173,6 +5179,9 @@ void CNeutrinoApp::switchTvRadioMode(const int prev_mode)
 #ifdef ENABLE_PIP
 #if !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
 void CNeutrinoApp::StartAVInputPiP() {
+	if (!g_info.hw_caps->can_pip)
+		return;
+
 	if (!pipDemux) {
 		pipDemux = new cDemux(1);
 		pipDemux->Open(DMX_PIP_CHANNEL);
@@ -5191,6 +5200,9 @@ void CNeutrinoApp::StartAVInputPiP() {
 }
 
 void CNeutrinoApp::StopAVInputPiP() {
+	if (!g_info.hw_caps->can_pip)
+		return;
+
 	pipDecoder->ShowPig(0);
 	pipDemux->Stop();
 	pipDecoder->Stop();
@@ -5673,7 +5685,7 @@ void CNeutrinoApp::loadKeys(const char * fname)
 
 	g_settings.key_list_start = tconfig->getInt32( "key_list_start", (unsigned int)CRCInput::RC_nokey );
 	g_settings.key_list_end = tconfig->getInt32( "key_list_end", (unsigned int)CRCInput::RC_nokey );
-#if BOXMODEL_HD51 || BOXMODEL_HD60 || BOXMODEL_HD61 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7 || BOXMODEL_OSMIO4K || BOXMODEL_OSMIO4KPLUS
+#if BOXMODEL_HD51 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7 || BOXMODEL_HD60 || BOXMODEL_HD61 || BOXMODEL_MULTIBOXSE || BOXMODEL_OSMIO4K || BOXMODEL_OSMIO4KPLUS
 	g_settings.key_timeshift = tconfig->getInt32( "key_timeshift", CRCInput::RC_nokey ); // FIXME
 #elif BOXMODEL_VUPLUS_ALL
 	g_settings.key_timeshift = tconfig->getInt32( "key_timeshift", CRCInput::RC_playpause );
@@ -5709,7 +5721,7 @@ void CNeutrinoApp::loadKeys(const char * fname)
 	g_settings.mpkey_rewind = tconfig->getInt32( "mpkey.rewind", CRCInput::RC_rewind );
 	g_settings.mpkey_forward = tconfig->getInt32( "mpkey.forward", CRCInput::RC_forward );
 	g_settings.mpkey_stop = tconfig->getInt32( "mpkey.stop", CRCInput::RC_stop );
-#if BOXMODEL_HD51 || BOXMODEL_HD60 || BOXMODEL_HD61 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7
+#if BOXMODEL_HD51 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7 || BOXMODEL_HD60 || BOXMODEL_HD61 || BOXMODEL_MULTIBOXSE
 	g_settings.mpkey_play = tconfig->getInt32( "mpkey.play", CRCInput::RC_playpause );
 	g_settings.mpkey_pause = tconfig->getInt32( "mpkey.pause", CRCInput::RC_playpause );
 #elif BOXMODEL_VUPLUS_ALL
@@ -5979,6 +5991,9 @@ void CNeutrinoApp::getAnnounceEpgName(CTimerd::RecordingInfo * eventinfo, std::s
 bool CNeutrinoApp::StartPip(const t_channel_id channel_id)
 {
 	bool ret = false;
+	if (!g_info.hw_caps->can_pip)
+		return ret;
+
 	CZapitChannel * channel = CServiceManager::getInstance()->FindChannel(channel_id);
 	if (!channel)
 		return ret;
