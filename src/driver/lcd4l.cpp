@@ -22,8 +22,8 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 
 */
 
@@ -137,7 +137,7 @@ void CLCD4l::InitLCD4l()
 {
 	if (thrLCD4l)
 	{
-		dprintf(DEBUG_NORMAL,"\033[32m[CLCD4l] [%s - %d] initializing %d \033[0m\n", __func__, __LINE__);
+		dprintf(DEBUG_NORMAL,"\033[32m[CLCD4l] [%s - %d] initializing CLCD4l \033[0m\n", __func__, __LINE__);
 		Init();
 	}
 }
