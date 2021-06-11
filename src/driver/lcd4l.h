@@ -64,7 +64,7 @@ class CLCD4l
 
 	private:
 		std::thread	*thrLCD4l;
-		static void*	LCD4lProc(void *arg);
+		static void	*LCD4lProc(void *arg);
 		bool		exit_proc;
 
 		struct tm	*tm_struct;
