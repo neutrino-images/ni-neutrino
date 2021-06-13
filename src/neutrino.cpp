@@ -174,7 +174,6 @@ CInfoIcons *InfoIcons;
 
 #ifdef ENABLE_LCD4LINUX
 #include "driver/lcd4l.h"
-CLCD4l *LCD4l;
 #endif
 
 int allow_flash = 1;
@@ -3128,11 +3127,8 @@ TIMER_START();
 	SHTDCNT::getInstance()->init();
 
 #ifdef ENABLE_LCD4LINUX
-	if (LCD4l == NULL)
-		LCD4l = new CLCD4l();
-
 	if (g_settings.lcd4l_support)
-		LCD4l->StartLCD4l();
+		CLCD4l::getInstance()->StartLCD4l();
 #endif
 
 	CZapit::getInstance()->SetScanSDT(g_settings.enable_sdt);
@@ -5494,13 +5490,8 @@ void CNeutrinoApp::stopDaemonsForFlash()
 #ifdef ENABLE_LCD4LINUX
 void stop_lcd4l_support()
 {
-	if(LCD4l) {
-		if(g_settings.lcd4l_support) {
-			LCD4l->StopLCD4l();
-		}
-		delete LCD4l;
-	}
-	LCD4l = NULL;
+	if (g_settings.lcd4l_support)
+		CLCD4l::getInstance()->StopLCD4l();
 }
 #endif
 

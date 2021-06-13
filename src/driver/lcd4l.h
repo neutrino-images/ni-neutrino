@@ -38,6 +38,7 @@ class CLCD4l
 	public:
 		CLCD4l();
 		~CLCD4l();
+		static CLCD4l *getInstance();
 
 		// Displays
 		enum
