@@ -324,6 +324,12 @@ TUXBOX_APPS_DIRECTORY_ONE(iconsdir, ICONSDIR, datadir, /share, /tuxbox/neutrino/
 TUXBOX_APPS_DIRECTORY_ONE(iconsdir_var, ICONSDIR_VAR, localstatedir, /var, /tuxbox/icons,
 	[--with-iconsdir_var=PATH], [where to find icons in /var])
 
+TUXBOX_APPS_DIRECTORY_ONE(logodir, LOGODIR, datadir, /share, /tuxbox/neutrino/icons/logo,
+	[--with-logodir=PATH], [where to find channel logos])
+
+TUXBOX_APPS_DIRECTORY_ONE(logodir_var, LOGODIR_VAR, localstatedir, /var, /tuxbox/icons/logo,
+	[--with-logodir_var=PATH], [where to find channel logos in /var])
+
 TUXBOX_APPS_DIRECTORY_ONE(private_httpddir, PRIVATE_HTTPDDIR, datadir, /share, /tuxbox/neutrino/httpd,
 	[--with-private_httpddir=PATH], [where to find private httpd files])
 
@@ -363,6 +369,8 @@ AC_SUBST(THEMESDIR)
 AC_SUBST(THEMESDIR_VAR)
 AC_SUBST(ICONSDIR)
 AC_SUBST(ICONSDIR_VAR)
+AC_SUBST(LOGODIR)
+AC_SUBST(LOGODIR_VAR)
 AC_SUBST(PRIVATE_HTTPDDIR)
 AC_SUBST(PUBLIC_HTTPDDIR)
 AC_SUBST(HOSTED_HTTPDDIR)
