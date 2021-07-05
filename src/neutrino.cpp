@@ -3220,8 +3220,12 @@ TIMER_START();
 
 	g_audioMute->AudioMute(current_muted, true);
 	CZapit::getInstance()->SetVolumePercent(g_settings.audio_volume_percent_ac3, g_settings.audio_volume_percent_pcm);
-	CVFD::getInstance()->showVolume(g_settings.current_volume, false);
-	//CVFD::getInstance()->setMuted(current_muted);
+	CVFD::getInstance()->setMuted(current_muted);
+	if (g_info.hw_caps->display_has_statusline)
+		CVFD::getInstance()->showVolume(g_settings.current_volume, false);
+	else
+		CVFD::getInstance()->setVolume(g_settings.current_volume);
+
 
 #ifdef ENABLE_GRAPHLCD
 	if (current_muted)
@@ -5181,7 +5185,8 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->setBacklight(g_settings.backlight_tv);
-		CVFD::getInstance()->showVolume(g_settings.current_volume, false);
+		if (g_info.hw_caps->display_has_statusline)
+			CVFD::getInstance()->showVolume(g_settings.current_volume, false);
 
 		CZapit::getInstance()->EnablePlayback(true);
 		g_Zapit->setStandby(false);
