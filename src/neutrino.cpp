@@ -5056,8 +5056,8 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 	lockStandbyCall = true;
 
 	if( bOnOff ) {
-		//NI set standby flag
-		if ( FILE *f = fopen("/tmp/.ni-standby", "w") )
+		// set standby flag
+		if (FILE *f = fopen("/tmp/.standby", "w"))
 			fclose(f);
 
 #ifdef ENABLE_GRAPHLCD
@@ -5220,9 +5220,9 @@ void CNeutrinoApp::standbyMode( bool bOnOff, bool fromDeepStandby )
 		InfoClock->enableInfoClock(true);
 		InfoIcons->enableInfoIcons(true); //NI InfoIcons
 
-		//NI remove standby flag
-		if (access("/tmp/.ni-standby", F_OK) == 0)
-			unlink("/tmp/.ni-standby");
+		// remove standby flag
+		if (access("/tmp/.standby", F_OK) == 0)
+			unlink("/tmp/.standby");
 
 		g_audioMute->AudioMute(current_muted, true);
 		StartSubtitles();
