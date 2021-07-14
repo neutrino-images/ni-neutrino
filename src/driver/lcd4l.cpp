@@ -83,6 +83,7 @@ extern CPictureViewer *g_PicViewer;
 #define MODE_TSHIFT		LCD_DATADIR "mode_tshift"
 #define MODE_TIMER		LCD_DATADIR "mode_timer"
 #define MODE_ECM		LCD_DATADIR "mode_ecm"
+#define MODE_CAMD		LCD_DATADIR "mode_camd"
 #define MODE_CAM		LCD_DATADIR "mode_cam"
 
 #define SERVICE			LCD_DATADIR "service"
@@ -270,6 +271,7 @@ void CLCD4l::Init()
 	m_ModeTshift	= -1;
 	m_ModeTimer	= -1;
 	m_ModeEcm	= -1;
+	m_ModeCamd	= "n/a";
 	m_ModeCamPresent = false;
 	m_ModeCam	= -1;
 
@@ -633,6 +635,27 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 	{
 		WriteFile(MODE_ECM, ModeEcm ? "on" : "off");
 		m_ModeEcm = ModeEcm;
+	}
+
+	/* ----------------------------------------------------------------- */
+
+	std::string ModeCamd = "";
+
+	const char *camd[] = {"mgcamd","doscam","ncam","osmod","oscam","cccam","gbox"};
+
+	for (int i=0; i < (int)(sizeof(camd)/sizeof(camd[0])); i++)
+	{
+		if (getpidof(camd[i]))
+		{
+			ModeCamd += camd[i];
+			ModeCamd += "\n";
+		}
+	}
+
+	if (m_ModeCamd != ModeCamd)
+	{
+		WriteFile(MODE_CAMD, ModeCamd);
+		m_ModeCamd = ModeCamd;
 	}
 
 	/* ----------------------------------------------------------------- */
