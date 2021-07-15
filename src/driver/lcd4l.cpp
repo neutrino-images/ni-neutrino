@@ -654,7 +654,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	if (m_ModeCamd != ModeCamd)
 	{
-		WriteFile(MODE_CAMD, ModeCamd);
+		WriteFile(MODE_CAMD, ModeCamd.empty() ? "off" : ModeCamd);
 		m_ModeCamd = ModeCamd;
 	}
 
