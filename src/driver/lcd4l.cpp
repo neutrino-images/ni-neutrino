@@ -643,6 +643,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	/* ----------------------------------------------------------------- */
 
+#if 0
 	std::string ModeCamd = "";
 
 	const char *camd[] = {"mgcamd","doscam","ncam","osmod","oscam","cccam","gbox"};
@@ -661,6 +662,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		WriteFile(MODE_CAMD, ModeCamd.empty() ? "off" : ModeCamd);
 		m_ModeCamd = ModeCamd;
 	}
+#endif
 
 	/* ----------------------------------------------------------------- */
 
