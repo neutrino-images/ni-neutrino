@@ -116,7 +116,6 @@ class CLCD4l
 		int		m_ModeTshift;
 		int		m_ModeTimer;
 		int		m_ModeEcm;
-		std::string	m_ModeCamd;
 		bool		m_ModeCamPresent;
 		int		m_ModeCam;
 
