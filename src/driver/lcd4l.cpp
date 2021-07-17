@@ -169,7 +169,7 @@ void CLCD4l::StartLCD4l()
 		if (exec_initscript("lcd4linux", "start"))
 			OnAfterStart();
 		else
-			OnAfterError();
+			OnError();
 	}
 }
 
@@ -192,7 +192,7 @@ void CLCD4l::StopLCD4l()
 	if (exec_initscript("lcd4linux", "stop"))
 		OnAfterStop();
 	else
-		OnAfterError();
+		OnError();
 }
 
 void CLCD4l::SwitchLCD4l()
@@ -861,7 +861,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 				if (exec_initscript("lcd4linux", "restart"))
 					OnAfterRestart();
 				else
-					OnAfterError();
+					OnError();
 			}
 		}
 	}
