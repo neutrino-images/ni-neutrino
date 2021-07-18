@@ -980,7 +980,7 @@ void CInfoViewer::setInfobarTimeout(int timeout_ext)
 			}
 			else
 			{
-				timeout = g_settings.handling_infobar[SNeutrinoSettings::HANDLING_INFOBAR_MEDIA_AUDIO];
+				timeout = g_settings.handling_infobar[SNeutrinoSettings::HANDLING_INFOBAR_MEDIA_VIDEO];
 				if (timeout < 0)
 					timeout = 0;
 				timeoutEnd = CRCInput::calcTimeoutEnd(timeout + timeout_ext);
