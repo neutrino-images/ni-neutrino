@@ -341,7 +341,7 @@ const lcd_setting_struct_t lcd_setting[SNeutrinoSettings::LCD_SETTING_COUNT] =
 static SNeutrinoSettings::usermenu_t usermenu_default[] = {
 	{ CRCInput::RC_red,             "2,3,4,13,1,23,22",                     "",     "red"           },
 	{ CRCInput::RC_green,           "6",                                    "",     "green"         },
-	{ CRCInput::RC_yellow,          "7,35",                                 "",     "yellow"        },
+	{ CRCInput::RC_yellow,          "7,35,freeze",                          "",     "yellow"        },
 	{ CRCInput::RC_blue,            "27,28,21,20,1,39,10,11,24,19,14",      "",     "blue"          },
 #if BOXMODEL_HD51 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7 || BOXMODEL_HD60 || BOXMODEL_HD61 || BOXMODEL_MULTIBOXSE
 	{ CRCInput::RC_playpause,       "9",                                    "",     "5"             },
@@ -1591,7 +1591,14 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	{
 		configfile.deleteKey("infobar_cn");
 	}
-
+	if (g_settings.version_pseudo < "20210801210000")
+	{
+		if (g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items == "7,35")
+		{
+			g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items = "7,35,freeze";
+			configfile.setString("usermenu_tv_yellow", g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items);
+		}
+	}
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
