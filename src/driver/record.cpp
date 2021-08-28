@@ -66,6 +66,7 @@
 
 extern "C" {
 #include <libavformat/avformat.h>
+#include <libavcodec/bsf.h>
 }
 
 #if (LIBAVCODEC_VERSION_MAJOR > 55)
@@ -2336,7 +2337,11 @@ bool CStreamRec::Open(CZapitChannel * channel)
 #endif
 
 	std::string tsfile = std::string(filename) + ".ts";
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(59,0,100)
 	AVOutputFormat *ofmt = av_guess_format(NULL, tsfile.c_str(), NULL);
+#else
+	const AVOutputFormat *ofmt = av_guess_format(NULL, tsfile.c_str(), NULL);
+#endif
 	if (ofmt == NULL) {
 		printf("%s: av_guess_format for [%s] failed!\n", __FUNCTION__, tsfile.c_str());
 		return false;
