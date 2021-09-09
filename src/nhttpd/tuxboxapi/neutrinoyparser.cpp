@@ -132,6 +132,9 @@ const CNeutrinoYParser::TyFuncCall CNeutrinoYParser::yFuncCallList[]=
 	{"set_timer_form",			&CNeutrinoYParser::func_set_timer_form},
 	{"bouquet_editor_main",			&CNeutrinoYParser::func_bouquet_editor_main},
 	{"set_bouquet_edit_form",		&CNeutrinoYParser::func_set_bouquet_edit_form},
+	{"get_webtv_list",			&CNeutrinoYParser::func_get_webtv_list},
+	{"get_webradio_list",			&CNeutrinoYParser::func_get_webradio_list},
+	{"get_xmltv_list",			&CNeutrinoYParser::func_get_xmltv_list},
 	//NI y-funcs
 	{"infoicons_set_values",		&CNeutrinoYParser::func_infoicons_set_values},
 	{"netfs_set_values",			&CNeutrinoYParser::func_netfs_set_values},
@@ -1269,6 +1272,34 @@ std::string  CNeutrinoYParser::func_set_bouquet_edit_form(CyhookHandler *hh, std
 	else
 		return "No Bouquet selected";
 }
+
+//-------------------------------------------------------------------------
+// y-funcs : func_get_webtv/webradio/xmltv_list
+//-------------------------------------------------------------------------
+std::string CNeutrinoYParser::func_get_webtv_list(CyhookHandler *hh, std::string para)
+{
+	std::string yresult;
+	for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); it++)
+			yresult += string_printf((*it).c_str()) + "\n";
+	return yresult;
+}
+
+std::string CNeutrinoYParser::func_get_webradio_list(CyhookHandler *hh, std::string para)
+{
+	std::string yresult;
+	for (std::list<std::string>::iterator it = g_settings.webradio_xml.begin(); it != g_settings.webradio_xml.end(); it++)
+			yresult += string_printf((*it).c_str()) + "\n";
+	return yresult;
+}
+
+std::string CNeutrinoYParser::func_get_xmltv_list(CyhookHandler *hh, std::string para)
+{
+	std::string yresult;
+	for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); it++)
+			yresult += string_printf((*it).c_str()) + "\n";
+	return yresult;
+}
+
 //-------------------------------------------------------------------------
 // NI y-func : infoicons_set_values
 //-------------------------------------------------------------------------
