@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include <fstream>
 #include <iostream>
@@ -1366,8 +1367,33 @@ void CBouquetManager::readEPGMapping()
 	if(!EpgXMLMapping.empty())
 		EpgXMLMapping.clear();
 
-	const std::string epg_map_dir = CONFIGDIR "/zapit/epgmap.xml";
-	xmlDocPtr epgmap_parser = parseXmlFile(epg_map_dir.c_str());
+	std::list<std::string> epgmap_dirs;
+	epgmap_dirs.push_back(CONFIGDIR "/zapit");
+	epgmap_dirs.push_back(WEBTVDIR);
+	epgmap_dirs.push_back(WEBTVDIR_VAR);
+
+	std::list<std::string> epgmaps;
+	for (std::list<std::string>::iterator it = epgmap_dirs.begin(); it != epgmap_dirs.end(); ++it)
+	{
+		DIR *dp;
+		struct dirent *d;
+
+		if ((dp = opendir((*it).c_str())) == NULL)
+			continue;
+
+		while ((d = readdir(dp)) != NULL)
+		{
+			std::string f = d->d_name;
+			if(f.find("epgmap.xml") != std::string::npos)
+				epgmaps.push_back((*it) + "/" + f);
+		}
+	}
+
+	for (std::list<std::string>::iterator it = epgmaps.begin(); it != epgmaps.end(); ++it)
+	{
+		INFO("read %s", (*it).c_str());
+
+	xmlDocPtr epgmap_parser = parseXmlFile((*it).c_str());
 
 	if (epgmap_parser != NULL)
 	{
@@ -1397,6 +1423,8 @@ void CBouquetManager::readEPGMapping()
 		}
 	}
 	xmlFreeDoc(epgmap_parser);
+
+	} // for loop
 }
 
 void CBouquetManager::convert_E2_EPGMapping(std::string mapfile_in, std::string mapfile_out)
