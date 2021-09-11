@@ -1384,7 +1384,7 @@ void CBouquetManager::readEPGMapping()
 		while ((d = readdir(dp)) != NULL)
 		{
 			std::string f = d->d_name;
-			if(f.find("epgmap.xml") != std::string::npos)
+			if (f.find("epgmap.xml") != std::string::npos)
 				epgmaps.push_back((*it) + "/" + f);
 		}
 	}
@@ -1393,38 +1393,34 @@ void CBouquetManager::readEPGMapping()
 	{
 		INFO("read %s", (*it).c_str());
 
-	xmlDocPtr epgmap_parser = parseXmlFile((*it).c_str());
+		xmlDocPtr epgmap_parser = parseXmlFile((*it).c_str());
 
-	if (epgmap_parser != NULL)
-	{
-
-		xmlNodePtr epgmap = xmlDocGetRootElement(epgmap_parser);
-		if(epgmap)
-			epgmap = xmlChildrenNode(epgmap);
-
-		while (epgmap)
+		if (epgmap_parser != NULL)
 		{
-			const char *channelid = xmlGetAttribute(epgmap, "channel_id");
-			const char *epgid = xmlGetAttribute(epgmap, "new_epg_id");
-			const char *xmlepg = xmlGetData(epgmap); // returns empty string, not NULL if nothing found
-			t_channel_id epg_id = 0;
-			t_channel_id channel_id = 0;
-			if (epgid)
-				epg_id = strtoull(epgid, NULL, 16);
-			if (channelid)
-				channel_id = strtoull(channelid, NULL, 16);
-			if(channel_id && epg_id){
-				EpgIDMapping[channel_id]=epg_id;
-			}
-			if(channel_id && ((xmlepg != NULL) && (xmlepg[0] != '\0'))){
-				EpgXMLMapping[channel_id]=xmlepg;
-			}
-			epgmap = xmlNextNode(epgmap);
-		}
-	}
-	xmlFreeDoc(epgmap_parser);
+			xmlNodePtr epgmap = xmlDocGetRootElement(epgmap_parser);
+			if (epgmap)
+				epgmap = xmlChildrenNode(epgmap);
 
-	} // for loop
+			while (epgmap)
+			{
+				const char *channelid = xmlGetAttribute(epgmap, "channel_id");
+				const char *epgid = xmlGetAttribute(epgmap, "new_epg_id");
+				const char *xmlepg = xmlGetData(epgmap); // returns empty string, not NULL if nothing found
+				t_channel_id channel_id = 0;
+				t_channel_id epg_id = 0;
+				if (channelid)
+					channel_id = strtoull(channelid, NULL, 16);
+				if (epgid)
+					epg_id = strtoull(epgid, NULL, 16);
+				if (channel_id && epg_id)
+					EpgIDMapping[channel_id]=epg_id;
+				if (channel_id && ((xmlepg != NULL) && (xmlepg[0] != '\0')))
+					EpgXMLMapping[channel_id]=xmlepg;
+				epgmap = xmlNextNode(epgmap);
+			}
+		}
+		xmlFreeDoc(epgmap_parser);
+	}
 }
 
 void CBouquetManager::convert_E2_EPGMapping(std::string mapfile_in, std::string mapfile_out)
