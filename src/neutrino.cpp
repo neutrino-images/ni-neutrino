@@ -4852,7 +4852,7 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	if (cs_get_revision() != 10)
 		bright = g_settings.lcd_setting[SNeutrinoSettings::LCD_DEEPSTANDBY_BRIGHTNESS];
 #endif
-	if (exit_code != EXIT_NORMAL && exit_code != EXIT_RESTART)
+	if (exit_code == EXIT_SHUTDOWN)
 	{
 		if (timer_minutes)
 		{
