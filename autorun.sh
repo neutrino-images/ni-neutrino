@@ -7,6 +7,7 @@ ERROR=-1
 NORMAL=0
 SHUTDOWN=1
 REBOOT=2
+RESTART=3
 
 echo "Starting Neutrino"
 
