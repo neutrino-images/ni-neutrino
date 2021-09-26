@@ -5690,7 +5690,9 @@ void stop_daemons(bool stopall, bool for_flash)
 		if (!backup_flash_sh.empty())
 			system(backup_flash_sh.c_str()); //don't fork
 #endif
-		my_system(NEUTRINO_ENTER_FLASH_SCRIPT);
+		std::string start_flash_sh = find_executable("start_flash.sh");
+		if (!start_flash_sh.empty())
+			my_system(start_flash_sh.c_str());
 	}
 
 	InfoClock->enableInfoClock(false);

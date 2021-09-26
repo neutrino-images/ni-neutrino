@@ -47,7 +47,6 @@
 #define NEUTRINO_APP_START_SCRIPT "neutrino.start"
 
 // control scripts w/o counterparts in /var
-#define NEUTRINO_ENTER_FLASH_SCRIPT CONTROLDIR "/flash.start"
 #define NEUTRINO_CONF_MIGRATION_SCRIPT CONTROLDIR "/migration.sh"
 
 #define COVERDIR_TMP "/tmp/.cover"

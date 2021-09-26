@@ -8,7 +8,6 @@ install_SCRIPTS = \
 	audioplayer.end \
 	deepstandby.on \
 	deepstandby.off \
-	flash.start \
 	inactivity.on \
 	migration.sh \
 	movieplayer.start \

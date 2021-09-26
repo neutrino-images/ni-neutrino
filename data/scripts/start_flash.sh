@@ -3,5 +3,5 @@
 # kill start script first to ignore neutrino's exit codes
 killall start_neutrino
 
-# run shutdown routine depending on flagfile
+# run shutdown routine
 /etc/init.d/rcK
