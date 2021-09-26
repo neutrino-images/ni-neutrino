@@ -46,9 +46,6 @@
 #define NEUTRINO_LEAVE_DEEPSTANDBY_SCRIPT "deepstandby.off"
 #define NEUTRINO_APP_START_SCRIPT "neutrino.start"
 
-// control scripts w/o counterparts in /var
-#define NEUTRINO_CONF_MIGRATION_SCRIPT CONTROLDIR "/migration.sh"
-
 #define COVERDIR_TMP "/tmp/.cover"
 #define LOGODIR_TMP "/tmp/.logo"
 

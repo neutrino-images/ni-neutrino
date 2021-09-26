@@ -365,7 +365,9 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	int erg = 0;
 
 	// execute migration script before loading configfile
-	my_system(NEUTRINO_CONF_MIGRATION_SCRIPT);
+	std::string migration_sh = find_executable("migration.sh");
+	if (!migration_sh.empty())
+		my_system(migration_sh.c_str());
 
 	configfile.clear();
 	// load settings; setup defaults

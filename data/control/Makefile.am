@@ -1,6 +1,3 @@
-EXTRA_DIST = \
-	migration.sh migration.sh.in
-
 installdir = $(CONTROLDIR)
 
 install_SCRIPTS = \
@@ -9,7 +6,6 @@ install_SCRIPTS = \
 	deepstandby.on \
 	deepstandby.off \
 	inactivity.on \
-	migration.sh \
 	movieplayer.start \
 	movieplayer.end \
 	neutrino.start \

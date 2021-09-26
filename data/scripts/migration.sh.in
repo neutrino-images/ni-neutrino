@@ -60,6 +60,5 @@ for controlscript in $controlscripts; do
 	fi
 done
 
-# these control scripts hasn't counterparts in @CONTROLDIR_VAR@
 rm -f migration.sh
 rm -f flash.start
