@@ -51,8 +51,7 @@ TOBACKUP="\
 	/etc/samba/smb.conf \
 	/etc/wpa_supplicant.conf \
 	\
-	@DATADIR@/neutrino/flex/flex_user.conf \
-	@DATADIR_VAR@/flex/flex_user.conf \
+	@DATADIR_VAR@/flex/flex_usr.conf \
 	\
 	@CONTROLDIR_VAR@/ \
 	@FONTDIR_VAR@/ \
