@@ -494,7 +494,7 @@ src/nhttpd/nhttpd.conf
 
 # Migration script
 AC_CONFIG_FILES([
-data/control/migration.sh
+data/scripts/migration.sh
 ])
 
 # Backup scripts
