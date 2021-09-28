@@ -5477,11 +5477,11 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	}
 	else if (actionKey=="reloadplugins") {
 		CHint *hint = new CHint(LOCALE_SERVICEMENU_GETPLUGINS_HINT);
+		hint->setDelay(1);
 		hint->paint();
 
 		g_Plugins->loadPlugins();
 
-		sleep(1); // small delay for very fast hardware
 		delete hint;
 	}
 	else if (actionKey=="restarttuner")
