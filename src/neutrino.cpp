@@ -5456,8 +5456,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 #endif
 
 	else if (actionKey=="savesettings") {
-		CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT)); // UTF-8
-		hintBox.paint();
+		CHint *hint = new CHint(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT);
+		hint->paint();
 
 		saveSetup(NEUTRINO_SETTINGS_FILE);
 
@@ -5470,23 +5470,24 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		//g_Sectionsd->setHoursToCache((unsigned short) (g_settings.epg_cache_days*24));
 
 		sleep(1); // small delay for very fast hardware
-		hintBox.hide();
+		delete hint;
 	}
 	else if (actionKey=="recording") {
 		setupRecordingDevice();
 	}
 	else if (actionKey=="reloadplugins") {
-		CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SERVICEMENU_GETPLUGINS_HINT));
-		hintBox.paint();
+		CHint *hint = new CHint(LOCALE_SERVICEMENU_GETPLUGINS_HINT);
+		hint->paint();
 
 		g_Plugins->loadPlugins();
 
-		hintBox.hide();
+		sleep(1); // small delay for very fast hardware
+		delete hint;
 	}
 	else if (actionKey=="restarttuner")
 	{
-		CHintBox * hintBox = new CHintBox(LOCALE_SERVICEMENU_RESTART_TUNER, g_Locale->getText(LOCALE_SERVICEMENU_RESTARTING_TUNER));
-		hintBox->paint();
+		CHint *hint = new CHint(LOCALE_SERVICEMENU_RESTARTING_TUNER);
+		hint->paint();
 
 		g_Zapit->setStandby(true);
 		sleep(2);
@@ -5494,20 +5495,19 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		sleep(2);
 		g_Zapit->Rezap();
 
-		hintBox->hide();
-		delete hintBox;
+		delete hint;
 	}
 	else if (actionKey == "camd_reset")
 	{
-		CHintBox hintbox(LOCALE_CAMD_CONTROL, LOCALE_CAMD_MSG_RESET);
-		hintbox.paint();
+		CHint *hint = new CHint(LOCALE_CAMD_MSG_RESET);
+		hint->paint();
 
 		printf("[neutrino.cpp] executing \"service camd restart\"\n");
 		if (my_system(3, "service", "camd", "restart") != 0)
 			printf("[neutrino.cpp] executing failed\n");
-		sleep(1);
 
-		hintbox.hide();
+		sleep(1); // small delay for very fast hardware
+		delete hint;
 
 		return menu_return::RETURN_EXIT_ALL;
 	}
