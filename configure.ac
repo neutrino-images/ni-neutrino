@@ -208,6 +208,16 @@ AC_ARG_ENABLE(fastscan,
 	AC_DEFINE(ENABLE_FASTSCAN, 1, [enable fastscan code]))
 AM_CONDITIONAL(ENABLE_FASTSCAN, test "$enable_fastscan" = "yes")
 
+AC_ARG_ENABLE(aitscan,
+	AS_HELP_STRING([--enable-aitscan], [enable Application Information Table support @<:@default=yes@:>@]),
+	[enable_aitscan="$enableval"],
+	[enable_aitscan="yes"])
+
+if test "$enable_aitscan" = "yes"; then
+	AC_DEFINE(ENABLE_AIT, 1, [enable Application Information Table support])
+fi
+AM_CONDITIONAL(ENABLE_AIT, test "$enable_aitscan" = "yes")
+
 AC_ARG_ENABLE(giflib,
 	AS_HELP_STRING([--enable-giflib], [use giflib instead of libungif @<:@default=no@:>@]),
 	AC_DEFINE(ENABLE_GIFLIB, 1, [use giflib instead of libungif]))
@@ -222,16 +232,6 @@ AC_ARG_ENABLE(flac,
 	AS_HELP_STRING([--enable-flac], [enable FLAC support @<:@default=no@:>@]),
 	AC_DEFINE(ENABLE_FLAC, 1, [enable FLAC support]))
 AM_CONDITIONAL(ENABLE_FLAC, test "$enable_flac" = "yes")
-
-AC_ARG_ENABLE(hbbtv,
-	AS_HELP_STRING([--enable-hbbtv], [enable HbbTV support @<:@default=yes@:>@]),
-	[enable_hbbtv="$enableval"],
-	[enable_hbbtv="yes"])
-
-if test "$enable_hbbtv" = "yes"; then
-	AC_DEFINE(ENABLE_HBBTV, 1, [enable HbbTV support])
-fi
-AM_CONDITIONAL(ENABLE_HBBTV, test "$enable_hbbtv" = "yes")
 
 AC_ARG_ENABLE(upnp,
 	AS_HELP_STRING([--enable-upnp], [enable UPNP support @<:@default=yes@:>@]),
