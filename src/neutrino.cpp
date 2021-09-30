@@ -5457,6 +5457,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 
 	else if (actionKey=="savesettings") {
 		CHint *hint = new CHint(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT);
+		hint->setDelay(1);
 		hint->paint();
 
 		saveSetup(NEUTRINO_SETTINGS_FILE);
@@ -5469,7 +5470,6 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		//g_Sectionsd->setEventsAreOldInMinutes((unsigned short) (g_settings.epg_old_hours*60));
 		//g_Sectionsd->setHoursToCache((unsigned short) (g_settings.epg_cache_days*24));
 
-		sleep(1); // small delay for very fast hardware
 		delete hint;
 	}
 	else if (actionKey=="recording") {
@@ -5500,13 +5500,13 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	else if (actionKey == "camd_reset")
 	{
 		CHint *hint = new CHint(LOCALE_CAMD_MSG_RESET);
+		hint->setDelay(1);
 		hint->paint();
 
 		printf("[neutrino.cpp] executing \"service camd restart\"\n");
 		if (my_system(3, "service", "camd", "restart") != 0)
 			printf("[neutrino.cpp] executing failed\n");
 
-		sleep(1); // small delay for very fast hardware
 		delete hint;
 
 		return menu_return::RETURN_EXIT_ALL;
