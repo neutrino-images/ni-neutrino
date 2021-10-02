@@ -204,9 +204,6 @@ extern cAudio * audioDecoder;
 cPowerManager *powerManager;
 cCpuFreqManager * cpuFreq;
 
-#ifdef ENABLE_LCD4LINUX
-void stop_lcd4l_support(void);
-#endif
 void stop_daemons(bool stopall = true, bool for_flash = false);
 void stop_video(void);
 
@@ -4777,7 +4774,7 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	printf("[neutrino] hw_caps->can_shutdown: %d\n", g_info.hw_caps->can_shutdown);
 
 #ifdef ENABLE_LCD4LINUX
-	stop_lcd4l_support();
+	CLCD4l::getInstance()->StopLCD4l();
 #endif
 
 	//NI InfoIcons
@@ -5576,7 +5573,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 			hint->paint();
 
 #ifdef ENABLE_LCD4LINUX
-			stop_lcd4l_support();
+			CLCD4l::getInstance()->StopLCD4l();
 #endif
 
 			saveSetup(NEUTRINO_SETTINGS_FILE);
@@ -5666,14 +5663,6 @@ void CNeutrinoApp::stopDaemonsForFlash()
 /**************************************************************************************
 *          Main programm - no function here                                           *
 **************************************************************************************/
-#ifdef ENABLE_LCD4LINUX
-void stop_lcd4l_support()
-{
-	if (g_settings.lcd4l_support)
-		CLCD4l::getInstance()->StopLCD4l();
-}
-#endif
-
 void stop_daemons(bool stopall, bool for_flash)
 {
 	CMoviePlayerGui::getInstance().stopPlayBack();
@@ -5790,7 +5779,8 @@ void sighandler (int signum)
 	case SIGINT:
 		CVFD::getInstance()->ShowText("Exiting ...");
 #ifdef ENABLE_LCD4LINUX
-		stop_lcd4l_support();
+		CLCD4l::getInstance()->StopLCD4l();
+		delete CLCD4l::getInstance();
 #endif
 		delete cHddStat::getInstance();
 		delete CRecordManager::getInstance();
