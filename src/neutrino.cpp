@@ -5481,6 +5481,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		setupRecordingDevice();
 	}
 	else if (actionKey=="reloadplugins") {
+		ShowHintS(LOCALE_SERVICEMENU_GETPLUGINS_HINT, sigc::mem_fun(g_Plugins, &CPlugins::loadPlugins),1);
+#if 0
 		CHint *hint = new CHint(LOCALE_SERVICEMENU_GETPLUGINS_HINT);
 		hint->setDelay(1);
 		hint->paint();
@@ -5488,6 +5490,7 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		g_Plugins->loadPlugins();
 
 		delete hint;
+#endif
 	}
 	else if (actionKey=="restarttuner")
 	{
