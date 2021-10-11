@@ -1040,6 +1040,19 @@ int CTestMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 		ShowHintS(hint);
 		return menu_return::RETURN_REPAINT;
 	}
+	else if (actionKey == "shellwindow"){
+		sigc::slot3<void, std::string*, int *, bool *> sl_shell_output;
+		sl_shell_output = sigc::mem_fun(*this, &CTestMenu::handleShellOutput);
+		int r = 0;
+		const char *c = getenv("TEST_COMMAND");
+		std::string cmd = "/bin/ps auxwf";
+		if (c)
+			cmd = (std::string)c;
+		CTermWindow term(cmd, CTermWindow::VERBOSE | CTermWindow::ACKNOWLEDGE, &r, false);
+		term.OnShellOutputLoop.connect(sl_shell_output);
+		term.exec();
+		return menu_return::RETURN_REPAINT;
+	}
 	else if (actionKey == "msgbox_alt_btn"){
 		CMsgBox msgBox("Variable buttontext...", "Msgbox Test");
 		msgBox.setShowedButtons(CMsgBox::mbNo | CMsgBox::mbYes);
@@ -1055,19 +1068,6 @@ int CTestMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 		ShowHint("MsgBox test returns", msg_txt.c_str(), 700, 10, NULL, NULL, CComponentsHeader::CC_BTN_EXIT);
 
 		return res;
-	}
-	else if (actionKey == "shellwindow"){
-		sigc::slot3<void, std::string*, int *, bool *> sl_shell_output;
-		sl_shell_output = sigc::mem_fun(*this, &CTestMenu::handleShellOutput);
-		int r = 0;
-		const char *c = getenv("TEST_COMMAND");
-		std::string cmd = "/bin/ps auxwf";
-		if (c)
-			cmd = (std::string)c;
-		CTermWindow term(cmd, CTermWindow::VERBOSE | CTermWindow::ACKNOWLEDGE, &r, false);
-		term.OnShellOutputLoop.connect(sl_shell_output);
-		term.exec();
-		return menu_return::RETURN_REPAINT;
 	}
 	else if (actionKey == "footer_key"){
 		CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, "Footer-Key pressed. Press EXIT to return", 350, NULL, NULL, CComponentsHeader::CC_BTN_EXIT);
