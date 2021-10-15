@@ -83,7 +83,6 @@ libneutrino_gui_a_SOURCES = \
 	personalize.cpp \
 	pictureviewer.cpp \
 	pictureviewer_setup.cpp \
-	pipsetup.cpp \
 	pluginlist.cpp \
 	plugins.cpp \
 	plugins_hide.cpp \
@@ -115,6 +114,15 @@ libneutrino_gui_a_SOURCES = \
 	webchannels_setup.cpp \
 	xmltv_setup.cpp \
 	zapit_setup.cpp
+
+if ENABLE_PIP
+libneutrino_gui_a_SOURCES += \
+	pipsetup.cpp
+if ENABLE_QUADPIP
+libneutrino_gui_a_SOURCES += \
+	quadpip_setup.cpp
+endif
+endif
 
 if ENABLE_PKG_MANAGEMENT
 libneutrino_gui_a_SOURCES += \
