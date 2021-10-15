@@ -69,7 +69,8 @@ CScreenSaver::CScreenSaver()
 	status_icons	= CInfoIcons::getInstance()->getStatus(); //NI
 
 	clr.i_color	= COL_DARK_GRAY;
-	pip_channel_id	= 0;
+	for (unsigned int i = 0; i < 3; i++)
+		pip_channel_id[i] = 0;
 	idletime	= time(NULL);
 	force_refresh	= false;
 	thr_exit	= false;
@@ -134,8 +135,8 @@ void CScreenSaver::Start()
 		g_Radiotext->OnAfterDecodeLine.block();
 
 #ifdef ENABLE_PIP
-	pip_channel_id = CZapit::getInstance()->GetPipChannelID();
-	if (pip_channel_id)
+	pip_channel_id[0] = CZapit::getInstance()->GetPipChannelID();
+	if (pip_channel_id[0])
 		g_Zapit->stopPip();
 #endif
 
@@ -186,9 +187,9 @@ void CScreenSaver::Stop()
 	}
 
 #ifdef ENABLE_PIP
-	if(pip_channel_id) {
-		CNeutrinoApp::getInstance()->StartPip(pip_channel_id);
-		pip_channel_id = 0;
+	if(pip_channel_id[0]) {
+		CNeutrinoApp::getInstance()->StartPip(pip_channel_id[0]);
+		pip_channel_id[0] = 0;
 	}
 #endif
 
