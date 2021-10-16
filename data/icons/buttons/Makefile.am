@@ -11,9 +11,10 @@ install_DATA = \
 	7.png \
 	8.png \
 	9.png \
-	blau.png \
 	btn_backward.png \
+	btn_blue.png \
 	btn_forward.png \
+	btn_green.png \
 	btn_option_off_active.png \
 	btn_option_off_inactive.png \
 	btn_option_on_active.png \
@@ -22,15 +23,15 @@ install_DATA = \
 	btn_play.png \
 	btn_record_active.png \
 	btn_record_inactive.png \
+	btn_red.png \
 	btn_stop.png \
 	btn_timer.png \
+	btn_yellow.png \
 	down.png \
 	dummy.png \
 	dummy_small.png \
 	epg.png \
 	epg_small.png \
-	gelb.png \
-	gruen.png \
 	help.png \
 	help_small.png \
 	home.png \
@@ -47,5 +48,4 @@ install_DATA = \
 	ok.png \
 	power.png \
 	right.png \
-	rot.png \
 	up.png
