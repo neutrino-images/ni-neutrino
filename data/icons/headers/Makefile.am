@@ -9,6 +9,7 @@ install_DATA = \
 	error.png \
 	features.png \
 	games.png \
+	icon_blue.png \
 	icon_green.png \
 	icon_red.png \
 	icon_yellow.png \
