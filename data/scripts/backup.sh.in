@@ -30,7 +30,8 @@ TOBACKUP="\
 	@CONFIGDIR@/tuxwetter/tuxwetter.conf \
 	@CONFIGDIR@/tuxwetter/tuxwetter.mcfg \
 	@CONFIGDIR@/Y-Web.conf \
-	@CONFIGDIR@/zapit/ \
+	\
+	@ZAPITDIR@/ \
 	\
 	@FLAGDIR@/ \
 	\

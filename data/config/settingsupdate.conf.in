@@ -44,12 +44,13 @@
 @CONFIGDIR@/satellites.xml
 @CONFIGDIR@/tuxcal/
 @CONFIGDIR@/tuxmail/
-@CONFIGDIR@/zapit/
 @CONFIGDIR@/oscam.*
 @CONFIGDIR@/oscammon.conf
 @CONFIGDIR@/scan.conf
 @CONFIGDIR@/srv.conf
 @CONFIGDIR@/flex/flex_eigene_scripte.conf
+
+@ZAPITDIR@/
 
 @FLAGDIR@/
 
