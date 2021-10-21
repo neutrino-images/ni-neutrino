@@ -3134,7 +3134,10 @@ TIMER_START();
 	g_videoSettings = new CVideoSettings;
 	g_videoSettings->setVideoSettings();
 
-	 // show startlogo
+	// reset videodecoder to fullscreen
+	videoDecoder->Pig(-1, -1, -1, -1);
+
+	// show startlogo
 	if (startlogo)
 		startlogo = frameBuffer->showFrame("start.jpg");
 
