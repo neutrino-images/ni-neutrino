@@ -311,12 +311,12 @@ case "$BOXMODEL" in
 		AC_ARG_ENABLE(quadpip,
 			AS_HELP_STRING([--enable-quadpip], [enable quad picture in picture support @<:@default=no@:>@]),
 			AC_DEFINE(ENABLE_QUADPIP, 1, [enable quad picture in picture support]))
-		AM_CONDITIONAL(ENABLE_QUADPIP, test "$enable_quadpip" = "yes")
 
 		AS_IF(test "$enable_quadpip" = "yes" -a "$enable_pip" != "yes",
 			AC_MSG_ERROR([--enable-quadpip depends on --enable-pip]))
 	;;
 esac
+AM_CONDITIONAL(ENABLE_QUADPIP, test "$enable_quadpip" = "yes")
 
 AC_ARG_ENABLE(dynamicdemux,
 	AS_HELP_STRING([--enable-dynamicdemux], [enable dynamic demux @<:@default=no@:>@]),
