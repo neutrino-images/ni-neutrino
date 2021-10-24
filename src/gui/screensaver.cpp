@@ -403,11 +403,11 @@ void CScreenSaver::paint()
 			scr_clock->setClockFont(g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_NUMBER]);
 			scr_clock->enableSaveBg();
 			scr_clock->doPaintBg(false);
-#if HAVE_CST_HARDWARE
-			paintImage("blackscreen.jpg", 0, 0, m_frameBuffer->getScreenWidth(true), m_frameBuffer->getScreenHeight(true));
-#endif
 		}
-#if !HAVE_CST_HARDWARE
+
+#if HAVE_CST_HARDWARE
+		m_viewer->ShowImage("blackscreen.jpg", false /*unscaled*/);
+#else
 		m_frameBuffer->showFrame("blackscreen.jpg", CFrameBuffer::SHOW_FRAME_FALLBACK_MODE_CALLBACK | CFrameBuffer::SHOW_FRAME_FALLBACK_MODE_BLACKSCREEN);
 #endif
 
