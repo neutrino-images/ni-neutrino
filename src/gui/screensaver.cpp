@@ -35,7 +35,7 @@
 #include <global.h>
 #include <neutrino.h>
 #include <pthread.h>
-#include <algorithm>    // sort
+#include <algorithm> // sort
 #include "audiomute.h"
 #include "screensaver.h"
 #include <driver/radiotext.h>
@@ -43,16 +43,14 @@
 #include <system/debug.h>
 #include <gui/color_custom.h>
 #include <gui/infoclock.h>
+#include <gui/infoicons.h>
 #include <gui/infoviewer.h>
 #include <zapit/zapit.h>
 #include <driver/pictureviewer/pictureviewer.h>
 #include <system/set_threadname.h>
 
 #include <hardware/video.h>
-extern cVideo * videoDecoder;
-
-//NI InfoIcons
-#include <gui/infoicons.h>
+extern cVideo *videoDecoder;
 
 static CComponentsFrmClock *scr_clock = NULL;
 
@@ -66,7 +64,7 @@ CScreenSaver::CScreenSaver()
 	m_viewer	= new CPictureViewer();
 	index 		= 0;
 	status_mute	= CAudioMute::getInstance()->getStatus();
-	status_icons	= CInfoIcons::getInstance()->getStatus(); //NI
+	status_icons	= CInfoIcons::getInstance()->getStatus();
 
 	clr.i_color	= COL_DARK_GRAY;
 	for (unsigned int i = 0; i < 3; i++)
@@ -86,16 +84,17 @@ CScreenSaver::~CScreenSaver()
 
 	delete m_viewer;
 
-	if (scr_clock){
+	if (scr_clock)
+	{
 		delete scr_clock;
 		scr_clock = NULL;
 	}
 }
 
 
-CScreenSaver* CScreenSaver::getInstance()
+CScreenSaver *CScreenSaver::getInstance()
 {
-	static CScreenSaver * screenSaver = NULL;
+	static CScreenSaver *screenSaver = NULL;
 	if (!screenSaver)
 		screenSaver = new CScreenSaver();
 
@@ -104,14 +103,14 @@ CScreenSaver* CScreenSaver::getInstance()
 
 void CScreenSaver::thrExit()
 {
-	if(thrScreenSaver)
+	if (thrScreenSaver)
 	{
-		dprintf(DEBUG_NORMAL,"[%s] %s: exit screensaver thread\n", __file__, __func__);
+		dprintf(DEBUG_NORMAL, "[%s] %s: exit screensaver thread\n", __file__, __func__);
 		thr_exit = true;
 		thrScreenSaver->join();
 		delete thrScreenSaver;
 		thrScreenSaver = NULL;
-		dprintf(DEBUG_NORMAL,"\033[32m[CScreenSaver] [%s - %d] screensaver thread stopped\033[0m\n", __func__, __LINE__);
+		dprintf(DEBUG_NORMAL, "\033[32m[CScreenSaver] [%s - %d] screensaver thread stopped\033[0m\n", __func__, __LINE__);
 	}
 }
 
@@ -124,10 +123,9 @@ void CScreenSaver::Start()
 	status_mute = CAudioMute::getInstance()->getStatus();
 	CAudioMute::getInstance()->enableMuteIcon(false);
 
-	if(!CInfoClock::getInstance()->isBlocked())
+	if (!CInfoClock::getInstance()->isBlocked())
 		CInfoClock::getInstance()->block();
 
-	//NI
 	status_icons = CInfoIcons::getInstance()->getStatus();
 	CInfoIcons::getInstance()->enableInfoIcons(false);
 
@@ -144,9 +142,9 @@ void CScreenSaver::Start()
 	m_viewer->SetVisible(g_settings.screen_StartX, g_settings.screen_EndX, g_settings.screen_StartY, g_settings.screen_EndY);
 
 	if (g_settings.video_Format == 3)
-		m_viewer->SetAspectRatio(float(16.0/9));
+		m_viewer->SetAspectRatio(float(16.0 / 9));
 	else
-		m_viewer->SetAspectRatio(float(4.0/3));
+		m_viewer->SetAspectRatio(float(4.0 / 3));
 
 	m_viewer->Cleanup();
 #if HAVE_ARM_HARDWARE
@@ -157,15 +155,15 @@ void CScreenSaver::Start()
 	m_frameBuffer->showFrame("blackscreen.jpg");
 #endif
 	m_frameBuffer->stopFrame();
-	
-	if(!thrScreenSaver)
+
+	if (!thrScreenSaver)
 	{
-		dprintf(DEBUG_NORMAL,"[%s] %s: starting thread\n", __file__, __func__);
+		dprintf(DEBUG_NORMAL, "[%s] %s: starting thread\n", __file__, __func__);
 		thr_exit = false;
-		thrScreenSaver = new std::thread (ScreenSaverPrg, this);
+		thrScreenSaver = new std::thread(ScreenSaverPrg, this);
 		std::string tn = "screen_saver";
 		set_threadname(tn.c_str());
-		dprintf(DEBUG_NORMAL,"\033[32m[CScreenSaver] [%s - %d] thread [%p] [%s] started\033[0m\n", __func__, __LINE__, thrScreenSaver, tn.c_str());
+		dprintf(DEBUG_NORMAL, "\033[32m[CScreenSaver] [%s - %d] thread [%p] [%s] started\033[0m\n", __func__, __LINE__, thrScreenSaver, tn.c_str());
 	}
 
 	if (!OnAfterStart.empty())
@@ -179,7 +177,8 @@ void CScreenSaver::Stop()
 
 	resetIdleTime();
 
-	if (scr_clock){
+	if (scr_clock)
+	{
 		std::lock_guard<std::mutex> g(scr_mutex);
 		scr_clock->Stop();
 		delete scr_clock;
@@ -187,20 +186,21 @@ void CScreenSaver::Stop()
 	}
 
 #if ENABLE_PIP
-	if(pip_channel_id[0]) {
+	if (pip_channel_id[0])
+	{
 		CNeutrinoApp::getInstance()->StartPip(pip_channel_id[0]);
 		pip_channel_id[0] = 0;
 	}
 #endif
 
-	m_frameBuffer->paintBackground(); //clear entire screen
+	m_frameBuffer->paintBackground(); // clear entire screen
 
 	CAudioMute::getInstance()->enableMuteIcon(status_mute);
 
-	CInfoClock::getInstance()->ClearDisplay(); //provokes reinit
+	CInfoClock::getInstance()->ClearDisplay(); // provokes reinit
 	CInfoClock::getInstance()->enableInfoClock();
 
-	CInfoIcons::getInstance()->enableInfoIcons(status_icons); //NI
+	CInfoIcons::getInstance()->enableInfoIcons(status_icons);
 
 	if (g_RadiotextWin)
 		g_Radiotext->OnAfterDecodeLine.unblock();
@@ -215,7 +215,7 @@ void CScreenSaver::ScreenSaverPrg(CScreenSaver *scr)
 
 	if (g_settings.screensaver_timeout)
 	{
-		while(!scr->thr_exit)
+		while (!scr->thr_exit)
 		{
 			if (g_settings.screensaver_mode == SCR_MODE_IMAGE)
 				scr->ReadDir();
@@ -223,17 +223,18 @@ void CScreenSaver::ScreenSaverPrg(CScreenSaver *scr)
 			scr->paint();
 
 			int corr = 1;
-#if HAVE_CST_HARDWARE //time offset
+#if HAVE_CST_HARDWARE
+			// time offset
 			corr = 10;
 #endif
-			int t = 1000/corr * g_settings.screensaver_timeout; //sleep and exit handle
+			int t = 1000 / corr * g_settings.screensaver_timeout; // sleep and exit handle
 			while (t > 0)
 			{
 				if (!scr->thr_exit)
 					this_thread::sleep_for(std::chrono::milliseconds(1));
 				t--;
 
-				if (scr->force_refresh) //NOTE: Do we really need this ?
+				if (scr->force_refresh) // NOTE: Do we really need this ?
 				{
 					scr->force_refresh = false;
 					break;
@@ -255,10 +256,11 @@ bool CScreenSaver::ReadDir()
 		{
 			struct dirent **coverlist;
 			int n = scandir(COVERDIR_TMP, &coverlist, 0, alphasort);
-			if (n > 2){ // we always have the "." and ".." entrys
+			if (n > 2) // we always have the "." and ".." entrys
+			{
 				show_audiocover = true;
 			}
-			if(n > -1)
+			if (n > -1)
 			{
 				for (int i = 0; i < n; i++)
 				{
@@ -276,7 +278,7 @@ bool CScreenSaver::ReadDir()
 		d = g_settings.screensaver_dir;
 	if (d.length() > 1)
 	{
-		//remove trailing slash
+		// remove trailing slash
 		string::iterator it = d.end() - 1;
 		if (*it == '/')
 			d.erase(it);
@@ -290,24 +292,25 @@ bool CScreenSaver::ReadDir()
 
 	v_bg_files.clear();
 
-	/* open dir */
-	if((dir=opendir(dir_name)) == NULL) {
-		fprintf(stderr,"[CScreenSaver] %s - %d : error open dir...\n",  __func__, __LINE__);
+	// open dir
+	if ((dir = opendir(dir_name)) == NULL)
+	{
+		fprintf(stderr, "[CScreenSaver] %s - %d : error open dir...\n", __func__, __LINE__);
 		return ret;
 	}
 
-	/* read complete dir */
-	while((dirpointer=readdir(dir)) != NULL) // TODO: use threadsave readdir_r instead readdir
+	// read complete dir
+	while ((dirpointer = readdir(dir)) != NULL) // TODO: use threadsave readdir_r instead readdir
 	{
 		int curr_lenght = strlen((*dirpointer).d_name);
 		string str = dir_name;
 		//printf("%d\n",curr_lenght);
-		if(curr_lenght > 4)
+		if (curr_lenght > 4)
 		{
-			strncpy(curr_ext,(*dirpointer).d_name+(curr_lenght-4),sizeof(curr_ext)-1);
+			strncpy(curr_ext, (*dirpointer).d_name + (curr_lenght - 4), sizeof(curr_ext) - 1);
 
 			//printf("%s\n",curr_ext);
-			if (strcasecmp(".jpg",curr_ext) && strcasecmp(".png",curr_ext))
+			if (strcasecmp(".jpg", curr_ext) && strcasecmp(".png", curr_ext))
 				continue;
 
 			str += "/";
@@ -330,15 +333,15 @@ bool CScreenSaver::ReadDir()
 
 	sort(v_bg_files.begin(), v_bg_files.end());
 
-	/* close pointer */
-	if(closedir(dir) == -1)
-		dprintf(DEBUG_NORMAL, "[CScreenSaver]  %s - %d : Error no closed %s\n",  __func__, __LINE__,  dir_name);
+	// close pointer
+	if (closedir(dir) == -1)
+		dprintf(DEBUG_NORMAL, "[CScreenSaver] %s - %d : Error no closed %s\n", __func__, __LINE__, dir_name);
 
-	if(!v_bg_files.empty())
+	if (!v_bg_files.empty())
 		ret = true;
 #if 0
 	else
-		dprintf(DEBUG_NORMAL, "[CScreenSaver]  %s - %d : no picture found\n",  __func__, __LINE__);
+		dprintf(DEBUG_NORMAL, "[CScreenSaver] %s - %d : no picture found\n", __func__, __LINE__);
 #endif
 
 	return ret;
@@ -368,14 +371,14 @@ void CScreenSaver::paint()
 
 	if (g_settings.screensaver_mode == SCR_MODE_IMAGE && !v_bg_files.empty())
 	{
-		if( (index >= v_bg_files.size()) || (access(v_bg_files.at(index).c_str(), F_OK)))
+		if ((index >= v_bg_files.size()) || (access(v_bg_files.at(index).c_str(), F_OK)))
 		{
 			ReadDir();
 			index = 0;
 			return;
 		}
 
-		dprintf(DEBUG_INFO, "[CScreenSaver]  %s - %d : %s\n",  __func__, __LINE__, v_bg_files.at(index).c_str());
+		dprintf(DEBUG_INFO, "[CScreenSaver] %s - %d : %s\n", __func__, __LINE__, v_bg_files.at(index).c_str());
 
 		//m_frameBuffer->showFrame(v_bg_files.at(index), CFrameBuffer::SHOW_FRAME_FALLBACK_MODE_IMAGE_UNSCALED);
 		m_viewer->ShowImage(v_bg_files.at(index).c_str(), false /*unscaled*/);
@@ -387,7 +390,7 @@ void CScreenSaver::paint()
 		else
 			index = rand_r(&seed[0]) % v_bg_files.size();
 
-		if(index ==  v_bg_files.size())
+		if (index == v_bg_files.size())
 			index = 0;
 	}
 	else
@@ -405,7 +408,8 @@ void CScreenSaver::paint()
 #endif
 		}
 #if !HAVE_CST_HARDWARE
-#if 0 //example for callback
+#if 0
+		// example for callback
 		m_frameBuffer->OnFallbackShowFrame.connect(sigc::bind(sigc::mem_fun(CFrameBuffer::getInstance(),
 								&CFrameBuffer::paintBoxRel),
 								scr_clock->getXPos(), scr_clock->getYPos(),
@@ -413,7 +417,7 @@ void CScreenSaver::paint()
 								COL_BLACK,
 								0,
 								CORNER_ALL)
-												  );
+		);
 #endif
 		m_frameBuffer->showFrame("blackscreen.jpg", CFrameBuffer::SHOW_FRAME_FALLBACK_MODE_CALLBACK | CFrameBuffer::SHOW_FRAME_FALLBACK_MODE_BLACKSCREEN);
 #endif
@@ -423,11 +427,11 @@ void CScreenSaver::paint()
 		if (scr_clock)
 		{
 			scr_clock->setTextColor(clr.i_color);
-			//check position and size use only possible available screen size
+			// check position and size use only possible available screen size
 			int x_cl, y_cl, w_cl, h_cl;
 			scr_clock->getDimensions(&x_cl, &y_cl, &w_cl, &h_cl);
-			int	x_random = rand_r(&seed[1]) % ((g_settings.screen_EndX - w_cl - g_settings.screen_StartX) + 1) + g_settings.screen_StartX;
-			int	y_random = rand_r(&seed[2]) % ((g_settings.screen_EndY - h_cl - g_settings.screen_StartY) + 1) + g_settings.screen_StartY;
+			int x_random = rand_r(&seed[1]) % ((g_settings.screen_EndX - w_cl - g_settings.screen_StartX) + 1) + g_settings.screen_StartX;
+			int y_random = rand_r(&seed[2]) % ((g_settings.screen_EndY - h_cl - g_settings.screen_StartY) + 1) + g_settings.screen_StartY;
 
 			if (g_RadiotextWin)
 			{
@@ -453,16 +457,17 @@ void CScreenSaver::paint()
 
 		if (g_settings.screensaver_mode == SCR_MODE_CLOCK_COLOR)
 		{
-			srand (time(NULL));
+			srand(time(NULL));
 			uint32_t brightness;
 
 			// sorcery, no darkness
-			do {
+			do
+			{
 				clr.i_color = rand_r(&seed[3]);
 				brightness = (unsigned int)clr.uc_color.r * 19595 + (unsigned int)clr.uc_color.g * 38469 + (unsigned int)clr.uc_color.b * 7471;
 				//printf("[%s] %s: brightness: %d\n", __file__, __FUNCTION__, brightness>> 16);
 			}
-			while(brightness >> 16 < 80);
+			while (brightness >> 16 < 80);
 
 			clr.i_color &= 0x00FFFFFF;
 			//printf("[%s] %s: clr.i_color: r %02x g %02x b %02x a %02x\n", __file__, __FUNCTION__, clr.uc_color.r, clr.uc_color.g, clr.uc_color.b, clr.uc_color.a);
@@ -482,9 +487,9 @@ void CScreenSaver::handleRadioText(bool enable_paint)
 	g_RadiotextWin->clearSavedScreen();
 
 	if (g_settings.screensaver_mode != SCR_MODE_IMAGE)
-		g_RadiotextWin->kill(/*COL_BLACK*/); //ensure black paintBackground before repaint
+		g_RadiotextWin->kill(/*COL_BLACK*/); // ensure black paintBackground before repaint
 
-	//check position and size, use only possible available screen size
+	// check position and size, use only possible available screen size
 	int x_rt, y_rt, w_rt, h_rt;
 	g_RadiotextWin->getDimensions(&x_rt, &y_rt, &w_rt, &h_rt);
 	//int rt_x_random = rand_r(&seed[4]) % ((g_settings.screen_EndX - w_rt - g_settings.screen_StartX - OFFSET_SHADOW) + 1) + g_settings.screen_StartX;
@@ -513,34 +518,34 @@ void CScreenSaver::hideRadioText()
 		return;
 
 	g_RadiotextWin->sl_after_decode_line.block();
-	
+
 	if (scr_clock)
 		scr_clock->cl_sl_show.block();
-	
+
 	g_RadiotextWin->kill();
 	g_RadiotextWin->hide();
-	
+
 	if (scr_clock)
 		scr_clock->cl_sl_show.unblock();
 }
 
 bool CScreenSaver::canStart()
 {
-	if (g_settings.screensaver_delay && (time(NULL) - idletime > g_settings.screensaver_delay*60))
+	if (g_settings.screensaver_delay && (time(NULL) - idletime > g_settings.screensaver_delay * 60))
 		return true;
 	return false;
 }
 
 bool CScreenSaver::isActive()
 {
-	if(thrScreenSaver)
+	if (thrScreenSaver)
 		return true;
 	return false;
 }
 
 bool CScreenSaver::ignoredMsg(neutrino_msg_t msg)
 {
-	/* screensaver will ignore these msgs */
+	// screensaver will ignore these msgs
 	if (
 		   msg == NeutrinoMessages::EVT_CURRENTEPG
 		|| msg == NeutrinoMessages::EVT_NEXTEPG
@@ -560,7 +565,7 @@ bool CScreenSaver::ignoredMsg(neutrino_msg_t msg)
 	return false;
 }
 
-CComponentsFrmClock* CScreenSaver::getClockObject()
+CComponentsFrmClock *CScreenSaver::getClockObject()
 {
 	return scr_clock;
 }
