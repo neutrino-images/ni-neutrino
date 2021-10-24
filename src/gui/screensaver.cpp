@@ -408,17 +408,6 @@ void CScreenSaver::paint()
 #endif
 		}
 #if !HAVE_CST_HARDWARE
-#if 0
-		// example for callback
-		m_frameBuffer->OnFallbackShowFrame.connect(sigc::bind(sigc::mem_fun(CFrameBuffer::getInstance(),
-								&CFrameBuffer::paintBoxRel),
-								scr_clock->getXPos(), scr_clock->getYPos(),
-								scr_clock->getWidth(), scr_clock->getHeight(),
-								COL_BLACK,
-								0,
-								CORNER_ALL)
-		);
-#endif
 		m_frameBuffer->showFrame("blackscreen.jpg", CFrameBuffer::SHOW_FRAME_FALLBACK_MODE_CALLBACK | CFrameBuffer::SHOW_FRAME_FALLBACK_MODE_BLACKSCREEN);
 #endif
 
