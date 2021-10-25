@@ -3132,7 +3132,7 @@ TIMER_START();
 
 	//init video settings
 	g_videoSettings = new CVideoSettings;
-	g_videoSettings->setVideoSettings();
+	g_videoSettings->initVideoSettings();
 
 	// reset videodecoder to fullscreen
 	videoDecoder->Pig(-1, -1, -1, -1);
