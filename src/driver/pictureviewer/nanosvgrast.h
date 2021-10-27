@@ -819,7 +819,7 @@ static void nsvg__flattenShapeStroke(NSVGrasterizer* r, NSVGshape* shape, float 
 	float miterLimit = shape->miterLimit;
 	int lineJoin = shape->strokeLineJoin;
 	int lineCap = shape->strokeLineCap;
-	float lineWidth = shape->strokeWidth * (scalex+scaley)*0.5;
+	float lineWidth = shape->strokeWidth * (scalex+scaley)*0.5f;
 
 	for (path = shape->paths; path != NULL; path = path->next)
 	{
@@ -878,7 +878,7 @@ static void nsvg__flattenShapeStroke(NSVGrasterizer* r, NSVGshape* shape, float 
 				dashOffset -= shape->strokeDashArray[idash];
 				idash = (idash + 1) % shape->strokeDashCount;
 			}
-			dashLen = (shape->strokeDashArray[idash] - dashOffset) * (scalex+scaley)*0.5;
+			dashLen = (shape->strokeDashArray[idash] - dashOffset) * (scalex+scaley)*0.5f;
 
 			for (j = 1; j < r->npoints2; )
 			{
@@ -903,7 +903,7 @@ static void nsvg__flattenShapeStroke(NSVGrasterizer* r, NSVGshape* shape, float 
 					// Advance dash pattern
 					dashState = !dashState;
 					idash = (idash+1) % shape->strokeDashCount;
-					dashLen = shape->strokeDashArray[idash] * (scalex+scaley)*0.5;
+					dashLen = shape->strokeDashArray[idash] * (scalex+scaley)*0.5f;
 					// Restart
 					cur.x = x;
 					cur.y = y;
@@ -1578,7 +1578,7 @@ void nsvgRasterizeFull(NSVGrasterizer* r,
 
 			nsvg__rasterizeSortedEdges(r, tx,ty, scalex, scaley, &cache, shape->fillRule);
 		}
-		if (shape->stroke.type != NSVG_PAINT_NONE && (shape->strokeWidth * (scalex+scaley)*0.5) > 0.01f)
+		if (shape->stroke.type != NSVG_PAINT_NONE && (shape->strokeWidth * (scalex+scaley)*0.5f) > 0.01f)
 		{
 			nsvg__resetPool(r);
 			r->freelist = NULL;
