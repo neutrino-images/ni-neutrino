@@ -8,3 +8,4 @@
 #define FBV_SUPPORT_JPEG
 #define FBV_SUPPORT_GIF
 #define FBV_SUPPORT_CRW
+#define FBV_SUPPORT_SVG

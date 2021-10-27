@@ -20,4 +20,4 @@ libneutrino_pictureviewer_a_SOURCES = \
 	gif.cpp \
 	jpeg.cpp \
 	pictureviewer.cpp \
-	png.cpp bmp.cpp
+	png.cpp bmp.cpp svg.cpp
