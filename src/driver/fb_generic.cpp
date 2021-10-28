@@ -698,20 +698,31 @@ void CFrameBuffer::setIconBasePath(const std::string & iconPath)
 
 std::string CFrameBuffer::getIconPath(std::string icon_name, std::string file_type)
 {
+	std::vector<std::string> filetypes = { ".svg", ".png", ".jpg" };
 	std::string path, filetype = "";
 	if (!file_type.empty())
-		filetype = "." + file_type;
+	{
+		filetypes.clear();
+		filetypes.push_back("." + file_type);
+	}
 
-	std::string dir[] = {	THEMESDIR_VAR "/" + g_settings.theme_name + "/icons",
-				THEMESDIR "/" + g_settings.theme_name + "/icons",
-				ICONSDIR_VAR,
-				iconBasePath
+	std::vector<std::string> dir =
+	{
+		THEMESDIR_VAR "/" + g_settings.theme_name + "/icons",
+		THEMESDIR "/" + g_settings.theme_name + "/icons",
+		ICONSDIR_VAR,
+		iconBasePath
 	};
 
-	for(int i=0; i<4 ; i++){
-		path = std::string(dir[i]) + "/" + icon_name + filetype;
-		if (access(path.c_str(), F_OK) == 0){
-			return path;
+	for(int t=0; t<filetypes.size(); t++)
+	{
+		for(int i=0; i<dir.size(); i++)
+		{
+			path = std::string(dir[i]) + "/" + icon_name + filetypes[t];
+			if (access(path.c_str(), F_OK) == 0)
+			{
+				return path;
+			}
 		}
 	}
 
@@ -835,7 +846,7 @@ bool CFrameBuffer::paintIcon(const std::string & filename, const int x, const in
 	/* we cache and check original name */
 	it = icon_cache.find(filename);
 	if(it == icon_cache.end()) {
-		std::string newname = getIconPath(filename);
+		std::string newname = getIconPath(filename,"");
 		//printf("CFrameBuffer::paintIcon: check for %s\n", newname.c_str());fflush(stdout);
 
 		data = g_PicViewer->getIcon(newname, &width, &height);
