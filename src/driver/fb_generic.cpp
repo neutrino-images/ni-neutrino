@@ -700,6 +700,14 @@ std::string CFrameBuffer::getIconPath(std::string icon_name, std::string file_ty
 {
 	std::vector<std::string> filetypes = { ".svg", ".png", ".jpg" };
 	std::string path, filetype = "";
+
+	std::string::size_type pos = icon_name.find_last_of(".");
+	if (pos != std::string::npos && file_type.empty())
+		if (std::find(filetypes.begin(), filetypes.end(), icon_name.substr(pos)) != filetypes.end())
+		{
+			icon_name = icon_name.substr(0,pos);
+			file_type = icon_name.substr(pos+1);
+		}
 	if (!file_type.empty())
 	{
 		filetypes.clear();
@@ -714,9 +722,9 @@ std::string CFrameBuffer::getIconPath(std::string icon_name, std::string file_ty
 		iconBasePath
 	};
 
-	for(int t=0; t<filetypes.size(); t++)
+	for(unsigned int t=0; t<filetypes.size(); t++)
 	{
-		for(int i=0; i<dir.size(); i++)
+		for(unsigned int i=0; i<dir.size(); i++)
 		{
 			path = std::string(dir[i]) + "/" + icon_name + filetypes[t];
 			if (access(path.c_str(), F_OK) == 0)
@@ -846,7 +854,7 @@ bool CFrameBuffer::paintIcon(const std::string & filename, const int x, const in
 	/* we cache and check original name */
 	it = icon_cache.find(filename);
 	if(it == icon_cache.end()) {
-		std::string newname = getIconPath(filename,"");
+		std::string newname = getIconPath(filename);
 		//printf("CFrameBuffer::paintIcon: check for %s\n", newname.c_str());fflush(stdout);
 
 		data = g_PicViewer->getIcon(newname, &width, &height);
@@ -1575,7 +1583,7 @@ void CFrameBuffer::Clear()
 
 bool CFrameBuffer::showFrame(const std::string & filename, int fallback_mode)
 {
-	std::string picture = getIconPath(filename, "");
+	std::string picture = getIconPath(filename);
 	bool ret = false;
 
 	if (access(picture.c_str(), F_OK) == 0 && !(fallback_mode & SHOW_FRAME_FALLBACK_MODE_IMAGE_UNSCALED))
