@@ -698,15 +698,19 @@ void CFrameBuffer::setIconBasePath(const std::string & iconPath)
 
 std::string CFrameBuffer::getIconPath(std::string icon_name, std::string file_type)
 {
+	// why search when we have an absolut path ?
+	if (icon_name.find("/", 0) != std::string::npos)
+		return icon_name;
+
 	std::vector<std::string> filetypes = { ".svg", ".png", ".jpg" };
-	std::string path, filetype = "";
+	std::string path = icon_name;
 
 	std::string::size_type pos = icon_name.find_last_of(".");
 	if (pos != std::string::npos && file_type.empty())
 		if (std::find(filetypes.begin(), filetypes.end(), icon_name.substr(pos)) != filetypes.end())
 		{
-			icon_name = icon_name.substr(0,pos);
-			file_type = icon_name.substr(pos+1);
+			icon_name = path.substr(0,pos);
+			file_type = path.substr(pos+1);
 		}
 	if (!file_type.empty())
 	{
@@ -734,10 +738,8 @@ std::string CFrameBuffer::getIconPath(std::string icon_name, std::string file_ty
 		}
 	}
 
-	if (icon_name.find("/", 0) != std::string::npos)
-		path = icon_name;
-
-	return path;
+	// nothing found, return empty string
+	return "";
 }
 
 void CFrameBuffer::getIconSize(const char * const filename, int* width, int *height)
