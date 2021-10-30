@@ -18,6 +18,12 @@ install_DATA += \
 	ubuntumono-b-webfont.ttf \
 	ubuntumono-r-webfont.ttf
 
+if ! BOXMODEL_CST_HD1
+# icon font
+install_DATA += \
+	fa-solid-900.ttf
+endif
+
 install-data-hook:
 	cd $(DESTDIR)$(FONTDIR); \
 		mv $(neutrino_ttf) neutrino.ttf; \
