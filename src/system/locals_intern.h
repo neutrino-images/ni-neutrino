@@ -1188,7 +1188,6 @@ const char * locale_real_names[] =
 	"keybindingmenu.remotecontrol_hardware_msg_part2",
 	"keybindingmenu.remotecontrol_hardware_msg_part3",
 	"keybindingmenu.remotecontrol_hardware_philips",
-	"keybindingmenu.remotecontrol_hardware_tripledragon",
 	"keybindingmenu.repeatblock",
 	"keybindingmenu.repeatblockgeneric",
 	"keybindingmenu.sort",
