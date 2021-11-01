@@ -131,7 +131,7 @@ elseif a[2] == "video" then
 	video = video.new()
 	if a[3] == "showpicture" and a[4] ~= nil then
 		video:zapitStopPlayBack()
-		r = video:ShowPicture(a[4])
+		r = video:ShowPicture(arg[4])
 	elseif a[3] == "stoppicture" then
 		video:zapitStopPlayBack(false)
 		r = video:StopPicture()
