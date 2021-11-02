@@ -224,6 +224,7 @@ class CRCInput
 			RC_bottom_left	= KEY_BOTTOMLEFT,   /* /include/linux/input.h: #define KEY_BOTTOMLEFT		0x1a4 */ /* in patched input.h */
 			RC_bottom_right	= KEY_BOTTOMRIGHT,  /* /include/linux/input.h: #define KEY_BOTTOMRIGHT		0x1a5 */ /* in patched input.h */
 
+			RC_aux		= KEY_AUX,
 			RC_audio	= KEY_AUDIO,
 			RC_video	= KEY_VIDEO,
 			RC_tv		= KEY_TV,
