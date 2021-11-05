@@ -1674,7 +1674,6 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			updateLcd(show_playtime);
 		}
 		if (first_start) {
-			usleep(80000);
 			callInfoViewer();
 			first_start = false;
 		}
