@@ -47,9 +47,9 @@
 #include <sys/sysinfo.h>
 #include <sys/vfs.h>
 
-static int my_filter(const struct dirent * dent)
+static int my_filter(const struct dirent *dent)
 {
-	if(dent->d_name[0] == 's' && dent->d_name[1] == 'd')
+	if (dent->d_name[0] == 's' && dent->d_name[1] == 'd')
 		return 1;
 	return 0;
 }
@@ -59,20 +59,18 @@ static char *trim(char *txt)
 	register int l;
 	register char *p1, *p2;
 
-	if (*txt==' ')
+	if (*txt == ' ')
 	{
-		for (p1=p2=txt;
-			(*p1==' ') || (*p1=='\t') || (*p1=='\n') || (*p1=='\r');
-			p1++){};
+		for (p1 = p2 = txt; (*p1 == ' ') || (*p1 == '\t') || (*p1 == '\n') || (*p1 == '\r'); p1++)
+		{};
 		while (*p1)
-			*p2++=*p1++;
-		*p2='\0';
+			*p2++ = *p1++;
+		*p2 = '\0';
 	}
-	if ((l=strlen(txt))>0)
-		for (p1=txt+l-1;
-			(*p1==' ') || (*p1=='\t') || (*p1=='\n') || (*p1=='\r');
-			*p1--='\0'){};
-	return(txt);
+	if ((l = strlen(txt)) > 0)
+		for (p1 = txt + l - 1; (*p1 == ' ') || (*p1 == '\t') || (*p1 == '\n') || (*p1 == '\r'); *p1-- = '\0')
+		{};
+	return (txt);
 }
 
 CHDDInfoMenu::CHDDInfoMenu()
@@ -85,15 +83,15 @@ CHDDInfoMenu::~CHDDInfoMenu()
 
 }
 
-int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
+int CHDDInfoMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 {
-	printf("[HDDInfo] exec ationKey %s\n",actionKey.c_str());
+	printf("[HDDInfo] exec ationKey %s\n", actionKey.c_str());
 	int res = menu_return::RETURN_REPAINT;
 
 	if (parent)
 		parent->hide();
 
-	if (actionKey!="")
+	if (actionKey != "")
 	{
 		COSDFader fader(g_settings.theme.menu_Content_alpha);
 		fader.StartFadeIn();
@@ -101,7 +99,7 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 		CHDDInfoWidget::paint(actionKey);
 
 		//int res = g_RCInput->messageLoop();
-		neutrino_msg_t      msg;
+		neutrino_msg_t msg;
 		neutrino_msg_data_t data;
 
 		bool doLoop = true;
@@ -111,20 +109,23 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 
 		while (doLoop)
 		{
-			g_RCInput->getMsgAbsoluteTimeout( &msg, &data, &timeoutEnd );
+			g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd);
 
-			if((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer())) {
-				if(fader.FadeDone()) {
+			if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer()))
+			{
+				if (fader.FadeDone())
+				{
 					doLoop = false;
-					}
+				}
 			}
-			else if ( ( msg == CRCInput::RC_timeout ) ||
-				( msg == CRCInput::RC_home ) ||
-				( msg == CRCInput::RC_ok ) ) {
-				if(fader.StartFadeOut()) {
+			else if ((msg == CRCInput::RC_timeout) || (msg == CRCInput::RC_home) || (msg == CRCInput::RC_ok))
+			{
+				if (fader.StartFadeOut())
+				{
 					timeoutEnd = CRCInput::calcTimeoutEnd(1);
 					msg = 0;
-				} else
+				}
+				else
 					doLoop = false;
 			}
 			else if (CNeutrinoApp::getInstance()->listModeKey(msg))
@@ -133,17 +134,16 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 			}
 			else
 			{
-				int mr = CNeutrinoApp::getInstance()->handleMsg( msg, data );
+				int mr = CNeutrinoApp::getInstance()->handleMsg(msg, data);
 
-				if ( mr & messages_return::cancel_all )
+				if (mr & messages_return::cancel_all)
 				{
 					res = menu_return::RETURN_EXIT_ALL;
 					doLoop = false;
 				}
-				else if ( mr & messages_return::unhandled )
+				else if (mr & messages_return::unhandled)
 				{
-					if ((msg <= CRCInput::RC_MaxRC) &&
-						(data == 0))                     /* <- button pressed */
+					if ((msg <= CRCInput::RC_MaxRC) && (data == 0)) /* <- button pressed */
 					{
 						timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
 					}
@@ -162,25 +162,26 @@ int CHDDInfoMenu::exec(CMenuTarget* parent, const std::string &actionKey)
 
 int CHDDInfoMenu::show()
 {
-	FILE * f;
+	FILE *f;
 	struct dirent **namelist;
 	bool hdd_found = 0;
 	int n = scandir("/sys/block", &namelist, my_filter, alphasort);
 	std::ostringstream buf;
 
 	//menue init
-	CMenuWidget* HDDInfo = new CMenuWidget(LOCALE_HDD_INFO_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_HDD_INFO);
+	CMenuWidget *HDDInfo = new CMenuWidget(LOCALE_HDD_INFO_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_HDD_INFO);
 	HDDInfo->addIntroItems();
 
-	for(int i = 0; i < n;i++)
+	for (int i = 0; i < n; i++)
 	{
-		char model[128]="unbekannt";
+		char model[128] = "unbekannt";
 
 		buf.str("");
 		buf << "/sys/block/" << namelist[i]->d_name << "/device/model";
 
 		f = fopen(buf.str().c_str(), "r");
-		if(f) {
+		if (f)
+		{
 			fscanf(f, "%127[^\n]", (char *) &model);
 			fclose(f);
 		}
@@ -198,7 +199,7 @@ int CHDDInfoMenu::show()
 	if (n >= 0)
 		free(namelist);
 
-	if(!hdd_found)
+	if (!hdd_found)
 		HDDInfo->addItem(new CMenuForwarder(LOCALE_HDD_NOT_FOUND, false));
 
 	int res = HDDInfo->exec(NULL, "");
@@ -251,14 +252,14 @@ void CHDDInfoWidget::paint(const std::string &Key)
 
 	int header_height = header.getHeight();
 	int item_height = item_font->getHeight();
-	int body_height = items_count*item_height + 2*OFFSET_INNER_SMALL;
+	int body_height = items_count * item_height + 2 * OFFSET_INNER_SMALL;
 	int footer_height = header.getHeight();
 
-	width	= frameBuffer->getScreenWidth()/2;
-	height	= header_height + body_height + footer_height;
+	width = frameBuffer->getScreenWidth() / 2;
+	height = header_height + body_height + footer_height;
 
-	x	= getScreenStartX(width);
-	y	= getScreenStartY(height);
+	x = getScreenStartX(width);
+	y = getScreenStartY(height);
 
 	FILE *pipe_reader;
 	char *buffer;
@@ -273,48 +274,48 @@ void CHDDInfoWidget::paint(const std::string &Key)
 
 	buffer = NULL;
 
-	if((pipe_reader = popen(buf.str().c_str(), "r")))
+	if ((pipe_reader = popen(buf.str().c_str(), "r")))
 	{
 		while ((read = getline(&buffer, &len, pipe_reader)) != -1)
 		{
 			if ((found = strstr(buffer, "Model Family:")))
-				sscanf(found+18, "%127[^\n]", (char *) &items_data[0].value);
+				sscanf(found + 18, "%127[^\n]", (char *) &items_data[0].value);
 			else if ((found = strstr(buffer, "Device Model:")))
-				sscanf(found+18, "%127[^\n]", (char *) &items_data[1].value);
+				sscanf(found + 18, "%127[^\n]", (char *) &items_data[1].value);
 			else if ((found = strstr(buffer, "Serial Number:")))
-				sscanf(found+18, "%127[^\n]", (char *) &items_data[2].value);
+				sscanf(found + 18, "%127[^\n]", (char *) &items_data[2].value);
 			else if ((found = strstr(buffer, "Firmware Version:")))
-				sscanf(found+18, "%127[^\n]", (char *) &items_data[3].value);
+				sscanf(found + 18, "%127[^\n]", (char *) &items_data[3].value);
 			else if ((found = strstr(buffer, "User Capacity:")))
-				sscanf(found+18, "%127[^\n]", (char *) &items_data[4].value);
+				sscanf(found + 18, "%127[^\n]", (char *) &items_data[4].value);
 			else if ((found = strstr(buffer, "Sector Size:")))
-				sscanf(found+18, "%127[^\n]", (char *) &items_data[5].value);
+				sscanf(found + 18, "%127[^\n]", (char *) &items_data[5].value);
 			else if ((found = strstr(buffer, "Rotation Rate:")))
-				sscanf(found+18, "%127[^\n]", (char *) &items_data[6].value);
+				sscanf(found + 18, "%127[^\n]", (char *) &items_data[6].value);
 			else if ((found = strstr(buffer, "SATA Version is:")))
-				sscanf(found+18, "%127[^\n]", (char *) &items_data[7].value);
+				sscanf(found + 18, "%127[^\n]", (char *) &items_data[7].value);
 			else if ((found = strstr(buffer, "Temperature_Celsius")))
-				sscanf(found+83, "%3[^\n]", (char *) &items_data[8].value);
+				sscanf(found + 83, "%3[^\n]", (char *) &items_data[8].value);
 		}
 		pclose(pipe_reader);
 	}
 	else
-		printf("[read_smartctl] popen error\n" );
+		printf("[read_smartctl] popen error\n");
 
-	if(buffer)
+	if (buffer)
 		free(buffer);
 
 	// manipulating capacity
 	str_capacity = items_data[4].value;
 	str_capacity.erase(std::remove(str_capacity.begin(), str_capacity.end(), ','), str_capacity.end());
-	mb = strtoull(str_capacity.c_str(),NULL,0)/1000000;
+	mb = strtoull(str_capacity.c_str(), NULL, 0) / 1000000;
 	buf.str("");
 	if (mb != 0)
 	{
 		if (mb < 1000)
 			buf << mb << " MB";
 		else
-			buf << mb/1000 << " GB";
+			buf << mb / 1000 << " GB";
 	}
 	snprintf(items_data[4].value, sizeof(items_data[4].value), "%s", buf.str().c_str());
 
@@ -349,12 +350,12 @@ void CHDDInfoWidget::paint(const std::string &Key)
 	}
 
 	// recalculate width and xpos
-	width = std::max(width, w_loc + w_sep + w_val + 4*OFFSET_INNER_MID);
+	width = std::max(width, w_loc + w_sep + w_val + 4 * OFFSET_INNER_MID);
 	if (width > (int) frameBuffer->getScreenWidth())
 	{
 		// should only happen with very big fonts
 		width = frameBuffer->getScreenWidth();
-		w_val = width - w_loc - w_sep - 4*OFFSET_INNER_MID;
+		w_val = width - w_loc - w_sep - 4 * OFFSET_INNER_MID;
 	}
 	x = getScreenStartX(width);
 

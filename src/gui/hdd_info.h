@@ -33,7 +33,7 @@
 class CHDDInfoWidget
 {
 	private:
-		CFrameBuffer	*frameBuffer;
+		CFrameBuffer *frameBuffer;
 		int x, y, width, height;
 
 	public:
@@ -54,7 +54,7 @@ class CHDDInfoMenu : public CMenuTarget, CHDDInfoWidget
 	public:
 		CHDDInfoMenu();
 		~CHDDInfoMenu();
-		int exec(CMenuTarget* parent, const std::string & actionKey);
+		int exec(CMenuTarget *parent, const std::string &actionKey);
 };
 
 #endif
