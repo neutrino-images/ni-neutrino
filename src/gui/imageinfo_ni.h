@@ -35,8 +35,8 @@ class CImageInfoNI : public CMenuTarget
 {
 	private:
 		void Init(void);
-		CConfigFile     * configfile;
-		CFrameBuffer	*frameBuffer;
+		CConfigFile *configfile;
+		CFrameBuffer *frameBuffer;
 		int x;
 		int y;
 		int ypos;
@@ -44,13 +44,13 @@ class CImageInfoNI : public CMenuTarget
 		int ycpu;
 		int width;
 		int height;
-		int hheight,iheight,sheight;
+		int hheight, iheight, sheight;
 		int swidth;
 
 		int max_height;
 		int max_width;
 		int max_text_width;
-		
+
 		neutrino_locale_t name;
 		int offset;
 
@@ -63,7 +63,8 @@ class CImageInfoNI : public CMenuTarget
 		void paintLine(int xpos, int font, std::string text);
 		void clearLine(int xpos, int font);
 
-		typedef struct {
+		typedef struct
+		{
 			unsigned long usr;
 			unsigned int nice;
 			unsigned long system;
@@ -74,14 +75,16 @@ class CImageInfoNI : public CMenuTarget
 			unsigned long old_idle;
 		} _stat;
 
-		struct {
+		struct
+		{
 			unsigned long blocks;
 			unsigned long used;
 			unsigned long available;
 			int percent;
 		} image_size;
 
-		struct {
+		struct
+		{
 			int total;
 			int free;
 			int buffers;
@@ -90,7 +93,8 @@ class CImageInfoNI : public CMenuTarget
 			int used;
 		} mem_info;
 
-		struct S_MTD_INFO {
+		struct S_MTD_INFO
+		{
 			char dev[8];
 			char size[9];
 			char erasesize[9];
@@ -104,10 +108,10 @@ class CImageInfoNI : public CMenuTarget
 		uint64_t net_best;
 		std::string netIfName;
 
-		pthread_t	InfoThread;
-		static void*	InfoProc(void *arg);
-		void 		StartInfoThread();
-		void 		StopInfoThread();
+		pthread_t InfoThread;
+		static void *InfoProc(void *arg);
+		void StartInfoThread();
+		void StopInfoThread();
 
 		int systemfs;
 		int revision;
@@ -145,12 +149,11 @@ class CImageInfoNI : public CMenuTarget
 		std::string getYWebVersion();
 
 	public:
-
 		CImageInfoNI();
 		~CImageInfoNI();
 
 		void hide();
-		int exec(CMenuTarget* parent, const std::string & actionKey);
+		int exec(CMenuTarget *parent, const std::string &actionKey);
 };
 
 #endif
