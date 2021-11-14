@@ -1370,7 +1370,7 @@ void CUpnpBrowserGui::updateTimes(const bool force)
 
 		//printf("updateTimes: force %d updatePlayed %d\n", force, updatePlayed);
 		char play_time[14];
-		snprintf(play_time, sizeof(play_time), "%zu:%02ld", m_time_played / 60, m_time_played % 60);
+		snprintf(play_time, sizeof(play_time), "%ld:%02ld", m_time_played / 60, m_time_played % 60);
 
 		if (updatePlayed)
 		{
