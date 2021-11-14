@@ -13,3 +13,8 @@ install_DATA = \
 	stars_bg.png \
 	tmdb.png \
 	volume.png
+
+if ENABLE_TESTING
+	install_DATA += \
+	tux.svg
+endif
