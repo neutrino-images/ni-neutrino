@@ -21,7 +21,7 @@
 #define COL_LIGHT_BLUE		0x0F
 #define COL_DARK_GRAY		0x10
 #define COL_GRAY		0x11
-#define COL_LIGHT_GRAY		0x11
+#define COL_LIGHT_GRAY		0x12
 
 #else
 
