@@ -537,7 +537,7 @@ int CImageInfoNI::CPU_Percent(_stat *cpu)
 
 	long unsigned int sys_diff = sys_new - sys_old;
 	long unsigned int total_diff = total_new - total_old;
-	if(!total_diff)
+	if (!total_diff)
 		total_diff = 1;
 	long unsigned int percent = ((float) sys_diff / (float) total_diff) * 100;
 
