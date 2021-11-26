@@ -289,25 +289,13 @@ void CImageInfoNI::paint()
 	CConfigFile config('\t');
 	config.loadConfig(IMAGE_VERSION_FILE);
 
-	std::string imagename	= config.getString("imagename",	"NI \\o/ Neutrino-Image");
-	std::string version	= config.getString("version",	"n/a");
-	std::string describe	= config.getString("describe",	"n/a");
-	std::string builddate	= config.getString("builddate",	"n/a");
-	std::string creator	= config.getString("creator",	"NI-Team");
-	std::string homepage	= config.getString("homepage",	"www.neutrino-images.de");
+	std::string imagename = config.getString("imagename", "NI \\o/ Neutrino-Image");
+	std::string imageversion = config.getString("imageversion", "n/a");
+	//std::string describe = config.getString("describe", "n/a");
+	std::string builddate = config.getString("builddate", "n/a");
+	std::string creator = config.getString("creator", "NI-Team");
+	std::string homepage = config.getString("homepage", "www.neutrino-images.de");
 
-#if 0
-	std::ostringstream imageversion;
-	imageversion.str("n/a");
-
-	if (version.compare("n/a") != 0)
-	{
-		static CFlashVersionInfo versionInfo(version);
-		std::string v = versionInfo.getVersionString();
-		imageversion.str("");
-		imageversion << v << " (" << versionInfo.getType(true) << ")";
-	}
-#endif
 
 	std::ostringstream guiversion;
 	guiversion.str("");
@@ -326,11 +314,8 @@ void CImageInfoNI::paint()
 
 	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_VERSION));
-#if 0
-	paintLine(xpos + offset, font_info, imageversion.str());
-#else
-	paintLine(xpos + offset, font_info, describe);
-#endif
+	paintLine(xpos + offset, font_info, imageversion);
+	//paintLine(xpos + offset, font_info, describe);
 
 	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_DATE));
