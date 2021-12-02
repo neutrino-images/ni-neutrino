@@ -370,7 +370,6 @@ const CMenuOptionChooser::keyval VIDEOMENU_HDMI_MODE_OPTIONS[VIDEOMENU_HDMI_MODE
 	{ HDMI_MODE_BT2020CL, LOCALE_VIDEOMENU_HDMI_MODE_BT2020CL },
 	{ HDMI_MODE_BT709, LOCALE_VIDEOMENU_HDMI_MODE_BT709 }
 };
-#endif
 
 int CVideoSettings::showVideoSetup()
 {
@@ -537,7 +536,7 @@ int CVideoSettings::showVideoSetup()
 	}
 
 	if (file_exists("/proc/stb/video/hdmi_colorimetry")) {
-		CMenuOptionChooser *hm = new CMenuOptionChooser(LOCALE_VIDEOMENU_HDMI_MODE, &g_settings.hdmimode, VIDEOMENU_HDMI_MODE_OPTIONS, VIDEOMENU_HDMI_MODE_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
+		CMenuOptionChooser *hm = new CMenuOptionChooser(LOCALE_VIDEOMENU_HDMI_MODE, &g_settings.hdmimode, VIDEOMENU_HDMI_MODE_OPTIONS, VIDEOMENU_HDMI_MODE_OPTION_COUNT, true, this);
 		hm->setHint("", LOCALE_MENU_HINT_VIDEO_HDMI_MODE);
 		videosetup->addItem(hm);
 	}
