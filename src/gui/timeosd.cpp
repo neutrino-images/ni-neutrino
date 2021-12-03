@@ -184,7 +184,6 @@ void CTimeOSD::kill()
 	if (m_mode != MODE_HIDE) {
 		KillAndResetTimescale();
 		CComponents::kill();
-		frameBuffer->blit();
 	}
 }
 
