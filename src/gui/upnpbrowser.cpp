@@ -44,6 +44,7 @@
 
 #include <gui/audiomute.h>
 #include <gui/color.h>
+#include <gui/infoicons.h>
 #include <gui/movieplayer.h>
 #include <gui/components/cc.h>
 #include <gui/widget/msgbox.h>
@@ -58,9 +59,6 @@
 extern cVideo *videoDecoder;
 extern CPictureViewer *g_PicViewer;
 
-//NI InfoIcons
-#include <gui/infoicons.h>
-
 const struct button_label RescanButton = {NEUTRINO_ICON_BUTTON_BLUE, LOCALE_UPNPBROWSER_RESCAN};
 const struct button_label BrowseButtons[] =
 {
@@ -68,7 +66,7 @@ const struct button_label BrowseButtons[] =
 	{ NEUTRINO_ICON_BUTTON_GREEN, LOCALE_FILEBROWSER_PREVPAGE },
 	{ NEUTRINO_ICON_BUTTON_YELLOW, LOCALE_AUDIOPLAYER_STOP },
 	{ NEUTRINO_ICON_BUTTON_OKAY, LOCALE_AUDIOPLAYER_PLAY },
-	{ NEUTRINO_ICON_BUTTON_HOME,  LOCALE_MENU_BACK, }
+	{ NEUTRINO_ICON_BUTTON_HOME, LOCALE_MENU_BACK, }
 };
 
 CUpnpBrowserGui::CUpnpBrowserGui()
@@ -91,14 +89,14 @@ void CUpnpBrowserGui::Init()
 {
 	font_item = SNeutrinoSettings::FONT_TYPE_MENU;
 
-	topbox.enableFrame(true, 1); //NI
+	topbox.enableFrame(true, 1);
 	topbox.setCorner(RADIUS_LARGE);
 	topbox.setColorAll(COL_FRAME_PLUS_0, COL_MENUHEAD_PLUS_0, COL_SHADOW_PLUS_0, COL_MENUHEAD_TEXT);
 	topbox.setTextFont(g_Font[SNeutrinoSettings::FONT_TYPE_MENU_INFO]);
 	topbox.enableColBodyGradient(g_settings.theme.menu_Head_gradient, COL_SHADOW_PLUS_0, g_settings.theme.menu_Head_gradient_direction);
 	topbox.enableShadow(CC_SHADOW_ON);
 
-	infobox.enableFrame(true, 1); //NI
+	infobox.enableFrame(true, 1);
 	infobox.setCorner(RADIUS_LARGE);
 	infobox.setColorAll(topbox.getColorFrame(), COL_MENUCONTENTDARK_PLUS_0);
 	infobox.setTextColor(COL_MENUCONTENTDARK_TEXT);
@@ -106,7 +104,7 @@ void CUpnpBrowserGui::Init()
 	infobox.enableColBodyGradient(g_settings.theme.menu_Hint_gradient, COL_SHADOW_PLUS_0, g_settings.theme.menu_Hint_gradient_direction);
 	infobox.enableShadow(CC_SHADOW_ON);
 
-	timebox.enableFrame(true, 1); //NI
+	timebox.enableFrame(true, 1);
 	timebox.setCorner(RADIUS_LARGE);
 	timebox.setColorAll(infobox.getColorFrame(), infobox.getColorBody());
 	timebox.setTextColor(infobox.getTextColor());
@@ -256,7 +254,7 @@ void CUpnpBrowserGui::splitProtocol(std::string &protocol, std::string &prot, st
 			}
 		}
 	}
-//printf("%s -> %s - %s - %s - %s\n", protocol.c_str(), prot.c_str(), network.c_str(), mime.c_str(), additional.c_str());
+	//printf("%s -> %s - %s - %s - %s\n", protocol.c_str(), prot.c_str(), network.c_str(), mime.c_str(), additional.c_str());
 }
 
 bool CUpnpBrowserGui::discoverDevices()
@@ -264,7 +262,7 @@ bool CUpnpBrowserGui::discoverDevices()
 	if (!m_devices.empty())
 		return true;
 
-	CHintBox hintbox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_UPNPBROWSER_SCANNING)); // UTF-8
+	CHintBox hintbox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_UPNPBROWSER_SCANNING));
 	hintbox.paint();
 
 	try
@@ -316,7 +314,7 @@ bool CUpnpBrowserGui::getResults(std::string id, unsigned int start, unsigned in
 
 std::vector<UPnPEntry> *CUpnpBrowserGui::decodeResult(std::string result)
 {
-	xmlNodePtr   root, node, snode;
+	xmlNodePtr root, node, snode;
 	xmlDocPtr parser = parseXml(result.c_str(), "UTF-8");
 	root = xmlDocGetRootElement(parser);
 	if (!root)
@@ -535,14 +533,14 @@ void CUpnpBrowserGui::selectDevice()
 {
 	bool loop = true;
 	bool refresh = true;
-	neutrino_msg_t      msg;
+	neutrino_msg_t msg;
 	neutrino_msg_data_t data;
 
 	if (!discoverDevices())
 		return;
 
 	CAudioMute::getInstance()->enableMuteIcon(false);
-	CInfoIcons::getInstance()->enableInfoIcons(false); //NI InfoIcons
+	CInfoIcons::getInstance()->enableInfoIcons(false);
 
 	while (loop)
 	{
@@ -606,7 +604,6 @@ void CUpnpBrowserGui::selectDevice()
 		{
 			CNeutrinoApp::getInstance()->handleMsg(msg, data);
 		}
-		else if (msg > CRCInput::RC_MaxRC)
 #endif
 		else
 		{
@@ -616,7 +613,7 @@ void CUpnpBrowserGui::selectDevice()
 		}
 	}
 	CAudioMute::getInstance()->enableMuteIcon(true);
-	CInfoIcons::getInstance()->enableInfoIcons(true); //NI InfoIcons
+	CInfoIcons::getInstance()->enableInfoIcons(true);
 }
 
 void CUpnpBrowserGui::playnext(void)
@@ -692,7 +689,7 @@ void CUpnpBrowserGui::playnext(void)
 				delete entries;
 				entries = NULL;
 			}
-			neutrino_msg_t      msg;
+			neutrino_msg_t msg;
 			neutrino_msg_data_t data;
 			g_RCInput->getMsg(&msg, &data, 10); // 1 sec timeout to update play/stop state display
 
@@ -711,7 +708,7 @@ void CUpnpBrowserGui::playnext(void)
 	m_frameBuffer->Clear();
 }
 
-bool CUpnpBrowserGui::getItems(std::string id, unsigned int index, std::vector<UPnPEntry>*&entries, unsigned int &total)
+bool CUpnpBrowserGui::getItems(std::string id, unsigned int index, std::vector<UPnPEntry> *&entries, unsigned int &total)
 {
 	bool tfound = false;
 	bool rfound = false;
@@ -757,7 +754,7 @@ bool CUpnpBrowserGui::getItems(std::string id, unsigned int index, std::vector<U
 	return true;
 }
 
-bool CUpnpBrowserGui::updateItemSelection(std::string id, std::vector<UPnPEntry>*&entries, int newpos, unsigned int &selected, unsigned int &liststart)
+bool CUpnpBrowserGui::updateItemSelection(std::string id, std::vector<UPnPEntry> *&entries, int newpos, unsigned int &selected, unsigned int &liststart)
 {
 	if ((int) selected != newpos)
 	{
@@ -788,7 +785,7 @@ bool CUpnpBrowserGui::selectItem(std::string id)
 	bool loop = true;
 	bool endall = false;
 	bool refresh = true;
-	neutrino_msg_t      msg;
+	neutrino_msg_t msg;
 	neutrino_msg_data_t data;
 	std::vector<UPnPEntry> *entries = NULL;
 
@@ -840,7 +837,7 @@ bool CUpnpBrowserGui::selectItem(std::string id)
 		}
 		else if (!timeout && (msg_repeatok == CRCInput::RC_up || (int) msg == g_settings.key_pageup))
 		{
-			int step = ((int) msg == g_settings.key_pageup) ? m_listmaxshow : 1;  // browse or step 1
+			int step = ((int) msg == g_settings.key_pageup) ? m_listmaxshow : 1; // browse or step 1
 			int new_selected = selected - step;
 			if (new_selected < 0)
 			{
@@ -853,7 +850,7 @@ bool CUpnpBrowserGui::selectItem(std::string id)
 		}
 		else if (!timeout && (msg_repeatok == CRCInput::RC_down || (int) msg == g_settings.key_pagedown))
 		{
-			int step = ((int) msg == g_settings.key_pagedown) ? m_listmaxshow : 1;   // browse or step 1
+			int step = ((int) msg == g_settings.key_pagedown) ? m_listmaxshow : 1; // browse or step 1
 			int new_selected = selected + step;
 			if (new_selected >= (int) total)
 			{
@@ -1085,7 +1082,7 @@ void CUpnpBrowserGui::paintDevices()
 	// Head
 	CComponentsHeader header(m_x, m_header_y, m_width, m_header_height, LOCALE_UPNPBROWSER_HEAD, NEUTRINO_ICON_UPNP);
 	header.enableShadow(CC_SHADOW_RIGHT | CC_SHADOW_CORNER_TOP_RIGHT | CC_SHADOW_CORNER_BOTTOM_RIGHT, -1, true);
-	if (CNeutrinoApp::getInstance()->isMuted()) //TODO: consider mute mode on runtime
+	if (CNeutrinoApp::getInstance()->isMuted()) // TODO: consider mute mode on runtime
 		header.addContextButton(NEUTRINO_ICON_BUTTON_MUTE_SMALL);
 	else
 		header.removeContextButtons();
@@ -1213,7 +1210,7 @@ void CUpnpBrowserGui::paintItemInfo(UPnPEntry *entry)
 	}
 	tmp += "\n";
 
-	//third line
+	// third line
 	if (!entry->isdir && preferred != -1)
 		tmp += "URL: " + entry->resources[preferred].url;
 
@@ -1252,7 +1249,7 @@ void CUpnpBrowserGui::paintItems(std::vector<UPnPEntry> *entry, unsigned int sel
 {
 	printf("CUpnpBrowserGui::paintItem:s selected %d max %d offset %d\n", selected, max, offset);
 
-	//block infoclock
+	// block infoclock
 	CInfoClock::getInstance()->block();
 
 	// LCD
@@ -1271,7 +1268,7 @@ void CUpnpBrowserGui::paintItems(std::vector<UPnPEntry> *entry, unsigned int sel
 	for (unsigned int count = 0; count < m_listmaxshow; count++)
 		paintItem(entry, count, selected);
 
-	//scrollbar
+	// scrollbar
 	int total_pages;
 	int current_page;
 	getScrollBarData(&total_pages, &current_page, max + offset, m_listmaxshow, selected + offset);
@@ -1344,7 +1341,7 @@ void CUpnpBrowserGui::paintItem2DetailsLine(int pos)
 		return;
 	}
 
-	int xpos  = m_x - DETAILSLINE_WIDTH;
+	int xpos = m_x - DETAILSLINE_WIDTH;
 	int ypos1 = m_item_y + pos * m_item_height;
 	int ypos2 = infobox.getYPos() + infobox.getHeight() - infobox.getHeight() / 2;
 
@@ -1382,7 +1379,7 @@ void CUpnpBrowserGui::updateTimes(const bool force)
 
 void CUpnpBrowserGui::updateMode()
 {
-	/* switch back to mode_upnp if audio has stopped automatically */
+	// switch back to mode_upnp if audio has stopped automatically
 	if ((CAudioPlayer::getInstance()->getState() == CBaseDec::STOP) && (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_audio))
 	{
 		CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, NeutrinoModes::mode_upnp | NeutrinoModes::norezap);
