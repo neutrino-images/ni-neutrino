@@ -3055,7 +3055,6 @@ const char * locale_real_names[] =
 	"videomenu.sdosd",
 	"videomenu.sharpness",
 	"videomenu.tv-scart",
-	"videomenu.vcrsignal",
 	"videomenu.videoformat",
 	"videomenu.videoformat_149",
 	"videomenu.videoformat_169",
