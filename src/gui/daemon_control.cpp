@@ -29,7 +29,8 @@
 
 #include <global.h>
 #include <neutrino.h>
-#include <mymenu.h>
+
+#include <gui/widget/menue_options.h>
 
 #include <system/helpers.h>
 

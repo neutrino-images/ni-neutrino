@@ -33,10 +33,10 @@
 
 #include <global.h>
 #include <neutrino.h>
-#include <mymenu.h>
 #include <neutrino_menue.h>
 
 #include <driver/screen_max.h>
+#include <gui/widget/menue_options.h>
 
 #include "gui/pluginlist.h"
 #include "gui/plugins.h"

@@ -30,6 +30,7 @@
 
 #include <gui/filebrowser.h>
 #include <gui/widget/menue.h>
+#include <gui/widget/menue_options.h>
 #include <gui/widget/hintbox.h>
 #include <gui/widget/keyboard_input.h>
 #include <driver/screen_max.h>
@@ -41,7 +42,6 @@
 #include <global.h>
 
 #include <sys/mount.h>
-#include <mymenu.h>
 #include <neutrino.h>
 #include <neutrino_menue.h>
 #include <zapit/client/zapittools.h>
