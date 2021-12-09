@@ -1268,6 +1268,12 @@ struct SNeutrinoSettings
 		INFOBAR = 3
 	};
 
+	enum BOUQUETHANDLING_SETTINGS
+	{
+		CHANNELLIST = 0,
+		FAVORITES = 2
+	};
+
 	int mode_left_right_key_tv;
 };
 

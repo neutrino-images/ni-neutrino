@@ -1619,6 +1619,11 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 			configfile.setString("usermenu_tv_yellow", g_settings.usermenu[SNeutrinoSettings::BUTTON_YELLOW]->items);
 		}
 	}
+	if (g_settings.version_pseudo < "20211209230000")
+	{
+		g_settings.bouquetlist_mode = SNeutrinoSettings::CHANNELLIST;
+	}
+
 
 	g_settings.version_pseudo = NEUTRINO_VERSION_PSEUDO;
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
@@ -3858,10 +3863,26 @@ int CNeutrinoApp::showChannelList(const neutrino_msg_t _msg, bool from_menu)
 
 	if(msg == CRCInput::RC_ok)
 	{
-		if( !bouquetList->Bouquets.empty() && bouquetList->Bouquets[old_b]->channelList->getSize() > 0)
-			nNewChannel = bouquetList->Bouquets[old_b]->channelList->exec();//with ZAP!
-		else
-			nNewChannel = bouquetList->exec(true);
+		switch (g_settings.bouquetlist_mode)
+		{
+			case SNeutrinoSettings::FAVORITES:
+			{
+				SetChannelMode(LIST_MODE_FAV);
+				if (bouquetList->Bouquets.empty())
+					SetChannelMode(LIST_MODE_PROV);
+				nNewChannel = bouquetList->exec(true);
+				break;
+			}
+			case SNeutrinoSettings::CHANNELLIST:
+			default:
+			{
+				if( !bouquetList->Bouquets.empty() && bouquetList->Bouquets[old_b]->channelList->getSize() > 0)
+					nNewChannel = bouquetList->Bouquets[old_b]->channelList->exec();//with ZAP!
+				else
+					nNewChannel = bouquetList->exec(true);
+				break;
+			}
+		}
 	} else if(msg == CRCInput::RC_sat) {
 		SetChannelMode(LIST_MODE_SAT);
 		nNewChannel = bouquetList->exec(true);
@@ -5942,7 +5963,7 @@ void CNeutrinoApp::loadKeys(const char *fname)
 	g_settings.mpkey_time = tconfig->getInt32("mpkey.time", CRCInput::RC_timeshift);
 
 	// key options
-	g_settings.bouquetlist_mode = tconfig->getInt32("bouquetlist_mode", 1);
+	g_settings.bouquetlist_mode = tconfig->getInt32("bouquetlist_mode", SNeutrinoSettings::CHANNELLIST);
 	g_settings.menu_left_exit = tconfig->getInt32("menu_left_exit", 0);
 	g_settings.repeat_blocker = tconfig->getInt32("repeat_blocker", 450);
 	g_settings.repeat_genericblocker = tconfig->getInt32("repeat_genericblocker", 100);
