@@ -32,10 +32,10 @@ class CDaemonControlMenu : public CMenuTarget
 	protected:
 		int width;
 
-	public:	
+	public:
 		CDaemonControlMenu();
 		~CDaemonControlMenu();
-		int exec(CMenuTarget* parent, const std::string & actionKey);
+		int exec(CMenuTarget *parent, const std::string &actionKey);
 };
 
 // ----------------------------------------------------------------------------
@@ -51,7 +51,7 @@ class CCamdControlMenu : public CMenuTarget
 	public:
 		CCamdControlMenu();
 		~CCamdControlMenu();
-		int exec(CMenuTarget* parent, const std::string & actionKey);
+		int exec(CMenuTarget *parent, const std::string &actionKey);
 };
 
 #endif
