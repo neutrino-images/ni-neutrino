@@ -14,7 +14,6 @@ install_DATA = \
 	tmdb.png \
 	volume.png
 
-if ENABLE_TESTING
-	install_DATA += \
+# used by testmenu only
+install_DATA += \
 	tux.svg
-endif
