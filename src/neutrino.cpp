@@ -5551,15 +5551,14 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	}
 	else if (actionKey == "camd_reset")
 	{
-		CHint *hint = new CHint(LOCALE_CAMD_MSG_RESET);
-		hint->setDelay(1);
-		hint->paint();
+		CHint hint(LOCALE_CAMD_MSG_RESET);
+		hint.paint();
 
 		printf("[neutrino.cpp] executing \"service camd restart\"\n");
 		if (my_system(3, "service", "camd", "restart") != 0)
 			printf("[neutrino.cpp] executing failed\n");
 
-		delete hint;
+		hint.hide();
 
 		return menu_return::RETURN_EXIT_ALL;
 	}
