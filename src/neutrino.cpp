@@ -64,7 +64,7 @@
 #include <driver/radiotext.h>
 #include <driver/scanepg.h>
 
-#if HAVE_ARM_HARDWARE
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 #include "gui/psisetup.h"
 #endif
 #include "gui/adzap.h"
@@ -470,7 +470,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.hdmi_cec_standby = configfile.getInt32("hdmi_cec_standby", 0);
 	g_settings.hdmi_cec_volume = configfile.getInt32("hdmi_cec_volume", 0);
 
-#if HAVE_ARM_HARDWARE
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 	g_settings.psi_brightness = configfile.getInt32("video_psi_brightness", 128);
 	g_settings.psi_contrast = configfile.getInt32("video_psi_contrast", 128);
 	g_settings.psi_saturation = configfile.getInt32("video_psi_saturation", 128);
@@ -1701,7 +1701,7 @@ void CNeutrinoApp::saveSetup(const char *fname)
 	configfile.setInt32("hdmi_cec_standby", g_settings.hdmi_cec_standby);
 	configfile.setInt32("hdmi_cec_volume", g_settings.hdmi_cec_volume);
 
-#if HAVE_ARM_HARDWARE
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 	configfile.setInt32("video_psi_brightness", g_settings.psi_brightness);
 	configfile.setInt32("video_psi_contrast", g_settings.psi_contrast);
 	configfile.setInt32("video_psi_saturation", g_settings.psi_saturation);
