@@ -6,17 +6,12 @@ start-block~timer
 	<div class="work_box_head"><div class="work_box_head_h2">
 	{=var-set:help_url=Neutrino:yWeb:Live_Timer#Timer=}{=var-set:menu=Timer=}{=include-block:Y_Blocks.txt;work_menu=}</div></div>
 	<div class="work_box_body">
-	<iframe src="/fb/timer.dbox2" scrolling="auto" marginheight="1" marginwidth="1" frameborder="0" name="bouquets" style="height : 600px;width:90%;"></iframe>
+	<iframe src="/fb/timer.stb" scrolling="auto" marginheight="1" marginwidth="1" frameborder="0" name="bouquets" style="height : 600px;width:90%;"></iframe>
 
 	</div>
 </div>
 </body>
 end-block~timer
-
-# ------- build live url
-start-block~build_live_url
-{=var-set:mrl={=if-equal:{=mode=}~tv~http://{=func:get_header_data Host=}:31339/0,{=func:get_video_pids {=if-empty:{=audiopid=}~00000~{=audiopid=}=}=}~http://{=func:get_header_data Host=}:31338/{=func:get_audio_pid=}=}=}
-end-block~build_live_url
 
 # ------- yWeb save Settings
 start-block~yWeb_save_settings
@@ -35,16 +30,6 @@ start-block~yWeb_save_settings
 {=ini-set:%(CONFIGDIR)/Y-Web.conf;yweb_box_name;{=yweb_box_name=}~cache=}
 {=ini-set:%(CONFIGDIR)/Y-Web.conf;yweb_box_color;{=yweb_box_color=}~save=}
 end-block~yWeb_save_settings
-
-# ------- Live save Settings
-start-block~Live_save_settings
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;slavebox;{=slavebox=}~open=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;vlc_record_path;{=vlc_record_path=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;deinterlace;{=deinterlace=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;deinterlace_filter;{=v=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;udp;{=udp=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;http_caching;{=http_caching=}~save=}
-end-block~Live_save_settings
 
 # ------- nhttpd save Settings
 start-block~nhttpd_save_settings
@@ -158,25 +143,6 @@ start-block~personalize_save_settings
 {=ini-set:%(CONFIGDIR)/neutrino.conf;personalize_bluebutton;{=p_bluebutton=}~cache=}
 {=ini-set:%(CONFIGDIR)/neutrino.conf;personalize_redbutton;{=p_redbutton=}~save=}
 end-block~personalize_save_settings
-
-# ------- VNC save Settings
-start-block~vnc_save_settings
-{=ini-set:%(CONFIGDIR)/vnc.conf;server;{=server=}~open=}
-{=ini-set:%(CONFIGDIR)/vnc.conf;port;{=port=}~cache=}
-{=ini-set:%(CONFIGDIR)/vnc.conf;passwd;{=password=}~cache=}
-{=ini-set:%(CONFIGDIR)/vnc.conf;scale;{=scale=}~save=}
-end-block~vnc_save_settings
-
-# ------- Timer save Settings
-start-block~timer_save_settings
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;tvinfo_username;{=tvinfo_username=}=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;tvinfo_password;{=tvinfo_password=}=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;klack_url;{=klack_url=}=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;klack_securitycode;{=klack_securitycode=}=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;live_resolution_w;{=ini-get:%(CONFIGDIR)/Y-Web.conf;live_resolution_w;384=}=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;live_resolution_h;{=ini-get:%(CONFIGDIR)/Y-Web.conf;live_resolution_h;288=}=}
-{=file-action:%(CONFIGDIR)/channels.txt;add;{=channels=}=}
-end-block~timer_save_settings
 
 # ------- Ext save Settings
 start-block~ext_save_settings
@@ -457,20 +423,6 @@ start-block~frame_boxcontrol
 =}
 {=include-block:Y_Blocks.txt;frame_secondary=}
 end-block~frame_boxcontrol
-
-# ------- Lay-Frame Live-Menu
-start-block~frame_live
-{=var-set:sec_menu=Y_Live_Menue.yhtm?start={=dostart=}=}
-{=var-set:work=Y_blank.htm=}
-{=include-block:Y_Blocks.txt;frame_secondary=}
-end-block~frame_live
-
-# ------- Lay-Frame Live-Menu
-start-block~frame_live_directtv
-{=var-set:sec_menu=Y_Live_Menue.yhtm=}
-{=var-set:work=Y_LiveViewFull.yhtm?mode=tv&amp;typ=live=}
-{=include-block:Y_Blocks.txt;frame_secondary=}
-end-block~frame_live_directtv
 
 # ------- Lay-Frame Tools-Menu
 start-block~frame_tools

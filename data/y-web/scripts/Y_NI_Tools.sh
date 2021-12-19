@@ -390,14 +390,21 @@ case "$action" in
 	;;
 
 	# zapit-control
-	resolution)		pzapit --${1}		&& echo "ok" || echo "failed";;
-	43mode)			pzapit -vm43 ${1}	&& echo "ok" || echo "failed";;
-	reload_channellists)    pzapit -c		&& echo "ok" || echo "failed";;
-	reset_tuner)				E=0
-				pzapit -esb;	E=$(($E+$?));	sleep 1
-				pzapit -lsb;	E=$(($E+$?));	sleep 1
-				pzapit -rz;	E=$(($E+$?))
-				test $E = 0 		&& echo "ok" || echo "failed"
+	resolution)
+		pzapit --${1}		&& echo "ok" || echo "failed"
+	;;
+	43mode)
+		pzapit -vm43 ${1}	&& echo "ok" || echo "failed"
+	;;
+	reload_channellists)
+		pzapit -c		&& echo "ok" || echo "failed"
+	;;
+	reset_tuner)
+				E=0
+		pzapit -esb;	E=$(($E+$?));	sleep 1
+		pzapit -lsb;	E=$(($E+$?));	sleep 1
+		pzapit -rz;	E=$(($E+$?))
+		test $E = 0	&& echo "ok" || echo "failed"
 	;;
 	# netfs-control
 	is_mount)
