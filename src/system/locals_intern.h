@@ -3035,6 +3035,7 @@ const char * locale_real_names[] =
 	"videomenu.hdmi_colorimetry_bt2020ncl",
 	"videomenu.hdmi_colorimetry_bt2020cl",
 	"videomenu.hdmi_colorimetry_bt709",
+	"videomenu.hdmi_colorimetry_bt470",
 	"videomenu.hue",
 	"videomenu.letterbox",
 	"videomenu.panscan",
