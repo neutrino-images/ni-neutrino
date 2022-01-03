@@ -118,7 +118,7 @@ int CHDDInfoMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 					doLoop = false;
 				}
 			}
-			else if ((msg == CRCInput::RC_timeout) || (msg == CRCInput::RC_home) || (msg == CRCInput::RC_ok))
+			else if ((msg == CRCInput::RC_timeout) || (CNeutrinoApp::getInstance()->backKey(msg)) || (msg == CRCInput::RC_ok))
 			{
 				if (fader.StartFadeOut())
 				{

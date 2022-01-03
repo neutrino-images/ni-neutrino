@@ -3593,8 +3593,8 @@ void CNeutrinoApp::RealRun()
 				numericZap(msg);
 			}
 			else if (msg == (neutrino_msg_t) g_settings.key_zaphistory || msg == (neutrino_msg_t) g_settings.key_current_transponder) {
-				//NI InfoIcons; hide, if one of the keys above is assigned to RC_home
-				if (msg == CRCInput::RC_home)
+				//NI InfoIcons; hide, if one of the keys above is assigned to RC_home or RC_back
+				if (backKey(msg))
 				{
 					if (g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
 						InfoIcons->hideIcons();
@@ -3800,7 +3800,7 @@ void CNeutrinoApp::RealRun()
 			else if (msg == CRCInput::RC_aux)
 				AVInputMode(true);
 			else {
-				if (msg == CRCInput::RC_home)
+				if (CNeutrinoApp::getInstance()->backKey(msg))
 				{
 					//NI InfoIcons
 					if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP) {
@@ -3815,7 +3815,7 @@ void CNeutrinoApp::RealRun()
 		}
 		else {
 			// mode == NeutrinoModes::mode_avinput
-			if (msg == CRCInput::RC_home || msg == CRCInput::RC_aux) {
+			if (backKey(msg) || msg == CRCInput::RC_aux) {
 				if( mode == NeutrinoModes::mode_avinput ) {
 					// AVInput-Mode verlassen
 					AVInputMode(false);
@@ -4036,6 +4036,19 @@ bool CNeutrinoApp::listModeKey(const neutrino_msg_t msg)
 	)
 	{
 		printf("CNeutrinoApp::listModeKey: true\n");
+		return true;
+	}
+	return false;
+}
+
+bool CNeutrinoApp::backKey(const neutrino_msg_t msg)
+{
+	if (
+		   msg == CRCInput::RC_home
+		|| msg == CRCInput::RC_back
+	)
+	{
+		printf("CNeutrinoApp::backKey: true\n");
 		return true;
 	}
 	return false;
