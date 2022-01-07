@@ -76,7 +76,7 @@ void CNaviBar::initCCItems()
 	// small separator line on the top
 	int grad = g_settings.theme.menu_Separator_gradient_enable ? CC_COLGRAD_COL_DARK_LIGHT_DARK : CC_COLGRAD_OFF;
 	if (!nb_topline)
-		nb_topline = new CComponentsShapeSquare(0, 0, width, 2, this, CC_SHADOW_OFF);
+		nb_topline = new CComponentsShapeSquare(0, 0, width, 1, this, CC_SHADOW_OFF);
 	nb_topline->setColorBody(COL_MENUCONTENT_PLUS_1);
 	nb_topline->setColBodyGradient(grad, CFrameBuffer::gradientHorizontal, COL_MENUCONTENT_PLUS_0, CColorGradient::light);
 
