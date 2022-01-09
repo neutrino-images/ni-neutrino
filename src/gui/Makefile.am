@@ -1,15 +1,17 @@
 AM_CPPFLAGS = -fno-rtti -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+
 BUILT_SOURCES = version.h
-version.h:
+VERSION = $(shell find version.h -mmin +60 2>/dev/null)
+$(VERSION):
 	@rm -f $@
 	@echo "#define BUILT_DATE \"$$(date)\"" > $@
 	@echo "#define BUILT_TIMESTAMP \"$$(date +%s)\"" >> $@
-	@if test -d $(top_srcdir)/.git ; then \
-		pushd $(top_srcdir) ; \
+	@if test -d $(top_srcdir)/.git; then \
+		pushd $(top_srcdir); \
 		GITTAG=$$(git tag -l "NI-*" | tail -n1); \
-		GITDESCRIBE=$$(git describe --always --long --tags --match $$GITTAG | sed 's/-/./2' || echo "VCS failed") ; \
-		popd ; \
-		echo "#define VCS \"$${GITDESCRIBE}\"" >> $@ ; \
+		GITDESCRIBE=$$(git describe --always --long --tags --match $$GITTAG | sed 's/-/./2' || echo "VCS failed"); \
+		popd; \
+		echo "#define VCS \"$${GITDESCRIBE}\"" >> $@; \
 	fi
 noinst_HEADERS = version.h
 .PHONY: version.h
