@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -fno-rtti -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 
-BUILT_SOURCES = version.h
-VERSION = $(shell find version.h -mmin +60 2>/dev/null)
+VERSION_H = version.h
+VERSION = $(shell find $(VERSION_H) -mmin +60 2>/dev/null)
 $(VERSION):
 	@rm -f $@
 	@echo "#define BUILT_DATE \"$$(date)\"" > $@
@@ -13,8 +13,10 @@ $(VERSION):
 		popd; \
 		echo "#define VCS \"$${GITDESCRIBE}\"" >> $@; \
 	fi
-noinst_HEADERS = version.h
-.PHONY: version.h
+
+BUILT_SOURCES = $(VERSION_H)
+noinst_HEADERS = $(VERSION_H)
+.PHONY: $(VERSION_H)
 
 SUBDIRS = bedit components moviebrowser widget
 
