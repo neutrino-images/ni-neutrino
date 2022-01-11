@@ -1,11 +1,9 @@
 AM_CPPFLAGS = -fno-rtti -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 
 VERSION_H = version.h
-VERSION = $(shell find $(VERSION_H) -mmin +60 2>/dev/null)
-$(VERSION):
+$(VERSION_H):
 	@rm -f $@
 	@echo "#define BUILT_DATE \"$$(date)\"" > $@
-	@echo "#define BUILT_TIMESTAMP \"$$(date +%s)\"" >> $@
 	@if test -d $(top_srcdir)/.git; then \
 		pushd $(top_srcdir); \
 		GITTAG=$$(git tag -l "NI-*" | tail -n1); \
