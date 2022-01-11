@@ -55,9 +55,6 @@
 #include "xmlutil.h"
 #include "debug.h"
 
-// version.h is located in $(top_builddir)
-#include <src/gui/version.h>
-
 #include <compatibility.h>
 #if ! HAVE_CST_HARDWARE
 #include <poll.h>
