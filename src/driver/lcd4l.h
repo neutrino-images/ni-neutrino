@@ -116,6 +116,7 @@ class CLCD4l
 		int		m_Tuner;
 		int		m_Volume;
 		int		m_ModeRec;
+		int		m_RecordCount;
 		int		m_ModeTshift;
 		int		m_ModeTimer;
 		int		m_ModeEcm;
