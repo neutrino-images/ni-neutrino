@@ -40,6 +40,7 @@
 #include <string>
 #include <zapit/channel.h>
 #include <gui/components/cc.h>
+#include <gui/weather.h>
 
 class CFrameBuffer;
 class COSDFader;
@@ -53,6 +54,8 @@ class CInfoViewer : public sigc::trackable
 	CComponentsFrmClock *clock;
 	CComponentsShapeSquare *header , *numbox, *body, *rec;
 	CComponentsTextTransp *txt_curr_start, *txt_curr_event, *txt_curr_rest, *txt_next_start, *txt_next_event, *txt_next_in;
+
+	CWeather *weather;
 
 	bool           gotTime;
 	bool           recordModeActive;

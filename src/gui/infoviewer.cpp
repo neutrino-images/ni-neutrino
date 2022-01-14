@@ -111,6 +111,7 @@ CInfoViewer::CInfoViewer ()
 	info_CurrentNext.flags = 0;
 	frameBuffer = CFrameBuffer::getInstance();
 	infoViewerBB = CInfoViewerBB::getInstance();
+	weather = CWeather::getInstance();
 
 	ecmInfoBox = NULL; //NI
 	md5_ecmInfo = "0"; //NI
@@ -621,6 +622,8 @@ void CInfoViewer::showMovieTitle(const int playState, const t_channel_id &Channe
 	if (!zap_mode)
 		infoViewerBB->paintshowButtonBar();
 
+	//weather->show(BoxStartX, g_settings.screen_StartY + OFFSET_INNER_MID);
+
 	int renderFlag = ((g_settings.theme.infobar_gradient_top) ? Font::FULLBG : 0) | Font::IS_UTF8;
 	int ChannelLogoMode = 0;
 	if (g_settings.infobar_show_channellogo > 1)
@@ -812,6 +815,8 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 	if (showButtonBar) {
 		infoViewerBB->paintshowButtonBar(noTimer);
 	}
+
+	//weather->show(BoxStartX, g_settings.screen_StartY + OFFSET_INNER_MID);
 
 	int ChanNumWidth = 0;
 	int ChannelLogoMode = 0;
@@ -2163,6 +2168,9 @@ void CInfoViewer::killTitle()
 	{
 		is_visible = false;
 		infoViewerBB->is_visible = false;
+
+		if (weather)
+			weather->hide();
 
 		//NI InfoIcons
 		if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
