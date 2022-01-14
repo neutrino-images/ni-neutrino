@@ -1879,9 +1879,9 @@ menu.hint_volume Konfigurácia volieb okna hlasitosti
 menu.hint_volume_digits Číselné zobrazenie ukazateľa hlasitosti Zap/Vyp
 menu.hint_volume_pos Výber pozície indikátora hlasitosti
 menu.hint_volume_size Výber výšky indikátora hlasitosti
-menu.hint_weather_api_key Zadajte svoj kľúč API Dark Sky. Prázdny vstup deaktivuje podporu počasia
+menu.hint_weather_api_key Zadajte svoj kľúč API OpenWeather. Prázdny vstup deaktivuje podporu počasia
 menu.hint_weather_country Vyberte svoju krajinu.
-menu.hint_weather_enabled Povolenie alebo zakázanie podpory počasia (darksky.net)
+menu.hint_weather_enabled Povolenie alebo zakázanie podpory počasia (openweathermap.org)
 menu.hint_weather_location Vyberte svoju lokalitu
 menu.hint_webradio_setup Kanály WebRadio tu nakonfigurované budú k dispozícii v štandartných zoznamoch kanálov
 menu.hint_webradio_xml_auto Automatické načítanie všetkých existujúcich súborov WebRadio z %s/ a %s/
@@ -3001,7 +3001,7 @@ videomenu.videomode Obrazový režim
 videomenu.zappingmode Režim prepínania
 videomenu.zappingmode_mute Čierna obraz
 videomenu.zappingmode_hold Statický obraz
-weather.api_key Počasie API kľúč (Dark Sky)
+weather.api_key Počasie API kľúč (OpenWeather)
 weather.country Výber krajiny
 weather.country_deutschland Nemecko
 weather.country_norway Nórsko
