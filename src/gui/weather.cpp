@@ -209,7 +209,7 @@ void CWeather::show(int x, int y)
 
 void CWeather::hide()
 {
-	if (form->isPainted())
+	if (form && form->isPainted())
 	{
 		form->hide();
 		delete form;
