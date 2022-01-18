@@ -452,6 +452,7 @@ data/themes/Neutrino-3.0/icons/buttons/Makefile
 data/themes/Olive-3.0/Makefile
 data/themes/Olive-3.0/icons/Makefile
 data/themes/Olive-3.0/icons/buttons/Makefile
+data/weather/Makefile
 data/webradio/Makefile
 data/webtv/Makefile
 data/y-web/Makefile
