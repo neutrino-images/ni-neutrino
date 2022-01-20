@@ -29,6 +29,7 @@ TOBACKUP="\
 	@CONFIGDIR@/tuxtxt/tuxtxt2.conf \
 	@CONFIGDIR@/tuxwetter/tuxwetter.conf \
 	@CONFIGDIR@/tuxwetter/tuxwetter.mcfg \
+	@CONFIGDIR@/weather-favorites.xml \
 	@CONFIGDIR@/Y-Web.conf \
 	\
 	@ZAPITDIR@/ \
