@@ -182,9 +182,12 @@ bool CWeather::GetWeatherDetails()
 	return false;
 }
 
-bool CWeather::FindCoords(int postcode, std::string country)
+bool CWeather::FindCoords(int postcode, std::string country, int pc_len)
 {
-	std::string data = "http://api.openweathermap.org/geo/1.0/zip?zip=" + std::to_string(postcode) + ","+country+"&appid=" + key;
+	std::string pcode = std::to_string(postcode);
+	unsigned int number_of_zeros = pc_len - pcode.length();
+	pcode.insert(0, number_of_zeros, '0');
+	std::string data = "http://api.openweathermap.org/geo/1.0/zip?zip=" + pcode + "," + country + "&appid=" + key;
 	JSONCPP_STRING answer;
 	JSONCPP_STRING formattedErrors;
 	Json::CharReaderBuilder builder;
