@@ -1613,6 +1613,10 @@ bool CMoviePlayerGui::SetPosition(int pos, bool absolute)
 		playback->SetSpeed(speed);
 	}
 	FileTimeOSD_tmp = 0;
+
+	if (res)
+		g_RCInput->postMsg(CRCInput::RC_info, 0);
+
 	return res;
 }
 
