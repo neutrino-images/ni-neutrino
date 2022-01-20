@@ -184,7 +184,7 @@ bool CWeather::GetWeatherDetails()
 
 bool CWeather::FindCoords(int postcode, std::string country, int pc_len)
 {
-	std::string pcode = std::to_string(postcode);
+	std::string pcode = to_string(postcode);
 	unsigned int number_of_zeros = pc_len - pcode.length();
 	pcode.insert(0, number_of_zeros, '0');
 	std::string data = "http://api.openweathermap.org/geo/1.0/zip?zip=" + pcode + "," + country + "&appid=" + key;
@@ -217,7 +217,7 @@ bool CWeather::FindCoords(int postcode, std::string country, int pc_len)
 	float lat = DataValues["lat"].asFloat();
 	float lon = DataValues["lon"].asFloat();
 	g_settings.weather_city = DataValues["name"].asString();
-	g_settings.weather_location = std::to_string(lat) + "," + std::to_string(lon);
+	g_settings.weather_location = to_string(lat) + "," + to_string(lon);
 	return true;
 }
 

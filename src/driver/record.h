@@ -31,6 +31,7 @@
 
 #include <neutrinoMessages.h>
 #include <driver/movieinfo.h>
+#include <gui/widget/menue.h>
 
 #include <hardware/record.h>
 
