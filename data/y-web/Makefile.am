@@ -1,7 +1,7 @@
 SUBDIRS = images scripts languages styles
 
 # NI-yWeb
-SUBDIRS += favicon info jquery
+SUBDIRS += favicon info jquery lcd4linux
 
 installdir = $(PRIVATE_HTTPDDIR)
 
