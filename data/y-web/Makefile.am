@@ -1,7 +1,7 @@
 SUBDIRS = images scripts languages styles
 
 # NI-yWeb
-SUBDIRS += info jquery
+SUBDIRS += favicon info jquery
 
 installdir = $(PRIVATE_HTTPDDIR)
 

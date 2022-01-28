@@ -456,6 +456,7 @@ data/weather/Makefile
 data/webradio/Makefile
 data/webtv/Makefile
 data/y-web/Makefile
+data/y-web/favicon/Makefile
 data/y-web/images/Makefile
 data/y-web/info/Makefile
 data/y-web/jquery/Makefile
