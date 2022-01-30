@@ -1866,7 +1866,7 @@ FT_Error MyFaceRequester(FTC_FaceID face_id, FT_Library plibrary, FT_Pointer /*r
 /******************************************************************************
  * Init                                                                       *
  ******************************************************************************/
-extern std::string ttx_font_file;
+extern std::string font_file_monospace;
 static bool ft_init_done = false;
 static int oldfontheight = 0;
 int Init(int source)
@@ -2081,7 +2081,7 @@ int Init(int source)
 		}
 	}
 #endif
-	if(!ft_init_done || font_file != ttx_font_file || fontheight != oldfontheight) {
+	if(!ft_init_done || font_file != font_file_monospace || fontheight != oldfontheight) {
 		printf("TuxTxt: init fontlibrary\n");
 		if(ft_init_done) {
 			FTC_Manager_Done(manager);
@@ -2111,8 +2111,8 @@ int Init(int source)
 		}
 
 		if (usettf) {
-			printf("TuxTxt: using font %s\n", ttx_font_file.c_str());
-			typettf.face_id = (FTC_FaceID) ttx_font_file.c_str();
+			printf("TuxTxt: using font %s\n", font_file_monospace.c_str());
+			typettf.face_id = (FTC_FaceID) font_file_monospace.c_str();
 			typettf.height = (FT_UShort) fontheight * TTFHeightFactor16 / 16;
 		} else {
 			typettf.face_id = (FTC_FaceID) TUXTXTOTB;
@@ -2129,7 +2129,7 @@ int Init(int source)
 			FT_Done_FreeType(library);
 			return 0;
 		}
-		font_file = ttx_font_file;
+		font_file = font_file_monospace;
 		ft_init_done = true;
 		oldfontheight = fontheight;
 
