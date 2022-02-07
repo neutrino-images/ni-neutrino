@@ -318,20 +318,9 @@ void CInfoViewer::showRecordIcon (const bool show)
 			rec->setFrameThickness(FRAME_WIDTH_NONE);
 			rec->setShadowWidth(OFFSET_SHADOW/2);
 			rec->setCorner(RADIUS_MIN, CORNER_ALL);
+			rec->enableColBodyGradient(g_settings.theme.infobar_gradient_top, g_settings.theme.infobar_gradient_top ? COL_INFOBAR_PLUS_0 : header->getColorBody(), g_settings.theme.infobar_gradient_top_direction);
+			rec->paintBlink(500);
 		}
-
-		if (rec->isPainted())
-		{
-			if (rec->getCCItem(0))
-			{
-				if (rec->getCCItem(0)->isPainted())
-					rec->getCCItem(0)->kill();
-				else
-					rec->getCCItem(0)->paint();
-			}
-		}
-		else
-			rec->paint();
 	}
 }
 
@@ -2110,7 +2099,11 @@ void CInfoViewer::killTitle()
 			sigbox->kill();
 #endif
 		if (rec)
-			rec->kill();
+		{
+			rec->cancelBlink();
+			delete rec;
+			rec = NULL;
+		}
 
 		if (timescale && (g_settings.infobar_progressbar == SNeutrinoSettings::INFOBAR_PROGRESSBAR_ARRANGEMENT_DEFAULT))
 			timescale->kill();
