@@ -62,14 +62,14 @@ const CMenuOptionChooser::keyval LCD4L_SUPPORT_OPTIONS[] =
 
 const CMenuOptionChooser::keyval_ext LCD4L_DISPLAY_TYPE_OPTIONS[] =
 {
-	{ CLCD4l::PEARL320x240,    NONEXISTANT_LOCALE, "320x240 Pearl DPF"},
-	{ CLCD4l::SAMSUNG800x480,  NONEXISTANT_LOCALE, "800x480 Samsung SPF"},
-	{ CLCD4l::SAMSUNG800x600,  NONEXISTANT_LOCALE, "800x600 Samsung SPF"},
-	{ CLCD4l::SAMSUNG1024x600, NONEXISTANT_LOCALE, "1024x600 Samsung SPF"}
+	{ CLCD4l::DPF320x240,  NONEXISTANT_LOCALE, "320x240 Pearl DPF"},
+	{ CLCD4l::SPF800x480,  NONEXISTANT_LOCALE, "800x480 Samsung SPF"},
+	{ CLCD4l::SPF800x600,  NONEXISTANT_LOCALE, "800x600 Samsung SPF"},
+	{ CLCD4l::SPF1024x600, NONEXISTANT_LOCALE, "1024x600 Samsung SPF"}
 };
 #define LCD4L_DISPLAY_TYPE_OPTION_COUNT (sizeof(LCD4L_DISPLAY_TYPE_OPTIONS)/sizeof(CMenuOptionChooser::keyval_ext))
 
-const CMenuOptionChooser::keyval LCD4L_PEARL_SKIN_OPTIONS[] =
+const CMenuOptionChooser::keyval LCD4L_DPF_SKIN_OPTIONS[] =
 {
 	{ 0, LOCALE_LCD4L_SKIN_0 },
 	{ 1, LOCALE_LCD4L_SKIN_1 },
@@ -78,15 +78,15 @@ const CMenuOptionChooser::keyval LCD4L_PEARL_SKIN_OPTIONS[] =
 	{ 4, LOCALE_LCD4L_SKIN_4 },
 	{ 100, LOCALE_LCD4L_SKIN_100 }
 };
-#define LCD4L_PEARL_SKIN_OPTION_COUNT (sizeof(LCD4L_PEARL_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
+#define LCD4L_DPF_SKIN_OPTION_COUNT (sizeof(LCD4L_DPF_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
-const CMenuOptionChooser::keyval LCD4L_SAMSUNG_SKIN_OPTIONS[] =
+const CMenuOptionChooser::keyval LCD4L_SPF_SKIN_OPTIONS[] =
 {
 	{ 0, LOCALE_LCD4L_SKIN_0 },
 	{ 4, LOCALE_LCD4L_SKIN_4 },
 	{ 100, LOCALE_LCD4L_SKIN_100 }
 };
-#define LCD4L_SAMSUNG_SKIN_OPTION_COUNT (sizeof(LCD4L_SAMSUNG_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
+#define LCD4L_SPF_SKIN_OPTION_COUNT (sizeof(LCD4L_SPF_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
 using namespace sigc;
 
@@ -281,7 +281,7 @@ int CLCD4lSetup::show()
 
 int CLCD4lSetup::showTypeSetup()
 {
-	if (temp_lcd4l_display_type == CLCD4l::PEARL320x240)
+	if (temp_lcd4l_display_type == CLCD4l::DPF320x240)
 	{
 		// fix brightness values for Pearl DPF
 		if (temp_lcd4l_brightness > 7)
@@ -304,10 +304,10 @@ int CLCD4lSetup::showTypeSetup()
 	CMenuWidget *typeSetup = new CMenuWidget(LOCALE_LCD4L_DISPLAY_TYPE_SETUP, NEUTRINO_ICON_SETTINGS, width);
 	typeSetup->addIntroItems(); //FIXME: show lcd4l display type
 
-	if (temp_lcd4l_display_type == CLCD4l::PEARL320x240)
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_PEARL_SKIN_OPTIONS, LCD4L_PEARL_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (temp_lcd4l_display_type == CLCD4l::DPF320x240)
+		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_DPF_SKIN_OPTIONS, LCD4L_DPF_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	else
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_SAMSUNG_SKIN_OPTIONS, LCD4L_SAMSUNG_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
+		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_SPF_SKIN_OPTIONS, LCD4L_SPF_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SKIN);
 	typeSetup->addItem(mc);
 

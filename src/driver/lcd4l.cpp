@@ -256,12 +256,12 @@ int CLCD4l::GetMaxBrightness()
 
 	switch (g_settings.lcd4l_display_type)
 	{
-		case SAMSUNG800x480:
-		case SAMSUNG800x600:
-		case SAMSUNG1024x600:
+		case SPF800x480:
+		case SPF800x600:
+		case SPF1024x600:
 			max_brightness = 10;
 			break;
-		case PEARL320x240:
+		case DPF320x240:
 		default:
 			max_brightness = 7;
 			break;
@@ -475,7 +475,8 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 	int x_res, y_res, framerate;
 	if (videoDecoder)
-	{	// Hack: That should not happen, but while shutting down there
+	{
+		// Hack: That should not happen, but while shutting down there
 		// could be a null pointer and this can lead to a crash.
 		// This behavior was observed with LeakSanitizer on pc hardware.
 		videoDecoder->getPictureInfo(x_res, y_res, framerate);
@@ -603,6 +604,7 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 			m_Tuner_ber = Tuner_ber;
 		}
 	}
+
 	/* ----------------------------------------------------------------- */
 
 	int Volume = g_settings.current_volume;
@@ -861,16 +863,16 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 		switch (g_settings.lcd4l_display_type)
 		{
-			case SAMSUNG800x480:
+			case SPF800x480:
 				DisplayType = "Samsung800x480_";
 				break;
-			case SAMSUNG800x600:
+			case SPF800x600:
 				DisplayType = "Samsung800x600_";
 				break;
-			case SAMSUNG1024x600:
+			case SPF1024x600:
 				DisplayType = "Samsung1024x600_";
 				break;
-			case PEARL320x240:
+			case DPF320x240:
 			default:
 				DisplayType = "Pearl_";
 				break;
@@ -1233,7 +1235,7 @@ bool CLCD4l::WriteFile(const char *file, std::string content, bool convert)
 		strReplace(content, "Ä", "\xc4\0");
 		strReplace(content, "Ö", "\xd6\0");
 		strReplace(content, "Ü", "\xdc\0");
-		if (g_settings.lcd4l_display_type == PEARL320x240)
+		if (g_settings.lcd4l_display_type == DPF320x240)
 			strReplace(content, "ß", "\xe2\0");
 
 		strReplace(content, "Ą", "\x41\0");

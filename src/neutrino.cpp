@@ -412,7 +412,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 #ifdef ENABLE_LCD4LINUX
 	g_settings.lcd4l_support = configfile.getInt32("lcd4l_support", 0);
 	g_settings.lcd4l_logodir = configfile.getString("lcd4l_logodir", "/media/sda1/logos");
-	g_settings.lcd4l_display_type = configfile.getInt32("lcd4l_display_type", 0);
+	g_settings.lcd4l_display_type = configfile.getInt32("lcd4l_display_type", CLCD4l::DPF320x240);
 	g_settings.lcd4l_skin = configfile.getInt32("lcd4l_skin", 0);
 	g_settings.lcd4l_skin_radio = configfile.getInt32("lcd4l_skin_radio", 0);
 	g_settings.lcd4l_brightness = configfile.getInt32("lcd4l_brightness", 7);

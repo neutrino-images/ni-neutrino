@@ -45,10 +45,10 @@ class CLCD4l
 		// Displays
 		enum
 		{
-			PEARL320x240	= 0,
-			SAMSUNG800x480	= 1,
-			SAMSUNG800x600	= 2,
-			SAMSUNG1024x600	= 3
+			DPF320x240	= 0,
+			SPF800x480	= 1,
+			SPF800x600	= 2,
+			SPF1024x600	= 3
 		};
 
 		// Functions
