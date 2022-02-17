@@ -859,59 +859,74 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 
 		/* --- */
 
-		std::string DisplayType;
+		std::string DisplayDriver;
+		std::string DisplayRes;
 
 		switch (g_settings.lcd4l_display_type)
 		{
 			case SPF800x480:
-				DisplayType = "Samsung800x480_";
+				DisplayDriver = "Samsung";
+				DisplayRes = "800x480";
 				break;
 			case SPF800x600:
-				DisplayType = "Samsung800x600_";
+				DisplayDriver = "Samsung";
+				DisplayRes = "800x600";
 				break;
 			case SPF1024x600:
-				DisplayType = "Samsung1024x600_";
+				DisplayDriver = "Samsung";
+				DisplayRes = "1024x600";
 				break;
 			case DPF320x240:
 			default:
-				DisplayType = "Pearl_";
+				DisplayDriver = "Pearl";
+				DisplayRes = "320x240";
 				break;
 		}
 
-		std::string Layout;
+		std::string DisplayType = DisplayDriver + DisplayRes;
+		// Workaround for DPF
+		if (g_settings.lcd4l_display_type == DPF320x240)
+			DisplayType = DisplayDriver;
+
+		std::string DisplayMode;
 
 		if (ModeStandby)
 		{
-			Layout = DisplayType + "standby";
+			DisplayMode = "standby";
 		}
 		else if ((g_settings.lcd4l_skin_radio) && (m_Mode == NeutrinoModes::mode_radio || m_Mode == NeutrinoModes::mode_webradio))
 		{
-			Layout = DisplayType + "radio";
+			DisplayMode = "radio";
 		}
 		else
 		{
 			switch (g_settings.lcd4l_skin)
 			{
 				case 100:
-					Layout = DisplayType + "user";
+					DisplayMode = "user";
 					break;
 				case 4:
-					Layout = DisplayType + "xcam";
+					DisplayMode = "xcam";
 					break;
 				case 3:
-					Layout = DisplayType + "d-box2";
+					DisplayMode = "d-box2";
 					break;
 				case 2:
-					Layout = DisplayType + "small";
+					DisplayMode = "small";
 					break;
 				case 1:
-					Layout = DisplayType + "large";
+					DisplayMode = "large";
 					break;
 				case 0:
 				default:
-					Layout = DisplayType + "standard";
+					DisplayMode = "standard";
 			}
 		}
+
+		std::string Layout = DisplayType + "_" + DisplayMode;
+		Layout += "\n" + DisplayDriver;
+		Layout += "\n" + DisplayRes;
+		Layout += "\n" + DisplayMode;
 
 		if (m_Layout.compare(Layout))
 		{
