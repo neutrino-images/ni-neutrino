@@ -1073,7 +1073,6 @@ void CEventList::paintFoot(t_channel_id channel_id)
 	btn_cnt++;
 
 	// paint footer only on changed content
-	bool repaint = false;
 	size_t btn_size = 0;
 	if (footer.getButtonChainObject())
 	{
@@ -1085,14 +1084,15 @@ void CEventList::paintFoot(t_channel_id channel_id)
 				CComponentsButton *btn = static_cast<CComponentsButton*> (footer.getButtonChainObject()->getCCItem(i));
 				if (g_Locale->getString(buttons[i].locale) != btn->getCaptionString())
 				{
-					repaint = true;
-					break;
+					btn->setCaption(buttons[i].locale);
+					btn->hide();
+					btn->paint();
 				}
 			}
 		}
 	}
 
-	if (!footer.isPainted() ||  btn_cnt != (int)btn_size || repaint)
+	if (!footer.isPainted() ||  btn_cnt != (int)btn_size)
 		footer.paintButtons(x, y + height - OFFSET_SHADOW - footer_height, full_width, footer_height, btn_cnt, buttons);
 }
 
