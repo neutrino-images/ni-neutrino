@@ -29,11 +29,11 @@
 
 class CPluginsHideNotifier : public CChangeObserver
 {
-	const char * filename;
+		const char *filename;
 
 	public:
-		inline CPluginsHideNotifier(const char * _filename) { filename = _filename; };
-		bool changeNotify(const neutrino_locale_t, void * data);
+		inline CPluginsHideNotifier(const char *_filename) { filename = _filename; };
+		bool changeNotify(const neutrino_locale_t, void *data);
 };
 
 class CPluginsHideMenu : public CMenuTarget
@@ -44,10 +44,10 @@ class CPluginsHideMenu : public CMenuTarget
 	protected:
 		int width;
 
-	public:	
+	public:
 		CPluginsHideMenu();
 		~CPluginsHideMenu();
-		int exec(CMenuTarget* parent, const std::string & actionKey);
+		int exec(CMenuTarget *parent, const std::string &actionKey);
 };
 
 

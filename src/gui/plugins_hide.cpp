@@ -59,7 +59,7 @@ CPluginsHideMenu::~CPluginsHideMenu()
 {
 }
 
-int CPluginsHideMenu::exec(CMenuTarget* parent, const std::string & /*actionKey*/)
+int CPluginsHideMenu::exec(CMenuTarget *parent, const std::string & /*actionKey*/)
 {
 	if (parent)
 		parent->hide();
@@ -69,13 +69,13 @@ int CPluginsHideMenu::exec(CMenuTarget* parent, const std::string & /*actionKey*
 
 int CPluginsHideMenu::menu()
 {
-	CMenuWidget* pluginsHideMenu = new CMenuWidget(LOCALE_PLUGINS_HIDE, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_PLUGINS_HIDE);
+	CMenuWidget *pluginsHideMenu = new CMenuWidget(LOCALE_PLUGINS_HIDE, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_PLUGINS_HIDE);
 	pluginsHideMenu->addIntroItems();
 
 	unsigned int maxPlugins = g_Plugins->getNumberOfPlugins();
 	int isHidden[maxPlugins];
 	std::string file[maxPlugins];
-	CPluginsHideNotifier * pluginsNotifier[maxPlugins];
+	CPluginsHideNotifier *pluginsNotifier[maxPlugins];
 	for (unsigned int i = 0; i < maxPlugins; i++)
 	{
 		std::string tmp = g_Plugins->getName(i);
@@ -83,23 +83,23 @@ int CPluginsHideMenu::menu()
 		isHidden[i] = g_Plugins->isHidden(i);
 
 		pluginsNotifier[i] = new CPluginsHideNotifier(file[i].c_str());
-		CMenuOptionChooser * mc = new CMenuOptionChooser(tmp.c_str(), &isHidden[i], PLUGIN_HIDE_OPTIONS, PLUGIN_HIDE_OPTIONS_COUNT, true, pluginsNotifier[i]);
+		CMenuOptionChooser *mc = new CMenuOptionChooser(tmp.c_str(), &isHidden[i], PLUGIN_HIDE_OPTIONS, PLUGIN_HIDE_OPTIONS_COUNT, true, pluginsNotifier[i]);
 		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_HIDE);
 		pluginsHideMenu->addItem(mc);
 	}
 
-	int res = pluginsHideMenu->exec(NULL,"");
+	int res = pluginsHideMenu->exec(NULL, "");
 	pluginsHideMenu->hide();
 	for (unsigned int i = 0; i < maxPlugins; i++)
 	{
-		if(pluginsNotifier[i])
+		if (pluginsNotifier[i])
 			delete pluginsNotifier[i];
 	}
 	delete pluginsHideMenu;
 	return res;
 }
 
-bool CPluginsHideNotifier::changeNotify(const neutrino_locale_t, void * data)
+bool CPluginsHideNotifier::changeNotify(const neutrino_locale_t, void *data)
 {
 	std::fstream f;
 	std::ostringstream os;
@@ -107,7 +107,7 @@ bool CPluginsHideNotifier::changeNotify(const neutrino_locale_t, void * data)
 	std::string cfg;
 	bool exist = false;
 
-	printf("CPluginsHideNotifier::changeNotify %s\n",filename);
+	printf("CPluginsHideNotifier::changeNotify %s\n", filename);
 
 	os << "hide=" << (((*(int *)data) != 0) ? 1 : 0) << std::endl;
 	std::string hide = os.str();
@@ -116,10 +116,10 @@ bool CPluginsHideNotifier::changeNotify(const neutrino_locale_t, void * data)
 	while (!f.eof())
 	{
 		getline(f, line);
-		if (line.substr(0,1) == "")
+		if (line.substr(0, 1) == "")
 			continue;
 
-		if (line.substr(0,4) == "hide")
+		if (line.substr(0, 4) == "hide")
 		{
 			cfg += (std::string) hide;
 			exist = true;
