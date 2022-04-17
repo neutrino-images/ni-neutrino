@@ -115,8 +115,13 @@ menu_Foot_Text_alpha=0
 infobar_Text_red=96
 infobar_Text_green=96
 infobar_Text_blue=96
-
 infobar_Text_alpha=0
+
+# 100
+channellist_Description_Text_red=96
+channellist_Description_Text_green=96
+channellist_Description_Text_blue=96
+channellist_Description_Text_alpha=0
 
 progressbar_design=-1
 progressbar_design_channellist=-1

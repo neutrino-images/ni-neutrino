@@ -117,6 +117,12 @@ infobar_Text_green=94
 infobar_Text_blue=95
 infobar_Text_alpha=0
 
+# 50
+channellist_Description_Text_red=93
+channellist_Description_Text_green=94
+channellist_Description_Text_blue=95
+channellist_Description_Text_alpha=0
+
 progressbar_design=-1
 progressbar_design_channellist=-1
 progressbar_gradient=1
