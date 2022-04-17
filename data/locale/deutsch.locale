@@ -391,7 +391,7 @@ colormenu.font_ttx Videotext Schriftart
 colormenu.menucolors Themes
 colormenu.osd_preset Bildschirmauswahl
 colormenu.osd_resolution OSD-Auflösung
-colormenu.progressbar_active Farbe des aktiven Teil
+colormenu.progressbar_active Farbe des aktiven Teils
 colormenu.progressbar_passive Hintergrundfarbe
 colormenu.shadow_color Schattenfarbe
 colormenu.textcolor Textfarbe

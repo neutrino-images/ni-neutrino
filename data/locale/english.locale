@@ -393,7 +393,7 @@ colormenu.osd_preset Screen selection
 colormenu.osd_resolution OSD resolution
 colormenu.progressbar_active Active part color
 colormenu.progressbar_passive Background
-colormenu.shadow_color Shadow Color
+colormenu.shadow_color Shadow color
 colormenu.textcolor Text color
 colormenu.themeselect Select theme
 colormenu.timing Timeouts, display behavior
