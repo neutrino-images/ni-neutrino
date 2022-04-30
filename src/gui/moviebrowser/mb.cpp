@@ -1991,7 +1991,7 @@ void CMovieBrowser::refreshTitle(void)
 
 	if (timeset)
 	{
-		m_header->enableClock(true, "%H:%M", "%H %M", true);
+		m_header->enableClock();
 		if (m_header->getClockObject())
 			m_header->getClockObject()->setCorner(RADIUS_LARGE, CORNER_TOP_RIGHT);
 	}
@@ -3758,7 +3758,7 @@ bool CMovieBrowser::showMenu(bool calledExternally)
 	delete nfs;
 
 	if (m_header->getClockObject())
-		m_header->enableClock(true, "%H:%M", "%H %M", true);
+		m_header->enableClock();
 
 	return(true);
 }
