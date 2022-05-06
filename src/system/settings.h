@@ -1054,7 +1054,7 @@ struct SNeutrinoSettings
 	};
 
 	int channellist_additional;
-	int channellist_epgtext_align_right;
+	int channellist_epgtext_alignment;
 	int channellist_foot;
 	int channellist_new_zap_mode;
 	int channellist_numeric_adjust;
