@@ -36,6 +36,7 @@
 #include <neutrino_menue.h>
 
 #include <driver/screen_max.h>
+#include <system/helpers.h>
 #include <gui/widget/menue_options.h>
 
 #include "gui/pluginlist.h"
@@ -96,6 +97,9 @@ int CPluginsHideMenu::menu()
 			delete pluginsNotifier[i];
 	}
 	delete pluginsHideMenu;
+
+	exec_initscript("plugins-hide", "create-conf");
+
 	return res;
 }
 
