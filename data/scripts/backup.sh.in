@@ -18,6 +18,7 @@ TOBACKUP="\
 	@CONFIGDIR@/neutrino.conf \
 	@CONFIGDIR@/oscam.* \
 	@CONFIGDIR@/oscammon.conf \
+	@CONFIGDIR@/plugins-hide.conf \
 	@CONFIGDIR@/pr-auto-timer.* \
 	@CONFIGDIR@/radio-favorites.xml \
 	@CONFIGDIR@/scan.conf \
