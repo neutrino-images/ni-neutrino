@@ -481,11 +481,13 @@ int CNeutrinoApp::loadSetup(const char *fname)
 #endif
 
 	// volume
-	g_settings.current_volume = g_settings.hdmi_cec_volume ? 100 : configfile.getInt32("current_volume", 75);
+	g_settings.current_volume = configfile.getInt32("current_volume", 75);
 	g_settings.current_volume_step = configfile.getInt32("current_volume_step", 5);
-	g_settings.start_volume = g_settings.hdmi_cec_volume ? 100 : configfile.getInt32("start_volume", -1);
+	g_settings.start_volume = configfile.getInt32("start_volume", -1);
 	if (g_settings.start_volume >= 0)
-		g_settings.current_volume = g_settings.hdmi_cec_volume ? 100 : g_settings.start_volume;
+		g_settings.current_volume = g_settings.start_volume;
+	if (g_settings.hdmi_cec_volume)
+		g_settings.current_volume = 100;
 	g_settings.audio_volume_percent_ac3 = configfile.getInt32("audio_volume_percent_ac3", 100);
 	g_settings.audio_volume_percent_pcm = configfile.getInt32("audio_volume_percent_pcm", 100);
 
@@ -1570,9 +1572,9 @@ void CNeutrinoApp::saveSetup(const char *fname)
 #endif
 
 	// volume
-	configfile.setInt32( "current_volume", g_settings.hdmi_cec_volume ? 100 : g_settings.current_volume );
+	configfile.setInt32( "current_volume", g_settings.current_volume );
 	configfile.setInt32("current_volume_step", g_settings.current_volume_step);
-	configfile.setInt32( "start_volume", g_settings.hdmi_cec_volume ? 100 : g_settings.start_volume );
+	configfile.setInt32( "start_volume", g_settings.start_volume );
 	configfile.setInt32("audio_volume_percent_ac3", g_settings.audio_volume_percent_ac3);
 	configfile.setInt32("audio_volume_percent_pcm", g_settings.audio_volume_percent_pcm);
 
