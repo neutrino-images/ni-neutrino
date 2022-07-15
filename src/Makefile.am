@@ -20,7 +20,6 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib/xmltree \
 	-I$(top_srcdir)/lib/libmd5sum \
 	-I$(top_srcdir)/lib/libupnpclient \
-	-I$(top_srcdir)/lib/jsoncpp \
 	@SIGC_CFLAGS@ \
 	@FREETYPE_CFLAGS@ \
 	@AVFORMAT_CFLAGS@ \
@@ -103,13 +102,13 @@ neutrino_LDADD = \
 	$(top_builddir)/lib/connection/libtuxbox-connection.a \
 	$(top_builddir)/lib/libeventserver/libtuxbox-eventserver.a \
 	$(top_builddir)/lib/xmltree/libtuxbox-xmltree.a \
-	$(top_builddir)/lib/jsoncpp/libjsoncpp.a \
 	$(top_builddir)/lib/libnet/libtuxbox-net.a \
 	$(top_builddir)/lib/libmd5sum/libtuxbox-md5sum.a \
 	$(top_builddir)/lib/libtuxtxt/libtuxtxt.a \
 	$(top_builddir)/lib/libdvbsub/libdvbsub.a \
 	$(top_builddir)/lib/libiw/libiw.a \
 	$(top_builddir)/src/gui/widget/yaft/libneutrino_gui_terminal.a \
+	@JSONCPP_LIBS@ \
 	@CURL_LIBS@ \
 	@FREETYPE_LIBS@ \
 	@PNG_LIBS@ \
