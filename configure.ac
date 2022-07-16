@@ -160,7 +160,6 @@ TUXBOX_APPS_LIB_PKGCONFIG(AVFORMAT,libavformat)
 TUXBOX_APPS_LIB_PKGCONFIG(AVCODEC,libavcodec)
 TUXBOX_APPS_LIB_PKGCONFIG(AVUTIL,libavutil)
 TUXBOX_APPS_LIB_PKGCONFIG(SIGC,sigc++-2.0)
-TUXBOX_APPS_LIB_PKGCONFIG(JSONCPP,jsoncpp)
 
 if test "$BOXTYPE" = "armbox" -o "$BOXTYPE" = "mipsbox"; then
 	TUXBOX_APPS_LIB_PKGCONFIG(SWSCALE,libswscale)
@@ -469,6 +468,7 @@ data/zapit/Makefile
 lib/Makefile
 lib/connection/Makefile
 lib/hardware/coolstream/Makefile
+lib/jsoncpp/Makefile
 lib/libconfigfile/Makefile
 lib/libdvbsub/Makefile
 lib/libeventserver/Makefile
