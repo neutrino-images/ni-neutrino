@@ -10,29 +10,32 @@ BAKF="$1/${2:-settings_${HOST}_${DATE}}.tar.gz"
 TOBACKUP="\
 	@CONFIGDIR@/settingsupdate.conf \
 	\
-	@CONFIGDIR@/auto-record-cleaner.* \
+	@CONFIGDIR@/neutrino.conf \
+	@CONFIGDIR@/moviebrowser.conf \
+	@CONFIGDIR@/radio-favorites.xml \
+	@CONFIGDIR@/scan.conf \
+	@CONFIGDIR@/timerd.conf \
+	@CONFIGDIR@/weather-favorites.xml \
+	@CONFIGDIR@/Y-Web.conf \
+	\
 	@CONFIGDIR@/doscam.* \
+	@CONFIGDIR@/oscam.* \
+	@CONFIGDIR@/ncam.* \
+	\
 	@CONFIGDIR@/FritzCallMonitor.addr \
 	@CONFIGDIR@/FritzCallMonitor.cfg \
-	@CONFIGDIR@/moviebrowser.conf \
-	@CONFIGDIR@/neutrino.conf \
+	@CONFIGDIR@/auto-record-cleaner.* \
 	@CONFIGDIR@/neutrino-mediathek.conf \
-	@CONFIGDIR@/oscam.* \
 	@CONFIGDIR@/oscammon.conf \
 	@CONFIGDIR@/plugins-hide.conf \
 	@CONFIGDIR@/pr-auto-timer.* \
-	@CONFIGDIR@/radio-favorites.xml \
-	@CONFIGDIR@/scan.conf \
 	@CONFIGDIR@/smarthomeinfo.conf \
-	@CONFIGDIR@/timerd.conf \
 	@CONFIGDIR@/tuxcal/ \
 	@CONFIGDIR@/tuxcom/ \
 	@CONFIGDIR@/tuxmail/ \
 	@CONFIGDIR@/tuxtxt/tuxtxt2.conf \
 	@CONFIGDIR@/tuxwetter/tuxwetter.conf \
 	@CONFIGDIR@/tuxwetter/tuxwetter.mcfg \
-	@CONFIGDIR@/weather-favorites.xml \
-	@CONFIGDIR@/Y-Web.conf \
 	\
 	@ZAPITDIR@/ \
 	\
