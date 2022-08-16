@@ -16,6 +16,7 @@ TOBACKUP="\
 	@CONFIGDIR@/FritzCallMonitor.cfg \
 	@CONFIGDIR@/moviebrowser.conf \
 	@CONFIGDIR@/neutrino.conf \
+	@CONFIGDIR@/neutrino-mediathek.conf \
 	@CONFIGDIR@/oscam.* \
 	@CONFIGDIR@/oscammon.conf \
 	@CONFIGDIR@/plugins-hide.conf \
