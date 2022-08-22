@@ -4927,6 +4927,7 @@ void CNeutrinoApp::tvMode( bool rezap )
 		pipVideoDecoder[0]->Pig(g_settings.pip_x, g_settings.pip_y,
 			g_settings.pip_width, g_settings.pip_height,
 			frameBuffer->getScreenWidth(true), frameBuffer->getScreenHeight(true));
+		pipVideoDecoder[0]->ShowPig(0);
 	}
 #endif
 #if 0
@@ -5211,6 +5212,7 @@ void CNeutrinoApp::radioMode( bool rezap)
 		pipVideoDecoder[0]->Pig(g_settings.pip_radio_x, g_settings.pip_radio_y,
 			g_settings.pip_radio_width, g_settings.pip_radio_height,
 			frameBuffer->getScreenWidth(true), frameBuffer->getScreenHeight(true));
+		pipVideoDecoder[0]->ShowPig(0);
 	}
 #endif
 	CRecordManager::getInstance()->StopAutoRecord();
