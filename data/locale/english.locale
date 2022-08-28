@@ -2728,7 +2728,7 @@ scants.numberofdataservices Data
 scants.numberofradioservices Radio
 scants.numberoftotalservices Total
 scants.numberoftvservices TV
-scants.preverences_receiving_system Preferences
+scants.preferences_receiving_system Preferences
 scants.provider Provider:
 scants.select_tp Select transponder
 scants.startnow start scan
