@@ -608,7 +608,7 @@ int CScanSetup::showScanMenu()
 
 	//back
 	settings->addIntroItems(/*is_wizard ? NONEXISTANT_LOCALE : */ LOCALE_SERVICEMENU_SCANTS);
-	//----------------------------------------------------------------------
+
 #if 0
 	//save scan settings
 	mf = new CMenuForwarder(LOCALE_MAINSETTINGS_SAVESETTINGSNOW, true, NULL, this, "save_scansettings", CRCInput::RC_red);
@@ -618,7 +618,7 @@ int CScanSetup::showScanMenu()
 	settings->addItem(GenericMenuSeparatorLine);
 	//----------------------------------------------------------------------
 #endif
-	//sat/provider selector
+
 #if 0
 	if(CFEManager::getInstance()->haveSat() || CFEManager::getInstance()->getFrontendCount() > 1) {
 		mf = new CMenuForwarder(LOCALE_SATSETUP_FE_TUNER, allow_start, NULL, this, "setup_frontend", CRCInput::convertDigitToKey(shortcut++));
@@ -626,6 +626,8 @@ int CScanSetup::showScanMenu()
 		settings->addItem(mf);
 	}
 #endif
+
+	//sat/provider selector
 	if (CFEManager::getInstance()->haveSat()) {
 		r_system = ALL_SAT;
 
@@ -647,7 +649,7 @@ int CScanSetup::showScanMenu()
 		//auto scan all
 		CMenuWidget * autoScanAll = new CMenuWidget(LOCALE_SATSETUP_AUTO_SCAN_ALL, NEUTRINO_ICON_SETTINGS, w/*width*/, MN_WIDGET_ID_SCAN_AUTO_SCAN_ALL);
 		addScanMenuAutoScanAll(autoScanAll);
-		fautoScanAll = new CMenuDForwarder(LOCALE_SATSETUP_AUTO_SCAN_ALL, true /*(dmode != NO_DISEQC)*/, NULL, autoScanAll, "", CRCInput::RC_blue);
+		fautoScanAll = new CMenuDForwarder(LOCALE_SATSETUP_AUTO_SCAN_ALL, true /*(dmode != NO_DISEQC)*/, NULL, autoScanAll, "", CRCInput::RC_green);
 		fautoScanAll->setHint("", LOCALE_MENU_HINT_SCAN_AUTOALL);
 		settings->addItem(fautoScanAll);
 
@@ -657,32 +659,31 @@ int CScanSetup::showScanMenu()
 		mf = new CMenuDForwarder(LOCALE_SATSETUP_MANUAL_SCAN, true, NULL, manualScan, "", CRCInput::RC_yellow);
 		mf->setHint("", LOCALE_MENU_HINT_SCAN_MANUAL);
 		settings->addItem(mf);
+
 #ifdef ENABLE_FASTSCAN
 		//fast scan
 		CMenuWidget * fastScanMenu = new CMenuWidget(LOCALE_SATSETUP_FASTSCAN_HEAD, NEUTRINO_ICON_SETTINGS, w, MN_WIDGET_ID_SCAN_FAST_SCAN);
 		addScanMenuFastScan(fastScanMenu);
-		mf = new CMenuDForwarder(LOCALE_SATSETUP_FASTSCAN_HEAD, true, NULL, fastScanMenu, "", CRCInput::RC_0);
+		mf = new CMenuDForwarder(LOCALE_SATSETUP_FASTSCAN_HEAD, true, NULL, fastScanMenu, "", CRCInput::RC_blue);
 		mf->setHint("", LOCALE_MENU_HINT_SCAN_FAST);
 		settings->addItem(mf);
 #endif
+
 #if 0
 		//signal test
 		CMenuWidget * sTest = new CMenuWidget(LOCALE_SCANTS_TEST, NEUTRINO_ICON_SETTINGS, w/*width*/, MN_WIDGET_ID_SCAN_MANUAL_SCAN);
 		addScanMenuManualScan(sTest, true);
-		mf = new CMenuDForwarder(LOCALE_SCANTS_TEST, true, NULL, sTest, "", CRCInput::RC_green);
+		mf = new CMenuDForwarder(LOCALE_SCANTS_TEST, true, NULL, sTest, "", CRCInput::RC_0);
 		mf->setHint("", LOCALE_MENU_HINT_SCAN_TEST);
 		settings->addItem(mf);
 #endif
-		//settings->addItem(GenericMenuSeparatorLine);
 	}
 
 	if (CFEManager::getInstance()->haveCable()) {
 		r_system = ALL_CABLE;
 
 		settings->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_TUNERSETUP_CABLE ));
-		//tune timeout
-		if(CFEManager::getInstance()->getFrontendCount() <= 1)
-			addScanMenuFrontendOptions(settings);
+
 		//nid = new CIntInput(LOCALE_SATSETUP_CABLE_NID, (int&) scansettings.cable_nid, 5, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE);
 
 		//auto scan
@@ -703,23 +704,19 @@ int CScanSetup::showScanMenu()
 		mf = new CMenuDForwarder(LOCALE_SATSETUP_MANUAL_SCAN, true, NULL, manualScan, "", have_other ? CRCInput::convertDigitToKey(shortcut++) : CRCInput::RC_yellow);
 		mf->setHint("", LOCALE_MENU_HINT_SCAN_MANUAL);
 		settings->addItem(mf);
+
 		//simple cable scan
 		CMenuWidget * cableScan = new CMenuWidget(LOCALE_SATSETUP_CABLE, NEUTRINO_ICON_SETTINGS, w/*width*/, MN_WIDGET_ID_SCAN_CABLE_SCAN);
 		addScanMenuCable(cableScan);
 		CMenuForwarder * fcableScan = new CMenuDForwarder(LOCALE_SATSETUP_CABLE, true, NULL, cableScan, "", have_other ? CRCInput::convertDigitToKey(shortcut++) : CRCInput::RC_blue);
 		fcableScan->setHint("", LOCALE_MENU_HINT_SCAN_CABLE_SIMPLE);
 		settings->addItem(fcableScan);
-		//settings->addItem(GenericMenuSeparatorLine);
 	}
 
 	if (CFEManager::getInstance()->haveTerr()) {
 		r_system = ALL_TERR;
 
 		settings->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_TUNERSETUP_TERR ));
-
-		// tune timeout, "Setup tuner" is not shown for only one non-sat tuner
-		if (CFEManager::getInstance()->getFrontendCount() <= 1)
-			addScanMenuFrontendOptions(settings);
 
 		//auto scan
 		char autoscan[64];
@@ -740,7 +737,16 @@ int CScanSetup::showScanMenu()
 		mf = new CMenuForwarder(LOCALE_SATSETUP_MANUAL_SCAN, true, NULL, manualScan, "", have_other ? CRCInput::convertDigitToKey(shortcut++) : CRCInput::RC_yellow);
 		mf->setHint("", LOCALE_MENU_HINT_SCAN_MANUAL);
 		settings->addItem(mf);
-		//settings->addItem(GenericMenuSeparatorLine);
+	}
+
+	if (CFEManager::getInstance()->haveCable() || CFEManager::getInstance()->haveTerr())
+	{
+		if (CFEManager::getInstance()->getFrontendCount() <= 1)
+		{
+			// tune timeout, "Setup tuner" is not shown for only one non-sat tuner
+			settings->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_TUNERSETUP_TUNERSETUP));
+			addScanMenuFrontendOptions(settings);
+		}
 	}
 
 	settings->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_SCANTS_PREVERENCES_RECEIVING_SYSTEM ));
