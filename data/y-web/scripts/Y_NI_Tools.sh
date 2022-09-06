@@ -485,30 +485,30 @@ case "$action" in
 		printf "%s" "$S"
 	;;
 	# plugin-control
-	p_fcm_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh fcm_start;;
-	p_fcm_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh fcm_stop;;
-	p_nfs_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh nfs_start;;
-	p_nfs_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh nfs_stop;;
-	p_smb_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh smb_start;;
-	p_smb_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh smb_stop;;
-	p_txc_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh txc_start;;
-	p_txc_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh txc_stop;;
-	p_txm_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh txm_start;;
-	p_txm_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh txm_stop;;
-	p_ina_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ina_start;;
-	p_ina_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ina_stop;;
-	p_drop_start)   %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh drop_start;;
-	p_drop_stop)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh drop_stop;;
-	p_ush_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ush_start;;
-	p_ush_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ush_stop;;
-	p_djm_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh djm_start;;
-	p_djm_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh djm_stop;;
+	p_fcm_start)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh fcm_start;;
+	p_fcm_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh fcm_stop;;
+	p_nfs_start)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh nfs_start;;
+	p_nfs_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh nfs_stop;;
+	p_samba_start)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh samba_start;;
+	p_samba_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh samba_stop;;
+	p_tuxcald_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh tuxcald_start;;
+	p_tuxcald_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh tuxcald_stop;;
+	p_tuxmaild_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh tuxmaild_start;;
+	p_tuxmaild_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh tuxmaild_stop;;
+	p_inadyn_start)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh inadyn_start;;
+	p_inadyn_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh inadyn_stop;;
+	p_dropbear_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh dropbear_start;;
+	p_dropbear_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh dropbear_stop;;
+	p_ushare_start)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ushare_start;;
+	p_ushare_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh ushare_stop;;
+	p_djmount_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh djmount_start;;
+	p_djmount_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh djmount_stop;;
 	p_minidlna_start)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh minidlna_start;;
 	p_minidlna_stop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh minidlna_stop;;
-	p_xud_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh xud_start;;
-	p_xud_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh xud_stop;;
-	p_cro_start)    %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh cro_start;;
-	p_cro_stop)     %(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh cro_stop;;
+	p_xupnpd_start)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh xupnpd_start;;
+	p_xupnpd_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh xupnpd_stop;;
+	p_crond_start)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh crond_start;;
+	p_crond_stop)		%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Plugin-control.sh crond_stop;;
 	# plugins on blue-button
 	p_show)
 		PLUGIN=$1

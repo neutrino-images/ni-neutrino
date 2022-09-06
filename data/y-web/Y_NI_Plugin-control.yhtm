@@ -72,9 +72,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.samba~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_smb_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_samba_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_smb_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_samba_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -91,9 +91,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.tuxcald~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_txc_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_tuxcald_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_txc_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_tuxcald_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -110,9 +110,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.tuxmaild~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_txm_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_tuxmaild_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_txm_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_tuxmaild_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -129,9 +129,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.inadyn~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_ina_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_inadyn_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_ina_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_inadyn_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -148,9 +148,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.dropbear~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_drop_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_dropbear_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_drop_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_dropbear_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -167,9 +167,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.ushare~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_ush_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_ushare_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_ush_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_ushare_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -209,9 +209,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.djmount~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_djm_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_djmount_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_djm_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_djmount_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -228,9 +228,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.xupnpd~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_xud_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_xupnpd_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_xud_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_xupnpd_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -251,9 +251,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.crond~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_cro_stop", 5000);'/>
+					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_crond_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_cro_start", 5000);'/>
+					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_crond_start", 5000);'/>
 					=}
 				</td>
 				<td>

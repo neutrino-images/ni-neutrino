@@ -32,72 +32,72 @@ case "$1" in
 		service nfsd stop >/dev/console
 		rm -f /var/etc/.nfsd
 	;;
-	smb_start)
+	samba_start)
 		echo "[$BNAME] samba-server start"
 		touch /var/etc/.samba
 		service samba start >/dev/console
 	;;
-	smb_stop)
+	samba_stop)
 		echo "[$BNAME] samba-server stop"
 		service samba stop >/dev/console
 		rm -f /var/etc/.samba
 	;;
-	txc_start)
+	tuxcald_start)
 		echo "[$BNAME] tuxcal start"
 		touch /var/etc/.tuxcald
 		service tuxcald start >/dev/console
 	;;
-	txc_stop)
+	tuxcald_stop)
 		echo "[$BNAME] tuxcal stop"
 		service tuxcald stop >/dev/console
 		rm -f /var/etc/.tuxcald
 	;;
-	txm_start)
+	tuxmaild_start)
 		echo "[$BNAME] tuxmail start"
 		touch /var/etc/.tuxmaild
 		service tuxmaild start >/dev/console
 	;;
-	txm_stop)
+	tuxmaild_stop)
 		echo "[$BNAME] tuxmail stop"
 		service tuxmaild stop >/dev/console
 		rm -f /var/etc/.tuxmaild
 	;;
-	ina_start)
+	inadyn_start)
 		echo "[$BNAME] inadyn start"
 		touch /var/etc/.inadyn
 		service inadyn start >/dev/console
 	;;
-	ina_stop)
+	inadyn_stop)
 		echo "[$BNAME] inadyn stop"
 		service inadyn stop >/dev/console
 		rm -f /var/etc/.inadyn
 	;;
-	drop_start)
+	dropbear_start)
 		echo "[$BNAME] dropbear start"
 		touch /var/etc/.dropbear
 		service dropbear start >/dev/console
 	;;
-	drop_stop)
+	dropbear_stop)
 		echo "[$BNAME] dropbear stop"
 		service dropbear stop >/dev/console
 		rm -f /var/etc/.dropbear
 	;;
-	ush_start)
+	ushare_start)
 		echo "[$BNAME] ushare start"
 		touch /var/etc/.ushare
 		service ushare start >/dev/console
 	;;
-	ush_stop)
+	ushare_stop)
 		echo "[$BNAME] ushare stop"
 		service ushare stop >/dev/console
 		rm -f /var/etc/.ushare
 	;;
-	djm_start)
+	djmount_start)
 		echo "[$BNAME] djmount start"
 		touch /var/etc/.djmount
 		service djmount start >/dev/console
 	;;
-	djm_stop)
+	djmount_stop)
 		echo "[$BNAME] djmount stop"
 		service djmount stop >/dev/console
 		rm -f /var/etc/.djmount
@@ -112,22 +112,22 @@ case "$1" in
 		service minidlnad stop >/dev/console
 		rm -f /var/etc/.minidlnad
 	;;
-	xud_start)
+	xupnpd_start)
 		echo "[$BNAME] xupnpd start"
 		touch /var/etc/.xupnpd
 		service xupnpd start >/dev/console
 	;;
-	xud_stop)
+	xupnpd_stop)
 		echo "[$BNAME] xupnpd stop"
 		service xupnpd stop >/dev/console
 		rm -f /var/etc/.xupnpd
 	;;
-	cro_start)
+	crond_start)
 		echo "[$BNAME] crond start"
 		touch /var/etc/.crond
 		service crond start >/dev/console
 	;;
-	cro_stop)
+	crond_stop)
 		echo "[$BNAME] crond stop"
 		service crond stop >/dev/console
 		rm -f /var/etc/.crond
