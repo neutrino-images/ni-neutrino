@@ -21,7 +21,7 @@ function do_stream(channelid, channelname)
 	saveTextAsFile(plist, title, type);
 }
 function do_streaminfo() {
-	window.open("Y_StreamInfo.yhtm", "stream", "width=400");
+	window.open("Y_StreamInfo.yhtm", "stream", "width=520");
 }
 //]]>
 </script>

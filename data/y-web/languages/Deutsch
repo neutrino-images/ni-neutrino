@@ -48,6 +48,7 @@ directory=Verzeichnis
 filename=Dateiname
 restriced_by_management_ip=Zugriff verwehrt wg. ManagementIP
 automatic=automatisch
+unknown=unbekannt
 show=zeigen
 hide=verstecken
 
@@ -184,6 +185,7 @@ epg.set_timer_zap=Umschalt-Timer gesetzt
 
 # ===== EPG Streaminfo
 epg.si.streaminfo=Streaminfo
+epg.si.url=URL
 epg.si.resolution=Aufl&ouml;sung
 epg.si.ratio=Verh&auml;ltnis
 epg.si.fps=Bildrate

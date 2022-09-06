@@ -48,6 +48,7 @@ directory=Directory
 filename=Filename
 restriced_by_management_ip=restricted by ManagementIP
 automatic=automatically
+unknown=unknown
 show=show
 hide=hide
 
@@ -184,6 +185,7 @@ epg.set_timer_zap=Set switch to channel. Done.
 
 # ===== EPG Streaminfo
 epg.si.streaminfo=Streaminfo
+epg.si.url=URL
 epg.si.resolution=Resolution
 epg.si.ratio=Aspect Ratio
 epg.si.fps=Frames per second
