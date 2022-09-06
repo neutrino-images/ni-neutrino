@@ -169,6 +169,9 @@ function epg_plus_popup() {
 				<li>
 					<a target="work" href="Y_Timer_List.yhtm">{=L:live.timer=}</a>
 				</li>
+				<li>
+					<a target="work" href="Y_NI_PZapit-control.yhtm">{=L:ni.pzapit-control=}</a>
+				</li>
 			</ul>
 		</div>
 	</div>

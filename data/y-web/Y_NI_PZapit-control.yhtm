@@ -3,7 +3,7 @@
 <body>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.pzapit-control.title=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}
+	{=var-set:menu={=L:ni.pzapit-control.title=}=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 	<form action="">
@@ -40,7 +40,7 @@
 </div>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:answer=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}</div></div>
+	{=var-set:menu={=L:answer=}=}{=include-block:Y_Blocks.txt;work_menu=}</div></div>
 	<div class="work_box_body">
 		<div id="out"></div>
 	</div>

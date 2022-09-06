@@ -13,7 +13,6 @@ install_DATA =	channels.js \
 		robots.txt \
 		Y_About.yhtm \
 		Y_Baselib.js \
-		Y_blank.htm \
 		Y_Blocks.txt \
 		Y_Boxcontrol_Bouquet_Editor_Edit.yhtm \
 		Y_Boxcontrol_Bouquet_Editor_Main.yhtm \
@@ -91,11 +90,9 @@ install_DATA += Y_NIlib.js \
 		Y_NI_blank.yhtm \
 		Y_NI_Blocks.txt \
 		Y_NI_Camd-control.yhtm \
-		Y_NI_Dyn_Pages.yhtm \
 		Y_NI_Infoicons-control.yhtm \
 		Y_NI_m3uConInfo.yhtm \
 		Y_NI_m3uConvert.yhtm \
-		Y_NI_Menue.yhtm \
 		Y_NI_NetFS-control.yhtm \
 		Y_NI_NetFS-edit.yhtm \
 		Y_NI_NetFS-init.yhtm \

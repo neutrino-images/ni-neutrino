@@ -26,7 +26,7 @@ function do_submit()
 {=var-set:wait_text={=L:ni.netfs-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.netfs-control.title=} ({=L:ni.edit=}: {=L:ni.netfs-{=mount_type=}=} - {=nr=})=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}
+	{=var-set:menu={=L:ni.netfs-control.title=} ({=L:ni.edit=}: {=L:ni.netfs-{=mount_type=}=} - {=nr=})=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 	<form name="f" action="/y/cgi">

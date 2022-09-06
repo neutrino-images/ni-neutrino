@@ -485,7 +485,6 @@ rc.key_recall=Recall
 
 # ===== NI
 main.ni=NI-yWeb
-main.ni_desc=NI-yWeb extension
 
 ni.save=Save
 ni.cancel=Cancel

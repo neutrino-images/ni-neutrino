@@ -8,17 +8,6 @@
 	box-shadow: .5em .5em .5em rgba(0, 0, 0, 0.5);
 }
 
-.ni_logo {
-	font-weight: bold;
-	font-size: 50px;
-	color: #FD6D13;
-	vertical-align: top;
-	text-shadow: 0 -1px #555555, 1px 0 #555555, 0 1px #555555, -1px 0 #555555, #000 4px 4px 3px;
-}
-.ni_logo img {
-	vertical-align: text-bottom;
-	margin-left: 5px;
-}
 hr {
 	border: 0 none;
 	border-top: 1px solid #a0a0a0;

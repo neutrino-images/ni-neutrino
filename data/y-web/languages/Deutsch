@@ -423,7 +423,7 @@ live.timer-sync.status=Status
 
 # ===== INFO
 info.help=Hilfe
-info.About=&uuml;ber
+info.About=&Uuml;ber
 info.check_for_updates=Auf Updates pr&uuml;fen
 info.your_version=Deine Version
 info.actual_version=Aktuelle Version
@@ -485,7 +485,6 @@ rc.key_recall=Recall
 
 # ===== NI
 main.ni=NI-yWeb
-main.ni_desc=NI-yWeb Erweiterung
 
 ni.save=Speichern
 ni.cancel=Abbrechen

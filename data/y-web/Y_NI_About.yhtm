@@ -41,18 +41,15 @@ jQuery(document).ready(function(){
 <body>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:info.About=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}
+	{=var-set:menu={=L:info.About=} NI-Image=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 		<table border="0" cellpadding="2" cellspacing="4" width="100%">
 		<tr>
-			<td valign="bottom" width="22%">
+			<td valign="bottom" colspan="4">
 				<a href="http://{=ini-get:/.version;homepage=}" target="_blank">
 					<img border="0" src="%(ICONSDIR)/hint_imagelogo.png" alt=""/>
 				</a>
-			</td>
-			<td valign="bottom" colspan="3">
-				<span class="ni_logo">NI-Imageinfo</span>
 			</td>
 		</tr>
 		<tr>

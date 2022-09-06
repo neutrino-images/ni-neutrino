@@ -349,9 +349,6 @@ img#shot {
 	border-color: #3b3b3b;
 }
 
-.ni_logo {
-	text-shadow: 0 -1px #090909, 1px 0 #090909, 0 1px #090909, -1px 0 #090909, #000 4px 4px 3px;
-}
 tr.list:hover td {
 	background-color: #3b3b3b;
 }

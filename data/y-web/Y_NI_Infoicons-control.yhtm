@@ -22,7 +22,7 @@ function do_submit()
 {=var-set:wait_text={=L:ni.infoicons-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.infoicons-control.title=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}
+	{=var-set:menu={=L:ni.infoicons-control.title=}=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 	<table class="y_invisible_table" cellpadding="5" width="100%">
@@ -45,7 +45,7 @@ function do_submit()
 </div>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.infoicons-control.flagfile-control=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}
+	{=var-set:menu={=L:ni.infoicons-control.flagfile-control=}=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 
@@ -258,7 +258,7 @@ function do_submit()
 </div>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:answer=}=}{=include-block:Y_NI_Blocks.txt;NI_work_menu=}</div></div>
+	{=var-set:menu={=L:answer=}=}{=include-block:Y_Blocks.txt;work_menu=}</div></div>
 	<div class="work_box_body">
 		<div id="out"></div>
 	</div>

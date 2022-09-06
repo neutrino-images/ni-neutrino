@@ -1,15 +1,3 @@
-# ------- Lay-Frame Extentions-Menu
-start-block~frame_NI
-{=var-set:sec_menu=Y_NI_Menue.yhtm=}
-{=var-set:work=Y_NI_blank.yhtm=}
-{=include-block:Y_Blocks.txt;frame_secondary=}
-end-block~frame_NI
-
-# ------- NI work menu
-start-block~NI_work_menu
-<div>{=var-get:menu=}</div>
-end-block~NI_work_menu
-
 # ------- Lay-NI-HEAD
 start-block~head
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
