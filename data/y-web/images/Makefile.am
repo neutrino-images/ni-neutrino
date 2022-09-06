@@ -14,7 +14,6 @@ install_DATA =	accept.png \
 		elist.png \
 		exlink.gif \
 		fb.png \
-		help.gif \
 		hidden.png \
 		info.png \
 		inlink.gif \

@@ -62,7 +62,7 @@ function do_init()
 {=var-set:wait_text={=L:save_values=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:help_url=Help-Settings-Personalize=}{=var-set:menu=Personalisierung=}{=include-block:Y_Blocks.txt;work_menu=}</div></div>
+	{=var-set:menu=Personalisierung=}{=include-block:Y_Blocks.txt;work_menu=}</div></div>
 	<div class="work_box_body">
 	<form name="f" class="y_form" action="">
 		<table cellspacing="0" border="0" cellpadding="2" width="100%">
