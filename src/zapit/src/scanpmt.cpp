@@ -120,7 +120,7 @@ bool CPmt::Parse(CZapitChannel * const channel)
 
 	if (channel->scrambled)
 	{
-        MakeCAPids(capids);
+		MakeCAPids(capids);
 	}
 
 

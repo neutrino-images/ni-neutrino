@@ -508,7 +508,7 @@ void CStreamManager::AddPids(int fd, CZapitChannel *channel, stream_pids_t &pids
 		{
 			pids.insert(channel->getVideoPid());
 			printf("CStreamManager::AddPids: vpid 0x%04x \n", channel->getVideoPid());
-        }
+		}
 		for (int i = 0; i <  channel->getAudioChannelCount(); i++)
 		{
 			pids.insert(channel->getAudioChannel(i)->pid);
@@ -518,8 +518,8 @@ void CStreamManager::AddPids(int fd, CZapitChannel *channel, stream_pids_t &pids
 		{
 			for(casys_pids_iterator_t it = channel->capids.begin(); it != channel->capids.end(); ++it)
 			{
-			  pids.insert((*it)); //all ECM Pids
-			  printf("CStreamManager::AddPids: capid 0x%04x \n", (*it));
+				pids.insert((*it)); //all ECM Pids
+				printf("CStreamManager::AddPids: capid 0x%04x \n", (*it));
 			}
 		}
 		pids.insert(0); //PAT
