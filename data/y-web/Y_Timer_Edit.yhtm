@@ -164,7 +164,7 @@ function init()
 			<tr id="RecDirRow" style="display:none">
 				<td>{=L:live.timer_edit.rec_dir=}:</td>
 				<td>
-				{=include-block:Y_neutrino_Blocks.txt;neutrino_list_record_dirs=}
+				{=include-block:Y_Blocks_Neutrino.txt;neutrino_list_record_dirs=}
 				</td>
 			</tr>
 		</table>
