@@ -318,6 +318,7 @@ start-block~head_ni
 	// Use jQuery via jQuery(...)
 	jQuery.noConflict();
 //]]>
+</script>
 end-block~head_ni
 
 # ------- nhttpd save Settings
