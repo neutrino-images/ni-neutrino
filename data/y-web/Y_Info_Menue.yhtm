@@ -30,13 +30,6 @@ function init(){
 					{=var-set:m_link_text={=L:info.check_for_updates=}=}
 					{=include-block:Y_Blocks.txt;management_link=}
 				</li>
-				<li>
-					&nbsp;
-				</li>
-				<li>
-					<a target="blank" title="{=L:ni.infopage=}" href="info/yinfo.yhtm">{=L:ni.infopage=}</a>
-					<a target="blank" title="{=L:ni.infopage=}" href="info/yinfo.yhtm" class="y_menu_popup_link"><img src="/images/popup.png"/></a>
-				</li>
 			</ul>
 		</div>
 
