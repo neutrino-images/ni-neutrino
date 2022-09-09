@@ -14,7 +14,7 @@ start-block~neutrino_form
 </head>
 <body>
 {=var-set:wait_text={=L:save_values=}=}{=include-block:Y_Blocks.txt;snip_wait=}
-{=include-block:Y_neutrino_Blocks.txt;{=var-get:neutrino=}=}
+{=include-block:Y_Blocks_Neutrino.txt;{=var-get:neutrino=}=}
 </body>
 </html>
 {=include-block:Y_Blocks.txt;management_check_bottom=}
@@ -146,9 +146,9 @@ start-block~neutrino_form-data_record
 		</table>
 		<br/>
 		<input type="hidden" name="tmpl" value="Y_Settings_neutrino_forms.yhtm"/>
-		<input type="hidden" name="execute" value="include-block:Y_neutrino_Blocks.txt;neutrino_record_save_settings;nix"/>
+		<input type="hidden" name="execute" value="include-block:Y_Blocks_Neutrino.txt;neutrino_record_save_settings;nix"/>
 		<input type="hidden" name="form" value="{=form=}"/>
-		{=include-block:Y_neutrino_Blocks.txt;neutrino_form_submit;nothing=}
+		{=include-block:Y_Blocks_Neutrino.txt;neutrino_form_submit;nothing=}
 	</form>
 	</div>
 </div>
@@ -230,9 +230,9 @@ start-block~neutrino_form-data_movieplayer
 		</table>
 		<br/>
 		<input type="hidden" name="tmpl" value="Y_Settings_neutrino_forms.yhtm"/>
-		<input type="hidden" name="execute" value="include-block:Y_neutrino_Blocks.txt;neutrino_movieplayer_save_settings;nix"/>
+		<input type="hidden" name="execute" value="include-block:Y_Blocks_Neutrino.txt;neutrino_movieplayer_save_settings;nix"/>
 		<input type="hidden" name="form" value="{=form=}"/>
-		{=include-block:Y_neutrino_Blocks.txt;neutrino_form_submit;nothing=}
+		{=include-block:Y_Blocks_Neutrino.txt;neutrino_form_submit;nothing=}
 	</form>
 	</div>
 </div>
@@ -295,9 +295,9 @@ start-block~neutrino_form-data_parental
 		</table>
 		<br/>
 		<input type="hidden" name="tmpl" value="Y_Settings_neutrino_forms.yhtm"/>
-		<input type="hidden" name="execute" value="include-block:Y_neutrino_Blocks.txt;neutrino_parental_save_settings;nix"/>
+		<input type="hidden" name="execute" value="include-block:Y_Blocks_Neutrino.txt;neutrino_parental_save_settings;nix"/>
 		<input type="hidden" name="form" value="{=form=}"/>
-		{=include-block:Y_neutrino_Blocks.txt;neutrino_form_submit;nothing=}
+		{=include-block:Y_Blocks_Neutrino.txt;neutrino_form_submit;nothing=}
 	</form>
 	</div>
 </div>
@@ -425,9 +425,9 @@ start-block~neutrino_form-data_epg
 		</table>
 		<br/>
 		<input type="hidden" name="tmpl" value="Y_Settings_neutrino_forms.yhtm"/>
-		<input type="hidden" name="execute" value="include-block:Y_neutrino_Blocks.txt;neutrino_epg_save_settings;nix"/>
+		<input type="hidden" name="execute" value="include-block:Y_Blocks_Neutrino.txt;neutrino_epg_save_settings;nix"/>
 		<input type="hidden" name="form" value="{=form=}"/>
-		{=include-block:Y_neutrino_Blocks.txt;neutrino_form_submit;nothing=}
+		{=include-block:Y_Blocks_Neutrino.txt;neutrino_form_submit;nothing=}
 	</form>
 	</div>
 </div>
@@ -698,9 +698,9 @@ start-block~neutrino_form-data_diverse
 		</table>
 		<br/>
 		<input type="hidden" name="tmpl" value="Y_Settings_neutrino_forms.yhtm"/>
-		<input type="hidden" name="execute" value="include-block:Y_neutrino_Blocks.txt;neutrino_diverse_save_settings;nix"/>
+		<input type="hidden" name="execute" value="include-block:Y_Blocks_Neutrino.txt;neutrino_diverse_save_settings;nix"/>
 		<input type="hidden" name="form" value="{=form=}"/>
-		{=include-block:Y_neutrino_Blocks.txt;neutrino_form_submit;nothing=}
+		{=include-block:Y_Blocks_Neutrino.txt;neutrino_form_submit;nothing=}
 	</form>
 	</div>
 </div>
@@ -819,9 +819,9 @@ start-block~neutrino_form-data_pictureviewer
 		</table>
 		<br/>
 		<input type="hidden" name="tmpl" value="Y_Settings_neutrino_forms.yhtm"/>
-		<input type="hidden" name="execute" value="include-block:Y_neutrino_Blocks.txt;neutrino_pictureviewer_save_settings;nix"/>
+		<input type="hidden" name="execute" value="include-block:Y_Blocks_Neutrino.txt;neutrino_pictureviewer_save_settings;nix"/>
 		<input type="hidden" name="form" value="{=form=}"/>
-		{=include-block:Y_neutrino_Blocks.txt;neutrino_form_submit;nothing=}
+		{=include-block:Y_Blocks_Neutrino.txt;neutrino_form_submit;nothing=}
 	</form>
 	</div>
 </div>
@@ -922,9 +922,9 @@ start-block~neutrino_form-data_audioplayer
 		</table>
 		<br/>
 		<input type="hidden" name="tmpl" value="Y_Settings_neutrino_forms.yhtm"/>
-		<input type="hidden" name="execute" value="include-block:Y_neutrino_Blocks.txt;neutrino_audioplayer_save_settings;nix"/>
+		<input type="hidden" name="execute" value="include-block:Y_Blocks_Neutrino.txt;neutrino_audioplayer_save_settings;nix"/>
 		<input type="hidden" name="form" value="{=form=}"/>
-		{=include-block:Y_neutrino_Blocks.txt;neutrino_form_submit;nothing=}
+		{=include-block:Y_Blocks_Neutrino.txt;neutrino_form_submit;nothing=}
 	</form>
 	</div>
 </div>
@@ -1091,9 +1091,9 @@ start-block~neutrino_form-data_direct_recording
 		</table>
 		<br/>
 		<input type="hidden" name="tmpl" value="Y_Settings_neutrino_forms.yhtm"/>
-		<input type="hidden" name="execute" value="include-block:Y_neutrino_Blocks.txt;neutrino_direct_recording_save_settings;nix"/>
+		<input type="hidden" name="execute" value="include-block:Y_Blocks_Neutrino.txt;neutrino_direct_recording_save_settings;nix"/>
 		<input type="hidden" name="form" value="{=form=}"/>
-		{=include-block:Y_neutrino_Blocks.txt;neutrino_form_submit;nothing=}
+		{=include-block:Y_Blocks_Neutrino.txt;neutrino_form_submit;nothing=}
 	</form>
 	</div>
 </div>
