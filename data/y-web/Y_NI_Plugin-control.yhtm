@@ -8,7 +8,7 @@
 {=var-set:r_xupnpd={=script:Y_NI_Tools is_running xupnpd=}=}
 {=var-set:xupnpdport={=script:Y_NI_Tools get_xupnpd_webif_port=}=}
 
-{=include-block:Y_NI_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;head_ni=}
 </head>
 <body onload='goUrl("/control/reloadplugins");'>
 {=var-set:wait_text={=L:ni.plugin-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}

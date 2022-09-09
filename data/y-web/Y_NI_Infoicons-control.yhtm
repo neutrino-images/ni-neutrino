@@ -7,7 +7,7 @@
 {=var-set:icons_flag6={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag6~cache=}=}
 {=var-set:icons_flag7={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag7~cache=}=}
 {=var-set:icons_dir=%(ICONSDIR)=}
-{=include-block:Y_NI_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;head_ni=}
 <script type="text/javascript">
 //<![CDATA[
 function do_submit()

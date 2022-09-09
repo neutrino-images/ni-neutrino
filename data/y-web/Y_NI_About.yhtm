@@ -1,4 +1,4 @@
-{=include-block:Y_NI_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;head_ni=}
 
 {=var-set:_mtd_info_dev={=script:Y_NI_Tools get_mtd_info dev=}=}
 {=var-set:_mtd_info_name={=script:Y_NI_Tools get_mtd_info name=}=}

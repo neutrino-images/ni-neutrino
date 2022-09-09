@@ -1,7 +1,7 @@
 {=var-set:grab={=find-exec:grab=}=}
 {=var-set:fbshot={=find-exec:fbshot=}=}
 
-{=include-block:Y_NI_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;head_ni=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
 <script type="text/javascript" src="/prototype.js"></script>
 <script type="text/javascript">

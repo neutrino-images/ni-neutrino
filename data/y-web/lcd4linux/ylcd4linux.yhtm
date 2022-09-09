@@ -1,6 +1,6 @@
 {=var-set:lcd4linux_png=/tmp/lcd4linux.png=}
 
-{=include-block:Y_NI_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;head_ni=}
 <meta http-equiv="refresh" content="15; URL=ylcd4linux.yhtm">
 
 <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">

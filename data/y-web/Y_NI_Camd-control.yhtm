@@ -20,7 +20,7 @@
 {=var-set:cccamport={=script:Y_NI_Tools get_cccam_webif_port=}=}
 {=var-set:doscamport={=script:Y_NI_Tools get_doscam_webif_port=}=}
 
-{=include-block:Y_NI_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;head_ni=}
 <style type="text/css">
 input[type="button"], .tools select {
 	width: 100%;

@@ -1,22 +1,22 @@
-{=var-set:nr=0=} {=include-block:Y_NI_Blocks.txt;netfs_local_dir=}
-{=var-set:nr=1=} {=include-block:Y_NI_Blocks.txt;netfs_local_dir=}
-{=var-set:nr=2=} {=include-block:Y_NI_Blocks.txt;netfs_local_dir=}
-{=var-set:nr=3=} {=include-block:Y_NI_Blocks.txt;netfs_local_dir=}
-{=var-set:nr=4=} {=include-block:Y_NI_Blocks.txt;netfs_local_dir=}
-{=var-set:nr=5=} {=include-block:Y_NI_Blocks.txt;netfs_local_dir=}
-{=var-set:nr=6=} {=include-block:Y_NI_Blocks.txt;netfs_local_dir=}
-{=var-set:nr=7=} {=include-block:Y_NI_Blocks.txt;netfs_local_dir=}
+{=var-set:nr=0=} {=include-block:Y_Blocks.txt;netfs_local_dir=}
+{=var-set:nr=1=} {=include-block:Y_Blocks.txt;netfs_local_dir=}
+{=var-set:nr=2=} {=include-block:Y_Blocks.txt;netfs_local_dir=}
+{=var-set:nr=3=} {=include-block:Y_Blocks.txt;netfs_local_dir=}
+{=var-set:nr=4=} {=include-block:Y_Blocks.txt;netfs_local_dir=}
+{=var-set:nr=5=} {=include-block:Y_Blocks.txt;netfs_local_dir=}
+{=var-set:nr=6=} {=include-block:Y_Blocks.txt;netfs_local_dir=}
+{=var-set:nr=7=} {=include-block:Y_Blocks.txt;netfs_local_dir=}
 
-{=var-set:nr=0=} {=include-block:Y_NI_Blocks.txt;netfs_is_mount=}
-{=var-set:nr=1=} {=include-block:Y_NI_Blocks.txt;netfs_is_mount=}
-{=var-set:nr=2=} {=include-block:Y_NI_Blocks.txt;netfs_is_mount=}
-{=var-set:nr=3=} {=include-block:Y_NI_Blocks.txt;netfs_is_mount=}
-{=var-set:nr=4=} {=include-block:Y_NI_Blocks.txt;netfs_is_mount=}
-{=var-set:nr=5=} {=include-block:Y_NI_Blocks.txt;netfs_is_mount=}
-{=var-set:nr=6=} {=include-block:Y_NI_Blocks.txt;netfs_is_mount=}
-{=var-set:nr=7=} {=include-block:Y_NI_Blocks.txt;netfs_is_mount=}
+{=var-set:nr=0=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
+{=var-set:nr=1=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
+{=var-set:nr=2=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
+{=var-set:nr=3=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
+{=var-set:nr=4=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
+{=var-set:nr=5=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
+{=var-set:nr=6=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
+{=var-set:nr=7=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
 
-{=include-block:Y_NI_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;head_ni=}
 <script type="text/javascript">
 //<![CDATA[
 function edit_popup()
@@ -89,14 +89,14 @@ function do_submit()
 				=}
 			</td>
 		</tr>
-		{=var-set:nr=0=} {=include-block:Y_NI_Blocks.txt;netfs_table_row=}
-		{=var-set:nr=1=} {=include-block:Y_NI_Blocks.txt;netfs_table_row=}
-		{=var-set:nr=2=} {=include-block:Y_NI_Blocks.txt;netfs_table_row=}
-		{=var-set:nr=3=} {=include-block:Y_NI_Blocks.txt;netfs_table_row=}
-		{=var-set:nr=4=} {=include-block:Y_NI_Blocks.txt;netfs_table_row=}
-		{=var-set:nr=5=} {=include-block:Y_NI_Blocks.txt;netfs_table_row=}
-		{=var-set:nr=6=} {=include-block:Y_NI_Blocks.txt;netfs_table_row=}
-		{=var-set:nr=7=} {=include-block:Y_NI_Blocks.txt;netfs_table_row=}
+		{=var-set:nr=0=} {=include-block:Y_Blocks.txt;netfs_table_row=}
+		{=var-set:nr=1=} {=include-block:Y_Blocks.txt;netfs_table_row=}
+		{=var-set:nr=2=} {=include-block:Y_Blocks.txt;netfs_table_row=}
+		{=var-set:nr=3=} {=include-block:Y_Blocks.txt;netfs_table_row=}
+		{=var-set:nr=4=} {=include-block:Y_Blocks.txt;netfs_table_row=}
+		{=var-set:nr=5=} {=include-block:Y_Blocks.txt;netfs_table_row=}
+		{=var-set:nr=6=} {=include-block:Y_Blocks.txt;netfs_table_row=}
+		{=var-set:nr=7=} {=include-block:Y_Blocks.txt;netfs_table_row=}
 	</table>
 	<br />
 	<button type="button" ytype="save" title="{=L:ni.save=}: {=L:ni.netfs-{=mount_type=}=}" onclick="$('out').update(''); goUrl('/y/cgi?execute=func:netfs_write_config {=mount_type=}')">{=L:ni.save=}</button>

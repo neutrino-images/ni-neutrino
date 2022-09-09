@@ -1,4 +1,4 @@
-{=include-block:Y_NI_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;head_ni=}
 <script type="text/javascript">
 //<![CDATA[
 function form_init()
