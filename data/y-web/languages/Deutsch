@@ -84,8 +84,6 @@ bc.menue.messages_desc=Nachricht an die Box senden
 bc.menue.messages=Nachrichten
 bc.menue.remote_desc=Fernbedienung
 bc.menue.remote=Fernbedienung
-bc.menue.glcd_screenshot_desc=GLCD Screenshot erstellen
-bc.menue.glcd_screenshot=GLCD Screenshot
 bc.menue.screenshot=Screenshot
 
 bc.menue.decrease_volume=Lautst&auml;rke verringern

@@ -64,13 +64,13 @@ install_DATA =	channels.js \
 		Y_Tools_Boxcontrol.yhtm \
 		Y_Tools_Check_Install.yhtm \
 		Y_Tools_Cmd.yhtm \
-		Y_Tools_Glcd_Screenshot.yhtm \
 		Y_Tools_Info_Menue.yhtm \
 		Y_Tools_Installer.yhtm \
 		Y_Tools_Menue.yhtm \
 		Y_Tools_Rcsim.yhtm \
 		Y_Tools_Screenshot.yhtm  \
-		Y_Tools_tvshot.yhtm \
+		Y_Tools_Screenshot_GraphLCD.yhtm \
+		Y_Tools_Screenshot_LCD4Linux.yhtm  \
 		Y_User.css \
 		Y_Version.txt \
 		Y_Wait.yhtm \

@@ -84,8 +84,6 @@ bc.menue.messages_desc=send Messages to box
 bc.menue.messages=Messages
 bc.menue.remote_desc=Web-based Remote Control
 bc.menue.remote=Remote
-bc.menue.glcd_screenshot_desc=take a GLCD screenshot
-bc.menue.glcd_screenshot=GLCD Screenshot
 bc.menue.screenshot=Screenshot
 
 bc.menue.decrease_volume=decrease volumen
