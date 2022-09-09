@@ -41,7 +41,7 @@ jQuery(document).ready(function(){
 <body>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:info.About=} NI-Image=}{=include-block:Y_Blocks.txt;work_menu=}
+	{=var-set:menu={=L:info.about=} NI-Image=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 		<table border="0" cellpadding="2" cellspacing="4" width="100%">
