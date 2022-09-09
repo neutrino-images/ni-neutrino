@@ -168,6 +168,7 @@ function epg_plus_popup() {
 					{=if-equal:{=ini-get:/var/tuxbox/config/neutrino.conf;lcd4l_screenshots;0=}~1~
 					<li>
 						<a target="work" title="LCD4Linux-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot_LCD4Linux.yhtm">LCD4Linux</a>
+						<a target="blank" class="y_menu_popup_link" href="lcd4linux/ylcd4linux.yhtm"><img src="/images/popup.png"/></a>
 					</li>
 					~=}
 					{=if-equal:{=ini-get:/var/tuxbox/config/neutrino.conf;glcd_enable;0=}~1~
