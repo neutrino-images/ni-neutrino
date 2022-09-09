@@ -35,8 +35,6 @@ start-block~neutrino_form_submit
 	<button type="button" ytype="save" title="{=L:save_values_desc=}" onclick="do_submit()">{=L:save=}</button>
 	&nbsp;
 	<button type="button" ytype="refresh" title="{=L:apply_desc=}" onclick="reload_neutrino_conf()">{=L:apply=}</button>
-	&nbsp;
-	<a href="javascript:top.top_main.prim_menu.nav('info', 'Y_Info_Help.yhtm');" class="inlink">{=L:help=}</a>
 end-block~neutrino_form_submit
 
 # ------- Neutrino form-data: record -------------------------------
