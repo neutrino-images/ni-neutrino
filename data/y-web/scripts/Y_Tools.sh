@@ -391,19 +391,6 @@ wol()
 }
 
 # -----------------------------------------------------------
-# lcd shot
-# $1= optionen | leer
-# -----------------------------------------------------------
-do_lcshot()
-{
-	if [ -e "$y_path_varbin/lcshot" ]; then
-		$y_path_varbin/lcshot $*
-	else
-		lcshot $*
-	fi
-}
-
-# -----------------------------------------------------------
 # osd shot
 # $1= fbshot | grab
 # -----------------------------------------------------------
@@ -501,7 +488,6 @@ case "$1" in
 	ext_installer)			shift 1; do_ext_installer $* 2>&1 ;;
 	proc)				shift 1; proc $* ;;
 	wol)				shift 1; wol $* ;;
-	lcshot)				shift 1; do_lcshot $* ;;
 	fbshot)				shift 1; do_fbshot $* ;;
 	fbshot_clear)			do_fbshot_clear ;;
 	screenshot_clear)		do_screenshot_clear ;;
