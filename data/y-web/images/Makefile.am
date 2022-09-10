@@ -86,7 +86,7 @@ images_DATA += \
 # remote controls
 imagesrcdir = $(PRIVATE_HTTPDDIR)/images/rc
 
-imagesrc_DATA += \
+imagesrc_DATA = \
 	rc/rc_cst_v1.jpg \
 	rc/rc_cst_v2.png \
 	rc/rc_cst_v3.png \
