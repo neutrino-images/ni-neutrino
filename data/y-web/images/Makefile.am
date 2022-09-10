@@ -7,7 +7,7 @@ install_DATA =	accept.png \
 		arrowright.png \
 		arrowup.png \
 		audiobar.png \
-		blank.gif \
+		blank.png \
 		check_green.png \
 		comment.png \
 		cross.png \
@@ -94,8 +94,7 @@ install_DATA +=	chmod.png \
 		work.gif
 
 # NI-yWeb
-install_DATA += blank.png \
-		cancel.png \
+install_DATA += cancel.png \
 		colored_bar.png \
 		server_add.png \
 		server_delete.png \
