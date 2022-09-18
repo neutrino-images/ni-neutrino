@@ -437,7 +437,7 @@ function  do_prop(prop){
 	show_prop();
 
 	document.edit.fitem.value = explorer.ac_item;
-	// Fileextention handling
+	// Fileextension handling
 	var fullfname = explorer.build_fname();
 	switch(explorer.ac_prop.get('ext')){
 		case "xml":

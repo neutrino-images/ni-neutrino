@@ -336,7 +336,7 @@ do_installer()
 }
 
 # -----------------------------------------------------------
-# extention Installer $1=URL
+# extension Installer $1=URL
 # -----------------------------------------------------------
 do_ext_installer()
 {
@@ -515,16 +515,16 @@ case "$1" in
 		fi
 	;;
 	get_extension_list)
-		if [ -e "$y_path_config/extentions.txt" ]
+		if [ -e "$y_path_config/extensions.txt" ]
 		then
-			cat $y_path_config/extentions.txt
+			cat $y_path_config/extensions.txt
 		else
-			cat $y_path_httpd/extentions.txt
+			cat $y_path_httpd/extensions.txt
 		fi
 	;;
 	write_extension_list)
 		shift 1
-		echo  "$*" >$y_path_config/extentions.txt
+		echo  "$*" >$y_path_config/extensions.txt
 	;;
 	url_get)
 		shift 1

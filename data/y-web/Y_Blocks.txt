@@ -146,7 +146,7 @@ end-block~personalize_save_settings
 
 # ------- Ext save Settings
 start-block~ext_save_settings
-{=file-action:%(CONFIGDIR)/extentions.txt;add;{=extentions=}=}
+{=file-action:%(CONFIGDIR)/extensions.txt;add;{=extensions=}=}
 end-block~ext_save_settings
 
 # ------- No Managemant Error

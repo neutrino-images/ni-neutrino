@@ -6,7 +6,7 @@ SUBDIRS += favicon info jquery lcd4linux
 installdir = $(PRIVATE_HTTPDDIR)
 
 install_DATA =	channels.js \
-		extentions.txt \
+		extensions.txt \
 		favicon.ico \
 		index.html \
 		prototype.js \
