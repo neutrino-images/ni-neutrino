@@ -400,22 +400,6 @@ class CHint : public CHintBox
 		};
 };
 
-
-typedef struct hint_message_data_t
-{
-	sigc::slot<void> slot;
-	std::string text;
-	neutrino_locale_t text_locale;
-	int timeout;
-	bool show_background;
-	const char *Picon;
-// 	hint_message_data_t(): 	text(std::string()),
-// 				text_locale(NONEXISTANT_LOCALE),
-// 				timeout(HINTBOX_DEFAULT_TIMEOUT),
-// 				show_background(true),
-// 				Picon(NULL){}
-} hint_message_data_struct_t;
-
 /**
 * Simplified methodes to show hintboxes without titlebar and footer
 * Text is UTF-8 encoded
@@ -430,6 +414,22 @@ typedef struct hint_message_data_t
 int ShowHintS(const neutrino_locale_t Text, int timeout = HINTBOX_DEFAULT_TIMEOUT, bool show_background = true, const char * const Picon = NULL);
 int ShowHintS(const char * const Text, int timeout = HINTBOX_DEFAULT_TIMEOUT, bool show_background = true, const char * const Picon = NULL);
 int ShowHintS(const std::string &Text, int timeout = HINTBOX_DEFAULT_TIMEOUT, bool show_background = true, const char * const Picon = NULL);
+
+#if 0
+typedef struct hint_message_data_t
+{
+	sigc::slot<void> slot;
+	std::string text;
+	neutrino_locale_t text_locale;
+	int timeout;
+	bool show_background;
+	const char *Picon;
+// 	hint_message_data_t(): 	text(std::string()),
+// 				text_locale(NONEXISTANT_LOCALE),
+// 				timeout(HINTBOX_DEFAULT_TIMEOUT),
+// 				show_background(true),
+// 				Picon(NULL){}
+} hint_message_data_struct_t;
 
 /**
  * Simplified methodes to show hintboxes without titlebar and footer with mounted function as slot for custom action
@@ -455,5 +455,6 @@ int ShowHintS(const std::string &Text, const sigc::slot<void> &Slot, int timeout
 
 int ShowHintS(const hint_message_data_t &hint_data);
 int ShowHintS(const std::vector<hint_message_data_t> &v_hint_data);
+#endif
 
 #endif

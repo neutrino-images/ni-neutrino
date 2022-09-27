@@ -505,6 +505,7 @@ int ShowHintS(const char * const Text, int timeout, bool show_background, const 
 	return res;
 }
 
+#if 0
 int ShowHintS(const char * const Text, const sigc::slot<void> &Slot, int timeout, bool show_background, const char * const Picon)
 {
 	int res = messages_return::none;
@@ -522,6 +523,7 @@ int ShowHintS(const char * const Text, const sigc::slot<void> &Slot, int timeout
 
 	return res;
 }
+#endif
 
 int ShowHintS(const neutrino_locale_t Text, int timeout, bool show_background, const char * const Picon)
 {
@@ -533,6 +535,7 @@ int ShowHintS(const std::string& Text, int timeout, bool show_background, const 
 	return ShowHintS(Text.c_str(), timeout, show_background, Picon);
 }
 
+#if 0
 int ShowHintS(const neutrino_locale_t Text, const sigc::slot<void> &Slot, int timeout, bool show_background, const char * const Picon)
 {
 	return ShowHintS(g_Locale->getText(Text), Slot, timeout, show_background, Picon);
@@ -564,3 +567,4 @@ int ShowHintS(const std::vector<hint_message_data_t> &v_hint_data)
 
 	return ret;
 }
+#endif

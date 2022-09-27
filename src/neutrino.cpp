@@ -5388,14 +5388,12 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 #endif
 
 	else if (actionKey=="savesettings") {
-		ShowHintS(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT, sigc::bind(sigc::mem_fun(*this, &CNeutrinoApp::saveSetup), NEUTRINO_SETTINGS_FILE), 1);
-#if 0
 		CHint *hint = new CHint(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT);
 		hint->setDelay(1);
 		hint->paint();
 
 		saveSetup(NEUTRINO_SETTINGS_FILE);
-#endif
+
 		if(g_settings.cacheTXT) {
 			tuxtxt_init();
 		} else
@@ -5404,14 +5402,12 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		//g_Sectionsd->setEventsAreOldInMinutes((unsigned short) (g_settings.epg_old_hours*60));
 		//g_Sectionsd->setHoursToCache((unsigned short) (g_settings.epg_cache_days*24));
 
-// 		delete hint;
+		delete hint;
 	}
 	else if (actionKey=="recording") {
 		setupRecordingDevice();
 	}
 	else if (actionKey=="reloadplugins") {
-		ShowHintS(LOCALE_SERVICEMENU_GETPLUGINS_HINT, sigc::mem_fun(g_Plugins, &CPlugins::loadPlugins),1);
-#if 0
 		CHint *hint = new CHint(LOCALE_SERVICEMENU_GETPLUGINS_HINT);
 		hint->setDelay(1);
 		hint->paint();
@@ -5419,26 +5415,30 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		g_Plugins->loadPlugins();
 
 		delete hint;
-#endif
 	}
 	else if (actionKey=="restarttuner")
 	{
-		std::vector <hint_message_data_t> hints;
-		hints.push_back({sigc::bind(sigc::mem_fun(g_Zapit, &CZapitClient::setStandby), true),"Stopping tuner...", NONEXISTANT_LOCALE, 2, true, NEUTRINO_ICON_LOADER});
-		hints.push_back({sigc::bind(sigc::mem_fun(g_Zapit, &CZapitClient::setStandby), false), "Start tuner...", NONEXISTANT_LOCALE, 2, true, NEUTRINO_ICON_LOADER});
-		hints.push_back({sigc::hide_return(sigc::mem_fun(g_Zapit, &CZapitClient::Rezap)), "Rezap...", NONEXISTANT_LOCALE, 2, true, NEUTRINO_ICON_LOADER});
-		ShowHintS(hints);
+		CHint *hint = new CHint(LOCALE_SERVICEMENU_RESTARTING_TUNER);
+		hint->paint();
+
+		g_Zapit->setStandby(true);
+		sleep(2);
+		g_Zapit->setStandby(false);
+		sleep(2);
+		g_Zapit->Rezap();
+
+		delete hint;
 	}
 	else if (actionKey == "camd_reset")
 	{
-		CHint hint(LOCALE_CAMD_MSG_RESET);
-		hint.paint();
+		CHint *hint = new CHint(LOCALE_CAMD_MSG_RESET);
+		hint->paint();
 
 		printf("[neutrino.cpp] executing \"service camd restart\"\n");
 		if (my_system(3, "service", "camd", "restart") != 0)
 			printf("[neutrino.cpp] executing failed\n");
 
-		hint.hide();
+		delete hint;
 
 		return menu_return::RETURN_EXIT_ALL;
 	}

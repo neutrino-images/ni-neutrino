@@ -1157,6 +1157,7 @@ int CTestMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 		ShowHintS("Info Test with timeout and loader graphic...", 3, true,  NEUTRINO_ICON_LOADER);
 		return menu_return::RETURN_REPAINT;
 	}
+#if 0
 	else if (actionKey == "short_hint_timed_slot")
 	{
 		ShowHintS("Info test with function...", sigc::mem_fun(*this, &CTestMenu::showRecords), 3);
@@ -1172,6 +1173,7 @@ int CTestMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 		ShowHintS(hint);
 		return menu_return::RETURN_REPAINT;
 	}
+#endif
 	else if (actionKey == "shellwindow")
 	{
 		sigc::slot3<void, std::string *, int *, bool *> sl_shell_output;
@@ -1572,8 +1574,10 @@ void CTestMenu::showMsgTests(CMenuWidget *widget)
 	widget->addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, "Short Hint"));
 	widget->addItem(new CMenuForwarder("Short hint!", true, NULL, this, "short_hint"));
 	widget->addItem(new CMenuForwarder("Short hint with timeout and visual loader!", true, NULL, this, "short_hint_timed"));
+#if 0
 	widget->addItem(new CMenuForwarder("Short hint with timeout and function!", true, NULL, this, "short_hint_timed_slot"));
 	widget->addItem(new CMenuForwarder("Short hint with struct arg!", true, NULL, this, "short_hint_struct"));
+#endif
 }
 
 void CTestMenu::showSeparatorTypes(CMenuWidget *widget)
