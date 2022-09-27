@@ -1238,7 +1238,7 @@ int CTestMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 	}
 	else if (actionKey == "hourglass")
 	{
-		CHourGlass hg(20, 20);
+		CHourGlass hg;
 		hg.paint();
 		sleep(10);
 		hg.hide();
