@@ -315,7 +315,7 @@
 #define NEUTRINO_ICON_MARKER_UPDATE_AVAILABLE	"marker_update_available"
 
 /* activity */
-# define NEUTRINO_ICON_LOADER		"hourglass"
+#define NEUTRINO_ICON_LOADER		"hourglass"
 
 //NI
 #define NEUTRINO_ICON_HINT_IMAGELOGO	"hint_imagelogo"
