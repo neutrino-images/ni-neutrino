@@ -154,9 +154,8 @@ int CMiscMenue::exec(CMenuTarget *parent, const std::string &actionKey)
 	}
 	else if (actionKey == "epg_read_now" || actionKey == "epg_read_now_usermenu")
 	{
-		CHint *hint = new CHint(LOCALE_MISCSETTINGS_EPG_READ);
-		hint->setDelay(1);
-		hint->paint();
+		CLoaderHint *lh = new CLoaderHint(LOCALE_MISCSETTINGS_EPG_READ);
+		lh->paint();
 
 		struct stat my_stat;
 		if (stat(g_settings.epg_dir.c_str(), &my_stat) == 0)
@@ -171,7 +170,7 @@ int CMiscMenue::exec(CMenuTarget *parent, const std::string &actionKey)
 			g_Sectionsd->readSIfromXMLTV((*it).c_str());
 		}
 
-		delete hint;
+		delete lh;
 
 		if (actionKey == "epg_read_now_usermenu")
 			return menu_return::RETURN_EXIT_ALL;

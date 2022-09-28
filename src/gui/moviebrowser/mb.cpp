@@ -888,17 +888,15 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 			//m_movieInfo.saveMovieInfo(*m_movieSelectionHandler);
 			hintBox.hide();
 		}
-
 	}
 	else if (actionKey == "save_movie_info")
 	{
-		CHint *loadBox = new CHint(LOCALE_MOVIEBROWSER_MENU_SAVE);
-		loadBox->setDelay(1);
-		loadBox->paint();
+		CLoaderHint *lh = new CLoaderHint(LOCALE_MOVIEBROWSER_MENU_SAVE);
+		lh->paint();
 
 		m_movieInfo.saveMovieInfo(*m_movieSelectionHandler);
 
-		delete loadBox;
+		delete lh;
 	}
 	else if (actionKey == "save_movie_info_all")
 	{
@@ -911,9 +909,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 		if (current_list == NULL || m_movieSelectionHandler == NULL)
 			return returnval;
 
-		CHint *loadBox = new CHint(LOCALE_MOVIEBROWSER_INFO_HEAD_UPDATE);
-		loadBox->setDelay(1);
-		loadBox->paint();
+		CLoaderHint *lh = new CLoaderHint(LOCALE_MOVIEBROWSER_INFO_HEAD_UPDATE);
+		lh->paint();
 
 		for (unsigned int i = 0; i< current_list->size();i++)
 		{
@@ -944,7 +941,7 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 			m_movieInfo.saveMovieInfo(*((*current_list)[i]));
 		}
 
-		delete loadBox;
+		delete lh;
 	}
 	else if (actionKey == "reload_movie_info")
 	{

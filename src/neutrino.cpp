@@ -5387,10 +5387,10 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 #endif
 #endif
 
-	else if (actionKey=="savesettings") {
-		CHint *hint = new CHint(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT);
-		hint->setDelay(1);
-		hint->paint();
+	else if (actionKey=="savesettings")
+	{
+		CLoaderHint *lh = new CLoaderHint(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT);
+		lh->paint();
 
 		saveSetup(NEUTRINO_SETTINGS_FILE);
 
@@ -5402,24 +5402,25 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		//g_Sectionsd->setEventsAreOldInMinutes((unsigned short) (g_settings.epg_old_hours*60));
 		//g_Sectionsd->setHoursToCache((unsigned short) (g_settings.epg_cache_days*24));
 
-		delete hint;
+		delete lh;
 	}
-	else if (actionKey=="recording") {
+	else if (actionKey=="recording")
+	{
 		setupRecordingDevice();
 	}
-	else if (actionKey=="reloadplugins") {
-		CHint *hint = new CHint(LOCALE_SERVICEMENU_GETPLUGINS_HINT);
-		hint->setDelay(1);
-		hint->paint();
+	else if (actionKey=="reloadplugins")
+	{
+		CLoaderHint *lh = new CLoaderHint(LOCALE_SERVICEMENU_GETPLUGINS_HINT);
+		lh->paint();
 
 		g_Plugins->loadPlugins();
 
-		delete hint;
+		delete lh;
 	}
 	else if (actionKey=="restarttuner")
 	{
-		CHint *hint = new CHint(LOCALE_SERVICEMENU_RESTARTING_TUNER);
-		hint->paint();
+		CLoaderHint *lh = new CLoaderHint(LOCALE_SERVICEMENU_RESTARTING_TUNER);
+		lh->paint();
 
 		g_Zapit->setStandby(true);
 		sleep(2);
@@ -5427,18 +5428,18 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		sleep(2);
 		g_Zapit->Rezap();
 
-		delete hint;
+		delete lh;
 	}
 	else if (actionKey == "camd_reset")
 	{
-		CHint *hint = new CHint(LOCALE_CAMD_MSG_RESET);
-		hint->paint();
+		CLoaderHint *lh = new CLoaderHint(LOCALE_CAMD_MSG_RESET);
+		lh->paint();
 
 		printf("[neutrino.cpp] executing \"service camd restart\"\n");
 		if (my_system(3, "service", "camd", "restart") != 0)
 			printf("[neutrino.cpp] executing failed\n");
 
-		delete hint;
+		delete lh;
 
 		return menu_return::RETURN_EXIT_ALL;
 	}
