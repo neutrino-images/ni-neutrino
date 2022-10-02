@@ -531,11 +531,17 @@ case "$1" in
 		res=`wget -O /tmp/$2 "$1" >/tmp/url.log 2>&1`
 		cat /tmp/$2
 	;;
-	mtd_space|var_space)
-		df | while read fs rest; do
+	mtd_space)
+		df | while read filesystem blocks used available percent mounted ; do
 			case ${fs:0:3} in
 				mtd)
-					echo "$fs" "$rest"
+					echo "$filesystem" "$blocks" "$used" "$available" "$percent" "$mounted"
+					break
+				;;
+			esac
+			case $mounted in
+				"/")
+					echo "$filesystem" "$blocks" "$used" "$available" "$percent" "$mounted"
 					break
 				;;
 			esac
