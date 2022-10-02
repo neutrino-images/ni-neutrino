@@ -134,7 +134,7 @@ bc.channels=Channels
 ext.installer_updater=Installer/Updater
 ext.uninstaller=Extensions Uninstaller
 ext.search_for_ext=Search for Extensions ...
-ext.installed_extensions=installed extensions
+ext.installed_extensions=Installed extensions
 ext.type=Type
 ext.extension=Extension
 ext.version=Version
@@ -152,6 +152,7 @@ ext.update_install=update/install
 ext.site=Site
 ext.refresh_now=Settings saved. Refreshing Menue now.
 ext.ext_saved=Extensions Settings saved
+ext.tag=Tag
 
 # ===== Bouquet
 bou.bouquet=Bouquet

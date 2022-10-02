@@ -8,11 +8,16 @@
 <body>
 {=var-set:wait_text={=L:save_values=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
-	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ext.installer_updater=}=}{=include-block:Y_Blocks.txt;work_menu=}</div></div>
-	<div class="work_box_body" style="width:100%">
-		<div id="statusline"><img border="0" src="/images/wait.gif" width="20" height="20" alt="wait"/>
-			<span id="status">{=L:ext.search_for_ext=}</span></div>
+	<div class="work_box_head">
+		<div class="work_box_head_h2">
+			{=var-set:menu={=L:ext.installer_updater=}=}{=include-block:Y_Blocks.txt;work_menu=}
+		</div>
+	</div>
+	<div class="work_box_body">
+		<div id="statusline">
+			<img border="0" src="/images/wait.gif" width="20" height="20" alt="wait"/>
+			<span id="status">{=L:ext.search_for_ext=}</span>
+		</div>
 
 	<form method="post" name="update" action="">
 		<br/>
@@ -21,13 +26,21 @@
 		<thead align="left">
 		<tr valign="bottom">
 			<th>&nbsp;</th>
-			<th>{=L:ext.site=}</th><th>{=L:ext.type=}</th><th>{=L:ext.extension=}</th>
-			<th>{=L:ext.tag=}</th><th>{=L:ext.your=}<br/>{=L:ext.version=}</th><th>{=L:ext.update=}<br/>{=L:ext.version=}</th>
-			<th title="minimal yWeb version">yWeb</th><th>{=L:ext.size=}</th><th>{=L:ext.info=}</th>
+			<th>{=L:ext.site=}</th>
+			<th>{=L:ext.type=}</th>
+			<th>{=L:ext.extension=}</th>
+			<th>{=L:ext.tag=}</th>
+			<th>{=L:ext.your=}<br/>{=L:ext.version=}</th>
+			<th>{=L:ext.update=}<br/>{=L:ext.version=}</th>
+			<th title="minimal yWeb version">yWeb</th>
+			<th>{=L:ext.size=}</th>
+			<th>{=L:ext.info=}</th>
 		</tr>
 		</thead>
 		<tbody id="update_list">
-		<tr><td></td></tr>
+		<tr style="display: none">
+			<td></td>
+		</tr>
 		</tbody>
 		</table>
 		<button type="button" ytype="go" title="" name="set_updates" onclick="do_set_updates()">{=L:ext.update_install=}</button>&nbsp;
@@ -40,11 +53,15 @@
 		<table class="lt_table" cellspacing="0" cellpadding="4">
 		<thead align="left">
 		<tr>
-			<th>&nbsp;</th><th>{=L:ext.action=}</th><th>{=L:ext.status=}</th>
+			<th>&nbsp;</th>
+			<th>{=L:ext.action=}</th>
+			<th>{=L:ext.status=}</th>
 		</tr>
 		</thead>
 		<tbody id="slog_list">
-		<tr><td></td></tr>
+		<tr style="display: none">
+			<td></td>
+		</tr>
 		</tbody>
 		</table>
 		<br/>
@@ -72,4 +89,3 @@
 </body>
 </html>
 {=include-block:Y_Blocks.txt;management_check_bottom=}
-

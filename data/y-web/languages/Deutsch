@@ -152,6 +152,7 @@ ext.update_install=Aktualisierung / Installation
 ext.site=Site
 ext.refresh_now=Einstellungen gespeichert. Menues werden aktualisiert.
 ext.ext_saved=Erweiterungseinstellungen gespeichert
+ext.tag=Markierung
 
 # ===== Bouquet
 bou.bouquet=Bouquet

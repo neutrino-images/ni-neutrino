@@ -1,2 +1,1 @@
-type:u,site:Neutrino-Images,desc:yWeb Extensions,url:https://raw.githubusercontent.com/neutrino-images/ni-neutrino-plugins/master/yWeb-Extensions/Y_Extensions.txt
-
+type:u,site:Neutrino-Images,desc:NI yWeb Extensions,url:https://raw.githubusercontent.com/neutrino-images/ni-neutrino-plugins/master/y-extensions/y-extensions.txt

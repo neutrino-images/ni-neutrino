@@ -20,11 +20,16 @@ function init(){
 <body onload="init()">
 {=var-set:wait_text={=L:save_values=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
-	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ext.uninstaller=}=}{=include-block:Y_Blocks.txt;work_menu=}</div></div>
+	<div class="work_box_head">
+		<div class="work_box_head_h2">
+			{=var-set:menu={=L:ext.uninstaller=}=}{=include-block:Y_Blocks.txt;work_menu=}
+		</div>
+	</div>
 	<div class="work_box_body">
-		<div id="statusline"><img border="0" src="/images/wait.gif" width="20" height="20" alt="wait"/>
-			<span id="status">{=L:ext.search_for_ext=}</span></div>
+		<div id="statusline">
+			<img border="0" src="/images/wait.gif" width="20" height="20" alt="wait"/>
+			<span id="status">{=L:ext.search_for_ext=}</span>
+		</div>
 
 	<form method="post" name="update" action="">
 		<br/>
@@ -32,12 +37,19 @@ function init(){
 		<table class="lt_table" cellspacing="0" cellpadding="2">
 		<thead align="left">
 		<tr valign="bottom">
-			<th>{=L:ext.type=}</th><th>{=L:ext.extension=}</th>
-			<th>{=L:ext.tag=}</th><th>{=L:ext.version=}</th><th>{=L:ext.size=}</th><th>{=L:ext.uninstall=}</th><th>{=L:ext.info=}</th>
+			<th>{=L:ext.type=}</th>
+			<th>{=L:ext.extension=}</th>
+			<th>{=L:ext.tag=}</th>
+			<th>{=L:ext.version=}</th>
+			<th>{=L:ext.size=}</th>
+			<th>{=L:ext.uninstall=}</th>
+			<th>{=L:ext.info=}</th>
 		</tr>
 		</thead>
 		<tbody id="update_list">
-		<tr><td></td></tr>
+		<tr style="display: none">
+			<td></td>
+		</tr>
 		</tbody>
 		</table>
 	</form>
@@ -49,11 +61,15 @@ function init(){
 		<table class="lt_table" cellspacing="0" cellpadding="4">
 		<thead align="left">
 		<tr>
-			<th>&nbsp;</th><th>{=L:ext.action=}</th><th>{=L:ext.status=}</th>
+			<th>&nbsp;</th>
+			<th>{=L:ext.action=}</th>
+			<th>{=L:ext.status=}</th>
 		</tr>
 		</thead>
 		<tbody id="slog_list">
-		<tr><td></td></tr>
+		<tr style="display: none">
+			<td></td>
+		</tr>
 		</tbody>
 		</table>
 		<br/>
@@ -75,4 +91,3 @@ function init(){
 </body>
 </html>
 {=include-block:Y_Blocks.txt;management_check_bottom=}
-
