@@ -363,7 +363,7 @@ do_ext_installer()
 
 do_ext_uninstaller()
 {
-	uinst="%(CONFIGDIR)/ext/uninstall.sh"
+	uinst="%(CONFIGDIR)/y-ext/uninstall.sh"
 	if [ -e "$uinst"  ]; then
 		chmod 755 "$uinst"
 		`$uinst $1_uninstall.inc`
