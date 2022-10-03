@@ -43,13 +43,15 @@
 		</tr>
 		</tbody>
 		</table>
+		<br/>
 		<button type="button" ytype="go" title="" name="set_updates" onclick="do_set_updates()">{=L:ext.update_install=}</button>&nbsp;
 	</form>
 	<br/>
 	<div id="free">?</div>
-	{=L:ext.free=}: <span id="avaiable">?</span>k
+	<div>{=L:ext.free=}: <span id="avaiable">?</span>k</div>
+	<br/>
 	<form method="post" name="log" action="">
-	<div class="y_form_header_oline">Log</div>
+		<div class="y_form_header_oline">Log</div>
 		<table class="lt_table" cellspacing="0" cellpadding="4">
 		<thead align="left">
 		<tr>
