@@ -21,6 +21,7 @@ y_path_sbin="/sbin"
 y_path_usrsbin="/usr/sbin"
 y_path_config="%(CONFIGDIR)"
 y_path_tmp="/tmp"
+y_path_install="$y_path_tmp/y-install"
 y_path_zapit="%(ZAPITDIR)"
 
 y_url_control="http://localhost/control"
@@ -37,4 +38,4 @@ y_tmp_m3u="$y_path_tmp/y.m3u"
 y_tmp_pls="$y_path_tmp/y.pls"
 
 y_out_html="$y_path_tmp/y_out.yhtm"
-y_install="$y_path_tmp/install.sh"
+y_install="$y_path_install/install.sh"

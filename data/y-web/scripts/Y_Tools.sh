@@ -283,7 +283,8 @@ do_cmd()
 
 # -----------------------------------------------------------
 # yInstaller
-# un-tar uploaded file to /tmp. Execute included install.sh
+# un-tar uploaded file to /tmp/y-install.
+# Execute included install.sh.
 # -----------------------------------------------------------
 do_installer()
 {
@@ -295,16 +296,16 @@ do_installer()
 
 	if [ -s "$y_upload_file" ]
 	then
-		# unpack /tmp/upload.tmp
-		cd $y_path_tmp
+		mkdir -p $y_path_install
+		cd $y_path_install
 		tar -xf "$y_upload_file"
 		rm $y_upload_file
-		if [ -s "$y_install" ] #look for install.sh
+		if [ -s "$y_install" ] # look for install.sh
 		then
 			chmod 755 $y_install
 			o=`$y_install` # execute
 			rm -f $y_install # clean up
-			if [ -s "$y_out_html" ] #html - output?
+			if [ -s "$y_out_html" ] # html - output?
 			then
 				echo '<html><head>'
 				echo '<link rel="stylesheet" type="text/css" href="/Y_Main.css">'
@@ -345,10 +346,11 @@ do_ext_installer()
 	fi
 	wgetlog=`wget -O $y_upload_file $1 2>&1`
 	if [ -s "$y_upload_file" ];then
-		cd $y_path_tmp
+		mkdir -p $y_path_install
+		cd $y_path_install
 		tar -xf "$y_upload_file"
 		rm $y_upload_file
-		if [ -s "$y_install" ] #look for install.sh
+		if [ -s "$y_install" ] # look for install.sh
 		then
 			chmod 755 $y_install
 			o=`$y_install` # execute
