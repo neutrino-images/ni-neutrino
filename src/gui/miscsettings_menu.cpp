@@ -152,6 +152,10 @@ int CMiscMenue::exec(CMenuTarget *parent, const std::string &actionKey)
 	{
 		return showMiscSettingsMenuPlugins();
 	}
+	else if(actionKey == "streaming")
+	{
+		return showMiscSettingsMenuStreaming();
+	}
 	else if (actionKey == "epg_read_now" || actionKey == "epg_read_now_usermenu")
 	{
 		CLoaderHint *lh = new CLoaderHint(LOCALE_MISCSETTINGS_EPG_READ);
@@ -350,6 +354,10 @@ int CMiscMenue::showMiscSettingsMenu()
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_CONTROL);
 	misc_menue.addItem(mf);
 
+	// streaming
+	mf = new CMenuForwarder(LOCALE_MISCSETTINGS_STREAMING, true, NULL, this, "streaming", CRCInput::convertDigitToKey(shortcut++));
+	//mf->setHint("", LOCALE_MENU_HINT_MISC_STREAMING);
+	misc_menue.addItem(mf);
 	int res = misc_menue.exec(NULL, "");
 
 	delete fanNotifier;
@@ -716,6 +724,32 @@ int CMiscMenue::showMiscSettingsMenuPlugins()
 
 	int res = ms_plugins->exec(NULL, "");
 	delete ms_plugins;
+	return res;
+}
+
+// streaming
+int CMiscMenue::showMiscSettingsMenuStreaming()
+{
+	CMenuWidget *ms_sservices = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_MISCSETUP_STREAMING);
+	ms_sservices->addIntroItems(LOCALE_MISCSETTINGS_STREAMING);
+
+	// port
+	CIntInput * miscSettings_streamingport = new CIntInput(LOCALE_STREAMING_PORT, &g_settings.streaming_port, 5);
+	CMenuForwarder * mf = new CMenuDForwarder(LOCALE_STREAMING_PORT, true, std::to_string(g_settings.streaming_port), miscSettings_streamingport);
+	ms_sservices->addItem(mf);
+
+	// ecm
+	ecm_onoff = new CMenuOptionChooser(LOCALE_STREAMING_ECMMODE, &g_settings.streaming_ecmmode, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	//ecm_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_ECMMODE_ENABLED);
+	ms_sservices->addItem(ecm_onoff);
+
+	// ecm
+	dec_onoff = new CMenuOptionChooser(LOCALE_STREAMING_DECRYPTMODE, &g_settings.streaming_decryptmode, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	//ecm_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_DECRYPTMODE_ENABLED);
+	ms_sservices->addItem(dec_onoff);
+
+	int res = ms_sservices->exec(NULL, "");
+	delete ms_sservices;
 	return res;
 }
 

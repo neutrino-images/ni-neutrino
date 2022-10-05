@@ -195,7 +195,10 @@ void CStreamInstance::run()
 
 	dmx->Start(true);
 
-	//if (!g_settings.stream_raw && is_e2_stream)
+	if (is_e2_stream)
+		if (g_settings.streaming_decryptmode)
+			CCamManager::getInstance()->Start(channel_id, CCamManager::STREAM);
+	else
 		CCamManager::getInstance()->Start(channel_id, CCamManager::STREAM);
 
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
@@ -212,7 +215,10 @@ void CStreamInstance::run()
 			Send(r);
 	}
 
-	//if (!g_settings.stream_raw && is_e2_stream)
+	if (is_e2_stream)
+		if (g_settings.streaming_decryptmode)
+			CCamManager::getInstance()->Stop(channel_id, CCamManager::STREAM);
+	else
 		CCamManager::getInstance()->Stop(channel_id, CCamManager::STREAM);
 
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
@@ -242,7 +248,7 @@ CStreamManager::CStreamManager()
 	enabled = true;
 	running = false;
 	listenfd = -1;
-	port = 31339;
+	port = g_settings.streaming_port;
 }
 
 CStreamManager::~CStreamManager()
@@ -490,12 +496,12 @@ bool CStreamManager::Parse(int fd, stream_pids_t &pids, t_channel_id &chid, CFro
 		return false;
 	}
 
-	PreparePids(channel, pids);
+	PreparePids(channel, pids, is_e2);
 
 	return !pids.empty();
 }
 
-void CStreamManager::PreparePids(CZapitChannel *channel, stream_pids_t &pids)
+void CStreamManager::PreparePids(CZapitChannel *channel, stream_pids_t &pids, bool is_e2)
 {
 	pids.clear();
 
@@ -518,8 +524,7 @@ void CStreamManager::PreparePids(CZapitChannel *channel, stream_pids_t &pids)
 		printf("CStreamManager::PreparePids: apid 0x%04x \n", channel->getAudioChannel(i)->pid);
 	}
 
-#if 0
-	if (!channel->capids.empty() && g_settings.stream_raw && is_e2_stream)
+	if (!channel->capids.empty() && g_settings.streaming_ecmmode && is_e2)
 	{
 		for(casys_pids_iterator_t it = channel->capids.begin(); it != channel->capids.end(); ++it)
 		{
@@ -527,7 +532,6 @@ void CStreamManager::PreparePids(CZapitChannel *channel, stream_pids_t &pids)
 		  printf("CStreamManager::PreparePids: capid 0x%04x \n", (*it));
 		}
 	}
-#endif
 
 	//add pcr pid
 	if (channel->getPcrPid() && (channel->getPcrPid() != channel->getVideoPid())) {
