@@ -271,6 +271,7 @@ const CControlAPI::TyCgiCall CControlAPI::yCgiCallList[]=
 	{"xmltvlist",		&CControlAPI::xmltvlistCGI,		"text/plain"},
 	// utils
 	{"build_live_url",	&CControlAPI::build_live_url,		""},
+	{"build_playlist",	&CControlAPI::build_playlist,		""},
 	{"get_logo",		&CControlAPI::logoCGI,			"text/plain"},
 	// settings
 	{"config",		&CControlAPI::ConfigCGI,		"text/plain"},
@@ -3413,7 +3414,7 @@ void CControlAPI::xmltvm3uCGI(CyhookHandler *hh)
 	if (url.rfind(":") != 4)
 		url = url.substr(0, url.rfind(":")); // strip off optional custom port
 	url += ":";
-	url += std::to_string(g_settings.streaming_port);
+	url += to_string(g_settings.streaming_port);
 	url += "/id=";
 
 	for (unsigned int i = 0; i < g_bouquetManager->Bouquets.size(); i++)
@@ -3538,7 +3539,7 @@ void CControlAPI::build_live_url(CyhookHandler *hh)
 		url = url.substr(0, url.rfind(":"));
 
 	url += ":";
-	url += std::to_string(g_settings.streaming_port);
+	url += to_string(g_settings.streaming_port);
 	url += "/id=";
 
 	// response url
@@ -3579,7 +3580,7 @@ void CControlAPI::build_playlist(CyhookHandler *hh)
 		url = url.substr(0, url.rfind(":"));
 
 	url += ":";
-	url += std::to_string(g_settings.streaming_port);
+	url += to_string(g_settings.streaming_port);
 	url += "/id=";
 
 	if(!hh->ParamList["id"].empty()) {
