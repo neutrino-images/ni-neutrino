@@ -501,7 +501,7 @@ eventfinder.history Frühere Suchen
 eventfinder.keyword Suche nach Textpassage
 eventfinder.max_history Max. Anzahl früherer Suchen
 eventfinder.search Suche
-eventfinder.search_all_epg Ganze 
+eventfinder.search_all_epg Ganze
 eventfinder.search_within_epg Suche innerhalb EPG-Daten
 eventfinder.search_within_list Suche innerhalb Text
 eventfinder.searching Suche ...
@@ -839,7 +839,7 @@ flashupdate.update_with_settings_skipped Ordner [%s] kann nicht gesichert werden
 flashupdate.update_with_settings_warning Warnung Flashspeicher!\n \nIm neuen Image sind nur noch %ld KB (von %ld KB) frei,\ndas ist möglicherweise zu wenig, um einen sicheren Betrieb zu gewährleisten.\n \nSoll der Vorgang trotzdem fortgesetzt werden?
 flashupdate.updatemode Updatemodus
 flashupdate.updatemode_internet Internet
-flashupdate.updatemode_manual von lokalem Update-Verzeichnis 
+flashupdate.updatemode_manual von lokalem Update-Verzeichnis
 flashupdate.url_file Internet Konfigurations-Datei
 flashupdate.versioncheck Versionsüberprüfung
 flashupdate.writeflash ganzes Flashimage einspielen
@@ -1053,7 +1053,7 @@ hdd_umount Aushängen
 hdd_umount_warn Datenträger aushängen
 hdd_umounted Gerät entfernt
 hdd_wakeup Interne Aufweckfunktion
-hdd_wakeup_msg Aufweckfunktion mit Nachricht 
+hdd_wakeup_msg Aufweckfunktion mit Nachricht
 hdd_wakeup_start Aufweckfunktion wird gestartet
 help_box_title Hilfe
 imageinfo.api API:
@@ -1874,7 +1874,7 @@ menu.hint_tvradio_switch Schaltet zwischen TV- und Radio-Modus um
 menu.hint_uni_setup Konfiguration Unikabel Frequenz, Userband und Pin
 menu.hint_upnp Universal Plug and Play Browser
 menu.hint_vfd Frontdisplay und Power-LEDs
-menu.hint_vfd_brightness Definiert die Helligkeit im TV-Betrieb 
+menu.hint_vfd_brightness Definiert die Helligkeit im TV-Betrieb
 menu.hint_vfd_brightness_setup Konfiguriert die Helligkeit des Frontdisplays für verschiedene Modi
 menu.hint_vfd_brightnessdeepstandby Definiert die Helligkeit im Deep-Standby
 menu.hint_vfd_brightnessdim Definiert den Wert für das Dimmen des Display nach Ablauf der eingestellten Zeit

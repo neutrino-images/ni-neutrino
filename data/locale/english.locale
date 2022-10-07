@@ -699,7 +699,7 @@ extra.zap_cycle Zap cycle
 extra.zapit_fe_no_same Different tuners when same transponder
 extra.zapit_fe_retries Tune retries
 extra.zapit_fe_timeout Tune timeout
-extra.zapit_hvoltage 18V for rotor moving 
+extra.zapit_hvoltage 18V for rotor moving
 extra.zapit_motor_speed Motor moving speed
 extra.zapit_scanpids Scan/Use pids
 extra.zapit_sdt_changed Channels changed, reload settings.
@@ -1735,7 +1735,7 @@ menu.hint_reset Reset GUI settings to defaults\nTuner config and channels not af
 menu.hint_restart_tuner Restart the internal tuner. This may help if you're experiencing reception problems
 menu.hint_restore Restore files from selected backup
 menu.hint_rotor_swap Swap rotor east/west directions\nin motor control
-menu.hint_rounded_corners Draw round or rectangular windows corners 
+menu.hint_rounded_corners Draw round or rectangular windows corners
 menu.hint_save_settings Save all settings to flash
 menu.hint_saveas Save GUI settings to a file named neutrino.conf
 menu.hint_scan_auto Auto-scan selected provider
@@ -1874,7 +1874,7 @@ menu.hint_tvradio_switch Switches between TV and Radio mode
 menu.hint_uni_setup Configuration of unicable frequency, user band and pin
 menu.hint_upnp Universal Plug and Play Browser
 menu.hint_vfd Frontpanel LEDs, VFD options
-menu.hint_vfd_brightness Working brightness 
+menu.hint_vfd_brightness Working brightness
 menu.hint_vfd_brightness_setup Configure frontpanel display brightness\nfor different modes
 menu.hint_vfd_brightnessdeepstandby Brightness in deep-standby mode
 menu.hint_vfd_brightnessdim Auto-dim brightness
@@ -1895,7 +1895,7 @@ menu.hint_video_dbdr MPEG2 enhancement filters
 menu.hint_video_format TV aspect ratio
 menu.hint_video_hdmi_colorimetry Selects the color profile for HDMI output
 menu.hint_video_mode HDMI output video mode
-menu.hint_video_modes VF key will cycle between enabled modes 
+menu.hint_video_modes VF key will cycle between enabled modes
 menu.hint_video_modes_auto Enable modes to auto-select based on content
 menu.hint_video_pip Picture in picture size and position
 menu.hint_video_psi Menu for changing color, contrast and more
