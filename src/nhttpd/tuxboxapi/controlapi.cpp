@@ -3548,14 +3548,17 @@ void CControlAPI::build_live_url(CyhookHandler *hh)
 	if(!hh->ParamList["vlc_link"].empty())
 	{
 		write_to_file("/tmp/vlc.m3u", "#EXTM3U\n");
-		for (int i = 0; i < (int) g_bouquetManager->Bouquets.size(); i++) {
+		for (int i = 0; i < (int) g_bouquetManager->Bouquets.size(); i++)
+		{
 			ZapitChannelList chanlist;
 			if (mode == CZapitClient::MODE_RADIO)
 				g_bouquetManager->Bouquets[i]->getRadioChannels(chanlist);
 			else
 				g_bouquetManager->Bouquets[i]->getTvChannels(chanlist);
-			if(!chanlist.empty() && !g_bouquetManager->Bouquets[i]->bHidden && g_bouquetManager->Bouquets[i]->bUser) {
-				for(int j = 0; j < (int) chanlist.size(); j++) {
+			if (!chanlist.empty() && !g_bouquetManager->Bouquets[i]->bHidden && g_bouquetManager->Bouquets[i]->bUser)
+			{
+				for (int j = 0; j < (int) chanlist.size(); j++)
+				{
 					CZapitChannel * channel = chanlist[j];
 					//printf("---> %s/n",channel->getName().c_str());
 					write_to_file("/tmp/vlc.m3u", "#EXTINF:-1,"+channel->getName()+"\n",true);
@@ -3585,25 +3588,29 @@ void CControlAPI::build_playlist(CyhookHandler *hh)
 	url += to_string(g_settings.streaming_port);
 	url += "/id=";
 
-	if(!hh->ParamList["id"].empty()) {
+	if (!hh->ParamList["id"].empty())
+	{
 		url += hh->ParamList["id"];
 		t_channel_id channel_id;
 		sscanf(hh->ParamList["id"].c_str(), SCANF_CHANNEL_ID_TYPE, &channel_id);
 		std::string chan_name = NeutrinoAPI->Zapit->getChannelName(channel_id);
 		std::string illegalChars = "\\/:?\"<>|+ ";
 		std::string::iterator it;
-		for (it = chan_name.begin() ; it < chan_name.end() ; ++it){
-		    bool found = illegalChars.find(*it) != std::string::npos;
-	    	if(found){
-	        	*it = '_';
-	    	}
+		for (it = chan_name.begin() ; it < chan_name.end() ; ++it)
+		{
+			bool found = illegalChars.find(*it) != std::string::npos;
+			if (found)
+			{
+				*it = '_';
+			}
 		}
 		std::string m3u = "/tmp/" + chan_name + ".m3u";
 		write_to_file(m3u, "#EXTM3U\n");
-		write_to_file(m3u, "#EXTINF:-1,"+NeutrinoAPI->Zapit->getChannelName(channel_id)+"\n",true);
+		write_to_file(m3u, "#EXTINF:-1," + NeutrinoAPI->Zapit->getChannelName(channel_id) + "\n", true);
 		write_to_file(m3u, url, true);
 		hh->SendRedirect(m3u);
-	} else
+	}
+	else
 		hh->SendError();
 }
 //-------------------------------------------------------------------------
