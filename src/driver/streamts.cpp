@@ -306,7 +306,10 @@ bool CStreamManager::SetPort(int newport)
 #endif
 		mutex.lock();
 		if (listenfd >= 0)
+		{
 			close(listenfd);
+			listenfd = -1;
+		}
 		ret = Listen();
 		mutex.unlock();
 	}
