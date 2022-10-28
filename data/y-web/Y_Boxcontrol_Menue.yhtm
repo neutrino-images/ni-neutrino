@@ -174,7 +174,7 @@ function epg_plus_popup() {
 					~=}
 					{=if-equal:{=ini-get:/var/tuxbox/config/neutrino.conf;glcd_enable;0=}~1~
 					<li>
-						<a target="work" title="GraphLCD-{=L:bc.menue.screenshot=}" href="Y_Tools_Glcd_Screenshot.yhtm">GraphLCD</a>
+						<a target="work" title="GraphLCD-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot_GraphLCD.yhtm">GraphLCD</a>
 					</li>
 					~=}
 				</ul>
