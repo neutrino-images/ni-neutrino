@@ -519,7 +519,7 @@ void CInfoViewerBB::showIcon_SubT()
 
 	showBBIcons(CInfoViewerBB::ICON_SUBT, (have_sub) ? NEUTRINO_ICON_SUBT : NEUTRINO_ICON_SUBT_GREY);
 #ifdef ENABLE_GRAPHLCD
-	if (cc && cc->getSubtitleCount())
+	if (have_sub)
 		cGLCD::lockIcon(cGLCD::SUB);
 	else
 		cGLCD::unlockIcon(cGLCD::SUB);
@@ -532,7 +532,7 @@ void CInfoViewerBB::showIcon_VTXT()
 		return;
 	showBBIcons(CInfoViewerBB::ICON_VTXT, (g_RemoteControl->current_PIDs.PIDs.vtxtpid != 0) ? NEUTRINO_ICON_VTXT : NEUTRINO_ICON_VTXT_GREY);
 #ifdef ENABLE_GRAPHLCD
-	if (g_RemoteControl->current_PIDs.PIDs.vtxtpid)
+	if (g_RemoteControl->current_PIDs.PIDs.vtxtpid != 0)
 		cGLCD::lockIcon(cGLCD::TXT);
 	else
 		cGLCD::unlockIcon(cGLCD::TXT);
@@ -877,6 +877,13 @@ void CInfoViewerBB::paint_ca_icons(int notfirst)
 		showIcon_CA();
 		return;
 	}
+
+#ifdef ENABLE_GRAPHLCD
+		if (fta)
+			cGLCD::unlockIcon(cGLCD::CAM);
+		else
+			cGLCD::lockIcon(cGLCD::CAM);
+#endif
 
 	if(!notfirst) {
 		//NI - check ecm.info
