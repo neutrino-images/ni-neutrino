@@ -50,10 +50,14 @@ extern CPictureViewer *g_PicViewer;
 // nhttpd
 #include "neutrinoapi.h"
 #include "controlapi.h"
-#include <hardware/video.h>
 #include <zapit/femanager.h>
 
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+#include <driver/hdmi_cec.h>
+#else
+#include <hardware/video.h>
 extern cVideo * videoDecoder;
+#endif
 
 //NI
 #include <system/helpers.h>
@@ -598,7 +602,11 @@ void CControlAPI::StandbyCGI(CyhookHandler *hh)
 		{
 			//dont use CEC with standbyoff (TV off) --- use: control/standby?off&cec=off
 			if(g_settings.hdmi_cec_standby && CEC_HDMI_off){
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+				g_hdmicec->SetCECAutoStandby(0);
+#else
 				videoDecoder->SetCECAutoStandby(0);
+#endif
 			}
 
 			if(CNeutrinoApp::getInstance()->getMode() != 4)
@@ -613,7 +621,11 @@ void CControlAPI::StandbyCGI(CyhookHandler *hh)
 		{
 			//dont use CEC with with view on (TV on) --- use: control/standby?off&cec=off
 			if(g_settings.hdmi_cec_view_on && CEC_HDMI_off){
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+				g_hdmicec->SetCECAutoView(0);
+#else
 				videoDecoder->SetCECAutoView(0);
+#endif
 			}
 
 			NeutrinoAPI->Zapit->setStandby(false);
