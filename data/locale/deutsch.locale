@@ -1374,7 +1374,7 @@ menu.hint_blank_screen Schaltet den VideoDecoder bis zum nächsten Event (Tasten
 menu.hint_buildinfo Informationen über Compiler, Compilerflags, Kernel
 menu.hint_ca_init Konfiguration der CA-Systemhardware, CA-Modul und Kartenschächte
 menu.hint_cache_txt Startet das Zwischenspeichern des Videotextes nach einem Kanalwechsel
-menu.hint_camd_control Softcams und Emulatoren\nStart, Stop, Versionsinfo
+menu.hint_camd_control Softcams und Emulatoren\nStart, Stopp, Versionsinfo
 menu.hint_camd_reset Aktive Softcam und/oder Emulator neu starten
 menu.hint_cec_mode CEC-Modus
 menu.hint_cec_sleep CEC-Standby bei HDMI Eingangswechsel
@@ -1552,7 +1552,7 @@ menu.hint_key_pagedown Weisen Sie eine Taste für das Herunterblättern zu
 menu.hint_key_pageup Weisen Sie eine Taste für das Hochblättern zu
 menu.hint_key_pic_mode_active Die Taste für das Bildschirmformat deaktivieren/aktivieren
 menu.hint_key_pic_size_active Die Taste für das 4:3 Anzeigeverhalten deaktivieren/aktivieren
-menu.hint_key_pip_close Tastenzuordnung für Stop PiP oder Start mit aktuellem Kanal
+menu.hint_key_pip_close Tastenzuordnung für Start PiP mit aktuellem Kanal oder Stopp PiP
 menu.hint_key_pip_rotate_cw Tastenzuordnung für PiP Bewegung im Uhrzeigersinn
 menu.hint_key_pip_rotate_ccw Tastenzuordnung für PiP Bewegung entgegen dem Uhrzeigersinn
 menu.hint_key_pip_setup Tastenzuordnung für PiP Konfiguration
@@ -2103,8 +2103,8 @@ motorcontrol.step_increase Schrittweite rauf (c)
 motorcontrol.step_mode Schrittmodus
 motorcontrol.step_size (c) Schrittweite:
 motorcontrol.step_west Fahre Motor nach Westen (b,c)
-motorcontrol.stop_moving Stoppe bei guten Signal(moving)
-motorcontrol.stop_stopped Stoppe bei schlechtem Signal(stopped)
+motorcontrol.stop_moving Stoppe bei guten Signal (moving)
+motorcontrol.stop_stopped Stoppe bei schlechtem Signal (stopped)
 motorcontrol.store Speichere Motorposition (a)
 motorcontrol.timed_mode Zeitgesteuerter Schrittweitenmodus
 motorcontrol.user_menu Benutzermenü
@@ -2188,7 +2188,7 @@ moviebrowser.hint_newbook_forward Neuer Werbesprung gestartet.\n'%s' bestimmt di
 moviebrowser.hint_truncate Entfernt den Filmteil hinter der Filmende-Markierung
 moviebrowser.info_audio Audio
 moviebrowser.info_channel Kanal
-moviebrowser.info_elapsed Letzer Wiedergabe Stop
+moviebrowser.info_elapsed Letzer Wiedergabe-Stopp
 moviebrowser.info_file Datei
 moviebrowser.info_filename Dateiname
 moviebrowser.info_genre_major Genre
