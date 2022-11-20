@@ -1110,7 +1110,7 @@ void cGLCD::Run(void)
 						scrollEpgOffset = 0;
 				}
 
-				if (CSectionsdClient::epgflags::has_current)
+				if (info_CurrentNext.flags & CSectionsdClient::epgflags::has_current)
 				{
 					if ((info_CurrentNext.current_zeit.dauer > 0) && (info_CurrentNext.current_zeit.dauer < 86400))
 					{
@@ -1137,7 +1137,7 @@ void cGLCD::Run(void)
 					Start = stagingStart = tmp_start;
 				}
 
-				if (CSectionsdClient::epgflags::has_next)
+				if (info_CurrentNext.flags & CSectionsdClient::epgflags::has_next)
 				{
 					char tmp_end[6] = {0};
 					tm = localtime(&info_CurrentNext.next_zeit.startzeit);
