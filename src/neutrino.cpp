@@ -4882,6 +4882,10 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	if (exit_code == CNeutrinoApp::EXIT_SHUTDOWN)
 		cGLCD::SetBrightness(0);
 #endif
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+	if (exit_code == CNeutrinoApp::EXIT_SHUTDOWN)
+		g_hdmicec->SetCECState(true);
+#endif
 
 	Cleanup();
 
