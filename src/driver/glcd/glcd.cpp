@@ -137,7 +137,6 @@ cGLCD::cGLCD()
 	InitAnalogClock();
 	InitDigitalClock();
 	InitSimpleClock();
-	InitWeather();
 
 	Update();
 }
@@ -666,6 +665,8 @@ void cGLCD::updateFonts()
 			font_smalltext.LoadFT2(t.glcd_font, "UTF-8", fontsize_smalltext);
 		}
 	}
+
+	WeatherUpdateFonts();
 
 	fonts_initialized = true;
 }
