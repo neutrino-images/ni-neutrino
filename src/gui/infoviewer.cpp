@@ -99,7 +99,7 @@ static bool sortByDateTime (const CChannelEvent& a, const CChannelEvent& b)
 extern bool timeset;
 
 CInfoViewer::CInfoViewer ()
-	: slider()
+	: fader(g_settings.theme.infobar_alpha)
 {
 	sigbox = NULL;
 	header = numbox = body = NULL;
@@ -499,7 +499,7 @@ void CInfoViewer::showMovieTitle(const int playState, const t_channel_id &Channe
 	reset_allScala();
 
 	if(!is_visible)
-		slider.StartSlideIn();
+		fader.StartFadeIn();
 
 	is_visible = true;
 	infoViewerBB->is_visible = true;
@@ -666,7 +666,7 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 	reset_allScala();
 
 	if(!is_visible && !calledFromNumZap)
-		slider.StartSlideIn();
+		fader.StartFadeIn();
 
 	is_visible = true;
 	infoViewerBB->is_visible = true;
@@ -1114,13 +1114,9 @@ void CInfoViewer::loop(bool show_dot)
 			g_RCInput->postMsg(NeutrinoMessages::SHOW_EPG, 0);
 			res = messages_return::cancel_info;
 #endif
-		} else if ((msg == NeutrinoMessages::EVT_TIMER) && (data == slider.GetSlideTimer())) {
-			if(slider.SlideDone())
+		} else if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer())) {
+			if(fader.FadeDone())
 				res = messages_return::cancel_info;
-		} else if ((msg == NeutrinoMessages::EVT_SLIDER) && (data == COSDSlider::AFTER_SLIDEIN)) {
-			// after slide in
-		} else if ((msg == NeutrinoMessages::EVT_SLIDER) && (data == COSDSlider::BEFORE_SLIDEOUT)) {
-			// before slide out
 		} else if ((msg == CRCInput::RC_ok) || (CNeutrinoApp::getInstance()->backKey(msg)) || (msg == CRCInput::RC_timeout)) {
 			if ((g_settings.mode_left_right_key_tv == SNeutrinoSettings::VZAP) && (msg == CRCInput::RC_ok))
 			{
@@ -1133,8 +1129,8 @@ void CInfoViewer::loop(bool show_dot)
 					hideIt = true;
 				}
 			}
-			if(slider.StartSlideOut())
-				timeoutEnd = CRCInput::calcTimeoutEnd(2);
+			if(fader.StartFadeOut())
+				timeoutEnd = CRCInput::calcTimeoutEnd(1);
 			else
 				res = messages_return::cancel_info;
 		} else if ((g_settings.mode_left_right_key_tv == SNeutrinoSettings::VZAP) && ((msg == CRCInput::RC_right) || (msg == CRCInput::RC_left ))) {
@@ -1205,7 +1201,7 @@ void CInfoViewer::loop(bool show_dot)
 			} else {
 				if (msg == CRCInput::RC_standby) {
 					g_RCInput->killTimer (sec_timer_id);
-					slider.StopSlide();
+					fader.StopFade();
 				}
 				res = neutrino->handleMsg (msg, data);
 				if (res & messages_return::unhandled) {
@@ -1242,7 +1238,7 @@ void CInfoViewer::loop(bool show_dot)
 	}
 
 	g_RCInput->killTimer (sec_timer_id);
-	slider.StopSlide();
+	fader.StopFade();
 	if (zap_mode & IV_MODE_VIRTUAL_ZAP) {
 		/* if bouquet cycle set, do virtual over current bouquet */
 		if (/*g_settings.zap_cycle && */ /* (bouquetList != NULL) && */ !(bouquetList->Bouquets.empty()))
@@ -1415,9 +1411,9 @@ int CInfoViewer::handleMsg (const neutrino_msg_t msg, neutrino_msg_data_t data)
 		//Set_CA_Status (data);
 		return messages_return::handled;
 	} else if (msg == NeutrinoMessages::EVT_TIMER) {
-		if (data == slider.GetSlideTimer()) {
+		if (data == fader.GetFadeTimer()) {
 			// here, the event can only come if there is another window in the foreground!
-			slider.StopSlide();
+			fader.StopFade();
 			return messages_return::handled;
 		} else if (data == lcdUpdateTimer) {
 //printf("CInfoViewer::handleMsg: lcdUpdateTimer\n");
