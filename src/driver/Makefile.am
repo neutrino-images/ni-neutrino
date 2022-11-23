@@ -48,7 +48,6 @@ libneutrino_driver_a_SOURCES = \
 	screen_max.cpp \
 	screenshot.cpp \
 	shutdown_count.cpp \
-	slide.cpp \
 	streamts.cpp \
 	volume.cpp
 
@@ -59,6 +58,16 @@ endif
 if ENABLE_LCD4LINUX
 libneutrino_driver_a_SOURCES += \
 	lcd4l.cpp
+endif
+
+# slide driver
+if BOXTYPE_ARMBOX
+libneutrino_driver_a_SOURCES += \
+	slide.cpp
+endif
+if BOXTYPE_MIPSBOX
+libneutrino_driver_a_SOURCES += \
+	slide.cpp
 endif
 
 # hdmi-cec driver
