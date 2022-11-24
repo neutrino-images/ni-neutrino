@@ -442,7 +442,6 @@ bool CStreamManager::Parse(int fd, stream_pids_t &pids, t_channel_id &chid, CFro
 		return false;
 	}
 
-	CFrontend *live_fe = NULL;
 	CZapitChannel * channel = NULL;
 
 	if (CNeutrinoApp::getInstance()->getMode() != NeutrinoModes::mode_standby) {
