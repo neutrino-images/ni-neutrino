@@ -89,7 +89,6 @@ static keyvals usermenu_items[] =
 	{ SNeutrinoSettings::ITEM_ECMINFO,		LOCALE_ECMINFO_SHOW,			usermenu_show },
 	{ SNeutrinoSettings::ITEM_CAMD_RESET,		LOCALE_CAMD_RESET,			usermenu_show },
 	{ SNeutrinoSettings::ITEM_INFOICONS,		LOCALE_INFOICONS_SWITCH_ON,		usermenu_show },
-	{ SNeutrinoSettings::ITEM_YOUTUBE,		LOCALE_MOVIEPLAYER_YTPLAYBACK,		usermenu_show },
 	{ SNeutrinoSettings::ITEM_FILEPLAY_VIDEO,	LOCALE_MOVIEPLAYER_FILEPLAYBACK_VIDEO,	usermenu_show },
 	{ SNeutrinoSettings::ITEM_FILEPLAY_AUDIO,	LOCALE_MOVIEPLAYER_FILEPLAYBACK_AUDIO,	usermenu_show },
 	{ SNeutrinoSettings::ITEM_AUDIOPLAYER,		LOCALE_AUDIOPLAYER_NAME,		usermenu_show },

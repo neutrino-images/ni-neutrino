@@ -75,32 +75,6 @@ if test "$enable_omdb_key_manage" = "yes" ; then
 fi
 # omdb end
 
-# youtube
-AC_ARG_WITH(youtube-dev-key,
-	AS_HELP_STRING([--with-youtube-dev-key=KEY], [API dev key for YouTube streaming]),
-	[YT_DEV_KEY="$withval"],
-	[YT_DEV_KEY=""])
-AC_DEFINE_UNQUOTED([YT_DEV_KEY], ["$YT_DEV_KEY"], [API dev key for YouTube streaming])
-
-AC_ARG_ENABLE([youtube-key-manage],
-	AS_HELP_STRING([--enable-youtube-key-manage], [Enable manage YouTube dev key via gui @<:@default=yes@:>@]),
-	[enable_youtube_key_manage="$enableval"],
-	[enable_youtube_key_manage="yes"])
-
-if test "$enable_youtube_key_manage" = "yes" ; then
-	AC_DEFINE([ENABLE_YOUTUBE_KEY_MANAGE], 1, [Enable manage YouTube dev key via gui])
-fi
-
-AC_ARG_ENABLE([youtube-player],
-	AS_HELP_STRING([--enable-youtube-player], [Enable play and control youtube streams with moviebrowser @<:@default=yes@:>@]),
-	[enable_youtube_player="$enableval"],
-	[enable_youtube_player="yes"])
-
-if test "$enable_youtube_player" = "yes" ; then
-	AC_DEFINE([ENABLE_YOUTUBE_PLAYER], 1, [Enable play and control YouTube streams with moviebrowser])
-fi
-# youtube end
-
 # shoutcast
 AC_ARG_WITH(shoutcast-dev-key,
 	AS_HELP_STRING([--with-shoutcast-dev-key=KEY], [API dev key to get stream data lists from ShoutCast service]),
@@ -117,6 +91,23 @@ if test "$enable_shoutcast_key_manage" = "yes" ; then
 	AC_DEFINE([ENABLE_SHOUTCAST_KEY_MANAGE], 1, [Enable manage of api dev key to get stream data lists from ShoutCast service via gui])
 fi
 # shoutcast end
+
+# youtube
+AC_ARG_WITH(youtube-dev-key,
+	AS_HELP_STRING([--with-youtube-dev-key=KEY], [API dev key for YouTube streaming]),
+	[YOUTUBE_DEV_KEY="$withval"],
+	[YOUTUBE_DEV_KEY=""])
+AC_DEFINE_UNQUOTED([YOUTUBE_DEV_KEY], ["$YOUTUBE_DEV_KEY"], [API dev key for YouTube streaming])
+
+AC_ARG_ENABLE([youtube-key-manage],
+	AS_HELP_STRING([--enable-youtube-key-manage], [Enable manage YouTube dev key via gui @<:@default=yes@:>@]),
+	[enable_youtube_key_manage="$enableval"],
+	[enable_youtube_key_manage="yes"])
+
+if test "$enable_youtube_key_manage" = "yes" ; then
+	AC_DEFINE([ENABLE_YOUTUBE_KEY_MANAGE], 1, [Enable manage YouTube dev key via gui])
+fi
+# youtube end
 
 AC_ARG_WITH(libcoolstream-static-dir,
 	AS_HELP_STRING([--with-libcoolstream-static-dir=PATH], [path for static libcoolstream [[NONE]]]),

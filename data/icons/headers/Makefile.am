@@ -33,5 +33,4 @@ install_DATA = \
 	streaming.png \
 	timer.png \
 	upnp.png \
-	video.png \
-	ytplay.png
+	video.png
