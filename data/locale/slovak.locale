@@ -894,23 +894,21 @@ fsk.to_12 do 12
 fsk.to_16 do 16
 fsk.to_7 do 7
 glcd.align_center zarovnaný
-glcd.align_channel Zarovnať kanál
-glcd.align_duration Zarovnať dĺžku programu
-glcd.align_end Zarovnať koniec programu
-glcd.align_epg Zarovnať EPG
 glcd.align_left vľavo
 glcd.align_none žiadne
 glcd.align_right vpravo
-glcd.align_start Zarovnať začiatik programu
-glcd.align_time Zarovnať čas
-glcd.bar_width Šírka pruhu posuvu
-glcd.bar_x_position Ukazovateľ priebehu x-pozícia
-glcd.bar_y_position Ukazovateľ priebehu y-pozícia
 glcd.brightness Jas
 glcd.brightness_dim Stmaviť
 glcd.brightness_dim_time Stmievanie
 glcd.brightness_settings Nastavenia jasu
 glcd.brightness_standby Jas v pohotovostnom režime
+glcd.channel_align Zarovnať kanál
+glcd.channel_size Výška kanála
+glcd.channel_x_position Kanál x-pozícia
+glcd.channel_y_position Kanál y-pozícia
+glcd.clock_digital_y_position Digitálne hodiny y-pozícia
+glcd.clock_simple_size Výška jednoduchých hodín
+glcd.clock_simple_y_position Jednoduché hodiny y-pozícia
 glcd.color.amber Jantárová
 glcd.color.black Čierna
 glcd.color.blue Modrá
@@ -932,63 +930,65 @@ glcd.color.red Červená
 glcd.color.teal Modrozelená
 glcd.color.white Biela
 glcd.color.yellow Žltá
-glcd.channel_x_position Kanál x-pozícia
-glcd.channel_y_position Kanál y-pozícia
-glcd.digital_clock_y_position Digitálne hodiny y-pozícia
+glcd.color_bg Farba pozadia
+glcd.color_fg Farba textu
 glcd.display Typ displeja
+glcd.duration_align Zarovnať dĺžku programu
+glcd.duration_show Zobraziť trvanie programu
+glcd.duration_size Výška trvania programu
 glcd.duration_x_position Trvanie programu x-pozícia
 glcd.duration_y_position Trvanie programu y-pozícia
 glcd.enable Použiť grafický LCD
+glcd.end_align Zarovnať koniec programu
+glcd.end_show Zobraziť koniec programu
+glcd.end_size Výška konca programu
 glcd.end_x_position Koniec programu x-pozícia
 glcd.end_y_position Koniec programu y-pozícia
+glcd.epg_align Zarovnať EPG
+glcd.epg_size Výška EPG
 glcd.epg_x_position EPG x-pozícia
 glcd.epg_y_position EPG y-pozícia
 glcd.font Písmo
 glcd.font_autoresize Automatická veľkosť písma
 glcd.head Nastavenie grafického LCD
+glcd.logo_show Zobraziť logo stanice
+glcd.logo_size Výška loga
 glcd.logo_x_position Logo x-pozícia
 glcd.logo_y_position Logo y-pozícia
 glcd.mirror_osd Zobraziť ponuku OSD na grafickom LCD
 glcd.mirror_video Zobraziť obraz videa na grafickom LCD
 glcd.position_settings Pozície a veľkosti
+glcd.progressbar_color Farba pruhu posuvu
+glcd.progressbar_show Zobraziť indikátor priebehu
+glcd.progressbar_size Výška lišty priebehu
+glcd.progressbar_width Šírka pruhu posuvu
+glcd.progressbar_x_position Ukazovateľ priebehu x-pozícia
+glcd.progressbar_y_position Ukazovateľ priebehu y-pozícia
 glcd.restart Znova spustiť
 glcd.scroll_speed Rýchlosť rolovania
-glcd.select.bar Farba pruhu posuvu
-glcd.select.bg Farba pozadia
-glcd.select.fg Farba textu
-glcd.show_duration Zobraziť trvanie programu
-glcd.show_end Zobraziť koniec programu
-glcd.show_logo Zobraziť logo stanice
-glcd.show_progressbar Zobraziť indikátor priebehu
-glcd.show_start Zobraziť začiatok programu
-glcd.show_time Zobraziť čas
-glcd.show_weather Zobraziť počasie
-glcd.simple_clock_y_position Jednoduché hodiny y-pozícia
-glcd.size_bar Výška lišty priebehu
-glcd.size_channel Výška kanála
-glcd.size_duration Výška trvania programu
-glcd.size_end Výška konca programu
-glcd.size_epg Výška EPG
-glcd.size_logo Výška loga
-glcd.size_simple_clock Výška jednoduchých hodín
-glcd.size_start Výška začiatku programu
-glcd.size_time Výška času
-glcd.size_time_standby Výška času v pohotovostnom režime
-glcd.theme Vyberte vzhľad
-glcd.theme_settings Nastavenia vzhľadu
-glcd.standby_analog_clock Analógové hodiny
-glcd.standby_digital_clock Digitálne hodiny
-glcd.standby_lcd_clock LCD hodiny
-glcd.standby_led_clock LED hodiny
+glcd.standby_clock Zobrazenie času v pohotovostnom režime
+glcd.standby_clock_analog Analógové hodiny
+glcd.standby_clock_digital Digitálne hodiny
+glcd.standby_clock_lcd LCD hodiny
+glcd.standby_clock_led LED hodiny
+glcd.standby_clock_simple Jednoduché hodiny
 glcd.standby_settings Nastavenia pohotovostného režimu
-glcd.standby_simple_clock Jednoduché hodiny
 glcd.standby_weather Počasie v pohotovostnom stave
+glcd.start_align Zarovnať začiatik programu
+glcd.start_show Zobraziť začiatok programu
+glcd.start_size Výška začiatku programu
 glcd.start_x_position Začiatok programu x-pozícia
 glcd.start_y_position Začiatok programu y-pozícia
-glcd.time_in_standby Zobrazenie času v pohotovostnom režime
+glcd.theme Vyberte vzhľad
+glcd.theme_settings Nastavenia vzhľadu
+glcd.time_align Zarovnať čas
+glcd.time_show Zobraziť čas
+glcd.time_size Výška času
+glcd.time_size_standby Výška času v pohotovostnom režime
 glcd.time_x_position Čas x-pozícia
 glcd.time_y_position Čas y-pozícia
 glcd.volume Hlasitosť
+glcd.weather_show Zobraziť počasie
 hdd_10min 10 minút
 hdd_1min 1 minúta
 hdd_20min 20 minút
