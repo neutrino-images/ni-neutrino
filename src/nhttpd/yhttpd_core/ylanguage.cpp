@@ -89,7 +89,7 @@ void CLanguage::setLanguage(std::string _language){
 		}
 		else if (i == 1) {
 			// load neutrino default language (should not happen)
-			NeutrinoLanguage->loadConfig(LOCALEDIR "/deutsch.locale", ' ');
+			NeutrinoLanguage->loadConfig(LOCALEDIR "/english.locale", ' ');
 		}
 	}
 }
