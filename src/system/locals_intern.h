@@ -1486,6 +1486,7 @@ const char * locale_real_names[] =
 	"menu.hint_foot_back",
 	"menu.hint_foot_textcolor",
 	"menu.hint_games",
+	"menu.hint_glcd_support",
 	"menu.hint_hdd",
 	"menu.hint_hdd_allow_set_recdir",
 	"menu.hint_hdd_apply",
