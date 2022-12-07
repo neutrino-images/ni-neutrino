@@ -74,6 +74,7 @@ main.info=Info
 main.info_desc=Information &uuml;ber das yWeb, Version
 main.remote_full_desc=Fernbedienung & OSD Vollbild
 main.stream_to_vlc_client_desc=Live TV direkt im VLC Client
+main.ni=NI-yWeb
 
 # ===== Boxcontrol Menue
 bc.menue.bouquets_desc=Sender ausw&auml;hlen
@@ -483,8 +484,6 @@ rc.key_pos=Pos
 rc.key_recall=Recall
 
 # ===== NI
-main.ni=NI-yWeb
-
 ni.save=Speichern
 ni.cancel=Abbrechen
 ni.edit=Bearbeiten

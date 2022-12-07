@@ -74,6 +74,7 @@ main.info=Info
 main.info_desc=Information about yWeb, Updates
 main.remote_full_desc=Remote & OSD full
 main.stream_to_vlc_client_desc=Stream to VLC Client
+main.ni=NI-yWeb
 
 # ===== Boxcontrol Menue
 bc.menue.bouquets_desc=Switch channels
@@ -483,8 +484,6 @@ rc.key_pos=Pos
 rc.key_recall=Recall
 
 # ===== NI
-main.ni=NI-yWeb
-
 ni.save=Save
 ni.cancel=Cancel
 ni.edit=Edit

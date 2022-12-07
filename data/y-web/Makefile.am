@@ -13,6 +13,7 @@ install_DATA =	channels.js \
 		robots.txt \
 		Y_About.yhtm \
 		Y_Baselib.js \
+		Y_Blank.yhtm \
 		Y_Blocks.txt \
 		Y_Blocks_Neutrino.txt \
 		Y_Boxcontrol_Bouquet_Editor_Edit.yhtm \
@@ -87,7 +88,6 @@ install_DATA +=	accordion.js \
 install_DATA += Y_NIlib.js \
 		Y_NI.css \
 		Y_NI_About.yhtm \
-		Y_NI_blank.yhtm \
 		Y_NI_Camd-control.yhtm \
 		Y_NI_Infoicons-control.yhtm \
 		Y_NI_m3uConInfo.yhtm \
