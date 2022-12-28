@@ -70,16 +70,6 @@ libneutrino_driver_a_SOURCES += \
 	slide.cpp
 endif
 
-# hdmi-cec driver
-if BOXTYPE_ARMBOX
-libneutrino_driver_a_SOURCES += \
-	hdmi_cec.cpp
-endif
-if BOXTYPE_MIPSBOX
-libneutrino_driver_a_SOURCES += \
-	hdmi_cec.cpp
-endif
-
 # different framebuffer drivers
 if BOXTYPE_GENERIC
 libneutrino_driver_a_SOURCES += \
