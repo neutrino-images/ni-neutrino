@@ -720,24 +720,24 @@ void CNetworkSetup::testNetworkSettings()
 
 	std::string our_ip, our_mask, our_broadcast, our_gateway, our_nameserver;
 
-	std::string text, testsite, offset = "    ";
+	std::string text, offset = "    ";
 
-	//set default testdomain
-	std::string defaultsite = "www.google.de";
+	//set test-url and test-ip
+	std::string test_url = "www.neutrino-images.de";
+	std::string test_ip = "178.32.218.87";
 
-	//set test-URL and test-IP
-	std::string test_URL = "tuxbox-neutrino.org";
-	std::string test_IP = "89.31.143.1";
+	//set homepage-default
+	std::string homepage_default = "www.google.de";
 
-	//get www-domain testsite from /.version
+	//get homepage from /.version
+	std::string homepage = "";
 	CConfigFile config('\t');
 	config.loadConfig(IMAGE_VERSION_FILE);
-	testsite = config.getString("homepage",defaultsite);
-	testsite.replace( 0, testsite.find("www",0), "" );
+	homepage = config.getString("homepage", homepage_default);
 
-	//use default testdomain if testsite missing
-	if (testsite.length()==0)
-		testsite = defaultsite;
+	//use homepage-default if homepage is missing
+	if (homepage.length() == 0)
+		homepage = homepage_default;
 
 	if (networkConfig->inet_static)
 	{
@@ -761,7 +761,7 @@ void CNetworkSetup::testNetworkSettings()
 	printf("testNw Broadcast: %s\n", our_broadcast.c_str());
 	printf("testNw Gateway: %s\n", our_gateway.c_str());
 	printf("testNw Nameserver: %s\n", our_nameserver.c_str());
-	printf("testNw Testsite: %s\n", testsite.c_str());
+	printf("testNw Homepage: %s\n", homepage.c_str());
 
 	if (our_ip.empty())
 	{
@@ -772,36 +772,38 @@ void CNetworkSetup::testNetworkSettings()
 		//Box
 		text = "Box (" + old_mac_addr + "):\n";
 		text += offset + our_ip + " " + mypinghost(our_ip) + "\n";
+
 		//Gateway
 		text += (std::string)g_Locale->getText(LOCALE_NETWORKMENU_GATEWAY) + " (Router):\n";
 		text += offset + our_gateway + " " + mypinghost(our_gateway) + "\n";
+
 		//Nameserver
 		text += (std::string)g_Locale->getText(LOCALE_NETWORKMENU_NAMESERVER) + ":\n";
 		text += offset + our_nameserver + " " + mypinghost(our_nameserver) + "\n";
+
 		//NTPserver
-		if ( (pinghost(our_nameserver) == 1) && g_settings.network_ntpenable && (!g_settings.network_ntpserver.empty()) )
+		if ((pinghost(our_nameserver) == 1) && g_settings.network_ntpenable && (!g_settings.network_ntpserver.empty()))
 		{
 			text += std::string(g_Locale->getText(LOCALE_NETWORKMENU_NTPSERVER)) + ":\n";
 			text += offset + g_settings.network_ntpserver + " " + mypinghost(g_settings.network_ntpserver) + "\n";
 		}
-		//NI
-		if (pinghost(our_nameserver.c_str()) == 1)
-		{
-			//testsite (or defaultsite)
-			text += testsite + ":\n";
-			text += offset + "via DNS: " + mypinghost(testsite) + "\n";
-		}
-		//Test-URL
-		text += test_URL + ":\n";
-		text += offset + "via IP (" + test_IP + "): " + mypinghost(test_IP) + "\n";
+
+		//test-url
+		text += test_url + ":\n";
+		text += offset + "via IP (" + test_ip + "): " + mypinghost(test_ip) + "\n";
 		if (pinghost(our_nameserver) == 1)
 		{
-			text += offset + "via DNS: " + mypinghost(test_URL) + "\n";
-			//testsite (or defaultsite)
-#if 0
-			text += testsite + ":\n";
-			text += offset + "via DNS: " + mypinghost(testsite) + "\n";
-#endif
+			text += offset + "via DNS: " + mypinghost(test_url) + "\n";
+		}
+
+		//homepage from /.version (or homepage-default)
+		if (homepage.compare(test_url) != 0)
+		{
+			if (pinghost(our_nameserver) == 1)
+			{
+				text += homepage + ":\n";
+				text += offset + "via DNS: " + mypinghost(homepage) + "\n";
+			}
 		}
 	}
 
