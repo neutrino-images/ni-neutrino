@@ -3095,7 +3095,7 @@ void CControlAPI::doNewTimer(CyhookHandler *hh)
 			// get Default Recordingdir
 			CConfigFile *Config = new CConfigFile(',');
 			Config->loadConfig(NEUTRINO_CONFIGFILE);
-			_rec_dir = Config->getString("network_nfs_recordingdir", "/mnt/filme");
+			_rec_dir = Config->getString("network_nfs_recordingdir", TARGET_ROOT "/media/sda1/movies");
 			delete Config;
 		}
 		if(changeApids)

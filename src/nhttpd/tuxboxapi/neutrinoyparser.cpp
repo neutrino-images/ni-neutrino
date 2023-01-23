@@ -1185,7 +1185,7 @@ std::string  CNeutrinoYParser::func_set_timer_form(CyhookHandler *hh, std::strin
 		// get Default Recordingdir
 		CConfigFile *Config = new CConfigFile(',');
 		Config->loadConfig(NEUTRINO_CONFIGFILE);
-		hh->ParamList["timer_recordingDir"] = Config->getString("network_nfs_recordingdir", "/mnt/filme");
+		hh->ParamList["timer_recordingDir"] = Config->getString("network_nfs_recordingdir", TARGET_ROOT "/media/sda1/movies");
 		delete Config;
 	}
 	hh->ParamList["standby"] = (cmd == "new")? "0" : ((timer.standby_on)?"1":"0");
