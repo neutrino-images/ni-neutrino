@@ -701,7 +701,7 @@ void CInfoViewerBB::showIcon_Tuner()
 	}
 
 	char icon_name[12];
-	snprintf(icon_name, sizeof(icon_name), "%s_%02d", NEUTRINO_ICON_TUNER, CFEManager::getInstance()->getLiveFE()->getNumber() + 1);
+	snprintf(icon_name, sizeof(icon_name), "%s_%02u", NEUTRINO_ICON_TUNER, CFEManager::getInstance()->getLiveFE()->getNumber() + 1);
 
 	int w = 0, h = 0;
 	if (!checkBBIcon(icon_name, &w, &h))
