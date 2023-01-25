@@ -446,7 +446,7 @@ int CImageInfoNI::get_MTD_Info()
 	size_t len;
 	int i = 0;
 
-	memset(&mtd_info, 0, sizeof(mtd_info));
+	mtd_info.clear();
 
 	buffer = NULL;
 	if (!(fh = fopen("/proc/mtd", "r")))
