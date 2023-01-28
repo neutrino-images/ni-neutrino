@@ -119,20 +119,6 @@ AC_ARG_ENABLE(reschange,
 	AC_DEFINE(ENABLE_CHANGE_OSD_RESOLUTION, 1, [enable to change osd resolution]))
 AM_CONDITIONAL(ENABLE_RESCHANGE, test "$enable_reschange" = "yes")
 
-# default theme
-AC_ARG_WITH(default-theme,
-	AS_HELP_STRING([--with-default-theme=THEMENAME], [Default theme for gui @<:@default is empty@:>@]),
-	[default_theme="$withval"],
-	[default_theme=""])
-AC_DEFINE_UNQUOTED([DEFAULT_THEME], ["$default_theme"], [Default theme for gui])
-
-# default oled theme
-AC_ARG_WITH(default-oled-theme,
-	AS_HELP_STRING([--with-default-oled-theme=THEMENAME], [Default theme for oled. @<:@default is empty@:>@]),
-	[default_oled_theme="$withval"],
-	[default_oled_theme=""])
-AC_DEFINE_UNQUOTED([DEFAULT_OLED_THEME], ["$default_oled_theme"], [Default theme for oled.])
-
 AC_MSG_CHECKING(target)
 
 if test "$TARGET" = "native"; then
