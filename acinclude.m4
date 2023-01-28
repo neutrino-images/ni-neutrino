@@ -517,11 +517,11 @@ elif test "$BOXMODEL" = "protek4k"; then
 	AC_DEFINE(BOXMODEL_PROTEK4K, 1, [protek4k])
 
 elif test "$BOXMODEL" = "osmini4k"; then
-        AC_DEFINE(BOXMODEL_OSMINI4K, 1, [osmini4k])
+	AC_DEFINE(BOXMODEL_OSMINI4K, 1, [osmini4k])
 elif test "$BOXMODEL" = "osmio4k"; then
-        AC_DEFINE(BOXMODEL_OSMIO4K, 1, [osmio4k])
+	AC_DEFINE(BOXMODEL_OSMIO4K, 1, [osmio4k])
 elif test "$BOXMODEL" = "osmio4kplus"; then
-        AC_DEFINE(BOXMODEL_OSMIO4KPLUS, 1, [osmio4kplus])
+	AC_DEFINE(BOXMODEL_OSMIO4KPLUS, 1, [osmio4kplus])
 
 elif test "$BOXMODEL" = "vusolo4k"; then
 	AC_DEFINE(BOXMODEL_VUSOLO4K, 1, [vusolo4k])
