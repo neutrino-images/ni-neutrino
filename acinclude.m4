@@ -131,7 +131,6 @@ AC_REQUIRE([TUXBOX_APPS])
 #
 # FIXME:
 # This breaks --sysconfdir= etc. switches in cdk mode.
-# Is --with-targetprefix= and the resulting ${TARGET_PREFIX} really needed?
 #
 if test "$TARGET" = "cdk"; then
 	datadir="\${prefix}/share"
