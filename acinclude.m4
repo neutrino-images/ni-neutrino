@@ -29,11 +29,6 @@ if test "$DEBUG" = "yes"; then
 	AC_DEFINE(DEBUG, 1, [enable debugging code])
 fi
 
-AC_ARG_ENABLE(reschange,
-	AS_HELP_STRING([--enable-reschange], [enable to change osd resolution]),
-	AC_DEFINE(ENABLE_CHANGE_OSD_RESOLUTION, 1, [enable to change osd resolution]))
-AM_CONDITIONAL(ENABLE_RESCHANGE, test "$enable_reschange" = "yes")
-
 AC_MSG_CHECKING(target)
 
 if test "$TARGET" = "native"; then
@@ -608,13 +603,6 @@ case "$BOXMODEL" in
 	;;
 esac
 AM_CONDITIONAL(BOXMODEL_HISILICON, test "$hisilicon" = "true")
-
-# BOXMODELs that allows to change osd resolution
-case "$BOXMODEL" in
-	hd2|hd60|hd61|multibox|multiboxse|hd51|bre2ze4k|h7|e4hdultra|protek4k|osmini4k|osmio4k|osmio4kplus|vusolo4k|vuduo4k|vuduo4kse|vuultimo4k|vuuno4k|vuuno4kse|vuzero4k|vuduo|vuduo2|gb800se|osnino|osninoplus|osninopro)
-		AC_DEFINE(ENABLE_CHANGE_OSD_RESOLUTION, 1, [enable to change osd resolution])
-	;;
-esac
 ])
 
 dnl backward compatiblity
