@@ -25,7 +25,7 @@
 #include <config.h>
 #endif
 
-#if USE_STB_HAL
+#if HAVE_LIBSTB_HAL
 #include <version_hal.h>
 #endif
 
@@ -331,7 +331,7 @@ void CImageInfoNI::paint()
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_GUI));
 	paintLine(xpos + offset, font_info, guiversion.str());
 
-#if USE_STB_HAL
+#if HAVE_LIBSTB_HAL
 	hal_libversion_t halver;
 	hal_get_lib_version(&halver);
 

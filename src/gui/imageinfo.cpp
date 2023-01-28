@@ -25,7 +25,7 @@
 #include <config.h>
 #endif
 
-#if USE_STB_HAL
+#if HAVE_LIBSTB_HAL
 #include <version_hal.h>
 #endif
 
@@ -399,7 +399,7 @@ void CImageInfo::initBuildDateInfo()
 
 void CImageInfo::initHalInfo()
 {
-#if USE_STB_HAL
+#if HAVE_LIBSTB_HAL
 	hal_libversion_t ver;
 	hal_get_lib_version(&ver);
 	//libstb-hal version
