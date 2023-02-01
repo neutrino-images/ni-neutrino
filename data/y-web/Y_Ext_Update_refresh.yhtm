@@ -11,7 +11,7 @@ function do_onload() {
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_onload()">
 {=var-set:wait_text={=L:refreshing=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

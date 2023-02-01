@@ -23,7 +23,7 @@ function build_menu(){
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body onload="build_menu()">
 <div class="y_menu_sec_box">
 	<div class="y_menu_sec_box_head"><h2>{=L:main.extensions=}</h2></div>

@@ -133,7 +133,7 @@ body {
 }
 /*]]>*/
 </style>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 
 <body>
 	<div class="yinfo">

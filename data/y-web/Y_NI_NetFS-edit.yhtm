@@ -21,7 +21,7 @@ function do_submit()
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body onload="form_init()">
 {=var-set:wait_text={=L:ni.netfs-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

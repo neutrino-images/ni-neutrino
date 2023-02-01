@@ -40,8 +40,8 @@ jQuery(document).ready(function() {
 });
 //]]>
 </script>
+{=include-block:Y_Blocks.txt;head_close=}
 
-</head>
 <body>
 	<div class="ylcd4linux">
 		{=if-file-exists:{=var-get:lcd4linux_png=}~

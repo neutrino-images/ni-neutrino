@@ -8,7 +8,7 @@ function goUrl(_url){
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 <div class="work_box">
 	<div class="work_box_head">

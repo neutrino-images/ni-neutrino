@@ -131,7 +131,7 @@ function epg_plus_popup() {
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 <div class="y_menu_sec_box">
 	<div class="y_menu_sec_box_head"><h2>{=L:main.boxcontrol=}</h2></div>

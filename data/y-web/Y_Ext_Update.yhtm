@@ -4,7 +4,7 @@
 <script type="text/javascript" src="/Y_Baselib.js"></script>
 <script type="text/javascript" src="/Y_yweb.js"></script>
 <script type="text/javascript" src="/Y_Ext_Update.js"></script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 {=var-set:wait_text={=L:save_values=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

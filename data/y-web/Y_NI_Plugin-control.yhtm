@@ -9,7 +9,7 @@
 {=var-set:xupnpdport={=script:Y_NI_Tools get_xupnpd_webif_port=}=}
 
 {=include-block:Y_Blocks.txt;head_ni=}
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body onload='goUrl("/control/reloadplugins");'>
 {=var-set:wait_text={=L:ni.plugin-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

@@ -17,7 +17,7 @@ function do_submit()
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 {=var-set:wait_text={=L:ni.infoicons-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

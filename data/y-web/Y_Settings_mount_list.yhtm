@@ -22,7 +22,7 @@ function do_edit()
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 {=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

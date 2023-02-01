@@ -40,7 +40,7 @@ function setCaretToEnd(control)
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">

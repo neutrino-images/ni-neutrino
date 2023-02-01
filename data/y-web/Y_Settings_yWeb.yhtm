@@ -87,7 +87,7 @@ select {
 	width: 220px;
 }
 </style>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_init()">
 {=var-set:wait_text={=L:save_values=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

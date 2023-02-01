@@ -7,7 +7,7 @@
 <script type="text/javascript">
 </script>
 
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 {=var-set:wait_text={=L:epg.get_epg=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

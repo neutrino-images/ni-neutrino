@@ -1,6 +1,6 @@
 start-block~timer
 {=include-block:Y_Blocks.txt;head=}
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
@@ -152,7 +152,7 @@ end-block~ext_save_settings
 # ------- No Managemant Error
 start-block~no_management
 {=include-block:Y_Blocks.txt;head=}
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 <br />
 <div class="y_head">Error</div>
@@ -261,7 +261,7 @@ start-block~head_no_charset
 end-block~head_no_charset
 
 # ------- Lay-Frame HEAD
-start-block~frame_head
+start-block~head_frame
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -271,10 +271,10 @@ start-block~frame_head
 <link rel="stylesheet" type="text/css" href="/Y_Dist.css" />
 <link rel="stylesheet" type="text/css" href="/Y_User.css" />
 <title>yWeb</title>
-end-block~frame_head
+end-block~head_frame
 
 # ------- Lay-Frame HEAD
-start-block~frame_iso_head
+start-block~head_frame_iso
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -284,7 +284,7 @@ start-block~frame_iso_head
 <link rel="stylesheet" type="text/css" href="/Y_Dist.css" />
 <link rel="stylesheet" type="text/css" href="/Y_User.css" />
 <title>yWeb</title>
-end-block~frame_iso_head
+end-block~head_frame_iso
 
 # ------- Lay-HEAD NI
 start-block~head_ni
@@ -313,6 +313,11 @@ start-block~head_ni
 {=include-block:Y_Blocks.txt;jQuery=}
 {=include-block:Y_Blocks.txt;jQuery_ui=}
 end-block~head_ni
+
+# ------- Lay-HEAD close
+start-block~head_close
+{=include-block:Y_Blocks.txt;head_close=}
+end-block~head_close
 
 # ============= jQuery
 # ------- jQuery library
@@ -353,7 +358,7 @@ function do_submit()
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body">
 {=var-set:wait_text={=L:save_values=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
@@ -397,9 +402,9 @@ start-block~frame_main
 {=if-empty:{=ini-get:%(CONFIGDIR)/Y-Web.conf;startup=}~
 {=include-block:Y_Blocks.txt;start_wizard_page=}
 ~
-{=include-block:Y_Blocks.txt;frame_head=}
+{=include-block:Y_Blocks.txt;head_frame=}
 <title>yWeb</title>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 	<frameset rows="70,*" frameborder="0" framespacing="0">
 	<frame name="prim_menu" src="Y_Menue.yhtm" scrolling="no"  marginwidth="0" marginheight="0" frameborder="0" noresize="noresize" />
 	<frame name="base" src="Y_Dyn_Pages.yhtm?page=frame_boxcontrol"  marginwidth="0" marginheight="0" frameborder="0" style="height:100%"; />
@@ -417,7 +422,7 @@ end-block~frame_main
 # ------- Lay-Frame MAIN
 start-block~page_frame_rest
 {=include-block:Y_Blocks.txt;head=}
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 </body>
 </html>
@@ -425,8 +430,8 @@ end-block~page_frame_rest
 
 # ------- Lay-Frame Secondary-Menu
 start-block~frame_secondary
-{=include-block:Y_Blocks.txt;frame_iso_head=}
-</head>
+{=include-block:Y_Blocks.txt;head_frame_iso=}
+{=include-block:Y_Blocks.txt;head_close=}
 <frameset cols="175,*" frameborder="0" framespacing="0">
 	<frame name="sec_menu" src="{=var-get:sec_menu=}" scrolling="no" noresize="noresize" frameborder="0" />
 	<frame name="work" src="{=var-get:work=}" scrolling="auto" frameborder="0" />
@@ -492,8 +497,8 @@ end-block~frame_info
 # ==== LIVE
 # ------- Lay-Frame Live-EPG Frameset
 start-block~frame_live_epg
-{=include-block:Y_Blocks.txt;frame_head=}
-</head>
+{=include-block:Y_Blocks.txt;head_frame=}
+{=include-block:Y_Blocks.txt;head_close=}
 <frameset rows="100,*" frameborder="0" framespacing="0">
 	<frame name="epg_info" src="Y_Live_EPG_Info.yhtm" scrolling="auto" frameborder="0" />
 	<frame name="epg_list" src="Y_Live_EPG.yhtm?channel={=channel=}&logoid={=logoid=}" scrolling="auto" frameborder="0" style="height:100%" />

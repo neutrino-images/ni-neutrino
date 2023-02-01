@@ -26,7 +26,7 @@ input[type="button"], .tools select {
 	width: 100%;
 }
 </style>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 {=var-set:wait_text={=L:ni.camd-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

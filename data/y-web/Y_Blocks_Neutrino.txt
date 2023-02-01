@@ -11,7 +11,7 @@ start-block~neutrino_form
 .line {border-top: 1px solid #6D96A9;}
 /*]]>*/
 </style>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 {=var-set:wait_text={=L:save_values=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 {=include-block:Y_Blocks_Neutrino.txt;{=var-get:neutrino=}=}

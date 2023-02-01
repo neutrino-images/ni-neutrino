@@ -18,7 +18,7 @@
 	clear:both;
 }
 </style>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 <br/>
 {=func:get_current_stream_info=}

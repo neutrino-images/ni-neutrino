@@ -8,7 +8,7 @@ function init(){
 	add_yExtensions('info', 'secmenu_info');
 }
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 {=var-set:management={=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip;{=func:get_request_data client_addr=}=}~1~=}{=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip2=}~1~=}=}
 <body onload="init()">
 <div class="y_menu_sec_box">

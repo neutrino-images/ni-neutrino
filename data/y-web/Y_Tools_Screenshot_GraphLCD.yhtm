@@ -46,7 +46,7 @@ function do_reload(){
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_snapshot();">
 <div class="work_box" id="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">

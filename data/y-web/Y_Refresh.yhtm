@@ -7,7 +7,7 @@ function do_onload()
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_onload()">
 refreshing...
 </body>

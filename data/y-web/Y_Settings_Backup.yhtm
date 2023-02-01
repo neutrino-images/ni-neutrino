@@ -31,7 +31,7 @@ function do_backup2()
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body>
 {=var-set:wait_text=Settings=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">

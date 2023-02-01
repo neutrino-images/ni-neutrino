@@ -12,7 +12,7 @@ function init(){
 	add_yExtensions('yweb', 'secmenu_yweb');
 }
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 {=var-set:management={=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip;{=func:get_request_data client_addr=}=}~1~=}{=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip2=}~1~=}=}
 {=var-set:automount={=find-exec:automount=}=}
 {=var-set:ether-wake={=find-exec:ether-wake=}=}

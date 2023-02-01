@@ -37,7 +37,7 @@ function ni(){
 }
 //]]>
 </script>
-</head>
+{=include-block:Y_Blocks.txt;head_close=}
 <body onload="init()">
 {=var-set:wait_text=Speichern (Save).=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
