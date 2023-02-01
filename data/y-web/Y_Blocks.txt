@@ -219,7 +219,6 @@ start-block~work_menu
 <div>{=var-get:menu=}</div>
 end-block~work_menu
 
-
 # ============= LAYOUT
 # ------- Lay-HEAD
 start-block~head
@@ -311,15 +310,26 @@ start-block~head_ni
 	yhttpd_cache_clear('');
 //]]>
 </script>
+{=include-block:Y_Blocks.txt;jQuery=}
+{=include-block:Y_Blocks.txt;jQuery_ui=}
+end-block~head_ni
+
+# ============= jQuery
+# ------- jQuery library
+start-block~jQuery
 <script type="text/javascript" src="/jquery/jquery.min.js"></script>
-<script type="text/javascript" src="/jquery/jquery-ui.min.js"></script>
 <script type="text/javascript">
 //<![CDATA[
 	// Use jQuery via jQuery(...)
 	jQuery.noConflict();
 //]]>
 </script>
-end-block~head_ni
+end-block~jQuery
+
+# ------- jQuery user interface
+start-block~jQuery_ui
+<script type="text/javascript" src="/jquery/jquery-ui.min.js"></script>
+end-block~jQuery_ui
 
 # ------- nhttpd save Settings
 start-block~start_wizard_save_settings
