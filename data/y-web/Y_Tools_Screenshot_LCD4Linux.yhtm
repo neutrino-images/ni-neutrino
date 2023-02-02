@@ -1,16 +1,17 @@
-{=include-block:Y_Blocks.txt;head_ni=}
+{=include-block:Y_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;jQuery=}
 <script type="text/javascript">
 //<![CDATA[
 var interval;
 
 function do_showshot() {
-	$('shot').src = "/tmp/lcd4linux.png?"+Math.random();
-	$('shot').show();
+	jQuery('#shot').attr("src", "/tmp/lcd4linux.png?" + Math.random());
+	jQuery('#shot').show();
 }
 
 function do_reload(){
-	if (document.getElementById("checkReload").checked)
-		interval = setInterval(do_showshot, document.getElementById("inputReload").value + "000");
+	if (id('checkReload').checked)
+		interval = setInterval(do_showshot, id('inputReload').value + "000");
 	else
 		clearInterval(interval);
 }
@@ -40,13 +41,13 @@ function do_reload(){
 	</div>
 </div>
 <script>
-document.getElementById('checkReload').onclick = function() {
+id('checkReload').onclick = function() {
 	if (this.checked ) {
-		interval = setInterval(do_showshot, document.getElementById("inputReload").value + "000");
-		document.getElementById("inputReload").disabled = false;
+		interval = setInterval(do_showshot, id('inputReload').value + "000");
+		id('inputReload').disabled = false;
 	} else {
 		clearInterval(interval);
-		document.getElementById("inputReload").disabled = true;
+		id('inputReload').disabled = true;
 	}
 };
 </script>

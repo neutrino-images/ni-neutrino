@@ -1,24 +1,24 @@
-
 {=include-block:Y_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;jQuery=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/prototype.js"></script>
 <script type="text/javascript">
 //<![CDATA[
 var interval;
 
 function do_snapshot() {
 
-	$('shot').hide();
-	$('shot').src = "";
-	$('buttons').hide();
-	$('status').show();
+	jQuery('#shot').hide();
+	jQuery('#shot').attr("src", "");
+	jQuery('#buttons').hide();
+	jQuery('#status').show();
 
+	// FIXME: any other filename then "glcdscreenshot" seeems broken
 	var filename = "glcdscreenshot";
-	if (id("filename").value != "") {
+	if (id('filename').value != "") {
 		filename = id("filename").value;
 	}
 
-	loadSyncURL("/control/glcdscreenshot?name"+filename);
+	loadSyncURL("/control/glcdscreenshot?name="+filename);
 
 	do_showshot(filename);	
 }
@@ -26,21 +26,21 @@ function do_showshot(_filename) {
 	if (_filename == "")
 		_filename = "glcdscreenshot";
 
-	$('status').hide();
-	$('buttons').show();
-	$('shot').src = "/tmp/"+_filename+".png?"+Math.random();
-	$('shot').show();
+	jQuery('#status').hide();
+	jQuery('#buttons').show();
+	jQuery('#shot').attr("src", "/tmp/"+_filename+".png?" + Math.random());
+	jQuery('#shot').show();
 }
 function do_clearshot(){
-	$('shot').hide();
-	$('shot').src = "";
+	jQuery('#shot').hide();
+	jQuery('#shot').attr("src", "");
 
 	loadSyncURL("/control/exec?Y_Tools&screenshot_clear");
 }
 
 function do_reload(){
-	if (document.getElementById("checkReload").checked)
-		interval = setInterval(do_snapshot, document.getElementById("inputReload").value + "000");
+	if (id('checkReload').checked)
+		interval = setInterval(do_snapshot, id('inputReload').value + "000");
 	else
 		clearInterval(interval);
 }
@@ -60,7 +60,7 @@ function do_reload(){
 			</div>
 			<div class="right">
 				<form onsubmit="do_snapshot(); return false">
-				{=L:filename=}: <input type="text" value="glcdscreenshot" id="filename" size="10" />
+				{=L:filename=}: <input type="text" value="glcdscreenshot" id="filename" size="12" />
 				</form>
 			</div>
 			<div class="clear"></div>
@@ -70,8 +70,8 @@ function do_reload(){
 			<div class="clear"></div>
 		</div>
 		<div id="status" style="display: none">
-				<img src="/images/wait.gif" alt="{=L:bc.screenshot.wait_text=}"/>
-				{=L:bc.screenshot.wait_text=}
+			<img src="/images/wait.gif" alt="{=L:bc.screenshot.wait_text=}"/>
+			{=L:bc.screenshot.wait_text=}
 		</div>
 		</div>
 		<table cellpadding="0" class="screenshot">
@@ -84,13 +84,13 @@ function do_reload(){
 	</div>
 </div>
 <script>
-document.getElementById('checkReload').onclick = function() {
+id('checkReload').onclick = function() {
 	if (this.checked ) {
-		interval = setInterval(do_snapshot, document.getElementById("inputReload").value + "000");
-		document.getElementById("inputReload").disabled = false;
+		interval = setInterval(do_snapshot, id('inputReload').value + "000");
+		id('inputReload').disabled = false;
 	} else {
 		clearInterval(interval);
-		document.getElementById("inputReload").disabled = true;
+		id('inputReload').disabled = true;
 	}
 };
 </script>
