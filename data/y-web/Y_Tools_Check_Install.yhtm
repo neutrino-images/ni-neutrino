@@ -1,21 +1,21 @@
 {=include-block:Y_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;jQuery=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/prototype.js"></script>
 <script type="text/javascript">
 //<![CDATA[
 function do_start(){
-	$('statusline').show();
+	jQuery('#statusline').show();
 	do_check();
 }
 function do_stop(){
-	$('statusline').hide();
+	jQuery('#statusline').hide();
 }
 /*sLog*/
 var sLog_body;
 var sLog_line_number;
 function sLog_init(){
 	sLog_line_number = 0;
-	sLog_body=document.getElementById("slog_list");
+	sLog_body=id("slog_list");
 }
 function sLog_clear(){
 	while(sLog_body.childNodes.length > 0)	{

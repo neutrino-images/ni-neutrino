@@ -1,7 +1,7 @@
 {=var-set:cancache=yPyes=}
 {=include-block:Y_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;jQuery=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/prototype.js"></script>
 <script type="text/javascript">
 //<![CDATA[
 function goConfirmUrl(_meld, _url){
@@ -13,7 +13,7 @@ function goUrl(_url){
 		case "1": res="on"; break;
 		case "0": res="off"; break;
 	}
-	$("out").update(res);
+	jQuery('#out').text(res);
 }
 function set_btn_standby(){
 	var res = trim(loadSyncURL("/control/standby"));
@@ -22,10 +22,10 @@ function set_btn_standby(){
 		case "off": color = "green"; break;
 		case "on":  color = "red";   break;
 	}
-	document.getElementById('btn_standby').style.borderColor = color;
+	id('btn_standby').style.borderColor = color;
 }
 function standby(_standby){
-	var _cec = (document.getElementById('checkCEC').checked == true) ? "on" : "off";
+	var _cec = (id('checkCEC').checked == true) ? "on" : "off";
 	goUrl("/control/standby?"+_standby+"&cec="+_cec);
 }
 function init() {
