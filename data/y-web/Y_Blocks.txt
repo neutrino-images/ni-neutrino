@@ -316,7 +316,7 @@ end-block~head_ni
 
 # ------- Lay-HEAD close
 start-block~head_close
-{=include-block:Y_Blocks.txt;head_close=}
+</head>
 end-block~head_close
 
 # ============= jQuery
