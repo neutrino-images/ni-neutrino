@@ -15,7 +15,11 @@ var interval;
 function checkEnable() {
 	enableOSD	= (id('checkOSD').checked == true)	? 1 : 0;
 	enableVideo	= (id('checkVideo').checked == true)	? 1 : 0;
+	{=if-empty:{=var-get:grab=}~
+	enablePiP	= 0;
+	~
 	enablePiP	= (id('checkPiP').checked == true)	? 1 : 0;
+	=}
 
 	if (enableOSD == 0 && enableVideo == 0) {
 		alert("{=L:bc.screenshot.checkenable=}");
@@ -27,6 +31,7 @@ function checkEnable() {
 	}
 	return true;
 }
+
 function rcsim(_key) {
 	if (!checkEnable()) return;
 
@@ -40,6 +45,7 @@ function rcsim(_key) {
 	loadSyncURL("/control/rcem?" + _key);
 	window.setTimeout("do_snapshot()", 750);
 }
+
 function do_snapshot() {
 	if (!checkEnable()) return;
 
@@ -73,6 +79,7 @@ function do_snapshot() {
 
 	do_showshot(filename);	
 }
+
 function do_showshot(_filename) {
 	if (_filename == "")
 		_filename = "screenshot";
@@ -82,6 +89,7 @@ function do_showshot(_filename) {
 	jQuery('#shot').attr("src", "/tmp/"+_filename+".png?" + Math.random());
 	jQuery('#shot').show();
 }
+
 function do_clearshot() {
 	jQuery('#shot').hide();
 	jQuery('#shot').attr("src", "");
