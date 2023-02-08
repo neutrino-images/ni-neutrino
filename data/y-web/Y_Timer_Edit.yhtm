@@ -1,13 +1,13 @@
 {=func:set_timer_form {=typ=} {=tid=}=}
 {=include-block:Y_Blocks.txt;head_no_charset=}
+{=include-block:Y_Blocks.txt;jQuery=}
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
-<script type="text/javascript" src="/prototype.js"></script>
 <script type="text/javascript" src="/Y_Baselib.js"></script>
 <script type="text/javascript">
 //<![CDATA[
 function my_display(id, state)
 {
-	(state) ? $(id).show() : $(id).hide();
+	(state) ? jQuery('#'+id).show() : jQuery('#'+id).hide();
 }
 
 function focusNMark()
@@ -56,7 +56,7 @@ function do_submit()
 }
 function obj_set_select_value(_obj_name, _value)
 {
-	var _obj = document.getElementById(_obj_name);
+	var _obj = id(_obj_name);
 	if (_obj)
 	{
 		for (i = 0; i < _obj.length; i++)
