@@ -19,6 +19,7 @@
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 </tr>
+
 {=var-set:row=
 <tr class="%ctimer">
 	<td>%s</td>

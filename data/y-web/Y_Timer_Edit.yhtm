@@ -1,13 +1,13 @@
 {=func:set_timer_form {=typ=} {=tid=}=}
 {=include-block:Y_Blocks.txt;head_no_charset=}
-{=include-block:Y_Blocks.txt;jQuery=}
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
+{=include-block:Y_Blocks.txt;jQuery=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
 <script type="text/javascript">
 //<![CDATA[
 function my_display(id, state)
 {
-	(state) ? jQuery('#'+id).show() : jQuery('#'+id).hide();
+	jQuery('#'+id).toggle(state);
 }
 
 function focusNMark()
@@ -15,6 +15,7 @@ function focusNMark()
 	document.f.ad.select();
 	document.f.ad.focus();
 }
+
 function onEventChange()
 {
 	tType=document.f.type.value;
@@ -28,6 +29,7 @@ function onEventChange()
 	my_display("ValuesRow",(tType != "1" && tType!="7"));
 	focusNMark();
 }
+
 function onEventChange2()
 {
 	tType=document.f.rep.value;
@@ -37,23 +39,26 @@ function onEventChange2()
 
 function onApidDefChange()
 {
-	if(document.f.apcf.checked == true)
+	if (document.f.apcf.checked == true)
 	{
 		document.f.apst.checked=false;
 		document.f.apal.checked=false;
 		document.f.apac.checked=false;
 	}
 }
+
 function onApidChange()
 {
 	if (document.f.apst.checked == true || document.f.apal.checked == true || document.f.apac.checked == true)
 		document.f.apcf.checked=false;
 }
+
 function do_submit()
 {
-		show_waitbox(true);
-		document.f.submit();
+	show_waitbox(true);
+	document.f.submit();
 }
+
 function obj_set_select_value(_obj_name, _value)
 {
 	var _obj = id(_obj_name);
@@ -64,6 +69,7 @@ function obj_set_select_value(_obj_name, _value)
 				_obj.selectedIndex=i;
 	}
 }
+
 function init()
 {
 	onEventChange();
@@ -112,7 +118,6 @@ function init()
 				&nbsp;:&nbsp;<input type="text" name="smi" value="{=stop_min=}" size="2" maxlength="2"/>
 				</td>
 			</tr>
-
 			<tr>
 				<td>{=L:live.timer_edit.repeat=}</td>
 				<td><select name="rep" onchange="onEventChange2();">
