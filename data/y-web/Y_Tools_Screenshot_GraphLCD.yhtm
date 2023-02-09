@@ -12,8 +12,7 @@ function do_snapshot() {
 	jQuery('#buttons').hide();
 	jQuery('#status').show();
 
-	// FIXME: any other filename then "glcdscreenshot" seeems broken
-	var filename = "glcdscreenshot";
+	var filename = "screenshot-glcd";
 	if (id('filename').value != "") {
 		filename = id("filename").value;
 	}
@@ -24,7 +23,7 @@ function do_snapshot() {
 }
 function do_showshot(_filename) {
 	if (_filename == "")
-		_filename = "glcdscreenshot";
+		_filename = "screenshot-glcd";
 
 	jQuery('#status').hide();
 	jQuery('#buttons').show();
@@ -60,7 +59,7 @@ function do_reload(){
 			</div>
 			<div class="right">
 				<form onsubmit="do_snapshot(); return false">
-				{=L:filename=}: <input type="text" value="glcdscreenshot" id="filename" size="12" />
+				{=L:filename=}: <input type="text" value="screenshot-glcd" id="filename" size="12" />
 				</form>
 			</div>
 			<div class="clear"></div>
