@@ -301,11 +301,6 @@ function init(){
 	do_dirview("/");
 }
 
-
-//alert($('adetails'));
-//alert($('work'));
-//var arc = new accordion('adetails');
-//new Control.Tabs('tab_group_one');
 /* --------------------------------------------------------------*/
 function on_before_dirview(){
 	show_path_and_item();
@@ -338,17 +333,13 @@ function _hide_diags(){
 function show_prop(){
 	if (explorer.ac_item != "") {
 		$('item').update(explorer.ac_item);
-//		$('prop','prop_toolbar').invoke('show');
 		$('prop_toolbar').show();
 		$('details').show();
-//		$$('.detail_title','.detail_content').invoke('show');
 	}
 	else {
 		$('item').update("nothing selected");
-//		$('prop','prop_toolbar').invoke('hide');
 		$('prop_toolbar').hide();
 		$('details').hide();
-//		$$('.detail_title','.detail_content').invoke('hide');
 	}
 	_hide_diags();	
 }
