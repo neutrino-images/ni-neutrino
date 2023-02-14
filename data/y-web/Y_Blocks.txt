@@ -554,6 +554,11 @@ start-block~netfs_table_row
 		</tr>
 end-block~netfs_table_row
 
+# ------- Filemgr
+start-block~filemgr_edit_save_settings
+{=file-action:{=file=};add;{=editfile=}=}
+end-block~filemgr_edit_save_settings
+
 # ------- Remote control variables
 start-block~rc_variables
 {=var-set:_fb_dbox_philips=2=}

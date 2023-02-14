@@ -13,7 +13,6 @@ install_DATA =	extensions.txt \
 		Y_Baselib.js \
 		Y_Blank.yhtm \
 		Y_Blocks.txt \
-		Y_Blocks_Filemgr.txt \
 		Y_Blocks_Neutrino.txt \
 		Y_Boxcontrol_Bouquet_Editor_Edit.yhtm \
 		Y_Boxcontrol_Bouquet_Editor_Main.yhtm \
