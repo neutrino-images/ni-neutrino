@@ -1,6 +1,6 @@
 installdir = $(PRIVATE_HTTPDDIR)/prototype
 
-# prototype library; see http://prototypejs.org/
+# prototype framework; see http://prototypejs.org/
 install_DATA = prototype.js
 
 # prototype effects; see http://script.aculo.us

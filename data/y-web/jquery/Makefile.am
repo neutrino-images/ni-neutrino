@@ -1,6 +1,6 @@
 installdir = $(PRIVATE_HTTPDDIR)/jquery
 
-# jQuery library; see https://jquery.com/
+# jQuery framework; see https://jquery.com/
 install_DATA = jquery.min.js
 
 # jQuery user interface; see https://jqueryui.com/
