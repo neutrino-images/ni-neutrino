@@ -2,8 +2,8 @@
 {=var-set:fbshot={=find-exec:fbshot=}=}
 
 {=include-block:Y_Blocks.txt;head=}
-{=include-block:Y_Blocks.txt;jQuery=}
-{=include-block:Y_Blocks.txt;jQuery_ui=}
+{=include-block:Y_Blocks.txt;js_jquery=}
+{=include-block:Y_Blocks.txt;js_jquery_ui=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
 <script type="text/javascript">
 //<![CDATA[

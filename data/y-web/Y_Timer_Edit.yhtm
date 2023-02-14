@@ -1,7 +1,7 @@
 {=func:set_timer_form {=typ=} {=tid=}=}
 {=include-block:Y_Blocks.txt;head_no_charset=}
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
-{=include-block:Y_Blocks.txt;jQuery=}
+{=include-block:Y_Blocks.txt;js_jquery=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
 <script type="text/javascript">
 //<![CDATA[

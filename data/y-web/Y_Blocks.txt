@@ -310,8 +310,8 @@ start-block~head_ni
 	yhttpd_cache_clear('');
 //]]>
 </script>
-{=include-block:Y_Blocks.txt;jQuery=}
-{=include-block:Y_Blocks.txt;jQuery_ui=}
+{=include-block:Y_Blocks.txt;js_jquery=}
+{=include-block:Y_Blocks.txt;js_jquery_ui=}
 end-block~head_ni
 
 # ------- Lay-HEAD close
@@ -321,7 +321,7 @@ end-block~head_close
 
 # ============= jQuery
 # ------- jQuery library
-start-block~jQuery
+start-block~js_jquery
 <script type="text/javascript" src="/jquery/jquery.min.js"></script>
 <script type="text/javascript">
 //<![CDATA[
@@ -329,12 +329,12 @@ start-block~jQuery
 	jQuery.noConflict();
 //]]>
 </script>
-end-block~jQuery
+end-block~js_jquery
 
 # ------- jQuery user interface
-start-block~jQuery_ui
+start-block~js_jquery_ui
 <script type="text/javascript" src="/jquery/jquery-ui.min.js"></script>
-end-block~jQuery_ui
+end-block~js_jquery_ui
 
 # ------- nhttpd save Settings
 start-block~start_wizard_save_settings
