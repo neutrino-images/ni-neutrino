@@ -298,7 +298,6 @@ start-block~head_ni
 <meta http-equiv="expires" content="Thu, 01 Jan 1970 00:00:00 GMT" />
 <title>yWeb - NI</title>
 <link rel="stylesheet" type="text/css" href="/Y_Main.css" />
-<link rel="stylesheet" type="text/css" href="/Y_NI.css" />
 <link rel="stylesheet" type="text/css" href="/Y_Dist.css" />
 <link rel="stylesheet" type="text/css" href="/Y_User.css" />
 {=include-block:Y_Blocks.txt;js_prototype=}

@@ -7,6 +7,10 @@ body {
 	color: #555555;
 }
 /*standards*/
+hr {
+	border: 0 none;
+	border-top: 1px solid #a0a0a0;
+}
 img {border:0;margin:0;padding:0;}
 button,input,select,form,td {
 	font-family: Verdana, Geneva, Arial, 'Lucida Grande',Tahoma, Helvetica, sans-serif;
@@ -27,6 +31,50 @@ button,input,select,form,td {
 .pointer {
 	cursor: pointer;
 }
+tr.list td {
+	padding-top: .25em;
+	padding-bottom: .25em;
+}
+tr.list:hover td {
+	background: #F0F0F0;
+}
+.tools select {
+	border: 1px solid #a0a0a0;
+	border-left: 3px solid #FD6D13 !important;
+}
+.tools option.e {
+	background: url(images/page_edit.png) no-repeat;
+	padding-left: 20px;
+}
+span.upd_no,
+span.upd_yes {
+	display: none;
+}
+abbr.version {
+	cursor: help;
+}
+.status {
+	vertical-align: text-bottom;
+}
+.vinfo {
+	font-size: 75%;
+	color: #c0c0c0;
+}
+._used_graph,
+._used_graph * {
+	border-radius: 5px;
+}
+div._used_graph {
+	width: 150px;
+	height: 20px;
+	border: 1px solid #a0a0a0;
+}
+div._used_graph div._inner_graph {
+	width: 0;
+	height: 100%;
+	background: transparent url(images/colored_bar.png) no-repeat 0 0;
+	float: left;
+}
 /* buttons */
 a img:hover {
 	position:relative;
@@ -34,7 +82,7 @@ a img:hover {
 	top:1px;
 }
 button[ytype]{
-	background-position: 5px;
+	background-position: 3px 1px;
 	background-attachment: scroll;
 	background-color: transparent;
 	background-repeat: no-repeat;
@@ -62,6 +110,15 @@ button[ytype="add"]{background-image:url(/images/new.png);}
 button[ytype="delete"]{background-image:url(/images/remove.png);}
 button[ytype="edit"]{background-image:url(/images/modify.png);}
 
+button[ytype="accept_"] { background-image:url(/images/accept.png); }
+button[ytype="cancel_"] { background-image:url(/images/cancel.png); }
+
+button[ytype="accept_"],
+button[ytype="cancel_"] {
+	text-align: center;
+	width: 105px;
+}
+
 button[ytype="no"] {
 	padding-left: 5px
 }
@@ -71,10 +128,10 @@ button,input[type="button"],input[type="submit"]/*,input[type="file"],input[type
 	height: 22px;
 	border: 1px solid #888888;
 	background-color: transparent;
-	border-radius: 3px;
+	border-radius: 5px;
 
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
 }
 button:hover,input[type="button"]:hover,input[type="submit"]:hover/*,input[type="file"]:hover*/ {
 	position:relative;
@@ -118,17 +175,17 @@ tr {
 }
 .exlink{
 	background:transparent url(/images/exlink.gif) no-repeat scroll left center;
-	text-decoration: underline;
+	text-decoration: none;
 	padding-left: 20px;
 }
 .inlink{
 	background:transparent url(/images/inlink.gif) no-repeat scroll left center;
-	text-decoration: underline;
+	text-decoration: none;
 	padding-left: 20px;
 }
 .comment{
 	background:transparent url(/images/comment.png) no-repeat scroll left center;
-	text-decoration: underline;
+	text-decoration: none;
 	padding-left: 20px;
 }
 /* primary Navigation */
