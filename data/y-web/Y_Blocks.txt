@@ -321,7 +321,7 @@ end-block~head_close
 # ============= prototypejs
 # ------- prototype library
 start-block~js_prototype
-<script type="text/javascript" src="/prototype.js"></script>
+<script type="text/javascript" src="/prototype/prototype.js"></script>
 end-block~js_prototype
 
 # ============= jQuery
