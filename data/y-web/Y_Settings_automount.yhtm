@@ -1,7 +1,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function automount_edit()
 {
 	var mstr = loadSyncURL("/control/exec?Y_Tools&automount_getline&/var/etc/auto.net&{=R1=}");
@@ -126,7 +125,6 @@ function change_type()
 		show_obj("vpassword",true);
 	}
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onLoad="form_init()">

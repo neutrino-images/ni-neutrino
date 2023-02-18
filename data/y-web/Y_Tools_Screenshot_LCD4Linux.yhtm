@@ -1,7 +1,6 @@
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_jquery=}
 <script>
-//<![CDATA[
 var interval;
 
 function do_showshot() {
@@ -15,7 +14,6 @@ function do_reload(){
 	else
 		clearInterval(interval);
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_showshot();">

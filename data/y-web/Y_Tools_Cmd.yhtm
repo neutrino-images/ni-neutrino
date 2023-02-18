@@ -3,7 +3,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_submit()
 {
 	if(document.f.cmd.value != "")
@@ -38,7 +37,6 @@ function setCaretToEnd(control)
 		control.setSelectionRange(l, l);
 	}
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
@@ -73,11 +71,9 @@ function setCaretToEnd(control)
 <iframe height="0" width="0" scrolling="no" align="left" frameborder="0" name="tmp" id="tmp">Your Browser does not support IFrames.</iframe>
 
 <script >
-//<![CDATA[
 	if(isIE)
 		document.f.appendx.checked = true;
 	window.document.f.cmd.focus();
-//]]>
 </script>
 </body>
 </html>

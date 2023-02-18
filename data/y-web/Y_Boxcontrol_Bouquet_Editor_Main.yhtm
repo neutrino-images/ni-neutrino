@@ -4,7 +4,6 @@
 <meta http-equiv="expires" content="0" />
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 var gurl= "";
 var gurl_last= "";
 function hide_forms(){
@@ -96,7 +95,6 @@ function do_rename(){
 	else
 		alert("{=L:bou.no_bouquet_name=}!");
 }
-//]]>
 </script>
 <style type="text/css">
 .fly_form

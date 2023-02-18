@@ -83,10 +83,8 @@
 	</div>
 </div>
 <script>
-//<![CDATA[
 	window.setTimeout("build_list();",500);
 	yversion_str="{=ini-get:Y_Version.txt;version=}";
-//]]>
 </script>
 </body>
 </html>

@@ -6,7 +6,6 @@
 {=include-block:Y_Blocks.txt;js_jquery_ui=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 var enableOSD;
 var enableVideo;
 var enablePiP;
@@ -116,7 +115,6 @@ function do_reload(){
 	else
 		clearInterval(interval);
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_switchrc_txt(); do_snapshot();">

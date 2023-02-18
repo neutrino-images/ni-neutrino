@@ -1,12 +1,10 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function goUrl(_url){
 	var res = loadSyncURL(_url);
 	id("out").innerHTML = res;
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

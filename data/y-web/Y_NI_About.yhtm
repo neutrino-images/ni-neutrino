@@ -20,7 +20,6 @@
 
 {=var-set:boxmodel={=func:get_boxmodel=}=}
 <script>
-//<![CDATA[
 jQuery(document).ready(function(){
 	if ("{=ani=}" == "false")
 	{
@@ -35,7 +34,6 @@ jQuery(document).ready(function(){
 		jQuery('#_mem_used_graph').delay(750).animate({ width: "{=var-get:_mem_used_percent=}%"}, 750);
 	}
 });
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

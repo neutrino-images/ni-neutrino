@@ -2,7 +2,6 @@
 {=include-block:Y_Blocks.txt;js_jquery=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_start(){
 	jQuery('#statusline').show();
 	do_check();
@@ -100,7 +99,6 @@ function do_check(){
 
 	do_stop();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
@@ -127,9 +125,7 @@ function do_check(){
 	</div>
 </div>
 <script>
-//<![CDATA[
 	window.setTimeout("do_start();",500);
-//]]>
 </script>
 </body>
 </html>

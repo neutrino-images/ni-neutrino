@@ -11,7 +11,6 @@
 <meta name="theme-color" content="#212121">
 
 <style type="text/css">
-/*<![CDATA[*/
 html {
 	margin: 0;
 	padding: 0;
@@ -29,16 +28,13 @@ body {
 	top: 50%;
 	transform: translate(-50%, -50%);
 }
-/*]]>*/
 </style>
 
 <script>
-//<![CDATA[
 jQuery(document).ready(function() {
 	jQuery('#screenshot').attr("src", "{=var-get:lcd4linux_png=}?" + Math.random());
 	jQuery('html head').find('title').text("yLCD4Linux");
 });
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 

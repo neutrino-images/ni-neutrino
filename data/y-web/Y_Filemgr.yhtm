@@ -4,7 +4,6 @@
 <script src="/prototype/accordion.js"></script>
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 /* --------------------------------------------------------------*/
 /* in development */
 /* --------------------------------------------------------------*/
@@ -567,7 +566,6 @@ function do_edit(){
 function ni() {
 	alert("not implemented");
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="init()">

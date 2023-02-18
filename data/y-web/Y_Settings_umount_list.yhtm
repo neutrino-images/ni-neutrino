@@ -1,7 +1,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_unmount()
 {
 	var local_dir="";
@@ -16,7 +15,6 @@ function do_unmount()
 		document.f.submit();
 	}
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

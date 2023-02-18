@@ -2,7 +2,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function rcsim(_key)
 {
 	if(_key == "KEY_POWER"){
@@ -14,7 +13,6 @@ function rcsim(_key)
 	}
 	loadSyncURL("/control/rcem?"+_key);
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

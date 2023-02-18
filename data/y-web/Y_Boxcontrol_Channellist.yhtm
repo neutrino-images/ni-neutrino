@@ -2,7 +2,6 @@
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_zap(channelid) {
 	stb_zapto(channelid);
 	window.location.reload();
@@ -22,7 +21,6 @@ function do_stream(channelid, channelname)
 function do_streaminfo() {
 	window.open("Y_StreamInfo.yhtm", "stream", "width=520");
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body class="iframe">

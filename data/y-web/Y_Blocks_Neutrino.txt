@@ -7,9 +7,7 @@ start-block~neutrino_form
 {=include-block:Y_Blocks.txt;js_prototype=}
 <script src="/Y_Baselib.js"></script>
 <style type="text/css">
-/*<![CDATA[*/
 .line {border-top: 1px solid #6D96A9;}
-/*]]>*/
 </style>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
@@ -151,7 +149,6 @@ start-block~neutrino_form-data_record
 	</div>
 </div>
 <script>
-//<![CDATA[
 function form_init()
 {
 	var val = "";
@@ -189,7 +186,6 @@ function do_submit()
 	document.f.submit();
 }
 form_init();
-//]]>
 </script>
 end-block~neutrino_form-data_record
 
@@ -235,7 +231,6 @@ start-block~neutrino_form-data_movieplayer
 	</div>
 </div>
 <script>
-//<![CDATA[
 function form_init()
 {
 	var val = "";
@@ -248,7 +243,6 @@ function do_submit()
 	document.f.submit();
 }
 form_init();
-//]]>
 </script>
 end-block~neutrino_form-data_movieplayer
 
@@ -300,7 +294,6 @@ start-block~neutrino_form-data_parental
 	</div>
 </div>
 <script>
-//<![CDATA[
 function form_init()
 {
 	var val = "";
@@ -323,7 +316,6 @@ function do_submit()
 	}
 }
 form_init();
-//]]>
 </script>
 end-block~neutrino_form-data_parental
 
@@ -430,7 +422,6 @@ start-block~neutrino_form-data_epg
 	</div>
 </div>
 <script>
-//<![CDATA[
 function form_init()
 {
 	obj_set_radio_value('epg_save', "{=ini-get:%(CONFIGDIR)/neutrino.conf;epg_save;false=}");
@@ -449,7 +440,6 @@ function do_submit()
 	document.f.submit();
 }
 form_init();
-//]]>
 </script>
 end-block~neutrino_form-data_epg
 
@@ -703,7 +693,6 @@ start-block~neutrino_form-data_diverse
 	</div>
 </div>
 <script>
-//<![CDATA[
 function form_init()
 {
 	var val = "";
@@ -754,7 +743,6 @@ function do_submit()
 	document.f.submit();
 }
 form_init();
-//]]>
 </script>
 end-block~neutrino_form-data_diverse
 
@@ -825,7 +813,6 @@ start-block~neutrino_form-data_pictureviewer
 </div>
 
 <script>
-//<![CDATA[
 function form_init()
 {
 	var val = "";
@@ -839,7 +826,6 @@ function do_submit()
 	document.f.submit();
 }
 form_init();
-//]]>
 </script>
 end-block~neutrino_form-data_pictureviewer
 
@@ -927,7 +913,6 @@ start-block~neutrino_form-data_audioplayer
 	</div>
 </div>
 <script>
-//<![CDATA[
 function form_init()
 {
 	var val = "";
@@ -948,7 +933,6 @@ function do_submit()
 	document.f.submit();
 }
 form_init();
-//]]>
 </script>
 end-block~neutrino_form-data_audioplayer
 
@@ -1096,7 +1080,6 @@ start-block~neutrino_form-data_direct_recording
 	</div>
 </div>
 <script>
-//<![CDATA[
 function form_init()
 {
 	var val = "{=ini-get:%(CONFIGDIR)/neutrino.conf;recordingmenu.ringbuffers;2~cache=}";
@@ -1117,7 +1100,6 @@ function do_submit()
 	document.f.submit();
 }
 form_init();
-//]]>
 </script>
 end-block~neutrino_form-data_direct_recording
 

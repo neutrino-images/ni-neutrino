@@ -2,7 +2,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_submit(){
 	show_waitbox(true);
 	for (i=document.getElementById('channels').bchannels.length-1; i >= 0 ; i--) {
@@ -48,7 +47,6 @@ function poschannel(box, direction){
 		}
 	}
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 

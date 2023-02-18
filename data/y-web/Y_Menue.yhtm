@@ -4,7 +4,6 @@
 <script src="/Y_Baselib.js"></script>
 <script src="/Y_yweb.js"></script>
 <script>
-//<![CDATA[
 /*Indicator*/
 var g_i_active = false;
 var g_i_counter = 0;
@@ -70,7 +69,6 @@ function vlc() {
 	var vlc_url = loadSyncURL("/control/build_live_url?vlc_link=true");
 	window.open("/tmp/vlc.m3u?"+Math.random(),"_blank");
 }
-//]]>
 </script>
 <style>
 #prim{
@@ -125,9 +123,7 @@ function vlc() {
 	</div>
 </div>
 <script>
-//<![CDATA[
 	i_start();
-//]]>
 </script>
 
 </body>

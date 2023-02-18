@@ -1,8 +1,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
-
 function do_submit()
 {
 	show_waitbox(true);
@@ -29,7 +27,6 @@ function do_delete()
 		location.reload();
 	}
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

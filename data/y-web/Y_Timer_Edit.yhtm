@@ -4,7 +4,6 @@
 {=include-block:Y_Blocks.txt;js_jquery=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function my_display(id, state)
 {
 	jQuery('#'+id).toggle(state);
@@ -77,7 +76,6 @@ function init()
 	var rd = "{=timer_recordingDir=}";
 	obj_set_select_value("rec_dir", rd);
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="init()">

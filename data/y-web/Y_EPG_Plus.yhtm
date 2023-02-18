@@ -65,9 +65,7 @@
 	</table>
 </div>
 <script>
-//<![CDATA[
 	epg_plus_init("{=ini-get:%(CONFIGDIR)/nhttpd.conf;Tuxbox.DisplayLogos;true=}");
-//]]>
 </script>
 
 </body>

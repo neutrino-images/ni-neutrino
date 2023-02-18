@@ -3,7 +3,6 @@
 
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_submit()
 {
 	if(document.f.p_pincode.value.length < 4)
@@ -54,7 +53,6 @@ function do_init()
 	obj_set_radio_value('p_bluebutton', "{=ini-get:%(CONFIGDIR)/neutrino.conf;personalize_bluebutton;1~cache=}");
 	obj_set_radio_value('p_redbutton', "{=ini-get:%(CONFIGDIR)/neutrino.conf;personalize_redbutton;1~cache=}");
 }
-//]]>
 </script>
 
 {=include-block:Y_Blocks.txt;head_close=}

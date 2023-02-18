@@ -4,7 +4,6 @@
 <script src="/Y_Baselib.js"></script>
 <script src="/Y_yweb.js"></script>
 <script>
-//<![CDATA[
 function epg_plus_popup() {
 	window.open("Y_EPG_Plus.yhtm","_blank","resizable=yes,scrollbars=yes");
 }
@@ -136,7 +135,6 @@ function init() {
 	set_mute_button();
 	add_yExtensions('boxcontrol', 'secmenu_boxcontrol');
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
@@ -261,10 +259,8 @@ function init() {
 	</div>
 </div>
 <script>
-//<![CDATA[
 	init();
 	window.setInterval("get_data();",5000);
-//]]>
 </script>
 </body>
 </html>

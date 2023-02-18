@@ -3,11 +3,10 @@
 
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_init()
 {
 	var val = "";
-//video
+	//video
 	val = "{=ini-get:%(CONFIGDIR)/controld.conf;videooutput;1~open=}";
 		document.f.videooutput.selectedIndex = val;
 	obj_set_radio_value('vcroutput', "{=ini-get:%(CONFIGDIR)/controld.conf;vcroutput;0~cache=}");
@@ -25,7 +24,7 @@ function do_init()
 	val = "{=ini-get:%(CONFIGDIR)/neutrino.conf;video_csync;0~cache=}"
 		document.f.video_csync.value = val;
 	obj_set_radio_value('vcr_AutoSwitch', "{=ini-get:%(CONFIGDIR)/neutrino.conf;vcr_AutoSwitch;true~cache=}");
-//audio
+	//audio
 	val = "{=ini-get:%(CONFIGDIR)/neutrino.conf;audio_AnalogMode;0~cache=}";
 		document.f.audio_AnalogMode.selectedIndex = val;
 	obj_set_radio_value('audiochannel_up_down_enable', "{=ini-get:%(CONFIGDIR)/neutrino.conf;audiochannel_up_down_enable;false~cache=}");
@@ -53,7 +52,6 @@ function do_submit()
 		document.f.submit();
 	}
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_init()">

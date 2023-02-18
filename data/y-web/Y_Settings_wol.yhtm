@@ -2,7 +2,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 var g_wol = new Array(
 	"{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_mac_1=}",
 	"{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_mac_2=}",
@@ -19,7 +18,6 @@ function init_wol()
 function goto_settings(){
 	top.top_main.prim_menu.nav("settings", "Y_Settings_yWeb.yhtm");
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
@@ -48,9 +46,7 @@ function goto_settings(){
 	</div>
 </div>
 <script>
-//<![CDATA[
 	init_wol();
-//]]>
 </script>
 </body>
 </html>

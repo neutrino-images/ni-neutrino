@@ -3,7 +3,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_submit(){
 	show_waitbox(true);
 	do_reload = false;
@@ -79,7 +78,6 @@ function do_switch_hostname()
 		document.f.yweb_box_name.focus();
 	}
 }
-//]]>
 </script>
 <style type="text/css">
 input[type="text"],

@@ -1,7 +1,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_mount()
 {
 	show_waitbox(true);
@@ -20,7 +19,6 @@ function do_edit()
 	show_waitbox(true);
 	document.f.submit();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

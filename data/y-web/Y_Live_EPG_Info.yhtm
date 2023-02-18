@@ -1,13 +1,11 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function show_info(_desc, _info1, _info2){
 	document.getElementById("description").innerHTML = _desc;
 	document.getElementById("info1").innerHTML = _info1;
 	document.getElementById("info2").innerHTML = _info2;
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <a href="javascript:window.history.back()"><u>{=L:back=}</u></a>

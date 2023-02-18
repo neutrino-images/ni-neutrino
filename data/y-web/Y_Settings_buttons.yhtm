@@ -1,7 +1,6 @@
 {=include-block:Y_Blocks.txt;management_check_top=}
 {=include-block:Y_Blocks.txt;head=}
 <style type="text/css">
-/*<![CDATA[*/
 .alink {
 	text-decoration: underline;
 }
@@ -15,11 +14,9 @@ input[type="text"],select {
 	vertical-align: middle;
 	font-size: 9px;
 }
-/*]]>*/
 </style>
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_init()
 {
 	var val = "";
@@ -204,7 +201,6 @@ function do_submit()
 	}
 	document.f.submit();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_init()">

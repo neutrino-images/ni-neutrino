@@ -18,7 +18,6 @@
 
 {=include-block:Y_Blocks.txt;head_ni=}
 <script>
-//<![CDATA[
 function edit_popup()
 {
 	popup = window.open('/Y_Filemgr_Edit.yhtm?file={=if-file-exists:/var/etc/{=L:ni.netfs-{=mount_type=}=}~/var/etc/{=L:ni.netfs-{=mount_type=}=}~/etc/{=L:ni.netfs-{=mount_type=}=}=}', 'edit', 'width=800,height=600,resizable=yes');
@@ -53,7 +52,6 @@ function do_submit()
 	show_waitbox(true);
 	document.f.submit();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

@@ -1,13 +1,11 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function check_updates()
 {
 	loadSyncURL("/control/exec?Y_Tools&get_update_version");
 	location.reload();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

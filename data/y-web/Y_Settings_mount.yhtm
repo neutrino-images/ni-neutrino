@@ -1,7 +1,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function form_init()
 {
 	var check = {=ini-get:%(CONFIGDIR)/neutrino.conf;network_nfs_type_{=R1=}=};
@@ -15,7 +14,6 @@ function do_submit()
 	show_waitbox(true);
 	document.f.submit();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onLoad="form_init()">

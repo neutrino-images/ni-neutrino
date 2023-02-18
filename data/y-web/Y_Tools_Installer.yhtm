@@ -3,7 +3,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_submit()
 {
 	if(document.f.filename.value != "")
@@ -32,7 +31,6 @@ function init(){
 		str="{=L:tools.yinstaller.not_determine=}";
 	id("free").innerHTML=str;
 }
-//]]>div
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="init()">

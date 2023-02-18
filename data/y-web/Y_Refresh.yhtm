@@ -1,11 +1,9 @@
 {=include-block:Y_Blocks.txt;head=}
 <script>
-//<![CDATA[
 function do_onload()
 {
 	top.location.href="/";
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_onload()">

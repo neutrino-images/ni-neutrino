@@ -1,10 +1,8 @@
 {=include-block:Y_Blocks.txt;head_ni=}
 <script>
-//<![CDATA[
 jQuery(document).ready(function(){
         window.document.location.href='/Y_NI_NetFS-control.yhtm?mount_type={=mount_type=}&mount_type_s={=mount_type_s=}';
 });
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

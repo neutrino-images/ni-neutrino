@@ -302,10 +302,8 @@ start-block~head_ni
 <script src="/Y_Baselib.js"></script>
 <script src="/Y_NIlib.js"></script>
 <script>
-//<![CDATA[
 	// Clear y-Cache in our pages
 	yhttpd_cache_clear('');
-//]]>
 </script>
 end-block~head_ni
 
@@ -325,10 +323,8 @@ end-block~js_prototype
 start-block~js_jquery
 <script src="/jquery/jquery.min.js"></script>
 <script>
-//<![CDATA[
 	// Use jQuery via jQuery(...)
 	jQuery.noConflict();
-//]]>
 </script>
 end-block~js_jquery
 
@@ -350,14 +346,12 @@ start-block~start_wizard_page
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function do_submit()
 {
 	show_waitbox(true);
 	yhttpd_cache_clear("");
 	document.f.submit();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body">

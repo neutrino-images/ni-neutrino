@@ -6,11 +6,9 @@
 <title>yWeb</title>
 <script src="/jquery/jquery.min.js"></script>
 <script>
-//<![CDATA[
 jQuery.get("/etc/hostname", function(data) {
 	jQuery('html head').find('title').text(data);
 });
-//]]>
 </script>
 </head>
 <frameset cols="*,1300,*" frameborder="0" framespacing="0">

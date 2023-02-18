@@ -3,7 +3,6 @@
 {=include-block:Y_Blocks.txt;js_jquery=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function goConfirmUrl(_meld, _url){
 	if (confirm(_meld)==true) goUrl(_url);
 }
@@ -32,7 +31,6 @@ function init() {
 	set_btn_standby();
 	window.setInterval("set_btn_standby();", 5000);
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="init()">
@@ -113,9 +111,7 @@ function init() {
 	</div>
 </div>
 <script>
-//<![CDATA[
 	init();
 	window.setInterval("get_data();",5000);
-//]]>
 </body>
 </html>

@@ -5,12 +5,10 @@
 <script src="/Y_yweb.js"></script>
 <script src="/Y_Ext_Update.js"></script>
 <script>
-//<![CDATA[
 function do_submit(){
 	show_waitbox(true);
 	document.f.submit();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

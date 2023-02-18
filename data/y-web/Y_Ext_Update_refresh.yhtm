@@ -3,13 +3,11 @@
 <script src="/Y_Baselib.js"></script>
 <script src="/Y_yweb.js"></script>
 <script>
-//<![CDATA[
 function do_onload() {
 	yhttpd_cache_clear('');
 	ext.read_items();	
 	parent.sec_menu.location.reload();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="do_onload()">

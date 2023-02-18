@@ -1,6 +1,5 @@
 {=include-block:Y_Blocks.txt;head=}
 <script>
-//<![CDATA[
 function do_submit() 
 {
 	document.f.su.disabled=true;
@@ -17,7 +16,6 @@ function do_submit()
 	document.f.action=_url;
 	document.f.submit();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>

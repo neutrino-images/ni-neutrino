@@ -5,11 +5,9 @@
 <script src="/Y_yweb.js"></script>
 <script src="/Y_Ext_Update.js"></script>
 <script>
-//<![CDATA[
 function init(){
 	window.setTimeout("uninstall_build_list();",300);
 }
-//]]>
 </script>
 <style>
 .type, .uninstall{

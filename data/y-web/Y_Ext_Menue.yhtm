@@ -5,8 +5,6 @@
 <script src="/Y_Baselib.js"></script>
 <script src="/Y_yweb.js"></script>
 <script>
-//<![CDATA[
-
 function build_menu(){
 //	ext.read_items();
 	var ext_normal=ext.select_type("n");
@@ -21,7 +19,6 @@ function build_menu(){
 		y_add_li_to_ul(id("ext_management"),"ext",item);
 	});
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="build_menu()">

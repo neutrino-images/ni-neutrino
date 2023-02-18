@@ -4,7 +4,6 @@
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 function form_init()
 {
 	obj_set_radio_value('authenticate', "{=ini-get:%(CONFIGDIR)/nhttpd.conf;mod_auth.authenticate;false=}");
@@ -34,7 +33,6 @@ function do_check_input_LogosURL()
 	else
 		document.f.Tuxbox_LogosURL.readOnly = true;
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="form_init()">

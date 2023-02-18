@@ -2,7 +2,6 @@
 <script src="/jquery/jquery.stickytableheaders.min.js"></script>
 <script src="/Y_Baselib.js"></script>
 <script>
-//<![CDATA[
 /*sLog*/
 var sLog_body;
 var sLog_line_number;
@@ -112,7 +111,6 @@ function _show_epg()
 	show_waitbox(false);
 	jQuery('table').stickyTableHeaders();
 }
-//]]>
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="show_epg()" class="iframe">
