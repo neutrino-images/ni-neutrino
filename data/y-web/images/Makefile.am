@@ -7,7 +7,6 @@ images_DATA = \
 	arrowleft.png \
 	arrowright.png \
 	arrowup.png \
-	audiobar.png \
 	blank.png \
 	check_green.png \
 	comment.png \
@@ -43,6 +42,7 @@ images_DATA = \
 	unlock.png \
 	visible.png \
 	vlc.png \
+	volumebar.png \
 	volumedown.png \
 	volumemute.png \
 	volumeunmute.png \
