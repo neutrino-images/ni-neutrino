@@ -222,8 +222,7 @@ end-block~work_menu
 # ============= LAYOUT
 # ------- Lay-HEAD
 start-block~head
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -237,8 +236,7 @@ end-block~head
 
 # ------- Lay-HEAD
 start-block~headCache
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -250,8 +248,7 @@ end-block~headCache
 
 # ------- Lay-HEAD without charset
 start-block~head_no_charset
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 <title>yWeb</title>
@@ -288,8 +285,7 @@ end-block~head_frame_iso
 
 # ------- Lay-HEAD NI
 start-block~head_ni
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 <meta name="author" content="NI-Team">
