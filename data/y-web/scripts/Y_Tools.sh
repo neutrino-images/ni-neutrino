@@ -308,9 +308,9 @@ do_installer()
 			if [ -s "$y_out_html" ] # html - output?
 			then
 				echo '<html><head>'
-				echo '<link rel="stylesheet" type="text/css" href="/Y_Main.css">'
-				echo '<link rel="stylesheet" type="text/css" href="/Y_Dist.css">'
-				echo '<link rel="stylesheet" type="text/css" href="/Y_User.css">'
+				echo '<link rel="stylesheet" href="/Y_Main.css">'
+				echo '<link rel="stylesheet" href="/Y_Dist.css">'
+				echo '<link rel="stylesheet" href="/Y_User.css">'
 				echo "<meta http-equiv='refresh' content='0; $y_out_html'>"
 				echo '</head>'
 				echo "<body><a href='$y_out_html'>If automatic forwarding does not go.</a>"
@@ -318,9 +318,9 @@ do_installer()
 				#cat $y_out_html
 			else
 				echo '<html><head>'
-				echo '<link rel="stylesheet" type="text/css" href="/Y_Main.css">'
-				echo '<link rel="stylesheet" type="text/css" href="/Y_Dist.css">'
-				echo '<link rel="stylesheet" type="text/css" href="/Y_User.css">'
+				echo '<link rel="stylesheet" href="/Y_Main.css">'
+				echo '<link rel="stylesheet" href="/Y_Dist.css">'
+				echo '<link rel="stylesheet" href="/Y_User.css">'
 				echo '</head>'
 				echo '<body>'
 				echo "$o"
