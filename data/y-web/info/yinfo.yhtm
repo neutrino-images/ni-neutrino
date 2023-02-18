@@ -41,7 +41,7 @@ jQuery(document).ready(function(){
 	jQuery('html head').find('title').text("yInfo");
 });
 </script>
-<style type="text/css">
+<style>
 /* globals */
 html {
 	margin: 0;

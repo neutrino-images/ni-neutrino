@@ -96,7 +96,7 @@ function do_rename(){
 		alert("{=L:bou.no_bouquet_name=}!");
 }
 </script>
-<style type="text/css">
+<style>
 .fly_form
 {
 	visibility: hidden;

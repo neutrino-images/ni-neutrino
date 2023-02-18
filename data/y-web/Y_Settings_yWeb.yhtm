@@ -79,7 +79,7 @@ function do_switch_hostname()
 	}
 }
 </script>
-<style type="text/css">
+<style>
 input[type="text"],
 select {
 	width: 220px;

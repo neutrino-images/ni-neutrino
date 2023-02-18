@@ -10,7 +10,7 @@
 <link rel="manifest" href="/lcd4linux/manifest.json">
 <meta name="theme-color" content="#212121">
 
-<style type="text/css">
+<style>
 html {
 	margin: 0;
 	padding: 0;

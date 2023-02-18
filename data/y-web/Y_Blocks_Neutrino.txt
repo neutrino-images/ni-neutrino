@@ -6,7 +6,7 @@ start-block~neutrino_form
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
 <script src="/Y_Baselib.js"></script>
-<style type="text/css">
+<style>
 .line {border-top: 1px solid #6D96A9;}
 </style>
 {=include-block:Y_Blocks.txt;head_close=}

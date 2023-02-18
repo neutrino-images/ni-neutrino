@@ -1,6 +1,6 @@
 {=include-block:Y_Blocks.txt;management_check_top=}
 {=include-block:Y_Blocks.txt;head=}
-<style type="text/css">
+<style>
 	.alink {
 	text-decoration: underline;
 	}

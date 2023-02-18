@@ -21,7 +21,7 @@
 {=var-set:doscamport={=script:Y_NI_Tools get_doscam_webif_port=}=}
 
 {=include-block:Y_Blocks.txt;head_ni=}
-<style type="text/css">
+<style>
 input[type="button"], .tools select {
 	width: 100%;
 }
