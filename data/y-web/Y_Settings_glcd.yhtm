@@ -7,8 +7,8 @@
 	}
 /*]]>*/
 </style>
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script>
 /*<![CDATA[*/
 function do_init()
 {

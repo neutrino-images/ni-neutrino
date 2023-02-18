@@ -26,7 +26,7 @@
 <link rel="manifest" href="/info/manifest.json">
 <meta name="theme-color" content="#212121">
 
-<script type="text/javascript">
+<script>
 //<![CDATA[
 jQuery(document).ready(function(){
 	var time = new Date();

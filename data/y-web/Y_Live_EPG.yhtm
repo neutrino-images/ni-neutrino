@@ -1,7 +1,7 @@
 {=include-block:Y_Blocks.txt;head_ni=}
-<script type="text/javascript" src="/jquery/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/jquery/jquery.stickytableheaders.min.js"></script>
+<script src="/Y_Baselib.js"></script>
+<script>
 //<![CDATA[
 /*sLog*/
 var sLog_body;

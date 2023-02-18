@@ -303,9 +303,9 @@ start-block~head_ni
 {=include-block:Y_Blocks.txt;js_prototype=}
 {=include-block:Y_Blocks.txt;js_jquery=}
 {=include-block:Y_Blocks.txt;js_jquery_ui=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/Y_NIlib.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script src="/Y_NIlib.js"></script>
+<script>
 //<![CDATA[
 	// Clear y-Cache in our pages
 	yhttpd_cache_clear('');
@@ -321,14 +321,14 @@ end-block~head_close
 # ============= prototypejs
 # ------- prototype library
 start-block~js_prototype
-<script type="text/javascript" src="/prototype/prototype.js"></script>
+<script src="/prototype/prototype.js"></script>
 end-block~js_prototype
 
 # ============= jQuery
 # ------- jQuery library
 start-block~js_jquery
-<script type="text/javascript" src="/jquery/jquery.min.js"></script>
-<script type="text/javascript">
+<script src="/jquery/jquery.min.js"></script>
+<script>
 //<![CDATA[
 	// Use jQuery via jQuery(...)
 	jQuery.noConflict();
@@ -338,7 +338,7 @@ end-block~js_jquery
 
 # ------- jQuery user interface
 start-block~js_jquery_ui
-<script type="text/javascript" src="/jquery/jquery-ui.min.js"></script>
+<script src="/jquery/jquery-ui.min.js"></script>
 end-block~js_jquery_ui
 
 # ------- nhttpd save Settings
@@ -352,8 +352,8 @@ end-block~start_wizard_save_settings
 # ------- Start Wizard
 start-block~start_wizard_page
 {=include-block:Y_Blocks.txt;head=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script>
 //<![CDATA[
 function do_submit()
 {

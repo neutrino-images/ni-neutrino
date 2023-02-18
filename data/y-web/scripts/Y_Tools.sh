@@ -79,10 +79,10 @@ image_upload()
 	if [ -s "$y_upload_file" ]
 	then
 		msg="<b>Image upload ok</b><br>"
-		msg="$msg <script language='JavaScript' type='text/javascript'>window.setTimeout('parent.do_image_upload_ready()',1000)</script>"
+		msg="$msg <script>window.setTimeout('parent.do_image_upload_ready()',1000)</script>"
 	else
 		msg="Upload-Problem.<br>Please, try again."
-		msg="$msg <script language='JavaScript' type='text/javascript'>window.setTimeout('parent.do_image_upload_ready_error()',1000)</script>"
+		msg="$msg <script>window.setTimeout('parent.do_image_upload_ready_error()',1000)</script>"
 	fi
 	y_format_message_html
 }
@@ -268,7 +268,7 @@ do_cmd()
 	echo "$pw1>$*"
 	echo "$tmp"
 	echo '</textarea></form>'
-	echo '<script language="JavaScript" type="text/javascript">'
+	echo '<script>'
 	if [ "$app" = "true" ]
 	then
 		echo 'parent.document.co.cmds.value += document.o.ot.value;'

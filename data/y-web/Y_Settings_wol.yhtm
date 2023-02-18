@@ -1,7 +1,7 @@
 {=include-block:Y_Blocks.txt;management_check_top=}
 {=include-block:Y_Blocks.txt;head=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script>
 //<![CDATA[
 var g_wol = new Array(
 	"{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_mac_1=}",
@@ -47,7 +47,7 @@ function goto_settings(){
 	<!--<a href="Y_Settings_yWeb.yhtm" title="WOL Settings">{=L:settings=}</a>-->
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 	init_wol();
 //]]>

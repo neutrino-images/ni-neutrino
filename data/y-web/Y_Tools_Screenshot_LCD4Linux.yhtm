@@ -1,6 +1,6 @@
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_jquery=}
-<script type="text/javascript">
+<script>
 //<![CDATA[
 var interval;
 

@@ -1,8 +1,8 @@
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/Y_yweb.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script src="/Y_yweb.js"></script>
+<script>
 function cmd_popup(){
 	window.open('Y_Tools_Cmd.yhtm','cmd','width=720,height=470,resizable=yes');
 }

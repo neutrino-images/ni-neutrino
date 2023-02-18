@@ -5,7 +5,7 @@ start-block~neutrino_form
 {=include-block:Y_Blocks.txt;management_check_top=}
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
+<script src="/Y_Baselib.js"></script>
 <style type="text/css">
 /*<![CDATA[*/
 .line {border-top: 1px solid #6D96A9;}
@@ -150,7 +150,7 @@ start-block~neutrino_form-data_record
 	</form>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function form_init()
 {
@@ -234,7 +234,7 @@ start-block~neutrino_form-data_movieplayer
 	</form>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function form_init()
 {
@@ -299,7 +299,7 @@ start-block~neutrino_form-data_parental
 	</form>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function form_init()
 {
@@ -429,7 +429,7 @@ start-block~neutrino_form-data_epg
 	</form>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function form_init()
 {
@@ -702,7 +702,7 @@ start-block~neutrino_form-data_diverse
 	</form>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function form_init()
 {
@@ -824,7 +824,7 @@ start-block~neutrino_form-data_pictureviewer
 	</div>
 </div>
 
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function form_init()
 {
@@ -926,7 +926,7 @@ start-block~neutrino_form-data_audioplayer
 	</form>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function form_init()
 {
@@ -1095,7 +1095,7 @@ start-block~neutrino_form-data_direct_recording
 	</form>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function form_init()
 {

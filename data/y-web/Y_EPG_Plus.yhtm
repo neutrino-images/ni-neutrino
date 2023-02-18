@@ -1,9 +1,9 @@
 {=include-block:Y_Blocks.txt;head_no_charset=}
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 {=include-block:Y_Blocks.txt;js_prototype=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/Y_EPG.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script src="/Y_EPG.js"></script>
+<script>
 </script>
 
 {=include-block:Y_Blocks.txt;head_close=}
@@ -64,7 +64,7 @@
 		</tr>
 	</table>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 	epg_plus_init("{=ini-get:%(CONFIGDIR)/nhttpd.conf;Tuxbox.DisplayLogos;true=}");
 //]]>

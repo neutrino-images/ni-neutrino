@@ -1,9 +1,9 @@
 {=global-var-set:alpha=true=}
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/Y_yweb.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script src="/Y_yweb.js"></script>
+<script>
 //<![CDATA[
 /*Indicator*/
 var g_i_active = false;
@@ -124,7 +124,7 @@ function vlc() {
 		</table>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 	i_start();
 //]]>

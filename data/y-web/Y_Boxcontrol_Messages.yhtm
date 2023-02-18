@@ -1,8 +1,8 @@
 {=var-set:cancache=yPyes=}
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_jquery=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script>
 //<![CDATA[
 function do_send(mode) {
 	var msg = id(mode);

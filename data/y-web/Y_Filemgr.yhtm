@@ -1,9 +1,9 @@
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
-<script type="text/javascript" src="/prototype/effects.js"></script>
-<script type="text/javascript" src="/prototype/accordion.js"></script>
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/prototype/effects.js"></script>
+<script src="/prototype/accordion.js"></script>
+<script src="/Y_Baselib.js"></script>
+<script>
 //<![CDATA[
 /* --------------------------------------------------------------*/
 /* in development */

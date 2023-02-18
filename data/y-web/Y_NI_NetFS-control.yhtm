@@ -17,7 +17,7 @@
 {=var-set:nr=7=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
 
 {=include-block:Y_Blocks.txt;head_ni=}
-<script type="text/javascript">
+<script>
 //<![CDATA[
 function edit_popup()
 {

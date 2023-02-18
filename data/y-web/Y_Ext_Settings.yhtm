@@ -1,10 +1,10 @@
 {=include-block:Y_Blocks.txt;management_check_top=}
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/Y_yweb.js"></script>
-<script type="text/javascript" src="/Y_Ext_Update.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script src="/Y_yweb.js"></script>
+<script src="/Y_Ext_Update.js"></script>
+<script>
 //<![CDATA[
 function do_submit(){
 	show_waitbox(true);

@@ -1,8 +1,8 @@
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/Y_yweb.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script src="/Y_yweb.js"></script>
+<script>
 //<![CDATA[
 function do_onload() {
 	yhttpd_cache_clear('');

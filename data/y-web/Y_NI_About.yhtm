@@ -19,7 +19,7 @@
 {=var-set:_mem_free={=script:Y_NI_Tools get_mem_info free=}=}
 
 {=var-set:boxmodel={=func:get_boxmodel=}=}
-<script type="text/javascript">
+<script>
 //<![CDATA[
 jQuery(document).ready(function(){
 	if ("{=ani=}" == "false")
@@ -72,23 +72,23 @@ jQuery(document).ready(function(){
 			<td valign="top" width="28%">
 				{=ini-get:/.version;imagename=}<br/>
 				<abbr class="version" title="{=L:ni.about.your_image=}">
-				<script type="text/javascript">getVersion("{=ini-get:/.version;version=}");</script><br/>
-				<script type="text/javascript">getBuild("{=ini-get:/.version;version=}");</script><br/>
+				<script>getVersion("{=ini-get:/.version;version=}");</script><br/>
+				<script>getBuild("{=ini-get:/.version;version=}");</script><br/>
 				</abbr>
 				{=ini-get:/.version;creator=}<br/>
 			</td>
 			<!--
 			<td valign="top" width="38%">
 				{=if-file-exists:/tmp/update.txt~
-				<script type="text/javascript">compareVersion("{=ini-get:/.version;version=}", "{=ini-get:/tmp/update.txt;version=}");</script>
+				<script>compareVersion("{=ini-get:/.version;version=}", "{=ini-get:/tmp/update.txt;version=}");</script>
 				<span class="upd_no">{=L:ni.about.image_upd_no=}</span>
 				<span class="upd_yes">{=L:ni.about.image_upd_yes=}</span>
 				<br/>
 				<abbr class="version" title="{=L:ni.about.actual_image=}">
-				<script type="text/javascript">getVersion("{=ini-get:/tmp/update.txt;version=}");</script>
+				<script>getVersion("{=ini-get:/tmp/update.txt;version=}");</script>
 				<br/>
 				<br/>
-				<script type="text/javascript">getBuild("{=ini-get:/tmp/update.txt;version=}");</script><br/>
+				<script>getBuild("{=ini-get:/tmp/update.txt;version=}");</script><br/>
 				</abbr>
 				<br/>
 				~
@@ -197,7 +197,7 @@ jQuery(document).ready(function(){
 		</table>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 	loadSyncURL("/control/exec?Y_NI_Tools&rm_update_txt");
 </script>
 </body>

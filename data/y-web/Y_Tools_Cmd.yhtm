@@ -1,8 +1,8 @@
 {=var-set:cancache=yPConf=}
 {=include-block:Y_Blocks.txt;management_check_top=}
 {=include-block:Y_Blocks.txt;head=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script>
 //<![CDATA[
 function do_submit()
 {
@@ -72,7 +72,7 @@ function setCaretToEnd(control)
 <iframe height="0" width="0" scrolling="no" align="left" frameborder="0" name="out" id="out">Your Browser does not support IFrames.</iframe>
 <iframe height="0" width="0" scrolling="no" align="left" frameborder="0" name="tmp" id="tmp">Your Browser does not support IFrames.</iframe>
 
-<script language="JavaScript" type="text/javascript" >
+<script >
 //<![CDATA[
 	if(isIE)
 		document.f.appendx.checked = true;

@@ -1,8 +1,8 @@
 {=var-set:cancache=yPyes=}
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_jquery=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script>
 //<![CDATA[
 function goConfirmUrl(_meld, _url){
 	if (confirm(_meld)==true) goUrl(_url);
@@ -112,7 +112,7 @@ function init() {
 		<div id="out"></div>
 	</div>
 </div>
-<script type="text/javascript">
+<script>
 //<![CDATA[
 	init();
 	window.setInterval("get_data();",5000);

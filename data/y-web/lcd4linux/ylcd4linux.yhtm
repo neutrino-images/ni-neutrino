@@ -32,7 +32,7 @@ body {
 /*]]>*/
 </style>
 
-<script type="text/javascript">
+<script>
 //<![CDATA[
 jQuery(document).ready(function() {
 	jQuery('#screenshot').attr("src", "{=var-get:lcd4linux_png=}?" + Math.random());

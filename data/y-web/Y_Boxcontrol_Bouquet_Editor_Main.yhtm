@@ -2,8 +2,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
 <meta http-equiv="cache-control" content="no-cache" />
 <meta http-equiv="expires" content="0" />
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script>
 //<![CDATA[
 var gurl= "";
 var gurl_last= "";

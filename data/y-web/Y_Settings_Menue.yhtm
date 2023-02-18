@@ -1,9 +1,9 @@
 {=var-set:cancache=yPConf=}
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
-<script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/Y_yweb.js"></script>
-<script type="text/javascript">
+<script src="/Y_Baselib.js"></script>
+<script src="/Y_yweb.js"></script>
+<script>
 function init(){
 	add_yExtensions('settings_general', 'secmenu_settings_general');
 	add_yExtensions('settings_neutrino', 'secmenu_settings_neutrino');

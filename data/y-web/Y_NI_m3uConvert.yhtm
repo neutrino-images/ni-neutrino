@@ -95,7 +95,7 @@ http://www.xyz.com:8000/live/test/test/376.ts">
 		</table>   
 	</div>
 
-<script language="javascript" type="text/javascript">
+<script language="javascript">
 	var textAreas = document.getElementsByTagName('textarea');
 	Array.prototype.forEach.call(textAreas, function(elem)
 	{
