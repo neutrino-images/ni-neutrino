@@ -4,6 +4,9 @@
 <script type="text/javascript" src="/Y_yweb.js"></script>
 <script type="text/javascript">
 //<![CDATA[
+function epg_plus_popup() {
+	window.open("Y_EPG_Plus.yhtm","_blank","resizable=yes,scrollbars=yes");
+}
 
 var g_sig = 100;
 function set_sigbar(_sig){
@@ -19,6 +22,7 @@ function set_sigbar(_sig){
 	else
 		r.width = (100-_sig).toString()+"%";
 }
+
 function sig_get(){
 	var __sig_str = loadSyncURL("/control/signal?sig");
 	var __sig = parseInt(__sig_str,10);
@@ -43,6 +47,7 @@ function set_snrbar(_snr){
 	else
 		r.width = (100-_snr).toString()+"%";
 }
+
 function snr_get(){
 	var __snr_str = loadSyncURL("/control/signal?snr");
 	var __snr = parseInt(__snr_str,10);
@@ -77,6 +82,7 @@ function volumen_set_audiobar(_volumen){
 	else
 		r.width = (100-_volumen).toString()+"%";
 }
+
 function volumen_get(){
 	var __volumen_str = loadSyncURL("/control/volume");
 	var __volumen = parseInt(__volumen_str,10);
@@ -85,6 +91,7 @@ function volumen_get(){
 	g_volumen = __volumen;
 	return __volumen;
 }
+
 function volumen_set(_volumen){
 	_volumen = Math.min(100, _volumen);
 	_volumen = Math.max(0, _volumen);
@@ -92,11 +99,13 @@ function volumen_set(_volumen){
 	volumen_set_audiobar(_volumen);
 	g_volumen = _volumen;
 }
+
 function set_mute_button(){
 	var status = loadSyncURL("/control/volume?status");
 	$('btMute').update( (status==1) ? "<img src=\"/images/volumeunmute.png\">" : "<img src=\"/images/volumemute.png\">");
 	return status;
 }
+
 function toggle_mute(){
 	var status = loadSyncURL("/control/volume?status");
 	if(status==0)//aus
@@ -105,29 +114,25 @@ function toggle_mute(){
 		loadSyncURL("/control/volume?unmute");
 	set_mute_button();
 }
+
 function set_mode(_mode){
 	var actual_mode = loadSyncURL("/control/getmode");
 	if(actual_mode != _mode)
 		loadSyncURL("/control/setmode?" + _mode);
 	parent.work.location.reload();
 }
-function init(){
-	volumen_set_audiobar(volumen_get());
-	set_mute_button();
-	set_sigbar(sig_get());
-	set_snrbar(snr_get());
-	ber_get();
-//	add_yExtensions('boxcontrol', 'secmenu_boxcontrol');
-}
+
 function get_data(){
 	volumen_set_audiobar(volumen_get());
 	set_sigbar(sig_get());
 	set_snrbar(snr_get());
 	ber_get();
-	add_yExtensions('boxcontrol', 'secmenu_boxcontrol');
 }
-function epg_plus_popup() {
-	window.open("Y_EPG_Plus.yhtm","_blank","resizable=yes,scrollbars=yes");
+
+function init(){
+	get_data();
+	set_mute_button();
+	add_yExtensions('boxcontrol', 'secmenu_boxcontrol');
 }
 //]]>
 </script>
