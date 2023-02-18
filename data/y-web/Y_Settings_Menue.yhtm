@@ -5,10 +5,10 @@
 <script type="text/javascript" src="/Y_yweb.js"></script>
 <script type="text/javascript">
 function init(){
-	add_yExtensions('settings_general', 'secmenu_general');
-	add_yExtensions('settings_neutrino', 'secmenu_neutrino');
-	add_yExtensions('settings_camds', 'secmenu_camds');
-	add_yExtensions('settings_plugins', 'secmenu_plugins');
+	add_yExtensions('settings_general', 'secmenu_settings_general');
+	add_yExtensions('settings_neutrino', 'secmenu_settings_neutrino');
+	add_yExtensions('settings_camds', 'secmenu_settings_camds');
+	add_yExtensions('settings_plugins', 'secmenu_settings_plugins');
 }
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
@@ -19,7 +19,7 @@ function init(){
 	<div class="y_menu_sec_box_body">
 		<div class="y_menu_sec_section">{=L:general=}</div>
 		<div class="y_menu_sec">
-			<ul id="secmenu_general">
+			<ul id="secmenu_settings_general">
 				<li>
 					{=var-set:m_link_href=Y_Settings_yWeb.yhtm=}
 					{=var-set:m_link_text=yWeb=}
@@ -44,7 +44,7 @@ function init(){
 		</div>
 		<div class="y_menu_sec_section">{=L:neutrino=}</div>
 		<div class="y_menu_sec">
-			<ul id="secmenu_neutrino">
+			<ul id="secmenu_settings_neutrino">
 				<li>
 					{=var-set:m_link_href=Y_Boxcontrol_Bouquet_Editor_Main.yhtm=}
 					{=var-set:m_link_text={=L:set.menue.bouquet_editor=}=}
@@ -133,7 +133,7 @@ function init(){
 		</div>
 		<div class="y_menu_sec_section">{=L:ni.camd-control=}</div>
 		<div class="y_menu_sec">
-			<ul id="secmenu_camds">
+			<ul id="secmenu_settings_camds">
 				<li>
 					{=var-set:m_link_href=Y_NI_Camd-control.yhtm=}
 					{=var-set:m_link_text={=L:ni.camd-control=}=}
@@ -143,7 +143,7 @@ function init(){
 		</div>
 		<div class="y_menu_sec_section">{=L:plugins=}</div>
 		<div class="y_menu_sec">
-			<ul id="secmenu_plugins">
+			<ul id="secmenu_settings_plugins">
 				<li>
 					{=var-set:m_link_href=Y_NI_Plugin-control.yhtm=}
 					{=var-set:m_link_text={=L:ni.plugin-control=}=}
