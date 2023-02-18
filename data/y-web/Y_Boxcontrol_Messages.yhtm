@@ -2,7 +2,6 @@
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_jquery=}
 <script type="text/javascript" src="/Y_Baselib.js"></script>
-<script type="text/javascript" src="/Y_yweb.js"></script>
 <script type="text/javascript">
 //<![CDATA[
 function do_send(mode) {
