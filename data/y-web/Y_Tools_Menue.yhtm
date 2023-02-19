@@ -42,7 +42,7 @@ function init(){
 					{=include-block:Y_Blocks.txt;management_link=}
 				</li>
 				<li>{=L:ni.netfs-control=}</li>
-				<ul style="margin-left: 1em">
+				<ul>
 					<li>
 						{=var-set:m_link_href=Y_NI_NetFS-init.yhtm?mount_type=0&mount_type_s=fstab=}
 						{=var-set:m_link_desc=fstab-{=L:tools.mounts=}=}

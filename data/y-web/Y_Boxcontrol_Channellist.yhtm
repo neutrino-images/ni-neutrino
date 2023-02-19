@@ -22,6 +22,11 @@ function do_streaminfo() {
 	window.open("Y_StreamInfo.yhtm", "stream", "width=520");
 }
 </script>
+<style>
+.work_box_body {
+	padding-right: 0;
+}
+</style>
 {=include-block:Y_Blocks.txt;head_close=}
 <body class="iframe">
 <table class="bouquetitemlist">

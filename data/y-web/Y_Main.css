@@ -188,6 +188,17 @@ tr {
 	text-decoration: none;
 	padding-left: 20px;
 }
+/* scrollbar styling */
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+ ::-webkit-scrollbar-track {
+	background-color: #757575;
+}
+::-webkit-scrollbar-thumb {
+	background: #424242;
+}
 /* primary Navigation */
 .y_menu_prim_box {
 	margin: 5px;
@@ -274,7 +285,7 @@ tr {
 }
 .y_menu_sec_box_head {
 	margin: 0;
-	padding: 0;
+	padding: 5px 5px 5px 10px;
 	background: #FD6D13;
 	border-radius: 4px 4px 0 0;
 
@@ -285,7 +296,7 @@ tr {
 }
 .y_menu_sec_box_head h2 {
 	margin: 0;
-	padding: 5px 5px 5px 10px;
+	padding: 0;
 	/* font-family: Arial, 'Lucida Grande',Tahoma, Verdana, Geneva, Helvetica, sans-serif; */
 	color: white;
 	font-weight: bold;
@@ -294,7 +305,7 @@ tr {
 }
 .y_menu_sec_box_body {
 	margin: 0;
-	padding: 5px 0 10px;
+	padding: 5px 5px 5px 10px;
 	background-color: #ffffff;
 	border-radius: 0 0 4px 4px;
 
@@ -318,7 +329,7 @@ tr {
 .y_menu_sec li {
 	text-align: left;
 	margin-bottom: 1px;
-	padding-left: 20px;
+	padding-left: 0;
 	color: #555555;
 }
 .y_menu_sec li a {
@@ -331,9 +342,13 @@ tr {
 .y_menu_sec li a:hover {
 	color: #FD6D13;
 }
+.y_menu_sec ul ul {
+	padding-left: 10px;
+	margin: 0;
+}
 .y_menu_sec_section {
-	margin: 10px 0px 0px 0px;
-	padding: 3px 2px 3px 10px;
+	margin: 10px 0px 0px -5px;
+	padding: 5px;
 	background-color: #F7F7F7;
 	font-size: 10pt;
 	font-weight: bold;
@@ -376,7 +391,7 @@ tr {
 }
 .work_box_head {
 	margin: 0;
-	padding: 0;
+	padding: 5px 10px;
 	text-align: center;
 	background-color: #606060;
 	border-radius: 4px 4px 0 0;
@@ -388,7 +403,7 @@ tr {
 }
 .work_box_head h2,.work_box_head_h2 {
 	margin: 0;
-	padding: 5px 20px;
+	padding: 0;
 	/* font-family: Arial, 'Lucida Grande',Tahoma, Verdana, Geneva, Helvetica, sans-serif; */
 	color: white;
 	font-weight: bold;
@@ -397,7 +412,7 @@ tr {
 }
 .work_box_body {
 	margin: 0;
-	padding: 5px 30px 10px 30px;
+	padding: 5px 10px;
 	background-color: #ffffff;
 	border-radius: 0 0 4px 4px;
 
@@ -485,7 +500,7 @@ tr {
 }
 .y_wait_box_head {
 	margin: 0;
-	padding: 0;
+	padding: 5px 5px 5px 10px;
 	background: #FD6D13;
 	border-radius: 4px 4px 0 0;
 
@@ -496,7 +511,7 @@ tr {
 }
 .y_wait_box_head h2 {
 	margin: 0;
-	padding: 5px 20px;
+	padding: 0;
 	color: white;
 	font-weight: bold;
 	font-size: 1.2em;
@@ -504,7 +519,7 @@ tr {
 }
 .y_wait_box_body {
 	margin: 0;
-	padding: 5px 15px 20px;
+	padding: 5px 5px 5px 10px;
 	background-color: #ffffff;
 	border-radius: 0 0 4px 4px;
 
@@ -596,7 +611,7 @@ tr {
 	padding:0;*/
 }
 .y_form td{
-	padding-left:20px;
+	padding-left: 10px;
 }
 .y_form #colorTable td{
 	padding-left:0px;
@@ -665,9 +680,6 @@ tr {
 .y_epg_info #info2 {
 	font-size:8pt;
 }
-.a, .b, .c {
-	vertical-align: top;
-}
 .bouquetitemlist .logo_cell {
 	background: #A7A7A7;
 	border-bottom: 1px solid white;
@@ -686,9 +698,6 @@ tr {
 	background: #A7A7A7;
 	max-width: 175px;
 	max-height: 40px;
-}
-.aepg, .bepg, .cepg {
-	white-space: nowrap;
 }
 .channel_logos
 {
@@ -852,17 +861,6 @@ tr.bouquetlist
 	margin: 0px;
 	width: 100%;
 }
-.a
-{
-	background-color: #F7F7F7;
-	/* font-family:Arial,Sans-Serif; */
-	font-size:11pt;
-	border-spacing: 0px;
-	padding: 0px;
-	padding-left: 10px;
-	padding-right: 20px;
-	margin:0px;
-}
 #epglist thead {
 	background-color: #fff;
 }
@@ -874,29 +872,60 @@ tr.bouquetlist
 #epglist tbody tr:hover {
 	background-color: #dddddd;
 }
+.a, .b, .c
+{
+	vertical-align: top;
+	font-size: 11pt;
+	padding: 0 20px 0 10px;
+	margin: 0;
+	border-spacing: 0px;
+}
+.a
+{
+	background-color: #F7F7F7;
+}
+.aepg, .bepg, .cepg
+{
+	white-space: nowrap;
+	font-weight: normal;
+	font-size: 10pt;
+	padding-left: 10px;
+}
 .aepg
 {
 	background-color: #F7F7F7;
-	font-weight:normal;
-	font-size:10pt;
-	padding-left: 10px;
 }
 .b
 {
 	background-color: white;
-	font-size:11pt;
-	border-spacing: 0px;
-	padding: 0px;
-	padding-left: 10px;
-	padding-right: 20px;
-	margin:0px;
 }
 .bepg
 {
 	background-color: white;
-	font-weight:normal;
-	font-size:10pt;
-	padding-left: 10px;
+}
+.c
+{
+	background-color: #D7D7D7;
+	font-weight:bold;
+}
+.cepg
+{
+	background-color:#D7D7D7;
+}
+.event_description
+{
+	display: inline-block;
+	max-width: 450px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: bottom;
+	cursor: pointer;
+}
+.event_duration
+{
+	font-size: 8pt;
+	white-space: nowrap;
+	margin-right: 10px;
 }
 a:hover.clist
 {
@@ -907,22 +936,6 @@ a:hover.clistsmall
 {
 	font-size:10pt;
 	text-decoration:underline;
-}
-.c
-{
-	background-color:#D7D7D7;
-	font-weight:bold;
-	font-size:11pt;
-	padding-left: 10px;
-	padding-right: 20px;
-	margin:0px;
-}
-.cepg
-{
-	background-color:#D7D7D7;
-	font-weight:normal;
-	font-size:10pt;
-	padding-left: 10px;
 }
 .cslider_cell
 {

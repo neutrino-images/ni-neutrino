@@ -1,5 +1,10 @@
 {=include-block:Y_Blocks.txt;head_no_charset=}
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252"/>
+<style>
+.work_box_body {
+	padding-right: 0;
+}
+</style>
 {=include-block:Y_Blocks.txt;head_close=}
 <body class="iframe">
 <table class="bouquetlist" width="100%">
