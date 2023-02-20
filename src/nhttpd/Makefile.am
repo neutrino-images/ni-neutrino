@@ -26,6 +26,5 @@ libnhttpd_adir = @CONFIGDIR@
 libnhttpd_a_DATA = nhttpd.conf
 EXTRA_DIST = nhttpd.conf nhttpd.conf.in
 
-# NI
 installdir = $(CONFIGDIR)
-install_DATA = Y-Web.conf
+install_DATA = yWeb.conf

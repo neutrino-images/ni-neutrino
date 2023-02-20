@@ -205,12 +205,12 @@ msg_popup()
 }
 
 # -----------------------------------------------------------
-# create Y_Web.conf if does not exists
+# create yWeb.conf if does not exists
 # -----------------------------------------------------------
-check_Y_Web_conf()
+check_yWeb_conf()
 {
-	if ! [ -e $y_config_Y_Web ]
+	if ! [ -e $y_config_yWeb ]
 	then
-		echo "skin=Tuxbox"  >$y_config_Y_Web
+		echo "skin=NI_dark" > $y_config_yWeb
 	fi
 }

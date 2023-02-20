@@ -15,20 +15,20 @@ end-block~timer
 
 # ------- yWeb save Settings
 start-block~yWeb_save_settings
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;management_ip;{=managementIP=}~open=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;management_ip2;{=managementIP2=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;wol_mac_1;{=wol_mac_1=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;wol_mac_2;{=wol_mac_2=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;wol_mac_3;{=wol_mac_3=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;wol_desc_1;{=wol_desc_1=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;wol_desc_2;{=wol_desc_2=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;wol_desc_3;{=wol_desc_3=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;fb;{=fb=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;screenshot_rc;{=screenshot_rc=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;start_page;{=start_page=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;style;{=style=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;yweb_box_name;{=yweb_box_name=}~cache=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;yweb_box_color;{=yweb_box_color=}~save=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;management_ip;{=managementIP=}~open=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;management_ip2;{=managementIP2=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;wol_mac_1;{=wol_mac_1=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;wol_mac_2;{=wol_mac_2=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;wol_mac_3;{=wol_mac_3=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;wol_desc_1;{=wol_desc_1=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;wol_desc_2;{=wol_desc_2=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;wol_desc_3;{=wol_desc_3=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;fb;{=fb=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;screenshot_rc;{=screenshot_rc=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;start_page;{=start_page=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;style;{=style=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;yweb_box_name;{=yweb_box_name=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;yweb_box_color;{=yweb_box_color=}~save=}
 end-block~yWeb_save_settings
 
 # ------- nhttpd save Settings
@@ -165,7 +165,7 @@ end-block~no_management
 
 # ------- Managemant Check : insert at Top of Page
 start-block~management_check_top
-{=var-set:management={=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip;{=func:get_request_data client_addr=}=}~1~=}{=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip2=}~1~=}=}
+{=var-set:management={=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip;{=func:get_request_data client_addr=}=}~1~=}{=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip2=}~1~=}=}
 {=if-empty:{=var-get:management=}
 ~
 	{=include-block:Y_Blocks.txt;no_management=}
@@ -335,8 +335,8 @@ end-block~js_jquery_ui
 
 # ------- nhttpd save Settings
 start-block~start_wizard_save_settings
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;start_page;{=start_page=}~open=}
-{=ini-set:%(CONFIGDIR)/Y-Web.conf;startup;true~save=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;start_page;{=start_page=}~open=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;startup;true~save=}
 {=ini-set:%(CONFIGDIR)/nhttpd.conf;Language.selected;{=language=}=}
 {=func:do_reload_httpd_config=}
 end-block~start_wizard_save_settings
@@ -394,7 +394,7 @@ end-block~start_wizard_page
 # ------- Lay-Frame MAIN
 start-block~frame_main
 
-{=if-empty:{=ini-get:%(CONFIGDIR)/Y-Web.conf;startup=}~
+{=if-empty:{=ini-get:%(CONFIGDIR)/yWeb.conf;startup=}~
 {=include-block:Y_Blocks.txt;start_wizard_page=}
 ~
 {=include-block:Y_Blocks.txt;head_frame=}
@@ -442,7 +442,7 @@ end-block~frame_secondary
 # ------- Lay-Frame Boxcontrol-Menu
 start-block~frame_boxcontrol
 {=var-set:sec_menu=Y_Boxcontrol_Menue.yhtm=}
-{=var-set:startpage={=ini-get:%(CONFIGDIR)/Y-Web.conf;start_page;none=}=}
+{=var-set:startpage={=ini-get:%(CONFIGDIR)/yWeb.conf;start_page;none=}=}
 {=var-set:work=
 	{=if-equal:{=var-get:startpage=}~bouquets~Y_Boxcontrol_Bouquets.yhtm
 	~
@@ -590,7 +590,7 @@ end-block~rc_variables
 start-block~remote
 {=include-block:Y_Blocks.txt;rc_variables=}
 {=var-set:nfbtype={=ini-get:%(CONFIGDIR)/neutrino.conf;remote_control_hardware=}=}
-{=var-set:yfbtype={=ini-get:%(CONFIGDIR)/Y-Web.conf;fb;0=}=}
+{=var-set:yfbtype={=ini-get:%(CONFIGDIR)/yWeb.conf;fb;0=}=}
 {=var-set:boxtype={=func:get_boxtype=}=}
 {=if-equal:{=var-get:yfbtype=}~{=var-get:_fb_auto=}~
 	{=if-equal:{=var-get:nfbtype=}~{=var-get:_fb_dbox_philips=}~	{=include-block:Y_Blocks.txt;rc_dbox_philips=}~

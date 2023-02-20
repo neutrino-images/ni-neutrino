@@ -26,7 +26,7 @@ function do_submit(){
 	}
 }
 function do_init(){
-	var val = "{=ini-get:/var/tuxbox/config/Y-Web.conf;fb;0~open=}";
+	var val = "{=ini-get:/var/tuxbox/config/yWeb.conf;fb;0~open=}";
 	var cst = (loadSyncURL("/control/info?hwinfo").indexOf("CST") > -1);
 	var fb_options = document.f.fb.getElementsByTagName("option");
 	for (var i = 0; i < fb_options.length; i++)
@@ -42,8 +42,8 @@ function do_init(){
 				fb_options[i].disabled = true;
 		}
 	}
-	obj_set_radio_value('screenshot_rc', "{=ini-get:%(CONFIGDIR)/Y-Web.conf;screenshot_rc;false~cache=}");
-	val = "{=ini-get:%(CONFIGDIR)/Y-Web.conf;start_page;bouquets~cache=}";
+	obj_set_radio_value('screenshot_rc', "{=ini-get:%(CONFIGDIR)/yWeb.conf;screenshot_rc;false~cache=}");
+	val = "{=ini-get:%(CONFIGDIR)/yWeb.conf;start_page;bouquets~cache=}";
 	var sel=4;
 	switch(val){
 		case "bouquets": sel=0; break;
@@ -52,9 +52,9 @@ function do_init(){
 		case "screenshot": sel=3; break;
 	}
 	document.f.start_page.selectedIndex = sel;
-	style_old = "{=ini-get:%(CONFIGDIR)/Y-Web.conf;style~cache=}";
+	style_old = "{=ini-get:%(CONFIGDIR)/yWeb.conf;style~cache=}";
 	//NI
-	if ("{=ini-get:%(CONFIGDIR)/Y-Web.conf;yweb_box_name=}" == "${HOSTNAME}") {
+	if ("{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_name=}" == "${HOSTNAME}") {
 		document.f.hostname.checked = true;
 		document.f.yweb_box_name.value = "${HOSTNAME}";
 		document.f.yweb_box_name.readOnly = true;
@@ -97,35 +97,35 @@ select {
 			<tr><td class="y_form_header" colspan="4">{=L:set.yweb.management_IPs=}</td></tr>
 			<tr>
 				<td>IP 1</td>
-				<td colspan="3"><input type="text" name="managementIP" size="15" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip=}" title="{=L:set.yweb.enter_ip_desc=}"/></td>
+				<td colspan="3"><input type="text" name="managementIP" size="15" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip=}" title="{=L:set.yweb.enter_ip_desc=}"/></td>
 			</tr>
 			<tr>
 				<td>IP 2</td>
-				<td colspan="3"><input type="text" name="managementIP2" size="15" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip2=}" title="{=L:set.yweb.enter_ip_desc=}"/></td>
+				<td colspan="3"><input type="text" name="managementIP2" size="15" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip2=}" title="{=L:set.yweb.enter_ip_desc=}"/></td>
 			</tr>
 			<tr><td class="y_form_header" colspan="4">{=L:set.yweb.wake_on_lan=}</td></tr>
 			<tr>
 				<td>MAC 1</td>
-				<td><input type="text" name="wol_mac_1" size="17" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_mac_1=}" title="{=L:set.yweb.enter_mac_desc=}"/></td>
+				<td><input type="text" name="wol_mac_1" size="17" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;wol_mac_1=}" title="{=L:set.yweb.enter_mac_desc=}"/></td>
 				<td>{=L:set.yweb.description=}</td>
-				<td><input type="text" name="wol_desc_1" size="17" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_desc_1=}" title="{=L:set.yweb.enter_description_desc=}"/></td>
+				<td><input type="text" name="wol_desc_1" size="17" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;wol_desc_1=}" title="{=L:set.yweb.enter_description_desc=}"/></td>
 			</tr>
 			<tr>
 				<td>MAC 2</td>
-				<td><input type="text" name="wol_mac_2" size="17" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_mac_2=}" title="{=L:set.yweb.enter_mac_desc=}"/></td>
+				<td><input type="text" name="wol_mac_2" size="17" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;wol_mac_2=}" title="{=L:set.yweb.enter_mac_desc=}"/></td>
 				<td>{=L:set.yweb.description=}</td>
-				<td><input type="text" name="wol_desc_2" size="17" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_desc_2=}" title="{=L:set.yweb.enter_description_desc=}"/></td>
+				<td><input type="text" name="wol_desc_2" size="17" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;wol_desc_2=}" title="{=L:set.yweb.enter_description_desc=}"/></td>
 			</tr>
 			<tr>
 				<td>MAC 3</td>
-				<td><input type="text" name="wol_mac_3" size="17" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_mac_3=}" title="{=L:set.yweb.enter_mac_desc=}"/></td>
+				<td><input type="text" name="wol_mac_3" size="17" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;wol_mac_3=}" title="{=L:set.yweb.enter_mac_desc=}"/></td>
 				<td>{=L:set.yweb.description=}</td>
-				<td><input type="text" name="wol_desc_3" size="17" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;wol_desc_3=}" title="{=L:set.yweb.enter_description_desc=}"/></td>
+				<td><input type="text" name="wol_desc_3" size="17" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;wol_desc_3=}" title="{=L:set.yweb.enter_description_desc=}"/></td>
 			</tr>
 			<tr><td class="y_form_header" colspan="4">{=L:set.yweb.box_tag=}</td></tr>
 			<tr>
 				<td>{=L:set.yweb.box_tag=}</td>
-				<td colspan="3"><input type="text" name="yweb_box_name" size="17" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;yweb_box_name=}"
+				<td colspan="3"><input type="text" name="yweb_box_name" size="17" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_name=}"
 					title="{=L:set.yweb.box_tag_desc=}"/>
 					<!-- //NI -->
 					<input type="checkbox" name="hostname" value="Hostname" onclick="do_switch_hostname()"/> Hostname
@@ -133,7 +133,7 @@ select {
 			</tr>
 			<tr>
 				<td>{=L:set.yweb.box_color=}</td>
-				<td colspan="3"><input type="text" name="yweb_box_color" size="8" value="{=ini-get:%(CONFIGDIR)/Y-Web.conf;yweb_box_color=}"
+				<td colspan="3"><input type="text" name="yweb_box_color" size="8" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_color=}"
 					title="{=L:set.yweb.box_color_desc=}"/></td>
 			</tr>
 			<tr><td class="y_form_header" colspan="4">{=L:others=}</td></tr>

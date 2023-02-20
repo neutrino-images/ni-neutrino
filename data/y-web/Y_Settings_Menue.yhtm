@@ -13,7 +13,7 @@ function init(){
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="init()">
-{=var-set:management={=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip;{=func:get_request_data client_addr=}=}~1~=}{=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip2=}~1~=}=}
+{=var-set:management={=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip;{=func:get_request_data client_addr=}=}~1~=}{=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip2=}~1~=}=}
 <div class="y_menu_sec_box">
 	<div class="y_menu_sec_box_head"><h2>{=L:main.settings=}</h2></div>
 	<div class="y_menu_sec_box_body">

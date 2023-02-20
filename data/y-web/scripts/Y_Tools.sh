@@ -14,8 +14,8 @@
 # -----------------------------------------------------------
 style_get()
 {
-	check_Y_Web_conf
-	active_style=$(config_get_value_direct $y_config_Y_Web 'style')
+	check_yWeb_conf
+	active_style=$(config_get_value_direct $y_config_yWeb 'style')
 
 	y_path_directory=$(config_get_value_direct $y_config_nhttpd 'WebsiteMain.directory')
 	y_path_override_directory=$(config_get_value_direct $y_config_nhttpd 'WebsiteMain.override_directory')
@@ -55,7 +55,7 @@ style_set()
 	# This function should be called one time after installing a new image
 	# to get sure, the right skin is installed too
 
-	style=${1:-$(config_get_value_direct $y_config_Y_Web 'style')}
+	style=${1:-$(config_get_value_direct $y_config_yWeb 'style')}
 	test -n "$style" || return
 
 	y_path_directory=$(config_get_value_direct $y_config_nhttpd 'WebsiteMain.directory')
@@ -67,7 +67,7 @@ style_set()
 	elif [ -e $y_path_directory/styles/Y_Dist-$style.css ]; then
 		cp $y_path_directory/styles/Y_Dist-$style.css Y_Dist.css
 	else
-		config_set_value_direct $y_config_Y_Web 'style'
+		config_set_value_direct $y_config_yWeb 'style'
 	fi
 }
 
@@ -480,7 +480,7 @@ case "$1" in
 	ps)				msg=`ps aux`; y_format_message_html ;;
 	free)				f=`free`; p=`df -h`; msg="RAM Memory use\n-------------------\n$f\n\nPartitions\n-------------------\n$p"; y_format_message_html ;;
 	yreboot)			reboot; echo "Reboot..." ;;
-	check_yWeb_conf) 		check_Y_Web_conf ;;
+	check_yWeb_conf) 		check_yWeb_conf ;;
 	rcsim)				rcsim $2 >/dev/null ;;
 	domount)			shift 1; do_mount $* ;;
 	dounmount)			shift 1; do_unmount $* ;;

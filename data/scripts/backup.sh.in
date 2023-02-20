@@ -16,7 +16,7 @@ TOBACKUP="\
 	@CONFIGDIR@/scan.conf \
 	@CONFIGDIR@/timerd.conf \
 	@CONFIGDIR@/weather-favorites.xml \
-	@CONFIGDIR@/Y-Web.conf \
+	@CONFIGDIR@/yWeb.conf \
 	\
 	@CONFIGDIR@/doscam.* \
 	@CONFIGDIR@/oscam.* \

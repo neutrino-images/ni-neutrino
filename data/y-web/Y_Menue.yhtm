@@ -113,9 +113,9 @@ function vlc() {
 			</td>
 			<td align="right">
 				<span id="state" style="color : red;font-family: Courier New, Courier, monospace;">&nbsp;</span>
-				<span id="box_name" {=if-empty:{=ini-get:%(CONFIGDIR)/Y-Web.conf;yweb_box_color=}~~style="color : #{=ini-get:%(CONFIGDIR)/Y-Web.conf;yweb_box_color=};"=}>
+				<span id="box_name" {=if-empty:{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_color=}~~style="color : #{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_color=};"=}>
 					<!-- //NI -->
-					{=if-equal:{=ini-get:%(CONFIGDIR)/Y-Web.conf;yweb_box_name=}~${HOSTNAME}~{=script:Y_Tools get_hostname=}~{=ini-get:%(CONFIGDIR)/Y-Web.conf;yweb_box_name=}=}</span>
+					{=if-equal:{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_name=}~${HOSTNAME}~{=script:Y_Tools get_hostname=}~{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_name=}=}</span>
 				<span id="clock">00:00</span>
 			</td>
 		</tr>

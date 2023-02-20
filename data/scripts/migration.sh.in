@@ -19,6 +19,11 @@ if [ -e neutrino.conf ]; then
 		mv @CONFIGDIR@/webtv_usr.xml @WEBTVDIR_VAR@/
 	fi
 
+	# Y-Web.conf was renamed to yWeb.conf
+	if [ -e @CONFIGDIR@/Y-Web.conf ]; then
+		mv @CONFIGDIR@/Y-Web.conf @CONFIGDIR@/yWeb.conf
+	fi
+
 	# remove all old glcd_ keywords; neutrino will add the new ones
 	if ! grep -q glcd_foreground_color neutrino.conf ; then
 		sed -i "/^glcd_/d" neutrino.conf

@@ -61,13 +61,13 @@ function do_check(){
 		"WebServer: not set to Standard-Port. Actual: {=ini-get:%(CONFIGDIR)/nhttpd.conf;WebsiteMain.port;80=}", "notice");
 	=}
 	/*settings*/
-	{=if-empty:{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip=}~~
+	{=if-empty:{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip=}~~
 		sLog_addRow(sLog_body, "yellow",
-		"Settings: Management IP(1) is set to {=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip=} ! Your IP is {=func:get_request_data client_addr=}.", "notice");
+		"Settings: Management IP(1) is set to {=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip=} ! Your IP is {=func:get_request_data client_addr=}.", "notice");
 	=}
-	{=if-empty:{=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip2=}~~
+	{=if-empty:{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip2=}~~
 		sLog_addRow(sLog_body, "yellow",
-		"Settings: Management IP(2) is set to {=ini-get:%(CONFIGDIR)/Y-Web.conf;management_ip2=} ! Your IP is {=func:get_request_data client_addr=}.", "notice");
+		"Settings: Management IP(2) is set to {=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip2=} ! Your IP is {=func:get_request_data client_addr=}.", "notice");
 	=}
 
 	/*programs*/
