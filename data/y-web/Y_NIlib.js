@@ -1,12 +1,8 @@
 /*	yWeb NIlib by NI-Team
 */
 
-//	next booth functions are taken from the original yweb
+//	next function is taken from the original yweb
 //	to make them available in all of our pages
-function goConfirmUrl(_meld, _url){
-	if (confirm(_meld)==true) goUrl(_url);
-}
-
 function goUrl(_url){
 	var res = trim(loadSyncURL(_url));
 	switch(res){
