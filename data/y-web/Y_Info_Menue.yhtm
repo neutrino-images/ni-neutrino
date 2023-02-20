@@ -2,7 +2,7 @@
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
 <script src="/Y_Baselib.js"></script>
-<script src="/Y_yweb.js"></script>
+<script src="/Y_yWeb.js"></script>
 <script>
 function init(){
 	add_yExtensions('info', 'secmenu_info');

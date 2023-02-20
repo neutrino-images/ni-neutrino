@@ -75,7 +75,7 @@ install_DATA =	extensions.txt \
 		Y_User.css \
 		Y_Version.txt \
 		Y_Wait.yhtm \
-		Y_yweb.js
+		Y_yWeb.js
 
 # NI-yWeb
 install_DATA += Y_NIlib.js \

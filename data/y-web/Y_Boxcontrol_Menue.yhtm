@@ -2,7 +2,7 @@
 {=include-block:Y_Blocks.txt;js_jquery=}
 {=include-block:Y_Blocks.txt;js_prototype=}
 <script src="/Y_Baselib.js"></script>
-<script src="/Y_yweb.js"></script>
+<script src="/Y_yWeb.js"></script>
 <script>
 function epg_plus_popup() {
 	window.open("Y_EPG_Plus.yhtm","_blank","resizable=yes,scrollbars=yes");

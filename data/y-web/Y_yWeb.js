@@ -1,14 +1,14 @@
 /*	yWeb by yjogol
-	internal organisation of yweb
+	internal organisation of yWeb
 */
 
 /* define namespace */
 if(typeof(Y) == "undefined")
 	Y = {};
 
-/* Class Y.yweb */
-Y.yweb = new Class.create();
-Object.extend(Y.yweb.prototype, {
+/* Class Y.yWeb */
+Y.yWeb = new Class.create();
+Object.extend(Y.yWeb.prototype, {
 	ver_file_prop : new Hash(),
 	yweb_version:  $H({major:'0', minor:'0', patch:'0', pre:'0'}),
 	yweblib_version:  $H({major:'1', minor:'0', patch:'0', pre:'0'}),
@@ -57,14 +57,14 @@ Object.extend(Y.yweb.prototype, {
 
 /* main instance */
 if (window == top.top_main.prim_menu) {
-	var yweb = new Y.yweb();
+	var yweb = new Y.yWeb();
 	yweb.require_prototype("1.7.3");
 }
 else 
 	if(top.top_main.prim_menu && top.top_main.prim_menu.yweb)
 		var yweb = top.top_main.prim_menu.yweb;
 	else { // should not happen!
-		var yweb = new Y.yweb();
+		var yweb = new Y.yWeb();
 		yweb.require_prototype("1.7.3");
 	}
 	
