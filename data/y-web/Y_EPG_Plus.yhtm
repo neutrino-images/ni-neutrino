@@ -3,9 +3,6 @@
 {=include-block:Y_Blocks.txt;js_prototype=}
 <script src="/Y_Baselib.js"></script>
 <script src="/Y_EPG.js"></script>
-<script>
-</script>
-
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
 {=var-set:wait_text={=L:epg.get_epg=}=}{=include-block:Y_Blocks.txt;snip_wait=}
@@ -47,14 +44,6 @@
 				<br/>
 			</td>
 		</tr>
-		<!--
-		<tr>
-			<td colspan="3">
-				{=L:lookup=}:
-				<span id="d_lookup"></span>
-			</td>
-		</tr>
-		-->
 		<tr>
 			<td colspan="3">
 				<br/>
@@ -66,7 +55,7 @@
 </div>
 <script>
 	epg_plus_init("{=ini-get:%(CONFIGDIR)/nhttpd.conf;Tuxbox.DisplayLogos;true=}");
+	build_epg_plus_main()
 </script>
-
 </body>
 </html>
