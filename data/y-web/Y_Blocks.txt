@@ -299,7 +299,6 @@ start-block~head_ni
 {=include-block:Y_Blocks.txt;js_prototype=}
 {=include-block:Y_Blocks.txt;js_jquery=}
 {=include-block:Y_Blocks.txt;js_jquery_ui=}
-<script src="/Y_Baselib.js"></script>
 <script src="/Y_NIlib.js"></script>
 <script>
 	// Clear y-Cache in our pages

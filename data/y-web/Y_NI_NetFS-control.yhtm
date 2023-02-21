@@ -17,6 +17,7 @@
 {=var-set:nr=7=} {=include-block:Y_Blocks.txt;netfs_is_mount=}
 
 {=include-block:Y_Blocks.txt;head_ni=}
+<script src="/Y_Baselib.js"></script>
 <script>
 function edit_popup()
 {

@@ -6,14 +6,6 @@
 function goConfirmUrl(_meld, _url){
 	if (confirm(_meld)==true) goUrl(_url);
 }
-function goUrl(_url){
-	var res = trim(loadSyncURL(_url));
-	switch(res){
-		case "1": res="on"; break;
-		case "0": res="off"; break;
-	}
-	jQuery('#out').text(res);
-}
 function set_btn_standby(){
 	var res = trim(loadSyncURL("/control/standby"));
 	var color = "gray";

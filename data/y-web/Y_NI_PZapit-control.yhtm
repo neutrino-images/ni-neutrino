@@ -1,4 +1,5 @@
 {=include-block:Y_Blocks.txt;head_ni=}
+<script src="/Y_Baselib.js"></script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
 <div class="work_box">

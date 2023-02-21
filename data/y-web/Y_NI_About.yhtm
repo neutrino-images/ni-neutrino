@@ -1,5 +1,3 @@
-{=include-block:Y_Blocks.txt;head_ni=}
-
 {=var-set:_mtd_info_dev={=script:Y_NI_Tools get_mtd_info dev=}=}
 {=var-set:_mtd_info_name={=script:Y_NI_Tools get_mtd_info name=}=}
 
@@ -19,6 +17,9 @@
 {=var-set:_mem_free={=script:Y_NI_Tools get_mem_info free=}=}
 
 {=var-set:boxmodel={=func:get_boxmodel=}=}
+
+{=include-block:Y_Blocks.txt;head_ni=}
+<script src="/Y_Baselib.js"></script>
 <script>
 // taken from http://www.jjam.de/JavaScript/Datum_Uhrzeit/Wochentag.html
 function getWeekDay(dd,mm,yyyy) {

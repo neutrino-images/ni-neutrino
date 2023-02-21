@@ -528,3 +528,28 @@ function saveTextAsFile(content, filename, filetype)
 	}
 	downloadLink.click();
 }
+
+function goUrl(_url)
+{
+	var res = trim(loadSyncURL(_url));
+	switch(res)
+	{
+		case "1": res = "on"; break;
+		case "0": res = "off"; break;
+	}
+	var out = document.getElementById("out");
+	if (out)
+		out.innerHTML = res;
+}
+
+function goPort(_port)
+{
+	if (_port == "")
+		return;
+	var host = self.location.href;
+	var pos1 = host.indexOf('//');
+	var temp = host.substring(pos1 + 2, host.length);
+	var pos2 = temp.indexOf('/');
+	var host = host.substring(0, pos1 + 2 + pos2);
+	window.open(host + ":" + _port, "_blank");
+}
