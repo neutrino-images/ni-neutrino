@@ -424,7 +424,12 @@ live.timer-sync.status=Status
 
 # ===== INFO
 info.help=Hilfe
-info.about=&Uuml;ber
+info.about_yweb=&Uuml;ber yWeb
+info.about_image=&Uuml;ber NI-Image
+info.about.your_image=Dein NI-Image
+info.about.actual_image=Aktuelles NI-Image
+info.about.image_upd_no=Kein Update verf&uuml;gbar
+info.about.image_upd_yes=Update verf&uuml;gbar
 info.check_for_updates=Auf Updates pr&uuml;fen
 info.your_version=Deine Version
 info.actual_version=Aktuelle Version
@@ -497,11 +502,6 @@ ni.reload=Neu laden
 ni.configure=Konfigurieren
 ni.dblclick=Doppelklick erforderlich
 ni.infopage=NI Infoseite
-
-ni.about.your_image=Dein NI-Image
-ni.about.actual_image=Aktuelles NI-Image
-ni.about.image_upd_no=Kein Update verf&uuml;gbar
-ni.about.image_upd_yes=Update verf&uuml;gbar
 
 ni.camd-control=Softcams
 ni.camd-control.title=Softcam-Steuerung

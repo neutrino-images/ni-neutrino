@@ -9,7 +9,8 @@ install_DATA =	extensions.txt \
 		favicon.ico \
 		index.html \
 		robots.txt \
-		Y_About.yhtm \
+		Y_About_Image.yhtm \
+		Y_About_yWeb.yhtm \
 		Y_Baselib.js \
 		Y_Blank.yhtm \
 		Y_Blocks.txt \
@@ -78,8 +79,7 @@ install_DATA =	extensions.txt \
 		Y_yWeb.js
 
 # NI-yWeb
-install_DATA += Y_NI_About.yhtm \
-		Y_NI_Camd-control.yhtm \
+install_DATA += Y_NI_Camd-control.yhtm \
 		Y_NI_Infoicons-control.yhtm \
 		Y_NI_m3uConInfo.yhtm \
 		Y_NI_m3uConvert.yhtm \
