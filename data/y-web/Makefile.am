@@ -78,8 +78,7 @@ install_DATA =	extensions.txt \
 		Y_yWeb.js
 
 # NI-yWeb
-install_DATA += Y_NIlib.js \
-		Y_NI_About.yhtm \
+install_DATA += Y_NI_About.yhtm \
 		Y_NI_Camd-control.yhtm \
 		Y_NI_Infoicons-control.yhtm \
 		Y_NI_m3uConInfo.yhtm \

@@ -553,3 +553,15 @@ function goPort(_port)
 	var host = host.substring(0, pos1 + 2 + pos2);
 	window.open(host + ":" + _port, "_blank");
 }
+
+function Y_NI_Tools(_cmd, _tout){
+	var out = document.getElementById("out");
+	if (out)
+		out.innerHTML = "";
+	show_waitbox(true);
+	goUrl("/control/exec?Y_NI_Tools&" + _cmd);
+	if (typeof(_tout) == "undefined")
+		show_waitbox(false);
+	else
+		window.setTimeout("document.location.reload()", _tout);
+}
