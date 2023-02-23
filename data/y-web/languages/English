@@ -129,6 +129,14 @@ bc.screenshot.checkenable=OSD and/or TV must be enabled!
 bc.screenshot.checkpip=PiP requires TV enabled!
 bc.screenshot.reload_desc=Reload interval in seconds
 
+# ===== Boxcontrol - PZapit
+bc.pzapit=PZapit
+bc.pzapit.title=PZapit-Control
+bc.pzapit.resolution=Resolution
+bc.pzapit.43mode=4:3 mode
+bc.pzapit.channellists=Channellists
+bc.pzapit.tuner=Tuner
+
 # ===== Boxcontrol - Others
 bc.channels=Channels
 
@@ -521,13 +529,6 @@ ni.camd-tools.mgshareinfo=NewCamd Lines
 ni.camd-tools.oscamversion=Common Informations
 ni.camd-tools.ncamversion=Common Informations
 ni.camd-tools.doscamversion=Common Informations
-
-ni.pzapit-control=PZapit
-ni.pzapit-control.title=PZapit-Control
-ni.pzapit-control.resolution=Resolution
-ni.pzapit-control.43mode=4:3 mode
-ni.pzapit-control.channellists=Channellists
-ni.pzapit-control.tuner=Tuner
 
 ni.plugin-control=Plugins
 ni.plugin-control.title=Plugin-Control

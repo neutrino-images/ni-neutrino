@@ -22,6 +22,7 @@ install_DATA =	extensions.txt \
 		Y_Boxcontrol_Channellist.yhtm \
 		Y_Boxcontrol_Menue.yhtm \
 		Y_Boxcontrol_Messages.yhtm \
+		Y_Boxcontrol_PZapit.yhtm \
 		Y_Dist.css \
 		Y_Dyn_Pages.yhtm \
 		Y_EPG.js \
@@ -86,8 +87,7 @@ install_DATA += Y_NI_Camd-control.yhtm \
 		Y_NI_NetFS-control.yhtm \
 		Y_NI_NetFS-edit.yhtm \
 		Y_NI_NetFS-init.yhtm \
-		Y_NI_Plugin-control.yhtm \
-		Y_NI_PZapit-control.yhtm
+		Y_NI_Plugin-control.yhtm
 
 install-data-hook:
 	@# Badass hack, I know. If anyone knows a better way -- please send patch!

@@ -4,14 +4,14 @@
 <body>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.pzapit-control.title=}=}{=include-block:Y_Blocks.txt;work_menu=}
+	{=var-set:menu={=L:bc.pzapit.title=}=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 	<form action="">
 		<table class="y_invisible_table" cellpadding="5" width="100%">
 			<tr>
-				<td class="y_form_header" width="48%">{=L:ni.pzapit-control.resolution=}</td>
-				<td class="y_form_header" width="48%">{=L:ni.pzapit-control.43mode=}</td>
+				<td class="y_form_header" width="48%">{=L:bc.pzapit.resolution=}</td>
+				<td class="y_form_header" width="48%">{=L:bc.pzapit.43mode=}</td>
 			</tr>
 			<tr>
 				<td>
@@ -26,8 +26,8 @@
 				</td>
 			</tr>
 			<tr>
-				<td class="y_form_header" width="48%">{=L:ni.pzapit-control.channellists=}</td>
-				<td class="y_form_header" width="48%">{=L:ni.pzapit-control.tuner=}</td>
+				<td class="y_form_header" width="48%">{=L:bc.pzapit.channellists=}</td>
+				<td class="y_form_header" width="48%">{=L:bc.pzapit.tuner=}</td>
 			</tr>
 				<td>
 					<input type="button" value="{=L:ni.reload=}" title="{=L:ni.dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;reload_channellists");' />
