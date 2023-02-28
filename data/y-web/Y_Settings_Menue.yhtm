@@ -131,12 +131,12 @@ function init(){
 				-->
 			</ul>
 		</div>
-		<div class="y_menu_sec_section">{=L:ni.camd-control=}</div>
+		<div class="y_menu_sec_section">{=L:set.camds=}</div>
 		<div class="y_menu_sec">
 			<ul id="secmenu_settings_camds">
 				<li>
-					{=var-set:m_link_href=Y_NI_Camd-control.yhtm=}
-					{=var-set:m_link_text={=L:ni.camd-control=}=}
+					{=var-set:m_link_href=Y_Settings_Camds.yhtm=}
+					{=var-set:m_link_text={=L:set.camds=}=}
 					{=include-block:Y_Blocks.txt;management_link=}
 				</li>
 			</ul>

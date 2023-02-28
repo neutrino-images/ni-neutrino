@@ -362,6 +362,26 @@ set.infoicons.static=Static
 set.infoicons.popup=As a popup
 set.infoicons.infoviewer=With Infoviewer
 
+# ===== Settings camds
+set.camds=Softcams
+set.camds.title=Softcam-Control
+
+set.camd-tools=Tools for
+set.camd-tools.line=----------------------------------
+set.camd-tools.ecminfo=ECM-Informations
+set.camd-tools.countcards=Count available cards
+set.camd-tools.sc01info=Card-details from slot1
+set.camd-tools.sc02info=Card-details from slot2
+set.camd-tools.shareinfo=CS-Informations
+set.camd-tools.shareonl=Online-Share-Informations
+set.camd-tools.mginfo=CS-Informations
+set.camd-tools.cccamdinfo=CCCamd Lines
+set.camd-tools.pidinfo=PID-Informations
+set.camd-tools.mgshareinfo=NewCamd Lines
+set.camd-tools.oscamversion=Common Informations
+set.camd-tools.ncamversion=Common Informations
+set.camd-tools.doscamversion=Common Informations
+
 # ===== Tools Info
 tools.info.show_messages=Kernel Messages
 tools.info.processes=Processes
@@ -532,25 +552,6 @@ ni.reload=Reload
 ni.configure=Configure
 ni.dblclick=Doubleclick required
 ni.infopage=NI Infopage
-
-ni.camd-control=Softcams
-ni.camd-control.title=Softcam-Control
-
-ni.camd-tools=Tools for
-ni.camd-tools.line=----------------------------------
-ni.camd-tools.ecminfo=ECM-Informations
-ni.camd-tools.countcards=Count available cards
-ni.camd-tools.sc01info=Card-details from slot1
-ni.camd-tools.sc02info=Card-details from slot2
-ni.camd-tools.shareinfo=CS-Informations
-ni.camd-tools.shareonl=Online-Share-Informations
-ni.camd-tools.mginfo=CS-Informations
-ni.camd-tools.cccamdinfo=CCCamd Lines
-ni.camd-tools.pidinfo=PID-Informations
-ni.camd-tools.mgshareinfo=NewCamd Lines
-ni.camd-tools.oscamversion=Common Informations
-ni.camd-tools.ncamversion=Common Informations
-ni.camd-tools.doscamversion=Common Informations
 
 ni.netfs-control=NetFS
 ni.netfs-0=fstab

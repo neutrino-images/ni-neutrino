@@ -240,30 +240,30 @@ case "$action" in
 		esac
 	;;
 	# camd-control
-	#softcamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh stop;;
-	#softcamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh start;;
-	softcamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh reset;;
-	mgcamdstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh mgcamd_stop;;
-	mgcamdstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh mgcamd_start;;
-	mgcamdreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh mgcamd_reset;;
-	gboxstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_stop;;
-	gboxstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_start;;
-	gboxreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh gbox_reset;;
-	oscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_stop;;
-	oscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_start;;
-	oscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh oscam_reset;;
-	osmodstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osmod_stop;;
-	osmodstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osmod_start;;
-	osmodreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh osmod_reset;;
-	ncamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_stop;;
-	ncamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_start;;
-	ncamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ncam_reset;;
-	cccamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ccccam_stop;;
-	cccamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh ccccam_start;;
-	cccamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh cccam_reset;;
-	doscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_stop;;
-	doscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_start;;
-	doscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_NI_Camd-control.sh doscam_reset;;
+	#softcamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh stop;;
+	#softcamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh start;;
+	softcamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh reset;;
+	mgcamdstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh mgcamd_stop;;
+	mgcamdstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh mgcamd_start;;
+	mgcamdreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh mgcamd_reset;;
+	gboxstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh gbox_stop;;
+	gboxstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh gbox_start;;
+	gboxreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh gbox_reset;;
+	oscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh oscam_stop;;
+	oscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh oscam_start;;
+	oscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh oscam_reset;;
+	osmodstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh osmod_stop;;
+	osmodstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh osmod_start;;
+	osmodreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh osmod_reset;;
+	ncamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh ncam_stop;;
+	ncamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh ncam_start;;
+	ncamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh ncam_reset;;
+	cccamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh ccccam_stop;;
+	cccamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh ccccam_start;;
+	cccamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh cccam_reset;;
+	doscamstop)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh doscam_stop;;
+	doscamstart)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh doscam_start;;
+	doscamreset)	%(PRIVATE_HTTPDDIR)/scripts/Y_Camds.sh doscam_reset;;
 
 	vinfo)
 	        if ! [ -x $y_path_varbin/$1 ]; then

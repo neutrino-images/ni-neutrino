@@ -44,6 +44,7 @@ install_DATA =	extensions.txt \
 		Y_Menue.yhtm \
 		Y_Refresh.yhtm \
 		Y_Settings_Backup.yhtm \
+		Y_Settings_Camds.yhtm \
 		Y_Settings_Menue.yhtm \
 		Y_Settings_automount.yhtm \
 		Y_Settings_automount_list.yhtm \
@@ -83,8 +84,7 @@ install_DATA =	extensions.txt \
 		Y_yWeb.js
 
 # NI-yWeb
-install_DATA += Y_NI_Camd-control.yhtm \
-		Y_NI_m3uConInfo.yhtm \
+install_DATA += Y_NI_m3uConInfo.yhtm \
 		Y_NI_m3uConvert.yhtm \
 		Y_NI_NetFS-control.yhtm \
 		Y_NI_NetFS-edit.yhtm \
