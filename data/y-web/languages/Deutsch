@@ -344,11 +344,11 @@ set.xmltv.header=XMLTV Einstellungen
 set.plugins=Plugin-Steuerung
 set.plugins.title=Plugins und Services verwalten
 
-set.plugintools.fcm-addr=Telefonbuch bearbeiten
-set.plugintools.pat-rules=Regeln bearbeiten
-set.plugintools.epgscan-dat=Transponderliste bearbeiten
-set.plugintools.rssreader-conf=RSS-Feeds bearbeiten
-set.plugintools.2webtvxmlurls-conf=WebTV-URLs bearbeiten
+set.plugin-tools.fcm-addr=Telefonbuch bearbeiten
+set.plugin-tools.pat-rules=Regeln bearbeiten
+set.plugin-tools.epgscan-dat=Transponderliste bearbeiten
+set.plugin-tools.rssreader-conf=RSS-Feeds bearbeiten
+set.plugin-tools.2webtvxmlurls-conf=WebTV-URLs bearbeiten
 
 set.plugins_hide=Plugins verstecken
 set.plugins_hide.title=Plugins anzeigen und verstecken

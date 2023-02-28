@@ -38,7 +38,7 @@
 					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/FritzCallMonitor.cfg","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:set.plugintools.fcm-addr=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/FritzCallMonitor.addr","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugin-tools.fcm-addr=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/FritzCallMonitor.addr","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- nfs-server -->
@@ -277,7 +277,7 @@
 					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/EPGscan.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:set.plugintools.epgscan-dat=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/EPGscan.dat","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugin-tools.epgscan-dat=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/EPGscan.dat","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- pr-auto-timer -->
@@ -293,7 +293,7 @@
 					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/pr-auto-timer.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:set.plugintools.pat-rules=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/pr-auto-timer.rules","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugin-tools.pat-rules=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/pr-auto-timer.rules","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- RSS-Reader -->
@@ -309,7 +309,7 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:set.plugintools.rssreader-conf=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/rssreader.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugin-tools.rssreader-conf=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/rssreader.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- 2webTVxml -->
@@ -325,7 +325,7 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:set.plugintools.2webtvxmlurls-conf=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/2webTVxmlUrls.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugin-tools.2webtvxmlurls-conf=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/2webTVxmlUrls.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 		</table>
