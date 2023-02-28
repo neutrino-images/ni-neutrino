@@ -1,4 +1,5 @@
-{=include-block:Y_Blocks.txt;head_ni=}
+{=include-block:Y_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;js_prototype=}
 	<style>
 		#InputOutputField
 		{
@@ -42,7 +43,7 @@
 		  <tr>
 		    <td>Mit <b>m3uConvert</b> ist es möglich, m3u-Playlisten in das webtv_usr.xml Format zu konvertieren.</td>
 		    <td>Zum ersten Mal hier?<br>
-		    <button onClick="window.open('/Y_NI_m3uConInfo.yhtm', '', 'status=0,title=0,height=0,width=1000,scrollbars=1');" title="Info und Anleitung zu m3uConvert">Info und Anleitung</button></td>
+		    <button onClick="window.open('/Y_Tools_m3uConvert_help.yhtm', '', 'status=0,title=0,height=0,width=1000,scrollbars=1');" title="Info und Anleitung zu m3uConvert">Info und Anleitung</button></td>
 		  </tr>
 			<tr><td class="y_form_header" colspan="2">1. Streams einfügen:</td></tr>
 			<tr>

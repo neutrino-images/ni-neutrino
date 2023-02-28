@@ -74,6 +74,8 @@ install_DATA =	extensions.txt \
 		Y_Tools_Info_Menue.yhtm \
 		Y_Tools_Installer.yhtm \
 		Y_Tools_Menue.yhtm \
+		Y_Tools_m3uConvert.yhtm \
+		Y_Tools_m3uConvert_help.yhtm \
 		Y_Tools_Rcsim.yhtm \
 		Y_Tools_Screenshot.yhtm  \
 		Y_Tools_Screenshot_GraphLCD.yhtm \
@@ -84,9 +86,7 @@ install_DATA =	extensions.txt \
 		Y_yWeb.js
 
 # NI-yWeb
-install_DATA += Y_NI_m3uConInfo.yhtm \
-		Y_NI_m3uConvert.yhtm \
-		Y_NI_NetFS-control.yhtm \
+install_DATA += Y_NI_NetFS-control.yhtm \
 		Y_NI_NetFS-edit.yhtm \
 		Y_NI_NetFS-init.yhtm
 
