@@ -55,6 +55,8 @@ install_DATA =	extensions.txt \
 		Y_Settings_neutrino_forms.yhtm \
 		Y_Settings_nhttpd.yhtm \
 		Y_Settings_personalize.yhtm \
+		Y_Settings_Plugin_hide.yhtm \
+		Y_Settings_Plugincontrol.yhtm \
 		Y_Settings_umount_list.yhtm \
 		Y_Settings_video_audio.yhtm \
 		Y_Settings_wol.yhtm \
@@ -86,8 +88,7 @@ install_DATA += Y_NI_Camd-control.yhtm \
 		Y_NI_m3uConvert.yhtm \
 		Y_NI_NetFS-control.yhtm \
 		Y_NI_NetFS-edit.yhtm \
-		Y_NI_NetFS-init.yhtm \
-		Y_NI_Plugin-control.yhtm
+		Y_NI_NetFS-init.yhtm
 
 install-data-hook:
 	@# Badass hack, I know. If anyone knows a better way -- please send patch!

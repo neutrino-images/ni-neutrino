@@ -340,6 +340,19 @@ set.settings.warning=Sichern &amp; Wiederherstellen ist nur bei einem gleichen I
 # ===== Settings XMLTV
 set.xmltv.header=XMLTV Einstellungen
 
+# ===== Settings Plugins
+set.plugincontrol=Plugin-Steuerung
+set.plugincontrol.title=Plugins und Services verwalten
+
+set.plugintools.fcm-addr=Telefonbuch bearbeiten
+set.plugintools.pat-rules=Regeln bearbeiten
+set.plugintools.epgscan-dat=Transponderliste bearbeiten
+set.plugintools.rssreader-conf=RSS-Feeds bearbeiten
+set.plugintools.2webtvxmlurls-conf=WebTV-URLs bearbeiten
+
+set.plugins_hide=Plugins verstecken
+set.plugins_hide.title=Plugins anzeigen und verstecken
+
 # ===== Tools Info
 tools.info.show_messages=Kernel Meldungen
 tools.info.processes=Prozesse
@@ -529,17 +542,6 @@ ni.camd-tools.mgshareinfo=NewCamd Verbindungen
 ni.camd-tools.oscamversion=Allgemeine Informationen
 ni.camd-tools.ncamversion=Allgemeine Informationen
 ni.camd-tools.doscamversion=Allgemeine Informationen
-
-ni.plugin-control=Plugins
-ni.plugin-control.title=Plugin-Steuerung
-ni.plugin-control.manage=Plugins und Services verwalten
-ni.plugin-control.blue=Plugins auf blauer Taste verwalten
-
-ni.plugin-tools.fcm-addr=Telefonbuch bearbeiten
-ni.plugin-tools.pat-rules=Regeln bearbeiten
-ni.plugin-tools.epgscan-dat=Transponderliste bearbeiten
-ni.plugin-tools.rssreader-conf=RSS-Feeds bearbeiten
-ni.plugin-tools.2webtvxmlurls-conf=WebTV-URLs bearbeiten
 
 ni.infoicons-control=Infoicons
 ni.infoicons-control.title=Infoicons-Steuerung

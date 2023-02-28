@@ -340,6 +340,19 @@ set.settings.warning=Backup & Restore is only useful for the same image with the
 # ===== Settings XMLTV
 set.xmltv.header=XMLTV Settings
 
+# ===== Settings Plugins
+set.plugincontrol=Plugincontrol
+set.plugincontrol.title=Manage plugins and services
+
+set.plugintools.fcm-addr=Edit Phonebook
+set.plugintools.pat-rules=Edit Rules
+set.plugintools.epgscan-dat=Edit Transponderlist
+set.plugintools.rssreader-conf=Edit RSS-Feeds
+set.plugintools.2webtvxmlurls-conf=Edit WebTV-URLs
+
+set.plugins_hide=Hide plugins
+set.plugins_hide.title=Show and hide plugins
+
 # ===== Tools Info
 tools.info.show_messages=Kernel Messages
 tools.info.processes=Processes
@@ -529,17 +542,6 @@ ni.camd-tools.mgshareinfo=NewCamd Lines
 ni.camd-tools.oscamversion=Common Informations
 ni.camd-tools.ncamversion=Common Informations
 ni.camd-tools.doscamversion=Common Informations
-
-ni.plugin-control=Plugins
-ni.plugin-control.title=Plugin-Control
-ni.plugin-control.manage=Customize Plugins and Services
-ni.plugin-control.blue=Customize Blue Button Plugins
-
-ni.plugin-tools.fcm-addr=Edit Phonebook
-ni.plugin-tools.pat-rules=Edit Rules
-ni.plugin-tools.epgscan-dat=Edit Transponderlist
-ni.plugin-tools.rssreader-conf=Edit RSS-Feeds
-ni.plugin-tools.2webtvxmlurls-conf=Edit WebTV-URLs
 
 ni.infoicons-control=Infoicons
 ni.infoicons-control.title=Infoicons-Control

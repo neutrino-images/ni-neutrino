@@ -1,27 +1,22 @@
-{=var-set:_p_list_so={=script:Y_NI_Tools p_list so=}=}
-{=var-set:_p_list_sh={=script:Y_NI_Tools p_list sh=}=}
-{=var-set:_p_list_lua={=script:Y_NI_Tools p_list lua=}=}
-
 {=var-set:r_minidlnad={=script:Y_NI_Tools is_running minidlnad=}=}
 {=var-set:minidlnadport={=script:Y_NI_Tools get_minidlnad_webif_port=}=}
 
 {=var-set:r_xupnpd={=script:Y_NI_Tools is_running xupnpd=}=}
 {=var-set:xupnpdport={=script:Y_NI_Tools get_xupnpd_webif_port=}=}
 
-{=include-block:Y_Blocks.txt;head_ni=}
+{=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload='goUrl("/control/reloadplugins");'>
-{=var-set:wait_text={=L:ni.plugin-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
+{=var-set:wait_text={=L:set.plugincontrol.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.plugin-control.title=}=}{=include-block:Y_Blocks.txt;work_menu=}
+	{=var-set:menu={=L:set.plugincontrol=}=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
-	<form action="">
 		<table class="y_invisible_table" cellpadding="5" width="100%">
 			<tr>
-				<td class="y_form_header" width="35%">{=L:ni.plugin-control.manage=}</td>
+				<td class="y_form_header" width="35%">{=L:set.plugincontrol.title=}</td>
 				<td class="y_form_header" width="5%">&nbsp;</td>
 				<td class="y_form_header">&nbsp;</td>
 				<td class="y_form_header">&nbsp;</td>
@@ -40,10 +35,10 @@
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/FritzCallMonitor.cfg","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/FritzCallMonitor.cfg","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.plugin-tools.fcm-addr=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/FritzCallMonitor.addr","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugintools.fcm-addr=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/FritzCallMonitor.addr","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- nfs-server -->
@@ -98,7 +93,7 @@
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/tuxcal/tuxcal.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/tuxcal/tuxcal.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -117,7 +112,7 @@
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/tuxmail/tuxmail.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/tuxmail/tuxmail.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -279,10 +274,10 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/EPGscan.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/EPGscan.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.plugin-tools.epgscan-dat=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/EPGscan.dat","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugintools.epgscan-dat=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/EPGscan.dat","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- pr-auto-timer -->
@@ -295,10 +290,10 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/pr-auto-timer.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/pr-auto-timer.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.plugin-tools.pat-rules=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/pr-auto-timer.rules","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugintools.pat-rules=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/pr-auto-timer.rules","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- RSS-Reader -->
@@ -314,7 +309,7 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.plugin-tools.rssreader-conf=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/rssreader.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugintools.rssreader-conf=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/rssreader.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 			<!-- 2webTVxml -->
@@ -330,29 +325,10 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.plugin-tools.2webtvxmlurls-conf=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/2webTVxmlUrls.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:set.plugintools.2webtvxmlurls-conf=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/tuxbox/config/2webTVxmlUrls.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 			</tr>
 		</table>
-		</br>
-		<table class="y_invisible_table" cellpadding="5" width="100%">
-			<tr>
-				<td class="y_form_header" width="35%">{=L:ni.plugin-control.blue=}</td>
-				<td class="y_form_header">&nbsp;</td>
-			</tr>
-			{=var-get:_p_list_so=}
-			<tr>
-				<td><hr></td>
-				<td><hr></td>
-			</tr>
-			{=var-get:_p_list_sh=}
-			<tr>
-				<td><hr></td>
-				<td><hr></td>
-			</tr>
-			{=var-get:_p_list_lua=}
-		</table>
-	</form>
 	</div>
 </div>
 <div class="work_box">
