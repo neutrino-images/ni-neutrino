@@ -341,8 +341,8 @@ set.settings.warning=Sichern &amp; Wiederherstellen ist nur bei einem gleichen I
 set.xmltv.header=XMLTV Einstellungen
 
 # ===== Settings Plugins
-set.plugincontrol=Plugin-Steuerung
-set.plugincontrol.title=Plugins und Services verwalten
+set.plugins=Plugin-Steuerung
+set.plugins.title=Plugins und Services verwalten
 
 set.plugintools.fcm-addr=Telefonbuch bearbeiten
 set.plugintools.pat-rules=Regeln bearbeiten

@@ -341,8 +341,8 @@ set.settings.warning=Backup & Restore is only useful for the same image with the
 set.xmltv.header=XMLTV Settings
 
 # ===== Settings Plugins
-set.plugincontrol=Plugincontrol
-set.plugincontrol.title=Manage plugins and services
+set.plugins=Plugincontrol
+set.plugins.title=Manage plugins and services
 
 set.plugintools.fcm-addr=Edit Phonebook
 set.plugintools.pat-rules=Edit Rules

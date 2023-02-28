@@ -145,8 +145,8 @@ function init(){
 		<div class="y_menu_sec">
 			<ul id="secmenu_settings_plugins">
 				<li>
-					{=var-set:m_link_href=Y_Settings_Plugincontrol.yhtm=}
-					{=var-set:m_link_text={=L:set.plugincontrol=}=}
+					{=var-set:m_link_href=Y_Settings_Plugins.yhtm=}
+					{=var-set:m_link_text={=L:set.plugins=}=}
 					{=include-block:Y_Blocks.txt;management_link=}
 				</li>
 				<li>

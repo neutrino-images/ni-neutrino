@@ -56,7 +56,7 @@ install_DATA =	extensions.txt \
 		Y_Settings_neutrino_forms.yhtm \
 		Y_Settings_nhttpd.yhtm \
 		Y_Settings_personalize.yhtm \
-		Y_Settings_Plugincontrol.yhtm \
+		Y_Settings_Plugins.yhtm \
 		Y_Settings_Plugins_hide.yhtm \
 		Y_Settings_umount_list.yhtm \
 		Y_Settings_video_audio.yhtm \
