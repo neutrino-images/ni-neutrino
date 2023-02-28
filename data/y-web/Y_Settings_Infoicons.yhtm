@@ -8,7 +8,7 @@
 {=var-set:icons_flag7={=ini-get:%(CONFIGDIR)/neutrino.conf;mode_icons_flag7~cache=}=}
 {=var-set:icons_dir=%(ICONSDIR)=}
 
-{=include-block:Y_Blocks.txt;head_ni=}
+{=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
 function do_submit()
@@ -19,25 +19,25 @@ function do_submit()
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
-{=var-set:wait_text={=L:ni.infoicons-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
+{=var-set:wait_text={=L:set.infoicons.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.infoicons-control.title=}=}{=include-block:Y_Blocks.txt;work_menu=}
+	{=var-set:menu={=L:set.infoicons=}=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 	<table class="y_invisible_table" cellpadding="5" width="100%">
 		<tr>
 			<td class="y_form_header" width="48%">
-				{=L:ni.infoicons-control=}
+				{=L:set.infoicons.title=}
 			</td>
 		</tr>
 		<tr>
 		        <td>
-				<input type="button" value="{=L:ni.infoicons-control.static=}"     onClick="$('out').update(''); goUrl('/control/infoicons?static')" />
-				<input type="button" value="{=L:ni.infoicons-control.popup=}"      onClick="$('out').update(''); goUrl('/control/infoicons?popup')" />
-				<input type="button" value="{=L:ni.infoicons-control.infoviewer=}" onClick="$('out').update(''); goUrl('/control/infoicons?infoviewer')" />
-				<input type="button" value="{=L:off=}"                           onClick="$('out').update(''); goUrl('/control/infoicons?off')" />
-				<input type="button" value="{=L:status=}"                        onClick="$('out').update(''); goUrl('/control/infoicons?status')" />
+				<input type="button" value="{=L:set.infoicons.static=}"     onClick="$('out').update(''); goUrl('/control/infoicons?static')" />
+				<input type="button" value="{=L:set.infoicons.popup=}"      onClick="$('out').update(''); goUrl('/control/infoicons?popup')" />
+				<input type="button" value="{=L:set.infoicons.infoviewer=}" onClick="$('out').update(''); goUrl('/control/infoicons?infoviewer')" />
+				<input type="button" value="{=L:off=}"                      onClick="$('out').update(''); goUrl('/control/infoicons?off')" />
+				<input type="button" value="{=L:status=}"                   onClick="$('out').update(''); goUrl('/control/infoicons?status')" />
 			</td>
 		</tr>
 	</table>
@@ -45,7 +45,7 @@ function do_submit()
 </div>
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.infoicons-control.flagfile-control=}=}{=include-block:Y_Blocks.txt;work_menu=}
+	{=var-set:menu={=L:set.infoicons.flagfile-control=}=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 
@@ -56,7 +56,7 @@ function do_submit()
 					&nbsp;
 				</td>
 				<td class="y_form_header" width="30%">
-					{=L:ni.infoicons-control.flagfiles=}
+					{=L:set.infoicons.flagfiles=}
 				</td>
 				<td class="y_form_header">
 					<input type="button" value="{=L:ni.remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag0=} {=var-get:icons_flag1=} {=var-get:icons_flag2=} {=var-get:icons_flag3=} {=var-get:icons_flag4=} {=var-get:icons_flag5=} {=var-get:icons_flag6=} {=var-get:icons_flag7=}", 1500);' />

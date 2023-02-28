@@ -353,6 +353,15 @@ set.plugintools.2webtvxmlurls-conf=Edit WebTV-URLs
 set.plugins_hide=Hide plugins
 set.plugins_hide.title=Show and hide plugins
 
+# ===== Settings Infoicons
+set.infoicons=Infoicons
+set.infoicons.title=Infoicons-Control
+set.infoicons.flagfile-control=Flag-Control
+set.infoicons.flagfiles=Flag-Files
+set.infoicons.static=Static
+set.infoicons.popup=As a popup
+set.infoicons.infoviewer=With Infoviewer
+
 # ===== Tools Info
 tools.info.show_messages=Kernel Messages
 tools.info.processes=Processes
@@ -542,14 +551,6 @@ ni.camd-tools.mgshareinfo=NewCamd Lines
 ni.camd-tools.oscamversion=Common Informations
 ni.camd-tools.ncamversion=Common Informations
 ni.camd-tools.doscamversion=Common Informations
-
-ni.infoicons-control=Infoicons
-ni.infoicons-control.title=Infoicons-Control
-ni.infoicons-control.flagfile-control=Flag-Control
-ni.infoicons-control.flagfiles=Flag-Files
-ni.infoicons-control.static=Static
-ni.infoicons-control.popup=As a popup
-ni.infoicons-control.infoviewer=With Infoviewer
 
 ni.netfs-control=NetFS
 ni.netfs-0=fstab

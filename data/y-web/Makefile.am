@@ -49,14 +49,15 @@ install_DATA =	extensions.txt \
 		Y_Settings_automount_list.yhtm \
 		Y_Settings_buttons.yhtm \
 		Y_Settings_glcd.yhtm \
+		Y_Settings_Infoicons.yhtm \
 		Y_Settings_lcd.yhtm \
 		Y_Settings_mount.yhtm \
 		Y_Settings_mount_list.yhtm \
 		Y_Settings_neutrino_forms.yhtm \
 		Y_Settings_nhttpd.yhtm \
 		Y_Settings_personalize.yhtm \
-		Y_Settings_Plugin_hide.yhtm \
 		Y_Settings_Plugincontrol.yhtm \
+		Y_Settings_Plugins_hide.yhtm \
 		Y_Settings_umount_list.yhtm \
 		Y_Settings_video_audio.yhtm \
 		Y_Settings_wol.yhtm \
@@ -83,7 +84,6 @@ install_DATA =	extensions.txt \
 
 # NI-yWeb
 install_DATA += Y_NI_Camd-control.yhtm \
-		Y_NI_Infoicons-control.yhtm \
 		Y_NI_m3uConInfo.yhtm \
 		Y_NI_m3uConvert.yhtm \
 		Y_NI_NetFS-control.yhtm \

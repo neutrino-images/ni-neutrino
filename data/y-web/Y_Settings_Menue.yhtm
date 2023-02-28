@@ -86,8 +86,8 @@ function init(){
 					{=include-block:Y_Blocks.txt;management_link=}
 				</li>
 				<li>
-					{=var-set:m_link_href=Y_NI_Infoicons-control.yhtm=}
-					{=var-set:m_link_text={=L:ni.infoicons-control=}=}
+					{=var-set:m_link_href=Y_Settings_Infoicons.yhtm=}
+					{=var-set:m_link_text={=L:set.infoicons=}=}
 					{=include-block:Y_Blocks.txt;management_link=}
 				</li>
 				{=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;glcd_enable;0=}~1~
