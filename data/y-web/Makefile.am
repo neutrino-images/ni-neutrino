@@ -76,6 +76,9 @@ install_DATA =	extensions.txt \
 		Y_Tools_Menue.yhtm \
 		Y_Tools_m3uConvert.yhtm \
 		Y_Tools_m3uConvert_help.yhtm \
+		Y_Tools_NetFS.yhtm \
+		Y_Tools_NetFS_edit.yhtm \
+		Y_Tools_NetFS_init.yhtm \
 		Y_Tools_Rcsim.yhtm \
 		Y_Tools_Screenshot.yhtm  \
 		Y_Tools_Screenshot_GraphLCD.yhtm \
@@ -84,11 +87,6 @@ install_DATA =	extensions.txt \
 		Y_Version.txt \
 		Y_Wait.yhtm \
 		Y_yWeb.js
-
-# NI-yWeb
-install_DATA += Y_NI_NetFS-control.yhtm \
-		Y_NI_NetFS-edit.yhtm \
-		Y_NI_NetFS-init.yhtm
 
 install-data-hook:
 	@# Badass hack, I know. If anyone knows a better way -- please send patch!

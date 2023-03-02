@@ -2,7 +2,7 @@
 <script src="/Y_Baselib.js"></script>
 <script>
 jQuery(document).ready(function(){
-        window.document.location.href='/Y_NI_NetFS-control.yhtm?mount_type={=mount_type=}&mount_type_s={=mount_type_s=}';
+        window.document.location.href='/Y_Tools_NetFS.yhtm?mount_type={=mount_type=}&mount_type_s={=mount_type_s=}';
 });
 </script>
 {=include-block:Y_Blocks.txt;head_close=}

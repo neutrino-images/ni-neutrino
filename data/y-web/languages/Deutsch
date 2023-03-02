@@ -404,6 +404,29 @@ tools.yinstaller.head=yInstaller
 tools.yinstaller.tar_file=tar-Datei
 tools.yinstaller.upload_install=hochladen und installieren
 
+# ===== Tools NetFS
+tools.netfs=NetFS
+tools.netfs.0=fstab
+tools.netfs.1=auto.net
+tools.netfs.title=NetFS-Steuerung
+tools.netfs.entrys=NetFS-Eintr&auml;ge
+tools.netfs.restart_menu=Das NetFS-Men&uuml; wird nun erneut gestartet
+tools.netfs.mount_all=Alle einh&auml;ngen
+tools.netfs.umount_all=Alle aush&auml;ngen
+tools.netfs.mount=Einh&auml;ngen
+tools.netfs.umount=Aush&auml;ngen
+tools.netfs.type=Typ
+tools.netfs.ip=Entfernte IP-Adresse
+tools.netfs.dir=Entferntes Verzeichnis
+tools.netfs.user=Benutzername
+tools.netfs.password=Passwort
+tools.netfs.options=Optionen
+tools.netfs.dump=Dump
+tools.netfs.pass=Pass
+tools.netfs.local_dir=Lokales Verzeichnis
+tools.netfs.active=Eintrag aktiv
+tools.netfs.autofs_restart=autofs neu starten
+
 # ===== Tools
 tools.automount=AutoMounts
 tools.mounts_desc=File mounts organisieren
@@ -552,25 +575,3 @@ ni.reload=Neu laden
 ni.configure=Konfigurieren
 ni.dblclick=Doppelklick erforderlich
 ni.infopage=NI Infoseite
-
-ni.netfs-control=NetFS
-ni.netfs-0=fstab
-ni.netfs-1=auto.net
-ni.netfs-control.title=NetFS-Steuerung
-ni.netfs-control.entrys=NetFS-Eintr&auml;ge
-ni.netfs-control.restart_menu=Das NetFS-Men&uuml; wird nun erneut gestartet
-ni.netfs-control.mount_all=Alle einh&auml;ngen
-ni.netfs-control.umount_all=Alle aush&auml;ngen
-ni.netfs-control.mount=Einh&auml;ngen
-ni.netfs-control.umount=Aush&auml;ngen
-ni.netfs-control.type=Typ
-ni.netfs-control.ip=Entfernte IP-Adresse
-ni.netfs-control.dir=Entferntes Verzeichnis
-ni.netfs-control.user=Benutzername
-ni.netfs-control.password=Passwort
-ni.netfs-control.options=Optionen
-ni.netfs-control.dump=Dump
-ni.netfs-control.pass=Pass
-ni.netfs-control.local_dir=Lokales Verzeichnis
-ni.netfs-control.active=Eintrag aktiv
-ni.netfs-control.autofs_restart=autofs neu starten

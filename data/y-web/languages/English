@@ -404,6 +404,29 @@ tools.yinstaller.head=yInstaller
 tools.yinstaller.tar_file=tar-File
 tools.yinstaller.upload_install=upload and install
 
+# ===== Tools NetFS
+tools.netfs=NetFS
+tools.netfs.0=fstab
+tools.netfs.1=auto.net
+tools.netfs.title=NetFS-Control
+tools.netfs.entrys=NetFS-Entrys
+tools.netfs.restart_menu=The NetFS-Menu will restart now
+tools.netfs.mount_all=Mount all
+tools.netfs.umount_all=Unmount all
+tools.netfs.mount=Mount
+tools.netfs.umount=Unmount
+tools.netfs.type=Typ
+tools.netfs.ip=Remote IP-Adress
+tools.netfs.dir=Remote directory
+tools.netfs.user=Username
+tools.netfs.password=Password
+tools.netfs.options=Options
+tools.netfs.dump=Dump
+tools.netfs.pass=Pass
+tools.netfs.local_dir=Local directory
+tools.netfs.active=Entry active
+tools.netfs.autofs_restart=Restart autofs
+
 # ===== Tools
 tools.automount=AutoMounts
 tools.mounts_desc=organize file mounts
@@ -552,25 +575,3 @@ ni.reload=Reload
 ni.configure=Configure
 ni.dblclick=Doubleclick required
 ni.infopage=NI Infopage
-
-ni.netfs-control=NetFS
-ni.netfs-0=fstab
-ni.netfs-1=auto.net
-ni.netfs-control.title=NetFS-Control
-ni.netfs-control.entrys=NetFS-Entrys
-ni.netfs-control.restart_menu=The NetFS-Menu will restart now
-ni.netfs-control.mount_all=Mount all
-ni.netfs-control.umount_all=Unmount all
-ni.netfs-control.mount=Mount
-ni.netfs-control.umount=Unmount
-ni.netfs-control.type=Typ
-ni.netfs-control.ip=Remote IP-Adress
-ni.netfs-control.dir=Remote directory
-ni.netfs-control.user=Username
-ni.netfs-control.password=Password
-ni.netfs-control.options=Options
-ni.netfs-control.dump=Dump
-ni.netfs-control.pass=Pass
-ni.netfs-control.local_dir=Local directory
-ni.netfs-control.active=Entry active
-ni.netfs-control.autofs_restart=Restart autofs

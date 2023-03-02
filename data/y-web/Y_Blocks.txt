@@ -521,18 +521,18 @@ start-block~netfs_table_row
 				{=var-get:local_dir_{=var-get:nr=}=}
 			</td>
 			<td>
-				<a href="/Y_NI_NetFS-edit.yhtm?nr={=var-get:nr=}&mount_type={=mount_type=}&mount_type_s={=mount_type_s=}" title="{=L:ni.edit=}">
+				<a href="/Y_Tools_NetFS_edit.yhtm?nr={=var-get:nr=}&mount_type={=mount_type=}&mount_type_s={=mount_type_s=}" title="{=L:ni.edit=}">
 					<img src="/images/modify.png">
 				</a>
 				{=if-equal:{=mount_type=}~0~
 				{=if-equal:{=var-get:is_mount_{=var-get:nr=}=}~false~
-				<a href="javascript:Y_NI_Tools('do_mount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:ni.netfs-control.mount=}">
+				<a href="javascript:Y_NI_Tools('do_mount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfscontrol.mount=}">
 					<img src="/images/server_add.png">
 				</a>
 				<img src="/images/blank.png">
 				~
 				<img src="/images/blank.png">
-				<a href="javascript:Y_NI_Tools('do_umount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:ni.netfs-control.umount=}">
+				<a href="javascript:Y_NI_Tools('do_umount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfscontrol.umount=}">
 					<img src="/images/server_delete.png">
 				</a>
 				=}

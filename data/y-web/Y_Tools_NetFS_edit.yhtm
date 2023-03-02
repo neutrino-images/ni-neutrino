@@ -22,10 +22,10 @@ function do_submit()
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body onload="form_init()">
-{=var-set:wait_text={=L:ni.netfs-control.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
+{=var-set:wait_text={=L:tools.netfs.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:ni.netfs-control.title=} ({=L:ni.edit=}: {=L:ni.netfs-{=mount_type=}=} - {=nr=})=}{=include-block:Y_Blocks.txt;work_menu=}
+	{=var-set:menu={=L:tools.netfs.title=} ({=L:ni.edit=}: {=L:tools.netfs.{=mount_type=}=} - {=nr=})=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 	<form name="f" action="/y/cgi">
@@ -34,50 +34,50 @@ function do_submit()
 		<input type="hidden" name="nr" value="{=nr=}"/>
 		<table border="0" class="y_form_table">
 			<tr>
-				<td>{=L:ni.netfs-control.type=}</td>
+				<td>{=L:tools.netfs.type=}</td>
 				<td>
 					<input onclick="form_init();" type="radio" name="type" value="0" {=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_type_{=nr=}~open=}~0~checked="checked"~=} />NFS
 					<input onclick="form_init();" type="radio" name="type" value="1" {=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_type_{=nr=}~cache=}~1~checked="checked"~=} />CIFS
 				</td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.ip=}</td>
+				<td>{=L:tools.netfs.ip=}</td>
 				<td><input type="text" name="ip" size="15" maxlength="15" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_ip_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.dir=}</td>
+				<td>{=L:tools.netfs.dir=}</td>
 				<td><input type="text" name="dir" size="30" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_dir_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.local_dir=}</td>
+				<td>{=L:tools.netfs.local_dir=}</td>
 				<td><input type="text" name="localdir" size="30" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_local_dir_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.options=} 1</td>
+				<td>{=L:tools.netfs.options=} 1</td>
 				<td><input type="text" name="opt1" size="30" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_mount_options1_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.options=} 2</td>
+				<td>{=L:tools.netfs.options=} 2</td>
 				<td><input type="text" name="opt2" size="30" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_mount_options2_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.user=}</td>
+				<td>{=L:tools.netfs.user=}</td>
 				<td><input type="text" name="username" size="30" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_username_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.password=}</td>
+				<td>{=L:tools.netfs.password=}</td>
 				<td><input type="text" name="password" size="30" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_password_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.dump=}</td>
+				<td>{=L:tools.netfs.dump=}</td>
 				<td><input type="text" name="dump" size="3" maxlength="3" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_dump_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.pass=}</td>
+				<td>{=L:tools.netfs.pass=}</td>
 				<td><input type="text" name="pass" size="3" maxlength="3" value="{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_pass_{=nr=}~cache=}" /></td>
 			</tr>
 			<tr>
-				<td>{=L:ni.netfs-control.active=}</td>
+				<td>{=L:tools.netfs.active=}</td>
 				<td>
 					<input type="radio" name="active" value="1" {=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_active_{=nr=}~cache=}~1~checked="checked"~=} />{=L:on=}
 					<input type="radio" name="active" value="0" {=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_active_{=nr=}~cache=}~0~checked="checked"~=} />{=L:off=}
@@ -85,10 +85,10 @@ function do_submit()
 			</tr>
 		</table>
 		<br/>
-		<input type="hidden" name="tmpl" value="Y_NI_NetFS-control.yhtm"/>
+		<input type="hidden" name="tmpl" value="Y_Tools_NetFS.yhtm"/>
 		<input type="hidden" name="execute" value="func:netfs_set_values"/>
 		<button type="button" ytype="accept_" title="ok" onClick="do_submit()">OK</button>
-		<button type="button" ytype="cancel_" title="{=L:cancel=}" name="abort" onClick='window.document.location.href="/Y_NI_NetFS-control.yhtm?mount_type={=mount_type=}&mount_type_s={=mount_type_s=}"'>{=L:ni.cancel=}</button>
+		<button type="button" ytype="cancel_" title="{=L:cancel=}" name="abort" onClick='window.document.location.href="/Y_Tools_NetFS.yhtm?mount_type={=mount_type=}&mount_type_s={=mount_type_s=}"'>{=L:ni.cancel=}</button>
 	</form>
 	</div>
 </div>
