@@ -494,6 +494,7 @@ case "$1" in
 	fbshot_clear)			do_fbshot_clear ;;
 	screenshot_clear)		do_screenshot_clear ;;
 	get_update_version)		wget -O /tmp/version.txt "https://raw.githubusercontent.com/neutrino-images/ni-neutrino/master/data/y-web/Y_Version.txt" ;;
+	rm_update_version)		rm -f /tmp/version.txt ;;
 	settings_backup_restore)	shift 1; do_settings_backup_restore $* ;;
 	exec_cmd)			shift 1; $* ;;
 	automount_list)			shift 1; do_automount_list $* ;;

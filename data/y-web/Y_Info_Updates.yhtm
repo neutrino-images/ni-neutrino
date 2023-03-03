@@ -41,5 +41,8 @@ function check_updates()
 		</table>
 	</div>
 </div>
+<script>
+	loadSyncURL("/control/exec?Y_Tools&rm_update_version");
+</script>
 </body>
 </html>
