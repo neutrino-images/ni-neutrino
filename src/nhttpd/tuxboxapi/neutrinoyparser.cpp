@@ -26,7 +26,6 @@
 #include "neutrinoyparser.h"
 #include "neutrinoapi.h"
 
-
 #include <zapit/channel.h>
 #include <zapit/zapit.h>
 #include <zapit/getservices.h>
@@ -34,7 +33,6 @@
 #include <cs_api.h>
 #include <system/configure_network.h>
 
-//NI y-funcs
 #include "gui/plugins.h"
 extern CPlugins *g_Plugins;
 #include "gui/infoicons.h"
@@ -135,7 +133,6 @@ const CNeutrinoYParser::TyFuncCall CNeutrinoYParser::yFuncCallList[]=
 	{"get_webtv_list",			&CNeutrinoYParser::func_get_webtv_list},
 	{"get_webradio_list",			&CNeutrinoYParser::func_get_webradio_list},
 	{"get_xmltv_list",			&CNeutrinoYParser::func_get_xmltv_list},
-	//NI y-funcs
 	{"infoicons_set_values",		&CNeutrinoYParser::func_infoicons_set_values},
 	{"netfs_set_values",			&CNeutrinoYParser::func_netfs_set_values},
 	{"netfs_read_config",			&CNeutrinoYParser::func_netfs_read_config},
@@ -1319,7 +1316,7 @@ std::string CNeutrinoYParser::func_get_xmltv_list(CyhookHandler *, std::string)
 }
 
 //-------------------------------------------------------------------------
-// NI y-func : infoicons_set_values
+// y-func : infoicons_set_values
 //-------------------------------------------------------------------------
 std::string  CNeutrinoYParser::func_infoicons_set_values(CyhookHandler *hh, std::string)
 {
@@ -1350,7 +1347,7 @@ std::string  CNeutrinoYParser::func_infoicons_set_values(CyhookHandler *hh, std:
 	return yresult;
 }
 //-------------------------------------------------------------------------
-// NI y-func : netfs_set_values
+// y-func : netfs_set_values
 //-------------------------------------------------------------------------
 std::string  CNeutrinoYParser::func_netfs_set_values(CyhookHandler *hh, std::string)
 {
@@ -1408,7 +1405,7 @@ std::string  CNeutrinoYParser::func_netfs_set_values(CyhookHandler *hh, std::str
 	return "ok";
 }
 //-------------------------------------------------------------------------
-// NI y-func : netfs_read_config
+// y-func : netfs_read_config
 //-------------------------------------------------------------------------
 std::string  CNeutrinoYParser::func_netfs_read_config(CyhookHandler *, std::string para)
 {
@@ -1469,7 +1466,7 @@ std::string  CNeutrinoYParser::func_netfs_read_config(CyhookHandler *, std::stri
 	return "ok";
 }
 //-------------------------------------------------------------------------
-// NI y-func : netfs_write_config
+// y-func : netfs_write_config
 //-------------------------------------------------------------------------
 std::string  CNeutrinoYParser::func_netfs_write_config(CyhookHandler *, std::string para)
 {
