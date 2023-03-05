@@ -1,5 +1,6 @@
 {=include-block:Y_Blocks.txt;head=}
 {=include-block:Y_Blocks.txt;js_prototype=}
+<script src="/Y_Baselib.js"></script>
 	<style>
 		#InputOutputField
 		{
