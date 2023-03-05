@@ -44,13 +44,13 @@ function init(){
 				<li>{=L:tools.netfs=}</li>
 				<ul>
 					<li>
-						{=var-set:m_link_href=Y_Tools_NetFS-init.yhtm?mount_type=0&mount_type_s=fstab=}
+						{=var-set:m_link_href=Y_Tools_NetFS_init.yhtm?mount_type=0&mount_type_s=fstab=}
 						{=var-set:m_link_desc=fstab-{=L:tools.mounts=}=}
 						{=var-set:m_link_text=/var/etc/fstab=}
 						{=include-block:Y_Blocks.txt;management_link=}
 					</li>
 					<li>
-						{=var-set:m_link_href=Y_Tools_NetFS-init.yhtm?mount_type=1&mount_type_s=automount=}
+						{=var-set:m_link_href=Y_Tools_NetFS_init.yhtm?mount_type=1&mount_type_s=automount=}
 						{=var-set:m_link_desc={=L:tools.automount=}=}
 						{=var-set:m_link_text=/var/etc/auto.net=}
 						{=include-block:Y_Blocks.txt;management_link=}
