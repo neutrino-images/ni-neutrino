@@ -249,10 +249,10 @@ function do_submit()
 			</tr>
 		</table>
 		<br/>
-		<input type="hidden" name="tmpl" value="Y_NI_Infoicons-control.yhtm"/>
+		<input type="hidden" name="tmpl" value="Y_Settings_Infoicons.yhtm"/>
 		<input type="hidden" name="execute" value="func:infoicons_set_values"/>
 		<button type="button" ytype="save" title="{=L:save_values_desc=}" onClick="do_submit()">{=L:ni.save=}</button>
-		<button type="button" ytype="cancel" title="{=L:cancel=}" name="abort" onClick='window.document.location.href="/Y_NI_Infoicons-control.yhtm"'>{=L:ni.cancel=}</button>
+		<button type="button" ytype="cancel" title="{=L:cancel=}" name="abort" onClick='window.document.location.href="/Y_Settings_Infoicons.yhtm"'>{=L:ni.cancel=}</button>
 	</form>
 	</div>
 </div>
