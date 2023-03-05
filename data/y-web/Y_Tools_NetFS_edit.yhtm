@@ -1,4 +1,4 @@
-{=include-block:Y_Blocks.txt;head_ni=}
+{=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
 <script>
 function form_init()

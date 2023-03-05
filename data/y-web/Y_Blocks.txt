@@ -283,29 +283,6 @@ start-block~head_frame_iso
 <title>yWeb</title>
 end-block~head_frame_iso
 
-# ------- Lay-HEAD NI
-start-block~head_ni
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="author" content="NI-Team">
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-<meta http-equiv="cache-control" content="no-cache" />
-<meta http-equiv="expires" content="Thu, 01 Jan 1970 00:00:00 GMT" />
-<title>yWeb - NI</title>
-<link rel="stylesheet" href="/Y_Main.css" />
-<link rel="stylesheet" href="/Y_Dist.css" />
-<link rel="stylesheet" href="/Y_User.css" />
-{=include-block:Y_Blocks.txt;js_prototype=}
-{=include-block:Y_Blocks.txt;js_jquery=}
-{=include-block:Y_Blocks.txt;js_jquery_ui=}
-<script src="/Y_NIlib.js"></script>
-<script>
-	// Clear y-Cache in our pages
-	yhttpd_cache_clear('');
-</script>
-end-block~head_ni
-
 # ------- Lay-HEAD close
 start-block~head_close
 </head>
