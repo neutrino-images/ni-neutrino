@@ -503,13 +503,13 @@ start-block~netfs_table_row
 				</a>
 				{=if-equal:{=mount_type=}~0~
 				{=if-equal:{=var-get:is_mount_{=var-get:nr=}=}~false~
-				<a href="javascript:Y_NI_Tools('do_mount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfscontrol.mount=}">
+				<a href="javascript:Y_NI_Tools('do_mount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfs.mount=}">
 					<img src="/images/server_add.png">
 				</a>
 				<img src="/images/blank.png">
 				~
 				<img src="/images/blank.png">
-				<a href="javascript:Y_NI_Tools('do_umount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfscontrol.umount=}">
+				<a href="javascript:Y_NI_Tools('do_umount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfs.umount=}">
 					<img src="/images/server_delete.png">
 				</a>
 				=}
