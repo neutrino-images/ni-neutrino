@@ -1,4 +1,3 @@
-{=var-set:cancache==}
 {=var-set:channelnr={=script:Y_NI_Tools getline /tmp/lcd/channelnr=}=}
 {=var-set:duration={=script:Y_NI_Tools getline /tmp/lcd/duration=}=}
 {=var-set:end={=script:Y_NI_Tools getline /tmp/lcd/end=}=}

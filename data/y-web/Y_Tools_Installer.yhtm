@@ -1,4 +1,4 @@
-{=var-set:cancache=yPConf=}
+{=var-set:cancache=yPTools=}
 {=include-block:Y_Blocks.txt;management_check_top=}
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
