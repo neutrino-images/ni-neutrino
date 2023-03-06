@@ -19,6 +19,7 @@
 {=var-set:boxmodel={=func:get_boxmodel=}=}
 
 {=include-block:Y_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;js_jquery=}
 <script src="/Y_Baselib.js"></script>
 <script>
 // taken from http://www.jjam.de/JavaScript/Datum_Uhrzeit/Wochentag.html
