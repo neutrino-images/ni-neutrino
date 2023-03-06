@@ -37,7 +37,6 @@ install_DATA =	extensions.txt \
 		Y_Filemgr_Edit.yhtm \
 		Y_Info_Help.yhtm \
 		Y_Info_Menue.yhtm \
-		Y_Info_Updates.yhtm \
 		Y_Live_EPG.yhtm \
 		Y_Live_EPG_Info.yhtm \
 		Y_Main.css \
