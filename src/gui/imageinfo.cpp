@@ -25,7 +25,7 @@
 #include <config.h>
 #endif
 
-#if HAVE_LIBSTB_HAL
+#if USE_STB_HAL
 #include <version_hal.h>
 #endif
 
@@ -54,8 +54,8 @@
 #include <nhttpd/yconfig.h>
 #include <ctype.h>
 
-#define OS_RELEASE_FILE TARGET_ROOT "/usr/lib/os-release"
-#define OE_IMAGE_VERSION_FILE TARGET_ROOT "/etc/image-version"
+#define OS_RELEASE_FILE "/usr/lib/os-release"
+#define OE_IMAGE_VERSION_FILE "/etc/image-version"
 
 using namespace std;
 
@@ -365,14 +365,7 @@ void CImageInfo::InitInfoData()
 		v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_CREATOR), creator});
 
 	//gui
-	v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_GUI), config.getString("gui", PACKAGE_NAME)});
-
-#ifdef VCS
-	//gui vcs
-	v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_VCS),	VCS});
-#else
-	v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_VCS),	PACKAGE_VERSION_GIT});
-#endif
+	initGuiInfo();
 
 	//stb info
 	initHalInfo();
@@ -397,9 +390,28 @@ void CImageInfo::initBuildDateInfo()
 	v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_DATE),	builddate});
 }
 
+void CImageInfo::initGuiInfo()
+{
+	string gui_info = PACKAGE_NAME;
+#if ENABLE_PKG_MANAGEMENT
+	if (file_exists("/tmp/.neutrino.version"))
+		gui_info += " " + CComponentsText::getTextFromFile("/tmp/.neutrino.version");
+#endif
+	v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_GUI), config.getString("gui", gui_info)});
+
+#ifndef ENABLE_PKG_MANAGEMENT
+# ifdef VCS
+	//gui vcs
+	v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_VCS),	VCS});
+# else
+	v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_VCS),	PACKAGE_VERSION_GIT});
+# endif
+#endif
+}
+
 void CImageInfo::initHalInfo()
 {
-#if HAVE_LIBSTB_HAL
+#if USE_STB_HAL
 	hal_libversion_t ver;
 	hal_get_lib_version(&ver);
 	//libstb-hal version
