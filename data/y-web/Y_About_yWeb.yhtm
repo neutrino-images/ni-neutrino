@@ -13,7 +13,7 @@ jQuery(document).ready(function(){
 });
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
-{=var-set:management={=if-equal:{=func:get_request_data client_addr=}~{=ini-get:/var/tuxbox/config/yWeb.conf;management_ip;{=func:get_request_data client_addr=}=}~1~=}{=if-equal:{=func:get_request_data client_addr=}~{=ini-get:/var/tuxbox/config/yWeb.conf;management_ip2=}~1~=}=}
+{=var-set:management={=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip;{=func:get_request_data client_addr=}=}~1~=}{=if-equal:{=func:get_request_data client_addr=}~{=ini-get:%(CONFIGDIR)/yWeb.conf;management_ip2=}~1~=}=}
 {=var-set:alt_httpd={=ini-get:%(CONFIGDIR)/nhttpd.conf;WebsiteMain.override_directory;%(PUBLIC_HTTPDDIR)=}=}
 {=var-set:vf={=if-file-exists:{=var-get:alt_httpd=}/Y_Version.txt~{=var-get:alt_httpd=}/Y_Version.txt~Y_Version.txt=}=}
 <body>
