@@ -25,6 +25,7 @@ start-block~yWeb_save_settings
 {=ini-set:%(CONFIGDIR)/yWeb.conf;wol_desc_3;{=wol_desc_3=}~cache=}
 {=ini-set:%(CONFIGDIR)/yWeb.conf;fb;{=fb=}~cache=}
 {=ini-set:%(CONFIGDIR)/yWeb.conf;screenshot_rc;{=screenshot_rc=}~cache=}
+{=ini-set:%(CONFIGDIR)/yWeb.conf;screenshot_timeout;{=screenshot_timeout=}~cache=}
 {=ini-set:%(CONFIGDIR)/yWeb.conf;start_page;{=start_page=}~cache=}
 {=ini-set:%(CONFIGDIR)/yWeb.conf;style;{=style=}~cache=}
 {=ini-set:%(CONFIGDIR)/yWeb.conf;yweb_box_name;{=yweb_box_name=}~cache=}

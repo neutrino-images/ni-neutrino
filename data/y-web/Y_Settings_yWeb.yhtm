@@ -26,7 +26,7 @@ function do_submit(){
 	}
 }
 function do_init(){
-	var val = "{=ini-get:/var/tuxbox/config/yWeb.conf;fb;0~open=}";
+	var val = "{=ini-get:%(CONFIGDIR)/yWeb.conf;fb;0~open=}";
 	var cst = (loadSyncURL("/control/info?hwinfo").indexOf("CST") > -1);
 	var fb_options = document.f.fb.getElementsByTagName("option");
 	for (var i = 0; i < fb_options.length; i++)
@@ -136,10 +136,24 @@ select {
 				<td colspan="3"><input type="text" name="yweb_box_color" size="8" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_color=}"
 					title="{=L:set.yweb.box_color_desc=}"/></td>
 			</tr>
+			<tr><td class="y_form_header" colspan="4">{=L:bc.menue.screenshot=}</td></tr>
+			<tr>
+				<td>{=L:set.yweb.screenshot_rc=}</td>
+				<td colspan="3">
+					<input type="radio" name="screenshot_rc" value="false" />{=L:off=}&nbsp;
+					<input type="radio" name="screenshot_rc" value="true" />{=L:on=}
+				</td>
+			</tr>
+			<tr>
+				<td>{=L:set.yweb.screenshot_timeout=}</td>
+				<td colspan="3">
+					<input type="number" name="screenshot_timeout" size="3" min="0" max="180" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;screenshot_timeout;15=}" title="{=L:set.yweb.screenshot_timeout=}"/>
+				</td>
+			</tr>
 			<tr><td class="y_form_header" colspan="4">{=L:others=}</td></tr>
 			<tr>
 				<td>{=L:set.yweb.remote=}</td>
-				<td>
+				<td colspan="3">
 					<select name="fb" title="{=L:remote=}">
 						<option value="{=var-get:_rc_dbox_philips=}">d-Box Philips</option>
 						<option value="{=var-get:_rc_dbox_nokia_old=}">d-Box Nokia (alt)</option>
@@ -173,11 +187,6 @@ select {
 						<option value="{=var-get:_rc_vuplus_duo=}">VU+ Duo</option>
 					</select>
 				</td>
-				<td>{=L:set.yweb.screenshot_rc=}</td>
-				<td>
-					<input type="radio" name="screenshot_rc" value="false" />{=L:off=}&nbsp;
-					<input type="radio" name="screenshot_rc" value="true" />{=L:on=}
-				</td>
 			</tr>
 			<tr>
 				<td>{=L:set.yweb.start_page=}</td>
@@ -193,7 +202,7 @@ select {
 			</tr>
 			<tr>
 				<td>Styles</td>
-				<td>
+				<td colspan="3">
 					<select name="style" title="Style">
 						{=script:Y_Tools style_get=}
 					</select>

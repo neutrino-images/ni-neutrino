@@ -306,6 +306,7 @@ set.yweb.box_color=Color
 set.yweb.start_page=Start page
 set.yweb.remote=Remote
 set.yweb.screenshot_rc=RC in screenshot menu
+set.yweb.screenshot_timeout=Screenshot timeout
 
 # ===== Settings Picture viewer
 set.pv.pictureviewer=Pictureviewer
