@@ -25,7 +25,7 @@ function do_submit()
 {=var-set:wait_text={=L:tools.netfs.title=}<br/>=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
-	{=var-set:menu={=L:tools.netfs.title=} ({=L:ni.edit=}: {=L:tools.netfs.{=mount_type=}=} - {=nr=})=}{=include-block:Y_Blocks.txt;work_menu=}
+	{=var-set:menu={=L:tools.netfs.title=} ({=L:edit=}: {=L:tools.netfs.{=mount_type=}=} - {=nr=})=}{=include-block:Y_Blocks.txt;work_menu=}
 	</div></div>
 	<div class="work_box_body">
 	<form name="f" action="/y/cgi">
@@ -88,7 +88,7 @@ function do_submit()
 		<input type="hidden" name="tmpl" value="Y_Tools_NetFS.yhtm"/>
 		<input type="hidden" name="execute" value="func:netfs_set_values"/>
 		<button type="button" ytype="accept_" title="ok" onClick="do_submit()">OK</button>
-		<button type="button" ytype="cancel_" title="{=L:cancel=}" name="abort" onClick='window.document.location.href="/Y_Tools_NetFS.yhtm?mount_type={=mount_type=}&mount_type_s={=mount_type_s=}"'>{=L:ni.cancel=}</button>
+		<button type="button" ytype="cancel_" title="{=L:cancel=}" name="abort" onClick='window.document.location.href="/Y_Tools_NetFS.yhtm?mount_type={=mount_type=}&mount_type_s={=mount_type_s=}"'>{=L:cancel=}</button>
 	</form>
 	</div>
 </div>

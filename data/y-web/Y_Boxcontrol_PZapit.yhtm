@@ -30,10 +30,10 @@
 				<td class="y_form_header" width="48%">{=L:bc.pzapit.tuner=}</td>
 			</tr>
 				<td>
-					<input type="button" value="{=L:ni.reload=}" title="{=L:ni.dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;reload_channellists");' />
+					<input type="button" value="{=L:reload=}" title="{=L:dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;reload_channellists");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.reset=}"  title="{=L:ni.dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;reset_tuner");' />
+					<input type="button" value="{=L:reset=}"  title="{=L:dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;reset_tuner");' />
 				</td>
 		</table>
 	</form>

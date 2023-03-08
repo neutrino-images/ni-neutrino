@@ -29,13 +29,13 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.fritzcallmonitor~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_fcm_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_fcm_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_fcm_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_fcm_start", 5000);'/>
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/FritzCallMonitor.cfg","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/FritzCallMonitor.cfg","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 					<input type="button" value="{=L:set.plugin-tools.fcm-addr=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/FritzCallMonitor.addr","edit", "width=800,height=600,resizable=yes");' />
@@ -49,13 +49,13 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.nfsd~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_nfs_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_nfs_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_nfs_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_nfs_start", 5000);'/>
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/etc/exports","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/etc/exports","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -68,13 +68,13 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.samba~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_samba_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_samba_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_samba_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_samba_start", 5000);'/>
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file={=if-file-exists:/etc/samba/smb.conf~/etc/samba/smb.conf~/etc/smb.conf=}","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file={=if-file-exists:/etc/samba/smb.conf~/etc/samba/smb.conf~/etc/smb.conf=}","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -87,13 +87,13 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.tuxcald~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_tuxcald_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_tuxcald_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_tuxcald_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_tuxcald_start", 5000);'/>
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/tuxcal/tuxcal.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/tuxcal/tuxcal.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -106,13 +106,13 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.tuxmaild~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_tuxmaild_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_tuxmaild_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_tuxmaild_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_tuxmaild_start", 5000);'/>
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/tuxmail/tuxmail.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/tuxmail/tuxmail.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -125,13 +125,13 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.inadyn~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_inadyn_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_inadyn_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_inadyn_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_inadyn_start", 5000);'/>
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/etc/inadyn.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/etc/inadyn.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -144,9 +144,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.dropbear~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_dropbear_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_dropbear_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_dropbear_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_dropbear_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -163,13 +163,13 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.ushare~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_ushare_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_ushare_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_ushare_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_ushare_start", 5000);'/>
 					=}
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/etc/ushare.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/etc/ushare.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 				</td>
@@ -182,9 +182,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.minidlnad~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_minidlna_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_minidlna_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_minidlna_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_minidlna_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -205,9 +205,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.djmount~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_djmount_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_djmount_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_djmount_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_djmount_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -224,9 +224,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.xupnpd~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_xupnpd_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_xupnpd_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_xupnpd_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_xupnpd_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -247,9 +247,9 @@
 				</td>
 				<td>
 					{=if-file-exists:/var/etc/.crond~
-					<input type="button" value="{=L:ni.stop=}" onclick='Y_NI_Tools("p_crond_stop", 5000);'/>
+					<input type="button" value="{=L:stop=}" onclick='Y_NI_Tools("p_crond_stop", 5000);'/>
 					~
-					<input type="button" value="{=L:ni.start=}" onclick='Y_NI_Tools("p_crond_start", 5000);'/>
+					<input type="button" value="{=L:start=}" onclick='Y_NI_Tools("p_crond_start", 5000);'/>
 					=}
 				</td>
 				<td>
@@ -274,7 +274,7 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/EPGscan.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/EPGscan.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 					<input type="button" value="{=L:set.plugin-tools.epgscan-dat=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/EPGscan.dat","edit", "width=800,height=600,resizable=yes");' />
@@ -290,7 +290,7 @@
 					&nbsp;
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/pr-auto-timer.conf","edit", "width=800,height=600,resizable=yes");' />
+					<input type="button" value="{=L:configure=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/pr-auto-timer.conf","edit", "width=800,height=600,resizable=yes");' />
 				</td>
 				<td>
 					<input type="button" value="{=L:set.plugin-tools.pat-rules=}" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/pr-auto-timer.rules","edit", "width=800,height=600,resizable=yes");' />

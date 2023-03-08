@@ -68,7 +68,7 @@ function do_submit()
 				{=L:tools.netfs.entrys=} {=L:tools.netfs.{=mount_type=}=}
 			</td>
 			<td class="y_form_header">
-				<a href="javascript:edit_popup();" title="{=L:ni.edit=}: {=L:tools.netfs.{=mount_type=}=}">
+				<a href="javascript:edit_popup();" title="{=L:edit=}: {=L:tools.netfs.{=mount_type=}=}">
 					<img src="/images/modify.png">
 				</a>
 				{=if-equal:{=mount_type=}~0~
@@ -98,9 +98,9 @@ function do_submit()
 		{=var-set:nr=7=} {=include-block:Y_Blocks.txt;netfs_table_row=}
 	</table>
 	<br />
-	<button type="button" ytype="save" title="{=L:ni.save=}: {=L:tools.netfs.{=mount_type=}=}" onclick="$('out').update(''); goUrl('/y/cgi?execute=func:netfs_write_config {=mount_type=}')">{=L:ni.save=}</button>
+	<button type="button" ytype="save" title="{=L:save=}: {=L:tools.netfs.{=mount_type=}=}" onclick="$('out').update(''); goUrl('/y/cgi?execute=func:netfs_write_config {=mount_type=}')">{=L:save=}</button>
 	{=if-equal:{=mount_type=}~1~
-	<button type="button" ytype="refresh" title="{=L:tools.netfs.autofs_restart=}" onclick="Y_NI_Tools('do_autofs restart', 5000)">{=L:ni.reload=}</button>
+	<button type="button" ytype="refresh" title="{=L:tools.netfs.autofs_restart=}" onclick="Y_NI_Tools('do_autofs restart', 5000)">{=L:reload=}</button>
 	~
 	=}
 	</div>

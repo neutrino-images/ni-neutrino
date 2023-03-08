@@ -42,7 +42,7 @@ input[type="button"], .tools select {
 				<td class="y_form_header">&nbsp;</td>
 				<td class="y_form_header">&nbsp;</td>
 				<td class="y_form_header">
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=}" onclick='Y_NI_Tools("softcamreset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=}" onclick='Y_NI_Tools("softcamreset", 10000);' />
 				</td>
 				<td class="y_form_header">&nbsp;</td>
 			</tr>
@@ -58,14 +58,14 @@ input[type="button"], .tools select {
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>	
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -82,40 +82,40 @@ input[type="button"], .tools select {
 						<option onclick='return false;' selected>{=L:set.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:set.camd-tools.line=} </option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/gbox_cfg","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: gbox_cfg
+							{=L:edit=}: gbox_cfg
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/conax","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: conax
+							{=L:edit=}: conax
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/constcw","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: constcw
+							{=L:edit=}: constcw
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/crypto","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: crypto
+							{=L:edit=}: crypto
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/cwshare.cfg","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: cwshare.cfg
+							{=L:edit=}: cwshare.cfg
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/ignore.list","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: ignore.list
+							{=L:edit=}: ignore.list
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/irdeto","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: irdeto
+							{=L:edit=}: irdeto
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/nagra","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: nagra
+							{=L:edit=}: nagra
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/nds","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: nds
+							{=L:edit=}: nds
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/seca","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: seca
+							{=L:edit=}: seca
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/softcam.cfg","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: softcam.cfg
+							{=L:edit=}: softcam.cfg
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/via","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: via
+							{=L:edit=}: via
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
@@ -162,14 +162,14 @@ input[type="button"], .tools select {
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>	
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -186,22 +186,22 @@ input[type="button"], .tools select {
 						<option onclick='return false;' selected>{=L:set.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:set.camd-tools.line=} </option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.conf","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.conf
+							{=L:edit=}: oscam.conf
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.dvbapi
+							{=L:edit=}: oscam.dvbapi
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.server","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.server
+							{=L:edit=}: oscam.server
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.services","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.services
+							{=L:edit=}: oscam.services
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.srvid","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.srvid
+							{=L:edit=}: oscam.srvid
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.user","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.user
+							{=L:edit=}: oscam.user
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
@@ -233,14 +233,14 @@ input[type="button"], .tools select {
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -257,22 +257,22 @@ input[type="button"], .tools select {
 						<option onclick='return false;' selected>{=L:set.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:set.camd-tools.line=} </option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.conf","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.conf
+							{=L:edit=}: oscam.conf
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.dvbapi
+							{=L:edit=}: oscam.dvbapi
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.server","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.server
+							{=L:edit=}: oscam.server
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.services","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.services
+							{=L:edit=}: oscam.services
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.srvid","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.srvid
+							{=L:edit=}: oscam.srvid
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/oscam.user","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: oscam.user
+							{=L:edit=}: oscam.user
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
@@ -304,14 +304,14 @@ input[type="button"], .tools select {
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -328,22 +328,22 @@ input[type="button"], .tools select {
 						<option onclick='return false;' selected>{=L:set.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:set.camd-tools.line=} </option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/ncam.conf","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: ncam.conf
+							{=L:edit=}: ncam.conf
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/ncam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: ncam.dvbapi
+							{=L:edit=}: ncam.dvbapi
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/ncam.server","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: ncam.server
+							{=L:edit=}: ncam.server
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/ncam.services","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: ncam.services
+							{=L:edit=}: ncam.services
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/ncam.srvid","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: ncam.srvid
+							{=L:edit=}: ncam.srvid
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/ncam.user","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: ncam.user
+							{=L:edit=}: ncam.user
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
@@ -375,14 +375,14 @@ input[type="button"], .tools select {
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -399,16 +399,16 @@ input[type="button"], .tools select {
 						<option onclick='return false;' selected>{=L:set.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:set.camd-tools.line=} </option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/etc/CCcam.cfg","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: CCcam.cfg
+							{=L:edit=}: CCcam.cfg
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/etc/CCcam.channelinfo","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: CCcam.channelinfo
+							{=L:edit=}: CCcam.channelinfo
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/etc/CCcam.prio","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: CCcam.prio
+							{=L:edit=}: CCcam.prio
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/etc/CCcam.providers","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: CCcam.providers
+							{=L:edit=}: CCcam.providers
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
@@ -440,14 +440,14 @@ input[type="button"], .tools select {
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -464,31 +464,31 @@ input[type="button"], .tools select {
 						<option onclick='return false;' selected>{=L:set.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:set.camd-tools.line=} </option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.cfg","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.cfg
+							{=L:edit=}: doscam.cfg
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.ac","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.ac
+							{=L:edit=}: doscam.ac
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.dvbapi","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.dvbapi
+							{=L:edit=}: doscam.dvbapi
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.guess","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.guess
+							{=L:edit=}: doscam.guess
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.provid","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.provid
+							{=L:edit=}: doscam.provid
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.services","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.services
+							{=L:edit=}: doscam.services
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.srvid","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.srvid
+							{=L:edit=}: doscam.srvid
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.tiers","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.tiers
+							{=L:edit=}: doscam.tiers
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=%(CONFIGDIR)/doscam.whitelist","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: doscam.whitelist
+							{=L:edit=}: doscam.whitelist
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
@@ -516,14 +516,14 @@ input[type="button"], .tools select {
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:ni.stop=}"  title="{=L:ni.stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' /> 
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' /> 
 				</td>                                                                                                                                               
 				<td>	                                                                                                                                            
-					<input type="button" value="{=L:ni.reset=}" title="{=L:ni.reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>                                                                                                                                               
 				~                                                                                                                                                   
 				<td>                                                                                                                                                
-					<input type="button" value="{=L:ni.start=}" title="{=L:ni.start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -540,31 +540,31 @@ input[type="button"], .tools select {
 						<option onclick='return false;' selected>{=L:set.camd-tools=} {=var-get:camd=}</option>
 						<option onclick='return false;'> {=L:set.camd-tools.line=} </option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/mg_cfg","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: mg_cfg
+							{=L:edit=}: mg_cfg
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/AutoRoll.Key","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: AutoRoll.Key
+							{=L:edit=}: AutoRoll.Key
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/cccamd.list","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: cccamd.list
+							{=L:edit=}: cccamd.list
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/ignore.list","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: ignore.list
+							{=L:edit=}: ignore.list
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/newcamd.list","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: newcamd.list
+							{=L:edit=}: newcamd.list
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/peer.cfg","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: peer.cfg
+							{=L:edit=}: peer.cfg
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/priority.list","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: priority.list
+							{=L:edit=}: priority.list
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/replace.list","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: replace.list
+							{=L:edit=}: replace.list
 						</option>
 						<option class="e" onclick='window.open("/Y_Filemgr_Edit.yhtm?file=/var/keys/SoftCam.Key","edit", "width=800,height=600,resizable=yes");'>
-							{=L:ni.edit=}: SoftCam.Key
+							{=L:edit=}: SoftCam.Key
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>

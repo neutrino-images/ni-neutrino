@@ -499,7 +499,7 @@ start-block~netfs_table_row
 				{=var-get:local_dir_{=var-get:nr=}=}
 			</td>
 			<td>
-				<a href="/Y_Tools_NetFS_edit.yhtm?nr={=var-get:nr=}&mount_type={=mount_type=}&mount_type_s={=mount_type_s=}" title="{=L:ni.edit=}">
+				<a href="/Y_Tools_NetFS_edit.yhtm?nr={=var-get:nr=}&mount_type={=mount_type=}&mount_type_s={=mount_type_s=}" title="{=L:edit=}">
 					<img src="/images/modify.png">
 				</a>
 				{=if-equal:{=mount_type=}~0~

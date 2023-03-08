@@ -51,6 +51,16 @@ automatic=automatically
 unknown=unknown
 show=show
 hide=hide
+edit=Edit
+remove=Remove
+create=Create
+start=Start
+stop=Stop
+reset=Reset
+reload=Reload
+configure=Configure
+dblclick=Doubleclick required
+infopage=Infopage
 
 # ===== Dates
 date.su=Su
@@ -562,17 +572,3 @@ rc.key_picsize=Pic Size
 rc.key_picmode=Pic Mode
 rc.key_pos=Pos
 rc.key_recall=Recall
-
-# ===== NI
-ni.save=Save
-ni.cancel=Cancel
-ni.edit=Edit
-ni.remove=Remove
-ni.create=Create
-ni.start=Start
-ni.stop=Stop
-ni.reset=Reset
-ni.reload=Reload
-ni.configure=Configure
-ni.dblclick=Doubleclick required
-ni.infopage=NI Infopage
