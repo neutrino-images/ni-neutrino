@@ -4,7 +4,7 @@ install_SCRIPTS = \
 	_Y_Globals.sh \
 	_Y_Library.sh \
 	Y_Camds.sh \
-	Y_Plugincontrol.sh \
+	Y_Plugins.sh \
 	Y_Tools.sh
 
 # file manager
