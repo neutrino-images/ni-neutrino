@@ -612,6 +612,7 @@ data/webtv/Makefile
 data/y-web/Makefile
 data/y-web/favicon/Makefile
 data/y-web/images/Makefile
+data/y-web/images/rc/Makefile
 data/y-web/info/Makefile
 data/y-web/jquery/Makefile
 data/y-web/languages/Makefile

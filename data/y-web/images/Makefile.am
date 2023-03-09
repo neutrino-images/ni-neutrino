@@ -1,6 +1,8 @@
-imagesdir = $(PRIVATE_HTTPDDIR)/images
+SUBDIRS = rc
 
-images_DATA = \
+installdir = $(PRIVATE_HTTPDDIR)/images
+
+install_DATA = \
 	accept.png \
 	alert.gif \
 	arrowdown.png \
@@ -60,7 +62,7 @@ images_DATA = \
 	zap.png
 
 # file manager
-images_DATA += \
+install_DATA += \
 	chmod.png \
 	copy.gif \
 	cut.png \
@@ -81,7 +83,7 @@ images_DATA += \
 	work.gif
 
 # extensions
-images_DATA += \
+install_DATA += \
 	ext_add.png \
 	ext_delete.png \
 	ext_edit.png \
@@ -92,30 +94,3 @@ images_DATA += \
 	ext_normal.png \
 	ext_plugin.png \
 	ext_script.png
-
-# remote controls
-imagesrcdir = $(PRIVATE_HTTPDDIR)/images/rc
-
-imagesrc_DATA = \
-	rc/rc_cst_v1.jpg \
-	rc/rc_cst_v2.png \
-	rc/rc_cst_v3.png \
-	rc/rc_cst_v4.png \
-	rc/rc_cst_v5.png \
-	rc/rc_cst_v6.png \
-	rc/rc_dbox_nokia_old.png \
-	rc/rc_dbox_philips.png
-
-if ! BOXTYPE_CST
-imagesrc_DATA += \
-	rc/rc_ax_hd51.png \
-	rc/rc_ax_hd61.png \
-	rc/rc_axas_e4hd.png \
-	rc/rc_mutant_hd51.png \
-	rc/rc_mutant_hd60.png \
-	rc/rc_osmio4k.png \
-	rc/rc_protek_4k_uhd.png \
-	rc/rc_vuplus.png \
-	rc/rc_wwio_bre2ze4k.png \
-	rc/rc_zgemma_h7.png
-endif
