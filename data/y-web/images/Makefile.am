@@ -8,7 +8,9 @@ images_DATA = \
 	arrowright.png \
 	arrowup.png \
 	blank.png \
+	cancel.png \
 	check_green.png \
+	colored_bar.png \
 	comment.png \
 	cross.png \
 	elist.png \
@@ -32,6 +34,10 @@ images_DATA = \
 	rename.gif \
 	save.png \
 	saveall.png \
+	server_add.png \
+	server_delete.png \
+	server_edit.png \
+	server_link.png \
 	snapshot.png \
 	stream.png \
 	streaminfo.png \
@@ -87,15 +93,6 @@ images_DATA += \
 	ext_plugin.png \
 	ext_script.png
 
-# NI-yWeb
-images_DATA += \
-	cancel.png \
-	colored_bar.png \
-	server_add.png \
-	server_delete.png \
-	server_edit.png \
-	server_link.png
-
 # remote controls
 imagesrcdir = $(PRIVATE_HTTPDDIR)/images/rc
 
@@ -122,4 +119,3 @@ imagesrc_DATA += \
 	rc/rc_wwio_bre2ze4k.png \
 	rc/rc_zgemma_h7.png
 endif
-

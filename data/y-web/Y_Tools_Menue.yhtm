@@ -23,7 +23,7 @@ function init(){
 		<div class="y_menu_sec_section">{=L:main.tools=}</div>
 		<div class="y_menu_sec">
 			<ul id="secmenu_tools_general">
-				{=comment:NI - disable automounter~
+				{=comment:disable automounter~
 				<li>
 					{=if-empty:{=var-get:automount=}~
 					<a href="javascript:void(0)" class="disabled" title="{=L:tools.not_installed=}">{=L:tools.automount=}</a>
@@ -101,7 +101,7 @@ function init(){
 				<li>
 					<a target="work" href="Y_Tools_Check_Install.yhtm">{=L:tools.check_install=}</a>
 				</li>
-				{=comment:NI - disable yInstaller~
+				{=comment:disable yInstaller~
 				<li>
 					{=var-set:m_link_href=Y_Tools_Installer.yhtm=}
 					{=var-set:m_link_desc==}

@@ -53,7 +53,6 @@ function do_init(){
 	}
 	document.f.start_page.selectedIndex = sel;
 	style_old = "{=ini-get:%(CONFIGDIR)/yWeb.conf;style~cache=}";
-	//NI
 	if ("{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_name=}" == "${HOSTNAME}") {
 		document.f.hostname.checked = true;
 		document.f.yweb_box_name.value = "${HOSTNAME}";
@@ -61,7 +60,6 @@ function do_init(){
 		document.f.yweb_box_name.style.color='#aaaaaa'
 	}
 }
-//NI
 function do_switch_hostname()
 {
 	if(document.f.hostname.checked == true)
@@ -127,7 +125,6 @@ select {
 				<td>{=L:set.yweb.box_tag=}</td>
 				<td colspan="3"><input type="text" name="yweb_box_name" size="17" value="{=ini-get:%(CONFIGDIR)/yWeb.conf;yweb_box_name=}"
 					title="{=L:set.yweb.box_tag_desc=}"/>
-					<!-- //NI -->
 					<input type="checkbox" name="hostname" value="Hostname" onclick="do_switch_hostname()"/> Hostname
 				</td>
 			</tr>

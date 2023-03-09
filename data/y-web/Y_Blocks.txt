@@ -483,7 +483,7 @@ start-block~frame_live_epg
 </html>
 end-block~frame_live_epg
 
-# ------- NI NetFS
+# ------- NetFS
 start-block~netfs_local_dir
 {=var-set:local_dir_{=var-get:nr=}={=ini-get:%(CONFIGDIR)/neutrino.conf;netfs_{=mount_type_s=}_local_dir_{=var-get:nr=}~open=}=}
 end-block~netfs_local_dir
