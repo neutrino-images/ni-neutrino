@@ -94,6 +94,9 @@ install_DATA = \
 	Y_Wait.yhtm \
 	Y_yWeb.js
 
+configdir = $(CONFIGDIR)
+config_DATA = yWeb.conf
+
 install-data-hook:
 	@# Badass hack, I know. If anyone knows a better way -- please send patch!
 	find $(DESTDIR)$(PRIVATE_HTTPDDIR)/ -type f -print0 | xargs --no-run-if-empty -0 \
