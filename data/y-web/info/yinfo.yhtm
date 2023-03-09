@@ -1,19 +1,19 @@
-{=var-set:channelnr={=script:Y_NI_Tools getline /tmp/lcd/channelnr=}=}
-{=var-set:duration={=script:Y_NI_Tools getline /tmp/lcd/duration=}=}
-{=var-set:end={=script:Y_NI_Tools getline /tmp/lcd/end=}=}
-{=var-set:event_curr={=script:Y_NI_Tools getline /tmp/lcd/event 1=}=}
-{=var-set:event_next={=script:Y_NI_Tools getline /tmp/lcd/event 2=}=}
-{=var-set:logo={=script:Y_NI_Tools getline /tmp/lcd/logo=}=}
-{=var-set:mode_ecm={=script:Y_NI_Tools getline /tmp/lcd/mode_ecm=}=}
-{=var-set:mode_timer={=script:Y_NI_Tools getline /tmp/lcd/mode_timer=}=}
-{=var-set:mode_rec={=script:Y_NI_Tools getline /tmp/lcd/mode_rec=}=}
-{=var-set:mode_tshift={=script:Y_NI_Tools getline /tmp/lcd/mode_tshift=}=}
-{=var-set:mode_logo={=script:Y_NI_Tools getline /tmp/lcd/mode_logo=}=}
-{=var-set:progress={=script:Y_NI_Tools getline /tmp/lcd/progress=}=}
-{=var-set:service={=script:Y_NI_Tools getline /tmp/lcd/service=}=}
-{=var-set:start={=script:Y_NI_Tools getline /tmp/lcd/start=}=}
-{=var-set:tuner={=script:Y_NI_Tools getline /tmp/lcd/tuner=}=}
-{=var-set:volume={=script:Y_NI_Tools getline /tmp/lcd/volume=}=}
+{=var-set:channelnr={=script:Y_Tools getline /tmp/lcd/channelnr=}=}
+{=var-set:duration={=script:Y_Tools getline /tmp/lcd/duration=}=}
+{=var-set:end={=script:Y_Tools getline /tmp/lcd/end=}=}
+{=var-set:event_curr={=script:Y_Tools getline /tmp/lcd/event 1=}=}
+{=var-set:event_next={=script:Y_Tools getline /tmp/lcd/event 2=}=}
+{=var-set:logo={=script:Y_Tools getline /tmp/lcd/logo=}=}
+{=var-set:mode_ecm={=script:Y_Tools getline /tmp/lcd/mode_ecm=}=}
+{=var-set:mode_timer={=script:Y_Tools getline /tmp/lcd/mode_timer=}=}
+{=var-set:mode_rec={=script:Y_Tools getline /tmp/lcd/mode_rec=}=}
+{=var-set:mode_tshift={=script:Y_Tools getline /tmp/lcd/mode_tshift=}=}
+{=var-set:mode_logo={=script:Y_Tools getline /tmp/lcd/mode_logo=}=}
+{=var-set:progress={=script:Y_Tools getline /tmp/lcd/progress=}=}
+{=var-set:service={=script:Y_Tools getline /tmp/lcd/service=}=}
+{=var-set:start={=script:Y_Tools getline /tmp/lcd/start=}=}
+{=var-set:tuner={=script:Y_Tools getline /tmp/lcd/tuner=}=}
+{=var-set:volume={=script:Y_Tools getline /tmp/lcd/volume=}=}
 
 {=include-block:Y_Blocks.txt;head=}
 <meta http-equiv="refresh" content="15; URL=yinfo.yhtm">

@@ -554,12 +554,12 @@ function goPort(_port)
 	window.open(host + ":" + _port, "_blank");
 }
 
-function Y_NI_Tools(_cmd, _tout){
+function Y_Tools(_cmd, _tout){
 	var out = document.getElementById("out");
 	if (out)
 		out.innerHTML = "";
 	show_waitbox(true);
-	goUrl("/control/exec?Y_NI_Tools&" + _cmd);
+	goUrl("/control/exec?Y_Tools&" + _cmd);
 	if (typeof(_tout) == "undefined")
 		show_waitbox(false);
 	else

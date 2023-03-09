@@ -1,24 +1,24 @@
-{=var-set:x_gbox={=script:Y_NI_Tools is_exec gbox=}=}
-{=var-set:x_oscam={=script:Y_NI_Tools is_exec oscam=}=}
-{=var-set:x_osmod={=script:Y_NI_Tools is_exec osmod=}=}
-{=var-set:x_ncam={=script:Y_NI_Tools is_exec ncam=}=}
-{=var-set:x_cccam={=script:Y_NI_Tools is_exec cccam=}=}
-{=var-set:x_doscam={=script:Y_NI_Tools is_exec doscam=}=}
-{=var-set:x_mgcamd={=script:Y_NI_Tools is_exec mgcamd=}=}
+{=var-set:x_gbox={=script:Y_Tools is_exec gbox=}=}
+{=var-set:x_oscam={=script:Y_Tools is_exec oscam=}=}
+{=var-set:x_osmod={=script:Y_Tools is_exec osmod=}=}
+{=var-set:x_ncam={=script:Y_Tools is_exec ncam=}=}
+{=var-set:x_cccam={=script:Y_Tools is_exec cccam=}=}
+{=var-set:x_doscam={=script:Y_Tools is_exec doscam=}=}
+{=var-set:x_mgcamd={=script:Y_Tools is_exec mgcamd=}=}
 
-{=var-set:r_gbox={=script:Y_NI_Tools is_running gbox=}=}
-{=var-set:r_oscam={=script:Y_NI_Tools is_running oscam=}=}
-{=var-set:r_osmod={=script:Y_NI_Tools is_running osmod=}=}
-{=var-set:r_ncam={=script:Y_NI_Tools is_running ncam=}=}
-{=var-set:r_cccam={=script:Y_NI_Tools is_running cccam=}=}
-{=var-set:r_doscam={=script:Y_NI_Tools is_running doscam=}=}
-{=var-set:r_mgcamd={=script:Y_NI_Tools is_running mgcamd=}=}
+{=var-set:r_gbox={=script:Y_Tools is_running gbox=}=}
+{=var-set:r_oscam={=script:Y_Tools is_running oscam=}=}
+{=var-set:r_osmod={=script:Y_Tools is_running osmod=}=}
+{=var-set:r_ncam={=script:Y_Tools is_running ncam=}=}
+{=var-set:r_cccam={=script:Y_Tools is_running cccam=}=}
+{=var-set:r_doscam={=script:Y_Tools is_running doscam=}=}
+{=var-set:r_mgcamd={=script:Y_Tools is_running mgcamd=}=}
 
-{=var-set:oscamport={=script:Y_NI_Tools get_oscam_webif_port=}=}
-{=var-set:osmodport={=script:Y_NI_Tools get_osmod_webif_port=}=}
-{=var-set:ncamport={=script:Y_NI_Tools get_ncam_webif_port=}=}
-{=var-set:cccamport={=script:Y_NI_Tools get_cccam_webif_port=}=}
-{=var-set:doscamport={=script:Y_NI_Tools get_doscam_webif_port=}=}
+{=var-set:oscamport={=script:Y_Tools get_oscam_webif_port=}=}
+{=var-set:osmodport={=script:Y_Tools get_osmod_webif_port=}=}
+{=var-set:ncamport={=script:Y_Tools get_ncam_webif_port=}=}
+{=var-set:cccamport={=script:Y_Tools get_cccam_webif_port=}=}
+{=var-set:doscamport={=script:Y_Tools get_doscam_webif_port=}=}
 
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>
@@ -42,7 +42,7 @@ input[type="button"], .tools select {
 				<td class="y_form_header">&nbsp;</td>
 				<td class="y_form_header">&nbsp;</td>
 				<td class="y_form_header">
-					<input type="button" value="{=L:reset=}" title="{=L:reset=}" onclick='Y_NI_Tools("softcamreset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=}" onclick='Y_Tools("softcamreset", 10000);' />
 				</td>
 				<td class="y_form_header">&nbsp;</td>
 			</tr>
@@ -53,19 +53,19 @@ input[type="button"], .tools select {
 					{=var-get:camd=}
 				</td>
 				<td>
-					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+					<span class="vinfo">{=script:Y_Tools vinfo {=var-get:camd=}=}</span>
 				</td>
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>	
-					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -119,25 +119,25 @@ input[type="button"], .tools select {
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
-						<option onclick='Y_NI_Tools("ecminfo");'>
+						<option onclick='Y_Tools("ecminfo");'>
 							{=L:set.camd-tools.ecminfo=}
 						</option>
-						<option onclick='Y_NI_Tools("pidinfo");'>
+						<option onclick='Y_Tools("pidinfo");'>
 							{=L:set.camd-tools.pidinfo=}
 						</option>
-						<option onclick='Y_NI_Tools("sc01info");'>
+						<option onclick='Y_Tools("sc01info");'>
 							{=L:set.camd-tools.sc01info=}
 						</option>
-						<option onclick='Y_NI_Tools("sc02info");'>
+						<option onclick='Y_Tools("sc02info");'>
 							{=L:set.camd-tools.sc02info=}
 						</option>
-						<option onclick='Y_NI_Tools("shareinfo");'>
+						<option onclick='Y_Tools("shareinfo");'>
 							{=L:set.camd-tools.shareinfo=}
 						</option>
-						<option onclick='Y_NI_Tools("shareonl");'>
+						<option onclick='Y_Tools("shareonl");'>
 							{=L:set.camd-tools.shareonl=}
 						</option>
-						<option onclick='Y_NI_Tools("countcards&amp;/tmp/share.info");'>
+						<option onclick='Y_Tools("countcards&amp;/tmp/share.info");'>
 							{=L:set.camd-tools.countcards=}
 						</option>
 						~
@@ -157,19 +157,19 @@ input[type="button"], .tools select {
 					=}
 				</td>
 				<td>
-					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+					<span class="vinfo">{=script:Y_Tools vinfo {=var-get:camd=}=}</span>
 				</td>
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>	
-					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -205,10 +205,10 @@ input[type="button"], .tools select {
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
-						<option onclick='Y_NI_Tools("ecminfo");'>
+						<option onclick='Y_Tools("ecminfo");'>
 							{=L:set.camd-tools.ecminfo=}
 						</option>
-						<option onclick='Y_NI_Tools("oscamversion");'>
+						<option onclick='Y_Tools("oscamversion");'>
 							{=L:set.camd-tools.oscamversion=}
 						</option>
 						~
@@ -228,19 +228,19 @@ input[type="button"], .tools select {
 					=}
 				</td>
 				<td>
-					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+					<span class="vinfo">{=script:Y_Tools vinfo {=var-get:camd=}=}</span>
 				</td>
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>
-					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -276,10 +276,10 @@ input[type="button"], .tools select {
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
-						<option onclick='Y_NI_Tools("ecminfo");'>
+						<option onclick='Y_Tools("ecminfo");'>
 							{=L:set.camd-tools.ecminfo=}
 						</option>
-						<option onclick='Y_NI_Tools("oscamversion");'>
+						<option onclick='Y_Tools("oscamversion");'>
 							{=L:set.camd-tools.oscamversion=}
 						</option>
 						~
@@ -299,19 +299,19 @@ input[type="button"], .tools select {
 					=}
 				</td>
 				<td>
-					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+					<span class="vinfo">{=script:Y_Tools vinfo {=var-get:camd=}=}</span>
 				</td>
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>
-					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -347,10 +347,10 @@ input[type="button"], .tools select {
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
-						<option onclick='Y_NI_Tools("ecminfo");'>
+						<option onclick='Y_Tools("ecminfo");'>
 							{=L:set.camd-tools.ecminfo=}
 						</option>
-						<option onclick='Y_NI_Tools("ncamversion");'>
+						<option onclick='Y_Tools("ncamversion");'>
 							{=L:set.camd-tools.ncamversion=}
 						</option>
 						~
@@ -370,19 +370,19 @@ input[type="button"], .tools select {
 					=}
 				</td>
 				<td>
-					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+					<span class="vinfo">{=script:Y_Tools vinfo {=var-get:camd=}=}</span>
 				</td>
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>
-					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -412,10 +412,10 @@ input[type="button"], .tools select {
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
-						<option onclick='Y_NI_Tools("ecminfo");'>
+						<option onclick='Y_Tools("ecminfo");'>
 							{=L:set.camd-tools.ecminfo=}
 						</option>
-						<option onclick='Y_NI_Tools("cccamversion");'>
+						<option onclick='Y_Tools("cccamversion");'>
 							{=L:set.camd-tools.cccamversion=}
 						</option>
 						~
@@ -435,19 +435,19 @@ input[type="button"], .tools select {
 					=}
 				</td>
 				<td>
-					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+					<span class="vinfo">{=script:Y_Tools vinfo {=var-get:camd=}=}</span>
 				</td>
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' />
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>
 				<td>
-					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>
 				~
 				<td>
-					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -492,10 +492,10 @@ input[type="button"], .tools select {
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
-						<option onclick='Y_NI_Tools("ecminfo");'>
+						<option onclick='Y_Tools("ecminfo");'>
 							{=L:set.camd-tools.ecminfo=}
 						</option>
-						<option onclick='Y_NI_Tools("doscamversion");'>
+						<option onclick='Y_Tools("doscamversion");'>
 							{=L:set.camd-tools.doscamversion=}
 						</option>
 						~
@@ -511,19 +511,19 @@ input[type="button"], .tools select {
 					{=var-get:camd=}
 				</td>
 				<td>
-					<span class="vinfo">{=script:Y_NI_Tools vinfo {=var-get:camd=}=}</span>
+					<span class="vinfo">{=script:Y_Tools vinfo {=var-get:camd=}=}</span>
 				</td>
 			{=if-equal:{=var-get:x_{=var-get:camd=}=}~true~
 				{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 				<td>
-					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_NI_Tools("{=var-get:camd=}stop", 10000);' /> 
+					<input type="button" value="{=L:stop=}"  title="{=L:stop=} {=var-get:camd=}"  onclick='Y_Tools("{=var-get:camd=}stop", 10000);' />
 				</td>                                                                                                                                               
 				<td>	                                                                                                                                            
-					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}reset", 10000);' />
+					<input type="button" value="{=L:reset=}" title="{=L:reset=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}reset", 10000);' />
 				</td>                                                                                                                                               
 				~                                                                                                                                                   
 				<td>                                                                                                                                                
-					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_NI_Tools("{=var-get:camd=}start", 10000);' />
+					<input type="button" value="{=L:start=}" title="{=L:start=} {=var-get:camd=}" onclick='Y_Tools("{=var-get:camd=}start", 10000);' />
 				</td>
 				<td>
 				</td>
@@ -568,22 +568,22 @@ input[type="button"], .tools select {
 						</option>
 						{=if-equal:{=var-get:r_{=var-get:camd=}=}~true~
 						<option> {=L:set.camd-tools.line=} </option>
-						<option onclick='Y_NI_Tools("ecminfo");'>
+						<option onclick='Y_Tools("ecminfo");'>
 							{=L:set.camd-tools.ecminfo=}
 						</option>
-						<option onclick='Y_NI_Tools("pidinfo");'>
+						<option onclick='Y_Tools("pidinfo");'>
 							{=L:set.camd-tools.pidinfo=}
 						</option>
-						<option onclick='Y_NI_Tools("mginfo");'>
+						<option onclick='Y_Tools("mginfo");'>
 							{=L:set.camd-tools.mginfo=}
 						</option>
-						<option onclick='Y_NI_Tools("cccamdinfo");'>
+						<option onclick='Y_Tools("cccamdinfo");'>
 							{=L:set.camd-tools.cccamdinfo=}
 						</option>
-						<option onclick='Y_NI_Tools("mgshareinfo");'>
+						<option onclick='Y_Tools("mgshareinfo");'>
 							{=L:set.camd-tools.mgshareinfo=}
 						</option>
-						<option onclick='Y_NI_Tools("countcards /tmp/mg.info");'>
+						<option onclick='Y_Tools("countcards /tmp/mg.info");'>
 							{=L:set.camd-tools.countcards=}
 						</option>
 						~

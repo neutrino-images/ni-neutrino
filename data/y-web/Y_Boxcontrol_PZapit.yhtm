@@ -15,14 +15,14 @@
 			</tr>
 			<tr>
 				<td>
-					<input type="button" value="1080i" onclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;resolution&amp;1080");' />
-					<input type="button" value="720p"  onclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;resolution&amp;720");' />
-					<input type="button" value="Pal"   onclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;resolution&amp;pal");' />
+					<input type="button" value="1080i" onclick='$("out").update(""); goUrl("/control/exec?Y_Tools&amp;resolution&amp;1080");' />
+					<input type="button" value="720p"  onclick='$("out").update(""); goUrl("/control/exec?Y_Tools&amp;resolution&amp;720");' />
+					<input type="button" value="Pal"   onclick='$("out").update(""); goUrl("/control/exec?Y_Tools&amp;resolution&amp;pal");' />
 				</td>
 				<td>
-					<input type="button" value="Letterbox"           onclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;43mode&amp;1");' />
-					<input type="button" value="Pan &amp; Scan"      onclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;43mode&amp;2");' />
-					<input type="button" value="14:9 Pan &amp; Scan" onclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;43mode&amp;3");' />
+					<input type="button" value="Letterbox"           onclick='$("out").update(""); goUrl("/control/exec?Y_Tools&amp;43mode&amp;1");' />
+					<input type="button" value="Pan &amp; Scan"      onclick='$("out").update(""); goUrl("/control/exec?Y_Tools&amp;43mode&amp;2");' />
+					<input type="button" value="14:9 Pan &amp; Scan" onclick='$("out").update(""); goUrl("/control/exec?Y_Tools&amp;43mode&amp;3");' />
 				</td>
 			</tr>
 			<tr>
@@ -30,10 +30,10 @@
 				<td class="y_form_header" width="48%">{=L:bc.pzapit.tuner=}</td>
 			</tr>
 				<td>
-					<input type="button" value="{=L:reload=}" title="{=L:dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;reload_channellists");' />
+					<input type="button" value="{=L:reload=}" title="{=L:dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_Tools&amp;reload_channellists");' />
 				</td>
 				<td>
-					<input type="button" value="{=L:reset=}"  title="{=L:dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_NI_Tools&amp;reset_tuner");' />
+					<input type="button" value="{=L:reset=}"  title="{=L:dblclick=}" ondblclick='$("out").update(""); goUrl("/control/exec?Y_Tools&amp;reset_tuner");' />
 				</td>
 		</table>
 	</form>

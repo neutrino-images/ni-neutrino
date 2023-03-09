@@ -1,6 +1,6 @@
-{=var-set:_p_list_so={=script:Y_NI_Tools p_list so=}=}
-{=var-set:_p_list_sh={=script:Y_NI_Tools p_list sh=}=}
-{=var-set:_p_list_lua={=script:Y_NI_Tools p_list lua=}=}
+{=var-set:_p_list_so={=script:Y_Tools p_list so=}=}
+{=var-set:_p_list_sh={=script:Y_Tools p_list sh=}=}
+{=var-set:_p_list_lua={=script:Y_Tools p_list lua=}=}
 
 {=include-block:Y_Blocks.txt;head=}
 <script src="/Y_Baselib.js"></script>

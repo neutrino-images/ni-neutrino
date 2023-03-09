@@ -59,8 +59,8 @@ function do_submit()
 					{=L:set.infoicons.flagfiles=}
 				</td>
 				<td class="y_form_header">
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag0=} {=var-get:icons_flag1=} {=var-get:icons_flag2=} {=var-get:icons_flag3=} {=var-get:icons_flag4=} {=var-get:icons_flag5=} {=var-get:icons_flag6=} {=var-get:icons_flag7=}", 1500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag0=} {=var-get:icons_flag1=} {=var-get:icons_flag2=} {=var-get:icons_flag3=} {=var-get:icons_flag4=} {=var-get:icons_flag5=} {=var-get:icons_flag6=} {=var-get:icons_flag7=}", 1500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag0=} {=var-get:icons_flag1=} {=var-get:icons_flag2=} {=var-get:icons_flag3=} {=var-get:icons_flag4=} {=var-get:icons_flag5=} {=var-get:icons_flag6=} {=var-get:icons_flag7=}", 1500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag0=} {=var-get:icons_flag1=} {=var-get:icons_flag2=} {=var-get:icons_flag3=} {=var-get:icons_flag4=} {=var-get:icons_flag5=} {=var-get:icons_flag6=} {=var-get:icons_flag7=}", 1500);' />
 				</td>
 			</tr>
 			{=var-set:nr=0=}
@@ -68,7 +68,7 @@ function do_submit()
 				<td>
 				{=if-file-exists:{=var-get:icons_flag{=var-get:nr=}=}~
 					{=if-file-exists:{=var-get:icons_dir=}/info{=var-get:nr=}_on.png~
-					<img src="{=var-get:icons_dir=}/info{=var-get:nr=}_on.png" title="{=script:Y_NI_Tools read_icons_flag {=var-get:icons_flag{=var-get:nr=}=}=} new mail(s)"/>
+					<img src="{=var-get:icons_dir=}/info{=var-get:nr=}_on.png" title="{=script:Y_Tools read_icons_flag {=var-get:icons_flag{=var-get:nr=}=}=} new mail(s)"/>
 					~ 
 					=}
 				~
@@ -82,8 +82,8 @@ function do_submit()
 					<input type="text" name="mode_icons_flag{=var-get:nr=}" size="30" value="{=var-get:icons_flag{=var-get:nr=}=}" title=""/>
 				</td>
 				<td>
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
 				</td>
 			</tr>
 			{=var-set:nr=1=}
@@ -105,8 +105,8 @@ function do_submit()
 					<input type="text" name="mode_icons_flag{=var-get:nr=}" size="30" value="{=var-get:icons_flag{=var-get:nr=}=}" title=""/>
 				</td>
 				<td>
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
 				</td>
 			</tr>
 			{=var-set:nr=2=}
@@ -128,8 +128,8 @@ function do_submit()
 					<input type="text" name="mode_icons_flag{=var-get:nr=}" size="30" value="{=var-get:icons_flag{=var-get:nr=}=}" title=""/>
 				</td>
 				<td>
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
 				</td>
 			</tr>
 			{=var-set:nr=3=}
@@ -151,8 +151,8 @@ function do_submit()
 					<input type="text" name="mode_icons_flag{=var-get:nr=}" size="30" value="{=var-get:icons_flag{=var-get:nr=}=}" title=""/>
 				</td>
 				<td>
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
 				</td>
 			</tr>
 			{=var-set:nr=4=}
@@ -174,8 +174,8 @@ function do_submit()
 					<input type="text" name="mode_icons_flag{=var-get:nr=}" size="30" value="{=var-get:icons_flag{=var-get:nr=}=}" title=""/>
 				</td>
 				<td>
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
 				</td>
 			</tr>
 			{=var-set:nr=5=}
@@ -197,8 +197,8 @@ function do_submit()
 					<input type="text" name="mode_icons_flag{=var-get:nr=}" size="30" value="{=var-get:icons_flag{=var-get:nr=}=}" title=""/>
 				</td>
 				<td>
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
 				</td>
 			</tr>
 			{=var-set:nr=6=}
@@ -220,8 +220,8 @@ function do_submit()
 					<input type="text" name="mode_icons_flag{=var-get:nr=}" size="30" value="{=var-get:icons_flag{=var-get:nr=}=}" title=""/>
 				</td>
 				<td>
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
 				</td>
 			</tr>
 			{=var-set:nr=7=}
@@ -243,8 +243,8 @@ function do_submit()
 					<input type="text" name="mode_icons_flag{=var-get:nr=}" size="30" value="{=var-get:icons_flag{=var-get:nr=}=}" title=""/>
 				</td>
 				<td>
-					<input type="button" value="{=L:remove=}" onclick='Y_NI_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
-					<input type="button" value="{=L:create=}" onclick='Y_NI_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:remove=}" onclick='Y_Tools("rm_icons_flag    {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
+					<input type="button" value="{=L:create=}" onclick='Y_Tools("touch_icons_flag {=var-get:icons_flag{=var-get:nr=}=}", 500);' />
 				</td>
 			</tr>
 		</table>

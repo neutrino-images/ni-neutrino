@@ -489,7 +489,7 @@ start-block~netfs_local_dir
 end-block~netfs_local_dir
 
 start-block~netfs_is_mount
-{=var-set:is_mount_{=var-get:nr=}={=script:Y_NI_Tools is_mount {=if-equal:{=mount_type=}~1~/mnt/autofs/~=}{=var-get:local_dir_{=var-get:nr=}=}=}=}
+{=var-set:is_mount_{=var-get:nr=}={=script:Y_Tools is_mount {=if-equal:{=mount_type=}~1~/mnt/autofs/~=}{=var-get:local_dir_{=var-get:nr=}=}=}=}
 end-block~netfs_is_mount
 
 start-block~netfs_table_row
@@ -504,13 +504,13 @@ start-block~netfs_table_row
 				</a>
 				{=if-equal:{=mount_type=}~0~
 				{=if-equal:{=var-get:is_mount_{=var-get:nr=}=}~false~
-				<a href="javascript:Y_NI_Tools('do_mount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfs.mount=}">
+				<a href="javascript:Y_Tools('do_mount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfs.mount=}">
 					<img src="/images/server_add.png">
 				</a>
 				<img src="/images/blank.png">
 				~
 				<img src="/images/blank.png">
-				<a href="javascript:Y_NI_Tools('do_umount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfs.umount=}">
+				<a href="javascript:Y_Tools('do_umount {=var-get:local_dir_{=var-get:nr=}=}', 5000);" title="{=L:tools.netfs.umount=}">
 					<img src="/images/server_delete.png">
 				</a>
 				=}

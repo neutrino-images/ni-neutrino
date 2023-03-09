@@ -1,20 +1,20 @@
-{=var-set:_mtd_info_dev={=script:Y_NI_Tools get_mtd_info dev=}=}
-{=var-set:_mtd_info_name={=script:Y_NI_Tools get_mtd_info name=}=}
+{=var-set:_mtd_info_dev={=script:Y_Tools get_mtd_info dev=}=}
+{=var-set:_mtd_info_name={=script:Y_Tools get_mtd_info name=}=}
 
-{=var-set:_root_used_percent={=script:Y_NI_Tools get_flash_info root used_percent=}=}
-{=var-set:_root_total={=script:Y_NI_Tools get_flash_info root total=}=}
-{=var-set:_root_used={=script:Y_NI_Tools get_flash_info root used=}=}
-{=var-set:_root_free={=script:Y_NI_Tools get_flash_info root free=}=}
+{=var-set:_root_used_percent={=script:Y_Tools get_flash_info root used_percent=}=}
+{=var-set:_root_total={=script:Y_Tools get_flash_info root total=}=}
+{=var-set:_root_used={=script:Y_Tools get_flash_info root used=}=}
+{=var-set:_root_free={=script:Y_Tools get_flash_info root free=}=}
 
-{=var-set:_var_used_percent={=script:Y_NI_Tools get_flash_info var used_percent=}=}
-{=var-set:_var_total={=script:Y_NI_Tools get_flash_info var total=}=}
-{=var-set:_var_used={=script:Y_NI_Tools get_flash_info var used=}=}
-{=var-set:_var_free={=script:Y_NI_Tools get_flash_info var free=}=}
+{=var-set:_var_used_percent={=script:Y_Tools get_flash_info var used_percent=}=}
+{=var-set:_var_total={=script:Y_Tools get_flash_info var total=}=}
+{=var-set:_var_used={=script:Y_Tools get_flash_info var used=}=}
+{=var-set:_var_free={=script:Y_Tools get_flash_info var free=}=}
 
-{=var-set:_mem_used_percent={=script:Y_NI_Tools get_mem_info used_percent=}=}
-{=var-set:_mem_total={=script:Y_NI_Tools get_mem_info total=}=}
-{=var-set:_mem_used={=script:Y_NI_Tools get_mem_info used=}=}
-{=var-set:_mem_free={=script:Y_NI_Tools get_mem_info free=}=}
+{=var-set:_mem_used_percent={=script:Y_Tools get_mem_info used_percent=}=}
+{=var-set:_mem_total={=script:Y_Tools get_mem_info total=}=}
+{=var-set:_mem_used={=script:Y_Tools get_mem_info used=}=}
+{=var-set:_mem_free={=script:Y_Tools get_mem_info free=}=}
 
 {=var-set:boxmodel={=func:get_boxmodel=}=}
 
@@ -90,7 +90,7 @@ function getBuild(_version)
 function get_update_txt()
 {
         //show_waitbox(true);
-	loadSyncURL("/control/exec?Y_NI_Tools&get_update_txt");
+	loadSyncURL("/control/exec?Y_Tools&get_update_txt");
 	window.document.location.href="/Y_About_Image.yhtm?ani=false";
 }
 
@@ -270,7 +270,7 @@ jQuery(document).ready(function(){
 	</div>
 </div>
 <script>
-	loadSyncURL("/control/exec?Y_NI_Tools&rm_update_txt");
+	loadSyncURL("/control/exec?Y_Tools&rm_update_txt");
 </script>
 </body>
 </html>
