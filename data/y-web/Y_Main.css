@@ -354,7 +354,9 @@ tr {
 	font-weight: bold;
 }
 .y_menu_sec li a.disabled,
-.y_menu_sec li a.restricted {
+.y_menu_sec li a.restricted,
+.y_menu_sec li span.disabled,
+.y_menu_sec li span.restricted {
 	color: #808080;
 	text-decoration:line-through;
 }

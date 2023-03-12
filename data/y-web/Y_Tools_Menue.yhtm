@@ -41,7 +41,11 @@ function init(){
 					{=var-set:m_link_text={=L:tools.mounts=}=}
 					{=include-block:Y_Blocks.txt;management_link=}
 				</li>
-				<li>{=L:tools.netfs=}</li>
+				<li>
+					{=var-set:m_desc={=L:tools.netfs=}=}
+					{=var-set:m_text={=L:tools.netfs=}=}
+					{=include-block:Y_Blocks.txt;management_text=}
+				</li>
 				<ul>
 					<li>
 						{=var-set:m_link_href=Y_Tools_NetFS_init.yhtm?mount_type=0&mount_type_s=fstab=}
