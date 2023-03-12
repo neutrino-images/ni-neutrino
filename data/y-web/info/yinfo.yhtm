@@ -16,6 +16,7 @@
 {=var-set:volume={=script:Y_Tools getline /tmp/lcd/volume=}=}
 
 {=include-block:Y_Blocks.txt;head=}
+{=include-block:Y_Blocks.txt;js_jquery=}
 <meta http-equiv="refresh" content="15; URL=yinfo.yhtm">
 
 <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
