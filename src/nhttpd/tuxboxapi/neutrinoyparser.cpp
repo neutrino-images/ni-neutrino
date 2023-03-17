@@ -32,6 +32,7 @@
 #include <eitd/sectionsd.h>
 #include <cs_api.h>
 #include <system/configure_network.h>
+#include <system/helpers.h>
 
 #include "gui/plugins.h"
 extern CPlugins *g_Plugins;
@@ -125,6 +126,9 @@ const CNeutrinoYParser::TyFuncCall CNeutrinoYParser::yFuncCallList[]=
 	{"get_partition_list",			&CNeutrinoYParser::func_get_partition_list},
 	{"get_boxtype",				&CNeutrinoYParser::func_get_boxtype},
 	{"get_boxmodel",			&CNeutrinoYParser::func_get_boxmodel},
+	{"get_boxname",				&CNeutrinoYParser::func_get_boxname},
+	{"get_revision",			&CNeutrinoYParser::func_get_revision},
+	{"get_chip_type",			&CNeutrinoYParser::func_get_chip_type},
 	{"get_current_stream_info",		&CNeutrinoYParser::func_get_current_stream_info},
 	{"get_timer_list",			&CNeutrinoYParser::func_get_timer_list},
 	{"set_timer_form",			&CNeutrinoYParser::func_set_timer_form},
@@ -858,7 +862,7 @@ std::string  CNeutrinoYParser::func_get_partition_list(CyhookHandler *, std::str
 	return yresult;
 }
 //-------------------------------------------------------------------------
-// y-func : get boxtypetext
+// y-func : get boxtype
 //-------------------------------------------------------------------------
 std::string CNeutrinoYParser::func_get_boxtype(CyhookHandler *, std::string)
 {
@@ -882,6 +886,27 @@ std::string CNeutrinoYParser::func_get_boxtype(CyhookHandler *, std::string)
 std::string CNeutrinoYParser::func_get_boxmodel(CyhookHandler *, std::string)
 {
 	return g_info.hw_caps->boxarch;
+}
+//-------------------------------------------------------------------------
+// y-func : get boxname
+//-------------------------------------------------------------------------
+std::string CNeutrinoYParser::func_get_boxname(CyhookHandler *, std::string)
+{
+	return g_info.hw_caps->boxname;
+}
+//-------------------------------------------------------------------------
+// y-func : get revision
+//-------------------------------------------------------------------------
+std::string CNeutrinoYParser::func_get_revision(CyhookHandler *, std::string)
+{
+	return to_string(cs_get_revision());
+}
+//-------------------------------------------------------------------------
+// y-func : get chip type
+//-------------------------------------------------------------------------
+std::string CNeutrinoYParser::func_get_chip_type(CyhookHandler *, std::string)
+{
+	return to_string(cs_get_chip_type());
 }
 //-------------------------------------------------------------------------
 // y-func : get stream info
