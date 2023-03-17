@@ -90,11 +90,12 @@ function getBuild(_version)
 function get_update_txt()
 {
         //show_waitbox(true);
-	loadSyncURL("/control/exec?Y_Tools&get_update_txt");
+	loadSyncURL("/control/exec?Y_Tools&get_update_txt&{=func:get_revision=}&\"{=func:get_boxname=}\"&{=func:get_chip_type=}&nightly");
 	window.document.location.href="/Y_About_Image.yhtm?ani=false";
 }
 
-jQuery(document).ready(function(){
+jQuery(document).ready(function()
+{
 	if ("{=ani=}" == "false")
 	{
 		jQuery('#_root_used_graph').css({ width: "{=var-get:_root_used_percent=}%"});
@@ -107,6 +108,8 @@ jQuery(document).ready(function(){
 		jQuery('#_var_used_graph').delay(750).animate({ width: "{=var-get:_var_used_percent=}%"}, 750);
 		jQuery('#_mem_used_graph').delay(750).animate({ width: "{=var-get:_mem_used_percent=}%"}, 750);
 	}
+
+	loadSyncURL("/control/exec?Y_Tools&rm_update_txt");
 });
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
@@ -149,7 +152,6 @@ jQuery(document).ready(function(){
 				</abbr>
 				{=ini-get:/.version;creator=}<br/>
 			</td>
-			<!--
 			<td valign="top" width="38%">
 				{=if-file-exists:/tmp/update.txt~
 				<script>compareVersion("{=ini-get:/.version;version=}", "{=ini-get:/tmp/update.txt;version=}");</script>
@@ -157,9 +159,7 @@ jQuery(document).ready(function(){
 				<span class="upd_yes">{=L:info.about.image_upd_yes=}</span>
 				<br/>
 				<abbr class="version" title="{=L:info.about.actual_image=}">
-				<script>getVersion("{=ini-get:/tmp/update.txt;version=}");</script>
-				<br/>
-				<br/>
+				<script>getVersion("{=ini-get:/tmp/update.txt;version=}");</script><br/>
 				<script>getBuild("{=ini-get:/tmp/update.txt;version=}");</script><br/>
 				</abbr>
 				<br/>
@@ -167,7 +167,6 @@ jQuery(document).ready(function(){
 				<input type="button" onclick='get_update_txt();' value="{=L:info.check_for_updates=}" />
 				=}
 			</td>
-			-->
 		</tr>
 		<tr>
 			<td colspan="4">
@@ -269,8 +268,5 @@ jQuery(document).ready(function(){
 		</table>
 	</div>
 </div>
-<script>
-	loadSyncURL("/control/exec?Y_Tools&rm_update_txt");
-</script>
 </body>
 </html>

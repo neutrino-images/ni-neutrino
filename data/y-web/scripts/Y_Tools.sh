@@ -687,11 +687,14 @@ case "$action" in
 	;;
 	get_update_txt)
 		version="n/a"
-		#FIXME align url to box specs
-		wget -O /tmp/release.txt "http://neutrino-images.de/neutrino-images/update.php"
-		test -e /tmp/release.txt && version=$(cat /tmp/release.txt | grep ".img" | cut -d" " -f2)
+		revision=$1
+		boxname=${2// /%20}
+		chip_type=$3
+		image_type=$4
+		wget -O /tmp/${image_type}.txt "https://neutrino-images.de/neutrino-images/update.php?revision=$revision&boxname=$boxname&chip_type=$chip_type&image_type=$image_type"
+		test -e /tmp/${image_type}.txt && version=$(cat /tmp/${image_type}.txt | cut -d" " -f2)
 		echo "version=${version// /}" > /tmp/update.txt
-		rm -f /tmp/release.txt
+		rm -f /tmp/${image_type}.txt
 	;;
 	rm_update_txt)
 		rm -f /tmp/update.txt
