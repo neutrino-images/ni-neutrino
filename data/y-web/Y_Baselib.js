@@ -281,7 +281,7 @@ function obj_enable(_obj_name, _disable)
 function show_obj(_obj_name, _show)
 {
 	var __obj = document.getElementById(_obj_name);
-	__obj.style.visibility= (_show) ? "visible" : "hidden";
+	__obj.style.visibility = (_show) ? "visible" : "hidden";
 }
 
 function display_obj(_obj_name, _display)

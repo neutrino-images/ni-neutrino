@@ -44,15 +44,19 @@ function getWeekDay(dd,mm,yyyy) {
 
 function compareVersion(_vi, _vo)
 {
-	if (_vi == "" || _vo == "") return;
+	if (_vi == "" || _vo == "")
+		return;
 
-	if (_vi >= _vo)	jQuery(document).ready(function(){jQuery('.upd_no').show().css('color', '#c0c0c0')});
-        else		jQuery(document).ready(function(){jQuery('.upd_yes').show().css('color', '#008000')});
+	if (_vi >= _vo)
+		jQuery(document).ready(function(){jQuery('.upd_no').show().css('color', '#c0c0c0')});
+	else
+		jQuery(document).ready(function(){jQuery('.upd_yes').show().css('color', '#008000')});
 }
 
 function getVersion(_version)
 {
-	if (_version == "") return;
+	if (_version == "")
+		return;
 	var Vmajor = _version.substr(1, 1);
 	var Vminor = _version.substr(2, 2);
 
@@ -89,7 +93,7 @@ function getBuild(_version)
 
 function get_update_txt()
 {
-        //show_waitbox(true);
+	show_waitbox(true);
 	loadSyncURL("/control/exec?Y_Tools&get_update_txt&{=func:get_revision=}&\"{=func:get_boxname=}\"&{=func:get_chip_type=}&nightly");
 	window.document.location.href="/Y_About_Image.yhtm?ani=false";
 }
@@ -114,6 +118,7 @@ jQuery(document).ready(function()
 </script>
 {=include-block:Y_Blocks.txt;head_close=}
 <body>
+{=var-set:wait_text={=L:info.check_for_updates=}=}{=include-block:Y_Blocks.txt;snip_wait=}
 <div class="work_box">
 	<div class="work_box_head"><div class="work_box_head_h2">
 	{=var-set:menu={=L:info.about_image=}=}{=include-block:Y_Blocks.txt;work_menu=}
