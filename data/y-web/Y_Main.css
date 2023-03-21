@@ -1016,6 +1016,7 @@ a.timer {
 	font-weight:bold;
 	text-align: center;
 	border-bottom : 1px solid #aaaaaa;
+	vertical-align: top;
 }
 .timer_footer td {
 	font-weight:bold;

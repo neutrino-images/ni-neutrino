@@ -124,7 +124,7 @@ function init()
 				</td>
 			</tr>
 			<tr id="repcountRow" style="display:none;">
-				<td>{=L:live.timer_edit.repeat1=}</td>
+				<td>{=L:live.timer_edit.repeatings=}</td>
 				<td><input type="text" name="repcount" id="repcount" value="{=timer_repeatCount=}" size="4" maxlength="3"/>
 				</td>
 			</tr>

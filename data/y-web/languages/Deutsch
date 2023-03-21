@@ -467,7 +467,7 @@ live.timer_edit.alarm_date=Alarm-Datum
 live.timer_edit.time=Zeit
 live.timer_edit.stop_date=Stop-Datum
 live.timer_edit.repeat=Wiederholung
-live.timer_edit.repeat1=Wiederholungen (0 = unbegrenzt)
+live.timer_edit.repeatings=Wiederholungen<br>(0 = unbegrenzt)
 live.timer_edit.weekdays.format=(Mo-So, X=Timer)
 live.timer_edit.weekdays=Wochentage
 live.timer_edit.values=Werte
