@@ -5,6 +5,7 @@
 {=var-set:event_next={=script:Y_Tools getline /tmp/lcd/event 2=}=}
 {=var-set:logo={=script:Y_Tools getline /tmp/lcd/logo=}=}
 {=var-set:mode_ecm={=script:Y_Tools getline /tmp/lcd/mode_ecm=}=}
+{=var-set:mode_cam={=script:Y_Tools getline /tmp/lcd/mode_cam=}=}
 {=var-set:mode_timer={=script:Y_Tools getline /tmp/lcd/mode_timer=}=}
 {=var-set:mode_rec={=script:Y_Tools getline /tmp/lcd/mode_rec=}=}
 {=var-set:mode_tshift={=script:Y_Tools getline /tmp/lcd/mode_tshift=}=}
@@ -88,6 +89,9 @@ body {
 .yinfo .status .ecm {
 	color: {=if-equal:{=var-get:mode_ecm=}~on~#ff9800~#424242=}
 }
+.yinfo .status .cam {
+	color: {=if-equal:{=var-get:mode_cam=}~on~#ffc107~#424242=}
+}
 .yinfo .status .timer {
 	color: {=if-equal:{=var-get:mode_timer=}~on~#ffeb3b~#424242=}
 }
@@ -136,6 +140,7 @@ body {
 		<div class="fullwidth status">
 			<div class="left">
 				<span class="ecm">ECM</span>
+				<span class="cam">CI+</span>
 			</div>
 			<div class="right">
 				<span class="timer">TIMER</span>
