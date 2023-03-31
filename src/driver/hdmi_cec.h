@@ -88,6 +88,7 @@ class hdmi_cec : public OpenThreads::Thread
 		bool active_source;
 		unsigned char audio_destination;
 		char osdname[14];
+		bool fallback;
 	protected:
 		bool running;
 	public:

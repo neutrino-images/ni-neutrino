@@ -1,13 +1,6 @@
 #ifndef __HDMI_CEC_TYPES_H__
 #define __HDMI_CEC_TYPES_H__
 
-typedef enum cec_version
-{
-	CEC_OP_CEC_VERSION_1_3A = 4,
-	CEC_OP_CEC_VERSION_1_4  = 5,
-	CEC_OP_CEC_VERSION_2_0  = 6
-} cec_version;
-
 typedef enum cec_vendor_id
 {
 	CEC_VENDOR_TOSHIBA        = 0x000039,

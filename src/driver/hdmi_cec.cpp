@@ -35,6 +35,14 @@
 
 #include <linux/input.h>
 
+#if __has_include(<linux/cec.h>)
+#include <linux/cec.h>
+#else
+#define CEC_OP_CEC_VERSION_1_3A 4
+#define CEC_OP_CEC_VERSION_1_4  5
+#define CEC_OP_CEC_VERSION_2_0  6
+#endif
+
 #include "hdmi_cec.h"
 #include "hdmi_cec_types.h"
 
@@ -53,6 +61,7 @@
 #define EPOLL_WAIT_TIMEOUT (-1)
 #define EPOLL_MAX_EVENTS (1)
 
+#define CEC_FALLBACK_DEVICE "/dev/cec0"
 #define CEC_HDMIDEV "/dev/hdmi_cec"
 #if BOXMODEL_H7 || BOXMODEL_H9COMBO || BOXMODEL_H9
 #define RC_DEVICE  "/dev/input/event2"
@@ -87,6 +96,7 @@ hdmi_cec::hdmi_cec()
 	physicalAddress[0] = 0x10;
 	physicalAddress[1] = 0x00;
 	logicalAddress = 0xFF;
+	fallback = false;
 }
 
 hdmi_cec::~hdmi_cec()
@@ -116,11 +126,51 @@ bool hdmi_cec::SetCECMode(VIDEO_HDMI_CEC_MODE cecOnOff)
 
 	if (hdmiFd == -1)
 	{
-		hdmiFd = ::open(CEC_HDMIDEV, O_RDWR | O_NONBLOCK | O_CLOEXEC);
+		hdmiFd = open(CEC_FALLBACK_DEVICE, O_RDWR | O_CLOEXEC);
 
 		if (hdmiFd >= 0)
 		{
+			fallback = true;
+			__u32 monitor = CEC_MODE_INITIATOR | CEC_MODE_FOLLOWER;
+			struct cec_caps caps = {};
+
+			if (ioctl(hdmiFd, CEC_ADAP_G_CAPS, &caps) < 0)
+				cecprintf(RED,"get caps failed (%m)", __func__);
+
+			if (caps.capabilities & CEC_CAP_LOG_ADDRS)
+			{
+				struct cec_log_addrs laddrs = {};
+
+				if (ioctl(hdmiFd, CEC_ADAP_S_LOG_ADDRS, &laddrs) < 0)
+					cecprintf(RED,"reset log addr failed (%m)", __func__);
+
+				memset(&laddrs, 0, sizeof(laddrs));
+
+				laddrs.cec_version = CEC_OP_CEC_VERSION_1_4;
+				strcpy(laddrs.osd_name, osdname);
+				laddrs.vendor_id = CEC_VENDOR_ID_NONE;
+
+				laddrs.log_addr_type[laddrs.num_log_addrs] = CEC_LOG_ADDR_TYPE_TUNER;
+				laddrs.all_device_types[laddrs.num_log_addrs] = CEC_OP_ALL_DEVTYPE_TUNER;
+				laddrs.primary_device_type[laddrs.num_log_addrs] = CEC_OP_PRIM_DEVTYPE_TUNER;
+
+				laddrs.num_log_addrs++;
+
+				if (ioctl(hdmiFd, CEC_ADAP_S_LOG_ADDRS, &laddrs) < 0)
+					cecprintf(RED,"et log addr failed (%m)", __func__);
+			}
+
+			if (ioctl(hdmiFd, CEC_S_MODE, &monitor) < 0)
+				cecprintf(RED,"monitor failed (%m)", __func__);
+		}
+		else
+		{
+			hdmiFd = ::open(CEC_HDMIDEV, O_RDWR | O_NONBLOCK | O_CLOEXEC);
 			::ioctl(hdmiFd, 0); /* flush old messages */
+		}
+
+		if (hdmiFd >= 0)
+		{
 			Start();
 		}
 	}
@@ -132,9 +182,54 @@ void hdmi_cec::GetCECAddressInfo()
 {
 	if (hdmiFd >= 0)
 	{
+		bool hasdata = false;
 		struct addressinfo addressinfo;
 
-		if (::ioctl(hdmiFd, 1, &addressinfo) >= 0)
+		if (fallback)
+		{
+			__u16 phys_addr;
+			struct cec_log_addrs laddrs = {};
+
+			::ioctl(hdmiFd, CEC_ADAP_G_PHYS_ADDR, &phys_addr);
+			addressinfo.physical[0] = (phys_addr >> 8) & 0xff;
+			addressinfo.physical[1] = phys_addr & 0xff;
+
+			::ioctl(hdmiFd, CEC_ADAP_G_LOG_ADDRS, &laddrs);
+			addressinfo.logical = laddrs.log_addr[0];
+
+			switch (laddrs.log_addr_type[0])
+			{
+				case CEC_LOG_ADDR_TYPE_TV:
+					addressinfo.type = CEC_LOG_ADDR_TV;
+					break;
+				case CEC_LOG_ADDR_TYPE_RECORD:
+					addressinfo.type = CEC_LOG_ADDR_RECORD_1;
+					break;
+				case CEC_LOG_ADDR_TYPE_TUNER:
+					addressinfo.type = CEC_LOG_ADDR_TUNER_1;
+					break;
+				case CEC_LOG_ADDR_TYPE_PLAYBACK:
+					addressinfo.type = CEC_LOG_ADDR_PLAYBACK_1;
+					break;
+				case CEC_LOG_ADDR_TYPE_AUDIOSYSTEM:
+					addressinfo.type = CEC_LOG_ADDR_AUDIOSYSTEM;
+					break;
+				case CEC_LOG_ADDR_TYPE_UNREGISTERED:
+				default:
+					addressinfo.type = CEC_LOG_ADDR_UNREGISTERED;
+					break;
+			}
+			hasdata = true;
+		}
+		else
+		{
+			if (::ioctl(hdmiFd, 1, &addressinfo) >= 0)
+			{
+				hasdata = true;
+			}
+		}
+
+		if (hasdata)
 		{
 			deviceType = addressinfo.type;
 			logicalAddress = addressinfo.logical;
@@ -182,12 +277,25 @@ void hdmi_cec::SendCECMessage(struct cec_message &txmessage, int sleeptime)
 			sprintf(str + (i * 6), "[0x%02X]", txmessage.data[i]);
 		}
 
-		struct cec_message_fb message;
-		message.address = txmessage.destination;
-		message.length = txmessage.length;
-		memcpy(&message.data, txmessage.data, txmessage.length);
-		if (::write(hdmiFd, &message, 2 + message.length) > 0)
-			cecprintf(YELLOW, "send message %s to %s (0x%02X>>0x%02X) '%s' (%s)", ToString((cec_logical_address)txmessage.initiator), txmessage.destination == 0xf ? "all" : ToString((cec_logical_address)txmessage.destination), txmessage.initiator, txmessage.destination, ToString((cec_opcode)txmessage.data[0]), str);
+		if (fallback)
+		{
+			struct cec_msg msg;
+			cec_msg_init(&msg, txmessage.initiator, txmessage.destination);
+			memcpy(&msg.msg[1], txmessage.data, txmessage.length);
+			msg.len = txmessage.length + 1;
+			if (ioctl(hdmiFd, CEC_TRANSMIT, &msg)>=0)
+				cecprintf(YELLOW, "send message %s to %s (0x%02X>>0x%02X) '%s' (%s)", ToString((cec_logical_address)txmessage.initiator), txmessage.destination == 0xf ? "all" : ToString((cec_logical_address)txmessage.destination), txmessage.initiator, txmessage.destination, ToString((cec_opcode)txmessage.data[0]), str);
+		}
+		else
+		{
+			struct cec_message_fb message;
+			message.address = txmessage.destination;
+			message.length = txmessage.length;
+			memcpy(&message.data, txmessage.data, txmessage.length);
+			if (::write(hdmiFd, &message, 2 + message.length) > 0)
+				cecprintf(YELLOW, "send message %s to %s (0x%02X>>0x%02X) '%s' (%s)", ToString((cec_logical_address)txmessage.initiator), txmessage.destination == 0xf ? "all" : ToString((cec_logical_address)txmessage.destination), txmessage.initiator, txmessage.destination, ToString((cec_opcode)txmessage.data[0]), str);
+
+		}
 
 		usleep(sleeptime * 1000);
 	}
@@ -517,12 +625,15 @@ void hdmi_cec::run()
 	int epollfd = epoll_create1(0);
 	struct epoll_event event;
 	event.data.fd = hdmiFd;
-	event.events = EPOLLPRI | EPOLLIN;
+	if (fallback)
+		event.events = EPOLLIN;
+	else
+		event.events = EPOLLPRI | EPOLLIN;
 	epoll_ctl(epollfd, EPOLL_CTL_ADD, hdmiFd, &event);
 	std::array<struct epoll_event, EPOLL_MAX_EVENTS> events;
 	cecprintf(GREEN, "thread started...");
 
-	while (logicalAddress == 0xFF)
+	while ((logicalAddress == 0xFF) && !fallback)
 	{
 		GetCECAddressInfo();
 		sleep(1);
@@ -551,16 +662,33 @@ void hdmi_cec::run()
 				struct cec_message txmessage;
 				struct cec_message_fb rx_message;
 
-				if (::read(events[i].data.fd, &rx_message, 2) == 2)
+				if (fallback)
 				{
-					if (::read(events[i].data.fd, &rx_message.data, rx_message.length) == rx_message.length)
+					struct cec_msg msg;
+					if (::ioctl(events[i].data.fd, CEC_RECEIVE, &msg) >= 0)
 					{
-						rxmessage.length = rx_message.length;
-						rxmessage.initiator = rx_message.address;
-						rxmessage.destination = logicalAddress;
-						rxmessage.opcode = rx_message.data[0];
-						memcpy(&rxmessage.data, rx_message.data, rx_message.length);
+						rxmessage.length = msg.len - 1;
+						rxmessage.initiator = cec_msg_initiator(&msg);
+						rxmessage.destination = cec_msg_destination(&msg);
+						rxmessage.opcode = cec_msg_opcode(&msg);
+						memcpy(&rxmessage.data, &msg.msg[1], rxmessage.length);
 						hasdata = true;
+					}
+				}
+				else
+				{
+					struct cec_message_fb rx_message;
+					if (::read(events[i].data.fd, &rx_message, 2) == 2)
+					{
+						if (::read(events[i].data.fd, &rx_message.data, rx_message.length) == rx_message.length)
+						{
+							rxmessage.length = rx_message.length;
+							rxmessage.initiator = rx_message.address;
+							rxmessage.destination = logicalAddress;
+							rxmessage.opcode = rx_message.data[0];
+							memcpy(&rxmessage.data, rx_message.data, rx_message.length);
+							hasdata = true;
+						}
 					}
 				}
 
@@ -733,9 +861,10 @@ void hdmi_cec::run()
 								cecprintf(CYAN, "received streampath/active source (%s) change away from me (%s) -> go to sleep", msgpath, phypath);
 
 								if (CNeutrinoApp::getInstance()->getMode() != NeutrinoModes::mode_standby && g_settings.hdmi_cec_sleep)
+								{
 									g_RCInput->postMsg(NeutrinoMessages::STANDBY_ON, (neutrino_msg_data_t)"cec");
-
-								active_source = false;
+									active_source = false;
+								}
 							}
 
 							break;
@@ -765,9 +894,10 @@ void hdmi_cec::run()
 								cecprintf(CYAN, "received routing change from (%s) change to (%s) (not me) -> go to sleep", frompath, topath);
 
 								if (CNeutrinoApp::getInstance()->getMode() != NeutrinoModes::mode_standby && g_settings.hdmi_cec_sleep)
+								{
 									g_RCInput->postMsg(NeutrinoMessages::STANDBY_ON, (neutrino_msg_data_t)"cec");
-
-								active_source = false;
+									active_source = false;
+								}
 							}
 
 							break;
