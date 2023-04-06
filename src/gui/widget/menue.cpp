@@ -1517,7 +1517,7 @@ void CMenuWidget::setMenuPos(const int& menu_width)
 		case MENU_POS_TOP_LEFT: 
 			y = offy + scr_y + OFFSET_INNER_MID;
 			x = offx + scr_x + OFFSET_INNER_MID;
-			x += g_settings.show_menu_hints_line ? DETAILSLINE_WIDTH : 0; //NI
+			x += g_settings.show_menu_hints_line ? DETAILSLINE_WIDTH : 0;
 			break;
 		case MENU_POS_TOP_RIGHT: 
 			y = offy + scr_y + OFFSET_INNER_MID;
@@ -1526,7 +1526,7 @@ void CMenuWidget::setMenuPos(const int& menu_width)
 		case MENU_POS_BOTTOM_LEFT: 
 			y = /*offy +*/ scr_y + scr_h - real_h - OFFSET_INNER_MID;
 			x = offx + scr_x + OFFSET_INNER_MID;
-			x += g_settings.show_menu_hints_line ? DETAILSLINE_WIDTH : 0; //NI
+			x += g_settings.show_menu_hints_line ? DETAILSLINE_WIDTH : 0;
 			break;
 		case MENU_POS_BOTTOM_RIGHT: 
 			y = /*offy +*/ scr_y + scr_h - real_h - OFFSET_INNER_MID;
@@ -1738,7 +1738,7 @@ void CMenuWidget::paintHint(int pos)
 
 	info_box->setDimensionsAll(x, ypos2, iwidth, hint_height);
 	info_box->setFrameThickness(FRAME_WIDTH_MIN);
-	//NI info_box->removeLineBreaks(str);
+	//info_box->removeLineBreaks(str);
 	info_box->setText(str, CTextBox::AUTO_WIDTH, g_Font[SNeutrinoSettings::FONT_TYPE_MENU_HINT], COL_MENUCONTENT_TEXT);
 	info_box->setCorner(rad);
 	info_box->setColorAll(COL_FRAME_PLUS_0, COL_MENUCONTENTDARK_PLUS_0);
@@ -2616,7 +2616,7 @@ int CMenuSeparator::paint(bool selected)
 			
 			frameBuffer->paintBoxRel(name_start_x-OFFSET_INNER_SMALL, y, stringwidth+2*OFFSET_INNER_SMALL, height, item_bgcolor);
 			
-			if ((type & LINE)) //NI - use COL_MENUHEAD_TEXT for CMenuSeparators defined with LINE and STRING
+			if ((type & LINE)) // use COL_MENUHEAD_TEXT for CMenuSeparators defined with LINE and STRING
 				item_color = COL_MENUHEAD_TEXT;
 
 			paintItemCaption(selected);
