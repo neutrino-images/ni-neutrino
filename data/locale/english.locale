@@ -1115,7 +1115,7 @@ imdb.data_votes Votes
 imdb.data_website Website
 imdb.data_writer Screenplay author
 inetradio.name Internetradio
-inetradio_autostart Internetradio auto-start
+inetradio.autostart Internetradio auto-start
 infoicons_background Show background
 infoicons_flag_all Reset all
 infoicons_flag_del Flagfile deleted
@@ -1476,7 +1476,7 @@ menu.hint_imageinfo Information about installed software
 menu.hint_inact_timer Shutdown box after inactivity
 menu.hint_inactive_back Change inactive item background color
 menu.hint_inactive_textcolor Change inactive item text color
-menu.hint_inet_radio Internet radio
+menu.hint_inetradio Internet radio
 menu.hint_inetradio_autostart Start play of first entry from favorites automatically
 menu.hint_info Show system informations.
 menu.hint_infobar_analogclock Shows an analog clock instead of the digital display of the time
