@@ -64,7 +64,7 @@
 #include <driver/display.h>
 #include <driver/volume.h>
 #include <system/helpers.h>
-
+#include <system/debug.h>
 #include <gui/widget/msgbox.h>
 #include <gui/widget/hintbox.h>
 
@@ -619,6 +619,7 @@ bool CTZChangeNotifier::changeNotify(const neutrino_locale_t, void *Data)
 	bool found = false;
 	std::string name, zone;
 	printf("CTZChangeNotifier::changeNotify: %s\n", (char *) Data);
+	std::string zoneinfo = TARGET_PREFIX "/share/zoneinfo/" + zone;
 
 	xmlDocPtr parser = parseXmlFile("/etc/timezone.xml");
 	if (parser != NULL)
@@ -638,8 +639,10 @@ bool CTZChangeNotifier::changeNotify(const neutrino_locale_t, void *Data)
 					const char *zptr = xmlGetAttribute(search, "zone");
 					if (zptr)
 						zone = zptr;
-					if (!access(TARGET_PREFIX "/share/zoneinfo/" + zone, R_OK))
+					if (!access(zoneinfo.c_str(), R_OK))
 						found = true;
+					else
+						dprintf(DEBUG_NORMAL, "[CTZChangeNotifier] [%s - %d] %s not found\n", __func__, __LINE__, zoneinfo.c_str());
 					break;
 				}
 			}
@@ -650,7 +653,7 @@ bool CTZChangeNotifier::changeNotify(const neutrino_locale_t, void *Data)
 	if (found)
 	{
 		printf("Timezone: %s -> %s\n", name.c_str(), zone.c_str());
-		std::string cmd = TARGET_PREFIX "/share/zoneinfo/" + zone;
+		std::string cmd = zoneinfo;
 		printf("symlink %s to /etc/localtime\n", cmd.c_str());
 		if (unlink("/etc/localtime"))
 			perror("unlink failed");
