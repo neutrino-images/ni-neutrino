@@ -921,11 +921,19 @@ std::string CNeutrinoYParser::func_get_current_stream_info(CyhookHandler *hh, st
 	hh->ParamList["tsid"] = itoh(serviceinfo.tsid);
 	hh->ParamList["vpid"] = itoh(serviceinfo.vpid);
 	hh->ParamList["apid"] = itoh(serviceinfo.apid);
-	hh->ParamList["vtxtpid"] = (serviceinfo.vtxtpid != 0)?itoh(serviceinfo.vtxtpid):"not available";
-	hh->ParamList["pmtpid"] = (serviceinfo.pmtpid != 0)?itoh(serviceinfo.pmtpid):"not available";
-	hh->ParamList["pcrpid"] = (serviceinfo.pcrpid != 0)?itoh(serviceinfo.pcrpid):"not available";
-	hh->ParamList["tsfrequency"] = string_printf("%d.%d MHz", serviceinfo.tsfrequency/1000, serviceinfo.tsfrequency%1000);
-	hh->ParamList["polarisation"] = serviceinfo.polarisation==1?"h":"v";
+	hh->ParamList["vtxtpid"] = (serviceinfo.vtxtpid != 0) ? itoh(serviceinfo.vtxtpid) : "not available";
+	hh->ParamList["pmtpid"] = (serviceinfo.pmtpid != 0) ? itoh(serviceinfo.pmtpid) : "not available";
+	hh->ParamList["pcrpid"] = (serviceinfo.pcrpid != 0) ? itoh(serviceinfo.pcrpid) : "not available";
+
+	int mode = CNeutrinoApp::getInstance()->getMode();
+	if (mode == NeutrinoModes::mode_tv || mode == NeutrinoModes::mode_radio) {
+		hh->ParamList["tsfrequency"] = string_printf("%d.%d MHz", serviceinfo.tsfrequency / 1000, serviceinfo.tsfrequency % 1000);
+		hh->ParamList["polarisation"] = serviceinfo.polarisation == 1 ? "(H)" : "(V)";
+	} else {
+		hh->ParamList["tsfrequency"] = "not available";
+		hh->ParamList["polarisation"] = "";
+	}
+
 	hh->ParamList["ServiceName"] = NeutrinoAPI->GetServiceName(CZapit::getInstance()->GetCurrentChannelID());
 	hh->ParamList["Url"] = CZapit::getInstance()->GetCurrentChannel()->getUrl().c_str();
 	hh->ParamList["VideoFormat"] = NeutrinoAPI->getVideoResolutionAsString();
