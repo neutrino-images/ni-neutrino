@@ -48,7 +48,7 @@
 #include "png.h"
 #include "jpeglib.h"
 
-#define ICONSEXT	".png"
+#define ICONSEXT ".png"
 
 static const char *kDefaultConfigFile = "/etc/graphlcd.conf";
 static cGLCD *cglcd = NULL;
@@ -1227,8 +1227,16 @@ void cGLCD::Run(void)
 				{
 					Epg = info_CurrentNext.current_name;
 					EpgWidth = font_epg.Width(Epg);
-					doScrollEpg = EpgWidth > bitmap->Width();
-					scrollEpgForward = true;
+					if (g_settings.glcd_scroll)
+					{
+						doScrollEpg = EpgWidth > bitmap->Width();
+						scrollEpgForward = true;
+					}
+					else
+					{
+						doScrollEpg = false;
+						scrollEpgForward = false;
+					}
 					scrollEpgSkip = 0;
 					if (doScrollEpg)
 					{
