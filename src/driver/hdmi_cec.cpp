@@ -38,9 +38,7 @@
 #if __has_include(<linux/cec.h>)
 #include <linux/cec.h>
 #else
-#define CEC_OP_CEC_VERSION_1_3A 4
-#define CEC_OP_CEC_VERSION_1_4  5
-#define CEC_OP_CEC_VERSION_2_0  6
+#include "linux-uapi-cec.h"
 #endif
 
 #include "hdmi_cec.h"
