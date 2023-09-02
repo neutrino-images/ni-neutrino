@@ -169,8 +169,8 @@ void CMoviePlayerGui::Init(void)
 
 	frameBuffer = CFrameBuffer::getInstance();
 
-	if (playback == NULL)
-		playback = new cPlayback(0);
+	// init playback instance
+	playback = getPlayback();
 #if HAVE_CST_HARDWARE
 	videoDecoder->setPlaybackPtr(playback);
 #endif
@@ -3543,4 +3543,12 @@ size_t CMoviePlayerGui::GetReadCount()
 	last_read = this_read;
 //printf("GetReadCount: %lld\n", res);
 	return (size_t) res;
+}
+
+cPlayback *CMoviePlayerGui::getPlayback()
+{
+	if (playback == NULL) // mutex needed ?
+		playback = new cPlayback(0);
+
+	return playback;
 }
