@@ -5,6 +5,11 @@ EXTRA_DIST = \
 	restore_flash.sh restore_flash.sh.in \
 	migration.sh migration.sh.in
 
+if BOXTYPE_GENERIC
+EXTRA_DIST += \
+	neutrino.sh neutrino.sh.in
+endif
+
 installdir = $(bindir)
 
 install_SCRIPTS = \
@@ -26,4 +31,9 @@ endif
 if BOXTYPE_ARMBOX
 install_SCRIPTS += \
 	restore_flash.sh
+endif
+
+if BOXTYPE_GENERIC
+install_SCRIPTS += \
+	neutrino.sh
 endif
