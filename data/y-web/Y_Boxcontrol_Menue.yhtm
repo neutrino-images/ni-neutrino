@@ -170,19 +170,19 @@ function init() {
 					<li>
 						<a target="work" title="TV-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot.yhtm?video=1&rc={=ini-get:%(CONFIGDIR)/yWeb.conf;screenshot_rc;false=}">TV</a>
 					</li>
-					{=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;lcd4l_support;0=}~1~
-					{=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;lcd4l_screenshots;0=}~1~
+					{=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;lcd4l_support;0=}~0~~
+					{=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;lcd4l_screenshots;0=}~0~~
 					<li>
 						<a target="work" title="LCD4Linux-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot_LCD4Linux.yhtm">LCD4Linux</a>
 						<a target="blank" title="LCD4Linux-{=L:bc.menue.screenshot=} (Popup)" href="lcd4linux/ylcd4linux.yhtm" class="y_menu_popup_link" ><img src="/images/popup.png"/></a>
 					</li>
-					~=}
-					~=}
-					{=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;glcd_enable;0=}~1~
+					=}
+					=}
+					{=if-equal:{=ini-get:%(CONFIGDIR)/neutrino.conf;glcd_enable;0=}~0~~
 					<li>
 						<a target="work" title="GraphLCD-{=L:bc.menue.screenshot=}" href="Y_Tools_Screenshot_GraphLCD.yhtm">GraphLCD</a>
 					</li>
-					~=}
+					=}
 				</ul>
 				<li>
 					{=var-set:m_link_href=Y_Timer_List.yhtm=}
