@@ -9,14 +9,15 @@ BAKF="/var/backup_flash.tar.gz"
 
 TOBACKUP=""
 
-SHOWINFO "backup to ${BAKF} ..."
-
+# add tobackup.conf and its content
 if [ -e "${USRF}" ]; then
 	TOBACKUP="$TOBACKUP ${USRF}"
 	while read i
 		do [ "${i:0:1}" = "#" ] || TOBACKUP="$TOBACKUP ${i%%#*}"
 		done < $USRF
 fi
+
+SHOWINFO "backup to ${BAKF} ..."
 
 # check existence and skip files in /var
 for i in $TOBACKUP; do

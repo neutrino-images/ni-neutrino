@@ -43,7 +43,6 @@ TOBACKUP="\
 	\
 	/var/bin/ \
 	/var/keys/ \
-	/var/log/ \
 	/var/root/ \
 	/var/xupnpd/ \
 	\
@@ -72,14 +71,20 @@ TOBACKUP="\
 	@WEBTVDIR_VAR@/ \
 "
 
-SHOWINFO "backup to ${BAKF} ..."
+# add /var/log if it is a directory
+if [ -d /var/log/ ]; then
+	TOBACKUP="$TOBACKUP /var/log/"
+fi
 
+# add tobackup.conf and its content
 if [ -e "${USRF}" ]; then
 	TOBACKUP="$TOBACKUP ${USRF}"
 	while read i
 		do [ "${i:0:1}" = "#" ] || TOBACKUP="$TOBACKUP ${i%%#*}"
 		done < $USRF
 fi
+
+SHOWINFO "backup to ${BAKF} ..."
 
 # check existence
 RES=""
