@@ -2500,7 +2500,7 @@ bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 	return true;
 }
 
-bool CZapit::StopPlayBack(bool send_pmt, bool blank)
+bool CZapit::StopPlayBack(bool send_pmt, bool __attribute__ ((unused)) blank)
 {
 	INFO("standby %d playing %d forced %d send_pmt %d", standby, playing, playbackStopForced, send_pmt);
 	if(send_pmt)
@@ -2519,13 +2519,14 @@ bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 	if (playbackStopForced)
 		return false;
 
+	videoDecoder->Stop(false);
 	videoDemux->Stop();
 	audioDemux->Stop();
 	pcrDemux->Stop();
 	audioDecoder->Stop();
 
 	/* hack. if standby, dont blank video -> for paused timeshift */
-	videoDecoder->Stop(standby ? false : blank);
+	//videoDecoder->Stop(standby ? false : blank);
 
 #if ENABLE_AITSCAN
 	ait->Stop();
