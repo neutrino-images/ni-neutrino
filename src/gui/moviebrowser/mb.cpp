@@ -934,16 +934,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 
 			framebuffer->paintBackground(); // clear screen
 
-			// restore last mode to allow tv/radio while copying
-			CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, m_LastMode);
-
-			// TODO: signalize running action
 			CMovieCut mc;
 			bool res = mc.copyMovie(m_movieSelectionHandler, onefile);
-
-			// tell neutrino we're in moviebrowser mode again
-			m_LastMode = CNeutrinoApp::getInstance()->getMode();
-			CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, NeutrinoModes::mode_moviebrowser | NeutrinoModes::norezap);
 
 			//g_RCInput->clearRCMsg();
 			if (res == 0)
@@ -969,16 +961,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 
 			framebuffer->paintBackground(); // clear screen
 
-			// restore last mode to allow tv/radio while cutting
-			CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, m_LastMode);
-
-			// TODO: signalize running action
 			CMovieCut mc;
 			bool res = mc.cutMovie(m_movieSelectionHandler);
-
-			// tell neutrino we're in moviebrowser mode again
-			m_LastMode = CNeutrinoApp::getInstance()->getMode();
-			CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, NeutrinoModes::mode_moviebrowser | NeutrinoModes::norezap);
 
 			//g_RCInput->clearRCMsg();
 			if (!res)
@@ -1007,16 +991,8 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 
 					framebuffer->paintBackground(); // clear screen
 
-					// restore last mode to allow tv/radio while truncating
-					CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, m_LastMode);
-
-					// TODO: signalize running action
 					CMovieCut mc;
 					bool res = mc.truncateMovie(m_movieSelectionHandler);
-
-					// tell neutrino we're in moviebrowser mode again
-					m_LastMode = CNeutrinoApp::getInstance()->getMode();
-					CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, NeutrinoModes::mode_moviebrowser | NeutrinoModes::norezap);
 
 					//g_RCInput->clearRCMsg();
 					if (!res)
@@ -1055,10 +1031,6 @@ int CMovieBrowser::exec(const char* path)
 	neutrino_msg_t msg;
 	neutrino_msg_data_t data;
 
-	// tell neutrino we're in moviebrowser mode
-	m_LastMode = CNeutrinoApp::getInstance()->getMode();
-	CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, NeutrinoModes::mode_moviebrowser | NeutrinoModes::norezap);
-
 	CVFD::getInstance()->setMode(CVFD::MODE_MENU_UTF8, g_Locale->getText(LOCALE_MOVIEBROWSER_HEAD));
 
 	loadSettings(&m_settings);
@@ -1089,6 +1061,10 @@ int CMovieBrowser::exec(const char* path)
 	if (paint() == false)
 		return menu_ret;// paint failed due to less memory, exit
 
+#ifdef ENABLE_LCD4LINUX
+	if (g_settings.lcd4l_support)
+		CLCD4l::getInstance()->setActionKey("moviebrowser");
+#endif
 	bool loop = true;
 	bool result;
 	int timeout = g_settings.timing[SNeutrinoSettings::TIMING_FILEBROWSER];
@@ -1159,14 +1135,6 @@ int CMovieBrowser::exec(const char* path)
 				loop = false;
 				g_RCInput->postMsg(msg, data);
 			}
-			else if (msg == NeutrinoMessages::CHANGEMODE)
-			{
-				if ((data & NeutrinoModes::mode_mask) != NeutrinoModes::mode_moviebrowser)
-				{
-					loop = false;
-					m_LastMode = data;
-				}
-			}
 			else if (CNeutrinoApp::getInstance()->handleMsg(msg, data) & messages_return::cancel_all)
 			{
 				TRACE("[mb]->exec: getInstance\n");
@@ -1193,8 +1161,10 @@ int CMovieBrowser::exec(const char* path)
 		TRACE("[mb] force reload next time\n");
 		fileInfoStale();
 	}
-
-	CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE, m_LastMode | NeutrinoModes::norezap);
+#ifdef ENABLE_LCD4LINUX
+	if (g_settings.lcd4l_support)
+		CLCD4l::getInstance()->clearActionKey();
+#endif
 
 	return (res);
 }
