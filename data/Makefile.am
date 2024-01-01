@@ -8,6 +8,7 @@ SUBDIRS = \
 	iso-codes \
 	license \
 	locale \
+	logos \
 	pictures \
 	policy \
 	scripts \
@@ -21,11 +22,6 @@ SUBDIRS = \
 if ENABLE_LUA
 SUBDIRS += \
 	luaplugins
-endif
-
-if ENABLE_LCD4LINUX
-SUBDIRS += \
-	lcd4l
 endif
 
 if ENABLE_GRAPHLCD

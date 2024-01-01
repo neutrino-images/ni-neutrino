@@ -575,7 +575,7 @@ data/iso-codes/Makefile
 data/lcd/Makefile
 data/lcd/clock/Makefile
 data/lcd/icons/Makefile
-data/lcd4l/Makefile
+data/logos/Makefile
 data/license/Makefile
 data/locale/Makefile
 data/luaplugins/Makefile
