@@ -360,7 +360,7 @@ void CImageInfoNI::paint()
 
 	ypos += iheight;
 
-#if !HAVE_GENERIC_HARDWARE && !HAVE_ARM_HARDWARE
+#if HAVE_CST_HARDWARE
 	get_MTD_Info();
 	//paint_MTD_Info(xpos);
 	//ypos += sheight;
