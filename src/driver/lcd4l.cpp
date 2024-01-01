@@ -747,8 +747,6 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		int dummy;
 		int ModeLogo = 0;
 
-		int ModeStandby	= 0;
-
 		if (m_ActionKey == "moviebrowser")
 		{
 			g_PicViewer->GetLogoName(0, "Moviebrowser", Logo, &dummy, &dummy, CPictureViewer::LCD4LINUX, true);
