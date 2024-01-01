@@ -2473,22 +2473,22 @@ bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 		pcrDemux->Start();
 	}
 
+	/* start video */
+	if (video_pid) {
+#if HAVE_CST_HARDWARE
+		videoDecoder->Start(0, pcr_pid, video_pid);
+		videoDemux->Start();
+#else
+		videoDemux->Start();
+		videoDecoder->Start(0, pcr_pid, video_pid);
+#endif
+	}
+
 	/* select audio output and start audio */
 	if (audio_pid) {
 		SetAudioStreamType(thisChannel->getAudioChannel()->audioChannelType);
 		audioDemux->Start();
 		audioDecoder->Start();
-	}
-
-	/* start video */
-	if (video_pid) {
-	#if HAVE_CST_HARDWARE
-		videoDecoder->Start(0, pcr_pid, video_pid);
-		videoDemux->Start();
-	#else
-		videoDemux->Start();
-		videoDecoder->Start(0, pcr_pid, video_pid);
-	#endif
 	}
 
 #ifdef USE_VBI
