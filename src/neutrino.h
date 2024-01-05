@@ -85,7 +85,6 @@ private:
 	int				mode;
 	int				lastMode;
 	bool				softupdate;
-//	bool				fromflash;
 	bool 				init_cec_setting;
 	int				lastChannelMode;
 	struct timeval                  standby_pressed_at;
