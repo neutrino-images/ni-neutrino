@@ -2483,6 +2483,13 @@ bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 		pcrDemux->Start();
 	}
 
+	/* select audio output and start audio */
+	if (audio_pid) {
+		SetAudioStreamType(thisChannel->getAudioChannel()->audioChannelType);
+		audioDemux->Start();
+		audioDecoder->Start();
+	}
+
 	/* start video */
 	if (video_pid) {
 #if HAVE_CST_HARDWARE
@@ -2494,13 +2501,6 @@ bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 #endif
 	}
 
-	/* select audio output and start audio */
-	if (audio_pid) {
-		SetAudioStreamType(thisChannel->getAudioChannel()->audioChannelType);
-		audioDemux->Start();
-		audioDecoder->Start();
-	}
-
 #ifdef USE_VBI
 	if(teletext_pid)
 		videoDecoder->StartVBI(teletext_pid);
@@ -2510,7 +2510,7 @@ bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 	return true;
 }
 
-bool CZapit::StopPlayBack(bool send_pmt, bool __attribute__ ((unused)) blank)
+bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 {
 	INFO("standby %d playing %d forced %d send_pmt %d", standby, playing, playbackStopForced, send_pmt);
 	if(send_pmt)
@@ -2529,14 +2529,13 @@ bool CZapit::StopPlayBack(bool send_pmt, bool __attribute__ ((unused)) blank)
 	if (playbackStopForced)
 		return false;
 
-	videoDecoder->Stop(false);
 	videoDemux->Stop();
 	audioDemux->Stop();
 	pcrDemux->Stop();
 	audioDecoder->Stop();
 
 	/* hack. if standby, dont blank video -> for paused timeshift */
-	//videoDecoder->Stop(standby ? false : blank);
+	videoDecoder->Stop(standby ? false : blank);
 
 #if ENABLE_AITSCAN
 	ait->Stop();
