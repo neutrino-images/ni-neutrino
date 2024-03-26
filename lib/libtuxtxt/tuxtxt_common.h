@@ -530,7 +530,7 @@ void tuxtxt_clear_p26(tstExtData* extData)
 
 	for(int i = 0; i < 16; ++i)
 	{
-		if(0 != extData->p26[i])
+		if(extData->p26[i] != 0)
 		{
 			memset(extData->p26[i], 0x00, 13 * 3);
 		}

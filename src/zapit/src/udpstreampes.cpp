@@ -433,7 +433,7 @@ void * TcpReceiver( void * Ptr )
    while(true) {
       ReadLine( TcpString );
       if( !strncmp(TcpString, "RESEND", 6)) {
-         if ( 2 != sscanf(TcpString, "RESEND %u %s", &SPktBuf, PacketString) ) {
+         if (sscanf(TcpString, "RESEND %u %s", &SPktBuf, PacketString) != 2) {
             fprintf(stderr, "ERROR: TcpReceiver - sscanf RESEND\n");
             continue;
          }

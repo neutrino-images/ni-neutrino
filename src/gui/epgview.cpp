@@ -94,7 +94,7 @@ void reformatExtendedEvents(std::string strItem, std::string strLabel, bool bUse
 			sprintf(index, "%d", nItem);
 			// Look for matching items
 			int nPos = findItem(std::string(strItem) + std::string(index), vecDescriptions);
-			if (-1 != nPos) {
+			if (nPos != -1) {
 				std::string item = std::string(vecItems[nPos]);
 				vecDescriptions.erase(vecDescriptions.begin() + nPos);
 				vecItems.erase(vecItems.begin() + nPos);
@@ -115,7 +115,7 @@ void reformatExtendedEvents(std::string strItem, std::string strLabel, bool bUse
 	} else {	// Single string event (e.g. Director)
 		// Look for matching items
 		int nPos = findItem(strItem, vecDescriptions);
-		if (-1 != nPos) {
+		if (nPos != -1) {
 			vecDescriptions[nPos] = strLabel;
 		}
 	}
