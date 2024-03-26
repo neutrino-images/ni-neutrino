@@ -229,14 +229,14 @@ void * DmxTSReader( void * /*Ptr*/ )
 		Stream[u].Filter.pes_type=DMX_PES_OTHER;
 		Stream[u].Filter.flags=0;
 		//Stream[u].Filter.flags=DMX_IMMEDIATE_START;
-		if (-1==ioctl(Stream[u].fd, DMX_SET_PES_FILTER, &(Stream[u].Filter)) ) {
+		if (ioctl(Stream[u].fd, DMX_SET_PES_FILTER, &(Stream[u].Filter)) == -1) {
 			perror("ERROR: main() - DMX_SET_PES_FILTER ioctl");
 			fprintf(stderr, "EXIT\n");
 			fflush(stderr);
 			exit(-1);
 		}
 
-		if ( -1==ioctl(Stream[u].fd, DMX_START, 0) ) {
+		if (ioctl(Stream[u].fd, DMX_START, 0) == -1) {
 			perror("ERROR: DmxReader() - DMX_START ioctl");
 			fprintf(stderr, "EXIT\n");
 			fflush(stderr);
@@ -252,14 +252,14 @@ void * DmxTSReader( void * /*Ptr*/ )
 		Stream[u].Filter.pes_type=DMX_PES_OTHER;
 		Stream[u].Filter.flags=0;
 		//Stream[u].Filter.flags=DMX_IMMEDIATE_START;
-		if (-1==ioctl(Stream[u].fd, DMX_SET_PES_FILTER, &(Stream[u].Filter)) ) {
+		if (ioctl(Stream[u].fd, DMX_SET_PES_FILTER, &(Stream[u].Filter)) == -1) {
 			perror("ERROR: main() - DMX_SET_PES_FILTER ioctl");
 			fprintf(stderr, "EXIT\n");
 			fflush(stderr);
 			exit(-1);
 		}
 
-		if ( -1==ioctl(Stream[u].fd, DMX_START, 0) ) {
+		if (ioctl(Stream[u].fd, DMX_START, 0) == -1) {
 			perror("ERROR: DmxReader() - DMX_START ioctl");
 			fprintf(stderr, "EXIT\n");
 			fflush(stderr);
@@ -345,14 +345,14 @@ void * DmxReader( void * Ptr )
    //CurStream->Filter.flags=0;
    CurStream->Filter.flags=DMX_IMMEDIATE_START;
 
-   if (-1==ioctl(CurStream->fd, DMX_SET_PES_FILTER, &(CurStream->Filter)) ) {
+   if (ioctl(CurStream->fd, DMX_SET_PES_FILTER, &(CurStream->Filter)) == -1) {
       perror("ERROR: main() - DMX_SET_PES_FILTER ioctl");
       fprintf(stderr, "EXIT\n");
       fflush(stderr);
       exit(-1);
    }
 
-   if ( -1==ioctl(CurStream->fd, DMX_START, 0) ) {
+   if (ioctl(CurStream->fd, DMX_START, 0) == -1) {
       perror("ERROR: DmxReader() - DMX_START ioctl");
       fprintf(stderr, "EXIT\n");
       fflush(stderr);
