@@ -1888,7 +1888,7 @@ menu.hint_webtv_setup Tu nakonfigurované WebTV kanály budú k dispozícii v š
 menu.hint_webtv_xml_auto Automatické načítanie všetkých existujúcich XML súborov z %s/ a %s/
 menu.hint_window_size Zoznam kanálov, EPG-Infp a niektoré iné okná sú zmenšené týmto faktorom
 menu.hint_xmltv_setup Nakonfigurujte súbory XMLTV s údajmi EPG na opis televíznych zoznamov
-menu.hint_youtube_dev_id Zadajte vaše YouTube Dev ID. Prázdne zadanie zabranuje podpore YouTube
+menu.hint_youtube_api_key Zadajte vaše YouTube API key. Prázdne zadanie zabranuje podpore YouTube
 menu.hint_youtube_enabled Povolenie alebo zakázanie podpory YouTube
 menu.hint_zap_cycle Pri prepínaní kanálov zotrvať v aktuálnom bukete
 menu.next Ďalej
@@ -3003,7 +3003,7 @@ xmltv.xml.add Pridať
 xmltv.xml.del Odstrániť
 xmltv.xml.enter Zadať
 xmltv.xml.reload Obnoviť
-youtube.dev_id YouTube Dev ID
+youtube.api_key YouTube API key
 youtube.enabled YouTube podpora
 zapit.scantype Vyhľadávanie kanálov
 zapit.scantype.all Všetky
