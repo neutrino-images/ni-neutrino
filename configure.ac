@@ -239,13 +239,12 @@ AC_DEFINE_UNQUOTED([WEATHER_API_VERSION], ["$WEATHER_API_VERSION"], [OpenWeather
 
 # Handle optional GUI managed OpenWeather API key
 AC_ARG_ENABLE([weather-key-manage],
-    AS_HELP_STRING([--enable-weather-key-manage], [Enable management of the OpenWeather API key via a GUI @<:@default=no@:>@. Warning: Enabling this feature may expose the key to users!]),
+    AS_HELP_STRING([--enable-weather-key-manage], [Enable management of the OpenWeather API key via GUI @<:@default=yes@:>@]),
     [enable_weather_key_manage="$enableval"],
-    [enable_weather_key_manage="no"])
+    [enable_weather_key_manage="yes"])
 
 if test "$enable_weather_key_manage" = "yes"; then
     AC_DEFINE([ENABLE_WEATHER_KEY_MANAGE], 1, [Enable management of the OpenWeather API key via GUI])
-	AC_MSG_WARN([Warning: Enabling GUI management for OpenWeather API key is enabled. This may expose the key to users!])
 fi
 ## END: OpenWeather API key
 
@@ -270,13 +269,12 @@ AC_DEFINE_UNQUOTED([TMDB_API_KEY], ["$TMDB_API_KEY"], [API key used for TMDB ser
 
 # Handle optional GUI managed TMDB API key
 AC_ARG_ENABLE([tmdb-key-manage],
-    AS_HELP_STRING([--enable-tmdb-key-manage], [Enable management of the TMDb API key via a GUI @<:@default=no@:>@. Warning: Enabling this feature may expose the key to users!]),
+    AS_HELP_STRING([--enable-tmdb-key-manage], [Enable management of the TMDb API key via GUI @<:@default=yes@:>@]),
     [enable_tmdb_key_manage="$enableval"],
-    [enable_tmdb_key_manage="no"])
+    [enable_tmdb_key_manage="yes"])
 
 if test "$enable_tmdb_key_manage" = "yes"; then
     AC_DEFINE([ENABLE_TMDB_KEY_MANAGE], 1, [Enable management of the TMDb API key via GUI])
-    AC_MSG_WARN([Warning: Enabling GUI management for the TMDb API key is enabled. This may expose the key to users!])
 fi
 ## END: TMDb API key
 
@@ -301,13 +299,12 @@ AC_DEFINE_UNQUOTED([OMDB_API_KEY], ["$OMDB_API_KEY"], [API key used for OMDb ser
 
 # Handle optional GUI managed OMDb API key
 AC_ARG_ENABLE([omdb-key-manage],
-    AS_HELP_STRING([--enable-omdb-key-manage], [Enable management of the OMDb API key via a GUI @<:@default=no@:>@. Warning: Enabling this feature may expose the key to users!]),
+    AS_HELP_STRING([--enable-omdb-key-manage], [Enable management of the OMDb API key via GUI @<:@default=yes@:>@]),
     [enable_omdb_key_manage="$enableval"],
-    [enable_omdb_key_manage="no"])
+    [enable_omdb_key_manage="yes"])
 
 if test "$enable_omdb_key_manage" = "yes"; then
     AC_DEFINE([ENABLE_OMDB_KEY_MANAGE], 1, [Enable management of the OMDb API key via GUI])
-    AC_MSG_WARN([Warning: Enabling GUI management for the OMDb API key is enabled. This may expose the key to users!])
 fi
 ## END: OMDb API key
 
@@ -332,13 +329,12 @@ AC_DEFINE_UNQUOTED([SHOUTCAST_DEV_ID], ["$SHOUTCAST_DEV_ID"], [Developer ID used
 
 # Handle optional GUI managed Shoutcast Developer ID
 AC_ARG_ENABLE([shoutcast-id-manage],
-    AS_HELP_STRING([--enable-shoutcast-id-manage], [Enable management of the Shoutcast Developer ID via a GUI @<:@default=no@:>@. Warning: Enabling this feature may expose the ID to users!]),
+    AS_HELP_STRING([--enable-shoutcast-id-manage], [Enable management of the Shoutcast Developer ID via GUI @<:@default=yes@:>@]),
     [enable_shoutcast_id_manage="$enableval"],
-    [enable_shoutcast_id_manage="no"])
+    [enable_shoutcast_id_manage="yes"])
 
 if test "$enable_shoutcast_id_manage" = "yes"; then
     AC_DEFINE([ENABLE_SHOUTCAST_ID_MANAGE], 1, [Enable management of the Shoutcast Developer ID via GUI])
-    AC_MSG_WARN([Warning: Enabling GUI management for the Shoutcast Developer ID is enabled. This may expose the ID to users!])
 fi
 # END: Shoutcast Developer ID
 
@@ -363,13 +359,12 @@ AC_DEFINE_UNQUOTED([YOUTUBE_API_KEY], ["$YOUTUBE_API_KEY"], [API key used for Yo
 
 # Handle optional GUI managed YouTube API key
 AC_ARG_ENABLE([youtube-key-manage],
-    AS_HELP_STRING([--enable-youtube-key-manage], [Enable management of the YouTube API key via a GUI @<:@default=no@:>@. Warning: Enabling this feature may expose the key to users!]),
+    AS_HELP_STRING([--enable-youtube-key-manage], [Enable management of the YouTube API key via GUI @<:@default=yes@:>@]),
     [enable_youtube_key_manage="$enableval"],
-    [enable_youtube_key_manage="no"])
+    [enable_youtube_key_manage="yes"])
 
 if test "$enable_youtube_key_manage" = "yes"; then
     AC_DEFINE([ENABLE_YOUTUBE_KEY_MANAGE], 1, [Enable management of the YouTube API key via GUI])
-    AC_MSG_WARN([Warning: Enabling GUI management for the YouTube API key is enabled. This may expose the key to users!])
 fi
 ## END: YouTube API key
 
