@@ -207,17 +207,17 @@ AM_CONDITIONAL(ENABLE_GRAPHLCD, test "$enable_graphlcd" = "yes")
 # Check and configure the OpenWeather API key
 AC_MSG_CHECKING([for OpenWeather API key])
 AC_ARG_WITH([weather-api-key],
-    AS_HELP_STRING([--with-weather-api-key=KEY], [Specify the OpenWeather API key for accessing weather information]),
-    [WEATHER_API_KEY="$withval"],
-    [WEATHER_API_KEY=""])
+	AS_HELP_STRING([--with-weather-api-key=KEY], [Specify the OpenWeather API key for accessing weather information]),
+	[WEATHER_API_KEY="$withval"],
+	[WEATHER_API_KEY=""])
 
 # Output the result of the OpenWeather API key check
 if test -z "$WEATHER_API_KEY"; then
-    result_msg="no"
+	result_msg="no"
 else
-    # Display shortened and masked OpenWeather API key
-    discrete_key=`echo $WEATHER_API_KEY | cut -c1-7`
-    result_msg="yes [$discrete_key***]"
+	# Display shortened and masked OpenWeather API key
+	discrete_key=`echo $WEATHER_API_KEY | cut -c1-7`
+	result_msg="yes [$discrete_key***]"
 fi
 AC_MSG_RESULT([$result_msg])
 AC_DEFINE_UNQUOTED([WEATHER_API_KEY], ["$WEATHER_API_KEY"], [OpenWeather API key])
@@ -225,26 +225,26 @@ AC_DEFINE_UNQUOTED([WEATHER_API_KEY], ["$WEATHER_API_KEY"], [OpenWeather API key
 # Configuration for used OpenWeather API version
 AC_MSG_CHECKING([for OpenWeather API version])
 AC_ARG_WITH([weather-api-version],
-    AS_HELP_STRING([--with-weather-api-version=VERSION], [Specify the OpenWeather API version]),
-    [WEATHER_API_VERSION="$withval"],
-    [WEATHER_API_VERSION=""])
+	AS_HELP_STRING([--with-weather-api-version=VERSION], [Specify the OpenWeather API version]),
+	[WEATHER_API_VERSION="$withval"],
+	[WEATHER_API_VERSION=""])
 
 # Output the result of the OpenWeather API version check
 if test -z "$WEATHER_API_VERSION"; then
-    AC_MSG_RESULT([no])
+	AC_MSG_RESULT([no])
 else
-    AC_MSG_RESULT([yes $WEATHER_API_VERSION])
+	AC_MSG_RESULT([yes $WEATHER_API_VERSION])
 fi
 AC_DEFINE_UNQUOTED([WEATHER_API_VERSION], ["$WEATHER_API_VERSION"], [OpenWeather API version])
 
 # Handle optional GUI managed OpenWeather API key
 AC_ARG_ENABLE([weather-key-manage],
-    AS_HELP_STRING([--enable-weather-key-manage], [Enable management of the OpenWeather API key via GUI @<:@default=yes@:>@]),
-    [enable_weather_key_manage="$enableval"],
-    [enable_weather_key_manage="yes"])
+	AS_HELP_STRING([--enable-weather-key-manage], [Enable management of the OpenWeather API key via GUI @<:@default=yes@:>@]),
+	[enable_weather_key_manage="$enableval"],
+	[enable_weather_key_manage="yes"])
 
 if test "$enable_weather_key_manage" = "yes"; then
-    AC_DEFINE([ENABLE_WEATHER_KEY_MANAGE], 1, [Enable management of the OpenWeather API key via GUI])
+	AC_DEFINE([ENABLE_WEATHER_KEY_MANAGE], 1, [Enable management of the OpenWeather API key via GUI])
 fi
 ## END: OpenWeather API key
 
@@ -252,29 +252,29 @@ fi
 # Check and configure the TMDb API key
 AC_MSG_CHECKING([for TMDb API key])
 AC_ARG_WITH([tmdb-api-key],
-    AS_HELP_STRING([--with-tmdb-api-key=KEY], [Specify the TMDb API key for accessing movie information]),
-    [TMDB_API_KEY="$withval"],
-    [TMDB_API_KEY=""])
+	AS_HELP_STRING([--with-tmdb-api-key=KEY], [Specify the TMDb API key for accessing movie information]),
+	[TMDB_API_KEY="$withval"],
+	[TMDB_API_KEY=""])
 
 # Output the result of the TMDb API key check
 if test -z "$TMDB_API_KEY"; then
-    result_msg="no"
+	result_msg="no"
 else
-    # Display shortened and masked TMDb API key
-    discrete_key=`echo $TMDB_API_KEY | cut -c1-7`
-    result_msg="yes [$discrete_key***]"
+	# Display shortened and masked TMDb API key
+	discrete_key=`echo $TMDB_API_KEY | cut -c1-7`
+	result_msg="yes [$discrete_key***]"
 fi
 AC_MSG_RESULT([$result_msg])
 AC_DEFINE_UNQUOTED([TMDB_API_KEY], ["$TMDB_API_KEY"], [TMDB API key])
 
 # Handle optional GUI managed TMDB API key
 AC_ARG_ENABLE([tmdb-key-manage],
-    AS_HELP_STRING([--enable-tmdb-key-manage], [Enable management of the TMDb API key via GUI @<:@default=yes@:>@]),
-    [enable_tmdb_key_manage="$enableval"],
-    [enable_tmdb_key_manage="yes"])
+	AS_HELP_STRING([--enable-tmdb-key-manage], [Enable management of the TMDb API key via GUI @<:@default=yes@:>@]),
+	[enable_tmdb_key_manage="$enableval"],
+	[enable_tmdb_key_manage="yes"])
 
 if test "$enable_tmdb_key_manage" = "yes"; then
-    AC_DEFINE([ENABLE_TMDB_KEY_MANAGE], 1, [Enable management of the TMDb API key via GUI])
+	AC_DEFINE([ENABLE_TMDB_KEY_MANAGE], 1, [Enable management of the TMDb API key via GUI])
 fi
 ## END: TMDb API key
 
@@ -282,29 +282,29 @@ fi
 # Check and configure the OMDb API key
 AC_MSG_CHECKING([for OMDb API key])
 AC_ARG_WITH([omdb-api-key],
-    AS_HELP_STRING([--with-omdb-api-key=KEY], [Specify the OMDb API key for accessing IMDb movie information]),
-    [OMDB_API_KEY="$withval"],
-    [OMDB_API_KEY=""])
+	AS_HELP_STRING([--with-omdb-api-key=KEY], [Specify the OMDb API key for accessing IMDb movie information]),
+	[OMDB_API_KEY="$withval"],
+	[OMDB_API_KEY=""])
 
 # Output the result of the OMDb API key check
 if test -z "$OMDB_API_KEY"; then
-    result_msg="no"
+	result_msg="no"
 else
-    # Display shortened and masked OMDb API key
-    discrete_key=`echo $OMDB_API_KEY | cut -c1-7`
-    result_msg="yes [$discrete_key***]"
+	# Display shortened and masked OMDb API key
+	discrete_key=`echo $OMDB_API_KEY | cut -c1-7`
+	result_msg="yes [$discrete_key***]"
 fi
 AC_MSG_RESULT([$result_msg])
 AC_DEFINE_UNQUOTED([OMDB_API_KEY], ["$OMDB_API_KEY"], [OMDb API key])
 
 # Handle optional GUI managed OMDb API key
 AC_ARG_ENABLE([omdb-key-manage],
-    AS_HELP_STRING([--enable-omdb-key-manage], [Enable management of the OMDb API key via GUI @<:@default=yes@:>@]),
-    [enable_omdb_key_manage="$enableval"],
-    [enable_omdb_key_manage="yes"])
+	AS_HELP_STRING([--enable-omdb-key-manage], [Enable management of the OMDb API key via GUI @<:@default=yes@:>@]),
+	[enable_omdb_key_manage="$enableval"],
+	[enable_omdb_key_manage="yes"])
 
 if test "$enable_omdb_key_manage" = "yes"; then
-    AC_DEFINE([ENABLE_OMDB_KEY_MANAGE], 1, [Enable management of the OMDb API key via GUI])
+	AC_DEFINE([ENABLE_OMDB_KEY_MANAGE], 1, [Enable management of the OMDb API key via GUI])
 fi
 ## END: OMDb API key
 
@@ -312,29 +312,29 @@ fi
 # Check and configure the Shoutcast Developer ID
 AC_MSG_CHECKING([for Shoutcast Develper ID])
 AC_ARG_WITH([shoutcast-dev-id],
-    AS_HELP_STRING([--with-shoutcast-dev-id=ID], [Specify the Shoutcast Developer ID for accessing streaming service information]),
-    [SHOUTCAST_DEV_ID="$withval"],
-    [SHOUTCAST_DEV_ID=""])
+	AS_HELP_STRING([--with-shoutcast-dev-id=ID], [Specify the Shoutcast Developer ID for accessing streaming service information]),
+	[SHOUTCAST_DEV_ID="$withval"],
+	[SHOUTCAST_DEV_ID=""])
 
 # Output the result of the Shoutcast Developer ID check
 if test -z "$SHOUTCAST_DEV_ID"; then
-    result_msg="no"
+	result_msg="no"
 else
-    # Display shortened and masked Shoutcast Developer ID
-    discrete_key=`echo $SHOUTCAST_DEV_ID | cut -c1-7`
-    result_msg="yes [$discrete_key***]"
+	# Display shortened and masked Shoutcast Developer ID
+	discrete_key=`echo $SHOUTCAST_DEV_ID | cut -c1-7`
+	result_msg="yes [$discrete_key***]"
 fi
 AC_MSG_RESULT([$result_msg])
 AC_DEFINE_UNQUOTED([SHOUTCAST_DEV_ID], ["$SHOUTCAST_DEV_ID"], [Shoutcast Developer ID])
 
 # Handle optional GUI managed Shoutcast Developer ID
 AC_ARG_ENABLE([shoutcast-id-manage],
-    AS_HELP_STRING([--enable-shoutcast-id-manage], [Enable management of the Shoutcast Developer ID via GUI @<:@default=yes@:>@]),
-    [enable_shoutcast_id_manage="$enableval"],
-    [enable_shoutcast_id_manage="yes"])
+	AS_HELP_STRING([--enable-shoutcast-id-manage], [Enable management of the Shoutcast Developer ID via GUI @<:@default=yes@:>@]),
+	[enable_shoutcast_id_manage="$enableval"],
+	[enable_shoutcast_id_manage="yes"])
 
 if test "$enable_shoutcast_id_manage" = "yes"; then
-    AC_DEFINE([ENABLE_SHOUTCAST_ID_MANAGE], 1, [Enable management of the Shoutcast Developer ID via GUI])
+	AC_DEFINE([ENABLE_SHOUTCAST_ID_MANAGE], 1, [Enable management of the Shoutcast Developer ID via GUI])
 fi
 # END: Shoutcast Developer ID
 
@@ -342,29 +342,29 @@ fi
 # Check and configure the YouTube API key
 AC_MSG_CHECKING([for YouTube API key])
 AC_ARG_WITH([youtube-api-key],
-    AS_HELP_STRING([--with-youtube-api-key=KEY], [Specify the YouTube API key for accessing streaming services]),
-    [YOUTUBE_API_KEY="$withval"],
-    [YOUTUBE_API_KEY=""])
+	AS_HELP_STRING([--with-youtube-api-key=KEY], [Specify the YouTube API key for accessing streaming services]),
+	[YOUTUBE_API_KEY="$withval"],
+	[YOUTUBE_API_KEY=""])
 
 # Output the result of the YouTube API key check
 if test -z "$YOUTUBE_API_KEY"; then
-    result_msg="no"
+	result_msg="no"
 else
-    # Display shortened and masked YouTube API key
-    discrete_key=`echo $YOUTUBE_API_KEY | cut -c1-7`
-    result_msg="yes [$discrete_key***]"
+	# Display shortened and masked YouTube API key
+	discrete_key=`echo $YOUTUBE_API_KEY | cut -c1-7`
+	result_msg="yes [$discrete_key***]"
 fi
 AC_MSG_RESULT([$result_msg])
 AC_DEFINE_UNQUOTED([YOUTUBE_API_KEY], ["$YOUTUBE_API_KEY"], [YouTube API key])
 
 # Handle optional GUI managed YouTube API key
 AC_ARG_ENABLE([youtube-key-manage],
-    AS_HELP_STRING([--enable-youtube-key-manage], [Enable management of the YouTube API key via GUI @<:@default=yes@:>@]),
-    [enable_youtube_key_manage="$enableval"],
-    [enable_youtube_key_manage="yes"])
+	AS_HELP_STRING([--enable-youtube-key-manage], [Enable management of the YouTube API key via GUI @<:@default=yes@:>@]),
+	[enable_youtube_key_manage="$enableval"],
+	[enable_youtube_key_manage="yes"])
 
 if test "$enable_youtube_key_manage" = "yes"; then
-    AC_DEFINE([ENABLE_YOUTUBE_KEY_MANAGE], 1, [Enable management of the YouTube API key via GUI])
+	AC_DEFINE([ENABLE_YOUTUBE_KEY_MANAGE], 1, [Enable management of the YouTube API key via GUI])
 fi
 ## END: YouTube API key
 
