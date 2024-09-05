@@ -2592,7 +2592,6 @@ void CStreamRec::run2url()
 			}
 
 		}
-		av_packet_make_refcounted(&pkt);
 
 		in_stream = ifmt_ctx->streams[pkt.stream_index];
 		out_stream = ofcx->streams[_stream_index];
