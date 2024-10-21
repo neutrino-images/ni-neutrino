@@ -306,6 +306,19 @@ void CInfoIcons::enableInfoIcons(bool enable)
 	}
 }
 
+int CInfoIcons::getHeightRel()
+{
+	if (is_painted)
+	{
+		if (g_settings.mode_icons_background)
+			return y + height + OFFSET_SHADOW;
+		else
+			return y + height;
+	}
+	else
+		return y;
+}
+
 void CInfoIcons::saveIconstate()
 {
 	std::ofstream file("/var/etc/infoicons");

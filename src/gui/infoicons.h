@@ -78,6 +78,7 @@ class CInfoIcons
 		void	enableInfoIcons(bool enable);
 		void	switchInfoIconsOnOff();
 		void	saveIconstate();
+		int	getHeightRel();
 
 		bool	getStatus(void) { return status; }
 };
