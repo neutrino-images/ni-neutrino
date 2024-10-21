@@ -1500,6 +1500,7 @@ menu.hint_infobar_sat Zeigt die aktuellen Satelliten- oder Kabel-Provider
 menu.hint_infobar_setup Wählen Sie die Anzeigeoptionen für die Infobar aus
 menu.hint_infobar_textcolor Ändern Sie die Textfarbe für die Infobar
 menu.hint_infobar_tuner Zeigt den aktiven Tuner als Nummernicon
+menu.hint_infobar_weather Zeigt aktuelle Wetterdaten
 menu.hint_infoclock_setup Wählen Sie die Anzeigeoptionen für die Info Uhr
 menu.hint_infoicons_background Legt fest, ob die Infoicons mit oder ohne Hintergrund gezeigt werden sollen
 menu.hint_infoicons_flag_all Alle Benachrichtigungen zurücksetzen
@@ -2038,6 +2039,7 @@ miscsettings.infobar_show_res Auflösung anzeigen
 miscsettings.infobar_show_res_simple einfach
 miscsettings.infobar_show_sysfs_hdd Füllstandsanzeige (SysFS und HDD)
 miscsettings.infobar_show_tuner Aktiven Tuner anzeigen
+miscsettings.infobar_weather Wetter
 miscsettings.infoclock Uhr
 miscsettings.onlineservices Online-Dienste
 miscsettings.progressbar Fortschrittsbalken

@@ -1500,6 +1500,7 @@ menu.hint_infobar_sat Show current satellite or cable provider
 menu.hint_infobar_setup Configure infobar options
 menu.hint_infobar_textcolor Change infobar text color
 menu.hint_infobar_tuner Show active tuner number icon
+menu.hint_infobar_weather Shows current weather data
 menu.hint_infoclock_setup Configure info clock GUI options
 menu.hint_infoicons_background Determines whether the Infoicons should be shown with or without background
 menu.hint_infoicons_flag_all Reset all flagfiles
@@ -2038,6 +2039,7 @@ miscsettings.infobar_show_res Show resolution on infobar
 miscsettings.infobar_show_res_simple simple
 miscsettings.infobar_show_sysfs_hdd Fill level (SysFS and HDD)
 miscsettings.infobar_show_tuner Display active tuner
+miscsettings.infobar_weather Weather
 miscsettings.infoclock Clock
 miscsettings.onlineservices Online services
 miscsettings.progressbar Progressbar

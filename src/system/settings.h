@@ -1098,6 +1098,7 @@ struct SNeutrinoSettings
 	int infobar_show_sysfs_hdd;
 	int infobar_show_tuner;
 	int infobar_subchan_disp_pos;
+	int infobar_weather;
 
 	int scrambled_message;
 

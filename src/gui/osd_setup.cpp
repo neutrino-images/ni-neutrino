@@ -1307,6 +1307,11 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_ANALOGCLOCK);
 	menu_infobar->addItem(mc);
 
+	// weather
+	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_INFOBAR_WEATHER, &g_settings.infobar_weather, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.weather_enabled);
+	mc->setHint("", LOCALE_MENU_HINT_INFOBAR_WEATHER);
+	menu_infobar->addItem(mc);
+
 	menu_infobar->addItem(GenericMenuSeparator);
 
 	// display options

@@ -1283,6 +1283,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.infobar_show_sysfs_hdd = configfile.getBool("infobar_show_sysfs_hdd", false);
 	g_settings.infobar_show_tuner = configfile.getInt32("infobar_show_tuner", 1);
 	g_settings.infobar_subchan_disp_pos = configfile.getInt32("infobar_subchan_disp_pos", 4);
+	g_settings.infobar_weather = configfile.getInt32("infobar_weather", 0);
 
 	g_settings.scrambled_message = configfile.getBool("scrambled_message", false);
 
@@ -2178,6 +2179,7 @@ void CNeutrinoApp::saveSetup(const char *fname)
 	configfile.setBool("infobar_show_sysfs_hdd", g_settings.infobar_show_sysfs_hdd);
 	configfile.setInt32("infobar_show_tuner", g_settings.infobar_show_tuner);
 	configfile.setInt32("infobar_subchan_disp_pos", g_settings.infobar_subchan_disp_pos);
+	configfile.setInt32("infobar_weather", g_settings.infobar_weather);
 
 	configfile.setBool("scrambled_message", g_settings.scrambled_message);
 
