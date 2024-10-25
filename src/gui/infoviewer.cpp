@@ -800,6 +800,14 @@ void CInfoViewer::showMovieTitle(const int playState, const t_channel_id &Channe
 	showRecordIcon (show_dot);
 	show_dot = !show_dot;
 
+	//NI InfoIcons
+	if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
+		CInfoIcons::getInstance()->paintIcons(true);
+
+	// Weather below InfoIcons
+	if (g_settings.weather_enabled && g_settings.infobar_weather)
+		weather->show(BoxStartX, CInfoIcons::getInstance()->getHeightRel() + OFFSET_INNER_SMALL);
+
 	if (!zap_mode)
 		infoViewerBB->paintshowButtonBar();
 
