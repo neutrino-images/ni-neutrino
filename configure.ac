@@ -1,7 +1,7 @@
 # explicit defines for separate revision handling
 # Keep in sync with git tags! Set tag with 'git tag NI-3.60'.
 define(ver_major, 3)
-define(ver_minor, 66)
+define(ver_minor, 67)
 # ver_micro counts commits since last tag
 define(ver_micro, m4_esyscmd([
 	GITTAG=$(git tag -l "NI-*" | tail -n1);
