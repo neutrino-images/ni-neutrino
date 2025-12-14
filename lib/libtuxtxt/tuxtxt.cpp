@@ -2224,6 +2224,9 @@ int Init(int source)
 
 void CleanUp()
 {
+#if TUXTXT_DEBUG
+	fprintf(stderr, "[tuxtxt][CleanUp] ENTER\n");
+#endif
 	int curscreenmode[2];
 	curscreenmode[0] = screenmode[0];
 	curscreenmode[1] = screenmode[1];
@@ -2292,6 +2295,9 @@ void CleanUp()
 			fclose(conf);
 		}
 	}
+#if TUXTXT_DEBUG
+	fprintf(stderr, "[tuxtxt][CleanUp] EXIT\n");
+#endif
 }
 /******************************************************************************
  * GetTeletextPIDs                                                           *
