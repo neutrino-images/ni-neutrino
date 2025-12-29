@@ -353,30 +353,6 @@ int run_pty(pid_t &pid, const char *cmdstring)
 	return master;
 }
 
-#if 0
-int mkdirhier(const char *pathname, mode_t mode)
-{
-	int res = -1;
-	if (!pathname || !*pathname)
-		return res;
-	char path[strlen(pathname) + 1];
-	strcpy(path, pathname);
-	char *p = path;
-	while ((p = strchr(p + 1, '/')))
-	{
-		*p = 0;
-		res = mkdir(path, mode);
-		if (res < 0 && errno != EEXIST)
-			break;
-		*p = '/';
-	}
-	res = mkdir(path, mode);
-	if (errno == EEXIST)
-		res = 0;
-	return res;
-}
-# endif
-
 /* This function is a replacement which makes sure that a \0 is always added,
    cuz standard strncpy does not terminate the string if the source is exactly
    as long or longer as the specified size. This can raise security issues.
