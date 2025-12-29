@@ -42,8 +42,6 @@ typedef uint64_t t_channel_id;
 int my_system(const char *cmd);
 int my_system(int argc, const char *arg, ...); /* argc is number of arguments including command */
 
-//int ni_system(std::string cmd, bool noshell = true, bool background = false); //NI background
-
 FILE *my_popen(pid_t &pid, const char *cmdstring, const char *type);
 int run_pty(pid_t &pid, const char *cmdstring);
 
