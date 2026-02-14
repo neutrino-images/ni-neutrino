@@ -110,7 +110,8 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 
 				if (g_Timerd->addRecordTimerEvent(channel_id, e->startTime, e->startTime + e->duration, e->eventID,
 								e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, e->startTime - (ANNOUNCETIME + 120) > time(NULL), recDir, true, ch->bUseCI) == -1) { //NI
-					//FIXME -- no error handling, but this shouldn't happen ...
+					DisplayErrorMessage(g_Locale->getText(LOCALE_CHANNELLIST_RECORDING_NOT_POSSIBLE));
+					return menu_return::RETURN_REPAINT;
 				} else {
 					if (!forwarders.empty() && (followlist.size() > 1 || g_settings.timer_followscreenings == FOLLOWSCREENINGS_ALWAYS)) //NI
 						forwarders[ix]->iconName_Info_right = NEUTRINO_ICON_MARKER_RECORD;
