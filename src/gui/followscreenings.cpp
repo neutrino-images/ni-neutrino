@@ -45,7 +45,7 @@
 
 #include <gui/timerlist.h>
 
-#include <zapit/zapit.h> //NI
+#include <zapit/zapit.h>
 
 #include <global.h>
 #include <neutrino.h>
@@ -94,26 +94,26 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 					if (i->eventType == CTimerd::TIMER_RECORD) {
 						if (channel_id == i->channel_id && e->startTime == i->epg_starttime) {
 							Timer.removeTimerEvent(i->eventID);
-							if (!forwarders.empty() && (followlist.size() > 1 || g_settings.timer_followscreenings == FOLLOWSCREENINGS_ALWAYS)) //NI
+							if (!forwarders.empty() && (followlist.size() > 1 || g_settings.timer_followscreenings == FOLLOWSCREENINGS_ALWAYS))
 								forwarders[ix]->iconName_Info_right = "";
 							return menu_return::RETURN_REPAINT;
 						}
-						if (!SAME_TRANSPONDER(channel_id, i->channel_id) || CZapit::getInstance()->getUseChannelFilter()) { //NI
+						if (!SAME_TRANSPONDER(channel_id, i->channel_id) || CZapit::getInstance()->getUseChannelFilter()) {
 							if (!askUserOnTimerConflict(start, stop, channel_id))
 								return menu_return::RETURN_REPAINT;
 							else
-								break; //NI - show conflicts only once
+								break; // show conflicts only once
 						}
 					}
-				//NI
+
 				CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(channel_id);
 
 				if (g_Timerd->addRecordTimerEvent(channel_id, e->startTime, e->startTime + e->duration, e->eventID,
-								e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, e->startTime - (ANNOUNCETIME + 120) > time(NULL), recDir, true, ch->bUseCI) == -1) { //NI
+								e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, e->startTime - (ANNOUNCETIME + 120) > time(NULL), recDir, true, ch->bUseCI) == -1) {
 					DisplayErrorMessage(g_Locale->getText(LOCALE_CHANNELLIST_RECORDING_NOT_POSSIBLE));
 					return menu_return::RETURN_REPAINT;
 				} else {
-					if (!forwarders.empty() && (followlist.size() > 1 || g_settings.timer_followscreenings == FOLLOWSCREENINGS_ALWAYS)) //NI
+					if (!forwarders.empty() && (followlist.size() > 1 || g_settings.timer_followscreenings == FOLLOWSCREENINGS_ALWAYS))
 						forwarders[ix]->iconName_Info_right = NEUTRINO_ICON_MARKER_RECORD;
 					else if (notify && g_settings.timer_followscreenings != FOLLOWSCREENINGS_ALWAYS)
 						ShowMsg(LOCALE_TIMER_EVENTRECORD_TITLE, LOCALE_TIMER_EVENTRECORD_MSG,
@@ -156,12 +156,12 @@ void CFollowScreenings::show()
 
 	getFollowScreenings();
 
-	if (followlist.size() == 1 && g_settings.timer_followscreenings != FOLLOWSCREENINGS_ALWAYS) //NI
+	if (followlist.size() == 1 && g_settings.timer_followscreenings != FOLLOWSCREENINGS_ALWAYS)
 	{
 		snprintf(actionstr, sizeof(actionstr), "%" PRIuMAX, static_cast<uintmax_t>(followlist.front().startTime));
 		exec(NULL, actionstr);
 	}
-	else if (followlist.size() > 1 || g_settings.timer_followscreenings == FOLLOWSCREENINGS_ALWAYS) //NI
+	else if (followlist.size() > 1 || g_settings.timer_followscreenings == FOLLOWSCREENINGS_ALWAYS)
 	{
 		CMenuWidget m(LOCALE_EPGVIEWER_SELECT_SCREENING, NEUTRINO_ICON_SETTINGS);
 		const char *icon = NEUTRINO_ICON_BUTTON_RED;
