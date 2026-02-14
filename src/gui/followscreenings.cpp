@@ -112,7 +112,7 @@ int CFollowScreenings::exec(CMenuTarget* /*parent*/, const std::string & actionK
 				CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(channel_id);
 
 				int res = g_Timerd->addRecordTimerEvent(channel_id, e->startTime, e->startTime + e->duration, e->eventID,
-								e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, e->startTime - (ANNOUNCETIME + 120) > time(NULL), recDir, forceAdd, ch->bUseCI) == -1);
+								e->startTime, e->startTime - (ANNOUNCETIME + 120 ), apids, true, e->startTime - (ANNOUNCETIME + 120) > time(NULL), recDir, forceAdd, ch->bUseCI);
 				if (res == -1 && !forceAdd) {
 					if (askUserOnTimerConflict(start, stop, channel_id)) {
 						forceAdd = true;
