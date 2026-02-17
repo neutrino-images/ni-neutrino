@@ -63,7 +63,11 @@ protected:
 	/* flag to check if there was section for that table, if yes, dont increase timeouts */
 	bool		seen_section;
 
+#if HAVE_CST_HARDWARE
+	inline bool isOpen(void) { return (dmx != NULL); }
+#else
 	inline bool isOpen(void) { return (dmx != NULL) && (dmx->getFD() >= 0); }
+#endif
 
 	int immediate_start(void); /* mutex must be locked before and unlocked after this method */
 	int immediate_stop(void);  /* mutex must be locked before and unlocked after this method */
