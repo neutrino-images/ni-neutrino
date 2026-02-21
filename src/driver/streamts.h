@@ -72,6 +72,8 @@ class CStreamInstance : public OpenThreads::Thread
 		void RemoveClient(int clientfd);
 		bool HasFd(int fd);
 		stream_fds_t & GetFds() { return fds; }
+		void GetFdsCopy(stream_fds_t &out);
+		size_t GetFdCount();
 		t_channel_id GetChannelId() { return channel_id; }
 		bool is_e2_stream;
 };

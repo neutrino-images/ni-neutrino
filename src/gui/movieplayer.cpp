@@ -150,9 +150,13 @@ CMoviePlayerGui::~CMoviePlayerGui()
 		bookmarkmanager = NULL;
 	}
 	if (playback) {
-		mutex.lock();
-		playback->Close();
-		delete playback;
+		// Synchronisierte Freigabe von playback
+		if (playback) {
+			mutex.lock();
+			delete playback;
+			playback = NULL;
+			mutex.unlock();
+		}
 		playback = NULL;
 		mutex.unlock();
 	}
@@ -948,14 +952,17 @@ void *CMoviePlayerGui::ShowStartHint(void *arg)
 		}
 #endif
 		else if (caller->isWebChannel && ((msg == (neutrino_msg_t) g_settings.key_quickzap_up ) || (msg == (neutrino_msg_t) g_settings.key_quickzap_down))) {
-			caller->playback->RequestAbort();
+			mutex.lock();
+			if (caller->playback)
+				caller->playback->RequestAbort();
+			mutex.unlock();
 			g_RCInput->postMsg(msg, data);
 		}
 		else if (msg != NeutrinoMessages::EVT_WEBTV_ZAP_COMPLETE && msg != CRCInput::RC_timeout && msg > CRCInput::RC_MaxRC) {
 			CNeutrinoApp::getInstance()->handleMsg(msg, data);
 		}
 		else if ((msg>= CRCInput::RC_WithData) && (msg< CRCInput::RC_WithData+ 0x10000000))
-                        delete[] (unsigned char*) data;
+            delete[] (unsigned char*) data;
 
 	}
 	if (hintbox != NULL) {
@@ -975,22 +982,25 @@ bool CMoviePlayerGui::StartWebtv(void)
 	if (videoDecoder->getBlank())
 		videoDecoder->setBlank(false);
 
-	playback->Open(is_file_player ? PLAYMODE_FILE : PLAYMODE_TS);
+	mutex.lock();
+	bool res = false;
+	if (playback) {
+		playback->Open(is_file_player ? PLAYMODE_FILE : PLAYMODE_TS);
 #if HAVE_ARM_HARDWARE
-	bool res = playback->Start(file_name, cookie_header, second_file_name);//url with cookies and optional second audio file
+		res = playback->Start(file_name, cookie_header, second_file_name);//url with cookies und optional second audio file
 #else
-	bool res = playback->Start((char *) file_name.c_str(), cookie_header);//url with cookies
+		res = playback->Start((char *) file_name.c_str(), cookie_header);//url mit cookies
 #endif
-	if (res)
-		playback->SetSpeed(1);
-	if (!res) {
-		playback->Close();
-	} else {
-		getCurrentAudioName(is_file_player, currentaudioname);
-		if (is_file_player)
-			selectAutoLang();
+		if (res)
+				playback->SetSpeed(1);
+		if (res) {
+			getCurrentAudioName(is_file_player, currentaudioname);
+			if (is_file_player)
+				selectAutoLang();
+		}
 	}
 
+	mutex.unlock();
 	return res;
 }
 
@@ -998,14 +1008,30 @@ void* CMoviePlayerGui::bgPlayThread(void *arg)
 {
 	set_threadname(__func__);
 	CMoviePlayerGui *mp = (CMoviePlayerGui *) arg;
+	unsigned char *chid = nullptr;
+	bool chidused = false;
+	bool started = false;
+	int eof = 0, pos = 0;
+	time_t start_time = 0;
+	uint64_t last_read_count = 0;
+	bool saw_read_activity = false;
+	int eof_max = 0;
+
+	if (!mp) {
+		printf("%s: arg is NULL!\n", __func__);
+		mutex.lock();
+		webtv_starting = false;
+		webtv_started = false;
+		mutex.unlock();
+		goto bgplaythread_exit;
+	}
 	printf("%s: starting... instance %p\n", __func__, mp);fflush(stdout);
 
-	unsigned char *chid = new unsigned char[sizeof(t_channel_id)];
+	chid = new unsigned char[sizeof(t_channel_id)];
 	*(t_channel_id*)chid = mp->movie_info.channelId;
 
-	bool started = mp->StartWebtv();
+	started = mp->StartWebtv();
 	printf("%s: started: %d\n", __func__, started);fflush(stdout);
-	bool chidused = false;
 
 	mutex.lock();
 	webtv_starting = false;
@@ -1018,19 +1044,26 @@ void* CMoviePlayerGui::bgPlayThread(void *arg)
 	webtv_started = started;
 	mutex.unlock();
 
-	int eof = 0, pos = 0;
-	time_t start_time = time(NULL);
-	uint64_t last_read_count = 0;
-	bool saw_read_activity = false;
-	if (mp->playback)
-		last_read_count = mp->playback->GetReadCount();
-	int eof_max = mp->isWebChannel ? g_settings.movieplayer_eof_cnt : 5;
+	eof = 0; pos = 0;
+	start_time = time(NULL);
+	last_read_count = 0;
+	saw_read_activity = false;
+	mutex.lock();
+	if (!mp->playback) {
+		printf("%s: playback is NULL!\n", __func__);
+		webtv_starting = false;
+		webtv_started = false;
+		mutex.unlock();
+		goto bgplaythread_exit;
+	}
+	last_read_count = mp->playback->GetReadCount();
+	eof_max = mp->isWebChannel ? g_settings.movieplayer_eof_cnt : 5;
+	mutex.unlock();
 
 	while(webtv_started) {
-		if (mp->playback->GetPosition(mp->position, mp->duration, mp->isWebChannel)) {
-#if 0
-			printf("CMoviePlayerGui::bgPlayThread: position %d duration %d (%d)\n", mp->position, mp->duration, mp->duration-mp->position);
-#endif
+		mutex.lock();
+		bool playback_ok = mp->playback && mp->playback->GetPosition(mp->position, mp->duration, mp->isWebChannel);
+		if (playback_ok) {
 			if (mp->playback) {
 				uint64_t read_count = mp->playback->GetReadCount();
 				if (read_count != last_read_count) {
@@ -1055,10 +1088,12 @@ void* CMoviePlayerGui::bgPlayThread(void *arg)
 				printf("CMoviePlayerGui::bgPlayThread: playback stopped, try to rezap...\n");
 				g_RCInput->postMsg(NeutrinoMessages::EVT_WEBTV_ZAP_COMPLETE, (neutrino_msg_data_t) chid);
 				chidused = true;
+				mutex.unlock();
 				break;
 			}
 			pos = mp->position;
 		}
+		mutex.unlock();
 		bgmutex.lock();
 		int res = cond.wait(&bgmutex, 1000);
 		bgmutex.unlock();
@@ -1066,13 +1101,17 @@ void* CMoviePlayerGui::bgPlayThread(void *arg)
 			printf("%s: wakeup/stop signal, exiting\n", __func__);
 			break;
 		}
-		mp->showSubtitle(0);
+		mutex.lock();
+		if (mp && mp->playback)
+			mp->showSubtitle(0);
+		mutex.unlock();
 	}
 	printf("%s: play end...\n", __func__);fflush(stdout);
-	mp->PlayFileEnd();
-	if(!chidused)
-		delete [] chid;
+	if (mp) mp->PlayFileEnd();
 
+bgplaythread_exit:
+	if (chid != nullptr && !chidused)
+		delete [] chid;
 	pthread_exit(NULL);
 }
 
@@ -1481,15 +1520,19 @@ void CMoviePlayerGui::stopTimeshift(void)
 
 void CMoviePlayerGui::Pause(bool b)
 {
+	mutex.lock();
 	if (b && (playstate == CMoviePlayerGui::PAUSE))
 		b = !b;
 	if (b) {
-		playback->SetSpeed(0);
+		if (playback)
+			playback->SetSpeed(0);
 		playstate = CMoviePlayerGui::PAUSE;
 	} else {
-		playback->SetSpeed(1);
+		if (playback)
+			playback->SetSpeed(1);
 		playstate = CMoviePlayerGui::PLAY;
 	}
+	mutex.unlock();
 }
 
 void CMoviePlayerGui::PlayFile(void)
@@ -1530,7 +1573,11 @@ bool CMoviePlayerGui::PlayFileStart(void)
 		videoDecoder->setBlank(false);
 
 	printf("IS FILE PLAYER: %s\n", is_file_player ?  "true": "false" );
-	playback->Open(is_file_player ? PLAYMODE_FILE : PLAYMODE_TS);
+	mutex.lock();
+	if (playback) {
+		playback->Open(is_file_player ? PLAYMODE_FILE : PLAYMODE_TS);
+	}
+	mutex.unlock();
 
 	if (p_movie_info) {
 		if (timeshift != TSHIFT_MODE_OFF) {
@@ -1566,18 +1613,22 @@ bool CMoviePlayerGui::PlayFileStart(void)
 	}
 #endif
 
+	bool res = false;
+	mutex.lock();
 #if HAVE_ARM_HARDWARE
-	bool res = playback->Start((char *) file_name.c_str(), vpid, vtype, currentapid, currentac3, duration,"",second_file_name);
+	if (playback)
+		 res = playback->Start((char *) file_name.c_str(), vpid, vtype, currentapid, currentac3, duration,"",second_file_name);
 #else
-	bool res = playback->Start((char *) file_name.c_str(), vpid, vtype, currentapid, currentac3, duration);
+	if (playback)
+		 res = playback->Start((char *) file_name.c_str(), vpid, vtype, currentapid, currentac3, duration);
 #endif
+	mutex.unlock();
 	if (thrStartHint) {
 		showStartingHint = false;
 		pthread_join(thrStartHint, NULL);
 	}
 
 	if (!res) {
-		playback->Close();
 		repeat_mode = REPEAT_OFF;
 		return false;
 	} else {
@@ -1649,13 +1700,22 @@ bool CMoviePlayerGui::PlayFileStart(void)
 bool CMoviePlayerGui::SetPosition(int pos, bool absolute)
 {
 	clearSubtitle();
-	bool res = playback->SetPosition(pos, absolute);
-	if(is_file_player && res && speed == 0 && playstate == CMoviePlayerGui::PAUSE){
+	bool res = false;
+	mutex.lock();
+	if (playback)
+		res = playback->SetPosition(pos, absolute);
+	if (is_file_player && res && speed == 0 && playstate == CMoviePlayerGui::PAUSE){
 		playstate = CMoviePlayerGui::PLAY;
 		speed = 1;
-		playback->SetSpeed(speed);
+		if (playback)
+			playback->SetSpeed(speed);
 	}
+	mutex.unlock();
 	FileTimeOSD_tmp = 0;
+
+	if (res)
+		g_RCInput->postMsg(CRCInput::RC_info, 0);
+
 	return res;
 }
 
@@ -1775,7 +1835,10 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			FileTimeOSD_tmp++;
 
 		if ((playstate >= CMoviePlayerGui::PLAY) && (timeshift != TSHIFT_MODE_OFF || (playstate != CMoviePlayerGui::PAUSE))) {
-			if (playback->GetPosition(position, duration, isWebChannel)) {
+			mutex.lock();
+			bool posok = playback && playback->GetPosition(position, duration, isWebChannel);
+			mutex.unlock();
+			if (posok) {
 				FileTimeOSD->update(position, duration);
 
 				if (FileTimeOSD_tmp > -1 && !FileTimeOSD->IsVisible() && g_settings.movieplayer_timeosd_while_searching)
@@ -2259,8 +2322,12 @@ void CMoviePlayerGui::PlayFileEnd(bool restore)
 		FileTimeOSD->kill();
 	clearSubtitle();
 
-	playback->SetSpeed(1);
-	playback->Close();
+	mutex.lock();
+	if (playback) {
+		playback->SetSpeed(1);
+		playback->Close();
+	}
+	mutex.unlock();
 #ifdef ENABLE_GRAPHLCD
 	if (!bgThread) {
 		glcd_channel = g_Locale->getText(LOCALE_MOVIEPLAYER_HEAD);

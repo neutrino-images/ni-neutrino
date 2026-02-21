@@ -99,9 +99,15 @@ bool CStreamInstance::Start()
 		perror("CStreamInstance::Start: buf");
 		return false;
 	}
-	running = true;
 	printf("CStreamInstance::Start: %" PRIx64 "\n", channel_id);
-	return (OpenThreads::Thread::start() == 0);
+	running = true;
+	if (OpenThreads::Thread::start() != 0) {
+		running = false;
+		delete [] buf;
+		buf = NULL;
+		return false;
+	}
+	return true;
 }
 
 bool CStreamInstance::Stop()
@@ -117,39 +123,55 @@ bool CStreamInstance::Stop()
 #if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(61, 1, 100)
 bool CStreamInstance::Send(ssize_t r, const unsigned char *_buf)
 #else
-bool CStreamInstance::Send(ssize_t r,  unsigned char * _buf)
+bool CStreamInstance::Send(ssize_t r, unsigned char *_buf)
 #endif
 {
-    // OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
-    stream_fds_t cfds;
-    mutex.lock();
-    cfds = fds;
-    mutex.unlock();
-    int flags = 0;
-    if (cfds.size() > 1)
-        flags = MSG_DONTWAIT;
-    for (stream_fds_t::iterator it = cfds.begin(); it != cfds.end(); ++it) {
-        int i = 10;
-        const unsigned char *b = _buf ? _buf : buf;
-        ssize_t count = r;
-        do {
-            int ret = send(*it, b, count, flags);
-            if (ret > 0) {
-                b += ret;
-                count -= ret;
-            }
-        } while ((count > 0) && (i-- > 0));
-        if (count)
-            printf("send err, fd %d: (%zd from %zd)\n", *it, r-count, r);
-    }
-    return true;
+	// lock fds for thread-safety
+	stream_fds_t cfds;
+	mutex.lock();
+	cfds = fds;
+	mutex.unlock();
+
+	int flags = 0;
+	if (cfds.size() > 1)
+		flags = MSG_DONTWAIT;
+#ifdef MSG_NOSIGNAL
+	flags |= MSG_NOSIGNAL;
+#endif
+
+	for (stream_fds_t::iterator it = cfds.begin(); it != cfds.end(); ++it)
+	{
+		int i = 10;
+		const unsigned char *b = _buf ? _buf : buf;
+		ssize_t count = r;
+
+		do
+		{
+			int ret = send(*it, b, count, flags);
+			if (ret > 0)
+			{
+				b += ret;
+				count -= ret;
+			}
+		} while ((count > 0) && (i-- > 0));
+
+		if (count)
+			printf("CStreamInstance::%s: send error, fd %d: (%zd from %zd)\n", __FUNCTION__, *it, r - count, r);
+	}
+
+	return true;
 }
 
 void CStreamInstance::Close()
 {
-	for (stream_fds_t::iterator fit = fds.begin(); fit != fds.end(); ++fit)
+	stream_fds_t cfds;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+		cfds = fds;
+		fds.clear();
+	}
+	for (stream_fds_t::iterator fit = cfds.begin(); fit != cfds.end(); ++fit)
 		close(*fit);
-	fds.clear();
 }
 
 void CStreamInstance::AddClient(int clientfd)
@@ -162,9 +184,21 @@ void CStreamInstance::AddClient(int clientfd)
 void CStreamInstance::RemoveClient(int clientfd)
 {
 	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
-	fds.erase(clientfd);
-	close(clientfd);
+	if (fds.erase(clientfd) > 0)
+		close(clientfd);
 	printf("CStreamInstance::RemoveClient: %d (count %d)\n", clientfd, (int)fds.size());
+}
+
+void CStreamInstance::GetFdsCopy(stream_fds_t &out)
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	out = fds;
+}
+
+size_t CStreamInstance::GetFdCount()
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	return fds.size();
 }
 
 bool CStreamInstance::Open()
@@ -244,9 +278,8 @@ void CStreamInstance::run()
 
 bool CStreamInstance::HasFd(int fd)
 {
-	if (fds.find(fd) != fds.end())
-		return true;
-	return false;
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	return (fds.find(fd) != fds.end());
 }
 
 /************************************************************************/
@@ -410,11 +443,6 @@ bool CStreamManager::Parse(int fd, stream_pids_t &pids, t_channel_id &chid, CFro
 	char cbuf[512];
 	char *bp;
 
-	FILE * fp = fdopen(fd, "r+");
-	if (fp == NULL) {
-		perror("fdopen");
-		return false;
-	}
 	cbuf[0] = 0;
 	bp = &cbuf[0];
 
@@ -438,8 +466,11 @@ bool CStreamManager::Parse(int fd, stream_pids_t &pids, t_channel_id &chid, CFro
 
 	/* send response to http client */
 	if (!strncmp(cbuf, "GET /", 5)) {
-		fprintf(fp, "HTTP/1.1 200 OK\r\nServer: streamts (%s)\r\n\r\n", "ts" /*&argv[1][1]*/);
-		fflush(fp);
+		static const char response[] = "HTTP/1.1 200 OK\r\nServer: streamts (ts)\r\n\r\n";
+		if (write(fd, response, sizeof(response) - 1) < 0) {
+			perror("CStreamManager::Parse: write response");
+			return false;
+		}
 		bp += 5;
 	} else {
 		printf("Received garbage\n");
@@ -608,17 +639,24 @@ bool CStreamManager::AddClient(int connfd)
 
 void CStreamManager::RemoveClient(int fd)
 {
-	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
-	for (streammap_iterator_t it = streams.begin(); it != streams.end(); ++it) {
-		if (it->second->HasFd(fd)) {
-			CStreamInstance *stream = it->second;
-			stream->RemoveClient(fd);
-			if (stream->GetFds().empty()) {
-				streams.erase(stream->GetChannelId());
-				delete stream;
+	CStreamInstance *stream_to_stop = NULL;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+		for (streammap_iterator_t it = streams.begin(); it != streams.end(); ++it) {
+			if (it->second->HasFd(fd)) {
+				CStreamInstance *stream = it->second;
+				stream->RemoveClient(fd);
+				if (stream->GetFdCount() == 0) {
+					stream_to_stop = stream;
+					streams.erase(stream->GetChannelId());
+				}
+				break;
 			}
-			break;
 		}
+	}
+	if (stream_to_stop) {
+		stream_to_stop->Stop();
+		delete stream_to_stop;
 	}
 }
 
@@ -641,13 +679,18 @@ void CStreamManager::run()
 		pfd[0].revents = 0;
 		poll_cnt = 1;
 		for (streammap_iterator_t it = streams.begin(); it != streams.end(); ++it) {
-			stream_fds_t fds = it->second->GetFds();
+			stream_fds_t fds;
+			it->second->GetFdsCopy(fds);
 			for (stream_fds_t::iterator fit = fds.begin(); fit != fds.end(); ++fit) {
+				if (poll_cnt >= (int)(sizeof(pfd) / sizeof(pfd[0])))
+					break;
 				pfd[poll_cnt].fd = *fit;
 				pfd[poll_cnt].events = POLLRDHUP | POLLHUP;
 				pfd[poll_cnt].revents = 0;
 				poll_cnt++;
 			}
+			if (poll_cnt >= (int)(sizeof(pfd) / sizeof(pfd[0])))
+				break;
 		}
 		mutex.unlock();
 //printf("polling, count= %d\n", poll_cnt);
@@ -668,11 +711,18 @@ void CStreamManager::run()
 						continue;
 					}
 
-					g_RCInput->postMsg(NeutrinoMessages::EVT_STREAM_START, 0);
 					if (!AddClient(connfd))
 					{
 						close(connfd);
-						g_RCInput->postMsg(NeutrinoMessages::EVT_STREAM_STOP, 0);
+					}
+					else
+					{
+						bool first_stream = false;
+						mutex.lock();
+						first_stream = (streams.size() == 1);
+						mutex.unlock();
+						if (first_stream)
+							g_RCInput->postMsg(NeutrinoMessages::EVT_STREAM_START, 0);
 					}
 					poll_timeout = 1000;
 				} else {
@@ -696,46 +746,61 @@ void CStreamManager::run()
 
 bool CStreamManager::StopAll()
 {
-	bool ret = !streams.empty();
-	for (streammap_iterator_t it = streams.begin(); it != streams.end(); ++it) {
+	streammap_t to_stop;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+		to_stop.swap(streams);
+	}
+	bool ret = !to_stop.empty();
+	for (streammap_iterator_t it = to_stop.begin(); it != to_stop.end(); ++it) {
 		it->second->Stop();
 		delete it->second;
 	}
-	streams.clear();
+	to_stop.clear();
 	return ret;
 }
 
 bool CStreamManager::StopStream(t_channel_id channel_id)
 {
-	bool ret = false;
-	mutex.lock();
-	if (channel_id) {
+	if (!channel_id)
+		return StopAll();
+
+	CStreamInstance *stream_to_stop = NULL;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
 		streammap_iterator_t it = streams.find(channel_id);
 		if (it != streams.end()) {
-			delete it->second;
+			stream_to_stop = it->second;
 			streams.erase(channel_id);
-			ret = true;
 		}
-	} else {
-		ret = StopAll();
 	}
-	mutex.unlock();
-	return ret;
+	if (stream_to_stop) {
+		stream_to_stop->Stop();
+		delete stream_to_stop;
+		return true;
+	}
+	return false;
 }
 
 bool CStreamManager::StopStream(CFrontend * fe)
 {
-	bool ret = false;
-	for (streammap_iterator_t it = streams.begin(); it != streams.end(); ) {
-		if (it->second->frontend == fe) {
-			delete it->second;
-			streams.erase(it++);
-			ret = true;
-		} else {
-			++it;
+	std::vector<CStreamInstance*> to_stop;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+		for (streammap_iterator_t it = streams.begin(); it != streams.end(); ) {
+			if (it->second->frontend == fe) {
+				to_stop.push_back(it->second);
+				streams.erase(it++);
+			} else {
+				++it;
+			}
 		}
 	}
-	return ret;
+	for (size_t i = 0; i < to_stop.size(); ++i) {
+		to_stop[i]->Stop();
+		delete to_stop[i];
+	}
+	return !to_stop.empty();
 }
 
 bool CStreamManager::StreamStatus(t_channel_id channel_id)
@@ -831,14 +896,20 @@ void CStreamStream::Close()
 	if (ifcx)
 		avformat_close_input(&ifcx);
 
-	if (ofcx)
+	if (ofcx) {
+		if (avio_ctx) {
+			ofcx->pb = NULL;
+			avio_context_free(&avio_ctx);
+			buf = NULL;
+		}
 		avformat_free_context(ofcx);
+	} else if (avio_ctx) {
+		avio_context_free(&avio_ctx);
+		buf = NULL;
+	}
 
 	if (buf)
 		av_freep(&buf);
-
-	if (avio_ctx)
-		av_free(avio_ctx);
 
 	if (bsfc){
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(57, 48, 100)
@@ -892,15 +963,14 @@ bool CStreamStream::Open()
 
 	if (avformat_open_input(&ifcx, url.c_str(), NULL, &options) != 0) {
 		printf("%s: Cannot open input [%s]!\n", __FUNCTION__, channel->getUrl().c_str());
-		if (!headers.empty())
 			av_dict_free(&options);
 		return false;
 	}
-	if (!headers.empty())
-		av_dict_free(&options);
+	av_dict_free(&options);
 
 	if (avformat_find_stream_info(ifcx, NULL) < 0) {
 		printf("%s: Cannot find stream info [%s]!\n", __FUNCTION__, channel->getUrl().c_str());
+		avformat_close_input(&ifcx);
 		return false;
 	}
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 27, 102)
@@ -914,6 +984,7 @@ bool CStreamStream::Open()
 			!strstr(ifcx->iformat->name, "avi") &&
 			!strstr(ifcx->iformat->name, "mp4")) {
 		printf("%s: not supported format [%s]!\n", __FUNCTION__, ifcx->iformat->name);
+		avformat_close_input(&ifcx);
 		return false;
 	}
 
@@ -935,11 +1006,16 @@ bool CStreamStream::Open()
 	avio_ctx = avio_alloc_context(buf, IN_SIZE, 1, this, NULL, &write_packet, NULL);
 	if (!avio_ctx) {
 		printf("%s: avio_alloc_context failed\n", __FUNCTION__);
+		av_freep(&buf);
+		avformat_close_input(&ifcx);
 		return false;
 	}
 
 	if (avformat_alloc_output_context2(&ofcx, NULL, "mpegts", NULL) < 0) {
 		printf("%s: avformat_alloc_output_context2 failed\n", __FUNCTION__);
+		avio_context_free(&avio_ctx);
+		buf = NULL;
+		avformat_close_input(&ifcx);
 		return false;
 	}
 	ofcx->pb = avio_ctx;
@@ -974,9 +1050,11 @@ bool CStreamStream::Open()
 #else
 	const AVBitStreamFilter *bsf = av_bsf_get_by_name("h264_mp4toannexb");
 	if(!bsf) {
+		Close();
 		return false;
 	}
 	if ((av_bsf_alloc(bsf, &bsfc))) {
+		Close();
 		return false;
 	}
 #endif
@@ -991,6 +1069,8 @@ bool CStreamStream::Start()
 	printf("%s: Starting...\n", __FUNCTION__);
 	stopped = false;
 	int ret = start();
+	if (ret != 0)
+		stopped = true;
 	return (ret == 0);
 }
 
@@ -1044,7 +1124,15 @@ void CStreamStream::run()
 		AVCodecParameters *codec = ifcx->streams[pkt.stream_index]->codecpar;
 #endif
 		if (bsfc && codec->codec_id == AV_CODEC_ID_H264 ) {
-			AVPacket newpkt = pkt;
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 133, 100)
+			AVPacket newpkt;
+			av_init_packet(&newpkt);
+#else
+			AVPacket newpkt;
+			get_packet_defaults(&newpkt);
+#endif
+			newpkt.data = NULL;
+			newpkt.size = 0;
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(57, 48, 100)
 			if (av_bitstream_filter_filter(bsfc, codec, NULL, &newpkt.data, &newpkt.size, pkt.data, pkt.size, pkt.flags & AV_PKT_FLAG_KEY) >= 0) {
 				av_packet_unref(&pkt);
@@ -1057,13 +1145,15 @@ void CStreamStream::run()
 				break;
 			}
 			ret = av_bsf_receive_packet(bsfc, &newpkt);
-			if (ret == AVERROR(EAGAIN)){
+			if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF){
+				continue;
+			}
+			if (ret < 0){
+				av_packet_unref(&pkt);
 				break;
 			}
-			if(ret != AVERROR_EOF){
-				av_packet_unref(&pkt);
-				pkt = newpkt;
-			}
+			av_packet_unref(&pkt);
+			pkt = newpkt;
 #endif
 		}
 		pkt.pts = av_rescale_q(pkt.pts, ifcx->streams[pkt.stream_index]->time_base, ofcx->streams[pkt.stream_index]->time_base);
