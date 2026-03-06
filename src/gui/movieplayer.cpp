@@ -927,8 +927,17 @@ void *CMoviePlayerGui::ShowStartHint(void *arg)
 		neutrino_msg_t msg = 0;
 		neutrino_msg_data_t data = 0;
 		g_RCInput->getMsg(&msg, &data, 1);
-		if (CNeutrinoApp::getInstance()->backKey(msg) || msg == CRCInput::RC_stop) {
-			caller->playback->RequestAbort();
+		const bool back_key = CNeutrinoApp::getInstance()->backKey(msg);
+		if (back_key || msg == CRCInput::RC_stop) {
+			if (back_key) {
+				// Home/Back is often bound to zaphistory; suppress the next list-open side effect.
+				CNeutrinoApp::getInstance()->allowChannelList(false);
+				g_RCInput->clearRCMsg();
+			}
+			mutex.lock();
+			if (caller->playback)
+				caller->playback->RequestAbort();
+			mutex.unlock();
 		}
 #if 0
 		else if (caller->isWebChannel) {
@@ -1892,9 +1901,15 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			}
 		}
 
+		const bool back_key = CNeutrinoApp::getInstance()->backKey(msg);
 		if (msg == (neutrino_msg_t) g_settings.mpkey_plugin) {
 			g_Plugins->startPlugin_by_name(g_settings.movieplayer_plugin.c_str ());
-		} else if (msg == (neutrino_msg_t) g_settings.mpkey_stop) {
+		} else if ((msg == (neutrino_msg_t) g_settings.mpkey_stop) || back_key) {
+			if (back_key) {
+				// Home/Back is often bound to zaphistory; suppress the next list-open side effect.
+				CNeutrinoApp::getInstance()->allowChannelList(false);
+				g_RCInput->clearRCMsg();
+			}
 			bool timeshift_stopped = false;
 
 			if (timeshift != TSHIFT_MODE_OFF)
