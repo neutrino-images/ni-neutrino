@@ -121,6 +121,7 @@ typedef struct
 } MB_SETTINGS;
 
 class CMovieBrowser;
+extern MI_MOVIE_INFO* playing_info;
 
 // Priorities for Developmemt: P1: critical feature, P2: important feature, P3: for next release, P4: looks nice, lets see
 class CMovieBrowser : public CMenuTarget, public CProgressSignals
