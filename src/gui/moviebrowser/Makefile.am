@@ -21,6 +21,7 @@ noinst_LIBRARIES = libneutrino_gui_moviebrowser.a
 libneutrino_gui_moviebrowser_a_SOURCES = \
 	mb.cpp \
 	mb_constants.cpp \
+	mb_delete.cpp \
 	mb_functions.cpp \
 	mb_input.cpp \
 	mb_menu.cpp \
