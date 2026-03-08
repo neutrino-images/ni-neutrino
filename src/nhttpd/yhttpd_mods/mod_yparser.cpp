@@ -113,10 +113,10 @@ void CyParser::Execute(CyhookHandler *hh) {
 
 	// debugging informations
 	if (CLogging::getInstance()->getDebug()) {
-		dprintf("Execute CGI : %s\n", filename.c_str());
+		yprintf("Execute CGI : %s\n", filename.c_str());
 		for (CStringList::iterator it = hh->ParamList.begin(); it
 				!= hh->ParamList.end(); ++it)
-			dprintf("  Parameter %s : %s\n", it->first.c_str(),
+			yprintf("  Parameter %s : %s\n", it->first.c_str(),
 					it->second.c_str());
 	}
 

@@ -230,7 +230,7 @@ bool CWebserver::run(void) {
 		{
 			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 			pthread_testcancel();
-			dperror("Socket accept error. Continue.\n");
+			yperror("Socket accept error. Continue.\n");
 			continue;
 		}
 		log_level_printf(3, "Socket connect from %s\n",
@@ -256,7 +256,7 @@ int CWebserver::AcceptNewConnectionSocket() {
 
 	if (!(connectionSock = listenSocket.accept())) // Blocking wait
 	{
-		dperror("Socket accept error. Continue.\n");
+		yperror("Socket accept error. Continue.\n");
 		delete connectionSock;
 		return -1;
 	}
@@ -414,7 +414,7 @@ bool CWebserver::handle_connection(CySocket *newSock) {
 	// create arguments
 	TWebserverConnectionArgs *newConn = new TWebserverConnectionArgs;
 	if (!newConn) {
-		dperror("CWebserver TWebserverConnectionArgs error!\n");
+		yperror("CWebserver TWebserverConnectionArgs error!\n");
 		return false;
 	}
 	newConn->ySock = newSock;
@@ -439,7 +439,7 @@ bool CWebserver::handle_connection(CySocket *newSock) {
 		}
 		if(index == -1)
 		{
-			dperror("Maximum Connection-Threads reached\n");
+			yperror("Maximum Connection-Threads reached\n");
 			pthread_mutex_unlock( &mutex );
 			return false;
 		}
@@ -450,7 +450,7 @@ bool CWebserver::handle_connection(CySocket *newSock) {
 
 		// start connection Thread
 		if(pthread_create(&Connection_Thread_List[index], &attr, WebThread, (void *)newConn) != 0)
-			dperror("Could not create Connection-Thread\n");
+			yperror("Could not create Connection-Thread\n");
 	}
 	else // non threaded
 #endif
@@ -463,7 +463,7 @@ bool CWebserver::handle_connection(CySocket *newSock) {
 void *WebThread(void *args) {
 	TWebserverConnectionArgs *newConn = (TWebserverConnectionArgs *) args;
 	if (!newConn) {
-		dperror("WebThread called without arguments!\n");
+		yperror("WebThread called without arguments!\n");
 		return NULL;
 	}
 
@@ -474,13 +474,13 @@ void *WebThread(void *args) {
 	// (1) create & init Connection
 	CWebserver *ws = newConn->WebserverBackref;
 	if (!ws) {
-		dperror("WebThread CWebserver error!\n");
+		yperror("WebThread CWebserver error!\n");
 		return NULL;
 	}
 
 	CWebserverConnection *con = new CWebserverConnection(ws);
 	if (!con) {
-		dperror("WebThread CWebserverConnection error!\n");
+		yperror("WebThread CWebserverConnection error!\n");
 		return NULL;
 	}
 

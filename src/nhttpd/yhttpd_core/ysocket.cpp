@@ -204,7 +204,7 @@ CySocket* CySocket::accept() {
 	init();
 	SOCKET newSock = ::accept(sock, (sockaddr *) &addr, &addr_len);
 	if (newSock == INVALID_SOCKET) {
-		dperror("accept: invalid socket\n");
+		yperror("accept: invalid socket\n");
 		return NULL;
 	}
 	CySocket *new_ySocket = new CySocket(newSock);
@@ -247,7 +247,7 @@ bool CySocket::set_option(int typ, int option) {
 void CySocket::set_reuse_port() {
 #ifdef SO_REUSEPORT
 	if(!set_option(SOL_SOCKET, SO_REUSEPORT))
-		dperror("setsockopt(SO_REUSEPORT)\n");
+		yperror("setsockopt(SO_REUSEPORT)\n");
 #endif
 }
 
@@ -257,7 +257,7 @@ void CySocket::set_reuse_port() {
 void CySocket::set_reuse_addr() {
 #ifdef SO_REUSEADDR
 	if(!set_option(SOL_SOCKET, SO_REUSEADDR))
-		dperror("setsockopt(SO_REUSEADDR)\n");
+		yperror("setsockopt(SO_REUSEADDR)\n");
 #endif
 }
 
@@ -267,7 +267,7 @@ void CySocket::set_reuse_addr() {
 void CySocket::set_keep_alive() {
 #ifdef SO_KEEPALIVE
 	if(!set_option(SOL_SOCKET, SO_KEEPALIVE))
-		dperror("setsockopt(SO_KEEPALIVE)\n");
+		yperror("setsockopt(SO_KEEPALIVE)\n");
 #endif
 }
 
@@ -277,7 +277,7 @@ void CySocket::set_keep_alive() {
 void CySocket::set_tcp_nodelay() {
 #ifdef TCP_NODELAY
 	if(!set_option(IPPROTO_TCP, TCP_NODELAY))
-		dperror("setsockopt(SO_KEEPALIVE)\n");
+		yperror("setsockopt(SO_KEEPALIVE)\n");
 #endif
 }
 //=============================================================================

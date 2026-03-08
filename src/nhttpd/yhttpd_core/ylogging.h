@@ -76,11 +76,11 @@ class CLogging
 	do { if(CLogging::getInstance()->LogLevel>=level) CLogging::getInstance()->printf("[yhttpd#%d(%s:%d)] " fmt, level, __file__, __LINE__, ## args); } while (0)
 
 // print only if debug is on
-#define dprintf(fmt, args...) \
+#define yprintf(fmt, args...) \
 	do { if(CLogging::getInstance()->getDebug())CLogging::getInstance()->printf("[yhttpd] " fmt, ## args); } while (0)
 
 // print string to stdandard error
-#define dperror(str) \
+#define yperror(str) \
 	do { perror("[yhttpd] " str); } while (0)
 
 #endif /* __yttpd_logging_h__ */

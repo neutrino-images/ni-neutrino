@@ -207,7 +207,7 @@ int CmodSendfile::OpenFile(CyhookHandler *, std::string fullfilename) {
 		fd = open(fullfilename.c_str(), O_RDONLY | O_LARGEFILE);
 		if (fd <= 0) {
 			aprintf("cannot open file %s: ", fullfilename.c_str());
-			dperror("");
+			yperror("");
 		}
 	}
 	return fd;

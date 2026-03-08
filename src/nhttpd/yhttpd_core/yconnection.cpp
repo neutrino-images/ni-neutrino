@@ -118,7 +118,7 @@ void CWebserverConnection::HandleConnection() {
 	} else {
 		RequestCanceled = true;
 		keep_alive = false; // close this connection socket
-		//		dperror("Error while parsing request\n");
+		//		yperror("Error while parsing request\n");
 		log_level_printf(1, "request canceled: %s\n", strerror(errno));
 	}
 	EndConnection();

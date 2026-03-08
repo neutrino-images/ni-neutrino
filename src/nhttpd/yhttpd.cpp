@@ -108,7 +108,7 @@ void * nhttpd_main_thread(void *) {
 	if (yhttpd->Configure()) {
 		// Start Webserver: fork ist if not in debug mode
 		aprintf("Webserver starting...\n");
-		dprintf("Start in Debug-Mode\n"); // non forked debugging loop
+		yprintf("Start in Debug-Mode\n"); // non forked debugging loop
 
 		yhttpd->run();
 	}
@@ -153,7 +153,7 @@ bool Cyhttpd::Configure() {
 		{
 			if((pwd = getpwnam(username.c_str())) == NULL)
 			{
-				dperror("Dont know user to set uid\n");
+				yperror("Dont know user to set uid\n");
 				return false;
 			}
 		}
@@ -175,13 +175,13 @@ bool Cyhttpd::Configure() {
 			// do change Root
 			if(chroot(ConfigList["server.chroot"].c_str()) == -1)
 			{
-				dperror("Change Root failed\n");
+				yperror("Change Root failed\n");
 				return false;
 			}
 			// Set Working Dir
 			if(chdir("/") == -1)
 			{
-				dperror("Change Directory to Root failed\n");
+				yperror("Change Directory to Root failed\n");
 				return false;
 			}
 		}
@@ -200,7 +200,7 @@ bool Cyhttpd::Configure() {
 			// set user
 			if(setuid(pwd->pw_uid) == -1)
 			{
-				dperror("Change User Context failed\n");
+				yperror("Change User Context failed\n");
 				return false;
 			}
 		}

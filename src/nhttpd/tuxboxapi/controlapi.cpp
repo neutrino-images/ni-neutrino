@@ -304,9 +304,9 @@ void CControlAPI::Execute(CyhookHandler *hh)
 	// debugging informations
 	if(CLogging::getInstance()->getDebug())
 	{
-		dprintf("Execute CGI : %s\n", func_req.c_str());
+		yprintf("Execute CGI : %s\n", func_req.c_str());
 		for(CStringList::iterator it = hh->ParamList.begin(); it != hh->ParamList.end(); ++it)
-			dprintf("  Parameter %s : %s\n", it->first.c_str(), it->second.c_str());
+			yprintf("  Parameter %s : %s\n", it->first.c_str(), it->second.c_str());
 	}
 
 	// get function index
@@ -2316,7 +2316,7 @@ void CControlAPI::ZaptoCGI(CyhookHandler *hh)
 			if(!NeutrinoAPI->Zapit->isPlayBackActive()){
 				NeutrinoAPI->Zapit->startPlayBack();
 				NeutrinoAPI->Sectionsd->setPauseScanning(false);
-				dprintf("start playback requested..\n");
+				yprintf("start playback requested..\n");
 			}
 			hh->SendOk();
 		}
