@@ -43,6 +43,17 @@
 #include <gui/pictureviewer.h>
 extern CPictureViewer * g_PicViewer;
 
+namespace {
+struct CProgressBarCacheCleanup {
+	~CProgressBarCacheCleanup()
+	{
+		CProgressBarCache::pbcClear();
+	}
+};
+
+static CProgressBarCacheCleanup g_progressbar_cache_cleanup;
+}
+
 CProgressBar::CProgressBar(	const int x_pos,
 				const int y_pos,
 				const int w,
@@ -137,10 +148,6 @@ void CProgressBar::initDimensions()
 void CProgressBarCache::pbcClear()
 {
 	for (std::vector<CProgressBarCache *>::iterator it = pbCache.begin(); it != pbCache.end(); ++it) {
-		if ((*it)->pbc_active)
-			free((*it)->pbc_active);
-		if ((*it)->pbc_passive)
-			free((*it)->pbc_passive);
 		delete (*it);
 		(*it) = NULL;
 	}
@@ -230,6 +237,7 @@ void CProgressBarCache::pbcCreateBitmaps()
 	pbc_passive = (fb_pixel_t *) calloc(1, pbc_width * pbc_height * sizeof(fb_pixel_t));
 	if (!pbc_passive) {
 		free(pbc_active);
+		pbc_active = NULL;
 		return;
 	}
 
