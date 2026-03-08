@@ -23,7 +23,15 @@
 
 	Description: Storage and scan helpers for moviebrowser
 
-	(C) 2016, 2026 Thilo Graf 'dbt'
+	Date:	   Nov 2005
+	Author: Guenther@tuxbox.berlios.org
+		based on code of Steffen Hehn 'McClean'
+
+	(C) 2009-2015 Stefan Seyfried
+	(C) 2016      Sven Hoefer
+
+	outsourced:
+	(C) 2026 Thilo Graf 'dbt'
 */
 
 #ifdef HAVE_CONFIG_H
