@@ -83,6 +83,7 @@ neutrino_LDADD = \
 	gui/moviebrowser/mb.o \
 	gui/moviebrowser/mb_constants.o \
 	gui/moviebrowser/mb_functions.o \
+	gui/moviebrowser/mb_input.o \
 	gui/moviebrowser/mb_menu.o \
 	gui/moviebrowser/mb_storage.o \
 	gui/moviebrowser/mb_ui.o \
