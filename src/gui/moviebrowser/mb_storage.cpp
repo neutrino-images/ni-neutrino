@@ -69,11 +69,11 @@ bool CMovieBrowser::addDir(std::string& dirname, int* used)
 		if (strcmp(m_dir[i].name.c_str(),newdir.name.c_str()) == 0)
 		{
 			// string is identical to previous one
-			TRACE("[mb] Dir already in list: %s\n",newdir.name.c_str());
+			dprintf(DEBUG_DEBUG, "[mb] Dir already in list: %s\n",newdir.name.c_str());
 			return (false);
 		}
 	}
-	TRACE("[mb] new Dir: %s\n",newdir.name.c_str());
+	dprintf(DEBUG_DEBUG, "[mb] new Dir: %s\n",newdir.name.c_str());
 	newdir.used = used;
 	m_dir.push_back(newdir);
 	if (*used == true)
@@ -111,7 +111,6 @@ void CMovieBrowser::updateDir(void)
 
 void CMovieBrowser::loadAllTsFileNamesFromStorage(void)
 {
-	//TRACE("[mb]->loadAllTsFileNamesFromStorage \n");
 
 	m_movieSelectionHandler = NULL;
 	m_dirNames.clear();
@@ -138,12 +137,11 @@ void CMovieBrowser::loadAllTsFileNamesFromStorage(void)
 		}
 	}
 
-	TRACE("[mb] Dir %d, Files: %d, size %zu, used_dirs %zu\n", (int)m_dirNames.size(), (int)m_vMovieInfo.size(), size, used_dirs);
+	dprintf(DEBUG_DEBUG, "[mb] Dir %d, Files: %d, size %zu, used_dirs %zu\n", (int)m_dirNames.size(), (int)m_vMovieInfo.size(), size, used_dirs);
 }
 
 bool CMovieBrowser::gotMovie(const char *rec_title)
 {
-	//TRACE("[mb]->gotMovie\n");
 
 	m_doRefresh = false;
 	loadAllTsFileNamesFromStorage();
@@ -151,7 +149,7 @@ bool CMovieBrowser::gotMovie(const char *rec_title)
 	bool found = false;
 	for (unsigned int i = 0; i < m_vMovieInfo.size(); i++)
 	{
-		//printf("[mb] search for %s in %s\n", rec_title, m_vMovieInfo[i].epgTitle.c_str());
+		//dprintf(DEBUG_DEBUG, "[mb] search for %s in %s\n", rec_title, m_vMovieInfo[i].epgTitle.c_str());
 		if (strcmp(rec_title, m_vMovieInfo[i].epgTitle.c_str()) == 0)
 		{
 			found = true;
@@ -189,7 +187,6 @@ bool CMovieBrowser::supportedExtension(CFile &file)
 bool CMovieBrowser::addFile(CFile &file, int dirItNr)
 {
 	if (!S_ISDIR(file.Mode) && !supportedExtension(file)) {
-		//TRACE("[mb] not supported file: '%s'\n", file.Name.c_str());
 		return false;
 	}
 
@@ -201,7 +198,6 @@ bool CMovieBrowser::addFile(CFile &file, int dirItNr)
 		movieInfo.epgTitle = file.getFileName();
 	}
 	movieInfo.dirItNr = dirItNr;
-	//TRACE("addFile dir [%s] : [%s]\n", m_dirNames[movieInfo.dirItNr].c_str(), movieInfo.file.Name.c_str());
 	m_vMovieInfo.push_back(movieInfo);
 	return true;
 }
@@ -211,14 +207,13 @@ Note: this function is used recursive, do not add any return within the body due
 ************************************************************************/
 bool CMovieBrowser::loadTsFileNamesFromDir(const std::string & dirname)
 {
-	//TRACE("[mb]->loadTsFileNamesFromDir %s\n",dirname.c_str());
 
 	static int recursive_counter = 0; // recursive counter to be used to avoid hanging
 	bool result = false;
 
 	if (recursive_counter > 10)
 	{
-		TRACE("[mb]loadTsFileNamesFromDir: return->recoursive error\n");
+		dprintf(DEBUG_DEBUG, "[mb]loadTsFileNamesFromDir: return->recoursive error\n");
 		return (false); // do not go deeper than 10 directories
 	}
 
@@ -228,7 +223,7 @@ bool CMovieBrowser::loadTsFileNamesFromDir(const std::string & dirname)
 		if (strcmp(m_dirNames[i].c_str(),dirname.c_str()) == 0)
 		{
 			// string is identical to previous one
-			TRACE("[mb]Dir already in list: %s\n",dirname.c_str());
+			dprintf(DEBUG_DEBUG, "[mb]Dir already in list: %s\n",dirname.c_str());
 			return (false);
 		}
 	}
@@ -270,7 +265,6 @@ bool CMovieBrowser::loadTsFileNamesFromDir(const std::string & dirname)
 bool CMovieBrowser::readDir(const std::string & dirname, CFileList* flist)
 {
 	bool result = true;
-	//TRACE("readDir_std %s\n",dirname.c_str());
 	stat_struct statbuf;
 	dirent_struct **namelist;
 	int n;
@@ -289,7 +283,6 @@ bool CMovieBrowser::readDir(const std::string & dirname, CFileList* flist)
 			file.Name = dirname;
 			file.Name += namelist[i]->d_name;
 
-//			printf("file.Name: '%s', getFileName: '%s' getPath: '%s'\n",file.Name.c_str(),file.getFileName().c_str(),file.getPath().c_str());
 			if (my_stat((file.Name).c_str(),&statbuf) != 0)
 				fprintf(stderr, "stat '%s' error: %m\n", file.Name.c_str());
 			else
@@ -312,7 +305,7 @@ bool CMovieBrowser::delFile(CFile& file)
 {
 	bool result = true;
 	int err = unlink(file.Name.c_str());
-	TRACE("  delete file: %s\r\n",file.Name.c_str());
+	dprintf(DEBUG_DEBUG, "  delete file: %s\r\n",file.Name.c_str());
 	if (err)
 		result = false;
 	return(result);
@@ -320,7 +313,7 @@ bool CMovieBrowser::delFile(CFile& file)
 
 void CMovieBrowser::loadMovies(bool doRefresh)
 {
-	TRACE("[mb] loadMovies: \n");
+	dprintf(DEBUG_DEBUG, "[mb] loadMovies: \n");
 
 	struct timeval t1, t2;
 	gettimeofday(&t1, NULL);
@@ -357,7 +350,6 @@ void CMovieBrowser::loadMovies(bool doRefresh)
 
 void CMovieBrowser::loadAllMovieInfo(void)
 {
-	//TRACE("[mb]->loadAllMovieInfo \n");
 	for (unsigned int i=0; i < m_vMovieInfo.size();i++)
 		m_movieInfo.loadMovieInfo(&(m_vMovieInfo[i]));
 }
@@ -383,14 +375,14 @@ void CMovieBrowser::updateSerienames(void)
 				m_vHandleSerienames.push_back(&m_vMovieInfo[i]);
 		}
 	}
-	TRACE("[mb]->updateSerienames: %d\n", (int)m_vHandleSerienames.size());
+	dprintf(DEBUG_DEBUG, "[mb]->updateSerienames: %d\n", (int)m_vHandleSerienames.size());
 	// TODO sort(m_serienames.begin(), m_serienames.end(), my_alphasort);
 	m_seriename_stale = false;
 }
 
 void CMovieBrowser::autoFindSerie(void)
 {
-	TRACE("autoFindSerie\n");
+	dprintf(DEBUG_DEBUG, "autoFindSerie\n");
 	updateSerienames(); // we have to make sure that the seriename array is up to date, otherwise this does not work
 	// if the array is not stale, the function is left immediately
 	for (unsigned int i = 0; i < m_vMovieInfo.size(); i++)
@@ -398,20 +390,16 @@ void CMovieBrowser::autoFindSerie(void)
 		// For all movie infos, which do not have a seriename, we try to find one.
 		// We search for a movieinfo with seriename, and than we do check if the title is the same
 		// in case of same title, we assume both belongs to the same serie
-		//TRACE("%s ",m_vMovieInfo[i].serieName);
 		if (m_vMovieInfo[i].serieName.empty())
 		{
 			for (unsigned int t=0; t < m_vHandleSerienames.size();t++)
 			{
-				//TRACE("%s ",m_vHandleSerienames[i].serieName);
 				if (m_vMovieInfo[i].epgTitle == m_vHandleSerienames[t]->epgTitle)
 				{
-					//TRACE("x");
 					m_vMovieInfo[i].serieName = m_vHandleSerienames[t]->serieName;
 					break; // we  found a maching serie, nothing to do else, leave for(t=0)
 				}
 			}
-			//TRACE("\n");
 		}
 	}
 }

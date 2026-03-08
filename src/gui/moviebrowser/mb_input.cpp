@@ -54,11 +54,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define TRACE  printf
 
 bool CMovieBrowser::onButtonPress(neutrino_msg_t msg)
 {
-//	TRACE("[mb]->onButtonPress %d\n",msg);
 	bool result = onButtonPressMainFrame(msg);
 	if (result == false)
 	{
@@ -79,7 +77,6 @@ bool CMovieBrowser::onButtonPress(neutrino_msg_t msg)
 
 bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 {
-	//TRACE("[mb]->onButtonPressMainFrame: %d\n",msg);
 	bool result = true;
 	neutrino_msg_data_t data;
 
@@ -129,7 +126,7 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 					extension = cover_file.substr(ext_pos + 1, cover_file.length() - ext_pos);
 					extension = "." + extension;
 					str_replace(extension, ".jpg", cover_file);
-					printf("TMDB: %s : %s\n",m_movieSelectionHandler->file.Name.c_str(),cover_file.c_str());
+					dprintf(DEBUG_DEBUG, "[mb] TMDB: %s : %s\n",m_movieSelectionHandler->file.Name.c_str(),cover_file.c_str());
 					CTMDB* tmdb = CTMDB::getInstance();
 					if (tmdb)
 					{
@@ -228,7 +225,7 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 			{
 				m_settings.sorting.item = (MB_INFO_ITEM) selected;
 
-				TRACE("[mb]->new sorting %d, %s\n", m_settings.sorting.item, g_Locale->getText(m_localizedItemName[m_settings.sorting.item]));
+				dprintf(DEBUG_DEBUG, "[mb]->new sorting %d, %s\n", m_settings.sorting.item, g_Locale->getText(m_localizedItemName[m_settings.sorting.item]));
 
 				refreshBrowserList();
 				refreshMovieInfo();
@@ -299,7 +296,7 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 
 		do {
 			smsKey = smsInput.handleMsg(msg);
-			printf("SMS new key: %c\n", smsKey);
+			dprintf(DEBUG_DEBUG, "[mb] SMS new key: %c\n", smsKey);
 			g_RCInput->getMsg_ms(&msg, &data, MOVIE_SMSKEY_TIMEOUT-100);
 		} while ((msg >= CRCInput::RC_1) && (msg <= CRCInput::RC_9));
 
@@ -310,7 +307,7 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 
 				char firstCharOfTitle = (*current_list)[i]->epgTitle.c_str()[0];
 				if (tolower(firstCharOfTitle) == smsKey) {
-					printf("SMS found selected=%d i=%d \"%s\"\n", selected, i, (*current_list)[i]->epgTitle.c_str());
+					dprintf(DEBUG_DEBUG, "[mb] SMS found selected=%d i=%d \"%s\"\n", selected, i, (*current_list)[i]->epgTitle.c_str());
 					break;
 				}
 			}
@@ -318,7 +315,7 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 				for (i = 0; i < (*current_list).size(); i++) {
 					char firstCharOfTitle = (*current_list)[i]->epgTitle.c_str()[0];
 					if (tolower(firstCharOfTitle) == smsKey) {
-						printf("SMS found selected=%d i=%d \"%s\"\n", selected, i, (*current_list)[i]->epgTitle.c_str());
+						dprintf(DEBUG_DEBUG, "[mb] SMS found selected=%d i=%d \"%s\"\n", selected, i, (*current_list)[i]->epgTitle.c_str());
 						break;
 					}
 				}
@@ -333,7 +330,6 @@ bool CMovieBrowser::onButtonPressMainFrame(neutrino_msg_t msg)
 	}
 	else
 	{
-		//TRACE("[mb]->onButtonPressMainFrame none\n");
 		result = false;
 	}
 
@@ -359,7 +355,6 @@ void CMovieBrowser::scrollBrowserItem(bool next, bool page)
 
 bool CMovieBrowser::onButtonPressBrowserList(neutrino_msg_t msg)
 {
-	//TRACE("[mb]->onButtonPressBrowserList %d\n",msg);
 	bool result = true;
 
 	if (msg == CRCInput::RC_up)
@@ -383,7 +378,6 @@ bool CMovieBrowser::onButtonPressBrowserList(neutrino_msg_t msg)
 
 bool CMovieBrowser::onButtonPressLastPlayList(neutrino_msg_t msg)
 {
-	//TRACE("[mb]->onButtonPressLastPlayList %d\n",msg);
 	bool result = true;
 
 	if (msg==CRCInput::RC_up)
@@ -407,7 +401,6 @@ bool CMovieBrowser::onButtonPressLastPlayList(neutrino_msg_t msg)
 
 bool CMovieBrowser::onButtonPressLastRecordList(neutrino_msg_t msg)
 {
-	//TRACE("[mb]->onButtonPressLastRecordList %d\n",msg);
 	bool result = true;
 
 	if (msg == CRCInput::RC_up)
@@ -431,7 +424,6 @@ bool CMovieBrowser::onButtonPressLastRecordList(neutrino_msg_t msg)
 
 bool CMovieBrowser::onButtonPressFilterList(neutrino_msg_t msg)
 {
-	//TRACE("[mb]->onButtonPressFilterList %d,%d\n",msg,m_settings.filter.item);
 	bool result = true;
 
 	if (msg==CRCInput::RC_up)
@@ -493,7 +485,6 @@ bool CMovieBrowser::onButtonPressFilterList(neutrino_msg_t msg)
 
 bool CMovieBrowser::onButtonPressMovieInfoList(neutrino_msg_t msg)
 {
-//	TRACE("[mb]->onButtonPressEPGInfoList %d\n",msg);
 	bool result = true;
 
 	if (msg == CRCInput::RC_up)
@@ -516,7 +507,7 @@ bool CMovieBrowser::onButtonPressMovieInfoList(neutrino_msg_t msg)
 
 void CMovieBrowser::onSetGUIWindow(MB_GUI gui)
 {
-	TRACE("[mb]->onSetGUIWindow: gui %d -> %d\n", m_settings.gui, gui);
+	dprintf(DEBUG_DEBUG, "[mb]->onSetGUIWindow: gui %d -> %d\n", m_settings.gui, gui);
 	m_settings.gui = gui;
 
 	hideDetailsLine();
@@ -611,7 +602,7 @@ void CMovieBrowser::onSetGUIWindowPrev(void)
 
 void CMovieBrowser::onSetFocus(MB_FOCUS new_focus)
 {
-	TRACE("[mb]->onSetFocus: focus %d -> %d \n", m_windowFocus, new_focus);
+	dprintf(DEBUG_DEBUG, "[mb]->onSetFocus: focus %d -> %d \n", m_windowFocus, new_focus);
 	clearSelection();
 
 	m_windowFocus = new_focus;
@@ -637,7 +628,7 @@ void CMovieBrowser::onSetFocus(MB_FOCUS new_focus)
 
 void CMovieBrowser::onSetFocusNext(void)
 {
-	TRACE("[mb]->onSetFocusNext: gui %d\n", m_settings.gui);
+	dprintf(DEBUG_DEBUG, "[mb]->onSetFocusNext: gui %d\n", m_settings.gui);
 
 	if (m_settings.gui == MB_GUI_FILTER)
 	{

@@ -45,8 +45,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define TRACE  printf
-
 std::string CMovieBrowser::formatDeleteMsg(MI_MOVIE_INFO *movieinfo, int msgFont, const int boxWidth)
 {
 	Font *msgFont_ = g_Font[msgFont];
@@ -93,7 +91,6 @@ std::string CMovieBrowser::formatDeleteMsg(MI_MOVIE_INFO *movieinfo, int msgFont
 
 bool CMovieBrowser::onDeleteFile(MI_MOVIE_INFO *movieinfo, bool skipAsk)
 {
-	//TRACE("[onDeleteFile] ");
 	bool result = false;
 
 	/* default font for ShowMsg */
@@ -119,7 +116,7 @@ bool CMovieBrowser::onDeleteFile(MI_MOVIE_INFO *movieinfo, bool skipAsk)
 		hintBox.hide();
 		g_RCInput->clearRCMsg();
 
-		TRACE("List size: %d\n", (int)m_vMovieInfo.size());
+		dprintf(DEBUG_DEBUG, "[mb] List size: %d\n", (int)m_vMovieInfo.size());
 		for (std::vector<MI_MOVIE_INFO>::iterator mi_it = m_vMovieInfo.begin(); mi_it != m_vMovieInfo.end(); ++mi_it)
 		{
 			if (
@@ -145,7 +142,6 @@ bool CMovieBrowser::onDeleteFile(MI_MOVIE_INFO *movieinfo, bool skipAsk)
 
 bool CMovieBrowser::onDelete(bool cursor_only)
 {
-	//TRACE("[onDelete] ");
 	bool result = false;
 
 	MI_MOVIE_INFO *movieinfo;
@@ -153,24 +149,22 @@ bool CMovieBrowser::onDelete(bool cursor_only)
 
 	getSelectedFiles(filelist, movielist);
 
-	printf("CMovieBrowser::onDelete(%s) filelist  size: %zd\n", cursor_only ? "true" : "false", filelist.size());
-	printf("CMovieBrowser::onDelete(%s) movielist size: %zd\n", cursor_only ? "true" : "false", movielist.size());
+	dprintf(DEBUG_DEBUG, "[mb] onDelete(%s) filelist  size: %zd\n", cursor_only ? "true" : "false", filelist.size());
+	dprintf(DEBUG_DEBUG, "[mb] onDelete(%s) movielist size: %zd\n", cursor_only ? "true" : "false", movielist.size());
 
 	if (cursor_only || (filelist.empty() || movielist.empty()))
 	{
-		printf("CMovieBrowser::onDelete(%s) clearing the lists\n", cursor_only ? "true" : "false");
+		dprintf(DEBUG_DEBUG, "[mb] onDelete(%s) clearing the lists\n", cursor_only ? "true" : "false");
 
 		filelist.clear();
 		movielist.clear();
-
-		printf("CMovieBrowser::onDelete(%s) add the m_movieSelectionHandler\n", cursor_only ? "true" : "false");
 
 		// just add the m_movieSelectionHandler
 		filelist.push_back(m_movieSelectionHandler->file);
 		movielist.push_back(m_movieSelectionHandler);
 
-		printf("CMovieBrowser::onDelete(%s) filelist  size: %zd\n", cursor_only ? "true" : "false", filelist.size());
-		printf("CMovieBrowser::onDelete(%s) movielist size: %zd\n", cursor_only ? "true" : "false", movielist.size());
+		dprintf(DEBUG_DEBUG, "[mb] onDelete(%s) filelist  size: %zd\n", cursor_only ? "true" : "false", filelist.size());
+		dprintf(DEBUG_DEBUG, "[mb] onDelete(%s) movielist size: %zd\n", cursor_only ? "true" : "false", movielist.size());
 	}
 
 	MI_MOVIE_LIST dellist;
@@ -181,7 +175,7 @@ bool CMovieBrowser::onDelete(bool cursor_only)
 	{
 		unsigned int idx = filelist_it - filelist.begin();
 		movieinfo = movielist[idx];
-		TRACE("[mb]-> try to delete %d:%s\n", idx, movieinfo->file.Name.c_str());
+		dprintf(DEBUG_DEBUG, "[mb] try to delete %d:%s\n", idx, movieinfo->file.Name.c_str());
 
 		if ((!m_vMovieInfo.empty()) && (movieinfo != NULL)) {
 			bool toDelete = true;

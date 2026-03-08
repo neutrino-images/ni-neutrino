@@ -88,38 +88,38 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 			element = imdb->getIMDbElement("Title");
 			if (!element.empty())
 			{
-				printf("Title\n");
-				printf("* old: %s\n", m_movieSelectionHandler->epgTitle.c_str());
+				dprintf(DEBUG_DEBUG, "[mb] Title\n");
+				dprintf(DEBUG_DEBUG, "[mb] * old: %s\n", m_movieSelectionHandler->epgTitle.c_str());
 				m_movieSelectionHandler->epgTitle = element;
-				printf("* new: %s\n", m_movieSelectionHandler->epgTitle.c_str());
+				dprintf(DEBUG_DEBUG, "[mb] * new: %s\n", m_movieSelectionHandler->epgTitle.c_str());
 			}
 
 			element = imdb->getIMDbElement("Genre");
 			if (!element.empty())
 			{
-				printf("Genre\n");
-				printf("* old: %s\n", m_movieSelectionHandler->epgInfo1.c_str());
+				dprintf(DEBUG_DEBUG, "[mb] Genre\n");
+				dprintf(DEBUG_DEBUG, "[mb] * old: %s\n", m_movieSelectionHandler->epgInfo1.c_str());
 				m_movieSelectionHandler->epgInfo1 = element;
-				printf("* new: %s\n", m_movieSelectionHandler->epgInfo1.c_str());
+				dprintf(DEBUG_DEBUG, "[mb] * new: %s\n", m_movieSelectionHandler->epgInfo1.c_str());
 			}
 #endif
 
 			element = imdb->getIMDbElement("Year");
 			if (!element.empty())
 			{
-				printf("Year\n");
-				printf("* old: %d\n", m_movieSelectionHandler->productionDate);
+				dprintf(DEBUG_DEBUG, "[mb] Year\n");
+				dprintf(DEBUG_DEBUG, "[mb] * old: %d\n", m_movieSelectionHandler->productionDate);
 				m_movieSelectionHandler->productionDate = atoi(element);
-				printf("* new: %d\n", m_movieSelectionHandler->productionDate);
+				dprintf(DEBUG_DEBUG, "[mb] * new: %d\n", m_movieSelectionHandler->productionDate);
 			}
 
 			element = imdb->getIMDbElement("Country");
 			if (!element.empty())
 			{
-				printf("Country\n");
-				printf("* old: %s\n", m_movieSelectionHandler->productionCountry.c_str());
+				dprintf(DEBUG_DEBUG, "[mb] Country\n");
+				dprintf(DEBUG_DEBUG, "[mb] * old: %s\n", m_movieSelectionHandler->productionCountry.c_str());
 				m_movieSelectionHandler->productionCountry = element;
-				printf("* new: %s\n", m_movieSelectionHandler->productionCountry.c_str());
+				dprintf(DEBUG_DEBUG, "[mb] * new: %s\n", m_movieSelectionHandler->productionCountry.c_str());
 			}
 
 			element = imdb->getIMDbElement("imdbRating");
@@ -128,23 +128,23 @@ int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)
 				if ((pos = element.find_first_of(",.")) != std::string::npos)
 					element.replace(pos, 1, ""); // change 8,1 or 8.1 to 81
 
-				printf("Rating\n");
-				printf("* old: %d\n", m_movieSelectionHandler->rating);
+				dprintf(DEBUG_DEBUG, "[mb] Rating\n");
+				dprintf(DEBUG_DEBUG, "[mb] * old: %d\n", m_movieSelectionHandler->rating);
 				m_movieSelectionHandler->rating = atoi(element);
-				printf("* new: %d\n", m_movieSelectionHandler->rating);
+				dprintf(DEBUG_DEBUG, "[mb] * new: %d\n", m_movieSelectionHandler->rating);
 			}
 
 			std::string poster;
 			if ((pos = m_movieSelectionHandler->file.Name.rfind(".")) != std::string::npos)
 			{
-				printf("Poster\n");
+				dprintf(DEBUG_DEBUG, "[mb] Poster\n");
 				poster = m_movieSelectionHandler->file.Name.substr(0, pos);
 				poster += ".jpg";
 				CFileHelpers fh;
 				if (fh.copyFile(imdb->getPoster().c_str(), poster.c_str(), 0644))
-					printf("* poster: %s\n", poster.c_str());
+					dprintf(DEBUG_DEBUG, "[mb] * poster: %s\n", poster.c_str());
 				else
-					printf("* poster: copy error\n");
+					dprintf(DEBUG_DEBUG, "[mb] * poster: copy error\n");
 			}
 
 			imdb = NULL;

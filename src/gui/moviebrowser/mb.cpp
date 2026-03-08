@@ -85,8 +85,6 @@
 
 extern CPictureViewer * g_PicViewer;
 
-#define TRACE  printf
-
 MI_MOVIE_INFO* playing_info = NULL;
 CMovieBrowser::CMovieBrowser(): configfile ('\t')
 {
@@ -95,8 +93,6 @@ CMovieBrowser::CMovieBrowser(): configfile ('\t')
 
 CMovieBrowser::~CMovieBrowser()
 {
-	//TRACE("[mb] del\n");
-
 	m_dir.clear();
 
 	m_dirNames.clear();
@@ -121,7 +117,6 @@ CMovieBrowser::~CMovieBrowser()
 
 void CMovieBrowser::clearSelection()
 {
-	//TRACE("[mb]->%s\n", __func__);
 	for (unsigned i = 0; i < m_vMovieInfo.size(); i++)
 		m_vMovieInfo[i].marked = false;
 
@@ -151,7 +146,6 @@ void CMovieBrowser::init(void)
 {
 	bool reinit_rows = false;
 	int i = 0;
-	//TRACE("[mb]->init\n");
 	initGlobalSettings();
 	loadSettings(&m_settings);
 

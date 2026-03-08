@@ -45,14 +45,13 @@
 #include "driver/lcd4l.h"
 #endif
 
-extern bool timeset;
 
 int CMovieBrowser::exec(const char* path)
 {
 	bool res = false;
 	menu_ret = menu_return::RETURN_REPAINT;
 
-	TRACE("[mb]->%s\n", __func__);
+	dprintf(DEBUG_DEBUG, "[mb]->%s\n", __func__);
 	int returnDefaultOnTimeout = true;
 	neutrino_msg_t msg;
 	neutrino_msg_data_t data;
@@ -73,7 +72,7 @@ int CMovieBrowser::exec(const char* path)
 
 	if (m_settings.remount == true)
 	{
-		TRACE("[mb] remount\n");
+		dprintf(DEBUG_DEBUG, "[mb] remount\n");
 		/* FIXME: add hintbox ? */
 		//umount automount dirs
 		for (int i = 0; i < NETWORK_NFS_NR_OF_ENTRIES; i++)
@@ -105,7 +104,7 @@ int CMovieBrowser::exec(const char* path)
 		{
 			if (msg == CRCInput::RC_timeout && returnDefaultOnTimeout)
 			{
-				TRACE("[mb] Timerevent\n");
+				dprintf(DEBUG_DEBUG, "[mb] Timerevent\n");
 				loop = false;
 			}
 			else if ((msg == NeutrinoMessages::EVT_TIMER) && (data == g_InfoViewer->sec_timer_id))
@@ -117,7 +116,7 @@ int CMovieBrowser::exec(const char* path)
 			{
 				for (unsigned int i = 0; i < m_vMovieInfo.size(); i++) {
 					if (m_vMovieInfo[i].marked) {
-						TRACE("[mb] has selected\n");
+						dprintf(DEBUG_DEBUG, "[mb] has selected\n");
 						res = true;
 						break;
 					}
@@ -133,13 +132,13 @@ int CMovieBrowser::exec(const char* path)
 					if (m_movieSelectionHandler->bookmarks.lastPlayStop != 0 ||
 							m_movieSelectionHandler->bookmarks.start != 0)
 					{
-						TRACE("[mb] stop: %d start:%d \n",m_movieSelectionHandler->bookmarks.lastPlayStop,m_movieSelectionHandler->bookmarks.start);
+						dprintf(DEBUG_DEBUG, "[mb] stop: %d start:%d \n",m_movieSelectionHandler->bookmarks.lastPlayStop,m_movieSelectionHandler->bookmarks.start);
 						m_currentStartPos = showStartPosSelectionMenu(); // display start menu m_currentStartPos =
 					}
 
 					if (m_currentStartPos >= 0) {
 						playing_info = m_movieSelectionHandler;
-						TRACE("[mb] start pos: %d s\n",m_currentStartPos);
+						dprintf(DEBUG_DEBUG, "[mb] start pos: %d s\n",m_currentStartPos);
 						res = true;
 						loop = false;
 					} else
@@ -164,7 +163,7 @@ int CMovieBrowser::exec(const char* path)
 			}
 			else if (CNeutrinoApp::getInstance()->handleMsg(msg, data) & messages_return::cancel_all)
 			{
-				TRACE("[mb]->exec: getInstance\n");
+				dprintf(DEBUG_DEBUG, "[mb]->exec: getInstance\n");
 				menu_ret = menu_return::RETURN_EXIT_ALL;
 				loop = false;
 			}
@@ -174,7 +173,6 @@ int CMovieBrowser::exec(const char* path)
 			timeoutEnd = CRCInput::calcTimeoutEnd(timeout); // calcualate next timeout
 	}
 	hide();
-	//TRACE(" return %d\n",res);
 
 	m_prevBrowserSelection = m_currentBrowserSelection;
 	m_prevRecordSelection = m_currentRecordSelection;
@@ -185,7 +183,7 @@ int CMovieBrowser::exec(const char* path)
 	// make stale if we should reload the next time, but not if movie has to be played
 	if (m_settings.reload == true && res == false)
 	{
-		TRACE("[mb] force reload next time\n");
+		dprintf(DEBUG_DEBUG, "[mb] force reload next time\n");
 		fileInfoStale();
 	}
 

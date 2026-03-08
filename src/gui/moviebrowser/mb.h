@@ -56,6 +56,7 @@
 #include <driver/movieinfo.h>
 #include <driver/file.h>
 #include <driver/fb_window.h>
+#include <system/debug.h>
 #include <system/setting_helpers.h>
 #include <gui/widget/progresswindow.h>
 #include <gui/widget/stringinput_ext.h>
@@ -122,6 +123,7 @@ typedef struct
 
 class CMovieBrowser;
 extern MI_MOVIE_INFO* playing_info;
+extern bool timeset;
 
 // Priorities for Developmemt: P1: critical feature, P2: important feature, P3: for next release, P4: looks nice, lets see
 class CMovieBrowser : public CMenuTarget, public CProgressSignals

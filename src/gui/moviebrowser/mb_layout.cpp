@@ -65,7 +65,6 @@ void CMovieBrowser::initFrames(void)
 	m_pcFontFoot = FOOT_FONT;
 	m_pcFontTitle = TITLE_FONT;
 
-	//TRACE("[mb]->%s\n", __func__);
 	m_cBoxFrame.iWidth = 			framebuffer->getWindowWidth();
 	m_cBoxFrame.iHeight = 			framebuffer->getWindowHeight();
 	m_cBoxFrame.iX = 			getScreenStartX(m_cBoxFrame.iWidth);
@@ -123,7 +122,6 @@ void CMovieBrowser::initFrames(void)
 
 void CMovieBrowser::initRows(void)
 {
-	//TRACE("[mb]->%s\n", __func__);
 
 	/*
 	   The "last played" / "last recorded" windows have only half the width, so

@@ -476,7 +476,6 @@ bool CMovieBrowser::showMenu(bool calledExternally)
 int CMovieBrowser::showStartPosSelectionMenu(void) // P2
 {
 	const char *unit_short_minute = g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE);
-	//TRACE("[mb]->showStartPosSelectionMenu\n");
 	int pos = -1;
 	int result = 0;
 	int menu_nr= 0;
@@ -536,7 +535,7 @@ int CMovieBrowser::showStartPosSelectionMenu(void) // P2
 	if (result >= 0 && result <= MAX_NUMBER_OF_BOOKMARK_ITEMS)
 		pos = position[result];
 
-	TRACE("[mb] selected bookmark %d position %d \n", result, pos);
+	dprintf(DEBUG_DEBUG, "[mb] selected bookmark %d position %d \n", result, pos);
 
 	return(pos) ;
 }
@@ -654,7 +653,7 @@ CDirMenu::CDirMenu(std::vector<MB_DIR>* dir_list)
 			int result = -1;
 			if (!g_settings.network_nfs[nfs].local_dir.empty())
 				result = (*dirList)[i].name.compare(0,g_settings.network_nfs[nfs].local_dir.size(),g_settings.network_nfs[nfs].local_dir) ;
-			printf("[CDirMenu] (nfs%d) %s == (mb%d) %s (%d)\n",nfs,g_settings.network_nfs[nfs].local_dir.c_str(),i,(*dirList)[i].name.c_str(),result);
+			dprintf(DEBUG_DEBUG, "[CDirMenu] (nfs%d) %s == (mb%d) %s (%d)\n",nfs,g_settings.network_nfs[nfs].local_dir.c_str(),i,(*dirList)[i].name.c_str(),result);
 
 			if (result == 0)
 			{
@@ -679,13 +678,13 @@ int CDirMenu::exec(CMenuTarget* parent, const std::string & actionKey)
 	}
 	else if (actionKey.size() == 1)
 	{
-		printf("[CDirMenu].exec %s\n",actionKey.c_str());
+		dprintf(DEBUG_DEBUG, "[CDirMenu].exec %s\n",actionKey.c_str());
 		int number = atoi(actionKey.c_str());
 		if (number < MB_MAX_DIRS)
 		{
 			if (dirState[number] == DIR_STATE_SERVER_DOWN)
 			{
-				printf("try to start server: %s %s\n","ether-wake", g_settings.network_nfs[dirNfsMountNr[number]].mac.c_str());
+				dprintf(DEBUG_DEBUG, "[mb] try to start server: %s %s\n","ether-wake", g_settings.network_nfs[dirNfsMountNr[number]].mac.c_str());
 				if (my_system(2, "ether-wake", g_settings.network_nfs[dirNfsMountNr[number]].mac.c_str()) != 0)
 					perror("ether-wake failed");
 
@@ -693,7 +692,7 @@ int CDirMenu::exec(CMenuTarget* parent, const std::string & actionKey)
 			}
 			else if (dirState[number] == DIR_STATE_NOT_MOUNTED)
 			{
-				printf("[CDirMenu] try to mount %d,%d\n",number,dirNfsMountNr[number]);
+				dprintf(DEBUG_DEBUG, "[CDirMenu] try to mount %d,%d\n",number,dirNfsMountNr[number]);
 				CFSMounter::MountRes res;
 				res = CFSMounter::mount(g_settings.network_nfs[dirNfsMountNr[number]].ip,
 						g_settings.network_nfs[dirNfsMountNr[number]].dir,
@@ -736,7 +735,7 @@ void CDirMenu::updateDirState(void)
 		dirOptionText[i] = "UNBEKANNT";
 		dirState[i] = DIR_STATE_UNKNOWN;
 		// 1st ping server
-		printf("updateDirState: %d: state %d nfs %d\n", i, dirState[i], dirNfsMountNr[i]);
+		dprintf(DEBUG_DEBUG, "[mb] updateDirState: %d: state %d nfs %d\n", i, dirState[i], dirNfsMountNr[i]);
 		if (dirNfsMountNr[i] != -1)
 		{
 			int retvalue = pinghost(g_settings.network_nfs[dirNfsMountNr[i]].ip);

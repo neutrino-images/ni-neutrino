@@ -43,8 +43,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define TRACE  printf
-
 void CMovieBrowser::initGlobalStorageSettings(void)
 {
 	m_settings.store.storageDirMovieUsed = true;
@@ -59,8 +57,6 @@ void CMovieBrowser::initGlobalStorageSettings(void)
 
 void CMovieBrowser::initGlobalSettings(void)
 {
-	//TRACE("[mb]->initGlobalSettings\n");
-
 	m_settings.gui = MB_GUI_MOVIE_INFO;
 
 	m_settings.lastPlayMaxItems = NUMBER_OF_MOVIES_LAST;
@@ -142,10 +138,9 @@ void CMovieBrowser::defaultSettings(MB_SETTINGS* /*settings*/)
 
 bool CMovieBrowser::loadSettings(MB_SETTINGS* settings)
 {
-	//TRACE("[mb]->%s\n", __func__);
 	bool result = configfile.loadConfig(MOVIEBROWSER_SETTINGS_FILE);
 	if (!result) {
-		TRACE("CMovieBrowser::loadSettings failed\n");
+		dprintf(DEBUG_NORMAL, "[mb] loadSettings failed\n");
 		return result;
 	}
 
@@ -209,7 +204,7 @@ bool CMovieBrowser::loadSettings(MB_SETTINGS* settings)
 bool CMovieBrowser::saveSettings(MB_SETTINGS* settings)
 {
 	bool result = true;
-	TRACE("[mb]->%s\n", __func__);
+	dprintf(DEBUG_DEBUG, "[mb]->%s\n", __func__);
 
 	configfile.setInt32("mb_lastPlayMaxItems", settings->lastPlayMaxItems);
 	configfile.setInt32("mb_lastRecordMaxItems", settings->lastRecordMaxItems);

@@ -42,11 +42,9 @@
 #include <stdio.h>
 #include <time.h>
 
-#define TRACE  printf
 
 bool CMovieBrowser::onSortMovieInfoHandleList(std::vector<MI_MOVIE_INFO*>& handle_list, MB_INFO_ITEM sort_item, MB_DIRECTION direction)
 {
-	//TRACE("sort: %d\n",direction);
 	if (handle_list.empty())
 		return false;
 	if (sortBy[sort_item] == NULL)
@@ -71,7 +69,6 @@ bool CMovieBrowser::onSortMovieInfoHandleList(std::vector<MI_MOVIE_INFO*>& handl
 		sortDirection = 1;
 	}
 
-	//TRACE("sort: %d\n",sortDirection);
 	sort(handle_list.begin(), handle_list.end(), sortBy[sort_item]);
 
 	return (true);
@@ -79,7 +76,6 @@ bool CMovieBrowser::onSortMovieInfoHandleList(std::vector<MI_MOVIE_INFO*>& handl
 
 void CMovieBrowser::updateMovieSelection(void)
 {
-	//TRACE("[mb]->updateMovieSelection %d\n",m_windowFocus);
 	if (m_vMovieInfo.empty()) return;
 	bool new_selection = false;
 
@@ -97,7 +93,6 @@ void CMovieBrowser::updateMovieSelection(void)
 		{
 			old_movie_selection = m_currentBrowserSelection;
 			m_currentBrowserSelection = m_pcBrowser->getSelectedLine();
-			//TRACE("    sel1:%d\n",m_currentBrowserSelection);
 			if (m_currentBrowserSelection != old_movie_selection)
 				new_selection = true;
 
@@ -118,7 +113,6 @@ void CMovieBrowser::updateMovieSelection(void)
 		{
 			old_movie_selection = m_currentPlaySelection;
 			m_currentPlaySelection = m_pcLastPlay->getSelectedLine();
-			//TRACE("    sel2:%d\n",m_currentPlaySelection);
 			if (m_currentPlaySelection != old_movie_selection)
 				new_selection = true;
 
@@ -139,7 +133,6 @@ void CMovieBrowser::updateMovieSelection(void)
 		{
 			old_movie_selection = m_currentRecordSelection;
 			m_currentRecordSelection = m_pcLastRecord->getSelectedLine();
-			//TRACE("    sel3:%d\n",m_currentRecordSelection);
 			if (m_currentRecordSelection != old_movie_selection)
 				new_selection = true;
 
@@ -150,12 +143,10 @@ void CMovieBrowser::updateMovieSelection(void)
 
 	if (new_selection == true)
 	{
-		//TRACE("new\n");
 		refreshHDDLevel();
 		refreshMovieInfo();
 		refreshLCD();
 	}
-	//TRACE("\n");
 }
 
 void CMovieBrowser::updateInfoSelection(void)
@@ -179,7 +170,6 @@ void CMovieBrowser::updateInfoSelection(void)
 
 void CMovieBrowser::updateFilterSelection(void)
 {
-	//TRACE("[mb]->updateFilterSelection \n");
 	if (m_FilterLines.lineArray[0].v_text.empty()) return;
 
 	bool result = true;
@@ -436,6 +426,5 @@ bool CMovieBrowser::getMovieInfoItem(MI_MOVIE_INFO& movie_info, MB_INFO_ITEM ite
 			result = false;
 			break;
 	}
-	//TRACE("   getMovieInfoItem: %d,>%s<",item,*item_string.c_str());
 	return(result);
 }
