@@ -251,11 +251,14 @@ bool CMovieBrowser::getSelectedFiles(CFileList &flist, P_MI_MOVIE_LIST &mlist)
 	return (!flist.empty());
 }
 
-std::string CMovieBrowser::getScreenshotName(std::string movie, bool is_dir)
+std::string CMovieBrowser::getScreenshotName(const std::string &movie, bool is_dir)
 {
 	std::string ext;
 	std::string ret;
 	size_t found;
+
+	if (movie.empty())
+		return "";
 
 	if (is_dir)
 		found = movie.size();
@@ -265,12 +268,13 @@ std::string CMovieBrowser::getScreenshotName(std::string movie, bool is_dir)
 	if (found == std::string::npos)
 		return "";
 
-	std::vector<std::string>::iterator it = PicExts.begin();
-	while (it < PicExts.end()) {
+	if (PicExts.empty())
+		return "";
+
+	for (const std::string &e : PicExts) {
 		ret = movie;
-		ext = *it;
+		ext = e;
 		ret.replace(found, ret.length() - found, ext);
-		++it;
 		if (!access(ret, F_OK))
 			return ret;
 	}
@@ -296,6 +300,10 @@ void CMovieBrowser::refreshChannelLogo(void)
 void CMovieBrowser::initMovieCover(void)
 {
 	dprintf(DEBUG_DEBUG, "[mb]->%s:%d\n", __func__, __LINE__);
+
+	if (m_movieSelectionHandler == NULL) {
+		return;
+	}
 
 	CBox movieCoverBox;
 

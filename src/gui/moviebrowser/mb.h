@@ -217,7 +217,7 @@ class CMovieBrowser : public CMenuTarget, public CProgressSignals
 		int movieInfoUpdateAllIfDestEmptyOnly;
 
 		std::vector<std::string> PicExts;
-		std::string getScreenshotName(std::string movie, bool is_dir = false);
+		std::string getScreenshotName(const std::string &movie, bool is_dir = false);
 
 		int menu_ret;
 
