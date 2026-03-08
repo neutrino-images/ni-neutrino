@@ -88,12 +88,6 @@ extern bool timeset;
 
 #define TRACE  printf
 
-#define TITLE_BACKGROUND_COLOR ((CFBWindow::color_t)COL_MENUHEAD_PLUS_0)
-#define TITLE_FONT_COLOR COL_MENUHEAD_TEXT
-
-#define TITLE_FONT g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]
-#define FOOT_FONT g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]
-
 static MI_MOVIE_INFO* playing_info;
 CMovieBrowser::CMovieBrowser(): configfile ('\t')
 {
@@ -124,23 +118,6 @@ CMovieBrowser::~CMovieBrowser()
 
 	if (m_header)
 		delete m_header;
-}
-
-void CMovieBrowser::clearListLines()
-{
-	for (int i = 0; i < MB_MAX_ROWS; i++)
-		m_pcBrowser->cleanupRow(&m_FilterLines, i);
-
-	m_browserListLines.Icon.clear();
-	m_browserListLines.marked.clear();
-
-	for (int i = 0; i < 3; i++)
-	{
-		m_pcLastRecord->cleanupRow(&m_recordListLines, i);
-		m_pcLastPlay->cleanupRow(&m_playListLines, i);
-	}
-	m_recordListLines.marked.clear();
-	m_playListLines.marked.clear();
 }
 
 void CMovieBrowser::clearSelection()
@@ -277,96 +254,6 @@ void CMovieBrowser::init(void)
 
 	m_doRefresh = false;
 	m_doLoadMovies = false;
-}
-
-void CMovieBrowser::initFrames(void)
-{
-	m_pcFontFoot = FOOT_FONT;
-	m_pcFontTitle = TITLE_FONT;
-
-	//TRACE("[mb]->%s\n", __func__);
-	m_cBoxFrame.iWidth = 			framebuffer->getWindowWidth();
-	m_cBoxFrame.iHeight = 			framebuffer->getWindowHeight();
-	m_cBoxFrame.iX = 			getScreenStartX(m_cBoxFrame.iWidth);
-	m_cBoxFrame.iY = 			getScreenStartY(m_cBoxFrame.iHeight);
-
-	m_cBoxFrameTitleRel.iX =		0;
-	m_cBoxFrameTitleRel.iY = 		0;
-	m_cBoxFrameTitleRel.iWidth = 		m_cBoxFrame.iWidth;
-	m_cBoxFrameTitleRel.iHeight = 		m_pcFontTitle->getHeight();
-
-	const int pic_h = 39;
-	m_cBoxFrameTitleRel.iHeight = std::max(m_cBoxFrameTitleRel.iHeight, pic_h);
-
-	m_cBoxFrameBrowserList.iX = 		m_cBoxFrame.iX;
-	m_cBoxFrameBrowserList.iY = 		m_cBoxFrame.iY + m_cBoxFrameTitleRel.iHeight;
-	if (m_settings.browserAdditional)
-		m_cBoxFrameBrowserList.iWidth =	m_cBoxFrame.iWidth / 3 * 2;
-	else
-		m_cBoxFrameBrowserList.iWidth =	m_cBoxFrame.iWidth;
-
-	m_settings.browserFrameHeight = m_settings.browserAdditional ? m_settings.browserFrameHeightAdditional : m_settings.browserFrameHeightGeneral;
-	m_cBoxFrameBrowserList.iHeight = 	m_cBoxFrame.iHeight * m_settings.browserFrameHeight / 100;
-
-
-	m_cBoxFrameFootRel.iX = 		m_cBoxFrameBrowserList.iX;
-	m_cBoxFrameFootRel.iHeight = 		refreshFoot(false);
-	m_cBoxFrameFootRel.iY = 		m_cBoxFrameBrowserList.iY + m_cBoxFrameBrowserList.iHeight;
-	m_cBoxFrameFootRel.iWidth = 		m_cBoxFrame.iWidth;
-
-	m_cBoxFrameLastPlayList.iX = 		m_cBoxFrameBrowserList.iX;
-	m_cBoxFrameLastPlayList.iY = 		m_cBoxFrameBrowserList.iY ;
-	m_cBoxFrameLastPlayList.iWidth = 	m_cBoxFrame.iWidth / 2;
-	m_cBoxFrameLastPlayList.iHeight = 	m_cBoxFrameBrowserList.iHeight;
-
-	m_cBoxFrameLastRecordList.iX = 		m_cBoxFrameLastPlayList.iX + m_cBoxFrameLastPlayList.iWidth;
-	m_cBoxFrameLastRecordList.iY = 		m_cBoxFrameLastPlayList.iY;
-	m_cBoxFrameLastRecordList.iWidth = 	m_cBoxFrame.iWidth - m_cBoxFrameLastPlayList.iWidth;
-	m_cBoxFrameLastRecordList.iHeight =	m_cBoxFrameLastPlayList.iHeight;
-
-	m_cBoxFrameInfo1.iX = 			m_cBoxFrameBrowserList.iX;
-	m_cBoxFrameInfo1.iY = 			m_cBoxFrameFootRel.iY + m_cBoxFrameFootRel.iHeight + OFFSET_INTER;
-	m_cBoxFrameInfo1.iWidth = 		m_cBoxFrame.iWidth;
-	m_cBoxFrameInfo1.iHeight = 		m_cBoxFrame.iHeight - m_cBoxFrameBrowserList.iHeight - OFFSET_INTER - m_cBoxFrameFootRel.iHeight - m_cBoxFrameTitleRel.iHeight;
-
-	m_cBoxFrameInfo2.iX = 			m_cBoxFrameBrowserList.iX + m_cBoxFrameBrowserList.iWidth;
-	m_cBoxFrameInfo2.iY = 			m_cBoxFrameBrowserList.iY;
-	m_cBoxFrameInfo2.iWidth = 		m_cBoxFrame.iWidth - m_cBoxFrameBrowserList.iWidth;
-	m_cBoxFrameInfo2.iHeight = 		m_cBoxFrameBrowserList.iHeight;
-
-	m_cBoxFrameFilter.iX = 			m_cBoxFrameInfo1.iX;
-	m_cBoxFrameFilter.iY = 			m_cBoxFrameInfo1.iY;
-	m_cBoxFrameFilter.iWidth = 		m_cBoxFrameInfo1.iWidth;
-	m_cBoxFrameFilter.iHeight = 		m_cBoxFrameInfo1.iHeight;
-}
-
-void CMovieBrowser::initRows(void)
-{
-	//TRACE("[mb]->%s\n", __func__);
-
-	/*
-	   The "last played" / "last recorded" windows have only half the width, so
-	   multiply the relative width with 2 and add 1 percent for safety to date row.
-	   This addition is just usefull for l a r g e font settings.
-	*/
-
-	/***** Last Play List **************/
-	m_settings.lastPlayRowNr = 3;
-	m_settings.lastPlayRow[0] = MB_INFO_TITLE;
-	m_settings.lastPlayRow[1] = MB_INFO_SPACER;
-	m_settings.lastPlayRow[2] = MB_INFO_PREVPLAYDATE;
-	m_settings.lastPlayRowWidth[2] = m_defaultRowWidth[m_settings.lastPlayRow[2]] * 2 + 1;
-	m_settings.lastPlayRowWidth[1] = m_defaultRowWidth[m_settings.lastPlayRow[1]] * 2;
-	m_settings.lastPlayRowWidth[0] = 100 - m_settings.lastPlayRowWidth[1] - m_settings.lastPlayRowWidth[2];
-
-	/***** Last Record List **************/
-	m_settings.lastRecordRowNr = 3;
-	m_settings.lastRecordRow[0] = MB_INFO_TITLE;
-	m_settings.lastRecordRow[1] = MB_INFO_SPACER;
-	m_settings.lastRecordRow[2] = MB_INFO_RECORDDATE;
-	m_settings.lastRecordRowWidth[2] = m_defaultRowWidth[m_settings.lastRecordRow[2]] * 2 + 1;
-	m_settings.lastRecordRowWidth[1] = m_defaultRowWidth[m_settings.lastRecordRow[1]] * 2;
-	m_settings.lastRecordRowWidth[0] = 100 - m_settings.lastRecordRowWidth[1] - m_settings.lastRecordRowWidth[2];
 }
 
 int CMovieBrowser::exec(CMenuTarget* parent, const std::string & actionKey)

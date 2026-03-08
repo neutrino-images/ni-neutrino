@@ -57,6 +57,9 @@
 
 #define TRACE  printf
 
+#define TITLE_BACKGROUND_COLOR ((CFBWindow::color_t)COL_MENUHEAD_PLUS_0)
+#define TITLE_FONT_COLOR COL_MENUHEAD_TEXT
+
 #define TITLE_FONT g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]
 #define FOOT_FONT g_Font[SNeutrinoSettings::FONT_TYPE_MENU_FOOT]
 

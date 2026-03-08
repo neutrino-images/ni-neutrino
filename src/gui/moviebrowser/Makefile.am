@@ -24,6 +24,7 @@ libneutrino_gui_moviebrowser_a_SOURCES = \
 	mb_delete.cpp \
 	mb_functions.cpp \
 	mb_input.cpp \
+	mb_layout.cpp \
 	mb_menu.cpp \
 	mb_settings.cpp \
 	mb_selection.cpp \
