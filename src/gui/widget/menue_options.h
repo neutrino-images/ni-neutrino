@@ -12,6 +12,13 @@ const CMenuOptionChooser::keyval OPTIONS_OFF1_ON0_OPTIONS[] =
 };
 #define OPTIONS_OFF1_ON0_OPTION_COUNT (sizeof(OPTIONS_OFF1_ON0_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
+const CMenuOptionChooser::keyval MESSAGEBOX_YES_NO_OPTIONS[] =
+{
+	{ 0, LOCALE_MESSAGEBOX_YES },
+	{ 1, LOCALE_MESSAGEBOX_NO }
+};
+#define MESSAGEBOX_YES_NO_OPTIONS_COUNT (sizeof(MESSAGEBOX_YES_NO_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
+
 const CMenuOptionChooser::keyval MESSAGEBOX_NO_YES_OPTIONS[] =
 {
 	{ 0, LOCALE_MESSAGEBOX_NO },
