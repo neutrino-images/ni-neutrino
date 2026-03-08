@@ -69,16 +69,15 @@ class CCPicture : public CComponentsShapeSquare
 
 		void SetTransparent(const int &mode) {setBodyBGImageTranparencyMode(mode);}
 
-#if 0
-		///import base class methods for width and height to avoid -Woverloaded-virtual
+		// Import base class setWidth/setHeight(int) so that the
+		// 2-arg overloads below do not hide them (-Woverloaded-virtual)
 		using CCDraw::setWidth;
 		using CCDraw::setHeight;
-#endif
 
-		///set width of object, keep_aspect = true keeps ratio related to height
-		void setWidth(const int &w, bool keep_aspect = true);
-		///set height of object, keep_aspect = true keeps ratio related to width
-		void setHeight(const int &h, bool keep_aspect = true);
+		///set width of object, if keep_aspect is true ratio is kept related to height
+		void setWidth(const int &w, bool keep_aspect);
+		///set height of object, if keep_aspect is true ratio is kept related to width
+		void setHeight(const int &h, bool keep_aspect);
 
 		///get original image size
 		void getRealSize(int *dx, int *dy);
@@ -287,25 +286,24 @@ class CComponentsPicture : public CComponentsForm
 		*/
 		void SetTransparent(const int &mode);
 
-#if 0
-		//import base class methods for width and height to avoid -Woverloaded-virtual
+		// Import base class setWidth/setHeight(int) so that the
+		// 2-arg overloads below do not hide them (-Woverloaded-virtual)
 		using CCDraw::setWidth;
 		using CCDraw::setHeight;
-#endif
 
 		/*!
-		Sets width of object, keep_aspect = true keeps ratio related to height
+		Sets width of object, if keep_aspect is true ratio is kept related to height
 		* @param[in]   int w image width
-		* @param[in]   bool keep_aspect,  optional default = true
+		* @param[in]   bool keep_aspect
 		*/
-		void setWidth(const int &w, bool keep_aspect = true);
+		void setWidth(const int &w, bool keep_aspect);
 
 		/*!
-		Sets height of object, keep_aspect = true keeps ratio related to width
-		* @param[in]   int h image width
-		* @param[in]   bool keep_aspect,  optional default = true
+		Sets height of object, if keep_aspect is true ratio is kept related to width
+		* @param[in]   int h image height
+		* @param[in]   bool keep_aspect
 		*/
-		void setHeight(const int &h, bool keep_aspect = true);
+		void setHeight(const int &h, bool keep_aspect);
 
 		/*!
 		Paints item
