@@ -23,6 +23,7 @@ libneutrino_gui_moviebrowser_a_SOURCES = \
 	mb_constants.cpp \
 	mb_delete.cpp \
 	mb_exec.cpp \
+	mb_exec_loop.cpp \
 	mb_functions.cpp \
 	mb_input.cpp \
 	mb_layout.cpp \
