@@ -149,9 +149,12 @@ CMoviePlayerGui::~CMoviePlayerGui()
 		delete bookmarkmanager;
 		bookmarkmanager = NULL;
 	}
-	if(playback){
+	if (playback) {
+		mutex.lock();
+		playback->Close();
 		delete playback;
 		playback = NULL;
+		mutex.unlock();
 	}
 	if (this == instance_mp) {
 		delete instance_bg;
