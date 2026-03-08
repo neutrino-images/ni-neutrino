@@ -31,7 +31,7 @@
 		based on code of Steffen Hehn 'McClean'
 
 	outsourced:
-	(C) 2016, Thilo Graf 'dbt'
+	(C) 2016, 2026 Thilo Graf 'dbt'
 */
 
 #ifndef MOVIEBROWSER_HELP_H_

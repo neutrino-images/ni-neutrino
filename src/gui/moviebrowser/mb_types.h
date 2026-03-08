@@ -34,7 +34,7 @@
 	(C) 2016      Sven Hoefer
 
 	outsourced:
-	(C) 2016, Thilo Graf 'dbt'
+	(C) 2016, 2026 Thilo Graf 'dbt'
 */
 
 #include <gui/widget/menue.h>

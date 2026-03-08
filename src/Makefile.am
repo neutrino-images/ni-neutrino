@@ -81,6 +81,10 @@ neutrino_LDADD = \
 	$(MTDUTILSLIBS) \
 	driver/movieinfo.o \
 	gui/moviebrowser/mb.o \
+	gui/moviebrowser/mb_constants.o \
+	gui/moviebrowser/mb_functions.o \
+	gui/moviebrowser/mb_menu.o \
+	gui/moviebrowser/mb_storage.o \
 	gui/libneutrino_gui2.a \
 	gui/moviedb/libneutrino_gui_moviedb.a \
 	gui/components/libneutrino_gui_components.a \

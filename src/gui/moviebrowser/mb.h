@@ -33,7 +33,7 @@
 	(C) 2009-2014 Stefan Seyfried
 
 	outsourced:
-	(C) 2016, Thilo Graf 'dbt'
+	(C) 2016, 2026 Thilo Graf 'dbt'
 */
 
 #ifndef MOVIEBROWSER_H_
