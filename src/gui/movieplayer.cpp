@@ -1904,12 +1904,17 @@ void CMoviePlayerGui::PlayFileLoop(void)
 		const bool back_key = CNeutrinoApp::getInstance()->backKey(msg);
 		if (msg == (neutrino_msg_t) g_settings.mpkey_plugin) {
 			g_Plugins->startPlugin_by_name(g_settings.movieplayer_plugin.c_str ());
+#if 0
+		} else if (msg == (neutrino_msg_t) g_settings.mpkey_stop) {
+#else
+		// backKey here? Looks wrong.
 		} else if ((msg == (neutrino_msg_t) g_settings.mpkey_stop) || back_key) {
 			if (back_key) {
 				// Home/Back is often bound to zaphistory; suppress the next list-open side effect.
 				CNeutrinoApp::getInstance()->allowChannelList(false);
 				g_RCInput->clearRCMsg();
 			}
+#endif
 			bool timeshift_stopped = false;
 
 			if (timeshift != TSHIFT_MODE_OFF)
