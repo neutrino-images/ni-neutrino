@@ -982,7 +982,7 @@ bool CMoviePlayerGui::StartWebtv(void)
 	if (videoDecoder->getBlank())
 		videoDecoder->setBlank(false);
 
-	mutex.lock();
+	// mutex.lock();
 	bool res = false;
 	if (playback) {
 		playback->Open(is_file_player ? PLAYMODE_FILE : PLAYMODE_TS);
@@ -1000,7 +1000,7 @@ bool CMoviePlayerGui::StartWebtv(void)
 		}
 	}
 
-	mutex.unlock();
+	// mutex.unlock();
 	return res;
 }
 
