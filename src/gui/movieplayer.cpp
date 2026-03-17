@@ -1704,7 +1704,8 @@ bool CMoviePlayerGui::SetPosition(int pos, bool absolute)
 	mutex.lock();
 	if (playback)
 		res = playback->SetPosition(pos, absolute);
-	if (is_file_player && res && speed == 0 && playstate == CMoviePlayerGui::PAUSE){
+	if (is_file_player && res && speed == 0 && playstate == CMoviePlayerGui::PAUSE)
+	{
 		playstate = CMoviePlayerGui::PLAY;
 		speed = 1;
 		if (playback)
@@ -1713,8 +1714,10 @@ bool CMoviePlayerGui::SetPosition(int pos, bool absolute)
 	mutex.unlock();
 	FileTimeOSD_tmp = 0;
 
+#if 0
 	if (res)
 		g_RCInput->postMsg(CRCInput::RC_info, 0);
+#endif
 
 	return res;
 }
