@@ -1,7 +1,7 @@
 #!/bin/bash
 
 locale_master="deutsch.locale"
-locale="${locale_master} english.locale"
+locale="${locale_master} english.locale slovak.locale"
 
 check_locale() {
 	cut -d' ' -f1 ${locale_master} | LC_ALL=C sort | uniq > /tmp/${locale_master}
