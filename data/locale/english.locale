@@ -1117,8 +1117,8 @@ imdb.data_title Original title
 imdb.data_votes Votes
 imdb.data_website Website
 imdb.data_writer Screenplay author
-inetradio.name Internetradio
 inetradio.autostart Internetradio auto-start
+inetradio.name Internetradio
 infoicons_background Show background
 infoicons_flag_all Reset all
 infoicons_flag_del Flagfile deleted

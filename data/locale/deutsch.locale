@@ -1117,8 +1117,8 @@ imdb.data_title Originaltitel
 imdb.data_votes Stimmen
 imdb.data_website Webseite
 imdb.data_writer Drehbuchautor
-inetradio.name Internetradio
 inetradio.autostart Internetradio Auto-Start
+inetradio.name Internetradio
 infoicons_background Hintergrund anzeigen
 infoicons_flag_all Alle zurücksetzen
 infoicons_flag_del Benachrichtigungsdatei wird gelöscht
