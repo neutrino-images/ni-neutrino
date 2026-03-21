@@ -19,7 +19,6 @@ my $masterfilename = "deutsch.locale";
 $#ARGV == 0 || die("Usage: create-locals-work file.locale");
 
 my $no_errors = 0;
-my $last_was_ok = 1;
 my $localefilename = $ARGV[0];
 my $outfilename = $localefilename . "-work";
 
@@ -71,5 +70,5 @@ if ($no_errors == 0)
 }
 else
 {
-	print "There were ", $no_errors, " error(s) in ", $localefilename, ".\n";
+	print "There were ", $no_errors, " error(s) in ", $localefilename, ". Check ", $outfilename, ".\n";
 }
