@@ -1149,7 +1149,7 @@ infoviewer.motor_moving Antennenpositionierung
 infoviewer.next Später
 infoviewer.nocurrent Keine Info zu laufendem Programm
 infoviewer.noepg Keine EPG-Information verfügbar
-infoviewer.notavailable Kanal (zur Zeit) nicht verfügbar
+infoviewer.notavailable Kanal (zurzeit) nicht verfügbar
 infoviewer.notavailable.hint_check_tuner_setup Bitte prüfen Sie die Tuner-Konfiguration.
 infoviewer.notavailable.reason_no_active_tuner Kein aktiver Tuner verfügbar.
 infoviewer.notavailable.reason_no_delivery Kein aktiver Tuner unterstützt den Empfangsweg dieses Senders.
