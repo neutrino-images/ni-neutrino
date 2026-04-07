@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <math.h>
+#include <set>
 
 #include <zapit/debug.h>
 #include <zapit/channel.h>
@@ -51,6 +52,20 @@ extern Zapit_config zapitCfg;
                 if (fedebug)					\
 			INFO(fmt, ##args);			\
         } while (0)
+
+static bool get_frontend_key_id(const std::string &key, int &frontend_id)
+{
+	if (key.size() < 4 || key[0] != 'f' || key[1] != 'e')
+		return false;
+
+	char *end = NULL;
+	long parsed_id = strtol(key.c_str() + 2, &end, 10);
+	if (end == NULL || *end != '_' || parsed_id < 0)
+		return false;
+
+	frontend_id = parsed_id;
+	return true;
+}
 
 CFeDmx::CFeDmx(int i)
 {
@@ -300,17 +315,32 @@ void CFEManager::saveSettings(bool write)
 
 	const bool have_existing_config =
 		config_exist || access(FECONFIGFILE, F_OK) == 0;
-	bool has_sat_frontend = false;
+	const ConfigDataMap existing_config = configfile.getConfigDataMap();
+	std::set<int> current_frontend_ids;
+	std::set<int> saved_frontend_ids;
 	bool has_configured_satellite = false;
+	bool saved_has_configured_satellite = false;
+	bool missing_saved_frontend = false;
+
+	for (ConfigDataMap::const_iterator it = existing_config.begin();
+	     it != existing_config.end(); ++it) {
+		int frontend_id = -1;
+		if (!get_frontend_key_id(it->first, frontend_id))
+			continue;
+
+		saved_frontend_ids.insert(frontend_id);
+		if (it->first.find("_satellites") != std::string::npos &&
+		    !it->second.empty()) {
+			saved_has_configured_satellite = true;
+		}
+	}
 
 	configfile.clear();
 	satellite_map_t &satlist = CServiceManager::getInstance()->SatelliteList();
 	for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
 		CFrontend * fe = it->second;
 		frontend_config_t & fe_config = fe->getConfig();
-
-		if (fe->hasSat())
-			has_sat_frontend = true;
+		current_frontend_ids.insert(fe->fenumber);
 
 		INFO("fe%d", fe->fenumber);
 
@@ -346,8 +376,22 @@ void CFEManager::saveSettings(bool write)
 		sprintf(cfg_key, "fe%d_satellites", fe->fenumber);
 		configfile.setInt32Vector(cfg_key, satList);
 	}
+
+	for (std::set<int>::const_iterator it = saved_frontend_ids.begin();
+	     it != saved_frontend_ids.end(); ++it) {
+		if (current_frontend_ids.find(*it) == current_frontend_ids.end()) {
+			missing_saved_frontend = true;
+			break;
+		}
+	}
+
 	if (write && configfile.getModifiedFlag()) {
-		if (have_existing_config && has_sat_frontend &&
+		if (have_existing_config && missing_saved_frontend) {
+			WARN("frontend set is incomplete, keeping existing %s",
+			     FECONFIGFILE);
+			return;
+		}
+		if (have_existing_config && saved_has_configured_satellite &&
 		    !has_configured_satellite) {
 			WARN("no configured satellites, keeping existing %s", FECONFIGFILE);
 			return;
