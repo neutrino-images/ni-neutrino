@@ -317,7 +317,6 @@ bool CFEManager::Init()
 	if (femap.empty() && simulate_fe_enabled()) {
 		INFO("SIMULATE_FE is set, adding dummy frontend for testing");
 		fe = new CFrontend(0, -1);
-		fe->setName("DuTu - The dummy tuner");
 		fekey = MAKE_FE_KEY(0, 0);
 		femap.insert(std::pair <unsigned short, CFrontend*> (fekey, fe));
 		fe_open_state[fekey] = CFrontend::FE_OPEN_OK;
