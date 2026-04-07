@@ -2726,6 +2726,8 @@ const char * locale_real_names[] =
 	"satsetup.fe_mode_link_twin",
 	"satsetup.fe_mode_master",
 	"satsetup.fe_mode_unused",
+	"satsetup.fe_busy",
+	"satsetup.fe_busy_hint",
 	"satsetup.fe_setup",
 	"satsetup.fe_tuner",
 	"satsetup.lofh",
