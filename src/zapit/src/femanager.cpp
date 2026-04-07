@@ -55,6 +55,13 @@ extern Zapit_config zapitCfg;
 			INFO(fmt, ##args);			\
         } while (0)
 
+static bool simulate_fe_enabled()
+{
+	const char *simulate_fe = getenv("SIMULATE_FE");
+
+	return simulate_fe && simulate_fe[0] != '\0' && strcmp(simulate_fe, "0") != 0;
+}
+
 static bool get_frontend_key_id(const std::string &key, int &frontend_id)
 {
 	if (key.size() < 4 || key[0] != 'f' || key[1] != 'e')
@@ -307,7 +314,7 @@ bool CFEManager::Init()
 	INFO("found %d frontends, %d demuxes (%u busy, %u unusable)",
 	     (int)femap.size(), (int)dmap.size(), busy_count, unusable_count);
 	/* for testing without a frontend, export SIMULATE_FE=1 */
-	if (femap.empty() && getenv("SIMULATE_FE")) {
+	if (femap.empty() && simulate_fe_enabled()) {
 		INFO("SIMULATE_FE is set, adding dummy frontend for testing");
 		fe = new CFrontend(0, -1);
 		fe->setName("DuTu - The dummy tuner");
