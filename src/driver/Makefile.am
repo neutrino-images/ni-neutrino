@@ -7,6 +7,10 @@ if ENABLE_GRAPHLCD
 SUBDIRS += glcd
 endif
 
+if ENABLE_SOFTCSA
+SUBDIRS += softcsa
+endif
+
 AM_CPPFLAGS += \
 	-I$(top_builddir) \
 	-I$(top_srcdir) \

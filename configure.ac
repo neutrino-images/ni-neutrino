@@ -548,6 +548,25 @@ if test "$enable_change_osd_resolution" = "yes"; then
 fi
 AM_CONDITIONAL(ENABLE_CHANGE_OSD_RESOLUTION, test "$enable_change_osd_resolution" = "yes")
 
+AC_ARG_ENABLE(softcsa,
+	AS_HELP_STRING([--enable-softcsa], [enable software descrambling via libdvbcsa @<:@default=no@:>@]),
+	AC_DEFINE(HAVE_SOFTCSA, 1, [enable software descrambling via libdvbcsa]))
+AM_CONDITIONAL(ENABLE_SOFTCSA, test "$enable_softcsa" = "yes")
+
+# BOXTYPEs that *not* allows softcsa
+case "$BOXTYPE" in
+	coolstream)
+		if test "$enable_softcsa" = "yes"; then
+			AC_MSG_WARN([--enable-softcsa=yes is not allowed for boxtype $BOXTYPE])
+			enable_softcsa="no"
+		fi
+	;;
+esac
+
+if test "$enable_softcsa" = "yes"; then
+	PKG_CHECK_MODULES([DVBCSA], [libdvbcsa])
+fi
+
 AC_ARG_WITH(stb-hal-includes,
 	AS_HELP_STRING([--with-stb-hal-includes=PATH], [path to libstb-hal includes [[NONE]]]),
 	[STB_HAL_INC="$withval"],
@@ -731,6 +750,7 @@ src/driver/Makefile
 src/driver/audiodec/Makefile
 src/driver/glcd/Makefile
 src/driver/pictureviewer/Makefile
+src/driver/softcsa/Makefile
 src/eitd/Makefile
 src/gui/Makefile
 src/gui/bedit/Makefile

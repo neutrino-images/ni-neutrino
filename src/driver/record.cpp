@@ -64,6 +64,10 @@
 #include <timerdclient/timerdclient.h>
 #include <cs_api.h>
 
+#ifdef HAVE_SOFTCSA
+#include <driver/softcsa/softcsa_manager.h>
+#endif
+
 extern "C" {
 #include <libavformat/avformat.h>
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 0, 100)
@@ -152,11 +156,21 @@ CRecordInstance::CRecordInstance(const CTimerd::RecordingInfo * const eventinfo,
 	cMovieInfo = new CMovieInfo();
 	recMovieInfo = new MI_MOVIE_INFO();
 	record = NULL;
+#ifdef HAVE_SOFTCSA
+	softcsa_record = false;
+	softcsa_fd = -1;
+#endif
 	rec_stop_msg = g_Locale->getText(LOCALE_RECORDING_STOP);
 }
 
 CRecordInstance::~CRecordInstance()
 {
+#ifdef HAVE_SOFTCSA
+	if (softcsa_fd >= 0) {
+		close(softcsa_fd);
+		softcsa_fd = -1;
+	}
+#endif
 	allpids.APIDs.clear();
 	recMovieInfo->audioPids.clear();
 	delete recMovieInfo;
@@ -287,6 +301,49 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 		apids[numpids++] = allpids.PIDs.pmtpid;
 #endif
 
+#ifdef HAVE_SOFTCSA
+	/* SoftCSA deferred start: for scrambled channels without CI, try SoftCSA.
+	 * Send CA-PMT, wait for OSCam to respond with CSA-ALT. If timeout (normal
+	 * CSA), fall through to hardware cRecord path. */
+	if (channel->scrambled && !channel->bUseCI) {
+		printf("CRecordInstance::Start: trying SoftCSA for channel %llx\n",
+		       (unsigned long long)channel->getChannelID());
+
+		if (!autoshift)
+			CFEManager::getInstance()->lockFrontend(frontend, channel);
+
+		start_time = time(0);
+
+		/* Send CA-PMT — triggers registerDemux(RECORD) in capmt.cpp */
+		CCamManager::getInstance()->Start(channel->getChannelID(), CCamManager::RECORD);
+
+		/* Add extra recording PIDs (additional audio, teletext, subtitles)
+		 * to the RECORD DemuxState so they get added to the TSDEMUX_TAP. */
+		{
+			uint32_t rec_demux = (uint32_t)channel->getRecordDemux();
+			for (unsigned int i = 0; i < numpids; i++)
+				CSoftCSAManager::getInstance()->addPid(rec_demux, apids[i]);
+		}
+
+		/* Wait for OSCam to confirm CSA-ALT and start the recordThread */
+		if (CSoftCSAManager::getInstance()->waitForRecordStart(
+				channel->getChannelID(), fd, 3000)) {
+			printf("CRecordInstance::Start: SoftCSA recording started\n");
+			softcsa_record = true;
+			softcsa_fd = fd;
+			WaitRecMsg(msg_start_time, 2);
+			hintBox.hide();
+			return RECORD_OK;
+		}
+
+		/* Timeout: not CSA-ALT (normal CSA or no OSCam response).
+		 * Clean up SoftCSA state and fall through to cRecord. */
+		printf("CRecordInstance::Start: SoftCSA timeout, falling back to cRecord\n");
+		CSoftCSAManager::getInstance()->stopSession(
+			channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+	}
+#endif
+
 	if (record == NULL)
 	{
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
@@ -348,9 +405,22 @@ bool CRecordInstance::Stop(bool remove_event)
 	printf("%s: channel %" PRIx64 " recording_id %d\n", __func__, channel_id, recording_id);
 	printf("%s: file %s.ts\n", __FUNCTION__, filename);
 	SaveXml();
-	/* Stop do close fd - if started */
-	record->Stop();
 
+#ifdef HAVE_SOFTCSA
+	if (softcsa_record) {
+		printf("%s: stopping SoftCSA recording for channel %" PRIx64 "\n", __func__, channel_id);
+		CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
+		if (softcsa_fd >= 0) {
+			close(softcsa_fd);
+			softcsa_fd = -1;
+		}
+		softcsa_record = false;
+	} else
+#endif
+	{
+		/* Stop do close fd - if started */
+		record->Stop();
+	}
 
 	CCamManager::getInstance()->Stop(channel_id, CCamManager::RECORD);
 

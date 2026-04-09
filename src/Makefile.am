@@ -151,6 +151,10 @@ neutrino_LDADD += \
 	-lglcddrivers -lglcdgraphics -lusb-1.0
 endif
 
+if ENABLE_SOFTCSA
+neutrino_LDADD += driver/softcsa/libneutrino_driver_softcsa.a @DVBCSA_LIBS@
+endif
+
 if ENABLE_GIFLIB
 neutrino_LDADD += -lgif
 else

@@ -77,6 +77,8 @@ class CCam : public CBasicClient
 		void setCaMask(int mask) { camask = mask; }
 		int  getSource() { return source_demux; }
 		void setSource(int demux) { source_demux = demux; }
+		const uint8_t *getBuffer() const { return cabuf; }
+		int getLength() const { return calen; }
 };
 
 typedef std::map<t_channel_id, CCam*> cammap_t;

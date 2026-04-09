@@ -94,6 +94,10 @@ class CRecordInstance
 		CMovieInfo *	cMovieInfo;
 		MI_MOVIE_INFO *	recMovieInfo;
 		cRecord *	record;
+#ifdef HAVE_SOFTCSA
+		bool		softcsa_record;
+		int		softcsa_fd;
+#endif
 
 		virtual void GetPids(CZapitChannel * channel);
 		virtual void FillMovieInfo(CZapitChannel * channel, APIDList & apid_list);

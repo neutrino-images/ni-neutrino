@@ -75,6 +75,15 @@
 #include <neutrino.h>
 #include <gui/osd_helpers.h>
 
+#ifdef HAVE_SOFTCSA
+#include "dvbapi_client.h"
+#include <driver/softcsa/softcsa_manager.h>
+#include <dmx_hal.h>
+#include <linux/dvb/audio.h>
+#include <linux/dvb/video.h>
+extern void CCamManager_SetDvbApiClient(CDvbApiClient *client);
+#endif
+
 #ifdef PEDANTIC_VALGRIND_SETUP
 #define VALGRIND_PARANOIA(x) memset(&x, 0, sizeof(x))
 #else
@@ -739,6 +748,9 @@ bool CZapit::StopPip(int pip)
 
 	if (pip_channel_id[pip]) {
 		INFO("[pip %d] stop %llx", pip, pip_channel_id[pip]);
+#ifdef HAVE_SOFTCSA
+		CSoftCSAManager::getInstance()->stopSession(pip_channel_id[pip], SOFTCSA_SESSION_PIP);
+#endif
 		CCamManager::getInstance()->Stop(pip_channel_id[pip], CCamManager::PIP);
 		pip_fe[pip] = NULL;
 		pip_channel_id[pip] = 0;
@@ -1962,7 +1974,6 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		StopPlayBack(msgBool.truefalse, false);
 		playbackStopForced = true;
 		lock_channel_id = live_channel_id;
-		//lockPlayBack();
 		SendCmdReady(connfd);
 		break;
 	}
@@ -1985,6 +1996,81 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		SendCmdReady(connfd);
 		break;
 	}
+#ifdef HAVE_SOFTCSA
+	case CZapitMessages::CMD_SOFTCSA_SWITCH_SOURCE:
+	{
+		CZapitMessages::commandSoftCSASwitchSource msg;
+		CBasicServer::receive_data(connfd, &msg, sizeof(msg));
+
+		printf("[softcsa] CMD_SWITCH_SOURCE: to_memory=%d video_type=%d audio_type=%d\n",
+			msg.to_memory, msg.video_type, msg.audio_type);
+
+		int vfd = -1, afd = -1;
+		if (msg.to_memory) {
+			/* Stop decoder PES demux filters.
+			 * The SoftCSA TSDEMUX_TAP maintains its own independent
+			 * PID routing via DMX_ADD_PID, so it will still receive
+			 * data after these decoder filters are stopped. */
+			videoDemux->Stop();
+			audioDemux->Stop();
+			pcrDemux->Stop();
+
+			/* Stop decoders and close/reopen HAL devices. */
+			if (videoDecoder) {
+				videoDecoder->Stop(true);
+				videoDecoder->closeDevice();
+				videoDecoder->openDevice();
+				vfd = videoDecoder->getFD();
+			}
+			if (audioDecoder) {
+				audioDecoder->Stop();
+				audioDecoder->closeDevice();
+				audioDecoder->openDevice();
+				afd = audioDecoder->getFD();
+			}
+
+			/* Switch video to MEMORY source — eplayer3 LinuxDvbOpen/Play
+			 * sequence on the fresh fd */
+			if (vfd >= 0) {
+				ioctl(vfd, VIDEO_CLEAR_BUFFER);
+				ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_MEMORY);
+				ioctl(vfd, VIDEO_FREEZE);
+				ioctl(vfd, VIDEO_SET_STREAMTYPE, msg.video_type);
+				ioctl(vfd, VIDEO_PLAY);
+				ioctl(vfd, VIDEO_CONTINUE);
+				ioctl(vfd, VIDEO_CLEAR_BUFFER);
+			}
+			if (videoDecoder)
+				videoDecoder->setPlayState(VIDEO_FREEZED);
+
+			/* Switch audio to MEMORY source */
+			if (afd >= 0) {
+				ioctl(afd, AUDIO_CLEAR_BUFFER);
+				ioctl(afd, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_MEMORY);
+				ioctl(afd, AUDIO_PAUSE);
+				ioctl(afd, AUDIO_SET_AV_SYNC, 0);
+				ioctl(afd, AUDIO_SET_BYPASS_MODE, msg.audio_type);
+				ioctl(afd, AUDIO_PLAY);
+				ioctl(afd, AUDIO_CONTINUE);
+			}
+		} else {
+			/* Restore: close/reopen + restart playback */
+			restoreSoftCSADecoder();
+			playing = false;
+			StartPlayBack(current_channel);
+			vfd = videoDecoder ? videoDecoder->getFD() : -1;
+			afd = audioDecoder ? audioDecoder->getFD() : -1;
+		}
+
+		CZapitMessages::responseSoftCSASwitchSource response;
+		response.video_fd = vfd;
+		response.audio_fd = afd;
+		printf("[softcsa] CMD_SWITCH_SOURCE: done (video_fd=%d audio_fd=%d)\n",
+			response.video_fd, response.audio_fd);
+		CBasicServer::send_data(connfd, &response, sizeof(response));
+		break;
+	}
+#endif
 #if 0
 	case CZapitMessages::CMD_SET_DISPLAY_FORMAT: {
 		CZapitMessages::commandInt msg;
@@ -2498,9 +2584,30 @@ bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 	return true;
 }
 
+#ifdef HAVE_SOFTCSA
+void CZapit::restoreSoftCSADecoder()
+{
+	/* Close/reopen HAL devices for clean MEMORY→DEMUX transition. */
+	if (videoDecoder) {
+		videoDecoder->closeDevice();
+		videoDecoder->openDevice();
+	}
+	if (audioDecoder) {
+		audioDecoder->closeDevice();
+		audioDecoder->openDevice();
+	}
+}
+#endif
+
 bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 {
 	INFO("standby %d playing %d forced %d send_pmt %d", standby, playing, playbackStopForced, send_pmt);
+#ifdef HAVE_SOFTCSA
+	if (current_channel &&
+	    CSoftCSAManager::getInstance()->stopSession(
+	        current_channel->getChannelID(), SOFTCSA_SESSION_LIVE))
+		restoreSoftCSADecoder();
+#endif
 	if(send_pmt)
 		CCamManager::getInstance()->Stop(live_channel_id, CCamManager::PLAY);
 
@@ -2811,6 +2918,18 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 #endif
 
 	ca->Start();
+
+#ifdef HAVE_SOFTCSA
+	{
+		static CDvbApiClient *dvbapi_client = NULL;
+		if (!dvbapi_client) {
+			dvbapi_client = new CDvbApiClient();
+			dvbapi_client->setManager(CSoftCSAManager::getInstance());
+			CCamManager_SetDvbApiClient(dvbapi_client);
+			printf("[zapit] SoftCSA: CDvbApiClient initialized (lazy connect)\n");
+		}
+	}
+#endif
 
 	eventServer = new CEventServer;
 	if (!zapit_server.prepare(ZAPIT_UDS_NAME)) {

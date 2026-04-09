@@ -153,7 +153,8 @@ class CZapitMessages
 			CMD_GET_VIDEO_FORMAT	   = 113,
 			CMD_STOP_PIP			   = 114,
 			CMD_ZAPTO_EPG			   = 115,
-			CMD_LOCKRC				   = 116
+			CMD_LOCKRC				   = 116,
+			CMD_SOFTCSA_SWITCH_SOURCE		   = 117
 		};
 
 	struct commandBoolean
@@ -161,6 +162,23 @@ class CZapitMessages
 		bool truefalse;
 		commandBoolean():truefalse(false){}
 	};
+
+#ifdef HAVE_SOFTCSA
+	struct commandSoftCSASwitchSource
+	{
+		bool to_memory;
+		int video_type;
+		int audio_type;
+		commandSoftCSASwitchSource() : to_memory(false), video_type(0), audio_type(0) {}
+	};
+
+	struct responseSoftCSASwitchSource
+	{
+		int video_fd;
+		int audio_fd;
+		responseSoftCSASwitchSource() : video_fd(-1), audio_fd(-1) {}
+	};
+#endif
 
 	struct commandInt
 	{
