@@ -46,6 +46,7 @@ CSoftCSASession::CSoftCSASession(SoftCSASessionType type, int adapter, int demux
 	, dec_vpid(0)
 	, dec_apid(0)
 	, dec_pcrpid(0)
+	, pending_apid(-1)
 	, buffer(NULL)
 	, running(false)
 {
@@ -75,14 +76,26 @@ void CSoftCSASession::setDecoderPids(unsigned short vpid, unsigned short apid, u
 	dec_pcrpid = pcrpid;
 }
 
+void CSoftCSASession::setAudioPidRouting(unsigned short new_apid)
+{
+	/* Called from the zapit server thread. The reader thread is the sole
+	 * owner of dec_apid and ts_demuxer state once start() returns — we
+	 * queue the change here and let the reader apply it between reads. */
+	pending_apid.store((int32_t)new_apid, std::memory_order_release);
+}
+
 void CSoftCSASession::addPid(unsigned short pid)
 {
 	pids.push_back(pid);
 	if (demux) {
+		bool ok;
 		if (pids.size() == 1)
-			demux->pesFilter(pid);
+			ok = demux->pesFilter(pid);
 		else
-			demux->addPid(pid);
+			ok = demux->addPid(pid);
+		if (!ok)
+			printf("[softcsa] addPid 0x%04x failed (pids.size=%zu) — "
+			       "kernel filter limit reached?\n", pid, pids.size());
 	}
 }
 
@@ -185,6 +198,15 @@ void CSoftCSASession::readerThread()
 	int consecutive_errors = 0;
 
 	while (running) {
+		/* Apply pending audio-pid change from setAudioPidRouting().
+		 * Runs single-threaded here so ts_demuxer state is safe. */
+		int32_t pending = pending_apid.exchange(-1, std::memory_order_acquire);
+		if (pending >= 0) {
+			dec_apid = (unsigned short)pending;
+			if (ts_demuxer)
+				ts_demuxer->setAudioPid((unsigned short)pending);
+		}
+
 		int len = demux->Read(buffer, BUFFER_SIZE, 100);
 		if (len <= 0) {
 			if (len < 0) {

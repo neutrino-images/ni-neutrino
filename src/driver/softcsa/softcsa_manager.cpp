@@ -20,6 +20,7 @@
 
 #include "softcsa_manager.h"
 #include "softcsa_engine.h"
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 
@@ -87,7 +88,15 @@ void CSoftCSAManager::addPid(uint32_t demux_index, unsigned short pid)
 	if (it == demux_states.end())
 		return;
 
-	it->second.pids.push_back(pid);
+	/* dedup — pathological multiplexes may list the same PID under
+	 * multiple roles (audio == video, audio == pcr, two identical
+	 * audio channel entries). cDemux has no internal dedup and
+	 * would emit DMX_ADD_PID errors + stale pesfds entries. */
+	auto &pid_list = it->second.pids;
+	if (std::find(pid_list.begin(), pid_list.end(), pid) != pid_list.end())
+		return;
+
+	pid_list.push_back(pid);
 
 	if (it->second.session)
 		it->second.session->addPid(pid);
@@ -466,6 +475,48 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 
 	printf("[softcsa] waitForRecordStart: %s\n", started ? "started" : "timeout");
 	return started;
+}
+
+bool CSoftCSAManager::notifyAudioPidChange(t_channel_id channel_id, unsigned short new_apid)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+
+	auto key = std::make_pair(channel_id, SOFTCSA_SESSION_LIVE);
+	auto ch_it = channel_to_demux.find(key);
+	if (ch_it == channel_to_demux.end())
+		return false;
+
+	auto dm_it = demux_states.find(ch_it->second);
+	if (dm_it == demux_states.end())
+		return false;
+
+	DemuxState &ds = dm_it->second;
+	ds.audio_pid = new_apid;
+
+	if (ds.session && ds.session->isRunning()) {
+		printf("[softcsa] notifyAudioPidChange: demux %u channel %llx new_apid=%04x\n",
+		       ch_it->second, (unsigned long long)channel_id, new_apid);
+		ds.session->setAudioPidRouting(new_apid);
+		return true;
+	}
+	return false;
+}
+
+bool CSoftCSAManager::hasRunningLiveSession(t_channel_id channel_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+
+	auto key = std::make_pair(channel_id, SOFTCSA_SESSION_LIVE);
+	auto ch_it = channel_to_demux.find(key);
+	if (ch_it == channel_to_demux.end())
+		return false;
+
+	auto dm_it = demux_states.find(ch_it->second);
+	if (dm_it == demux_states.end())
+		return false;
+
+	return dm_it->second.session != NULL
+	    && dm_it->second.session->isRunning();
 }
 
 bool CSoftCSAManager::isActive(t_channel_id channel_id)

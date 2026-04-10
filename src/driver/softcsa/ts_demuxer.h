@@ -41,6 +41,10 @@ public:
 	/* Reset internal state (e.g., on channel change) */
 	void reset();
 
+	/* Switch routed audio PID at runtime (e.g., audio language change).
+	 * Drops any partial PES accumulated for the previous audio PID. */
+	void setAudioPid(unsigned short pid);
+
 	static const size_t MAX_PES_BUF_SIZE = 2 * 1024 * 1024; /* safety limit — matches MAX_PES_SIZE */
 
 private:

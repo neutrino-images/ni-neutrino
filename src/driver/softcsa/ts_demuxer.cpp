@@ -41,6 +41,13 @@ void CTsDemuxer::reset()
 	audio.has_data = false;
 }
 
+void CTsDemuxer::setAudioPid(unsigned short pid)
+{
+	audio.pid = pid;
+	audio.pes_buf.clear();
+	audio.has_data = false;
+}
+
 void CTsDemuxer::flushPid(PidState &ps,
                            const std::function<void(unsigned short, const uint8_t *, int)> &on_pes)
 {

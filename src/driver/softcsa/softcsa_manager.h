@@ -53,7 +53,14 @@ public:
 	bool stopSession(t_channel_id channel_id, SoftCSASessionType type);
 	void stopAll();
 
+	// Audio language change: update routed apid on the LIVE session for channel_id.
+	// Returns true if an active session was found and updated.
+	bool notifyAudioPidChange(t_channel_id channel_id, unsigned short new_apid);
+
 	bool isActive(t_channel_id channel_id);
+
+	// LIVE session exists and has a running worker
+	bool hasRunningLiveSession(t_channel_id channel_id);
 
 	// Recording: register fd and wait for OSCam to confirm CSA-ALT.
 	// Returns true if recordThread started, false on timeout.

@@ -49,6 +49,12 @@ public:
 	void setDecoderPids(unsigned short vpid, unsigned short apid, unsigned short pcrpid);
 	bool addReaderPid(unsigned short pid);
 
+	/* Switch which audio PID is routed to the memory decoder at runtime
+	 * (audio language change). Assumes the new PID is already in the
+	 * SoftCSA cDemux TAP — all audio PIDs of the channel are added by
+	 * capmt at session setup. */
+	void setAudioPidRouting(unsigned short new_apid);
+
 	/* LIVE: start memory-source injection (3 threads) */
 	bool start(int video_fd, int audio_fd);
 	/* RECORD: start descramble-to-file (standalone, without LIVE) */
@@ -81,9 +87,14 @@ private:
 	int demux_unit;
 	int frontend_num;
 
+	/* dec_vpid / dec_apid / dec_pcrpid are only touched by the reader
+	 * thread after start() returns. Cross-thread APID changes are queued
+	 * via pending_apid and applied by the reader thread — never written
+	 * directly from the caller side. -1 = no pending change. */
 	unsigned short dec_vpid;
 	unsigned short dec_apid;
 	unsigned short dec_pcrpid;
+	std::atomic<int32_t> pending_apid;
 
 	uint8_t *buffer;
 	static const int BUFFER_SIZE = 512 * 1024;         /* TS read buffer — 512KB for 2160p bitrates up to 50 Mbit/s */

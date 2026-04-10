@@ -1169,6 +1169,20 @@ bool CZapit::ChangeAudioPid(uint8_t index)
 	if (!current_channel)
 		return false;
 
+	/* restarting the decoder while `playing` is false desyncs state —
+	 * StopPlayBack would then early-return and the next StartPlayBack
+	 * hits an already-playing decoder (silent audio). Update channel
+	 * state and stream-type so the next StartPlayBack sees them. */
+	if (!playing) {
+		current_channel->setAudioChannel(index);
+		CZapitAudioChannel *newAudioChannel = current_channel->getAudioChannel();
+		if (newAudioChannel)
+			SetAudioStreamType(newAudioChannel->audioChannelType);
+		printf("[zapit] change apid to 0x%x (not playing — state-only)\n",
+			current_channel->getAudioPid());
+		return true;
+	}
+
 	/* stop demux filter */
 	if (audioDemux->Stop() == false)
 		return false;
@@ -1190,6 +1204,15 @@ bool CZapit::ChangeAudioPid(uint8_t index)
 
 	printf("[zapit] change apid to 0x%x\n", current_channel->getAudioPid());
 	SetAudioStreamType(currentAudioChannel->audioChannelType);
+
+#ifdef HAVE_SOFTCSA
+	/* If SoftCSA has a LIVE session for this channel, switch its routed
+	 * audio PID in the ts_demuxer. All audio PIDs are already in the
+	 * cDemux TAP (see capmt.cpp), so only routing needs to change. */
+	CSoftCSAManager::getInstance()->notifyAudioPidChange(
+		current_channel->getChannelID(),
+		current_channel->getAudioPid());
+#endif
 
 	/* set demux filter */
 	if (audioDemux->pesFilter(current_channel->getAudioPid()) == false)
@@ -2603,7 +2626,9 @@ bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 {
 	INFO("standby %d playing %d forced %d send_pmt %d", standby, playing, playbackStopForced, send_pmt);
 #ifdef HAVE_SOFTCSA
-	if (current_channel &&
+	/* paired with CCamManager::Stop below: tearing LIVE down without the
+	 * CAM stop strands a same-channel RECORD that would key-copy from it */
+	if (send_pmt && current_channel &&
 	    CSoftCSAManager::getInstance()->stopSession(
 	        current_channel->getChannelID(), SOFTCSA_SESSION_LIVE))
 		restoreSoftCSADecoder();

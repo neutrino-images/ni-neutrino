@@ -384,7 +384,10 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		cam->setSource(source);
 		if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
 			INFO("\033[33m socket only\033[0m");
-			cam->makeCaPmt(channel, true);
+			/* CAPMT_ONLY makes OSCam stop every other demuxer on the
+			 * same connection — would clobber a concurrent recording */
+			uint8_t softcsa_list = (channel_map.size() > 1) ? CCam::CAPMT_ADD : CCam::CAPMT_ONLY;
+			cam->makeCaPmt(channel, true, softcsa_list);
 #ifdef HAVE_SOFTCSA
 			if ((mode == PLAY || mode == RECORD || mode == PIP) && dvbapi_client && dvbapi_client->ensureConnected()) {
 				uint32_t demux_index;
@@ -399,7 +402,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 				if (mode == RECORD) {
 					int saved_source = cam->getSource();
 					cam->setSource(demux_index);
-					cam->makeCaPmt(channel, true);
+					cam->makeCaPmt(channel, true, softcsa_list);
 					cam->setSource(saved_source);
 				}
 				SoftCSASessionType stype = (mode == RECORD) ? SOFTCSA_SESSION_RECORD :
@@ -411,8 +414,13 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 				if (channel->getVideoPid())
 					CSoftCSAManager::getInstance()->addPid(demux_index, channel->getVideoPid());
-				if (channel->getAudioPid())
-					CSoftCSAManager::getInstance()->addPid(demux_index, channel->getAudioPid());
+				/* Add ALL audio PIDs so audio-language switch needs no runtime
+				 * cDemux filter mutation — only routing in ts_demuxer changes. */
+				for (unsigned char ai = 0; ai < channel->getAudioChannelCount(); ai++) {
+					CZapitAudioChannel *ac = channel->getAudioChannel(ai);
+					if (ac && ac->pid)
+						CSoftCSAManager::getInstance()->addPid(demux_index, ac->pid);
+				}
 				if (channel->getPcrPid() && channel->getPcrPid() != channel->getVideoPid())
 					CSoftCSAManager::getInstance()->addPid(demux_index, channel->getPcrPid());
 				if (channel->getPmtPid())
@@ -465,8 +473,13 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 			if (channel->getVideoPid())
 				CSoftCSAManager::getInstance()->addPid(rec_demux, channel->getVideoPid());
-			if (channel->getAudioPid())
-				CSoftCSAManager::getInstance()->addPid(rec_demux, channel->getAudioPid());
+			/* Record all audio PIDs so language track choice remains flexible
+			 * during playback and matches the LIVE session setup. */
+			for (unsigned char ai = 0; ai < channel->getAudioChannelCount(); ai++) {
+				CZapitAudioChannel *ac = channel->getAudioChannel(ai);
+				if (ac && ac->pid)
+					CSoftCSAManager::getInstance()->addPid(rec_demux, ac->pid);
+			}
 			if (channel->getPcrPid() && channel->getPcrPid() != channel->getVideoPid())
 				CSoftCSAManager::getInstance()->addPid(rec_demux, channel->getPcrPid());
 			if (channel->getPmtPid())
@@ -476,8 +489,26 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 				channel->getVideoPid(),
 				channel->getAudioPid(),
 				channel->getPcrPid());
-			/* No sendCaPmt here — same-channel recording uses key-copy
-			 * from the LIVE session. OSCam ignores duplicate SID anyway. */
+
+			/* no LIVE to key-copy from (e.g. record-from-standby) →
+			 * subscribe RECORD demux with OSCam directly. Always ADD:
+			 * an in-flight recording on another SID must not be clobbered
+			 * even when this is the only entry in channel_map. */
+			if (!CSoftCSAManager::getInstance()->hasRunningLiveSession(channel->getChannelID())) {
+				int saved_source = cam->getSource();
+				cam->setSource(rec_demux);
+				cam->makeCaPmt(channel, true, CCam::CAPMT_ADD);
+				cam->setSource(saved_source);
+				if (!dvbapi_client->sendCaPmt(cam->getBuffer(), cam->getLength(),
+				                              channel->getServiceId())) {
+					printf("[softcsa] sendCaPmt (record-only) failed for channel %llx\n",
+					       (unsigned long long)channel->getChannelID());
+					/* roll back the RECORD state so the caller's cRecord
+					 * fallback sees a clean slate */
+					CSoftCSAManager::getInstance()->stopSession(
+						channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+				}
+			}
 		}
 #endif
 		if (mode) {
