@@ -1183,6 +1183,30 @@ bool CZapit::ChangeAudioPid(uint8_t index)
 		return true;
 	}
 
+#ifdef HAVE_SOFTCSA
+	/* SoftCSA LIVE runs a memory-source decoder that is fed continuously
+	 * by the session's writer threads. audioDecoder->Stop()+Start() would
+	 * need a full re-init sequence (CLEAR_BUFFER/PAUSE/SET_AV_SYNC/PLAY/
+	 * CONTINUE) to resume from MEMORY — a plain AUDIO_PLAY is not enough
+	 * and leaves the decoder silent. Skip the HAL dance entirely and just
+	 * reroute the audio pid inside the running SoftCSA session. */
+	if (CSoftCSAManager::getInstance()->hasRunningLiveSession(current_channel->getChannelID())) {
+		current_channel->setAudioChannel(index);
+		CZapitAudioChannel *ch = current_channel->getAudioChannel();
+		if (!ch) {
+			WARN("No current audio channel");
+			return false;
+		}
+		printf("[zapit] change apid to 0x%x (softcsa — in-place reroute)\n",
+			current_channel->getAudioPid());
+		SetAudioStreamType(ch->audioChannelType);
+		CSoftCSAManager::getInstance()->notifyAudioPidChange(
+			current_channel->getChannelID(),
+			current_channel->getAudioPid());
+		return true;
+	}
+#endif
+
 	/* stop demux filter */
 	if (audioDemux->Stop() == false)
 		return false;
@@ -1204,15 +1228,6 @@ bool CZapit::ChangeAudioPid(uint8_t index)
 
 	printf("[zapit] change apid to 0x%x\n", current_channel->getAudioPid());
 	SetAudioStreamType(currentAudioChannel->audioChannelType);
-
-#ifdef HAVE_SOFTCSA
-	/* If SoftCSA has a LIVE session for this channel, switch its routed
-	 * audio PID in the ts_demuxer. All audio PIDs are already in the
-	 * cDemux TAP (see capmt.cpp), so only routing needs to change. */
-	CSoftCSAManager::getInstance()->notifyAudioPidChange(
-		current_channel->getChannelID(),
-		current_channel->getAudioPid());
-#endif
 
 	/* set demux filter */
 	if (audioDemux->pesFilter(current_channel->getAudioPid()) == false)
