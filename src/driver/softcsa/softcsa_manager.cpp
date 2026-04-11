@@ -66,6 +66,7 @@ void CSoftCSAManager::registerDemux(uint32_t demux_index, t_channel_id channel_i
 		state.video_type = 0;
 		state.audio_type = 0;
 		state.record_fd = -1;
+		state.stream_callback = nullptr;
 
 		demux_states[demux_index] = state;
 		channel_to_demux[std::make_pair(channel_id, type)] = demux_index;
@@ -194,6 +195,15 @@ void CSoftCSAManager::onDescrMode(uint32_t demux_index, uint32_t algo, uint32_t 
 					record_started = true;
 				} else {
 					printf("[softcsa] createSession: failed to start record\n");
+				}
+			} else if (ds.type == SOFTCSA_SESSION_STREAM && ds.stream_callback) {
+				printf("[softcsa] createSession: auto-starting stream for demux %u\n",
+				       demux_index);
+				if (ds.session->startStream(ds.stream_callback)) {
+					ds.stream_callback = nullptr;
+					record_started = true;
+				} else {
+					printf("[softcsa] createSession: failed to start stream\n");
 				}
 			}
 		}
@@ -330,7 +340,7 @@ bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType ty
 
 	/* Extract session pointer under lock, then stop/delete outside lock.
 	 * session->stop() calls worker.join() which blocks — holding the mutex
-	 * during join would deadlock if the loopback thread or CW handler
+	 * during join would deadlock if the reader thread or CW handler
 	 * tries to acquire it (addReaderPid, onCW). */
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -344,8 +354,11 @@ bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType ty
 		auto dm_it = demux_states.find(demux_index);
 		if (dm_it != demux_states.end())
 		{
-			/* Reset deferred record fd — caller (record.cpp) owns and closes it */
+			/* Reset deferred fds/callbacks — caller owns the fd, the
+			 * callback's std::function captures are released with the
+			 * state on erase() below anyway; nulling is for symmetry. */
 			dm_it->second.record_fd = -1;
+			dm_it->second.stream_callback = nullptr;
 			if (dm_it->second.session) {
 				session_to_stop = dm_it->second.session;
 				dm_it->second.session = NULL;
@@ -419,6 +432,10 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 				rec_ds.record_fd = -1;
 				return true;
 			}
+			/* startRecord failed — drop the orphan session so the CV
+			 * predicate below doesn't fire a false positive. */
+			delete rec_ds.session;
+			rec_ds.session = NULL;
 		}
 
 		/* Same-channel: LIVE session already has CW keys.
@@ -477,6 +494,93 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 	return started;
 }
 
+bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms)
+{
+	/* Store callback in STREAM DemuxState for deferred start by onDescrMode */
+	{
+		std::lock_guard<std::mutex> lock(mtx);
+		auto key = std::make_pair(channel_id, SOFTCSA_SESSION_STREAM);
+		auto ch_it = channel_to_demux.find(key);
+		if (ch_it == channel_to_demux.end()) {
+			printf("[softcsa] waitForStreamStart: no STREAM demux for channel %llx\n",
+			       (unsigned long long)channel_id);
+			return false;
+		}
+		auto dm_it = demux_states.find(ch_it->second);
+		if (dm_it == demux_states.end())
+			return false;
+
+		DemuxState &str_ds = dm_it->second;
+		str_ds.stream_callback = cb;
+
+		/* Fast path: onDescrMode already created the session */
+		if (str_ds.session && !str_ds.session->isRunning()) {
+			printf("[softcsa] waitForStreamStart: session exists, starting stream immediately\n");
+			if (str_ds.session->startStream(cb)) {
+				str_ds.stream_callback = nullptr;
+				return true;
+			}
+			/* startStream failed — drop the orphan session so the CV
+			 * predicate below doesn't fire a false positive. */
+			delete str_ds.session;
+			str_ds.session = NULL;
+		}
+
+		/* Same-channel: LIVE session has CW keys already — clone and start.
+		 * OSCam won't issue a second DVBAPI filter for the same SID, so
+		 * onDescrMode will never fire for the STREAM demux on its own. */
+		auto live_key = std::make_pair(channel_id, SOFTCSA_SESSION_LIVE);
+		auto live_it = channel_to_demux.find(live_key);
+		if (live_it != channel_to_demux.end()) {
+			auto live_dm = demux_states.find(live_it->second);
+			if (live_dm != demux_states.end()
+			    && live_dm->second.csa_alt_active
+			    && live_dm->second.session) {
+				printf("[softcsa] waitForStreamStart: same-channel, creating STREAM from LIVE keys\n");
+
+				str_ds.csa_alt_active = true;
+				str_ds.ecm_mode = live_dm->second.ecm_mode;
+				str_ds.session = new CSoftCSASession(
+					str_ds.type, str_ds.adapter, str_ds.demux_unit, str_ds.frontend_num);
+
+				for (auto pid : str_ds.pids)
+					str_ds.session->addPid(pid);
+
+				live_dm->second.session->getEngine()->copyKeysTo(str_ds.session->getEngine());
+
+				if (str_ds.session->startStream(cb)) {
+					str_ds.stream_callback = nullptr;
+					printf("[softcsa] waitForStreamStart: same-channel streaming started\n");
+					return true;
+				}
+
+				printf("[softcsa] waitForStreamStart: startStream failed\n");
+				delete str_ds.session;
+				str_ds.session = NULL;
+			}
+		}
+
+		printf("[softcsa] waitForStreamStart: callback stored, waiting %dms\n", timeout_ms);
+	}
+
+	/* Wait for onDescrMode to create session and start streamThread */
+	std::unique_lock<std::mutex> cv_lock(record_cv_mtx);
+	bool started = record_cv.wait_for(cv_lock, std::chrono::milliseconds(timeout_ms), [&]() {
+		std::lock_guard<std::mutex> lock(mtx);
+		auto key = std::make_pair(channel_id, SOFTCSA_SESSION_STREAM);
+		auto ch_it = channel_to_demux.find(key);
+		if (ch_it == channel_to_demux.end())
+			return false;
+		auto dm_it = demux_states.find(ch_it->second);
+		if (dm_it == demux_states.end())
+			return false;
+		return dm_it->second.session != NULL && dm_it->second.session->isRunning();
+	});
+
+	printf("[softcsa] waitForStreamStart: %s\n", started ? "started" : "timeout");
+	return started;
+}
+
 bool CSoftCSAManager::notifyAudioPidChange(t_channel_id channel_id, unsigned short new_apid)
 {
 	std::lock_guard<std::mutex> lock(mtx);
@@ -523,7 +627,7 @@ bool CSoftCSAManager::isActive(t_channel_id channel_id)
 {
 	std::lock_guard<std::mutex> lock(mtx);
 
-	for (int t = SOFTCSA_SESSION_LIVE; t <= SOFTCSA_SESSION_RECORD; t++)
+	for (int t = SOFTCSA_SESSION_LIVE; t <= SOFTCSA_SESSION_STREAM; t++)
 	{
 		auto key = std::make_pair(channel_id, (SoftCSASessionType)t);
 		auto it = channel_to_demux.find(key);

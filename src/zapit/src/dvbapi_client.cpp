@@ -620,8 +620,8 @@ void CDvbApiClient::handleDmxSetFilter(uint32_t /* msgid */, const uint8_t *payl
 
 	/*
 	 * payload: adapter_index(1) + demux_id(1) + filter_number(1) + pid(2) + ...
-	 * Extract the PID and add it to the SoftCSA reader so that ECM data
-	 * flows through the DVR loopback to OSCam's filters on demux0.
+	 * Extract the PID and add it to the SoftCSA reader so the section
+	 * data can be forwarded back to OSCam over the DVBAPI socket.
 	 */
 	uint32_t demux_index = payload[1];
 	uint16_t pid = readU16(payload + 3);

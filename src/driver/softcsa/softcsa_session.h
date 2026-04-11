@@ -1,5 +1,5 @@
 /*
- * CSoftCSASession - single SoftCSA descrambling session (live/record)
+ * CSoftCSASession - single SoftCSA descrambling session (live/pip/record/stream)
  *
  * Copyright (C) 2026 NI-Team
  *
@@ -22,6 +22,7 @@
 #define __SOFTCSA_SESSION_H__
 
 #include <cstdint>
+#include <functional>
 #include <vector>
 #include <thread>
 #include <atomic>
@@ -34,8 +35,11 @@ class cDemux;
 enum SoftCSASessionType {
 	SOFTCSA_SESSION_LIVE,
 	SOFTCSA_SESSION_PIP,
-	SOFTCSA_SESSION_RECORD
+	SOFTCSA_SESSION_RECORD,
+	SOFTCSA_SESSION_STREAM
 };
+
+typedef std::function<void(const uint8_t *data, int len)> SoftCSAStreamCallback;
 
 class CSoftCSASession
 {
@@ -59,6 +63,8 @@ public:
 	bool start(int video_fd, int audio_fd);
 	/* RECORD: start descramble-to-file (standalone, without LIVE) */
 	bool startRecord(int fd);
+	/* STREAM: start descramble-to-callback (standalone, without LIVE) */
+	bool startStream(SoftCSAStreamCallback cb);
 	void stop();
 
 	bool isRunning() const { return running.load(); }
@@ -70,6 +76,7 @@ private:
 	void videoWriterThread();
 	void audioWriterThread();
 	void recordThread();
+	void streamThread();
 
 	SoftCSASessionType session_type;
 	CSoftCSAEngine *engine;
@@ -82,6 +89,7 @@ private:
 	int video_fd;    /* video0 in MEMORY mode (LIVE only, not owned) */
 	int audio_fd;    /* audio0 in MEMORY mode (LIVE only, not owned) */
 	int record_fd;   /* recording output (RECORD only, not owned) */
+	SoftCSAStreamCallback stream_callback; /* STREAM only */
 
 	int adapter_num;
 	int demux_unit;

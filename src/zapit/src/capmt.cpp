@@ -389,23 +389,26 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			uint8_t softcsa_list = (channel_map.size() > 1) ? CCam::CAPMT_ADD : CCam::CAPMT_ONLY;
 			cam->makeCaPmt(channel, true, softcsa_list);
 #ifdef HAVE_SOFTCSA
-			if ((mode == PLAY || mode == RECORD || mode == PIP) && dvbapi_client && dvbapi_client->ensureConnected()) {
+			if ((mode == PLAY || mode == RECORD || mode == PIP || mode == STREAM) && dvbapi_client && dvbapi_client->ensureConnected()) {
 				uint32_t demux_index;
 				if (mode == RECORD)
 					demux_index = (uint32_t)channel->getRecordDemux();
+				else if (mode == STREAM)
+					demux_index = (uint32_t)channel->getStreamDemux();
 				else
 					demux_index = (source >= 0) ? (uint32_t)source : 0;
 
-				/* Rebuild CA-PMT with recording demux in descriptor 0x86.
-				 * makeCaPmt above used source_demux (=LIVE). For RECORD
-				 * we need getRecordDemux() so OSCam sends CW to demux 1. */
-				if (mode == RECORD) {
+				/* Rebuild CA-PMT with the non-LIVE demux in descriptor 0x86.
+				 * makeCaPmt above used source_demux (=LIVE). RECORD and
+				 * STREAM need their own demux so OSCam routes CW there. */
+				if (mode == RECORD || mode == STREAM) {
 					int saved_source = cam->getSource();
 					cam->setSource(demux_index);
 					cam->makeCaPmt(channel, true, softcsa_list);
 					cam->setSource(saved_source);
 				}
 				SoftCSASessionType stype = (mode == RECORD) ? SOFTCSA_SESSION_RECORD :
+				                           (mode == STREAM) ? SOFTCSA_SESSION_STREAM :
 				                           (mode == PIP) ? SOFTCSA_SESSION_PIP : SOFTCSA_SESSION_LIVE;
 
 				CSoftCSAManager::getInstance()->registerDemux(
@@ -464,49 +467,56 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	if(oldmask == newmask) {
 		INFO("\033[33m (oldmask == newmask)\033[0m");
 #ifdef HAVE_SOFTCSA
-		if (mode == RECORD && start && channel->scrambled && !channel->bUseCI
+		/* Same-channel RECORD/STREAM fallback: mask did not change because
+		 * a subscription on this frontend already exists. Register the new
+		 * demux in SoftCSA and — if no LIVE session can share its keys —
+		 * send a fresh CAPMT to OSCam targeted at the new demux. */
+		if ((mode == RECORD || mode == STREAM) && start && channel->scrambled && !channel->bUseCI
 		    && dvbapi_client && dvbapi_client->ensureConnected()) {
-			uint32_t rec_demux = (uint32_t)channel->getRecordDemux();
+			uint32_t new_demux = (mode == RECORD)
+				? (uint32_t)channel->getRecordDemux()
+				: (uint32_t)channel->getStreamDemux();
+			SoftCSASessionType stype = (mode == RECORD)
+				? SOFTCSA_SESSION_RECORD
+				: SOFTCSA_SESSION_STREAM;
+
 			CSoftCSAManager::getInstance()->registerDemux(
-				rec_demux, channel->getChannelID(),
-				SOFTCSA_SESSION_RECORD, 0 /* adapter */, rec_demux, source);
+				new_demux, channel->getChannelID(),
+				stype, 0 /* adapter */, new_demux, source);
 
 			if (channel->getVideoPid())
-				CSoftCSAManager::getInstance()->addPid(rec_demux, channel->getVideoPid());
-			/* Record all audio PIDs so language track choice remains flexible
-			 * during playback and matches the LIVE session setup. */
+				CSoftCSAManager::getInstance()->addPid(new_demux, channel->getVideoPid());
 			for (unsigned char ai = 0; ai < channel->getAudioChannelCount(); ai++) {
 				CZapitAudioChannel *ac = channel->getAudioChannel(ai);
 				if (ac && ac->pid)
-					CSoftCSAManager::getInstance()->addPid(rec_demux, ac->pid);
+					CSoftCSAManager::getInstance()->addPid(new_demux, ac->pid);
 			}
 			if (channel->getPcrPid() && channel->getPcrPid() != channel->getVideoPid())
-				CSoftCSAManager::getInstance()->addPid(rec_demux, channel->getPcrPid());
+				CSoftCSAManager::getInstance()->addPid(new_demux, channel->getPcrPid());
 			if (channel->getPmtPid())
-				CSoftCSAManager::getInstance()->addPid(rec_demux, channel->getPmtPid());
+				CSoftCSAManager::getInstance()->addPid(new_demux, channel->getPmtPid());
 
-			CSoftCSAManager::getInstance()->setDecoderPids(rec_demux,
+			CSoftCSAManager::getInstance()->setDecoderPids(new_demux,
 				channel->getVideoPid(),
 				channel->getAudioPid(),
 				channel->getPcrPid());
 
-			/* no LIVE to key-copy from (e.g. record-from-standby) →
-			 * subscribe RECORD demux with OSCam directly. Always ADD:
-			 * an in-flight recording on another SID must not be clobbered
-			 * even when this is the only entry in channel_map. */
+			/* no LIVE to key-copy from → subscribe directly with OSCam.
+			 * Always CAPMT_ADD so an in-flight recording/stream on another
+			 * SID stays alive even when channel_map has only this entry. */
 			if (!CSoftCSAManager::getInstance()->hasRunningLiveSession(channel->getChannelID())) {
 				int saved_source = cam->getSource();
-				cam->setSource(rec_demux);
+				cam->setSource(new_demux);
 				cam->makeCaPmt(channel, true, CCam::CAPMT_ADD);
 				cam->setSource(saved_source);
 				if (!dvbapi_client->sendCaPmt(cam->getBuffer(), cam->getLength(),
 				                              channel->getServiceId())) {
-					printf("[softcsa] sendCaPmt (record-only) failed for channel %llx\n",
+					printf("[softcsa] sendCaPmt (%s-only) failed for channel %llx\n",
+					       (mode == RECORD) ? "record" : "stream",
 					       (unsigned long long)channel->getChannelID());
-					/* roll back the RECORD state so the caller's cRecord
-					 * fallback sees a clean slate */
+					/* roll back so the caller sees a clean slate */
 					CSoftCSAManager::getInstance()->stopSession(
-						channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+						channel->getChannelID(), stype);
 				}
 			}
 		}

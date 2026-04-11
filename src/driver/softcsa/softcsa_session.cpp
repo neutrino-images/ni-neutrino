@@ -1,5 +1,5 @@
 /*
- * CSoftCSASession - single SoftCSA descrambling session (live/record)
+ * CSoftCSASession - single SoftCSA descrambling session (live/pip/record/stream)
  *
  * Copyright (C) 2026 NI-Team
  *
@@ -172,6 +172,19 @@ bool CSoftCSASession::startRecord(int fd)
 	return true;
 }
 
+bool CSoftCSASession::startStream(SoftCSAStreamCallback cb)
+{
+	if (running.load())
+		return false;
+	if (!buffer || !demux || !cb)
+		return false;
+	stream_callback = cb;
+	demux->Start();
+	running = true;
+	reader_worker = std::thread(&CSoftCSASession::streamThread, this);
+	return true;
+}
+
 void CSoftCSASession::stop()
 {
 	running = false;
@@ -187,6 +200,10 @@ void CSoftCSASession::stop()
 		video_worker.join();
 	if (audio_worker.joinable())
 		audio_worker.join();
+
+	/* Release the callback's captured state (e.g. a CStreamInstance*)
+	 * once the reader thread has definitely stopped calling it. */
+	stream_callback = nullptr;
 
 	if (demux)
 		demux->Stop();
@@ -315,6 +332,19 @@ void CSoftCSASession::recordThread()
 				}
 				written += ret;
 			}
+		}
+	}
+}
+
+void CSoftCSASession::streamThread()
+{
+	set_threadname("n:softcsa_str");
+	while (running) {
+		int len = demux->Read(buffer, BUFFER_SIZE, 100);
+		if (len > 0) {
+			engine->descramble(buffer, len);
+			if (stream_callback)
+				stream_callback(buffer, len);
 		}
 	}
 }

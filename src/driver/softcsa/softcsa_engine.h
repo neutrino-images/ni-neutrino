@@ -34,11 +34,14 @@ public:
 	CSoftCSAEngine();
 	~CSoftCSAEngine();
 
-	// Set control word (called from CW handler thread)
+	// Set control word. Called from the CDvbApiClient reader thread via
+	// CSoftCSAManager::onCW, and via copyKeysTo from the zapit server
+	// thread at same-channel session creation.
 	// parity: 0=even, 1=odd
 	void setKey(int parity, uint8_t ecm_mode, const uint8_t *cw);
 
-	// Descramble TS packets in buffer (called from loopback thread)
+	// Descramble TS packets in buffer. Called from the session reader
+	// thread (LIVE/PIP) or the dedicated record/stream thread.
 	// Returns number of packets descrambled
 	int descramble(uint8_t *data, int len);
 

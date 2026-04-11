@@ -66,6 +66,10 @@ public:
 	// Returns true if recordThread started, false on timeout.
 	bool waitForRecordStart(t_channel_id channel_id, int fd, int timeout_ms);
 
+	// Streaming: register callback and wait for OSCam to confirm CSA-ALT.
+	// Returns true if streamThread started, false on timeout.
+	bool waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
+
 private:
 	CSoftCSAManager();
 	~CSoftCSAManager();
@@ -87,6 +91,7 @@ private:
 		int video_type;        // VIDEO_FORMAT stream type
 		int audio_type;        // audio channel type for AUDIO_SET_BYPASS_MODE
 		int record_fd;         // deferred fd for RECORD sessions (-1 = none)
+		SoftCSAStreamCallback stream_callback; // deferred cb for STREAM sessions
 	};
 
 	// Primary: demux_index -> state (for CW routing from CDvbApiClient)
