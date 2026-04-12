@@ -53,7 +53,17 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 				sess_it->second.session = NULL;
 			}
 		} else {
-			session_id = next_session_id++;
+			/* Reuse the id from a recently stopped session for the
+			 * same (channel_id, type).  OSCam's is_update path
+			 * keeps the old msgid on its demux slot — reusing the
+			 * same id here keeps client and server in sync. */
+			auto recent_it = recently_stopped.find(existing_key);
+			if (recent_it != recently_stopped.end()) {
+				session_id = recent_it->second;
+				recently_stopped.erase(recent_it);
+			} else {
+				session_id = next_session_id++;
+			}
 		}
 
 		SessionState state;
@@ -161,7 +171,13 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 		auto it = sessions.find(session_id);
-		if (it != sessions.end() && algo == CW_ALGO_CSA_ALT && !it->second.session) {
+		/* A retained LIVE entry (session stopped but kept for CW routing
+		 * to siblings) has session==NULL AND csa_alt_active==true.  We
+		 * must NOT create a new session for it — that would switch the
+		 * main decoder to MEMORY and start feeding stale data.  The
+		 * !needs_session path below just updates ecm_mode so onCW can
+		 * keep routing CWs to RECORD/PIP/STREAM siblings. */
+		if (it != sessions.end() && algo == CW_ALGO_CSA_ALT && !it->second.session && !it->second.csa_alt_active) {
 			needs_session = true;
 			/* Only LIVE needs the IPC-driven main-decoder switchSoftCSASource
 			 * in the phases below. PIP sessions get their pre-switched pip
@@ -407,10 +423,12 @@ bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType ty
 			/* Retain entry: OSCam still has the channel's demux slot bound
 			 * to this msgid; onCW routes CWs to siblings via sharing loop. */
 		} else {
+			recently_stopped[key] = session_id;
 			sessions.erase(sess_it);
 			channel_to_session.erase(ch_it);
 
 			if (type != SOFTCSA_SESSION_LIVE && live_siblings == 0 && retained_live_present) {
+				recently_stopped[std::make_pair(channel_id, SOFTCSA_SESSION_LIVE)] = retained_live_id;
 				sessions.erase(retained_live_id);
 				channel_to_session.erase(std::make_pair(channel_id, SOFTCSA_SESSION_LIVE));
 			}
@@ -443,13 +461,53 @@ void CSoftCSAManager::stopAll()
 		}
 		sessions.clear();
 		channel_to_session.clear();
+		recently_stopped.clear();
 	}
 
 	for (auto *s : sessions_to_stop) {
 		s->stop();
 		delete s;
 	}
-	/* No decoder restore via IPC — see stopSession comment above. */
+}
+
+void CSoftCSAManager::stopSessions()
+{
+	std::vector<CSoftCSASession *> sessions_to_stop;
+
+	{
+		std::lock_guard<std::mutex> lock(mtx);
+		for (auto &pair : sessions) {
+			if (pair.second.session) {
+				sessions_to_stop.push_back(pair.second.session);
+				pair.second.session = NULL;
+			}
+			pair.second.csa_alt_active = false;
+		}
+		/* After reconnect OSCam allocates fresh demux slots, so old
+		 * session_ids are meaningless — don't carry them over. */
+		recently_stopped.clear();
+	}
+
+	for (auto *s : sessions_to_stop) {
+		s->stop();
+		delete s;
+	}
+}
+
+std::vector<CSoftCSAManager::ResubscribeInfo> CSoftCSAManager::getResubscribeInfo()
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	std::vector<ResubscribeInfo> result;
+	for (auto &pair : sessions) {
+		ResubscribeInfo info;
+		info.channel_id = pair.second.channel_id;
+		info.session_id = pair.first;
+		info.type = pair.second.type;
+		info.demux_unit = pair.second.demux_unit;
+		info.frontend_num = pair.second.frontend_num;
+		result.push_back(info);
+	}
+	return result;
 }
 
 bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int timeout_ms)

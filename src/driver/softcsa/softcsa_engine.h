@@ -23,6 +23,7 @@
 
 #include <cstdint>
 #include <atomic>
+#include <mutex>
 
 extern "C" {
 #include <dvbcsa/dvbcsa.h>
@@ -56,9 +57,9 @@ private:
 	struct dvbcsa_bs_batch_s *even_batch;
 	struct dvbcsa_bs_batch_s *odd_batch;
 
-	/* Stored raw CW for key transfer to RECORD sessions */
-	uint8_t stored_cw[2][8]; /* [0]=even, [1]=odd */
+	uint8_t stored_cw[2][8];
 	uint8_t stored_ecm_mode;
+	std::mutex stored_cw_mtx;
 
 public:
 	/* Copy current keys to another engine (for same-channel recording) */

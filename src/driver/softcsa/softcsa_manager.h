@@ -51,6 +51,16 @@ public:
 	bool stopSession(t_channel_id channel_id, SoftCSASessionType type);
 	void stopAll();
 
+	struct ResubscribeInfo {
+		t_channel_id channel_id;
+		uint32_t session_id;
+		SoftCSASessionType type;
+		int demux_unit;
+		int frontend_num;
+	};
+	void stopSessions();
+	std::vector<ResubscribeInfo> getResubscribeInfo();
+
 	// Audio language change: update routed apid on the LIVE session for channel_id.
 	// Returns true if an active session was found and updated.
 	bool notifyAudioPidChange(t_channel_id channel_id, unsigned short new_apid);
@@ -101,6 +111,10 @@ private:
 
 	std::map<uint32_t, SessionState> sessions;
 	std::map<std::pair<t_channel_id, SoftCSASessionType>, uint32_t> channel_to_session;
+	/* Preserve session_id across stop → re-register for the same
+	 * (channel_id, type).  OSCam's is_update path does not store a
+	 * new msgid — reusing the old id keeps routing consistent. */
+	std::map<std::pair<t_channel_id, SoftCSASessionType>, uint32_t> recently_stopped;
 	uint32_t next_session_id;
 
 	std::mutex mtx;

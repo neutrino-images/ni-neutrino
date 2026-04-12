@@ -84,8 +84,8 @@ void CSoftCSAEngine::setKey(int parity, uint8_t ecm_mode, const uint8_t *cw)
 	 * until we implement an ECM section monitor. */
 	const uint8_t libdvbcsa_ecm = 4;
 
-	/* Store raw CW for copyKeysTo (same-channel recording) */
 	if (parity == 0 || parity == 1) {
+		std::lock_guard<std::mutex> lock(stored_cw_mtx);
 		memcpy(stored_cw[parity], cw, 8);
 		stored_ecm_mode = ecm_mode;
 	}
@@ -114,10 +114,17 @@ void CSoftCSAEngine::setKey(int parity, uint8_t ecm_mode, const uint8_t *cw)
 
 void CSoftCSAEngine::copyKeysTo(CSoftCSAEngine *dst)
 {
+	uint8_t cw_copy[2][8];
+	uint8_t ecm_copy;
+	{
+		std::lock_guard<std::mutex> lock(stored_cw_mtx);
+		memcpy(cw_copy, stored_cw, sizeof(cw_copy));
+		ecm_copy = stored_ecm_mode;
+	}
 	if (key_even_set.load(std::memory_order_acquire))
-		dst->setKey(0, stored_ecm_mode, stored_cw[0]);
+		dst->setKey(0, ecm_copy, cw_copy[0]);
 	if (key_odd_set.load(std::memory_order_acquire))
-		dst->setKey(1, stored_ecm_mode, stored_cw[1]);
+		dst->setKey(1, ecm_copy, cw_copy[1]);
 }
 
 int CSoftCSAEngine::descramble(uint8_t *data, int len)

@@ -384,9 +384,16 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		cam->setSource(source);
 		if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
 			INFO("\033[33m socket only\033[0m");
+#ifdef HAVE_SOFTCSA
 			/* CAPMT_ONLY makes OSCam stop every other demuxer on the
-			 * same connection — would clobber a concurrent recording */
+			 * same connection — always use CAPMT_ADD when SoftCSA is
+			 * active so a concurrent RECORD/STREAM/PIP stays alive. */
+			uint8_t softcsa_list = (dvbapi_client && dvbapi_client->ensureConnected())
+				? CCam::CAPMT_ADD
+				: ((channel_map.size() > 1) ? CCam::CAPMT_ADD : CCam::CAPMT_ONLY);
+#else
 			uint8_t softcsa_list = (channel_map.size() > 1) ? CCam::CAPMT_ADD : CCam::CAPMT_ONLY;
+#endif
 			cam->makeCaPmt(channel, true, softcsa_list);
 #ifdef HAVE_SOFTCSA
 			if ((mode == PLAY || mode == RECORD || mode == PIP || mode == STREAM) && dvbapi_client && dvbapi_client->ensureConnected()) {

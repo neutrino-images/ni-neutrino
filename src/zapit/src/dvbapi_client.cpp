@@ -26,6 +26,8 @@
 
 #include "dvbapi_client.h"
 #include <driver/softcsa/softcsa_manager.h>
+#include <zapit/capmt.h>
+#include <zapit/getservices.h>
 #include <zapit/settings.h>
 
 #include <cstdio>
@@ -352,12 +354,11 @@ void CDvbApiClient::readerThread()
 
 	while (running.load()) {
 		if (sock_fd < 0) {
-			/* Connection lost — attempt reconnect */
 			printf(TAG "attempting reconnect...\n");
 			if (manager)
-				manager->stopAll();
+				manager->stopSessions();
 			for (int i = 0; i < 10 && running.load(); i++)
-				usleep(500000); /* 5 second backoff */
+				usleep(500000);
 			if (!running.load())
 				break;
 			if (!connect()) {
@@ -365,6 +366,24 @@ void CDvbApiClient::readerThread()
 				continue;
 			}
 			printf(TAG "reconnected to OSCam\n");
+			if (manager) {
+				auto resub = manager->getResubscribeInfo();
+				for (auto &info : resub) {
+					CZapitChannel *channel = CServiceManager::getInstance()->FindChannel(info.channel_id);
+					if (!channel)
+						continue;
+					CCam cam;
+					cam.setCaMask(1 << info.demux_unit);
+					cam.setSource(info.demux_unit);
+					cam.makeCaPmt(channel, true, CCam::CAPMT_ADD);
+					if (!sendCaPmt(cam.getBuffer(), cam.getLength(), info.session_id))
+						printf(TAG "resubscribe failed for channel %llx session %u\n",
+						       (unsigned long long)info.channel_id, info.session_id);
+					else
+						printf(TAG "resubscribed channel %llx session %u\n",
+						       (unsigned long long)info.channel_id, info.session_id);
+				}
+			}
 			continue;
 		}
 

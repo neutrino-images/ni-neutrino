@@ -931,9 +931,37 @@ bool CZapit::StartPip(const t_channel_id channel_id, int pip)
 		int atype = newchannel->getAudioChannel() ? newchannel->getAudioChannel()->audioChannelType : 0;
 		if (switchPipToMemory(pip, vtype, atype, &pip_vfd, &pip_afd)) {
 			if (!CSoftCSAManager::getInstance()->waitForPipStart(
-			        newchannel->getChannelID(), pip_vfd, pip_afd, 3000))
-				printf("[softcsa] waitForPipStart timeout — pip stays dark for %llx\n",
-				       (unsigned long long)newchannel->getChannelID());
+			        newchannel->getChannelID(), pip_vfd, pip_afd, 3000)) {
+				/* Timeout — channel is probably not CSA-ALT.  Undo
+				 * the MEMORY switch so the hardware descrambler can
+				 * feed the pip decoder through the normal demux path. */
+				printf("[softcsa] waitForPipStart timeout — restoring pip %d to hardware\n", pip);
+				CSoftCSAManager::getInstance()->stopSession(newchannel->getChannelID(), SOFTCSA_SESSION_PIP);
+				if (pipVideoDecoder[pip]) {
+					pipVideoDecoder[pip]->Stop(true);
+					pipVideoDecoder[pip]->closeDevice();
+					pipVideoDecoder[pip]->openDevice();
+					pipVideoDecoder[pip]->SetStreamType((VIDEO_FORMAT) newchannel->type);
+					pipVideoDecoder[pip]->Start(0, newchannel->getPcrPid(), newchannel->getVideoPid());
+				}
+				if (pipAudioDecoder[pip]) {
+					pipAudioDecoder[pip]->Stop();
+					pipAudioDecoder[pip]->closeDevice();
+					pipAudioDecoder[pip]->openDevice();
+					if (newchannel->getAudioChannel())
+						pipAudioDecoder[pip]->SetStreamType(newchannel->getAudioChannel()->audioChannelType);
+				}
+				if (pipVideoDemux[pip]) {
+					pipVideoDemux[pip]->pesFilter(newchannel->getVideoPid());
+					pipVideoDemux[pip]->Start();
+				}
+				if (pipAudioDemux[pip])
+					pipAudioDemux[pip]->pesFilter(newchannel->getAudioPid());
+				if (pipVideoDecoder[pip])
+					pipVideoDecoder[pip]->SetSyncMode((AVSYNC_TYPE) g_settings.avsync);
+				if (pipAudioDecoder[pip])
+					pipAudioDecoder[pip]->SetSyncMode((AVSYNC_TYPE) g_settings.avsync);
+			}
 		} else {
 			printf("[softcsa] switchPipToMemory failed for pip %d — pip stays dark\n", pip);
 		}

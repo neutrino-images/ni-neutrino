@@ -29,8 +29,10 @@ CTsDemuxer::CTsDemuxer(unsigned short video_pid, unsigned short audio_pid)
 {
 	video.pid = video_pid;
 	video.has_data = false;
+	video.pes_buf.reserve(512 * 1024);
 	audio.pid = audio_pid;
 	audio.has_data = false;
+	audio.pes_buf.reserve(64 * 1024);
 }
 
 void CTsDemuxer::reset()

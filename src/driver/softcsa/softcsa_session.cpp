@@ -114,7 +114,12 @@ bool CSoftCSASession::start(int vfd, int afd)
 
 	ts_demuxer = new CTsDemuxer(dec_vpid, dec_apid);
 
-	demux->Start();
+	if (!demux->Start()) {
+		printf("[softcsa] start: demux->Start() failed\n");
+		delete ts_demuxer;
+		ts_demuxer = NULL;
+		return false;
+	}
 	running = true;
 
 	reader_worker = std::thread(&CSoftCSASession::readerThread, this);
@@ -155,7 +160,10 @@ bool CSoftCSASession::startRecord(int fd)
 	if (!buffer || !demux)
 		return false;
 	record_fd = fd;
-	demux->Start();
+	if (!demux->Start()) {
+		printf("[softcsa] startRecord: demux->Start() failed\n");
+		return false;
+	}
 	running = true;
 	reader_worker = std::thread(&CSoftCSASession::recordThread, this);
 	return true;
@@ -168,7 +176,10 @@ bool CSoftCSASession::startStream(SoftCSAStreamCallback cb)
 	if (!buffer || !demux || !cb)
 		return false;
 	stream_callback = cb;
-	demux->Start();
+	if (!demux->Start()) {
+		printf("[softcsa] startStream: demux->Start() failed\n");
+		return false;
+	}
 	running = true;
 	reader_worker = std::thread(&CSoftCSASession::streamThread, this);
 	return true;
