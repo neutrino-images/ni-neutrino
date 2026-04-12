@@ -199,6 +199,9 @@ class CZapit : public OpenThreads::Thread
 		//bool StopPlayBack(bool send_pmt);
 #ifdef HAVE_SOFTCSA
 		void restoreSoftCSADecoder();
+#if ENABLE_PIP
+		bool switchPipToMemory(int pip, int video_type, int audio_type, int *out_vfd, int *out_afd);
+#endif
 #endif
 		void SendPMT(bool forupdate = false);
 		void SetAudioStreamType(CZapitAudioChannel::ZapitAudioChannelType audioChannelType);

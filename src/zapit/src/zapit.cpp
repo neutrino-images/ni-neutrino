@@ -82,6 +82,31 @@
 #include <linux/dvb/audio.h>
 #include <linux/dvb/video.h>
 extern void CCamManager_SetDvbApiClient(CDvbApiClient *client);
+
+/* Kernel VIDEO_STREAMTYPE_* values expected by VIDEO_SET_STREAMTYPE.
+ * Duplicated from libarmbox/video.cpp (private to cVideo::SetStreamType)
+ * because we bypass the HAL and drive the decoder fd directly from here. */
+#define ZAPIT_VIDEO_STREAMTYPE_MPEG2       0
+#define ZAPIT_VIDEO_STREAMTYPE_MPEG4_H264  1
+#define ZAPIT_VIDEO_STREAMTYPE_VC1         3
+#define ZAPIT_VIDEO_STREAMTYPE_H265_HEVC   7
+#define ZAPIT_VIDEO_STREAMTYPE_AVS         16
+
+/* CZapitChannel::type is a VIDEO_FORMAT_* enum — translate to the kernel
+ * VIDEO_STREAMTYPE_* value the decoder ioctl actually expects. Values
+ * coincide for MPEG2/H264 but diverge for VC1 and HEVC, so channels with
+ * those codecs would get the wrong streamtype without this. */
+static int zapit_translate_video_streamtype(int video_format)
+{
+	switch (video_format) {
+		case VIDEO_FORMAT_MPEG4_H264: return ZAPIT_VIDEO_STREAMTYPE_MPEG4_H264;
+		case VIDEO_FORMAT_MPEG4_H265: return ZAPIT_VIDEO_STREAMTYPE_H265_HEVC;
+		case VIDEO_FORMAT_VC1:        return ZAPIT_VIDEO_STREAMTYPE_VC1;
+		case VIDEO_FORMAT_AVS:        return ZAPIT_VIDEO_STREAMTYPE_AVS;
+		case VIDEO_FORMAT_MPEG2:
+		default:                      return ZAPIT_VIDEO_STREAMTYPE_MPEG2;
+	}
+}
 #endif
 
 #ifdef PEDANTIC_VALGRIND_SETUP
@@ -894,6 +919,27 @@ bool CZapit::StartPip(const t_channel_id channel_id, int pip)
 #endif
 
 	CCamManager::getInstance()->Start(newchannel->getChannelID(), CCamManager::PIP);
+
+#ifdef HAVE_SOFTCSA
+	/* Scrambled channels: switch the pip decoder to MEMORY source and hand
+	 * the fds to the SoftCSA manager. Same-channel PIP clones keys from
+	 * the running LIVE session; different-TP PIP waits for OSCam to serve
+	 * a fresh CAPMT for the pip demux. Mirrors the record/stream paths. */
+	if (newchannel->scrambled && !newchannel->bUseCI) {
+		int pip_vfd = -1, pip_afd = -1;
+		int vtype = (int) newchannel->type;
+		int atype = newchannel->getAudioChannel() ? newchannel->getAudioChannel()->audioChannelType : 0;
+		if (switchPipToMemory(pip, vtype, atype, &pip_vfd, &pip_afd)) {
+			if (!CSoftCSAManager::getInstance()->waitForPipStart(
+			        newchannel->getChannelID(), pip_vfd, pip_afd, 3000))
+				printf("[softcsa] waitForPipStart timeout — pip stays dark for %llx\n",
+				       (unsigned long long)newchannel->getChannelID());
+		} else {
+			printf("[softcsa] switchPipToMemory failed for pip %d — pip stays dark\n", pip);
+		}
+	}
+#endif
+
 	return true;
 }
 #endif
@@ -2070,10 +2116,11 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 			/* Switch video to MEMORY source — eplayer3 LinuxDvbOpen/Play
 			 * sequence on the fresh fd */
 			if (vfd >= 0) {
+				int st = zapit_translate_video_streamtype(msg.video_type);
 				ioctl(vfd, VIDEO_CLEAR_BUFFER);
 				ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_MEMORY);
 				ioctl(vfd, VIDEO_FREEZE);
-				ioctl(vfd, VIDEO_SET_STREAMTYPE, msg.video_type);
+				ioctl(vfd, VIDEO_SET_STREAMTYPE, st);
 				ioctl(vfd, VIDEO_PLAY);
 				ioctl(vfd, VIDEO_CONTINUE);
 				ioctl(vfd, VIDEO_CLEAR_BUFFER);
@@ -2635,6 +2682,73 @@ void CZapit::restoreSoftCSADecoder()
 		audioDecoder->openDevice();
 	}
 }
+
+#if ENABLE_PIP
+/* Parallel to CMD_SOFTCSA_SWITCH_SOURCE for the main decoder: stop the
+ * pip video/audio demux filters and decoders, reopen the pip decoder
+ * devices, and put them into VIDEO_SOURCE_MEMORY / AUDIO_SOURCE_MEMORY
+ * mode so a SoftCSA session can write descrambled PES directly to them.
+ *
+ * Runs inline on the zapit server thread from StartPip — no IPC (would
+ * deadlock with ourselves). The resulting fds are handed to the SoftCSA
+ * manager via waitForPipStart and travel into CSoftCSASession::start()
+ * like the main-decoder fds travel from the CMD_SOFTCSA_SWITCH_SOURCE
+ * handler. */
+bool CZapit::switchPipToMemory(int pip, int video_type, int audio_type, int *out_vfd, int *out_afd)
+{
+	*out_vfd = -1;
+	*out_afd = -1;
+
+	if (pipVideoDemux[pip])
+		pipVideoDemux[pip]->Stop();
+	if (pipAudioDemux[pip])
+		pipAudioDemux[pip]->Stop();
+
+	int vfd = -1, afd = -1;
+	if (pipVideoDecoder[pip]) {
+		pipVideoDecoder[pip]->Stop(true);
+		pipVideoDecoder[pip]->closeDevice();
+		pipVideoDecoder[pip]->openDevice();
+		vfd = pipVideoDecoder[pip]->getFD();
+	}
+	if (pipAudioDecoder[pip]) {
+		pipAudioDecoder[pip]->Stop();
+		pipAudioDecoder[pip]->closeDevice();
+		pipAudioDecoder[pip]->openDevice();
+		afd = pipAudioDecoder[pip]->getFD();
+	}
+
+	if (vfd >= 0) {
+		int st = zapit_translate_video_streamtype(video_type);
+		ioctl(vfd, VIDEO_CLEAR_BUFFER);
+		ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_MEMORY);
+		ioctl(vfd, VIDEO_FREEZE);
+		ioctl(vfd, VIDEO_SET_STREAMTYPE, st);
+		ioctl(vfd, VIDEO_PLAY);
+		ioctl(vfd, VIDEO_CONTINUE);
+		ioctl(vfd, VIDEO_CLEAR_BUFFER);
+	}
+	if (pipVideoDecoder[pip])
+		pipVideoDecoder[pip]->setPlayState(VIDEO_FREEZED);
+
+	if (afd >= 0) {
+		ioctl(afd, AUDIO_CLEAR_BUFFER);
+		ioctl(afd, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_MEMORY);
+		ioctl(afd, AUDIO_PAUSE);
+		ioctl(afd, AUDIO_SET_AV_SYNC, 0);
+		ioctl(afd, AUDIO_SET_BYPASS_MODE, audio_type);
+		ioctl(afd, AUDIO_PLAY);
+		ioctl(afd, AUDIO_CONTINUE);
+	}
+
+	*out_vfd = vfd;
+	*out_afd = afd;
+	printf("[softcsa] switchPipToMemory: pip=%d video_fd=%d audio_fd=%d\n", pip, vfd, afd);
+	/* Video is mandatory. Audio is optional — CSoftCSASession::start tolerates
+	 * afd==-1 (video-only pip still shows a picture, just silent). */
+	return vfd >= 0;
+}
+#endif
 #endif
 
 bool CZapit::StopPlayBack(bool send_pmt, bool blank)

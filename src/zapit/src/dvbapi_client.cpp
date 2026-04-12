@@ -475,28 +475,14 @@ void CDvbApiClient::readerThread()
 			/* AES128 — out of scope, consume and ignore */
 			break;
 		}
-		case DVBAPI_DMX_SET_FILTER: {
-			/* adapter_index(1)+demux_id(1)+filter_number(1)+pid(2)+filter(16)+mask(16)+mode(16)+timeout(4)+flags(4) = 61 */
-			uint8_t payload[61];
-			if (!readAll(sock_fd, payload, 61)) {
-				printf(TAG "failed to read DMX_SET_FILTER payload\n");
-				disconnect();
-				break;
-			}
-			handleDmxSetFilter(msgid, payload, 61);
+		case DVBAPI_DMX_SET_FILTER:
+		case DVBAPI_DMX_STOP:
+			/* OSCam's pc_nodmx filter path — never triggered in our
+			 * setup. Disconnect rather than guess the payload size
+			 * against a potentially mismatched proto version. */
+			printf(TAG "unexpected DMX opcode 0x%08x — disconnecting\n", opcode);
+			disconnect();
 			break;
-		}
-		case DVBAPI_DMX_STOP: {
-			/* adapter_index(1)+demux_id(1)+filter_number(1)+pid(2) = 5 */
-			uint8_t payload[5];
-			if (!readAll(sock_fd, payload, 5)) {
-				printf(TAG "failed to read DMX_STOP payload\n");
-				disconnect();
-				break;
-			}
-			handleDmxStop(msgid, payload, 5);
-			break;
-		}
 		case DVBAPI_SERVER_INFO: {
 			/* No adapter_index. proto_version(2)+name_len(1)+name(N) */
 			uint8_t info[3];
@@ -579,21 +565,22 @@ void CDvbApiClient::readerThread()
 	printf(TAG "reader thread stopped\n");
 }
 
+/* msgid = our session_id (OSCam reflects it opaquely). The payload
+ * `index` is OSCam's usedidx, not routable across ca_mask-isolated
+ * sessions — we ignore it. */
 void CDvbApiClient::handleCaSetDescrMode(uint32_t msgid, const uint8_t *payload, int len)
 {
 	if (len < 13)
 		return;
 
-	/* payload[0] = adapter_index (skip) */
-	uint32_t demux_index = readU32(payload + 1);
 	uint32_t algo = readU32(payload + 5);
 	uint32_t cipher_mode = readU32(payload + 9);
 
-	printf(TAG "CA_SET_DESCR_MODE: msgid=0x%08x demux=%u algo=%u cipher_mode=%u\n",
-		msgid, demux_index, algo, cipher_mode);
+	printf(TAG "CA_SET_DESCR_MODE: msgid=0x%08x algo=%u cipher_mode=%u\n",
+		msgid, algo, cipher_mode);
 
 	if (manager)
-		manager->onDescrMode(demux_index, algo, cipher_mode);
+		manager->onDescrMode(msgid, algo, cipher_mode);
 }
 
 void CDvbApiClient::handleCaSetDescr(uint32_t msgid, const uint8_t *payload, int len)
@@ -601,38 +588,13 @@ void CDvbApiClient::handleCaSetDescr(uint32_t msgid, const uint8_t *payload, int
 	if (len < 17)
 		return;
 
-	/* payload[0] = adapter_index (skip) */
-	uint32_t demux_index = readU32(payload + 1);
 	uint32_t parity = readU32(payload + 5);
-	const uint8_t *cw = payload + 9; /* 8 bytes */
+	const uint8_t *cw = payload + 9;
 
-	printf(TAG "CA_SET_DESCR: msgid=0x%08x demux=%u parity=%u\n",
-		msgid, demux_index, parity);
+	printf(TAG "CA_SET_DESCR: msgid=0x%08x parity=%u\n", msgid, parity);
 
 	if (manager)
-		manager->onCW(demux_index, parity, cw);
-}
-
-void CDvbApiClient::handleDmxSetFilter(uint32_t /* msgid */, const uint8_t *payload, int len)
-{
-	if (len < 5)
-		return;
-
-	/*
-	 * payload: adapter_index(1) + demux_id(1) + filter_number(1) + pid(2) + ...
-	 * Extract the PID and add it to the SoftCSA reader so the section
-	 * data can be forwarded back to OSCam over the DVBAPI socket.
-	 */
-	uint32_t demux_index = payload[1];
-	uint16_t pid = readU16(payload + 3);
-
-	if (manager && pid > 0 && pid < 0x1FFF)
-		manager->addReaderPid(demux_index, pid);
-}
-
-void CDvbApiClient::handleDmxStop(uint32_t /* msgid */, const uint8_t * /* payload */, int /* len */)
-{
-	/* Consumed and ignored */
+		manager->onCW(msgid, parity, cw);
 }
 
 #endif /* HAVE_SOFTCSA */

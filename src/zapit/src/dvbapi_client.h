@@ -54,11 +54,8 @@ private:
 	bool sendClientInfo();
 	bool recvServerInfo();
 
-	// Protocol v3 message parsing
 	void handleCaSetDescrMode(uint32_t msgid, const uint8_t *payload, int len);
 	void handleCaSetDescr(uint32_t msgid, const uint8_t *payload, int len);
-	void handleDmxSetFilter(uint32_t msgid, const uint8_t *payload, int len);
-	void handleDmxStop(uint32_t msgid, const uint8_t *payload, int len);
 
 	int sock_fd;
 	std::atomic<bool> running;

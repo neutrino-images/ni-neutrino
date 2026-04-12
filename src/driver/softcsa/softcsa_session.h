@@ -51,7 +51,6 @@ public:
 
 	void addPid(unsigned short pid);
 	void setDecoderPids(unsigned short vpid, unsigned short apid, unsigned short pcrpid);
-	bool addReaderPid(unsigned short pid);
 
 	/* Switch which audio PID is routed to the memory decoder at runtime
 	 * (audio language change). Assumes the new PID is already in the

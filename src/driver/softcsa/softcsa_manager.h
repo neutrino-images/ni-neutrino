@@ -39,17 +39,15 @@ class CSoftCSAManager
 public:
 	static CSoftCSAManager *getInstance();
 
-	// Called by CDvbApiClient reader thread
-	void onDescrMode(uint32_t demux_index, uint32_t algo, uint32_t cipher_mode);
-	void onCW(uint32_t demux_index, uint32_t parity, const uint8_t *cw);
-	void addReaderPid(uint32_t demux_index, unsigned short pid);
+	void onDescrMode(uint32_t session_id, uint32_t algo, uint32_t cipher_mode);
+	void onCW(uint32_t session_id, uint32_t parity, const uint8_t *cw);
 
-	// Called by zapit
-	void registerDemux(uint32_t demux_index, t_channel_id channel_id,
-	                   SoftCSASessionType type, int adapter, int demux_unit, int frontend_num);
-	void addPid(uint32_t demux_index, unsigned short pid);
-	void setDecoderPids(uint32_t demux_index, unsigned short vpid, unsigned short apid, unsigned short pcrpid);
-	void setDecoderTypes(uint32_t demux_index, int video_type, int audio_type);
+	uint32_t registerSession(t_channel_id channel_id, SoftCSASessionType type,
+	                         int adapter, int demux_unit, int frontend_num);
+	void addPid(uint32_t session_id, unsigned short pid);
+	void addPidByChannel(t_channel_id channel_id, SoftCSASessionType type, unsigned short pid);
+	void setDecoderPids(uint32_t session_id, unsigned short vpid, unsigned short apid, unsigned short pcrpid);
+	void setDecoderTypes(uint32_t session_id, int video_type, int audio_type);
 	bool stopSession(t_channel_id channel_id, SoftCSASessionType type);
 	void stopAll();
 
@@ -70,35 +68,40 @@ public:
 	// Returns true if streamThread started, false on timeout.
 	bool waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
 
+	// PiP: register pre-switched pip decoder fds and wait for the session
+	// to start. Caller (StartPip) must have put the pip video/audio decoder
+	// into AUDIO_SOURCE_MEMORY/VIDEO_SOURCE_MEMORY mode and pass the fds.
+	bool waitForPipStart(t_channel_id channel_id,
+	                     int pip_vfd, int pip_afd, int timeout_ms);
+
 private:
 	CSoftCSAManager();
 	~CSoftCSAManager();
 
-	struct DemuxState {
+	struct SessionState {
 		t_channel_id channel_id;
 		SoftCSASessionType type;
 		int adapter;
 		int demux_unit;
 		int frontend_num;
-		bool csa_alt_active;   // CA_SET_DESCR_MODE with algo==3 received
-		uint8_t ecm_mode;      // stored per demux for setKey()
+		bool csa_alt_active;
+		uint8_t ecm_mode;
 		CSoftCSASession *session;
-		std::vector<unsigned short> pids; // stored before session creation
-		std::vector<unsigned short> pending_reader_pids; // ECM PIDs queued before session start
+		std::vector<unsigned short> pids;
 		unsigned short video_pid;
 		unsigned short audio_pid;
 		unsigned short pcr_pid;
-		int video_type;        // VIDEO_FORMAT stream type
-		int audio_type;        // audio channel type for AUDIO_SET_BYPASS_MODE
-		int record_fd;         // deferred fd for RECORD sessions (-1 = none)
-		SoftCSAStreamCallback stream_callback; // deferred cb for STREAM sessions
+		int video_type;
+		int audio_type;
+		int record_fd;
+		SoftCSAStreamCallback stream_callback;
+		int pip_vfd;
+		int pip_afd;
 	};
 
-	// Primary: demux_index -> state (for CW routing from CDvbApiClient)
-	std::map<uint32_t, DemuxState> demux_states;
-
-	// Secondary: (channel_id, type) -> demux_index (for lifecycle from zapit)
-	std::map<std::pair<t_channel_id, SoftCSASessionType>, uint32_t> channel_to_demux;
+	std::map<uint32_t, SessionState> sessions;
+	std::map<std::pair<t_channel_id, SoftCSASessionType>, uint32_t> channel_to_session;
+	uint32_t next_session_id;
 
 	std::mutex mtx;
 

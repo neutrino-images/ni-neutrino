@@ -99,17 +99,6 @@ void CSoftCSASession::addPid(unsigned short pid)
 	}
 }
 
-bool CSoftCSASession::addReaderPid(unsigned short pid)
-{
-	if (!demux)
-		return false;
-	if (!demux->addPid(pid)) {
-		printf("[softcsa] addReaderPid %04x failed\n", pid);
-		return false;
-	}
-	return true;
-}
-
 bool CSoftCSASession::start(int vfd, int afd)
 {
 	if (running.load())

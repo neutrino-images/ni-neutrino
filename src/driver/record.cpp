@@ -314,16 +314,11 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 
 		start_time = time(0);
 
-		/* Send CA-PMT — triggers registerDemux(RECORD) in capmt.cpp */
 		CCamManager::getInstance()->Start(channel->getChannelID(), CCamManager::RECORD);
 
-		/* Add extra recording PIDs (additional audio, teletext, subtitles)
-		 * to the RECORD DemuxState so they get added to the TSDEMUX_TAP. */
-		{
-			uint32_t rec_demux = (uint32_t)channel->getRecordDemux();
-			for (unsigned int i = 0; i < numpids; i++)
-				CSoftCSAManager::getInstance()->addPid(rec_demux, apids[i]);
-		}
+		for (unsigned int i = 0; i < numpids; i++)
+			CSoftCSAManager::getInstance()->addPidByChannel(
+				channel->getChannelID(), SOFTCSA_SESSION_RECORD, apids[i]);
 
 		/* Wait for OSCam to confirm CSA-ALT and start the recordThread */
 		if (CSoftCSAManager::getInstance()->waitForRecordStart(
