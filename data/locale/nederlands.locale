@@ -2693,6 +2693,8 @@ satsetup.fastscan_prov_tvv_sd TV Vlaanderen (SD)
 satsetup.fastscan_sd Enkel SD
 satsetup.fastscan_type Scantype
 satsetup.fastscan_update Auto update
+satsetup.fe_busy (((T))) Belegt
+satsetup.fe_busy_hint (((T))) Dieser Tuner wird derzeit von einem anderen Prozess verwendet und kann aus dieser Instanz nicht konfiguriert werden.
 satsetup.fe_mode Tuner mode
 satsetup.fe_mode_independent Onafhankelijk
 satsetup.fe_mode_link_loop Doorgelust
