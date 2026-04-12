@@ -154,7 +154,8 @@ class CZapitMessages
 			CMD_STOP_PIP			   = 114,
 			CMD_ZAPTO_EPG			   = 115,
 			CMD_LOCKRC				   = 116,
-			CMD_SOFTCSA_SWITCH_SOURCE		   = 117
+			CMD_SOFTCSA_SWITCH_SOURCE		   = 117,
+			CMD_SOFTCSA_SWITCH_PIP_SOURCE		   = 118
 		};
 
 	struct commandBoolean
@@ -177,6 +178,14 @@ class CZapitMessages
 		int video_fd;
 		int audio_fd;
 		responseSoftCSASwitchSource() : video_fd(-1), audio_fd(-1) {}
+	};
+
+	struct commandSoftCSASwitchPipSource
+	{
+		int pip;
+		int video_type;
+		int audio_type;
+		commandSoftCSASwitchPipSource() : pip(0), video_type(0), audio_type(0) {}
 	};
 #endif
 

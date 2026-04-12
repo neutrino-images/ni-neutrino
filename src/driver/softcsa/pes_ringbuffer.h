@@ -46,13 +46,15 @@ public:
 	void reset();
 
 	bool isValid() const { return buf != NULL; }
+	size_t usedBytes() const { return used.load(std::memory_order_relaxed); }
+	size_t capacityBytes() const { return capacity; }
 
 private:
 	uint8_t *buf;
 	size_t capacity;
 	size_t head;
 	size_t tail;
-	size_t used;
+	std::atomic<size_t> used;
 
 	std::mutex mtx;
 	std::condition_variable cv_not_full;

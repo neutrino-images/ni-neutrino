@@ -166,6 +166,7 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 {
 	bool needs_session = false;
 	bool is_live = false;
+	bool is_pip = false;
 	t_channel_id expected_channel = 0;
 
 	{
@@ -179,12 +180,8 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 		 * keep routing CWs to RECORD/PIP/STREAM siblings. */
 		if (it != sessions.end() && algo == CW_ALGO_CSA_ALT && !it->second.session && !it->second.csa_alt_active) {
 			needs_session = true;
-			/* Only LIVE needs the IPC-driven main-decoder switchSoftCSASource
-			 * in the phases below. PIP sessions get their pre-switched pip
-			 * decoder fds handed over by StartPip via waitForPipStart and
-			 * are auto-started from the non-live branch, just like RECORD
-			 * and STREAM. */
 			is_live = (it->second.type == SOFTCSA_SESSION_LIVE);
+			is_pip = (it->second.type == SOFTCSA_SESSION_PIP);
 			expected_channel = it->second.channel_id;
 		}
 	}
@@ -235,7 +232,7 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 
 		ds.session->setDecoderPids(ds.video_pid, ds.audio_pid, ds.pcr_pid);
 
-		if (!is_live) {
+		if (!is_live && !is_pip) {
 			if (ds.type == SOFTCSA_SESSION_RECORD && ds.record_fd >= 0) {
 				printf("[softcsa] createSession: auto-starting record for id %u fd %d\n",
 				       session_id, ds.record_fd);
@@ -254,32 +251,29 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 				} else {
 					printf("[softcsa] createSession: failed to start stream\n");
 				}
-			} else if (ds.type == SOFTCSA_SESSION_PIP && ds.pip_vfd >= 0 && ds.pip_afd >= 0) {
-				printf("[softcsa] createSession: auto-starting pip for id %u vfd=%d afd=%d\n",
-				       session_id, ds.pip_vfd, ds.pip_afd);
-				if (ds.session->start(ds.pip_vfd, ds.pip_afd)) {
-					record_started = true;
-				} else {
-					printf("[softcsa] createSession: failed to start pip\n");
-				}
 			}
 		}
 	}
 
-	if (!is_live) {
+	if (!is_live && !is_pip) {
 		if (record_started)
 			record_cv.notify_all();
 		return;
 	}
 
-	/* Phase 3: Switch decoder to MEMORY source */
+	/* Phase 3: Switch decoder to MEMORY source — mtx NOT held during IPC
+	 * to avoid deadlock (IPC targets zapit server thread which may be
+	 * waiting on mtx for a concurrent stopSession/registerSession). */
 	int video_type = 0, audio_type = 0;
+	int pip_index = 0;
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 		auto it = sessions.find(session_id);
 		if (it != sessions.end()) {
 			video_type = it->second.video_type;
 			audio_type = it->second.audio_type;
+			if (is_pip)
+				pip_index = it->second.demux_unit > 0 ? it->second.demux_unit - 1 : 0;
 		}
 	}
 
@@ -288,11 +282,15 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 		CZapitClient zapit;
 		zapit.switchSoftCSASource(true, video_type, audio_type, &vfd, &afd);
 		printf("[softcsa] switchSoftCSASource returned video_fd=%d audio_fd=%d\n", vfd, afd);
+	} else if (is_pip) {
+		CZapitClient zapit;
+		zapit.switchSoftCSAPipSource(pip_index, video_type, audio_type, &vfd, &afd);
+		printf("[softcsa] switchSoftCSAPipSource returned video_fd=%d audio_fd=%d\n", vfd, afd);
 	}
 
 	/* Phase 4: Start session with decoder fds */
-	if (is_live && vfd < 0) {
-		printf("[softcsa] createSession: video0 open failed, aborting\n");
+	if (vfd < 0) {
+		printf("[softcsa] createSession: decoder switch failed, aborting\n");
 		CSoftCSASession *to_delete = NULL;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
@@ -306,12 +304,14 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 			to_delete->stop();
 			delete to_delete;
 		}
-		CZapitClient zapit_restore;
-		zapit_restore.switchSoftCSASource(false, 0, 0);
+		if (is_live) {
+			CZapitClient zapit_restore;
+			zapit_restore.switchSoftCSASource(false, 0, 0);
+		}
 		return;
 	}
-	if (is_live) {
 
+	{
 		bool started = false;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
@@ -339,8 +339,10 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 				to_delete->stop();
 				delete to_delete;
 			}
-			CZapitClient zapit;
-			zapit.switchSoftCSASource(false, 0, 0);
+			if (is_live) {
+				CZapitClient zapit;
+				zapit.switchSoftCSASource(false, 0, 0);
+			}
 		}
 	}
 }

@@ -109,13 +109,22 @@ bool CSoftCSASession::start(int vfd, int afd)
 		return false;
 	}
 
-	video_fd = vfd;
-	audio_fd = afd;
+	/* dup() so we own the fds and can close them in stop() to unblock
+	 * writer threads without invalidating the HAL's original fd. */
+	video_fd = (vfd >= 0) ? dup(vfd) : -1;
+	audio_fd = (afd >= 0) ? dup(afd) : -1;
+	if (vfd >= 0 && video_fd < 0) {
+		printf("[softcsa] start: dup(video_fd) failed: %s\n", strerror(errno));
+		if (audio_fd >= 0) { close(audio_fd); audio_fd = -1; }
+		return false;
+	}
 
 	ts_demuxer = new CTsDemuxer(dec_vpid, dec_apid);
 
 	if (!demux->Start()) {
 		printf("[softcsa] start: demux->Start() failed\n");
+		if (video_fd >= 0) { close(video_fd); video_fd = -1; }
+		if (audio_fd >= 0) { close(audio_fd); audio_fd = -1; }
 		delete ts_demuxer;
 		ts_demuxer = NULL;
 		return false;
@@ -133,7 +142,7 @@ bool CSoftCSASession::start(int vfd, int afd)
 			video_worker = std::thread(&CSoftCSASession::videoWriterThread, this);
 		}
 	} else if (dec_vpid) {
-		printf("[softcsa] WARNING: video_fd invalid (%d) but vpid=%04x set\n", video_fd, dec_vpid);
+		printf("[softcsa] WARNING: video_fd invalid (%d) but vpid=%04x set\n", video_fd.load(), dec_vpid);
 	}
 	if (audio_fd >= 0) {
 		audio_rb = new CPesRingbuffer(RINGBUFFER_SIZE);
@@ -145,11 +154,11 @@ bool CSoftCSASession::start(int vfd, int afd)
 			audio_worker = std::thread(&CSoftCSASession::audioWriterThread, this);
 		}
 	} else if (dec_apid) {
-		printf("[softcsa] WARNING: audio_fd invalid (%d) but apid=%04x set\n", audio_fd, dec_apid);
+		printf("[softcsa] WARNING: audio_fd invalid (%d) but apid=%04x set\n", audio_fd.load(), dec_apid);
 	}
 
 	printf("[softcsa] start: demux%d, vpid=%04x apid=%04x, video_fd=%d audio_fd=%d\n",
-		demux_unit, dec_vpid, dec_apid, video_fd, audio_fd);
+		demux_unit, dec_vpid, dec_apid, video_fd.load(), audio_fd.load());
 	return true;
 }
 
@@ -194,6 +203,16 @@ void CSoftCSASession::stop()
 	if (audio_rb)
 		audio_rb->cancel();
 
+	/* Close decoder fds to unblock writer threads that may be stuck
+	 * in a blocking write() on the video/audio device.  Swap to -1
+	 * atomically so the writer's next read sees -1 and won't pass
+	 * a stale fd to write().  The in-flight write() on the old fd
+	 * returns EBADF after close(). */
+	int vfd_tmp = video_fd.exchange(-1);
+	int afd_tmp = audio_fd.exchange(-1);
+	if (vfd_tmp >= 0) close(vfd_tmp);
+	if (afd_tmp >= 0) close(afd_tmp);
+
 	if (reader_worker.joinable())
 		reader_worker.join();
 	if (video_worker.joinable())
@@ -213,6 +232,11 @@ void CSoftCSASession::readerThread()
 {
 	set_threadname("n:softcsa_rd");
 	int consecutive_errors = 0;
+
+	uint64_t stat_bytes_read = 0;
+	uint32_t stat_vpes_ok = 0, stat_vpes_drop = 0;
+	uint32_t stat_apes_ok = 0, stat_apes_drop = 0;
+	time_t stat_last = time(NULL);
 
 	while (running) {
 		/* Apply pending audio-pid change from setAudioPidRouting().
@@ -238,15 +262,41 @@ void CSoftCSASession::readerThread()
 			continue;
 		}
 		consecutive_errors = 0;
+		stat_bytes_read += len;
 
 		engine->descramble(buffer, len);
 
 		ts_demuxer->process(buffer, len, [&](unsigned short pid, const uint8_t *pes, int pes_len) {
-			if (pid == dec_vpid && video_rb)
-				video_rb->write(pes, pes_len, 100);
-			else if (pid == dec_apid && audio_rb)
-				audio_rb->write(pes, pes_len, 100);
+			if (pid == dec_vpid && video_rb) {
+				if (video_rb->write(pes, pes_len, 100))
+					stat_vpes_ok++;
+				else
+					stat_vpes_drop++;
+			} else if (pid == dec_apid && audio_rb) {
+				if (audio_rb->write(pes, pes_len, 100))
+					stat_apes_ok++;
+				else
+					stat_apes_drop++;
+			}
 		});
+
+		time_t now = time(NULL);
+		if (now - stat_last >= 10) {
+			time_t elapsed = now - stat_last;
+			if (elapsed < 1) elapsed = 1;
+			printf("[softcsa] reader stats: %lluKB/s read, vpes %u ok %u drop, apes %u ok %u drop, vrb %zu/%zuKB arb %zu/%zuKB\n",
+			       (unsigned long long)(stat_bytes_read / 1024 / elapsed),
+			       stat_vpes_ok, stat_vpes_drop,
+			       stat_apes_ok, stat_apes_drop,
+			       video_rb ? video_rb->usedBytes()/1024 : 0,
+			       video_rb ? video_rb->capacityBytes()/1024 : 0,
+			       audio_rb ? audio_rb->usedBytes()/1024 : 0,
+			       audio_rb ? audio_rb->capacityBytes()/1024 : 0);
+			stat_bytes_read = 0;
+			stat_vpes_ok = stat_vpes_drop = 0;
+			stat_apes_ok = stat_apes_drop = 0;
+			stat_last = now;
+		}
 	}
 }
 
@@ -259,6 +309,10 @@ void CSoftCSASession::videoWriterThread()
 		return;
 	int consecutive_errors = 0;
 
+	uint64_t stat_bytes_written = 0;
+	uint32_t stat_stalls = 0;
+	time_t stat_last = time(NULL);
+
 	while (running && consecutive_errors < 100) {
 		int len = video_rb->read(pes_buf, MAX_PES_SIZE, 100);
 		if (len <= 0)
@@ -266,16 +320,31 @@ void CSoftCSASession::videoWriterThread()
 
 		int written = 0;
 		while (written < len) {
-			int w = ::write(video_fd, pes_buf + written, len - written);
+			int fd = video_fd.load();
+			if (fd < 0) break;
+			int w = ::write(fd, pes_buf + written, len - written);
 			if (w < 0) {
 				if (errno == EINTR) continue;
-				if (errno == EAGAIN || errno == EWOULDBLOCK) { usleep(5000); continue; }
+				if (errno == EAGAIN || errno == EWOULDBLOCK) { stat_stalls++; usleep(5000); continue; }
 				if (!running) break;
 				consecutive_errors++;
 				break;
 			}
 			written += w;
+			stat_bytes_written += w;
 			consecutive_errors = 0;
+		}
+
+		time_t now = time(NULL);
+		if (now - stat_last >= 10) {
+			time_t elapsed = now - stat_last;
+			if (elapsed < 1) elapsed = 1;
+			printf("[softcsa] vwriter stats: %lluKB/s written, %u stalls\n",
+			       (unsigned long long)(stat_bytes_written / 1024 / elapsed),
+			       stat_stalls);
+			stat_bytes_written = 0;
+			stat_stalls = 0;
+			stat_last = now;
 		}
 	}
 
@@ -298,7 +367,9 @@ void CSoftCSASession::audioWriterThread()
 
 		int written = 0;
 		while (written < len) {
-			int w = ::write(audio_fd, pes_buf + written, len - written);
+			int fd = audio_fd.load();
+			if (fd < 0) break;
+			int w = ::write(fd, pes_buf + written, len - written);
 			if (w < 0) {
 				if (errno == EINTR) continue;
 				if (errno == EAGAIN || errno == EWOULDBLOCK) { usleep(5000); continue; }

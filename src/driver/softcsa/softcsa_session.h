@@ -85,8 +85,8 @@ private:
 	CPesRingbuffer *video_rb;
 	CPesRingbuffer *audio_rb;
 
-	int video_fd;    /* video0 in MEMORY mode (LIVE only, not owned) */
-	int audio_fd;    /* audio0 in MEMORY mode (LIVE only, not owned) */
+	std::atomic<int> video_fd;    /* duped from HAL fd — owned, closed in stop() */
+	std::atomic<int> audio_fd;    /* duped from HAL fd — owned, closed in stop() */
 	int record_fd;   /* recording output (RECORD only, not owned) */
 	SoftCSAStreamCallback stream_callback; /* STREAM only */
 

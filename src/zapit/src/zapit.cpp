@@ -921,49 +921,26 @@ bool CZapit::StartPip(const t_channel_id channel_id, int pip)
 	CCamManager::getInstance()->Start(newchannel->getChannelID(), CCamManager::PIP);
 
 #ifdef HAVE_SOFTCSA
-	/* Scrambled channels: switch the pip decoder to MEMORY source and hand
-	 * the fds to the SoftCSA manager. Same-channel PIP clones keys from
-	 * the running LIVE session; different-TP PIP waits for OSCam to serve
-	 * a fresh CAPMT for the pip demux. Mirrors the record/stream paths. */
-	if (newchannel->scrambled && !newchannel->bUseCI) {
+	/* Same-channel CSA-ALT PiP: the LIVE SoftCSA session is running,
+	 * so we can clone its keys immediately.  Switch the pip decoder to
+	 * MEMORY here — this is the only case where we know upfront that
+	 * SoftCSA is needed.
+	 *
+	 * All other cases (different channel, or non-CSA-ALT): PiP starts
+	 * in hardware mode.  If OSCam later confirms CSA-ALT via
+	 * onDescrMode, the manager switches the pip decoder to MEMORY via
+	 * CMD_SOFTCSA_SWITCH_PIP_SOURCE IPC at that point.  Non-CSA-ALT
+	 * channels stay in hardware mode undisturbed. */
+	if (newchannel->scrambled && !newchannel->bUseCI
+	    && CSoftCSAManager::getInstance()->hasRunningLiveSession(newchannel->getChannelID())) {
 		int pip_vfd = -1, pip_afd = -1;
 		int vtype = (int) newchannel->type;
 		int atype = newchannel->getAudioChannel() ? newchannel->getAudioChannel()->audioChannelType : 0;
 		if (switchPipToMemory(pip, vtype, atype, &pip_vfd, &pip_afd)) {
 			if (!CSoftCSAManager::getInstance()->waitForPipStart(
-			        newchannel->getChannelID(), pip_vfd, pip_afd, 3000)) {
-				/* Timeout — channel is probably not CSA-ALT.  Undo
-				 * the MEMORY switch so the hardware descrambler can
-				 * feed the pip decoder through the normal demux path. */
-				printf("[softcsa] waitForPipStart timeout — restoring pip %d to hardware\n", pip);
-				CSoftCSAManager::getInstance()->stopSession(newchannel->getChannelID(), SOFTCSA_SESSION_PIP);
-				if (pipVideoDecoder[pip]) {
-					pipVideoDecoder[pip]->Stop(true);
-					pipVideoDecoder[pip]->closeDevice();
-					pipVideoDecoder[pip]->openDevice();
-					pipVideoDecoder[pip]->SetStreamType((VIDEO_FORMAT) newchannel->type);
-					pipVideoDecoder[pip]->Start(0, newchannel->getPcrPid(), newchannel->getVideoPid());
-				}
-				if (pipAudioDecoder[pip]) {
-					pipAudioDecoder[pip]->Stop();
-					pipAudioDecoder[pip]->closeDevice();
-					pipAudioDecoder[pip]->openDevice();
-					if (newchannel->getAudioChannel())
-						pipAudioDecoder[pip]->SetStreamType(newchannel->getAudioChannel()->audioChannelType);
-				}
-				if (pipVideoDemux[pip]) {
-					pipVideoDemux[pip]->pesFilter(newchannel->getVideoPid());
-					pipVideoDemux[pip]->Start();
-				}
-				if (pipAudioDemux[pip])
-					pipAudioDemux[pip]->pesFilter(newchannel->getAudioPid());
-				if (pipVideoDecoder[pip])
-					pipVideoDecoder[pip]->SetSyncMode((AVSYNC_TYPE) g_settings.avsync);
-				if (pipAudioDecoder[pip])
-					pipAudioDecoder[pip]->SetSyncMode((AVSYNC_TYPE) g_settings.avsync);
-			}
-		} else {
-			printf("[softcsa] switchPipToMemory failed for pip %d — pip stays dark\n", pip);
+			        newchannel->getChannelID(), pip_vfd, pip_afd, 3000))
+				printf("[softcsa] waitForPipStart timeout for same-channel pip %llx\n",
+				       (unsigned long long)newchannel->getChannelID());
 		}
 	}
 #endif
@@ -2180,6 +2157,32 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		response.audio_fd = afd;
 		printf("[softcsa] CMD_SWITCH_SOURCE: done (video_fd=%d audio_fd=%d)\n",
 			response.video_fd, response.audio_fd);
+		CBasicServer::send_data(connfd, &response, sizeof(response));
+		break;
+	}
+	case CZapitMessages::CMD_SOFTCSA_SWITCH_PIP_SOURCE:
+	{
+		CZapitMessages::commandSoftCSASwitchPipSource msg;
+		CBasicServer::receive_data(connfd, &msg, sizeof(msg));
+
+		printf("[softcsa] CMD_SWITCH_PIP_SOURCE: pip=%d video_type=%d audio_type=%d\n",
+			msg.pip, msg.video_type, msg.audio_type);
+
+		int vfd = -1, afd = -1;
+		int p = msg.pip;
+		if (p >= 0 && p < (int)(sizeof(pipVideoDecoder)/sizeof(pipVideoDecoder[0]))
+		    && pipVideoDecoder[p]) {
+			if (switchPipToMemory(p, msg.video_type, msg.audio_type, &vfd, &afd))
+				printf("[softcsa] CMD_SWITCH_PIP_SOURCE: done (video_fd=%d audio_fd=%d)\n", vfd, afd);
+			else
+				printf("[softcsa] CMD_SWITCH_PIP_SOURCE: switchPipToMemory failed\n");
+		} else {
+			printf("[softcsa] CMD_SWITCH_PIP_SOURCE: pip %d not active\n", p);
+		}
+
+		CZapitMessages::responseSoftCSASwitchSource response;
+		response.video_fd = vfd;
+		response.audio_fd = afd;
 		CBasicServer::send_data(connfd, &response, sizeof(response));
 		break;
 	}
