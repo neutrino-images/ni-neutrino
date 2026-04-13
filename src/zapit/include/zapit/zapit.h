@@ -201,6 +201,7 @@ class CZapit : public OpenThreads::Thread
 		void restoreSoftCSADecoder();
 #if ENABLE_PIP
 		bool switchPipToMemory(int pip, int video_type, int audio_type, int *out_vfd, int *out_afd);
+		void restorePipDecoder(int pip);
 #endif
 #endif
 		void SendPMT(bool forupdate = false);

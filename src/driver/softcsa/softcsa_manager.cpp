@@ -82,8 +82,6 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		state.audio_type = 0;
 		state.record_fd = -1;
 		state.stream_callback = nullptr;
-		state.pip_vfd = -1;
-		state.pip_afd = -1;
 
 		sessions[session_id] = state;
 		channel_to_session[existing_key] = session_id;
@@ -307,6 +305,9 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 		if (is_live) {
 			CZapitClient zapit_restore;
 			zapit_restore.switchSoftCSASource(false, 0, 0);
+		} else if (is_pip) {
+			CZapitClient zapit_restore;
+			zapit_restore.restoreSoftCSAPipSource(pip_index);
 		}
 		return;
 	}
@@ -342,6 +343,9 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 			if (is_live) {
 				CZapitClient zapit;
 				zapit.switchSoftCSASource(false, 0, 0);
+			} else if (is_pip) {
+				CZapitClient zapit;
+				zapit.restoreSoftCSAPipSource(pip_index);
 			}
 		}
 	}
@@ -396,8 +400,6 @@ bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType ty
 
 		sess_it->second.record_fd = -1;
 		sess_it->second.stream_callback = nullptr;
-		sess_it->second.pip_vfd = -1;
-		sess_it->second.pip_afd = -1;
 		if (sess_it->second.session) {
 			session_to_stop = sess_it->second.session;
 			sess_it->second.session = NULL;
@@ -687,90 +689,61 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 	return started;
 }
 
-bool CSoftCSAManager::waitForPipStart(t_channel_id channel_id,
-                                       int pip_vfd, int pip_afd, int timeout_ms)
+bool CSoftCSAManager::startPipFromLive(t_channel_id channel_id,
+                                       int pip_vfd, int pip_afd)
 {
-	{
-		std::lock_guard<std::mutex> lock(mtx);
-		auto key = std::make_pair(channel_id, SOFTCSA_SESSION_PIP);
-		auto ch_it = channel_to_session.find(key);
-		if (ch_it == channel_to_session.end()) {
-			printf("[softcsa] waitForPipStart: no PIP session for channel %llx\n",
-			       (unsigned long long)channel_id);
-			return false;
-		}
-		auto sess_it = sessions.find(ch_it->second);
-		if (sess_it == sessions.end())
-			return false;
+	std::lock_guard<std::mutex> lock(mtx);
 
-		SessionState &pip_ds = sess_it->second;
-		pip_ds.pip_vfd = pip_vfd;
-		pip_ds.pip_afd = pip_afd;
+	auto key = std::make_pair(channel_id, SOFTCSA_SESSION_PIP);
+	auto ch_it = channel_to_session.find(key);
+	if (ch_it == channel_to_session.end()) {
+		printf("[softcsa] startPipFromLive: no PIP session for channel %llx\n",
+		       (unsigned long long)channel_id);
+		return false;
+	}
+	auto sess_it = sessions.find(ch_it->second);
+	if (sess_it == sessions.end())
+		return false;
 
-		if (pip_ds.session && !pip_ds.session->isRunning()) {
-			printf("[softcsa] waitForPipStart: session exists, starting pip immediately\n");
-			if (pip_ds.session->start(pip_vfd, pip_afd))
-				return true;
-			delete pip_ds.session;
-			pip_ds.session = NULL;
-			sessions.erase(sess_it);
-			channel_to_session.erase(ch_it);
-			return false;
-		}
+	SessionState &pip_ds = sess_it->second;
 
-		auto live_key = std::make_pair(channel_id, SOFTCSA_SESSION_LIVE);
-		auto live_it = channel_to_session.find(live_key);
-		if (live_it != channel_to_session.end()) {
-			auto live_sess = sessions.find(live_it->second);
-			if (live_sess != sessions.end()
-			    && live_sess->second.csa_alt_active
-			    && live_sess->second.session) {
-				printf("[softcsa] waitForPipStart: same-channel, creating PIP from LIVE keys\n");
-
-				pip_ds.csa_alt_active = true;
-				pip_ds.ecm_mode = live_sess->second.ecm_mode;
-				pip_ds.session = new CSoftCSASession(
-					pip_ds.type, pip_ds.adapter, pip_ds.demux_unit, pip_ds.frontend_num);
-
-				for (auto pid : pip_ds.pids)
-					pip_ds.session->addPid(pid);
-
-				pip_ds.session->setDecoderPids(pip_ds.video_pid, pip_ds.audio_pid, pip_ds.pcr_pid);
-
-				live_sess->second.session->getEngine()->copyKeysTo(pip_ds.session->getEngine());
-
-				if (pip_ds.session->start(pip_vfd, pip_afd)) {
-					printf("[softcsa] waitForPipStart: same-channel pip started\n");
-					return true;
-				}
-
-				printf("[softcsa] waitForPipStart: start failed\n");
-				delete pip_ds.session;
-				pip_ds.session = NULL;
-				sessions.erase(sess_it);
-				channel_to_session.erase(ch_it);
-				return false;
-			}
-		}
-
-		printf("[softcsa] waitForPipStart: fds stored, waiting %dms\n", timeout_ms);
+	auto live_key = std::make_pair(channel_id, SOFTCSA_SESSION_LIVE);
+	auto live_it = channel_to_session.find(live_key);
+	if (live_it == channel_to_session.end())
+		return false;
+	auto live_sess = sessions.find(live_it->second);
+	if (live_sess == sessions.end()
+	    || !live_sess->second.csa_alt_active
+	    || !live_sess->second.session) {
+		printf("[softcsa] startPipFromLive: no running LIVE session for channel %llx\n",
+		       (unsigned long long)channel_id);
+		return false;
 	}
 
-	std::unique_lock<std::mutex> cv_lock(record_cv_mtx);
-	bool started = record_cv.wait_for(cv_lock, std::chrono::milliseconds(timeout_ms), [&]() {
-		std::lock_guard<std::mutex> lock(mtx);
-		auto key = std::make_pair(channel_id, SOFTCSA_SESSION_PIP);
-		auto ch_it = channel_to_session.find(key);
-		if (ch_it == channel_to_session.end())
-			return false;
-		auto sess_it = sessions.find(ch_it->second);
-		if (sess_it == sessions.end())
-			return false;
-		return sess_it->second.session != NULL && sess_it->second.session->isRunning();
-	});
+	printf("[softcsa] startPipFromLive: cloning LIVE keys into PIP\n");
 
-	printf("[softcsa] waitForPipStart: %s\n", started ? "started" : "timeout");
-	return started;
+	pip_ds.csa_alt_active = true;
+	pip_ds.ecm_mode = live_sess->second.ecm_mode;
+	pip_ds.session = new CSoftCSASession(
+		pip_ds.type, pip_ds.adapter, pip_ds.demux_unit, pip_ds.frontend_num);
+
+	for (auto pid : pip_ds.pids)
+		pip_ds.session->addPid(pid);
+
+	pip_ds.session->setDecoderPids(pip_ds.video_pid, pip_ds.audio_pid, pip_ds.pcr_pid);
+	live_sess->second.session->getEngine()->copyKeysTo(pip_ds.session->getEngine());
+
+	if (pip_ds.session->start(pip_vfd, pip_afd)) {
+		printf("[softcsa] startPipFromLive: pip started\n");
+		return true;
+	}
+
+	printf("[softcsa] startPipFromLive: start failed\n");
+	delete pip_ds.session;
+	pip_ds.session = NULL;
+	sessions.erase(sess_it);
+	channel_to_session.erase(ch_it);
+	return false;
 }
 
 bool CSoftCSAManager::notifyAudioPidChange(t_channel_id channel_id, unsigned short new_apid)

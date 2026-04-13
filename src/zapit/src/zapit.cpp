@@ -937,10 +937,12 @@ bool CZapit::StartPip(const t_channel_id channel_id, int pip)
 		int vtype = (int) newchannel->type;
 		int atype = newchannel->getAudioChannel() ? newchannel->getAudioChannel()->audioChannelType : 0;
 		if (switchPipToMemory(pip, vtype, atype, &pip_vfd, &pip_afd)) {
-			if (!CSoftCSAManager::getInstance()->waitForPipStart(
-			        newchannel->getChannelID(), pip_vfd, pip_afd, 3000))
-				printf("[softcsa] waitForPipStart timeout for same-channel pip %llx\n",
+			if (!CSoftCSAManager::getInstance()->startPipFromLive(
+			        newchannel->getChannelID(), pip_vfd, pip_afd)) {
+				printf("[softcsa] startPipFromLive failed for same-channel pip %llx\n",
 				       (unsigned long long)newchannel->getChannelID());
+				restorePipDecoder(pip);
+			}
 		}
 	}
 #endif
@@ -2165,19 +2167,23 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		CZapitMessages::commandSoftCSASwitchPipSource msg;
 		CBasicServer::receive_data(connfd, &msg, sizeof(msg));
 
-		printf("[softcsa] CMD_SWITCH_PIP_SOURCE: pip=%d video_type=%d audio_type=%d\n",
-			msg.pip, msg.video_type, msg.audio_type);
-
 		int vfd = -1, afd = -1;
 		int p = msg.pip;
-		if (p >= 0 && p < (int)(sizeof(pipVideoDecoder)/sizeof(pipVideoDecoder[0]))
-		    && pipVideoDecoder[p]) {
-			if (switchPipToMemory(p, msg.video_type, msg.audio_type, &vfd, &afd))
-				printf("[softcsa] CMD_SWITCH_PIP_SOURCE: done (video_fd=%d audio_fd=%d)\n", vfd, afd);
-			else
-				printf("[softcsa] CMD_SWITCH_PIP_SOURCE: switchPipToMemory failed\n");
+		if (msg.to_memory) {
+			printf("[softcsa] CMD_SWITCH_PIP_SOURCE: pip=%d video_type=%d audio_type=%d\n",
+				msg.pip, msg.video_type, msg.audio_type);
+			if (p >= 0 && p < (int)(sizeof(pipVideoDecoder)/sizeof(pipVideoDecoder[0]))
+			    && pipVideoDecoder[p]) {
+				if (switchPipToMemory(p, msg.video_type, msg.audio_type, &vfd, &afd))
+					printf("[softcsa] CMD_SWITCH_PIP_SOURCE: done (video_fd=%d audio_fd=%d)\n", vfd, afd);
+				else
+					printf("[softcsa] CMD_SWITCH_PIP_SOURCE: switchPipToMemory failed\n");
+			} else {
+				printf("[softcsa] CMD_SWITCH_PIP_SOURCE: pip %d not active\n", p);
+			}
 		} else {
-			printf("[softcsa] CMD_SWITCH_PIP_SOURCE: pip %d not active\n", p);
+			printf("[softcsa] CMD_SWITCH_PIP_SOURCE: restore pip=%d\n", p);
+			restorePipDecoder(p);
 		}
 
 		CZapitMessages::responseSoftCSASwitchSource response;
@@ -2722,7 +2728,7 @@ void CZapit::restoreSoftCSADecoder()
  *
  * Runs inline on the zapit server thread from StartPip — no IPC (would
  * deadlock with ourselves). The resulting fds are handed to the SoftCSA
- * manager via waitForPipStart and travel into CSoftCSASession::start()
+ * manager via startPipFromLive and travel into CSoftCSASession::start()
  * like the main-decoder fds travel from the CMD_SOFTCSA_SWITCH_SOURCE
  * handler. */
 bool CZapit::switchPipToMemory(int pip, int video_type, int audio_type, int *out_vfd, int *out_afd)
@@ -2778,6 +2784,63 @@ bool CZapit::switchPipToMemory(int pip, int video_type, int audio_type, int *out
 	/* Video is mandatory. Audio is optional — CSoftCSASession::start tolerates
 	 * afd==-1 (video-only pip still shows a picture, just silent). */
 	return vfd >= 0;
+}
+
+void CZapit::restorePipDecoder(int pip)
+{
+	if (pip < 0 || pip >= (int)(sizeof(pipVideoDecoder)/sizeof(pipVideoDecoder[0])))
+		return;
+
+	CZapitChannel *channel = NULL;
+	if (pip_channel_id[pip])
+		channel = CServiceManager::getInstance()->FindChannel(pip_channel_id[pip]);
+
+	/* Close/reopen resets from MEMORY back to default DEMUX source */
+	if (pipVideoDecoder[pip]) {
+		pipVideoDecoder[pip]->Stop(true);
+		pipVideoDecoder[pip]->closeDevice();
+		pipVideoDecoder[pip]->openDevice();
+	}
+	if (pipAudioDecoder[pip]) {
+		pipAudioDecoder[pip]->Stop();
+		pipAudioDecoder[pip]->closeDevice();
+		pipAudioDecoder[pip]->openDevice();
+	}
+
+	if (!channel) {
+		printf("[softcsa] restorePipDecoder: no channel for pip %d\n", pip);
+		return;
+	}
+
+	/* Re-setup PES filters and restart — demux SetSource is still
+	 * valid from StartPip, only the filters were cleared by Stop(). */
+	if (pipVideoDecoder[pip]) {
+		pipVideoDecoder[pip]->SetStreamType((VIDEO_FORMAT) channel->type);
+		pipVideoDecoder[pip]->SetSyncMode((AVSYNC_TYPE) g_settings.avsync);
+	}
+	if (pipVideoDemux[pip]) {
+		pipVideoDemux[pip]->pesFilter(channel->getVideoPid());
+		pipVideoDemux[pip]->Start();
+	}
+	if (pipVideoDecoder[pip]) {
+		pipVideoDecoder[pip]->Start(0, channel->getPcrPid(), channel->getVideoPid());
+		pipVideoDecoder[pip]->Pig(
+			CNeutrinoApp::getInstance()->pip_recalc_pos_x(g_settings.pip_x),
+			CNeutrinoApp::getInstance()->pip_recalc_pos_y(g_settings.pip_y),
+			g_settings.pip_width, g_settings.pip_height,
+			g_settings.screen_width, g_settings.screen_height);
+		pipVideoDecoder[pip]->ShowPig(1);
+	}
+
+	if (pipAudioDecoder[pip]) {
+		if (channel->getAudioChannel())
+			pipAudioDecoder[pip]->SetStreamType(channel->getAudioChannel()->audioChannelType);
+		pipAudioDecoder[pip]->SetSyncMode((AVSYNC_TYPE) g_settings.avsync);
+	}
+	if (pipAudioDemux[pip])
+		pipAudioDemux[pip]->pesFilter(channel->getAudioPid());
+
+	printf("[softcsa] restorePipDecoder: pip=%d restored to DEMUX mode\n", pip);
 }
 #endif
 #endif

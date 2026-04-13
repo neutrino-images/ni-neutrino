@@ -398,7 +398,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 #endif
 			cam->makeCaPmt(channel, true, softcsa_list);
 #ifdef HAVE_SOFTCSA
-			if ((mode == PLAY || mode == RECORD || mode == PIP || mode == STREAM) && dvbapi_client && dvbapi_client->ensureConnected()) {
+			if (start && (mode == PLAY || mode == RECORD || mode == PIP || mode == STREAM) && dvbapi_client && dvbapi_client->ensureConnected()) {
 				int phys_demux = (mode == RECORD) ? channel->getRecordDemux()
 				               : (mode == STREAM) ? channel->getStreamDemux()
 				               : (mode == PIP)    ? channel->getPipDemux()

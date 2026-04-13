@@ -182,10 +182,11 @@ class CZapitMessages
 
 	struct commandSoftCSASwitchPipSource
 	{
+		bool to_memory;
 		int pip;
 		int video_type;
 		int audio_type;
-		commandSoftCSASwitchPipSource() : pip(0), video_type(0), audio_type(0) {}
+		commandSoftCSASwitchPipSource() : to_memory(true), pip(0), video_type(0), audio_type(0) {}
 	};
 #endif
 

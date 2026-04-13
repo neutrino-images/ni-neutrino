@@ -78,11 +78,11 @@ public:
 	// Returns true if streamThread started, false on timeout.
 	bool waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
 
-	// PiP: register pre-switched pip decoder fds and wait for the session
-	// to start. Caller (StartPip) must have put the pip video/audio decoder
+	// PiP: clone LIVE session keys into a PIP session and start it.
+	// Caller (StartPip) must have put the pip video/audio decoder
 	// into AUDIO_SOURCE_MEMORY/VIDEO_SOURCE_MEMORY mode and pass the fds.
-	bool waitForPipStart(t_channel_id channel_id,
-	                     int pip_vfd, int pip_afd, int timeout_ms);
+	// Only valid for same-channel CSA-ALT PiP (LIVE session running).
+	bool startPipFromLive(t_channel_id channel_id, int pip_vfd, int pip_afd);
 
 private:
 	CSoftCSAManager();
@@ -105,8 +105,6 @@ private:
 		int audio_type;
 		int record_fd;
 		SoftCSAStreamCallback stream_callback;
-		int pip_vfd;
-		int pip_afd;
 	};
 
 	std::map<uint32_t, SessionState> sessions;

@@ -332,10 +332,14 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 		}
 
 		/* Timeout: not CSA-ALT (normal CSA or no OSCam response).
-		 * Clean up SoftCSA state and fall through to cRecord. */
+		 * Undo all SoftCSA-path side effects before falling through
+		 * to cRecord which re-does lockFrontend + CCamManager::Start. */
 		printf("CRecordInstance::Start: SoftCSA timeout, falling back to cRecord\n");
 		CSoftCSAManager::getInstance()->stopSession(
 			channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+		CCamManager::getInstance()->Stop(channel->getChannelID(), CCamManager::RECORD);
+		if (!autoshift)
+			CFEManager::getInstance()->unlockFrontend(frontend);
 	}
 #endif
 
@@ -404,7 +408,6 @@ bool CRecordInstance::Stop(bool remove_event)
 #ifdef HAVE_SOFTCSA
 	if (softcsa_record) {
 		printf("%s: stopping SoftCSA recording for channel %" PRIx64 "\n", __func__, channel_id);
-		CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
 		if (softcsa_fd >= 0) {
 			close(softcsa_fd);
 			softcsa_fd = -1;
@@ -417,6 +420,9 @@ bool CRecordInstance::Stop(bool remove_event)
 		record->Stop();
 	}
 
+#ifdef HAVE_SOFTCSA
+	CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
+#endif
 	CCamManager::getInstance()->Stop(channel_id, CCamManager::RECORD);
 
 	if(!autoshift)

@@ -1194,6 +1194,7 @@ void CZapitClient::switchSoftCSAPipSource(int pip, int video_type, int audio_typ
 {
 	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(mutex);
 	CZapitMessages::commandSoftCSASwitchPipSource msg;
+	msg.to_memory = true;
 	msg.pip = pip;
 	msg.video_type = video_type;
 	msg.audio_type = audio_type;
@@ -1205,6 +1206,18 @@ void CZapitClient::switchSoftCSAPipSource(int pip, int video_type, int audio_typ
 		*out_video_fd = response.video_fd;
 	if (out_audio_fd)
 		*out_audio_fd = response.audio_fd;
+}
+
+void CZapitClient::restoreSoftCSAPipSource(int pip)
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(mutex);
+	CZapitMessages::commandSoftCSASwitchPipSource msg;
+	msg.to_memory = false;
+	msg.pip = pip;
+	send(CZapitMessages::CMD_SOFTCSA_SWITCH_PIP_SOURCE, (char *)&msg, sizeof(msg));
+	CZapitMessages::responseSoftCSASwitchSource response;
+	CBasicClient::receive_data((char*)&response, sizeof(response));
+	close_connection();
 }
 #endif
 

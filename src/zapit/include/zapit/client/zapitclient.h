@@ -512,6 +512,7 @@ class CZapitClient:public CBasicClient
 	                        int *out_video_fd = NULL, int *out_audio_fd = NULL);
 	void switchSoftCSAPipSource(int pip, int video_type, int audio_type,
 	                            int *out_video_fd, int *out_audio_fd);
+	void restoreSoftCSAPipSource(int pip);
 #endif
 	bool tune_TP(TP_params TP);
 	bool isPlayBackActive();
