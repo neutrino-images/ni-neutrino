@@ -307,7 +307,7 @@ void CStreamInstance::run()
 		CZapitChannel *str_ch = CServiceManager::getInstance()->FindChannel(channel_id);
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_STREAM);
 		for (auto &sn : sr.dvbapi_stops)
-			sendDvbapiSessionStop(str_ch, sn.session_id, sn.demux_unit);
+			sendDvbapiSessionStop(str_ch, sn.session_id, sn.capmt_demux);
 	}
 #endif
 

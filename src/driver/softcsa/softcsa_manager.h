@@ -36,7 +36,7 @@
 
 struct SoftCSAStopNotify {
 	uint32_t session_id;
-	int demux_unit;
+	int capmt_demux;
 };
 
 struct SoftCSAStopResult {
@@ -53,11 +53,12 @@ public:
 	void onCW(uint32_t session_id, uint32_t parity, const uint8_t *cw);
 
 	uint32_t registerSession(t_channel_id channel_id, SoftCSASessionType type,
-	                         int adapter, int demux_unit, int frontend_num);
+	                         int adapter, int capmt_demux, int frontend_num);
 	void addPid(uint32_t session_id, unsigned short pid);
 	void addPidByChannel(t_channel_id channel_id, SoftCSASessionType type, unsigned short pid);
 	void setDecoderPids(uint32_t session_id, unsigned short vpid, unsigned short apid, unsigned short pcrpid);
 	void setDecoderTypes(uint32_t session_id, int video_type, int audio_type);
+	void setPipDevIndex(uint32_t session_id, int pip_dev);
 	SoftCSAStopResult stopSession(t_channel_id channel_id, SoftCSASessionType type);
 	void stopAll();
 
@@ -65,7 +66,7 @@ public:
 		t_channel_id channel_id;
 		uint32_t session_id;
 		SoftCSASessionType type;
-		int demux_unit;
+		int capmt_demux;
 		int frontend_num;
 	};
 	void stopSessions();
@@ -89,10 +90,10 @@ public:
 	bool waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
 
 	// PiP: clone LIVE session keys into a PIP session and start it.
-	// Caller (StartPip) must have put the pip video/audio decoder
-	// into AUDIO_SOURCE_MEMORY/VIDEO_SOURCE_MEMORY mode and pass the fds.
+	// Caller (StartPip) must have put the pip video decoder into
+	// VIDEO_SOURCE_MEMORY mode and pass the fd. No audio for PiP.
 	// Only valid for same-channel CSA-ALT PiP (LIVE session running).
-	bool startPipFromLive(t_channel_id channel_id, int pip_vfd, int pip_afd);
+	bool startPipFromLive(t_channel_id channel_id, int pip_vfd);
 
 private:
 	CSoftCSAManager();
@@ -102,7 +103,8 @@ private:
 		t_channel_id channel_id;
 		SoftCSASessionType type;
 		int adapter;
-		int demux_unit;
+		int demux_unit;      // allocated kernel demux (from allocator)
+		int capmt_demux;     // value for CAPMT 0x86 descriptor (for OSCam ca_mask)
 		int frontend_num;
 		bool csa_alt_active;
 		uint8_t ecm_mode;
@@ -113,6 +115,7 @@ private:
 		unsigned short pcr_pid;
 		int video_type;
 		int audio_type;
+		int pip_dev;         // PiP device index (0, 1, 2) — only for PIP sessions
 		int record_fd;
 		SoftCSAStreamCallback stream_callback;
 	};
@@ -125,6 +128,16 @@ private:
 
 	std::condition_variable record_cv;
 	std::mutex record_cv_mtx;
+
+	struct DemuxAlloc {
+		int demux_unit;
+		int frontend_num;
+		int refcount;
+	};
+	std::vector<DemuxAlloc> demux_allocs;
+
+	int allocateDemux(int frontend_num);
+	void releaseDemux(int frontend_num);
 
 };
 

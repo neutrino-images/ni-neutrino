@@ -123,7 +123,7 @@ class CCamManager
 };
 
 #ifdef HAVE_SOFTCSA
-void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int demux_unit);
+void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int capmt_demux);
 #endif
 
 #endif /* __capmt_h__ */

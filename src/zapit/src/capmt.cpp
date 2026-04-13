@@ -389,8 +389,8 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			uint8_t softcsa_list = (channel_map.size() > 1) ? CCam::CAPMT_ADD : CCam::CAPMT_ONLY;
 			cam->makeCaPmt(channel, true, softcsa_list);
 #ifdef HAVE_SOFTCSA
-			if (start && (mode == PLAY || mode == RECORD || mode == PIP || mode == STREAM) && dvbapi_client && dvbapi_client->ensureConnected()) {
-				int phys_demux = (mode == RECORD) ? channel->getRecordDemux()
+			if (start && channel->scrambled && !channel->bUseCI && (mode == PLAY || mode == RECORD || mode == PIP || mode == STREAM) && dvbapi_client && dvbapi_client->ensureConnected()) {
+				int capmt_demux = (mode == RECORD) ? channel->getRecordDemux()
 				               : (mode == STREAM) ? channel->getStreamDemux()
 				               : (mode == PIP)    ? channel->getPipDemux()
 				                                  : (source >= 0 ? source : 0);
@@ -401,16 +401,19 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 				uint32_t session_id = CSoftCSAManager::getInstance()->registerSession(
 					channel->getChannelID(), stype,
-					0, phys_demux, source);
+					0, capmt_demux, source);
 
-				/* Rebuild CAPMT with per-session phys_demux in 0x86 so OSCam
+				if (mode == PIP)
+					CSoftCSAManager::getInstance()->setPipDevIndex(session_id, channel->getPipDemux() - 1);
+
+				/* Rebuild CAPMT with per-session capmt_demux in 0x86 so OSCam
 				 * derives a distinct ca_mask (1 << demux_index at
 				 * module-dvbapi.c:4346) and allocates a separate demux slot
 				 * with its own usedidx sequence. Response routing uses msgid
 				 * (session_id), not this value. */
 				if (mode == RECORD || mode == STREAM || mode == PIP) {
 					int saved_source = cam->getSource();
-					cam->setSource(phys_demux);
+					cam->setSource(capmt_demux);
 					cam->makeCaPmt(channel, true, softcsa_list);
 					cam->setSource(saved_source);
 				}
@@ -465,22 +468,27 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	if(oldmask == newmask) {
 		INFO("\033[33m (oldmask == newmask)\033[0m");
 #ifdef HAVE_SOFTCSA
-		/* Same-channel RECORD/STREAM/PIP fallback: mask did not change
-		 * because a subscription on this frontend already exists. Register
-		 * the new demux in SoftCSA and — if no LIVE session can share its
-		 * keys — send a fresh CAPMT to OSCam targeted at the new demux. */
-		if ((mode == RECORD || mode == STREAM || mode == PIP) && start && channel->scrambled && !channel->bUseCI
+		/* Same-channel fallback: mask did not change because a
+		 * subscription on this frontend already exists. Register
+		 * the new mode in SoftCSA and — if no LIVE session can share
+		 * its keys — send a fresh CAPMT to OSCam. */
+		if (start && channel->scrambled && !channel->bUseCI
 		    && dvbapi_client && dvbapi_client->ensureConnected()) {
-			int phys_demux = (mode == RECORD) ? channel->getRecordDemux()
+			int capmt_demux = (mode == RECORD) ? channel->getRecordDemux()
 			               : (mode == PIP)    ? channel->getPipDemux()
-			                                  : channel->getStreamDemux();
+			               : (mode == STREAM) ? channel->getStreamDemux()
+			                                  : (source >= 0 ? source : 0);
 			SoftCSASessionType stype = (mode == RECORD) ? SOFTCSA_SESSION_RECORD
+			                         : (mode == STREAM) ? SOFTCSA_SESSION_STREAM
 			                         : (mode == PIP)    ? SOFTCSA_SESSION_PIP
-			                                            : SOFTCSA_SESSION_STREAM;
+			                                            : SOFTCSA_SESSION_LIVE;
 
 			uint32_t session_id = CSoftCSAManager::getInstance()->registerSession(
 				channel->getChannelID(), stype,
-				0 /* adapter */, phys_demux, source);
+				0 /* adapter */, capmt_demux, source);
+
+			if (mode == PIP)
+				CSoftCSAManager::getInstance()->setPipDevIndex(session_id, channel->getPipDemux() - 1);
 
 			if (channel->getVideoPid())
 				CSoftCSAManager::getInstance()->addPid(session_id, channel->getVideoPid());
@@ -499,19 +507,24 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 				channel->getAudioPid(),
 				channel->getPcrPid());
 
+			CSoftCSAManager::getInstance()->setDecoderTypes(session_id,
+				channel->type,
+				channel->getAudioChannel() ? channel->getAudioChannel()->audioChannelType : 0);
+
 			/* no LIVE to key-copy from → subscribe directly with OSCam.
 			 * Always CAPMT_ADD so an in-flight recording/stream on another
 			 * SID stays alive even when channel_map has only this entry. */
 			if (!CSoftCSAManager::getInstance()->hasRunningLiveSession(channel->getChannelID())) {
 				int saved_source = cam->getSource();
-				cam->setSource(phys_demux);
+				cam->setSource(capmt_demux);
 				cam->makeCaPmt(channel, true, CCam::CAPMT_ADD);
 				cam->setSource(saved_source);
 				if (!dvbapi_client->sendCaPmt(cam->getBuffer(), cam->getLength(),
 				                              session_id)) {
 					const char *kind = (mode == RECORD) ? "record"
 					                 : (mode == PIP)    ? "pip"
-					                                    : "stream";
+					                 : (mode == STREAM) ? "stream"
+					                                    : "live";
 					printf("[softcsa] sendCaPmt (%s-only) failed for channel %llx\n",
 					       kind, (unsigned long long)channel->getChannelID());
 					/* roll back — CAPMT never reached OSCam, no NOT_SELECTED needed */
@@ -663,14 +676,14 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 }
 
 #ifdef HAVE_SOFTCSA
-void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int demux_unit)
+void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int capmt_demux)
 {
 	if (!dvbapi_client || !dvbapi_client->isConnected() || !channel)
 		return;
 
 	CCam tmp;
-	tmp.setCaMask(1 << demux_unit);
-	tmp.setSource(demux_unit);
+	tmp.setCaMask(1 << capmt_demux);
+	tmp.setSource(capmt_demux);
 	if (!tmp.makeCaPmt(channel, true, CCam::CAPMT_ADD, CaIdVector(), 0x04)) {
 		printf("[softcsa] sendDvbapiSessionStop: makeCaPmt failed for session %u (no raw PMT?)\n", session_id);
 		return;
@@ -680,7 +693,7 @@ void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int demu
 		printf("[softcsa] sendDvbapiSessionStop: failed for session %u\n", session_id);
 	else
 		printf("[softcsa] sendDvbapiSessionStop: NOT_SELECTED sent for session %u (dmx %d)\n",
-		       session_id, demux_unit);
+		       session_id, capmt_demux);
 }
 #endif
 

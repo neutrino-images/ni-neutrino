@@ -55,6 +55,7 @@ CSoftCSASession::CSoftCSASession(SoftCSASessionType type, int adapter, int demux
 
 	demux = new cDemux(demux_unit);
 	demux->Open(DMX_TP_CHANNEL, NULL, BUFFER_SIZE);
+	cDemux::SetSource(demux_unit, frontend_num);
 }
 
 CSoftCSASession::~CSoftCSASession()

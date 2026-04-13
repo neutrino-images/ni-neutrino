@@ -777,7 +777,7 @@ bool CZapit::StopPip(int pip)
 		CZapitChannel *pip_ch = CServiceManager::getInstance()->FindChannel(pip_channel_id[pip]);
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(pip_channel_id[pip], SOFTCSA_SESSION_PIP);
 		for (auto &sn : sr.dvbapi_stops)
-			sendDvbapiSessionStop(pip_ch, sn.session_id, sn.demux_unit);
+			sendDvbapiSessionStop(pip_ch, sn.session_id, sn.capmt_demux);
 #endif
 		CCamManager::getInstance()->Stop(pip_channel_id[pip], CCamManager::PIP);
 		pip_fe[pip] = NULL;
@@ -941,7 +941,7 @@ bool CZapit::StartPip(const t_channel_id channel_id, int pip)
 		int atype = newchannel->getAudioChannel() ? newchannel->getAudioChannel()->audioChannelType : 0;
 		if (switchPipToMemory(pip, vtype, atype, &pip_vfd, &pip_afd)) {
 			if (!CSoftCSAManager::getInstance()->startPipFromLive(
-			        newchannel->getChannelID(), pip_vfd, pip_afd)) {
+			        newchannel->getChannelID(), pip_vfd)) {
 				printf("[softcsa] startPipFromLive failed for same-channel pip %llx\n",
 				       (unsigned long long)newchannel->getChannelID());
 				restorePipDecoder(pip);
@@ -2860,7 +2860,7 @@ bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 		if (sr.had_running_session)
 			restoreSoftCSADecoder();
 		for (auto &sn : sr.dvbapi_stops)
-			sendDvbapiSessionStop(current_channel, sn.session_id, sn.demux_unit);
+			sendDvbapiSessionStop(current_channel, sn.session_id, sn.capmt_demux);
 	}
 #endif
 	if(send_pmt)

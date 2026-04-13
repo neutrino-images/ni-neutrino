@@ -373,8 +373,8 @@ void CDvbApiClient::readerThread()
 					if (!channel)
 						continue;
 					CCam cam;
-					cam.setCaMask(1 << info.demux_unit);
-					cam.setSource(info.demux_unit);
+					cam.setCaMask(1 << info.capmt_demux);
+					cam.setSource(info.capmt_demux);
 					cam.makeCaPmt(channel, true, CCam::CAPMT_ADD);
 					if (!sendCaPmt(cam.getBuffer(), cam.getLength(), info.session_id))
 						printf(TAG "resubscribe failed for channel %llx session %u\n",

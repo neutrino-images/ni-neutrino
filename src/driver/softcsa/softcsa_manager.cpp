@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <dmx_hal.h>
 
 CSoftCSAManager *CSoftCSAManager::getInstance()
 {
@@ -33,8 +34,60 @@ CSoftCSAManager *CSoftCSAManager::getInstance()
 CSoftCSAManager::CSoftCSAManager() : next_session_id(1) {}
 CSoftCSAManager::~CSoftCSAManager() { stopAll(); }
 
+int CSoftCSAManager::allocateDemux(int frontend_num)
+{
+	/* Reuse existing allocation for the same frontend */
+	for (auto &alloc : demux_allocs) {
+		if (alloc.frontend_num == frontend_num) {
+			alloc.refcount++;
+			printf("[softcsa] allocateDemux: reuse unit %d for fe%d (refcount %d)\n",
+			       alloc.demux_unit, frontend_num, alloc.refcount);
+			return alloc.demux_unit;
+		}
+	}
+
+	/* Find highest free unit — avoids zapit's low units (0, 1) */
+	for (int unit = MAX_DMX_UNITS - 1; unit >= 0; unit--) {
+		bool in_use = false;
+		for (auto &alloc : demux_allocs) {
+			if (alloc.demux_unit == unit) {
+				in_use = true;
+				break;
+			}
+		}
+		if (!in_use) {
+			cDemux::SetSource(unit, frontend_num);
+			DemuxAlloc alloc;
+			alloc.demux_unit = unit;
+			alloc.frontend_num = frontend_num;
+			alloc.refcount = 1;
+			demux_allocs.push_back(alloc);
+			printf("[softcsa] allocateDemux: assigned unit %d for fe%d\n",
+			       unit, frontend_num);
+			return unit;
+		}
+	}
+
+	printf("[softcsa] allocateDemux: no free unit for fe%d!\n", frontend_num);
+	return -1;
+}
+
+void CSoftCSAManager::releaseDemux(int frontend_num)
+{
+	for (auto it = demux_allocs.begin(); it != demux_allocs.end(); ++it) {
+		if (it->frontend_num == frontend_num) {
+			it->refcount--;
+			printf("[softcsa] releaseDemux: unit %d fe%d refcount %d\n",
+			       it->demux_unit, frontend_num, it->refcount);
+			if (it->refcount <= 0)
+				demux_allocs.erase(it);
+			return;
+		}
+	}
+}
+
 uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessionType type,
-                                           int adapter, int demux_unit, int frontend_num)
+                                           int adapter, int capmt_demux, int frontend_num)
 {
 	CSoftCSASession *old_session = NULL;
 	uint32_t session_id;
@@ -51,6 +104,7 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 			if (sess_it != sessions.end()) {
 				old_session = sess_it->second.session;
 				sess_it->second.session = NULL;
+				releaseDemux(sess_it->second.frontend_num);
 			}
 		} else {
 			session_id = next_session_id++;
@@ -60,7 +114,8 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		state.channel_id = channel_id;
 		state.type = type;
 		state.adapter = adapter;
-		state.demux_unit = demux_unit;
+		state.demux_unit = allocateDemux(frontend_num);
+		state.capmt_demux = capmt_demux;
 		state.frontend_num = frontend_num;
 		state.csa_alt_active = false;
 		state.ecm_mode = 0;
@@ -70,14 +125,15 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		state.pcr_pid = 0;
 		state.video_type = 0;
 		state.audio_type = 0;
+		state.pip_dev = -1;
 		state.record_fd = -1;
 		state.stream_callback = nullptr;
 
 		sessions[session_id] = state;
 		channel_to_session[existing_key] = session_id;
 
-		printf("[softcsa] registerSession: id %u for channel %llx type %d (fe %d, dmx %d)\n",
-		       session_id, (unsigned long long)channel_id, type, frontend_num, demux_unit);
+		printf("[softcsa] registerSession: id %u for channel %llx type %d (fe %d, capmt_dmx %d, dmx %d)\n",
+		       session_id, (unsigned long long)channel_id, type, frontend_num, capmt_demux, state.demux_unit);
 	}
 
 	if (old_session) {
@@ -148,6 +204,15 @@ void CSoftCSAManager::setDecoderTypes(uint32_t session_id, int video_type, int a
 		return;
 	it->second.video_type = video_type;
 	it->second.audio_type = audio_type;
+}
+
+void CSoftCSAManager::setPipDevIndex(uint32_t session_id, int pip_dev)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto it = sessions.find(session_id);
+	if (it == sessions.end())
+		return;
+	it->second.pip_dev = pip_dev;
 }
 
 void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t cipher_mode)
@@ -264,7 +329,7 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 			video_type = it->second.video_type;
 			audio_type = it->second.audio_type;
 			if (is_pip)
-				pip_index = it->second.demux_unit > 0 ? it->second.demux_unit - 1 : 0;
+				pip_index = it->second.pip_dev >= 0 ? it->second.pip_dev : 0;
 		}
 	}
 
@@ -402,7 +467,7 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 
 		int live_siblings = 0;
 		uint32_t retained_live_id = 0;
-		int retained_live_demux = 0;
+		int retained_live_capmt_demux = 0;
 		bool retained_live_present = false;
 		for (auto &pair : sessions) {
 			if (pair.first == session_id || pair.second.channel_id != channel_id)
@@ -410,7 +475,7 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 			if (pair.second.type == SOFTCSA_SESSION_LIVE && pair.second.session == NULL) {
 				retained_live_present = true;
 				retained_live_id = pair.first;
-				retained_live_demux = pair.second.demux_unit;
+				retained_live_capmt_demux = pair.second.capmt_demux;
 			} else {
 				live_siblings++;
 			}
@@ -422,20 +487,26 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 		} else {
 			SoftCSAStopNotify notify;
 			notify.session_id = session_id;
-			notify.demux_unit = sess_it->second.demux_unit;
+			notify.capmt_demux = sess_it->second.capmt_demux;
 			result.dvbapi_stops.push_back(notify);
 
+			int fe_num = sess_it->second.frontend_num;
 			sessions.erase(sess_it);
 			channel_to_session.erase(ch_it);
+			releaseDemux(fe_num);
 
 			if (type != SOFTCSA_SESSION_LIVE && live_siblings == 0 && retained_live_present) {
 				SoftCSAStopNotify live_notify;
 				live_notify.session_id = retained_live_id;
-				live_notify.demux_unit = retained_live_demux;
+				live_notify.capmt_demux = retained_live_capmt_demux;
 				result.dvbapi_stops.push_back(live_notify);
 
+				auto retained_it = sessions.find(retained_live_id);
+				int retained_fe = (retained_it != sessions.end()) ? retained_it->second.frontend_num : -1;
 				sessions.erase(retained_live_id);
 				channel_to_session.erase(std::make_pair(channel_id, SOFTCSA_SESSION_LIVE));
+				if (retained_fe >= 0)
+					releaseDemux(retained_fe);
 			}
 		}
 	}
@@ -464,6 +535,7 @@ void CSoftCSAManager::stopAll()
 		}
 		sessions.clear();
 		channel_to_session.clear();
+		demux_allocs.clear();
 	}
 
 	for (auto *s : sessions_to_stop) {
@@ -485,6 +557,7 @@ void CSoftCSAManager::stopSessions()
 			}
 			pair.second.csa_alt_active = false;
 		}
+		demux_allocs.clear();
 	}
 
 	for (auto *s : sessions_to_stop) {
@@ -502,7 +575,7 @@ std::vector<CSoftCSAManager::ResubscribeInfo> CSoftCSAManager::getResubscribeInf
 		info.channel_id = pair.second.channel_id;
 		info.session_id = pair.first;
 		info.type = pair.second.type;
-		info.demux_unit = pair.second.demux_unit;
+		info.capmt_demux = pair.second.capmt_demux;
 		info.frontend_num = pair.second.frontend_num;
 		result.push_back(info);
 	}
@@ -684,8 +757,7 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 	return started;
 }
 
-bool CSoftCSAManager::startPipFromLive(t_channel_id channel_id,
-                                       int pip_vfd, int pip_afd)
+bool CSoftCSAManager::startPipFromLive(t_channel_id channel_id, int pip_vfd)
 {
 	std::lock_guard<std::mutex> lock(mtx);
 
@@ -739,8 +811,10 @@ bool CSoftCSAManager::startPipFromLive(t_channel_id channel_id,
 	printf("[softcsa] startPipFromLive: start failed\n");
 	delete pip_ds.session;
 	pip_ds.session = NULL;
+	int fe = pip_ds.frontend_num;
 	sessions.erase(sess_it);
 	channel_to_session.erase(ch_it);
+	releaseDemux(fe);
 	return false;
 }
 
