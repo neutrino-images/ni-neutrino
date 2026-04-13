@@ -65,7 +65,7 @@ class CCam : public CBasicClient
 		CCam();
 		virtual ~CCam();
 		bool sendMessage(const char * const data, const size_t length, bool update = false);
-		bool makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list = CAPMT_ONLY, const CaIdVector &caids = CaIdVector());
+		bool makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list = CAPMT_ONLY, const CaIdVector &caids = CaIdVector(), uint8_t cmd_id = 0x01);
 		bool setCaPmt(bool update = false);
 #if ! HAVE_CST_HARDWARE
 		bool sendCaPmt(uint64_t tpid, uint8_t *rawpmt, int rawlen, uint8_t type, unsigned char scrambled = 0, casys_map_t camap = std::set<int>(), int mode = 0 , bool enable = false);
@@ -121,4 +121,9 @@ class CCamManager
 		void enableMoviePlayer(bool enable) { mp = enable; };
 
 };
+
+#ifdef HAVE_SOFTCSA
+void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int demux_unit);
+#endif
+
 #endif /* __capmt_h__ */

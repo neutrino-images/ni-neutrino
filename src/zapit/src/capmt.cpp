@@ -98,7 +98,7 @@ bool CCam::sendMessage(const char * const data, const size_t length, bool update
 	return send_data(data, length);
 }
 
-bool CCam::makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list, const CaIdVector &caids)
+bool CCam::makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list, const CaIdVector &caids, uint8_t cmd_id)
 {
         int len;
         unsigned char * buffer = channel->getRawPmt(len);
@@ -109,7 +109,7 @@ bool CCam::makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list, co
 		return false;
 
 	ProgramMapSection pmt(buffer);
-	CaProgramMapSection capmt(&pmt, list, 0x01, caids);
+	CaProgramMapSection capmt(&pmt, list, cmd_id, caids);
 
 	if (add_private) {
 		uint8_t tmp[10];
@@ -386,16 +386,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		cam->setSource(source);
 		if(newmask != 0 && (!filter_channels || !channel->bUseCI)) {
 			INFO("\033[33m socket only\033[0m");
-#ifdef HAVE_SOFTCSA
-			/* CAPMT_ONLY makes OSCam stop every other demuxer on the
-			 * same connection — always use CAPMT_ADD when SoftCSA is
-			 * active so a concurrent RECORD/STREAM/PIP stays alive. */
-			uint8_t softcsa_list = (dvbapi_client && dvbapi_client->ensureConnected())
-				? CCam::CAPMT_ADD
-				: ((channel_map.size() > 1) ? CCam::CAPMT_ADD : CCam::CAPMT_ONLY);
-#else
 			uint8_t softcsa_list = (channel_map.size() > 1) ? CCam::CAPMT_ADD : CCam::CAPMT_ONLY;
-#endif
 			cam->makeCaPmt(channel, true, softcsa_list);
 #ifdef HAVE_SOFTCSA
 			if (start && (mode == PLAY || mode == RECORD || mode == PIP || mode == STREAM) && dvbapi_client && dvbapi_client->ensureConnected()) {
@@ -523,7 +514,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 					                                    : "stream";
 					printf("[softcsa] sendCaPmt (%s-only) failed for channel %llx\n",
 					       kind, (unsigned long long)channel->getChannelID());
-					/* roll back so the caller sees a clean slate */
+					/* roll back — CAPMT never reached OSCam, no NOT_SELECTED needed */
 					CSoftCSAManager::getInstance()->stopSession(
 						channel->getChannelID(), stype);
 				}
@@ -670,6 +661,28 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 	return true;
 }
+
+#ifdef HAVE_SOFTCSA
+void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int demux_unit)
+{
+	if (!dvbapi_client || !dvbapi_client->isConnected() || !channel)
+		return;
+
+	CCam tmp;
+	tmp.setCaMask(1 << demux_unit);
+	tmp.setSource(demux_unit);
+	if (!tmp.makeCaPmt(channel, true, CCam::CAPMT_ADD, CaIdVector(), 0x04)) {
+		printf("[softcsa] sendDvbapiSessionStop: makeCaPmt failed for session %u (no raw PMT?)\n", session_id);
+		return;
+	}
+
+	if (!dvbapi_client->sendCaPmt(tmp.getBuffer(), tmp.getLength(), session_id))
+		printf("[softcsa] sendDvbapiSessionStop: failed for session %u\n", session_id);
+	else
+		printf("[softcsa] sendDvbapiSessionStop: NOT_SELECTED sent for session %u (dmx %d)\n",
+		       session_id, demux_unit);
+}
+#endif
 
 void CCamManager::SetCITuner(int tuner)
 {

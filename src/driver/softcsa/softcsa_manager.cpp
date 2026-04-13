@@ -53,17 +53,7 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 				sess_it->second.session = NULL;
 			}
 		} else {
-			/* Reuse the id from a recently stopped session for the
-			 * same (channel_id, type).  OSCam's is_update path
-			 * keeps the old msgid on its demux slot — reusing the
-			 * same id here keeps client and server in sync. */
-			auto recent_it = recently_stopped.find(existing_key);
-			if (recent_it != recently_stopped.end()) {
-				session_id = recent_it->second;
-				recently_stopped.erase(recent_it);
-			} else {
-				session_id = next_session_id++;
-			}
+			session_id = next_session_id++;
 		}
 
 		SessionState state;
@@ -228,7 +218,10 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 		for (auto pid : ds.pids)
 			ds.session->addPid(pid);
 
-		ds.session->setDecoderPids(ds.video_pid, ds.audio_pid, ds.pcr_pid);
+		/* PiP has no audio output — set apid=0 so the reader skips
+		 * audio PES extraction (avoids ringbuffer stall). */
+		ds.session->setDecoderPids(ds.video_pid,
+			is_pip ? 0 : ds.audio_pid, ds.pcr_pid);
 
 		if (!is_live && !is_pip) {
 			if (ds.type == SOFTCSA_SESSION_RECORD && ds.record_fd >= 0) {
@@ -318,7 +311,7 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 			std::lock_guard<std::mutex> lock(mtx);
 			auto it = sessions.find(session_id);
 			if (it != sessions.end() && it->second.session) {
-				if (it->second.session->start(vfd, afd)) {
+				if (it->second.session->start(vfd, is_pip ? -1 : afd)) {
 					started = true;
 				} else {
 					printf("[softcsa] createSession: start() failed\n");
@@ -380,9 +373,11 @@ void CSoftCSAManager::onCW(uint32_t session_id, uint32_t parity, const uint8_t *
 	}
 }
 
-bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType type)
+SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType type)
 {
-	/* session->stop() joins workers — must run outside mtx or onCW deadlocks */
+	SoftCSAStopResult result;
+	result.had_running_session = false;
+
 	CSoftCSASession *session_to_stop = NULL;
 
 	{
@@ -391,12 +386,12 @@ bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType ty
 		auto key = std::make_pair(channel_id, type);
 		auto ch_it = channel_to_session.find(key);
 		if (ch_it == channel_to_session.end())
-			return false;
+			return result;
 
 		uint32_t session_id = ch_it->second;
 		auto sess_it = sessions.find(session_id);
 		if (sess_it == sessions.end())
-			return false;
+			return result;
 
 		sess_it->second.record_fd = -1;
 		sess_it->second.stream_callback = nullptr;
@@ -405,12 +400,9 @@ bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType ty
 			sess_it->second.session = NULL;
 		}
 
-		/* Count non-retained siblings on the same channel. A retained LIVE
-		 * (session == NULL) does NOT count — if it's the only thing left
-		 * we still drop it below, along with the OSCam msgid entry it was
-		 * keeping alive for. */
 		int live_siblings = 0;
 		uint32_t retained_live_id = 0;
+		int retained_live_demux = 0;
 		bool retained_live_present = false;
 		for (auto &pair : sessions) {
 			if (pair.first == session_id || pair.second.channel_id != channel_id)
@@ -418,21 +410,30 @@ bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType ty
 			if (pair.second.type == SOFTCSA_SESSION_LIVE && pair.second.session == NULL) {
 				retained_live_present = true;
 				retained_live_id = pair.first;
+				retained_live_demux = pair.second.demux_unit;
 			} else {
 				live_siblings++;
 			}
 		}
 
 		if (type == SOFTCSA_SESSION_LIVE && live_siblings > 0) {
-			/* Retain entry: OSCam still has the channel's demux slot bound
-			 * to this msgid; onCW routes CWs to siblings via sharing loop. */
+			/* Retain: OSCam subscription must persist for sibling CW routing.
+			 * Do NOT add to dvbapi_stops — no NOT_SELECTED for this session. */
 		} else {
-			recently_stopped[key] = session_id;
+			SoftCSAStopNotify notify;
+			notify.session_id = session_id;
+			notify.demux_unit = sess_it->second.demux_unit;
+			result.dvbapi_stops.push_back(notify);
+
 			sessions.erase(sess_it);
 			channel_to_session.erase(ch_it);
 
 			if (type != SOFTCSA_SESSION_LIVE && live_siblings == 0 && retained_live_present) {
-				recently_stopped[std::make_pair(channel_id, SOFTCSA_SESSION_LIVE)] = retained_live_id;
+				SoftCSAStopNotify live_notify;
+				live_notify.session_id = retained_live_id;
+				live_notify.demux_unit = retained_live_demux;
+				result.dvbapi_stops.push_back(live_notify);
+
 				sessions.erase(retained_live_id);
 				channel_to_session.erase(std::make_pair(channel_id, SOFTCSA_SESSION_LIVE));
 			}
@@ -442,11 +443,9 @@ bool CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType ty
 	if (session_to_stop) {
 		session_to_stop->stop();
 		delete session_to_stop;
-		/* decoder restore is caller's job — we run on the zapit server
-		 * thread and CZapitClient IPC would self-deadlock */
-		return true;
+		result.had_running_session = true;
 	}
-	return false;
+	return result;
 }
 
 void CSoftCSAManager::stopAll()
@@ -465,7 +464,6 @@ void CSoftCSAManager::stopAll()
 		}
 		sessions.clear();
 		channel_to_session.clear();
-		recently_stopped.clear();
 	}
 
 	for (auto *s : sessions_to_stop) {
@@ -487,9 +485,6 @@ void CSoftCSAManager::stopSessions()
 			}
 			pair.second.csa_alt_active = false;
 		}
-		/* After reconnect OSCam allocates fresh demux slots, so old
-		 * session_ids are meaningless — don't carry them over. */
-		recently_stopped.clear();
 	}
 
 	for (auto *s : sessions_to_stop) {
@@ -730,10 +725,13 @@ bool CSoftCSAManager::startPipFromLive(t_channel_id channel_id,
 	for (auto pid : pip_ds.pids)
 		pip_ds.session->addPid(pid);
 
-	pip_ds.session->setDecoderPids(pip_ds.video_pid, pip_ds.audio_pid, pip_ds.pcr_pid);
+	/* PiP has no audio output — skip audio to avoid the audio ringbuffer
+	 * filling up (PiP audio decoder never consumes) which would stall
+	 * the reader thread on blocked rb->write() calls. */
+	pip_ds.session->setDecoderPids(pip_ds.video_pid, 0, pip_ds.pcr_pid);
 	live_sess->second.session->getEngine()->copyKeysTo(pip_ds.session->getEngine());
 
-	if (pip_ds.session->start(pip_vfd, pip_afd)) {
+	if (pip_ds.session->start(pip_vfd, -1)) {
 		printf("[softcsa] startPipFromLive: pip started\n");
 		return true;
 	}

@@ -774,7 +774,10 @@ bool CZapit::StopPip(int pip)
 	if (pip_channel_id[pip]) {
 		INFO("[pip %d] stop %llx", pip, pip_channel_id[pip]);
 #ifdef HAVE_SOFTCSA
-		CSoftCSAManager::getInstance()->stopSession(pip_channel_id[pip], SOFTCSA_SESSION_PIP);
+		CZapitChannel *pip_ch = CServiceManager::getInstance()->FindChannel(pip_channel_id[pip]);
+		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(pip_channel_id[pip], SOFTCSA_SESSION_PIP);
+		for (auto &sn : sr.dvbapi_stops)
+			sendDvbapiSessionStop(pip_ch, sn.session_id, sn.demux_unit);
 #endif
 		CCamManager::getInstance()->Stop(pip_channel_id[pip], CCamManager::PIP);
 		pip_fe[pip] = NULL;
@@ -2851,10 +2854,14 @@ bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 #ifdef HAVE_SOFTCSA
 	/* paired with CCamManager::Stop below: tearing LIVE down without the
 	 * CAM stop strands a same-channel RECORD that would key-copy from it */
-	if (send_pmt && current_channel &&
-	    CSoftCSAManager::getInstance()->stopSession(
-	        current_channel->getChannelID(), SOFTCSA_SESSION_LIVE))
-		restoreSoftCSADecoder();
+	if (send_pmt && current_channel) {
+		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
+			current_channel->getChannelID(), SOFTCSA_SESSION_LIVE);
+		if (sr.had_running_session)
+			restoreSoftCSADecoder();
+		for (auto &sn : sr.dvbapi_stops)
+			sendDvbapiSessionStop(current_channel, sn.session_id, sn.demux_unit);
+	}
 #endif
 	if(send_pmt)
 		CCamManager::getInstance()->Stop(live_channel_id, CCamManager::PLAY);

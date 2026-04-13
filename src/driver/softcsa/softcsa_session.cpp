@@ -204,14 +204,19 @@ void CSoftCSASession::stop()
 		audio_rb->cancel();
 
 	/* Close decoder fds to unblock writer threads that may be stuck
-	 * in a blocking write() on the video/audio device.  Swap to -1
-	 * atomically so the writer's next read sees -1 and won't pass
-	 * a stale fd to write().  The in-flight write() on the old fd
-	 * returns EBADF after close(). */
+	 * in a blocking write() on the video/audio device. */
 	int vfd_tmp = video_fd.exchange(-1);
 	int afd_tmp = audio_fd.exchange(-1);
 	if (vfd_tmp >= 0) close(vfd_tmp);
 	if (afd_tmp >= 0) close(afd_tmp);
+
+	/* Stop demux BEFORE joining the reader — if the demux source
+	 * delivers no data (transponder changed), Read() blocks in
+	 * kernel poll() indefinitely. DMX_STOP closes the filter and
+	 * unblocks the poll, so the reader sees the error + running==false
+	 * and exits. */
+	if (demux)
+		demux->Stop();
 
 	if (reader_worker.joinable())
 		reader_worker.join();
@@ -220,12 +225,7 @@ void CSoftCSASession::stop()
 	if (audio_worker.joinable())
 		audio_worker.join();
 
-	/* Release the callback's captured state (e.g. a CStreamInstance*)
-	 * once the reader thread has definitely stopped calling it. */
 	stream_callback = nullptr;
-
-	if (demux)
-		demux->Stop();
 }
 
 void CSoftCSASession::readerThread()

@@ -51,6 +51,7 @@
 
 #include <hardware/dmx.h>
 #include <zapit/capmt.h>
+#include <zapit/getservices.h>
 #include <zapit/zapit.h>
 #include <zapit/pat.h>
 #include <driver/streamts.h>
@@ -302,8 +303,12 @@ void CStreamInstance::run()
 #ifdef HAVE_SOFTCSA
 	/* Join the SoftCSA reader thread before this instance is freed — the
 	 * lambda captured `this`, so an in-flight callback would be a UAF. */
-	if (use_softcsa)
-		CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_STREAM);
+	if (use_softcsa) {
+		CZapitChannel *str_ch = CServiceManager::getInstance()->FindChannel(channel_id);
+		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_STREAM);
+		for (auto &sn : sr.dvbapi_stops)
+			sendDvbapiSessionStop(str_ch, sn.session_id, sn.demux_unit);
+	}
 #endif
 
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE

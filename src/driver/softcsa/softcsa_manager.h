@@ -34,6 +34,16 @@
 
 #define CW_ALGO_CSA_ALT 3 // Not in ca_descr_algo enum (0-2); from OSCam globals.h
 
+struct SoftCSAStopNotify {
+	uint32_t session_id;
+	int demux_unit;
+};
+
+struct SoftCSAStopResult {
+	bool had_running_session;
+	std::vector<SoftCSAStopNotify> dvbapi_stops;
+};
+
 class CSoftCSAManager
 {
 public:
@@ -48,7 +58,7 @@ public:
 	void addPidByChannel(t_channel_id channel_id, SoftCSASessionType type, unsigned short pid);
 	void setDecoderPids(uint32_t session_id, unsigned short vpid, unsigned short apid, unsigned short pcrpid);
 	void setDecoderTypes(uint32_t session_id, int video_type, int audio_type);
-	bool stopSession(t_channel_id channel_id, SoftCSASessionType type);
+	SoftCSAStopResult stopSession(t_channel_id channel_id, SoftCSASessionType type);
 	void stopAll();
 
 	struct ResubscribeInfo {
@@ -109,10 +119,6 @@ private:
 
 	std::map<uint32_t, SessionState> sessions;
 	std::map<std::pair<t_channel_id, SoftCSASessionType>, uint32_t> channel_to_session;
-	/* Preserve session_id across stop → re-register for the same
-	 * (channel_id, type).  OSCam's is_update path does not store a
-	 * new msgid — reusing the old id keeps routing consistent. */
-	std::map<std::pair<t_channel_id, SoftCSASessionType>, uint32_t> recently_stopped;
 	uint32_t next_session_id;
 
 	std::mutex mtx;

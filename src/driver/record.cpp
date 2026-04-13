@@ -335,8 +335,12 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 		 * Undo all SoftCSA-path side effects before falling through
 		 * to cRecord which re-does lockFrontend + CCamManager::Start. */
 		printf("CRecordInstance::Start: SoftCSA timeout, falling back to cRecord\n");
-		CSoftCSAManager::getInstance()->stopSession(
-			channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+		{
+			SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
+				channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+			for (auto &sn : sr.dvbapi_stops)
+				sendDvbapiSessionStop(channel, sn.session_id, sn.demux_unit);
+		}
 		CCamManager::getInstance()->Stop(channel->getChannelID(), CCamManager::RECORD);
 		if (!autoshift)
 			CFEManager::getInstance()->unlockFrontend(frontend);
@@ -421,7 +425,12 @@ bool CRecordInstance::Stop(bool remove_event)
 	}
 
 #ifdef HAVE_SOFTCSA
-	CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
+	{
+		CZapitChannel *rec_ch = CServiceManager::getInstance()->FindChannel(channel_id);
+		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
+		for (auto &sn : sr.dvbapi_stops)
+			sendDvbapiSessionStop(rec_ch, sn.session_id, sn.demux_unit);
+	}
 #endif
 	CCamManager::getInstance()->Stop(channel_id, CCamManager::RECORD);
 
