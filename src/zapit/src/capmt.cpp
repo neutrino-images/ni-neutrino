@@ -151,10 +151,12 @@ bool CCam::makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list, co
 		tmp[2] = (source_demux >= 0) ? (uint8_t)source_demux : 0x00;
 		capmt.injectDescriptor(tmp, false);
 
-		tmp[0] = 0x87; /* CA device */
-		tmp[1] = 0x01;
-		tmp[2] = 0x00; /* ca_device_index */
-		capmt.injectDescriptor(tmp, false);
+		/* No 0x87 (CA device) descriptor — let OSCam derive
+		 * ca_mask from 0x86 alone (ca_mask = 1 << demux_index).
+		 * Hardcoding 0x87=0 forced all sessions onto ca_mask=1
+		 * which polluted ll_activestreampids and phantom-consumed
+		 * descrambler slots for CSA-ALT, starving non-CSA-ALT
+		 * channels on other tuners.  Matches Enigma2 behavior. */
 #endif
 	}
 
