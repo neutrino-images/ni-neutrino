@@ -88,6 +88,7 @@ public:
 	// Streaming: register callback and wait for OSCam to confirm CSA-ALT.
 	// Returns true if streamThread started, false on timeout.
 	bool waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
+	bool hasRegisteredSession(t_channel_id channel_id, SoftCSASessionType type);
 
 	// PiP: clone LIVE session keys into a PIP session and start it.
 	// Caller (StartPip) must have put the pip video decoder into

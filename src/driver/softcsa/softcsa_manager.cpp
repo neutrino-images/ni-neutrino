@@ -757,6 +757,12 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 	return started;
 }
 
+bool CSoftCSAManager::hasRegisteredSession(t_channel_id channel_id, SoftCSASessionType type)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	return channel_to_session.find(std::make_pair(channel_id, type)) != channel_to_session.end();
+}
+
 bool CSoftCSAManager::startPipFromLive(t_channel_id channel_id, int pip_vfd)
 {
 	std::lock_guard<std::mutex> lock(mtx);

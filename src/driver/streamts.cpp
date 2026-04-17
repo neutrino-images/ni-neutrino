@@ -225,30 +225,6 @@ void CStreamInstance::run()
 	printf("CStreamInstance::run: %" PRIx64 "\n", channel_id);
 	set_threadname("n:streaminstance");
 
-#ifdef HAVE_SOFTCSA
-	/* SoftCSA drives the data flow for scrambled channels: its own cDemux
-	 * reads encrypted TS, libdvbcsa descrambles, and a callback pushes the
-	 * descrambled buffer into Send(). Our local dmx stays unused in that
-	 * case so we don't tap the hardware demux twice. */
-	CZapitChannel *ch = CServiceManager::getInstance()->FindChannel(channel_id);
-	bool use_softcsa = ch && ch->scrambled && !ch->bUseCI && !is_e2_stream;
-#else
-	bool use_softcsa = false;
-#endif
-
-	if (!use_softcsa) {
-		/* pids here cannot be empty */
-		stream_pids_t::iterator it = pids.begin();
-		printf("CStreamInstance::run: add pid 0x%04x\n", *it);
-		dmx->pesFilter(*it);
-		++it;
-		for (; it != pids.end(); ++it) {
-			printf("CStreamInstance::run: add pid 0x%04x\n", *it);
-			dmx->addPid(*it);
-		}
-		dmx->Start(true);
-	}
-
 	if (is_e2_stream)
 	{
 		if (g_settings.streaming_decryptmode)
@@ -266,25 +242,37 @@ void CStreamInstance::run()
 	//CZapit::getInstance()->SetRecordMode(true);
 #endif
 
+	bool use_softcsa_path = false;
 #ifdef HAVE_SOFTCSA
-	if (use_softcsa) {
+	if (!is_e2_stream &&
+	    CSoftCSAManager::getInstance()->hasRegisteredSession(
+	        channel_id, SOFTCSA_SESSION_STREAM)) {
 		auto on_data = [this](const uint8_t *data, int len) {
 			this->Send((ssize_t)len, (unsigned char *)data);
 		};
-		bool started = CSoftCSAManager::getInstance()->waitForStreamStart(
+		/* 3 s: conservative window for OSCam's DESCR_MODE (algo=3). No
+		 * message within the timeout means HW descrambling, in which case
+		 * dmx->Read below returns descrambled TS. The trade-off is ~3 s
+		 * startup latency on HW channels; a shorter timeout risks
+		 * bypassing a slow CSA-ALT reply and producing scrambled TS. */
+		use_softcsa_path = CSoftCSAManager::getInstance()->waitForStreamStart(
 			channel_id, on_data, 3000);
-		if (started) {
-			/* Data flows from the SoftCSA reader thread via on_data.
-			 * Just keep the instance alive until the last client leaves. */
-			while (running)
-				usleep(100000);
-		} else {
-			printf("CStreamInstance::run: SoftCSA stream timeout — "
-			       "closing connection so VLC sees an error instead of a stall\n");
-		}
-	} else
+	}
 #endif
-	{
+
+	if (use_softcsa_path) {
+		while (running)
+			usleep(100000);
+	} else {
+		stream_pids_t::iterator it = pids.begin();
+		printf("CStreamInstance::run: add pid 0x%04x\n", *it);
+		dmx->pesFilter(*it);
+		++it;
+		for (; it != pids.end(); ++it) {
+			printf("CStreamInstance::run: add pid 0x%04x\n", *it);
+			dmx->addPid(*it);
+		}
+		dmx->Start(true);
 		while (running) {
 			ssize_t r = dmx->Read(buf, IN_SIZE, 100);
 			if (r > 0)
@@ -301,11 +289,14 @@ void CStreamInstance::run()
 		CCamManager::getInstance()->Stop(channel_id, CCamManager::STREAM);
 
 #ifdef HAVE_SOFTCSA
-	/* Join the SoftCSA reader thread before this instance is freed — the
-	 * lambda captured `this`, so an in-flight callback would be a UAF. */
-	if (use_softcsa) {
+	/* Always stop if a session was registered, even if we never entered
+	 * the SoftCSA path — capmt.cpp registered it unconditionally for
+	 * scrambled non-CI channels, and OSCam's demux slot must be released. */
+	if (CSoftCSAManager::getInstance()->hasRegisteredSession(
+	        channel_id, SOFTCSA_SESSION_STREAM)) {
 		CZapitChannel *str_ch = CServiceManager::getInstance()->FindChannel(channel_id);
-		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_STREAM);
+		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
+			channel_id, SOFTCSA_SESSION_STREAM);
 		for (auto &sn : sr.dvbapi_stops)
 			sendDvbapiSessionStop(str_ch, sn.session_id, sn.capmt_demux);
 	}
