@@ -198,6 +198,9 @@ class CZapit : public OpenThreads::Thread
 		bool StartPlayBack(CZapitChannel *thisChannel);
 		//bool StopPlayBack(bool send_pmt);
 #ifdef HAVE_SOFTCSA
+		/* Switches the main decoder to MEMORY source for SoftCSA writer
+		 * consumption. Safe to call on the zapit thread. */
+		void applySoftCSAMemorySource(int video_type, int audio_type, int *vfd_out, int *afd_out);
 		void restoreSoftCSADecoder();
 #if ENABLE_PIP
 		bool switchPipToMemory(int pip, int video_type, int audio_type, int *out_vfd, int *out_afd);

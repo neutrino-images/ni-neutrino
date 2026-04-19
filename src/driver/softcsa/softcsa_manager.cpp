@@ -24,6 +24,7 @@
 #include <chrono>
 #include <cstdio>
 #include <dmx_hal.h>
+#include <neutrino.h>
 
 CSoftCSAManager *CSoftCSAManager::getInstance()
 {
@@ -87,7 +88,8 @@ void CSoftCSAManager::releaseDemux(int frontend_num)
 }
 
 uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessionType type,
-                                           int adapter, int capmt_demux, int frontend_num)
+                                           int adapter, int capmt_demux, int frontend_num,
+                                           uint8_t capmt_ca_mask)
 {
 	CSoftCSASession *old_session = NULL;
 	uint32_t session_id;
@@ -116,8 +118,10 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		state.adapter = adapter;
 		state.demux_unit = allocateDemux(frontend_num);
 		state.capmt_demux = capmt_demux;
+		state.capmt_ca_mask = capmt_ca_mask;
 		state.frontend_num = frontend_num;
 		state.csa_alt_active = false;
+		state.retained = false;
 		state.ecm_mode = 0;
 		state.session = NULL;
 		state.video_pid = 0;
@@ -225,13 +229,14 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 		auto it = sessions.find(session_id);
-		/* A retained LIVE entry (session stopped but kept for CW routing
-		 * to siblings) has session==NULL AND csa_alt_active==true.  We
-		 * must NOT create a new session for it — that would switch the
-		 * main decoder to MEMORY and start feeding stale data.  The
-		 * !needs_session path below just updates ecm_mode so onCW can
-		 * keep routing CWs to RECORD/PIP/STREAM siblings. */
-		if (it != sessions.end() && algo == CW_ALGO_CSA_ALT && !it->second.session && !it->second.csa_alt_active) {
+		/* A retained LIVE entry — either the csa-alt cw-routing shape
+		 * (session==NULL && csa_alt_active==true) or the hw subscription-
+		 * holder shape (session==NULL && retained==true) — must not
+		 * create a new session. For csa-alt the fall-through updates
+		 * ecm_mode so onCW keeps routing; for hw there is no cw routing
+		 * and the retained entry is purely an oscam bookkeeping anchor. */
+		if (it != sessions.end() && algo == CW_ALGO_CSA_ALT && !it->second.session
+		    && !it->second.csa_alt_active && !it->second.retained) {
 			needs_session = true;
 			is_live = (it->second.type == SOFTCSA_SESSION_LIVE);
 			is_pip = (it->second.type == SOFTCSA_SESSION_PIP);
@@ -333,8 +338,13 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 		}
 	}
 
+	/* In standby the main decoder does not consume from memory —
+	 * attaching would saturate the reader ring and starve siblings. */
+	bool live_standby = is_live
+	    && CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_standby;
+
 	int vfd = -1, afd = -1;
-	if (is_live) {
+	if (is_live && !live_standby) {
 		CZapitClient zapit;
 		zapit.switchSoftCSASource(true, video_type, audio_type, &vfd, &afd);
 		printf("[softcsa] switchSoftCSASource returned video_fd=%d audio_fd=%d\n", vfd, afd);
@@ -342,6 +352,24 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 		CZapitClient zapit;
 		zapit.switchSoftCSAPipSource(pip_index, video_type, audio_type, &vfd, &afd);
 		printf("[softcsa] switchSoftCSAPipSource returned video_fd=%d audio_fd=%d\n", vfd, afd);
+	}
+
+	if (live_standby) {
+		/* Hold the session without starting any thread: oscam emits one
+		 * filter per sid so stream/record siblings rely on this entry
+		 * for key clone and onCW fan-out. */
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			auto it = sessions.find(session_id);
+			if (it == sessions.end() || it->second.channel_id != expected_channel) {
+				return;
+			}
+		}
+		printf("[softcsa] onDescrMode: LIVE in standby, holding session for id %u\n", session_id);
+		int n = tryCloneSiblingsFromLive(session_id);
+		if (n > 0)
+			printf("[softcsa] onDescrMode: cloned %d sibling(s) from held LIVE\n", n);
+		return;
 	}
 
 	/* Phase 4: Start session with decoder fds */
@@ -382,6 +410,15 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 					printf("[softcsa] createSession: start() failed\n");
 				}
 			}
+		}
+
+		if (started && is_live) {
+			/* A sibling stream/record may already be parked on the CV
+			 * because OSCam does not emit a duplicate filter for the
+			 * same SID — clone keys now so they don't time out. */
+			int n = tryCloneSiblingsFromLive(session_id);
+			if (n > 0)
+				printf("[softcsa] onDescrMode: cloned %d sibling(s) from LIVE\n", n);
 		}
 
 		if (!started) {
@@ -444,6 +481,7 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 	result.had_running_session = false;
 
 	CSoftCSASession *session_to_stop = NULL;
+	std::vector<CSoftCSASession *> retained_sessions_to_stop;
 
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -466,28 +504,34 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 		}
 
 		int live_siblings = 0;
-		uint32_t retained_live_id = 0;
-		int retained_live_capmt_demux = 0;
-		bool retained_live_present = false;
+		std::vector<uint32_t> retained_ids;
 		for (auto &pair : sessions) {
 			if (pair.first == session_id || pair.second.channel_id != channel_id)
 				continue;
-			if (pair.second.type == SOFTCSA_SESSION_LIVE && pair.second.session == NULL) {
-				retained_live_present = true;
-				retained_live_id = pair.first;
-				retained_live_capmt_demux = pair.second.capmt_demux;
-			} else {
+
+			/* Retained-shape: not driving a writer and carrying cw keys
+			 * or flagged retained. Actively-decoding hw sessions have
+			 * session==NULL with both flags false and count as siblings. */
+			bool not_running = (pair.second.session == NULL
+			                    || !pair.second.session->isRunning());
+			bool retained_shape = not_running
+			                      && (pair.second.csa_alt_active || pair.second.retained);
+
+			if (retained_shape)
+				retained_ids.push_back(pair.first);
+			else
 				live_siblings++;
-			}
 		}
 
-		if (type == SOFTCSA_SESSION_LIVE && live_siblings > 0) {
-			/* Retain: OSCam subscription must persist for sibling CW routing.
-			 * Do NOT add to dvbapi_stops — no NOT_SELECTED for this session. */
+		if (live_siblings > 0) {
+			/* Keep the entry so siblings still have a subscription
+			 * anchor; sibling teardown will clear it later. */
+			sess_it->second.retained = true;
 		} else {
 			SoftCSAStopNotify notify;
 			notify.session_id = session_id;
 			notify.capmt_demux = sess_it->second.capmt_demux;
+			notify.capmt_ca_mask = sess_it->second.capmt_ca_mask;
 			result.dvbapi_stops.push_back(notify);
 
 			int fe_num = sess_it->second.frontend_num;
@@ -495,18 +539,29 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 			channel_to_session.erase(ch_it);
 			releaseDemux(fe_num);
 
-			if (type != SOFTCSA_SESSION_LIVE && live_siblings == 0 && retained_live_present) {
-				SoftCSAStopNotify live_notify;
-				live_notify.session_id = retained_live_id;
-				live_notify.capmt_demux = retained_live_capmt_demux;
-				result.dvbapi_stops.push_back(live_notify);
+			if (!retained_ids.empty()) {
+				/* Last active session stopped: tear down orphaned retained siblings. */
+				for (uint32_t rid : retained_ids) {
+					auto rit = sessions.find(rid);
+					if (rit == sessions.end())
+						continue;
 
-				auto retained_it = sessions.find(retained_live_id);
-				int retained_fe = (retained_it != sessions.end()) ? retained_it->second.frontend_num : -1;
-				sessions.erase(retained_live_id);
-				channel_to_session.erase(std::make_pair(channel_id, SOFTCSA_SESSION_LIVE));
-				if (retained_fe >= 0)
-					releaseDemux(retained_fe);
+					SoftCSAStopNotify rnotify;
+					rnotify.session_id = rid;
+					rnotify.capmt_demux = rit->second.capmt_demux;
+					rnotify.capmt_ca_mask = rit->second.capmt_ca_mask;
+					result.dvbapi_stops.push_back(rnotify);
+
+					int rfe = rit->second.frontend_num;
+					SoftCSASessionType rtype = rit->second.type;
+					if (rit->second.session) {
+						retained_sessions_to_stop.push_back(rit->second.session);
+						rit->second.session = NULL;
+					}
+					sessions.erase(rit);
+					channel_to_session.erase(std::make_pair(channel_id, rtype));
+					releaseDemux(rfe);
+				}
 			}
 		}
 	}
@@ -515,6 +570,11 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 		session_to_stop->stop();
 		delete session_to_stop;
 		result.had_running_session = true;
+	}
+	for (auto *s : retained_sessions_to_stop) {
+		/* Idempotent for the held shape: no workers to join, fds are -1. */
+		s->stop();
+		delete s;
 	}
 	return result;
 }
@@ -556,6 +616,7 @@ void CSoftCSAManager::stopSessions()
 				pair.second.session = NULL;
 			}
 			pair.second.csa_alt_active = false;
+			pair.second.retained = false;
 		}
 		demux_allocs.clear();
 	}
@@ -577,6 +638,7 @@ std::vector<CSoftCSAManager::ResubscribeInfo> CSoftCSAManager::getResubscribeInf
 		info.type = pair.second.type;
 		info.capmt_demux = pair.second.capmt_demux;
 		info.frontend_num = pair.second.frontend_num;
+		info.capmt_ca_mask = pair.second.capmt_ca_mask;
 		result.push_back(info);
 	}
 	return result;
@@ -584,6 +646,7 @@ std::vector<CSoftCSAManager::ResubscribeInfo> CSoftCSAManager::getResubscribeInf
 
 bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int timeout_ms)
 {
+	uint32_t session_id = 0;
 	/* Store fd in RECORD session for deferred start by onDescrMode */
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -600,6 +663,7 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 
 		SessionState &rec_ds = sess_it->second;
 		rec_ds.record_fd = fd;
+		session_id = ch_it->second;
 
 		/* Check if onDescrMode already created the session (fast OSCam response) */
 		if (rec_ds.session && !rec_ds.session->isRunning()) {
@@ -613,44 +677,13 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 			delete rec_ds.session;
 			rec_ds.session = NULL;
 		}
-
-		/* Same-channel: LIVE session already has CW keys.
-		 * OSCam doesn't create a second filter for the same SID,
-		 * so onDescrMode will never fire for the RECORD session.
-		 * Create the RECORD session here and copy keys from LIVE. */
-		auto live_key = std::make_pair(channel_id, SOFTCSA_SESSION_LIVE);
-		auto live_it = channel_to_session.find(live_key);
-		if (live_it != channel_to_session.end()) {
-			auto live_sess = sessions.find(live_it->second);
-			if (live_sess != sessions.end()
-			    && live_sess->second.csa_alt_active
-			    && live_sess->second.session) {
-				printf("[softcsa] waitForRecordStart: same-channel, creating RECORD from LIVE keys\n");
-
-				rec_ds.csa_alt_active = true;
-				rec_ds.ecm_mode = live_sess->second.ecm_mode;
-				rec_ds.session = new CSoftCSASession(
-					rec_ds.type, rec_ds.adapter, rec_ds.demux_unit, rec_ds.frontend_num);
-
-				for (auto pid : rec_ds.pids)
-					rec_ds.session->addPid(pid);
-
-				live_sess->second.session->getEngine()->copyKeysTo(rec_ds.session->getEngine());
-
-				if (rec_ds.session->startRecord(fd)) {
-					rec_ds.record_fd = -1;
-					printf("[softcsa] waitForRecordStart: same-channel recording started\n");
-					return true;
-				}
-
-				printf("[softcsa] waitForRecordStart: startRecord failed\n");
-				delete rec_ds.session;
-				rec_ds.session = NULL;
-			}
-		}
-
-		printf("[softcsa] waitForRecordStart: fd %d stored, waiting %dms\n", fd, timeout_ms);
 	}
+
+	/* Same-channel sibling-attach. Helper takes mtx internally. */
+	if (cloneAndStartRecord(session_id, fd))
+		return true;
+
+	printf("[softcsa] waitForRecordStart: fd %d stored, waiting %dms\n", fd, timeout_ms);
 
 	/* Wait for onDescrMode to create session and start recordThread */
 	std::unique_lock<std::mutex> cv_lock(record_cv_mtx);
@@ -666,12 +699,26 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 		return sess_it->second.session != NULL && sess_it->second.session->isRunning();
 	});
 
+	if (!started) {
+		/* Symmetric with waitForStreamStart: a late onDescrMode would
+		 * otherwise auto-start a second writer on the fd the caller has
+		 * already handed to cRecord — corrupts the output .ts file. */
+		std::lock_guard<std::mutex> lock(mtx);
+		auto ch_it = channel_to_session.find(std::make_pair(channel_id, SOFTCSA_SESSION_RECORD));
+		if (ch_it != channel_to_session.end()) {
+			auto sess_it = sessions.find(ch_it->second);
+			if (sess_it != sessions.end())
+				sess_it->second.record_fd = -1;
+		}
+	}
+
 	printf("[softcsa] waitForRecordStart: %s\n", started ? "started" : "timeout");
 	return started;
 }
 
 bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms)
 {
+	uint32_t session_id = 0;
 	/* Store callback in STREAM session for deferred start by onDescrMode */
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -688,6 +735,7 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 
 		SessionState &str_ds = sess_it->second;
 		str_ds.stream_callback = cb;
+		session_id = ch_it->second;
 
 		/* Fast path: onDescrMode already created the session */
 		if (str_ds.session && !str_ds.session->isRunning()) {
@@ -701,43 +749,13 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 			delete str_ds.session;
 			str_ds.session = NULL;
 		}
-
-		/* Same-channel: LIVE session has CW keys already — clone and start.
-		 * OSCam won't issue a second DVBAPI filter for the same SID, so
-		 * onDescrMode will never fire for the STREAM session on its own. */
-		auto live_key = std::make_pair(channel_id, SOFTCSA_SESSION_LIVE);
-		auto live_it = channel_to_session.find(live_key);
-		if (live_it != channel_to_session.end()) {
-			auto live_sess = sessions.find(live_it->second);
-			if (live_sess != sessions.end()
-			    && live_sess->second.csa_alt_active
-			    && live_sess->second.session) {
-				printf("[softcsa] waitForStreamStart: same-channel, creating STREAM from LIVE keys\n");
-
-				str_ds.csa_alt_active = true;
-				str_ds.ecm_mode = live_sess->second.ecm_mode;
-				str_ds.session = new CSoftCSASession(
-					str_ds.type, str_ds.adapter, str_ds.demux_unit, str_ds.frontend_num);
-
-				for (auto pid : str_ds.pids)
-					str_ds.session->addPid(pid);
-
-				live_sess->second.session->getEngine()->copyKeysTo(str_ds.session->getEngine());
-
-				if (str_ds.session->startStream(cb)) {
-					str_ds.stream_callback = nullptr;
-					printf("[softcsa] waitForStreamStart: same-channel streaming started\n");
-					return true;
-				}
-
-				printf("[softcsa] waitForStreamStart: startStream failed\n");
-				delete str_ds.session;
-				str_ds.session = NULL;
-			}
-		}
-
-		printf("[softcsa] waitForStreamStart: callback stored, waiting %dms\n", timeout_ms);
 	}
+
+	/* Same-channel sibling-attach. Helper takes mtx internally. */
+	if (cloneAndStartStream(session_id, cb))
+		return true;
+
+	printf("[softcsa] waitForStreamStart: callback stored, waiting %dms\n", timeout_ms);
 
 	/* Wait for onDescrMode to create session and start streamThread */
 	std::unique_lock<std::mutex> cv_lock(record_cv_mtx);
@@ -753,6 +771,19 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 		return sess_it->second.session != NULL && sess_it->second.session->isRunning();
 	});
 
+	if (!started) {
+		/* Late onDescrMode after our 3s deadline would otherwise auto-start
+		 * a second reader on top of the dmx->Read fallback the caller has
+		 * already committed to — two writers on the same HTTP socket. */
+		std::lock_guard<std::mutex> lock(mtx);
+		auto ch_it = channel_to_session.find(std::make_pair(channel_id, SOFTCSA_SESSION_STREAM));
+		if (ch_it != channel_to_session.end()) {
+			auto sess_it = sessions.find(ch_it->second);
+			if (sess_it != sessions.end())
+				sess_it->second.stream_callback = nullptr;
+		}
+	}
+
 	printf("[softcsa] waitForStreamStart: %s\n", started ? "started" : "timeout");
 	return started;
 }
@@ -763,65 +794,313 @@ bool CSoftCSAManager::hasRegisteredSession(t_channel_id channel_id, SoftCSASessi
 	return channel_to_session.find(std::make_pair(channel_id, type)) != channel_to_session.end();
 }
 
-bool CSoftCSAManager::startPipFromLive(t_channel_id channel_id, int pip_vfd)
+int CSoftCSAManager::tryCloneSiblingsFromLive(uint32_t live_session_id)
 {
-	std::lock_guard<std::mutex> lock(mtx);
+	int cloned = 0;
+	{
+		std::lock_guard<std::mutex> lock(mtx);
 
-	auto key = std::make_pair(channel_id, SOFTCSA_SESSION_PIP);
-	auto ch_it = channel_to_session.find(key);
-	if (ch_it == channel_to_session.end()) {
-		printf("[softcsa] startPipFromLive: no PIP session for channel %llx\n",
-		       (unsigned long long)channel_id);
-		return false;
+		auto live_sess = sessions.find(live_session_id);
+		if (live_sess == sessions.end())
+			return 0;
+		if (live_sess->second.type != SOFTCSA_SESSION_LIVE)
+			return 0;
+		if (!live_sess->second.csa_alt_active)
+			return 0;
+		/* Only transient during register; normal live entries, including
+		 * the standby key holder, carry a session and engine to clone from. */
+		if (!live_sess->second.session)
+			return 0;
+
+		t_channel_id channel_id = live_sess->second.channel_id;
+
+		for (auto &kv : sessions) {
+			SessionState &ds = kv.second;
+			if (ds.channel_id != channel_id)
+				continue;
+			if (ds.type != SOFTCSA_SESSION_STREAM && ds.type != SOFTCSA_SESSION_RECORD)
+				continue;
+			if (ds.session && ds.session->isRunning())
+				continue;
+
+			bool has_pending = (ds.type == SOFTCSA_SESSION_STREAM)
+				? (bool)ds.stream_callback
+				: (ds.record_fd >= 0);
+			if (!has_pending)
+				continue;
+
+			/* Drop any half-built orphan so the CV predicate isn't
+			 * tripped by a non-running session pointer. */
+			if (ds.session) {
+				delete ds.session;
+				ds.session = NULL;
+			}
+
+			printf("[softcsa] tryCloneSiblingsFromLive: cloning to sibling type %d\n",
+			       ds.type);
+
+			ds.csa_alt_active = true;
+			ds.ecm_mode = live_sess->second.ecm_mode;
+			ds.session = new CSoftCSASession(
+				ds.type, ds.adapter, ds.demux_unit, ds.frontend_num);
+
+			for (auto pid : ds.pids)
+				ds.session->addPid(pid);
+
+			live_sess->second.session->getEngine()->copyKeysTo(ds.session->getEngine());
+
+			bool started = false;
+			if (ds.type == SOFTCSA_SESSION_STREAM) {
+				if (ds.session->startStream(ds.stream_callback)) {
+					ds.stream_callback = nullptr;
+					started = true;
+				}
+			} else {
+				if (ds.session->startRecord(ds.record_fd)) {
+					ds.record_fd = -1;
+					started = true;
+				}
+			}
+
+			if (started) {
+				cloned++;
+			} else {
+				printf("[softcsa] tryCloneSiblingsFromLive: start failed, dropping orphan\n");
+				delete ds.session;
+				ds.session = NULL;
+			}
+		}
 	}
-	auto sess_it = sessions.find(ch_it->second);
-	if (sess_it == sessions.end())
-		return false;
 
-	SessionState &pip_ds = sess_it->second;
+	/* Notify outside mtx to match the existing auto-start pattern and
+	 * avoid waking a waiter that then re-acquires mtx immediately. */
+	if (cloned > 0)
+		record_cv.notify_all();
 
-	auto live_key = std::make_pair(channel_id, SOFTCSA_SESSION_LIVE);
-	auto live_it = channel_to_session.find(live_key);
-	if (live_it == channel_to_session.end())
-		return false;
-	auto live_sess = sessions.find(live_it->second);
-	if (live_sess == sessions.end()
-	    || !live_sess->second.csa_alt_active
-	    || !live_sess->second.session) {
-		printf("[softcsa] startPipFromLive: no running LIVE session for channel %llx\n",
-		       (unsigned long long)channel_id);
-		return false;
+	return cloned;
+}
+
+bool CSoftCSAManager::cloneAndStartStream(uint32_t session_id, SoftCSAStreamCallback cb)
+{
+	bool started = false;
+	{
+		std::lock_guard<std::mutex> lock(mtx);
+
+		auto sess_it = sessions.find(session_id);
+		if (sess_it == sessions.end())
+			return false;
+		SessionState &ds = sess_it->second;
+		if (ds.session && ds.session->isRunning())
+			return false;
+
+		uint32_t sib_id = findRunningSibling(ds.channel_id, session_id);
+		if (sib_id == 0)
+			return false;
+		auto sib_it = sessions.find(sib_id);
+		if (sib_it == sessions.end())
+			return false;
+
+		printf("[softcsa] cloneAndStartStream: session %u cloning from sibling %u\n",
+		       session_id, sib_id);
+
+		if (ds.session) {
+			delete ds.session;
+			ds.session = NULL;
+		}
+
+		ds.csa_alt_active = true;
+		ds.ecm_mode = sib_it->second.ecm_mode;
+		ds.session = new CSoftCSASession(
+			ds.type, ds.adapter, ds.demux_unit, ds.frontend_num);
+
+		for (auto pid : ds.pids)
+			ds.session->addPid(pid);
+		ds.session->setDecoderPids(ds.video_pid, ds.audio_pid, ds.pcr_pid);
+		sib_it->second.session->getEngine()->copyKeysTo(ds.session->getEngine());
+
+		if (ds.session->startStream(cb)) {
+			ds.stream_callback = nullptr;
+			started = true;
+		} else {
+			/* Entry must survive so waiters/onDescrMode can still find it. */
+			printf("[softcsa] cloneAndStartStream: start failed, dropping orphan\n");
+			delete ds.session;
+			ds.session = NULL;
+		}
 	}
 
-	printf("[softcsa] startPipFromLive: cloning LIVE keys into PIP\n");
+	if (started)
+		record_cv.notify_all();
+	return started;
+}
 
-	pip_ds.csa_alt_active = true;
-	pip_ds.ecm_mode = live_sess->second.ecm_mode;
-	pip_ds.session = new CSoftCSASession(
-		pip_ds.type, pip_ds.adapter, pip_ds.demux_unit, pip_ds.frontend_num);
+bool CSoftCSAManager::cloneAndStartRecord(uint32_t session_id, int fd)
+{
+	bool started = false;
+	{
+		std::lock_guard<std::mutex> lock(mtx);
 
-	for (auto pid : pip_ds.pids)
-		pip_ds.session->addPid(pid);
+		auto sess_it = sessions.find(session_id);
+		if (sess_it == sessions.end())
+			return false;
+		SessionState &ds = sess_it->second;
+		if (ds.session && ds.session->isRunning())
+			return false;
 
-	/* PiP has no audio output — skip audio to avoid the audio ringbuffer
-	 * filling up (PiP audio decoder never consumes) which would stall
-	 * the reader thread on blocked rb->write() calls. */
-	pip_ds.session->setDecoderPids(pip_ds.video_pid, 0, pip_ds.pcr_pid);
-	live_sess->second.session->getEngine()->copyKeysTo(pip_ds.session->getEngine());
+		uint32_t sib_id = findRunningSibling(ds.channel_id, session_id);
+		if (sib_id == 0)
+			return false;
+		auto sib_it = sessions.find(sib_id);
+		if (sib_it == sessions.end())
+			return false;
 
-	if (pip_ds.session->start(pip_vfd, -1)) {
-		printf("[softcsa] startPipFromLive: pip started\n");
-		return true;
+		printf("[softcsa] cloneAndStartRecord: session %u cloning from sibling %u\n",
+		       session_id, sib_id);
+
+		if (ds.session) {
+			delete ds.session;
+			ds.session = NULL;
+		}
+
+		ds.csa_alt_active = true;
+		ds.ecm_mode = sib_it->second.ecm_mode;
+		ds.session = new CSoftCSASession(
+			ds.type, ds.adapter, ds.demux_unit, ds.frontend_num);
+
+		for (auto pid : ds.pids)
+			ds.session->addPid(pid);
+		ds.session->setDecoderPids(ds.video_pid, ds.audio_pid, ds.pcr_pid);
+		sib_it->second.session->getEngine()->copyKeysTo(ds.session->getEngine());
+
+		if (ds.session->startRecord(fd)) {
+			ds.record_fd = -1;
+			started = true;
+		} else {
+			printf("[softcsa] cloneAndStartRecord: start failed, dropping orphan\n");
+			delete ds.session;
+			ds.session = NULL;
+		}
 	}
 
-	printf("[softcsa] startPipFromLive: start failed\n");
-	delete pip_ds.session;
-	pip_ds.session = NULL;
-	int fe = pip_ds.frontend_num;
-	sessions.erase(sess_it);
-	channel_to_session.erase(ch_it);
-	releaseDemux(fe);
-	return false;
+	if (started)
+		record_cv.notify_all();
+	return started;
+}
+
+bool CSoftCSAManager::cloneAndStartLive(uint32_t session_id, int vfd, int afd)
+{
+	bool started = false;
+	{
+		std::lock_guard<std::mutex> lock(mtx);
+
+		auto sess_it = sessions.find(session_id);
+		if (sess_it == sessions.end())
+			return false;
+		SessionState &ds = sess_it->second;
+		if (ds.session && ds.session->isRunning())
+			return false;
+
+		uint32_t sib_id = findRunningSibling(ds.channel_id, session_id);
+		if (sib_id == 0)
+			return false;
+		auto sib_it = sessions.find(sib_id);
+		if (sib_it == sessions.end())
+			return false;
+
+		printf("[softcsa] cloneAndStartLive: session %u cloning from sibling %u\n",
+		       session_id, sib_id);
+
+		if (ds.session) {
+			delete ds.session;
+			ds.session = NULL;
+		}
+
+		ds.csa_alt_active = true;
+		ds.ecm_mode = sib_it->second.ecm_mode;
+		ds.session = new CSoftCSASession(
+			ds.type, ds.adapter, ds.demux_unit, ds.frontend_num);
+
+		for (auto pid : ds.pids)
+			ds.session->addPid(pid);
+		ds.session->setDecoderPids(ds.video_pid, ds.audio_pid, ds.pcr_pid);
+		sib_it->second.session->getEngine()->copyKeysTo(ds.session->getEngine());
+
+		if (ds.session->start(vfd, afd)) {
+			started = true;
+		} else {
+			/* Caller handles decoder restoration; leave the entry. */
+			printf("[softcsa] cloneAndStartLive: start failed, dropping orphan\n");
+			delete ds.session;
+			ds.session = NULL;
+		}
+	}
+
+	if (started)
+		record_cv.notify_all();
+	return started;
+}
+
+bool CSoftCSAManager::cloneAndStartPip(uint32_t session_id, int pip_vfd)
+{
+	bool started = false;
+	{
+		std::lock_guard<std::mutex> lock(mtx);
+
+		auto sess_it = sessions.find(session_id);
+		if (sess_it == sessions.end())
+			return false;
+		SessionState &ds = sess_it->second;
+		if (ds.session && ds.session->isRunning())
+			return false;
+
+		uint32_t sib_id = findRunningSibling(ds.channel_id, session_id);
+		if (sib_id == 0)
+			return false;
+		auto sib_it = sessions.find(sib_id);
+		if (sib_it == sessions.end())
+			return false;
+
+		printf("[softcsa] cloneAndStartPip: session %u cloning from sibling %u\n",
+		       session_id, sib_id);
+
+		if (ds.session) {
+			delete ds.session;
+			ds.session = NULL;
+		}
+
+		ds.csa_alt_active = true;
+		ds.ecm_mode = sib_it->second.ecm_mode;
+		ds.session = new CSoftCSASession(
+			ds.type, ds.adapter, ds.demux_unit, ds.frontend_num);
+
+		for (auto pid : ds.pids)
+			ds.session->addPid(pid);
+		/* PiP audio zeroed: pip video decoder has no audio output;
+		 * feeding audio PES would stall the reader on a full ringbuffer. */
+		ds.session->setDecoderPids(ds.video_pid, 0, ds.pcr_pid);
+		sib_it->second.session->getEngine()->copyKeysTo(ds.session->getEngine());
+
+		if (ds.session->start(pip_vfd, -1)) {
+			started = true;
+		} else {
+			/* No fallback path: fully erase so the broken entry cannot
+			 * leak into stopSession or a subsequent StartPip. */
+			printf("[softcsa] cloneAndStartPip: start failed\n");
+			delete ds.session;
+			ds.session = NULL;
+			int fe = ds.frontend_num;
+			auto ch_it = channel_to_session.find(
+				std::make_pair(ds.channel_id, SOFTCSA_SESSION_PIP));
+			sessions.erase(sess_it);
+			if (ch_it != channel_to_session.end())
+				channel_to_session.erase(ch_it);
+			releaseDemux(fe);
+		}
+	}
+
+	if (started)
+		record_cv.notify_all();
+	return started;
 }
 
 bool CSoftCSAManager::notifyAudioPidChange(t_channel_id channel_id, unsigned short new_apid)
@@ -864,6 +1143,69 @@ bool CSoftCSAManager::hasRunningLiveSession(t_channel_id channel_id)
 
 	return sess_it->second.session != NULL
 	    && sess_it->second.session->isRunning();
+}
+
+uint32_t CSoftCSAManager::findRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id) const
+{
+	/* Lower rank wins. All qualifying siblings carry identical CW keys. */
+	auto rank = [](SoftCSASessionType t) -> int {
+		switch (t) {
+			case SOFTCSA_SESSION_LIVE:   return 0;
+			case SOFTCSA_SESSION_RECORD: return 1;
+			case SOFTCSA_SESSION_PIP:    return 2;
+			case SOFTCSA_SESSION_STREAM: return 3;
+		}
+		return 4;
+	};
+
+	uint32_t best_id = 0;
+	int best_rank = 5;
+	for (const auto &pair : sessions) {
+		if (pair.first == exclude_session_id)
+			continue;
+		if (pair.second.channel_id != channel_id)
+			continue;
+		/* Match running siblings and standby key-holders: a non-running
+		 * csa_alt_active entry still receives onCW and has valid keys. */
+		if (pair.second.session == NULL || !pair.second.csa_alt_active)
+			continue;
+		int r = rank(pair.second.type);
+		if (r < best_rank) {
+			best_rank = r;
+			best_id = pair.first;
+		}
+	}
+	return best_id;
+}
+
+uint32_t CSoftCSAManager::getLiveSessionId(t_channel_id channel_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+
+	auto ch_it = channel_to_session.find(std::make_pair(channel_id, SOFTCSA_SESSION_LIVE));
+	if (ch_it == channel_to_session.end())
+		return 0;
+	return ch_it->second;
+}
+
+uint32_t CSoftCSAManager::getSessionId(t_channel_id channel_id, SoftCSASessionType type)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto it = channel_to_session.find(std::make_pair(channel_id, type));
+	return it == channel_to_session.end() ? 0 : it->second;
+}
+
+bool CSoftCSAManager::hasRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	return findRunningSibling(channel_id, exclude_session_id) != 0;
+}
+
+bool CSoftCSAManager::hasAnyRunningSession(t_channel_id channel_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	/* next_session_id starts at 1, so 0 excludes nothing. */
+	return findRunningSibling(channel_id, 0) != 0;
 }
 
 bool CSoftCSAManager::isActive(t_channel_id channel_id)

@@ -50,11 +50,11 @@ CSoftCSASession::CSoftCSASession(SoftCSASessionType type, int adapter, int demux
 	, buffer(NULL)
 	, running(false)
 {
-	if (posix_memalign((void **)&buffer, 16, BUFFER_SIZE) != 0)
+	if (posix_memalign((void **)&buffer, 16, READ_BATCH_SIZE) != 0)
 		buffer = NULL;
 
 	demux = new cDemux(demux_unit);
-	demux->Open(DMX_TP_CHANNEL, NULL, BUFFER_SIZE);
+	demux->Open(DMX_TP_CHANNEL, NULL, KERNEL_BUFFER_SIZE);
 	cDemux::SetSource(demux_unit, frontend_num);
 }
 
@@ -249,7 +249,7 @@ void CSoftCSASession::readerThread()
 				ts_demuxer->setAudioPid((unsigned short)pending);
 		}
 
-		int len = demux->Read(buffer, BUFFER_SIZE, 100);
+		int len = demux->Read(buffer, READ_BATCH_SIZE, 100);
 		if (len <= 0) {
 			if (len < 0) {
 				consecutive_errors++;
@@ -390,7 +390,7 @@ void CSoftCSASession::recordThread()
 {
 	set_threadname("n:softcsa_rec");
 	while (running) {
-		int len = demux->Read(buffer, BUFFER_SIZE, 100);
+		int len = demux->Read(buffer, READ_BATCH_SIZE, 100);
 		if (len > 0) {
 			engine->descramble(buffer, len);
 			int written = 0;
@@ -412,7 +412,7 @@ void CSoftCSASession::streamThread()
 {
 	set_threadname("n:softcsa_str");
 	while (running) {
-		int len = demux->Read(buffer, BUFFER_SIZE, 100);
+		int len = demux->Read(buffer, READ_BATCH_SIZE, 100);
 		if (len > 0) {
 			engine->descramble(buffer, len);
 			if (stream_callback)

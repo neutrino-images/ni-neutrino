@@ -298,7 +298,7 @@ void CStreamInstance::run()
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
 			channel_id, SOFTCSA_SESSION_STREAM);
 		for (auto &sn : sr.dvbapi_stops)
-			sendDvbapiSessionStop(str_ch, sn.session_id, sn.capmt_demux);
+			sendDvbapiSessionStop(str_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 	}
 #endif
 

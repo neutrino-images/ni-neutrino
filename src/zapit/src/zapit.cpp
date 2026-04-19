@@ -67,6 +67,9 @@
 #include <hardware/video.h>
 
 #include <driver/abstime.h>
+#ifdef HAVE_SOFTCSA
+#include <driver/fb_generic.h>
+#endif
 #include <system/set_threadname.h>
 #include <libdvbsub/dvbsub.h>
 #include <OpenThreads/ScopedLock>
@@ -696,6 +699,33 @@ bool CZapit::ZapIt(const t_channel_id channel_id, bool forupdate, bool startplay
 	//printf("[zapit] sending capmt....\n");
 
 	SendPMT(forupdate);
+
+#ifdef HAVE_SOFTCSA
+	/* If a sibling is already descrambling this channel, attach the main
+	 * decoder to MEMORY now. Without this hook the dedup case (a sibling
+	 * already has the subscription) never triggers onDescrMode and the
+	 * decoder would stay on DEMUX. applySoftCSAMemorySource honours
+	 * playing==false so the standby record-zap case stays muted. */
+	if (current_channel->scrambled && !current_channel->bUseCI) {
+		uint32_t live_sid = CSoftCSAManager::getInstance()->getLiveSessionId(
+			current_channel->getChannelID());
+		if (live_sid
+		    && CSoftCSAManager::getInstance()->hasRunningSibling(
+		           current_channel->getChannelID(), live_sid)) {
+			int vfd = -1, afd = -1;
+			int video_type = (int) current_channel->type;
+			int audio_type = current_channel->getAudioChannel()
+				? current_channel->getAudioChannel()->audioChannelType : 0;
+			applySoftCSAMemorySource(video_type, audio_type, &vfd, &afd);
+			if (vfd >= 0
+			    && !CSoftCSAManager::getInstance()->cloneAndStartLive(
+			            live_sid, vfd, afd)) {
+				printf("[softcsa] ZapIt: sibling-attach lost race, restoring decoder\n");
+				restoreSoftCSADecoder();
+			}
+		}
+	}
+#endif
 	//play:
 	int caid = 1;
 	SendEvent(CZapitClient::EVT_ZAP_CA_ID, &caid, sizeof(int));
@@ -777,7 +807,7 @@ bool CZapit::StopPip(int pip)
 		CZapitChannel *pip_ch = CServiceManager::getInstance()->FindChannel(pip_channel_id[pip]);
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(pip_channel_id[pip], SOFTCSA_SESSION_PIP);
 		for (auto &sn : sr.dvbapi_stops)
-			sendDvbapiSessionStop(pip_ch, sn.session_id, sn.capmt_demux);
+			sendDvbapiSessionStop(pip_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 #endif
 		CCamManager::getInstance()->Stop(pip_channel_id[pip], CCamManager::PIP);
 		pip_fe[pip] = NULL;
@@ -924,25 +954,21 @@ bool CZapit::StartPip(const t_channel_id channel_id, int pip)
 	CCamManager::getInstance()->Start(newchannel->getChannelID(), CCamManager::PIP);
 
 #ifdef HAVE_SOFTCSA
-	/* Same-channel CSA-ALT PiP: the LIVE SoftCSA session is running,
-	 * so we can clone its keys immediately.  Switch the pip decoder to
-	 * MEMORY here — this is the only case where we know upfront that
-	 * SoftCSA is needed.
-	 *
-	 * All other cases (different channel, or non-CSA-ALT): PiP starts
-	 * in hardware mode.  If OSCam later confirms CSA-ALT via
-	 * onDescrMode, the manager switches the pip decoder to MEMORY via
-	 * CMD_SOFTCSA_SWITCH_PIP_SOURCE IPC at that point.  Non-CSA-ALT
-	 * channels stay in hardware mode undisturbed. */
+	/* Same-channel CSA-ALT PiP: a sibling is already running on this
+	 * channel, so we can clone its keys immediately and switch the pip
+	 * decoder to MEMORY here. Other cases start PiP in hardware mode;
+	 * onDescrMode will switch to MEMORY later if CSA-ALT is confirmed. */
 	if (newchannel->scrambled && !newchannel->bUseCI
-	    && CSoftCSAManager::getInstance()->hasRunningLiveSession(newchannel->getChannelID())) {
+	    && CSoftCSAManager::getInstance()->hasAnyRunningSession(newchannel->getChannelID())) {
 		int pip_vfd = -1, pip_afd = -1;
 		int vtype = (int) newchannel->type;
 		int atype = newchannel->getAudioChannel() ? newchannel->getAudioChannel()->audioChannelType : 0;
 		if (switchPipToMemory(pip, vtype, atype, &pip_vfd, &pip_afd)) {
-			if (!CSoftCSAManager::getInstance()->startPipFromLive(
-			        newchannel->getChannelID(), pip_vfd)) {
-				printf("[softcsa] startPipFromLive failed for same-channel pip %llx\n",
+			uint32_t pip_sid = CSoftCSAManager::getInstance()->getSessionId(
+				newchannel->getChannelID(), SOFTCSA_SESSION_PIP);
+			if (!pip_sid
+			    || !CSoftCSAManager::getInstance()->cloneAndStartPip(pip_sid, pip_vfd)) {
+				printf("[softcsa] cloneAndStartPip failed for same-channel pip %llx\n",
 				       (unsigned long long)newchannel->getChannelID());
 				restorePipDecoder(pip);
 			}
@@ -2101,53 +2127,7 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 
 		int vfd = -1, afd = -1;
 		if (msg.to_memory) {
-			/* Stop decoder PES demux filters.
-			 * The SoftCSA TSDEMUX_TAP maintains its own independent
-			 * PID routing via DMX_ADD_PID, so it will still receive
-			 * data after these decoder filters are stopped. */
-			videoDemux->Stop();
-			audioDemux->Stop();
-			pcrDemux->Stop();
-
-			/* Stop decoders and close/reopen HAL devices. */
-			if (videoDecoder) {
-				videoDecoder->Stop(true);
-				videoDecoder->closeDevice();
-				videoDecoder->openDevice();
-				vfd = videoDecoder->getFD();
-			}
-			if (audioDecoder) {
-				audioDecoder->Stop();
-				audioDecoder->closeDevice();
-				audioDecoder->openDevice();
-				afd = audioDecoder->getFD();
-			}
-
-			/* Switch video to MEMORY source — eplayer3 LinuxDvbOpen/Play
-			 * sequence on the fresh fd */
-			if (vfd >= 0) {
-				int st = zapit_translate_video_streamtype(msg.video_type);
-				ioctl(vfd, VIDEO_CLEAR_BUFFER);
-				ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_MEMORY);
-				ioctl(vfd, VIDEO_FREEZE);
-				ioctl(vfd, VIDEO_SET_STREAMTYPE, st);
-				ioctl(vfd, VIDEO_PLAY);
-				ioctl(vfd, VIDEO_CONTINUE);
-				ioctl(vfd, VIDEO_CLEAR_BUFFER);
-			}
-			if (videoDecoder)
-				videoDecoder->setPlayState(VIDEO_FREEZED);
-
-			/* Switch audio to MEMORY source */
-			if (afd >= 0) {
-				ioctl(afd, AUDIO_CLEAR_BUFFER);
-				ioctl(afd, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_MEMORY);
-				ioctl(afd, AUDIO_PAUSE);
-				ioctl(afd, AUDIO_SET_AV_SYNC, 0);
-				ioctl(afd, AUDIO_SET_BYPASS_MODE, msg.audio_type);
-				ioctl(afd, AUDIO_PLAY);
-				ioctl(afd, AUDIO_CONTINUE);
-			}
+			applySoftCSAMemorySource(msg.video_type, msg.audio_type, &vfd, &afd);
 		} else {
 			/* Restore: close/reopen + restart playback */
 			restoreSoftCSADecoder();
@@ -2710,14 +2690,96 @@ bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 }
 
 #ifdef HAVE_SOFTCSA
-void CZapit::restoreSoftCSADecoder()
+void CZapit::applySoftCSAMemorySource(int video_type, int audio_type, int *vfd_out, int *afd_out)
 {
-	/* Close/reopen HAL devices for clean MEMORY→DEMUX transition. */
+	int vfd = -1, afd = -1;
+
+	/* Stop decoder PES demux filters.
+	 * The SoftCSA TSDEMUX_TAP maintains its own independent
+	 * PID routing via DMX_ADD_PID, so it will still receive
+	 * data after these decoder filters are stopped. */
+	videoDemux->Stop();
+	audioDemux->Stop();
+	pcrDemux->Stop();
+
+	/* Stop decoders and close/reopen HAL devices. */
 	if (videoDecoder) {
+		videoDecoder->Stop(true);
 		videoDecoder->closeDevice();
 		videoDecoder->openDevice();
+		vfd = videoDecoder->getFD();
 	}
 	if (audioDecoder) {
+		audioDecoder->Stop();
+		audioDecoder->closeDevice();
+		audioDecoder->openDevice();
+		afd = audioDecoder->getFD();
+	}
+
+	/* Switch video to MEMORY source. VIDEO_PLAY / AUDIO_PLAY only when
+	 * live playback is active: a standby-triggered record zap still
+	 * registers a LIVE SoftCSA session, and starting the decoders here
+	 * would unmute HDMI on the way back to standby. */
+	if (vfd >= 0) {
+		int st = zapit_translate_video_streamtype(video_type);
+		ioctl(vfd, VIDEO_CLEAR_BUFFER);
+		ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_MEMORY);
+		ioctl(vfd, VIDEO_FREEZE);
+		ioctl(vfd, VIDEO_SET_STREAMTYPE, st);
+		if (playing) {
+			ioctl(vfd, VIDEO_PLAY);
+			ioctl(vfd, VIDEO_CONTINUE);
+		}
+		ioctl(vfd, VIDEO_CLEAR_BUFFER);
+	}
+	if (videoDecoder)
+		videoDecoder->setPlayState(VIDEO_FREEZED);
+
+	/* Switch audio to MEMORY source */
+	if (afd >= 0) {
+		ioctl(afd, AUDIO_CLEAR_BUFFER);
+		ioctl(afd, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_MEMORY);
+		ioctl(afd, AUDIO_PAUSE);
+		ioctl(afd, AUDIO_SET_AV_SYNC, 0);
+		ioctl(afd, AUDIO_SET_BYPASS_MODE, audio_type);
+		if (playing) {
+			ioctl(afd, AUDIO_PLAY);
+			ioctl(afd, AUDIO_CONTINUE);
+		}
+	}
+
+	if (vfd_out) *vfd_out = vfd;
+	if (afd_out) *afd_out = afd;
+}
+
+void CZapit::restoreSoftCSADecoder()
+{
+	/* ARM/BCM driver retains the last MEMORY-source frame on the plane — a
+	 * manual VIDEO_STOP + source-flip does not blank it. showFrame writes
+	 * a black iframe through the MEMORY path and flips back to DEMUX, so
+	 * the retained frame is then black. On failure the decoder must still
+	 * return to DEMUX source, so fall back to the manual restore. */
+	if (!CFrameBuffer::getInstance()->showFrame("blackscreen.jpg")) {
+		INFO("showFrame(blackscreen.jpg) failed, falling back to source restore");
+		if (videoDecoder) {
+			int vfd = videoDecoder->getFD();
+			if (vfd >= 0) {
+				ioctl(vfd, VIDEO_CLEAR_BUFFER);
+				ioctl(vfd, VIDEO_STOP, 0);
+				ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_DEMUX);
+			}
+			videoDecoder->closeDevice();
+			videoDecoder->openDevice();
+		}
+	}
+
+	if (audioDecoder) {
+		int afd = audioDecoder->getFD();
+		if (afd >= 0) {
+			ioctl(afd, AUDIO_CLEAR_BUFFER);
+			ioctl(afd, AUDIO_STOP, 0);
+			ioctl(afd, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_DEMUX);
+		}
 		audioDecoder->closeDevice();
 		audioDecoder->openDevice();
 	}
@@ -2731,7 +2793,7 @@ void CZapit::restoreSoftCSADecoder()
  *
  * Runs inline on the zapit server thread from StartPip — no IPC (would
  * deadlock with ourselves). The resulting fds are handed to the SoftCSA
- * manager via startPipFromLive and travel into CSoftCSASession::start()
+ * manager's cloneAndStartPip and travel into CSoftCSASession::start()
  * like the main-decoder fds travel from the CMD_SOFTCSA_SWITCH_SOURCE
  * handler. */
 bool CZapit::switchPipToMemory(int pip, int video_type, int audio_type, int *out_vfd, int *out_afd)
@@ -2860,7 +2922,7 @@ bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 		if (sr.had_running_session)
 			restoreSoftCSADecoder();
 		for (auto &sn : sr.dvbapi_stops)
-			sendDvbapiSessionStop(current_channel, sn.session_id, sn.capmt_demux);
+			sendDvbapiSessionStop(current_channel, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 	}
 #endif
 	if(send_pmt)

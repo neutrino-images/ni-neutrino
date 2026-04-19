@@ -339,7 +339,7 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 			SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
 				channel->getChannelID(), SOFTCSA_SESSION_RECORD);
 			for (auto &sn : sr.dvbapi_stops)
-				sendDvbapiSessionStop(channel, sn.session_id, sn.capmt_demux);
+				sendDvbapiSessionStop(channel, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 		}
 		CCamManager::getInstance()->Stop(channel->getChannelID(), CCamManager::RECORD);
 		if (!autoshift)
@@ -429,7 +429,7 @@ bool CRecordInstance::Stop(bool remove_event)
 		CZapitChannel *rec_ch = CServiceManager::getInstance()->FindChannel(channel_id);
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
 		for (auto &sn : sr.dvbapi_stops)
-			sendDvbapiSessionStop(rec_ch, sn.session_id, sn.capmt_demux);
+			sendDvbapiSessionStop(rec_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 	}
 #endif
 	CCamManager::getInstance()->Stop(channel_id, CCamManager::RECORD);

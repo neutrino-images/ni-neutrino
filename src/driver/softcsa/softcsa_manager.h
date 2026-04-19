@@ -37,6 +37,7 @@
 struct SoftCSAStopNotify {
 	uint32_t session_id;
 	int capmt_demux;
+	uint8_t capmt_ca_mask;
 };
 
 struct SoftCSAStopResult {
@@ -53,7 +54,8 @@ public:
 	void onCW(uint32_t session_id, uint32_t parity, const uint8_t *cw);
 
 	uint32_t registerSession(t_channel_id channel_id, SoftCSASessionType type,
-	                         int adapter, int capmt_demux, int frontend_num);
+	                         int adapter, int capmt_demux, int frontend_num,
+	                         uint8_t capmt_ca_mask);
 	void addPid(uint32_t session_id, unsigned short pid);
 	void addPidByChannel(t_channel_id channel_id, SoftCSASessionType type, unsigned short pid);
 	void setDecoderPids(uint32_t session_id, unsigned short vpid, unsigned short apid, unsigned short pcrpid);
@@ -68,6 +70,7 @@ public:
 		SoftCSASessionType type;
 		int capmt_demux;
 		int frontend_num;
+		uint8_t capmt_ca_mask;
 	};
 	void stopSessions();
 	std::vector<ResubscribeInfo> getResubscribeInfo();
@@ -81,6 +84,11 @@ public:
 	// LIVE session exists and has a running worker
 	bool hasRunningLiveSession(t_channel_id channel_id);
 
+	uint32_t getLiveSessionId(t_channel_id channel_id);
+	uint32_t getSessionId(t_channel_id channel_id, SoftCSASessionType type);
+	bool hasRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id);
+	bool hasAnyRunningSession(t_channel_id channel_id);
+
 	// Recording: register fd and wait for OSCam to confirm CSA-ALT.
 	// Returns true if recordThread started, false on timeout.
 	bool waitForRecordStart(t_channel_id channel_id, int fd, int timeout_ms);
@@ -90,11 +98,10 @@ public:
 	bool waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
 	bool hasRegisteredSession(t_channel_id channel_id, SoftCSASessionType type);
 
-	// PiP: clone LIVE session keys into a PIP session and start it.
-	// Caller (StartPip) must have put the pip video decoder into
-	// VIDEO_SOURCE_MEMORY mode and pass the fd. No audio for PiP.
-	// Only valid for same-channel CSA-ALT PiP (LIVE session running).
-	bool startPipFromLive(t_channel_id channel_id, int pip_vfd);
+	bool cloneAndStartStream(uint32_t session_id, SoftCSAStreamCallback cb);
+	bool cloneAndStartRecord(uint32_t session_id, int fd);
+	bool cloneAndStartLive(uint32_t session_id, int vfd, int afd);
+	bool cloneAndStartPip(uint32_t session_id, int pip_vfd);
 
 private:
 	CSoftCSAManager();
@@ -106,8 +113,14 @@ private:
 		int adapter;
 		int demux_unit;      // allocated kernel demux (from allocator)
 		int capmt_demux;     // value for CAPMT 0x86 descriptor (for OSCam ca_mask)
+		uint8_t capmt_ca_mask;
 		int frontend_num;
 		bool csa_alt_active;
+		/* True only while a stream/record sibling still depends on this
+		 * live's oscam subscription (capmt path b suppresses the
+		 * sibling's own capmt while live exists). Distinguishes a
+		 * parked hw live from an actively-decoding one. */
+		bool retained;
 		uint8_t ecm_mode;
 		CSoftCSASession *session;
 		std::vector<unsigned short> pids;
@@ -139,6 +152,14 @@ private:
 
 	int allocateDemux(int frontend_num);
 	void releaseDemux(int frontend_num);
+
+	/* Caller must hold mtx. */
+	uint32_t findRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id) const;
+
+	/* When LIVE becomes CSA-ALT active, walk same-channel siblings that
+	 * have a pending callback/fd and clone keys so they don't time out
+	 * waiting for a duplicate filter that never arrives. */
+	int tryCloneSiblingsFromLive(uint32_t live_session_id);
 
 };
 
