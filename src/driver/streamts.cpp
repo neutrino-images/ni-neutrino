@@ -136,9 +136,11 @@ bool CStreamInstance::Send(ssize_t r, unsigned char *_buf)
 	cfds = fds;
 	mutex.unlock();
 
-	int flags = 0;
-	if (cfds.size() > 1)
-		flags = MSG_DONTWAIT;
+	/* Always non-blocking: a single slow VLC consumer blocking send() stalls
+	 * the demux reader, the kernel ring buffer overflows, VLC disconnects on
+	 * its own inactivity timeout. The retry loop below tolerates transient
+	 * EAGAIN; sustained back-pressure will lose bytes, not wedge the reader. */
+	int flags = MSG_DONTWAIT;
 #ifdef MSG_NOSIGNAL
 	flags |= MSG_NOSIGNAL;
 #endif
@@ -329,6 +331,7 @@ CStreamManager::CStreamManager()
 	running = false;
 	listenfd = -1;
 	port = g_settings.streaming_port;
+	pending_starts = 0;
 }
 
 CStreamManager::~CStreamManager()
@@ -647,33 +650,44 @@ bool CStreamManager::AddClient(int connfd)
 	t_channel_id channel_id = 0;
 	CFrontend *frontend = NULL;
 	bool is_e2 = false;
-	
-	if (Parse(connfd, pids, channel_id, frontend, is_e2)) {
-		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
-		streammap_iterator_t it = streams.find(channel_id);
-		if (it != streams.end()) {
-			it->second->AddClient(connfd);
-		} else {
-			CStreamInstance * stream;
-			if (IS_WEBCHAN(channel_id)) {
-				stream = new CStreamStream(connfd, channel_id, pids);
-			} else {
-				stream = new CStreamInstance(connfd, channel_id, pids);
-				stream->frontend = frontend;
-				stream->is_e2_stream = is_e2;
-			}
 
-			int sendsize = 10*IN_SIZE;
-			unsigned int m = sizeof(sendsize);
-			setsockopt(connfd, SOL_SOCKET, SO_SNDBUF, (void *)&sendsize, m);
-			if (stream->Open() && stream->Start())
-				streams.insert(streammap_pair_t(channel_id, stream));
-			else
-				delete stream;
-		}
-		return true;
+	/* Mark setup in progress before Parse's zap emits EVT_ZAP_COMPLETE,
+	 * so a concurrent EVT_STREAM_STOP from the previous stream cannot
+	 * trip standbyToStandby's StreamStatus gate while we are mid-setup. */
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+		pending_starts++;
 	}
-	return false;
+
+	bool parsed = Parse(connfd, pids, channel_id, frontend, is_e2);
+
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	pending_starts--;
+	if (!parsed)
+		return false;
+
+	streammap_iterator_t it = streams.find(channel_id);
+	if (it != streams.end()) {
+		it->second->AddClient(connfd);
+	} else {
+		CStreamInstance * stream;
+		if (IS_WEBCHAN(channel_id)) {
+			stream = new CStreamStream(connfd, channel_id, pids);
+		} else {
+			stream = new CStreamInstance(connfd, channel_id, pids);
+			stream->frontend = frontend;
+			stream->is_e2_stream = is_e2;
+		}
+
+		int sendsize = 10*IN_SIZE;
+		unsigned int m = sizeof(sendsize);
+		setsockopt(connfd, SOL_SOCKET, SO_SNDBUF, (void *)&sendsize, m);
+		if (stream->Open() && stream->Start())
+			streams.insert(streammap_pair_t(channel_id, stream));
+		else
+			delete stream;
+	}
+	return true;
 }
 
 void CStreamManager::RemoveClient(int fd)
@@ -789,6 +803,10 @@ bool CStreamManager::StopAll()
 	{
 		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
 		to_stop.swap(streams);
+		/* Defensive: if the accept thread was cancelled mid-Parse the
+		 * counter is not decremented. Clear it so a later restart begins
+		 * at a consistent zero. */
+		pending_starts = 0;
 	}
 	bool ret = !to_stop.empty();
 	for (streammap_iterator_t it = to_stop.begin(); it != to_stop.end(); ++it) {
@@ -849,7 +867,7 @@ bool CStreamManager::StreamStatus(t_channel_id channel_id)
 	if (channel_id)
 		ret = (streams.find(channel_id) != streams.end());
 	else
-		ret = !streams.empty();
+		ret = !streams.empty() || pending_starts > 0;
 	mutex.unlock();
 	return ret;
 }
