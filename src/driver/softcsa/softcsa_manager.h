@@ -54,7 +54,7 @@ public:
 	void onCW(uint32_t session_id, uint32_t parity, const uint8_t *cw);
 
 	uint32_t registerSession(t_channel_id channel_id, SoftCSASessionType type,
-	                         int adapter, int capmt_demux, int frontend_num,
+	                         int adapter, int frontend_num,
 	                         uint8_t capmt_ca_mask);
 	void addPid(uint32_t session_id, unsigned short pid);
 	void addPidByChannel(t_channel_id channel_id, SoftCSASessionType type, unsigned short pid);
@@ -86,6 +86,7 @@ public:
 
 	uint32_t getLiveSessionId(t_channel_id channel_id);
 	uint32_t getSessionId(t_channel_id channel_id, SoftCSASessionType type);
+	int getCapmtDemux(uint32_t session_id);
 	bool hasRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id);
 	bool hasAnyRunningSession(t_channel_id channel_id);
 

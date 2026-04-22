@@ -67,9 +67,6 @@
 #include <hardware/video.h>
 
 #include <driver/abstime.h>
-#ifdef HAVE_SOFTCSA
-#include <driver/fb_generic.h>
-#endif
 #include <system/set_threadname.h>
 #include <libdvbsub/dvbsub.h>
 #include <OpenThreads/ScopedLock>
@@ -2763,32 +2760,15 @@ void CZapit::applySoftCSAMemorySource(int video_type, int audio_type, int *vfd_o
 
 void CZapit::restoreSoftCSADecoder()
 {
-	/* ARM/BCM driver retains the last MEMORY-source frame on the plane — a
-	 * manual VIDEO_STOP + source-flip does not blank it. showFrame writes
-	 * a black iframe through the MEMORY path and flips back to DEMUX, so
-	 * the retained frame is then black. On failure the decoder must still
-	 * return to DEMUX source, so fall back to the manual restore. */
-	if (!CFrameBuffer::getInstance()->showFrame("blackscreen.jpg")) {
-		INFO("showFrame(blackscreen.jpg) failed, falling back to source restore");
-		if (videoDecoder) {
-			int vfd = videoDecoder->getFD();
-			if (vfd >= 0) {
-				ioctl(vfd, VIDEO_CLEAR_BUFFER);
-				ioctl(vfd, VIDEO_STOP, 0);
-				ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_DEMUX);
-			}
-			videoDecoder->closeDevice();
-			videoDecoder->openDevice();
-		}
+	/* close/open restores the decoder from the MEMORY feed back to DEMUX
+	 * without a synchronous iframe write inside the teardown. Plane blank
+	 * for standby is handled separately in the standby entry path where
+	 * no tune follows, so no race can arise */
+	if (videoDecoder) {
+		videoDecoder->closeDevice();
+		videoDecoder->openDevice();
 	}
-
 	if (audioDecoder) {
-		int afd = audioDecoder->getFD();
-		if (afd >= 0) {
-			ioctl(afd, AUDIO_CLEAR_BUFFER);
-			ioctl(afd, AUDIO_STOP, 0);
-			ioctl(afd, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_DEMUX);
-		}
 		audioDecoder->closeDevice();
 		audioDecoder->openDevice();
 	}

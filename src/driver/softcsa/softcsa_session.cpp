@@ -64,6 +64,10 @@ CSoftCSASession::~CSoftCSASession()
 		stop();
 	delete engine;
 	delete ts_demuxer;
+	/* demux is deleted inside stop() so the fd close follows the
+	 * worker joins deterministically and cannot race an in-flight
+	 * kernel section callback. stop() nulls the pointer on its way
+	 * out; this delete is a safety net if stop() was never called. */
 	delete demux;
 	delete video_rb;
 	delete audio_rb;
@@ -225,6 +229,9 @@ void CSoftCSASession::stop()
 		video_worker.join();
 	if (audio_worker.joinable())
 		audio_worker.join();
+
+	delete demux;
+	demux = NULL;
 
 	stream_callback = nullptr;
 }

@@ -5109,6 +5109,15 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 			g_Zapit->lockPlayBack();
 		}
 
+#ifdef HAVE_SOFTCSA
+		/* BCM plane keeps the last MPEG-ES frame of a CSA-ALT session
+		 * on screen even after VIDEO_STOP. A black iframe written here
+		 * becomes the new "last frame" and replaces it. Must run before
+		 * Standby() closes the video device, otherwise ShowPicture would
+		 * reopen it and leave an open decoder in the standby state */
+		CFrameBuffer::getInstance()->showFrame("blackscreen.jpg");
+#endif
+
 		videoDecoder->Standby(true);
 
 		g_Sectionsd->setServiceChanged(0, false);

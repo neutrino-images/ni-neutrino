@@ -374,7 +374,11 @@ void CDvbApiClient::readerThread()
 						continue;
 					CCam cam;
 					cam.setCaMask(info.capmt_ca_mask);
-					cam.setSource(info.capmt_demux);
+					/* Match the stop and primary-send paths: a broken
+					 * allocation (-1) is floored explicitly instead of
+					 * relying on makeCaPmt's implicit 0x00 truncation. */
+					int capmt_demux = (info.capmt_demux >= 0) ? info.capmt_demux : 0;
+					cam.setSource(capmt_demux);
 					cam.makeCaPmt(channel, true, CCam::CAPMT_ADD);
 					if (!sendCaPmt(cam.getBuffer(), cam.getLength(), info.session_id))
 						printf(TAG "resubscribe failed for channel %llx session %u\n",

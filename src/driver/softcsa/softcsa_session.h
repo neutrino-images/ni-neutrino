@@ -105,7 +105,7 @@ private:
 
 	uint8_t *buffer;
 	static const int READ_BATCH_SIZE = 256 * 188;          /* TS read batch — 256 TS packets (~47KB). Small batch catches CW key rotations quickly */
-	static const int KERNEL_BUFFER_SIZE = 16 * 1024 * 188; /* kernel demux buffer — 16K TS packets (~3MB). Absorbs TS bursts between Read() calls */
+	static const int KERNEL_BUFFER_SIZE = 8192 * 188;      /* kernel demux buffer — 8K TS packets (~1.5MB). Tracks Enigma2's eDVBTSRecorder sizing; the 3MB predecessor burdened the kernel allocator without bitrate benefit */
 	static const size_t RINGBUFFER_SIZE = 4 * 1024 * 1024; /* PES ringbuffer per stream — must fit several 2160p I-frames */
 	static const int MAX_PES_SIZE = 2 * 1024 * 1024;   /* max single PES packet — 2160p H.265 I-frames can reach ~1.5MB */
 

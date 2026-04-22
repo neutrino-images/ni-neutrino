@@ -37,7 +37,8 @@ CSoftCSAManager::~CSoftCSAManager() { stopAll(); }
 
 int CSoftCSAManager::allocateDemux(int frontend_num)
 {
-	/* Reuse existing allocation for the same frontend */
+	/* All sessions on one frontend share one unit; the key server
+	 * separates them by program_number, not by demux_index. */
 	for (auto &alloc : demux_allocs) {
 		if (alloc.frontend_num == frontend_num) {
 			alloc.refcount++;
@@ -47,7 +48,8 @@ int CSoftCSAManager::allocateDemux(int frontend_num)
 		}
 	}
 
-	/* Find highest free unit — avoids zapit's low units (0, 1) */
+	/* Highest-free-unit policy avoids the low units that zapit pre-binds
+	 * to frontend<N> for hardware record/stream/pip. */
 	for (int unit = MAX_DMX_UNITS - 1; unit >= 0; unit--) {
 		bool in_use = false;
 		for (auto &alloc : demux_allocs) {
@@ -88,7 +90,7 @@ void CSoftCSAManager::releaseDemux(int frontend_num)
 }
 
 uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessionType type,
-                                           int adapter, int capmt_demux, int frontend_num,
+                                           int adapter, int frontend_num,
                                            uint8_t capmt_ca_mask)
 {
 	CSoftCSASession *old_session = NULL;
@@ -104,6 +106,13 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 			session_id = ch_it->second;
 			auto sess_it = sessions.find(session_id);
 			if (sess_it != sessions.end()) {
+				if (sess_it->second.session != NULL
+				    && sess_it->second.frontend_num == frontend_num
+				    && sess_it->second.capmt_ca_mask == capmt_ca_mask) {
+					printf("[softcsa] registerSession: reuse id %u for channel %llx type %d (no state change)\n",
+					       session_id, (unsigned long long)channel_id, type);
+					return session_id;
+				}
 				old_session = sess_it->second.session;
 				sess_it->second.session = NULL;
 				releaseDemux(sess_it->second.frontend_num);
@@ -117,7 +126,7 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		state.type = type;
 		state.adapter = adapter;
 		state.demux_unit = allocateDemux(frontend_num);
-		state.capmt_demux = capmt_demux;
+		state.capmt_demux = (frontend_num >= 0) ? frontend_num : 0;
 		state.capmt_ca_mask = capmt_ca_mask;
 		state.frontend_num = frontend_num;
 		state.csa_alt_active = false;
@@ -136,8 +145,9 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		sessions[session_id] = state;
 		channel_to_session[existing_key] = session_id;
 
-		printf("[softcsa] registerSession: id %u for channel %llx type %d (fe %d, capmt_dmx %d, dmx %d)\n",
-		       session_id, (unsigned long long)channel_id, type, frontend_num, capmt_demux, state.demux_unit);
+		printf("[softcsa] registerSession: id %u for channel %llx type %d (fe %d, dmx %d)\n",
+		       session_id, (unsigned long long)channel_id, type, frontend_num,
+		       state.demux_unit);
 	}
 
 	if (old_session) {
@@ -1193,6 +1203,13 @@ uint32_t CSoftCSAManager::getSessionId(t_channel_id channel_id, SoftCSASessionTy
 	std::lock_guard<std::mutex> lock(mtx);
 	auto it = channel_to_session.find(std::make_pair(channel_id, type));
 	return it == channel_to_session.end() ? 0 : it->second;
+}
+
+int CSoftCSAManager::getCapmtDemux(uint32_t session_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto it = sessions.find(session_id);
+	return it == sessions.end() ? -1 : it->second.capmt_demux;
 }
 
 bool CSoftCSAManager::hasRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id)
