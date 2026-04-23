@@ -19,6 +19,7 @@
  */
 
 #include "softcsa_manager.h"
+#include "softcsa_config.h"
 #include "softcsa_engine.h"
 #include <algorithm>
 #include <chrono>
@@ -91,8 +92,12 @@ void CSoftCSAManager::releaseDemux(int frontend_num)
 
 uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessionType type,
                                            int adapter, int frontend_num,
-                                           uint8_t capmt_ca_mask)
+                                           uint8_t capmt_ca_mask, bool passive)
 {
+	if (passive)
+		printf("[softcsa] registerSession: passive for channel %llx type %d\n",
+		       (unsigned long long)channel_id, type);
+
 	CSoftCSASession *old_session = NULL;
 	uint32_t session_id;
 
@@ -131,6 +136,7 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		state.frontend_num = frontend_num;
 		state.csa_alt_active = false;
 		state.retained = false;
+		state.passive = passive;
 		state.ecm_mode = 0;
 		state.session = NULL;
 		state.video_pid = 0;
@@ -239,6 +245,10 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 	{
 		std::lock_guard<std::mutex> lock(mtx);
 		auto it = sessions.find(session_id);
+		if (it != sessions.end() && it->second.passive) {
+			printf("[softcsa] onDescrMode: ignored for passive session %u\n", session_id);
+			return;
+		}
 		/* A retained LIVE entry — either the csa-alt cw-routing shape
 		 * (session==NULL && csa_alt_active==true) or the hw subscription-
 		 * holder shape (session==NULL && retained==true) — must not
@@ -465,6 +475,8 @@ void CSoftCSAManager::onCW(uint32_t session_id, uint32_t parity, const uint8_t *
 		return;
 
 	SessionState &ds = it->second;
+	if (ds.passive)
+		return;
 	if (!ds.csa_alt_active)
 		return;
 
@@ -517,6 +529,13 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 		std::vector<uint32_t> retained_ids;
 		for (auto &pair : sessions) {
 			if (pair.first == session_id || pair.second.channel_id != channel_id)
+				continue;
+
+			/* Passive siblings are bookkeeping-only: no engine, no cw
+			 * keys, not a subscription holder. Skip them from both
+			 * buckets so they never force retention and never prevent
+			 * this session's NOT_SELECTED from being emitted now. */
+			if (pair.second.passive)
 				continue;
 
 			/* Retained-shape: not driving a writer and carrying cw keys
@@ -671,6 +690,12 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 		if (sess_it == sessions.end())
 			return false;
 
+		if (sess_it->second.passive) {
+			printf("[softcsa] waitForRecordStart: passive, skipping wait for channel %llx\n",
+			       (unsigned long long)channel_id);
+			return false;
+		}
+
 		SessionState &rec_ds = sess_it->second;
 		rec_ds.record_fd = fd;
 		session_id = ch_it->second;
@@ -742,6 +767,12 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 		auto sess_it = sessions.find(ch_it->second);
 		if (sess_it == sessions.end())
 			return false;
+
+		if (sess_it->second.passive) {
+			printf("[softcsa] waitForStreamStart: passive, skipping wait for channel %llx\n",
+			       (unsigned long long)channel_id);
+			return false;
+		}
 
 		SessionState &str_ds = sess_it->second;
 		str_ds.stream_callback = cb;
@@ -1176,8 +1207,11 @@ uint32_t CSoftCSAManager::findRunningSibling(t_channel_id channel_id, uint32_t e
 		if (pair.second.channel_id != channel_id)
 			continue;
 		/* Match running siblings and standby key-holders: a non-running
-		 * csa_alt_active entry still receives onCW and has valid keys. */
-		if (pair.second.session == NULL || !pair.second.csa_alt_active)
+		 * csa_alt_active entry still receives onCW and has valid keys.
+		 * Passive entries never become key-holders, skip them. */
+		if (pair.second.passive
+		    || pair.second.session == NULL
+		    || !pair.second.csa_alt_active)
 			continue;
 		int r = rank(pair.second.type);
 		if (r < best_rank) {
@@ -1210,6 +1244,35 @@ int CSoftCSAManager::getCapmtDemux(uint32_t session_id)
 	std::lock_guard<std::mutex> lock(mtx);
 	auto it = sessions.find(session_id);
 	return it == sessions.end() ? -1 : it->second.capmt_demux;
+}
+
+uint8_t CSoftCSAManager::getCapmtCaMask(uint32_t session_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto it = sessions.find(session_id);
+	return it == sessions.end() ? 0 : it->second.capmt_ca_mask;
+}
+
+bool CSoftCSAManager::willReuseSession(t_channel_id channel_id, SoftCSASessionType type,
+                                        int frontend_num, uint8_t capmt_ca_mask)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto ch_it = channel_to_session.find(std::make_pair(channel_id, type));
+	if (ch_it == channel_to_session.end())
+		return false;
+	auto sess_it = sessions.find(ch_it->second);
+	if (sess_it == sessions.end())
+		return false;
+	return sess_it->second.session != NULL
+	    && sess_it->second.frontend_num == frontend_num
+	    && sess_it->second.capmt_ca_mask == capmt_ca_mask;
+}
+
+bool CSoftCSAManager::isPassiveSession(uint32_t session_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto it = sessions.find(session_id);
+	return it != sessions.end() && it->second.passive;
 }
 
 bool CSoftCSAManager::hasRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id)

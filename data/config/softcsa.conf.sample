@@ -1,0 +1,328 @@
+# -----------------------------------------------------------------------------
+# SoftCSA runtime configuration
+# -----------------------------------------------------------------------------
+#
+# Target path on the box: /var/tuxbox/config/softcsa.conf
+#
+# This file controls the Neutrino SoftCSA feature at runtime. SoftCSA performs
+# descrambling in software via libdvbcsa when a channel is flagged CSA-ALT by
+# OSCam. It is only compiled in when Neutrino is built with --enable-softcsa.
+#
+# FILE PRESENCE IS THE OPT-IN SIGNAL
+#
+#   File missing    -> SoftCSA stays dormant. Every scrambled channel is
+#                      registered with OSCam via the dvbapi v3 protocol so
+#                      OSCam's slot bookkeeping remains consistent, but the
+#                      local SoftCSA engine never starts, no MEMORY-source
+#                      switch occurs, no start-up wait fires on stream or
+#                      record start, and control words are dropped.
+#
+#   File present    -> SoftCSA is opted in. An empty file (or one with only
+#                      comments and blank lines) activates the feature with
+#                      the default values documented below. The smallest
+#                      working activation is:
+#
+#                          touch /var/tuxbox/config/softcsa.conf
+#
+# Running sessions are NOT torn down when this file is edited, moved or
+# deleted. Changes apply to the next CAPMT (next zap) dispatch only.
+#
+# -----------------------------------------------------------------------------
+# SYNTAX
+# -----------------------------------------------------------------------------
+#
+#   - One directive per line.
+#   - Lines starting with `#` are comments.
+#   - Blank lines are ignored.
+#   - Whitespace around `=` is trimmed.
+#   - Malformed lines are logged and skipped; the rest of the file still loads.
+#   - The config is re-read automatically when the file's mtime changes, so
+#     editing and saving is enough; no Neutrino restart required.
+#
+# -----------------------------------------------------------------------------
+# KEYS
+# -----------------------------------------------------------------------------
+#
+# enabled = 0 | 1                    (default: 1)
+#
+#   Master switch.
+#
+#       1 -> SoftCSA is armed; per-channel decision follows `auto` and entries.
+#       0 -> Every scrambled channel is registered with OSCam as passive:
+#            the dvbapi v3 capmt is sent, OSCam's slot stays consistent,
+#            but the local SoftCSA engine never runs.
+#
+# auto = 0 | 1                       (default: 1)
+#
+#   Fallthrough policy for channels that no entry matches.
+#
+#       1 -> OSCam's CSA-ALT flag decides.
+#            Unmatched channels are free to enter the SoftCSA path if OSCam
+#            announces CSA-ALT; otherwise they fall back to the classic hw path.
+#       0 -> Strict allow-list. Unmatched channels always use the classic hw
+#            path, even if OSCam announces CSA-ALT for them. Combined with
+#            include entries this gives a "only these channels use SoftCSA"
+#            semantic.
+#
+# start_timeout_ms = <integer>       (default: 3000, clamped to [100, 15000])
+#
+#   Maximum time in milliseconds that stream and record starts wait for
+#   OSCam's CW_ALGO_CSA_ALT confirmation before falling back to classic
+#   hardware descrambling. Shorter values trade reliability for startup
+#   latency; longer values help slow providers. Values outside the allowed
+#   range are clamped and a warning is logged.
+#
+# entry = <type>:<mode>:<body>       (zero or more)
+#
+#   Per-channel / per-transponder / per-bouquet rules. See the Entry Grammar
+#   section below. Rules override the `auto` fallthrough.
+#
+# -----------------------------------------------------------------------------
+# ENTRY GRAMMAR
+# -----------------------------------------------------------------------------
+#
+#   entry = <type>:<mode>:<body>
+#
+#   <type>  -> dvb | bouquet
+#   <mode>  -> include | exclude
+#   <body>  -> type-specific content (see below)
+#
+# DVB entries
+# -----------
+#
+#   entry = dvb:<mode>:<field>=<value>[,<field>=<value>...]
+#
+#   Fields (each optional; at least one must be set):
+#
+#       sid    = service_id                (hex 0x... or decimal)
+#       tsid   = transport_stream_id       (hex 0x... or decimal)
+#       onid   = original_network_id       (hex 0x... or decimal)
+#       satpos = satellite position        (signed; see below)
+#       freq   = freq_id as in services.xml (hex 0x... or decimal)
+#
+#   Unset fields act as wildcards. An entry matches a channel only if every
+#   set field equals the channel's value for that field.
+#
+#   Satellite position accepts two forms:
+#
+#       - Signed form:       satpos = 192     (19.2 degrees E)
+#                            satpos = -300    (30 degrees W)
+#                            satpos = 0       (terrestrial or cable)
+#
+#       - Transponder-id form:
+#                            satpos = 0xF12C  (same as -300, the historical
+#                                              0xF000 + abs() encoding)
+#
+#   Both forms produce the same internal match; use whichever is at hand.
+#
+# Bouquet entries
+# ---------------
+#
+#   entry = bouquet:<mode>:<name>
+#
+#   <name> is the bouquet name exactly as stored in bouquets.xml. Matching is
+#   case-sensitive and UTF-8. Everything after the third colon up to end of
+#   line is part of the name, including inner spaces and additional colons.
+#
+#   Bouquet membership is resolved once at config load time, not on every
+#   channel decision. After editing bouquets.xml or running a channel rescan,
+#   touch this file to force a re-resolve:
+#
+#       touch /var/tuxbox/config/softcsa.conf
+#
+# -----------------------------------------------------------------------------
+# MATCHING LADDER
+# -----------------------------------------------------------------------------
+#
+# Decision for a given channel follows this ladder:
+#
+#   1. DVB level
+#
+#      All DVB entries that match the channel are collected and ranked by
+#      specificity:
+#
+#          Rank 3 (most specific): sid is set
+#          Rank 2:                 tsid AND onid both set, sid not set
+#          Rank 1:                 freq set, rank-2 conditions not met
+#          Rank 0 (least specific): satpos set, rank-1 conditions not met
+#
+#      Only entries at the highest populated rank count. If one entry remains,
+#      its mode wins. If several entries tie at that rank, exclude wins.
+#
+#      If any DVB entry matched at rank >= 0, the bouquet level is skipped.
+#
+#   2. Bouquet level (only reached if no DVB entry matched)
+#
+#      All bouquet entries whose named bouquet contains this channel are
+#      collected. If any exclude exists among them, exclude wins; else if any
+#      include exists, include wins.
+#
+#   3. Fallthrough (only reached if no entry matched on either level)
+#
+#      auto = 1 -> OSCam's CSA-ALT flag decides.
+#      auto = 0 -> classic hardware path (strict allow-list semantics).
+#
+# The enabled = 0 master switch short-circuits the whole evaluation to the
+# classic hardware path.
+#
+# -----------------------------------------------------------------------------
+# EXAMPLES
+# -----------------------------------------------------------------------------
+#
+# Each example shows only the lines that change. Keys not shown keep their
+# defaults.
+#
+# Example A: Feature dormant
+# --------------------------
+#
+# Leave this file absent, or:
+#
+#     enabled=0
+#
+# No SoftCSA engine activity.
+#
+# Example B: Auto behaviour, nothing tuned
+# -------------------------------------------
+#
+#     enabled=1
+#     auto=1
+#     start_timeout_ms=3000
+#
+# Equivalent to `touch softcsa.conf`. All defaults. OSCam decides per channel,
+# SoftCSA handles CSA-ALT subscriptions, 3s start wait.
+#
+# Example C: Auto behaviour, but skip SoftCSA for a single noisy service
+# ----------------------------------------------------------------------
+#
+#     enabled=1
+#     auto=1
+#     entry=dvb:exclude:sid=0x2F75,tsid=0x4458,onid=0x0001
+#
+# Every scrambled channel keeps the auto behaviour, except the service
+# identified by those three IDs, which always takes the classic hardware path.
+#
+# Example D: Strict allow-list, one bouquet
+# -----------------------------------------
+#
+#     enabled=1
+#     auto=0
+#     entry=bouquet:include:Sky Deutschland
+#
+# Only channels in the "Sky Deutschland" bouquet use SoftCSA. Every other
+# scrambled channel falls back to the classic hardware path even if OSCam
+# announces CSA-ALT. Useful to restrict SoftCSA to a known-good provider
+# while evaluating behaviour on others.
+#
+# Mixed bouquets are safe: if the included bouquet also contains non-CSA-ALT
+# services, those still descramble. OSCam never signals CSA-ALT for them,
+# the SoftCSA engine stays idle, waitForStreamStart / waitForRecordStart
+# time out after start_timeout_ms, and the code path falls back to the
+# classic dmx->Read that the hardware descrambler feeds from OSCam's
+# /dev/dvb/adapterN/caM writes. The only visible cost is the one-time
+# start_timeout_ms latency per stream or record start on those in-bouquet
+# non-CSA-ALT services; live zapping has no wait and is unaffected.
+#
+# Channels *outside* the included bouquet are unmatched and hit the auto=0
+# fallthrough (DENY) — they register with OSCam as passive, so waitFor*Start
+# returns immediately and descrambling runs via OSCam's hardware-ca0 path
+# without any start-up latency.
+#
+# Example E: Whole transponder in, one service out
+# ------------------------------------------------
+#
+#     enabled=1
+#     auto=1
+#     entry=dvb:include:tsid=0x0001,onid=0x0085
+#     entry=dvb:exclude:sid=0x00AB,tsid=0x0001,onid=0x0085
+#
+# Every service on transponder (tsid=0x0001, onid=0x0085) uses SoftCSA except
+# the single service with sid=0x00AB. The sid-include sits at rank 3 and wins
+# the override without needing to exclude each sibling individually.
+#
+# Example F: Whole satellite in, one transponder out
+# ---------------------------------------------------
+#
+#     enabled=1
+#     auto=0
+#     entry=dvb:include:satpos=192
+#     entry=dvb:exclude:tsid=0x0001,onid=0x0085,satpos=192
+#
+# All 19.2 degrees E transponders are eligible for SoftCSA; the transponder
+# identified by (tsid, onid, satpos) is excluded. Entries outside the sat at
+# rank 0 are unaffected; channels on other satellites stay on the classic
+# hardware path because auto is 0.
+#
+# Example G: Bouquet-level tuning only
+# ------------------------------------
+#
+#     enabled=1
+#     auto=0
+#     entry=bouquet:include:Sky Gesamt
+#     entry=bouquet:exclude:Sky Sport
+#
+# Channels in "Sky Gesamt" use SoftCSA; any channel that is also a member of
+# "Sky Sport" is excluded because exclude wins on bouquet-level ties. Good
+# fit for setting an opt-in baseline and masking a sub-bouquet on top.
+#
+# Example H: Shorter start timeout for a fast OSCam
+# -------------------------------------------------
+#
+#     enabled=1
+#     auto=1
+#     start_timeout_ms=1500
+#
+# Unchanged decision logic, but stream and record starts wait only 1.5s for
+# the CSA-ALT confirmation before falling back to classic hardware path.
+# Use when the local OSCam always responds quickly.
+#
+# Example I: Emergency off without removing the file
+# --------------------------------------------------
+#
+#     enabled=0
+#     # everything else kept for later reactivation
+#     auto=1
+#     entry=bouquet:include:Sky Deutschland
+#
+# enabled=0 short-circuits the whole evaluation. The entries below are
+# retained as documentation for the operator; they take effect again as soon
+# as enabled flips back to 1.
+#
+# Example J: Loose sid-only entry (use with care)
+# -----------------------------------------------
+#
+#     enabled=1
+#     auto=0
+#     entry=dvb:include:sid=0x00AB
+#
+# Matches every service in the database with sid = 0x00AB, regardless of
+# transponder or satellite. Since SID is not globally unique this catches
+# unintended channels on other providers. Prefer pairing sid with tsid and
+# onid (rank 3 then addresses exactly one service).
+#
+# -----------------------------------------------------------------------------
+# ERROR HANDLING (reference)
+# -----------------------------------------------------------------------------
+#
+# The parser never aborts on bad input; it logs and continues:
+#
+#   - Malformed `key = value` line without `=`: logged, skipped.
+#   - Unknown key: logged, skipped.
+#   - enabled / auto not in {0, 1}: logged, the previous value is kept.
+#   - start_timeout_ms not numeric: logged, the previous value is kept.
+#   - start_timeout_ms out of [100, 15000]: clamped, warning logged.
+#   - Entry with unknown type or mode: logged, the single entry is dropped.
+#   - DVB entry with no field set, or a field without a numeric value: logged,
+#     the single entry is dropped.
+#   - Bouquet name not present in bouquets.xml: silently accepted; the match
+#     will simply never succeed. Rationale: this file may be edited before
+#     bouquets are loaded, so complaining would be noisy.
+
+# -----------------------------------------------------------------------------
+# DEFAULT OPT-IN FILE (active section starts here)
+# -----------------------------------------------------------------------------
+#
+# The two uncommented lines below activate the feature.
+# Customise as needed following the examples above.
+
+enabled=1
+auto=1

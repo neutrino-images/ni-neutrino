@@ -65,6 +65,7 @@
 #include <cs_api.h>
 
 #ifdef HAVE_SOFTCSA
+#include <driver/softcsa/softcsa_config.h>
 #include <driver/softcsa/softcsa_manager.h>
 #endif
 
@@ -302,9 +303,10 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 #endif
 
 #ifdef HAVE_SOFTCSA
-	/* SoftCSA deferred start: for scrambled channels without CI, try SoftCSA.
-	 * Send CA-PMT, wait for OSCam to respond with CSA-ALT. If timeout (normal
-	 * CSA), fall through to hardware cRecord path. */
+	/* Scrambled non-CI channels register with OSCam via the dvbapi v3
+	 * path. If the config denies the channel the session is passive
+	 * and the wait is skipped; otherwise wait for OSCam's CSA-ALT
+	 * confirmation. On passive or timeout, fall through to cRecord. */
 	if (channel->scrambled && !channel->bUseCI) {
 		printf("CRecordInstance::Start: trying SoftCSA for channel %llx\n",
 		       (unsigned long long)channel->getChannelID());
@@ -322,7 +324,8 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 
 		/* Wait for OSCam to confirm CSA-ALT and start the recordThread */
 		if (CSoftCSAManager::getInstance()->waitForRecordStart(
-				channel->getChannelID(), fd, 3000)) {
+				channel->getChannelID(), fd,
+				CSoftCSAConfig::getInstance()->startTimeoutMs())) {
 			printf("CRecordInstance::Start: SoftCSA recording started\n");
 			softcsa_record = true;
 			softcsa_fd = fd;
@@ -331,16 +334,22 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 			return RECORD_OK;
 		}
 
-		/* Timeout: not CSA-ALT (normal CSA or no OSCam response).
-		 * Undo all SoftCSA-path side effects before falling through
-		 * to cRecord which re-does lockFrontend + CCamManager::Start. */
-		printf("CRecordInstance::Start: SoftCSA timeout, falling back to cRecord\n");
-		{
-			SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
-				channel->getChannelID(), SOFTCSA_SESSION_RECORD);
-			for (auto &sn : sr.dvbapi_stops)
-				sendDvbapiSessionStop(channel, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
-		}
+		/* waitForRecordStart returned false. Either the runtime config
+		 * denied the channel (passive) or OSCam did not announce CSA-ALT
+		 * within the timeout. Undo the SoftCSA side effects so cRecord
+		 * can redo lockFrontend + CCamManager::Start cleanly. */
+		uint32_t sid = CSoftCSAManager::getInstance()->getSessionId(
+			channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+		bool was_passive = sid
+			&& CSoftCSAManager::getInstance()->isPassiveSession(sid);
+		printf("CRecordInstance::Start: %s, falling back to cRecord\n",
+		       was_passive ? "passive session" : "SoftCSA timeout");
+
+		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
+			channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+		for (auto &sn : sr.dvbapi_stops)
+			sendDvbapiSessionStop(channel, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
+
 		CCamManager::getInstance()->Stop(channel->getChannelID(), CCamManager::RECORD);
 		if (!autoshift)
 			CFEManager::getInstance()->unlockFrontend(frontend);

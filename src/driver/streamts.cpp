@@ -57,6 +57,7 @@
 #include <driver/streamts.h>
 #include <driver/record.h>
 #ifdef HAVE_SOFTCSA
+#include <driver/softcsa/softcsa_config.h>
 #include <driver/softcsa/softcsa_manager.h>
 #endif
 #include <driver/genpsi.h>
@@ -252,13 +253,12 @@ void CStreamInstance::run()
 		auto on_data = [this](const uint8_t *data, int len) {
 			this->Send((ssize_t)len, (unsigned char *)data);
 		};
-		/* 3 s: conservative window for OSCam's DESCR_MODE (algo=3). No
-		 * message within the timeout means HW descrambling, in which case
-		 * dmx->Read below returns descrambled TS. The trade-off is ~3 s
-		 * startup latency on HW channels; a shorter timeout risks
-		 * bypassing a slow CSA-ALT reply and producing scrambled TS. */
+		/* No descrmode within the timeout means HW descrambling; the
+		 * caller falls back to dmx->Read for descrambled TS. Window is
+		 * runtime-tunable via start_timeout_ms in softcsa.conf. */
 		use_softcsa_path = CSoftCSAManager::getInstance()->waitForStreamStart(
-			channel_id, on_data, 3000);
+			channel_id, on_data,
+			CSoftCSAConfig::getInstance()->startTimeoutMs());
 	}
 #endif
 

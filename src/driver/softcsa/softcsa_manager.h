@@ -53,9 +53,14 @@ public:
 	void onDescrMode(uint32_t session_id, uint32_t algo, uint32_t cipher_mode);
 	void onCW(uint32_t session_id, uint32_t parity, const uint8_t *cw);
 
+	/* Returns a valid session id. passive=true marks the session as
+	 * dormant: a v3 capmt is sent so oscam's slot bookkeeping stays
+	 * clean, but descrmode is ignored, cw is dropped, engine never
+	 * starts, and sibling lookups exclude this entry. passive is set
+	 * by the caller in capmt.cpp from the runtime config decision. */
 	uint32_t registerSession(t_channel_id channel_id, SoftCSASessionType type,
 	                         int adapter, int frontend_num,
-	                         uint8_t capmt_ca_mask);
+	                         uint8_t capmt_ca_mask, bool passive);
 	void addPid(uint32_t session_id, unsigned short pid);
 	void addPidByChannel(t_channel_id channel_id, SoftCSASessionType type, unsigned short pid);
 	void setDecoderPids(uint32_t session_id, unsigned short vpid, unsigned short apid, unsigned short pcrpid);
@@ -87,6 +92,13 @@ public:
 	uint32_t getLiveSessionId(t_channel_id channel_id);
 	uint32_t getSessionId(t_channel_id channel_id, SoftCSASessionType type);
 	int getCapmtDemux(uint32_t session_id);
+	uint8_t getCapmtCaMask(uint32_t session_id);
+	/* Predicate mirroring registerSession's internal reuse condition:
+	 * true when a session for (channel_id, type) already exists with the
+	 * same frontend_num and capmt_ca_mask and its worker is non-null. */
+	bool willReuseSession(t_channel_id channel_id, SoftCSASessionType type,
+	                      int frontend_num, uint8_t capmt_ca_mask);
+	bool isPassiveSession(uint32_t session_id);
 	bool hasRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id);
 	bool hasAnyRunningSession(t_channel_id channel_id);
 
@@ -122,6 +134,11 @@ private:
 		 * sibling's own capmt while live exists). Distinguishes a
 		 * parked hw live from an actively-decoding one. */
 		bool retained;
+		/* True when the runtime config denies this channel. A passive
+		 * session exists only to keep the oscam dvbapi slot bookkeeping
+		 * clean: v3 capmt is sent, descrmode is ignored, cw is dropped,
+		 * engine never starts, and sibling lookups exclude this entry. */
+		bool passive;
 		uint8_t ecm_mode;
 		CSoftCSASession *session;
 		std::vector<unsigned short> pids;

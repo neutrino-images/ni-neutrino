@@ -21,6 +21,7 @@ AM_CPPFLAGS = \
 noinst_LIBRARIES = libneutrino_driver_softcsa.a
 
 libneutrino_driver_softcsa_a_SOURCES = \
+	softcsa_config.cpp \
 	softcsa_engine.cpp \
 	softcsa_session.cpp \
 	softcsa_manager.cpp \

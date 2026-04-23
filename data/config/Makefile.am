@@ -20,3 +20,8 @@ EXTRA_DIST += \
 install_DATA += \
 	settingsupdate.conf
 endif
+
+if ENABLE_SOFTCSA
+install_DATA += \
+	softcsa.conf.sample
+endif

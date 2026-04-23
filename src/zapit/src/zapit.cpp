@@ -707,6 +707,7 @@ bool CZapit::ZapIt(const t_channel_id channel_id, bool forupdate, bool startplay
 		uint32_t live_sid = CSoftCSAManager::getInstance()->getLiveSessionId(
 			current_channel->getChannelID());
 		if (live_sid
+		    && !CSoftCSAManager::getInstance()->isPassiveSession(live_sid)
 		    && CSoftCSAManager::getInstance()->hasRunningSibling(
 		           current_channel->getChannelID(), live_sid)) {
 			int vfd = -1, afd = -1;

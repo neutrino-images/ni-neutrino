@@ -299,6 +299,13 @@ bool CDvbApiClient::recvServerInfo()
 
 bool CDvbApiClient::sendCaPmt(const unsigned char *data, unsigned int len, uint32_t msgid)
 {
+	/* Defense in depth: msgid 0 is never a valid session id (counter
+	 * starts at 1), so treat it as an unbacked capmt and drop it rather
+	 * than poison oscam's slot table with an uncorrelated subscription. */
+	if (msgid == 0) {
+		printf(TAG "sendCaPmt called with msgid=0; dropping\n");
+		return false;
+	}
 	/* Note: sock_fd check races with readerThread's disconnect(), but a stale
 	 * check only causes a failed writeAll which returns false safely. */
 	if (sock_fd < 0)
