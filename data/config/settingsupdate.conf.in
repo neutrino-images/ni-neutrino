@@ -47,6 +47,7 @@
 @CONFIGDIR@/oscam.*
 @CONFIGDIR@/oscammon.conf
 @CONFIGDIR@/scan.conf
+@CONFIGDIR@/softcsa.conf
 @CONFIGDIR@/srv.conf
 @CONFIGDIR@/flex/flex_eigene_scripte.conf
 

@@ -14,6 +14,7 @@ TOBACKUP="\
 	@CONFIGDIR@/moviebrowser.conf \
 	@CONFIGDIR@/radio-favorites.xml \
 	@CONFIGDIR@/scan.conf \
+	@CONFIGDIR@/softcsa.conf \
 	@CONFIGDIR@/timerd.conf \
 	@CONFIGDIR@/weather-favorites.xml \
 	@CONFIGDIR@/yWeb.conf \
