@@ -397,16 +397,34 @@ bool YaFT_p::push_esc(uint8_t ch)
 	esc.bp++;
 	esc.buf.push_back(ch);
 	if (esc.state == STATE_ESC) {
+		/* format:
+			OSC  I.......I F
+			ESC  ' '  '/'  '0'  '~'
+			0x1B 0x20-0x2F 0x30-0x7E
+		*/
 		if ('0' <= ch && ch <= '~')        /* final char */
 			return true;
 		else if (SPACE <= ch && ch <= '/') /* intermediate char */
 			return false;
 	} else if (esc.state == STATE_CSI) {
+		/* format:
+			CSI       P.......P I.......I F
+			ESC  '['  '0'  '?'  ' '  '/'  '@'  '~'
+			0x1B 0x5B 0x30-0x3F 0x20-0x2F 0x40-0x7E
+		*/
 		if ('@' <= ch && ch <= '~')
 			return true;
 		else if (SPACE <= ch && ch <= '?')
 			return false;
 	} else {
+		/* format:
+			OSC       I.....I F
+			ESC  ']'          BEL  or ESC  '\'
+			0x1B 0x5D unknown 0x07 or 0x1B 0x5C
+			DCS       I....I  F
+			ESC  'P'          BEL  or ESC  '\'
+			0x1B 0x50 unknown 0x07 or 0x1B 0x5C
+		*/
 		if (ch == BEL || (ch == BACKSLASH
 			&& esc.bp >= 2 && esc.buf[esc.bp-2] == ESC))
 			return true;
@@ -471,11 +489,18 @@ void YaFT_p::term_die(void)
 
 void YaFT_p::parse(uint8_t *buf, int size)
 {
+	/*
+		CTRL CHARS      : 0x00 ~ 0x1F
+		ASCII(printable): 0x20 ~ 0x7E
+		CTRL CHARS(DEL) : 0x7F
+		UTF-8           : 0x80 ~ 0xFF
+	*/
 	uint8_t ch;
 
 	for (int i = 0; i < size; i++) {
 		ch = buf[i];
 		if (esc.state == STATE_RESET) {
+			/* interrupted by illegal byte */
 			if (charset.following_byte > 0 && (ch < 0x80 || ch > 0xBF)) {
 				addch(REPLACEMENT_CHAR);
 				reset_charset();
@@ -590,6 +615,10 @@ void YaFT_p::csi_sequence(uint8_t ch)
 	case 'm': set_attr(&parm);          break;
 	case 'n': status_report(&parm);     break;
 	case 'r': set_margin(&parm);        break;
+	/* XXX: not implemented because these sequences conflict DECSLRM/DECSHTS
+	case 's': sco_save_state(&parm);    break;
+	case 'u': sco_restore_state(&parm); break;
+	*/
 	case '`': curs_col(&parm);          break;
 	default:                            break;
 	}
@@ -637,6 +666,14 @@ void YaFT_p::osc_sequence(uint8_t ch)
 void YaFT_p::utf8_charset(uint8_t ch)
 {
 	if (0x80 <= ch && ch <= 0xBF) {
+		/* check illegal UTF-8 sequence
+			* ? byte sequence: first byte must be between 0xC2 ~ 0xFD
+			* 2 byte sequence: first byte must be between 0xC2 ~ 0xDF
+			* 3 byte sequence: second byte following 0xE0 must be between 0xA0 ~ 0xBF
+			* 4 byte sequence: second byte following 0xF0 must be between 0x90 ~ 0xBF
+			* 5 byte sequence: second byte following 0xF8 must be between 0x88 ~ 0xBF
+			* 6 byte sequence: second byte following 0xFC must be between 0x84 ~ 0xBF
+		*/
 		if ((charset.following_byte == 0)
 			|| (charset.following_byte == 1 && charset.count == 0 && charset.code <= 1)
 			|| (charset.following_byte == 2 && charset.count == 0 && charset.code == 0 && ch < 0xA0)
@@ -680,6 +717,12 @@ void YaFT_p::utf8_charset(uint8_t ch)
 	}
 
 	if (charset.count >= charset.following_byte) {
+		/*	illegal code point (ref: http://www.unicode.org/reports/tr27/tr27-4.html)
+			0xD800   ~ 0xDFFF : surrogate pair
+			0xFDD0   ~ 0xFDEF : noncharacter
+			0xnFFFE  ~ 0xnFFFF: noncharacter (n: 0x00 ~ 0x10)
+			0x110000 ~        : invalid (unicode U+0000 ~ U+10FFFF)
+		*/
 		if (!charset.is_valid
 			|| (0xD800 <= charset.code && charset.code <= 0xDFFF)
 			|| (0xFDD0 <= charset.code && charset.code <= 0xFDEF)

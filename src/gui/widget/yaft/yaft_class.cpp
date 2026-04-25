@@ -129,6 +129,7 @@ int YaFT::run(void)
 	YaFT_p *term = new YaFT_p(paint);
 	int flags;
 
+	/* init */
 	if (setlocale(LC_ALL, "") == NULL) /* for wcwidth() */
 		logging(NORMAL, "setlocale failed\n");
 	if (!term->init())
@@ -141,6 +142,7 @@ int YaFT::run(void)
 	sigact.sa_flags   = SA_RESTART;
 	sigaction(SIGCHLD, &sigact, &oldact);
 
+	/* fork and exec shell */
 	if ((childpid = fork_and_exec(&term->fd, term->lines, term->cols)) < 0) {
 		logging(NORMAL, "forkpty failed\n");
 		goto exec_failed;
@@ -150,6 +152,7 @@ int YaFT::run(void)
 	flags = fcntl(term->fd, F_GETFL);
 	fcntl(term->fd, F_SETFL, flags | O_NONBLOCK);
 
+	/* main loop */
 	while (child_alive) {
 		if (need_redraw) {
 			need_redraw = false;
@@ -186,6 +189,7 @@ int YaFT::run(void)
 	}
 	term->refresh();
 
+	/* get the last partial line if there was no newline. The loop should only ever run once... */
 	while (!term->txt.empty()) {
 		std::string s = term->txt.front();
 		OnShellOutputLoop(&s, res, &ok);
