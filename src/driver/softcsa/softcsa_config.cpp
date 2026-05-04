@@ -67,7 +67,8 @@ CSoftCSAConfig *CSoftCSAConfig::getInstance()
 
 CSoftCSAConfig::CSoftCSAConfig()
 	: has_file(false), last_mtime(0),
-	  cfg_enabled(true), cfg_auto(true), cfg_start_timeout_ms(3000)
+	  cfg_enabled(true), cfg_auto(true), cfg_start_timeout_ms(3000),
+	  cfg_wait_for_data_timeout_ms(0), cfg_buffer_time_ms(0)
 {
 	resetToNoFileStateLocked();
 }
@@ -79,6 +80,8 @@ void CSoftCSAConfig::resetToNoFileStateLocked()
 	cfg_enabled = true;
 	cfg_auto = true;
 	cfg_start_timeout_ms = 3000;
+	cfg_wait_for_data_timeout_ms = 0;
+	cfg_buffer_time_ms = 0;
 	dvb_entries.clear();
 	bouquet_entries.clear();
 }
@@ -129,8 +132,11 @@ void CSoftCSAConfig::loadFromFileLocked()
 	}
 	fclose(fp);
 	resolveBouquetEntriesLocked();
-	printf(TAG "loaded %s: enabled=%d auto=%d start_timeout_ms=%d dvb=%zu bouquet=%zu\n",
+	printf(TAG "loaded %s: enabled=%d auto=%d start_timeout_ms=%d "
+	           "wait_for_data_timeout_ms=%d buffer_time_ms=%d "
+	           "dvb=%zu bouquet=%zu\n",
 	       CONFIG_PATH, (int)cfg_enabled, (int)cfg_auto, cfg_start_timeout_ms,
+	       cfg_wait_for_data_timeout_ms, cfg_buffer_time_ms,
 	       dvb_entries.size(), bouquet_entries.size());
 }
 
@@ -170,6 +176,41 @@ void CSoftCSAConfig::parseLineLocked(const std::string &key, const std::string &
 		cfg_start_timeout_ms = (int)v;
 		return;
 	}
+	if (key == "wait_for_data_timeout_ms") {
+		long v;
+		if (!parseIntStrict(val, v)) {
+			printf(TAG "line %d: wait_for_data_timeout_ms not an integer: '%s'\n", lineno, val.c_str());
+			return;
+		}
+		/* 0 disables; 100..2000 valid. Below 100 clamps to 0 so a stray
+		 * small value does not become a tight busy-wait. */
+		if (v != 0 && v < 100) {
+			printf(TAG "line %d: wait_for_data_timeout_ms %ld below 100, clamped to 0 (disabled)\n", lineno, v);
+			v = 0;
+		} else if (v > 2000) {
+			printf(TAG "line %d: wait_for_data_timeout_ms %ld clamped to 2000\n", lineno, v);
+			v = 2000;
+		}
+		cfg_wait_for_data_timeout_ms = (int)v;
+		return;
+	}
+	if (key == "buffer_time_ms") {
+		long v;
+		if (!parseIntStrict(val, v)) {
+			printf(TAG "line %d: buffer_time_ms not an integer: '%s'\n", lineno, val.c_str());
+			return;
+		}
+		/* 0 disables; 100..2000 valid. */
+		if (v != 0 && v < 100) {
+			printf(TAG "line %d: buffer_time_ms %ld below 100, clamped to 0 (disabled)\n", lineno, v);
+			v = 0;
+		} else if (v > 2000) {
+			printf(TAG "line %d: buffer_time_ms %ld clamped to 2000\n", lineno, v);
+			v = 2000;
+		}
+		cfg_buffer_time_ms = (int)v;
+		return;
+	}
 	if (key == "entry") {
 		parseEntryLocked(val, lineno);
 		return;
@@ -179,8 +220,8 @@ void CSoftCSAConfig::parseLineLocked(const std::string &key, const std::string &
 
 void CSoftCSAConfig::parseEntryLocked(const std::string &val, int lineno)
 {
-	/* Grammar: <type>:<mode>:<body>. Body is taken verbatim after the
-	 * second colon so bouquet names can contain further colons. */
+	/* Grammar: <type>:<mode>:<body>. Body is verbatim after the second
+	 * colon so bouquet names can contain further colons. */
 	size_t c1 = val.find(':');
 	if (c1 == std::string::npos) {
 		printf(TAG "line %d: entry missing type, skipping: %s\n", lineno, val.c_str());
@@ -208,9 +249,8 @@ void CSoftCSAConfig::parseEntryLocked(const std::string &val, int lineno)
 	if (type == "dvb") {
 		parseDvbEntryLocked(body, include, lineno);
 	} else if (type == "bouquet") {
-		/* Bouquet names keep internal colons and trailing spaces only if
-		 * the user meant them. Strip leading whitespace so `bouquet: Name`
-		 * is forgiven; preserve trailing so odd names round-trip. */
+		/* Strip leading whitespace so `bouquet: Name` is forgiven;
+		 * preserve trailing so odd names round-trip. */
 		size_t b = 0;
 		while (b < body.size() && (body[b] == ' ' || body[b] == '\t'))
 			b++;
@@ -266,10 +306,9 @@ void CSoftCSAConfig::parseDvbEntryLocked(const std::string &body, bool include, 
 		} else if (key == "onid") {
 			e.onid = (uint16_t)v; e.has_onid = true;
 		} else if (key == "satpos") {
-			/* Spec allows two forms: signed (e.g. -300 for 30 degrees W)
-			 * and the transponder-id encoding 0xF000 + abs(position).
-			 * Channels store the signed form in int16_t, so normalise
-			 * the transponder-id form back to signed before comparison. */
+			/* Two forms allowed: signed (e.g. -300 for 30 degrees W)
+			 * or transponder-id encoding 0xF000 + abs(position). Channels
+			 * store the signed form, so normalise back to signed. */
 			if (v >= 0xF000 && v <= 0xFFFF) {
 				long signed_v = -(v - 0xF000);
 				printf(TAG "line %d: satpos 0x%04lx interpreted as signed %ld via 0xF000+abs() encoding\n",
@@ -305,7 +344,7 @@ bool CSoftCSAConfig::dvbMatches(const DvbEntry &e, uint16_t sid, uint16_t tsid,
 
 int CSoftCSAConfig::dvbRank(const DvbEntry &e) const
 {
-	/* Spec: sid > tsid+onid > freq > satpos. Rank 3 is most specific. */
+	/* Specificity: sid > tsid+onid > freq > satpos. */
 	if (e.has_sid) return 3;
 	if (e.has_tsid && e.has_onid) return 2;
 	if (e.has_freq) return 1;
@@ -349,7 +388,7 @@ CSoftCSAConfig::Decision CSoftCSAConfig::decide(CZapitChannel *channel)
 	int32_t satpos = (int32_t)channel->getSatellitePosition();
 	uint16_t freq = (uint16_t)channel->getFreqId();
 
-	/* DVB level: find highest-ranked matching entry; ties resolve to exclude. */
+	/* DVB level: highest-ranked matching entry wins; ties go to exclude. */
 	int best_rank = -1;
 	bool best_include = false;
 	bool best_exclude = false;
@@ -375,10 +414,9 @@ CSoftCSAConfig::Decision CSoftCSAConfig::decide(CZapitChannel *channel)
 			return DECISION_ALLOW;
 	}
 
-	/* Bouquet level, only if no DVB entry matched. Tie-break: exclude wins.
-	 * Membership is checked against the snapshot built at config load time,
-	 * not the live bouquet manager, so we do not walk bouquet vectors under
-	 * mtx and avoid a latent race with runtime bouquet reloads. */
+	/* Bouquet level, only if no DVB entry matched. Ties go to exclude.
+	 * Membership uses the load-time snapshot to avoid walking the live
+	 * bouquet manager under mtx. */
 	bool bq_include = false, bq_exclude = false;
 	for (const auto &b : bouquet_entries) {
 		if (b.resolved_cids.find(cid) == b.resolved_cids.end())
@@ -391,7 +429,7 @@ CSoftCSAConfig::Decision CSoftCSAConfig::decide(CZapitChannel *channel)
 	if (bq_include)
 		return DECISION_ALLOW;
 
-	/* Fallthrough: auto=1 keeps today's behaviour, auto=0 denies. */
+	/* Fallthrough: auto=1 allows, auto=0 denies. */
 	return cfg_auto ? DECISION_FALLTHROUGH : DECISION_DENY;
 }
 
@@ -400,4 +438,18 @@ int CSoftCSAConfig::startTimeoutMs()
 	std::lock_guard<std::mutex> lock(mtx);
 	maybeReloadLocked();
 	return cfg_start_timeout_ms;
+}
+
+int CSoftCSAConfig::waitForDataTimeoutMs()
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	maybeReloadLocked();
+	return cfg_wait_for_data_timeout_ms;
+}
+
+int CSoftCSAConfig::bufferTimeMs()
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	maybeReloadLocked();
+	return cfg_buffer_time_ms;
 }

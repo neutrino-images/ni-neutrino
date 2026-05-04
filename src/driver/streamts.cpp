@@ -253,9 +253,9 @@ void CStreamInstance::run()
 		auto on_data = [this](const uint8_t *data, int len) {
 			this->Send((ssize_t)len, (unsigned char *)data);
 		};
-		/* No descrmode within the timeout means HW descrambling; the
-		 * caller falls back to dmx->Read for descrambled TS. Window is
-		 * runtime-tunable via start_timeout_ms in softcsa.conf. */
+		/* No descrmode within the timeout means HW descrambling; fall
+		 * back to dmx->Read for the descrambled TS. Window is tunable
+		 * via start_timeout_ms in softcsa.conf. */
 		use_softcsa_path = CSoftCSAManager::getInstance()->waitForStreamStart(
 			channel_id, on_data,
 			CSoftCSAConfig::getInstance()->startTimeoutMs());
@@ -291,9 +291,9 @@ void CStreamInstance::run()
 		CCamManager::getInstance()->Stop(channel_id, CCamManager::STREAM);
 
 #ifdef HAVE_SOFTCSA
-	/* Always stop if a session was registered, even if we never entered
-	 * the SoftCSA path — capmt.cpp registered it unconditionally for
-	 * scrambled non-CI channels, and OSCam's demux slot must be released. */
+	/* Stop if a session was registered, even when we never entered the
+	 * SoftCSA path: capmt registers unconditionally for scrambled
+	 * non-CI channels, and OSCam's demux slot must be released. */
 	if (CSoftCSAManager::getInstance()->hasRegisteredSession(
 	        channel_id, SOFTCSA_SESSION_STREAM)) {
 		CZapitChannel *str_ch = CServiceManager::getInstance()->FindChannel(channel_id);

@@ -42,7 +42,7 @@
 /* DVBAPI protocol version */
 #define DVBAPI_PROTOCOL_VERSION   3
 
-/* DVBAPI opcodes — from OSCam module-dvbapi.h */
+/* DVBAPI opcodes - from OSCam module-dvbapi.h */
 #define DVBAPI_CA_SET_DESCR       0x40106F86
 #define DVBAPI_CA_SET_DESCR_MODE  0x400C6F88
 #define DVBAPI_CA_SET_DESCR_DATA  0x40186F89
@@ -68,7 +68,6 @@
 
 #define TAG "[dvbapi] "
 
-/* Helper: read exactly 'count' bytes from fd, returns true on success */
 static bool readAll(int fd, uint8_t *buf, int count)
 {
 	int total = 0;
@@ -86,7 +85,6 @@ static bool readAll(int fd, uint8_t *buf, int count)
 	return true;
 }
 
-/* Helper: write exactly 'count' bytes to fd, returns true on success */
 static bool writeAll(int fd, const uint8_t *buf, int count)
 {
 	int total = 0;
@@ -104,19 +102,16 @@ static bool writeAll(int fd, const uint8_t *buf, int count)
 	return true;
 }
 
-/* Helper: read big-endian uint32 from buffer */
 static inline uint32_t readU32(const uint8_t *p)
 {
 	return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) | ((uint32_t)p[2] << 8) | p[3];
 }
 
-/* Helper: read big-endian uint16 from buffer */
 static inline uint16_t readU16(const uint8_t *p)
 {
 	return ((uint16_t)p[0] << 8) | p[1];
 }
 
-/* Helper: write big-endian uint32 to buffer */
 static inline void writeU32(uint8_t *p, uint32_t v)
 {
 	p[0] = (v >> 24) & 0xFF;
@@ -125,7 +120,6 @@ static inline void writeU32(uint8_t *p, uint32_t v)
 	p[3] = v & 0xFF;
 }
 
-/* Helper: write big-endian uint16 to buffer */
 static inline void writeU16(uint8_t *p, uint16_t v)
 {
 	p[0] = (v >> 8) & 0xFF;
@@ -176,7 +170,6 @@ bool CDvbApiClient::connect()
 
 	printf(TAG "connected to %s\n", CAMD_UDS_NAME);
 
-	/* Perform handshake: send CLIENT_INFO, receive SERVER_INFO */
 	if (!sendClientInfo()) {
 		printf(TAG "failed to send CLIENT_INFO\n");
 		disconnect();
@@ -228,10 +221,8 @@ bool CDvbApiClient::ensureConnected()
 
 bool CDvbApiClient::sendClientInfo()
 {
-	/*
-	 * CLIENT_INFO is sent WITHOUT 0xa5 prefix (OSCam proto_version is 0 at this point).
-	 * Format: [opcode:4 BE][proto_version:2 BE][name_len:1][name:N]
-	 */
+	/* CLIENT_INFO has no 0xa5 prefix (OSCam proto_version is still 0).
+	 * Format: [opcode:4 BE][proto_version:2 BE][name_len:1][name:N] */
 	const char *name = DVBAPI_CLIENT_NAME;
 	uint8_t name_len = (uint8_t)strlen(name);
 	int total = 4 + 2 + 1 + name_len;
@@ -248,10 +239,9 @@ bool CDvbApiClient::sendClientInfo()
 
 bool CDvbApiClient::recvServerInfo()
 {
-	/*
-	 * SERVER_INFO is received WITH 0xa5+msgid prefix (OSCam uses proto v3 after handshake).
-	 * Format: [0xa5][msgid:4][opcode:4 BE][proto_version:2 BE][name_len:1][name:N]
-	 */
+	/* SERVER_INFO carries the 0xa5+msgid prefix (proto v3 active after
+	 * handshake). Format: [0xa5][msgid:4][opcode:4 BE][proto_version:2
+	 * BE][name_len:1][name:N] */
 	uint8_t marker;
 	if (!readAll(sock_fd, &marker, 1))
 		return false;
@@ -282,8 +272,7 @@ bool CDvbApiClient::recvServerInfo()
 
 	if (name_len > 0) {
 		char name_buf[256];
-		/* name_len is uint8_t (max 255), buf is 256 — truncation cannot happen,
-		 * but keep the guard for defensive coding */
+		/* name_len fits in uint8_t (<=255); guard kept defensively. */
 		if (name_len > sizeof(name_buf) - 1)
 			name_len = sizeof(name_buf) - 1;
 		if (!readAll(sock_fd, (uint8_t *)name_buf, name_len))
@@ -299,28 +288,22 @@ bool CDvbApiClient::recvServerInfo()
 
 bool CDvbApiClient::sendCaPmt(const unsigned char *data, unsigned int len, uint32_t msgid)
 {
-	/* Defense in depth: msgid 0 is never a valid session id (counter
-	 * starts at 1), so treat it as an unbacked capmt and drop it rather
-	 * than poison oscam's slot table with an uncorrelated subscription. */
+	/* msgid 0 is never a valid session id (counter starts at 1); drop
+	 * rather than poison oscam's slot table with an uncorrelated subscription. */
 	if (msgid == 0) {
 		printf(TAG "sendCaPmt called with msgid=0; dropping\n");
 		return false;
 	}
-	/* Note: sock_fd check races with readerThread's disconnect(), but a stale
+	/* sock_fd check races with readerThread's disconnect(), but a stale
 	 * check only causes a failed writeAll which returns false safely. */
 	if (sock_fd < 0)
 		return false;
 
-	/*
-	 * CA-PMT sending (proto v3 framing):
-	 * [0xa5][msgid:4][ca_pmt_apdu...]
-	 *
-	 * The ca_pmt_apdu from writeToBuffer() already contains the AOT tag
-	 * (0x9F 80 32), ASN.1 length, and the full CA_PMT body including
-	 * adapter/demux/CA-device info via private descriptors (0x83/0x86/0x87).
-	 * OSCam parses the AOT tag and ASN.1 length directly after stripping
-	 * the v3 prefix — no separate opcode or adapter_index byte is expected.
-	 */
+	/* Proto v3 framing: [0xa5][msgid:4][ca_pmt_apdu...]. The apdu from
+	 * writeToBuffer already contains the AOT tag (0x9F 80 32), ASN.1
+	 * length, and the full CA_PMT body including the private descriptors
+	 * (0x83/0x86). OSCam parses the AOT tag and ASN.1 length directly
+	 * after stripping the v3 prefix; no separate opcode is expected. */
 	uint8_t hdr[5];
 	hdr[0] = DVBAPI_PROTO3_MARKER;
 	writeU32(hdr + 1, msgid);
@@ -347,7 +330,7 @@ void CDvbApiClient::stop()
 {
 	running.store(false);
 	if (reader.joinable()) {
-		/* closing socket will unblock the read in the reader thread */
+		/* shutdown unblocks the reader's blocking read. */
 		if (sock_fd >= 0) {
 			::shutdown(sock_fd, SHUT_RDWR);
 		}
@@ -381,9 +364,8 @@ void CDvbApiClient::readerThread()
 						continue;
 					CCam cam;
 					cam.setCaMask(info.capmt_ca_mask);
-					/* Match the stop and primary-send paths: a broken
-					 * allocation (-1) is floored explicitly instead of
-					 * relying on makeCaPmt's implicit 0x00 truncation. */
+					/* Floor -1 explicitly: do not rely on makeCaPmt's
+					 * implicit 0x00 truncation for the 0x86 byte. */
 					int capmt_demux = (info.capmt_demux >= 0) ? info.capmt_demux : 0;
 					cam.setSource(capmt_demux);
 					cam.makeCaPmt(channel, true, CCam::CAPMT_ADD);
@@ -398,11 +380,10 @@ void CDvbApiClient::readerThread()
 			continue;
 		}
 
-		/* Use poll to allow periodic checks of running flag */
 		struct pollfd pfd;
 		pfd.fd = sock_fd;
 		pfd.events = POLLIN;
-		int ret = ::poll(&pfd, 1, 500); /* 500ms timeout */
+		int ret = ::poll(&pfd, 1, 500);
 
 		if (ret < 0) {
 			if (errno == EINTR)
@@ -413,7 +394,7 @@ void CDvbApiClient::readerThread()
 		}
 
 		if (ret == 0)
-			continue; /* timeout, check running flag */
+			continue;
 
 		if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) {
 			printf(TAG "socket error (revents=0x%x)\n", pfd.revents);
@@ -421,7 +402,6 @@ void CDvbApiClient::readerThread()
 			continue;
 		}
 
-		/* Read the 0xa5 marker */
 		uint8_t marker;
 		if (!readAll(sock_fd, &marker, 1)) {
 			printf(TAG "connection closed by server\n");
@@ -435,8 +415,7 @@ void CDvbApiClient::readerThread()
 			continue;
 		}
 
-		/* Read msgid (4 bytes) + opcode (4 bytes) */
-		uint8_t hdr[8];
+		uint8_t hdr[8]; /* msgid(4) + opcode(4) */
 		if (!readAll(sock_fd, hdr, 8)) {
 			printf(TAG "failed to read message header\n");
 			disconnect();
@@ -446,12 +425,10 @@ void CDvbApiClient::readerThread()
 		uint32_t msgid = readU32(hdr);
 		uint32_t opcode = readU32(hdr + 4);
 
-		/*
-		 * Based on opcode, determine how much more to read.
-		 * CA_SET_DESCR, CA_SET_DESCR_MODE, DMX_SET_FILTER, DMX_STOP, ECM_INFO
-		 * have an adapter_index byte followed by opcode-specific payload.
-		 * SERVER_INFO does NOT have adapter_index.
-		 */
+		/* Per-opcode payload size. CA_SET_DESCR, CA_SET_DESCR_MODE,
+		 * DMX_SET_FILTER, DMX_STOP, ECM_INFO carry an adapter_index
+		 * byte followed by opcode-specific payload. SERVER_INFO does
+		 * not. */
 		switch (opcode) {
 		case DVBAPI_CA_SET_DESCR: {
 			/* adapter_index(1) + ca_descr_t: index(4)+parity(4)+cw(8) = 17 */
@@ -476,10 +453,8 @@ void CDvbApiClient::readerThread()
 			break;
 		}
 		case DVBAPI_CA_SET_DESCR_DATA: {
-			/*
-			 * adapter_index(1) + ca_descr_data_t: index(4)+parity(4)+data_type(4)+length(4)+data(N)
-			 * Read the fixed header first (17 bytes), extract length, then read data.
-			 */
+			/* adapter_index(1) + index(4)+parity(4)+data_type(4)+
+			 * length(4)+data(N). Read 17-byte fixed header, then data. */
 			uint8_t ddhdr[17]; /* adapter_index(1)+index(4)+parity(4)+data_type(4)+length(4) */
 			if (!readAll(sock_fd, ddhdr, 17)) {
 				printf(TAG "failed to read CA_SET_DESCR_DATA header\n");
@@ -502,15 +477,15 @@ void CDvbApiClient::readerThread()
 				if (remaining > 0)
 					break; /* readAll failed above */
 			}
-			/* AES128 — out of scope, consume and ignore */
+			/* AES128 is out of scope; consume and ignore. */
 			break;
 		}
 		case DVBAPI_DMX_SET_FILTER:
 		case DVBAPI_DMX_STOP:
-			/* OSCam's pc_nodmx filter path — never triggered in our
-			 * setup. Disconnect rather than guess the payload size
-			 * against a potentially mismatched proto version. */
-			printf(TAG "unexpected DMX opcode 0x%08x — disconnecting\n", opcode);
+			/* OSCam's pc_nodmx filter path is never triggered here.
+			 * Disconnect rather than guess the payload size against a
+			 * possibly mismatched proto version. */
+			printf(TAG "unexpected DMX opcode 0x%08x; disconnecting\n", opcode);
 			disconnect();
 			break;
 		case DVBAPI_SERVER_INFO: {
@@ -537,15 +512,9 @@ void CDvbApiClient::readerThread()
 			break;
 		}
 		case DVBAPI_ECM_INFO: {
-			/*
-			 * Has adapter_index (OSCam sends it for all opcodes except SERVER_INFO).
-			 * Consume all fields and discard — we don't use ECM_INFO data.
-			 *
-			 * Format: adapter_index(1) + service_id(2)+caid(2)+pid(2)+prov_id(4)+ecm_time(4)
-			 *         + [cardsystem_len(1)+cardsystem(N)] + [reader_len(1)+reader(N)]
-			 *         + [from_len(1)+from(N)] + [protocol_len(1)+protocol(N)]
-			 *         + hops(1)
-			 */
+			/* Discard ECM_INFO. Format: adapter_index(1) + sid(2)+
+			 * caid(2)+pid(2)+prov(4)+ecm_time(4) + 4 length-prefixed
+			 * strings + hops(1). */
 			uint8_t ecm_fixed[15]; /* adapter_index(1)+service_id(2)+caid(2)+pid(2)+prov_id(4)+ecm_time(4) */
 			if (!readAll(sock_fd, ecm_fixed, 15)) {
 				printf(TAG "failed to read ECM_INFO fixed fields\n");
@@ -583,10 +552,7 @@ void CDvbApiClient::readerThread()
 		}
 		default:
 			printf(TAG "unknown opcode 0x%08x, msgid=0x%08x\n", opcode, msgid);
-			/*
-			 * Unknown opcode with unknown payload length — we cannot safely
-			 * continue parsing the stream. Disconnect.
-			 */
+			/* Unknown opcode + unknown payload length: cannot resync. */
 			disconnect();
 			break;
 		}
@@ -595,9 +561,9 @@ void CDvbApiClient::readerThread()
 	printf(TAG "reader thread stopped\n");
 }
 
-/* msgid = our session_id (OSCam reflects it opaquely). The payload
+/* msgid = our session_id (OSCam reflects it opaquely). The payload's
  * `index` is OSCam's usedidx, not routable across ca_mask-isolated
- * sessions — we ignore it. */
+ * sessions, so it is ignored. */
 void CDvbApiClient::handleCaSetDescrMode(uint32_t msgid, const uint8_t *payload, int len)
 {
 	if (len < 13)

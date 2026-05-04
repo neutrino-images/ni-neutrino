@@ -23,7 +23,7 @@ noinst_LIBRARIES = libneutrino_driver_softcsa.a
 libneutrino_driver_softcsa_a_SOURCES = \
 	softcsa_config.cpp \
 	softcsa_engine.cpp \
-	softcsa_session.cpp \
 	softcsa_manager.cpp \
-	ts_demuxer.cpp \
-	pes_ringbuffer.cpp
+	softcsa_output_fd_set.cpp \
+	softcsa_dvr_demux_slot.cpp \
+	softcsa_tap_reader.cpp

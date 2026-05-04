@@ -7,6 +7,7 @@
 
 #include <OpenThreads/Thread>
 #include <OpenThreads/ReentrantMutex>
+#include <functional>
 #include <configfile.h>
 #include <eventserver.h>
 #include <connection/basicserver.h>
@@ -113,7 +114,7 @@ class CZapit : public OpenThreads::Thread
 		};
 
 		OpenThreads::ReentrantMutex	mutex;
-		OpenThreads::Mutex zapit_mutex;
+		OpenThreads::ReentrantMutex zapit_mutex;
 		bool started;
 		bool event_mode;
 		bool firstzap;
@@ -197,16 +198,6 @@ class CZapit : public OpenThreads::Thread
 
 		bool StartPlayBack(CZapitChannel *thisChannel);
 		//bool StopPlayBack(bool send_pmt);
-#ifdef HAVE_SOFTCSA
-		/* Switches the main decoder to MEMORY source for SoftCSA writer
-		 * consumption. Safe to call on the zapit thread. */
-		void applySoftCSAMemorySource(int video_type, int audio_type, int *vfd_out, int *afd_out);
-		void restoreSoftCSADecoder();
-#if ENABLE_PIP
-		bool switchPipToMemory(int pip, int video_type, int audio_type, int *out_vfd, int *out_afd);
-		void restorePipDecoder(int pip);
-#endif
-#endif
 		void SendPMT(bool forupdate = false);
 		void SetAudioStreamType(CZapitAudioChannel::ZapitAudioChannelType audioChannelType);
 
@@ -302,6 +293,24 @@ class CZapit : public OpenThreads::Thread
 		bool OpenPip(int pip = 0, int dnum = -1);
 		bool StartPip(const t_channel_id channel_id, int pip = 0);
 		bool StopPip(int pip = 0);
+#endif
+#ifdef HAVE_SOFTCSA
+		/* Stop the decoders for decoder_index (0=main, 1..2=PiP), destroy the
+		 * existing demuxes, construct fresh ones bound to dvr_demux_unit on
+		 * adapter (which the caller has configured with DMX_SOURCE_DVR<n>),
+		 * re-apply PIDs from current_channel / pip_channel_id, and Start.
+		 * cVideo/cAudio wrapper instances are NOT destroyed. Returns 0 on success. */
+		/* ready_for_data is invoked between filter setup and demux/decoder
+		 * start. Caller uses it to start the tap reader (so descrambled
+		 * bytes begin flowing into the DVR loopback) and optionally wait
+		 * for the first byte plus a buffer-fill sleep -- the anti-race
+		 * for "decoder Start before any data is buffered" PTS=0 stalls. */
+		int softcsaRebindDecoderToDvrDemux(int decoder_index, int adapter, int dvr_demux_unit,
+		                                   std::function<void(int /*adapter*/, int /*dvr_demux_unit*/)> ready_for_data);
+		/* Inverse: Stop, destroy the DVR-bound demuxes, construct fresh ones
+		 * against the default FRONT-source demux unit, re-apply PIDs, Start.
+		 * Returns 0 on success. */
+		int softcsaRebindDecoderToFrontDemux(int decoder_index, bool skip_decoder_start = false);
 #endif
 		void Lock() { mutex.lock(); }
 		void Unlock() { mutex.unlock(); }

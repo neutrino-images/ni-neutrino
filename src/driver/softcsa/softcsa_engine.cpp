@@ -45,7 +45,6 @@ CSoftCSAEngine::CSoftCSAEngine()
 		key_odd[i] = dvbcsa_bs_key_alloc();
 		if (!key_even[i] || !key_odd[i]) {
 			printf("[softcsa] dvbcsa_bs_key_alloc failed\n");
-			/* Clean up any already-allocated keys */
 			for (int j = 0; j <= i; j++) {
 				dvbcsa_bs_key_free(key_even[j]);
 				dvbcsa_bs_key_free(key_odd[j]);
@@ -70,18 +69,17 @@ CSoftCSAEngine::~CSoftCSAEngine()
 		dvbcsa_bs_key_free(key_even[i]);
 		dvbcsa_bs_key_free(key_odd[i]);
 	}
-	delete[] even_batch;  /* safe if NULL (constructor error path sets to NULL) */
+	delete[] even_batch;
 	delete[] odd_batch;
 }
 
 void CSoftCSAEngine::setKey(int parity, uint8_t ecm_mode, const uint8_t *cw)
 {
-	/* OSCam's cipher_mode (from CA_SET_DESCR_MODE) does NOT correspond to
-	 * libdvbcsa's ecm parameter. Enigma2 ignores cipher_mode entirely and
-	 * extracts ecm_mode from the ECM section body (last byte & 0x0F).
-	 * Enigma2's default is 0x04, which triggers the block cipher key
-	 * permutation in dvbcsa_bs_key_set_ecm(). Use 0x04 unconditionally
-	 * until we implement an ECM section monitor. */
+	/* OSCam's cipher_mode does NOT map to libdvbcsa's ecm parameter
+	 * (which is normally taken from the ECM section body, last byte
+	 * & 0x0F). 0x04 triggers the block-cipher key permutation and
+	 * works for current channels; replace once a real ECM section
+	 * monitor is wired up. */
 	const uint8_t libdvbcsa_ecm = 4;
 
 	if (parity == 0 || parity == 1) {
@@ -99,6 +97,9 @@ void CSoftCSAEngine::setKey(int parity, uint8_t ecm_mode, const uint8_t *cw)
 		dvbcsa_bs_key_set_ecm(libdvbcsa_ecm, cw, key_even[inactive]);
 		key_even_idx.store(inactive, std::memory_order_release);
 		key_even_set.store(true, std::memory_order_release);
+		bool was_logged = first_even_logged.exchange(true);
+		if (!was_logged)
+			printf("[softcsa engine] first even key set\n");
 	}
 	else // odd
 	{
@@ -109,22 +110,10 @@ void CSoftCSAEngine::setKey(int parity, uint8_t ecm_mode, const uint8_t *cw)
 		dvbcsa_bs_key_set_ecm(libdvbcsa_ecm, cw, key_odd[inactive]);
 		key_odd_idx.store(inactive, std::memory_order_release);
 		key_odd_set.store(true, std::memory_order_release);
+		bool was_logged = first_odd_logged.exchange(true);
+		if (!was_logged)
+			printf("[softcsa engine] first odd key set\n");
 	}
-}
-
-void CSoftCSAEngine::copyKeysTo(CSoftCSAEngine *dst)
-{
-	uint8_t cw_copy[2][8];
-	uint8_t ecm_copy;
-	{
-		std::lock_guard<std::mutex> lock(stored_cw_mtx);
-		memcpy(cw_copy, stored_cw, sizeof(cw_copy));
-		ecm_copy = stored_ecm_mode;
-	}
-	if (key_even_set.load(std::memory_order_acquire))
-		dst->setKey(0, ecm_copy, cw_copy[0]);
-	if (key_odd_set.load(std::memory_order_acquire))
-		dst->setKey(1, ecm_copy, cw_copy[1]);
 }
 
 int CSoftCSAEngine::descramble(uint8_t *data, int len)
@@ -132,11 +121,10 @@ int CSoftCSAEngine::descramble(uint8_t *data, int len)
 	if (!even_batch || !odd_batch || batch_size == 0)
 		return 0;
 
-	/* Snapshot key availability — once per call, not per packet.
-	 * Before setKey() is called, key buffers contain uninitialized data
-	 * from dvbcsa_bs_key_alloc(). Descrambling with garbage keys produces
-	 * corrupted output that the decoder misinterprets as valid TS.
-	 * Instead, packets without a valid key are converted to null packets. */
+	/* Snapshot key availability once per call. dvbcsa_bs_key_alloc
+	 * returns uninitialised buffers, so descrambling with a garbage
+	 * key would emit corrupted-but-valid-looking TS. Convert packets
+	 * with no key to null packets instead. */
 	const bool even_set = key_even_set.load(std::memory_order_acquire);
 	const bool odd_set = key_odd_set.load(std::memory_order_acquire);
 	struct dvbcsa_bs_key_s *k_even = even_set ? key_even[key_even_idx.load(std::memory_order_acquire)] : nullptr;
@@ -155,12 +143,11 @@ int CSoftCSAEngine::descramble(uint8_t *data, int len)
 
 		uint8_t tsc = pkt[3] & TS_TSC_MASK;
 		if (tsc == 0)
-			continue; // not scrambled — PSI, ECM, clear streams pass through
+			continue; // PSI, ECM, clear streams pass through
 
-		// Calculate payload offset (skip adaptation field if present)
 		int payload_off = TS_HDR_PAYLOAD_OFF;
 		if (pkt[3] & TS_ADAPT_FIELD)
-			payload_off += 1 + pkt[4]; // 1 byte adapt length + adapt data
+			payload_off += 1 + pkt[4];
 
 		if (payload_off >= TS_PACKET_SIZE)
 			continue; // no payload
@@ -181,13 +168,13 @@ int CSoftCSAEngine::descramble(uint8_t *data, int len)
 					dvbcsa_bs_decrypt(k_even, even_batch, TS_PACKET_SIZE - TS_HDR_PAYLOAD_OFF);
 					even_count = 0;
 				}
-				/* Clear TSC bits after adding to batch. Safe because dvbcsa_bs_decrypt
-				 * operates on payload data pointers, not TS headers. */
+				/* Clearing TSC after batch-add is safe: dvbcsa_bs_decrypt
+				 * operates on payload pointers, not TS headers. */
 				pkt[3] &= ~TS_TSC_MASK;
 			}
 			else
 			{
-				// No even key yet — convert to null packet
+				// No even key yet: emit null packet
 				pkt[1] = 0x1F;
 				pkt[2] = 0xFF;
 				pkt[3] &= ~TS_TSC_MASK;
@@ -209,12 +196,11 @@ int CSoftCSAEngine::descramble(uint8_t *data, int len)
 					dvbcsa_bs_decrypt(k_odd, odd_batch, TS_PACKET_SIZE - TS_HDR_PAYLOAD_OFF);
 					odd_count = 0;
 				}
-				/* Clear TSC bits — see even-key comment above */
 				pkt[3] &= ~TS_TSC_MASK;
 			}
 			else
 			{
-				// No odd key yet — convert to null packet
+				// No odd key yet: emit null packet
 				pkt[1] = 0x1F;
 				pkt[2] = 0xFF;
 				pkt[3] &= ~TS_TSC_MASK;
@@ -222,7 +208,7 @@ int CSoftCSAEngine::descramble(uint8_t *data, int len)
 		}
 	}
 
-	// Flush remaining packets
+	// Flush remainder
 	if (even_count > 0)
 	{
 		even_batch[even_count].data = NULL;

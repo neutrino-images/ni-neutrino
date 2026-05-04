@@ -46,6 +46,46 @@ void CCamManager_SetDvbApiClient(CDvbApiClient *client)
 {
 	dvbapi_client = client;
 }
+
+/* Tap PID set for a SoftCSA session. LIVE/PIP need only what the HW
+ * decoder consumes (video, every audio track, pcr, pmt). STREAM/RECORD
+ * also need PAT, TDT, teletext and DVB subs so the descrambled stream
+ * is byte-equivalent to the FTA path and clients can enumerate the
+ * program.
+ *
+ * Centralised here: capmt::SetMode is the only path that runs on both
+ * initial register and PMT-update force_update, so live, PiP, record,
+ * and stream all get correct PID coverage without each hooking PMT
+ * update events. */
+static void softcsaAddSessionPids(uint32_t session_id, CZapitChannel *channel,
+                                  SoftCSASessionType stype)
+{
+	if (channel->getVideoPid())
+		CSoftCSAManager::getInstance()->addPid(session_id, channel->getVideoPid());
+	for (unsigned char ai = 0; ai < channel->getAudioChannelCount(); ai++) {
+		CZapitAudioChannel *ac = channel->getAudioChannel(ai);
+		if (ac && ac->pid)
+			CSoftCSAManager::getInstance()->addPid(session_id, ac->pid);
+	}
+	if (channel->getPcrPid() && channel->getPcrPid() != channel->getVideoPid())
+		CSoftCSAManager::getInstance()->addPid(session_id, channel->getPcrPid());
+	if (channel->getPmtPid())
+		CSoftCSAManager::getInstance()->addPid(session_id, channel->getPmtPid());
+
+	if (stype == SOFTCSA_SESSION_STREAM || stype == SOFTCSA_SESSION_RECORD) {
+		CSoftCSAManager::getInstance()->addPid(session_id, 0x0000);  /* PAT */
+		CSoftCSAManager::getInstance()->addPid(session_id, 0x0014);  /* TDT */
+		if (channel->getTeletextPid())
+			CSoftCSAManager::getInstance()->addPid(session_id, channel->getTeletextPid());
+		for (int i = 0; i < (int)channel->getSubtitleCount(); i++) {
+			CZapitAbsSub *s = channel->getChannelSub(i);
+			if (s && s->thisSubType == CZapitAbsSub::DVB) {
+				CZapitDVBSub *sd = reinterpret_cast<CZapitDVBSub*>(s);
+				CSoftCSAManager::getInstance()->addPid(session_id, sd->pId);
+			}
+		}
+	}
+}
 #endif
 
 //#define DEBUG_CAPMT
@@ -141,7 +181,7 @@ bool CCam::makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list, co
 		capmt.injectDescriptor(tmp, false);
 
 #ifdef HAVE_SOFTCSA
-		/* DVBAPI protocol v3 descriptors */
+		/* DVBAPI v3 descriptors */
 		tmp[0] = 0x83; /* adapter device */
 		tmp[1] = 0x01;
 		tmp[2] = 0x00; /* adapter_index */
@@ -151,9 +191,6 @@ bool CCam::makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list, co
 		tmp[1] = 0x01;
 		tmp[2] = (source_demux >= 0) ? (uint8_t)source_demux : 0x00;
 		capmt.injectDescriptor(tmp, false);
-
-		/* No 0x87: previous attempts forced ca_mask=1 and broke
-		 * descrambler slots. Keep 0x82 and 0x86 symmetric. */
 #endif
 	}
 
@@ -386,12 +423,11 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			uint8_t softcsa_list = (channel_map.size() > 1) ? CCam::CAPMT_ADD : CCam::CAPMT_ONLY;
 			cam->makeCaPmt(channel, true, softcsa_list);
 #ifdef HAVE_SOFTCSA
-			/* Every scrambled, non-CI channel is registered with oscam via
-			 * the dvbapi v3 path; the runtime config only decides whether
+			/* Every scrambled non-CI channel is registered with oscam
+			 * via dvbapi v3. The runtime config only decides whether
 			 * the local SoftCSA engine runs (passive=false) or lies
-			 * dormant (passive=true). Keeps oscam's slot bookkeeping
-			 * clean regardless of feature activation, which is the only
-			 * reliable protocol on current oscam builds. */
+			 * dormant (passive=true). This keeps oscam's slot
+			 * bookkeeping consistent regardless of feature activation. */
 			if (start && channel->scrambled && !channel->bUseCI
 			    && (mode == PLAY || mode == RECORD || mode == PIP || mode == STREAM)
 			    && dvbapi_client && dvbapi_client->ensureConnected()) {
@@ -404,23 +440,22 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 				/* 0x82 is a single descriptor byte, truncation is correct. */
 				uint8_t reg_ca_mask = (uint8_t)cam->getCaMask();
 
-				/* PMT updates set force_update but often change nothing the
-				 * softcsa slot cares about. Split the two cases:
-				 *   reuse-path: registerSession would return the same id
-				 *               untouched. Any CAPMT resend here would be a
-				 *               second START for the same msgid, the race
-				 *               that intermittently blacks the next same-TP
-				 *               zap, and a running Recording on this channel
-				 *               would lose its CW window during the resulting
-				 *               OSCam slot rebuild. Skip the whole block.
-				 *   session-change: frontend_num or capmt_ca_mask differ, so
-				 *               registerSession drops the old session. Send
-				 *               an explicit NOT_SELECTED first so OSCam tears
-				 *               the old slot down before the fresh CAPMT. */
+				/* PMT updates set force_update but often change nothing
+				 * the softcsa slot cares about. Two cases:
+				 *   reuse-path: registerSession returns the same id;
+				 *     a CAPMT resend here would be a duplicate START for
+				 *     the same msgid (intermittently blacks the next
+				 *     same-TP zap, and a running record on this channel
+				 *     loses its CW window during the OSCam slot rebuild).
+				 *     Skip the whole block.
+				 *   session-change: frontend_num or capmt_ca_mask differ,
+				 *     so registerSession drops the old session. Send
+				 *     an explicit NOT_SELECTED first so OSCam tears the
+				 *     old slot down before the fresh CAPMT. */
 				bool skip_resubscribe = false;
 				if (force_update) {
 					if (CSoftCSAManager::getInstance()->willReuseSession(
-					        channel->getChannelID(), stype, source, reg_ca_mask)) {
+					        channel->getChannelID(), stype, source)) {
 						printf("[softcsa] force_update no-op: session for channel %llx unchanged, skipping capmt resend\n",
 						       (unsigned long long)channel->getChannelID());
 						skip_resubscribe = true;
@@ -443,12 +478,12 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 					if (mode == PIP)
 						CSoftCSAManager::getInstance()->setPipDevIndex(session_id, channel->getPipDemux() - 1);
 
-					/* Rebuild the CAPMT with the allocator-assigned demux
-					 * unit for all modes so register, stop, and resubscribe
-					 * all carry the same 0x86 byte on the wire. Without
-					 * this, the stop path's secondary slot-match by
-					 * demux_index would miss the register-time value and
-					 * leak subscriptions on the key server. */
+					/* Rebuild the CAPMT with the allocator-assigned
+					 * demux unit so register, stop, and resubscribe all
+					 * carry the same 0x86 byte. Otherwise the stop path's
+					 * secondary slot-match by demux_index misses the
+					 * register-time value and leaks subscriptions on the
+					 * key server. */
 					int capmt_demux = CSoftCSAManager::getInstance()->getCapmtDemux(session_id);
 					if (capmt_demux < 0)
 						capmt_demux = (source >= 0) ? source : 0;
@@ -457,17 +492,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 					cam->makeCaPmt(channel, true, softcsa_list);
 					cam->setSource(saved_source);
 
-					if (channel->getVideoPid())
-						CSoftCSAManager::getInstance()->addPid(session_id, channel->getVideoPid());
-					for (unsigned char ai = 0; ai < channel->getAudioChannelCount(); ai++) {
-						CZapitAudioChannel *ac = channel->getAudioChannel(ai);
-						if (ac && ac->pid)
-							CSoftCSAManager::getInstance()->addPid(session_id, ac->pid);
-					}
-					if (channel->getPcrPid() && channel->getPcrPid() != channel->getVideoPid())
-						CSoftCSAManager::getInstance()->addPid(session_id, channel->getPcrPid());
-					if (channel->getPmtPid())
-						CSoftCSAManager::getInstance()->addPid(session_id, channel->getPmtPid());
+					softcsaAddSessionPids(session_id, channel, stype);
 
 					CSoftCSAManager::getInstance()->setDecoderPids(session_id,
 						channel->getVideoPid(),
@@ -508,12 +533,11 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	if(oldmask == newmask) {
 		INFO("\033[33m (oldmask == newmask)\033[0m");
 #ifdef HAVE_SOFTCSA
-		/* Same-channel fallback: mask did not change because a
-		 * subscription on this frontend already exists. Register
-		 * the new mode in SoftCSA and — if no LIVE session can share
-		 * its keys — send a fresh CAPMT to OSCam. When force_update
-		 * is set the mask-change branch above already ran the same
-		 * registration, so skip here to avoid a double-register. */
+		/* Same-channel fallback: mask unchanged because a subscription
+		 * on this frontend already exists. Register the new mode in
+		 * SoftCSA and -- if no LIVE session can share its keys -- send
+		 * a fresh CAPMT to OSCam. force_update means the mask-change
+		 * branch above already did this; skip to avoid a double-register. */
 		if (start && channel->scrambled && !channel->bUseCI
 		    && dvbapi_client && dvbapi_client->ensureConnected()
 		    && !force_update) {
@@ -532,17 +556,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			if (mode == PIP)
 				CSoftCSAManager::getInstance()->setPipDevIndex(session_id, channel->getPipDemux() - 1);
 
-			if (channel->getVideoPid())
-				CSoftCSAManager::getInstance()->addPid(session_id, channel->getVideoPid());
-			for (unsigned char ai = 0; ai < channel->getAudioChannelCount(); ai++) {
-				CZapitAudioChannel *ac = channel->getAudioChannel(ai);
-				if (ac && ac->pid)
-					CSoftCSAManager::getInstance()->addPid(session_id, ac->pid);
-			}
-			if (channel->getPcrPid() && channel->getPcrPid() != channel->getVideoPid())
-				CSoftCSAManager::getInstance()->addPid(session_id, channel->getPcrPid());
-			if (channel->getPmtPid())
-				CSoftCSAManager::getInstance()->addPid(session_id, channel->getPmtPid());
+			softcsaAddSessionPids(session_id, channel, stype);
 
 			CSoftCSAManager::getInstance()->setDecoderPids(session_id,
 				channel->getVideoPid(),
@@ -555,7 +569,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 			/* No sibling to key-copy from: subscribe directly. Always
 			 * CAPMT_ADD so an in-flight recording/stream on another SID
-			 * stays alive even when channel_map has only this entry. */
+			 * survives even when channel_map only has this entry. */
 			if (!CSoftCSAManager::getInstance()->hasAnyRunningSession(channel->getChannelID())) {
 				int capmt_demux = CSoftCSAManager::getInstance()->getCapmtDemux(session_id);
 				if (capmt_demux < 0)
@@ -572,7 +586,7 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 					                                    : "live";
 					printf("[softcsa] sendCaPmt (%s-only) failed for channel %llx\n",
 					       kind, (unsigned long long)channel->getChannelID());
-					/* roll back — CAPMT never reached OSCam, no NOT_SELECTED needed */
+					/* CAPMT never reached OSCam, no NOT_SELECTED needed. */
 					CSoftCSAManager::getInstance()->stopSession(
 						channel->getChannelID(), stype);
 				}
@@ -728,7 +742,7 @@ void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int capm
 
 	CCam tmp;
 	tmp.setCaMask(capmt_ca_mask);
-	/* Explicit floor so a broken allocation (-1) does not rely on
+	/* Explicit floor: a broken allocation (-1) must not rely on
 	 * makeCaPmt's implicit 0x00 truncation for the 0x86 byte. */
 	if (capmt_demux < 0)
 		capmt_demux = 0;

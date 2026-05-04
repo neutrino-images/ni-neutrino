@@ -24,6 +24,8 @@
  */
 
 /* system headers */
+#include <cerrno>
+#include <cstring>
 #include <fcntl.h>
 #include <sys/poll.h>
 #include <sys/ioctl.h>
@@ -76,37 +78,12 @@
 #include <gui/osd_helpers.h>
 
 #ifdef HAVE_SOFTCSA
+#include <functional>
 #include "dvbapi_client.h"
 #include <driver/softcsa/softcsa_manager.h>
+#include <driver/softcsa/softcsa_config.h>
 #include <dmx_hal.h>
-#include <linux/dvb/audio.h>
-#include <linux/dvb/video.h>
 extern void CCamManager_SetDvbApiClient(CDvbApiClient *client);
-
-/* Kernel VIDEO_STREAMTYPE_* values expected by VIDEO_SET_STREAMTYPE.
- * Duplicated from libarmbox/video.cpp (private to cVideo::SetStreamType)
- * because we bypass the HAL and drive the decoder fd directly from here. */
-#define ZAPIT_VIDEO_STREAMTYPE_MPEG2       0
-#define ZAPIT_VIDEO_STREAMTYPE_MPEG4_H264  1
-#define ZAPIT_VIDEO_STREAMTYPE_VC1         3
-#define ZAPIT_VIDEO_STREAMTYPE_H265_HEVC   7
-#define ZAPIT_VIDEO_STREAMTYPE_AVS         16
-
-/* CZapitChannel::type is a VIDEO_FORMAT_* enum — translate to the kernel
- * VIDEO_STREAMTYPE_* value the decoder ioctl actually expects. Values
- * coincide for MPEG2/H264 but diverge for VC1 and HEVC, so channels with
- * those codecs would get the wrong streamtype without this. */
-static int zapit_translate_video_streamtype(int video_format)
-{
-	switch (video_format) {
-		case VIDEO_FORMAT_MPEG4_H264: return ZAPIT_VIDEO_STREAMTYPE_MPEG4_H264;
-		case VIDEO_FORMAT_MPEG4_H265: return ZAPIT_VIDEO_STREAMTYPE_H265_HEVC;
-		case VIDEO_FORMAT_VC1:        return ZAPIT_VIDEO_STREAMTYPE_VC1;
-		case VIDEO_FORMAT_AVS:        return ZAPIT_VIDEO_STREAMTYPE_AVS;
-		case VIDEO_FORMAT_MPEG2:
-		default:                      return ZAPIT_VIDEO_STREAMTYPE_MPEG2;
-	}
-}
 #endif
 
 #ifdef PEDANTIC_VALGRIND_SETUP
@@ -139,6 +116,18 @@ extern cDemux * pipAudioDemux[3];
 #endif
 
 cDemux *pcrDemux = NULL;
+
+#ifdef HAVE_SOFTCSA
+/* Decoder-fed demuxes used while a SoftCSA session is active. They are
+ * constructed against the DVR loopback unit (>= 4) so HAL pesFilter's
+ * default switch branch routes them to decoder slot 0. The original
+ * videoDemux/audioDemux/pcrDemux globals stay alive throughout, just
+ * with their filters DMX_STOP'd so only one feeder per pes_type is
+ * active at any time. */
+static cDemux *softcsa_videoDemux = NULL;
+static cDemux *softcsa_audioDemux = NULL;
+static cDemux *softcsa_pcrDemux = NULL;
+#endif
 
 /* the map which stores the wanted cable/satellites */
 scan_list_t scanProviders;
@@ -547,7 +536,9 @@ bool CZapit::ZapIt(const t_channel_id channel_id, bool forupdate, bool startplay
 	bool transponder_change = false;
 	bool failed = false;
 	CZapitChannel* newchannel;
-
+#ifdef HAVE_SOFTCSA
+	OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> _zlock(zapit_mutex);
+#endif
 	abort_zapit = 0;
 	if((newchannel = CServiceManager::getInstance()->FindChannel(channel_id, &current_is_nvod)) == NULL) {
 		INFO("channel_id " PRINTF_CHANNEL_ID_TYPE " not found", channel_id);
@@ -698,32 +689,20 @@ bool CZapit::ZapIt(const t_channel_id channel_id, bool forupdate, bool startplay
 	SendPMT(forupdate);
 
 #ifdef HAVE_SOFTCSA
-	/* If a sibling is already descrambling this channel, attach the main
-	 * decoder to MEMORY now. Without this hook the dedup case (a sibling
-	 * already has the subscription) never triggers onDescrMode and the
-	 * decoder would stay on DEMUX. applySoftCSAMemorySource honours
-	 * playing==false so the standby record-zap case stays muted. */
+	/* Same-mask sibling-attach: when a STREAM/RECORD already runs on
+	 * this channel and capmt took the same-mask branch (sendCaPmt
+	 * skipped), OSCam will never emit onDescrMode for the new LIVE
+	 * session_id. Attach directly: the engine is shared via tap and
+	 * the sibling already keyed it. -1 from cloneAndStartLive means
+	 * no sibling -- onDescrMode will attach later. */
 	if (current_channel->scrambled && !current_channel->bUseCI) {
-		uint32_t live_sid = CSoftCSAManager::getInstance()->getLiveSessionId(
-			current_channel->getChannelID());
-		if (live_sid
-		    && !CSoftCSAManager::getInstance()->isPassiveSession(live_sid)
-		    && CSoftCSAManager::getInstance()->hasRunningSibling(
-		           current_channel->getChannelID(), live_sid)) {
-			int vfd = -1, afd = -1;
-			int video_type = (int) current_channel->type;
-			int audio_type = current_channel->getAudioChannel()
-				? current_channel->getAudioChannel()->audioChannelType : 0;
-			applySoftCSAMemorySource(video_type, audio_type, &vfd, &afd);
-			if (vfd >= 0
-			    && !CSoftCSAManager::getInstance()->cloneAndStartLive(
-			            live_sid, vfd, afd)) {
-				printf("[softcsa] ZapIt: sibling-attach lost race, restoring decoder\n");
-				restoreSoftCSADecoder();
-			}
-		}
+		uint32_t live_sid = CSoftCSAManager::getInstance()->getSessionId(
+			current_channel->getChannelID(), SOFTCSA_SESSION_LIVE);
+		if (live_sid && !CSoftCSAManager::getInstance()->isPassiveSession(live_sid))
+			CSoftCSAManager::getInstance()->cloneAndStartLive(live_sid, 0);
 	}
 #endif
+
 	//play:
 	int caid = 1;
 	SendEvent(CZapitClient::EVT_ZAP_CA_ID, &caid, sizeof(int));
@@ -952,25 +931,15 @@ bool CZapit::StartPip(const t_channel_id channel_id, int pip)
 	CCamManager::getInstance()->Start(newchannel->getChannelID(), CCamManager::PIP);
 
 #ifdef HAVE_SOFTCSA
-	/* Same-channel CSA-ALT PiP: a sibling is already running on this
-	 * channel, so we can clone its keys immediately and switch the pip
-	 * decoder to MEMORY here. Other cases start PiP in hardware mode;
-	 * onDescrMode will switch to MEMORY later if CSA-ALT is confirmed. */
-	if (newchannel->scrambled && !newchannel->bUseCI
-	    && CSoftCSAManager::getInstance()->hasAnyRunningSession(newchannel->getChannelID())) {
-		int pip_vfd = -1, pip_afd = -1;
-		int vtype = (int) newchannel->type;
-		int atype = newchannel->getAudioChannel() ? newchannel->getAudioChannel()->audioChannelType : 0;
-		if (switchPipToMemory(pip, vtype, atype, &pip_vfd, &pip_afd)) {
-			uint32_t pip_sid = CSoftCSAManager::getInstance()->getSessionId(
-				newchannel->getChannelID(), SOFTCSA_SESSION_PIP);
-			if (!pip_sid
-			    || !CSoftCSAManager::getInstance()->cloneAndStartPip(pip_sid, pip_vfd)) {
-				printf("[softcsa] cloneAndStartPip failed for same-channel pip %llx\n",
-				       (unsigned long long)newchannel->getChannelID());
-				restorePipDecoder(pip);
-			}
-		}
+	/* Same-channel CSA-ALT PiP: a sibling already runs, so attach the
+	 * PiP decoder via DVR-loopback now (OSCam dedup-skips onDescrMode).
+	 * No-sibling cases fall through to the normal onDescrMode path
+	 * once the fresh CAPMT goes out. */
+	if (newchannel->scrambled && !newchannel->bUseCI) {
+		uint32_t pip_sid = CSoftCSAManager::getInstance()->getSessionId(
+			newchannel->getChannelID(), SOFTCSA_SESSION_PIP);
+		if (pip_sid && !CSoftCSAManager::getInstance()->isPassiveSession(pip_sid))
+			CSoftCSAManager::getInstance()->cloneAndStartPip(pip_sid, pip + 1);
 	}
 #endif
 
@@ -1262,30 +1231,6 @@ bool CZapit::ChangeAudioPid(uint8_t index)
 			current_channel->getAudioPid());
 		return true;
 	}
-
-#ifdef HAVE_SOFTCSA
-	/* SoftCSA LIVE runs a memory-source decoder that is fed continuously
-	 * by the session's writer threads. audioDecoder->Stop()+Start() would
-	 * need a full re-init sequence (CLEAR_BUFFER/PAUSE/SET_AV_SYNC/PLAY/
-	 * CONTINUE) to resume from MEMORY — a plain AUDIO_PLAY is not enough
-	 * and leaves the decoder silent. Skip the HAL dance entirely and just
-	 * reroute the audio pid inside the running SoftCSA session. */
-	if (CSoftCSAManager::getInstance()->hasRunningLiveSession(current_channel->getChannelID())) {
-		current_channel->setAudioChannel(index);
-		CZapitAudioChannel *ch = current_channel->getAudioChannel();
-		if (!ch) {
-			WARN("No current audio channel");
-			return false;
-		}
-		printf("[zapit] change apid to 0x%x (softcsa — in-place reroute)\n",
-			current_channel->getAudioPid());
-		SetAudioStreamType(ch->audioChannelType);
-		CSoftCSAManager::getInstance()->notifyAudioPidChange(
-			current_channel->getChannelID(),
-			current_channel->getAudioPid());
-		return true;
-	}
-#endif
 
 	/* stop demux filter */
 	if (audioDemux->Stop() == false)
@@ -2114,66 +2059,6 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		SendCmdReady(connfd);
 		break;
 	}
-#ifdef HAVE_SOFTCSA
-	case CZapitMessages::CMD_SOFTCSA_SWITCH_SOURCE:
-	{
-		CZapitMessages::commandSoftCSASwitchSource msg;
-		CBasicServer::receive_data(connfd, &msg, sizeof(msg));
-
-		printf("[softcsa] CMD_SWITCH_SOURCE: to_memory=%d video_type=%d audio_type=%d\n",
-			msg.to_memory, msg.video_type, msg.audio_type);
-
-		int vfd = -1, afd = -1;
-		if (msg.to_memory) {
-			applySoftCSAMemorySource(msg.video_type, msg.audio_type, &vfd, &afd);
-		} else {
-			/* Restore: close/reopen + restart playback */
-			restoreSoftCSADecoder();
-			playing = false;
-			StartPlayBack(current_channel);
-			vfd = videoDecoder ? videoDecoder->getFD() : -1;
-			afd = audioDecoder ? audioDecoder->getFD() : -1;
-		}
-
-		CZapitMessages::responseSoftCSASwitchSource response;
-		response.video_fd = vfd;
-		response.audio_fd = afd;
-		printf("[softcsa] CMD_SWITCH_SOURCE: done (video_fd=%d audio_fd=%d)\n",
-			response.video_fd, response.audio_fd);
-		CBasicServer::send_data(connfd, &response, sizeof(response));
-		break;
-	}
-	case CZapitMessages::CMD_SOFTCSA_SWITCH_PIP_SOURCE:
-	{
-		CZapitMessages::commandSoftCSASwitchPipSource msg;
-		CBasicServer::receive_data(connfd, &msg, sizeof(msg));
-
-		int vfd = -1, afd = -1;
-		int p = msg.pip;
-		if (msg.to_memory) {
-			printf("[softcsa] CMD_SWITCH_PIP_SOURCE: pip=%d video_type=%d audio_type=%d\n",
-				msg.pip, msg.video_type, msg.audio_type);
-			if (p >= 0 && p < (int)(sizeof(pipVideoDecoder)/sizeof(pipVideoDecoder[0]))
-			    && pipVideoDecoder[p]) {
-				if (switchPipToMemory(p, msg.video_type, msg.audio_type, &vfd, &afd))
-					printf("[softcsa] CMD_SWITCH_PIP_SOURCE: done (video_fd=%d audio_fd=%d)\n", vfd, afd);
-				else
-					printf("[softcsa] CMD_SWITCH_PIP_SOURCE: switchPipToMemory failed\n");
-			} else {
-				printf("[softcsa] CMD_SWITCH_PIP_SOURCE: pip %d not active\n", p);
-			}
-		} else {
-			printf("[softcsa] CMD_SWITCH_PIP_SOURCE: restore pip=%d\n", p);
-			restorePipDecoder(p);
-		}
-
-		CZapitMessages::responseSoftCSASwitchSource response;
-		response.video_fd = vfd;
-		response.audio_fd = afd;
-		CBasicServer::send_data(connfd, &response, sizeof(response));
-		break;
-	}
-#endif
 #if 0
 	case CZapitMessages::CMD_SET_DISPLAY_FORMAT: {
 		CZapitMessages::commandInt msg;
@@ -2615,6 +2500,9 @@ CZapitChannel * CZapit::GetCurrentChannel()
 bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 {
 	INFO("standby %d playing %d forced %d", standby, playing, playbackStopForced);
+#ifdef HAVE_SOFTCSA
+	OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> _zlock(zapit_mutex);
+#endif
 	if(!thisChannel)
 		thisChannel = current_channel;
 
@@ -2697,220 +2585,354 @@ bool CZapit::StartPlayBack(CZapitChannel *thisChannel)
 }
 
 #ifdef HAVE_SOFTCSA
-void CZapit::applySoftCSAMemorySource(int video_type, int audio_type, int *vfd_out, int *afd_out)
+/* Activate the DVR loopback: stop the live decoder filters, install
+ * fresh softcsa_*Demux on dvr_demux_unit (where the manager already
+ * set DMX_SOURCE_DVR<n>), reapply PIDs, restart decoders. */
+int CZapit::softcsaRebindDecoderToDvrDemux(int decoder_index, int adapter, int dvr_demux_unit,
+                                           std::function<void(int, int)> ready_for_data)
 {
-	int vfd = -1, afd = -1;
+	OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> _zlock(zapit_mutex);
 
-	/* Stop decoder PES demux filters.
-	 * The SoftCSA TSDEMUX_TAP maintains its own independent
-	 * PID routing via DMX_ADD_PID, so it will still receive
-	 * data after these decoder filters are stopped. */
-	videoDemux->Stop();
-	audioDemux->Stop();
-	pcrDemux->Stop();
+	if (adapter != 0)
+		printf("[softcsa] softcsaRebindDecoderToDvrDemux: adapter=%d != 0, proceeding anyway\n", adapter);
 
-	/* Stop decoders and close/reopen HAL devices. */
-	if (videoDecoder) {
-		videoDecoder->Stop(true);
-		videoDecoder->closeDevice();
-		videoDecoder->openDevice();
-		vfd = videoDecoder->getFD();
-	}
-	if (audioDecoder) {
+	if (decoder_index == 0) {
+		if (!current_channel) {
+			printf("[softcsa] softcsaRebindDecoderToDvrDemux: no current_channel\n");
+			return -1;
+		}
+
+		videoDecoder->Stop(false);
 		audioDecoder->Stop();
-		audioDecoder->closeDevice();
-		audioDecoder->openDevice();
-		afd = audioDecoder->getFD();
-	}
 
-	/* Switch video to MEMORY source. VIDEO_PLAY / AUDIO_PLAY only when
-	 * live playback is active: a standby-triggered record zap still
-	 * registers a LIVE SoftCSA session, and starting the decoders here
-	 * would unmute HDMI on the way back to standby. */
-	if (vfd >= 0) {
-		int st = zapit_translate_video_streamtype(video_type);
-		ioctl(vfd, VIDEO_CLEAR_BUFFER);
-		ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_MEMORY);
-		ioctl(vfd, VIDEO_FREEZE);
-		ioctl(vfd, VIDEO_SET_STREAMTYPE, st);
-		if (playing) {
-			ioctl(vfd, VIDEO_PLAY);
-			ioctl(vfd, VIDEO_CONTINUE);
+		/* Stop the original front-bound filters so only the SoftCSA
+		 * filters feed the decoder slot for video0/audio0/pcr0. The
+		 * cDemux pointers stay alive; non-zapit readers (settings,
+		 * radio, gui helpers) keep dereferencing valid objects. */
+		videoDemux->Stop();
+		audioDemux->Stop();
+		pcrDemux->Stop();
+
+		unsigned short pcr_pid   = current_channel->getPcrPid();
+		unsigned short audio_pid = current_channel->getAudioPid();
+		unsigned short video_pid = (currentMode & TV_MODE) ? current_channel->getVideoPid() : 0;
+
+		if (video_pid && (pcr_pid == 0x1FFF))
+			pcr_pid = video_pid;
+
+		/* SoftCSA decode demuxes on cDemux unit dvr_demux_unit (>= 4).
+		 * HAL pesFilter's default switch branch routes num >= 4 to
+		 * DMX_PES_VIDEO0 / AUDIO0 / PCR0, so decoder slot 0 is fed.
+		 * Identity-map dmx_source[dvr_demux_unit] = dvr_demux_unit so
+		 * HAL _open(num=dvr_demux_unit) actually opens the matching
+		 * physical /dev/dvb/.../demux<dvr_demux_unit> -- without this
+		 * the default dmx_source[N>=4]=0 makes _open hit demux0. No
+		 * collision: nothing else allocates a cDemux on this unit.
+		 *
+		 * markSourceInitialized tells the HAL that the device-source
+		 * for this unit is already configured (dvr_demux_slot set
+		 * DMX_SOURCE_DVR<n> via raw ioctl). Without it, HAL _open
+		 * would try DMX_SET_SOURCE = FRONT0+unit, which fails on
+		 * single-tuner boxes and risks clobbering the DVR binding. */
+		cDemux::markSourceInitialized(dvr_demux_unit);
+		cDemux::SetSource(dvr_demux_unit, dvr_demux_unit);
+
+		/* Defensive cleanup in case a prior activation never ran the
+		 * matching FrontDemux teardown. */
+		if (softcsa_videoDemux) { softcsa_videoDemux->Stop(); delete softcsa_videoDemux; }
+		if (softcsa_audioDemux) { softcsa_audioDemux->Stop(); delete softcsa_audioDemux; }
+		if (softcsa_pcrDemux)   { softcsa_pcrDemux->Stop();   delete softcsa_pcrDemux;   }
+		softcsa_videoDemux = new cDemux(dvr_demux_unit);
+		softcsa_videoDemux->Open(DMX_VIDEO_CHANNEL);
+		softcsa_pcrDemux = new cDemux(dvr_demux_unit);
+		softcsa_pcrDemux->Open(DMX_PCR_ONLY_CHANNEL, softcsa_videoDemux->getBuffer());
+		softcsa_audioDemux = new cDemux(dvr_demux_unit);
+		softcsa_audioDemux->Open(DMX_AUDIO_CHANNEL);
+
+		videoDecoder->SetStreamType((VIDEO_FORMAT)current_channel->type);
+		if (pcr_pid)   softcsa_pcrDemux->pesFilter(pcr_pid);
+		if (audio_pid) softcsa_audioDemux->pesFilter(audio_pid);
+		if (video_pid) softcsa_videoDemux->pesFilter(video_pid);
+
+		/* No explicit DMX_SET_SOURCE on the decoder fds: dvr_demux_slot
+		 * already set DVR<unit> on the device-node and the kernel
+		 * preserves it across fd cycles. */
+		printf("[softcsa] softcsaRebindDecoderToDvrDemux: decode demux%d (vfd=%d afd=%d pfd=%d) src=DVR%d pids v=0x%04x a=0x%04x p=0x%04x\n",
+		       dvr_demux_unit,
+		       softcsa_videoDemux->getFD(),
+		       softcsa_audioDemux->getFD(),
+		       softcsa_pcrDemux->getFD(),
+		       dvr_demux_unit, video_pid, audio_pid, pcr_pid);
+
+		/* Decode-demux ringbuffer: HAL default 64 KB underflows on
+		 * H.264 peak bitrate via dvr-loopback. */
+		unsigned long bufsz = 1024 * 1024;
+		if (softcsa_videoDemux->getFD() >= 0)
+			ioctl(softcsa_videoDemux->getFD(), DMX_SET_BUFFER_SIZE, bufsz);
+		if (softcsa_audioDemux->getFD() >= 0)
+			ioctl(softcsa_audioDemux->getFD(), DMX_SET_BUFFER_SIZE, bufsz);
+		if (softcsa_pcrDemux->getFD() >= 0)
+			ioctl(softcsa_pcrDemux->getFD(), DMX_SET_BUFFER_SIZE, bufsz);
+
+		/* Hand off to the caller: start the tap reader so the engine
+		 * produces output, then optionally wait for the first byte and
+		 * a buffer-fill sleep before binding the hardware decoder.
+		 * zapit_mutex stays locked throughout, blocking concurrent zaps. */
+		if (ready_for_data)
+			ready_for_data(adapter, dvr_demux_unit);
+
+		if (pcr_pid)   softcsa_pcrDemux->Start();
+		if (audio_pid) {
+			SetAudioStreamType(current_channel->getAudioChannel()->audioChannelType);
+			softcsa_audioDemux->Start();
+			audioDecoder->Start();
 		}
-		ioctl(vfd, VIDEO_CLEAR_BUFFER);
-	}
-	if (videoDecoder)
-		videoDecoder->setPlayState(VIDEO_FREEZED);
-
-	/* Switch audio to MEMORY source */
-	if (afd >= 0) {
-		ioctl(afd, AUDIO_CLEAR_BUFFER);
-		ioctl(afd, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_MEMORY);
-		ioctl(afd, AUDIO_PAUSE);
-		ioctl(afd, AUDIO_SET_AV_SYNC, 0);
-		ioctl(afd, AUDIO_SET_BYPASS_MODE, audio_type);
-		if (playing) {
-			ioctl(afd, AUDIO_PLAY);
-			ioctl(afd, AUDIO_CONTINUE);
+		if (video_pid) {
+			softcsa_videoDemux->Start();
+			videoDecoder->Start(0, pcr_pid, video_pid);
 		}
 	}
-
-	if (vfd_out) *vfd_out = vfd;
-	if (afd_out) *afd_out = afd;
-}
-
-void CZapit::restoreSoftCSADecoder()
-{
-	/* close/open restores the decoder from the MEMORY feed back to DEMUX
-	 * without a synchronous iframe write inside the teardown. Plane blank
-	 * for standby is handled separately in the standby entry path where
-	 * no tune follows, so no race can arise */
-	if (videoDecoder) {
-		videoDecoder->closeDevice();
-		videoDecoder->openDevice();
-	}
-	if (audioDecoder) {
-		audioDecoder->closeDevice();
-		audioDecoder->openDevice();
-	}
-}
-
 #if ENABLE_PIP
-/* Parallel to CMD_SOFTCSA_SWITCH_SOURCE for the main decoder: stop the
- * pip video/audio demux filters and decoders, reopen the pip decoder
- * devices, and put them into VIDEO_SOURCE_MEMORY / AUDIO_SOURCE_MEMORY
- * mode so a SoftCSA session can write descrambled PES directly to them.
- *
- * Runs inline on the zapit server thread from StartPip — no IPC (would
- * deadlock with ourselves). The resulting fds are handed to the SoftCSA
- * manager's cloneAndStartPip and travel into CSoftCSASession::start()
- * like the main-decoder fds travel from the CMD_SOFTCSA_SWITCH_SOURCE
- * handler. */
-bool CZapit::switchPipToMemory(int pip, int video_type, int audio_type, int *out_vfd, int *out_afd)
-{
-	*out_vfd = -1;
-	*out_afd = -1;
+	else {
+		int pip = decoder_index - 1;
+		if (pip >= (int)(sizeof(pipVideoDecoder)/sizeof(pipVideoDecoder[0]))) {
+			printf("[softcsa] softcsaRebindDecoderToDvrDemux: decoder_index=%d out of range\n", decoder_index);
+			return -1;
+		}
+		if (!pipVideoDecoder[pip]) {
+			printf("[softcsa] softcsaRebindDecoderToDvrDemux: pip=%d not opened\n", pip);
+			return -1;
+		}
 
-	if (pipVideoDemux[pip])
-		pipVideoDemux[pip]->Stop();
-	if (pipAudioDemux[pip])
-		pipAudioDemux[pip]->Stop();
+		CZapitChannel *channel = NULL;
+		if (pip_channel_id[pip])
+			channel = CServiceManager::getInstance()->FindChannel(pip_channel_id[pip]);
+		if (!channel) {
+			printf("[softcsa] softcsaRebindDecoderToDvrDemux: no channel for pip=%d\n", pip);
+			return -1;
+		}
 
-	int vfd = -1, afd = -1;
-	if (pipVideoDecoder[pip]) {
-		pipVideoDecoder[pip]->Stop(true);
-		pipVideoDecoder[pip]->closeDevice();
-		pipVideoDecoder[pip]->openDevice();
-		vfd = pipVideoDecoder[pip]->getFD();
-	}
-	if (pipAudioDecoder[pip]) {
-		pipAudioDecoder[pip]->Stop();
-		pipAudioDecoder[pip]->closeDevice();
-		pipAudioDecoder[pip]->openDevice();
-		afd = pipAudioDecoder[pip]->getFD();
-	}
+		pipVideoDecoder[pip]->Stop(false);
+		if (pipAudioDecoder[pip])
+			pipAudioDecoder[pip]->Stop();
 
-	if (vfd >= 0) {
-		int st = zapit_translate_video_streamtype(video_type);
-		ioctl(vfd, VIDEO_CLEAR_BUFFER);
-		ioctl(vfd, VIDEO_SELECT_SOURCE, VIDEO_SOURCE_MEMORY);
-		ioctl(vfd, VIDEO_FREEZE);
-		ioctl(vfd, VIDEO_SET_STREAMTYPE, st);
-		ioctl(vfd, VIDEO_PLAY);
-		ioctl(vfd, VIDEO_CONTINUE);
-		ioctl(vfd, VIDEO_CLEAR_BUFFER);
-	}
-	if (pipVideoDecoder[pip])
-		pipVideoDecoder[pip]->setPlayState(VIDEO_FREEZED);
+		if (pipVideoDemux[pip])
+			pipVideoDemux[pip]->Stop();
+		if (pipAudioDemux[pip])
+			pipAudioDemux[pip]->Stop();
 
-	if (afd >= 0) {
-		ioctl(afd, AUDIO_CLEAR_BUFFER);
-		ioctl(afd, AUDIO_SELECT_SOURCE, AUDIO_SOURCE_MEMORY);
-		ioctl(afd, AUDIO_PAUSE);
-		ioctl(afd, AUDIO_SET_AV_SYNC, 0);
-		ioctl(afd, AUDIO_SET_BYPASS_MODE, audio_type);
-		ioctl(afd, AUDIO_PLAY);
-		ioctl(afd, AUDIO_CONTINUE);
-	}
+		/* Keep cDemux unit at the PiP's natural index (pip+1) so HAL
+		 * pesFilter routes to decoder slot 1..3. SetSource redirects
+		 * that unit's physical demux device to the DVR loopback. The
+		 * cDemux pointers stay stable across the source flip.
+		 *
+		 * markSourceInitialized prevents HAL _open from running its
+		 * DMX_SET_SOURCE=FRONT0+devnum on the DVR-bound device. */
+		int pip_unit = pip + 1;
+		cDemux::markSourceInitialized(dvr_demux_unit);
+		cDemux::SetSource(pip_unit, dvr_demux_unit);
 
-	*out_vfd = vfd;
-	*out_afd = afd;
-	printf("[softcsa] switchPipToMemory: pip=%d video_fd=%d audio_fd=%d\n", pip, vfd, afd);
-	/* Video is mandatory. Audio is optional — CSoftCSASession::start tolerates
-	 * afd==-1 (video-only pip still shows a picture, just silent). */
-	return vfd >= 0;
-}
+		if (!pipVideoDemux[pip])
+			pipVideoDemux[pip] = new cDemux(pip_unit);
+		pipVideoDemux[pip]->Open(DMX_VIDEO_CHANNEL);
+		if (!pipAudioDemux[pip])
+			pipAudioDemux[pip] = new cDemux(pip_unit);
+		pipAudioDemux[pip]->Open(DMX_AUDIO_CHANNEL);
 
-void CZapit::restorePipDecoder(int pip)
-{
-	if (pip < 0 || pip >= (int)(sizeof(pipVideoDecoder)/sizeof(pipVideoDecoder[0])))
-		return;
-
-	CZapitChannel *channel = NULL;
-	if (pip_channel_id[pip])
-		channel = CServiceManager::getInstance()->FindChannel(pip_channel_id[pip]);
-
-	/* Close/reopen resets from MEMORY back to default DEMUX source */
-	if (pipVideoDecoder[pip]) {
-		pipVideoDecoder[pip]->Stop(true);
-		pipVideoDecoder[pip]->closeDevice();
-		pipVideoDecoder[pip]->openDevice();
-	}
-	if (pipAudioDecoder[pip]) {
-		pipAudioDecoder[pip]->Stop();
-		pipAudioDecoder[pip]->closeDevice();
-		pipAudioDecoder[pip]->openDevice();
-	}
-
-	if (!channel) {
-		printf("[softcsa] restorePipDecoder: no channel for pip %d\n", pip);
-		return;
-	}
-
-	/* Re-setup PES filters and restart — demux SetSource is still
-	 * valid from StartPip, only the filters were cleared by Stop(). */
-	if (pipVideoDecoder[pip]) {
-		pipVideoDecoder[pip]->SetStreamType((VIDEO_FORMAT) channel->type);
-		pipVideoDecoder[pip]->SetSyncMode((AVSYNC_TYPE) g_settings.avsync);
-	}
-	if (pipVideoDemux[pip]) {
+		pipVideoDecoder[pip]->SetStreamType((VIDEO_FORMAT)channel->type);
 		pipVideoDemux[pip]->pesFilter(channel->getVideoPid());
-		pipVideoDemux[pip]->Start();
-	}
-	if (pipVideoDecoder[pip]) {
-		pipVideoDecoder[pip]->Start(0, channel->getPcrPid(), channel->getVideoPid());
-		pipVideoDecoder[pip]->Pig(
-			CNeutrinoApp::getInstance()->pip_recalc_pos_x(g_settings.pip_x),
-			CNeutrinoApp::getInstance()->pip_recalc_pos_y(g_settings.pip_y),
-			g_settings.pip_width, g_settings.pip_height,
-			g_settings.screen_width, g_settings.screen_height);
-		pipVideoDecoder[pip]->ShowPig(1);
-	}
 
-	if (pipAudioDecoder[pip]) {
-		if (channel->getAudioChannel())
+		if (channel->getAudioChannel() && pipAudioDecoder[pip]) {
 			pipAudioDecoder[pip]->SetStreamType(channel->getAudioChannel()->audioChannelType);
-		pipAudioDecoder[pip]->SetSyncMode((AVSYNC_TYPE) g_settings.avsync);
-	}
-	if (pipAudioDemux[pip])
-		pipAudioDemux[pip]->pesFilter(channel->getAudioPid());
+			pipAudioDemux[pip]->pesFilter(channel->getAudioPid());
+		}
 
-	printf("[softcsa] restorePipDecoder: pip=%d restored to DEMUX mode\n", pip);
-}
+		/* dvr_demux_slot already set DVR<unit> on the device-node;
+		 * persistent across fd cycles. See main-decoder branch. */
+		printf("[softcsa] softcsaRebindDecoderToDvrDemux: pip%d decode demux%d src=DVR%d\n",
+		       pip, dvr_demux_unit, dvr_demux_unit);
+
+		unsigned long bufsz = 1024 * 1024;
+		if (pipVideoDemux[pip] && pipVideoDemux[pip]->getFD() >= 0)
+			ioctl(pipVideoDemux[pip]->getFD(), DMX_SET_BUFFER_SIZE, bufsz);
+		if (pipAudioDemux[pip] && pipAudioDemux[pip]->getFD() >= 0)
+			ioctl(pipAudioDemux[pip]->getFD(), DMX_SET_BUFFER_SIZE, bufsz);
+
+		/* Same handoff as the main-decoder branch: caller starts the
+		 * tap reader and runs the optional wait/buffer-fill before
+		 * binding the PiP hardware decoder. */
+		if (ready_for_data)
+			ready_for_data(adapter, dvr_demux_unit);
+
+		pipVideoDemux[pip]->Start();
+		pipVideoDecoder[pip]->Start(0, channel->getPcrPid(), channel->getVideoPid());
+
+		if (channel->getAudioChannel() && pipAudioDecoder[pip]) {
+			pipAudioDemux[pip]->Start();
+			pipAudioDecoder[pip]->Start();
+		}
+	}
+#else
+	else {
+		printf("[softcsa] softcsaRebindDecoderToDvrDemux: decoder_index=%d but PiP not enabled\n", decoder_index);
+		return -1;
+	}
 #endif
+	return 0;
+}
+
+/* Deactivate the DVR loopback: stop decoders, destroy the DVR-bound
+ * demuxes, build fresh ones against the FRONT-source demux unit
+ * (ordinary live TV), reapply PIDs, Start decoders. */
+int CZapit::softcsaRebindDecoderToFrontDemux(int decoder_index, bool skip_decoder_start)
+{
+	OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> _zlock(zapit_mutex);
+
+	if (decoder_index == 0) {
+		if (!current_channel) {
+			printf("[softcsa] softcsaRebindDecoderToFrontDemux: no current_channel\n");
+			return -1;
+		}
+
+		videoDecoder->Stop(false);
+		audioDecoder->Stop();
+
+		/* Tear down the SoftCSA decode demuxes. The original
+		 * videoDemux/audioDemux/pcrDemux pointers were never touched,
+		 * so they're still valid; we just resume their filters. */
+		if (softcsa_videoDemux) {
+			softcsa_videoDemux->Stop();
+			delete softcsa_videoDemux;
+			softcsa_videoDemux = NULL;
+		}
+		if (softcsa_audioDemux) {
+			softcsa_audioDemux->Stop();
+			delete softcsa_audioDemux;
+			softcsa_audioDemux = NULL;
+		}
+		if (softcsa_pcrDemux) {
+			softcsa_pcrDemux->Stop();
+			delete softcsa_pcrDemux;
+			softcsa_pcrDemux = NULL;
+		}
+
+		unsigned short pcr_pid   = current_channel->getPcrPid();
+		unsigned short audio_pid = current_channel->getAudioPid();
+		unsigned short video_pid = (currentMode & TV_MODE) ? current_channel->getVideoPid() : 0;
+
+		if (video_pid && (pcr_pid == 0x1FFF))
+			pcr_pid = video_pid;
+
+		videoDecoder->SetStreamType((VIDEO_FORMAT)current_channel->type);
+		if (pcr_pid)   pcrDemux->pesFilter(pcr_pid);
+		if (audio_pid) audioDemux->pesFilter(audio_pid);
+		if (video_pid) videoDemux->pesFilter(video_pid);
+
+		if (!skip_decoder_start) {
+			if (pcr_pid)   pcrDemux->Start();
+			if (audio_pid) {
+				SetAudioStreamType(current_channel->getAudioChannel()->audioChannelType);
+				audioDemux->Start();
+				audioDecoder->Start();
+			}
+			if (video_pid) {
+				videoDemux->Start();
+				videoDecoder->Start(0, pcr_pid, video_pid);
+			}
+		}
+	}
+#if ENABLE_PIP
+	else {
+		int pip = decoder_index - 1;
+		if (pip >= (int)(sizeof(pipVideoDecoder)/sizeof(pipVideoDecoder[0]))) {
+			printf("[softcsa] softcsaRebindDecoderToFrontDemux: decoder_index=%d out of range\n", decoder_index);
+			return -1;
+		}
+		if (!pipVideoDecoder[pip]) {
+			printf("[softcsa] softcsaRebindDecoderToFrontDemux: pip=%d not opened\n", pip);
+			return -1;
+		}
+
+		CZapitChannel *channel = NULL;
+		if (pip_channel_id[pip])
+			channel = CServiceManager::getInstance()->FindChannel(pip_channel_id[pip]);
+		if (!channel) {
+			printf("[softcsa] softcsaRebindDecoderToFrontDemux: no channel for pip=%d\n", pip);
+			return -1;
+		}
+
+		pipVideoDecoder[pip]->Stop(false);
+		if (pipAudioDecoder[pip])
+			pipAudioDecoder[pip]->Stop();
+
+		if (pipVideoDemux[pip])
+			pipVideoDemux[pip]->Stop();
+		if (pipAudioDemux[pip])
+			pipAudioDemux[pip]->Stop();
+
+		/* dnum = pip + 1 mirrors OpenPip. Restore that unit's
+		 * physical-device mapping to the PiP frontend. cDemux pointers
+		 * stay stable across the source flip. */
+		int dnum = pip + 1;
+		int fe_num = (pip_fe[pip] != NULL) ? pip_fe[pip]->getNumber() : 0;
+		cDemux::SetSource(dnum, fe_num);
+
+		if (!pipVideoDemux[pip])
+			pipVideoDemux[pip] = new cDemux(dnum);
+		pipVideoDemux[pip]->Open(DMX_VIDEO_CHANNEL);
+		if (!pipAudioDemux[pip])
+			pipAudioDemux[pip] = new cDemux(dnum);
+		pipAudioDemux[pip]->Open(DMX_AUDIO_CHANNEL);
+
+		pipVideoDecoder[pip]->SetStreamType((VIDEO_FORMAT)channel->type);
+		pipVideoDemux[pip]->pesFilter(channel->getVideoPid());
+
+		if (channel->getAudioChannel() && pipAudioDecoder[pip]) {
+			pipAudioDecoder[pip]->SetStreamType(channel->getAudioChannel()->audioChannelType);
+			pipAudioDemux[pip]->pesFilter(channel->getAudioPid());
+		}
+
+		/* HAL init[] is sticky; a prior DVR-bound source stays unless
+		 * FRONT is re-set explicitly. */
+		int front_src = (int)DMX_SOURCE_FRONT0 + fe_num;
+		if (pipVideoDemux[pip] && pipVideoDemux[pip]->getFD() >= 0
+		    && ioctl(pipVideoDemux[pip]->getFD(), DMX_SET_SOURCE, &front_src) < 0)
+			printf("[softcsa] softcsaRebindDecoderToFrontDemux: pip video DMX_SET_SOURCE FRONT%d failed: %s\n",
+			       fe_num, strerror(errno));
+		if (pipAudioDemux[pip] && pipAudioDemux[pip]->getFD() >= 0
+		    && ioctl(pipAudioDemux[pip]->getFD(), DMX_SET_SOURCE, &front_src) < 0)
+			printf("[softcsa] softcsaRebindDecoderToFrontDemux: pip audio DMX_SET_SOURCE FRONT%d failed: %s\n",
+			       fe_num, strerror(errno));
+
+		if (!skip_decoder_start) {
+			pipVideoDemux[pip]->Start();
+			pipVideoDecoder[pip]->Start(0, channel->getPcrPid(), channel->getVideoPid());
+			if (channel->getAudioChannel() && pipAudioDecoder[pip]) {
+				pipAudioDemux[pip]->Start();
+				pipAudioDecoder[pip]->Start();
+			}
+		}
+	}
+#else
+	else {
+		printf("[softcsa] softcsaRebindDecoderToFrontDemux: decoder_index=%d but PiP not enabled\n", decoder_index);
+		return -1;
+	}
+#endif
+	return 0;
+}
 #endif
 
 bool CZapit::StopPlayBack(bool send_pmt, bool blank)
 {
 	INFO("standby %d playing %d forced %d send_pmt %d", standby, playing, playbackStopForced, send_pmt);
 #ifdef HAVE_SOFTCSA
-	/* paired with CCamManager::Stop below: tearing LIVE down without the
-	 * CAM stop strands a same-channel RECORD that would key-copy from it */
+	OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> _zlock(zapit_mutex);
+	/* Paired with CCamManager::Stop below: tearing LIVE down without
+	 * the CAM stop strands a same-channel RECORD that key-copies from it. */
 	if (send_pmt && current_channel) {
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
 			current_channel->getChannelID(), SOFTCSA_SESSION_LIVE);
-		if (sr.had_running_session)
-			restoreSoftCSADecoder();
 		for (auto &sn : sr.dvbapi_stops)
 			sendDvbapiSessionStop(current_channel, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 	}
@@ -2970,6 +2992,11 @@ void CZapit::enterStandby(void)
 	SaveSettings(true);
 	SaveAudioMap();
 	SaveVolumeMap();
+#ifdef HAVE_SOFTCSA
+	/* Drain LIVE attachments before StopPlayBack so the FRONT-rebind
+	 * does not briefly start the decoder during standby. */
+	CSoftCSAManager::getInstance()->enterStandbyTeardown();
+#endif
 	StopPlayBack(true);
 #if ENABLE_PIP
 	for (unsigned i=0; i < (unsigned int) g_info.hw_caps->pip_devs; i++)
@@ -3233,7 +3260,7 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 			dvbapi_client = new CDvbApiClient();
 			dvbapi_client->setManager(CSoftCSAManager::getInstance());
 			CCamManager_SetDvbApiClient(dvbapi_client);
-			printf("[zapit] SoftCSA: CDvbApiClient initialized (lazy connect)\n");
+			printf("[zapit] SoftCSA: dvbapi client ready (lazy connect)\n");
 		}
 	}
 #endif

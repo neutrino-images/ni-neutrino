@@ -22,17 +22,34 @@
 #define __SOFTCSA_MANAGER_H__
 
 #include <cstdint>
+#include <functional>
 #include <map>
-#include <zapit/client/zapitclient.h>
+#include <memory>
+#include <set>
+#include <thread>
 #include <condition_variable>
 #include <mutex>
 #include <utility>
 #include <vector>
 
 #include <zapit/channel.h>
-#include "softcsa_session.h"
+#include <zapit/client/zapitclient.h>
+#include "softcsa_engine.h"
+#include "softcsa_output_fd_set.h"
+#include "softcsa_tap_reader.h"
 
-#define CW_ALGO_CSA_ALT 3 // Not in ca_descr_algo enum (0-2); from OSCam globals.h
+class CDvrDemuxSlot;
+
+#define CW_ALGO_CSA_ALT 3 // Not in ca_descr_algo enum (0-2); OSCam-specific marker.
+
+enum SoftCSASessionType {
+	SOFTCSA_SESSION_LIVE,
+	SOFTCSA_SESSION_PIP,
+	SOFTCSA_SESSION_RECORD,
+	SOFTCSA_SESSION_STREAM
+};
+
+typedef std::function<void(const uint8_t *data, int len)> SoftCSAStreamCallback;
 
 struct SoftCSAStopNotify {
 	uint32_t session_id;
@@ -41,7 +58,6 @@ struct SoftCSAStopNotify {
 };
 
 struct SoftCSAStopResult {
-	bool had_running_session;
 	std::vector<SoftCSAStopNotify> dvbapi_stops;
 };
 
@@ -53,11 +69,10 @@ public:
 	void onDescrMode(uint32_t session_id, uint32_t algo, uint32_t cipher_mode);
 	void onCW(uint32_t session_id, uint32_t parity, const uint8_t *cw);
 
-	/* Returns a valid session id. passive=true marks the session as
-	 * dormant: a v3 capmt is sent so oscam's slot bookkeeping stays
-	 * clean, but descrmode is ignored, cw is dropped, engine never
-	 * starts, and sibling lookups exclude this entry. passive is set
-	 * by the caller in capmt.cpp from the runtime config decision. */
+	/* passive=true marks the session as dormant: capmt is still sent
+	 * so oscam's slot bookkeeping stays clean, but descrmode is ignored,
+	 * cw is dropped, engine never starts, and sibling lookups skip
+	 * this entry. */
 	uint32_t registerSession(t_channel_id channel_id, SoftCSASessionType type,
 	                         int adapter, int frontend_num,
 	                         uint8_t capmt_ca_mask, bool passive);
@@ -67,7 +82,6 @@ public:
 	void setDecoderTypes(uint32_t session_id, int video_type, int audio_type);
 	void setPipDevIndex(uint32_t session_id, int pip_dev);
 	SoftCSAStopResult stopSession(t_channel_id channel_id, SoftCSASessionType type);
-	void stopAll();
 
 	struct ResubscribeInfo {
 		t_channel_id channel_id;
@@ -80,104 +94,173 @@ public:
 	void stopSessions();
 	std::vector<ResubscribeInfo> getResubscribeInfo();
 
-	// Audio language change: update routed apid on the LIVE session for channel_id.
-	// Returns true if an active session was found and updated.
-	bool notifyAudioPidChange(t_channel_id channel_id, unsigned short new_apid);
-
-	bool isActive(t_channel_id channel_id);
-
-	// LIVE session exists and has a running worker
-	bool hasRunningLiveSession(t_channel_id channel_id);
-
-	uint32_t getLiveSessionId(t_channel_id channel_id);
 	uint32_t getSessionId(t_channel_id channel_id, SoftCSASessionType type);
 	int getCapmtDemux(uint32_t session_id);
 	uint8_t getCapmtCaMask(uint32_t session_id);
-	/* Predicate mirroring registerSession's internal reuse condition:
-	 * true when a session for (channel_id, type) already exists with the
-	 * same frontend_num and capmt_ca_mask and its worker is non-null. */
+	/* Mirrors registerSession's internal reuse condition: true when a
+	 * session for (channel_id, type) already exists on the same frontend
+	 * and is still alive. */
 	bool willReuseSession(t_channel_id channel_id, SoftCSASessionType type,
-	                      int frontend_num, uint8_t capmt_ca_mask);
+	                      int frontend_num);
 	bool isPassiveSession(uint32_t session_id);
-	bool hasRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id);
 	bool hasAnyRunningSession(t_channel_id channel_id);
 
-	// Recording: register fd and wait for OSCam to confirm CSA-ALT.
-	// Returns true if recordThread started, false on timeout.
+	// Register the recording fd and wait for OSCam's CSA-ALT confirm.
+	// Returns true if descrambling started, false on timeout.
 	bool waitForRecordStart(t_channel_id channel_id, int fd, int timeout_ms);
 
-	// Streaming: register callback and wait for OSCam to confirm CSA-ALT.
-	// Returns true if streamThread started, false on timeout.
+	// Register the stream callback and wait for OSCam's CSA-ALT confirm.
+	// Returns true if descrambling started, false on timeout.
 	bool waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
 	bool hasRegisteredSession(t_channel_id channel_id, SoftCSASessionType type);
 
 	bool cloneAndStartStream(uint32_t session_id, SoftCSAStreamCallback cb);
 	bool cloneAndStartRecord(uint32_t session_id, int fd);
-	bool cloneAndStartLive(uint32_t session_id, int vfd, int afd);
-	bool cloneAndStartPip(uint32_t session_id, int pip_vfd);
+
+	/* Attach a new LIVE/PIP session to an existing sibling's tap engine
+	 * without waiting for onDescrMode. Used when capmt skipped sendCaPmt
+	 * because the same-mask sibling already runs: OSCam will not confirm
+	 * the new session, but the engine is keyed via the sibling, so we
+	 * rebind the decoder to a fresh DVR slot directly. Returns 0 on
+	 * success. decoder_index: 0 for main, pip+1 for PiP. */
+	int cloneAndStartLive(uint32_t session_id, int decoder_index);
+	int cloneAndStartPip(uint32_t session_id, int decoder_index);
+
+	int  startLive(uint32_t session_id, int decoder_index);
+	void stopLive(uint32_t session_id, bool skip_decoder_start = false);
+
+	/* Drain all LIVE attachments before zapit's StopPlayBack runs, with
+	 * skip_decoder_start so the FRONT-rebind does not briefly start
+	 * the decoder during standby entry. */
+	void enterStandbyTeardown();
+
+	/* True once the DVR loopback fd for (adapter, demux_unit) has
+	 * flushed at least one byte. */
+	bool isLiveDataFlowing(int adapter, int demux_unit);
 
 private:
 	CSoftCSAManager();
 	~CSoftCSAManager();
 
+	struct SoftCSAServiceTapKey {
+		int frontend_num;
+		t_channel_id channel_id;
+		bool operator<(const SoftCSAServiceTapKey &o) const {
+			if (frontend_num != o.frontend_num) return frontend_num < o.frontend_num;
+			return channel_id < o.channel_id;
+		}
+	};
+
+	struct SoftCSAServiceTap {
+		int adapter;
+		int frontend_num;
+		int tap_demux_unit;
+		std::unique_ptr<CSoftCSAEngine> engine;
+		std::unique_ptr<COutputFdSet> outputs;
+		std::unique_ptr<CTapReader> reader;
+		int refcount;
+		bool reader_started;
+	};
+
 	struct SessionState {
 		t_channel_id channel_id;
 		SoftCSASessionType type;
-		int adapter;
-		int demux_unit;      // allocated kernel demux (from allocator)
-		int capmt_demux;     // value for CAPMT 0x86 descriptor (for OSCam ca_mask)
-		uint8_t capmt_ca_mask;
-		int frontend_num;
+		SoftCSAServiceTapKey tap_key;
+		/* Engine ready to descramble: set by onDescrMode after OSCam's
+		 * confirm, or by cloneAndStart* when a sibling already keyed
+		 * the shared tap engine. */
 		bool csa_alt_active;
-		/* True only while a stream/record sibling still depends on this
-		 * live's oscam subscription (capmt path b suppresses the
-		 * sibling's own capmt while live exists). Distinguishes a
-		 * parked hw live from an actively-decoding one. */
+		/* Set while a stream/record sibling still depends on this live's
+		 * oscam subscription. Distinguishes a parked hw live from an
+		 * actively-decoding one. */
 		bool retained;
-		/* True when the runtime config denies this channel. A passive
-		 * session exists only to keep the oscam dvbapi slot bookkeeping
-		 * clean: v3 capmt is sent, descrmode is ignored, cw is dropped,
-		 * engine never starts, and sibling lookups exclude this entry. */
+		/* Runtime config denied the channel. capmt is still sent so
+		 * oscam's slot bookkeeping stays clean; descrmode is ignored,
+		 * cw dropped, engine never starts, sibling lookups skip it. */
 		bool passive;
 		uint8_t ecm_mode;
-		CSoftCSASession *session;
+		int capmt_demux;
+		uint8_t capmt_ca_mask;
 		std::vector<unsigned short> pids;
 		unsigned short video_pid;
 		unsigned short audio_pid;
 		unsigned short pcr_pid;
 		int video_type;
 		int audio_type;
-		int pip_dev;         // PiP device index (0, 1, 2) — only for PIP sessions
+		int pip_dev;
+		/* Output binding into ServiceTap.outputs; -1 if not registered. */
+		int output_token;
+		/* fd registered in outputs; -1 when no binding. For RECORD and
+		 * STREAM this is the write end of the pipe bridge we own. */
+		int output_fd;
+		/* Caller's recording fd; NOT owned by us (close stays on cRecord). */
 		int record_fd;
 		SoftCSAStreamCallback stream_callback;
+		/* Pipe read end for RECORD/STREAM; -1 when no pipe. */
+		int stream_pipe_read;
+		/* Consumer thread draining the pipe for RECORD/STREAM. */
+		std::thread stream_consumer;
+	};
+
+	struct SoftCSALiveAttachment {
+		int decoder_index;
+		std::unique_ptr<CDvrDemuxSlot> slot;
+		int output_token;
+		/* Cached so stopLive never has to fall back to sessions[] (which
+		 * may already be erased by then). */
+		SoftCSAServiceTapKey tap_key;
 	};
 
 	std::map<uint32_t, SessionState> sessions;
 	std::map<std::pair<t_channel_id, SoftCSASessionType>, uint32_t> channel_to_session;
+	std::map<SoftCSAServiceTapKey, std::unique_ptr<SoftCSAServiceTap>> m_taps;
+	std::map<uint32_t, std::unique_ptr<SoftCSALiveAttachment>> m_live;
+	/* In-progress sentinel set during startLive: closes the window
+	 * between the dedup check (first crit-section) and m_live[session_id]
+	 * being populated (third crit-section). Without this, two concurrent
+	 * calls could both pass dedup, allocate duplicate DVR slots, and
+	 * leak an output_token into the tap's OutputFdSet. */
+	std::set<uint32_t> m_live_starting;
 	uint32_t next_session_id;
 
 	std::mutex mtx;
 
+	/* Two-mutex pattern: record_cv waits on record_cv_mtx but the
+	 * predicate relocks mtx to read state. Wakeups from notify_all
+	 * only need to be delivered (record_cv_mtx held), not synchronised
+	 * with state mutation under mtx. Do not collapse to a single mutex
+	 * without restructuring the wait sites. */
 	std::condition_variable record_cv;
 	std::mutex record_cv_mtx;
 
-	struct DemuxAlloc {
-		int demux_unit;
-		int frontend_num;
-		int refcount;
+	/* Output-teardown bundle extracted while holding mtx; the actual
+	 * close/join/remove runs outside the lock. */
+	struct PendingDetach {
+		COutputFdSet *outputs;   /* non-owning; tap outlives the detach */
+		int output_token;        /* -1 if none */
+		int output_fd;           /* write end of owned pipe; -1 if none */
+		int stream_pipe_read;    /* -1 if not a stream */
+		std::thread stream_consumer;
 	};
-	std::vector<DemuxAlloc> demux_allocs;
 
-	int allocateDemux(int frontend_num);
-	void releaseDemux(int frontend_num);
+	void stopAll();
 
-	/* Caller must hold mtx. */
+	/* Highest free demux unit not already assigned to any tap. */
+	int tapDemuxForFrontend(int frontend_num);
+
+	/* Extract a PendingDetach from a SessionState and zero the binding
+	 * fields on the state. Caller holds mtx. */
+	PendingDetach extractPendingDetach(SessionState &ds);
+
+	/* Caller holds mtx. Returns 0 if no qualifying sibling. */
 	uint32_t findRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id) const;
 
-	/* When LIVE becomes CSA-ALT active, walk same-channel siblings that
-	 * have a pending callback/fd and clone keys so they don't time out
-	 * waiting for a duplicate filter that never arrives. */
-	int tryCloneSiblingsFromLive(uint32_t live_session_id);
+	/* Caller holds mtx. Stops the tap reader if no output consumers
+	 * remain. Reader.stop() joins the thread (up to ~poll-timeout, ie
+	 * ~200ms), so mtx is held during the join; acceptable on the
+	 * cleanup paths where this is called (rebind-fail, wait*-timeout,
+	 * stopSessions). */
+	void stopReaderIfIdleLocked(SoftCSAServiceTap *tap);
 
 };
 

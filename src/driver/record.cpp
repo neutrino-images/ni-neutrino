@@ -303,10 +303,9 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 #endif
 
 #ifdef HAVE_SOFTCSA
-	/* Scrambled non-CI channels register with OSCam via the dvbapi v3
-	 * path. If the config denies the channel the session is passive
-	 * and the wait is skipped; otherwise wait for OSCam's CSA-ALT
-	 * confirmation. On passive or timeout, fall through to cRecord. */
+	/* Scrambled non-CI channels register with OSCam via dvbapi v3.
+	 * If runtime config denied the channel, the session is passive and
+	 * the wait is skipped. On timeout or passive: fall through to cRecord. */
 	if (channel->scrambled && !channel->bUseCI) {
 		printf("CRecordInstance::Start: trying SoftCSA for channel %llx\n",
 		       (unsigned long long)channel->getChannelID());
@@ -318,11 +317,6 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 
 		CCamManager::getInstance()->Start(channel->getChannelID(), CCamManager::RECORD);
 
-		for (unsigned int i = 0; i < numpids; i++)
-			CSoftCSAManager::getInstance()->addPidByChannel(
-				channel->getChannelID(), SOFTCSA_SESSION_RECORD, apids[i]);
-
-		/* Wait for OSCam to confirm CSA-ALT and start the recordThread */
 		if (CSoftCSAManager::getInstance()->waitForRecordStart(
 				channel->getChannelID(), fd,
 				CSoftCSAConfig::getInstance()->startTimeoutMs())) {
@@ -334,10 +328,10 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 			return RECORD_OK;
 		}
 
-		/* waitForRecordStart returned false. Either the runtime config
-		 * denied the channel (passive) or OSCam did not announce CSA-ALT
-		 * within the timeout. Undo the SoftCSA side effects so cRecord
-		 * can redo lockFrontend + CCamManager::Start cleanly. */
+		/* waitForRecordStart returned false: either passive (config
+		 * denied) or OSCam never announced CSA-ALT in time. Undo the
+		 * SoftCSA side effects so cRecord can redo lockFrontend +
+		 * CCamManager::Start cleanly. */
 		uint32_t sid = CSoftCSAManager::getInstance()->getSessionId(
 			channel->getChannelID(), SOFTCSA_SESSION_RECORD);
 		bool was_passive = sid
@@ -421,6 +415,13 @@ bool CRecordInstance::Stop(bool remove_event)
 #ifdef HAVE_SOFTCSA
 	if (softcsa_record) {
 		printf("%s: stopping SoftCSA recording for channel %" PRIx64 "\n", __func__, channel_id);
+		/* stopSession joins the consumer before returning; close the
+		 * recording fd afterwards so the consumer cannot write into a
+		 * kernel-recycled fd slot. */
+		CZapitChannel *rec_ch = CServiceManager::getInstance()->FindChannel(channel_id);
+		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
+		for (auto &sn : sr.dvbapi_stops)
+			sendDvbapiSessionStop(rec_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 		if (softcsa_fd >= 0) {
 			close(softcsa_fd);
 			softcsa_fd = -1;
@@ -432,15 +433,6 @@ bool CRecordInstance::Stop(bool remove_event)
 		/* Stop do close fd - if started */
 		record->Stop();
 	}
-
-#ifdef HAVE_SOFTCSA
-	{
-		CZapitChannel *rec_ch = CServiceManager::getInstance()->FindChannel(channel_id);
-		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
-		for (auto &sn : sr.dvbapi_stops)
-			sendDvbapiSessionStop(rec_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
-	}
-#endif
 	CCamManager::getInstance()->Stop(channel_id, CCamManager::RECORD);
 
 	if(!autoshift)

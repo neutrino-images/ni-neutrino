@@ -507,13 +507,6 @@ class CZapitClient:public CBasicClient
 	void stopPip(int pip = 0);
 	void lockPlayBack(const bool sendpmt = true);
 	void unlockPlayBack(const bool sendpmt = true);
-#ifdef HAVE_SOFTCSA
-	void switchSoftCSASource(bool to_memory, int video_type, int audio_type,
-	                        int *out_video_fd = NULL, int *out_audio_fd = NULL);
-	void switchSoftCSAPipSource(int pip, int video_type, int audio_type,
-	                            int *out_video_fd, int *out_audio_fd);
-	void restoreSoftCSAPipSource(int pip);
-#endif
 	bool tune_TP(TP_params TP);
 	bool isPlayBackActive();
 	//void setDisplayFormat(const video_display_format_t mode);

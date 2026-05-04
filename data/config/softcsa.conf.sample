@@ -72,6 +72,29 @@
 #   latency; longer values help slow providers. Values outside the allowed
 #   range are clamped and a warning is logged.
 #
+# wait_for_data_timeout_ms = <integer>     (default: 0, allowed: 0 or 100..2000)
+#
+#   After CW arrival and DVR-loopback FD open, wait up to this many
+#   milliseconds for the first byte to flow through the loopback before
+#   issuing the decoder Start.
+#
+#       0       -> disabled (default). Decoder starts immediately after
+#                  the reconstruct sequence completes.
+#       100..2000 -> wait up to N ms. Out-of-range values are clamped:
+#                    1..99 falls back to 0, > 2000 clamps to 2000.
+#
+#   Anti-race for "decoder Start before any data is buffered" which
+#   manifests as PTS=0 stalls on some platforms.
+#
+# buffer_time_ms = <integer>         (default: 0, allowed: 0 or 100..2000)
+#
+#   Additional pre-buffer hold after first data has arrived, before
+#   decoder Start. Same numeric range and clamping as
+#   wait_for_data_timeout_ms.
+#
+#   Smooths decoder start on boxes with small DVR ring buffers. Use
+#   together with wait_for_data_timeout_ms.
+#
 # entry = <type>:<mode>:<body>       (zero or more)
 #
 #   Per-channel / per-transponder / per-bouquet rules. See the Entry Grammar

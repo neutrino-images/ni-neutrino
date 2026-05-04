@@ -1170,57 +1170,6 @@ void CZapitClient::unlockPlayBack(const bool sendpmt)
 	close_connection();
 }
 
-#ifdef HAVE_SOFTCSA
-void CZapitClient::switchSoftCSASource(bool to_memory, int video_type, int audio_type,
-                                        int *out_video_fd, int *out_audio_fd)
-{
-	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(mutex);
-	CZapitMessages::commandSoftCSASwitchSource msg;
-	msg.to_memory = to_memory;
-	msg.video_type = video_type;
-	msg.audio_type = audio_type;
-	send(CZapitMessages::CMD_SOFTCSA_SWITCH_SOURCE, (char *)&msg, sizeof(msg));
-	CZapitMessages::responseSoftCSASwitchSource response;
-	CBasicClient::receive_data((char*)&response, sizeof(response));
-	close_connection();
-	if (out_video_fd)
-		*out_video_fd = response.video_fd;
-	if (out_audio_fd)
-		*out_audio_fd = response.audio_fd;
-}
-
-void CZapitClient::switchSoftCSAPipSource(int pip, int video_type, int audio_type,
-                                           int *out_video_fd, int *out_audio_fd)
-{
-	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(mutex);
-	CZapitMessages::commandSoftCSASwitchPipSource msg;
-	msg.to_memory = true;
-	msg.pip = pip;
-	msg.video_type = video_type;
-	msg.audio_type = audio_type;
-	send(CZapitMessages::CMD_SOFTCSA_SWITCH_PIP_SOURCE, (char *)&msg, sizeof(msg));
-	CZapitMessages::responseSoftCSASwitchSource response;
-	CBasicClient::receive_data((char*)&response, sizeof(response));
-	close_connection();
-	if (out_video_fd)
-		*out_video_fd = response.video_fd;
-	if (out_audio_fd)
-		*out_audio_fd = response.audio_fd;
-}
-
-void CZapitClient::restoreSoftCSAPipSource(int pip)
-{
-	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(mutex);
-	CZapitMessages::commandSoftCSASwitchPipSource msg;
-	msg.to_memory = false;
-	msg.pip = pip;
-	send(CZapitMessages::CMD_SOFTCSA_SWITCH_PIP_SOURCE, (char *)&msg, sizeof(msg));
-	CZapitMessages::responseSoftCSASwitchSource response;
-	CBasicClient::receive_data((char*)&response, sizeof(response));
-	close_connection();
-}
-#endif
-
 bool CZapitClient::isPlayBackActive()
 {
 	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(mutex);

@@ -35,15 +35,11 @@ public:
 	CSoftCSAEngine();
 	~CSoftCSAEngine();
 
-	// Set control word. Called from the CDvbApiClient reader thread via
-	// CSoftCSAManager::onCW, and via copyKeysTo from the zapit server
-	// thread at same-channel session creation.
-	// parity: 0=even, 1=odd
+	// parity: 0=even, 1=odd. Called via CSoftCSAManager::onCW from the
+	// dvbapi reader thread.
 	void setKey(int parity, uint8_t ecm_mode, const uint8_t *cw);
 
-	// Descramble TS packets in buffer. Called from the session reader
-	// thread (LIVE/PIP) or the dedicated record/stream thread.
-	// Returns number of packets descrambled
+	// Descrambles TS packets in place. Returns count descrambled.
 	int descramble(uint8_t *data, int len);
 
 private:
@@ -53,6 +49,10 @@ private:
 	std::atomic<int> key_odd_idx;
 	std::atomic<bool> key_even_set{false};
 	std::atomic<bool> key_odd_set{false};
+	/* One-shot flags: log "first key arrived" once per engine+parity,
+	 * not on every CW rotation. */
+	std::atomic<bool> first_even_logged{false};
+	std::atomic<bool> first_odd_logged{false};
 	unsigned int batch_size;
 	struct dvbcsa_bs_batch_s *even_batch;
 	struct dvbcsa_bs_batch_s *odd_batch;
@@ -61,9 +61,6 @@ private:
 	uint8_t stored_ecm_mode;
 	std::mutex stored_cw_mtx;
 
-public:
-	/* Copy current keys to another engine (for same-channel recording) */
-	void copyKeysTo(CSoftCSAEngine *dst);
 };
 
 #endif

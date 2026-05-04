@@ -43,6 +43,8 @@ public:
 
 	Decision decide(CZapitChannel *channel);
 	int startTimeoutMs();
+	int waitForDataTimeoutMs();
+	int bufferTimeMs();
 
 private:
 	CSoftCSAConfig();
@@ -66,9 +68,8 @@ private:
 	struct BouquetEntry {
 		std::string name;
 		bool include;
-		/* Snapshot of channel ids resolved from the live bouquet manager at
-		 * load time. decide() avoids walking the bouquet vectors under mtx,
-		 * which dodges a latent race with runtime bouquet reloads. */
+		/* Snapshot at load time so decide() does not walk live bouquet
+		 * vectors under mtx (avoids a race with runtime bouquet reloads). */
 		std::set<t_channel_id> resolved_cids;
 	};
 
@@ -93,6 +94,8 @@ private:
 	bool cfg_enabled;
 	bool cfg_auto;
 	int cfg_start_timeout_ms;
+	int cfg_wait_for_data_timeout_ms;
+	int cfg_buffer_time_ms;
 
 	std::vector<DvbEntry> dvb_entries;
 	std::vector<BouquetEntry> bouquet_entries;
