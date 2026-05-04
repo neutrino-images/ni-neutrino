@@ -81,7 +81,7 @@ extern CBouquetManager *g_bouquetManager;
 #define RC_DEVICE_FALLBACK "/dev/input/event1"
 #endif
 
-#elif BOXMODEL_MULTIBOX || BOXMODEL_MULTIBOXSE || BOXMODEL_OSMIO4K || BOXMODEL_OSMIO4KPLUS
+#elif BOXMODEL_MULTIBOX || BOXMODEL_MULTIBOXSE
 #ifndef RC_DEVICE
 #define RC_DEVICE "/dev/input/event0"
 #endif
