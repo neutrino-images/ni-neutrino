@@ -306,8 +306,28 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 		if (is_live || is_pip) {
 			/* m_live keyed by session_id dedups across CSA-ALT transitions. */
 			if (m_live.find(session_id) == m_live.end()) {
-				start_attach = true;
-				decoder_index = is_pip ? (ds.pip_dev + 1) : 0;
+				int target_index = is_pip ? (ds.pip_dev + 1) : 0;
+				/* OSCam keeps a subscription alive as long as any
+				 * sibling holds it (e.g. PIP on the same channel after
+				 * the LIVE has zapped away). Late CWs for the now-stale
+				 * LIVE/PIP session would otherwise re-trigger startLive
+				 * and clobber the decoder slot owned by the new live
+				 * attachment. Skip if another m_live entry already
+				 * holds the target decoder slot. */
+				bool slot_taken = false;
+				for (auto &lp : m_live) {
+					if (lp.second && lp.second->decoder_index == target_index) {
+						slot_taken = true;
+						break;
+					}
+				}
+				if (slot_taken) {
+					printf("[softcsa] onDescrMode: ignored late CW for session %u, decoder slot %d already taken\n",
+					       session_id, target_index);
+				} else {
+					start_attach = true;
+					decoder_index = target_index;
+				}
 			}
 		} else {
 			/* RECORD/STREAM: pipe bridge survives OSCam disconnect.
@@ -374,20 +394,22 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 {
 	SoftCSAStopResult result;
 
-	/* LIVE sessions: reverse the decoder rebind first so zapit
+	/* LIVE/PIP sessions: reverse the decoder rebind first so zapit
 	 * reconstructs demuxes back to the main frontend before the tap
-	 * and DVR slot tear down. softcsaRebind* acquires zapit_mutex,
-	 * so no manager mutex may be held here. */
-	if (type == SOFTCSA_SESSION_LIVE) {
-		uint32_t live_id = 0;
+	 * and DVR slot tear down. Without this for PIP, m_live[pip_id]
+	 * leaks across StopPip and the slot-taken check in onDescrMode
+	 * locks out the next PiP attach. softcsaRebind* acquires
+	 * zapit_mutex, so no manager mutex may be held here. */
+	if (type == SOFTCSA_SESSION_LIVE || type == SOFTCSA_SESSION_PIP) {
+		uint32_t attached_id = 0;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
 			auto ch_it = channel_to_session.find(std::make_pair(channel_id, type));
 			if (ch_it != channel_to_session.end())
-				live_id = ch_it->second;
+				attached_id = ch_it->second;
 		}
-		if (live_id != 0)
-			stopLive(live_id);
+		if (attached_id != 0)
+			stopLive(attached_id);
 	}
 
 	struct StreamThread {
@@ -1544,8 +1566,16 @@ void CSoftCSAManager::stopLive(uint32_t session_id, bool skip_decoder_start)
 		dying = std::move(it->second);
 		m_live.erase(it);
 		auto tap_it = m_taps.find(tap_key);
-		if (tap_it != m_taps.end() && tap_it->second && output_token > 0)
-			tap_it->second->outputs->remove(output_token);
+		if (tap_it != m_taps.end() && tap_it->second) {
+			if (output_token > 0)
+				tap_it->second->outputs->remove(output_token);
+			/* LIVE-only path: no PIP/RECORD/STREAM sibling holds the
+			 * tap, refcount stays > 0 until capmt's stopSession runs,
+			 * but in that window the reader has no consumer. Stop it
+			 * here; it restarts on the next attach via the normal
+			 * waitForXStart / onDescrMode path. */
+			stopReaderIfIdleLocked(tap_it->second.get());
+		}
 	}
 	/* dying drops here, outside mtx; CDvrDemuxSlot's dtor closes the
 	 * dvr_fd. Neither outputs nor reader thread can still reference
