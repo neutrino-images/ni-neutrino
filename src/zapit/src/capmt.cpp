@@ -47,6 +47,23 @@ void CCamManager_SetDvbApiClient(CDvbApiClient *client)
 	dvbapi_client = client;
 }
 
+/* Once dvbapi_client has done the v3 handshake, oscam treats EVERY UDS
+ * connection on /tmp/camd.socket as v3 (proto_version is a global,
+ * re-assigned per poll-cycle in oscam's pfd2 setup). Legacy CCam sends
+ * over CBasicClient have no 0xa5 marker and trigger oscam's
+ * "malformed (no start)" path, desyncing that connection's reader.
+ * Skip the four legacy CCam UDS call sites when dvbapi_client owns
+ * oscam-side capmt; the hardware CI-CAM path via cCA::SendCAPMT is
+ * unaffected. */
+static inline bool dvbapi_owns_uds()
+{
+#ifdef HAVE_SOFTCSA
+	return dvbapi_client && dvbapi_client->isConnected();
+#else
+	return false;
+#endif
+}
+
 /* Tap PID set for a SoftCSA session. LIVE/PIP need only what the HW
  * decoder consumes (video, every audio track, pcr, pmt). STREAM/RECORD
  * also need PAT, TDT, teletext and DVB subs so the descrambled stream
@@ -269,7 +286,8 @@ CCamManager * CCamManager::getInstance(void)
 
 void CCamManager::StopCam(t_channel_id channel_id, CCam *cam)
 {
-	cam->sendMessage(NULL, 0, false);
+	if (!dvbapi_owns_uds())
+		cam->sendMessage(NULL, 0, false);
 	cam->sendCaPmt(channel_id, NULL, 0, CA_SLOT_TYPE_ALL);
 	channel_map.erase(channel_id);
 	delete cam;
@@ -403,7 +421,8 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		/* Possibly beware stopping cam in case of overlapping timers on same channel */
 		if (newmask != oldmask)
 		{
-			cam->sendMessage(NULL, 0, false);
+			if (!dvbapi_owns_uds())
+				cam->sendMessage(NULL, 0, false);
 		}
 		/* clean up channel_map with stopped record/stream/pip services NOT live-tv */
 		it = channel_map.find(channel_id);
@@ -440,25 +459,23 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 				/* 0x82 is a single descriptor byte, truncation is correct. */
 				uint8_t reg_ca_mask = (uint8_t)cam->getCaMask();
 
-				/* PMT updates set force_update but often change nothing
-				 * the softcsa slot cares about. Two cases:
-				 *   reuse-path: registerSession returns the same id;
-				 *     a CAPMT resend here would be a duplicate START for
-				 *     the same msgid (intermittently blacks the next
-				 *     same-TP zap, and a running record on this channel
-				 *     loses its CW window during the OSCam slot rebuild).
-				 *     Skip the whole block.
-				 *   session-change: frontend_num or capmt_ca_mask differ,
-				 *     so registerSession drops the old session. Send
-				 *     an explicit NOT_SELECTED first so OSCam tears the
-				 *     old slot down before the fresh CAPMT. */
+				/* On drop+recreate the fresh CAPMT is treated as an
+				 * update unless we explicitly tear the old session down
+				 * first; without that, descrambling stays on stale slot
+				 * state and never restarts. Sibling-guard: the stop is
+				 * per-channel, so skip it when another session for this
+				 * channel still holds the slot alive. */
+				bool will_reuse = CSoftCSAManager::getInstance()->willReuseSession(
+					channel->getChannelID(), stype, source);
 				bool skip_resubscribe = false;
-				if (force_update) {
-					if (CSoftCSAManager::getInstance()->willReuseSession(
-					        channel->getChannelID(), stype, source)) {
-						printf("[softcsa] force_update no-op: session for channel %llx unchanged, skipping capmt resend\n",
+				if (force_update && will_reuse) {
+					printf("[softcsa] force_update no-op: session for channel %llx unchanged, skipping capmt resend\n",
+					       (unsigned long long)channel->getChannelID());
+					skip_resubscribe = true;
+				} else if (!will_reuse) {
+					if (CSoftCSAManager::getInstance()->hasAnyRunningSession(channel->getChannelID())) {
+						printf("[softcsa] drop+recreate for channel %llx: sibling still active, skipping NOT_SELECTED\n",
 						       (unsigned long long)channel->getChannelID());
-						skip_resubscribe = true;
 					} else {
 						uint32_t old_sid = CSoftCSAManager::getInstance()->getSessionId(
 							channel->getChannelID(), stype);
@@ -510,7 +527,8 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 				}
 			} else
 #endif
-			cam->setCaPmt(true);
+			if (!dvbapi_owns_uds())
+				cam->setCaPmt(true);
 #if 0
 			// CI
 			CaIdVector caids;
@@ -638,7 +656,8 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 
 		/* don't use StopCam() here: ci-cam needs the real mode stop */
 		cam->sendCaPmt(channel->getChannelID(), NULL, 0, CA_SLOT_TYPE_CI, channel->scrambled, channel->camap, mode, start);
-		cam->sendMessage(NULL, 0, false);
+		if (!dvbapi_owns_uds())
+			cam->sendMessage(NULL, 0, false);
 		channel_map.erase(channel_id);
 		delete cam;
 #endif

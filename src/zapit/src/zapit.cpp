@@ -127,6 +127,10 @@ cDemux *pcrDemux = NULL;
 static cDemux *softcsa_videoDemux = NULL;
 static cDemux *softcsa_audioDemux = NULL;
 static cDemux *softcsa_pcrDemux = NULL;
+/* -1 = not yet created; otherwise the dvr_demux_unit the softcsa_*Demux
+ * are bound to. Lets same-unit rebinds skip the close+reopen cycle that
+ * trips the BCM e4hd NEXUS_PidChannel_Close NULL deref under load. */
+static int softcsa_dvr_demux_unit = -1;
 #endif
 
 /* the map which stores the wanted cable/satellites */
@@ -2637,22 +2641,50 @@ int CZapit::softcsaRebindDecoderToDvrDemux(int decoder_index, int adapter, int d
 		cDemux::markSourceInitialized(dvr_demux_unit);
 		cDemux::SetSource(dvr_demux_unit, dvr_demux_unit);
 
-		/* Defensive cleanup in case a prior activation never ran the
-		 * matching FrontDemux teardown. */
-		if (softcsa_videoDemux) { softcsa_videoDemux->Stop(); delete softcsa_videoDemux; }
-		if (softcsa_audioDemux) { softcsa_audioDemux->Stop(); delete softcsa_audioDemux; }
-		if (softcsa_pcrDemux)   { softcsa_pcrDemux->Stop();   delete softcsa_pcrDemux;   }
-		softcsa_videoDemux = new cDemux(dvr_demux_unit);
-		softcsa_videoDemux->Open(DMX_VIDEO_CHANNEL);
-		softcsa_pcrDemux = new cDemux(dvr_demux_unit);
-		softcsa_pcrDemux->Open(DMX_PCR_ONLY_CHANNEL, softcsa_videoDemux->getBuffer());
-		softcsa_audioDemux = new cDemux(dvr_demux_unit);
-		softcsa_audioDemux->Open(DMX_AUDIO_CHANNEL);
+		/* Reuse cDemux objects on same-unit rebind; mirrors the lazy-
+		 * create pattern of pipVideoDemux/pipAudioDemux. If pesFilter
+		 * fails on the reused fd (HAL state drift after Stop+filter
+		 * cycle), fall back to destroy+recreate as a safety net so
+		 * Sky->Sky zaps cannot brick on stale fd state. */
+		auto rebuild_demuxes = [&]() {
+			if (softcsa_videoDemux) { softcsa_videoDemux->Stop(); delete softcsa_videoDemux; softcsa_videoDemux = NULL; }
+			if (softcsa_audioDemux) { softcsa_audioDemux->Stop(); delete softcsa_audioDemux; softcsa_audioDemux = NULL; }
+			if (softcsa_pcrDemux)   { softcsa_pcrDemux->Stop();   delete softcsa_pcrDemux;   softcsa_pcrDemux   = NULL; }
+			softcsa_videoDemux = new cDemux(dvr_demux_unit);
+			softcsa_videoDemux->Open(DMX_VIDEO_CHANNEL);
+			softcsa_pcrDemux = new cDemux(dvr_demux_unit);
+			softcsa_pcrDemux->Open(DMX_PCR_ONLY_CHANNEL, softcsa_videoDemux->getBuffer());
+			softcsa_audioDemux = new cDemux(dvr_demux_unit);
+			softcsa_audioDemux->Open(DMX_AUDIO_CHANNEL);
+		};
+		bool reused = (softcsa_dvr_demux_unit == dvr_demux_unit)
+			&& softcsa_videoDemux && softcsa_audioDemux && softcsa_pcrDemux;
+		if (!reused) {
+			rebuild_demuxes();
+		} else {
+			softcsa_videoDemux->Stop();
+			softcsa_audioDemux->Stop();
+			softcsa_pcrDemux->Stop();
+		}
+		softcsa_dvr_demux_unit = dvr_demux_unit;
 
 		videoDecoder->SetStreamType((VIDEO_FORMAT)current_channel->type);
-		if (pcr_pid)   softcsa_pcrDemux->pesFilter(pcr_pid);
-		if (audio_pid) softcsa_audioDemux->pesFilter(audio_pid);
-		if (video_pid) softcsa_videoDemux->pesFilter(video_pid);
+		bool filter_ok = true;
+		if (pcr_pid && !softcsa_pcrDemux->pesFilter(pcr_pid))     filter_ok = false;
+		if (audio_pid && !softcsa_audioDemux->pesFilter(audio_pid)) filter_ok = false;
+		if (video_pid && !softcsa_videoDemux->pesFilter(video_pid)) filter_ok = false;
+		if (!filter_ok && reused) {
+			/* Only retry once and only if the failure was on reused
+			 * fds. A failure on freshly-Open()d fds would indicate a
+			 * deeper driver issue that another rebuild cannot heal. */
+			printf("[softcsa] softcsaRebindDecoderToDvrDemux: pesFilter failed on reused fds, rebuilding\n");
+			rebuild_demuxes();
+			if (pcr_pid)   softcsa_pcrDemux->pesFilter(pcr_pid);
+			if (audio_pid) softcsa_audioDemux->pesFilter(audio_pid);
+			if (video_pid) softcsa_videoDemux->pesFilter(video_pid);
+		} else if (!filter_ok) {
+			printf("[softcsa] softcsaRebindDecoderToDvrDemux: pesFilter failed on fresh fds (driver issue)\n");
+		}
 
 		/* No explicit DMX_SET_SOURCE on the decoder fds: dvr_demux_slot
 		 * already set DVR<unit> on the device-node and the kernel
@@ -2797,24 +2829,10 @@ int CZapit::softcsaRebindDecoderToFrontDemux(int decoder_index, bool skip_decode
 		videoDecoder->Stop(false);
 		audioDecoder->Stop();
 
-		/* Tear down the SoftCSA decode demuxes. The original
-		 * videoDemux/audioDemux/pcrDemux pointers were never touched,
-		 * so they're still valid; we just resume their filters. */
-		if (softcsa_videoDemux) {
-			softcsa_videoDemux->Stop();
-			delete softcsa_videoDemux;
-			softcsa_videoDemux = NULL;
-		}
-		if (softcsa_audioDemux) {
-			softcsa_audioDemux->Stop();
-			delete softcsa_audioDemux;
-			softcsa_audioDemux = NULL;
-		}
-		if (softcsa_pcrDemux) {
-			softcsa_pcrDemux->Stop();
-			delete softcsa_pcrDemux;
-			softcsa_pcrDemux = NULL;
-		}
+		/* Pause the SoftCSA decoder demuxes; do not destroy them. */
+		if (softcsa_videoDemux) softcsa_videoDemux->Stop();
+		if (softcsa_audioDemux) softcsa_audioDemux->Stop();
+		if (softcsa_pcrDemux)   softcsa_pcrDemux->Stop();
 
 		unsigned short pcr_pid   = current_channel->getPcrPid();
 		unsigned short audio_pid = current_channel->getAudioPid();

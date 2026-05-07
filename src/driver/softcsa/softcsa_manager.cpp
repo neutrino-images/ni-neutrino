@@ -32,13 +32,29 @@
 #include <thread>
 #include <unistd.h>
 
+#ifndef F_SETPIPE_SZ
+#define F_SETPIPE_SZ 1031
+#endif
+
+/* 1 MB absorbs disk-write latency spikes (FS journal commit, HDD seek)
+ * that would otherwise back-pressure tap_reader and let the kernel demux
+ * ringbuffer overflow, dropping TS packets at the source and producing
+ * discontinuities in the recording. Default 64 KB pipe holds <350 ms of
+ * payload on a typical Sky stream. Silent fallback: kernel rejects sizes
+ * over /proc/sys/fs/pipe-max-size with EPERM, behavior degrades to the
+ * default 64 KB which still works (just less robust). */
+static inline void enlargePipeBuffer(int write_fd)
+{
+	::fcntl(write_fd, F_SETPIPE_SZ, 1 << 20);
+}
+
 CSoftCSAManager *CSoftCSAManager::getInstance()
 {
 	static CSoftCSAManager instance;
 	return &instance;
 }
 
-CSoftCSAManager::CSoftCSAManager() : next_session_id(1) {}
+CSoftCSAManager::CSoftCSAManager() : next_session_id(1), m_standby_in_progress(false) {}
 CSoftCSAManager::~CSoftCSAManager() { stopAll(); }
 
 int CSoftCSAManager::tapDemuxForFrontend(int frontend_num)
@@ -102,6 +118,7 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 				if (alive && existing.tap_key.frontend_num == frontend_num) {
 					/* Same tap: update mask in place. */
 					existing.capmt_ca_mask = capmt_ca_mask;
+					existing.stopping = false;
 					printf("[softcsa] registerSession: reuse id %u for channel %llx type %d\n",
 					       session_id, (unsigned long long)channel_id, type);
 					return session_id;
@@ -170,6 +187,7 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		state.csa_alt_active = false;
 		state.retained = false;
 		state.passive = passive;
+		state.stopping = false;
 		state.ecm_mode = 0;
 		state.capmt_demux = (frontend_num >= 0) ? frontend_num : 0;
 		state.capmt_ca_mask = capmt_ca_mask;
@@ -292,6 +310,14 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 			printf("[softcsa] onDescrMode: ignored for passive session %u\n", session_id);
 			return;
 		}
+		if (ds.stopping) {
+			printf("[softcsa] onDescrMode: ignored for stopping session %u\n", session_id);
+			return;
+		}
+		if (m_standby_in_progress) {
+			printf("[softcsa] onDescrMode: ignored during standby teardown (session %u)\n", session_id);
+			return;
+		}
 		if (algo != CW_ALGO_CSA_ALT)
 			return;
 
@@ -319,6 +345,17 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 					if (lp.second && lp.second->decoder_index == target_index) {
 						slot_taken = true;
 						break;
+					}
+				}
+				/* Also check m_live_starting: another startLive that
+				 * has passed dedup but not yet inserted into m_live
+				 * already owns this decoder_index. */
+				if (!slot_taken) {
+					for (auto &kv : m_live_starting) {
+						if (kv.first != session_id && kv.second == target_index) {
+							slot_taken = true;
+							break;
+						}
 					}
 				}
 				if (slot_taken) {
@@ -405,8 +442,15 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 		{
 			std::lock_guard<std::mutex> lock(mtx);
 			auto ch_it = channel_to_session.find(std::make_pair(channel_id, type));
-			if (ch_it != channel_to_session.end())
+			if (ch_it != channel_to_session.end()) {
 				attached_id = ch_it->second;
+				/* Mark stopping before dropping the lock so a late
+				 * onDescrMode hitting the stopLive race window cannot
+				 * resurrect m_live[attached_id] as a zombie. */
+				auto sess_it = sessions.find(attached_id);
+				if (sess_it != sessions.end())
+					sess_it->second.stopping = true;
+			}
 		}
 		if (attached_id != 0)
 			stopLive(attached_id);
@@ -771,6 +815,7 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 				printf("[softcsa] waitForRecordStart: pipe failed\n");
 				return false;
 			}
+			enlargePipeBuffer(p[1]);
 			int wflags = ::fcntl(p[1], F_GETFL, 0);
 			if (wflags >= 0)
 				::fcntl(p[1], F_SETFL, wflags | O_NONBLOCK);
@@ -799,8 +844,15 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 			int read_end = p[0];
 			int record_fd_cap = fd;
 			ds.stream_consumer = std::thread([read_end, record_fd_cap]() {
-				const int kBuf = 65536;
+				const int kBuf = 1024 * 1024;
 				std::vector<uint8_t> buf(kBuf);
+				/* Drive writeback in 4 MB chunks so the page cache
+				 * never grows enough to trigger a global writeback
+				 * burst at dirty_background_ratio that would stall
+				 * this thread and overflow the pipe. */
+				off_t total_written = 0;
+				off_t last_advised = 0;
+				const off_t kAdviseInterval = 4 * 1024 * 1024;
 				while (true) {
 					ssize_t n = ::read(read_end, buf.data(), kBuf);
 					if (n <= 0) break;
@@ -814,6 +866,19 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 						}
 						ptr += w;
 						rem -= w;
+					}
+					total_written += n;
+					if (total_written - last_advised >= kAdviseInterval) {
+						::sync_file_range(record_fd_cap, last_advised,
+						                  total_written - last_advised,
+						                  SYNC_FILE_RANGE_WRITE);
+						if (last_advised >= kAdviseInterval) {
+							::posix_fadvise(record_fd_cap,
+							                last_advised - kAdviseInterval,
+							                kAdviseInterval,
+							                POSIX_FADV_DONTNEED);
+						}
+						last_advised = total_written;
 					}
 				}
 			});
@@ -961,6 +1026,7 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 				printf("[softcsa] waitForStreamStart: pipe failed\n");
 				return false;
 			}
+			enlargePipeBuffer(p[1]);
 			int wflags = ::fcntl(p[1], F_GETFL, 0);
 			if (wflags >= 0)
 				::fcntl(p[1], F_SETFL, wflags | O_NONBLOCK);
@@ -1124,6 +1190,7 @@ bool CSoftCSAManager::cloneAndStartRecord(uint32_t session_id, int fd)
 		int p[2];
 		if (::pipe(p) < 0)
 			return false;
+		enlargePipeBuffer(p[1]);
 		int wflags = ::fcntl(p[1], F_GETFL, 0);
 		if (wflags >= 0)
 			::fcntl(p[1], F_SETFL, wflags | O_NONBLOCK);
@@ -1156,8 +1223,11 @@ bool CSoftCSAManager::cloneAndStartRecord(uint32_t session_id, int fd)
 		int read_end = p[0];
 		int record_fd_cap = fd;
 		ds.stream_consumer = std::thread([read_end, record_fd_cap]() {
-			const int kBuf = 65536;
+			const int kBuf = 1024 * 1024;
 			std::vector<uint8_t> buf(kBuf);
+			off_t total_written = 0;
+			off_t last_advised = 0;
+			const off_t kAdviseInterval = 4 * 1024 * 1024;
 			while (true) {
 				ssize_t n = ::read(read_end, buf.data(), kBuf);
 				if (n <= 0) break;
@@ -1171,6 +1241,19 @@ bool CSoftCSAManager::cloneAndStartRecord(uint32_t session_id, int fd)
 					}
 					ptr += w;
 					rem -= w;
+				}
+				total_written += n;
+				if (total_written - last_advised >= kAdviseInterval) {
+					::sync_file_range(record_fd_cap, last_advised,
+					                  total_written - last_advised,
+					                  SYNC_FILE_RANGE_WRITE);
+					if (last_advised >= kAdviseInterval) {
+						::posix_fadvise(record_fd_cap,
+						                last_advised - kAdviseInterval,
+						                kAdviseInterval,
+						                POSIX_FADV_DONTNEED);
+					}
+					last_advised = total_written;
 				}
 			}
 		});
@@ -1233,6 +1316,7 @@ bool CSoftCSAManager::cloneAndStartStream(uint32_t session_id, SoftCSAStreamCall
 		int p[2];
 		if (::pipe(p) < 0)
 			return false;
+		enlargePipeBuffer(p[1]);
 		int wflags = ::fcntl(p[1], F_GETFL, 0);
 		if (wflags >= 0)
 			::fcntl(p[1], F_SETFL, wflags | O_NONBLOCK);
@@ -1321,7 +1405,7 @@ int CSoftCSAManager::startLive(uint32_t session_id, int decoder_index)
 		if (m_live.find(session_id) != m_live.end()
 		    || m_live_starting.count(session_id))
 			return 0;
-		m_live_starting.insert(session_id);
+		m_live_starting[session_id] = decoder_index;
 		auto sit = sessions.find(session_id);
 		if (sit == sessions.end()) {
 			m_live_starting.erase(session_id);
@@ -1357,6 +1441,30 @@ int CSoftCSAManager::startLive(uint32_t session_id, int decoder_index)
 		std::lock_guard<std::mutex> lock(mtx);
 		m_live_starting.erase(session_id);
 		return -3;
+	}
+
+	/* Re-validate the chosen unit under lock: a parallel startLive for a
+	 * different session may have allocated the same unit between our
+	 * excluded_units snapshot and CDvrDemuxSlot::alloc. */
+	{
+		std::lock_guard<std::mutex> lock(mtx);
+		int chosen_unit = live->slot->demuxUnit();
+		bool collision = false;
+		for (auto &kv : m_live) {
+			if (kv.second && kv.second->slot &&
+			    kv.second->slot->adapter() == adapter &&
+			    kv.second->slot->demuxUnit() == chosen_unit) {
+				collision = true;
+				break;
+			}
+		}
+		if (collision) {
+			printf("[softcsa] startLive: dvr_demux_unit %d collided post-alloc, aborting session %u\n",
+			       chosen_unit, session_id);
+			live.reset();
+			m_live_starting.erase(session_id);
+			return -3;
+		}
 	}
 
 	/* Register the output token first so the reader, once started, has
@@ -1445,13 +1553,43 @@ int CSoftCSAManager::startLive(uint32_t session_id, int decoder_index)
 
 	int dvr_unit;
 	int dvr_adapter;
+	bool aborted = false;
 	{
 		std::lock_guard<std::mutex> lock(mtx);
-		dvr_unit = live->slot->demuxUnit();
-		dvr_adapter = live->slot->adapter();
-		m_live[session_id] = std::move(live);
-		m_live_starting.erase(session_id);
+		/* While the rebind held zapit_mutex (and possibly slept in
+		 * ready_for_data), a parallel stopSession may have set
+		 * stopping=true and erased the session. onDescrMode's pre-flight
+		 * check on stopping is not enough on its own. */
+		auto sit = sessions.find(session_id);
+		if (sit == sessions.end() || sit->second.stopping) {
+			aborted = true;
+			auto tap_it = m_taps.find(live->tap_key);
+			if (tap_it != m_taps.end() && tap_it->second) {
+				tap_it->second->outputs->remove(output_token);
+				stopReaderIfIdleLocked(tap_it->second.get());
+			}
+			m_live_starting.erase(session_id);
+		} else {
+			dvr_unit = live->slot->demuxUnit();
+			dvr_adapter = live->slot->adapter();
+			m_live[session_id] = std::move(live);
+			m_live_starting.erase(session_id);
+		}
 	}
+
+	if (aborted) {
+		/* Decoder is bound to dvr_demux_unit by the rebind we just did.
+		 * Revert to FRONT before the slot dtor closes the dvr_fd, so the
+		 * next StartPlayBack starts cleanly. zapit_mutex order preserved
+		 * (no manager mtx held here). */
+		CZapit::getInstance()->softcsaRebindDecoderToFrontDemux(
+			decoder_index, /*skip_decoder_start=*/true);
+		live.reset();
+		printf("[softcsa] startLive: session %u aborted mid-rebind, rolled back\n",
+		       session_id);
+		return -6;
+	}
+
 	printf("[softcsa] startLive: session %u decoder_index=%d adapter=%d dvr_demux=%d ok\n",
 	       session_id, decoder_index, dvr_adapter, dvr_unit);
 	return 0;
@@ -1459,9 +1597,10 @@ int CSoftCSAManager::startLive(uint32_t session_id, int decoder_index)
 
 int CSoftCSAManager::cloneAndStartLive(uint32_t session_id, int decoder_index)
 {
-	bool prior_csa_alt_active = false;
 	{
 		std::lock_guard<std::mutex> lock(mtx);
+		if (m_standby_in_progress)
+			return -1;
 		auto sit = sessions.find(session_id);
 		if (sit == sessions.end())
 			return -1;
@@ -1477,30 +1616,28 @@ int CSoftCSAManager::cloneAndStartLive(uint32_t session_id, int decoder_index)
 		auto sib_it = sessions.find(sib_id);
 		if (sib_it != sessions.end())
 			sit->second.ecm_mode = sib_it->second.ecm_mode;
-		/* Engine is physically shared via the tap; flipping
-		 * csa_alt_active is enough for sibling lookups to see us. */
-		prior_csa_alt_active = sit->second.csa_alt_active;
-		sit->second.csa_alt_active = true;
 		printf("[softcsa] cloneAndStartLive: session %u using shared engine from sibling %u\n",
 		       session_id, sib_id);
 	}
 	int rc = startLive(session_id, decoder_index);
-	if (rc != 0) {
-		/* startLive failed: willReuseSession must not see this session
-		 * as alive on the next zap attempt. */
+	if (rc == 0) {
+		/* Engine is physically shared via the tap. Flip csa_alt_active
+		 * only after startLive succeeded so a third thread cannot see
+		 * a transient alive state if the attach fails. */
 		std::lock_guard<std::mutex> lock(mtx);
 		auto sit = sessions.find(session_id);
 		if (sit != sessions.end())
-			sit->second.csa_alt_active = prior_csa_alt_active;
+			sit->second.csa_alt_active = true;
 	}
 	return rc;
 }
 
 int CSoftCSAManager::cloneAndStartPip(uint32_t session_id, int decoder_index)
 {
-	bool prior_csa_alt_active = false;
 	{
 		std::lock_guard<std::mutex> lock(mtx);
+		if (m_standby_in_progress)
+			return -1;
 		auto sit = sessions.find(session_id);
 		if (sit == sessions.end())
 			return -1;
@@ -1514,17 +1651,15 @@ int CSoftCSAManager::cloneAndStartPip(uint32_t session_id, int decoder_index)
 		auto sib_it = sessions.find(sib_id);
 		if (sib_it != sessions.end())
 			sit->second.ecm_mode = sib_it->second.ecm_mode;
-		prior_csa_alt_active = sit->second.csa_alt_active;
-		sit->second.csa_alt_active = true;
 		printf("[softcsa] cloneAndStartPip: session %u using shared engine from sibling %u\n",
 		       session_id, sib_id);
 	}
 	int rc = startLive(session_id, decoder_index);
-	if (rc != 0) {
+	if (rc == 0) {
 		std::lock_guard<std::mutex> lock(mtx);
 		auto sit = sessions.find(session_id);
 		if (sit != sessions.end())
-			sit->second.csa_alt_active = prior_csa_alt_active;
+			sit->second.csa_alt_active = true;
 	}
 	return rc;
 }
@@ -1584,16 +1719,42 @@ void CSoftCSAManager::stopLive(uint32_t session_id, bool skip_decoder_start)
 
 void CSoftCSAManager::enterStandbyTeardown()
 {
-	std::vector<uint32_t> live_ids;
+	/* RAII guard so an exception out of stopLive (or transitively
+	 * softcsaRebindDecoderToFrontDemux) cannot leave the standby flag
+	 * stuck at true and lock out every future LIVE/PIP attach. */
+	struct StandbyGuard {
+		CSoftCSAManager *mgr;
+		~StandbyGuard() {
+			std::lock_guard<std::mutex> lock(mgr->mtx);
+			mgr->m_standby_in_progress = false;
+		}
+	};
 	{
 		std::lock_guard<std::mutex> lock(mtx);
-		for (auto &lp : m_live)
-			live_ids.push_back(lp.first);
+		m_standby_in_progress = true;
 	}
-	printf("[softcsa] enterStandbyTeardown: draining %zu live attachment(s)\n",
-	       live_ids.size());
-	for (uint32_t sid : live_ids)
-		stopLive(sid, /*skip_decoder_start=*/true);
+	StandbyGuard guard{this};
+
+	/* Drain in a loop; a late onDescrMode arriving between snapshot and
+	 * stopLive could otherwise insert a fresh m_live entry that the
+	 * single-pass loop would miss. The standby flag blocks new attaches
+	 * but a startLive already past its first crit-section can still
+	 * complete. Bound the loop so a runaway producer cannot spin us. */
+	const int kMaxIterations = 5;
+	for (int iter = 0; iter < kMaxIterations; iter++) {
+		std::vector<uint32_t> live_ids;
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			for (auto &lp : m_live)
+				live_ids.push_back(lp.first);
+		}
+		if (live_ids.empty())
+			break;
+		printf("[softcsa] enterStandbyTeardown: draining %zu live attachment(s) (iter %d)\n",
+		       live_ids.size(), iter);
+		for (uint32_t sid : live_ids)
+			stopLive(sid, /*skip_decoder_start=*/true);
+	}
 }
 
 void CSoftCSAManager::stopReaderIfIdleLocked(SoftCSAServiceTap *tap)

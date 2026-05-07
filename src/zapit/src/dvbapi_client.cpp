@@ -309,6 +309,7 @@ bool CDvbApiClient::sendCaPmt(const unsigned char *data, unsigned int len, uint3
 	writeU32(hdr + 1, msgid);
 
 	std::lock_guard<std::mutex> lock(send_mutex);
+
 	if (!writeAll(sock_fd, hdr, 5))
 		return false;
 	if (len > 0 && !writeAll(sock_fd, data, len))

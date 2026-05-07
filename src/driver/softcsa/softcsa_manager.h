@@ -178,6 +178,10 @@ private:
 		 * oscam's slot bookkeeping stays clean; descrmode is ignored,
 		 * cw dropped, engine never starts, sibling lookups skip it. */
 		bool passive;
+		/* Set while stopSession is tearing the session down. Blocks
+		 * onDescrMode auto-attach so a late CW cannot resurrect an
+		 * m_live entry that the second crit-section is about to drop. */
+		bool stopping;
 		uint8_t ecm_mode;
 		int capmt_demux;
 		uint8_t capmt_ca_mask;
@@ -220,8 +224,15 @@ private:
 	 * being populated (third crit-section). Without this, two concurrent
 	 * calls could both pass dedup, allocate duplicate DVR slots, and
 	 * leak an output_token into the tap's OutputFdSet. */
-	std::set<uint32_t> m_live_starting;
+	/* session_id -> decoder_index. Used as in-progress sentinel AND so
+	 * the slot-taken check in onDescrMode can see attaches that have
+	 * passed dedup but not yet populated m_live. */
+	std::map<uint32_t, int> m_live_starting;
 	uint32_t next_session_id;
+	/* Set while enterStandbyTeardown is running. Blocks new LIVE/PIP
+	 * attaches via onDescrMode and cloneAndStart* so a CW that arrives
+	 * mid-drain cannot reinsert an m_live entry behind the snapshot. */
+	bool m_standby_in_progress;
 
 	std::mutex mtx;
 

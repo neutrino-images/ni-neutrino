@@ -96,10 +96,13 @@ int CTapReader::openTapAndConfigure()
 		return -1;
 	}
 
-	/* 1 MB ringbuffer: some vendor drivers reject sizes >1 MB. */
-	unsigned long bufsz = 1024 * 1024;
-	if (ioctl(m_demux_fd, DMX_SET_BUFFER_SIZE, bufsz) < 0)
-		printf(TAG "DMX_SET_BUFFER_SIZE %lu failed: %s\n", bufsz, strerror(errno));
+	/* 1.54 MB (8192 TS packets) absorbs ~5 s of disk-write stalls. */
+	unsigned long bufsz = 8192UL * 188UL;
+	if (ioctl(m_demux_fd, DMX_SET_BUFFER_SIZE, bufsz) < 0) {
+		bufsz = 1024UL * 1024UL;
+		if (ioctl(m_demux_fd, DMX_SET_BUFFER_SIZE, bufsz) < 0)
+			printf(TAG "DMX_SET_BUFFER_SIZE failed: %s\n", strerror(errno));
+	}
 
 	/* No DMX_SET_SOURCE: device-source is already correct from the
 	 * live channel allocation. Re-issuing it on a demux with active

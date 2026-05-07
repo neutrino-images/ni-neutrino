@@ -22,12 +22,22 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <fcntl.h>
+#include <poll.h>
+#include <time.h>
 #include <unistd.h>
 
 #define TAG "[softcsa output_fd_set] "
+
+static inline uint64_t writeAll_now_us()
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
+}
 
 COutputFdSet::COutputFdSet() : next_id(1)
 {
@@ -91,19 +101,47 @@ int COutputFdSet::writeAll(const unsigned char *buf, std::size_t len)
 	int ok = 0;
 	for (auto *e : entries) {
 		if (e->stale) continue;
-		ssize_t n = ::write(e->fd, buf, len);
-		if (n == (ssize_t)len) {
+		const unsigned char *ptr = buf;
+		std::size_t rem = len;
+		uint64_t stall_start_us = 0;
+		while (rem > 0) {
+			ssize_t n = ::write(e->fd, ptr, rem);
+			if (n == (ssize_t)rem) {
+				ptr += n;
+				rem = 0;
+			} else if (n < 0 && errno == EINTR) {
+				continue;
+			} else if (n < 0 && errno == EAGAIN) {
+				// Pipe buffer full. Track stall start so we can
+				// emit one diagnostic per stall episode rather
+				// than per poll-tick.
+				if (!stall_start_us)
+					stall_start_us = writeAll_now_us();
+				struct pollfd pfd = { e->fd, POLLOUT, 0 };
+				::poll(&pfd, 1, 5);
+			} else if (n < 0) {
+				printf(TAG "fd=%d role=%d write failed: %s; marking stale\n",
+					e->fd, (int)e->role, strerror(errno));
+				e->stale = true;
+				break;
+			} else {
+				// Partial write: retry remaining bytes.
+				ptr += n;
+				rem -= (std::size_t)n;
+			}
+		}
+		if (rem == 0) {
 			e->write_count.fetch_add(1, std::memory_order_relaxed);
 			ok++;
-		} else if (n < 0 && errno == EAGAIN) {
-			/* drop silently; consumer will catch up via kernel buffering */
-		} else if (n < 0) {
-			printf(TAG "fd=%d role=%d write failed: %s; marking stale\n",
-				e->fd, (int)e->role, strerror(errno));
-			e->stale = true;
-		} else {
-			printf(TAG "fd=%d role=%d short write n=%zd of %zu\n",
-				e->fd, (int)e->role, n, len);
+			// Log stalls >= 50 ms so we can correlate disk pauses
+			// with TS discontinuities in the final recording.
+			if (stall_start_us) {
+				uint64_t stall_us = writeAll_now_us() - stall_start_us;
+				if (stall_us >= 50000)
+					printf(TAG "fd=%d role=%d stalled %llu us\n",
+						e->fd, (int)e->role,
+						(unsigned long long)stall_us);
+			}
 		}
 	}
 	return ok;
