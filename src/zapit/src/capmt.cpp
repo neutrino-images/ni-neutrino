@@ -46,6 +46,7 @@ void CCamManager_SetDvbApiClient(CDvbApiClient *client)
 {
 	dvbapi_client = client;
 }
+#endif
 
 /* Once dvbapi_client has done the v3 handshake, oscam treats EVERY UDS
  * connection on /tmp/camd.socket as v3 (proto_version is a global,
@@ -54,7 +55,8 @@ void CCamManager_SetDvbApiClient(CDvbApiClient *client)
  * "malformed (no start)" path, desyncing that connection's reader.
  * Skip the four legacy CCam UDS call sites when dvbapi_client owns
  * oscam-side capmt; the hardware CI-CAM path via cCA::SendCAPMT is
- * unaffected. */
+ * unaffected. Defined unconditionally so non-SoftCSA boxes (Coolstream)
+ * still see the symbol; returns false there. */
 static inline bool dvbapi_owns_uds()
 {
 #ifdef HAVE_SOFTCSA
@@ -64,6 +66,7 @@ static inline bool dvbapi_owns_uds()
 #endif
 }
 
+#ifdef HAVE_SOFTCSA
 /* Tap PID set for a SoftCSA session. LIVE/PIP need only what the HW
  * decoder consumes (video, every audio track, pcr, pmt). STREAM/RECORD
  * also need PAT, TDT, teletext and DVB subs so the descrambled stream
