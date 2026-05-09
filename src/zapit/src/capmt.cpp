@@ -661,8 +661,24 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		cam->sendCaPmt(channel->getChannelID(), NULL, 0, CA_SLOT_TYPE_CI, channel->scrambled, channel->camap, mode, start);
 		if (!dvbapi_owns_uds())
 			cam->sendMessage(NULL, 0, false);
-		channel_map.erase(channel_id);
-		delete cam;
+#ifdef HAVE_SOFTCSA
+		/* Retain channel_map entry + cam while a SoftCSA RECORD/STREAM
+		 * sibling on this channel still keeps OSCam descrambling. Without
+		 * it, the next CAPMT for an unrelated channel goes out as
+		 * CAPMT_ONLY (channel_map.size() == 1), which OSCam interprets
+		 * as "replace the existing Demuxer's content" -- ending
+		 * descrambling for the orphaned sibling on the same slot. The
+		 * cam object stays alive; when the sibling later stops via the
+		 * RECORD/STREAM teardown path, that branch erases the entry. */
+		if (CSoftCSAManager::getInstance()->hasAnyRunningSession(channel_id)) {
+			printf("[capmt] newmask==0 for channel %llx: SoftCSA sibling still active, retaining cam to preserve OSCam Demuxer\n",
+			       (unsigned long long)channel_id);
+		} else
+#endif
+		{
+			channel_map.erase(channel_id);
+			delete cam;
+		}
 #endif
 	}
 

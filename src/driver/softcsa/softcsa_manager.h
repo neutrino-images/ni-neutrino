@@ -138,6 +138,14 @@ public:
 	 * flushed at least one byte. */
 	bool isLiveDataFlowing(int adapter, int demux_unit);
 
+	/* True when the decoder for decoder_index is currently bound through
+	 * the dvr-loopback (via a LIVE attachment for index 0 or a PIP
+	 * attachment for index >= 1). Callers use this to route operations
+	 * on the audio/video demux to softcsa_*Demux instead of the
+	 * FRONT-bound cDemux objects, which are paused while the loopback
+	 * is active. */
+	bool isDecoderDvrBound(int decoder_index);
+
 private:
 	CSoftCSAManager();
 	~CSoftCSAManager();

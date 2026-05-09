@@ -1222,7 +1222,16 @@ bool CZapit::ChangeAudioPid(uint8_t index)
 	if (!current_channel)
 		return false;
 
-	/* restarting the decoder while `playing` is false desyncs state —
+#ifdef HAVE_SOFTCSA
+	/* zapit_mutex serializes against softcsaRebindDecoderToDvrDemux,
+	 * which deletes and recreates softcsa_audioDemux from the dvbapi
+	 * onDescrMode/startLive thread. Without this lock, picking
+	 * softcsa_audioDemux via isDecoderDvrBound and then dereferencing
+	 * it races with rebuild_demuxes' delete + reassign. */
+	OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> _zlock(zapit_mutex);
+#endif
+
+	/* restarting the decoder while `playing` is false desyncs state --
 	 * StopPlayBack would then early-return and the next StartPlayBack
 	 * hits an already-playing decoder (silent audio). Update channel
 	 * state and stream-type so the next StartPlayBack sees them. */
@@ -1236,8 +1245,19 @@ bool CZapit::ChangeAudioPid(uint8_t index)
 		return true;
 	}
 
+	/* When a SoftCSA LIVE attachment is bound to the main decoder, the
+	 * decoder is fed by softcsa_audioDemux on the dvr-loopback unit;
+	 * audioDemux (FRONT-bound) is paused. Operating on audioDemux would
+	 * leave the old PID on softcsa_audioDemux and the audio track does
+	 * not change. */
+	cDemux *adx = audioDemux;
+#ifdef HAVE_SOFTCSA
+	if (CSoftCSAManager::getInstance()->isDecoderDvrBound(0) && softcsa_audioDemux)
+		adx = softcsa_audioDemux;
+#endif
+
 	/* stop demux filter */
-	if (audioDemux->Stop() == false)
+	if (adx->Stop() == false)
 		return false;
 
 	/* stop audio playback */
@@ -1259,11 +1279,11 @@ bool CZapit::ChangeAudioPid(uint8_t index)
 	SetAudioStreamType(currentAudioChannel->audioChannelType);
 
 	/* set demux filter */
-	if (audioDemux->pesFilter(current_channel->getAudioPid()) == false)
+	if (adx->pesFilter(current_channel->getAudioPid()) == false)
 		return false;
 
 	/* start demux filter */
-	if (audioDemux->Start() == false)
+	if (adx->Start() == false)
 		return false;
 
 	/* start audio playback */

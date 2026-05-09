@@ -366,6 +366,32 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 					decoder_index = target_index;
 				}
 			}
+
+			/* Same-mask sibling propagation: a RECORD/STREAM session
+			 * registered with (oldmask == newmask) does not get its own
+			 * onDescrMode from OSCam. Mark any keyed sibling active so
+			 * its waitForXStart predicate succeeds. csa_alt_active needs
+			 * the manager mutex (held here); record_cv.notify_all is
+			 * triggered after the lock drops via the existing notify
+			 * flag. */
+			t_channel_id ch = ds.channel_id;
+			for (auto &kv : sessions) {
+				if (kv.first == session_id) continue;
+				if (kv.second.channel_id != ch) continue;
+				if (kv.second.passive) continue;
+				if (kv.second.stopping) continue;
+				if (kv.second.type != SOFTCSA_SESSION_RECORD &&
+				    kv.second.type != SOFTCSA_SESSION_STREAM) continue;
+				if (kv.second.output_token <= 0) continue;
+				if (kv.second.csa_alt_active) continue;
+				kv.second.csa_alt_active = true;
+				kv.second.ecm_mode = (uint8_t)cipher_mode;
+				notify = true;
+				printf("[softcsa] onDescrMode: same-mask sibling %u (%s) adopted from session %u\n",
+				       kv.first,
+				       (kv.second.type == SOFTCSA_SESSION_RECORD) ? "RECORD" : "STREAM",
+				       session_id);
+			}
 		} else {
 			/* RECORD/STREAM: pipe bridge survives OSCam disconnect.
 			 * If stopSessions detached the output_token, re-attach
@@ -907,6 +933,21 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 			}
 		}
 
+		/* Same-mask sibling-attach: when the LIVE for this channel is
+		 * already keyed but the dvbapi server skipped sendCaPmt because
+		 * (oldmask == newmask), no onDescrMode for this RECORD session
+		 * will arrive. Adopt the sibling's keying directly so the wait
+		 * predicate succeeds without the 3-second fallback timeout. */
+		if (!ds.csa_alt_active && ds.output_token > 0) {
+			uint32_t sib = findRunningSibling(channel_id, session_id);
+			if (sib != 0) {
+				ds.csa_alt_active = true;
+				already_active = true;
+				printf("[softcsa] waitForRecordStart: adopting keyed sibling %u for channel %llx\n",
+				       sib, (unsigned long long)channel_id);
+			}
+		}
+
 		if (already_active && ds.output_token > 0) {
 			printf("[softcsa] waitForRecordStart: csa_alt already active, returning immediately\n");
 			ds.record_fd = -1;
@@ -1085,6 +1126,20 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 						::close(pd.stream_pipe_read);
 					return false;
 				}
+			}
+		}
+
+		/* Same-mask sibling-attach: see waitForRecordStart for the
+		 * dvbapi rationale. Stream sessions can ride on the sibling's
+		 * keying even when the dvbapi server suppressed the per-session
+		 * CSA-ALT confirmation. */
+		if (!ds.csa_alt_active && ds.output_token > 0) {
+			uint32_t sib = findRunningSibling(channel_id, session_id);
+			if (sib != 0) {
+				ds.csa_alt_active = true;
+				already_active = true;
+				printf("[softcsa] waitForStreamStart: adopting keyed sibling %u for channel %llx\n",
+				       sib, (unsigned long long)channel_id);
 			}
 		}
 
@@ -1681,15 +1736,49 @@ void CSoftCSAManager::stopLive(uint32_t session_id, bool skip_decoder_start)
 		decoder_index = it->second->decoder_index;
 		output_token = it->second->output_token;
 		tap_key = it->second->tap_key;
+
+		/* Auto-skip the decoder restart in front-rebind when an active
+		 * RECORD/STREAM sibling on the same channel keeps the engine
+		 * keyed via the tap. Restarting the decoder on the FRONT-bound
+		 * scrambled stream produces a transient audio glitch and -- if
+		 * the caller has its own follow-up StopPlayBack chain -- holds
+		 * the dvr-loopback fd in tap.outputs without a consumer until
+		 * outputs->remove runs below, which can stall the sibling pipe
+		 * via writeAll EAGAIN-spin. The next StartPlayBack/TuneChannel
+		 * by the caller reconfigures the decoder cleanly. */
+		if (!skip_decoder_start) {
+			auto self = sessions.find(session_id);
+			t_channel_id ch = (self != sessions.end()) ? self->second.channel_id : 0;
+			if (ch != 0) {
+				for (const auto &p : sessions) {
+					if (p.first == session_id) continue;
+					if (p.second.channel_id != ch) continue;
+					if (p.second.passive) continue;
+					if (p.second.output_token <= 0) continue;
+					if (p.second.type == SOFTCSA_SESSION_RECORD ||
+					    p.second.type == SOFTCSA_SESSION_STREAM) {
+						printf("[softcsa] stopLive: auto-skip decoder restart, sibling %u (%s) on channel %llx still consumes the tap\n",
+						       p.first,
+						       (p.second.type == SOFTCSA_SESSION_RECORD) ? "RECORD" : "STREAM",
+						       (unsigned long long)ch);
+						skip_decoder_start = true;
+						break;
+					}
+				}
+			}
+		}
 	}
 	printf("[softcsa] stopLive: session %u decoder_index=%d skip_decoder_start=%d\n",
 	       session_id, decoder_index, skip_decoder_start ? 1 : 0);
 
 	/* Rebind decoders back to main demux first. softcsaRebind* calls
-	 * Stop internally, which is the right order while the dvr<M> fd
-	 * is still in the OutputFdSet: any in-flight write drains while
-	 * the decoder is still consuming. softcsaRebind* takes zapit_mutex,
-	 * so no manager mutex may be held here. */
+	 * Stop internally; for skip_decoder_start=false this also restarts
+	 * the decoder on FRONT briefly so any in-flight dvr<M> write drains
+	 * while the decoder is still consuming, before the outputs->remove
+	 * below evicts the dvr fd. For skip=true the drain argument does
+	 * not apply -- the decoder stays stopped and the dvr-loopback fd
+	 * is removed unconditionally below. softcsaRebind* takes
+	 * zapit_mutex, so no manager mutex may be held here. */
 	CZapit::getInstance()->softcsaRebindDecoderToFrontDemux(decoder_index, skip_decoder_start);
 
 	std::unique_ptr<SoftCSALiveAttachment> dying;
@@ -1785,6 +1874,16 @@ bool CSoftCSAManager::isLiveDataFlowing(int adapter, int demux_unit)
 				return false;
 			return tap_it->second->outputs->writeCountFor(live->output_token) > 0;
 		}
+	}
+	return false;
+}
+
+bool CSoftCSAManager::isDecoderDvrBound(int decoder_index)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	for (const auto &lp : m_live) {
+		if (lp.second && lp.second->decoder_index == decoder_index)
+			return true;
 	}
 	return false;
 }
