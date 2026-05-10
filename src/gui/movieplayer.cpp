@@ -1510,9 +1510,15 @@ void CMoviePlayerGui::stopPlayBack(void)
 		livestreamInfo2.clear();
 	}
 
-	// wait until player is really stopped; potential endless loop?
+	// wait until player is really stopped
+	int i = 0;
 	while (playback && playback->IsPlaying())
+	{
+		i++;
+		if (i > 1000) // max. 1s
+			break;
 		usleep(10000); // 10ms
+	}
 
 	printf("%s: stopped\n", __func__);
 }
