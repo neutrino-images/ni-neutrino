@@ -566,8 +566,22 @@ bool CZapit::ZapIt(const t_channel_id channel_id, bool forupdate, bool startplay
 			return true;
 		}
 
-		if (!IS_WEBCHAN(live_channel_id))
+		if (!IS_WEBCHAN(live_channel_id)) {
+#ifdef HAVE_SOFTCSA
+			/* Mirror StopPlayBack pairing: without stopSession the LIVE
+			 * session stays alive across the WebTV detour. On return the
+			 * reuse-path in registerSession then matches and skips the live
+			 * bring-up, leaving the decoder bound to the scrambled FRONT
+			 * demux instead of the DVR tap. */
+			if (current_channel) {
+				SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
+					current_channel->getChannelID(), SOFTCSA_SESSION_LIVE);
+				for (auto &sn : sr.dvbapi_stops)
+					sendDvbapiSessionStop(current_channel, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
+			}
+#endif
 			CCamManager::getInstance()->Stop(live_channel_id, CCamManager::PLAY);
+		}
 
 		live_channel_id = newchannel->getChannelID();
 		lock_channel_id = live_channel_id;
