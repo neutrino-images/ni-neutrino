@@ -407,7 +407,7 @@ AS_HELP_STRING([], [valid for mipsbox: vuduo, vuduo2]),
 				AC_MSG_ERROR([unknown model $withval for boxtype $BOXTYPE])
 			fi
 		;;
-		vuduo|vuduo2|gb800se|osnino|osninoplus|osninopro)
+		vuduo|vuduo2|osnino|osninoplus|osninopro)
 			if test "$BOXTYPE" = "mipsbox"; then
 				BOXMODEL="$withval"
 			else
@@ -463,8 +463,6 @@ AM_CONDITIONAL(BOXMODEL_VUZERO4K, test "$BOXMODEL" = "vuzero4k")
 # mipsbox
 AM_CONDITIONAL(BOXMODEL_VUDUO, test "$BOXMODEL" = "vuduo")
 AM_CONDITIONAL(BOXMODEL_VUDUO2, test "$BOXMODEL" = "vuduo2")
-
-AM_CONDITIONAL(BOXMODEL_GB800SE, test "$BOXMODEL" = "gb800se")
 
 AM_CONDITIONAL(BOXMODEL_OSNINO, test "$BOXMODEL" = "osnino")
 AM_CONDITIONAL(BOXMODEL_OSNINOPLUS, test "$BOXMODEL" = "osninoplus")
@@ -540,9 +538,6 @@ elif test "$BOXMODEL" = "vuduo"; then
 	AC_DEFINE(BOXMODEL_VUDUO, 1, [vuduo])
 elif test "$BOXMODEL" = "vuduo2"; then
 	AC_DEFINE(BOXMODEL_VUDUO2, 1, [vuduo2])
-
-elif test "$BOXMODEL" = "gb800se"; then
-	AC_DEFINE(BOXMODEL_GB800SE, 1, [gb800se])
 
 elif test "$BOXMODEL" = "osnino"; then
 	AC_DEFINE(BOXMODEL_OSNINO, 1, [osnino])
