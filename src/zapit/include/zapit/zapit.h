@@ -311,6 +311,19 @@ class CZapit : public OpenThreads::Thread
 		 * against the default FRONT-source demux unit, re-apply PIDs, Start.
 		 * Returns 0 on success. */
 		int softcsaRebindDecoderToFrontDemux(int decoder_index, bool skip_decoder_start = false);
+		/* Scoped in-place PMT-update handler: re-parses the PMT section
+		 * already in the run-loop's buffer, diffs against the current
+		 * channel state, dispatches CAPMT_UPDATE per active session,
+		 * updates softcsa_*Demux/pipVideoDemux/pipAudioDemux pesFilter
+		 * if PIDs changed, and re-arms the version-filter on pmtDemux.
+		 * Avoids the vendor-PidChannel alloc/free in CPmt::Read /
+		 * pmtDemux->Stop+sectionFilter cycle that races with vendor
+		 * Timebase_SetSettings during active recording.
+		 *
+		 * Returns false if a phase-1 sanity check or unsupported case
+		 * (corrupt section, A/V codec change) is detected; the caller
+		 * falls back to the legacy ZapIt(force) | SendPMT(true) path. */
+		bool handlePmtUpdateInPlace(unsigned char *buf, int len);
 #endif
 		void Lock() { mutex.lock(); }
 		void Unlock() { mutex.unlock(); }

@@ -131,6 +131,91 @@ static cDemux *softcsa_pcrDemux = NULL;
  * are bound to. Lets same-unit rebinds skip the close+reopen cycle that
  * trips the BCM e4hd NEXUS_PidChannel_Close NULL deref under load. */
 static int softcsa_dvr_demux_unit = -1;
+
+/* Snapshot of CZapitChannel fields that the in-place PMT-update handler
+ * diffs across CPmt::ParseFromBuffer. Lets the handler restore the
+ * pre-state on hard-fail so the legacy ZapIt(force)|SendPMT(true)
+ * fallback in the caller starts from a clean channel object. */
+struct PmtSnapshot {
+	uint8_t  pmt_version;
+	uint16_t vpid;
+	uint16_t apid;
+	uint16_t pcr;
+	int      video_type;
+	int      audio_type;
+	std::set<uint16_t> ecm_pids;     /* ECM PIDs (CA_PIDs) from CAPMT */
+	std::set<uint16_t> all_pids;     /* VPID + APID + PCR + ECM PIDs (vendor tap-set) */
+};
+
+static PmtSnapshot snapshotChannel(CZapitChannel *ch)
+{
+	PmtSnapshot s = {};
+	if (!ch)
+		return s;
+	s.pmt_version = ch->getPmtVersion();
+	s.vpid        = ch->getVideoPid();
+	s.apid        = ch->getAudioPid();
+	s.pcr         = ch->getPcrPid();
+	s.video_type  = ch->type;
+	CZapitAudioChannel *ac = ch->getAudioChannel();
+	s.audio_type  = ac ? ac->audioChannelType : 0;
+
+	/* capids holds CA-PIDs (= ECM-PIDs) populated by CPmt::ParseInternal
+	 * via MakeCAPids. Channel state is non-null even pre-Parse: snapshot
+	 * what's there. */
+	for (int p : ch->capids)
+		s.ecm_pids.insert((uint16_t)p);
+
+	if (s.vpid) s.all_pids.insert(s.vpid);
+	if (s.apid) s.all_pids.insert(s.apid);
+	if (s.pcr && s.pcr != 0x1FFF) s.all_pids.insert(s.pcr);
+	for (uint16_t e : s.ecm_pids)
+		s.all_pids.insert(e);
+
+	/* Auxiliary tracks: every audio variant in the PMT, plus subtitles
+	 * and the teletext carrier. getAudioPid() / s.apid only carry the
+	 * currently-selected track; sport channels and Sky films routinely
+	 * add a 2nd audio mid-broadcast (different commentary, audio
+	 * description, original-language). Subtitle and teletext PIDs can
+	 * also be added at programme boundaries. Without these, the
+	 * tap-reader filter set stays at the old PIDs and the recording
+	 * misses the new tracks. */
+	uint8_t aud_count = ch->getAudioChannelCount();
+	for (uint8_t i = 0; i < aud_count; i++) {
+		CZapitAudioChannel *ac = ch->getAudioChannel(i);
+		if (ac && ac->pid)
+			s.all_pids.insert(ac->pid);
+	}
+	size_t sub_count = ch->getSubtitleCount();
+	for (size_t i = 0; i < sub_count; i++) {
+		CZapitAbsSub *sub = ch->getChannelSub((int)i);
+		if (sub && sub->pId)
+			s.all_pids.insert(sub->pId);
+	}
+	if (uint16_t ttx = ch->getTeletextPid())
+		s.all_pids.insert(ttx);
+
+	return s;
+}
+
+static void restoreChannel(CZapitChannel *ch, const PmtSnapshot &s)
+{
+	if (!ch)
+		return;
+	ch->setPmtVersion(s.pmt_version);
+	ch->setVideoPid(s.vpid);
+	ch->setAudioPid(s.apid);
+	ch->setPcrPid(s.pcr);
+	ch->capids.clear();
+	for (uint16_t p : s.ecm_pids)
+		ch->capids.insert((int)p);
+	/* type, audio_type, camap and scrambled are not restored. They are
+	 * needed only for the codec-change/scrambled comparison before
+	 * commit; on hard-fail we return false and the caller's fallback
+	 * runs pmt.Parse(current_channel) which overwrites all those fields
+	 * anyway. Restoring vpid/apid/pcr/version/capids is sufficient for
+	 * a clean fallback handoff. */
+}
 #endif
 
 /* the map which stores the wanted cable/satellites */
@@ -2973,6 +3058,148 @@ int CZapit::softcsaRebindDecoderToFrontDemux(int decoder_index, bool skip_decode
 #endif
 	return 0;
 }
+
+bool CZapit::handlePmtUpdateInPlace(unsigned char *buf, int len)
+{
+	OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> _zlock(zapit_mutex);
+
+	if (!current_channel)
+		return false;
+
+	t_channel_id chid = current_channel->getChannelID();
+
+	/* Phase 1: snapshot pre-state, parse buffer, snapshot post-state */
+	PmtSnapshot old_snap = snapshotChannel(current_channel);
+
+	CPmt pmt;
+	if (!pmt.ParseFromBuffer(current_channel, buf, len)) {
+		printf("[zapit] handlePmtUpdateInPlace: ParseFromBuffer failed, falling back\n");
+		return false;
+	}
+
+	PmtSnapshot new_snap = snapshotChannel(current_channel);
+
+	/* Spurious / duplicate section: same version. Just re-arm and bail. */
+	if (new_snap.pmt_version == old_snap.pmt_version) {
+		printf("[zapit] handlePmtUpdateInPlace: spurious section (same version 0x%x), re-arming filter only\n",
+		       new_snap.pmt_version);
+		if (pmt_set_update_filter(current_channel, &pmt_update_fd) != 0) {
+			printf("[zapit] handlePmtUpdateInPlace: re-arm failed (spurious path)\n");
+			pmt_update_fd = -1;
+		}
+		return true;
+	}
+
+	/* Codec change: would require Decoder restart. Out of scope, fall back. */
+	if (new_snap.video_type != old_snap.video_type
+	    || new_snap.audio_type != old_snap.audio_type) {
+		printf("[zapit] handlePmtUpdateInPlace: codec change (video %d->%d, audio %d->%d), falling back\n",
+		       old_snap.video_type, new_snap.video_type,
+		       old_snap.audio_type, new_snap.audio_type);
+		restoreChannel(current_channel, old_snap);
+		return false;
+	}
+
+	/* Defective PMT (no audio + no video). Refuse to commit. */
+	if (new_snap.vpid == 0 && new_snap.apid == 0) {
+		printf("[zapit] handlePmtUpdateInPlace: corrupt PMT (no vpid/apid), falling back\n");
+		restoreChannel(current_channel, old_snap);
+		return false;
+	}
+
+	bool pids_changed = (new_snap.vpid != old_snap.vpid)
+	                 || (new_snap.apid != old_snap.apid)
+	                 || (new_snap.pcr  != old_snap.pcr);
+
+	printf("[zapit] handlePmtUpdateInPlace: ch=%llx version 0x%x->0x%x vpid 0x%x->0x%x apid 0x%x->0x%x pcr 0x%x->0x%x ecm_pids %zu->%zu\n",
+	       (unsigned long long)chid,
+	       old_snap.pmt_version, new_snap.pmt_version,
+	       old_snap.vpid, new_snap.vpid,
+	       old_snap.apid, new_snap.apid,
+	       old_snap.pcr,  new_snap.pcr,
+	       old_snap.ecm_pids.size(), new_snap.ecm_pids.size());
+
+	/* Phase 2: channel state is already committed by ParseFromBuffer. */
+
+	/* Phase 3: per-session OSCam CAPMT_UPDATE + bookkeeping */
+	CSoftCSAManager *mgr = CSoftCSAManager::getInstance();
+	std::vector<uint32_t> active_sids = mgr->getActiveSessionsForChannel(chid);
+	if (active_sids.empty()) {
+		printf("[zapit] handlePmtUpdateInPlace: active_sids empty, no per-session work\n");
+	}
+
+	for (uint32_t sid : active_sids) {
+		(void)sendCapmtUpdateForSession(current_channel, sid);
+		mgr->setDecoderPids(sid, new_snap.vpid, new_snap.apid, new_snap.pcr);
+		mgr->replaceSessionPids(sid, new_snap.all_pids);
+	}
+
+	/* Phase 4: LIVE / PIP softcsa demux pesFilter -- only if PIDs changed. */
+	bool has_live_active = false;
+	for (uint32_t sid : active_sids) {
+		if (mgr->isPassiveSession(sid))
+			continue;
+		if (mgr->getSessionType(sid) == SOFTCSA_SESSION_LIVE) {
+			has_live_active = true;
+			break;
+		}
+	}
+
+	if (pids_changed && playing && has_live_active) {
+		if (softcsa_videoDemux && new_snap.vpid) {
+			if (!softcsa_videoDemux->pesFilter(new_snap.vpid))
+				printf("[zapit] handlePmtUpdateInPlace: softcsa_videoDemux pesFilter 0x%x failed\n",
+				       new_snap.vpid);
+		}
+		if (softcsa_audioDemux && new_snap.apid) {
+			if (!softcsa_audioDemux->pesFilter(new_snap.apid))
+				printf("[zapit] handlePmtUpdateInPlace: softcsa_audioDemux pesFilter 0x%x failed\n",
+				       new_snap.apid);
+		}
+		if (softcsa_pcrDemux && new_snap.pcr) {
+			uint16_t pcr = new_snap.pcr;
+			if (pcr == 0x1FFF) pcr = new_snap.vpid;
+			if (pcr && !softcsa_pcrDemux->pesFilter(pcr))
+				printf("[zapit] handlePmtUpdateInPlace: softcsa_pcrDemux pesFilter 0x%x failed\n",
+				       pcr);
+		}
+	}
+
+#if ENABLE_PIP
+	if (pids_changed) {
+		for (uint32_t sid : active_sids) {
+			if (mgr->isPassiveSession(sid))
+				continue;
+			if (mgr->getSessionType(sid) != SOFTCSA_SESSION_PIP)
+				continue;
+			int idx = mgr->getPipDevIndex(sid);
+			if (idx < 0
+			    || idx >= (int)(sizeof(pipVideoDemux)/sizeof(pipVideoDemux[0])))
+				continue;
+			/* PIP shares pipVideoDemux/pipAudioDemux arrays with the
+			 * non-softcsa path; SetSource via softcsaRebindDecoderToDvrDemux
+			 * pip-branch routes them to the dvr-loopback. pesFilter
+			 * reconfigure on those existing fds is the same as on
+			 * softcsa_*Demux for LIVE. */
+			if (pipVideoDemux[idx] && new_snap.vpid)
+				pipVideoDemux[idx]->pesFilter(new_snap.vpid);
+			if (pipAudioDemux[idx] && new_snap.apid)
+				pipAudioDemux[idx]->pesFilter(new_snap.apid);
+		}
+	}
+#endif
+
+	/* Phase 5: re-arm pmt_update_fd on the new PMT version. */
+	if (pmt_set_update_filter(current_channel, &pmt_update_fd) != 0) {
+		printf("[zapit] handlePmtUpdateInPlace: re-arm failed, disabling pmt_update_fd\n");
+		pmt_update_fd = -1;
+	}
+
+	/* Phase 6: notify subscribers */
+	SendEvent(CZapitClient::EVT_PMT_CHANGED, &chid, sizeof(chid));
+
+	return true;
+}
 #endif
 
 bool CZapit::StopPlayBack(bool send_pmt, bool blank)
@@ -3383,6 +3610,22 @@ void CZapit::run()
 			unsigned char buf[4096];
 			int ret = pmtDemux->Read(buf, 4095, 10);
 			if (ret > 0) {
+#ifdef HAVE_SOFTCSA
+				bool handled_by_in_place = false;
+				if (current_channel
+				    && current_channel->scrambled
+				    && !current_channel->bUseCI
+				    && CSoftCSAManager::getInstance()->hasAnyRunningSession(
+				           current_channel->getChannelID())) {
+					handled_by_in_place = handlePmtUpdateInPlace(buf, ret);
+				}
+				if (handled_by_in_place) {
+					/* SendEvent already issued inside handlePmtUpdateInPlace;
+					 * legacy block below is the fallback for non-SoftCSA
+					 * channels and hard-fail returns from the handler. */
+				} else
+#endif
+				{
 				pmt_stop_update_filter(&pmt_update_fd);
 				printf("[zapit] pmt updated, sid 0x%x new version 0x%x\n", (buf[3] << 8) + buf[4], (buf[5] >> 1) & 0x1F);
 				if(current_channel) {
@@ -3407,6 +3650,7 @@ void CZapit::run()
 						pmt_set_update_filter(current_channel, &pmt_update_fd);
 					}
 					SendEvent(CZapitClient::EVT_PMT_CHANGED, &channel_id, sizeof(channel_id));
+				}
 				}
 			}
 		}

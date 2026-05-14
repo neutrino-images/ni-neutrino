@@ -806,3 +806,43 @@ void CCamManager::SetCITuner(int tuner)
 		cCA::GetInstance()->SetTS((CA_DVBCI_TS_INPUT)tunerno);
 #endif
 }
+
+#ifdef HAVE_SOFTCSA
+bool sendCapmtUpdateForSession(CZapitChannel *channel, uint32_t session_id)
+{
+	if (!channel || session_id == 0)
+		return false;
+	if (!dvbapi_client || !dvbapi_client->ensureConnected())
+		return false;
+
+	CSoftCSAManager *mgr = CSoftCSAManager::getInstance();
+	int capmt_demux = mgr->getCapmtDemux(session_id);
+	if (capmt_demux < 0)
+		capmt_demux = 0;
+	uint8_t ca_mask = mgr->getCapmtCaMask(session_id);
+
+	CCam cam;
+	cam.setCaMask(ca_mask);
+	cam.setSource(capmt_demux);
+	/* CAPMT_UPDATE (0x05) per dvbapi v3: same APDU framing as
+	 * CAPMT_ONLY/CAPMT_ADD, only the list_management byte differs.
+	 * OSCam compares the new ECM-PID list to its current state and
+	 * adds/removes ECM filters in-place without dropping CWs. */
+	if (!cam.makeCaPmt(channel, true, CCam::CAPMT_UPDATE)) {
+		printf("[softcsa] CAPMT_UPDATE makeCaPmt failed for channel %llx session %u (no raw PMT?)\n",
+		       (unsigned long long)channel->getChannelID(), session_id);
+		return false;
+	}
+
+	if (!dvbapi_client->sendCaPmt(cam.getBuffer(), cam.getLength(), session_id)) {
+		printf("[softcsa] CAPMT_UPDATE send failed for channel %llx session %u\n",
+		       (unsigned long long)channel->getChannelID(), session_id);
+		return false;
+	}
+
+	printf("[softcsa] CAPMT_UPDATE sent: channel %llx session %u demux=%d ca_mask=0x%02x\n",
+	       (unsigned long long)channel->getChannelID(), session_id,
+	       capmt_demux, ca_mask);
+	return true;
+}
+#endif

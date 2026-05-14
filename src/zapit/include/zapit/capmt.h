@@ -126,4 +126,15 @@ class CCamManager
 void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int capmt_demux, uint8_t capmt_ca_mask);
 #endif
 
+#ifdef HAVE_SOFTCSA
+/* Sends a CAPMT with list_management = 0x05 (UPDATE) for an existing
+ * dvbapi v3 session. Used by CZapit::handlePmtUpdateInPlace to push
+ * a PMT-version-bump (and possibly new ECM PIDs) without tearing the
+ * session down and recreating it. The session_id, ca_mask and
+ * capmt_demux byte are looked up from CSoftCSAManager. Returns false
+ * if the channel has no raw PMT, the session is unknown, or the
+ * dvbapi socket write failed; callers may discard the bool. */
+bool sendCapmtUpdateForSession(CZapitChannel *channel, uint32_t session_id);
+#endif
+
 #endif /* __capmt_h__ */

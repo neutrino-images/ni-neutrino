@@ -499,7 +499,22 @@ bool CRecordInstance::Update()
 			if (numpids < REC_MAX_APIDS)
 				apids[numpids++] = it->apid;
 
+#ifdef HAVE_SOFTCSA
+			/* SoftCSA recordings keep record == NULL by design (Start
+			 * returns RECORD_OK on the SoftCSA path before allocating
+			 * a HAL cRecord). The new audio PID is forwarded to the
+			 * tap-reader filter set by CSoftCSAManager::replaceSessionPids
+			 * inside handlePmtUpdateInPlace; no HAL AddPid is needed and
+			 * calling it here NULL-derefs in cRecord::AddPid.
+			 *
+			 * Belt-and-suspenders: also tolerate record == NULL outside
+			 * the softcsa_record case (defensive against future Stop /
+			 * lifecycle races). */
+			if (!softcsa_record && record)
+				record->AddPid(it->apid);
+#else
 			record->AddPid(it->apid);
+#endif
 			for(unsigned int i = 0; i < allpids.APIDs.size(); i++) {
 				if(allpids.APIDs[i].pid == it->apid) {
 					AUDIO_PIDS audio_pids;

@@ -38,11 +38,16 @@ class CPmt
 		void MakeCAMap(casys_map_t &camap);
 		void MakeCAPids(casys_map_t &capids);
 		bool ParseEsInfo(ElementaryStreamInfo *esinfo, CZapitChannel * const channel);
+		bool ParseInternal(CZapitChannel * const channel);
 	public:
 		CPmt(int dnum = 0);
 		~CPmt();
 
 		bool Parse(CZapitChannel * const channel);
+#ifdef HAVE_SOFTCSA
+		bool ParseFromBuffer(CZapitChannel * const channel,
+		                     const unsigned char *buf, int len);
+#endif
 		bool haveCaSys(int pmtpid, int service_id);
 };
 

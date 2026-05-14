@@ -105,6 +105,33 @@ public:
 	bool isPassiveSession(uint32_t session_id);
 	bool hasAnyRunningSession(t_channel_id channel_id);
 
+	/* Returns the session type registered via registerSession.
+	 * Used by the PMT-update handler to dispatch per session-type
+	 * (LIVE -> softcsa_*Demux pesFilter, RECORD/STREAM -> tap-reader,
+	 * PIP -> pipVideoDemux/pipAudioDemux pesFilter). */
+	SoftCSASessionType getSessionType(uint32_t session_id);
+
+	/* Returns the pip_dev index set by setPipDevIndex, or -1 if the
+	 * session is not a PIP or pip_dev was never assigned. */
+	int getPipDevIndex(uint32_t session_id);
+
+	/* Snapshot of all currently-registered session IDs (LIVE, RECORD,
+	 * STREAM, PIP -- active and passive) on the given channel. The
+	 * caller iterates without holding the manager mutex; if a session
+	 * disappears between snapshot and use, the per-session lookups
+	 * inside the manager handle it gracefully. */
+	std::vector<uint32_t> getActiveSessionsForChannel(t_channel_id channel_id);
+
+	/* Replace the per-session pid bookkeeping with new_pids:
+	 *  - PIDs in new_pids that are not in the existing list are added
+	 *    via tap_reader->addPid (vendor DMX_ADD_PID).
+	 *  - PIDs in the existing list that are not in new_pids are dropped
+	 *    from bookkeeping; the vendor filter cannot per-pid-remove, so
+	 *    surplus TS keeps flowing until the tap restarts at session-stop.
+	 *  - tap-reader-null-safe: if the session is passive or has no
+	 *    bound tap, only the bookkeeping list is replaced. */
+	void replaceSessionPids(uint32_t session_id, const std::set<uint16_t> &new_pids);
+
 	// Register the recording fd and wait for OSCam's CSA-ALT confirm.
 	// Returns true if descrambling started, false on timeout.
 	bool waitForRecordStart(t_channel_id channel_id, int fd, int timeout_ms);

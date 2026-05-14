@@ -1976,3 +1976,60 @@ bool CSoftCSAManager::hasAnyRunningSession(t_channel_id channel_id)
 	return findRunningSibling(channel_id, 0) != 0;
 }
 
+SoftCSASessionType CSoftCSAManager::getSessionType(uint32_t session_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto it = sessions.find(session_id);
+	if (it == sessions.end())
+		return SOFTCSA_SESSION_LIVE;   /* sentinel; caller must check */
+	return it->second.type;
+}
+
+int CSoftCSAManager::getPipDevIndex(uint32_t session_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto it = sessions.find(session_id);
+	if (it == sessions.end())
+		return -1;
+	if (it->second.type != SOFTCSA_SESSION_PIP)
+		return -1;
+	return it->second.pip_dev;
+}
+
+std::vector<uint32_t> CSoftCSAManager::getActiveSessionsForChannel(t_channel_id channel_id)
+{
+	std::vector<uint32_t> out;
+	std::lock_guard<std::mutex> lock(mtx);
+	for (const auto &kv : sessions) {
+		if (kv.second.channel_id == channel_id)
+			out.push_back(kv.first);
+	}
+	return out;
+}
+
+void CSoftCSAManager::replaceSessionPids(uint32_t session_id, const std::set<uint16_t> &new_pids)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+	auto it = sessions.find(session_id);
+	if (it == sessions.end())
+		return;
+
+	auto &pid_list = it->second.pids;
+	std::set<uint16_t> old_set(pid_list.begin(), pid_list.end());
+
+	auto tap_it = m_taps.find(it->second.tap_key);
+	bool tap_alive = (tap_it != m_taps.end()
+	                  && tap_it->second
+	                  && tap_it->second->reader);
+
+	/* Vendor add-only: forward new PIDs to the tap. Surplus old PIDs
+	 * stay in the vendor filter set; consumers drop the unused PID
+	 * traffic by demuxing only what they care about. */
+	for (uint16_t pid : new_pids) {
+		if (old_set.find(pid) == old_set.end() && tap_alive)
+			tap_it->second->reader->addPid(pid);
+	}
+
+	pid_list.assign(new_pids.begin(), new_pids.end());
+}
+

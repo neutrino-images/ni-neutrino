@@ -97,6 +97,11 @@ bool CPmt::Parse(CZapitChannel * const channel)
 	if(!Read(channel->getPmtPid(), channel->getServiceId()))
 		return false;
 
+	return ParseInternal(channel);
+}
+
+bool CPmt::ParseInternal(CZapitChannel * const channel)
+{
 	ProgramMapSection pmt(buffer);
 
 	DBG("[pmt] pcr pid: old 0x%x new 0x%x\n", channel->getPcrPid(), pmt.getPcrPid());
@@ -138,6 +143,33 @@ bool CPmt::Parse(CZapitChannel * const channel)
 	channel->setPidsFlag();
 	return true;
 }
+
+#ifdef HAVE_SOFTCSA
+bool CPmt::ParseFromBuffer(CZapitChannel * const channel,
+                           const unsigned char *buf, int len)
+{
+	/* Sanity guards: under -fno-exceptions a malformed input to dvbsi++
+	 * would terminate(). Reject obvious corruption before constructing
+	 * ProgramMapSection. */
+	if (!buf || len < 12)
+		return false;
+	if (buf[0] != 0x02)
+		return false;
+	if (!(buf[1] & 0x80))
+		return false;
+	int section_len = ((buf[1] & 0x0F) << 8) | buf[2];
+	if (section_len + 3 > len)
+		return false;
+	if (len > PMT_SECTION_SIZE)
+		len = PMT_SECTION_SIZE;
+	memcpy(buffer, buf, len);
+
+	if (channel->getPmtPid() == 0)
+		return false;
+
+	return ParseInternal(channel);
+}
+#endif
 
 bool CPmt::ParseEsInfo(ElementaryStreamInfo *esinfo, CZapitChannel * const channel)
 {
