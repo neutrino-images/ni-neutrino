@@ -86,6 +86,9 @@ CStreamInstance::CStreamInstance(int clientfd, t_channel_id chid, stream_pids_t 
 	buf = NULL;
 	frontend = NULL;
 	is_e2_stream = false;
+#ifdef HAVE_SOFTCSA
+	softcsa_stream_handle = 0;
+#endif
 }
 
 CStreamInstance::~CStreamInstance()
@@ -255,10 +258,12 @@ void CStreamInstance::run()
 		};
 		/* No descrmode within the timeout means HW descrambling; fall
 		 * back to dmx->Read for the descrambled TS. Window is tunable
-		 * via start_timeout_ms in softcsa.conf. */
-		use_softcsa_path = CSoftCSAManager::getInstance()->waitForStreamStart(
+		 * via start_timeout_ms in softcsa.conf. The returned handle
+		 * scopes the stop path to this CStreamInstance's StreamOutput. */
+		softcsa_stream_handle = CSoftCSAManager::getInstance()->waitForStreamStart(
 			channel_id, on_data,
 			CSoftCSAConfig::getInstance()->startTimeoutMs());
+		use_softcsa_path = (softcsa_stream_handle != 0);
 	}
 #endif
 
@@ -293,14 +298,20 @@ void CStreamInstance::run()
 #ifdef HAVE_SOFTCSA
 	/* Stop if a session was registered, even when we never entered the
 	 * SoftCSA path: capmt registers unconditionally for scrambled
-	 * non-CI channels, and OSCam's demux slot must be released. */
+	 * non-CI channels, and the external slot bookkeeping must be
+	 * released. Per-stream teardown: pass our handle so a parallel
+	 * stream on the same channel keeps its pipe + consumer + dvbapi
+	 * subscription. A zero handle (we never entered the SoftCSA path)
+	 * falls through to session-wide teardown because no StreamOutput
+	 * exists for us. */
 	if (CSoftCSAManager::getInstance()->hasRegisteredSession(
 	        channel_id, SOFTCSA_SESSION_STREAM)) {
 		CZapitChannel *str_ch = CServiceManager::getInstance()->FindChannel(channel_id);
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
-			channel_id, SOFTCSA_SESSION_STREAM);
+			channel_id, SOFTCSA_SESSION_STREAM, -1 /*record_fd*/, softcsa_stream_handle);
 		for (auto &sn : sr.dvbapi_stops)
 			sendDvbapiSessionStop(str_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
+		softcsa_stream_handle = 0;
 	}
 #endif
 

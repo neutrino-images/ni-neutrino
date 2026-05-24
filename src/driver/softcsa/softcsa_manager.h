@@ -81,7 +81,14 @@ public:
 	void setDecoderPids(uint32_t session_id, unsigned short vpid, unsigned short apid, unsigned short pcrpid);
 	void setDecoderTypes(uint32_t session_id, int video_type, int audio_type);
 	void setPipDevIndex(uint32_t session_id, int pip_dev);
-	SoftCSAStopResult stopSession(t_channel_id channel_id, SoftCSASessionType type);
+	/* record_fd / stream_handle scope the stop to a single RECORD or
+	 * STREAM output; session-wide teardown only runs once the last
+	 * output goes. The sentinels (-1, 0) tear the whole session down
+	 * and are used by all non-overlapping callers and the dvbapi drain
+	 * in stopSessions. */
+	SoftCSAStopResult stopSession(t_channel_id channel_id, SoftCSASessionType type,
+	                              int record_fd = -1,
+	                              uint32_t stream_handle = 0);
 
 	struct ResubscribeInfo {
 		t_channel_id channel_id;
@@ -136,12 +143,16 @@ public:
 	// Returns true if descrambling started, false on timeout.
 	bool waitForRecordStart(t_channel_id channel_id, int fd, int timeout_ms);
 
-	// Register the stream callback and wait for OSCam's CSA-ALT confirm.
-	// Returns true if descrambling started, false on timeout.
-	bool waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
+	/* Returns a nonzero StreamOutput handle on success, 0 on timeout
+	 * or any failure. The caller passes the handle back to stopSession
+	 * so a per-stream stop never tears down a sibling stream on the
+	 * same SessionState. */
+	uint32_t waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms);
 	bool hasRegisteredSession(t_channel_id channel_id, SoftCSASessionType type);
 
-	bool cloneAndStartStream(uint32_t session_id, SoftCSAStreamCallback cb);
+	/* Returns a nonzero StreamOutput handle when a keyed sibling
+	 * absorbs us, 0 when no sibling exists or rollback fired. */
+	uint32_t cloneAndStartStream(uint32_t session_id, SoftCSAStreamCallback cb);
 	bool cloneAndStartRecord(uint32_t session_id, int fd);
 
 	/* Attach a new LIVE/PIP session to an existing sibling's tap engine
@@ -227,18 +238,53 @@ private:
 		int video_type;
 		int audio_type;
 		int pip_dev;
-		/* Output binding into ServiceTap.outputs; -1 if not registered. */
-		int output_token;
-		/* fd registered in outputs; -1 when no binding. For RECORD and
-		 * STREAM this is the write end of the pipe bridge we own. */
-		int output_fd;
-		/* Caller's recording fd; NOT owned by us (close stays on cRecord). */
-		int record_fd;
-		SoftCSAStreamCallback stream_callback;
-		/* Pipe read end for RECORD/STREAM; -1 when no pipe. */
-		int stream_pipe_read;
-		/* Consumer thread draining the pipe for RECORD/STREAM. */
-		std::thread stream_consumer;
+		/* RECORD only: one entry per overlapping CRecordInstance::Start
+		 * (own pipe + consumer + record fd). High concurrency consumes
+		 * the user pipe-page budget (pipe-user-pages-soft). */
+		struct RecordOutput {
+			int output_token;      /* token in tap.outputs */
+			int output_fd;         /* pipe write end (owned) */
+			int stream_pipe_read;  /* pipe read end (owned) */
+			std::thread stream_consumer;
+			int record_fd;         /* caller's recording fd (not owned) */
+			/* Splitting the stable record_fd identity from the one-shot
+			 * wait_acked predicate-fire flag keeps stopSession(fd) able
+			 * to exact-match record_fd after the wait has been ack'd. */
+			bool wait_acked;
+			RecordOutput()
+				: output_token(-1), output_fd(-1),
+				  stream_pipe_read(-1), record_fd(-1),
+				  wait_acked(false) {}
+			RecordOutput(RecordOutput &&) = default;
+			RecordOutput &operator=(RecordOutput &&) = default;
+			RecordOutput(const RecordOutput &) = delete;
+			RecordOutput &operator=(const RecordOutput &) = delete;
+		};
+		std::vector<RecordOutput> record_outputs;
+		/* STREAM only: one entry per overlapping CStreamInstance::run
+		 * (own pipe + consumer + captured callback). The manager
+		 * assigns output_id since STREAM has no natural per-output
+		 * handle the way RECORD has its recording fd; wait_acked is
+		 * the one-shot predicate flag so a second overlapping wait
+		 * cannot steal the first one's predicate-fire. */
+		struct StreamOutput {
+			int output_token;      /* token in tap.outputs */
+			int output_fd;         /* pipe write end (owned) */
+			int stream_pipe_read;  /* pipe read end (owned) */
+			std::thread stream_consumer;
+			SoftCSAStreamCallback stream_callback;
+			uint32_t output_id;    /* stable handle returned to caller */
+			bool wait_acked;
+			StreamOutput()
+				: output_token(-1), output_fd(-1),
+				  stream_pipe_read(-1), output_id(0),
+				  wait_acked(false) {}
+			StreamOutput(StreamOutput &&) = default;
+			StreamOutput &operator=(StreamOutput &&) = default;
+			StreamOutput(const StreamOutput &) = delete;
+			StreamOutput &operator=(const StreamOutput &) = delete;
+		};
+		std::vector<StreamOutput> stream_outputs;
 	};
 
 	struct SoftCSALiveAttachment {
@@ -264,6 +310,9 @@ private:
 	 * passed dedup but not yet populated m_live. */
 	std::map<uint32_t, int> m_live_starting;
 	uint32_t next_session_id;
+	/* 1-based; 0 is the "invalid handle" sentinel returned by
+	 * waitForStreamStart / cloneAndStartStream on failure. */
+	uint32_t next_stream_output_id;
 	/* Set while enterStandbyTeardown is running. Blocks new LIVE/PIP
 	 * attaches via onDescrMode and cloneAndStart* so a CW that arrives
 	 * mid-drain cannot reinsert an m_live entry behind the snapshot. */
@@ -294,9 +343,16 @@ private:
 	/* Highest free demux unit not already assigned to any tap. */
 	int tapDemuxForFrontend(int frontend_num);
 
-	/* Extract a PendingDetach from a SessionState and zero the binding
-	 * fields on the state. Caller holds mtx. */
-	PendingDetach extractPendingDetach(SessionState &ds);
+	/* Detach one record_outputs entry for off-lock cleanup. Caller
+	 * still owns vector erasure (erase invalidates the reference).
+	 * Caller holds mtx. */
+	PendingDetach extractRecordOutput(SessionState &ds, size_t index);
+
+	/* Detach one stream_outputs entry for off-lock cleanup. Clears
+	 * wait_acked and the callback so the detached entry cannot fire
+	 * any more user callbacks. Caller still owns vector erasure.
+	 * Caller holds mtx. */
+	PendingDetach extractStreamOutput(SessionState &ds, size_t index);
 
 	/* Caller holds mtx. Returns 0 if no qualifying sibling. */
 	uint32_t findRunningSibling(t_channel_id channel_id, uint32_t exclude_session_id) const;

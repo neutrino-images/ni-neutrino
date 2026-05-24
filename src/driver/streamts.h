@@ -54,6 +54,12 @@ class CStreamInstance : public OpenThreads::Thread
 		t_channel_id channel_id;
 		stream_pids_t pids;
 		stream_fds_t fds;
+#ifdef HAVE_SOFTCSA
+		/* StreamOutput handle from waitForStreamStart, 0 if unbound.
+		 * Passed back to stopSession so a parallel stream on the same
+		 * channel keeps its pipe + consumer + dvbapi subscription. */
+		uint32_t softcsa_stream_handle = 0;
+#endif
 #if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(61, 1, 100)
 		virtual bool Send(ssize_t r, const unsigned char * _buf = NULL);
 #else

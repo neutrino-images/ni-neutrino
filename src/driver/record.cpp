@@ -339,8 +339,11 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 		printf("CRecordInstance::Start: %s, falling back to cRecord\n",
 		       was_passive ? "passive session" : "SoftCSA timeout");
 
+		/* Rollback: pass our local fd so only the RecordOutput just
+		 * created for us is torn down; sibling recordings on the same
+		 * channel keep their outputs. */
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
-			channel->getChannelID(), SOFTCSA_SESSION_RECORD);
+			channel->getChannelID(), SOFTCSA_SESSION_RECORD, fd);
 		for (auto &sn : sr.dvbapi_stops)
 			sendDvbapiSessionStop(channel, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 
@@ -419,7 +422,11 @@ bool CRecordInstance::Stop(bool remove_event)
 		 * recording fd afterwards so the consumer cannot write into a
 		 * kernel-recycled fd slot. */
 		CZapitChannel *rec_ch = CServiceManager::getInstance()->FindChannel(channel_id);
-		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD);
+		/* Per-recording teardown: pass our softcsa_fd so a parallel
+		 * recording on the same channel keeps its pipe + consumer +
+		 * dvbapi subscription. Session-wide teardown only runs when
+		 * the last RecordOutput stops. */
+		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(channel_id, SOFTCSA_SESSION_RECORD, softcsa_fd);
 		for (auto &sn : sr.dvbapi_stops)
 			sendDvbapiSessionStop(rec_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 		if (softcsa_fd >= 0) {

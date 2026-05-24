@@ -54,7 +54,7 @@ CSoftCSAManager *CSoftCSAManager::getInstance()
 	return &instance;
 }
 
-CSoftCSAManager::CSoftCSAManager() : next_session_id(1), m_standby_in_progress(false) {}
+CSoftCSAManager::CSoftCSAManager() : next_session_id(1), next_stream_output_id(1), m_standby_in_progress(false) {}
 CSoftCSAManager::~CSoftCSAManager() { stopAll(); }
 
 int CSoftCSAManager::tapDemuxForFrontend(int frontend_num)
@@ -67,20 +67,62 @@ int CSoftCSAManager::tapDemuxForFrontend(int frontend_num)
 	return frontend_num;
 }
 
-CSoftCSAManager::PendingDetach CSoftCSAManager::extractPendingDetach(SessionState &ds)
+/* Caller closes pd.output_fd first (signals EOF), joins, then closes
+ * pd.stream_pipe_read. Vector erasure stays with the caller because
+ * erase invalidates the reference held here. */
+CSoftCSAManager::PendingDetach
+CSoftCSAManager::extractRecordOutput(SessionState &ds, size_t index)
 {
 	PendingDetach pd;
 	pd.outputs = nullptr;
+	pd.output_token = -1;
+	pd.output_fd = -1;
+	pd.stream_pipe_read = -1;
+	if (index >= ds.record_outputs.size())
+		return pd;
 	auto tap_it = m_taps.find(ds.tap_key);
 	if (tap_it != m_taps.end())
 		pd.outputs = tap_it->second->outputs.get();
-	pd.output_token = ds.output_token;
-	pd.output_fd = ds.output_fd;
-	pd.stream_pipe_read = ds.stream_pipe_read;
-	pd.stream_consumer = std::move(ds.stream_consumer);
-	ds.output_token = -1;
-	ds.output_fd = -1;
-	ds.stream_pipe_read = -1;
+	SessionState::RecordOutput &ro = ds.record_outputs[index];
+	pd.output_token = ro.output_token;
+	pd.output_fd = ro.output_fd;
+	pd.stream_pipe_read = ro.stream_pipe_read;
+	pd.stream_consumer = std::move(ro.stream_consumer);
+	ro.output_token = -1;
+	ro.output_fd = -1;
+	ro.stream_pipe_read = -1;
+	ro.record_fd = -1;
+	ro.wait_acked = false;
+	return pd;
+}
+
+/* Mirrors extractRecordOutput; also clears the captured callback so a
+ * detached entry cannot fire any more user callbacks. Vector erasure
+ * stays with the caller. */
+CSoftCSAManager::PendingDetach
+CSoftCSAManager::extractStreamOutput(SessionState &ds, size_t index)
+{
+	PendingDetach pd;
+	pd.outputs = nullptr;
+	pd.output_token = -1;
+	pd.output_fd = -1;
+	pd.stream_pipe_read = -1;
+	if (index >= ds.stream_outputs.size())
+		return pd;
+	auto tap_it = m_taps.find(ds.tap_key);
+	if (tap_it != m_taps.end())
+		pd.outputs = tap_it->second->outputs.get();
+	SessionState::StreamOutput &so = ds.stream_outputs[index];
+	pd.output_token = so.output_token;
+	pd.output_fd = so.output_fd;
+	pd.stream_pipe_read = so.stream_pipe_read;
+	pd.stream_consumer = std::move(so.stream_consumer);
+	so.output_token = -1;
+	so.output_fd = -1;
+	so.stream_pipe_read = -1;
+	so.output_id = 0;
+	so.wait_acked = false;
+	so.stream_callback = nullptr;
 	return pd;
 }
 
@@ -113,7 +155,16 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 			auto sess_it = sessions.find(session_id);
 			if (sess_it != sessions.end()) {
 				SessionState &existing = sess_it->second;
-				bool alive = (existing.output_token > 0)
+				/* RECORD outputs live on record_outputs, STREAM on
+				 * stream_outputs. LIVE/PIP never anchor a tap from the
+				 * session itself; m_live owns that, so csa_alt_active
+				 * alone decides aliveness for those. */
+				bool has_output = false;
+				if (existing.type == SOFTCSA_SESSION_RECORD)
+					has_output = !existing.record_outputs.empty();
+				else if (existing.type == SOFTCSA_SESSION_STREAM)
+					has_output = !existing.stream_outputs.empty();
+				bool alive = has_output
 				             || (existing.csa_alt_active && !existing.passive);
 				if (alive && existing.tap_key.frontend_num == frontend_num) {
 					/* Same tap: update mask in place. */
@@ -123,26 +174,35 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 					       session_id, (unsigned long long)channel_id, type);
 					return session_id;
 				}
-				/* Frontend changed: remove output binding, drop tap ref. */
-				auto old_tap_it = m_taps.find(existing.tap_key);
-				COutputFdSet *old_outputs = (old_tap_it != m_taps.end())
-				    ? old_tap_it->second->outputs.get() : nullptr;
-				if (old_outputs && existing.output_token > 0)
-					old_outputs->remove(existing.output_token);
-				existing.output_token = -1;
-				if (existing.stream_pipe_read >= 0) {
-					/* Defer pipe close + thread join until after lock drop. */
-					StreamThread st;
-					st.output_fd = existing.output_fd;
-					st.stream_pipe_read = existing.stream_pipe_read;
-					st.stream_consumer = std::move(existing.stream_consumer);
-					detach_list.push_back(std::move(st));
-					existing.output_fd = -1;
-					existing.stream_pipe_read = -1;
-				} else if (existing.output_fd >= 0) {
-					::close(existing.output_fd);
-					existing.output_fd = -1;
+				/* Frontend changed: drain every RecordOutput or
+				 * StreamOutput, then drop the tap ref. */
+				if (existing.type == SOFTCSA_SESSION_RECORD) {
+					for (size_t i = 0; i < existing.record_outputs.size(); ++i) {
+						PendingDetach pd = extractRecordOutput(existing, i);
+						if (pd.outputs && pd.output_token > 0)
+							pd.outputs->remove(pd.output_token);
+						StreamThread st;
+						st.output_fd = pd.output_fd;
+						st.stream_pipe_read = pd.stream_pipe_read;
+						st.stream_consumer = std::move(pd.stream_consumer);
+						detach_list.push_back(std::move(st));
+					}
+					existing.record_outputs.clear();
 				}
+				if (existing.type == SOFTCSA_SESSION_STREAM) {
+					for (size_t i = 0; i < existing.stream_outputs.size(); ++i) {
+						PendingDetach pd = extractStreamOutput(existing, i);
+						if (pd.outputs && pd.output_token > 0)
+							pd.outputs->remove(pd.output_token);
+						StreamThread st;
+						st.output_fd = pd.output_fd;
+						st.stream_pipe_read = pd.stream_pipe_read;
+						st.stream_consumer = std::move(pd.stream_consumer);
+						detach_list.push_back(std::move(st));
+					}
+					existing.stream_outputs.clear();
+				}
+				auto old_tap_it = m_taps.find(existing.tap_key);
 				if (old_tap_it != m_taps.end()) {
 					old_tap_it->second->refcount--;
 					if (old_tap_it->second->refcount <= 0) {
@@ -197,11 +257,6 @@ uint32_t CSoftCSAManager::registerSession(t_channel_id channel_id, SoftCSASessio
 		state.video_type = 0;
 		state.audio_type = 0;
 		state.pip_dev = -1;
-		state.output_token = -1;
-		state.output_fd = -1;
-		state.record_fd = -1;
-		state.stream_callback = nullptr;
-		state.stream_pipe_read = -1;
 
 		sessions[session_id] = std::move(state);
 		channel_to_session[existing_key] = session_id;
@@ -382,7 +437,12 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 				if (kv.second.stopping) continue;
 				if (kv.second.type != SOFTCSA_SESSION_RECORD &&
 				    kv.second.type != SOFTCSA_SESSION_STREAM) continue;
-				if (kv.second.output_token <= 0) continue;
+				bool has_output;
+				if (kv.second.type == SOFTCSA_SESSION_RECORD)
+					has_output = !kv.second.record_outputs.empty();
+				else
+					has_output = !kv.second.stream_outputs.empty();
+				if (!has_output) continue;
 				if (kv.second.csa_alt_active) continue;
 				kv.second.csa_alt_active = true;
 				kv.second.ecm_mode = (uint8_t)cipher_mode;
@@ -392,32 +452,59 @@ void CSoftCSAManager::onDescrMode(uint32_t session_id, uint32_t algo, uint32_t c
 				       (kv.second.type == SOFTCSA_SESSION_RECORD) ? "RECORD" : "STREAM",
 				       session_id);
 			}
-		} else {
-			/* RECORD/STREAM: pipe bridge survives OSCam disconnect.
-			 * If stopSessions detached the output_token, re-attach
-			 * now so the recording/stream resumes transparently. The
-			 * fresh waitForXStart path leaves output_fd cached on the
-			 * SessionState, so it hits this branch too. */
-			if (ds.output_token <= 0 && ds.output_fd >= 0) {
-				auto tap_it = m_taps.find(ds.tap_key);
-				if (tap_it != m_taps.end() && tap_it->second) {
-					COutputFdSet::FdRole role = (ds.type == SOFTCSA_SESSION_RECORD)
-						? COutputFdSet::ROLE_RECORD
-						: COutputFdSet::ROLE_STREAM;
-					int token = tap_it->second->outputs->add(ds.output_fd, role);
+		} else if (ds.type == SOFTCSA_SESSION_RECORD) {
+			/* Pipe bridges survive a descrambler drop. Re-attach every
+			 * output_fd that stopSessions detached so each in-flight
+			 * recording resumes transparently. */
+			auto tap_it = m_taps.find(ds.tap_key);
+			if (tap_it != m_taps.end() && tap_it->second) {
+				for (auto &ro : ds.record_outputs) {
+					if (ro.output_token > 0) continue;
+					if (ro.output_fd < 0) continue;
+					int token = tap_it->second->outputs->add(
+						ro.output_fd, COutputFdSet::ROLE_RECORD);
 					if (token > 0) {
-						ds.output_token = token;
-						printf("[softcsa] onDescrMode: re-attached %s session %u output_fd=%d as token=%d\n",
-						       (ds.type == SOFTCSA_SESSION_RECORD) ? "RECORD" : "STREAM",
-						       session_id, ds.output_fd, token);
+						ro.output_token = token;
+						printf("[softcsa] onDescrMode: re-attached RECORD session %u output_fd=%d as token=%d\n",
+						       session_id, ro.output_fd, token);
 					} else {
-						printf("[softcsa] onDescrMode: re-attach for session %u failed (outputs->add)\n",
-						       session_id);
+						/* A failed re-add leaves this output stuck
+						 * detached until the next descrambler reconnect
+						 * triggers another onDescrMode pass. */
+						printf("[softcsa] onDescrMode: re-attach for session %u RECORD output_fd=%d record_fd=%d failed (outputs->add)\n",
+						       session_id, ro.output_fd, ro.record_fd);
 					}
 				}
 			}
-			/* Wake any waitForXStart waiters; predicate rechecks
-			 * (csa_alt_active && output_token > 0). */
+			/* Predicate matches each fd against its RecordOutput.record_fd
+			 * and flips wait_acked on hit. */
+			notify = true;
+		} else {
+			/* Pipe bridges survive a descrambler drop. Re-attach every
+			 * output_fd that stopSessions detached so each in-flight
+			 * stream resumes transparently. */
+			auto tap_it = m_taps.find(ds.tap_key);
+			if (tap_it != m_taps.end() && tap_it->second) {
+				for (auto &so : ds.stream_outputs) {
+					if (so.output_token > 0) continue;
+					if (so.output_fd < 0) continue;
+					int token = tap_it->second->outputs->add(
+						so.output_fd, COutputFdSet::ROLE_STREAM);
+					if (token > 0) {
+						so.output_token = token;
+						printf("[softcsa] onDescrMode: re-attached STREAM session %u output_fd=%d as token=%d\n",
+						       session_id, so.output_fd, token);
+					} else {
+						/* A failed re-add leaves this output stuck
+						 * detached until the next descrambler reconnect
+						 * triggers another onDescrMode pass. */
+						printf("[softcsa] onDescrMode: re-attach for session %u STREAM output_fd=%d handle=%u failed (outputs->add)\n",
+						       session_id, so.output_fd, so.output_id);
+					}
+				}
+			}
+			/* Predicate matches each handle against its
+			 * StreamOutput.output_id and flips wait_acked on hit. */
 			notify = true;
 		}
 	}
@@ -453,7 +540,8 @@ void CSoftCSAManager::onCW(uint32_t session_id, uint32_t parity, const uint8_t *
 	/* All sessions on the same tap share one engine. */
 }
 
-SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType type)
+SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSASessionType type,
+                                                int record_fd, uint32_t stream_handle)
 {
 	SoftCSAStopResult result;
 
@@ -490,131 +578,232 @@ SoftCSAStopResult CSoftCSAManager::stopSession(t_channel_id channel_id, SoftCSAS
 	std::vector<StreamThread> threads;
 	std::vector<std::unique_ptr<SoftCSAServiceTap>> dead_taps;
 
-	{
-		std::lock_guard<std::mutex> lock(mtx);
+	/* Closing the pipe write end signals EOF to the consumer; order
+	 * matters because a consumer blocked on its caller fd would
+	 * otherwise pin the join forever. */
+	auto flush_off_lock = [&]() {
+		for (auto &st : threads) {
+			if (st.output_fd >= 0)
+				::close(st.output_fd);
+			if (st.stream_consumer.joinable())
+				st.stream_consumer.join();
+			if (st.stream_pipe_read >= 0)
+				::close(st.stream_pipe_read);
+		}
+		threads.clear();
+		dead_taps.clear();
+	};
 
-		auto key = std::make_pair(channel_id, type);
-		auto ch_it = channel_to_session.find(key);
-		if (ch_it == channel_to_session.end())
-			return result;
+	/* unique_lock so the per-fd RECORD early-return can drop mtx
+	 * before flush_off_lock runs. */
+	std::unique_lock<std::mutex> lock(mtx);
 
-		uint32_t session_id = ch_it->second;
-		auto sess_it = sessions.find(session_id);
-		if (sess_it == sessions.end())
-			return result;
+	auto key = std::make_pair(channel_id, type);
+	auto ch_it = channel_to_session.find(key);
+	if (ch_it == channel_to_session.end()) {
+		lock.unlock();
+		return result;
+	}
 
-		SessionState &ds = sess_it->second;
+	uint32_t session_id = ch_it->second;
+	auto sess_it = sessions.find(session_id);
+	if (sess_it == sessions.end()) {
+		lock.unlock();
+		return result;
+	}
 
-		/* Count non-passive siblings with an active output binding. */
-		int live_siblings = 0;
-		std::vector<uint32_t> retained_ids;
-		for (auto &pair : sessions) {
-			if (pair.first == session_id || pair.second.channel_id != channel_id)
-				continue;
-			if (pair.second.passive)
-				continue;
+	SessionState &ds = sess_it->second;
 
-			/* LIVE/PIP hold their token on SoftCSALiveAttachment in
-			 * m_live, not on SessionState. m_live presence == engine-keyed,
-			 * mirroring findRunningSibling. */
-			bool not_running = (pair.second.output_token <= 0)
-			                   && (m_live.find(pair.first) == m_live.end());
-			bool retained_shape = not_running
-			                      && (pair.second.csa_alt_active || pair.second.retained);
-
-			if (retained_shape)
-				retained_ids.push_back(pair.first);
-			else
-				live_siblings++;
+	/* Per-fd RECORD detach: drop only the matching RecordOutput and
+	 * leave the rest of the session standing. record_fd<0 falls
+	 * through to the session-wide path below. */
+	if (type == SOFTCSA_SESSION_RECORD && record_fd >= 0) {
+		/* Exact-match only: a miss means the caller is stopping an fd
+		 * we never tracked, not a stale ack'd entry. */
+		size_t match_idx = (size_t)-1;
+		for (size_t i = 0; i < ds.record_outputs.size(); ++i) {
+			if (ds.record_outputs[i].record_fd == record_fd) {
+				match_idx = i;
+				break;
+			}
+		}
+		if (match_idx != (size_t)-1) {
+			PendingDetach pd = extractRecordOutput(ds, match_idx);
+			ds.record_outputs.erase(ds.record_outputs.begin() + match_idx);
+			if (pd.outputs && pd.output_token > 0)
+				pd.outputs->remove(pd.output_token);
+			StreamThread st;
+			st.output_fd = pd.output_fd;
+			st.stream_pipe_read = pd.stream_pipe_read;
+			st.stream_consumer = std::move(pd.stream_consumer);
+			threads.push_back(std::move(st));
 		}
 
-		auto detach_session = [&](SessionState &s) {
-			auto tap_it = m_taps.find(s.tap_key);
-			if (tap_it != m_taps.end() && s.output_token > 0)
-				tap_it->second->outputs->remove(s.output_token);
-			s.output_token = -1;
-			if (s.stream_pipe_read >= 0) {
+		/* Surviving recordings still anchor the dvbapi subscription. */
+		if (!ds.record_outputs.empty()) {
+			lock.unlock();
+			flush_off_lock();
+			return result;
+		}
+		/* Last output gone: fall through to session-wide teardown. */
+	}
+
+	/* Per-handle STREAM detach: drop only the matching StreamOutput
+	 * and leave the rest of the session standing. stream_handle==0
+	 * falls through to the session-wide path below. */
+	if (type == SOFTCSA_SESSION_STREAM && stream_handle != 0) {
+		size_t match_idx = (size_t)-1;
+		for (size_t i = 0; i < ds.stream_outputs.size(); ++i) {
+			if (ds.stream_outputs[i].output_id == stream_handle) {
+				match_idx = i;
+				break;
+			}
+		}
+		if (match_idx != (size_t)-1) {
+			PendingDetach pd = extractStreamOutput(ds, match_idx);
+			ds.stream_outputs.erase(ds.stream_outputs.begin() + match_idx);
+			if (pd.outputs && pd.output_token > 0)
+				pd.outputs->remove(pd.output_token);
+			StreamThread st;
+			st.output_fd = pd.output_fd;
+			st.stream_pipe_read = pd.stream_pipe_read;
+			st.stream_consumer = std::move(pd.stream_consumer);
+			threads.push_back(std::move(st));
+		}
+
+		/* Surviving streams still anchor the dvbapi subscription. */
+		if (!ds.stream_outputs.empty()) {
+			lock.unlock();
+			flush_off_lock();
+			return result;
+		}
+		/* Last output gone: fall through to session-wide teardown. */
+	}
+
+	/* Count non-passive siblings with an active output binding. */
+	int live_siblings = 0;
+	std::vector<uint32_t> retained_ids;
+	for (auto &pair : sessions) {
+		if (pair.first == session_id || pair.second.channel_id != channel_id)
+			continue;
+		if (pair.second.passive)
+			continue;
+
+		/* LIVE/PIP keep their token on SoftCSALiveAttachment in m_live
+		 * (m_live presence == engine-keyed, mirroring findRunningSibling);
+		 * RECORD on record_outputs; STREAM on stream_outputs. */
+		bool record_running = (pair.second.type == SOFTCSA_SESSION_RECORD)
+		                      && !pair.second.record_outputs.empty();
+		bool stream_running = (pair.second.type == SOFTCSA_SESSION_STREAM)
+		                      && !pair.second.stream_outputs.empty();
+		bool not_running = (m_live.find(pair.first) == m_live.end())
+		                   && !record_running
+		                   && !stream_running;
+		bool retained_shape = not_running
+		                      && (pair.second.csa_alt_active || pair.second.retained);
+
+		if (retained_shape)
+			retained_ids.push_back(pair.first);
+		else
+			live_siblings++;
+	}
+
+	auto detach_session = [&](SessionState &s) {
+		/* Drain any RecordOutput entries that survived (per-fd branch
+		 * above already erased its matching entry). */
+		if (s.type == SOFTCSA_SESSION_RECORD) {
+			for (size_t i = 0; i < s.record_outputs.size(); ++i) {
+				PendingDetach pd = extractRecordOutput(s, i);
+				if (pd.outputs && pd.output_token > 0)
+					pd.outputs->remove(pd.output_token);
 				StreamThread st;
-				st.output_fd = s.output_fd;
-				st.stream_pipe_read = s.stream_pipe_read;
-				st.stream_consumer = std::move(s.stream_consumer);
+				st.output_fd = pd.output_fd;
+				st.stream_pipe_read = pd.stream_pipe_read;
+				st.stream_consumer = std::move(pd.stream_consumer);
 				threads.push_back(std::move(st));
-				s.output_fd = -1;
-				s.stream_pipe_read = -1;
-			} else if (s.output_fd >= 0) {
-				::close(s.output_fd);
-				s.output_fd = -1;
 			}
-			s.record_fd = -1;
-			s.stream_callback = nullptr;
-		};
-
-		if (live_siblings > 0) {
-			/* Siblings still depend on this tap; keep entry as the
-			 * subscription anchor. */
-			detach_session(ds);
-			ds.retained = true;
-		} else {
-			SoftCSAStopNotify notify;
-			notify.session_id = session_id;
-			notify.capmt_demux = ds.capmt_demux;
-			notify.capmt_ca_mask = ds.capmt_ca_mask;
-			result.dvbapi_stops.push_back(notify);
-
-			detach_session(ds);
-
-			auto tap_it = m_taps.find(ds.tap_key);
-			if (tap_it != m_taps.end())
-				tap_it->second->refcount--;
-
-			sessions.erase(sess_it);
-			channel_to_session.erase(ch_it);
-
-			for (uint32_t rid : retained_ids) {
-				auto rit = sessions.find(rid);
-				if (rit == sessions.end())
-					continue;
-
-				SoftCSAStopNotify rnotify;
-				rnotify.session_id = rid;
-				rnotify.capmt_demux = rit->second.capmt_demux;
-				rnotify.capmt_ca_mask = rit->second.capmt_ca_mask;
-				result.dvbapi_stops.push_back(rnotify);
-
-				detach_session(rit->second);
-
-				SoftCSASessionType rtype = rit->second.type;
-				auto rtap_it = m_taps.find(rit->second.tap_key);
-				if (rtap_it != m_taps.end())
-					rtap_it->second->refcount--;
-				sessions.erase(rit);
-				channel_to_session.erase(std::make_pair(channel_id, rtype));
+			s.record_outputs.clear();
+		}
+		/* Drain any StreamOutput entries that survived (per-handle
+		 * branch above already erased its matching entry). */
+		if (s.type == SOFTCSA_SESSION_STREAM) {
+			for (size_t i = 0; i < s.stream_outputs.size(); ++i) {
+				PendingDetach pd = extractStreamOutput(s, i);
+				if (pd.outputs && pd.output_token > 0)
+					pd.outputs->remove(pd.output_token);
+				StreamThread st;
+				st.output_fd = pd.output_fd;
+				st.stream_pipe_read = pd.stream_pipe_read;
+				st.stream_consumer = std::move(pd.stream_consumer);
+				threads.push_back(std::move(st));
 			}
+			s.stream_outputs.clear();
+		}
+	};
 
-			/* Move zero-refcount taps out of the map; destroy outside lock. */
-			for (auto it2 = m_taps.begin(); it2 != m_taps.end(); ) {
-				if (it2->second->refcount <= 0) {
-					dead_taps.push_back(std::move(it2->second));
-					it2 = m_taps.erase(it2);
-				} else {
-					++it2;
-				}
-			}
+	if (live_siblings > 0) {
+		/* Siblings still depend on this tap; keep entry as the
+		 * subscription anchor. */
+		detach_session(ds);
+		ds.retained = true;
+		/* A late CW or descrmode for this session's msgid (descrambler
+		 * has not seen NOT_SELECTED yet, that fires when the last
+		 * sibling drops) must not reactivate the session: outputs are
+		 * gone and any onDescrMode hit would only touch state we are
+		 * about to discard in the retained_ids loop. The reuse path
+		 * in registerSession resets stopping to false, so a fresh
+		 * RECORD/STREAM start on the same channel still works. */
+		ds.stopping = true;
+	} else {
+		SoftCSAStopNotify notify;
+		notify.session_id = session_id;
+		notify.capmt_demux = ds.capmt_demux;
+		notify.capmt_ca_mask = ds.capmt_ca_mask;
+		result.dvbapi_stops.push_back(notify);
+
+		detach_session(ds);
+
+		auto tap_it = m_taps.find(ds.tap_key);
+		if (tap_it != m_taps.end())
+			tap_it->second->refcount--;
+
+		sessions.erase(sess_it);
+		channel_to_session.erase(ch_it);
+
+		for (uint32_t rid : retained_ids) {
+			auto rit = sessions.find(rid);
+			if (rit == sessions.end())
+				continue;
+
+			SoftCSAStopNotify rnotify;
+			rnotify.session_id = rid;
+			rnotify.capmt_demux = rit->second.capmt_demux;
+			rnotify.capmt_ca_mask = rit->second.capmt_ca_mask;
+			result.dvbapi_stops.push_back(rnotify);
+
+			detach_session(rit->second);
+
+			SoftCSASessionType rtype = rit->second.type;
+			auto rtap_it = m_taps.find(rit->second.tap_key);
+			if (rtap_it != m_taps.end())
+				rtap_it->second->refcount--;
+			sessions.erase(rit);
+			channel_to_session.erase(std::make_pair(channel_id, rtype));
 		}
 
+		/* Move zero-refcount taps out of the map; destroy outside lock. */
+		for (auto it2 = m_taps.begin(); it2 != m_taps.end(); ) {
+			if (it2->second->refcount <= 0) {
+				dead_taps.push_back(std::move(it2->second));
+				it2 = m_taps.erase(it2);
+			} else {
+				++it2;
+			}
+		}
 	}
 
-	/* Outside the lock: close pipe write ends, join consumers, drop taps. */
-	for (auto &st : threads) {
-		if (st.output_fd >= 0)
-			::close(st.output_fd);
-		if (st.stream_consumer.joinable())
-			st.stream_consumer.join();
-		if (st.stream_pipe_read >= 0)
-			::close(st.stream_pipe_read);
-	}
-	dead_taps.clear();
-
+	lock.unlock();
+	flush_off_lock();
 	return result;
 }
 
@@ -666,23 +855,35 @@ void CSoftCSAManager::stopAll()
 		 * before tap ownership transfers so outputs are still alive. */
 		for (auto &pair : sessions) {
 			SessionState &ds = pair.second;
-			if (ds.output_token > 0) {
-				auto tap_it = m_taps.find(ds.tap_key);
-				if (tap_it != m_taps.end())
-					tap_it->second->outputs->remove(ds.output_token);
-				ds.output_token = -1;
+			/* Drain every RecordOutput; off-lock cleanup at the bottom
+			 * closes write end (signals EOF), joins, closes read end. */
+			if (ds.type == SOFTCSA_SESSION_RECORD) {
+				for (size_t i = 0; i < ds.record_outputs.size(); ++i) {
+					PendingDetach pd = extractRecordOutput(ds, i);
+					if (pd.outputs && pd.output_token > 0)
+						pd.outputs->remove(pd.output_token);
+					ThreadEntry te;
+					te.output_fd = pd.output_fd;
+					te.stream_pipe_read = pd.stream_pipe_read;
+					te.stream_consumer = std::move(pd.stream_consumer);
+					threads.push_back(std::move(te));
+				}
+				ds.record_outputs.clear();
 			}
-			if (ds.stream_pipe_read >= 0) {
-				ThreadEntry te;
-				te.output_fd = ds.output_fd;
-				te.stream_pipe_read = ds.stream_pipe_read;
-				te.stream_consumer = std::move(ds.stream_consumer);
-				threads.push_back(std::move(te));
-				ds.output_fd = -1;
-				ds.stream_pipe_read = -1;
-			} else if (ds.output_fd >= 0) {
-				::close(ds.output_fd);
-				ds.output_fd = -1;
+			/* Same drain for StreamOutput; each owns pipe + consumer
+			 * + captured callback. */
+			if (ds.type == SOFTCSA_SESSION_STREAM) {
+				for (size_t i = 0; i < ds.stream_outputs.size(); ++i) {
+					PendingDetach pd = extractStreamOutput(ds, i);
+					if (pd.outputs && pd.output_token > 0)
+						pd.outputs->remove(pd.output_token);
+					ThreadEntry te;
+					te.output_fd = pd.output_fd;
+					te.stream_pipe_read = pd.stream_pipe_read;
+					te.stream_consumer = std::move(pd.stream_consumer);
+					threads.push_back(std::move(te));
+				}
+				ds.stream_outputs.clear();
 			}
 		}
 
@@ -746,15 +947,33 @@ void CSoftCSAManager::stopSessions()
 		for (auto &pair : sessions) {
 			SessionState &ds = pair.second;
 			/* Detach from the tap broadcast: descrambling pauses while
-			 * OSCam is gone. Pipe bridge, record_fd, and stream_callback
-			 * are deliberately preserved so the onDescrMode resume path
-			 * can re-add output_fd without restarting the consumer or
-			 * asking record.cpp / streamts.cpp to re-register. */
-			if (ds.output_token > 0) {
+			 * the descrambler is gone. Per-output pipe bridges, record
+			 * fds and captured callbacks are deliberately preserved so
+			 * the onDescrMode resume path can re-add each output_fd
+			 * without restarting the consumer or asking record.cpp /
+			 * streamts.cpp to re-register.
+			 *
+			 * Every per-recording output loses its token; pipe write
+			 * end + consumer stay alive so onDescrMode can re-add the
+			 * same output_fd. */
+			if (ds.type == SOFTCSA_SESSION_RECORD) {
 				auto tap_it = m_taps.find(ds.tap_key);
-				if (tap_it != m_taps.end())
-					tap_it->second->outputs->remove(ds.output_token);
-				ds.output_token = -1;
+				for (auto &ro : ds.record_outputs) {
+					if (ro.output_token > 0 && tap_it != m_taps.end())
+						tap_it->second->outputs->remove(ro.output_token);
+					ro.output_token = -1;
+				}
+			}
+			/* Same drain for every stream output. The captured callback
+			 * stays bound so onDescrMode's re-add resumes the stream
+			 * without the caller re-registering. */
+			if (ds.type == SOFTCSA_SESSION_STREAM) {
+				auto tap_it = m_taps.find(ds.tap_key);
+				for (auto &so : ds.stream_outputs) {
+					if (so.output_token > 0 && tap_it != m_taps.end())
+						tap_it->second->outputs->remove(so.output_token);
+					so.output_token = -1;
+				}
 			}
 			ds.csa_alt_active = false;
 			ds.retained = false;
@@ -790,7 +1009,6 @@ std::vector<CSoftCSAManager::ResubscribeInfo> CSoftCSAManager::getResubscribeInf
 bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int timeout_ms)
 {
 	uint32_t session_id = 0;
-	bool already_active = false;
 
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -811,21 +1029,18 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 			return false;
 		}
 
-		SessionState &ds = sess_it->second;
 		session_id = ch_it->second;
-		ds.record_fd = fd;
-		already_active = ds.csa_alt_active;
 	}
 
-	/* Sibling-attach: if a sibling on the same tap already runs, the
-	 * engine has keys and we can attach directly. */
+	/* If a sibling on the same tap already keys the engine,
+	 * cloneAndStartRecord allocates a fresh output and returns
+	 * immediately. */
 	if (cloneAndStartRecord(session_id, fd))
 		return true;
 
-	/* Pipe bridge: O_NONBLOCK write end into COutputFdSet (tap reader
-	 * never blocks), blocking read end drained by a consumer thread that
-	 * forwards to the caller's recording fd. The caller's fd keeps its
-	 * original blocking semantics. */
+	/* Pipe bridge for the wait path: O_NONBLOCK write end into
+	 * COutputFdSet (tap reader never blocks), blocking read end drained
+	 * by a consumer thread that forwards to the caller's recording fd. */
 	{
 		/* unique_lock so mtx can be dropped before joining the consumer
 		 * thread on the reader-start-failure rollback path. */
@@ -835,130 +1050,116 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 			return false;
 		SessionState &ds = it->second;
 
-		if (ds.output_token <= 0) {
-			int p[2];
-			if (::pipe(p) < 0) {
-				printf("[softcsa] waitForRecordStart: pipe failed\n");
-				return false;
-			}
-			enlargePipeBuffer(p[1]);
-			int wflags = ::fcntl(p[1], F_GETFL, 0);
-			if (wflags >= 0)
-				::fcntl(p[1], F_SETFL, wflags | O_NONBLOCK);
-			int rflags = ::fcntl(p[0], F_GETFL, 0);
-			if (rflags >= 0)
-				::fcntl(p[0], F_SETFL, rflags & ~O_NONBLOCK);
+		int p[2];
+		if (::pipe(p) < 0) {
+			printf("[softcsa] waitForRecordStart: pipe failed\n");
+			return false;
+		}
+		enlargePipeBuffer(p[1]);
+		int wflags = ::fcntl(p[1], F_GETFL, 0);
+		if (wflags >= 0)
+			::fcntl(p[1], F_SETFL, wflags | O_NONBLOCK);
+		int rflags = ::fcntl(p[0], F_GETFL, 0);
+		if (rflags >= 0)
+			::fcntl(p[0], F_SETFL, rflags & ~O_NONBLOCK);
 
-			auto tap_it = m_taps.find(ds.tap_key);
-			if (tap_it == m_taps.end()) {
-				::close(p[0]);
-				::close(p[1]);
-				return false;
-			}
-			SoftCSAServiceTap &tap = *tap_it->second;
-			int token = tap.outputs->add(p[1], COutputFdSet::ROLE_RECORD);
-			if (token < 0) {
-				::close(p[0]);
-				::close(p[1]);
-				printf("[softcsa] waitForRecordStart: outputs->add failed\n");
-				return false;
-			}
-			ds.output_token = token;
-			ds.output_fd = p[1];
-			ds.stream_pipe_read = p[0];
-
-			int read_end = p[0];
-			int record_fd_cap = fd;
-			ds.stream_consumer = std::thread([read_end, record_fd_cap]() {
-				const int kBuf = 1024 * 1024;
-				std::vector<uint8_t> buf(kBuf);
-				/* Drive writeback in 4 MB chunks so the page cache
-				 * never grows enough to trigger a global writeback
-				 * burst at dirty_background_ratio that would stall
-				 * this thread and overflow the pipe. */
-				off_t total_written = 0;
-				off_t last_advised = 0;
-				const off_t kAdviseInterval = 4 * 1024 * 1024;
-				while (true) {
-					ssize_t n = ::read(read_end, buf.data(), kBuf);
-					if (n <= 0) break;
-					const uint8_t *ptr = buf.data();
-					ssize_t rem = n;
-					while (rem > 0) {
-						ssize_t w = ::write(record_fd_cap, ptr, (size_t)rem);
-						if (w < 0) {
-							if (errno == EINTR) continue;
-							return;
-						}
-						ptr += w;
-						rem -= w;
-					}
-					total_written += n;
-					if (total_written - last_advised >= kAdviseInterval) {
-						::sync_file_range(record_fd_cap, last_advised,
-						                  total_written - last_advised,
-						                  SYNC_FILE_RANGE_WRITE);
-						if (last_advised >= kAdviseInterval) {
-							::posix_fadvise(record_fd_cap,
-							                last_advised - kAdviseInterval,
-							                kAdviseInterval,
-							                POSIX_FADV_DONTNEED);
-						}
-						last_advised = total_written;
-					}
-				}
-			});
-
-			if (!tap.reader_started) {
-				if (tap.reader->start() == 0) {
-					tap.reader_started = true;
-				} else {
-					/* Reader failed to start. Roll back the output
-					 * registration and pipe under the lock, then join
-					 * the consumer thread outside. */
-					printf("[softcsa] waitForRecordStart: reader->start failed, rolling back\n");
-					PendingDetach pd = extractPendingDetach(ds);
-					ds.record_fd = -1;
-					if (pd.outputs && pd.output_token > 0)
-						pd.outputs->remove(pd.output_token);
-					lock.unlock();
-					if (pd.output_fd >= 0)
-						::close(pd.output_fd);
-					if (pd.stream_consumer.joinable())
-						pd.stream_consumer.join();
-					if (pd.stream_pipe_read >= 0)
-						::close(pd.stream_pipe_read);
-					return false;
-				}
-			}
+		auto tap_it = m_taps.find(ds.tap_key);
+		if (tap_it == m_taps.end()) {
+			::close(p[0]);
+			::close(p[1]);
+			return false;
+		}
+		SoftCSAServiceTap &tap = *tap_it->second;
+		int token = tap.outputs->add(p[1], COutputFdSet::ROLE_RECORD);
+		if (token < 0) {
+			::close(p[0]);
+			::close(p[1]);
+			printf("[softcsa] waitForRecordStart: outputs->add failed\n");
+			return false;
 		}
 
-		/* Same-mask sibling-attach: when the LIVE for this channel is
-		 * already keyed but the dvbapi server skipped sendCaPmt because
-		 * (oldmask == newmask), no onDescrMode for this RECORD session
-		 * will arrive. Adopt the sibling's keying directly so the wait
-		 * predicate succeeds without the 3-second fallback timeout. */
-		if (!ds.csa_alt_active && ds.output_token > 0) {
-			uint32_t sib = findRunningSibling(channel_id, session_id);
-			if (sib != 0) {
-				ds.csa_alt_active = true;
-				already_active = true;
-				printf("[softcsa] waitForRecordStart: adopting keyed sibling %u for channel %llx\n",
-				       sib, (unsigned long long)channel_id);
-			}
-		}
+		ds.record_outputs.emplace_back();
+		SessionState::RecordOutput &ro = ds.record_outputs.back();
+		ro.output_token = token;
+		ro.output_fd = p[1];
+		ro.stream_pipe_read = p[0];
+		/* record_fd is the per-output identifier the stop side matches
+		 * on. The one-shot wait_acked flag decouples "predicate fired"
+		 * from "still routable", so an overlapping second wait cannot
+		 * collide on a cleared sentinel. */
+		ro.record_fd = fd;
 
-		if (already_active && ds.output_token > 0) {
-			printf("[softcsa] waitForRecordStart: csa_alt already active, returning immediately\n");
-			ds.record_fd = -1;
-			return true;
+		int read_end = p[0];
+		int record_fd_cap = fd;
+		ro.stream_consumer = std::thread([read_end, record_fd_cap]() {
+			const int kBuf = 1024 * 1024;
+			std::vector<uint8_t> buf(kBuf);
+			/* Drive writeback in 4 MB chunks so the page cache
+			 * never grows enough to trigger a global writeback
+			 * burst at dirty_background_ratio that would stall
+			 * this thread and overflow the pipe. */
+			off_t total_written = 0;
+			off_t last_advised = 0;
+			const off_t kAdviseInterval = 4 * 1024 * 1024;
+			while (true) {
+				ssize_t n = ::read(read_end, buf.data(), kBuf);
+				if (n <= 0) break;
+				const uint8_t *ptr = buf.data();
+				ssize_t rem = n;
+				while (rem > 0) {
+					ssize_t w = ::write(record_fd_cap, ptr, (size_t)rem);
+					if (w < 0) {
+						if (errno == EINTR) continue;
+						return;
+					}
+					ptr += w;
+					rem -= w;
+				}
+				total_written += n;
+				if (total_written - last_advised >= kAdviseInterval) {
+					::sync_file_range(record_fd_cap, last_advised,
+					                  total_written - last_advised,
+					                  SYNC_FILE_RANGE_WRITE);
+					if (last_advised >= kAdviseInterval) {
+						::posix_fadvise(record_fd_cap,
+						                last_advised - kAdviseInterval,
+						                kAdviseInterval,
+						                POSIX_FADV_DONTNEED);
+					}
+					last_advised = total_written;
+				}
+			}
+		});
+
+		if (!tap.reader_started) {
+			if (tap.reader->start() == 0) {
+				tap.reader_started = true;
+			} else {
+				/* Roll back only this output under the lock; join the
+				 * consumer outside. */
+				printf("[softcsa] waitForRecordStart: reader->start failed, rolling back\n");
+				PendingDetach pd = extractRecordOutput(ds, ds.record_outputs.size() - 1);
+				ds.record_outputs.pop_back();
+				if (pd.outputs && pd.output_token > 0)
+					pd.outputs->remove(pd.output_token);
+				lock.unlock();
+				if (pd.output_fd >= 0)
+					::close(pd.output_fd);
+				if (pd.stream_consumer.joinable())
+					pd.stream_consumer.join();
+				if (pd.stream_pipe_read >= 0)
+					::close(pd.stream_pipe_read);
+				return false;
+			}
 		}
 	}
 
 	printf("[softcsa] waitForRecordStart: fd %d stored, waiting %dms\n", fd, timeout_ms);
 
-	/* Predicate: engine keyed (csa_alt_active) AND output attached
-	 * (output_token > 0). */
+	/* Predicate: engine keyed AND our record_fd entry exists and is
+	 * not yet ack'd. Match on record_fd so an overlapping second wait
+	 * cannot steal the first one's predicate-fire; set wait_acked on
+	 * first match to make this one-shot. */
 	std::unique_lock<std::mutex> cv_lock(record_cv_mtx);
 	bool started = record_cv.wait_for(cv_lock, std::chrono::milliseconds(timeout_ms), [&]() {
 		std::lock_guard<std::mutex> lock(mtx);
@@ -969,21 +1170,22 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 		auto sess_it = sessions.find(ch_it->second);
 		if (sess_it == sessions.end())
 			return false;
-		return sess_it->second.csa_alt_active && sess_it->second.output_token > 0;
+		if (!sess_it->second.csa_alt_active)
+			return false;
+		for (auto &ro : sess_it->second.record_outputs) {
+			if (ro.record_fd == fd && !ro.wait_acked) {
+				ro.wait_acked = true;
+				return true;
+			}
+		}
+		return false;
 	});
 
-	if (started) {
-		std::lock_guard<std::mutex> lock(mtx);
-		auto ch_it = channel_to_session.find(std::make_pair(channel_id, SOFTCSA_SESSION_RECORD));
-		if (ch_it != channel_to_session.end()) {
-			auto sess_it = sessions.find(ch_it->second);
-			if (sess_it != sessions.end())
-				sess_it->second.record_fd = -1;
-		}
-	} else {
-		/* Timeout: detach so a late onDescrMode cannot write into a
-		 * consumer thread about to be torn down. Order: close write end
-		 * (signals EOF), join, close read end. */
+	if (!started) {
+		/* Timeout: detach our specific output by exact record_fd match
+		 * so a late onDescrMode cannot push bytes through a consumer
+		 * thread about to be torn down. Order: close write end (EOF),
+		 * join, close read end. */
 		PendingDetach pd;
 		pd.outputs = nullptr;
 		pd.output_token = -1;
@@ -995,11 +1197,17 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 			if (ch_it != channel_to_session.end()) {
 				auto sess_it = sessions.find(ch_it->second);
 				if (sess_it != sessions.end()) {
-					pd = extractPendingDetach(sess_it->second);
-					sess_it->second.record_fd = -1;
-					auto tap_it = m_taps.find(sess_it->second.tap_key);
+					SessionState &ds = sess_it->second;
+					for (size_t i = 0; i < ds.record_outputs.size(); ++i) {
+						if (ds.record_outputs[i].record_fd == fd) {
+							pd = extractRecordOutput(ds, i);
+							ds.record_outputs.erase(ds.record_outputs.begin() + i);
+							break;
+						}
+					}
 					if (pd.outputs && pd.output_token > 0)
 						pd.outputs->remove(pd.output_token);
+					auto tap_it = m_taps.find(ds.tap_key);
 					if (tap_it != m_taps.end())
 						stopReaderIfIdleLocked(tap_it->second.get());
 				}
@@ -1017,10 +1225,9 @@ bool CSoftCSAManager::waitForRecordStart(t_channel_id channel_id, int fd, int ti
 	return started;
 }
 
-bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms)
+uint32_t CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamCallback cb, int timeout_ms)
 {
 	uint32_t session_id = 0;
-	bool already_active = false;
 
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -1029,129 +1236,125 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 		if (ch_it == channel_to_session.end()) {
 			printf("[softcsa] waitForStreamStart: no STREAM session for channel %llx\n",
 			       (unsigned long long)channel_id);
-			return false;
+			return 0;
 		}
 		auto sess_it = sessions.find(ch_it->second);
 		if (sess_it == sessions.end())
-			return false;
+			return 0;
 
 		if (sess_it->second.passive) {
 			printf("[softcsa] waitForStreamStart: passive, skipping for channel %llx\n",
 			       (unsigned long long)channel_id);
-			return false;
+			return 0;
 		}
 
-		SessionState &ds = sess_it->second;
 		session_id = ch_it->second;
-		ds.stream_callback = cb;
-		already_active = ds.csa_alt_active;
 	}
 
-	if (cloneAndStartStream(session_id, cb))
-		return true;
+	/* If a sibling on the same tap already keys the engine,
+	 * cloneAndStartStream allocates a fresh output and returns its
+	 * handle immediately. */
+	uint32_t cloned = cloneAndStartStream(session_id, cb);
+	if (cloned != 0)
+		return cloned;
 
-	/* Pipe bridge: O_NONBLOCK write end into COutputFdSet, blocking
-	 * read end drained by the consumer thread. */
+	/* Pipe bridge for the wait path: O_NONBLOCK write end into
+	 * COutputFdSet (tap reader never blocks), blocking read end drained
+	 * by a consumer thread that forwards via the captured callback. */
+	uint32_t wait_handle = 0;
 	{
 		/* unique_lock so mtx can be dropped before joining the consumer
 		 * thread on the reader-start-failure rollback path. */
 		std::unique_lock<std::mutex> lock(mtx);
 		auto it = sessions.find(session_id);
 		if (it == sessions.end())
-			return false;
+			return 0;
 		SessionState &ds = it->second;
 
-		if (ds.output_token <= 0) {
-			int p[2];
-			if (::pipe(p) < 0) {
-				printf("[softcsa] waitForStreamStart: pipe failed\n");
-				return false;
-			}
-			enlargePipeBuffer(p[1]);
-			int wflags = ::fcntl(p[1], F_GETFL, 0);
-			if (wflags >= 0)
-				::fcntl(p[1], F_SETFL, wflags | O_NONBLOCK);
-			int rflags = ::fcntl(p[0], F_GETFL, 0);
-			if (rflags >= 0)
-				::fcntl(p[0], F_SETFL, rflags & ~O_NONBLOCK);
+		int p[2];
+		if (::pipe(p) < 0) {
+			printf("[softcsa] waitForStreamStart: pipe failed\n");
+			return 0;
+		}
+		enlargePipeBuffer(p[1]);
+		int wflags = ::fcntl(p[1], F_GETFL, 0);
+		if (wflags >= 0)
+			::fcntl(p[1], F_SETFL, wflags | O_NONBLOCK);
+		int rflags = ::fcntl(p[0], F_GETFL, 0);
+		if (rflags >= 0)
+			::fcntl(p[0], F_SETFL, rflags & ~O_NONBLOCK);
 
-			auto tap_it = m_taps.find(ds.tap_key);
-			if (tap_it == m_taps.end()) {
-				::close(p[0]);
-				::close(p[1]);
-				return false;
-			}
-			SoftCSAServiceTap &tap = *tap_it->second;
-			int token = tap.outputs->add(p[1], COutputFdSet::ROLE_STREAM);
-			if (token < 0) {
-				::close(p[0]);
-				::close(p[1]);
-				printf("[softcsa] waitForStreamStart: outputs->add failed\n");
-				return false;
-			}
-			ds.output_token = token;
-			ds.output_fd = p[1];
-			ds.stream_pipe_read = p[0];
-
-			SoftCSAStreamCallback captured_cb = cb;
-			int read_end = p[0];
-			ds.stream_consumer = std::thread([captured_cb, read_end]() {
-				const int kBuf = 65536;
-				std::vector<uint8_t> buf(kBuf);
-				while (true) {
-					ssize_t n = ::read(read_end, buf.data(), kBuf);
-					if (n <= 0) break;
-					captured_cb(buf.data(), (int)n);
-				}
-			});
-
-			if (!tap.reader_started) {
-				if (tap.reader->start() == 0) {
-					tap.reader_started = true;
-				} else {
-					/* Reader failed to start. Roll back the output
-					 * registration and pipe under the lock, then join
-					 * the consumer thread outside. */
-					printf("[softcsa] waitForStreamStart: reader->start failed, rolling back\n");
-					PendingDetach pd = extractPendingDetach(ds);
-					ds.stream_callback = nullptr;
-					if (pd.outputs && pd.output_token > 0)
-						pd.outputs->remove(pd.output_token);
-					lock.unlock();
-					if (pd.output_fd >= 0)
-						::close(pd.output_fd);
-					if (pd.stream_consumer.joinable())
-						pd.stream_consumer.join();
-					if (pd.stream_pipe_read >= 0)
-						::close(pd.stream_pipe_read);
-					return false;
-				}
-			}
+		auto tap_it = m_taps.find(ds.tap_key);
+		if (tap_it == m_taps.end()) {
+			::close(p[0]);
+			::close(p[1]);
+			return 0;
+		}
+		SoftCSAServiceTap &tap = *tap_it->second;
+		int token = tap.outputs->add(p[1], COutputFdSet::ROLE_STREAM);
+		if (token < 0) {
+			::close(p[0]);
+			::close(p[1]);
+			printf("[softcsa] waitForStreamStart: outputs->add failed\n");
+			return 0;
 		}
 
-		/* Same-mask sibling-attach: see waitForRecordStart for the
-		 * dvbapi rationale. Stream sessions can ride on the sibling's
-		 * keying even when the dvbapi server suppressed the per-session
-		 * CSA-ALT confirmation. */
-		if (!ds.csa_alt_active && ds.output_token > 0) {
-			uint32_t sib = findRunningSibling(channel_id, session_id);
-			if (sib != 0) {
-				ds.csa_alt_active = true;
-				already_active = true;
-				printf("[softcsa] waitForStreamStart: adopting keyed sibling %u for channel %llx\n",
-				       sib, (unsigned long long)channel_id);
-			}
-		}
+		ds.stream_outputs.emplace_back();
+		SessionState::StreamOutput &so = ds.stream_outputs.back();
+		so.output_token = token;
+		so.output_fd = p[1];
+		so.stream_pipe_read = p[0];
+		so.stream_callback = cb;
+		/* output_id is the per-output identifier the stop side matches
+		 * on. The one-shot wait_acked flag decouples "predicate fired"
+		 * from "still routable", so an overlapping second wait cannot
+		 * collide on a cleared sentinel. */
+		so.output_id = next_stream_output_id++;
+		if (next_stream_output_id == 0)
+			next_stream_output_id = 1;
+		wait_handle = so.output_id;
 
-		if (already_active && ds.output_token > 0) {
-			printf("[softcsa] waitForStreamStart: csa_alt already active, returning immediately\n");
-			ds.stream_callback = nullptr;
-			return true;
+		SoftCSAStreamCallback captured_cb = cb;
+		int read_end = p[0];
+		so.stream_consumer = std::thread([captured_cb, read_end]() {
+			const int kBuf = 65536;
+			std::vector<uint8_t> buf(kBuf);
+			while (true) {
+				ssize_t n = ::read(read_end, buf.data(), kBuf);
+				if (n <= 0) break;
+				captured_cb(buf.data(), (int)n);
+			}
+		});
+
+		if (!tap.reader_started) {
+			if (tap.reader->start() == 0) {
+				tap.reader_started = true;
+			} else {
+				/* Roll back only this output under the lock; join the
+				 * consumer outside. */
+				printf("[softcsa] waitForStreamStart: reader->start failed, rolling back\n");
+				PendingDetach pd = extractStreamOutput(ds, ds.stream_outputs.size() - 1);
+				ds.stream_outputs.pop_back();
+				if (pd.outputs && pd.output_token > 0)
+					pd.outputs->remove(pd.output_token);
+				lock.unlock();
+				if (pd.output_fd >= 0)
+					::close(pd.output_fd);
+				if (pd.stream_consumer.joinable())
+					pd.stream_consumer.join();
+				if (pd.stream_pipe_read >= 0)
+					::close(pd.stream_pipe_read);
+				return 0;
+			}
 		}
 	}
 
-	printf("[softcsa] waitForStreamStart: callback stored, waiting %dms\n", timeout_ms);
+	printf("[softcsa] waitForStreamStart: handle %u stored, waiting %dms\n", wait_handle, timeout_ms);
 
+	/* Predicate: engine keyed AND our output_id entry exists and is
+	 * not yet ack'd. Match on output_id so an overlapping second wait
+	 * cannot steal the first one's predicate-fire; set wait_acked on
+	 * first match to make this one-shot. */
 	std::unique_lock<std::mutex> cv_lock(record_cv_mtx);
 	bool started = record_cv.wait_for(cv_lock, std::chrono::milliseconds(timeout_ms), [&]() {
 		std::lock_guard<std::mutex> lock(mtx);
@@ -1162,19 +1365,22 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 		auto sess_it = sessions.find(ch_it->second);
 		if (sess_it == sessions.end())
 			return false;
-		return sess_it->second.csa_alt_active && sess_it->second.output_token > 0;
+		if (!sess_it->second.csa_alt_active)
+			return false;
+		for (auto &so : sess_it->second.stream_outputs) {
+			if (so.output_id == wait_handle && !so.wait_acked) {
+				so.wait_acked = true;
+				return true;
+			}
+		}
+		return false;
 	});
 
-	if (started) {
-		std::lock_guard<std::mutex> lock(mtx);
-		auto ch_it = channel_to_session.find(std::make_pair(channel_id, SOFTCSA_SESSION_STREAM));
-		if (ch_it != channel_to_session.end()) {
-			auto sess_it = sessions.find(ch_it->second);
-			if (sess_it != sessions.end())
-				sess_it->second.stream_callback = nullptr;
-		}
-	} else {
-		/* Order: close write end (signals EOF), join, close read end. */
+	if (!started) {
+		/* Timeout: detach our specific output by exact output_id match
+		 * so a late onDescrMode cannot push bytes through a consumer
+		 * thread about to be torn down. Order: close write end (EOF),
+		 * join, close read end. */
 		PendingDetach pd;
 		pd.outputs = nullptr;
 		pd.output_token = -1;
@@ -1186,14 +1392,19 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 			if (ch_it != channel_to_session.end()) {
 				auto sess_it = sessions.find(ch_it->second);
 				if (sess_it != sessions.end()) {
-					pd = extractPendingDetach(sess_it->second);
-					sess_it->second.stream_callback = nullptr;
-					auto tap_it = m_taps.find(sess_it->second.tap_key);
+					SessionState &ds = sess_it->second;
+					for (size_t i = 0; i < ds.stream_outputs.size(); ++i) {
+						if (ds.stream_outputs[i].output_id == wait_handle) {
+							pd = extractStreamOutput(ds, i);
+							ds.stream_outputs.erase(ds.stream_outputs.begin() + i);
+							break;
+						}
+					}
 					if (pd.outputs && pd.output_token > 0)
 						pd.outputs->remove(pd.output_token);
+					auto tap_it = m_taps.find(ds.tap_key);
 					if (tap_it != m_taps.end())
 						stopReaderIfIdleLocked(tap_it->second.get());
-					/* Pipe fds must NOT close under lock. */
 				}
 			}
 		}
@@ -1203,10 +1414,12 @@ bool CSoftCSAManager::waitForStreamStart(t_channel_id channel_id, SoftCSAStreamC
 			pd.stream_consumer.join();
 		if (pd.stream_pipe_read >= 0)
 			::close(pd.stream_pipe_read);
+		printf("[softcsa] waitForStreamStart: timeout (handle %u)\n", wait_handle);
+		return 0;
 	}
 
-	printf("[softcsa] waitForStreamStart: %s\n", started ? "started" : "timeout");
-	return started;
+	printf("[softcsa] waitForStreamStart: started (handle %u)\n", wait_handle);
+	return wait_handle;
 }
 
 bool CSoftCSAManager::hasRegisteredSession(t_channel_id channel_id, SoftCSASessionType type)
@@ -1228,16 +1441,16 @@ bool CSoftCSAManager::cloneAndStartRecord(uint32_t session_id, int fd)
 			return false;
 		SessionState &ds = sess_it->second;
 
-		if (ds.output_token > 0)
-			return false;
+		/* Every overlapping CRecordInstance::Start needs its own pipe
+		 * + consumer + fd, so no early-out on existing record_outputs. */
 
 		/* Sibling on the same channel: engine is shared via tap. */
 		uint32_t sib_id = findRunningSibling(ds.channel_id, session_id);
 		if (sib_id == 0)
 			return false;
 
-		printf("[softcsa] cloneAndStartRecord: session %u using shared engine from sibling %u\n",
-		       session_id, sib_id);
+		printf("[softcsa] cloneAndStartRecord: session %u using shared engine from sibling %u (output #%zu)\n",
+		       session_id, sib_id, ds.record_outputs.size());
 
 		auto sib_it = sessions.find(sib_id);
 		uint8_t sib_ecm_mode = (sib_it != sessions.end()) ? sib_it->second.ecm_mode : 0;
@@ -1267,17 +1480,22 @@ bool CSoftCSAManager::cloneAndStartRecord(uint32_t session_id, int fd)
 			return false;
 		}
 
-		/* Commit. */
+		/* Commit a fresh RecordOutput. */
 		ds.csa_alt_active = true;
 		ds.ecm_mode = sib_ecm_mode;
-		ds.output_token = token;
-		ds.output_fd = p[1];
-		ds.stream_pipe_read = p[0];
-		ds.record_fd = -1;
+		ds.record_outputs.emplace_back();
+		SessionState::RecordOutput &ro = ds.record_outputs.back();
+		ro.output_token = token;
+		ro.output_fd = p[1];
+		ro.stream_pipe_read = p[0];
+		/* record_fd is the per-output identifier the stop side matches
+		 * on. Sibling-attach has no wait phase so wait_acked stays
+		 * false; the stop lookup keys on record_fd alone. */
+		ro.record_fd = fd;
 
 		int read_end = p[0];
 		int record_fd_cap = fd;
-		ds.stream_consumer = std::thread([read_end, record_fd_cap]() {
+		ro.stream_consumer = std::thread([read_end, record_fd_cap]() {
 			const int kBuf = 1024 * 1024;
 			std::vector<uint8_t> buf(kBuf);
 			off_t total_written = 0;
@@ -1317,11 +1535,15 @@ bool CSoftCSAManager::cloneAndStartRecord(uint32_t session_id, int fd)
 			if (tap.reader->start() == 0) {
 				tap.reader_started = true;
 			} else {
-				/* Reader failed to start: roll back so the caller does
-				 * not see a session marked active with no reader. */
+				/* Roll back only this output. Clear csa_alt_active
+				 * only when this was the last record_output so the
+				 * caller's wait predicate stays consistent for any
+				 * sibling still waiting. */
 				printf("[softcsa] cloneAndStartRecord: reader->start failed, rolling back\n");
-				PendingDetach pd = extractPendingDetach(ds);
-				ds.csa_alt_active = false;
+				PendingDetach pd = extractRecordOutput(ds, ds.record_outputs.size() - 1);
+				ds.record_outputs.pop_back();
+				if (ds.record_outputs.empty())
+					ds.csa_alt_active = false;
 				if (pd.outputs && pd.output_token > 0)
 					pd.outputs->remove(pd.output_token);
 				lock.unlock();
@@ -1342,9 +1564,9 @@ bool CSoftCSAManager::cloneAndStartRecord(uint32_t session_id, int fd)
 	return started;
 }
 
-bool CSoftCSAManager::cloneAndStartStream(uint32_t session_id, SoftCSAStreamCallback cb)
+uint32_t CSoftCSAManager::cloneAndStartStream(uint32_t session_id, SoftCSAStreamCallback cb)
 {
-	bool started = false;
+	uint32_t new_handle = 0;
 	{
 		/* unique_lock needed so we can drop mtx before joining the consumer
 		 * thread on the reader-start-failure rollback path. */
@@ -1352,25 +1574,26 @@ bool CSoftCSAManager::cloneAndStartStream(uint32_t session_id, SoftCSAStreamCall
 
 		auto sess_it = sessions.find(session_id);
 		if (sess_it == sessions.end())
-			return false;
+			return 0;
 		SessionState &ds = sess_it->second;
 
-		if (ds.output_token > 0)
-			return false;
+		/* Every overlapping CStreamInstance::run on the same channel
+		 * needs its own pipe + consumer + captured callback, so no
+		 * early-out on existing stream_outputs. */
 
 		uint32_t sib_id = findRunningSibling(ds.channel_id, session_id);
 		if (sib_id == 0)
-			return false;
+			return 0;
 
-		printf("[softcsa] cloneAndStartStream: session %u using shared engine from sibling %u\n",
-		       session_id, sib_id);
+		printf("[softcsa] cloneAndStartStream: session %u using shared engine from sibling %u (output #%zu)\n",
+		       session_id, sib_id, ds.stream_outputs.size());
 
 		auto sib_it = sessions.find(sib_id);
 		uint8_t sib_ecm_mode = (sib_it != sessions.end()) ? sib_it->second.ecm_mode : 0;
 
 		int p[2];
 		if (::pipe(p) < 0)
-			return false;
+			return 0;
 		enlargePipeBuffer(p[1]);
 		int wflags = ::fcntl(p[1], F_GETFL, 0);
 		if (wflags >= 0)
@@ -1383,27 +1606,33 @@ bool CSoftCSAManager::cloneAndStartStream(uint32_t session_id, SoftCSAStreamCall
 		if (tap_it == m_taps.end()) {
 			::close(p[0]);
 			::close(p[1]);
-			return false;
+			return 0;
 		}
 		SoftCSAServiceTap &tap = *tap_it->second;
 		int token = tap.outputs->add(p[1], COutputFdSet::ROLE_STREAM);
 		if (token < 0) {
 			::close(p[0]);
 			::close(p[1]);
-			return false;
+			return 0;
 		}
 
-		/* Commit. */
+		/* Commit a fresh StreamOutput. */
 		ds.csa_alt_active = true;
 		ds.ecm_mode = sib_ecm_mode;
-		ds.output_token = token;
-		ds.output_fd = p[1];
-		ds.stream_pipe_read = p[0];
-		ds.stream_callback = nullptr;
+		ds.stream_outputs.emplace_back();
+		SessionState::StreamOutput &so = ds.stream_outputs.back();
+		so.output_token = token;
+		so.output_fd = p[1];
+		so.stream_pipe_read = p[0];
+		so.stream_callback = cb;
+		so.output_id = next_stream_output_id++;
+		if (next_stream_output_id == 0)
+			next_stream_output_id = 1;
+		new_handle = so.output_id;
 
 		SoftCSAStreamCallback captured_cb = cb;
 		int read_end = p[0];
-		ds.stream_consumer = std::thread([captured_cb, read_end]() {
+		so.stream_consumer = std::thread([captured_cb, read_end]() {
 			const int kBuf = 65536;
 			std::vector<uint8_t> buf(kBuf);
 			while (true) {
@@ -1417,11 +1646,15 @@ bool CSoftCSAManager::cloneAndStartStream(uint32_t session_id, SoftCSAStreamCall
 			if (tap.reader->start() == 0) {
 				tap.reader_started = true;
 			} else {
-				/* Reader failed to start: roll back so the caller does
-				 * not see a session marked active with no reader. */
+				/* Roll back only this output. Clear csa_alt_active
+				 * only when this was the last stream_output so the
+				 * caller's wait predicate stays consistent for any
+				 * sibling stream still waiting. */
 				printf("[softcsa] cloneAndStartStream: reader->start failed, rolling back\n");
-				PendingDetach pd = extractPendingDetach(ds);
-				ds.csa_alt_active = false;
+				PendingDetach pd = extractStreamOutput(ds, ds.stream_outputs.size() - 1);
+				ds.stream_outputs.pop_back();
+				if (ds.stream_outputs.empty())
+					ds.csa_alt_active = false;
 				if (pd.outputs && pd.output_token > 0)
 					pd.outputs->remove(pd.output_token);
 				lock.unlock();
@@ -1431,15 +1664,14 @@ bool CSoftCSAManager::cloneAndStartStream(uint32_t session_id, SoftCSAStreamCall
 					pd.stream_consumer.join();
 				if (pd.stream_pipe_read >= 0)
 					::close(pd.stream_pipe_read);
-				return false;
+				return 0;
 			}
 		}
-		started = true;
 	}
 
-	if (started)
+	if (new_handle != 0)
 		record_cv.notify_all();
-	return started;
+	return new_handle;
 }
 
 int CSoftCSAManager::startLive(uint32_t session_id, int decoder_index)
@@ -1754,7 +1986,16 @@ void CSoftCSAManager::stopLive(uint32_t session_id, bool skip_decoder_start)
 					if (p.first == session_id) continue;
 					if (p.second.channel_id != ch) continue;
 					if (p.second.passive) continue;
-					if (p.second.output_token <= 0) continue;
+					/* Only RECORD/STREAM siblings can keep the tap
+					 * keyed without restarting the LIVE decoder. */
+					bool sib_consumes;
+					if (p.second.type == SOFTCSA_SESSION_RECORD)
+						sib_consumes = !p.second.record_outputs.empty();
+					else if (p.second.type == SOFTCSA_SESSION_STREAM)
+						sib_consumes = !p.second.stream_outputs.empty();
+					else
+						sib_consumes = false;
+					if (!sib_consumes) continue;
 					if (p.second.type == SOFTCSA_SESSION_RECORD ||
 					    p.second.type == SOFTCSA_SESSION_STREAM) {
 						printf("[softcsa] stopLive: auto-skip decoder restart, sibling %u (%s) on channel %llx still consumes the tap\n",
@@ -1909,11 +2150,15 @@ uint32_t CSoftCSAManager::findRunningSibling(t_channel_id channel_id, uint32_t e
 			continue;
 		if (pair.second.passive)
 			continue;
-		/* RECORD/STREAM keep their token on SessionState; LIVE/PIP
-		 * keep theirs on SoftCSALiveAttachment in m_live. Either form
-		 * confirms the engine is keyed and has a live consumer. */
-		bool engine_keyed = (pair.second.output_token > 0)
-		                    || (m_live.find(pair.first) != m_live.end());
+		/* Any of these forms confirms the engine is keyed and has a
+		 * live consumer. */
+		bool record_keyed = (pair.second.type == SOFTCSA_SESSION_RECORD)
+		                    && !pair.second.record_outputs.empty();
+		bool stream_keyed = (pair.second.type == SOFTCSA_SESSION_STREAM)
+		                    && !pair.second.stream_outputs.empty();
+		bool engine_keyed = (m_live.find(pair.first) != m_live.end())
+		                    || record_keyed
+		                    || stream_keyed;
 		if (!engine_keyed || !pair.second.csa_alt_active)
 			continue;
 		int r = rank(pair.second.type);
@@ -1957,7 +2202,13 @@ bool CSoftCSAManager::willReuseSession(t_channel_id channel_id, SoftCSASessionTy
 	if (sess_it == sessions.end())
 		return false;
 	const SessionState &ds = sess_it->second;
-	bool alive = (ds.output_token > 0) || (ds.csa_alt_active && !ds.passive);
+	/* Mirror registerSession's alive check. */
+	bool has_output = false;
+	if (ds.type == SOFTCSA_SESSION_RECORD)
+		has_output = !ds.record_outputs.empty();
+	else if (ds.type == SOFTCSA_SESSION_STREAM)
+		has_output = !ds.stream_outputs.empty();
+	bool alive = has_output || (ds.csa_alt_active && !ds.passive);
 	return alive
 	    && ds.tap_key.frontend_num == frontend_num;
 }
