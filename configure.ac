@@ -21,13 +21,9 @@ define(ver_date, m4_esyscmd([
 	printf "$BUILTDATE"
 ]))
 
-define(rel_cycle, "ver_major.0")
-
 AC_INIT([neutrino],[ver_major.ver_minor.ver_micro],[https://www.neutrino-images.de])
 AM_INIT_AUTOMAKE([nostdinc foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
-
-AC_DEFINE(PACKAGE_RELEASE_CYCLE, rel_cycle, [Release cycle information; used in update code; only relevant for flash image releases ])
 
 AC_DEFINE(PACKAGE_VERSION_MAJOR, ver_major, [Major version number])
 AC_DEFINE(PACKAGE_VERSION_MINOR, ver_minor, [Minor version number])
