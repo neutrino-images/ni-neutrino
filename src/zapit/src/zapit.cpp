@@ -182,9 +182,9 @@ static PmtSnapshot snapshotChannel(CZapitChannel *ch)
 	 * misses the new tracks. */
 	uint8_t aud_count = ch->getAudioChannelCount();
 	for (uint8_t i = 0; i < aud_count; i++) {
-		CZapitAudioChannel *ac = ch->getAudioChannel(i);
-		if (ac && ac->pid)
-			s.all_pids.insert(ac->pid);
+		CZapitAudioChannel *track = ch->getAudioChannel(i);
+		if (track && track->pid)
+			s.all_pids.insert(track->pid);
 	}
 	size_t sub_count = ch->getSubtitleCount();
 	for (size_t i = 0; i < sub_count; i++) {
