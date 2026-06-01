@@ -1,8 +1,7 @@
-# explicit defines for separate revision handling
-# Keep in sync with git tags! Set tag with 'git tag NI-x.xx <commit>'.
-define(ver_major, 3)
-define(ver_minor, 70)
-# ver_micro counts commits since last tag
+# explicit defines for calendar version
+define(ver_major, 2026)
+define(ver_minor, 05)
+# ver_micro counts commits since last tag. Set tag with 'git tag NI-YYYY.MM <commit>'
 define(ver_micro, m4_esyscmd([
 	GITTAG=$(git tag -l "NI-*" | tail -n1);
 	GITREV=$(git rev-list $GITTAG..HEAD --count);
