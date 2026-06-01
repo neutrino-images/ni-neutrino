@@ -1,6 +1,6 @@
 # explicit defines for calendar version
 define(ver_major, 2026)
-define(ver_minor, 05)
+define(ver_minor, 06)
 # ver_micro counts commits since last tag. Set tag with 'git tag NI-YYYY.MM <commit>'
 define(ver_micro, m4_esyscmd([
 	GITTAG=$(git tag -l "NI-*" | tail -n1);
