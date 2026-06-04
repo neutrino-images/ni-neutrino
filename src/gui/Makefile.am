@@ -6,7 +6,7 @@ $(VERSION_H):
 	@echo "#define BUILT_DATE \"$$(date)\"" > $@
 	@if test -d $(top_srcdir)/.git; then \
 		pushd $(top_srcdir); \
-		GITTAG=$$(git tag -l "NI-*" | tail -n1); \
+		GITTAG=$$(git tag -l "NI-*" --sort=version:refname | tail -n1); \
 		GITDESCRIBE=$$(git describe --always --long --tags --match $$GITTAG | sed 's/-/./2' || echo "VCS failed"); \
 		popd; \
 		echo "#define VCS \"$${GITDESCRIBE}\"" >> $@; \

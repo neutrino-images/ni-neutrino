@@ -3,7 +3,7 @@ define(ver_major, 2026)
 define(ver_minor, 06)
 # ver_micro counts commits since last tag. Set tag with 'git tag NI-YYYY.MM <commit>'
 define(ver_micro, m4_esyscmd([
-	GITTAG=$(git tag -l "NI-*" | tail -n1);
+	GITTAG=$(git tag -l "NI-*" --sort=version:refname | tail -n1);
 	GITREV=$(git rev-list $GITTAG..HEAD --count);
 	printf "$GITREV"
 ]))
