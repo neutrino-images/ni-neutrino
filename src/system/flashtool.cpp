@@ -499,54 +499,94 @@ void CFlashTool::reboot()
 
 CFlashVersionInfo::CFlashVersionInfo(const std::string &_versionString)
 {
-	// SBBBYYYYMMTTHHMM -- formatsting
+	// SVVVYYYYMMTTHHMM    -- formatsting SemVer (16 chars)
+	// SVVVVVVYYYYMMTTHHMM -- formatsting CalVer (19 chars)
 	std::string versionString = _versionString;
+
+	bool calver = false;
 
 	// just to make sure the string is long enough for the following code
 	// trailing chars don't matter -- will just be ignored
 	if (versionString.size() < 16)
+	{
 		versionString.append(16, '0');
+		// we're assuming semantic version
+	}
+	else if (versionString.size() > 16)
+	{
+		versionString.append(19, '0');
+		// we're assuming calendar version
+		calver = true;
+	}
+
+	// start positions in versionString
+	int S = 0; // snapshot/type
+	int V = 1; // version
+	// release date
+	int Y = calver ? 7 : 4; // year
+	int M = Y + 4; // month
+	int D = M + 2; // day
+	int h = D + 2; // hour
+	int m = h + 2; // minute
 
 	// recover type
-	snapshot = versionString[0];
+	snapshot = versionString[S];
 
 	// human readable version
-	vstring[0] = versionString[1];
-	vstring[1] = '.';
-	vstring[2] = versionString[2];
-	vstring[3] = versionString[3];
-	vstring[4] = 0;
+	if (calver)
+	{
+		vstring[0] = versionString[V];
+		vstring[1] = versionString[V + 1];
+		vstring[2] = versionString[V + 2];
+		vstring[3] = versionString[V + 3];
+		vstring[4] = '.';
+		vstring[5] = versionString[V + 4];
+		vstring[6] = versionString[V + 5];
+		vstring[7] = 0;
+	}
+	else // SemVer
+	{
+		vstring[0] = versionString[V];
+		vstring[1] = '.';
+		vstring[2] = versionString[V + 1];
+		vstring[3] = versionString[V + 2];
+		vstring[4] = 0;
+		vstring[5] = 0;
+		vstring[6] = 0;
+		vstring[7] = 0;
+	}
 
-	version = atoi(&versionString[1]) * 100 + atoi(&versionString[2]) * 10 + atoi(&versionString[3]);
+	version = std::stoi(versionString.substr(1, calver ? 6 : 3));
 
 	// recover date
 	struct tm tt;
 	memset(&tt, 0, sizeof(tt));
-	date[0] = versionString[10];
-	date[1] = versionString[11];
+
+	date[0] = versionString[D];
+	date[1] = versionString[D + 1];
 	date[2] = '.';
 	tt.tm_mday = atoi(&date[0]);
 
-	date[3] = versionString[8];
-	date[4] = versionString[9];
+	date[3] = versionString[M];
+	date[4] = versionString[M + 1];
 	date[5] = '.';
 	tt.tm_mon = atoi(&date[3]) - 1;
 
-	date[6] = versionString[4];
-	date[7] = versionString[5];
-	date[8] = versionString[6];
-	date[9] = versionString[7];
+	date[6] = versionString[Y];
+	date[7] = versionString[Y + 1];
+	date[8] = versionString[Y + 2];
+	date[9] = versionString[Y + 3];
 	date[10] = 0;
 	tt.tm_year = atoi(&date[6]) - 1900;
 
 	// recover time stamp
-	time[0] = versionString[12];
-	time[1] = versionString[13];
+	time[0] = versionString[h];
+	time[1] = versionString[h + 1];
 	time[2] = ':';
 	tt.tm_hour = atoi(&time[0]);
 
-	time[3] = versionString[14];
-	time[4] = versionString[15];
+	time[3] = versionString[m];
+	time[4] = versionString[m + 1];
 	time[5] = 0;
 	tt.tm_min = atoi(&time[3]);
 
