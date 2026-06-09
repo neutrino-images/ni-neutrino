@@ -152,12 +152,17 @@ jQuery(document).ready(function()
 			<td valign="top" width="28%">
 				{=ini-get:/.version;imagename=}<br/>
 				<abbr class="version" title="{=L:info.about.your_image=}">
+				<!--
 				<script>getVersion("{=ini-get:/.version;version=}");</script><br/>
 				<script>getBuild("{=ini-get:/.version;version=}");</script><br/>
+				-->
+				{=ini-get:/.version;imageversion=}<br/>
+				{=ini-get:/.version;builddate=}<br/>
 				</abbr>
 				{=ini-get:/.version;creator=}<br/>
 			</td>
 			<td valign="top" width="38%">
+				<!--
 				{=if-file-exists:/tmp/update.txt~
 				<script>compareVersion("{=ini-get:/.version;version=}", "{=ini-get:/tmp/update.txt;version=}");</script>
 				<span class="upd_no">{=L:info.about.image_upd_no=}</span>
@@ -171,6 +176,7 @@ jQuery(document).ready(function()
 				~
 				<input type="button" onclick='get_update_txt();' value="{=L:info.check_for_updates=}" />
 				=}
+				-->
 			</td>
 		</tr>
 		<tr>
