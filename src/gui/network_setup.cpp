@@ -405,18 +405,18 @@ void CNetworkSetup::showNetworkNTPSetup(CMenuWidget *menu_ntp)
 	CStringInput * networkSettings_NtpRefresh = new CStringInput(LOCALE_NETWORKMENU_NTPREFRESH, &g_settings.network_ntprefresh, 3,LOCALE_NETWORKMENU_NTPREFRESH_HINT1, LOCALE_NETWORKMENU_NTPREFRESH_HINT2 , "0123456789 ", sectionsdConfigNotifier);
 
 	CMenuOptionChooser *ntp1 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPENABLE, &g_settings.network_ntpenable, OPTIONS_NTPENABLE_OPTIONS, OPTIONS_NTPENABLE_OPTION_COUNT, true, sectionsdConfigNotifier);
-	CMenuOptionChooser *ntp9 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPATBOOT, &g_settings.network_ntpatboot, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true); //NI
+	//CMenuOptionChooser *ntp9 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPATBOOT, &g_settings.network_ntpatboot, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true); //NI
 	CMenuForwarder *ntp2 = new CMenuDForwarder( LOCALE_NETWORKMENU_NTPSERVER, true , g_settings.network_ntpserver, networkSettings_NtpServer );
 	CMenuForwarder *ntp3 = new CMenuDForwarder( LOCALE_NETWORKMENU_NTPREFRESH, true , g_settings.network_ntprefresh, networkSettings_NtpRefresh );
 
 	ntp1->setHint("", LOCALE_MENU_HINT_NET_NTPENABLE);
-	ntp9->setHint("", LOCALE_MENU_HINT_NET_NTPATBOOT); //NI
+	//ntp9->setHint("", LOCALE_MENU_HINT_NET_NTPATBOOT); //NI
 	ntp2->setHint("", LOCALE_MENU_HINT_NET_NTPSERVER);
 	ntp3->setHint("", LOCALE_MENU_HINT_NET_NTPREFRESH);
 
 	menu_ntp->addIntroItems(LOCALE_NETWORKMENU_NTPTITLE);
 	menu_ntp->addItem( ntp1);
-	menu_ntp->addItem( ntp9); //NI
+	//menu_ntp->addItem( ntp9); //NI
 	menu_ntp->addItem( ntp2);
 	menu_ntp->addItem( ntp3);
 }
