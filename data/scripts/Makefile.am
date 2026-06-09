@@ -16,6 +16,7 @@ install_SCRIPTS = \
 	backup.sh \
 	restore.sh \
 	migration.sh \
+	ntp-helper.sh \
 	wakeup.sh \
 	install.sh 
 
