@@ -106,8 +106,7 @@ static bool messaging_zap_detected = false;
 //NTP-Config
 #define CONF_FILE CONFIGDIR "/neutrino.conf"
 
-std::string ntp_system_cmd_prefix = find_executable("ntpdate") + " ";
-
+std::string ntp_system_cmd_prefix = find_executable("ntp-helper.sh") + " ";
 std::string ntp_system_cmd;
 std::string ntpserver;
 int ntprefresh;
@@ -2271,24 +2270,38 @@ bool CEitManager::Start()
 	ntpenable = config.network_ntpenable;
 	ntp_system_cmd = ntp_system_cmd_prefix + ntpserver;
 
+	if (find_executable("ntp-helper.sh").empty())
+	{
+		// fallback to ntpdate
+		ntp_system_cmd_prefix = find_executable("ntpdate");
+		if (!ntp_system_cmd_prefix.empty())
+		{
+			ntp_system_cmd_prefix += " ";
+			ntp_system_cmd = ntp_system_cmd_prefix + ntpserver;
+		}
+		else
+		{
+			// fallback to ntpd
+			ntp_system_cmd_prefix = find_executable("ntpd");
+			if (!ntp_system_cmd_prefix.empty())
+			{
+				ntp_system_cmd_prefix += " -n -q -p ";
+				ntp_system_cmd = ntp_system_cmd_prefix + ntpserver;
+			}
+			else
+			{
+				debug(DEBUG_NORMAL, "NTP Error: time sync not possible, ntp-helper.sh/ntpdate/ntpd not found");
+				ntpenable = false;
+			}
+		}
+	}
+
 	secondsToCache = config.epg_cache *24*60L*60L; //days
 	secondsExtendedTextCache = config.epg_extendedcache*60L*60L; //hours
 	oldEventsAre = config.epg_old_events*60L*60L; //hours
 	max_events = config.epg_max_events;
 	epg_save_frequently = config.epg_save_frequently;
 	epg_read_frequently = config.epg_read_frequently;
-
-	if (find_executable("ntpdate").empty()){
-		ntp_system_cmd_prefix = find_executable("ntpd");
-		if (!ntp_system_cmd_prefix.empty()){
-			ntp_system_cmd_prefix += " -n -q -p ";
-			ntp_system_cmd = ntp_system_cmd_prefix + ntpserver;
-		}
-		else{
-			debug(DEBUG_NORMAL, "NTP Error: time sync not possible, ntpdate/ntpd not found");
-			ntpenable = false;
-		}
-	}
 
 	debug(DEBUG_NORMAL, "Caching: %d days, %d hours Extended Text, max %d events, Events are old %d hours after end time",
 		config.epg_cache, config.epg_extendedcache, config.epg_max_events, config.epg_old_events);
