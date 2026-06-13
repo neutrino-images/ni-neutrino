@@ -27,6 +27,7 @@
 
 #include "filebrowser.h"
 #include <stdio.h>
+#include <limits.h>
 #include <global.h>
 #include <libgen.h>
 #include <neutrino.h>
@@ -41,6 +42,8 @@
 #include "webchannels_setup.h"
 
 #include <dirent.h>
+#include <set>
+#include <stdlib.h>
 #include <system/helpers.h>
 
 const CMenuOptionChooser::keyval_ext LIVESTREAM_RESOLUTION_OPTIONS[] =
@@ -363,6 +366,32 @@ int filefilter(const struct dirent *entry)
 	return 0;
 }
 
+static std::string normalizeLocalPath(const std::string &path)
+{
+	if (path.empty())
+		return path;
+
+	char resolved[PATH_MAX];
+	if (realpath(path.c_str(), resolved))
+		return resolved;
+
+	std::string normalized = path;
+	while (normalized.length() > 1 && normalized[normalized.length() - 1] == '/')
+		normalized.erase(normalized.length() - 1);
+	return normalized;
+}
+
+static std::string pathBasename(std::string path)
+{
+	while (path.length() > 1 && path[path.length() - 1] == '/')
+		path.erase(path.length() - 1);
+
+	std::string::size_type pos = path.find_last_of('/');
+	if (pos == std::string::npos)
+		return path;
+	return path.substr(pos + 1);
+}
+
 // webradio wrapper for webchannels_auto()
 void CWebChannelsSetup::webradio_xml_auto()
 {
@@ -403,8 +432,16 @@ void CWebChannelsSetup::webchannels_auto()
 
 	struct dirent **filelist;
 	char webchannel_file[1024] = {0};
+	std::set<std::string> scanned_dirs;
 	for (int i = 0; i < 2; i++)
 	{
+		std::string normalized_dir = normalizeLocalPath(dirs[i]);
+		if (!scanned_dirs.insert(normalized_dir).second)
+		{
+			printf("[CWebChannelsSetup] skipping duplicate autodir: %s\n", dirs[i]);
+			continue;
+		}
+
 		int file_count = scandir(dirs[i], &filelist, filefilter, alphasort);
 		if (file_count > -1)
 		{
@@ -415,7 +452,7 @@ void CWebChannelsSetup::webchannels_auto()
 				{
 					bool found = false;
 					for (std::list<std::string>::iterator it = webchannels.begin(); it != webchannels.end(); it++)
-						found |= ((*it).find(filelist[count]->d_name) != std::string::npos);
+						found |= (pathBasename(*it) == filelist[count]->d_name);
 
 					if (!found)
 					{
@@ -424,6 +461,7 @@ void CWebChannelsSetup::webchannels_auto()
 							g_settings.webradio_xml.push_back(webchannel_file);
 						else
 							g_settings.webtv_xml.push_back(webchannel_file);
+						webchannels.push_back(webchannel_file);
 					}
 					else
 					{
