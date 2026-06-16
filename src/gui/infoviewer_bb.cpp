@@ -64,6 +64,10 @@
 
 #include <hardware/video.h>
 
+#ifdef HAVE_SOFTCSA
+#include <driver/softcsa/softcsa_manager.h>
+#endif
+
 extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
 extern cVideo * videoDecoder;
 
@@ -852,7 +856,7 @@ void CInfoViewerBB::paint_ca_icons(int notfirst)
 	int icon_space_offset = 0;
 
 	//NI
-	const char *dec_icon_name[] = {"na","na","fta","int","card","net"};
+	const char *dec_icon_name[] = {"na","na","fta","int","card","net", "softcsa"};
 	decode = UNKNOWN;
 
 	if(!g_InfoViewer->chanready) {
@@ -892,6 +896,11 @@ void CInfoViewerBB::paint_ca_icons(int notfirst)
 			if(camCI)
 				decode = CARD;
 		}
+
+#ifdef HAVE_SOFTCSA
+		if (CSoftCSAManager::getInstance()->isActive(g_InfoViewer->get_current_channel_id()))
+			decode = SOFTCSA;
+#endif
 
 		//NI - map betacrypt to nagra
 		if((acaid & 0xFF00)== 0x1700 && (caids[3]& 0xFF00) == 0x1800)

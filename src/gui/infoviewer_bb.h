@@ -83,7 +83,7 @@ class CInfoViewerBB
 		} bbButtonInfoStruct;
 
 		//NI
-		enum CAM_DECODE_NUM {UNKNOWN, NA, FTA, LOCAL, CARD, REMOTE};
+		enum CAM_DECODE_NUM {UNKNOWN, NA, FTA, LOCAL, CARD, REMOTE, SOFTCSA};
 		void 		paint_cam_icons();
 		unsigned short int decode;
 		int		DecEndx;
