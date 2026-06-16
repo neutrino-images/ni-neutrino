@@ -2240,8 +2240,7 @@ bool CSoftCSAManager::isActive(t_channel_id channel_id)
 			auto sess = sessions.find(it->second);
 			if (sess != sessions.end()
 			    && !sess->second.passive
-			    && sess->second.csa_alt_active
-			    && sess->second.session != NULL)
+			    && sess->second.csa_alt_active)
 				return true;
 		}
 	}
