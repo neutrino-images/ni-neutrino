@@ -101,6 +101,8 @@ public:
 	void stopSessions();
 	std::vector<ResubscribeInfo> getResubscribeInfo();
 
+	bool isActive(t_channel_id channel_id);
+
 	uint32_t getSessionId(t_channel_id channel_id, SoftCSASessionType type);
 	int getCapmtDemux(uint32_t session_id);
 	uint8_t getCapmtCaMask(uint32_t session_id);

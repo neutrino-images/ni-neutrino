@@ -2227,6 +2227,27 @@ bool CSoftCSAManager::hasAnyRunningSession(t_channel_id channel_id)
 	return findRunningSibling(channel_id, 0) != 0;
 }
 
+bool CSoftCSAManager::isActive(t_channel_id channel_id)
+{
+	std::lock_guard<std::mutex> lock(mtx);
+
+	for (int t = SOFTCSA_SESSION_LIVE; t <= SOFTCSA_SESSION_STREAM; t++)
+	{
+		auto key = std::make_pair(channel_id, (SoftCSASessionType)t);
+		auto it = channel_to_session.find(key);
+		if (it != channel_to_session.end())
+		{
+			auto sess = sessions.find(it->second);
+			if (sess != sessions.end()
+			    && !sess->second.passive
+			    && sess->second.csa_alt_active
+			    && sess->second.session != NULL)
+				return true;
+		}
+	}
+	return false;
+}
+
 SoftCSASessionType CSoftCSAManager::getSessionType(uint32_t session_id)
 {
 	std::lock_guard<std::mutex> lock(mtx);
