@@ -19,3 +19,8 @@ install_DATA = \
 	oscam_yellow.png \
 	osmod_green.png \
 	osmod_yellow.png
+
+if ENABLE_SOFTCSA
+install_DATA += \
+	dec_softcsa.png
+endif
