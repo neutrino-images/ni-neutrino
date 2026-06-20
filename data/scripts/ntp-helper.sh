@@ -8,14 +8,14 @@ if [ -z $chronyc -o -z $ntpserver ]; then
 fi
 
 conf=/etc/chrony.conf
-pool=$(grep ^pool $conf | cut -d" " -f2)
+pool=$(grep -m1 ^pool $conf | cut -d" " -f2)
 
 if [ "$pool" == "$ntpserver" ]; then
 	printf "${0##*/}: Synchronize time with $pool ... "
 	$chronyc makestep
 else
 	echo "${0##*/}: Replace pool $pool with $ntpserver in $conf"
-	sed -i -e "s|^pool .*|pool $ntpserver iburst|" $conf
+	sed -i -e "/^pool/{s/^pool .*/pool $ntpserver iburst/;:a;n;ba;}" $conf
 	echo "${0##*/}: Restart chrony"
 	service chrony restart
 fi
