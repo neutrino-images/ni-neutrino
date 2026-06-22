@@ -698,6 +698,7 @@ void CNetworkSetup::showCurrentNetworkSettings()
 			+ g_Locale->getText(LOCALE_NETWORKMENU_NAMESERVER) + ": " + nameserver + '\n'
 			+ g_Locale->getText(LOCALE_NETWORKMENU_GATEWAY   ) + ": " + router;
 	}
+	text += "\n\n" + getTimeSyncSettingsText("", false);
 	ShowMsg(LOCALE_NETWORKMENU_SHOW, text, CMsgBox::mbrBack, CMsgBox::mbBack); // UTF-8
 }
 
@@ -712,6 +713,29 @@ const char * CNetworkSetup::mypinghost(std::string &host)
                 case -2: return (g_Locale->getText(LOCALE_PING_SOCKET));
         }
         return "";
+}
+
+std::string CNetworkSetup::getTimeSyncSettingsText(const std::string &offset,
+						   const bool test_server)
+{
+	const neutrino_locale_t mode = g_settings.network_ntpenable ?
+		LOCALE_OPTIONS_NTP_ON : LOCALE_OPTIONS_NTP_OFF;
+	const std::string server = g_settings.network_ntpserver.empty() ?
+		"-" : g_settings.network_ntpserver;
+	std::string text = std::string(g_Locale->getText(LOCALE_NETWORKMENU_NTPTITLE)) +
+		":\n";
+
+	text += offset + g_Locale->getText(LOCALE_NETWORKMENU_NTPENABLE) + ": " +
+		g_Locale->getText(mode) + "\n";
+	text += offset + g_Locale->getText(LOCALE_NETWORKMENU_NTPSERVER) + ": " + server;
+	if (test_server && g_settings.network_ntpenable && !g_settings.network_ntpserver.empty()) {
+		std::string ping_server = g_settings.network_ntpserver;
+		text += " " + std::string(mypinghost(ping_server));
+	}
+	text += "\n";
+	text += offset + g_Locale->getText(LOCALE_NETWORKMENU_NTPREFRESH) + ": " + g_settings.network_ntprefresh;
+
+	return text;
 }
 
 void CNetworkSetup::testNetworkSettings()
@@ -766,6 +790,7 @@ void CNetworkSetup::testNetworkSettings()
 	if (our_ip.empty())
 	{
 		text = g_Locale->getText(LOCALE_NETWORKMENU_INACTIVE_NETWORK);
+		text += "\n\n" + getTimeSyncSettingsText(offset, true);
 	}
 	else
 	{
@@ -787,6 +812,9 @@ void CNetworkSetup::testNetworkSettings()
 			text += std::string(g_Locale->getText(LOCALE_NETWORKMENU_NTPSERVER)) + ":\n";
 			text += offset + g_settings.network_ntpserver + " " + mypinghost(g_settings.network_ntpserver) + "\n";
 		}
+
+		//Time sync
+		text += "\n" + getTimeSyncSettingsText(offset, true) + "\n";
 
 		//test-url
 		text += test_url + ":\n";
