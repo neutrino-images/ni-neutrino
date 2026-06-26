@@ -108,7 +108,7 @@ static bool messaging_zap_detected = false;
 /* Neutrino-managed additive chrony source. The image owns
    /etc/chrony.conf; Neutrino only drops this one source fragment and reloads
    it, never rewriting the main config or restarting chronyd. */
-#define CHRONY_SOURCES_FILE "/etc/chrony/sources.d/neutrino.sources"
+#define CHRONY_SOURCES_FILE "/etc/chrony.d/neutrino-ntpserver.conf"
 
 std::string ntpserver;
 int ntprefresh;
@@ -1493,7 +1493,7 @@ static bool writeChronySource(const std::string &server)
 		return false;
 	}
 	fprintf(f, "# managed by neutrino; do not edit\n");
-	fprintf(f, "server %s iburst prefer\n", server.c_str());
+	fprintf(f, "pool %s iburst prefer\n", server.c_str());
 	fclose(f);
 	return true;
 }
