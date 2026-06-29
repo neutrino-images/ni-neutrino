@@ -89,6 +89,7 @@ libneutrino_gui_a_SOURCES = \
 	pluginlist.cpp \
 	plugins.cpp \
 	plugins_hide.cpp \
+	poweroff_menu.cpp \
 	proxyserver_setup.cpp \
 	radiotext_window.cpp \
 	rate_banner.cpp \

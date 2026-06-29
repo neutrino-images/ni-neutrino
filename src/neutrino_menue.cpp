@@ -67,6 +67,7 @@
 #include "gui/timerlist.h"
 #include "gui/update_menue.h"
 #include "gui/update.h"
+#include "gui/poweroff_menu.h"
 #include "gui/vfd_setup.h"
 #include "gui/videosettings.h"
 #include "gui/widget/menue_options.h"
@@ -235,25 +236,42 @@ void CNeutrinoApp::InitMenuMain()
 
 	// 3rd section ********************************************************
 
-	// sleeptimer
+	// power-off submenu (new default) - RC_standby shortcut opens CPowerOffMenu.
+	// The legacy "Herunterfahren" entry below carries the SAME RC_standby DirectKey (+ auto power
+	// icon via setIconName). Only one of the two is ever active at a time (observer-anchor /
+	// personalize visibility), and the menu loop routes a DirectKey to the *active* item, so the
+	// key and its icon follow the current personalize choice live - no menu rebuild needed.
+	CMenuForwarder *poweroff_menu = new CMenuForwarder(LOCALE_MAINMENU_POWEROFF_MENU, true, NULL, new CPowerOffMenu(), NULL,
+		CRCInput::RC_standby);
+	poweroff_menu->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_POWEROFF_MENU);
+	personalize.addItem(MENU_MAIN, poweroff_menu, &g_settings.personalize[SNeutrinoSettings::P_MAIN_POWEROFF_MENU]);
+
+	// sleeptimer (part of power-off submenu; anchored to poweroff_menu)
 	mf = new CMenuForwarder(LOCALE_MAINMENU_SLEEPTIMER, true, NULL, new CSleepTimerWidget);
 	mf->setHint(NEUTRINO_ICON_HINT_SLEEPTIMER, LOCALE_MENU_HINT_SLEEPTIMER);
-	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SLEEPTIMER]);
+	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SLEEPTIMER],
+		false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, poweroff_menu);
 
 	// reboot
 	mf = new CMenuForwarder(LOCALE_MAINMENU_REBOOT, true, NULL, this, "reboot");
 	mf->setHint(NEUTRINO_ICON_HINT_REBOOT, LOCALE_MENU_HINT_REBOOT);
-	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_REBOOT]);
+	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_REBOOT],
+		false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, poweroff_menu);
 
-	// standby
+	// standby (legacy / master parity) - shown when the power menu is hidden (anchored to poweroff_menu)
 	mf = new CMenuForwarder(LOCALE_MAINMENU_STANDBY, true, NULL, this, "standby");
 	mf->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_STANDBY);
-	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_STANDBY]);
+	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_STANDBY],
+		false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, poweroff_menu);
 
-	// shutdown
-	mf = new CMenuForwarder(LOCALE_MAINMENU_SHUTDOWN, true, NULL, this, "shutdown", CRCInput::RC_standby);
+	// shutdown direct (legacy) - master parity: carries the same RC_standby DirectKey (+ auto power
+	// icon). Active only when the power menu is hidden (observer-anchor); the menu loop skips the
+	// then-inactive poweroff_menu and routes RC_standby here, so icon+key appear exactly in legacy mode.
+	mf = new CMenuForwarder(LOCALE_MAINMENU_SHUTDOWN, true, NULL, new CPowerOffDirect(), NULL,
+		CRCInput::RC_standby);
 	mf->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_SHUTDOWN);
-	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SHUTDOWN]);
+	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SHUTDOWN],
+		false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, poweroff_menu);
 
 	// blank screen
 	mf = new CMenuForwarder(LOCALE_BLANK_SCREEN, true, NULL, this, "blank_screen", CRCInput::RC_pause);
