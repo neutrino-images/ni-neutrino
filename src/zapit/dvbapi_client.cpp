@@ -25,10 +25,10 @@
 #ifdef HAVE_SOFTCSA
 
 #include "dvbapi_client.h"
+#include "capmt.h"
+#include "getservices.h"
+#include "settings.h"
 #include <driver/softcsa/softcsa_manager.h>
-#include <zapit/capmt.h>
-#include <zapit/getservices.h>
-#include <zapit/settings.h>
 
 #include <cstdio>
 #include <cstring>
