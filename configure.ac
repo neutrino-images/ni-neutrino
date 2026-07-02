@@ -802,7 +802,6 @@ src/system/mtdutils/lib/Makefile
 src/timerd/Makefile
 src/zapit/Makefile
 src/zapit/client/Makefile
-src/zapit/src/Makefile
 ])
 
 # Webserver config
