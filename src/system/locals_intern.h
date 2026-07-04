@@ -2431,6 +2431,7 @@ const char * locale_real_names[] =
 	"networkmenu.httpd_port_invalid",
 	"networkmenu.httpd_save_failed",
 	"networkmenu.inactive_network",
+	"networkmenu.no_interface",
 	"networkmenu.ipaddress",
 	"networkmenu.mount",
 	"networkmenu.nameserver",
