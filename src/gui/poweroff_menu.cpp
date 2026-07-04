@@ -100,39 +100,14 @@ int CPowerOffMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 	CMenuWidget m(LOCALE_MAINMENU_POWEROFF_MENU, NEUTRINO_ICON_HINT_SHUTDOWN, 35);
 	m.addIntroItems();
 
-	// Order follows the legacy main-menu power group (SleepTimer, Reboot,
-	// Standby, Shutdown) so users keep their muscle memory. Color keys stay
-	// bound to their action regardless of position; RC_standby is added via
-	// addKey() below so the physical power button also works.
+	const char *marker = NULL;
+	CMenuForwarder *fw = NULL;
 
-	// --- SleepTimer (arm one-shot standby countdown) – RC_blue ---
-	CMenuForwarder *fw_sleep = new CMenuForwarder(LOCALE_MAINMENU_SLEEPTIMER,
-		true, NULL, this, "sleeptimer", CRCInput::RC_blue);
-	fw_sleep->setHint(NEUTRINO_ICON_HINT_SLEEPTIMER, LOCALE_MENU_HINT_SLEEPTIMER);
-	m.addItem(fw_sleep);
-
-	// --- Reboot – RC_yellow ---
-	const char *marker_reboot = (g_settings.power_off_selected == 2) ? NEUTRINO_ICON_BUTTON_POWER : NULL;
-	CMenuForwarder *fw_reboot = new CMenuForwarder(LOCALE_MAINMENU_REBOOT,
-		true, NULL, this, "reboot", CRCInput::RC_yellow, NULL, marker_reboot);
-	fw_reboot->setHint(NEUTRINO_ICON_HINT_REBOOT, LOCALE_MENU_HINT_REBOOT);
-	m.addItem(fw_reboot);
-
-	// --- Standby – RC_green ---
-	// Only shown when not already in standby mode.
-	if (CNeutrinoApp::getInstance()->getMode() != NeutrinoModes::mode_standby) {
-		const char *marker = (g_settings.power_off_selected == 0) ? NEUTRINO_ICON_BUTTON_POWER : NULL;
-		CMenuForwarder *fw = new CMenuForwarder(LOCALE_MAINMENU_STANDBY,
-			true, NULL, this, "standby", CRCInput::RC_green, NULL, marker);
-		fw->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_STANDBY);
-		m.addItem(fw);
-	}
-
-	// --- Deep-Standby / Shutdown – RC_red ---
-	if (g_info.hw_caps->can_shutdown) {
-		const char *marker = (g_settings.power_off_selected == 1) ? NEUTRINO_ICON_BUTTON_POWER : NULL;
-		CMenuForwarder *fw = new CMenuForwarder(LOCALE_MAINMENU_SHUTDOWN,
-			true, NULL, this, "shutdown", CRCInput::RC_red, NULL, marker);
+	// --- Deep-Standby / Shutdown - RC_red ---
+	if (g_info.hw_caps->can_shutdown)
+	{
+		marker = (g_settings.power_off_selected == 1) ? NEUTRINO_ICON_BUTTON_POWER : NULL;
+		fw = new CMenuForwarder(LOCALE_MAINMENU_SHUTDOWN, true, NULL, this, "shutdown", CRCInput::RC_red, NULL, marker);
 		fw->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_SHUTDOWN);
 		std::string rec_opt = recordingProtectionOption();
 		if (!rec_opt.empty())
@@ -140,16 +115,33 @@ int CPowerOffMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 		m.addItem(fw);
 	}
 
+	// --- Standby - RC_green ---
+	marker = (g_settings.power_off_selected == 0) ? NEUTRINO_ICON_BUTTON_POWER : NULL;
+	fw = new CMenuForwarder(LOCALE_MAINMENU_STANDBY, true, NULL, this, "standby", CRCInput::RC_green, NULL, marker);
+	fw->setHint(NEUTRINO_ICON_HINT_SHUTDOWN, LOCALE_MENU_HINT_STANDBY);
+	m.addItem(fw);
+
+	// --- Reboot - RC_yellow ---
+	marker = (g_settings.power_off_selected == 2) ? NEUTRINO_ICON_BUTTON_POWER : NULL;
+	fw = new CMenuForwarder(LOCALE_MAINMENU_REBOOT, true, NULL, this, "reboot", CRCInput::RC_yellow, NULL, marker);
+	fw->setHint(NEUTRINO_ICON_HINT_REBOOT, LOCALE_MENU_HINT_REBOOT);
+	m.addItem(fw);
+
+	// --- SleepTimer (arm one-shot standby countdown) - RC_blue ---
+	fw = new CMenuForwarder(LOCALE_MAINMENU_SLEEPTIMER, true, NULL, this, "sleeptimer", CRCInput::RC_blue);
+	fw->setHint(NEUTRINO_ICON_HINT_SLEEPTIMER, LOCALE_MENU_HINT_SLEEPTIMER);
+	m.addItem(fw);
+
 	// Plugins registered with PLUGIN_INTEGRATION_POWER
 	m.integratePlugins(PLUGIN_INTEGRATION_POWER);
 
 	// --- Settings - shortcut to the energy/shutdown settings (last entry) ---
 	// Still reachable via Settings → Extended Settings when this submenu is hidden.
 	m.addItem(GenericMenuSeparatorLine);
-	CMenuForwarder *fw_energy = new CMenuForwarder(LOCALE_MAINMENU_SETTINGS,
-		true, NULL, this, "energy", CRCInput::RC_0);
-	fw_energy->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_MISC_ENERGY);
-	m.addItem(fw_energy);
+
+	fw = new CMenuForwarder(LOCALE_MAINMENU_SETTINGS, true, NULL, this, "energy", CRCInput::RC_0);
+	fw->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_MISC_ENERGY);
+	m.addItem(fw);
 
 	// Physical power/standby button triggers the remembered default entry (see "last" above),
 	// so Main menu → RC_standby → RC_standby reaches the last-used function with two presses.
@@ -171,6 +163,7 @@ int CPowerOffMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 	}
 
 	int res = m.exec(NULL, "");
+
 	// Update remembered position when user pressed Back (not an action):
 	// map the actual item index back to conceptual index 0/1/2 by name.
 	if (res != menu_return::RETURN_EXIT_ALL) {
