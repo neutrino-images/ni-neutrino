@@ -371,6 +371,15 @@ const CControlAPI::TyCgiCall CControlAPI::yCgiCallListV4[] =
 #ifdef ENABLE_GRAPHLCD
 	{"glcdscreenshot",	&CControlAPI::GlcdScreenshotCGI,	"application/json"},
 #endif
+	// bouquet editing
+	{"setbouquet",	&CControlAPI::setBouquetCGI,	"application/json"},
+	{"savebouquet",	&CControlAPI::saveBouquetCGI,	"application/json"},
+	{"movebouquet",	&CControlAPI::moveBouquetCGI,	"application/json"},
+	{"deletebouquet",	&CControlAPI::deleteBouquetCGI,	"application/json"},
+	{"addbouquet",	&CControlAPI::addBouquetCGI,	"application/json"},
+	{"renamebouquet",	&CControlAPI::renameBouquetCGI,	"application/json"},
+	{"changebouquet",	&CControlAPI::changeBouquetCGI,	"application/json"},
+	{"updatebouquet",	&CControlAPI::updateBouquetCGI,	"application/json"},
 };
 
 //-----------------------------------------------------------------------------
@@ -2489,7 +2498,7 @@ void CControlAPI::GetChannelCGI(CyhookHandler *hh)
 //-------------------------------------------------------------------------
 // Is bouquet i part of the requested listing? Used twice per bouquet: once for
 // the bouquet itself and once to look ahead for the array separator.
-static bool listedBouquet(int i, int mode, bool show_hidden, bool fav)
+static bool listedBouquet(int i, int mode, bool show_hidden, bool fav, bool show_empty)
 {
 	CZapitBouquet *b = g_bouquetManager->Bouquets[i];
 	unsigned int channel_count = 0;
@@ -2504,7 +2513,7 @@ static bool listedBouquet(int i, int mode, bool show_hidden, bool fav)
 		case CZapitClient::MODE_ALL:
 			channel_count = b->radioChannels.size() + b->tvChannels.size();
 	}
-	return channel_count && (!b->bHidden || show_hidden) && (!fav || b->bUser);
+	return (channel_count || show_empty) && (!b->bHidden || show_hidden) && (!fav || b->bUser);
 }
 
 //-------------------------------------------------------------------------
@@ -2594,6 +2603,10 @@ void CControlAPI::GetBouquetsCGI(CyhookHandler *hh)
 	if (hh->ParamList["fav"] == "true")
 		fav = true;
 
+	// list bouquets without channels too (bouquet editor needs freshly
+	// created, still empty bouquets); default keeps legacy filtering
+	bool show_empty = (hh->ParamList["showempty"] == "true");
+
 	int mode = requestedChannelsMode(hh, NeutrinoAPI->Zapit->getMode());
 
 	std::string bouquet;
@@ -2602,7 +2615,7 @@ void CControlAPI::GetBouquetsCGI(CyhookHandler *hh)
 		if (i >= (int) g_bouquetManager->Bouquets.size() || !g_bouquetManager->Bouquets[i])
 			continue;
 
-		if (!listedBouquet(i, mode, show_hidden, fav))
+		if (!listedBouquet(i, mode, show_hidden, fav, show_empty))
 			continue;
 
 		/* The separator belongs after the last *listed* bouquet, not after the
@@ -2610,7 +2623,7 @@ void CControlAPI::GetBouquetsCGI(CyhookHandler *hh)
 		   would otherwise leave a trailing comma and break the json. */
 		bool has_next = false;
 		for (int j = i + 1; j < size && !has_next; j++)
-			has_next = listedBouquet(j, mode, show_hidden, fav);
+			has_next = listedBouquet(j, mode, show_hidden, fav, show_empty);
 
 		std::string item = "";
 		bouquet = std::string(g_bouquetManager->Bouquets[i]->bName.c_str());
