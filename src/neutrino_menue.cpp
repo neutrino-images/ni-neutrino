@@ -276,7 +276,8 @@ void CNeutrinoApp::InitMenuMain()
 	// blank screen
 	mf = new CMenuForwarder(LOCALE_BLANK_SCREEN, true, NULL, this, "blank_screen", CRCInput::RC_pause);
 	mf->setHint(NEUTRINO_ICON_HINT_BLANK_SCREEN, LOCALE_MENU_HINT_BLANK_SCREEN);
-	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_BLANK_SCREEN], false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, NULL, DCOND_MODE_TS);
+	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_BLANK_SCREEN],
+		false, CPersonalizeGui::PERSONALIZE_SHOW_AS_ITEM_OPTION, poweroff_menu, DCOND_MODE_TS);
 
 	// separator
 	personalize.addSeparator(MENU_MAIN);

@@ -77,6 +77,10 @@ int CPowerOffMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 		delete st;
 		return menu_return::RETURN_REPAINT;
 	}
+	if (actionKey == "blank_screen")
+	{
+		return CNeutrinoApp::getInstance()->exec(NULL, actionKey);
+	}
 	if (actionKey == "energy")
 	{
 		// open the full energy/shutdown settings menu (also reachable via extended settings)
@@ -136,6 +140,11 @@ int CPowerOffMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 	// --- SleepTimer (arm one-shot standby countdown) - RC_blue ---
 	fw = new CMenuForwarder(LOCALE_MAINMENU_SLEEPTIMER, true, NULL, this, "sleeptimer", CRCInput::RC_blue);
 	fw->setHint(NEUTRINO_ICON_HINT_SLEEPTIMER, LOCALE_MENU_HINT_SLEEPTIMER);
+	m.addItem(fw);
+
+	// --- Blank Screen - RC_pause ---
+	fw = new CMenuForwarder(LOCALE_BLANK_SCREEN, true, NULL, this, "blank_screen", CRCInput::RC_pause);
+	fw->setHint(NEUTRINO_ICON_HINT_BLANK_SCREEN, LOCALE_MENU_HINT_BLANK_SCREEN);
 	m.addItem(fw);
 
 	// Plugins registered with PLUGIN_INTEGRATION_POWER
