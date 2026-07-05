@@ -356,9 +356,6 @@ void CControlAPI::ExecuteV4(CyhookHandler *hh)
 		filename[i] = tolower(filename[i]);
 	func_req = filename;
 
-	// force JSON: reused handlers resolve outType via ParamList["format"]
-	hh->ParamList["format"] = "json";
-
 	int index = -1;
 	for (unsigned int i = 0; i < (sizeof(yCgiCallListV4)/sizeof(yCgiCallListV4[0])); i++)
 		if (func_req == yCgiCallListV4[i].func_name)
@@ -372,6 +369,18 @@ void CControlAPI::ExecuteV4(CyhookHandler *hh)
 		hh->SetHeader(HTTP_NOT_FOUND, "application/json; charset=UTF-8", HANDLED_READY);
 		hh->WriteLn("{\"success\": \"false\", \"error\":{\"msg\": \"unknown endpoint\", \"endpoint\": \"" + func_req + "\"}}");
 		return;
+	}
+
+	// force JSON for json endpoints WITHOUT touching ParamList: handlers
+	// keep their parameter semantics (ParamList.empty() guards, action
+	// dispatch, format checks) exactly as with a plain legacy call, while
+	// getOutType()/outStart() and SendOk()/SendError()/SendResult() see
+	// the preset type. Entries with a non-json mime type (e.g. exec, cmd)
+	// keep raw output.
+	if (std::string(yCgiCallListV4[index].mime_type) == "application/json")
+	{
+		hh->outType = json;
+		hh->outTypeForced = true;
 	}
 
 	hh->SetHeader(HTTP_OK, yCgiCallListV4[index].mime_type);
@@ -541,7 +550,7 @@ void CControlAPI::SetModeCGI(CyhookHandler *hh)
 		{
 			bool recording = NeutrinoAPI->Zapit->isRecordModeActive();
 
-			if (hh->ParamList["format"] == "json")
+			if (hh->getOutType() == json)
 			{
 				hh->SetHeader(HTTP_OK, "application/json");
 				hh->printf("{\"recording\":%s}\n", recording ? "true" : "false");
@@ -662,7 +671,7 @@ void CControlAPI::GetModeCGI(CyhookHandler *hh)
 	}
 
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		hh->SetHeader(HTTP_OK, "application/json");
 		hh->printf("{\"mode\":\"%s\",\"standby\":%s}\n", modeStr.c_str(), isStandby ? "true" : "false");
@@ -766,7 +775,7 @@ void CControlAPI::SystemCGI(CyhookHandler *hh)
 void CControlAPI::StandbyCGI(CyhookHandler *hh)
 {
 	bool isStandby = (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_standby);
-	bool jsonFormat = (hh->ParamList["format"] == "json");
+	bool jsonFormat = (hh->getOutType() == json);
 
 	// JSON format: return standby status
 	if (jsonFormat && (hh->ParamList["1"].empty() || hh->ParamList["1"] == "status"))
@@ -881,7 +890,7 @@ void CControlAPI::RCCGI(CyhookHandler *hh)
 void CControlAPI::GetDateCGI(CyhookHandler *hh)
 {
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		time_t now = time(0);
 		struct tm *t = localtime(&now);
@@ -907,7 +916,7 @@ void CControlAPI::GetDateCGI(CyhookHandler *hh)
 void CControlAPI::GetTimeCGI(CyhookHandler *hh)
 {
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		time_t now = time(0);
 		struct tm *t = localtime(&now);
@@ -1172,7 +1181,7 @@ void CControlAPI::BoxInfoCGI(CyhookHandler *hh)
 	std::string boxarch(g_info.hw_caps->boxarch);
 
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		hh->SetHeader(HTTP_OK, "application/json");
 		hh->printf("{\"vendor\":\"%s\",\"boxname\":\"%s\",\"boxarch\":\"%s\"}\n",
@@ -1221,7 +1230,7 @@ void CControlAPI::OsInfoCGI(CyhookHandler *hh)
 	}
 
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		hh->SetHeader(HTTP_OK, "application/json");
 		hh->printf("{");
@@ -1672,7 +1681,7 @@ void CControlAPI::PathsCGI(CyhookHandler *hh)
 //-----------------------------------------------------------------------------
 void CControlAPI::ShutdownCGI(CyhookHandler *hh)
 {
-	bool jsonFormat = (hh->ParamList["format"] == "json");
+	bool jsonFormat = (hh->getOutType() == json);
 
 	if (hh->ParamList.empty() || jsonFormat)
 	{
@@ -1692,7 +1701,7 @@ void CControlAPI::ShutdownCGI(CyhookHandler *hh)
 //-----------------------------------------------------------------------------
 void CControlAPI::RebootCGI(CyhookHandler *hh)
 {
-	bool jsonFormat = (hh->ParamList["format"] == "json");
+	bool jsonFormat = (hh->getOutType() == json);
 
 	if (hh->ParamList.empty() || jsonFormat)
 	{
@@ -1712,7 +1721,7 @@ void CControlAPI::RebootCGI(CyhookHandler *hh)
 //-----------------------------------------------------------------------------
 void CControlAPI::RestartCGI(CyhookHandler *hh)
 {
-	bool jsonFormat = (hh->ParamList["format"] == "json");
+	bool jsonFormat = (hh->getOutType() == json);
 
 	if (hh->ParamList.empty() || jsonFormat)
 	{
@@ -1826,7 +1835,7 @@ void CControlAPI::AspectRatioCGI(CyhookHandler *hh)
 	std::string ratio = NeutrinoAPI->getVideoAspectRatioAsString();
 
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		hh->SetHeader(HTTP_OK, "application/json");
 		hh->printf("{\"aspectratio\":\"%s\"}\n", ratio.c_str());
@@ -1839,7 +1848,7 @@ void CControlAPI::AspectRatioCGI(CyhookHandler *hh)
 void CControlAPI::VideoFormatCGI(CyhookHandler *hh)
 {
 	// JSON format for status query
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		hh->SetHeader(HTTP_OK, "application/json");
 		hh->printf("{\"videoformat\":\"%s\"}\n", (NeutrinoAPI->getVideoAspectRatioAsString()).c_str());
@@ -1881,7 +1890,7 @@ void CControlAPI::AVInputModeCGI(CyhookHandler *hh)
 void CControlAPI::AudioCGI(CyhookHandler *hh)
 {
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		int type = 0, layer = 0, freq = 0, mode = 0, bitrate = 0;
 		if (audioDecoder)
@@ -1914,7 +1923,7 @@ void CControlAPI::AudioCGI(CyhookHandler *hh)
 void CControlAPI::VolumeCGI(CyhookHandler *hh)
 {
 	// JSON format: return volume and mute status
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		unsigned int volume;
 		NeutrinoAPI->Zapit->getVolume(&volume, &volume);
@@ -1957,7 +1966,7 @@ void CControlAPI::VolumeCGI(CyhookHandler *hh)
 void CControlAPI::CryptCGI(CyhookHandler *hh)
 {
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		hh->SetHeader(HTTP_OK, "application/json");
 
@@ -3398,7 +3407,7 @@ void CControlAPI::StartPluginCGI(CyhookHandler *hh)
 void CControlAPI::LCDAction(CyhookHandler *hh)
 {
 	// JSON format: return LCD settings
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		hh->SetHeader(HTTP_OK, "application/json");
 		hh->printf("{\"power\":%s,\"brightness\":%d,\"standby_brightness\":%d,\"dim_brightness\":%d,\"scroll\":%s}\n",
@@ -3441,7 +3450,7 @@ void CControlAPI::SendChannelList(CyhookHandler *hh, bool currentTP)
 	}
 
 	// JSON format
-	if (hh->ParamList["format"] == "json")
+	if (hh->getOutType() == json)
 	{
 		hh->SetHeader(HTTP_OK, "application/json");
 		if (!g_bouquetManager)
@@ -3525,7 +3534,7 @@ void CControlAPI::SignalInfoCGI(CyhookHandler *hh)
 		unsigned int ber = frontend->getBitErrorRate();
 
 		// JSON format: return all values
-		if (hh->ParamList["format"] == "json") {
+		if (hh->getOutType() == json) {
 			hh->SetHeader(HTTP_OK, "application/json");
 			hh->printf("{\"sig\":%u,\"snr\":%u,\"ber\":%u}\n", sig, snr, ber);
 			return;
@@ -3648,7 +3657,7 @@ void CControlAPI::SendStreamInfo(CyhookHandler *hh)
 	std::string audio = NeutrinoAPI->getAudioInfoAsString();
 
 	// JSON format
-	if (hh->ParamList["format"] == "json") {
+	if (hh->getOutType() == json) {
 		// Parse resolution to get width and height
 		int width = 0, height = 0;
 		sscanf(resolution.c_str(), "%dx%d", &width, &height);
@@ -3696,7 +3705,7 @@ void CControlAPI::SendAllCurrentVAPid(CyhookHandler *hh)
 	pids.PIDs.vpid=0;
 	NeutrinoAPI->Zapit->getPIDS(pids);
 
-	bool jsonFormat = (hh->ParamList["format"] == "json");
+	bool jsonFormat = (hh->getOutType() == json);
 
 	// Collect audio PID info for both JSON and text output
 	struct AudioPidInfo {
