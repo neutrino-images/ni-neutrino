@@ -75,8 +75,8 @@ src/zapit/src/pzapit
 src/zapit/src/udpstreampes
 
 ### header files that fall out of the build
-src/rcsim.h
 src/gui/version.h
+src/tools/rcsim.h
 local_build_config.h
 
 ### other files that fall out of the build

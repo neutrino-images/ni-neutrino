@@ -1,11 +1,6 @@
-BUILT_SOURCES = rcsim.h
-# ugly: this is in the source tree, but belongs into the build dir :-(
-rcsim.h: $(srcdir)/driver/rcinput.h $(srcdir)/driver/rcinput_fake.h $(srcdir)/create_rcsim_h.sh
-	pushd $(srcdir) && sh ./create_rcsim_h.sh > $@
+SUBDIRS = tools zapit gui daemonc driver system eitd timerd nhttpd
 
 AM_CXXFLAGS = -fno-rtti -fno-exceptions -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
-
-SUBDIRS = zapit gui daemonc driver system eitd timerd nhttpd
 
 AM_CPPFLAGS = \
 	-I$(srcdir) \
@@ -193,16 +188,7 @@ endif
 if BOXMODEL_CST_HD2
 neutrino_LDADD += -liconv
 endif
-
-#NI bin_PROGRAMS += drivertool
-#NI drivertool_SOURCES = drivertool.c
-bin_PROGRAMS += dt
-dt_SOURCES = dt.c
 endif
-bin_PROGRAMS += rcsim
-rcsim_SOURCES = rcsim.c rcsim.h
-bin_PROGRAMS += mdev_helper
-mdev_helper_SOURCES = mdev_helper.cpp
 
 if HAVE_LIBSTB_HAL
 neutrino_LDADD += \
@@ -227,9 +213,4 @@ endif
 if BOXMODEL_RASPI
 neutrino_LDADD += \
 	-L/opt/vc/lib/ -lbcm_host -lvcos -lvchiq_arm -lpthread -lrt
-endif
-
-if BOXTYPE_CST
-bin_PROGRAMS += shutdown_helper
-shutdown_helper_SOURCES = shutdown_helper.c
 endif

@@ -800,6 +800,7 @@ src/system/Makefile
 src/system/mtdutils/Makefile
 src/system/mtdutils/lib/Makefile
 src/timerd/Makefile
+src/tools/Makefile
 src/zapit/Makefile
 src/zapit/client/Makefile
 ])
