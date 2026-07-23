@@ -124,6 +124,10 @@ class CCamManager
 
 #ifdef HAVE_SOFTCSA
 void sendDvbapiSessionStop(CZapitChannel *channel, uint32_t session_id, int capmt_demux, uint8_t capmt_ca_mask);
+
+/* True when a CA daemon that speaks DVBAPI v3 is running. Anything else
+ * must get neither the handshake probe nor the v3 capmt descriptors. */
+bool oscam_family_running();
 #endif
 
 #ifdef HAVE_SOFTCSA

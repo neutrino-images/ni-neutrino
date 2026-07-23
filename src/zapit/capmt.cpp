@@ -38,9 +38,23 @@
 #include "dvbapi_client.h"
 #include <driver/softcsa/softcsa_config.h>
 #include <driver/softcsa/softcsa_manager.h>
+#include <system/helpers.h> /* getpidof */
 
 /* CDvbApiClient singleton, initialized from zapit.cpp */
 static CDvbApiClient *dvbapi_client = NULL;
+
+bool oscam_family_running()
+{
+	/* Detect the running CA daemon by process name; only these speak
+	 * DVBAPI v3. Process detection avoids sending anything to an
+	 * incompatible daemon. */
+	static const char *family[] = { "oscam", "ncam", "doscam", "osmod" };
+	for (size_t i = 0; i < sizeof(family) / sizeof(family[0]); i++) {
+		if (getpidof(family[i]) > 0)
+			return true;
+	}
+	return false;
+}
 
 void CCamManager_SetDvbApiClient(CDvbApiClient *client)
 {
@@ -60,7 +74,9 @@ void CCamManager_SetDvbApiClient(CDvbApiClient *client)
 static inline bool dvbapi_owns_uds()
 {
 #ifdef HAVE_SOFTCSA
-	return dvbapi_client && dvbapi_client->isConnected();
+	/* Falls back to the classic sends as soon as a v3-capable daemon is
+	 * no longer running. */
+	return dvbapi_client && dvbapi_client->isConnected() && oscam_family_running();
 #else
 	return false;
 #endif
@@ -201,16 +217,21 @@ bool CCam::makeCaPmt(CZapitChannel * channel, bool add_private, uint8_t list, co
 		capmt.injectDescriptor(tmp, false);
 
 #ifdef HAVE_SOFTCSA
-		/* DVBAPI v3 descriptors */
-		tmp[0] = 0x83; /* adapter device */
-		tmp[1] = 0x01;
-		tmp[2] = 0x00; /* adapter_index */
-		capmt.injectDescriptor(tmp, false);
+		/* v3 descriptors only for a v3-capable daemon; otherwise the
+		 * capmt stays byte-identical to a build without software
+		 * descrambling. */
+		if (oscam_family_running()) {
+			/* DVBAPI v3 descriptors */
+			tmp[0] = 0x83; /* adapter device */
+			tmp[1] = 0x01;
+			tmp[2] = 0x00; /* adapter_index */
+			capmt.injectDescriptor(tmp, false);
 
-		tmp[0] = 0x86; /* demux device */
-		tmp[1] = 0x01;
-		tmp[2] = (source_demux >= 0) ? (uint8_t)source_demux : 0x00;
-		capmt.injectDescriptor(tmp, false);
+			tmp[0] = 0x86; /* demux device */
+			tmp[1] = 0x01;
+			tmp[2] = (source_demux >= 0) ? (uint8_t)source_demux : 0x00;
+			capmt.injectDescriptor(tmp, false);
+		}
 #endif
 	}
 

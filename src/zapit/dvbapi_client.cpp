@@ -206,6 +206,12 @@ bool CDvbApiClient::isConnected() const
 
 bool CDvbApiClient::ensureConnected()
 {
+	/* Never open the link to an incompatible daemon. The reader thread
+	 * owns the socket lifecycle, so a switch away is torn down there;
+	 * closing from this thread would race its poll. */
+	if (!oscam_family_running())
+		return false;
+
 	if (sock_fd >= 0)
 		return true;
 
@@ -352,6 +358,11 @@ void CDvbApiClient::readerThread()
 				usleep(500000);
 			if (!running.load())
 				break;
+			/* Skip the probe while no v3-capable daemon runs so a
+			 * switched-in incompatible daemon never sees a blind
+			 * handshake. */
+			if (!oscam_family_running())
+				continue;
 			if (!connect()) {
 				printf(TAG "reconnect failed, retrying in 5s\n");
 				continue;
