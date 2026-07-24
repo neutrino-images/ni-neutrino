@@ -484,3 +484,24 @@ int CGenPsi::genpsi(int fd)
 
 }
 
+int CGenPsi::genpsi_pmt(int fd)
+{
+	uint8_t   buffer[SIZE_TS_PKT];
+
+	build_pmt(buffer);
+
+	// Overwrite the existing PMT, which genpsi() wrote as the second packet
+	// right behind the PAT. Positioned write keeps the recorder's append
+	// offset untouched, so a running recording can keep growing the file.
+	// One 188 byte packet stays inside a single page, so a concurrent reader
+	// (timeshift playback) always sees either the old or the new PMT, never a
+	// torn one. No fsync here on purpose: this runs under CRecordManager's
+	// lock, and a device flush barrier would stall the whole record manager on
+	// slow USB or network storage. Page cache coherence covers the concurrent
+	// reader, normal writeback covers durability well before playback reopens.
+	if (pwrite(fd, buffer, SIZE_TS_PKT, SIZE_TS_PKT) != (ssize_t)SIZE_TS_PKT)
+		return 0;
+
+	return 1;
+}
+

@@ -540,10 +540,75 @@ bool CRecordInstance::Update()
 		return false;
 	}
 
+	// A new audio pid started mid-recording. The PMT embedded at the file
+	// start still lists only the pids known when recording began, so on
+	// playback the file player meets the extra audio stream out of band and
+	// loses its seek time base, snapping every seek back to the start.
+	// Refresh the on-disk PMT so all recorded streams are declared up front.
+	RewritePmt(channel);
+
 	SaveXml();
 	CCamManager::getInstance()->Start(channel_id, CCamManager::RECORD, true);
 
         return true;
+}
+
+void CRecordInstance::RewritePmt(CZapitChannel * channel)
+{
+	CGenPsi psi;
+
+	if (allpids.PIDs.vpid != 0) {
+		psi.addPid(allpids.PIDs.vpid, recMovieInfo->VideoType == CHANNEL_MPEG4 ? EN_TYPE_AVC : recMovieInfo->VideoType == CHANNEL_HEVC ? EN_TYPE_HEVC : EN_TYPE_VIDEO, 0);
+		if (allpids.PIDs.pcrpid && (allpids.PIDs.pcrpid != allpids.PIDs.vpid))
+			psi.addPid(allpids.PIDs.pcrpid, EN_TYPE_PCR, 0);
+	}
+
+	// Source the audio streams from the recorded audio list itself. It already
+	// carries the newly added pid, and using it keeps the rewritten PMT from
+	// ever disagreeing with what is actually on disk.
+	for (unsigned int i = 0; i < recMovieInfo->audioPids.size(); i++) {
+		const AUDIO_PIDS &a = recMovieInfo->audioPids[i];
+		const char *lang = a.AudioPidName.c_str();
+		switch (a.atype) {
+			case CZapitAudioChannel::EAC3:
+				psi.addPid(a.AudioPid, EN_TYPE_AUDIO_EAC3, 0, lang);
+				break;
+			case CZapitAudioChannel::AAC:
+				psi.addPid(a.AudioPid, EN_TYPE_AUDIO_AAC, 0, lang);
+				break;
+			case CZapitAudioChannel::AACPLUS:
+				psi.addPid(a.AudioPid, EN_TYPE_AUDIO_AACP, 0, lang);
+				break;
+			default:
+				psi.addPid(a.AudioPid, EN_TYPE_AUDIO, (a.atype == CZapitAudioChannel::AC3), lang);
+				break;
+		}
+	}
+
+	if (StreamVTxtPid && (allpids.PIDs.vtxtpid != 0))
+		psi.addPid(allpids.PIDs.vtxtpid, EN_TYPE_TELTEX, 0, channel->getTeletextLang());
+
+	if (StreamSubtitlePids) {
+		for (int i = 0; i < (int)channel->getSubtitleCount(); ++i) {
+			CZapitAbsSub *s = channel->getChannelSub(i);
+			if (s->thisSubType == CZapitAbsSub::DVB) {
+				if (i > 9)
+					break;
+				CZapitDVBSub *sd = reinterpret_cast<CZapitDVBSub*>(s);
+				psi.addPid(sd->pId, EN_TYPE_DVBSUB, 0, sd->ISO639_language_code.c_str());
+			}
+		}
+	}
+
+	std::string tsfile = std::string(filename) + ".ts";
+	int fd = open(tsfile.c_str(), O_WRONLY | O_LARGEFILE | O_CLOEXEC);
+	if (fd < 0) {
+		perror(tsfile.c_str());
+		return;
+	}
+	int ok = psi.genpsi_pmt(fd);
+	close(fd);
+	printf("%s: rewrote in-file PMT (%u audio pids) rc=%d\n", __FUNCTION__, (unsigned int)recMovieInfo->audioPids.size(), ok);
 }
 
 void CRecordInstance::GetPids(CZapitChannel * channel)

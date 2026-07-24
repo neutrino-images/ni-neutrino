@@ -101,6 +101,7 @@ class CRecordInstance
 
 		virtual void GetPids(CZapitChannel * channel);
 		virtual void FillMovieInfo(CZapitChannel * channel, APIDList & apid_list);
+		void RewritePmt(CZapitChannel * channel);
 		record_error_msg_t Start(CZapitChannel * channel);
 		void ProcessAPIDnames();
 		void FilterPids(APIDList & apid_list);
