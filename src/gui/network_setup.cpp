@@ -133,6 +133,14 @@ int CNetworkSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 	{
 		return showInterfaceSelectMenu();
 	}
+#ifdef ENABLE_GUI_MOUNT
+	else if (actionKey == "networkmounts")
+	{
+		CNETFSMountGui *netfsMountGui = new CNETFSMountGui();
+		return showNetworkNFSMounts(netfsMountGui);
+		delete netfsMountGui;
+	}
+#endif
 	else if (actionKey == "restore")
 	{
 		int result =  	ShowMsg(LOCALE_MAINSETTINGS_NETWORK, g_Locale->getText(LOCALE_NETWORKMENU_RESET_SETTINGS_NOW), CMsgBox::mbrNo,
@@ -262,9 +270,6 @@ int CNetworkSetup::showNetworkSetup()
 	networkSettings->setWizardMode(is_wizard);
 
 	CMenuWidget ntp(LOCALE_MAINSETTINGS_NETWORK, NEUTRINO_ICON_NETWORK, width, MN_WIDGET_ID_NETWORKSETUP_NTP);
-#ifdef ENABLE_GUI_MOUNT
-	CMenuWidget networkmounts(LOCALE_MAINSETTINGS_NETWORK, NEUTRINO_ICON_NETWORK, width, MN_WIDGET_ID_NETWORKSETUP_MOUNTS);
-#endif
 
 	CProxySetup proxy(LOCALE_MAINSETTINGS_NETWORK);
 	CNhttpdSetup httpd;
@@ -337,13 +342,10 @@ int CNetworkSetup::showNetworkSetup()
 	showNetworkNTPSetup(&ntp);
 
 #ifdef ENABLE_GUI_MOUNT
-	//nfs mount submenu
-	mf = new CMenuForwarder(LOCALE_NETWORKMENU_MOUNT, true, NULL, &networkmounts, NULL, CRCInput::RC_blue);
+	//nfs mount submenu, built when it is entered
+	mf = new CMenuForwarder(LOCALE_NETWORKMENU_MOUNT, true, NULL, this, "networkmounts", CRCInput::RC_blue);
 	mf->setHint("", LOCALE_MENU_HINT_NET_MOUNT);
 	networkSettings->addItem(mf);
-
-	CNETFSMountGui *netfsMountGui = new CNETFSMountGui();
-	showNetworkNFSMounts(&networkmounts, netfsMountGui);
 #endif
 
 	networkSettings->addItem(GenericMenuSeparatorLine);
@@ -428,9 +430,6 @@ int CNetworkSetup::showNetworkSetup()
 
 	dhcpDisable.Clear();
 	wlanEnable.Clear();
-#ifdef ENABLE_GUI_MOUNT
-	delete netfsMountGui;
-#endif
 	delete networkSettings;
 	delete sectionsdConfigNotifier;
 	return ret;
@@ -521,28 +520,39 @@ void CNetworkSetup::showNetworkNTPSetup(CMenuWidget *menu_ntp)
 }
 
 #ifdef ENABLE_GUI_MOUNT
-void CNetworkSetup::showNetworkNFSMounts(CMenuWidget *menu_nfs,CNETFSMountGui *netfsMountGui)
+/*
+	Built on entering, not once with the network menu around it. The list of
+	active shares below is a snapshot of /proc/mounts, and a snapshot taken
+	when the network menu opened would already be stale by the time the user
+	arrives here.
+*/
+int CNetworkSetup::showNetworkNFSMounts(CNETFSMountGui *netfsMountGui)
 {
-	menu_nfs->addIntroItems(LOCALE_NETWORKMENU_MOUNT);
+	CMenuWidget menu_nfs(LOCALE_MAINSETTINGS_NETWORK, NEUTRINO_ICON_NETWORK, width, MN_WIDGET_ID_NETWORKSETUP_MOUNTS);
+	menu_nfs.addIntroItems(LOCALE_NETWORKMENU_MOUNT);
 	CMenuForwarder *mf = new CMenuDForwarder(LOCALE_NFS_MOUNT, true, NULL, new CNFSMountGui(), NULL, CRCInput::RC_red);
 	mf->setHint("", LOCALE_MENU_HINT_NET_NFS_MOUNT);
-	menu_nfs->addItem(mf);
+	menu_nfs.addItem(mf);
 	mf = new CMenuDForwarder(LOCALE_NFS_UMOUNT, true, NULL, new CNFSUmountGui(), NULL, CRCInput::RC_green);
 	mf->setHint("", LOCALE_MENU_HINT_NET_NFS_UMOUNT);
-	menu_nfs->addItem(mf);
+	menu_nfs.addItem(mf);
 
-	menu_nfs->addItem(GenericMenuSeparatorLine);
+	showActiveNetworkShares(&menu_nfs);
+
+	menu_nfs.addItem(GenericMenuSeparatorLine);
 
 	const char *used_fstab = netfsMountGui->fstabPath.c_str();
 	const char *used_autonet = netfsMountGui->autoPath.c_str();
 
 	CMenuForwarder *fstab = new CMenuForwarder(LOCALE_NETFS_FSTAB_EDIT, true, used_fstab, netfsMountGui, "menu fstab", CRCInput::RC_yellow);
 	fstab->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NETFS_MENU_MAIN_FSTAB);
-	menu_nfs->addItem(fstab);
+	menu_nfs.addItem(fstab);
 
 	CMenuForwarder *automount = new CMenuForwarder(LOCALE_NETFS_AUTOMOUNT_EDIT, true, used_autonet, netfsMountGui, "menu automount", CRCInput::RC_blue);
 	automount->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_NETFS_MENU_MAIN_AUTOMOUNT);
-	menu_nfs->addItem(automount);
+	menu_nfs.addItem(automount);
+
+	return menu_nfs.exec(NULL, "");
 }
 #endif
 
