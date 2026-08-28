@@ -6,6 +6,7 @@ install_DATA = \
 	border_ul.png \
 	clock_face.png \
 	imdb.png \
+	key_space.png \
 	numericpad.png \
 	star-off.png \
 	star-on.png \
