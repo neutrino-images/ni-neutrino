@@ -25,7 +25,8 @@ AM_INIT_AUTOMAKE([nostdinc foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
 AC_DEFINE(PACKAGE_VERSION_MAJOR, ver_major, [Major version number])
-AC_DEFINE(PACKAGE_VERSION_MINOR, ver_minor, [Minor version number])
+# handle PACKAGE_VERSION_MINOR as string because of possible leading zero
+AC_DEFINE(PACKAGE_VERSION_MINOR, "ver_minor", [Minor version number])
 AC_DEFINE(PACKAGE_VERSION_MICRO, ver_micro, [Micro version number])
 AC_DEFINE(PACKAGE_VERSION_GIT, "ver_git", [internal vcs version info])
 AC_DEFINE(PACKAGE_VERSION_DATE, "ver_date", [internal built date])
