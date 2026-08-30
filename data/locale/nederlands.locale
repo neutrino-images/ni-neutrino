@@ -2896,7 +2896,7 @@ streaming.overflow Record buffer overflow, overweeg enkele opnames te stoppen
 streaming.port (((T))) Streaming-Port
 streaming.slow Systeem/hdd te traag, overweeg enkele opnames te stoppen
 streaming.write_error De opname was afgebroken,\nomdat er een fout optrad gedurende het opname proces.
-stringinput.backspace (((T))) Rücktaste
+stringinput.backspace Backspace
 stringinput.caps Hoofd- / kleine letters
 stringinput.clear alle invoer wissen
 stringinput.insert (((T))) Einfügen
