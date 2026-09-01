@@ -3167,6 +3167,8 @@ xmltv.xml.enter (((T))) Eintragen
 xmltv.xml.reload (((T))) Neu laden
 youtube.api_key (((T))) YouTube API Schlüssel
 youtube.enabled (((T))) YouTube-Unterstützung (für Plugins)
+zapit.init_failed Het kanaalbeheer kon niet worden gestart. TV en radio werken niet in deze sessie.
+zapit.no_tuner Er is geen bruikbare tuner gevonden. Live-tv is niet beschikbaar; al het andere blijft werken. Tuner- en zoekinstellingen kunnen later worden ingesteld zodra een tuner is aangesloten.
 zapit.scantype Wat voor kanalen wilt u zoeken?
 zapit.scantype.all Alle services
 zapit.scantype.radio Alleen radio
