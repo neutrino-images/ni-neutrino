@@ -65,6 +65,7 @@ libneutrino_gui_a_SOURCES = \
 	favorites.cpp \
 	filebrowser.cpp \
 	followscreenings.cpp \
+	frontend_label.cpp \
 	imageinfo_ni.cpp \
 	info_menue.cpp \
 	infoviewer.cpp \
