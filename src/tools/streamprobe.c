@@ -40,7 +40,7 @@
 #include "streamprobe_version.h"
 
 #ifndef PACKAGE_NAME
-#define PACKAGE_NAME "Tuxbox-Neutrino"
+#define PACKAGE_NAME "NI-Neutrino"
 #endif
 #ifndef PACKAGE_VERSION
 #define PACKAGE_VERSION "unknown"

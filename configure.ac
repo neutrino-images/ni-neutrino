@@ -20,7 +20,7 @@ define(ver_date, m4_esyscmd([
 	printf "$BUILTDATE"
 ]))
 
-AC_INIT([neutrino],[ver_major.ver_minor.ver_micro],[https://www.neutrino-images.de])
+AC_INIT([NI-Neutrino],[ver_major.ver_minor.ver_micro],[https://www.neutrino-images.de])
 AM_INIT_AUTOMAKE([nostdinc foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
