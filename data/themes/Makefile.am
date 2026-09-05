@@ -4,6 +4,7 @@ EXTRA_DIST = \
 SUBDIRS = \
 	Grey-3.0/icons/buttons \
 	Grey-Blue/icons/buttons \
+	Meridian/icons/buttons \
 	Neutrino-3.0/icons/buttons \
 	Olive-3.0/icons/buttons
 
@@ -25,6 +26,7 @@ install_DATA = \
 	Material_Grey_(Dark).theme \
 	Material_Grey_(Light).theme \
 	Material_Grey_(Medium).theme \
+	Meridian.theme \
 	MonoChrom.theme \
 	Neutrino-3.0.theme \
 	Olive.theme \
