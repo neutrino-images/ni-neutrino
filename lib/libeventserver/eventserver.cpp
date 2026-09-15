@@ -24,12 +24,216 @@
 	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <poll.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "eventserver.h"
+
+namespace
+{
+
+// How long a connect that the kernel refused to queue waits before asking
+// again, and how often a drop is reported however many there were.
+const int64_t kRetryMs = 5;
+const int64_t kDropReportMs = 5000;
+
+// Negative when the clock cannot be read, which every caller below treats as
+// time already spent, so an unreadable clock cuts a send short instead of
+// removing its bound.
+int64_t nowMs()
+{
+	struct timespec t;
+	if (clock_gettime(CLOCK_MONOTONIC, &t) != 0)
+		return -1;
+	return (int64_t) t.tv_sec * 1000 + (int64_t) (t.tv_nsec / 1000000);
+}
+
+// Waits until the socket can be used for what is about to be done with it, or
+// says the deadline has gone. One deadline covers the whole send, so a client
+// cannot spend the budget once per step.
+bool waitReady(int fd, short events, int64_t deadline)
+{
+	for (;;)
+	{
+		const int64_t now = nowMs();
+		if (now < 0)
+			return false;
+		const int64_t left = deadline - now;
+		if (left <= 0)
+			return false;
+
+		struct pollfd p;
+		p.fd = fd;
+		p.events = events;
+		p.revents = 0;
+		const int r = poll(&p, 1, (int) left);
+		if (r > 0)
+			return (p.revents & (POLLERR | POLLHUP | POLLNVAL)) == 0;
+		if (r == 0)
+			return false;
+		if (errno != EINTR)
+			return false;
+	}
+}
+
+// Every byte or none of them. A stream that stopped half way through a header
+// or a body leaves the reader waiting for a length that will never arrive, and
+// answering that as a send is what makes the loss invisible.
+bool writeAll(int fd, const void *data, size_t size, int64_t deadline)
+{
+	const char *p = (const char *) data;
+	size_t done = 0;
+	while (done < size)
+	{
+		const ssize_t n = write(fd, p + done, size - done);
+		if (n > 0)
+		{
+			done += (size_t) n;
+			continue;
+		}
+		if (n < 0 && errno == EINTR)
+			continue;
+		if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		{
+			if (!waitReady(fd, POLLOUT, deadline))
+				return false;
+			continue;
+		}
+		return false;
+	}
+	return true;
+}
+
+// A unix socket whose listener has a full backlog answers a non-blocking connect
+// with EAGAIN and queues nothing, so there is no connection to wait on and the
+// call itself is what has to be made again. A local socket that is merely slow
+// to accept answers EINPROGRESS, and that one is waited on. Both are the state
+// this exists to survive; anything else is the client not being there.
+bool connectBy(int fd, const struct sockaddr *addr, socklen_t len, int64_t deadline)
+{
+	for (;;)
+	{
+		if (connect(fd, addr, len) == 0)
+			return true;
+		if (errno == EISCONN)
+			return true;
+		// EINTR falls through to the deadline below with everything else, so
+		// that a stream of signals cannot keep this here past the budget.
+		if (errno == EINPROGRESS || errno == EALREADY)
+		{
+			int err = 0;
+			socklen_t errlen = sizeof(err);
+			if (!waitReady(fd, POLLOUT, deadline))
+				return false;
+			if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &errlen) != 0)
+				return false;
+			if (err == 0)
+				return true;
+			if (err != EAGAIN)
+				return false;
+			// fall through to the wait below and ask again
+		}
+		else if (errno != EAGAIN && errno != EINTR)
+		{
+			return false;
+		}
+
+		// Nothing to poll on: the kernel took no connection, so this waits out
+		// a slice of the budget and asks again rather than sleeping on a
+		// descriptor that will never become ready.
+		const int64_t now = nowMs();
+		if (now < 0 || deadline - now <= 0)
+			return false;
+		const int64_t left = deadline - now;
+		struct timespec ts;
+		ts.tv_sec = 0;
+		ts.tv_nsec = (left < kRetryMs ? left : kRetryMs) * 1000000;
+		nanosleep(&ts, NULL);
+	}
+}
+
+/* A drop is one line, and the condition that produces them produces them in
+   bursts, so the line is rate limited.
+
+   One slot per client rather than one for the server, because a client dropping
+   steadily would otherwise silence the single drop of a client beside it, and
+   which client is dropping is the whole of what the line is for. The table is
+   fixed and small: the clients are the registered initiators, and a name that
+   finds no slot shares the last one rather than allocating, which costs that
+   name a cadence and never a line.
+
+   The count is the running total and is not reset, so a line always carries
+   what came before it and nothing is lost by a burst ending between two of
+   them. What is not reported is the drops after the last line until the next
+   one arrives; there is no timer here to flush them.
+
+   Both fields are read and written from more than one thread without a lock.
+   They are 32 bits and aligned, which is a single store on the host and on the
+   target, so a reader sees an old value or a new one and never half of each.
+   The cost of a race is a repeated or a late line, which is what a rate limiter
+   is allowed to do; it cannot affect a send. The seconds are enough because the
+   interval is measured in them. */
+struct DropCount
+{
+	// The same width the client name is registered with.
+	char     name[50];
+	unsigned last_reported;   // monotonic seconds, 0 for never
+	unsigned dropped;
+};
+
+DropCount &slotFor(const char *udsName)
+{
+	static DropCount slots[8];
+
+	size_t free_slot = 0;
+	for (size_t i = 0; i < sizeof(slots) / sizeof(slots[0]); i++)
+	{
+		if (slots[i].name[0] == '\0')
+		{
+			free_slot = i;
+			break;
+		}
+		if (strncmp(slots[i].name, udsName, sizeof(slots[i].name) - 1) == 0)
+			return slots[i];
+		free_slot = i;
+	}
+	// snprintf both bounds the copy and guarantees the terminator in one call,
+	// so there is no separate write whose omission would leave the buffer
+	// unterminated if this were ever refactored.
+	snprintf(slots[free_slot].name, sizeof(slots[free_slot].name), "%s", udsName);
+	return slots[free_slot];
+}
+
+void reportDrop(const char *udsName)
+{
+	const int saved = errno;
+	DropCount &slot = slotFor(udsName);
+
+	slot.dropped++;
+
+	const int64_t ms = nowMs();
+	const unsigned now = (ms < 0) ? 0 : (unsigned)(ms / 1000);
+	if (now != 0 && slot.last_reported != 0 &&
+	    now - slot.last_reported < (unsigned)(kDropReportMs / 1000))
+	{
+		errno = saved;
+		return;
+	}
+	slot.last_reported = (now == 0) ? 1 : now;
+	fprintf(stderr, "[eventserver]: dropped %u event(s) so far for %s: %s\n",
+		slot.dropped, udsName, strerror(saved));
+	errno = saved;
+}
+
+} // anonymous namespace
 
 void CEventServer::registerEvent2(const unsigned int eventID, const unsigned int ClientID, const std::string &udsName)
 {
@@ -73,6 +277,18 @@ void CEventServer::sendEvent(const unsigned int eventID, const initiators initia
 }
 
 
+/* An event is a notification, and the client at the other end reads it on the
+   thread it does everything else on. So this waits for that client only as long
+   as EVENT_SEND_TIMEOUT_MS, and a client that cannot take the event inside that
+   loses the event. The sender keeps its thread, which is the trade: one missed
+   notification against a daemon stopped for as long as a client is busy.
+
+   Every wait is against one deadline taken at the top, so a client cannot spend
+   the budget once for the connection and again for each write.
+
+   What the answer means: true when the whole header and the whole body reached
+   the client's socket, false for anything else. It does not mean the client has
+   read them. */
 bool CEventServer::sendEvent2Client(const unsigned int eventID, const initiators initiatorID, const eventClient *ClientData, const void *eventbody, const unsigned int eventbodysize)
 {
 	struct sockaddr_un servaddr;
@@ -89,11 +305,28 @@ bool CEventServer::sendEvent2Client(const unsigned int eventID, const initiators
 		return false;
 	}
 
-	if (connect(sock_fd, (struct sockaddr *) &servaddr, clilen) < 0)
+	// Set before the connect, because a client whose backlog is full is the
+	// case the loop below has to be able to come back to: a blocking connect
+	// would park in the kernel with no deadline and nothing to come back for.
+	const int flags = fcntl(sock_fd, F_GETFL, 0);
+	if (flags < 0 || fcntl(sock_fd, F_SETFL, flags | O_NONBLOCK) < 0)
 	{
-		char errmsg[128];
-		snprintf(errmsg, 128, "[eventserver]: connect (%s)", ClientData->udsName);
-		perror(errmsg);
+		perror("[eventserver]: nonblock");
+		close(sock_fd);
+		return false;
+	}
+
+	const int64_t start = nowMs();
+	if (start < 0)
+	{
+		close(sock_fd);
+		return false;
+	}
+	const int64_t deadline = start + EVENT_SEND_TIMEOUT_MS;
+
+	if (!connectBy(sock_fd, (struct sockaddr *) &servaddr, clilen, deadline))
+	{
+		reportDrop(ClientData->udsName);
 		close(sock_fd);
 		return false;
 	}
@@ -102,16 +335,11 @@ bool CEventServer::sendEvent2Client(const unsigned int eventID, const initiators
 	head.eventID = eventID;
 	head.initiatorID = initiatorID;
 	head.dataSize = eventbodysize;
-	/*int written = */
-	ssize_t ignored __attribute__((unused)) = write(sock_fd, &head, sizeof(head));
-//	printf ("[eventserver]: sent 0x%x - following eventbody= %d\n", written, eventbodysize );
 
-	if (eventbodysize != 0)
-	{
-		/*written = */
-		ignored = write(sock_fd, eventbody, eventbodysize);
-//		printf ("[eventserver]: eventbody sent 0x%x - peventbody= %x eventbody= %x\n", written, (unsigned)eventbody, *(unsigned*)eventbody );
-	}
+	bool sent = writeAll(sock_fd, &head, sizeof(head), deadline);
+	if (sent && eventbodysize != 0)
+		sent = writeAll(sock_fd, eventbody, eventbodysize, deadline);
+
 	close(sock_fd);
-	return true;
+	return sent;
 }
