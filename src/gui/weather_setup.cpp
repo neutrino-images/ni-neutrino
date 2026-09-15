@@ -112,7 +112,7 @@ int CWeatherSetup::showWeatherSetup()
 	ms_oservices->addItem(weather_api);
 #endif
 
-	CMenuForwarder *mf_wl = new CMenuForwarder(LOCALE_WEATHER_LOCATION, g_settings.weather_enabled, g_settings.weather_city, this, "select_location");
+	CMenuForwarder *mf_wl = new CMenuForwarder(LOCALE_WEATHER_LOCATION, g_settings.weather_enabled, settingsText(g_settings.weather_city), this, "select_location");
 	mf_wl->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_WEATHER_LOCATION);
 	ms_oservices->addItem(mf_wl);
 
@@ -135,9 +135,9 @@ int CWeatherSetup::selectLocation()
 	{
 		// TODO: localize hint
 		ShowHint("Warning", "Failed to load weather-favorites.xml or weather-locations.xml\nPlease press any key or wait some seconds! ...", 700, 10, NULL, NEUTRINO_ICON_HINT_IMAGEINFO, CComponentsHeader::CC_BTN_EXIT);
-		g_settings.weather_location = WEATHER_DEFAULT_LOCATION;
-		g_settings.weather_city = WEATHER_DEFAULT_CITY;
-		CWeather::getInstance()->setCoords(g_settings.weather_location, g_settings.weather_city);
+		setSettingsText(g_settings.weather_location, WEATHER_DEFAULT_LOCATION);
+		setSettingsText(g_settings.weather_city, WEATHER_DEFAULT_CITY);
+		CWeather::getInstance()->setCoords(settingsText(g_settings.weather_location), settingsText(g_settings.weather_city));
 		return menu_return::RETURN_REPAINT;
 	}
 
@@ -169,11 +169,11 @@ int CWeatherSetup::selectLocation()
 		delete selector;
 	}
 
-	g_settings.weather_postalcode.clear();
+	clearSettingsText(g_settings.weather_postalcode);
 
-	g_settings.weather_location = locations[select].coords;
-	g_settings.weather_city = std::string(locations[select].city);
-	CWeather::getInstance()->setCoords(g_settings.weather_location, g_settings.weather_city);
+	setSettingsText(g_settings.weather_location, locations[select].coords);
+	setSettingsText(g_settings.weather_city, std::string(locations[select].city));
+	CWeather::getInstance()->setCoords(settingsText(g_settings.weather_location), settingsText(g_settings.weather_city));
 
 	return res;
 }
@@ -188,7 +188,7 @@ int CWeatherSetup::findLocation()
 
 	if (CWeather::getInstance()->FindCoords(g_settings.weather_postalcode))
 	{
-		CWeather::getInstance()->setCoords(g_settings.weather_location, g_settings.weather_city);
+		CWeather::getInstance()->setCoords(settingsText(g_settings.weather_location), settingsText(g_settings.weather_city));
 	}
 
 	return ret;
@@ -212,7 +212,7 @@ bool CWeatherSetup::changeNotify(const neutrino_locale_t OptionName, void */*dat
 	}
 	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_WEATHER_API_VERSION))
 	{
-		g_settings.weather_api_version = WEATHER_API_OPTIONS[weather_api_version].valname;
+		setSettingsText(g_settings.weather_api_version, WEATHER_API_OPTIONS[weather_api_version].valname);
 		CWeather::getInstance()->updateApi();
 	}
 	return ret;

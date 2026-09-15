@@ -50,7 +50,11 @@ class CInfoIcons
 			int sizeH;
 			int space;
 			const char* name;
-			const char* flag;
+			/* The path of the flag file, and a copy of the setting rather than a
+			   pointer into it: the setup screen edits that string while the
+			   timer thread below is painting from it, and a c_str kept across
+			   such an edit points at a buffer the assignment freed. */
+			std::string flag;
 		};
 
 		CFrameBuffer * 	frameBuffer;

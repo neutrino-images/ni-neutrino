@@ -222,7 +222,10 @@ int COPKGManager::exec(CMenuTarget* parent, const string &actionKey)
 				showError(g_Locale->getText(LOCALE_OPKG_FAILURE_INSTALL), strerror(errno), package);
 				 */
 
-			*local_dir = fileBrowser.getCurrentDir();
+			/* The setting this points at is copied by a request answered on
+			   another thread, so it is written under the lock those reads
+			   take. */
+			setSettingsText(*local_dir, fileBrowser.getCurrentDir());
 
 			// Show message while reloading package list
 			loadBox->setMsgText(LOCALE_OPKG_UPDATE_READING_LISTS);

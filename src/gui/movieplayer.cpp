@@ -1653,7 +1653,7 @@ bool CMoviePlayerGui::SelectFile()
 		enableOsdElements(MUTE);
 	}
 	if (!is_audio_playing)
-		g_settings.network_nfs_moviedir = Path_local;
+		setSettingsText(g_settings.network_nfs_moviedir, Path_local);
 
 	return ret;
 }
