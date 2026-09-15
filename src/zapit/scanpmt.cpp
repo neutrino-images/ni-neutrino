@@ -106,6 +106,23 @@ bool CPmt::ParseInternal(CZapitChannel * const channel)
 
 	DBG("[pmt] pcr pid: old 0x%x new 0x%x\n", channel->getPcrPid(), pmt.getPcrPid());
 
+	/* Everything below rewrites what the channel holds rather than the map it
+	   sits in: resetPids deletes every audio track and the subtitle list,
+	   setRawPmt deletes the table, and the two CA containers are assigned
+	   whole. Threads other than this one read exactly those under the channel
+	   lock, so this takes it too. A reader that arrived first is waited for,
+	   which is one walk of a track list.
+
+	   Held across the parse and not around each write: a reader between the
+	   reset and the tracks being back would see a channel with no sound at
+	   all. Nothing in here reaches the channel manager, so there is nothing
+	   for this to take twice.
+
+	   Taken here and not around CPmt::Parse: that one reads the table off the
+	   demux first, which waits on the transponder and would hold this lock for
+	   as long as that takes. */
+	CServiceManager::ChannelGuard guard;
+
 	channel->resetPids();
 
 	channel->setPmtVersion(pmt.getVersionNumber());
