@@ -893,8 +893,13 @@ bool CZapit::ZapIt(const t_channel_id channel_id, bool forupdate, bool startplay
 	live_fe = fe;
 	CFEManager::getInstance()->setLiveFE(live_fe);
 
-	if(!forupdate && current_channel)
+	/* Under the channel lock for the reason CPmt::ParseInternal takes it: this
+	   deletes the audio tracks and the subtitle list of the channel that was
+	   playing, and other threads walk those. */
+	if(!forupdate && current_channel) {
+		CServiceManager::ChannelGuard guard;
 		current_channel->resetPids();
+	}
 
 	current_channel = newchannel;
 
@@ -1797,7 +1802,7 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 #endif
 #if 0
 	case CZapitMessages::CMD_GET_CURRENT_SATELLITE_POSITION: {
-		int32_t currentSatellitePosition = current_channel ? current_channel->getSatellitePosition() : live_fe->getCurrentSatellitePosition();
+		int32_t currentSatellitePosition = current_channel ? current_channel->getSatellitePosition() : (live_fe ? live_fe->getCurrentSatellitePosition() : 0);
 		CBasicServer::send_data(connfd, &currentSatellitePosition, sizeof(currentSatellitePosition));
 		break;
 	}
@@ -1850,15 +1855,20 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 			//msgCurrentServiceInfo.pmt_version = (current_channel->getCaPmt() != NULL) ? current_channel->getCaPmt()->version_number : 0xff;
 			msgCurrentServiceInfo.pmt_version = current_channel->getPmtVersion();
 			msgCurrentServiceInfo.pcrpid = current_channel->getPcrPid();
-			msgCurrentServiceInfo.tsfrequency = live_fe->getFrequency();
-			msgCurrentServiceInfo.rate = live_fe->getRate();
-			msgCurrentServiceInfo.fec = live_fe->getCFEC();
+			/* The pc build answers this without a tuner, and the struct
+			 * was memset above, so leaving the transponder fields at zero
+			 * is the honest answer rather than inventing one. */
+			if (live_fe) {
+				msgCurrentServiceInfo.tsfrequency = live_fe->getFrequency();
+				msgCurrentServiceInfo.rate = live_fe->getRate();
+				msgCurrentServiceInfo.fec = live_fe->getCFEC();
+			}
 			msgCurrentServiceInfo.vtype = current_channel->type;
 			//msgCurrentServiceInfo.diseqc = current_channel->getDiSEqC();
 		}
 		if(!msgCurrentServiceInfo.fec)
 			msgCurrentServiceInfo.fec = (fe_code_rate)3;
-		if (CFrontend::isSat(live_fe->getCurrentDeliverySystem()))
+		if (live_fe && CFrontend::isSat(live_fe->getCurrentDeliverySystem()))
 			msgCurrentServiceInfo.polarisation = live_fe->getPolarization();
 		else
 			msgCurrentServiceInfo.polarisation = 2;
@@ -1869,7 +1879,7 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 	case CZapitMessages::CMD_GET_DELIVERY_SYSTEM: {
 		CZapitMessages::responseDeliverySystem response;
 		VALGRIND_PARANOIA(response);
-		response.system = live_fe->getCurrentDeliverySystem();
+		response.system = live_fe ? live_fe->getCurrentDeliverySystem() : UNKNOWN_DS;
 		CBasicServer::send_data(connfd, &response, sizeof(response));
 		break;
 	}
@@ -2176,7 +2186,7 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		CBasicServer::receive_data(connfd, &msgRenameBouquet, sizeof(msgRenameBouquet)); // bouquet & channel number are already starting at 0!
 		char * name = CBasicServer::receive_string(connfd);
 		if (msgRenameBouquet.bouquet < g_bouquetManager->Bouquets.size()) {
-			g_bouquetManager->Bouquets[msgRenameBouquet.bouquet]->Name = name;
+			g_bouquetManager->Bouquets[msgRenameBouquet.bouquet]->setName(name);
 			g_bouquetManager->Bouquets[msgRenameBouquet.bouquet]->bUser = true;
 		}
 		CBasicServer::delete_string(name);
@@ -2273,7 +2283,6 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		CZapitMessages::commandBoolean msgBoolean;
 		CBasicServer::receive_data(connfd, &msgBoolean, sizeof(msgBoolean));
 
-		SendCmdReady(connfd);
 #if 0
 		//if (msgBoolean.truefalse)
 		if(list_changed) {
@@ -2281,8 +2290,20 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		} else
 			SendEvent(CZapitClient::EVT_BOUQUETS_CHANGED);
 #endif
-		g_bouquetManager->saveBouquets();
-		g_bouquetManager->saveUBouquets();
+		/* Both files every time and not the first one only: the caller asked
+		   for the lists it has to be saved, and stopping after a failure would
+		   leave the other one older than the list it belongs to. */
+		CZapitMessages::responseGeneralTrueFalse responseSaved;
+		responseSaved.status = g_bouquetManager->saveBouquets();
+		if (!g_bouquetManager->saveUBouquets())
+			responseSaved.status = false;
+
+		/* Answered here rather than before the writing, because a reply sent
+		   first can say no more than that the command arrived, and whether it
+		   arrived was never the question. Everything below stays behind the
+		   reply in the order it always ran in. */
+		CBasicServer::send_data(connfd, &responseSaved, sizeof(responseSaved));
+
 		g_bouquetManager->renumServices();
 		//SendEvent(CZapitClient::EVT_SERVICES_CHANGED);
 		SendEvent(CZapitClient::EVT_BOUQUETS_CHANGED);
@@ -3639,8 +3660,16 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 #endif
 	ca = cCA::GetInstance();
 
+#if !HAVE_GENERIC_HARDWARE
+	/* On a box a missing frontend means the driver is broken and there is
+	 * nothing useful left to do. The PC build is expected to run without one,
+	 * and everything that actually needs a tuner already gives up by itself:
+	 * ZapIt() returns as soon as allocateFE() hands back NULL. Channel lists,
+	 * bouquets, the command server and WebTV all work without a frontend, so
+	 * bailing out here would only rob them of their data. */
 	if (live_fe == NULL) /* no frontend found? */
 		return false;
+#endif
 	//LoadSettings();
 	//LoadAudioMap();
 
@@ -3858,7 +3887,14 @@ void CZapit::run()
 #endif
 	delete pcrDemux;
 	delete pmtDemux;
+	/* Cleared as well as freed, because a reader outside this thread checks it
+	   for null before using it: the web server runs detached and is never
+	   stopped, so a request in flight while this runs would otherwise find a
+	   pointer that is still set and read the object after it is gone. The
+	   pointers around it are global in the same way and are left as they are,
+	   because none of them has a reader that outlives this. */
 	delete audioDecoder;
+	audioDecoder = NULL;
 	delete audioDemux;
 #if ENABLE_PIP
 	for (unsigned i=0; i < (unsigned int) g_info.hw_caps->pip_devs; i++)
