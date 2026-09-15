@@ -1,3 +1,0 @@
-version=3.1.6
-date=26.03.2023
-info=NI-Neutrino-Webinterface

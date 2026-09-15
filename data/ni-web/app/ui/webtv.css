@@ -1,0 +1,63 @@
+/* The web television block.
+ *
+ * Its own sheet and not a few rules in the frame's, because the frame's two
+ * files are what every screen loads and are held to a size for that reason,
+ * while this is loaded by the one screen that plays a channel. It arrives
+ * through ensureCss, the way a screen's own sheet does, and it sits beside the
+ * block rather than under app/css so that the block is one directory.
+ *
+ * The marks and the measures come from tokens.css, which the document loads
+ * before anything here.
+ */
+
+.webtv {
+	position: relative;
+	display: grid;
+	gap: 8px;
+}
+
+/* Sixteen to nine and never taller than the window, so that a channel opened
+ * on a telephone held upright does not push everything beside it off the
+ * screen. Black behind it because that is what a picture that has not started
+ * yet should be, rather than the page showing through. */
+.webtv-frame {
+	width: 100%;
+	max-height: 70vh;
+	aspect-ratio: 16 / 9;
+	background: #000;
+	border-radius: 8px;
+	display: block;
+}
+
+.webtv-say {
+	margin: 0;
+	font-size: 0.9em;
+	opacity: 0.75;
+}
+
+.webtv-refused {
+	display: grid;
+	gap: 8px;
+	justify-items: start;
+}
+
+.webtv-refused h3 {
+	margin: 0;
+	font-size: 1em;
+}
+
+.webtv-refused p {
+	margin: 0;
+}
+
+/* The address is meant to be selected and pasted into another program, so it
+ * wraps at any point rather than running off the side of a telephone. */
+.webtv-address {
+	display: grid;
+	gap: 2px;
+}
+
+.webtv-address code {
+	overflow-wrap: anywhere;
+	font-size: 0.9em;
+}

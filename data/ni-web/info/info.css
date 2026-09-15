@@ -1,0 +1,190 @@
+/* A DISPLAY AND NOT A SCREEN OF THE APPLICATION, which is why this sheet does
+   not reach for app/css/tokens.css and carries its own handful of colours.
+
+   Three reasons, and the first two are about the room this page stands in. It
+   is pinned to a telephone that is put on a shelf and looked at from across the
+   room, so the ground is black rather than the application's near black and
+   nothing on it is white: a full white on a display that is on all evening is a
+   lamp. It has no controls, so the whole vocabulary of hover, focus and
+   disabled that tokens.css exists for buys nothing here. And it is answered at
+   an address outside the application, so a sheet it did not load is a sheet it
+   would not inherit anyway.
+
+   The five marks keep the application's own colour vocabulary, because they
+   mean the same things: the accent is what is on air, amber wants looking at,
+   red is the box writing to a disc, green is something running. The display
+   this replaces painted descrambling orange and the module amber, which is the
+   same pair of hues, and the amber standing for two of the five is no
+   collision: the left two and the right three are read as two groups and every
+   mark carries its own word. */
+:root {
+	--info-ground: #000000;
+	--info-ink: #d7dbe2;
+	--info-dim: #99a1ad;
+	--info-faint: #464c55;
+	--info-bar: #21252b;
+	--info-fill: #fd6d13;
+	--info-ecm: #fd6d13;
+	--info-ci: #e0a33b;
+	--info-timer: #e0a33b;
+	--info-rec: #e03b3b;
+	--info-ts: #3ba55d;
+	--info-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* The rule for the attribute is the browser's own and loses to any rule of this
+   sheet that sets display, which several below do. Said once here, so hiding a
+   thing is the attribute everywhere and never a second class beside it. */
+[hidden] {
+	display: none !important;
+}
+
+html {
+	background: var(--info-ground);
+}
+
+body {
+	margin: 0;
+	background: var(--info-ground);
+	color: var(--info-ink);
+	font-family: var(--info-font);
+	/* Nothing on this page is selected, dragged or long pressed, and a
+	   selection highlight left on a telephone that was only tapped awake stays
+	   there for the rest of the evening. */
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+/* Three rows and the middle one takes what is left, so the marks stay at the
+   top edge and the clock at the bottom one whatever the height is.
+
+   100svh and not 100vh: on a telephone the large viewport is the one with the
+   address bar scrolled away, and a page measured against it is a page whose
+   bottom row sits under the bar until somebody scrolls. There is nothing to
+   scroll here, so it would simply never be seen. */
+.info {
+	box-sizing: border-box;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	gap: 2vh;
+	min-height: 100vh;
+	min-height: 100svh;
+	padding: max(3vh, env(safe-area-inset-top)) max(4vw, env(safe-area-inset-right))
+		max(3vh, env(safe-area-inset-bottom)) max(4vw, env(safe-area-inset-left));
+}
+
+/* The two rows of small type stay one line each. They are five short words and
+   a clock, so there is nothing in them to wrap, and a row that wrapped would
+   take the height the middle of the page is measured against. */
+.info-top,
+.info-times {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 1em;
+	font-size: clamp(1rem, min(3.6vh, 5vw), 1.9rem);
+	letter-spacing: 0.1em;
+	color: var(--info-dim);
+}
+
+.info-flags {
+	display: flex;
+	gap: 0.9em;
+}
+
+/* Off is the grey the whole row is written in, on is the mark's own colour.
+   Nothing else changes, so the row keeps its width and its rhythm whatever the
+   box is doing. */
+.info-flag {
+	color: var(--info-faint);
+}
+
+#info-ecm[data-on]   { color: var(--info-ecm); }
+#info-ci[data-on]    { color: var(--info-ci); }
+#info-timer[data-on] { color: var(--info-timer); }
+#info-rec[data-on]   { color: var(--info-rec); }
+#info-ts[data-on]    { color: var(--info-ts); }
+
+.info-middle {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2vh;
+	min-width: 0;
+}
+
+.info-logo {
+	display: block;
+	max-height: min(26vh, 40vw);
+	max-width: 80vw;
+	object-fit: contain;
+}
+
+/* The name and the programme wrap and are then cut after two lines.
+
+   Cut, because the page is measured against the height of the window and has
+   nothing to scroll: a name somebody gave forty words would otherwise push the
+   clock off the bottom edge. Two lines and not one, because the page this
+   replaces cut on the first, and a telephone held upright is narrow enough that
+   an ordinary channel name lost its last word to that. What is cut is bounded
+   either way, which is what keeps the page from ever growing past its window or
+   scrolling sideways. */
+.info-name,
+.info-event {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	min-width: 0;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+}
+
+.info-name {
+	margin: 0;
+	max-width: 100%;
+	font-size: clamp(1.75rem, min(11vh, 13vw), 6rem);
+	font-weight: 700;
+	text-align: center;
+}
+
+/* What the box is doing when there is no channel to name: standby, an idle box,
+   a refusal, or a box that is not answering. Dim and small, because it is a
+   sentence and the rest of this page is not. */
+.info-said {
+	margin: 0;
+	max-width: 90%;
+	font-size: clamp(1rem, min(4vh, 4.5vw), 2rem);
+	color: var(--info-dim);
+	text-align: center;
+	text-wrap: balance;
+}
+
+.info-bottom {
+	display: grid;
+	gap: 2vh;
+	min-width: 0;
+}
+
+.info-event {
+	margin: 0;
+	font-size: clamp(1rem, min(4.5vh, 5.5vw), 2.5rem);
+	color: var(--info-ink);
+}
+
+.info-bar {
+	height: clamp(8px, 4vh, 40px);
+	background: var(--info-bar);
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.info-fill {
+	height: 100%;
+	width: 0;
+	background: var(--info-fill);
+}

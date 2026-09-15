@@ -1,0 +1,149 @@
+// THE PAGES ARE TYPE CHECKED AND THE PAGES ARE NOT BUILT. Both of those, and
+// the second is the reason for the shape of the first.
+//
+// What the browser loads is the file in this tree. There is no bundler, no
+// transpiler and nothing emitted: data/ni-web is installed by walking it and
+// compressing what is found (data/ni-web/app/Makefile.am), which is what lets
+// the docroot of the development server point straight at these sources and a
+// reload in the browser be the whole of the edit cycle. It is also what keeps
+// node out of the way of a firmware image: this frontend leaves the tree the
+// way swagger-ui does, as bytes that are already what they will be on the box.
+//
+// So the types are written into the sources as JSDoc and the checking is done
+// by tsc with checkJs and noEmit. The rules below are TypeScript's own rules
+// and the errors are TypeScript's own errors. The only thing missing is the
+// output, and the output is the thing we do not want.
+//
+// IF YOU ARE READING THIS BECAUSE YOU ARE ABOUT TO REWRITE THESE FILES AS .ts:
+// that trade is a build step in the path of every firmware image, in exchange
+// for annotations that read a little better. Say it out loud before you make
+// it.
+//
+// jsconfig.json and not tsconfig.json, for the one difference between the two
+// names: a directory holding a jsconfig.json is a JavaScript project, and an
+// editor opening a file under it checks that file by these rules with nobody
+// configuring anything. tsc reads it either way.
+//
+// test/web/check-web-types.sh is what runs this under make check, and its head
+// says what it needs and where those things come from.
+{
+	"compilerOptions": {
+		"checkJs": true,
+		"allowJs": true,
+		"noEmit": true,
+
+		// Whole, and on from the first file rather than tightened later. Every
+		// rule under it costs four files today and a hundred screens once the
+		// screens are written, and a check that cannot be tightened afterwards
+		// is a check that stays where it was first put.
+		"strict": true,
+
+		// Beyond strict, each for a fault this page in particular can have.
+		//
+		// noUncheckedIndexedAccess: everything the box answers with is a list,
+		// and rows[0] of an empty page is undefined. Without this the check
+		// believes every index hits.
+		//
+		// noImplicitReturns, noFallthroughCasesInSwitch: a branch that forgets
+		// to return hands back undefined, and the caller is a long way from
+		// the branch.
+		//
+		// noUnusedLocals, noUnusedParameters: an import left behind after a
+		// screen was rewritten is a module the browser fetches for nothing. A
+		// parameter deliberately unused is spelt with a leading underscore,
+		// which is what TypeScript reads as deliberate.
+		"noUncheckedIndexedAccess": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noImplicitOverride": true,
+
+		// THE TWO RULES THAT ARE OFF, AND WHY.
+		//
+		// exactOptionalPropertyTypes was on and came off after it had been
+		// read against the whole of the page. It separates a member that is
+		// absent from one that is present and undefined, and nothing here
+		// makes that distinction: this page passes bags of options from one
+		// layer to the next, forwarding what it holds rather than building a
+		// different call for a value it has not got, and every one of those
+		// hand-overs is a fault under that rule. The price would have been the
+		// words "| undefined" on nearly every optional member of every set of
+		// properties in the tree, written by ten people at once.
+		//
+		// What it would have caught is worth stating, so that whoever turns it
+		// back on knows what they are buying: a screen writing undefined into
+		// a member the server's document says may be absent. The one call
+		// hands the body to JSON.stringify, which drops such a member, so what
+		// reaches the box is the same request either way. That is why this is
+		// the rule that came off and strict itself did not.
+		//
+		// skipLibCheck skips the declaration files of preact, htm and the
+		// router, and nothing of ours. Those are bytes out of a published
+		// archive, checked by the people who publish them, and an error inside
+		// one of them is not a thing this tree can fix by editing a screen.
+		// Our own declarations are not declaration files in that sense and are
+		// checked in full.
+		//
+		// verbatimModuleSyntax and isolatedModules are not set, and that is
+		// not an exception: nothing here is emitted, so there is no emit for
+		// them to be about.
+		"skipLibCheck": true,
+
+		// The browser floor of this interface is the current and the previous
+		// major of Chrome, Firefox, Safari and Edge. ES2022 is comfortably
+		// under all eight, and it is named rather than left to a default so
+		// that the check refuses a method the floor lacks here instead of
+		// somebody finding out in their browser.
+		//
+		// module and moduleResolution say what is true of these pages:
+		// modules loaded by the browser, from addresses, with no resolver in
+		// front of them. types is empty because nothing here runs under node.
+		"target": "ES2022",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"types": [],
+
+		// The four addresses app/runtime.js names, and the only root absolute
+		// ones in the tree; test/check-web-imports.sh holds everything else to
+		// reaching them through that file. The browser is answered them by the
+		// buildsystem, which puts the published modules under /vendor. A type
+		// checker has no server, so it is pointed at the declarations out of
+		// the same archives.
+		//
+		// They sit under test/ and not under this directory on purpose:
+		// everything under data/ni-web/app is installed onto the box by a
+		// walk, so a declaration file dropped in there would be shipped as
+		// part of the page. Nothing under test/ reaches a box.
+		//
+		// yweb-devenv/scripts/fetch-webui-vendor.sh puts them there in the
+		// same run that puts the modules under /vendor, so the declarations
+		// always belong to the bytes the page loads.
+		"paths": {
+			"/vendor/preact.module.js": ["../../test/web/node_modules/preact/src/index.d.ts"],
+			"/vendor/hooks.module.js": ["../../test/web/node_modules/preact/hooks/src/index.d.ts"],
+			"/vendor/htm.module.js": ["../../test/web/node_modules/htm/dist/htm.d.ts"],
+			"/vendor/preact-router.module.js": ["../../test/web/node_modules/preact-router/index.d.ts"],
+
+			// The fifth, and the one that is not out of an archive. It is
+			// fetched by the same two places as the four above and reaches a
+			// browser the same way, but nothing unpacks it here: what the page
+			// uses of it is six names, so those are written down under test/
+			// rather than a hundred kilobytes fetched to read a declaration
+			// out of. See test/web/types/hls.d.ts for why that is the smaller
+			// risk of the two.
+			"/vendor/hls.module.js": ["../../test/web/types/hls.d.ts"]
+		}
+	},
+
+	// The pages, and the two declarations that say what the box answers and
+	// what this page's own layers hand each other. api.d.ts is written out of
+	// the server's own document on every run and is in no commit; client.d.ts
+	// is written by hand and is.
+	"include": [
+		"app/**/*.js",
+		"info/**/*.js",
+		"../../test/web/types/*.d.ts"
+	]
+}

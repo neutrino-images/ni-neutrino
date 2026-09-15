@@ -1,0 +1,349 @@
+/* The grid. Every colour and every gap here is a name out of app/css/tokens.css.
+
+   One scrolling box carries both directions, so one scroll position answers both
+   windows and the column of names and the row of hours can stay where they are
+   with position: sticky rather than with a second box kept in step by hand. */
+
+/* NAMED APART FROM ITS OWN ELEMENTS. The frame owns .grid for the tables every
+   screen draws, and a screen's stylesheet stays in the document once it has
+   been loaded, so a bare .grid here reached every table of every screen opened
+   after this one and turned it into a flex box: the head of such a table no
+   longer stands over its columns. The elements below keep the grid__ prefix,
+   which nothing else in the page or in the checks around it answers to. */
+.epg-grid {
+	--grid-name: 200px;
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-3);
+}
+
+.grid__bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-3);
+}
+.grid__pick { display: flex; align-items: center; gap: var(--gap-2); }
+.grid__plabel { color: var(--text-dim); }
+/* Only the size and the ceiling on the width; what it looks like is the
+   frame's, and the shorthand here would clear the arrow the frame draws. */
+.grid__pick select {
+	min-height: var(--control-height);
+	max-width: 22ch;
+	padding: 0 26px 0 var(--gap-3);
+}
+.grid__when { display: flex; align-items: center; gap: var(--gap-2); }
+.grid__window { margin: 0; color: var(--text-dim); }
+
+.grid__detail {
+	padding: var(--gap-3) var(--gap-4);
+	background: var(--ground-1);
+	border: 1px solid var(--line);
+	border-left: 3px solid var(--accent);
+	border-radius: var(--radius);
+}
+.grid__dhead { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-3); }
+.grid__dtitle { margin: 0; font-size: 1.0625rem; }
+.grid__dwhen { margin: var(--gap-1) 0 0; color: var(--text-dim); }
+.grid__dtext { margin: var(--gap-2) 0 0; }
+
+/* The one box that scrolls. Both directions, because the axis is wider than
+   most windows and the channel list is longer than every one of them. */
+.grid__scroll {
+	position: relative;
+	overflow: auto;
+	background: var(--ground-0);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+/* The hours. Sticky at the top of the scrolling box, and its own left corner
+   sticky over the column of names, or the first hour would slide under it. */
+.grid__head {
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	display: flex;
+	height: var(--grid-head, 28px);
+	background: var(--ground-1);
+	border-bottom: 1px solid var(--line);
+}
+/* Over the flag as well as over the first hour: both travel with the axis and
+   both slide in behind this. */
+.grid__corner {
+	position: sticky;
+	left: 0;
+	z-index: 2;
+	flex: none;
+	width: var(--grid-name);
+	background: var(--ground-1);
+	border-right: 1px solid var(--line);
+}
+/* clip and not hidden, and not nothing at all: the flag is centred on the mark
+   of the moment, so half of it hangs past the end of the axis in the last
+   minutes of a window, and half a flag past the end is a box that scrolls
+   sideways by twenty two pixels. clip takes that out of the scrollable area
+   without making this a scrolling box of its own, which hidden would, and the
+   column of names beside it stays sticky. */
+.grid__axis { position: relative; flex: none; height: var(--grid-head, 28px); overflow: clip; }
+.grid__tick {
+	position: absolute;
+	top: 0;
+	padding-left: var(--gap-1);
+	border-left: 1px solid var(--line);
+	color: var(--text-dim);
+	font-size: 0.75rem;
+	line-height: var(--grid-head, 28px);
+	white-space: nowrap;
+}
+
+.grid__body { position: relative; }
+
+/* WHERE THE BOX IS NOW. A mark and never a target, so it takes no pointer.
+
+   The accent under the name the frame gives what is running: it had been the
+   amber, chosen only because the red was already spent on recording.
+
+   Over the programmes and under the column of names, which is the whole of what
+   its z-index is for. The line is drawn in the coordinates the programmes are
+   in, so when the box is scrolled sideways it travels with them and slides in
+   behind the names. The flag it belongs to is drawn in the row of hours; see
+   grid.js:Axis for why. */
+.grid__nowline {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 1;
+	width: 2px;
+	background: var(--on-air);
+	pointer-events: none;
+}
+
+.grid__nowflag {
+	position: absolute;
+	top: 0;
+	z-index: 1;
+	transform: translateX(-50%);
+	padding: 0 var(--gap-1);
+	background: var(--on-air);
+	border-radius: 0 0 var(--radius) var(--radius);
+	color: var(--accent-ink);
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: var(--grid-head, 28px);
+	white-space: nowrap;
+}
+
+.grid__row { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); }
+
+/* The names stay while the hours scroll past them, which is the whole of what
+   makes a grid readable on a screen narrower than its axis. */
+.grid__name {
+	position: sticky;
+	left: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: var(--gap-2);
+	flex: none;
+	width: var(--grid-name);
+	padding: 0 var(--gap-2);
+	background: var(--ground-1);
+	border-right: 1px solid var(--line);
+}
+.grid__place { flex: none; width: 4ch; color: var(--text-dim); text-align: right; }
+/* Narrower here than in a list, because this cell is two hundred pixels wide
+   and the name is what a guide is read for. */
+.grid__name .logo { width: 20px; height: 20px; }
+.grid__channel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* THE CHANNEL THE BOX IS PLAYING, MARKED WHERE ITS NAME IS.
+
+   The two tinting amounts the frame allows and nothing else. The wash is laid
+   over the ground rather than instead of it, because this cell is sticky and the
+   lanes travel under it: a translucent colour on its own would let a programme
+   box show through the names the moment the grid is pushed sideways. */
+.grid__row.is-onair .grid__name {
+	background: linear-gradient(var(--accent-wash), var(--accent-wash)), var(--ground-1);
+	border-right-color: var(--accent-edge);
+}
+.grid__row.is-onair .grid__channel { color: var(--on-air); font-weight: 600; }
+/* At the far end of the cell, which is where a column of them reads as a
+   column. The mark alone: what it means is said under the grid, because the
+   word beside it here is measured at thirty six pixels of a two hundred pixel
+   column and the name is what the column is for. */
+.grid__air { display: inline-flex; align-items: center; flex: none; margin-left: auto; }
+
+/* The word, once, under the thing it explains. */
+.grid__legend { margin: 0; color: var(--text-dim); font-size: 0.75rem; }
+
+.grid__lane { position: relative; flex: none; }
+
+.grid__event {
+	position: absolute;
+	top: 2px;
+	bottom: 2px;
+	display: flex;
+	align-items: center;
+	gap: var(--gap-2);
+	overflow: hidden;
+	padding: 0 var(--gap-2);
+	background: var(--ground-2);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+	white-space: nowrap;
+}
+.grid__event:hover { border-color: var(--text-dim); }
+.grid__event.is-picked { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.grid__clock { flex: none; color: var(--text-dim); font-size: 0.75rem; }
+.grid__event.is-picked .grid__clock { color: var(--accent-ink); }
+.grid__title { overflow: hidden; text-overflow: ellipsis; }
+
+/* Waiting and empty are the same shape and never the same words, because a row
+   that is about to fill itself in and a row the guide holds nothing for are
+   two different answers. */
+.grid__wait, .grid__none {
+	position: absolute;
+	top: 0;
+	left: var(--gap-3);
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+	line-height: 40px;
+}
+
+/* A row the guide held more of than one row carries. It sits at the end of the
+   lane, where the missing part would have been. */
+.grid__cut {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	bottom: 2px;
+	display: flex;
+	align-items: center;
+	padding: 0 var(--gap-2);
+	background: var(--ground-1);
+	border: 1px dashed var(--state-warning);
+	border-radius: var(--radius);
+	color: var(--state-warning);
+	font-size: 0.75rem;
+}
+
+.grid__more { margin: 0; padding: var(--gap-3); color: var(--text-dim); text-align: center; }
+
+/* NARROWER NAMES WHERE THE WINDOW IS NARROW. Measured in a browser: at six
+   hundred pixels, the narrowest this is still a grid at, the box is 551 wide,
+   and two hundred of that spent on names leaves a minute drawn at two and a
+   third pixels, which is a half hour programme forty pixels shorter than one
+   that fits its clock. A hundred and thirty two leaves two and a third, and the
+   number goes with it. */
+@media (max-width: 1151px) {
+	.epg-grid { --grid-name: 132px; }
+	.grid__place { display: none; }
+}
+
+/* FOLDED, WHICH IS THE SAME DATA WITH THE AXES SWAPPED.
+
+   A lane of three hours in four hundred pixels is a lane nobody reads, so below
+   the frame's telephone width there is no lane: the channels become a strip
+   across the top and the one that is chosen has its evening down the page. The
+   strip runs off the side, and what says so is the chip at the edge being cut,
+   which the frame's own .chipbar leaves the room for. */
+.grid__strip { margin-bottom: var(--gap-2); }
+
+/* The one control of this screen that is not the frame's, so the frame's rule
+   about what a finger is given does not reach it. */
+@media (max-width: 599px) {
+	.grid__pick select { min-height: var(--tap-height); }
+}
+
+/* The way of choosing a strip is no good for sits at the end of the line that
+   was already there, not beside the strip: beside it, the button took a hundred
+   and forty six of the three hundred and ninety a telephone has and left under
+   two chips to push.
+
+   The wrapper and not the button, because a control comes back inside a span of
+   its own (app/ui/button.js), and that span is what this row lays out. */
+.grid__nowbar > :last-child { margin-left: auto; }
+.grid__find { min-height: var(--tap-height); white-space: nowrap; }
+
+.grid__found { display: grid; gap: var(--gap-1); list-style: none; margin: var(--gap-2) 0 0; padding: 0; }
+.grid__found .btn { width: 100%; justify-content: flex-start; min-height: var(--tap-height); }
+.grid__found [aria-pressed="true"] { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--on-air); }
+.grid__chan { min-height: var(--tap-height); color: var(--text); }
+.grid__chan[aria-pressed="true"] {
+	border-color: var(--accent-edge);
+	background: var(--accent-wash);
+	color: var(--on-air);
+	font-weight: 600;
+}
+
+/* The mark of the moment, where there is no axis to stand on: the same colour
+   saying the same thing, over a list instead of across one. */
+.grid__nowbar { display: flex; align-items: center; gap: var(--gap-2); margin: 0 0 var(--gap-2); color: var(--on-air); font-size: 0.8125rem; }
+.grid__nowmark { display: inline-block; flex: none; width: 2px; height: 13px; background: var(--on-air); }
+
+.grid__slots { display: grid; gap: var(--gap-2); list-style: none; margin: 0; padding: 0; }
+/* min-width because a grid item is as wide as its content by default, and the
+   content here is a title that does not wrap: without it the whole row is as
+   wide as the longest programme name and the page goes sideways with it. */
+.grid__slot {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-3);
+	min-width: 0;
+	padding: var(--gap-2) var(--gap-3);
+	background: var(--ground-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+}
+.grid__slot[data-on-air] { border-color: var(--accent-edge); background: var(--accent-wash); }
+.grid__sclock { flex: none; color: var(--text-dim); }
+.grid__slot[data-on-air] .grid__sclock { color: var(--on-air); }
+.grid__swhat {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--gap-1);
+	flex: 1;
+	min-width: 0;
+	min-height: var(--tap-height);
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+}
+.grid__stitle { overflow: hidden; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.grid__swhen { color: var(--text-dim); font-size: 0.75rem; }
+.grid__swhat.is-picked .grid__stitle { color: var(--on-air); }
+/* How far the programme has come, as a share of itself: there is no axis down
+   here for it to reach across to.
+
+   Named after the slot it belongs to. The bar at the head of this screen was
+   called the same thing, and since a stylesheet here is attached for the life of
+   the page, the later of the two rules flattened the other to two pixels
+   wherever the grid was drawn. */
+.grid__sbar { display: block; width: 100%; height: 2px; background: var(--line); }
+.grid__sbar i { display: block; height: 100%; background: var(--on-air); }
+.grid__srec { flex: none; min-width: var(--tap-height); min-height: var(--tap-height); text-decoration: none; }
+
+/* What is on air, so that the row reads as a clock and not only as a list. A
+   left edge and not a fill: the fill is what a chosen event is. The same name
+   the mark of the moment carries, because they are the same fact. */
+.grid__event.is-onair { border-left: 3px solid var(--on-air); }
+.grid__event.is-onair.is-picked { border-left-color: var(--accent-ink); }
+
+/* How much of the programme has gone, along the foot of its box and in the
+   lane's own coordinates rather than the box's (grid.js:Lane), so that it ends
+   exactly where the mark of the moment stands. */
+.grid__gone {
+	position: absolute;
+	bottom: 2px;
+	height: 2px;
+	background: var(--on-air);
+	pointer-events: none;
+}

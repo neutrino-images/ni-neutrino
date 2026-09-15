@@ -69,7 +69,6 @@ class CImageInfo : public CMenuTarget
 		std::string getPolicyText();
 		void ShowWindow();
 		void ScrollLic(bool scrollDown);
-		std::string getYWebVersion();
 
 		CComponentsWindowMax  	*cc_win;
 		CComponentsForm  	*cc_info;

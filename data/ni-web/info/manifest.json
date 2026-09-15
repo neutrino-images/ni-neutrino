@@ -1,0 +1,24 @@
+{
+	"name": "NI-Info",
+	"short_name": "NI-Info",
+	"start_url": "/info/",
+	"scope": "/info/",
+	"display": "standalone",
+	"orientation": "any",
+	"background_color": "#000000",
+	"theme_color": "#000000",
+	"icons": [
+		{
+			"src": "/info/icon.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/app/icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any"
+		}
+	]
+}

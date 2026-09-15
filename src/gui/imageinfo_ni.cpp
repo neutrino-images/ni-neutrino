@@ -53,6 +53,7 @@
 #ifdef ENABLE_LUA
 #include <gui/lua/lua_api_version.h>
 #endif
+#include <coreapi/base/version.h>
 #include <system/helpers.h>
 #include <system/debug.h>
 #include <cs_api.h>
@@ -90,7 +91,7 @@ static const neutrino_locale_t info_items[] =
 	LOCALE_IMAGEINFO_GUI,
 	/* libstb-hal: */
 	/* Lua-API: */
-	/* yWeb: */
+	/* CoreAPI: */
 	LOCALE_IMAGEINFO_CREATOR,
 	LOCALE_IMAGEINFO_HOMEPAGE
 };
@@ -346,9 +347,15 @@ void CImageInfoNI::paint()
 	paintLine(xpos + offset, font_info, to_string(LUA_API_VERSION_MAJOR) + "." + to_string(LUA_API_VERSION_MINOR));
 #endif
 
+	/* The version of the core API, out of the same header that fills in
+	   /api/v1/system/box and the head of the API document, so this screen
+	   cannot drift away from what a caller on the network is told.
+
+	   Not the web interface: that ships inside the image and keeps no version
+	   of its own, so a number named after it would be invented. */
 	ypos += iheight;
-	paintLine(xpos, font_info, "yWeb:");
-	paintLine(xpos + offset, font_info, getYWebVersion());
+	paintLine(xpos, font_info, "CoreAPI:");
+	paintLine(xpos + offset, font_info, to_string(NEUTRINO_API_VERSION_MAJOR) + "." + to_string(NEUTRINO_API_VERSION_MINOR));
 
 	ypos += iheight;
 	paintLine(xpos, font_info, g_Locale->getText(LOCALE_IMAGEINFO_CREATOR));
@@ -930,11 +937,4 @@ void CImageInfoNI::paint_NET_Info(int posx, int posy)
 	last_tv.tv_usec = tv.tv_usec;
 	read_old = read_akt;
 	write_old = write_akt;
-}
-
-std::string CImageInfoNI::getYWebVersion()
-{
-	CConfigFile yV('=', false);
-	yV.loadConfig(PRIVATE_HTTPDDIR "/Y_Version.txt");
-	return yV.getString("version", "n/a");
 }

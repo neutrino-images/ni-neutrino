@@ -1,0 +1,186 @@
+/* The shape of the network drives, and nothing the frame already draws.
+ *
+ * Its own file rather than a section of files.css: this screen is a list of cards
+ * where the two beside it are tables, so what is written here says nothing about
+ * them and would be loaded by them for nothing.
+ *
+ * Every colour and every measure is a name from tokens.css. */
+
+.netfs > h2 {
+	margin: 0 0 var(--gap-2);
+}
+
+/* A way back in for somebody who closed the sign in sheet, which is the whole
+   of what this screen says about not being allowed yet. */
+.netfs-way-in {
+	margin: 0 0 var(--gap-4);
+}
+
+.netfs-file {
+	margin-bottom: var(--gap-5);
+}
+
+/* The name of the file, where it is, and what may be done to all of it, on one
+   line where there is room and wrapped where there is not. */
+.netfs-file-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-2);
+	margin-bottom: var(--gap-2);
+}
+
+.netfs-file-head h3 {
+	margin: 0;
+	font-size: 1.0625rem;
+}
+
+/* The acts go to the far end of the line and drop to their own line before
+   they crowd the name. */
+.netfs-file-acts {
+	margin-left: auto;
+}
+
+.netfs-file .files-hint {
+	margin-bottom: var(--gap-3);
+}
+
+/* A file with a line nothing could be made of. Amber and not red: the entries
+   beside it were read and are on the screen, so this wants looking at and is
+   not a failure. */
+.netfs-broken {
+	margin: 0 0 var(--gap-3);
+	padding: var(--gap-2) var(--gap-3);
+	border-left: 3px solid var(--state-warning);
+	border-radius: var(--radius);
+	background: var(--ground-1);
+	color: var(--text-dim);
+}
+
+/* What the box's own script wrote, as it wrote it, so it wraps rather than
+   pushing the page sideways. */
+.netfs-ran {
+	margin: 0 0 var(--gap-3);
+	padding: var(--gap-3);
+	background: var(--ground-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+.netfs-ran h4 {
+	margin: 0 0 var(--gap-2);
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+	font-weight: 600;
+}
+
+.netfs-ran pre {
+	margin: 0;
+	overflow-x: auto;
+	font-family: var(--font-mono);
+	font-size: 0.8125rem;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.netfs-slots {
+	display: grid;
+	gap: var(--gap-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* Two cards side by side where the window is wide enough for both to be read,
+   and one where it is not. Measured on the longest thing a card holds, which is
+   a server and its share on one line: below sixty characters of that the second
+   column is a column of wrapped addresses. */
+@media (min-width: 900px) {
+	.netfs-slots {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+.netfs-slot {
+	padding: var(--gap-3);
+	background: var(--ground-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+}
+
+/* A slot nobody has filled in is a thing to fill in and says so, rather than
+   being left out of the list: what a write addresses is the slot, and a list of
+   five where the file holds eight would hide the three that are free. */
+.netfs-free {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--gap-3);
+	border-style: dashed;
+	color: var(--text-dim);
+}
+
+.netfs-slot-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-2);
+	margin-bottom: var(--gap-3);
+}
+
+.netfs-slot-head .acts {
+	margin-left: auto;
+}
+
+.netfs-number {
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+}
+
+/* The five things a card states, each as a word above the value rather than
+   beside it: a label column wide enough for the longest of the two languages
+   would be half the card. */
+.netfs-facts {
+	display: grid;
+	gap: var(--gap-2);
+	margin: 0;
+}
+
+.netfs-facts dt {
+	color: var(--text-dim);
+	font-size: 0.75rem;
+}
+
+.netfs-facts dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+/* The form is one column at every width, the way the timer form is: eight
+   fields of which half are addresses, and a second column would put four of
+   them where a narrow screen cannot follow them. */
+.netfs-form-acts {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-2);
+	margin: var(--gap-4) 0 0;
+}
+
+/* What the box said about a refusal, in the sheet where the thing that was
+   refused still is, so that it can be corrected and sent again. */
+.netfs-refusal {
+	margin: 0 0 var(--gap-3);
+	padding: var(--gap-2) var(--gap-3);
+	border-left: 3px solid var(--failure);
+	border-radius: var(--radius);
+	background: var(--ground-1);
+}
+
+.acts-row {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-2);
+}

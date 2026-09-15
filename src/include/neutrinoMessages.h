@@ -78,6 +78,7 @@ struct NeutrinoMessages
 		LEAVE_ALL				= CRCInput::RC_Messages + 26,
 		RESTART					= CRCInput::RC_Messages + 27,
 		POWER_MENU				= CRCInput::RC_Messages + 28,
+		APPLY_SETTINGS				= CRCInput::RC_Messages + 29,
 
 		/* END of CRCInput::RC_Messages */
 
@@ -131,6 +132,16 @@ struct NeutrinoMessages
 
 		/* sectionsd */
 		EVT_RELOAD_XMLTV			= CRCInput::RC_Events + 63,
+
+		/* from nhttpd, read on the loop's own thread so that the list the
+		   screens draw from is not rebuilt under them */
+		EVT_RELOAD_PLUGINS			= CRCInput::RC_Events + 64,
+
+		/* from nhttpd, read on the loop's own thread because starting and
+		   ending the shift allocates a tuner and moves the live channel, which
+		   is work only the thread that owns those may do */
+		EVT_START_TIMESHIFT			= CRCInput::RC_Events + 65,
+		EVT_STOP_TIMESHIFT			= CRCInput::RC_Events + 66,
 
 		/* END of CRCInput::RC_Events */
 

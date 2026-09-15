@@ -78,7 +78,6 @@ libneutrino_gui_a_SOURCES = \
 	movieplayer.cpp \
 	network_service.cpp \
 	network_setup.cpp \
-	nhttpd_setup.cpp \
 	nfs.cpp \
 	osd_helpers.cpp \
 	osd_progressbar_setup.cpp \
@@ -101,6 +100,7 @@ libneutrino_gui_a_SOURCES = \
 	scan_setup.cpp \
 	screensaver.cpp \
 	screensetup.cpp \
+	settings_appliers.cpp \
 	settings_manager.cpp \
 	sleeptimer.cpp \
 	start_wizard.cpp \
@@ -122,6 +122,14 @@ libneutrino_gui_a_SOURCES = \
 	webchannels_setup.cpp \
 	xmltv_setup.cpp \
 	zapit_setup.cpp
+
+# The screen that sets the web server up, which a build without that server has
+# nothing for. Named under the same switch the link and the two calls that
+# start and stop it are named under, so the three cannot come apart.
+if ENABLE_NI_WEB
+libneutrino_gui_a_SOURCES += \
+	webserver_setup.cpp
+endif
 
 if ENABLE_PIP
 libneutrino_gui_a_SOURCES += \

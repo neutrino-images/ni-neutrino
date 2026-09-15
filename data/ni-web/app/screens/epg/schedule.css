@@ -1,0 +1,60 @@
+/* The three screens of this destination: a channel's day, a search over the
+   whole guide, and the link to the guide as one document.
+ *
+ * Named after the first of them because a stream here owns names and not a
+ * directory, and the grid beside these belongs to another one.
+ *
+ * Only the marks the frame declares, never a colour or a measure written out.
+ * The two listings are the frame's own table, which turns itself into a stack
+ * of cards below the phone width, so nothing about a narrow window is decided
+ * here: what is left is the shape of one cell and of the page around it. */
+
+.epg h2 { margin: 0 0 var(--gap-4); font-size: 1.1875rem; }
+
+/* The controls of the window. They wrap rather than scroll: three of them are
+   a row at a desk and a column in one hand, and nothing is lost either way. */
+.epg-bar { display: flex; flex-wrap: wrap; gap: var(--gap-4); align-items: flex-start; }
+.epg-bar .field { flex: 1 1 200px; margin-bottom: 0; }
+
+.epg-days { display: flex; flex-wrap: wrap; gap: var(--gap-2); margin: var(--gap-4) 0; }
+
+.epg-window { margin: 0 0 var(--gap-3); color: var(--text-dim); }
+
+/* What one programme is, in one cell: the name, and under it the two things
+   that are about the name rather than about the row. A column and not a line,
+   because on a card the cell is as wide as the card and a line would wrap in
+   the middle of a clock. */
+.epg-what { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+.epg-what b { font-weight: 600; }
+.epg-what small { color: var(--text-dim); font-size: 0.75rem; }
+
+/* A channel the listing has not named yet, drawn as the identifier it is, so
+   that a screen still waiting is not read as a screen that has answered. */
+.epg-unnamed { color: var(--text-dim); }
+
+.epg-text { margin: 0 0 var(--gap-2); }
+.epg-long { margin: 0 0 var(--gap-2); }
+
+.epg-actions { display: flex; flex-wrap: wrap; gap: var(--gap-2); margin: var(--gap-2) 0 0; }
+.epg-actions .btn { text-decoration: none; }
+
+.epg-facts { display: grid; grid-template-columns: auto 1fr; gap: var(--gap-1) var(--gap-3); margin: 0 0 var(--gap-2); }
+.epg-facts dt { color: var(--text-dim); }
+.epg-facts dd { margin: 0; }
+
+/* What the box cut off, and what the whole of the answer would have cost. It
+   is a condition of the answer and not a fault, so it carries the warning mark
+   and not the red one. */
+.epg-cut { display: flex; align-items: center; gap: var(--gap-2); margin: 0 0 var(--gap-3);
+	color: var(--text-dim); }
+
+.epg-form { display: flex; flex-wrap: wrap; gap: var(--gap-4); align-items: flex-start; }
+.epg-form .field { flex: 1 1 180px; margin-bottom: 0; }
+.epg-form .epg-query { flex: 2 1 260px; }
+.epg-submit { margin: var(--gap-4) 0; }
+
+.epg-doc { max-width: 60ch; }
+.epg-doc p { margin: 0 0 var(--gap-3); }
+.epg-address { display: block; padding: var(--gap-2) var(--gap-3); margin-bottom: var(--gap-3);
+	background: var(--ground-1); border: 1px solid var(--line); border-radius: var(--radius);
+	overflow-x: auto; white-space: nowrap; }

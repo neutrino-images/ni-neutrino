@@ -1,0 +1,59 @@
+/* The player, which is a media element and four lines of prose around it.
+   Fetched by the module itself when it is first drawn, so a page that never
+   plays anything never asks for it. */
+
+/* The place the element is drawn in while this screen is on. The element
+   itself belongs to app/ui/playing.js and outlives the screen, so what is
+   stated here is the space it is given and what it looks like in it. */
+.pl-media {
+	display: block;
+	width: 100%;
+	max-width: 60rem;
+	margin: var(--gap) 0;
+	background: #000;
+	border-radius: var(--radius);
+}
+
+.pl-media .np-media {
+	display: block;
+	width: 100%;
+	border-radius: inherit;
+}
+
+/* Sound alone needs no black rectangle, and one drawn for it is a hole in the
+   page the size of a video. */
+.pl-media.pl-sound {
+	background: none;
+	height: var(--tap-height);
+}
+
+.pl-how,
+.pl-vlc-hint {
+	color: var(--muted);
+}
+
+.pl-state {
+	margin: var(--gap) 0 0;
+}
+
+.pl-phase.bad {
+	color: var(--failure);
+}
+
+.pl-bad {
+	color: var(--failure);
+}
+
+.pl-no-head {
+	margin-top: 0;
+}
+
+.pl-vlc {
+	margin-top: var(--gap);
+	padding-top: var(--gap);
+	border-top: 1px solid var(--edge);
+}
+
+.pl-address {
+	overflow-wrap: anywhere;
+}

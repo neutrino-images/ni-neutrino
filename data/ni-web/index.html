@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- blob: is in media-src and in nothing else. A channel of this box reaches
+     the page as a transport stream, which no browser opens on its own: the
+     demuxer takes it apart and hands the pieces to a MediaSource, and the only
+     way to put one of those on a video element is a blob address the page
+     makes for itself. The wildcard beside it does not cover that, because a
+     wildcard matches addresses that are fetched from somewhere and this one is
+     not fetched at all. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src * blob:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<title>NI-Web</title>
+<link rel="icon" href="/app/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/app/css/tokens.css">
+<link rel="stylesheet" href="/app/css/shell.css">
+<!-- The one file a person may put on the box themselves, answered out of the
+     directory a box may write into. It need not exist, and a 404 on a
+     stylesheet costs nothing. -->
+<link rel="stylesheet" href="/user.css">
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="/app/main.js"></script>
+</body>
+</html>

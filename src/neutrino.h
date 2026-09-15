@@ -150,6 +150,9 @@ private:
 	void CmdParser(int argc, char **argv);
 	void Cleanup();
 	void CheckFastScan(bool standby = false, bool reload = true);
+	// Puts the appliers of the settings screens into the facade. Defined beside
+	// them in src/gui, because what they call is the screens' own notifiers.
+	void registerSettingsAppliers();
 	CNeutrinoApp();
 
 public:
@@ -177,6 +180,7 @@ public:
 	static CNeutrinoApp* getInstance();
 
 	void channelsInit(bool bOnly = false);
+	void invalidateChannelLists();
 	int run(int argc, char **argv);
 
 #if ENABLE_PIP

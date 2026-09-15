@@ -1650,18 +1650,11 @@ menu.hint_net_dropbear Activeer ssh toegang naar de box
 menu.hint_net_ftpd Bestandsoverdracht via FTP inschakelen
 menu.hint_net_gateway Gateway/router IP adres invoeren
 menu.hint_net_hostname Wijzig de hostnaam van uw ontvanger
-menu.hint_net_httpd Webserver (nhttpd) instellen
-menu.hint_net_httpd_auth Aanmelden verplicht voor het webinterface
-menu.hint_net_httpd_host Bind-adres of host\n(leeg of 0.0.0.0 voor alles)
-menu.hint_net_httpd_loglevel Logniveau van de webserver
-menu.hint_net_httpd_noauth Clients zonder login\n(komma-gescheiden IPs/hosts)
-menu.hint_net_httpd_pass Wachtwoord voor HTTP-authenticatie
+menu.hint_net_httpd Webserver (ni-web) instellen
+menu.hint_net_httpd_host Adres waarop de server antwoordt\n(0.0.0.0 voor alles)
+menu.hint_net_httpd_pass Nieuw wachtwoord voor het webinterface\n(leeg laten behoudt het huidige)
 menu.hint_net_httpd_port TCP-poort voor het webinterface (1-65535)
-menu.hint_net_httpd_ssl HTTPS voor het webinterface inschakelen
-menu.hint_net_httpd_ssl_cafile Pad naar CA-bestand (optioneel)
-menu.hint_net_httpd_ssl_pemfile Pad naar PEM-bestand met certificaat en sleutel
-menu.hint_net_httpd_threading Verbindingen in aparte threads afhandelen
-menu.hint_net_httpd_user Gebruikersnaam voor HTTP-authenticatie
+menu.hint_net_httpd_user Gebruikersnaam voor het webinterface
 menu.hint_net_if Selecteer interface om te configureren
 menu.hint_net_ipaddress Voer het IP adres van uw ontvanger in.
 menu.hint_net_mount Configureer, koppel of ontkoppel gedeelde netwerklocaties\n NFS en CIFS ondersteund.
@@ -2387,20 +2380,13 @@ networkmenu.gateway Standaard gateway
 networkmenu.hostname Hostnaam
 networkmenu.hostname_hint1 Hostnaam invoeren
 networkmenu.hostname_hint2 Opnieuw opstarten na wijzigingen
-networkmenu.httpd Webserver (nhttpd)
-networkmenu.httpd_port Poort
+networkmenu.httpd Webserver (ni-web)
 networkmenu.httpd_host Bind-adres
-networkmenu.httpd_auth Authenticatie
-networkmenu.httpd_user Gebruikersnaam
 networkmenu.httpd_pass Wachtwoord
-networkmenu.httpd_noauth Geen-auth clients
-networkmenu.httpd_threading Verbindings-threads
-networkmenu.httpd_loglevel Logniveau
-networkmenu.httpd_ssl SSL inschakelen
-networkmenu.httpd_ssl_pemfile SSL-PEM-bestand
-networkmenu.httpd_ssl_cafile SSL-CA-bestand
-networkmenu.httpd_port_invalid Ongeldige poort. Gebruik 1-65535.
-networkmenu.httpd_save_failed nhttpd.conf opslaan mislukt
+networkmenu.httpd_port Poort
+networkmenu.httpd_restart_failed ni-web kon daarna niet starten
+networkmenu.httpd_save_failed ni-web.conf opslaan mislukt
+networkmenu.httpd_user Gebruikersnaam
 networkmenu.inactive_network Netwerk inactief!
 networkmenu.ipaddress IP adres
 networkmenu.mount Beheer netwerklocaties
