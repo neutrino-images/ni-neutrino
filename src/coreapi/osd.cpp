@@ -207,6 +207,21 @@ OpenThreads::Mutex &displayGuard()
 	return m;
 }
 
+/* Gives back a lock the caller has already taken, however the call leaves.
+   ScopedLock takes the lock itself, which is the one thing a caller that must
+   not wait for it can let it do. */
+class Held
+{
+	public:
+		explicit Held(OpenThreads::Mutex &m) : m_(m) {}
+		~Held() { m_.unlock(); }
+
+	private:
+		OpenThreads::Mutex &m_;
+		Held(const Held &);
+		Held &operator=(const Held &);
+};
+
 } // anonymous namespace
 
 Result<std::string> screenshot(bool osd, bool video, PictureFormat format)
@@ -215,8 +230,18 @@ Result<std::string> screenshot(bool osd, bool video, PictureFormat format)
 
 	/* One lock for both names and not one each. What two captures at once
 	   contend for is the screen and not the file: the layer below reads one
-	   video decoder and one framebuffer. */
-	OpenThreads::ScopedLock<OpenThreads::Mutex> held(screenGuard());
+	   video decoder and one framebuffer.
+
+	   Tried and not waited for. The capture below reads the box's framebuffer
+	   through a driver call that has no deadline of its own, so a caller that
+	   queued here would hand this server's next worker to the same stuck read;
+	   there are four of them, and the page asks for a picture on every key.
+	   Refusing costs one worker, waiting costs the channel list and the guide
+	   with it. */
+	if (screenGuard().trylock() != 0)
+		return fail(Status::Busy, ErrorCode::ScreenNotCaptured,
+			    "the box is already taking a picture of its screen");
+	Held held(screenGuard());
 	const Status s = screenshotSource().captureScreen(osd, video, format, path);
 	if (s != Status::Ok)
 		return fail(s, ErrorCode::ScreenNotCaptured,
@@ -228,6 +253,11 @@ Result<std::string> displayScreenshot()
 {
 	const std::string path = DISPLAY_PICTURE;
 
+	/* Waited for, unlike the one above. What is under this lock is an encode of
+	   a bitmap this process already holds, bounded by its own size, with no
+	   device read in it; and nothing asks for this picture but a press of the
+	   button beside it, so two at once means two people pressing at the same
+	   moment. A refusal would cost that press a picture and buy nothing. */
 	OpenThreads::ScopedLock<OpenThreads::Mutex> held(displayGuard());
 	const Status s = screenshotSource().captureDisplay(path);
 	if (s != Status::Ok)
