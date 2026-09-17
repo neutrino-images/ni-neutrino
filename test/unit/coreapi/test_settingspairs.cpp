@@ -449,7 +449,7 @@ TEST_CASE("every declared default is the one the program falls back to", "[setti
 			   here, so the two are compared as the number both of them mean.
 			   Read as a spelling against a fallback that was never written as
 			   one, it would be a row nothing could check. */
-			if (d.field.origin == FieldOrigin::ChannelId)
+			if (d.field.origin == FieldOrigin::ChannelIdField)
 			{
 				if (v[j].kind != "int")
 					continue;
@@ -488,7 +488,7 @@ TEST_CASE("every declared default is the one the program falls back to", "[setti
 		}
 
 		std::string declared;
-		if (d.field.origin == FieldOrigin::ChannelId)
+		if (d.field.origin == FieldOrigin::ChannelIdField)
 			declared = std::string("id ") + (d.default_string != NULL ? d.default_string : "");
 		else if (d.type == ValueType::String)
 			declared = std::string("str ") + (d.default_string != NULL ? d.default_string : "");
