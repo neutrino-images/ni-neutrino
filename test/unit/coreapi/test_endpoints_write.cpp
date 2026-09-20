@@ -1249,6 +1249,47 @@ TEST_CASE("a timer round trip creates, changes and removes", "[write]")
 	REQUIRE(authedPatch("/api/v1/timers/" + id, "{\"title\":\"x\"}").code == 404);
 }
 
+TEST_CASE("the two flags a recording carries are taken on the way in and nowhere else", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+
+	/* Left out, both are off. A caller that named a start and a stop named the
+	   window it wants, and either flag has the daemon file the timer at other
+	   times than the ones that were sent. */
+	REQUIRE(authedPost("/api/v1/timers", timerBody(box.timers.clock + 3600)).code == 201);
+	REQUIRE(box.timers.timers.size() == 1);
+	REQUIRE_FALSE(box.timers.timers[0].recording_safety);
+	REQUIRE_FALSE(box.timers.timers[0].auto_adjust);
+
+	// Asked for, both reach the daemon, which applies them itself and is the
+	// whole of what this route does with them.
+	std::string asked = timerBody(box.timers.clock + 7200);
+	asked.erase(asked.size() - 1);
+	asked += ",\"recording_safety\":true,\"auto_adjust\":true}";
+	REQUIRE(authedPost("/api/v1/timers", asked).code == 201);
+	REQUIRE(box.timers.timers.size() == 2);
+	REQUIRE(box.timers.timers[1].recording_safety);
+	REQUIRE(box.timers.timers[1].auto_adjust);
+
+	/* A change takes neither, and says so rather than taking one and dropping
+	   it: the daemon's change command carries times, repeat and a directory, so
+	   a route that took either would be one that answered ok and applied
+	   neither. */
+	const Reply changed = authedPatch("/api/v1/timers/1", "{\"recording_safety\":true}");
+	REQUIRE(changed.code == 400);
+	REQUIRE(changed.body.find("no-such-parameter") != std::string::npos);
+	REQUIRE_FALSE(box.timers.timers[0].recording_safety);
+
+	/* Nor does a read state either. The daemon's answer for a timer carries
+	   neither, so a member for one would read false on every timer whatever was
+	   asked for, the second of these two included. */
+	const ::Json::Value items = parsed(authedGet("/api/v1/timers").body)["items"];
+	REQUIRE(items.size() == 2);
+	REQUIRE_FALSE(items[1].isMember("recording_safety"));
+	REQUIRE_FALSE(items[1].isMember("auto_adjust"));
+}
+
 TEST_CASE("a timer in the past is refused with the reason", "[write]")
 {
 	ShippedRoutes shipped;

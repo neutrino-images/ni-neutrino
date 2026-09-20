@@ -451,6 +451,31 @@ export function createBody(draft, now) {
 		body.epg_id = draft.epg_id;
 		body.epg_start = draft.epg_start;
 	}
+
+	/* THE TWO THINGS A RECORDING PICKED OUT OF THE GUIDE GETS, and a recording
+	   somebody typed the times of does not.
+
+	   The box draws the same line at its own screens. Times typed into its
+	   timer screen are taken as they stand (src/gui/timerlist.cpp), while
+	   pressing record on a guide entry asks for both (src/gui/epgview.cpp).
+	   The two are different acts: one names a window, the other names a
+	   programme, and a programme is worth a margin at each end and worth
+	   following when the broadcast moves. Without this the same press gave a
+	   bare window here and a margin at the television.
+
+	   Only where the guide entry came along, which is what tells the two acts
+	   apart, and only for a recording: the daemon reads neither on any other
+	   kind, and an immediate recording begins now, where a margin in front of
+	   it would be a start already behind us.
+
+	   Following is asked for only while the programme is still ahead. There is
+	   nothing to follow once it has begun, and the box stops asking three
+	   minutes earlier still; a timer made inside those three minutes is about
+	   a programme starting now, so the difference changes nothing. */
+	if (draft.kind === 'record' && draft.epg_id !== '' && draft.epg_start > 0) {
+		body.recording_safety = true;
+		body.auto_adjust = draft.epg_start > now;
+	}
 	return body;
 }
 
