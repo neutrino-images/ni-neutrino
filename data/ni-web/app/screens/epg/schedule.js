@@ -1,5 +1,4 @@
-/* What one channel is showing over one day, and the event row every screen of
-   this destination draws.
+/* What one channel is showing over one day.
 
    THE GUIDE IS ASKED WITH BOTH ENDS OF A WINDOW AND NEITHER MAY BE LEFT OUT
    (src/httpd/ep/ep_epg.cpp). A read with no bound is a whole schedule of a channel,
@@ -8,32 +7,24 @@
    the local midnight of the next one. The next one and not from plus a day,
    because two days a year are twenty three and twenty five hours long here.
 
-   A LIST CARRIES SIX FIELDS AND NO MORE. The age an event is broadcast for, what
-   it is about and the long text under the short one are answered by one route
-   for one event, asked with both halves of its name: the guide files an
-   identifier under every showing. That is why nothing of that is fetched until
-   somebody asks for one event, and why they are shown a sheet and not a panel
-   inside a row.
-
-   AND THE SHORT TEXT OF A LIST IS NOT ALWAYS A SHORT TEXT. Where an event
-   carries none, the event manager fills the field with the beginning of the long
-   one cut at a hundred and twenty bytes. So the sheet draws the two texts the
-   single event route answers and stops drawing the one the list gave it, or the
-   same sentence would stand twice, once cut off. */
+   ONE EVENT IS NOT THIS SCREEN'S. What a showing says about itself and what may
+   be done to it are drawn by app/ui/event.js, because the grid and the search
+   reach the same showing and the answer must not depend on where it was reached
+   from. */
 import { html, route, useState, useEffect } from '../../runtime.js';
 import * as store from '../../store.js';
 import { t } from '../../i18n.js';
 import { hrefFor } from '../../nav.js';
 import { problemHref } from '../../problem.js';
-import { channelId, clock, day, duration } from '../../fmt.js';
+import { channelId, day } from '../../fmt.js';
 import { State } from '../../ui/state.js';
 import { Select } from '../../ui/select.js';
 import { Button } from '../../ui/button.js';
 import { Field } from '../../ui/field.js';
 import { Table } from '../../ui/table.js';
-import { RowActions } from '../../ui/actions.js';
-import { Sheet } from '../../ui/sheet.js';
 import { Dot } from '../../ui/dot.js';
+import { EventActions, EventSheet, isOnAir, whenOf } from '../../ui/event.js';
+import words from '../../ui/event.text.js';
 import text from './schedule.text.js';
 
 export const css = '/app/screens/epg/schedule.css';
@@ -116,56 +107,7 @@ export function shiftDay(key, by) {
 	return dayKeyOf(Math.floor(moved.getTime() / 1000));
 }
 
-/* ----------------------------------------------------------------- events */
-
-/**
- * The word for what an event is about, out of the upper half of the one byte the
- * box answers. Empty for the classes the box itself draws as unknown, which is
- * nought and everything from eleven up (src/gui/epgview.cpp).
- *
- * @param {number} genre
- * @returns {string} a key of this screen's catalogue, or the empty string
- */
-export function genreKey(genre) {
-	if (!Number.isFinite(genre)) {
-		return '';
-	}
-	const broad = (Math.floor(genre) >> 4) & 0x0f;
-	return (broad >= 1 && broad <= 10) ? 'epg.genre.' + String(broad) : '';
-}
-
-/**
- * The way from an event to a timer made out of it.
- *
- * The timer list owns making and changing one, reached with a third part in its
- * address (app/screens/timers/nav.js). What the event is travels beside that
- * part rather than in it: one part of a path names one thing, and an event is
- * four.
- *
- * The names here are the ones the form reads (askedFor in
- * app/screens/timers/form.js) and not the ones an event happens to carry. An
- * event states how long it runs; the form asks when it ends, and a name it does
- * not read is a field left empty on a form the reader thinks was filled in.
- *
- * The channel is handed on as the event names it, and that is only safe because
- * every guide read now names a channel the way the channel routes do
- * (src/coreapi/epg.cpp). It did not always: the guide keeps the lower half of an
- * identifier, a search used to answer that half, and a timer made out of a hit
- * then named a channel this box does not have.
- *
- * @param {Api.Event} event
- * @returns {string}
- */
-export function timerHref(event) {
-	const values = [
-		'channel=' + encodeURIComponent(event.channel_id),
-		'epg=' + encodeURIComponent(event.id),
-		'start=' + encodeURIComponent(String(event.start)),
-		'stop=' + encodeURIComponent(String(event.start + event.duration)),
-		'title=' + encodeURIComponent(event.title)
-	];
-	return hrefFor('timers', 'list', 'new') + '?' + values.join('&');
-}
+/* --------------------------------------------------------------- refusals */
 
 /**
  * A refusal as the shared state draws one: what the box said about itself, and
@@ -183,147 +125,6 @@ export function problemOf(error) {
 		detail: error.problem.detail,
 		href: problemHref(error.problem)
 	};
-}
-
-/**
- * Whether one event is the one on air. The half open interval, so the event
- * beginning at the moment another ends is the one on now and never both.
- *
- * @param {Api.Event} event
- * @param {number} at seconds since the epoch
- * @returns {boolean}
- */
-export function isOnAir(event, at) {
-	return event.start <= at && at < event.start + event.duration;
-}
-
-/**
- * When one event is, as the first column of a listing says it.
- *
- * @param {Api.Event} event
- * @returns {string}
- */
-export function whenOf(event) {
-	return t(text, 'epg.event.span', {
-		start: clock(event.start),
-		end: clock(event.start + event.duration)
-	});
-}
-
-/**
- * What may be done to one event.
- *
- * Handed to the frame's own control rather than drawn here, because three marks
- * in a line is three targets of eleven pixels in one hand: that control draws
- * them side by side where there is a pointer and puts them in a sheet where
- * there is a finger.
- *
- * @param {{ event: Api.Event, channelHref?: string,
- *           onOpen: (event: Api.Event) => void }} props
- * @returns {Web.Drawn}
- */
-export function EventActions(props) {
-	const event = props.event;
-	/** @type {{ id: string, label: string, mark: string, onAct: () => void }[]} */
-	const actions = [
-		{
-			id: 'about',
-			label: t(text, 'epg.event.details.open'),
-			mark: 'i',
-			onAct: function () { props.onOpen(event); }
-		},
-		{
-			id: 'timer',
-			label: t(text, 'epg.event.timer'),
-			mark: '⏺',
-			onAct: function () { route(timerHref(event)); }
-		}
-	];
-	if (props.channelHref) {
-		actions.push({
-			id: 'day',
-			label: t(text, 'epg.event.schedule'),
-			mark: '▤',
-			onAct: function () { route(String(props.channelHref)); }
-		});
-	}
-	return html`<div class="acts"><${RowActions} title=${event.title} actions=${actions} /></div>`;
-}
-
-/**
- * The three things only the single event route carries, in the one thing this
- * page lays over itself.
- *
- * A sheet and not a panel under the row: the row is a row of a table at a desk
- * and a card in one hand, and a thing that unfolds inside it is two layouts to
- * keep right. The read happens while the sheet is open, so a list nobody opened
- * anything in costs the box nothing.
- *
- * @param {{ event: Api.Event | null, onClose: () => void }} props
- * @returns {Web.Drawn}
- */
-export function EventSheet(props) {
-	const event = props.event;
-	const [detail, setDetail] = useState(/** @type {Web.Snapshot<Api.EventDetail> | null} */ (null));
-	// Both halves of the name, because the guide files one identifier under
-	// every showing of an event and the moment is which of them is meant.
-	const id = event === null ? '' : event.id;
-	const start = event === null ? 0 : event.start;
-
-	useEffect(function () {
-		if (id === '') {
-			setDetail(null);
-			return undefined;
-		}
-		return store.watch('GET', '/api/v1/epg/event', {
-			query: { id: id, start: start }
-		}, setDetail);
-	}, [id, start]);
-
-	return html`<${Sheet}
-		open=${event !== null}
-		centred=${true}
-		label=${event === null ? '' : event.title}
-		onClose=${props.onClose}>
-		${event === null ? null : html`<div>
-			<h2>${event.title}</h2>
-			<p class="epg-window">${whenOf(event)} · ${duration(event.duration)}</p>
-			<${EventFacts} shot=${detail} genre=${detail && detail.data ? genreKey(detail.data.genre) : ''} />
-			<p class="epg-actions"><${Button} onClick=${props.onClose}>${t(text, 'epg.event.details.close')}<//></p>
-		</div>`}
-	<//>`;
-}
-
-/**
- * @param {{ shot: Web.Snapshot<Api.EventDetail> | null, genre: string }} props
- * @returns {Web.Drawn}
- */
-function EventFacts(props) {
-	const shot = props.shot;
-	if (!shot || shot.state === 'empty' || (shot.state === 'loading' && shot.data === null)) {
-		return html`<${State} phase="first" />`;
-	}
-	if (shot.state === 'error' && shot.data === null) {
-		return html`<${State} problem=${problemOf(shot.error)} />`;
-	}
-
-	const known = shot.data;
-	if (!known) {
-		return html`<${State} phase="first" />`;
-	}
-
-	return html`<div>
-		<dl class="epg-facts">
-			<dt>${t(text, 'epg.event.rating')}</dt>
-			<dd>${known.rating > 0
-				? t(text, 'epg.event.rating.value', { years: known.rating })
-				: t(text, 'epg.event.rating.none')}</dd>
-			<dt>${t(text, 'epg.event.genre')}</dt>
-			<dd>${props.genre ? t(text, props.genre) : t(text, 'epg.event.genre.none')}</dd>
-		</dl>
-		${known.description ? html`<p class="epg-text">${known.description}</p>` : null}
-		${known.long_description ? html`<p class="epg-long">${known.long_description}</p>` : null}
-	</div>`;
 }
 
 /* ----------------------------------------------------------------- picker */
@@ -549,6 +350,12 @@ export default function Schedule(props) {
 		tv && tv.data ? tv.data : null,
 		radio && radio.data ? radio.data : null);
 
+	/* The clock as this draw read it, for the one thing on this screen that
+	   depends on it: what may be done to a showing that has begun is not what
+	   may be done to one that has not. Read at the draw and not held, because
+	   nothing here moves by itself and every act reads the clock again. */
+	const now = Math.floor(Date.now() / 1000);
+
 	/** @param {{ currentTarget: HTMLSelectElement }} event */
 	function pickBouquet(event) {
 		setBouquet(Number(event.currentTarget.value));
@@ -599,8 +406,8 @@ export default function Schedule(props) {
 		</p>
 		${channel === ''
 			? html`<p class="note epg-nochannel">${t(text, bouquetRows.length ? 'epg.schedule.nochannel' : 'epg.schedule.nobouquets')}</p>`
-			: html`<${Listing} shot=${events} when=${when} onOpen=${setOpen} />`}
-		<${EventSheet} event=${open} onClose=${function () { setOpen(null); }} />
+			: html`<${Listing} shot=${events} when=${when} at=${now} onOpen=${setOpen} />`}
+		<${EventSheet} event=${open} at=${now} onClose=${function () { setOpen(null); }} />
 	</section>`;
 }
 
@@ -643,7 +450,7 @@ export function pickerOptions(rows, chosen, name) {
  * turns every row of one into a card and puts the column's own word in front of
  * each cell.
  *
- * @param {{ shot: Web.Snapshot<Api.EventList> | null, when: string,
+ * @param {{ shot: Web.Snapshot<Api.EventList> | null, when: string, at: number,
  *           onOpen: (event: Api.Event) => void }} props
  * @returns {Web.Drawn}
  */
@@ -658,7 +465,7 @@ function Listing(props) {
 
 	const rows = shot.data ? shot.data.items : [];
 	const chosen = dayStart(props.when);
-	const now = Math.floor(Date.now() / 1000);
+	const now = props.at;
 
 	/** @type {import('../../ui/table.js').Column<Api.Event>[]} */
 	const columns = [
@@ -675,7 +482,7 @@ function Listing(props) {
 			cell: function (one) {
 				return html`<span class="epg-what">
 					<b>${one.title}</b>
-					${isOnAir(one, now) ? html`<${Dot} kind="onair" word=${t(text, 'epg.event.running')} />` : null}
+					${isOnAir(one, now) ? html`<${Dot} kind="onair" word=${t(words, 'epg.event.running')} />` : null}
 				</span>`;
 			}
 		},
@@ -683,7 +490,7 @@ function Listing(props) {
 			id: 'acts',
 			label: '',
 			cell: function (one) {
-				return html`<${EventActions} event=${one} onOpen=${props.onOpen} />`;
+				return html`<${EventActions} event=${one} at=${now} onOpen=${props.onOpen} />`;
 			}
 		}
 	];

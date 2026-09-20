@@ -29,10 +29,9 @@ import { Select } from '../../ui/select.js';
 import { Button } from '../../ui/button.js';
 import { Table } from '../../ui/table.js';
 import { Dot } from '../../ui/dot.js';
-import {
-	EventActions, EventSheet, isOnAir, whenOf,
-	dayKeyOf, dayStart, shiftDay, problemOf
-} from './schedule.js';
+import { EventActions, EventSheet, isOnAir, whenOf } from '../../ui/event.js';
+import { dayKeyOf, dayStart, shiftDay, problemOf } from './schedule.js';
+import words from '../../ui/event.text.js';
 import shared from './schedule.text.js';
 import text from './search.text.js';
 
@@ -129,6 +128,11 @@ export default function Search(_props) {
 		tv && tv.data ? tv.data : null,
 		radio && radio.data ? radio.data : null);
 
+	/* The clock as this draw read it. What may be done to a hit that has begun
+	   is not what may be done to one that has not, and that is the only thing
+	   on this screen the moment decides. */
+	const now = Math.floor(Date.now() / 1000);
+
 	/** @param {{ currentTarget: HTMLInputElement }} event */
 	function typeQuery(event) {
 		setQuery(event.currentTarget.value);
@@ -186,14 +190,18 @@ export default function Search(_props) {
 				<${Button} type="submit" primary=${true}>${t(text, 'epg.search.submit')}<//>
 			</p>
 		</form>
-		<${Hits} shot=${hits} names=${names} onOpen=${setOpen} />
-		<${EventSheet} event=${open} onClose=${function () { setOpen(null); }} />
+		<${Hits} shot=${hits} names=${names} at=${now} onOpen=${setOpen} />
+		<${EventSheet}
+			event=${open}
+			at=${now}
+			channelHref=${open === null ? '' : hrefFor('epg', 'schedule', open.channel_id)}
+			onClose=${function () { setOpen(null); }} />
 	</section>`;
 }
 
 /**
  * @param {{ shot: Web.Snapshot<Api.EventSearch> | null, names: Map<string, string>,
- *           onOpen: (event: Api.Event) => void }} props
+ *           at: number, onOpen: (event: Api.Event) => void }} props
  * @returns {Web.Drawn}
  */
 function Hits(props) {
@@ -226,7 +234,7 @@ function Hits(props) {
 		</div>`;
 	}
 
-	const now = Math.floor(Date.now() / 1000);
+	const now = props.at;
 
 	/** @type {import('../../ui/table.js').Column<Api.Event>[]} */
 	const columns = [
@@ -257,7 +265,7 @@ function Hits(props) {
 				return html`<span class="epg-what">
 					<b>${one.title}</b>
 					<small>${whenOf(one)}</small>
-					${isOnAir(one, now) ? html`<${Dot} kind="onair" word=${t(shared, 'epg.event.running')} />` : null}
+					${isOnAir(one, now) ? html`<${Dot} kind="onair" word=${t(words, 'epg.event.running')} />` : null}
 				</span>`;
 			}
 		},
@@ -267,6 +275,7 @@ function Hits(props) {
 			cell: function (one) {
 				return html`<${EventActions}
 					event=${one}
+					at=${now}
 					channelHref=${hrefFor('epg', 'schedule', one.channel_id)}
 					onOpen=${props.onOpen} />`;
 			}

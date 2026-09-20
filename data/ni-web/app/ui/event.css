@@ -1,0 +1,34 @@
+/* The dress of one guide event, beside the module that draws it.
+ *
+ * Its own sheet and not a screen's, because the same four shapes are drawn on
+ * three screens: in a sheet over a listing, in a sheet over a search, and in the
+ * panel above the grid. A screen's sheet dressing them would be a screen every
+ * other screen borrowed its looks from.
+ *
+ * Only the marks the frame declares, never a colour or a measure written out.
+ */
+
+/* When it is, under the name. */
+.ev-when { margin: 0 0 var(--gap-3); color: var(--text-dim); }
+
+/* The two facts the single event route carries. A grid of two columns rather
+   than a list, so the words and the values line up down the page. */
+.ev-facts { display: grid; grid-template-columns: auto 1fr; gap: var(--gap-1) var(--gap-3); margin: 0 0 var(--gap-2); }
+.ev-facts dt { color: var(--text-dim); }
+.ev-facts dd { margin: 0; }
+
+/* The short text and the long one under it, which are two paragraphs and never
+   one: the box answers them separately and the second is not the first made
+   longer. */
+.ev-text { margin: 0 0 var(--gap-2); }
+.ev-long { margin: 0 0 var(--gap-2); }
+
+/* What may be done, as words. They wrap rather than shrink: four controls are a
+   row at a desk and two rows in one hand, and nothing is lost either way. */
+.ev-acts { display: flex; flex-wrap: wrap; gap: var(--gap-2); margin: var(--gap-3) 0 0; }
+/* Room under the row where something follows it, which is the panel over the
+   grid: a control and the fact under it are different things to look at, and a
+   press is easier to aim at when nothing sits against it. Where the row is the
+   last thing, which is the sheet, the same margin would be a gap at the bottom
+   of a panel that has already ended. */
+.ev-acts:not(:last-child) { margin-bottom: var(--gap-4); }

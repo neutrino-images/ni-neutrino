@@ -30,9 +30,12 @@
    and the cursor is the only thing that says whether a walk is over. It is read
    in one place, grid.model.js:nextCursor.
 
-   Nothing here writes to the box. Everything it asks for is answered to a caller
-   granted Read, so there is no control on this screen that a visitor is
-   refused. */
+   AND WHAT IT WRITES, WHICH IS WHAT A PERSON READS A GUIDE FOR. A press on the
+   name at the front of a row puts the box on that channel, and a programme picked
+   out of a lane offers what may be done to it (app/ui/event.js). Both ask for a
+   sign in at the moment they are used and never before, so a visitor granted Read
+   reads this grid exactly as it always did and is turned down only where they
+   reach for something. */
 import { html, Fragment, useState, useEffect, useLayoutEffect, useRef, Link, route } from '../../runtime.js';
 import { api } from '../../api.js';
 import * as store from '../../store.js';
@@ -48,7 +51,8 @@ import { Field } from '../../ui/field.js';
 import { Sheet } from '../../ui/sheet.js';
 import { elapsedShare } from '../../ui/onair.js';
 import { Logo } from '../../ui/logo.js';
-import { holdingBouquet, timerHref } from './schedule.js';
+import { EventButtons, EventFacts, timerHref, zapTo } from '../../ui/event.js';
+import { holdingBouquet } from './schedule.js';
 import text from './grid.text.js';
 import * as model from './grid.model.js';
 
@@ -211,6 +215,16 @@ function Axis(props) {
 /**
  * One channel, as the column on the left says it.
  *
+ * AND IT IS A CONTROL: A PRESS OF IT PUTS THE BOX ON THAT CHANNEL. The name at
+ * the front of a row is where a person points when they mean that channel, and
+ * the grid is read to decide what to watch. The chips of the folded grid are not
+ * this and must not become it: those choose whose evening is drawn, which is a
+ * choice about the screen and not about the television.
+ *
+ * WHAT IT IS CALLED WHERE IT IS READ OUT is the act and not the contents. The
+ * cell holds a number, a picture and a name, which read out in a row says three
+ * things and not what pressing it does.
+ *
  * THE ONE THE BOX IS PLAYING CARRIES A MARK. The accent and never the red: red
  * on this page is the box writing to a disc. The mark is asked for by name
  * (app/ui/dot.js) so that no screen here decides which colour that is.
@@ -230,7 +244,16 @@ function Name(props) {
 	const channel = props.row.channel;
 	const place = channel.number > 0 ? String(channel.number) : t(text, 'grid.nonumber');
 	const air = dotParts('onair', t(text, 'grid.playing'));
-	return html`<div class="grid__name" data-channel=${channel.id}>
+	const what = t(text, 'grid.zap', { channel: channel.name });
+	return html`<button
+		type="button"
+		class="grid__name"
+		data-channel=${channel.id}
+		title=${what}
+		aria-label=${what}
+		onClick=${function () {
+			zapTo(channel.id, t(text, 'grid.zap.done', { channel: channel.name }));
+		}}>
 		<span class="grid__place mono">${place}</span>
 		<${Logo} channel=${channel} size="sm" />
 		<span class="grid__channel">${channel.name}</span>
@@ -238,7 +261,7 @@ function Name(props) {
 			<span class=${air.className} aria-hidden="true"></span>
 			<span class="sr">${air.word}</span>
 		</span>` : null}
-	</div>`;
+	</button>`;
 }
 
 /**
@@ -470,7 +493,7 @@ function Slots(props) {
 					${onAir ? html`<${Dot} kind="onair" word=${t(text, 'grid.running')} />` : null}
 					${onAir ? html`<span class="grid__sbar"><i style=${{ width: share + '%' }}></i></span>` : null}
 				</button>
-				<${Link} class="btn grid__srec" href=${timerHref(event)} title=${t(text, 'grid.record')}>
+				<${Link} class="btn grid__srec" href=${timerHref(event, 'record')} title=${t(text, 'grid.record')}>
 					<span aria-hidden="true">⏺</span><span class="sr">${t(text, 'grid.record')}</span>
 				<//>
 			</li>`;
@@ -479,12 +502,18 @@ function Slots(props) {
 }
 
 /**
- * What one event says about itself, out of what the listing already carries.
+ * WHAT ONE EVENT SAYS ABOUT ITSELF, AND WHAT MAY BE DONE TO IT.
  *
- * The long text is not asked for here: it is one more read of the guide per
- * event somebody rests on, and what a listing carries is the short text.
+ * The long text, the age it is broadcast for and what it is about are asked for
+ * here, which they were not while this panel followed the pointer: that was one
+ * read of the guide per programme somebody rested on. What fills this panel now
+ * is a press, so the read is one a person asked for, one at a time.
  *
- * @param {{ pick: { channel: Api.Channel, event: Api.Event } | null, onClose: () => void }} props
+ * Both halves are the shared drawing of one event (app/ui/event.js), so a
+ * programme offers the same things here, in a channel's day and in a search.
+ *
+ * @param {{ pick: { channel: Api.Channel, event: Api.Event } | null, at: number,
+ *          boxRef: { current: HTMLElement | null }, onClose: () => void }} props
  * @returns {Web.Drawn}
  */
 function Detail(props) {
@@ -493,7 +522,7 @@ function Detail(props) {
 		return null;
 	}
 	const ends = pick.event.start + pick.event.duration;
-	return html`<div class="grid__detail" role="status">
+	return html`<div class="grid__detail" role="status" ref=${props.boxRef}>
 		<div class="grid__dhead">
 			<h2 class="grid__dtitle">${pick.event.title}</h2>
 			<${Button} onClick=${props.onClose}>${t(text, 'grid.detail.close')}<//>
@@ -503,7 +532,11 @@ function Detail(props) {
 			end: clock(ends),
 			duration: spanOf(pick.event.duration)
 		})}</p>
-		${pick.event.description === '' ? null : html`<p class="grid__dtext">${pick.event.description}</p>`}
+		<${EventButtons}
+			event=${pick.event}
+			at=${props.at}
+			channelHref=${hrefFor('epg', 'schedule', pick.channel.id)} />
+		<${EventFacts} event=${pick.event} />
 	</div>`;
 }
 
@@ -545,6 +578,9 @@ export default function Grid(props) {
 	const [minute, setMinute] = useState(nowMinute());
 
 	const box = useRef(/** @type {HTMLElement | null} */ (null));
+	// What a picked programme says about itself, watched because it changes
+	// height on its own. See the measurement below.
+	const panel = useRef(/** @type {HTMLElement | null} */ (null));
 	// Whether where this guide opens has been settled. See the read below.
 	const decided = useRef(false);
 
@@ -840,6 +876,16 @@ export default function Grid(props) {
 		if (watch !== null && element !== null) {
 			watch.observe(element);
 		}
+		/* AND THE PANEL ABOVE IT, WHICH GROWS AFTER IT IS DRAWN. What a picked
+		   programme says about itself arrives from the box a moment later, so the
+		   panel is one height when it opens and a taller one once the answer is
+		   in, and the grid under it sits that much further down. It is watched
+		   and never measured from: nothing about its height depends on what is
+		   worked out here, so this cannot chase itself. */
+		const said = panel.current;
+		if (watch !== null && said !== null) {
+			watch.observe(said);
+		}
 		return function () {
 			window.removeEventListener('resize', measure);
 			if (watch !== null) {
@@ -1087,7 +1133,7 @@ export default function Grid(props) {
 			<p class="grid__window">${t(text, 'grid.window', { from: dayAndClock(from), to: clock(to) })}</p>
 		</div>
 
-		<${Detail} pick=${picked} onClose=${function () { setPicked(null); }} />
+		<${Detail} pick=${picked} at=${moment} boxRef=${panel} onClose=${function () { setPicked(null); }} />
 
 		${rows.length === 0 && !listMore
 			? html`<${State} empty=${t(text, 'grid.empty')} />`
