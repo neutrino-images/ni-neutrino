@@ -2672,12 +2672,15 @@ remotebox_add Add
 remotebox_channel_na Channel not available on Remote-Box
 remotebox_del Delete
 remotebox_head Remote-Boxes
+remotebox_login_failed Remote-Box refused the user name or the password
 remotebox_mod Modify
+remotebox_no_answer Remote-Box does not answer
 remotebox_onoff On/Off
 remotebox_pass Password
 remotebox_port Port
 remotebox_rbaddr Address
 remotebox_rbname Screenname
+remotebox_refused Remote-Box refused the request
 remotebox_user User
 reset_all Factory reset and reboot
 reset_channels Delete all channels

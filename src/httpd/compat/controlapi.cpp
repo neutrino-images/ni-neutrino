@@ -42,6 +42,7 @@
 #include <eitd/sectionsd.h>
 #include <configfile.h>
 #include <system/configure_network.h>
+#include <system/remotetimer.h>
 #include <cs_api.h>
 #include <gui/plugins.h>//for relodplugins
 #include <neutrino.h>
@@ -399,12 +400,12 @@ void CControlAPI::TimerSendCGI(CyhookHandler *hh)
 			bool force = (hh->ParamList["force"] == "1") || (hh->ParamList["force"] == "true");
 			if(!hh->ParamList["ip"].empty())
 			{
-				NeutrinoAPI->SendAllTimers(hh->ParamList["ip"],force);
+				sendAllTimersTo(NeutrinoAPI->Timerd, hh->ParamList["ip"], force);
 				hh->SendOk();
 			}
 			else if(!hh->ParamList["name"].empty())
 			{
-				NeutrinoAPI->SendAllTimers(NeutrinoAPI->GetRemoteBoxIP(decodeString(hh->ParamList["name"])),force);
+				sendAllTimersTo(NeutrinoAPI->Timerd, NeutrinoAPI->GetRemoteBoxIP(decodeString(hh->ParamList["name"])), force);
 				hh->SendOk();
 			}
 			else
