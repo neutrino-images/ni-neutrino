@@ -286,7 +286,16 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 
 	if (actionKey == "add_ip")
 	{
-		std::string rbname, rbaddress, user, pass = "";
+		std::string rbname, rbaddress;
+		/* The login these images ship with, which is the same pair that opens
+		   their ssh and their web interface. Left empty, a box is reached with
+		   nothing but the address, and the new API grants an unnamed caller on
+		   the local network no more than reading: the list of the other box's
+		   timers arrives and deleting one is refused, with nothing on screen
+		   saying why until the refusal is read. Somebody who changed the pair
+		   types over it; somebody who did not is connected. */
+		std::string user = "root";
+		std::string pass = "ni";
 		std::string port = "80";
 		CKeyboardInput remotebox_name(LOCALE_REMOTEBOX_RBNAME, &rbname, 25);
 		remotebox_name.forceSaveScreen(true);
