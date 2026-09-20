@@ -675,7 +675,7 @@ function Storage() {
 	const all = useResource('GET', '/api/v1/storage/mounts');
 	const rows = (all.data && all.data.items) || [];
 
-	return html`<${Card}
+	return html`<${Card} double=${true}
 		title=${t(text, 'now.card.storage')}
 		snapshot=${all}
 		empty=${all.data && rows.length === 0 ? t(text, 'now.store.none') : undefined}>
