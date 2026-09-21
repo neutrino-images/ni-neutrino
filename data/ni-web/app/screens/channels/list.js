@@ -547,9 +547,6 @@ export default function ChannelList(props) {
 				if (!isPlaying(channel) && !channel.scrambled && !channel.locked && !isWeb(channel))
 					return null;
 				return html`<span class="ch-marks">
-					${isPlaying(channel)
-						? html`<span class="chip on-air"><${Dot} kind="onair" word=${t(text, 'list.running')} /></span>`
-						: null}
 					${channel.scrambled ? html`<span class="ch-mark ch-crypt" title=${t(text, 'list.flag.scrambled')}>
 						<span aria-hidden="true">${t(text, 'list.flag.scrambled.short')}</span>
 						<span class="sr">${t(text, 'list.flag.scrambled')}</span>
@@ -562,6 +559,9 @@ export default function ChannelList(props) {
 						<span aria-hidden="true">${t(text, 'list.flag.web.short')}</span>
 						<span class="sr">${t(text, 'list.flag.web')}</span>
 					</span>` : null}
+					${isPlaying(channel)
+						? html`<span class="chip on-air"><${Dot} kind="onair" word=${t(text, 'list.running')} /></span>`
+						: null}
 				</span>`;
 			}
 		},
