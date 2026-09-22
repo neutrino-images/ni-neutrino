@@ -65,6 +65,7 @@
 #include <driver/scanepg.h>
 
 #include <coreapi/channels.h>
+#include <coreapi/system.h>
 #include <coreapi/base/deps.h>
 #include <coreapi/base/messagebridge.h>
 
@@ -4905,6 +4906,12 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 					(recordingstatus && channelList && channelList->SameTP(eventinfo->channel_id)) ) {
 				bool isTVMode = CServiceManager::getInstance()->IsChannelTVChannel(eventinfo->channel_id);
 
+				// The calls below write the mode, and one that writes it
+				// without this leaves a box that says it is running and looks
+				// like one in standby.
+				if (mode == NeutrinoModes::mode_standby)
+					standbyMode(false);
+
 				dvbsub_stop();
 
 				if ((!isTVMode) && (mode != NeutrinoModes::mode_radio) && (mode != NeutrinoModes::mode_webradio)) {
@@ -5884,6 +5891,9 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 		powerManager->SetStandby(false, false);
 		if (scansettings.fst_update)
 			fst_timer = g_RCInput->addTimer(30*1000*1000, true);
+
+		// Here and not where the message arrives: this is where it happened.
+		coreapi::system::announceStandby(true);
 	} else {
 		// Active standby off
 		powerManager->SetStandby(false, false);
@@ -5976,6 +5986,8 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 
 		g_audioMute->AudioMute(current_muted, true);
 		StartSubtitles();
+
+		coreapi::system::announceStandby(false);
 	}
 	lockStandbyCall = false;
 }
