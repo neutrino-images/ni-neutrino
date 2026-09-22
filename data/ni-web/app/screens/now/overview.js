@@ -539,7 +539,8 @@ function BoxCard() {
 			? html`<p class="now-empty" role="status">${t(text, 'now.loading')}</p>`
 			: html`<div class="now-state">
 				<${Switch}
-					label=${mode.on ? t(text, 'now.box.standby') : t(text, 'now.box.on')}
+					label=${t(text, 'now.box.on')}
+					hint=${mode.on ? t(text, 'now.box.standby') : ''}
 					checked=${!mode.on}
 					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) {
 						if (!e.currentTarget.checked) {
