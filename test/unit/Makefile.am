@@ -75,6 +75,8 @@ coreapi_tests_SOURCES = \
 	coreapi/test_screenshot.cpp \
 	coreapi/test_shellcontract.cpp \
 	system/test_mysystem.cpp \
+	system/test_httptool.cpp \
+	system/test_remotetimer.cpp \
 	coreapi/test_storage.cpp \
 	coreapi/test_shelltable.cpp \
 	coreapi/test_daemons.cpp \
@@ -140,6 +142,12 @@ coreapi_tests_SOURCES = \
 # archive with it, which is why that adapter lives in a file of its own.
 # The timer daemon's client is linked for the same reason as the channel object:
 # what a list read does with an answer that stops early is its own logic.
+# httptool.o is the client the box talks to another box with, and the cases that
+# pin what it puts on the wire answer it with a socket rather than reading the
+# source: a header it stopped sending is only visible at the other end.
+# remotetimer.o is what the timer screen asks another box's API with, driven the
+# same way: what it sends, how it logs in when the other end refuses, and how it
+# reads a list back are all visible only from the other side of a socket.
 # helpers.o carries the spawn helper the shipped program uses, so the case that
 # pins what it does with an ampersand drives that object and not a copy. debug.o,
 # the json archive and the network library are what it needs besides;
@@ -162,6 +170,8 @@ coreapi_tests_LDADD = \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
 	$(top_builddir)/lib/xmltree/libxmltree.a \
 	$(top_builddir)/src/system/helpers.o \
+	$(top_builddir)/src/system/httptool.o \
+	$(top_builddir)/src/system/remotetimer.o \
 	$(top_builddir)/src/system/debug.o \
 	$(top_builddir)/lib/jsoncpp/libjsoncpp.a \
 	$(top_builddir)/src/zapit/channel.o \
