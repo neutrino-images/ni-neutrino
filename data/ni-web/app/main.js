@@ -129,9 +129,11 @@ function readBuild() {
  * @returns {void}
  */
 function nameTab(host) {
+	document.title = '';
 	const trimmed = host.replace(/^\s+|\s+$/g, '');
 	if (trimmed !== '')
-		document.title = 'NI-Web - ' + trimmed;
+		document.title = trimmed + ' - ';
+	document.title += 'NI-Web';
 }
 
 /** @returns {Web.Drawn} */
