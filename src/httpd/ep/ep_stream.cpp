@@ -300,6 +300,16 @@ const Endpoint kStreamEndpoints[] = {
 	{ Method::Get, "/api/v1/stream/playlist", AuthLevel::Read,
 	  "every visible user bouquet as one playlist a player opens",
 	  HTTPD_PARAMS(kPlaylistParams), NULL, &streamPlaylist, false },
+	/* THE SAME LIST UNDER THE NAME ITS FILE HAS. A box reading a playlist back
+	   in as a channel list decides what it was handed by the extension of the
+	   address it was given and reads nothing it cannot name that way
+	   (CBouquetManager::loadWebchannels), so the address above, which ends in
+	   no extension and whose last point is the one in an address like
+	   192.168.1.5, is turned away there before a byte of it is read. The webtv
+	   route names its file the same way and for readers of the same kind. */
+	{ Method::Get, "/api/v1/stream/playlist.m3u", AuthLevel::Read,
+	  "the same list, under a name a reader that goes by file names accepts",
+	  HTTPD_PARAMS(kPlaylistParams), NULL, &streamPlaylist, false },
 	{ Method::Get, "/api/v1/stream/playlist/{id}", AuthLevel::Read,
 	  "one channel as a playlist a player opens",
 	  HTTPD_PARAMS(kChannelParams), NULL, &streamPlaylistFor, false },

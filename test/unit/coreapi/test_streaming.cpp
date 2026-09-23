@@ -32,6 +32,7 @@
 
 #include "coreapi/base/errors.h"
 #include "coreapi/base/result.h"
+#include "coreapi/epg.h"
 #include "coreapi/streaming.h"
 #include "coreapi/base/types.h"
 
@@ -102,6 +103,27 @@ size_t playlistFilesInTmp()
 	return n;
 }
 
+/* The head one half of the list is written under. Built here from the pieces a
+   case names rather than transcribed, because what every case below is about is
+   which authority and which half went into it. */
+std::string headOf(const char *authority, const char *half)
+{
+	return std::string("#EXTM3U tvg-url=\"http://") + authority +
+	       "/api/v1/epg/xmltv?mode=" + half + "\"\n";
+}
+
+/* What this machine is called, read the same way the playlist reads it. A case
+   comparing the two is about the field carrying this box's name and not about
+   the name itself, which is whatever the machine running the case is called. */
+std::string thisHostName()
+{
+	char name[256];
+	if (::gethostname(name, sizeof(name)) != 0)
+		return std::string();
+	name[sizeof(name) - 1] = '\0';
+	return std::string(name);
+}
+
 coreapi::ChannelInfo makeChannel(uint64_t id, const char *name, coreapi::ServiceKind kind)
 {
 	coreapi::ChannelInfo c;
@@ -125,6 +147,9 @@ struct Fixture
 	static const uint64_t kShown1 = 0x1001;
 	static const uint64_t kShown2 = 0x1002;
 	static const uint64_t kShownRadio = 0x2001;
+	// In a bouquet, and called something carrying the byte that tells the
+	// fields of an entry from the title behind them.
+	static const uint64_t kComma = 0x1003;
 	static const uint64_t kHidden = 0x3001;
 	static const uint64_t kProvider = 0x4001;
 	// Wider than thirty two bits, and in no bouquet: what a request asks for by
@@ -161,6 +186,7 @@ struct Fixture
 		coreapi::ChannelList shown_members;
 		shown_members.push_back(makeChannel(kShown1, "First", coreapi::ServiceKind::Tv));
 		shown_members.push_back(makeChannel(kShown2, "Second", coreapi::ServiceKind::Tv));
+		shown_members.push_back(makeChannel(kComma, "Eins, Zwei", coreapi::ServiceKind::Tv));
 		shown_members.push_back(makeChannel(kShownRadio, "Tunes", coreapi::ServiceKind::Radio));
 		deps.channels.bouquet_members[1] = shown_members;
 
@@ -248,8 +274,8 @@ TEST_CASE("the playlist holds every visible user bouquet and nothing else", "[st
 		coreapi::streaming::playlist("box", coreapi::streaming::Scope::Tv).value();
 	const std::string doc = readAndRemove(path);
 
-	REQUIRE(doc.compare(0, 8, "#EXTM3U\n") == 0);
-	REQUIRE(countOf(doc, "#EXTINF:-1,") == 2);
+	REQUIRE(doc.compare(0, headOf("box", "tv").size(), headOf("box", "tv")) == 0);
+	REQUIRE(countOf(doc, "#EXTINF:-1 ") == 3);
 	// By name and not by count: a filter dropped on either of these would leave
 	// a list of the same shape holding channels nobody asked to see.
 	REQUIRE(doc.find("HiddenChannel") == std::string::npos);
@@ -316,11 +342,166 @@ TEST_CASE("a playlist of one channel names that channel and nothing else", "[str
 	const std::string doc = readAndRemove(
 		coreapi::streaming::playlistFor("box", Fixture::kShown1).value());
 
-	REQUIRE(doc.compare(0, 8, "#EXTM3U\n") == 0);
-	REQUIRE(countOf(doc, "#EXTINF:-1,") == 1);
-	REQUIRE(doc.find("#EXTINF:-1,First\n") != std::string::npos);
+	REQUIRE(doc.compare(0, headOf("box", "tv").size(), headOf("box", "tv")) == 0);
+	REQUIRE(countOf(doc, "#EXTINF:-1 ") == 1);
+	REQUIRE(doc.find(",First\n") != std::string::npos);
 	REQUIRE(doc.find("http://box:31339/id=1001\n") != std::string::npos);
 	REQUIRE(doc.find("Second") == std::string::npos);
+}
+
+TEST_CASE("the head of a playlist names the guide of this server", "[streaming]")
+{
+	/* What a box reading this list in keeps is the address in this line, and it
+	   fetches every schedule from it from then on. A line naming the route the
+	   copied endpoint answers would send it to the other server, which names a
+	   channel by another spelling than the entries below do. */
+	Fixture fx;
+
+	/* The guide is answered here, so its address keeps the port the request
+	   arrived on; the stream is answered by the box's own server, so that
+	   address takes the port the box streams on. Both in one document. */
+	const std::string doc = readAndRemove(
+		coreapi::streaming::playlist("box.example:8080", coreapi::streaming::Scope::Tv).value());
+	const std::string head = headOf("box.example:8080", "tv");
+	REQUIRE(doc.compare(0, head.size(), head) == 0);
+	REQUIRE(doc.find("http://box.example:31339/id=1001\n") != std::string::npos);
+	REQUIRE(doc.find("/control/xmltv") == std::string::npos);
+}
+
+TEST_CASE("the half the head names is the half that was written", "[streaming]")
+{
+	Fixture fx;
+
+	{
+		const std::string doc = readAndRemove(
+			coreapi::streaming::playlist("box", coreapi::streaming::Scope::Radio).value());
+		const std::string head = headOf("box", "radio");
+		REQUIRE(doc.compare(0, head.size(), head) == 0);
+	}
+
+	/* The mode the box happens to be in is written out as the half it stands
+	   for. A guide of both halves would offer schedules for channels this list
+	   does not hold. */
+	fx.deps.channels.mode = NeutrinoModes::mode_radio;
+	{
+		const std::string doc = readAndRemove(
+			coreapi::streaming::playlist("box", coreapi::streaming::Scope::CurrentMode).value());
+		const std::string head = headOf("box", "radio");
+		REQUIRE(doc.compare(0, head.size(), head) == 0);
+	}
+	fx.deps.channels.mode = NeutrinoModes::mode_tv;
+	{
+		const std::string doc = readAndRemove(
+			coreapi::streaming::playlist("box", coreapi::streaming::Scope::CurrentMode).value());
+		const std::string head = headOf("box", "tv");
+		REQUIRE(doc.compare(0, head.size(), head) == 0);
+	}
+}
+
+TEST_CASE("an entry carries every field a box reading it back in needs", "[streaming]")
+{
+	/* The whole line, byte for byte, and not the fields one at a time: what a
+	   reader takes off it is the order and the spelling together, and a case
+	   asking after each field on its own passes on a line no reader can
+	   read. */
+	Fixture fx;
+	fx.deps.logos.put(Fixture::kShown1, "/share/tuxbox/neutrino/icons/logo/1001.png");
+
+	const std::string doc = readAndRemove(
+		coreapi::streaming::playlist("box.example:8080", coreapi::streaming::Scope::Tv).value());
+
+	const std::string entry =
+		"#EXTINF:-1 tvg-id=\"1001\" tvg-name=\"First\""
+		" tvg-logo=\"http://box.example:8080/api/v1/channels/1001/logo\""
+		" radio=\"\" group-prefix=\"" + thisHostName() + "\""
+		" group-title=\"Meine\",First\n"
+		"http://box.example:31339/id=1001\n";
+	REQUIRE(doc.find(entry) != std::string::npos);
+}
+
+TEST_CASE("a channel with no picture is handed no address for one", "[streaming]")
+{
+	Fixture fx;
+
+	const unsigned looked_before = fx.deps.logos.searches;
+	const std::string doc = readAndRemove(
+		coreapi::streaming::playlist("box", coreapi::streaming::Scope::Tv).value());
+
+	// The field is written and empty, and no address for a picture is in the
+	// document at all
+	REQUIRE(countOf(doc, "tvg-logo=\"\"") == 3);
+	REQUIRE(doc.find("/logo") == std::string::npos);
+	// And the search really ran: without this the case above is green whether
+	// or not anything ever looked
+	REQUIRE(fx.deps.logos.searches > looked_before);
+}
+
+TEST_CASE("the address of a picture is the route that hands one over", "[streaming]")
+{
+	/* Not the path the picture has on this box's disc, which is what the copied
+	   endpoint writes: this server hands over the web directory and one name
+	   beside it, so that path is a picture nothing answers with. */
+	Fixture fx;
+	fx.deps.logos.put(Fixture::kShown2, "/share/tuxbox/neutrino/icons/logo/1002.png");
+
+	const std::string doc = readAndRemove(
+		coreapi::streaming::playlist("box", coreapi::streaming::Scope::Tv).value());
+
+	REQUIRE(doc.find("tvg-logo=\"http://box/api/v1/channels/1002/logo\"") != std::string::npos);
+	REQUIRE(doc.find("/share/tuxbox") == std::string::npos);
+}
+
+TEST_CASE("the separator is kept out of the fields of an entry", "[streaming]")
+{
+	/* A comma is what tells the fields from the title behind them, so one
+	   inside a field would leave a reader taking the rest of the fields for the
+	   title. The title itself is the name as it is: it is the rest of the
+	   line. */
+	Fixture fx;
+
+	const std::string doc = readAndRemove(
+		coreapi::streaming::playlist("box", coreapi::streaming::Scope::Tv).value());
+
+	REQUIRE(doc.find("tvg-name=\"Eins. Zwei\"") != std::string::npos);
+	REQUIRE(doc.find(",Eins, Zwei\n") != std::string::npos);
+}
+
+TEST_CASE("which half a channel is in is said on the line", "[streaming]")
+{
+	Fixture fx;
+
+	{
+		const std::string doc = readAndRemove(
+			coreapi::streaming::playlist("box", coreapi::streaming::Scope::Radio).value());
+		REQUIRE(doc.find(" radio=\"true\"") != std::string::npos);
+		REQUIRE(doc.find(" radio=\"\"") == std::string::npos);
+	}
+	{
+		const std::string doc = readAndRemove(
+			coreapi::streaming::playlist("box", coreapi::streaming::Scope::Tv).value());
+		REQUIRE(doc.find(" radio=\"\"") != std::string::npos);
+		REQUIRE(doc.find(" radio=\"true\"") == std::string::npos);
+	}
+}
+
+TEST_CASE("the identifier an entry is keyed by is the one the guide writes", "[streaming]")
+{
+	/* THE ONE THING THAT MAKES THE TWO DOCUMENTS ONE. A box reading the list in
+	   keeps tvg-id and matches it against the channel names in the guide the
+	   head points at. The copied endpoint wrote the lower forty eight bits in
+	   both of its documents; this server writes the whole identifier in its
+	   guide, so a line carrying the short one would leave every channel taken
+	   over without a schedule. Read out of both documents rather than
+	   transcribed from either. */
+	Fixture fx;
+
+	const std::string list = readAndRemove(
+		coreapi::streaming::playlist("box", coreapi::streaming::Scope::Tv).value());
+	const std::string guide = readAndRemove(
+		coreapi::epg::xmltv(coreapi::epg::Kind::Tv).value());
+
+	REQUIRE(list.find("tvg-id=\"1001\"") != std::string::npos);
+	REQUIRE(guide.find("<channel id=\"1001\">") != std::string::npos);
 }
 
 TEST_CASE("a playlist for a channel the box does not have is refused", "[streaming]")
@@ -434,6 +615,10 @@ TEST_CASE("the playlist is written as it is built and not held in one piece", "[
 	   asking for bouquets. */
 	PeekingChannelSource channels;
 	InstalledChannelSource in_channels(&channels);
+	// Every entry asks after a picture, and this fixture names none, so what is
+	// measured below is the writing and not a search of the filesystem.
+	FakeLogoSource logos;
+	InstalledLogoSource in_logos(&logos);
 	FakeSettingsSource settings;
 	InstalledSettingsSource in_settings(&settings);
 	settings.ints["streaming_port"] = 31339;
@@ -706,7 +891,7 @@ TEST_CASE("one channel's playlist arrives the same way", "[streaming]")
 	REQUIRE(r.transport_ok);
 	REQUIRE(r.code == 200);
 	REQUIRE(r.header("Content-Type") == "audio/x-mpegurl");
-	REQUIRE(r.body.find("#EXTINF:-1,First\n") != std::string::npos);
+	REQUIRE(r.body.find(",First\n") != std::string::npos);
 	REQUIRE(r.body.find("Second") == std::string::npos);
 }
 
@@ -767,6 +952,25 @@ TEST_CASE("which half the playlist covers can be named in the query", "[streamin
 	REQUIRE(r.code == 200);
 	REQUIRE(r.body.find("Tunes") != std::string::npos);
 	REQUIRE(r.body.find("First") == std::string::npos);
+}
+
+TEST_CASE("the list is answered under the name a reader that goes by file names needs", "[streaming]")
+{
+	/* A box reading a playlist in as a channel list decides what it was handed
+	   by the extension of the address, and the address without one is turned
+	   away there before a byte of it is read. */
+	Serving serving;
+	REQUIRE(serving.port > 0);
+
+	const testhttp::Reply r =
+		testhttp::request(serving.port, "GET", "/api/v1/stream/playlist.m3u?mode=tv",
+		                  headers("Host", "box.example"));
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 200);
+	REQUIRE(r.header("Content-Type") == "audio/x-mpegurl");
+	const std::string head = headOf("box.example", "tv");
+	REQUIRE(r.body.compare(0, head.size(), head) == 0);
+	REQUIRE(r.body.find("http://box.example:31339/id=1001\n") != std::string::npos);
 }
 
 TEST_CASE("nothing on the way out builds a second answer from a playlist", "[streaming]")

@@ -165,7 +165,12 @@ int CWebChannelsSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 	}
 	if (actionKey == "e" /* enter */)
 	{
-		std::string tpl = "http://xxx.xxx.xxx.xxx/control/xmltv.m3u";
+		/* The route of the web server this image ships, under the name that
+		   ends in an extension: the reader below decides what it was handed by
+		   the extension of the address. The old address is still answered by
+		   the layer that keeps the former server's routes, so a line stored
+		   before this stays good. */
+		std::string tpl = "http://xxx.xxx.xxx.xxx/api/v1/stream/playlist.m3u";
 		if (webradio)
 			tpl += "?mode=radio";
 		else

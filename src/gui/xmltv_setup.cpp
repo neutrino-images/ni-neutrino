@@ -116,7 +116,11 @@ int CXMLTVSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 	}
 	if (actionKey == "e" /* enter */)
 	{
-		std::string tpl = "http://xxx.xxx.xxx.xxx/control/xmltv.xml";
+		/* The route another NI box answers this with today. The old server's
+		   /control/xmltv.xml is still answered by the compatibility layer, so a
+		   line somebody already stored goes on working; what is offered here is
+		   the one to store from now on. */
+		std::string tpl = "http://xxx.xxx.xxx.xxx/api/v1/epg/xmltv";
 		std::string entry = tpl;
 
 		CKeyboardInput *e = new CKeyboardInput(LOCALE_XMLTV_XML_ENTER, &entry, 255);
