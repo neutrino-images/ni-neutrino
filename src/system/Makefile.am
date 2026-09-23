@@ -40,6 +40,7 @@ libneutrino_system_a_SOURCES = \
 	mdb-tools.cpp \
 	ping.cpp \
 	proc_tools.cpp \
+	remotetimer.cpp \
 	settings.cpp \
 	stacktrace.cpp \
 	supportinfo.cpp \

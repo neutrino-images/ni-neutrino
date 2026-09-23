@@ -39,6 +39,9 @@
 #include <gui/widget/menue.h>
 #include <gui/widget/listhelpers.h>
 
+#include <system/remotetimer.h>
+
+#include <map>
 #include <string>
 #include <vector>
 
@@ -90,10 +93,18 @@ class CTimerList : public CMenuTarget, public CListHelpers
 		CVFD::MODES saved_displaymode;
 		bool RemoteBoxSetup();
 		void RemoteBoxSelect();
-		std::string RemoteBoxConnectUrl(std::string _rbname);
+		bool RemoteBoxAddress(const std::string &rbname, remotebox_address_t &out);
 		bool RemoteBoxChanExists(t_channel_id channel_id);
 		bool LocalBoxChanExists(t_channel_id channel_id);
-		int rem_pre, rem_post;
+		/* What the other box refused with, said to the person in front of this
+		   one. A call that came to nothing used to look exactly like one that
+		   worked. */
+		void RemoteBoxProblem(const std::string &rbname, CRemoteTimerClient &client,
+			CRemoteTimerClient::result_t res);
+		/* What each remote box calls the channel of each of its timers, read
+		   once with the list rather than once per drawn row. */
+		std::map<std::string, std::string> rb_channel_names;
+		std::string RemoteBoxChannelName(const CTimerd::responseGetTimer &timer) const;
 		int item_offset;
 		bool changed;
 		int bselected;
@@ -109,7 +120,9 @@ class CTimerList : public CMenuTarget, public CListHelpers
 		static const char *convertTimerType2String(const CTimerd::CTimerEventTypes type);
 		static std::string convertTimerRepeat2String(const CTimerd::CTimerEventRepeat rep);
 		static std::string convertChannelId2String(const t_channel_id id);
-		void RemoteBoxTimerList(CTimerd::TimerList &timerlist);
+		/* with_channel_names costs one call per channel the other box has a
+		   timer on, so only the screen that draws those names asks for them. */
+		void RemoteBoxTimerList(CTimerd::TimerList &timerlist, bool with_channel_names = false);
 };
 
 bool askUserOnTimerConflict(time_t announceTime, time_t stopTime, t_channel_id channel_id = 0);

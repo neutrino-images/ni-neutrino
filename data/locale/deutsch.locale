@@ -2672,12 +2672,15 @@ remotebox_add Hinzufügen
 remotebox_channel_na Kanal auf Remote-Box nicht verfügbar
 remotebox_del Löschen
 remotebox_head Remote-Boxen
+remotebox_login_failed Remote-Box weist Benutzername oder Passwort zurück
 remotebox_mod Bearbeiten
+remotebox_no_answer Remote-Box antwortet nicht
 remotebox_onoff Ein/Aus
 remotebox_pass Passwort
 remotebox_port Port
 remotebox_rbaddr Adresse
 remotebox_rbname Anzeigename
+remotebox_refused Remote-Box hat die Anfrage abgelehnt
 remotebox_user Benutzer
 reset_all Werkseinstellungen und Reboot
 reset_channels Lösche Kanäle

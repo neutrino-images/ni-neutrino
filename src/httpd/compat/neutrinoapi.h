@@ -88,7 +88,6 @@ public:
 	std::string getCryptInfoAsString(void);
 	std::string getLogoFile(t_channel_id channelId);
 	std::string GetRemoteBoxIP(std::string _rbname);
-	void		SendAllTimers(std::string url, bool force = false);
 public:
 	CNeutrinoAPI();
 	~CNeutrinoAPI(void);

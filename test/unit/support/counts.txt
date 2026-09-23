@@ -44,7 +44,7 @@ labels compared against a stated field	83
 labels compared against the locale names	342
 labels stated beside a field	97
 listed keys compared against the table	26
-locale names the program has	3187
+locale names the program has	3190
 options an applier or its notifier branches on	50
 parameters the document describes	128
 refusals the header names	13

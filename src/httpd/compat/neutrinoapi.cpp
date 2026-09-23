@@ -599,36 +599,3 @@ std::string CNeutrinoAPI::GetRemoteBoxIP(std::string _rbname)
 	}
 	return c_url;
 }
-
-void CNeutrinoAPI::SendAllTimers(std::string url, bool force)
-{
-	CTimerd::TimerList timerlist;
-	timerlist.clear();
-	Timerd->getTimerList(timerlist);
-	sort(timerlist.begin(), timerlist.end());
-
-	int pre = 0,post = 0;
-	Timerd->getRecordingSafety(pre,post);
-	CHTTPTool httpTool;
-	std::string r_url;
-
-	for(CTimerd::TimerList::iterator timer = timerlist.begin(); timer != timerlist.end(); ++timer)
-	{
-		if (timer->eventType == CTimerd::TIMER_RECORD) {
-			r_url = "http://";
-			r_url += url;
-			r_url += "/control/timer?action=new";
-			r_url += "&alarm=" + to_string((int)timer->alarmTime + pre);
-			r_url += "&stop=" + to_string((int)timer->stopTime - post);
-			r_url += "&announce=" + to_string((int)timer->announceTime + pre);
-			r_url += "&channel_id=" + string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer->channel_id);
-			r_url += "&aj=on";
-			r_url += "&rs=on";
-
-			r_url = httpTool.downloadString(r_url, -1, 300);
-
-			if ((r_url=="ok") || force)
-				Timerd->removeTimerEvent(timer->eventID);
-		}
-	}
-}

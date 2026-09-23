@@ -68,10 +68,7 @@
 #include <system/settings.h>
 #include <system/fsmounter.h>
 #include <system/helpers.h>
-#include <system/helpers-json.h>
-#include <system/httptool.h>
-
-#include <json/json.h>
+#include <system/remotetimer.h>
 
 #include <global.h>
 #include <neutrino.h>
@@ -254,17 +251,6 @@ class CTimerListApidNotifier : public CChangeObserver
 		}
 };
 
-std::string string_printf_helper(const char *fmt, ...)
-{
-	va_list arglist;
-	const int bufferlen = 4 * 1024;
-	char buffer[bufferlen] = {0};
-	va_start(arglist, fmt);
-	vsnprintf(buffer, bufferlen, fmt, arglist);
-	va_end(arglist);
-	return std::string(buffer);
-}
-
 CTimerList::CTimerList()
 {
 	frameBuffer = CFrameBuffer::getInstance();
@@ -431,22 +417,14 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 		}
 		else if (timerlist[selected].eventType == CTimerd::TIMER_REMOTEBOX)
 		{
-			CHTTPTool httpTool;
-			std::string r_url;
-			r_url = "http://";
-			r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
-			r_url += "/control/timer?action=new&update=1";
-			r_url += "&alarm=" + to_string((int)timerlist[selected].alarmTime);
-			r_url += "&stop=" + to_string((int)timerlist[selected].stopTime);
-			r_url += "&start=" + to_string((int)timerlist[selected].epg_starttime);
-			r_url += "&announce=" + to_string((int)timerlist[selected].announceTime);
-			r_url += "&channel_id=" + string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timerlist[selected].channel_id);
-			r_url += "&aj=on";
-			r_url += "&rs=on";
-			r_url += "&id=" + to_string((int)timerlist[selected].eventID);
-			//printf("[remotetimer] url:%s\n",r_url.c_str());
-			r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
-			//printf("[remotetimer] status:%s\n",r_url.c_str());
+			remotebox_address_t box;
+			if (RemoteBoxAddress(timerlist[selected].remotebox_name, box))
+			{
+				CRemoteTimerClient client(box, httpConnectTimeout);
+				const CRemoteTimerClient::result_t res = client.modifyTimer(timerlist[selected]);
+				if (res != CRemoteTimerClient::RESULT_OK)
+					RemoteBoxProblem(timerlist[selected].remotebox_name, client, res);
+			}
 		}
 		else
 		{
@@ -459,40 +437,31 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 	}
 	else if ((strcmp(key, "send_remotetimer") == 0) && RemoteBoxChanExists(timerlist[selected].channel_id))
 	{
-		int pre = 0, post = 0;
-		Timer->getRecordingSafety(pre, post);
-		CHTTPTool httpTool;
-		std::string r_url;
-		r_url = "http://";
-		r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
-		r_url += "/control/timer?action=new";
-		r_url += "&alarm=" + to_string((int)timerlist[selected].alarmTime + pre);
-		r_url += "&stop=" + to_string((int)timerlist[selected].stopTime - post);
-		r_url += "&start=" + to_string((int)timerlist[selected].epg_starttime);
-		r_url += "&announce=" + to_string((int)timerlist[selected].announceTime + pre);
-		r_url += "&channel_id=" + string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timerlist[selected].channel_id);
-		r_url += "&aj=on";
-		r_url += "&rs=on";
-		if (timerlist[selected].eventRepeat > CTimerd::TIMERREPEAT_ONCE)
+		remotebox_address_t box;
+		if (RemoteBoxAddress(timerlist[selected].remotebox_name, box))
 		{
-			r_url += "&rep=" + to_string((int)timerlist[selected].eventRepeat);
-			r_url += "&repcount=" + to_string((int)timerlist[selected].repeatCount);
+			int pre = 0, post = 0;
+			Timer->getRecordingSafety(pre, post);
+
+			CRemoteTimerClient client(box, httpConnectTimeout);
+			const CRemoteTimerClient::result_t res =
+				client.addRecordTimer(timerlist[selected], pre, post);
+
+			/* The status decides whether the local timer goes. It used to be
+			   a body reading "ok", and everything that is not that word reads
+			   alike: a refusal, a box asking for a login, a box that was never
+			   reached. All of them left the timer here with nothing said, so
+			   the person saw a send that had not happened. */
+			if (res == CRemoteTimerClient::RESULT_OK)
+				Timer->removeTimerEvent(timerlist[selected].eventID);
+			else
+				RemoteBoxProblem(timerlist[selected].remotebox_name, client, res);
 		}
-		if (timerlist[selected].eventRepeat >= CTimerd::TIMERREPEAT_WEEKDAYS)
-		{
-			Timer->setWeekdaysToStr(timerlist[selected].eventRepeat, m_weekdaysStr);
-			r_url += "&wd=" + m_weekdaysStr;
-		}
-		//printf("[remotetimer] url:%s\n",r_url.c_str());
-		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
-		//printf("[remotetimer] status:%s\n",r_url.c_str());
-		if (r_url == "ok")
-			Timer->removeTimerEvent(timerlist[selected].eventID);
 	}
 	else if ((strcmp(key, "fetch_remotetimer") == 0) && LocalBoxChanExists(timerlist[selected].channel_id))
 	{
 		std::string remotebox_name = timerlist[selected].remotebox_name;
-		std::string eventID = to_string((int)timerlist[selected].eventID);
+		const int eventID = timerlist[selected].eventID;
 
 		int res = Timer->addRecordTimerEvent(timerlist[selected].channel_id, timerlist[selected].alarmTime + timerlist[selected].rem_pre,
 				timerlist[selected].stopTime - timerlist[selected].rem_post, 0, 0, timerlist[selected].announceTime + timerlist[selected].rem_pre,
@@ -510,56 +479,38 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 			}
 		}
 
-		CHTTPTool httpTool;
-		std::string r_url;
-		r_url = "http://";
-		r_url += RemoteBoxConnectUrl(remotebox_name);
-		r_url += "/control/timer?action=remove";
-		r_url += "&id=" + eventID;
-		//printf("[remotetimer] url:%s\n",r_url.c_str());
-		if (res > 0)
-			r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
-		//printf("[remotetimer] status:%s\n",r_url.c_str());
+		remotebox_address_t box;
+		if (res > 0 && RemoteBoxAddress(remotebox_name, box))
+		{
+			CRemoteTimerClient client(box, httpConnectTimeout);
+			const CRemoteTimerClient::result_t dropped = client.removeTimer(eventID);
+			/* A timer the other box no longer holds is the state this asked
+			   for, so only a real refusal is worth saying anything about. */
+			if (dropped != CRemoteTimerClient::RESULT_OK && dropped != CRemoteTimerClient::RESULT_NOT_THERE)
+				RemoteBoxProblem(remotebox_name, client, dropped);
+		}
 	}
 	else if (strcmp(key, "del_remotetimer") == 0)
 	{
-		CHTTPTool httpTool;
-		std::string r_url;
-		r_url = "http://";
-		r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
-		r_url += "/control/timer?action=remove";
-		r_url += "&id=" + to_string((int)timerlist[selected].eventID);
-		//printf("[remotetimer] url:%s\n",r_url.c_str());
-		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
-		//printf("[remotetimer] status:%s\n",r_url.c_str());
+		remotebox_address_t box;
+		if (RemoteBoxAddress(timerlist[selected].remotebox_name, box))
+		{
+			CRemoteTimerClient client(box, httpConnectTimeout);
+			const CRemoteTimerClient::result_t res = client.removeTimer(timerlist[selected].eventID);
+			if (res != CRemoteTimerClient::RESULT_OK && res != CRemoteTimerClient::RESULT_NOT_THERE)
+				RemoteBoxProblem(timerlist[selected].remotebox_name, client, res);
+		}
 	}
 	else if (strcmp(key, "update_remotetimer") == 0)
 	{
-		CHTTPTool httpTool;
-		std::string r_url;
-		r_url = "http://";
-		r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
-		r_url += "/control/timer?action=new&update=1";
-		r_url += "&alarm=" + to_string((int)timerlist[selected].alarmTime);
-		r_url += "&stop=" + to_string((int)timerlist[selected].stopTime);
-		r_url += "&start=" + to_string((int)timerlist[selected].epg_starttime);
-		r_url += "&announce=" + to_string((int)timerlist[selected].announceTime);
-		r_url += "&channel_id=" + string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timerlist[selected].channel_id);
-		r_url += "&aj=on";
-		r_url += "&rs=on";
-		if (timerlist[selected].eventRepeat > CTimerd::TIMERREPEAT_ONCE)
+		remotebox_address_t box;
+		if (RemoteBoxAddress(timerlist[selected].remotebox_name, box))
 		{
-			r_url += "&rep=" + to_string((int)timerlist[selected].eventRepeat);
-			r_url += "&repcount=" + to_string((int)timerlist[selected].repeatCount);
+			CRemoteTimerClient client(box, httpConnectTimeout);
+			const CRemoteTimerClient::result_t res = client.modifyTimer(timerlist[selected]);
+			if (res != CRemoteTimerClient::RESULT_OK)
+				RemoteBoxProblem(timerlist[selected].remotebox_name, client, res);
 		}
-		if (timerlist[selected].eventRepeat >= CTimerd::TIMERREPEAT_WEEKDAYS)
-		{
-			Timer->setWeekdaysToStr(timerlist[selected].eventRepeat, m_weekdaysStr);
-			r_url += "&wd=" + m_weekdaysStr;
-		}
-		//printf("[remotetimer] url:%s\n",r_url.c_str());
-		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
-		//printf("[remotetimer] status:%s\n",r_url.c_str());
 	}
 	else if (strcmp(key, "newtimer") == 0)
 	{
@@ -700,7 +651,7 @@ void CTimerList::updateEvents(void)
 {
 	timerlist.clear();
 	Timer->getTimerList(timerlist);
-	RemoteBoxTimerList(timerlist);
+	RemoteBoxTimerList(timerlist, true);
 	sort(timerlist.begin(), timerlist.end());
 
 	header_height = g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->getHeight();
@@ -769,31 +720,25 @@ void CTimerList::RemoteBoxSelect()
 
 bool CTimerList::RemoteBoxChanExists(t_channel_id channel_id)
 {
-	if (strcmp(timerlist[selected].remotebox_name, "") == 0)
+	const std::string rbname = timerlist[selected].remotebox_name;
+	remotebox_address_t box;
+	if (rbname.empty() || !RemoteBoxAddress(rbname, box))
 		return false;
 
-	CHTTPTool httpTool;
-	std::string r_url;
-	r_url = "http://";
-	r_url += RemoteBoxConnectUrl(timerlist[selected].remotebox_name);
-	r_url += "/control/getchannel?format=json&id=";
-	r_url += string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id);
-	r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
+	CRemoteTimerClient client(box, httpConnectTimeout);
+	std::string name;
+	const CRemoteTimerClient::result_t res = client.getChannelName(channel_id, name);
 
-	std::string errMsg = "";
-	Json::Value root;
-	bool ok = parseJsonFromString(r_url, &root, &errMsg);
-	if (!ok)
-	{
-		printf("Failed to parse JSON\n");
-		printf("%s\n", errMsg.c_str());
-	}
-
-	r_url = root.get("success", "false").asString();
-	if (r_url == "false")
+	/* The channel is there or it is not, and that is the answer for those two
+	   alone. A box that could not be reached at all is neither, and saying the
+	   channel is missing would send the person looking through a list that is
+	   right. */
+	if (res == CRemoteTimerClient::RESULT_NOT_THERE)
 		ShowMsg(LOCALE_REMOTEBOX_CHANNEL_NA, convertChannelId2String(channel_id), CMsgBox::mbrOk, CMsgBox::mbOk, NULL, 450, 30, false);
+	else if (res != CRemoteTimerClient::RESULT_OK)
+		RemoteBoxProblem(rbname, client, res);
 
-	return (r_url == "true");
+	return res == CRemoteTimerClient::RESULT_OK;
 }
 
 bool CTimerList::LocalBoxChanExists(t_channel_id channel_id)
@@ -805,98 +750,108 @@ bool CTimerList::LocalBoxChanExists(t_channel_id channel_id)
 		return false;
 }
 
-std::string CTimerList::RemoteBoxConnectUrl(std::string _rbname)
+bool CTimerList::RemoteBoxAddress(const std::string &rbname, remotebox_address_t &out)
 {
-	std::string c_url = "";
 	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it)
 	{
-		if (it->rbname == _rbname)
-		{
-			if (!it->user.empty() && !it->pass.empty())
-				c_url += it->user + ":" + it->pass + "@";
-			c_url += it->rbaddress;
-			c_url += ":" + to_string(it->port);
-			break;
-		}
+		if (it->rbname != rbname)
+			continue;
+		out.address = it->rbaddress;
+		out.port = it->port;
+		out.user = it->user;
+		out.pass = it->pass;
+		return !out.address.empty();
 	}
-	return c_url;
+	return false;
 }
 
-void CTimerList::RemoteBoxTimerList(CTimerd::TimerList &rtimerlist)
+/* What went wrong, in the words of the person's own language, with the status
+   the other box answered with beside it: two refusals read alike and only that
+   number tells them apart. Nothing is said about a box that answered nothing,
+   there being no status to say. */
+void CTimerList::RemoteBoxProblem(const std::string &rbname, CRemoteTimerClient &client,
+	CRemoteTimerClient::result_t res)
 {
-	if (g_settings.timer_remotebox_ip.size() == 0)
+	neutrino_locale_t what = LOCALE_REMOTEBOX_REFUSED;
+	if (res == CRemoteTimerClient::RESULT_NO_ANSWER)
+		what = LOCALE_REMOTEBOX_NO_ANSWER;
+	else if (res == CRemoteTimerClient::RESULT_NOT_PERMITTED)
+		what = LOCALE_REMOTEBOX_LOGIN_FAILED;
+
+	std::string text = g_Locale->getText(what);
+	if (res != CRemoteTimerClient::RESULT_NO_ANSWER && client.httpCode() != 0)
+		text += " (" + to_string(client.httpCode()) + ")";
+
+	ShowMsg(rbname, text, CMsgBox::mbrOk, CMsgBox::mbOk, NULL, 450, 30, false);
+}
+
+/* One remote box's channel, as a key. The box is named in it because two boxes
+   number their channels apart. */
+static std::string remoteChannelKey(const std::string &rbname, t_channel_id id)
+{
+	char hex[24];
+	snprintf(hex, sizeof(hex), "%llx", (unsigned long long) id);
+	return rbname + '\t' + hex;
+}
+
+std::string CTimerList::RemoteBoxChannelName(const CTimerd::responseGetTimer &timer) const
+{
+	std::map<std::string, std::string>::const_iterator it =
+		rb_channel_names.find(remoteChannelKey(timer.remotebox_name, timer.channel_id));
+	return it == rb_channel_names.end() ? std::string() : it->second;
+}
+
+void CTimerList::RemoteBoxTimerList(CTimerd::TimerList &rtimerlist, bool with_channel_names)
+{
+	rb_channel_names.clear();
+	if (g_settings.timer_remotebox_ip.empty())
 		return;
 
-	CHTTPTool httpTool;
-	std::string r_url;
 	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it)
 	{
 		if (!it->enabled)
 			continue;
 
-		r_url = "http://";
-		r_url += RemoteBoxConnectUrl(it->rbname);
-		r_url += "/control/timer?format=json";
-		r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
-		//printf("[remotetimer] timers:%s\n",r_url.c_str());
-
-		std::string errMsg = "";
-		Json::Value root;
-		bool ok = parseJsonFromString(r_url, &root, &errMsg);
-		if (!ok)
+		remotebox_address_t box;
+		if (!RemoteBoxAddress(it->rbname, box))
 		{
-			printf("Failed to parse JSON\n");
-			printf("%s\n", errMsg.c_str());
 			it->online = false;
 			continue;
 		}
-		else
-			it->online = true;
 
-		Json::Value delays = root["data"]["timer"][0];
+		/* One client for one box, so the session opened for the list is the one
+		   every channel name below is asked over. */
+		CRemoteTimerClient client(box, httpConnectTimeout);
+		const size_t first = rtimerlist.size();
+		it->online = client.getTimers(it->rbname, rtimerlist) == CRemoteTimerClient::RESULT_OK;
+		if (!it->online)
+			continue;
 
-		rem_pre  = atoi(delays["config"].get("pre_delay", "0").asString());
-		rem_post = atoi(delays["config"].get("post_delay", "0").asString());
-
-		//printf("[remotetimer] pre:%d - post:%d\n", rem_pre, rem_post);
-
-		Json::Value remotetimers = root["data"]["timer"][0]["timer_list"];
-
-		for (unsigned int i = 0; i < remotetimers.size(); i++)
+		for (size_t i = first; i < rtimerlist.size(); i++)
 		{
-			CTimerd::responseGetTimer rtimer;
-			if (atoi(remotetimers[i].get("type_number", "").asString()) == 5)
-			{
-				strncpy(rtimer.remotebox_name, it->rbname.c_str(), sizeof(rtimer.remotebox_name));
-				rtimer.remotebox_name[sizeof(rtimer.remotebox_name) - 1] = 0;
-				rtimer.rem_pre = rem_pre;
-				rtimer.rem_post = rem_post;
-				rtimer.eventID = atoi(remotetimers[i].get("id", "").asString());
-				rtimer.eventType = CTimerd::TIMER_REMOTEBOX;
-				rtimer.eventState = (CTimerd::CTimerEventStates) atoi(remotetimers[i].get("state", "").asString());
-				if (remotetimers[i]["repeat"].get("count", "").asString() == "-")
-					rtimer.repeatCount = 0;
-				else
-					rtimer.repeatCount = atoi(remotetimers[i]["repeat"].get("count", "").asString());
-				rtimer.eventRepeat = (CTimerd::CTimerEventRepeat)(atoi(remotetimers[i]["repeat"].get("number", "").asString()) & 0x1FF);
-				std::string wd = remotetimers[i]["repeat"].get("weekdays", "").asString();
-				CTimerdClient().getWeekdaysFromStr(&rtimer.eventRepeat, wd);
-				rtimer.alarmTime = (time_t) atoll(remotetimers[i]["alarm"][0].get("digits", "").asString().c_str());
-				rtimer.announceTime = (time_t) atoll(remotetimers[i]["announce"][0].get("digits", "").asString().c_str());
-				rtimer.stopTime = (time_t) atoll(remotetimers[i]["stop"][0].get("digits", "").asString().c_str());
-				rtimer.epg_starttime = (time_t) atoll(remotetimers[i]["start"][0].get("digits", "").asString().c_str());
-				sscanf(remotetimers[i].get("epg_id", "").asString().c_str(), SCANF_CHANNEL_ID_TYPE, &rtimer.epg_id);
-				sscanf(remotetimers[i].get("channel_id", "").asString().c_str(),	SCANF_CHANNEL_ID_TYPE, &rtimer.channel_id);
-				CZapitChannel *channel = CServiceManager::getInstance()->FindChannel48(rtimer.channel_id);
-				if (channel)
-					rtimer.channel_id = channel->getChannelID();
-				strncpy(rtimer.epgTitle, remotetimers[i].get("title", "").asString().c_str(), sizeof(rtimer.epgTitle) - 1);
-				rtimer.epgTitle[sizeof(rtimer.epgTitle) - 1] = 0;
-				if (remotetimers[i]["audio"].get("apids_conf", "").asString() == "true")
-					rtimer.apids = TIMERD_APIDS_CONF;
-				//printf("[remotetimer] r-timer:%s - %s\n", remotetimers[i].get("channel_id","").asString().c_str(), remotetimers[i].get("title","").asString().c_str());
-				rtimerlist.push_back(rtimer);
-			}
+			/* A channel this box also holds is renumbered to the identifier
+			   this box knows it by, so that fetching the timer over lands on
+			   it. The other box is still asked under the one it named. */
+			const t_channel_id remote_id = rtimerlist[i].channel_id;
+
+			CZapitChannel *channel = CServiceManager::getInstance()->FindChannel48(remote_id);
+			if (channel)
+				rtimerlist[i].channel_id = channel->getChannelID();
+
+			if (!with_channel_names)
+				continue;
+
+			/* What the other box calls it, under the identifier the row now
+			   carries, which is what the drawn line has to hand. Once per
+			   channel and not once per timer: drawing a line used to cost a
+			   call, so scrolling a list of five cost five of them a frame. */
+			const std::string key = remoteChannelKey(it->rbname, rtimerlist[i].channel_id);
+			if (rb_channel_names.find(key) != rb_channel_names.end())
+				continue;
+
+			std::string name;
+			if (client.getChannelName(remote_id, name) == CRemoteTimerClient::RESULT_OK)
+				rb_channel_names[key] = name;
 		}
 	}
 }
@@ -1345,49 +1300,12 @@ void CTimerList::paintItem(int pos)
 			break;
 			case CTimerd::TIMER_REMOTEBOX:
 			{
-				CHTTPTool httpTool;
-				std::string r_url;
-				r_url = "http://";
-				r_url += RemoteBoxConnectUrl(timer.remotebox_name);
-				r_url += "/control/getchannel?format=json&id=";
-				r_url += string_printf_helper(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer.channel_id);
-				r_url = httpTool.downloadString(r_url, -1, httpConnectTimeout);
-
-				std::string errMsg = "";
-				Json::Value root;
-				bool ok = parseJsonFromString(r_url, &root, &errMsg);
-				if (!ok)
-				{
-					printf("Failed to parse JSON\n");
-					printf("%s\n", errMsg.c_str());
-				}
-
-				Json::Value remotechannel = root["data"]["channel"][0];
-
-				zAddData = remotechannel.get("name", "").asString();
-				if (timer.apids != TIMERD_APIDS_CONF)
-				{
-					std::string sep = "";
-					zAddData += " (";
-					if (timer.apids & TIMERD_APIDS_STD)
-					{
-						zAddData += "STD";
-						sep = "/";
-					}
-					if (timer.apids & TIMERD_APIDS_ALT)
-					{
-						zAddData += sep;
-						zAddData += "ALT";
-						sep = "/";
-					}
-					if (timer.apids & TIMERD_APIDS_AC3)
-					{
-						zAddData += sep;
-						zAddData += "AC3";
-						//sep = "/";
-					}
-					zAddData += ')';
-				}
+				/* Read with the list and only looked up here. Drawing this row
+				   used to cost a call to the other box, which put a whole
+				   network round trip inside the paint of one line. */
+				zAddData = RemoteBoxChannelName(timer);
+				if (zAddData.empty())
+					zAddData = convertChannelId2String(timer.channel_id);
 				if (strlen(timer.epgTitle) != 0)
 				{
 					zAddData += " : ";
