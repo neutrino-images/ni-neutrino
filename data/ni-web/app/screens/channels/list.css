@@ -182,6 +182,7 @@ tr[data-on-air] .ch-name {
 .ch-mark {
 	display: inline-flex;
 	align-items: center;
+	margin: 0 var(--gap-2) 0 0;
 	padding: 0 var(--gap-1);
 	border: 1px solid var(--line);
 	border-radius: var(--radius);
