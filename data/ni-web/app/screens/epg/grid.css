@@ -134,7 +134,7 @@
 	white-space: nowrap;
 }
 
-.grid__row { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); }
+.grid__row { display: flex; align-items: stretch; }
 
 /* The names stay while the hours scroll past them, which is the whole of what
    makes a grid readable on a screen narrower than its axis. */
@@ -190,7 +190,6 @@
 	padding: 0 var(--gap-2);
 	background: var(--ground-2);
 	border: 1px solid var(--line);
-	border-radius: var(--radius);
 	color: var(--text);
 	font: inherit;
 	text-align: left;
@@ -198,8 +197,8 @@
 }
 .grid__event:hover { border-color: var(--text-dim); }
 .grid__event.is-picked { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.grid__clock { flex: none; color: var(--text-dim); font-size: 0.75rem; }
 .grid__event.is-picked .grid__clock { color: var(--accent-ink); }
+.grid__clock { flex: none; color: var(--text-dim); font-size: 0.75rem; }
 .grid__title { overflow: hidden; text-overflow: ellipsis; }
 
 /* Waiting and empty are the same shape and never the same words, because a row
@@ -334,8 +333,7 @@
 /* What is on air, so that the row reads as a clock and not only as a list. A
    left edge and not a fill: the fill is what a chosen event is. The same name
    the mark of the moment carries, because they are the same fact. */
-.grid__event.is-onair { border-left: 3px solid var(--on-air); }
-.grid__event.is-onair.is-picked { border-left-color: var(--accent-ink); }
+.grid__event.is-onair { border-left: 2px solid var(--on-air); }
 
 /* How much of the programme has gone, along the foot of its box and in the
    lane's own coordinates rather than the box's (grid.js:Lane), so that it ends
