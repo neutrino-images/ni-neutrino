@@ -17,6 +17,7 @@ WEB_CHECKS = \
 	check-web-store.sh \
 	check-web-player.sh \
 	check-web-decide.sh \
+	check-web-timerbody.sh \
 	check-web-fileplay.sh \
 	check-web-size.sh \
 	check-web-types.sh \
@@ -25,7 +26,7 @@ WEB_CHECKS = \
 # openapi-types.js is read by check-web-types.sh and writes the types the
 # pages are held to; types/ holds what the type checker reads beside them.
 EXTRA_DIST = $(WEB_CHECKS) fetch-types.sh serve.js openapi-types.js drag-cases.mjs player-cases.mjs \
-	     decide-cases.mjs fileplay-cases.mjs store-cases.mjs types
+	     decide-cases.mjs fileplay-cases.mjs store-cases.mjs timerbody-cases.mjs types
 
 # The document the server answers with, written out by the target that owns it
 # and read here so that what the page asks for is held to it. Made through that
