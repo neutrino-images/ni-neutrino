@@ -906,10 +906,11 @@ void CNetworkSetup::testNetworkSettings()
 	//set homepage-default
 	std::string homepage_default = "www.google.de";
 
-	//get homepage from /.version
+	//get homepage from image metadata, fallback to legacy /.version
 	std::string homepage = "";
 	CConfigFile config('\t');
-	config.loadConfig(IMAGE_VERSION_FILE);
+	if (!config.loadConfig(IMAGE_METADATA_FILE))
+		config.loadConfig(IMAGE_VERSION_FILE);
 	homepage = config.getString("homepage", homepage_default);
 
 	//use default homepage if homepage missing
