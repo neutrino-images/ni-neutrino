@@ -112,7 +112,7 @@ void CInfoIcons::Init()
 			icons_height  = std::max(icons_height, icon_sizeH);
 			icon[i].sizeW = icon_sizeW;
 			icon[i].sizeH = icon_sizeH;
-			icon[i].flag  = g_settings.mode_icons_flag[i].c_str();
+			icon[i].flag  = settingsText(g_settings.mode_icons_flag[i]);
 			icon[i].last_stat = file_exists(icon[i].flag);
 		}
 		else
@@ -188,6 +188,11 @@ void CInfoIcons::paintIcons(bool first)
 		}
 	}
 
+	/* Read again rather than kept from Init, because the setup screen changes
+	   these while this thread is painting from them. */
+	for (int i=0; i < m_entries; i++)
+		icon[i].flag = settingsText(g_settings.mode_icons_flag[i]);
+
 	//check for reload
 	if(!reload)
 	{
@@ -195,7 +200,7 @@ void CInfoIcons::paintIcons(bool first)
 		{
 			if (file_exists(icon[i].flag) != icon[i].last_stat)
 			{
-				printf("CInfoIcons::paintIcons: %s status change: %d ==> %d\n",icon[i].flag, icon[i].last_stat, file_exists(icon[i].flag));
+				printf("CInfoIcons::paintIcons: %s status change: %d ==> %d\n",icon[i].flag.c_str(), icon[i].last_stat, file_exists(icon[i].flag));
 				reload = true;
 				break;
 			}

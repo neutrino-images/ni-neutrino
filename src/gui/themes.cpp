@@ -97,7 +97,7 @@ int CThemes::exec(CMenuTarget *parent, const std::string &actionKey)
 			}
 			else
 				readFile(((std::string)THEMESDIR + "/" + themeFile + FILE_SUFFIX).c_str());
-			g_settings.theme_name = themeFile;
+			setSettingsText(g_settings.theme_name, themeFile);
 		}
 		OnAfterSelectTheme();
 		CFrameBuffer::getInstance()->clearIconCache();
@@ -293,7 +293,7 @@ void CThemes::rememberOldTheme(bool remember)
 	else
 	{
 		t = oldTheme;
-		g_settings.theme_name = oldTheme_name;
+		setSettingsText(g_settings.theme_name, oldTheme_name);
 
 		changeNotify(NONEXISTANT_LOCALE, NULL);
 		hasThemeChanged = false;
@@ -327,7 +327,7 @@ void CThemes::saveFile(const char *themename)
 
 bool CThemes::applyDefaultTheme()
 {
-	g_settings.theme_name = DEFAULT_THEME;
+	setSettingsText(g_settings.theme_name, DEFAULT_THEME);
 	std::string default_theme = THEMESDIR "/" + g_settings.theme_name + ".theme";
 	if (themefile.loadConfig(default_theme))
 	{

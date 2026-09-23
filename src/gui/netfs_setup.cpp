@@ -83,17 +83,17 @@ int CNETFSMountGui::vinit(int mt)
 {
 	for(int i=0 ; i < NETFS_NR_OF_ENTRIES ; i++)
 	{
-		g_settings.netfs[mt][i].ip = "";
-		g_settings.netfs[mt][i].dir = "";
-		g_settings.netfs[mt][i].local_dir= "";
+		setSettingsText(g_settings.netfs[mt][i].ip, "");
+		setSettingsText(g_settings.netfs[mt][i].dir, "");
+		setSettingsText(g_settings.netfs[mt][i].local_dir, "");
 		g_settings.netfs[mt][i].type = 0;
-		g_settings.netfs[mt][i].username = "";
-		g_settings.netfs[mt][i].password = "";
-		g_settings.netfs[mt][i].options1 = "soft";
-		g_settings.netfs[mt][i].options2 = "nolock";
+		setSettingsText(g_settings.netfs[mt][i].username, "");
+		setSettingsText(g_settings.netfs[mt][i].password, "");
+		setSettingsText(g_settings.netfs[mt][i].options1, "soft");
+		setSettingsText(g_settings.netfs[mt][i].options2, "nolock");
 		g_settings.netfs[mt][i].active = 0;
-		g_settings.netfs[mt][i].dump = "0";
-		g_settings.netfs[mt][i].pass = "0";
+		setSettingsText(g_settings.netfs[mt][i].dump, "0");
+		setSettingsText(g_settings.netfs[mt][i].pass, "0");
 	}
 	return(0);
 }
@@ -212,16 +212,16 @@ int CNETFSMountGui::read_config(int mt)
 					printf("CNETFSMountGui::read_config auto.net: \n%s\t-fstype=%s\t%s%s%s\t%s:%s\n", mountpt,fstype, options1,options2,((strlen(options2)==0)? "":","),device,device_dir.c_str());
 				}
 
-				g_settings.netfs[mt][i].ip		= (strcmp(device,"0.0.0.0")==0)		? "" : device;
-				g_settings.netfs[mt][i].dir		= ((device_dir=="/netfsDir")		? "" : device_dir.c_str());
-				g_settings.netfs[mt][i].local_dir	= ((strcmp(mountpt,"mountPt")==0)	? "" : mountpt);
+				setSettingsText(g_settings.netfs[mt][i].ip, (strcmp(device,"0.0.0.0")==0)		? "" : device);
+				setSettingsText(g_settings.netfs[mt][i].dir, ((device_dir=="/netfsDir")		? "" : device_dir.c_str()));
+				setSettingsText(g_settings.netfs[mt][i].local_dir, ((strcmp(mountpt,"mountPt")==0)	? "" : mountpt));
 				g_settings.netfs[mt][i].type		= (strcmp(fstype,"nfs")==0)		? (int) CFSMounter::NFS : (int) CFSMounter::CIFS;
-				g_settings.netfs[mt][i].username	= user;
-				g_settings.netfs[mt][i].password	= passwd;
-				g_settings.netfs[mt][i].options1	= options1;
-				g_settings.netfs[mt][i].options2	= options2;
-				g_settings.netfs[mt][i].dump		= dump;
-				g_settings.netfs[mt][i].pass		= pass;
+				setSettingsText(g_settings.netfs[mt][i].username, user);
+				setSettingsText(g_settings.netfs[mt][i].password, passwd);
+				setSettingsText(g_settings.netfs[mt][i].options1, options1);
+				setSettingsText(g_settings.netfs[mt][i].options2, options2);
+				setSettingsText(g_settings.netfs[mt][i].dump, dump);
+				setSettingsText(g_settings.netfs[mt][i].pass, pass);
 				g_settings.netfs[mt][i].active	= active;
 
 				if(i == NETFS_NR_OF_ENTRIES-1) {
