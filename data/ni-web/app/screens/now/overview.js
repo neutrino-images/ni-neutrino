@@ -482,8 +482,7 @@ function Sound() {
 }
 
 /**
- * The box itself: whether it is on, what it is, how long it has been up, and
- * the note somebody at a browser puts on the television without walking over.
+ * The box itself: whether it is on, what it is, how long it has been up.
  *
  * @returns {Web.Drawn}
  */
@@ -501,21 +500,9 @@ function BoxCard() {
 			store.put('GET', '/api/v1/system/standby', null, { on: Number(one.value) === 1 });
 		});
 	}, []);
-	const box = info.data;
-	const [message, setMessage] = useState('');
-	const [waits, setWaits] = useState(false);
-	const [asking, setAsking] = useState(false);
 
-	function sendMessage() {
-		if (message === '') {
-			return;
-		}
-		announce(store.write('POST', '/api/v1/osd/message', {
-			body: { text: message, kind: waits ? 'box' : 'hint' },
-		}).then(function () {
-			setMessage('');
-		}), t(text, 'now.message.sent'));
-	}
+	const box = info.data;
+	const [asking, setAsking] = useState(false);
 
 	/**
 	 * @param {boolean} on
@@ -568,25 +555,6 @@ function BoxCard() {
 				<span>${t(text, 'now.box.uptime', { duration: duration(box.uptime) })}</span>
 			</p>`
 			: null}
-		${/* A LINE UNDER THE STATE, because what follows it is another matter.
-		     Above the line is what the box is; below it is a note somebody
-		     writes to whoever is sitting in front of the television. */''}
-		<div class="now-apart">
-			<div class="now-message">
-				<${Field}
-					label=${t(text, 'now.message.label')}
-					value=${message}
-					onInput=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setMessage(e.currentTarget.value); }} />
-				<${Button}
-					primary=${true}
-					disabled=${message === ''}
-					onClick=${sendMessage}>${t(text, 'now.message.send')}<//>
-			</div>
-			<${Switch}
-				label=${t(text, 'now.message.wait')}
-				checked=${waits}
-				onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setWaits(e.currentTarget.checked); }} />
-		</div>
 		<${Dialog}
 			open=${asking}
 			title=${t(text, 'now.standby')}
@@ -594,6 +562,44 @@ function BoxCard() {
 			onConfirm=${function () { sendStandby(true); }}>
 			<p>${t(text, 'now.standby.ask')}</p>
 		<//>
+	<//>`;
+}
+
+/**
+ * Note somebody at a browser puts on the television without walking over.
+ *
+ * @returns {Web.Drawn}
+ */
+function Message() {
+	const [message, setMessage] = useState('');
+	const [waits, setWaits] = useState(false);
+
+	function sendMessage() {
+		if (message === '') {
+			return;
+		}
+		announce(store.write('POST', '/api/v1/osd/message', {
+			body: { text: message, kind: waits ? 'box' : 'hint' },
+		}).then(function () {
+			setMessage('');
+		}), t(text, 'now.message.sent'));
+	}
+
+	return html`<${Card} title=${t(text, 'now.card.message')} snapshot=none>
+		<div class="now-message">
+			<${Field}
+				label=${t(text, 'now.message.label')}
+				value=${message}
+				onInput=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setMessage(e.currentTarget.value); }} />
+		</div>
+		<${Switch}
+			label=${t(text, 'now.message.wait')}
+			checked=${waits}
+			onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setWaits(e.currentTarget.checked); }} />
+		<${Button}
+			primary=${true}
+			disabled=${message === ''}
+			onClick=${sendMessage}>${t(text, 'now.message.send')}<//>
 	<//>`;
 }
 
@@ -953,8 +959,9 @@ function Quick() {
 export default function Overview() {
 	return html`<div class="now-grid">
 		<${Playing} />
-		<${Sound} />
 		<${BoxCard} />
+		<${Sound} />
+		<${Message} />
 		<${Recordings} />
 		<${Storage} />
 		<${Reception} />
