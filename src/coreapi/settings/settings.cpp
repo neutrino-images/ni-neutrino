@@ -344,7 +344,7 @@ Result<void> set(const std::string &key, const std::string &value)
 		   spelling that survives is the one a channel is named by everywhere else. A value the
 		   store cannot read would travel as far as the field, be dropped there and read back as
 		   whatever the field already held, on a thread with nobody left to answer. */
-		if (d->field.origin == FieldOrigin::ChannelId)
+		if (d->field.origin == FieldOrigin::ChannelIdField)
 		{
 			unsigned long long id = 0;
 			if (!readChannelIdText(value, id))

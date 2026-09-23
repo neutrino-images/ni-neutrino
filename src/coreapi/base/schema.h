@@ -121,9 +121,13 @@ enum class FieldOrigin
 	   what a person is offered and the mask is what is stored. */
 	MaskBit,
 	/* A sixty four bit identifier the struct holds, carried as text because a
-	   long on the box is half that wide. Spelled the way a channel is named
-	   everywhere else in this layer. */
-	ChannelId,
+	   long on the box is half that wide.
+
+	   Field on the end, although a scoped enumerator reaches nobody who did not
+	   spell the enum: gcc warns that the bare name shadows the type of the same
+	   name in types.h, on every build of every box, and a warning nobody can act
+	   on is one everybody learns to read past. */
+	ChannelIdField,
 	/* A value the program does not keep at all: a daemon holds it, and what the
 	   struct has under that name is the buffer a screen fills when it opens.
 	   Reading the buffer answers whatever was last left in it. */
@@ -168,7 +172,7 @@ struct FieldRef
    reading a member this layer never wrote. */
 inline bool valueIsInNamedMember(const FieldRef &f)
 {
-	return f.origin == FieldOrigin::Member || f.origin == FieldOrigin::ChannelId;
+	return f.origin == FieldOrigin::Member || f.origin == FieldOrigin::ChannelIdField;
 }
 
 // What a setting whose value this layer cannot reach writes.
@@ -321,7 +325,7 @@ inline bool descriptorIsSane(const Descriptor &d)
 				return false;
 			break;
 
-		case FieldOrigin::ChannelId:
+		case FieldOrigin::ChannelIdField:
 			// Sixty four bits do not fit the long a number travels in here, so
 			// the identifier is carried as the text a channel is named by.
 			if (d.field.read_text == NULL || d.field.read_number != NULL)

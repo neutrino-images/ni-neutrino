@@ -172,7 +172,7 @@ struct ChannelIdField
 	{ NULL, NULL, NULL, \
 	  &coreapi::ChannelIdField<decltype(SNeutrinoSettings::f), &SNeutrinoSettings::f>::read, \
 	  &coreapi::ChannelIdField<decltype(SNeutrinoSettings::f), &SNeutrinoSettings::f>::write, \
-	  NULL, NULL, NULL, #f, coreapi::FieldOrigin::ChannelId }
+	  NULL, NULL, NULL, #f, coreapi::FieldOrigin::ChannelIdField }
 
 /* A value a daemon holds. a asks it and t tells it, and f is the member the
    program keeps as the screen's buffer for that value, named so the checks
