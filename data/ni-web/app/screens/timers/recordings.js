@@ -33,6 +33,7 @@ import { StateChip } from '../../ui/dot.js';
 import { Table } from '../../ui/table.js';
 import { Dialog } from '../../ui/dialog.js';
 import { Select } from '../../ui/select.js';
+import { ChannelName } from '../../ui/channels.js';
 import { toast } from '../../ui/toast.js';
 
 export const css = '/app/screens/timers/recordings.css';
@@ -139,27 +140,6 @@ export function hourOptions(preferred) {
 			label: one === 1 ? t(text, 'rec.hours.one') : t(text, 'rec.hours.many', { count: one }),
 		};
 	});
-}
-
-/**
- * What the box calls this channel, asked for by the identifier the recording carries. A
- * recording names its channel and nothing more; a channel the list does not hold answers as
- * its identifier rather than as a blank.
- *
- * @param {{ id: string }} props
- * @returns {Web.Drawn}
- */
-export function ChannelName(props) {
-	const [shot, setShot] = useState(function () {
-		return store.read('GET', '/api/v1/channels/{id}', { params: { id: props.id } });
-	});
-
-	useEffect(function () {
-		return store.watch('GET', '/api/v1/channels/{id}', { params: { id: props.id } }, setShot);
-	}, [props.id]);
-
-	const one = shot.data;
-	return html`<span class="rec-channel">${(one && one.name) ? one.name : props.id}</span>`;
 }
 
 /** @returns {Web.Drawn} */
@@ -350,7 +330,7 @@ export default function Recordings() {
 		},
 		{
 			id: 'channel', label: t(text, 'rec.col.channel'), sortable: false, mono: false,
-			cell: function (/** @type {Api.Recording} */ one) { return html`<${ChannelName} id=${one.channel_id} />`; },
+			cell: function (/** @type {Api.Recording} */ one) { return html`<${ChannelName} id=${one.channel_id} class="rec-channel" />`; },
 		},
 		{
 			id: 'title', label: t(text, 'rec.col.title'), sortable: false, mono: false, wide: true,
@@ -458,7 +438,7 @@ export default function Recordings() {
 					stopOne(one);
 			}}>
 			<p>${asked ? t(text, 'rec.stop.ask.body', { what: whatOf(asked) }) : ''}</p>
-			${asked ? html`<p><${ChannelName} id=${asked.channel_id} /></p>` : null}
+			${asked ? html`<p><${ChannelName} id=${asked.channel_id} class="rec-channel" /></p>` : null}
 		<//>
 	</section>`;
 }

@@ -23,6 +23,7 @@ import { Table } from '../../ui/table.js';
 import { RowActions } from '../../ui/actions.js';
 import { Dialog } from '../../ui/dialog.js';
 import { StateChip } from '../../ui/dot.js';
+import { ChannelName } from '../../ui/channels.js';
 import { State } from '../../ui/state.js';
 import { toast } from '../../ui/toast.js';
 import text from './list.text.js';
@@ -32,12 +33,6 @@ import { TimerForm, kindLabel } from './form.js';
 export const css = '/app/screens/timers/list.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
 export function lead() { return t(text, 'timers.head'); }
-
-
-// The same page of channels the form offers, so that a timer names a channel
-// and not a sixteen digit number. One question for both screens, because the
-// store keys an answer by the address it was asked for.
-const CHANNEL_PAGE = 500;
 
 /**
  * @param {string} value
@@ -146,18 +141,20 @@ export function sortRows(rows, sort) {
 }
 
 /**
- * @param {{ items?: Array<{ id: string, name: string }> } | null} page
- * @param {string} id
- * @returns {string}
+ * The channel a row is about.
+ *
+ * Asked per channel rather than looked up in a listing this screen fetched.
+ * The listing answers one page of one mode, so a timer on a radio channel or
+ * on anything past that page drew its bare identifier, and which timers those
+ * were was not a thing a reader could work out (app/ui/channels.js).
+ *
+ * @param {{ id: string }} props
+ * @returns {Web.Drawn}
  */
-function channelName(page, id) {
-	if (id === '' || id === '0')
-		return t(text, 'timers.nochannel');
-	for (const one of (page && page.items) || []) {
-		if (one.id === id)
-			return one.name;
-	}
-	return id;
+function TimerChannel(props) {
+	if (props.id === '' || props.id === '0')
+		return html`<span>${t(text, 'timers.nochannel')}</span>`;
+	return html`<${ChannelName} id=${props.id} />`;
 }
 
 /**
@@ -165,7 +162,6 @@ function channelName(page, id) {
  */
 function TimerList() {
 	const held = useAnswer('GET', '/api/v1/timers');
-	const channels = useAnswer('GET', '/api/v1/channels', { query: { mode: 'tv', limit: CHANNEL_PAGE } }, 'tv');
 
 	const [sort, setSort] = useState(/** @type {Web.Sort} */ ({ column: 'start', dir: 'asc' }));
 	const [asking, setAsking] = useState(/** @type {Api.Timer | null} */ (null));
@@ -236,7 +232,7 @@ function TimerList() {
 			id: 'what', label: t(text, 'timers.col.what'), sortable: false, mono: false, wide: true,
 			cell: function (row) {
 				return html`<span class="timers-what">
-					<span>${channelName(channels.data, row.channel_id)}</span>
+					<${TimerChannel} id=${row.channel_id} />
 					${row.title ? html`<span class="timers-title">${row.title}</span>` : null}
 				</span>`;
 			},

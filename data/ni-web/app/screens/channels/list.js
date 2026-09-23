@@ -277,6 +277,64 @@ export default function ChannelList(props) {
 		};
 	}, []);
 
+	/* WHERE THE LIST OPENS. The old web interface opened on the channel the box
+	   is playing, inside the bouquet that holds it, and that is what somebody
+	   coming to this screen is nearly always looking for. This one opened on
+	   every bouquet at once, which on a full satellite list is thousands of rows
+	   and the running channel somewhere among them.
+
+	   Only when the address names no bouquet, so a link, a bookmark or the Back
+	   button all keep naming what they named. Once per visit and not once per
+	   answer: choosing "every bouquet" by hand writes the same address as naming
+	   none, and a screen that jumped again on that would not let go of the wheel.
+
+	   Which bouquet holds a channel is the box's answer and not this screen's to
+	   work out: asking every bouquet for its members would be one request per
+	   bouquet (src/httpd/ep/ep_channels.cpp, the holds parameter).
+
+	   The address is replaced rather than pushed, so Back leaves the screen
+	   instead of returning to the list nobody asked for. */
+	const jumped = useRef(false);
+	useEffect(function () {
+		if (jumped.current || bouquet > 0 || current === null)
+			return;
+		jumped.current = true;
+		const playing = current;
+		const itsMode = (playing.kind === 'radio' || playing.kind === 'webradio') ? 'radio' : 'tv';
+		store.load('GET', '/api/v1/bouquets', { query: { holds: playing.id } }).then(function (answer) {
+			const holding = (answer && answer.items) || [];
+			// A channel in no bouquet at all leaves the screen where it is,
+			// which is every bouquet, and that is where it can be found. The
+			// first is taken rather than a choice being made: the route answers
+			// them in the box's own order, so the first is the one the box
+			// would have opened on.
+			const first = holding[0];
+			if (!first)
+				return;
+			route(hrefFor('channels', 'list', writeSelection(itsMode, first.id)), true);
+		}, function () {
+			// The list is usable without the jump, and a screen that says so
+			// would be saying it about something nobody asked for.
+		});
+	}, [current === null ? '' : String(current.id), bouquet]);
+
+	/* And the row itself, once the page holding it has arrived. The table marks
+	   the playing row for the frame's stylesheet, so that mark is what this
+	   reaches for rather than a second way of saying which row it is. A bouquet
+	   is smaller than one page nearly always, so the row is there; where it is
+	   not, nothing scrolls and the marking still says where it is once the walk
+	   reaches it. */
+	const shown = useRef(false);
+	useEffect(function () {
+		if (shown.current || current === null || walk.items.length === 0)
+			return;
+		const row = document.querySelector('[data-on-air]');
+		if (!row)
+			return;
+		shown.current = true;
+		row.scrollIntoView({ block: 'center' });
+	}, [current === null ? '' : String(current.id), walk.items.length]);
+
 	/* The two events that change the list this screen is a walk over, rather
 	   than one answer inside it. The store cannot help here: a walk is a
 	   sequence of answers under a sequence of addresses, so what has to happen

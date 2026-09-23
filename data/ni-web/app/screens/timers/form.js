@@ -32,16 +32,11 @@ import { Button } from '../../ui/button.js';
 import { State } from '../../ui/state.js';
 import { toast } from '../../ui/toast.js';
 import text from './list.text.js';
+import { useAllChannels } from '../../ui/channels.js';
 import {
 	KINDS, kindOf, isKnownKind, PLAIN_REPEATS, momentInput, emptyDraft, draftOf,
 	draftProblems, createBody, changeBody, useAnswer,
 } from './list.model.js';
-
-// How much of a channel list is offered in one control. The route hands out at
-// most this many at a time (src/httpd/ep/ep_channels.cpp), and a chooser of several
-// thousand entries is not a chooser anyway: what lies beyond it is reached from
-// the channel list and from the guide, which is what the note under it says.
-const CHANNEL_PAGE = 500;
 
 const WEEKDAY_WORDS = ['weekday.mo', 'weekday.tu', 'weekday.we', 'weekday.th', 'weekday.fr', 'weekday.sa', 'weekday.su'];
 
@@ -123,21 +118,22 @@ export function findTimer(answer, id) {
 }
 
 /**
- * @param {{ items?: Array<{ id: string, name: string, number: number }> } | null} page
+ * @param {Array<{ id: string, name: string, number: number }>} all
  * @param {string} chosen
  * @returns {Array<{ value: string, label: string }>}
  */
-export function channelOptions(page, chosen) {
+export function channelOptions(all, chosen) {
 	const out = [{ value: '', label: t(text, 'form.channel.pick') }];
 	let seen = false;
-	for (const one of (page && page.items) || []) {
+	for (const one of all) {
 		if (one.id === chosen)
 			seen = true;
 		out.push({ value: one.id, label: one.number + '  ' + one.name });
 	}
-	/* A channel that arrived in the address and is not on the page offered is
-	   still the channel this timer is about, so it becomes an option of its own
-	   rather than a value the control quietly drops. */
+	/* A channel that arrived in the address and the list does not hold is still
+	   the channel this timer is about, so it becomes an option of its own rather
+	   than a value the control quietly drops. The walk may also still be running,
+	   and then this is the option it is picked from until it ends. */
 	if (chosen !== '' && !seen)
 		out.push({ value: chosen, label: chosen });
 	return out;
@@ -186,16 +182,16 @@ export function targetOptions(answer, chosen) {
 }
 
 /**
- * @param {{ items?: Array<{ id: string, name: string }> } | null} page
+ * @param {Array<{ id: string, name: string }>} all
  * @param {string} id
  * @returns {string}
  */
-function channelName(page, id) {
+function channelName(all, id) {
 	// Nought is how the box writes a kind that acts on no channel at all, and
 	// it is not an identifier anything could be looked up by.
 	if (id === '' || id === '0')
 		return t(text, 'timers.nochannel');
-	for (const one of (page && page.items) || []) {
+	for (const one of all) {
 		if (one.id === id)
 			return one.name;
 	}
@@ -262,8 +258,15 @@ export function TimerForm(props) {
 
 	const held = useAnswer('GET', '/api/v1/timers');
 	const timer = findTimer(held.data, props.id);
-	const mode = draft === null ? 'tv' : draft.mode;
-	const channels = useAnswer('GET', '/api/v1/channels', { query: { mode: mode, limit: CHANNEL_PAGE } }, mode);
+	/* Narrowed here rather than where it is drawn: a draft carries the mode as
+	   a plain string because that is what the control hands back, and the two
+	   spellings this screen has are the two the listing knows. */
+	const mode = /** @type {'tv' | 'radio'} */ ((draft !== null && draft.mode === 'radio') ? 'radio' : 'tv');
+	/* Every channel of the mode and not the first page of them. The route
+	   answers five hundred at most, and a box with a full satellite list has
+	   several thousand: a channel past that page could not be picked at all,
+	   so no timer could be written for it here (app/ui/channels.js). */
+	const channels = useAllChannels(mode);
 	const targets = useAnswer('GET', '/api/v1/storage/mounts');
 
 	useEffect(function () {
@@ -424,7 +427,7 @@ export function TimerForm(props) {
 				<${Field}
 					id="timer-channel"
 					label=${t(text, 'form.channel')}
-					value=${channelName(channels.data, here.channel_id)}
+					value=${channelName(channels.items, here.channel_id)}
 					readOnly=${true}
 					onInput=${function () { }} />` : null}
 
@@ -443,8 +446,8 @@ export function TimerForm(props) {
 					label=${t(text, 'form.channel')}
 					value=${here.channel_id}
 					error=${wrong.indexOf('form.bad.channel') >= 0 ? t(text, 'form.bad.channel') : null}
-					hint=${t(text, 'form.channel.more', { count: CHANNEL_PAGE })}
-					options=${channelOptions(channels.data, here.channel_id)}
+					hint=${channels.done ? null : t(text, 'form.channel.loading')}
+					options=${channelOptions(channels.items, here.channel_id)}
 					onChange=${function (/** @type {Web.On<HTMLSelectElement>} */ e) { change({ channel_id: e.currentTarget.value }); }} />` : null}
 
 			${shape && shape.start ? html`
