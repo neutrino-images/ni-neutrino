@@ -45,7 +45,8 @@
 .grid__dhead { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-3); }
 .grid__dtitle { margin: 0; font-size: 1.0625rem; }
 .grid__dwhen { margin: var(--gap-1) 0 0; color: var(--text-dim); }
-.grid__dtext { margin: var(--gap-2) 0 0; }
+/* What the programme is and what may be done to it are drawn by the shared
+   module and dressed by its own sheet (app/ui/event.css). */
 
 /* The one box that scrolls. Both directions, because the axis is wider than
    most windows and the channel list is longer than every one of them. */
@@ -137,7 +138,12 @@
 .grid__row { display: flex; align-items: stretch; }
 
 /* The names stay while the hours scroll past them, which is the whole of what
-   makes a grid readable on a screen narrower than its axis. */
+   makes a grid readable on a screen narrower than its axis.
+
+   AND THE CELL IS A CONTROL. Pressing it puts the box on that channel, so what it
+   keeps of a button is the pointer and the ring a keyboard gives it; a frame
+   around every row would draw a column of two hundred boxes where the grid wants
+   a column of names. */
 .grid__name {
 	position: sticky;
 	left: 0;
@@ -149,8 +155,15 @@
 	width: var(--grid-name);
 	padding: 0 var(--gap-2);
 	background: var(--ground-1);
+	border: 0;
 	border-right: 1px solid var(--line);
+	border-radius: 0;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
 }
+.grid__name:hover .grid__channel { text-decoration: underline; }
 .grid__place { flex: none; width: 4ch; color: var(--text-dim); text-align: right; }
 /* Narrower here than in a list, because this cell is two hundred pixels wide
    and the name is what a guide is read for. */

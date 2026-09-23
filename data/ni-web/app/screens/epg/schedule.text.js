@@ -1,11 +1,8 @@
-// The event row keys here are drawn by the search screen too.
+// The column keys here are drawn by the search screen too.
 //
-// The ten genre names are the broad class and only the broad class. What the box
-// answers is one byte with two halves: the upper one is the class out of the
-// broadcasting standard's own table of eleven, the lower one names a narrower kind
-// inside it. The lower half is the box's own table of over a hundred entries, nothing
-// in this API answers it, and writing it out here would be a second copy of a table
-// this page has no way of keeping in step.
+// The words about one showing are not here. They stand beside the module that
+// draws one (app/ui/event.text.js), because three screens draw the same showing
+// and a word of it in a screen's catalogue would be a word the other two borrow.
 export default {
 	de: {
 		'epg.schedule.head': 'Ein Sender, ein Tag, von oben nach unten.',
@@ -19,30 +16,9 @@ export default {
 		'epg.schedule.nochannel': 'Wähle oben einen Kanal. Es läuft gerade keiner, und die Adresse nennt auch keinen.',
 		'epg.schedule.nobouquets': 'Die Box hält keine Bouquets, aus denen sich ein Kanal wählen ließe.',
 		'epg.schedule.window': 'Ablauf am {day}',
-		'epg.event.span': '{start} bis {end}',
-		'epg.event.running': 'läuft',
-		'epg.event.details.open': 'Mehr zu dieser Sendung',
-		'epg.event.details.close': 'Schließen',
 		'epg.col.when': 'Zeit',
 		'epg.col.what': 'Sendung',
 		'epg.col.channel': 'Kanal',
-		'epg.event.timer': 'Timer anlegen',
-		'epg.event.schedule': 'Ablauf dieses Kanals',
-		'epg.event.rating': 'Altersfreigabe',
-		'epg.event.rating.value': 'ab {years} Jahren',
-		'epg.event.rating.none': 'keine Angabe',
-		'epg.event.genre': 'Genre',
-		'epg.event.genre.none': 'keine Angabe',
-		'epg.genre.1': 'Spielfilm',
-		'epg.genre.2': 'Nachrichten',
-		'epg.genre.3': 'Show',
-		'epg.genre.4': 'Sport',
-		'epg.genre.5': 'Kinder',
-		'epg.genre.6': 'Musik',
-		'epg.genre.7': 'Kultur',
-		'epg.genre.8': 'Sozial',
-		'epg.genre.9': 'Magazin',
-		'epg.genre.10': 'Freizeit'
 	},
 	en: {
 		'epg.schedule.head': 'One channel, one day, from top to bottom.',
@@ -56,29 +32,8 @@ export default {
 		'epg.schedule.nochannel': 'Pick a channel above. Nothing is playing, and the address names none either.',
 		'epg.schedule.nobouquets': 'The box holds no bouquet to pick a channel out of.',
 		'epg.schedule.window': 'Schedule for {day}',
-		'epg.event.span': '{start} to {end}',
-		'epg.event.running': 'on now',
-		'epg.event.details.open': 'More about this programme',
-		'epg.event.details.close': 'Close',
 		'epg.col.when': 'Time',
 		'epg.col.what': 'Programme',
 		'epg.col.channel': 'Channel',
-		'epg.event.timer': 'Make a timer',
-		'epg.event.schedule': 'Schedule of this channel',
-		'epg.event.rating': 'Age rating',
-		'epg.event.rating.value': 'from {years} years',
-		'epg.event.rating.none': 'not stated',
-		'epg.event.genre': 'Genre',
-		'epg.event.genre.none': 'not stated',
-		'epg.genre.1': 'movie',
-		'epg.genre.2': 'news',
-		'epg.genre.3': 'show',
-		'epg.genre.4': 'sports',
-		'epg.genre.5': 'children',
-		'epg.genre.6': 'music',
-		'epg.genre.7': 'arts',
-		'epg.genre.8': 'social',
-		'epg.genre.9': 'documentation',
-		'epg.genre.10': 'leisure'
 	}
 };

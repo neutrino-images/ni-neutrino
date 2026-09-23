@@ -32,15 +32,11 @@
    that a screen still waiting is not read as a screen that has answered. */
 .epg-unnamed { color: var(--text-dim); }
 
-.epg-text { margin: 0 0 var(--gap-2); }
-.epg-long { margin: 0 0 var(--gap-2); }
-
+/* The row of controls under the link to the guide as one document. What one
+   showing offers is not here: that is dressed beside the module which draws it
+   (app/ui/event.css). */
 .epg-actions { display: flex; flex-wrap: wrap; gap: var(--gap-2); margin: var(--gap-2) 0 0; }
 .epg-actions .btn { text-decoration: none; }
-
-.epg-facts { display: grid; grid-template-columns: auto 1fr; gap: var(--gap-1) var(--gap-3); margin: 0 0 var(--gap-2); }
-.epg-facts dt { color: var(--text-dim); }
-.epg-facts dd { margin: 0; }
 
 /* What the box cut off, and what the whole of the answer would have cost. It
    is a condition of the answer and not a fault, so it carries the warning mark
