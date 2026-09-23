@@ -206,6 +206,9 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/count
 	scan/check-bouquet-vector-lock.sh \
 	scan/check-list-reader-lock.sh \
 	scan/check-settings-text-lock.sh \
+	scan/check-standby-display.sh \
+	scan/check-standby-abort.sh \
+	scan/check-standby-wake.sh \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
 	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk scan/branches.awk \
 	scan/settingstext.awk \
@@ -338,3 +341,6 @@ check-local: check-TESTS
 	@$(SHELL) $(srcdir)/scan/check-bouquet-vector-lock.sh $(top_srcdir)
 	@$(SHELL) $(srcdir)/scan/check-list-reader-lock.sh $(top_srcdir)
 	@$(SHELL) $(srcdir)/scan/check-settings-text-lock.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/scan/check-standby-display.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/scan/check-standby-abort.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/scan/check-standby-wake.sh $(top_srcdir)

@@ -91,7 +91,20 @@ export function useCapture(bump) {
 	   says instead of showing a picture. */
 	const [round, setRound] = useState(0);
 	const [failed, setFailed] = useState(false);
+	/* The round whose picture arrived, and whether what is on screen is that
+	   older round rather than the newest.
+
+	   A CAPTURE CAN BE TURNED DOWN AND NOTHING BE WRONG. The box takes one
+	   picture of its screen at a time and tells a second asker it is busy rather
+	   than queueing it behind a driver read that has no deadline. The element
+	   below cannot read that answer, it only sees an error, so the first error
+	   falls back to the last picture that did arrive, which is a moment old and
+	   is what somebody driving the box is looking at anyway. Only a round with
+	   nothing left to fall back on says so in words. */
+	const [shown, setShown] = useState(0);
+	const [stale, setStale] = useState(false);
 	const nothing = !osd && !video;
+	const at = stale ? shown : round;
 
 	// One capture per raise of the number above, which is the whole of what
 	// the screen around this asks for.
@@ -99,7 +112,7 @@ export function useCapture(bump) {
 		if (bump <= 0 || nothing) {
 			return;
 		}
-		setFailed(false);
+		forget();
 		setRound(function (n) { return n + 1; });
 	}, [bump]);
 
@@ -119,7 +132,7 @@ export function useCapture(bump) {
 	 */
 	function chooseOsd(next) {
 		setOsd(next);
-		setFailed(false);
+		forget();
 		fetchAgain();
 	}
 
@@ -129,7 +142,7 @@ export function useCapture(bump) {
 	 */
 	function chooseVideo(next) {
 		setVideo(next);
-		setFailed(false);
+		forget();
 		fetchAgain();
 	}
 
@@ -138,6 +151,32 @@ export function useCapture(bump) {
 	   for one. */
 	function fetchAgain() {
 		setRound(function (n) { return n === 0 ? 0 : n + 1; });
+	}
+
+	/**
+	 * What every fresh ask clears, so a round is judged on its own answer and
+	 * not on the one before it.
+	 *
+	 * @returns {void}
+	 */
+	function forget() {
+		setFailed(false);
+		setStale(false);
+	}
+
+	/**
+	 * A picture that did not arrive. The first one falls back to the last that
+	 * did; a second, with that fallback gone as well, is the case where there is
+	 * nothing left to show.
+	 *
+	 * @returns {void}
+	 */
+	function missed() {
+		if (shown > 0 && !stale) {
+			setStale(true);
+			return;
+		}
+		setFailed(true);
 	}
 
 	/* Pressing the picture makes it bigger, pressing it again puts it back.
@@ -166,11 +205,12 @@ export function useCapture(bump) {
 							title=${t(text, large ? 'now.shot.smaller' : 'now.shot.bigger')}
 							onClick=${function () { setLarge(!large); }}>
 							<img
-								key=${'shot-' + round}
+								key=${'shot-' + at}
 								class="now-shot-image"
-								src=${pictureUrl(osd, video, 'jpeg', round)}
+								src=${pictureUrl(osd, video, 'jpeg', at)}
 								alt=${t(text, 'now.shot.alt')}
-								onError=${function () { setFailed(true); }} />
+								onLoad=${function () { setShown(at); }}
+								onError=${missed} />
 							<span class="sr">${t(text, large ? 'now.shot.smaller' : 'now.shot.bigger')}</span>
 						</button>`}
 		</div>`,
@@ -180,7 +220,7 @@ export function useCapture(bump) {
 					primary=${true}
 					disabled=${nothing}
 					onClick=${function () {
-						setFailed(false);
+						forget();
 						setRound(function (n) { return n + 1; });
 					}}>${t(text, 'now.shot.refresh')}<//>
 			</p>
@@ -210,7 +250,7 @@ export function useCapture(bump) {
 						? null
 						: html`<a
 							class="btn"
-							href=${pictureUrl(osd, video, 'png', round)}
+							href=${pictureUrl(osd, video, 'png', at)}
 							download="neutrino.png">${t(text, 'now.shot.download')}</a>`}
 				</p>
 				<p class="now-hint">${t(text, 'now.shot.hint')}</p>

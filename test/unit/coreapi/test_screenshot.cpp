@@ -35,6 +35,7 @@
 #include "jsoncpp/json/json.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <iterator>
@@ -194,6 +195,89 @@ struct ServingPictures
 		ServingPictures &operator=(const ServingPictures &);
 };
 
+void restFor(int ms)
+{
+	struct timespec ts;
+	ts.tv_sec = ms / 1000;
+	ts.tv_nsec = (long)(ms % 1000) * 1000 * 1000;
+	nanosleep(&ts, NULL);
+}
+
+/* How long a capture below is allowed to sit inside the box. A ceiling and not a
+   wait for a signal, because the whole point of the case that uses it is a build
+   that queues the second capture behind this one: such a build leaves this
+   thread waiting on a thread that is waiting on it, and a suite that hangs says
+   nothing about anything. Nothing waits this out when the refusal comes back. */
+const int kHeldMs = 3000;
+
+/* A capture that does not leave the box until it is let go. Counted before it is
+   held, so a capture that reached the box and is still in there is one the
+   counter has already seen. */
+struct HeldScreenshotSource : public FakeScreenshotSource
+{
+	std::atomic<bool> inside;
+	std::atomic<bool> let_go;
+
+	HeldScreenshotSource() : inside(false), let_go(false) {}
+
+	coreapi::Status captureScreen(bool osd, bool video, coreapi::PictureFormat format,
+				      const std::string &path)
+	{
+		const coreapi::Status s =
+			FakeScreenshotSource::captureScreen(osd, video, format, path);
+		inside = true;
+		for (int waited = 0; waited < kHeldMs && !let_go; waited += 10)
+			restFor(10);
+		return s;
+	}
+
+	// Whether a capture got as far as the box, rather than whether one was
+	// started: a thread that never ran leaves the same silence as one that is
+	// being kept out.
+	bool waitInside(int budget_ms)
+	{
+		for (int waited = 0; waited < budget_ms && !inside; waited += 10)
+			restFor(10);
+		return inside;
+	}
+};
+
+/* One capture on a thread of its own, let go and joined from the destructor
+   whichever line the case leaves through: a check that fails unwinds past
+   whatever came after it, and a case that left this thread sitting in the box
+   would take the ceiling above with it for nothing. */
+struct CaptureInFlight
+{
+	HeldScreenshotSource &source;
+	pthread_t thread;
+	bool started;
+	std::atomic<bool> took;
+
+	explicit CaptureInFlight(HeldScreenshotSource &s)
+		: source(s), thread(), started(false), took(false)
+	{
+		started = pthread_create(&thread, NULL, &run, this) == 0;
+	}
+
+	~CaptureInFlight()
+	{
+		source.let_go = true;
+		if (started)
+			pthread_join(thread, NULL);
+	}
+
+	static void *run(void *arg)
+	{
+		CaptureInFlight *f = static_cast<CaptureInFlight *>(arg);
+		f->took = osd::screenshot(true, true, PictureFormat::Png).ok();
+		return NULL;
+	}
+
+	private:
+		CaptureInFlight(const CaptureInFlight &);
+		CaptureInFlight &operator=(const CaptureInFlight &);
+};
+
 ::Json::Value parsed(const std::string &doc)
 {
 	::Json::CharReaderBuilder builder;
@@ -311,6 +395,81 @@ TEST_CASE("a thousand captures do not leave a thousand files", "[screenshot]")
 	     << " that were not there before, first: "
 	     << (added.empty() ? std::string("none") : added[0]));
 	REQUIRE(added.empty());
+}
+
+/* The capture reads the framebuffer through a driver call with no deadline of
+   its own, so the wait this layer used to put a second caller through was a wait
+   on that call. The web server answers out of four worker threads and the page
+   asks for a picture on every key: four callers queued behind one stuck read is
+   a server that answers nothing at all, not even the channel list. Turned away
+   instead, a stuck read costs the one worker that is in it.
+
+   Everything this rests on is shown to move first: the first capture is shown to
+   have reached the box, and the count is shown not to have moved for the second,
+   so neither a thread that never ran nor a refusal invented above the box can
+   read as a pass. */
+TEST_CASE("a capture asked for while one is running is turned away rather than queued",
+          "[screenshot]")
+{
+	HeldScreenshotSource source;
+	InstalledScreenshotSource installed(&source);
+
+	bool held = false;
+	bool refused = false;
+	/* Neither starting value is the one this ends up checking for, so a case
+	   that never reached the call cannot read as a pass. */
+	Status status = Status::Ok;
+	ErrorCode code = ErrorCode::DisplayNotCaptured;
+	unsigned reached_box = 0;
+
+	{
+		CaptureInFlight first(source);
+		held = source.waitInside(kHeldMs);
+
+		Result<std::string> second = osd::screenshot(true, true, PictureFormat::Png);
+		refused = !second.ok();
+		if (refused)
+		{
+			status = second.error().status;
+			code = second.error().code;
+		}
+		reached_box = source.screen_shots;
+	}
+
+	REQUIRE(held);
+	REQUIRE(refused);
+	// Busy and not a fault: nothing is wrong with the request and nothing is
+	// wrong with the box, and what the caller does about it is come back.
+	REQUIRE(status == Status::Busy);
+	REQUIRE(code == ErrorCode::ScreenNotCaptured);
+	// The box was asked once. A build that waited would have asked twice.
+	REQUIRE(reached_box == 1u);
+}
+
+/* The refusal above is about one capture at a time and not about one for the
+   life of the box, so the next ask has to go through. A trylock given back on
+   one way out and not on another would pass the case above and leave every
+   capture after it refused for ever. */
+TEST_CASE("the next capture after a refused one is taken", "[screenshot]")
+{
+	HeldScreenshotSource source;
+	InstalledScreenshotSource installed(&source);
+
+	bool refused = false;
+
+	{
+		CaptureInFlight first(source);
+		REQUIRE(source.waitInside(kHeldMs));
+		refused = !osd::screenshot(true, true, PictureFormat::Png).ok();
+	}
+
+	REQUIRE(refused);
+
+	// The hold is already off: the thread above was let go and joined on its
+	// way out of the block, so this one runs straight through the box.
+	Result<std::string> after = osd::screenshot(true, true, PictureFormat::Png);
+	REQUIRE(after.ok());
+	REQUIRE(exists(after.value()));
 }
 
 TEST_CASE("the display is a capture of its own", "[screenshot]")
