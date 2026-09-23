@@ -238,6 +238,7 @@ bouqueteditor.newbouquetname New name
 bouqueteditor.rename Rename
 bouqueteditor.return ready
 bouqueteditor.savechanges? Do you want to save the changes?
+bouqueteditor.savefailed The changes could not be saved.
 bouqueteditor.savingchanges Saving changes. Please wait ...
 bouqueteditor.switch add/remove
 bouqueteditor.switchmode TV/Radio
@@ -1655,18 +1656,11 @@ menu.hint_net_dropbear Enable ssh access to the box
 menu.hint_net_ftpd Enable file transfer using FTP
 menu.hint_net_gateway Enter gateway/router IP address
 menu.hint_net_hostname Change your box hostname
-menu.hint_net_httpd Configure the web server (nhttpd)
-menu.hint_net_httpd_auth Require login for the web interface
-menu.hint_net_httpd_host Bind address or host\n(leave empty or 0.0.0.0 for all)
-menu.hint_net_httpd_loglevel Set the web server log verbosity
-menu.hint_net_httpd_noauth Clients that may access without login\n(comma-separated IPs/hosts)
-menu.hint_net_httpd_pass Password for HTTP authentication
+menu.hint_net_httpd Configure the web server (ni-web)
+menu.hint_net_httpd_host Address the server answers on\n(0.0.0.0 for every interface)
+menu.hint_net_httpd_pass New password for the web interface\n(leave empty to keep the current one)
 menu.hint_net_httpd_port TCP port for the web interface (1-65535)
-menu.hint_net_httpd_ssl Enable HTTPS for the web interface
-menu.hint_net_httpd_ssl_cafile Path to CA file (optional)
-menu.hint_net_httpd_ssl_pemfile Path to PEM file with certificate and key
-menu.hint_net_httpd_threading Handle connections in separate threads
-menu.hint_net_httpd_user Username for HTTP authentication
+menu.hint_net_httpd_user User name for the web interface
 menu.hint_net_if Select interface to config
 menu.hint_net_ipaddress Enter your box IP address
 menu.hint_net_mount Configure, mount and un-mount network shares\nNFS and CIFS supported
@@ -2393,19 +2387,12 @@ networkmenu.gateway default gateway
 networkmenu.hostname Hostname
 networkmenu.hostname_hint1 Enter hostname
 networkmenu.hostname_hint2 Need reboot after change
-networkmenu.httpd Web server (nhttpd)
-networkmenu.httpd_auth Authentication
+networkmenu.httpd Web server (ni-web)
 networkmenu.httpd_host Bind address
-networkmenu.httpd_loglevel Log level
-networkmenu.httpd_noauth No-auth clients
 networkmenu.httpd_pass Password
 networkmenu.httpd_port Port
-networkmenu.httpd_port_invalid Invalid port. Use 1-65535.
-networkmenu.httpd_save_failed Failed to save nhttpd.conf
-networkmenu.httpd_ssl Enable SSL
-networkmenu.httpd_ssl_cafile SSL CA file
-networkmenu.httpd_ssl_pemfile SSL PEM file
-networkmenu.httpd_threading Connection threading
+networkmenu.httpd_restart_failed ni-web could not be started again
+networkmenu.httpd_save_failed Failed to save ni-web.conf
 networkmenu.httpd_user Username
 networkmenu.inactive_network Network inactiv!
 networkmenu.ipaddress IP address

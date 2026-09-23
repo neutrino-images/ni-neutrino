@@ -19,18 +19,16 @@ autom4te.cache
 /install-sh
 /missing
 /stamp-h*
-
+/test-driver
 ### https://www.gnu.org/software/libtool/
 /libtool
 /ltmain.sh
-
 ### http://www.gnu.org/software/m4/
 m4/libtool.m4
 m4/ltoptions.m4
 m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
-
 ### compiled objects and libs
 .libs
 *.lo
@@ -39,31 +37,26 @@ m4/lt~obsolete.m4
 *.lai
 *.la
 *.a
-
 ### dependency files
 .deps
 *.Plo
 *.Po
-
 ### diff and patch files
 *.patch
 *.diff
 *.orig
 *.rej
-
 ### system generated stuff
 # dolphin
 .directory
 # kate
 *-swp
 .*.swp
-
 ### generally excluded files
 *~
 *.pc
 git-*
 go_*
-
 ### binaries that fall out of the build
 lib/sectionsdclient/sectionsdcontrol
 src/neutrino
@@ -75,18 +68,28 @@ src/tools/shutdown_helper
 src/tools/streamprobe
 src/zapit/pzapit
 src/zapit/udpstreampes
-
 ### header files that fall out of the build
 local_build_config.h
 src/gui/version.h
 src/tools/rcsim.h
-
-### other files that fall out of the build
-src/nhttpd/nhttpd.conf
-
+### the web interface's runtime, which belongs to the buildsystem and not here
+# A development environment serves the pages out of this tree rather than out
+# of an install prefix, so what they import has to sit beside them to be
+# reachable at all: the modules the interface runs on under the first name, and
+# the bundle the docs page loads under the second. On a box both arrive as
+# packages.
+data/ni-web/vendor/
+data/ni-web/swagger/vendor/
+### what a file manager leaves behind
+# Four of these were committed once and two of them are under data/ni-web,
+# where everything is installed onto the box and weighed by a ceiling: they
+# were shipped, gzipped, and counted as files of the page.
+.DS_Store
 ### IDE-specific settings
 # Visual Studio Code settings
 .vscode/
-
 ### python environment fallout
 venv
+### what the Finder leaves behind
+# One of these under data/ni-web/app is a file the install rules would ship and
+# a case counts, so it is not only clutter.

@@ -772,7 +772,11 @@ int CScanSetup::showScanMenu()
 	//set write_names if changed
 	if(zapitCfg.writeChannelsNames != tmp_writeChannelsNames){
 		CZapit::getInstance()->SetConfig(&zapitCfg);
-		g_Zapit->saveBouquets();
+		// The setting decides what goes into the files, so a setting that was
+		// taken while the files were not rewritten is a setting that did not
+		// take.
+		if (!g_Zapit->saveBouquets())
+			DisplayErrorMessage(g_Locale->getText(LOCALE_BOUQUETEDITOR_SAVEFAILED));
 	}
 
 	delete satOnOff;

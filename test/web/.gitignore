@@ -1,0 +1,10 @@
+# The declaration files of preact, htm and the router, and the TypeScript that
+# reads them, put here by yweb-devenv/scripts/fetch-webui-vendor.sh out of the
+# same archives the page's own runtime comes from. Fetched and never committed,
+# exactly like data/ni-web/vendor.
+node_modules/
+
+# The shapes of the API, written out of the server's own openapi.json on every
+# run of check-web-types.sh. Committing it would be the second description of
+# the same thing that generating it exists to avoid.
+types/api.d.ts

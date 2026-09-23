@@ -1,0 +1,111 @@
+/* The shape of the two screens of this destination.
+ *
+ * Colours and measures are the names from tokens.css and never a literal. What is here is
+ * only what the shared parts do not already do.
+ *
+ * The form is one column and stays one column at every width. A timer has fourteen fields
+ * of which a kind shows between four and nine, and a second column would put half of them
+ * where a narrow screen cannot follow them.
+ */
+
+/* No box of its own. The frame already sets every screen in from the edge of
+   the window by the same measure, and a second one here put the table sixteen
+   pixels to the right of the heading above it and took thirty two off the one
+   table in the tree that is wider than fourteen hundred pixels. */
+
+/* What is left in this row is the one control that makes a timer; the name of
+   the screen is the frame's and stands above it. */
+.timers-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--gap-3);
+	margin-bottom: var(--gap-4);
+}
+
+.timers h2 {
+	margin: 0;
+	font-size: 1.0625rem;
+}
+
+/* A hint or a refusal that stands beside a control rather than under a field,
+   which is where the button carries its reason. The frame styles these inside a
+   field and only there. */
+.timers .hint {
+	display: block;
+	margin-top: var(--gap-1);
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+}
+
+/* A refusal, in the colour a refusal is drawn in. It had the recording colour,
+   which is the same red under the name of the one thing on this page that is
+   not a refusal at all. */
+.timers .err {
+	margin: var(--gap-1) 0 0;
+	color: var(--failure);
+	font-size: 0.8125rem;
+}
+
+/* Two lines in one cell: what it is on, and what it is called. The table keeps
+   its rows on one line, so the second is its own line inside the cell. */
+.timers-what {
+	display: flex;
+	flex-direction: column;
+}
+
+.timers-title {
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+}
+
+/* Wide enough to read and no wider. A field of forty characters on a screen of
+   a hundred is a field whose end nobody looks at. */
+.timers-form {
+	max-width: 32rem;
+}
+
+.timers-days {
+	margin: 0 0 var(--gap-4);
+	padding: var(--gap-3);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+.timers-days legend {
+	padding: 0 var(--gap-2);
+	color: var(--text-dim);
+}
+
+/* The seven side by side where there is room and wrapped where there is not,
+   which at 360 pixels is three rows of controls a finger can hit. */
+.timers-days .field {
+	display: inline-block;
+	margin: 0 var(--gap-3) 0 0;
+}
+
+.timers-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var(--gap-3);
+	margin: var(--gap-5) 0 0;
+}
+
+/* What the address brought with it, said in one line above the fields it filled
+   in, so that whoever came here from a guide entry can see what was taken over
+   without reading eight controls to find out. */
+.timers-from-epg {
+	max-width: 32rem;
+	margin: 0 0 var(--gap-4);
+	padding: var(--gap-3);
+	background: var(--ground-1);
+	border-left: 3px solid var(--accent);
+	border-radius: var(--radius);
+}
+
+.timers-now {
+	padding: 0 0 var(--gap-4);
+	text-align: left;
+}

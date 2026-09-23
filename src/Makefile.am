@@ -1,4 +1,4 @@
-SUBDIRS = tools zapit gui daemonc driver system eitd timerd nhttpd
+SUBDIRS = tools zapit gui daemonc driver system eitd timerd coreapi httpd
 
 AM_CXXFLAGS = -fno-rtti -fno-exceptions -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 
@@ -65,6 +65,33 @@ LUALIBS = \
 	gui/lua/libneutrino_gui_lua.a
 endif
 
+# What the new web server costs the program, and nothing when it is left out.
+#
+# Two variables and not one, because the two halves go to different ends of the
+# link line. The archive has to stand in front of the layer it reads, since an
+# archive answers only what something already on the line has asked for. The
+# shared libraries have to stand behind it, because a link that drops what
+# nothing has asked for yet would drop both of them where the archive is and
+# leave the symbols undefined; that behaviour is the default in some toolchains
+# and not in others, and putting them last is right under either.
+#
+# The crypto library is named here and not left to the environment. The image
+# build passes it in its link flags, so a build from that direction would link
+# either way; a plain configure and make has nothing to pass it, and the
+# derivation and the constant time comparison in the archive would be undefined
+# symbols at the end of the line. The two other places in this tree that link
+# the archive name it for the same reason.
+if ENABLE_NI_WEB
+NI_WEB_LDADD = httpd/libhttpd.a
+NI_WEB_LIBS = @MHD_LIBS@ -lcrypto
+else
+NI_WEB_LDADD =
+NI_WEB_LIBS =
+endif
+
+# Archives resolve left to right and the dependency is circular: the HTTP
+# layer needs coreapi, coreapi needs the channel, schedule and timer
+# archives. They are therefore named again behind it.
 neutrino_LDADD = \
 	daemonc/libneutrino_daemonc.a \
 	gui/bedit/libneutrino_gui_bedit.a \
@@ -99,10 +126,11 @@ neutrino_LDADD = \
 	driver/libneutrino_driver_netfile.a \
 	timerd/libtimerd.a \
 	zapit/libzapit.a \
-	nhttpd/libnhttpd.a \
-	nhttpd/tuxboxapi/libnhttpd_tuxboxapi.a \
-	nhttpd/yhttpd_mods/libyhttpdmods.a \
-	nhttpd/yhttpd_core/libyhttpd.a \
+	$(NI_WEB_LDADD) \
+	coreapi/libcoreapi.a \
+	eitd/libsectionsd.a \
+	timerd/libtimerd.a \
+	zapit/libzapit.a \
 	system/libneutrino_system.a \
 	$(top_builddir)/lib/sectionsdclient/libsectionsdclient.a \
 	$(top_builddir)/lib/timerdclient/libtimerdclient.a \
@@ -133,7 +161,8 @@ neutrino_LDADD = \
 	-lutil \
 	-lOpenThreads \
 	-lrt -lpthread \
-	-lz
+	-lz \
+	$(NI_WEB_LIBS)
 
 # LCD display
 if ENABLE_LCD

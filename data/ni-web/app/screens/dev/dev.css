@@ -1,0 +1,67 @@
+/* The toolbox, in the marks the frame sets and no colour of its own. Every
+   value here is one of the page's custom properties, so a palette that changes
+   changes here too.
+
+   Deliberately plain. This is a place to look something up, not a place to be
+   shown anything, and a route list that is designed is a route list that is
+   harder to scan. */
+
+.dev { display: flex; flex-direction: column; gap: var(--gap-5); }
+
+.dev-block { min-width: 0; }
+.dev-block > h2 { margin: 0 0 var(--gap-2); font-size: 17px; }
+.dev-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: 72ch; }
+
+.dev-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-2); }
+.dev-row a.btn { text-decoration: none; color: var(--text); }
+
+/* The three questions the route list is narrowed by. Two of them are fields
+   and carry the bottom margin a form wants; in a row of filters that margin is
+   the gap above. */
+.dev-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--gap-3); }
+.dev-filters .field { margin-bottom: 0; flex: 1 1 200px; min-width: 0; }
+
+/* The levels as a row of buttons and not a list to open. There are five of
+   them at most, each carries the count that used to be a table of its own, and
+   a list would put both behind a press and a second press. */
+.dev-levels { display: flex; flex-direction: column; gap: var(--gap-1); margin: var(--gap-3) 0; }
+.dev-levels > .label { color: var(--text-dim); }
+.dev-level-row { display: flex; flex-wrap: wrap; gap: var(--gap-2); }
+.dev-levels .btn.on { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--accent); }
+
+/* One line off the stream: when it came, what it was, and what it carried. A
+   grid and not a table, because there is one row shape and only the last
+   column's width matters. */
+.dev-op {
+	display: grid;
+	grid-template-columns: 5.5rem 9rem minmax(0, 1fr);
+	gap: 0 var(--gap-3);
+	padding: var(--gap-1) var(--gap-3);
+	border-bottom: 1px solid var(--line);
+}
+.dev-op:last-child { border-bottom: 0; }
+
+/* The method of a route, and the clock of an event, in the same quiet face.
+   The four that change something are marked, because the level beside them
+   says what a caller needs and not what the call does. */
+.dev-method { font-weight: 600; font-size: 12px; letter-spacing: .04em; color: var(--text-dim); }
+.dev-method[data-method="POST"],
+.dev-method[data-method="PUT"],
+.dev-method[data-method="PATCH"],
+.dev-method[data-method="DELETE"] { color: var(--state-warning); }
+
+.dev-said { display: block; color: var(--text-dim); font-size: 13px; white-space: normal; }
+
+/* What came off the stream. It scrolls inside itself, because a box that has
+   been on for an hour has more of these than a page should grow by. */
+.dev-log {
+	max-height: 60vh;
+	overflow: auto;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--ground-1);
+}
+
+@media (max-width: 599px) {
+	.dev-op { grid-template-columns: minmax(0, 1fr); }
+}

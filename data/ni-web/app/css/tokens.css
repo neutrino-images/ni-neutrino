@@ -1,0 +1,84 @@
+/* The names every colour and every measure is spelled with. A screen uses the
+   names and never a literal, which is what lets ten of them be written at once
+   without a second palette turning up in one. The colours are inherited, and
+   the docs page beside these is drawn from the same set. */
+:root {
+	/* Inherited, not invented: this accent is what the community recognises.
+	   White over this orange is under three to one and dark over it above
+	   seven, so what goes ON the accent is dark. The two washes are the only
+	   amounts it may tint a surface by, so that a row, a pill and a card that
+	   all mean "this is the one" tint alike. */
+	--accent: #fd6d13;
+	--accent-dim: #c5540c;
+	--accent-ink: #14100b;
+	--accent-edge: rgba(253, 109, 19, 0.45);
+	--accent-wash: rgba(253, 109, 19, 0.09);
+
+	/* Neutrals with a slight cool bias instead of a flat near-black, so a
+	   surface separates from the one under it without a border on everything. */
+	--ground-0: #0d0f12;
+	--ground-1: #14171c;
+	--ground-2: #1c2027;
+	--line:     #2a2f38;
+	--text:     #e6e9ee;
+	--text-dim: #9aa3b0;
+
+	/* State is not interaction, so it does not borrow the accent's hue. Each of
+	   these names a condition the box is in, never a control.
+
+	   THE RED IS THE BOX WRITING TO A DISC AND NOTHING ELSE. It had also been
+	   the colour of whatever is playing, and then a page with a recording on it
+	   and a page without one were the same red meaning two things. Green is
+	   running or connected; amber wants looking at and is not yet a failure. */
+	--state-recording: #e03b3b;
+	--state-running:   #3ba55d;
+	--state-warning:   #e0a33b;
+
+	/* An open session, which is no condition of the box: the running green at
+	   half the saturation. */
+	--session-open:      #6f9c7f;
+	--session-open-edge: rgba(111, 156, 127, 0.45);
+
+	/* The same red under a second name, for the one thing that is not a
+	   condition of the box: something this page asked for and did not get. A
+	   refusal and a recording never stand in one vocabulary, so they may share
+	   a colour and may not share a name. Sharing the name is what makes "where
+	   is the recording red spent" a question nobody can answer by looking. */
+	--failure: #e03b3b;
+
+	/* What the box is playing, wherever it is drawn: the channel in the bar,
+	   its row in the channel list, its row in the guide. The accent under its
+	   own name, so marking it reaches for a word that says so. */
+	--on-air: var(--accent);
+
+	--font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+	/* HOW BIG THE WRITING IS, IN ONE PLACE. Every size on every screen is a rem,
+	   so this is the only number that sets any of them.
+
+	   Only the writing. The gaps and the heights below stay pixels on purpose:
+	   growing the frame by the same factor is how a phone ends up scrolling
+	   sideways. What a reader chooses is written onto this element from
+	   app/ui/textsize.js. */
+	--text-scale: 1;
+
+	/* Shape on one scale for the same reason the colours are on one: twenty
+	   screens line up without anybody measuring. --tap-height is what a finger
+	   is given below the phone width, where there is no pointer to be precise
+	   with. */
+	--gap-1: 4px; --gap-2: 8px; --gap-3: 12px; --gap-4: 16px; --gap-5: 24px;
+	--radius: 6px;
+	--radius-lg: 10px;
+	--radius-pill: 999px;
+	--bar-height: 52px;
+	--control-height: 36px;
+	--tap-height: 44px;
+	--focus-ring: 2px solid var(--accent);
+	--focus-offset: 2px;
+}
+
+/* The one size everything else is a fraction of. A hundred per cent of what
+   the browser was set to and not a number of pixels, so a reader who has
+   already told their browser to draw larger keeps that and multiplies it. */
+:root { font-size: calc(100% * var(--text-scale)); }

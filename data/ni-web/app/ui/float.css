@@ -1,0 +1,227 @@
+/* The window the source goes on playing in, and the bar it becomes where there
+   is no room for a window. Fetched by the module itself the first time something
+   plays, so a page nobody presses play on never asks for it.
+
+   Which of the two forms is on screen is an attribute app/ui/float.js writes and
+   not a width read here: the threshold is a judgement about the frame as a whole
+   and is stated once, where the frame is.
+
+   No colour of its own and no size of its own: the names out of
+   app/css/tokens.css. */
+
+.fp {
+	display: flex;
+	background: var(--ground-1);
+	border: 1px solid var(--line);
+}
+
+/* ------------------------------------------------------------- the window */
+
+.fp[data-form="window"] {
+	position: fixed;
+	/* Over the page and under what asks a question. A sheet and the shade
+	   behind it are the one thing on this page that must be answered before
+	   anything else, and a window floating over the shade would be a control
+	   nobody can reach outside a trap they cannot leave. */
+	z-index: 15;
+	flex-direction: column;
+	overflow: hidden;
+	border-radius: var(--radius-lg);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+	/* Taken away again for anybody who asked for less motion, by the one rule
+	   in app/css/shell.css that says so for the whole page. */
+	animation: fp-appear 120ms ease-out;
+}
+
+@keyframes fp-appear {
+	from { opacity: 0; transform: translateY(6px); }
+	to { opacity: 1; transform: none; }
+}
+
+/* The head is written after the picture, so that the node the element lives in
+   is the first child at both widths and survives the crossing. On screen in
+   this form it belongs above the picture. */
+.fp[data-form="window"] .fp-head {
+	order: -1;
+	flex: none;
+	padding: var(--gap-1) var(--gap-1) var(--gap-1) var(--gap-2);
+	background: var(--ground-2);
+	border-bottom: 1px solid var(--line);
+	/* The whole head carries the window, so the browser must not read a finger
+	   on it as a scroll and take the gesture away before the page sees it. */
+	touch-action: none;
+	cursor: move;
+	user-select: none;
+}
+
+.fp[data-form="window"] .fp-media {
+	flex: 1;
+	min-height: 0;
+}
+
+/* ---------------------------------------------------------------- the bar */
+
+.fp[data-form="bar"] {
+	flex: none;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--gap-3);
+	padding: var(--gap-2) var(--gap-3);
+	border-width: 1px 0 0;
+}
+
+.fp[data-form="bar"] .fp-head {
+	flex: 1 1 auto;
+}
+
+/* A picture small enough to leave the name room, and the shape a picture is.
+   Nothing here is dragged, so nothing here says anything about touch. */
+.fp[data-form="bar"] .fp-media {
+	flex: none;
+	width: 96px;
+	height: 54px;
+	border-radius: var(--radius);
+}
+
+.fp[data-form="bar"][data-sound] .fp-media {
+	flex: 1 1 140px;
+	width: auto;
+	min-width: 0;
+	height: var(--control-height);
+}
+
+/* A finger and not a pointer: this form is only ever on screen below the width
+   at which the destinations move to the foot of the page, which is where the
+   frame gives everything else its target height as well. */
+.fp[data-form="bar"] .fp-shut {
+	width: var(--tap-height);
+	height: var(--tap-height);
+}
+
+/* ------------------------------------------------------------- the pieces */
+
+/* The place for the element, which is black because what goes in it has black
+   edges of its own wherever the picture is not the shape of the window. */
+.fp-media {
+	min-width: 0;
+	background: #000;
+}
+
+.fp[data-sound] .fp-media {
+	background: none;
+}
+
+.fp-media .np-media {
+	display: block;
+	width: 100%;
+	height: 100%;
+	/* Letterboxed and never stretched: a window pulled to a shape the channel
+	   is not is a window somebody chose, and a face stretched to fill it is
+	   not what they asked for. */
+	object-fit: contain;
+}
+
+.fp[data-sound] .fp-media .np-media {
+	height: var(--control-height);
+}
+
+.fp-head {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-2);
+	min-width: 0;
+}
+
+/* Which of the two is in the window, which is a word and not a mark: the two
+   cost the box different things to leave standing, and a recording is named
+   after the channel it came off, so the name beside it does not say which. It
+   keeps its width and the name gives way, because a name cut short still reads
+   as a name and a word cut short reads as nothing. */
+.fp-kind {
+	flex: none;
+	color: var(--text-dim);
+	font-size: 0.75rem;
+}
+
+/* A name is as long as somebody named it and the window is as wide as somebody
+   pulled it, so the name gives way rather than the row. */
+.fp-name {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 0.8125rem;
+}
+
+.fp-said {
+	flex: none;
+	color: var(--text-dim);
+	font-size: 0.75rem;
+}
+
+.fp[data-phase="failed"] .fp-said {
+	color: var(--failure);
+}
+
+.fp-grip,
+.fp-shut {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	background: none;
+	border: 0;
+	border-radius: var(--radius);
+	color: var(--text-dim);
+	font: inherit;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.fp-grip:hover,
+.fp-shut:hover {
+	background: var(--ground-1);
+	color: var(--text);
+}
+
+.fp-grip {
+	cursor: move;
+	touch-action: none;
+}
+
+/* The corner, which is the one place the window is pulled from. Drawn as two
+   short rules rather than as a filled square, because a square in the corner
+   of a picture reads as part of the picture. */
+.fp-grab {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	background: none;
+	border: 0;
+	cursor: nwse-resize;
+	touch-action: none;
+}
+
+.fp-grab::before {
+	content: "";
+	position: absolute;
+	right: 4px;
+	bottom: 4px;
+	width: 8px;
+	height: 8px;
+	border-right: 2px solid var(--text-dim);
+	border-bottom: 2px solid var(--text-dim);
+}
+
+/* The window clips what stands in it, so a ring drawn outside this control is
+   a ring nobody sees. */
+.fp-grab:focus-visible {
+	outline-offset: -2px;
+}

@@ -1,0 +1,206 @@
+/* The settings screen. Every colour, gap and radius is a custom property of the
+   frame, so this file states arrangement and nothing else.
+
+   One column, always. The form is several hundred rows deep on the widest of its
+   sections, and a second column would put half of them where a narrow window
+   cannot reach them without a second arrangement to maintain. */
+
+.settings {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-4);
+	max-width: 44rem;
+	/* The gutter the mark on a changed row lives in, reserved on everything
+	   this screen draws so that one left edge runs down the whole of it. */
+	--set-mark: calc(var(--gap-3) + 3px);
+}
+
+.set-head {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-2);
+	padding-left: var(--set-mark);
+}
+
+.set-find {
+	margin-bottom: 0;
+}
+
+.set-rows {
+	display: flex;
+	flex-direction: column;
+}
+
+/* The control, and whatever the view around it adds under it. The gap lives here
+   rather than on the control, because the frame's own field already carries a
+   margin and two of them would stack.
+
+   THE GUTTER IS RESERVED ON EVERY ROW and not added to the marked one. Added, it
+   moved that one row's whole content box fifteen pixels right. Above the
+   telephone width that cannot be seen, because the column of controls is anchored
+   to the right edge; below it a control fills the row and begins where the row's
+   content begins, so a single marked row put its switch fifteen pixels beside
+   every other switch on the screen. */
+.set-row {
+	margin-bottom: var(--gap-4);
+	padding-left: var(--gap-3);
+	border-left: 3px solid transparent;
+}
+
+.set-row .field {
+	margin-bottom: var(--gap-1);
+}
+
+/* THE NAME ON THE LEFT AND THE CONTROL ON THE RIGHT, which is the shape the design
+   carries and which the frame's own field does not have: a field is a label over a
+   control, and a form several hundred rows deep drawn that way is a column of names
+   nobody can run an eye down.
+
+   CSS and not a second field. The parts of a field are its name, its control and
+   whatever it says under itself, and a grid can place those three without any of
+   the twenty screens that use a field knowing about this one.
+
+   The fold is the telephone's, where there is not room for two: the row goes back
+   to being a name over a control, which is what a field already is. */
+@media (min-width: 600px) {
+	.set-row > .field,
+	.set-row > .set-secret > .field {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 14rem;
+		align-items: center;
+		column-gap: var(--gap-4);
+	}
+	/* One colour down the column of names. A field's own name is the dim one
+	   the frame uses for a label over a control, and a yes or no carries its
+	   name as plain text; side by side in one column the two read as two
+	   kinds of row. */
+	.set-row > .field > .label,
+	.set-row > .set-secret > .field > .label { margin-bottom: 0; color: var(--text); }
+	/* The notes under a row belong under the whole of it and not under the
+	   control: a sentence 14rem wide beside a name is a sentence in a gutter. */
+	.set-row > .field > span:last-child,
+	.set-row > .set-secret > .field > span:last-child { grid-column: 1 / -1; }
+	.set-row > .field > span:last-child:empty,
+	.set-row > .set-secret > .field > span:last-child:empty { display: none; }
+
+	/* A credential is a field and an act beside it, and the act is wider than
+	   the column. So it goes under the field rather than next to it, on the
+	   edge the column of controls ends on. */
+	.set-row > .set-secret {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--gap-2);
+	}
+	.set-row > .set-secret > .field { margin-bottom: 0; }
+	.set-row > .set-secret > :last-child { align-self: flex-end; }
+
+	/* A yes or no is one child of the field where every other kind is two, so
+	   the grid goes on that child and not on the field around it. Nesting one
+	   inside the other put the switch two hundred and forty pixels left of
+	   every other control on the screen, which is one column too few.
+
+	   Named rather than left to the source order, because the box comes before
+	   its word in the document and the word is the name of the row. */
+	.set-row > .field-switch { display: block; }
+	.set-row > .field-switch > .switch {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 14rem;
+		align-items: center;
+		column-gap: var(--gap-4);
+	}
+	.set-row > .field-switch > .switch > input { grid-column: 2; grid-row: 1; justify-self: start; }
+	.set-row > .field-switch > .switch > span { grid-column: 1; grid-row: 1; }
+}
+
+.set-place {
+	color: var(--text-dim);
+}
+
+/* A ROW THAT IS NOT ON THE VALUE THE BOX SHIPPED.
+
+   The edge is the one tinted mark this page draws, in the frame's own accent
+   and at the frame's own weight, so a section reads as a column of quiet rows
+   with the changed ones standing out of it. It is never the only sign: the mark
+   and the way back are under the control, and either of them says the same
+   thing to somebody the colour does not reach. */
+.set-row.set-drift {
+	border-left-color: var(--accent-edge);
+}
+
+/* The mark, what the box ships, and the way back to it, on one line while
+   there is room. */
+.set-back {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: var(--gap-2);
+	margin: 0;
+}
+
+/* A credential: the field and the one act that empties it, side by side while
+   there is room and stacked when there is not. */
+.set-secret {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--gap-3);
+	margin-bottom: var(--gap-4);
+	flex-wrap: wrap;
+}
+
+.set-secret .field {
+	flex: 1 1 16rem;
+	margin-bottom: 0;
+}
+
+.set-locked p {
+	margin: 0;
+	padding: var(--gap-2) var(--gap-3);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--ground-1);
+	color: var(--text-dim);
+	min-height: var(--control-height);
+	box-sizing: border-box;
+}
+
+/* A hit that lives on another page stands in the same column of names as a row
+   that can be answered here, so the gutter is reserved on it too. */
+.set-elsewhere {
+	display: flex;
+	align-items: baseline;
+	gap: var(--gap-3);
+	flex-wrap: wrap;
+	margin: 0 0 var(--gap-3);
+	padding-left: var(--set-mark);
+}
+
+/* What is about to be sent, and the two answers to it, where a thumb reaches them:
+   the form is long and a bar at its foot would be several screens below the row
+   somebody just changed.
+
+   The two answers drop under the sentence rather than push the row off the screen.
+   A reader who has asked for larger writing has larger buttons. */
+.set-bar {
+	position: sticky;
+	bottom: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-3);
+	padding: var(--gap-3) 0 var(--gap-3) var(--set-mark);
+	border-top: 1px solid var(--line);
+	background: var(--ground-0);
+}
+
+.set-bar .hint {
+	flex: 1;
+	color: var(--text-dim);
+}
+
+@media (max-width: 480px) {
+	.set-secret {
+		flex-direction: column;
+		align-items: stretch;
+	}
+}

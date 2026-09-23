@@ -32,6 +32,22 @@
 #define IMAGE_VERSION_FILE TARGET_ROOT "/.version"
 
 #define NEUTRINO_SETTINGS_FILE CONFIGDIR "/neutrino.conf"
+/* Beside the program's own settings and not inside them, because what is in it
+   is a credential and a policy about who may reach the box, which the settings
+   file is copied over and rewritten wholesale on every save. Absent on a box
+   nobody has configured, and the server then runs on what it declares as its
+   own defaults. */
+#define NI_WEB_SETTINGS_FILE CONFIGDIR "/ni-web.conf"
+/* Where the web server this one replaced kept its own settings. That server is
+   gone from this tree; its file is not gone from the boxes, and a box coming
+   from an older image still has it. It is read once, on the first start after
+   an upgrade, for the address, the user name, the password and the port it
+   holds, and never written.
+
+   Named beside the file above because the two are one question asked twice,
+   and because the storage layer refuses to hand out either of them; the check
+   that holds those two lists together reads both names from here. */
+#define NI_WEB_OLD_SETTINGS_FILE CONFIGDIR "/nhttpd.conf"
 #define NEUTRINO_SCAN_SETTINGS_FILE CONFIGDIR "/scan.conf"
 #define NEUTRINO_PARENTALLOCKED_FILE DATADIR "/neutrino/.plocked"
 

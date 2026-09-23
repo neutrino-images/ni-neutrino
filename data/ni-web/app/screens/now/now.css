@@ -1,0 +1,440 @@
+/* The shape of this destination. Only the names from the shared palette, never a
+   colour or a measure written out here.
+
+   The cards fall into as many columns as the width allows and into one at the
+   narrow folding. They are not stretched to a common height, because a card with
+   three lines in it pulled down to the height of one with twelve is a screen
+   with nothing for the eye to find. */
+.now-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: var(--gap-4);
+	align-items: start;
+}
+
+.now-card {
+	background: var(--ground-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+	padding: var(--gap-4);
+	min-width: 0;
+}
+
+/* The whole row, for the card that leads the screen and for a picture that is
+   sixteen by nine. */
+.now-wide { grid-column: 1 / -1; }
+
+/* Two of them, for the two cards that carry a set of readings rather than one
+   figure. Two columns and not the whole row, because on a wide screen the row is
+   four.
+
+   THE WIDTH IN THE QUERY IS DERIVED AND NOT CHOSEN. The grid gives a card at
+   least 280px and the gap is 16, so two columns need 576 of grid; the page pads
+   itself by 16 on each side, so they need 608 of window. Below that the grid has
+   one column, and a card spanning two would push the page off the edge. */
+@media (min-width: 608px) {
+	.now-double { grid-column: span 2; }
+}
+
+/* What is playing. Tinted by the one amount the palette allows a surface to be
+   tinted by, so that the card the screen is about is the card the eye lands
+   on. */
+.now-lead {
+	border-color: var(--accent-edge);
+	background: var(--accent-wash);
+}
+
+.now-card-title {
+	margin: 0 0 var(--gap-3);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: var(--text-dim);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.now-sub {
+	margin: var(--gap-4) 0 var(--gap-2);
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-dim);
+}
+
+/* The shared failure and empty notes are written for a page that has nothing
+   on it and centre themselves in a good deal of room. Inside a card they are
+   one thing among seven, so they line up with everything else in it. Only the
+   arrangement is touched here, never a colour or a word. */
+.now-card > .note { padding: var(--gap-3) 0; text-align: left; }
+
+/* The refusal colour and not the recording one. The red is the same red, and
+   the name is what says which of the two this is: a card that could not be
+   read is something this page asked for and did not get, and the recording red
+   is the box writing to a disc. */
+.now-card-bad { padding: var(--gap-3); text-align: left; }
+.now-card-bad h3 { margin: 0 0 var(--gap-1); color: var(--failure); font-size: 0.9375rem; }
+.now-card-bad p { margin: 0; }
+
+.now-empty { margin: 0; color: var(--text-dim); }
+.now-hint { margin: var(--gap-2) 0 0; color: var(--text-dim); font-size: 0.8125rem; }
+.now-hint:empty { margin: 0; }
+
+/* The state a card is about, which is the label of that card's own switch and
+   is read as a reading, so the two cards that have one read alike. */
+.now-state .switch > span { margin: 0; font-size: 1.5rem; font-weight: 600; }
+.now-facts { display: flex; flex-wrap: wrap; gap: var(--gap-3); margin: var(--gap-1) 0 0;
+	color: var(--text-dim); font-size: 0.8125rem; }
+/* Read as one line and not as a list, so the pieces are parted by a mark
+   rather than by a gap alone. */
+.now-facts > span + span::before { content: '\00b7'; margin-right: var(--gap-3); }
+
+/* ------------------------------------------------------------ what is on */
+
+.now-head { display: flex; align-items: center; gap: var(--gap-3); }
+.now-head-what { min-width: 0; flex: 1; }
+.now-logo { flex: none; width: 48px; height: 48px; object-fit: contain;
+	border-radius: var(--radius); background: var(--ground-2); }
+.now-monogram { display: flex; align-items: center; justify-content: center;
+	font-weight: 600; font-size: 0.9375rem; color: var(--text-dim); }
+
+.now-channel-name { margin: 0; font-size: 1.375rem; font-weight: 600; }
+.now-channel-facts { display: flex; flex-wrap: wrap; gap: var(--gap-3); margin: var(--gap-1) 0 0;
+	color: var(--text-dim); font-size: 0.8125rem; }
+.now-event { margin-top: var(--gap-4); }
+.now-event-title { margin: 0; font-size: 1.0625rem; }
+.now-event-when { margin: var(--gap-1) 0 0; color: var(--text-dim); font-size: 0.8125rem; }
+.now-event-text { margin: var(--gap-2) 0 0; color: var(--text-dim); }
+.now-next-list { list-style: none; margin: 0; padding: 0; }
+.now-next-list li { display: flex; gap: var(--gap-3); padding: var(--gap-1) 0;
+	border-top: 1px solid var(--line); }
+.now-next-time { flex: none; color: var(--text-dim); }
+.now-next-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --------------------------------------------------------------- readings */
+
+/* A word, a figure beside it and a bar across both, the same three the sound
+   control below is drawn as.
+
+   A FLEX BOX AND NOT A GRID, WHICH IS ABOUT THE ONE READING WHERE BOTH HALVES
+   ARE LONG. Two columns of 1fr and auto put "Belegung von /opt/devenv-fixtures"
+   and "102 TiB von 232 TiB frei" on one row whatever the card is worth, and the
+   name then wraps over four lines around a figure that never gives way. Wrapping
+   the line instead moves the figure under the name and leaves the name whole. */
+.now-meter { display: flex; flex-wrap: wrap; gap: 0 var(--gap-3);
+	align-items: baseline; margin-top: var(--gap-3); }
+.now-meter-label { color: var(--text-dim); font-size: 0.8125rem; }
+/* Dimmed and in the page's own face. At full contrast, monospaced, beside a
+   quiet label, a figure reads as the loudest thing on the card, which is not
+   what a number beside a bar is. The digits still hold their column while a
+   slider is being dragged, which is all the monospaced face was doing here.
+
+   The margin is what puts it at the right edge, on the line it shares with the
+   name and on a line of its own alike. */
+.now-meter-value { margin-left: auto; font-size: 0.8125rem; color: var(--text-dim);
+	font-variant-numeric: tabular-nums; }
+/* Last in the markup and across the whole of it, for the reason the sound
+   control below spells out: automatic placement never goes back a row. */
+.now-bar { flex: 0 0 100%; width: 100%; height: var(--gap-2);
+	appearance: none; border: 0; border-radius: var(--radius);
+	background: var(--ground-2); color: var(--accent); }
+.now-bar::-webkit-progress-bar { background: var(--ground-2); border-radius: var(--radius); }
+.now-bar::-webkit-progress-value { background: var(--accent); border-radius: var(--radius); }
+.now-bar::-moz-progress-bar { background: var(--accent); border-radius: var(--radius); }
+
+.now-signal-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-3); margin: 0; }
+/* Three readings side by side where there is room for them, because they are
+   read as a set and not one after the other. */
+.now-gauges { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 0 var(--gap-4); }
+.now-figure { display: grid; grid-template-columns: 1fr auto; gap: 0 var(--gap-3);
+	align-items: baseline; margin-top: var(--gap-3); }
+.now-figure .now-hint { grid-column: 1 / -1; margin-top: 0; }
+
+/* ----------------------------------------------------------------- lists */
+
+.now-tuners, .now-recordings, .now-mounts { list-style: none; margin: 0; padding: 0; }
+.now-tuner, .now-recording {
+	display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-3);
+	padding: var(--gap-2) 0; border-top: 1px solid var(--line);
+}
+.now-tuners > li:first-child, .now-recordings > li:first-child { border-top: 0; }
+.now-tuner-name { font-weight: 600; }
+.now-tuner-kinds { color: var(--text-dim); font-size: 0.8125rem; }
+.now-recording-title { flex: 1; min-width: 8ch; overflow: hidden; text-overflow: ellipsis;
+	white-space: nowrap; }
+/* A box answers with every filesystem the kernel has mounted, which in a
+   container is thirty of them. Without a ceiling this one card would push the
+   ones below it off the screen, and the list is the box's answer and not this
+   page's to shorten. */
+.now-mounts { max-height: 260px; overflow-y: auto; }
+.now-mount { padding: var(--gap-2) 0; border-top: 1px solid var(--line); }
+.now-mounts > li:first-child { border-top: 0; }
+.now-mount-name { display: block; font-weight: 600; }
+
+/* -------------------------------------------------------------- controls */
+
+/* A word, a figure beside it and a control across both, the same three the
+   readings above are drawn as.
+
+   THE ONE ACROSS BOTH COMES LAST IN THE MARKUP, and that is not a preference.
+   Automatic placement never goes back a row: put the wide one in the middle and
+   it takes the second row while the first is still half empty, and the figure
+   after it lands on a third row under the control. Nothing in a stylesheet says
+   so, which is why it says so here. */
+.now-volume { display: grid; grid-template-columns: 1fr auto; gap: 0 var(--gap-3);
+	align-items: baseline; margin-top: var(--gap-3); }
+.now-range { grid-column: 1 / -1; width: 100%; min-height: var(--control-height);
+	accent-color: var(--accent); }
+.now-buttons { display: flex; flex-wrap: wrap; gap: var(--gap-2); margin: var(--gap-3) 0 0;
+	align-items: center; }
+
+/* The four the old interface kept a page of its own for: a word, then the
+   values it takes, which wrap rather than run off the card. */
+.now-quick { margin-top: var(--gap-3); }
+.now-quick-label { display: block; color: var(--text-dim); font-size: 0.8125rem;
+	margin-bottom: var(--gap-2); }
+.now-quick-set { display: flex; flex-wrap: wrap; gap: var(--gap-2); }
+
+/* ------------------------------------------------------------ the handset */
+
+/* THE PICTURE AND THE KEYS, SIDE BY SIDE WHERE THERE IS ROOM AND OVER EACH OTHER
+   WHERE THERE IS NOT. Both halves have to be usable at once, so where the two are
+   over each other the picture is held small and pinned and every key passes under
+   it.
+
+   NINE HUNDRED IS THE SAME NUMBER THE SCREEN READS IN JAVASCRIPT, and it is read
+   twice because there is nowhere both can read it from: the layout needs it here
+   and the drawing of the photograph needs it in remote.js, which says why it is
+   this number and not the two the rest of the page turns at. */
+.now-remote { display: grid; grid-template-columns: minmax(0, 1fr);
+	gap: var(--gap-4); align-items: start; }
+@media (min-width: 900px) {
+	.now-remote { grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); }
+}
+
+/* The picture, and under it the line that answers a press. Beside the keys this
+   wraps one card and does nothing; over them it is the block that is pinned. */
+
+/* OVER EACH OTHER, THE PICTURE STAYS AT THE HEAD OF THE READING AND EVERY KEY
+   PASSES UNDER IT. Without this a thumb reaching a key has scrolled the picture
+   away, and the picture is half of why the keys and the television are one
+   screen.
+
+   THE PICTURE ALONE. A heading, a card's edge, a button and the five keys a hand
+   aims were pinned with it once, and at 390 by 874 that block was 429 pixels of a
+   652 pixel reading with 223 left under it for every other key, which is the form
+   failing exactly where it was meant to help. What is here now is the picture and
+   the one line under it.
+
+   The page's own ground and not a card's: what is pinned carries no card, and the
+   ground it is drawn on is the ground the page is drawn on. */
+@media (max-width: 899px) {
+	/* THE CEILING ON THE PICTURE, WRITTEN ONCE AND READ TWICE: by the picture
+	   below and by the inset the frame's scrolling box is given further down.
+	   Written on the body because that is the one element both are under.
+
+	   THE THREE FIGURES, AND THE MIDDLE ONE IS DERIVED. Below, what is still
+	   worth calling a picture. Above, what stops a very tall window spending
+	   itself on one.
+
+	   The middle one is measured rather than guessed. The frame's bars take 222
+	   of the window at these widths, so the reading is the window less that.
+	   Pinned under the picture stand the line that answers a press, the gap
+	   over it and the block's own foot, which come to 30 whatever the window
+	   is. A quarter of the reading for the whole block is a quarter of the
+	   window less a quarter of those 222, and the picture is that less the 30,
+	   which is 25vh minus 86. */
+	body:has(.now-remote) { --now-shot-cap: clamp(64px, 25vh - 86px, 200px); }
+
+	/* Not the gap of a flex box, because the block is one box on a telephone
+	   and a card's child everywhere else. */
+	.now-remote-head > .now-remote-sent { margin-top: var(--gap-1); }
+
+	.now-remote-head {
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		background: var(--ground-0);
+		padding-bottom: var(--gap-1);
+	}
+	/* THE GROUND CARRIES ON ABOVE THE BLOCK. A sticky block comes to rest at
+	   the foot of the scrolling box's own padding, not at the top edge of it,
+	   so a strip the height of that padding is left over the block for the keys
+	   to slide through. The strip is the page's ground, and where the block has
+	   not been scrolled to yet it lies in the margin under the sentence that
+	   names this screen, which is that same ground. */
+	.now-remote-head::before {
+		content: "";
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 100%;
+		height: var(--gap-4);
+		background: var(--ground-0);
+	}
+	/* AND WHAT PASSES UNDER IT DISSOLVES RATHER THAN BEING CUT IN HALF. A hard
+	   edge across the middle of a row of keys reads as a fault and not as a
+	   thing that was meant; the same row fading out under the picture reads as
+	   what it is. */
+	.now-remote-head::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 100%;
+		height: var(--gap-4);
+		pointer-events: none;
+		background: linear-gradient(var(--ground-0), transparent);
+	}
+	/* WHAT IS TABBED TO IS SCROLLED CLEAR OF THE PINNED BLOCK AND NOT UNDER IT.
+	   Tabbing forward puts the next thing at the foot of the reading and is safe
+	   whatever stands at the head of it; tabbing backward puts it at the head,
+	   which is exactly where the block is. The inset belongs to the box that
+	   scrolls, which is why it is written on the frame's and not on anything of
+	   this screen's, and only for as long as this screen is in the document,
+	   which is what :has is doing here. A browser that does not read :has drops
+	   the rule. The height is the block's own: the picture, 30 for the line
+	   under it and its foot, 16 for the fade below it, and 16 for the strip the
+	   block rests below, which is the widest the scrolling box's own padding
+	   gets. Over rather than under: a thing tabbed to a few pixels lower than
+	   it had to be is a thing that is read, and one a few pixels higher is one
+	   under the picture. */
+	body:has(.now-remote) .content {
+		scroll-padding-top: calc(var(--now-shot-cap) + 62px);
+	}
+}
+
+/* AND NOTHING IS PINNED IN A WINDOW TOO SHORT TO PIN ANYTHING IN. The smallest
+   block this can draw is 94: the floor under the picture, below which a picture
+   is not worth calling one, and the 30 the line under it costs. A third of the
+   reading is 94 where the reading is 282, which is a window of 504, so under 520
+   the block is more than the share this form allows itself however small the
+   picture is drawn. A telephone held sideways is well under it. */
+@media (max-width: 899px) and (max-height: 519px) {
+	.now-remote-head { position: static; }
+	.now-remote-head::before, .now-remote-head::after { content: none; }
+}
+.now-remote-sent { margin: var(--gap-3) 0 0; color: var(--text-dim); min-height: 1.45em; }
+.now-keygroup + .now-keygroup { margin-top: var(--gap-4); }
+.now-keyset { display: flex; flex-wrap: wrap; gap: var(--gap-2); }
+
+/* Everything the box names that no group asked for: on the list and out of the
+   way. The marker is the browser's own, because a disclosure that does not
+   look like one is a heading nobody presses. */
+.now-keyrest > summary { cursor: pointer; }
+.now-keyrest > summary .now-hint { font-weight: 400; }
+.now-keyrest[open] > summary { margin-bottom: var(--gap-2); }
+
+.now-key {
+	min-height: var(--control-height); min-width: var(--control-height);
+	padding: 0 var(--gap-3);
+	background: var(--ground-2); color: var(--text);
+	border: 1px solid var(--line); border-radius: var(--radius);
+	font: inherit; font-size: 0.8125rem; cursor: pointer;
+}
+.now-key:hover:not(:disabled) { border-color: var(--text-dim); }
+.now-key:active:not(:disabled) { background: var(--ground-0); }
+.now-key:disabled { opacity: 0.5; cursor: default; }
+
+/* The digits keep the arrangement they have on the handset, so that a hand
+   that knows where the five is finds it here. */
+.now-keys-digits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+	max-width: 210px; }
+.now-keys-digits .now-key-KEY_0 { grid-column: 2; }
+
+/* And the cross keeps its own, which is what makes the arrow keys on the
+   keyboard read as the same thing rather than as a second way in. */
+.now-keys-cross { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+	max-width: 210px; }
+.now-key-KEY_UP { grid-column: 2; grid-row: 1; }
+.now-key-KEY_LEFT { grid-column: 1; grid-row: 2; }
+.now-key-KEY_OK { grid-column: 2; grid-row: 2; font-weight: 600; }
+.now-key-KEY_RIGHT { grid-column: 3; grid-row: 2; }
+.now-key-KEY_DOWN { grid-column: 2; grid-row: 3; }
+
+.now-keys-colour .now-key { min-width: 6ch; }
+
+/* The photograph, with the hot spots over it. The picture keeps its own
+   proportions and the overlay is stretched over exactly the box it ends up in,
+   which is what lets the shapes stay in the pixels of the photograph. The
+   width is a ceiling and not a size: a handset drawn larger than it is on a
+   desk is a photograph blown up. */
+.now-handset { position: relative; max-width: 320px; margin-top: var(--gap-3); }
+.now-handset-picture { display: block; width: 100%; height: auto;
+	border-radius: var(--radius-lg); }
+.now-handset-map { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.now-spot { fill: transparent; stroke: transparent; stroke-width: 2; cursor: pointer; }
+.now-spot:hover, .now-spot:focus {
+	fill: var(--accent-wash); stroke: var(--accent); outline: none;
+}
+/* A key this box does not name is part of the photograph and nothing else. */
+.now-spot-dead { pointer-events: none; }
+
+/* -------------------------------------------------------------- pictures */
+
+.now-shot { background: var(--ground-0); border: 1px solid var(--line);
+	border-radius: var(--radius); padding: var(--gap-3); min-height: 160px;
+	display: flex; align-items: center; justify-content: center; }
+.now-shot-small { min-height: 60px; }
+/* WHERE THE PICTURE IS OVER THE KEYS IT CARRIES NOTHING BUT ITSELF: no frame, no
+   ground of its own and no padding, because it is the one thing pinned and every
+   line around it is a line the keys under it do not get.
+
+   THE CEILING IS ON THE PICTURE AND NOT ON THE BOX AROUND IT. A height in per
+   cent on the image resolves against a box of no stated height, so it is simply
+   dropped, and the box shrank while the picture inside it hung out of the bottom.
+   The ceiling itself is set once, on the body, at the head of this sheet's narrow
+   rules. */
+@media (max-width: 899px) {
+	.now-shot-live { min-height: 0; padding: 0; border: 0; background: none; }
+	.now-shot-live .now-shot-image {
+		max-height: var(--now-shot-cap);
+		object-fit: contain;
+	}
+	/* Pressed, the ceiling lifts to what a menu on the television can be read
+	   at. Not the whole window: the keys under it have to stay reachable by
+	   scrolling, and a picture that fills the screen is a second view and not
+	   a bigger picture. Pressing again puts the ceiling back. */
+	.now-shot-live[data-large] .now-shot-image { max-height: 55vh; }
+}
+/* Wide the picture already has its room, so the control is a plain frame
+   around the image and changes nothing when pressed. */
+.now-shot-zoom { display: block; padding: 0; border: 0; background: none;
+	max-width: 100%; }
+@media (max-width: 899px) { .now-shot-zoom { cursor: zoom-in; } }
+@media (max-width: 899px) { .now-shot-live[data-large] .now-shot-zoom { cursor: zoom-out; } }
+.now-shot-image { display: block; max-width: 100%; height: auto; border-radius: var(--radius); }
+
+/* The picture's own options, out of the way of the keys beside them. The
+   marker is the browser's own; a disclosure that does not look like one is a
+   heading nobody presses. */
+.now-shot-more > summary { cursor: pointer; }
+.now-shot-more[open] > summary { margin-bottom: var(--gap-2); }
+
+/* A finger and not a pointer: the keys of the handset and the slider under the
+   volume are what this destination is worked with. */
+@media (max-width: 599px) {
+	.now-key { min-height: var(--tap-height); min-width: var(--tap-height); }
+	.now-range { min-height: var(--tap-height); }
+}
+
+/* The state on one line: the word at the near end, the switch at the far one.
+   The word is the switch's own label, so the label comes first and the box
+   itself is pushed across. Both cards that carry a state are drawn by this. */
+.now-state .field { margin-bottom: 0; max-width: none; }
+.now-state .switch input { order: 1; margin-left: auto; }
+/* And one line kept free under it, whether or not there is a note in it.
+   The note is written only in the state that is not the ordinary one, so it
+   arrives and goes; the card grows with it, and the box card grown by one line
+   is taller than the tallest card beside it, which moved everything below the
+   row down by eight pixels on being switched off. Measured. */
+.now-state .field-switch > span { display: block; font-size: 0.8125rem;
+	min-height: calc(var(--gap-1) + 1.4em); }
+
+/* The message under a line of its own: it is a note to whoever is in front of
+   the television and not part of what the box is. */
+.now-apart { margin-top: var(--gap-4); padding-top: var(--gap-4);
+	border-top: 1px solid var(--line); }
+.now-message { display: flex; align-items: flex-end; gap: var(--gap-2); }
+.now-message .field { flex: 1; min-width: 0; margin-bottom: var(--gap-3); }
+.now-message > span { margin-bottom: var(--gap-3); }

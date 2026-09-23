@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="NI-Web">
+<!-- A broadcast mark rather than a letter: it is read at sixteen pixels in a
+     tab strip, where a glyph is a smudge. The two colours are spelled out
+     because a file loaded as an icon has no page to inherit a name from. -->
+<rect width="32" height="32" rx="7" fill="#14171c"/>
+<circle cx="9" cy="23" r="3" fill="#fd6d13"/>
+<path d="M9 16a7 7 0 0 1 7 7" fill="none" stroke="#fd6d13" stroke-width="3" stroke-linecap="round"/>
+<path d="M9 9a14 14 0 0 1 14 14" fill="none" stroke="#fd6d13" stroke-width="3" stroke-linecap="round"/>
+</svg>

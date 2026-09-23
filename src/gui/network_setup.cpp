@@ -36,7 +36,9 @@
 
 #include "network_setup.h"
 #include <gui/proxyserver_setup.h>
-#include <gui/nhttpd_setup.h>
+#ifdef ENABLE_NI_WEB
+#include <gui/webserver_setup.h>
+#endif
 #include <gui/nfs.h>
 
 #include <gui/widget/icons.h>
@@ -67,7 +69,10 @@
 #include <libnet.h>
 #include <libiw/iwscan.h>
 #include <libconfigfile/configfile.h>
-#include <nhttpd/yconfig.h>
+
+#ifdef ENABLE_NI_WEB
+#include <httpd/webconfig.h>
+#endif
 
 extern int pinghost(const std::string &hostname, std::string *ip = NULL);
 
@@ -272,7 +277,9 @@ int CNetworkSetup::showNetworkSetup()
 	CMenuWidget ntp(LOCALE_MAINSETTINGS_NETWORK, NEUTRINO_ICON_NETWORK, width, MN_WIDGET_ID_NETWORKSETUP_NTP);
 
 	CProxySetup proxy(LOCALE_MAINSETTINGS_NETWORK);
-	CNhttpdSetup httpd;
+#ifdef ENABLE_NI_WEB
+	CWebserverSetup webserver;
+#endif
 	//CNetworkServiceSetup services;
 	CMenuForwarder *mf = NULL;
 
@@ -328,10 +335,12 @@ int CNetworkSetup::showNetworkSetup()
 	//-------------------------------------------------
 	networkSettings->addItem(m0);   //apply
 
-	//web interface (nhttpd) submenu
-	mf = new CMenuForwarder(LOCALE_NETWORKMENU_HTTPD, true, NULL, &httpd, NULL, CRCInput::RC_green);
+#ifdef ENABLE_NI_WEB
+	//web interface submenu
+	mf = new CMenuForwarder(LOCALE_NETWORKMENU_HTTPD, true, NULL, &webserver, NULL, CRCInput::RC_green);
 	mf->setHint("", LOCALE_MENU_HINT_NET_HTTPD);
 	networkSettings->addItem(mf);
+#endif
 
 	//ntp submenu
 	sectionsdConfigNotifier = new CSectionsdConfigNotifier;
@@ -488,7 +497,7 @@ int CNetworkSetup::showInterfaceSelectMenu()
 
 	if (select >= 0 && select < (int)ifnames.size())
 	{
-		g_settings.ifname = ifnames[select];
+		setSettingsText(g_settings.ifname, ifnames[select]);
 		changeNotify(LOCALE_NETWORKMENU_SELECT_IF, NULL);
 	}
 
@@ -734,7 +743,7 @@ int  CNetworkSetup::saveChangesDialog()
 //restores settings
 void CNetworkSetup::restoreNetworkSettings()
 {
-	g_settings.ifname = old_ifname;
+	setSettingsText(g_settings.ifname, old_ifname);
 	networkConfig->readConfig(g_settings.ifname);//FIXME ?
 
 	mac_addr			= networkConfig->mac_addr;
@@ -797,10 +806,6 @@ void CNetworkSetup::showCurrentNetworkSettings()
 {
 	dprintf(DEBUG_NORMAL, "[CNetworkSetup]\t[%s - %d], show current network settings...\n", __func__, __LINE__);
 	std::string ip, mask, broadcast, router, nameserver, text;
-	CConfigFile config(',');
-	config.loadConfig(HTTPD_CONFIGFILE);
-	std::string httpd_host = config.getString("WebsiteMain.host", HTTPD_DEFAULT_HOST);
-	int httpd_port = config.getInt32("WebsiteMain.port", HTTPD_STANDARD_PORT);
 
 	netGetIP(g_settings.ifname, ip, mask, broadcast);
 	if (ip[0] == 0)
@@ -824,16 +829,28 @@ void CNetworkSetup::showCurrentNetworkSettings()
 			+ g_Locale->getText(LOCALE_NETWORKMENU_NAMESERVER) + ": " + nameserver + '\n'
 			+ g_Locale->getText(LOCALE_NETWORKMENU_GATEWAY) + ": " + router;
 	}
+#ifdef ENABLE_NI_WEB
+	/* The server by its own name and not by the word for what it is. There is
+	   one web server on this box now, and somebody reading these two lines to
+	   find out where their browser should go is helped by the name they will
+	   read everywhere else about it.
+
+	   What is shown is what the server is running on and not what its file
+	   says, which is the same thing on every start and is the interesting
+	   difference on a box where a save could not be applied. */
+	const httpd::WebSettings web = httpd::currentWebSettings();
+
 	text += '\n';
-	text += "nhttpd-";
+	text += "ni-web ";
 	text += g_Locale->getText(LOCALE_NETWORKMENU_HTTPD_PORT);
 	text += ": ";
-	text += to_string(httpd_port);
+	text += to_string(web.port);
 	text += '\n';
-	text += "nhttpd-";
+	text += "ni-web ";
 	text += g_Locale->getText(LOCALE_NETWORKMENU_HTTPD_HOST);
 	text += ": ";
-	text += httpd_host;
+	text += web.bind_address;
+#endif
 	text += "\n\n" + getTimeSyncSettingsText("", false);
 	ShowMsg(LOCALE_NETWORKMENU_SHOW, text, CMsgBox::mbrBack, CMsgBox::mbBack); // UTF-8
 }

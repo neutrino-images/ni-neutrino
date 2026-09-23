@@ -1,0 +1,78 @@
+/* What this screen adds to the shape and the colours the frame already sets.
+   Nothing here names a colour or a measure of its own: every value is one of
+   the properties the frame declares, so this screen cannot drift away from the
+   twenty four beside it. */
+
+.rec > h2 {
+	margin: 0 0 var(--gap-2);
+}
+
+/* The sentence that says how many are running. It carries the count in its
+   own class as well as in its words, because how many there are is the one
+   thing about this screen a check can ask for without reading a language. */
+.rec-summary {
+	margin: 0 0 var(--gap-4);
+	color: var(--text-dim);
+}
+
+.rec-summary.rec-one,
+.rec-summary.rec-many {
+	color: var(--text);
+}
+
+/* The file a recording is writing is long and is the one cell nobody reads in
+   full: it keeps to one line and says the whole of itself on hover and to
+   anything reading the markup. Narrow enough that the control at the end of
+   the row is on screen at the wide folding without anybody scrolling to it,
+   which is the one column that can be given up for that. */
+.rec .mono span {
+	display: inline-block;
+	max-width: 14em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	vertical-align: bottom;
+}
+
+/* How a recording began sits under its title rather than in a column of its
+   own: it is read once and never compared down a column. */
+.rec .hint {
+	display: block;
+	color: var(--text-dim);
+}
+
+.rec-acts {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--gap-3);
+	margin-top: var(--gap-5);
+	padding-top: var(--gap-4);
+	border-top: 1px solid var(--line);
+}
+
+/* Which channel would be recorded takes the whole width above the controls, so
+   that the two buttons sit side by side and the sentence is not squeezed
+   between them. */
+.rec-acts .rec-on {
+	flex-basis: 100%;
+	margin: 0;
+	color: var(--text-dim);
+}
+
+
+/* One column below the fold this page is built for. The table beside it keeps
+   its own sideways scroll, so nothing here has to make a row wrap. */
+@media (max-width: 560px) {
+	.rec-acts {
+		display: block;
+	}
+
+	.rec-acts > * {
+		margin-bottom: var(--gap-3);
+	}
+
+	.rec .mono span {
+		max-width: 12em;
+	}
+}

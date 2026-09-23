@@ -1,0 +1,118 @@
+/* The playback screen. Names out of app/css/tokens.css and no colour of its
+   own, so that the card here and the card on the nine screens beside it are
+   the same card. */
+
+.pb-screen {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-4);
+	max-width: 760px;
+}
+
+.pb-head {
+	margin: 0;
+	font-size: 1.1875rem;
+}
+
+.pb-kind,
+.pb-current {
+	margin: 0;
+	color: var(--text-dim);
+}
+
+.pb-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-3);
+	padding: var(--gap-4);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+	background: var(--ground-1);
+}
+
+.pb-card h2 {
+	margin: 0;
+	font-size: 1rem;
+}
+
+.pb-card p {
+	margin: 0;
+}
+
+/* An address off a broadcast can be longer than the card, and a card that
+   grew to fit one would push the page sideways. */
+.pb-url {
+	word-break: break-all;
+	color: var(--text-dim);
+}
+
+.pb-phase {
+	font-weight: 600;
+}
+
+/* A source that did not answer is a refusal and not the box writing to a
+   disc, which is what the red under its other name is for. */
+.pb-phase.bad,
+.pb-failed {
+	color: var(--failure);
+}
+
+/* The place the element is drawn in. It is there from the first draw and empty
+   until somebody presses play, so the card is the same size before and after,
+   and an empty one is not a hole in it. The element itself belongs to
+   app/ui/playing.js and outlives this screen. */
+.pb-media {
+	width: 100%;
+	max-width: 100%;
+	background: var(--ground-0);
+	border-radius: var(--radius);
+}
+
+.pb-media .np-media {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: inherit;
+}
+
+.pb-media:not(.pb-sound) {
+	aspect-ratio: 16 / 9;
+}
+
+.pb-media.pb-sound {
+	height: var(--control-height);
+}
+
+.pb-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-2);
+}
+
+.pb-kind-tag {
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+}
+
+.pb-none,
+.pb-found {
+	color: var(--text-dim);
+}
+
+/* The three ways out of this page, in one line, with the tab first. */
+.pb-away {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-2);
+	margin: 0;
+}
+
+.pb-why {
+	margin: 0;
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+}

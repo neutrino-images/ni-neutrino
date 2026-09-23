@@ -130,6 +130,102 @@ AM_CONDITIONAL(USE_TREMOR, test "$TREMOR" = "yes")
 # TUXBOX_APPS_LIB_PKGCONFIG(OPENSSL,openssl)
 TUXBOX_APPS_LIB_PKGCONFIG(CURL,libcurl)
 
+# Unlike the 0.9.71 this replaces, which was an API floor and stood for the
+# release where the access handler's return type became enum MHD_Result, this
+# number says nothing about the API. Every call this server makes is unchanged
+# since 0.9.71 and it would still compile and run against it.
+#
+# It is a refusal to build against a library with holes we know about. 1.0.4
+# and 1.0.5 fixed HTTP request smuggling (CWE-444), which on this box is the
+# way past the only check that decides what a caller may do, and 1.0.3 fixed
+# ready connections being skipped, possibly forever, while another was
+# suspended, which is the shape every event stream and every live stream here
+# puts the daemon in.
+#
+# A version floor is normally the wrong instrument for this, because a
+# distribution backports a fix without moving the number and such a floor then
+# rejects a library that is perfectly sound. That objection does not apply
+# here: the buildsystem fetches and builds this from source for the box, and
+# the container these pages are developed in does the same, so nothing that
+# meets this check is ever a distribution's build with a distribution's
+# patches. Should that change, this number is the first thing that has to.
+PKG_CHECK_MODULES([MHD], [libmicrohttpd >= 1.0.10], [], [
+	AC_MSG_ERROR([libmicrohttpd >= 1.0.10 not found])
+])
+
+# The words the API document carries about itself: the summary of each route,
+# what each parameter says about itself and what each member of an answer says
+# about itself. Off leaves every path, parameter and shape exactly where they
+# are and takes out only those, because what reads that document is the type
+# generation for the pages and the cases that hold this server to it, and both
+# of those read the structure. On by default, a box being no use to whoever is
+# writing against it without them.
+AC_ARG_ENABLE(api-doc,
+	AS_HELP_STRING([--disable-api-doc], [leave the descriptions out of the API document @<:@default=yes@:>@]),
+	[enable_api_doc="$enableval"],
+	[enable_api_doc="yes"])
+
+if test "$enable_api_doc" != "yes"; then
+	AC_DEFINE(DISABLE_API_DOC, 1, [leave the descriptions out of the API document])
+fi
+# The page that reads that document goes with it. Off used to take the prose
+# out of the document and install the reader for it anyway, which is four
+# hundred kilobytes of flash for a page whose whole purpose is to show what was
+# just left out. On a box with twenty eight megabytes that is the difference
+# between fitting and not.
+AM_CONDITIONAL(ENABLE_API_DOC, test "$enable_api_doc" = "yes")
+
+# The photographs of the handset that belongs to the box, drawn under the keys
+# on the remote control screen. One model's set is between 28 and 134 kilobytes
+# depending on how many shapes of handset it was sold with, and the screen
+# falls back to drawing the keys where there is no picture, so this is a size
+# lever that costs a likeness and nothing else. On by default: a box with the
+# room for it is better with the handset somebody is holding.
+AC_ARG_ENABLE(handset-pictures,
+	AS_HELP_STRING([--disable-handset-pictures], [draw the keys rather than the handset @<:@default=yes@:>@]),
+	[enable_handset_pictures="$enableval"],
+	[enable_handset_pictures="yes"])
+
+AM_CONDITIONAL(ENABLE_HANDSET_PICTURES, test "$enable_handset_pictures" = "yes")
+
+# The copied control API, the seventy-four handlers under /control/ that the
+# old web server used to answer alone (see src/httpd/compat/). A size lever
+# for a box like nevis, which nothing still calling that surface runs on: off
+# takes the whole layer out rather than leaving it linked and unreachable,
+# because a handler nothing can any longer reach is flash spent on a promise
+# already broken. Off means the sources under compat/ are not even compiled and
+# /control/ answers like any path this server does not have. The counter at
+# /api/v1/system/legacy-usage stays: it is a route the page asks for, the page
+# is the same bytes on every box and cannot see this switch, so it answers no
+# names at all rather than going missing.
+# On by default, since retiring the surface is a decision to make on what the
+# counter reports, not one this switch should make first.
+AC_ARG_ENABLE(legacy-api,
+	AS_HELP_STRING([--disable-legacy-api], [leave the copied control API out of the program @<:@default=yes@:>@]),
+	[enable_legacy_api="$enableval"],
+	[enable_legacy_api="yes"])
+
+if test "$enable_legacy_api" != "yes"; then
+	AC_DEFINE(DISABLE_LEGACY_API, 1, [leave the copied control API out of the program])
+fi
+AM_CONDITIONAL(ENABLE_LEGACY_API, test "$enable_legacy_api" = "yes")
+
+# Whether the program carries the new web server at all. Off is a size lever
+# and nothing else: the archive is still built and the suite still holds it to
+# everything it holds it to with this on, so the two configurations answer the
+# same questions about the layer. What off takes away is the link and the two
+# calls that start and stop it, which is what a box short of flash is paying
+# for. The old server is untouched either way.
+AC_ARG_ENABLE(ni-web,
+	AS_HELP_STRING([--disable-ni-web], [leave the new web server out of the program @<:@default=yes@:>@]),
+	[enable_ni_web="$enableval"],
+	[enable_ni_web="yes"])
+
+if test "$enable_ni_web" = "yes"; then
+	AC_DEFINE(ENABLE_NI_WEB, 1, [carry the new web server in the program])
+fi
+AM_CONDITIONAL(ENABLE_NI_WEB, test "$enable_ni_web" = "yes")
+
 ## For the check you must use the corresponding libtool number as version number,
 ## see freetype source code docs/VERSIONS.TXT
 PKG_CHECK_MODULES([FREETYPE], [freetype2 >= 16.2.10], [
@@ -547,6 +643,11 @@ AC_ARG_ENABLE(fribidi,
 	AC_DEFINE(ENABLE_FRIBIDI, 1, [enable fribidi support]))
 AM_CONDITIONAL(ENABLE_FRIBIDI, test "$enable_fribidi" = "yes")
 
+AC_ARG_ENABLE(unit-tests,
+	AS_HELP_STRING([--enable-unit-tests],[build host-side unit tests, native builds only]),
+	,[enable_unit_tests=no])
+AM_CONDITIONAL(ENABLE_UNIT_TESTS, test "$enable_unit_tests" = "yes")
+
 # default theme
 AC_ARG_WITH(default-theme,
 	AS_HELP_STRING([--with-default-theme=THEMENAME], [default theme for gui @<:@default is empty@:>@]),
@@ -688,6 +789,7 @@ data/Makefile
 data/config/Makefile
 data/control/Makefile
 data/fonts/Makefile
+data/httpd-scripts/Makefile
 data/icons/Makefile
 data/icons/buttons/Makefile
 data/icons/filetypes/Makefile
@@ -727,6 +829,11 @@ data/oled/themes/220x176/Makefile
 data/oled/themes/400x240/Makefile
 data/oled/themes/480x320/Makefile
 data/oled/themes/800x480/Makefile
+data/ni-web/Makefile
+data/ni-web/app/Makefile
+data/ni-web/info/Makefile
+data/ni-web/rc/Makefile
+data/ni-web/swagger/Makefile
 data/pictures/Makefile
 data/pictures/backgrounds/Makefile
 data/pictures/screensaver/Makefile
@@ -751,17 +858,6 @@ data/themes/Olive-3.0/icons/buttons/Makefile
 data/weather/Makefile
 data/webradio/Makefile
 data/webtv/Makefile
-data/y-web/Makefile
-data/y-web/favicon/Makefile
-data/y-web/images/Makefile
-data/y-web/images/rc/Makefile
-data/y-web/info/Makefile
-data/y-web/jquery/Makefile
-data/y-web/languages/Makefile
-data/y-web/lcd4linux/Makefile
-data/y-web/prototype/Makefile
-data/y-web/scripts/Makefile
-data/y-web/styles/Makefile
 data/zapit/Makefile
 lib/Makefile
 lib/connection/Makefile
@@ -781,6 +877,7 @@ lib/sectionsdclient/Makefile
 lib/timerdclient/Makefile
 lib/xmltree/Makefile
 src/Makefile
+src/coreapi/Makefile
 src/daemonc/Makefile
 src/driver/Makefile
 src/driver/audiodec/Makefile
@@ -796,10 +893,7 @@ src/gui/moviedb/Makefile
 src/gui/moviebrowser/Makefile
 src/gui/widget/Makefile
 src/gui/widget/yaft/Makefile
-src/nhttpd/Makefile
-src/nhttpd/tuxboxapi/Makefile
-src/nhttpd/yhttpd_core/Makefile
-src/nhttpd/yhttpd_mods/Makefile
+src/httpd/Makefile
 src/system/Makefile
 src/system/mtdutils/Makefile
 src/system/mtdutils/lib/Makefile
@@ -807,11 +901,9 @@ src/timerd/Makefile
 src/tools/Makefile
 src/zapit/Makefile
 src/zapit/client/Makefile
-])
-
-# Webserver config
-AC_CONFIG_FILES([
-src/nhttpd/nhttpd.conf
+test/Makefile
+test/unit/Makefile
+test/web/Makefile
 ])
 
 # Migration script

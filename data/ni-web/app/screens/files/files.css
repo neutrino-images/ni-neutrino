@@ -1,0 +1,231 @@
+/* The look of this destination, and nothing the frame already draws.
+ *
+ * Every colour and every measure is a custom property of the frame. A literal
+ * here would be a second palette.
+ *
+ * Every name begins with files- so that a class of this destination and a class
+ * of another one cannot mean two things at once. */
+
+.files-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--gap-3);
+	margin-bottom: var(--gap-4);
+}
+
+/* The trail is a row that wraps rather than one that scrolls: a deep name at
+   360 pixels is several lines of trail, and a line the finger has to drag is a
+   line nobody reads. */
+.files-crumbs {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-1);
+	margin: 0 0 var(--gap-3);
+	padding: 0;
+	list-style: none;
+	font-family: var(--font-mono);
+}
+
+.files-crumbs li {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-1);
+	color: var(--text-dim);
+}
+
+.files-crumbs a {
+	padding: var(--gap-1) var(--gap-2);
+	border-radius: var(--radius);
+	text-decoration: none;
+}
+
+.files-crumbs a:hover {
+	background: var(--ground-2);
+}
+
+.files-crumbs .files-here {
+	padding: var(--gap-1) var(--gap-2);
+	color: var(--text);
+}
+
+/* A sentence the person is meant to read before acting, so it sits in the
+   reading column and not in the middle of the screen the way a state does. */
+.files-hint {
+	max-width: 68ch;
+	margin: 0 0 var(--gap-4);
+	color: var(--text-dim);
+}
+
+.files-hint strong {
+	display: block;
+	color: var(--text);
+	font-weight: 600;
+}
+
+.files-panel {
+	max-width: 68ch;
+	margin-bottom: var(--gap-4);
+	padding: var(--gap-4);
+	background: var(--ground-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+}
+
+.files-panel h2 {
+	margin: 0 0 var(--gap-2);
+	font-size: 1.0625rem;
+}
+
+/* The field and the button on one line where there is room for one, and the
+   field first, because that is the order they are used in. */
+.files-form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--gap-3);
+}
+
+.files-form .field {
+	flex: 1 1 22ch;
+	margin-bottom: 0;
+}
+
+.files-form input {
+	font-family: var(--font-mono);
+}
+
+.files-starts {
+	margin: var(--gap-3) 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.files-starts li + li {
+	border-top: 1px solid var(--line);
+}
+
+.files-starts a {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--gap-3);
+	padding: var(--gap-2) 0;
+	text-decoration: none;
+}
+
+.files-starts span {
+	color: var(--text-dim);
+}
+
+/* A refusal that is the design working, drawn as a note and not as a fault:
+   nothing here borrows the colour a failure is drawn in. */
+.files-closed {
+	display: block;
+	max-width: 52ch;
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+	white-space: normal;
+}
+
+.files-name {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--gap-2);
+}
+
+/* The player that opens under a row.
+
+   Held to a width of its own and not to the width of the table it stands in: a
+   listing with a long name in it is wider than the screen and scrolls sideways,
+   and a picture that took that width would scroll with it. */
+.files-play {
+	max-width: 60rem;
+	padding: var(--gap-2) 0;
+}
+
+.files-play h3 {
+	margin: 0 0 var(--gap-2);
+	font-size: 1.0625rem;
+}
+
+.files-play-how,
+.files-play-vlc {
+	max-width: 68ch;
+	margin: 0 0 var(--gap-2);
+	color: var(--text-dim);
+}
+
+.files-play-acts {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-2);
+	margin: 0 0 var(--gap-2);
+}
+
+.files-play-state {
+	color: var(--text-dim);
+}
+
+.files-play-media {
+	margin: var(--gap-2) 0;
+	background: var(--ground-0);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+/* The place for the element stands in the page before there is an element, and
+   while the window on shell level is carrying it. Drawn then, it is a black
+   rectangle under a play button that is already pressed, which reads as a
+   picture that never came. */
+.files-play-media:empty {
+	display: none;
+}
+
+.files-play-media video {
+	display: block;
+	width: 100%;
+	max-height: 60vh;
+}
+
+.files-play-media audio {
+	display: block;
+	width: 100%;
+}
+
+/* Sound alone needs no black rectangle, and one drawn for it is a hole in the
+   page the size of a picture. */
+.files-play-sound {
+	background: none;
+	border: 0;
+}
+
+.files-play-vlc .mono {
+	overflow-wrap: anywhere;
+}
+
+/* The two counters are in the row as numbers, so the bar is decoration and is
+   hidden from anything that reads the row out. */
+.files-meter {
+	width: 8ch;
+	height: 6px;
+	overflow: hidden;
+	background: var(--ground-0);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+.files-meter span {
+	display: block;
+	height: 100%;
+	background: var(--accent);
+}
+
+.files-meter.files-tight span {
+	background: var(--state-warning);
+}
+
+@media (max-width: 599px) {
+	.files-starts a { display: flex; align-items: center; min-height: var(--tap-height); }
+}

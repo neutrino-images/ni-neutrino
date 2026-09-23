@@ -1,0 +1,483 @@
+/* The bouquet screen: three columns, and one row shape used in all of them.
+
+   THE MIDDLE AND THE RIGHT WEIGH THE SAME. What is in the bouquet and what there
+   is to put in it are the same kind of question, and a pool squeezed into
+   whatever the other two left over is a pool nobody drags out of.
+
+   THE LEFT IS THE ONE WITH A WIDTH OF ITS OWN, AND IT WAS TOO SMALL. It had 240px
+   on the reading that a list of bouquet names is a list of short words: of the 54
+   in data/initial/ubouquets.xml, 19 were cut off at that width once the selected
+   row grew its two arrows, and a bouquet built out of a web playlist is named
+   after the playlist, which on the development box runs to 37 characters. The
+   longest wants 430px, a third of a 1280px screen.
+
+   So the names wrap instead (the rule further down), and the width is only a
+   question of how many lines a name may have. 300px is where that answer becomes
+   two: measured over both sets of names, 280 leaves five rows of three lines and
+   260 leaves nineteen, while at 300 the tallest ordinary row is two lines and
+   there is nothing to gain above it. */
+
+.bq {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-3);
+}
+
+.bq h1 {
+	margin: 0;
+	font-size: 1.1875rem;
+}
+
+.bq-keys {
+	margin: 0;
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+}
+
+.bq-bar {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-2);
+	flex-wrap: wrap;
+}
+
+.bq-gap {
+	flex: 1 1 auto;
+}
+
+/* Which half is being edited. Two buttons and not a list to pick from: there
+   are two, always, and a list of two is a list nobody reads. */
+.bq-halves {
+	display: inline-flex;
+	gap: var(--gap-1);
+}
+
+.bq-halves .btn.on {
+	border-color: var(--accent-edge);
+	background: var(--accent-wash);
+	color: var(--accent);
+}
+
+.bq3 {
+	display: grid;
+	grid-template-columns: 300px minmax(0, 1fr) minmax(0, 1fr);
+	gap: var(--gap-3);
+	align-items: start;
+}
+
+.pane {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-2);
+	min-width: 0;
+	padding: var(--gap-3);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+	background: var(--ground-1);
+}
+
+.pane h2 {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-2);
+	margin: 0;
+	font-size: 0.6875rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-dim);
+}
+
+/* THE THREE LISTS BEGIN AT ONE HEIGHT, and this is the whole of what makes
+   them. Every column's heading is a row as tall as a control, so that the one
+   column with a control in its heading is no taller than the two without one.
+   Twenty pixels of air over two of the lists is the price, and it is paid
+   once and in the same place in all three; the pool's list used to begin
+   ninety six pixels below its neighbours, and three lists starting at three
+   heights read as three unrelated things rather than as one screen. */
+.pane > h2,
+.bq-poolhead {
+	min-height: var(--control-height);
+}
+
+.bq-poolhead {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-3);
+	min-width: 0;
+}
+
+.bq-poolhead h2 {
+	flex: none;
+}
+
+/* The filter as one row: the label beside the box rather than over it. What
+   it does not carry is its sentence, which is under the list it is about
+   (bouquets.js, bq-pool-note) and still tied to this field by name. */
+.bq-poolhead .field {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	min-width: 0;
+	max-width: none;
+	margin: 0;
+}
+
+/* The size the heading beside it is, so the row reads as one strip and not as
+   two headings. */
+.bq-poolhead .field > .label {
+	flex: none;
+	margin: 0 var(--gap-2) 0 0;
+	font-size: 0.75rem;
+}
+
+.bq-poolhead .field input {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: auto;
+}
+
+/* A heading that carries a name rather than a word of ours, and the one place
+   on this screen where a column deliberately does not look like the other two.
+   None of the shouting first: a bouquet is called what somebody called it, so
+   it is not put into small capitals and not spaced out. And then brighter and
+   two points larger than its neighbours, because which bouquet is open is what
+   everything else on the screen is about, and the two words beside it name a
+   list that is always the same list. */
+.pane h2.named {
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: 0.8125rem;
+	color: var(--text);
+}
+
+.vrows {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	max-height: 58vh;
+	overflow-y: auto;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* A column of flex items under a ceiling is a column that shrinks its items to
+   meet the ceiling, and these are meant to scroll past it instead. It made no
+   difference while every row was one line high and the floor below held them
+   there; the moment a name wrapped, the row was pressed back to that floor and
+   its second line came out over the row beneath. */
+.vrows > li {
+	flex: none;
+}
+
+/* The pool under its heading row: the list and the line about it. A column at
+   every width, because the sheet the pool becomes on a telephone wanted the
+   same three lines and used to say so a second time in its own rule. */
+.bq-pool {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-2);
+	min-width: 0;
+}
+
+.bq-scroll {
+	height: 52vh;
+}
+
+/* The windowed list gives every row the one height its arithmetic assumes and
+   this fills it, a finger's height at every width so that the number in the
+   screen stays true when a telephone turns up. */
+.vlist .row > .brow {
+	width: 100%;
+	min-height: var(--tap-height);
+}
+
+/* One row of any of the three columns.
+
+   THE ROW MAY BE SCROLLED AND THE HANDLE MAY NOT. pan-y on the row is what
+   lets a finger drag the list up and down over it; none on the handle is what
+   stops the browser taking the gesture that starts there. Both are needed:
+   with only the second the list scrolls over the handle, with only the first
+   the drag never begins. */
+.brow {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-2);
+	min-height: 34px;
+	padding: 0 var(--gap-2);
+	border: 1px solid transparent;
+	border-radius: var(--radius);
+	background: var(--ground-2);
+	min-width: 0;
+	touch-action: pan-y;
+}
+
+.brow.picked {
+	border-color: var(--accent-edge);
+	background: var(--accent-wash);
+}
+
+.brow.picked .bq-name,
+.brow.marked .bq-name {
+	color: var(--accent);
+	font-weight: 600;
+}
+
+.brow.marked {
+	border-color: var(--accent-edge);
+}
+
+.brow.grabbed {
+	border-style: dashed;
+	border-color: var(--accent);
+}
+
+.brow.inside .bq-name {
+	color: var(--text-dim);
+}
+
+/* Where the row would land, drawn on the row it would land beside rather than
+   as an element pushed between two: a list that grows a row under the pointer
+   moves everything below it, and the thing being aimed at moves with it. */
+.brow.above {
+	box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.brow.below {
+	box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.brow.into {
+	border-color: var(--accent);
+	background: var(--accent-wash);
+}
+
+/* WHERE A CHANNEL GOES WHEN THE HALF IS EMPTY. The sentence saying the half
+   holds nothing is also the thing a drag is let go of, so it is given the area
+   a pointer can be aimed at: a sentence is seventeen pixels tall and a target
+   that thin is one nobody hits with a finger. Dashed, because it is a place
+   for something and not a thing. */
+.bq-nothing {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--gap-1);
+	min-height: 108px;
+	padding: var(--gap-4);
+	border: 1px dashed var(--line);
+	border-radius: var(--radius);
+	color: var(--text-dim);
+	text-align: center;
+	touch-action: pan-y;
+}
+
+.bq-nothing.into {
+	border-style: solid;
+	border-color: var(--accent);
+	background: var(--accent-wash);
+}
+
+.grip {
+	flex: none;
+	padding: 0 2px;
+	border: 0;
+	background: none;
+	color: var(--text-dim);
+	font-size: 0.875rem;
+	line-height: 1;
+	cursor: grab;
+	touch-action: none;
+}
+
+.grip:active {
+	cursor: grabbing;
+}
+
+.bq-name {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* The left column, and only that one, wraps instead of cutting. A bouquet built
+   out of a web playlist is named after the playlist and runs to 37 characters.
+   Two lines cost the row 22px and lose nothing; an ellipsis loses the half of the
+   name that tells two Samsung TV Plus_de bouquets apart.
+
+   anywhere and not break-word, so a name with no space in it breaks as well, and
+   so the flex item's smallest size is a character rather than the longest word:
+   the column is sized by the layout above and this must not push it wider. */
+.pane-bouquets .bq-name {
+	white-space: normal;
+	overflow: visible;
+	text-overflow: clip;
+	overflow-wrap: anywhere;
+	/* A basis of its own, because auto is the whole name: a flex item asking
+	   for 274px on a 235px line pushes the count and the arrows onto a second
+	   line in every row rather than in the one that needs it. */
+	flex: 1 1 8rem;
+	min-width: 8rem;
+}
+
+/* And what happens when even that does not fit. A hidden or locked bouquet
+   carries a chip beside its name that takes 80px and cannot give any of it back,
+   which at 300px leaves the name sixty. Wrapping a name into sixty pixels is a
+   tower ten lines high, so the row wraps instead and what does not fit beside the
+   name goes under it. Measured at 300px, an ordinary row is at most two lines and
+   46px tall; a bouquet that is both hidden and named after a web playlist reaches
+   97px. It is also the guard against the other failure: without it a name that
+   may not shrink below its floor would push the row sideways. */
+.pane-bouquets .brow {
+	flex-wrap: wrap;
+	/* What went under the name goes under its right hand end, where the same
+	   marks sit on every row that did not have to wrap. The name grows into
+	   whatever the first line has left, so this reaches the second line only. */
+	justify-content: flex-end;
+}
+
+.bq-pos,
+.bq-count {
+	flex: none;
+	color: var(--text-dim);
+	font-size: 0.6875rem;
+}
+
+.bq-flag {
+	flex: none;
+	padding: 0 var(--gap-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	color: var(--text-dim);
+	font-size: 0.625rem;
+	line-height: 16px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.bq-flag.warn {
+	border-color: var(--state-warning);
+	color: var(--state-warning);
+}
+
+.bq-mini {
+	flex: none;
+	min-height: 22px;
+	padding: 0 var(--gap-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	background: var(--ground-1);
+	color: var(--text-dim);
+	font-size: 0.6875rem;
+	cursor: pointer;
+}
+
+.bq-mini:hover:not(:disabled) {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.bq-foot,
+.bq-owns {
+	margin: 0;
+	color: var(--text-dim);
+	font-size: 0.75rem;
+}
+
+.bq-flags {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-2);
+	padding-top: var(--gap-2);
+	border-top: 1px solid var(--line);
+}
+
+/* What the pointer is carrying, which follows it and is never under it: the
+   row under a point is read with elementFromPoint, and a label that took
+   events would be the only thing it ever found. */
+.flyer {
+	position: fixed;
+	z-index: 40;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--gap-1);
+	padding: var(--gap-1) var(--gap-2);
+	border: 1px solid var(--accent);
+	border-radius: var(--radius);
+	background: var(--ground-2);
+	font-size: 0.75rem;
+	pointer-events: none;
+}
+
+/* The pool is the third column where there is room for one, and a sheet where
+   there is not. The button that opens it is the other half of that rule. */
+.bq-addpool {
+	display: none;
+}
+
+@media (max-width: 1023px) {
+	/* Two columns and the pool underneath, which is still the same width as
+	   the middle one rather than a strip beside it. The left one keeps the
+	   190px it had where there is no more to give, so the middle loses nothing
+	   at the narrowest, and grows toward the 300 of the wide layout where there
+	   is room. Nothing is cut at either end; a name simply takes another line
+	   at 190 than it does at 300. */
+	.bq3 {
+		grid-template-columns: clamp(190px, 30%, 300px) minmax(0, 1fr);
+	}
+
+	.pane-pool {
+		grid-column: 1 / -1;
+	}
+}
+
+@media (max-width: 599px) {
+	/* One column, and the pool is a sheet. Picking the bouquet is at the top,
+	   what is in it under that, and the pool is not on screen at all until
+	   somebody asks for it. */
+	.bq3 {
+		grid-template-columns: 1fr;
+	}
+
+	.pane-bouquets .vrows {
+		max-height: 30vh;
+	}
+
+	.pane-pool {
+		display: none;
+	}
+
+	.bq-addpool {
+		display: block;
+	}
+
+	.sheet .bq-scroll {
+		height: 50vh;
+	}
+
+	/* A finger, so every row and every handle is a target and not a pixel. */
+	.brow {
+		min-height: var(--tap-height);
+	}
+
+	.grip,
+	.bq-mini {
+		min-height: var(--tap-height);
+		min-width: 34px;
+	}
+
+	/* The name is what a finger reaches for on a row and it was the one part
+	   of the row that stayed as high as its text. */
+	.bq-name {
+		min-height: var(--tap-height);
+	}
+}

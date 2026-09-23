@@ -1,0 +1,98 @@
+/* The shape of this destination, in the marks the frame sets and no colour of
+   its own. Every value here is one of the page's custom properties, so a
+   palette that changes changes here too and nothing in this file is a second
+   palette. */
+
+.sys { display: flex; flex-direction: column; gap: var(--gap-5); }
+
+.sys-block { min-width: 0; }
+/* Two blocks that stand inside one box rather than beside each other under the
+   destination, so the gap of the column above does not reach between them. A
+   heading with a table over it and a table under it belongs to the one under
+   it, and without the air above it the eye reads it as the last line of the
+   one over it. */
+.sys-group + .sys-group { margin-top: var(--gap-5); }
+.sys-block > h2 { margin: 0 0 var(--gap-2); font-size: 1.0625rem; }
+.sys-block > h3, .sys-doc > h3 { margin: var(--gap-3) 0 var(--gap-2); font-size: 0.9375rem; }
+
+/* A sentence that stands in front of a table or a set of controls and explains
+   it, rather than a hint hanging off one control. */
+.sys-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: 72ch; }
+
+/* Why a control is out. One per screen and tied to every control it is about,
+   which is what keeps fifty seven buttons from carrying fifty seven copies of
+   the same sentence. */
+.sys-why { margin: 0 0 var(--gap-3); padding: var(--gap-2) var(--gap-3); max-width: 72ch;
+	background: var(--ground-1); border-left: 3px solid var(--state-warning);
+	border-radius: var(--radius); color: var(--text-dim); }
+
+/* What the box last answered about something that was asked of it. Polite, not
+   alarming: it is a report and not a question, or it would be a dialog. */
+.sys-said { margin: var(--gap-3) 0 0; padding: var(--gap-2) var(--gap-3); max-width: 72ch;
+	background: var(--ground-1); border-left: 3px solid var(--accent);
+	border-radius: var(--radius); }
+
+/* Controls beside each other, wrapping rather than pushing the page sideways:
+   five commands do not fit across three hundred and sixty pixels and must not
+   try. */
+.sys-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-2); }
+
+/* The link that downloads is spelt like the buttons beside it, because it does
+   the same kind of thing and a person should not have to tell them apart. */
+.sys-row a.btn { text-decoration: none; color: var(--text); }
+
+.sys-ask { display: inline-flex; }
+
+/* A second line inside a cell: the name a thing is started by under the name a
+   person reads, or what a plugin says about itself. */
+.sys-sub { display: block; color: var(--text-dim); font-size: 0.8125rem; white-space: normal; }
+
+.sys-doc { margin-bottom: var(--gap-4); padding: var(--gap-3);
+	background: var(--ground-1); border: 1px solid var(--line); border-radius: var(--radius); }
+.sys-doc > h3 { margin-top: 0; }
+
+/* A document out of the box, in its own box: it scrolls inside itself in both
+   directions, because a channel list is long and its lines are wide, and
+   neither of those is the page's business. */
+.sys-pre { max-height: 60vh; margin: var(--gap-3) 0 0; padding: var(--gap-3); overflow: auto;
+	background: var(--ground-0); border: 1px solid var(--line); border-radius: var(--radius);
+	font-size: 0.8125rem; }
+
+/* The first column of these three tables is a name and stays readable; the
+   cells around it may wrap, since a plugin's own sentence about itself is a
+   sentence and not a value. */
+.sys-box th[scope="row"], .sys-daemons th[scope="row"], .sys-plugins th[scope="row"] {
+	color: var(--text); font-weight: 600; text-align: left; }
+.sys-plugins td, .sys-plugins th[scope="row"] { white-space: normal; }
+.sys-plugins th[scope="row"] { min-width: 16ch; }
+
+/* The three commands of a row: they wrap under each other at the narrow width
+   rather than making the table wider than a hand. */
+.sys-daemons td > .sys-row { gap: var(--gap-1); }
+
+/* The lines of the server's own configuration that are shown and not offered.
+
+   A NAME BESIDE ITS VALUE AND NEVER ABOVE IT. A name above a value is the
+   shape of every field further up this same page, so these stood under the
+   save button reading as four settings that had gone dead, and the sentence
+   over them saying they are only shown was not read at all. Beside it, the
+   name is dim and the answer is not, which is a fact somebody is being told
+   rather than a control nobody may touch.
+
+   Still not a table, and now for a better reason than the count of columns:
+   two of the answers are a sentence and one is a list, and a table would draw
+   borders around that for the sake of the borders. */
+.sys-read { display: grid; grid-template-columns: auto 1fr; gap: var(--gap-2) var(--gap-4);
+	margin: 0; align-items: baseline; }
+.sys-read dt { color: var(--text-dim); }
+.sys-read dd { margin: 0; }
+.sys-list { margin: 0; padding: 0; list-style: none; }
+.sys-list > li { margin: 0 0 var(--gap-1); }
+
+/* Stacked where two columns would leave a name of eight words no room, at the
+   width the frame folds its tables at. */
+@media (max-width: 599px) {
+	.sys-read { grid-template-columns: 1fr; gap: 0; }
+	.sys-read dt { margin-top: var(--gap-3); }
+	.sys-read dt:first-child { margin-top: 0; }
+}

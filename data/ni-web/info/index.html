@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Narrower than the application's own policy by two entries. Nothing here is
+     played, so media-src stays shut, and the one picture this page draws is the
+     channel logo the box answers with, which is this origin. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<title>NI-Info</title>
+<meta name="theme-color" content="#000000">
+<!-- Pinned to a home screen is what this page is for, so it says so twice: the
+     manifest for a browser that reads one, and the touch icon for the one that
+     reads no manifest at all and would otherwise pin a photograph of the page.
+     That icon is the mark of /app/icon.svg drawn out at five hundred and twelve
+     pixels and cut to sixteen colours, because the browser that needs it takes
+     no drawing, only a picture. -->
+<link rel="manifest" href="/info/manifest.json">
+<link rel="apple-touch-icon" href="/info/icon.png">
+<link rel="icon" href="/app/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/info/info.css">
+</head>
+<body>
+<div class="info">
+	<!-- The five marks, in the two groups and the order the display this
+	     replaces had them in. Every one of them is on the page at all times and
+	     only its colour says whether it is on: a mark that came and went would
+	     move the ones beside it. -->
+	<div class="info-top">
+		<span class="info-flags">
+			<span class="info-flag" id="info-ecm">ECM</span>
+			<span class="info-flag" id="info-ci">CI+</span>
+		</span>
+		<span class="info-flags">
+			<span class="info-flag" id="info-timer">TIMER</span>
+			<span class="info-flag" id="info-rec">REC</span>
+			<span class="info-flag" id="info-ts">TS</span>
+		</span>
+	</div>
+	<div class="info-middle">
+		<img class="info-logo" id="info-logo" alt="" hidden>
+		<p class="info-name" id="info-name"></p>
+		<p class="info-said" id="info-said"></p>
+	</div>
+	<div class="info-bottom">
+		<p class="info-event" id="info-event"></p>
+		<div class="info-bar" id="info-bar"><div class="info-fill" id="info-fill"></div></div>
+		<div class="info-times">
+			<span class="info-clock" id="info-clock"></span>
+			<span class="info-left" id="info-left"></span>
+		</div>
+	</div>
+</div>
+<script type="module" src="/info/info.js"></script>
+</body>
+</html>

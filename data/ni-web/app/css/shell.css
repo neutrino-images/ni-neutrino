@@ -1,0 +1,449 @@
+/* The frame and the parts more than one screen needs. A screen that restates
+   one of these has a copy of something about to change. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #app { height: 100%; }
+
+/* The window does not scroll: the bars stay put by lying outside the one box
+   that does. */
+body { margin: 0; background: var(--ground-0); color: var(--text); font: 0.9375rem/1.45 var(--font); overflow: hidden; }
+a { color: var(--accent); }
+
+/* One ring: one that differs per control is the one nobody looks for. */
+:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.shell { display: flex; flex-direction: column; height: 100%; }
+.content { flex: 1; min-width: 0; overflow: auto; padding: var(--gap-4); }
+
+/* The name of the screen and the sentence under it, drawn by the frame for
+   every screen. The sentence is often the only place that says what a screen
+   is for. */
+h1.scr { margin: 0 0 3px; font-size: 1.3125rem; font-weight: 600; letter-spacing: -0.01em; }
+p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem; max-width: 60rem; }
+
+/* ------------------------------------------------------------ the header */
+
+.topbar { flex: none; background: var(--ground-1); border-bottom: 1px solid var(--line); }
+/* The height is the bar height and nothing is added to it: the padding is
+   sideways, and a bottom edge appears only where the row wraps. */
+.topbar-main { display: flex; align-items: center; gap: var(--gap-3); flex-wrap: wrap;
+	min-height: var(--bar-height); padding: 0 var(--gap-4); }
+.brand { display: flex; align-items: center; gap: var(--gap-2); flex: none; font-size: 0.9375rem; font-weight: 700; color: var(--accent); }
+/* Grey until the event stream carries, and its own colour and not the word's:
+   the name of the page is the name of the page whatever the box is doing. */
+.brand-mark { width: 22px; height: 22px; flex: none; color: var(--text-dim); }
+.brand-mark[data-live] { color: var(--accent); }
+
+/* THE DESTINATIONS NEVER SHRINK AND NEVER SCROLL. This row used to be a box
+   that scrolled sideways, and a pointer machine draws no bar inside it until
+   something is already scrolling, so the eighth destination was off the edge
+   and nothing said so. flex: none here, and the width at which the row stops
+   fitting is the width at which it folds into the bar along the bottom. What
+   gives in between is what is playing, which shortens visibly. */
+.areas { display: flex; align-items: center; gap: var(--gap-1); flex: none; }
+.areas a { display: block; padding: 6px 10px; border-radius: var(--radius);
+	color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: 0.8125rem; }
+.areas a:hover { background: var(--ground-2); color: var(--text); }
+/* A surface and not a fill: a filled pill in a row of eight reads as chosen.
+   And the surface is the whole of it; an accent rule under it as well was a
+   second mark for one fact. */
+.areas a[data-current] { background: var(--ground-2); color: var(--text); }
+/* What sets the last one apart, and the whole of it: a rule before it. No
+   colour and no mark, because a coloured button in a row of plain ones is read
+   as the one that is open, which this row already says with the attribute.
+
+   The rule is drawn beside the link and not as its own edge, so that it is a
+   short mark between two words rather than a line as tall as the link. */
+.areas a.apart { position: relative; margin-left: var(--gap-3); padding-left: var(--gap-3); }
+.areas a.apart::before { content: ""; position: absolute; left: 0; top: 50%;
+	transform: translateY(-50%); width: 1px; height: 18px; background: var(--line); }
+
+/* Who is signed in, and the only place on the page that says anything about
+   it. Signed in it is a quiet pill carrying the name; signed out it is one
+   button and no sentence beside it. What needs a session says so when it is
+   asked for, so nothing has to be explained in advance. */
+.status { display: flex; align-items: center; flex: none; }
+/* Smaller than a control in the body of a page, because everything in this
+   bar is. Below the phone width the folding gives it a finger's height. */
+.session-act { display: inline-flex; align-items: center; gap: var(--gap-2); min-height: 28px;
+	padding: 4px var(--gap-3); background: var(--ground-1); border: 1px solid var(--line);
+	border-radius: var(--radius-pill); font: inherit; font-size: 0.75rem; }
+.session-act:hover { color: var(--text); border-color: var(--text-dim); }
+.status[data-session="out"] .session-act { background: var(--ground-2); color: var(--text); border-radius: var(--radius); }
+/* Green where a session is open, grey where there is none, so the pill and
+   not only the word in it says which. */
+.status[data-session="in"] .session-act { border-color: var(--session-open-edge); color: var(--session-open); }
+.status[data-session="in"] .session-act:hover { border-color: var(--session-open); }
+.status[data-session="in"] .session-act .dot { background: currentColor; }
+
+/* What this session may do, as a sentence: a word does not explain a refusal. */
+.session-may { margin: 0 0 var(--gap-3); color: var(--text-dim); }
+.sheet-areas.session-menu { grid-template-columns: 1fr; }
+
+/* WHAT THE BOX IS PLAYING: the accent and never the red. The red here is the
+   dot, and it is there only while something is being written to a disc. It
+   alone grows, so the slack lands in its left margin and it ends at the right
+   edge beside the session. */
+.onair { display: flex; align-items: center; gap: var(--gap-2); flex: 1 1 200px; min-width: 0; max-width: 320px;
+	margin-left: auto; padding: 5px 11px 5px 6px; background: var(--accent-wash);
+	border: 1px solid var(--accent-edge); border-radius: var(--radius-pill); color: inherit; text-decoration: none; }
+.onair:hover { border-color: var(--accent); }
+.onair-logo { width: 24px; height: 24px; flex: none; border-radius: 5px;
+	background: var(--ground-2); object-fit: contain; }
+.onair-monogram { display: grid; place-items: center; border: 1px solid var(--line);
+	font-size: 0.625rem; font-weight: 700; color: var(--text-dim); }
+.onair-meta { min-width: 0; }
+.onair-name, .onair-event { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.onair-name { font-size: 0.78125rem; font-weight: 600; color: var(--on-air); }
+.onair-event { font-size: 0.6875rem; color: var(--text-dim); }
+.onair .state-mark { margin-left: auto; font-size: 0.75rem; color: var(--text-dim); }
+
+/* A channel's picture wherever a screen draws one, and the initials that take
+   over for a channel that has none or on a box that draws none. Here and not
+   beside a screen because ui/logo.js is the frame's and three screens use it,
+   and two copies of a box 30 pixels square are two boxes that stop being the
+   same size. */
+.logo { flex: none; display: grid; place-items: center; width: 30px; height: 30px;
+	border-radius: var(--radius); border: 1px solid var(--line); background: var(--ground-2);
+	overflow: hidden; }
+/* Both in the one cell, so the picture covers the initials instead of pushing
+   them aside, and the box is the same size before and after it arrives. */
+.logo > * { grid-area: 1 / 1; }
+.logo-pic { width: 100%; height: 100%; object-fit: contain; opacity: 0; }
+.logo[data-pic] .logo-pic { opacity: 1; }
+.logo[data-pic] .logo-mg { visibility: hidden; }
+.logo.sm { width: 22px; height: 22px; }
+.logo-word { font-size: 0.625rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text-dim); }
+.logo.sm.logo-word { font-size: 0.5625rem; }
+
+/* The second level, under the first and not beside it: a column down the left
+   costs two hundred pixels on every screen, and the two screens that want the
+   width most are the guide and the bouquets. */
+.entries { display: flex; gap: var(--gap-1); padding: 0 var(--gap-4) var(--gap-2); overflow-x: auto; }
+.entries a { display: block; flex: none; padding: var(--gap-1) var(--gap-3); border: 1px solid transparent;
+	border-radius: var(--radius-pill); color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: 0.8125rem; }
+.entries a:hover { color: var(--text); }
+.entries a[aria-current] { color: var(--accent); border-color: var(--accent-edge); background: var(--accent-wash); }
+
+/* ------------------------------------------- the bar along the bottom */
+
+/* Four asked for all day and a fifth that opens the rest. Four and not eight:
+   eight across 360 pixels is 45 each with nothing between them. Along the
+   bottom on the tablet as well, because a device held in two hands is reached
+   at the bottom of the screen. */
+.dock { display: flex; flex: none; gap: var(--gap-1); background: var(--ground-1); border-top: 1px solid var(--line);
+	padding: var(--gap-1) var(--gap-1) calc(var(--gap-1) + env(safe-area-inset-bottom, 0px)); }
+.dock a, .dock button { flex: 1 1 0; display: flex; flex-direction: column; align-items: center;
+	justify-content: center; gap: 2px; min-height: var(--tap-height); padding: var(--gap-1) 2px;
+	background: none; border: 0; border-radius: var(--radius); color: var(--text-dim);
+	font: inherit; font-size: 0.6875rem; text-decoration: none; }
+.dock .ic { font-size: 1.0625rem; line-height: 1; }
+.dock [data-current] { color: var(--accent); background: var(--accent-wash); }
+
+/* ------------------------------------------------------- what lies over */
+
+/* One overlay for menu, sign in and question: one trap, one escape. The plain
+   one is anchored where the control that opened it is. */
+.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 20; }
+.sheet { position: fixed; inset: auto 0 0 0; z-index: 21; max-height: 82%; overflow: auto;
+	padding: var(--gap-3) var(--gap-3) calc(var(--gap-3) + env(safe-area-inset-bottom, 0px));
+	background: var(--ground-1); border-top: 1px solid var(--line);
+	border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.sheet.centred { inset: 10% auto auto 50%; transform: translateX(-50%); width: min(480px, 92%);
+	border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.sheet h2 { margin: 0 0 var(--gap-3); font-size: 1.0625rem; }
+.sheet-areas { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-2); list-style: none; margin: 0; padding: 0; }
+.sheet-areas a, .sheet-areas button { display: flex; align-items: center; gap: var(--gap-2); width: 100%;
+	min-height: var(--tap-height); padding: var(--gap-2) var(--gap-3); background: var(--ground-2);
+	border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); font: inherit; text-decoration: none; }
+.sheet-areas [data-current] { border-color: var(--accent); color: var(--accent); }
+.sheet-areas .ic { opacity: 0.7; }
+
+/* HOW BIG THE WRITING IS. See app/ui/textsize.js.
+
+   The whole label is the target and not the dot in it: a radio button is
+   thirteen pixels wide whatever a page asks for. Given a finger's height at
+   every width and not only below the phone one, because whoever opens this
+   cannot see the page well enough, on whatever they are holding. */
+.text-size { margin: 0 0 var(--gap-3); padding: 0; border: 0; }
+.text-size legend { padding: 0; margin-bottom: var(--gap-2); color: var(--text-dim); font-size: 0.8125rem; }
+.text-size-set { display: flex; gap: var(--gap-2); }
+.text-size-set label { flex: 1; display: flex; align-items: center; justify-content: center;
+	gap: var(--gap-2); min-height: var(--tap-height); padding: var(--gap-2) var(--gap-3);
+	background: var(--ground-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.text-size-set input { flex: none; margin: 0; accent-color: var(--accent); }
+.text-size-where { margin: var(--gap-2) 0 0; color: var(--text-dim); font-size: 0.75rem; }
+
+/* ---------------------------------------------------------- the pieces */
+
+/* A state is a mark and a word. The word is read by somebody the colours do
+   not separate, so it stays in --text. */
+.dot { display: inline-block; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--text-dim); }
+.dot.rec { background: var(--state-recording); }
+.dot.run { background: var(--state-running); }
+.dot.warn { background: var(--state-warning); }
+.dot.air { background: var(--on-air); }
+.state-mark { display: inline-flex; align-items: center; gap: var(--gap-2); white-space: nowrap; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--gap-2);
+	min-height: var(--control-height); padding: 0 var(--gap-4); background: var(--ground-2);
+	border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); font: inherit;
+	/* A control that leads somewhere is a link and wears this class, and a
+	   link that is drawn as a button does not also wear the underline. */
+	text-decoration: none; }
+.btn:hover:not(:disabled) { border-color: var(--text-dim); }
+.btn:active:not(:disabled) { background: var(--ground-1); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.primary:active:not(:disabled) { background: var(--accent-dim); border-color: var(--accent-dim); }
+.btn:disabled { opacity: 0.5; }
+
+/* A word about something, in a pill: neutral, what is playing, running, and
+   wanting a look. Four and no more, so a screen picks from the vocabulary the
+   marks already use rather than inventing a fifth. */
+.chip { display: inline-flex; align-items: center; gap: var(--gap-2); flex: none; padding: var(--gap-1) var(--gap-3);
+	background: var(--ground-1); border: 1px solid var(--line); border-radius: var(--radius-pill);
+	color: var(--text-dim); font-size: 0.8125rem; }
+.chip.on-air { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--on-air); }
+.chip.good { border-color: rgba(59, 165, 93, 0.45); color: var(--state-running); }
+.chip.warn { border-color: rgba(224, 163, 59, 0.45); color: var(--state-warning); }
+
+/* A row of pills that runs off the side. A touch screen draws no bar to say
+   so, so what says it is the pill at the edge being cut: the margin after the
+   last one is what keeps it from sitting flush and reading as the last one. */
+.chipbar { display: flex; gap: var(--gap-2); overflow-x: auto; padding-bottom: var(--gap-2); }
+.chipbar > :last-child { margin-right: var(--gap-4); }
+
+/* A line of text has a width and a screen does not: a port number in a field as
+   wide as the window says the box wants a number that wide. A ceiling and not a
+   width, so a field in a narrow card is still as wide as the card. */
+.field { display: block; max-width: 44rem; margin-bottom: var(--gap-4); }
+.field > .label { display: block; margin-bottom: var(--gap-1); color: var(--text-dim); }
+/* background-color and not the shorthand, which would clear the arrow. */
+.field input, .field select, .field textarea { width: 100%; min-height: var(--control-height);
+	padding: 0 var(--gap-3); background-color: var(--ground-0); border: 1px solid var(--line);
+	border-radius: var(--radius); color: var(--text); font: inherit; }
+.field select { padding-right: 26px; }
+.field textarea { padding: var(--gap-2) var(--gap-3); font-family: var(--font-mono); }
+.field .hint { margin-top: var(--gap-1); color: var(--text-dim); font-size: 0.8125rem; }
+.field .err { margin-top: var(--gap-1); color: var(--failure); font-size: 0.8125rem; }
+.field.bad input, .field.bad select { border-color: var(--failure); }
+
+/* A choice, drawn like everything else: the same fault the switch had, a
+   browser control wearing this page's colours inside the frame of whatever
+   machine it was opened on. The arrow is two gradients rather than a picture,
+   so it takes its colour from the same name as the words beside it. */
+select {
+	appearance: none; -webkit-appearance: none;
+	padding-right: 26px;
+	background-color: var(--ground-0);
+	background-image:
+		linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+		linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+	background-position: calc(100% - 15px) calc(50% + 1px), calc(100% - 10px) calc(50% + 1px);
+	background-size: 5px 5px;
+	background-repeat: no-repeat;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	color: var(--text);
+	font: inherit;
+	cursor: pointer;
+}
+select:hover { border-color: var(--text-dim); }
+select:disabled { opacity: 0.5; cursor: default; }
+/* High contrast throws the backgrounds away, arrow included. */
+@media (forced-colors: active) {
+	select { appearance: auto; -webkit-appearance: auto; background-image: none; padding-right: var(--gap-3); }
+}
+/* Yes or no, and still a checkbox underneath: the element keeps the keyboard,
+   the role and the state the browser gives it, and only its painting is taken
+   over. The knob is a background image and not a child, because an input is a
+   replaced element and not every browser gives one a pseudo-element to hang a
+   knob on; it slides because a background position is a length. */
+.switch { display: flex; align-items: center; gap: var(--gap-3); min-height: var(--control-height); }
+.switch input {
+	appearance: none; -webkit-appearance: none;
+	flex: none; width: 42px; height: 23px; margin: 0;
+	background-color: var(--ground-2);
+	background-image: radial-gradient(circle 8.5px at 8.5px 50%, var(--text-dim) 99%, transparent 100%);
+	background-repeat: no-repeat;
+	background-position: 2px 50%;
+	border: 1px solid var(--line); border-radius: var(--radius-pill);
+	transition: background-color 140ms, background-position 140ms, border-color 140ms;
+	cursor: pointer;
+}
+.switch input:checked {
+	background-color: var(--accent);
+	background-image: radial-gradient(circle 8.5px at 8.5px 50%, var(--accent-ink) 99%, transparent 100%);
+	background-position: 21px 50%;
+	border-color: var(--accent);
+}
+.switch input:disabled { opacity: 0.5; cursor: default; }
+/* A high contrast mode throws every background away, so a switch painted only
+   in backgrounds would be a blank pill. There the browser paints it again. */
+@media (forced-colors: active) {
+	.switch input { appearance: auto; -webkit-appearance: auto; width: 18px; height: 18px;
+		background-image: none; border-radius: 0; }
+}
+
+/* Wide content scrolls inside itself: a page that scrolls sideways cannot be
+   held in one hand. Below the phone width it does not scroll at all, because
+   a table is not a table down there; see the folding at the end. */
+.scroll-x { overflow-x: auto; }
+table.grid { width: 100%; border-collapse: collapse; white-space: nowrap; }
+table.grid th, table.grid td { padding: var(--gap-2) var(--gap-3); border-bottom: 1px solid var(--line); text-align: left; }
+/* thead and not th: a row named by its first cell carries a th in the body,
+   and that one is a name, not a heading. No sticky either, it never held: the
+   box around a table scrolls sideways, which makes it a scrollport as tall as
+   the table, and such a box never scrolls. */
+table.grid thead th { background: var(--ground-1); color: var(--text-dim); font-weight: 600; }
+table.grid thead th button { padding: 0; background: none; border: 0; color: inherit; font: inherit; }
+/* Both out of one word from the column, so a head cannot stand at one edge of
+   a cell with its content at the other, and the spare width goes where it is
+   wanted instead of being spread until a clock sits in 300 pixels. A column
+   that says neither keeps what it holds. */
+table.grid th[data-align="end"], table.grid td[data-align="end"] { text-align: right; }
+table.grid th[data-fit="wide"] { width: 100%; }
+table.grid tbody tr:hover { background: var(--ground-1); }
+/* The row the box is playing, wherever a screen says which one that is. */
+table.grid tbody tr[data-on-air] { background: var(--accent-wash); }
+table.grid tbody tr[data-on-air] td:first-child { box-shadow: inset 3px 0 0 var(--on-air); }
+/* What a screen opens under one row: one cell across the whole table. The rows
+   above hold their content on one line and this one must not, since what opens
+   there is a paragraph or a player and neither is a line. */
+table.grid tbody tr.grid-more td { white-space: normal; }
+table.grid tbody tr.grid-more:hover { background: none; }
+
+/* What may be done to one row: the marks side by side where there is a
+   pointer, one control that opens a sheet where there is a finger. Both are in
+   the document and this shows one of them; ui/actions.js is the control. */
+.acts { display: flex; align-items: center; gap: var(--gap-1); justify-content: flex-end; }
+.acts-inline { display: inline-flex; align-items: center; gap: var(--gap-1); }
+.acts-more { display: none; }
+
+.vlist { position: relative; height: 100%; overflow: auto; }
+.vlist .row { display: flex; align-items: center; gap: var(--gap-3); padding: 0 var(--gap-3);
+	border-bottom: 1px solid var(--line); }
+
+.note { padding: var(--gap-5); color: var(--text-dim); text-align: center; }
+.note h2 { margin: 0 0 var(--gap-2); color: var(--text); font-size: 1.0625rem; }
+.note.bad h2 { color: var(--failure); }
+/* Loading again is not loading: a curtain over what is drawn loses the row
+   somebody was reading. */
+.busy { opacity: 0.6; }
+
+/* Pressed through, and why each one ends at its own text: data/ni-web/app/ui/toast.js */
+.toasts { position: fixed; right: var(--gap-4); bottom: var(--gap-4); z-index: 30; display: flex;
+	flex-direction: column; align-items: flex-end; gap: var(--gap-2); pointer-events: none; }
+.toast { display: flex; align-items: center; gap: var(--gap-3); max-width: 92vw;
+	padding: var(--gap-3) var(--gap-4); background: var(--ground-2); border: 1px solid var(--line);
+	border-left: 3px solid var(--accent); border-radius: var(--radius); pointer-events: auto; }
+.toast.bad { border-left-color: var(--failure); }
+
+/* The name of a control that carries only a mark. */
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+	clip-path: inset(50%); white-space: nowrap; }
+
+/* A bar where one is unavoidable: thin and quiet. The two rows of pills carry
+   none at any width, because a bar 3 pixels high under a row of pills is a
+   stripe that says nothing. */
+.content, .scroll-x { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.content::-webkit-scrollbar, .scroll-x::-webkit-scrollbar { width: 7px; height: 7px; }
+.content::-webkit-scrollbar-thumb, .scroll-x::-webkit-scrollbar-thumb { background: var(--line); border-radius: var(--radius); }
+.content::-webkit-scrollbar-track, .scroll-x::-webkit-scrollbar-track { background: transparent; }
+.entries, .chipbar { scrollbar-width: none; }
+.entries::-webkit-scrollbar, .chipbar::-webkit-scrollbar { width: 0; height: 0; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ===========================================================================
+   WHICH FOLDING IS SHOWN. Last in this file on purpose: a media query carries
+   no weight of its own, so a rule written after it beats it at every width.
+
+   1152 AND UP: the eight destinations along the top. The row was loaded in a
+   browser and measured, in German, which is the longer of the two languages this
+   page speaks: the mark is 105, the eight destinations with the rule before the
+   last are 620, the session pill is 98, and the padding and the gaps are 68,
+   which is 891 before what is playing has any room. Its flex-basis is 200, so
+   1091 is where it stops sharing the line, and the figure here leaves sixty
+   pixels over that for a wider system font. Guessing is what put the eighth
+   destination off the edge of a bar that scrolled in silence.
+
+   BELOW 1152: tablet and phone alike get the bar along the bottom.
+
+   BELOW 600: a phone. A table is not a table, every target is a finger wide,
+   and nothing scrolls sideways.
+
+   The bar along the bottom needs no query to be right, so it is the default and
+   the row along the top is what a wide window adds.
+
+   AND THE ROW WRAPS AT EVERY WIDTH, which is the guard behind the number. A
+   narrower window, a wider system font, a longer name: any of those and what is
+   playing drops onto a second line, where it is whole and visible. */
+.areas { display: none; }
+
+@media (min-width: 1152px) {
+	.areas { display: flex; }
+	.dock { display: none; }
+}
+
+@media (max-width: 1151px) {
+	/* Two rows: mark and session above, what is playing across the whole width
+	   below, where a channel name and an event title have room to be read. The
+	   second row is the only reason this bar has a bottom edge at all. */
+	.topbar-main { padding-bottom: var(--gap-2); }
+	.onair { order: 3; flex: 1 0 100%; max-width: none; }
+	/* Nothing on the first row grows, so a margin holds the session right. */
+	.status { margin-left: auto; }
+	/* No permanent bar down the side of the one box that scrolls: a touch
+	   screen draws its own while a finger is moving. */
+	.content, .scroll-x { scrollbar-width: none; }
+	.content::-webkit-scrollbar, .scroll-x::-webkit-scrollbar { width: 0; height: 0; }
+}
+
+@media (max-width: 599px) {
+	.content, .topbar-main { padding: var(--gap-2) var(--gap-3); }
+	h1.scr { font-size: 1.125rem; }
+	.entries { padding-left: var(--gap-3); padding-right: var(--gap-3); }
+	/* A finger and not a pointer. The switch is in this list because the label
+	   is the target: the box inside it is eighteen pixels whatever the width,
+	   and what a thumb lands on is the row around it. */
+	.btn, .session-act, .sheet-areas a, .sheet-areas button,
+	.switch { min-height: var(--tap-height); }
+	/* What a finger types into, and the one control in the bar it presses. */
+	.field input, .field select, .field textarea { min-height: var(--tap-height); }
+	.onair { min-height: var(--tap-height); }
+	.entries a { display: flex; align-items: center; min-height: var(--tap-height); }
+
+	/* A TABLE IS NOT A TABLE HERE. Seven columns at 360 pixels is either a row
+	   broken over three lines or a page pushed sideways, and both stop being a
+	   row. So the head goes, each row becomes a card, and each cell carries the
+	   word its column head was carrying. One rule for every table in the tree,
+	   rather than a decision each screen makes and makes differently. */
+	.scroll-x { overflow-x: visible; }
+	/* The row header is in this list too. A table written out by hand names its
+	   first cell as the header of its row, and a th left as a table cell inside
+	   a row that is a block is a cell the browser wraps in a table of its own. */
+	table.grid, table.grid tbody, table.grid tr, table.grid td,
+	table.grid tbody th[scope="row"] { display: block; width: 100%; }
+	table.grid thead { display: none; }
+	table.grid tr { margin-bottom: var(--gap-2); padding: var(--gap-2) var(--gap-3); background: var(--ground-1);
+		border: 1px solid var(--line); border-radius: var(--radius-lg); }
+	table.grid td { padding: 2px 0; border: 0; white-space: normal; }
+	table.grid td:empty { display: none; }
+	/* It sat right to line up with a head. A card has no head. */
+	table.grid td[data-align="end"] { text-align: left; }
+	table.grid tbody tr[data-on-air] { border-color: var(--accent-edge); }
+	table.grid tbody tr[data-on-air] td:first-child { box-shadow: none; }
+	/* A cell that is one link is a row somebody taps. Only a link that is
+	   the whole cell: one inside a sentence stays part of the sentence. */
+	table.grid td > a:only-child { display: inline-flex; align-items: center; min-height: var(--tap-height); }
+	/* Written by the one table widget, so a column with no name puts nothing
+	   in front of its cells. */
+	table.grid td[data-label]::before { content: attr(data-label) " "; color: var(--text-dim); font-size: 0.75rem; }
+	table.grid td[data-label=""]::before { content: none; }
+	/* One control instead of four marks, and the four go into a sheet. */
+	.acts { justify-content: flex-start; margin-top: var(--gap-1); }
+	.acts-more { display: inline-flex; }
+	.acts-inline { display: none; }
+}

@@ -1,0 +1,253 @@
+/* The channel list. Every colour and every measure is a name from
+   app/css/tokens.css.
+
+   The row is the frame's own table, which is what folds into cards below the
+   telephone width. What is left here is what a channel row holds that no other
+   table holds: the picture, the name that switches, the two programmes and the
+   marks. */
+
+.ch-screen {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-3);
+}
+
+/* THE THREE CONTROLS OF THIS ROW BEGIN AT ONE HEIGHT. Aligned by their tops
+   and not by their bottoms, so that a note hanging under any one of them
+   hangs and does not lift that one control out of the row. The filter's note
+   is drawn beside the count for that reason (list.js, ch-filter-note); the
+   bouquet's appears only where the box refused to name its lists, which is
+   the case nobody sees until the day it happens. */
+.ch-filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var(--gap-3);
+}
+
+/* The fields carry their own bottom margin for a form; in a row of filters
+   that margin is the gap above. */
+.ch-filters .field {
+	margin-bottom: 0;
+	flex: 1 1 160px;
+	min-width: 0;
+}
+
+/* Television or radio, as two buttons and not a list of two: there are two,
+   always, so a list is a control that has to be opened to be read and closed
+   again to be used.
+
+   The word above them stays, unlike on the bouquet screen, because this one
+   carries a second button reading "switch the box to television" and the two
+   would otherwise be the same word twice with nothing saying which filters the
+   list and which changes what is on the set. */
+.ch-mode {
+	display: flex;
+	flex: none;
+	flex-direction: column;
+	gap: var(--gap-1);
+}
+
+.ch-mode > .label {
+	color: var(--text-dim);
+}
+
+.ch-mode-row {
+	display: inline-flex;
+	gap: var(--gap-1);
+}
+
+.ch-mode .btn.on {
+	border-color: var(--accent-edge);
+	background: var(--accent-wash);
+	color: var(--accent);
+}
+
+.ch-count {
+	margin: 0;
+	color: var(--text-dim);
+}
+
+.ch-bar {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-3);
+	flex-wrap: wrap;
+}
+
+.ch-bar .ch-count {
+	flex: 1 1 auto;
+}
+
+/* The picture and the name that switches to the channel. */
+.ch-who {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-2);
+	min-width: 0;
+}
+
+/* The name is the control, so it looks like one and not like a button: what
+   is being pointed at is the channel. */
+.ch-name {
+	padding: 0;
+	background: none;
+	border: 0;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.ch-name:hover {
+	color: var(--accent);
+	text-decoration: underline;
+}
+
+/* The row the box is playing carries the accent from the frame's own rule.
+   The name inside it takes the same colour, and nothing here reaches for the
+   green: green is running or connected and this is what is on. */
+tr[data-on-air] .ch-name {
+	color: var(--on-air);
+	font-weight: 600;
+}
+
+/* What is on, and what is on next. Both lines are always there so the column
+   does not ripple as the guide's answers arrive one chunk at a time. */
+.ch-now {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+	max-width: 24rem;
+}
+
+.ch-now-line {
+	display: flex;
+	align-items: baseline;
+	gap: var(--gap-2);
+	min-width: 0;
+}
+
+.ch-now-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ch-now-left {
+	flex: none;
+	color: var(--text-dim);
+	font-size: 0.75rem;
+}
+
+.ch-now-none {
+	color: var(--text-dim);
+	opacity: 0.7;
+}
+
+.ch-meter {
+	display: block;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--ground-2);
+	overflow: hidden;
+}
+
+.ch-meter i {
+	display: block;
+	height: 100%;
+	border-radius: 2px;
+	background: var(--accent);
+}
+
+.ch-next {
+	color: var(--text-dim);
+	font-size: 0.75rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ch-marks {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-1);
+	flex-wrap: wrap;
+}
+
+.ch-mark {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 var(--gap-1);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	font-size: 0.6875rem;
+	line-height: 18px;
+	letter-spacing: 0.04em;
+	color: var(--text-dim);
+}
+
+.ch-crypt {
+	border-color: var(--state-warning);
+	color: var(--state-warning);
+}
+
+/* The parental code is a thing to look at before it is a fault, and it is
+   certainly not the box writing to a disc. Amber, not red. */
+.ch-locked {
+	border-color: var(--state-warning);
+	color: var(--state-warning);
+}
+
+.ch-web {
+	border-color: var(--accent-edge);
+	color: var(--accent);
+}
+
+/* Smaller than a button that stands on its own, because there are four of
+   these in every row of a hundred. Named under this screen, because a row of
+   another screen is not this dense and the shared control is the same control
+   in both. Below the telephone width the frame gives every control a finger's
+   height again, so this is only the wide folding. */
+.ch-screen .acts-inline .btn {
+	min-height: 28px;
+	padding: 0 var(--gap-2);
+	font-size: 0.8125rem;
+}
+
+.ch-more {
+	margin: 0;
+}
+
+@media (max-width: 719px) {
+	.ch-filters .field {
+		flex: 1 1 100%;
+	}
+}
+
+/* A card and not a row. The two programmes take the whole width, the marks
+   line up under the name, and nothing is cut off. */
+@media (max-width: 599px) {
+	.ch-now {
+		max-width: none;
+	}
+
+	.ch-name {
+		white-space: normal;
+		font-size: 0.9375rem;
+	}
+
+	.ch-next {
+		white-space: normal;
+	}
+}
+
+/* The name is what switches the box, so on a telephone it is a target and not
+   a line of text. */
+@media (max-width: 599px) {
+	.ch-name { display: inline-flex; align-items: center; min-height: var(--tap-height); }
+}

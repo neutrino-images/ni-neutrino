@@ -51,7 +51,7 @@
 #ifdef ENABLE_LUA
 #include <gui/lua/lua_api_version.h>
 #endif
-#include <nhttpd/yconfig.h>
+#include <coreapi/base/version.h>
 #include <system/supportinfo.h>
 #include <ctype.h>
 
@@ -446,16 +446,13 @@ void CImageInfo::initAPIVersions()
 	s_api	+= "LUA " + to_string(LUA_API_VERSION_MAJOR) + "." + to_string(LUA_API_VERSION_MINOR);
 	s_api	+= ", ";
 	#endif
-	s_api	+= "yWeb ";
-	s_api	+= getYWebVersion();
-	s_api	+= ", ";
-	s_api	+= HTTPD_NAME;
-	s_api	+= + " ";
-	s_api	+= HTTPD_VERSION;
-	s_api	+= + ", ";
-	s_api	+= YHTTPD_NAME;
-	s_api	+= + " ";
-	s_api	+= YHTTPD_VERSION;
+	/* The web interface ships inside the image and keeps no version file of
+	   its own, so a number read off one would be invented. What stands here
+	   instead is the one version it does maintain: the version of the
+	   interface it answers under, taken from the same header that fills in
+	   /api/v1/system/box and the head of the API document, so this screen
+	   cannot drift away from what a caller on the network is told. */
+	s_api	+= "ni-web " + to_string(NEUTRINO_API_VERSION_MAJOR) + "." + to_string(NEUTRINO_API_VERSION_MINOR);
 	v_info.push_back({g_Locale->getText(LOCALE_IMAGEINFO_API),	s_api});
 }
 
@@ -592,19 +589,4 @@ void CImageInfo::hide()
 		cc_win->StopFade();
 		Clean();
 	}
-}
-
-string CImageInfo::getYWebVersion()
-{
-	CConfigFile yConf('=', false);
-	yConf.loadConfig(CONFIGDIR "/nhttpd.conf");
-	std::string ver = yConf.getString("WebsiteMain.directory", "n/a") + "/Y_Version.txt";
-
-	CConfigFile yV('=', false);
-	if (file_exists(ver.c_str()))
-	{
-		yV.loadConfig(ver);
-		return yV.getString("version", "n/a");
-	}
-	return "n/a";
 }
