@@ -778,14 +778,9 @@ void CControlAPI::GetChannelInfoCGI(CyhookHandler *hh)
 	t_channel_id channel_id = CZapit::getInstance()->GetCurrentChannelID();
 	CZapitChannel *channel = CServiceManager::getInstance()->FindChannel48(channel_id);
 
-	/* outObject() wraps its content in braces, so every field came out as
-	   "name": {Das Erste} - no json parser accepts that. These were also the
-	   last places where an outValue() result did not reach outPair(), the one
-	   place that escapes for json; a name containing a quote went out raw.
-	   outStart(true) keeps the plain output at bare values. */
-	hh->outStart(true /*old mode*/);
+	hh->outStart();
 	std::string result = "";
-	result = hh->outPair("name", hh->outValue(channel->getName()), true);
+	result = hh->outObject("name", hh->outValue(channel->getName()) + "\n");
 
 	CShortEPGData epg;
 	CSectionsdClient::CurrentNextInfo CurrentNext;
@@ -793,21 +788,21 @@ void CControlAPI::GetChannelInfoCGI(CyhookHandler *hh)
 
 	if (CurrentNext.flags & CSectionsdClient::epgflags::has_current)
 	{
-		result += hh->outPair("epg_now", hh->outValue(CurrentNext.current_name), true);
-		result += hh->outPair("duration", string_printf("%d/", (abs(time(NULL) - CurrentNext.current_zeit.startzeit) + 30) / 60) + string_printf("%d", CurrentNext.current_zeit.dauer / 60), true);
+		result += hh->outObject("epg_now", hh->outValue(CurrentNext.current_name) + "\n");
+		result += hh->outObject("duration", string_printf("%d/", (abs(time(NULL) - CurrentNext.current_zeit.startzeit) + 30) / 60) + string_printf("%d\n", CurrentNext.current_zeit.dauer / 60));
 	}
 	else
 	{
-		result += hh->outPair("epg_now", "", true);
-		result += hh->outPair("duration", "0/0", true);
+		result += hh->outObject("epg_now", "\n");
+		result += hh->outObject("duration", "0/0\n");
 	}
 
 	if (CurrentNext.flags & CSectionsdClient::epgflags::has_next)
 	{
-		result += hh->outPair("epg_next", hh->outValue(CurrentNext.next_name), false);
+		result += hh->outObject("epg_next", hh->outValue(CurrentNext.next_name) + "\n");
 	}
 	else
-		result += hh->outPair("epg_next", "", false);
+		result += hh->outObject("epg_next", "\n");
 
 	hh->SendResult(result);
 }
