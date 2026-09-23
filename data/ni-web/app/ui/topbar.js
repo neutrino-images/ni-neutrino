@@ -290,11 +290,10 @@ export function EntryTabs(props) {
  * @returns {Web.Drawn}
  */
 function Mark(props) {
-	return html`<svg class="brand-mark" data-live=${props.carrying ? 'one' : null}
-		viewBox="0 0 32 32" aria-hidden="true">
-		<circle cx="9" cy="23" r="3" fill="currentColor" />
-		<path d="M9 16a7 7 0 0 1 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-		<path d="M9 9a14 14 0 0 1 14 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+	return html`<svg class="brand-mark" data-live=${props.carrying ? 'one' : null} width="85" height="65" 
+		viewBox="0 0 85 65" aria-hidden="true">
+		<path id="NI" fill="currentColor" stroke="black" stroke-width="0"
+			d="m15 0 1 1 2 2 7 9 18 22 7 8 4 5V11l-2-5q-1-3-6-5l-3-1h18v65l-2-2-3-3-9-10-19-24-7-8-3-4v47l1 2H9l1-4 1-7V11q-1-6-6-9L2 1 0 0zm65 0h5l-3 1q-4 1-7 6l-1 4v45l1 4 1 2v1H66l1-4V0zm0 0"/>
 	</svg>`;
 }
 
