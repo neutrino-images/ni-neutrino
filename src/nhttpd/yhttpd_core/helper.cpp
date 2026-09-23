@@ -238,6 +238,8 @@ std::string encodeString(const std::string &decodedString)
 			result +=buf;
 		}
 	}
+	result+='\0';
+	result.reserve();
 	return result;
 }
 
