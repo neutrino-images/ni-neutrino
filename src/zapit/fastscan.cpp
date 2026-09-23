@@ -268,8 +268,14 @@ bool CServiceScan::ScanFast(int num, bool reload)
 		CZapitClient myZapitClient;
 		CServiceManager::getInstance()->SaveServices(true);
 		scanBouquetManager->saveBouquets(bouquetMode, "");
-		g_bouquetManager->saveBouquets();
-		g_bouquetManager->saveUBouquets();
+		/* Both files are asked for even after the first one failed, because
+		   they hold different lists. Said to the log and not passed on: this
+		   runs in the scan's own thread with no screen in front of it. */
+		bool saved = g_bouquetManager->saveBouquets();
+		if (!g_bouquetManager->saveUBouquets())
+			saved = false;
+		if (!saved)
+			printf("[fast scan] save bouquets FAILED\n");
 		//g_bouquetManager->clearAll();
 		if (reload)
 			g_bouquetManager->loadBouquets();
