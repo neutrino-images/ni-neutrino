@@ -305,12 +305,14 @@ export function EventActions(props) {
  * @returns {Web.Drawn}
  */
 export function EventButtons(props) {
+	const event = props.event;
+	const onAir = isOnAir(event, props.at);
 	const leave = props.onClose;
 	useEffect(function () { ensureCss(kCss); }, []);
 
 	return html`<p class="ev-acts">
 		${eventActions(props).map(function (one) {
-			return html`<${Button} key=${one.id} onClick=${one.onAct}>${one.label}<//>`;
+			return html`<${Button} primary=${onAir && one.id === 'record'} key=${one.id} onClick=${one.onAct}>${one.label}<//>`;
 		})}
 		${leave ? html`<${Button} onClick=${leave}>${t(text, 'epg.event.details.close')}<//>` : null}
 	</p>`;
