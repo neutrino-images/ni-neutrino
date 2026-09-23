@@ -4855,12 +4855,12 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		return messages_return::handled;
 	}
 	else if (msg == NeutrinoMessages::EVT_START_TIMESHIFT) {
-		/* Asked here and not by whoever sent this, because this is the one
-		   place where the question and the act are not separated by a thread.
-		   A second shift of the same channel holds a second tuner and writes
-		   the same stream twice, and the manager starts one rather than
-		   turning it down. */
-		if (!CRecordManager::getInstance()->TimeshiftRunning())
+		/* The same act as the timeshift key. Writing the file alone leaves the
+		   picture on live, which is a recording and not a shift. No player
+		   where there is no live picture, and none on top of one playing. */
+		if (g_RemoteControl->is_video_started && !CMoviePlayerGui::getInstance().Playing())
+			CRecordManager::getInstance()->StartTimeshift();
+		else if (!CRecordManager::getInstance()->TimeshiftRunning())
 			CRecordManager::getInstance()->StartAutoRecord(true);
 		autoshift = CRecordManager::getInstance()->TimeshiftOnly();
 		return messages_return::handled;
