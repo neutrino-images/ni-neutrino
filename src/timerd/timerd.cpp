@@ -306,6 +306,10 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 
 					CTimerd::TransferRecordingInfo recInfo;
 					CBasicServer::receive_data(connfd, &recInfo, sizeof(CTimerd::TransferRecordingInfo));
+					/* Read as a string below, and a read that stopped short
+					   leaves whatever was on the stack behind the last byte
+					   it did write. */
+					recInfo.epgTitle[sizeof(recInfo.epgTitle) - 1] = 0;
 					if(recInfo.recordingSafety)
 					{
 						int pre = 0,post = 0;
@@ -327,7 +331,8 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 						recInfo.recordingDir,
 						recInfo.recordingSafety,
 						recInfo.autoAdjustToEPG,
-						recInfo.channel_ci); //NI
+						recInfo.channel_ci, //NI
+						recInfo.epgTitle);
 					rspAddTimer.eventID = CTimerManager::getInstance()->addEvent(event);
 
 					break;
