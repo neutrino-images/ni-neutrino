@@ -493,8 +493,9 @@ function BoxCard() {
 	/* THE EVENT AND NOT A SECOND READING. The box accepts the command,
 	   publishes the event and reaches the mode a fraction of a second after
 	   that, measured at 240ms, so anything sent off by the event is answered
-	   with the mode the box is leaving. What the event carries is the answer
-	   itself, so it is written down rather than asked for again. */
+	   with the mode the box is leaving. The address is asked again as well
+	   (app/events.js); this writes the value down at once and spares the
+	   screen the round trip before it can draw. */
 	useEffect(function () {
 		return events.on('standby', function (one) {
 			store.put('GET', '/api/v1/system/standby', null, { on: Number(one.value) === 1 });

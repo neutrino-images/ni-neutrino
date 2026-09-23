@@ -25,13 +25,9 @@ const kStreamPath = '/api/v1/events';
 const kStale = {
 	'zap': ['/api/v1/channels/current', '/api/v1/epg/current', '/api/v1/tuner'],
 	'mode': ['/api/v1/channels', '/api/v1/bouquets', '/api/v1/epg'],
-	/* Not the route that says whether the box is in standby, although this is
-	   the event about exactly that. The box accepts the command, publishes
-	   this, and reaches the mode a fraction of a second later, so a reader
-	   sent off by this one is answered with the mode the box is leaving:
-	   measured at 240ms. The event carries the value, and the screen that
-	   draws it takes it from there instead. */
-	'standby': ['/api/v1/system/info', '/api/v1/tuner'],
+	// The route about standby is among these because the box now says this
+	// once the mode has moved, and no longer when the command arrived.
+	'standby': ['/api/v1/system/standby', '/api/v1/system/info', '/api/v1/tuner'],
 	'volume': ['/api/v1/osd/volume'],
 	'mute': ['/api/v1/osd/volume'],
 	'record-start': ['/api/v1/recordings', '/api/v1/timers', '/api/v1/tuner'],
