@@ -628,6 +628,7 @@ const char *typeName(coreapi::EventType t)
 		case coreapi::EventType::TimerChanged: return "timer-changed";
 		case coreapi::EventType::EpgUpdated:   return "epg-updated";
 		case coreapi::EventType::BouquetsChanged: return "bouquets-changed";
+		case coreapi::EventType::SettingsChanged: return "settings-changed";
 	}
 
 	// Only a value that is not one of the enumerators reaches here, which is

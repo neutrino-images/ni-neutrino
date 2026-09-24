@@ -7,21 +7,14 @@
 // C++
 #include <string>
 // yhttpd
-#include <zapit/types.h>
-#include "httpd/compat/hook.h"
-// what a helper below carries a refusal out in
-#include <coreapi/base/result.h>
-
-namespace httpd
-{
-namespace compat
-{
+#include <zapit/channel.h>
+#include <yhook.h>
 
 // forward declaration
 class CNeutrinoAPI;
 
 //-----------------------------------------------------------------------------
-class CControlAPI
+class CControlAPI : public Cyhook
 {
 private:
 	// Dispatcher Array
@@ -34,6 +27,19 @@ private:
 		const char *mime_type;
 	} TyCgiCall;
 	const static TyCgiCall yCgiCallList[];
+
+	struct FileCGI_List
+	{
+		std::string name;
+		std::string type_str;
+		unsigned char type;
+		std::string fullname;
+
+		bool operator() (FileCGI_List a, FileCGI_List b)
+		{
+			return (a.name < b.name);
+		}
+	} fsort;
 
 	void rc_sync(int fd);
 	int rc_send(int fd, unsigned int code, unsigned int value);
@@ -57,13 +63,14 @@ private:
 	void doModifyTimer(CyhookHandler *hh);
 	void doNewTimer(CyhookHandler *hh);
 	std::string _SendTime(CyhookHandler *hh, struct tm *Time, int digits);
-	std::string _GetBouquetWriteItem(CyhookHandler *hh, t_channel_id channel_id, t_channel_id epg_id, const std::string &name, int bouquetNr, int channelNr);
+	std::string _GetBouquetWriteItem(CyhookHandler *hh, CZapitChannel * channel, int bouquetNr, int channelNr);
 	std::string channelEPGformated(CyhookHandler *hh, int bouquetnr, t_channel_id channel_id, int max, long stoptime);
-	std::string _GetBouquetActualEPGItem(CyhookHandler *hh, t_channel_id channel_id);
+	std::string _GetBouquetActualEPGItem(CyhookHandler *hh, CZapitChannel * channel);
 
 	//yweb
 	void YWeb_SendVideoStreamingPids(CyhookHandler *hh, int apid_no);
 	void YWeb_SendRadioStreamingPid(CyhookHandler *hh);
+	void compatibility_Timer(CyhookHandler *hh);
 
 	// CGI functions for ExecuteCGI
 	void TimerCGI(CyhookHandler *hh);
@@ -87,6 +94,7 @@ private:
 	void InfoCGI(CyhookHandler *hh);
 	void BoxInfoCGI(CyhookHandler *hh);
 	void HWInfoCGI(CyhookHandler *hh);
+	void OsInfoCGI(CyhookHandler *hh);
 	void ShutdownCGI(CyhookHandler *hh);
 	void VolumeCGI(CyhookHandler *hh);
 	void ChannellistCGI(CyhookHandler *hh);
@@ -135,13 +143,7 @@ private:
 	void SignalInfoCGI(CyhookHandler *hh);
 	void getDirCGI(CyhookHandler *hh);
 	void getMoviesCGI(CyhookHandler *hh);
-	// refusal carries out what a directory was turned down with, for the one
-	// caller that names its directory itself and has to be told rather than
-	// answered an empty list. The configured directories pass nothing here: one
-	// of those that cannot be read has always been skipped, and skipping it is
-	// what keeps the ones beside it readable.
-	std::string readMovies(CyhookHandler *hh, std::string path, std::string result, bool subdirs,
-			       coreapi::Result<void> *refusal);
+	std::string readMovies(CyhookHandler *hh, std::string path, std::string result, bool subdirs);
 	std::string getSubdirectories(CyhookHandler *hh, std::string path, std::string result);
 
 	void InfoIconsCGI(CyhookHandler *hh); //NI
@@ -150,6 +152,9 @@ private:
 protected:
 	CNeutrinoAPI	*NeutrinoAPI;
 
+	void init(CyhookHandler *hh);
+	void Execute(CyhookHandler *hh);
+
 public:
 	static const unsigned int PLUGIN_DIR_COUNT = 9;
 	static std::string PLUGIN_DIRS[PLUGIN_DIR_COUNT];
@@ -157,20 +162,11 @@ public:
 	// constructor & deconstructor
 	CControlAPI(CNeutrinoAPI *_NeutrinoAPI);
 
-	// Used to sit above Execute, called only by the two hook methods the move
-	// into compat/ dropped. Nothing inside this class calls it either, so the
-	// mount point that now owns the one caller this has needs it from outside.
-	void init(CyhookHandler *hh);
-
-	void Execute(CyhookHandler *hh);
-
-	// yCgiCallList stays private; a caller that needs the 74 names it carries
-	// reads them through here rather than keeping its own copy that could drift.
-	size_t endpointCount();
-	const char *endpointName(size_t index);
+	// virtual functions for HookHandler/Hook
+	virtual std::string	getHookName(void) {return std::string("controlapi");}
+	virtual std::string	getHookVersion(void) {return std::string("$Revision$");}
+	virtual THandleStatus	Hook_SendResponse(CyhookHandler *hh);
+	virtual THandleStatus	Hook_PrepareResponse(CyhookHandler *hh);
 };
-
-} // namespace compat
-} // namespace httpd
 
 #endif /* __nhttpd_neutrinocontrolapi_hpp__ */
