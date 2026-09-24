@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="850" height="650" viewBox="0 0 850 650" role="img" aria-label="NI-Web">
 	<path fill="none" d="M0 0h850v650H0z"/>
 	<path id="NI"
-	fill="#fd6d13" stroke="black" stroke-width="0"
+	fill="#e0e0e0" stroke="black" stroke-width="0"
 	d="M 145.00,0.00
 	   C 145.00,0.00 152.83,1.02 152.83,1.02
 	     152.83,1.02 161.20,10.00 161.20,10.00
