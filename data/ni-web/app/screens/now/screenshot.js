@@ -36,6 +36,44 @@ import { Card, useOnScreen } from './parts.js';
 // rate of somebody watching and not the rate of a video.
 const AGAIN_EVERY_MS = 5000;
 
+// This browser's choice, kept across reloads the way the size of the writing is.
+const KEEP_OSD = 'ni-web.remote.shot.osd';
+const KEEP_VIDEO = 'ni-web.remote.shot.video';
+const KEEP_AGAIN = 'ni-web.remote.shot.again';
+
+/**
+ * @param {string} key
+ * @param {boolean} fallback
+ * @returns {boolean}
+ */
+function kept(key, fallback) {
+	try {
+		const saved = window.localStorage.getItem(key);
+		if (saved === 'yes') {
+			return true;
+		}
+		if (saved === 'no') {
+			return false;
+		}
+	} catch (e) {
+		// A browser that keeps no site data starts from the defaults.
+	}
+	return fallback;
+}
+
+/**
+ * @param {string} key
+ * @param {boolean} value
+ * @returns {void}
+ */
+function keep(key, value) {
+	try {
+		window.localStorage.setItem(key, value ? 'yes' : 'no');
+	} catch (e) {
+		// Holds until the page is loaded again.
+	}
+}
+
 /**
  * One capture, asked for in the form the caller wants.
  *
@@ -84,9 +122,9 @@ export function pictureUrl(osd, video, format, round) {
 export function useCapture(bump) {
 	const box = useRef(/** @type {HTMLElement | null} */ (null));
 	const watching = useOnScreen(box);
-	const [osd, setOsd] = useState(true);
-	const [video, setVideo] = useState(true);
-	const [again, setAgain] = useState(false);
+	const [osd, setOsd] = useState(function () { return kept(KEEP_OSD, true); });
+	const [video, setVideo] = useState(function () { return kept(KEEP_VIDEO, true); });
+	const [again, setAgain] = useState(function () { return kept(KEEP_AGAIN, false); });
 	/* Nought means nothing has been fetched yet, and that is what the frame
 	   says instead of showing a picture. */
 	const [round, setRound] = useState(0);
@@ -132,6 +170,7 @@ export function useCapture(bump) {
 	 */
 	function chooseOsd(next) {
 		setOsd(next);
+		keep(KEEP_OSD, next);
 		forget();
 		fetchAgain();
 	}
@@ -142,8 +181,18 @@ export function useCapture(bump) {
 	 */
 	function chooseVideo(next) {
 		setVideo(next);
+		keep(KEEP_VIDEO, next);
 		forget();
 		fetchAgain();
+	}
+
+	/**
+	 * @param {boolean} next
+	 * @returns {void}
+	 */
+	function chooseAgain(next) {
+		setAgain(next);
+		keep(KEEP_AGAIN, next);
 	}
 
 	/* Only where one has been fetched already. Turning a switch on a frame
@@ -244,7 +293,7 @@ export function useCapture(bump) {
 					label=${t(text, 'now.shot.auto')}
 					checked=${again}
 					disabled=${nothing}
-					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setAgain(e.currentTarget.checked); }} />
+					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { chooseAgain(e.currentTarget.checked); }} />
 				<p class="now-buttons">
 					${nothing
 						? null
