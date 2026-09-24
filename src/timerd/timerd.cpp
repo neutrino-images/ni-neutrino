@@ -215,8 +215,6 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 			{
 				CBasicServer::receive_data(connfd,&msgModifyTimer, sizeof(msgModifyTimer));
 				int ret=CTimerManager::getInstance()->rescheduleEvent(msgModifyTimer.eventID,msgModifyTimer.announceTime,msgModifyTimer.alarmTime, msgModifyTimer.stopTime);
-				if (ret != 0)
-					CTimerManager::getInstance()->announceListChanged();
 				CTimerdMsg::responseStatus rspStatus;
 				rspStatus.status = (ret!=0);
 				CBasicServer::send_data(connfd, &rspStatus, sizeof(rspStatus));
@@ -256,8 +254,6 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 				int ret=CTimerManager::getInstance()->modifyEvent(msgModifyTimer.eventID,msgModifyTimer.announceTime,msgModifyTimer.alarmTime,
 										msgModifyTimer.stopTime,msgModifyTimer.repeatCount,msgModifyTimer.eventRepeat,
 										data);
-				if (ret != 0)
-					CTimerManager::getInstance()->announceListChanged();
 				CTimerdMsg::responseStatus rspStatus;
 				rspStatus.status = (ret!=0);
 				CBasicServer::send_data(connfd, &rspStatus, sizeof(rspStatus));
@@ -428,9 +424,6 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 					printf("[timerd] Unknown TimerType\n");
 			}
 
-			if (rspAddTimer.eventID != 0)
-				CTimerManager::getInstance()->announceListChanged();
-
 			CBasicServer::send_data(connfd, &rspAddTimer, sizeof(rspAddTimer));
 
 			break;
@@ -439,8 +432,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 			CTimerdMsg::commandRemoveTimer msgRemoveTimer;
 			CBasicServer::receive_data(connfd,&msgRemoveTimer, sizeof(msgRemoveTimer));
 			dprintf("TIMERD: command remove %d\n",msgRemoveTimer.eventID);
-			if (CTimerManager::getInstance()->removeEvent(msgRemoveTimer.eventID))
-				CTimerManager::getInstance()->announceListChanged();
+			CTimerManager::getInstance()->removeEvent(msgRemoveTimer.eventID);
 			break;
 
 		case CTimerdMsg::CMD_STOPTIMER:						// stop timer
@@ -448,8 +440,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 			CTimerdMsg::commandRemoveTimer msgStopTimer;
 			CBasicServer::receive_data(connfd,&msgStopTimer, sizeof(msgStopTimer));
 			dprintf("TIMERD: command stop %d\n",msgStopTimer.eventID);
-			if (CTimerManager::getInstance()->stopEvent(msgStopTimer.eventID))
-				CTimerManager::getInstance()->announceListChanged();
+			CTimerManager::getInstance()->stopEvent(msgStopTimer.eventID);
 			break;
 
 		case CTimerdMsg::CMD_TIMERDAVAILABLE:					// check if server is running ;)
@@ -472,8 +463,7 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 			{
 				CTimerdMsg::commandSetAPid data;
 				CBasicServer::receive_data(connfd,&data, sizeof(data));
-				if (CTimerManager::getInstance()->modifyEvent(data.eventID , data.apids) != 0)
-					CTimerManager::getInstance()->announceListChanged();
+				CTimerManager::getInstance()->modifyEvent(data.eventID , data.apids);
 			}
 			break;
 		case CTimerdMsg::CMD_SETRECSAFETY:				  // set recording correction

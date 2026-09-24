@@ -11,7 +11,10 @@
 // C++
 #include <string>
 #include <fstream>
+#include <limits>
 #include <map>
+#include <utility>
+#include <vector>
 // system
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -29,9 +32,17 @@
 #include <neutrinoMessages.h>
 #include <zapit/client/zapittools.h>
 #include <zapit/zapit.h>
+#include <coreapi/channels.h>
+#include <coreapi/base/errors.h>
+#include <coreapi/storage.h>
+#include <coreapi/epg.h>
+#include <coreapi/osd.h>
+#include <coreapi/system.h>
+#include <coreapi/timers.h>
 #include <eitd/sectionsd.h>
 #include <configfile.h>
 #include <system/configure_network.h>
+#include <system/remotetimer.h>
 #include <cs_api.h>
 #include <gui/plugins.h>//for relodplugins
 #include <neutrino.h>
@@ -42,18 +53,52 @@
 #include <driver/pictureviewer/pictureviewer.h>
 extern CPictureViewer *g_PicViewer;
 
-// yhttpd
-#include <yhttpd.h>
-#include <ytypes_globals.h>
-#include <ylogging.h>
-#include <helper.h>
-// nhttpd
-#include "neutrinoapi.h"
-#include "controlapi.h"
+#include "httpd/compat/helper.h"
+#include "httpd/compat/query.h"
+#include "httpd/compat/scriptrunner.h"
+#include "httpd/compat/neutrinoapi.h"
+#include "httpd/compat/controlapi.h"
 #include <hardware/video.h>
 #include <zapit/femanager.h>
 
+/* Two of the four files /control/config names, spelled here because the header
+   that spelled them belonged to the removed server. The other two are named in
+   global.h, which this file already has. Neither of these is that server's
+   file: one is the old page set's, one is the movie browser's, and both stay
+   under CONFIGDIR, where a box upgraded from an older image still has them. */
+#define MOVIEBROWSER_CONFIGFILE CONFIGDIR "/moviebrowser.conf"
+#define YWEB_CONFIGFILE CONFIGDIR "/yWeb.conf"
+
+/* The version /control/info?nhttpd_version answers with, which came from the
+   same header. A constant here and not derived from anything this program
+   carries a version of: it is a number clients compare against, and what they
+   compare against is the number that server last reported. */
+#define HTTPD_VERSION "3.5.0"
+
+/* The removed server's logging singleton went out with it, and so did the
+   calls that went through it here. Every one of them was behind that server's
+   debug switch or behind a log level nothing sets any more, so none of them
+   printed a line on a box as shipped. The one call that printed whatever the
+   level was is a plain printf now, the way the other line in this file that
+   reports something an operator can act on already was. */
+
+// CControlAPI now lives in httpd::compat; every definition below still
+// writes the bare name, and a qualified-id needs it resolvable unqualified
+// to bind to the right class. This one alias does that without bringing the
+// rest of the namespace into scope, which is what the enum collision below
+// needs kept out.
+typedef httpd::compat::CControlAPI CControlAPI;
+
 extern cVideo * videoDecoder;
+
+// A member function defined out of class is anchored, for name lookup, at
+// the namespace the class itself was declared in (httpd::compat) rather than
+// at this file's own top level. A local "extern CRemoteControl *g_RemoteControl;"
+// inside such a function therefore declares httpd::compat::g_RemoteControl,
+// a distinct entity from neutrino.cpp's global, even with this declaration
+// already visible above it; the three call sites below name the global with
+// "::" instead of redeclaring it locally.
+extern CRemoteControl * g_RemoteControl;
 
 //NI
 #include <system/helpers.h>
@@ -100,18 +145,19 @@ extern CBouquetManager *g_bouquetManager;
 #endif
 
 //-----------------------------------------------------------------------------
+// None of the EPG endpoints has ever taken a window, so every read below asks
+// for the whole schedule of the channel. Nothing a request carries sizes it.
+// The bounds are the ends of the range rather than the epoch and the far
+// future, so that the window holds every event a time_t can express and the
+// filter cannot drop one the unwindowed read would have kept.
+static const time_t EPG_WHOLE_FROM = std::numeric_limits<time_t>::min();
+static const time_t EPG_WHOLE_TO = std::numeric_limits<time_t>::max();
+
+//-----------------------------------------------------------------------------
 //=============================================================================
 // Initialization of static variables
 //=============================================================================
 std::string CControlAPI::PLUGIN_DIRS[PLUGIN_DIR_COUNT];
-
-static const char *getVersionInfoPath()
-{
-	if (access(IMAGE_METADATA_FILE, R_OK) == 0)
-		return IMAGE_METADATA_FILE;
-
-	return IMAGE_VERSION_FILE;
-}
 
 //=============================================================================
 // constructor und destructor
@@ -130,72 +176,11 @@ void CControlAPI::init(CyhookHandler *hh)
 		PLUGIN_DIRS[2]=PLUGIN_DIRS[3]=hh->WebserverConfigList["WebsiteMain.directory"];
 		PLUGIN_DIRS[3].append("/scripts");
 		PLUGIN_DIRS[4]=GAMESDIR;
-		PLUGIN_DIRS[5]=g_settings.plugin_hdd_dir;
+		PLUGIN_DIRS[5]=settingsText(g_settings.plugin_hdd_dir);
 		PLUGIN_DIRS[6]=PLUGINDIR_MNT;
 		PLUGIN_DIRS[7]=PLUGINDIR_VAR;
 		PLUGIN_DIRS[8]=PLUGINDIR;
 	}
-}
-
-//=============================================================================
-// Hooks!
-//=============================================================================
-//-----------------------------------------------------------------------------
-THandleStatus CControlAPI::Hook_PrepareResponse(CyhookHandler *hh)
-{
-	init(hh);
-
-	if(hh->UrlData["path"] == "/control/"
-			|| hh->UrlData["path"] == "/cgi-bin/"
-			|| hh->UrlData["path"] == "/fb/"
-	  )
-		return HANDLED_READY;
-	else
-		return HANDLED_NONE;
-}
-//-----------------------------------------------------------------------------
-// HOOK: response_hook Handler
-// This is the main dispatcher for this module
-//-----------------------------------------------------------------------------
-THandleStatus CControlAPI::Hook_SendResponse(CyhookHandler *hh)
-{
-	hh->status = HANDLED_NONE;
-
-//	log_level_printfX(4,"CControlAPI hook start url:%s\n",hh->UrlData["url"].c_str());
-	init(hh);
-
-	if(hh->UrlData["path"] == "/control/"
-			|| hh->UrlData["path"] == "/cgi-bin/")
-		Execute(hh);
-	if(hh->UrlData["path"] == "/fb/")		// fb-compatibility for timer-calls
-		compatibility_Timer(hh);
-//	log_level_printfX(4,"CControlAPI hook ende status:%d\n",(int)hh->status);
-//	log_level_printfX(5,"CControlAPI hook result:%s\n",hh->yresult.c_str());
-
-	return hh->status;
-}
-
-//=============================================================================
-//-------------------------------------------------------------------------
-// timer compatibility
-// do add/modify/remove and Return (redirect) Timerlist
-//-------------------------------------------------------------------------
-void CControlAPI::compatibility_Timer(CyhookHandler *hh)
-{
-	log_level_printf(4,"CControlAPI Compatibility Timer Start url:%s\n",hh->UrlData["url"].c_str());
-	if(NeutrinoAPI->Timerd->isTimerdAvailable() && !hh->ParamList.empty() )
-	{
-		if(hh->ParamList["action"] == "remove")
-		{
-			unsigned removeId = atoi(hh->ParamList["id"].c_str());
-			NeutrinoAPI->Timerd->removeTimerEvent(removeId);
-		}
-		else if(hh->ParamList["action"] == "modify")
-			doModifyTimer(hh);
-		else if(hh->ParamList["action"] == "new")
-			doNewTimer(hh);
-	}
-	hh->SendRedirect("/Y_Timer_List.yhtm");
 }
 
 //=============================================================================
@@ -233,7 +218,6 @@ const CControlAPI::TyCgiCall CControlAPI::yCgiCallList[]=
 	{"gettime",		&CControlAPI::GetTimeCGI,		"text/plain"},
 	{"info",		&CControlAPI::InfoCGI,			"text/plain"},
 	{"boxinfo",		&CControlAPI::BoxInfoCGI,		"text/plain"},
-	{"osinfo",		&CControlAPI::OsInfoCGI,		"text/plain"},
 	{"version",		&CControlAPI::VersionCGI,		""},
 	{"reloadsetup",		&CControlAPI::ReloadNeutrinoSetupCGI,	""},
 	{"reloadplugins",	&CControlAPI::ReloadPluginsCGI,		""},
@@ -303,20 +287,11 @@ void CControlAPI::Execute(CyhookHandler *hh)
 	int index = -1;
 	std::string filename = hh->UrlData["filename"];
 
-	log_level_printf(4,"ControlAPI.Execute filename:(%s)\n",filename.c_str());
 	// tolower(filename)
 	for(unsigned int i = 0; i < filename.length(); i++)
 		filename[i] = tolower(filename[i]);
 
 	func_req = filename;
-
-	// debugging informations
-	if(CLogging::getInstance()->getDebug())
-	{
-		yprintf("Execute CGI : %s\n", func_req.c_str());
-		for(CStringList::iterator it = hh->ParamList.begin(); it != hh->ParamList.end(); ++it)
-			yprintf("  Parameter %s : %s\n", it->first.c_str(), it->second.c_str());
-	}
 
 	// get function index
 	for(unsigned int i = 0; i < (sizeof(yCgiCallList)/sizeof(yCgiCallList[0])); i++)
@@ -328,29 +303,40 @@ void CControlAPI::Execute(CyhookHandler *hh)
 
 	if(index == -1) // function not found
 	{
-		hh->SetError(HTTP_NOT_IMPLEMENTED, HANDLED_NOT_IMPLEMENTED);
+		hh->SetError(httpd::compat::HTTP_NOT_IMPLEMENTED, httpd::compat::HANDLED_NOT_IMPLEMENTED);
 		return;
 	}
 	// send header
 	else if(std::string(yCgiCallList[index].mime_type).empty())	// decide in function
 		;
 	else if(std::string(yCgiCallList[index].mime_type) == "+xml")		// Parameter xml?
-		if (hh->getOutType() == xml)
-			hh->SetHeader(HTTP_OK, "text/xml; charset=UTF-8");
+		if (hh->getOutType() == httpd::compat::xml)
+			hh->SetHeader(httpd::compat::HTTP_OK, "text/xml; charset=UTF-8");
 		else
-			hh->SetHeader(HTTP_OK, "text/html; charset=UTF-8");
+			hh->SetHeader(httpd::compat::HTTP_OK, "text/html; charset=UTF-8");
 	else
-		hh->SetHeader(HTTP_OK, yCgiCallList[index].mime_type);
+		hh->SetHeader(httpd::compat::HTTP_OK, yCgiCallList[index].mime_type);
 
 	// response
-	hh->status = HANDLED_READY;
-	if (hh->Method == M_HEAD)	// HEAD or function call
+	hh->status = httpd::compat::HANDLED_READY;
+	if (hh->Method == httpd::compat::M_HEAD)	// HEAD or function call
 		return;
 	else
 	{
 		(this->*yCgiCallList[index].pfunc)(hh);
 		return;
 	}
+}
+
+//-----------------------------------------------------------------------------
+size_t CControlAPI::endpointCount()
+{
+	return sizeof(yCgiCallList) / sizeof(yCgiCallList[0]);
+}
+
+const char *CControlAPI::endpointName(size_t index)
+{
+	return yCgiCallList[index].func_name;
 }
 
 //=============================================================================
@@ -372,7 +358,12 @@ void CControlAPI::TimerCGI(CyhookHandler *hh)
 			else if (hh->ParamList["action"] == "remove")
 			{
 				unsigned removeId = atoi(hh->ParamList["id"].c_str());
-				NeutrinoAPI->Timerd->removeTimerEvent(removeId);
+				// The answer is ok whatever came back, as it has always been
+				// here. The facade tells a removal that happened from an id
+				// nobody has; this endpoint has never made that difference and
+				// a client that has been reading "ok" cannot start seeing
+				// "error" for the same request.
+				coreapi::timers::remove((uint32_t) removeId);
 				hh->SendOk();
 			}
 			else if(!hh->ParamList["get"].empty())
@@ -388,7 +379,7 @@ void CControlAPI::TimerCGI(CyhookHandler *hh)
 			}
 		}
 		else {
-			if (hh->getOutType() == plain)
+			if (hh->getOutType() == httpd::compat::plain)
 				SendTimersPlain(hh);
 			else
 				SendTimers(hh);
@@ -409,12 +400,12 @@ void CControlAPI::TimerSendCGI(CyhookHandler *hh)
 			bool force = (hh->ParamList["force"] == "1") || (hh->ParamList["force"] == "true");
 			if(!hh->ParamList["ip"].empty())
 			{
-				NeutrinoAPI->SendAllTimers(hh->ParamList["ip"],force);
+				sendAllTimersTo(NeutrinoAPI->Timerd, hh->ParamList["ip"], force);
 				hh->SendOk();
 			}
 			else if(!hh->ParamList["name"].empty())
 			{
-				NeutrinoAPI->SendAllTimers(NeutrinoAPI->GetRemoteBoxIP(decodeString(hh->ParamList["name"])),force);
+				sendAllTimersTo(NeutrinoAPI->Timerd, NeutrinoAPI->GetRemoteBoxIP(decodeString(hh->ParamList["name"])), force);
 				hh->SendOk();
 			}
 			else
@@ -447,8 +438,7 @@ void CControlAPI::SetModeCGI(CyhookHandler *hh)
 				sleep(1);
 				NeutrinoAPI->UpdateBouquets();
 			}else{
-				extern CRemoteControl * g_RemoteControl;
-				g_RemoteControl->radioMode();
+				::g_RemoteControl->radioMode();
 			}
 		}
 		else if (hh->ParamList["1"] == "tv")	// switch to tv mode
@@ -459,8 +449,7 @@ void CControlAPI::SetModeCGI(CyhookHandler *hh)
 				sleep(1);
 				NeutrinoAPI->UpdateBouquets();
 			}else{
-				extern CRemoteControl * g_RemoteControl;
-				g_RemoteControl->tvMode();
+				::g_RemoteControl->tvMode();
 			}
 		}
 		else if (hh->ParamList["record"] == "start")	// start record mode
@@ -477,6 +466,15 @@ void CControlAPI::SetModeCGI(CyhookHandler *hh)
 		}
 		else if (hh->ParamList["record"] == "stop")	// stop record mode
 		{
+			/* This stops nothing, and it answers ok all the same. Two
+			   reasons, both below: the block written here is a RecordingInfo
+			   and what reads it at the other end reads a RecordingStopInfo,
+			   and the identifier in it is nought, which names no recording,
+			   so the lookup finds none and the branch that reports that only
+			   prints. Left exactly as it is: this surface is reproduced to
+			   the byte, and what it has answered for years is part of what is
+			   being reproduced. The route that ends a recording and says
+			   whether it did is /api/v1/recordings/{id}. */
 #if 0
 			NeutrinoAPI->Zapit->setRecordMode(false);
 			NeutrinoAPI->Sectionsd->setPauseScanning(false);
@@ -513,7 +511,10 @@ void CControlAPI::GetModeCGI(CyhookHandler *hh)
 	}
 	else
 	{
-		int mode = CNeutrinoApp::getInstance()->getMode();
+		// An unsettled box and a mode with no name of its own both read as
+		// unknown.
+		coreapi::Result<int> r = coreapi::channels::mode();
+		int mode = r.ok() ? r.value() : NeutrinoModes::mode_unknown;
 		if (mode == NeutrinoModes::mode_tv)
 			result = "tv";
 		else if (mode == NeutrinoModes::mode_radio)
@@ -540,7 +541,7 @@ void CControlAPI::GetModeCGI(CyhookHandler *hh)
 
 	if (!result.empty())
 	{
-		if (hh->getOutType() != plain)
+		if (hh->getOutType() != httpd::compat::plain)
 		{
 			result = hh->outPair(key, result, false);
 			result = hh->outObject("getmode", result);
@@ -569,12 +570,12 @@ void CControlAPI::ExecCGI(CyhookHandler *hh)
 	}
 	else
 	{
-		log_level_printf(0, "[%s] no script given\n", __func__);
+		printf("[nhttpd] [%s] no script given\n", __func__);
 		result = "error";
 	}
 
 	if (result == "error")
-		hh->SetError(HTTP_NOT_FOUND);
+		hh->SetError(httpd::compat::HTTP_NOT_FOUND);
 	else
 		hh->WriteLn(result);
 }
@@ -592,6 +593,14 @@ void CControlAPI::SystemCGI(CyhookHandler *hh)
 }
 
 //-----------------------------------------------------------------------------
+// An unsettled box is not in standby, which is what the raw mode read said
+// before it had a status of its own to say it with.
+static bool isInStandby()
+{
+	coreapi::Result<int> m = coreapi::channels::mode();
+	return m.ok() && m.value() == NeutrinoModes::mode_standby;
+}
+
 void CControlAPI::StandbyCGI(CyhookHandler *hh)
 {
 	if (!(hh->ParamList.empty()))
@@ -603,43 +612,60 @@ void CControlAPI::StandbyCGI(CyhookHandler *hh)
 			}
 		}
 
+		// Both arms send up to two commands and answer once, after the last
+		// of them, so that a command that did not go out is reported here as
+		// it is everywhere else rather than answered with ok.
 		if (hh->ParamList["1"] == "on")	// standby mode on
 		{
+			bool sent = true;
+
 			//dont use CEC with standbyoff (TV off) --- use: control/standby?off&cec=off
 			if(g_settings.hdmi_cec_standby && CEC_HDMI_off){
 				videoDecoder->SetCECAutoStandby(0);
 			}
 
-			if(CNeutrinoApp::getInstance()->getMode() != 4)
-				NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::STANDBY_ON, CEventServer::INITID_HTTPD);
-			hh->SendOk();
+			if (!isInStandby())
+				sent = coreapi::system::standby(true).ok();
 
 			if(g_settings.hdmi_cec_standby && CEC_HDMI_off){//dont use CEC with standbyoff (TV off)
-				NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::EVT_HDMI_CEC_STANDBY, CEventServer::INITID_HTTPD);
+				if (!coreapi::system::hdmiCec(false).ok())
+					sent = false;
 			}
+
+			if (sent)
+				hh->SendOk();
+			else
+				hh->SendError();
 		}
 		else if (hh->ParamList["1"] == "off")// standby mode off
 		{
+			bool sent = true;
+
 			//dont use CEC with with view on (TV on) --- use: control/standby?off&cec=off
 			if(g_settings.hdmi_cec_view_on && CEC_HDMI_off){
 				videoDecoder->SetCECAutoView(0);
 			}
 
 			NeutrinoAPI->Zapit->setStandby(false);
-			if(CNeutrinoApp::getInstance()->getMode() == 4)
-				NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::STANDBY_OFF, CEventServer::INITID_HTTPD);
-			hh->SendOk();
+			if (isInStandby())
+				sent = coreapi::system::standby(false).ok();
 
 			if(g_settings.hdmi_cec_view_on && CEC_HDMI_off){//dont use CEC with view on (TV on)
-				NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::EVT_HDMI_CEC_VIEW_ON, CEventServer::INITID_HTTPD);
+				if (!coreapi::system::hdmiCec(true).ok())
+					sent = false;
 			}
+
+			if (sent)
+				hh->SendOk();
+			else
+				hh->SendError();
 		}
 		else
 			hh->SendError();
 
 	}
 	else
-		if(CNeutrinoApp::getInstance()->getMode() == 4)//mode_standby = 4
+		if (isInStandby())
 			hh->WriteLn("on");
 		else
 			hh->WriteLn("off");
@@ -784,17 +810,15 @@ void CControlAPI::GetChannelIDCGI(CyhookHandler *hh)
 // get actual channel_info
 void CControlAPI::GetChannelInfoCGI(CyhookHandler *hh)
 {
+	// The EPG below is keyed on the id zapit names, and that id still answers
+	// when the lookup for it does not, so the two are read apart.
 	t_channel_id channel_id = CZapit::getInstance()->GetCurrentChannelID();
-	CZapitChannel *channel = CServiceManager::getInstance()->FindChannel48(channel_id);
+	coreapi::Result<coreapi::ChannelInfo> current = coreapi::channels::current();
 
-	/* outObject() wraps its content in braces, so every field came out as
-	   "name": {Das Erste} - no json parser accepts that. These were also the
-	   last places where an outValue() result did not reach outPair(), the one
-	   place that escapes for json; a name containing a quote went out raw.
-	   outStart(true) keeps the plain output at bare values. */
-	hh->outStart(true /*old mode*/);
+	hh->outStart();
 	std::string result = "";
-	result = hh->outPair("name", hh->outValue(channel->getName()), true);
+	// An idle box answers with an empty name rather than no answer.
+	result = hh->outObject("name", hh->outValue(current.ok() ? current.value().name : std::string()) + "\n");
 
 	CShortEPGData epg;
 	CSectionsdClient::CurrentNextInfo CurrentNext;
@@ -802,21 +826,21 @@ void CControlAPI::GetChannelInfoCGI(CyhookHandler *hh)
 
 	if (CurrentNext.flags & CSectionsdClient::epgflags::has_current)
 	{
-		result += hh->outPair("epg_now", hh->outValue(CurrentNext.current_name), true);
-		result += hh->outPair("duration", string_printf("%d/", (abs(time(NULL) - CurrentNext.current_zeit.startzeit) + 30) / 60) + string_printf("%d", CurrentNext.current_zeit.dauer / 60), true);
+		result += hh->outObject("epg_now", hh->outValue(CurrentNext.current_name) + "\n");
+		result += hh->outObject("duration", string_printf("%d/", (abs(time(NULL) - CurrentNext.current_zeit.startzeit) + 30) / 60) + string_printf("%d\n", CurrentNext.current_zeit.dauer / 60));
 	}
 	else
 	{
-		result += hh->outPair("epg_now", "", true);
-		result += hh->outPair("duration", "0/0", true);
+		result += hh->outObject("epg_now", "\n");
+		result += hh->outObject("duration", "0/0\n");
 	}
 
 	if (CurrentNext.flags & CSectionsdClient::epgflags::has_next)
 	{
-		result += hh->outPair("epg_next", hh->outValue(CurrentNext.next_name), false);
+		result += hh->outObject("epg_next", hh->outValue(CurrentNext.next_name) + "\n");
 	}
 	else
-		result += hh->outPair("epg_next", "", false);
+		result += hh->outObject("epg_next", "\n");
 
 	hh->SendResult(result);
 }
@@ -846,11 +870,13 @@ void CControlAPI::GetChannelInfoCGI(CyhookHandler *hh)
 // get actual epg_id
 void CControlAPI::GetEpgIDCGI(CyhookHandler *hh)
 {
-	t_channel_id channel_id = CZapit::getInstance()->GetCurrentChannelID();
-	t_channel_id epg_id = channel_id;
-	CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(channel_id);
-	if (ch)
-		epg_id = ch->getEpgID();
+	// The epg id wanted here is the running channel's own, so this is a channel
+	// read and not an EPG one. The running id is asked for only where that read
+	// could not resolve it, which is what the answer falls back to; asking for
+	// it up front would read it twice for every answer that never needs it.
+	coreapi::Result<coreapi::ChannelInfo> current = coreapi::channels::current();
+	t_channel_id epg_id = current.ok() ? (t_channel_id) current.value().epg_id
+					  : CZapit::getInstance()->GetCurrentChannelID();
 
 	hh->outStart();
 	std::string result = "";
@@ -870,17 +896,17 @@ void CControlAPI::GetTPChannel_IDCGI(CyhookHandler *hh)
 void CControlAPI::MessageCGI(CyhookHandler *hh)
 {
 	std::string message;
-	int event = 0;
+	coreapi::osd::MessageKind kind = coreapi::osd::MessageKind::Hint;
 
 	if (!(hh->ParamList["popup"].empty()))
 	{
 		message = hh->ParamList["popup"];
-		event = NeutrinoMessages::EVT_POPUP;
+		kind = coreapi::osd::MessageKind::Hint;
 	}
 	else if (!(hh->ParamList["nmsg"].empty()))
 	{
 		message = hh->ParamList["nmsg"];
-		event = NeutrinoMessages::EVT_EXTMSG;
+		kind = coreapi::osd::MessageKind::Box;
 	}
 	else
 	{
@@ -888,18 +914,16 @@ void CControlAPI::MessageCGI(CyhookHandler *hh)
 		return;
 	}
 
+	// The timeout rides inside the words and is cut back out of them where the
+	// message is drawn, because the event carries one block and no second field.
 	if (!(hh->ParamList["timeout"].empty()))
 	{
 		message += "&timeout=";
 		message += hh->ParamList["timeout"];
 	}
 
-	if (event != 0)
-	{
-		//message=decodeString(message);
-		NeutrinoAPI->EventServer->sendEvent(event, CEventServer::INITID_HTTPD, (void *) message.c_str(), message.length() + 1);
+	if (coreapi::osd::message(kind, message).ok())
 		hh->SendOk();
-	}
 	else
 		hh->SendError();
 }
@@ -914,7 +938,7 @@ void CControlAPI::InfoCGI(CyhookHandler *hh)
 		if (hh->ParamList["1"] == "streaminfo")		// print streaminfo
 			SendStreamInfo(hh);
 		else if (hh->ParamList["1"] == "version")	// send version file
-			hh->SendFile(getVersionInfoPath());
+			hh->SendFile(IMAGE_VERSION_FILE);
 		else if (hh->ParamList["1"] == "httpdversion")	// print httpd version typ (just for compatibility)
 			hh->Write("3");
 		else if (hh->ParamList["1"] == "nhttpd_version")// print nhttpd version
@@ -928,34 +952,20 @@ void CControlAPI::InfoCGI(CyhookHandler *hh)
 
 void CControlAPI::BoxInfoCGI(CyhookHandler *hh)
 {
-	std::string boxinfo(g_info.hw_caps->boxvendor);
-	/*
-	   I don't know the current legal situation.
-	   So better let's change the vendor's name to CST.
-
-	   After change this, you'll have to align code in Y_Blocks.txt
-	*/
-
-	if (boxinfo.compare("Coolstream") == 0) {
-		boxinfo = "CST";
-	}
-	std::string boxname(g_info.hw_caps->boxname);
-	if (strcmp(boxname.c_str(), "Neo") == 0)
+	/* The vendor of one family is answered under its abbreviation and one model
+	   is told from its twin tuner version by counting frontends. Both of those
+	   are now decided where the box is read, so that every reader gets the same
+	   names; Y_Blocks.txt matches on the short vendor. */
+	coreapi::Result<coreapi::BoxInfo> r = coreapi::system::info();
+	if (!r.ok())
 	{
-		// detecting Neo Twin by counting frontends
-		if (CFEManager::getInstance()->getFrontendCount() > 1)
-			boxname = "Neo Twin";
+		hh->SendError();
+		return;
 	}
+	const coreapi::BoxInfo &box = r.value();
 
-	boxinfo  = "vendor=" + boxinfo;
-	boxinfo += "\n";
-	boxinfo += "boxname=";
-	boxinfo += boxname;
-	boxinfo += "\n";
-	boxinfo += "boxarch=";
-	boxinfo += g_info.hw_caps->boxarch;
-
-	hh->printf("%s\n", boxinfo.c_str());
+	hh->printf("vendor=%s\nboxname=%s\nboxarch=%s\n",
+		   box.vendor.c_str(), box.model.c_str(), box.chipset.c_str());
 }
 
 void CControlAPI::HWInfoCGI(CyhookHandler *hh)
@@ -974,35 +984,15 @@ void CControlAPI::HWInfoCGI(CyhookHandler *hh)
 
 	hh->printf("%s %s (%s)\nMAC:%s\n", boxvendor.c_str(), g_info.hw_caps->boxname, g_info.hw_caps->boxarch, eth_id.c_str());
 }
-
-//-----------------------------------------------------------------------------
-void CControlAPI::OsInfoCGI(CyhookHandler *hh)
-{
-	std::string result;
-	std::ifstream osrelease("/etc/os-release");
-	if (osrelease.is_open())
-	{
-		std::string line;
-		while (std::getline(osrelease, line))
-		{
-			if (!line.empty())
-				result += line + "\n";
-		}
-		osrelease.close();
-	}
-	if (result.empty())
-		hh->SendError();
-	else
-		hh->printf("%s", result.c_str());
-}
-
 //-----------------------------------------------------------------------------
 void CControlAPI::ShutdownCGI(CyhookHandler *hh)
 {
 	if (hh->ParamList.empty())
 	{
-		NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::SHUTDOWN, CEventServer::INITID_HTTPD);
-		hh->SendOk();
+		if (coreapi::system::shutdown().ok())
+			hh->SendOk();
+		else
+			hh->SendError();
 	}
 	else
 		hh->SendError();
@@ -1013,8 +1003,10 @@ void CControlAPI::RebootCGI(CyhookHandler *hh)
 {
 	if (hh->ParamList.empty())
 	{
-		NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::REBOOT, CEventServer::INITID_HTTPD);
-		hh->SendOk();
+		if (coreapi::system::reboot().ok())
+			hh->SendOk();
+		else
+			hh->SendError();
 	}
 	else
 		hh->SendError();
@@ -1025,8 +1017,10 @@ void CControlAPI::RestartCGI(CyhookHandler *hh)
 {
 	if (hh->ParamList.empty())
 	{
-		NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::RESTART, CEventServer::INITID_HTTPD);
-		hh->SendOk();
+		if (coreapi::system::restart().ok())
+			hh->SendOk();
+		else
+			hh->SendError();
 	}
 	else
 		hh->SendError();
@@ -1181,29 +1175,42 @@ void CControlAPI::AudioCGI(CyhookHandler *hh)
 void CControlAPI::VolumeCGI(CyhookHandler *hh)
 {
 	if (hh->ParamList.empty()) {//without param: show actual volumen
-		unsigned int volume;
-		NeutrinoAPI->Zapit->getVolume(&volume, &volume);
-		hh->printf("%d", volume);
+		coreapi::Result<int> v = coreapi::osd::volume();
+		if (v.ok())
+			hh->printf("%d", v.value());
+		else
+			hh->SendError();
 	}
 	else if (hh->ParamList["1"].compare("mute") == 0)
 	{
-		char mute = 1;
-		NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::EVT_SET_MUTE, CEventServer::INITID_HTTPD, (void *)&mute, sizeof(char));
-		hh->SendOk();
+		if (coreapi::osd::setMuted(true).ok())
+			hh->SendOk();
+		else
+			hh->SendError();
 	}
 	else if (hh->ParamList["1"].compare("unmute") == 0)
 	{
-		char mute = 0;
-		NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::EVT_SET_MUTE, CEventServer::INITID_HTTPD, (void *)&mute, sizeof(char));
-		hh->SendOk();
+		if (coreapi::osd::setMuted(false).ok())
+			hh->SendOk();
+		else
+			hh->SendError();
 	}
 	else if (hh->ParamList["1"].compare("status") == 0) { // Mute status
-		(NeutrinoAPI->Zapit->getMuteStatus()) ? hh->Write("1") :  hh->Write("0");
+		coreapi::Result<bool> m = coreapi::osd::muted();
+		if (!m.ok())
+			hh->SendError();
+		else
+			m.value() ? hh->Write("1") : hh->Write("0");
 	}
 	else if(!hh->ParamList["1"].empty()) { //set volume
-		char vol = atol( hh->ParamList["1"].c_str() );
-		NeutrinoAPI->EventServer->sendEvent(NeutrinoMessages::EVT_SET_VOLUME, CEventServer::INITID_HTTPD, (void *)&vol, sizeof(char));
-		hh->SendOk();
+		/* Read wide and narrowed only once it is known to fit, so that a number
+		   too large for an int cannot wrap into the range the setter takes. */
+		long value = atol( hh->ParamList["1"].c_str() );
+		int percent = (value < 0 || value > 100) ? -1 : (int) value;
+		if (coreapi::osd::setVolume(percent).ok())
+			hh->SendOk();
+		else
+			hh->SendError();
 	}
 	else
 		hh->SendError();
@@ -1275,7 +1282,7 @@ void CControlAPI::LogolistCGI(CyhookHandler *hh)
 			}
 		}
 
-		if (hh->outType == plain)
+		if (hh->outType == httpd::compat::plain)
 		{
 			std::string outLine = string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS";%s;" PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS"", channel->getChannelID(), channel->getName().c_str(), (channel->getChannelID() & 0xFFFFFFFFFFFFULL));
 			if (files)
@@ -1313,9 +1320,26 @@ void CControlAPI::LogolistCGI(CyhookHandler *hh)
 	hh->SendResult(result);
 }
 //-----------------------------------------------------------------------------
+static bool isRadioChannel(coreapi::ServiceKind kind)
+{
+	return kind == coreapi::ServiceKind::Radio || kind == coreapi::ServiceKind::WebRadio;
+}
+
+// The numbers printed beside a channel count positions in the bouquet order,
+// which is not the number the channel carries once it sits in more than one
+// bouquet.
+static int channelsBeforeBouquet(const std::vector<uint32_t> &counts, int index)
+{
+	int n = 0;
+	for (int i = 0; i < index && i < (int) counts.size(); i++)
+		n += (int) counts[i];
+	return n;
+}
+
+//-----------------------------------------------------------------------------
 // get actual and next event data for given channel
 //-----------------------------------------------------------------------------
-std::string CControlAPI::_GetBouquetActualEPGItem(CyhookHandler *hh, CZapitChannel * channel)
+std::string CControlAPI::_GetBouquetActualEPGItem(CyhookHandler *hh, t_channel_id channel_id)
 {
 	std::string result, firstEPG, secondEPG = "";
 	t_channel_id current_channel = CZapit::getInstance()->GetCurrentChannelID();
@@ -1324,17 +1348,17 @@ std::string CControlAPI::_GetBouquetActualEPGItem(CyhookHandler *hh, CZapitChann
 
 	CSectionsdClient::responseGetCurrentNextInfoChannelID currentNextInfo;
 	CChannelEvent event;
-	NeutrinoAPI->GetChannelEvent(channel->getChannelID(), event);
+	NeutrinoAPI->GetChannelEvent(channel_id, event);
 
 	bool return_epginfo = (hh->ParamList["epginfo"] != "false");
 
-	result += hh->outPair("isActiveChannel", (channel->getChannelID() == current_channel) ? "true" : "false", false);
+	result += hh->outPair("isActiveChannel", (channel_id == current_channel) ? "true" : "false", false);
 
 	if (event.eventID) {
 		int percentage = 100;
 		if (event.duration > 0)
 			percentage = 100 * (time(NULL) - event.startTime) / event.duration;
-		CEitManager::getInstance()->getCurrentNextServiceKey(channel->getChannelID(), currentNextInfo);
+		CEitManager::getInstance()->getCurrentNextServiceKey(channel_id, currentNextInfo);
 		timestr = timeString(event.startTime);
 
 		firstEPG += hh->outPair("eventid", string_printf("%llu", currentNextInfo.current_uniqueKey), true);
@@ -1376,19 +1400,19 @@ std::string CControlAPI::_GetBouquetActualEPGItem(CyhookHandler *hh, CZapitChann
 
 //-----------------------------------------------------------------------------
 // produce data (collection) for given channel
-std::string CControlAPI::_GetBouquetWriteItem(CyhookHandler *hh, CZapitChannel * channel, int bouquetNr, int channelNr)
+std::string CControlAPI::_GetBouquetWriteItem(CyhookHandler *hh, t_channel_id channel_id, t_channel_id epg_id, const std::string &name, int bouquetNr, int channelNr)
 {
 	std::string result = "";
 	bool isEPGdetails = !(hh->ParamList["epg"].empty());
-	if (hh->outType == json || hh->outType == xml) {
+	if (hh->outType == httpd::compat::json || hh->outType == httpd::compat::xml) {
 		if (channelNr > -1)
 			result += hh->outPair("number", string_printf("%u", channelNr), true);
-		result += hh->outPair("id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel->getChannelID()), true);
-		result += hh->outPair("short_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel->getChannelID() & 0xFFFFFFFFFFFFULL), true);
-		result += hh->outPair("epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel->getEpgID()), true);
-		result += hh->outPair("short_epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel->getEpgID() & 0xFFFFFFFFFFFFULL), true);
-		result += hh->outPair("name", hh->outValue(channel->getName()), true);
-		result += hh->outPair("logo", hh->outValue(NeutrinoAPI->getLogoFile(channel->getChannelID())), false);
+		result += hh->outPair("id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id), true);
+		result += hh->outPair("short_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id & 0xFFFFFFFFFFFFULL), true);
+		result += hh->outPair("epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, epg_id), true);
+		result += hh->outPair("short_epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, epg_id & 0xFFFFFFFFFFFFULL), true);
+		result += hh->outPair("name", hh->outValue(name), true);
+		result += hh->outPair("logo", hh->outValue(NeutrinoAPI->getLogoFile(channel_id)), false);
 		if (bouquetNr > -1)
 		{
 			result += hh->outNext();
@@ -1397,54 +1421,32 @@ std::string CControlAPI::_GetBouquetWriteItem(CyhookHandler *hh, CZapitChannel *
 		if (isEPGdetails)
 		{
 			result += hh->outNext();
-			result += _GetBouquetActualEPGItem(hh, channel);
+			result += _GetBouquetActualEPGItem(hh, channel_id);
 		}
 		result = hh->outArrayItem("channel", result, false);
 	}
 	else {
 		CChannelEvent event;
-		NeutrinoAPI->GetChannelEvent(channel->getChannelID(), event);
+		NeutrinoAPI->GetChannelEvent(channel_id, event);
 
 		if (event.eventID && isEPGdetails) {
 			result += string_printf("%u "
 					PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS
 					" %s (%s)\n",
 					channelNr,
-					channel->getChannelID(),
-					channel->getName().c_str(), event.description.c_str());
+					channel_id,
+					name.c_str(), event.description.c_str());
 		} else {
 			result += string_printf("%u "
 					PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS
 					" %s\n",
 					channelNr,
-					channel->getChannelID(),
-					channel->getName().c_str());
+					channel_id,
+					name.c_str());
 		}
 	}
 	return result;
 }
-//-------------------------------------------------------------------------
-// mode=tv|radio|all for the bouquet calls. /control/getmode answers in lower
-// case, so accept any spelling instead of silently falling back. Zapit reports
-// MODE_CURRENT while neither tv nor radio is active - callers count channels
-// per mode and would come up empty on it, so never hand that out.
-static int requestedChannelsMode(CyhookHandler *hh, int fallback)
-{
-	std::string mode = hh->ParamList["mode"];
-	std::transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
-
-	if (mode == "tv")
-		return CZapitClient::MODE_TV;
-	if (mode == "radio")
-		return CZapitClient::MODE_RADIO;
-	if (mode == "all")
-		return CZapitClient::MODE_ALL;
-
-	if (fallback == CZapitClient::MODE_TV || fallback == CZapitClient::MODE_RADIO || fallback == CZapitClient::MODE_ALL)
-		return fallback;
-	return CZapitClient::MODE_TV;
-}
-
 //-------------------------------------------------------------------------
 /** List all channels for given bouquet (or all) or show actual bouquet number
  * @param hh CyhookHandler
@@ -1453,7 +1455,7 @@ static int requestedChannelsMode(CyhookHandler *hh, int fallback)
  * Get bouquet list (all) oder filtered to a given bouquet number
  * Option epg=true for actual and next epg data for each channel
  * @code
- * /control/getbouquet?[bouquet=<bouquet number>][&mode=tv|radio|all][&epg=true[&epginfo=false]]
+ * /control/getbouquet?[bouquet=<bouquet number>][&mode=TV|RADIO][&epg=true[&epginfo=false]]
  * @endcode
  * Get the actual used bouquet number
  * @code
@@ -1544,7 +1546,14 @@ void CControlAPI::GetBouquetCGI(CyhookHandler *hh)
 
 	std::string result = "";
 	if (!(hh->ParamList.empty())) {
-		int mode = requestedChannelsMode(hh, NeutrinoAPI->Zapit->getMode());
+		int mode = NeutrinoAPI->Zapit->getMode();
+
+		if (hh->ParamList["mode"].compare("TV") == 0)
+			mode = CZapitClient::MODE_TV;
+		else if (hh->ParamList["mode"].compare("RADIO") == 0)
+			mode = CZapitClient::MODE_RADIO;
+		else if (hh->ParamList["mode"].compare("all") == 0)
+			mode = CZapitClient::MODE_ALL;
 
 		// Get Bouquet Number. First matching current channel
 		if (hh->ParamList["1"] == "actual") {
@@ -1558,9 +1567,16 @@ void CControlAPI::GetBouquetCGI(CyhookHandler *hh)
 			hh->printf("%d", actual);
 		}
 		else {
+			coreapi::Result<coreapi::BouquetList> bl = coreapi::channels::bouquets();
+			if (!bl.ok()) {
+				hh->SendError();
+				return;
+			}
+			const coreapi::BouquetList &bouquets = bl.value();
+
 			int BouquetNr = -1; // -1 = all bouquets
 			int startBouquet = 0;
-			int bsize = (int) g_bouquetManager->Bouquets.size();
+			int bsize = (int) bouquets.size();
 			if (!hh->ParamList["bouquet"].empty()) {
 				// list for given bouquet
 				BouquetNr = atoi(hh->ParamList["bouquet"].c_str());
@@ -1577,30 +1593,75 @@ void CControlAPI::GetBouquetCGI(CyhookHandler *hh)
 			if (!(hh->ParamList["epg"].empty()))
 				NeutrinoAPI->GetChannelEvents();
 			const char *json_delimiter = "";
-			if (mode == CZapitClient::MODE_RADIO || mode == CZapitClient::MODE_ALL)
+
+			// Read once, printed twice. A mixed listing walks each bouquet for
+			// radio and again for television, and two reads could come from
+			// either side of a channel list reload.
+			std::vector<coreapi::ChannelList> members;
+			// A bouquet that could not be read is not a bouquet with no
+			// channels, and the two have to stay apart below.
+			std::vector<char> members_read;
+			if (bsize > startBouquet) {
+				members.resize((size_t) (bsize - startBouquet));
+				members_read.resize((size_t) (bsize - startBouquet), 0);
+			}
+			for (int i = startBouquet; i < bsize; i++) {
+				coreapi::Result<coreapi::ChannelList> cl = coreapi::channels::bouquetChannels((uint32_t) i + 1);
+				if (cl.ok()) {
+					members[(size_t) (i - startBouquet)] = std::move(cl).value();
+					members_read[(size_t) (i - startBouquet)] = 1;
+				}
+			}
+
+			// Counted from the read that produced the channels, so the numbers
+			// beside them cannot come from a different channel list. A listing
+			// narrowed to one bouquet never reads the ones before it, and
+			// their sizes stay those of the bouquet list.
+			std::vector<uint32_t> tv_count, radio_count;
+			for (size_t b = 0; b < bouquets.size(); b++) {
+				tv_count.push_back(bouquets[b].tv_count);
+				radio_count.push_back(bouquets[b].radio_count);
+			}
+			for (int i = startBouquet; i < bsize; i++) {
+				if (i < 0 || i >= (int) bouquets.size())
+					continue;
+				// A bouquet nobody could read keeps the size the bouquet list
+				// gave it, so failing to read one costs its own rows and does
+				// not renumber every bouquet behind it.
+				if (!members_read[(size_t) (i - startBouquet)])
+					continue;
+				const coreapi::ChannelList &c = members[(size_t) (i - startBouquet)];
+				uint32_t radio = 0;
+				for (size_t k = 0; k < c.size(); k++)
+					if (isRadioChannel(c[k].kind))
+						radio++;
+				radio_count[(size_t) i] = radio;
+				tv_count[(size_t) i] = (uint32_t) c.size() - radio;
+			}
+
+			// Radio before television, and every bouquet walked once per kind,
+			// because that is the order the listing has.
+			for (int pass = 0; pass < 2; pass++) {
+				bool tv = (pass == 1);
+				int wanted = tv ? CZapitClient::MODE_TV : CZapitClient::MODE_RADIO;
+				if (mode != wanted && mode != CZapitClient::MODE_ALL)
+					continue;
 				for (int i = startBouquet; i < bsize; i++) {
-					ZapitChannelList channels = g_bouquetManager->Bouquets[i]->radioChannels;
-					int num = 1 + g_bouquetManager->radioChannelsBegin().getNrofFirstChannelofBouquet(i);
-					int size = (int) channels.size();
-					for (int j = 0; j < size; j++) {
-						CZapitChannel * channel = channels[j];
+					const coreapi::ChannelList &channels = members[(size_t) (i - startBouquet)];
+					int num = 1 + channelsBeforeBouquet(tv ? tv_count : radio_count, i);
+					int j = 0;
+					for (size_t k = 0; k < channels.size(); k++) {
+						if (isRadioChannel(channels[k].kind) == tv)
+							continue;
 						result += json_delimiter;
-						json_delimiter = (outType == json) ? ",\n" : "";
-						result += _GetBouquetWriteItem(hh, channel, i, num + j);
+						json_delimiter = (outType == httpd::compat::json) ? ",\n" : "";
+						result += _GetBouquetWriteItem(hh, (t_channel_id) channels[k].id,
+									       (t_channel_id) channels[k].epg_id,
+									       channels[k].name, i, num + j);
+						j++;
 					}
 				}
-			if (mode == CZapitClient::MODE_TV || mode == CZapitClient::MODE_ALL)
-				for (int i = startBouquet; i < bsize; i++) {
-					ZapitChannelList channels = g_bouquetManager->Bouquets[i]->tvChannels;
-					int num = 1 + g_bouquetManager->tvChannelsBegin().getNrofFirstChannelofBouquet(i);
-					int size = (int) channels.size();
-					for (int j = 0; j < size; j++) {
-						CZapitChannel * channel = channels[j];
-						result += json_delimiter;
-						json_delimiter = (outType == json) ? ",\n" : "";
-						result += _GetBouquetWriteItem(hh, channel, i, num + j);
-					}
-				}
+			}
 			result = hh->outArray("channels", result);
 
 			hh->SendResult(result);
@@ -1650,19 +1711,40 @@ void CControlAPI::GetChannelCGI(CyhookHandler *hh)
 
 	std::string result = "";
 
-	t_channel_id channel_id = 0;
 	if (hh->ParamList["id"].empty())
-		channel_id = CZapit::getInstance()->GetCurrentChannelID();
-	else
-		sscanf(hh->ParamList["id"].c_str(), SCANF_CHANNEL_ID_TYPE, &channel_id);
+	{
+		coreapi::Result<coreapi::ChannelInfo> current = coreapi::channels::current();
+		if (!current.ok())
+		{
+			// Nothing running is one answer. A running channel the list does
+			// not hold is the other, and it reads like a bad id, which on this
+			// path is the empty one.
+			if (current.error().status == coreapi::Status::NotFound)
+				hh->SendError();
+			else
+				hh->SendError(hh->ParamList["id"] + " seems wrong");
+			return;
+		}
+		NeutrinoAPI->GetChannelEvents();
+		const coreapi::ChannelInfo &ci = current.value();
+		result = _GetBouquetWriteItem(hh, (t_channel_id) ci.id, (t_channel_id) ci.epg_id, ci.name, -1, -1);
+		result = hh->outArray("channel", result);
+		hh->SendResult(result);
+		return;
+	}
+
+	t_channel_id channel_id = 0;
+	sscanf(hh->ParamList["id"].c_str(), SCANF_CHANNEL_ID_TYPE, &channel_id);
 
 	if (channel_id != 0)
 	{
 		NeutrinoAPI->GetChannelEvents();
+		// The lookup ignores the top sixteen bits, so a caller may name a
+		// channel by the short id this module prints beside it.
 		CZapitChannel * channel = CServiceManager::getInstance()->FindChannel48(channel_id);
 		if (channel)
 		{
-			result = _GetBouquetWriteItem(hh, channel, -1, -1);
+			result = _GetBouquetWriteItem(hh, channel->getChannelID(), channel->getEpgID(), channel->getName(), -1, -1);
 			result = hh->outArray("channel", result);
 			hh->SendResult(result);
 		}
@@ -1674,33 +1756,12 @@ void CControlAPI::GetChannelCGI(CyhookHandler *hh)
 }
 
 //-------------------------------------------------------------------------
-// Is bouquet i part of the requested listing? Used twice per bouquet: once for
-// the bouquet itself and once to look ahead for the array separator.
-static bool listedBouquet(int i, int mode, bool show_hidden, bool fav)
-{
-	CZapitBouquet *b = g_bouquetManager->Bouquets[i];
-	unsigned int channel_count = 0;
-
-	switch (mode) {
-		case CZapitClient::MODE_RADIO:
-			channel_count = b->radioChannels.size();
-			break;
-		case CZapitClient::MODE_TV:
-			channel_count = b->tvChannels.size();
-			break;
-		case CZapitClient::MODE_ALL:
-			channel_count = b->radioChannels.size() + b->tvChannels.size();
-	}
-	return channel_count && (!b->bHidden || show_hidden) && (!fav || b->bUser);
-}
-
-//-------------------------------------------------------------------------
 /** Return all bouquets
  * @param hh CyhookHandler
  *
  * @par nhttpd-usage
  * @code
- * /control/getbouquets?[showhidden=true|false][&encode=true|false][&mode=tv|radio|all][&format=|xml|json]
+ * /control/getbouquets?[showhidden=true|false][&encode=true|false][&format=|xml|json]
  *
  * @endcode
  * @par
@@ -1765,12 +1826,6 @@ void CControlAPI::GetBouquetsCGI(CyhookHandler *hh)
 
 	TOutType outType = hh->outStart();
 
-	if (!g_bouquetManager) {
-		result = hh->outArray("bouquets", result);
-		hh->SendResult(result);
-		return;
-	}
-
 	if (hh->ParamList["showhidden"] == "false")
 		show_hidden = false;
 
@@ -1781,32 +1836,49 @@ void CControlAPI::GetBouquetsCGI(CyhookHandler *hh)
 	if (hh->ParamList["fav"] == "true")
 		fav = true;
 
-	int mode = requestedChannelsMode(hh, NeutrinoAPI->Zapit->getMode());
+	int mode = NeutrinoAPI->Zapit->getMode();
+	if (hh->ParamList["mode"].compare("all") == 0)
+		mode = CZapitClient::MODE_ALL;
+	else if (hh->ParamList["mode"].compare("TV") == 0)
+		mode = CZapitClient::MODE_TV;
+	else if (hh->ParamList["mode"].compare("RADIO") == 0)
+		mode = CZapitClient::MODE_RADIO;
+ 
+	coreapi::Result<coreapi::BouquetList> bl = coreapi::channels::bouquets();
+	if (!bl.ok())
+	{
+		hh->SendError();
+		return;
+	}
+	const coreapi::BouquetList &bouquets = bl.value();
 
 	std::string bouquet;
-	for (int i = 0, size = (int) g_bouquetManager->Bouquets.size(); i < size; i++) {
-		if (!listedBouquet(i, mode, show_hidden, fav))
-			continue;
-
-		/* The separator belongs after the last *listed* bouquet, not after the
-		   last one in Bouquets. Filtered-out entries at the end of the list
-		   would otherwise leave a trailing comma and break the json. */
-		bool has_next = false;
-		for (int j = i + 1; j < size && !has_next; j++)
-			has_next = listedBouquet(j, mode, show_hidden, fav);
-
+	for (int i = 0, size = (int) bouquets.size(); i < size; i++) {
 		std::string item = "";
-		bouquet = std::string(g_bouquetManager->Bouquets[i]->bName.c_str());
-		if (encode)
-			bouquet = encodeString(bouquet); // encode (URLencode) the bouquetname
-		if (outType == plain)
-			item = string_printf("%u", i + 1) + " " + bouquet + "\n";
-		else
-		{
-			item = hh->outPair("number", string_printf("%u", i + 1), true);
-			item += hh->outPair("name", hh->outValue(bouquet), false);
+		unsigned int channel_count = 0;
+		switch (mode) {
+			case CZapitClient::MODE_RADIO:
+				channel_count = bouquets[i].radio_count;
+				break;
+			case CZapitClient::MODE_TV:
+				channel_count = bouquets[i].tv_count;
+				break;
+			case CZapitClient::MODE_ALL:
+				channel_count = bouquets[i].radio_count + bouquets[i].tv_count;
 		}
-		result += hh->outArrayItem("bouquet", item, has_next);
+		if (channel_count && (!bouquets[i].hidden || show_hidden) && (!fav || bouquets[i].user_bouquet)) {
+			bouquet = bouquets[i].name;
+			if (encode)
+				bouquet = encodeString(bouquet); // encode (URLencode) the bouquetname
+			if (outType == httpd::compat::plain)
+				item = string_printf("%u", bouquets[i].id) + " " + bouquet + "\n";
+			else
+			{
+				item = hh->outPair("number", string_printf("%u", bouquets[i].id), true);
+				item += hh->outPair("name", bouquet, false);
+			}
+			result += hh->outArrayItem("bouquet", item, (i < size-1));
+		}
 	}
 	result = hh->outArray("bouquets", result);
 
@@ -1832,50 +1904,56 @@ std::string CControlAPI::channelEPGformated(CyhookHandler *hh, int bouquetnr, t_
 	channelData += hh->outPair("short_epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, epg_id & 0xFFFFFFFFFFFFULL), (bouquetnr > -1));
 	if (bouquetnr > -1)
 		channelData += hh->outPair("bouquetnr", string_printf("%d", bouquetnr), false);
-	if (hh->outType == json)
+	if (hh->outType == httpd::compat::json)
 		channelData = hh->outObject("channelData", channelData);
-	int i = 0;
-	CChannelEventList::iterator eventIterator;
 	bool isFirstLine = true;
 
-	CChannelEventList eList;
-	CEitManager::getInstance()->getEventsServiceKey(epg_id, eList);
+	coreapi::Result<coreapi::EventList> events =
+		coreapi::epg::forChannel((coreapi::ChannelId) epg_id, EPG_WHOLE_FROM, EPG_WHOLE_TO);
+	// An EPG that cannot be read leaves the channel with no programme rows,
+	// which is what an empty schedule already produced here.
+	coreapi::EventList eList;
+	if (events.ok())
+		eList = std::move(events).value();
 
-	for (eventIterator = eList.begin(); eventIterator != eList.end(); ++eventIterator, i++) {
-		if ((max != -1 && i >= max) || (stoptime != -1 && eventIterator->startTime >= stoptime))
+	for (size_t i = 0; i < eList.size(); i++) {
+		const coreapi::EventInfo &event = eList[i];
+		if ((max != -1 && (int) i >= max) || (stoptime != -1 && event.start >= stoptime))
 			break;
 		std::string prog = "";
-		if (hh->outType == plain)
+		if (hh->outType == httpd::compat::plain)
 			prog += hh->outSingle("");
 
 		prog += hh->outPair("bouquetnr", string_printf("%d", bouquetnr), true);
 		prog += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id), true);
 		prog += hh->outPair("epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, epg_id), true);
-		prog += hh->outPair("eventid", string_printf("%llu", eventIterator->eventID), true);
-		prog += hh->outPair("eventid_hex", string_printf("%llx", eventIterator->eventID), true);
-		prog += hh->outPair("start_sec", string_printf("%ld", eventIterator->startTime), true);
+		prog += hh->outPair("eventid", string_printf("%llu", event.event_id), true);
+		prog += hh->outPair("eventid_hex", string_printf("%llx", event.event_id), true);
+		prog += hh->outPair("start_sec", string_printf("%ld", event.start), true);
 		char zbuffer[25] = { 0 };
-		struct tm *mtime = localtime(&eventIterator->startTime);
+		struct tm *mtime = localtime(&event.start);
 		strftime(zbuffer, 20, "%H:%M", mtime);
 		prog += hh->outPair("start_t", std::string(zbuffer), true);
 		memset(zbuffer, 0, sizeof(zbuffer));
 		strftime(zbuffer, 20, "%d.%m.%Y", mtime);
 		prog += hh->outPair("date", std::string(zbuffer), true);
-		prog += hh->outPair("stop_sec", string_printf("%ld", eventIterator->startTime + eventIterator->duration), true);
-		time_t _stoptime = eventIterator->startTime + eventIterator->duration;
+		prog += hh->outPair("stop_sec", string_printf("%ld", event.start + event.duration), true);
+		time_t _stoptime = event.start + event.duration;
 		mtime = localtime(&_stoptime);
 		strftime(zbuffer, 20, "%H:%M", mtime);
 		prog += hh->outPair("stop_t", std::string(zbuffer), true);
-		prog += hh->outPair("duration_min", string_printf("%d", (int) (eventIterator->duration / 60)), true);
+		prog += hh->outPair("duration_min", string_printf("%d", (int) (event.duration / 60)), true);
 
 		if (!(hh->ParamList["details"].empty())) {
 			CShortEPGData epg;
-			if (CEitManager::getInstance()->getEPGidShort(eventIterator->eventID, &epg)) {
+			if (CEitManager::getInstance()->getEPGidShort(event.event_id, &epg)) {
 				prog += hh->outPair("info1", hh->outValue(epg.info1), true);
 				prog += hh->outPair("info2", hh->outValue(epg.info2), true);
 			}
 		}
-		prog += hh->outPair("description", hh->outValue(eventIterator->description), false);
+		// The title, because the event manager's description is the event's
+		// name and that is what this field has always carried.
+		prog += hh->outPair("description", hh->outValue(event.title), false);
 
 		if(isFirstLine)
 			isFirstLine = false;
@@ -1883,7 +1961,7 @@ std::string CControlAPI::channelEPGformated(CyhookHandler *hh, int bouquetnr, t_
 			result += hh->outNext();
 		result += hh->outArrayItem("prog", prog, false);
 	}
-	if(hh->outType == json)
+	if(hh->outType == httpd::compat::json)
 		result = hh->outArray("progData", result);
 	result = channelData + hh->outNext() + result;
 	return result;
@@ -1943,7 +2021,12 @@ void CControlAPI::epgDetailList(CyhookHandler *hh)
 
 		if(bouquetnr >= 0 && !all_bouquets) {
 			start_bouquet = bouquetnr;
-			bouquet_size = bouquetnr+1;
+			// The number came out of the request and nothing above it has
+			// been compared with the bouquet count, so one past the end
+			// indexed the vector past its end. Left below the start when it
+			// is out of range, which is the loop's own way of doing nothing.
+			if (bouquetnr + 1 < bouquet_size)
+				bouquet_size = bouquetnr + 1;
 		}
 		// list all bouquets			if(encode)
 		ZapitChannelList channels;
@@ -2099,7 +2182,7 @@ void CControlAPI::SendFoundEvents(CyhookHandler *hh, bool xml_format)
 
 			struct tm *tmStartZeit = localtime(&eventIterator->startTime);
 			item.clear();
-			if (hh->outType == json || hh->outType == xml)
+			if (hh->outType == httpd::compat::json || hh->outType == httpd::compat::xml)
 			{
 				item += hh->outPair("channelname", NeutrinoAPI->GetServiceName(chan_id), true);
 				item += hh->outPair("epgtitle", hh->outValue(epg.title), true);
@@ -2196,14 +2279,14 @@ void CControlAPI::SendFoundEvents(CyhookHandler *hh, bool xml_format)
 void CControlAPI::EpgCGI(CyhookHandler *hh)
 {
 	bool param_empty = hh->ParamList.empty();
-	hh->SetHeader(HTTP_OK, "text/plain; charset=UTF-8"); // default
+	hh->SetHeader(httpd::compat::HTTP_OK, "text/plain; charset=UTF-8"); // default
 	// Detailed EPG list in XML or JSON
-	if (hh->getOutType() == xml || hh->getOutType() == json || !hh->ParamList["detaillist"].empty()) {
+	if (hh->getOutType() == httpd::compat::xml || hh->getOutType() == httpd::compat::json || !hh->ParamList["detaillist"].empty()) {
 		epgDetailList(hh);
 	}
 	// Standard list normal or extended
 	else if (param_empty || hh->ParamList["1"] == "ext") {
-		hh->SetHeader(HTTP_OK, "text/plain; charset=UTF-8");
+		hh->SetHeader(httpd::compat::HTTP_OK, "text/plain; charset=UTF-8");
 		bool isExt = (hh->ParamList["1"] == "ext");
 		CChannelEvent event;
 		NeutrinoAPI->GetChannelEvents();
@@ -2225,7 +2308,7 @@ void CControlAPI::EpgCGI(CyhookHandler *hh)
 	}
 	else if (!hh->ParamList["search"].empty())
 	{
-		SendFoundEvents(hh, (hh->getOutType() == xml));
+		SendFoundEvents(hh, (hh->getOutType() == httpd::compat::xml));
 	}
 	// query details for given eventid
 	else if (!hh->ParamList["eventid"].empty()) {
@@ -2257,13 +2340,17 @@ void CControlAPI::EpgCGI(CyhookHandler *hh)
 	else if (!(hh->ParamList["id"].empty())) {
 		t_channel_id channel_id = 0;
 		sscanf(hh->ParamList["id"].c_str(), SCANF_CHANNEL_ID_TYPE, &channel_id);
-		CChannelEventList eList;
-		CEitManager::getInstance()->getEventsServiceKey(channel_id, eList);
-		CChannelEventList::iterator eventIterator;
-		for (eventIterator = eList.begin(); eventIterator != eList.end(); ++eventIterator) {
+		coreapi::Result<coreapi::EventList> events =
+			coreapi::epg::forChannel((coreapi::ChannelId) channel_id, EPG_WHOLE_FROM, EPG_WHOLE_TO);
+		coreapi::EventList eList;
+		if (events.ok())
+			eList = std::move(events).value();
+		for (size_t i = 0; i < eList.size(); i++) {
+			// The three lines below come from the long form of the event, which
+			// carries texts the listing does not, so it stays a read of its own.
 			CShortEPGData epg;
-			if (CEitManager::getInstance()->getEPGidShort(eventIterator->eventID, &epg)) {
-				hh->printf("%" PRIu64 " %" PRIdMAX " %d\n", eventIterator->eventID, static_cast<intmax_t>(eventIterator->startTime), eventIterator->duration);
+			if (CEitManager::getInstance()->getEPGidShort(eList[i].event_id, &epg)) {
+				hh->printf("%" PRIu64 " %" PRIdMAX " %d\n", eList[i].event_id, static_cast<intmax_t>(eList[i].start), eList[i].duration);
 				hh->printf("%s\n", epg.title.c_str());
 				hh->printf("%s\n", epg.info1.c_str());
 				hh->printf("%s\n\n", epg.info2.c_str());
@@ -2282,7 +2369,7 @@ void CControlAPI::EpgCGI(CyhookHandler *hh)
 //-----------------------------------------------------------------------------
 void CControlAPI::VersionCGI(CyhookHandler *hh)
 {
-	hh->SendFile(getVersionInfoPath());
+	hh->SendFile(IMAGE_VERSION_FILE);
 }
 //-----------------------------------------------------------------------------
 void CControlAPI::ReloadNeutrinoSetupCGI(CyhookHandler *hh)
@@ -2387,7 +2474,6 @@ void CControlAPI::ZaptoCGI(CyhookHandler *hh)
 			if(!NeutrinoAPI->Zapit->isPlayBackActive()){
 				NeutrinoAPI->Zapit->startPlayBack();
 				NeutrinoAPI->Sectionsd->setPauseScanning(false);
-				yprintf("start playback requested..\n");
 			}
 			hh->SendOk();
 		}
@@ -2431,8 +2517,7 @@ void CControlAPI::ZaptoCGI(CyhookHandler *hh)
 		}
 		else if (!hh->ParamList["subchannel"].empty())
 		{
-			extern CRemoteControl * g_RemoteControl;
-			if (!g_RemoteControl->subChannels.empty())
+			if (!::g_RemoteControl->subChannels.empty())
 			{
 				NeutrinoAPI->ZapToSubService(hh->ParamList["subchannel"].c_str());
 				hh->SendOk();
@@ -2505,13 +2590,16 @@ void CControlAPI::LCDAction(CyhookHandler *hh)
 //-------------------------------------------------------------------------
 void CControlAPI::SendEventList(CyhookHandler *hh, t_channel_id channel_id)
 {
-	int pos = 0;
-	CChannelEventList eList;
-	CEitManager::getInstance()->getEventsServiceKey(channel_id, eList);
-	CChannelEventList::iterator eventIterator;
+	coreapi::Result<coreapi::EventList> events =
+		coreapi::epg::forChannel((coreapi::ChannelId) channel_id, EPG_WHOLE_FROM, EPG_WHOLE_TO);
+	if (!events.ok())
+		return;
 
-	for (eventIterator = eList.begin(); eventIterator != eList.end(); ++eventIterator, pos++)
-		hh->printf("%llu %ld %d %s\n", eventIterator->eventID, eventIterator->startTime, eventIterator->duration, eventIterator->description.c_str());
+	const coreapi::EventList &eList = events.value();
+	// The title, because the event manager calls an event's name its
+	// description and that is the name this listing has always printed.
+	for (size_t i = 0; i < eList.size(); i++)
+		hh->printf("%llu %ld %d %s\n", eList[i].event_id, eList[i].start, eList[i].duration, eList[i].title.c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -2521,25 +2609,34 @@ void CControlAPI::SendChannelList(CyhookHandler *hh, bool currentTP)
 	std::vector<t_channel_id> v;
 
 	if(currentTP){
-		current_channel = CZapit::getInstance()->GetCurrentChannelID();
-		current_channel=(current_channel>>16);
+		// The filter wants the transponder half of the running id, and that
+		// half is still there when the channel list cannot resolve the id.
+		current_channel = CZapit::getInstance()->GetCurrentChannelID() >> 16;
 	}
 
-	hh->SetHeader(HTTP_OK, "text/plain; charset=UTF-8");
-	if (!g_bouquetManager)
+	hh->SetHeader(httpd::compat::HTTP_OK, "text/plain; charset=UTF-8");
+	coreapi::Result<coreapi::BouquetList> bl = coreapi::channels::bouquets();
+	if (!bl.ok())
 		return;
-	int mode = NeutrinoAPI->Zapit->getMode();
-	CBouquetManager::ChannelIterator cit = mode == CZapitClient::MODE_RADIO ? g_bouquetManager->radioChannelsBegin() : g_bouquetManager->tvChannelsBegin();
-	for (; !(cit.EndOfChannels()); cit++) {
-		CZapitChannel * channel = *cit;
-		if(!currentTP || (channel->getChannelID() >>16) == current_channel){
-
-			size_t pos = std::find(v.begin(), v.end(), channel->getChannelID()) - v.begin();
-			if( pos < v.size() )
+	// The listing follows the bouquet order rather than the channel list's own,
+	// so a channel in two bouquets is printed once, where it first appears.
+	bool radio = NeutrinoAPI->Zapit->getMode() == CZapitClient::MODE_RADIO;
+	for (size_t i = 0, size = bl.value().size(); i < size; i++) {
+		coreapi::Result<coreapi::ChannelList> cl = coreapi::channels::bouquetChannels((uint32_t) i + 1);
+		if (!cl.ok())
+			continue;
+		const coreapi::ChannelList &channels = cl.value();
+		for (size_t j = 0; j < channels.size(); j++) {
+			t_channel_id id = (t_channel_id) channels[j].id;
+			if (isRadioChannel(channels[j].kind) != radio)
 				continue;
-			v.push_back(channel->getChannelID());
+			if (currentTP && (id >> 16) != current_channel)
+				continue;
+			if (std::find(v.begin(), v.end(), id) != v.end())
+				continue;
+			v.push_back(id);
 
-			hh->printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS " %s\n", channel->getChannelID(), channel->getName().c_str());
+			hh->printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS " %s\n", id, channels[j].name.c_str());
 		}
 	}
 }
@@ -2677,19 +2774,22 @@ void CControlAPI::SendAllCurrentVAPid(CyhookHandler *hh)
 //-----------------------------------------------------------------------------
 void CControlAPI::SendTimersPlain(CyhookHandler *hh)
 {
-	CTimerd::TimerList timerlist;			// List of bouquets
 	bool send_id = false;
 
 	if (hh->ParamList["format"] == "id")
 		send_id = true;
 
-	timerlist.clear();
-	NeutrinoAPI->Timerd->getTimerList(timerlist);
+	// A list that could not be read prints nothing, which is what this printed
+	// before whenever the daemon answered with nothing.
+	coreapi::Result<coreapi::TimerList> read = coreapi::timers::list();
+	if (!read.ok())
+		return;
+	const coreapi::TimerList &timerlist = read.value();
 
-	CTimerd::TimerList::iterator timer = timerlist.begin();
-
-	for(; timer != timerlist.end(); ++timer)
+	for (size_t i = 0; i < timerlist.size(); i++)
 	{
+		const coreapi::TimerInfo &timer = timerlist[i];
+
 		// Add Data
 		char zAddData[22+1] = { 0 };
 		if (send_id)
@@ -2698,19 +2798,19 @@ void CControlAPI::SendTimersPlain(CyhookHandler *hh)
 			zAddData[1] = 0;
 		}
 
-		switch(timer->eventType) {
+		switch((CTimerd::CTimerEventTypes) timer.type) {
 		//case CTimerd::TIMER_NEXTPROGRAM:
 		case CTimerd::TIMER_ZAPTO:
 		case CTimerd::TIMER_RECORD:
 			if (!send_id)
 			{
-				strncpy(zAddData, NeutrinoAPI->GetServiceName(timer->channel_id).c_str(), 22);
+				strncpy(zAddData, NeutrinoAPI->GetServiceName(timer.channel_id).c_str(), 22);
 				if (zAddData[0] == 0)
-					strcpy(zAddData, CServiceManager::getInstance()->IsChannelTVChannel(timer->channel_id) ?
+					strcpy(zAddData, CServiceManager::getInstance()->IsChannelTVChannel(timer.channel_id) ?
 							"Unknown TV-Channel" : "Unknown Radio-Channel");
 			}
 			else
-				snprintf(zAddData,sizeof(zAddData), PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer->channel_id);
+				snprintf(zAddData,sizeof(zAddData), PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer.channel_id);
 
 			zAddData[22]=0;
 
@@ -2718,12 +2818,12 @@ void CControlAPI::SendTimersPlain(CyhookHandler *hh)
 
 		case CTimerd::TIMER_STANDBY:
 			if (!send_id)
-				snprintf(zAddData,sizeof(zAddData),"Standby: %s",(timer->standby_on ? "ON" : "OFF"));
+				snprintf(zAddData,sizeof(zAddData),"Standby: %s",(timer.standby_on ? "ON" : "OFF"));
 			break;
 
 		case CTimerd::TIMER_REMIND :
 			if (!send_id)
-				strncpy(zAddData, timer->message, 22);
+				strncpy(zAddData, timer.title.c_str(), 22);
 			zAddData[22]=0;
 			break;
 
@@ -2732,13 +2832,13 @@ void CControlAPI::SendTimersPlain(CyhookHandler *hh)
 		}
 
 		hh->printf("%d %d %d %d %d %d %d %s\n",
-			   timer->eventID,
-			   (int)timer->eventType,
-			   (int)timer->eventRepeat,
-			   (int)timer->repeatCount,
-			   (int)timer->announceTime,
-			   (int)timer->alarmTime,
-			   (int)timer->stopTime,
+			   (int)timer.id,
+			   timer.type,
+			   timer.repeat,
+			   (int)timer.repeat_count,
+			   (int)timer.announce,
+			   (int)timer.start,
+			   (int)timer.stop,
 			   zAddData);
 	}
 }
@@ -2764,16 +2864,88 @@ std::string CControlAPI::_SendTime(CyhookHandler *hh, struct tm *Time, int digit
 	return result;
 }
 //-----------------------------------------------------------------------------
+// The text a label stands for, out of this program's own locale rather than
+// out of the language files the removed server kept beside its pages. Every
+// timerlist label the two helpers below produce is written in those locale
+// files and in none of those language files, and the removed server's own
+// lookup fell through to the locale for exactly that reason, so what a client
+// reads here does not move.
+//
+// The seven weekday labels are the one exception: they were written only in
+// the language files that go out with the pages, and this program writes the
+// same seven days under names of its own. Mapped rather than let fall through,
+// because a timer repeating on weekdays would otherwise name its days with the
+// token nobody resolved. The abbreviation is then this program's and not
+// always the one those files held.
+static std::string translateLabel(const std::string &id)
+{
+	static const char *const kWeekdayLabels[7] =
+	{
+		"date.su", "date.mo", "date.tu", "date.we", "date.th", "date.fr", "date.sa"
+	};
+	for (int i = 0; i < 7; i++)
+		if (id == kWeekdayLabels[i])
+			return g_Locale->getText(CLocaleManager::getWeekday(i));
+
+	const neutrino_locale_t locale = CLocaleManager::getLocale(id.c_str());
+	if (locale != NONEXISTANT_LOCALE)
+		return g_Locale->getText(locale);
+
+	// What the removed server answered for a name none of its sources held.
+	return "# " + id + " #";
+}
+
+// The templated pages are run through the parser before they are sent and the
+// control API's answers are not, so a label left as a token reaches a client
+// with no way to resolve it. Resolved here rather than where the token is made,
+// because the two helpers that make them also feed the templated pages, where
+// the token is what belongs. A token without an end is left alone: it is not a
+// label, and dropping the rest of the text would lose more than it fixes.
+static std::string resolveLabels(const std::string &text)
+{
+	static const char OPEN[] = "{=L:";
+	static const char CLOSE[] = "=}";
+	const size_t open_len = sizeof(OPEN) - 1;
+	const size_t close_len = sizeof(CLOSE) - 1;
+
+	std::string out;
+	size_t pos = 0;
+	for (;;)
+	{
+		size_t start = text.find(OPEN, pos);
+		if (start == std::string::npos)
+			break;
+		size_t end = text.find(CLOSE, start + open_len);
+		if (end == std::string::npos)
+			break;
+		out.append(text, pos, start - pos);
+		out += translateLabel(text.substr(start + open_len, end - start - open_len));
+		pos = end + close_len;
+	}
+	out.append(text, pos, std::string::npos);
+	return out;
+}
+
+// The order the list has always been sent in. The daemon's own comparison is
+// this one, so a list built from the same rows in the same order comes out in
+// the same order as before.
+static bool earlierAlarm(const coreapi::TimerInfo &a, const coreapi::TimerInfo &b)
+{
+	return a.start < b.start;
+}
+
+//-----------------------------------------------------------------------------
 // build json/xml for all timer data (needed for yWeb 3)
 //-----------------------------------------------------------------------------
 void CControlAPI::SendTimers(CyhookHandler *hh)
 {
-	// Init local timer iterator
-	CTimerd::TimerList timerlist;			// List of timers
-	timerlist.clear();
-	NeutrinoAPI->Timerd->getTimerList(timerlist);
-	sort(timerlist.begin(), timerlist.end());		// sort timer
-	CTimerd::TimerList::iterator timer = timerlist.begin();
+	// A list that could not be read leaves an empty timer_list, which is what a
+	// box with no timers left here before.
+	coreapi::TimerList timerlist;
+	coreapi::Result<coreapi::TimerList> read = coreapi::timers::list();
+	if (read.ok())
+		timerlist = std::move(read).value();
+	sort(timerlist.begin(), timerlist.end(), earlierAlarm);		// sort timer
 	std::string result = "";
 	std::string config = "";
 	std::string timer_list = "";
@@ -2786,25 +2958,27 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 
 	result += hh->outObject("config", config, true);
 
-	for(int i = 0; timer != timerlist.end(); ++timer)
+	for(size_t i = 0; i < timerlist.size(); i++)
 	{
+		const coreapi::TimerInfo &timer = timerlist[i];
+
 		if (i > 0)
 			timer_list += hh->outNext();
 
 		std::string timer_item = "";
 
-		timer_item += hh->outPair("type", NeutrinoAPI->timerEventType2Str(timer->eventType), true);
-		timer_item += hh->outPair("id", string_printf("%d", timer->eventID), true);
-		timer_item += hh->outPair("state", string_printf("%d", (int)timer->eventState), true);
-		timer_item += hh->outPair("type_number", string_printf("%d", (int)timer->eventType), true);
+		timer_item += hh->outPair("type", resolveLabels(NeutrinoAPI->timerEventType2Str((CTimerd::CTimerEventTypes) timer.type)), true);
+		timer_item += hh->outPair("id", string_printf("%d", (int)timer.id), true);
+		timer_item += hh->outPair("state", string_printf("%d", timer.state), true);
+		timer_item += hh->outPair("type_number", string_printf("%d", timer.type), true);
 
 		// alarmtime
 		std::string alarm = "";
 
-		struct tm *alarmTime = localtime(&(timer->alarmTime));
-		alarm += hh->outArrayItem("normal", _SendTime(hh, alarmTime, (int)timer->alarmTime), true);
+		struct tm *alarmTime = localtime(&timer.start);
+		alarm += hh->outArrayItem("normal", _SendTime(hh, alarmTime, (int)timer.start), true);
 
-		time_t real_alarmTimeT = timer->alarmTime - pre;
+		time_t real_alarmTimeT = timer.start - pre;
 		struct tm *safetyAlarmTime = localtime(&real_alarmTimeT);
 		alarm += hh->outArrayItem("safety", _SendTime(hh, safetyAlarmTime, (int)real_alarmTimeT), false);
 
@@ -2813,23 +2987,23 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 		// announcetime
 		std::string announce = "";
 
-		struct tm *announceTime = localtime(&(timer->announceTime));
-		announce += hh->outArrayItem("normal", _SendTime(hh, announceTime, (int)timer->announceTime), true);
+		struct tm *announceTime = localtime(&timer.announce);
+		announce += hh->outArrayItem("normal", _SendTime(hh, announceTime, (int)timer.announce), true);
 
-		time_t real_announceTimeT = timer->announceTime - pre;
+		time_t real_announceTimeT = timer.announce - pre;
 		struct tm *safetyAnnounceTime = localtime(&real_announceTimeT);
 		announce += hh->outArrayItem("safety", _SendTime(hh, safetyAnnounceTime, (int)real_announceTimeT), false);
 
 		timer_item += hh->outArray("announce", announce, true);
 
 		// stoptime
-		if(timer->stopTime > 0) {
+		if(timer.stop > 0) {
 			std::string stop = "";
 
-			struct tm *stopTime = localtime(&(timer->stopTime));
-			stop += hh->outArrayItem("normal", _SendTime(hh, stopTime, (int)timer->stopTime), true);
+			struct tm *stopTime = localtime(&timer.stop);
+			stop += hh->outArrayItem("normal", _SendTime(hh, stopTime, (int)timer.stop), true);
 
-			time_t real_stopTimeT = timer->stopTime - post;
+			time_t real_stopTimeT = timer.stop - post;
 			struct tm *safetyStopTime = localtime(&real_stopTimeT);
 			stop += hh->outArrayItem("safety", _SendTime(hh, safetyStopTime, (int)real_stopTimeT), false);
 
@@ -2838,49 +3012,49 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 
 		// epg_starttime
 		std::string start = "";
-		struct tm *startTime = localtime(&(timer->epg_starttime));
-		start += hh->outArrayItem("normal", _SendTime(hh, startTime, (int)timer->epg_starttime), false);
+		struct tm *startTime = localtime(&timer.epg_start);
+		start += hh->outArrayItem("normal", _SendTime(hh, startTime, (int)timer.epg_start), false);
 
 		timer_item += hh->outArray("start", start, true);
 
 		// repeat
 		std::string repeat = "";
 
-		std::string zRep = NeutrinoAPI->timerEventRepeat2Str(timer->eventRepeat);
+		std::string zRep = resolveLabels(NeutrinoAPI->timerEventRepeat2Str((CTimerd::CTimerEventRepeat) timer.repeat));
 		std::string zRepCount;
-		if (timer->eventRepeat == CTimerd::TIMERREPEAT_ONCE)
+		if (timer.repeat == (int) CTimerd::TIMERREPEAT_ONCE)
 			zRepCount = "-";
 		else
-			zRepCount = (timer->repeatCount == 0) ? "&#x221E;" : string_printf("%dx",timer->repeatCount);
+			zRepCount = (timer.repeat_count == 0) ? "&#x221E;" : string_printf("%dx",timer.repeat_count);
 		std::string weekdays;
-		NeutrinoAPI->Timerd->setWeekdaysToStr(timer->eventRepeat, weekdays);
+		NeutrinoAPI->Timerd->setWeekdaysToStr((CTimerd::CTimerEventRepeat) timer.repeat, weekdays);
 
 		repeat += hh->outPair("count", zRepCount, true);
-		repeat += hh->outPair("number", string_printf("%d", (int)timer->eventRepeat), true);
+		repeat += hh->outPair("number", string_printf("%d", timer.repeat), true);
 		repeat += hh->outPair("text", zRep, true);
 		repeat += hh->outPair("weekdays", weekdays, false);
 
 		timer_item += hh->outObject("repeat", repeat, false);
 
 		// channel infos
-		std::string channel_name = NeutrinoAPI->GetServiceName(timer->channel_id);
+		std::string channel_name = NeutrinoAPI->GetServiceName(timer.channel_id);
 		if (channel_name.empty())
-			channel_name = CServiceManager::getInstance()->IsChannelTVChannel(timer->channel_id) ? "Unknown TV-Channel" : "Unknown Radio-Channel";
+			channel_name = CServiceManager::getInstance()->IsChannelTVChannel(timer.channel_id) ? "Unknown TV-Channel" : "Unknown Radio-Channel";
 
 		// epg title
-		std::string title = timer->epgTitle;
-		if(timer->epg_id!=0) {
+		std::string title = timer.title;
+		if(timer.epg_id!=0) {
 			CEPGData epgdata;
-			if (CEitManager::getInstance()->getEPGid(timer->epg_id, timer->epg_starttime, &epgdata))
+			if (CEitManager::getInstance()->getEPGid(timer.epg_id, timer.epg_start, &epgdata))
 				title = epgdata.title;
 		}
 
 		// timer specific data
-		switch(timer->eventType)
+		switch((CTimerd::CTimerEventTypes) timer.type)
 		{
 #if 0
 		case CTimerd::TIMER_NEXTPROGRAM : {
-			timer_item += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer->channel_id), true);
+			timer_item += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer.channel_id), true);
 			timer_item += hh->outPair("channel_name", channel_name, true);
 			timer_item += hh->outPair("title", title, false);
 		}
@@ -2889,7 +3063,7 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 
 		case CTimerd::TIMER_ZAPTO : {
 			timer_item += hh->outNext();
-			timer_item += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer->channel_id), true);
+			timer_item += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer.channel_id), true);
 			timer_item += hh->outPair("channel_name", channel_name, true);
 			timer_item += hh->outPair("title", title, false);
 		}
@@ -2897,7 +3071,7 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 
 		case CTimerd::TIMER_RECORD : {
 			timer_item += hh->outNext();
-			timer_item += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer->channel_id), true);
+			timer_item += hh->outPair("channel_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer.channel_id), true);
 			timer_item += hh->outPair("channel_name", channel_name, true);
 			timer_item += hh->outPair("title", title, true);
 
@@ -2908,14 +3082,14 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 			std::string apids_alt = "false";
 			std::string apids_ac3 = "false";
 
-			if (timer->apids != TIMERD_APIDS_CONF)
+			if (timer.apids != TIMERD_APIDS_CONF)
 			{
 				apids_conf = "false";
-				if (timer->apids & TIMERD_APIDS_STD)
+				if (timer.apids & TIMERD_APIDS_STD)
 					apids_std = "true";
-				if (timer->apids & TIMERD_APIDS_ALT)
+				if (timer.apids & TIMERD_APIDS_ALT)
 					apids_alt = "true";
-				if (timer->apids & TIMERD_APIDS_AC3)
+				if (timer.apids & TIMERD_APIDS_AC3)
 					apids_ac3 = "true";
 			}
 
@@ -2926,20 +3100,19 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 
 			timer_item += hh->outObject("audio", audio, true);
 
-			timer_item += hh->outPair("recording_dir", timer->recordingDir, true);
-			timer_item += hh->outPair("epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer->epg_id), false);
+			timer_item += hh->outPair("recording_dir", timer.recording_dir, true);
+			timer_item += hh->outPair("epg_id", string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, timer.epg_id), false);
 		}
 		break;
 
 		case CTimerd::TIMER_STANDBY : {
 			timer_item += hh->outNext();
-			timer_item += hh->outPair("status", (timer->standby_on) ? "on" : "off", false);
+			timer_item += hh->outPair("status", (timer.standby_on) ? "on" : "off", false);
 		}
 		break;
 
 		case CTimerd::TIMER_REMIND : {
-			std::string _message;
-			_message = std::string(timer->message).substr(0,20);
+			std::string _message = timer.title.substr(0, 20);
 			timer_item += hh->outNext();
 			timer_item += hh->outPair("message", _message, false);
 		}
@@ -2947,7 +3120,7 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 
 		case CTimerd::TIMER_EXEC_PLUGIN : {
 			timer_item += hh->outNext();
-			timer_item += hh->outPair("plugin", timer->pluginName, false);
+			timer_item += hh->outPair("plugin", timer.title, false);
 		}
 		break;
 
@@ -2963,10 +3136,9 @@ void CControlAPI::SendTimers(CyhookHandler *hh)
 		{}
 		}
 		timer_list += hh->outArrayItem("timer", timer_item, false);
-		i++;
 	}
 	result += hh->outArray("timer_list", timer_list);
-	if (hh->getOutType() == json)
+	if (hh->getOutType() == httpd::compat::json)
 		result = hh->outArrayItem("timer", result, false);
 	result = hh->outArray("timer", result);
 
@@ -3229,7 +3401,7 @@ void CControlAPI::doNewTimer(CyhookHandler *hh)
 		{
 			// get Default Recordingdir
 			CConfigFile *Config = new CConfigFile(',');
-			Config->loadConfig(NEUTRINO_CONFIGFILE);
+			Config->loadConfig(NEUTRINO_SETTINGS_FILE);
 			_rec_dir = Config->getString("network_nfs_recordingdir", TARGET_ROOT "/media/sda1/movies");
 			delete Config;
 		}
@@ -3316,7 +3488,13 @@ void CControlAPI::setBouquetCGI(CyhookHandler *hh)
 //-------------------------------------------------------------------------
 void CControlAPI::saveBouquetCGI(CyhookHandler *hh)
 {
-	NeutrinoAPI->Zapit->saveBouquets();
+	/* Thrown away on purpose. What this layer answers is held to the old
+	   server's answer byte for byte, and that one is "ok" whatever became of
+	   the files; a caller that wants to know whether they were written asks
+	   the route that was built to say so. Named rather than cast to void
+	   because a cast does not quiet the compiler's own complaint about a
+	   discarded result. */
+	const bool saved __attribute__((unused)) = NeutrinoAPI->Zapit->saveBouquets();
 	NeutrinoAPI->UpdateBouquets();
 	hh->SendOk();
 }
@@ -3685,7 +3863,14 @@ void CControlAPI::build_live_url(CyhookHandler *hh)
 	// response url
 	if(!hh->ParamList["vlc_link"].empty())
 	{
-		write_to_file("/tmp/vlc.m3u", "#EXTM3U\n");
+		// An external player (VLC, Kodi) fetches this URL directly and expects
+		// the playlist itself, not a redirect to a file it has no way to
+		// reach once sendfile stops serving arbitrary paths. The file at
+		// /tmp/vlc.m3u still gets written line for line, in step with the
+		// body, in case something else reads it there.
+		std::string line = "#EXTM3U\n";
+		write_to_file("/tmp/vlc.m3u", line);
+		hh->Write(line);
 		for (int i = 0; i < (int) g_bouquetManager->Bouquets.size(); i++)
 		{
 			ZapitChannelList chanlist;
@@ -3699,12 +3884,16 @@ void CControlAPI::build_live_url(CyhookHandler *hh)
 				{
 					CZapitChannel * channel = chanlist[j];
 					//printf("---> %s/n",channel->getName().c_str());
-					write_to_file("/tmp/vlc.m3u", "#EXTINF:-1,"+channel->getName()+"\n",true);
-					write_to_file("/tmp/vlc.m3u", url+string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel->getChannelID())+"\n",true);
+					line = "#EXTINF:-1,"+channel->getName()+"\n";
+					write_to_file("/tmp/vlc.m3u", line, true);
+					hh->Write(line);
+					line = url+string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel->getChannelID())+"\n";
+					write_to_file("/tmp/vlc.m3u", line, true);
+					hh->Write(line);
 				}
 			}
 		}
-		hh->SendRedirect("/tmp/vlc.m3u");
+		hh->SetHeader(httpd::compat::HTTP_OK, "audio/x-mpegurl");
 	} else
 		hh->SendError();
 }
@@ -3743,10 +3932,18 @@ void CControlAPI::build_playlist(CyhookHandler *hh)
 			}
 		}
 		std::string m3u = "/tmp/" + chan_name + ".m3u";
-		write_to_file(m3u, "#EXTM3U\n");
-		write_to_file(m3u, "#EXTINF:-1," + NeutrinoAPI->Zapit->getChannelName(channel_id) + "\n", true);
+		// Same reasoning as build_live_url: the external client that asked
+		// for this playlist gets the body directly, and the file stays only
+		// for whatever else might read it there.
+		std::string line = "#EXTM3U\n";
+		write_to_file(m3u, line);
+		hh->Write(line);
+		line = "#EXTINF:-1," + NeutrinoAPI->Zapit->getChannelName(channel_id) + "\n";
+		write_to_file(m3u, line, true);
+		hh->Write(line);
 		write_to_file(m3u, url, true);
-		hh->SendRedirect(m3u);
+		hh->Write(url);
+		hh->SetHeader(httpd::compat::HTTP_OK, "audio/x-mpegurl");
 	}
 	else
 		hh->SendError();
@@ -3827,11 +4024,11 @@ void CControlAPI::ConfigCGI(CyhookHandler *hh)
 
 	// Para "config" describes the config type
 	if (configFileName == "neutrino")
-		config_filename = NEUTRINO_CONFIGFILE;
+		config_filename = NEUTRINO_SETTINGS_FILE;
 	else if (configFileName == "moviebrowser")
 		config_filename = MOVIEBROWSER_CONFIGFILE;
 	else if (configFileName == "nhttpd")
-		config_filename = HTTPD_CONFIGFILE;
+		config_filename = NI_WEB_OLD_SETTINGS_FILE;
 	else if (configFileName == "yweb")
 		config_filename = YWEB_CONFIGFILE;
 
@@ -3855,6 +4052,15 @@ void CControlAPI::ConfigCGI(CyhookHandler *hh)
 		else { // set values and save list
 			for (CStringList::iterator it = hh->ParamList.begin(); it != hh->ParamList.end(); ++it) {
 				std::string key = it->first;
+
+				// parseParams (httpd/compat/query.cpp) adds a second entry for
+				// every token, named or not: "<position>" -> "<name>". A submit
+				// here would otherwise write that echo into the config file
+				// too, as a phantom "<position>=<name>" line next to the real
+				// setting.
+				if (isPositionKey(key))
+					continue;
+
 				replace(key, "_dot_", ".");
 				replace(key, "_bind_", "-");
 				if (key != "_dc" && key != "action" && key != "format" && key != "config") {
@@ -3892,17 +4098,24 @@ void CControlAPI::ConfigCGI(CyhookHandler *hh)
  *
  * @par example:
  * @code
- * /control/file?action=list&path=/
- * /control/file?action=list&path=/&format=json
- * /control/file?action=list&path=/&format=json&sort=false
+ * /control/file?action=list&path=/media
+ * /control/file?action=list&path=/media&format=json
+ * /control/file?action=list&path=/media&format=json&sort=false
+ * /control/file?action=new_folder&path=/media/sda1/movies/new
+ * /control/file?action=delete&path=/media/sda1/movies/new
  * @endcode
+ *
+ * @par
+ * A path has to resolve inside one of the permitted directories: the media and
+ * the plugin directories, plus whatever this box was told to record into. A
+ * path outside them is answered with 400, one that is not there with 404.
  *
  * @par output
  * @code
  * {"success": "true", "data":{"filelist": [{"name": "timeshift",
  * "type_str": "dir",
  * "type": "4",
- * "fullname": "/timeshift",
+ * "fullname": "/media/timeshift",
  * "mode": "41ffld",
  * "nlink": "2",
  * "user": "root",
@@ -3914,10 +4127,10 @@ void CControlAPI::ConfigCGI(CyhookHandler *hh)
  * @endcode
  * ... snip ...
  * @code
- * {"name": "root",
+ * {"name": "recordings",
  * "type_str": "dir",
  * "type": "4",
- * "fullname": "/root",
+ * "fullname": "/media/recordings",
  * "mode": "41edld",
  * "nlink": "2",
  * "user": "1000",
@@ -3931,93 +4144,146 @@ void CControlAPI::ConfigCGI(CyhookHandler *hh)
  * @endcode
  *
  *  @par Not implemented now:
- *  action =new_folder|delete|read_file|write_file|set_properties
+ *  action =read_file|write_file|set_properties
  */
 //-----------------------------------------------------------------------------
+
+// What a directory calls one of its names, in the words this endpoint has
+// always used. Anything else keeps the empty name it has always had.
+static const char *fileTypeName(coreapi::FileKind kind)
+{
+	switch (kind) {
+		case coreapi::FileKind::Dir:		return "dir";
+		case coreapi::FileKind::Link:		return "lnk";
+		case coreapi::FileKind::Regular:	return "file";
+		default:				return "";
+	}
+}
+
+// The number a directory entry carries, for every kind one can have. This
+// endpoint has always printed it straight off the directory, so every kind maps
+// back to exactly the number it came from and none of them collapses into
+// another. It cannot be read off the mode instead: that follows a link and
+// would answer with what the link points at.
+static int fileTypeNumber(coreapi::FileKind kind)
+{
+	switch (kind) {
+		case coreapi::FileKind::Fifo:		return DT_FIFO;
+		case coreapi::FileKind::CharDevice:	return DT_CHR;
+		case coreapi::FileKind::Dir:		return DT_DIR;
+		case coreapi::FileKind::BlockDevice:	return DT_BLK;
+		case coreapi::FileKind::Regular:	return DT_REG;
+		case coreapi::FileKind::Link:		return DT_LNK;
+		case coreapi::FileKind::Socket:		return DT_SOCK;
+		case coreapi::FileKind::Whiteout:	return DT_WHT;
+		default:				return DT_UNKNOWN;
+	}
+}
+
+// The listing has always come back in name order unless the caller said not to.
+static bool byName(const coreapi::FileEntry &a, const coreapi::FileEntry &b)
+{
+	return a.name < b.name;
+}
+
+static httpd::compat::HttpResponseType httpStatusFor(coreapi::Status status)
+{
+	switch (status) {
+		case coreapi::Status::NotFound:		return httpd::compat::HTTP_NOT_FOUND;
+		case coreapi::Status::InvalidArgument:	return httpd::compat::HTTP_BAD_REQUEST;
+		case coreapi::Status::Conflict:		return httpd::compat::HTTP_CONFLICT;
+		case coreapi::Status::NotSupported:	return httpd::compat::HTTP_NOT_IMPLEMENTED;
+		case coreapi::Status::Busy:		return httpd::compat::HTTP_SERVICE_UNAVAILABLE;
+		default:				return httpd::compat::HTTP_INTERNAL_SERVER_ERROR;
+	}
+}
+
+// The code and never the message: the message quotes the name the caller sent,
+// and this body is written into json and xml without escaping anything.
+static void sendCode(httpd::compat::CyhookHandler *hh, coreapi::Status status, const char *code)
+{
+	hh->httpStatus = httpStatusFor(status);
+	// This server's header for a not found declares no body at all, so writing
+	// one would put bytes behind a length of zero.
+	if (hh->httpStatus != httpd::compat::HTTP_NOT_FOUND)
+		hh->SendError(code);
+}
+
+static void sendStorageError(httpd::compat::CyhookHandler *hh, const coreapi::Error &error)
+{
+	sendCode(hh, error.status, coreapi::codeString(error.code));
+}
+
 void CControlAPI::FileCGI(CyhookHandler *hh)
 {
 	std::string result = "";
+	const std::string path = hh->ParamList["path"];
+
+	coreapi::storage::refreshRoots();
 
 	if (hh->ParamList["action"] == "list") { // directory list: action=list&path=<path>
-		DIR *dirp;
-
 		hh->outStart();
 
-		std::string path = hh->ParamList["path"];
-		if ((dirp = opendir(path.c_str()))) {
-			struct dirent *entry;
-			std::vector<FileCGI_List> filelist;
-			while ((entry = readdir(dirp))) {
-				if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
-					continue;
-				std::string ftype;
-				if (entry->d_type == DT_DIR)
-					ftype = "dir";
-				else if (entry->d_type == DT_LNK)
-					ftype = "lnk";
-				else if (entry->d_type == 8)
-					ftype = "file";
-				if (path[path.length() - 1] != '/')
-					path += "/";
-				std::string fullname = path + entry->d_name;
+		coreapi::Result<std::vector<coreapi::FileEntry> > read = coreapi::storage::list(path);
+		if (!read.ok()) {
+			// A directory that could not be opened used to answer an empty
+			// filelist, which reads as a directory with nothing in it.
+			sendStorageError(hh, read.error());
+			return;
+		}
 
-				FileCGI_List listitem;
-				listitem.name = std::string(entry->d_name);
-				listitem.type_str = ftype;
-				listitem.type = entry->d_type;
-				listitem.fullname = fullname;
+		std::string dir = path;
+		if (dir[dir.length() - 1] != '/')
+			dir += "/";
 
-				filelist.push_back(listitem);
+		std::vector<coreapi::FileEntry> filelist = read.value();
+		if (hh->ParamList["sort"] != "false")
+			sort(filelist.begin(), filelist.end(), byName);
+
+		for(std::vector<coreapi::FileEntry>::iterator f = filelist.begin(); f != filelist.end(); ++f)
+		{
+			bool got_next = (f != filelist.end()-1);
+
+			std::string item = "";
+			item += hh->outPair("name",	hh->outValue(f->name.c_str()), true);
+			item += hh->outPair("type_str",	hh->outValue(fileTypeName(f->kind)), true);
+			item += hh->outPair("type",	string_printf("%d", fileTypeNumber(f->kind)), true);
+			item += hh->outPair("fullname",	hh->outValue(dir + f->name), true);
+
+			// A name nothing could be read about leaves this whole block out,
+			// because a zero here is a real owner, a real size and a real time.
+			if (f->attributes_read) {
+				item += hh->outPair("mode", string_printf("%xld", (long) f->mode), true);
+
+				/* Print out type, permissions, and number of links. */
+				//TODO:	hh->printf("\t\t<permission>%10.10s</permission>\n", sperm (f->mode));
+				item += hh->outPair("nlink", string_printf("%d", (int) f->nlink), true);
+
+				/* Print out owner's name if it is found using getpwuid(). */
+				struct passwd *pwd;
+				if ((pwd = getpwuid(f->uid)) != NULL)
+					item += hh->outPair("user", pwd->pw_name, true);
+				else
+					item += hh->outPair("user", string_printf("%d", f->uid), true);
+
+				/* Print out group name if it is found using getgrgid(). */
+				struct group *grp;
+				if ((grp = getgrgid(f->gid)) != NULL)
+					item += hh->outPair("group", grp->gr_name, true);
+				else
+					item += hh->outPair("group", string_printf("%d", f->gid), true);
+
+				/* Print size of file. */
+				item += hh->outPair("size", string_printf("%jd", (intmax_t) f->size), true);
+
+				struct tm *tm = localtime(&f->mtime);
+				char datestring[256] = {0};
+				/* Get localized date string. */
+				strftime(datestring, sizeof(datestring), nl_langinfo(D_T_FMT), tm);
+				item += hh->outPair("time", hh->outValue(datestring), true);
+				item += hh->outPair("time_t", string_printf("%ld", (long) f->mtime), false);
 			}
-			closedir(dirp);
-
-			if (hh->ParamList["sort"] != "false")
-				sort(filelist.begin(), filelist.end(), fsort);
-
-			for(std::vector<FileCGI_List>::iterator f = filelist.begin(); f != filelist.end(); ++f)
-			{
-				bool got_next = (f != filelist.end()-1);
-
-				std::string item = "";
-				item += hh->outPair("name",	hh->outValue(f->name.c_str()), true);
-				item += hh->outPair("type_str",	hh->outValue(f->type_str.c_str()), true);
-				item += hh->outPair("type",	string_printf("%d", (int) f->type), true);
-				item += hh->outPair("fullname",	hh->outValue(f->fullname.c_str()), true);
-
-				struct stat statbuf;
-				if (stat(f->fullname.c_str(), &statbuf) != -1) {
-					item += hh->outPair("mode", string_printf("%xld", (long) statbuf.st_mode), true);
-
-					/* Print out type, permissions, and number of links. */
-					//TODO:	hh->printf("\t\t<permission>%10.10s</permission>\n", sperm (statbuf.st_mode));
-					item += hh->outPair("nlink", string_printf("%d", statbuf.st_nlink), true);
-
-					/* Print out owner's name if it is found using getpwuid(). */
-					struct passwd *pwd;
-					if ((pwd = getpwuid(statbuf.st_uid)) != NULL)
-						item += hh->outPair("user", pwd->pw_name, true);
-					else
-						item += hh->outPair("user", string_printf("%d", statbuf.st_uid), true);
-
-					/* Print out group name if it is found using getgrgid(). */
-					struct group *grp;
-					if ((grp = getgrgid(statbuf.st_gid)) != NULL)
-						item += hh->outPair("group", grp->gr_name, true);
-					else
-						item += hh->outPair("group", string_printf("%d", statbuf.st_gid), true);
-
-					/* Print size of file. */
-					item += hh->outPair("size", string_printf("%jd", (intmax_t) statbuf.st_size), true);
-
-					struct tm *tm = localtime(&statbuf.st_mtime);
-					char datestring[256] = {0};
-					/* Get localized date string. */
-					strftime(datestring, sizeof(datestring), nl_langinfo(D_T_FMT), tm);
-					item += hh->outPair("time", hh->outValue(datestring), true);
-					item += hh->outPair("time_t", string_printf("%ld", (long) statbuf.st_mtime), false);
-				}
-				result += hh->outArrayItem("item", item, got_next);
-			}
+			result += hh->outArrayItem("item", item, got_next);
 		}
 		result = hh->outArray("filelist", result);
 
@@ -4025,12 +4291,30 @@ void CControlAPI::FileCGI(CyhookHandler *hh)
 	}
 	// create new folder
 	else if (hh->ParamList["action"] == "new_folder") {
-		hh->SetHeader(HTTP_OK, "text/plain; charset=UTF-8");
-		//TODO
+		hh->outStart();
+		coreapi::Result<void> made = coreapi::storage::createDirectory(path);
+		if (!made.ok()) {
+			sendStorageError(hh, made.error());
+			return;
+		}
+		hh->SendOk();
 	}
 	else if (hh->ParamList["action"] == "delete") {
-		hh->SetHeader(HTTP_OK, "text/plain; charset=UTF-8");
-		//TODO
+		hh->outStart();
+		coreapi::Result<void> removed = coreapi::storage::removePath(path);
+		if (!removed.ok()) {
+			sendStorageError(hh, removed.error());
+			return;
+		}
+		hh->SendOk();
+	}
+	else {
+		// Every other action used to reach the end of this with no header set
+		// and nothing written, which the server answers as an empty 200. The
+		// code is this endpoint's own: what action names it takes is a thing
+		// only this endpoint has.
+		hh->outStart();
+		sendCode(hh, coreapi::Status::InvalidArgument, "unknown-action");
 	}
 }
 
@@ -4081,6 +4365,12 @@ void CControlAPI::StatfsCGI(CyhookHandler *hh)
 	hh->outStart();
 
 	std::string path = hh->ParamList["path"];
+	// The kernel read here rather than through the layer below. What this
+	// answers is the filesystem's own eleven counters under their own names,
+	// for any name the caller sends and for / by default, and that is a shape
+	// and a reach the layer below deliberately does not have. Keeping the old
+	// answer belongs on this side of the line, with the rest of what is here
+	// only because it always has been.
 	struct statfs s;
 	if (::statfs(path.c_str(), &s) == 0)
 	{
@@ -4137,6 +4427,7 @@ void CControlAPI::getDirCGI(CyhookHandler *hh)
 	std::string item = "";
 	bool isFirstLine = true;
 
+	coreapi::storage::refreshRoots();
 	hh->outStart(true /*old mode*/);
 
 	//Shows all 7 directories stored in the moviebrowser.conf
@@ -4171,7 +4462,7 @@ void CControlAPI::getDirCGI(CyhookHandler *hh)
 
 	//Shows the neutrino recording dir
 	if (hh->ParamList["dir"] == "recordingdir" || hh->ParamList["dir"] == "allmoviedirs" ) {
-		item += hh->outPair("dir", hh->outValue(g_settings.network_nfs_recordingdir), false);
+		item += hh->outPair("dir", hh->outValue(settingsText(g_settings.network_nfs_recordingdir)), false);
 		if(isFirstLine) {
 			isFirstLine = false;
 		}
@@ -4180,10 +4471,9 @@ void CControlAPI::getDirCGI(CyhookHandler *hh)
 		}
 		result += hh->outArrayItem("item", item, false);
 		if (hh->ParamList["subdirs"] == "true") {
-			result = getSubdirectories(hh, g_settings.network_nfs_recordingdir, result);
+			result = getSubdirectories(hh, settingsText(g_settings.network_nfs_recordingdir), result);
 		}
 	}
-
 
 	result = hh->outArray("dirs", result);
 
@@ -4194,24 +4484,31 @@ void CControlAPI::getDirCGI(CyhookHandler *hh)
 std::string CControlAPI::getSubdirectories(CyhookHandler *hh, std::string path, std::string result)
 {
 	std::string item = "";
-	DIR *dirp;
-	struct dirent *entry;
 
-	if ((dirp = opendir(path.c_str()))) {
-		while ((entry = readdir(dirp))) {
-			if (entry->d_type == DT_DIR && entry->d_name[0] != '.') {
-				if (path[path.length() - 1] != '/') {
-					path += "/";
-				}
-				std::string fullname = path + entry->d_name;
-				item += hh->outPair("dir", hh->outValue(fullname), false);
-				result += hh->outNext();
-				result += hh->outArrayItem("item", item, false);
-				item = "";
-				result = getSubdirectories(hh, fullname, result);
+	coreapi::Result<std::vector<coreapi::FileEntry> > read = coreapi::storage::list(path);
+	// A configured directory that cannot be read is passed over, whatever the
+	// reason, which is what an unopenable one has always been. Refusing the
+	// whole answer over one of them would cost the caller the directories that
+	// are perfectly readable, and would make this arm disagree with the one
+	// that lists the same directories without descending into them.
+	if (!read.ok())
+		return result;
+
+	// Directories only, and a link that points at one is not a directory here.
+	// Following it would walk the same names twice, or forever.
+	const std::vector<coreapi::FileEntry> &entries = read.value();
+	for (size_t i = 0; i < entries.size(); i++) {
+		if (entries[i].kind == coreapi::FileKind::Dir && entries[i].name[0] != '.') {
+			if (path[path.length() - 1] != '/') {
+				path += "/";
 			}
+			std::string fullname = path + entries[i].name;
+			item += hh->outPair("dir", hh->outValue(fullname), false);
+			result += hh->outNext();
+			result += hh->outArrayItem("item", item, false);
+			item = "";
+			result = getSubdirectories(hh, fullname, result);
 		}
-		closedir(dirp);
 	}
 	return result;
 }
@@ -4247,11 +4544,13 @@ std::string CControlAPI::getSubdirectories(CyhookHandler *hh, std::string path, 
 void CControlAPI::getMoviesCGI(CyhookHandler *hh) {
 	std::string result = "";
 	bool subdirs = true;
+	coreapi::Result<void> refusal = coreapi::Result<void>::success();
 
 	if(hh->ParamList["subdirs"] == "false") {
 		subdirs = false;
 	}
 
+	coreapi::storage::refreshRoots();
 	hh->outStart();
 
 	//Shows all movies with path in moviebrowser.conf
@@ -4268,19 +4567,26 @@ void CControlAPI::getMoviesCGI(CyhookHandler *hh) {
 			mb_dir = Config->getString(mb_dir, "");
 
 			if(!mb_dir.empty()) {
-				result = readMovies(hh, mb_dir, result, subdirs);
+				result = readMovies(hh, mb_dir, result, subdirs, NULL);
 			}
 		}
 	}
 
 	//Shows all movies in the recordingdir
 	if (hh->ParamList["dir"] == "recordingdir" || hh->ParamList["dir"] == "allmoviedirs" ) {
-		result = readMovies(hh, g_settings.network_nfs_recordingdir, result, subdirs);
+		result = readMovies(hh, settingsText(g_settings.network_nfs_recordingdir), result, subdirs, NULL);
 	}
 
 	//Shows movie from a given path
 	if (hh->ParamList["dir"][0] == '/') {
-		result = readMovies(hh, hh->ParamList["dir"], result, subdirs);
+		result = readMovies(hh, hh->ParamList["dir"], result, subdirs, &refusal);
+	}
+
+	// Only the directory the caller named can refuse this answer, and it does
+	// so with the error the layer below gave rather than with one made up here.
+	if (!refusal.ok()) {
+		sendStorageError(hh, refusal.error());
+		return;
 	}
 
 	result = hh->outArray("movies", result);
@@ -4289,45 +4595,55 @@ void CControlAPI::getMoviesCGI(CyhookHandler *hh) {
 }
 
 //Helpfunction to get movies of a dir
-std::string CControlAPI::readMovies(CyhookHandler *hh, std::string path, std::string result, bool subdirs) {
+std::string CControlAPI::readMovies(CyhookHandler *hh, std::string path, std::string result, bool subdirs,
+				    coreapi::Result<void> *refusal) {
 	std::string item = "";
 	std::string fullname;
-	DIR *dirp;
-	struct dirent *entry;
 
-	if ((dirp = opendir(path.c_str()))) {
-		if (path[path.length() - 1] != '/') {
-			path += "/";
-		}
-		while ((entry = readdir(dirp))) {
-			if(entry->d_type == 8) {
-				fullname = path + entry->d_name;
-				item += hh->outPair("title", hh->outValue(entry->d_name),true);
-				item += hh->outPair("path", hh->outValue(fullname), true);
-				struct stat statbuf;
-				if (stat(fullname.c_str(), &statbuf) != -1) {
-					/* Print size of file. */
-					item += hh->outPair("size", string_printf("%jd", (intmax_t) statbuf.st_size), false);
-				}
-				if(!result.empty()) {
-					result += hh->outNext();
-				}
-				result += hh->outArrayItem("item", item, false);
-				item = "";
+	coreapi::Result<std::vector<coreapi::FileEntry> > read = coreapi::storage::list(path);
+	if (!read.ok()) {
+		// A directory the caller named itself has to be told what was wrong
+		// with it, in the words the layer below used, or the answer reads as a
+		// directory holding no recordings. A configured one passes nothing here
+		// and is skipped, as an unreadable one has always been.
+		if (refusal != NULL)
+			*refusal = coreapi::fail(read.error());
+		return result;
+	}
+
+	if (path[path.length() - 1] != '/') {
+		path += "/";
+	}
+
+	// Regular files only: a link is not one, whatever it points at, which is
+	// what keeps a link back up the tree from being listed as a recording.
+	const std::vector<coreapi::FileEntry> &entries = read.value();
+	for (size_t i = 0; i < entries.size(); i++) {
+		if (entries[i].kind == coreapi::FileKind::Regular) {
+			fullname = path + entries[i].name;
+			item += hh->outPair("title", hh->outValue(entries[i].name),true);
+			item += hh->outPair("path", hh->outValue(fullname), true);
+			if (entries[i].attributes_read) {
+				/* Print size of file. */
+				item += hh->outPair("size", string_printf("%jd", (intmax_t) entries[i].size), false);
 			}
-		}
-		closedir(dirp);
-		if ((dirp = opendir(path.c_str()))) {
-			if(subdirs)
-			{
-				while ((entry = readdir(dirp))) {
-					if (entry->d_type == DT_DIR && entry->d_name[0] != '.') {
-						fullname = path + entry->d_name;
-						result = readMovies(hh, fullname, result, subdirs);
-					}
-				}
+			if(!result.empty()) {
+				result += hh->outNext();
 			}
-			closedir(dirp);
+			result += hh->outArrayItem("item", item, false);
+			item = "";
+		}
+	}
+	if(subdirs)
+	{
+		for (size_t i = 0; i < entries.size(); i++) {
+			if (entries[i].kind == coreapi::FileKind::Dir && entries[i].name[0] != '.') {
+				fullname = path + entries[i].name;
+				// Nothing below the directory the caller named can refuse
+				// the answer: one unreadable subdirectory has always been
+				// walked past, and the ones beside it still listed.
+				result = readMovies(hh, fullname, result, subdirs, NULL);
+			}
 		}
 	}
 	return result;
@@ -4388,10 +4704,10 @@ void CControlAPI::InfoIconsCGI(CyhookHandler *hh)
 	}
 
 	CConfigFile *Config = new CConfigFile(',');
-	Config->loadConfig(NEUTRINO_CONFIGFILE);
+	Config->loadConfig(NEUTRINO_SETTINGS_FILE);
 	Config->setInt32("mode_icons", g_settings.mode_icons);
 	Config->setInt32("mode_icons_skin", g_settings.mode_icons_skin);
-	Config->saveConfig(NEUTRINO_CONFIGFILE);
+	Config->saveConfig(NEUTRINO_SETTINGS_FILE);
 	delete Config;
 
 	if (g_settings.mode_icons != remember_mode_icons)

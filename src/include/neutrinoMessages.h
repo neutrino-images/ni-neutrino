@@ -80,9 +80,6 @@ struct NeutrinoMessages
 		POWER_MENU				= CRCInput::RC_Messages + 28,
 		APPLY_SETTINGS				= CRCInput::RC_Messages + 29,
 
-		// timerd's own list changed, whoever caused it
-		EVT_TIMERLIST_CHANGED			= CRCInput::RC_Messages + 30,
-
 		/* END of CRCInput::RC_Messages */
 
 		EVT_VOLCHANGED				= CRCInput::RC_Events + 1,

@@ -29,7 +29,6 @@
 #endif
 #include <global.h>
 #include <neutrino.h>
-#include <coreapi/osd.h>
 #include <gui/infoclock.h>
 #include <gui/keybind_setup.h>
 #include <system/debug.h>
@@ -80,8 +79,6 @@ CVolume *CVolume::getInstance()
 void CVolume::setvol(int vol)
 {
 	CZapit::getInstance()->SetVolume(vol);
-	// The clamped level, which is what a reader gets back.
-	coreapi::osd::announceVolume(CZapit::getInstance()->GetVolume());
 }
 
 void CVolume::setVolumeExt(int vol)
@@ -89,7 +86,6 @@ void CVolume::setVolumeExt(int vol)
 	g_settings.current_volume = vol;
 	CZapit::getInstance()->SetVolume(vol);
 	CVFD::getInstance()->showVolume(vol);
-	coreapi::osd::announceVolume(CZapit::getInstance()->GetVolume());
 	if (CNeutrinoApp::getInstance()->isMuted() && vol > 0)
 		CAudioMute::getInstance()->AudioMute(false, true);
 }

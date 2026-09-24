@@ -35,7 +35,6 @@ const kStale = {
 	'timer-changed': ['/api/v1/timers'],
 	'epg-updated': ['/api/v1/epg'],
 	'bouquets-changed': ['/api/v1/bouquets', '/api/v1/channels'],
-	'settings-changed': ['/api/v1/settings/'],
 };
 
 export const types = Object.keys(kStale);

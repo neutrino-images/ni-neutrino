@@ -21,6 +21,7 @@
 #include "timers.h"
 #include "coreapi/base/errors.h"
 #include "coreapi/base/deps.h"
+#include "coreapi/base/eventbus.h"
 
 #include <utility>
 
@@ -143,7 +144,21 @@ Result<TimerList> list()
 	return ok(std::move(out));
 }
 
-// No announcement here: timerd sends one for every change to its list.
+namespace
+{
+/* Nothing the message loop sends says that a timer was added, changed or taken
+   away, so the announcement is made here, on the far side of a change the box
+   has confirmed it took. The id is what the announcement carries: a reader that
+   keeps timers reads that one back, and one that keeps a list reads the list. */
+void announceChange(uint32_t id)
+{
+	Event e;
+	e.type = EventType::TimerChanged;
+	e.value = (int) id;
+	EventBus::instance().publish(e);
+}
+} // anonymous namespace
+
 Result<uint32_t> create(const TimerInfo &t)
 {
 	if (!creatableType(t.type))
@@ -184,6 +199,7 @@ Result<uint32_t> create(const TimerInfo &t)
 	if (s != Status::Ok)
 		return fail(s, ErrorCode::TimerNotCreated,
 			    "the box did not take the timer");
+	announceChange(new_id);
 	return ok(new_id);
 }
 
@@ -209,6 +225,7 @@ Result<void> modify(const TimerInfo &t)
 	if (s != Status::Ok)
 		return fail(s, ErrorCode::TimerNotChanged,
 			    "the box did not take the change");
+	announceChange(t.id);
 	return ok();
 }
 
@@ -236,6 +253,7 @@ Result<void> remove(uint32_t id)
 	if (held)
 		return fail(Status::Internal, ErrorCode::TimerStillThere,
 			    "the box still has the timer");
+	announceChange(id);
 	return ok();
 }
 

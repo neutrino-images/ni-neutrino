@@ -65,10 +65,7 @@ class CTimerdClient:private CBasicClient
 			EVT_ANNOUNCE_SLEEPTIMER,
 			EVT_SLEEPTIMER,
 			EVT_REMIND,
-			EVT_EXEC_PLUGIN,
-
-			// Sent after anything getTimerList reports has changed.
-			EVT_TIMERLIST_CHANGED
+			EVT_EXEC_PLUGIN
 		};
 
 		void registerEvent(unsigned int eventID, unsigned int clientID, const char * const udsName);
