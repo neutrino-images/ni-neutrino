@@ -66,6 +66,7 @@
 
 #include <coreapi/channels.h>
 #include <coreapi/system.h>
+#include <coreapi/settings/settings.h>
 #include <coreapi/base/deps.h>
 #include <coreapi/base/messagebridge.h>
 
@@ -2282,8 +2283,15 @@ void CNeutrinoApp::saveSetup(const char *fname)
 
 	saveKeys();
 
-	if (strcmp(fname, NEUTRINO_SETTINGS_FILE) || configfile.getModifiedFlag())
+	const bool is_live_file = !strcmp(fname, NEUTRINO_SETTINGS_FILE);
+	const bool was_modified = configfile.getModifiedFlag();
+	if (!is_live_file || was_modified)
 		configfile.saveConfig(fname);
+
+	/* Menu commits and web writes both end here. A backup under another
+	   name, or a save that changed nothing, is no news. */
+	if (is_live_file && was_modified)
+		coreapi::settings::announceSettingsChanged();
 }
 
 /**************************************************************************************
@@ -2905,6 +2913,7 @@ void CNeutrinoApp::InitTimerdClient()
 	g_Timerd->registerEvent(CTimerdClient::EVT_ANNOUNCE_SLEEPTIMER, 222, NEUTRINO_UDS_NAME);
 	g_Timerd->registerEvent(CTimerdClient::EVT_REMIND, 222, NEUTRINO_UDS_NAME);
 	g_Timerd->registerEvent(CTimerdClient::EVT_EXEC_PLUGIN, 222, NEUTRINO_UDS_NAME);
+	g_Timerd->registerEvent(CTimerdClient::EVT_TIMERLIST_CHANGED, 222, NEUTRINO_UDS_NAME);
 }
 
 void CNeutrinoApp::InitZapitClient()

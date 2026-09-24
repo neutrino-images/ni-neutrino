@@ -86,6 +86,12 @@ CTimerManager* CTimerManager::getInstance()
 }
 
 //------------------------------------------------------------
+void CTimerManager::announceListChanged()
+{
+	getEventServer()->sendEvent(CTimerdClient::EVT_TIMERLIST_CHANGED, CEventServer::INITID_TIMERD);
+}
+
+//------------------------------------------------------------
 void* CTimerManager::timerThread(void *arg)
 {
 	pthread_mutex_t dummy_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -129,6 +135,10 @@ void* CTimerManager::timerThread(void *arg)
 			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
 			pthread_mutex_lock(&tm_eventsMutex);
 
+			// Not m_saveEvents: a socket command sets that too and has
+			// announced its change already.
+			bool changed = false;
+
 			CTimerEventMap::iterator pos = timerManager->events.begin();
 			for(;pos != timerManager->events.end();++pos)
 			{
@@ -150,6 +160,7 @@ void* CTimerManager::timerThread(void *arg)
 						dprintf("announcing event\n");
 						event->announceEvent();							// event specific announce handler
 						timerManager->m_saveEvents = true;
+						changed = true;
 					}
 
 				if(event->alarmTime > 0 && (event->eventState == CTimerd::TIMERSTATE_SCHEDULED || event->eventState == CTimerd::TIMERSTATE_PREANNOUNCE) )	// if event wants to be fired
@@ -161,6 +172,7 @@ void* CTimerManager::timerThread(void *arg)
 						if(event->stopTime == 0)					// if event needs no stop event
 							event->setState(CTimerd::TIMERSTATE_HASFINISHED);
 						timerManager->m_saveEvents = true;
+						changed = true;
 					}
 
 				if(event->stopTime > 0 && event->eventState == CTimerd::TIMERSTATE_ISRUNNING  )		// check if stopevent is wanted
@@ -170,6 +182,7 @@ void* CTimerManager::timerThread(void *arg)
 						event->stopEvent();							//  event specific stop handler
 						event->setState(CTimerd::TIMERSTATE_HASFINISHED);
 						timerManager->m_saveEvents = true;
+						changed = true;
 					}
 
 				if(event->eventState == CTimerd::TIMERSTATE_HASFINISHED)
@@ -183,6 +196,7 @@ void* CTimerManager::timerThread(void *arg)
 						event->setState(CTimerd::TIMERSTATE_TERMINATED);
 					}
 					timerManager->m_saveEvents = true;
+					changed = true;
 				}
 
 				if(event->eventState == CTimerd::TIMERSTATE_TERMINATED)				// event is terminated, so delete it
@@ -194,6 +208,7 @@ void* CTimerManager::timerThread(void *arg)
 					delete pos->second;										// delete event
 					timerManager->events.erase(pos++);				// remove from list
 					timerManager->m_saveEvents = true;
+					changed = true;
 					if(pos == timerManager->events.end())
 						break;
 				}
@@ -216,6 +231,8 @@ void* CTimerManager::timerThread(void *arg)
 			{
 				timerManager->saveEventsToConfig();
 			}
+			if (changed)
+				timerManager->announceListChanged();
 			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
 
 			wait.tv_sec = (((time(NULL) / sleeptime) * sleeptime) + sleeptime);
@@ -489,6 +506,9 @@ int CTimerManager::adjustEvent(int peventID, time_t announceTime, time_t alarmTi
 // ---------------------------------------------------------------------------------
 void CTimerManager::loadEventsFromConfig()
 {
+	// Until the clock is set a reader sees an empty list. Once for the file.
+	size_t before = events.size();
+
 	CConfigFile config(',');
 
 	if(!config.loadConfig(TIMERDCONFIGFILE))
@@ -694,6 +714,8 @@ void CTimerManager::loadEventsFromConfig()
 		}
 	}
 	saveEventsToConfig();
+	if (events.size() != before)
+		announceListChanged();
 }
 // -------------------------------------------------------------------------------------
 void CTimerManager::loadRecordingSafety()
