@@ -147,8 +147,9 @@ done
 # ------------------------------------------------------- nobody writes one bare
 #
 # Candidates first, so the scan reads a hundred files rather than a thousand.
+# src/nhttpd stays in the tree as source only and is never built.
 ( cd "$SRC" && grep -rl 'g_settings\.' src lib --include='*.cpp' --include='*.h' --include='*.c' 2>/dev/null ) \
-	| grep -v '^src/system/settings\.h$' | sort -u > "$tmp/candidates"
+	| grep -v -e '^src/system/settings\.h$' -e '^src/nhttpd/' | sort -u > "$tmp/candidates"
 
 [ -s "$tmp/candidates" ] || {
 	echo "check-settings-text-lock.sh: no file in the tree mentions g_settings," >&2
