@@ -1408,7 +1408,7 @@ bool start(const ServerConfig &c)
 	// what was bound and a caller that wants to reach this has to be told.
 	const union MHD_DaemonInfo *i = MHD_get_daemon_info(daemon_, MHD_DAEMON_INFO_BIND_PORT);
 	{
-		OpenThreads::ScopedLock<OpenThreads::Mutex> port(portLock());
+		OpenThreads::ScopedLock<OpenThreads::Mutex> guard(portLock());
 		bound_port_ = (i != NULL) ? (int) i->port : c.port;
 	}
 
@@ -1444,7 +1444,7 @@ void stop()
 	   handler still running asks that question: it must not be left waiting on
 	   this thread, which is waiting on it. */
 	{
-		OpenThreads::ScopedLock<OpenThreads::Mutex> port(portLock());
+		OpenThreads::ScopedLock<OpenThreads::Mutex> guard(portLock());
 		bound_port_ = 0;
 	}
 
