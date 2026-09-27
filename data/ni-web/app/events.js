@@ -364,6 +364,17 @@ export function stop() {
 	source = null;
 }
 
+/* Closed and opened again on purpose, for a caller that wants a fresh connection now
+   rather than whatever retry happens to be running. status stays reachable across
+   the two calls, so opened() does not read this as a stream coming back from being
+   down and clears nothing on its own; the caller that asked for this is the one that
+   empties the store. */
+/** @returns {void} */
+export function reopen() {
+	stop();
+	open();
+}
+
 /* The document is being left: a navigation away from it, a tab being closed, or the browser
    putting it away whole. One event for all three, and pagehide rather than unload or
    beforeunload on purpose: a listener on either of those is itself a reason a browser

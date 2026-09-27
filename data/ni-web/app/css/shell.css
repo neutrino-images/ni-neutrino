@@ -14,7 +14,11 @@ a { color: var(--accent); }
 
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .shell { display: flex; flex-direction: column; height: 100%; }
-.content { flex: 1; min-width: 0; overflow: auto; padding: var(--gap-4); }
+/* overflow-anchor: none because a pull down grows an element above whatever
+   is on screen (app/ui/pulldown.js), and a browser's own scroll anchoring
+   would answer that by moving scrollTop to keep the view still, which is
+   exactly the reveal the gesture is drawing. */
+.content { flex: 1; min-width: 0; overflow: auto; padding: var(--gap-4); overflow-anchor: none; }
 
 /* The name of the screen and the sentence under it, drawn by the frame for
    every screen. The sentence is often the only place that says what a screen

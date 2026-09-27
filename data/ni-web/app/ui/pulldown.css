@@ -1,0 +1,39 @@
+/* The pull down and what it reveals. Fetched by the frame itself and not by a
+   screen, the one time this page loads (app/ui/pulldown.js), because every
+   screen sits inside the one element this is attached to.
+
+   THE INDICATOR NEVER MOVES ANYTHING BY ITSELF. Its height is set from
+   JavaScript, in step with the finger, and everything below is only what that
+   height is drawn as: centred, quiet, and gone at zero. */
+
+.pull-indicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--gap-2);
+	overflow: hidden;
+	height: 0;
+	color: var(--text-dim);
+	font-size: 0.8125rem;
+	pointer-events: none;
+}
+
+.pull-mark {
+	flex: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 2px solid var(--line);
+	border-top-color: var(--text-dim);
+	transform: rotate(0deg);
+	transition: transform 150ms ease;
+}
+
+.pull-indicator[data-armed] .pull-mark { transform: rotate(180deg); }
+
+.pull-indicator[data-busy] .pull-mark {
+	border-top-color: var(--accent);
+	animation: pull-spin 700ms linear infinite;
+}
+
+@keyframes pull-spin { to { transform: rotate(360deg); } }

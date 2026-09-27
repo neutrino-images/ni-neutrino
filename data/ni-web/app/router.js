@@ -22,6 +22,11 @@ import { Float } from './ui/float.js';
 import { MenuSheet } from './ui/sheet.js';
 import { Toasts } from './ui/toast.js';
 import { State } from './ui/state.js';
+// A pull down of .content refreshes the page, on a telephone where the
+// browser's own gesture cannot reach it: see app/ui/pulldown.js for why.
+import { usePullToRefresh, PullIndicator } from './ui/pulldown.js';
+
+const kPullCss = '/app/ui/pulldown.css';
 
 // The address as the page reads it, which is the one thing the two bars, the
 // column and the router have to agree about.
@@ -251,6 +256,8 @@ export function Shell(props) {
 	const open = area ? entryById(area, asked) : null;
 	const entryId = open ? open.id : asked;
 
+	const pull = usePullToRefresh();
+
 	// Asked for after the draw, never during it, and asked once: what comes
 	// back is kept where both foldings read it.
 	useEffect(function () {
@@ -258,6 +265,10 @@ export function Shell(props) {
 			return;
 		loadSecondLevel(area, ctx).then(bump, bump);
 	}, [area ? area.id : '', items]);
+
+	useEffect(function () {
+		ensureCss(kPullCss);
+	}, []);
 
 	useEffect(function () {
 		document.addEventListener('click', markWhatLeaves, true);
@@ -291,7 +302,8 @@ export function Shell(props) {
 			activeEntry=${entryId}
 			status=${props.status}
 			event=${props.status ? props.status.event : null} />
-		<main class="content" id="content">
+		<main class="content" id="content" ref=${pull.ref}>
+			<${PullIndicator} shown=${pull.shown} armed=${pull.armed} busy=${pull.busy} />
 			<${Router} onChange=${function (/** @type {{ url: string }} */ event) { setUrl(event.url); setMenuOpen(false); }}>
 				${routes}
 				<${AreaRoute} path="/" area=${first()} ctx=${ctx} />
