@@ -1154,12 +1154,12 @@ export default function Grid(props) {
 					onClose=${function () { setFinding(false); }} />
 				<div class="grid__nowbar">
 					<span class="grid__nowmark" aria-hidden="true"></span>
-					<span class="mono">${t(text, 'grid.now')} ${clock(at)}</span>
+					<span class="mono">${t(text, 'grid.now')} ${clock(moment)}</span>
 					<${Button} class="grid__find" onClick=${function () { setFinding(true); }}>${t(text, 'grid.pick')}<//>
 				</div>
 				${here === undefined
 					? null
-					: html`<${Slots} row=${here} at=${at} picked=${pickedKey} onPick=${pick} />`}
+					: html`<${Slots} row=${here} at=${moment} picked=${pickedKey} onPick=${pick} />`}
 				${listMore ? html`<p class="grid__more" role="status">${t(text, 'grid.more')}</p>` : null}
 			<//>`
 			/* In the tab order: this box scrolls in both directions, and
