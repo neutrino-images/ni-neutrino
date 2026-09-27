@@ -24,6 +24,7 @@ import { Shell } from './router.js';
 import { SignIn } from './ui/signin.js';
 import { setLanguage, pickLanguage, onLanguage } from './i18n.js';
 import { api } from './api.js';
+import { channelId } from './fmt.js';
 import { isTimeshift } from './fmt.js';
 import { restore as restoreTextSize } from './ui/textsize.js';
 /* Whole modules and not a named value out of each: neither of these exports
@@ -32,17 +33,10 @@ import { restore as restoreTextSize } from './ui/textsize.js';
    shows is nothing at all. */
 import * as session from './session.js';
 import * as events from './events.js';
+import * as store from './store.js';
 
-// The three events that change what the frame itself shows. Everything else on
-// the stream belongs to a screen and is none of this file's business.
-const WATCHED = ['zap', 'record-start', 'record-stop'];
-
-/* How often what is playing is asked for again on its own. The events above
-   cover the channel changing and a recording starting; this is for the
-   programme ending, which nothing on the stream announces. A minute, because
-   the header carries a percentage and a percentage that is a minute stale is
-   still the right number to two figures. */
-const EVENT_AGAIN_MS = 60000;
+// The header's progress share moves with the clock and not with any event.
+const CLOCK_MS = 60000;
 
 // What the box calls itself in, as one of the two this page has words for.
 // A box that has never been given a language answers with an empty name, which
@@ -66,36 +60,6 @@ function readLanguage() {
 	});
 }
 
-// Read and not guessed, and read again on the three events, because a page
-// left open all evening would otherwise name the channel somebody watched
-// before dinner.
-/**
- * @returns {Promise<{ channel: Api.Channel | null, event: Api.Event | null, recordings: Api.Recording[] }>}
- */
-function readStatus() {
-	const channel = api("GET", "/api/v1/channels/current").then(function (one) { return one; }, function () { return null; });
-	const recordings = api("GET", "/api/v1/recordings").then(function (answer) {
-		const rows = (answer && answer.items) || [];
-		// A timeshift is running too, and the mark in the corner says recording.
-		// Which of the two a row is, and what it is drawn with, is fmt.js.
-		return rows.filter(function (row) { return !isTimeshift(row); });
-	}, function () { return []; });
-
-	/* What is on now, asked for after the channel and not beside it, because
-	   the guide is asked about a channel and the channel is what the first
-	   answer carries. A box with no guide for this channel answers a refusal,
-	   which is a header without a programme in it and not a header missing. */
-	const event = channel.then(function (one) {
-		if (!one)
-			return null;
-		return api("GET", "/api/v1/epg/current", { query: { channel: one.id } })
-			.then(function (now) { return now; }, function () { return null; });
-	});
-
-	return Promise.all([channel, event, recordings]).then(function (three) {
-		return { channel: three[0], event: three[1], recordings: three[2] };
-	});
-}
 
 /* What this build carries, which the page cannot see for itself: the API
    documentation is a switch at compile time, and the destination that leads
@@ -141,7 +105,7 @@ function App() {
 	/* Said and not left to the first value: every member of this starts empty,
 	   so what it would settle on is a frame that can only ever be empty. */
 	const [status, setStatus] = useState(/** @type {Web.ShellStatus} */ ({
-		channel: null, event: null, recordings: [], session: null, build: null, carrying: false,
+		channel: null, event: null, recordings: [], standby: null, session: null, build: null, carrying: false,
 	}));
 	// The words on screen change when the language does, and nothing else does,
 	// so the frame is drawn again and the catalogue answers differently.
@@ -152,18 +116,6 @@ function App() {
 
 		function bump() {
 			redraw(function (n) { return n + 1; });
-		}
-
-		function refresh() {
-			readStatus().then(function (fresh) {
-				if (alive)
-					setStatus(function (was) {
-						return {
-							channel: fresh.channel, event: fresh.event, recordings: fresh.recordings,
-							session: was.session, build: was.build, carrying: was.carrying,
-						};
-					});
-			});
 		}
 
 		const stopLanguage = onLanguage(bump);
@@ -181,7 +133,7 @@ function App() {
 			if (alive)
 				setStatus(function (was) {
 					return {
-						channel: was.channel, event: was.event, recordings: was.recordings,
+						channel: was.channel, event: was.event, recordings: was.recordings, standby: was.standby,
 						session: granted, build: was.build, carrying: was.carrying,
 					};
 				});
@@ -195,15 +147,84 @@ function App() {
 			if (alive)
 				setStatus(function (was) {
 					return {
-						channel: was.channel, event: was.event, recordings: was.recordings,
+						channel: was.channel, event: was.event, recordings: was.recordings, standby: was.standby,
 						session: was.session, build: build, carrying: was.carrying,
 					};
 				});
 		});
 
-		const stopEvents = events.subscribe(function (/** @type {import('./events.js').StreamEvent} */ event) {
-			if (event && WATCHED.indexOf(event.type) >= 0)
-				refresh();
+		/* Watch channel through the store, read from the same source the card uses. */
+		const stopChannel = store.watch('GET', '/api/v1/channels/current', null, function (snapshot) {
+			if (alive) {
+				const channel = snapshot.state === store.READY ? snapshot.data : null;
+				setStatus(function (was) {
+					return {
+						channel: channel, event: was.event, recordings: was.recordings, standby: was.standby,
+						session: was.session, build: was.build, carrying: was.carrying,
+					};
+				});
+			}
+		});
+
+		/* Watch recordings through the store, filtering out timeshifts. */
+		const stopRecordings = store.watch('GET', '/api/v1/recordings', null, function (snapshot) {
+			if (alive) {
+				const answer = snapshot.state === store.READY ? snapshot.data : null;
+				const rows = (answer && answer.items) || [];
+				const recordings = rows.filter(function (row) { return !isTimeshift(row); });
+				setStatus(function (was) {
+					return {
+						channel: was.channel, event: was.event, recordings: recordings, standby: was.standby,
+						session: was.session, build: was.build, carrying: was.carrying,
+					};
+				});
+			}
+		});
+
+		/* Watch standby state through the store. */
+		const stopStandby = store.watch('GET', '/api/v1/system/standby', null, function (snapshot) {
+			if (alive) {
+				const mode = snapshot.state === store.READY ? snapshot.data : null;
+				setStatus(function (was) {
+					return {
+						channel: was.channel, event: was.event, recordings: was.recordings, standby: mode,
+						session: was.session, build: was.build, carrying: was.carrying,
+					};
+				});
+			}
+		});
+
+		/* Watch current epg event. This depends on having a channel, so only watch
+		   when the channel changes. */
+		let stopEvent = function () { };
+		const stopChannelForEvent = store.watch('GET', '/api/v1/channels/current', null, function (snapshot) {
+			if (!alive) return;
+			stopEvent();
+			const channel = snapshot.state === store.READY ? snapshot.data : null;
+			if (!channel) {
+				setStatus(function (was) {
+					return {
+						channel: was.channel, event: null, recordings: was.recordings, standby: was.standby,
+						session: was.session, build: was.build, carrying: was.carrying,
+					};
+				});
+				return;
+			}
+			const guideId = channelId(channel.epg_id) || channelId(channel.id);
+			if (!guideId) {
+				return;
+			}
+			stopEvent = store.watch('GET', '/api/v1/epg/current', { query: { channel: guideId } }, function (snapshot) {
+				if (alive) {
+					const event = snapshot.state === store.READY ? snapshot.data : null;
+					setStatus(function (was) {
+						return {
+							channel: was.channel, event: event, recordings: was.recordings, standby: was.standby,
+							session: was.session, build: was.build, carrying: was.carrying,
+						};
+					});
+				}
+			});
 		});
 
 		/* Whether that stream is carrying, which the mark in the corner is
@@ -220,24 +241,26 @@ function App() {
 					if (was.carrying === stream.carrying)
 						return was;
 					return {
-						channel: was.channel, event: was.event, recordings: was.recordings,
+						channel: was.channel, event: was.event, recordings: was.recordings, standby: was.standby,
 						session: was.session, build: was.build, carrying: stream.carrying,
 					};
 				});
 		});
 
 		events.start();
-		refresh();
-		const again = setInterval(refresh, EVENT_AGAIN_MS);
+		const clock = setInterval(bump, CLOCK_MS);
 
 		return function () {
 			alive = false;
-			clearInterval(again);
+			clearInterval(clock);
 			stopLanguage();
 			if (typeof stopSession === 'function')
 				stopSession();
-			if (typeof stopEvents === 'function')
-				stopEvents();
+			stopChannel();
+			stopRecordings();
+			stopStandby();
+			stopChannelForEvent();
+			stopEvent();
 			stopWatching();
 		};
 	}, []);

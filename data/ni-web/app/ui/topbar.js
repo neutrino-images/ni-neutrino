@@ -321,6 +321,7 @@ export function Topbar(props) {
 			<${OnAir}
 				channel=${status ? status.channel : null}
 				event=${props.event}
+				standby=${status && status.standby ? status.standby.on : null}
 				recordings=${status && status.recordings ? status.recordings.length : 0} />
 			<${Status} status=${status} />
 		</div>

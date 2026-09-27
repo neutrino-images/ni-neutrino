@@ -204,7 +204,9 @@ function Playing() {
 	const at = useNowSeconds();
 	const channel = useResource('GET', '/api/v1/channels/current');
 	const running = useResource('GET', '/api/v1/recordings');
+	const standbyStatus = useResource('GET', '/api/v1/system/standby');
 	const playing = channel.data;
+	const standby = standbyStatus.data;
 	const id = playing ? channelId(playing.id) : '';
 
 	/* The guide is asked for only once there is a channel to ask about, and
@@ -314,74 +316,76 @@ function Playing() {
 	}
 
 	return html`<${Card}
-		title=${t(text, 'now.card.playing')}
-		snapshot=${channel}
+		title=${t(text, standby && standby.on ? 'now.card.standby' : 'now.card.playing')}
+		snapshot=${standby && standby.on ? standbyStatus : channel}
 		wide=${true}
 		lead=${true}>
-		${playing
-			? html`<div class="now-head">
-				<${Logo} id=${playing.id} name=${playing.name} />
-				<div class="now-head-what">
-					<p class="now-channel-name">${playing.name}</p>
-					<p class="now-channel-facts">
-						${playing.number > 0 ? html`<span>${t(text, 'now.channel.number', { number: playing.number })}</span>` : null}
-						${playing.scrambled ? html`<span>${t(text, 'now.channel.scrambled')}</span>` : null}
-						${playing.url ? html`<span>${t(text, 'now.channel.web')}</span>` : null}
-					</p>
-				</div>
-				${recordingId !== 0
-					? html`<${Dot} kind="recording" word=${t(text, 'now.card.recording')} />`
-					: html`<${Dot} kind="onair" word=${t(text, 'now.card.playing')} />`}
-			</div>
-			<div class="now-event">
-				${on
-					? html`<p class="now-event-title">${on.title}</p>
-						<p class="now-event-when mono">
-							${t(text, 'now.event.window', { from: clock(on.start), to: clock(on.start + on.duration) })}
+		${standby && standby.on
+			? html`<p class="now-empty">${t(text, 'now.standby.state')}</p>`
+			: playing
+				? html`<div class="now-head">
+					<${Logo} id=${playing.id} name=${playing.name} />
+					<div class="now-head-what">
+						<p class="now-channel-name">${playing.name}</p>
+						<p class="now-channel-facts">
+							${playing.number > 0 ? html`<span>${t(text, 'now.channel.number', { number: playing.number })}</span>` : null}
+							${playing.scrambled ? html`<span>${t(text, 'now.channel.scrambled')}</span>` : null}
+							${playing.url ? html`<span>${t(text, 'now.channel.web')}</span>` : null}
 						</p>
-						${on.description ? html`<p class="now-event-text">${on.description}</p>` : null}
-						${on.duration > 0
-							? html`<${Meter}
-								label=${t(text, 'now.event.progress')}
-								value=${ran}
-								max=${on.duration}
-								text=${left > 0 ? t(text, 'now.event.left', { duration: duration(left) }) : ''} />`
-							: null}`
-					: html`<p class="now-empty">${t(text, 'now.event.none')}</p>`}
-			</div>
-			<div>
-				<h3 class="now-sub">${t(text, 'now.card.next')}</h3>
-				${rows.length
-					? html`<ul class="now-next-list">
-						${rows.slice(0, 3).map(function (row) {
-							return html`<li key=${row.id}>
-								<span class="mono now-next-time">${clock(row.start)}</span>
-								<span class="now-next-title">${row.title}</span>
-							</li>`;
-						})}
-					</ul>`
-					: html`<p class="now-empty">${t(text, 'now.next.none')}</p>`}
-			</div>
-			<p class="now-buttons">
-				${recordingId !== 0
-					? html`<${Button} primary=${true} onClick=${stopRecording}>${t(text, 'now.act.recordstop')}<//>`
-					: html`<${Button} primary=${true} onClick=${startRecording}>${t(text, 'now.act.record')}<//>`}
-				${shifting
-					? html`<${Button} onClick=${stopShift}>${t(text, 'now.act.timeshiftstop')}<//>`
-					: html`<${Button} onClick=${startShift}>${t(text, 'now.act.timeshift')}<//>`}
-				${/* The file for a player elsewhere, and the same channel played
-				     here, side by side: they are the two ways of watching what
-				     is on without the television, and somebody who wants one
-				     of them was looking for the other a moment before. */''}
-				<a class="btn" href=${buildUrl('/api/v1/stream/playlist/{id}', { id: playing.id }, null)}>
-					${t(text, 'now.act.m3u')}
-				</a>
-				${streaming
-					? html`<a class="btn" href=${hrefFor('channels', 'playback', playing.id)}>${labelOf(streaming)}</a>`
-					: null}
-				<a class="btn" href=${hrefFor('channels', 'list')}>${t(text, 'now.act.zap')}</a>
-			</p>`
-			: html`<p class="now-empty">${t(text, 'now.channel.none')}</p>`}
+					</div>
+					${recordingId !== 0
+						? html`<${Dot} kind="recording" word=${t(text, 'now.card.recording')} />`
+						: html`<${Dot} kind="onair" word=${t(text, 'now.card.playing')} />`}
+				</div>
+				<div class="now-event">
+					${on
+						? html`<p class="now-event-title">${on.title}</p>
+							<p class="now-event-when mono">
+								${t(text, 'now.event.window', { from: clock(on.start), to: clock(on.start + on.duration) })}
+							</p>
+							${on.description ? html`<p class="now-event-text">${on.description}</p>` : null}
+							${on.duration > 0
+								? html`<${Meter}
+									label=${t(text, 'now.event.progress')}
+									value=${ran}
+									max=${on.duration}
+									text=${left > 0 ? t(text, 'now.event.left', { duration: duration(left) }) : ''} />`
+								: null}`
+						: html`<p class="now-empty">${t(text, 'now.event.none')}</p>`}
+				</div>
+				<div>
+					<h3 class="now-sub">${t(text, 'now.card.next')}</h3>
+					${rows.length
+						? html`<ul class="now-next-list">
+							${rows.slice(0, 3).map(function (row) {
+								return html`<li key=${row.id}>
+									<span class="mono now-next-time">${clock(row.start)}</span>
+									<span class="now-next-title">${row.title}</span>
+								</li>`;
+							})}
+						</ul>`
+						: html`<p class="now-empty">${t(text, 'now.next.none')}</p>`}
+				</div>
+				<p class="now-buttons">
+					${recordingId !== 0
+						? html`<${Button} primary=${true} onClick=${stopRecording}>${t(text, 'now.act.recordstop')}<//>`
+						: html`<${Button} primary=${true} onClick=${startRecording}>${t(text, 'now.act.record')}<//>`}
+					${shifting
+						? html`<${Button} onClick=${stopShift}>${t(text, 'now.act.timeshiftstop')}<//>`
+						: html`<${Button} onClick=${startShift}>${t(text, 'now.act.timeshift')}<//>`}
+					${/* The file for a player elsewhere, and the same channel played
+					     here, side by side: they are the two ways of watching what
+					     is on without the television, and somebody who wants one
+					     of them was looking for the other a moment before. */''}
+					<a class="btn" href=${buildUrl('/api/v1/stream/playlist/{id}', { id: playing.id }, null)}>
+						${t(text, 'now.act.m3u')}
+					</a>
+					${streaming
+						? html`<a class="btn" href=${hrefFor('channels', 'playback', playing.id)}>${labelOf(streaming)}</a>`
+						: null}
+					<a class="btn" href=${hrefFor('channels', 'list')}>${t(text, 'now.act.zap')}</a>
+				</p>`
+				: html`<p class="now-empty">${t(text, 'now.channel.none')}</p>`}
 	<//>`;
 }
 

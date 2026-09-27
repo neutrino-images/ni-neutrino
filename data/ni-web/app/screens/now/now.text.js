@@ -20,6 +20,7 @@
 export default {
 	de: {
 		'now.card.playing': 'Läuft gerade',
+		'now.card.standby': 'Im Standby',
 		'now.card.next': 'Gleich danach',
 		'now.head': 'Was die Box gerade tut, auf einem Bildschirm.',
 		'now.card.sound': 'Ton',
@@ -94,6 +95,7 @@ export default {
 		'now.standby': 'In Standby schalten',
 		'now.standby.ask': 'Die Box in Standby schalten? Das Bild geht aus.',
 		'now.standby.sent': 'Die Box wurde in Standby geschickt.',
+		'now.standby.state': 'Die Box steht im Standby.',
 		'now.wake.sent': 'Die Box wurde geweckt.',
 		'now.quick.mode': 'Auflösung',
 		'now.quick.mode.unknown': 'Die Box nennt ihre Auflösungen gerade nicht.',
@@ -205,6 +207,7 @@ export default {
 	},
 	en: {
 		'now.card.playing': 'On now',
+		'now.card.standby': 'In standby',
 		'now.card.next': 'Up next',
 		'now.head': 'What the box is doing, on one screen.',
 		'now.card.sound': 'Sound',
@@ -279,6 +282,7 @@ export default {
 		'now.standby': 'Put into standby',
 		'now.standby.ask': 'Put the box into standby? The picture goes off.',
 		'now.standby.sent': 'The box was sent into standby.',
+		'now.standby.state': 'The box is in standby.',
 		'now.wake.sent': 'The box was woken up.',
 		'now.quick.mode': 'Resolution',
 		'now.quick.mode.unknown': 'The box is not naming its resolutions.',

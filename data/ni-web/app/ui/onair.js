@@ -60,6 +60,7 @@ export function monogram(name) {
  * @param {{
  *   channel: Api.Channel | null,
  *   event?: { title?: string, start?: number, duration?: number } | null,
+ *   standby?: boolean | null,
  *   recordings?: number,
  *   now?: number
  * }} props
@@ -68,6 +69,7 @@ export function monogram(name) {
 export function OnAir(props) {
 	const channel = props.channel;
 	const recordings = props.recordings || 0;
+	const standbyOn = props.standby === true;
 	/* A picture the box does not have for this channel is a 404, which a
 	   browser draws as a broken image. Asked for once, and the monogram takes
 	   over the moment the answer says there is none. */
@@ -76,6 +78,12 @@ export function OnAir(props) {
 	useEffect(function () {
 		setBroken(false);
 	}, [channel ? channel.id : '']);
+
+	if (standbyOn) {
+		return html`<span class="onair" data-on-air="standby">
+			<span class="onair-meta"><span class="onair-name">${t(text, 'shell.status.standby')}</span></span>
+		</span>`;
+	}
 
 	if (!channel) {
 		return html`<span class="onair" data-on-air="none">

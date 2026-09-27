@@ -226,6 +226,8 @@ declare namespace Web {
 		/** what the guide says is on that channel now, and null where it says nothing */
 		event: Api.Event | null;
 		recordings: Api.Recording[];
+		/** standby status of the box, and null before it has been read */
+		standby: { on: boolean } | null;
 		session: import('../../../data/ni-web/app/session.js').Session | null;
 		/**
 		 * What the box said about its own build, and null before it has said.
