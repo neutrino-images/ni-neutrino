@@ -238,6 +238,7 @@ bouqueteditor.newbouquetname Nový názov buketu
 bouqueteditor.rename Premenovať
 bouqueteditor.return Naspäť
 bouqueteditor.savechanges? Uloženie týchto zmien?
+bouqueteditor.savefailed Zmeny sa nepodarilo uložiť
 bouqueteditor.savingchanges Ukladám zmeny. Čakajte prosím...
 bouqueteditor.switch Pridať/Odstrániť kanál
 bouqueteditor.switchmode TV/Rádio
@@ -803,14 +804,14 @@ flashupdate.ng_noflash Systém beží na USB, aktualizácia zrušená!
 flashupdate.noversion Kontrola verzie je momentálne podporovaná len pri aktualizácii cez web.\nSkutočne chcete inštalovať túto verziu?
 flashupdate.programmingflash Programovanie pamäte FLASH
 flashupdate.proxypassword Heslo
-flashupdate.proxypassword_hint1 Vloženie hesla proxy servera
+flashupdate.proxypassword_hint1 Zadanie hesla proxy servera
 flashupdate.proxypassword_hint2 Prázdne pole znamená nepoužitie hesla
 flashupdate.proxyserver Názov proxy servera
-flashupdate.proxyserver_hint1 Vloženie názovu servera proxy alebo IP (host:port)
+flashupdate.proxyserver_hint1 Zadanie názovu servera proxy alebo IP (host:port)
 flashupdate.proxyserver_hint2 Prázdne pole znamená nepoužitie proxy servera
 flashupdate.proxyserver_sep Proxy server
 flashupdate.proxyusername Užívateľ
-flashupdate.proxyusername_hint1 Vloženie mena užívateľa proxy servera
+flashupdate.proxyusername_hint1 Zadanie mena užívateľa proxy servera
 flashupdate.proxyusername_hint2 Prázdne pole znamená nepoužite autorizácie
 flashupdate.read_directory_not_exist Zálohovací priečinok %s \nneexistuje!
 flashupdate.read_no_available_space Maximálna dostupná veľkosť miesta v %s \nje %d KB, potrebné sú ale %d KB.\n \nOperácia sa zruší, vyberte iný disk!
@@ -1149,14 +1150,18 @@ infoviewer.next Nasleduje
 infoviewer.nocurrent Nedostupné informácie pre aktuálny program
 infoviewer.noepg EPG je nedostupné
 infoviewer.notavailable Kanál (teraz) nedostupný
-infoviewer.notavailable.hint_check_tuner_setup (((T))) Bitte prüfen Sie die Tuner-Konfiguration.
-infoviewer.notavailable.reason_no_active_tuner (((T))) Kein aktiver Tuner verfügbar.
-infoviewer.notavailable.reason_no_delivery (((T))) Kein aktiver Tuner unterstützt den Empfangsweg dieses Senders.
-infoviewer.notavailable.reason_no_free_tuner (((T))) Zurzeit ist kein freier Tuner verfügbar.
-infoviewer.notavailable.reason_no_source_config (((T))) Für den gewählten Satelliten/Provider ist kein aktiver Tuner konfiguriert.
-infoviewer.notavailable.reason_stream_start_failed (((T))) Stream konnte nicht gestartet werden.
-infoviewer.notavailable.reason_tune_failed (((T))) Tuning fehlgeschlagen (kein Signal oder Transponder nicht verfügbar).
-infoviewer.notavailable.source (((T))) Quelle: %s
+infoviewer.notavailable.hint_check_tuner_setup Skontrolujte prosím konfiguráciu tunera.
+infoviewer.notavailable.needs_reception Tento kanál potrebuje: %s
+infoviewer.notavailable.reason_no_active_tuner Nie je k dispozícii žiadny aktívny tuner.
+infoviewer.notavailable.reason_no_delivery Žiadny aktívny tuner nepodporuje tento systém distribúcie kanálov.
+infoviewer.notavailable.reason_no_free_tuner Momentálne nie je k dispozícii žiadny voľný tuner.
+infoviewer.notavailable.reason_no_source_config Pre vybraný satelit/poskytovateľa nie je nakonfigurovaný žiadny aktívny tuner.
+infoviewer.notavailable.reason_no_standard Žiadny aktívny tuner nepodporuje vysielací štandard tohto kanála.
+infoviewer.notavailable.reason_stream_start_failed Stream sa nepodarilo spustiť.
+infoviewer.notavailable.reason_tune_failed Ladenie zlyhalo (žiadny signál alebo nedostupný transpondér).
+infoviewer.notavailable.source Zdroj: %s
+infoviewer.notavailable.tuner_disabled %s by mohlo prijímať tento kanál, ale je nastavené na „%s“.
+infoviewer.notavailable.tuner_disabled_source %s by mohlo prijímať tento kanál, ale je nastavené na „%s“ a zatiaľ k nemu nie je priradený žiadny satelit.
 infoviewer.now Teraz
 infoviewer.subchan_disp_pos Zobrazenie podkanálov
 infoviewer.subchan_infobar Infolišta
@@ -1294,6 +1299,7 @@ mainmenu.mediaplayer Prehrávač medií
 mainmenu.movieplayer Prehrávač filmov
 mainmenu.pausesectionsd Načítavanie EPG
 mainmenu.pictureviewer Prehliadač obrázkov
+mainmenu.poweroff_menu Vypnutie
 mainmenu.radiomode Rádio
 mainmenu.reboot Reštartovať
 mainmenu.recording Nahrávanie
@@ -1648,7 +1654,7 @@ menu.hint_net_dhcp Použije DHCP server pre automatickú konfiguráciu
 menu.hint_net_djmount Pripojenie UPnP zariadení ako filesystem\npodľa /media/00upnp
 menu.hint_net_dropbear Použitie ssh prístupu do boxu
 menu.hint_net_ftpd Použitie prenosu súboru cez FTP
-menu.hint_net_gateway Vloženie IP adresy brány smerovača
+menu.hint_net_gateway Zadanie IP adresy brány smerovača
 menu.hint_net_hostname Zmena hosťovacieho názvu prijímača
 menu.hint_net_httpd Nastavenia webového servera (ni-web)
 menu.hint_net_httpd_host Adresa, na ktorej server odpovedá\n(0.0.0.0 pre všetky)
@@ -1656,7 +1662,7 @@ menu.hint_net_httpd_pass Nové heslo pre webové rozhranie\n(prázdne ponechá d
 menu.hint_net_httpd_port TCP port webového rozhrania (1-65535)
 menu.hint_net_httpd_user Používateľ pre webové rozhranie
 menu.hint_net_if Výber interface pre konfiguráciu
-menu.hint_net_ipaddress Vloženie IP adresy vášho prijímača
+menu.hint_net_ipaddress Zadanie IP adresy vášho prijímača
 menu.hint_net_mount Konfigurácia, pripojenie a odpojenie sieťových zdielaní. Podpora NFS a CIFS.
 menu.hint_net_nameserver Zadanie IP adresy DNS servera
 menu.hint_net_netmask Zadanie sieťovej masky, ak netušíte použite 255.255.255.0
@@ -1666,8 +1672,8 @@ menu.hint_net_ntp Konfigurácia synchronizácie času / hodín
 menu.hint_net_ntpatboot Použije synchronizáciu času NTP protokolom počas zavádzania systému
 menu.hint_net_ntpenable Použije synchronizáciu času pomocou NTP protokolu\nAk nebude NTP synchronizácia úspešná, použije sa sychronicácia cez DVB.
 menu.hint_net_ntprefresh Časový interval synchronizácie
-menu.hint_net_ntpserver Vloženie názvu NTP servera
-menu.hint_net_pass Vloženie kryptovacieho kľúča (WPA-PSK)
+menu.hint_net_ntpserver Zadanie názvu NTP servera
+menu.hint_net_pass Zadanie kryptovacieho kľúča (WPA-PSK)
 menu.hint_net_proxy Ak používate proxy prístup k internetu\nnastavte tu on-line aktualizáciu softvéru
 menu.hint_net_proxypass Proxy užívateľské heslo\nak vyžaduje autorizáciu
 menu.hint_net_proxyserver Názov proxy servera
@@ -1726,6 +1732,7 @@ menu.hint_plugins_control Konfigurácia nainštalovaných doplnkov a služieb
 menu.hint_plugins_hdd_dir Výber priečinka pre načítanie doplnkov
 menu.hint_plugins_hide Skryť alebo zobraziť integrovaných doplnkov alebo doplnkov v užívateľskom menu
 menu.hint_power_leds Konfigurácia správania LED podsvietenia tlačidla napájania
+menu.hint_poweroff_menu Otvorí podponuku s možnosťami napájania: vypnutie, pohotovostný režim, reštart, časovač vypnutia, nastavenia napájania a doplnky.
 menu.hint_pref_lang Výber preferovaných jayzkov zvuku a EPG\nvýber 'none' pre nepoužitie
 menu.hint_pref_subs Výber preferovaných jazykov titulkov\nvýber 'none' pre nepoužitie
 menu.hint_progressbar Výber volieb ukazateľa
@@ -1829,7 +1836,7 @@ menu.hint_scan_motor Možnosti motora, satelitný vyhľadávač
 menu.hint_scan_motor_18v Použije 18V pri pohybe motora
 menu.hint_scan_motor_speed Rýchlosť pohybu motora v 1/10 stupňa\nza sekundu
 menu.hint_scan_motorpos Výber čísla uloženej pozície pre\ntento satelit
-menu.hint_scan_nid Vloženie network ID (dekadicky)
+menu.hint_scan_nid Zadanie network ID (dekadicky)
 menu.hint_scan_nit Pridanie transpondérov zo sieťovej informácie
 menu.hint_scan_pids Hľadať a uložiť audio/video/PMT PIDy
 menu.hint_scan_pilot Výber parametru pilotného signálu (áno - ON, nie - OFF)
@@ -2307,7 +2314,7 @@ moviecut.cancel Zrušiť úpravu filmu?
 movieplayer.bisection_jump Deliace skoky
 movieplayer.bookmark Záložky
 movieplayer.bookmarkname Názov záložky
-movieplayer.bookmarkname_hint1 Vloženie názvu novej záložky
+movieplayer.bookmarkname_hint1 Zadanie názvu novej záložky
 movieplayer.bookmarkname_hint2 ???
 movieplayer.chapters Kapitoly
 movieplayer.display_playtime Zobraziť čas prehrávania na VFD
@@ -2381,7 +2388,7 @@ networkmenu.hostname Názov hostiteľa
 networkmenu.hostname_hint1 Vložiť hostiteľa,
 networkmenu.hostname_hint2 pre zmenu potrebný reštart
 networkmenu.httpd Webový server (ni-web)
-networkmenu.httpd_host Adresa viazania
+networkmenu.httpd_host Priradená adresa
 networkmenu.httpd_pass Heslo
 networkmenu.httpd_port Port
 networkmenu.httpd_restart_failed ni-web sa potom nepodarilo spustiť
@@ -2392,6 +2399,7 @@ networkmenu.ipaddress IP adresa
 networkmenu.mount Úprava sieťových priečinkov (NFS / CIFS)
 networkmenu.nameserver DNS
 networkmenu.netmask Maska podsiete
+networkmenu.no_interface Nenašlo sa žiadne sieťové rozhranie!
 networkmenu.ntpatboot Synchronizácia pri zavádzaní
 networkmenu.ntpenable Synchronizovať čas cez
 networkmenu.ntprefresh Skontrolovať po (min):
@@ -2664,12 +2672,15 @@ remotebox_add pridať
 remotebox_channel_na Kanál nedostupný na Vzdialenom boxe
 remotebox_del zmazať
 remotebox_head Vzdialený box
+remotebox_login_failed Vzdialený box odmietol používateľské meno alebo heslo
 remotebox_mod upraviť
+remotebox_no_answer Vzdialený box neodpovedá
 remotebox_onoff zap/vyp
 remotebox_pass Heslo
 remotebox_port Port
 remotebox_rbaddr Adresa
 remotebox_rbname Pomenovanie
+remotebox_refused Vzdialený box odmietol požiadavku
 remotebox_user Uživateľ
 reset_all Továrenské nastavenia
 reset_channels Zmazanie všetkych kanálov
@@ -2884,9 +2895,14 @@ streaming.slow Systém/HDD je pomalý, zvážte zastavenie niektorých nahrávan
 streaming.write_error Nahrávanie prerušené z dôvodu chyby zápisu.
 stringinput.backspace Naspäť
 stringinput.caps Veľké/Malé znaky
+stringinput.char_not_allowed Znak tu nie je povolený.
 stringinput.clear Všetko zmazať
+stringinput.empty_not_allowed Vstup nesmie byť prázdny.
 stringinput.insert Vložiť
+stringinput.maxchars_reached Dosiahnutý maximálny počet znakov.
 stringinput.save Uložiť
+stringinput.save_failed Vstup nie je možné uložiť.
+stringinput.space Medzera
 subtitles.charset Znaková sada
 subtitles.head Titulky
 subtitles.stop Vypnúť titulky
@@ -3131,7 +3147,11 @@ webchannels.xml.reload Obnoviť
 webradio.head WebRádio
 webradio.xml Súbory WebRádia
 webradio.xml.auto Automatické načítanie WebRádio súborov
+webtv.dns.blocker_suspected Hostiteľ streamu sa preložil na blokovanú adresu:\n\nHostiteľ: %s\nAdresa: %s\n\nMôže to naznačovať prítomnosť blokovacieho nástroja DNS, ako je napríklad Pi-hole, AdGuard Home alebo filter v smerovači.
+webtv.dns.diagnostics Diagnostika DNS
+webtv.dns.failed Vyhľadanie DNS zlyhalo pre:\n%s\n\nSkontrolujte pripojenie na internet, nastavenia DNS alebo smerovač.
 webtv.head WebTV
+webtv.stream_restart_attempts Stream sa reštartuje po obnovení spojenia
 webtv.xml WebTV súbory
 webtv.xml.auto Automatické načítanie WebTV súborov
 window_size Veľkosť okna v %
