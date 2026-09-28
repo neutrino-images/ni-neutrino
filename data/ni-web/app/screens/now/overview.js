@@ -578,6 +578,8 @@ function BoxCard() {
 function Message() {
 	const [message, setMessage] = useState('');
 	const [waits, setWaits] = useState(false);
+	const standbyStatus = useResource('GET', '/api/v1/system/standby');
+	const standby = standbyStatus.data;
 
 	function sendMessage() {
 		if (message === '') {
@@ -603,7 +605,7 @@ function Message() {
 			onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setWaits(e.currentTarget.checked); }} />
 		<${Button}
 			primary=${true}
-			disabled=${message === ''}
+			disabled=${(standby && standby.on) || message === ''}
 			onClick=${sendMessage}>${t(text, 'now.message.send')}<//>
 	<//>`;
 }
