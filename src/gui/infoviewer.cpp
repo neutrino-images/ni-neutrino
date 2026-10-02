@@ -1193,6 +1193,10 @@ void CInfoViewer::loop(bool show_dot)
 			g_RCInput->postMsg(NeutrinoMessages::SHOW_EPG, 0);
 			res = messages_return::cancel_info;
 #endif
+		} else if (msg == NeutrinoMessages::STANDBY_ON || msg == NeutrinoMessages::STANDBY_TOGGLE || msg == NeutrinoMessages::SHUTDOWN) {
+			// Standby entered from here would delete the clock this loop repaints.
+			g_RCInput->postMsg(msg, data);
+			res = messages_return::cancel_info;
 		} else if ((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer())) {
 			if(fader.FadeDone())
 				res = messages_return::cancel_info;
