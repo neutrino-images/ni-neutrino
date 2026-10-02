@@ -95,6 +95,9 @@ const WEEKDAY_SHIFT = 9;
 // index is the number. Six is left out: the daemon never runs it.
 export const PLAIN_REPEATS = ['once', 'daily', 'weekly', 'biweekly', 'fourweekly', 'monthly'];
 
+// The daemon's TIMERSTATE_ISRUNNING.
+export const STATE_RUNNING = 2;
+
 /**
  * Which of the choices a stored repeat is, as the form names them.
  * @param {number} repeat
@@ -229,6 +232,8 @@ export function startOfMinute(seconds) {
  * @property {string} recording_dir
  * @property {string} epg_id
  * @property {number} epg_start
+ * @property {boolean} running a recording the daemon has already begun
+ * @property {number} began when it began, to the second
  */
 
 // How long a recording lasts when nothing else said. A number, and any number
@@ -260,6 +265,8 @@ export function emptyDraft(kind, now) {
 		recording_dir: '',
 		epg_id: '',
 		epg_start: 0,
+		running: false,
+		began: 0,
 	};
 }
 
@@ -270,6 +277,7 @@ export function emptyDraft(kind, now) {
  */
 export function draftOf(timer) {
 	const minutes = timer.stop > timer.start ? Math.round((timer.stop - timer.start) / 60) : 0;
+	const at = kindOf(timer.kind);
 	return {
 		kind: timer.kind,
 		mode: 'tv',
@@ -290,6 +298,8 @@ export function draftOf(timer) {
 		recording_dir: timer.recording_dir,
 		epg_id: timer.epg_id,
 		epg_start: timer.epg_start,
+		running: at !== null && at.duration && timer.state === STATE_RUNNING,
+		began: timer.start,
 	};
 }
 
@@ -309,6 +319,27 @@ export function wholeNumber(value) {
 }
 
 /**
+ * How the draft repeats, in the daemon's numbering, and once for a kind that
+ * carries no repeat.
+ * @param {Draft} draft
+ * @returns {number}
+ */
+function repeatsOf(draft) {
+	const at = kindOf(draft.kind);
+	return at !== null && at.repeat ? repeatValue(draft.repeat, draft.days) : REPEAT_ONCE;
+}
+
+/**
+ * A running recording that runs once: the daemon no longer moves its start. A
+ * repeating one counts its next occurrence from its start, so that stays open.
+ * @param {Draft} draft
+ * @returns {boolean}
+ */
+export function startFixed(draft) {
+	return draft.running && repeatsOf(draft) === REPEAT_ONCE;
+}
+
+/**
  * When the timer begins, in seconds. An immediate recording begins now and says
  * so rather than carrying a field somebody could push into next week.
  * @param {Draft} draft
@@ -318,6 +349,8 @@ export function wholeNumber(value) {
 export function startSeconds(draft, now) {
 	if (draft.kind === 'immediate-record')
 		return now;
+	if (startFixed(draft))
+		return draft.began;
 	return momentSeconds(draft.start);
 }
 
@@ -338,11 +371,11 @@ export function stopSeconds(draft, now) {
 	return startSeconds(draft, now) + minutes * 60;
 }
 
-/* WHAT THE FORM REFUSES TO SEND, AND WHY IT IS THESE FOUR.
+/* WHAT THE FORM REFUSES TO SEND, AND WHY.
 
-   The first three are the box's own rules, stated here so the person is told
-   before the send rather than by a refusal afterwards. Nothing here lets anything
-   past that the box would turn down, and everything here it would turn down too
+   All of them are the box's own, stated here so the person is told before the
+   send rather than by a refusal afterwards. Nothing here lets anything past that
+   the box would turn down, and everything here it would turn down too
    (src/coreapi/timers.cpp).
 
    THE DURATION IS THE ONE THAT MATTERS. A recording is the only kind that has an
@@ -351,7 +384,7 @@ export function stopSeconds(draft, now) {
    has no end for the daemon to act on. So this is not a default somebody can
    clear, it is a value without which nothing is sent at all.
 
-   The fourth the box refuses as well: a weekday repeat with no day set, which
+   The weekday rule too: the box refuses a weekday repeat with no day set, which
    the daemon would otherwise file as a timer that runs once. */
 
 /**
@@ -389,9 +422,16 @@ export function draftProblems(draft, now) {
 	}
 
 	// Asked of a one-off only, as the box asks it.
-	const repeats = at.repeat ? repeatValue(draft.repeat, draft.days) : REPEAT_ONCE;
-	if (repeats === REPEAT_ONCE && start > 0 && start < startOfMinute(now))
+	const fixed = startFixed(draft);
+	if (!fixed && repeatsOf(draft) === REPEAT_ONCE && start > 0 && start < startOfMinute(now))
 		out.push('form.bad.past');
+
+	// An end behind now would have the daemon end it at its next pass.
+	if (fixed) {
+		const stop = stopSeconds(draft, now);
+		if (stop > 0 && stop <= now)
+			out.push('form.bad.ended');
+	}
 
 	return out;
 }
@@ -478,34 +518,34 @@ export function createBody(draft, now) {
 }
 
 /**
- * What a change is sent as. The kind, the channel and the guide entry are not in
- * it: the daemon's protocol carries no way to move any of them, so a route that
- * took them would answer ok and change nothing (src/httpd/ep/ep_timers.cpp).
+ * What a change is sent as. The kind, the channel, the guide entry, the title,
+ * the standby flag and the directory are not in it: the route takes none of them
+ * (src/httpd/ep/ep_timers.cpp).
  * @param {Draft} draft
  * @param {number} now
  * @returns {ChangeBody}
  */
 export function changeBody(draft, now) {
 	const at = kindOf(draft.kind);
+	// Left out where it is fixed, so the box keeps what it holds to the second.
+	const fixed = startFixed(draft);
 	/** @type {ChangeBody} */
-	const body = { start: startSeconds(draft, now) };
+	const body = {};
+	if (!fixed)
+		body.start = startSeconds(draft, now);
 	if (at === null)
 		return body;
 
 	if (at.duration)
 		body.stop = stopSeconds(draft, now);
-	if (at.title !== '')
-		body.title = draft.title;
 	if (at.repeat) {
 		body.repeat = repeatValue(draft.repeat, draft.days);
 		body.repeat_count = wholeNumber(draft.count);
 	}
-	if (at.announce)
+	if (at.announce && !fixed)
 		body.announce = wholeNumber(draft.announce) > 0
 			? startSeconds(draft, now) - wholeNumber(draft.announce) * 60
 			: 0;
-	if (at.standby)
-		body.standby_on = draft.standby_on;
 	return body;
 }
 

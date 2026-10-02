@@ -35,7 +35,7 @@ import text from './list.text.js';
 import { useAllChannels } from '../../ui/channels.js';
 import {
 	KINDS, kindOf, isKnownKind, PLAIN_REPEATS, momentInput, emptyDraft, draftOf,
-	draftProblems, createBody, changeBody, useAnswer,
+	draftProblems, createBody, changeBody, useAnswer, startFixed,
 } from './list.model.js';
 
 const WEEKDAY_WORDS = ['weekday.mo', 'weekday.tu', 'weekday.we', 'weekday.th', 'weekday.fr', 'weekday.sa', 'weekday.su'];
@@ -233,6 +233,18 @@ function startError(wrong) {
 	return null;
 }
 
+/**
+ * @param {string[]} wrong
+ * @returns {string | null}
+ */
+function durationError(wrong) {
+	if (wrong.indexOf('form.bad.duration') >= 0)
+		return t(text, 'form.bad.duration');
+	if (wrong.indexOf('form.bad.ended') >= 0)
+		return t(text, 'form.bad.ended');
+	return null;
+}
+
 function nowSeconds() {
 	return Math.floor(Date.now() / 1000);
 }
@@ -293,6 +305,7 @@ export function TimerForm(props) {
 
 	const here = draft;
 	const shape = kindOf(here.kind);
+	const fixed = startFixed(here);
 	const wrong = draftProblems(here, nowSeconds());
 	/* The one reason this form withholds its own button is a field that is not
 	   filled in yet. What the request is granted is not read here at all: the
@@ -450,7 +463,16 @@ export function TimerForm(props) {
 					options=${channelOptions(channels.items, here.channel_id)}
 					onChange=${function (/** @type {Web.On<HTMLSelectElement>} */ e) { change({ channel_id: e.currentTarget.value }); }} />` : null}
 
-			${shape && shape.start ? html`
+			${shape && shape.start && fixed ? html`
+				<${Field}
+					id="timer-start"
+					label=${t(text, 'form.start')}
+					type="datetime-local"
+					value=${momentInput(here.began)}
+					readOnly=${true}
+					hint=${t(text, 'form.start.running')}
+					onInput=${function () { }} />`
+				: shape && shape.start ? html`
 				<${Field}
 					id="timer-start"
 					label=${t(text, 'form.start')}
@@ -471,10 +493,19 @@ export function TimerForm(props) {
 					min="1"
 					value=${here.minutes}
 					hint=${t(text, 'form.duration.why')}
-					error=${wrong.indexOf('form.bad.duration') >= 0 ? t(text, 'form.bad.duration') : null}
+					error=${durationError(wrong)}
 					onInput=${function (/** @type {Web.On<HTMLInputElement, InputEvent>} */ e) { change({ minutes: e.currentTarget.value }); }} />` : null}
 
-			${shape && shape.title !== '' ? html`
+			${shape && shape.title !== '' && changing ? html`
+				<${Field}
+					id="timer-title"
+					label=${t(text, shape.title)}
+					value=${here.title}
+					readOnly=${true}
+					hint=${t(text, 'form.fixed')}
+					onInput=${function () { }} />` : null}
+
+			${shape && shape.title !== '' && !changing ? html`
 				<${Field}
 					id="timer-title"
 					label=${t(text, shape.title)}
@@ -512,7 +543,7 @@ export function TimerForm(props) {
 						hint=${t(text, 'form.count.hint')}
 						onInput=${function (/** @type {Web.On<HTMLInputElement, InputEvent>} */ e) { change({ count: e.currentTarget.value }); }} />` : null}` : null}
 
-			${shape && shape.announce ? html`
+			${shape && shape.announce && !fixed ? html`
 				<${Field}
 					id="timer-announce"
 					label=${t(text, 'form.announce')}
@@ -527,9 +558,20 @@ export function TimerForm(props) {
 					id="timer-standby"
 					label=${t(text, 'form.standby')}
 					checked=${here.standby_on}
+					disabled=${changing}
+					hint=${changing ? t(text, 'form.fixed') : null}
 					onChange=${function (/** @type {Web.On<HTMLInputElement>} */ e) { change({ standby_on: e.currentTarget.checked }); }} />` : null}
 
-			${shape && shape.dir ? html`
+			${shape && shape.dir && changing ? html`
+				<${Field}
+					id="timer-dir"
+					label=${t(text, 'form.dir')}
+					value=${here.recording_dir === '' ? t(text, 'form.dir.default') : here.recording_dir}
+					readOnly=${true}
+					hint=${t(text, 'form.fixed')}
+					onInput=${function () { }} />` : null}
+
+			${shape && shape.dir && !changing ? html`
 				<${Select}
 					id="timer-dir"
 					label=${t(text, 'form.dir')}
