@@ -73,7 +73,7 @@ const Param kIdParams[] = {
 };
 
 const Endpoint kEndpoints[] = {
-	{ Method::Delete, "/api/v1/timers/{id}", AuthLevel::System, "removes one timer",
+	{ Method::Delete, "/api/v1/timers/{id}", AuthLevel::System, "removes one timer", NULL,
 	  HTTPD_PARAMS(kIdParams), NULL, &removeTimer },
 };
 

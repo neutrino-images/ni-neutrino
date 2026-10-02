@@ -74,10 +74,10 @@ Response theHostAndThePeer(const Request &req)
 }
 
 const Endpoint host_endpoints[] = {
-	{ Method::Get, "/api/v1/test/host",        AuthLevel::Read, "answers with the authority the request named",
-	  NULL, 0, NULL, &theHost, false },
-	{ Method::Get, "/api/v1/test/hostandpeer", AuthLevel::Read, "answers with that authority and the address it came from",
-	  NULL, 0, NULL, &theHostAndThePeer, false },
+	{ Method::Get, "/api/v1/test/host",        AuthLevel::Read, "answers with the authority the request named", NULL,
+	  NULL, 0, NULL, &theHost, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get, "/api/v1/test/hostandpeer", AuthLevel::Read, "answers with that authority and the address it came from", NULL,
+	  NULL, 0, NULL, &theHostAndThePeer, false, Answers200, HTTPD_NO_REFUSALS },
 };
 
 const RouteTable host_table = { HTTPD_TABLE("host", host_endpoints) };

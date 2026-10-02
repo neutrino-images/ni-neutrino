@@ -35,7 +35,7 @@
      each other come apart without a border between them. */
   --ni-get: #4aa3df;
   --ni-post: #3fb984;
-  --ni-put: #9b8cff;
+  --ni-put: #d9b54a;
   --ni-patch: #3fbfb1;
   --ni-delete: #e0574d;
 }
@@ -59,6 +59,11 @@ body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
 .swagger-ui .opblock-tag, .swagger-ui .opblock .opblock-summary-path,
 .swagger-ui .opblock .opblock-summary-description,
 .swagger-ui .opblock-description-wrapper p, .swagger-ui .opblock-title_normal p,
+.swagger-ui .markdown li, .swagger-ui .renderedMarkdown li,
+.swagger-ui .markdown td, .swagger-ui .renderedMarkdown td,
+.swagger-ui .markdown th, .swagger-ui .renderedMarkdown th,
+.swagger-ui .model .property.primitive, .swagger-ui .model td:first-child,
+.swagger-ui .model .markdown p, .swagger-ui .model .renderedMarkdown p,
 .swagger-ui .parameter__name, .swagger-ui .parameter__type,
 .swagger-ui table thead tr td, .swagger-ui table thead tr th,
 .swagger-ui .response-col_status, .swagger-ui .response-col_links,
@@ -115,6 +120,10 @@ body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
 .swagger-ui .opblock.opblock-put { border-color: var(--ni-put); }
 .swagger-ui .opblock.opblock-patch { border-color: var(--ni-patch); }
 .swagger-ui .opblock.opblock-delete { border-color: var(--ni-delete); }
+.swagger-ui .opblock.opblock-get, .swagger-ui .opblock.opblock-post,
+.swagger-ui .opblock.opblock-put, .swagger-ui .opblock.opblock-patch,
+.swagger-ui .opblock.opblock-delete { background: var(--ni-surface); }
+.swagger-ui .opblock .tab-header .tab-item.active h4 span:after { background: var(--ni-accent); }
 .swagger-ui .opblock .opblock-summary-method { color: #10141a; text-shadow: none; }
 .swagger-ui .opblock.opblock-get .opblock-summary,
 .swagger-ui .opblock.opblock-post .opblock-summary,
@@ -135,6 +144,43 @@ body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
    are shapes nobody can see. */
 .swagger-ui svg:not(:root) { fill: var(--ni-dim); }
 .swagger-ui .btn.authorize svg, .swagger-ui .authorization__btn svg { fill: var(--ni-accent); }
+
+/* Dark form controls, and readable stand-ins for the viewer's purples. */
+:root { color-scheme: dark; --ni-code: #e8c58a; --ni-type: #7cc0ef; }
+.swagger-ui .markdown code, .swagger-ui .renderedMarkdown code {
+  background: var(--ni-surface-2); color: var(--ni-code); font-weight: 500;
+  font-size: 13px; padding: 1px 5px;
+}
+.swagger-ui .markdown li, .swagger-ui .renderedMarkdown li { line-height: 1.7; }
+.swagger-ui .prop-type, .swagger-ui .json-schema-2020-12__attribute--primary { color: var(--ni-type); }
+.swagger-ui .json-schema-2020-12__constraint,
+.swagger-ui .json-schema-2020-12__constraint--string {
+  background: var(--ni-surface-2); color: var(--ni-dim); border: 1px solid var(--ni-line);
+}
+
+/* The schema list ships light; give it this page's surfaces. */
+.swagger-ui section.models h4, .swagger-ui section.models h5,
+.swagger-ui .json-schema-2020-12__title,
+.swagger-ui .json-schema-2020-12-property .json-schema-2020-12__title,
+.swagger-ui .json-schema-2020-12-keyword__name--primary,
+.swagger-ui .json-schema-2020-12-keyword__value--primary,
+.swagger-ui .json-schema-2020-12__attribute { color: var(--ni-text); }
+.swagger-ui .json-schema-2020-12-keyword__name--secondary,
+.swagger-ui .json-schema-2020-12-keyword__value,
+.swagger-ui .json-schema-2020-12-keyword__value--secondary,
+.swagger-ui .json-schema-2020-12-keyword--description,
+.swagger-ui .json-schema-2020-12-expand-deep-button { color: var(--ni-dim); }
+.swagger-ui section.models { border-color: var(--ni-line); }
+.swagger-ui section.models.is-open h4 { border-bottom-color: var(--ni-line); }
+.swagger-ui section.models h4:hover { background: var(--ni-surface-2); }
+.swagger-ui .json-schema-2020-12 { background: var(--ni-surface-2); }
+.swagger-ui .json-schema-2020-12--embedded,
+.swagger-ui .json-schema-2020-12-accordion,
+.swagger-ui .json-schema-2020-12-expand-deep-button { background: transparent; }
+.swagger-ui .json-schema-2020-12-body,
+.swagger-ui .json-schema-2020-12-keyword__children { border-left-color: var(--ni-line); }
+.swagger-ui .model-box { background: var(--ni-surface-2); }
+.swagger-ui .model-title, .swagger-ui .model .property { color: var(--ni-dim); }
 </style>
 </head>
 <body>
@@ -312,6 +358,9 @@ window.ui = SwaggerUIBundle({
   dom_id: "#swagger-ui",
   presets: [ SwaggerUIBundle.presets.apis ],
   layout: "BaseLayout",
+  // The schema with its member descriptions first, the example one click away.
+  defaultModelRendering: "model",
+  defaultModelExpandDepth: 2,
   supportedSubmitMethods: [ "get", "put", "post", "delete", "patch" ],
   onComplete: function () {
     specReady = true;

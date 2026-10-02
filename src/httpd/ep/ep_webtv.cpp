@@ -260,12 +260,42 @@ Response webtvPart(const Request &r)
 }
 
 const Param kChannelParams[] = {
-	HTTPD_SEGMENT("id", ParamType::ChannelId, "the channel, hexadecimal"),
+	HTTPD_SEGMENT("id", ParamType::ChannelId,
+		"the channel, hexadecimal, up to 16 digits, as GET /api/v1/channels answers it"),
 };
 
 const Param kPartParams[] = {
-	HTTPD_SEGMENT("id", ParamType::ChannelId, "the channel, hexadecimal"),
-	HTTPD_SEGMENT_TEXT("token", "a name this box minted while reading this channel's playlist", 64),
+	HTTPD_SEGMENT("id", ParamType::ChannelId,
+		"the channel, hexadecimal, up to 16 digits, as GET /api/v1/channels answers it"),
+	HTTPD_SEGMENT_TEXT("token", "a name this box minted while reading this channel's playlist, "
+		"good for a few minutes and then aged out", 64),
+};
+
+const RouteRefusal kWebtvPlaylistRefusals[] = {
+	HTTPD_REFUSES(Denied, AddressRefused,
+		"this channel leads to an address on a network this box does not fetch from"),
+	HTTPD_REFUSES(NotFound, NoSuchChannel,
+		"no channel with that id"),
+	HTTPD_REFUSES(NotFound, NotAWebChannel,
+		"this channel is one the box tunes to, not one it plays from an address"),
+	HTTPD_REFUSES_AS(415, NotAPlaylist,
+		"the address this channel names does not answer with a playlist"),
+	HTTPD_REFUSES_AS(503, UpstreamUnreachable,
+		"the server this channel is played from answered 404"),
+};
+
+const RouteRefusal kWebtvStreamRefusals[] = {
+	HTTPD_REFUSES(Denied, AddressRefused,
+		"this channel leads to an address on a network this box does not fetch from"),
+	HTTPD_REFUSES_AS(503, TooManyStreams,
+		"this box is already passing through as many streams as it will"),
+	HTTPD_REFUSES_AS(503, UpstreamUnreachable,
+		"the server this channel is played from answered 404"),
+};
+
+const RouteRefusal kWebtvPartRefusals[] = {
+	HTTPD_REFUSES(NotFound, NoSuchPart,
+		"nothing was minted under that name, or what was has aged out"),
 };
 
 /* Read and not public, which is the level the addresses of a stream are handed
@@ -275,13 +305,66 @@ const Param kPartParams[] = {
 const Endpoint kWebtvEndpoints[] = {
 	{ Method::Get, "/api/v1/webtv/{id}/playlist.m3u8", AuthLevel::Read,
 	  "one channel's playlist, with every address in it answered by this box",
-	  HTTPD_PARAMS(kChannelParams), NULL, &webtvPlaylist, false },
+	  "Fetches the HLS playlist of a web channel (one whose address is a URL and "
+	  "not a tuner) and hands it back with every address inside it, segments, keys, "
+	  "maps and nested playlists alike, replaced by a token minted under `GET "
+	  "/api/v1/webtv/{id}/part/{token}`, so a browser only ever talks to this box "
+	  "and never to the far server directly. The answer is `application/vnd.apple."
+	  "mpegurl` and sent `Cache-Control: no-store`, since a live playlist is a "
+	  "different document every few seconds and its addresses stop working.\n\n"
+	  "**Preconditions:** the channel's address resolves to one this box will "
+	  "fetch from, not loopback, a private, carrier, link local, multicast or "
+	  "reserved range, and the far server answers with an actual playlist, not a "
+	  "byte range reference, inside the address and uri limits this box reads.\n\n"
+	  "**Refusals:**\n"
+	  "- `403 address-refused`: the channel's address, or one it redirects to, is "
+	  "on a network this box will not fetch from.\n"
+	  "- `404 no-such-channel`: no channel has that id.\n"
+	  "- `404 not-a-web-channel`: this channel is one the box tunes to, not one it "
+	  "plays from an address.\n"
+	  "- `415 not-a-playlist`: the address answered with something other than an "
+	  "HLS playlist; play it with `GET /api/v1/webtv/{id}/stream` instead.\n"
+	  "- `503 upstream-unreachable`: the far server could not be reached or "
+	  "answered outside 200 to 299.\n\n"
+	  "**Related:** `GET /api/v1/webtv/{id}/stream`, `GET /api/v1/webtv/{id}/part/{token}`.",
+	  HTTPD_PARAMS(kChannelParams), NULL, &webtvPlaylist, false,
+	  Answers200, HTTPD_REFUSALS(kWebtvPlaylistRefusals) },
 	{ Method::Get, "/api/v1/webtv/{id}/stream", AuthLevel::Read,
 	  "one channel's stream, fetched by this box and passed on as it arrives",
-	  HTTPD_PARAMS(kChannelParams), NULL, &webtvStream, false },
+	  "Opens a web channel's address itself, for a channel that is a stream "
+	  "rather than a playlist, and relays the bytes as they arrive, holding the "
+	  "connection open for as long as the far server keeps sending. This is the "
+	  "route to use for a channel `GET /api/v1/webtv/{id}/playlist.m3u8` refuses "
+	  "with `not-a-playlist`.\n\n"
+	  "**Preconditions:** the channel's address resolves to a network this box "
+	  "will fetch from, and the box is not already relaying as many streams as it "
+	  "allows at once.\n\n"
+	  "**Refusals:**\n"
+	  "- `403 address-refused`: the channel's address, or one it redirects to, is "
+	  "on a network this box will not fetch from.\n"
+	  "- `503 too-many-streams`: the box is already passing through as many "
+	  "streams as it will.\n"
+	  "- `503 upstream-unreachable`: the far server could not be reached or "
+	  "answered outside 200 to 299.\n\n"
+	  "**Related:** `GET /api/v1/webtv/{id}/playlist.m3u8`.",
+	  HTTPD_PARAMS(kChannelParams), NULL, &webtvStream, false,
+	  Answers200, HTTPD_REFUSALS(kWebtvStreamRefusals) },
 	{ Method::Get, "/api/v1/webtv/{id}/part/{token}", AuthLevel::Read,
 	  "one address out of a playlist this box read, fetched and passed on",
-	  HTTPD_PARAMS(kPartParams), NULL, &webtvPart, false },
+	  "Fetches the address a `GET /api/v1/webtv/{id}/playlist.m3u8` call minted "
+	  "`token` for, segment, key, map or nested playlist, and relays it, rewriting "
+	  "a nested playlist the same way the original one was rewritten. `token` is "
+	  "never an address itself and only ever a name this box handed out, which is "
+	  "the whole of this route's protection against being made to fetch an "
+	  "address of somebody else's choosing. A token is kept for a few minutes "
+	  "after it was minted and then forgotten.\n\n"
+	  "**Refusals:**\n"
+	  "- `404 no-such-part`: nothing was minted under that name, the name was not "
+	  "minted for this channel, or it has aged out; read the playlist again with "
+	  "`GET /api/v1/webtv/{id}/playlist.m3u8` to mint fresh ones.\n\n"
+	  "**Related:** `GET /api/v1/webtv/{id}/playlist.m3u8`.",
+	  HTTPD_PARAMS(kPartParams), NULL, &webtvPart, false,
+	  Answers200, HTTPD_REFUSALS(kWebtvPartRefusals) },
 };
 
 } // namespace

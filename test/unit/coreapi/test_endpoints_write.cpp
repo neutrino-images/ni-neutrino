@@ -19,6 +19,7 @@
  */
 
 #include "support/catch.hpp"
+#include "support/answers.h"
 #include "support/fakes.h"
 
 #include "httpd/auth.h"
@@ -50,6 +51,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -1364,6 +1366,39 @@ TEST_CASE("a timer in the past is refused with the reason", "[write]")
 	REQUIRE(box.timers.timers.empty());
 }
 
+TEST_CASE("a timer the daemon cannot make, change or let go of is refused with the reason", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+
+	char body[160];
+	std::snprintf(body, sizeof(body), "{\"kind\":\"record\",\"start\":%lld,\"stop\":%lld}",
+	              (long long) (box.timers.clock + 3600), (long long) (box.timers.clock + 7200));
+	const Reply unchannelled = authedPost("/api/v1/timers", body);
+	REQUIRE(unchannelled.code == 400);
+	REQUIRE(unchannelled.body.find("timer-without-channel") != std::string::npos);
+
+	box.timers.add_status = coreapi::Status::Conflict;
+	const Reply twice = authedPost("/api/v1/timers", timerBody(box.timers.clock + 3600));
+	REQUIRE(twice.code == 409);
+	REQUIRE(twice.body.find("timer-exists") != std::string::npos);
+	REQUIRE(box.timers.timers.empty());
+
+	box.timers.add_status = coreapi::Status::Ok;
+	REQUIRE(authedPost("/api/v1/timers", timerBody(box.timers.clock + 3600)).code == 201);
+	std::snprintf(body, sizeof(body), "{\"stop\":%lld}", (long long) (box.timers.clock + 3600));
+	const Reply empty = authedPatch("/api/v1/timers/1", body);
+	REQUIRE(empty.code == 400);
+	REQUIRE(empty.body.find("recording-without-duration") != std::string::npos);
+	REQUIRE(box.timers.modifications == 0u);
+
+	box.timers.ignore_removals = true;
+	const Reply kept = authedDelete("/api/v1/timers/1");
+	REQUIRE(kept.code == 500);
+	REQUIRE(kept.body.find("timer-still-there") != std::string::npos);
+	REQUIRE(box.timers.removals == 1u);
+}
+
 TEST_CASE("a change names nothing the daemon would drop", "[write]")
 {
 	ShippedRoutes shipped;
@@ -1712,6 +1747,26 @@ TEST_CASE("a directory is made and a path removed inside the roots and nowhere e
 	REQUIRE(stat(inside.c_str(), &st) != 0);
 	REQUIRE(authedDelete("/api/v1/storage/path?path=" + inside).code == 404);
 	REQUIRE(authedDelete("/api/v1/storage/path?path=/etc/passwd").code == 400);
+}
+
+TEST_CASE("a directory that still holds something is not removed", "[write]")
+{
+	ShippedRoutes shipped;
+	RootsFixture roots;
+
+	const std::string dir = roots.box.at("full");
+	REQUIRE(mkdir(dir.c_str(), 0700) == 0);
+	const std::string inner = dir + "/inner";
+	REQUIRE(mkdir(inner.c_str(), 0700) == 0);
+
+	const Reply full = authedDelete("/api/v1/storage/path?path=" + dir);
+	REQUIRE(full.code == 409);
+	REQUIRE(full.body.find("not-empty") != std::string::npos);
+	struct stat st;
+	REQUIRE(stat(inner.c_str(), &st) == 0);
+
+	REQUIRE(authedDelete("/api/v1/storage/path?path=" + inner).code == 204);
+	REQUIRE(authedDelete("/api/v1/storage/path?path=" + dir).code == 204);
 }
 
 TEST_CASE("an id wider than the daemon's own is refused and removes nothing", "[write]")
@@ -2117,6 +2172,35 @@ TEST_CASE("a bouquet round trip makes, renames, moves and takes away", "[write]"
 	REQUIRE(parsed(authedGet("/api/v1/bouquets").body)["items"].size() == 2u);
 }
 
+TEST_CASE("every bouquet route refuses a name no bouquet carries and changes nothing", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	giveBouquets(box.channels);
+
+	const Reply answers[] = {
+		authedPut("/api/v1/bouquets/Keines/name", "{\"name\":\"Anders\"}"),
+		authedPut("/api/v1/bouquets/Keines/position", "{\"direction\":\"up\"}"),
+		authedPut("/api/v1/bouquets/Keines/hidden", "{\"on\":true}"),
+		authedPut("/api/v1/bouquets/Keines/locked", "{\"on\":true}"),
+		authedPut("/api/v1/bouquets/Keines/channels?mode=tv", "[\"2b66\"]"),
+	};
+	for (size_t i = 0; i < sizeof(answers) / sizeof(answers[0]); ++i)
+	{
+		INFO(i);
+		REQUIRE(answers[i].code == 404);
+		REQUIRE(answers[i].body.find("no-such-bouquet") != std::string::npos);
+	}
+
+	const Reply taken = authedPut("/api/v1/bouquets/Zweites/name", "{\"name\":\"Erstes\"}");
+	REQUIRE(taken.code == 409);
+	REQUIRE(taken.body.find("name-taken") != std::string::npos);
+
+	REQUIRE(box.channels.bouquets[0].name == "Erstes");
+	REQUIRE(box.channels.bouquets[1].name == "Zweites");
+	REQUIRE(box.channels.saves == 0u);
+}
+
 TEST_CASE("a bouquet name carrying a separator and a percent is one name", "[write]")
 {
 	ShippedRoutes shipped;
@@ -2177,7 +2261,7 @@ TEST_CASE("a bouquet route written below a write is a table the server will not 
 	};
 	static const Endpoint too_low[] = {
 		{ Delete, "/api/v1/bouquets/{bouquet}", AuthLevel::Read,
-		  "takes a bouquet away", HTTPD_PARAMS(params), NULL, &unreachedHandler, false },
+		  "takes a bouquet away", NULL, HTTPD_PARAMS(params), NULL, &unreachedHandler, false, Answers200, HTTPD_NO_REFUSALS },
 	};
 	const RouteTable low = { HTTPD_TABLE_N("low", too_low, 1) };
 	std::string why;
@@ -2189,7 +2273,7 @@ TEST_CASE("a bouquet route written below a write is a table the server will not 
 	// turned down is the level and not anything else about the route.
 	static const Endpoint high[] = {
 		{ Delete, "/api/v1/bouquets/{bouquet}", AuthLevel::Write,
-		  "takes a bouquet away", HTTPD_PARAMS(params), NULL, &unreachedHandler, false },
+		  "takes a bouquet away", NULL, HTTPD_PARAMS(params), NULL, &unreachedHandler, false, Answers200, HTTPD_NO_REFUSALS },
 	};
 	const RouteTable fine = { HTTPD_TABLE_N("fine", high, 1) };
 	std::string nothing_wrong;
@@ -3416,4 +3500,84 @@ TEST_CASE("a line about the logos this server cannot read turns them off", "[wri
 	const Reply r = authedGet("/api/v1/system/webserver");
 	REQUIRE(r.code == 200);
 	REQUIRE_FALSE(parsed(r.body)["channel_logos"].asBool());
+}
+
+TEST_CASE("the body example a route is documented with is a request that route accepts", "[write][openapi]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	giveBouquets(box.channels);
+	ProcFixture proc;
+	FakeInputDevice input;
+	InstalledInputDevice installed_input(&input);
+	// Read by the icon route before it writes.
+	box.store.ints["mode_icons"] = 0;
+	box.store.ints["mode_icons_skin"] = 0;
+
+	const std::string example_channel = parsed(openapi::document())["paths"]["/api/v1/zap"]["post"]
+		["requestBody"]["content"]["application/json"]["example"]["channel_id"].asString();
+	box.channels.channels.push_back(makeChannel(std::strtoull(example_channel.c_str(), NULL, 16),
+	                                            "the example"));
+
+	std::map<std::string, std::string> none;
+	std::map<std::string, std::string> first;
+	first["bouquet"] = "Erstes";
+	std::map<std::string, std::string> second;
+	second["bouquet"] = "Zweites";
+
+	REQUIRE(sendBodyExample("POST", "/api/v1/zap", none) == 202);
+	REQUIRE(sendBodyExample("POST", "/api/v1/mode", none) == 202);
+	REQUIRE(sendBodyExample("POST", "/api/v1/channels/reload", none) == 202);
+	REQUIRE(sendBodyExample("PUT", "/api/v1/bouquets/{bouquet}/channels", first) == 204);
+	REQUIRE(sendBodyExample("PUT", "/api/v1/bouquets/{bouquet}/hidden", first) == 204);
+	REQUIRE(sendBodyExample("PUT", "/api/v1/bouquets/{bouquet}/locked", first) == 204);
+	// The first one is already at the top.
+	REQUIRE(sendBodyExample("PUT", "/api/v1/bouquets/{bouquet}/position", second) == 204);
+	REQUIRE(sendBodyExample("PUT", "/api/v1/bouquets/{bouquet}/name", first) == 204);
+	REQUIRE(sendBodyExample("POST", "/api/v1/bouquets", none) == 201);
+
+	REQUIRE(sendBodyExample("POST", "/api/v1/timers", none) == 201);
+	REQUIRE(sendBodyExample("PATCH", "/api/v1/timers/{id}", none) == 200);
+
+	REQUIRE(sendBodyExample("PATCH", "/api/v1/settings/{section}", none) == 200);
+	REQUIRE(sendBodyExample("POST", "/api/v1/settings/secret/clear", none) == 200);
+	REQUIRE(sendBodyExample("POST", "/api/v1/system/standby", none) == 202);
+
+	REQUIRE(sendBodyExample("PUT", "/api/v1/osd/volume", none) == 202);
+	REQUIRE(sendBodyExample("PUT", "/api/v1/osd/mute", none) == 202);
+	REQUIRE(sendBodyExample("POST", "/api/v1/osd/message", none) == 202);
+	REQUIRE(sendBodyExample("PUT", "/api/v1/osd/remote", none) == 202);
+	REQUIRE(sendBodyExample("POST", "/api/v1/osd/remote/key", none) == 202);
+	REQUIRE(sendBodyExample("PUT", "/api/v1/osd/infoicons", none) == 204);
+}
+
+TEST_CASE("the body examples of the routes that write files are requests those routes accept", "[write][openapi]")
+{
+	ShippedRoutes shipped;
+
+	{
+		RootsFixture roots;
+		REQUIRE(::mkdir(roots.box.at("movie").c_str(), 0700) == 0);
+		REQUIRE(sendBodyExample("POST", "/api/v1/storage/directory",
+		                        std::map<std::string, std::string>(),
+		                        "/media/hdd", roots.box.dir) == 201);
+	}
+	{
+		NetfsFixture netfs;
+		REQUIRE(sendBodyExample("PUT", "/api/v1/storage/netfs/{table}/{slot}",
+		                        std::map<std::string, std::string>()) == 200);
+	}
+	{
+		WebFile file("example", kWebFileHead);
+		REQUIRE(sendBodyExample("PUT", "/api/v1/system/webserver",
+		                        std::map<std::string, std::string>()) == 200);
+	}
+	{
+		ConfigFixture cfg;
+		WebConfig c = config();
+		c.username = "root";
+		c.password_hash = hashSecret("ni", 2000);
+		setConfigForTest(c);
+		REQUIRE(sendBodyExample("POST", "/api/v1/login", std::map<std::string, std::string>()) == 200);
+	}
 }

@@ -53,6 +53,7 @@ size_t openSessions();
 
 // The most that may run at once, so that a refusal can say what the limit was.
 size_t maxSessions();
+void   setMaxSessionsForTest(size_t n);
 
 /* Whether this answer is one of these rather than a document. The handler puts
    the command in the answer and returns, and this is what the transport asks

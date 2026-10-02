@@ -216,13 +216,13 @@ Response secret(const Request &)
 }
 
 const Endpoint wired_endpoints[] = {
-	{ Method::Get,  "/api/v1/fine",      AuthLevel::Read,   "answers",        NULL, 0, NULL, &fine, false },
-	{ Method::Post, "/api/v1/echo",      AuthLevel::Write,  "hands back",     NULL, 0, NULL, &echo, false },
-	{ Method::Get,  "/api/v1/peer",      AuthLevel::Read,   "names the peer", NULL, 0, NULL, &peerBack, false },
-	{ Method::Get,  "/api/v1/throw",     AuthLevel::Read,   "gives up",       NULL, 0, NULL, &boom, false },
-	{ Method::Get,  "/api/v1/oddthrow",  AuthLevel::Read,   "gives up oddly", NULL, 0, NULL, &oddThrow, false },
-	{ Method::Get,  "/api/v1/nocode",    AuthLevel::Read,   "answers no code", NULL, 0, NULL, &silent, false },
-	{ Method::Get,  "/api/v1/secret",    AuthLevel::System, "needs the most", NULL, 0, NULL, &secret, false },
+	{ Method::Get,  "/api/v1/fine",      AuthLevel::Read,   "answers", NULL,        NULL, 0, NULL, &fine, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Post, "/api/v1/echo",      AuthLevel::Write,  "hands back", NULL,     NULL, 0, NULL, &echo, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get,  "/api/v1/peer",      AuthLevel::Read,   "names the peer", NULL, NULL, 0, NULL, &peerBack, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get,  "/api/v1/throw",     AuthLevel::Read,   "gives up", NULL,       NULL, 0, NULL, &boom, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get,  "/api/v1/oddthrow",  AuthLevel::Read,   "gives up oddly", NULL, NULL, 0, NULL, &oddThrow, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get,  "/api/v1/nocode",    AuthLevel::Read,   "answers no code", NULL, NULL, 0, NULL, &silent, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get,  "/api/v1/secret",    AuthLevel::System, "needs the most", NULL, NULL, 0, NULL, &secret, false, Answers200, HTTPD_NO_REFUSALS },
 };
 
 const RouteTable wired_table = { HTTPD_TABLE("wired", wired_endpoints) };
@@ -230,8 +230,8 @@ const RouteTable wired_table = { HTTPD_TABLE("wired", wired_endpoints) };
 // Two routes that answer one request equally well, which is what the table
 // check refuses and what the daemon must refuse to start on.
 const Endpoint duplicate_endpoints[] = {
-	{ Method::Get, "/api/v1/two/{id}",   AuthLevel::Read, "one", NULL, 0, NULL, &fine, false },
-	{ Method::Get, "/api/v1/two/{name}", AuthLevel::Read, "two", NULL, 0, NULL, &fine, false },
+	{ Method::Get, "/api/v1/two/{id}",   AuthLevel::Read, "one", NULL, NULL, 0, NULL, &fine, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get, "/api/v1/two/{name}", AuthLevel::Read, "two", NULL, NULL, 0, NULL, &fine, false, Answers200, HTTPD_NO_REFUSALS },
 };
 
 const RouteTable duplicate_table = { HTTPD_TABLE_N("duplicate", duplicate_endpoints, 2) };

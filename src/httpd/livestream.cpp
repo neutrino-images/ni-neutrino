@@ -129,6 +129,7 @@ std::vector<Session *> &sessions()
 }
 
 bool serving_ = false;
+size_t ceiling_ = kMaxSessions;
 bool watching_ = false;
 pthread_t watcher_;
 
@@ -559,7 +560,12 @@ size_t openSessions()
 
 size_t maxSessions()
 {
-	return kMaxSessions;
+	return ceiling_;
+}
+
+void setMaxSessionsForTest(size_t n)
+{
+	ceiling_ = n;
 }
 
 bool isStream(const Response &r)
@@ -572,26 +578,12 @@ Opened open(struct MHD_Connection *connection, const Response &r, Response &refu
 	if (connection == NULL || r.stream_argv.empty())
 		return StreamFailed;
 
-	/* Asked before anything is counted or started, because a box without the
-	   converter is a box that cannot do this at all and ought to say so rather
-	   than hand out an answer with no bytes in it. Not every box carries one:
-	   the ffmpeg some of them build has neither an AAC encoder nor a command
-	   line program, and browsers cannot play what those boxes broadcast
-	   anyway. */
-	if (::access(r.stream_argv[0].c_str(), X_OK) != 0)
-	{
-		refusal = problemResponse(StatusNotImplemented,
-		                          coreapi::ErrorCode::NotPlayableInBrowser,
-		                          "this box carries nothing that can convert a channel for a browser");
-		return StreamRefused;
-	}
-
 	bool room = false;
 	{
 		OpenThreads::ScopedLock<OpenThreads::Mutex> held(lock());
 		// Counted under the lock the place is taken under, so that two
 		// requests arriving together cannot both find the last one free.
-		room = serving_ && sessions().size() < kMaxSessions;
+		room = serving_ && sessions().size() < ceiling_;
 	}
 
 	if (!room)
@@ -601,6 +593,21 @@ Opened open(struct MHD_Connection *connection, const Response &r, Response &refu
 		                          "this box is already converting as many streams as it will");
 		refusal.headers.push_back(std::make_pair(std::string("Retry-After"),
 		                                         std::string("15")));
+		return StreamRefused;
+	}
+
+	/* Asked before anything is started, because a box without the
+	   converter is a box that cannot do this at all and ought to say so rather
+	   than hand out an answer with no bytes in it. Not every box carries one:
+	   the ffmpeg some of them build has neither an AAC encoder nor a command
+	   line program, and browsers cannot play what those boxes broadcast
+	   anyway. Such a box never has a seat taken, so asking after the count
+	   answers it the same. */
+	if (::access(r.stream_argv[0].c_str(), X_OK) != 0)
+	{
+		refusal = problemResponse(StatusNotImplemented,
+		                          coreapi::ErrorCode::NotPlayableInBrowser,
+		                          "this box carries nothing that can convert a channel for a browser");
 		return StreamRefused;
 	}
 
@@ -628,7 +635,7 @@ Opened open(struct MHD_Connection *connection, const Response &r, Response &refu
 		   lock given up and another request may have taken the last place in
 		   between. Giving this one back is cheaper than holding a lock across
 		   a fork. */
-		if (!serving_ || sessions().size() >= kMaxSessions)
+		if (!serving_ || sessions().size() >= ceiling_)
 		{
 			room = false;
 		}

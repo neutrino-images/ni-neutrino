@@ -18,6 +18,8 @@ acted options matched to a declared row	27
 acted options whose row writes another member	5
 answer members narrower than free text	35
 applier sections registered	9
+body examples their routes accepted	26
+body members the examples carry	22
 bounds compared against a screen	30
 bounds read off the screens	47
 bounds read with both ends resolved	45
@@ -47,7 +49,10 @@ listed keys compared against the table	26
 locale names the program has	3190
 options an applier or its notifier branches on	50
 parameters the document describes	131
+refusals the document states against a route	769
 refusals the header names	13
+refusals the routes declare of their own	103
+refusals the shipped routes were seen to give	175
 routes the document describes	98
 rows an applier acts on	26
 rows compared against the load and save pass	368
@@ -55,5 +60,7 @@ rows in a section with an applier	309
 rows this build links	376
 rows whose set of values the box decides	3
 rows whose value is not in the settings file	5
+rule refusals the document states	15
 shapes the document files against a route	46
 statuses the enum declares	8
+success codes the document states	109

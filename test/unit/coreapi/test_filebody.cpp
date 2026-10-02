@@ -194,14 +194,14 @@ Response outOfAString(const Request &)
 }
 
 const Endpoint file_endpoints[] = {
-	{ Method::Get, "/api/v1/test/file",         AuthLevel::Read, "answers out of a file",
-	  NULL, 0, NULL, &outOfTheFile, false },
-	{ Method::Get, "/api/v1/test/file-toolong", AuthLevel::Read, "states a length no answer carries",
-	  NULL, 0, NULL, &tooLongForTheLibrary, false },
-	{ Method::Get, "/api/v1/test/file-badhead", AuthLevel::Read, "writes a header the library refuses",
-	  NULL, 0, NULL, &withAHeaderTheLibraryRefuses, false },
-	{ Method::Get, "/api/v1/test/string",       AuthLevel::Read, "answers out of a string",
-	  NULL, 0, NULL, &outOfAString, false },
+	{ Method::Get, "/api/v1/test/file",         AuthLevel::Read, "answers out of a file", NULL,
+	  NULL, 0, NULL, &outOfTheFile, false, Answers200 | Answers206, HTTPD_NO_REFUSALS },
+	{ Method::Get, "/api/v1/test/file-toolong", AuthLevel::Read, "states a length no answer carries", NULL,
+	  NULL, 0, NULL, &tooLongForTheLibrary, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get, "/api/v1/test/file-badhead", AuthLevel::Read, "writes a header the library refuses", NULL,
+	  NULL, 0, NULL, &withAHeaderTheLibraryRefuses, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get, "/api/v1/test/string",       AuthLevel::Read, "answers out of a string", NULL,
+	  NULL, 0, NULL, &outOfAString, false, Answers200, HTTPD_NO_REFUSALS },
 };
 
 const RouteTable file_table = { HTTPD_TABLE("file", file_endpoints) };

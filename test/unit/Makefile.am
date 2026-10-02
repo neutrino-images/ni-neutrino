@@ -32,6 +32,7 @@ AM_CPPFLAGS = \
 	-DCOREAPI_ENUM_SCRIPT='"$(srcdir)/scan/extract-enum.sh"' \
 	-DCOREAPI_COUNTS_FILE='"$(srcdir)/support/counts.txt"' \
 	-DCOREAPI_COUNTS_ACTUAL='"$(abs_builddir)/counts.actual"' \
+	-DCOREAPI_ANSWERS_ACTUAL='"$(abs_builddir)/answers.actual"' \
 	-DNI_WEB_OLD_CONF='"$(top_srcdir)/src/httpd/nhttpd.conf.in"' \
 	-DNI_WEB_PAGE_DIR='"$(top_srcdir)/data/ni-web"' \
 	-DNI_WEB_OPENAPI_DUMP='"$(abs_builddir)/openapi.json"' \
@@ -129,6 +130,7 @@ coreapi_tests_SOURCES = \
 	coreapi/test_settingsfields.cpp \
 	support/httpclient.cpp \
 	support/counts.cpp \
+	support/answers.cpp \
 	support/helperstubs.cpp
 
 # The channel object is linked rather than reimplemented, so a change to its copy
@@ -202,7 +204,7 @@ TESTS = $(check_PROGRAMS)
 # front of it, hence the shell.
 LOG_COMPILER = $(SHELL) -c 'exec "$$0" -w NoAssertions'
 
-EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/counts.h support/counts.txt support/httpclient.h \
+EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/httpclient.h \
 	scan/extract-enum.sh support/merge-counts.sh \
 	scan/check-hook.sh scan/check-fieldtypes.sh \
 	scan/check-hardware.sh scan/check-appliers.sh scan/check-denominator.sh \
@@ -249,7 +251,7 @@ BUILT_SOURCES = $(top_builddir)/src/tools/rcsim.h openapi.json settings-pairs.tx
 	settings-choices.txt settings-labels.txt settings-applied.txt errorcodes.txt statuses.txt httpcodes.txt
 CLEANFILES = openapi.json settings-pairs.txt settings-keys.txt settings-bounds.txt settings-locales.txt \
 	settings-choices.txt settings-labels.txt settings-applied.txt errorcodes.txt statuses.txt httpcodes.txt \
-	counts.actual
+	counts.actual answers.actual
 
 # The members each of the two enums declares, so that a walk of one in the suite
 # is answerable to the header it came from. The error codes are walked from a

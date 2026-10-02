@@ -138,19 +138,49 @@ const Param kDocumentParams[] = {
 	   moment that name carries a separator or a pair of dots, and the three
 	   documents there are do not need one. */
 	HTTPD_SEGMENT_FROM_SET("document", "which of the documents the box keeps its configuration in",
-		"services,bouquets,ubouquets"),
+		"services,bouquets,ubouquets",
+		"services: every service zapit found on the configured transponders, services.xml\n"
+		"bouquets: the provider bouquets built from that scan, bouquets.xml\n"
+		"ubouquets: the bouquets and favorites the user created or edited, ubouquets.xml"),
+};
+
+const RouteRefusal kConfigDocumentRefusals[] = {
+	HTTPD_REFUSES(NotFound, ConfigDocumentUnreadable,
+		"the box's copy of that document could not be read"),
 };
 
 const Endpoint kConfigEndpoints[] = {
 	{ Method::Get, "/api/v1/config/{document}", AuthLevel::Read,
 	  "one of the documents the box keeps its own configuration in, as it stands on the box",
-	  HTTPD_PARAMS(kDocumentParams), NULL, &configDocument, false },
+	  "Sends the raw XML file this box keeps one of its configuration documents in, exactly as it "
+	  "stands on disk, as `application/xml`. The file is streamed straight off disk rather than read "
+	  "into this process first, since a full channel list can run to megabytes; a `Range` header is "
+	  "honoured and answered `206` for the part asked for.\n"
+	  "\n"
+	  "**Refusals:**\n"
+	  "- `404 config-document-unreadable`: the box has never written that document, for instance "
+	  "`ubouquets` before any bouquet was ever edited.\n"
+	  "\n"
+	  "**Related:** `POST /api/v1/system/reload-setup`.",
+	  HTTPD_PARAMS(kDocumentParams), NULL, &configDocument, false,
+	  Answers200 | Answers206, HTTPD_REFUSALS(kConfigDocumentRefusals) },
 	/* Beside the three above rather than with the rest of the box, because
 	   what it asks for is the other half of the same subject: those hand a
 	   configuration document out, this asks the box to read them again. */
 	{ Method::Post, "/api/v1/system/reload-setup", AuthLevel::Write,
 	  "asks the box to read its configuration again",
-	  NULL, 0, NULL, &reloadSetup, false },
+	  "Asks the box to read its own settings file from disk again, as if it had just started. The "
+	  "`202` answer means the box has queued the request, not that the reload has finished; there is "
+	  "no read route or event that reports when it is done.\n"
+	  "\n"
+	  "**Side effects:** rereads the settings file, resends the channel list configuration to the EPG "
+	  "daemon, and rebuilds the channel list only when one of the flags that decide whether HD, web TV "
+	  "or web radio pseudo channels are included has changed since it was last loaded; otherwise the "
+	  "running channel and bouquet lists are left as they are.\n"
+	  "\n"
+	  "**Related:** `GET /api/v1/config/{document}`.",
+	  NULL, 0, NULL, &reloadSetup, false,
+	  Answers202, HTTPD_NO_REFUSALS },
 };
 
 } // namespace

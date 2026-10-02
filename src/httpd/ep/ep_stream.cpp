@@ -60,7 +60,7 @@ const char *playlistContentType()
 const FieldDesc kAddressFields[] = {
 	HTTPD_MEMBER("url", FieldType::String,
 		"where a player fetches this channel, under the name this request reached the box by"),
-	HTTPD_MEMBER("name", FieldType::String, "what the box calls the channel"),
+	HTTPD_MEMBER("name", FieldType::String, "what the box calls the channel, as the channel list names it"),
 	HTTPD_MEMBER("port", FieldType::UInt,
 		"the port the box streams on, which is the port the address above carries"),
 };
@@ -273,33 +273,75 @@ Response streamForBrowser(const Request &r)
 }
 
 const Param kChannelParams[] = {
-	HTTPD_SEGMENT("id", ParamType::ChannelId, "the channel, hexadecimal"),
+	HTTPD_SEGMENT("id", ParamType::ChannelId,
+		"the channel, hexadecimal, up to 16 digits, as GET /api/v1/channels answers it"),
 };
 
 const Param kBrowserParams[] = {
-	HTTPD_SEGMENT("id", ParamType::ChannelId, "the channel, hexadecimal"),
+	HTTPD_SEGMENT("id", ParamType::ChannelId,
+		"the channel, hexadecimal, up to 16 digits, as GET /api/v1/channels answers it"),
 	HTTPD_QUERY_REQUIRED_FROM_SET("video",
 		"what the channel's picture is, as the channel route spells it",
-		kVideoCodecs),
+		kVideoCodecs,
+		"mpeg2: MPEG-2 video\n"
+		"h264: H.264/AVC video\n"
+		"hevc: H.265/HEVC video\n"
+		"cavs: Chinese AVS video\n"
+		"none: no picture, a radio channel\n"
+		"unknown: the box has not tuned this channel yet and has not read its codecs"),
 	HTTPD_QUERY_REQUIRED_FROM_SET("audio",
 		"what the channel's sound is, as the channel route spells it",
-		kAudioCodecs),
+		kAudioCodecs,
+		"mp2: MPEG-1 layer 2 audio\n"
+		"ac3: Dolby Digital audio\n"
+		"eac3: Dolby Digital Plus audio\n"
+		"aac: Advanced Audio Coding\n"
+		"aacplus: High Efficiency AAC\n"
+		"dts: DTS (Digital Theater Systems) audio\n"
+		"dtshd: DTS-HD audio\n"
+		"lpcm: uncompressed linear PCM audio\n"
+		"unknown: the box has not tuned this channel yet and has not read its codecs"),
 	HTTPD_QUERY_IN("apid", ParamType::UInt,
-		"which sound to take, as its pid, when the channel carries several",
+		"which sound to take, decimal pid; 0, the default, takes the first the channel carries",
 		0, kMaxPid),
 };
 
 const Param kPlaylistParams[] = {
 	// Carried in the query, because the method that fetches a list is written
 	// with no body.
-	HTTPD_QUERY_FROM_SET("mode", "which half to list, the half the box is showing when it is left out",
-		"tv,radio"),
+	HTTPD_QUERY_FROM_SET("mode", "which list to return, the one the box is showing when it is left out",
+		"tv,radio",
+		"tv: the television channel list\n"
+		"radio: the radio channel list"),
+};
+
+const RouteRefusal kStreamAddressRefusals[] = {
+	HTTPD_REFUSES(InvalidArgument, NoAuthority,
+		"the request named no authority to build an address under"),
+};
+
+const RouteRefusal kStreamForBrowserRefusals[] = {
+	HTTPD_REFUSES(NotFound, NoSuchChannel,
+		"no channel with that id"),
+	HTTPD_REFUSES(NotSupported, NotPlayableInBrowser,
+		"no browser plays what this channel carries, and this box will not re-encode a picture"),
+	HTTPD_REFUSES_AS(503, TooManyConversions,
+		"this box is already converting as many streams as it will"),
 };
 
 const Endpoint kStreamEndpoints[] = {
 	{ Method::Get, "/api/v1/stream/playlist", AuthLevel::Read,
 	  "every visible user bouquet as one playlist a player opens",
-	  HTTPD_PARAMS(kPlaylistParams), NULL, &streamPlaylist, false },
+	  "Builds and returns an M3U playlist (`audio/x-mpegurl`) naming every channel "
+	  "of the user's visible bouquets, from the television or the radio list as "
+	  "`mode` says, and from the list the box is showing when `mode` is left out. Each "
+	  "entry's address points at this box's own streaming port, under the channel "
+	  "id in hexadecimal, and the entry's title carries the channel's name and "
+	  "bouquet. A tuner is only taken when a player actually opens an entry's "
+	  "address, not by fetching this playlist.\n\n"
+	  "**Related:** `GET /api/v1/stream/{id}`, `GET /api/v1/stream/playlist/{id}`.",
+	  HTTPD_PARAMS(kPlaylistParams), NULL, &streamPlaylist, false,
+	  Answers200 | Answers206, HTTPD_NO_REFUSALS },
 	/* THE SAME LIST UNDER THE NAME ITS FILE HAS. A box reading a playlist back
 	   in as a channel list decides what it was handed by the extension of the
 	   address it was given and reads nothing it cannot name that way
@@ -309,16 +351,64 @@ const Endpoint kStreamEndpoints[] = {
 	   route names its file the same way and for readers of the same kind. */
 	{ Method::Get, "/api/v1/stream/playlist.m3u", AuthLevel::Read,
 	  "the same list, under a name a reader that goes by file names accepts",
-	  HTTPD_PARAMS(kPlaylistParams), NULL, &streamPlaylist, false },
+	  "Returns exactly the playlist `GET /api/v1/stream/playlist` builds, under an "
+	  "address ending in `.m3u`. A box reading a playlist back in as a channel "
+	  "list decides what it was handed by the extension of the address it was "
+	  "given, and the plain address above ends in no extension it recognizes, so "
+	  "this route exists for readers of that kind.\n\n"
+	  "**Related:** `GET /api/v1/stream/playlist`.",
+	  HTTPD_PARAMS(kPlaylistParams), NULL, &streamPlaylist, false,
+	  Answers200 | Answers206, HTTPD_NO_REFUSALS },
 	{ Method::Get, "/api/v1/stream/playlist/{id}", AuthLevel::Read,
 	  "one channel as a playlist a player opens",
-	  HTTPD_PARAMS(kChannelParams), NULL, &streamPlaylistFor, false },
+	  "Builds and returns an M3U playlist (`audio/x-mpegurl`) naming the single "
+	  "channel `id`, for a player that only opens playlists rather than stream "
+	  "addresses directly. The answer carries a `Content-Disposition` header "
+	  "naming the file after the channel, so a browser that saves it rather than "
+	  "opening it gets a sensible name.\n\n"
+	  "**Related:** `GET /api/v1/stream/{id}`.",
+	  HTTPD_PARAMS(kChannelParams), NULL, &streamPlaylistFor, false,
+	  Answers200 | Answers206, HTTPD_NO_REFUSALS },
 	{ Method::Get, "/api/v1/stream/{id}", AuthLevel::Read,
 	  "where a player fetches one channel",
-	  HTTPD_PARAMS(kChannelParams), &kAddressSchema, &streamAddress, false },
+	  "Returns the address a player can open to receive the raw stream of channel "
+	  "`id`, built under the same host or address this request itself reached the "
+	  "box by, together with the channel's name and the port the box streams on. "
+	  "Nothing is started by this call: the tuner is taken only once a player "
+	  "actually opens the address.\n\n"
+	  "**Refusals:**\n"
+	  "- `400 no-authority`: the request named no host to build the address under.\n\n"
+	  "**Related:** `GET /api/v1/stream/playlist/{id}`, `GET /api/v1/stream/browser/{id}`.",
+	  HTTPD_PARAMS(kChannelParams), &kAddressSchema, &streamAddress, false,
+	  Answers200, HTTPD_REFUSALS(kStreamAddressRefusals) },
 	{ Method::Get, "/api/v1/stream/browser/{id}", AuthLevel::Read,
 	  "one channel as a browser can play it, with the sound converted where it has to be",
-	  HTTPD_PARAMS(kBrowserParams), NULL, &streamForBrowser, false },
+	  "Opens channel `id` and streams it straight into the response: an MPEG "
+	  "transport stream for a channel with a picture, or a raw ADTS stream for "
+	  "radio, so radio needs only an audio element and no demuxer in the page. "
+	  "The picture is never re-encoded, only copied; the box has no spare cycles "
+	  "to encode one. Depending on `video` and `audio`, the sound is either "
+	  "copied as well or converted to AAC so a browser's own media stack can "
+	  "decode it; `video` and `audio` are the codecs the channel route reports "
+	  "for this channel, and naming codecs the channel does not actually carry "
+	  "costs a stream that will not play and nothing else. `apid` picks which "
+	  "sound track to take where the channel carries several. The answer is sent "
+	  "`Cache-Control: no-store`, since it is a live stream and never the same "
+	  "stream twice.\n\n"
+	  "**Preconditions:** the box carries a converter able to produce the "
+	  "requested result; otherwise the raw stream address is the only option "
+	  "(`GET /api/v1/stream/{id}`).\n\n"
+	  "**Refusals:**\n"
+	  "- `404 no-such-channel`: no channel has that id.\n"
+	  "- `501 not-playable-in-browser`: no browser plays what this channel "
+	  "carries, and this box will not re-encode a picture; use `GET "
+	  "/api/v1/stream/{id}` for the raw address instead.\n"
+	  "- `503 too-many-conversions`: the box is already converting as many "
+	  "streams as it will, at most 2 at once; retry after the time named in the "
+	  "`Retry-After` header.\n\n"
+	  "**Related:** `GET /api/v1/stream/{id}`.",
+	  HTTPD_PARAMS(kBrowserParams), NULL, &streamForBrowser, false,
+	  Answers200, HTTPD_REFUSALS(kStreamForBrowserRefusals) },
 };
 
 } // namespace

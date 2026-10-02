@@ -204,8 +204,8 @@ Response silentStream(const Request &)
 }
 
 const Endpoint silent_endpoints[] = {
-	{ Get, "/api/v1/silent", AuthLevel::Read, "answers a program that says nothing",
-	  NULL, 0, NULL, &silentStream, false },
+	{ Get, "/api/v1/silent", AuthLevel::Read, "answers a program that says nothing", NULL,
+	  NULL, 0, NULL, &silentStream, false, Answers200, HTTPD_NO_REFUSALS },
 };
 
 const RouteTable silent_table = { HTTPD_TABLE("silent", silent_endpoints) };
@@ -375,6 +375,23 @@ TEST_CASE("a channel the box does not have is not converted", "[browserstream]")
 	CHECK(r.code == 404);
 	CHECK(livestream::openSessions() == 0);
 	(void) kUnknown;
+}
+
+TEST_CASE("a box with every seat taken refuses and starts nothing", "[browserstream]")
+{
+	Serving serving;
+	REQUIRE(serving.port > 0);
+	livestream::setMaxSessionsForTest(0);
+
+	const testhttp::Reply r =
+		testhttp::request(serving.port, "GET",
+		                  "/api/v1/stream/browser/1001?video=h264&audio=mp2", hostHeader());
+	livestream::setMaxSessionsForTest(2);
+	REQUIRE(r.transport_ok);
+	CHECK(r.code == 503);
+	CHECK(r.body.find("too-many-conversions") != std::string::npos);
+	CHECK(r.header("Retry-After") == "15");
+	CHECK(livestream::openSessions() == 0);
 }
 
 TEST_CASE("there is a ceiling and it is small", "[browserstream]")

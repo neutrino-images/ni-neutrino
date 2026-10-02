@@ -19,6 +19,7 @@
  */
 
 #include "support/catch.hpp"
+#include "support/answers.h"
 #include "support/fakes.h"
 
 #include "coreapi/base/deps.h"
@@ -713,7 +714,7 @@ TEST_CASE("a table that changes something at a read is one this server will not 
 	};
 	const httpd::Endpoint too_low[] = {
 		{ httpd::Post, "/api/v1/plugins/{name}/start", httpd::AuthLevel::Read,
-		  "asks the box to start one plugin", kName, 1, NULL, &nothing, false },
+		  "asks the box to start one plugin", NULL, kName, 1, NULL, &nothing, false, httpd::Answers200, HTTPD_NO_REFUSALS },
 	};
 	const httpd::RouteTable low = { HTTPD_TABLE_N("low", too_low, 1) };
 	std::string why;
@@ -724,7 +725,7 @@ TEST_CASE("a table that changes something at a read is one this server will not 
 	// refuses is the level and not the route.
 	const httpd::Endpoint high[] = {
 		{ httpd::Post, "/api/v1/plugins/{name}/start", httpd::AuthLevel::Write,
-		  "asks the box to start one plugin", kName, 1, NULL, &nothing, false },
+		  "asks the box to start one plugin", NULL, kName, 1, NULL, &nothing, false, httpd::Answers200, HTTPD_NO_REFUSALS },
 	};
 	const httpd::RouteTable ok_table = { HTTPD_TABLE_N("ok", high, 1) };
 	REQUIRE(httpd::tableIsSane(ok_table, &why));
@@ -787,4 +788,27 @@ TEST_CASE("what a script wrote is what comes back", "[plugins]")
 	const httpd::Response missing = asOwner(httpd::Post, "/api/v1/scripts/nobody", "{}");
 	REQUIRE(missing.code == 404);
 	REQUIRE(missing.body.find("script-missing") != std::string::npos);
+}
+
+TEST_CASE("the body examples of the plugin routes are requests those routes accept", "[plugins][openapi]")
+{
+	ShippedRoutes shipped;
+	InstalledDependencies deps;
+	{
+		CfgFixture fx;
+		REQUIRE(fx.ready);
+		REQUIRE(fx.write("name=Teletext\nhide=0\n"));
+		addWithCfg(deps.plugins, "tuxtxt", fx.cfg);
+		std::map<std::string, std::string> fills;
+		fills["name"] = "tuxtxt";
+		REQUIRE(sendBodyExample("PUT", "/api/v1/plugins/{name}/hidden", fills) == 204);
+	}
+	{
+		Fixture fx;
+		REQUIRE(fx.ready);
+		REQUIRE(fx.writeScript("hello.sh", "printf 'here'\n"));
+		std::map<std::string, std::string> fills;
+		fills["name"] = "hello";
+		REQUIRE(sendBodyExample("POST", "/api/v1/scripts/{name}", fills) == 200);
+	}
 }

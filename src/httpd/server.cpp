@@ -484,7 +484,8 @@ std::string noSuchRange(uint64_t length)
 	return std::string(buf);
 }
 
-MHD_Result queueResponse(struct MHD_Connection *connection, const Response &r)
+MHD_Result queueResponse(struct MHD_Connection *connection, const Response &r,
+                         Method m = UnknownMethod, const std::string *route_path = NULL)
 {
 	/* Taken over the moment this is entered, and not only once the branch that
 	   sends it is reached: the answer below may become a different one, and the
@@ -542,7 +543,7 @@ MHD_Result queueResponse(struct MHD_Connection *connection, const Response &r)
 		{
 			no_such_range = problemResponse(StatusRangeNotSatisfiable,
 			                                coreapi::ErrorCode::RangeOutsideFile,
-			                                "the stretch that was asked for is not in this file");
+			                                rangeRefusedDetail());
 			addApiHeaders(no_such_range);
 			/* The length is in the refusal and the bytes are not, which lets a
 			   caller that asked past the end work out what to ask for next
@@ -553,6 +554,13 @@ MHD_Result queueResponse(struct MHD_Connection *connection, const Response &r)
 			code = out->code;
 			takes_ranges = false;
 		}
+	}
+
+	if (route_path != NULL)
+	{
+		Response noted;
+		noted.code = code;
+		noteAnswer(m, *route_path, (code == out->code) ? *out : noted);
 	}
 
 	/* Out of the file itself where the answer names one, so its bytes go from the
@@ -662,7 +670,7 @@ Response tooLarge()
 {
 	Response r = problemResponse(StatusPayloadTooLarge,
 	                             coreapi::ErrorCode::BodyTooLarge,
-	                             "the body is longer than this server accepts");
+	                             tooLargeDetail());
 	addApiHeaders(r);
 	return r;
 }
@@ -808,7 +816,11 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 			   closed under it can be lost with the reset that follows, so that
 			   one is read to the end and answered after. */
 			if (asksBeforeSending(connection))
-				return queueResponse(connection, tooLarge());
+			{
+				const std::string at = st->target.substr(0, st->target.find('?'));
+				return queueResponse(connection, tooLarge(),
+				                     methodFromString((method != NULL) ? method : ""), &at);
+			}
 		}
 
 		/* THE GATE, ASKED BEFORE THE BODY IS ACCEPTED.
@@ -906,7 +918,7 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 			// The same reasoning as the ceiling above, and the same two ways
 			// out of it.
 			if (st->refused && asksBeforeSending(connection))
-				return queueResponse(connection, st->refusal);
+				return queueResponse(connection, st->refusal, m, &gate_path);
 		}
 		return MHD_YES;
 	}
@@ -947,14 +959,6 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 		return MHD_YES;
 	}
 
-	if (st->too_large)
-		return queueResponse(connection, tooLarge());
-
-	// The answer the gate arrived at before the body, sent now that there is
-	// nothing left coming in to be reset under it.
-	if (st->refused)
-		return queueResponse(connection, st->refusal);
-
 	// The query is split off here and decoded by nothing on the way: what
 	// separates the two is the first question mark, and everything after it is
 	// the router's to take apart.
@@ -963,6 +967,14 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 	const std::string query = (q == std::string::npos) ? std::string() : st->target.substr(q + 1);
 
 	const Method m = methodFromString((method != NULL) ? method : "");
+
+	if (st->too_large)
+		return queueResponse(connection, tooLarge(), m, &path);
+
+	// The answer the gate arrived at before the body, sent now that there is
+	// nothing left coming in to be reset under it.
+	if (st->refused)
+		return queueResponse(connection, st->refusal, m, &path);
 
 	/* Resolved once, off the head, on the call that ran before the body. What is
 	   done here is the one part of that answer which can have moved since: a
@@ -997,7 +1009,7 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 	if (!allowed(AuthLevel::Public, have, m, cred, &refusal))
 	{
 		addApiHeaders(refusal);
-		return queueResponse(connection, refusal);
+		return queueResponse(connection, refusal, m, &path);
 	}
 
 	/* The address off the socket is what the handler is given as the peer, and
@@ -1096,7 +1108,7 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 				// may queue an answer on it.
 				return MHD_YES;
 			case events::StreamRefused:
-				return queueResponse(connection, no_room);
+				return queueResponse(connection, no_room, m, &path);
 			case events::StreamFailed:
 				break;
 		}
@@ -1115,7 +1127,7 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 			case livestream::StreamOpened:
 				return MHD_YES;
 			case livestream::StreamRefused:
-				return queueResponse(connection, no_room);
+				return queueResponse(connection, no_room, m, &path);
 			case livestream::StreamFailed:
 				break;
 		}
@@ -1138,7 +1150,7 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 				// here may queue an answer on it.
 				return MHD_YES;
 			case webtv::RelayRefused:
-				return queueResponse(connection, no_room);
+				return queueResponse(connection, no_room, m, &path);
 			case webtv::RelayFailed:
 				break;
 		}
@@ -1162,7 +1174,8 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 		return queueResponse(
 			connection,
 			openapi::withEncoding(
-				r, joinedHeader(connection, MHD_HTTP_HEADER_ACCEPT_ENCODING)));
+				r, joinedHeader(connection, MHD_HTTP_HEADER_ACCEPT_ENCODING)),
+			m, &path);
 	}
 
 	/* What the router does not have is offered to the pages before the answer
@@ -1210,7 +1223,7 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 		return queueResponse(connection, served);
 	}
 
-	return queueResponse(connection, r);
+	return queueResponse(connection, r, m, &path);
 }
 
 /* The boundary. This is reached from C, the rest of the tree is built without
@@ -1281,6 +1294,16 @@ bool answerFromDescriptor(Response &r, int fd)
 	r.fd = fd;
 	r.length = (uint64_t) st.st_size;
 	return true;
+}
+
+const char *tooLargeDetail()
+{
+	return "the body is longer than this server accepts";
+}
+
+const char *rangeRefusedDetail()
+{
+	return "the stretch that was asked for is not in this file";
 }
 
 ServerConfig defaultConfig()

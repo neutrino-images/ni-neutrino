@@ -619,10 +619,10 @@ Response bothAddresses(const Request &r)
 }
 
 const Endpoint gated_endpoints[] = {
-	{ Get,  "/api/v1/read",   AuthLevel::Read,   "asks",       NULL, 0, NULL, &answer, false },
-	{ Get,  "/api/v1/secret", AuthLevel::System, "asks a lot", NULL, 0, NULL, &answer, false },
-	{ Get,  "/api/v1/where",  AuthLevel::Read,   "names both", NULL, 0, NULL, &bothAddresses, false },
-	{ Post, "/api/v1/change", AuthLevel::Write,  "changes",    NULL, 0, NULL, &answer, false },
+	{ Get,  "/api/v1/read",   AuthLevel::Read,   "asks", NULL,       NULL, 0, NULL, &answer, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Get,  "/api/v1/secret", AuthLevel::System, "asks a lot", NULL, NULL, 0, NULL, &answer, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Get,  "/api/v1/where",  AuthLevel::Read,   "names both", NULL, NULL, 0, NULL, &bothAddresses, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Post, "/api/v1/change", AuthLevel::Write,  "changes", NULL,    NULL, 0, NULL, &answer, false, Answers200, HTTPD_NO_REFUSALS },
 };
 
 const RouteTable gated_table = { HTTPD_TABLE("gated", gated_endpoints) };
