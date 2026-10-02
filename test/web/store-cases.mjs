@@ -58,17 +58,42 @@ function boxSays(key, status, body) {
 	says.set(key, { status: status, body: body === undefined ? '' : body });
 }
 
+/** The next request to this key is answered at once and heard only when hear() runs. */
+let slowKey = '';
+/** @type {Array<() => void>} */
+let unheard = [];
+
 globalThis.fetch = function (url, init) {
 	const key = (init && init.method ? init.method : 'GET') + ' ' + url;
 	asked.push(key);
 	const said = says.get(key) || { status: 200, body: '{}' };
-	return Promise.resolve({
+	const answer = {
 		ok: said.status >= 200 && said.status < 300,
 		status: said.status,
 		text: function () { return Promise.resolve(said.body); },
 		json: function () { return Promise.resolve(said.body === '' ? null : JSON.parse(said.body)); },
-	});
+	};
+	if (key === slowKey) {
+		slowKey = '';
+		return new Promise(function (resolve) {
+			unheard.push(function () { resolve(answer); });
+		});
+	}
+	return Promise.resolve(answer);
 };
+
+/** @param {string} key */
+function slowly(key) {
+	slowKey = key;
+}
+
+function hear() {
+	const now = unheard;
+	unheard = [];
+	for (const one of now) {
+		one();
+	}
+}
 
 /** Everything in flight, run out. Two turns, because a reload starts inside a promise. */
 function settle() {
@@ -89,6 +114,8 @@ function empty() {
 	store.clear();
 	asked = [];
 	says.clear();
+	slowKey = '';
+	unheard = [];
 }
 
 /**
@@ -429,6 +456,100 @@ same(tv.shot.state, store.LOADING, 'read again after the refusal');
 same(store.lastAnswer(tv.shot), null, 'nothing comes back while that read runs');
 await settle();
 same(store.lastAnswer(tv.shot), { id: 'ffffffff48deb591' }, 'and the next answer is the last one');
+
+// ------------------------------------------ an answer overtaken by an event
+
+/* The page can hear the answer to a read after an event the box sent later, so the
+   read the event found on its way shows the box before it. */
+empty();
+boxSays(kCurrent, 200, '{"id":"ffffffffbe692dd5"}');
+const late = looking('GET', '/api/v1/channels/current', null);
+await settle();
+slowly(kCurrent);
+store.invalidate('/api/v1/channels/current');
+boxSays(kCurrent, 404, kNothing);
+store.invalidate('/api/v1/channels/current');
+same(timesAsked(kCurrent), 2, 'an event during a read does not ask a second time at once');
+hear();
+await settle();
+same(timesAsked(kCurrent), 3, 'it asks once more when that answer lands');
+same(store.lastAnswer(late.shot), null, 'so the screen ends on the box after the event, not before it');
+
+// However many events came meanwhile, and none at all where nothing overtook it.
+empty();
+boxSays(kCurrent, 200, '{"id":"ffffffffbe692dd5"}');
+looking('GET', '/api/v1/channels/current', null);
+await settle();
+slowly(kCurrent);
+store.invalidate('/api/v1/channels/current');
+store.invalidate('/api/v1/channels/current');
+store.invalidate('/api/v1/channels/current');
+store.invalidate('/api/v1/channels/current');
+hear();
+await settle();
+same(timesAsked(kCurrent), 3, 'three events behind one read cost one read more');
+slowly(kCurrent);
+store.invalidate('/api/v1/channels/current');
+hear();
+await settle();
+same(timesAsked(kCurrent), 4, 'and a read nothing overtook is the last one');
+
+// A change behind the read that followed one is followed in turn.
+empty();
+boxSays(kCurrent, 200, '{"id":"ffffffffbe692dd5"}');
+looking('GET', '/api/v1/channels/current', null);
+await settle();
+slowly(kCurrent);
+store.invalidate('/api/v1/channels/current');
+store.invalidate('/api/v1/channels/current');
+slowly(kCurrent);
+hear();
+await settle();
+store.invalidate('/api/v1/channels/current');
+hear();
+await settle();
+same(timesAsked(kCurrent), 4, 'each read a change asked for is followed when another overtook it');
+
+// The other way round: a refusal on its way, from the box before it woke.
+empty();
+boxSays(kCurrent, 404, kNothing);
+const woken = looking('GET', '/api/v1/channels/current', null);
+await settle();
+slowly(kCurrent);
+store.invalidate('/api/v1/channels/current');
+boxSays(kCurrent, 200, '{"id":"ffffffffbe692dd5"}');
+store.invalidate('/api/v1/channels/current');
+hear();
+await settle();
+same(store.lastAnswer(woken.shot), { id: 'ffffffffbe692dd5' }, 'a refusal overtaken by an event is read once more too');
+
+// Emptied in between, the store has asked afresh and owes nothing more.
+empty();
+boxSays(kCurrent, 200, '{"id":"ffffffffbe692dd5"}');
+looking('GET', '/api/v1/channels/current', null);
+await settle();
+slowly(kCurrent);
+store.invalidate('/api/v1/channels/current');
+store.invalidate('/api/v1/channels/current');
+store.clear();
+await settle();
+same(timesAsked(kCurrent), 3, 'a store emptied while it owed a read asks once and not twice');
+hear();
+await settle();
+same(timesAsked(kCurrent), 3, 'and the answer it threw away asks nothing either');
+
+// And a screen that left while the answer was on its way is not asked for.
+empty();
+boxSays(kCurrent, 200, '{"id":"ffffffffbe692dd5"}');
+const leaving = store.watch('GET', '/api/v1/channels/current', null, function () {});
+await settle();
+slowly(kCurrent);
+store.invalidate('/api/v1/channels/current');
+store.invalidate('/api/v1/channels/current');
+leaving();
+hear();
+await settle();
+same(timesAsked(kCurrent), 2, 'nobody watching, nothing asked once more');
 
 // ------------------------------------------------------------------ verdict
 

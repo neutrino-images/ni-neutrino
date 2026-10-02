@@ -56,6 +56,8 @@ const kTaken = 202;
  * @property {Array<(snapshot: Web.Snapshot<unknown>) => void>} watchers
  * @property {Promise<unknown> | null} pending
  * @property {AbortController | null} control
+ * @property {boolean} forChange whether the read on its way was asked for by a change
+ * @property {boolean} again whether another change came while that read was on its way
  */
 
 /** @type {Map<string, Entry>} */
@@ -101,6 +103,8 @@ function entryFor(method, path, options) {
 			watchers: [],
 			pending: null,
 			control: null,
+			forChange: false,
+			again: false,
 		};
 		entries.set(key, entry);
 	}
@@ -191,14 +195,16 @@ function fail(entry, error) {
 /**
  * @param {Entry} entry
  * @param {Web.Phase} phase
+ * @param {boolean} [forChange] whether a change the box made is what asks
  * @returns {Promise<unknown>}
  */
-function start(entry, phase) {
+function start(entry, phase, forChange) {
 	if (entry.pending !== null) {
 		return entry.pending;
 	}
 	const control = new AbortController();
 	entry.control = control;
+	entry.forChange = !!forChange;
 	begin(entry, phase);
 	/* The store asks with a method and a template it was handed, so the one call
 	   cannot tell it what the answer looks like and hands back unknown. Every door
@@ -210,16 +216,37 @@ function start(entry, phase) {
 	}).then(function (data) {
 		if (entry.control === control) {
 			finish(entry, data);
+			askAgain(entry);
 		}
 		return data;
 	}, function (error) {
 		if (entry.control === control) {
 			fail(entry, error);
+			askAgain(entry);
 		}
 		throw error;
 	});
 	entry.pending = running;
 	return running;
+}
+
+/* A change can come while the read an earlier change asked for is on its way, and
+   that read may predate it. One more read, however many changes came meanwhile. */
+/**
+ * @param {Entry} entry
+ * @returns {void}
+ */
+function askAgain(entry) {
+	if (!entry.again) {
+		return;
+	}
+	entry.again = false;
+	if (entry.watchers.length === 0) {
+		return;
+	}
+	start(entry, entry.data === null ? FIRST : AGAIN, true).catch(function () {
+		// As in watch: the entry holds the fault and the watchers know.
+	});
 }
 
 /**
@@ -357,11 +384,19 @@ function stale(prefixes, ask) {
 			entries.delete(entry.key);
 			continue;
 		}
-		if (ask && entry.pending === null) {
-			start(entry, entry.data === null ? FIRST : AGAIN).catch(function () {
-				// As above: the entry holds the fault and the watchers know.
-			});
+		if (!ask) {
+			continue;
 		}
+		// A read the page asked for by itself answers what comes during it.
+		if (entry.pending !== null) {
+			if (entry.forChange) {
+				entry.again = true;
+			}
+			continue;
+		}
+		start(entry, entry.data === null ? FIRST : AGAIN, true).catch(function () {
+			// As above: the entry holds the fault and the watchers know.
+		});
 	}
 }
 
@@ -393,6 +428,7 @@ export function clear() {
 			entry.control = null;
 			entry.pending = null;
 		}
+		entry.again = false;
 		if (entry.watchers.length === 0) {
 			entries.delete(entry.key);
 			continue;

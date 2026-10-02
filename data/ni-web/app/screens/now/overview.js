@@ -220,7 +220,8 @@ function Playing() {
 	const guideId = playing ? channelId(playing.epg_id) || id : '';
 	const event = useResource('GET', '/api/v1/epg/current',
 		{ query: { channel: guideId } }, guideId !== '');
-	const on = event.data;
+	// The store keeps the answer before a failed read, and that one may be over.
+	const on = event.state === store.FAILED ? null : event.data;
 
 	/* Hung on the end of what is running where there is something running, so
 	   that the address holds still for as long as the programme does. Cut to a
@@ -238,8 +239,10 @@ function Playing() {
 	   worth one comparison here. */
 	const rows = [];
 	const items = (after.data && after.data.items) || [];
+	// The quarter hour window also holds what has ended, and the tick may be old.
+	const drawn = Math.floor(Date.now() / 1000);
 	for (const row of items) {
-		if (!on || row.id !== on.id) {
+		if ((!on || row.id !== on.id) && row.start + row.duration > drawn) {
 			rows.push(row);
 		}
 	}

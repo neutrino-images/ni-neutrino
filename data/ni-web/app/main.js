@@ -35,6 +35,7 @@ import { restore as restoreTextSize } from './ui/textsize.js';
 import * as session from './session.js';
 import * as events from './events.js';
 import * as store from './store.js';
+import { watchOnAir } from './guideclock.js';
 
 // The header's progress share moves with the clock and not with any event.
 const CLOCK_MS = 60000;
@@ -215,9 +216,10 @@ function App() {
 			if (!guideId) {
 				return;
 			}
-			stopEvent = store.watch('GET', '/api/v1/epg/current', { query: { channel: guideId } }, function (snapshot) {
+			stopEvent = watchOnAir(guideId, function (snapshot) {
 				if (alive) {
-					const event = snapshot.state === store.READY ? snapshot.data : null;
+					// Held through a reload, or the tile blanks at every programme change.
+					const event = snapshot.state === store.FAILED ? null : snapshot.data;
 					setStatus(function (was) {
 						return {
 							channel: was.channel, event: event, recordings: was.recordings, standby: was.standby,

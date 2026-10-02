@@ -1,5 +1,5 @@
 #!/bin/sh
-# Whether the page reads the box again when its event stream says so.
+# Whether the page reads the box again when its event stream says so or comes back.
 #
 # It needs node and nothing else.
 set -e

@@ -91,6 +91,8 @@ let listeners = [];
 let watchers = [];
 let failures = 0;
 let failedAt = 0;
+// Any failure, even a drop the browser recovers from by itself, misses events.
+let behind = false;
 
 /* What the page says about the box being there.
 
@@ -219,7 +221,6 @@ function received(type, message) {
 
 /** @returns {void} */
 function opened() {
-	const wasDown = !status.reachable;
 	if (failedAt !== 0) {
 		status.retryMs = Date.now() - failedAt;
 		failedAt = 0;
@@ -237,8 +238,10 @@ function opened() {
 	   the stream was down happened, and there is no way to find out what: the stream carries
 	   no identifier, so there is nothing to resume from. Keeping what was in the store would
 	   be keeping a picture of the box from before the gap, which is worse than an empty one
-	   because it looks current. Only on a stream that comes back, not on the first one. */
-	if (wasDown) {
+	   because it looks current. Only on a stream that comes back, not on the first one,
+	   however short the gap. */
+	if (behind) {
+		behind = false;
 		store.clear();
 	}
 }
@@ -290,6 +293,7 @@ function failed() {
 	   Reading both as the first drew a page that said it was not allowed to read, on a
 	   session that was, and then never asked again. */
 	const closed = source === null || source.readyState === 2;
+	behind = true;
 	status.carrying = false;
 	if (failedAt === 0) {
 		failedAt = Date.now();
@@ -366,12 +370,11 @@ export function stop() {
 }
 
 /* Closed and opened again on purpose, for a caller that wants a fresh connection now
-   rather than whatever retry happens to be running. status stays reachable across
-   the two calls, so opened() does not read this as a stream coming back from being
-   down and clears nothing on its own; the caller that asked for this is the one that
-   empties the store. */
+   rather than whatever retry happens to be running. The caller empties the store itself,
+   and a second emptying from opened() would cancel what the first had just asked for. */
 /** @returns {void} */
 export function reopen() {
+	behind = false;
 	stop();
 	open();
 }
@@ -404,6 +407,7 @@ function documentShown(persisted) {
 	   afterwards. opened() cannot do it here, because nothing failed and by its reckoning the
 	   box was never away. */
 	if (persisted) {
+		behind = false;
 		store.clear();
 	}
 }
