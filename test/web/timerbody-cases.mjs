@@ -55,7 +55,9 @@ loader.registerHooks({
 	},
 });
 
-const { createBody, emptyDraft } = await import('../../data/ni-web/app/screens/timers/list.model.js');
+const { createBody, changeBody, draftOf, emptyDraft, PLAIN_REPEATS } = await import('../../data/ni-web/app/screens/timers/list.model.js');
+const { timerRepeat } = await import('../../data/ni-web/app/fmt.js');
+const { text } = await import('../../data/ni-web/app/data.text.js');
 
 let checked = 0;
 let failed = 0;
@@ -148,6 +150,24 @@ for (const kind of ['zapto', 'remind', 'standby', 'shutdown', 'immediate-record'
 	same(body.auto_adjust, undefined, 'a ' + kind + ' timer does not ask to be moved');
 }
 
+// ------------------------------------------------------------------------ repeats
+//
+// Six is not offered. A stored six is still named, and a change to it sends a
+// repeat the box takes.
+
+same(PLAIN_REPEATS, ['once', 'daily', 'weekly', 'biweekly', 'fourweekly', 'monthly'],
+	'the form offers the plain repeats the box makes and no other');
+
+{
+	const stored = {
+		id: 7, kind: 'remind', channel_id: '0', start: NOW + HOUR, stop: 0, title: 'Tatort',
+		repeat: 6, repeat_count: 0, state: 0, announce: 0, epg_id: '0', epg_start: 0,
+		standby_on: false, recording_dir: '',
+	};
+	same(changeBody(draftOf(stored), NOW).repeat, 0, 'a timer carrying six is changed into one that runs once');
+	same(timerRepeat(stored.repeat), text.de['timer.repeat.byevent'], 'and is still named in the list');
+}
+
 // ------------------------------------------------------------------------ verdict
 
 const FLOOR = 16;
@@ -159,4 +179,4 @@ if (failed > 0) {
 	process.stderr.write('timerbody-cases.mjs: ' + failed + ' of ' + checked + ' assertions failed\n');
 	process.exit(1);
 }
-process.stdout.write('check-web-timerbody.sh: ' + checked + ' assertions over which timers ask for a margin and which ask to be followed\n');
+process.stdout.write('check-web-timerbody.sh: ' + checked + ' assertions over which timers ask for a margin, which ask to be followed and which repeats the form sends\n');

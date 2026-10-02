@@ -92,8 +92,8 @@ export const REPEAT_WEEKDAYS = 0x100;
 const WEEKDAY_SHIFT = 9;
 
 // The plain repeats as the form offers them, in the daemon's order, so that the
-// index is the number.
-export const PLAIN_REPEATS = ['once', 'daily', 'weekly', 'biweekly', 'fourweekly', 'monthly', 'byevent'];
+// index is the number. Six is left out: the daemon never runs it.
+export const PLAIN_REPEATS = ['once', 'daily', 'weekly', 'biweekly', 'fourweekly', 'monthly'];
 
 /**
  * Which of the choices a stored repeat is, as the form names them.
@@ -351,8 +351,8 @@ export function stopSeconds(draft, now) {
    has no end for the daemon to act on. So this is not a default somebody can
    clear, it is a value without which nothing is sent at all.
 
-   The fourth is not the box's: a weekday repeat with no day set is a timer that
-   matches no day and therefore never runs. The daemon takes it and files it. */
+   The fourth the box refuses as well: a weekday repeat with no day set, which
+   the daemon would otherwise file as a timer that runs once. */
 
 /**
  * The keys of what is wrong with a draft, empty when nothing is.
@@ -388,9 +388,7 @@ export function draftProblems(draft, now) {
 			out.push('form.bad.noday');
 	}
 
-	// Asked of a one-off only, as the box asks it: a repeating timer whose first
-	// occurrence is behind us is the ordinary way to enter one, and the daemon
-	// moves it to the next.
+	// Asked of a one-off only, as the box asks it.
 	const repeats = at.repeat ? repeatValue(draft.repeat, draft.days) : REPEAT_ONCE;
 	if (repeats === REPEAT_ONCE && start > 0 && start < startOfMinute(now))
 		out.push('form.bad.past');
