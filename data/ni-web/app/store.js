@@ -237,6 +237,23 @@ export function read(method, path, options) {
 		snapshot(entryFor(method, path, /** @type {Record<string, unknown> | null | undefined} */ (options))));
 }
 
+/* What the box last answered, held through a reload and gone after a refusal: a failed
+   read keeps the answer before it, so a box playing nothing would show its old channel. */
+/**
+ * @template T
+ * @param {Web.Snapshot<T>} snapshot
+ * @returns {T | null}
+ */
+export function lastAnswer(snapshot) {
+	if (snapshot.state === READY) {
+		return snapshot.data;
+	}
+	if (snapshot.state === LOADING && snapshot.error === null) {
+		return snapshot.data;
+	}
+	return null;
+}
+
 /* The answer, asking for it if it is not there. A caller that arrives while somebody else
    is asking waits on that one request. */
 /**

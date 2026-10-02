@@ -215,6 +215,7 @@ export default function Schedule(props) {
 	const [open, setOpen] = useState(/** @type {Api.Event | null} */ (null));
 
 	const [current, setCurrent] = useState(/** @type {Web.Snapshot<Api.Channel> | null} */ (null));
+	const [standby, setStandby] = useState(/** @type {Web.Snapshot<Api.Standby> | null} */ (null));
 	const [bouquets, setBouquets] = useState(/** @type {Web.Snapshot<Api.BouquetList> | null} */ (null));
 	const [tv, setTv] = useState(/** @type {Web.Snapshot<Api.ChannelPage> | null} */ (null));
 	const [radio, setRadio] = useState(/** @type {Web.Snapshot<Api.ChannelPage> | null} */ (null));
@@ -222,12 +223,17 @@ export default function Schedule(props) {
 
 	// Asked only where the address named no channel. A box playing nothing
 	// answers this with a refusal, and that is a state of this screen and not
-	// a fault: it says pick one.
+	// a fault: it says pick one. Standby is read for the words of that note.
 	useEffect(function () {
 		if (asked !== '') {
 			return undefined;
 		}
-		return store.watch('GET', '/api/v1/channels/current', null, setCurrent);
+		const stopCurrent = store.watch('GET', '/api/v1/channels/current', null, setCurrent);
+		const stopStandby = store.watch('GET', '/api/v1/system/standby', null, setStandby);
+		return function () {
+			stopCurrent();
+			stopStandby();
+		};
 	}, [asked]);
 
 	/* The name of the channel the address names, for the one case where the
@@ -248,7 +254,9 @@ export default function Schedule(props) {
 		return store.watch('GET', '/api/v1/bouquets', null, setBouquets);
 	}, []);
 
-	const currentChannel = current && current.data ? current.data : null;
+	const currentChannel = current === null ? null : store.lastAnswer(current);
+	const standing = standby === null ? null : store.lastAnswer(standby);
+	const asleep = !!standing && standing.on;
 	/* The channel's own identifier and never its epg_id. The guide answers on
 	   either, because the box maps one onto the other before it looks anything
 	   up, but only one of them is a channel this box has: on a box where a
@@ -405,7 +413,9 @@ export default function Schedule(props) {
 			<${Button} class="epg-next" onClick=${function () { setWhen(shiftDay(when, 1)); }}>${t(text, 'epg.schedule.next')}<//>
 		</p>
 		${channel === ''
-			? html`<p class="note epg-nochannel">${t(text, bouquetRows.length ? 'epg.schedule.nochannel' : 'epg.schedule.nobouquets')}</p>`
+			? html`<p class="note epg-nochannel">${t(text, !bouquetRows.length
+				? 'epg.schedule.nobouquets'
+				: (asleep ? 'epg.schedule.standby' : 'epg.schedule.nochannel'))}</p>`
 			: html`<${Listing} shot=${events} when=${when} at=${now} onOpen=${setOpen} />`}
 		<${EventSheet} event=${open} at=${now} onClose=${function () { setOpen(null); }} />
 	</section>`;

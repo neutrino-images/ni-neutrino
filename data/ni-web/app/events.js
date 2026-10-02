@@ -26,8 +26,9 @@ const kStale = {
 	'zap': ['/api/v1/channels/current', '/api/v1/epg/current', '/api/v1/tuner'],
 	'mode': ['/api/v1/channels', '/api/v1/bouquets', '/api/v1/epg'],
 	// The route about standby is among these because the box now says this
-	// once the mode has moved, and no longer when the command arrived.
-	'standby': ['/api/v1/system/standby', '/api/v1/system/info', '/api/v1/tuner'],
+	// once the mode has moved, and no longer when the command arrived. Standby
+	// also changes what plays, without a zap.
+	'standby': ['/api/v1/system/standby', '/api/v1/system/info', '/api/v1/tuner', '/api/v1/channels/current'],
 	'volume': ['/api/v1/osd/volume'],
 	'mute': ['/api/v1/osd/volume'],
 	'record-start': ['/api/v1/recordings', '/api/v1/timers', '/api/v1/tuner'],

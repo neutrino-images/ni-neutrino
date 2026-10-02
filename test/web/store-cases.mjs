@@ -403,6 +403,33 @@ const answer = await store.write('PUT', '/api/v1/storage/netfs/{table}/{slot}', 
 });
 same(answer, { entries: [{ slot: 0 }] }, 'the answer to a write is handed back untouched');
 
+// ---------------------------------------------- what the box last answered
+
+// A failed read keeps the answer before it; the last answer does not.
+empty();
+const kCurrent = 'GET /api/v1/channels/current';
+const kNothing = '{"type":"/errors/no-running-channel","title":"Not found","status":404,"detail":"nothing is playing"}';
+boxSays(kCurrent, 200, '{"id":"ffffffffbe692dd5"}');
+const tv = looking('GET', '/api/v1/channels/current', null);
+await settle();
+same(store.lastAnswer(tv.shot), { id: 'ffffffffbe692dd5' }, 'the last answer is what the box answered');
+store.invalidate('/api/v1/channels/current');
+same(tv.shot.state, store.LOADING, 'an event reads it again');
+same(store.lastAnswer(tv.shot), { id: 'ffffffffbe692dd5' }, 'and the answer is held through that read');
+await settle();
+boxSays(kCurrent, 404, kNothing);
+store.invalidate('/api/v1/channels/current');
+await settle();
+same(tv.shot.state, store.FAILED, 'a refusal fails the read');
+same(tv.shot.data, { id: 'ffffffffbe692dd5' }, 'and the store keeps what it held before');
+same(store.lastAnswer(tv.shot), null, 'which the last answer does not');
+boxSays(kCurrent, 200, '{"id":"ffffffff48deb591"}');
+store.invalidate('/api/v1/channels/current');
+same(tv.shot.state, store.LOADING, 'read again after the refusal');
+same(store.lastAnswer(tv.shot), null, 'nothing comes back while that read runs');
+await settle();
+same(store.lastAnswer(tv.shot), { id: 'ffffffff48deb591' }, 'and the next answer is the last one');
+
 // ------------------------------------------------------------------ verdict
 
 const FLOOR = 40;

@@ -198,7 +198,7 @@ export default function Recordings() {
 
 	const rows = (shot.data && shot.data.items) || [];
 	const shift = rows.filter(function (one) { return one.timeshift; })[0] || null;
-	const channel = current.data;
+	const channel = store.lastAnswer(current);
 	const preferred = boxHours(settings.data);
 	const chosen = hours > 0 ? hours : (preferred > 0 ? preferred : kFallbackHours);
 	const summary = summaryOf(rows.length);

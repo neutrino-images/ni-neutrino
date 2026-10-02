@@ -617,7 +617,8 @@ export default function Grid(props) {
 	const bouquet = (bouquets === null || holding === null) ? 0 : chosenBouquet(bouquets, asked, holding);
 	// The channel the box is on, or nothing at all, which is a box in standby
 	// and every other box with nothing playing.
-	const playing = current && current.data ? current.data.id : '';
+	const onTv = current === null ? null : store.lastAnswer(current);
+	const playing = onTv ? onTv.id : '';
 	/* Two different nothings, told apart: the box has not said yet, and the box
 	   has said it is playing nothing. Only the second is an answer to act on,
 	   and this is what the read below waits for. */

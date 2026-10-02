@@ -33,6 +33,8 @@
 
 #include "jsoncpp/json/json.h"
 
+#include <neutrinoMessages.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -119,6 +121,21 @@ TEST_CASE("an idle box is not found", "[crypt]")
 	REQUIRE_FALSE(r.ok());
 	REQUIRE(r.error().status == Status::NotFound);
 	REQUIRE(r.error().code == ErrorCode::NoRunningChannel);
+}
+
+TEST_CASE("a box in standby is not found either", "[crypt]")
+{
+	InstalledDependencies deps;
+	deps.channels.setCurrentCaids(caids(0x0622));
+	deps.channels.mode = NeutrinoModes::mode_standby;
+
+	const Result<CaidList> r = channels::currentCaids();
+	REQUIRE_FALSE(r.ok());
+	REQUIRE(r.error().status == Status::NotFound);
+	REQUIRE(r.error().code == ErrorCode::NoRunningChannel);
+
+	deps.channels.mode = NeutrinoModes::mode_tv;
+	REQUIRE(channels::currentCaids().ok());
 }
 
 TEST_CASE("an identifier nobody has a name for keeps its number", "[crypt]")

@@ -71,6 +71,8 @@ const TICK_MS = 30000;
    either, and it is the same number the box falls back to. */
 const RECORD_HOURS_FALLBACK = 4;
 
+const kNothingPlaying = '/errors/no-running-channel';
+
 /* The four ways a box can put a 4:3 picture on a 16:9 screen, as the driver
    numbers them (DISPLAY_AR_MODE in the hardware library, and the same four the
    video screen of the box offers). Written out here and not read off the
@@ -205,8 +207,10 @@ function Playing() {
 	const channel = useResource('GET', '/api/v1/channels/current');
 	const running = useResource('GET', '/api/v1/recordings');
 	const standbyStatus = useResource('GET', '/api/v1/system/standby');
-	const playing = channel.data;
+	const playing = store.lastAnswer(channel);
 	const standby = standbyStatus.data;
+	// The card's own empty state, or waking from standby flashes it as a fault.
+	const idle = !!channel.error && channel.error.problem.type === kNothingPlaying;
 	const id = playing ? channelId(playing.id) : '';
 
 	/* The guide is asked for only once there is a channel to ask about, and
@@ -317,7 +321,7 @@ function Playing() {
 
 	return html`<${Card}
 		title=${t(text, standby && standby.on ? 'now.card.standby' : 'now.card.playing')}
-		snapshot=${standby && standby.on ? standbyStatus : channel}
+		snapshot=${standby && standby.on ? standbyStatus : (idle ? Object.assign({}, channel, { error: null }) : channel)}
 		wide=${true}
 		lead=${true}>
 		${standby && standby.on
