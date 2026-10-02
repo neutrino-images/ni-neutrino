@@ -4759,6 +4759,10 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		//FIXME unused ?
 		return messages_return::handled;
 	}
+	// Unhandled would close an open timer announcement.
+	else if (msg == NeutrinoMessages::EVT_TIMERLIST_CHANGED) {
+		return messages_return::handled;
+	}
 	else if( msg == NeutrinoMessages::EVT_SERVICESCHANGED ) {
 		printf("NeutrinoMessages::EVT_SERVICESCHANGED\n");fflush(stdout);
 		channelsInit();
