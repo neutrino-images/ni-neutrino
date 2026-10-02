@@ -30,6 +30,7 @@ import { hrefFor } from '../../nav.js';
 import { State } from '../../ui/state.js';
 import { Button } from '../../ui/button.js';
 import { toast } from '../../ui/toast.js';
+import { zap } from '../../ui/wake.js';
 import text from './playback.text.js';
 import { playlistHref, playlistFile } from './stream.js';
 /* The other half of playing in the browser. A channel the box tunes reaches a
@@ -107,11 +108,10 @@ export default function Playback(props) {
 	 */
 	function zapTo(one) {
 		session.requireWrite().then(function () {
-			store.write('POST', '/api/v1/zap', {
-				touches: ['/api/v1/channels/current', '/api/v1/epg/current'],
-				body: { channel_id: one.id },
-			}).then(function () {
-				toast(t(text, 'play.zap.done', { name: one.name }));
+			zap(one.id).then(function (sent) {
+				if (sent) {
+					toast(t(text, 'play.zap.done', { name: one.name }));
+				}
 			}, function (error) {
 				toast(error && error.problem ? error.problem.title : t(text, 'play.failed'), 'bad');
 			});

@@ -22,6 +22,7 @@
 import { html, render, Fragment, useState, useEffect } from './runtime.js';
 import { Shell } from './router.js';
 import { SignIn } from './ui/signin.js';
+import { WakeQuestion } from './ui/wake.js';
 import { setLanguage, pickLanguage, onLanguage } from './i18n.js';
 import { api } from './api.js';
 import { channelId } from './fmt.js';
@@ -272,6 +273,7 @@ function App() {
 	return html`<${Fragment}>
 		<${Shell} status=${status} ctx=${{ api: api, session: session, events: events }} />
 		<${SignIn} />
+		<${WakeQuestion} />
 	<//>`;
 }
 

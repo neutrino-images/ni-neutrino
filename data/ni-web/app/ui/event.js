@@ -36,16 +36,12 @@ import { RowActions } from './actions.js';
 import { Sheet } from './sheet.js';
 import { State } from './state.js';
 import { toast } from './toast.js';
+import { zap } from './wake.js';
 import text from './event.text.js';
 
 const kCss = '/app/ui/event.css';
 
-/* What a zap makes stale, said here because nothing else could know it: the box
-   is on another channel afterwards, and the guide answer for the running channel
-   is about the one it left. */
-const kZapTouches = ['/api/v1/channels/current', '/api/v1/epg/current'];
-
-/* And what a recording started now makes stale. The timer list because that is
+/* What a recording started now makes stale. The timer list because that is
    where the row is made, the recordings because that is where it shows up as
    something running. */
 const kRecordTouches = ['/api/v1/recordings', '/api/v1/timers'];
@@ -143,8 +139,11 @@ export function timerHref(event, kind) {
  */
 function ask(run, said) {
 	session.requireWrite().then(function () {
-		run().then(function () {
-			toast(said, '');
+		run().then(function (sent) {
+			// false is somebody declining to switch the box on.
+			if (sent !== false) {
+				toast(said, '');
+			}
 		}, function (failed) {
 			toast(failed && failed.problem ? failed.problem.title : t(text, 'epg.event.failed'), 'bad');
 		});
@@ -159,12 +158,7 @@ function ask(run, said) {
  * @returns {void}
  */
 export function zapTo(id, said) {
-	ask(function () {
-		return store.write('POST', '/api/v1/zap', {
-			touches: kZapTouches,
-			body: { channel_id: id }
-		});
-	}, said);
+	ask(function () { return zap(id); }, said);
 }
 
 /* RECORDING SOMETHING THAT HAS ALREADY BEGUN IS A TIMER WHOSE START HAS COME.

@@ -44,6 +44,7 @@ import { Dot } from '../../ui/dot.js';
 import { RowActions } from '../../ui/actions.js';
 import { elapsedShare } from '../../ui/onair.js';
 import { toast } from '../../ui/toast.js';
+import { zap, switchMode } from '../../ui/wake.js';
 import text from './list.text.js';
 import { fetchPlaylist } from './stream.js';
 import { emptyWalk, beginPage, failPage, extend, wants, byName, isWeb } from './list.paging.js';
@@ -432,15 +433,10 @@ export default function ChannelList(props) {
 	 */
 	function zapTo(channel) {
 		session.requireWrite().then(function () {
-			store.write('POST', '/api/v1/zap', {
-				/* What a zap makes stale, said by the caller because nothing
-				   else could know it: the box is now on another channel, and
-				   the guide answer for the running channel is about the one it
-				   left. */
-				touches: ['/api/v1/channels/current', '/api/v1/epg/current'],
-				body: { channel_id: channel.id },
-			}).then(function () {
-				toast(t(text, 'list.zap.done', { name: channel.name }));
+			zap(channel.id).then(function (sent) {
+				if (sent) {
+					toast(t(text, 'list.zap.done', { name: channel.name }));
+				}
 			}, function (error) {
 				toast(error && error.problem ? error.problem.title : t(text, 'list.failed'), 'bad');
 			});
@@ -449,11 +445,10 @@ export default function ChannelList(props) {
 
 	function switchBox() {
 		session.requireWrite().then(function () {
-			store.write('POST', '/api/v1/mode', {
-				touches: ['/api/v1/channels', '/api/v1/bouquets', '/api/v1/epg'],
-				body: { mode: mode },
-			}).then(function () {
-				toast(t(text, 'list.boxmode.done', { mode: t(text, 'list.mode.' + mode) }));
+			switchMode(mode).then(function (sent) {
+				if (sent) {
+					toast(t(text, 'list.boxmode.done', { mode: t(text, 'list.mode.' + mode) }));
+				}
 			}, function (error) {
 				toast(error && error.problem ? error.problem.title : t(text, 'list.failed'), 'bad');
 			});
