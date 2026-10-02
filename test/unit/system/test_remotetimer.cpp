@@ -589,6 +589,41 @@ TEST_CASE("a timer off a box with no margins of its own goes over as it stands",
 		"\"recording_safety\":true,\"auto_adjust\":true}");
 }
 
+TEST_CASE("a timer with no announce time of its own goes over with the timer list's lead", "[remotetimer]")
+{
+	StubServer server;
+	for (int i = 0; i < 3; i++)
+		server.answer(reply("201 Created", "{\"id\":\"9\"}"));
+	// Not checked here: a server that is not up leaves no bodies below.
+	server.start();
+
+	CTimerd::responseGetTimer timer = CTimerd::responseGetTimer();
+	timer.channel_id = 0x2bULL;
+	timer.alarmTime = 1000;
+	timer.stopTime = 2000;
+
+	CRemoteTimerClient client(boxAt(server.port()));
+	// None, what a margin taken off none leaves, and one past the alarm.
+	const time_t announces[] = { 0, -300, 1100 };
+	for (size_t i = 0; i < 3; i++)
+	{
+		timer.announceTime = announces[i];
+		client.addRecordTimer(timer, 300, 600);
+	}
+	server.stop();
+
+	std::vector<std::string> bodies;
+	for (size_t i = 0; i < server.seen.size(); i++)
+		bodies.push_back(server.seen[i].body);
+
+	// Three minutes ahead of the programme's own start, 1000 + 300.
+	const std::string expected =
+		"{\"kind\":\"record\",\"channel_id\":\"2b\",\"start\":1300,"
+		"\"stop\":1400,\"announce\":1120,\"repeat\":0,\"repeat_count\":0,\"epg_start\":0,"
+		"\"recording_safety\":true,\"auto_adjust\":true}";
+	CHECK(bodies == std::vector<std::string>(3, expected));
+}
+
 TEST_CASE("a list read stamps the other box's name and margins onto every row", "[remotetimer]")
 {
 	StubServer server;

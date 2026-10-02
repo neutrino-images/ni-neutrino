@@ -30,6 +30,7 @@
 #include <system/helpers-json.h>
 
 #include <timerdclient/timerdclient.h>
+#include <timerdclient/timerdannounce.h>
 
 #include <algorithm>
 
@@ -556,7 +557,8 @@ CRemoteTimerClient::result_t CRemoteTimerClient::addRecordTimer(
 	   the body says to apply them, so a box set to wider ones holds the
 	   recording for its own stretch and not for a copy of this box's. */
 	out.alarm = timer.alarmTime + local_pre;
-	out.announce = timer.announceTime + local_pre;
+	// Without an announce time it would arrive as one in 1970.
+	out.announce = timerAnnounceTime(CTimerd::TIMER_RECORD, timer.announceTime, timer.alarmTime) + local_pre;
 	out.stop = timer.stopTime - local_post;
 
 	std::string answer;

@@ -78,6 +78,7 @@
 #include <zapit/femanager.h>
 
 #include <timerdclient/timerdclient.h>
+#include <timerdclient/timerdannounce.h>
 
 #include <eitd/sectionsd.h>
 
@@ -473,7 +474,7 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 		const int eventID = timerlist[selected].eventID;
 
 		int res = Timer->addRecordTimerEvent(timerlist[selected].channel_id, timerlist[selected].alarmTime + timerlist[selected].rem_pre,
-				timerlist[selected].stopTime - timerlist[selected].rem_post, 0, 0, timerlist[selected].announceTime + timerlist[selected].rem_pre,
+				timerlist[selected].stopTime - timerlist[selected].rem_post, 0, 0, timerAnnounceTime(CTimerd::TIMER_RECORD, timerlist[selected].announceTime, timerlist[selected].alarmTime) + timerlist[selected].rem_pre,
 				TIMERD_APIDS_CONF, true, timerlist[selected].announceTime > time(NULL), "", false, false, timerlist[selected].eventRepeat, timerlist[selected].repeatCount);
 
 		if (res == -1)
@@ -483,7 +484,7 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 			if (forceAdd)
 			{
 				res = Timer->addRecordTimerEvent(timerlist[selected].channel_id, timerlist[selected].alarmTime + timerlist[selected].rem_pre,
-						timerlist[selected].stopTime - timerlist[selected].rem_post, 0, 0, timerlist[selected].announceTime + timerlist[selected].rem_pre,
+						timerlist[selected].stopTime - timerlist[selected].rem_post, 0, 0, timerAnnounceTime(CTimerd::TIMER_RECORD, timerlist[selected].announceTime, timerlist[selected].alarmTime) + timerlist[selected].rem_pre,
 						TIMERD_APIDS_CONF, true, timerlist[selected].announceTime > time(NULL), "", true, false, timerlist[selected].eventRepeat, timerlist[selected].repeatCount);
 			}
 		}

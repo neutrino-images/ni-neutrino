@@ -302,9 +302,11 @@ openapi_dump_SOURCES = doc/openapi-dump.cpp doc/openapi-dump-stubs.cpp doc/opena
 # the JSON archive are named for the same reason the settings reader is: to
 # answer a symbol the object needs, not because this program uses either.
 # md5sum answers the one hash helpers.o computes over a whole file.
+# libtimerdclient answers the announce time the timer layer fills in.
 openapi_dump_LDADD = \
 	libhttpd.a \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
+	$(top_builddir)/lib/timerdclient/libtimerdclient.a \
 	$(top_builddir)/src/system/helpers.o \
 	$(top_builddir)/src/system/debug.o \
 	$(top_builddir)/lib/libconfigfile/libconfigfile.a \
