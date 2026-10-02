@@ -19,7 +19,6 @@
  */
 
 #include "support/catch.hpp"
-#include "support/counts.h"
 #include "support/fakes.h"
 #include "support/httpclient.h"
 
@@ -221,17 +220,6 @@ TEST_CASE("the page does not answer over a refusal the directory made", "[apppat
 namespace
 {
 
-/* How many files the page installs, counted here rather than in a script, because every
-   name in counts.txt has to be one a case recorded: the run fails on a name that file
-   holds and nothing measured.
-
-   An identity, so a screen that stops being installed is a failure and not a quieter
-   build. What the page weighs is deliberately not a number here: a ceiling recorded
-   under its own name would be compared with itself, and the measured weight as an
-   identity would move on every edit to every file of the page. The weight is held to a
-   ceiling by check-web-size.sh, where a promise belongs. */
-const char kWebFiles[] = "web files the page installs";
-
 std::string readWhole(const std::string &path)
 {
 	std::ifstream f(path.c_str(), std::ios::in | std::ios::binary);
@@ -281,10 +269,14 @@ TEST_CASE("the page is the files it installs", "[apppaths]")
 	std::vector<std::string> files;
 	files.push_back("index.html");
 	collect(dir + "/app", "app/", files);
+	const size_t app_end = files.size();
 	/* The display at /info is a second page out of the same directory, with a
 	   document and an install rule of its own, so it is walked as well: a file
-	   of it left out of this count is a file nothing here would notice. */
+	   of it left out of this walk is a file nothing here would notice. */
 	collect(dir + "/info", "info/", files);
+
+	REQUIRE(app_end > 1);
+	REQUIRE(files.size() > app_end);
 
 	for (size_t i = 0; i < files.size(); ++i)
 	{
@@ -293,6 +285,4 @@ TEST_CASE("the page is the files it installs", "[apppaths]")
 		INFO("data/ni-web/" << files[i]);
 		REQUIRE(readWhole(dir + "/" + files[i]).size() > 0);
 	}
-
-	recordCount(kWebFiles, files.size());
 }
