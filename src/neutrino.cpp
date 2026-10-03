@@ -3738,14 +3738,12 @@ void CNeutrinoApp::RealRun()
 		   luaclient scripts are let in. */
 		if (!CStringInputOpen::any())
 			carryWaitingSettings();
-#ifdef ENABLE_LUA
-		luaServer->UnBlock();
-#endif
-#ifdef ENABLE_PYTHON
-		pyServer->UnBlock();
-#endif
 		/* Back at the top, with no screen open: what a screen drew from
-		   the plugin list is gone with the screen. */
+		   the plugin list is gone with the screen. Taken up before UnBlock
+		   lets luaclient scripts in: from there until Block a script runs on
+		   a thread of its own, reads the remote and paints, and a player a
+		   shift opens would run beside it for as long as the shift is
+		   watched. */
 		if (plugins_reload_pending) {
 			plugins_reload_pending = false;
 			if (g_Plugins)
@@ -3756,6 +3754,12 @@ void CNeutrinoApp::RealRun()
 			timeshift_pending = false;
 			startAskedTimeshift();
 		}
+#ifdef ENABLE_LUA
+		luaServer->UnBlock();
+#endif
+#ifdef ENABLE_PYTHON
+		pyServer->UnBlock();
+#endif
 		g_RCInput->getMsg(&msg, &data, 100, ((g_settings.mode_left_right_key_tv == SNeutrinoSettings::VOLUME) && (g_RemoteControl->subChannels.size() < 1)) ? true : false);	// 10 secs..
 #ifdef ENABLE_LUA
 		if (luaServer->Block(msg, data))
