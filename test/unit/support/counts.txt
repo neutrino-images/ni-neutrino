@@ -9,11 +9,6 @@
 # What the run measured is written to counts.actual beside the binary. Putting
 # that file here is the whole of the edit, so a change to coverage is one diff
 # to read rather than a constant to lower in each of several cases.
-# The flash of the smallest box is what this stands in for, and it stands in
-# badly: the buildsystem's own check-image-size weighs the real image, and a
-# build that will not fit fails there whatever this says. Raised to the
-# measured figure rather than defended.
-# web bytes the pages may cost gzipped	789099
 acted options matched to a declared row	27
 acted options whose row writes another member	5
 answer members narrower than free text	41

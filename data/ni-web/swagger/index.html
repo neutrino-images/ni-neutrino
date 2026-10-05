@@ -361,6 +361,8 @@ window.ui = SwaggerUIBundle({
   // The schema with its member descriptions first, the example one click away.
   defaultModelRendering: "model",
   defaultModelExpandDepth: 2,
+  // The level an operation needs is only in x-auth-level.
+  showExtensions: true,
   supportedSubmitMethods: [ "get", "put", "post", "delete", "patch" ],
   onComplete: function () {
     specReady = true;

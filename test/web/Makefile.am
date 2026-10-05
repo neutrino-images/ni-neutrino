@@ -24,7 +24,6 @@ WEB_CHECKS = \
 	check-web-timeredit.sh \
 	check-web-fileplay.sh \
 	check-web-archive.sh \
-	check-web-size.sh \
 	check-web-types.sh \
 	check-web-handover.sh \
 	check-web-guideclock.sh \

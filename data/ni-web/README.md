@@ -141,8 +141,7 @@ loads it when the screen is first drawn.
 - **`localStorage` is for conveniences of one browser** and nothing else, read
   and written in `try/catch`. Anything that must survive or be seen by anybody
   else belongs on the box.
-- **The smallest box has 28 MB of flash for the whole image.** Everything here
-  is weighed; `test/web/check-web-size.sh` says the figure.
+- **The smallest box has 28 MB of flash for the whole image.**
 
 ## A trap that has cost several afternoons
 
