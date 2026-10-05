@@ -342,6 +342,9 @@
 .grid__sbar { display: block; width: 100%; height: 2px; background: var(--line); }
 .grid__sbar i { display: block; height: 100%; background: var(--on-air); }
 .grid__srec { flex: none; min-width: var(--tap-height); min-height: var(--tap-height); text-decoration: none; }
+/* Scaled rather than resized: the glyph's own layout size (and so the
+   button's content box, at every text scale) is exactly what it was. */
+.grid__srec span[aria-hidden] { display: inline-block; transform: scale(1.5); }
 
 /* What is on air, so that the row reads as a clock and not only as a list. A
    left edge and not a fill: the fill is what a chosen event is. The same name

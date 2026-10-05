@@ -32,12 +32,16 @@ import { Field } from '../../ui/field.js';
 import { Dot } from '../../ui/dot.js';
 import { Dialog } from '../../ui/dialog.js';
 import { toast } from '../../ui/toast.js';
-import { monogram } from '../../ui/onair.js';
+import { Logo } from '../../ui/logo.js';
+import { useRefused } from '../../ui/refused.js';
+import * as pagePlayer from '../../ui/playing.js';
 import { hrefFor, areaById, entryById, labelOf } from '../../nav.js';
 import { Card, Meter, useResource, useOnScreen } from './parts.js';
 import { readPlayback, isPlayback, positionAt, timeText, tileActions, kResyncMs } from '../../playback.js';
-import { ArchiveDetails } from '../recordings/archive.js';
+import { ArchiveDetails, usePlaylist, playHereNow, isHere } from '../recordings/archive.js';
+import recText from '../recordings/recordings.text.js';
 import { archiveCoverHref } from '../recordings/archive.model.js';
+import { useKept } from '../../ui/kept.js';
 import { ensureCss } from '../../css.js';
 
 export const css = '/app/screens/now/now.css';
@@ -166,33 +170,6 @@ export function settingChoices(schema, id) {
 	return [];
 }
 
-/**
- * The picture of a channel, and its initials where the box has none.
- *
- * @param {{ id: string, name: string }} channel
- * @returns {Web.Drawn}
- */
-function Logo(channel) {
-	/* A picture the box does not have for this channel is a 404, which a
-	   browser draws as a broken image. Asked for once, and the initials take
-	   over the moment the answer says there is none. This is the frame's own
-	   arrangement for the same picture, kept the same here on purpose. */
-	const [broken, setBroken] = useState(false);
-
-	useEffect(function () {
-		setBroken(false);
-	}, [channel.id]);
-
-	if (broken) {
-		return html`<span class="now-logo now-monogram" aria-hidden="true">${monogram(channel.name)}</span>`;
-	}
-	return html`<img
-		class="now-logo"
-		src=${'/api/v1/channels/' + encodeURIComponent(channel.id) + '/logo'}
-		alt=""
-		onError=${function () { setBroken(true); }} />`;
-}
-
 /* The screen that plays a channel in the browser, as the navigation states it.
    Taken from there and not written out, so that the word on the tile is the
    word in the bars: the screen was renamed and its identifier was not, and a
@@ -201,24 +178,24 @@ function Logo(channel) {
 const streaming = entryById(areaById('channels'), 'playback');
 
 /**
+ * A recording's cover in the box a channel logo takes, drawn whole and smaller
+ * where its shape is not the box's.
+ *
  * @param {{ id: string, title: string }} props
  * @returns {Web.Drawn}
  */
 function Cover(props) {
-	const [broken, setBroken] = useState(false);
-
-	useEffect(function () {
-		setBroken(false);
-	}, [props.id]);
-
+	const [broken, refuse] = useRefused(props.id);
 	if (broken) {
 		return null;
 	}
-	return html`<img
-		class="now-cover"
-		src=${archiveCoverHref(props.id)}
-		alt=${t(text, 'now.playback.cover', { title: props.title })}
-		onError=${function () { setBroken(true); }} />`;
+	return html`<span class="logo lg now-cover-box">
+		<img
+			class="now-cover"
+			src=${archiveCoverHref(props.id)}
+			alt=${t(text, 'now.playback.cover', { title: props.title })}
+			onError=${refuse} />
+	</span>`;
 }
 
 /** @returns {import('../../ui/actions.js').RowAction[]} */
@@ -235,8 +212,15 @@ function noActions() {
 function PlaybackShown(props) {
 	const shown = props.shown;
 	const redraw = useState(0)[1];
-	const [details, setDetails] = useState(false);
+	const [details, setDetails] = useKept('now:playback-details', false);
 	const recording = shown.source === 'recording';
+	const list = usePlaylist(shown.id);
+	const [here, setHere] = useState(pagePlayer.current());
+
+	useEffect(function () {
+		setHere(pagePlayer.current());
+		return pagePlayer.subscribe(setHere);
+	}, []);
 
 	useEffect(function () {
 		if (shown.state !== 'playing') {
@@ -299,7 +283,13 @@ function PlaybackShown(props) {
 				? html`<${Button} primary=${true} class="now-act-stop" onClick=${stop}>${t(text, 'now.playback.stop')}<//>`
 				: null}
 			${acts.indexOf('info') !== -1
-				? html`<${Button} class="now-act-info" onClick=${function () { setDetails(true); }}>ℹ ${t(text, 'now.playback.info')}<//>`
+				? html`<${Button} class="now-act-info" onClick=${function () { setDetails(true); }}>${t(text, 'now.playback.info')}<//>`
+				: null}
+			${acts.indexOf('m3u') !== -1 && list !== null
+				? html`<a class="btn now-act-m3u" href=${list.href}>${t(text, 'now.act.m3u')}</a>`
+				: null}
+			${acts.indexOf('browser') !== -1 && !isHere(here, shown.id)
+				? html`<${Button} class="now-act-browser" onClick=${function () { playHereNow(shown.id, name); }}>${t(recText, 'rec.archive.here')}<//>`
 				: null}
 			${acts.indexOf('archive') !== -1
 				? html`<a class="btn now-act-archive" href=${hrefFor('recordings', 'archive')}>${t(text, 'now.playback.archive')}</a>`
@@ -452,7 +442,7 @@ function Playing() {
 			? html`<${PlaybackShown} shown=${shown} at=${playback.at} />`
 			: playing
 				? html`<div class="now-head">
-					<${Logo} id=${playing.id} name=${playing.name} />
+					<${Logo} channel=${playing} size="lg" />
 					<div class="now-head-what">
 						<p class="now-channel-name">${playing.name}</p>
 						<p class="now-channel-facts">

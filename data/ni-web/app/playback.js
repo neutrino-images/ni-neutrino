@@ -86,5 +86,5 @@ export function tileActions(shown) {
 		return [];
 	}
 	const out = shown.returnsTo !== '' ? ['stop'] : [];
-	return shown.source === 'recording' && shown.id !== '' ? out.concat(['info', 'archive']) : out;
+	return shown.source === 'recording' && shown.id !== '' ? out.concat(['info', 'm3u', 'browser', 'archive']) : out;
 }

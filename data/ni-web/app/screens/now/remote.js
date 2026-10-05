@@ -57,6 +57,7 @@ import { t } from '../../i18n.js';
 import text from './now.text.js';
 import { Switch } from '../../ui/switch.js';
 import { toast } from '../../ui/toast.js';
+import { fold } from '../../ui/kept.js';
 import { Card, useResource } from './parts.js';
 import { HANDSETS, PICTURE_FOR, PICTURE_FOR_HARDWARE, keySpots } from './handsets.js';
 import { useCapture, Display } from './screenshot.js';
@@ -437,14 +438,15 @@ export default function Remote() {
 	 * @returns {void}
 	 */
 	function press(name) {
-		/* Said before the box answers and left standing after it. What the key
-		   did is the box's business and there is no answer that describes it;
-		   what this can honestly report is that the key went, and a refusal
-		   replaces the line with what the box said. */
-		setLast(name);
+		/* Said once the box took it. What the key did is the box's business and
+		   there is no answer that describes it; what this can honestly report is
+		   that the key went, and a refused key never went, whether the refusal
+		   is the sign in sheet or a line of its own. */
 		askForPicture();
 		store.write('POST', '/api/v1/osd/remote/key', { body: { name: name } })
-			.catch(function (failed) {
+			.then(function () {
+				setLast(name);
+			}, function (failed) {
 				setLast('');
 				if (failed && failed.aborted === true) {
 					return;
@@ -573,7 +575,7 @@ export default function Remote() {
 						   out in the open made the screen a catalogue rather
 						   than a handset. */
 						if (group.id === 'rest') {
-							return html`<details key=${group.id} class="now-keygroup now-keyrest">
+							return html`<details key=${group.id} class="now-keygroup now-keyrest" ...${fold('now.remote:rest')}>
 								<summary class="now-sub">
 									${t(text, 'now.group.rest')}
 									${' '}<span class="now-hint">${t(text, 'now.remote.count', { count: group.keys.length })}</span>

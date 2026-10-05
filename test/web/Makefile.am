@@ -28,7 +28,23 @@ WEB_CHECKS = \
 	check-web-types.sh \
 	check-web-handover.sh \
 	check-web-guideclock.sh \
-	$(NOW_CHECKS)
+	check-web-grid.sh \
+	$(CHANNEL_CHECKS) \
+	$(KEEP_CHECKS) \
+	$(NOW_CHECKS) \
+	check-web-timerend.sh
+
+CHANNEL_CHECKS = \
+	check-web-channels.sh
+
+CHANNEL_DIST = \
+	channels-cases.mjs
+
+KEEP_CHECKS = \
+	check-web-keep.sh
+
+KEEP_DIST = \
+	keep-cases.mjs
 
 NOW_CHECKS = \
 	check-web-now.sh
@@ -41,7 +57,7 @@ NOW_DIST = \
 EXTRA_DIST = $(WEB_CHECKS) fetch-types.sh serve.js openapi-types.js drag-cases.mjs player-cases.mjs \
 	     decide-cases.mjs fileplay-cases.mjs archive-cases.mjs store-cases.mjs events-cases.mjs session-cases.mjs timerbody-cases.mjs \
 	     timeredit-cases.mjs guideclock-cases.mjs wake-cases.mjs types \
-	     $(NOW_DIST)
+	     $(CHANNEL_DIST) timerend-cases.mjs $(KEEP_DIST) $(NOW_DIST)
 
 # The document the server answers with, written out by the target that owns it
 # and read here so that what the page asks for is held to it. Made through that

@@ -491,7 +491,7 @@ function Listing(props) {
 			wide: true,
 			cell: function (one) {
 				return html`<span class="epg-what">
-					<b>${one.title}</b>
+					<b title=${one.title}>${one.title}</b>
 					${isOnAir(one, now) ? html`<${Dot} kind="onair" word=${t(words, 'epg.event.running')} />` : null}
 				</span>`;
 			}

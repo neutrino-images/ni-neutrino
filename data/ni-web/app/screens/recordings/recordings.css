@@ -64,9 +64,6 @@
 .rec-archive-name .rec-cut { min-width: 0; }
 .rec-archive-on { flex: none; color: var(--on-air); font-size: 0.8125rem; }
 .rec-archive-more { margin: var(--gap-3) 0; }
-/* What a row may do, spelled out in its sheet, on one line each. */
-.rec-archive .sheet-areas { grid-template-columns: 1fr; }
-.rec-archive .sheet-areas button { white-space: nowrap; }
 @media (min-width: 600px) {
 	.rec-archive td[data-col="title"] { max-width: 0; }
 	.rec-archive td[data-col="channel"] .rec-cut { max-width: 24ch; }

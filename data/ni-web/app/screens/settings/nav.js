@@ -11,7 +11,7 @@ const form = () => import('./form.js');
 export default {
 	id: 'settings',
 	text: 'nav.settings',
-	ic: '⚒',
+	ic: '⚒︎',
 	items: (/** @type {Web.Context} */ ctx) => ctx.api("GET", "/api/v1/settings/sections").then(function (answer) {
 		const rows = (answer && answer.items) || [];
 		return rows.map(function (row) {

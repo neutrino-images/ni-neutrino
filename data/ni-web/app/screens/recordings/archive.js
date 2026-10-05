@@ -216,7 +216,7 @@ function ArchivePages(props) {
 			next[row.id] = Object.assign({ play: false, vlc: false, said: '' }, was[row.id], { play: true, said: '' });
 			return next;
 		});
-		playing.start(playing.ofFile(nameOf(row), href, { how: 'demuxed', sound: false }));
+		playHereNow(row.id, nameOf(row));
 	}
 
 	/** @param {import('./archive.model.js').ArchiveItem} row */
@@ -389,7 +389,7 @@ function ArchivePages(props) {
  * @param {string} id
  * @returns {boolean} whether the page's player is playing this recording
  */
-function isHere(now, id) {
+export function isHere(now, id) {
 	return now !== null && now.source.of === 'file' && now.source.id === archiveFileHref(id);
 }
 
@@ -545,11 +545,11 @@ function tvMark() {
  */
 function archiveActions(row, here, on) {
 	return [
-		{ id: 'info', mark: '\u2139', label: t(text, 'rec.archive.info'),
+		{ id: 'info', mark: '\u2139\ufe0e', label: t(text, 'rec.archive.info'),
 			named: t(text, 'rec.archive.info.for', { title: nameOf(row) }), onAct: function () { on.onInfo(row); } },
 		here
 			? { id: 'play-stop', mark: '\u25a0', label: t(text, 'rec.archive.stop'), onAct: function () { on.onStop(row); } }
-			: { id: 'play-here', mark: '\u25b6', label: t(text, 'rec.archive.here'), onAct: function () { on.onPlayHere(row); } },
+			: { id: 'play-here', mark: '\u25b6\ufe0e', label: t(text, 'rec.archive.here'), onAct: function () { on.onPlayHere(row); } },
 		{ id: 'play-tv', mark: tvMark(), label: t(text, 'rec.archive.tv'), onAct: function () { on.onPlayTv(row); } },
 		{ id: 'vlc-open', mark: '\u2193', label: t(text, 'rec.archive.vlc'), onAct: function () { on.onVlc(row); } },
 		{ id: 'delete', mark: '\u2715', label: t(text, 'rec.archive.delete'), onAct: function () { on.onDelete(row); } },
@@ -566,6 +566,7 @@ function archiveActions(row, here, on) {
 function ArchiveActs(props) {
 	return html`<span class="acts" data-archive-act=${props.row.id}><${RowActions}
 		title=${nameOf(props.row)}
+		keep=${'archive:' + props.row.id}
 		actions=${props.actions} /></span>`;
 }
 
@@ -596,12 +597,24 @@ function ArchivePlay(props) {
 }
 
 /**
- * A reader without sign in gets no token; asking would be refused.
+ * Plays a recording in the page's own player.
  *
- * @param {{ id: string }} props
- * @returns {Web.Drawn}
+ * @param {string} id
+ * @param {string} name
+ * @returns {void}
  */
-function ArchiveVlc(props) {
+export function playHereNow(id, name) {
+	playing.start(playing.ofFile(name, archiveFileHref(id), { how: 'demuxed', sound: false }));
+}
+
+/**
+ * A recording's playlist address for a player elsewhere, null while it is
+ * being made. A reader without sign in gets no token; asking would be refused.
+ *
+ * @param {string} id
+ * @returns {{ href: string, home: boolean } | null}
+ */
+export function usePlaylist(id) {
 	const [signed, setSigned] = useState(session.canSystem());
 	const [token, setToken] = useState(/** @type {string | null} */ (null));
 
@@ -611,7 +624,7 @@ function ArchiveVlc(props) {
 
 	useEffect(function () {
 		let live = true;
-		if (!signed) {
+		if (!signed || id === '') {
 			setToken('');
 			return function () { live = false; };
 		}
@@ -624,14 +637,25 @@ function ArchiveVlc(props) {
 				setToken('');
 		});
 		return function () { live = false; };
-	}, [signed]);
+	}, [signed, id]);
 
-	if (token === null) {
+	if (token === null || id === '') {
 		return null;
 	}
-	const address = new URL(archivePlaylistHref(props.id, token), window.location.href).href;
+	return { href: new URL(archivePlaylistHref(id, token), window.location.href).href, home: token === '' };
+}
+
+/**
+ * @param {{ id: string }} props
+ * @returns {Web.Drawn}
+ */
+function ArchiveVlc(props) {
+	const list = usePlaylist(props.id);
+	if (list === null) {
+		return null;
+	}
 	return html`<p class="rec-archive-vlc">
-		<a data-act="vlc" href=${address}>${t(text, 'rec.archive.vlc')}</a>
-		<span class="hint">${t(text, token === '' ? 'rec.archive.vlc.how.home' : 'rec.archive.vlc.how')}</span>
+		<a data-act="vlc" href=${list.href}>${t(text, 'rec.archive.vlc')}</a>
+		<span class="hint">${t(text, list.home ? 'rec.archive.vlc.how.home' : 'rec.archive.vlc.how')}</span>
 	</p>`;
 }

@@ -9,10 +9,11 @@
 // Drawn twice and not moved, because a control that is moved between two places as
 // the window changes loses the focus that was on it. The hidden one is out of the
 // tab order with it.
-import { html, Fragment, useState } from '../runtime.js';
+import { html, Fragment } from '../runtime.js';
 import { t } from '../i18n.js';
 import text from '../shell.text.js';
 import { Sheet } from './sheet.js';
+import { useKept } from './kept.js';
 
 /**
  * @typedef {object} RowAction
@@ -30,14 +31,16 @@ import { Sheet } from './sheet.js';
 /**
  * @param {{
  *   title?: string,
+ *   keep?: string,
  *   actions?: readonly RowAction[]
  * }} props title names the row the sheet is about, so that a sheet opened from
- *   the fourth row says which row it came from
+ *   the fourth row says which row it came from; keep names the row for good, so
+ *   its sheet stays open when the list is read again
  * @returns {Web.Drawn}
  */
 export function RowActions(props) {
 	const actions = props.actions || [];
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useKept(props.keep || '', false);
 
 	if (actions.length === 0)
 		return null;
@@ -74,7 +77,7 @@ export function RowActions(props) {
 			onClick=${function () { setOpen(true); }}>⋯</button>
 		<${Sheet} open=${open} onClose=${function () { setOpen(false); }} label=${t(text, 'shell.actions')}>
 			<h2>${props.title || t(text, 'shell.actions')}</h2>
-			<ul class="sheet-areas">
+			<ul class="sheet-areas row-actions">
 				${actions.map(function (one) {
 					return html`<li key=${one.id}>
 						<button

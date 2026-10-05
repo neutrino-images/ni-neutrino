@@ -143,7 +143,7 @@ export function eventActions(props) {
 		actions.push({
 			id: 'about',
 			label: t(text, 'epg.event.details.open'),
-			mark: 'i',
+			mark: 'ℹ︎',
 			onAct: function () { open(event); }
 		});
 	}
@@ -152,13 +152,13 @@ export function eventActions(props) {
 		? {
 			id: 'record',
 			label: t(text, 'epg.event.record.now'),
-			mark: '⏺',
+			mark: '⏺︎',
 			onAct: function () { recordNow(event); }
 		}
 		: {
 			id: 'record',
 			label: t(text, 'epg.event.record.timer'),
-			mark: '⏺',
+			mark: '⏺︎',
 			onAct: function () { route(timerHref(event, 'record')); }
 		});
 
@@ -166,7 +166,7 @@ export function eventActions(props) {
 		? {
 			id: 'zap',
 			label: t(text, 'epg.event.zap.now'),
-			mark: '▶',
+			mark: '▶︎',
 			onAct: function () {
 				zapTo(event.channel_id, t(text, 'epg.event.zap.done', { title: event.title }));
 			}
@@ -174,7 +174,7 @@ export function eventActions(props) {
 		: {
 			id: 'zap',
 			label: t(text, 'epg.event.zap.timer'),
-			mark: '▶',
+			mark: '▶︎',
 			onAct: function () { route(timerHref(event, 'zapto')); }
 		});
 
@@ -197,6 +197,7 @@ export function eventActions(props) {
 export function EventActions(props) {
 	return html`<div class="acts"><${RowActions}
 		title=${props.event.title}
+		keep=${'event:' + props.event.channel_id + ':' + props.event.id + '@' + props.event.start}
 		actions=${eventActions(props)} /></div>`;
 }
 

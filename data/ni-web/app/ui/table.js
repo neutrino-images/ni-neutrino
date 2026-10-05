@@ -5,6 +5,8 @@
 // the phone width it is not a table at all: the head goes, each row becomes a card and
 // each cell carries the word its column head was carrying. That fold is one rule in
 // the frame's stylesheet rather than a decision each screen makes for itself.
+// The words stand in one column and the values beside them, so what a cell draws
+// is one thing: a second would land in the word column.
 //
 // A column states where its content sits and this writes that on the head cell and on
 // every cell of the column from the one statement. A head left over controls that sit
@@ -178,7 +180,7 @@ export function Table(props) {
 	useNearEnd(hold, rows.length, lastKey, props.hasMore === true, props.onNearEnd);
 
 	return html`<div class="scroll-x">
-		<table class="grid" ref=${hold}>
+		<table class="grid grid-facts" ref=${hold}>
 			<thead><tr>
 				${columns.map(function (column) {
 					const active = sort && sort.column === column.id;

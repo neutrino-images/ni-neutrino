@@ -33,7 +33,7 @@ export function Sheet(props) {
 		const before = /** @type {HTMLElement | null} */ (document.activeElement);
 		const node = box.current;
 		const first = node && /** @type {HTMLElement | null} */ (node.querySelector(FOCUSABLE));
-		if (first)
+		if (first && !node.contains(document.activeElement))
 			first.focus();
 
 		/**
@@ -67,8 +67,10 @@ export function Sheet(props) {
 		return function () {
 			document.removeEventListener('keydown', /** @type {EventListener} */ (onKey), true);
 			// Back where it came from, because a sheet that closes and leaves
-			// the focus on the body sends the next key press to the page.
-			if (before && before.focus)
+			// the focus on the body sends the next key press to the page. Not
+			// out of a sheet that opened meanwhile and already holds it.
+			const now = document.activeElement;
+			if (before && before.focus && (!now || now === document.body || (node && node.contains(now))))
 				before.focus();
 		};
 	}, [props.open]);

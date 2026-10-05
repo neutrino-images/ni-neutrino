@@ -371,6 +371,43 @@ export function stopSeconds(draft, now) {
 	return startSeconds(draft, now) + minutes * 60;
 }
 
+/**
+ * The end as the value a date and time control takes, empty while there is none.
+ * @param {Draft} draft
+ * @param {number} now
+ * @returns {string}
+ */
+export function endInput(draft, now) {
+	return startSeconds(draft, now) > 0 ? momentInput(stopSeconds(draft, now)) : '';
+}
+
+/**
+ * The whole minutes from the start to a picked end, nought where that end is not
+ * after the start. Counted in seconds and not on the clock, so a night with a
+ * summer time change gets its real length.
+ * @param {Draft} draft
+ * @param {string} value
+ * @param {number} now
+ * @returns {number}
+ */
+export function minutesUntil(draft, value, now) {
+	const start = startSeconds(draft, now);
+	const end = momentSeconds(value);
+	if (start <= 0 || end <= start)
+		return 0;
+	return Math.round((end - start) / 60);
+}
+
+/**
+ * Whether the browser can open its own date and time picker on demand.
+ * @param {any} scope globalThis
+ * @returns {boolean}
+ */
+export function canPickEnd(scope) {
+	const input = scope ? scope.HTMLInputElement : undefined;
+	return !!input && !!input.prototype && typeof input.prototype.showPicker === 'function';
+}
+
 /* WHAT THE FORM REFUSES TO SEND, AND WHY.
 
    All of them are the box's own, stated here so the person is told before the

@@ -7,6 +7,8 @@
 // and not two: on, off, and not knowable. Not knowable draws the picture,
 // because the box's own default is on and a page that hid every logo whenever
 // it could not ask would turn the switch on for nobody and off for everybody.
+// So a caller below System does not ask at all: the refusal is certain, and
+// it would be sent from every screen with a picture on it.
 //
 // Asked through the store, so a list of two hundred rows asks once and a
 // second screen asks not at all, and asked by the first picture that is drawn
@@ -19,7 +21,9 @@
 // then this is as far as a page can get on its own.
 import { html, useState, useEffect } from '../runtime.js';
 import * as store from '../store.js';
+import * as session from '../session.js';
 import { monogram } from './onair.js';
+import { useRefused } from './refused.js';
 
 /**
  * Whether channel pictures are drawn at all, out of what the box said about
@@ -41,7 +45,7 @@ export function drawsLogos(seen) {
 }
 
 /**
- * @param {{ channel: { id: string, name: string }, size?: 'sm' | 'md' }} props
+ * @param {{ channel: { id: string, name: string }, size?: 'sm' | 'md' | 'lg' }} props
  * @returns {Web.Drawn}
  */
 export function Logo(props) {
@@ -49,25 +53,27 @@ export function Logo(props) {
 	const [allowed, setAllowed] = useState(true);
 	/* A picture the box does not have for this channel is a 404, which a
 	   browser draws as a broken image, and the initials take over the moment
-	   the answer says there is none.
-
-	   WHICH CHANNEL FAILED AND NOT WHETHER ONE DID. A 404 already in the
-	   browser's cache fires its error before the first effect of this
-	   component runs, so an effect that cleared a flag on the way in would
-	   clear the answer that had just arrived, and no second error ever comes
-	   for an address that has not changed. Held against the channel instead,
-	   the answer needs no clearing: it stops applying when the channel does. */
-	const [failed, setFailed] = useState('');
+	   the answer says there is none. */
+	const [broken, refuse] = useRefused(channel.id);
 	const [shown, setShown] = useState('');
-	const broken = failed === channel.id;
+
+	const [system, setSystem] = useState(session.canSystem());
 
 	useEffect(function () {
+		return session.subscribe(function () { setSystem(session.canSystem()); });
+	}, []);
+
+	useEffect(function () {
+		if (!system) {
+			setAllowed(true);
+			return undefined;
+		}
 		return store.watch('GET', '/api/v1/system/webserver', null, function (seen) {
 			setAllowed(drawsLogos(seen));
 		});
-	}, []);
+	}, [system]);
 
-	const kind = props.size === 'sm' ? 'logo sm' : 'logo';
+	const kind = props.size === 'sm' ? 'logo sm' : props.size === 'lg' ? 'logo lg' : 'logo';
 	if (!allowed || broken)
 		return html`<span class=${kind + ' logo-word'} aria-hidden="true">${monogram(channel.name)}</span>`;
 
@@ -89,6 +95,6 @@ export function Logo(props) {
 			alt=""
 			loading="lazy"
 			onLoad=${function () { setShown(channel.id); }}
-			onError=${function () { setFailed(channel.id); }} />
+			onError=${refuse} />
 	</span>`;
 }

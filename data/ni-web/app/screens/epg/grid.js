@@ -44,6 +44,7 @@ import * as boxEvents from '../../events.js';
 import { t } from '../../i18n.js';
 import { clock, dayAndClock, duration as spanOf } from '../../fmt.js';
 import { hrefFor } from '../../nav.js';
+import timers from '../timers/nav.js';
 import { State } from '../../ui/state.js';
 import { Button } from '../../ui/button.js';
 import { Dot, dotParts } from '../../ui/dot.js';
@@ -494,7 +495,7 @@ function Slots(props) {
 					${onAir ? html`<span class="grid__sbar"><i style=${{ width: share + '%' }}></i></span>` : null}
 				</button>
 				<${Link} class="btn grid__srec" href=${timerHref(event, 'record')} title=${t(text, 'grid.record')}>
-					<span aria-hidden="true">⏺</span><span class="sr">${t(text, 'grid.record')}</span>
+					<span aria-hidden="true">${timers.ic}</span><span class="sr">${t(text, 'grid.record')}</span>
 				<//>
 			</li>`;
 		})}

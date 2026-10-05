@@ -378,7 +378,7 @@ export default function Files() {
 					acts.push({
 						id: 'preview',
 						label: showing ? t(text, 'files.preview.close') : t(text, 'files.preview'),
-						mark: showing ? '\u25a0' : '\u25b6',
+						mark: showing ? '\u25a0' : '\u25b6\ufe0e',
 						onAct: function () { setPlaying(showing ? '' : row.id); },
 					});
 				}
@@ -388,7 +388,7 @@ export default function Files() {
 					mark: '\u2715',
 					onAct: function () { setDoomed(row.id); },
 				});
-				return html`<span class="acts"><${RowActions} title=${row.id} actions=${acts} /></span>`;
+				return html`<span class="acts"><${RowActions} title=${row.id} keep=${'files:' + joinPath(dir, row.id)} actions=${acts} /></span>`;
 			},
 		},
 	];

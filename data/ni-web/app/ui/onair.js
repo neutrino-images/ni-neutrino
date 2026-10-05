@@ -18,6 +18,7 @@ import { hrefFor } from '../nav.js';
 import { Dot } from './dot.js';
 import * as store from '../store.js';
 import { readPlayback, isPlayback } from '../playback.js';
+import { useRefused } from './refused.js';
 
 /* The share of the programme that has gone, as a whole number. Nought where
    the guide said nothing, so a bar drawn from this is empty rather than absent
@@ -75,12 +76,8 @@ export function OnAir(props) {
 	/* A picture the box does not have for this channel is a 404, which a
 	   browser draws as a broken image. Asked for once, and the monogram takes
 	   over the moment the answer says there is none. */
-	const [broken, setBroken] = useState(false);
+	const [broken, refuse] = useRefused(channel ? channel.id : '');
 	const [answer, setAnswer] = useState(/** @type {unknown} */ (null));
-
-	useEffect(function () {
-		setBroken(false);
-	}, [channel ? channel.id : '']);
 
 	useEffect(function () {
 		return store.watch('GET', '/api/v1/playback', null, function (snapshot) {
@@ -135,7 +132,7 @@ export function OnAir(props) {
 				class="onair-logo"
 				src=${'/api/v1/channels/' + encodeURIComponent(channel.id) + '/logo'}
 				alt=""
-				onError=${function () { setBroken(true); }} />`}
+				onError=${refuse} />`}
 		<span class="onair-meta">
 			<span class="onair-name">${channel.name}</span>
 			<span class="onair-event">

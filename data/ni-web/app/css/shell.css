@@ -105,7 +105,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 
 /* A channel's picture wherever a screen draws one, and the initials that take
    over for a channel that has none or on a box that draws none. Here and not
-   beside a screen because ui/logo.js is the frame's and three screens use it,
+   beside a screen because ui/logo.js is the frame's and four screens use it,
    and two copies of a box 30 pixels square are two boxes that stop being the
    same size. */
 .logo { flex: none; display: grid; place-items: center; width: 30px; height: 30px;
@@ -118,8 +118,10 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .logo[data-pic] .logo-pic { opacity: 1; }
 .logo[data-pic] .logo-mg { visibility: hidden; }
 .logo.sm { width: 22px; height: 22px; }
+.logo.lg { width: 48px; height: 48px; }
 .logo-word { font-size: 0.625rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text-dim); }
 .logo.sm.logo-word { font-size: 0.5625rem; }
+.logo.lg.logo-word { font-size: 0.9375rem; font-weight: 600; letter-spacing: 0; }
 
 /* The second level, under the first and not beside it: a column down the left
    costs two hundred pixels on every screen, and the two screens that want the
@@ -163,6 +165,10 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 	border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); font: inherit; text-decoration: none; }
 .sheet-areas [data-current] { border-color: var(--accent); color: var(--accent); }
 .sheet-areas .ic { opacity: 0.7; }
+
+.sheet-areas.row-actions { grid-template-columns: minmax(0, 1fr); }
+.sheet-areas.row-actions button { white-space: nowrap; }
+.sheet-areas.row-actions button > span:last-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
 /* HOW BIG THE WRITING IS. See app/ui/textsize.js.
 
@@ -446,6 +452,14 @@ table.grid tbody tr.grid-more:hover { background: none; }
 	   in front of its cells. */
 	table.grid td[data-label]::before { content: attr(data-label) " "; color: var(--text-dim); font-size: 0.75rem; }
 	table.grid td[data-label=""]::before { content: none; }
+	/* Words in one column and values beside them on one baseline, as the Now
+	   tile's facts are drawn. */
+	.grid-facts tr:not(.grid-more) { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--gap-3); }
+	.grid-facts td[data-label]:not(:empty) { display: grid; grid-template-columns: subgrid; grid-column: span 2;
+		align-items: baseline; overflow-wrap: anywhere; }
+	table.grid-facts td[data-label]::before { content: attr(data-label); font: 1em/1.45 var(--font); }
+	.grid-facts td > * { grid-column: 2; }
+	.grid-facts .chip { justify-self: start; }
 	/* One control instead of four marks, and the four go into a sheet. */
 	.acts { justify-content: flex-start; margin-top: var(--gap-1); }
 	.acts-more { display: inline-flex; }

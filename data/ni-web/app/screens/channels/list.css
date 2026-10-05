@@ -230,6 +230,27 @@ tr[data-on-air] .ch-name {
 	}
 }
 
+/* The name is capped and the programme takes what is left; the whole name
+   stays in its title. */
+@media (min-width: 600px) {
+	.ch-screen td[data-col="now"] { max-width: 0; }
+	.ch-screen .ch-now { max-width: 32rem; }
+	.ch-screen td[data-col="name"] .ch-who { max-width: 20rem; }
+}
+
+@media (min-width: 600px) and (max-width: 1151px) {
+	.ch-screen td[data-col="name"] .ch-who { max-width: 13rem; }
+}
+
+/* Five marks leave the programme no room on a narrow tablet, so the row
+   offers them through its sheet there. The name gives way to the on-air mark,
+   which takes its words whole. */
+@media (min-width: 600px) and (max-width: 899px) {
+	.ch-screen td[data-col="name"] .ch-who { max-width: 9rem; }
+	.ch-screen .acts-inline { display: none; }
+	.ch-screen .acts-more { display: inline-flex; }
+}
+
 /* A card and not a row. The two programmes take the whole width, the marks
    line up under the name, and nothing is cut off. */
 @media (max-width: 599px) {

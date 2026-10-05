@@ -50,7 +50,8 @@ same([model.timeText(0), model.timeText(59), model.timeText(754), model.timeText
 
 same(model.tileActions(model.readPlayback({ source: 'channel', channel: { id: '2b66', name: 'X' } })),
 	[], 'a channel is drawn with its own actions, none of these');
-same(model.tileActions(recording), ['stop', 'info', 'archive'], 'a recording offers stop, details and the archive');
+same(model.tileActions(recording), ['stop', 'info', 'm3u', 'browser', 'archive'],
+	'a recording offers stop, details, its playlist, the browser and the archive');
 same(model.tileActions(file), [], 'a file with no channel to go back to offers nothing');
 same(model.tileActions(Object.assign({}, file, { returnsTo: '2b66' })), ['stop'], 'a file offers stop alone');
 same(model.tileActions(model.readPlayback({ source: 'none' })), [], 'nothing playing offers nothing');

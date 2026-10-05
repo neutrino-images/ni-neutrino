@@ -25,7 +25,11 @@
    because on a card the cell is as wide as the card and a line would wrap in
    the middle of a clock. */
 .epg-what { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
-.epg-what b { font-weight: 600; }
+/* Cut to the room its cell has; the whole title stays in its title. */
+.epg-what b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+@media (min-width: 600px) {
+	.epg td[data-col="what"] { max-width: 0; }
+}
 .epg-what small { color: var(--text-dim); font-size: 0.75rem; }
 
 /* A channel the listing has not named yet, drawn as the identifier it is, so

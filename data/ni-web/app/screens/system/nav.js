@@ -3,7 +3,7 @@
 export default {
 	id: 'system',
 	text: 'nav.system',
-	ic: '⚙',
+	ic: '⚙︎',
 	items: [
 		{ id: 'box', text: 'nav.system.box', load: () => import('./box.js') },
 		{ id: 'daemons', text: 'nav.system.daemons', load: () => import('./daemons.js') },

@@ -286,6 +286,7 @@ function TimerList() {
 				return html`<span class="hint">${t(text, 'timers.foreign')}</span>`;
 			return html`<span class="acts"><${RowActions}
 				title=${kindLabel(row.kind) + ' ' + dayAndClock(row.start)}
+				keep=${'timers:' + row.id}
 				actions=${[
 					{
 						/* Not gated. Reading a form is a read, and the one act

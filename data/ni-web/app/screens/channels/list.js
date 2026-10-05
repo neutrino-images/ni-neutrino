@@ -42,6 +42,7 @@ import { Table } from '../../ui/table.js';
 import { Logo } from '../../ui/logo.js';
 import { Dot } from '../../ui/dot.js';
 import { RowActions } from '../../ui/actions.js';
+import { EventSheet } from '../../ui/event.js';
 import { elapsedShare } from '../../ui/onair.js';
 import { toast } from '../../ui/toast.js';
 import { zap, switchMode } from '../../ui/wake.js';
@@ -160,6 +161,30 @@ export function eventsAround(list, at) {
  */
 
 /**
+ * The row action that opens the programme on air in the shared event sheet.
+ * Disabled while the guide has not answered and where it lists nothing on air.
+ *
+ * @param {Api.Channel} channel
+ * @param {Showing | null} showing
+ * @param {(event: Api.Event) => void} open
+ * @returns {import('../../ui/actions.js').RowAction}
+ */
+export function infoAction(channel, showing, open) {
+	const now = showing ? showing.now : null;
+	const none = showing !== null && now === null;
+	return {
+		id: 'info', mark: 'ℹ︎',
+		label: t(text, none ? 'list.act.info.none' : 'list.act.info', { name: channel.name }),
+		disabled: now === null,
+		onAct: function () {
+			if (now !== null) {
+				open(now);
+			}
+		}
+	};
+}
+
+/**
  * @param {{ param: string, ctx: Web.Context, entry: Web.NavEntry }} props
  * @returns {Web.Drawn}
  */
@@ -173,6 +198,7 @@ export default function ChannelList(props) {
 	const [bouquets, setBouquets] = useState(/** @type {Api.Bouquet[]} */ ([]));
 	const [bouquetsFailed, setBouquetsFailed] = useState(false);
 	const [current, setCurrent] = useState(/** @type {Api.Channel | null} */ (null));
+	const [about, setAbout] = useState(/** @type {Api.Event | null} */ (null));
 	// Bumped to walk the list again from its first page, which is what an
 	// event that changed the list itself asks for.
 	const [generation, setGeneration] = useState(0);
@@ -492,6 +518,14 @@ export default function ChannelList(props) {
 
 	/**
 	 * @param {Api.Channel} channel
+	 * @returns {Showing | null}
+	 */
+	function showingOf(channel) {
+		return guide.current.get(guideRowKey(channel)) || null;
+	}
+
+	/**
+	 * @param {Api.Channel} channel
 	 * @returns {boolean}
 	 */
 	function isPlaying(channel) {
@@ -519,16 +553,17 @@ export default function ChannelList(props) {
 					<button
 						type="button"
 						class="ch-name"
+						title=${channel.name}
 						aria-label=${t(text, 'list.zap.to', { name: channel.name })}
 						onClick=${function () { zapTo(channel); }}>${channel.name}</button>
 				</span>`;
 			}
 		},
 		{
-			id: 'now', label: t(text, 'list.col.now'), mono: false,
+			id: 'now', label: t(text, 'list.col.now'), mono: false, wide: true,
 			/** @param {Api.Channel} channel */
 			cell: function (channel) {
-				return html`<${Showing} showing=${guide.current.get(guideRowKey(channel)) || null} />`;
+				return html`<${Showing} showing=${showingOf(channel)} />`;
 			}
 		},
 		{
@@ -570,9 +605,11 @@ export default function ChannelList(props) {
 				   and neither is decided here. */
 				return html`<span class="acts"><${RowActions}
 					title=${channel.name}
+					keep=${'channels:' + channel.id}
 					actions=${[
+						infoAction(channel, showingOf(channel), setAbout),
 						{
-							id: 'play', mark: '▶',
+							id: 'play', mark: '▶︎',
 							label: t(text, 'list.act.play', { name: channel.name }),
 							onAct: function () { route(hrefFor('channels', 'playback', channel.id)); }
 						},
@@ -683,6 +720,12 @@ export default function ChannelList(props) {
 				${walk.busy ? html`<span class="sr" role="status">${t(text, 'list.loading.more')}</span>` : null}
 			</p>`
 			: null}
+
+		<${EventSheet}
+			event=${about}
+			at=${Math.floor(Date.now() / 1000)}
+			channelHref=${about ? hrefFor('epg', 'schedule', channelId(about.channel_id)) : undefined}
+			onClose=${function () { setAbout(null); }} />
 	</div>`;
 }
 

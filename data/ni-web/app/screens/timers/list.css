@@ -66,6 +66,60 @@
 	max-width: 32rem;
 }
 
+/* The minutes with a control for their end inside the right edge. */
+.timers-minutes-box {
+	position: relative;
+	display: block;
+}
+
+.timers-minutes-box input[type="number"] {
+	padding-right: calc(var(--tap-height) + var(--gap-1));
+}
+
+.timers-end-open {
+	position: absolute;
+	top: 50%;
+	right: 0;
+	width: var(--tap-height);
+	height: var(--tap-height);
+	transform: translateY(-50%);
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var(--text-dim);
+	font: inherit;
+	font-size: 1.125rem;
+	cursor: pointer;
+}
+
+.timers-end-open:hover,
+.timers-end-open:focus-visible {
+	color: var(--accent);
+}
+
+/* Still rendered, because the browser only opens a picker for an input it
+   lays out; anchored under the control that opens it. */
+.timers-end-pick {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	border: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.timers-minutes .hint,
+.timers-minutes .err {
+	display: block;
+}
+
+.timers-minutes .hint:empty {
+	display: none;
+}
+
 .timers-days {
 	margin: 0 0 var(--gap-4);
 	padding: var(--gap-3);

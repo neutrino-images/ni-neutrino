@@ -264,6 +264,7 @@ function Slot(props) {
 			<span class="netfs-number">${t(text, 'netfs.slot', { number: number })}</span>
 			<span class="acts"><${RowActions}
 				title=${nameOf(entry)}
+				keep=${'netfs:' + props.table + ':' + entry.slot}
 				actions=${[
 					{
 						id: 'edit', label: t(text, 'netfs.edit'), mark: '✎',

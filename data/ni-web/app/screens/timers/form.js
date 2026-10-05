@@ -19,7 +19,7 @@
    What this form will not do is send a recording without a duration; why stands in
    list.model.js beside the rule. */
 
-import { html, useState, useEffect, route, getCurrentUrl } from '../../runtime.js';
+import { html, useState, useEffect, useRef, route, getCurrentUrl } from '../../runtime.js';
 import * as store from '../../store.js';
 import * as session from '../../session.js';
 import { t } from '../../i18n.js';
@@ -33,9 +33,11 @@ import { State } from '../../ui/state.js';
 import { toast } from '../../ui/toast.js';
 import text from './list.text.js';
 import { useAllChannels } from '../../ui/channels.js';
+import timers from './nav.js';
 import {
 	KINDS, kindOf, isKnownKind, PLAIN_REPEATS, momentInput, emptyDraft, draftOf,
-	draftProblems, createBody, changeBody, useAnswer, startFixed,
+	draftProblems, createBody, changeBody, useAnswer, startFixed, startSeconds, stopSeconds,
+	endInput, minutesUntil, canPickEnd,
 } from './list.model.js';
 
 const WEEKDAY_WORDS = ['weekday.mo', 'weekday.tu', 'weekday.we', 'weekday.th', 'weekday.fr', 'weekday.sa', 'weekday.su'];
@@ -267,6 +269,7 @@ export function TimerForm(props) {
 	const [draft, setDraft] = useState(/** @type {import('./list.model.js').Draft | null} */ (null));
 	const [problem, setProblem] = useState(/** @type {{ title: string, detail: string } | null} */ (null));
 	const [sending, setSending] = useState(false);
+	const endPick = useRef(/** @type {HTMLInputElement | null} */ (null));
 
 	const held = useAnswer('GET', '/api/v1/timers');
 	const timer = findTimer(held.data, props.id);
@@ -321,6 +324,25 @@ export function TimerForm(props) {
 		setDraft(function (was) {
 			return was === null ? was : Object.assign({}, was, patch);
 		});
+	}
+
+	function openEnd() {
+		const pick = endPick.current;
+		if (!pick)
+			return;
+		try {
+			pick.showPicker();
+		} catch (e) {
+			pick.focus();
+		}
+	}
+
+	/**
+	 * @param {string} value
+	 */
+	function pickEnd(value) {
+		const minutes = minutesUntil(here, value, nowSeconds());
+		change({ minutes: minutes > 0 ? String(minutes) : '' });
 	}
 
 	/**
@@ -486,15 +508,32 @@ export function TimerForm(props) {
 				: html`<p class="note timers-now">${t(text, 'form.start.now')}</p>`}
 
 			${shape && shape.duration ? html`
-				<${Field}
-					id="timer-minutes"
-					label=${t(text, 'form.duration')}
-					type="number"
-					min="1"
-					value=${here.minutes}
-					hint=${t(text, 'form.duration.why')}
-					error=${durationError(wrong)}
-					onInput=${function (/** @type {Web.On<HTMLInputElement, InputEvent>} */ e) { change({ minutes: e.currentTarget.value }); }} />` : null}
+				<div class=${durationError(wrong) ? 'field bad timers-minutes' : 'field timers-minutes'}>
+					<label class="label" for="timer-minutes">${t(text, 'form.duration')}</label>
+					<span class="timers-minutes-box">
+						<input
+							id="timer-minutes"
+							type="number"
+							min="1"
+							value=${here.minutes}
+							aria-invalid=${durationError(wrong) ? 'true' : null}
+							aria-describedby=${durationError(wrong) ? 'timer-minutes-end timer-minutes-hint timer-minutes-err' : 'timer-minutes-end timer-minutes-hint'}
+							onInput=${function (/** @type {Web.On<HTMLInputElement, InputEvent>} */ e) { change({ minutes: e.currentTarget.value }); }} />
+						${canPickEnd(globalThis) ? html`
+							<button type="button" class="timers-end-open" aria-label=${t(text, 'form.end.pick')}
+								onClick=${openEnd}><span aria-hidden="true">${timers.ic}</span></button>
+							<input type="datetime-local" class="timers-end-pick" ref=${endPick}
+								tabindex="-1" aria-hidden="true"
+								min=${momentInput(startSeconds(here, nowSeconds()))}
+								value=${endInput(here, nowSeconds())}
+								onChange=${function (/** @type {Web.On<HTMLInputElement>} */ e) { pickEnd(e.currentTarget.value); }} />` : null}
+					</span>
+					<span id="timer-minutes-end" class="hint timers-end">${stopSeconds(here, nowSeconds()) > 0
+						? t(text, 'form.end.at', { when: dayAndClock(stopSeconds(here, nowSeconds())) })
+						: null}</span>
+					<span id="timer-minutes-hint" class="hint">${t(text, 'form.duration.why')}</span>
+					${durationError(wrong) ? html`<span id="timer-minutes-err" class="err">${durationError(wrong)}</span>` : null}
+				</div>` : null}
 
 			${shape && shape.title !== '' && changing ? html`
 				<${Field}

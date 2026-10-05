@@ -11,6 +11,7 @@ import { MenuSheet } from './ui/sheet.js';
 import { Toasts } from './ui/toast.js';
 import { State } from './ui/state.js';
 import { usePullToRefresh, PullIndicator } from './ui/pulldown.js';
+import { leave } from './ui/kept.js';
 
 const kPullCss = '/app/ui/pulldown.css';
 
@@ -233,7 +234,7 @@ export function Shell(props) {
 			event=${props.status ? props.status.event : null} />
 		<main class="content" id="content" ref=${pull.ref}>
 			<${PullIndicator} shown=${pull.shown} armed=${pull.armed} busy=${pull.busy} />
-			<${Router} onChange=${function (/** @type {{ url: string }} */ event) { setUrl(event.url); setMenuOpen(false); }}>
+			<${Router} onChange=${function (/** @type {{ url: string }} */ event) { leave(event.url); setUrl(event.url); setMenuOpen(false); }}>
 				${routes}
 				<${AreaRoute} path="/" area=${first()} ctx=${ctx} />
 				<${NotFound} default />
