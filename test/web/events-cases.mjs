@@ -40,14 +40,18 @@ let asked = [];
 const says = new Map();
 says.set('GET /api/v1/session', '{"authenticated":false,"level":"read"}');
 
+/** What the box refuses, and with which status. */
+/** @type {Map<string, number>} */
+const refuses = new Map();
 
 globalThis.fetch = function (url, init) {
 	const key = (init && init.method ? init.method : 'GET') + ' ' + url;
 	asked.push(key);
-	const body = says.get(key) || '{}';
+	const status = refuses.get(key) || 200;
+	const body = status === 200 ? (says.get(key) || '{}') : '{"status":' + status + ',"title":"no"}';
 	return Promise.resolve({
-		ok: true,
-		status: 200,
+		ok: status === 200,
+		status: status,
 		text: function () { return Promise.resolve(body); },
 		json: function () { return Promise.resolve(JSON.parse(body)); },
 	});
@@ -345,6 +349,50 @@ says.set('GET /api/v1/session', '{"authenticated":true,"level":"system","expires
 await session.refresh();
 same(alarms.length, alarmsBefore + 1, 'a thirty day session sets one alarm');
 same(alarms[alarms.length - 1], 2147483647, 'as long as the browser can hold');
+
+// A sign in after a refusal.
+
+const kGuides = 'GET /api/v1/ai/guides';
+const kAllow = 'GET /api/v1/ai/allowlists';
+const kMissing = 'GET /api/v1/channels/0';
+says.set('GET /api/v1/session', '{"authenticated":false,"level":"read"}');
+await session.refresh();
+refuses.set(kGuides, 403);
+refuses.set(kAllow, 403);
+refuses.set(kMissing, 404);
+/** @type {any} */
+let guides = null;
+/** @type {any} */
+let missing = null;
+const stopGuides = store.watch('GET', '/api/v1/ai/guides', null, function (shot) { guides = shot; });
+const stopMissing = store.watch('GET', '/api/v1/channels/{id}', { params: { id: '0' } }, function (shot) { missing = shot; });
+store.watch('GET', '/api/v1/ai/allowlists', null, function () {})();
+await settle();
+same([guides.state, missing.state, store.read('GET', '/api/v1/ai/allowlists').state], ['error', 'error', 'error'],
+	'what the box refuses a reading caller is held as refused');
+refuses.clear();
+asked = [];
+says.set('GET /api/v1/session', '{"authenticated":true,"level":"system"}');
+await session.refresh();
+same([guides.state, guides.phase, guides.error], ['loading', 'first', null],
+	'signing in reads a refusal for want of rights again, from nothing held');
+await settle();
+same(timesAsked(kGuides), 1, 'once');
+same(guides.state, 'ready', 'and draws its answer');
+same(timesAsked(kMissing), 0, 'a refusal that is not about rights is not asked again');
+same(missing.state, 'error', 'and stays as it was');
+same([timesAsked(kAllow), store.read('GET', '/api/v1/ai/allowlists').state], [0, 'empty'],
+	'one nobody is looking at is not asked, and is nothing known, so the next screen asks afresh');
+refuses.set(kGuides, 403);
+store.reload('GET', '/api/v1/ai/guides').catch(function () {});
+await settle();
+asked = [];
+await session.refresh();
+await settle();
+same([timesAsked(kGuides), guides.state], [0, 'error'], 'the same session told again asks nothing again');
+refuses.clear();
+stopGuides();
+stopMissing();
 
 if (failed > 0) {
 	process.stderr.write('events: ' + failed + ' of ' + checked + ' failed\n');

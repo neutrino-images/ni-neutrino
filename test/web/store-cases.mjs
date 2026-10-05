@@ -441,7 +441,7 @@ const tv = looking('GET', '/api/v1/channels/current', null);
 await settle();
 same(store.lastAnswer(tv.shot), { id: 'ffffffffbe692dd5' }, 'the last answer is what the box answered');
 store.invalidate('/api/v1/channels/current');
-same(tv.shot.state, store.LOADING, 'an event reads it again');
+same(tv.shot.phase, store.AGAIN, 'an event reads it again');
 same(store.lastAnswer(tv.shot), { id: 'ffffffffbe692dd5' }, 'and the answer is held through that read');
 await settle();
 boxSays(kCurrent, 404, kNothing);
@@ -452,10 +452,57 @@ same(tv.shot.data, { id: 'ffffffffbe692dd5' }, 'and the store keeps what it held
 same(store.lastAnswer(tv.shot), null, 'which the last answer does not');
 boxSays(kCurrent, 200, '{"id":"ffffffff48deb591"}');
 store.invalidate('/api/v1/channels/current');
-same(tv.shot.state, store.LOADING, 'read again after the refusal');
+same(tv.shot.phase, store.AGAIN, 'read again after the refusal');
+same(tv.shot.state, store.FAILED, 'which stays drawn while that read runs');
 same(store.lastAnswer(tv.shot), null, 'nothing comes back while that read runs');
 await settle();
 same(store.lastAnswer(tv.shot), { id: 'ffffffff48deb591' }, 'and the next answer is the last one');
+
+// AN ANSWER HELD WHILE IT IS READ AGAIN
+
+/* A screen that tests for ready draws nothing while it is not, so an answer read again
+   stays ready: the top bar dropped its channel and its recordings on every event. */
+empty();
+boxSays(kCurrent, 200, '{"id":"ffffffffbe692dd5"}');
+const held = looking('GET', '/api/v1/channels/current', null);
+await settle();
+slowly(kCurrent);
+store.invalidate('/api/v1/channels/current');
+same(held.shot.state, store.READY, 'an answer read again for an event stays ready');
+same(held.shot.data, { id: 'ffffffffbe692dd5' }, 'with what it held');
+hear();
+await settle();
+slowly(kCurrent);
+store.reload('GET', '/api/v1/channels/current');
+same(held.shot.state, store.READY, 'and for a reload asked for on purpose');
+hear();
+await settle();
+
+/* Emptied, as a stream that came back or a pull empties it: what is drawn stays drawn
+   and is read again, rather than a placeholder that also throws the scroll away. */
+boxSays(kCurrent, 200, '{"id":"ffffffff48deb591"}');
+slowly(kCurrent);
+store.clear();
+same(held.shot.state, store.READY, 'an emptied store keeps an answer on screen');
+same(held.shot.phase, store.AGAIN, 'and says it is reading it again');
+same(held.shot.data, { id: 'ffffffffbe692dd5' }, 'with what it held');
+same(timesAsked(kCurrent), 4, 'and asks again at once');
+hear();
+await settle();
+same(store.lastAnswer(held.shot), { id: 'ffffffff48deb591' }, 'until the new answer replaces it');
+
+// A refusal is something the box said too, and "nothing is playing" is drawn from one.
+empty();
+boxSays(kCurrent, 404, kNothing);
+const turnedDown = looking('GET', '/api/v1/channels/current', null);
+await settle();
+store.invalidate('/api/v1/channels/current');
+same(turnedDown.shot.state, store.FAILED, 'a refusal read again for an event stays drawn');
+await settle();
+store.clear();
+same(turnedDown.shot.state, store.FAILED, 'and so does an emptied one');
+same(turnedDown.shot.phase, store.AGAIN, 'which says it is reading it again');
+same(store.lastAnswer(turnedDown.shot), null, 'and still answers nothing');
 
 // ------------------------------------------ an answer overtaken by an event
 
@@ -550,6 +597,48 @@ leaving();
 hear();
 await settle();
 same(timesAsked(kCurrent), 2, 'nobody watching, nothing asked once more');
+
+// A refusal for want of rights, after a sign in.
+
+const kGuides = 'GET /api/v1/ai/guides';
+const kAway = 'GET /api/v1/channels/0';
+empty();
+boxSays(kGuides, 403, '{"status":403,"title":"Forbidden"}');
+boxSays(kAway, 404, '{"status":404,"title":"Not Found"}');
+boxSays('GET /api/v1/ai/settings', 403, '{"status":403,"title":"Forbidden"}');
+const guides = looking('GET', '/api/v1/ai/guides', null);
+const away = looking('GET', '/api/v1/channels/{id}', { params: { id: '0' } });
+store.watch('GET', '/api/v1/ai/settings', null, function () {})();
+await settle();
+same([guides.shot.state, away.shot.state, store.read('GET', '/api/v1/ai/settings').state], ['error', 'error', 'error'],
+	'three refusals are held');
+boxSays(kGuides, 200, '{"clients":[]}');
+asked = [];
+store.forgetRefusals();
+same([guides.shot.state, guides.shot.phase, guides.shot.error], ['loading', 'first', null],
+	'a refusal for want of rights is read again from nothing held, so no refusal stays drawn meanwhile');
+await settle();
+same(asked, [kGuides], 'only that one is asked again');
+same(guides.shot.state, 'ready', 'and it is answered');
+same(away.shot.state, 'error', 'a refusal about something else is kept');
+same(store.read('GET', '/api/v1/ai/settings').state, 'empty', 'one nobody looks at is nothing known');
+looking('GET', '/api/v1/ai/settings', null);
+await settle();
+same(timesAsked('GET /api/v1/ai/settings'), 1, 'so the next screen to look asks for it');
+
+// A read again already on its way was sent before, and its refusal is not the answer.
+empty();
+boxSays(kGuides, 403, '{"status":403,"title":"Forbidden"}');
+const onItsWay = looking('GET', '/api/v1/ai/guides', null);
+await settle();
+slowly(kGuides);
+store.reload('GET', '/api/v1/ai/guides').catch(function () {});
+boxSays(kGuides, 200, '{"clients":[]}');
+store.forgetRefusals();
+await settle();
+hear();
+await settle();
+same([timesAsked(kGuides), onItsWay.shot.state], [3, 'ready'], 'a refused read on its way is replaced by a fresh one, and its answer is not drawn');
 
 // ------------------------------------------------------------------ verdict
 

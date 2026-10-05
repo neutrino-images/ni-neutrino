@@ -9,8 +9,9 @@
    Invalidation by prefix. An event says the timers changed. It does not say which page of
    which listing, and it could not: what the stream carries is a type and a channel.
 
-   Three named loads: first load, reload, and write. A reload draws no empty screen, which
-   is the difference between a page that flickers on every event and one that does not.
+   Three named loads: first load, reload, and write. A reload draws no empty screen and
+   leaves an answer ready, which is the difference between a page that flickers on every
+   event and one that does not.
 
    A write makes stale what it says it touches. That statement is the caller's, because
    nothing here could work it out, and it is also the answer to what has to be read again.
@@ -139,13 +140,35 @@ function announce(entry) {
 	}
 }
 
+/* Whether the box has said something about this address, an answer or a refusal. What
+   it said stays drawn while it is read again: a screen that tests for ready, or draws a
+   refusal such as "nothing is playing", would otherwise blank it for as long as the read
+   takes. */
+/**
+ * @param {Entry} entry
+ * @returns {boolean}
+ */
+function held(entry) {
+	return entry.state === READY || entry.state === FAILED;
+}
+
+/**
+ * @param {Entry} entry
+ * @returns {Web.Phase}
+ */
+function phaseOf(entry) {
+	return held(entry) || entry.data !== null ? AGAIN : FIRST;
+}
+
 /**
  * @param {Entry} entry
  * @param {Web.Phase} phase
  * @returns {void}
  */
 function begin(entry, phase) {
-	entry.state = LOADING;
+	if (!(phase === AGAIN && held(entry))) {
+		entry.state = LOADING;
+	}
 	entry.phase = phase;
 	announce(entry);
 }
@@ -244,7 +267,7 @@ function askAgain(entry) {
 	if (entry.watchers.length === 0) {
 		return;
 	}
-	start(entry, entry.data === null ? FIRST : AGAIN, true).catch(function () {
+	start(entry, phaseOf(entry), true).catch(function () {
 		// As in watch: the entry holds the fault and the watchers know.
 	});
 }
@@ -296,7 +319,7 @@ export function load(method, path, options) {
 	/** @type {Promise<unknown>} */
 	const answer = (entry.state === READY && entry.pending === null)
 		? Promise.resolve(entry.data)
-		: start(entry, entry.data === null ? FIRST : AGAIN);
+		: start(entry, phaseOf(entry));
 	return /** @type {Promise<Api.Result<`${Uppercase<M>} ${P}`>>} */ (answer);
 }
 
@@ -315,7 +338,7 @@ export function reload(method, path, options) {
 	/** @type {Promise<unknown>} */
 	const answer = entry.pending !== null
 		? entry.pending
-		: start(entry, entry.data === null ? FIRST : AGAIN);
+		: start(entry, phaseOf(entry));
 	return /** @type {Promise<Api.Result<`${Uppercase<M>} ${P}`>>} */ (answer);
 }
 
@@ -394,7 +417,7 @@ function stale(prefixes, ask) {
 			}
 			continue;
 		}
-		start(entry, entry.data === null ? FIRST : AGAIN, true).catch(function () {
+		start(entry, phaseOf(entry), true).catch(function () {
 			// As above: the entry holds the fault and the watchers know.
 		});
 	}
@@ -408,9 +431,11 @@ export function invalidate(prefix) {
 	stale([prefix], true);
 }
 
-/* Everything, forgotten. What the stream missed while it was down is everything this store
+/* Everything, read again. What the stream missed while it was down is everything this store
    holds, and there is no identifier to replay from (src/httpd/events.cpp sends no id), so
-   the honest answer to a stream coming back is that nothing here is known any more. */
+   nothing here is known any more. What the box said stays on screen, marked as being read
+   again, until the new answer replaces it: emptying it drew a placeholder and lost the
+   scroll on every phone that woke up. */
 /** @returns {void} */
 export function clear() {
 	/** @type {string[]} */
@@ -433,11 +458,45 @@ export function clear() {
 			entries.delete(entry.key);
 			continue;
 		}
-		entry.data = null;
-		entry.state = EMPTY;
-		start(entry, FIRST).catch(function () {
+		if (!held(entry)) {
+			entry.data = null;
+			entry.state = EMPTY;
+		}
+		start(entry, phaseOf(entry)).catch(function () {
 			// As above.
 		});
+	}
+}
+
+/* A refusal for want of a session or of rights answered the caller the page was before a
+   sign in, and is nothing known about the one it is now. What somebody is looking at is read
+   again from nothing held, so the earlier refusal is not drawn while the new answer is on its
+   way; a read already on its way went out before and is dropped. */
+/** @returns {void} */
+export function forgetRefusals() {
+	/** @type {Entry[]} */
+	const refused = [];
+	entries.forEach(function (entry) {
+		if (entry.state === FAILED && entry.error !== null && (entry.error.status === 401 || entry.error.status === 403)) {
+			refused.push(entry);
+		}
+	});
+	for (const entry of refused) {
+		if (entry.control !== null) {
+			entry.control.abort();
+			entry.control = null;
+			entry.pending = null;
+		}
+		entry.again = false;
+		entry.state = EMPTY;
+		entry.phase = '';
+		entry.data = null;
+		entry.error = null;
+		if (entry.watchers.length > 0) {
+			start(entry, FIRST).catch(function () {
+				// As above.
+			});
+		}
 	}
 }
 

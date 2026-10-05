@@ -237,12 +237,11 @@ function opened() {
 	// starts over from short rather than from wherever this round ended up.
 	retryMs = 0;
 	announceStatus();
-	/* Everything is forgotten and what is visible is asked again. Whatever happened while
-	   the stream was down happened, and there is no way to find out what: the stream carries
-	   no identifier, so there is nothing to resume from. Keeping what was in the store would
-	   be keeping a picture of the box from before the gap, which is worse than an empty one
-	   because it looks current. Only on a stream that comes back, not on the first one,
-	   however short the gap. */
+	/* Everything is asked again. Whatever happened while the stream was down happened, and
+	   there is no way to find out what: the stream carries no identifier, so there is nothing
+	   to resume from. What is on screen stays, marked as being read again, until the answers
+	   replace it. Only on a stream that comes back, not on the first one, however short the
+	   gap. */
 	if (behind) {
 		behind = false;
 		// A gap is also how a restart of the box looks, and a restart drops every session.
@@ -407,10 +406,9 @@ function documentShown(persisted) {
 	}
 	gone = false;
 	open();
-	/* Everything is forgotten and what is visible is asked again, for the reason opened() gives
-	   at length: whatever the box did while this document was away cannot be asked for
-	   afterwards. opened() cannot do it here, because nothing failed and by its reckoning the
-	   box was never away. */
+	/* Everything is asked again, for the reason opened() gives at length: whatever the box
+	   did while this document was away cannot be asked for afterwards. opened() cannot do it
+	   here, because nothing failed and by its reckoning the box was never away. */
 	if (persisted) {
 		behind = false;
 		store.clear();
@@ -419,8 +417,8 @@ function documentShown(persisted) {
 
 /* The stream and the session are tied together in one direction: signing in can only grant
    more than was granted before, so a stream that was refused is worth opening again the
-   moment somebody signs in. Signing out does not close it, a box on its own network going
-   on answering a caller holding nothing.
+   moment somebody signs in, and so is every read the box refused for want of rights. Signing
+   out does not close it, a box on its own network going on answering a caller holding nothing.
 
    Tied from inside start and not at the top of this file, so importing this module does
    nothing at all. */
@@ -449,7 +447,13 @@ function tieToSession() {
 		return;
 	}
 	tied = true;
+	let granted = session.state().level;
 	session.subscribe(function (now) {
+		// Before the stream, so what opens with it does not meet the refusals of the level before.
+		if (now.level !== granted && session.atLeast(granted)) {
+			store.forgetRefusals();
+		}
+		granted = now.level;
 		if (source === null && now.checked && session.atLeast('read')) {
 			status.denied = false;
 			open();

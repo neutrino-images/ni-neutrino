@@ -76,6 +76,8 @@ const kAheadSeconds = 4 * 3600;
 // hour has turned, so the one thing here that is not driven by an event is
 // driven by the clock.
 const kNowMs = 60000;
+// The box's answer for playing nothing, as against a refusal or a fault.
+const kNothingPlaying = '/errors/no-running-channel';
 
 /**
  * The selection, out of the one piece the address carries.
@@ -220,6 +222,16 @@ export default function ChannelList(props) {
 	   every draw would ask again about every channel with no schedule. */
 	const guide = useRef(/** @type {Map<string, Showing>} */ (new Map()));
 	const guideBusy = useRef(false);
+	// What the rows showed before the guide was asked again, drawn until the new answer lands.
+	const formerGuide = useRef(/** @type {Map<string, Showing>} */ (new Map()));
+
+	/** @returns {void} */
+	function askGuideAgain() {
+		for (const [key, showing] of guide.current) {
+			formerGuide.current.set(key, showing);
+		}
+		guide.current = new Map();
+	}
 
 	/**
 	 * @param {import('./list.paging.js').Walk<Api.Channel>} next
@@ -272,6 +284,7 @@ export default function ChannelList(props) {
 		held.current = emptyWalk();
 		setWalk(held.current);
 		guide.current = new Map();
+		formerGuide.current = new Map();
 		setGuideAt(function (n) { return n + 1; });
 		ask();
 		return function () {
@@ -282,12 +295,18 @@ export default function ChannelList(props) {
 		};
 	}, [mode, bouquet, generation]);
 
+	// Whether the list has settled where it opens; see WHERE THE LIST OPENS.
+	const jumped = useRef(false);
+
 	// What is playing, and the bouquets the filter offers. Both are one answer
 	// each and both are corrected by the stream, so both are the store's.
 	useEffect(function () {
 		const stopCurrent = store.watch('GET', '/api/v1/channels/current', {}, function (seen) {
 			/* A box playing nothing answers 404 here, which is an answer and
-			   not a fault to draw: the list simply marks no row. */
+			   not a fault to draw: the list simply marks no row. It also settles
+			   where the list opens, so a later zap does not move it. */
+			if (seen.state === store.FAILED && seen.error && seen.error.problem.type === kNothingPlaying)
+				jumped.current = true;
 			setCurrent(seen.state === store.READY ? seen.data : null);
 		});
 		const stopBouquets = store.watch('GET', '/api/v1/bouquets', {}, function (seen) {
@@ -321,7 +340,6 @@ export default function ChannelList(props) {
 
 	   The address is replaced rather than pushed, so Back leaves the screen
 	   instead of returning to the list nobody asked for. */
-	const jumped = useRef(false);
 	useEffect(function () {
 		if (jumped.current || bouquet > 0 || current === null)
 			return;
@@ -374,7 +392,7 @@ export default function ChannelList(props) {
 			setGeneration(function (n) { return n + 1; });
 		});
 		const stopGuide = events.on('epg-updated', function () {
-			guide.current = new Map();
+			askGuideAgain();
 			setGuideAt(function (n) { return n + 1; });
 		});
 		return function () {
@@ -386,7 +404,7 @@ export default function ChannelList(props) {
 
 	useEffect(function () {
 		const tick = window.setInterval(function () {
-			guide.current = new Map();
+			askGuideAgain();
 			setMinute(function (n) { return n + 1; });
 		}, kNowMs);
 		return function () { window.clearInterval(tick); };
@@ -521,7 +539,8 @@ export default function ChannelList(props) {
 	 * @returns {Showing | null}
 	 */
 	function showingOf(channel) {
-		return guide.current.get(guideRowKey(channel)) || null;
+		const key = guideRowKey(channel);
+		return guide.current.get(key) || formerGuide.current.get(key) || null;
 	}
 
 	/**

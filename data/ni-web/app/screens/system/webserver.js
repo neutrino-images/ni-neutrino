@@ -60,12 +60,6 @@ function useReading(ask) {
 			setShot(null);
 			return undefined;
 		}
-		/* A refusal this address collected under an earlier session is not an
-		   answer to this one, and watching an entry that already failed asks
-		   the box for nothing: the store starts a load from nothing held, not
-		   from something held that turned out to be a refusal. */
-		if (store.read('GET', kPath).state === store.FAILED)
-			store.reload('GET', kPath).catch(function () { });
 		return store.watch('GET', kPath, null, setShot);
 	}, [ask]);
 	return shot;
