@@ -782,6 +782,11 @@ struct FakeTimerSource : public coreapi::TimerSource
 	   acknowledged with nothing either way. */
 	bool ignore_removals;
 
+	/* Fails the next removal and clears itself, so a case can see a rollback
+	   that removes what it just made succeed right after the removal it was
+	   meant to undo failed. */
+	bool fail_next_remove;
+
 	// Counted, because a removal that was refused before it got here and one
 	// that got here and did nothing both leave the list unchanged.
 	mutable unsigned list_reads;
@@ -792,7 +797,7 @@ struct FakeTimerSource : public coreapi::TimerSource
 
 	FakeTimerSource()
 		: clock(0), status(coreapi::Status::Ok), now_status(coreapi::Status::Ok),
-		  add_status(coreapi::Status::Ok), ignore_removals(false),
+		  add_status(coreapi::Status::Ok), ignore_removals(false), fail_next_remove(false),
 		  list_reads(0), removals(0), modifications(0), next_id(1) {}
 
 	coreapi::Status list(coreapi::TimerList &out) const
@@ -840,6 +845,11 @@ struct FakeTimerSource : public coreapi::TimerSource
 		removals++;
 		if (status != coreapi::Status::Ok)
 			return status;
+		if (fail_next_remove)
+		{
+			fail_next_remove = false;
+			return coreapi::Status::Internal;
+		}
 		if (ignore_removals)
 			return coreapi::Status::Ok;
 		for (size_t i = 0; i < timers.size(); i++)
@@ -1398,7 +1408,7 @@ struct FakePluginSource : public coreapi::PluginSource
 
 	// One entry made of what a case actually says about it, so a case adding
 	// one does not have to write out the fields it has nothing to say about.
-	void add(const std::string &name, const std::string &title)
+	void add(const std::string &name, const std::string &title = std::string())
 	{
 		coreapi::PluginInfo one;
 		one.name = name;

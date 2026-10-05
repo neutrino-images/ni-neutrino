@@ -31,8 +31,14 @@
 #include "compat/mount.h"
 #endif
 #include "webconfig.h"
+#ifdef ENABLE_MCP
+#include "oauth/surface.h"
+#endif
 #include "endpoint.h"
 #include "events.h"
+#ifdef ENABLE_MCP
+#include "mcp/exposure.h"
+#endif
 #include "livestream.h"
 #include "http.h"
 #include "doc/openapi.h"
@@ -40,6 +46,9 @@
 #include "static.h"
 #include "status.h"
 #include "webtv.h"
+#ifdef ENABLE_MCP
+#include "mcp/endpoint.h"
+#endif
 
 #include "coreapi/base/deps.h"
 #include "coreapi/base/errors.h"
@@ -49,6 +58,7 @@
 #include <cstring>
 #include <exception>
 #include <string>
+#include <utility>
 
 #include <stdint.h>
 #include <strings.h>
@@ -59,6 +69,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <OpenThreads/Mutex>
@@ -142,6 +153,136 @@ void countClosed()
 		--open_requests_;
 }
 
+#ifdef ENABLE_MCP
+/* A tools/call whose tool runs on. Its connection is suspended meanwhile, so the
+   server thread it came in on goes on serving every other connection it has. */
+struct McpWait
+{
+	struct MHD_Connection *conn;
+	int             refs;        // the request and the running call
+	bool            suspended;   // set by the handler, cleared by whoever resumes
+	bool            ended;       // the call has handed over its answer
+	bool            listed;      // in the list below until its request is done
+	McpWait        *prev;
+	McpWait        *next;
+	mcp::CallAnswer answer;
+	mcp::Deferred   later;
+
+	McpWait()
+		: conn(NULL), refs(1), suspended(false), ended(false), listed(false), prev(NULL), next(NULL)
+	{
+	}
+};
+
+OpenThreads::Mutex &mcpLock()
+{
+	static OpenThreads::Mutex m;
+	return m;
+}
+
+McpWait *mcp_waits_ = NULL;
+bool     mcp_stopping_ = false;
+
+// Under mcpLock.
+void unlistUnderLock(McpWait *w)
+{
+	if (!w->listed)
+		return;
+	if (w->prev != NULL)
+		w->prev->next = w->next;
+	else
+		mcp_waits_ = w->next;
+	if (w->next != NULL)
+		w->next->prev = w->prev;
+	w->prev = w->next = NULL;
+	w->listed = false;
+}
+
+// Called by the call's own thread, once.
+void mcpCallEnded(void *cls, const mcp::CallAnswer &a)
+{
+	McpWait *w = (McpWait *) cls;
+	struct MHD_Connection *wake = NULL;
+	bool last = false;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> held(mcpLock());
+		try
+		{
+			w->answer = a;
+		}
+		catch (...)
+		{
+			w->answer = mcp::CallAnswer();
+			w->answer.thrown = true;
+		}
+		w->ended = true;
+		if (w->suspended)
+		{
+			w->suspended = false;
+			wake = w->conn;
+		}
+		last = (--w->refs == 0);
+	}
+	// Still there: a suspended connection is one the library leaves alone, and stop() waits for it.
+	if (wake != NULL)
+		MHD_resume_connection(wake);
+	if (last)
+		delete w;
+}
+
+void mcpRequestDone(McpWait *w)
+{
+	bool last = false;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> held(mcpLock());
+		unlistUnderLock(w);
+		w->conn = NULL;
+		last = (--w->refs == 0);
+	}
+	if (last)
+		delete w;
+}
+
+// Every suspended call answered at once, and back only when their requests are done.
+void mcpStopAll()
+{
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> held(mcpLock());
+		mcp_stopping_ = true;
+	}
+	for (;;)
+	{
+		struct MHD_Connection *wake = NULL;
+		{
+			OpenThreads::ScopedLock<OpenThreads::Mutex> held(mcpLock());
+			for (McpWait *w = mcp_waits_; w != NULL && wake == NULL; w = w->next)
+			{
+				if (w->suspended)
+				{
+					w->suspended = false;
+					wake = w->conn;
+				}
+			}
+		}
+		if (wake == NULL)
+			break;
+		MHD_resume_connection(wake);
+	}
+	for (;;)
+	{
+		{
+			OpenThreads::ScopedLock<OpenThreads::Mutex> held(mcpLock());
+			if (mcp_waits_ == NULL)
+				return;
+		}
+		struct timespec t;
+		t.tv_sec = 0;
+		t.tv_nsec = 10 * 1000 * 1000;
+		nanosleep(&t, NULL);
+	}
+}
+#endif
+
 /* What one request needs while it is being read, which is more than one call of
    the access handler can hold: the library calls that handler again for every
    piece of a body, and a handler run on the first piece would answer out of a
@@ -211,10 +352,23 @@ struct Pending
 	   reach the caller that asked before the box moves. */
 	std::string reload_after;
 
+#ifdef ENABLE_MCP
+	Origin         origin;
+	bool           hidden;
+	std::string    forwarded_client;
+	bool           for_mcp;
+	mcp::Head      mcp_head;
+	mcp::Admission mcp_admission;
+	McpWait       *mcp_wait;
+#endif
+
 	Pending(const char *uri, size_t max)
 		: target((uri != NULL) ? uri : ""), ceiling(max), seen(0), started(false),
 		  too_large(false), keep_body(false), refused(false), have(AuthLevel::Public),
 		  query_token_ok(false), session_live(false)
+#ifdef ENABLE_MCP
+		  , origin(Origin::Lan), hidden(false), for_mcp(false), mcp_wait(NULL)
+#endif
 	{
 	}
 };
@@ -333,6 +487,10 @@ void requestDone(void *cls, struct MHD_Connection *connection,
 	   for the change, and the file it asked for is already written. */
 		const std::string reload = p->reload_after;
 
+#ifdef ENABLE_MCP
+		if (p->mcp_wait != NULL)
+			mcpRequestDone(p->mcp_wait);
+#endif
 		delete p;
 		countClosed();
 
@@ -756,6 +914,56 @@ std::string joinedHeader(struct MHD_Connection *connection, const char *name)
 	return j.out;
 }
 
+#ifdef ENABLE_MCP
+// Entered from C, so nothing may be thrown out of it.
+MHD_Result noteForwarding(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
+{
+	(void) kind;
+	(void) value;
+	bool *seen = (bool *) cls;
+	if (seen == NULL)
+		return MHD_YES;
+	try
+	{
+		if (key == NULL)
+			return MHD_YES;
+
+		size_t n = 0;
+		const char *const *names = exposure::forwardingHeaders(&n);
+		for (size_t i = 0; i < n; ++i)
+		{
+			if (strcasecmp(key, names[i]) == 0)
+			{
+				*seen = true;
+				return MHD_NO;
+			}
+		}
+	}
+	catch (...)
+	{
+		*seen = true;
+		return MHD_NO;
+	}
+	return MHD_YES;
+}
+
+bool carriesForwarding(struct MHD_Connection *connection)
+{
+	bool seen = false;
+	MHD_get_connection_values(connection, MHD_HEADER_KIND, &noteForwarding, &seen);
+	return seen;
+}
+
+// A tunnel agent sits in the LAN; its address must not lend the internet the LAN read.
+Credentials judged(const Pending &st)
+{
+	Credentials c = st.cred;
+	if (st.origin != Origin::Lan)
+		c.peer.clear();
+	return c;
+}
+#endif
+
 /* What the request carried that could say who is asking, read off the connection
    and handed to the gate as text. Nothing here decides anything: the header
    names live in one place and this is the one call that turns a connection into
@@ -806,6 +1014,127 @@ Credentials credentialsOf(struct MHD_Connection *connection)
 	return c;
 }
 
+#ifdef ENABLE_MCP
+struct Counted
+{
+	const char *name;
+	std::string first;
+	unsigned    count;
+};
+
+// A copy that fails counts as a second header, which every reader refuses.
+MHD_Result countHeader(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
+{
+	(void) kind;
+	Counted *c = (Counted *) cls;
+	if (c == NULL || key == NULL || strcasecmp(key, c->name) != 0)
+		return MHD_YES;
+	try
+	{
+		if (c->count == 0)
+			c->first = (value != NULL) ? value : "";
+	}
+	catch (...)
+	{
+		c->count = 2;
+		return MHD_NO;
+	}
+	++c->count;
+	return MHD_YES;
+}
+
+unsigned headerCount(struct MHD_Connection *connection, const char *name, std::string &first)
+{
+	Counted seen;
+	seen.name = name;
+	seen.count = 0;
+	MHD_get_connection_values(connection, MHD_HEADER_KIND, &countHeader, &seen);
+	first = seen.first;
+	return seen.count;
+}
+
+mcp::Head mcpHeadOf(struct MHD_Connection *connection, Method verb, Origin origin)
+{
+	mcp::Head h;
+	h.method = verb;
+	h.origin = origin;
+
+	const char *host = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_HOST);
+	h.base = exposure::baseUrl(origin, (host != NULL) ? host : "");
+	const char *ctype = MHD_lookup_connection_value(connection, MHD_HEADER_KIND,
+	                                                MHD_HTTP_HEADER_CONTENT_TYPE);
+	h.content_type = (ctype != NULL) ? ctype : "";
+
+	h.origin_header_count = headerCount(connection, "Origin", h.origin_header);
+	h.authorization_count = headerCount(connection, MHD_HTTP_HEADER_AUTHORIZATION, h.authorization);
+	h.protocol_version_count = headerCount(connection, "MCP-Protocol-Version", h.protocol_version);
+	h.mcp_method_count = headerCount(connection, "Mcp-Method", h.mcp_method);
+	h.mcp_name_count = headerCount(connection, "Mcp-Name", h.mcp_name);
+	return h;
+}
+
+MHD_Result answerMcp(struct MHD_Connection *connection, Pending *st, Method m, const std::string &path)
+{
+	McpWait *w = st->mcp_wait;
+	if (w == NULL)
+	{
+		w = new McpWait;
+		w->conn = connection;
+		st->mcp_wait = w;
+
+		bool stopping = false;
+		{
+			OpenThreads::ScopedLock<OpenThreads::Mutex> held(mcpLock());
+			stopping = mcp_stopping_;
+		}
+		Response now;
+		w->refs = 2;
+		bool started = false;
+		try
+		{
+			// A tool started now would be answered before it could finish.
+			started = mcp::answerLater(st->mcp_head, st->mcp_admission, st->body,
+			                           stopping ? NULL : &mcpCallEnded, w, now, w->later);
+		}
+		catch (...)
+		{
+			// Nothing throws once the call is started.
+			w->refs = 1;
+			throw;
+		}
+		if (!started)
+		{
+			w->refs = 1;
+			return queueResponse(connection, now, m, &path);
+		}
+
+		OpenThreads::ScopedLock<OpenThreads::Mutex> held(mcpLock());
+		if (!w->ended && !mcp_stopping_)
+		{
+			w->suspended = true;
+			w->listed = true;
+			w->next = mcp_waits_;
+			if (mcp_waits_ != NULL)
+				mcp_waits_->prev = w;
+			mcp_waits_ = w;
+			// Under the lock, or the call could end between the two and nothing would resume it.
+			MHD_suspend_connection(connection);
+			return MHD_YES;
+		}
+	}
+
+	// Ended, or resumed by a stop before it did; that one is answered as given up on.
+	mcp::CallAnswer a;
+	a.outcome = mcp::CallOutcome::TimedOut;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> held(mcpLock());
+		if (w->ended)
+			std::swap(a, w->answer);
+	}
+	return queueResponse(connection, mcp::respond(w->later, a), m, &path);
+}
+#endif
+
 MHD_Result serve(struct MHD_Connection *connection, const char *method,
                  const char *upload_data, size_t *upload_data_size, void **con_cls)
 {
@@ -823,6 +1152,47 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 	if (!st->started)
 	{
 		st->started = true;
+
+#ifdef ENABLE_MCP
+		{
+			// First, so a hidden path says nothing else about itself.
+			const std::string raw_path = st->target.substr(0, st->target.find('?'));
+			const exposure::Policy policy = exposure::policyFrom(config());
+
+			exposure::Seen seen;
+			seen.peer = peerOf(connection);
+			seen.forwarded_for = joinedHeader(connection, "X-Forwarded-For");
+			seen.carries_forwarding = carriesForwarding(connection);
+
+			st->origin = exposure::classify(seen, policy);
+			if (st->origin == Origin::Tunnel)
+				st->forwarded_client = exposure::forwardedClient(seen);
+
+			exposure::Admit a = exposure::admit(st->origin, raw_path, policy);
+			// Under the prefixes only what a mount claims; the rest would reach the router and the files.
+			if (a == exposure::Admit::Pass && st->origin == Origin::Tunnel && !mcp::handles(raw_path) &&
+			    !oauth::handles(raw_path))
+				a = exposure::Admit::Hidden;
+			if (a != exposure::Admit::Pass)
+			{
+				st->hidden = true;
+				st->refusal = (a == exposure::Admit::Refused) ? exposure::refusedResponse()
+				                                              : exposure::hiddenResponse();
+				addApiHeaders(st->refusal);
+				exposure::noteTurnedAway();
+				// No route path: an answer no route gave is not one to record against a route.
+				if (asksBeforeSending(connection))
+					return queueResponse(connection, st->refusal);
+				return MHD_YES;
+			}
+		}
+#endif
+
+#ifdef ENABLE_MCP
+		st->for_mcp = mcp::handles(st->target.substr(0, st->target.find('?')));
+		if (st->for_mcp && mcp::maxBodyBytes() < st->ceiling)
+			st->ceiling = mcp::maxBodyBytes();
+#endif
 
 		unsigned long long declared = 0;
 		if (declaredLength(connection, declared) && declared > (unsigned long long) st->ceiling)
@@ -865,6 +1235,27 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 
 			const std::string gate_path = st->target.substr(0, q);
 
+#ifdef ENABLE_MCP
+			// Own bearer tokens and never a session: neither the router's gate nor its body rule applies.
+			if (st->for_mcp)
+			{
+				st->mcp_head = mcpHeadOf(connection, m, st->origin);
+				st->mcp_admission = mcp::admit(st->mcp_head);
+				if (st->mcp_admission.admitted)
+				{
+					st->keep_body = true;
+				}
+				else
+				{
+					st->refused = true;
+					st->refusal = st->mcp_admission.refusal;
+				}
+				if (st->refused && asksBeforeSending(connection))
+					return queueResponse(connection, st->refusal, m, &gate_path);
+				return MHD_YES;
+			}
+#endif
+
 			/* THE ROUTE BEFORE THE CREDENTIAL, because one of the things the route
 			   declares is which credentials count. A token with a scope is worth its
 			   level only where the route reads one, and only there may one arrive in
@@ -876,7 +1267,11 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 			const bool routed = routeLevelFor(m, gate_path, &need, &st->query_token_ok);
 
 			st->cred = credentialsOf(connection);
+#ifdef ENABLE_MCP
+			st->have = granted(judged(*st), st->query_token_ok, &st->scope);
+#else
 			st->have = granted(st->cred, st->query_token_ok, &st->scope);
+#endif
 			st->session_live = !st->cred.cookie_token.empty() &&
 			                   sessionIsLive(st->cred.cookie_token);
 
@@ -907,6 +1302,11 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 					st->keep_body = true;
 				}
 			}
+#ifdef ENABLE_MCP
+			// Only the posts the surface reads keep their body.
+			else if (oauth::handles(gate_path))
+				st->keep_body = oauth::keepsBody(m, gate_path);
+#endif
 #ifndef DISABLE_LEGACY_API
 			/* The same decision for the one prefix that has no route table. Its
 			   handlers read a posted form out of the very list a query goes into
@@ -986,6 +1386,10 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 
 	const Method m = methodFromString((method != NULL) ? method : "");
 
+#ifdef ENABLE_MCP
+	if (st->hidden)
+		return queueResponse(connection, st->refusal);
+#endif
 	if (st->too_large)
 		return queueResponse(connection, tooLarge(), m, &path);
 
@@ -993,6 +1397,11 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 	// nothing left coming in to be reset under it.
 	if (st->refused)
 		return queueResponse(connection, st->refusal, m, &path);
+
+#ifdef ENABLE_MCP
+	if (st->for_mcp)
+		return answerMcp(connection, st, m, path);
+#endif
 
 	/* Resolved once, off the head, on the call that ran before the body. What is
 	   done here is the one part of that answer which can have moved since: a
@@ -1003,12 +1412,43 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 	   change. */
 	if (st->session_live && !sessionIsLive(st->cred.cookie_token))
 	{
+#ifdef ENABLE_MCP
+		st->have = granted(judged(*st), st->query_token_ok, &st->scope);
+#else
 		st->have = granted(st->cred, st->query_token_ok, &st->scope);
+#endif
 		st->session_live = false;
 	}
 
 	const Credentials &cred = st->cred;
 	const AuthLevel have = st->have;
+
+#ifdef ENABLE_MCP
+	// Ahead of the CSRF half of the gate: the consent form carries its own token.
+	if (oauth::handles(path))
+	{
+		const char *ctype = MHD_lookup_connection_value(connection, MHD_HEADER_KIND,
+		                                                MHD_HTTP_HEADER_CONTENT_TYPE);
+		const char *consent = MHD_lookup_connection_value(connection, MHD_COOKIE_KIND,
+		                                                  oauth::consentCookieName());
+		const char *host = MHD_lookup_connection_value(connection, MHD_HEADER_KIND,
+		                                               MHD_HTTP_HEADER_HOST);
+		oauth::Exchange x;
+		x.method = m;
+		x.path = path;
+		x.query = query;
+		x.body = st->body;
+		x.content_type = (ctype != NULL) ? ctype : "";
+		x.accept_language = joinedHeader(connection, MHD_HTTP_HEADER_ACCEPT_LANGUAGE);
+		x.consent_cookie = (consent != NULL) ? consent : "";
+		x.peer = cred.peer;
+		x.source = (st->origin == Origin::Tunnel && !st->forwarded_client.empty()) ? st->forwarded_client
+		                                                                          : cred.peer;
+		x.origin = st->origin;
+		x.base = exposure::baseUrl(st->origin, (host != NULL) ? host : "");
+		return queueResponse(connection, oauth::answer(x));
+	}
+#endif
 
 	/* The half of the gate the transport can settle. What a request needs is not
 	   known until a route is matched, so this asks with the least any route can
@@ -1098,9 +1538,16 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 	}
 #endif
 
+	std::string reported = clientAddress(cred);
+	Origin origin = Origin::Lan;
+#ifdef ENABLE_MCP
+	if (!st->forwarded_client.empty())
+		reported = st->forwarded_client;
+	origin = st->origin;
+#endif
 	const Response r = dispatch(m, path, query, st->body, cred.peer, have,
-	                            clientAddress(cred), cred.cookie_token, authority,
-	                            st->scope, localAuthorityOf(connection));
+	                            reported, cred.cookie_token, authority,
+	                            st->scope, origin, localAuthorityOf(connection));
 
 	/* Carried out of the answer and into the state of this request, which is what
 	   outlives the answer: the notification that says the bytes have gone is
@@ -1236,7 +1683,10 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 		/* What the directory does not hold is offered to the page, but only under
 		   a name the page has an area for. The two 404s stay one answer
 		   everywhere else, which is what static.h keeps them as. */
-		if (served.code == StatusNotFound && answersWithPage(path))
+		// An area may share its bare name with a directory of the page.
+		const bool bare = served.code == StatusMovedPermanently &&
+		                  path.find('/', 1) == std::string::npos;
+		if ((served.code == StatusNotFound || bare) && answersWithPage(path))
 			served = serveStatic("/index.html", accept, inm);
 		return queueResponse(connection, served);
 	}
@@ -1465,6 +1915,12 @@ bool start(const ServerConfig &c)
 	// Suspend and resume is allowed from the outset because it is a property of
 	// the daemon, and a daemon in a running process cannot be given it later
 	// without being torn down and rebuilt.
+#ifdef ENABLE_MCP
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> guard(mcpLock());
+		mcp_stopping_ = false;
+	}
+#endif
 	daemon_ = MHD_start_daemon(
 		flags,
 		port, NULL, NULL, &accessHandler, NULL,
@@ -1508,6 +1964,9 @@ void stop()
 	   suspended connection. This answers once every one of them is gone. */
 	events::stop();
 	livestream::stop();
+#ifdef ENABLE_MCP
+	mcpStopAll();
+#endif
 
 	// And the pass throughs, which are suspended connections for the same
 	// reason and are torn down the same way.

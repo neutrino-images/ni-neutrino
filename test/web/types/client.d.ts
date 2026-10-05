@@ -217,7 +217,7 @@ declare namespace Web {
 		/** whether it is set apart from the rest of the row by a rule before it */
 		apart?: boolean;
 		/** what the build has to carry for this one to be offered at all */
-		needs?: 'api-doc';
+		needs?: 'api-doc' | 'mcp';
 	};
 
 	/** what the frame itself shows, which is everything and nothing in particular */
@@ -235,7 +235,7 @@ declare namespace Web {
 		 * part of the page that reads it and it arrives on the same answer the
 		 * frame already asks for.
 		 */
-		build: { apiDoc: boolean } | null;
+		build: { apiDoc: boolean, mcp: boolean } | null;
 		/**
 		 * Whether the event stream is open right now. The frame's own state
 		 * because the mark in the corner is the one place the page says it, and

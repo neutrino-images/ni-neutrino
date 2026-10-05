@@ -496,6 +496,25 @@ TEST_CASE("the next capture after a refused one is taken", "[screenshot]")
 	REQUIRE(exists(after.value()));
 }
 
+TEST_CASE("the route answers a capture asked for while one is running as busy", "[screenshot]")
+{
+	HeldScreenshotSource source;
+	InstalledScreenshotSource installed(&source);
+
+	int code = 0;
+	std::string body;
+	{
+		CaptureInFlight first(source);
+		REQUIRE(source.waitInside(kHeldMs));
+		const httpd::Response r = httpd::dispatch(httpd::Get, "/api/v1/osd/screenshot", "", std::string(),
+		                                          "192.168.1.9", httpd::AuthLevel::Read);
+		code = r.code;
+		body = r.body;
+	}
+	REQUIRE(code == 409);
+	REQUIRE(parsed(body)["type"].asString() == "/errors/screen-not-captured");
+}
+
 TEST_CASE("the display is a capture of its own", "[screenshot]")
 {
 	FakeScreenshotSource source;

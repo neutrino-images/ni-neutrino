@@ -47,7 +47,7 @@ bool answersWithPage(const std::string &path);
 
 /* The areas themselves, as the list rather than as something a caller
    assembles. Read by the cases and by the check that holds this list and the
-   navigation of the page to being the same eight names. */
+   navigation of the page to being the same nine names. */
 const char *const *appAreas(std::size_t *count);
 
 } // namespace httpd

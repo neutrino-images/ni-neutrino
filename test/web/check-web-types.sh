@@ -101,34 +101,41 @@ done
 tmp=`mktemp -d`
 trap 'rm -rf "$tmp"' EXIT
 
-# The shapes, out of the document, on every run. Written beside the hand
-# written declarations rather than into the build tree so that an editor
-# reading data/ni-web/jsconfig.json sees the same types this check does; a
-# stream writing a screen gets them without building anything.
-#
-# Moved into place only when it changed, so that a source tree nobody may write
-# to still passes on a file that is already right.
+MCP="${NI_WEB_MCP:-yes}"
+
 mkdir -p "$TYPES"
 node "$GENERATOR" "$DOCUMENT" "$tmp/api.d.ts" || {
 	echo "check-web-types.sh: the shapes could not be read out of $DOCUMENT" >&2
 	exit 1
 }
-if ! cmp -s "$tmp/api.d.ts" "$GENERATED"; then
+
+# Copied only when changed, so a read-only tree passes; only a build with the AI routes writes it.
+if [ "$MCP" != no ] && ! cmp -s "$tmp/api.d.ts" "$GENERATED"; then
 	cp "$tmp/api.d.ts" "$GENERATED" || {
 		echo "check-web-types.sh: cannot write $GENERATED" >&2
 		exit 1
 	}
 fi
 
-# Read back rather than assumed: a generator that printed a header and stopped
-# would leave a file that declares nothing and refuses nothing.
-grep -q '^	interface Ops {$' "$GENERATED" || {
-	echo "check-web-types.sh: $GENERATED names no routes, so nothing would be held to the document" >&2
+grep -q '^	interface Ops {$' "$tmp/api.d.ts" || {
+	echo "check-web-types.sh: $tmp/api.d.ts names no routes, so nothing would be held to the document" >&2
 	exit 1
 }
 
-# What the checker read, counted before what it said is believed.
-( cd "$WEB" && node "$TSC" -p jsconfig.json --listFiles --noEmit ) > "$tmp/out" 2>&1 || true
+if [ "$MCP" = no ]; then
+	cat > "$tmp/jsconfig.json" <<EOF
+{
+	"extends": "$CONFIG",
+	"include": ["$WEB/app/**/*.js", "$WEB/info/**/*.js", "$TYPES/*.d.ts", "$tmp/api.d.ts"],
+	"exclude": ["$GENERATED"]
+}
+EOF
+	PROJECT="$tmp/jsconfig.json"
+else
+	PROJECT=jsconfig.json
+fi
+
+( cd "$WEB" && node "$TSC" -p "$PROJECT" --listFiles --noEmit ) > "$tmp/out" 2>&1 || true
 read_files=`grep -c "/data/ni-web/app/" "$tmp/out" || true`
 [ "$read_files" -ge "$FLOOR" ] || {
 	echo "check-web-types.sh: the checker read $read_files modules of the page, and there are more than $FLOOR" >&2
@@ -147,5 +154,5 @@ if [ "$faults" -ne 0 ]; then
 	exit 1
 fi
 
-routes=`grep -c "^		'" "$GENERATED" || true`
+routes=`grep -c "^		'" "$tmp/api.d.ts" || true`
 echo "check-web-types.sh: $read_files modules of the page type check against $routes routes of the document"

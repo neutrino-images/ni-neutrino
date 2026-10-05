@@ -21,6 +21,8 @@
 #ifndef __httpd_webconfig_h__
 #define __httpd_webconfig_h__
 
+#include <config.h>
+
 #include "netmatch.h"
 #include "server.h"
 
@@ -122,6 +124,17 @@ struct WebConfig
 	   learnt it and went on drawing the pictures. So the refusal is at the route
 	   (GET /api/v1/channels/{id}/logo), where it holds for every caller. */
 	bool         channel_logos;
+
+#ifdef ENABLE_MCP
+	// Least meaning is AI off; ai_named keeps unlisted forwarders refused even then.
+	bool                   ai_enabled;
+	std::string            ai_public_url;
+	std::vector<NetPrefix> ai_trusted_proxies;
+	bool                   ai_allow_lan;
+	bool                   ai_named;
+	std::vector<std::string> ai_allowed_plugins;
+	std::vector<std::string> ai_allowed_sections;
+#endif
 };
 
 // The values a box that has never been configured runs on.
@@ -377,6 +390,31 @@ WebSettings currentWebSettings();
    A box with no file at that name gets one, with the same head the migration
    writes. */
 bool saveWebSettings(const std::string &path, const WebSettings &s);
+
+#ifdef ENABLE_MCP
+struct AiSettings
+{
+	bool                   enabled;
+	std::string            public_url;      // canonical, empty when unset
+	std::vector<NetPrefix> trusted_proxies;
+	bool                   allow_lan;
+};
+
+AiSettings currentAiSettings();
+
+// Whether the login is still the password the image ships; the tunnel stays shut while it is.
+bool shippedPasswordInEffect(const WebConfig &c);
+
+// Nothing is written for a value the loader would not read back as given, nor for a missing file.
+bool saveAiSettings(const std::string &path, const AiSettings &s);
+
+/* Refuses a plugin name holding a comma, a control byte, or longer than the
+   plugin routes' own name ceiling (64 bytes), and a section that is unknown
+   or denied. Nothing is written on a refusal. On success both lists are
+   written and installed live. */
+bool saveAiAllowlists(const std::string &path, const std::vector<std::string> &plugins,
+		       const std::vector<std::string> &sections);
+#endif
 
 /* Reads path again and puts the running server on what it now says.
 

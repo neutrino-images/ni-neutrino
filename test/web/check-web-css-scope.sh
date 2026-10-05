@@ -41,7 +41,9 @@ frame_sheets=$(find "$FRAME" -name '*.css' | sort)
 
 # Every sheet that is not the frame's, which is every one a screen or a shared
 # control names for itself.
-screen_sheets=$(find "$WEB" -name '*.css' | grep -v "^$FRAME/" | sort)
+# The AI pages attach their sheet the way a screen does.
+AI="$SRC/data/ni-web/ai"
+screen_sheets=$( { find "$WEB" -name '*.css' | grep -v "^$FRAME/"; [ ! -d "$AI" ] || find "$AI" -name '*.css'; } | sort)
 [ -n "$screen_sheets" ] || {
 	echo "check-web-css-scope.sh: no screen stylesheet under $WEB" >&2
 	exit 1

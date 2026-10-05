@@ -665,10 +665,22 @@ const Endpoint kEpgEndpoints[] = {
 	  Answers200, HTTPD_REFUSALS(kEventDetailRefusals) },
 };
 
+const ToolFlag kEpgTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/epg", "channel_schedule",
+		"The programmes one channel shows between from and to, both seconds since the epoch. channel is the hexadecimal channel id."),
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/epg/event", "programme_details",
+		"Everything the guide holds about one programme: the long text, the age it is rated for and its genre. Pass id and start exactly as whats_on, find_programme or channel_schedule return them."),
+	HTTPD_TOOL_DEFAULTS(Method::Get, "/api/v1/epg/grid", "epg_grid",
+		"What several channels show over a window of time, 3 channels to a page unless limit says otherwise. "
+		"Name a bouquet by its number from list_bouquets or channels as hexadecimal ids separated by commas, and "
+		"from and to in seconds since the epoch. Pass next_cursor back as cursor for the next page; stop when "
+		"there is none.", "limit=3"),
+};
+
 } // namespace
 
 extern const RouteTable epgTable = {
-	HTTPD_TABLE("epg", kEpgEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("epg", kEpgEndpoints, kEpgTools)
 };
 
 } // namespace httpd

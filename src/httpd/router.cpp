@@ -688,7 +688,7 @@ Response runEndpoint(const Endpoint &ep,
                      const std::string &peer, AuthLevel granted,
                      const std::string &reported, const std::string &session,
                      const std::string &host, const std::string &scope,
-                     const std::string &local_address)
+                     Origin origin, const std::string &local_address)
 {
 	/* The sentence is the gate's and not written out again here, because two
 	   copies of one refusal are two answers a client can tell apart the moment
@@ -801,6 +801,7 @@ Response runEndpoint(const Endpoint &ep,
 	req.setHost(host);
 	req.setScope(scope);
 	req.setAddressToken(address_token);
+	req.setOrigin(origin);
 	req.setLocalAddress(local_address);
 
 	/* A value that is nothing is no value, whether the name was left out or handed over
@@ -985,7 +986,7 @@ Response dispatchTables(const RouteTable *const *tables, size_t table_count, Met
                         const std::string &body, const std::string &peer,
                         AuthLevel granted, const std::string &reported,
                         const std::string &session, const std::string &host,
-                        const std::string &scope,
+                        const std::string &scope, Origin origin,
                         const std::string &local_address)
 {
 	/* A method this server does not have is not a path it does not have. The
@@ -1040,7 +1041,7 @@ Response dispatchTables(const RouteTable *const *tables, size_t table_count, Met
 		              coreapi::ErrorCode::BadTable, "two routes answer this request");
 
 	const Response r = runEndpoint(*best, found.binds, query, body, peer, granted, reported,
-	                               session, host, scope, local_address);
+	                               session, host, scope, origin, local_address);
 	if (answer_watch != NULL)
 		answer_watch(*best, r);
 	return r;
@@ -1403,10 +1404,10 @@ Response dispatchIn(const RouteTable *const *tables, size_t table_count, Method 
                     const std::string &body, const std::string &peer, AuthLevel granted,
                     const std::string &reported, const std::string &session,
                     const std::string &host, const std::string &scope,
-                    const std::string &local_address)
+                    Origin origin, const std::string &local_address)
 {
 	return dispatchTables(tables, table_count, m, path, query, body, peer, granted, reported,
-	                      session, host, scope, local_address);
+	                      session, host, scope, origin, local_address);
 }
 
 Response dispatchIn(const RouteTable &t, Method m, const std::string &path,
@@ -1414,11 +1415,11 @@ Response dispatchIn(const RouteTable &t, Method m, const std::string &path,
                     const std::string &peer, AuthLevel granted,
                     const std::string &reported, const std::string &session,
                     const std::string &host, const std::string &scope,
-                    const std::string &local_address)
+                    Origin origin, const std::string &local_address)
 {
 	const RouteTable *const one[] = { &t };
 	return dispatchTables(one, 1, m, path, query, body, peer, granted, reported, session, host,
-	                      scope, local_address);
+	                      scope, origin, local_address);
 }
 
 Response dispatch(Method m, const std::string &path,
@@ -1426,12 +1427,12 @@ Response dispatch(Method m, const std::string &path,
                   const std::string &peer, AuthLevel granted,
                   const std::string &reported, const std::string &session,
                   const std::string &host, const std::string &scope,
-                  const std::string &local_address)
+                  Origin origin, const std::string &local_address)
 {
 	size_t count = 0;
 	const RouteTable *const *tables = allRoutes(&count);
 	Response r = dispatchTables(tables, count, m, path, query, body, peer, granted, reported,
-	                            session, host, scope, local_address);
+	                            session, host, scope, origin, local_address);
 
 	/* Here rather than at each handler and each refusal, because what these three say
 	   is true of every answer this API gives and a header written at each site is a

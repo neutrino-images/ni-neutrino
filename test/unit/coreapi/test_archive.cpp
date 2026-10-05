@@ -996,7 +996,8 @@ TEST_CASE("a forged host never reaches the playlist, the box's own names do", "[
 	// With one: the box's own address stands in, and the forged name never appears.
 	httpd::Response rebuilt = httpd::dispatch(httpd::Get, path, "", std::string(), "192.168.1.9",
 	                                          httpd::AuthLevel::Read, std::string(), std::string(),
-	                                          "evil.com", std::string(), "10.0.0.5:8081");
+	                                          "evil.com", std::string(), httpd::Origin::Tunnel,
+	                                          "10.0.0.5:8081");
 	REQUIRE(rebuilt.code == 200);
 	REQUIRE(rebuilt.body.find("evil.com") == std::string::npos);
 	REQUIRE(rebuilt.body.find("http://10.0.0.5:8081/") != std::string::npos);

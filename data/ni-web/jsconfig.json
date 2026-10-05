@@ -144,6 +144,7 @@
 	"include": [
 		"app/**/*.js",
 		"info/**/*.js",
+		"ai/**/*.js",
 		"../../test/web/types/*.d.ts"
 	]
 }

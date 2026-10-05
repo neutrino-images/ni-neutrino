@@ -1117,6 +1117,10 @@ void appendAnswerContent(Json &j, const Endpoint &ep, const std::vector<SchemaRe
 {
 	if (code == StatusAccepted || code == StatusNoContent || code == StatusPartialContent)
 		return;
+	/* A 207 states one outcome per key sent, not the route's own schema: the settings
+	   write is the one route that answers both, and its 200 keeps that schema. */
+	if (code == StatusMultiStatus)
+		return;
 
 	if (events::isStreamRoute(ep))
 	{
@@ -1515,6 +1519,11 @@ const TagDoc kTags[] = {
 	  "on, the one account it takes a password under, who reads from it without presenting one, "
 	  "and whether it hands channel pictures over. The only part of this box that can cut the "
 	  "way it is being changed through." },
+#ifdef ENABLE_MCP
+	{ "ai",
+	  "How AI clients reach this box: the tunnel settings, the guides for putting one in front of "
+	  "it, and the clients let in. Answered in the local network only." },
+#endif
 	{ "daemons",
 	  "Starting, stopping and restarting one of the programs beside the one answering here. What "
 	  "they are and how they are doing is under system." },

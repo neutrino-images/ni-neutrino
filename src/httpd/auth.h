@@ -103,6 +103,9 @@ std::string bearerToken(const std::string &authorization);
    box's own account. */
 std::string basicCredential(const std::string &authorization);
 
+// The last forwarded-for element as an address, empty when it is not one.
+std::string lastForwarded(const std::string &header);
+
 /* Which address this request is judged to have come from.
 
    The peer, unless a proxy list exists and the peer is on it, and then the last element

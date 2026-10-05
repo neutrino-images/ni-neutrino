@@ -1437,6 +1437,23 @@ TEST_CASE("the settings schema answers every declared row", "[endpoints]")
 	REQUIRE(everyItemHas(r.body, "id"));
 }
 
+TEST_CASE("the schema answers one section when asked for it", "[settings][schema]")
+{
+	ShippedRoutes shipped;
+
+	const Reply all = get("/api/v1/settings/schema");
+	const Reply audio = get("/api/v1/settings/schema?section=audio");
+	REQUIRE(all.code == 200);
+	REQUIRE(audio.code == 200);
+	REQUIRE(audio.body.size() < all.body.size());
+	REQUIRE(audio.body.find("\"section\":\"osd\"") == std::string::npos);
+	REQUIRE(audio.body.find("\"section\":\"audio\"") != std::string::npos);
+
+	const Reply unknown = get("/api/v1/settings/schema?section=nonsense");
+	REQUIRE(unknown.code == 404);
+	REQUIRE(unknown.body.find("no-such-name") != std::string::npos);
+}
+
 /* The one place a caller other than the tables themselves reads label_key: the
    wire. Before this the field carried label_key's own spelling, such as
    videomenu.videoformat_169 for the choice a screen shows as 16:9, and these
@@ -1876,6 +1893,12 @@ TEST_CASE("the box says what it is and what this interface is", "[endpoints]")
 	REQUIRE(root["uptime"].asInt64() == 4711);
 	REQUIRE(root["api"]["major"].asUInt() == NEUTRINO_API_VERSION_MAJOR);
 	REQUIRE(root["api"]["minor"].asUInt() == NEUTRINO_API_VERSION_MINOR);
+	REQUIRE(root.isMember("mcp"));
+#ifdef ENABLE_MCP
+	REQUIRE(root["mcp"].asBool());
+#else
+	REQUIRE_FALSE(root["mcp"].asBool());
+#endif
 }
 
 TEST_CASE("whether the box is in standby is a reading and not only a command", "[endpoints]")

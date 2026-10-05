@@ -111,13 +111,14 @@ TEST_CASE("a name under an area of the page is the page", "[apppaths]")
 	REQUIRE(answersWithPage("/channels/12ab"));
 	REQUIRE(answersWithPage("/settings/video"));
 	REQUIRE(answersWithPage("/epg/grid/today"));
+	REQUIRE(answersWithPage("/ai/access"));
 }
 
 TEST_CASE("the bare name of an area is the page as well", "[apppaths]")
 {
 	std::size_t count = 0;
 	const char *const *areas = appAreas(&count);
-	REQUIRE(count == 9);
+	REQUIRE(count == 10);
 	for (std::size_t i = 0; i < count; ++i)
 		REQUIRE(answersWithPage("/" + std::string(areas[i])));
 }
@@ -175,6 +176,27 @@ TEST_CASE("what the directory does not hold under an area comes back as the page
 	REQUIRE(missing.transport_ok);
 	REQUIRE(missing.code == 200);
 	REQUIRE(missing.body == kPage);
+}
+
+TEST_CASE("an area named like a directory of the page is the page", "[apppaths]")
+{
+	// The directory would otherwise send the bare name on to its slash form.
+	Docroot tree;
+	REQUIRE(::mkdir((kRoot + "/ai").c_str(), 0755) == 0);
+	REQUIRE(::mkdir((kRoot + "/swagger").c_str(), 0755) == 0);
+	setRoutesForTest(NULL);
+	REQUIRE(start(loopback()));
+
+	testhttp::Reply r = testhttp::request(boundPort(), "GET", "/ai");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 200);
+	REQUIRE(r.body == kPage);
+
+	// A directory that is no area keeps its redirect.
+	testhttp::Reply dir = testhttp::request(boundPort(), "GET", "/swagger");
+	REQUIRE(dir.transport_ok);
+	REQUIRE(dir.code == 301);
+	REQUIRE(dir.header("Location") == "/swagger/");
 }
 
 TEST_CASE("a file this directory does not hold stays missing whatever it is under", "[apppaths]")

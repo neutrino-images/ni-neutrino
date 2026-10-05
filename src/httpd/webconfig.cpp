@@ -28,6 +28,12 @@
 #include "auth.h"
 #include "credentials.h"
 
+#ifdef ENABLE_MCP
+#include "coreapi/settings/settings.h"
+#include "mcp/allowlist.h"
+#include "mcp/exposure.h"
+#endif
+
 #include <configfile.h>
 
 #include <openssl/crypto.h>
@@ -44,6 +50,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#ifdef ENABLE_MCP
+#include <OpenThreads/Mutex>
+#include <OpenThreads/ScopedLock>
+#endif
 
 namespace httpd
 {
@@ -66,6 +77,14 @@ const char kKeySseMaxStreams[]   = "sse_max_streams";
 const char kKeyLegacy[]          = "legacy_enabled";
 const char kKeyLogos[]           = "channel_logos";
 const char kKeyApiTokens[]       = "api_tokens";
+#ifdef ENABLE_MCP
+const char kKeyAiEnabled[]       = "ai_enabled";
+const char kKeyAiPublicUrl[]     = "ai_public_url";
+const char kKeyAiProxies[]       = "ai_trusted_proxies";
+const char kKeyAiAllowLan[]      = "ai_allow_lan";
+const char kKeyAiAllowedPlugins[]  = "ai_allowed_plugins";
+const char kKeyAiAllowedSections[] = "ai_allowed_sections";
+#endif
 
 // Read where a message would otherwise have to name a key it found in a file.
 // A key out of a file is text somebody else wrote; one of these is not.
@@ -73,7 +92,11 @@ const char *const kKnownKeys[] =
 {
 	kKeyPort, kKeyBind, kKeyUser, kKeyHash, kKeyLanRead,
 	kKeyTrustedProxies, kKeyDocroot, kKeySessionLifetime,
-	kKeySseMaxStreams, kKeyLegacy, kKeyLogos, kKeyApiTokens
+	kKeySseMaxStreams, kKeyLegacy, kKeyLogos, kKeyApiTokens,
+#ifdef ENABLE_MCP
+	kKeyAiEnabled, kKeyAiPublicUrl, kKeyAiProxies, kKeyAiAllowLan,
+	kKeyAiAllowedPlugins, kKeyAiAllowedSections,
+#endif
 };
 
 // What the old file calls the same things, where it has them at all.
@@ -721,6 +744,157 @@ void readTextField(const Pairs &m, const CutShort &cut, const char *key,
 	out = raw;
 }
 
+#ifdef ENABLE_MCP
+bool readSwitchWord(const std::string &raw, bool &out)
+{
+	if (raw == "true" || raw == "1")
+	{
+		out = true;
+		return true;
+	}
+	if (raw == "false" || raw == "0")
+	{
+		out = false;
+		return true;
+	}
+	return false;
+}
+
+void readAiKeys(const Pairs &m, const CutShort &cut, WebConfig &c)
+{
+	std::string raw;
+	bool usable = true;
+
+	Reading r = reading(m, cut, kKeyAiEnabled, raw);
+	c.ai_named = (r != KeyAbsent);
+	if (r == KeyUnreadable || (r == KeyPresent && !readSwitchWord(raw, c.ai_enabled)))
+	{
+		complain(std::string(kKeyAiEnabled) + ": the line says neither true nor false, and AI access is off");
+		c.ai_enabled = false;
+	}
+
+	r = reading(m, cut, kKeyAiAllowLan, raw);
+	c.ai_named = c.ai_named || (r != KeyAbsent);
+	if (r == KeyUnreadable || (r == KeyPresent && !readSwitchWord(raw, c.ai_allow_lan)))
+	{
+		complain(std::string(kKeyAiAllowLan) + ": the line says neither true nor false, and AI access is off");
+		c.ai_allow_lan = false;
+		usable = false;
+	}
+
+	r = reading(m, cut, kKeyAiPublicUrl, raw);
+	c.ai_named = c.ai_named || (r != KeyAbsent);
+	if (r != KeyAbsent)
+	{
+		std::string why;
+		if (r == KeyUnreadable || !exposure::normalisePublicUrl(raw, &c.ai_public_url, &why))
+		{
+			complain(std::string(kKeyAiPublicUrl) + ": the address cannot be used" +
+				 (why.empty() ? std::string() : " (" + why + ")") +
+				 ", so it is empty and AI access is off");
+			c.ai_public_url.clear();
+			usable = false;
+		}
+	}
+
+	r = reading(m, cut, kKeyAiProxies, raw);
+	c.ai_named = c.ai_named || (r != KeyAbsent);
+	if (r != KeyAbsent)
+	{
+		std::string why;
+		if (r == KeyUnreadable || !exposure::readTrustedProxies(raw, &c.ai_trusted_proxies, &why))
+		{
+			complain(std::string(kKeyAiProxies) + ": the list cannot be used" +
+				 (why.empty() ? std::string() : " (" + why + ")") +
+				 ", so no peer is a tunnel and AI access is off");
+			c.ai_trusted_proxies.clear();
+			usable = false;
+		}
+	}
+
+	if (!usable)
+		c.ai_enabled = false;
+}
+
+bool hasControlByte(const std::string &v)
+{
+	for (size_t i = 0; i < v.size(); ++i)
+	{
+		const unsigned char ch = static_cast<unsigned char>(v[i]);
+		if (ch < 0x20 || ch == 0x7f)
+			return true;
+	}
+	return false;
+}
+
+bool knownSection(const std::string &section)
+{
+	const coreapi::Result<std::vector<std::string> > known = coreapi::settings::sections();
+	if (!known.ok())
+		return false;
+	const std::vector<std::string> &all = known.value();
+	for (size_t i = 0; i < all.size(); ++i)
+	{
+		if (all[i] == section)
+			return true;
+	}
+	return false;
+}
+
+void readAiAllowlistKeys(const Pairs &m, const CutShort &cut, WebConfig &c)
+{
+	std::string raw;
+
+	Reading r = reading(m, cut, kKeyAiAllowedPlugins, raw);
+	if (r == KeyUnreadable)
+	{
+		complain(std::string(kKeyAiAllowedPlugins) + ": the line carries a list this cannot read, and "
+			 "the box is left with none of them");
+	}
+	else if (r == KeyPresent)
+	{
+		const std::vector<std::string> parts = splitOnComma(raw);
+		for (size_t i = 0; i < parts.size(); ++i)
+		{
+			const std::string piece = trimmed(parts[i]);
+			if (piece.empty())
+				continue;
+			if (hasControlByte(piece))
+			{
+				complain(std::string(kKeyAiAllowedPlugins) + ": a name with a control byte is left "
+					 "out");
+				continue;
+			}
+			c.ai_allowed_plugins.push_back(piece);
+		}
+	}
+
+	r = reading(m, cut, kKeyAiAllowedSections, raw);
+	if (r == KeyUnreadable)
+	{
+		complain(std::string(kKeyAiAllowedSections) + ": the line carries a list this cannot read, and "
+			 "the box is left with none of them");
+	}
+	else if (r == KeyPresent)
+	{
+		const std::vector<std::string> parts = splitOnComma(raw);
+		for (size_t i = 0; i < parts.size(); ++i)
+		{
+			const std::string piece = trimmed(parts[i]);
+			if (piece.empty())
+				continue;
+			if (!knownSection(piece) || !mcp::sectionDenial(piece).empty())
+			{
+				complain(std::string(kKeyAiAllowedSections) + ": " + piece + " is not a section AI "
+					 "clients may write, and is left out");
+				continue;
+			}
+			c.ai_allowed_sections.push_back(piece);
+		}
+	}
+}
+#endif
+
 /* Wipes a value that was somebody's password before it was anything else.
 
    What this reaches is the copy this file made. The parser under it holds its
@@ -1182,6 +1356,21 @@ void appendKeyDocs(std::string &text)
 	appendKeyDoc(text, kKeyApiTokens, "tokens a program presents in place of a password, separated by "
 		     "commas, each one a level and a token with a colon between them, the level being "
 		     "read, write or system", "none");
+#ifdef ENABLE_MCP
+	appendKeyDoc(text, kKeyAiEnabled, "whether AI clients are answered at /mcp, true or false",
+		     d.ai_enabled ? "true" : "false");
+	appendKeyDoc(text, kKeyAiPublicUrl, "the https address a tunnel publishes this box under, a bare "
+		     "origin without a path", "none");
+	appendKeyDoc(text, kKeyAiProxies, "the addresses a tunnel connects to this box from, separated by "
+		     "commas. A request from one of them reaches /mcp, /oauth/ and /.well-known/ and nothing "
+		     "else", "none");
+	appendKeyDoc(text, kKeyAiAllowLan, "whether AI clients in the local network are answered at /mcp, "
+		     "true or false", d.ai_allow_lan ? "true" : "false");
+	appendKeyDoc(text, kKeyAiAllowedPlugins, "the plugins AI clients may start, by name, separated by "
+		     "commas; empty for none", "");
+	appendKeyDoc(text, kKeyAiAllowedSections, "the settings sections AI clients may change, separated by "
+		     "commas; empty for none", "");
+#endif
 }
 
 /* What went wrong, in the file rather than only on the standard error.
@@ -1437,6 +1626,116 @@ bool isReadableRegularFile(const std::string &path, const char *what)
 	return true;
 }
 
+#ifdef ENABLE_MCP
+// A file that is there and unusable may have named a tunnel, so AI access
+// closes but strict stays. A file that is gone names nothing, same as a box
+// that never had one, so the ai_* keys fall back to the defaults rather than
+// keeping whatever a last good load left behind.
+void closeAiOnUnusableFile(const std::string &path)
+{
+	struct stat st;
+	WebConfig c = held();
+	if (::stat(path.c_str(), &st) != 0 && errno == ENOENT)
+	{
+		const WebConfig d = defaultWebConfig();
+		c.ai_enabled = d.ai_enabled;
+		c.ai_public_url = d.ai_public_url;
+		c.ai_trusted_proxies = d.ai_trusted_proxies;
+		c.ai_allow_lan = d.ai_allow_lan;
+		c.ai_named = d.ai_named;
+	}
+	else
+	{
+		c.ai_named = true;
+		c.ai_enabled = false;
+	}
+	held() = c;
+}
+#endif
+
+// fresh heads a file that is not there yet; NULL refuses to create one.
+bool rewriteOwnedLines(const std::string &path, std::vector<OwnedLine> &owned,
+		       const std::string *fresh)
+{
+	std::string text;
+	struct stat st;
+
+	if (::lstat(path.c_str(), &st) == 0)
+	{
+		/* A link is refused and not followed. What puts the new content in
+		   place puts a file at this name, so a link here would have the link
+		   replaced and the file it names left exactly as it was, which is the
+		   opposite of what a save means. */
+		if (S_ISLNK(st.st_mode))
+		{
+			complain(path + " is a link, and a save would replace the link rather than the file "
+				 "it names, so nothing is written");
+			return false;
+		}
+
+		if (!isReadableRegularFile(path, "configuration"))
+			return false;
+
+		text = wholeFile(path);
+	}
+	else if (errno != ENOENT)
+	{
+		complain(std::string("cannot look at ") + path + ": " + std::strerror(errno));
+		return false;
+	}
+	else if (fresh == NULL)
+	{
+		complain(path + " is not there, and a file written from nothing here would carry no login");
+		return false;
+	}
+	else
+	{
+		/* The other way a box comes to have this file, the one that runs on
+		   every start being the first. This is reached at a box whose file
+		   was taken away under it. */
+		text = *fresh;
+	}
+
+	std::string out;
+	out.reserve(text.size() + 128);
+
+	size_t at = 0;
+	while (at < text.size())
+	{
+		const size_t end = text.find('\n', at);
+		const bool last = (end == std::string::npos);
+		const std::string line = last ? text.substr(at) : text.substr(at, end - at);
+		at = last ? text.size() : end + 1;
+
+		const size_t which = ownedLineFor(line, owned);
+		if (which == owned.size())
+		{
+			out += line;
+			out += '\n';
+			continue;
+		}
+
+		/* The first line naming a key is where the new value goes, so a key
+		   somebody put at the top of their file stays at the top of it. Every
+		   later line naming the same key is dropped rather than rewritten: two
+		   lines naming one key are read as whichever came last, and a file
+		   saying one thing twice is a file that can be read two ways. */
+		if (!owned[which].written)
+		{
+			appendPair(out, owned[which].key, owned[which].value);
+			owned[which].written = true;
+		}
+	}
+
+	for (size_t i = 0; i < owned.size(); ++i)
+	{
+		if (!owned[i].written)
+			appendPair(out, owned[i].key, owned[i].value);
+	}
+
+	return replaceFile(path, out);
+}
+
 } // namespace
 
 WebConfig defaultWebConfig()
@@ -1460,6 +1759,15 @@ WebConfig defaultWebConfig()
 	c.sse_max_streams = kSseMaxStreamsDefault;
 	c.legacy_enabled = true;
 	c.channel_logos = true;
+#ifdef ENABLE_MCP
+	c.ai_enabled = false;
+	c.ai_public_url.clear();
+	c.ai_trusted_proxies.clear();
+	c.ai_allow_lan = true;
+	c.ai_named = false;
+	c.ai_allowed_plugins.clear();
+	c.ai_allowed_sections.clear();
+#endif
 	return c;
 }
 
@@ -1490,6 +1798,14 @@ const WebConfig &config()
 void setConfigForTest(const WebConfig &c)
 {
 	held() = c;
+#ifdef ENABLE_MCP
+	{
+		mcp::Allowlists a;
+		a.plugins = c.ai_allowed_plugins;
+		a.sections = c.ai_allowed_sections;
+		mcp::installAllowlists(a);
+	}
+#endif
 }
 
 const std::vector<std::string> &configProblems()
@@ -1514,7 +1830,12 @@ bool load(const std::string &path)
 	heldPath() = path;
 
 	if (!isReadableRegularFile(path, "configuration"))
+	{
+#ifdef ENABLE_MCP
+		closeAiOnUnusableFile(path);
+#endif
 		return false;
+	}
 
 	// Nothing is stored back through this object and no default is asked of
 	// it, so it is told not to keep any: its readers write the default they
@@ -1524,6 +1845,9 @@ bool load(const std::string &path)
 	if (!file.loadConfig(path))
 	{
 		complain("cannot parse " + path);
+#ifdef ENABLE_MCP
+		closeAiOnUnusableFile(path);
+#endif
 		return false;
 	}
 
@@ -1716,7 +2040,22 @@ bool load(const std::string &path)
 	   names who may talk to it. */
 	readApiTokens(m, cut);
 
+#ifdef ENABLE_MCP
+	readAiKeys(m, cut, c);
+	readAiAllowlistKeys(m, cut, c);
+#endif
+
 	held() = c;
+
+#ifdef ENABLE_MCP
+	{
+		mcp::Allowlists a;
+		a.plugins = c.ai_allowed_plugins;
+		a.sections = c.ai_allowed_sections;
+		mcp::installAllowlists(a);
+	}
+#endif
+
 	return true;
 }
 
@@ -1823,79 +2162,159 @@ bool saveWebSettings(const std::string &path, const WebSettings &s)
 		}
 	}
 
-	std::string text;
-	struct stat st;
+	const std::string head = ownHead(s.username, s.change_password);
+	return rewriteOwnedLines(path, owned, &head);
+}
 
-	if (::lstat(path.c_str(), &st) == 0)
+#ifdef ENABLE_MCP
+bool shippedPasswordInEffect(const WebConfig &c)
+{
+	// Remembered per stored form, so the gate pays for the key derivation once per password.
+	static OpenThreads::Mutex lock;
+	static std::string checked;
+	static bool shipped = false;
+	OpenThreads::ScopedLock<OpenThreads::Mutex> held(lock);
+	if (c.password_hash.empty())
+		return false;
+	if (c.password_hash != checked)
 	{
-		/* A link is refused and not followed. What puts the new content in
-		   place puts a file at this name, so a link here would have the link
-		   replaced and the file it names left exactly as it was, which is the
-		   opposite of what a save means. */
-		if (S_ISLNK(st.st_mode))
-		{
-			complain(path + " is a link, and a save would replace the link rather than the file "
-				 "it names, so nothing is written");
-			return false;
-		}
-
-		if (!isReadableRegularFile(path, "configuration"))
-			return false;
-
-		text = wholeFile(path);
+		shipped = verifySecret(kOldShippedPassword, c.password_hash);
+		checked = c.password_hash;
 	}
-	else if (errno != ENOENT)
+	return shipped;
+}
+
+AiSettings currentAiSettings()
+{
+	const WebConfig &c = config();
+	AiSettings s;
+	s.enabled = c.ai_enabled;
+	s.public_url = c.ai_public_url;
+	s.trusted_proxies = c.ai_trusted_proxies;
+	s.allow_lan = c.ai_allow_lan;
+	return s;
+}
+
+bool saveAiSettings(const std::string &path, const AiSettings &s)
+{
+	problemList().clear();
+
+	std::string canonical;
+	std::string why;
+	if (!exposure::normalisePublicUrl(s.public_url, &canonical, &why) || canonical != s.public_url)
 	{
-		complain(std::string("cannot look at ") + path + ": " + std::strerror(errno));
+		complain(std::string(kKeyAiPublicUrl) + ": the address is not a bare https origin in its one "
+			 "spelling, and nothing is written");
 		return false;
 	}
-	else
+
+	const std::string proxies = exposure::trustedProxyText(s.trusted_proxies);
+	std::vector<NetPrefix> again;
+	if (!exposure::readTrustedProxies(proxies, &again, &why) || again.size() != s.trusted_proxies.size())
 	{
-		/* The other way a box comes to have this file, the one that runs on
-		   every start being the first. This one is reached by a save at a box
-		   whose file was taken away under it. */
-		text = ownHead(s.username, s.change_password);
+		complain(std::string(kKeyAiProxies) + ": the list would not read back as given, and nothing "
+			 "is written");
+		return false;
 	}
 
-	std::string out;
-	out.reserve(text.size() + 128);
+	std::vector<OwnedLine> owned;
+	OwnedLine one;
+	one.written = false;
 
-	size_t at = 0;
-	while (at < text.size())
-	{
-		const size_t end = text.find('\n', at);
-		const bool last = (end == std::string::npos);
-		const std::string line = last ? text.substr(at) : text.substr(at, end - at);
-		at = last ? text.size() : end + 1;
+	one.key = kKeyAiEnabled;
+	one.value = s.enabled ? "true" : "false";
+	owned.push_back(one);
 
-		const size_t which = ownedLineFor(line, owned);
-		if (which == owned.size())
-		{
-			out += line;
-			out += '\n';
-			continue;
-		}
+	one.key = kKeyAiPublicUrl;
+	one.value = s.public_url;
+	owned.push_back(one);
 
-		/* The first line naming a key is where the new value goes, so a key
-		   somebody put at the top of their file stays at the top of it. Every
-		   later line naming the same key is dropped rather than rewritten: two
-		   lines naming one key are read as whichever came last, and a file
-		   saying one thing twice is a file that can be read two ways. */
-		if (!owned[which].written)
-		{
-			appendPair(out, owned[which].key, owned[which].value);
-			owned[which].written = true;
-		}
-	}
+	one.key = kKeyAiProxies;
+	one.value = proxies;
+	owned.push_back(one);
 
-	for (size_t i = 0; i < owned.size(); ++i)
-	{
-		if (!owned[i].written)
-			appendPair(out, owned[i].key, owned[i].value);
-	}
+	one.key = kKeyAiAllowLan;
+	one.value = s.allow_lan ? "true" : "false";
+	owned.push_back(one);
 
-	return replaceFile(path, out);
+	return rewriteOwnedLines(path, owned, NULL);
 }
+
+namespace
+{
+
+// Comma joined with no space, so what this writes is what splitOnComma, trimmed, splits back.
+std::string commaJoin(const std::vector<std::string> &parts)
+{
+	std::string out;
+	for (size_t i = 0; i < parts.size(); ++i)
+	{
+		if (i != 0)
+			out += ",";
+		out += parts[i];
+	}
+	return out;
+}
+
+// The plugin routes' own name ceiling (the {name} segment of /api/v1/plugins/{name}/start).
+const size_t kMaxPluginNameBytes = 64;
+
+} // namespace
+
+bool saveAiAllowlists(const std::string &path, const std::vector<std::string> &plugins,
+		       const std::vector<std::string> &sections)
+{
+	problemList().clear();
+
+	for (size_t i = 0; i < plugins.size(); ++i)
+	{
+		if (plugins[i].size() > kMaxPluginNameBytes || hasControlByte(plugins[i]) ||
+		    plugins[i].find(',') != std::string::npos)
+		{
+			complain(std::string(kKeyAiAllowedPlugins) + ": " + plugins[i] + " cannot be used, and "
+				 "nothing is written");
+			return false;
+		}
+	}
+
+	for (size_t i = 0; i < sections.size(); ++i)
+	{
+		if (!knownSection(sections[i]))
+		{
+			complain(std::string(kKeyAiAllowedSections) + ": " + sections[i] + " is not a section, "
+				 "and nothing is written");
+			return false;
+		}
+		if (!mcp::sectionDenial(sections[i]).empty())
+		{
+			complain(std::string(kKeyAiAllowedSections) + ": " + sections[i] + " is a section AI "
+				 "clients may not write, and nothing is written");
+			return false;
+		}
+	}
+
+	std::vector<OwnedLine> owned;
+	OwnedLine one;
+	one.written = false;
+
+	one.key = kKeyAiAllowedPlugins;
+	one.value = commaJoin(plugins);
+	owned.push_back(one);
+
+	one.key = kKeyAiAllowedSections;
+	one.value = commaJoin(sections);
+	owned.push_back(one);
+
+	if (!rewriteOwnedLines(path, owned, NULL))
+		return false;
+
+	mcp::Allowlists a;
+	a.plugins = plugins;
+	a.sections = sections;
+	mcp::installAllowlists(a);
+	return true;
+}
+#endif
 
 bool reloadAndRestart(const std::string &path)
 {

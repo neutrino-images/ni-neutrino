@@ -82,6 +82,9 @@ std::vector<NetPrefix> defaultLanPrefixes();
    is built from, or the file would document a list the box does not use. */
 std::vector<std::string> defaultLanPrefixTexts();
 
+// Written from the bits, so two spellings of one network read back as one; empty for neither family.
+std::string formatPrefix(const NetPrefix &p);
+
 } // namespace httpd
 
 #endif

@@ -28,12 +28,28 @@ WEB_CHECKS = \
 	check-web-types.sh \
 	check-web-handover.sh \
 	check-web-guideclock.sh \
+	check-web-nav.sh \
+	check-web-mcp.sh \
 	check-web-grid.sh \
 	check-web-state.sh \
+	$(AI_GUIDE_CHECKS) \
+	$(AI_UI_CHECKS) \
 	$(CHANNEL_CHECKS) \
 	$(KEEP_CHECKS) \
 	$(NOW_CHECKS) \
 	check-web-timerend.sh
+
+AI_GUIDE_CHECKS = \
+	check-web-aiguides.sh
+
+AI_UI_CHECKS = \
+	check-web-ai.sh
+
+AI_GUIDE_DIST = \
+	aiguides-cases.mjs
+
+AI_UI_DIST = \
+	ai-cases.mjs
 
 CHANNEL_CHECKS = \
 	check-web-channels.sh
@@ -57,8 +73,8 @@ NOW_DIST = \
 # pages are held to; types/ holds what the type checker reads beside them.
 EXTRA_DIST = $(WEB_CHECKS) fetch-types.sh serve.js openapi-types.js drag-cases.mjs player-cases.mjs \
 	     decide-cases.mjs fileplay-cases.mjs archive-cases.mjs store-cases.mjs events-cases.mjs session-cases.mjs timerbody-cases.mjs \
-	     timeredit-cases.mjs guideclock-cases.mjs wake-cases.mjs types \
-	     $(CHANNEL_DIST) timerend-cases.mjs $(KEEP_DIST) $(NOW_DIST) state-cases.mjs
+	     timeredit-cases.mjs guideclock-cases.mjs wake-cases.mjs nav-cases.mjs types \
+	     $(AI_GUIDE_DIST) $(AI_UI_DIST) $(CHANNEL_DIST) timerend-cases.mjs $(KEEP_DIST) $(NOW_DIST) state-cases.mjs
 
 # The document the server answers with, written out by the target that owns it
 # and read here so that what the page asks for is held to it. Made through that
@@ -77,6 +93,13 @@ openapi.json: FORCE
 FORCE:
 .PHONY: FORCE web-orphans
 
+# Whether the document carries the routes the modules under data/ni-web/ai call.
+if ENABLE_MCP
+WEB_MCP = yes
+else
+WEB_MCP = no
+endif
+
 # Every script the list above names, one target each, so make -j runs them side
 # by side; none writes anything another reads. A name without a file is a
 # failure like any other check (make finds no rule for it), and a script of this
@@ -89,7 +112,7 @@ $(WEB_RUNS): FORCE
 check-local: $(WEB_RUNS) web-orphans
 
 .sh.run:
-	@$(SHELL) $< $(top_srcdir) $(abs_builddir)
+	@NI_WEB_MCP=$(WEB_MCP) $(SHELL) $< $(top_srcdir) $(abs_builddir)
 
 web-orphans:
 	@orphan=`cd $(srcdir) && for f in check-web-*.sh; do \

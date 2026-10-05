@@ -115,6 +115,10 @@ Result<void> setLocked(bool on);
    larger than the first. */
 Result<std::string> screenshot(bool osd, bool video, PictureFormat format);
 
+// The same picture as bytes, at most max_bytes, read before another capture may
+// overwrite the file.
+Result<std::string> screenshotBytes(bool osd, bool video, PictureFormat format, size_t max_bytes);
+
 // The same for the small display on the front of the box. NotSupported where
 // there is none, which is most of them and every build made without it.
 Result<std::string> displayScreenshot();

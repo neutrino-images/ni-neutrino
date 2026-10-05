@@ -1,0 +1,73 @@
+.ai { display: flex; flex-direction: column; gap: var(--gap-5); }
+.ai-block { min-width: 0; max-width: 72ch; }
+.ai-block > h2 { margin: 0 0 var(--gap-2); font-size: 1.0625rem; }
+.ai-block > h3 { margin: var(--gap-3) 0 var(--gap-2); font-size: 1rem; }
+/* Home network and internet are two parts with a line between them, not one list. */
+.ai-part { display: flex; flex-direction: column; gap: var(--gap-4); min-width: 0; }
+.ai-part + .ai-part { padding-top: var(--gap-5); border-top: 1px solid var(--line); }
+.ai-say { margin: var(--gap-2) 0; font-weight: 600; }
+/* Greyed while shut; the reasons stay readable and revoking stays possible. */
+.ai-part[data-remote="shut"] { color: var(--text-dim); }
+.ai-part[data-remote="shut"] .ai-warn, .ai-part[data-remote="shut"] .ai-say, .ai-part[data-remote="shut"] [data-part="remote-list"] button { color: var(--text); }
+.ai-connect code { min-width: 0; overflow-wrap: anywhere; }
+.ai-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-2); margin: var(--gap-2) 0; }
+.ai-reach, .ai-said { margin: 0 0 var(--gap-3); padding: var(--gap-2) var(--gap-3);
+	background: var(--ground-1); border-left: 3px solid var(--accent); border-radius: var(--radius); }
+.ai-reach[data-reach="none"], .ai-reach[data-reach$="noproxy"] { border-left-color: var(--state-warning); }
+.ai-warn { padding: var(--gap-2) var(--gap-3); background: var(--ground-1);
+	border-left: 3px solid var(--state-warning); border-radius: var(--radius); }
+.ai-snippet { margin: var(--gap-3) 0; }
+.ai-snippet figcaption { margin-bottom: var(--gap-1); color: var(--text-dim); }
+.ai-snippet pre { margin: 0 0 var(--gap-2); padding: var(--gap-3); white-space: pre-wrap;
+	overflow-wrap: anywhere; background: var(--ground-0); border: 1px solid var(--line);
+	border-radius: var(--radius); font-family: var(--font-mono); font-size: 0.8125rem; }
+.ai-copy { display: inline-flex; align-items: center; gap: var(--gap-2); }
+/* Off screen rather than hidden: a hidden field cannot be selected for copying. */
+.ai-offscreen { position: fixed; top: 0; left: -100vw; opacity: 0; }
+.ai-scopes { display: flex; flex-wrap: wrap; gap: var(--gap-3); margin: var(--gap-2) 0; }
+.ai-guide summary { cursor: pointer; padding: var(--gap-2) 0; font-weight: 600; }
+.ai-steps { margin: var(--gap-2) 0; padding-left: 1.25rem; }
+/* The own-address way: three steps that name their number in the heading. */
+.ai-ways { margin: var(--gap-2) 0; padding: 0; list-style: none; }
+.ai-ways > li + li { margin-top: var(--gap-4); }
+.ai-ways > li > p { margin: var(--gap-1) 0 var(--gap-2); }
+.ai-examples { margin: var(--gap-2) 0; padding-left: 1.25rem; }
+.ai-examples > li { margin: var(--gap-1) 0; }
+.ai-examples small { color: var(--text-dim); }
+
+.ai-block.ai-list { max-width: none; }
+.ai-cut { display: inline-block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis;
+	white-space: nowrap; vertical-align: bottom; }
+.ai-clients table.grid td[data-col="kind"], .ai-clients table.grid td[data-col="where"],
+	.ai-clients table.grid td[data-col="scopes"], .ai-clients table.grid td[data-col="created"],
+	.ai-clients table.grid td[data-col="used"] { white-space: normal; }
+.ai-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--gap-1) var(--gap-2); margin: var(--gap-1) 0; }
+.ai-group small { flex: 1 0 100%; color: var(--text-dim); overflow-wrap: anywhere; }
+.ai-group [data-cost] { color: var(--text-dim); font-size: 0.8125rem; }
+@media (min-width: 600px) and (max-width: 1151px) {
+	/* No room spare at this width for a fixed-width cut on top of the one the groups column adds. */
+	.ai-clients table.grid td[data-col="groups"] { white-space: normal; }
+	.ai-clients table.grid td[data-col="groups"] .ai-cut,
+	.ai-clients table.grid td[data-col="where"] .ai-cut { display: inline; max-width: none; white-space: normal; overflow-wrap: anywhere; }
+	/* Two buttons side by side need their sum; stacked, only the wider one. */
+	.ai-clients table.grid td[data-col="act"] { white-space: normal; }
+	.ai-clients table.grid [data-col="kind"], .ai-clients table.grid [data-col="created"] { display: none; }
+}
+@media (min-width: 600px) {
+	.ai-clients table.grid td[data-col="name"] { max-width: 0; }
+	.ai-clients td[data-col="name"] .ai-cut { display: block; max-width: 100%; }
+}
+.ai-row > * { min-width: 0; }
+.ai-reach, .ai-said, .ai-warn, .ai-guide, .ai-ways, .ai-examples, .ai [data-part="mcp-url"] { overflow-wrap: anywhere; }
+.ai-allow-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-1) var(--gap-2); margin: var(--gap-1) 0; max-width: 100%; }
+.ai-allow-row small { color: var(--text-dim); }
+.ai-allow-row input[disabled] + span { color: var(--text-dim); }
+.ai-allow-row .ai-wrap { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 599px) {
+	.ai-cut { display: inline; max-width: none; white-space: normal; overflow-wrap: anywhere; }
+	.ai-scope { display: inline-flex; align-items: center; min-height: var(--tap-height); }
+	.ai-clients button[data-revoke] { min-height: var(--tap-height); }
+	.ai-group { min-height: var(--tap-height); }
+	.ai-clients button[data-groups-edit] { min-height: var(--tap-height); }
+	.ai-allow-row { min-height: var(--tap-height); }
+}

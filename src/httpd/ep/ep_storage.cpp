@@ -753,6 +753,11 @@ const Endpoint kStorageEndpoints[] = {
 	  Answers201 | Answers204, HTTPD_REFUSALS(kWriteFileRefusals) },
 };
 
+const ToolFlag kStorageTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/storage/mounts", "storage_space",
+		"The filesystems the box has mounted and how much room each has left, which is where recordings go."),
+};
+
 } // namespace
 
 /* What the file is called, as a header a file name cannot write into.
@@ -811,7 +816,7 @@ const char *mediaScopeName()
 }
 
 extern const RouteTable storageTable = {
-	HTTPD_TABLE("storage", kStorageEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("storage", kStorageEndpoints, kStorageTools)
 };
 
 } // namespace httpd

@@ -243,3 +243,15 @@ if BOXMODEL_RASPI
 neutrino_LDADD += \
 	-L/opt/vc/lib/ -lbcm_host -lvcos -lvchiq_arm -lpthread -lrt
 endif
+
+# The archive too: an object in it is linked only once something asks for it.
+if !ENABLE_MCP
+check-mcp-absent: neutrino$(EXEEXT)
+	@$(SHELL) $(srcdir)/check-mcp-absent.sh "$(NM)" neutrino$(EXEEXT) httpd/libhttpd.a
+
+all-local: check-mcp-absent
+
+.PHONY: check-mcp-absent
+endif
+
+EXTRA_DIST = check-mcp-absent.sh

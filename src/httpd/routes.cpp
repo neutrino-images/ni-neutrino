@@ -18,13 +18,21 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <config.h>
+
 #include "router.h"
 
 #include "endpoint.h"
 #include "endpoints.h"
+#ifdef ENABLE_MCP
+#include "mcp/ep_ai.h"
+#endif
 #include "events.h"
 #include "doc/openapi.h"
 #include "webtv.h"
+#ifdef ENABLE_MCP
+#include "oauth/api.h"
+#endif
 
 #include <cstddef>
 
@@ -65,6 +73,9 @@ const RouteTable *const kTables[] = {
 	&settingsTable,
 	&systemTable,
 	&webserverTable,
+#ifdef ENABLE_MCP
+	&exposure::aiTable,
+#endif
 	&storageTable,
 	&netfsTable,
 	&eventsTable,
@@ -80,6 +91,9 @@ const RouteTable *const kTables[] = {
 	&recordingsTable,
 	&playbackTable,
 	&openapi::openapiTable,
+#ifdef ENABLE_MCP
+	&oauth::oauthTable,
+#endif
 };
 
 } // namespace

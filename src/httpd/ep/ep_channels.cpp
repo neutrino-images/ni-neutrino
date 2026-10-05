@@ -1499,12 +1499,42 @@ const Endpoint kChannelEndpoints[] = {
 	  Answers204, HTTPD_REFUSALS(kFillBouquetRefusals) },
 };
 
+const ToolFlag kChannelTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/channels/current", "current_channel",
+		"The channel the box is playing live, with its audio and video streams. Refused with no-running-channel in standby "
+		"and while a recording or a file plays; now_playing says what the television shows."),
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/channels", "list_channels",
+		"The box's channels a page at a time, television unless mode is radio, optionally only one bouquet's. Pass the id of the last item as cursor for the next page. To act on a channel by its name, whats_on, find_programme and switch_channel take the name directly."),
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/bouquets", "list_bouquets",
+		"The box's bouquets, its channel lists, with their ids, names and how many channels each holds."),
+	HTTPD_TOOL_IMAGE(Method::Get, "/api/v1/channels/{id}/logo", "channel_logo",
+		"The picture (logo) of one channel by its hexadecimal id, as an image."),
+	HTTPD_TOOL_AS(Method::Post, "/api/v1/mode", "set_mode",
+		"Switches the box between television and radio. A box in standby refuses with box-in-standby unless wake is true."),
+	HTTPD_TOOL_AS(Method::Post, "/api/v1/bouquets", "create_bouquet",
+		"Makes a new, empty bouquet (a favourites list) under a name no other bouquet has; set_bouquet_channels fills it."),
+	HTTPD_TOOL_AS(Method::Delete, "/api/v1/bouquets/{bouquet}", "delete_bouquet",
+		"Deletes one bouquet by its name as list_bouquets gives it. The channels stay on the box; only the list "
+		"goes. Ask the user before calling this."),
+	HTTPD_TOOL_AS(Method::Put, "/api/v1/bouquets/{bouquet}/name", "rename_bouquet",
+		"Gives one bouquet a new name no other bouquet has."),
+	HTTPD_TOOL_AS(Method::Put, "/api/v1/bouquets/{bouquet}/position", "move_bouquet",
+		"Moves one bouquet one place up or down in the list of bouquets."),
+	HTTPD_TOOL_AS(Method::Put, "/api/v1/bouquets/{bouquet}/hidden", "hide_bouquet",
+		"Hides one bouquet from the channel lists on the television (on true) or shows it again (on false)."),
+	HTTPD_TOOL_AS(Method::Put, "/api/v1/bouquets/{bouquet}/locked", "lock_bouquet",
+		"Makes the box ask for the parental PIN before the bouquet opens (on true) or removes that lock (on false)."),
+	HTTPD_TOOL_AS(Method::Put, "/api/v1/bouquets/{bouquet}/channels", "set_bouquet_channels",
+		"Replaces the television or radio channels of one bouquet: channels is a JSON array of hexadecimal "
+		"channel ids from list_channels in the order wanted; [] empties it. mode says which of the two lists."),
+};
+
 } // namespace
 
 // The pair, written where the array is, so the length beside it is the length of
 // the array and not a number somebody kept in step by hand.
 extern const RouteTable channelsTable = {
-	HTTPD_TABLE("channels", kChannelEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("channels", kChannelEndpoints, kChannelTools)
 };
 
 } // namespace httpd

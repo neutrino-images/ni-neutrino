@@ -7,33 +7,36 @@ import recordings from './screens/recordings/nav.js';
 import files from './screens/files/nav.js';
 import system from './screens/system/nav.js';
 import settings from './screens/settings/nav.js';
+import ai from './screens/ai/nav.js';
 import dev from './screens/dev/nav.js';
 import { t } from './i18n.js';
 import text from './shell.text.js';
 
 // Written out, since the server's prefix list is compared against it.
-export const ids = ['now', 'channels', 'epg', 'timers', 'recordings', 'files', 'system', 'settings', 'dev'];
+export const ids = ['now', 'channels', 'epg', 'timers', 'recordings', 'files', 'system', 'settings', 'ai', 'dev'];
 
 /** @type {Web.NavArea[]} */
-export const areas = [now, channels, epg, timers, recordings, files, system, settings, dev];
+export const areas = [now, channels, epg, timers, recordings, files, system, settings, ai, dev];
 
 areas.forEach(function (area, i) {
 	if (area.id !== ids[i])
 		throw new Error('nav: area ' + i + ' is ' + area.id + ' and the list says ' + ids[i]);
 });
 
-// Before the box has answered, the documentation shows.
+// Before the box has answered, the documentation shows and the AI area waits.
 /**
  * @param {readonly Web.NavArea[]} all
- * @param {{ apiDoc?: boolean } | null | undefined} build what the box said
+ * @param {{ apiDoc?: boolean, mcp?: boolean } | null | undefined} build what the box said
  *        about its own build, and null while it has not said yet
  * @returns {Web.NavArea[]}
  */
 export function visibleAreas(all, build) {
 	return all.filter(function (area) {
-		if (area.needs !== 'api-doc')
-			return true;
-		return !build || build.apiDoc !== false;
+		if (area.needs === 'api-doc')
+			return !build || build.apiDoc !== false;
+		if (area.needs === 'mcp')
+			return !!build && build.mcp === true;
+		return true;
 	});
 }
 

@@ -18,6 +18,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <config.h>
+
 #include "support/catch.hpp"
 #include "support/fakes.h"
 #include "support/httpclient.h"
@@ -386,3 +388,21 @@ TEST_CASE("the answer that says where the box is going reaches the caller first"
 	httpd::setConfigForTest(before);
 	::unlink(name);
 }
+
+#ifndef ENABLE_MCP
+TEST_CASE("without the switch the server has no /mcp", "[httpd]")
+{
+	InstalledDependencies wired;
+	httpd::ServerConfig c = httpd::defaultConfig();
+	c.port = 0;
+	c.bind_address = "127.0.0.1";
+	REQUIRE(httpd::start(c));
+	std::vector<std::pair<std::string, std::string> > h;
+	h.push_back(std::make_pair(std::string("Content-Type"), std::string("application/json")));
+	h.push_back(std::make_pair(std::string("Authorization"), std::string("Bearer nis_x")));
+	const testhttp::Reply r = testhttp::request(httpd::boundPort(), "POST", "/mcp", h, "{}");
+	httpd::stop();
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 404);
+}
+#endif

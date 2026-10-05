@@ -759,7 +759,11 @@ TEST_CASE("the groups are declared in the order somebody meets this box in", "[o
 
 	static const char *const kMeant[] = {
 		"auth", "channels", "epg", "timers", "recordings", "playback", "osd", "settings",
-		"system", "webserver", "daemons", "storage", "netfs", "tuner", "plugins",
+		"system", "webserver",
+#ifdef ENABLE_MCP
+		"ai",
+#endif
+		"daemons", "storage", "netfs", "tuner", "plugins",
 		"stream", "webtv", "config", "events", "openapi"
 	};
 	const size_t meant = sizeof(kMeant) / sizeof(kMeant[0]);
@@ -1395,6 +1399,9 @@ TEST_CASE("each route states the codes it succeeds with as its table declares th
 
 			REQUIRE_FALSE(responses["202"].isMember("content"));
 			REQUIRE_FALSE(responses["204"].isMember("content"));
+			// A 207 states one outcome per key, never the route's own schema; a
+			// reader cannot be told it is a setting-value-list when it is not one.
+			REQUIRE_FALSE(responses["207"].isMember("content"));
 
 			stated += here;
 			several += (here > 1) ? 1 : 0;
@@ -1402,6 +1409,33 @@ TEST_CASE("each route states the codes it succeeds with as its table declares th
 	}
 	REQUIRE(several > 0);
 	recordCount("success codes the document states", stated);
+}
+
+TEST_CASE("the settings write states its 200 shape and no shape at all for its 207",
+	  "[openapi]")
+{
+	ShippedRoutes shipped;
+
+	const ::Json::Value doc = parsed(openapi::document());
+	size_t tables = 0;
+	const RouteTable *const *t = allRoutes(&tables);
+
+	const Endpoint *write = NULL;
+	for (size_t i = 0; i < tables && write == NULL; ++i)
+	{
+		for (size_t j = 0; j < t[i]->count && write == NULL; ++j)
+		{
+			const Endpoint &ep = t[i]->endpoints[j];
+			if (ep.method == Method::Patch && std::strcmp(ep.path, "/api/v1/settings/{section}") == 0)
+				write = &ep;
+		}
+	}
+	REQUIRE(write != NULL);
+	REQUIRE((write->answers & Answers207) != 0);
+
+	const ::Json::Value responses = operationOf(doc, *write)["responses"];
+	REQUIRE(responses["200"]["content"]["application/json"]["schema"].isMember("$ref"));
+	REQUIRE_FALSE(responses["207"].isMember("content"));
 }
 
 TEST_CASE("every refusal a route gives is stated under the code it is sent with and with an example", "[openapi]")

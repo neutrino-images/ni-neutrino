@@ -76,6 +76,8 @@ enum class ErrorCode
 	/* Nothing is being recorded under that number, whether there never was one
 	   or it ended between the listing and the act built on it. */
 	NoSuchRecording,
+	// No tool is offered under that name.
+	NoSuchTool,
 	/* Nothing was minted under that token, or what was is older than a minted
 	   address is kept for. Either way the caller reads the playlist again. */
 	NoSuchPart,
@@ -125,6 +127,7 @@ enum class ErrorCode
 	   request answered out of half of what it said is one whose author never
 	   learns the other half was dropped. */
 	ConflictingParameters,
+	AmbiguousChannel,
 	LeadingDash,
 	BadInt,
 	BadBool,
@@ -359,6 +362,24 @@ enum class ErrorCode
 	   it ran on either way, and the line the box wrote says which value it
 	   was. */
 	WebserverNotConfigured,
+	// Forwarded by a peer on neither proxy list while AI access is named.
+	ForwardedByUntrustedPeer,
+	// One refusal per field the KI tab shows it beside.
+	AiPublicUrlRefused,
+	AiTrustedProxiesRefused,
+	AiCallerWouldBeTunnel,
+	// A public address while the login is the shipped password.
+	AiDefaultPassword,
+	// A group name the table does not carry.
+	UnknownGroup,
+	// The tool exists and its group is off for this connection.
+	GroupNotEnabled,
+	// A plugin the owner has not allowed AI clients to start.
+	PluginNotAllowed,
+	// A settings section the owner has not allowed AI clients to write.
+	SettingsSectionNotAllowed,
+	// A settings section no AI client may ever write.
+	SettingsSectionDenied,
 
 	// A command this layer ran, and what became of it.
 	CommandNotStarted,
@@ -415,6 +436,7 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::NoSuchLogo: return "no-such-logo";
 		case ErrorCode::NoSuchEvent: return "no-such-event";
 		case ErrorCode::NoSuchRecording: return "no-such-recording";
+		case ErrorCode::NoSuchTool: return "no-such-tool";
 		case ErrorCode::NoSuchPart: return "no-such-part";
 		case ErrorCode::NoRunningChannel: return "no-running-channel";
 		case ErrorCode::NoMode: return "no-mode";
@@ -443,6 +465,7 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::DuplicateParameter: return "duplicate-parameter";
 		case ErrorCode::MissingParameter: return "missing-parameter";
 		case ErrorCode::ConflictingParameters: return "conflicting-parameters";
+		case ErrorCode::AmbiguousChannel: return "ambiguous-channel";
 		case ErrorCode::LeadingDash: return "leading-dash";
 		case ErrorCode::BadInt: return "bad-int";
 		case ErrorCode::BadBool: return "bad-bool";
@@ -527,6 +550,16 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::RecordingListUnavailable: return "recording-list-unavailable";
 		case ErrorCode::ConfigDocumentUnreadable: return "config-document-unreadable";
 		case ErrorCode::WebserverNotConfigured: return "webserver-not-configured";
+		case ErrorCode::ForwardedByUntrustedPeer: return "forwarded-by-untrusted-peer";
+		case ErrorCode::AiPublicUrlRefused: return "ai-public-url-refused";
+		case ErrorCode::AiTrustedProxiesRefused: return "ai-trusted-proxies-refused";
+		case ErrorCode::AiCallerWouldBeTunnel: return "ai-caller-would-be-tunnel";
+		case ErrorCode::AiDefaultPassword: return "ai-default-password";
+		case ErrorCode::UnknownGroup: return "unknown-group";
+		case ErrorCode::GroupNotEnabled: return "group-not-enabled";
+		case ErrorCode::PluginNotAllowed: return "plugin-not-allowed";
+		case ErrorCode::SettingsSectionNotAllowed: return "settings-section-not-allowed";
+		case ErrorCode::SettingsSectionDenied: return "settings-section-denied";
 		case ErrorCode::CommandNotStarted: return "command-not-started";
 		case ErrorCode::CommandOutputUnreadable: return "command-output-unreadable";
 		case ErrorCode::Timeout: return "timeout";

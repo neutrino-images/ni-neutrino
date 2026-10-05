@@ -445,6 +445,8 @@ const RouteRefusal kSendKeyRefusals[] = {
 const RouteRefusal kGetScreenshotRefusals[] = {
 	HTTPD_REFUSES(NotSupported, ScreenNotCaptured,
 		"the box could not take a picture of its screen"),
+	HTTPD_REFUSES(Busy, ScreenNotCaptured,
+		"the box is already taking a picture of its screen"),
 };
 
 const RouteRefusal kGetDisplayScreenshotRefusals[] = {
@@ -582,10 +584,21 @@ const Endpoint kOsdEndpoints[] = {
 	  Answers200 | Answers206, HTTPD_REFUSALS(kGetDisplayScreenshotRefusals) },
 };
 
+const ToolFlag kOsdTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/osd/volume", "get_volume",
+		"How loud the box is, in percent, and whether the sound is off."),
+	HTTPD_TOOL_AS(Method::Put, "/api/v1/osd/volume", "set_volume",
+		"Sets the volume, in percent."),
+	HTTPD_TOOL_AS(Method::Put, "/api/v1/osd/mute", "set_mute",
+		"Turns the sound off (on true) or back on (on false)."),
+	HTTPD_TOOL_AS(Method::Post, "/api/v1/osd/message", "show_message",
+		"Shows a message on the television: kind hint goes away by itself, box waits to be dismissed."),
+};
+
 } // namespace
 
 extern const RouteTable osdTable = {
-	HTTPD_TABLE("osd", kOsdEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("osd", kOsdEndpoints, kOsdTools)
 };
 
 } // namespace httpd

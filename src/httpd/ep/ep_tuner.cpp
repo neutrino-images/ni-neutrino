@@ -244,10 +244,17 @@ const Endpoint kTunerEndpoints[] = {
 	  Answers204, HTTPD_REFUSALS(kResetTunerRefusals) },
 };
 
+const ToolFlag kTunerTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/tuner/signal", "signal_quality",
+		"What the tuner carrying the picture measures: signal strength, quality and error rate."),
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/tuner/frontends", "list_tuners",
+		"The box's tuners: what kind each one is and what it is doing now."),
+};
+
 } // namespace
 
 extern const RouteTable tunerTable = {
-	HTTPD_TABLE("tuner", kTunerEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("tuner", kTunerEndpoints, kTunerTools)
 };
 
 } // namespace httpd

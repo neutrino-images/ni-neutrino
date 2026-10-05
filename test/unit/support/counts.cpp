@@ -114,6 +114,25 @@ bool writeFile(const char *path, const std::map<std::string, size_t> &in)
 
 } // namespace
 
+bool readExpectedCounts(const char *base_path, const char *overlay_path,
+			std::map<std::string, size_t> &out, std::string &why)
+{
+	std::string reason;
+	if (!readFile(base_path, out, reason))
+	{
+		why = std::string(base_path) + " " + reason;
+		return false;
+	}
+	if (overlay_path == NULL)
+		return true;
+	if (!readFile(overlay_path, out, reason))
+	{
+		why = std::string(overlay_path) + " " + reason;
+		return false;
+	}
+	return true;
+}
+
 void recordCount(const char *name, size_t value)
 {
 	if (name == NULL)
@@ -135,7 +154,8 @@ void recordedCounts(std::map<std::string, size_t> &measured_out,
 	clashed_out = clashes();
 }
 
-bool coverageCountsAgree(const char *expected_path, const char *actual_path, bool whole)
+bool coverageCountsAgree(const char *expected_path, const char *overlay_path,
+			 const char *actual_path, bool whole)
 {
 	writeFile(actual_path, measured());
 
@@ -151,9 +171,9 @@ bool coverageCountsAgree(const char *expected_path, const char *actual_path, boo
 
 	std::map<std::string, size_t> expected;
 	std::string why;
-	if (!readFile(expected_path, expected, why))
+	if (!readExpectedCounts(expected_path, overlay_path, expected, why))
 	{
-		std::fprintf(stderr, "coverage counts: %s %s\n", expected_path, why.c_str());
+		std::fprintf(stderr, "coverage counts: %s\n", why.c_str());
 		return false;
 	}
 
@@ -203,5 +223,9 @@ bool coverageCountsAgree(const char *expected_path, const char *actual_path, boo
 			     "what this run measured has been written to %s;\n"
 			     "  check each line that moved and put that file in place of %s\n",
 			     actual_path, expected_path);
+	if (!agree && whole && overlay_path != NULL)
+		std::fprintf(stderr,
+			     "  this build has --enable-mcp: a figure only it moves goes in %s\n",
+			     overlay_path);
 	return whole ? agree : true;
 }

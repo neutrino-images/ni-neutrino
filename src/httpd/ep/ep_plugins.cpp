@@ -311,10 +311,18 @@ const Endpoint kPluginEndpoints[] = {
 	  Answers200, HTTPD_REFUSALS(kRunScriptRefusals) },
 };
 
+const ToolFlag kPluginTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/plugins", "list_plugins",
+		"The plugins installed on the box, by name."),
+	HTTPD_TOOL_AS(Method::Post, "/api/v1/plugins/{name}/start", "start_plugin",
+		"Starts one plugin the owner allowed AI clients to start, by its name from list_plugins. A plugin may take "
+		"over the screen until it ends. Ask the user before starting one."),
+};
+
 } // namespace
 
 extern const RouteTable pluginsTable = {
-	HTTPD_TABLE("plugins", kPluginEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("plugins", kPluginEndpoints, kPluginTools)
 };
 
 } // namespace httpd

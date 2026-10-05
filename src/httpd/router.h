@@ -129,6 +129,8 @@ bool routesAreSane(std::string *why = NULL);
    the transport sends the head of it. That is also why a table naming a route of its
    own for HEAD is refused.
 
+   origin is the gate's answer; Tunnel when no transport gave one.
+
    local_address is the authority (address and port) the socket itself answered
    this request on, for a route that builds its own address rather than echo a
    caller's; empty where the transport cannot say. */
@@ -139,6 +141,7 @@ Response dispatchIn(const RouteTable *const *tables, size_t table_count, Method 
                     const std::string &session = std::string(),
                     const std::string &host = std::string(),
                     const std::string &scope = std::string(),
+                    Origin origin = Origin::Tunnel,
                     const std::string &local_address = std::string());
 
 // One table, which is what most of what drives this needs.
@@ -149,6 +152,7 @@ Response dispatchIn(const RouteTable &t, Method m, const std::string &path,
                     const std::string &session = std::string(),
                     const std::string &host = std::string(),
                     const std::string &scope = std::string(),
+                    Origin origin = Origin::Tunnel,
                     const std::string &local_address = std::string());
 
 // The same against every table the server ships.
@@ -159,6 +163,7 @@ Response dispatch(Method m, const std::string &path,
                   const std::string &session = std::string(),
                   const std::string &host = std::string(),
                   const std::string &scope = std::string(),
+                  Origin origin = Origin::Tunnel,
                   const std::string &local_address = std::string());
 
 /* The level the route that would answer a request declares, which the transport

@@ -18,6 +18,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <config.h>
+
 #include "support/catch.hpp"
 #include "support/answers.h"
 #include "support/fakes.h"
@@ -989,7 +991,11 @@ TEST_CASE("every route that changes something asks for more than a read", "[writ
 	}
 	// A walk that found nothing would pass this whatever the tables held, and a
 	// route added at a level below a write has to move this number by hand.
+#ifdef ENABLE_MCP
+	REQUIRE(changing == 55);
+#else
 	REQUIRE(changing == 50);
+#endif
 }
 
 TEST_CASE("a caller on the local network cannot zap, reboot or write a setting", "[write]")

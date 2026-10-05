@@ -30,6 +30,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 namespace coreapi
 {
@@ -243,6 +244,40 @@ Result<std::vector<Descriptor> > schema()
 	for (size_t i = 0; i < out.size(); ++i)
 		withhold(out[i]);
 	return ok(std::move(out));
+}
+
+/* Names the declaration cannot show: a relative name the box writes a file under,
+   appended to another directory. */
+const char *const kRelativePaths[] = { "recordingmenu.filename_template" };
+
+/* Read off the declaration: every row naming a file or folder either defaults to an
+   absolute name or is a directory whose empty default means "beside another one",
+   and the few relative names are listed above. */
+bool holdsPath(const Descriptor &d)
+{
+	if (d.type != ValueType::String || d.key == NULL)
+		return false;
+	if (d.default_string != NULL && d.default_string[0] == '/')
+		return true;
+	for (size_t i = 0; i < sizeof(kRelativePaths) / sizeof(kRelativePaths[0]); ++i)
+	{
+		if (strcmp(d.key, kRelativePaths[i]) == 0)
+			return true;
+	}
+	const size_t n = strlen(d.key);
+	return n >= 3 && strcmp(d.key + n - 3, "dir") == 0;
+}
+
+bool sectionHoldsSecret(const std::string &section)
+{
+	const Descriptor *t = settingsTable();
+	const size_t n = settingsTableCount();
+	for (size_t i = 0; t != NULL && i < n; ++i)
+	{
+		if (t[i].secret && t[i].section != NULL && section == t[i].section)
+			return true;
+	}
+	return false;
 }
 
 Result<std::vector<std::string> > sections()

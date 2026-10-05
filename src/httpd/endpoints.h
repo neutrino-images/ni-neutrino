@@ -179,6 +179,12 @@ std::string dispositionFor(const std::string &name);
    the whole of what that answer can carry. */
 const char *mediaScopeName();
 
+// The bound port, or the configured one while nothing is bound.
+int answeringPort();
+
+// The last line configProblems() holds, for a save that refused.
+std::string whatWentWrong();
+
 /* Every table this server answers a request out of. Each is stated by the module that
    writes the handlers behind it, as the pair rather than as an array and a count: a
    count declared in one unit and read in another is not a constant the linker can write,

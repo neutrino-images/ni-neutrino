@@ -91,7 +91,7 @@ struct JsonMember
    handful of named values. An object or an array under a member is refused rather than
    flattened or ignored: a caller that sent one meant something this server does not
    offer, and taking the outer half of it would act on half a request. Null is refused
-   for the same reason.
+   for the same reason, unless skip_null leaves such a member out.
 
    Nothing recurses, so a body cannot spend this server's stack however it is written,
    and the members are bounded so a body the size of the ceiling cannot be turned into a
@@ -103,7 +103,7 @@ struct JsonMember
    twice under its own code.
 
    Empty is an object with no members and not a fault. */
-bool readFlatObject(const std::string &in, std::vector<JsonMember> &out);
+bool readFlatObject(const std::string &in, std::vector<JsonMember> &out, bool skip_null = false);
 
 /* The most members one body may carry and the longest a member's name may be.
    Public because the sentence a caller answers a refusal with names them, and

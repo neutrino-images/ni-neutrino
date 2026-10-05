@@ -673,7 +673,7 @@ bool readWord(const std::string &in, size_t &i, const char *word)
 
 } // namespace
 
-bool readFlatObject(const std::string &in, std::vector<JsonMember> &out)
+bool readFlatObject(const std::string &in, std::vector<JsonMember> &out, bool skip_null)
 {
 	out.clear();
 
@@ -725,12 +725,17 @@ bool readFlatObject(const std::string &in, std::vector<JsonMember> &out)
 		if (i >= in.size())
 			return false;
 
+		bool skipped = false;
 		if (in[i] == '"')
 		{
 			++i;
 			if (!readString(in, i, m.text))
 				return false;
 			m.kind = JsonValueKind::String;
+		}
+		else if (skip_null && readWord(in, i, "null"))
+		{
+			skipped = true;
 		}
 		else if (readWord(in, i, "true"))
 		{
@@ -754,7 +759,8 @@ bool readFlatObject(const std::string &in, std::vector<JsonMember> &out)
 
 		if (out.size() >= kMaxBodyMembers)
 			return false;
-		out.push_back(m);
+		if (!skipped)
+			out.push_back(m);
 
 		skipSpace(in, i);
 		if (i >= in.size())

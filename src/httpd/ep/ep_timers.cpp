@@ -645,10 +645,15 @@ const Endpoint kTimerEndpoints[] = {
 	  Answers204, HTTPD_REFUSALS(kRemoveTimerRefusals) },
 };
 
+const ToolFlag kTimerTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/timers", "list_timers",
+		"Every timer the box holds: recordings, reminders, switch and standby timers, with start and stop in seconds since the epoch. The id is what remove_timer takes."),
+};
+
 } // namespace
 
 extern const RouteTable timersTable = {
-	HTTPD_TABLE("timers", kTimerEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("timers", kTimerEndpoints, kTimerTools)
 };
 
 } // namespace httpd

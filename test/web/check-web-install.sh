@@ -22,10 +22,8 @@ SRC="$1"
 
 WEB="$SRC/data/ni-web"
 WEBMK="$WEB/Makefile.am"
-# The directories under here that carry a page of their own and install
-# themselves by walking: the application, and the display at /info. Both are
-# held to the same rule, because the fault below is the same in both.
-WALKED="app info"
+# The directories here that install themselves by walking.
+WALKED="app info ai"
 [ -r "$WEBMK" ] || { echo "check-web-install.sh: cannot read $WEBMK" >&2; exit 1; }
 for one in $WALKED; do
 	[ -r "$WEB/$one/Makefile.am" ] || {
@@ -63,6 +61,64 @@ for one in $WALKED; do
 		exit 1
 	}
 done
+
+# ai is the MCP pages, so every line that adds it has to sit in the
+# then-branch of if ENABLE_MCP, read as a word of SUBDIRS and not a spelling.
+awk '
+	{
+		line = $0
+		sub(/#.*/, "", line)
+		sub(/[[:blank:]]+$/, "", line)
+	}
+	line ~ /^if[[:blank:]]/ {
+		depth++
+		split(line, f, /[[:blank:]]+/)
+		cond[depth] = f[2]
+		branch[depth] = "then"
+		in_subdirs = 0
+		next
+	}
+	line ~ /^else([[:blank:]]|$)/ { branch[depth] = "else"; in_subdirs = 0; next }
+	line ~ /^endif([[:blank:]]|$)/ { depth--; in_subdirs = 0; next }
+	{
+		trimmed = line
+		sub(/^[[:blank:]]+/, "", trimmed)
+		if (trimmed ~ /^SUBDIRS[[:blank:]]*\+?=/) {
+			in_subdirs = 1
+			sub(/^SUBDIRS[[:blank:]]*\+?=/, "", trimmed)
+		} else if (!in_subdirs) {
+			next
+		}
+		cont = (trimmed ~ /\\[[:blank:]]*$/)
+		sub(/\\[[:blank:]]*$/, "", trimmed)
+		n = split(trimmed, words, /[[:blank:]]+/)
+		for (w = 1; w <= n; w++) {
+			if (words[w] == "ai") {
+				ok = 0
+				for (i = 1; i <= depth; i++)
+					if (cond[i] == "ENABLE_MCP" && branch[i] == "then") ok = 1
+				if (ok) good = 1
+				else bad = 1
+			}
+		}
+		if (!cont) in_subdirs = 0
+	}
+	END { if (bad) exit 2; if (!good) exit 3; exit 0 }
+' "$WEBMK" && mcp_rc=0 || mcp_rc=$?
+case $mcp_rc in
+2)
+	echo "check-web-install.sh: $WEBMK adds ai to SUBDIRS outside the" >&2
+	echo "  then-branch of if ENABLE_MCP, so a build without the switch" >&2
+	echo "  would ship the MCP pages anyway" >&2
+	exit 1
+	;;
+3)
+	echo "check-web-install.sh: $WEBMK does not add ai to SUBDIRS inside" >&2
+	echo "  the then-branch of if ENABLE_MCP, so a build without the switch" >&2
+	echo "  would ship the MCP pages anyway" >&2
+	exit 1
+	;;
+esac
 
 # The walk. Named by the automake hook it is written as, so that a rule which
 # stopped being a hook is a failure rather than a rule nothing calls.

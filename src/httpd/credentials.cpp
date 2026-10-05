@@ -18,6 +18,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <config.h>
+
 #include "credentials.h"
 
 #include "randomsource.h"
@@ -411,5 +413,12 @@ std::string tokenLookupPrefix(const std::string &token)
 
 	return token.substr(0, kLookupPrefixChars);
 }
+
+#ifdef ENABLE_MCP
+bool decodeBase64Strict(const std::string &in, std::vector<unsigned char> &out)
+{
+	return decodeBase64(in, out);
+}
+#endif
 
 } // namespace httpd

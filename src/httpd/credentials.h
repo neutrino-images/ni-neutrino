@@ -23,6 +23,7 @@
 
 #include <cstddef>
 #include <string>
+#include <vector>
 
 namespace httpd
 {
@@ -72,6 +73,9 @@ std::string randomToken(size_t bytes = 32);
    attacker chooses, and answering nothing for one leaves the caller with no record
    found. */
 std::string tokenLookupPrefix(const std::string &token);
+
+// The strict reader of the stored forms, for a value a caller encoded. Only with --enable-mcp.
+bool decodeBase64Strict(const std::string &in, std::vector<unsigned char> &out);
 
 } // namespace httpd
 

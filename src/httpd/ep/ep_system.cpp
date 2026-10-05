@@ -92,6 +92,8 @@ const FieldDesc kBoxFields[] = {
 		"how much of the root filesystem is unwritten, in bytes; under a root_total of 0 this is a reading that failed"),
 	HTTPD_MEMBER("api_doc", FieldType::Bool,
 		"whether this build carries the API documentation, which is the prose in the document this server writes about itself and the reader page beside it, both under one switch"),
+	HTTPD_MEMBER("mcp", FieldType::Bool,
+		"whether this build lets AI clients reach the box: the MCP endpoint, its sign-in and the pages that manage both"),
 	HTTPD_OBJECT("api", &kApiSchema,
 		"what this interface is, so a caller knows before it asks anything else"),
 };
@@ -267,6 +269,13 @@ Response boxInfo(const Request &)
 	j.value(false);
 #else
 	j.value(true);
+#endif
+
+	j.key("mcp");
+#ifdef ENABLE_MCP
+	j.value(true);
+#else
+	j.value(false);
 #endif
 
 	/* Answered here rather than left to a caller to infer from what it finds,
@@ -449,7 +458,8 @@ const Endpoint kSystemEndpoints[] = {
 	  "what the box is and what it is running", "Reads what the box is and what it is currently "
 	  "running: the vendor, the model, the chipset, the firmware version, the kernel release, "
 	  "the hostname, its uptime, its memory and root filesystem usage, whether this build "
-	  "carries the API documentation, and the version of this interface itself. Every field is "
+	  "carries the API documentation, whether it carries AI access (`mcp`), and the version of "
+	  "this interface itself. Every field is "
 	  "read fresh for each request.\n\n"
 	  "**Refusals:**\n"
 	  "- `500 box-unreadable`: the box could not be identified at all. This is a box fault, not "
@@ -559,10 +569,19 @@ const Endpoint kSystemEndpoints[] = {
 	  Answers202, HTTPD_NO_REFUSALS },
 };
 
+const ToolFlag kSystemTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/system/info", "box_info",
+		"What the box is: model, image version, uptime, free memory and free space on its own filesystem."),
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/system/standby", "standby_state",
+		"Whether the box is in standby."),
+	HTTPD_TOOL_AS(Method::Post, "/api/v1/system/standby", "set_standby",
+		"Puts the box into standby (on true) or wakes it (on false)."),
+};
+
 } // namespace
 
 extern const RouteTable systemTable = {
-	HTTPD_TABLE("system", kSystemEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("system", kSystemEndpoints, kSystemTools)
 };
 
 } // namespace httpd

@@ -120,41 +120,20 @@ namespace httpd
 namespace
 {
 
-/* One network as the line a file writes it on.
-
-   Written from what was parsed and not from what was read, so the answer names the
-   network this box compares against: "10.1.2.3/8" and "10.0.0.0/8" are one network
-   here, and the second is the one that decides. A caller reading its own file back
-   would otherwise see a line it did not write.
-
-   The empty string for a prefix of neither family, and the caller below drops those
-   rather than writing an empty line into a list of networks. */
-std::string prefixText(const NetPrefix &p)
-{
-	if (p.family != AF_INET && p.family != AF_INET6)
-		return std::string();
-
-	char addr[INET6_ADDRSTRLEN];
-	if (::inet_ntop(p.family, p.bits, addr, sizeof(addr)) == NULL)
-		return std::string();
-
-	char tail[16];
-	std::snprintf(tail, sizeof(tail), "/%d", p.len);
-	return std::string(addr) + tail;
-}
-
 void writePrefixes(Json &j, const char *name, const std::vector<NetPrefix> &all)
 {
 	j.key(name);
 	j.beginArray();
 	for (size_t i = 0; i < all.size(); ++i)
 	{
-		const std::string one = prefixText(all[i]);
+		const std::string one = formatPrefix(all[i]);
 		if (!one.empty())
 			j.value(one);
 	}
 	j.endArray();
 }
+
+} // namespace
 
 /* The port a caller reaches this box on, which is not always the port the
    configuration asked for: a file naming nought asks the kernel to choose, and what it
@@ -174,6 +153,9 @@ int answeringPort()
 		return bound;
 	return config().server.port;
 }
+
+namespace
+{
 
 /* What the server is set to, as the seven members both routes answer it with.
 
@@ -303,6 +285,8 @@ std::string addressAfter(const std::string &authority, int port)
 	return "http://" + host + tail;
 }
 
+} // namespace
+
 /* What the box said about a save it would not do, which is the only thing in
    this program that knows which value it was.
 
@@ -316,6 +300,9 @@ std::string whatWentWrong()
 		return "the configuration could not be written, and nothing was said about why";
 	return said[said.size() - 1];
 }
+
+namespace
+{
 
 const FieldDesc kCallerFields[] = {
 	HTTPD_MEMBER("address", FieldType::String,

@@ -144,6 +144,8 @@ const FieldDesc kSettingFields[] = {
 		"whether the box has to be restarted before it takes effect"),
 	HTTPD_MEMBER("secret", FieldType::Bool,
 		"whether the setting is a credential, which is described here and never valued"),
+	HTTPD_MEMBER("path", FieldType::Bool,
+		"whether the value names a file or folder on the box, which no AI client may change"),
 	HTTPD_LIST_OF("conditions", &kConditionSchema,
 		"every comparison that has to hold before the setting is worth showing, all of them together, empty for one always shown"),
 };
@@ -285,6 +287,8 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d)
 	j.value(d.needs_restart);
 	j.key("secret");
 	j.value(d.secret);
+	j.key("path");
+	j.value(coreapi::settings::holdsPath(d));
 
 	j.key("conditions");
 	j.beginArray();
@@ -317,7 +321,7 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d)
 	j.endObject();
 }
 
-Response settingsSchema(const Request &)
+Response settingsSchema(const Request &r)
 {
 	coreapi::Result<std::vector<coreapi::Descriptor> > got = coreapi::settings::schema();
 	if (!got.ok())
@@ -325,13 +329,29 @@ Response settingsSchema(const Request &)
 
 	const std::vector<coreapi::Descriptor> rows = std::move(got).value();
 
+	const bool narrowed = r.has("section");
+	const std::string &section = r.asString("section");
+	if (narrowed)
+	{
+		bool have = false;
+		for (size_t i = 0; !have && i < rows.size(); ++i)
+			have = rows[i].section != NULL && section == rows[i].section;
+		if (!have)
+			return problemResponse(StatusNotFound, coreapi::ErrorCode::NoSuchName,
+			                       "no setting is declared under a section of that name");
+	}
+
 	Response out = okJson();
 	Json j(out.body, 32 + 320 * rows.size());
 	j.beginObject();
 	j.key("items");
 	j.beginArray();
 	for (size_t i = 0; i < rows.size(); ++i)
+	{
+		if (narrowed && (rows[i].section == NULL || section != rows[i].section))
+			continue;
 		appendDescriptor(j, rows[i]);
+	}
 	j.endArray();
 	j.endObject();
 	return out;
@@ -680,6 +700,10 @@ const Param kSectionParams[] = {
 	HTTPD_SEGMENT_FROM_ASKED_SET("section", "the section's id, take it from GET /api/v1/settings/sections", &sectionNames),
 };
 
+const Param kSchemaParams[] = {
+	HTTPD_QUERY_FROM_ASKED_SET("section", "only the settings of this section, as GET /api/v1/settings/sections names it", &sectionNames),
+};
+
 /* The route that writes a section takes a body the table cannot list, its members being
    whichever settings the caller means to write, and the second row is the one that says
    so rather than leaving a reader of the document with nothing to send.
@@ -706,6 +730,11 @@ const Param kWriteParams[] = {
    is called either. */
 const Param kClearParams[] = {
 	HTTPD_BODY_REQUIRED_TEXT("key", "the key of the credential to empty, as GET /api/v1/settings/schema names it", 256),
+};
+
+const RouteRefusal kSettingsSchemaRefusals[] = {
+	HTTPD_REFUSES(NotFound, NoSuchName,
+		"no setting is declared under a section of that name"),
 };
 
 const RouteRefusal kSettingsSectionRefusals[] = {
@@ -747,10 +776,16 @@ const Endpoint kSettingsEndpoints[] = {
 	  "Each item's `conditions` list states every comparison against another setting's current value "
 	  "that must hold before this setting is worth showing; an empty list means it is always shown.\n"
 	  "\n"
+	  "`section` narrows the list to one section, which keeps the answer small.\n"
+	  "\n"
+	  "**Refusals:**\n"
+	  "- `404 no-such-name`: no setting is declared under a section of that name. Take section ids "
+	  "from `GET /api/v1/settings/sections`.\n"
+	  "\n"
 	  "**Related:** `GET /api/v1/settings/sections`, `GET /api/v1/settings/{section}`, "
 	  "`PATCH /api/v1/settings/{section}`.",
-	  NULL, 0, &kSettingListSchema, &settingsSchema, false,
-	  Answers200, HTTPD_NO_REFUSALS },
+	  HTTPD_PARAMS(kSchemaParams), &kSettingListSchema, &settingsSchema, false,
+	  Answers200, HTTPD_REFUSALS(kSettingsSchemaRefusals) },
 	{ Method::Get, "/api/v1/settings/sections", AuthLevel::Read,
 	  "the sections the settings are laid out in",
 	  "Lists the sections the settings are grouped into, in the order the schema first names each one. "
@@ -841,15 +876,29 @@ const Endpoint kSettingsEndpoints[] = {
 	  "\n"
 	  "**Related:** `GET /api/v1/settings/schema`, `GET /api/v1/settings/{section}`, "
 	  "`POST /api/v1/settings/secret/clear`.",
-	  HTTPD_PARAMS(kWriteParams), NULL, &settingsWrite, false,
+	  /* The 200 case is exactly the section's own GET shape; the 207 case answers a
+	     results object instead, which no schema here states. */
+	  HTTPD_PARAMS(kWriteParams), &kValueListSchema, &settingsWrite, false,
 	  Answers200 | Answers207, HTTPD_REFUSALS_AND_BODY(kSettingsWriteRefusals,
 		"{\"auto_subs\":\"1\"}") },
+};
+
+const ToolFlag kSettingsTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/settings/schema", "settings_schema",
+		"What the settings of one section are: key, kind, allowed values, label, and whether it needs a restart. "
+		"Always pass section; without it the answer is very large."),
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/settings/{section}", "read_settings",
+		"What every setting of one section is set to now, as key and value text. Credentials always read as empty."),
+	HTTPD_TOOL_AS(Method::Patch, "/api/v1/settings/{section}", "write_settings",
+		"Changes settings of one section the owner allowed AI clients to change: settings is a JSON object of "
+		"key and new value as text, keys from settings_schema of that section. Sections the owner has not "
+		"allowed, credentials and settings marked path are refused. Tell the user what will change before calling this."),
 };
 
 } // namespace
 
 extern const RouteTable settingsTable = {
-	HTTPD_TABLE("settings", kSettingsEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("settings", kSettingsEndpoints, kSettingsTools)
 };
 
 } // namespace httpd

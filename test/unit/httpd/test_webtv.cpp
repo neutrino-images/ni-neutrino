@@ -70,7 +70,7 @@ void napMs(int ms)
 // redirection, with an address, and with a body that arrives in pieces, and a
 // seam in front of curl would test the seam.
 
-struct Origin
+struct FarServer
 {
 	int         fd;
 	int         port;
@@ -94,12 +94,12 @@ struct Origin
 
 	pthread_mutex_t said;
 
-	Origin() : fd(-1), port(0), running(false), pause_ms(0), asked(0), finished_at(0)
+	FarServer() : fd(-1), port(0), running(false), pause_ms(0), asked(0), finished_at(0)
 	{
 		pthread_mutex_init(&said, NULL);
 	}
 
-	~Origin()
+	~FarServer()
 	{
 		stop();
 		pthread_mutex_destroy(&said);
@@ -178,7 +178,7 @@ struct Origin
 
 	static void *serve(void *cls)
 	{
-		Origin *o = (Origin *) cls;
+		FarServer *o = (FarServer *) cls;
 		for (;;)
 		{
 			const int c = ::accept(o->fd, NULL, NULL);
@@ -232,8 +232,8 @@ struct Origin
 	}
 
 private:
-	Origin(const Origin &);
-	Origin &operator=(const Origin &);
+	FarServer(const FarServer &);
+	FarServer &operator=(const FarServer &);
 };
 
 std::string httpReply(const std::string &type, const std::string &body)
@@ -688,7 +688,7 @@ TEST_CASE("the same segment keeps the address it was given", "[webtv]")
 TEST_CASE("a channel's playlist comes back with every address answered by this box", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::string master =
@@ -722,7 +722,7 @@ TEST_CASE("a channel's playlist comes back with every address answered by this b
 TEST_CASE("an address out of a playlist is fetched and handed on", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::vector<NetPrefix> only_docs = onlyDocumentationRange();
@@ -763,7 +763,7 @@ TEST_CASE("an address out of a playlist is fetched and handed on", "[webtv]")
 TEST_CASE("bytes are handed on as they arrive and not collected first", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::vector<NetPrefix> only_docs = onlyDocumentationRange();
@@ -832,7 +832,7 @@ TEST_CASE("bytes are handed on as they arrive and not collected first", "[webtv]
 TEST_CASE("the shipped list refuses a channel that leads to this machine", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	// The shipped list, which is the point of this case.
@@ -854,7 +854,7 @@ TEST_CASE("the shipped list refuses a channel that leads to this machine", "[web
 TEST_CASE("a redirection into a refused network is refused as well", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::vector<NetPrefix> only_docs = onlyDocumentationRange();
@@ -881,7 +881,7 @@ TEST_CASE("a redirection into a refused network is refused as well", "[webtv]")
 TEST_CASE("a redirection into a refused network is refused on the pass through too", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::vector<NetPrefix> only_docs = onlyDocumentationRange();
@@ -919,7 +919,7 @@ TEST_CASE("an address nobody minted is not fetched", "[webtv]")
 TEST_CASE("an address minted for one channel is not fetched under another", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::vector<NetPrefix> only_docs = onlyDocumentationRange();
@@ -971,7 +971,7 @@ TEST_CASE("a channel the box tunes to has nothing here to fetch", "[webtv]")
 TEST_CASE("what the far server says goes wrong is said as such", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::vector<NetPrefix> only_docs = onlyDocumentationRange();
@@ -998,7 +998,7 @@ TEST_CASE("what the far server says goes wrong is said as such", "[webtv]")
 TEST_CASE("an address that answers with something other than a playlist says so", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::vector<NetPrefix> only_docs = onlyDocumentationRange();
@@ -1016,7 +1016,7 @@ TEST_CASE("an address that answers with something other than a playlist says so"
 TEST_CASE("the box passes through only as many streams at once as it will", "[webtv]")
 {
 	Box box;
-	Origin far;
+	FarServer far;
 	REQUIRE(far.start());
 
 	const std::vector<NetPrefix> only_docs = onlyDocumentationRange();

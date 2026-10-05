@@ -47,6 +47,80 @@ if USE_PUGIXML
 PUGIXML_LIBS = -lpugixml
 endif
 
+# Named in both configurations, so the orphan check knows each file.
+MCP_CORE_TESTS = \
+	httpd/mcp/mcpfakes.h \
+	httpd/mcp/test_mcp_admit.cpp \
+	httpd/mcp/test_mcp_callrunner.cpp \
+	httpd/mcp/test_mcp_headers.cpp \
+	httpd/mcp/test_mcp_jsonrpc.cpp \
+	httpd/mcp/test_mcp_protocol.cpp \
+	httpd/mcp/test_mcp_ratelimit.cpp \
+	httpd/mcp/test_mcp_server.cpp \
+	httpd/mcp/test_mcp_toolerror.cpp \
+	httpd/mcp/test_mcp_tools.cpp
+
+MCP_TOOL_TESTS = \
+	httpd/mcp/test_mcp_boxtools.cpp \
+	httpd/mcp/test_mcp_composed_read.cpp \
+	httpd/mcp/test_mcp_composed_write.cpp \
+	httpd/mcp/test_mcp_flagkinds.cpp \
+	httpd/mcp/test_mcp_guard.cpp \
+	httpd/mcp/test_mcp_image.cpp \
+	httpd/mcp/test_mcp_picture.cpp \
+	httpd/mcp/test_mcp_problem.cpp \
+	httpd/mcp/test_mcp_refusals.cpp \
+	httpd/mcp/test_mcp_routetools.cpp \
+	httpd/mcp/test_mcp_schema.cpp \
+	httpd/mcp/test_mcp_toolgen.cpp \
+	httpd/mcp/toolcaller.h
+
+MCP_EXPOSURE_TESTS = \
+	httpd/mcp/test_aiguides.cpp \
+	httpd/mcp/test_aisettings.cpp \
+	httpd/mcp/test_exposure.cpp \
+	httpd/mcp/test_exposure_config.cpp \
+	httpd/mcp/test_exposure_gate.cpp \
+	httpd/mcp/test_mcp_allowlist.cpp
+
+# Which test files exercise the tool-group table, in mcp/ and in oauth/.
+MCP_GROUP_TESTS = \
+	httpd/mcp/test_mcp_groups.cpp \
+	httpd/oauth/test_oauth_groups.cpp
+
+OAUTH_TESTS = \
+	httpd/oauth/oauthtest.h \
+	httpd/oauth/test_oauth_api.cpp \
+	httpd/oauth/test_oauth_authorize.cpp \
+	httpd/oauth/test_oauth_cimd.cpp \
+	httpd/oauth/test_oauth_consent.cpp \
+	httpd/oauth/test_oauth_flow.cpp \
+	httpd/oauth/test_oauth_limits.cpp \
+	httpd/oauth/test_oauth_metadata.cpp \
+	httpd/oauth/test_oauth_persist.cpp \
+	httpd/oauth/test_oauth_register.cpp \
+	httpd/oauth/test_oauth_scopes.cpp \
+	httpd/oauth/test_oauth_store.cpp \
+	httpd/oauth/test_oauth_surface.cpp \
+	httpd/oauth/test_oauth_token.cpp \
+	httpd/oauth/test_oauth_tokens.cpp \
+	httpd/oauth/test_oauth_uri.cpp \
+	httpd/oauth/test_oauth_verify.cpp
+
+MCP_TEST_SOURCES = \
+	httpd/mcp/test_mcp_contract.cpp \
+	httpd/mcp/test_mcp_wired.cpp \
+	$(MCP_CORE_TESTS) \
+	$(MCP_TOOL_TESTS) \
+	$(MCP_EXPOSURE_TESTS) \
+	$(OAUTH_TESTS) \
+	$(MCP_GROUP_TESTS)
+
+if ENABLE_MCP
+MCP_TESTS = $(MCP_TEST_SOURCES)
+AM_CPPFLAGS += -DCOREAPI_COUNTS_OVERLAY='"$(srcdir)/support/counts-mcp.txt"'
+endif
+
 check_PROGRAMS = coreapi_tests
 
 coreapi_tests_SOURCES = \
@@ -99,6 +173,7 @@ coreapi_tests_SOURCES = \
 	coreapi/test_httpstatus.cpp \
 	httpd/test_httpjson.cpp \
 	httpd/test_router.cpp \
+	httpd/test_toolflag.cpp \
 	httpd/test_serverbridge.cpp \
 	httpd/test_credentials.cpp \
 	httpd/test_auth.cpp \
@@ -127,11 +202,13 @@ coreapi_tests_SOURCES = \
 	coreapi/test_streaming.cpp \
 	httpd/test_webtv.cpp \
 	httpd/test_byterange.cpp \
+	$(MCP_TESTS) \
 	coreapi/test_browserplay.cpp \
 	coreapi/test_browserstream.cpp \
 	coreapi/test_storagefile.cpp \
 	coreapi/test_storageroots.cpp \
 	coreapi/test_settingsfields.cpp \
+	support/test_counts.cpp \
 	support/shape.cpp \
 	support/shape.h \
 	support/httpclient.cpp \
@@ -201,6 +278,7 @@ coreapi_tests_LDADD = \
 	@MHD_LIBS@ \
 	$(PUGIXML_LIBS) \
 	-lcrypto \
+	-ljpeg \
 	-lz \
 	-lpthread
 
@@ -229,7 +307,7 @@ whole.log: $(PART_TESTS:.part=.log)
 $(PART_TESTS) whole.merge:
 	@: > $@
 
-EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/part-seconds.txt support/httpclient.h \
+EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/counts-mcp.txt support/part-seconds.txt support/httpclient.h \
 	scan/extract-enum.sh support/merge-counts.sh \
 	scan/check-hook.sh scan/check-fieldtypes.sh \
 	scan/check-hardware.sh scan/check-appliers.sh scan/check-denominator.sh \
@@ -397,8 +475,11 @@ $(SCAN_CHECKS): check-TESTS
 
 # A test file no source list mentions is compiled by nothing and would pass unnoticed.
 scan-sources:
+	@stray=`cd $(srcdir) && find httpd/mcp httpd/oauth -name 'test_*.cpp' 2>/dev/null | sort | while read f; do \
+		case " $(MCP_TEST_SOURCES) " in *" $$f "*) ;; *) echo $$f;; esac; done`; \
+	test -z "$$stray" || { echo "not in MCP_TEST_SOURCES: $$stray" >&2; exit 1; }
 	@orphan=`cd $(srcdir) && find . -name 'test_*.cpp' | sed 's|^\./||' | sort | while read f; do \
-		case " $(coreapi_tests_SOURCES) " in *" $$f "*) ;; *) echo $$f;; esac; done`; \
+		case " $(coreapi_tests_SOURCES) $(MCP_TEST_SOURCES) " in *" $$f "*) ;; *) echo $$f;; esac; done`; \
 	test -z "$$orphan" || { echo "not in coreapi_tests_SOURCES: $$orphan" >&2; exit 1; }
 
 scan-hook:

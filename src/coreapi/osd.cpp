@@ -241,7 +241,10 @@ class Held
 
 } // anonymous namespace
 
-Result<std::string> screenshot(bool osd, bool video, PictureFormat format)
+namespace
+{
+
+Result<std::string> captureHeld(bool osd, bool video, PictureFormat format, size_t max_bytes, bool read)
 {
 	const std::string path = screenPictureFor(format);
 
@@ -263,7 +266,32 @@ Result<std::string> screenshot(bool osd, bool video, PictureFormat format)
 	if (s != Status::Ok)
 		return fail(s, ErrorCode::ScreenNotCaptured,
 			    "the box could not take a picture of its screen");
-	return ok(path);
+	if (!read)
+		return ok(path);
+
+	std::string bytes;
+	FILE *f = std::fopen(path.c_str(), "rb");
+	if (f == NULL)
+		return fail(Status::Internal, ErrorCode::ScreenNotCaptured,
+			    "the picture the box took could not be read");
+	char buf[65536];
+	size_t n = 0;
+	while (bytes.size() < max_bytes && (n = std::fread(buf, 1, sizeof(buf), f)) > 0)
+		bytes.append(buf, n);
+	std::fclose(f);
+	return ok(std::move(bytes));
+}
+
+} // namespace
+
+Result<std::string> screenshot(bool osd, bool video, PictureFormat format)
+{
+	return captureHeld(osd, video, format, 0, false);
+}
+
+Result<std::string> screenshotBytes(bool osd, bool video, PictureFormat format, size_t max_bytes)
+{
+	return captureHeld(osd, video, format, max_bytes, true);
 }
 
 Result<std::string> displayScreenshot()

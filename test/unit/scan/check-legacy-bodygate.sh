@@ -1,19 +1,22 @@
 #!/bin/sh
 # serve() decides, on the head alone and before a single body byte is accepted,
 # whether this box will pay for the body of the request it is holding
-# (server.cpp). Two assignments say yes, one per surface: the router's own,
-# inside the branch allowed() let through, and the legacy prefix's, inside the
-# branch wouldDispatch() let through.
+# (server.cpp). Three assignments say yes, one per surface: the router's own,
+# inside the branch allowed() let through, the legacy prefix's, inside the
+# branch wouldDispatch() let through, and the MCP endpoint's, inside the branch
+# its own admission let through.
 #
 # WHAT A CASE HOLDS AND WHAT THIS HOLDS, MEASURED RATHER THAN ASSUMED.
 #
-# Both assignments are held by cases for the direction that says the body is
+# All three assignments are held by cases for the direction that says the body is
 # kept, and for any spelling that stops the line running at all.
 # test_serverbridge.cpp "nothing of a body is kept for a request nothing will
 # answer" posts to a route that answers, reads the count of body bytes taken in,
 # and requires it to have moved by the length of what it sent.
-# test_compat_mount.cpp does the same for the legacy prefix over a real socket. A
-# dead wrapper around either assignment is red in those cases because the counter
+# test_compat_mount.cpp does the same for the legacy prefix over a real socket.
+# test_mcp_server.cpp "the endpoint keeps a body only for a caller it admitted"
+# covers the admitted and the 401 direction for the MCP assignment. A dead
+# wrapper around any assignment is red in those cases because the counter
 # never moves.
 #
 # The router's assignment is held by a case for the other direction too: the same
@@ -251,14 +254,15 @@ ENCLOSING=`printf '%s' "$FLAT" | awk -v assign="$ASSIGN" '
 
 STATUS=0
 COUNT=`printf '%s\n' "$ENCLOSING" | wc -l | tr -d ' '`
-[ "$COUNT" -eq 2 ] || {
-	echo "serve() in $FILE has $COUNT \"$ASSIGN\", not the two this checks for (one per surface)" >&2
+[ "$COUNT" -eq 3 ] || {
+	echo "serve() in $FILE has $COUNT \"$ASSIGN\", not the three this checks for (one per surface)" >&2
 	STATUS=1
 }
 
 ROUTED=0
 LEGACY=0
 UNGATED=0
+MCP=0
 while IFS= read -r line; do
 	# the first tab separates what is not an if from the conditions of the ifs
 	intruders=`printf '%s\n' "$line" | cut -f1`
@@ -280,6 +284,9 @@ while IFS= read -r line; do
 			;;
 		esac
 		;;
+	*"mcp_admission.admitted"*)
+		MCP=`expr $MCP + 1`
+		;;
 	*"allowed("*)
 		ROUTED=`expr $ROUTED + 1`
 		;;
@@ -292,7 +299,7 @@ $ENCLOSING
 EOF
 
 [ "$UNGATED" -eq 0 ] || {
-	echo "serve() in $FILE has $UNGATED \"$ASSIGN\" that no condition reading allowed() or wouldDispatch() decides: a caller this box is going to turn away can make it hold a body first" >&2
+	echo "serve() in $FILE has $UNGATED \"$ASSIGN\" that no condition reading allowed(), wouldDispatch() or the MCP admission decides: a caller this box is going to turn away can make it hold a body first" >&2
 	STATUS=1
 }
 
@@ -303,6 +310,11 @@ EOF
 
 [ "$LEGACY" -eq 1 ] || {
 	echo "serve() in $FILE has $LEGACY \"$ASSIGN\" gated on wouldDispatch(), not the one the legacy prefix needs" >&2
+	STATUS=1
+}
+
+[ "$MCP" -eq 1 ] || {
+	echo "serve() in $FILE has $MCP \"$ASSIGN\" gated on the MCP admission, not the one the endpoint's branch needs" >&2
 	STATUS=1
 }
 

@@ -75,6 +75,7 @@ const Walked kWalked[] = {
 	CODE(NoSuchLogo),
 	CODE(NoSuchEvent),
 	CODE(NoSuchRecording),
+	CODE(NoSuchTool),
 	CODE(NoSuchPart),
 	CODE(NoRunningChannel),
 	CODE(NoMode),
@@ -103,6 +104,7 @@ const Walked kWalked[] = {
 	CODE(DuplicateParameter),
 	CODE(MissingParameter),
 	CODE(ConflictingParameters),
+	CODE(AmbiguousChannel),
 	CODE(LeadingDash),
 	CODE(BadInt),
 	CODE(BadBool),
@@ -187,6 +189,16 @@ const Walked kWalked[] = {
 	CODE(RecordingListUnavailable),
 	CODE(ConfigDocumentUnreadable),
 	CODE(WebserverNotConfigured),
+	CODE(ForwardedByUntrustedPeer),
+	CODE(AiPublicUrlRefused),
+	CODE(AiTrustedProxiesRefused),
+	CODE(AiCallerWouldBeTunnel),
+	CODE(AiDefaultPassword),
+	CODE(UnknownGroup),
+	CODE(GroupNotEnabled),
+	CODE(PluginNotAllowed),
+	CODE(SettingsSectionNotAllowed),
+	CODE(SettingsSectionDenied),
 	CODE(CommandNotStarted),
 	CODE(CommandOutputUnreadable),
 	CODE(Timeout),
@@ -384,7 +396,7 @@ TEST_CASE("everything a lookup did not find is spelt the same way", "[result]")
 		ErrorCode::NoSuchRoute, ErrorCode::NoSuchMethod,
 		ErrorCode::NoSuchParameter, ErrorCode::NoSuchTimerType, ErrorCode::NoSuchName,
 		ErrorCode::NoSuchParent, ErrorCode::NoSuchFilesystem,
-		ErrorCode::UnknownSetting, ErrorCode::NoSuchRecording
+		ErrorCode::UnknownSetting, ErrorCode::NoSuchRecording, ErrorCode::NoSuchTool
 	};
 	for (size_t i = 0; i < sizeof(absent) / sizeof(absent[0]); i++)
 	{

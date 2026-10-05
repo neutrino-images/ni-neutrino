@@ -31,13 +31,14 @@ namespace
    an address is an identifier and not a word anybody reads out: the API under /api/v1
    already spells most of these the same way.
 
-   The last of them is here in every build, including one compiled without the API
-   documentation, where the page does not offer it. A destination the page can be walked
-   to but not reloaded on is a bookmark that works until somebody presses reload, and
-   whether that destination is worth offering is a decision the page makes out of what
-   the box answers about its own build. */
+   The last two are here in every build, including one compiled without the API
+   documentation or without AI access, where the page does not offer them. A
+   destination the page can be walked to but not reloaded on is a bookmark that works
+   until somebody presses reload, and whether that destination is worth offering is a
+   decision the page makes out of what the box answers about its own build. */
 const char *const kAreas[] = {
-	"now", "channels", "epg", "timers", "recordings", "files", "system", "settings", "dev"
+	"now", "channels", "epg", "timers", "recordings", "files", "system", "settings", "ai",
+	"dev"
 };
 
 const std::size_t kAreaCount = sizeof(kAreas) / sizeof(kAreas[0]);

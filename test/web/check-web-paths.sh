@@ -77,6 +77,9 @@ FILES=`find "$APP" -name '*.js' \
 	| grep -v "^$APP/vendor/" \
 	| grep -v "^$APP/swagger/" \
 	| sort`
+if [ "${NI_WEB_MCP:-yes}" = no ]; then
+	FILES=`printf '%s\n' "$FILES" | grep -v "^$APP/ai/" || true`
+fi
 if [ -z "$FILES" ]; then
 	# Not a pass dressed up as one: the directory is there and carries no
 	# application yet, which is the state between the delivery stream landing
@@ -191,16 +194,45 @@ sort -u "$WORK/literals" > "$WORK/literals.u"
 # under that is a method it answers, and everything deeper belongs to the
 # operation and is not looked at. Strings are walked with their escapes so that
 # a brace inside a description cannot move the depth.
+#
+# The root's own "paths" key is found by walking the root object's keys, not by
+# the first byte string "paths": in the file: a schema is free to answer with a
+# member of that same name (as the AI guides one does), and that member is
+# written into components before this key.
 awk '
 	function emit(path, method) { print path " " toupper(method) }
 	{
 		s = $0
 		n = length(s)
-		start = index(s, "\"paths\":")
-		if (start == 0) { exit 1 }
-		i = start + 8
+		depth = 0
+		pathsat = 0
+		i = 1
+		while (i <= n && pathsat == 0) {
+			c = substr(s, i, 1)
+			if (c == "\"") {
+				value = ""
+				i++
+				while (i <= n) {
+					c = substr(s, i, 1)
+					if (c == "\\") { i += 2; value = value "?"; continue }
+					if (c == "\"") { i++; break }
+					value = value c
+					i++
+				}
+				j = i
+				while (j <= n && substr(s, j, 1) == " ") j++
+				if (depth == 1 && value == "paths" && substr(s, j, 1) == ":") pathsat = j + 1
+				continue
+			}
+			if (c == "{") { depth++; i++; continue }
+			if (c == "}") { depth--; i++; continue }
+			i++
+		}
+		if (pathsat == 0) { exit 1 }
+		i = pathsat
 		while (i <= n && substr(s, i, 1) != "{") i++
 		depth = 0
+		path = ""
 		while (i <= n) {
 			c = substr(s, i, 1)
 			if (c == "\"") {
@@ -238,18 +270,8 @@ cut -d' ' -f1 "$WORK/routes" | sort -u > "$WORK/paths"
 
 # ------------------------------------------------- what is written ahead of it
 #
-# ONE ADDRESS THIS TREE ASKS FOR AND DOES NOT YET ANSWER.
-#
-# The display at /info draws the two marks the page it replaces called ECM and
-# CI+, and what says whether either is on is a route being written in another
-# branch of the same round. The contract is settled, so the page is written
-# against it rather than merged half finished; a box without the route refuses the
-# address and the page draws both marks grey.
-#
-# AN IDENTITY AND NOT A TOLERANCE, which is why this is allowed to exist. A line
-# here whose address the document has started answering is a fault of its own,
-# reported below, so the merge that brings the route in cannot leave the exception
-# standing. Empty is where this list belongs.
+# Addresses the page asks for before the server answers them, as METHOD PATH;
+# one the document already answers is reported below. Empty is where it belongs.
 AHEAD=''
 
 printf '%s\n' "$AHEAD" | grep -v '^$' | sort -u > "$WORK/ahead"

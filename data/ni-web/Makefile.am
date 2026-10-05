@@ -18,6 +18,11 @@ SUBDIRS += \
 	swagger
 endif
 
+if ENABLE_MCP
+SUBDIRS += \
+	ai
+endif
+
 installdir = $(PRIVATE_HTTPDDIR)/ni-web
 
 # The document the page is: the history fallback answers a path under an area

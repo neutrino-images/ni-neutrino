@@ -187,6 +187,7 @@ export function Table(props) {
 					return html`<th
 						key=${column.id}
 						scope="col"
+						data-col=${column.id}
 						data-align=${column.align || null}
 						data-fit=${column.wide ? 'wide' : null}
 						aria-sort=${active && sort ? (sort.dir === 'asc' ? 'ascending' : 'descending') : null}>
@@ -212,6 +213,7 @@ export function Table(props) {
 							${columns.map(function (column) {
 								return html`<td
 									key=${column.id}
+									data-col=${column.id}
 									class=${column.mono ? 'mono' : null}
 									data-align=${column.align || null}
 									data-label=${column.label}>${column.cell(row)}</td>`;

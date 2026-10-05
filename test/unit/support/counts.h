@@ -49,11 +49,18 @@ void recordCount(const char *name, size_t value);
 
    whole says every case ran to its end. After a failure it is false and only the numbers
    a case did record and got wrong are named: a case that stops on its first bad line
-   records nothing after it, so the rest are unknown rather than fallen. */
-bool coverageCountsAgree(const char *expected_path, const char *actual_path, bool whole);
+   records nothing after it, so the rest are unknown rather than fallen.
+
+   overlay_path, where it is not NULL, is read over expected_path. */
+bool coverageCountsAgree(const char *expected_path, const char *overlay_path,
+			 const char *actual_path, bool whole);
 
 // What this process recorded, and each name recorded twice with its second value.
 void recordedCounts(std::map<std::string, size_t> &measured_out,
 		    std::map<std::string, size_t> &clashed_out);
+
+// base_path with overlay_path read over it where that is not NULL; false naming the file that failed.
+bool readExpectedCounts(const char *base_path, const char *overlay_path,
+			std::map<std::string, size_t> &out, std::string &why);
 
 #endif

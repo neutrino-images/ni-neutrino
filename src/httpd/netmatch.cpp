@@ -21,6 +21,7 @@
 #include "netmatch.h"
 
 #include <cstring>
+#include <cstdio>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -251,6 +252,20 @@ std::vector<std::string> defaultLanPrefixTexts()
 		out.push_back(kLanSeed[i]);
 
 	return out;
+}
+
+std::string formatPrefix(const NetPrefix &p)
+{
+	if (p.family != AF_INET && p.family != AF_INET6)
+		return std::string();
+
+	char addr[INET6_ADDRSTRLEN];
+	if (::inet_ntop(p.family, p.bits, addr, sizeof(addr)) == NULL)
+		return std::string();
+
+	char tail[16];
+	std::snprintf(tail, sizeof(tail), "/%d", p.len);
+	return std::string(addr) + tail;
 }
 
 } // namespace httpd

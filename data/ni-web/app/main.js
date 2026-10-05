@@ -67,16 +67,14 @@ function readLanguage() {
    documentation is a switch at compile time, and the destination that leads
    into it is left out of the bars where the answer says no. Asked once, at
    start, because a build does not change under a page that is open. */
-/** @returns {Promise<{ apiDoc: boolean }>} */
+/** @returns {Promise<{ apiDoc: boolean, mcp: boolean }>} */
 function readBuild() {
 	return api("GET", "/api/v1/system/info").then(function (box) {
 		nameTab(box && box.hostname ? box.hostname : '');
-		return { apiDoc: !!(box && box.api_doc) };
+		return { apiDoc: !!(box && box.api_doc), mcp: !!(box && box.mcp) };
 	}, function () {
-		/* A box that would not answer is not a box without documentation. What
-		   is offered then is everything, and the destination says for itself
-		   what it finds when it is opened. */
-		return { apiDoc: true };
+		// Unanswered: offer the documentation, but not AI access, whose modules may be absent.
+		return { apiDoc: true, mcp: false };
 	});
 }
 

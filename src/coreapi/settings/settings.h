@@ -41,6 +41,11 @@ Result<std::vector<Descriptor> > schema();
 // lay out its menu without walking the whole schema.
 Result<std::vector<std::string> > sections();
 
+// Whether the value names a file or folder on the box.
+bool holdsPath(const Descriptor &d);
+
+bool sectionHoldsSecret(const std::string &section);
+
 // NotFound for a key nothing declares: a zeroed descriptor would be a lie a
 // caller cannot tell from a setting that really has no label and no bounds. A
 // secret row comes back with its default withheld.

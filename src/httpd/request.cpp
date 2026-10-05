@@ -40,7 +40,7 @@ const std::string &nothing()
 
 } // namespace
 
-Request::Request() : granted_(AuthLevel::Public)
+Request::Request() : granted_(AuthLevel::Public), origin_(Origin::Tunnel)
 {
 }
 
@@ -216,6 +216,16 @@ void Request::setHost(const std::string &h)
 void Request::setLocalAddress(const std::string &a)
 {
 	local_address_ = a;
+}
+
+Origin Request::origin() const
+{
+	return origin_;
+}
+
+void Request::setOrigin(Origin o)
+{
+	origin_ = o;
 }
 
 } // namespace httpd

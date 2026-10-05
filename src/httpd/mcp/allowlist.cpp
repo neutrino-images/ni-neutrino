@@ -1,0 +1,118 @@
+/*
+ * allowlist.cpp - what an AI client may start and may change
+ *
+ * Copyright (C) 2026 NI-Team
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+#include "httpd/mcp/allowlist.h"
+
+#include "httpd/json.h"
+
+#include "coreapi/settings/settings.h"
+
+#include <OpenThreads/Mutex>
+#include <OpenThreads/ScopedLock>
+
+namespace httpd
+{
+namespace mcp
+{
+
+namespace
+{
+
+OpenThreads::Mutex &lock()
+{
+	static OpenThreads::Mutex m;
+	return m;
+}
+
+Allowlists &held()
+{
+	static Allowlists a;
+	return a;
+}
+
+bool listed(const std::vector<std::string> &list, const std::string &name)
+{
+	for (size_t i = 0; i < list.size(); ++i)
+	{
+		if (list[i] == name)
+			return true;
+	}
+	return false;
+}
+
+// Never writable by an AI client, whatever the owner ticks.
+const char *const kDeniedByName[] = { "network", "parental", "update" };
+
+} // namespace
+
+Allowlists currentAllowlists()
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> h(lock());
+	return held();
+}
+
+void installAllowlists(const Allowlists &a)
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> h(lock());
+	held() = a;
+}
+
+std::string sectionDenial(const std::string &section)
+{
+	for (size_t i = 0; i < sizeof(kDeniedByName) / sizeof(kDeniedByName[0]); ++i)
+	{
+		if (section == kDeniedByName[i])
+			return kDeniedByName[i];
+	}
+	return coreapi::settings::sectionHoldsSecret(section) ? "secret" : std::string();
+}
+
+bool pluginAllowed(const std::string &name)
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> h(lock());
+	return listed(held().plugins, name);
+}
+
+bool sectionAllowed(const std::string &section)
+{
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> h(lock());
+		if (!listed(held().sections, section))
+			return false;
+	}
+	return sectionDenial(section).empty();
+}
+
+std::string deniedKeyIn(const std::string &settings_json)
+{
+	std::vector<JsonMember> members;
+	if (!readFlatObject(settings_json, members))
+		return std::string();
+	for (size_t i = 0; i < members.size(); ++i)
+	{
+		coreapi::Result<coreapi::Descriptor> d = coreapi::settings::describe(members[i].name);
+		if (d.ok() && (d.value().secret || coreapi::settings::holdsPath(d.value())))
+			return members[i].name;
+	}
+	return std::string();
+}
+
+} // namespace mcp
+} // namespace httpd

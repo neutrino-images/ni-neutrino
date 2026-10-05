@@ -67,6 +67,14 @@ enum class AuthLevel
 	System
 };
 
+// Where a request came from, as the exposure gate decided.
+enum class Origin
+{
+	Lan,
+	Tunnel,
+	Refused
+};
+
 /* Where the value is carried. A body is one flat JSON object, and its members
    reach a handler through the same reader a value off the query goes through. Only
    for the methods written with a body: a route declaring one on a method that
@@ -195,6 +203,12 @@ struct Param
    empty has to be a value the set does not carry rather than the name left out. */
 #define HTTPD_QUERY_FROM_CLOSED_SET(name, doc, set, value_docs) \
 	(name), httpd::ParamType::Enum, httpd::In::Query, false, (doc), 0, 0, (set), (value_docs), NULL, true
+
+/* A query out of a set this table cannot state, asked for where the document is
+   written. The same reasoning as HTTPD_SEGMENT_FROM_ASKED_SET, for a query that may
+   be left out rather than a segment that is always there. */
+#define HTTPD_QUERY_FROM_ASKED_SET(name, doc, asks) \
+	(name), httpd::ParamType::String, httpd::In::Query, false, (doc), 0, 0, NULL, NULL, (asks), false
 
 #define HTTPD_QUERY_REQUIRED(name, type, doc) \
 	(name), (type), httpd::In::Query, true, (doc), 0, 0, NULL, NULL, NULL, false
@@ -367,6 +381,10 @@ class Request
 		void setHost(const std::string &h);
 		void setLocalAddress(const std::string &a);
 
+		// Tunnel until the transport sets it, so a request built without one meets the stricter reading.
+		Origin origin() const;
+		void setOrigin(Origin o);
+
 	private:
 		struct Bound
 		{
@@ -389,6 +407,7 @@ class Request
 		std::string        scope_;
 		std::string        address_token_;
 		AuthLevel          granted_;
+		Origin             origin_;
 };
 
 /* What a handler answers with, and what the router answers with when no handler is
@@ -545,6 +564,25 @@ struct Endpoint
 	const char         *body_example;  // NULL: built from the rows
 };
 
+// A route offered as a tool; a NULL name or description is derived from the route.
+struct ToolFlag
+{
+	Method      method;
+	const char *path;
+	const char *name;
+	const char *description;
+	// The route answers a picture file, sent to the model as image content.
+	bool        image;
+	// A query added for each name the arguments leave out, "limit=5"; NULL for none.
+	const char *defaults;
+};
+
+#define HTTPD_TOOL(method, path) { (method), (path), NULL, NULL, false, NULL }
+#define HTTPD_TOOL_AS(method, path, name, description) { (method), (path), (name), (description), false, NULL }
+#define HTTPD_TOOL_IMAGE(method, path, name, description) { (method), (path), (name), (description), true, NULL }
+#define HTTPD_TOOL_DEFAULTS(method, path, name, description, defaults) \
+	{ (method), (path), (name), (description), false, (defaults) }
+
 /* A module's table, its length, and the name the document groups its routes under,
    together, for the same reason a parameter array carries its own count.
 
@@ -562,6 +600,8 @@ struct RouteTable
 	const char     *tag;
 	const Endpoint *endpoints;
 	size_t          count;
+	const ToolFlag *tools;
+	size_t          tool_count;
 };
 
 /* Writes a table's mark, its array and its count as one group. Written by hand the
@@ -571,13 +611,17 @@ struct RouteTable
    The reason of its own: the tables the server ships are sixteen and the tables the
    cases build are forty one more, so a field added to the struct without this is fifty
    seven hand edits. */
-#define HTTPD_TABLE(tag, a) (tag), (a), (sizeof(a) / sizeof((a)[0]))
+#define HTTPD_TABLE(tag, a) (tag), (a), (sizeof(a) / sizeof((a)[0])), NULL, 0
 
 /* The same, for a table that hands over a count rather than having one measured.
    What uses it is a case about the disagreement itself: a count that overruns its
    array, a count beside no array at all, a count that stops short of one. Nothing
    that means its count to be right should reach for this. */
-#define HTTPD_TABLE_N(tag, a, n) (tag), (a), (n)
+#define HTTPD_TABLE_N(tag, a, n) (tag), (a), (n), NULL, 0
+
+// The same, with a ToolFlag array for the routes this table offers as tools.
+#define HTTPD_TABLE_WITH_TOOLS(tag, a, t) \
+	(tag), (a), (sizeof(a) / sizeof((a)[0])), (t), (sizeof(t) / sizeof((t)[0]))
 
 } // namespace httpd
 

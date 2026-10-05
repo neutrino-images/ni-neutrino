@@ -226,6 +226,19 @@ if test "$enable_ni_web" = "yes"; then
 fi
 AM_CONDITIONAL(ENABLE_NI_WEB, test "$enable_ni_web" = "yes")
 
+AC_ARG_ENABLE(mcp,
+	AS_HELP_STRING([--enable-mcp], [let AI clients reach the box over MCP with OAuth @<:@default=no@:>@]),
+	[enable_mcp="$enableval"],
+	[enable_mcp="no"])
+
+if test "$enable_mcp" = "yes"; then
+	if test "$enable_ni_web" != "yes"; then
+		AC_MSG_ERROR([--enable-mcp needs the web server that --disable-ni-web leaves out])
+	fi
+	AC_DEFINE(ENABLE_MCP, 1, [let AI clients reach the box over MCP with OAuth])
+fi
+AM_CONDITIONAL(ENABLE_MCP, test "$enable_mcp" = "yes")
+
 ## For the check you must use the corresponding libtool number as version number,
 ## see freetype source code docs/VERSIONS.TXT
 PKG_CHECK_MODULES([FREETYPE], [freetype2 >= 16.2.10], [
@@ -830,6 +843,7 @@ data/oled/themes/400x240/Makefile
 data/oled/themes/480x320/Makefile
 data/oled/themes/800x480/Makefile
 data/ni-web/Makefile
+data/ni-web/ai/Makefile
 data/ni-web/app/Makefile
 data/ni-web/info/Makefile
 data/ni-web/rc/Makefile

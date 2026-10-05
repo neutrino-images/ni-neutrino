@@ -213,10 +213,16 @@ const Endpoint kPlaybackEndpoints[] = {
 	  Answers200, HTTPD_REFUSALS(kPlaybackRefusals) },
 };
 
+const ToolFlag kPlaybackTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/playback", "now_playing",
+		"What the television shows now: a live channel, a recording of the archive with its id, or another file, "
+		"with how far it has played and whether it is paused; none in standby. Ask this before current_channel."),
+};
+
 } // namespace
 
 extern const RouteTable playbackTable = {
-	HTTPD_TABLE("playback", kPlaybackEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("playback", kPlaybackEndpoints, kPlaybackTools)
 };
 
 } // namespace httpd

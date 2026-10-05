@@ -74,6 +74,12 @@
 #ifdef ENABLE_NI_WEB
 #include <httpd/server.h>
 #include <httpd/webconfig.h>
+#ifdef ENABLE_MCP
+#include <httpd/mcp/contract.h>
+#include <httpd/mcp/limits.h>
+#include <httpd/mcp/wiring.h>
+#include <httpd/oauth/store.h>
+#endif
 #ifndef DISABLE_LEGACY_API
 #include <httpd/compat/mount.h>
 #include <httpd/compat/legacybridge.h>
@@ -3332,6 +3338,21 @@ TIMER_START();
 	httpd::compat::installDispatch(&httpd::compat::realDispatch);
 #endif
 
+#ifdef ENABLE_MCP
+	// Before the server answers anything; an unreadable file is set aside.
+	if (!httpd::oauth::store().open(CONFIGDIR "/ni-web-oauth"))
+		printf("[neutrino] ni-web AI access store was unreadable and has been set aside\n");
+
+	httpd::mcp::Wiring w;
+	w.tools = &httpd::mcp::boxTools();
+	w.verify = &httpd::oauth::verifyAccessToken;
+	httpd::mcp::install(w);
+	// A refused tool table leaves /mcp answering with an empty tool list.
+	if (!httpd::mcp::boxToolsRefusal().empty())
+		printf("[neutrino] ni-web AI tools were refused, /mcp offers none: %s\n",
+		       httpd::mcp::boxToolsRefusal().c_str());
+#endif
+
 	if (httpd::start(httpd::config().server))
 		printf("[neutrino] ni-web listening on port %d\n", httpd::boundPort());
 	else
@@ -5446,6 +5467,12 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	 * ended. It gives the suspended event streams back before it stops the
 	 * daemon, which is the daemon's own requirement and not this caller's. */
 	httpd::stop();
+#ifdef ENABLE_MCP
+	// A tool call runs on past its answer and would meet the singletons deleted below.
+	if (!httpd::mcp::drain(httpd::mcp::limits().call_timeout_ms))
+		printf("[neutrino] ni-web AI tool calls still running at shutdown\n");
+	httpd::oauth::store().saveUse();
+#endif
 #endif
 
 #if 0

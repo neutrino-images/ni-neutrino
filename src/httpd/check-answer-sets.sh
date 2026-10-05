@@ -55,7 +55,8 @@ FLOOR=6
 tmp=`mktemp -d`
 trap 'rm -rf "$tmp"' EXIT
 
-awk -v keepstrings=1 -v mark='#file ' -f "$STRIP" "$SRC"/*.cpp "$SRC"/ep/*.cpp "$SRC"/doc/*.cpp > "$tmp/blank"
+NESTED=`cd "$SRC" && find mcp oauth -name '*.cpp' 2>/dev/null | sort | sed "s|^|$SRC/|"`
+awk -v keepstrings=1 -v mark='#file ' -f "$STRIP" "$SRC"/*.cpp "$SRC"/ep/*.cpp "$SRC"/doc/*.cpp $NESTED > "$tmp/blank"
 
 awk -v floor="$FLOOR" '
 # The nth string literal of a line, and empty when there is no nth.

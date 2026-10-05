@@ -99,7 +99,12 @@ int main(int argc, char *argv[])
 	   decide the answer: the run has already failed for a reason somebody is
 	   about to read and a count a case never reached is unknown and not fallen. */
 	const bool answered = answersAgree(COREAPI_ANSWERS_ACTUAL);
-	const bool agree = coverageCountsAgree(COREAPI_COUNTS_FILE, COREAPI_COUNTS_ACTUAL, failed == 0);
+#ifdef COREAPI_COUNTS_OVERLAY
+	const char *overlay = COREAPI_COUNTS_OVERLAY;
+#else
+	const char *overlay = NULL;
+#endif
+	const bool agree = coverageCountsAgree(COREAPI_COUNTS_FILE, overlay, COREAPI_COUNTS_ACTUAL, failed == 0);
 	if (failed != 0)
 		return failed;
 	return (agree && answered) ? 0 : 1;

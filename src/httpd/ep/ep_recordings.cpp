@@ -506,6 +506,14 @@ std::string withoutPort(const std::string &host)
 	return host.substr(0, first);
 }
 
+#ifdef ENABLE_MCP
+std::string authorityHost(const std::string &authority)
+{
+	const size_t scheme = authority.find("://");
+	return withoutPort(scheme == std::string::npos ? authority : authority.substr(scheme + 3));
+}
+#endif
+
 // Every address this box answers an interface by, in whatever family it has one.
 void boxAddresses(std::vector<std::string> &out)
 {
@@ -557,6 +565,12 @@ bool hostNamesThisBox(const std::string &host)
 		if (!box_label.empty() && name.substr(0, name.find('.')) == box_label)
 			return true;
 	}
+
+#ifdef ENABLE_MCP
+	const std::string public_host = loweredAscii(authorityHost(config().ai_public_url));
+	if (!public_host.empty() && name == public_host)
+		return true;
+#endif
 
 	std::vector<std::string> addresses;
 	boxAddresses(addresses);
@@ -871,10 +885,39 @@ const Endpoint kRecordingEndpoints[] = {
 	  Answers204, HTTPD_REFUSALS(kArchiveRemoveRefusals) },
 };
 
+const ToolFlag kRecordingTools[] = {
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/recordings", "list_recordings",
+		"What the box is recording at this moment, with the file each recording is written to."),
+	HTTPD_TOOL_AS(Method::Post, "/api/v1/recordings/timeshift", "timeshift_start",
+		"Starts the time shift of the channel the box is showing, so the viewer can pause and rewind. "
+		"list_recordings shows the shift once it runs."),
+	HTTPD_TOOL_AS(Method::Delete, "/api/v1/recordings/timeshift", "timeshift_stop",
+		"Ends the time shift the box keeps of the channel it is showing."),
+	HTTPD_TOOL_AS(Method::Delete, "/api/v1/recordings/{id}", "stop_recording",
+		"Ends one recording that is running, by the id list_recordings gives it."),
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/recordings/archive", "list_archive",
+		"Finished recordings on the box's disk, newest first, 15 to a page: id, title, channel, start, "
+		"length and size. title narrows by words of the title; sort and order pick another order; pass "
+		"next_offset back as offset for the next page."),
+	HTTPD_TOOL_AS(Method::Get, "/api/v1/recordings/archive/{id}", "recording_details",
+		"One finished recording in full, by the id list_archive gives it: the list's members plus the "
+		"guide's short and long text, genre, series, country, year, rating, age, sound tracks and whether "
+		"it has a cover. Details the box never noted are left out."),
+	HTTPD_TOOL_AS(Method::Post, "/api/v1/recordings/archive/{id}/play", "play_recording",
+		"Plays one finished recording on the television, by the id list_archive gives it. The box leaves live "
+		"television for it and returns when it ends or the viewer stops it; if the player repeats, only "
+		"stopping ends it. A file already playing refuses with playback-running unless stop_playback is true; "
+		"a box in standby refuses with box-in-standby unless wake is true."),
+	HTTPD_TOOL_AS(Method::Delete, "/api/v1/recordings/archive/{id}", "delete_recording",
+		"Deletes one finished recording from the disk for good, with its guide text and cover, by the id "
+		"list_archive gives it. Ask the user before calling this. A recording still being written or being "
+		"played is refused."),
+};
+
 } // namespace
 
 extern const RouteTable recordingsTable = {
-	HTTPD_TABLE("recordings", kRecordingEndpoints)
+	HTTPD_TABLE_WITH_TOOLS("recordings", kRecordingEndpoints, kRecordingTools)
 };
 
 } // namespace httpd

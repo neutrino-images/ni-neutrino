@@ -86,10 +86,125 @@ if ENABLE_LEGACY_API
 LEGACY_SOURCES = $(COMPAT_SOURCES)
 endif
 
+# Named in both configurations, so check-sources can tell a file left out from one switched off.
+MCP_CORE_SOURCES = \
+	mcp/callrunner.cpp \
+	mcp/endpoint.cpp \
+	mcp/headers.cpp \
+	mcp/jsonrpc.cpp \
+	mcp/limits.cpp \
+	mcp/ratelimit.cpp \
+	mcp/toolerror.cpp \
+	mcp/wiring.cpp
+
+MCP_TOOL_SOURCES = \
+	mcp/channelname.cpp \
+	mcp/composed.cpp \
+	mcp/picture.cpp \
+	mcp/problem.cpp \
+	mcp/registry.cpp \
+	mcp/routetools.cpp \
+	mcp/toolgen.cpp \
+	mcp/toolguard.cpp \
+	mcp/toolhint.cpp \
+	mcp/toolschema.cpp
+
+MCP_EXPOSURE_SOURCES = \
+	mcp/aiguides.cpp \
+	mcp/allowlist.cpp \
+	mcp/ep_ai.cpp \
+	mcp/exposure.cpp
+
+# Which tool belongs to which group, and what the least reach to offer it is.
+MCP_GROUP_SOURCES = \
+	mcp/toolgroups.cpp
+
+OAUTH_SOURCES = \
+	oauth/api.cpp \
+	oauth/authorize.cpp \
+	oauth/cimd.cpp \
+	oauth/clientmeta.cpp \
+	oauth/consent.cpp \
+	oauth/metadata.cpp \
+	oauth/registration.cpp \
+	oauth/scopes.cpp \
+	oauth/sourcelimit.cpp \
+	oauth/store.cpp \
+	oauth/surface.cpp \
+	oauth/token.cpp \
+	oauth/tokens.cpp \
+	oauth/uri.cpp \
+	oauth/verify.cpp
+
+# Empty on purpose: a _HEADERS variable needs an install directory named after it, and
+# these only ever feed noinst_HEADERS below, never install on their own.
+MCP_COREdir =
+MCP_TOOLdir =
+MCP_EXPOSUREdir =
+MCP_GROUPdir =
+OAUTHdir =
+MCPdir =
+
+MCP_CORE_HEADERS = \
+	mcp/callrunner.h \
+	mcp/endpoint.h \
+	mcp/headers.h \
+	mcp/jsonrpc.h \
+	mcp/limits.h \
+	mcp/ratelimit.h \
+	mcp/toolerror.h \
+	mcp/wiring.h
+
+MCP_TOOL_HEADERS = \
+	mcp/channelname.h \
+	mcp/composed.h \
+	mcp/picture.h \
+	mcp/problem.h \
+	mcp/routetools.h \
+	mcp/toolgen.h \
+	mcp/toolguard.h \
+	mcp/toolhint.h \
+	mcp/toolschema.h
+
+MCP_EXPOSURE_HEADERS = \
+	mcp/aiguides.h \
+	mcp/allowlist.h \
+	mcp/ep_ai.h \
+	mcp/exposure.h
+
+MCP_GROUP_HEADERS = \
+	mcp/toolgroups.h
+
+OAUTH_HEADERS = \
+	oauth/api.h \
+	oauth/authorize.h \
+	oauth/cimd.h \
+	oauth/clientmeta.h \
+	oauth/consent.h \
+	oauth/metadata.h \
+	oauth/registration.h \
+	oauth/scopes.h \
+	oauth/sourcelimit.h \
+	oauth/store.h \
+	oauth/surface.h \
+	oauth/token.h \
+	oauth/tokens.h \
+	oauth/uri.h \
+	oauth/verify.h
+
+MCP_SOURCES = $(MCP_CORE_SOURCES) $(MCP_TOOL_SOURCES) $(MCP_EXPOSURE_SOURCES) $(MCP_GROUP_SOURCES)
+
+MCP_HEADERS = mcp/contract.h $(MCP_CORE_HEADERS) $(MCP_TOOL_HEADERS) $(MCP_EXPOSURE_HEADERS) $(MCP_GROUP_HEADERS)
+
+if ENABLE_MCP
+MCP_ENABLED_SOURCES = $(MCP_SOURCES) $(OAUTH_SOURCES)
+endif
+
 libhttpd_a_SOURCES = \
 	apppaths.cpp \
 	auth.cpp \
 	$(LEGACY_SOURCES) \
+	$(MCP_ENABLED_SOURCES) \
 	byterange.cpp \
 	credentials.cpp \
 	ep/ep_auth.cpp \
@@ -141,6 +256,8 @@ noinst_HEADERS = \
 	compat/neutrinoapi.h \
 	compat/query.h \
 	compat/scriptrunner.h \
+	$(MCP_HEADERS) \
+	$(OAUTH_HEADERS) \
 	credentials.h \
 	endpoint.h \
 	endpoints.h \
@@ -197,6 +314,8 @@ noinst_HEADERS = \
 # own objects rather than being read by the host's binutils. An object whose
 # sections it cannot list at all is a refusal and not a pass: a check that
 # answers nothing when its tool is missing is a check that cannot fail.
+#
+# Under mcp/ and oauth/ a file must reach the archive only through MCP_ENABLED_SOURCES.
 check-sources:
 	@orphan=`cd $(srcdir) && for f in *.cpp compat/*.cpp ep/*.cpp doc/*.cpp; do \
 		test -f "$$f" || continue; \
@@ -206,6 +325,20 @@ check-sources:
 		esac; \
 	done`; \
 	test -z "$$orphan" || { echo "in src/httpd and in no source list:$$orphan" >&2; exit 1; }
+	@stray=`cd $(srcdir) && find mcp oauth -name '*.cpp' 2>/dev/null | sort | while read f; do \
+		case "$$f" in \
+		mcp/*) list=" $(MCP_SOURCES) ";; \
+		*) list=" $(OAUTH_SOURCES) ";; \
+		esac; \
+		case "$$list" in *" $$f "*) ;; *) echo $$f;; esac; \
+	done`; \
+	test -z "$$stray" || { echo "in src/httpd/mcp or oauth and not in MCP_SOURCES or OAUTH_SOURCES:" $$stray >&2; exit 1; }
+	@leak=`for f in $(libhttpd_a_SOURCES); do \
+		case "$$f" in mcp/*|oauth/*) \
+			case " $(MCP_ENABLED_SOURCES) " in *" $$f "*) ;; *) echo $$f;; esac;; \
+		esac; \
+	done`; \
+	test -z "$$leak" || { echo "compiled whatever --enable-mcp says:" $$leak >&2; exit 1; }
 
 # A sanitizer build is the one place this rule has to stand aside, and it says
 # so out loud rather than passing or failing quietly. The address sanitizer
@@ -224,7 +357,7 @@ check-no-constructors: $(noinst_LIBRARIES)
 		echo "  puts a constructor of its own in every object it compiles" >&2; \
 		exit 0;; \
 	esac; \
-	for o in *.$(OBJEXT) compat/*.$(OBJEXT) ep/*.$(OBJEXT) doc/*.$(OBJEXT); do \
+	for o in *.$(OBJEXT) compat/*.$(OBJEXT) ep/*.$(OBJEXT) doc/*.$(OBJEXT) `find mcp oauth -name '*.$(OBJEXT)' 2>/dev/null`; do \
 		test -f "$$o" || continue; \
 		case "$$o" in compat/controlapi.$(OBJEXT)|compat/neutrinoapi.$(OBJEXT)) continue;; esac; \
 		case "$$o" in doc/openapi-dump*.$(OBJEXT)) continue;; esac; \
@@ -304,6 +437,7 @@ openapi_dump_SOURCES = doc/openapi-dump.cpp doc/openapi-dump-stubs.cpp doc/opena
 # answer a symbol the object needs, not because this program uses either.
 # md5sum answers the one hash helpers.o computes over a whole file.
 # libtimerdclient answers the announce time the timer layer fills in.
+# jpeg answers the screenshot tool the AI client routes reach through the tool list.
 openapi_dump_LDADD = \
 	libhttpd.a \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
@@ -319,6 +453,7 @@ openapi_dump_LDADD = \
 	-lcurl \
 	@MHD_LIBS@ \
 	-lcrypto \
+	-ljpeg \
 	-lz \
 	-lpthread
 

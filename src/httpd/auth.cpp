@@ -228,18 +228,6 @@ std::string forwardedAddress(const std::string &element)
 	return isAddress(v) ? v : std::string();
 }
 
-/* The last element of the forwarded header, and empty when that element is not an
-   address. Only the last is looked at: walking back for an earlier element that
-   parses would let a client that can append one unusable element choose which of
-   its own elements is believed. */
-std::string lastForwarded(const std::string &header)
-{
-	const size_t comma = header.rfind(',');
-	if (comma == std::string::npos)
-		return forwardedAddress(header);
-	return forwardedAddress(header.substr(comma + 1));
-}
-
 /* When a session opened now runs out.
 
    A sum past what a time_t holds would wrap to a moment already gone. That fails closed,
@@ -549,6 +537,18 @@ bool decodeBasicPayload(const std::string &in, std::string &out)
 const char kNotPermitted[] = "this endpoint is not open to this caller";
 
 } // namespace
+
+/* The last element of the forwarded header, and empty when that element is not an
+   address. Only the last is looked at: walking back for an earlier element that
+   parses would let a client that can append one unusable element choose which of
+   its own elements is believed. */
+std::string lastForwarded(const std::string &header)
+{
+	const size_t comma = header.rfind(',');
+	if (comma == std::string::npos)
+		return forwardedAddress(header);
+	return forwardedAddress(header.substr(comma + 1));
+}
 
 const char *notPermittedDetail()
 {
