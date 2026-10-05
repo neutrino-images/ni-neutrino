@@ -37,7 +37,7 @@ namespace
    whether that destination is worth offering is a decision the page makes out of what
    the box answers about its own build. */
 const char *const kAreas[] = {
-	"now", "channels", "epg", "timers", "files", "system", "settings", "dev"
+	"now", "channels", "epg", "timers", "recordings", "files", "system", "settings", "dev"
 };
 
 const std::size_t kAreaCount = sizeof(kAreas) / sizeof(kAreas[0]);

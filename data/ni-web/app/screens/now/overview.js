@@ -35,6 +35,10 @@ import { toast } from '../../ui/toast.js';
 import { monogram } from '../../ui/onair.js';
 import { hrefFor, areaById, entryById, labelOf } from '../../nav.js';
 import { Card, Meter, useResource, useOnScreen } from './parts.js';
+import { readPlayback, isPlayback, positionAt, timeText, tileActions, kResyncMs } from '../../playback.js';
+import { ArchiveDetails } from '../recordings/archive.js';
+import { archiveCoverHref } from '../recordings/archive.model.js';
+import { ensureCss } from '../../css.js';
 
 export const css = '/app/screens/now/now.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -197,6 +201,117 @@ function Logo(channel) {
 const streaming = entryById(areaById('channels'), 'playback');
 
 /**
+ * @param {{ id: string, title: string }} props
+ * @returns {Web.Drawn}
+ */
+function Cover(props) {
+	const [broken, setBroken] = useState(false);
+
+	useEffect(function () {
+		setBroken(false);
+	}, [props.id]);
+
+	if (broken) {
+		return null;
+	}
+	return html`<img
+		class="now-cover"
+		src=${archiveCoverHref(props.id)}
+		alt=${t(text, 'now.playback.cover', { title: props.title })}
+		onError=${function () { setBroken(true); }} />`;
+}
+
+/** @returns {import('../../ui/actions.js').RowAction[]} */
+function noActions() {
+	return [];
+}
+
+/**
+ * A recording or a file the movie player shows, in place of the channel.
+ *
+ * @param {{ shown: import('../../playback.js').Shown, at: number }} props
+ * @returns {Web.Drawn}
+ */
+function PlaybackShown(props) {
+	const shown = props.shown;
+	const redraw = useState(0)[1];
+	const [details, setDetails] = useState(false);
+	const recording = shown.source === 'recording';
+
+	useEffect(function () {
+		if (shown.state !== 'playing') {
+			return undefined;
+		}
+		const timer = window.setInterval(function () { redraw(function (n) { return n + 1; }); }, 1000);
+		return function () { window.clearInterval(timer); };
+	}, [shown.state, props.at]);
+
+	useEffect(function () {
+		const timer = window.setInterval(function () {
+			store.reload('GET', '/api/v1/playback').catch(function () { });
+		}, kResyncMs);
+		return function () { window.clearInterval(timer); };
+	}, []);
+
+	useEffect(function () {
+		if (recording) {
+			ensureCss('/app/screens/recordings/recordings.css');
+		}
+	}, [recording]);
+
+	const position = positionAt(shown, Date.now() - props.at);
+	const name = shown.title || shown.name;
+	const acts = tileActions(shown);
+
+	function stop() {
+		announce(session.requireLevel('write').then(function () {
+			return store.write('POST', '/api/v1/zap', {
+				touches: ['/api/v1/playback', '/api/v1/channels/current', '/api/v1/recordings/archive'],
+				body: { channel_id: shown.returnsTo, stop_playback: true },
+			});
+		}), t(text, 'now.playback.stopped'));
+	}
+
+	return html`<div class="now-head" data-playback=${shown.source}>
+			${recording ? html`<${Cover} id=${shown.id} title=${name} />` : null}
+			<div class="now-head-what">
+				<p class="now-channel-name">${name}</p>
+				<p class="now-channel-facts">
+					<span>${t(text, recording ? 'now.playback.recording' : 'now.playback.file')}</span>
+					${shown.channel ? html`<span>${shown.channel}</span>` : null}
+				</p>
+			</div>
+			${shown.paused
+				? html`<${Dot} kind="warning" word=${t(text, 'now.playback.paused')} />`
+				: html`<${Dot} kind="onair" word=${t(text, 'now.card.playing')} />`}
+		</div>
+		<div class="now-event">
+			${shown.duration > 0
+				? html`<${Meter}
+					label=${t(text, 'now.playback.progress')}
+					value=${position}
+					max=${shown.duration}
+					text=${t(text, 'now.playback.at', { position: timeText(position), duration: timeText(shown.duration) })} />`
+				: html`<p class="now-event-when mono now-playback-at">${timeText(position)}</p>`}
+		</div>
+		<p class="now-buttons">
+			${acts.indexOf('stop') !== -1
+				? html`<${Button} primary=${true} class="now-act-stop" onClick=${stop}>${t(text, 'now.playback.stop')}<//>`
+				: null}
+			${acts.indexOf('info') !== -1
+				? html`<${Button} class="now-act-info" onClick=${function () { setDetails(true); }}>ℹ ${t(text, 'now.playback.info')}<//>`
+				: null}
+			${acts.indexOf('archive') !== -1
+				? html`<a class="btn now-act-archive" href=${hrefFor('recordings', 'archive')}>${t(text, 'now.playback.archive')}</a>`
+				: null}
+		</p>
+		${recording
+			? html`<${ArchiveDetails} id=${details ? shown.id : null} actionsOf=${noActions}
+				onClose=${function () { setDetails(false); }} />`
+			: null}`;
+}
+
+/**
  * What is playing, what is on, what comes after it, and what can be done with
  * it without leaving this screen.
  *
@@ -207,7 +322,10 @@ function Playing() {
 	const channel = useResource('GET', '/api/v1/channels/current');
 	const running = useResource('GET', '/api/v1/recordings');
 	const standbyStatus = useResource('GET', '/api/v1/system/standby');
-	const playing = store.lastAnswer(channel);
+	const playback = useResource('GET', '/api/v1/playback');
+	const shown = readPlayback(store.lastAnswer(playback));
+	const playingBack = isPlayback(shown);
+	const playing = playingBack ? null : store.lastAnswer(channel);
 	const standby = standbyStatus.data;
 	// The card's own empty state, or waking from standby flashes it as a fault.
 	const idle = !!channel.error && channel.error.problem.type === kNothingPlaying;
@@ -324,11 +442,14 @@ function Playing() {
 
 	return html`<${Card}
 		title=${t(text, standby && standby.on ? 'now.card.standby' : 'now.card.playing')}
-		snapshot=${standby && standby.on ? standbyStatus : (idle ? Object.assign({}, channel, { error: null }) : channel)}
+		snapshot=${standby && standby.on ? standbyStatus
+			: (playingBack ? playback : (idle ? Object.assign({}, channel, { error: null }) : channel))}
 		wide=${true}
 		lead=${true}>
 		${standby && standby.on
 			? html`<p class="now-empty">${t(text, 'now.standby.state')}</p>`
+			: playingBack
+			? html`<${PlaybackShown} shown=${shown} at=${playback.at} />`
 			: playing
 				? html`<div class="now-head">
 					<${Logo} id=${playing.id} name=${playing.name} />
@@ -375,22 +496,22 @@ function Playing() {
 				</div>
 				<p class="now-buttons">
 					${recordingId !== 0
-						? html`<${Button} primary=${true} onClick=${stopRecording}>${t(text, 'now.act.recordstop')}<//>`
-						: html`<${Button} primary=${true} onClick=${startRecording}>${t(text, 'now.act.record')}<//>`}
+						? html`<${Button} primary=${true} class="now-act-recordstop" onClick=${stopRecording}>${t(text, 'now.act.recordstop')}<//>`
+						: html`<${Button} primary=${true} class="now-act-record" onClick=${startRecording}>${t(text, 'now.act.record')}<//>`}
 					${shifting
-						? html`<${Button} onClick=${stopShift}>${t(text, 'now.act.timeshiftstop')}<//>`
-						: html`<${Button} onClick=${startShift}>${t(text, 'now.act.timeshift')}<//>`}
+						? html`<${Button} class="now-act-timeshiftstop" onClick=${stopShift}>${t(text, 'now.act.timeshiftstop')}<//>`
+						: html`<${Button} class="now-act-timeshift" onClick=${startShift}>${t(text, 'now.act.timeshift')}<//>`}
 					${/* The file for a player elsewhere, and the same channel played
 					     here, side by side: they are the two ways of watching what
 					     is on without the television, and somebody who wants one
 					     of them was looking for the other a moment before. */''}
-					<a class="btn" href=${buildUrl('/api/v1/stream/playlist/{id}', { id: playing.id }, null)}>
+					<a class="btn now-act-m3u" href=${buildUrl('/api/v1/stream/playlist/{id}', { id: playing.id }, null)}>
 						${t(text, 'now.act.m3u')}
 					</a>
 					${streaming
-						? html`<a class="btn" href=${hrefFor('channels', 'playback', playing.id)}>${labelOf(streaming)}</a>`
+						? html`<a class="btn now-act-browser" href=${hrefFor('channels', 'playback', playing.id)}>${labelOf(streaming)}</a>`
 						: null}
-					<a class="btn" href=${hrefFor('channels', 'list')}>${t(text, 'now.act.zap')}</a>
+					<a class="btn now-act-zap" href=${hrefFor('channels', 'list')}>${t(text, 'now.act.zap')}</a>
 				</p>`
 				: html`<p class="now-empty">${t(text, 'now.channel.none')}</p>`}
 	<//>`;

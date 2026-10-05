@@ -16,11 +16,13 @@ import { Sheet } from './sheet.js';
 
 /**
  * @typedef {object} RowAction
- * @property {string} id
+ * @property {string} id written as data-act on both of its controls
  * @property {string} label what it does, spelled out, which is also what the
  *           mark beside a pointer is named by
- * @property {string} [mark] the one character the wide folding draws, and the
- *           label alone where there is none
+ * @property {string | Web.Drawn} [mark] the one character, or small drawing,
+ *           the wide folding draws, and the label alone where there is none
+ * @property {string} [named] the accessible name and tooltip where a short
+ *           label needs the row's name beside it; the label otherwise
  * @property {boolean} [disabled]
  * @property {() => void} onAct
  */
@@ -56,9 +58,10 @@ export function RowActions(props) {
 					key=${one.id}
 					type="button"
 					class="btn"
+					data-act=${one.id}
 					disabled=${one.disabled}
-					title=${one.label}
-					aria-label=${one.label}
+					title=${one.named || one.label}
+					aria-label=${one.named || one.label}
 					onClick=${function () { one.onAct(); }}>${one.mark || one.label}</button>`;
 			})}
 		</span>
@@ -76,7 +79,10 @@ export function RowActions(props) {
 					return html`<li key=${one.id}>
 						<button
 							type="button"
+							data-act=${one.id}
 							disabled=${one.disabled}
+							title=${one.named || one.label}
+							aria-label=${one.named || null}
 							onClick=${function () { run(one); }}>
 							${one.mark ? html`<span class="ic" aria-hidden="true">${one.mark}</span>` : null}
 							<span>${one.label}</span>

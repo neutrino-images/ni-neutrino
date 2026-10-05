@@ -37,6 +37,9 @@ const kStale = {
 	'epg-updated': ['/api/v1/epg'],
 	'bouquets-changed': ['/api/v1/bouquets', '/api/v1/channels'],
 	'settings-changed': ['/api/v1/settings/'],
+	// What plays, so the running channel too, and the archive's mark of it.
+	'playback': ['/api/v1/playback', '/api/v1/channels/current', '/api/v1/epg/current', '/api/v1/tuner',
+		'/api/v1/recordings/archive'],
 };
 
 export const types = Object.keys(kStale);

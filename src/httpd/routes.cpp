@@ -78,6 +78,7 @@ const RouteTable *const kTables[] = {
 	&streamTable,
 	&webtvTable,
 	&recordingsTable,
+	&playbackTable,
 	&openapi::openapiTable,
 };
 

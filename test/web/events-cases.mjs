@@ -233,6 +233,28 @@ await settle();
 same(timesAsked(kCurrent), 2, 'a zap right behind the standby event reads the running channel once more');
 stopCurrent();
 
+// A playback starting, pausing or ending changes what plays.
+const kPlayback = 'GET /api/v1/playback';
+const stopPlayback = store.watch('GET', '/api/v1/playback', null, function () {});
+const stopCurrentToo = store.watch('GET', '/api/v1/channels/current', null, function () {});
+await settle();
+asked = [];
+last().emit('playback', '{"channel_id":"0","value":12,"text":"paused recording dd27cf8d43d5a28f"}');
+await settle();
+same([timesAsked(kPlayback), timesAsked(kCurrent)], [1, 1],
+	'a playback event reads what plays and the running channel again');
+stopPlayback();
+stopCurrentToo();
+// And the archive, whose mark says which recording plays on the TV.
+const kArchive = 'GET /api/v1/recordings/archive';
+const stopArchive = store.watch('GET', '/api/v1/recordings/archive', null, function () {});
+await settle();
+asked = [];
+last().emit('playback', '{"channel_id":"0","value":0,"text":"stopped recording dd27cf8d43d5a28f"}');
+await settle();
+same(timesAsked(kArchive), 1, 'a playback event reads the archive again');
+stopArchive();
+
 // --------------------------------- the browser reconnects after one drop
 
 asked = [];

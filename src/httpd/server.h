@@ -24,6 +24,8 @@
 #include <cstddef>
 #include <string>
 
+#include <sys/socket.h>
+
 namespace httpd
 {
 
@@ -99,6 +101,9 @@ size_t openRequestsForTest();
 
    Counted and never uncounted, so it is a total and not a level. */
 size_t bodyBytesKeptForTest();
+
+// Address and port as a Host header spells them, empty for a family it cannot spell.
+std::string authorityOf(const struct sockaddr *addr);
 
 } // namespace httpd
 

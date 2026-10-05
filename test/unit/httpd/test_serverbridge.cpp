@@ -1277,3 +1277,27 @@ TEST_CASE("a page holding only its cookie is refused a write, and gets back what
 	REQUIRE(out.code == 204);
 	REQUIRE_FALSE(sessionIsLive(held.token));
 }
+
+TEST_CASE("an IPv4 client on a socket that takes both families is answered its own address", "[server]")
+{
+	struct sockaddr_in6 mapped;
+	memset(&mapped, 0, sizeof(mapped));
+	mapped.sin6_family = AF_INET6;
+	mapped.sin6_port = htons(8080);
+	REQUIRE(inet_pton(AF_INET6, "::ffff:192.168.1.20", &mapped.sin6_addr) == 1);
+	REQUIRE(authorityOf((const struct sockaddr *) &mapped) == "192.168.1.20:8080");
+
+	struct sockaddr_in6 plain;
+	memset(&plain, 0, sizeof(plain));
+	plain.sin6_family = AF_INET6;
+	plain.sin6_port = htons(8080);
+	REQUIRE(inet_pton(AF_INET6, "fd00::7", &plain.sin6_addr) == 1);
+	REQUIRE(authorityOf((const struct sockaddr *) &plain) == "[fd00::7]:8080");
+
+	struct sockaddr_in four;
+	memset(&four, 0, sizeof(four));
+	four.sin_family = AF_INET;
+	four.sin_port = htons(80);
+	REQUIRE(inet_pton(AF_INET, "10.0.0.3", &four.sin_addr) == 1);
+	REQUIRE(authorityOf((const struct sockaddr *) &four) == "10.0.0.3:80");
+}

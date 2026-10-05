@@ -117,7 +117,7 @@ TEST_CASE("the bare name of an area is the page as well", "[apppaths]")
 {
 	std::size_t count = 0;
 	const char *const *areas = appAreas(&count);
-	REQUIRE(count == 8);
+	REQUIRE(count == 9);
 	for (std::size_t i = 0; i < count; ++i)
 		REQUIRE(answersWithPage("/" + std::string(areas[i])));
 }

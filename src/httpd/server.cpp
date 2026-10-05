@@ -374,6 +374,24 @@ std::string peerOf(struct MHD_Connection *connection)
 	return std::string(text);
 }
 
+// The authority (address and port, as a Host header would spell it) this request
+// arrived on, for a route that answers with its own address rather than a forged
+// one. Empty when the socket cannot say, which a caller takes as "cannot build one".
+std::string localAuthorityOf(struct MHD_Connection *connection)
+{
+	const union MHD_ConnectionInfo *i =
+		MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CONNECTION_FD);
+	if (i == NULL)
+		return std::string();
+
+	struct sockaddr_storage addr;
+	socklen_t len = sizeof(addr);
+	if (getsockname(i->connect_fd, (struct sockaddr *) &addr, &len) != 0)
+		return std::string();
+
+	return authorityOf((const struct sockaddr *) &addr);
+}
+
 /* The length the request says its body will be, or none when it says nothing or
    says something that is not a number. Read so a body known to be over the
    ceiling is refused before a byte of it is kept. */
@@ -1082,7 +1100,7 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 
 	const Response r = dispatch(m, path, query, st->body, cred.peer, have,
 	                            clientAddress(cred), cred.cookie_token, authority,
-	                            st->scope);
+	                            st->scope, localAuthorityOf(connection));
 
 	/* Carried out of the answer and into the state of this request, which is what
 	   outlives the answer: the notification that says the bytes have gone is
@@ -1268,6 +1286,39 @@ MHD_Result accessHandler(void *cls, struct MHD_Connection *connection,
 }
 
 } // namespace
+
+std::string authorityOf(const struct sockaddr *addr)
+{
+	char text[INET6_ADDRSTRLEN];
+	unsigned short port = 0;
+	bool v6 = false;
+	if (addr->sa_family == AF_INET)
+	{
+		const struct sockaddr_in *a = (const struct sockaddr_in *) addr;
+		if (inet_ntop(AF_INET, &a->sin_addr, text, sizeof(text)) == NULL)
+			return std::string();
+		port = ntohs(a->sin_port);
+	}
+	else if (addr->sa_family == AF_INET6)
+	{
+		const struct sockaddr_in6 *a = (const struct sockaddr_in6 *) addr;
+		// An IPv4 client on a socket that takes both families.
+		v6 = !IN6_IS_ADDR_V4MAPPED(&a->sin6_addr);
+		const bool done = v6 ? inet_ntop(AF_INET6, &a->sin6_addr, text, sizeof(text)) != NULL
+		                     : inet_ntop(AF_INET, &a->sin6_addr.s6_addr[12], text, sizeof(text)) != NULL;
+		if (!done)
+			return std::string();
+		port = ntohs(a->sin6_port);
+	}
+	else
+	{
+		return std::string();
+	}
+	std::string out = v6 ? "[" + std::string(text) + "]" : std::string(text);
+	if (port != 0)
+		out += ":" + std::to_string(port);
+	return out;
+}
 
 bool answerFromDescriptor(Response &r, int fd)
 {

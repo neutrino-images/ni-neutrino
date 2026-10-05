@@ -156,7 +156,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 	border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 .sheet.centred { inset: 10% auto auto 50%; transform: translateX(-50%); width: min(480px, 92%);
 	border: 1px solid var(--line); border-radius: var(--radius-lg); }
-.sheet h2 { margin: 0 0 var(--gap-3); font-size: 1.0625rem; }
+.sheet h2 { margin: 0 0 var(--gap-3); font-size: 1.0625rem; overflow-wrap: anywhere; }
 .sheet-areas { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-2); list-style: none; margin: 0; padding: 0; }
 .sheet-areas a, .sheet-areas button { display: flex; align-items: center; gap: var(--gap-2); width: 100%;
 	min-height: var(--tap-height); padding: var(--gap-2) var(--gap-3); background: var(--ground-2);

@@ -1,27 +1,5 @@
-/* ONE EVENT OF THE GUIDE: WHAT IT SAYS ABOUT ITSELF, AND WHAT MAY BE DONE TO IT.
-
-   Here and not in a screen because three screens reach the same event. The grid,
-   the day of one channel and the search over the whole guide all pick one out,
-   and what may be done to it belongs to the event and not to the page it was
-   picked on.
-
-   A LIST CARRIES SIX FIELDS AND NO MORE. The age an event is broadcast for, what
-   it is about and the long text under the short one are answered by one route for
-   one event, asked with both halves of its name: the guide files an identifier
-   under every showing (src/httpd/ep/ep_epg.cpp). So none of that is fetched until
-   somebody picks one event out, and then it is fetched wherever they picked it.
-
-   AND THE SHORT TEXT OF A LIST IS NOT ALWAYS A SHORT TEXT. Where an event carries
-   none, the event manager fills the field with the beginning of the long one cut
-   at a hundred and twenty bytes. So the facts below draw the two texts the single
-   event route answers and never the one a list handed them, or the same sentence
-   would stand twice, once cut off.
-
-   WHAT IS ON NOW IS DONE NOW, AND WHAT IS NOT YET ON IS WRITTEN DOWN. A programme
-   that has begun is recorded and switched to at once; one that has not is a timer
-   of the kind the button is named after. Every rule about what a timer may be is
-   the box's own (src/coreapi/timers.cpp), so nothing here decides whether a thing
-   may be done: it is sent, and what comes back is what is said on screen. */
+/* One guide event and what may be done to it. A list's short text may be the long one
+   cut, so details come from the single event route only. */
 
 import { html, route, useState, useEffect } from '../runtime.js';
 import * as store from '../store.js';
@@ -41,15 +19,10 @@ import text from './event.text.js';
 
 const kCss = '/app/ui/event.css';
 
-/* What a recording started now makes stale. The timer list because that is
-   where the row is made, the recordings because that is where it shows up as
-   something running. */
 const kRecordTouches = ['/api/v1/recordings', '/api/v1/timers'];
 
 /**
- * The word for what an event is about, out of the upper half of the one byte the
- * box answers. Empty for the classes the box itself draws as unknown, which is
- * nought and everything from eleven up (src/gui/epgview.cpp).
+ * Empty for the classes the box draws as unknown (src/gui/epgview.cpp).
  *
  * @param {number} genre
  * @returns {string} a key of the catalogue beside this file, or the empty string
@@ -63,8 +36,7 @@ export function genreKey(genre) {
 }
 
 /**
- * Whether one event is the one on air. The half open interval, so the event
- * beginning at the moment another ends is the one on now and never both.
+ * Half open, so at a boundary only one event is on.
  *
  * @param {Api.Event} event
  * @param {number} at seconds since the epoch
@@ -75,8 +47,6 @@ export function isOnAir(event, at) {
 }
 
 /**
- * When one event is, as a listing says it.
- *
  * @param {Api.Event} event
  * @returns {string}
  */
@@ -88,27 +58,7 @@ export function whenOf(event) {
 }
 
 /**
- * The way from an event to a timer made out of it.
- *
- * The timer list owns making and changing one, reached with a third part in its
- * address (app/screens/timers/nav.js). What the event is travels beside that
- * part rather than in it: one part of a path names one thing, and an event is
- * four.
- *
- * THE KIND IS NAMED AND NEVER LEFT OUT. The form falls back to a recording for a
- * caller that says nothing (app/screens/timers/form.js), so a switch timer asked
- * for without a kind would open a form that records.
- *
- * The names here are the ones the form reads (askedFor in
- * app/screens/timers/form.js) and not the ones an event happens to carry. An
- * event states how long it runs; the form asks when it ends, and a name it does
- * not read is a field left empty on a form the reader thinks was filled in.
- *
- * The channel is handed on as the event names it, and that is only safe because
- * every guide read now names a channel the way the channel routes do
- * (src/coreapi/epg.cpp). It did not always: the guide keeps the lower half of an
- * identifier, a search used to answer that half, and a timer made out of a hit
- * then named a channel this box does not have.
+ * The kind is always named: the form falls back to a recording.
  *
  * @param {Api.Event} event
  * @param {'record' | 'zapto'} kind what the timer is to do, as the box spells it
@@ -127,11 +77,6 @@ export function timerHref(event, kind) {
 	return hrefFor('timers', 'list', 'new') + '?' + values.join('&');
 }
 
-/* A change this page asks the box for: the sign in first, then the call, then a
-   line about what came of it. Nothing on these screens says in advance that it
-   may not be used, because a visitor may sign in at the moment they reach for a
-   control; a sheet somebody closed says nothing afterwards, because whoever
-   closed it knows what they did. */
 /**
  * @param {() => Promise<unknown>} run
  * @param {string} said what is put on screen once the box has taken it
@@ -151,8 +96,6 @@ function ask(run, said) {
 }
 
 /**
- * The box, on that channel, now.
- *
  * @param {string} id the channel, hexadecimal
  * @param {string} said what is put on screen once the box has taken it
  * @returns {void}
@@ -161,16 +104,7 @@ export function zapTo(id, said) {
 	ask(function () { return zap(id); }, said);
 }
 
-/* RECORDING SOMETHING THAT HAS ALREADY BEGUN IS A TIMER WHOSE START HAS COME.
-   That is the one shape of an immediate recording the daemon runs, which is why
-   the kind carries a name of its own (src/coreapi/timers.cpp). It ends when the
-   programme does, and the guide entry travels with it so that the box knows
-   which showing it was made from.
-
-   The start is read off the clock here and not taken from whatever moment the
-   screen last drew itself to: the box refuses a one-off that begins before the
-   current minute, and a screen a minute behind would be refused for asking to
-   record in the past. */
+// The start is read now: the box refuses a one-off that begins in the past.
 /**
  * @param {Api.Event} event
  * @returns {void}
@@ -194,17 +128,6 @@ function recordNow(event) {
 }
 
 /**
- * WHAT MAY BE DONE TO ONE EVENT, AS ONE LIST TWO DRAWINGS SHARE.
- *
- * Which of them there are is decided here and once: a row of a listing draws
- * them as marks and a panel draws them as words, and a screen that built its own
- * list would be a screen where the same programme offers different things.
- *
- * at is the moment the caller is drawing to, and it decides the shape of the two
- * middle ones: what is on now is done now, what is not yet on is written down.
- * The moment the box is asked is read off the clock inside the act, so a screen
- * that has not drawn itself for a minute still asks about now.
- *
  * @param {{ event: Api.Event, at: number, channelHref?: string,
  *           onOpen?: (event: Api.Event) => void }} props
  * @returns {import('./actions.js').RowAction[]}
@@ -216,8 +139,6 @@ export function eventActions(props) {
 	/** @type {import('./actions.js').RowAction[]} */
 	const actions = [];
 
-	// Only where there is somewhere to open it. A panel that already draws the
-	// whole of an event has nothing to open.
 	if (open) {
 		actions.push({
 			id: 'about',
@@ -269,13 +190,6 @@ export function eventActions(props) {
 }
 
 /**
- * The same list in a row of a listing.
- *
- * Handed to the frame's own control rather than drawn here, because four marks
- * in a line is four targets of eleven pixels in one hand: that control draws
- * them side by side where there is a pointer and puts them in a sheet where
- * there is a finger.
- *
  * @param {{ event: Api.Event, at: number, channelHref?: string,
  *           onOpen: (event: Api.Event) => void }} props
  * @returns {Web.Drawn}
@@ -287,13 +201,6 @@ export function EventActions(props) {
 }
 
 /**
- * And the same list where there is room for words: a panel that has already said
- * which event it is about, so a mark whose meaning has to be guessed would be
- * the only thing on it that has to be.
- *
- * The way out of a thing that lies over the page is in the same row, because it
- * is one of the things to be done there and not a control of its own.
- *
  * @param {{ event: Api.Event, at: number, channelHref?: string,
  *           onOpen?: (event: Api.Event) => void, onClose?: () => void }} props
  * @returns {Web.Drawn}
@@ -313,19 +220,12 @@ export function EventButtons(props) {
 }
 
 /**
- * The three things only the single event route carries, fetched for the one
- * event somebody picked and drawn wherever that was.
- *
- * The read happens while this is on screen, so a listing nobody picked anything
- * out of costs the box nothing.
- *
  * @param {{ event: Api.Event }} props
  * @returns {Web.Drawn}
  */
 export function EventFacts(props) {
 	const [shot, setShot] = useState(/** @type {Web.Snapshot<Api.EventDetail> | null} */ (null));
-	// Both halves of the name, because the guide files one identifier under
-	// every showing of an event and the moment is which of them is meant.
+	// The guide files one id under every showing; the start picks which.
 	const id = props.event.id;
 	const start = props.event.start;
 
@@ -341,8 +241,6 @@ export function EventFacts(props) {
 		return html`<${State} phase="first" />`;
 	}
 	if (shot.state === 'error' && shot.data === null) {
-		// What the box said about its own refusal, and no sentence of this
-		// page's making beside it.
 		const failed = shot.error;
 		return html`<${State} problem=${failed === null ? null : {
 			title: failed.problem.title,
@@ -372,12 +270,6 @@ export function EventFacts(props) {
 }
 
 /**
- * One event whole, in the thing a listing lays over itself.
- *
- * A sheet and not a panel under the row: the row is a row of a table at a desk
- * and a card in one hand, and a thing that unfolds inside it is two layouts to
- * keep right.
- *
  * @param {{ event: Api.Event | null, at: number, channelHref?: string,
  *           onClose: () => void }} props
  * @returns {Web.Drawn}
@@ -400,5 +292,50 @@ export function EventSheet(props) {
 				channelHref=${props.channelHref}
 				onClose=${props.onClose} />
 		</div>`}
+	<//>`;
+}
+
+/**
+ * @param {number} genre
+ * @returns {string}
+ */
+export function genreWord(genre) {
+	const key = genreKey(genre);
+	return key ? t(text, key) : '';
+}
+
+/**
+ * A fact without a value is left out.
+ *
+ * @param {{ facts: readonly { term: string, value: string }[] }} props
+ * @returns {Web.Drawn}
+ */
+export function FactList(props) {
+	useEffect(function () { ensureCss(kCss); }, []);
+	const shown = props.facts.filter(function (one) { return one.value !== ''; });
+	if (!shown.length) {
+		return null;
+	}
+	return html`<dl class="ev-facts">
+		${shown.map(function (one) { return html`<dt>${one.term}</dt><dd>${one.value}</dd>`; })}
+	</dl>`;
+}
+
+/**
+ * @param {{ open: boolean, title: string, when: string, onClose: () => void, children?: unknown }} props
+ * @returns {Web.Drawn}
+ */
+export function DetailSheet(props) {
+	useEffect(function () { ensureCss(kCss); }, []);
+	return html`<${Sheet}
+		open=${props.open}
+		centred=${true}
+		label=${props.title}
+		onClose=${props.onClose}>
+		${props.open ? html`<div>
+			<h2>${props.title}</h2>
+			<p class="ev-when">${props.when}</p>
+			${props.children}
+		</div>` : null}
 	<//>`;
 }

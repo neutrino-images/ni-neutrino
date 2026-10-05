@@ -1,0 +1,4 @@
+.wake-which label { display: flex; align-items: center; gap: var(--gap-2); min-height: var(--tap-height);
+	margin-bottom: var(--gap-2); padding: var(--gap-2) var(--gap-3); overflow-wrap: anywhere;
+	background: var(--ground-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.wake-which input { flex: none; margin: 0; accent-color: var(--accent); }

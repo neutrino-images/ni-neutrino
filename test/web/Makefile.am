@@ -23,16 +23,25 @@ WEB_CHECKS = \
 	check-web-timerbody.sh \
 	check-web-timeredit.sh \
 	check-web-fileplay.sh \
+	check-web-archive.sh \
 	check-web-size.sh \
 	check-web-types.sh \
 	check-web-handover.sh \
-	check-web-guideclock.sh
+	check-web-guideclock.sh \
+	$(NOW_CHECKS)
+
+NOW_CHECKS = \
+	check-web-now.sh
+
+NOW_DIST = \
+	now-cases.mjs
 
 # openapi-types.js is read by check-web-types.sh and writes the types the
 # pages are held to; types/ holds what the type checker reads beside them.
 EXTRA_DIST = $(WEB_CHECKS) fetch-types.sh serve.js openapi-types.js drag-cases.mjs player-cases.mjs \
-	     decide-cases.mjs fileplay-cases.mjs store-cases.mjs events-cases.mjs session-cases.mjs timerbody-cases.mjs \
-	     timeredit-cases.mjs guideclock-cases.mjs wake-cases.mjs types
+	     decide-cases.mjs fileplay-cases.mjs archive-cases.mjs store-cases.mjs events-cases.mjs session-cases.mjs timerbody-cases.mjs \
+	     timeredit-cases.mjs guideclock-cases.mjs wake-cases.mjs types \
+	     $(NOW_DIST)
 
 # The document the server answers with, written out by the target that owns it
 # and read here so that what the page asks for is held to it. Made through that

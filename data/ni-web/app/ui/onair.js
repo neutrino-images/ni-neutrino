@@ -16,6 +16,8 @@ import { t } from '../i18n.js';
 import text from '../shell.text.js';
 import { hrefFor } from '../nav.js';
 import { Dot } from './dot.js';
+import * as store from '../store.js';
+import { readPlayback, isPlayback } from '../playback.js';
 
 /* The share of the programme that has gone, as a whole number. Nought where
    the guide said nothing, so a bar drawn from this is empty rather than absent
@@ -74,15 +76,43 @@ export function OnAir(props) {
 	   browser draws as a broken image. Asked for once, and the monogram takes
 	   over the moment the answer says there is none. */
 	const [broken, setBroken] = useState(false);
+	const [answer, setAnswer] = useState(/** @type {unknown} */ (null));
 
 	useEffect(function () {
 		setBroken(false);
 	}, [channel ? channel.id : '']);
 
+	useEffect(function () {
+		return store.watch('GET', '/api/v1/playback', null, function (snapshot) {
+			setAnswer(store.lastAnswer(snapshot));
+		});
+	}, []);
+	const shown = readPlayback(answer);
+
 	if (standbyOn) {
 		return html`<span class="onair" data-on-air="standby">
 			<span class="onair-meta"><span class="onair-name">${t(text, 'shell.status.standby')}</span></span>
 		</span>`;
+	}
+
+	const dot = recordings
+		? html`<${Dot}
+			kind="recording"
+			word=${recordings > 1
+				? t(text, 'shell.status.recordings', { count: recordings })
+				: t(text, 'shell.status.recording')} />`
+		: null;
+
+	// The television shows the file, not the channel the box goes back to.
+	if (isPlayback(shown)) {
+		const name = shown.title || shown.name;
+		return html`<a class="onair" data-on-air="playback" href=${hrefFor('now', 'overview')} title=${name}>
+			<span class="onair-meta">
+				<span class="onair-name">${name}</span>
+				<span class="onair-event">${t(text, shown.paused ? 'shell.onair.paused' : 'shell.onair.playback')}</span>
+			</span>
+			${dot}
+		</a>`;
 	}
 
 	if (!channel) {
@@ -114,12 +144,6 @@ export function OnAir(props) {
 					: t(text, 'shell.onair.noevent')}
 			</span>
 		</span>
-		${recordings
-			? html`<${Dot}
-				kind="recording"
-				word=${recordings > 1
-					? t(text, 'shell.status.recordings', { count: recordings })
-					: t(text, 'shell.status.recording')} />`
-			: null}
+		${dot}
 	</a>`;
 }

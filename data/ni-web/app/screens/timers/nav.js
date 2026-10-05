@@ -13,7 +13,6 @@ export default {
 	   it are all out of blocks every font carries. */
 	ic: '\u25f7',
 	items: [
-		{ id: 'list', text: 'nav.timers.list', load: () => import('./list.js') },
-		{ id: 'recordings', text: 'nav.timers.recordings', load: () => import('./recordings.js') }
+		{ id: 'list', text: 'nav.timers.list', load: () => import('./list.js') }
 	]
 };

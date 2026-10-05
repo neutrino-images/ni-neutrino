@@ -220,15 +220,13 @@ function take(answer) {
 	const body = answer || {};
 	current.checked = true;
 	current.authenticated = body.authenticated === true;
-	/* A session that has gone takes the token for another program with it. The box gives
-	   one no longer than a session, so what is held here after that is at best about to
-	   stop working, and a page showing an address that answers nothing is the defect this
-	   token was drawn to close. The next caller draws a fresh one. */
-	if (!current.authenticated) {
+	const level = /** @type {Web.Level} */ (body.level);
+	const nextLevel = kLevels.indexOf(level) === -1 ? 'public' : level;
+	// The media token is drawn at a level; a new level draws a fresh one.
+	if (!current.authenticated || nextLevel !== current.level) {
 		outsideToken = null;
 	}
-	const level = /** @type {Web.Level} */ (body.level);
-	current.level = kLevels.indexOf(level) === -1 ? 'public' : level;
+	current.level = nextLevel;
 	current.user = typeof body.user === 'string' ? body.user : '';
 	/* The header name is kept even when no token came with it. The box answers it to a
 	   caller holding no session precisely so a page about to sign in already has it, and
@@ -337,27 +335,13 @@ export async function logout() {
 }
 
 /**
- * The address of a recording, for a program that is not this browser.
+ * Shared by every address that carries it.
  *
- * WHY THIS EXISTS AT ALL. A media player is handed an address and nothing else: it sets no
- * header and carries no cookie, and the route that hands over the bytes asks for System.
- * So the address this page shows answered 403 to everybody who pasted it. What it carries
- * now is a token, and the token is worth the media of this box and nothing else, for
- * as long as a session lasts.
- *
- * The address is built by the one file that builds addresses, from the path this was
- * handed and the token this draws, and this is the only caller that adds the second. Every
- * other address the page asks for travels with the cookie the browser attaches by itself,
- * and a token written into one of those would be a secret in a history list for nothing.
- *
- * @param {string} path the file on the box
- * @returns {Promise<string>} the address to paste elsewhere
+ * @returns {Promise<string>}
  */
-export async function outsideAddress(path) {
+export async function mediaToken() {
 	if (outsideToken === null) {
-		/* Kept before it settles, so two rows opened at once wait on one call. Cleared
-		   again on a refusal, or the first failure would be the answer for the rest of
-		   the visit. */
+		// Kept before it settles so parallel callers share one call; cleared on failure.
 		outsideToken = api('POST', '/api/v1/token/media', { recover: 'token' })
 			.then(function (answer) {
 				return answer && typeof answer.token === 'string' ? answer.token : '';
@@ -371,7 +355,17 @@ export async function outsideAddress(path) {
 	if (token === '') {
 		throw localError('session.token.title', 'session.token.detail', 500);
 	}
-	return buildUrl('/api/v1/storage/file', null, { path: path, token: token });
+	return token;
+}
+
+/**
+ * For a player that sends no cookie, so the address carries the token.
+ *
+ * @param {string} path the file on the box
+ * @returns {Promise<string>} the address to paste elsewhere
+ */
+export async function outsideAddress(path) {
+	return buildUrl('/api/v1/storage/file', null, { path: path, token: await mediaToken() });
 }
 
 /* A promise, not an event: the caller writes on, or does not, and the intention behind the
