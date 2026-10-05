@@ -48,20 +48,23 @@ openapi.json: FORCE
 	@cp -f $(top_builddir)/src/httpd/openapi.json $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
 
 FORCE:
-.PHONY: FORCE
+.PHONY: FORCE web-orphans
 
-# Every script the list above names. A name without a file is a failure like
-# any other check, and a script of this family that the list does not name is
-# one too, because nothing would run it.
-check-local:
-	@for c in $(WEB_CHECKS); do \
-		if test -f $(srcdir)/$$c; then \
-			$(SHELL) $(srcdir)/$$c $(top_srcdir) $(abs_builddir) || exit 1; \
-		else \
-			echo "$$c is named in WEB_CHECKS and is not in $(srcdir)" >&2; \
-			exit 1; \
-		fi; \
-	done
+# Every script the list above names, one target each, so make -j runs them side
+# by side; none writes anything another reads. A name without a file is a
+# failure like any other check (make finds no rule for it), and a script of this
+# family that the list does not name is one too, because nothing would run it.
+# A .run is never written, and FORCE runs a script even beside a stray one.
+SUFFIXES = .sh .run
+WEB_RUNS = $(WEB_CHECKS:.sh=.run)
+$(WEB_RUNS): FORCE
+
+check-local: $(WEB_RUNS) web-orphans
+
+.sh.run:
+	@$(SHELL) $< $(top_srcdir) $(abs_builddir)
+
+web-orphans:
 	@orphan=`cd $(srcdir) && for f in check-web-*.sh; do \
 		test -f "$$f" || continue; \
 		case " $(WEB_CHECKS) " in *" $$f "*) ;; *) echo $$f;; esac; done`; \

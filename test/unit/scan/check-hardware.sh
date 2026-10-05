@@ -61,9 +61,72 @@ fi
 # One compilation per condition, and one per combination of the conditions a
 # table names, written out first and run below. No object file is wanted and
 # two of these run at once, so the compiler is asked for the front end alone.
+#
+# A condition no file the table includes mentions, the configuration aside,
+# cannot change a token the compiler sees, so it compiles exactly what the table
+# compiles with no condition added. That one compilation stands for all of them;
+# the rest went to reading the same headers again a thousand times. A name glued
+# together with ## could hide a mention, so a table whose own headers paste at
+# all, or whose system headers paste beside one of the prefixes, is compiled
+# under every condition as before.
+#
+# grep over a list of files. xargs answers 123 for a file without a match;
+# anything else is a grep that did not run, which must not read as no mention.
+grepList() {
+	list="$1"
+	shift
+	r=0
+	tr '\n' '\000' < "$list" | xargs -0 grep "$@" || r=$?
+	[ "$r" -eq 0 ] || [ "$r" -eq 123 ] || {
+		echo "check-hardware.sh: grep over what a table includes failed with $r" >&2
+		exit 1
+	}
+}
+
 : > "$tmp/work"
-for m in $MACROS; do
-	for t in $TABLES; do
+idx=0
+for t in $TABLES; do
+	idx=$((idx + 1))
+	printf '%s\t\n' "$t" >> "$tmp/work"
+	$CXX "$@" -M "$t" > "$tmp/deps.$idx" 2>/dev/null || {
+		echo "check-hardware.sh: cannot list what $t includes" >&2
+		exit 1
+	}
+	: > "$tmp/files.$idx"
+	for f in `sed 's/^[^:]*://; s/\\\\$//' "$tmp/deps.$idx"`; do
+		[ "$f" -ef "$CONFIG" ] && continue
+		[ -r "$f" ] || {
+			echo "check-hardware.sh: $t includes $f, which cannot be read" >&2
+			exit 1
+		}
+		echo "$f" >> "$tmp/files.$idx"
+	done
+	if ! grep -qx "$t" "$tmp/files.$idx"; then
+		echo "check-hardware.sh: what $t includes was not read" >&2
+		exit 1
+	fi
+	grep -v '^/usr/' "$tmp/files.$idx" > "$tmp/own.files.$idx" || true
+	grepList "$tmp/own.files.$idx" -l '##' > "$tmp/pasted.$idx"
+	if [ ! -s "$tmp/pasted.$idx" ]; then
+		grepList "$tmp/files.$idx" -lE \
+			'##[[:space:]]*(HAVE|ENABLE|BOXMODEL)_|(HAVE|ENABLE|BOXMODEL)_[A-Z_0-9]*[[:space:]]*##' \
+			> "$tmp/pasted.$idx"
+	fi
+	if [ -s "$tmp/pasted.$idx" ]; then
+		cp "$tmp/macros" "$tmp/mentioned.$idx"
+	else
+		grepList "$tmp/files.$idx" -ohE 'HAVE_[A-Z_0-9]+_HARDWARE|ENABLE_[A-Z_0-9]+|BOXMODEL_[A-Z_0-9]+' \
+			> "$tmp/named.$idx"
+		sort -u "$tmp/named.$idx" | comm -12 "$tmp/macros" - > "$tmp/mentioned.$idx" || true
+	fi
+	# The settings struct the rows name is itself under these conditions, so a
+	# table that mentions none of them is a scan that stopped reading.
+	if [ "`grep -c . "$tmp/mentioned.$idx"`" -lt 1 ]; then
+		echo "check-hardware.sh: no file $t includes mentions a build condition," >&2
+		echo "  the scan of what it includes has stopped matching" >&2
+		exit 1
+	fi
+	for m in `cat "$tmp/mentioned.$idx"`; do
 		printf '%s\t-D%s=1\n' "$t" "$m" >> "$tmp/work"
 	done
 done

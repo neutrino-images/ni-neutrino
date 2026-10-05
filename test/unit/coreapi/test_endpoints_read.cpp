@@ -20,6 +20,7 @@
 
 #include "support/catch.hpp"
 #include "support/fakes.h"
+#include "support/shape.h"
 
 /* What configure wrote. Read here for one thing only: the counter route below
    is answered by every build and what it counts is not, so the case that holds
@@ -56,7 +57,6 @@
 #include "jsoncpp/json/json.h"
 
 #include <algorithm>
-#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -410,125 +410,6 @@ const coreapi::Descriptor *rowIn(const std::vector<coreapi::Descriptor> &rows,
 		return &rows[i];
 	}
 	return NULL;
-}
-
-/* Whether the value that arrived is of the kind the row declares, read off the parser's
-   own idea of what it parsed rather than off the bytes.
-
-   This is the half of a FieldDesc a client would build a typed record out of, and a shape
-   check that only compares member names leaves it described and unchecked: a row saying
-   unsigned over a handler that writes a signed value reads exactly like a row that is
-   right. Which is a drift that happened.
-
-   A whole number arrives as one of the parser's two integer kinds depending on its sign
-   and width, so both are taken wherever a whole number is declared and the sign is asked
-   separately. A number that is not whole is allowed to arrive whole; nothing else
-   widens. */
-/* What the document says an identifier reads as, asked of the answer itself:
-   hexadecimal, no prefix and never empty. */
-bool isHexIdentifier(const std::string &s)
-{
-	if (s.empty() || s.size() > 16)
-		return false;
-	for (size_t i = 0; i < s.size(); ++i)
-	{
-		if (std::isxdigit((unsigned char) s[i]) == 0)
-			return false;
-	}
-	return true;
-}
-
-bool typeMatches(const ::Json::Value &v, FieldType t)
-{
-	const ::Json::ValueType got = v.type();
-	const bool whole = (got == ::Json::intValue || got == ::Json::uintValue);
-
-	switch (t)
-	{
-		case FieldType::Bool:   return got == ::Json::booleanValue;
-		case FieldType::Int:    return whole;
-		// The one that says what the others do not: a row declaring no sign is
-		// answered by a number that has none.
-		case FieldType::UInt:   return whole && v.asInt64() >= 0;
-		case FieldType::Number: return whole || got == ::Json::realValue;
-		case FieldType::String: return got == ::Json::stringValue;
-		case FieldType::Time:   return whole;
-		/* Text, and the text the pattern in the document states: this is the
-		   one kind whose shape a reader is told outright, so a member of it
-		   answering anything else is a document the server does not hold to. */
-		case FieldType::ChannelId: return got == ::Json::stringValue && isHexIdentifier(v.asString());
-		case FieldType::Object: return got == ::Json::objectValue;
-		case FieldType::Array:  return got == ::Json::arrayValue;
-	}
-	// A value cast into the enum from outside it, which no table here writes.
-	return false;
-}
-
-const char *typeName(FieldType t)
-{
-	switch (t)
-	{
-		case FieldType::Bool:   return "bool";
-		case FieldType::Int:    return "int";
-		case FieldType::UInt:   return "uint";
-		case FieldType::Number: return "number";
-		case FieldType::String: return "string";
-		case FieldType::Time:   return "time";
-		case FieldType::ChannelId: return "channel id";
-		case FieldType::Object: return "object";
-		case FieldType::Array:  return "array";
-	}
-	return "?";
-}
-
-/* One answer against the shape its route declares, in three directions. Every member
-   the schema calls for and does not mark absent has to be there. Every member the
-   answer carries has to be one the schema names, which is the direction that catches a
-   member added to a handler and left out of the shape beside it. And every value has to
-   be of the kind its row declares, which is the direction the two above cannot see at
-   all. */
-void checkShape(const ::Json::Value &v, const Schema &s, const std::string &where)
-{
-	INFO(where << " against " << s.name);
-	REQUIRE(v.isObject());
-
-	for (size_t i = 0; i < s.count; ++i)
-	{
-		const FieldDesc &f = s.fields[i];
-		INFO("member " << f.name);
-		if (!f.optional)
-			REQUIRE(v.isMember(f.name));
-		if (!v.isMember(f.name))
-			continue;
-
-		const ::Json::Value &member = v[f.name];
-		INFO("declared " << typeName(f.type) << ", arrived as kind " << (int) member.type());
-		REQUIRE(typeMatches(member, f.type));
-
-		if (f.type == FieldType::Object)
-		{
-			REQUIRE(f.nested != NULL);
-			checkShape(member, *f.nested, where + "." + f.name);
-			continue;
-		}
-		if (f.type == FieldType::Array)
-		{
-			if (f.nested == NULL)
-				continue;
-			for (::Json::ArrayIndex e = 0; e < member.size(); ++e)
-				checkShape(member[e], *f.nested, where + "." + f.name);
-		}
-	}
-
-	const ::Json::Value::Members names = v.getMemberNames();
-	for (size_t i = 0; i < names.size(); ++i)
-	{
-		bool declared = false;
-		for (size_t j = 0; j < s.count && !declared; ++j)
-			declared = names[i] == s.fields[j].name;
-		INFO("member " << names[i]);
-		REQUIRE(declared);
-	}
 }
 
 // The route of that path, out of the tables the server ships, so a case that

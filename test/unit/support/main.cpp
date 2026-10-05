@@ -23,8 +23,10 @@
 
 #include "answers.h"
 #include "counts.h"
+#include "parts.h"
 
 #include <cstdio>
+#include <string>
 
 /* The runner is written out rather than taken from the header, because what
    each case compared is only whole once every case has run and Catch promises
@@ -32,13 +34,57 @@
 int main(int argc, char *argv[])
 {
 	Catch::Session session;
+	std::string part;
+	std::string merge;
+	session.cli(session.cli()
+		| Catch::clara::Opt(part, "k/n")["--part"]("run part k of n and record what it compared")
+		| Catch::clara::Opt(merge, "n")["--merge"]("run no case, judge what parts 1 to n recorded"));
 
 	const int bad = session.applyCommandLine(argc, argv);
 	if (bad != 0)
 		return bad;
+	if (!part.empty() && !merge.empty())
+	{
+		std::fprintf(stderr, "--part and --merge are two different runs\n");
+		return 2;
+	}
+	if (!part.empty())
+	{
+		if (!session.configData().testsOrTags.empty())
+		{
+			std::fprintf(stderr, "a part is chosen by its number and not by a name or a tag\n");
+			return 2;
+		}
+		std::string spec;
+		if (!planPart(part, spec))
+			return 2;
+		watchAnswers();
+		int ran = 0;
+		if (!spec.empty())
+		{
+			session.configData().filenamesAsTags = true;
+			session.configData().testsOrTags.push_back(spec);
+			ran = session.run();
+		}
+		return finishPart(ran);
+	}
 
-	watchAnswers();
-	const int failed = session.run();
+	const bool merging = !merge.empty();
+	if (merging && !session.configData().testsOrTags.empty())
+	{
+		std::fprintf(stderr, "a merge judges every part and takes no name or tag\n");
+		return 2;
+	}
+
+	// A merge runs no case here: the parts ran them and it reads what they saw.
+	int failed = 0;
+	if (merging)
+		failed = mergeParts(merge) ? 0 : 1;
+	else
+	{
+		watchAnswers();
+		failed = session.run();
+	}
 
 	// A run given a name or a tag to pick out is not the whole suite, so the
 	// counts of it are not the suite's counts and nothing is compared.

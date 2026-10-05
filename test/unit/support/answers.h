@@ -21,13 +21,34 @@
 #ifndef COREAPI_TEST_ANSWERS_H
 #define COREAPI_TEST_ANSWERS_H
 
+#include <cstddef>
 #include <map>
+#include <set>
 #include <string>
+#include <vector>
 
 // As complete as the cases: a refusal no case provokes cannot be declared.
 void watchAnswers();
 
 bool answersAgree(const char *actual_path);
+
+// One outcome a shipped route gave, named by its place in allRoutes().
+struct SeenAnswer
+{
+	size_t      table;
+	size_t      index;
+	int         http;
+	std::string code;
+	std::string detail;
+};
+
+// What this process watched, so a run split into parts can be judged as one.
+void answerState(std::vector<SeenAnswer> &seen, std::set<std::string> &rules,
+                 std::set<std::string> &examples);
+
+// False for a route that is not in this binary's tables.
+bool addAnswerState(const std::vector<SeenAnswer> &seen, const std::set<std::string> &rules,
+                    const std::set<std::string> &examples);
 
 // fills names the segments the document gives no example for; from and to rewrite the body.
 int sendBodyExample(const char *method, const char *path,

@@ -86,6 +86,15 @@ size_t countOf(const std::string &haystack, const std::string &needle)
 	return n;
 }
 
+// The pid in the name narrows a look in /tmp to this process: a part running
+// beside this one makes playlists of the same scheme.
+std::string ownPlaylistPrefix()
+{
+	char mine[64];
+	std::snprintf(mine, sizeof(mine), "coreapi-playlist.%d.", (int) ::getpid());
+	return mine;
+}
+
 // How many of the files this call's own naming scheme could have made are
 // sitting in /tmp right now. Matched by prefix and not by a fixed name, because
 // the path carries this process's id and a counter of its own.
@@ -94,7 +103,7 @@ size_t playlistFilesInTmp()
 	DIR *d = ::opendir("/tmp");
 	if (d == NULL)
 		return 0;
-	const std::string prefix = "coreapi-playlist.";
+	const std::string prefix = ownPlaylistPrefix();
 	size_t n = 0;
 	for (struct dirent *e = ::readdir(d); e != NULL; e = ::readdir(d))
 		if (std::strncmp(e->d_name, prefix.c_str(), prefix.size()) == 0)
@@ -566,7 +575,7 @@ off_t playlistBytesSoFar()
 	if (d == NULL)
 		return 0;
 
-	const std::string prefix = "coreapi-playlist.";
+	const std::string prefix = ownPlaylistPrefix();
 	off_t largest = 0;
 	for (struct dirent *e = ::readdir(d); e != NULL; e = ::readdir(d))
 	{

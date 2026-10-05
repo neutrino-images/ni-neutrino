@@ -79,9 +79,8 @@ std::string baseName(const std::string &path)
    beside this suite each take a directory of their own there, and one turning up between
    the two walks below read as a capture left behind.
 
-   Files are still counted whoever wrote them, which is the part this cannot rule out:
-   narrowing further would mean naming the spelling the capture uses, and that is exactly
-   what the case below refuses to do. */
+   Files are still listed whoever wrote them; the case below tells its own apart by what
+   they hold rather than by the spelling the capture uses, which it refuses to name. */
 std::set<std::string> namesIn(const char *dir)
 {
 	std::set<std::string> out;
@@ -105,6 +104,25 @@ std::set<std::string> namesIn(const char *dir)
 	::closedir(d);
 	return out;
 }
+
+// Whether a file in kWhereTheyGo holds something other than what was given, or
+// the start of it, which is what a capture cut short leaves. An empty file says
+// nothing about who wrote it and is not counted.
+struct NotHolding
+{
+	std::string want;
+	explicit NotHolding(const std::string &w) : want(w) {}
+	bool operator()(const std::string &name) const
+	{
+		std::FILE *f = std::fopen((std::string(kWhereTheyGo) + "/" + name).c_str(), "rb");
+		if (f == NULL)
+			return true;
+		char buf[128];
+		const size_t got = std::fread(buf, 1, sizeof(buf), f);
+		std::fclose(f);
+		return got == 0 || want.compare(0, got, buf, got) != 0;
+	}
+};
 
 // How many of this process's descriptors are on one file, found by asking what
 // each of them is on rather than by counting them: connections opening and
@@ -370,6 +388,11 @@ TEST_CASE("a capture that came to nothing is reported", "[screenshot]")
 TEST_CASE("a thousand captures do not leave a thousand files", "[screenshot]")
 {
 	FakeScreenshotSource source;
+	// Content no other process writes, so a part running beside this one does
+	// not count as a capture left behind, whatever name the capture chose.
+	char mark[64];
+	std::snprintf(mark, sizeof(mark), "capture taken by process %d", (int) ::getpid());
+	source.content = mark;
 	InstalledScreenshotSource installed(&source);
 
 	const std::string path = osd::screenshot(true, true, PictureFormat::Png).value();
@@ -391,6 +414,7 @@ TEST_CASE("a thousand captures do not leave a thousand files", "[screenshot]")
 	std::vector<std::string> added;
 	std::set_difference(after.begin(), after.end(), before.begin(), before.end(),
 			    std::back_inserter(added));
+	added.erase(std::remove_if(added.begin(), added.end(), NotHolding(mark)), added.end());
 	INFO(added.size() << " name(s) under " << kWhereTheyGo
 	     << " that were not there before, first: "
 	     << (added.empty() ? std::string("none") : added[0]));

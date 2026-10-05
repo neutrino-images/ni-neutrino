@@ -128,6 +128,13 @@ void recordCount(const char *name, size_t value)
 	m[name] = value;
 }
 
+void recordedCounts(std::map<std::string, size_t> &measured_out,
+		    std::map<std::string, size_t> &clashed_out)
+{
+	measured_out = measured();
+	clashed_out = clashes();
+}
+
 bool coverageCountsAgree(const char *expected_path, const char *actual_path, bool whole)
 {
 	writeFile(actual_path, measured());

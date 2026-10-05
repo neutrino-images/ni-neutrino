@@ -33,6 +33,8 @@ AM_CPPFLAGS = \
 	-DCOREAPI_COUNTS_FILE='"$(srcdir)/support/counts.txt"' \
 	-DCOREAPI_COUNTS_ACTUAL='"$(abs_builddir)/counts.actual"' \
 	-DCOREAPI_ANSWERS_ACTUAL='"$(abs_builddir)/answers.actual"' \
+	-DCOREAPI_PART_DIR='"$(abs_builddir)"' \
+	-DCOREAPI_PART_SECONDS='"$(srcdir)/support/part-seconds.txt"' \
 	-DNI_WEB_OLD_CONF='"$(top_srcdir)/src/httpd/nhttpd.conf.in"' \
 	-DNI_WEB_PAGE_DIR='"$(top_srcdir)/data/ni-web"' \
 	-DNI_WEB_OPENAPI_DUMP='"$(abs_builddir)/openapi.json"' \
@@ -128,9 +130,13 @@ coreapi_tests_SOURCES = \
 	coreapi/test_storagefile.cpp \
 	coreapi/test_storageroots.cpp \
 	coreapi/test_settingsfields.cpp \
+	support/shape.cpp \
+	support/shape.h \
 	support/httpclient.cpp \
 	support/counts.cpp \
 	support/answers.cpp \
+	support/parts.cpp \
+	support/parts.h \
 	support/helperstubs.cpp
 
 # The channel object is linked rather than reimplemented, so a change to its copy
@@ -196,15 +202,32 @@ coreapi_tests_LDADD = \
 	-lz \
 	-lpthread
 
-TESTS = $(check_PROGRAMS)
+# The cases mostly wait on timeouts rather than compute, so the suite runs as
+# parts side by side under make -j, each a share of the source files. The last
+# entry runs no case: it reads what every part recorded and judges the counts
+# and answers as one run would, and refuses unless every case ran exactly once.
+# How many parts is this list alone; add a name to have one more.
+PART_TESTS = part-01.part part-02.part part-03.part part-04.part part-05.part part-06.part \
+	part-07.part part-08.part part-09.part part-10.part part-11.part part-12.part
+TESTS = $(PART_TESTS) whole.merge
+TEST_EXTENSIONS = .part .merge
 
 # Catch2 passes a case that ran no assertion at all unless it is asked to object,
 # so a case whose only check sits behind a loop nobody enters reads as green. The
-# flag has to follow the program name and the harness puts what it is handed in
-# front of it, hence the shell.
-LOG_COMPILER = $(SHELL) -c 'exec "$$0" -w NoAssertions'
+# harness hands over the name of the entry, which carries the part's number.
+PART_LOG_COMPILER = $(SHELL) -c 'k=`expr "$$0" : ".*part-\([0-9]*\)\.part$$"`; rm -f part-$$k.state; set -- $(PART_TESTS); \
+	exec ./coreapi_tests$(EXEEXT) -w NoAssertions --part "$$k/$$\#"'
+MERGE_LOG_COMPILER = $(SHELL) -c 'set -- $(PART_TESTS); exec ./coreapi_tests$(EXEEXT) --merge "$$\#"'
 
-EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/httpclient.h \
+# A part run by an earlier binary is run again rather than merged.
+$(PART_TESTS:.part=.log) whole.log: coreapi_tests$(EXEEXT)
+whole.log: $(PART_TESTS:.part=.log)
+
+# Names for the harness to run, nothing more.
+$(PART_TESTS) whole.merge:
+	@: > $@
+
+EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/part-seconds.txt support/httpclient.h \
 	scan/extract-enum.sh support/merge-counts.sh \
 	scan/check-hook.sh scan/check-fieldtypes.sh \
 	scan/check-hardware.sh scan/check-appliers.sh scan/check-denominator.sh \
@@ -251,7 +274,8 @@ BUILT_SOURCES = $(top_builddir)/src/tools/rcsim.h openapi.json settings-pairs.tx
 	settings-choices.txt settings-labels.txt settings-applied.txt errorcodes.txt statuses.txt httpcodes.txt
 CLEANFILES = openapi.json settings-pairs.txt settings-keys.txt settings-bounds.txt settings-locales.txt \
 	settings-choices.txt settings-labels.txt settings-applied.txt errorcodes.txt statuses.txt httpcodes.txt \
-	counts.actual answers.actual
+	counts.actual answers.actual \
+	$(PART_TESTS) whole.merge part-*.state part-*.state.tmp part-seconds.actual
 
 # The members each of the two enums declares, so that a walk of one in the suite
 # is answerable to the header it came from. The error codes are walked from a
@@ -323,46 +347,145 @@ FORCE:
 # project keeps for the oldest compiler it supports, which is also the only
 # environment here with the target's four byte long, and its header says how.
 
-# A test file no source list mentions is compiled by nothing and would pass unnoticed.
-#
 # Named as a prerequisite rather than left beside check-TESTS: automake asks for the
 # two of them in one make, which under -j runs them at the same time, and these scans
 # start compilers and write files while the cases are running. What that cost the
 # suite was cases that read the clock or the free space going red on a loaded machine
 # and green on a quiet one. Ordered here rather than in check-am, because check-am is
 # automake's and this is not.
-check-local: check-TESTS
+#
+# Each scan reads the tree and nothing the others write, so they run beside
+# each other under make -j; only the cases are kept apart from them.
+SCAN_CHECKS = \
+	scan-sources \
+	scan-hook \
+	scan-legacy-mount \
+	scan-legacybridge-order \
+	scan-legacy-levels \
+	scan-server-credentials \
+	scan-legacy-bodygate \
+	scan-fieldtypes \
+	scan-hardware \
+	scan-denominator \
+	scan-appliers \
+	scan-choices \
+	scan-sections \
+	scan-locale-catalog \
+	scan-callback-boundary \
+	scan-channellist-invalidation \
+	scan-bouquet-rename \
+	scan-zapit-write-checked \
+	scan-bouquet-save-atomic \
+	scan-access-store \
+	scan-mute-source \
+	scan-channel-content-lock \
+	scan-bouquet-vector-lock \
+	scan-list-reader-lock \
+	scan-settings-text-lock \
+	scan-standby-display \
+	scan-standby-abort \
+	scan-standby-wake \
+	scan-zap-standby \
+	scan-timeshift-start \
+	scan-timerlist-event
+
+check-local: $(SCAN_CHECKS)
+$(SCAN_CHECKS): check-TESTS
+.PHONY: $(SCAN_CHECKS)
+
+# A test file no source list mentions is compiled by nothing and would pass unnoticed.
+scan-sources:
 	@orphan=`cd $(srcdir) && find . -name 'test_*.cpp' | sed 's|^\./||' | sort | while read f; do \
 		case " $(coreapi_tests_SOURCES) " in *" $$f "*) ;; *) echo $$f;; esac; done`; \
 	test -z "$$orphan" || { echo "not in coreapi_tests_SOURCES: $$orphan" >&2; exit 1; }
+
+scan-hook:
 	@$(SHELL) $(srcdir)/scan/check-hook.sh $(top_srcdir)/src/neutrino.cpp
+
+scan-legacy-mount:
 	@$(SHELL) $(srcdir)/scan/check-legacy-mount.sh $(top_srcdir)/src/neutrino.cpp
+
+scan-legacybridge-order:
 	@$(SHELL) $(srcdir)/scan/check-legacybridge-order.sh $(top_srcdir)/src/httpd/compat/legacybridge.cpp
+
+scan-legacy-levels:
 	@$(SHELL) $(srcdir)/scan/check-legacy-levels.sh $(top_srcdir)/src/httpd/compat/controlapi.cpp $(top_srcdir)/src/httpd/compat/levels.cpp
+
+scan-server-credentials:
 	@$(SHELL) $(srcdir)/scan/check-server-credentials.sh $(top_srcdir)/src/httpd/server.cpp
+
+scan-legacy-bodygate:
 	@$(SHELL) $(srcdir)/scan/check-legacy-bodygate.sh $(top_srcdir)/src/httpd/server.cpp
+
+scan-fieldtypes:
 	@$(SHELL) $(srcdir)/scan/check-fieldtypes.sh "$(CXX)" $(DEFS) $(AM_CPPFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src/coreapi
+
+scan-hardware:
 	@$(SHELL) $(srcdir)/scan/check-hardware.sh "$(CXX)" $(top_builddir)/config.h $(top_srcdir)/src/coreapi/settings \
 		$(DEFS) $(AM_CPPFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src/coreapi
+
+scan-denominator:
 	@$(SHELL) $(srcdir)/scan/check-denominator.sh $(top_srcdir)
+
+scan-appliers:
 	@$(SHELL) $(srcdir)/scan/check-appliers.sh $(top_srcdir)
+
+scan-choices:
 	@$(SHELL) $(srcdir)/scan/check-choices.sh $(top_srcdir)
+
+scan-sections:
 	@$(SHELL) $(srcdir)/scan/check-sections.sh $(top_srcdir)
+
+scan-locale-catalog:
 	@$(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir)
+
+scan-callback-boundary:
 	@$(SHELL) $(srcdir)/scan/check-callback-boundary.sh $(top_srcdir)/src/httpd
+
+scan-channellist-invalidation:
 	@$(SHELL) $(srcdir)/scan/check-channellist-invalidation.sh $(top_srcdir)
+
+scan-bouquet-rename:
 	@$(SHELL) $(srcdir)/scan/check-bouquet-rename.sh $(top_srcdir)
+
+scan-zapit-write-checked:
 	@$(SHELL) $(srcdir)/scan/check-zapit-write-checked.sh $(top_srcdir)
+
+scan-bouquet-save-atomic:
 	@$(SHELL) $(srcdir)/scan/check-bouquet-save-atomic.sh $(top_srcdir)
+
+scan-access-store:
 	@$(SHELL) $(srcdir)/scan/check-access-store.sh $(top_srcdir)
+
+scan-mute-source:
 	@$(SHELL) $(srcdir)/scan/check-mute-source.sh $(top_srcdir)
+
+scan-channel-content-lock:
 	@$(SHELL) $(srcdir)/scan/check-channel-content-lock.sh $(top_srcdir)
+
+scan-bouquet-vector-lock:
 	@$(SHELL) $(srcdir)/scan/check-bouquet-vector-lock.sh $(top_srcdir)
+
+scan-list-reader-lock:
 	@$(SHELL) $(srcdir)/scan/check-list-reader-lock.sh $(top_srcdir)
+
+scan-settings-text-lock:
 	@$(SHELL) $(srcdir)/scan/check-settings-text-lock.sh $(top_srcdir)
+
+scan-standby-display:
 	@$(SHELL) $(srcdir)/scan/check-standby-display.sh $(top_srcdir)
+
+scan-standby-abort:
 	@$(SHELL) $(srcdir)/scan/check-standby-abort.sh $(top_srcdir)
+
+scan-standby-wake:
 	@$(SHELL) $(srcdir)/scan/check-standby-wake.sh $(top_srcdir)
+
+scan-zap-standby:
 	@$(SHELL) $(srcdir)/scan/check-zap-standby.sh $(top_srcdir)
+
+scan-timeshift-start:
 	@$(SHELL) $(srcdir)/scan/check-timeshift-start.sh $(top_srcdir)
+
+scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)

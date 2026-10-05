@@ -299,6 +299,54 @@ bool answersAgree(const char *actual_path)
 	return agree;
 }
 
+void answerState(std::vector<SeenAnswer> &seen, std::set<std::string> &rules,
+                 std::set<std::string> &examples)
+{
+	size_t count = 0;
+	const RouteTable *const *tables = allRoutes(&count);
+	for (size_t t = 0; t < count; ++t)
+	{
+		for (size_t i = 0; i < tables[t]->count; ++i)
+		{
+			std::map<const Endpoint *, Outcomes>::const_iterator s =
+				watched().seen.find(&tables[t]->endpoints[i]);
+			if (s == watched().seen.end())
+				continue;
+			for (Outcomes::const_iterator o = s->second.begin(); o != s->second.end(); ++o)
+			{
+				SeenAnswer a;
+				a.table = t;
+				a.index = i;
+				a.http = o->first.first;
+				a.code = o->first.second;
+				a.detail = o->second;
+				seen.push_back(a);
+			}
+		}
+	}
+	rules = watched().rules_reached;
+	examples = examplesAccepted();
+}
+
+bool addAnswerState(const std::vector<SeenAnswer> &seen, const std::set<std::string> &rules,
+                    const std::set<std::string> &examples)
+{
+	size_t count = 0;
+	const RouteTable *const *tables = allRoutes(&count);
+	for (size_t k = 0; k < seen.size(); ++k)
+	{
+		if (seen[k].table >= count || seen[k].index >= tables[seen[k].table]->count)
+			return false;
+		Outcomes &o = watched().seen[&tables[seen[k].table]->endpoints[seen[k].index]];
+		const Outcome key(seen[k].http, seen[k].code);
+		if (o.find(key) == o.end())
+			o[key] = seen[k].detail;
+	}
+	watched().rules_reached.insert(rules.begin(), rules.end());
+	examplesAccepted().insert(examples.begin(), examples.end());
+	return true;
+}
+
 int sendBodyExample(const char *method, const char *path,
                     const std::map<std::string, std::string> &fills,
                     const std::string &from, const std::string &to)

@@ -142,13 +142,17 @@ std::string readAndRemove(const std::string &path)
 
 // How many of the files this endpoint's own naming scheme could have made are
 // sitting in /tmp right now. Matched by prefix and not by a fixed name,
-// because the path carries this process's pid and a per-call counter.
+// because the path carries this process's pid and a per-call counter; the
+// pid narrows it to this process, as a part running beside this one makes
+// files of the same scheme.
 size_t xmltvFilesInTmp()
 {
 	DIR *d = ::opendir("/tmp");
 	if (d == NULL)
 		return 0;
-	const std::string prefix = "coreapi-xmltv.";
+	char mine[64];
+	std::snprintf(mine, sizeof(mine), "coreapi-xmltv.%d.", (int) ::getpid());
+	const std::string prefix = mine;
 	size_t n = 0;
 	for (struct dirent *e = ::readdir(d); e != NULL; e = ::readdir(d))
 		if (std::strncmp(e->d_name, prefix.c_str(), prefix.size()) == 0)
