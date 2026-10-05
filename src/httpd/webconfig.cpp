@@ -92,13 +92,13 @@ const char kOldExempt[]   = "mod_auth.no_auth_client";
    shuts the box down to whoever has read either place. */
 const char kOldShippedPassword[] = "ni";
 
-/* How long a session may stand. A day by default. The bounds are here because
-   this is a security parameter and both ends of it are a way to be wrong: a
-   lifetime of seconds is a box nobody can stay logged in to, and one of years
-   is a stolen token that never stops working. The shortest of them is also
-   what a value this cannot use falls back to, for the reason the header
-   states. */
-const unsigned kSessionLifetimeDefault = 86400u;
+/* How long a session may stand. Thirty days by default, the longest it may be.
+   The bounds are here because this is a security parameter and both ends of it
+   are a way to be wrong: a lifetime of seconds is a box nobody can stay logged
+   in to, and one of years is a stolen token that never stops working. The
+   shortest of them is also what a value this cannot use falls back to, for the
+   reason the header states. */
+const unsigned kSessionLifetimeDefault = 2592000u;
 const unsigned kSessionLifetimeMin     = 60u;
 const unsigned kSessionLifetimeMax     = 2592000u;
 

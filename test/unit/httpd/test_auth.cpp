@@ -534,7 +534,7 @@ TEST_CASE("sessions are dropped when they expire rather than accumulating", "[au
 	REQUIRE_FALSE(openSession("root").empty());
 	REQUIRE(sessionCount() == before + 2);
 
-	expireSessions(time(NULL) + 86400 + 1);
+	expireSessions(time(NULL) + 2592000 + 1);
 	REQUIRE(sessionCount() == 0);
 }
 
@@ -545,7 +545,7 @@ TEST_CASE("the gate is what gives back what has run out", "[auth]")
 	   leak anybody who can reach the port can pull on. */
 	Policy back;
 
-	expireSessions(time(NULL) + 86400 + 1);
+	expireSessions(time(NULL) + 2592000 + 1);
 	REQUIRE(sessionCount() == 0);
 
 	const std::string dead = expiredSession();
@@ -1138,7 +1138,7 @@ TEST_CASE("a scoped token is never the second token", "[auth]")
 
 TEST_CASE("a token that has run out resolves to nothing and is given back", "[auth]")
 {
-	/* A token minted for a page is short lived on purpose, which is worth nothing
+	/* A token minted for a page lives no longer than a session on purpose, which is worth nothing
 	   unless something refuses it afterwards. Refused where it is looked up rather
 	   than when the walk comes round, so its life is the length it was given and not
 	   that plus however long until the next walk. */

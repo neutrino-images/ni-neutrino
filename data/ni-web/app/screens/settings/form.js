@@ -406,7 +406,7 @@ export default function SettingsForm(props) {
 				reason=${badValues.length > 0 ? t(text, 'settings.badvalues') : ''}
 				disabled=${pending === 0 || saving}
 				onClick=${function () {
-					session.requireWrite().then(save, function () {
+					session.requireSystem().then(save, function () {
 						// The sheet was closed. What was typed is still on the
 						// screen and Save is still there to be pressed again.
 					});

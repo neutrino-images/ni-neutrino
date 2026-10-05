@@ -234,7 +234,7 @@ TEST_CASE("the values a box that was never configured runs on", "[webconf]")
 	REQUIRE(c.server.bind_address == "0.0.0.0");
 	REQUIRE(c.username == "root");
 	REQUIRE(c.password_hash.empty());
-	REQUIRE(c.session_lifetime_s == 86400);
+	REQUIRE(c.session_lifetime_s == 2592000);
 	REQUIRE(c.sse_max_streams == 8);
 	REQUIRE(c.legacy_enabled);
 	REQUIRE(c.docroot == std::string(PRIVATE_HTTPDDIR) + "/ni-web");
@@ -1314,7 +1314,7 @@ TEST_CASE("a session lifetime outside what one may be keeps the default", "[webc
 {
 	Restore back;
 
-	/* The default is a day, which is longer than any hand written line is
+	/* The default is thirty days, which is longer than any hand written line is
 	   likely to be, so a refused value falls back to the shortest a session may
 	   be rather than to the default. A token that outlives what the file asked
 	   for is the failure that matters here. */
@@ -1327,7 +1327,7 @@ TEST_CASE("a session lifetime outside what one may be keeps the default", "[webc
 		REQUIRE(httpd::load(conf.path()));
 		INFO("lifetime value " << bad[i]);
 		REQUIRE(httpd::config().session_lifetime_s == 60);
-		REQUIRE(httpd::config().session_lifetime_s != 86400);
+		REQUIRE(httpd::config().session_lifetime_s != 2592000);
 		REQUIRE(anyProblemMentions("session_lifetime_s"));
 	}
 
@@ -1606,8 +1606,8 @@ TEST_CASE("a proxy list cut short believes nobody", "[webconf]")
 
 TEST_CASE("a session lifetime cut short is the shortest and not the longest", "[webconf]")
 {
-	// The default is a day. A line asking for five minutes that cannot be read
-	// must not become a day.
+	// The default is thirty days. A line asking for five minutes that cannot be
+	// read must not become thirty days.
 	Restore back;
 	Temp conf("conf");
 
@@ -1615,7 +1615,7 @@ TEST_CASE("a session lifetime cut short is the shortest and not the longest", "[
 
 	REQUIRE(httpd::load(conf.path()));
 	REQUIRE(httpd::config().session_lifetime_s == 60);
-	REQUIRE(httpd::config().session_lifetime_s != 86400);
+	REQUIRE(httpd::config().session_lifetime_s != 2592000);
 	REQUIRE(anyProblemMentions("session_lifetime_s"));
 }
 
@@ -1961,7 +1961,7 @@ TEST_CASE("space around a name reaches the other two keys the same way", "[webco
 	writeFile(life.path(), "session_lifetime_s = 300\n");
 	REQUIRE(httpd::load(life.path()));
 	REQUIRE(httpd::config().session_lifetime_s == 60);
-	REQUIRE(httpd::config().session_lifetime_s != 86400);
+	REQUIRE(httpd::config().session_lifetime_s != 2592000);
 	REQUIRE(anyProblemMentions("session_lifetime_s"));
 }
 
@@ -2010,7 +2010,7 @@ TEST_CASE("a name differing only in case is the key it can only mean", "[webconf
 	writeFile(life.path(), "SESSION_LIFETIME_S=300\n");
 	REQUIRE(httpd::load(life.path()));
 	REQUIRE(httpd::config().session_lifetime_s == 60);
-	REQUIRE(httpd::config().session_lifetime_s != 86400);
+	REQUIRE(httpd::config().session_lifetime_s != 2592000);
 	REQUIRE(anyProblemMentions("session_lifetime_s"));
 }
 

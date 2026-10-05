@@ -202,6 +202,13 @@ export function SignIn() {
 		open=${shown}
 		centred=${true}
 		onClose=${close}
+		onScrim=${function () {
+			/* A press beside the sheet while the sign in is on its way would cancel
+			   the write waiting on it, and the sign in would land all the same.
+			   Cancel and escape still close it, for a sign in that never answers. */
+			if (!busy)
+				close();
+		}}
 		label=${t(text, 'shell.signin.title')}>
 		<h2>${t(text, 'shell.signin.title')}</h2>
 		${expired

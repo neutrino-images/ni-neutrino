@@ -269,6 +269,10 @@ async function send(method, url, options, mayRecover, seen) {
 		}
 	}
 
+	// Taken before sending, so a call that loses the race to a sibling's
+	// recovery still counts as one sent under a session.
+	const believedIn = session.state().authenticated;
+
 	let response;
 	try {
 		response = await fetch(url, init);
@@ -303,8 +307,13 @@ async function send(method, url, options, mayRecover, seen) {
 
 	   Exactly once. A second round would be a loop nobody sees, and the state that would cause
 	   it is a refusal that has nothing to do with the token: a bearer credential below the
-	   level a route asks for is refused with the same status and the same code. */
-	const recoverable = response.status === 401 || (response.status === 403 && !isSafe(method));
+	   level a route asks for is refused with the same status and the same code.
+
+	   A read is refused 403 only for its level, and a page that believes it is signed in
+	   holds System, so such a refusal means the box no longer has the session: restarted,
+	   or signed out in another tab. */
+	const recoverable = response.status === 401 ||
+		(response.status === 403 && (!isSafe(method) || believedIn));
 	if (mayRecover && options.recover !== false && recoverable) {
 		/* recover: 'token' is the middle setting, and the two calls that use it are the
 		   two this whole mechanism is made of. Signing in and signing out are themselves

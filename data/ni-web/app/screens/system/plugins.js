@@ -163,7 +163,7 @@ function Found() {
 								<td data-label="">
 									<${Act}
 										label=${t(text, 'sys.plugins.start')}
-										needs="write"
+										needs="system"
 										onClick=${function () {
 											drive(function () {
 												return store.write('POST', '/api/v1/plugins/{name}/start',

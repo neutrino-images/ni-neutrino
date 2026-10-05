@@ -678,10 +678,9 @@ TEST_CASE("writing the flag is a write and it says nothing to the loop", "[plugi
 	REQUIRE(fx.read() == "name=Teletext\nhide=1\n");
 }
 
-TEST_CASE("a write drives the plugins and does not run a script", "[plugins]")
+TEST_CASE("a write reloads the plugins and starting one or running a script takes the system level", "[plugins]")
 {
-	// The line that carries System, and the only guard on it: a table with it
-	// at Write satisfies every rule the server checks before it starts.
+	// The lines that carry System: running a script and starting a plugin.
 	ShippedRoutes shipped;
 	InstalledDependencies deps;
 	Fixture fx;
@@ -693,14 +692,14 @@ TEST_CASE("a write drives the plugins and does not run a script", "[plugins]")
 	REQUIRE(fx.ranNothing());
 
 	REQUIRE(ask(httpd::Post, "/api/v1/plugins/tuxtxt/start", "{}",
-		    httpd::AuthLevel::Write, "127.0.0.1").code == 202);
+		    httpd::AuthLevel::Write, "127.0.0.1").code == 403);
+	REQUIRE(deps.events.sent.empty());
+
 	REQUIRE(ask(httpd::Post, "/api/v1/plugins/reload", "{}",
 		    httpd::AuthLevel::Write, "127.0.0.1").code == 202);
-	REQUIRE(deps.events.sent.size() == 2);
 
-	// And the credential that owns the box does reach the script.
-	REQUIRE(asOwner(httpd::Post, "/api/v1/scripts/hello", "{}").code == 200);
-	REQUIRE_FALSE(fx.ranNothing());
+	REQUIRE(asOwner(httpd::Post, "/api/v1/plugins/tuxtxt/start", "{}").code == 202);
+	REQUIRE(deps.events.sent.size() == 2);
 }
 
 TEST_CASE("a table that changes something at a read is one this server will not start on",

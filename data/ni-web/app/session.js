@@ -183,11 +183,13 @@ export function canSystem() {
 /* The alarm that goes off when the session does.
 
    A session is absolute and not sliding: expires is written once when it is opened and
-   never moved (src/httpd/auth.cpp), and the lifetime is a day (src/httpd/webconfig.cpp).
-   So a tab left open overnight is refused in the middle of whatever it is doing, once, the
-   next morning.
+   never moved (src/httpd/auth.cpp), and the lifetime is thirty days by default
+   (src/httpd/webconfig.cpp). So a tab left open past it is refused in the middle of
+   whatever it is doing, once.
 
    What it does is ask the box again rather than decide what is true. */
+const kLongestAlarmMs = 2147483647;
+
 /**
  * @param {number} seconds
  * @returns {void}
@@ -200,10 +202,11 @@ function setAlarm(seconds) {
 	if (!Number.isFinite(seconds) || seconds <= 0) {
 		return;
 	}
+	// A browser fires a longer timer at once.
 	alarm = window.setTimeout(function () {
 		alarm = 0;
 		refresh();
-	}, seconds * 1000);
+	}, Math.min(seconds * 1000, kLongestAlarmMs));
 }
 
 /**
@@ -428,7 +431,9 @@ export function cancelLogin() {
 /**
  * @param {number} status the status the box refused with
  * @param {boolean} mayPrompt whether the sign in sheet may be opened
- * @returns {Promise<boolean>} whether there is anything new to send
+ * @returns {Promise<boolean>} whether there is anything new to send; rejected
+ *          with the cancellation when the person closed the sheet, so the
+ *          caller does not draw the refusal that opened it
  */
 export async function recover(status, mayPrompt) {
 	const before = current.csrf;
@@ -445,10 +450,6 @@ export async function recover(status, mayPrompt) {
 	if (status !== 401 && status !== 403) {
 		return false;
 	}
-	try {
-		await requireWrite();
-		return true;
-	} catch (e) {
-		return false;
-	}
+	await requireWrite();
+	return true;
 }

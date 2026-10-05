@@ -242,6 +242,8 @@ function opened() {
 	   however short the gap. */
 	if (behind) {
 		behind = false;
+		// A gap is also how a restart of the box looks, and a restart drops every session.
+		session.refresh();
 		store.clear();
 	}
 }

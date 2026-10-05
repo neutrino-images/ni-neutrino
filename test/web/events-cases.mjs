@@ -38,6 +38,8 @@ function same(got, want, what) {
 let asked = [];
 /** @type {Map<string, string>} */
 const says = new Map();
+says.set('GET /api/v1/session', '{"authenticated":false,"level":"read"}');
+
 
 globalThis.fetch = function (url, init) {
 	const key = (init && init.method ? init.method : 'GET') + ' ' + url;
@@ -55,10 +57,18 @@ globalThis.fetch = function (url, init) {
 
 /** @type {Record<string, Array<(event: object) => void>>} */
 const handlers = {};
+/** Every delay a case asked the window to wait, in order. */
+/** @type {Array<number>} */
+const alarms = [];
 globalThis.window = /** @type {any} */ ({
 	addEventListener: function (/** @type {string} */ type, /** @type {(event: object) => void} */ fn) {
 		(handlers[type] = handlers[type] || []).push(fn);
 	},
+	setTimeout: function (/** @type {() => void} */ fn, /** @type {number} */ ms) {
+		alarms.push(ms);
+		return alarms.length;
+	},
+	clearTimeout: function () {},
 });
 
 /** @param {string} type @param {object} event */
@@ -198,6 +208,7 @@ same(sources.length, 1, 'the page opens one stream');
 last().open();
 await settle();
 same(timesAsked(kVolume), 1, 'and the first open reads nothing again');
+same(timesAsked('GET /api/v1/session'), 0, 'nor asks about the session');
 
 // ------------------------------------------- standby and what is playing
 
@@ -232,6 +243,7 @@ is(events.streamStatus().reachable, 'and one drop does not count the box as away
 last().open();
 await settle();
 same(timesAsked(kVolume), 1, 'the stream the browser opened again by itself reads everything once');
+same(timesAsked('GET /api/v1/session'), 1, 'and asks the box once whether the session survived the gap');
 same(sources.length, 1, 'on the same stream, with no second one opened');
 
 // ------------------------------ the browser reconnects after several drops
@@ -263,6 +275,7 @@ same(openStreams(), 1, 'and leave one stream at most');
 last().open();
 await settle();
 same(timesAsked(kVolume), 1, 'the stream the page opened again reads everything once');
+same(timesAsked('GET /api/v1/session'), 1, 'and asks about the session once');
 
 // --------------------------------------------------------- pull to refresh
 
@@ -304,6 +317,12 @@ same(held.length, 0, 'and is not tried again');
 runHeld();
 same(sources.length, count, 'so no stream is opened');
 same(timesAsked(kVolume), 0, 'and nothing is read');
+
+const alarmsBefore = alarms.length;
+says.set('GET /api/v1/session', '{"authenticated":true,"level":"system","expires_in":2592000}');
+await session.refresh();
+same(alarms.length, alarmsBefore + 1, 'a thirty day session sets one alarm');
+same(alarms[alarms.length - 1], 2147483647, 'as long as the browser can hold');
 
 if (failed > 0) {
 	process.stderr.write('events: ' + failed + ' of ' + checked + ' failed\n');

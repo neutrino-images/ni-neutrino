@@ -18,8 +18,9 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
  *   centred?: boolean,
  *   label?: string,
  *   children?: unknown,
- *   onClose: () => void
- * }} props
+ *   onClose: () => void,
+ *   onScrim?: () => void
+ * }} props onScrim, when given, is what a press beside the sheet does instead of closing it
  * @returns {Web.Drawn}
  */
 export function Sheet(props) {
@@ -76,7 +77,7 @@ export function Sheet(props) {
 		return null;
 
 	return html`<${Fragment}>
-		<div class="scrim" onClick=${props.onClose}></div>
+		<div class="scrim" onClick=${props.onScrim || props.onClose}></div>
 		<div
 			class=${props.centred ? 'sheet centred' : 'sheet'}
 			role="dialog"
