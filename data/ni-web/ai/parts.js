@@ -86,10 +86,11 @@ const kFix = {
 	password: { href: '/system/webserver', key: 'ai.why.go.password' },
 	address: { href: '/ai/access', key: 'ai.why.go.access' },
 	proxy: { href: '/ai/access', key: 'ai.why.go.access' },
+	totp: { href: '/ai/access', key: 'ai.why.go.totp' },
 };
 
 /**
- * @param {{ why: 'off' | 'lan' | 'password' | 'address' | 'proxy', here: string }} props
+ * @param {{ why: 'off' | 'lan' | 'password' | 'address' | 'proxy' | 'totp', here: string, onTotp?: () => void }} props
  * @returns {Web.Drawn}
  */
 function Reason(props) {
@@ -97,21 +98,23 @@ function Reason(props) {
 	return html`<p class="ai-warn" data-reason=${props.why}>
 		${t(text, 'ai.why.' + props.why)}
 		${props.why === 'password' ? html` <span data-part="strong">${t(text, 'ai.remote.strong')}</span>` : null}
-		${fix.href === props.here ? null : html` <a href=${fix.href}>${t(text, fix.key)}</a>`}
+		${props.why === 'totp' && props.onTotp
+			? html` <span data-act="totp-reason"><${Button} onClick=${props.onTotp}>${t(text, 'ai.totp.setup')}<//></span>`
+			: fix.href === props.here ? null : html` <a href=${fix.href}>${t(text, fix.key)}</a>`}
 	</p>`;
 }
 
 /**
  * Whether clients can reach the box from the internet, and every reason they cannot.
  *
- * @param {{ settings: import('./model.js').AiSettings, here: string }} props here is the path of the screen, which is not linked to
+ * @param {{ settings: import('./model.js').AiSettings, here: string, onTotp?: () => void }} props here is the path of the screen, which is not linked to
  * @returns {Web.Drawn}
  */
 export function RemoteState(props) {
 	const why = remoteReasons(props.settings);
 	return html`<div class="ai-state" data-part="remote-state">
 		<p class="ai-say" data-say=${why.length ? 'shut' : 'open'}>${t(text, why.length ? 'ai.remote.shut' : 'ai.remote.open')}</p>
-		${why.map(function (one) { return html`<${Reason} key=${one} why=${one} here=${props.here} />`; })}
+		${why.map(function (one) { return html`<${Reason} key=${one} why=${one} here=${props.here} onTotp=${props.onTotp} />`; })}
 		${why.indexOf('password') === -1 ? html`<p class="hint" data-part="strong">${t(text, 'ai.remote.strong')}</p>` : null}
 	</div>`;
 }

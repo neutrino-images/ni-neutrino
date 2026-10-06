@@ -143,6 +143,7 @@ Response route(const Exchange &x)
 		c.cookie = x.consent_cookie;
 		c.accept_language = x.accept_language;
 		c.peer = x.peer;
+		c.origin = x.origin;
 		return answerConsent(c);
 	}
 	if (x.path == kToken)

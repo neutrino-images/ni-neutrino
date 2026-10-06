@@ -29,9 +29,11 @@
 
 #include <openssl/crypto.h>
 
+#include <cstdio>
 #include <limits>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <time.h>
@@ -900,7 +902,7 @@ LoginAttempt beginLoginAttempt(const std::string &peer, unsigned *retry_after)
 
 	forgetQuietLocked(now);
 
-	const std::map<std::string, Attempts>::const_iterator i = table().attempts.find(peer);
+	const std::map<std::string, Attempts>::iterator i = table().attempts.find(peer);
 	if (i != table().attempts.end())
 	{
 		const unsigned delay = loginDelayFor(i->second.failures);
@@ -914,6 +916,9 @@ LoginAttempt beginLoginAttempt(const std::string &peer, unsigned *retry_after)
 				*retry_after = (unsigned)((i->second.last + (time_t) delay) - now);
 			return LoginAttempt::TooSoon;
 		}
+		// Stamped now, so a second attempt from this address waits for this one.
+		if (delay > 0)
+			i->second.last = now;
 	}
 
 	++table().in_flight;
@@ -952,6 +957,16 @@ void forgetLoginAttemptsForTest()
 	OpenThreads::ScopedLock<OpenThreads::Mutex> held(lock());
 	table().attempts.clear();
 	table().in_flight = 0;
+}
+
+Response tooManyAttemptsResponse(unsigned retry_after)
+{
+	Response r = problemResponse(StatusTooManyRequests, coreapi::ErrorCode::TooManyAttempts,
+	                             "too many attempts are being made here; come back in a moment");
+	char seconds[24];
+	std::snprintf(seconds, sizeof(seconds), "%u", retry_after);
+	r.headers.push_back(std::make_pair(std::string("Retry-After"), std::string(seconds)));
+	return r;
 }
 
 size_t loginAttemptCountForTest()

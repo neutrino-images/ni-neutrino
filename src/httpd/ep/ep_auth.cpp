@@ -32,7 +32,6 @@
 #include "coreapi/base/errors.h"
 
 #include <cstddef>
-#include <cstdio>
 #include <string>
 #include <utility>
 
@@ -171,37 +170,6 @@ Response wrongCredential()
 	return r;
 }
 
-/* Says that too much is being asked and nothing else. One document for both things
-   that close the gate, because a caller does the same thing about either, and telling
-   them apart would say whether the box is loaded to somebody who has presented
-   nothing. Retry-After carries a wait the caller could work out by counting. */
-Response tooManyAttempts(unsigned retry_after)
-{
-	Response r = problemResponse(StatusTooManyRequests, coreapi::ErrorCode::TooManyAttempts,
-	                             "too many attempts are being made here; come back in a moment");
-	char seconds[24];
-	std::snprintf(seconds, sizeof(seconds), "%u", retry_after);
-	r.headers.push_back(std::make_pair(std::string("Retry-After"), std::string(seconds)));
-	return r;
-}
-
-/* Gives the ceiling its room back however this handler leaves. A destructor and not a
-   line at the end, because this directory is built with exceptions and a throw between
-   the gate and that line would leave a place in the ceiling taken by nothing for as
-   long as the daemon runs. Four of those and no login is ever answered again. */
-struct AttemptHeld
-{
-	std::string peer;
-	bool        granted;
-
-	explicit AttemptHeld(const std::string &p) : peer(p), granted(false) {}
-	~AttemptHeld() { endLoginAttempt(peer, granted); }
-
-	private:
-		AttemptHeld(const AttemptHeld &);
-		AttemptHeld &operator=(const AttemptHeld &);
-};
-
 Response login(const Request &r)
 {
 	/* Ahead of the derivation and not after it, which is the whole of what this is for:
@@ -211,7 +179,7 @@ Response login(const Request &r)
 	   guesses. */
 	unsigned retry_after = 0;
 	if (beginLoginAttempt(r.peer(), &retry_after) != LoginAttempt::Open)
-		return tooManyAttempts(retry_after);
+		return tooManyAttemptsResponse(retry_after);
 	AttemptHeld held(r.peer());
 
 	const WebConfig &cfg = config();
@@ -233,7 +201,7 @@ Response login(const Request &r)
 	/* Recorded before anything below can fail, so a right answer clears the record
 	   whatever this server then makes of it: a caller that got the password right is not
 	   somebody to go on delaying because the pool the token comes out of was empty. */
-	held.granted = true;
+	held.grant();
 
 	const std::string token = openSession(cfg.username);
 	/* Nothing was written into the table, so there is no session and no cookie

@@ -17,6 +17,13 @@ if (!existsSync(kHtm)) {
 	process.exit(1);
 }
 
+// The QR code library, unpacked by sh test/web/fetch-types.sh like htm above.
+const kQrcode = new URL('./node_modules/qrcode-generator/dist/qrcode.mjs', import.meta.url);
+if (!existsSync(kQrcode)) {
+	process.stderr.write('ai-cases.mjs: no ' + kQrcode.pathname + '; sh test/web/fetch-types.sh puts it there\n');
+	process.exit(1);
+}
+
 const kStubs = {
 	'/vendor/preact.module.js':
 		'export function h(type, props) { return { type: type, props: props || {}, children: Array.prototype.slice.call(arguments, 2) }; }\n' +
@@ -36,6 +43,9 @@ loader.registerHooks({
 	resolve: function (spec, context, next) {
 		if (spec === '/vendor/htm.module.js') {
 			return { url: kHtm.href, shortCircuit: true };
+		}
+		if (spec === '/vendor/qrcode.module.js') {
+			return { url: kQrcode.href, shortCircuit: true };
 		}
 		if (Object.prototype.hasOwnProperty.call(kStubs, spec)) {
 			return { url: 'data:text/javascript,' + encodeURIComponent(kStubs[spec]), shortCircuit: true };
@@ -150,13 +160,13 @@ same(scopes.hasLevel(['read']), true, 'reading is a level');
 // ----------------------------------------------------------------- settings
 
 const doc = { enabled: true, public_url: 'https://tv.example.org', trusted_proxies: '192.168.1.5/32', allow_lan: false,
-	mcp_url: 'https://tv.example.org/mcp', tunnel_paths: ['/mcp', 7, '/oauth/'], port: 8081, default_password: true };
+	mcp_url: 'https://tv.example.org/mcp', tunnel_paths: ['/mcp', 7, '/oauth/'], port: 8081, default_password: true, totp: true };
 const box = model.readSettings(doc);
 same(box, { enabled: true, publicUrl: 'https://tv.example.org', trustedProxies: '192.168.1.5/32', allowLan: false,
-	mcpUrl: 'https://tv.example.org/mcp', tunnelPaths: ['/mcp', '/oauth/'], port: 8081, defaultPassword: true }, 'settings read');
+	mcpUrl: 'https://tv.example.org/mcp', tunnelPaths: ['/mcp', '/oauth/'], port: 8081, defaultPassword: true, totp: true }, 'settings read');
 same(model.readSettings('nonsense'), null, 'a body that is not an object is no settings');
 same(model.readSettings({}), { enabled: false, publicUrl: '', trustedProxies: '', allowLan: true,
-	mcpUrl: '', tunnelPaths: [], port: 0, defaultPassword: false }, 'missing members read as the delivered state');
+	mcpUrl: '', tunnelPaths: [], port: 0, defaultPassword: false, totp: false }, 'missing members read as the delivered state');
 same((model.readSettings({ default_password: 'yes' }) || {}).defaultPassword, false, 'only true is the shipped password');
 same((model.readSettings({ trusted_proxies: ['10.0.0.1'] }) || {}).trustedProxies, '', 'a list where one string belongs is nothing');
 same(model.readSaved({ ai: doc, restarting: true }), { settings: box, restarting: true }, 'a save answers the settings and the restart');
@@ -387,6 +397,14 @@ same(model.allowBody(['Wetter', 'Tierpark'], ['video', 'audio']), { plugins: 'We
 
 const runtime = await import('../../data/ni-web/app/runtime.js');
 
+{
+	const qr = await runtime.loadQrcode();
+	const q = qr.default(0, 'M');
+	q.addData('x');
+	q.make();
+	same([typeof qr.default, q.getModuleCount()], ['function', 21], 'the runtime hands over the QR code library a version 1 code comes out of');
+}
+
 /**
  * A drawn tree with every component in it drawn as well, each on hooks of its own
  * so it cannot disturb the screen's.
@@ -517,11 +535,15 @@ function headings(node) {
 const asked = [];
 /** @type {Record<string, [number, unknown]>} */
 const answers = {};
+/** @type {Record<string, string>} */
+const sentBody = {};
 globalThis.fetch = /** @type {any} */ (async function (/** @type {string} */ url, /** @type {RequestInit | undefined} */ init) {
 	const path = String(url).split('?')[0];
-	asked.push(((init && init.method) || 'GET') + ' ' + path);
+	const what = ((init && init.method) || 'GET') + ' ' + path;
+	asked.push(what);
+	sentBody[what] = init && typeof init.body === 'string' ? init.body : '';
 	const a = answers[path] || [404, { type: '/errors/not-found', title: 'Not Found', status: 404, detail: 'no such route' }];
-	return new Response(JSON.stringify(a[1]), { status: a[0],
+	return new Response(a[0] === 204 ? null : JSON.stringify(a[1]), { status: a[0],
 		headers: { 'content-type': a[0] < 300 ? 'application/json' : 'application/problem+json' } });
 });
 async function settle() {
@@ -548,7 +570,7 @@ const aiText = (await import('../../data/ni-web/ai/ai.text.js')).default;
 function say(key) { return i18n.t(aiText, key); }
 const kRaw = 'this endpoint is not open to this caller';
 const settingsDoc = { enabled: true, public_url: '', trusted_proxies: '', allow_lan: true, mcp_url: '',
-	tunnel_paths: ['/mcp'], port: 8081, default_password: true };
+	tunnel_paths: ['/mcp'], port: 8081, default_password: true, totp: true };
 i18n.setLanguage('de');
 
 answers['/api/v1/session'] = [200, { authenticated: false, level: 'read', user: '', csrf: '', csrf_header: 'X-CSRF-Token', expires_in: 0 }];
@@ -814,9 +836,180 @@ function partOf(tree, part) {
 	i18n.setLanguage('de');
 }
 
+// two-factor sign-in
+
+const totpModule = await import('../../data/ni-web/ai/totp.js');
+const guideWords = await import('../../data/ni-web/ai/guidewords.js');
+const guideText = (await import('../../data/ni-web/ai/guidewords.text.js')).default;
+const { createHash } = await import('node:crypto');
+const kTotpSecret = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+const kTotpUri = 'otpauth://totp/Neutrino:ni-box?secret=' + kTotpSecret + '&issuer=Neutrino';
+/** @param {string} key */
+function sayGuide(key) { return i18n.t(guideText, key); }
+/**
+ * @param {unknown} node
+ * @param {(props: Record<string, unknown>) => boolean} match
+ * @returns {Array<{ props: Record<string, unknown> }>}
+ */
+function components(node, match) {
+	/** @type {Array<{ props: Record<string, unknown> }>} */
+	const out = [];
+	(function walk(/** @type {unknown} */ n) {
+		if (Array.isArray(n)) {
+			n.forEach(walk);
+			return;
+		}
+		if (!n || typeof n !== 'object' || !('type' in n))
+			return;
+		const v = /** @type {{ type: unknown, props: Record<string, unknown>, children: unknown }} */ (n);
+		if (v.type === 'component' && v.props && match(v.props))
+			out.push(v);
+		walk(v.children);
+	})(node);
+	return out;
+}
+/** @param {unknown} tree @param {string} part @returns {string} the words inside the first element of that part */
+function textOf(tree, part) {
+	const at = /** @type {{ children?: unknown } | undefined} */ (nodes(tree, function (p) { return p['data-part'] === part; })[0]);
+	return at ? words(at.children).trim() : '';
+}
+/** @param {unknown} tree @param {string} act */
+function press(tree, act) {
+	const at = nodes(tree, function (p) { return p['data-act'] === act; })[0];
+	const button = at ? nodes(at, function (p) { return typeof p.onClick === 'function'; })[0] : undefined;
+	if (!button) {
+		failed++;
+		process.stderr.write('ai: nothing to press at data-act=' + act + '\n');
+		return;
+	}
+	/** @type {() => void} */ (button.props.onClick)();
+}
+/** @param {unknown} tree @param {string} title */
+function confirmDialog(tree, title) {
+	const d = components(tree, function (p) { return p.title === title && typeof p.onConfirm === 'function'; })[0];
+	if (!d) {
+		failed++;
+		process.stderr.write('ai: no dialog titled ' + title + '\n');
+		return;
+	}
+	/** @type {() => void} */ (d.props.onConfirm)();
+}
+/** @param {unknown} tree @param {string} id @param {string} value */
+function typeInto(tree, id, value) {
+	const field = nodes(tree, function (p) { return p.id === id; })[0];
+	if (!field) {
+		failed++;
+		process.stderr.write('ai: no field ' + id + '\n');
+		return;
+	}
+	/** @type {any} */ (field.props).onInput({ currentTarget: { value: value } });
+}
+
+same(model.secretGroups(kTotpSecret), 'GEZD GNBV GY3T QOJQ GEZD GNBV GY3T QOJQ', 'the secret reads in groups of four');
+same(model.secretGroups(' gezd gnbv '), 'gezd gnbv', 'spaces already in it are not doubled');
+same(model.readTotpSetup({ secret: kTotpSecret, uri: kTotpUri }), { secret: kTotpSecret, uri: kTotpUri }, 'a setup answer is read');
+same(model.readTotpSetup({ secret: kTotpSecret, uri: 'https://example.org' }), null, 'only an otpauth address is drawn as a QR code');
+same(model.readTotpSetup({ secret: '', uri: kTotpUri }), null, 'a setup without its secret is no setup');
+same(model.qrPath([[true, false], [false, true]], 4), 'M4 4h1v1h-1zM5 5h1v1h-1z', 'a dark module is one unit square past the quiet zone');
+{
+	const rows = await totpModule.qrMatrix(kTotpUri);
+	const bits = rows.map(function (r) { return r.map(function (d) { return d ? '1' : '0'; }).join(''); }).join('');
+	same([rows.length, rows.every(function (r) { return r.length === rows.length; }), createHash('sha256').update(bits).digest('hex')],
+		[41, true, '6d57d7bc6306cdf75015d16bdc8762fd0494ac01f34c867d123dbe7cbb4e4248'],
+		'the QR code library draws the otpauth address as the version 6 code it always drew');
+}
+same(model.remoteReasons(/** @type {any} */ (model.readSettings(Object.assign({}, settingsDoc, { default_password: false,
+	public_url: 'https://tv.example.org', trusted_proxies: '192.168.1.5/32', totp: false })))), ['totp'],
+	'two-factor sign-in not set up is a reason of its own');
+same(model.remoteReasons(/** @type {any} */ (model.readSettings(Object.assign({}, settingsDoc, { enabled: false, totp: false })))),
+	['off', 'password', 'address', 'totp'], 'and it is said beside the others, last');
+same(['claude', 'chatgpt'].map(function (id) {
+	return guideWords.clientSteps(id, { url: 'https://tv.example.org/mcp' }).some(function (s) { return s.indexOf('Authenticator') !== -1; });
+}), [true, true], 'the guides for claude.ai and ChatGPT say the sign-in asks for the code');
+
+{
+	const d = await drawnWith({ default_password: false, public_url: 'https://tv.example.org', mcp_url: 'https://tv.example.org/mcp',
+		trusted_proxies: '192.168.1.5/32', totp: false });
+	same([reasons(d.clients), reasons(d.access)], [['totp'], ['totp']], 'both screens give the reason');
+	same(attrs(nodes(d.clients, function (p) { return p['data-reason'] === 'totp'; })[0], 'href'), ['/ai/access'],
+		'the connections screen leads to the access screen for it');
+	same(nodes(d.access, function (p) { return p['data-act'] === 'totp-reason'; }).length, 1, 'the access screen offers the setup at the reason');
+	same(words(d.access).indexOf(say('ai.why.totp')) !== -1 && read.worded(say('ai.why.totp')), true, 'and says why');
+	same(attrs(d.access, 'data-totp'), ['off'], 'the access screen says it is off');
+}
+
+{
+	store.put('GET', '/api/v1/ai/settings', null, /** @type {any} */ (Object.assign({}, settingsDoc, { default_password: false, totp: false })));
+	answers['/api/v1/ai/totp/setup'] = [200, { secret: kTotpSecret, uri: kTotpUri }];
+	unmount();
+	draw(access.default);
+	await settle();
+	draw(access.default);
+	press(draw(access.default), 'totp-setup');
+	await settle();
+	const open = draw(access.default);
+	same(asked.indexOf('POST /api/v1/ai/totp/setup') !== -1, true, 'setting up asks the box for a secret');
+	same(textOf(open, 'totp-secret'), 'GEZD GNBV GY3T QOJQ GEZD GNBV GY3T QOJQ',
+		'the secret is shown in groups of four');
+	same(components(open, function (p) { return p.value === kTotpUri; }).length >= 1, true, 'the QR code is drawn from the otpauth address');
+	answers['/api/v1/ai/totp/confirm'] = [400, { type: '/errors/ai-totp-code-wrong', title: 'Bad Request', status: 400, detail: kRaw }];
+	same(attrs(nodes(open, function (p) { return p.id === 'ai-totp-code'; }), 'inputmode'), ['numeric'], 'the code field asks phones for digits');
+	typeInto(open, 'ai-totp-code', '123 456');
+	confirmDialog(draw(access.default), say('ai.totp.setup'));
+	await settle();
+	const wrong = draw(access.default);
+	same(sentBody['POST /api/v1/ai/totp/confirm'], '{"code":"123456"}', 'the code goes without its space');
+	same([words(wrong).indexOf(sayGuide('ai.error.ai-totp-code-wrong')) !== -1, words(wrong).indexOf(kRaw),
+		nodes(wrong, function (p) { return p['data-part'] === 'totp-setup'; }).length], [true, -1, 1],
+		'a wrong code is said in the area\'s words and the dialog stays');
+	const readsBefore = asked.filter(function (a) { return a === 'GET /api/v1/ai/settings'; }).length;
+	answers['/api/v1/ai/totp/confirm'] = [204, null];
+	confirmDialog(wrong, say('ai.totp.setup'));
+	await settle();
+	const done = draw(access.default);
+	same([nodes(done, function (p) { return p['data-part'] === 'totp-setup'; }).length, words(done).indexOf(say('ai.totp.done')) !== -1],
+		[0, true], 'a right code closes the dialog and says so');
+	same(asked.filter(function (a) { return a === 'GET /api/v1/ai/settings'; }).length > readsBefore, true,
+		'and the settings are read again');
+	unmount();
+}
+
+{
+	store.put('GET', '/api/v1/ai/settings', null, /** @type {any} */ (Object.assign({}, settingsDoc, { default_password: false, totp: true })));
+	unmount();
+	draw(access.default);
+	await settle();
+	draw(access.default);
+	const on = draw(access.default);
+	same(attrs(on, 'data-totp'), ['on'], 'the access screen says it is on');
+	same([nodes(on, function (p) { return p['data-act'] === 'totp-again'; }).length, nodes(on, function (p) { return p['data-act'] === 'totp-off'; }).length],
+		[1, 1], 'once on it offers setting up again and turning off');
+	press(on, 'totp-off');
+	const asking = draw(access.default);
+	same(textOf(asking, 'totp-off-note'),
+		'Bestehende Verbindungen bleiben aktiv. Neue Anmeldungen von unterwegs sind erst nach erneuter Einrichtung möglich.',
+		'turning off says that connections already granted stay');
+	confirmDialog(asking, say('ai.totp.off'));
+	await settle();
+	same([asked.indexOf('POST /api/v1/ai/totp/disable'), words(draw(access.default)).indexOf(say('ai.totp.password.missing')) !== -1],
+		[-1, true], 'an empty password is not sent and is said');
+	answers['/api/v1/ai/totp/disable'] = [403, { type: '/errors/not-permitted', title: 'Forbidden', status: 403, detail: kRaw }];
+	typeInto(draw(access.default), 'ai-totp-password', 'falsch');
+	confirmDialog(draw(access.default), say('ai.totp.off'));
+	await settle();
+	const refused = draw(access.default);
+	same([sentBody['POST /api/v1/ai/totp/disable'], words(refused).indexOf(say('ai.totp.password.wrong')) !== -1, words(refused).indexOf(kRaw)],
+		['{"password":"falsch"}', true, -1], 'a wrong password is said as one');
+	answers['/api/v1/ai/totp/disable'] = [204, null];
+	confirmDialog(refused, say('ai.totp.off'));
+	await settle();
+	same(words(draw(access.default)).indexOf(say('ai.totp.gone')) !== -1, true, 'turned off it says so');
+	unmount();
+}
+
 // ------------------------------------------------------------------ verdict
 
-const FLOOR = 163;
+const FLOOR = 191;
 if (checked < FLOOR) {
 	process.stderr.write('ai-cases.mjs: only ' + checked + ' assertions ran, and there are ' + FLOOR + '\n');
 	process.exit(1);

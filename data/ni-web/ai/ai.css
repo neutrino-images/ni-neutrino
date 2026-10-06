@@ -63,6 +63,8 @@
 .ai-allow-row small { color: var(--text-dim); }
 .ai-allow-row input[disabled] + span { color: var(--text-dim); }
 .ai-allow-row .ai-wrap { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.ai-qr { display: block; width: min(15rem, 100%); height: auto; margin: var(--gap-2) 0; }
+.ai-totp-setup code { overflow-wrap: anywhere; }
 @media (max-width: 599px) {
 	.ai-cut { display: inline; max-width: none; white-space: normal; overflow-wrap: anywhere; }
 	.ai-scope { display: inline-flex; align-items: center; min-height: var(--tap-height); }

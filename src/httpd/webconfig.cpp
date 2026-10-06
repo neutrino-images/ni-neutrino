@@ -32,6 +32,8 @@
 #include "coreapi/settings/settings.h"
 #include "mcp/allowlist.h"
 #include "mcp/exposure.h"
+#include "oauth/totp.h"
+#include "oauth/twofactor.h"
 #endif
 
 #include <configfile.h>
@@ -41,6 +43,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <map>
 #include <string>
 #include <vector>
@@ -51,10 +54,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef ENABLE_MCP
 #include <OpenThreads/Mutex>
 #include <OpenThreads/ScopedLock>
-#endif
 
 namespace httpd
 {
@@ -84,6 +85,8 @@ const char kKeyAiProxies[]       = "ai_trusted_proxies";
 const char kKeyAiAllowLan[]      = "ai_allow_lan";
 const char kKeyAiAllowedPlugins[]  = "ai_allowed_plugins";
 const char kKeyAiAllowedSections[] = "ai_allowed_sections";
+const char kKeyAiTotpSecret[]    = "ai_totp_secret";
+const char kKeyAiTotpLastStep[]  = "ai_totp_last_step";
 #endif
 
 // Read where a message would otherwise have to name a key it found in a file.
@@ -96,6 +99,7 @@ const char *const kKnownKeys[] =
 #ifdef ENABLE_MCP
 	kKeyAiEnabled, kKeyAiPublicUrl, kKeyAiProxies, kKeyAiAllowLan,
 	kKeyAiAllowedPlugins, kKeyAiAllowedSections,
+	kKeyAiTotpSecret, kKeyAiTotpLastStep,
 #endif
 };
 
@@ -893,6 +897,56 @@ void readAiAllowlistKeys(const Pairs &m, const CutShort &cut, WebConfig &c)
 		}
 	}
 }
+
+bool totpSecretUsable(const std::string &text)
+{
+	std::string key;
+	const bool usable = oauth::base32Decode(text, &key) && key.size() == oauth::kTotpSecretBytes;
+	if (!key.empty())
+		OPENSSL_cleanse(&key[0], key.size());
+	return usable;
+}
+
+bool readStep(const std::string &raw, long long *out)
+{
+	if (raw.empty() || raw.size() > 18)
+		return false;
+	long long v = 0;
+	for (size_t i = 0; i < raw.size(); ++i)
+	{
+		if (raw[i] < '0' || raw[i] > '9')
+			return false;
+		v = v * 10 + (raw[i] - '0');
+	}
+	*out = v;
+	return true;
+}
+
+// Not kept in the structure: like api_tokens, what a line holds goes where it is used.
+void readAiTotpKeys(const Pairs &m, const CutShort &cut)
+{
+	std::string raw;
+	std::string secret;
+	long long last_step = 0;
+
+	Reading r = reading(m, cut, kKeyAiTotpSecret, raw);
+	if (r == KeyUnreadable || (r == KeyPresent && !raw.empty() && !totpSecretUsable(raw)))
+		complain(std::string(kKeyAiTotpSecret) + ": the line is not a secret this box drew, so new "
+			 "sign-ins through the tunnel are refused until two-factor sign-in is set up again");
+	else if (r == KeyPresent)
+		secret = raw;
+
+	r = reading(m, cut, kKeyAiTotpLastStep, raw);
+	if (r != KeyAbsent && (r == KeyUnreadable || !readStep(raw, &last_step)))
+	{
+		const time_t now = time(NULL);
+		last_step = (now >= oauth::kTotpClockFloor) ? (long long) now / oauth::kTotpStepSeconds : 0;
+		complain(std::string(kKeyAiTotpLastStep) + ": the line is not a step, so every code up to now "
+			 "counts as used");
+	}
+
+	oauth::installTotp(secret, last_step);
+}
 #endif
 
 /* Wipes a value that was somebody's password before it was anything else.
@@ -1643,6 +1697,7 @@ void closeAiOnUnusableFile(const std::string &path)
 		c.ai_trusted_proxies = d.ai_trusted_proxies;
 		c.ai_allow_lan = d.ai_allow_lan;
 		c.ai_named = d.ai_named;
+		oauth::installTotp(std::string(), 0);
 	}
 	else
 	{
@@ -1657,6 +1712,10 @@ void closeAiOnUnusableFile(const std::string &path)
 bool rewriteOwnedLines(const std::string &path, std::vector<OwnedLine> &owned,
 		       const std::string *fresh)
 {
+	// One writer at a time: every save shares the file and its .new name.
+	static OpenThreads::Mutex lock;
+	OpenThreads::ScopedLock<OpenThreads::Mutex> held_file(lock);
+
 	std::string text;
 	struct stat st;
 
@@ -2043,6 +2102,7 @@ bool load(const std::string &path)
 #ifdef ENABLE_MCP
 	readAiKeys(m, cut, c);
 	readAiAllowlistKeys(m, cut, c);
+	readAiTotpKeys(m, cut);
 #endif
 
 	held() = c;
@@ -2313,6 +2373,31 @@ bool saveAiAllowlists(const std::string &path, const std::vector<std::string> &p
 	a.sections = sections;
 	mcp::installAllowlists(a);
 	return true;
+}
+
+bool saveAiTotp(const std::string &path, const std::string &secret_base32, long long last_step)
+{
+	if ((!secret_base32.empty() && !totpSecretUsable(secret_base32)) || last_step < 0)
+	{
+		complain(std::string(kKeyAiTotpSecret) + ": not a secret this box draws, and nothing is written");
+		return false;
+	}
+
+	std::vector<OwnedLine> owned;
+	OwnedLine one;
+	one.written = false;
+
+	one.key = kKeyAiTotpSecret;
+	one.value = secret_base32;
+	owned.push_back(one);
+
+	char step[24];
+	std::snprintf(step, sizeof(step), "%lld", last_step);
+	one.key = kKeyAiTotpLastStep;
+	one.value = step;
+	owned.push_back(one);
+
+	return rewriteOwnedLines(path, owned, NULL);
 }
 #endif
 

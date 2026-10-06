@@ -37,7 +37,7 @@ are not there, and `test/web/check-web-types.sh` refuses to run rather than
 stepping aside. One of the other checks wants node 22.15 or newer and says so
 when it does not have it.
 
-**The six runtime files under `vendor/` are a separate matter.** They are what
+**The seven runtime files under `vendor/` are a separate matter.** They are what
 the browser loads, and a box already carries them, so serving the pages
 against a box needs nothing here. They are only missing if you serve this
 directory with no box behind it, which nothing here asks you to do. Nothing

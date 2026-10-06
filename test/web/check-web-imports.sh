@@ -53,16 +53,16 @@ done
 tmp=`mktemp -d`
 trap 'rm -rf "$tmp"' EXIT
 
-# The five the buildsystem delivers, spelled as the rewritten bytes spell them.
-# The fifth is not loaded with the page: runtime.js reaches it through an
-# address inside a call, so it is fetched by the one screen that plays a
-# channel from an address somewhere else and by nothing else.
+# The six the buildsystem delivers, spelled as the rewritten bytes spell them.
+# The last two are not loaded with the page: runtime.js reaches each through an
+# address inside a call.
 cat > "$tmp/vendor" <<'EOF'
 /vendor/preact.module.js
 /vendor/hooks.module.js
 /vendor/htm.module.js
 /vendor/preact-router.module.js
 /vendor/hls.module.js
+/vendor/qrcode.module.js
 EOF
 
 # Every module of the application, which is everything under the pages except
@@ -159,7 +159,7 @@ while IFS='	' read -r file line spec; do
 			;;
 		/*)
 			if ! grep -qx -- "$spec" "$tmp/vendor"; then
-				echo "$short:$line: $spec is root absolute and is not one of the four the buildsystem delivers" >&2
+				echo "$short:$line: $spec is root absolute and is not one of those the buildsystem delivers" >&2
 				bad=`expr $bad + 1`
 			elif [ "$short" != "data/ni-web/$RUNTIME" ]; then
 				echo "$short:$line: $spec is the runtime, and the runtime is named in $RUNTIME and reached from there" >&2

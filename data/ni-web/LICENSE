@@ -18,6 +18,7 @@ the GPL, and nothing here relicenses them.
   vendor/htm.module.js            Apache-2.0
   vendor/hls.module.js            Apache-2.0
   vendor/mpegts.js                Apache-2.0
+  vendor/qrcode.module.js         MIT
   swagger/vendor/*                Apache-2.0
 
 No version is named. Neither licence asks for one, and a number written here

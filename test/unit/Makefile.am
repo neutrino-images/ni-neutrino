@@ -78,6 +78,7 @@ MCP_TOOL_TESTS = \
 MCP_EXPOSURE_TESTS = \
 	httpd/mcp/test_aiguides.cpp \
 	httpd/mcp/test_aisettings.cpp \
+	httpd/mcp/test_aitotp.cpp \
 	httpd/mcp/test_exposure.cpp \
 	httpd/mcp/test_exposure_config.cpp \
 	httpd/mcp/test_exposure_gate.cpp \
@@ -104,6 +105,8 @@ OAUTH_TESTS = \
 	httpd/oauth/test_oauth_surface.cpp \
 	httpd/oauth/test_oauth_token.cpp \
 	httpd/oauth/test_oauth_tokens.cpp \
+	httpd/oauth/test_oauth_totp.cpp \
+	httpd/oauth/test_oauth_twofactor.cpp \
 	httpd/oauth/test_oauth_uri.cpp \
 	httpd/oauth/test_oauth_verify.cpp
 

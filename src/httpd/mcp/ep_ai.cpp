@@ -20,6 +20,8 @@
 
 #include "httpd/mcp/ep_ai.h"
 
+#include "httpd/auth.h"
+#include "httpd/credentials.h"
 #include "httpd/endpoint.h"
 #include "httpd/endpoints.h"
 #include "httpd/http.h"
@@ -28,6 +30,7 @@
 #include "httpd/mcp/allowlist.h"
 #include "httpd/mcp/exposure.h"
 #include "httpd/netmatch.h"
+#include "httpd/oauth/twofactor.h"
 #include "httpd/schema.h"
 #include "httpd/status.h"
 #include "httpd/webconfig.h"
@@ -37,8 +40,12 @@
 #include "coreapi/settings/settings.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <string>
+#include <utility>
 #include <vector>
+
+#include <unistd.h>
 
 namespace httpd
 {
@@ -92,6 +99,8 @@ void writeAi(Json &j, const AiSettings &s)
 	j.value((unsigned long) answeringPort());
 	j.key("default_password");
 	j.value(shippedPasswordInEffect(config()));
+	j.key("totp");
+	j.value(oauth::totpActive());
 	j.endObject();
 }
 
@@ -110,6 +119,8 @@ const FieldDesc kAiFields[] = {
 	HTTPD_MEMBER("port", FieldType::UInt, "the port this server answers on"),
 	HTTPD_MEMBER("default_password", FieldType::Bool,
 		"whether the login is still the password the image ships, which keeps the tunnel shut"),
+	HTTPD_MEMBER("totp", FieldType::Bool,
+		"whether two-factor sign-in is set up; without it the consent page refuses new sign-ins through the tunnel"),
 };
 
 const Schema kAiSchema = { "ai-settings", HTTPD_FIELDS(kAiFields) };
@@ -492,6 +503,123 @@ const RouteRefusal kAiWriteRefusals[] = {
 		"the configuration file is not there, and a file written from nothing here would carry no login"),
 };
 
+std::string boxAccount()
+{
+	char name[256];
+	if (::gethostname(name, sizeof(name)) != 0)
+		return "box";
+	name[sizeof(name) - 1] = '\0';
+	return name[0] != '\0' ? std::string(name) : std::string("box");
+}
+
+// A token is no stand-in for the password a session was opened with.
+bool fromSignedInHome(const Request &r)
+{
+	return r.origin() == Origin::Lan && sessionIsLive(r.session());
+}
+
+Response notFromHome()
+{
+	return problemResponse(StatusForbidden, coreapi::ErrorCode::NotPermitted,
+	                       "two-factor sign-in is changed from a signed-in session on the home network only");
+}
+
+const FieldDesc kTotpSetupFields[] = {
+	HTTPD_MEMBER("secret", FieldType::String, "the new secret in base32, answered this once"),
+	HTTPD_MEMBER("uri", FieldType::String, "the otpauth address an authenticator app reads from a QR code"),
+};
+
+const Schema kTotpSetupSchema = { "ai-totp-setup", HTTPD_FIELDS(kTotpSetupFields) };
+
+Response totpSetup(const Request &r)
+{
+	if (!fromSignedInHome(r))
+		return notFromHome();
+	oauth::TotpSetup s;
+	if (!oauth::startTotpSetup(boxAccount(), &s))
+		return problemResponse(StatusInternalServerError, coreapi::ErrorCode::BoxUnreadable,
+		                       "the box could not draw a secret");
+	Response out = okJson();
+	Json j(out.body, 256);
+	j.beginObject();
+	j.key("secret");
+	j.value(s.secret);
+	j.key("uri");
+	j.value(s.uri);
+	j.endObject();
+	return out;
+}
+
+Response totpConfirm(const Request &r)
+{
+	if (!fromSignedInHome(r))
+		return notFromHome();
+	switch (oauth::confirmTotpSetup(r.asString("code")))
+	{
+		case oauth::SetupConfirm::Activated:
+			return noContent();
+		case oauth::SetupConfirm::NoPending:
+			return problemResponse(StatusConflict, coreapi::ErrorCode::AiTotpNoPending,
+			                       "no setup is waiting for a code; one is kept for ten minutes");
+		case oauth::SetupConfirm::ClockUnknown:
+			return problemResponse(StatusConflict, coreapi::ErrorCode::AiTotpClockUnknown,
+			                       "the clock of the box is not set yet");
+		case oauth::SetupConfirm::Wrong:
+			return problemResponse(StatusBadRequest, coreapi::ErrorCode::AiTotpCodeWrong,
+			                       "the code does not belong to the secret being set up");
+		case oauth::SetupConfirm::NotSaved:
+			break;
+	}
+	return problemResponse(StatusInternalServerError, coreapi::ErrorCode::WebserverNotConfigured, whatWentWrong());
+}
+
+Response totpDisable(const Request &r)
+{
+	if (!fromSignedInHome(r))
+		return notFromHome();
+	unsigned retry_after = 0;
+	if (beginLoginAttempt(r.peer(), &retry_after) != LoginAttempt::Open)
+		return tooManyAttemptsResponse(retry_after);
+	AttemptHeld held(r.peer());
+	if (!verifySecret(r.asString("password"), config().password_hash))
+		return problemResponse(StatusForbidden, coreapi::ErrorCode::NotPermitted, "the password is wrong");
+	held.grant();
+	if (!oauth::totpActive())
+		return problemResponse(StatusConflict, coreapi::ErrorCode::AiTotpNotSetUp,
+		                       "two-factor sign-in is not set up");
+	if (!oauth::removeTotp())
+		return problemResponse(StatusInternalServerError, coreapi::ErrorCode::WebserverNotConfigured, whatWentWrong());
+	return noContent();
+}
+
+const Param kTotpConfirmParams[] = {
+	HTTPD_BODY_REQUIRED_TEXT("code", "the six digits the authenticator app shows for the pending secret", 16),
+};
+
+const Param kTotpDisableParams[] = {
+	HTTPD_BODY_REQUIRED_TEXT("password", "the password of the box login, asked again", 512),
+};
+
+const RouteRefusal kTotpSetupRefusals[] = {
+	HTTPD_REFUSES(Denied, NotPermitted, "the request did not come from a signed-in session on the home network"),
+	HTTPD_REFUSES(Internal, BoxUnreadable, "the box could not draw a secret"),
+};
+
+const RouteRefusal kTotpConfirmRefusals[] = {
+	HTTPD_REFUSES(InvalidArgument, AiTotpCodeWrong, "the code does not belong to the secret being set up"),
+	HTTPD_REFUSES(Conflict, AiTotpNoPending, "no setup is waiting for a code"),
+	HTTPD_REFUSES(Conflict, AiTotpClockUnknown, "the clock of the box is not set yet"),
+	HTTPD_REFUSES(Denied, NotPermitted, "the request did not come from a signed-in session on the home network"),
+	HTTPD_REFUSES(Internal, WebserverNotConfigured, "the configuration file could not be written"),
+};
+
+const RouteRefusal kTotpDisableRefusals[] = {
+	HTTPD_REFUSES(Denied, NotPermitted, "the password is wrong"),
+	HTTPD_REFUSES(Conflict, AiTotpNotSetUp, "two-factor sign-in is not set up"),
+	HTTPD_REFUSES_AS(429, TooManyAttempts, "too many attempts are being made here; come back in a moment"),
+	HTTPD_REFUSES(Internal, WebserverNotConfigured, "the configuration file could not be written"),
+};
+
 const Endpoint kAiEndpoints[] = {
 	{ Method::Get, "/api/v1/ai/settings", AuthLevel::System,
 	  "how AI clients reach this box: whether they are answered, under which public address, and which machines are the tunnel",
@@ -499,8 +627,10 @@ const Endpoint kAiEndpoints[] = {
 	  "holds them, together with what follows from them: `mcp_url`, the address a client outside the "
 	  "local network is given, and `tunnel_paths`, the only paths a request arriving through the tunnel "
 	  "may reach. `port` is the port this server answers on. `default_password` is `true` while the "
-	  "login is still the password the image ships; the tunnel is shut then, whatever `public_url` says.\n\n"
-	  "**Related:** `PUT /api/v1/ai/settings`, `GET /api/v1/ai/guides`.",
+	  "login is still the password the image ships; the tunnel is shut then, whatever `public_url` says. "
+	  "`totp` is `true` once two-factor sign-in is set up; without it the consent page refuses new "
+	  "sign-ins through the tunnel.\n\n"
+	  "**Related:** `PUT /api/v1/ai/settings`, `GET /api/v1/ai/guides`, `POST /api/v1/ai/totp/setup`.",
 	  NULL, 0, &kAiSchema, &aiRead, false,
 	  Answers200, HTTPD_NO_REFUSALS },
 	{ Method::Put, "/api/v1/ai/settings", AuthLevel::System,
@@ -563,6 +693,51 @@ const Endpoint kAiEndpoints[] = {
 	  "**Related:** `GET /api/v1/ai/allowlists`.",
 	  HTTPD_PARAMS(kAllowlistParams), &kAllowlistSchema, &putAllowlists, false,
 	  Answers200, HTTPD_REFUSALS_AND_BODY(kAllowlistRefusals, "{\"plugins\":\"Tierpark\",\"sections\":\"audio\"}") },
+	{ Method::Post, "/api/v1/ai/totp/setup", AuthLevel::System,
+	  "draws a new secret for two-factor sign-in and holds it until a code from it confirms it",
+	  "Draws a new 160 bit secret for two-factor sign-in (TOTP, RFC 6238: HMAC-SHA1, 6 digits, 30 s) and "
+	  "answers it once, in base32 and as the `otpauth://` address an authenticator app reads from a QR code. "
+	  "The secret is pending: the consent page keeps the state it had, none or the previous secret, until "
+	  "`POST /api/v1/ai/totp/confirm` is sent a code from it. A pending secret is dropped after ten minutes "
+	  "and by the next call here. Answered to a session from `POST /api/v1/login` on the home network only, "
+	  "never to a bearer token.\n\n"
+	  "**Refusals:**\n"
+	  "- `403 not-permitted`: the request did not come from a signed-in session on the home network.\n"
+	  "- `500 box-unreadable`: the box could not draw a secret; nothing changed.\n\n"
+	  "**Related:** `POST /api/v1/ai/totp/confirm`, `POST /api/v1/ai/totp/disable`, `GET /api/v1/ai/settings`.",
+	  NULL, 0, &kTotpSetupSchema, &totpSetup, false,
+	  Answers200, HTTPD_REFUSALS(kTotpSetupRefusals) },
+	{ Method::Post, "/api/v1/ai/totp/confirm", AuthLevel::System,
+	  "turns the pending secret on once a code from it is right",
+	  "Checks `code` against the pending secret, the current 30 s step and one step either side, and turns "
+	  "the secret on when it matches; from then on the consent page asks for a code for every new sign-in "
+	  "through the tunnel. A wrong code leaves everything as it was, the pending secret included. "
+	  "Answered to a session from `POST /api/v1/login` on the home network only, never to a bearer token.\n\n"
+	  "**Side effects:** writes `ai_totp_secret` and `ai_totp_last_step` into `ni-web.conf`.\n\n"
+	  "**Refusals:**\n"
+	  "- `400 ai-totp-code-wrong`: the code does not belong to the pending secret.\n"
+	  "- `409 ai-totp-no-pending`: no setup is waiting, or it is older than ten minutes.\n"
+	  "- `409 ai-totp-clock-unknown`: the clock of the box is not set yet.\n"
+	  "- `403 not-permitted`: the request did not come from a signed-in session on the home network.\n"
+	  "- `500 webserver-not-configured`: the configuration file could not be written; nothing was turned on.\n\n"
+	  "**Related:** `POST /api/v1/ai/totp/setup`.",
+	  HTTPD_PARAMS(kTotpConfirmParams), NULL, &totpConfirm, false,
+	  Answers204, HTTPD_REFUSALS_AND_BODY(kTotpConfirmRefusals, "{\"code\":\"123456\"}") },
+	{ Method::Post, "/api/v1/ai/totp/disable", AuthLevel::System,
+	  "turns two-factor sign-in off, asking for the password again",
+	  "Turns two-factor sign-in off after checking the box password once more; wrong passwords count in the "
+	  "same delay the login has. Connections already granted keep working; new sign-ins through the tunnel "
+	  "are refused until it is set up again. Answered to a session from `POST /api/v1/login` on the home "
+	  "network only, never to a bearer token.\n\n"
+	  "**Side effects:** empties `ai_totp_secret` in `ni-web.conf` and drops a pending setup.\n\n"
+	  "**Refusals:**\n"
+	  "- `403 not-permitted`: the password is wrong, or the request did not come from a signed-in session on the home network.\n"
+	  "- `409 ai-totp-not-set-up`: two-factor sign-in is not set up.\n"
+	  "- `429 too-many-attempts`: too many wrong passwords from this address lately; `Retry-After` says how long to wait.\n"
+	  "- `500 webserver-not-configured`: the configuration file could not be written; nothing changed.\n\n"
+	  "**Related:** `POST /api/v1/ai/totp/setup`.",
+	  HTTPD_PARAMS(kTotpDisableParams), NULL, &totpDisable, false,
+	  Answers204, HTTPD_REFUSALS_AND_BODY(kTotpDisableRefusals, "{\"password\":\"your-password\"}") },
 };
 
 } // namespace

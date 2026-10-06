@@ -10,6 +10,7 @@ import { useSystemSession, useWatch, SignInRow, refusalShown, refusalText, Remot
 import { readSettings, readSaved, draftOf, settingsBody, mcpUrlOf, publicUrlProblem, publicUrlOffPort, reachOf } from './model.js';
 import { codeOf, worded } from './read.js';
 import { errorText } from './guidewords.js';
+import { useTotp, TotpPart } from './totp.js';
 import text from './ai.text.js';
 
 export const css = '/ai/ai.css';
@@ -28,6 +29,7 @@ export default function Access() {
 	const [busy, setBusy] = useState(false);
 	const [said, setSaid] = useState('');
 	const [restarting, setRestarting] = useState(false);
+	const totp = useTotp();
 
 	// Seeded once, so a reload does not take a field away from somebody typing.
 	useEffect(function () {
@@ -93,7 +95,8 @@ export default function Access() {
 				<${Field} id="ai-proxies" label=${t(text, 'ai.proxies')} hint=${t(text, 'ai.proxies.hint')}
 					value=${draft.proxies} autocomplete="off"
 					onInput=${function (/** @type {Event} */ e) { edit({ proxies: /** @type {HTMLInputElement} */ (e.currentTarget).value }); }} />
-				<${RemoteState} here="/ai/access" settings=${now} />
+				<${RemoteState} here="/ai/access" settings=${now} onTotp=${totp.begin} />
+				<${TotpPart} flow=${totp} on=${now.totp} />
 				${nothing ? null : html`<p class="hint" data-part="remote-unsaved">${t(text, 'ai.remote.unsaved')}</p>`}
 				<div class="ai-row" data-act="save">
 					<${Button} primary=${true} disabled=${busy || nothing || urlProblem !== ''}

@@ -27,6 +27,7 @@
 #include "httpd/oauth/scopes.h"
 #include "httpd/oauth/store.h"
 #include "httpd/oauth/surface.h"
+#include "httpd/oauth/twofactor.h"
 #include "httpd/oauth/uri.h"
 
 #include <jsoncpp/json/json.h>
@@ -136,7 +137,7 @@ Flow signIn(int port)
 	h.push_back(std::make_pair(std::string("Content-Type"), std::string("application/x-www-form-urlencoded")));
 	const testhttp::Reply decided = testhttp::request(port, "POST", "/oauth/consent", h,
 		"request=" + id + "&csrf=" + token + "&user=root&password=sofa-2026&decision=approve"
-		"&scope_read=on&scope_write=on&scope_offline_access=on");
+		"&scope_read=on&scope_write=on&scope_offline_access=on" + "&totp=" + nextTotpCode());
 	REQUIRE(decided.code == 302);
 	Form back = paramsOf(decided.header("Location"));
 	REQUIRE(back["state"] == "s1");
@@ -183,6 +184,7 @@ TEST_CASE("a tunnel client signs in refreshes and is revoked end to end", "[oaut
 {
 	Clean clean;
 	TunnelConfigured config;
+	TotpInstalled totp;
 	RunningServer srv;
 
 	const Flow f = signIn(srv.port);
@@ -214,6 +216,7 @@ TEST_CASE("an oauth token is good through the tunnel only", "[oauth-flow]")
 {
 	Clean clean;
 	TunnelConfigured config;
+	TotpInstalled totp;
 	RunningServer srv;
 	const std::string access = signIn(srv.port).tokens["access_token"].asString();
 	const coreapi::Result<mcp::Caller> tunnel = verifyAccessToken(access, Origin::Tunnel, resource());
@@ -259,9 +262,31 @@ TEST_CASE("tokens survive a restart of the store", "[oauth-flow]")
 	TunnelConfigured config;
 	std::string access;
 	{
+		TotpInstalled totp;
 		RunningServer srv;
 		access = signIn(srv.port).tokens["access_token"].asString();
 	}
 	REQUIRE(store().open(clean.path));
 	REQUIRE(verifyAccessToken(access, Origin::Tunnel, resource()).ok());
+}
+
+TEST_CASE("tokens granted before two-factor sign-in was turned off keep working and refresh", "[oauth-flow]")
+{
+	Clean clean;
+	TunnelConfigured config;
+	RunningServer srv;
+	Flow f;
+	{
+		TotpInstalled totp;
+		f = signIn(srv.port);
+	}
+	REQUIRE_FALSE(totpActive());
+	REQUIRE(verifyAccessToken(f.tokens["access_token"].asString(), Origin::Tunnel, resource()).ok());
+	const testhttp::Reply refreshed = testhttp::request(srv.port, "POST", "/oauth/token",
+		with("Content-Type", "application/x-www-form-urlencoded"),
+		"grant_type=refresh_token&refresh_token=" + f.tokens["refresh_token"].asString() +
+		"&client_id=" + f.client_id);
+	REQUIRE(refreshed.code == 200);
+	REQUIRE(verifyAccessToken(parsedJson(refreshed.body)["access_token"].asString(), Origin::Tunnel, resource()).ok());
+	REQUIRE(testhttp::request(srv.port, "GET", "/oauth/consent?request=x").code == 403);
 }

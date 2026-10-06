@@ -13,6 +13,7 @@ import { canonical } from './scopes.js';
  * @property {string[]} tunnelPaths
  * @property {number} port
  * @property {boolean} defaultPassword the login is the shipped one, so the tunnel is shut
+ * @property {boolean} totp two-factor sign-in is set up, without which new sign-ins through the tunnel are refused
  */
 
 /**
@@ -112,6 +113,7 @@ export function readSettings(answer) {
 		tunnelPaths: strings(a.tunnel_paths),
 		port: num(a.port),
 		defaultPassword: a.default_password === true,
+		totp: a.totp === true,
 	};
 }
 
@@ -231,10 +233,10 @@ export function reachOf(d, shut) {
  * Why a client cannot reach the box from the internet, in the order they are told; none when it can.
  *
  * @param {AiSettings} s
- * @returns {Array<'off' | 'password' | 'address' | 'proxy'>}
+ * @returns {Array<'off' | 'password' | 'address' | 'proxy' | 'totp'>}
  */
 export function remoteReasons(s) {
-	/** @type {Array<'off' | 'password' | 'address' | 'proxy'>} */
+	/** @type {Array<'off' | 'password' | 'address' | 'proxy' | 'totp'>} */
 	const out = [];
 	if (!s.enabled)
 		out.push('off');
@@ -244,6 +246,8 @@ export function remoteReasons(s) {
 		out.push('address');
 	else if (parseProxies(s.trustedProxies).length === 0)
 		out.push('proxy');
+	if (!s.totp)
+		out.push('totp');
 	return out;
 }
 
@@ -509,4 +513,49 @@ export function readAllowlists(answer) {
  */
 export function allowBody(plugins, sections) {
 	return { plugins: plugins.join(','), sections: sections.join(',') };
+}
+
+/**
+ * @typedef {object} AiTotpSetup
+ * @property {string} secret base32, answered this once
+ * @property {string} uri the otpauth address the QR code carries
+ */
+
+/**
+ * @param {unknown} answer
+ * @returns {AiTotpSetup | null}
+ */
+export function readTotpSetup(answer) {
+	const a = obj(answer);
+	const secret = a ? str(a.secret) : '';
+	const uri = a ? str(a.uri) : '';
+	if (secret === '' || uri.indexOf('otpauth://totp/') !== 0)
+		return null;
+	return { secret: secret, uri: uri };
+}
+
+/**
+ * @param {string} secret
+ * @returns {string}
+ */
+export function secretGroups(secret) {
+	return secret.replace(/\s+/g, '').replace(/(.{4})(?=.)/g, '$1 ');
+}
+
+/**
+ * One path of unit squares for the dark modules, moved in by the quiet zone.
+ *
+ * @param {boolean[][]} rows
+ * @param {number} quiet
+ * @returns {string}
+ */
+export function qrPath(rows, quiet) {
+	let d = '';
+	rows.forEach(function (row, r) {
+		row.forEach(function (dark, c) {
+			if (dark)
+				d += 'M' + (c + quiet) + ' ' + (r + quiet) + 'h1v1h-1z';
+		});
+	});
+	return d;
 }

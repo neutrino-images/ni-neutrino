@@ -56,6 +56,7 @@ httpd/compat/test_compat_serializer.cpp	0
 httpd/compat/test_compat_usage.cpp	0
 httpd/mcp/test_aiguides.cpp	0
 httpd/mcp/test_aisettings.cpp	0
+httpd/mcp/test_aitotp.cpp	0
 httpd/mcp/test_exposure.cpp	0
 httpd/mcp/test_exposure_config.cpp	0
 httpd/mcp/test_exposure_gate.cpp	3000
@@ -92,6 +93,8 @@ httpd/oauth/test_oauth_store.cpp	0
 httpd/oauth/test_oauth_surface.cpp	1000
 httpd/oauth/test_oauth_token.cpp	0
 httpd/oauth/test_oauth_tokens.cpp	0
+httpd/oauth/test_oauth_totp.cpp	0
+httpd/oauth/test_oauth_twofactor.cpp	0
 httpd/oauth/test_oauth_uri.cpp	0
 httpd/oauth/test_oauth_verify.cpp	0
 httpd/test_apppaths.cpp	1000

@@ -49,8 +49,9 @@ struct ConsentInput
 	std::string cookie;
 	std::string accept_language;
 	std::string peer;
+	Origin      origin;
 
-	ConsentInput() : method(UnknownMethod) {}
+	ConsentInput() : method(UnknownMethod), origin(Origin::Tunnel) {}
 };
 
 Response answerConsent(const ConsentInput &in);

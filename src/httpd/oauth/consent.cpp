@@ -27,6 +27,8 @@
 #include "httpd/oauth/scopes.h"
 #include "httpd/oauth/store.h"
 #include "httpd/oauth/surface.h"
+#include "httpd/oauth/totp.h"
+#include "httpd/oauth/twofactor.h"
 #include "httpd/oauth/uri.h"
 #include "httpd/status.h"
 #include "httpd/webconfig.h"
@@ -47,6 +49,7 @@ namespace
 
 const size_t kMaxPasswordBytes = 512;
 const size_t kMaxUserBytes     = 256;
+const size_t kMaxCodeBytes     = 16;
 
 struct Texts
 {
@@ -74,6 +77,10 @@ struct Texts
 	const char *tool;
 	const char *tools;
 	const char *needs_system;
+	const char *code;
+	const char *wrong_code;
+	const char *no_totp;
+	const char *clock;
 };
 
 struct GroupWords
@@ -135,6 +142,10 @@ const Texts kDe = {
 	"Werkzeug",
 	"Werkzeuge",
 	"braucht System",
+	"Code aus der Authenticator-App",
+	"Benutzer, Passwort oder Code falsch.",
+	"Zuerst im Heimnetz 2FA einrichten",
+	"Die Uhrzeit der Box ist noch nicht gestellt.",
 };
 
 const Texts kEn = {
@@ -164,6 +175,10 @@ const Texts kEn = {
 	"tool",
 	"tools",
 	"needs System",
+	"Code from the authenticator app",
+	"The user, password or code is wrong.",
+	"Set up two-factor sign-in in the home network first",
+	"The clock of the box is not set yet.",
 };
 
 const Texts &textsFor(Lang l)
@@ -417,7 +432,7 @@ bool postedOn(const Form *posted, const char *name, bool default_on)
 }
 
 std::string formPage(const Texts &t, const PendingView &v, const char *message, const std::string &user,
-                      const Form *posted = NULL)
+                      bool ask_code, const Form *posted = NULL)
 {
 	std::string out = head(t);
 	out += "<p><strong>" + safeText(v.client_name) + "</strong>" + t.wants + "</p>";
@@ -466,6 +481,10 @@ std::string formPage(const Texts &t, const PendingView &v, const char *message, 
 	       safeText(user) + "\"></label>";
 	out += std::string("<label>") + t.password +
 	       " <input type=\"password\" name=\"password\" autocomplete=\"current-password\"></label>";
+	if (ask_code)
+		out += std::string("<label>") + t.code +
+		       " <input type=\"text\" name=\"totp\" inputmode=\"numeric\" autocomplete=\"one-time-code\""
+		       " maxlength=\"8\"></label>";
 	out += std::string("<button type=\"submit\" name=\"decision\" value=\"approve\">") + t.approve + "</button>";
 	out += std::string("<button type=\"submit\" name=\"decision\" value=\"deny\">") + t.deny + "</button>";
 	out += "</form>";
@@ -487,24 +506,6 @@ bool sameSecret(const std::string &a, const std::string &b)
 	return !a.empty() && a.size() == b.size() && CRYPTO_memcmp(a.data(), b.data(), a.size()) == 0;
 }
 
-// Every Open from the throttle is answered once, however this returns.
-struct AttemptHeld
-{
-	std::string peer;
-	bool        granted;
-	explicit AttemptHeld(const std::string &p) : peer(p), granted(false)
-	{
-	}
-	~AttemptHeld()
-	{
-		endLoginAttempt(peer, granted);
-	}
-
-	private:
-		AttemptHeld(const AttemptHeld &);
-		AttemptHeld &operator=(const AttemptHeld &);
-};
-
 Response redirectAfterDecision(const std::string &url)
 {
 	Response r;
@@ -518,17 +519,23 @@ Response redirectAfterDecision(const std::string &url)
 
 Response showForm(const ConsentInput &in, const Texts &t)
 {
+	const bool ask_code = in.origin != Origin::Lan;
+	if (ask_code && !totpActive())
+		return page(StatusForbidden, messagePage(t, t.no_totp), std::string());
 	Form q;
 	PendingView v;
 	if (!parseForm(in.query, &q) || !viewRequest(formValue(q, "request"), &v))
 		return page(StatusBadRequest, messagePage(t, t.expired), std::string());
-	Response r = page(StatusOk, formPage(t, v, NULL, std::string()), redirectOrigin(v.redirect_uri));
+	Response r = page(StatusOk, formPage(t, v, NULL, std::string(), ask_code), redirectOrigin(v.redirect_uri));
 	addHeader(r, "Set-Cookie", cookieFor(v.form_token));
 	return r;
 }
 
 Response takeDecision(const ConsentInput &in, const Texts &t)
 {
+	const bool ask_code = in.origin != Origin::Lan;
+	if (ask_code && !totpActive())
+		return page(StatusForbidden, messagePage(t, t.no_totp), std::string());
 	if (!contentTypeIs(in.content_type, "application/x-www-form-urlencoded"))
 		return page(StatusUnsupportedMedia, messagePage(t, t.stale_form), std::string());
 	Form f;
@@ -548,12 +555,16 @@ Response takeDecision(const ConsentInput &in, const Texts &t)
 		return redirectAfterDecision(url);
 	}
 	if (decision != "approve")
-		return page(StatusBadRequest, formPage(t, v, t.stale_form, std::string(), &f), origin);
+		return page(StatusBadRequest, formPage(t, v, t.stale_form, std::string(), ask_code, &f), origin);
+
+	// Before the throttle: an unset clock is the box's fault and no guess.
+	if (ask_code && totpNow() < kTotpClockFloor)
+		return page(StatusServiceUnavailable, formPage(t, v, t.clock, std::string(), ask_code, &f), origin);
 
 	unsigned retry_after = 0;
 	if (beginLoginAttempt(in.peer, &retry_after) != LoginAttempt::Open)
 	{
-		Response r = page(StatusTooManyRequests, formPage(t, v, t.busy, std::string(), &f), origin);
+		Response r = page(StatusTooManyRequests, formPage(t, v, t.busy, std::string(), ask_code, &f), origin);
 		char seconds[24];
 		std::snprintf(seconds, sizeof(seconds), "%u", retry_after);
 		addHeader(r, "Retry-After", seconds);
@@ -564,13 +575,18 @@ Response takeDecision(const ConsentInput &in, const Texts &t)
 	const WebConfig &cfg = config();
 	const std::string &user = formValue(f, "user");
 	const std::string &password = formValue(f, "password");
-	const bool short_enough = user.size() <= kMaxUserBytes && password.size() <= kMaxPasswordBytes;
-	// Both halves are always asked, so a wrong name costs what a wrong password costs.
+	const std::string &code = formValue(f, "totp");
+	const bool short_enough = user.size() <= kMaxUserBytes && password.size() <= kMaxPasswordBytes &&
+	                          code.size() <= kMaxCodeBytes;
+	// Every half is always asked, so no half answers faster for being wrong.
 	const bool name_ok = short_enough && !cfg.username.empty() && user == cfg.username;
 	const bool secret_ok = short_enough && verifySecret(password, cfg.password_hash);
-	if (!name_ok || !secret_ok)
-		return page(StatusUnauthorized, formPage(t, v, t.wrong, short_enough ? user : std::string(), &f), origin);
-	held.granted = true;
+	// The code is used up only once the password is right.
+	const bool code_ok = !ask_code || (short_enough && useTotpCode(code, name_ok && secret_ok) == CodeUse::Accepted);
+	if (!name_ok || !secret_ok || !code_ok)
+		return page(StatusUnauthorized, formPage(t, v, ask_code ? t.wrong_code : t.wrong,
+		                                         short_enough ? user : std::string(), ask_code, &f), origin);
+	held.grant();
 
 	unsigned granted = 0;
 	granted |= (formValue(f, "scope_read") == "on") ? ScopeRead : 0u;
@@ -592,7 +608,7 @@ Response takeDecision(const ConsentInput &in, const Texts &t)
 		case Decided::Redirect:
 			return redirectAfterDecision(url);
 		case Decided::BadScopes:
-			return page(StatusBadRequest, formPage(t, v, t.bad_scopes, user, &f), origin);
+			return page(StatusBadRequest, formPage(t, v, t.bad_scopes, user, ask_code, &f), origin);
 		case Decided::NoSuchRequest:
 			return page(StatusBadRequest, messagePage(t, t.expired), std::string());
 		case Decided::Failed:

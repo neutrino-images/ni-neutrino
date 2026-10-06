@@ -31,10 +31,13 @@
 #include "httpd/netmatch.h"
 #include "httpd/oauth/cimd.h"
 #include "httpd/oauth/sourcelimit.h"
+#include "httpd/oauth/totp.h"
+#include "httpd/oauth/twofactor.h"
 #include "httpd/server.h"
 #include "httpd/webconfig.h"
 
 #include <cstdio>
+#include <ctime>
 #include <memory>
 #include <string>
 #include <utility>
@@ -149,6 +152,65 @@ struct TunnelConfigured : ConfigInstalled
 	{
 	}
 };
+
+// RFC 6238's SHA-1 key in base32.
+const char kTotpSecret[] = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+const time_t kTotpClock = 1790000000;
+
+// Two-factor sign-in on with kTotpSecret at kTotpClock, off again however the case ends.
+struct TotpInstalled
+{
+	TotpInstalled()
+	{
+		httpd::oauth::setTotpClockForTest(kTotpClock);
+		httpd::oauth::installTotp(kTotpSecret, 0);
+		httpd::oauth::forgetPendingTotpForTest();
+	}
+	~TotpInstalled()
+	{
+		httpd::oauth::installTotp(std::string(), 0);
+		httpd::oauth::forgetPendingTotpForTest();
+		httpd::oauth::setTotpClockForTest(0);
+	}
+
+	private:
+		TotpInstalled(const TotpInstalled &);
+		TotpInstalled &operator=(const TotpInstalled &);
+};
+
+inline std::string totpCodeAt(time_t t)
+{
+	std::string key;
+	REQUIRE(httpd::oauth::base32Decode(kTotpSecret, &key));
+	return httpd::oauth::hotp(key, (unsigned long long) (t / httpd::oauth::kTotpStepSeconds),
+	                          httpd::oauth::kTotpDigits);
+}
+
+inline std::string currentTotpCode()
+{
+	return totpCodeAt(httpd::oauth::totpNow());
+}
+
+// One step on first, so no two calls answer a code already used.
+inline std::string nextTotpCode()
+{
+	httpd::oauth::setTotpClockForTest(httpd::oauth::totpNow() + (time_t) httpd::oauth::kTotpStepSeconds);
+	return currentTotpCode();
+}
+
+// Six digits that are the code of no step the window takes.
+inline std::string wrongTotpCode()
+{
+	const time_t now = httpd::oauth::totpNow();
+	const std::string taken[] = { totpCodeAt(now - 30), totpCodeAt(now), totpCodeAt(now + 30) };
+	for (unsigned n = 0;; ++n)
+	{
+		char code[8];
+		std::snprintf(code, sizeof(code), "%06u", n);
+		if (taken[0] != code && taken[1] != code && taken[2] != code)
+			return code;
+	}
+}
 
 // A server on a port the kernel chose, stopped however the case ends.
 struct RunningServer

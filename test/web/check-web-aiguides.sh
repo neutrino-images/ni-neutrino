@@ -19,7 +19,8 @@ for f in "$CASES" "$UNDER" "$SERVER" "$ERRORS"; do
 	[ -r "$f" ] || { echo "check-web-aiguides.sh: cannot read $f" >&2; exit 1; }
 done
 
-for code in ai-public-url-refused ai-trusted-proxies-refused ai-caller-would-be-tunnel ai-default-password forwarded-by-untrusted-peer; do
+for code in ai-public-url-refused ai-trusted-proxies-refused ai-caller-would-be-tunnel ai-default-password forwarded-by-untrusted-peer \
+	ai-totp-code-wrong ai-totp-clock-unknown ai-totp-not-set-up ai-totp-no-pending; do
 	grep -q "return \"$code\";" "$ERRORS" || {
 		echo "check-web-aiguides.sh: $ERRORS does not spell $code" >&2
 		exit 1

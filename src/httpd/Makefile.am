@@ -133,6 +133,8 @@ OAUTH_SOURCES = \
 	oauth/surface.cpp \
 	oauth/token.cpp \
 	oauth/tokens.cpp \
+	oauth/totp.cpp \
+	oauth/twofactor.cpp \
 	oauth/uri.cpp \
 	oauth/verify.cpp
 
@@ -189,6 +191,8 @@ OAUTH_HEADERS = \
 	oauth/surface.h \
 	oauth/token.h \
 	oauth/tokens.h \
+	oauth/totp.h \
+	oauth/twofactor.h \
 	oauth/uri.h \
 	oauth/verify.h
 

@@ -317,6 +317,25 @@ enum class LoginAttempt
 LoginAttempt beginLoginAttempt(const std::string &peer, unsigned *retry_after);
 void endLoginAttempt(const std::string &peer, bool granted);
 
+// Ends an Open attempt once on scope exit; grant() marks it a success.
+class AttemptHeld
+{
+	public:
+		explicit AttemptHeld(const std::string &peer) : peer_(peer), granted_(false) {}
+		~AttemptHeld() { endLoginAttempt(peer_, granted_); }
+		void grant() { granted_ = true; }
+
+	private:
+		std::string peer_;
+		bool        granted_;
+
+		AttemptHeld(const AttemptHeld &);
+		AttemptHeld &operator=(const AttemptHeld &);
+};
+
+// The 429 answer for a closed gate, with Retry-After set.
+Response tooManyAttemptsResponse(unsigned retry_after);
+
 /* How long an attempt waits after this many wrong answers, which is the policy
    above written as one function so that a case can walk it rather than sleep
    through it. Nought while the free ones last, doubling after that, and never above

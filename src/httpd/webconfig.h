@@ -414,6 +414,10 @@ bool saveAiSettings(const std::string &path, const AiSettings &s);
    written and installed live. */
 bool saveAiAllowlists(const std::string &path, const std::vector<std::string> &plugins,
 		       const std::vector<std::string> &sections);
+
+// Writes ai_totp_secret and ai_totp_last_step; an empty secret writes two-factor off.
+// Refuses a secret that is not 20 bytes in base32, and a missing file.
+bool saveAiTotp(const std::string &path, const std::string &secret_base32, long long last_step);
 #endif
 
 /* Reads path again and puts the running server on what it now says.

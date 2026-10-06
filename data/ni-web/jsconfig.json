@@ -133,7 +133,10 @@
 			// rather than a hundred kilobytes fetched to read a declaration
 			// out of. See test/web/types/hls.d.ts for why that is the smaller
 			// risk of the two.
-			"/vendor/hls.module.js": ["../../test/web/types/hls.d.ts"]
+			"/vendor/hls.module.js": ["../../test/web/types/hls.d.ts"],
+
+			// The QR code library, hand written for the same reason as hls above.
+			"/vendor/qrcode.module.js": ["../../test/web/types/qrcode.d.ts"]
 		}
 	},
 

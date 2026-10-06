@@ -83,8 +83,9 @@ struct Fixture
 	Client            client;
 	std::string       id;
 	PendingView       view;
+	Origin            origin;
 
-	explicit Fixture(const char *name = "Claude", const char *scope = "read write")
+	explicit Fixture(const char *name = "Claude", const char *scope = "read write") : origin(Origin::Lan)
 	{
 		store().open(std::string());
 		forgetAuthorizationStateForTest();
@@ -100,6 +101,7 @@ struct Fixture
 		in.query = "request=" + id;
 		in.accept_language = lang;
 		in.peer = "192.168.1.20";
+		in.origin = origin;
 		return in;
 	}
 
@@ -111,6 +113,7 @@ struct Fixture
 		in.content_type = "application/x-www-form-urlencoded";
 		in.cookie = view.form_token;
 		in.peer = "192.168.1.20";
+		in.origin = origin;
 		return in;
 	}
 
@@ -264,6 +267,7 @@ TEST_CASE("a client with only loopback redirects carries a warning", "[oauth-con
 	ConsentInput in;
 	in.method = Get;
 	in.query = "request=" + askFor(c, "read", "http://127.0.0.1:5000/callback");
+	in.origin = Origin::Lan;
 	const Response r = answerConsent(in);
 	REQUIRE(r.code == StatusOk);
 	REQUIRE(has(r.body, "class=\"warn\""));
@@ -389,6 +393,7 @@ TEST_CASE("only a form post is taken", "[oauth-consent]")
 
 TEST_CASE("the browser flow works over a real connection beside a live ni-web session", "[oauth-consent]")
 {
+	TotpInstalled totp;
 	TunnelConfigured config;
 	store().open(std::string());
 	forgetAuthorizationStateForTest();
@@ -421,8 +426,173 @@ TEST_CASE("the browser flow works over a real connection beside a live ni-web se
 	                           "; " + consentCookieName() + "=" + token));
 	h.push_back(std::make_pair(std::string("Content-Type"), std::string("application/x-www-form-urlencoded")));
 	const testhttp::Reply done = testhttp::request(srv.port, "POST", "/oauth/consent", h,
-		"request=" + id + "&csrf=" + token + "&user=root&password=sofa-2026&decision=approve&scope_read=on");
+		"request=" + id + "&csrf=" + token + "&user=root&password=sofa-2026&decision=approve&scope_read=on"
+		"&totp=" + currentTotpCode());
 	REQUIRE(done.code == 302);
 	REQUIRE(done.header("Location").find("code=nic_") != std::string::npos);
 	closeSession(session);
+}
+
+TEST_CASE("through the tunnel without two-factor sign-in the page shows no form", "[oauth-consent]")
+{
+	Fixture f;
+	f.origin = Origin::Tunnel;
+	const Response r = answerConsent(f.get());
+	REQUIRE(r.code == StatusForbidden);
+	REQUIRE(has(r.body, "Zuerst im Heimnetz 2FA einrichten"));
+	REQUIRE_FALSE(has(r.body, "<form"));
+	REQUIRE(header(r, "Set-Cookie").empty());
+	REQUIRE(has(answerConsent(f.get("en")).body, "Set up two-factor sign-in in the home network first"));
+}
+
+TEST_CASE("through the tunnel without two-factor sign-in no post is taken", "[oauth-consent]")
+{
+	Fixture f;
+	f.origin = Origin::Tunnel;
+	const std::string forms[] = { f.approve(kAccountPassword, "&scope_read=on"),
+	                              "request=" + f.id + "&csrf=" + f.view.form_token + "&decision=deny" };
+	for (size_t i = 0; i < 2; ++i)
+	{
+		INFO(i);
+		const Response r = answerConsent(f.post(forms[i]));
+		REQUIRE(r.code == StatusForbidden);
+		REQUIRE(has(r.body, "Zuerst im Heimnetz 2FA einrichten"));
+		REQUIRE(header(r, "Location").empty());
+	}
+	PendingView still;
+	REQUIRE(viewRequest(f.id, &still));
+	REQUIRE(loginAttemptCountForTest() == 0);
+}
+
+TEST_CASE("through the tunnel the form asks for the code", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	Fixture f;
+	f.origin = Origin::Tunnel;
+	const Response r = answerConsent(f.get());
+	REQUIRE(r.code == StatusOk);
+	REQUIRE(has(r.body, "name=\"totp\" inputmode=\"numeric\" autocomplete=\"one-time-code\""));
+	REQUIRE(has(r.body, "Code aus der Authenticator-App"));
+}
+
+TEST_CASE("from the home network the form asks for no code even with two-factor sign-in set up", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	Fixture f;
+	REQUIRE_FALSE(has(answerConsent(f.get()).body, "name=\"totp\""));
+	REQUIRE(answerConsent(f.post(f.approve(kAccountPassword, "&scope_read=on"))).code == kStatusFound);
+}
+
+TEST_CASE("through the tunnel approving needs the password and the code", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	Fixture f;
+	f.origin = Origin::Tunnel;
+	const Response none = answerConsent(f.post(f.approve(kAccountPassword, "&scope_read=on")));
+	REQUIRE(none.code == StatusUnauthorized);
+	REQUIRE(has(none.body, "Benutzer, Passwort oder Code falsch"));
+	REQUIRE(has(none.body, "name=\"totp\""));
+	const std::string code = currentTotpCode();
+	const Response right = answerConsent(f.post(f.approve(kAccountPassword, "&scope_read=on") +
+	                                            "&totp=" + code.substr(0, 3) + "+" + code.substr(3)));
+	REQUIRE(right.code == kStatusFound);
+	REQUIRE(has(header(right, "Location"), "code=nic_"));
+}
+
+TEST_CASE("a wrong code and a wrong password read the same and both count", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	Fixture f;
+	f.origin = Origin::Tunnel;
+	setLoginClockForTest(kTotpClock);
+	const Response bad_password = answerConsent(f.post(f.approve("wrong", "&scope_read=on") + "&totp=" + currentTotpCode()));
+	const Response bad_code = answerConsent(f.post(f.approve(kAccountPassword, "&scope_read=on") + "&totp=" + wrongTotpCode()));
+	REQUIRE(bad_password.code == StatusUnauthorized);
+	REQUIRE(bad_code.code == StatusUnauthorized);
+	REQUIRE(bad_password.body == bad_code.body);
+	REQUIRE(bad_password.headers == bad_code.headers);
+	REQUIRE(answerConsent(f.post(f.approve(kAccountPassword, "&scope_read=on") + "&totp=" + wrongTotpCode())).code ==
+	        StatusUnauthorized);
+	const Response after = answerConsent(f.post(f.approve(kAccountPassword, "&scope_read=on") + "&totp=" + currentTotpCode()));
+	REQUIRE(after.code == StatusTooManyRequests);
+	REQUIRE_FALSE(header(after, "Retry-After").empty());
+}
+
+TEST_CASE("a right code sent with a wrong password is not used up", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	Fixture f;
+	f.origin = Origin::Tunnel;
+	const std::string code = currentTotpCode();
+	REQUIRE(answerConsent(f.post(f.approve("wrong", "&scope_read=on") + "&totp=" + code)).code == StatusUnauthorized);
+	REQUIRE(answerConsent(f.post(f.approve(kAccountPassword, "&scope_read=on") + "&totp=" + code)).code == kStatusFound);
+}
+
+TEST_CASE("a code used for one sign-in is refused for the next", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	const std::string code = currentTotpCode();
+	{
+		Fixture f;
+		f.origin = Origin::Tunnel;
+		REQUIRE(answerConsent(f.post(f.approve(kAccountPassword, "&scope_read=on") + "&totp=" + code)).code ==
+		        kStatusFound);
+	}
+	Fixture g;
+	g.origin = Origin::Tunnel;
+	const Response again = answerConsent(g.post(g.approve(kAccountPassword, "&scope_read=on") + "&totp=" + code));
+	REQUIRE(again.code == StatusUnauthorized);
+	REQUIRE(has(again.body, "Benutzer, Passwort oder Code falsch"));
+}
+
+TEST_CASE("an unset box clock is said and does not count as an attempt", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	setTotpClockForTest(1700000000);
+	Fixture f;
+	f.origin = Origin::Tunnel;
+	for (int i = 0; i < 6; ++i)
+	{
+		INFO(i);
+		const Response r = answerConsent(f.post(f.approve("wrong", "&scope_read=on") + "&totp=123456"));
+		REQUIRE(r.code == StatusServiceUnavailable);
+		REQUIRE(has(r.body, "Die Uhrzeit der Box ist noch nicht gestellt"));
+	}
+	REQUIRE(loginAttemptCountForTest() == 0);
+}
+
+TEST_CASE("through the tunnel denying needs neither password nor code", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	Fixture f;
+	f.origin = Origin::Tunnel;
+	const Response r = answerConsent(f.post("request=" + f.id + "&csrf=" + f.view.form_token + "&decision=deny"));
+	REQUIRE(r.code == kStatusFound);
+	REQUIRE(has(header(r, "Location"), "error=access_denied"));
+}
+
+TEST_CASE("the delay for wrong codes through the tunnel is shared by every forwarded client", "[oauth-consent]")
+{
+	TotpInstalled totp;
+	Fixture f;
+	setLoginClockForTest(kTotpClock);
+	Exchange x;
+	x.method = Post;
+	x.path = "/oauth/consent";
+	x.origin = Origin::Tunnel;
+	x.base = kBase;
+	x.peer = "192.168.1.5";
+	x.content_type = "application/x-www-form-urlencoded";
+	x.consent_cookie = f.view.form_token;
+	x.body = f.approve(kAccountPassword, "&scope_read=on") + "&totp=" + wrongTotpCode();
+	x.source = "203.0.113.9";
+	int first = -1;
+	for (int i = 0; i < 6 && first < 0; ++i)
+	{
+		if (answer(x).code == StatusTooManyRequests)
+			first = i;
+	}
+	REQUIRE(first > 0);
+	x.source = "203.0.113.10";
+	REQUIRE(answer(x).code == StatusTooManyRequests);
 }

@@ -370,6 +370,11 @@ enum class ErrorCode
 	AiCallerWouldBeTunnel,
 	// A public address while the login is the shipped password.
 	AiDefaultPassword,
+	// Two-factor sign-in, one per sentence the KI tab says.
+	AiTotpCodeWrong,
+	AiTotpClockUnknown,
+	AiTotpNotSetUp,
+	AiTotpNoPending,
 	// A group name the table does not carry.
 	UnknownGroup,
 	// The tool exists and its group is off for this connection.
@@ -555,6 +560,10 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::AiTrustedProxiesRefused: return "ai-trusted-proxies-refused";
 		case ErrorCode::AiCallerWouldBeTunnel: return "ai-caller-would-be-tunnel";
 		case ErrorCode::AiDefaultPassword: return "ai-default-password";
+		case ErrorCode::AiTotpCodeWrong: return "ai-totp-code-wrong";
+		case ErrorCode::AiTotpClockUnknown: return "ai-totp-clock-unknown";
+		case ErrorCode::AiTotpNotSetUp: return "ai-totp-not-set-up";
+		case ErrorCode::AiTotpNoPending: return "ai-totp-no-pending";
 		case ErrorCode::UnknownGroup: return "unknown-group";
 		case ErrorCode::GroupNotEnabled: return "group-not-enabled";
 		case ErrorCode::PluginNotAllowed: return "plugin-not-allowed";

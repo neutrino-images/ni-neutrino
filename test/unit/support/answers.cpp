@@ -349,7 +349,8 @@ bool addAnswerState(const std::vector<SeenAnswer> &seen, const std::set<std::str
 
 int sendBodyExample(const char *method, const char *path,
                     const std::map<std::string, std::string> &fills,
-                    const std::string &from, const std::string &to)
+                    const std::string &from, const std::string &to, bool from_home,
+                    const std::string &session)
 {
 	std::string verb = method;
 	for (size_t k = 0; k < verb.size(); ++k)
@@ -390,8 +391,9 @@ int sendBodyExample(const char *method, const char *path,
 	}
 
 	const Response r = dispatch(methodFromString(method), target, query, body, "127.0.0.1",
-	                            AuthLevel::System, std::string(), std::string(),
-	                            "box.example:8081");
+	                            AuthLevel::System, std::string(), session,
+	                            "box.example:8081", std::string(),
+	                            from_home ? Origin::Lan : Origin::Tunnel);
 	if (r.code >= 200 && r.code < 300)
 		examplesAccepted().insert(std::string(method) + " " + path);
 	else

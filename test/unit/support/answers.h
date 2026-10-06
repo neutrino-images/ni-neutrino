@@ -54,6 +54,8 @@ bool addAnswerState(const std::vector<SeenAnswer> &seen, const std::set<std::str
 int sendBodyExample(const char *method, const char *path,
                     const std::map<std::string, std::string> &fills,
                     const std::string &from = std::string(),
-                    const std::string &to = std::string());
+                    const std::string &to = std::string(),
+                    bool from_home = false,
+                    const std::string &session = std::string());
 
 #endif

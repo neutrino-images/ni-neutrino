@@ -31,6 +31,8 @@ export LC_ALL
 PREACT_VERSION=10.24.3
 HTM_VERSION=3.1.1
 PREACT_ROUTER_VERSION=4.1.2
+# version ni-buildsystem's package/qrcode-generator/qrcode-generator.mk installs
+QRCODE_GENERATOR_VERSION=2.0.4
 
 # Plain JavaScript and no binary per platform, so this runs under any node.
 # Pinned rather than taken from the machine, because a check whose strictness
@@ -71,6 +73,7 @@ mkdir -p "$DEST"
 grab preact "$PREACT_VERSION"
 grab htm "$HTM_VERSION"
 grab preact-router "$PREACT_ROUTER_VERSION"
+grab qrcode-generator "$QRCODE_GENERATOR_VERSION"
 grab typescript "$TYPESCRIPT_VERSION"
 
 # The four files jsconfig.json and the check name. Said here rather than left
@@ -80,6 +83,7 @@ for f in preact/src/index.d.ts \
 	 preact/hooks/src/index.d.ts \
 	 htm/dist/htm.d.ts \
 	 preact-router/index.d.ts \
+	 qrcode-generator/dist/qrcode.mjs \
 	 typescript/lib/tsc.js; do
 	[ -r "$DEST/$f" ] || {
 		echo "fetch-types.sh: $f is not in the archive it should be in" >&2
@@ -87,4 +91,4 @@ for f in preact/src/index.d.ts \
 	}
 done
 
-echo "fetch-types.sh: preact $PREACT_VERSION, htm $HTM_VERSION, preact-router $PREACT_ROUTER_VERSION and typescript $TYPESCRIPT_VERSION are under test/web/node_modules"
+echo "fetch-types.sh: preact $PREACT_VERSION, htm $HTM_VERSION, preact-router $PREACT_ROUTER_VERSION, qrcode-generator $QRCODE_GENERATOR_VERSION and typescript $TYPESCRIPT_VERSION are under test/web/node_modules"

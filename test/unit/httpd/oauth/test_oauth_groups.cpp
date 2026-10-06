@@ -301,6 +301,7 @@ struct ConsentRun
 		oauth::ConsentInput in;
 		in.method = Get;
 		in.query = "request=" + id;
+		in.origin = Origin::Lan;
 		return oauth::answerConsent(in).body;
 	}
 
@@ -336,6 +337,7 @@ struct ConsentRun
 		          kAccountPassword + "&decision=approve&" + fields;
 		in.content_type = "application/x-www-form-urlencoded";
 		in.cookie = view.form_token;
+		in.origin = Origin::Lan;
 		const Response r = oauth::answerConsent(in);
 		REQUIRE(r.code == oauth::kStatusFound);
 		const std::string loc = header(r, "Location");

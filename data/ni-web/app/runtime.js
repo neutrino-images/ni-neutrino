@@ -39,3 +39,9 @@ export { default as Router, Link, route, getCurrentUrl } from '/vendor/preact-ro
 export function loadHls() {
 	return import('/vendor/hls.module.js');
 }
+
+// The QR code library, loaded the same way: only the KI area asks, and only a
+// box built with AI access carries it.
+export function loadQrcode() {
+	return import('/vendor/qrcode.module.js');
+}

@@ -45,7 +45,7 @@ export default {
 		'ai.client.claude.title': 'Claude Desktop und claude.ai',
 		'ai.client.claude.step1': 'In Claude Desktop oder auf claude.ai unter Customize > Connectors „Add custom connector“ wählen. In Team- und Enterprise-Tarifen legt das ein Owner unter Organization settings > Connectors an.',
 		'ai.client.claude.step2': 'Als Adresse {url} eintragen und, falls nach einem Namen gefragt wird, etwa Neutrino.',
-		'ai.client.claude.step3': 'Hinzufügen und Connect wählen. Die Box zeigt ihre Anmeldeseite: mit dem Konto der Weboberfläche anmelden und auswählen, was Claude darf.',
+		'ai.client.claude.step3': 'Hinzufügen und Connect wählen. Die Box zeigt ihre Anmeldeseite: mit dem Konto der Weboberfläche und dem Code aus der Authenticator-App anmelden und auswählen, was Claude darf.',
 		'ai.client.claude.step4': 'Claude verbindet sich dabei aus der Cloud von Anthropic, nicht vom eigenen Rechner. Darum geht das nur über die öffentliche Adresse; für die Box im Heimnetz ohne Tunnel gibt es oben Claude Desktop mit Zugangsschlüssel.',
 		'ai.client.claude-code.title': 'Claude Code',
 		'ai.client.claude-code.step1': 'In diesem Tab einen Zugangsschlüssel für Claude Code anlegen und kopieren. Er wird nur einmal angezeigt.',
@@ -54,7 +54,7 @@ export default {
 		'ai.client.chatgpt.title': 'ChatGPT',
 		'ai.client.chatgpt.step1': 'In ChatGPT https://chatgpt.com/plugins öffnen und „Hinzufügen“ wählen.',
 		'ai.client.chatgpt.step2': '„Benutzerdefinierten MCP-Server erstellen“ wählen, als Adresse {url} eintragen und als Authentifizierung OAuth wählen.',
-		'ai.client.chatgpt.step3': 'Verbinden, an der Box anmelden und auswählen, was ChatGPT darf.',
+		'ai.client.chatgpt.step3': 'Verbinden, an der Box mit dem Konto der Weboberfläche und dem Code aus der Authenticator-App anmelden und auswählen, was ChatGPT darf.',
 		'ai.client.home-assistant.title': 'Home Assistant',
 		'ai.client.home-assistant.step1': 'In diesem Tab einen Zugangsschlüssel für Home Assistant anlegen und kopieren. Er wird nur einmal angezeigt.',
 		'ai.client.home-assistant.step2': 'In Home Assistant einen MCP-Client verwenden, der {url} erreicht und den Zugangsschlüssel als Header Authorization: Bearer mitschickt.',
@@ -67,6 +67,10 @@ export default {
 		'ai.error.ai-trusted-proxies-refused': 'Jeder Eintrag muss eine Adresse oder ein Netz bis /24 (IPv6 bis /64) sein, höchstens 16 Einträge, und keiner darf die Box selbst sein.',
 		'ai.error.ai-caller-would-be-tunnel': 'Die Adresse, von der aus gerade zugegriffen wird, steht in der Liste. Danach würde diese Seite nicht mehr antworten.',
 		'ai.error.ai-default-password': 'Die Box hat noch das ausgelieferte Passwort. Erst unter System, Webserver ein eigenes setzen, dann eine öffentliche Adresse eintragen.',
+		'ai.error.ai-totp-code-wrong': 'Der Code stimmt nicht. Den Code eingeben, den die App gerade zeigt; die Uhrzeit von Telefon und Box muss stimmen.',
+		'ai.error.ai-totp-clock-unknown': 'Die Uhrzeit der Box ist noch nicht gestellt. Sobald sie stimmt, noch einmal versuchen.',
+		'ai.error.ai-totp-no-pending': 'Die Einrichtung ist abgelaufen. Bitte 2FA neu einrichten.',
+		'ai.error.ai-totp-not-set-up': '2FA ist nicht eingerichtet.',
 		'ai.error.forwarded-by-untrusted-peer': 'Die Anfrage kam über einen Proxy, der nicht in der Liste der vertrauenswürdigen Proxys steht.'
 	},
 	en: {
@@ -114,7 +118,7 @@ export default {
 		'ai.client.claude.title': 'Claude Desktop and claude.ai',
 		'ai.client.claude.step1': 'In Claude Desktop or on claude.ai, choose Add custom connector under Customize > Connectors. On Team and Enterprise plans, an Owner adds it under Organization settings > Connectors.',
 		'ai.client.claude.step2': 'Enter {url} as the address and, if a name is asked for, something like Neutrino.',
-		'ai.client.claude.step3': 'Choose Add and Connect. The box shows its sign-in page: sign in with the web interface account and choose what Claude may do.',
+		'ai.client.claude.step3': 'Choose Add and Connect. The box shows its sign-in page: sign in with the web interface account and the code from the authenticator app, and choose what Claude may do.',
 		'ai.client.claude.step4': 'Claude connects from the cloud of Anthropic, not from your own computer. So this works only through the public address; for the box in the home network without a tunnel, use Claude Desktop with an access token above.',
 		'ai.client.claude-code.title': 'Claude Code',
 		'ai.client.claude-code.step1': 'Create an access token for Claude Code in this tab and copy it. It is shown only once.',
@@ -123,7 +127,7 @@ export default {
 		'ai.client.chatgpt.title': 'ChatGPT',
 		'ai.client.chatgpt.step1': 'In ChatGPT, open https://chatgpt.com/plugins and choose Add.',
 		'ai.client.chatgpt.step2': 'Choose Create custom MCP server, enter {url} as the address and choose OAuth as the authentication.',
-		'ai.client.chatgpt.step3': 'Connect, sign in at the box and choose what ChatGPT may do.',
+		'ai.client.chatgpt.step3': 'Connect, sign in at the box with the web interface account and the code from the authenticator app, and choose what ChatGPT may do.',
 		'ai.client.home-assistant.title': 'Home Assistant',
 		'ai.client.home-assistant.step1': 'Create an access token for Home Assistant in this tab and copy it. It is shown only once.',
 		'ai.client.home-assistant.step2': 'In Home Assistant, use an MCP client that reaches {url} and sends the access token as an Authorization: Bearer header.',
@@ -136,6 +140,10 @@ export default {
 		'ai.error.ai-trusted-proxies-refused': 'Each entry has to be an address or a network of at most /24 (IPv6 /64), at most 16 entries, and none may be the box itself.',
 		'ai.error.ai-caller-would-be-tunnel': 'The address this page is being used from is in the list. After saving, this page would stop answering.',
 		'ai.error.ai-default-password': 'The box still has the password it shipped with. Set your own under System, Webserver first, then enter a public address.',
+		'ai.error.ai-totp-code-wrong': 'The code is wrong. Enter the code the app shows right now; the clocks of phone and box have to be right.',
+		'ai.error.ai-totp-clock-unknown': 'The clock of the box is not set yet. Try again once it is.',
+		'ai.error.ai-totp-no-pending': 'The setup has expired. Please set up 2FA again.',
+		'ai.error.ai-totp-not-set-up': '2FA is not set up.',
 		'ai.error.forwarded-by-untrusted-peer': 'The request came through a proxy that is not on the list of trusted proxies.'
 	}
 };

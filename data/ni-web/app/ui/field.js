@@ -58,6 +58,7 @@ export function Notes(props) {
  *   max?: number,
  *   readOnly?: boolean,
  *   autocomplete?: string,
+ *   inputMode?: string,
  *   hint?: string,
  *   error?: string,
  *   needsRestart?: boolean,
@@ -94,6 +95,7 @@ export function Field(props) {
 				max=${props.max}
 				readOnly=${props.readOnly}
 				autocomplete=${props.autocomplete}
+				inputmode=${props.inputMode}
 				aria-invalid=${props.error ? 'true' : null}
 				aria-describedby=${describedBy(id, props)}
 				onInput=${props.onInput}

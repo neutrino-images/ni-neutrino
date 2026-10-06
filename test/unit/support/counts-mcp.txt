@@ -1,11 +1,11 @@
 # Read over counts.txt in an --enable-mcp build only: a line here replaces the figure of its name or adds one.
 answer members narrower than free text	50
-body examples their routes accepted	31
+body examples their routes accepted	33
 groups the document declares	21
-parameters the document describes	158
-refusals the document states against a route	913
-refusals the routes declare of their own	142
-refusals the shipped routes were seen to give	226
-routes the document describes	116
-shapes the document files against a route	59
-success codes the document states	128
+parameters the document describes	160
+refusals the document states against a route	944
+refusals the routes declare of their own	153
+refusals the shipped routes were seen to give	237
+routes the document describes	119
+shapes the document files against a route	60
+success codes the document states	131
