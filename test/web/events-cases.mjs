@@ -5,6 +5,9 @@
 import * as store from '../../data/ni-web/app/store.js';
 import * as events from '../../data/ni-web/app/events.js';
 import * as session from '../../data/ni-web/app/session.js';
+import { watchApplyFailed } from '../../data/ni-web/app/screens/settings/applyfailed.js';
+import { setLanguage } from '../../data/ni-web/app/i18n.js';
+import { readFileSync } from 'node:fs';
 import { refreshAll } from '../../data/ni-web/app/refresh.js';
 
 let checked = 0;
@@ -259,6 +262,25 @@ await settle();
 same(timesAsked(kArchive), 1, 'a playback event reads the archive again');
 stopArchive();
 
+// The box could not put a written setting in force: the keys and the reason reach a
+// listener, and the settings are read again because they may not be what was written.
+const kSettings = 'GET /api/v1/settings/schema';
+const stopSchema = store.watch('GET', '/api/v1/settings/schema', null, function () {});
+await settle();
+asked = [];
+/** @type {any[]} */
+const failures = [];
+const stopFailures = events.on('setting-apply-failed', function (event) { failures.push(event); });
+last().emit('setting-apply-failed', '{"keys":["video_Mode","x",3],"status":500,"detail":"no"}');
+await settle();
+same(failures.map(function (e) { return [e.keys, e.status, e.detail]; }), [[['video_Mode', 'x'], 500, 'no']],
+	'a setting-apply-failed event hands over its keys, status and detail');
+same(timesAsked(kSettings), 1, 'and the declaration is read again');
+last().emit('zap', '{"channel_id":"0","value":0}');
+same(failures.length, 1, 'another type is not one');
+stopFailures();
+stopSchema();
+
 // --------------------------------- the browser reconnects after one drop
 
 asked = [];
@@ -393,6 +415,59 @@ same([timesAsked(kGuides), guides.state], [0, 'error'], 'the same session told a
 refuses.clear();
 stopGuides();
 stopMissing();
+
+// ------------------------------ the apply failure reaches the page's toast
+says.set('GET /api/v1/settings/schema', '{"items":[{"id":"lcd4l_support","type":"bool","section":"x","label":"LCD4Linux","conditions":[]}]}');
+/** @type {any[]} */
+const shown = [];
+globalThis.document = /** @type {any} */ ({ documentElement: {} });
+setLanguage('en');
+const stopWatching = watchApplyFailed(function (message, kind) { shown.push([message, kind]); });
+events.reopen();
+last().open();
+await settle();
+last().emit('setting-apply-failed', '{"keys":["lcd4l_support","zz"],"status":500,"detail":"script failed"}');
+await settle();
+same(shown, [['The box stored LCD4Linux, zz but could not put it in force: script failed', 'bad']],
+	'an apply failure reaches the toast with the settings named by their labels');
+stopWatching();
+last().emit('setting-apply-failed', '{"keys":["lcd4l_support"],"status":500,"detail":"again"}');
+await settle();
+same(shown.length, 1, 'and stops when the watching stops');
+is(/watchApplyFailed\(toast\)/.test(readFileSync(new URL('../../data/ni-web/app/main.js', import.meta.url), 'utf8')),
+	'the page starts the watching with its toast');
+
+// ----------------------------- the stream follows who is signed in
+// The box sends some events only to the stream of the session that wrote, and tags a stream
+// with the session it was opened under. One opened before signing in, or under a session
+// that ran out, would never get them.
+says.set('GET /api/v1/session', '{"authenticated":false,"level":"read"}');
+await session.refresh();
+await settle();
+events.reopen();
+last().open();
+await settle();
+let streams = sources.length;
+same(openStreams(), 1, 'a stream is open for a caller holding nothing');
+says.set('GET /api/v1/session', '{"authenticated":true,"level":"system","user":"root","csrf":"one"}');
+await session.refresh();
+await settle();
+same([sources.length, openStreams()], [streams + 1, 1], 'signing in opens a new stream and closes the old');
+last().open();
+streams = sources.length;
+await session.refresh();
+await settle();
+same(sources.length, streams, 'the same session told again keeps its stream');
+says.set('GET /api/v1/session', '{"authenticated":true,"level":"system","user":"root","csrf":"two"}');
+await session.refresh();
+await settle();
+same([sources.length, openStreams()], [streams + 1, 1], 'a renewed session, same user and level, opens a new stream');
+last().open();
+streams = sources.length;
+says.set('GET /api/v1/session', '{"authenticated":false,"level":"read"}');
+await session.refresh();
+await settle();
+same([sources.length, openStreams()], [streams + 1, 1], 'and so does signing out');
 
 if (failed > 0) {
 	process.stderr.write('events: ' + failed + ' of ' + checked + ' failed\n');

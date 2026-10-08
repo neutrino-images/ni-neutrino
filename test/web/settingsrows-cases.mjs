@@ -8,6 +8,7 @@ import * as loader from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync, readdirSync } from 'node:fs';
 
 if (typeof loader.registerHooks !== 'function') {
 	process.stderr.write('settingsrows-cases.mjs: this node cannot register a resolver, and the page names its runtime by an address only a server resolves\n');
@@ -45,8 +46,10 @@ loader.registerHooks({
 
 globalThis.document = /** @type {any} */ ({ documentElement: {} });
 
-const { Control, Row } = await import('../../data/ni-web/app/screens/settings/rows.js');
-const { rowOf, changed, numberFault, isVisible, withKeyNames } = await import('../../data/ni-web/app/screens/settings/model.js');
+const { Control, Row, ChannelPick, ChannelSelect, ReadOnlyRow, channelChoices, faultText } = await import('../../data/ni-web/app/screens/settings/rows.js');
+const { conditionKeys, rowOf, rowsOf, changed, numberFault, textFault, hasFault, isVisible, withKeyNames, lineOf, risksOf } = await import('../../data/ni-web/app/screens/settings/model.js');
+const { outcomeOf, refusedOfSent, refusalText, applyFailedText } = await import('../../data/ni-web/app/screens/settings/refusal.js');
+const { default: words } = await import('../../data/ni-web/app/screens/settings/settings.text.js');
 const { setLanguage } = await import('../../data/ni-web/app/i18n.js');
 const { aspectModes } = await import('../../data/ni-web/app/screens/now/overview.js');
 const { settingChoices } = await import('../../data/ni-web/app/screens/now/overview.js');
@@ -226,16 +229,29 @@ function schemaWith(values) {
 		{ id: 'video_43mode', values: values.map(function (v) { return { value: v, label: String(v) }; }) },
 	] };
 }
-same(aspectModes(schemaWith([0, 3, 1, 2])).map(function (one) { return one.value; }), [0, 1, 2, 3],
-	'every mode the box lists, in the order of the page');
+same(aspectModes(schemaWith([0, 3, 1, 2])).map(function (one) { return one.value; }), [0, 3, 1, 2],
+	'every mode the box lists, in the order the box lists them');
+same(aspectModes(schemaWith([0, 7])).map(function (one) { return [one.value, one.key, one.label]; }),
+	[[0, 'now.quick.43.panscan', '0'], [7, '', '7']], 'a value the page has no words for is an extra button with the schema\'s label');
 same(aspectModes(schemaWith([0, 1, 2])).map(function (one) { return one.key; }),
-	['now.quick.43.panscan', 'now.quick.43.letterbox', 'now.quick.43.full'], 'a mode the box does not list is left out');
+	['now.quick.43.panscan', 'now.quick.43.letterbox', 'now.quick.43.full'], 'a mode the box does not list is not offered');
 same(aspectModes(null).length, 4, 'all four before the schema answers');
 same(aspectModes({ items: [] }), [], 'none where the schema answered without the setting');
 
 // The choices a setting offers are the values the schema lists for it.
 same(settingChoices({ items: [{ id: 'video_Mode', values: [{ value: 9, label: '1080i 50Hz' }] }] }, 'video_Mode'),
 	[{ value: 9, label: '1080i 50Hz' }], 'a setting\'s choices are its values');
+
+// A list the box stated once for several rows is found under the name the row gives.
+const sharedSchema = { items: [
+	{ id: 'video_Mode', values_from: 'a1' },
+	{ id: 'video_43mode', values_from: 'a2' },
+], value_lists: {
+	a1: [{ value: 9, label: '1080i 50Hz' }],
+	a2: [{ value: 0, label: 'p' }, { value: 3, label: 'x' }],
+} };
+same(settingChoices(sharedSchema, 'video_Mode'), [{ value: 9, label: '1080i 50Hz' }], 'a setting\'s choices come from the shared list it names');
+same(aspectModes(sharedSchema).map(function (one) { return one.value; }), [0, 3], 'the 4:3 buttons come from the shared list too');
 
 // A number row that names a value in words takes it wherever it lies and says the words
 // beside the number. The row shape is a declared one: start_volume names -1 at its floor.
@@ -405,6 +421,206 @@ same(tuners.options.map(function (o) { return [o.value, o.label]; }), [['-1', 'O
 const goneTuner = tunerDrawn(true, '5');
 same(goneTuner.options[3], { value: '5', disabled: true, label: '5, not available on this box' }, 'a stored number the box does not list is shown and not choosable');
 same(tunerDrawn(false, '0').selects, 0, 'an int that only names values stays a number field');
+
+
+// ---------------------------------------------------------------- pairs the box states
+
+// A start channel is two rows, an identifier without a label and the name with one. The
+// identifier is drawn as a picker under the name's label, and the name is shown as it
+// stands and never sent.
+setLanguage('en');
+/** @param {boolean} paired */
+function startChannel(paired) {
+	/** @type {any} */
+	const id = { id: 'startchanneltv_id', type: 'string', section: 'channel', default: '0', conditions: [] };
+	/** @type {any} */
+	const name = { id: 'startchanneltv', type: 'string', section: 'channel', label: 'Last TV channel', default: '', conditions: [] };
+	/** @type {any} */
+	const radio = { id: 'startchannelradio_id', type: 'string', section: 'channel', default: '0', conditions: [] };
+	/** @type {any} */
+	const radioName = { id: 'startchannelradio', type: 'string', section: 'channel', label: 'Last radio channel', default: '', conditions: [] };
+	if (paired) {
+		id.pair = 'startchanneltv'; id.pair_writes = 'id';
+		name.pair = 'startchanneltv_id'; name.pair_writes = 'id';
+		radio.pair = 'startchannelradio'; radio.pair_writes = 'id';
+		radioName.pair = 'startchannelradio_id'; radioName.pair_writes = 'id';
+	}
+	return rowsOf({ items: [id, name, radio, radioName] });
+}
+const channelRows = /** @type {any[]} */ (startChannel(true));
+same(channelRows.map(function (r) { return [r.id, r.label, r.picker, r.readOnly]; }), [
+	['startchanneltv_id', 'Last TV channel', 'tv', ''],
+	['startchanneltv', 'Last TV channel', '', 'follows'],
+	['startchannelradio_id', 'Last radio channel', 'radio', ''],
+	['startchannelradio', 'Last radio channel', '', 'follows'],
+], 'the identifier is a picker under the name\'s label and the name is read only');
+same(changed(channelRows, { startchanneltv_id: '0', startchanneltv: '' }, { startchanneltv_id: 'b9b0040200016dcb', startchanneltv: 'typed' }),
+	{ startchanneltv_id: 'b9b0040200016dcb' }, 'only the identifier is sent for a start channel');
+const channelTree = Control(/** @type {any} */ ({ row: channelRows[0], value: '0', onChange: function () {}, onClear: function () {} }));
+same(channelTree.type === ChannelPick, true, 'the identifier row is drawn as the channel picker');
+const nameTree = Control(/** @type {any} */ ({ row: channelRows[1], value: 'Das Erste', onChange: function () {}, onClear: function () {} }));
+same([nameTree.type === ReadOnlyRow, find(nameTree, 'p', [])[0].props.children], [true, 'Das Erste'], 'the name row shows the name');
+same(startChannel(false).map(function (r) { return /** @type {any} */ (r).id; }), ['startchanneltv', 'startchannelradio'],
+	'a box that states no pair draws what it drew before: the names, editable');
+same(startChannel(false).every(function (r) { return /** @type {any} */ (r).picker === '' && /** @type {any} */ (r).readOnly === ''; }), true,
+	'and neither is a picker nor read only');
+same(channelChoices([{ id: 'a1', number: 1, name: 'Eins' }], 'a1').map(function (o) { return o.value; }), ['0', 'a1'], 'a channel in the list is one entry');
+same(channelChoices([{ id: 'a1', number: 1, name: 'Eins' }], 'ff').map(function (o) { return o.value; }), ['0', 'a1', 'ff'],
+	'a stored channel the list lacks stays an entry');
+same(channelChoices([], '0'), [{ value: '0', label: 'no channel' }], 'none is its own entry');
+
+// The kind of channel comes from the box when it says so, and from the name when it does not.
+/** @param {string} id @param {any} extra */
+function kindOf(id, extra) {
+	return /** @type {any[]} */ (rowsOf({ items: [
+		Object.assign({ id: id, type: 'string', section: 'c', pair: 'n', pair_writes: 'id', conditions: [] }, extra),
+		{ id: 'n', type: 'string', section: 'c', label: 'Name', pair: id, pair_writes: 'id', conditions: [] },
+	] }))[0].picker;
+}
+same([kindOf('tv_id', { channel_kind: 'radio' }), kindOf('radio_id', { channels: 'tv' }), kindOf('radio_id', {}), kindOf('x_id', {})],
+	['radio', 'tv', 'radio', 'tv'], 'the picker follows the kind the box states and falls back to the name');
+
+// The weather place is two rows written whole: one read only line, the second not drawn.
+const weatherRows = /** @type {any[]} */ (rowsOf({ items: [
+	{ id: 'weather_city', type: 'string', section: 'weather', label: 'Location', pair: 'weather_location', pair_writes: 'both', default: '', conditions: [] },
+	{ id: 'weather_location', type: 'string', section: 'weather', label: 'Location', pair: 'weather_city', pair_writes: 'both', default: '', conditions: [] },
+] }));
+same(weatherRows.map(function (r) { return [r.id, r.readOnly]; }), [['weather_city', 'box']], 'a pair written whole is one read only line');
+same(lineOf(weatherRows[0], { weather_city: 'Berlin', weather_location: '52.5,13.4' }), 'Berlin, 52.5,13.4', 'its line holds both members');
+same(changed(weatherRows, { weather_city: 'a' }, { weather_city: 'b' }), {}, 'and is never sent');
+
+// -------------------------------------------------- a parental lock shows the words
+const lockedAge = /** @type {any} */ (rowOf({ id: 'x.age', label: 'Age', type: 'enum', section: 'x', locked: true,
+	values: [{ value: 12, label: '12 and over' }, { value: 18, label: '18 and over' }], conditions: [] }));
+same(find(Control(/** @type {any} */ ({ row: lockedAge, value: '18', onChange: function () {}, onClear: function () {} })), 'p', [])[0].props.children,
+	'18 and over', 'a held choice shows its label and not its number');
+
+// ------------------------------------------------------------------ text limits
+const pinRow = /** @type {any} */ (rowOf({ id: 'x.text', label: 'Text', type: 'string', section: 'x', text_kind: 'plain',
+	min_length: 2, max_length: 4, allowed_chars: '0123456789abcdef', conditions: [] }));
+same([textFault(pinRow, 'a'), textFault(pinRow, 'abcde'), textFault(pinRow, 'xy'), textFault(pinRow, 'ab')], ['short', 'long', 'chars', null],
+	'a text is held to the length and characters the box states');
+same(hasFault(pinRow, 'xy'), true, 'and a fault holds the save back');
+same(faultText(pinRow, 'abcde'), 'At most 4 characters.', 'with the words of the page');
+same(textFault(/** @type {any} */ (rowOf({ id: 'x.t', label: 'T', type: 'string', section: 'x', conditions: [] })), 'anything at all'), null,
+	'a string with no stated rule takes anything');
+const secretText = /** @type {any} */ (rowOf({ id: 'x.s', label: 'S', type: 'string', section: 'x', secret: true, text_kind: 'plain', min_length: 3, conditions: [] }));
+same(hasFault(secretText, ''), false, 'an untouched credential field is no fault');
+
+// -------------------------------------------------- what a partly refused write says
+const answerResults = { a: { status: 204, code: '' }, b: { status: 409, code: 'setting-condition-not-met', detail: 'not now', depends_on: ['c', 7] },
+	c: { status: 409, code: 'setting-locked', detail: 'locked' }, d: { status: 400, code: 'something-new', detail: 'a new thing' }, e: { status: 409, code: 'setting-locked' } };
+const outcome = outcomeOf(answerResults);
+same(outcome.landed, ['a'], 'a 2xx entry landed');
+same(outcome.refused.map(function (r) { return r.key; }), ['b', 'c', 'd', 'e'], 'the others were refused');
+same(refusedOfSent(outcome.refused, ['a', 'b', 'c']), 2, 'only the keys that were sent are counted');
+/** @param {string} key */
+const nameOf = function (key) { return ({ a: 'Alpha', b: 'Beta', c: 'Gamma' })[key] || key; };
+same(refusalText(/** @type {any} */ (outcome.refused[0]), nameOf).indexOf('Beta: depends on Gamma'), 0, 'a refused condition names the setting it depends on');
+same(refusalText(/** @type {any} */ (outcome.refused[1]), nameOf), 'Gamma: Locked, it cannot be changed right now.', 'a known code is worded by the page');
+same(refusalText(/** @type {any} */ (outcome.refused[2]), nameOf), 'd: a new thing', 'an unknown code falls back to the box\'s sentence');
+setLanguage('de');
+same(refusalText(/** @type {any} */ (outcome.refused[1]), nameOf).indexOf('Gamma: Gesperrt'), 0, 'in German as well');
+setLanguage('en');
+same(outcomeOf(null), { landed: [], refused: [] }, 'no results is no outcome');
+
+same(applyFailedText({ keys: ['a', 'zz'], detail: 'busy' }, nameOf), 'The box stored Alpha, zz but could not put it in force: busy', 'an apply failure names the settings and the reason');
+same(applyFailedText({ keys: ['a'], detail: '' }, nameOf), 'The box stored Alpha but could not put it in force.', 'and works without a reason');
+
+
+// A refusal naming settings the row's own conditions do not read is the box keeping settings
+// together, and "change that one first" is wrong advice for it.
+const bConditions = { b: ['c'] };
+/** @param {string} key */
+const conditionKeysOf = function (key) { return /** @type {Record<string, string[]>} */ (bConditions)[key] || []; };
+same(refusalText(/** @type {any} */ (outcome.refused[0]), nameOf, conditionKeysOf).indexOf('Beta: depends on Gamma'), 0,
+	'a refusal naming a setting the row\'s condition reads is worded as a dependency');
+same(refusalText(/** @type {any} */ (outcome.refused[0]), nameOf, function () { return []; }).indexOf('Beta: does not go together with Gamma'), 0,
+	'one naming a setting no condition of the row reads is worded as a pairing');
+same(conditionKeys(/** @type {any} */ (rowOf({ id: 'x', label: 'X', type: 'bool', section: 's', conditions: [
+	{ key: 'a', op: 'eq', values: [1] }, { any: [{ key: 'b', op: 'ne', values: [0] }, { key: 'c', op: 'ne', values: [0] }] }] }))),
+	['a', 'b', 'c'], 'the keys a row\'s conditions read include those in a group');
+
+// The picker hands the identifier, under the identifier\'s key, to the page.
+/** @type {any[]} */
+const picked = [];
+const pickTree = ChannelSelect(/** @type {any} */ ({ row: channelRows[0], value: '0', channels: { items: [{ id: 'b9b0040200016dcb', number: 1, name: 'Eins' }], failed: false },
+	onChange: function (/** @type {string} */ id, /** @type {string} */ value) { picked.push([id, value]); } }));
+find(pickTree, 'select', [])[0].props.onChange({ currentTarget: { value: 'b9b0040200016dcb' } });
+same(picked, [['startchanneltv_id', 'b9b0040200016dcb']], 'choosing a channel reaches the page as the identifier of the row, not the name');
+
+// ------------------------------------------------------------ writes that ask first
+same(risksOf({ video_Mode: '5' }), ['settings.risk.video_Mode'], 'a resolution is asked about');
+same(risksOf({ remote_control_hardware: '1', other: '2' }), ['settings.risk.remote_control_hardware'], 'so is the remote control');
+same(risksOf({ other: '2' }), [], 'nothing else is');
+
+// ------------------------------------------------------ the tables against this page
+const kTables = resolve(here, '../../src/coreapi/settings');
+const kSources = readdirSync(kTables).filter(function (f) { return /^settingstable_.*\.cpp$/.test(f); })
+	.map(function (f) { return readFileSync(resolve(kTables, f), 'utf8'); });
+same(kSources.length > 0, true, 'the tables are found');
+
+// Every unit a table uses has a word in both languages, or the number shows without one.
+/** @type {Record<string, boolean>} */
+const units = {};
+for (const source of kSources) {
+	for (const found of source.matchAll(/\.unit\("([^"]+)"\)/g))
+		units[/** @type {string} */ (found[1])] = true;
+}
+same(Object.keys(units).length > 0, true, 'the tables use units');
+for (const unit of Object.keys(units)) {
+	for (const lang of ['de', 'en'])
+		same(typeof /** @type {any} */ (words)[lang]['settings.' + unit], 'string', 'the unit ' + unit + ' has a text in ' + lang);
+}
+
+// A list row with a label has to be drawn. Reading the tables as text is what finds one
+// before a box does; the page draws none today because no list row has a label.
+/** @param {string} source @returns {string[]} */
+function labelledLists(source) {
+	/** @type {string[]} */
+	const out = [];
+	for (const found of source.matchAll(/listRow\("([^"]+)"\)([\s\S]*?)\.field\(/g)) {
+		if (/\.label\(/.test(/** @type {string} */ (found[2])))
+			out.push(/** @type {string} */ (found[1]));
+	}
+	return out;
+}
+same(labelledLists('listRow("a").section("x").label("k").field(F)\nlistRow("b").section("x").field(F)'), ['a'],
+	'the scan finds a labelled list row and not an unlabelled one');
+const drawsLists = rowOf({ id: 'x.list', label: 'List', type: 'list', section: 'x', conditions: [] }) !== null;
+for (const source of kSources) {
+	for (const key of labelledLists(source))
+		same(drawsLists, true, 'the list row ' + key + ' has a label, so the page has to draw lists');
+}
+
+// The box leaves a member out when it has its default: the page reads that as the default.
+const bare = /** @type {any} */ (rowOf({ id: 'x.bare', label: 'Bare', type: 'bool', section: 'x', default: '0' }));
+same([bare.secret, bare.locked, bare.held, bare.needsRestart, bare.conditions], [false, false, false, false, []],
+	'a row with no secret, locked, needs_restart or conditions member has their defaults');
+same(isVisible(bare, {}), true, 'a row with no conditions member is always shown');
+same(rowOf({ id: 'x.on', label: 'On', type: 'bool', section: 'x' }) !== null, true, 'a row with no available member is drawn');
+const flagged = /** @type {any} */ (rowOf({ id: 'x.flag', label: 'Flag', type: 'bool', section: 'x', locked: true, secret: true, needs_restart: true }));
+same([flagged.locked, flagged.secret, flagged.needsRestart], [true, true, true], 'a member that is present and true is read as true');
+
+// A list the box states once is looked up by the name a row gives.
+const sharedAnswer = {
+	value_lists: { 'list-a': [{ value: 0, key: 'k.off', label: 'Off' }, { value: 1, key: 'k.on', label: 'On' }],
+		'list-t': [{ value: 0, text: 'de', label: 'Deutsch' }, { value: 0, text: 'en', label: 'English' }] },
+	items: [
+		{ id: 'x.one', label: 'One', type: 'enum', section: 'x', values_from: 'list-a' },
+		{ id: 'x.two', label: 'Two', type: 'enum', section: 'x', values_from: 'list-a' },
+		{ id: 'x.own', label: 'Own', type: 'enum', section: 'x', values: [{ value: 5, label: 'Five' }] },
+		{ id: 'x.lang', label: 'Lang', type: 'string', section: 'x', values_from: 'list-t' },
+		{ id: 'x.gone', label: 'Gone', type: 'enum', section: 'x', values_from: 'list-missing' },
+	],
+};
+const sharedRows = /** @type {any[]} */ (rowsOf(sharedAnswer));
+same(sharedRows[0].choices, [{ value: 0, label: 'Off' }, { value: 1, label: 'On' }], 'values_from gives the row the shared choices');
+same(sharedRows[1].choices, sharedRows[0].choices, 'two rows naming one list get the same choices');
+same(sharedRows[2].choices, [{ value: 5, label: 'Five' }], 'a row with its own values keeps them');
+same(sharedRows[3].choices.map(function (/** @type {any} */ c) { return c.text; }), ['de', 'en'], 'a string row reads shared entries by their text');
+same([sharedRows[4].choices.length, sharedRows[4].locked], [0, true], 'a name the answer does not hold leaves a choice with no values, which is held');
+same(rowsOf({ items: sharedAnswer.items.slice(0, 1) })[0].choices, [], 'an answer with no value_lists leaves the named list empty');
 
 if (failed > 0) {
 	process.stderr.write('settingsrows: ' + failed + ' of ' + checked + ' failed\n');

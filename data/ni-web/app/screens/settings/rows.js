@@ -14,7 +14,8 @@ import { Field, Notes, describedBy } from '../../ui/field.js';
 import { Select } from '../../ui/select.js';
 import { Switch } from '../../ui/switch.js';
 import { Button } from '../../ui/button.js';
-import { numberFault, namedValue, fallbackLabel } from './model.js';
+import { useAllChannels } from '../../ui/channels.js';
+import { numberFault, textFault, namedValue, labelFor } from './model.js';
 import text from './settings.text.js';
 
 /**
@@ -26,6 +27,14 @@ import text from './settings.text.js';
  * @returns {string}
  */
 export function faultText(row, value) {
+	const said = textFault(row, value);
+	if (said !== null) {
+		return t(text, said === 'short' ? 'settings.badshort' : said === 'long' ? 'settings.badlong' : 'settings.badchars', {
+			min: String(row.minLength),
+			max: String(row.maxLength),
+			chars: row.allowedChars
+		});
+	}
 	const fault = numberFault(row, value);
 	if (fault === null)
 		return '';
@@ -68,9 +77,89 @@ export function unitText(row) {
  * @returns {string}
  */
 export function deliveredWord(row) {
+	return wordOf(row, row.fallback);
+}
+
+/**
+ * A stored value in the words the control beside it uses.
+ *
+ * @param {import('./model.js').Row} row
+ * @param {string} value
+ * @returns {string}
+ */
+export function wordOf(row, value) {
 	if (row.type === 'bool')
-		return t(text, row.fallback === '0' ? 'settings.off' : 'settings.on');
-	return fallbackLabel(row);
+		return t(text, value === '0' ? 'settings.off' : 'settings.on');
+	return labelFor(row, value);
+}
+
+/**
+ * The choices of a channel picker: the channels as the box numbers them, a first entry for
+ * none, and the stored channel when the list does not hold it, so a select never draws
+ * empty over a value the box keeps.
+ *
+ * @param {ReadonlyArray<{ id: string, number: number, name: string }>} channels
+ * @param {string} chosen
+ * @returns {Array<{ value: string, label: string }>}
+ */
+export function channelChoices(channels, chosen) {
+	const out = [{ value: '0', label: t(text, 'settings.channel.none') }];
+	let seen = chosen === '' || chosen === '0';
+	for (const one of channels) {
+		if (one.id === chosen)
+			seen = true;
+		out.push({ value: one.id, label: one.number + '  ' + one.name });
+	}
+	if (!seen)
+		out.push({ value: chosen, label: chosen });
+	return out;
+}
+
+/**
+ * A start channel: chosen from the channels of its kind, written as the identifier.
+ *
+ * @param {{ row: import('./model.js').Row, value: string, onChange: (id: string, value: string) => void }} props
+ * @returns {Web.Drawn}
+ */
+export function ChannelPick(props) {
+	const channels = useAllChannels(props.row.picker === 'radio' ? 'radio' : 'tv');
+	return html`<${ChannelSelect} row=${props.row} value=${props.value} channels=${channels} onChange=${props.onChange} />`;
+}
+
+/**
+ * The picker over a channel list already in hand, which is all the hook above adds.
+ *
+ * @param {{ row: import('./model.js').Row, value: string, channels: { items: Api.Channel[], failed: boolean }, onChange: (id: string, value: string) => void }} props
+ * @returns {Web.Drawn}
+ */
+export function ChannelSelect(props) {
+	const row = props.row;
+	const chosen = props.value === '' ? '0' : props.value;
+	return html`<${Select}
+		label=${row.label}
+		value=${chosen}
+		needsRestart=${row.needsRestart}
+		hint=${props.channels.failed ? t(text, 'settings.channel.partial') : undefined}
+		options=${channelChoices(props.channels.items, chosen)}
+		onChange=${function (/** @type {Event} */ event) {
+			const chooser = /** @type {HTMLSelectElement} */ (event.currentTarget);
+			props.onChange(row.id, chooser.value);
+		}} />`;
+}
+
+/**
+ * A setting this page shows and does not set: one the box sets itself, or one that follows
+ * the row above it.
+ *
+ * @param {{ row: import('./model.js').Row, value: string }} props
+ * @returns {Web.Drawn}
+ */
+export function ReadOnlyRow(props) {
+	return html`<div class="field set-locked">
+		<span class="label">${props.row.label}</span>
+		<p class="mono">${props.value}</p>
+		<span class="hint">${t(text, props.row.readOnly === 'box' ? 'settings.pair.box' : 'settings.pair.follows')}</span>
+	</div>`;
 }
 
 /**
@@ -124,7 +213,7 @@ export function SecretRow(props) {
 export function LockedRow(props) {
 	return html`<div class="field set-locked">
 		<span class="label">${props.row.label}</span>
-		<p class="mono">${props.value}</p>
+		<p class="mono">${wordOf(props.row, props.value)}</p>
 		<span class="hint">${t(text, props.row.held ? 'settings.held' : 'settings.locked')}</span>
 	</div>`;
 }
@@ -132,7 +221,8 @@ export function LockedRow(props) {
 /**
  * The control alone, without anything this screen says around it.
  *
- * @param {{ row: import('./model.js').Row, value: string, onChange: (id: string, value: string) => void, onClear: (row: import('./model.js').Row) => void }} props
+ * @param {{ row: import('./model.js').Row, value: string, also?: string, onChange: (id: string, value: string) => void, onClear: (row: import('./model.js').Row) => void }} props
+ *   also is the line a pair written whole is drawn with, the other member's value joined to this one's
  * @returns {Web.Drawn}
  */
 export function Control(props) {
@@ -154,6 +244,12 @@ export function Control(props) {
 
 	if (row.locked)
 		return html`<${LockedRow} row=${row} value=${value} />`;
+
+	if (row.readOnly)
+		return html`<${ReadOnlyRow} row=${row} value=${row.partner === '' ? value : (props.also === undefined ? value : props.also)} />`;
+
+	if (row.picker)
+		return html`<${ChannelPick} row=${row} value=${value} onChange=${props.onChange} />`;
 
 	if (row.type === 'bool') {
 		// Anything but the box's own nought is on. A value this page has never
@@ -221,7 +317,7 @@ export function Control(props) {
 			}} />`;
 	}
 
-	const fault = row.type === 'int' ? faultText(row, value) : '';
+	const fault = row.type === 'int' || row.type === 'string' ? faultText(row, value) : '';
 	// The row's own word for the value it names, beside the number: the input stays
 	// a number whatever is shown.
 	const named = namedValue(row, value);
@@ -234,6 +330,7 @@ export function Control(props) {
 		unit=${row.type === 'int' ? unitText(row) : ''}
 		min=${row.min === null ? null : String(row.min)}
 		max=${row.max === null ? null : String(row.max)}
+		maxLength=${row.maxLength > 0 ? row.maxLength : undefined}
 		error=${fault === '' ? null : fault}
 		needsRestart=${row.needsRestart}
 		onInput=${function (/** @type {Event} */ event) {
@@ -245,8 +342,9 @@ export function Control(props) {
 /**
  * One row: the control, and what the view around it adds to it.
  *
- * @param {{ row: import('./model.js').Row, value: string, drifts: boolean, place: string, onChange: (id: string, value: string) => void, onClear: (row: import('./model.js').Row) => void, onRevert: (row: import('./model.js').Row) => void }} props
- *   drifts is whether what is on screen differs from the value the box falls
+ * @param {{ row: import('./model.js').Row, value: string, also?: string, drifts: boolean, place: string, onChange: (id: string, value: string) => void, onClear: (row: import('./model.js').Row) => void, onRevert: (row: import('./model.js').Row) => void }} props
+ *   also is the other member's value for a pair drawn as one line
+   drifts is whether what is on screen differs from the value the box falls
  *   back to, which is what the mark and the way back are about
  * @returns {Web.Drawn}
  */
@@ -256,6 +354,7 @@ export function Row(props) {
 	const control = html`<${Control}
 		row=${row}
 		value=${props.value}
+		also=${props.also}
 		onChange=${props.onChange}
 		onClear=${props.onClear} />`;
 
@@ -281,7 +380,7 @@ export function Row(props) {
 				<span class="hint">${row.secret
 					? t(text, 'settings.drift.unknown')
 					: t(text, 'settings.drift.default', { value: deliveredWord(row) })}</span>
-				${row.secret || row.locked ? null : html`<button
+				${row.secret || row.locked || row.readOnly ? null : html`<button
 					type="button"
 					class="btn"
 					aria-label=${t(text, 'settings.drift.revert.one', { label: row.label })}

@@ -21,9 +21,14 @@ import { Button } from '../../ui/button.js';
 import { State } from '../../ui/state.js';
 import { Switch } from '../../ui/switch.js';
 import { toast } from '../../ui/toast.js';
+import { Dialog } from '../../ui/dialog.js';
 import { Row } from './rows.js';
+import { outcomeOf, refusedOfSent, refusalText } from './refusal.js';
 import {
-	numberFault,
+	hasFault,
+	conditionKeys,
+	risksOf,
+	lineOf,
 	rowsOf,
 	withKeyNames,
 	rowsOfSection,
@@ -95,7 +100,7 @@ export default function SettingsForm(props) {
 	   declaration. Everything this screen draws comes out of that reading, so a
 	   member the box stops sending is a row that stops being drawn and never a
 	   value read off undefined. */
-	const [schema, setSchema] = useState(/** @type {Web.Snapshot<{ items?: unknown }> | null} */ (null));
+	const [schema, setSchema] = useState(/** @type {Web.Snapshot<{ items?: unknown, value_lists?: unknown }> | null} */ (null));
 	// The names of the keys, which a failed or late answer only leaves out: a key row is then
 	// the number it is stored as.
 	const [keys, setKeys] = useState(/** @type {Web.Snapshot<{ items?: unknown }> | null} */ (null));
@@ -104,6 +109,8 @@ export default function SettingsForm(props) {
 	const [query, setQuery] = useState('');
 	const [driftOnly, holdDriftOnly] = useState(onlyDrifting);
 	const [saving, setSaving] = useState(false);
+	// The texts of the risky writes waiting for a yes, and none while nothing waits.
+	const [confirming, setConfirming] = useState(/** @type {string[] | null} */ (null));
 	const [problem, setProblem] = useState(/** @type {Web.Failure | null} */ (null));
 	/* Only a way to ask for another draw when what this request is granted
 	   changes. What it is granted is kept in the session, where the whole page
@@ -160,6 +167,24 @@ export default function SettingsForm(props) {
 	const body = changed(sectionRows, held, edits);
 	const pending = countOf(body);
 
+	/** @param {string} key @returns {string[]} */
+	function conditionKeysOfKey(key) {
+		for (const row of allRows) {
+			if (row.id === key)
+				return conditionKeys(row);
+		}
+		return [];
+	}
+
+	/** @param {string} key */
+	function nameOf(key) {
+		for (const row of allRows) {
+			if (row.id === key)
+				return row.label;
+		}
+		return key;
+	}
+
 	/* Nothing is said in advance about what this session may do. The frame
 	   dropped its own sentence about that and this is the rest of it: the two
 	   controls that want more than reading ask for it when they are pressed,
@@ -175,7 +200,7 @@ export default function SettingsForm(props) {
 	   already drawn with. */
 	const badValues = visible.filter(function (row) {
 		const typed = edits[row.id];
-		return typed !== undefined && numberFault(row, typed) !== null;
+		return typed !== undefined && hasFault(row, typed);
 	});
 
 	/**
@@ -225,9 +250,13 @@ export default function SettingsForm(props) {
 		}).then(function (answer) {
 			setSaving(false);
 			const said = /** @type {{ items?: unknown, results?: unknown } | null} */ (answer);
-			const results = said && said.results !== null && typeof said.results === 'object'
-				? /** @type {Record<string, { status?: unknown, detail?: unknown }>} */ (said.results)
-				: null;
+			const results = said && said.results !== null && typeof said.results === 'object' ? said.results : null;
+
+			/* A row's bounds can depend on what was just written, so the declaration is read
+			   again whichever way the write went. */
+			store.reload('GET', '/api/v1/settings/schema', {}).catch(function () {
+				// The entry holds the fault and the screen shows it.
+			});
 
 			if (results === null) {
 				// Every one of them landed, and the answer is the section as it
@@ -248,22 +277,16 @@ export default function SettingsForm(props) {
 			/* Some landed and some did not. What landed is forgotten so the
 			   form stops offering to send it again; what did not stays where it
 			   is, with what the box said about it beside it, because a value
-			   silently dropped is one nobody knows was refused. */
-			const landed = [];
-			const refused = [];
-			for (const key of Object.keys(results)) {
-				const one = results[key];
-				const code = one === undefined ? 0 : Number(one.status);
-				if (code >= 200 && code < 300) {
-					landed.push(key);
-					continue;
-				}
-				refused.push(key);
-				const detail = one === undefined || typeof one.detail !== 'string' ? '' : one.detail;
-				toast(t(text, 'settings.rejected', { id: key, detail: detail }), 'bad');
-			}
-			forget(landed);
-			toast(t(text, 'settings.partly', { count: sent.length, failed: refused.length }), 'bad');
+			   silently dropped is one nobody knows was refused. The box can add
+			   settings of its own to the answer, and those are neither forgotten
+			   nor counted: they were not sent. */
+			const outcome = outcomeOf(results);
+			forget(outcome.landed);
+			for (const one of outcome.refused)
+				toast(refusalText(one, nameOf, conditionKeysOfKey), 'bad');
+			const turnedDown = refusedOfSent(outcome.refused, sent);
+			if (turnedDown > 0)
+				toast(t(text, 'settings.partly', { count: sent.length, failed: turnedDown }), 'bad');
 			store.reload('GET', '/api/v1/settings/{section}', { params: { section: section } });
 		}, function (failed) {
 			setSaving(false);
@@ -390,6 +413,7 @@ export default function SettingsForm(props) {
 						key=${row.id}
 						row=${row}
 						value=${shownValue(row, held, edits)}
+						also=${row.partner === '' ? undefined : lineOf(row, held)}
 						${/* Held against what is on screen and not against what
 						     the box last said, so that a row put back stops
 						     being marked the moment it is put back. The list
@@ -416,7 +440,13 @@ export default function SettingsForm(props) {
 				reason=${badValues.length > 0 ? t(text, 'settings.badvalues') : ''}
 				disabled=${pending === 0 || saving}
 				onClick=${function () {
-					session.requireSystem().then(save, function () {
+					session.requireSystem().then(function () {
+						const risks = risksOf(body);
+						if (risks.length > 0)
+							setConfirming(risks);
+						else
+							save();
+					}, function () {
 						// The sheet was closed. What was typed is still on the
 						// screen and Save is still there to be pressed again.
 					});
@@ -424,5 +454,13 @@ export default function SettingsForm(props) {
 				${t(text, 'settings.save')}
 			<//>
 		</footer>
+
+		<${Dialog}
+			open=${confirming !== null}
+			title=${t(text, 'settings.risk.title')}
+			onCancel=${function () { setConfirming(null); }}
+			onConfirm=${function () { setConfirming(null); save(); }}>
+			${(confirming || []).map(function (key) { return html`<p key=${key}>${t(text, key)}</p>`; })}
+		<//>
 	</div>`;
 }

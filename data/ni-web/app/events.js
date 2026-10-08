@@ -37,6 +37,10 @@ const kStale = {
 	'epg-updated': ['/api/v1/epg'],
 	'bouquets-changed': ['/api/v1/bouquets', '/api/v1/channels'],
 	'settings-changed': ['/api/v1/settings/'],
+	/* Only the stream of the session that wrote gets this one, so another tab never
+	   sees a failure that was not its own. The box took the value and could not put it
+	   in force, so what the page reads may differ from what was written. */
+	'setting-apply-failed': ['/api/v1/settings/'],
 	// What plays, so the running channel too, and the archive's mark of it.
 	'playback': ['/api/v1/playback', '/api/v1/channels/current', '/api/v1/epg/current', '/api/v1/tuner',
 		'/api/v1/recordings/archive'],
@@ -53,6 +57,9 @@ export const types = Object.keys(kStale);
  * @property {string} channel_id
  * @property {number} value
  * @property {string} text
+ * @property {string[]} keys the settings a setting-apply-failed names, empty for every other type
+ * @property {number} status the HTTP status that event carries, nought for every other type
+ * @property {string} detail what the box said about it, empty for every other type
  */
 
 /**
@@ -215,6 +222,9 @@ function received(type, message) {
 		channel_id: (data && typeof data['channel_id'] === 'string') ? data['channel_id'] : '',
 		value: (data && typeof data['value'] === 'number' && Number.isFinite(data['value'])) ? data['value'] : 0,
 		text: (data && typeof data['text'] === 'string') ? data['text'] : '',
+		keys: (data && Array.isArray(data['keys'])) ? data['keys'].filter(function (one) { return typeof one === 'string'; }) : [],
+		status: (data && typeof data['status'] === 'number' && Number.isFinite(data['status'])) ? data['status'] : 0,
+		detail: (data && typeof data['detail'] === 'string') ? data['detail'] : '',
 	};
 	for (const prefix of kStale[type] || []) {
 		store.invalidate(prefix);
@@ -441,6 +451,12 @@ function tieToDocument() {
 	});
 }
 
+/** @returns {string} empty for a caller holding no session */
+function identity() {
+	const now = session.state();
+	return now.authenticated ? now.user + '|' + now.level + '|' + session.csrf() : '';
+}
+
 /** @returns {void} */
 function tieToSession() {
 	if (tied) {
@@ -448,12 +464,25 @@ function tieToSession() {
 	}
 	tied = true;
 	let granted = session.state().level;
+	/* Who the open stream was opened as. The box tags a stream with the session it was opened
+	   under and sends some events only to that session's stream, so a stream opened before
+	   signing in, or under a session that has since run out, would miss them. The session's
+	   token is part of it because a renewed session has the same user and level as the one
+	   before. */
+	let opened_as = identity();
 	session.subscribe(function (now) {
 		// Before the stream, so what opens with it does not meet the refusals of the level before.
 		if (now.level !== granted && session.atLeast(granted)) {
 			store.forgetRefusals();
 		}
 		granted = now.level;
+		const who = identity();
+		const changed = who !== opened_as;
+		opened_as = who;
+		if (changed && source !== null && now.checked) {
+			reopen();
+			return;
+		}
 		if (source === null && now.checked && session.atLeast('read')) {
 			status.denied = false;
 			open();

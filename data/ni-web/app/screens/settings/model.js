@@ -36,6 +36,16 @@
  * @property {boolean} listed an int whose choices are every number it takes, drawn as that list
  * @property {boolean} locked whether no write of it can land, for either reason below
  * @property {boolean} held whether the box's parental lock holds it
+ * @property {string} pair the key of the setting this one is written with, empty for none
+ * @property {''|'both'|'id'} pairWrites both: neither is taken without the other. id: the identifier alone is taken and the box fills the name
+ * @property {''|'box'|'follows'} readOnly box: only the box itself sets it. follows: it follows another row of the page
+ * @property {''|'tv'|'radio'} channelKind the kind of channel the box says the row names, empty where it says nothing
+ * @property {''|'tv'|'radio'} picker the kind of channel the row is chosen from, empty for any other row
+ * @property {string} partner for a pair written whole, the key of the member drawn together with this one
+ * @property {string} textKind the sort of text a string holds, empty where the box states no rule
+ * @property {number} minLength fewest bytes of a string, 0 for none
+ * @property {number} maxLength most bytes of a string, 0 for no limit
+ * @property {string} allowedChars the only characters a string takes, empty for any
  * @property {import('./model.js').Condition[]} conditions
  */
 
@@ -57,7 +67,7 @@
  */
 
 /** what the schema calls a setting, before this file has read it */
-/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, unit?: unknown, channels?: unknown, values?: unknown, listed?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, available?: unknown, conditions?: unknown }} Declared */
+/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, unit?: unknown, channels?: unknown, values?: unknown, values_from?: unknown, listed?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, available?: unknown, conditions?: unknown, pair?: unknown, pair_writes?: unknown, channel_kind?: unknown, text_kind?: unknown, min_length?: unknown, max_length?: unknown, allowed_chars?: unknown }} Declared */
 
 const kTypes = ['bool', 'int', 'string', 'enum', 'key', 'color'];
 
@@ -68,10 +78,15 @@ const kTypes = ['bool', 'int', 'string', 'enum', 'key', 'color'];
  * box deliberately left unnamed, one not available is one this box lacks, and a kind this
  * page has never heard of is a server newer than this file.
  *
+ * A list the box stated once for several rows is looked up by the name the row gives, in the
+ * lists of the answer. A member the answer leaves out is read as its default: not locked, not
+ * secret, not a path, no restart, available, no conditions.
+ *
  * @param {Declared} declared
+ * @param {Record<string, unknown>} [lists]
  * @returns {Row | null}
  */
-export function rowOf(declared) {
+export function rowOf(declared, lists) {
 	if (!declared || typeof declared !== 'object')
 		return null;
 
@@ -79,7 +94,13 @@ export function rowOf(declared) {
 	const label = typeof declared.label === 'string' ? declared.label : '';
 	const section = typeof declared.section === 'string' ? declared.section : '';
 	const type = typeof declared.type === 'string' ? declared.type : '';
-	if (id === '' || label === '' || kTypes.indexOf(type) === -1)
+	const pair = typeof declared.pair === 'string' ? declared.pair : '';
+	const pairWrites = declared.pair_writes === 'both' || declared.pair_writes === 'id' ? declared.pair_writes : '';
+	/* The identifier of a pair written by id carries no label of its own: the name beside
+	   it does, and rowsOf lends it to the identifier. Kept here, dropped there if the name
+	   is not on the page. */
+	const lent = label === '' && pair !== '' && pairWrites === 'id';
+	if (id === '' || (label === '' && !lent) || kTypes.indexOf(type) === -1)
 		return null;
 	// Only an explicit no: a server older than the member says nothing about it.
 	if (declared.available === false)
@@ -88,7 +109,8 @@ export function rowOf(declared) {
 	/* A colour is drawn as text. A key keeps its own kind: its names are a list of their
 	   own, put on the row by withKeyNames, and until that arrives it is a number. */
 	const kind = /** @type {'bool'|'int'|'string'|'enum'|'key'} */ (type === 'color' ? 'string' : type);
-	const offered = Array.isArray(declared.values) ? declared.values : [];
+	const shared = typeof declared.values_from === 'string' && lists ? lists[declared.values_from] : undefined;
+	const offered = Array.isArray(declared.values) ? declared.values : Array.isArray(shared) ? shared : [];
 	/** @type {{ value: number, label: string, text?: string }[]} */
 	const choices = [];
 	for (const one of offered) {
@@ -128,8 +150,32 @@ export function rowOf(declared) {
 		// failed to answer.
 		locked: held || (kind === 'enum' && choices.length === 0),
 		held: held,
+		pair: pair,
+		pairWrites: pairWrites,
+		readOnly: '',
+		channelKind: channelKindOf(declared),
+		picker: '',
+		partner: '',
+		textKind: kind === 'string' && typeof declared.text_kind === 'string' ? declared.text_kind : '',
+		minLength: kind === 'string' && Number.isFinite(Number(declared.min_length)) ? Number(declared.min_length) : 0,
+		maxLength: kind === 'string' && Number.isFinite(Number(declared.max_length)) ? Number(declared.max_length) : 0,
+		allowedChars: kind === 'string' && typeof declared.allowed_chars === 'string' ? declared.allowed_chars : '',
 		conditions: conditionsOf(declared.conditions),
 	};
+}
+
+/**
+ * The kind of channel a row names when the box says so, in either member it may use.
+ *
+ * @param {Declared} declared
+ * @returns {''|'tv'|'radio'}
+ */
+function channelKindOf(declared) {
+	for (const one of [declared.channel_kind, declared.channels]) {
+		if (one === 'tv' || one === 'radio')
+			return one;
+	}
+	return '';
 }
 
 /**
@@ -192,19 +238,102 @@ function conditionsOf(declared) {
 /**
  * Every drawable row of the whole schema, in the order the box states them.
  *
- * @param {{ items?: unknown } | null} answer
+ * @param {{ items?: unknown, value_lists?: unknown } | null} answer
  * @returns {Row[]}
  */
 export function rowsOf(answer) {
 	/** @type {Row[]} */
 	const out = [];
 	const items = answer && Array.isArray(answer.items) ? answer.items : [];
+	const lists = answer && answer.value_lists && typeof answer.value_lists === 'object' ? /** @type {Record<string, unknown>} */ (answer.value_lists) : {};
 	for (const one of items) {
-		const row = rowOf(/** @type {Declared} */ (one));
+		const row = rowOf(/** @type {Declared} */ (one), lists);
 		if (row !== null)
 			out.push(row);
 	}
+	return withPairs(out);
+}
+
+/**
+ * The rows the box says are written together, drawn the way each pair can be edited here.
+ *
+ * A pair written by identifier is a channel: the identifier is chosen from the channel
+ * list, the name beside it is the box's to fill and is shown as it stands. A pair written
+ * whole is a place the page has no lookup for, so it is one line the box sets and the
+ * second member is not drawn on its own. A server that states no pair leaves every row as
+ * it was, which is also what it does today.
+ *
+ * @param {Row[]} rows
+ * @returns {Row[]}
+ */
+function withPairs(rows) {
+	/** @type {Record<string, number>} */
+	const at = {};
+	rows.forEach(function (row, i) { at[row.id] = i; });
+
+	/** @type {Row[]} */
+	const out = [];
+	rows.forEach(function (row, i) {
+		if (row.pairWrites === '' || row.pair === '' || at[row.pair] === undefined) {
+			if (row.label !== '')
+				out.push(row);
+			return;
+		}
+		const partner = /** @type {Row} */ (rows[/** @type {number} */ (at[row.pair])]);
+		if (row.pairWrites === 'both') {
+			// The later member is part of the first one's line.
+			if (/** @type {number} */ (at[row.pair]) < i)
+				return;
+			out.push(Object.assign({}, row, { readOnly: /** @type {'box'} */ ('box'), partner: row.pair }));
+			return;
+		}
+		// By identifier. The member without a label is the identifier.
+		if (row.label === '') {
+			if (partner.label === '')
+				return;
+			out.push(Object.assign({}, row, {
+				label: partner.label,
+				// The box's own statement first; the name is the fallback for one that makes none.
+				picker: row.channelKind !== '' ? row.channelKind : /** @type {'tv'|'radio'} */ (row.id.indexOf('radio') === -1 ? 'tv' : 'radio'),
+			}));
+			return;
+		}
+		if (partner.label === '')
+			out.push(Object.assign({}, row, { readOnly: /** @type {'follows'} */ ('follows') }));
+		else
+			out.push(row);
+	});
 	return out;
+}
+
+/**
+ * The settings the conditions of a row read.
+ *
+ * @param {Row} row
+ * @returns {string[]}
+ */
+export function conditionKeys(row) {
+	/** @type {string[]} */
+	const out = [];
+	for (const condition of row.conditions) {
+		for (const one of 'any' in condition ? condition.any : [condition])
+			out.push(one.key);
+	}
+	return out;
+}
+
+/**
+ * The text a pair written whole is drawn with: its members' values on one line.
+ *
+ * @param {Row} row
+ * @param {Record<string, string>} values
+ * @returns {string}
+ */
+export function lineOf(row, values) {
+	const parts = [row.id, row.partner].map(function (id) {
+		return id === '' || values[id] === undefined ? '' : /** @type {string} */ (values[id]);
+	});
+	return parts.filter(function (one) { return one !== ''; }).join(', ');
 }
 
 /**
@@ -433,7 +562,7 @@ export function changed(rows, values, edits) {
 			continue;
 		// A locked row refuses every write, so a value for one is left out
 		// rather than sent to be turned down.
-		if (row.locked)
+		if (row.locked || row.readOnly)
 			continue;
 		const held = valueOf(row, values);
 		if (held !== null && typed === held)
@@ -499,6 +628,44 @@ export function numberFault(row, text) {
 }
 
 /**
+ * What a text field says when what is in it is not a text the row takes, by the rule the
+ * box states for it. Bytes, as the box counts them. Null when there is nothing to say.
+ *
+ * @param {Row} row
+ * @param {string} text
+ * @returns {'short'|'long'|'chars'|null}
+ */
+export function textFault(row, text) {
+	if (row.type !== 'string' || row.textKind === '' || row.choices.length > 0)
+		return null;
+	const size = typeof TextEncoder === 'function' ? new TextEncoder().encode(text).length : text.length;
+	if (size < row.minLength)
+		return 'short';
+	if (row.maxLength !== 0 && size > row.maxLength)
+		return 'long';
+	if (row.allowedChars !== '') {
+		for (const one of text) {
+			if (row.allowedChars.indexOf(one) === -1)
+				return 'chars';
+		}
+	}
+	return null;
+}
+
+/**
+ * Whether what was typed is something the row cannot take, whichever kind it is.
+ *
+ * @param {Row} row
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function hasFault(row, text) {
+	if (row.secret && text === '')
+		return false;
+	return numberFault(row, text) !== null || textFault(row, text) !== null;
+}
+
+/**
  * Whether what the box holds differs from what it falls back to.
  *
  * Null for a credential, and null is the answer this view prints rather than hides: there
@@ -525,21 +692,57 @@ export function driftsFromDefault(row, values) {
  * @returns {string}
  */
 export function fallbackLabel(row) {
+	return labelFor(row, row.fallback);
+}
+
+/**
+ * The words a stored value goes by, and the value itself where the row has none for it.
+ *
+ * @param {Row} row
+ * @param {string} value
+ * @returns {string}
+ */
+export function labelFor(row, value) {
 	if (row.type === 'string') {
 		for (const choice of row.choices) {
-			if (choice.text === row.fallback)
+			if (choice.text === value)
 				return choice.label;
 		}
-		return row.fallback;
+		return value;
 	}
-	if (row.type !== 'enum' && row.type !== 'key')
-		return row.fallback;
-	const wanted = Number(row.fallback);
+	if (row.type !== 'enum' && row.type !== 'key' && !(row.type === 'int' && row.choices.length > 0))
+		return value;
+	const wanted = Number(value);
 	for (const choice of row.choices) {
 		if (choice.value === wanted)
 			return choice.label;
 	}
-	return row.fallback;
+	return value;
+}
+
+/* Settings whose write can leave the box unusable until somebody is at it: a picture the
+   TV cannot show is a black screen, and a remote control of the wrong kind answers to no
+   key. Named here because the box states no such thing about a row, and the text to ask
+   with is this page's. */
+const kRisky = {
+	video_Mode: 'settings.risk.video_Mode',
+	remote_control_hardware: 'settings.risk.remote_control_hardware'
+};
+
+/**
+ * The questions to put before a write: one text name per risky setting the body carries.
+ *
+ * @param {Record<string, string>} body
+ * @returns {string[]}
+ */
+export function risksOf(body) {
+	/** @type {string[]} */
+	const out = [];
+	for (const id of Object.keys(kRisky)) {
+		if (Object.prototype.hasOwnProperty.call(body, id))
+			out.push(/** @type {string} */ (/** @type {Record<string, string>} */ (kRisky)[id]));
+	}
+	return out;
 }
 
 /**

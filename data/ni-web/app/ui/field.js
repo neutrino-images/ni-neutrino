@@ -56,6 +56,7 @@ export function Notes(props) {
  *   rows?: number,
  *   min?: number,
  *   max?: number,
+ *   maxLength?: number,
  *   readOnly?: boolean,
  *   autocomplete?: string,
  *   inputMode?: string,
@@ -83,6 +84,7 @@ export function Field(props) {
 		value=${props.value}
 		min=${props.min}
 		max=${props.max}
+		maxlength=${props.maxLength}
 		readOnly=${props.readOnly}
 		autocomplete=${props.autocomplete}
 		inputmode=${props.inputMode}

@@ -115,6 +115,7 @@ export default function Allow() {
 		</section>
 		<section class="ai-block ai-allow-sections">
 			<h2>${t(text, 'ai.allow.sections')}</h2>
+			<p class="note" data-part="never">${t(text, 'ai.allow.never')}</p>
 			<div class="ai-list ai-allow">
 				${lists.sections.map(function (s) {
 					return html`<label class="ai-allow-row" data-section=${s.id} key=${s.id}>

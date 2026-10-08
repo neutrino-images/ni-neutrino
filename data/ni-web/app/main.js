@@ -36,6 +36,8 @@ import * as session from './session.js';
 import * as events from './events.js';
 import * as store from './store.js';
 import { watchOnAir } from './guideclock.js';
+import { toast } from './ui/toast.js';
+import { watchApplyFailed } from './screens/settings/applyfailed.js';
 
 // The header's progress share moves with the clock and not with any event.
 const CLOCK_MS = 60000;
@@ -249,6 +251,7 @@ function App() {
 		});
 
 		events.start();
+		const stopApplyFailed = watchApplyFailed(toast);
 		const clock = setInterval(bump, CLOCK_MS);
 
 		return function () {
@@ -263,6 +266,7 @@ function App() {
 			stopChannelForEvent();
 			stopEvent();
 			stopWatching();
+			stopApplyFailed();
 		};
 	}, []);
 

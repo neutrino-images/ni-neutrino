@@ -152,7 +152,7 @@ export function settingValue(section, id) {
  * The choices the box declares for one setting, which for the video modes is a
  * list only the box can state.
  *
- * @param {{ items?: readonly { id: string, values?: readonly { value: number, label: string }[] }[] } | null} schema
+ * @param {{ items?: readonly { id: string, values?: readonly { value: number, label: string }[], values_from?: string }[], value_lists?: Record<string, readonly { value: number, label: string }[]> } | null} schema
  * @param {string} id
  * @returns {{ value: number, label: string }[]}
  */
@@ -160,25 +160,31 @@ export function settingChoices(schema, id) {
 	const rows = (schema && schema.items) || [];
 	for (const row of rows) {
 		if (row.id === id) {
-			return (row.values || []).slice();
+			// A list several rows share is stated once, under the name the row gives.
+			const shared = row.values_from && schema && schema.value_lists ? schema.value_lists[row.values_from] : undefined;
+			return (row.values || shared || []).slice();
 		}
 	}
 	return [];
 }
 
 /**
- * The 4:3 modes this box offers, in the words of this page: the values the
- * schema lists, and all four while it has not answered at all.
+ * The 4:3 modes this box offers, in the order the schema lists them: the
+ * page's own words for the values it knows (key) and the schema's label for any
+ * other, and the four it knows while the schema has not answered at all.
  *
- * @param {{ items?: readonly { id: string, values?: readonly { value: number, label: string }[] }[] } | null} schema
- * @returns {{ value: number, key: string }[]}
+ * @param {{ items?: readonly { id: string, values?: readonly { value: number, label: string }[], values_from?: string }[], value_lists?: Record<string, readonly { value: number, label: string }[]> } | null} schema
+ * @returns {{ value: number, key: string, label: string }[]}
  */
 export function aspectModes(schema) {
-	if (!schema)
-		return ASPECT_MODES.slice();
-	const offered = settingChoices(schema, 'video_43mode');
-	return ASPECT_MODES.filter(function (one) {
-		return offered.some(function (o) { return o.value === one.value; });
+	if (!schema) {
+		return ASPECT_MODES.map(function (one) {
+			return { value: one.value, key: one.key, label: '' };
+		});
+	}
+	return settingChoices(schema, 'video_43mode').map(function (o) {
+		const known = ASPECT_MODES.find(function (one) { return one.value === o.value; });
+		return { value: o.value, key: known === undefined ? '' : known.key, label: o.label };
 	});
 }
 
@@ -1008,7 +1014,10 @@ function Quick() {
 	const schema = useResource('GET', '/api/v1/settings/schema');
 	const video = useResource('GET', '/api/v1/settings/{section}', { params: { section: 'video' } });
 	const [asking, setAsking] = useState(false);
+	// A resolution the TV cannot show leaves a black screen, so it is asked for first.
+	const [switching, setSwitching] = useState(/** @type {{ value: number, label: string } | null} */ (null));
 	const modes = settingChoices(schema.data, 'video_Mode');
+	const aspects = aspectModes(schema.data);
 	const mode = settingValue(video.data, 'video_Mode');
 	const aspect = settingValue(video.data, 'video_43mode');
 
@@ -1061,20 +1070,25 @@ function Quick() {
 						return html`<${Button}
 							key=${one.value}
 							primary=${String(one.value) === mode}
-							onClick=${function () { writeVideo('video_Mode', one.value); }}>${one.label}<//>`;
+							onClick=${function () {
+								if (String(one.value) !== mode)
+									setSwitching(one);
+							}}>${one.label}<//>`;
 					})}
 				</div>`}
 		</div>
 		<div class="now-quick">
 			<span class="now-quick-label">${t(text, 'now.quick.43')}</span>
-			<div class="now-quick-set">
-				${aspectModes(schema.data).map(function (one) {
-					return html`<${Button}
-						key=${one.value}
-						primary=${String(one.value) === aspect}
-						onClick=${function () { writeVideo('video_43mode', one.value); }}>${t(text, one.key)}<//>`;
-				})}
-			</div>
+			${aspects.length === 0
+				? html`<p class="now-empty">${t(text, 'now.quick.43.none')}</p>`
+				: html`<div class="now-quick-set">
+					${aspects.map(function (one) {
+						return html`<${Button}
+							key=${one.value}
+							primary=${String(one.value) === aspect}
+							onClick=${function () { writeVideo('video_43mode', one.value); }}>${one.key === '' ? one.label : t(text, one.key)}<//>`;
+					})}
+				</div>`}
 		</div>
 		<p class="now-buttons">
 			<${Button} onClick=${reloadChannels}>${t(text, 'now.quick.reload')}<//>
@@ -1086,6 +1100,18 @@ function Quick() {
 			onCancel=${function () { setAsking(false); }}
 			onConfirm=${resetTuner}>
 			<p>${t(text, 'now.quick.reset.ask')}</p>
+		<//>
+		<${Dialog}
+			open=${switching !== null}
+			title=${t(text, 'now.quick.mode')}
+			onCancel=${function () { setSwitching(null); }}
+			onConfirm=${function () {
+				const one = switching;
+				setSwitching(null);
+				if (one !== null)
+					writeVideo('video_Mode', one.value);
+			}}>
+			<p>${t(text, 'now.quick.mode.ask', { mode: switching === null ? '' : switching.label })}</p>
 		<//>
 	<//>`;
 }
