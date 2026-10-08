@@ -16,13 +16,16 @@ import * as playing from '../../ui/playing.js';
 import { DetailSheet, FactList, genreWord } from '../../ui/event.js';
 import { waking } from '../../ui/wake.js';
 import { refusalKey, readArchive, archiveQuery, lengthWords, archiveFileHref, archivePlaylistHref, kArchiveSortKeys,
-	nextArchiveSort, onlyKeys, readArchiveDetails, archiveCoverHref, paragraphsOf, kAlwaysLocked, kTvRefusals } from './archive.model.js';
+	nextArchiveSort, onlyKeys, readArchiveDetails, archiveCoverHref, paragraphsOf, kAlwaysLocked, kTvRefusals,
+	kDeleteRefusals, sourceName, sourceChoices } from './archive.model.js';
 
 export const css = '/app/screens/recordings/recordings.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
 export function lead() { return t(text, 'rec.archive.lead'); }
 
 const kFilterPauseMs = 300;
+// How soon a page that misses a directory still being read asks again.
+const kReadingAgainMs = 3000;
 
 let keptSort = /** @type {Web.Sort} */ ({ column: 'start', dir: 'desc' });
 
@@ -40,6 +43,9 @@ export default function Archive() {
 	const [filter, setFilter] = useState('');
 	const [sort, setSort] = useState(keptSort);
 	const [pages, setPages] = useState(/** @type {number[]} */ ([0]));
+	const [source, setSource] = useState('');
+	const [sources, setSources] = useState(/** @type {string[]} */ ([]));
+	const [reading, setReading] = useState(false);
 
 	// One list read per pause in typing, not per key.
 	useEffect(function () {
@@ -80,7 +86,23 @@ export default function Archive() {
 					sortBy({ column: picked[0] || 'start', dir: picked[1] === 'asc' ? 'asc' : 'desc' });
 				}} />
 		</div>
-		<${ArchivePages} title=${filter} sort=${sort} offsets=${pages}
+		${sources.length > 1 || source !== '' ? html`<div class="rec-archive-source">
+			<${Select} id="rec-archive-source" label=${t(text, 'rec.archive.source')} value=${source}
+				options=${[{ value: '', label: t(text, 'rec.archive.source.all') }].concat(
+					sourceChoices(sources, source, reading).map(function (one) {
+						return { value: one.value,
+							label: one.missing ? t(text, 'rec.archive.source.gone', { dir: one.value }) : one.value };
+					}))}
+				onChange=${function (/** @type {Event} */ e) {
+					setSource(/** @type {HTMLSelectElement} */ (e.currentTarget).value);
+					setPages([0]);
+				}} />
+		</div>` : null}
+		<${ArchivePages} title=${filter} sort=${sort} offsets=${pages} source=${source}
+			onSources=${function (/** @type {string[]} */ list, /** @type {boolean} */ partial) {
+				setSources(list);
+				setReading(partial);
+			}}
 			onSort=${function (/** @type {string} */ key) { sortBy(nextArchiveSort(sort, key)); }}
 			onMore=${function (/** @type {number} */ next) {
 				// Near-end watch and button may both ask for one offset.
@@ -97,6 +119,8 @@ export default function Archive() {
  *   title: string,
  *   sort: Web.Sort,
  *   offsets: number[],
+ *   source: string,
+ *   onSources: (sources: string[], partial: boolean) => void,
  *   onSort: (key: string) => void,
  *   onMore: (next: number) => void
  * }} props
@@ -104,6 +128,7 @@ export default function Archive() {
  */
 function ArchivePages(props) {
 	const title = props.title;
+	const source = props.source;
 	const sort = props.sort;
 	const offsets = props.offsets;
 	const offsetsKey = offsets.join(',');
@@ -115,7 +140,7 @@ function ArchivePages(props) {
 	 * @returns {Record<string, string>}
 	 */
 	function queryAt(offset) {
-		return archiveQuery(title, offset, sort.column, sort.dir);
+		return archiveQuery(title, offset, sort.column, sort.dir, source);
 	}
 
 	useEffect(function () {
@@ -134,12 +159,14 @@ function ArchivePages(props) {
 				});
 		});
 		return function () { stops.forEach(function (stop) { stop(); }); };
-	}, [title, sort.column, sort.dir, offsetsKey]);
+	}, [title, source, sort.column, sort.dir, offsetsKey]);
 
 	/** @type {import('./archive.model.js').ArchiveItem[]} */
 	const rows = [];
 	let next = -1;
 	let total = 0;
+	let sources = /** @type {string[]} */ ([]);
+	let partial = false;
 	let loaded = false;
 	let phase = /** @type {Web.Phase} */ ('first');
 	let problem = /** @type {Web.Shown | null} */ (null);
@@ -157,6 +184,8 @@ function ArchivePages(props) {
 			rows.push.apply(rows, page.items);
 			next = page.next;
 			total = page.total;
+			sources = page.sources;
+			partial = partial || page.partial;
 			loaded = true;
 		}
 	}
@@ -167,6 +196,22 @@ function ArchivePages(props) {
 	const [shown, setShown] = useState(/** @type {string | null} */ (null));
 
 	const [now, setNow] = useState(playing.current());
+
+	const sourcesKey = sources.join('\n');
+	useEffect(function () {
+		if (loaded)
+			props.onSources(sources, partial);
+	}, [loaded, sourcesKey, partial]);
+
+	// Each answer that still misses a directory sets the next ask.
+	useEffect(function () {
+		if (!partial)
+			return undefined;
+		const timer = window.setTimeout(function () {
+			store.invalidate('/api/v1/recordings/archive');
+		}, kReadingAgainMs);
+		return function () { window.clearTimeout(timer); };
+	}, [partial, snaps]);
 
 	// The player stops on a refusal, so the reason is kept here.
 	useEffect(function () {
@@ -293,10 +338,7 @@ function ArchivePages(props) {
 			toast(t(text, 'rec.archive.deleted', { title: nameOf(row) }));
 			forget(row.id);
 		}, function (/** @type {unknown} */ caught) {
-			failed(row, caught, {
-				'recording-running': 'rec.archive.running',
-				'recording-playing': 'rec.archive.playing.now',
-			});
+			failed(row, caught, kDeleteRefusals);
 		});
 	}
 
@@ -338,8 +380,8 @@ function ArchivePages(props) {
 		});
 	}
 
-	/** @type {import('../../ui/table.js').Column<import('./archive.model.js').ArchiveItem>[]} */
-	const columns = [
+	/** @type {(import('../../ui/table.js').Column<import('./archive.model.js').ArchiveItem> | null)[]} */
+	const all = [
 		{ id: 'title', label: keyLabel('title'), sortable: true, wide: true, cell: function (/** @type {import('./archive.model.js').ArchiveItem} */ r) {
 			return html`<button type="button" class="rec-archive-name" data-archive-open=${r.id} aria-haspopup="dialog"
 				onClick=${function () { setShown(r.id); }}><span class="rec-cut" data-archive=${r.id} title=${r.title || null}>${nameOf(r)}</span>${r.playing
@@ -348,6 +390,9 @@ function ArchivePages(props) {
 		{ id: 'channel', label: keyLabel('channel'), sortable: true, cell: function (/** @type {import('./archive.model.js').ArchiveItem} */ r) {
 			return html`<span class="rec-cut" title=${r.channel || null}>${r.channel}</span>`;
 		} },
+		sources.length > 1 ? { id: 'source', label: t(text, 'rec.archive.col.source'), cell: function (/** @type {import('./archive.model.js').ArchiveItem} */ r) {
+			return html`<span class="rec-cut" data-archive-source=${r.id} title=${r.source || null}>${sourceName(r.source)}</span>`;
+		} } : null,
 		{ id: 'start', label: keyLabel('start'), sortable: true, cell: function (/** @type {import('./archive.model.js').ArchiveItem} */ r) { return r.start ? dayAndClock(r.start) : ''; } },
 		{ id: 'duration', label: keyLabel('duration'), sortable: true, align: 'end', cell: function (/** @type {import('./archive.model.js').ArchiveItem} */ r) { return lengthWords(r.duration); } },
 		{ id: 'size', label: keyLabel('size'), sortable: true, align: 'end', cell: function (/** @type {import('./archive.model.js').ArchiveItem} */ r) { return bytes(r.size); } },
@@ -355,6 +400,8 @@ function ArchivePages(props) {
 				return html`<${ArchiveActs} row=${r} actions=${actionsOf(r)} />`;
 		} },
 	];
+	const columns = /** @type {import('../../ui/table.js').Column<import('./archive.model.js').ArchiveItem>[]} */ (
+		all.filter(function (one) { return one !== null; }));
 
 	return html`<div class="rec-archive-list">
 		<${State} phase=${phase} problem=${problem}
@@ -367,6 +414,7 @@ function ArchivePages(props) {
 		<//>
 		${next >= 0 ? html`<div class="rec-archive-more" data-act="archive-more"><${Button} onClick=${function () { props.onMore(next); }}>${t(text, 'rec.archive.more')}<//></div>` : null}
 		${rows.length ? html`<p class="hint">${t(text, 'rec.archive.count', { shown: rows.length, total: total })}</p>` : null}
+		${partial ? html`<p class="hint" data-part="archive-reading">${t(text, 'rec.archive.reading')}</p>` : null}
 		<${Dialog}
 			open=${!!asked}
 			title=${t(text, 'rec.archive.delete')}
@@ -463,6 +511,7 @@ function factsOf(known) {
 		{ term: t(text, 'rec.details.age'), value: known.age === kAlwaysLocked ? t(text, 'rec.details.age.always')
 			: known.age ? t(text, 'rec.details.age.value', { years: known.age }) : '' },
 		{ term: t(text, 'rec.details.audio'), value: known.audio.join(', ') },
+		{ term: t(text, 'rec.details.source'), value: known.item.source },
 	];
 }
 

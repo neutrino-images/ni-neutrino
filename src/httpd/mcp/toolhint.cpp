@@ -54,6 +54,9 @@ const Hint kHints[] = {
 	  "switch_channel and wake true." },
 	{ coreapi::ErrorCode::QueryTooShort, "Search with at least two characters." },
 	{ coreapi::ErrorCode::RecordingRunning, "A running recording keeps its start; only its end can move." },
+	{ coreapi::ErrorCode::MediumReadOnly,
+	  "Tell the user the box may not remove files where this recording lies, such as a read-only share. "
+	  "Do not retry." },
 	{ coreapi::ErrorCode::EmptyWindow, "Make to later than from." },
 	{ coreapi::ErrorCode::NotPermitted,
 	  "This needs a scope the connection was not granted; ask the user to reconnect with it." },

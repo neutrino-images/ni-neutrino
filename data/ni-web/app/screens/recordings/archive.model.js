@@ -10,6 +10,7 @@ import { buildUrl } from '../../api.js';
  * @property {number} duration
  * @property {number} size
  * @property {boolean} playing
+ * @property {string} source the library directory it lies in
  */
 
 const kId = /^[0-9a-f]{16}$/;
@@ -36,7 +37,7 @@ function itemOf(one) {
 		return null;
 	}
 	return { id: str(r.id), title: str(r.title), channel: str(r.channel), start: num(r.start),
-		duration: num(r.duration), size: num(r.size), playing: r.playing === true };
+		duration: num(r.duration), size: num(r.size), playing: r.playing === true, source: str(r.source) };
 }
 
 /**
@@ -98,7 +99,8 @@ export function paragraphsOf(text) {
 
 /**
  * @param {unknown} answer
- * @returns {{ items: ArchiveItem[], total: number, next: number }}
+ * @returns {{ items: ArchiveItem[], total: number, next: number, sources: string[], partial: boolean }} sources:
+ *   the library directories that answered and were read whole; partial: one is still being read
  */
 export function readArchive(answer) {
 	const a = /** @type {Record<string, unknown>} */ (answer && typeof answer === 'object' ? answer : {});
@@ -112,7 +114,37 @@ export function readArchive(answer) {
 		}
 	}
 	const next = typeof a.next_offset === 'number' && a.next_offset > 0 ? a.next_offset : -1;
-	return { items: items, total: num(a.total), next: next };
+	const sources = Array.isArray(a.sources) ? a.sources.filter(function (/** @type {unknown} */ s) {
+		return typeof s === 'string' && s !== '';
+	}) : [];
+	return { items: items, total: num(a.total), next: next, sources: sources, partial: a.partial === true };
+}
+
+/**
+ * The directory filter's choices. One picked that is not among the sources
+ * stays a choice of its own, so the filter never shows every directory while it
+ * narrows; it is marked missing unless the page says it is still being read.
+ *
+ * @param {string[]} sources the directories that answered
+ * @param {string} picked the one the list is narrowed to, empty for all
+ * @param {boolean} reading whether the page is partial
+ * @returns {{ value: string, missing: boolean }[]} without the choice of all
+ */
+export function sourceChoices(sources, picked, reading) {
+	const out = sources.map(function (one) { return { value: one, missing: false }; });
+	if (picked !== '' && sources.indexOf(picked) === -1) {
+		out.push({ value: picked, missing: !reading });
+	}
+	return out;
+}
+
+/**
+ * @param {string} source a library directory
+ * @returns {string} its last name, short enough for a column
+ */
+export function sourceName(source) {
+	const parts = source.split('/').filter(function (part) { return part !== ''; });
+	return parts[parts.length - 1] || source;
 }
 
 /**
@@ -139,6 +171,13 @@ export function archiveCoverHref(id) {
 export function archivePlaylistHref(id, token) {
 	return buildUrl('/api/v1/recordings/archive/{id}/playlist.m3u', { id: id }, token === '' ? null : { token: token });
 }
+
+/** @type {Readonly<Record<string, string>>} what a refused delete says, by refusal */
+export const kDeleteRefusals = {
+	'recording-running': 'rec.archive.running',
+	'recording-playing': 'rec.archive.playing.now',
+	'medium-read-only': 'rec.archive.readonly',
+};
 
 /** @type {Readonly<Record<string, string>>} what a refused play on the TV says, by refusal */
 export const kTvRefusals = {
@@ -176,9 +215,10 @@ export function nextArchiveSort(sort, key) {
  * @param {number} offset
  * @param {string} [sort]
  * @param {'asc' | 'desc'} [order]
+ * @param {string} [source] one library directory, empty for all
  * @returns {Record<string, string>} only what differs from the route's own choice
  */
-export function archiveQuery(title, offset, sort, order) {
+export function archiveQuery(title, offset, sort, order, source) {
 	/** @type {Record<string, string>} */
 	const q = {};
 	if (title.trim() !== '') {
@@ -194,6 +234,9 @@ export function archiveQuery(title, offset, sort, order) {
 	if (order && order !== archiveFirstOrder(key)) {
 		q.sort = key;
 		q.order = order;
+	}
+	if (source) {
+		q.source = source;
 	}
 	return q;
 }

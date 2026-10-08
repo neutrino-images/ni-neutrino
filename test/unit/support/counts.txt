@@ -9,7 +9,7 @@
 # What the run measured is written to counts.actual beside the binary. Putting
 # that file here is the whole of the edit, so a change to coverage is one diff
 # to read rather than a constant to lower in each of several cases.
-answer members narrower than free text	46
+answer members narrower than free text	47
 arrays held to a row for every element	14
 body examples their routes accepted	27
 body members the examples carry	26
@@ -23,7 +23,7 @@ defaults compared against this build's own load	256
 element defaults compared against the load	149
 element rows compared against the load	163
 elements of arrays held to a row	163
-error codes the header declares	164
+error codes the header declares	165
 fields the bound scan read	6
 fields the chooser scan read	11
 fields with a stated label	10
@@ -44,11 +44,11 @@ lists and lists of records held to a read of the load	5
 locale names the program has	3233
 memory backed folders tried	1
 number elements written and read back among their neighbours	145
-parameters the document describes	149
-refusals the document states against a route	859
+parameters the document describes	150
+refusals the document states against a route	860
 refusals the header names	13
-refusals the routes declare of their own	139
-refusals the shipped routes were seen to give	214
+refusals the routes declare of their own	140
+refusals the shipped routes were seen to give	215
 routes the document describes	108
 rows compared against the load and save pass	394
 rows of the theme struct	26

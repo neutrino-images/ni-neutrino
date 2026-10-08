@@ -67,12 +67,14 @@
 @media (min-width: 600px) {
 	.rec-archive td[data-col="title"] { max-width: 0; }
 	.rec-archive td[data-col="channel"] .rec-cut { max-width: 24ch; }
+	.rec-archive td[data-col="source"] .rec-cut { max-width: 16ch; }
 }
 @media (min-width: 1152px) {
 	.rec-archive-sort { display: none; }
 }
 @media (min-width: 600px) and (max-width: 1151px) {
-	.rec-archive table.grid [data-col="channel"], .rec-archive table.grid [data-col="size"] { display: none; }
+	.rec-archive table.grid [data-col="channel"], .rec-archive table.grid [data-col="size"],
+	.rec-archive table.grid [data-col="source"] { display: none; }
 	.rec-archive td[data-col="start"] { white-space: normal; }
 }
 .rec-archive-media:empty { display: none; }

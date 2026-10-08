@@ -284,10 +284,17 @@ TEST_CASE("the archive is offered as three tools and deleting is destructive", "
 TEST_CASE("list_archive takes a sort and an order", "[mcp-boxtools]")
 {
 	const std::vector<mcp::ToolDef> all = mcp::boxTools().list();
-	std::string input;
+	std::string input, description;
 	for (size_t i = 0; i < all.size(); ++i)
 		if (all[i].name == "list_archive")
+		{
 			input = all[i].input;
+			description = all[i].description;
+		}
+	REQUIRE(description.find("media library") != std::string::npos);
+	REQUIRE(description.find("partial true") != std::string::npos);
+	REQUIRE(description.find("by other means") != std::string::npos);
+	REQUIRE(input.find("\"source\"") != std::string::npos);
 	REQUIRE(input.find("\"sort\"") != std::string::npos);
 	REQUIRE(input.find("\"duration\"") != std::string::npos);
 	REQUIRE(input.find("\"order\"") != std::string::npos);

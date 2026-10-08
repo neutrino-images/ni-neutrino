@@ -52,16 +52,47 @@ function same(got, want, what) {
 }
 
 const model = await import('../../data/ni-web/app/screens/recordings/archive.model.js');
+const words = (await import('../../data/ni-web/app/screens/recordings/recordings.text.js')).default;
 
 same(model.readArchive({ items: [{ id: '0123456789abcdef', title: 'Tatort', channel: 'Das Erste HD', channel_id: '0',
-	start: 1790000000, duration: 5400, size: 1880, playing: false }], total: 17, next_offset: 15 }),
+	start: 1790000000, duration: 5400, size: 1880, playing: false, source: '/media/hdd/movie' }], total: 17, next_offset: 15,
+	sources: ['/media/hdd/movie', '/mnt/nas/Filme'] }),
 	{ items: [{ id: '0123456789abcdef', title: 'Tatort', channel: 'Das Erste HD', start: 1790000000, duration: 5400,
-		size: 1880, playing: false }], total: 17, next: 15 },
-	'a page is read with its next offset');
+		size: 1880, playing: false, source: '/media/hdd/movie' }], total: 17, next: 15,
+		sources: ['/media/hdd/movie', '/mnt/nas/Filme'], partial: false },
+	'a page is read with its next offset, each row with its directory, and the directories that answered');
+same(model.readArchive({ items: [], total: 0, sources: [], partial: true }).partial, true,
+	'a page that misses a directory still being read says so');
+same(model.readArchive({ items: [], total: 0, partial: 'yes' }).partial, false, 'only true marks a page partial');
+same(model.sourceChoices(['/a', '/b'], '/b', false), [{ value: '/a', missing: false }, { value: '/b', missing: false }],
+	'every directory that answered is a choice');
+same(model.sourceChoices(['/a'], '/gone', false), [{ value: '/a', missing: false }, { value: '/gone', missing: true }],
+	'a picked directory that stopped answering stays a choice, marked');
+same(model.sourceChoices(['/a'], '/new', true), [{ value: '/a', missing: false }, { value: '/new', missing: false }],
+	'a picked directory still read the first time stays a choice, not marked as gone');
+same(model.sourceChoices(['/a'], '', false), [{ value: '/a', missing: false }], 'every directory picked adds nothing');
+same(model.readArchive({ items: [{ id: '0123456789abcdef', source: 3 }], total: 1, sources: ['/a', 7, ''] }),
+	{ items: [{ id: '0123456789abcdef', title: '', channel: '', start: 0, duration: 0, size: 0, playing: false, source: '' }],
+		total: 1, next: -1, sources: ['/a'], partial: false },
+	'a directory that is no text is read as none');
+same(['/media/hdd/movie', '/mnt/nas/Filme/', '/'].map(model.sourceName), ['movie', 'Filme', '/'],
+	'a directory is shown by its last name');
+same(model.archiveQuery('', 0, 'start', 'desc', '/mnt/nas/Filme'), { source: '/mnt/nas/Filme' },
+	'one directory is asked for by its name');
+same(model.archiveQuery('', 0, 'start', 'desc', ''), {}, 'every directory asks nothing extra');
+const deleted = model.kDeleteRefusals || {};
+for (const code of ['recording-running', 'recording-playing', 'medium-read-only']) {
+	same(typeof deleted[code], 'string', 'a delete refused with ' + code + ' says so in words');
+	same([typeof words.de[deleted[code]], typeof words.en[deleted[code]]], ['string', 'string'],
+		'the words for ' + code + ' are there in German and English');
+}
+for (const key of ['rec.archive.col.source', 'rec.archive.source', 'rec.archive.source.all', 'rec.archive.source.gone',
+	'rec.archive.reading', 'rec.details.source'])
+	same([typeof words.de[key], typeof words.en[key]], ['string', 'string'], key + ' is there in German and English');
 same(model.readArchive({ items: [{ id: 'nope' }, { id: 'fedcba9876543210', title: 7 }], total: 2 }).items.map(function (i) { return i.id; }),
 	['fedcba9876543210'], 'a row without a proper id is left out, a wrong title read as empty');
 same(model.readArchive({ items: [], total: 0 }).next, -1, 'the last page has no next');
-same(model.readArchive('nonsense'), { items: [], total: 0, next: -1 }, 'nothing out of something that is not an answer');
+same(model.readArchive('nonsense'), { items: [], total: 0, next: -1, sources: [], partial: false }, 'nothing out of something that is not an answer');
 same(model.archiveFileHref('0123456789abcdef'), '/api/v1/recordings/archive/0123456789abcdef/file', 'the file address');
 same(model.archivePlaylistHref('0123456789abcdef', 'tok en'),
 	'/api/v1/recordings/archive/0123456789abcdef/playlist.m3u?token=tok%20en', 'the playlist address carries the token');
@@ -97,13 +128,13 @@ same(model.lengthWords(0), '', 'no length');
 same(model.readArchiveDetails({ id: '0123456789abcdef', title: 'Tatort', channel: 'Das Erste HD', channel_id: '2dfdc1c35',
 	start: 1790000000, duration: 5400, size: 1880, playing: true, description: 'Krimi', long_description: 'Eins\nZwei',
 	genre: 16, genre_minor: 1, series: 'Tatort', country: 'DE', year: 2025, rating: 81, quality: 2, age: 12,
-	audio: ['Deutsch', 7, 'Englisch'], cover: true }),
+	audio: ['Deutsch', 7, 'Englisch'], cover: true, source: '/mnt/nas/Filme' }),
 	{ item: { id: '0123456789abcdef', title: 'Tatort', channel: 'Das Erste HD', start: 1790000000, duration: 5400,
-		size: 1880, playing: true }, description: 'Krimi', longDescription: 'Eins\nZwei', genre: 16, series: 'Tatort',
+		size: 1880, playing: true, source: '/mnt/nas/Filme' }, description: 'Krimi', longDescription: 'Eins\nZwei', genre: 16, series: 'Tatort',
 		country: 'DE', year: 2025, rating: 81, quality: 2, age: 12, audio: ['Deutsch', 'Englisch'], cover: true },
 	'the details are read whole, a track name that is no text left out');
 same(model.readArchiveDetails({ id: 'fedcba9876543210', title: 'Bare', cover: false }),
-	{ item: { id: 'fedcba9876543210', title: 'Bare', channel: '', start: 0, duration: 0, size: 0, playing: false },
+	{ item: { id: 'fedcba9876543210', title: 'Bare', channel: '', start: 0, duration: 0, size: 0, playing: false, source: '' },
 		description: '', longDescription: '', genre: 0, series: '', country: '', year: 0, rating: 0, quality: 0, age: 0,
 		audio: [], cover: false },
 	'what the box left out reads as empty');
@@ -120,7 +151,6 @@ same(model.paragraphsOf('Eins\n\n  Zwei  \r\nDrei'), ['Eins', 'Zwei', 'Drei'], '
 same(model.paragraphsOf(''), [], 'no long text, no paragraph');
 
 // Every refusal a play on the TV hands back has words of the page's own, in both languages.
-const words = (await import('../../data/ni-web/app/screens/recordings/recordings.text.js')).default;
 const tv = model.kTvRefusals || {};
 for (const code of ['recording-playing', 'mode-unavailable', 'playback-running', 'box-in-standby']) {
 	same(typeof tv[code], 'string', 'a play refused with ' + code + ' says so in words');
@@ -140,7 +170,7 @@ for (const key of ['rec.refused.forbidden', 'rec.refused.signin', 'rec.refused.c
 
 // verdict
 
-const FLOOR = 44;
+const FLOOR = 74;
 if (checked < FLOOR) {
 	process.stderr.write('archive-cases.mjs: only ' + checked + ' assertions ran, and there are ' + FLOOR + '\n');
 	process.exit(1);
