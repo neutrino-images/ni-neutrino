@@ -57,6 +57,23 @@ bool listed(const std::vector<std::string> &list, const std::string &name)
 	return false;
 }
 
+/* Keys no AI client may write whatever section the owner ticks. The flag that makes
+   the box answer a module's pin enquiry from the pin it saved guards a credential
+   as the pin does: set from outside it, the box unlocks the module without anyone
+   asking, and the section it is in is one the owner may well have opened. */
+bool guardsCredential(const std::string &key)
+{
+	return key.compare(0, 16, "ci_save_pincode_") == 0;
+}
+
+/* The flag files that switch a program on at boot: the services, which a client could use to
+   export the box's disks or to close its login, and the softcams, which hold the keys that
+   descramble. Named for good, whatever the owner ticks and whatever the rows come to do. */
+bool switchesAProgram(const std::string &key)
+{
+	return key.compare(0, 12, "flag_daemon_") == 0 || key.compare(0, 10, "flag_camd_") == 0;
+}
+
 // Never writable by an AI client, whatever the owner ticks.
 const char *const kDeniedByName[] = { "network", "parental", "update" };
 
@@ -107,6 +124,8 @@ std::string deniedKeyIn(const std::string &settings_json)
 		return std::string();
 	for (size_t i = 0; i < members.size(); ++i)
 	{
+		if (guardsCredential(members[i].name) || switchesAProgram(members[i].name))
+			return members[i].name;
 		coreapi::Result<coreapi::Descriptor> d = coreapi::settings::describe(members[i].name);
 		if (d.ok() && (d.value().secret || coreapi::settings::holdsPath(d.value())))
 			return members[i].name;

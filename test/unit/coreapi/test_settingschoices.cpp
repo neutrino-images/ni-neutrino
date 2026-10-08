@@ -521,7 +521,8 @@ TEST_CASE("every setting a screen builds from the declaration can be shown", "[s
 	box.caps.display_scroll_repeats = 1;
 	box.caps.video_zapmode = 1;
 	box.caps.video_hdmi_colorimetry = 1;
-	box.caps.board_revision = 7;
+	box.caps.board_revision = 9;
+	box.caps.rc_hw_select = 1;
 	box.format_tools.push_back("ext4");
 	FakeOsdResolution drawing;
 	InstalledOsdResolution installed_drawing(&drawing);

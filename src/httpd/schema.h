@@ -166,6 +166,10 @@ struct Schema
 #define HTTPD_MEMBER_OF_SET(name, set, doc, value_docs) \
 	(name), httpd::FieldType::String, false, (doc), NULL, (set), (value_docs), httpd::ElementType::None, NULL
 
+// The same, left out of the answers where the member does not apply.
+#define HTTPD_MEMBER_OF_SET_OPTIONAL(name, set, doc, value_docs) \
+	(name), httpd::FieldType::String, true, (doc), NULL, (set), (value_docs), httpd::ElementType::None, NULL
+
 // A member that is an object of a named shape. Always a named one: an object
 // with no shape beside it is a member a reader is told nothing about.
 #define HTTPD_OBJECT(name, shape, doc) \
@@ -187,6 +191,10 @@ struct Schema
 // because there are no members to name them.
 #define HTTPD_LIST_OF_VALUES(name, element, doc) \
 	(name), httpd::FieldType::Array, false, (doc), NULL, NULL, NULL, (element), NULL
+
+// The same, left out of the answers where the member does not apply.
+#define HTTPD_LIST_OF_VALUES_OPTIONAL(name, element, doc) \
+	(name), httpd::FieldType::Array, true, (doc), NULL, NULL, NULL, (element), NULL
 
 /* A member whose text is one of a set the build decides, which a table cannot write
    down.

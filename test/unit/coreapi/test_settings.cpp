@@ -20,15 +20,18 @@
 
 #include "support/catch.hpp"
 #include "coreapi/settings/settings.h"
+#include "coreapi/base/apply.h"
 #include "coreapi/base/deps.h"
 #include "coreapi/base/eventbus.h"
 #include "coreapi/settings/settingsfield.h"
 #include "coreapi/settings/settingstable.h"
 #include "support/fakes.h"
+#include "support/counts.h"
 
 #include <pthread.h>
 #include <cstring>
 #include <unistd.h>
+#include <sys/statfs.h>
 
 #include <neutrinoMessages.h>
 #include <hardware/video.h>
@@ -93,6 +96,71 @@ TEST_CASE("a value the store has never held reads as the declared default", "[se
 	char want[32];
 	snprintf(want, sizeof(want), "%ld", d.value().default_int);
 	REQUIRE(r.value() == std::string(want));
+	setSettingsSource(NULL);
+}
+
+/* The one shipped row whose number depends on the box and differs from its
+   constant on a build with no exceptions: the numeric panel makes the play time
+   on by default. A read that took the constant would say off on that box. */
+TEST_CASE("a value the store has never held reads as the default of this box", "[settings]")
+{
+	FakeSettingsSource f;
+	setSettingsSource(&f);
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	box.caps.display_xres = 8;
+
+	box.caps.display_type = HW_DISPLAY_LED_NUM;
+	Result<std::string> numeric = settings::get("movieplayer_display_playtime");
+	REQUIRE(numeric.ok());
+	CHECK(numeric.value() == "1");
+
+	box.caps.display_type = HW_DISPLAY_LINE_TEXT;
+	Result<std::string> text = settings::get("movieplayer_display_playtime");
+	REQUIRE(text.ok());
+	CHECK(text.value() == "0");
+	setSettingsSource(NULL);
+}
+
+namespace
+{
+long threeOnThisBox() { return 3; }
+
+const Condition kBasisIsThree[] =
+{
+	{ "fixture_basis", CompareOp::Eq, 3, NULL, 0, NULL, NULL, 0 }
+};
+
+/* A row whose number is the box's and not its constant, and a row that is
+   settable only while the first holds three. */
+const Descriptor kBoxDefaultThenCondition[] =
+{
+	{
+		"fixture_basis", ValueType::Int, "fixture", "label", NULL,
+		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, threeOnThisBox
+	},
+	{
+		"fixture_dependent", ValueType::Bool, "fixture", "label", NULL,
+		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kBasisIsThree),
+		COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+};
+} // anonymous namespace
+
+/* The condition reads a number nobody stored, which is what the box falls back
+   to and not what the row's constant says. */
+TEST_CASE("a condition on a setting nobody stored reads the default of this box", "[settings]")
+{
+	FakeSettingsSource f;
+	setSettingsSource(&f);
+	InstalledSettingsTable table(kBoxDefaultThenCondition,
+	                             sizeof(kBoxDefaultThenCondition) / sizeof(kBoxDefaultThenCondition[0]));
+
+	Result<void> r = settings::set("fixture_dependent", "1");
+	CHECK(r.ok());
 	setSettingsSource(NULL);
 }
 
@@ -620,7 +688,8 @@ const Descriptor kWiderThanItsField[] =
 	{
 		"fixture_byte", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(recording_audio_pids_default)
+		COREAPI_NUMBER_FIELD(recording_audio_pids_default),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 const size_t kWiderThanItsFieldCount =
@@ -868,8 +937,19 @@ struct LoopApplier : public coreapi::SettingsApplier
 	}
 };
 
-// What the loop does when the message the write posted reaches it.
+/* What the loop does when the message the write posted reaches it. This thread is the
+   loop for the time it runs, so it names itself as such, as the program does, and
+   gives the name up again so a later case is not left with a loop that is gone. */
 void *drainOnOwnThread(void *)
+{
+	bindApplyLoop();
+	applyPendingSettings();
+	resetApplyRegistry();
+	return 0;
+}
+
+// A thread that is not the loop, which the bound registry refuses.
+void *drainElsewhere(void *)
 {
 	applyPendingSettings();
 	return 0;
@@ -906,6 +986,219 @@ TEST_CASE("a written setting reaches its applier on the loop thread and not on t
 	// which is what a notifier reads.
 	REQUIRE(applier.seen == 1);
 	REQUIRE(store.values.audio_AnalogMode == 1);
+}
+
+namespace
+{
+/* What a group saw when it ran. A group is a bare function, so what it records
+   lives here, and Fresh puts it back for every case. */
+struct GroupLog
+{
+	unsigned   runs;
+	long       seen;
+	long       seen_volume;
+	unsigned   saves_before;
+	pthread_t  where;
+};
+
+GroupLog        g_group;
+unsigned        g_saves = 0;
+const SNeutrinoSettings *g_group_values = 0;
+
+bool countingSave() { ++g_saves; return true; }
+
+Status runAudioGroup()
+{
+	++g_group.runs;
+	g_group.seen = g_group_values->audio_AnalogMode;
+	g_group.seen_volume = g_group_values->audio_volume_percent_ac3;
+	g_group.saves_before = g_saves;
+	g_group.where = pthread_self();
+	return Status::Ok;
+}
+
+const char *const kAudioGroupKeys[] = { "audio_AnalogMode", "audio_volume_percent_ac3" };
+
+struct FreshGroup
+{
+	FreshGroup(const SNeutrinoSettings *values)
+	{
+		resetApplyRegistry();
+		g_group = GroupLog();
+		g_group.runs = 0;
+		g_group.seen = -1;
+		g_group.seen_volume = -1;
+		g_group.saves_before = 0;
+		g_group.where = pthread_self();
+		g_saves = 0;
+		g_group_values = values;
+	}
+	~FreshGroup() { resetApplyRegistry(); }
+};
+} // anonymous namespace
+
+/* One drain takes everything written since the last, so two keys of one group
+   are one run of it, after the values landed and the save was made: what a
+   group reads is what the box now holds. */
+TEST_CASE("a drained batch of keys of one group runs the group once after the save", "[settings][apply]")
+{
+	RealStore store;
+	installRealSettingsSource(&store.values, countingSave);
+	FreshGroup fresh(&store.values);
+	const ApplyGroup group = { "audio", ApplyPhase::Decoders, COREAPI_KEYS(kAudioGroupKeys), runAudioGroup };
+	REQUIRE(registerApplyGroup(&group) == Status::Ok);
+	runPhase(ApplyPhase::Decoders);
+	g_group.runs = 0;
+	FakeApplier audio;
+	InstalledApplier a("audio", &audio);
+
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
+	REQUIRE(settings::set("audio_volume_percent_ac3", "50").ok());
+	REQUIRE(g_group.runs == 0);
+	applyPendingSettings();
+
+	REQUIRE(g_group.runs == 1);
+	REQUIRE(g_group.seen == 1);
+	REQUIRE(g_group.saves_before == 1);
+	// The group stands in for the section's applier, so the key is applied once.
+	REQUIRE(audio.calls == 0);
+}
+
+/* The transition: a key with no group is still applied by its section's
+   applier, in the same drain that runs another key's group. */
+TEST_CASE("a key without a group still reaches its section applier", "[settings][apply]")
+{
+	RealStore store;
+	FreshGroup fresh(&store.values);
+	const ApplyGroup group = { "audio", ApplyPhase::Decoders, COREAPI_KEYS(kAudioGroupKeys), runAudioGroup };
+	REQUIRE(registerApplyGroup(&group) == Status::Ok);
+	runPhase(ApplyPhase::Decoders);
+	g_group.runs = 0;
+	FakeApplier general;
+	InstalledApplier g("general", &general);
+
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
+	REQUIRE(settings::set("language", "deutsch").ok());
+	applyPendingSettings();
+
+	REQUIRE(g_group.runs == 1);
+	REQUIRE(general.calls == 1);
+	REQUIRE(general.last_key == "language");
+}
+
+/* A write that is drained before its group's phase is kept and not applied:
+   the phase runs the group later with the value then in the box, and the
+   section's applier is not asked in its place. This is what makes a write that
+   arrives before the daemon is up harmless. */
+TEST_CASE("a write drained before its phase is applied when the phase is reached", "[settings][apply]")
+{
+	RealStore store;
+	FreshGroup fresh(&store.values);
+	const ApplyGroup group = { "audio", ApplyPhase::Decoders, COREAPI_KEYS(kAudioGroupKeys), runAudioGroup };
+	REQUIRE(registerApplyGroup(&group) == Status::Ok);
+	FakeApplier audio;
+	InstalledApplier a("audio", &audio);
+
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
+	applyPendingSettings();
+
+	REQUIRE(store.values.audio_AnalogMode == 1);
+	REQUIRE(g_group.runs == 0);
+	REQUIRE(audio.calls == 0);
+
+	runPhase(ApplyPhase::Decoders);
+	REQUIRE(g_group.runs == 1);
+	REQUIRE(g_group.seen == 1);
+}
+
+/* The registry has no lock and belongs to the loop, so the group has to run on
+   the thread that drains and not on the one that wrote. */
+TEST_CASE("a group runs on the draining thread and not on the writer's", "[settings][apply]")
+{
+	RealStore store;
+	FreshGroup fresh(&store.values);
+	const ApplyGroup group = { "audio", ApplyPhase::Decoders, COREAPI_KEYS(kAudioGroupKeys), runAudioGroup };
+	REQUIRE(registerApplyGroup(&group) == Status::Ok);
+	runPhase(ApplyPhase::Decoders);
+	g_group.runs = 0;
+
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
+	REQUIRE(g_group.runs == 0);
+
+	pthread_t loop;
+	REQUIRE(pthread_create(&loop, 0, drainOnOwnThread, 0) == 0);
+	REQUIRE(pthread_join(loop, 0) == 0);
+
+	REQUIRE(g_group.runs == 1);
+	REQUIRE_FALSE(pthread_equal(g_group.where, pthread_self()));
+}
+
+/* The registry is unlocked, so with the loop named a drain from another thread is
+   refused whole: nothing lands, nothing runs, and what was written is still held
+   for the loop, which then takes it. */
+TEST_CASE("a drain on a thread that is not the loop is refused and the write stays held", "[settings][apply]")
+{
+	RealStore store;
+	FreshGroup fresh(&store.values);
+	const ApplyGroup group = { "audio", ApplyPhase::Decoders, COREAPI_KEYS(kAudioGroupKeys), runAudioGroup };
+	REQUIRE(registerApplyGroup(&group) == Status::Ok);
+	runPhase(ApplyPhase::Decoders);
+	g_group.runs = 0;
+	bindApplyLoop();
+
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
+
+	pthread_t other;
+	REQUIRE(pthread_create(&other, 0, drainElsewhere, 0) == 0);
+	REQUIRE(pthread_join(other, 0) == 0);
+	REQUIRE(g_group.runs == 0);
+	REQUIRE(store.values.audio_AnalogMode == 0);
+
+	applyPendingSettings();
+	REQUIRE(g_group.runs == 1);
+	REQUIRE(store.values.audio_AnalogMode == 1);
+}
+
+/* Two writes of one group before its phase are one run of it by the phase, which
+   finds the last value of each, and the deferred drain did not run it. */
+TEST_CASE("writes to one group before its phase are one phase run with the final values", "[settings][apply]")
+{
+	RealStore store;
+	FreshGroup fresh(&store.values);
+	const ApplyGroup group = { "audio", ApplyPhase::Decoders, COREAPI_KEYS(kAudioGroupKeys), runAudioGroup };
+	REQUIRE(registerApplyGroup(&group) == Status::Ok);
+
+	REQUIRE(settings::set("audio_volume_percent_ac3", "30").ok());
+	REQUIRE(settings::set("audio_volume_percent_ac3", "60").ok());
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
+	applyPendingSettings();
+	REQUIRE(g_group.runs == 0);
+
+	runPhase(ApplyPhase::Decoders);
+	REQUIRE(g_group.runs == 1);
+	REQUIRE(g_group.seen == 1);
+	REQUIRE(g_group.seen_volume == 60);
+}
+
+// After its phase a drain applies the group again with what that drain wrote.
+TEST_CASE("a drain after the phase applies the group", "[settings][apply]")
+{
+	RealStore store;
+	FreshGroup fresh(&store.values);
+	const ApplyGroup group = { "audio", ApplyPhase::Decoders, COREAPI_KEYS(kAudioGroupKeys), runAudioGroup };
+	REQUIRE(registerApplyGroup(&group) == Status::Ok);
+
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
+	applyPendingSettings();
+	runPhase(ApplyPhase::Decoders);
+	REQUIRE(g_group.runs == 1);
+
+	REQUIRE(settings::set("audio_volume_percent_ac3", "40").ok());
+	applyPendingSettings();
+	REQUIRE(g_group.runs == 2);
+	REQUIRE(g_group.seen_volume == 40);
+	// The earlier write is still there, so the run saw the whole state.
+	REQUIRE(g_group.seen == 1);
 }
 
 // A section is what the registry is keyed by, so one without a name names
@@ -965,7 +1258,8 @@ const Descriptor kBoolWithoutBounds[] =
 	{
 		"fixture_bool", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(channellist_descmode)
+		COREAPI_NUMBER_FIELD(channellist_descmode),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 const size_t kBoolWithoutBoundsCount =
@@ -973,43 +1267,65 @@ const size_t kBoolWithoutBoundsCount =
 
 // A number from one to fourteen that shows nought as off, and one that names
 // nothing beside the same bounds.
-const EnumValue kOffBelow[] = { { 0, "options.off", NULL, NULL } };
+const EnumValue kOffBelow[] = { { 0, "options.off", NULL, NULL, NULL, 0 } };
 const Descriptor kNamedNumber[] =
 {
 	{
 		"fixture_named", ValueType::Int, "fixture", "label", NULL,
 		1, 14, COREAPI_VALUES(kOffBelow), 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(channellist_descmode)
+		COREAPI_NUMBER_FIELD(channellist_descmode),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(channellist_descmode)
+		COREAPI_NUMBER_FIELD(channellist_descmode),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 const size_t kNamedNumberCount = sizeof(kNamedNumber) / sizeof(kNamedNumber[0]);
 
+// A number from one to fourteen that shows two values below the floor in words.
+const EnumValue kAutoAndOff[] =
+{
+	{ -1, "options.auto", NULL, NULL, NULL, 0 },
+	{ 0, "options.off", NULL, NULL, NULL, 0 }
+};
+const Descriptor kSeveralNamed[] =
+{
+	{
+		"fixture_several", ValueType::Int, "fixture", "label", NULL,
+		1, 14, COREAPI_VALUES(kAutoAndOff), 1, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD(channellist_descmode),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+};
+const size_t kSeveralNamedCount = sizeof(kSeveralNamed) / sizeof(kSeveralNamed[0]);
+
 // A fan the box may lack, and a count the box may take only as a flag.
 bool g_box_has = false;
 bool boxHas() { return g_box_has; }
-const Shape kFlagShape = { ValueType::Bool, "flag_label", 0, 1, NULL, 0, NULL };
-const EnumValue kOffFloor[] = { { 0, "options.off", NULL, NULL } };
+const Shape kFlagShape = shape(ValueType::Bool, "flag_label").range(0, 1);
+const EnumValue kOffFloor[] = { { 0, "options.off", NULL, NULL, NULL, 0 } };
 const Descriptor kOnBox[] =
 {
 	{
 		"fixture_fan", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL)
+		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_scroll", ValueType::Int, "fixture", "label", NULL,
 		0, 999, COREAPI_VALUES(kOffFloor), 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, &kFlagShape)
+		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, &kFlagShape),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, COREAPI_VALUES(kOffFloor), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL)
+		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 const size_t kOnBoxCount = sizeof(kOnBox) / sizeof(kOnBox[0]);
@@ -1022,13 +1338,15 @@ const Descriptor kWrongRows[] =
 	{
 		"fixture_unknown_kind", (ValueType) 99, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	// An Enum whose list is not there, which offers no value at all.
 	{
 		"fixture_empty_enum", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	/* An Enum counting three values it does not have. The macro that writes the
 	   pair cannot say this and a row written by hand can, which is the reason
@@ -1036,7 +1354,8 @@ const Descriptor kWrongRows[] =
 	{
 		"fixture_lying_enum", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, NULL, 3, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 const size_t kWrongRowCount = sizeof(kWrongRows) / sizeof(kWrongRows[0]);
@@ -1095,6 +1414,27 @@ TEST_CASE("a number takes the value it names in words beside its bounds and noth
 	REQUIRE(plain.error().code == ErrorCode::OutOfRange);
 	REQUIRE(plain.error().message == "the setting takes 1 to 14");
 	REQUIRE(f.ints.count("fixture_plain") == 0);
+}
+
+TEST_CASE("a number naming several values in words takes each of them beside its bounds", "[settings]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	InstalledSettingsTable table(kSeveralNamed, kSeveralNamedCount);
+	REQUIRE(descriptorIsSane(kSeveralNamed[0]));
+
+	REQUIRE(settings::set("fixture_several", "-1").ok());
+	REQUIRE(f.ints["fixture_several"] == -1);
+	REQUIRE(settings::set("fixture_several", "0").ok());
+	REQUIRE(f.ints["fixture_several"] == 0);
+	REQUIRE(settings::set("fixture_several", "7").ok());
+	REQUIRE(f.ints["fixture_several"] == 7);
+
+	Result<void> other = settings::set("fixture_several", "-2");
+	REQUIRE_FALSE(other.ok());
+	REQUIRE(other.error().code == ErrorCode::OutOfRange);
+	REQUIRE(other.error().message == "the setting takes 1 to 14 or -1, 0");
+	REQUIRE(f.ints["fixture_several"] == 7);
 }
 
 TEST_CASE("a setting the box lacks reads and refuses every write", "[settings]")
@@ -1224,17 +1564,18 @@ bool always() { return true; }
 
 const EnumValue kOffered[] =
 {
-	{ 0, "options.off", NULL, NULL },
-	{ 1, NULL, "ext4", NULL },
-	{ 2, NULL, "xfs", never },
-	{ 3, NULL, "f2fs", always },
+	{ 0, "options.off", NULL, NULL, NULL, 0 },
+	{ 1, NULL, "ext4", NULL, NULL, 0 },
+	{ 2, NULL, "xfs", never, NULL, 0 },
+	{ 3, NULL, "f2fs", always, NULL, 0 },
 };
 const Descriptor kOfferedRows[] =
 {
 	{
 		"t_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kOffered, sizeof(kOffered) / sizeof(kOffered[0]), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -1299,12 +1640,14 @@ const Descriptor kRestartAndNot[] =
 	{
 		"fixture_at_once", ValueType::Int, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_on_restart", ValueType::Int, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, true, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(current_volume)
+		COREAPI_NUMBER_FIELD(current_volume),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 const size_t kRestartAndNotCount =
@@ -1340,22 +1683,26 @@ const Descriptor kSecretAndNot[] =
 	{
 		"fixture_secret_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(language)
+		COREAPI_TEXT_FIELD(language),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(epg_dir)
+		COREAPI_TEXT_FIELD(epg_dir),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_secret_number", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, true, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain_number", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(current_volume)
+		COREAPI_NUMBER_FIELD(current_volume),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 const size_t kSecretAndNotCount = sizeof(kSecretAndNot) / sizeof(kSecretAndNot[0]);
@@ -1375,7 +1722,13 @@ const char *const kShippedSecrets[] =
 	"softupdate_proxyusername",
 	"softupdate_proxypassword",
 	"parentallock_pincode",
-	"personalize_pincode"
+	"personalize_pincode",
+	// The pin of each module slot, and the remote boxes, whose list carries a password.
+	"ci_pincode_0",
+	"ci_pincode_1",
+	"ci_pincode_2",
+	"ci_pincode_3",
+	"timer_remotebox_ip"
 };
 const size_t kShippedSecretsCount = sizeof(kShippedSecrets) / sizeof(kShippedSecrets[0]);
 } // anonymous namespace
@@ -1568,10 +1921,12 @@ TEST_CASE("the credentials the program declares refuse an empty value", "[settin
 	}
 
 	// A text row of the same section that is not a credential, so the case
-	// cannot pass by refusing every empty write.
-	REQUIRE(settings::set("epg_dir", "").ok());
+	// cannot pass by refusing every empty write. It is offered while the guide
+	// is read.
+	store.values.timeshiftdir = "/media/sda1/ts";
+	REQUIRE(settings::set("timeshiftdir", "").ok());
 	applyPendingSettings();
-	REQUIRE(store.values.epg_dir == "");
+	REQUIRE(store.values.timeshiftdir == "");
 }
 
 // Reported rather than required: which rows are credentials is a judgement the
@@ -1931,4 +2286,469 @@ TEST_CASE("announceSettingsChanged puts one SettingsChanged event on the bus", "
 
 	REQUIRE(watch.seen.size() == 1);
 	REQUIRE(watch.seen[0].type == EventType::SettingsChanged);
+}
+
+using settings::BatchOverlay;
+
+// Asked before error(), which a mutation that turns the result ok would abort on.
+static bool refusedAs(const Result<void> &r, ErrorCode code)
+{
+	return !r.ok() && r.error().code == code;
+}
+
+TEST_CASE("a write whose condition fails is refused", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 0;
+	s.ints["epg_read"] = 0;
+
+	Result<void> r = settings::set("epg_dir", "/usr");
+	REQUIRE_FALSE(r.ok());
+	REQUIRE(r.error().code == ErrorCode::SettingConditionNotMet);
+	CHECK(r.error().status == Status::Conflict);
+	CHECK(s.strings.count("epg_dir") == 0);
+	CHECK(s.persisted == 0);
+
+	// Either half of the group is enough.
+	s.ints["epg_read"] = 1;
+	REQUIRE(settings::set("epg_dir", "/usr").ok());
+	CHECK(s.strings["epg_dir"] == "/usr");
+}
+
+TEST_CASE("a controlling setting and its dependent in one batch are accepted", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 0;
+	s.ints["epg_read"] = 0;
+
+	BatchOverlay b;
+	b.values.push_back(std::make_pair("epg_save", "1"));
+	b.values.push_back(std::make_pair("epg_dir", "/usr"));
+	REQUIRE(settings::set("epg_save", "1", &b).ok());
+	REQUIRE(settings::set("epg_dir", "/usr", &b).ok());
+}
+
+TEST_CASE("a dependent written ahead of its controller in one batch is judged on the batch", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 0;
+	s.ints["epg_read"] = 0;
+
+	BatchOverlay b;
+	b.values.push_back(std::make_pair("epg_dir", "/usr"));
+	b.values.push_back(std::make_pair("epg_save", "1"));
+	REQUIRE(settings::set("epg_dir", "/usr", &b).ok());
+	CHECK(s.ints["epg_save"] == 0);
+	REQUIRE(settings::set("epg_save", "1", &b).ok());
+}
+
+TEST_CASE("a batch that turns the controller off refuses the dependent the store would allow", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 1;
+	s.ints["epg_read"] = 0;
+
+	BatchOverlay b;
+	b.values.push_back(std::make_pair("epg_save", "0"));
+	b.values.push_back(std::make_pair("epg_dir", "/usr"));
+	REQUIRE(refusedAs(settings::set("epg_dir", "/usr", &b), ErrorCode::SettingConditionNotMet));
+}
+
+TEST_CASE("a condition the store cannot answer lets the write through", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 0;
+	s.ints["epg_read"] = 0;
+
+	// The first read is the condition's look at epg_save.
+	s.fail_next = true;
+	REQUIRE(settings::set("epg_dir", "/usr").ok());
+	CHECK(s.strings["epg_dir"] == "/usr");
+}
+
+TEST_CASE("a controller the store never held is judged by its declared default", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_read"] = 0;
+
+	Result<Descriptor> save = settings::describe("epg_save");
+	REQUIRE(save.ok());
+	REQUIRE(save.value().default_int == 0);
+	REQUIRE(refusedAs(settings::set("epg_dir", "/usr"), ErrorCode::SettingConditionNotMet));
+}
+
+namespace
+{
+const Condition kFixtureKeyValid[] =
+{
+	{ "fixture_key", CompareOp::TextValid, 0, NULL, 0, "XXXX", NULL, 0 }
+};
+
+/* A credential and a switch that needs it, the shape every online service has. */
+const Descriptor kKeyAndService[] =
+{
+	{
+		"fixture_key", ValueType::String, "fixture", "label", NULL,
+		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
+		COREAPI_TEXT_FIELD(language),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+	{
+		"fixture_service", ValueType::Bool, "fixture", "label", NULL,
+		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kFixtureKeyValid),
+		COREAPI_NUMBER_FIELD(current_volume),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+};
+} // anonymous namespace
+
+TEST_CASE("a credential a read withholds still allows what depends on it", "[settings]")
+{
+	InstalledSettingsTable table(kKeyAndService, 2);
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.strings["fixture_key"] = "the key";
+
+	REQUIRE(settings::get("fixture_key").value() == "");
+	REQUIRE(settings::set("fixture_service", "1").ok());
+}
+
+TEST_CASE("a text condition is judged on the batch first and the store after", "[settings]")
+{
+	InstalledSettingsTable table(kKeyAndService, 2);
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+
+	// Never held: the declared default is empty and does not hold.
+	REQUIRE(refusedAs(settings::set("fixture_service", "1"), ErrorCode::SettingConditionNotMet));
+
+	BatchOverlay typed;
+	typed.values.push_back(std::make_pair("fixture_key", "a new key"));
+	REQUIRE(settings::set("fixture_service", "1", &typed).ok());
+
+	s.strings["fixture_key"] = "the key";
+	BatchOverlay placeholder;
+	placeholder.values.push_back(std::make_pair("fixture_key", "XXXX"));
+	REQUIRE(refusedAs(settings::set("fixture_service", "1", &placeholder),
+	                  ErrorCode::SettingConditionNotMet));
+}
+
+namespace
+{
+const Condition kNumberOnText[] =
+{
+	{ "fixture_key", CompareOp::Ne, 0, NULL, 0, NULL, NULL, 0 }
+};
+
+const Condition kTextOnNumber[] =
+{
+	{ "fixture_number", CompareOp::TextValid, 0, NULL, 0, "XXXX", NULL, 0 }
+};
+
+/* Conditions the table check refuses, written here so that a row that slipped past it
+   is not judged on a value read as the wrong kind. */
+const Descriptor kWrongKind[] =
+{
+	{
+		"fixture_key", ValueType::String, "fixture", "label", NULL,
+		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
+		COREAPI_TEXT_FIELD(language),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+	{
+		"fixture_number", ValueType::Int, "fixture", "label", NULL,
+		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+	{
+		"fixture_by_number", ValueType::Bool, "fixture", "label", NULL,
+		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kNumberOnText),
+		COREAPI_NUMBER_FIELD(current_volume),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+	{
+		"fixture_by_text", ValueType::Bool, "fixture", "label", NULL,
+		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kTextOnNumber),
+		COREAPI_NUMBER_FIELD(current_volume),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+};
+} // anonymous namespace
+
+TEST_CASE("a condition naming a setting of the other kind is not answered", "[settings]")
+{
+	InstalledSettingsTable table(kWrongKind, 4);
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	// Both would fail if they were read: a number 0 and an empty text.
+	s.ints["fixture_key"] = 0;
+	s.strings["fixture_number"] = "";
+
+	REQUIRE(settings::set("fixture_by_number", "1").ok());
+	REQUIRE(settings::set("fixture_by_text", "1").ok());
+}
+
+TEST_CASE("check answers what set would for the value alone and writes nothing", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 0;
+	s.ints["epg_read"] = 0;
+
+	REQUIRE(refusedAs(settings::check("epg_save", "5"), ErrorCode::OutOfRange));
+	REQUIRE(refusedAs(settings::check("epg_save", "on"), ErrorCode::NotANumber));
+	REQUIRE(refusedAs(settings::check("no-such-key-4711", "1"), ErrorCode::UnknownSetting));
+	REQUIRE(refusedAs(settings::check("epg_dir", "a\nb"), ErrorCode::BadString));
+	// Its conditions are not asked: they are judged once the batch is known.
+	REQUIRE(settings::check("epg_dir", "/usr").ok());
+	REQUIRE(settings::check("epg_save", "1").ok());
+	CHECK(s.ints.size() == 2);
+	CHECK(s.strings.empty());
+	CHECK(s.persisted == 0);
+}
+
+namespace
+{
+bool refusedKey(const std::vector<std::pair<std::string, Error> > &refused, const char *key)
+{
+	for (size_t i = 0; i < refused.size(); ++i)
+		if (refused[i].first == key && refused[i].second.code == ErrorCode::SettingConditionNotMet &&
+		    refused[i].second.status == Status::Conflict)
+			return true;
+	return false;
+}
+} // anonymous namespace
+
+/* The icons are offered only where the skin is not the infobar's, and the skin only while
+   the icons are off. Judged once against the whole batch, the skin falls and the icons
+   then land on the infobar skin the store keeps, which their own condition forbids. */
+TEST_CASE("settling takes out a member whose support was itself taken out", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["mode_icons"] = 0;
+	s.ints["mode_icons_skin"] = INFOICONS_INFOVIEWER;
+
+	BatchOverlay b;
+	b.values.push_back(std::make_pair("mode_icons", "1"));
+	b.values.push_back(std::make_pair("mode_icons_skin", "0"));
+	std::vector<std::pair<std::string, Error> > refused;
+	settings::settleBatch(b, refused);
+
+	REQUIRE(refused.size() == 2);
+	CHECK(refusedKey(refused, "mode_icons_skin"));
+	CHECK(refusedKey(refused, "mode_icons"));
+	CHECK(b.values.empty());
+}
+
+TEST_CASE("settling keeps a batch whose members hold together and takes out only what fails", "[settings]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 0;
+	s.ints["epg_read"] = 0;
+	s.ints["mode_icons"] = 0;
+	s.ints["mode_icons_skin"] = INFOICONS_STATIC;
+
+	BatchOverlay b;
+	b.values.push_back(std::make_pair("epg_dir", "/usr"));
+	b.values.push_back(std::make_pair("mode_icons", "1"));
+	b.values.push_back(std::make_pair("epg_save", "1"));
+	b.values.push_back(std::make_pair("epg_save_standby", "1"));
+	std::vector<std::pair<std::string, Error> > refused;
+	settings::settleBatch(b, refused);
+
+	REQUIRE(refused.empty());
+	// The four named and the read the guide's save brings with it.
+	REQUIRE(b.values.size() == 5);
+
+	// Without the controller its two dependents fall, and the rest stays in body order.
+	BatchOverlay alone;
+	alone.values.push_back(std::make_pair("epg_dir", "/usr"));
+	alone.values.push_back(std::make_pair("mode_icons", "1"));
+	alone.values.push_back(std::make_pair("epg_save_standby", "1"));
+	settings::settleBatch(alone, refused);
+	REQUIRE(refused.size() == 2);
+	CHECK(refusedKey(refused, "epg_dir"));
+	CHECK(refusedKey(refused, "epg_save_standby"));
+	REQUIRE(alone.values.size() == 1);
+	CHECK(alone.values[0].first == "mode_icons");
+}
+
+TEST_CASE("a pin row refuses text the remote cannot type back", "[settings][textrules]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource installed(&f);
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	const char *const keys[] = { "parentallock_pincode", "personalize_pincode" };
+	const char *const refused[] = { "abcd", "12345", "123", "12 4", "-123" };
+	for (size_t k = 0; k < 2; ++k)
+	{
+		for (size_t v = 0; v < sizeof(refused) / sizeof(refused[0]); ++v)
+		{
+			INFO(keys[k] << " " << refused[v]);
+			CHECK(refusedAs(settings::set(keys[k], refused[v]), ErrorCode::BadString));
+			CHECK(refusedAs(settings::check(keys[k], refused[v]), ErrorCode::BadString));
+		}
+		CHECK(f.strings.count(keys[k]) == 0);
+		REQUIRE(settings::set(keys[k], "0815").ok());
+		CHECK(f.strings[keys[k]] == "0815");
+	}
+}
+
+TEST_CASE("a text row is held to its length, characters and place", "[settings][textrules]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource installed(&f);
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	// Longer than the keyboard of the screen takes.
+	CHECK(refusedAs(settings::set("omdb_api_key", "123456789"), ErrorCode::BadString));
+	REQUIRE(settings::set("omdb_api_key", "12345678").ok());
+	// Digits only, three of them.
+	CHECK(refusedAs(settings::set("network_ntprefresh", "abc"), ErrorCode::BadString));
+	CHECK(refusedAs(settings::set("network_ntprefresh", "1234"), ErrorCode::BadString));
+	REQUIRE(settings::set("network_ntprefresh", "30").ok());
+
+	// A folder that is not there, and one that is a file.
+	CHECK(refusedAs(settings::set("network_nfs_audioplayerdir", "/no/such/folder-4711"), ErrorCode::BadString));
+	CHECK(refusedAs(settings::set("network_nfs_audioplayerdir", "/etc/passwd"), ErrorCode::BadString));
+	REQUIRE(settings::set("network_nfs_audioplayerdir", "/usr").ok());
+	// A folder row that tests nothing takes any place.
+	REQUIRE(settings::set("logo_hdd_dir", "/no/such/folder-4711").ok());
+	// Empty means none and is not looked for.
+	REQUIRE(settings::set("timeshiftdir", "").ok());
+
+	// A font is a file of the right ending.
+	CHECK(refusedAs(settings::set("font_file", "/etc/passwd"), ErrorCode::BadString));
+	CHECK(refusedAs(settings::set("font_file", "/no/such/font.ttf"), ErrorCode::BadString));
+	CHECK(refusedAs(settings::set("font_file", "/usr"), ErrorCode::BadString));
+}
+
+TEST_CASE("a text rule tells memory backed folders from the rest on the real file system", "[settings][textrules]")
+{
+	// /dev/shm is memory backed wherever the suite runs in the build image. Where it is
+	// not, the case says so and records that it did not run, which the counts file fails.
+	struct statfs fs;
+	if (statfs("/dev/shm", &fs) != 0 || (long) fs.f_type != 0x1021994L)
+	{
+		WARN("skipped: /dev/shm is not a tmpfs here");
+		recordCount("memory backed folders tried", 0);
+		return;
+	}
+
+	const TextRule durable = { TextKind::Directory, 0, 0, NULL, MustExist::YesNotTmpfs, NULL, false };
+	const TextRule update = { TextKind::Directory, 0, 0, NULL, MustExist::YesNotFlash, NULL, false };
+	const TextRule any = { TextKind::Directory, 0, 0, NULL, MustExist::Yes, NULL, false };
+	CHECK_FALSE(settings::holdsTextRule(durable, "/dev/shm").ok());
+	CHECK(settings::holdsTextRule(update, "/dev/shm").ok());
+	CHECK(settings::holdsTextRule(any, "/dev/shm").ok());
+	CHECK(settings::holdsTextRule(durable, "/usr").ok());
+	recordCount("memory backed folders tried", 1);
+}
+
+TEST_CASE("a file system is allowed by the level a row asks for", "[settings][textrules]")
+{
+	const long ramfs = 0x858458f6L, tmpfs = 0x1021994L, jffs2 = 0x72b6L, ext4 = 0xEF53L;
+	// Flash is refused by both tested levels and taken by a row that only wants the folder.
+	CHECK_FALSE(settings::fileSystemAllowed(MustExist::YesNotFlash, jffs2));
+	CHECK_FALSE(settings::fileSystemAllowed(MustExist::YesNotTmpfs, jffs2));
+	CHECK(settings::fileSystemAllowed(MustExist::Yes, jffs2));
+	// Memory is refused only by the stricter level.
+	CHECK(settings::fileSystemAllowed(MustExist::YesNotFlash, tmpfs));
+	CHECK(settings::fileSystemAllowed(MustExist::YesNotFlash, ramfs));
+	CHECK_FALSE(settings::fileSystemAllowed(MustExist::YesNotTmpfs, tmpfs));
+	CHECK_FALSE(settings::fileSystemAllowed(MustExist::YesNotTmpfs, ramfs));
+	CHECK(settings::fileSystemAllowed(MustExist::YesNotTmpfs, ext4));
+	CHECK(settings::fileSystemAllowed(MustExist::YesNotFlash, ext4));
+}
+
+TEST_CASE("a pin cannot be cleared and a credential without a rule can", "[settings][textrules]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource installed(&f);
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	f.strings["parentallock_pincode"] = "0815";
+	f.strings["personalize_pincode"] = "0815";
+	CHECK(refusedAs(settings::clearSecret("parentallock_pincode"), ErrorCode::BadString));
+	CHECK(refusedAs(settings::clearSecret("personalize_pincode"), ErrorCode::BadString));
+	CHECK(f.strings["parentallock_pincode"] == "0815");
+	CHECK(f.strings["personalize_pincode"] == "0815");
+
+	f.strings["softupdate_proxypassword"] = "secret";
+	REQUIRE(settings::clearSecret("softupdate_proxypassword").ok());
+	CHECK(f.strings["softupdate_proxypassword"] == "");
+}
+
+TEST_CASE("a row that names a place cannot be emptied unless its screen can", "[settings][textrules]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource installed(&f);
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	CHECK(refusedAs(settings::set("font_file", ""), ErrorCode::BadString));
+	CHECK(refusedAs(settings::set("font_file_monospace", ""), ErrorCode::BadString));
+	CHECK(refusedAs(settings::set("epg_dir", ""), ErrorCode::BadString));
+	CHECK(refusedAs(settings::set("network_nfs_audioplayerdir", ""), ErrorCode::BadString));
+#ifndef USE_SMS_INPUT
+	// Picked from existing files; the SMS arm types a name instead and may leave it empty.
+	CHECK(refusedAs(settings::set("softupdate_url_file", ""), ErrorCode::BadString));
+#endif
+	// The timeshift folder empty means the recording folder.
+	REQUIRE(settings::set("timeshiftdir", "").ok());
+	// A row naming no place is not made stricter.
+	REQUIRE(settings::set("keyboard_layout", "").ok());
+}
+
+TEST_CASE("a place that is already stored is not looked for again", "[settings][textrules]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource installed(&f);
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	// An unmounted disk and a legacy empty font path, as a client sends the whole section back.
+	f.strings["network_nfs_audioplayerdir"] = "/media/sda1/music-not-mounted";
+	f.strings["font_file"] = "";
+	REQUIRE(settings::set("network_nfs_audioplayerdir", "/media/sda1/music-not-mounted").ok());
+	REQUIRE(settings::check("network_nfs_audioplayerdir", "/media/sda1/music-not-mounted").ok());
+	REQUIRE(settings::set("font_file", "").ok());
+
+	// Any other value has to be there, as the file browser demands.
+	CHECK(refusedAs(settings::set("network_nfs_audioplayerdir", "/media/sda1/elsewhere-not-mounted"),
+			ErrorCode::BadString));
+	CHECK(f.strings["network_nfs_audioplayerdir"] == "/media/sda1/music-not-mounted");
+	REQUIRE(settings::set("network_nfs_audioplayerdir", "/usr").ok());
+}
+
+TEST_CASE("a text rule matches file endings without regard to case", "[settings][textrules]")
+{
+	const TextRule fonts = { TextKind::File, 0, 0, NULL, MustExist::No, "ttf,otf", false };
+	CHECK(settings::holdsTextRule(fonts, "/a/b.TTF").ok());
+	CHECK(settings::holdsTextRule(fonts, "/a/b.otf").ok());
+	CHECK_FALSE(settings::holdsTextRule(fonts, "/a/b.ttf.bak").ok());
+	CHECK_FALSE(settings::holdsTextRule(fonts, "/a/ttf").ok());
 }

@@ -64,7 +64,7 @@ void WeatherUpdateFonts()
 	if (!fonts_initialized || (weather_fontsize_new != weather_fontsize))
 	{
 		weather_fontsize = weather_fontsize_new;
-		if (!font_temperature.LoadFT2(t.glcd_font, "UTF-8", weather_fontsize))
+		if (!font_temperature.LoadFT2(settingsText(t.glcd_font), "UTF-8", weather_fontsize))
 		{
 			font_temperature.LoadFT2(settingsText(g_settings.font_file), "UTF-8", weather_fontsize);
 		}
@@ -73,7 +73,7 @@ void WeatherUpdateFonts()
 	if (!fonts_initialized || (standby_weather_fontsize_new != standby_weather_fontsize))
 	{
 		standby_weather_fontsize = standby_weather_fontsize_new;
-		if (!font_temperature_standby.LoadFT2(t.glcd_font, "UTF-8", standby_weather_fontsize))
+		if (!font_temperature_standby.LoadFT2(settingsText(t.glcd_font), "UTF-8", standby_weather_fontsize))
 		{
 			font_temperature_standby.LoadFT2(settingsText(g_settings.font_file), "UTF-8", standby_weather_fontsize);
 		}

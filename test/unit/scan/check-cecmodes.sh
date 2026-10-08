@@ -20,9 +20,9 @@ TABLE="$SRC/src/coreapi/settings/settingstable_video.cpp"
 [ -r "$TABLE" ] || { echo "check-cecmodes.sh: cannot read $TABLE" >&2; exit 1; }
 
 entries=`awk '
-	/const EnumValue kCecMode\[\]/ { inside = 1; next }
+	/EnumValue kCecMode\[\]/ { inside = 1; next }
 	inside && /^\};/ { inside = 0 }
-	inside && /^[ \t]*\{[ \t]*[A-Za-z0-9]/ { print }
+	inside && /^[ \t]*option\([ \t]*[A-Za-z0-9]/ { print }
 ' "$TABLE"`
 
 # A table that was renamed or reshaped would leave nothing to read and pass.
@@ -32,7 +32,7 @@ if [ "$count" -ne 3 ]; then
 	exit 1
 fi
 
-named=`printf '%s\n' "$entries" | grep -cE '^[ 	]*\{[ 	]*VIDEO_HDMI_CEC_MODE_[A-Z]+,'` || named=0
+named=`printf '%s\n' "$entries" | grep -cE '^[ 	]*option\([ 	]*VIDEO_HDMI_CEC_MODE_[A-Z]+\)'` || named=0
 if [ "$named" -ne 3 ]; then
 	echo "check-cecmodes.sh: an entry of kCecMode does not start with the hardware library's name for the mode:" >&2
 	printf '%s\n' "$entries" >&2

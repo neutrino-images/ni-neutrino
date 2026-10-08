@@ -1106,7 +1106,11 @@ static void buildWebchannelSources(int mode, std::list<std::string> &sources)
 
 	if (cfg)
 	{
-		for (std::list<std::string>::iterator it = cfg->begin(); it != cfg->end(); ++it)
+		/* The list is the settings'. A write from another thread releases its entries, so
+		   it is copied under the lock the settings layer copies it under, and walked there
+		   after; the real path of each entry is looked up outside the lock. */
+		std::list<std::string> configured = settingsCopy(*cfg);
+		for (std::list<std::string>::iterator it = configured.begin(); it != configured.end(); ++it)
 		{
 			if (!isWebchannelAutoDirEntry(*it, dir_keys[0], dir_keys[1]))
 				sources.push_back(*it);

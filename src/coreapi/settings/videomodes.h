@@ -56,6 +56,10 @@ namespace coreapi
    this box draws, in the same words and the same order. */
 const char *const *videoModeNames(size_t &count);
 
+/* Whether this box draws the mode a number stands for, which is whether the
+   video_Mode row offers a mode of that name here. */
+bool videoModeDrawn(size_t index);
+
 } // namespace coreapi
 
 #endif

@@ -1,2 +1,2 @@
-	{ 1, NULL, "ext4", NULL },
-	{ 2, NULL, "not.a.catalog.key", NULL }
+	option(1).text("ext4"),
+	option(2).text("not.a.catalog.key")

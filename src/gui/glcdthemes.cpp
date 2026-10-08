@@ -372,8 +372,8 @@ void CGLCDThemes::getTheme(CConfigFile &configfile)
 	t.glcd_background_color_red = configfile.getInt32("glcd_background_color_red", 0x00);
 	t.glcd_background_color_green = configfile.getInt32("glcd_background_color_green", 0x00);
 	t.glcd_background_color_blue = configfile.getInt32("glcd_background_color_blue", 0x00);
-	t.glcd_background_image = configfile.getString("glcd_background_image", "");
-	t.glcd_font = configfile.getString("glcd_font", "");
+	setSettingsText(t.glcd_background_image, configfile.getString("glcd_background_image", ""));
+	setSettingsText(t.glcd_font, configfile.getString("glcd_font", ""));
 	t.glcd_channel_percent = configfile.getInt32("glcd_channel_percent", 25);
 	t.glcd_channel_align = configfile.getInt32("glcd_channel_align", 2);
 	t.glcd_channel_x_position = configfile.getInt32("glcd_channel_x_position", 0);

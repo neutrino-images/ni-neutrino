@@ -49,6 +49,7 @@ libcoreapi_a_SOURCES = \
 	box/recordingsource_real.cpp \
 	box/settingssource_real.cpp \
 	box/localesource_real.cpp \
+	box/keysource_real.cpp \
 	box/recordingsafetysource_real.cpp \
 	settings/settingstable.cpp \
 	settings/settingsundeclared.cpp \
@@ -67,6 +68,9 @@ libcoreapi_a_SOURCES = \
 	settings/settingstable_cam.cpp \
 	settings/settingstable_hdd.cpp \
 	settings/settingstable_update.cpp \
+	settings/settingstable_theme.cpp \
+	settings/settingstable_elements.cpp \
+	settings/settingstable_lists.cpp \
 	box/commandsink_real.cpp \
 	box/eventsink_real.cpp \
 	channels.cpp \
@@ -82,6 +86,14 @@ libcoreapi_a_SOURCES = \
 	playback.cpp \
 	osd.cpp \
 	settings/settings.cpp \
+	settings/apply.cpp \
+	settings/apply_groups.cpp \
+	settings/couple.cpp \
+	settings/couple_epg.cpp \
+	settings/couple_osd.cpp \
+	settings/couple_channel.cpp \
+	settings/couple_weather.cpp \
+	settings/couple_plugins.cpp \
 	settings/menuspec.cpp \
 	settings/predicates.cpp \
 	streaming.cpp \
@@ -115,9 +127,13 @@ noinst_HEADERS = \
 	playback.h \
 	osd.h \
 	base/bootmode.h \
+	base/apply.h \
 	base/schema.h \
+	base/flagfile.h \
 	settings/settings.h \
+	settings/couple.h \
 	settings/menuspec.h \
+	settings/boxdefaults.h \
 	settings/predicates.h \
 	settings/settingsfield.h \
 	settings/settingstable.h \

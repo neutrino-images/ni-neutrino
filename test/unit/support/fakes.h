@@ -1119,6 +1119,9 @@ struct FakeSettingsSource : public coreapi::SettingsSource
 {
 	std::map<std::string, long> ints;
 	std::map<std::string, std::string> strings;
+	// The lists and the lists of records, each under its own key as the other two are.
+	std::map<std::string, std::vector<std::string> > lists;
+	std::map<std::string, std::vector<std::vector<std::string> > > records;
 
 	// Counted, because a write that only reached memory and one that was saved
 	// leave the same value behind.
@@ -1174,6 +1177,44 @@ struct FakeSettingsSource : public coreapi::SettingsSource
 		if (failing())
 			return coreapi::Status::Internal;
 		strings[key] = value;
+		return coreapi::Status::Ok;
+	}
+
+	coreapi::Status readList(const char *key, std::vector<std::string> &out) const
+	{
+		if (failing())
+			return coreapi::Status::Internal;
+		std::map<std::string, std::vector<std::string> >::const_iterator it = lists.find(key);
+		if (it == lists.end())
+			return coreapi::Status::NotFound;
+		out = it->second;
+		return coreapi::Status::Ok;
+	}
+
+	coreapi::Status writeList(const char *key, const std::vector<std::string> &value)
+	{
+		if (failing())
+			return coreapi::Status::Internal;
+		lists[key] = value;
+		return coreapi::Status::Ok;
+	}
+
+	coreapi::Status readRecords(const char *key, std::vector<std::vector<std::string> > &out) const
+	{
+		if (failing())
+			return coreapi::Status::Internal;
+		std::map<std::string, std::vector<std::vector<std::string> > >::const_iterator it = records.find(key);
+		if (it == records.end())
+			return coreapi::Status::NotFound;
+		out = it->second;
+		return coreapi::Status::Ok;
+	}
+
+	coreapi::Status writeRecords(const char *key, const std::vector<std::vector<std::string> > &value)
+	{
+		if (failing())
+			return coreapi::Status::Internal;
+		records[key] = value;
 		return coreapi::Status::Ok;
 	}
 

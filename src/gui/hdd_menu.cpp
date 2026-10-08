@@ -65,23 +65,9 @@
 #include <driver/screen_max.h>
 #include <driver/record.h>
 
-#define MDEV_MOUNT	"/lib/mdev/fs/mdev-mount"
 #define MOUNT_BASE	"/media/"
 
 #define MKFS_LABEL_DEFAULT "records"
-
-// hdd_fs stores a position in this table; its row in
-// src/coreapi/settings/settingstable_hdd.cpp lists the same order.
-devtool_s CHDDMenuHandler::devtools[] = {
-	{ "ext4",  "fsck.ext4",  "-C 1 -f -y", "mkfs.ext4",  "-m 0", "-L", false, false },
-	{ "ext3",  "fsck.ext3",  "-C 1 -f -y", "mkfs.ext3",  "-m 0", "-L", false, false },
-	{ "ext2",  "fsck.ext2",  "-C 1 -f -y", "mkfs.ext2",  "-m 0", "-L", false, false },
-	{ "f2fs",  "fsck.f2fs",  "",           "mkfs.f2fs",  "-f",   "-l", false, false },
-	{ "vfat",  "fsck.vfat",  "-a",         "mkfs.vfat",  "",     "-n", false, false },
-	{ "exfat", "fsck.exfat", "",           "mkfs.exfat", "",     "-n", false, false },
-	{ "xfs",   "xfs_repair", "",           "mkfs.xfs",   "-f",   "-L", false, false },
-};
-#define FS_MAX (sizeof(CHDDMenuHandler::devtools)/sizeof(devtool_s))
 
 CHDDMenuHandler::CHDDMenuHandler()
 {
@@ -121,35 +107,8 @@ static std::string readlink(const char *path)
 
 bool CHDDMenuHandler::is_mounted(const char *dev)
 {
-	bool res = false;
-	char devpath[40];
-	if (!strncmp(dev, "/dev/", 5))
-		snprintf(devpath, sizeof(devpath), "%s", dev);
-	else
-		snprintf(devpath, sizeof(devpath), "/dev/%s", dev);
-
-	char buffer[255];
-	std::string realdev = readlink(devpath);
-	realdev = trim(realdev);
-	FILE *f = fopen("/proc/mounts", "r");
-	if(f) {
-		while (!res && fgets(buffer, sizeof(buffer), f)) {
-			if (buffer[0] != '/')
-				continue; /* only "real" devices are interesting */
-			char *p = strchr(buffer, ' ');
-			if (p)
-				*p = 0; /* terminate at first space, kernel-user ABI is fixed */
-			if (!strcmp(buffer, devpath)) /* default '/dev/sda1' mount */
-				res = true;
-			else {	/* now the case of '/dev/disk/by-label/myharddrive' mounts */
-				std::string realmount = readlink(buffer);
-				if (realdev == trim(realmount))
-					res = true;
-			}
-		}
-		fclose(f);
-	}
-	printf("CHDDMenuHandler::is_mounted: dev [%s] is %s\n", devpath, res ? "mounted" : "not mounted");
+	bool res = coreapi::storage::isMounted(dev);
+	printf("CHDDMenuHandler::is_mounted: dev [%s] is %s\n", dev, res ? "mounted" : "not mounted");
 	return res;
 }
 
@@ -218,158 +177,44 @@ std::string CHDDMenuHandler::getFmtType(std::string name, std::string part)
 
 void CHDDMenuHandler::check_kernel_fs()
 {
-	char line[128]; /* /proc/filesystems lines are shorter */
-	kernel_fs_list.clear();
-	FILE *f = fopen("/proc/filesystems", "r");
-	if (! f) {
-		fprintf(stderr, "CHDDMenuHandler::%s: opening /proc/filesystems failed: %m\n", __func__);
-		return;
-	}
-	while (fgets(line, sizeof(line), f)) {
-		size_t l = strlen(line);
-		if (l > 0)
-			line[l - 1] = 0; /* remove \n */
-		char *tab = strchr(line, '\t');
-		if (! tab)	/* should not happen in any kernel I have seen */
-			continue;
-		tab++;
-		kernel_fs_list.insert(std::string(tab));
-	}
-	fclose(f);
+	kernel_fs_list = coreapi::storage::kernelFilesystems();
+	if (kernel_fs_list.empty())
+		fprintf(stderr, "CHDDMenuHandler::%s: no file systems listed by the kernel\n", __func__);
 }
 
 void CHDDMenuHandler::check_dev_tools()
 {
-	for (unsigned i = 0; i < FS_MAX; i++) {
-		if (kernel_fs_list.find(devtools[i].fmt) == kernel_fs_list.end()) {
-			printf("%s: filesystem '%s' not supported by kernel\n",
-				__func__, devtools[i].fmt.c_str());
-			continue;
-		}
-		std::string fsck = find_executable(devtools[i].fsck.c_str());
-		if (!fsck.empty())
-		{
-			devtools[i].fsck = fsck;
-			devtools[i].fsck_supported = true;
-		}
-		std::string mkfs = find_executable(devtools[i].mkfs.c_str());
-		if (!mkfs.empty())
-		{
-			devtools[i].mkfs = mkfs;
-			devtools[i].mkfs_supported = true;
-		}
-		printf("check_dev_tools: %s: fsck (%s) %d mkfs (%s) %d\n", devtools[i].fmt.c_str(), devtools[i].fsck.c_str(), devtools[i].fsck_supported, devtools[i].mkfs.c_str(), devtools[i].mkfs_supported);
-	}
+	fs_tools = coreapi::storage::fsTools();
+	for (unsigned i = 0; i < fs_tools.size(); i++)
+		printf("check_dev_tools: %s: fsck (%s) %d mkfs (%s) %d\n", fs_tools[i].fmt.c_str(), fs_tools[i].fsck.c_str(), fs_tools[i].fsck_supported, fs_tools[i].mkfs.c_str(), fs_tools[i].mkfs_supported);
 }
 
-devtool_s * CHDDMenuHandler::get_dev_tool(std::string fmt)
+coreapi::storage::FsTool * CHDDMenuHandler::get_dev_tool(std::string fmt)
 {
-	for (unsigned i = 0; i < FS_MAX; i++) {
-		if (fmt == devtools[i].fmt)
-			return &devtools[i];
+	for (unsigned i = 0; i < fs_tools.size(); i++) {
+		if (fmt == fs_tools[i].fmt)
+			return &fs_tools[i];
 	}
 	return NULL;
 }
 
 bool CHDDMenuHandler::mount_dev(std::string name)
 {
-	std::string dev = name.substr(0, 2);
-	std::string eject = find_executable("eject");
-	printf("CHDDMenuHandler::mount_dev: eject = %s\n", eject.c_str());
-	if (dev == "sr" && !eject.empty()) {
-		eject += " -t /dev/" + name;
-		system(eject.c_str());
-		sleep(3);
-	}
-#ifdef ASSUME_MDEV
-	std::string cmd = std::string("ACTION=add") + " MDEV=" + name + " " + MDEV_MOUNT;
-#else
-	std::string dst = MOUNT_BASE + name;
-	safe_mkdir(dst.c_str());
-	std::string cmd = std::string("mount ") + "/dev/" + name + " " + dst;
-#endif
-	printf("CHDDMenuHandler::mount_dev: mount cmd [%s]\n", cmd.c_str());
-	system(cmd.c_str());
+	bool res = coreapi::storage::mount(name);
 	lock_refresh = true;
-	return is_mounted(name.c_str());
+	return res;
 }
 
 bool CHDDMenuHandler::umount_dev(std::string name)
 {
-#ifdef ASSUME_MDEV
-	std::string cmd = std::string("ACTION=remove") + " MDEV=" + name + " " + MDEV_MOUNT;
-	printf("CHDDMenuHandler::umount_dev: umount cmd [%s]\n", cmd.c_str());
-	system(cmd.c_str());
-#else
-	std::string path = MOUNT_BASE + name;
-	if (::umount(path.c_str()))
-		return false;
+	bool res = coreapi::storage::umount(name);
+#ifndef ASSUME_MDEV
+	// A refused unmount causes no event, so the next real one has to refresh.
+	if (res)
 #endif
-	std::string dev = name.substr(0, 2);
-	std::string eject = find_executable("eject");
-	printf("CHDDMenuHandler::umount_dev: eject = %s\n", eject.c_str());
-	if (dev == "sr" && !eject.empty()) {
-		eject += " /dev/" + name;
-		system(eject.c_str());
-	}
-	lock_refresh = true;
-	return !is_mounted(name.c_str());
+		lock_refresh = true;
+	return res;
 }
-
-bool CHDDMenuHandler::umount_all(std::string dev)
-{
-	bool ret = true;
-	for (std::vector<hdd_s>::iterator it = hdd_list.begin(); it != hdd_list.end(); ++it) {
-		if (coreapi::storage::ownsDevice(dev, it->devname)) {
-			if (is_mounted(it->devname.c_str()))
-				ret &= umount_dev(it->devname);
-		}
-	}
-	return ret;
-}
-
-#ifdef ASSUME_MDEV
-bool CHDDMenuHandler::add_dev(std::string dev, std::string partition)
-{
-	std::string filename = "/sys/block/" + dev + "/" + partition + "/uevent";
-	if (!access(filename.c_str(), W_OK)) {
-		FILE *f = fopen(filename.c_str(), "w");
-		if (!f)
-			printf("HDD: %s could not open %s: %m\n", __func__, filename.c_str());
-		else {
-			printf("-> triggering add uevent in %s\n", filename.c_str());
-			fprintf(f, "add\n");
-			fclose(f);
-			return true;
-		}
-	}
-	return false;
-}
-
-bool CHDDMenuHandler::waitfordev(std::string dev, int maxwait)
-{
-	int ret = true;
-	int waitcount = 0;
-	/* wait for the device to show up... */
-	while (access(dev.c_str(), W_OK)) {
-		if (!waitcount)
-			printf("CHDDFmtExec: waiting for %s", dev.c_str());
-		else
-			printf(".");
-		fflush(stdout);
-		waitcount++;
-		if (waitcount > maxwait) {
-			fprintf(stderr, "CHDDFmtExec: device %s did not appear!\n", dev.c_str());
-			ret = false;
-			break;
-		}
-		sleep(1);
-	}
-	if (waitcount && waitcount <= maxwait)
-		printf("\n");
-	return ret;
-}
-#endif
 
 void CHDDMenuHandler::showHint(std::string &message)
 {
@@ -581,8 +426,8 @@ int CHDDMenuHandler::showDeviceMenu(std::string dev)
 
 	std::string fmt_type = getFmtType(coreapi::storage::partitionName(dev, 1));
 	bool fsck_enabled = false;
-	for (unsigned i = 0; i < FS_MAX; i++) {
-		if (fmt_type == devtools[i].fmt)
+	for (unsigned i = 0; i < fs_tools.size(); i++) {
+		if (fmt_type == fs_tools[i].fmt)
 			g_settings.hdd_fs = i;
 	}
 	int cnt = 0;
@@ -591,7 +436,7 @@ int CHDDMenuHandler::showDeviceMenu(std::string dev)
 		if (coreapi::storage::ownsDevice(dev, it->devname)) {
 			printf("found %s partition %s\n", dev.c_str(), it->devname.c_str());
 			fsck_enabled = false;
-			devtool_s * devtool = get_dev_tool(it->fmt);
+			coreapi::storage::FsTool * devtool = get_dev_tool(it->fmt);
 			if (devtool) {
 				fsck_enabled = devtool->fsck_supported;
 			}
@@ -635,70 +480,17 @@ bool CHDDMenuHandler::scanDevices()
 
 	for(int i = 0; i < n;i++) {
 		char str[281];
-		char vendor[128] = { 0 };
-		char model[128] = { 0 };
-		int64_t bytes = 0;
-		int64_t megabytes;
-		bool oldkernel = false;
+		const coreapi::storage::DiskInfo &disk = user_disks[i];
+		const int64_t megabytes = disk.size_bytes / 1000000;
 
-		printf("HDD: checking /sys/block/%s\n", user_disks[i].name.c_str());
-		snprintf(str, sizeof(str), "/dev/%s", user_disks[i].name.c_str());
-		int fd = open(str, O_RDONLY);
-		if (fd >= 0) {
-			if (ioctl(fd, BLKGETSIZE64, &bytes))
-				perror("BLKGETSIZE64");
-			close(fd);
-		} else {
-			printf("Cant open %s\n", str);
-		}
-		megabytes = bytes/1000000;
+		printf("HDD: checking /sys/block/%s\n", disk.name.c_str());
 
-		snprintf(str, sizeof(str), "/sys/block/%s/device/vendor", user_disks[i].name.c_str());
-		FILE * f = fopen(str, "r");
-		if(!f) {
-			printf("Cant open %s\n", str);
-			snprintf(str, sizeof(str), "/sys/block/%s/device/type", user_disks[i].name.c_str());
-			f = fopen(str, "r");
-		}
-		if (f) {
-			fscanf(f, "%s", vendor);
-			fclose(f);
-		} else {
-			oldkernel = true;
-			strcpy(vendor, "");
-		}
-
-		if (oldkernel)
-			snprintf(str, sizeof(str), "/proc/ide/%s/model", user_disks[i].name.c_str());
-		else
-			snprintf(str, sizeof(str), "/sys/block/%s/device/model", user_disks[i].name.c_str());
-		f = fopen(str, "r");
-		if(!f) {
-			printf("Cant open %s\n", str);
-			snprintf(str, sizeof(str), "/sys/block/%s/device/name", user_disks[i].name.c_str());
-			f = fopen(str, "r");
-		}
-		if (f) {
-			fscanf(f, "%s", model);
-			fclose(f);
-		}
-#if 0
-		int removable = 0;
-		snprintf(str, sizeof(str), "/sys/block/%s/removable", user_disks[i].name.c_str());
-		f = fopen(str, "r");
-		if(!f) {
-			printf("Cant open %s\n", str);
-			continue;
-		}
-		fscanf(f, "%d", &removable);
-		fclose(f);
-#endif
-		std::string dev = std::string(user_disks[i].name.c_str()).substr(0, 2);
-		std::string fmt = getFmtType(user_disks[i].name.c_str());
+		std::string dev = disk.name.substr(0, 2);
+		std::string fmt = getFmtType(disk.name);
 		/* epmty cdrom do not appear in blkid output */
 		if (fmt.empty() && dev == "sr") {
 			hdd_s hdd;
-			hdd.devname = user_disks[i].name.c_str();
+			hdd.devname = disk.name;
 			hdd.mounted = false;
 			hdd.fmt = "";
 			hdd.desc = hdd.devname;
@@ -706,9 +498,9 @@ bool CHDDMenuHandler::scanDevices()
 			hdd_list.push_back(hdd);
 		}
 
-		snprintf(str, sizeof(str), "%s %s %ld %s", vendor, model, (long)(megabytes < 10000 ? megabytes : megabytes/1000), megabytes < 10000 ? "MB" : "GB");
+		snprintf(str, sizeof(str), "%s %s %ld %s", disk.vendor.c_str(), disk.model.c_str(), (long)(megabytes < 10000 ? megabytes : megabytes/1000), megabytes < 10000 ? "MB" : "GB");
 		printf("HDD: %s\n", str);
-		devtitle[user_disks[i].name.c_str()] = str;
+		devtitle[disk.name] = str;
 	}
 	return !devtitle.empty();
 }
@@ -721,110 +513,111 @@ int CHDDMenuHandler::doMenu()
 	check_kernel_fs();
 	check_dev_tools();
 
-_show_menu:
-	getBlkIds();
-	scanDevices();
+	int ret;
+	bool again;
+	do {
+		getBlkIds();
+		scanDevices();
 
-	CMenuWidget* hddmenu = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_DRIVESETUP);
+		CMenuWidget* hddmenu = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_DRIVESETUP);
 
-	hddmenu->addIntroItems(LOCALE_HDD_SETTINGS, LOCALE_HDD_EXTENDED_SETTINGS);
+		hddmenu->addIntroItems(LOCALE_HDD_SETTINGS, LOCALE_HDD_EXTENDED_SETTINGS);
 
-	CHDDDestExec hddexec;
-	CMenuForwarder * mf = new CMenuForwarder(LOCALE_HDD_ACTIVATE, true, "", &hddexec, NULL, CRCInput::RC_red);
-	mf->setHint("", LOCALE_MENU_HINT_HDD_APPLY);
-	hddmenu->addItem(mf);
-
-	addSetting(hddmenu, "hdd_sleep");
-
-	std::string hdparm = find_executable("hdparm");
-	printf("CHDDMenuHandler::doMenu: hdparm = %s\n", hdparm.c_str());
-	struct stat stat_buf;
-	bool have_nonbb_hdparm = !::lstat(hdparm.c_str(), &stat_buf) && !S_ISLNK(stat_buf.st_mode);
-	if (have_nonbb_hdparm)
-		addSetting(hddmenu, "hdd_noise");
-
-	//NI
-	int fake_hddpower = 0;
-	CTouchFileNotifier * hddpowerNotifier = NULL;
-	hddmenu->addItem(new CMenuSeparator());
-	if (cs_get_revision() < 8) {
-		//NI HDD power (HD1/BSE only)
-		const char *flag_hddpower = FLAGDIR "/.hddpower";
-		fake_hddpower = file_exists(flag_hddpower);
-		hddpowerNotifier = new CTouchFileNotifier(flag_hddpower);
-		CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_HDD_POWER, &fake_hddpower, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, hddpowerNotifier, CRCInput::RC_yellow);
-		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_HDD_POWER);
-		hddmenu->addItem(mc);
-		hddmenu->addItem(new CMenuSeparator());
-	}
-	addSetting(hddmenu, "hdd_format_on_mount_failed");
-	addSetting(hddmenu, "hdd_wakeup");
-	addSetting(hddmenu, "hdd_wakeup_msg");
-	hddmenu->addItem(new CMenuSeparator());
-	addSetting(hddmenu, "hdd_allow_set_recdir");
-
-	hddmenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_HDD_MANAGE));
-
-	for (std::map<std::string, std::string>::iterator it = devtitle.begin(); it != devtitle.end(); ++it) {
-		std::string dev = it->first.substr(0, 2);
-		bool enabled = !CNeutrinoApp::getInstance()->recordingstatus && dev != "sr";
-		std::string key = "d" + it->first;
-		mf = new CMenuForwarder(it->first, enabled, it->second, this, key.c_str());
-		mf->setHint("", LOCALE_MENU_HINT_HDD_TOOLS);
+		CHDDDestExec hddexec;
+		CMenuForwarder * mf = new CMenuForwarder(LOCALE_HDD_ACTIVATE, true, "", &hddexec, NULL, CRCInput::RC_red);
+		mf->setHint("", LOCALE_MENU_HINT_HDD_APPLY);
 		hddmenu->addItem(mf);
-	}
 
-	if(devtitle.empty()) {
-		//if no drives found, select 'back'
-		if (hddmenu->getSelected() != -1)
-			hddmenu->setSelected(2);
-		hddmenu->addItem(new CMenuForwarder(LOCALE_HDD_NOT_FOUND, false));
-	}
+		addSetting(hddmenu, "hdd_sleep");
 
-	if (!hdd_list.empty()) {
-		struct stat rec_st, root_st, dev_st;
-		memset(&rec_st, 0, sizeof(rec_st));
-		memset(&root_st, 0, sizeof(root_st));
-		stat(g_settings.network_nfs_recordingdir.c_str(), &rec_st);
-		stat("/", &root_st);
+		std::string hdparm = find_executable("hdparm");
+		printf("CHDDMenuHandler::doMenu: hdparm = %s\n", hdparm.c_str());
+		struct stat stat_buf;
+		bool have_nonbb_hdparm = !::lstat(hdparm.c_str(), &stat_buf) && !S_ISLNK(stat_buf.st_mode);
+		if (have_nonbb_hdparm)
+			addSetting(hddmenu, "hdd_noise");
 
-		sort(hdd_list.begin(), hdd_list.end(), cmp_hdd_by_name());
-		mount = g_Locale->getText(LOCALE_HDD_MOUNT);
-		umount = g_Locale->getText(LOCALE_HDD_UMOUNT);
-		int shortcut = 1;
-		hddmenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_HDD_MOUNT_UMOUNT));
-		for (std::vector<hdd_s>::iterator it = hdd_list.begin(); it != hdd_list.end(); ++it) {
-			const char * rec_icon = NULL;
-			if (it->mounted) {
-				std::string dst = MOUNT_BASE + it->devname;
-				if (!stat(dst.c_str(), &stat_buf) && rec_st.st_dev == stat_buf.st_dev)
-					rec_icon = CNeutrinoApp::getInstance()->recordingstatus ? NEUTRINO_ICON_MARKER_RECORD : NEUTRINO_ICON_MARKER_RECORD_GRAY;
-			}
-			std::string key = "m" + it->devname;
-			bool enabled = !rec_icon || !CNeutrinoApp::getInstance()->recordingstatus;
-			/* do not allow to unmount the rootfs, and skip filesystems without kernel support */
-			memset(&dev_st, 0, sizeof(dev_st));
-			if (stat(("/dev/" + it->devname).c_str(), &dev_st) != -1
-			    && dev_st.st_rdev == root_st.st_dev)
-				enabled = false;
-			else if (kernel_fs_list.find(it->fmt) == kernel_fs_list.end())
-				enabled = false;
-			it->cmf = new CMenuForwarder(it->desc, enabled, it->mounted ? umount : mount , this,
-					key.c_str(), CRCInput::convertDigitToKey(shortcut++), NULL, rec_icon);
-			hddmenu->addItem(it->cmf);
+		//NI
+		int fake_hddpower = 0;
+		CTouchFileNotifier * hddpowerNotifier = NULL;
+		hddmenu->addItem(new CMenuSeparator());
+		if (cs_get_revision() < 8) {
+			//NI HDD power (HD1/BSE only)
+			const char *flag_hddpower = FLAGDIR "/.hddpower";
+			fake_hddpower = file_exists(flag_hddpower);
+			hddpowerNotifier = new CTouchFileNotifier(flag_hddpower);
+			CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_HDD_POWER, &fake_hddpower, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, hddpowerNotifier, CRCInput::RC_yellow);
+			mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_HDD_POWER);
+			hddmenu->addItem(mc);
+			hddmenu->addItem(new CMenuSeparator());
 		}
-	}
+		addSetting(hddmenu, "hdd_format_on_mount_failed");
+		addSetting(hddmenu, "hdd_wakeup");
+		addSetting(hddmenu, "hdd_wakeup_msg");
+		hddmenu->addItem(new CMenuSeparator());
+		addSetting(hddmenu, "hdd_allow_set_recdir");
 
-	int ret = hddmenu->exec(NULL, "");
-	if (hddpowerNotifier)
-		delete hddpowerNotifier;
-	delete hddmenu;
-	hdd_list.clear();
-	devtitle.clear();
-	if (show_menu) {
+		hddmenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_HDD_MANAGE));
+
+		for (std::map<std::string, std::string>::iterator it = devtitle.begin(); it != devtitle.end(); ++it) {
+			std::string dev = it->first.substr(0, 2);
+			bool enabled = !CNeutrinoApp::getInstance()->recordingstatus && dev != "sr";
+			std::string key = "d" + it->first;
+			mf = new CMenuForwarder(it->first, enabled, it->second, this, key.c_str());
+			mf->setHint("", LOCALE_MENU_HINT_HDD_TOOLS);
+			hddmenu->addItem(mf);
+		}
+
+		if(devtitle.empty()) {
+			//if no drives found, select 'back'
+			if (hddmenu->getSelected() != -1)
+				hddmenu->setSelected(2);
+			hddmenu->addItem(new CMenuForwarder(LOCALE_HDD_NOT_FOUND, false));
+		}
+
+		if (!hdd_list.empty()) {
+			struct stat rec_st, root_st, dev_st;
+			memset(&rec_st, 0, sizeof(rec_st));
+			memset(&root_st, 0, sizeof(root_st));
+			stat(g_settings.network_nfs_recordingdir.c_str(), &rec_st);
+			stat("/", &root_st);
+
+			sort(hdd_list.begin(), hdd_list.end(), cmp_hdd_by_name());
+			mount = g_Locale->getText(LOCALE_HDD_MOUNT);
+			umount = g_Locale->getText(LOCALE_HDD_UMOUNT);
+			int shortcut = 1;
+			hddmenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_HDD_MOUNT_UMOUNT));
+			for (std::vector<hdd_s>::iterator it = hdd_list.begin(); it != hdd_list.end(); ++it) {
+				const char * rec_icon = NULL;
+				if (it->mounted) {
+					std::string dst = MOUNT_BASE + it->devname;
+					if (!stat(dst.c_str(), &stat_buf) && rec_st.st_dev == stat_buf.st_dev)
+						rec_icon = CNeutrinoApp::getInstance()->recordingstatus ? NEUTRINO_ICON_MARKER_RECORD : NEUTRINO_ICON_MARKER_RECORD_GRAY;
+				}
+				std::string key = "m" + it->devname;
+				bool enabled = !rec_icon || !CNeutrinoApp::getInstance()->recordingstatus;
+				/* do not allow to unmount the rootfs, and skip filesystems without kernel support */
+				memset(&dev_st, 0, sizeof(dev_st));
+				if (stat(("/dev/" + it->devname).c_str(), &dev_st) != -1
+				    && dev_st.st_rdev == root_st.st_dev)
+					enabled = false;
+				else if (kernel_fs_list.find(it->fmt) == kernel_fs_list.end())
+					enabled = false;
+				it->cmf = new CMenuForwarder(it->desc, enabled, it->mounted ? umount : mount , this,
+						key.c_str(), CRCInput::convertDigitToKey(shortcut++), NULL, rec_icon);
+				hddmenu->addItem(it->cmf);
+			}
+		}
+
+		ret = hddmenu->exec(NULL, "");
+		if (hddpowerNotifier)
+			delete hddpowerNotifier;
+		delete hddmenu;
+		hdd_list.clear();
+		devtitle.clear();
+		again = show_menu;
 		show_menu = false;
-		goto _show_menu;
-	}
+	} while (again);
 	in_menu = false;
 	return ret;
 }
@@ -961,238 +754,82 @@ void CHDDMenuHandler::showError(neutrino_locale_t err)
 	ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(err), CMsgBox::mbrOk, CMsgBox::mbOk);
 }
 
+/* The window the format progress is drawn in. It is made when the box layer
+   starts its first command and goes when the last one ends, so a refusal
+   before that shows nothing. */
+class CHDDFormatProgress : public coreapi::storage::FormatObserver
+{
+	public:
+		CHDDFormatProgress() : progress(NULL), table_changed(false) {}
+		~CHDDFormatProgress() { end(); }
+
+		void begin()
+		{
+			progress = new CProgressWindow();
+			progress->setTitle(LOCALE_HDD_FORMAT);
+			progress->exec(NULL, "");
+		}
+		void message(const std::string &text) { if (progress) progress->showStatusMessageUTF(text.c_str()); }
+		void global(int percent) { if (progress) progress->showGlobalStatus(percent); }
+		void local(int percent) { if (progress) progress->showLocalStatus(percent); }
+		void tableChanged() { table_changed = true; }
+		void end()
+		{
+			if (!progress)
+				return;
+			progress->hide();
+			delete progress;
+			progress = NULL;
+		}
+
+		bool tableWasChanged() const { return table_changed; }
+
+	private:
+		CProgressWindow *progress;
+		bool table_changed;
+};
+
 int CHDDMenuHandler::formatDevice(std::string dev)
 {
-	char cmd[100];
-	char cmd2[100];
-	int res;
-	FILE * f;
-	CProgressWindow * progress;
-	std::string fdisk, sfdisk, sgdisk, tune2fs;
-
 	printf("CHDDMenuHandler::formatDevice: dev %s hdd_fs %d\n", dev.c_str(), g_settings.hdd_fs);
 
-	if (g_settings.hdd_fs < 0 || g_settings.hdd_fs >= (int) FS_MAX)
+	if (g_settings.hdd_fs < 0 || g_settings.hdd_fs >= (int) fs_tools.size())
 		return menu_return::RETURN_REPAINT;
 
-	devtool_s * devtool = &devtools[g_settings.hdd_fs];
-	if (!devtool || !devtool->mkfs_supported) {
-		printf("CHDDMenuHandler::formatDevice: mkfs.%s is not supported\n", devtool ? devtool->fmt.c_str() : "unknown");
+	const coreapi::storage::FsTool &devtool = fs_tools[g_settings.hdd_fs];
+	if (!devtool.mkfs_supported) {
+		printf("CHDDMenuHandler::formatDevice: mkfs.%s is not supported\n", devtool.fmt.c_str());
 		return menu_return::RETURN_REPAINT;
 	}
 
-	std::string devname = "/dev/" + dev;
-	std::string devpart = coreapi::storage::partitionName(dev, 1);
-	std::string partname = "/dev/" + devpart;
-
-	std::string mkfscmd = devtool->mkfs + " " + devtool->mkfs_options + " ";
-	if (!devtool->mkfs_labelswitch.empty() && !mkfs_label.empty())
-		mkfscmd += devtool->mkfs_labelswitch + " \"" + mkfs_label + "\" ";
-	mkfscmd += partname;
-	printf("mkfs cmd: [%s]\n", mkfscmd.c_str());
-
-	res = ShowMsg(LOCALE_HDD_FORMAT, g_Locale->getText(LOCALE_HDD_FORMAT_WARN), CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo );
+	int res = ShowMsg(LOCALE_HDD_FORMAT, g_Locale->getText(LOCALE_HDD_FORMAT_WARN), CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo );
 	if(res != CMsgBox::mbrYes)
 		return menu_return::RETURN_REPAINT;
 
 	//NI bool srun = my_system(3, "killall", "-9", "smbd");
 
-	res = umount_all(dev);
-	printf("CHDDMenuHandler::formatDevice: umount res %d\n", res);
+	CHDDFormatProgress progress;
+	coreapi::storage::FormatResult result = coreapi::storage::format(dev, devtool.fmt, mkfs_label,
+			mkfs_label == MKFS_LABEL_DEFAULT, &progress);
+	progress.end();
+	// Only a format that got as far as mounting makes a mount event the menu
+	// causes itself. After a refusal the next real event has to refresh it.
+	if (result == coreapi::storage::FormatResult::Done)
+		lock_refresh = true;
+	if (progress.tableWasChanged())
+		show_menu = true;
 
-	if(!res) {
-		showError(LOCALE_HDD_UMOUNT_WARN);
-		goto _return;
-	}
-
-#ifndef ASSUME_MDEV
-	f = fopen("/proc/sys/kernel/hotplug", "w");
-	if(f) {
-		fprintf(f, "none\n");
-		fclose(f);
-	}
-#endif
-	creat("/tmp/.nomdevmount", 00660);
-
-	progress = new CProgressWindow();
-	progress->setTitle(LOCALE_HDD_FORMAT);
-	progress->exec(NULL,"");
-	progress->showGlobalStatus(0);
-
-	fdisk   = find_executable("fdisk");
-	sfdisk  = find_executable("sfdisk");
-	sgdisk  = find_executable("sgdisk");
-	tune2fs = find_executable("tune2fs");
-	if (! sfdisk.empty()) {
-		std::string conf = "echo 'label: gpt\n;' | ";
-		snprintf(cmd, sizeof(cmd), "%s %s -f %s", conf.c_str(), sfdisk.c_str(), devname.c_str());
-	}
-	else if (! sgdisk.empty()) {
-		snprintf(cmd, sizeof(cmd), "%s -Z -N 0 %s", sgdisk.c_str(), devname.c_str());
-	}
-	else if (! fdisk.empty()) {
-		snprintf(cmd, sizeof(cmd), "%s -u %s", fdisk.c_str(), devname.c_str());
-		strcpy(cmd2, "o\nn\np\n1\n2048\n\nw\n");
-	}
-	else {
-		/* cannot do anything */
-		fprintf(stderr, "CHDDFmtExec: neither fdisk, sfdisk or sgdisk found in $PATH :-(\n");
-		showError(LOCALE_HDD_FORMAT_FAILED);
-		goto _remount;
-	}
-	progress->showStatusMessageUTF(cmd);
-
-#ifdef ASSUME_MDEV
-	/* mdev will create it and waitfordev will wait for it... */
-	unlink(partname.c_str());
-#endif
-	printf("CHDDMenuHandler::formatDevice: executing %s\n", cmd);
-	f = popen(cmd, "w");
-	if (!f) {
-		showError(LOCALE_HDD_FORMAT_FAILED);
-		res = -1;
-		goto _remount;
-	}
-	show_menu = true;
-
-	fprintf(f, "%s", cmd2);
-	res = pclose(f);
-	printf("CHDDMenuHandler::formatDevice: (s(g))(f)disk res: %d\n", res);
-	if (res) {
-		showError(LOCALE_HDD_FORMAT_FAILED);
-		goto _remount;
-	}
-	sleep(2);
-#ifdef ASSUME_MDEV
-	add_dev(dev, devpart);
-	waitfordev(partname, 30);
-#endif
-
-	progress->showStatusMessageUTF(mkfscmd.c_str());
-	res = umount_all(dev);
-	printf("CHDDMenuHandler::formatDevice: umount res %d\n", res);
-	f = popen(mkfscmd.c_str(), "r");
-	if (!f) {
-		showError(LOCALE_HDD_FORMAT_FAILED);
-		res = -1;
-		goto _remount;
-	}
-
-	char buf[256];
-	setbuf(f, NULL);
-	int n, t, in, pos, stage;
-	pos = 0;
-	stage = 0;
-	while (true)
-	{
-		in = fgetc(f);
-		if (in == EOF)
+	switch (result) {
+		case coreapi::storage::FormatResult::Done:
 			break;
-
-		buf[pos] = (char)in;
-		pos++;
-		buf[pos] = 0;
-		if (in == '\b' || in == '\n')
-			pos = 0; /* start a new line */
-		//printf("%s", buf);
-		switch (stage) {
-			case 0:
-				if (strcmp(buf, "Writing inode tables:") == 0) {
-					stage++;
-					progress->showGlobalStatus(20);
-					progress->showStatusMessageUTF(buf);
-				}
-				break;
-			case 1:
-				if (in == '\b' && sscanf(buf, "%d/%d\b", &n, &t) == 2) {
-					if (t == 0)
-						t = 1;
-					int percent = 100 * n / t;
-					progress->showLocalStatus(percent);
-					progress->showGlobalStatus(20 + percent / 5);
-				}
-				if (strstr(buf, "done")) {
-					stage++;
-					pos = 0;
-				}
-				break;
-			case 2:
-				if (strstr(buf, "blocks):") && sscanf(buf, "Creating journal (%d blocks):", &n) == 1) {
-					progress->showLocalStatus(0);
-					progress->showGlobalStatus(60);
-					progress->showStatusMessageUTF(buf);
-					pos = 0;
-				}
-				if (strstr(buf, "done")) {
-					stage++;
-					pos = 0;
-				}
-				break;
-			case 3:
-				if (strcmp(buf, "Writing superblocks and filesystem accounting information:") == 0) {
-					progress->showGlobalStatus(80);
-					progress->showStatusMessageUTF(buf);
-					pos = 0;
-				}
-				break;
-			default:
-				// printf("unknown stage! %d \n\t", stage);
-				break;
-		}
+		case coreapi::storage::FormatResult::Busy:
+			showError(LOCALE_HDD_UMOUNT_WARN);
+			break;
+		default:
+			showError(LOCALE_HDD_FORMAT_FAILED);
+			break;
 	}
-	progress->showLocalStatus(100);
-	res = pclose(f);
-	printf("CHDDMenuHandler::formatDevice: mkfs res: %d\n", res);
-	progress->showGlobalStatus(100);
-	if (res) {
-		showError(LOCALE_HDD_FORMAT_FAILED);
-		goto _remount;
-	}
-	sleep(2);
 
-	if (devtool->fmt.substr(0, 3) == "ext" && ! tune2fs.empty()) {
-		std::string d = "/dev/" + devpart;
-		printf("CHDDMenuHandler::formatDevice: executing %s %s %s\n", tune2fs.c_str(), "-r 0 -c 0 -i 0", d.c_str());
-		my_system(8, tune2fs.c_str(), "-r", "0", "-c", "0", "-i", "0", d.c_str());
-	}
-	show_menu = true;
-
-_remount:
-	unlink("/tmp/.nomdevmount");
-	progress->hide();
-	delete progress;
-
-#ifndef ASSUME_MDEV
-	f = fopen("/proc/sys/kernel/hotplug", "w");
-	if(f) {
-		fprintf(f, "/sbin/mdev\n");
-		fclose(f);
-	}
-#endif
-	if (!res) {
-		res = mount_dev(devpart);
-
-		if (res && mkfs_label == MKFS_LABEL_DEFAULT)
-		{
-			std::string dst = MOUNT_BASE + devpart;
-			snprintf(cmd, sizeof(cmd), "%s/movies", dst.c_str());
-			safe_mkdir(cmd);
-			snprintf(cmd, sizeof(cmd), "%s/pictures", dst.c_str());
-			safe_mkdir(cmd);
-			snprintf(cmd, sizeof(cmd), "%s/epg", dst.c_str());
-			safe_mkdir(cmd);
-			snprintf(cmd, sizeof(cmd), "%s/music", dst.c_str());
-			safe_mkdir(cmd);
-			snprintf(cmd, sizeof(cmd), "%s/logos", dst.c_str());
-			safe_mkdir(cmd);
-			snprintf(cmd, sizeof(cmd), "%s/logos/events", dst.c_str());
-			safe_mkdir(cmd);
-			snprintf(cmd, sizeof(cmd), "%s/plugins", dst.c_str());
-			safe_mkdir(cmd);
-			// sync();
-		}
-	}
-_return:
 	//NI if (!srun) my_system(1, "smbd");
 	if (show_menu)
 		return menu_return::RETURN_EXIT_ALL;
@@ -1219,7 +856,7 @@ int CHDDMenuHandler::checkDevice(std::string dev)
 	printf("CHDDMenuHandler::checkDevice: dev %s\n", dev.c_str());
 
 	std::string fmt = getFmtType(dev);
-	devtool_s * devtool = get_dev_tool(fmt);
+	coreapi::storage::FsTool * devtool = get_dev_tool(fmt);
 	if (!devtool || !devtool->fsck_supported)
 		return menu_return::RETURN_REPAINT;
 
@@ -1242,61 +879,59 @@ int CHDDMenuHandler::checkDevice(std::string dev)
 	f=popen(cmd.c_str(), "r");
 	if(!f) {
 		showError(LOCALE_HDD_CHECK_FAILED);
-		goto ret1;
-	}
+	} else {
+		progress = new CProgressWindow();
+		progress->setTitle(LOCALE_HDD_CHECK);
+		progress->exec(NULL,"");
+		progress->showStatusMessageUTF(cmd.c_str());
 
-	progress = new CProgressWindow();
-	progress->setTitle(LOCALE_HDD_CHECK);
-	progress->exec(NULL,"");
-	progress->showStatusMessageUTF(cmd.c_str());
-
-	while(fgets(buf, 255, f) != NULL)
-	{
-		if(isdigit(buf[0])) {
-			sscanf(buf, "%d %d %d\n", &pass, &step, &total);
-			if(total == 0)
-				total = 1;
-			if(oldpass != pass) {
-				oldpass = pass;
-				progress->showGlobalStatus(pass > 0 ? (pass-1)*20: 0);
+		while(fgets(buf, 255, f) != NULL)
+		{
+			if(isdigit(buf[0])) {
+				sscanf(buf, "%d %d %d\n", &pass, &step, &total);
+				if(total == 0)
+					total = 1;
+				if(oldpass != pass) {
+					oldpass = pass;
+					progress->showGlobalStatus(pass > 0 ? (pass-1)*20: 0);
+				}
+				percent = (step * 100) / total;
+				if(opercent != percent) {
+					opercent = percent;
+	//printf("CHDDChkExec: pass %d : %d\n", pass, percent);
+					progress->showLocalStatus(percent);
+				}
 			}
-			percent = (step * 100) / total;
-			if(opercent != percent) {
-				opercent = percent;
-//printf("CHDDChkExec: pass %d : %d\n", pass, percent);
-				progress->showLocalStatus(percent);
+			else {
+				char *t = strrchr(buf, '\n');
+				if (t)
+					*t = 0;
+				if(!strncmp(buf, "Pass", 4)) {
+					progress->showStatusMessageUTF(buf);
+				}
 			}
 		}
-		else {
-			char *t = strrchr(buf, '\n');
-			if (t)
-				*t = 0;
-			if(!strncmp(buf, "Pass", 4)) {
-				progress->showStatusMessageUTF(buf);
-			}
+	//printf("CHDDChkExec: %s\n", buf);
+		res = pclose(f);
+		if(res)
+			showError(LOCALE_HDD_CHECK_FAILED);
+
+		progress->showGlobalStatus(100);
+		progress->showStatusMessageUTF(buf);
+
+		timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
+		loop = true;
+		while (loop)
+		{
+			g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd);
+			if (msg == CRCInput::RC_timeout || msg == CRCInput::RC_ok || CNeutrinoApp::getInstance()->backKey(msg))
+				loop = false;
 		}
-	}
-//printf("CHDDChkExec: %s\n", buf);
-	res = pclose(f);
-	if(res)
-		showError(LOCALE_HDD_CHECK_FAILED);
 
-	progress->showGlobalStatus(100);
-	progress->showStatusMessageUTF(buf);
-
-	timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
-	loop = true;
-	while (loop)
-	{
-		g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd);
-		if (msg == CRCInput::RC_timeout || msg == CRCInput::RC_ok || CNeutrinoApp::getInstance()->backKey(msg))
-			loop = false;
+		progress->hide();
+		delete progress;
 	}
 
-	progress->hide();
-	delete progress;
-
-ret1:
 	res = mount_dev(dev);
 	printf("CHDDMenuHandler::checkDevice: mount res %d\n", res);
 

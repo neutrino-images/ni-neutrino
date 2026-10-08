@@ -40,7 +40,7 @@ void SimpleClockUpdateFonts(int mode)
 	cGLCD *cglcd = cGLCD::getInstance();
 	SNeutrinoGlcdTheme &t = g_settings.glcd_theme;
 
-	std::string font = t.glcd_font;
+	std::string font = settingsText(t.glcd_font);
 
 	switch (mode)
 	{
@@ -52,7 +52,7 @@ void SimpleClockUpdateFonts(int mode)
 			break;
 		case cGLCD::CLOCK_SIMPLE:
 		default:
-			font = t.glcd_font;
+			font = settingsText(t.glcd_font);
 	}
 
 	int fontsize_time_standby = 0;

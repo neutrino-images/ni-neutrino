@@ -18,7 +18,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include "coreapi/base/apply.h"
 #include "coreapi/base/deps.h"
+#include "coreapi/base/flagfile.h"
 #include "coreapi/base/schema.h"
 #include "coreapi/settings/settingstable.h"
 
@@ -67,6 +69,23 @@ class RealSettingsSource : public SettingsSource
 			const Descriptor *d = find(key);
 			if (d == 0)
 				return status(d);
+
+			/* A flag that is a file's existence. What was written here answers first, as for any
+			   row, and otherwise the file is looked at: the path is the row's name. */
+			if (d->field.origin == FieldOrigin::FlagFile)
+			{
+				{
+					OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
+					const Write *w = latest(d);
+					if (w)
+					{
+						out = w->number;
+						return Status::Ok;
+					}
+				}
+				out = flagFileIsSet(d->field.name) ? 1 : 0;
+				return Status::Ok;
+			}
 
 			/* A value a daemon holds rather than a field. What was written here answers first, and
 			   the daemon is asked with the guard let go: reaching it is a blocking exchange over a
@@ -119,7 +138,8 @@ class RealSettingsSource : public SettingsSource
 			const Descriptor *d = find(key);
 			if (d == 0)
 				return status(d);
-			if (d->field.write_number == 0 && d->field.tell == 0)
+			if (d->field.write_number == 0 && d->field.tell == 0 &&
+			    d->field.origin != FieldOrigin::FlagFile)
 				return Status::NotSupported;
 			/* The fields are narrower than a long, so a value that does not fit is refused now
 			   rather than stored as a different one later: what stores it runs on another thread and
@@ -151,6 +171,88 @@ class RealSettingsSource : public SettingsSource
 			w.owner = caller();
 			OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
 			held.push_back(w);
+			return Status::Ok;
+		}
+
+		Status readList(const char *key, std::vector<std::string> &out) const
+		{
+			const Descriptor *d = find(key);
+			if (d == 0)
+				return status(d);
+			const FieldExtra *x = d->field.extra;
+			if (x == 0 || x->read_list == 0)
+				return Status::NotSupported;
+
+			OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
+			const Write *w = latest(d);
+			if (w)
+				out = w->list;
+			else
+				x->read_list(*values, out);
+			return Status::Ok;
+		}
+
+		Status writeList(const char *key, const std::vector<std::string> &value)
+		{
+			const Descriptor *d = find(key);
+			if (d == 0)
+				return status(d);
+			const FieldExtra *x = d->field.extra;
+			if (x == 0 || x->write_list == 0)
+				return Status::NotSupported;
+
+			Write w;
+			w.row = d;
+			w.list = value;
+			w.owner = caller();
+			OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
+			held.push_back(w);
+			return Status::Ok;
+		}
+
+		Status readRecords(const char *key, std::vector<RecordValues> &out) const
+		{
+			const Descriptor *d = find(key);
+			if (d == 0)
+				return status(d);
+			const FieldExtra *x = d->field.extra;
+			if (x == 0 || x->read_records == 0)
+				return Status::NotSupported;
+
+			OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
+			const Write *w = latest(d);
+			if (w)
+				out = w->records;
+			else
+				x->read_records(*values, out);
+			return Status::Ok;
+		}
+
+		Status writeRecords(const char *key, const std::vector<RecordValues> &value)
+		{
+			const Descriptor *d = find(key);
+			if (d == 0)
+				return status(d);
+			const FieldExtra *x = d->field.extra;
+			if (x == 0 || x->write_records == 0)
+				return Status::NotSupported;
+
+			Write w;
+			w.row = d;
+			w.records = value;
+			w.owner = caller();
+			OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
+			held.push_back(w);
+			return Status::Ok;
+		}
+
+		Status persistNow()
+		{
+			if (!values)
+				return Status::Internal;
+			if (save == 0)
+				return Status::NotSupported;
+			applyAndSave();
 			return Status::Ok;
 		}
 
@@ -212,6 +314,14 @@ class RealSettingsSource : public SettingsSource
 		   had before and the notifiers read the value the box was running on. */
 		void applyAndSave()
 		{
+			/* The registry below is unlocked and belongs to the program's loop, so a drain
+			   from anywhere else is refused whole: what was written stays held for the loop
+			   to take. */
+			if (!onApplyLoop())
+			{
+				std::fprintf(stderr, "coreapi: written settings were drained on a thread that is not the loop and were left held\n");
+				return;
+			}
 			std::vector<Write> taken;
 			{
 				OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
@@ -234,7 +344,24 @@ class RealSettingsSource : public SettingsSource
 						f.write_number(*values, taken[i].number);
 					else if (f.write_text)
 						f.write_text(*values, taken[i].text);
+					else if (f.extra && f.extra->write_list)
+						f.extra->write_list(*values, taken[i].list);
+					else if (f.extra && f.extra->write_records)
+						f.extra->write_records(*values, taken[i].records);
 				}
+			}
+
+			/* A flag file is made or removed here, on the loop, so that the file and the
+			   program's own settings change together and a read in between never sees one
+			   without the other. Nothing of it is in the struct or the settings file. */
+			for (size_t i = 0; i < taken.size(); ++i)
+			{
+				const FieldRef &f = taken[i].row->field;
+				if (f.origin != FieldOrigin::FlagFile)
+					continue;
+				if (!setFlagFile(f.name, taken[i].number != 0))
+					std::fprintf(stderr, "coreapi: %s was written and the file could not be changed\n",
+						     taken[i].row->key);
 			}
 
 			/* The daemons are told with the guard let go, each being a blocking exchange over a
@@ -256,7 +383,16 @@ class RealSettingsSource : public SettingsSource
 			/* Driven by the writes themselves rather than by a list of keys kept beside them: a
 			   second record of the same thing can come apart from the first, and a value that landed
 			   without its notifier is the defect this exists to stop. A setting only a restart
-			   applies has nobody to tell. */
+			   applies has nobody to tell.
+
+			   A key a group holds goes to that group, once per drain however many of its keys were
+			   written, and never to its section's applier as well: the transition ends when every
+			   key has a group, and until then a key with none still reaches the applier. The
+			   registry has no lock and belongs to this thread, the one the program's loop drains
+			   on, so nothing here may be moved to the thread that wrote. A group whose phase of
+			   startup is not reached yet is skipped and run by that phase, with the values it finds
+			   then, so a write that arrives early is not lost. */
+			std::vector<std::string> grouped;
 			for (size_t i = 0; i < taken.size(); ++i)
 			{
 				const Descriptor *row = taken[i].row;
@@ -267,6 +403,11 @@ class RealSettingsSource : public SettingsSource
 				   would apply whatever a screen last left there, over the value just written. */
 				if (!valueIsInNamedMember(row->field))
 					continue;
+				if (groupOf(row->key) != NULL)
+				{
+					grouped.push_back(row->key);
+					continue;
+				}
 				SettingsApplier *a = settingsApplier(row->section);
 				// Reported here because it reaches no caller: the value was
 				// stored and saved before anything was asked to apply it.
@@ -274,6 +415,9 @@ class RealSettingsSource : public SettingsSource
 					std::fprintf(stderr, "coreapi: %s was written and no applier acted on it\n",
 						     row->key);
 			}
+			// Failures are logged by group name inside, for the same reason.
+			if (!grouped.empty())
+				applyBatch(grouped);
 		}
 
 	private:
@@ -282,6 +426,8 @@ class RealSettingsSource : public SettingsSource
 			const Descriptor *row;
 			long              number;
 			std::string       text;
+			std::vector<std::string>  list;
+			std::vector<RecordValues> records;
 			// Which post promised this write to the loop. Nought is one nobody
 			// has promised, and a post that fails takes its own back by it.
 			unsigned          batch;

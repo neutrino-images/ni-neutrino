@@ -14,6 +14,19 @@
 #
 # Every other arm is read, taken or not: the source is what is scanned, and which
 # arm a box takes is for the build to say.
+BEGIN { kinds["boolRow"] = "Bool"; kinds["intRow"] = "Int"; kinds["enumRow"] = "Enum"; kinds["textRow"] = "String"; kinds["keyRow"] = "Key"; kinds["colorRow"] = "Color"; kinds["listRow"] = "List"; kinds["recordsRow"] = "Records" }
+# What stands between the parenthesis a call opened and the one that closes it,
+# the rest of the line when it does not close there. Quotes are not read: no
+# value an entry states holds one.
+function argument(rest,   i, c, depth) {
+	depth = 1
+	for (i = 1; i <= length(rest); i++) {
+		c = substr(rest, i, 1)
+		if (c == "(") depth++
+		else if (c == ")" && --depth == 0) return substr(rest, 1, i - 1)
+	}
+	return rest
+}
 function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
 function guard(   i, g) {
 	g = ""
@@ -72,8 +85,8 @@ mark != "" && index($0, mark) == 1 { reset(); next }
 	if (intab != "") {
 		# the brace that opens the list is not an entry
 		if (!opened) { if (!sub(/^[^{]*\{/, "", l)) next; opened = 1 }
-		while (match(l, /\{[^{}]*\}/)) {
-			e = substr(l, RSTART + 1, RLENGTH - 2)
+		while (match(l, /option\(/)) {
+			e = argument(substr(l, RSTART + RLENGTH))
 			l = substr(l, RSTART + RLENGTH)
 			sub(/,.*$/, "", e)
 			++slot; e = trim(e)
@@ -83,15 +96,16 @@ mark != "" && index($0, mark) == 1 { reset(); next }
 		next
 	}
 
-	if (match(l, /(^|\{)[ \t]*"[A-Za-z0-9_.]+"[ \t]*,[ \t]*ValueType::[A-Za-z]+/)) {
+	if (match(l, /(^|[^A-Za-z0-9_])(bool|int|enum|text|key|color|list|records)Row\([ \t]*"[A-Za-z0-9_.]+"[ \t]*\)/)) {
 		flush()
 		r = substr(l, RSTART, RLENGTH)
+		match(r, /(bool|int|enum|text|key|color|list|records)Row/)
+		type = kinds[substr(r, RSTART, RLENGTH)]
 		match(r, /"[^"]*"/); key = substr(r, RSTART + 1, RLENGTH - 2)
-		match(r, /ValueType::[A-Za-z]+/); type = substr(r, RSTART + 11, RLENGTH - 11)
 		table = ""
 		kguard = guard()
 	}
-	if (key != "" && type != "Int" && match(l, /COREAPI_(ENUM|VALUES)\([ \t]*[A-Za-z_0-9]+/)) {
+	if (key != "" && type != "Int" && match(l, /\.values\([ \t]*[A-Za-z_0-9]+/)) {
 		table = substr(l, RSTART, RLENGTH)
 		sub(/^[^(]*\([ \t]*/, "", table)
 	}

@@ -41,6 +41,22 @@ export function faultText(row, value) {
 }
 
 /**
+ * The text that follows a number: this page's own word for the unit the box names, and
+ * nothing for a name it has no word for. The raw name is never shown, because it is a
+ * key of the box's catalog and says nothing to the person reading the page.
+ *
+ * @param {import('./model.js').Row} row
+ * @returns {string}
+ */
+export function unitText(row) {
+	if (!row.unit)
+		return '';
+	const key = 'settings.' + row.unit;
+	const word = t(text, key);
+	return word === key ? '' : word;
+}
+
+/**
  * What the box falls back to, in the words the control beside it uses.
  *
  * A yes or no is a word here and a nought or a one in the settings file, and the file's
@@ -109,7 +125,7 @@ export function LockedRow(props) {
 	return html`<div class="field set-locked">
 		<span class="label">${props.row.label}</span>
 		<p class="mono">${props.value}</p>
-		<span class="hint">${t(text, props.row.held ? 'settings.held' : 'settings.locked')}</span>
+		<span class="hint">${t(text, props.row.held ? 'settings.held' : props.row.pending ? 'settings.heldapply' : 'settings.locked')}</span>
 	</div>`;
 }
 
@@ -153,15 +169,21 @@ export function Control(props) {
 			}} />`;
 	}
 
-	if (row.type === 'enum') {
+	if (row.type === 'enum' || (row.type === 'key' && row.choices.length > 0)) {
 		/** @type {Array<{ value: string, label: string, disabled?: boolean }>} */
 		const options = row.choices.map(function (choice) {
 			return { value: String(choice.value), label: choice.label };
 		});
 		// A value another box wrote and this one does not offer: shown, so the
 		// select does not draw empty, and not choosable.
-		if (value !== '' && !options.some(function (o) { return o.value === value; }))
-			options.push({ value: value, label: t(text, 'settings.value.unlisted', { value: value }), disabled: true });
+		if (value !== '' && !options.some(function (o) { return o.value === value; })) {
+			// A key the box accepts and has no name for is a real value and stays choosable,
+			// where an enum value the box does not offer is not.
+			if (row.type === 'key')
+				options.push({ value: value, label: t(text, 'settings.key.unnamed', { value: value }) });
+			else
+				options.push({ value: value, label: t(text, 'settings.value.unlisted', { value: value }), disabled: true });
+		}
 		return html`<${Select}
 			label=${row.label}
 			value=${value}
@@ -177,11 +199,13 @@ export function Control(props) {
 	// The row's own word for the value it names, beside the number: the input stays
 	// a number whatever is shown.
 	const named = namedValue(row, value);
+	const colorHint = row.channels === null ? undefined : t(text, row.channels === 4 ? 'settings.color.rgba' : 'settings.color.rgb');
 	return html`<${Field}
 		label=${row.label}
-		type=${row.type === 'int' ? 'number' : 'text'}
+		type=${row.type === 'int' || row.type === 'key' ? 'number' : 'text'}
 		value=${value}
-		hint=${named === null ? undefined : named.label}
+		hint=${named === null ? colorHint : named.label}
+		unit=${row.type === 'int' ? unitText(row) : ''}
 		min=${row.min === null ? null : String(row.min)}
 		max=${row.max === null ? null : String(row.max)}
 		error=${fault === '' ? null : fault}

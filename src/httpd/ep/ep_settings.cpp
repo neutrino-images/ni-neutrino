@@ -28,6 +28,7 @@
 
 #include "coreapi/base/errors.h"
 #include "coreapi/base/result.h"
+#include "coreapi/base/deps.h"
 #include "coreapi/base/schema.h"
 #include "coreapi/settings/settings.h"
 
@@ -51,9 +52,27 @@ const char *valueTypeName(coreapi::ValueType t)
 		case coreapi::ValueType::Int:    return "int";
 		case coreapi::ValueType::String: return "string";
 		case coreapi::ValueType::Enum:   return "enum";
+		case coreapi::ValueType::Key:    return "key";
+		case coreapi::ValueType::Color:  return "color";
+		case coreapi::ValueType::List:   return "list";
+		case coreapi::ValueType::Records: return "records";
 	}
 	// Unreachable while the compiler holds the switch to the enumeration, an
 	// unhandled enumerator being an error in this directory.
+	return "string";
+}
+
+/* The three kinds the member of a record can be, apart from valueTypeName because the
+   set a record member's type states is these three and not the six a setting's does, and
+   each set is held to the function that writes it. */
+const char *recordFieldTypeName(coreapi::ValueType t)
+{
+	switch (t)
+	{
+		case coreapi::ValueType::Bool: return "bool";
+		case coreapi::ValueType::Int:  return "int";
+		default: break;
+	}
 	return "string";
 }
 
@@ -68,6 +87,7 @@ const char *compareOpName(coreapi::CompareOp op)
 		case coreapi::CompareOp::Gt: return "gt";
 		case coreapi::CompareOp::Ge: return "ge";
 		case coreapi::CompareOp::In: return "in";
+		case coreapi::CompareOp::TextValid: return "text-valid";
 	}
 	return "eq";
 }
@@ -100,21 +120,71 @@ const FieldDesc kEnumValueFields[] = {
 
 const Schema kEnumValueSchema = { "setting-choice", HTTPD_FIELDS(kEnumValueFields) };
 
-const FieldDesc kConditionFields[] = {
+// One member of the records a setting of kind records holds, in the order a record carries them.
+const FieldDesc kRecordFieldFields[] = {
+	HTTPD_MEMBER("name", FieldType::String, "what the member is called"),
+	HTTPD_MEMBER_OF_SET("type", "bool,int,string",
+		"what the text of the member has to read as",
+		"bool: 0 or 1\n"
+		"int: a whole number, bounded by min and max\n"
+		"string: one line of text"),
+	HTTPD_MEMBER_OPTIONAL("min", FieldType::Int,
+		"the lowest whole number the member accepts, present only when type is int"),
+	HTTPD_MEMBER_OPTIONAL("max", FieldType::Int,
+		"the highest whole number the member accepts, present only when type is int"),
+	HTTPD_MEMBER("secret", FieldType::Bool,
+		"whether the member is a credential, which makes the whole list one: it is described here and never valued"),
+	HTTPD_MEMBER_OPTIONAL("label", FieldType::String,
+		"the text the box shows for the member, absent where it has none"),
+};
+
+const Schema kRecordFieldSchema = { "setting-record-field", HTTPD_FIELDS(kRecordFieldFields) };
+
+// What each operator means, said once for both shapes that carry one.
+const char kConditionOpDocs[] =
+	"eq: the setting's current value equals the one number given\n"
+	"ne: the setting's current value does not equal the one number given\n"
+	"lt: the setting's current value is less than the one number given\n"
+	"le: the setting's current value is less than or equal to the one number given\n"
+	"gt: the setting's current value is greater than the one number given\n"
+	"ge: the setting's current value is greater than or equal to the one number given\n"
+	"in: the setting's current value is one of the numbers given\n"
+	"text-valid: the setting's current text is not empty and is not the text given";
+
+/* One comparison inside a group. A group inside a group is never answered, so
+   this shape carries no group of its own.
+
+   values: plain numbers and so no shape beside it. One list whatever the numeric
+   operator, a comparison against a single value being a list of one, so a reader
+   has one member to read rather than two that depend on which operator arrived. */
+const FieldDesc kAlternativeFields[] = {
 	HTTPD_MEMBER("key", FieldType::String, "the setting whose current value this reads"),
-	HTTPD_MEMBER_OF_SET("op", "eq,ne,lt,le,gt,ge,in", "how the value is held against the numbers below",
-		"eq: the setting's current value equals the one number given\n"
-		"ne: the setting's current value does not equal the one number given\n"
-		"lt: the setting's current value is less than the one number given\n"
-		"le: the setting's current value is less than or equal to the one number given\n"
-		"gt: the setting's current value is greater than the one number given\n"
-		"ge: the setting's current value is greater than or equal to the one number given\n"
-		"in: the setting's current value is one of the numbers given"),
-	/* Plain numbers and so no shape beside it. One list whatever the operator, a
-	   comparison against a single value being a list of one, so a reader has one member to
-	   read rather than two that depend on which operator arrived. */
-	HTTPD_LIST_OF_VALUES("values", ElementType::Int,
-		"the numbers the value is compared against, one of them for every operator but in"),
+	HTTPD_MEMBER_OF_SET("op", "eq,ne,lt,le,gt,ge,in,text-valid",
+		"how the value is held against the numbers or the text below", kConditionOpDocs),
+	HTTPD_MEMBER_OPTIONAL("text", FieldType::String,
+		"the placeholder text-valid holds the setting's text against, present only for that operator"),
+	HTTPD_LIST_OF_VALUES_OPTIONAL("values", ElementType::Int,
+		"the numbers the value is compared against, one of them for every operator but in; "
+		"absent for text-valid, which compares text"),
+};
+
+const Schema kAlternativeSchema = { "setting-condition-alternative", HTTPD_FIELDS(kAlternativeFields) };
+
+/* A comparison, carrying key and op, or a group, carrying any and nothing else.
+   One shape with the members of both optional rather than two a reader has to
+   tell apart first. */
+const FieldDesc kConditionFields[] = {
+	HTTPD_MEMBER_OPTIONAL("key", FieldType::String,
+		"the setting whose current value this reads, absent for a group"),
+	HTTPD_MEMBER_OF_SET_OPTIONAL("op", "eq,ne,lt,le,gt,ge,in,text-valid",
+		"how the value is held against the numbers or the text below, absent for a group", kConditionOpDocs),
+	HTTPD_MEMBER_OPTIONAL("text", FieldType::String,
+		"the placeholder text-valid holds the setting's text against, present only for that operator"),
+	HTTPD_LIST_OF_VALUES_OPTIONAL("values", ElementType::Int,
+		"the numbers the value is compared against, one of them for every operator but in; "
+		"absent for text-valid, which compares text, and for a group"),
+	HTTPD_LIST_OF_OPTIONAL("any", &kAlternativeSchema,
+		"present only for a group, which holds when any one of these comparisons holds"),
 };
 
 const Schema kConditionSchema = { "setting-condition", HTTPD_FIELDS(kConditionFields) };
@@ -122,12 +192,20 @@ const Schema kConditionSchema = { "setting-condition", HTTPD_FIELDS(kConditionFi
 const FieldDesc kSettingFields[] = {
 	HTTPD_MEMBER("id", FieldType::String,
 		"what every route here names this setting by, which is the key the box stores it under"),
-	HTTPD_MEMBER_OF_SET("type", "bool,int,string,enum",
+	HTTPD_MEMBER_OF_SET("type", "bool,int,string,enum,key,color,list,records",
 		"what kind of value this setting holds, which decides how the rest of this descriptor is read",
 		"bool: stores 0 or 1 and is shown as a toggle\n"
 		"int: a whole number, bounded by min and max, and possibly one more listed under values\n"
 		"string: free text or an identifier, with no numeric bounds\n"
-		"enum: one of a fixed or box reported set of choices, listed under values"),
+		"enum: one of a fixed or box reported set of choices, listed under values\n"
+		"key: the code of a remote control key, stored as a whole number between min and max and shown "
+		"by the name GET /api/v1/settings/keys gives it; a code that list does not name is accepted too "
+		"where a remote control can send it\n"
+		"color: a colour written #rrggbb for three channels or #rrggbbaa for four, as channels says, in "
+		"hexadecimal and in either case, rounded to 101 steps per channel\n"
+		"list: an ordered list of texts, read and written as one text with a line to each\n"
+		"records: a list of records, read and written as one text with a line to each record and "
+		"a tab between its members, which fields names in order"),
 	HTTPD_MEMBER("section", FieldType::String,
 		"which page of the settings it belongs to, as GET /api/v1/settings/sections lists it"),
 	HTTPD_MEMBER_OPTIONAL("label", FieldType::String,
@@ -136,14 +214,36 @@ const FieldDesc kSettingFields[] = {
 	HTTPD_MEMBER_OPTIONAL("hint", FieldType::String,
 		"the name of the longer text beside it, absent where there is none"),
 	HTTPD_MEMBER_OPTIONAL("min", FieldType::Int,
-		"the lowest whole number this setting accepts, present only when type is int; "
+		"the lowest whole number this setting accepts, present only when type is int or key; "
 		"a number listed under values is accepted as well"),
 	HTTPD_MEMBER_OPTIONAL("max", FieldType::Int,
-		"the highest whole number this setting accepts, present only when type is int"),
+		"the highest whole number this setting accepts, present only when type is int or key"),
+	HTTPD_MEMBER_OPTIONAL("unit", FieldType::String,
+		"the name of the text that follows the number, such as unit.short.hour, for the box's own "
+		"language catalog and not the text itself; present only when type is int and the box shows "
+		"the number with a unit, so a client draws its own text for the name and nothing for one it "
+		"does not know"),
+	HTTPD_MEMBER_OPTIONAL("channels", FieldType::Int,
+		"how many channels a colour has, present only when type is color: 3 for #rrggbb, 4 for "
+		"#rrggbbaa, where the fourth is the alpha"),
 	HTTPD_LIST_OF_OPTIONAL("values", &kEnumValueSchema,
-		"what it accepts, for a setting that offers a set; for an int, the one number the box "
+		"what it accepts, for a setting that offers a set; for an int, each number the box "
 		"shows in words instead, such as off, which it accepts beside min to max. Empty for a "
 		"set this box cannot state, which includes a setting that is not available"),
+	HTTPD_MEMBER_OPTIONAL("text_kind", FieldType::String,
+		"what sort of text a string setting holds, present only for a string setting with a rule: "
+		"plain, directory, file, pin, host, number, name or paths"),
+	HTTPD_MEMBER_OPTIONAL("min_length", FieldType::Int,
+		"the fewest bytes a string setting with a rule accepts; 0 for no minimum"),
+	HTTPD_MEMBER_OPTIONAL("max_length", FieldType::Int,
+		"the most bytes a string setting with a rule accepts; 0 for no limit"),
+	HTTPD_MEMBER_OPTIONAL("allowed_chars", FieldType::String,
+		"the only characters a string setting accepts, absent where any character is taken"),
+	HTTPD_MEMBER_OPTIONAL("must_exist", FieldType::String,
+		"whether the place a string setting names must exist on the box: no, yes, "
+		"not-memory (and not flash or memory backed storage) or not-flash (and not flash storage)"),
+	HTTPD_MEMBER_OPTIONAL("extensions", FieldType::String,
+		"the file name endings a file setting accepts, separated by commas, absent for any"),
 	HTTPD_MEMBER("default", FieldType::String,
 		"what the box falls back to, rendered the way a value is, and empty for a setting held to be a credential"),
 	HTTPD_MEMBER("needs_restart", FieldType::Bool,
@@ -154,13 +254,19 @@ const FieldDesc kSettingFields[] = {
 		"whether the value names a file or folder on the box, which no AI client may change"),
 	HTTPD_MEMBER("locked", FieldType::Bool,
 		"whether the box's parental lock fixes the setting right now, so every write of it is refused"),
+	HTTPD_MEMBER("held", FieldType::Bool,
+		"whether the box holds the setting until the screen that owns it can apply its effect from outside, "
+		"so every write of it is refused. Not the parental lock, and the box's own screen still changes it"),
 	HTTPD_MEMBER("available", FieldType::Bool,
 		"whether this box has what the setting controls, such as a fan; false also where the box cannot "
 		"say. A setting that is not available is offered on no screen and every write of it is refused, "
 		"while its value still reads. Where the box offers a setting in one of two ways, type, label, "
 		"bounds and values already describe the way this box offers it"),
+	HTTPD_LIST_OF_OPTIONAL("fields", &kRecordFieldSchema,
+		"the members of one record, in the order a record carries them, present only when type is records"),
 	HTTPD_LIST_OF("conditions", &kConditionSchema,
-		"every comparison that has to hold before the setting is worth showing, all of them together, empty for one always shown"),
+		"every condition that has to hold before the setting is worth showing, all of them together, empty for one always shown; "
+		"a condition is exactly one of two forms, a comparison carrying key and op or a group carrying any, never both"),
 };
 
 const Schema kSettingSchema = { "setting", HTTPD_FIELDS(kSettingFields) };
@@ -185,6 +291,22 @@ const FieldDesc kSectionListFields[] = {
 
 const Schema kSectionListSchema = { "setting-section-list", HTTPD_FIELDS(kSectionListFields) };
 
+const FieldDesc kKeyNameFields[] = {
+	HTTPD_MEMBER("code", FieldType::Int,
+		"the number a key setting stores for this key, matched against the setting's own stored value"),
+	HTTPD_MEMBER("name", FieldType::String,
+		"what the box calls the key, which is the text its own key chooser shows for the code"),
+};
+
+const Schema kKeyNameSchema = { "setting-key-name", HTTPD_FIELDS(kKeyNameFields) };
+
+const FieldDesc kKeyNameListFields[] = {
+	HTTPD_LIST_OF("items", &kKeyNameSchema,
+		"every key the box names: no key first, then each named key, pressed and then held"),
+};
+
+const Schema kKeyNameListSchema = { "setting-key-name-list", HTTPD_FIELDS(kKeyNameListFields) };
+
 const FieldDesc kValueFields[] = {
 	HTTPD_MEMBER("id", FieldType::String, "the setting, which is the key the box stores it under"),
 	HTTPD_MEMBER("value", FieldType::String,
@@ -198,6 +320,39 @@ const FieldDesc kValueListFields[] = {
 };
 
 const Schema kValueListSchema = { "setting-value-list", HTTPD_FIELDS(kValueListFields) };
+
+// One comparison, on its own or as an alternative inside a group.
+void appendComparison(Json &j, const coreapi::Condition &c)
+{
+	j.beginObject();
+	j.key("key");
+	j.value(c.key != NULL ? c.key : "");
+	j.key("op");
+	j.value(compareOpName(c.op));
+	if (c.op == coreapi::CompareOp::TextValid)
+	{
+		j.key("text");
+		j.value(c.text != NULL ? c.text : "");
+		j.endObject();
+		return;
+	}
+	/* One list whatever the operator, so a reader has one member to read rather than two
+	   that depend on which operator arrived. Every operator but in compares against a
+	   single value, and a list of one is what that is. */
+	j.key("values");
+	j.beginArray();
+	if (c.op == coreapi::CompareOp::In)
+	{
+		for (size_t v = 0; c.values != NULL && v < c.value_count; ++v)
+			j.value(c.values[v]);
+	}
+	else
+	{
+		j.value(c.value);
+	}
+	j.endArray();
+	j.endObject();
+}
 
 /* One declared setting. Nothing here withholds anything: the layer below answers a
    schema with the default of a credential already taken out, and reading the tables
@@ -232,29 +387,51 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d)
 	// Only a whole number is bounded by these. Every other kind leaves both at
 	// nought, and a pair of noughts written out would read as a setting that
 	// takes nothing but nought.
+	if (d.type == coreapi::ValueType::Key)
+	{
+		j.key("min");
+		j.value(d.min);
+		j.key("max");
+		j.value(d.max);
+	}
+
+	if (d.type == coreapi::ValueType::Color)
+	{
+		j.key("channels");
+		j.value((long) coreapi::colorChannels(d));
+	}
+
 	if (d.type == coreapi::ValueType::Int)
 	{
 		j.key("min");
 		j.value(d.min);
 		j.key("max");
 		j.value(d.max);
-
-		// The one value the box shows in words rather than as the number.
-		const coreapi::EnumValue *named = coreapi::namedNumber(d);
-		if (named != NULL)
+		if (d.unit_key != NULL)
 		{
-			std::string words;
-			coreapi::settings::resolveLabel(named->label_key, words);
+			j.key("unit");
+			j.value(d.unit_key);
+		}
+
+		// Every value the box shows in words rather than as the number.
+		if (d.values != NULL && d.value_count > 0)
+		{
 			j.key("values");
 			j.beginArray();
-			j.beginObject();
-			j.key("value");
-			j.value((long) named->value);
-			j.key("key");
-			j.value(named->label_key);
-			j.key("label");
-			j.value(words);
-			j.endObject();
+			for (size_t i = 0; i < d.value_count; ++i)
+			{
+				const coreapi::EnumValue &named = d.values[i];
+				std::string words;
+				coreapi::settings::resolveLabel(named.label_key, words);
+				j.beginObject();
+				j.key("value");
+				j.value((long) named.value);
+				j.key("key");
+				j.value(named.label_key);
+				j.key("label");
+				j.value(words);
+				j.endObject();
+			}
 			j.endArray();
 		}
 	}
@@ -295,10 +472,67 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d)
 		j.endArray();
 	}
 
+	if (d.text != NULL)
+	{
+		static const char *const kinds[] = { "plain", "directory", "file", "pin", "host", "number", "name", "paths" };
+		static const char *const places[] = { "no", "yes", "not-memory", "not-flash" };
+		j.key("text_kind");
+		j.value(kinds[(int) d.text->kind]);
+		j.key("min_length");
+		j.value((long) d.text->min_length);
+		j.key("max_length");
+		j.value((long) d.text->max_length);
+		if (d.text->allowed != NULL)
+		{
+			j.key("allowed_chars");
+			j.value(d.text->allowed);
+		}
+		j.key("must_exist");
+		j.value(places[(int) d.text->must_exist]);
+		if (d.text->extensions != NULL)
+		{
+			j.key("extensions");
+			j.value(d.text->extensions);
+		}
+	}
+
+	if (d.type == coreapi::ValueType::Records && d.field.extra != NULL)
+	{
+		j.key("fields");
+		j.beginArray();
+		for (size_t i = 0; i < d.field.extra->record_field_count; ++i)
+		{
+			const coreapi::RecordField &f = d.field.extra->record_fields[i];
+			j.beginObject();
+			j.key("name");
+			j.value(f.name);
+			j.key("type");
+			j.value(recordFieldTypeName(f.type));
+			if (f.type == coreapi::ValueType::Int)
+			{
+				j.key("min");
+				j.value(f.min);
+				j.key("max");
+				j.value(f.max);
+			}
+			j.key("secret");
+			j.value(f.secret);
+			std::string words;
+			if (coreapi::settings::resolveLabel(f.label_key, words))
+			{
+				j.key("label");
+				j.value(words);
+			}
+			j.endObject();
+		}
+		j.endArray();
+	}
+
 	j.key("default");
-	j.value((d.type == coreapi::ValueType::String)
+	j.value((d.type == coreapi::ValueType::String || d.type == coreapi::ValueType::Color ||
+	         d.type == coreapi::ValueType::List || d.type == coreapi::ValueType::Records)
 	        ? std::string(d.default_string != NULL ? d.default_string : "")
-	        : decimal(d.default_int));
+	        : decimal(coreapi::defaultInt(d)));
 	j.key("needs_restart");
 	j.value(d.needs_restart);
 	j.key("secret");
@@ -307,6 +541,8 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d)
 	j.value(coreapi::settings::holdsPath(d));
 	j.key("locked");
 	j.value(coreapi::settings::lockedNow(d.key));
+	j.key("held");
+	j.value(coreapi::settings::heldNow(d.key));
 	coreapi::Descriptor here;
 	j.key("available");
 	j.value(coreapi::rowOnThisBox(d, here));
@@ -316,25 +552,25 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d)
 	for (size_t i = 0; d.conditions != NULL && i < d.condition_count; ++i)
 	{
 		const coreapi::Condition &c = d.conditions[i];
+		if (!coreapi::conditionIsGroup(c))
+		{
+			appendComparison(j, c);
+			continue;
+		}
+		/* A group inside a group is refused by the sanity check, and the
+		   evaluator answers it as holding, which makes the group around it hold.
+		   Such a group is left out, which a reader answers the same way, rather
+		   than written with a member that reads a setting with no name. */
+		bool nested = false;
+		for (size_t m = 0; c.any_of != NULL && m < c.any_count; ++m)
+			nested = nested || coreapi::conditionIsGroup(c.any_of[m]);
+		if (nested)
+			continue;
 		j.beginObject();
-		j.key("key");
-		j.value(c.key);
-		j.key("op");
-		j.value(compareOpName(c.op));
-		/* One list whatever the operator, so a reader has one member to read rather than two
-		   that depend on which operator arrived. Every operator but in compares against a
-		   single value, and a list of one is what that is. */
-		j.key("values");
+		j.key("any");
 		j.beginArray();
-		if (c.op == coreapi::CompareOp::In)
-		{
-			for (size_t v = 0; c.values != NULL && v < c.value_count; ++v)
-				j.value(c.values[v]);
-		}
-		else
-		{
-			j.value(c.value);
-		}
+		for (size_t m = 0; c.any_of != NULL && m < c.any_count; ++m)
+			appendComparison(j, c.any_of[m]);
 		j.endArray();
 		j.endObject();
 	}
@@ -396,6 +632,29 @@ Response settingsSections(const Request &)
 		j.beginObject();
 		j.key("id");
 		j.value(names[i]);
+		j.endObject();
+	}
+	j.endArray();
+	j.endObject();
+	return out;
+}
+
+Response settingsKeys(const Request &)
+{
+	const std::vector<coreapi::KeyName> all = coreapi::keySource().all();
+
+	Response out = okJson();
+	Json j(out.body, 32 + 48 * all.size());
+	j.beginObject();
+	j.key("items");
+	j.beginArray();
+	for (size_t i = 0; i < all.size(); ++i)
+	{
+		j.beginObject();
+		j.key("code");
+		j.value(all[i].code);
+		j.key("name");
+		j.value(all[i].name);
 		j.endObject();
 	}
 	j.endArray();
@@ -597,13 +856,18 @@ Response settingsWrite(const Request &r)
 		return problemResponse(StatusNotFound, coreapi::ErrorCode::NoSuchName,
 		                       "no settings are declared under a section of that name");
 
-	std::vector<Written> results;
-	results.reserve(members.size());
+	/* What this route refuses on its own is decided here, one member at a time. Everything
+	   about the values and how they hold together is the layer below's, in one call that
+	   gives the checks, the couplings, the settling and the writes: the order of the body
+	   decides nothing, and a value that never lands is not what allows another one. Results
+	   stay in body order, which is the order the answer names them in. */
+	std::vector<Written> results(members.size());
+	std::vector<std::pair<std::string, std::string> > toWrite;
 	bool all_ok = true;
 
 	for (size_t i = 0; i < members.size(); ++i)
 	{
-		Written w;
+		Written &w = results[i];
 		/* The caller's spelling, because for a key nobody declares there is no other, and a
 		   result a caller cannot match to what it sent is one it cannot act on. Everything that
 		   reaches the answer goes through the writer, which escapes it. */
@@ -620,7 +884,6 @@ Response settingsWrite(const Request &r)
 			w.error = coreapi::Error(coreapi::Status::NotFound, coreapi::ErrorCode::UnknownSetting,
 			                         "this section declares no setting under that key");
 			all_ok = false;
-			results.push_back(w);
 			continue;
 		}
 
@@ -636,23 +899,45 @@ Response settingsWrite(const Request &r)
 			w.error = coreapi::Error(coreapi::Status::InvalidArgument, coreapi::ErrorCode::BadString,
 			                         "the value is not text this server can answer back unchanged");
 			all_ok = false;
-			results.push_back(w);
 			continue;
 		}
 
-		/* Every other rule about the value is the layer below's: what one line of the settings
-		   file can carry, what the row declares, and what the field behind it holds. That
-		   includes the one this route exists beside: a row marked secret refuses an empty value,
-		   so a form redrawn from a read that answered nothing cannot wipe the credential. */
-		coreapi::Result<void> done = coreapi::settings::set(w.key, members[i].text);
-		if (!done.ok())
+		toWrite.push_back(std::make_pair(members[i].name, members[i].text));
+	}
+
+	coreapi::settings::Refusals failed;
+	coreapi::settings::writeBatch(toWrite, failed);
+
+	/* A setting the layer below added to the write has no member in the body, so one that
+	   did not land is answered under its own key after the others. */
+	for (size_t f = 0; f < failed.size(); ++f)
+	{
+		size_t at = results.size();
+		for (size_t i = 0; i < members.size(); ++i)
 		{
-			w.failed = true;
-			w.error = done.error();
-			w.code = httpStatus(w.error.status);
-			all_ok = false;
+			if (members[i].name == failed[f].first && !results[i].failed)
+				at = i;
 		}
-		results.push_back(w);
+		if (at == results.size())
+		{
+			bool known = false;
+			for (size_t i = members.size(); i < results.size(); ++i)
+				known = known || results[i].key == failed[f].first;
+			if (known)
+				continue;
+			bool in_body = false;
+			for (size_t i = 0; i < members.size(); ++i)
+				in_body = in_body || members[i].name == failed[f].first;
+			if (in_body)
+				continue;
+			Written extra;
+			extra.key = failed[f].first;
+			results.push_back(extra);
+		}
+		results[at].failed = true;
+		results[at].error = failed[f].second;
+		results[at].code = httpStatus(results[at].error.status);
+		all_ok = false;
 	}
 
 	/* One key is answered as itself. There is nothing for a per key answer to say that the
@@ -746,9 +1031,9 @@ const Param kWriteParams[] = {
 };
 
 /* The two written out below answer ahead of the one that binds a segment, which is
-   settled where the tables are read and not by the order here. A section called schema or
-   sections would therefore be unreachable, and none of the sixteen the program declares
-   is called either. */
+   settled where the tables are read and not by the order here. A section called schema,
+   sections or keys would therefore be unreachable, and none of the sixteen the program
+   declares is called any of them. */
 const Param kClearParams[] = {
 	HTTPD_BODY_REQUIRED_TEXT("key", "the key of the credential to empty, as GET /api/v1/settings/schema names it", 256),
 };
@@ -784,9 +1069,12 @@ const RouteRefusal kSettingsWriteRefusals[] = {
 	HTTPD_REFUSES(NotFound, UnknownSetting,
 		"this section declares no setting under that key"),
 	HTTPD_REFUSES(Conflict, SettingLocked,
-		"the box's parental lock fixes this setting"),
+		"the box's parental lock fixes this setting, or the schema marks it held until its screen's "
+		"effect can be applied from outside"),
 	HTTPD_REFUSES(Conflict, SettingNotOnThisBox,
 		"this box does not have what the setting controls"),
+	HTTPD_REFUSES(Conflict, SettingConditionNotMet,
+		"the settings this one depends on, or the settings it is written with, do not allow it to be set"),
 };
 
 const Endpoint kSettingsEndpoints[] = {
@@ -796,11 +1084,17 @@ const Endpoint kSettingsEndpoints[] = {
 	  "value it holds, which section it belongs to, the label and hint text to show beside it where "
 	  "the locale catalog carries one, the bounds or choices it accepts, its default, whether changing "
 	  "it needs a restart, whether it is a credential, and whether the box's parental lock fixes it "
-	  "right now. A setting marked a credential never carries "
+	  "right now, and whether it is held until its screen's effect can be applied from outside. A setting marked a credential never carries "
 	  "its real default here; its default is always reported as an empty string.\n"
 	  "\n"
-	  "Each item's `conditions` list states every comparison against another setting's current value "
-	  "that must hold before this setting is worth showing; an empty list means it is always shown.\n"
+	  "Each item's `conditions` list states every condition that must hold before this setting is "
+	  "worth showing, all of them together; an empty list means it is always shown. A write of a "
+	  "setting whose conditions do not hold is refused. A condition is "
+	  "either a comparison against another setting's current value, `{\"key\", \"op\", \"values\"}`, "
+	  "or for `op` `text-valid` `{\"key\", \"op\", \"text\"}`, which holds when that setting's text "
+	  "is not empty and is not the placeholder `text`; or a group, `{\"any\": [comparisons]}`, which "
+	  "holds when any one of its comparisons holds. Every condition is exactly one of these forms, "
+	  "never a mix of the two. A comparison that names a setting the reader cannot see holds.\n"
 	  "\n"
 	  "Each item is described the way this box offers it. `available` is false for a setting whose "
 	  "hardware this box lacks; such a setting is not worth showing, refuses every write, and a "
@@ -825,6 +1119,17 @@ const Endpoint kSettingsEndpoints[] = {
 	  "\n"
 	  "**Related:** `GET /api/v1/settings/schema`, `GET /api/v1/settings/{section}`.",
 	  NULL, 0, &kSectionListSchema, &settingsSections, false,
+	  Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Get, "/api/v1/settings/keys", AuthLevel::Read,
+	  "the remote control keys a key setting takes, with their names",
+	  "Lists the keys the box has a name for and the name it shows for each: no key first, then each "
+	  "named key, pressed and then held. A key setting stores the code, so a frontend shows the name "
+	  "from this list and writes the code back. A setting may hold a code this list does not name, "
+	  "because the box accepts the code of any key a remote control can send, and a frontend keeps "
+	  "such a code rather than dropping it.\n"
+	  "\n"
+	  "**Related:** `GET /api/v1/settings/schema`, `PATCH /api/v1/settings/{section}`.",
+	  NULL, 0, &kKeyNameListSchema, &settingsKeys, false,
 	  Answers200, HTTPD_NO_REFUSALS },
 	{ Method::Get, "/api/v1/settings/{section}", AuthLevel::Read,
 	  "what one section's settings are set to",
@@ -903,10 +1208,29 @@ const Endpoint kSettingsEndpoints[] = {
 	  "`GET /api/v1/settings/sections`.\n"
 	  "- `404 no-such-setting`: a named key does not belong to this section, whether or not it exists "
 	  "elsewhere on the box.\n"
-	  "- `409 setting-locked`: the schema marks the key `locked`; the box's image fixes it and no "
-	  "write changes it.\n"
+	  "- `409 setting-locked`: the schema marks the key `locked` (the parental lock) or `held` (its screen still applies "
+	  "the effect); no write changes it.\n"
 	  "- `409 setting-not-on-this-box`: the schema marks the key not `available`; this box does not "
 	  "have what it controls.\n"
+	  "- `409 setting-condition-not-met`: the `conditions` the schema states for the key do not hold. "
+	  "They are judged on the values the box would hold after this whole request, so a setting and "
+	  "the one it depends on can be sent together in either order; sent in separate requests, the "
+	  "one it depends on has to come first. A key whose own value is refused counts as not sent, so "
+	  "a setting depending on it is refused too, and so is every setting that in turn depends on "
+	  "one refused this way. Two settings whose new values each refuse the other are both refused. "
+	  "A key that passes every check and then fails to be saved cannot be foreseen, so a setting "
+	  "depending on it may still land.\n"
+	  "\n"
+	  "The same code answers where a setting cannot be kept together with others that the schema "
+	  "states no condition for, and says which in `detail`. The name and the id of a start "
+	  "channel, and the city and the location of the weather, are one setting each in two parts "
+	  "and are refused when sent without their partner. Writing `epg_save` on implies `epg_read` "
+	  "on, and writing `show_ecm_pos` implies `show_ecm`; a request that sends the other value "
+	  "for the implied setting is refused for both, while the same value is taken. Two of the "
+	  "five `plugins_*` lists naming one plugin are both refused, and a plugin named in one list "
+	  "is taken out of the others. The settings such a write adds are stored with it, and one of "
+	  "them that cannot be stored is answered under its own key and refuses the setting that "
+	  "implied it.\n"
 	  "\n"
 	  "**Related:** `GET /api/v1/settings/schema`, `GET /api/v1/settings/{section}`, "
 	  "`POST /api/v1/settings/secret/clear`.",
@@ -920,14 +1244,17 @@ const Endpoint kSettingsEndpoints[] = {
 const ToolFlag kSettingsTools[] = {
 	HTTPD_TOOL_AS(Method::Get, "/api/v1/settings/schema", "settings_schema",
 		"What the settings of one section are: key, kind, allowed values, label, whether it needs a restart, "
-		"and whether this box has it at all (available). "
+		"and whether this box has it at all (available). Its conditions say when it is shown, and they also gate writes: a write of it is refused while they do not hold. "
 		"Always pass section; without it the answer is very large."),
 	HTTPD_TOOL_AS(Method::Get, "/api/v1/settings/{section}", "read_settings",
 		"What every setting of one section is set to now, as key and value text. Credentials always read as empty."),
 	HTTPD_TOOL_AS(Method::Patch, "/api/v1/settings/{section}", "write_settings",
 		"Changes settings of one section the owner allowed AI clients to change: settings is a JSON object of "
 		"key and new value as text, keys from settings_schema of that section. Sections the owner has not "
-		"allowed, credentials and settings marked path are refused. Tell the user what will change before calling this."),
+		"allowed, credentials and settings marked path are refused. A setting whose conditions in settings_schema "
+		"do not hold is refused; send the setting it depends on in the same call. Some settings go together "
+		"(the name and id of a start channel, the city and location of the weather) and are sent as pairs. "
+		"Tell the user what will change before calling this."),
 };
 
 } // namespace

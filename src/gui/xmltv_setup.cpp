@@ -162,7 +162,8 @@ int CXMLTVSetup::Show()
 
 	item_offset = m->getItemsCount();
 	// show users xmltv files
-	for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); ++it)
+	std::list<std::string> shown = settingsCopy(g_settings.xmltv_xml);
+	for (std::list<std::string>::iterator it = shown.begin(); it != shown.end(); ++it)
 	{
 		m->addItem(new CMenuForwarder(*it, true, NULL, this, "c"));
 	}
@@ -174,12 +175,17 @@ int CXMLTVSetup::Show()
 
 	if (changed)
 	{
-		g_settings.xmltv_xml.clear();
+		std::list<std::string> chosen;
 		for (int i = item_offset; i < m->getItemsCount(); i++)
 		{
 			CMenuItem *item = m->getItem(i);
 			CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
-			g_settings.xmltv_xml.push_back(f->getName());
+			chosen.push_back(f->getName());
+		}
+		{
+			// A request reads the list under this lock, so it is replaced under it.
+			CSettingsTextGuard lock;
+			g_settings.xmltv_xml = chosen;
 		}
 
 		CNeutrinoApp::getInstance()->xmltv_xml_readepg();

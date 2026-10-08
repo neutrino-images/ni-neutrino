@@ -235,6 +235,9 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 	border-radius: var(--radius); color: var(--text); font: inherit; }
 .field select { padding-right: 26px; }
 .field textarea { padding: var(--gap-2) var(--gap-3); font-family: var(--font-mono); }
+.field-unit { display: flex; align-items: center; gap: var(--gap-2); }
+.field-unit > input { flex: 1 1 auto; min-width: 0; }
+.field-unit > .unit { flex: none; color: var(--text-dim); }
 .field .hint { margin-top: var(--gap-1); color: var(--text-dim); font-size: 0.8125rem; }
 .field .err { margin-top: var(--gap-1); color: var(--failure); font-size: 0.8125rem; }
 .field.bad input, .field.bad select { border-color: var(--failure); }

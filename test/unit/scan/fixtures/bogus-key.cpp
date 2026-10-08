@@ -1,1 +1,1 @@
-	{ 3, "no.such.catalog.key", NULL, NULL }
+	option(3).label("no.such.catalog.key")

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Every label_key and hint_key a settings row declares, and every label_key one of
+# Every label_key, hint_key, unit_key and format_key a settings row declares, and every label_key one of
 # an Enum's own choices declares, held to the catalog each is said to be a name in:
 # data/locale/english.locale. check-fieldtypes.sh and check-sections.sh both read
 # these same tables and neither opens the catalog, so a key mistyped here compiles,
@@ -60,42 +60,35 @@ if [ "$cn" -lt 3000 ]; then
 	exit 1
 fi
 
-# label_key and hint_key sit together on a line of their own in every row this
-# tree declares, which is what the tables' own comments call "the labels off
-# the screen that offers it": a quoted string or NULL, a comma, the same
-# again, and nothing else on the line.
+# A row names its label, hint, unit and format in calls of their own, one to a line, and
+# an entry names its label in the same call on the line of its option. The two
+# are told apart by that line: a row's call starts the line, an entry's follows
+# the option it belongs to.
 awk '
-	/^[ \t]*(NULL|"[^"]*"),[ \t]*(NULL|"[^"]*"),[ \t]*$/ {
+	/^[ \t]*\.(label|hint|unit|format)\("[^"]*"\)[ \t]*;?[ \t]*$/ {
 		line = $0
-		sub(/^[ \t]+/, "", line)
-		sub(/[ \t]*,[ \t]*$/, "", line)
-		n = split(line, parts, ",")
-		for (i = 1; i <= n; i++) {
-			v = parts[i]
-			gsub(/^[ \t]+|[ \t]+$/, "", v)
-			if (v == "NULL") continue
-			gsub(/^"|"$/, "", v)
-			print v
-		}
+		match(line, /"[^"]*"/)
+		print substr(line, RSTART + 1, RLENGTH - 2)
 	}
 ' "$tmp/stripped" | LC_ALL=C sort -u > "$tmp/labelhint"
 
-# An Enum's own choices are a table of their own instead, one choice per
-# line, a number or an expression and a quoted string between braces. Kept
-# apart from the pairs above rather than merged in the same pass, because a
-# route answers a choice's own label as never absent (ep_settings.cpp's
-# kEnumValueFields), which is a claim this makes for the choices alone and
-# has to be checked, and reported, on its own count: a scan that stopped
-# matching only this shape would otherwise hide behind the pairs still
-# matching theirs. An entry has four members: value, label key, fixed text, predicate.
-# Only a quoted second member is a key. An entry that carries fixed text has NULL
-# there and its text in the third, which is shown as written and is no catalog name,
-# so the pattern does not take a quote anywhere else.
+# An Enum's own choices are one option per line, with the key of its label in a
+# call on that line or fixed text in another. Kept apart from the pairs above
+# rather than merged in the same pass, because a route answers a choice's own
+# label as never absent (ep_settings.cpp's kEnumValueFields), which is a claim
+# this makes for the choices alone and has to be checked, and reported, on its
+# own count: a scan that stopped matching only this shape would otherwise hide
+# behind the pairs still matching theirs. Only label() names a key. An entry
+# that carries fixed text has its text in text(), which is shown as written and
+# is no catalog name, so the pattern takes no quote anywhere else.
 awk '
-	/^[ \t]*\{[ \t]*[^{},"]+,[ \t]*"[^"]*"[ \t]*,[ \t]*[^{},"]+,[ \t]*[^{},"]+\},?[ \t]*$/ {
+	/^[ \t]*option\([^"]*\)\.label\("[^"]*"\)/ {
 		line = $0
-		if (match(line, /"[^"]*"/))
+		if (match(line, /\.label\("[^"]*"\)/)) {
+			line = substr(line, RSTART, RLENGTH)
+			match(line, /"[^"]*"/)
 			print substr(line, RSTART + 1, RLENGTH - 2)
+		}
 	}
 ' "$tmp/stripped" | LC_ALL=C sort -u > "$tmp/choices"
 
@@ -115,16 +108,60 @@ if [ "$ch" -lt 100 ]; then
 	exit 1
 fi
 
+# Every label(, hint(, unit( and format( call the tables make has to be one the two patterns
+# above read, which the floors cannot say: a call wrapped onto the next line, or
+# two calls on one line, would drop out of the check one key at a time and leave
+# the totals standing. A line carrying such a call that neither pattern takes is
+# named and fails.
+awk '
+	function calls(l,   n, t) { n = 0; t = l; while (match(t, /\.(label|hint|unit|format)\(/)) { n++; t = substr(t, RSTART + RLENGTH) } return n }
+	{
+		n = calls($0)
+		if (n == 0) next
+		if (n == 1 && ($0 ~ /^[ \t]*\.(label|hint|unit|format)\("[^"]*"\)[ \t]*;?[ \t]*$/ ||
+		               $0 ~ /^[ \t]*option\([^"]*\)\.label\("[^"]*"\)/))
+			next
+		print
+	}
+' "$tmp/stripped" > "$tmp/unread"
+if [ -s "$tmp/unread" ]; then
+	echo "check-locale-catalog.sh: a label, hint, unit or format call the scan does not read, so its key is held to nothing:" >&2
+	sed 's/^[ \t]*/  /' "$tmp/unread" >&2
+	exit 1
+fi
+
+# A unit is the text after a number and a format holds the number itself, so a
+# unit that carries a %d would print twice and a format without one would never
+# show the value. Told apart by the call, which is why they are read apart.
+awk '
+	/^[ \t]*\.unit\("[^"]*"\)[ \t]*$/ { match($0, /"[^"]*"/); print substr($0, RSTART + 1, RLENGTH - 2) }
+' "$tmp/stripped" | LC_ALL=C sort -u > "$tmp/units"
+awk '
+	/^[ \t]*\.format\("[^"]*"\)[ \t]*$/ { match($0, /"[^"]*"/); print substr($0, RSTART + 1, RLENGTH - 2) }
+' "$tmp/stripped" | LC_ALL=C sort -u > "$tmp/formats"
+if [ ! -s "$tmp/units" ] || [ ! -s "$tmp/formats" ]; then
+	echo "check-locale-catalog.sh: no unit or no format name read out of the tables, the scan has stopped matching that shape" >&2
+	exit 1
+fi
+while read -r k; do
+	text=`awk -v k="$k" '$1 == k { sub(/^[^ ]* /, ""); print }' "$CATALOG"`
+	case "$text" in *%d*) echo "check-locale-catalog.sh: the unit $k holds a %d, which the number would print twice" >&2; exit 1;; esac
+done < "$tmp/units"
+while read -r k; do
+	text=`awk -v k="$k" '$1 == k { sub(/^[^ ]* /, ""); print }' "$CATALOG"`
+	case "$text" in *%d*) ;; *) echo "check-locale-catalog.sh: the format $k holds no %d, so it would never show the value" >&2; exit 1;; esac
+done < "$tmp/formats"
+
 cat "$tmp/labelhint" "$tmp/choices" | LC_ALL=C sort -u > "$tmp/used"
 used=`wc -l < "$tmp/used"`
 
 missing=`comm -23 "$tmp/used" "$tmp/catalog"`
 if [ -n "$missing" ]; then
-	echo "check-locale-catalog.sh: a label_key, hint_key or choice label the tables declare that the catalog does not carry:" >&2
+	echo "check-locale-catalog.sh: a label_key, hint_key, unit_key, format_key or choice label the tables declare that the catalog does not carry:" >&2
 	printf '%s\n' "$missing" | sed 's/^/  /' >&2
 	exit 1
 fi
 
-echo "settings label_key/hint_key held to the catalog             $used"
+echo "settings label/hint/unit/format keys held to the catalog     $used"
 echo "  of which the choices' own labels                          $ch"
 exit 0

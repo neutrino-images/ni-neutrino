@@ -1,37 +1,38 @@
 // Rows for the self test of the row scan, read by the scan only.
-const EnumValue kScanAlternatives[] =
+constexpr EnumValue kScanAlternatives[] =
 {
 #if SCAN_ALTERNATIVES_ONE
-	{ 0, "scan.alternatives.one", NULL, NULL },
-	{ 5, "scan.alternatives.five", NULL, NULL },
+	option(0).label("scan.alternatives.one"),
+	option(5).label("scan.alternatives.five"),
 #elif SCAN_ALTERNATIVES_TWO
-	{ 0, "scan.alternatives.two", NULL, NULL },
+	option(0).label("scan.alternatives.two"),
 #else
-	{ 3, "scan.alternatives.other", NULL, NULL },
+	option(3).label("scan.alternatives.other"),
 #endif
-	{ 1, "scan.alternatives.always", NULL, NULL },
+	option(1).label("scan.alternatives.always"),
 #ifdef SCAN_ALTERNATIVES_MORE
-	{ 2, "scan.alternatives.more", NULL, NULL },
+	option(2).label("scan.alternatives.more"),
 #endif
 };
 
-const EnumValue kScanNamedNumber[] =
+constexpr EnumValue kScanNamedNumber[] =
 {
-	{ 0, "options.off", NULL, NULL },
+	option(0).label("options.off"),
 };
 
-const Descriptor kSettings[] =
+constexpr Descriptor kSettings[] =
 {
-	{
-		"scan_alternatives", ValueType::Enum, "fixture",
-		"label", NULL,
-		0, 0, COREAPI_ENUM(kScanAlternatives), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NO_FIELD
-	},
-	{
-		"scan_named_number", ValueType::Int, "fixture",
-		"label", NULL,
-		1, 14, COREAPI_VALUES(kScanNamedNumber), 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NO_FIELD
-	},
+	enumRow("scan_alternatives")
+		.section("fixture")
+		.label("label")
+		.defaultValue(0)
+		.values(kScanAlternatives)
+		.field(COREAPI_NO_FIELD),
+	intRow("scan_named_number")
+		.section("fixture")
+		.label("label")
+		.range(1, 14)
+		.defaultValue(1)
+		.values(kScanNamedNumber)
+		.field(COREAPI_NO_FIELD),
 };

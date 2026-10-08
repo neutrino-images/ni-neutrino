@@ -900,6 +900,7 @@ fontsize.moviebrowser_list List items
 fontsize.subtitles Text subtitles
 fontsize.window_radiotext_desc0 Radiotext infos
 fontsize.window_radiotext_desc1 Radiotext additional infos
+format.after_second after %d s
 fsk.all off
 fsk.from_12 from 12
 fsk.from_16 from 16
@@ -3016,8 +3017,10 @@ unicable.scr Unicable SCR
 unit.decimal .
 unit.long.years years
 unit.short.hour h
+unit.short.megabyte MB
 unit.short.millisecond ms
 unit.short.minute min
+unit.short.percent %
 unit.short.second s
 upnpbrowser.head UPnP browser
 upnpbrowser.noservers No UPnP servers found

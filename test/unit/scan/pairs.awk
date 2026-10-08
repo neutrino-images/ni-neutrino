@@ -3,6 +3,10 @@
 # parentheses, commas and string literals of its own, so it is read by counting
 # depth from the opening parenthesis rather than by a pattern.
 #
+# A member of one of the two structs inside the settings is read under the name of
+# the member that holds it, which is how the themes' own files are rewritten before
+# they come here: they reach the struct through a name of their own.
+#
 # Two spellings of the same load, because a text field is not assigned to: it is
 # written through setSettingsText, under the lock its readers take. Everything
 # after the opening parenthesis of the read is the same in both, so only the
@@ -12,7 +16,7 @@
 # default are literals.
 {
 	line = $0
-	while (match(line, /(g_settings\.[A-Za-z_][A-Za-z_0-9]*[ \t]*=|setSettingsText\([ \t]*g_settings\.[A-Za-z_][A-Za-z_0-9]*[ \t]*,)[ \t]*(configfile\.|tconfig->)get[A-Za-z0-9_]*\(/)) {
+	while (match(line, /(g_settings\.(theme\.|glcd_theme\.)?[A-Za-z_][A-Za-z_0-9]*[ \t]*=|setSettingsText\([ \t]*g_settings\.(theme\.|glcd_theme\.)?[A-Za-z_][A-Za-z_0-9]*[ \t]*,)[ \t]*(configfile\.|tconfig->)get[A-Za-z0-9_]*\(/)) {
 		head = substr(line, RSTART, RLENGTH)
 		rest = substr(line, RSTART + RLENGTH)
 

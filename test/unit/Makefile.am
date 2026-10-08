@@ -20,6 +20,10 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib/libconfigfile \
 	-I$(top_srcdir)/lib/timerdclient \
 	-DCOREAPI_PAIRS_FILE='"$(abs_builddir)/settings-pairs.txt"' \
+	-DCOREAPI_PAIRS_BUILT_FILE='"$(abs_builddir)/settings-pairs-built.txt"' \
+	-DCOREAPI_LOAD_VALUES_INC='"$(abs_builddir)/settings-load-values.inc"' \
+	-DCOREAPI_ELEMENTS_FILE='"$(abs_builddir)/settings-elements.txt"' \
+	-DCOREAPI_ELEMENT_NAMES_INC='"$(abs_builddir)/settings-element-names.inc"' \
 	-DCOREAPI_KEYS_FILE='"$(abs_builddir)/settings-keys.txt"' \
 	-DCOREAPI_BOUNDS_FILE='"$(abs_builddir)/settings-bounds.txt"' \
 	-DCOREAPI_LOCALES_FILE='"$(abs_builddir)/settings-locales.txt"' \
@@ -167,12 +171,15 @@ coreapi_tests_SOURCES = \
 	coreapi/test_daemons.cpp \
 	coreapi/test_settingssource.cpp \
 	coreapi/test_settings.cpp \
+	coreapi/test_couple.cpp \
 	coreapi/test_schema.cpp \
 	coreapi/test_settingspairs.cpp \
 	coreapi/test_settingschoices.cpp \
 	coreapi/test_menuspec.cpp \
 	coreapi/test_settingstable.cpp \
 	coreapi/test_settingsappliers.cpp \
+	coreapi/test_apply.cpp \
+	gui/test_settingactive.cpp \
 	httpd/test_server.cpp \
 	support/test_httpclient.cpp \
 	coreapi/test_httpstatus.cpp \
@@ -213,6 +220,8 @@ coreapi_tests_SOURCES = \
 	coreapi/test_storagefile.cpp \
 	coreapi/test_storageroots.cpp \
 	coreapi/test_settingsfields.cpp \
+	coreapi/test_keyscolors.cpp \
+	coreapi/test_settingselements.cpp \
 	support/test_counts.cpp \
 	support/shape.cpp \
 	support/shape.h \
@@ -312,11 +321,11 @@ whole.log: $(PART_TESTS:.part=.log)
 $(PART_TESTS) whole.merge:
 	@: > $@
 
-EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/counts-mcp.txt support/part-seconds.txt support/httpclient.h \
+EXTRA_DIST = support/catch.hpp support/fakes.h support/conditions.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/counts-mcp.txt support/part-seconds.txt support/httpclient.h \
 	scan/extract-enum.sh support/merge-counts.sh \
 	scan/check-hook.sh scan/check-fieldtypes.sh \
 	scan/check-hardware.sh scan/check-cecmodes.sh scan/check-appliers.sh scan/check-denominator.sh \
-	scan/check-sections.sh scan/check-callback-boundary.sh scan/check-legacy-mount.sh \
+	scan/check-sections.sh scan/check-color-defaults.sh scan/check-callback-boundary.sh scan/check-legacy-mount.sh \
 	scan/check-legacybridge-order.sh scan/check-legacy-levels.sh \
 	scan/check-server-credentials.sh scan/check-legacy-bodygate.sh \
 	scan/check-channellist-invalidation.sh \
@@ -329,6 +338,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/count
 	scan/check-bouquet-vector-lock.sh \
 	scan/check-list-reader-lock.sh \
 	scan/check-settings-text-lock.sh \
+	scan/check-settings-list-lock.sh scan/fixtures/unguarded-list.cpp scan/fixtures/guarded-list.cpp scan/fixtures/unguarded-glcd.cpp scan/fixtures/unguarded-read.cpp \
 	scan/check-standby-display.sh \
 	scan/check-standby-abort.sh \
 	scan/check-standby-wake.sh \
@@ -344,11 +354,13 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/count
 	scan/fixtures/arms/site-else3.cpp scan/fixtures/arms/site-and3.cpp scan/fixtures/arms/site-notand3.cpp \
 	scan/fixtures/arms/site-elifelse.cpp scan/fixtures/arms/site-orand.cpp scan/fixtures/arms/site-bare2.cpp \
 	scan/fixtures/arms/site-amtwice.cpp scan/fixtures/arms/site-amtwo.cpp \
-	scan/fixtures/arms/site-continued.cpp scan/fixtures/arms/site-spans.cpp scan/fixtures/fixed-text.cpp scan/fixtures/bogus-key.cpp \
+	scan/fixtures/arms/site-continued.cpp scan/fixtures/arms/site-spans.cpp scan/fixtures/fixed-text.cpp scan/fixtures/bogus-key.cpp scan/fixtures/bogus-key-four.cpp scan/fixtures/bogus-key-macro.cpp scan/fixtures/bogus-unit.cpp scan/fixtures/bogus-format.cpp scan/fixtures/unread-wrapped.cpp scan/fixtures/unread-combined.cpp \
 	scan/fixtures/alternatives/settingstable_alternatives.cpp \
-	scan/extract-pairs.sh scan/extract-bounds.sh scan/extract-defines.sh \
+	scan/extract-pairs.sh scan/extract-elements.sh scan/loadvalues.awk scan/extract-bounds.sh scan/extract-defines.sh \
 	scan/extract-choices.sh scan/extract-constants.sh scan/extract-labels.sh \
 	scan/extract-applied.sh scan/extract-httpcodes.sh \
+	scan/check-apply-groups.sh scan/applyrows.awk scan/applyreads.awk scan/applygroups.awk scan/applyregs.awk scan/apply-eval-needs.txt \
+	scan/wiringapply.awk scan/apply-pending.txt scan/fixtures/apply \
 	scan/check-narrowing.sh support/narrow-probe.cpp
 
 # What the program says about its own settings, read out of its source so a
@@ -362,9 +374,9 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/count
 # layer under test reads it. A file that has never been written is not one the
 # recorded dependencies can bring into being, so it is asked for rather than left
 # to the order the directories are built in.
-BUILT_SOURCES = $(top_builddir)/src/tools/rcsim.h openapi.json settings-pairs.txt settings-keys.txt settings-bounds.txt settings-locales.txt \
+BUILT_SOURCES = $(top_builddir)/src/tools/rcsim.h openapi.json settings-pairs.txt settings-pairs-built.txt settings-load-values.inc settings-elements.txt settings-element-names.inc settings-keys.txt settings-bounds.txt settings-locales.txt \
 	settings-choices.txt settings-labels.txt settings-applied.txt errorcodes.txt statuses.txt httpcodes.txt
-CLEANFILES = openapi.json settings-pairs.txt settings-keys.txt settings-bounds.txt settings-locales.txt \
+CLEANFILES = openapi.json settings-pairs.txt settings-pairs-built.txt settings-load-values.inc settings-elements.txt settings-element-names.inc settings-keys.txt settings-bounds.txt settings-locales.txt \
 	settings-choices.txt settings-labels.txt settings-applied.txt errorcodes.txt statuses.txt httpcodes.txt \
 	counts.actual answers.actual \
 	$(PART_TESTS) whole.merge part-*.state part-*.state.tmp part-seconds.actual
@@ -389,6 +401,26 @@ httpcodes.txt: FORCE
 
 settings-pairs.txt: FORCE
 	@$(SHELL) $(srcdir)/scan/extract-pairs.sh $(top_srcdir)/src/neutrino.cpp $(top_srcdir)/src > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
+
+settings-pairs-built.txt: FORCE
+	@CXXCPP="$(CXX) -E" $(SHELL) $(srcdir)/scan/extract-pairs.sh -b $(top_srcdir)/src/neutrino.cpp $(top_srcdir)/src $(top_builddir)/config.h > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
+
+# The same pairs with the names the load falls back to written as the numbers
+# the compiler gives them.
+settings-load-values.inc: settings-pairs-built.txt
+	@awk -f $(srcdir)/scan/loadvalues.awk settings-pairs-built.txt > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
+
+# The key and the default of each element of an array, which the load builds rather
+# than writes out. Needs the names of the locales to say what a table of timeouts is
+# called, so it waits for that file.
+settings-elements.txt: settings-locales.txt FORCE
+	@$(SHELL) $(srcdir)/scan/extract-elements.sh $(top_srcdir)/src/neutrino.cpp $(top_srcdir)/src settings-locales.txt > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
+
+# The enumerators the tables of elements are written in the order of, named so that
+# the compiler gives each its number, as the load values above are. An enumerator that
+# only some builds have is left out of the others.
+settings-element-names.inc: settings-elements.txt
+	@awk -F'\t' '$$1 == "T" { if ($$7 != "-") printf "#if %s\n", $$7; printf "\t{ \"%s\", \"%s\", (long) SNeutrinoSettings::%s },\n", $$2, $$3, $$3; if ($$7 != "-") print "#endif" }' settings-elements.txt > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
 
 settings-keys.txt: FORCE
 	@$(SHELL) $(srcdir)/scan/extract-pairs.sh -k $(top_srcdir)/src > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
@@ -461,7 +493,10 @@ SCAN_CHECKS = \
 	scan-cecmodes \
 	scan-denominator \
 	scan-appliers \
+	scan-apply-groups \
+	scan-apply-groups-fixtures \
 	scan-sections \
+	scan-color-defaults \
 	scan-locale-catalog \
 	scan-addsetting \
 	scan-addsetting-arms \
@@ -478,6 +513,7 @@ SCAN_CHECKS = \
 	scan-bouquet-vector-lock \
 	scan-list-reader-lock \
 	scan-settings-text-lock \
+	scan-settings-list-lock \
 	scan-standby-display \
 	scan-standby-abort \
 	scan-standby-wake \
@@ -538,8 +574,29 @@ scan-denominator:
 scan-appliers:
 	@$(SHELL) $(srcdir)/scan/check-appliers.sh $(top_srcdir)
 
+# The tree is held to its groups, and then the scan is shown to go red. Each directory
+# under fixtures/apply is a small tree of its own, with the answer the scan must give
+# in its expect file: pass, or fail with the sentence it fails with and the key it
+# names. A fixture that fails for another reason than the one written is no proof
+# that the scan sees the case.
+scan-apply-groups:
+	@$(SHELL) $(srcdir)/scan/check-apply-groups.sh $(top_srcdir)
+
+scan-apply-groups-fixtures:
+	@for d in $(srcdir)/scan/fixtures/apply/*/; do \
+		want=`sed -n 1p $$d/expect`; phrase=`sed -n 2p $$d/expect`; key=`sed -n 3p $$d/expect`; \
+		err=`APPLY_FLOOR_KEYS=0 APPLY_FLOOR_READS=0 APPLY_FLOOR_APPLY=0 APPLY_EVAL_OPTIONAL=1 $(SHELL) $(srcdir)/scan/check-apply-groups.sh $$d $$d/pending.txt 2>&1 >/dev/null` && got=pass || got=fail; \
+		test "$$got" = "$$want" || { echo "check-apply-groups.sh answers $$got over $$d, expected $$want" >&2; echo "$$err" >&2; exit 1; }; \
+		test "$$want" = pass && continue; \
+		case "$$err" in *"$$phrase"*"$$key"*|*"$$key"*"$$phrase"*) ;; *) \
+			echo "check-apply-groups.sh fails over $$d for another reason than '$$phrase' of $$key:" >&2; echo "$$err" >&2; exit 1;; esac; \
+	done
+
 scan-sections:
 	@$(SHELL) $(srcdir)/scan/check-sections.sh $(top_srcdir)
+
+scan-color-defaults:
+	@$(SHELL) $(srcdir)/scan/check-color-defaults.sh $(top_srcdir)
 
 scan-locale-catalog:
 	@$(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir)
@@ -579,8 +636,14 @@ scan-row-alternatives:
 scan-locale-fixed-text:
 	@CATALOG_CHECK_EXTRA=$(srcdir)/scan/fixtures/fixed-text.cpp $(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir) >/dev/null \
 		|| { echo "check-locale-catalog.sh reads an entry's fixed text as a catalog key" >&2; exit 1; }
-	@err=`CATALOG_CHECK_EXTRA=$(srcdir)/scan/fixtures/bogus-key.cpp $(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir) 2>&1 >/dev/null`; \
-		case "$$err" in *no.such.catalog.key*) ;; *) echo "check-locale-catalog.sh passes a key the catalog does not carry" >&2; exit 1;; esac
+	@for f in bogus-key bogus-key-four bogus-key-macro bogus-unit bogus-format; do \
+		err=`CATALOG_CHECK_EXTRA=$(srcdir)/scan/fixtures/$$f.cpp $(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir) 2>&1 >/dev/null`; \
+		case "$$err" in *no.such.catalog.key*) ;; *) echo "check-locale-catalog.sh passes a key the catalog does not carry ($$f)" >&2; exit 1;; esac; \
+	done
+	@for f in unread-wrapped unread-combined; do \
+		err=`CATALOG_CHECK_EXTRA=$(srcdir)/scan/fixtures/$$f.cpp $(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir) 2>&1 >/dev/null`; \
+		case "$$err" in *"does not read"*) ;; *) echo "check-locale-catalog.sh lets a call it cannot read pass ($$f)" >&2; exit 1;; esac; \
+	done
 
 scan-callback-boundary:
 	@$(SHELL) $(srcdir)/scan/check-callback-boundary.sh $(top_srcdir)/src/httpd
@@ -611,6 +674,18 @@ scan-bouquet-vector-lock:
 
 scan-list-reader-lock:
 	@$(SHELL) $(srcdir)/scan/check-list-reader-lock.sh $(top_srcdir)
+
+# The scan reads the tree, and then it is shown to go red: over a fixture that changes a list
+# with no guard, and over one that assigns a display text directly, and to stay green over
+# the same changes written the way the tree writes them.
+scan-settings-list-lock:
+	@$(SHELL) $(srcdir)/scan/check-settings-list-lock.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/scan/check-settings-list-lock.sh $(top_srcdir) $(srcdir)/scan/fixtures/guarded-list.cpp >/dev/null \
+		|| { echo "check-settings-list-lock.sh refuses a change under the guard" >&2; exit 1; }
+	@for f in unguarded-list unguarded-glcd unguarded-read; do \
+		if $(SHELL) $(srcdir)/scan/check-settings-list-lock.sh $(top_srcdir) $(srcdir)/scan/fixtures/$$f.cpp >/dev/null 2>&1; then \
+			echo "check-settings-list-lock.sh passes $$f" >&2; exit 1; fi; \
+	done
 
 scan-settings-text-lock:
 	@$(SHELL) $(srcdir)/scan/check-settings-text-lock.sh $(top_srcdir)

@@ -9,52 +9,68 @@
 # What the run measured is written to counts.actual beside the binary. Putting
 # that file here is the whole of the edit, so a change to coverage is one diff
 # to read rather than a constant to lower in each of several cases.
-acted options matched to a declared row	27
+acted options matched to a declared row	38
 acted options whose row writes another member	0
-answer members narrower than free text	41
+answer members narrower than free text	44
 applier sections registered	9
+arrays held to a row for every element	14
 body examples their routes accepted	27
 body members the examples carry	25
 bounds compared against a screen	6
 bounds read off the screens	238
 bounds read with both ends resolved	236
-choice value names compared	282
+choice value names compared	571
 choices compared against a screen	4
 chooser call sites read	243
 chooser call sites read whole	241
-conditions checked	34
-defaults compared against the program	249
-error codes the header declares	162
+conditions checked	36
+defaults compared against the program	259
+defaults compared against this build's own load	257
+element defaults compared against the load	149
+element rows compared against the load	163
+elements of arrays held to a row	163
+error codes the header declares	163
 fields the bound scan read	13
 fields the chooser scan read	17
 fields with a stated label	93
+flag file rows held read-only	21
 flags compared against a screen	10
 groups the document declares	20
-key to field pairs read out of the program	430
-keys an applier lists	36
-keys compared against what the program reads	371
+key code defaults compared against this build's own load	50
+key to field pairs read out of the program	608
+keys an applier lists	48
+keys compared against what the program reads	397
 keys read anywhere in the tree	732
-keys whose default the scan can compare	292
+keys whose default the scan can compare	445
 labels compared against a chooser	16
 labels compared against a number chooser	7
 labels compared against a stated field	83
-labels compared against the locale names	344
+labels compared against the locale names	443
 labels stated beside a field	322
-listed keys compared against the table	26
+list, records and flag file rows	27
+listed keys compared against the table	34
+lists and lists of records held to a read of the load	5
 locale names the program has	3190
+memory backed folders tried	1
+number elements written and read back among their neighbours	145
 options an applier or its notifier branches on	45
 parameters the document describes	146
-refusals the document states against a route	843
+refusals the document states against a route	847
 refusals the header names	13
-refusals the routes declare of their own	125
-refusals the shipped routes were seen to give	201
-routes the document describes	106
-rows an applier acts on	26
-rows compared against the load and save pass	368
-rows in a section with an applier	309
-rows this build links	376
-rows whose value is not in the settings file	5
+refusals the routes declare of their own	126
+refusals the shipped routes were seen to give	202
+routes the document describes	107
+rows a notifier acts on that wait for a stream	3
+rows an applier acts on	34
+rows compared against the load and save pass	394
+rows in a section with an applier	535
+rows of the theme struct	26
+rows this build links	611
+rows whose value is not in the settings file	46
 rule refusals the document states	16
-shapes the document files against a route	50
+shapes the document files against a route	51
 statuses the enum declares	8
-success codes the document states	118
+success codes the document states	119
+table entries of the load with a row	89
+text elements written and read back among their neighbours	18
+text rules compared against a screen	45

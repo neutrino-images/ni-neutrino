@@ -1,19 +1,24 @@
 # Every member of SNeutrinoSettings, and whether a table row could carry it. Read after
 # the comments have been taken out.
 #
+# With -v struct=SNeutrinoTheme -v qual=theme. it reads that one of the structs
+# the settings hold instead, naming each member with the prefix: a member of a
+# struct inside the settings is a setting like the others, found under the member
+# that holds the struct.
+#
 # The conditionals are ignored rather than followed, so every arm is read: a row may be
 # written for a box this build is not for, and the count it is held to has to hold those
 # as well.
 #
 # One line per member, tab between: the name, scalar or aggregate, whether it stands
 # inside a conditional arm, and for an aggregate what makes it one.
-BEGIN { depth = 0; body = 0; seen = 0; arm = 0 }
+BEGIN { depth = 0; body = 0; seen = 0; arm = 0; if (struct == "") struct = "SNeutrinoSettings" }
 /^[ \t]*#[ \t]*(if|ifdef|ifndef)/ { if (body) arm++; next }
 /^[ \t]*#[ \t]*endif/ { if (body && arm > 0) arm--; next }
 /^[ \t]*#/ { next }
 !body {
 	# the definition and not a forward declaration, which ends before its brace
-	if ($0 ~ /struct[ \t]+SNeutrinoSettings[ \t]*(\/|$)/) { found = 1 }
+	if ($0 ~ ("struct[ \t]+" struct "[ \t]*(/|$)")) { found = 1 }
 	if (!found) next
 	if ($0 ~ /;/) { found = 0; next }
 	if (index($0, "{") == 0) next
@@ -52,11 +57,11 @@ BEGIN { depth = 0; body = 0; seen = 0; arm = 0 }
 }
 END {
 	if (!seen) {
-		print "fields.awk: no SNeutrinoSettings body was read" > "/dev/stderr"
+		print "fields.awk: no " struct " body was read" > "/dev/stderr"
 		exit 1
 	}
 	if (depth != 0) {
-		print "fields.awk: the struct body does not close, depth " depth > "/dev/stderr"
+		print "fields.awk: the " struct " body does not close, depth " depth > "/dev/stderr"
 		exit 1
 	}
 }
@@ -82,13 +87,13 @@ function emit(pre, decl,   name, type, why, bare)
 	name = bare
 	sub(/^.* /, "", name)
 	if (pre != "") {
-		print name "\taggregate\t" where() "\tnested block"
+		print qual name "\taggregate\t" where() "\tnested block"
 		return
 	}
 	type = bare
 	sub(/ [A-Za-z_][A-Za-z_0-9]*$/, "", type)
 	if (decl ~ /\[/) {
-		print name "\taggregate\t" where() "\tarray"
+		print qual name "\taggregate\t" where() "\tarray"
 		return
 	}
 	if (decl ~ /,/) {
@@ -101,9 +106,9 @@ function emit(pre, decl,   name, type, why, bare)
 		exit 1
 	}
 	if (why == "scalar")
-		print name "\tscalar\t" where()
+		print qual name "\tscalar\t" where()
 	else
-		print name "\taggregate\t" where() "\t" why
+		print qual name "\taggregate\t" where() "\t" why
 }
 
 # A member behind a conditional exists on some builds and not on others, which

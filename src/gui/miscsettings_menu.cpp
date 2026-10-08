@@ -174,7 +174,8 @@ int CMiscMenue::exec(CMenuTarget *parent, const std::string &actionKey)
 			g_Sectionsd->readSIfromXML(g_settings.epg_dir.c_str());
 		}
 
-		for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); ++it)
+		std::list<std::string> xmltv = settingsCopy(g_settings.xmltv_xml);
+		for (std::list<std::string>::iterator it = xmltv.begin(); it != xmltv.end(); ++it)
 		{
 			printf("Reading xmltv epg from %s ...\n", (*it).c_str());
 			g_Sectionsd->readSIfromXMLTV((*it).c_str());

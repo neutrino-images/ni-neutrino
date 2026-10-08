@@ -22,7 +22,7 @@
 /**
  * @typedef {Object} Row
  * @property {string} id
- * @property {'bool'|'int'|'string'|'enum'} type
+ * @property {'bool'|'int'|'string'|'enum'|'key'} type
  * @property {string} label
  * @property {string} section
  * @property {boolean} secret
@@ -30,23 +30,36 @@
  * @property {string} fallback what the box falls back to, empty for a credential
  * @property {number|null} min
  * @property {number|null} max
+ * @property {string} unit the name of the text that follows the number, empty for none
+ * @property {number|null} channels how many channels a colour has, null for any other row
  * @property {{ value: number, label: string }[]} choices
  * @property {boolean} locked whether no write of it can land, for either reason below
  * @property {boolean} held whether the box's parental lock holds it
+ * @property {boolean} pending whether the box holds it until its own screen's effect can be applied from outside
  * @property {import('./model.js').Condition[]} conditions
  */
 
 /**
- * @typedef {Object} Condition
+ * One comparison against another setting. text is the placeholder text-valid holds the
+ * setting's text against, and empty for every other operator.
+ *
+ * @typedef {Object} Comparison
  * @property {string} key
  * @property {string} op
  * @property {number[]} values
+ * @property {string} text
+ */
+
+/**
+ * A comparison, or a group that holds when any of its comparisons does.
+ *
+ * @typedef {Comparison | { any: Comparison[] }} Condition
  */
 
 /** what the schema calls a setting, before this file has read it */
-/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, values?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, available?: unknown, conditions?: unknown }} Declared */
+/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, unit?: unknown, channels?: unknown, values?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, held?: unknown, available?: unknown, conditions?: unknown }} Declared */
 
-const kTypes = ['bool', 'int', 'string', 'enum'];
+const kTypes = ['bool', 'int', 'string', 'enum', 'key', 'color'];
 
 /**
  * One declared setting, as this screen reads it.
@@ -72,7 +85,9 @@ export function rowOf(declared) {
 	if (declared.available === false)
 		return null;
 
-	const kind = /** @type {'bool'|'int'|'string'|'enum'} */ (type);
+	/* A colour is drawn as text. A key keeps its own kind: its names are a list of their
+	   own, put on the row by withKeyNames, and until that arrives it is a number. */
+	const kind = /** @type {'bool'|'int'|'string'|'enum'|'key'} */ (type === 'color' ? 'string' : type);
 	const offered = Array.isArray(declared.values) ? declared.values : [];
 	/** @type {{ value: number, label: string }[]} */
 	const choices = [];
@@ -87,6 +102,9 @@ export function rowOf(declared) {
 	}
 
 	const held = declared.locked === true;
+	// Held for another reason: the screen that owns it still applies its effect, which a write
+	// from here would not. Not the parental lock, and it must not be worded as one.
+	const pending = declared.held === true;
 	return {
 		id: id,
 		type: kind,
@@ -95,19 +113,50 @@ export function rowOf(declared) {
 		secret: declared.secret === true,
 		needsRestart: declared.needs_restart === true,
 		fallback: typeof declared['default'] === 'string' ? declared['default'] : '',
-		min: kind === 'int' && Number.isFinite(Number(declared.min)) ? Number(declared.min) : null,
-		max: kind === 'int' && Number.isFinite(Number(declared.max)) ? Number(declared.max) : null,
+		min: (kind === 'int' || kind === 'key') && Number.isFinite(Number(declared.min)) ? Number(declared.min) : null,
+		max: (kind === 'int' || kind === 'key') && Number.isFinite(Number(declared.max)) ? Number(declared.max) : null,
+		unit: kind === 'int' && typeof declared.unit === 'string' ? declared.unit : '',
+		channels: type === 'color' && (declared.channels === 3 || declared.channels === 4) ? declared.channels : null,
 		choices: choices,
 		// Only a choice can lack its values. Every other kind states what it
 		// takes in the row itself, so there is nothing the box could have
 		// failed to answer.
-		locked: held || (kind === 'enum' && choices.length === 0),
+		locked: held || pending || (kind === 'enum' && choices.length === 0),
 		held: held,
+		pending: pending,
 		conditions: conditionsOf(declared.conditions),
 	};
 }
 
 /**
+ * @param {unknown} one
+ * @returns {Comparison | null}
+ */
+function comparisonOf(one) {
+	if (!one || typeof one !== 'object')
+		return null;
+	const said = /** @type {{ key?: unknown, op?: unknown, values?: unknown, text?: unknown }} */ (one);
+	const key = typeof said.key === 'string' ? said.key : '';
+	const op = typeof said.op === 'string' ? said.op : '';
+	if (key === '' || op === '')
+		return null;
+	/** @type {number[]} */
+	const numbers = [];
+	if (Array.isArray(said.values)) {
+		for (const value of said.values) {
+			const n = Number(value);
+			if (Number.isFinite(n))
+				numbers.push(n);
+		}
+	}
+	return { key: key, op: op, values: numbers, text: typeof said.text === 'string' ? said.text : '' };
+}
+
+/**
+ * A member this page cannot read is kept as a comparison naming no setting, which holds and
+ * so makes its group hold, the way the box answers a member it cannot read. An empty group
+ * is dropped, which leaves the row shown: the box answers that the same way.
+ *
  * @param {unknown} declared
  * @returns {Condition[]}
  */
@@ -117,23 +166,21 @@ function conditionsOf(declared) {
 	if (!Array.isArray(declared))
 		return out;
 	for (const one of declared) {
-		if (!one || typeof one !== 'object')
+		const group = one && typeof one === 'object' ? /** @type {{ any?: unknown }} */ (one).any : undefined;
+		if (!Array.isArray(group)) {
+			const comparison = comparisonOf(one);
+			if (comparison !== null)
+				out.push(comparison);
 			continue;
-		const said = /** @type {{ key?: unknown, op?: unknown, values?: unknown }} */ (one);
-		const key = typeof said.key === 'string' ? said.key : '';
-		const op = typeof said.op === 'string' ? said.op : '';
-		if (key === '' || op === '')
-			continue;
-		/** @type {number[]} */
-		const numbers = [];
-		if (Array.isArray(said.values)) {
-			for (const value of said.values) {
-				const n = Number(value);
-				if (Number.isFinite(n))
-					numbers.push(n);
-			}
 		}
-		out.push({ key: key, op: op, values: numbers });
+		/** @type {Comparison[]} */
+		const any = [];
+		for (const member of group) {
+			const comparison = comparisonOf(member);
+			any.push(comparison !== null ? comparison : { key: '', op: '', values: [], text: '' });
+		}
+		if (any.length > 0)
+			out.push({ any: any });
 	}
 	return out;
 }
@@ -154,6 +201,33 @@ export function rowsOf(answer) {
 			out.push(row);
 	}
 	return out;
+}
+
+/**
+ * The key rows with the names the box gives its keys as their choices. A row whose list
+ * has not arrived keeps none and is drawn as the number it is stored as.
+ *
+ * @param {Row[]} rows
+ * @param {{ items?: unknown } | null} answer GET /api/v1/settings/keys
+ * @returns {Row[]}
+ */
+export function withKeyNames(rows, answer) {
+	const items = answer && Array.isArray(answer.items) ? answer.items : [];
+	/** @type {{ value: number, label: string }[]} */
+	const names = [];
+	for (const one of items) {
+		if (!one || typeof one !== 'object')
+			continue;
+		const code = Number(/** @type {{ code?: unknown }} */ (one).code);
+		const name = /** @type {{ name?: unknown }} */ (one).name;
+		if (Number.isFinite(code) && typeof name === 'string' && name !== '')
+			names.push({ value: code, label: name });
+	}
+	if (names.length === 0)
+		return rows;
+	return rows.map(function (row) {
+		return row.type === 'key' ? Object.assign({}, row, { choices: names }) : row;
+	});
 }
 
 /**
@@ -215,21 +289,36 @@ export function valueOf(row, values) {
 }
 
 /**
- * Whether one comparison holds.
+ * Whether one condition holds, a group when any one of its comparisons does.
  *
  * A comparison this cannot carry out is answered true. It names a setting whose value is
- * not in front of this screen, which happens when it lives on another page, and hiding a
- * field on a fact nobody has is how a setting becomes unreachable with nothing on screen to
- * say why.
+ * not in front of this screen, which happens when it lives on another page or is a
+ * credential, and hiding a field on a fact nobody has is how a setting becomes unreachable
+ * with nothing on screen to say why.
  *
  * @param {Condition} condition
  * @param {Record<string, string>} values
  * @returns {boolean}
  */
 export function conditionHolds(condition, values) {
+	if ('any' in condition)
+		return condition.any.some(function (one) { return comparisonHolds(one, values); });
+	return comparisonHolds(condition, values);
+}
+
+/**
+ * @param {Comparison} condition
+ * @param {Record<string, string>} values
+ * @returns {boolean}
+ */
+function comparisonHolds(condition, values) {
+	// A member kept unread names no setting, and no value is held under no name.
 	const held = values[condition.key];
 	if (held === undefined)
 		return true;
+	// An empty placeholder adds nothing to the test for an empty text.
+	if (condition.op === 'text-valid')
+		return held !== '' && held !== condition.text;
 	const value = Number(held);
 	if (!Number.isFinite(value))
 		return true;
@@ -432,7 +521,7 @@ export function driftsFromDefault(row, values) {
  * @returns {string}
  */
 export function fallbackLabel(row) {
-	if (row.type !== 'enum')
+	if (row.type !== 'enum' && row.type !== 'key')
 		return row.fallback;
 	const wanted = Number(row.fallback);
 	for (const choice of row.choices) {

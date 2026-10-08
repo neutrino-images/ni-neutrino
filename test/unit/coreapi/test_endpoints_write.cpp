@@ -49,6 +49,7 @@
 #include "coreapi/base/types.h"
 
 #include <neutrinoMessages.h>
+#include <system/settings.h>
 
 #include "jsoncpp/json/json.h"
 
@@ -1287,7 +1288,8 @@ const coreapi::Descriptor kFanRow[] =
 		"fixture_fan", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
-		  fixtureFan, NULL }
+		  fixtureFan, NULL, NULL },
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 } // namespace
@@ -1308,6 +1310,171 @@ TEST_CASE("a write of a setting the box lacks is refused as setting-not-on-this-
 	const Reply taken = authedPatch("/api/v1/settings/fixture", "{\"fixture_fan\":\"3\"}");
 	REQUIRE(taken.code == 200);
 	REQUIRE(box.store.ints["fixture_fan"] == 3);
+}
+
+TEST_CASE("a setting and the one it depends on are taken in one write in either order", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.store.ints["epg_save"] = 0;
+	box.store.ints["epg_read"] = 0;
+
+	const Reply r = authedPatch("/api/v1/settings/misc",
+	                            "{\"epg_dir\":\"/usr\",\"epg_save\":\"1\"}");
+	REQUIRE(r.code == 200);
+	REQUIRE(box.store.ints["epg_save"] == 1);
+	REQUIRE(box.store.strings["epg_dir"] == "/usr");
+}
+
+TEST_CASE("a write is carried out with the settings that go with it", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.store.ints["epg_save"] = 0;
+	box.store.ints["epg_read"] = 0;
+
+	// The read is not in the body and is on afterwards, and the answer reads it as it stands.
+	const Reply r = authedPatch("/api/v1/settings/misc", "{\"epg_save\":\"1\"}");
+	REQUIRE(r.code == 200);
+	REQUIRE(box.store.ints["epg_save"] == 1);
+	REQUIRE(box.store.ints["epg_read"] == 1);
+
+	// Two plugin lists naming one plugin are refused whole, each under its own key.
+	const Reply clash = authedPatch("/api/v1/settings/misc",
+	                                "{\"plugins_game\":\"a\",\"plugins_tool\":\"a\"}");
+	REQUIRE(clash.code != 200);
+	REQUIRE(clash.body.find("setting-condition-not-met") != std::string::npos);
+	REQUIRE(box.store.strings.count("plugins_game") == 0);
+	REQUIRE(box.store.strings.count("plugins_tool") == 0);
+}
+
+TEST_CASE("a value against what a write implies is refused for both, and an added setting that fails is answered", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.store.ints["epg_save"] = 0;
+	box.store.ints["epg_read"] = 0;
+
+	const Reply against = authedPatch("/api/v1/settings/misc", "{\"epg_save\":\"1\",\"epg_read\":\"0\"}");
+	REQUIRE(against.code == 207);
+	const ::Json::Value refused = parsed(against.body)["results"];
+	REQUIRE(refused["epg_save"]["code"].asString() == "setting-condition-not-met");
+	REQUIRE(refused["epg_read"]["code"].asString() == "setting-condition-not-met");
+	REQUIRE(box.store.ints["epg_save"] == 0);
+	REQUIRE(box.store.ints["epg_read"] == 0);
+
+	/* The postal code is not in the body; with the weather off the pick and the code it clears
+	   are all refused, and the code is answered under its own key. */
+	box.store.ints["weather_enabled"] = 0;
+	const Reply pick = authedPatch("/api/v1/settings/weather",
+	                               "{\"weather_city\":\"Hamburg\",\"weather_location\":\"53.55,10.00\"}");
+	REQUIRE(pick.code == 207);
+	const ::Json::Value answers = parsed(pick.body)["results"];
+	REQUIRE(answers["weather_postalcode"]["code"].asString() == "setting-condition-not-met");
+	REQUIRE(answers["weather_city"]["code"].asString() == "setting-condition-not-met");
+	REQUIRE(box.store.strings.count("weather_postalcode") == 0);
+}
+
+TEST_CASE("a write its conditions do not allow is refused as setting-condition-not-met", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.store.ints["epg_save"] = 1;
+	box.store.ints["epg_read"] = 0;
+
+	// The same two settings as two requests, the controller first and switching off.
+	const Reply first = authedPatch("/api/v1/settings/misc", "{\"epg_save\":\"0\"}");
+	REQUIRE(first.code == 200);
+
+	const Reply second = authedPatch("/api/v1/settings/misc", "{\"epg_dir\":\"/usr\"}");
+	REQUIRE(second.code == 409);
+	REQUIRE(second.body.find("setting-condition-not-met") != std::string::npos);
+	REQUIRE(box.store.strings.count("epg_dir") == 0);
+}
+
+TEST_CASE("a setting whose controller is refused for its value is refused too", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.store.ints["epg_save"] = 0;
+	box.store.ints["epg_read"] = 0;
+
+	const char *const bad[] = { "5", "on" };
+	const char *const why[] = { "out-of-range", "not-a-number" };
+	for (size_t b = 0; b < 2; ++b)
+	{
+		INFO("epg_save " << bad[b]);
+		const Reply r = authedPatch("/api/v1/settings/misc",
+		                            std::string("{\"epg_save\":\"") + bad[b] + "\",\"epg_dir\":\"/usr\"}");
+		REQUIRE(r.code == 207);
+		const ::Json::Value results = parsed(r.body)["results"];
+		REQUIRE(results["epg_save"]["code"].asString() == why[b]);
+		REQUIRE(results["epg_dir"]["status"].asInt() == 409);
+		REQUIRE(results["epg_dir"]["code"].asString() == "setting-condition-not-met");
+		REQUIRE(box.store.strings.count("epg_dir") == 0);
+		REQUIRE(box.store.ints["epg_save"] == 0);
+	}
+}
+
+TEST_CASE("two settings whose new values refuse each other both stay as they were", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.store.ints["mode_icons"] = 0;
+	box.store.ints["mode_icons_skin"] = INFOICONS_INFOVIEWER;
+
+	const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons\":\"1\",\"mode_icons_skin\":\"0\"}");
+	REQUIRE(r.code == 207);
+	const ::Json::Value results = parsed(r.body)["results"];
+	REQUIRE(results["mode_icons"]["code"].asString() == "setting-condition-not-met");
+	REQUIRE(results["mode_icons_skin"]["code"].asString() == "setting-condition-not-met");
+	REQUIRE(box.store.ints["mode_icons"] == 0);
+	REQUIRE(box.store.ints["mode_icons_skin"] == INFOICONS_INFOVIEWER);
+}
+
+namespace
+{
+const coreapi::Condition kFixtureKeyValid[] =
+{
+	{ "fixture_key", coreapi::CompareOp::TextValid, 0, NULL, 0, "XXXX", NULL, 0 }
+};
+
+// A credential and a switch that needs it, the shape every online service has.
+const coreapi::Descriptor kKeyAndService[] =
+{
+	{
+		"fixture_key", coreapi::ValueType::String, "fixture", NULL, NULL,
+		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
+		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
+		  NULL, NULL, NULL },
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+	{
+		"fixture_service", coreapi::ValueType::Bool, "fixture", NULL, NULL,
+		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kFixtureKeyValid),
+		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
+		  NULL, NULL, NULL },
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+};
+} // namespace
+
+/* A form redrawn from a read sends the credential back empty. That write is refused and
+   never lands, so the key the box holds is what the switch is judged on. */
+TEST_CASE("a credential sent back empty is not what refuses the setting depending on it", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	InstalledSettingsTable table(kKeyAndService, 2);
+	box.store.strings["fixture_key"] = "the key";
+
+	const Reply r = authedPatch("/api/v1/settings/fixture", "{\"fixture_key\":\"\",\"fixture_service\":\"1\"}");
+	REQUIRE(r.code == 207);
+	const ::Json::Value results = parsed(r.body)["results"];
+	REQUIRE(results["fixture_key"]["code"].asString() == "empty-credential");
+	REQUIRE(results["fixture_service"]["status"].asInt() == 200);
+	REQUIRE(box.store.strings["fixture_key"] == "the key");
+	REQUIRE(box.store.ints["fixture_service"] == 1);
 }
 
 TEST_CASE("clearing a credential is its own act", "[write]")

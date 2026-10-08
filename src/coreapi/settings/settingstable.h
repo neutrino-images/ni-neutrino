@@ -23,6 +23,8 @@
 
 #include "coreapi/base/schema.h"
 
+#include <system/sms_input.h>
+
 namespace coreapi
 {
 
@@ -86,11 +88,56 @@ const Descriptor *settingsTableParental(size_t &count);
 const Descriptor *settingsTableCam(size_t &count);
 const Descriptor *settingsTableHdd(size_t &count);
 const Descriptor *settingsTableUpdate(size_t &count);
+/* The three that follow are not a screen's worth of settings but a kind: the
+   members of the two theme structs, the elements of the arrays, and the lists
+   and flag files. Each row still names the section whose screen offers it. */
+const Descriptor *settingsTableTheme(size_t &count);
+const Descriptor *settingsTableElements(size_t &count);
+const Descriptor *settingsTableLists(size_t &count);
+
+/* What each text row accepts, shared by the rows that take the same thing. Every
+   figure is the one the screen that edits the row enforces; a row holding to
+   none of them has no rule and is plain text. Constants in a header so a row
+   file takes the address of one in its constant table. */
+constexpr TextRule kRuleDirectory = { TextKind::Directory, 0, 0, NULL, MustExist::No, NULL, false };
+// The folder browser only returns a folder that exists.
+constexpr TextRule kRuleDirectoryExists = { TextKind::Directory, 0, 0, NULL, MustExist::Yes, NULL, false };
+// Recording, EPG and screenshots refuse a folder on flash or in memory.
+constexpr TextRule kRuleDirectoryDurable = { TextKind::Directory, 0, 0, NULL, MustExist::YesNotTmpfs, NULL, false };
+// The timeshift folder may be left empty, which means the recording folder.
+constexpr TextRule kRuleDirectoryDurableOrEmpty = { TextKind::Directory, 0, 0, NULL, MustExist::YesNotTmpfs, NULL, true };
+// The update folder may be in memory, which is where an upload lands.
+constexpr TextRule kRuleDirectoryUpdate = { TextKind::Directory, 0, 0, NULL, MustExist::YesNotFlash, NULL, false };
+// Four digits, because that is all the remote's pin entry can type back.
+constexpr TextRule kRulePin = { TextKind::Pin, 4, 4, "0123456789", MustExist::No, NULL, false };
+constexpr TextRule kRuleNumberText3 = { TextKind::NumberAsText, 0, 3, "0123456789 ", MustExist::No, NULL, false };
+constexpr TextRule kRuleNumberText5 = { TextKind::NumberAsText, 0, 5, "0123456789 ", MustExist::No, NULL, false };
+constexpr TextRule kRuleHost = { TextKind::Host, 0, 0, NULL, MustExist::No, NULL, false };
+constexpr TextRule kRuleNameFromList = { TextKind::NameFromList, 0, 0, NULL, MustExist::No, NULL, false };
+constexpr TextRule kRulePathList = { TextKind::PathList, 0, 0, NULL, MustExist::No, NULL, false };
+constexpr TextRule kRuleChannelId = { TextKind::Plain, 1, 16, "0123456789abcdefABCDEF", MustExist::No, NULL, false };
+constexpr TextRule kRuleFontFile = { TextKind::File, 0, 0, NULL, MustExist::Yes, "ttf", false };
+#ifdef USE_SMS_INPUT
+// Typed by name on the SMS input, which takes thirty characters and a name that is not there yet.
+constexpr TextRule kRuleUrlFile = { TextKind::File, 0, 30, NULL, MustExist::No, NULL, true };
+#else
+constexpr TextRule kRuleUrlFile = { TextKind::File, 0, 0, NULL, MustExist::Yes, "conf,urls", false };
+#endif
+constexpr TextRule kRuleKey8 = { TextKind::Plain, 0, 8, NULL, MustExist::No, NULL, false };
+constexpr TextRule kRuleKey16 = { TextKind::Plain, 0, 16, NULL, MustExist::No, NULL, false };
+constexpr TextRule kRuleKey32 = { TextKind::Plain, 0, 32, NULL, MustExist::No, NULL, false };
+constexpr TextRule kRuleKey39 = { TextKind::Plain, 0, 39, NULL, MustExist::No, NULL, false };
+constexpr TextRule kRulePostalCode = { TextKind::Plain, 0, 5, "0123456789. ", MustExist::No, NULL, false };
 
 /* The rows a box whose image fixes the parental lock refuses to change. Kept as
    a list beside the parental rows rather than as a member of every row. */
 const char *const *parentalLockKeys(size_t &count);
 bool heldByParentalLock(const char *key);
+
+/* The rows that are read-only until the stream that owns them moves their effect to
+   something that applies it: a flag file whose screen also starts or stops a program, or
+   rewrites other settings, would be only half done by a write of the file alone. */
+bool heldUntilApplied(const char *key);
 
 } // namespace coreapi
 

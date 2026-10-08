@@ -23,6 +23,7 @@
 
 #include "coreapi/base/deps.h"
 #include "coreapi/base/errors.h"
+#include "coreapi/base/flagfile.h"
 #include "settings.h"
 
 namespace coreapi
@@ -40,9 +41,19 @@ Result<MenuItemSpec> menuItem(const std::string &key)
 	const Descriptor *d = &here;
 	const bool asked = d->field.ask != NULL && d->field.tell != NULL;
 	const bool numbered = d->field.read_number != NULL && d->field.write_number != NULL;
-	if (d->type == ValueType::String || (d->field.int_pointer == NULL && !asked && !numbered))
+	const bool texted = d->field.read_text != NULL && d->field.write_text != NULL;
+	// A flag file has no function of its own: its row names the file.
+	const bool flagged = d->field.origin == FieldOrigin::FlagFile;
+	if (d->type == ValueType::Color)
+	{
+		// A colour is edited as the text of its channels, which is all a widget needs of it.
+		if (!texted)
+			return fail(Status::Internal, ErrorCode::BadTable,
+				    "the setting has no colour a widget can edit");
+	}
+	else if (d->type == ValueType::String ? !texted : (d->field.int_pointer == NULL && !asked && !numbered && !flagged))
 		return fail(Status::Internal, ErrorCode::BadTable,
-			    "the setting has no number a widget can edit");
+			    "the setting has no value a widget can edit");
 
 	MenuItemSpec spec;
 	spec.key = d->key;
@@ -54,17 +65,31 @@ Result<MenuItemSpec> menuItem(const std::string &key)
 	spec.int_pointer = d->field.int_pointer;
 	spec.field = d->field;
 	spec.locked = settings::lockedNow(key);
+	spec.text = d->text;
+	spec.secret = d->secret;
 
-	if (d->type == ValueType::Int)
+	if (d->type == ValueType::Color)
+		spec.channels = colorChannels(*d);
+	else if (d->type == ValueType::Key)
 	{
 		spec.min = d->min;
 		spec.max = d->max;
-		const EnumValue *named = namedNumber(*d);
-		if (named != NULL)
+	}
+	else if (d->type == ValueType::Int)
+	{
+		spec.min = d->min;
+		spec.max = d->max;
+		if (d->unit_key != NULL)
+			spec.unit_key = d->unit_key;
+		if (d->format_key != NULL)
+			spec.format_key = d->format_key;
+		// Every number the row names in words, as namedNumber leaves several
+		// to whoever honours them all.
+		for (size_t i = 0; d->values != NULL && i < d->value_count; ++i)
 		{
 			MenuChoice c;
-			c.value = named->value;
-			c.label_key = named->label_key;
+			c.value = d->values[i].value;
+			c.label_key = d->values[i].label_key;
 			spec.choices.push_back(c);
 		}
 	}
@@ -120,6 +145,11 @@ Result<MenuItemSpec> menuItem(const std::string &key)
 
 bool menuValueRead(const MenuItemSpec &spec, const SNeutrinoSettings &s, long &out)
 {
+	if (spec.field.origin == FieldOrigin::FlagFile)
+	{
+		out = flagFileIsSet(spec.field.name) ? 1 : 0;
+		return true;
+	}
 	if (spec.field.ask != NULL)
 		return spec.field.ask(out);
 	if (spec.field.read_number == NULL)
@@ -128,8 +158,34 @@ bool menuValueRead(const MenuItemSpec &spec, const SNeutrinoSettings &s, long &o
 	return true;
 }
 
+bool menuTextRead(const MenuItemSpec &spec, const SNeutrinoSettings &s, std::string &out)
+{
+	if (spec.field.read_text == NULL)
+		return false;
+	spec.field.read_text(s, out);
+	return true;
+}
+
+bool menuTextWrite(const MenuItemSpec &spec, SNeutrinoSettings &s, const std::string &value)
+{
+	if (spec.field.write_text == NULL)
+		return false;
+	// The field drops a text it cannot read and says nothing, so a colour that is none is
+	// refused here where the caller can be told.
+	if (spec.type == ValueType::Color)
+	{
+		unsigned char channels[4];
+		if (!readColorText(value, spec.channels, channels))
+			return false;
+	}
+	spec.field.write_text(s, value);
+	return true;
+}
+
 bool menuValueWrite(const MenuItemSpec &spec, SNeutrinoSettings &s, long value)
 {
+	if (spec.field.origin == FieldOrigin::FlagFile)
+		return (value == 0 || value == 1) && setFlagFile(spec.field.name, value != 0);
 	if (spec.field.tell != NULL)
 		return spec.field.tell(value);
 	if (spec.field.write_number == NULL)

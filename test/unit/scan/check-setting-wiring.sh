@@ -37,6 +37,14 @@
 # row does not carry). A WARN is for the human who
 # reads the screen, so 3 is not a pass.
 #
+# After the items, a second pass (wiringapply.awk) reads what the conversion took
+# out beside them: setActive, the notifiers that grey an item, the key checks of a
+# menu and the branches of a change notifier. Each setting they read is set against
+# the conditions the rows state and the apply groups; a NOTE shows both sides for the
+# reader to compare and a WARN says there is nothing to compare, either because no
+# row's condition names the setting or because the branch's setting has no group
+# and is not on apply-pending.txt. Its WARNs count as this check's WARNs.
+#
 # Not checked, and so left to the review of each screen: the #if around the item,
 # an if that is not on the box, the order of the items in the menu, arguments of the addItem call other
 # than the item, and later uses of the old item variable (setActive, setMarked,
@@ -83,6 +91,8 @@ git diff -U0 "$REV" -- "$REL" | grep '^@@' > "$tmp/hunks" || true
 	sh "$HERE/extract-constants.sh" src lib
 } > "$tmp/names"
 
+# the pass below still has to run when this one finds a mismatch
+set +e
 awk -v old="$tmp/old.c" -v new="$tmp/new.c" -v rows="$tmp/rows.c" -v hunks="$tmp/hunks" -v names="$tmp/names" \
 	-v preds="$tmp/preds.c" -v capsrc="$tmp/caps.c" \
 	-v localesh="src/system/locals.h" -v localesi="src/system/locals_intern.h" \
@@ -336,24 +346,31 @@ function load_locales(    n, i, l, inenum, instr, ne, ns) {
 }
 
 # ---- the declaration: rows and enum tables ----
-function load_rows(    n, i, T, p, rest, starts, ns, k, R, nr, a, t, tok, e, body, ent, ne, parts, np, j, name, end, l, tab, opened, pend) {
+function load_rows(    n, i, T, p, rest, starts, ns, k, R, nr, a, t, tok, e, body, ent, ne, parts, np, j, name, args, lo, end, l, tab, opened, pend) {
 	n = readfile(rows, RL)
 	T = ""
 	# a directive ends where its line does, which the joined text marks
 	for (i = 1; i <= n; i++) T = T " " RL[i] ((RL[i] ~ /^[ \t]*#/) ? " \002" : "")
 	# the other shape a row may take, by name
 	rest = T
-	while (match(rest, /Shape[ \t]+[A-Za-z_0-9]+[ \t]*=[ \t]*\{[^}]*\}/)) {
+	while (match(rest, /Shape[ \t]+[A-Za-z_0-9]+[ \t]*=[ \t]*shape\([^;]*;/)) {
 		a = substr(rest, RSTART, RLENGTH)
 		rest = substr(rest, RSTART + RLENGTH)
 		name = a; sub(/^Shape[ \t]+/, "", name); sub(/[ \t=].*$/, "", name)
-		sub(/^[^{]*\{/, "", a); sub(/\}$/, "", a)
-		split_args(a, parts)
+		sub(/^[^(]*\(/, "", a)
+		args = a; sub(/\).*$/, "", args)
+		split_args(args, parts)
 		t = nows(parts[1]); sub(/^ValueType::/, "", t)
 		shtype[name] = t
 		shlabel[name] = str_lit(parts[2])
-		shmin[name] = num(parts[3]); shmax[name] = num(parts[4])
-		shenum[name] = (nows(parts[5]) == "NULL") ? "" : nows(parts[5])
+		shmin[name] = 0; shmax[name] = 0
+		if (match(a, /\.range\([^)]*\)/)) {
+			lo = substr(a, RSTART + 7, RLENGTH - 8)
+			split_args(lo, parts)
+			shmin[name] = num(parts[1]); shmax[name] = num(parts[2])
+		}
+		shenum[name] = ""
+		if (match(a, /\.values\([^)]*\)/)) shenum[name] = nows(substr(a, RSTART + 8, RLENGTH - 9))
 	}
 	# enum tables, line by line for the arms inside them
 	tab = ""
@@ -1268,3 +1285,29 @@ BEGIN {
 	exit (nfail > 0) ? 1 : ((nwarn > 0) ? 3 : 0)
 }
 '
+rc=$?
+set -e
+
+# What the conversion took out beside the items, against the rows and the apply
+# groups. Its WARN lines count as this check's WARN: exit 3 unless the items
+# already failed.
+git diff -U0 "$REV" -- "$REL" | sed -n 's/^-\([^-].*\)$/\1/p; s/^-$//p' \
+	| awk -v keepstrings=1 -f "$STRIP" > "$tmp/removed.c"
+awk -v keepstrings=1 -f "$STRIP" src/coreapi/settings/settingstable*.cpp | awk -f "$HERE/blank-if0.awk" \
+	| awk -f "$HERE/applyrows.awk" | sort -u > "$tmp/members.tsv"
+: > "$tmp/groups.tsv"
+for g in src/coreapi/box/apply_*.cpp; do
+	[ -r "$g" ] || continue
+	awk -v keepstrings=1 -f "$STRIP" "$g" | awk -f "$HERE/blank-if0.awk" \
+		| awk -v file="$g" -f "$HERE/applygroups.awk" | grep -v '^ERR	' >> "$tmp/groups.tsv" || true
+done
+sh "$HERE/extract-bounds.sh" -m src > "$tmp/locales.tsv"
+PENDING="$HERE/apply-pending.txt"
+[ -r "$PENDING" ] || : > "$tmp/pending.txt"
+[ -r "$PENDING" ] && cp "$PENDING" "$tmp/pending.txt"
+awk -v removed="$tmp/removed.c" -v rows="$tmp/rows.c" -v members="$tmp/members.tsv" -v groups="$tmp/groups.tsv" \
+	-v pending="$tmp/pending.txt" -v locales="$tmp/locales.tsv" -f "$HERE/wiringapply.awk" < /dev/null
+arc=$?
+[ "$rc" -ne 0 ] && [ "$rc" -ne 3 ] && exit "$rc"
+[ "$rc" -eq 3 ] || [ "$arc" -eq 3 ] && exit 3
+exit 0

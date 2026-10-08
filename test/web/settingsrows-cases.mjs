@@ -46,7 +46,7 @@ loader.registerHooks({
 globalThis.document = /** @type {any} */ ({ documentElement: {} });
 
 const { Control, Row } = await import('../../data/ni-web/app/screens/settings/rows.js');
-const { rowOf, changed, numberFault } = await import('../../data/ni-web/app/screens/settings/model.js');
+const { rowOf, changed, numberFault, isVisible, withKeyNames } = await import('../../data/ni-web/app/screens/settings/model.js');
 const { setLanguage } = await import('../../data/ni-web/app/i18n.js');
 const { aspectModes } = await import('../../data/ni-web/app/screens/now/overview.js');
 const { settingChoices } = await import('../../data/ni-web/app/screens/now/overview.js');
@@ -127,10 +127,10 @@ same(drawn('3').options[3].label, '3, auf dieser Box nicht verfügbar', 'the Ger
 // A row the schema reports locked is drawn read only, even with its choices there,
 // and an edit of it is never sent.
 setLanguage('en');
-/** @param {boolean} locked */
-function declared(locked) {
+/** @param {boolean} locked @param {boolean} [pending] */
+function declared(locked, pending) {
 	return rowOf({
-		id: 'x.age', label: 'Age', type: 'enum', section: 'x', locked: locked,
+		id: 'x.age', label: 'Age', type: 'enum', section: 'x', locked: locked, held: pending === true,
 		values: [{ value: 12, label: '12' }, { value: 18, label: '18' }], conditions: [],
 	});
 }
@@ -144,6 +144,17 @@ same(changed([held], { 'x.age': '18' }, { 'x.age': '12' }), {}, 'an edit of a he
 const free = /** @type {any} */ (declared(false));
 same([free.locked, free.held], [false, false], 'an unlocked schema row is neither');
 same(changed([free], { 'x.age': '18' }, { 'x.age': '12' }), { 'x.age': '12' }, 'an edit of an unlocked row is sent');
+
+// A row the box holds until its own screen can apply it is read only too, and says so in
+// words of its own: the parental lock is not the reason.
+const pending = /** @type {any} */ (declared(false, true));
+same([pending.locked, pending.held, pending.pending], [true, false, true], 'a pending row is locked and not held');
+const pendingTree = Control(/** @type {any} */ ({ row: pending, value: '18', onChange: function () {}, onClear: function () {} }));
+same(find(pendingTree, 'select', []).length, 0, 'a pending row offers no chooser');
+same(find(pendingTree, 'span', []).map(function (n) { return n.props.children; })[1],
+	'The box still applies this itself, so it cannot be changed here yet.', 'a pending row says why, without the parental lock');
+same(changed([pending], { 'x.age': '18' }, { 'x.age': '12' }), {}, 'an edit of a pending row is not sent');
+same(free.pending, false, 'an ordinary row is not pending');
 
 // A held row drifting from its default is marked but offered no way back, which
 // would be an edit that is never sent.
@@ -168,6 +179,54 @@ function onBox(available) {
 same(onBox(false), null, 'a row the box lacks is not drawn');
 same(onBox(true) !== null, true, 'an available row is drawn');
 same(onBox(undefined) !== null, true, 'a row from a server that does not say is drawn');
+
+// A key is a choice among the names the box gives its keys, and the number it is stored as
+// until those have arrived. A stored code with no name is one more entry and stays choosable.
+const keyRow = /** @type {any} */ (rowOf({ id: 'x.key', label: 'Key', type: 'key', section: 'x', min: -2, max: 100,
+	default: '5', conditions: [] }));
+same(keyRow === null ? null : [keyRow.type, keyRow.min, keyRow.max, keyRow.choices.length], ['key', -2, 100, 0], 'a key row keeps its kind and its bounds');
+const keyNames = { items: [{ code: -2, name: 'none' }, { code: 5, name: 'ok' }, { code: 1029, name: 'ok (long)' }, { code: 'x', name: 'junk' }, { code: 7, name: '' }] };
+const withNames = /** @type {any} */ (withKeyNames([keyRow], keyNames)[0]);
+same(withNames.choices, [{ value: -2, label: 'none' }, { value: 5, label: 'ok' }, { value: 1029, label: 'ok (long)' }], 'the names become the choices and a malformed entry is left out');
+same(withKeyNames([keyRow], null)[0].choices, [], 'no list leaves the row without choices');
+same(withKeyNames([keyRow], { items: [] })[0].choices, [], 'an empty list leaves the row without choices');
+/** @param {any} row @param {string} value */
+function keyDrawn(row, value) {
+	const tree = Control(/** @type {any} */ ({ row: row, value: value, onChange: function () {}, onClear: function () {} }));
+	const select = find(tree, 'select', [])[0];
+	return {
+		inputs: find(tree, 'input', []).map(function (i) { return i.props.type; }),
+		selected: select ? select.props.value : null,
+		options: find(tree, 'option', []).map(function (o) {
+			return { value: o.props.value, disabled: o.props.disabled === true, label: o.props.children };
+		}),
+	};
+}
+same(keyDrawn(keyRow, '5').inputs, ['number'], 'a key without names is a number field');
+const named5 = keyDrawn(withNames, '5');
+same([named5.inputs, named5.selected, named5.options.length], [[], '5', 3], 'a key with names is a choice with the stored key selected');
+same(named5.options[1], { value: '5', disabled: false, label: 'ok' }, 'the choice carries the name');
+const unnamed = keyDrawn(withNames, '77');
+same(unnamed.options[3], { value: '77', disabled: false, label: '77, no name' }, 'a stored code with no name is one more choosable entry');
+same(unnamed.selected, '77', 'and it is the selected one, so the stored value is not lost');
+setLanguage('de');
+same(keyDrawn(withNames, '77').options[3].label, '77, ohne Namen', 'the German text of the extra entry');
+setLanguage('en');
+same(keyDrawn(withNames, '-2').options.length, 3, 'a named code adds nothing');
+
+// A colour is drawn as text with the format it takes, from the channels the schema states.
+const colorRow = /** @type {any} */ (rowOf({ id: 'x.color', label: 'Colour', type: 'color', section: 'x', default: '#102030', channels: 3, conditions: [] }));
+same(colorRow === null ? null : [colorRow.type, colorRow.fallback, colorRow.min, colorRow.channels], ['string', '#102030', null, 3], 'a colour row is drawn as text and knows its channels');
+const alphaRow = /** @type {any} */ (rowOf({ id: 'x.colora', label: 'Colour', type: 'color', section: 'x', default: '#10203040', channels: 4, conditions: [] }));
+same(alphaRow.channels, 4, 'a colour with an alpha says four');
+same(/** @type {any} */ (rowOf({ id: 'x.colorb', label: 'Colour', type: 'color', section: 'x', default: '#102030', channels: 7, conditions: [] })).channels, null, 'a channel count that is not three or four is not believed');
+/** @param {any} row */
+function colorHint(row) {
+	const tree = Control(/** @type {any} */ ({ row: row, value: row.fallback, onChange: function () {}, onClear: function () {} }));
+	return find(tree, 'span', []).map(function (n) { return n.props.children; }).filter(function (c) { return typeof c === 'string' && c.indexOf('#rrggbb') !== -1; });
+}
+same(colorHint(colorRow), ['Colour as #rrggbb'], 'a three channel colour says #rrggbb');
+same(colorHint(alphaRow), ['Colour as #rrggbbaa, the last two digits are the transparency'], 'a four channel colour says #rrggbbaa');
 
 // The quick 4:3 buttons offer what the schema lists for the setting, in the
 // page's own words, and all four before the schema has answered.
@@ -227,6 +286,69 @@ same(numberField(named, '50'), { type: 'number', shown: '50', notes: [], faults:
 same(numberField(named, ''), { type: 'number', shown: '', notes: [], faults: 1 }, 'an empty field has no words and a fault');
 same(numberField(below, '-1'), { type: 'number', shown: '-1', notes: ['Last used'], faults: 0 }, 'the words show for a value below the range too');
 same(numberField(plain, '-1'), { type: 'number', shown: '-1', notes: [], faults: 1 }, 'without a named value it is faulted');
+
+// A number shows its unit beside the input, in the page's own words. The schema names the
+// unit by the box's catalog key; a key this page has no word for shows nothing, and the raw
+// key never reaches the screen.
+/** @param {unknown} unit */
+function unitRow(unit) {
+	/** @type {any} */
+	const said = { id: 'x.hours', label: 'Hours', type: 'int', section: 'x', min: 1, max: 24, conditions: [] };
+	if (unit !== undefined)
+		said.unit = unit;
+	return /** @type {any} */ (rowOf(said));
+}
+/** @param {any} row @param {string} lang */
+function unitShown(row, lang) {
+	setLanguage(lang);
+	const tree = Control(/** @type {any} */ ({ row: row, value: '4', onChange: function () {}, onClear: function () {} }));
+	return find(tree, 'span', []).filter(function (n) { return n.props.class === 'unit'; })
+		.map(function (n) { return n.props.children; });
+}
+same(unitRow('unit.short.hour').unit, 'unit.short.hour', 'the row keeps the unit name the schema gave');
+same(unitRow(undefined).unit, '', 'a row without a unit has none');
+same(unitShown(unitRow('unit.short.hour'), 'en'), ['h'], 'the unit is shown beside the number');
+same(unitShown(unitRow('unit.short.percent'), 'de'), ['%'], 'the unit is shown in the other language too');
+same(unitShown(unitRow('unit.short.nonsense'), 'en'), [], 'a unit the page has no word for shows nothing');
+same(unitShown(unitRow('unit.short.nonsense'), 'en').concat(unitShown(unitRow('unit.short.nonsense'), 'de')).join(''), '', 'the raw unit name is never shown');
+same(unitShown(unitRow(undefined), 'en'), [], 'a number without a unit shows none');
+same(unitRow(5).unit, '', 'a unit that is no text is none');
+setLanguage('en');
+
+// A text condition and a group are read the way the box reads them.
+/** @param {any[]} conditions */
+function gated(conditions) {
+	return /** @type {any} */ (rowOf({ id: 'x.gated', label: 'Gated', type: 'int', section: 'x', min: 0, max: 9,
+		conditions: conditions }));
+}
+const keyed = gated([{ key: 'k_key', op: 'text-valid', text: 'XXXX' }]);
+same(isVisible(keyed, { k_key: 'abcd' }), true, 'a real key holds a text condition');
+same(isVisible(keyed, { k_key: 'XXXX' }), false, 'the placeholder does not hold a text condition');
+same(isVisible(keyed, { k_key: '' }), false, 'an empty key does not hold a text condition');
+same(isVisible(keyed, {}), true, 'a key not in front of the page leaves the row shown');
+const anyText = gated([{ key: 'k_key', op: 'text-valid' }]);
+same(isVisible(anyText, { k_key: 'XXXX' }), true, 'without a placeholder any text holds');
+same(isVisible(anyText, { k_key: '' }), false, 'without a placeholder an empty key fails');
+const emptyPattern = gated([{ key: 'k_key', op: 'text-valid', text: '' }]);
+same(isVisible(emptyPattern, { k_key: 'abcd' }), true, 'an empty placeholder lets any text hold');
+same(isVisible(emptyPattern, { k_key: '' }), false, 'an empty placeholder still fails an empty key');
+
+const either = gated([{ any: [{ key: 'a', op: 'ne', values: [0] }, { key: 'b', op: 'ne', values: [0] }] }]);
+same(isVisible(either, { a: '0', b: '1' }), true, 'a group holds when one member holds');
+same(isVisible(either, { a: '1', b: '0' }), true, 'a group holds when the other member holds');
+same(isVisible(either, { a: '0', b: '0' }), false, 'a group fails when no member holds');
+same(isVisible(either, { a: '0' }), true, 'a member not in front of the page holds');
+
+const both = gated([{ any: [{ key: 'a', op: 'ne', values: [0] }, { key: 'b', op: 'ne', values: [0] }] },
+	{ key: 'on', op: 'ne', values: [0] }]);
+same(isVisible(both, { a: '1', b: '0', on: '1' }), true, 'a group and a comparison both holding');
+same(isVisible(both, { a: '1', b: '0', on: '0' }), false, 'a group is one entry of a conjunction');
+same(isVisible(gated([{ any: [] }]), { a: '0' }), true, 'an empty group leaves the row shown');
+const unread = gated([{ any: [{ key: 'a', op: 'ne', values: [0] }, { op: 'ne', values: [0] }] }]);
+same(isVisible(unread, { a: '0' }), true, 'a member the page cannot read makes its group hold');
+same(unread.conditions[0].any.length, 2, 'a member the page cannot read is kept');
+same(gated([{ any: [{ key: 'a', op: 'ne', values: [0] }] }]).conditions,
+	[{ any: [{ key: 'a', op: 'ne', values: [0], text: '' }] }], 'a group is read with its members');
 
 if (failed > 0) {
 	process.stderr.write('settingsrows: ' + failed + ' of ' + checked + ' failed\n');

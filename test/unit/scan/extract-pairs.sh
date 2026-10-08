@@ -15,6 +15,12 @@
 # read under a spelling the program no longer writes, and a scan of the load side would
 # take those for the current one.
 #
+# With -b, and the build's config.h as a third argument, only the loads and saves the
+# build itself compiles: the conditional arms are resolved against that header by the
+# preprocessor and what it drops is not read. Where the table above holds every arm
+# a key has, this holds the one arm this build takes, which is the only one a row
+# written for this build can be held to exactly.
+#
 # With -k and a source directory instead, every key any read in the tree names. That is
 # the weaker question, and the only one that can be asked of a setting whose value is
 # read outside the file the loop above lives in.
@@ -54,11 +60,46 @@ if [ "$1" = "-k" ]; then
 	exit 0
 fi
 
+BUILT=""
+if [ "$1" = "-b" ]; then
+	BUILT=1
+	shift
+	# Fewer pairs than the arms together, by the keys only another model loads.
+	FLOOR_PAIRS=330
+	FLOOR_DEFAULTS=220
+fi
+
 SRC="$1"
 SRCDIR="$2"
-[ -n "$SRC" ] && [ -n "$SRCDIR" ] || { echo "usage: extract-pairs.sh <neutrino.cpp> <source directory>" >&2; exit 2; }
+CONFIG="$3"
+[ -n "$SRC" ] && [ -n "$SRCDIR" ] || { echo "usage: extract-pairs.sh [-b] <neutrino.cpp> <source directory> [<config.h>]" >&2; exit 2; }
+if [ -n "$BUILT" ]; then
+	[ -r "$CONFIG" ] || { echo "extract-pairs.sh: -b needs the build's config.h as a third argument" >&2; exit 2; }
+fi
 
 awk -v keepstrings=1 -f "$STRIP" "$SRC" > "$tmp/code"
+
+# The two themes are loaded and saved in files of their own, through a reference
+# to the struct they keep: written out as the member that holds it, so that they are
+# read as every other load is. Only a name that stands alone is rewritten. Their own
+# definitions of macros are left out: the two files each define the same name for a
+# different thing, which the preprocessor would say, and nothing here reads one.
+for pair in "gui/themes.cpp theme" "gui/glcdthemes.cpp glcd_theme"; do
+	file=${pair% *}
+	member=${pair#* }
+	[ -r "$SRCDIR/$file" ] || { echo "extract-pairs.sh: cannot read $SRCDIR/$file" >&2; exit 2; }
+	awk -v keepstrings=1 -f "$STRIP" "$SRCDIR/$file" \
+		| sed -E "/^[ 	]*#[ 	]*(define|undef)/d; s/(^|[^A-Za-z0-9_.])t\\./\\1g_settings.$member./g" >> "$tmp/code"
+done
+
+# Only the conditionals are evaluated: the includes are taken out so that nothing is
+# looked for, and the directives-only mode leaves the text between them as it was,
+# so a name the code uses is not replaced by what the header defines it as.
+if [ -n "$BUILT" ]; then
+	grep -v '^[ 	]*#[ 	]*include' "$tmp/code" > "$tmp/code.in"
+	${CXXCPP:-cpp} -P -fdirectives-only -include "$CONFIG" -x c++ "$tmp/code.in" > "$tmp/code" \
+		|| { echo "extract-pairs.sh: the preprocessor refused the source" >&2; exit 1; }
+fi
 
 # The field is a plain name in both patterns, so an element of an array and a
 # member reached through one are left out rather than half read. None of them is
@@ -69,10 +110,10 @@ awk -f "$HERE/pairs.awk" "$tmp/code" | sort -u > "$tmp/load"
 # through the accessor on the way out. Both name the key and the member, which is
 # all this reads them for.
 {
-grep -oE '(configfile\.|tconfig->)set[A-Za-z0-9_]*\([ 	]*"[^"]*"[ 	]*,[ 	]*g_settings\.[A-Za-z_][A-Za-z_0-9]*[ 	]*\)' "$tmp/code" \
-	| sed -E 's/^(configfile\.|tconfig->)set[A-Za-z0-9_]*\([ 	]*"([^"]*)"[ 	]*,[ 	]*g_settings\.([A-Za-z_0-9]+)[ 	]*\)$/\2	\3/'
-grep -oE '(configfile\.|tconfig->)set[A-Za-z0-9_]*\([ 	]*"[^"]*"[ 	]*,[ 	]*settingsText\([ 	]*g_settings\.[A-Za-z_][A-Za-z_0-9]*[ 	]*\)' "$tmp/code" \
-	| sed -E 's/^(configfile\.|tconfig->)set[A-Za-z0-9_]*\([ 	]*"([^"]*)"[ 	]*,[ 	]*settingsText\([ 	]*g_settings\.([A-Za-z_0-9]+)[ 	]*\)$/\2	\3/'
+grep -oE '(configfile\.|tconfig->)set[A-Za-z0-9_]*\([ 	]*"[^"]*"[ 	]*,[ 	]*g_settings\.(theme\.|glcd_theme\.)?[A-Za-z_][A-Za-z_0-9]*[ 	]*\)' "$tmp/code" \
+	| sed -E 's/^(configfile\.|tconfig->)set[A-Za-z0-9_]*\([ 	]*"([^"]*)"[ 	]*,[ 	]*g_settings\.((theme\.|glcd_theme\.)?[A-Za-z_0-9]+)[ 	]*\)$/\2	\3/'
+grep -oE '(configfile\.|tconfig->)set[A-Za-z0-9_]*\([ 	]*"[^"]*"[ 	]*,[ 	]*settingsText\([ 	]*g_settings\.(theme\.|glcd_theme\.)?[A-Za-z_][A-Za-z_0-9]*[ 	]*\)' "$tmp/code" \
+	| sed -E 's/^(configfile\.|tconfig->)set[A-Za-z0-9_]*\([ 	]*"([^"]*)"[ 	]*,[ 	]*settingsText\([ 	]*g_settings\.((theme\.|glcd_theme\.)?[A-Za-z_0-9]+)[ 	]*\)$/\2	\3/'
 } | sort -u > "$tmp/save"
 
 sh "$HERE/extract-defines.sh" "$SRCDIR" > "$tmp/defines"

@@ -121,10 +121,25 @@ const AppliedSetting kMiscRows[] =
 	{ "cpufreq", LOCALE_CPU_FREQ_NORMAL },
 };
 
-// src/gui/cam_menu.cpp CCAMMenuHandler::changeNotify. Its clock, pincode and
-// routing options name no declared row.
+/* src/gui/cam_menu.cpp CCAMMenuHandler::changeNotify. Its clock and its routing
+   are asked of every slot whichever one the option stands in, so each slot's row
+   names the option. The save of the pin is the same for every slot. */
 const AppliedSetting kCamRows[] =
 {
+	{ "ci_clock_0", LOCALE_CI_CLOCK },
+	{ "ci_clock_1", LOCALE_CI_CLOCK },
+	{ "ci_clock_2", LOCALE_CI_CLOCK },
+	{ "ci_clock_3", LOCALE_CI_CLOCK },
+	{ "ci_save_pincode_0", LOCALE_CI_SAVE_PINCODE },
+	{ "ci_save_pincode_1", LOCALE_CI_SAVE_PINCODE },
+	{ "ci_save_pincode_2", LOCALE_CI_SAVE_PINCODE },
+	{ "ci_save_pincode_3", LOCALE_CI_SAVE_PINCODE },
+#if BOXMODEL_VUPLUS_ALL
+	{ "ci_rpr_0", LOCALE_CI_RPR },
+	{ "ci_rpr_1", LOCALE_CI_RPR },
+	{ "ci_rpr_2", LOCALE_CI_RPR },
+	{ "ci_rpr_3", LOCALE_CI_RPR },
+#endif
 	{ "ci_tuner", LOCALE_CI_TUNER },
 #if HAVE_LIBSTB_HAL
 	{ "ci_check_live", LOCALE_CI_CHECK_LIVE_SLOT },

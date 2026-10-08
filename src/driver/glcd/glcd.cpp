@@ -211,7 +211,7 @@ void cGLCD::Exec()
 
 			int fw = font_epg.Width(Epg);
 			fw = (fw == 0) ? 1 : fw;
-			font_tmp.LoadFT2(t.glcd_font, "UTF-8", fontsize_epg * bitmap->Width() / fw);
+			font_tmp.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_epg * bitmap->Width() / fw);
 			fw = font_tmp.Width(Epg);
 			int fh = font_tmp.Height(Epg);
 
@@ -253,8 +253,8 @@ void cGLCD::Exec()
 		return;
 	}
 
-	if (t.glcd_background_image != "")
-		imageShow(t.glcd_background_image, 0, 0, 0, 0, false, true, true, false, false);
+	if (!settingsText(t.glcd_background_image).empty())
+		imageShow(settingsText(t.glcd_background_image), 0, 0, 0, 0, false, true, true, false, false);
 
 	if (t.glcd_weather)
 		ShowWeather(false);
@@ -674,68 +674,68 @@ void cGLCD::updateFonts()
 	if (!fonts_initialized || (fontsize_channel_new != fontsize_channel))
 	{
 		fontsize_channel = fontsize_channel_new;
-		if (!font_channel.LoadFT2(t.glcd_font, "UTF-8", fontsize_channel))
+		if (!font_channel.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_channel))
 		{
-			t.glcd_font = settingsText(g_settings.font_file);
-			font_channel.LoadFT2(t.glcd_font, "UTF-8", fontsize_channel);
+			setSettingsText(t.glcd_font, settingsText(g_settings.font_file));
+			font_channel.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_channel);
 		}
 	}
 	if (!fonts_initialized || (fontsize_epg_new != fontsize_epg))
 	{
 		fontsize_epg = fontsize_epg_new;
-		if (!font_epg.LoadFT2(t.glcd_font, "UTF-8", fontsize_epg))
+		if (!font_epg.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_epg))
 		{
-			t.glcd_font = settingsText(g_settings.font_file);
-			font_epg.LoadFT2(t.glcd_font, "UTF-8", fontsize_epg);
+			setSettingsText(t.glcd_font, settingsText(g_settings.font_file));
+			font_epg.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_epg);
 		}
 	}
 	if (!fonts_initialized || (fontsize_time_new != fontsize_time))
 	{
 		fontsize_time = fontsize_time_new;
-		if (!font_time.LoadFT2(t.glcd_font, "UTF-8", fontsize_time))
+		if (!font_time.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_time))
 		{
-			t.glcd_font = settingsText(g_settings.font_file);
-			font_time.LoadFT2(t.glcd_font, "UTF-8", fontsize_time);
+			setSettingsText(t.glcd_font, settingsText(g_settings.font_file));
+			font_time.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_time);
 		}
 	}
 
 	if (!fonts_initialized || (fontsize_duration_new != fontsize_duration))
 	{
 		fontsize_duration = fontsize_duration_new;
-		if (!font_duration.LoadFT2(t.glcd_font, "UTF-8", fontsize_duration))
+		if (!font_duration.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_duration))
 		{
-			t.glcd_font = settingsText(g_settings.font_file);
-			font_duration.LoadFT2(t.glcd_font, "UTF-8", fontsize_duration);
+			setSettingsText(t.glcd_font, settingsText(g_settings.font_file));
+			font_duration.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_duration);
 		}
 	}
 
 	if (!fonts_initialized || (fontsize_start_new != fontsize_start))
 	{
 		fontsize_start = fontsize_start_new;
-		if (!font_start.LoadFT2(t.glcd_font, "UTF-8", fontsize_start))
+		if (!font_start.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_start))
 		{
-			t.glcd_font = settingsText(g_settings.font_file);
-			font_start.LoadFT2(t.glcd_font, "UTF-8", fontsize_start);
+			setSettingsText(t.glcd_font, settingsText(g_settings.font_file));
+			font_start.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_start);
 		}
 	}
 
 	if (!fonts_initialized || (fontsize_end_new != fontsize_end))
 	{
 		fontsize_end = fontsize_end_new;
-		if (!font_end.LoadFT2(t.glcd_font, "UTF-8", fontsize_end))
+		if (!font_end.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_end))
 		{
-			t.glcd_font = settingsText(g_settings.font_file);
-			font_end.LoadFT2(t.glcd_font, "UTF-8", fontsize_end);
+			setSettingsText(t.glcd_font, settingsText(g_settings.font_file));
+			font_end.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_end);
 		}
 	}
 
 	if (!fonts_initialized || (fontsize_smalltext_new != fontsize_smalltext))
 	{
 		fontsize_smalltext = fontsize_smalltext_new;
-		if (!font_smalltext.LoadFT2(t.glcd_font, "UTF-8", fontsize_smalltext))
+		if (!font_smalltext.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_smalltext))
 		{
-			t.glcd_font = settingsText(g_settings.font_file);
-			font_smalltext.LoadFT2(t.glcd_font, "UTF-8", fontsize_smalltext);
+			setSettingsText(t.glcd_font, settingsText(g_settings.font_file));
+			font_smalltext.LoadFT2(settingsText(t.glcd_font), "UTF-8", fontsize_smalltext);
 		}
 	}
 

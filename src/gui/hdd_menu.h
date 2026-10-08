@@ -27,17 +27,7 @@
 
 #include "widget/menue.h"
 #include <gui/widget/hintbox.h>
-
-struct devtool_s {
-	std::string fmt;
-	std::string fsck;
-	std::string fsck_options;
-	std::string mkfs;
-	std::string mkfs_options;
-	std::string mkfs_labelswitch;
-	bool fsck_supported;
-	bool mkfs_supported;
-};
+#include <coreapi/box/storage_disks.h>
 
 class CHDDDestExec : public CMenuTarget
 {
@@ -73,19 +63,16 @@ class CHDDMenuHandler : public CMenuTarget
 			};
 		};
 
-		static devtool_s devtools[];
+		std::vector<coreapi::storage::FsTool> fs_tools;
 
 		bool is_mounted(const char *dev);
 		void getBlkIds();
 		std::string getFmtType(std::string name, std::string part = "");
 		bool mount_dev(std::string name);
 		bool umount_dev(std::string name);
-		bool umount_all(std::string dev);
-		bool add_dev(std::string dev, std::string partition);
-		bool waitfordev(std::string dev, int maxwait);
 		void check_dev_tools();
 		void check_kernel_fs();
-		devtool_s * get_dev_tool(std::string fmt);
+		coreapi::storage::FsTool * get_dev_tool(std::string fmt);
 
 		int showDeviceMenu(std::string dev);
 		int checkDevice(std::string dev);

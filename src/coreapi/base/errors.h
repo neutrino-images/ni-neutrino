@@ -408,6 +408,13 @@ enum class ErrorCode
 	/* The box lacks what this setting controls, a fan or a socket, or cannot
 	   say whether it has it. The schema marks such a row unavailable. */
 	SettingNotOnThisBox,
+	/* The conditions the schema states for this setting do not hold, judged on
+	   what the whole write leaves rather than on what the box holds now. Also the
+	   answer where the write cannot keep settings together that the schema states
+	   no condition for: one half of a pair written without the other, a value that
+	   contradicts one implied by another in the same write, two plugin lists
+	   naming one plugin, and a setting a coupling added that cannot be set. */
+	SettingConditionNotMet,
 };
 
 /* The wire form. A code with no case here answers with nothing, and two things
@@ -589,6 +596,7 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::ChoicesUnavailable: return "choices-unavailable";
 		case ErrorCode::SettingLocked: return "setting-locked";
 		case ErrorCode::SettingNotOnThisBox: return "setting-not-on-this-box";
+		case ErrorCode::SettingConditionNotMet: return "setting-condition-not-met";
 	}
 	return "";
 }

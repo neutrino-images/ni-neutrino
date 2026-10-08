@@ -31,51 +31,49 @@ namespace
    these six, which is why only these six are here. */
 
 /* What the box does with a module. */
-const EnumValue kCiMode[] =
+constexpr EnumValue kCiMode[] =
 {
-	{ 0, "ci.mode_0", NULL, NULL },
-	{ 1, "ci.mode_1", NULL, NULL },
-	{ 2, "ci.mode_2", NULL, NULL }
+	option(0).label("ci.mode_0"),
+	option(1).label("ci.mode_1"),
+	option(2).label("ci.mode_2")
 };
 
 #if BOXMODEL_VUPLUS_ALL
 // The steps are named by their digits.
-const EnumValue kCiDelay[] =
+constexpr EnumValue kCiDelay[] =
 {
-	{ 16, NULL, "16", NULL },
-	{ 32, NULL, "32", NULL },
-	{ 64, NULL, "64", NULL },
-	{ 128, NULL, "128", NULL },
-	{ 256, NULL, "256", NULL }
+	option(16).text("16"),
+	option(32).text("32"),
+	option(64).text("64"),
+	option(128).text("128"),
+	option(256).text("256")
 };
 #endif
 
-const Descriptor kCam[] =
+constexpr Descriptor kCam[] =
 {
-	{
-		"ci_standby_reset", ValueType::Bool, "cam",
-		"ci.reset_standby", NULL,
-		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(ci_standby_reset)
-	},
-	{
-		"ci_check_live", ValueType::Bool, "cam",
-		"ci.check_live_slot", NULL,
-		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(ci_check_live)
-	},
-	{
-		"ci_rec_zapto", ValueType::Bool, "cam",
-		"ci.rec_zapto", NULL,
-		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(ci_rec_zapto)
-	},
-	{
-		"ci_mode", ValueType::Enum, "cam",
-		"ci.mode", "menu.hint_ci_mode",
-		0, 0, COREAPI_ENUM(kCiMode), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(ci_mode)
-	},
+	boolRow("ci_standby_reset")
+		.section("cam")
+		.label("ci.reset_standby")
+		.defaultValue(0)
+		.field(COREAPI_NUMBER_FIELD(ci_standby_reset)),
+	boolRow("ci_check_live")
+		.section("cam")
+		.label("ci.check_live_slot")
+		.defaultValue(0)
+		.field(COREAPI_NUMBER_FIELD(ci_check_live)),
+	boolRow("ci_rec_zapto")
+		.section("cam")
+		.label("ci.rec_zapto")
+		.defaultValue(0)
+		.field(COREAPI_NUMBER_FIELD(ci_rec_zapto)),
+	enumRow("ci_mode")
+		.section("cam")
+		.label("ci.mode")
+		.hint("menu.hint_ci_mode")
+		.defaultValue(0)
+		.values(kCiMode)
+		.field(COREAPI_NUMBER_FIELD(ci_mode)),
 	/* Which tuner the module reads, as the number the box gives it, and minus
 	   one for none. A number and not a choice: the tuners on offer are the ones
 	   the running box has, so no table in the source states the values. The
@@ -83,20 +81,20 @@ const Descriptor kCam[] =
 	   manager's maximum), which is wider than what most boxes offer; the
 	   narrower ceilings belong to other builds and refusing a value the box
 	   would take is the worse direction. */
-	{
-		"ci_tuner", ValueType::Int, "cam",
-		"ci.tuner", NULL,
-		-1, 23, NULL, 0, -1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(ci_tuner)
-	},
+	intRow("ci_tuner")
+		.section("cam")
+		.label("ci.tuner")
+		.range(-1, 23)
+		.defaultValue(-1)
+		.field(COREAPI_NUMBER_FIELD(ci_tuner)),
 #if BOXMODEL_VUPLUS_ALL
 	// Only where the settings struct has the field, which is on the VU+ boxes.
-	{
-		"ci_delay", ValueType::Enum, "cam",
-		"ci.delay", NULL,
-		0, 0, COREAPI_ENUM(kCiDelay), 128, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(ci_delay)
-	},
+	enumRow("ci_delay")
+		.section("cam")
+		.label("ci.delay")
+		.defaultValue(128)
+		.values(kCiDelay)
+		.field(COREAPI_NUMBER_FIELD(ci_delay)),
 #endif
 };
 

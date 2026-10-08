@@ -278,7 +278,8 @@ public:
 	}
 	void xmltv_xml_readepg()
 	{
-		for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); it++)
+		std::list<std::string> xmltv = settingsCopy(g_settings.xmltv_xml);
+		for (std::list<std::string>::iterator it = xmltv.begin(); it != xmltv.end(); it++)
 			g_Sectionsd->readSIfromXMLTV((*it).c_str());
 	}
 	void xmltv_xml_auto_readepg()

@@ -45,6 +45,7 @@
 #include "coreapi/daemons.h"
 #include "coreapi/decryption.h"
 #include "coreapi/epg.h"
+#include "coreapi/base/deps.h"
 #include "coreapi/base/eventbus.h"
 #include "coreapi/netfs.h"
 #include "coreapi/base/schema.h"
@@ -56,9 +57,12 @@
 
 #include "jsoncpp/json/json.h"
 
+#include <driver/rcinput.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -1521,6 +1525,54 @@ TEST_CASE("a schema label resolves through the installed catalog, not the key", 
 	REQUIRE(have_choice);
 }
 
+/* A frontend draws its input from the rule, so the pin's four digits and a
+   font's ending are in the schema and a row without a rule carries none. */
+TEST_CASE("the schema carries the text rule of a string setting", "[endpoints]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	ShippedRoutes shipped;
+
+	const Reply r = get("/api/v1/settings/schema");
+	REQUIRE(r.code == 200);
+	const ::Json::Value items = parsed(r.body)["items"];
+
+	bool pin = false, font = false, plain = false;
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		const ::Json::Value &row = items[i];
+		const std::string id = row["id"].asString();
+		if (id == "parentallock_pincode")
+		{
+			pin = true;
+			CHECK(row["text_kind"].asString() == "pin");
+			CHECK(row["min_length"].asInt() == 4);
+			CHECK(row["max_length"].asInt() == 4);
+			CHECK(row["allowed_chars"].asString() == "0123456789");
+			CHECK(row["must_exist"].asString() == "no");
+			CHECK_FALSE(row.isMember("extensions"));
+		}
+		else if (id == "font_file")
+		{
+			font = true;
+			CHECK(row["text_kind"].asString() == "file");
+			CHECK(row["must_exist"].asString() == "yes");
+			CHECK(row["extensions"].asString() == "ttf");
+			CHECK_FALSE(row.isMember("allowed_chars"));
+		}
+		else if (id == "keyboard_layout")
+		{
+			plain = true;
+			CHECK_FALSE(row.isMember("text_kind"));
+		}
+	}
+	CHECK(pin);
+	CHECK(font);
+	CHECK(plain);
+}
+
 /* The values of a setting the box decides, which carries none of its own. A
    caller reads one member whichever sort of row arrived, so the schema is the
    whole of the settings surface and there is no second call to make. */
@@ -1557,6 +1609,37 @@ TEST_CASE("the schema answers the values a setting's own box decides", "[endpoin
 	CHECK(found["values"][1]["value"].asInt() == 0x11);
 }
 
+TEST_CASE("the schema answers the default its own box falls back to", "[endpoints]")
+{
+	// The schema asks whether the parental lock holds its rows.
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	ShippedRoutes shipped;
+
+	unlocked.caps.display_xres = 8;
+	const display_type_t kinds[] = { HW_DISPLAY_LED_NUM, HW_DISPLAY_LINE_TEXT };
+	const char *const want[] = { "1", "0" };
+	for (size_t k = 0; k < 2; ++k)
+	{
+		unlocked.caps.display_type = kinds[k];
+		const Reply r = get("/api/v1/settings/schema");
+		REQUIRE(r.code == 200);
+		const ::Json::Value items = parsed(r.body)["items"];
+
+		bool have = false;
+		for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+		{
+			if (items[i]["id"].asString() != "movieplayer_display_playtime")
+				continue;
+			have = true;
+			CHECK(items[i]["default"].asString() == want[k]);
+		}
+		CHECK(have);
+	}
+}
+
 /* And what the same row looks like while the box cannot be asked, which is not
    a setting without a choice: it is a choice nobody can state at this moment,
    and a write of any value is refused for as long as that lasts. */
@@ -1591,16 +1674,31 @@ TEST_CASE("a setting whose box cannot be asked answers an empty list of values",
 
 namespace
 {
-const coreapi::EnumValue kOffBelow[] = { { 0, "options.off", NULL, NULL } };
+const coreapi::EnumValue kOffBelow[] = { { 0, "options.off", NULL, NULL, NULL, 0 } };
+const coreapi::EnumValue kTwoNamed[] =
+{
+	{ -1, "options.auto", NULL, NULL, NULL, 0 },
+	{ 0, "options.off", NULL, NULL, NULL, 0 },
+};
+const coreapi::Descriptor kSeveralNamed[] =
+{
+	{
+		"fixture_several", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		1, 14, kTwoNamed, 2, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+};
 const coreapi::Descriptor kNamedNumbers[] =
 {
 	{
 		"fixture_named", coreapi::ValueType::Int, "fixture", NULL, NULL,
-		1, 14, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD
+		1, 14, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain", coreapi::ValueType::Int, "fixture", NULL, NULL,
-		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 } // namespace
@@ -1638,27 +1736,153 @@ TEST_CASE("the schema names the value a number shows in words", "[endpoints]")
 	CHECK_FALSE(plain.isMember("values"));
 }
 
+// A client draws its own text for a number's unit, so the schema answers the
+// unit's name, and a row that shows no unit, or one whose format holds more than
+// a unit, answers none.
+TEST_CASE("the schema names the unit a number is shown with", "[endpoints]")
+{
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	ShippedRoutes shipped;
+
+	const Reply r = get("/api/v1/settings/schema");
+	REQUIRE(r.code == 200);
+	const ::Json::Value items = parsed(r.body)["items"];
+
+	std::map<std::string, ::Json::Value> byId;
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+		byId[items[i]["id"].asString()] = items[i];
+
+	REQUIRE(byId.count("record_hours") == 1);
+	REQUIRE(byId["record_hours"].isMember("unit"));
+	CHECK(byId["record_hours"]["unit"].asString() == "unit.short.hour");
+	REQUIRE(byId.count("audio_volume_percent_ac3") == 1);
+	CHECK(byId["audio_volume_percent_ac3"]["unit"].asString() == "unit.short.percent");
+
+	// A number whose format is more than a unit names none.
+	REQUIRE(byId.count("timeshift_auto") == 1);
+	CHECK_FALSE(byId["timeshift_auto"].isMember("unit"));
+	// A number the screens show bare, and a kind that has no number.
+	REQUIRE(byId.count("start_volume") == 1);
+	CHECK_FALSE(byId["start_volume"].isMember("unit"));
+	REQUIRE(byId.count("timeshift_pause") == 1);
+	CHECK_FALSE(byId["timeshift_pause"].isMember("unit"));
+}
+
+TEST_CASE("the schema names every value a number shows in words", "[endpoints]")
+{
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	ShippedRoutes shipped;
+	FakeLocaleSource cat;
+	cat.texts["options.auto"] = "auto";
+	cat.texts["options.off"] = "off";
+	InstalledLocaleSource installed(&cat);
+	InstalledSettingsTable table(kSeveralNamed, 1);
+
+	const Reply r = get("/api/v1/settings/schema");
+	REQUIRE(r.code == 200);
+	const ::Json::Value items = parsed(r.body)["items"];
+	REQUIRE(items.size() == 1);
+	const ::Json::Value &values = items[0]["values"];
+	REQUIRE(values.size() == 2);
+	CHECK(values[0]["value"].asInt() == -1);
+	CHECK(values[0]["key"].asString() == "options.auto");
+	CHECK(values[0]["label"].asString() == "auto");
+	CHECK(values[1]["value"].asInt() == 0);
+	CHECK(values[1]["label"].asString() == "off");
+}
+
+/* A list and a list of records are kinds a caller meets in the schema, and the
+   second says what a record is made of: without the members a caller cannot write
+   one, and without the kinds it cannot tell the two from a text. */
+TEST_CASE("the schema names the kind of a list and the members of a record", "[endpoints]")
+{
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	ShippedRoutes shipped;
+
+	const Reply r = get("/api/v1/settings/schema?section=misc");
+	REQUIRE(r.code == 200);
+	const ::Json::Value items = parsed(r.body)["items"];
+
+	const ::Json::Value *list = NULL, *usermenu = NULL, *boxes = NULL, *plain = NULL;
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		const std::string id = items[i]["id"].asString();
+		if (id == "xmltv_xml")
+			list = &items[i];
+		else if (id == "usermenu")
+			usermenu = &items[i];
+		else if (id == "timer_remotebox_ip")
+			boxes = &items[i];
+		else if (id == "epg_dir")
+			plain = &items[i];
+	}
+	REQUIRE(list != NULL);
+	REQUIRE(usermenu != NULL);
+	REQUIRE(boxes != NULL);
+	REQUIRE(plain != NULL);
+
+	CHECK((*list)["type"].asString() == "list");
+	CHECK((*list)["path"].asBool());
+	CHECK((*list)["default"].asString() == "");
+	CHECK_FALSE(list->isMember("fields"));
+	CHECK_FALSE(plain->isMember("fields"));
+
+	CHECK((*usermenu)["type"].asString() == "records");
+	const ::Json::Value &fields = (*usermenu)["fields"];
+	REQUIRE(fields.size() == 3);
+	CHECK(fields[0]["name"].asString() == "title");
+	CHECK(fields[0]["type"].asString() == "string");
+	CHECK_FALSE(fields[0].isMember("min"));
+	CHECK(fields[1]["name"].asString() == "key");
+	CHECK(fields[1]["type"].asString() == "int");
+	CHECK(fields[1]["min"].asInt() == 0);
+	CHECK(fields[1]["max"].asInt() == 2147483647);
+	CHECK_FALSE(fields[1]["secret"].asBool());
+	CHECK(fields[2]["name"].asString() == "items");
+
+	// A password among the members is said, and the list is a credential.
+	CHECK((*boxes)["secret"].asBool());
+	const ::Json::Value &remote = (*boxes)["fields"];
+	REQUIRE(remote.size() == 6);
+	CHECK(remote[4]["name"].asString() == "pass");
+	CHECK(remote[4]["secret"].asBool());
+	CHECK(remote[0]["type"].asString() == "bool");
+	CHECK(remote[5]["max"].asInt() == 65535);
+}
+
 namespace
 {
 bool lacking() { return false; }
-const coreapi::Shape kFlagShape = { coreapi::ValueType::Bool, "flag_label", 0, 1, NULL, 0, NULL };
+const coreapi::Shape kFlagShape = shape(coreapi::ValueType::Bool, "flag_label").range(0, 1);
 const coreapi::Descriptor kOnBoxRows[] =
 {
 	{
 		"fixture_fan", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
-		  lacking, NULL }
+		  lacking, NULL, NULL },
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_scroll", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
-		  lacking, &kFlagShape }
+		  lacking, &kFlagShape, NULL },
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain", coreapi::ValueType::Int, "fixture", NULL, NULL,
-		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 } // namespace
@@ -1687,6 +1911,85 @@ TEST_CASE("the schema says which settings this box has and in which shape", "[en
 
 	REQUIRE(items[2]["id"].asString() == "fixture_plain");
 	CHECK(items[2]["available"].asBool() == true);
+}
+
+namespace
+{
+const long kOneOrTwo[] = { 1, 2 };
+const coreapi::Condition kEitherNumber[] =
+{
+	{ "fixture_a", coreapi::CompareOp::Ne, 0, NULL, 0, NULL, NULL, 0 },
+	{ "fixture_b", coreapi::CompareOp::In, 0, COREAPI_VALUES(kOneOrTwo), NULL, NULL, 0 }
+};
+const coreapi::Condition kKeyAndEither[] =
+{
+	{ "fixture_key", coreapi::CompareOp::TextValid, 0, NULL, 0, "XXXX", NULL, 0 },
+	{ NULL, coreapi::CompareOp::Eq, 0, NULL, 0, NULL, COREAPI_ANY(kEitherNumber) }
+};
+// Refused by the sanity check, and still not to be written as a comparison.
+const coreapi::Condition kGroupInGroup[] =
+{
+	{ "fixture_a", coreapi::CompareOp::Ne, 0, NULL, 0, NULL, NULL, 0 },
+	{ NULL, coreapi::CompareOp::Eq, 0, NULL, 0, NULL, COREAPI_ANY(kEitherNumber) }
+};
+const coreapi::Condition kNestedGroup[] =
+{
+	{ NULL, coreapi::CompareOp::Eq, 0, NULL, 0, NULL, COREAPI_ANY(kGroupInGroup) }
+};
+const coreapi::Descriptor kConditionForms[] =
+{
+	{
+		"fixture_gated", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_CONDITIONS(kKeyAndEither), COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+	{
+		"fixture_nested", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_CONDITIONS(kNestedGroup), COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+};
+} // namespace
+
+// A text test carries its placeholder and no numbers, and a group carries its
+// comparisons and nothing of its own.
+TEST_CASE("the schema states a text condition and a group of alternatives", "[endpoints]")
+{
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	ShippedRoutes shipped;
+	InstalledSettingsTable table(kConditionForms, 2);
+
+	const Reply r = get("/api/v1/settings/schema");
+	REQUIRE(r.code == 200);
+	const ::Json::Value items = parsed(r.body)["items"];
+	REQUIRE(items.size() == 2);
+
+	/* A group holding a group holds on the box, so it is left out, which a
+	   reader answers the same way. */
+	REQUIRE(items[1]["id"].asString() == "fixture_nested");
+	CHECK(items[1]["conditions"].size() == 0u);
+	const ::Json::Value conditions = items[0]["conditions"];
+	REQUIRE(conditions.size() == 2);
+
+	const ::Json::Value &text = conditions[0];
+	CHECK(text["key"].asString() == "fixture_key");
+	CHECK(text["op"].asString() == "text-valid");
+	CHECK(text["text"].asString() == "XXXX");
+	CHECK_FALSE(text.isMember("values"));
+
+	const ::Json::Value &group = conditions[1];
+	CHECK(group.getMemberNames().size() == 1u);
+	REQUIRE(group["any"].size() == 2);
+	CHECK(group["any"][0]["key"].asString() == "fixture_a");
+	CHECK(group["any"][0]["op"].asString() == "ne");
+	REQUIRE(group["any"][0]["values"].size() == 1);
+	CHECK(group["any"][0]["values"][0].asInt() == 0);
+	CHECK_FALSE(group["any"][0].isMember("text"));
+	CHECK(group["any"][1]["key"].asString() == "fixture_b");
+	CHECK(group["any"][1]["op"].asString() == "in");
+	REQUIRE(group["any"][1]["values"].size() == 2);
+	CHECK(group["any"][1]["values"][1].asInt() == 2);
 }
 
 TEST_CASE("a schema label the catalog does not carry is left out, not the key", "[endpoints]")
@@ -1780,8 +2083,15 @@ TEST_CASE("the schema reports the rows the parental lock holds only while the bo
 	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
 	{
 		REQUIRE(items[i]["locked"].isBool());
+		const std::string id = items[i]["id"].asString();
+		const bool fixed_until_applied = id.compare(0, 12, "flag_daemon_") == 0 ||
+		                                 id.compare(0, 10, "flag_camd_") == 0 || id == "flag_scart_osd_fix";
+		// A flag whose screen still applies its effect is held, whether or not the box is
+		// locked, and it is not the parental lock that holds it.
+		REQUIRE(items[i]["held"].isBool());
+		CHECK(items[i]["held"].asBool() == fixed_until_applied);
 		if (items[i]["locked"].asBool())
-			locked.insert(items[i]["id"].asString());
+			locked.insert(id);
 	}
 	const char *const held[] = { "parentallock_prompt", "parentallock_lockage",
 	                             "parentallock_defaultlocked", "parentallock_zaptime" };
@@ -1792,6 +2102,95 @@ TEST_CASE("the schema reports the rows the parental lock holds only while the bo
 	REQUIRE(items.size() == 5);
 	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
 		CHECK_FALSE(items[i]["locked"].asBool());
+}
+
+TEST_CASE("the schema describes a key row by its bounds and a colour row by its text", "[endpoints]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	ShippedRoutes shipped;
+
+	const ::Json::Value items = parsed(get("/api/v1/settings/schema").body)["items"];
+	const ::Json::Value *key = NULL;
+	const ::Json::Value *plain = NULL;
+	const ::Json::Value *alpha = NULL;
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		if (items[i]["id"].asString() == "key_power_off")
+			key = &items[i];
+		if (items[i]["id"].asString() == "theme.menu_Content_Text")
+			plain = &items[i];
+		if (items[i]["id"].asString() == "theme.menu_Head")
+			alpha = &items[i];
+	}
+	REQUIRE(key != NULL);
+	REQUIRE(plain != NULL);
+	REQUIRE(alpha != NULL);
+
+	CHECK((*key)["type"].asString() == "key");
+	CHECK((*key)["min"].asInt() == (int32_t) CRCInput::RC_nokey);
+	CHECK((*key)["max"].asInt() == (int) CRCInput::RC_MaxRC);
+	CHECK_FALSE(key->isMember("values"));
+	CHECK((*key)["default"].asString() == std::to_string((long) (int32_t) CRCInput::RC_standby));
+
+	CHECK((*alpha)["type"].asString() == "color");
+	CHECK((*alpha)["channels"].asInt() == 4);
+	CHECK((*plain)["channels"].asInt() == 3);
+	CHECK_FALSE(key->isMember("channels"));
+	CHECK((*alpha)["default"].asString() == "#0000001a");
+	CHECK_FALSE(alpha->isMember("min"));
+	CHECK((*plain)["type"].asString() == "color");
+	CHECK((*plain)["default"].asString() == "#fafafa");
+}
+
+TEST_CASE("the keys route lists no key first and every named key plain and held", "[endpoints]")
+{
+	ShippedRoutes shipped;
+	coreapi::installRealKeySource();
+	struct Restore { ~Restore() { coreapi::setKeySource(0); } } restore;
+
+	const Reply r = get("/api/v1/settings/keys");
+	REQUIRE(r.code == 200);
+	const ::Json::Value items = parsed(r.body)["items"];
+	const std::vector<coreapi::KeyName> all = coreapi::keySource().all();
+	// Exactly what the source lists, in its order: no key, then the named keys plain,
+	// then the same held.
+	REQUIRE(all.size() > 100);
+	REQUIRE(items.size() == all.size());
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		INFO(i);
+		CHECK(items[i]["code"].asInt() == all[i].code);
+		CHECK(items[i]["name"].asString() == all[i].name);
+	}
+	CHECK(items[0u]["code"].asInt() == (int32_t) CRCInput::RC_nokey);
+	CHECK(items[0u]["name"].asString() == "none");
+	CHECK((items.size() - 1) % 2 == 0);
+
+	bool ok = false;
+	bool held = false;
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		const int code = items[i]["code"].asInt();
+		if (code == (int) CRCInput::RC_ok && items[i]["name"].asString() == "ok")
+			ok = true;
+		if (code == (int) (CRCInput::RC_ok | CRCInput::RC_Repeat) && items[i]["name"].asString() == "ok (long)")
+			held = true;
+	}
+	CHECK(ok);
+	CHECK(held);
+}
+
+TEST_CASE("the keys route answers an empty list while no input layer is installed", "[endpoints]")
+{
+	ShippedRoutes shipped;
+	coreapi::setKeySource(0);
+
+	const Reply r = get("/api/v1/settings/keys");
+	REQUIRE(r.code == 200);
+	CHECK(parsed(r.body)["items"].size() == 0);
 }
 
 TEST_CASE("a section nobody declared is 404", "[endpoints]")
@@ -2509,7 +2908,7 @@ TEST_CASE("every route these modules read with asks for a read at least", "[endp
 		}
 	}
 
-	REQUIRE(read_routes == 24);
+	REQUIRE(read_routes == 25);
 }
 
 TEST_CASE("no route this server ships is reachable without a credential", "[endpoints]")
@@ -2684,6 +3083,7 @@ TEST_CASE("every answer carries the members its route says it does", "[endpoints
 		{ "/api/v1/epg/event",         "/api/v1/epg/event?id=" + hex(0x31) + "&start=100" },
 		{ "/api/v1/settings/schema",   "/api/v1/settings/schema" },
 		{ "/api/v1/settings/sections", "/api/v1/settings/sections" },
+		{ "/api/v1/settings/keys",     "/api/v1/settings/keys" },
 		{ "/api/v1/settings/{section}","/api/v1/settings/network" },
 		{ "/api/v1/system/info",       "/api/v1/system/info" },
 		{ "/api/v1/storage/mounts",    "/api/v1/storage/mounts" },
@@ -2695,7 +3095,7 @@ TEST_CASE("every answer carries the members its route says it does", "[endpoints
 	const size_t count = sizeof(cases) / sizeof(cases[0]);
 	// Every route this task declares, so a route left out of this list is one
 	// nothing here holds to its shape.
-	REQUIRE(count == 17);
+	REQUIRE(count == 18);
 
 	for (size_t i = 0; i < count; ++i)
 	{

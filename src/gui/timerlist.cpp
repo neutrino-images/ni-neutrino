@@ -333,6 +333,7 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 				timer_rb.rbname = rbname;
 				if (timer_rb.rbname.empty())
 					timer_rb.rbname = timer_rb.rbaddress;
+				CSettingsTextGuard lock;
 				g_settings.timer_remotebox_ip.push_back(timer_rb);
 			}
 			changed = true;
@@ -1137,7 +1138,7 @@ bool CTimerList::RemoteBoxSetup()
 	if (changed)
 	{
 		std::vector<timer_remotebox_item> old_timer_remotebox_ip = g_settings.timer_remotebox_ip;
-		g_settings.timer_remotebox_ip.clear();
+		std::vector<timer_remotebox_item> kept;
 		for (int i = item_offset; i < remboxmenu->getItemsCount(); i++)
 		{
 			CMenuItem *item = remboxmenu->getItem(i);
@@ -1145,8 +1146,13 @@ bool CTimerList::RemoteBoxSetup()
 			for (std::vector<timer_remotebox_item>::iterator it = old_timer_remotebox_ip.begin(); it != old_timer_remotebox_ip.end(); ++it)
 			{
 				if (it->rbname == f->getName())
-					g_settings.timer_remotebox_ip.push_back(*it);
+					kept.push_back(*it);
 			}
+		}
+		{
+			// A request reads the list under this lock, so it is replaced under it.
+			CSettingsTextGuard lock;
+			g_settings.timer_remotebox_ip = kept;
 		}
 		changed = false;
 		ret = true;

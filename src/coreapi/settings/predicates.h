@@ -42,6 +42,14 @@ bool canPip();
 // has to ask before it offers a second picture, since canPip alone says yes
 // where the start refuses.
 bool pipUsable();
+// How many pictures the decoders can show at once beside the main one, none
+// where the box cannot say.
+int pipWindows();
+// The display is a graphical one, which is what the graphical LCD is on by
+// default for.
+bool hasGraphicPanel();
+// The display is a numeric one.
+bool hasNumericPanel();
 // Goes to deep standby and so can shut itself down.
 bool canShutdown();
 bool hasFormatButton();
@@ -60,6 +68,36 @@ bool analogOutputsSplit();
 bool hasAnalogCinch();
 bool scartSdOffered();
 bool scartHdOffered();
+/* What the board revision decides beyond the analog outputs, by the screens' own
+   tests. Revision 1 is also what every box without a Coolstream board reports,
+   so hasDbdr is the one that is false there and hasHddPowerFlag the one that is
+   true. */
+// The DBDR option is offered, which the first board revision and every box
+// without a Coolstream board lack.
+bool hasDbdr();
+// Boards above revision 7, which leaves out the first two families, have power
+// LEDs with modes of their own.
+bool hasLedMenu();
+// The panel has a backlight to switch.
+bool hasBacklight();
+// The front panel is wired up on this board. Revisions 10 and 11 have none.
+bool vfdEnabled();
+// The panel is wired up and its driver takes a count of scrolls. The first of the two shapes
+// of the scroll row, whose second shape asks vfdEnabled alone.
+bool vfdCountsScrolls();
+// The panel takes a brightness and is wired up, which is what the brightness
+// settings need together.
+bool canSetPanelBrightness();
+// A flag file keeps the disk powered, which the boards below the eighth need.
+bool hasHddPowerFlag();
+// The oldest family has a SCART picture fix that a flag file switches on.
+bool hasScartOsdFix();
+// The input driver can be told which remote to listen to.
+bool canSelectRemote();
+// The module offers a delay, the rpr setting and a clock above high.
+bool ciExtended();
+// More than one tuner in the box, whether switched on or not.
+bool severalTunersFitted();
 // More than one tuner switched on in the tuner setup.
 bool severalTunersEnabled();
 // The kernel knows the file system and a mkfs for it is there.

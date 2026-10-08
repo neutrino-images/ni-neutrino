@@ -45,47 +45,51 @@ namespace
    an Enum keeps the names and holds both the numbers and the words. A Bool is
    compared on the numbers alone, and which of the two means one would then rest
    on nothing. */
-const EnumValue kNtpEnable[] =
+constexpr EnumValue kNtpEnable[] =
 {
-	{ NETWORK_NTP_OFF, "options.ntp_off", NULL, NULL },
-	{ NETWORK_NTP_ON, "options.ntp_on", NULL, NULL }
+	option(NETWORK_NTP_OFF).label("options.ntp_off"),
+	option(NETWORK_NTP_ON).label("options.ntp_on")
 };
 
-const Descriptor kNetwork[] =
+constexpr Descriptor kNetwork[] =
 {
 	/* The name of an interface, and what is on offer is what the box has: the
 	   list is read from /sys/class/net. A name nothing there matches is dropped
 	   and replaced at the next load. */
-	{
-		"ifname", ValueType::String, "network",
-		"networkmenu.select_if", "menu.hint_net_if",
-		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(ifname)
-	},
+	textRow("ifname")
+		.section("network")
+		.label("networkmenu.select_if")
+		.hint("menu.hint_net_if")
+		.defaultValue("")
+		.text(kRuleNameFromList)
+		.field(COREAPI_TEXT_FIELD(ifname)),
 
 	// time
-	{
-		"network_ntpenable", ValueType::Enum, "network",
-		"networkmenu.ntpenable", "menu.hint_net_ntpenable",
-		0, 0, COREAPI_ENUM(kNtpEnable), 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(network_ntpenable)
-	},
-	{
-		"network_ntpserver", ValueType::String, "network",
-		"networkmenu.ntpserver", "menu.hint_net_ntpserver",
-		0, 0, NULL, 0, 0, "0.de.pool.ntp.org", false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(network_ntpserver)
-	},
+	enumRow("network_ntpenable")
+		.section("network")
+		.label("networkmenu.ntpenable")
+		.hint("menu.hint_net_ntpenable")
+		.defaultValue(1)
+		.values(kNtpEnable)
+		.field(COREAPI_NUMBER_FIELD(network_ntpenable)),
+	textRow("network_ntpserver")
+		.section("network")
+		.label("networkmenu.ntpserver")
+		.hint("menu.hint_net_ntpserver")
+		.defaultValue("0.de.pool.ntp.org")
+		.text(kRuleHost)
+		.field(COREAPI_TEXT_FIELD(network_ntpserver)),
 	/* Minutes, kept as text and turned into a number where it is used. Text
 	   here because the field is, and a String carries no bound, so the three
 	   digits and the ten characters the field takes are stated nowhere a caller
 	   can read. */
-	{
-		"network_ntprefresh", ValueType::String, "network",
-		"networkmenu.ntprefresh", "menu.hint_net_ntprefresh",
-		0, 0, NULL, 0, 0, "30", false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(network_ntprefresh)
-	},
+	textRow("network_ntprefresh")
+		.section("network")
+		.label("networkmenu.ntprefresh")
+		.hint("menu.hint_net_ntprefresh")
+		.defaultValue("30")
+		.text(kRuleNumberText3)
+		.field(COREAPI_TEXT_FIELD(network_ntprefresh)),
 
 	/* The proxy. The three below are one setting in three parts: the loader
 	   joins them into one URL, and so does every reader.
@@ -96,24 +100,27 @@ const Descriptor kNetwork[] =
 	   and the password is typed behind stars. The server is not secret. Which proxy
 	   a box goes through is not a credential, and hiding it would leave a
 	   frontend unable to show whether one is set at all. */
-	{
-		"softupdate_proxyserver", ValueType::String, "network",
-		"flashupdate.proxyserver", "menu.hint_net_proxyserver",
-		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(softupdate_proxyserver)
-	},
-	{
-		"softupdate_proxyusername", ValueType::String, "network",
-		"flashupdate.proxyusername", "menu.hint_net_proxyuser",
-		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(softupdate_proxyusername)
-	},
-	{
-		"softupdate_proxypassword", ValueType::String, "network",
-		"flashupdate.proxypassword", "menu.hint_net_proxypass",
-		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(softupdate_proxypassword)
-	},
+	textRow("softupdate_proxyserver")
+		.section("network")
+		.label("flashupdate.proxyserver")
+		.hint("menu.hint_net_proxyserver")
+		.defaultValue("")
+		.text(kRuleHost)
+		.field(COREAPI_TEXT_FIELD(softupdate_proxyserver)),
+	textRow("softupdate_proxyusername")
+		.section("network")
+		.label("flashupdate.proxyusername")
+		.hint("menu.hint_net_proxyuser")
+		.defaultValue("")
+		.secret()
+		.field(COREAPI_TEXT_FIELD(softupdate_proxyusername)),
+	textRow("softupdate_proxypassword")
+		.section("network")
+		.label("flashupdate.proxypassword")
+		.hint("menu.hint_net_proxypass")
+		.defaultValue("")
+		.secret()
+		.field(COREAPI_TEXT_FIELD(softupdate_proxypassword)),
 };
 
 } // anonymous namespace

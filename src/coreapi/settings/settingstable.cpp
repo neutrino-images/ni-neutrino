@@ -43,50 +43,49 @@ namespace
    settings struct a row could have carried and no row declares is listed with
    its reason in settingsundeclared.cpp, and what says the two together are the
    whole struct is a check that reads the struct rather than a number. */
-const Descriptor kSettings[] =
+constexpr Descriptor kSettings[] =
 {
 	// The name of a locale file, which is why an empty one is a default and
 	// means the box picks.
-	{
-		"language", ValueType::String, "general",
-		"languagesetup.osd", NULL,
-		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(language)
-	},
+	textRow("language")
+		.section("general")
+		.label("languagesetup.osd")
+		.defaultValue("")
+		.text(kRuleNameFromList)
+		.field(COREAPI_TEXT_FIELD(language)),
 	/* The name of a zone as the box's own list spells it, which is why this is
 	   text and not a choice: the list is read out of /etc/timezone.xml at run
 	   time. The running box links its clock to the zone at start, and changing
 	   the zone in a menu does it again; a value written here reaches neither. */
-	{
-		"timezone", ValueType::String, "general",
-		"mainsettings.timezone", "menu.hint_timezone",
-		0, 0, NULL, 0, 0, "(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Vienna",
-		true, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(timezone)
-	},
-	{
-		"auto_lang", ValueType::Bool, "general",
-		"audiomenu.auto_lang", "menu.hint_auto_lang",
-		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(auto_lang)
-	},
-	{
-		"auto_subs", ValueType::Bool, "general",
-		"audiomenu.auto_subs", "menu.hint_auto_subs",
-		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(auto_subs)
-	},
+	textRow("timezone")
+		.section("general")
+		.label("mainsettings.timezone")
+		.hint("menu.hint_timezone")
+		.defaultValue("(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Vienna")
+		.needsRestart()
+		.text(kRuleNameFromList)
+		.field(COREAPI_TEXT_FIELD(timezone)),
+	boolRow("auto_lang")
+		.section("general")
+		.label("audiomenu.auto_lang")
+		.hint("menu.hint_auto_lang")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(auto_lang)),
+	boolRow("auto_subs")
+		.section("general")
+		.label("audiomenu.auto_subs")
+		.hint("menu.hint_auto_subs")
+		.defaultValue(0)
+		.field(COREAPI_NUMBER_FIELD(auto_subs)),
 	/* The one mask here, of the three bits the screen offers as three
 	   questions. Its field is a byte and only those three bits are read, so
 	   the ceiling is the three of them together rather than what a byte holds. */
-	{
-		"recording_audio_pids_default", ValueType::Int, "recording",
-		"recordingmenu.apids", NULL,
-		0, TIMERD_APIDS_STD | TIMERD_APIDS_ALT | TIMERD_APIDS_AC3, NULL, 0,
-		TIMERD_APIDS_STD | TIMERD_APIDS_AC3,
-		NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(recording_audio_pids_default)
-	},
+	intRow("recording_audio_pids_default")
+		.section("recording")
+		.label("recordingmenu.apids")
+		.range(0, TIMERD_APIDS_STD | TIMERD_APIDS_ALT | TIMERD_APIDS_AC3)
+		.defaultValue(TIMERD_APIDS_STD | TIMERD_APIDS_AC3)
+		.field(COREAPI_NUMBER_FIELD(recording_audio_pids_default)),
 };
 
 /* The sections live in files of their own, so what the whole table is has to be
@@ -143,6 +142,15 @@ std::vector<Descriptor> join()
 
 	const Descriptor *update = settingsTableUpdate(count);
 	v.insert(v.end(), update, update + count);
+
+	const Descriptor *theme = settingsTableTheme(count);
+	v.insert(v.end(), theme, theme + count);
+
+	const Descriptor *elements = settingsTableElements(count);
+	v.insert(v.end(), elements, elements + count);
+
+	const Descriptor *lists = settingsTableLists(count);
+	v.insert(v.end(), lists, lists + count);
 
 	return v;
 }

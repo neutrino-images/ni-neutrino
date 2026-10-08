@@ -900,6 +900,7 @@ fontsize.moviebrowser_list Zoznam položiek
 fontsize.subtitles Text titulkov
 fontsize.window_radiotext_desc0 Rádiotext informácie
 fontsize.window_radiotext_desc1 Ďaľšie rádiotext informácie
+format.after_second po %d s
 fsk.all vyp
 fsk.from_12 od 12
 fsk.from_16 od 16
@@ -3016,8 +3017,10 @@ unicable.scr SCR Unicable
 unit.decimal .
 unit.long.years roky
 unit.short.hour h
+unit.short.megabyte MB
 unit.short.millisecond ms
 unit.short.minute min
+unit.short.percent %
 unit.short.second s
 upnpbrowser.head UPnP prehliadač
 upnpbrowser.noservers Nenájdený UPnP server

@@ -27,6 +27,7 @@
 #include "coreapi/decryption.h"
 #include "coreapi/osd.h"
 #include "coreapi/settings/predicates.h"
+#include "coreapi/settings/settings.h"
 #include "coreapi/system.h"
 
 #include <neutrinoMessages.h>
@@ -720,6 +721,9 @@ TEST_CASE("each setting predicate reads its own capability and fails closed", "[
 		{ countsScrolls, &coreapi::BoxCapabilities::display_scroll_repeats, "countsScrolls" },
 		{ takesZappingMode, &coreapi::BoxCapabilities::video_zapmode, "takesZappingMode" },
 		{ takesHdmiColorimetry, &coreapi::BoxCapabilities::video_hdmi_colorimetry, "takesHdmiColorimetry" },
+		{ canSelectRemote, &coreapi::BoxCapabilities::rc_hw_select, "canSelectRemote" },
+		{ hasScartOsdFix, &coreapi::BoxCapabilities::has_scart_osd_fix, "hasScartOsdFix" },
+		{ ciExtended, &coreapi::BoxCapabilities::ci_extended, "ciExtended" },
 	};
 	const size_t n = sizeof(tests) / sizeof(tests[0]);
 
@@ -767,6 +771,229 @@ TEST_CASE("picture in picture is usable only where the decoder and the boot mode
 	source.caps.pip_boot_mode_ok = 1;
 	source.caps_status = Status::Internal;
 	CHECK_FALSE(pipUsable());
+}
+
+/* One revision at a time, by the screens' own tests: revision 0 is a revision and
+   passes the tests that exclude only others. Revision 1 is also what a box
+   without a Coolstream board reports, which is why the disk power flag is
+   offered there. A box that cannot be asked fails through its status. */
+TEST_CASE("the board revision predicates follow their revisions and fail closed", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+
+	struct Row
+	{
+		unsigned rev;
+		bool dbdr, led, backlight, vfd, hddpower;
+	};
+	const Row rows[] = {
+		{ 0, true, false, false, true, true },
+		{ 1, false, false, false, true, true },
+		{ 5, true, false, false, true, true },
+		{ 6, true, false, false, true, true },
+		{ 7, true, false, false, true, true },
+		{ 8, true, true, false, true, false },
+		{ 9, true, true, true, true, false },
+		{ 10, true, true, false, false, false },
+		{ 11, true, true, false, false, false },
+		{ 12, true, true, false, true, false }
+	};
+	for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); ++i)
+	{
+		INFO("revision " << rows[i].rev);
+		source.caps.board_revision = rows[i].rev;
+		CHECK(hasDbdr() == rows[i].dbdr);
+		CHECK(hasLedMenu() == rows[i].led);
+		CHECK(hasBacklight() == rows[i].backlight);
+		CHECK(vfdEnabled() == rows[i].vfd);
+		CHECK(hasHddPowerFlag() == rows[i].hddpower);
+	}
+
+	source.caps.board_revision = 9;
+	source.caps_status = Status::Internal;
+	CHECK_FALSE(hasDbdr());
+	CHECK_FALSE(hasLedMenu());
+	CHECK_FALSE(hasBacklight());
+	CHECK_FALSE(vfdEnabled());
+	CHECK_FALSE(hasHddPowerFlag());
+}
+
+TEST_CASE("the panel brightness needs the capability and a wired panel", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+
+	const unsigned revs[] = { 0, 1, 9, 10, 11 };
+	const bool wired[] = { true, true, true, false, false };
+	for (size_t i = 0; i < sizeof(revs) / sizeof(revs[0]); ++i)
+	{
+		INFO("revision " << revs[i]);
+		source.caps.board_revision = revs[i];
+		source.caps.display_can_set_brightness = 1;
+		CHECK(canSetPanelBrightness() == wired[i]);
+		source.caps.display_can_set_brightness = 0;
+		CHECK_FALSE(canSetPanelBrightness());
+	}
+
+	source.caps.board_revision = 9;
+	source.caps.display_can_set_brightness = 1;
+	source.caps_status = Status::Internal;
+	CHECK_FALSE(canSetPanelBrightness());
+}
+
+TEST_CASE("the display kind predicates tell the graphical and the numeric panel apart", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+
+	const display_type_t kinds[] = { HW_DISPLAY_NONE, HW_DISPLAY_LED_ONLY, HW_DISPLAY_LED_NUM,
+					 HW_DISPLAY_LINE_TEXT, HW_DISPLAY_GFX };
+	for (size_t i = 0; i < sizeof(kinds) / sizeof(kinds[0]); ++i)
+	{
+		INFO("display kind " << (int) kinds[i]);
+		source.caps.display_type = kinds[i];
+		CHECK(hasGraphicPanel() == (kinds[i] == HW_DISPLAY_GFX));
+		CHECK(hasNumericPanel() == (kinds[i] == HW_DISPLAY_LED_NUM));
+	}
+
+	source.caps.display_type = HW_DISPLAY_GFX;
+	source.caps_status = Status::Internal;
+	CHECK_FALSE(hasGraphicPanel());
+	source.caps.display_type = HW_DISPLAY_LED_NUM;
+	CHECK_FALSE(hasNumericPanel());
+}
+
+TEST_CASE("the picture in picture window count is the decoder's and fails to none", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+
+	source.caps.pip_devs = 0;
+	CHECK(pipWindows() == 0);
+	source.caps.pip_devs = 1;
+	CHECK(pipWindows() == 1);
+	source.caps.pip_devs = 3;
+	CHECK(pipWindows() == 3);
+	source.caps.pip_devs = -1;
+	CHECK(pipWindows() == 0);
+
+	source.caps.pip_devs = 3;
+	source.caps_status = Status::Internal;
+	CHECK(pipWindows() == 0);
+}
+
+/* The screen counts the tuners the box has and not the ones switched on, so the
+   two counts have to be able to differ here. */
+TEST_CASE("the fitted tuner predicate counts every frontend and fails closed", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	source.caps.frontend_count = 0;
+	CHECK_FALSE(severalTunersFitted());
+	source.caps.frontend_count = 1;
+	CHECK_FALSE(severalTunersFitted());
+	source.caps.frontend_count = 2;
+	CHECK(severalTunersFitted());
+
+	// A second tuner that is fitted and switched off is still fitted.
+	tuner.enabled = 1;
+	CHECK(severalTunersFitted());
+	CHECK_FALSE(severalTunersEnabled());
+
+	source.caps_status = Status::Internal;
+	CHECK_FALSE(severalTunersFitted());
+}
+
+namespace
+{
+struct RowTest
+{
+	const char *key;
+	bool (*test)();
+};
+} // namespace
+
+/* The rows that ask the box through one of the predicates above, each held to
+   its own: a row wired to a neighbour's test would still be offered somewhere,
+   which no case on the tests alone can see. Every combination of what the tests
+   read is walked, so two of them cannot agree by accident. */
+TEST_CASE("each row behind a box test is on the box exactly where its test holds", "[system]")
+{
+	const RowTest rows[] =
+	{
+		{ "video_dbdr", hasDbdr },
+		{ "led_tv_mode", hasLedMenu },
+		{ "led_standby_mode", hasLedMenu },
+		{ "led_deep_mode", hasLedMenu },
+		{ "led_rec_mode", hasLedMenu },
+		{ "led_blink", hasLedMenu },
+		{ "backlight_tv", hasBacklight },
+		{ "backlight_standby", hasBacklight },
+		{ "backlight_deepstandby", hasBacklight },
+		{ "lcd_dim_brightness", canSetPanelBrightness },
+		{ "lcd_dim_time", canSetPanelBrightness },
+		{ "lcd_info_line", vfdEnabled },
+		{ "lcd_notify_rclock", vfdEnabled },
+		{ "lcd_scroll", vfdEnabled },
+		{ "remote_control_hardware", canSelectRemote },
+		{ "infobar_show_tuner", severalTunersFitted },
+	};
+
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+
+	const unsigned revisions[] = { 0, 1, 6, 8, 9, 10, 11 };
+	for (size_t r = 0; r < sizeof(revisions) / sizeof(revisions[0]); ++r)
+	for (int panel = 0; panel < 2; ++panel)
+	for (int remote = 0; remote < 2; ++remote)
+	for (size_t tuners = 0; tuners < 3; ++tuners)
+	{
+		source.caps.board_revision = revisions[r];
+		source.caps.display_can_set_brightness = panel;
+		source.caps.rc_hw_select = remote;
+		source.caps.frontend_count = (int) tuners;
+
+		for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); ++i)
+		{
+			INFO(rows[i].key << " revision " << revisions[r] << " panel " << panel
+			     << " remote " << remote << " tuners " << tuners);
+			const Descriptor *d = settings::findRow(rows[i].key);
+			REQUIRE(d != NULL);
+			Descriptor shown;
+			CHECK(rowOnThisBox(*d, shown) == rows[i].test());
+		}
+	}
+}
+
+/* The scroll row is a count where the driver takes one and an off and an on where it takes
+   none, and it is absent where the panel is not wired up whichever the driver takes: the
+   second shape must not stand in for a panel that is not there. */
+TEST_CASE("the scroll row keeps its shape by the driver and is absent without a panel", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+	const Descriptor *d = settings::findRow("lcd_scroll");
+	REQUIRE(d != NULL);
+
+	const unsigned revisions[] = { 0, 1, 9, 10, 11 };
+	for (size_t r = 0; r < sizeof(revisions) / sizeof(revisions[0]); ++r)
+	for (int counts = 0; counts < 2; ++counts)
+	{
+		INFO("revision " << revisions[r] << " counts " << counts);
+		source.caps.board_revision = revisions[r];
+		source.caps.display_scroll_repeats = counts;
+
+		Descriptor shown;
+		const bool wired = revisions[r] != 10 && revisions[r] != 11;
+		CHECK(vfdCountsScrolls() == (wired && counts != 0));
+		REQUIRE(rowOnThisBox(*d, shown) == wired);
+		if (wired)
+			CHECK((shown.type == ValueType::Int) == (counts != 0));
+	}
 }
 
 /* The command line of a box that starts in numbered modes: only the one with room

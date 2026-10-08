@@ -899,6 +899,7 @@ fontsize.moviebrowser_list (((T))) Listen-Einträge
 fontsize.subtitles Text ondertitels
 fontsize.window_radiotext_desc0 (((T))) Radiotext Infos
 fontsize.window_radiotext_desc1 (((T))) Radiotext Zusatzinfo
+format.after_second (((T))) nach %d s
 fsk.all (((T))) aus
 fsk.from_12 (((T))) ab 12
 fsk.from_16 (((T))) ab 16
@@ -3000,8 +3001,10 @@ unicable.scr Unicable SCR
 unit.decimal .
 unit.long.years jaren
 unit.short.hour h
+unit.short.megabyte MB
 unit.short.millisecond ms
 unit.short.minute min
+unit.short.percent %
 unit.short.second s
 upnpbrowser.head UPnP Browser
 upnpbrowser.noservers Geen UPnP servers gevonden

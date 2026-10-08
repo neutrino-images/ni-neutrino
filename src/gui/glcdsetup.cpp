@@ -184,7 +184,7 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 		fileBrowser.Filter = &fileFilter;
 		if (fileBrowser.exec(FONTDIR) == true)
 		{
-			t.glcd_font = fileBrowser.getSelectedFile()->Name;
+			setSettingsText(t.glcd_font, fileBrowser.getSelectedFile()->Name);
 			cglcd->ReInitFont();
 		}
 		return res;
@@ -198,9 +198,9 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 		fileFilter.addFilter("png");
 		fileBrowser.Filter = &fileFilter;
 		if (fileBrowser.exec(THEMESDIR"/oled") == true)
-			t.glcd_background_image = fileBrowser.getSelectedFile()->Name;
+			setSettingsText(t.glcd_background_image, fileBrowser.getSelectedFile()->Name);
 		else
-			t.glcd_background_image = "";
+			setSettingsText(t.glcd_background_image, "");
 		return res;
 	}
 	else if (actionKey == "brightness_default")

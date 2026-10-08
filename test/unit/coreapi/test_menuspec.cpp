@@ -28,6 +28,8 @@
 #include "coreapi/settings/settingstable.h"
 #include "support/fakes.h"
 
+#include "gui/widget/settingformat.h"
+
 #include <timerdclient/timerdtypes.h>
 
 #include <cstring>
@@ -78,10 +80,9 @@ TEST_CASE("the prompt offers the three the screen shows", "[menuspec]")
 	REQUIRE(r.value().choices[1].value == 2);
 }
 
-TEST_CASE("an unknown key and a member no widget can edit are refused", "[menuspec]")
+TEST_CASE("an unknown key is refused", "[menuspec]")
 {
 	REQUIRE(menuItem("no_such_setting").error().code == ErrorCode::UnknownSetting);
-	REQUIRE(menuItem("parentallock_pincode").error().code == ErrorCode::BadTable);
 }
 
 TEST_CASE("a row the parental lock holds is a locked item only while the box is locked", "[menuspec]")
@@ -106,69 +107,88 @@ bool never() { return false; }
 
 const EnumValue kEntries[] =
 {
-	{ 0, "options.off", NULL, NULL },
-	{ 1, NULL, "ext4", NULL },
-	{ 2, NULL, "xfs", never },
+	{ 0, "options.off", NULL, NULL, NULL, 0 },
+	{ 1, NULL, "ext4", NULL, NULL, 0 },
+	{ 2, NULL, "xfs", never, NULL, 0 },
 };
 const EnumValue kNoneOffered[] =
 {
-	{ 2, NULL, "xfs", never },
+	{ 2, NULL, "xfs", never, NULL, 0 },
 };
 const EnumValue kNoYes[] =
 {
-	{ 0, "messagebox.no", NULL, NULL },
-	{ 1, "messagebox.yes", NULL, NULL },
+	{ 0, "messagebox.no", NULL, NULL, NULL, 0 },
+	{ 1, "messagebox.yes", NULL, NULL, NULL, 0 },
 };
 const EnumValue kOffBelow[] =
 {
-	{ 0, "options.off", NULL, NULL },
+	{ 0, "options.off", NULL, NULL, NULL, 0 },
+};
+const EnumValue kTwoWords[] =
+{
+	{ -1, "options.auto", NULL, NULL, NULL, 0 },
+	{ 0, "options.off", NULL, NULL, NULL, 0 },
 };
 // What the box answers for the rows below that ask it.
 bool g_box_has = false;
 bool boxHas() { return g_box_has; }
-const Shape kFlag = { ValueType::Bool, "flag_label", 0, 1, NULL, 0, NULL };
-const Shape kFlagHinted = { ValueType::Bool, "flag_label", 0, 1, NULL, 0, "shape_hint" };
+const Shape kFlag = shape(ValueType::Bool, "flag_label").range(0, 1);
+const Shape kFlagHinted = shape(ValueType::Bool, "flag_label").range(0, 1).hint("shape_hint");
 const Descriptor kRows[] =
 {
 	{
 		"t_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kEntries, sizeof(kEntries) / sizeof(kEntries[0]), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"t_none", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kNoneOffered, 1, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"t_bool", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"t_noyes", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, kNoYes, 2, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"t_named", ValueType::Int, "fixture", "label", NULL,
 		1, 14, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	},
+	{
+		"t_words", ValueType::Int, "fixture", "label", NULL,
+		1, 14, kTwoWords, 2, 1, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"t_fan", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, NULL)
+		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, NULL),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"t_hinted", ValueType::Int, "fixture", "label", "row_hint",
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, &kFlagHinted)
+		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, &kFlagHinted),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"t_scroll", ValueType::Int, "fixture", "label", NULL,
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, &kFlag)
+		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, &kFlag),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -348,9 +368,33 @@ TEST_CASE("a daemon that cannot be asked answers no value", "[menuspec]")
 	CHECK(v == -1);
 }
 
-TEST_CASE("a text row is still refused", "[menuspec]")
+TEST_CASE("a text row carries its rule and is read and written whole", "[menuspec]")
 {
-	REQUIRE(menuItem("network_nfs_recordingdir").error().code == ErrorCode::BadTable);
+	Result<MenuItemSpec> r = menuItem("network_nfs_recordingdir");
+	REQUIRE(r.ok());
+	REQUIRE(r.value().text != NULL);
+	CHECK(r.value().text->kind == TextKind::Directory);
+	CHECK(r.value().text->must_exist == MustExist::YesNotTmpfs);
+	CHECK_FALSE(r.value().secret);
+
+	SNeutrinoSettings s;
+	REQUIRE(menuTextWrite(r.value(), s, "/media/sda1/rec"));
+	std::string back;
+	REQUIRE(menuTextRead(r.value(), s, back));
+	CHECK(back == "/media/sda1/rec");
+}
+
+TEST_CASE("a pin item carries its four digit rule and is a credential", "[menuspec]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	Result<MenuItemSpec> r = menuItem("parentallock_pincode");
+	REQUIRE(r.ok());
+	REQUIRE(r.value().text != NULL);
+	CHECK(r.value().text->kind == TextKind::Pin);
+	CHECK(r.value().text->min_length == 4);
+	CHECK(r.value().text->max_length == 4);
+	CHECK(r.value().secret);
 }
 
 namespace
@@ -457,4 +501,112 @@ TEST_CASE("the shutdown choices of the energy menu are offered on a box that can
 	Result<MenuItemSpec> block = menuItem("shutdown_block_while_recording");
 	REQUIRE_FALSE(block.ok());
 	CHECK(block.error().code == ErrorCode::SettingNotOnThisBox);
+}
+
+TEST_CASE("a number's unit and format reach the menu item as names", "[menuspec][units]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	Result<MenuItemSpec> hours = menuItem("record_hours");
+	REQUIRE(hours.ok());
+	CHECK(hours.value().unit_key == "unit.short.hour");
+	CHECK(hours.value().format_key.empty());
+
+	Result<MenuItemSpec> after = menuItem("timeshift_auto");
+	REQUIRE(after.ok());
+	CHECK(after.value().unit_key.empty());
+	CHECK(after.value().format_key == "format.after_second");
+
+	Result<MenuItemSpec> bare = menuItem("start_volume");
+	REQUIRE(bare.ok());
+	CHECK(bare.value().unit_key.empty());
+	CHECK(bare.value().format_key.empty());
+
+	// A choice has no number to put a unit after.
+	Result<MenuItemSpec> choice = menuItem("timeshift_pause");
+	REQUIRE(choice.ok());
+	CHECK(choice.value().unit_key.empty());
+}
+
+TEST_CASE("the number format a row's texts make is the one the screens wrote", "[menuspec][units]")
+{
+	CHECK(settingNumberFormat("", "") == "%d");
+	CHECK(settingNumberFormat("h", "") == "%d h");
+	CHECK(settingNumberFormat("min", "") == "%d min");
+	CHECK(settingNumberFormat("MB", "") == "%d MB");
+	// Against the number, and doubled for printf.
+	CHECK(settingNumberFormat("%", "") == "%d%%");
+	// The row's own format is used as it stands, and wins over a unit.
+	CHECK(settingNumberFormat("", "after %d s") == "after %d s");
+	CHECK(settingNumberFormat("s", "after %d s") == "after %d s");
+	// A letter outside ASCII is a letter, not a sign.
+	CHECK(settingNumberFormat("\xc3\xa9", "") == "%d \xc3\xa9");
+}
+
+namespace
+{
+std::string fakeText(const std::string &key)
+{
+	if (key == "unit.short.hour")
+		return "h";
+	if (key == "unit.short.percent")
+		return "%";
+	if (key == "format.after_second")
+		return "after %d s";
+	return "";
+}
+} // namespace
+
+TEST_CASE("a row's number is printed with its own unit and no other", "[menuspec][units]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	CHECK(settingNumberFormat(menuItem("record_hours").value(), fakeText) == "%d h");
+	CHECK(settingNumberFormat(menuItem("recording_fill_warning").value(), fakeText) == "%d%%");
+	CHECK(settingNumberFormat(menuItem("timeshift_auto").value(), fakeText) == "after %d s");
+	// A row that names none leaves the chooser as it is.
+	CHECK(settingNumberFormat(menuItem("start_volume").value(), fakeText).empty());
+}
+
+TEST_CASE("a number that names several values offers every one of them", "[menuspec][units]")
+{
+	InstalledSettingsTable table(kRows, sizeof(kRows) / sizeof(kRows[0]));
+	Result<MenuItemSpec> r = menuItem("t_words");
+	REQUIRE(r.ok());
+	REQUIRE(r.value().choices.size() == 2);
+	CHECK(r.value().choices[0].value == -1);
+	CHECK(r.value().choices[0].label_key == "options.auto");
+	CHECK(r.value().choices[1].value == 0);
+	CHECK(r.value().choices[1].label_key == "options.off");
+	// The one-word row keeps its single entry.
+	CHECK(menuItem("t_named").value().choices.size() == 1);
+}
+
+/* A percent sign attaches to its number as the screens wrote it, and these
+   are the five rows that wrote it so. A change to the attach rule that spaced
+   them would show on each, so each is named. */
+TEST_CASE("every row that prints a percent keeps it against the number", "[menuspec][units]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	const char *const rows[] = {
+		"audio_volume_percent_ac3", "audio_volume_percent_pcm", "recording_fill_warning",
+		"font_scaling_x", "font_scaling_y"
+	};
+	for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); ++i)
+	{
+		INFO(rows[i]);
+		Result<MenuItemSpec> r = menuItem(rows[i]);
+		REQUIRE(r.ok());
+		CHECK(r.value().unit_key == "unit.short.percent");
+		CHECK(settingNumberFormat(r.value(), fakeText) == "%d%%");
+	}
 }

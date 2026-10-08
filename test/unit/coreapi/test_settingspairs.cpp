@@ -24,6 +24,11 @@
 #include "coreapi/settings/settingstable.h"
 
 #include "support/counts.h"
+#include "support/fakes.h"
+
+// What the load names its key fallbacks by, which the scan cannot read a value of
+// and the compiler can.
+#include <driver/rcinput.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -84,8 +89,20 @@ bool isUnpaired(const std::string &key)
    What keeps this from being a way out of the cases below is the case at the foot of
    this file: every row it excludes has to have a key the program really does not
    read. */
+/* An element of an array, a list and a list of records are in the file under keys
+   the load builds: out of the element's number, or out of a count and the number of
+   the entry. So no pair for one is in the map below and no read names the row's own
+   key. Each is held to a scan of its own, in test_settingselements.cpp. */
+bool storedUnderBuiltKeys(const Descriptor &d)
+{
+	return d.field.origin == FieldOrigin::Element || d.type == ValueType::List ||
+	       d.type == ValueType::Records;
+}
+
 bool inSettingsFile(const Descriptor &d)
 {
+	if (storedUnderBuiltKeys(d))
+		return false;
 	return valueIsInNamedMember(d.field) || isUnpaired(d.key);
 }
 
@@ -185,6 +202,44 @@ const std::map<std::string, Loaded> &loaded()
 	}
 	return m;
 }
+
+/* The same pairs, but only the arm of each conditional this build compiles, so a
+   key loaded differently on another model has the one fallback this model gets. */
+const std::map<std::string, Loaded> &loadedHere()
+{
+	static std::map<std::string, Loaded> m;
+	static bool done = false;
+	if (!done)
+	{
+		std::vector<std::vector<std::string> > rows = readTable(COREAPI_PAIRS_BUILT_FILE);
+		for (size_t i = 0; i < rows.size(); ++i)
+		{
+			if (rows[i].size() != 4)
+				continue;
+			Loaded &l = m[rows[i][0]];
+			l.field = rows[i][1];
+			Fallback f;
+			f.kind = rows[i][2];
+			f.value = rows[i][3];
+			l.defaults.push_back(f);
+		}
+		done = true;
+	}
+	return m;
+}
+
+struct LoadValue
+{
+	const char *key;
+	long        value;
+};
+
+// Written by the build from the load's own fallbacks, one entry for each that is a key code.
+const LoadValue kLoadValues[] =
+{
+#include COREAPI_LOAD_VALUES_INC
+	{ NULL, 0 }
+};
 
 std::string fallbacks(const std::vector<Fallback> &v)
 {
@@ -529,6 +584,80 @@ TEST_CASE("every declared default is the one the program falls back to", "[setti
 	recordCount("defaults compared against the program", checked);
 }
 
+/* The case above lets a row agree with any arm of the load, which is what the
+   table written for every model needs and is also why it cannot see a row whose
+   constant is the arm of another model: the loader has the other arm too. This
+   holds every row to the one arm this build compiles, with the row's own function
+   applied where it has one, which is the number a read of an unset key and a
+   reset answer on this box. */
+TEST_CASE("every declared default is the one this build's own load falls back to", "[settingspairs]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	size_t checked = 0;
+
+	for (size_t i = 0; i < settingsTableCount(); ++i)
+	{
+		const Descriptor &d = settingsTable()[i];
+		if (d.field.name == NULL || !inSettingsFile(d))
+			continue;
+		if (d.field.origin == FieldOrigin::ChannelIdField)
+			continue;
+
+		std::map<std::string, Loaded>::const_iterator it = loadedHere().find(d.key);
+		if (it == loadedHere().end() || it->second.defaults.size() != 1)
+			continue;
+
+		const Fallback &f = it->second.defaults[0];
+		if (d.type == ValueType::String)
+		{
+			if (f.kind != "str")
+				continue;
+			++checked;
+			INFO("row " << d.key << " declares " << (d.default_string != NULL ? d.default_string : "")
+			     << ", this build falls back to " << f.value);
+			CHECK(d.default_string != NULL);
+			if (d.default_string != NULL)
+				CHECK(f.value == std::string(d.default_string));
+		}
+		else
+		{
+			if (f.kind != "int")
+				continue;
+			++checked;
+			INFO("row " << d.key << " declares " << defaultInt(d)
+			     << ", this build falls back to " << f.value);
+			CHECK(strtol(f.value.c_str(), NULL, 10) == defaultInt(d));
+		}
+	}
+
+	INFO("defaults compared against this build's arm: " << checked);
+	recordCount("defaults compared against this build's own load", checked);
+
+	// The ones the load writes as a key code: the compiler has given each its number.
+	size_t named = 0;
+	for (size_t v = 0; kLoadValues[v].key != NULL; ++v)
+	{
+		const Descriptor *d = NULL;
+		for (size_t i = 0; i < settingsTableCount() && d == NULL; ++i)
+		{
+			if (std::string(settingsTable()[i].key) == kLoadValues[v].key)
+				d = &settingsTable()[i];
+		}
+		if (d == NULL || d->field.name == NULL || !inSettingsFile(*d))
+			continue;
+		if (d->type == ValueType::String || d->field.origin == FieldOrigin::ChannelIdField)
+			continue;
+
+		++named;
+		INFO("row " << d->key << " declares " << (int32_t) defaultInt(*d)
+		     << ", this build falls back to " << (int32_t) kLoadValues[v].value);
+		CHECK((int32_t) kLoadValues[v].value == (int32_t) defaultInt(*d));
+	}
+	INFO("defaults named as key codes compared against this build's arm: " << named);
+	recordCount("key code defaults compared against this build's own load", named);
+}
+
 /* The bounds, which are the ones the pairing above cannot see. Both of the two
    wrong rows the review found named the right field for the right key and got
    the range wrong, one of them by reading the minimum as a maximum. */
@@ -793,7 +922,7 @@ TEST_CASE("a row whose value is not in the settings file is not in it", "[settin
 	for (size_t i = 0; i < settingsTableCount(); ++i)
 	{
 		const Descriptor &d = settingsTable()[i];
-		if (inSettingsFile(d))
+		if (inSettingsFile(d) || storedUnderBuiltKeys(d))
 			continue;
 
 		++checked;

@@ -34,6 +34,7 @@
 #include <sstream>
 
 #include <gui/hdd_info.h>
+#include <coreapi/box/storage_disks.h>
 
 #include <global.h>
 #include <neutrino.h>
@@ -46,13 +47,6 @@
 
 #include <sys/sysinfo.h>
 #include <sys/vfs.h>
-
-static int my_filter(const struct dirent *dent)
-{
-	if (dent->d_name[0] == 's' && dent->d_name[1] == 'd')
-		return 1;
-	return 0;
-}
 
 static char *trim(char *txt)
 {
@@ -162,42 +156,27 @@ int CHDDInfoMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 
 int CHDDInfoMenu::show()
 {
-	FILE *f;
-	struct dirent **namelist;
 	bool hdd_found = 0;
-	int n = scandir("/sys/block", &namelist, my_filter, alphasort);
+	const std::vector<coreapi::storage::DiskInfo> disks = coreapi::storage::disks();
 	std::ostringstream buf;
 
 	//menue init
 	CMenuWidget *HDDInfo = new CMenuWidget(LOCALE_HDD_INFO_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_HDD_INFO);
 	HDDInfo->addIntroItems();
 
-	for (int i = 0; i < n; i++)
+	for (size_t i = 0; i < disks.size(); i++)
 	{
-		char model[128] = "unbekannt";
+		// A disc drive has no health data to show.
+		if (disks[i].optical)
+			continue;
 
 		buf.str("");
-		buf << "/sys/block/" << namelist[i]->d_name << "/device/model";
+		buf << (disks[i].model.empty() ? "unbekannt" : disks[i].model) << " (" << disks[i].name << ")";
 
-		f = fopen(buf.str().c_str(), "r");
-		if (f)
-		{
-			fscanf(f, "%127[^\n]", (char *) &model);
-			fclose(f);
-		}
-		else
-			printf("Cant open %s\n", buf.str().c_str());
-
-		buf.str("");
-		buf << trim(model) << " (" << namelist[i]->d_name << ")";
-
-		HDDInfo->addItem(new CMenuForwarder(buf.str().c_str(), true, NULL, this, namelist[i]->d_name));
+		HDDInfo->addItem(new CMenuForwarder(buf.str().c_str(), true, NULL, this, disks[i].name.c_str()));
 
 		hdd_found = 1;
-		free(namelist[i]);
 	}
-	if (n >= 0)
-		free(namelist);
 
 	if (!hdd_found)
 		HDDInfo->addItem(new CMenuForwarder(LOCALE_HDD_NOT_FOUND, false));

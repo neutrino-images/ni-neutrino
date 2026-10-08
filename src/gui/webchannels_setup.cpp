@@ -220,7 +220,7 @@ int CWebChannelsSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 int CWebChannelsSetup::Show()
 {
 	item_offset = 0;
-	std::list<std::string> webchannels = (webradio ? g_settings.webradio_xml : g_settings.webtv_xml);
+	std::list<std::string> webchannels = settingsCopy(webradio ? g_settings.webradio_xml : g_settings.webtv_xml);
 
 	m = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_STREAMING, width, webradio ? MN_WIDGET_ID_WEBRADIOSETUP : MN_WIDGET_ID_WEBTVSETUP);
 	m->addKey(CRCInput::RC_red, this, "d");
@@ -309,15 +309,13 @@ int CWebChannelsSetup::Show()
 			CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
 			webchannels.push_back(f->getName());
 		}
-		if (webradio)
 		{
-			g_settings.webradio_xml.clear();
-			g_settings.webradio_xml = webchannels;
-		}
-		else
-		{
-			g_settings.webtv_xml.clear();
-			g_settings.webtv_xml = webchannels;
+			// What a request answers with is copied under this lock, so the swap is too.
+			CSettingsTextGuard lock;
+			if (webradio)
+				g_settings.webradio_xml = webchannels;
+			else
+				g_settings.webtv_xml = webchannels;
 		}
 		webchannels_auto();
 		if (webradio)
@@ -424,7 +422,7 @@ void CWebChannelsSetup::webchannels_auto()
 		if (!g_settings.webradio_xml_auto)
 			return;
 
-		webchannels = g_settings.webradio_xml;
+		webchannels = settingsCopy(g_settings.webradio_xml);
 		dirs[0] = WEBRADIODIR_VAR;
 		dirs[1] = WEBRADIODIR;
 	}
@@ -433,7 +431,7 @@ void CWebChannelsSetup::webchannels_auto()
 		if (!g_settings.webtv_xml_auto)
 			return;
 
-		webchannels = g_settings.webtv_xml;
+		webchannels = settingsCopy(g_settings.webtv_xml);
 		dirs[0] = WEBTVDIR_VAR;
 		dirs[1] = WEBTVDIR;
 	}
@@ -465,10 +463,13 @@ void CWebChannelsSetup::webchannels_auto()
 					if (!found)
 					{
 						printf("[CWebChannelsSetup] loading: %s\n", webchannel_file);
-						if (webradio)
-							g_settings.webradio_xml.push_back(webchannel_file);
-						else
-							g_settings.webtv_xml.push_back(webchannel_file);
+						{
+							CSettingsTextGuard lock;
+							if (webradio)
+								g_settings.webradio_xml.push_back(webchannel_file);
+							else
+								g_settings.webtv_xml.push_back(webchannel_file);
+						}
 						webchannels.push_back(webchannel_file);
 					}
 					else

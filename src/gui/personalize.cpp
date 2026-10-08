@@ -248,6 +248,7 @@ int CPersonalizeGui::exec(CMenuTarget* parent, const string & actionKey)
 						txt1 += "_text";
 						CNeutrinoApp::getInstance()->getConfigFile()->deleteKey(txt1);
 					}
+					CSettingsTextGuard lock;
 					delete g_settings.usermenu[i];
 					g_settings.usermenu[i] = NULL;
 				}
@@ -267,7 +268,10 @@ int CPersonalizeGui::exec(CMenuTarget* parent, const string & actionKey)
 		CUserMenuSetup *cms = new CUserMenuSetup(LOCALE_USERMENU_HEAD, i);
 		SNeutrinoSettings::usermenu_t *um = new SNeutrinoSettings::usermenu_t;
 		um->key = CRCInput::RC_nokey;
-		g_settings.usermenu.push_back(um);
+		{
+			CSettingsTextGuard lock;
+			g_settings.usermenu.push_back(um);
+		}
 		CMenuDForwarder *fw = new CMenuDForwarder(CRCInput::getKeyName(um->key), true, um->title, cms, to_string(i).c_str());
 		cms->setCaller(fw);
 
@@ -422,12 +426,15 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 	}
 
 	if (show_usermenu)
+	{
+		CSettingsTextGuard lock;
 		for(std::vector<SNeutrinoSettings::usermenu_t *>::iterator it = g_settings.usermenu.begin(); it != g_settings.usermenu.end();) {
 			if (!*it)
 				it = g_settings.usermenu.erase(it);
 			else
 				++it;
 		}
+	}
 
 	delete pMenu;
 	delete uMenu;

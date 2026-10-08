@@ -419,10 +419,14 @@ struct BoxCapabilities
 	int            display_has_statusline;
 	display_type_t display_type;
 	int            display_xres;
+	int            has_button_timer;
+	int            display_has_colon;
 	int            has_button_vformat;
 	int            has_fan;
 	int            has_HDMI;
+	int            has_HDMI_input;
 	int            has_SCART;
+	int            has_SCART_input;
 	int            pip_devs;
 	/* Not the library's: what the drivers offer under /proc, read with every
 	   call. Whether the front panel takes a scroll count rather than a flag,
@@ -435,6 +439,15 @@ struct BoxCapabilities
 	   count says it could, and the boot command line is the only place that
 	   says which. True where the box has no such modes. */
 	int            pip_boot_mode_ok;
+	/* Differences the build decides and the library does not report: the
+	   module clock and delay beyond what the other boxes offer, an input
+	   driver that can be told which remote to listen to, and the SCART picture
+	   fix of the oldest box family. */
+	int            ci_extended;
+	int            rc_hw_select;
+	int            has_scart_osd_fix;
+	// How many frontends the box has, switched on or not, counted at every call.
+	int            frontend_count;
 	/* The board revision, which decides what analog outputs the box has. */
 	unsigned int   board_revision;
 };

@@ -22,6 +22,7 @@
 
 #include "coreapi/base/bootmode.h"
 #include "coreapi/base/deps.h"
+#include "coreapi/box/storage_disks.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -35,6 +36,7 @@
 
 #include <configfile.h>
 #include <cs_api.h>
+#include <driver/rcinput.h>
 #include <global.h>
 #include <hardware/ca.h>
 #include <hardware_caps.h>
@@ -244,10 +246,14 @@ class RealSystemSource : public SystemSource
 			out.display_has_statusline = caps->display_has_statusline;
 			out.display_type = caps->display_type;
 			out.display_xres = caps->display_xres;
+			out.has_button_timer = caps->has_button_timer;
+			out.display_has_colon = caps->display_has_colon;
 			out.has_button_vformat = caps->has_button_vformat;
 			out.has_fan = caps->has_fan;
 			out.has_HDMI = caps->has_HDMI;
+			out.has_HDMI_input = caps->has_HDMI_input;
 			out.has_SCART = caps->has_SCART;
+			out.has_SCART_input = caps->has_SCART_input;
 			out.pip_devs = caps->pip_devs;
 			out.display_scroll_repeats = file_exists("/proc/stb/lcd/scroll_repeats");
 			out.video_zapmode = file_exists("/proc/stb/video/zapmode");
@@ -258,6 +264,22 @@ class RealSystemSource : public SystemSource
 #endif
 			out.board_revision = cs_get_revision();
 			out.pip_boot_mode_ok = pipBootModeOk();
+#if BOXMODEL_VUPLUS_ALL
+			out.ci_extended = 1;
+#else
+			out.ci_extended = 0;
+#endif
+#ifdef IOC_IR_SET_PRI_PROTOCOL
+			out.rc_hw_select = 1;
+#else
+			out.rc_hw_select = 0;
+#endif
+#if BOXMODEL_CST_HD1
+			out.has_scart_osd_fix = 1;
+#else
+			out.has_scart_osd_fix = 0;
+#endif
+			out.frontend_count = CFEManager::getInstance()->getFrontendCount();
 			return Status::Ok;
 		}
 
@@ -269,43 +291,19 @@ class RealSystemSource : public SystemSource
 		}
 
 		/* Same test the disk menu applies: the kernel lists the file system
-		   and a mkfs for it is on the path. */
+		   and a mkfs for it is on the path. The table is the one the disk
+		   operations format from. */
 		Status formatTools(std::vector<std::string> &out) const
 		{
-			static const char *const tools[][2] = {
-				{ "ext4",  "mkfs.ext4" },
-				{ "ext3",  "mkfs.ext3" },
-				{ "ext2",  "mkfs.ext2" },
-				{ "f2fs",  "mkfs.f2fs" },
-				{ "vfat",  "mkfs.vfat" },
-				{ "exfat", "mkfs.exfat" },
-				{ "xfs",   "mkfs.xfs" }
-			};
-
-			FILE *f = fopen("/proc/filesystems", "r");
-			if (!f)
+			if (storage::kernelFilesystems().empty())
 				return Status::Internal;
-			std::set<std::string> kernel;
-			char line[128]; // lines are shorter
-			while (fgets(line, sizeof(line), f))
-			{
-				size_t l = strlen(line);
-				if (l > 0)
-					line[l - 1] = 0;
-				// "nodev" lines carry a tab before the name, the others start with one
-				char *tab = strchr(line, '\t');
-				if (tab)
-					kernel.insert(std::string(tab + 1));
-			}
-			fclose(f);
 
 			out.clear();
-			for (size_t i = 0; i < sizeof(tools) / sizeof(tools[0]); i++)
+			const std::vector<storage::FsTool> tools = storage::fsTools();
+			for (size_t i = 0; i < tools.size(); i++)
 			{
-				if (kernel.find(tools[i][0]) == kernel.end())
-					continue;
-				if (!find_executable(tools[i][1]).empty())
-					out.push_back(tools[i][0]);
+				if (tools[i].mkfs_supported)
+					out.push_back(tools[i].fmt);
 			}
 			return Status::Ok;
 		}

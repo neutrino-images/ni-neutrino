@@ -64,11 +64,19 @@ const Hint kHints[] = {
 	  "Tell the user the owner has to allow this in the Freigaben screen of the KI tab in ni-web; "
 	  "do not try another way." },
 	{ coreapi::ErrorCode::SettingLocked,
-	  "The box's image fixes its parental lock; tell the user this setting cannot be changed on "
-	  "this box. Do not try another way." },
+	  "The box fixes this setting, by its parental lock or because its own screen still applies "
+	  "the effect (settings_schema marks it locked or held); tell the user this setting cannot be "
+	  "changed from here. Do not try another way." },
 	{ coreapi::ErrorCode::SettingNotOnThisBox,
 	  "This box does not have what the setting controls; tell the user it does not apply to this "
 	  "box. Do not try another way." },
+	{ coreapi::ErrorCode::SettingConditionNotMet,
+	  "Read the refusal's detail first. If another setting does not allow this one right now, "
+	  "settings_schema lists its conditions: send the setting it depends on in the same call, after "
+	  "telling the user, and if you already sent it, fix the refusal answered for it first. If the "
+	  "setting is one half of a pair (the name and id of a start channel, the city and location of the "
+	  "weather), send both halves together. If two values contradict each other or one plugin is in two "
+	  "lists, correct the values; sending the same call again will be refused again." },
 	{ coreapi::ErrorCode::SettingsSectionDenied,
 	  "No AI client may ever change this section or credential; tell the user to change it in "
 	  "ni-web directly. Do not try another way." },

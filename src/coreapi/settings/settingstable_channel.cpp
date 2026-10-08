@@ -44,82 +44,93 @@ namespace
    may take that lock. */
 
 // LIST_MODE_WEB is not on offer. -1 keeps the list mode last used.
-const EnumValue kChannelListMode[] =
+constexpr EnumValue kChannelListMode[] =
 {
-	{ -1, "channellist.remember", NULL, NULL },
-	{ LIST_MODE_FAV, "channellist.favs", NULL, NULL },
-	{ LIST_MODE_PROV, "channellist.provs", NULL, NULL },
-	{ LIST_MODE_SAT, "channellist.sats", NULL, NULL },
-	{ LIST_MODE_ALL, "channellist.head", NULL, NULL }
+	option(-1).label("channellist.remember"),
+	option(LIST_MODE_FAV).label("channellist.favs"),
+	option(LIST_MODE_PROV).label("channellist.provs"),
+	option(LIST_MODE_SAT).label("channellist.sats"),
+	option(LIST_MODE_ALL).label("channellist.head")
 };
 
 /* The four start channel rows apply only while the box is not told to come up
    on the channel it was left on. */
-const Condition kNoLastChannel[] =
+constexpr Condition kNoLastChannel[] =
 {
-	{ "uselastchannel", CompareOp::Eq, 0, NULL, 0 }
+	when("uselastchannel").is(0)
 };
 
 /* The loader writes the initial mode over the mode the box was left in
    wherever one is chosen, so the pair below matters only while none is. */
-const Condition kNoInitialMode[] =
+constexpr Condition kNoInitialMode[] =
 {
-	{ "channel_mode_initial", CompareOp::Lt, 0, NULL, 0 }
+	when("channel_mode_initial").below(0)
 };
 
-const Descriptor kChannel[] =
+constexpr Descriptor kChannel[] =
 {
 	/* The three rows below reach the box only at start: the first is handed to
 	   zapit once and the two list modes are read by the pass that loads them and
 	   nowhere else. */
-	{
-		"uselastchannel", ValueType::Bool, "channel",
-		"zapitsetup.last_use", "menu.hint_last_use",
-		0, 1, NULL, 0, 1, NULL, true, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(uselastchannel)
-	},
-	{
-		"channel_mode_initial", ValueType::Enum, "channel",
-		"zapitsetup.channelmode", "menu.hint_channellist_mode",
-		0, 0, COREAPI_ENUM(kChannelListMode), 0, NULL, true, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(channel_mode_initial)
-	},
-	{
-		"channel_mode_initial_radio", ValueType::Enum, "channel",
-		"zapitsetup.channelmode_radio", "menu.hint_channellist_mode_radio",
-		0, 0, COREAPI_ENUM(kChannelListMode), 0, NULL, true, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(channel_mode_initial_radio)
-	},
+	boolRow("uselastchannel")
+		.section("channel")
+		.label("zapitsetup.last_use")
+		.hint("menu.hint_last_use")
+		.defaultValue(1)
+		.needsRestart()
+		.field(COREAPI_NUMBER_FIELD(uselastchannel)),
+	enumRow("channel_mode_initial")
+		.section("channel")
+		.label("zapitsetup.channelmode")
+		.hint("menu.hint_channellist_mode")
+		.defaultValue(0)
+		.values(kChannelListMode)
+		.needsRestart()
+		.field(COREAPI_NUMBER_FIELD(channel_mode_initial)),
+	enumRow("channel_mode_initial_radio")
+		.section("channel")
+		.label("zapitsetup.channelmode_radio")
+		.hint("menu.hint_channellist_mode_radio")
+		.defaultValue(0)
+		.values(kChannelListMode)
+		.needsRestart()
+		.field(COREAPI_NUMBER_FIELD(channel_mode_initial_radio)),
 
 	/* The two identifiers, which is what a start channel really is. The name
 	   beside each is what a person reads. Handed to zapit once at start, so a
 	   written one takes effect at the next. */
-	{
-		"startchanneltv_id", ValueType::String, "channel",
-		NULL, NULL,
-		0, 0, NULL, 0, 0, "0", true, false, COREAPI_CONDITIONS(kNoLastChannel),
-		COREAPI_CHANNEL_ID_FIELD(startchanneltv_id)
-	},
-	{
-		"startchannelradio_id", ValueType::String, "channel",
-		NULL, NULL,
-		0, 0, NULL, 0, 0, "0", true, false, COREAPI_CONDITIONS(kNoLastChannel),
-		COREAPI_CHANNEL_ID_FIELD(startchannelradio_id)
-	},
+	textRow("startchanneltv_id")
+		.section("channel")
+		.defaultValue("0")
+		.needsRestart()
+		.changeableWhen(kNoLastChannel)
+		.text(kRuleChannelId)
+		.field(COREAPI_CHANNEL_ID_FIELD(startchanneltv_id)),
+	textRow("startchannelradio_id")
+		.section("channel")
+		.defaultValue("0")
+		.needsRestart()
+		.changeableWhen(kNoLastChannel)
+		.text(kRuleChannelId)
+		.field(COREAPI_CHANNEL_ID_FIELD(startchannelradio_id)),
 	/* The name beside each, which is what a person reads. Not what the box
 	   zaps to. */
-	{
-		"startchanneltv", ValueType::String, "channel",
-		"zapitsetup.last_tv", "menu.hint_last_tv",
-		0, 0, NULL, 0, 0, "", true, false, COREAPI_CONDITIONS(kNoLastChannel),
-		COREAPI_TEXT_FIELD(StartChannelTV)
-	},
-	{
-		"startchannelradio", ValueType::String, "channel",
-		"zapitsetup.last_radio", "menu.hint_last_radio",
-		0, 0, NULL, 0, 0, "", true, false, COREAPI_CONDITIONS(kNoLastChannel),
-		COREAPI_TEXT_FIELD(StartChannelRadio)
-	},
+	textRow("startchanneltv")
+		.section("channel")
+		.label("zapitsetup.last_tv")
+		.hint("menu.hint_last_tv")
+		.defaultValue("")
+		.needsRestart()
+		.changeableWhen(kNoLastChannel)
+		.field(COREAPI_TEXT_FIELD(StartChannelTV)),
+	textRow("startchannelradio")
+		.section("channel")
+		.label("zapitsetup.last_radio")
+		.hint("menu.hint_last_radio")
+		.defaultValue("")
+		.needsRestart()
+		.changeableWhen(kNoLastChannel)
+		.field(COREAPI_TEXT_FIELD(StartChannelRadio)),
 
 	/* Web channels. Which of the rows below a menu shows is a matter of which
 	   menu was opened and not a setting, so none of them carries a condition.
@@ -129,91 +140,86 @@ const Descriptor kChannel[] =
 	   ones is one a frontend can write and the box has no step for. Bound: the
 	   first and the last of the steps, which are fewer on the boxes that
 	   cannot decode the larger ones. */
-	{
-		"livestreamResolution", ValueType::Int, "channel",
-		"livestream.resolution", NULL,
+	intRow("livestreamResolution")
+		.section("channel")
+		.label("livestream.resolution")
 #if HAVE_CST_HARDWARE
-		480, 1920,
+		.range(480, 1920)
 #else
-		480, 3840,
+		.range(480, 3840)
 #endif
-		NULL, 0, 1920, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(livestreamResolution)
-	},
-	{
-		"webtv_stream_restart_attempts", ValueType::Int, "channel",
-		"webtv.stream_restart_attempts", NULL,
-		0, 3, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(webtv_stream_restart_attempts)
-	},
-	{
-		"webtv_dns_diagnostics", ValueType::Bool, "channel",
-		"webtv.dns.diagnostics", NULL,
-		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(webtv_dns_diagnostics)
-	},
+		.defaultValue(1920)
+		.field(COREAPI_NUMBER_FIELD(livestreamResolution)),
+	intRow("webtv_stream_restart_attempts")
+		.section("channel")
+		.label("webtv.stream_restart_attempts")
+		.range(0, 3)
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(webtv_stream_restart_attempts)),
+	boolRow("webtv_dns_diagnostics")
+		.section("channel")
+		.label("webtv.dns.diagnostics")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(webtv_dns_diagnostics)),
 	/* The two below carry no fixed hint: the text depends on the directories
 	   found at run time. */
-	{
-		"webtv_xml_auto", ValueType::Bool, "channel",
-		"webtv.xml.auto", NULL,
-		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(webtv_xml_auto)
-	},
-	{
-		"webradio_xml_auto", ValueType::Bool, "channel",
-		"webradio.xml.auto", NULL,
-		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(webradio_xml_auto)
-	},
+	boolRow("webtv_xml_auto")
+		.section("channel")
+		.label("webtv.xml.auto")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(webtv_xml_auto)),
+	boolRow("webradio_xml_auto")
+		.section("channel")
+		.label("webradio.xml.auto")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(webradio_xml_auto)),
 	/* No menu offers this one in this build, and the value is live anyway: the
 	   movie player still reads it. */
-	{
-		"livestreamScriptPath", ValueType::String, "channel",
-		"livestream.scriptpath", NULL,
-		0, 0, NULL, 0, 0, WEBTVDIR, false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(livestreamScriptPath)
-	},
+	textRow("livestreamScriptPath")
+		.section("channel")
+		.label("livestream.scriptpath")
+		.defaultValue(WEBTVDIR)
+		.text(kRuleDirectory)
+		.field(COREAPI_TEXT_FIELD(livestreamScriptPath)),
 
 	/* The two below are the list the box was left in, which it writes whenever
 	   the list is changed and reads once at the next start. The loader writes
 	   the initial mode over both where one is chosen, which is the condition
 	   each carries. The ceiling is the last of the five list modes. */
-	{
-		"channel_mode", ValueType::Int, "channel",
-		NULL, NULL,
-		0, 4, NULL, 0, 0, NULL, true, false, COREAPI_CONDITIONS(kNoInitialMode),
-		COREAPI_NUMBER_FIELD(channel_mode)
-	},
-	{
-		"channel_mode_radio", ValueType::Int, "channel",
-		NULL, NULL,
-		0, 4, NULL, 0, 0, NULL, true, false, COREAPI_CONDITIONS(kNoInitialMode),
-		COREAPI_NUMBER_FIELD(channel_mode_radio)
-	},
+	intRow("channel_mode")
+		.section("channel")
+		.range(0, 4)
+		.defaultValue(0)
+		.needsRestart()
+		.changeableWhen(kNoInitialMode)
+		.field(COREAPI_NUMBER_FIELD(channel_mode)),
+	intRow("channel_mode_radio")
+		.section("channel")
+		.range(0, 4)
+		.defaultValue(0)
+		.needsRestart()
+		.changeableWhen(kNoInitialMode)
+		.field(COREAPI_NUMBER_FIELD(channel_mode_radio)),
 	/* How the channel list is sorted, stepped through and wrapped at the last
 	   sort there is. That count is the ceiling here. */
-	{
-		"channellist_sort_mode", ValueType::Int, "channel",
-		NULL, NULL,
-		0, 3, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(channellist_sort_mode)
-	},
+	intRow("channellist_sort_mode")
+		.section("channel")
+		.range(0, 3)
+		.defaultValue(0)
+		.field(COREAPI_NUMBER_FIELD(channellist_sort_mode)),
 	/* The two below are where the file browser last stood when a web channel
 	   list was picked, written by the browser itself and read the next time it
 	   opens. */
-	{
-		"last_webtv_dir", ValueType::String, "channel",
-		NULL, NULL,
-		0, 0, NULL, 0, 0, WEBTVDIR_VAR, false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(last_webtv_dir)
-	},
-	{
-		"last_webradio_dir", ValueType::String, "channel",
-		NULL, NULL,
-		0, 0, NULL, 0, 0, WEBRADIODIR_VAR, false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(last_webradio_dir)
-	},
+	textRow("last_webtv_dir")
+		.section("channel")
+		.defaultValue(WEBTVDIR_VAR)
+		.text(kRuleDirectory)
+		.field(COREAPI_TEXT_FIELD(last_webtv_dir)),
+	textRow("last_webradio_dir")
+		.section("channel")
+		.defaultValue(WEBRADIODIR_VAR)
+		.text(kRuleDirectory)
+		.field(COREAPI_TEXT_FIELD(last_webradio_dir)),
 };
 
 } // anonymous namespace

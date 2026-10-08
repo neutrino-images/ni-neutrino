@@ -250,10 +250,38 @@ struct ActedMatch
 {
 	size_t checked;
 	size_t elsewhere;
+	size_t pending;
 	std::string wrong;
 
-	ActedMatch() : checked(0), elsewhere(0) {}
+	ActedMatch() : checked(0), elsewhere(0), pending(0) {}
 };
+
+/* Rows a notifier acts on that the applier does not list yet, and why, with the stream
+   that is to settle each. The front display's brightnesses: the screen edits each through
+   a copy of its own and writes it into the setting when the item is focused, so applying
+   the setting would apply whatever the copy last held. Stream S5 takes the screen over and
+   then lists them; the figure below is held to what is named here, so a row that is
+   listed has to come off this list and a name that no longer matches a row fails. */
+struct Pending
+{
+	const char *key;
+	const char *owner;
+};
+
+static const Pending kPending[] =
+{
+	{ "lcd_brightness", "S5" },
+	{ "lcd_standbybrightness", "S5" },
+	{ "lcd_deepbrightness", "S5" }
+};
+
+static bool isPending(const std::string &key)
+{
+	for (size_t i = 0; i < sizeof(kPending) / sizeof(kPending[0]); ++i)
+		if (key == kPending[i].key)
+			return true;
+	return false;
+}
 
 static ActedMatch matchActed(const std::vector<Acts> &acts, const std::set<std::string> &listedKeys)
 {
@@ -278,6 +306,15 @@ static ActedMatch matchActed(const std::vector<Acts> &acts, const std::set<std::
 			}
 
 			++m.checked;
+			if (isPending(d.key))
+			{
+				// Pending means not listed; a pending row that is listed is a list to correct.
+				if (isListed)
+					m.wrong += " " + std::string(d.key) + "(listed, and still pending)";
+				else
+					++m.pending;
+				continue;
+			}
 			if (!isListed)
 				m.wrong += " " + std::string(d.key) + "(acted on, not listed)"
 				           " [" + a.label + ", acted on by " + a.where + "]";
@@ -300,6 +337,9 @@ TEST_CASE("every option a notifier acts on is one its applier lists", "[settings
 	CHECK(m.wrong.empty());
 
 	recordCount("acted options matched to a declared row", m.checked);
+	// Every name on the pending list is a row a notifier acts on, so none is left behind.
+	recordCount("rows a notifier acts on that wait for a stream", m.pending);
+	CHECK(m.pending == sizeof(kPending) / sizeof(kPending[0]));
 	/* Counted, or a table that stopped declaring any of them would satisfy the
 	   comparison by never matching a row. Rows whose value lives elsewhere are
 	   no longer required of the tree: the proof for that path is the fixture

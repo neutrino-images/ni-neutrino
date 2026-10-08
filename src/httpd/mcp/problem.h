@@ -34,7 +34,7 @@ namespace mcp
 {
 
 // Last member of ErrorCode; a case holds it there.
-const coreapi::ErrorCode kLastErrorCode = coreapi::ErrorCode::SettingNotOnThisBox;
+const coreapi::ErrorCode kLastErrorCode = coreapi::ErrorCode::SettingConditionNotMet;
 
 bool codeFromWire(const std::string &wire, coreapi::ErrorCode &out);
 

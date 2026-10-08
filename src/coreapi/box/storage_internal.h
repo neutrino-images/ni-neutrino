@@ -64,6 +64,23 @@ extern const char *sys_block_path;
 extern const char *dev_dir;
 extern const char *sys_dev_block_path;
 extern const char *root_path;
+extern const char *filesystems_path;
+
+/* The commands the operations run, built apart from running them so the suite
+   can read what would be asked of the box. The names are checked by the
+   operations before they get here. */
+std::string mountCommand(const std::string &name);
+std::string umountCommand(const std::string &name);
+std::string mkfsCommand(const std::string &mkfs, const std::string &options,
+			const std::string &labelswitch, const std::string &label,
+			const std::string &partition);
+/* The partitions of a disk that are mounted, last mounted first and each once,
+   read from the table with the covered mounts kept. */
+std::vector<std::string> partitionsToUnmount(const std::string &disk);
+// A word the shell reads as one, whatever the user typed into it.
+std::string shellQuote(const std::string &word);
+// Whether a name is made of what a device is called and nothing a shell reads.
+bool plainDeviceName(const std::string &name);
 
 /* The list a refresh starts from, which is what defaultRoots() answers. Named
    here so the suite can narrow it: /tmp is one of the media this build ships in

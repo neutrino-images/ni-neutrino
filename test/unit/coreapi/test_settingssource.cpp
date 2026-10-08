@@ -152,29 +152,34 @@ const Descriptor kRows[] =
 	{
 		"repeat_blocker", ValueType::Int, "keybindings", "label", NULL,
 		0, 2000, NULL, 0, 450, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(repeat_blocker)
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"current_volume", ValueType::Int, "audio", "label", NULL,
 		0, 100, NULL, 0, 75, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(current_volume)
+		COREAPI_NUMBER_FIELD(current_volume),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"channellist_descmode", ValueType::Bool, "channels", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(channellist_descmode)
+		COREAPI_NUMBER_FIELD(channellist_descmode),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	{
 		"language", ValueType::String, "general", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(language)
+		COREAPI_TEXT_FIELD(language),
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 	// Declared and not reachable, which is what the program's file only
 	// settings look like from here.
 	{
 		"font_scaling_x", ValueType::Int, "osd", "label", NULL,
 		0, 200, NULL, 0, 100, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NO_FIELD
+		COREAPI_NO_FIELD,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL
 	},
 };
 
@@ -623,8 +628,14 @@ TEST_CASE("every row the program declares is sane and reachable", "[settingssour
 
 		long v = 0;
 		std::string s;
-		if (d.type == ValueType::String)
+		std::vector<std::string> list;
+		std::vector<RecordValues> records;
+		if (d.type == ValueType::String || d.type == ValueType::Color)
 			REQUIRE(settingsSource().readString(d.key, s) == Status::Ok);
+		else if (d.type == ValueType::List)
+			REQUIRE(settingsSource().readList(d.key, list) == Status::Ok);
+		else if (d.type == ValueType::Records)
+			REQUIRE(settingsSource().readRecords(d.key, records) == Status::Ok);
 		else
 			REQUIRE(settingsSource().readInt(d.key, v) == Status::Ok);
 

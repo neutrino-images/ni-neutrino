@@ -34,86 +34,89 @@ namespace
 
 /* How long the disk waits before it spins down. The last three are not
    minutes: the driver reads them as its own codes. */
-const EnumValue kHddSleep[] =
+constexpr EnumValue kHddSleep[] =
 {
-	{   0, "options.off", NULL, NULL },
-	{  60, "hdd_5min", NULL, NULL },
-	{ 120, "hdd_10min", NULL, NULL },
-	{ 240, "hdd_20min", NULL, NULL },
-	{ 241, "hdd_30min", NULL, NULL },
-	{ 242, "hdd_60min", NULL, NULL }
+	option(0).label("options.off"),
+	option(60).label("hdd_5min"),
+	option(120).label("hdd_10min"),
+	option(240).label("hdd_20min"),
+	option(241).label("hdd_30min"),
+	option(242).label("hdd_60min")
 };
 
 // How loud the disk is allowed to be.
-const EnumValue kHddNoise[] =
+constexpr EnumValue kHddNoise[] =
 {
-	{   0, "options.off", NULL, NULL },
-	{ 128, "hdd_slow", NULL, NULL },
-	{ 190, "hdd_middle", NULL, NULL },
-	{ 254, "hdd_fast", NULL, NULL }
+	option(0).label("options.off"),
+	option(128).label("hdd_slow"),
+	option(190).label("hdd_middle"),
+	option(254).label("hdd_fast")
 };
 
 /* Positions in the disk manager's tool table, in the same order; named by the
    file system, which the program has no other words for. An entry is offered
    where its mkfs is there. */
-const EnumValue kHddFs[] =
+constexpr EnumValue kHddFs[] =
 {
-	{ 0, NULL, "ext4", formatsExt4 },
-	{ 1, NULL, "ext3", formatsExt3 },
-	{ 2, NULL, "ext2", formatsExt2 },
-	{ 3, NULL, "f2fs", formatsF2fs },
-	{ 4, NULL, "vfat", formatsVfat },
-	{ 5, NULL, "exfat", formatsExfat },
-	{ 6, NULL, "xfs", formatsXfs }
+	option(0).text("ext4").availableIf(formatsExt4),
+	option(1).text("ext3").availableIf(formatsExt3),
+	option(2).text("ext2").availableIf(formatsExt2),
+	option(3).text("f2fs").availableIf(formatsF2fs),
+	option(4).text("vfat").availableIf(formatsVfat),
+	option(5).text("exfat").availableIf(formatsExfat),
+	option(6).text("xfs").availableIf(formatsXfs)
 };
 
-const Descriptor kHdd[] =
+constexpr Descriptor kHdd[] =
 {
 	// Which file system the box writes when it formats a disk.
-	{
-		"hdd_fs", ValueType::Enum, "hdd",
-		"hdd_fs", "menu.hint_hdd_fmt",
-		0, 0, COREAPI_VALUES(kHddFs), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(hdd_fs)
-	},
-	{
-		"hdd_sleep", ValueType::Enum, "hdd",
-		"hdd_sleep", "menu.hint_hdd_sleep",
-		0, 0, COREAPI_VALUES(kHddSleep), 60, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(hdd_sleep)
-	},
+	enumRow("hdd_fs")
+		.section("hdd")
+		.label("hdd_fs")
+		.hint("menu.hint_hdd_fmt")
+		.defaultValue(0)
+		.values(kHddFs)
+		.field(COREAPI_NUMBER_FIELD(hdd_fs)),
+	enumRow("hdd_sleep")
+		.section("hdd")
+		.label("hdd_sleep")
+		.hint("menu.hint_hdd_sleep")
+		.defaultValue(60)
+		.values(kHddSleep)
+		.field(COREAPI_NUMBER_FIELD(hdd_sleep)),
 	/* Only a full hdparm takes this one, which is a file the box looks for and
 	   not a setting, so the row carries no condition. */
-	{
-		"hdd_noise", ValueType::Enum, "hdd",
-		"hdd_noise", "menu.hint_hdd_noise",
-		0, 0, COREAPI_VALUES(kHddNoise), 254, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(hdd_noise)
-	},
-	{
-		"hdd_format_on_mount_failed", ValueType::Bool, "hdd",
-		"hdd_format_on_mount_failed", "menu.hint_hdd_format_on_mount_failed",
-		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(hdd_format_on_mount_failed)
-	},
-	{
-		"hdd_wakeup", ValueType::Bool, "hdd",
-		"hdd_wakeup", "menu.hint_hdd_wakeup",
-		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(hdd_wakeup)
-	},
-	{
-		"hdd_wakeup_msg", ValueType::Bool, "hdd",
-		"hdd_wakeup_msg", "menu.hint_hdd_wakeup_msg",
-		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(hdd_wakeup_msg)
-	},
-	{
-		"hdd_allow_set_recdir", ValueType::Bool, "hdd",
-		"hdd_allow_set_recdir", "menu.hint_hdd_allow_set_recdir",
-		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(hdd_allow_set_recdir)
-	},
+	enumRow("hdd_noise")
+		.section("hdd")
+		.label("hdd_noise")
+		.hint("menu.hint_hdd_noise")
+		.defaultValue(254)
+		.values(kHddNoise)
+		.field(COREAPI_NUMBER_FIELD(hdd_noise)),
+	boolRow("hdd_format_on_mount_failed")
+		.section("hdd")
+		.label("hdd_format_on_mount_failed")
+		.hint("menu.hint_hdd_format_on_mount_failed")
+		.defaultValue(0)
+		.field(COREAPI_NUMBER_FIELD(hdd_format_on_mount_failed)),
+	boolRow("hdd_wakeup")
+		.section("hdd")
+		.label("hdd_wakeup")
+		.hint("menu.hint_hdd_wakeup")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(hdd_wakeup)),
+	boolRow("hdd_wakeup_msg")
+		.section("hdd")
+		.label("hdd_wakeup_msg")
+		.hint("menu.hint_hdd_wakeup_msg")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(hdd_wakeup_msg)),
+	boolRow("hdd_allow_set_recdir")
+		.section("hdd")
+		.label("hdd_allow_set_recdir")
+		.hint("menu.hint_hdd_allow_set_recdir")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(hdd_allow_set_recdir)),
 };
 
 } // anonymous namespace

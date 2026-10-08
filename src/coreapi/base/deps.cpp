@@ -230,6 +230,33 @@ void setLocaleSource(LocaleSource *s) { g_locale_source = s; }
 
 namespace
 {
+/* What a key read reaches while no input layer is installed: every code is a
+   key and none has a name, so a write is held to the bounds of its row and
+   nothing is said that the layer cannot know. */
+class NoKeys : public KeySource
+{
+	public:
+		bool known(long) const { return true; }
+		std::string name(long) const { return std::string(); }
+		std::vector<KeyName> all() const { return std::vector<KeyName>(); }
+};
+
+NoKeys g_no_keys;
+} // anonymous namespace
+
+static KeySource *g_key_source = 0;
+
+KeySource &keySource()
+{
+	if (!g_key_source)
+		return g_no_keys;
+	return *g_key_source;
+}
+
+void setKeySource(KeySource *s) { g_key_source = s; }
+
+namespace
+{
 struct ApplierEntry
 {
 	const char      *section;

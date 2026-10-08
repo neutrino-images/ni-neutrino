@@ -378,6 +378,38 @@ void setLocaleSource(LocaleSource *s);
 // currently has loaded.
 void installRealLocaleSource();
 
+struct KeyName
+{
+	long        code;
+	std::string name;
+};
+
+/* The remote control keys a key setting may hold, which the input layer names
+   and this layer must not include. A code is a key when it is no key at all or
+   a code the layer can deliver, pressed or held, whether or not it has a name:
+   the key chooser stores what it is sent. A code between the bounds the field
+   holds that the layer cannot deliver, such as a release, is none.
+
+   Not one of the seams that end the process when nothing is installed, for the
+   reason the locale source is not. Nothing installed answers that every code is
+   a key and names none: a layer that cannot say what a key is takes the bounds
+   of the row for the whole rule, as a condition it cannot read holds. */
+struct KeySource
+{
+	virtual ~KeySource() {}
+	virtual bool known(long code) const = 0;
+	// What the box shows for the code, empty for one without a name.
+	virtual std::string name(long code) const = 0;
+	// The named keys: no key first, then each plain and held.
+	virtual std::vector<KeyName> all() const = 0;
+};
+
+KeySource &keySource();
+void setKeySource(KeySource *s);
+
+// Binds the accessor above to the input layer's own table of key names.
+void installRealKeySource();
+
 /* Where a setting's value is read and written. The two kinds are told apart at
    the seam rather than below it, because what a key means is known here and
    nowhere further down.
@@ -401,6 +433,22 @@ struct SettingsSource
 	   arriving between them would throw the writes away. */
 	virtual Status writeInt(const char *key, long value) = 0;
 	virtual Status writeString(const char *key, const std::string &value) = 0;
+	/* A list of texts and a list of records are carried whole, one write replacing
+	   the list, because there is no element of either a caller could name that
+	   the next write of the list would not move. A record is its members as
+	   text, in the order its row states them. Not pure: a source that holds no
+	   list answers that it cannot, which is the answer for any row that is not
+	   one. */
+	virtual Status readList(const char *, std::vector<std::string> &) const { return Status::NotSupported; }
+	virtual Status writeList(const char *, const std::vector<std::string> &) { return Status::NotSupported; }
+	virtual Status readRecords(const char *, std::vector<std::vector<std::string> > &) const
+	{
+		return Status::NotSupported;
+	}
+	virtual Status writeRecords(const char *, const std::vector<std::vector<std::string> > &)
+	{
+		return Status::NotSupported;
+	}
 	/* Ok says the box was asked to save, not that a file was written: the loop
 	   that saves answers nothing, and waiting for it deadlocks.
 
@@ -414,6 +462,12 @@ struct SettingsSource
 	   other's values. A refusal cannot promise that nothing landed: another
 	   caller's message may be draining the store as this one is refused. */
 	virtual Status persist() = 0;
+	/* persist() for a caller that is the program's loop itself. Carries every write held
+	   into the program's settings and saves at once, so what the caller wrote is in effect
+	   when this returns, which a message to the loop could not give a caller that is on it.
+	   Writes other callers had held go in with them, as they would on the loop's next turn.
+	   Other sources have no loop and answer as persist() does. */
+	virtual Status persistNow() { return persist(); }
 };
 
 /* The one accessor here that answers with nothing installed instead of ending

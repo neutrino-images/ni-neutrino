@@ -34,6 +34,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <map>
 #include <set>
@@ -359,6 +360,35 @@ TEST_CASE("write_settings refuses a section off the list or a denied one or a se
 	REQUIRE(store.persisted == 0);
 }
 
+TEST_CASE("write_settings judges a setting on the whole call and says what to send", "[allowlist][gate]")
+{
+	Lists back;
+	FakeSettingsSource store;
+	InstalledSettingsSource in_store(&store);
+	// A box that has everything a row may ask about, so no row is refused for want of it.
+	FakeSystemSource box;
+	InstalledSystemSource in_box(&box);
+	memset(&box.caps, 0xff, sizeof(box.caps));
+	store.ints["srs_enable"] = 0;
+	mcp::Allowlists a;
+	a.sections.push_back("audio");
+	mcp::installAllowlists(a);
+
+	REQUIRE(mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+		"{\"section\":\"audio\",\"settings\":{\"srs_algo\":\"0\"}}").error().code ==
+		coreapi::ErrorCode::SettingConditionNotMet);
+	REQUIRE(store.ints.count("srs_algo") == 0);
+
+	REQUIRE(mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+		"{\"section\":\"audio\",\"settings\":{\"srs_algo\":\"0\",\"srs_enable\":\"1\"}}").ok());
+	REQUIRE(store.ints.count("srs_algo") == 1);
+	REQUIRE(store.ints["srs_algo"] == 0);
+
+	const std::string hint = mcp::boxTools().hint("write_settings", coreapi::ErrorCode::SettingConditionNotMet);
+	REQUIRE(hint.find("settings_schema") != std::string::npos);
+	REQUIRE(hint.find("same call") != std::string::npos);
+}
+
 TEST_CASE("write_settings refuses every setting that names a place on the box's disk", "[allowlist][gate]")
 {
 	Lists back;
@@ -399,6 +429,66 @@ TEST_CASE("write_settings refuses every setting that names a place on the box's 
 	REQUIRE(store.ints["timeshift_hours"] == 5);
 }
 
+/* The module section is one an owner may open. The flag in it that makes the box answer
+   a module's pin enquiry from the pin it saved is not for an AI client to set, because
+   set from outside it unlocks the module with nobody asking. */
+TEST_CASE("write_settings refuses the flag that answers a module's pin enquiry", "[allowlist][gate]")
+{
+	Lists back;
+	FakeSettingsBox box;
+	FakeSettingsSource store;
+	InstalledSettingsSource in_store(&store);
+	mcp::Allowlists a;
+	a.sections.push_back("cam");
+	mcp::installAllowlists(a);
+
+	for (int slot = 0; slot < 4; ++slot)
+	{
+		const std::string key = std::string("ci_save_pincode_") + char('0' + slot);
+		INFO(key);
+		const coreapi::Result<mcp::JsonText> r = mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+			std::string("{\"section\":\"cam\",\"settings\":{\"") + key + "\":\"1\"}}");
+		REQUIRE_FALSE(r.ok());
+		REQUIRE(r.error().code == coreapi::ErrorCode::SettingsSectionDenied);
+	}
+	REQUIRE(store.persisted == 0);
+
+	// A plain row of the same section is still written, so the refusal is the key's and not the section's.
+	REQUIRE(mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+		"{\"section\":\"cam\",\"settings\":{\"ci_standby_reset\":\"1\"}}").ok());
+}
+
+/* The flags that switch a service or a softcam on at boot are never an AI client's, in a
+   section the owner has opened or not. */
+TEST_CASE("write_settings refuses the flags that switch a service or a softcam on", "[allowlist][gate]")
+{
+	Lists back;
+	FakeSettingsBox box;
+	FakeSettingsSource store;
+	InstalledSettingsSource in_store(&store);
+	mcp::Allowlists a;
+	a.sections.push_back("misc");
+	a.sections.push_back("cam");
+	mcp::installAllowlists(a);
+
+	const char *const flags[][2] = {
+		{ "misc", "flag_daemon_samba" }, { "misc", "flag_daemon_dropbear" }, { "misc", "flag_daemon_nfsd" },
+		{ "cam", "flag_camd_oscam" }, { "cam", "flag_camd_cccam" },
+	};
+	for (size_t i = 0; i < sizeof(flags) / sizeof(flags[0]); ++i)
+	{
+		INFO(flags[i][1]);
+		const coreapi::Result<mcp::JsonText> r = mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+			std::string("{\"section\":\"") + flags[i][0] + "\",\"settings\":{\"" + flags[i][1] + "\":\"1\"}}");
+		REQUIRE_FALSE(r.ok());
+		REQUIRE(r.error().code == coreapi::ErrorCode::SettingsSectionDenied);
+		// By the key itself, apart from the section: the services' section is one that holds
+		// credentials and is closed anyway, and the key must stay closed when that changes.
+		REQUIRE(mcp::deniedKeyIn(std::string("{\"") + flags[i][1] + "\":\"1\"}") == flags[i][1]);
+	}
+	REQUIRE(store.persisted == 0);
+}
+
 TEST_CASE("the schema marks every setting that names a place on the box's disk", "[allowlist][gate]")
 {
 	FakeSettingsBox box;
@@ -418,6 +508,12 @@ TEST_CASE("the schema marks every setting that names a place on the box's disk",
 		"network_nfs_streamripperdir", "plugin_hdd_dir", "recordingmenu.filename_template", "screensaver_dir",
 		"screenshot_dir",
 		"softupdate_url_file", "timeshiftdir", "update_dir", "update_dir_opkg",
+		// The files a flag of the info icons tests for, the font and picture of the display,
+		// and the lists of files and addresses the box reads channels and guides from.
+		"glcd_font", "glcd_background_image",
+		"mode_icons_flag0", "mode_icons_flag1", "mode_icons_flag2", "mode_icons_flag3",
+		"mode_icons_flag4", "mode_icons_flag5", "mode_icons_flag6", "mode_icons_flag7",
+		"webtv_xml", "webradio_xml", "xmltv_xml",
 	};
 	const std::set<std::string> want(expected, expected + sizeof(expected) / sizeof(expected[0]));
 	for (std::set<std::string>::const_iterator it = marked.begin(); it != marked.end(); ++it)
@@ -431,7 +527,7 @@ TEST_CASE("the schema marks every setting that names a place on the box's disk",
 		INFO(*it);
 		CHECK(marked.count(*it) == declared.count(*it));
 	}
-	CHECK(marked.size() >= want.size() - 2);
+	CHECK(marked.size() >= want.size() - 4);
 
 	FakeSettingsSource store;
 	InstalledSettingsSource in_store(&store);

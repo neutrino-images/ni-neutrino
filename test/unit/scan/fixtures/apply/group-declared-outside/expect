@@ -1,0 +1,3 @@
+fail
+outside src/coreapi/box
+src/gui/own.cpp

@@ -737,3 +737,41 @@ TEST_CASE("the file systems offered are the ones the box can write", "[settingsf
 	CHECK_FALSE(none.ok());
 	CHECK_FALSE(settings::set("hdd_fs", "0").ok());
 }
+
+/* A reset from a menu runs on the loop that would otherwise be sent a message, so the values
+   have to be in the program's settings when it returns: the menu repaints from them at once.
+   A reset from any other thread leaves them for the loop's next turn. */
+TEST_CASE("a reset on the loop is in effect and saved when it returns", "[settingsfields]")
+{
+	RealStore store;
+	store.values.show_ecm_pos = 2;
+	store.values.show_ecm = 1;
+
+	std::vector<std::string> keys(1, "show_ecm_pos");
+	settings::Refusals refused;
+	REQUIRE(settings::resetDefaults(keys, refused, true).ok());
+	CHECK(refused.empty());
+	CHECK(store.values.show_ecm_pos == 0);
+	CHECK(store.values.show_ecm == 0);
+	CHECK(fixtureSaved);
+}
+
+TEST_CASE("a reset from another thread waits for the loop", "[settingsfields]")
+{
+	RealStore store;
+	store.values.show_ecm_pos = 2;
+	store.values.show_ecm = 1;
+
+	std::vector<std::string> keys(1, "show_ecm_pos");
+	settings::Refusals refused;
+	REQUIRE(settings::resetDefaults(keys, refused).ok());
+	// Read back as written, while the program's own settings still hold what they held.
+	Result<std::string> now = settings::get("show_ecm_pos");
+	REQUIRE(now.ok());
+	CHECK(now.value() == "0");
+	CHECK(store.values.show_ecm_pos == 2);
+
+	applyPendingSettings();
+	CHECK(store.values.show_ecm_pos == 0);
+	CHECK(store.values.show_ecm == 0);
+}

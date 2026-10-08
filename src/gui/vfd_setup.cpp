@@ -43,6 +43,8 @@
 #include <gui/widget/menue_options.h>
 #include <gui/widget/settingitem.h>
 
+#include <coreapi/settings/settings.h>
+
 #ifdef ENABLE_GRAPHLCD
 #include <gui/glcdsetup.h>
 #endif
@@ -79,7 +81,11 @@ int CVfdSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 		brightness = DEFAULT_VFD_BRIGHTNESS;
 		brightnessstandby = DEFAULT_VFD_STANDBYBRIGHTNESS;
 		brightnessdeepstandby = DEFAULT_VFD_STANDBYBRIGHTNESS;
-		g_settings.lcd_setting_dim_brightness = 3;
+		/* The dim brightness is a row, so its default is the row's and not a number kept here. The
+		   brightness settings above are not rows and stay as they were. */
+		std::vector<std::string> reset(1, "lcd_dim_brightness");
+		coreapi::settings::Refusals refused;
+		coreapi::settings::resetDefaults(reset, refused, true);
 		CVFD::getInstance()->setBrightness(brightness);
 		CVFD::getInstance()->setBrightnessStandby(brightnessstandby);
 		CVFD::getInstance()->setBrightnessDeepStandby(brightnessdeepstandby);

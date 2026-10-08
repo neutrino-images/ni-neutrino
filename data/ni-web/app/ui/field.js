@@ -60,12 +60,14 @@ export function Notes(props) {
  *   autocomplete?: string,
  *   inputMode?: string,
  *   hint?: string,
+ *   unit?: string,
  *   error?: string,
  *   needsRestart?: boolean,
  *   describedBy?: string,
  *   onInput?: (event: Event) => void,
  *   onKeyDown?: (event: KeyboardEvent) => void
- * }} props onKeyDown is here because the document states form-action 'none':
+ * }} props unit is the word that follows a one-line input, such as h or MB.
+ *   onKeyDown is here because the document states form-action 'none':
  *   there is no form on this page to press return in, so a field that answers
  *   return answers it itself
  * @returns {Web.Drawn}
@@ -74,6 +76,20 @@ export function Field(props) {
 	const auto = useId();
 	const id = props.id || auto;
 	const many = (props.rows || 0) > 1;
+
+	const input = many ? null : html`<input
+		id=${id}
+		type=${props.type || 'text'}
+		value=${props.value}
+		min=${props.min}
+		max=${props.max}
+		readOnly=${props.readOnly}
+		autocomplete=${props.autocomplete}
+		inputmode=${props.inputMode}
+		aria-invalid=${props.error ? 'true' : null}
+		aria-describedby=${describedBy(id, props)}
+		onInput=${props.onInput}
+		onKeyDown=${props.onKeyDown} />`;
 
 	return html`<label class=${props.error ? 'field bad' : 'field'}>
 		<span class="label">${props.label}</span>
@@ -87,19 +103,9 @@ export function Field(props) {
 				aria-describedby=${describedBy(id, props)}
 				onInput=${props.onInput}
 				onKeyDown=${props.onKeyDown} />`
-			: html`<input
-				id=${id}
-				type=${props.type || 'text'}
-				value=${props.value}
-				min=${props.min}
-				max=${props.max}
-				readOnly=${props.readOnly}
-				autocomplete=${props.autocomplete}
-				inputmode=${props.inputMode}
-				aria-invalid=${props.error ? 'true' : null}
-				aria-describedby=${describedBy(id, props)}
-				onInput=${props.onInput}
-				onKeyDown=${props.onKeyDown} />`}
+			: props.unit
+				? html`<span class="field-unit">${input}<span class="unit">${props.unit}</span></span>`
+				: input}
 		<${Notes} id=${id} hint=${props.hint} error=${props.error} needsRestart=${props.needsRestart} />
 	</label>`;
 }

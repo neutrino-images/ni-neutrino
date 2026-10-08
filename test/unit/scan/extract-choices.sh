@@ -73,7 +73,18 @@ find "$@" ${SCAN_EXTRA:+"$SCAN_EXTRA"} -name 'settingstable*.cpp' | LC_ALL=C sor
 while read -r f; do
 	echo "$MARK$f"
 	awk -v keepstrings=1 -v markspan=1 -f "$STRIP" "$f" | awk -f "$HERE/blank-if0.awk"
-done < "$tmp/tablefiles" | awk -v mark="$MARK" -f "$HERE/rows.awk" > "$tmp/rows"
+done < "$tmp/tablefiles" > "$tmp/tablesource"
+awk -v mark="$MARK" -f "$HERE/rows.awk" "$tmp/tablesource" > "$tmp/rows"
+
+# Every row the table source writes has to come out of the row scan: a row it
+# did not read has no arms and no list there, and nothing downstream would say
+# so. Counted on the same text, so a row under #if 0 is in neither number.
+written=`grep -oE '(^|[^A-Za-z0-9_])(bool|int|enum|text|key|color|list|records)Row\(' "$tmp/tablesource" | wc -l`
+read_rows=`grep -c '^R	' "$tmp/rows"` || read_rows=0
+if [ "$written" -ne "$read_rows" ]; then
+	echo "extract-choices.sh: the tables write $written rows and the row scan read $read_rows, it has stopped matching a row" >&2
+	exit 1
+fi
 awk -F'	' -v rowfile="$tmp/rows" '
 	FILENAME == rowfile {
 		if ($1 == "R") { type[$2] = $3; tab[$2] = $4 }

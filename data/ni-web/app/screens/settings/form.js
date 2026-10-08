@@ -25,6 +25,7 @@ import { Row } from './rows.js';
 import {
 	numberFault,
 	rowsOf,
+	withKeyNames,
 	rowsOfSection,
 	valuesOf,
 	shownRows,
@@ -95,6 +96,9 @@ export default function SettingsForm(props) {
 	   member the box stops sending is a row that stops being drawn and never a
 	   value read off undefined. */
 	const [schema, setSchema] = useState(/** @type {Web.Snapshot<{ items?: unknown }> | null} */ (null));
+	// The names of the keys, which a failed or late answer only leaves out: a key row is then
+	// the number it is stored as.
+	const [keys, setKeys] = useState(/** @type {Web.Snapshot<{ items?: unknown }> | null} */ (null));
 	const [values, setValues] = useState(/** @type {Web.Snapshot<{ items?: unknown }> | null} */ (null));
 	const [edits, setEdits] = useState(/** @type {Record<string, string>} */ ({}));
 	const [query, setQuery] = useState('');
@@ -109,6 +113,12 @@ export default function SettingsForm(props) {
 	useEffect(function () {
 		return store.watch('GET', '/api/v1/settings/schema', {}, function (snapshot) {
 			setSchema(snapshot);
+		});
+	}, []);
+
+	useEffect(function () {
+		return store.watch('GET', '/api/v1/settings/keys', {}, function (snapshot) {
+			setKeys(snapshot);
 		});
 	}, []);
 
@@ -134,8 +144,8 @@ export default function SettingsForm(props) {
 	}, []);
 
 	const allRows = useMemo(function () {
-		return rowsOf(schema === null ? null : schema.data);
-	}, [schema === null ? null : schema.data]);
+		return withKeyNames(rowsOf(schema === null ? null : schema.data), keys === null ? null : keys.data);
+	}, [schema === null ? null : schema.data, keys === null ? null : keys.data]);
 
 	const sectionRows = useMemo(function () {
 		return rowsOfSection(allRows, section);

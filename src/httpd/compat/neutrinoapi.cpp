@@ -586,7 +586,9 @@ std::string CNeutrinoAPI::getLogoFile(t_channel_id channelId)
 std::string CNeutrinoAPI::GetRemoteBoxIP(std::string _rbname)
 {
 	std::string c_url = "";
-	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it)
+	// Copied under the lock the settings layer copies it under: this runs on a web thread.
+	std::vector<timer_remotebox_item> boxes = settingsCopy(g_settings.timer_remotebox_ip);
+	for (std::vector<timer_remotebox_item>::iterator it = boxes.begin(); it != boxes.end(); ++it)
 	{
 		if (it->rbname == _rbname)
 		{

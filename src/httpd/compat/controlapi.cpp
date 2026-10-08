@@ -3788,7 +3788,7 @@ void CControlAPI::xmltvlistCGI(CyhookHandler *hh)
 	if (!hh->ParamList["webtv"].empty())
 	{
 		std::string webtv_url = hh->ParamList["webtv"];
-		g_settings.webtv_xml.clear();
+		std::list<std::string> chosen;
 		url_list = ::split(webtv_url, '\n');
 		for (it = url_list.begin(); it != url_list.end(); it++)
 		{
@@ -3797,16 +3797,22 @@ void CControlAPI::xmltvlistCGI(CyhookHandler *hh)
 			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
 			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\t'), tmp.end());
 			if (!tmp.empty())
-				g_settings.webtv_xml.push_back(tmp);
+				chosen.push_back(tmp);
 		}
+		// The settings answer reads the list under this lock, so it is replaced under it.
+		CSettingsTextGuard lock;
+		g_settings.webtv_xml = chosen;
 	}
 	else
+	{
+		CSettingsTextGuard lock;
 		g_settings.webtv_xml.clear();
+	}
 
 	if (!hh->ParamList["webradio"].empty())
 	{
 		std::string webradio_url = hh->ParamList["webradio"];
-		g_settings.webradio_xml.clear();
+		std::list<std::string> chosen;
 		url_list = ::split(webradio_url, '\n');
 		for (it = url_list.begin(); it != url_list.end(); it++)
 		{
@@ -3815,16 +3821,22 @@ void CControlAPI::xmltvlistCGI(CyhookHandler *hh)
 			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
 			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\t'), tmp.end());
 			if (!tmp.empty())
-				g_settings.webradio_xml.push_back(tmp);
+				chosen.push_back(tmp);
 		}
+		// The settings answer reads the list under this lock, so it is replaced under it.
+		CSettingsTextGuard lock;
+		g_settings.webradio_xml = chosen;
 	}
 	else
+	{
+		CSettingsTextGuard lock;
 		g_settings.webradio_xml.clear();
+	}
 
 	if (!hh->ParamList["xmltv"].empty())
 	{
 		std::string xmltv_url = hh->ParamList["xmltv"];
-		g_settings.xmltv_xml.clear();
+		std::list<std::string> chosen;
 		url_list = ::split(xmltv_url, '\n');
 		for (it = url_list.begin(); it != url_list.end(); it++)
 		{
@@ -3833,11 +3845,17 @@ void CControlAPI::xmltvlistCGI(CyhookHandler *hh)
 			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
 			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\t'), tmp.end());
 			if (!tmp.empty())
-				g_settings.xmltv_xml.push_back(tmp);
+				chosen.push_back(tmp);
 		}
+		// The settings answer reads the list under this lock, so it is replaced under it.
+		CSettingsTextGuard lock;
+		g_settings.xmltv_xml = chosen;
 	}
 	else
+	{
+		CSettingsTextGuard lock;
 		g_settings.xmltv_xml.clear();
+	}
 
 	hh->SendOk();
 }

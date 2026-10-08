@@ -66,6 +66,16 @@ const UndeclaredSetting kUndeclared[] =
 	{ "the shipped web page writes the key and no consumer reads the member",
 	  COREAPI_NUMBER_FIELD(recording_epg_for_filename) },
 
+	// Lists and arrays of structs that no setting is offered over.
+	{ "the searches the event list keeps for the person to pick from again, which the screen fills as they search",
+	  COREAPI_AGGREGATE_FIELD(epg_search_history) },
+	{ "the guide files found by looking, filled in at every load and saved nowhere",
+	  COREAPI_AGGREGATE_FIELD(xmltv_xml_auto) },
+	{ "the network filesystems, each a mount the dialogs of the network drives make and break",
+	  COREAPI_AGGREGATE_FIELD(network_nfs) },
+	{ "the network filesystems, each a mount the dialogs of the network drives make and break",
+	  COREAPI_AGGREGATE_FIELD(netfs) },
+
 	// A written value cannot reach anything.
 	{ "only the fallback for the two window sizes beside it, and both of those are saved every time",
 	  COREAPI_NUMBER_FIELD(window_size) },

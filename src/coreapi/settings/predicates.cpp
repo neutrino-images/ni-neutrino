@@ -38,13 +38,18 @@ namespace coreapi
 namespace
 {
 
-// Zero when the box cannot say, so every test below fails closed.
-BoxCapabilities capabilities()
+// Zero when the box cannot say, so every test below that asks for a capability
+// fails closed. ok says whether it could, for the tests on a number a zero is
+// also a valid answer for.
+BoxCapabilities capabilities(bool *ok = NULL)
 {
 	BoxCapabilities caps;
 	memset(&caps, 0, sizeof(caps));
-	if (systemSource().capabilities(caps) != Status::Ok)
+	const bool asked = systemSource().capabilities(caps) == Status::Ok;
+	if (!asked)
 		memset(&caps, 0, sizeof(caps));
+	if (ok != NULL)
+		*ok = asked;
 	return caps;
 }
 
@@ -118,6 +123,22 @@ bool pipUsable()
 	return caps.can_pip && caps.pip_boot_mode_ok;
 }
 
+int pipWindows()
+{
+	const int n = capabilities().pip_devs;
+	return n > 0 ? n : 0;
+}
+
+bool hasGraphicPanel()
+{
+	return capabilities().display_type == HW_DISPLAY_GFX;
+}
+
+bool hasNumericPanel()
+{
+	return capabilities().display_type == HW_DISPLAY_LED_NUM;
+}
+
 bool canShutdown()
 {
 	return capabilities().can_shutdown;
@@ -180,6 +201,79 @@ bool scartHdOffered()
 {
 	const BoxCapabilities caps = capabilities();
 	return caps.board_revision > 0x06 && caps.board_revision != 10;
+}
+
+/* The tests below on a revision are the screens' own, which pass revision 0:
+   it is a revision. A box that cannot be asked is told apart by the status. */
+bool hasDbdr()
+{
+	bool ok;
+	const BoxCapabilities caps = capabilities(&ok);
+	return ok && caps.board_revision != 1;
+}
+
+bool hasLedMenu()
+{
+	return capabilities().board_revision > 7;
+}
+
+bool hasBacklight()
+{
+	return capabilities().board_revision == 9;
+}
+
+namespace
+{
+bool revisionHasPanel(unsigned int rev)
+{
+	return rev != 10 && rev != 11;
+}
+} // anonymous namespace
+
+bool vfdEnabled()
+{
+	bool ok;
+	const BoxCapabilities caps = capabilities(&ok);
+	return ok && revisionHasPanel(caps.board_revision);
+}
+
+bool vfdCountsScrolls()
+{
+	return vfdEnabled() && countsScrolls();
+}
+
+bool canSetPanelBrightness()
+{
+	bool ok;
+	const BoxCapabilities caps = capabilities(&ok);
+	return ok && caps.display_can_set_brightness && revisionHasPanel(caps.board_revision);
+}
+
+bool hasHddPowerFlag()
+{
+	bool ok;
+	const BoxCapabilities caps = capabilities(&ok);
+	return ok && caps.board_revision < 8;
+}
+
+bool hasScartOsdFix()
+{
+	return capabilities().has_scart_osd_fix;
+}
+
+bool canSelectRemote()
+{
+	return capabilities().rc_hw_select;
+}
+
+bool ciExtended()
+{
+	return capabilities().ci_extended;
+}
+
+bool severalTunersFitted()
+{
+	return capabilities().frontend_count > 1;
 }
 
 bool severalTunersEnabled()

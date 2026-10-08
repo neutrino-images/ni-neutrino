@@ -34,66 +34,70 @@ namespace
    running box and not a setting, so no row carries it as a condition. */
 
 // ONSTART (PARENTALLOCK_PROMPT_ONSTART in src/system/settings.h) is not offered.
-const EnumValue kPrompt[] =
+constexpr EnumValue kPrompt[] =
 {
-	{ 0, "parentallock.never", NULL, NULL },
-	{ 2, "parentallock.changetolocked", NULL, NULL },
-	{ 3, "parentallock.onsignal", NULL, NULL }
+	option(0).label("parentallock.never"),
+	option(2).label("parentallock.changetolocked"),
+	option(3).label("parentallock.onsignal")
 };
 
 // The age is one of the three the ratings use.
-const EnumValue kLockage[] =
+constexpr EnumValue kLockage[] =
 {
-	{ 12, "parentallock.lockage12", NULL, NULL },
-	{ 16, "parentallock.lockage16", NULL, NULL },
-	{ 18, "parentallock.lockage18", NULL, NULL }
+	option(12).label("parentallock.lockage12"),
+	option(16).label("parentallock.lockage16"),
+	option(18).label("parentallock.lockage18")
 };
 
-const EnumValue kDefaultLocked[] =
+constexpr EnumValue kDefaultLocked[] =
 {
-	{ 0, "parentallock.defaultunlocked", NULL, NULL },
-	{ 1, "parentallock.defaultlocked", NULL, NULL }
+	option(0).label("parentallock.defaultunlocked"),
+	option(1).label("parentallock.defaultlocked")
 };
 
-const Descriptor kSettings[] =
+constexpr Descriptor kSettings[] =
 {
-	{
-		"parentallock_prompt", ValueType::Enum, "parental",
-		"parentallock.prompt", "menu.hint_parentallock_prompt",
-		0, 0, COREAPI_ENUM(kPrompt), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(parentallock_prompt)
-	},
-	{
-		"parentallock_lockage", ValueType::Enum, "parental",
-		"parentallock.lockage", "menu.hint_parentallock_lockage",
-		0, 0, COREAPI_ENUM(kLockage), 12, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(parentallock_lockage)
-	},
+	enumRow("parentallock_prompt")
+		.section("parental")
+		.label("parentallock.prompt")
+		.hint("menu.hint_parentallock_prompt")
+		.defaultValue(0)
+		.values(kPrompt)
+		.field(COREAPI_NUMBER_FIELD(parentallock_prompt)),
+	enumRow("parentallock_lockage")
+		.section("parental")
+		.label("parentallock.lockage")
+		.hint("menu.hint_parentallock_lockage")
+		.defaultValue(12)
+		.values(kLockage)
+		.field(COREAPI_NUMBER_FIELD(parentallock_lockage)),
 	/* A choice and not a flag: the words are what a new bouquet starts as and
 	   not an on and an off, so a flag would carry the values and lose them. */
-	{
-		"parentallock_defaultlocked", ValueType::Enum, "parental",
-		"parentallock.bouquetmode", NULL,
-		0, 0, COREAPI_ENUM(kDefaultLocked), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(parentallock_defaultlocked)
-	},
+	enumRow("parentallock_defaultlocked")
+		.section("parental")
+		.label("parentallock.bouquetmode")
+		.defaultValue(0)
+		.values(kDefaultLocked)
+		.field(COREAPI_NUMBER_FIELD(parentallock_defaultlocked)),
 	// Seconds a locked channel stays watchable after the pin was given.
-	{
-		"parentallock_zaptime", ValueType::Int, "parental",
-		"parentallock.zaptime", NULL,
-		0, 10000, NULL, 0, 60, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(parentallock_zaptime)
-	},
+	intRow("parentallock_zaptime")
+		.section("parental")
+		.label("parentallock.zaptime")
+		.range(0, 10000)
+		.defaultValue(60)
+		.field(COREAPI_NUMBER_FIELD(parentallock_zaptime)),
 	/* The pin itself, which is why it is secret: a read answers nothing and an
 	   empty write is refused, so a form that round trips its fields cannot
-	   clear it. The pin is four digits and no more, which a String row cannot
-	   say. */
-	{
-		"parentallock_pincode", ValueType::String, "parental",
-		"parentallock.changepin", "menu.hint_parentallock_changepin",
-		0, 0, NULL, 0, 0, "0000", false, true, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(parentallock_pincode)
-	},
+	   clear it. The rule keeps it to four digits, which is all the remote can
+	   type back. */
+	textRow("parentallock_pincode")
+		.section("parental")
+		.label("parentallock.changepin")
+		.hint("menu.hint_parentallock_changepin")
+		.defaultValue("0000")
+		.secret()
+		.text(kRulePin)
+		.field(COREAPI_TEXT_FIELD(parentallock_pincode)),
 };
 
 /* What the lock holds. The pin is not among them: it stays changeable on a

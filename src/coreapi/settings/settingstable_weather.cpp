@@ -34,22 +34,22 @@ namespace
    so the literals below carry them. */
 
 /* The three below are editable only while the weather is on. */
-const Condition kWeatherOn[] =
+constexpr Condition kWeatherOn[] =
 {
-	{ "weather_enabled", CompareOp::Ne, 0, NULL, 0 }
+	when("weather_enabled").isNot(0)
 };
 
-const Descriptor kWeather[] =
+constexpr Descriptor kWeather[] =
 {
 	/* Can only be on while an API key is present. That is a check on the key
 	   itself and not a comparison against another setting, so no condition is
 	   carried. The loader turns it off without a key. */
-	{
-		"weather_enabled", ValueType::Bool, "weather",
-		"weather.enabled", "menu.hint_weather_enabled",
-		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(weather_enabled)
-	},
+	boolRow("weather_enabled")
+		.section("weather")
+		.label("weather.enabled")
+		.hint("menu.hint_weather_enabled")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(weather_enabled)),
 
 #if ENABLE_WEATHER_KEY_MANAGE
 	/* The two below sit behind the arm the program loads and saves them under.
@@ -61,21 +61,23 @@ const Descriptor kWeather[] =
 	   whatever is stored. It defaults to the placeholder below only where the
 	   build carries no key of its own; one configured with a key falls back to
 	   that key instead, which is not a constant this can carry. */
-	{
-		"weather_api_key", ValueType::String, "weather",
-		"weather.api_key", "menu.hint_weather_api_key",
-		0, 0, NULL, 0, 0, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", false, true, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(weather_api_key)
-	},
+	textRow("weather_api_key")
+		.section("weather")
+		.label("weather.api_key")
+		.hint("menu.hint_weather_api_key")
+		.defaultValue("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+		.secret()
+		.text(kRuleKey32)
+		.field(COREAPI_TEXT_FIELD(weather_api_key)),
 	/* No menu offers this one in this build, and its label comes from the item
 	   the build leaves out, which is the only statement of it there is. The
 	   value is the version part of a URL, so it is text and not a choice. */
-	{
-		"weather_api_version", ValueType::String, "weather",
-		"weather.api_version", "menu.hint_weather_api_version",
-		0, 0, NULL, 0, 0, "3.0", false, false, COREAPI_ALWAYS,
-		COREAPI_TEXT_FIELD(weather_api_version)
-	},
+	textRow("weather_api_version")
+		.section("weather")
+		.label("weather.api_version")
+		.hint("menu.hint_weather_api_version")
+		.defaultValue("3.0")
+		.field(COREAPI_TEXT_FIELD(weather_api_version)),
 #endif
 
 	/* The name of the place and its coordinates are one setting in two parts,
@@ -84,26 +86,30 @@ const Descriptor kWeather[] =
 	   what is shown and leaves the forecast where it was. Both are declared,
 	   because both are text this layer can carry; there is one item for the pair
 	   and both rows name its label. */
-	{
-		"weather_city", ValueType::String, "weather",
-		"weather.location", "menu.hint_weather_location",
-		0, 0, NULL, 0, 0, "Berlin", false, false, COREAPI_CONDITIONS(kWeatherOn),
-		COREAPI_TEXT_FIELD(weather_city)
-	},
-	{
-		"weather_location", ValueType::String, "weather",
-		"weather.location", "menu.hint_weather_location",
-		0, 0, NULL, 0, 0, "52.52,13.40", false, false, COREAPI_CONDITIONS(kWeatherOn),
-		COREAPI_TEXT_FIELD(weather_location)
-	},
+	textRow("weather_city")
+		.section("weather")
+		.label("weather.location")
+		.hint("menu.hint_weather_location")
+		.defaultValue("Berlin")
+		.changeableWhen(kWeatherOn)
+		.field(COREAPI_TEXT_FIELD(weather_city)),
+	textRow("weather_location")
+		.section("weather")
+		.label("weather.location")
+		.hint("menu.hint_weather_location")
+		.defaultValue("52.52,13.40")
+		.changeableWhen(kWeatherOn)
+		.field(COREAPI_TEXT_FIELD(weather_location)),
 	/* Five characters, and a String carries no bound, so that is stated nowhere
 	   a caller can read. */
-	{
-		"weather_postalcode", ValueType::String, "weather",
-		"weather.postalcode", "menu.hint_weather_postalcode",
-		0, 0, NULL, 0, 0, "10178", false, false, COREAPI_CONDITIONS(kWeatherOn),
-		COREAPI_TEXT_FIELD(weather_postalcode)
-	},
+	textRow("weather_postalcode")
+		.section("weather")
+		.label("weather.postalcode")
+		.hint("menu.hint_weather_postalcode")
+		.defaultValue("10178")
+		.changeableWhen(kWeatherOn)
+		.text(kRulePostalCode)
+		.field(COREAPI_TEXT_FIELD(weather_postalcode)),
 };
 
 } // anonymous namespace

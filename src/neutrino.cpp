@@ -68,6 +68,7 @@
 #include <coreapi/channels.h>
 #include <coreapi/system.h>
 #include <coreapi/settings/settings.h>
+#include <coreapi/base/apply.h>
 #include <coreapi/base/deps.h>
 #include <coreapi/base/messagebridge.h>
 
@@ -388,6 +389,8 @@ static SNeutrinoSettings::usermenu_t usermenu_default[] = {
 
 static void clearUsermenuConfig()
 {
+	// A request reads the buttons under this lock, so they are freed under it.
+	CSettingsTextGuard lock;
 	for (unsigned int i = 0; i < g_settings.usermenu.size(); ++i)
 	{
 		delete g_settings.usermenu[i];
@@ -682,7 +685,10 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.hdd_allow_set_recdir = configfile.getInt32("hdd_allow_set_recdir", 1);
 
 	// timer
-	g_settings.timer_remotebox_ip.clear();
+	{
+		CSettingsTextGuard lock;
+		g_settings.timer_remotebox_ip.clear();
+	}
 	int timer_remotebox_itemcount = configfile.getInt32("timer_remotebox_ip_count", 0);
 	if (timer_remotebox_itemcount)
 	{
@@ -708,6 +714,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 			k = "timer_remotebox_port_" + to_string(i);
 			timer_rb.port = configfile.getInt32(k, 80);
 
+			CSettingsTextGuard lock;
 			g_settings.timer_remotebox_ip.push_back(timer_rb);
 		}
 	}
@@ -963,7 +970,10 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	if (g_settings.webtv_stream_restart_attempts > 3)
 		g_settings.webtv_stream_restart_attempts = 3;
 	g_settings.webtv_dns_diagnostics = configfile.getInt32("webtv_dns_diagnostics", 1) ? 1 : 0;
-	g_settings.webtv_xml.clear();
+	{
+		CSettingsTextGuard lock;
+		g_settings.webtv_xml.clear();
+	}
 	int webtv_count = configfile.getInt32("webtv_xml_count", 0);
 	if (webtv_count)
 	{
@@ -973,6 +983,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 			std::string webtv_xml = configfile.getString(k, "");
 			if (webtv_xml.empty())
 				continue;
+			CSettingsTextGuard lock;
 			g_settings.webtv_xml.push_back(webtv_xml);
 		}
 	}
@@ -980,7 +991,10 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	{
 		std::string webtv_xml = configfile.getString("webtv_xml", WEBTV_XML);
 		if (file_size(webtv_xml.c_str()))
+		{
+			CSettingsTextGuard lock;
 			g_settings.webtv_xml.push_back(webtv_xml);
+		}
 	}
 	setSettingsText(g_settings.last_webtv_dir, configfile.getString("last_webtv_dir", WEBTVDIR_VAR));
 
@@ -989,7 +1003,10 @@ int CNeutrinoApp::loadSetup(const char *fname)
 
 	// webradio
 	g_settings.webradio_xml_auto = configfile.getInt32("webradio_xml_auto", 1);
-	g_settings.webradio_xml.clear();
+	{
+		CSettingsTextGuard lock;
+		g_settings.webradio_xml.clear();
+	}
 #ifndef BOXMODEL_CST_HD1
 	/*
 	   Coolstream's HD1 generation can't play audiostreams via movieplayer
@@ -1005,6 +1022,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 			std::string webradio_xml = configfile.getString(k, "");
 			if (webradio_xml.empty())
 				continue;
+			CSettingsTextGuard lock;
 			g_settings.webradio_xml.push_back(webradio_xml);
 		}
 	}
@@ -1012,7 +1030,10 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	{
 		std::string webradio_xml = configfile.getString("webradio_xml", WEBRADIO_XML);
 		if (file_size(webradio_xml.c_str()))
+		{
+			CSettingsTextGuard lock;
 			g_settings.webradio_xml.push_back(webradio_xml);
+		}
 	}
 	setSettingsText(g_settings.last_webradio_dir, configfile.getString("last_webradio_dir", WEBRADIODIR_VAR));
 
@@ -1020,7 +1041,10 @@ int CNeutrinoApp::loadSetup(const char *fname)
 #endif
 
 	// xmltv
-	g_settings.xmltv_xml.clear();
+	{
+		CSettingsTextGuard lock;
+		g_settings.xmltv_xml.clear();
+	}
 	int xmltv_count = configfile.getInt32("xmltv_xml_count", 0);
 	if (xmltv_count)
 	{
@@ -1030,6 +1054,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 			std::string xmltv_xml = configfile.getString(k, "");
 			if (xmltv_xml.empty())
 				continue;
+			CSettingsTextGuard lock;
 			g_settings.xmltv_xml.push_back(xmltv_xml);
 		}
 	}
@@ -1374,6 +1399,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 		{
 			SNeutrinoSettings::usermenu_t *u = new SNeutrinoSettings::usermenu_t;
 			*u = *um;
+			CSettingsTextGuard lock;
 			g_settings.usermenu.push_back(u);
 		}
 	}
@@ -1404,6 +1430,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 			txt1 += "_text";
 			u->title = configfile.getString(txt1, "");
 
+			CSettingsTextGuard lock;
 			g_settings.usermenu.push_back(u);
 		}
 	}
@@ -1967,7 +1994,8 @@ void CNeutrinoApp::saveSetup(const char *fname)
 	configfile.setInt32("webtv_stream_restart_attempts", g_settings.webtv_stream_restart_attempts);
 	configfile.setInt32("webtv_dns_diagnostics", g_settings.webtv_dns_diagnostics);
 	int webtv_count = 0;
-	for (std::list<std::string>::iterator it = g_settings.webtv_xml.begin(); it != g_settings.webtv_xml.end(); ++it)
+	std::list<std::string> webtv = settingsCopy(g_settings.webtv_xml);
+	for (std::list<std::string>::iterator it = webtv.begin(); it != webtv.end(); ++it)
 	{
 		std::string k = "webtv_xml_" + to_string(webtv_count);
 		if (webchannelssetup.webtv_xml_autodir((*it)))
@@ -1981,7 +2009,8 @@ void CNeutrinoApp::saveSetup(const char *fname)
 	// webradio
 	configfile.setInt32("webradio_xml_auto", g_settings.webradio_xml_auto);
 	int webradio_count = 0;
-	for (std::list<std::string>::iterator it = g_settings.webradio_xml.begin(); it != g_settings.webradio_xml.end(); ++it)
+	std::list<std::string> webradio = settingsCopy(g_settings.webradio_xml);
+	for (std::list<std::string>::iterator it = webradio.begin(); it != webradio.end(); ++it)
 	{
 		std::string k = "webradio_xml_" + to_string(webradio_count);
 		if (webchannelssetup.webradio_xml_autodir((*it)))
@@ -1994,13 +2023,14 @@ void CNeutrinoApp::saveSetup(const char *fname)
 
 	// xmltv
 	int xmltv_count = 0;
-	for (std::list<std::string>::iterator it = g_settings.xmltv_xml.begin(); it != g_settings.xmltv_xml.end(); ++it)
+	std::list<std::string> xmltv = settingsCopy(g_settings.xmltv_xml);
+	for (std::list<std::string>::iterator it = xmltv.begin(); it != xmltv.end(); ++it)
 	{
 		std::string k = "xmltv_xml_" + to_string(xmltv_count);
 		configfile.setString(k, *it);
 		xmltv_count++;
 	}
-	configfile.setInt32("xmltv_xml_count", g_settings.xmltv_xml.size());
+	configfile.setInt32("xmltv_xml_count", xmltv.size());
 
 	configfile.setInt32("livestreamResolution", g_settings.livestreamResolution);
 	configfile.setString("livestreamScriptPath", g_settings.livestreamScriptPath);
@@ -3079,6 +3109,12 @@ TIMER_START();
 
 	int loadSettingsErg = loadSetup(NEUTRINO_SETTINGS_FILE);
 
+	/* This thread is the loop that applies written settings, and every group is
+	   registered before the first phase, since a group registered after its phase
+	   is refused rather than run at startup. */
+	coreapi::bindApplyLoop();
+	coreapi::registerApplyGroups();
+
 	// Keep the system timezone aligned with the stored Neutrino setting
 	// before any DVB/NTP time handling starts.
 	CTZChangeNotifier().changeNotify(NONEXISTANT_LOCALE, (void *) "startup");
@@ -3109,6 +3145,9 @@ TIMER_START();
 	SetupFonts();
 	g_PicViewer = new CPictureViewer();
 	CColorSetupNotifier::setPalette();
+	// The framebuffer was set up before this and the fonts just now, so a group that
+	// draws can be told from here on.
+	coreapi::runPhase(coreapi::ApplyPhase::Framebuffer);
 
 	char start_text [100];
 	snprintf(start_text, sizeof(start_text), g_Locale->getText(LOCALE_NEUTRINO_STARTING), PACKAGE_NAME, PACKAGE_VERSION );
@@ -3186,6 +3225,8 @@ TIMER_START();
 
 	// reset videodecoder to fullscreen
 	videoDecoder->Pig(-1, -1, -1, -1);
+	// CZapit::Start created both decoders above, and the lines since gave them their settings.
+	coreapi::runPhase(coreapi::ApplyPhase::Decoders);
 
 	// show startlogo
 	if (startlogo)
@@ -3195,6 +3236,7 @@ TIMER_START();
 
 	InitZapitClient();
 	g_Zapit->setStandby(false);
+	coreapi::runPhase(coreapi::ApplyPhase::Zapit);
 
 	CheckFastScan();
 
@@ -3266,6 +3308,7 @@ TIMER_START();
 	// fresh on every call, so nothing here binds it to the language in effect
 	// at this particular moment.
 	coreapi::installRealLocaleSource();
+	coreapi::installRealKeySource();
 	// The timer daemon holds the two safety times, and the members named after
 	// them in the settings are the setup screen's own buffer, so nothing but
 	// this answers what a recording really starts and stops on.
@@ -3364,6 +3407,9 @@ TIMER_START();
 	CEitManager::getInstance()->SetConfig(config);
 	CEitManager::getInstance()->Start();
 #endif
+	// Reached without the daemon too: a write to one of its groups is then applied by a
+	// group that copes with the daemon being absent, and not dropped as never ready.
+	coreapi::runPhase(coreapi::ApplyPhase::Sectionsd);
 
 	g_RemoteControl = new CRemoteControl;
 	g_EpgData = new CEpgData;
@@ -3397,6 +3443,9 @@ TIMER_START();
 #endif
 
 	CFSMounter::automount();
+	// The interfaces are configured by the system before this program starts and the
+	// mounts above are what needed them.
+	coreapi::runPhase(coreapi::ApplyPhase::Network);
 	g_Plugins = new CPlugins;
 	g_Plugins->setPluginDir(PLUGINDIR);
 	//load Pluginlist before main menu (only show script menu if at least one script is available

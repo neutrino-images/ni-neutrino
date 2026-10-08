@@ -216,7 +216,8 @@ const Walked kWalked[] = {
 	CODE(ExitStatus),
 	CODE(ChoicesUnavailable),
 	CODE(SettingLocked),
-	CODE(SettingNotOnThisBox)
+	CODE(SettingNotOnThisBox),
+	CODE(SettingConditionNotMet)
 };
 
 #undef CODE
