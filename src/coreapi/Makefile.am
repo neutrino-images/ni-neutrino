@@ -89,6 +89,7 @@ libcoreapi_a_SOURCES = \
 	shellcontract.cpp \
 	shelltable.cpp \
 	storage.cpp \
+	box/storage_disks.cpp \
 	netfs.cpp \
 	daemons.cpp \
 	base/eventbus.cpp \
@@ -113,6 +114,7 @@ noinst_HEADERS = \
 	archive.h \
 	playback.h \
 	osd.h \
+	base/bootmode.h \
 	base/schema.h \
 	settings/settings.h \
 	settings/menuspec.h \
@@ -127,6 +129,7 @@ noinst_HEADERS = \
 	shelltable.h \
 	storage.h \
 	box/storage_internal.h \
+	box/storage_disks.h \
 	netfs.h \
 	daemons.h \
 	base/eventbus.h \

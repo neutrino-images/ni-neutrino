@@ -112,6 +112,12 @@ bool canPip()
 	return capabilities().can_pip;
 }
 
+bool pipUsable()
+{
+	const BoxCapabilities caps = capabilities();
+	return caps.can_pip && caps.pip_boot_mode_ok;
+}
+
 bool canShutdown()
 {
 	return capabilities().can_shutdown;

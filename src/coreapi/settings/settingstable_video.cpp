@@ -399,50 +399,50 @@ const Descriptor kVideo[] =
 		"pip_x", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		0, 1920, NULL, 0, 50, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_x, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_x, pipUsable, NULL)
 	},
 	{
 		"pip_y", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		0, 1080, NULL, 0, 50, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_y, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_y, pipUsable, NULL)
 	},
 	{
 		"pip_width", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		0, 1920, NULL, 0, 365, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_width, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_width, pipUsable, NULL)
 	},
 	{
 		"pip_height", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		0, 1080, NULL, 0, 200, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_height, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_height, pipUsable, NULL)
 	},
 	// The radio pair falls back to the television one rather than to a number.
 	{
 		"pip_radio_x", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		0, 1920, NULL, 0, 50, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_radio_x, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_radio_x, pipUsable, NULL)
 	},
 	{
 		"pip_radio_y", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		0, 1080, NULL, 0, 50, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_radio_y, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_radio_y, pipUsable, NULL)
 	},
 	{
 		"pip_radio_width", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		0, 1920, NULL, 0, 365, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_radio_width, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_radio_width, pipUsable, NULL)
 	},
 	{
 		"pip_radio_height", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		0, 1080, NULL, 0, 200, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_radio_height, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_radio_height, pipUsable, NULL)
 	},
 	/* Which corner the small picture was last moved to. The floor is the value
 	   that means no corner at all and the rest are the four. */
@@ -450,7 +450,7 @@ const Descriptor kVideo[] =
 		"pip_rotate_lastpos", ValueType::Int, "video",
 		"videomenu.pip", "menu.hint_video_pip",
 		-1, 3, NULL, 0, -1, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD_ON(pip_rotate_lastpos, canPip, NULL)
+		COREAPI_NUMBER_FIELD_ON(pip_rotate_lastpos, pipUsable, NULL)
 	},
 #endif
 	/* The video mode, out of the table of the family the build is for. The

@@ -509,6 +509,7 @@ TEST_CASE("every setting a screen builds from the declaration can be shown", "[s
 	box.caps.can_cec = 1;
 	box.caps.can_cpufreq = 1;
 	box.caps.can_pip = 1;
+	box.caps.pip_boot_mode_ok = 1;
 	box.caps.display_can_set_brightness = 1;
 	box.caps.can_ps_14_9 = 1;
 	box.caps.can_shutdown = 1;

@@ -23,6 +23,9 @@
 
 #include "coreapi/base/types.h"
 
+#include <string>
+#include <vector>
+
 namespace coreapi
 {
 namespace storage
@@ -34,6 +37,33 @@ namespace internal
 // wrote itself, which is the only way to drive the escaping a mount table uses
 // for a name carrying a space.
 extern const char *mounts_path;
+
+struct MountLine
+{
+	std::string device;
+	std::string mountpoint;
+	std::string fstype;
+};
+
+/* The mount table as the one reader of it answers, shared by the list of
+   mounts and by the lookup of the device that holds the root, so the two cannot
+   disagree about what is mounted. By default one line per mount point, and the
+   last one wins: a later mount covers an earlier one, and the line an initial
+   RAM filesystem leaves for / is covered by the root mounted over it. A device
+   mounted on two different points keeps both lines.
+
+   With keepCovered every line is answered, in table order. For the caller that
+   has to know what is still mounted underneath another mount: a device that is
+   covered is not unmounted, and a screen about to rewrite its partition table
+   must not take it for gone. False when the table cannot be opened. */
+bool readMountTable(std::vector<MountLine> &out, bool keepCovered = false);
+
+// The directories the disk detection reads, named so the suite can point them
+// at trees it built itself.
+extern const char *sys_block_path;
+extern const char *dev_dir;
+extern const char *sys_dev_block_path;
+extern const char *root_path;
 
 /* The list a refresh starts from, which is what defaultRoots() answers. Named
    here so the suite can narrow it: /tmp is one of the media this build ships in

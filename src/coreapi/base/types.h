@@ -430,6 +430,11 @@ struct BoxCapabilities
 	int            display_scroll_repeats;
 	int            video_zapmode;
 	int            video_hdmi_colorimetry;
+	/* Whether the way the box was started lets a second picture run. Some
+	   boxes start in a mode that has no room for one even though the decoder
+	   count says it could, and the boot command line is the only place that
+	   says which. True where the box has no such modes. */
+	int            pip_boot_mode_ok;
 	/* The board revision, which decides what analog outputs the box has. */
 	unsigned int   board_revision;
 };

@@ -23,6 +23,7 @@
 #include <hardware/video.h>
 #include "support/fakes.h"
 
+#include "coreapi/base/bootmode.h"
 #include "coreapi/decryption.h"
 #include "coreapi/osd.h"
 #include "coreapi/settings/predicates.h"
@@ -743,6 +744,44 @@ TEST_CASE("each setting predicate reads its own capability and fails closed", "[
 		source.caps_status = Status::Internal;
 		CHECK_FALSE(tests[i].test());
 	}
+}
+
+/* The decoder count says a second picture is possible on a box started in a
+   mode that has no room for it, and the screen refuses there. */
+TEST_CASE("picture in picture is usable only where the decoder and the boot mode both allow it", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+
+	const bool decoder[] = { false, false, true, true };
+	const bool mode[] = { false, true, false, true };
+	for (size_t i = 0; i < 4; ++i)
+	{
+		INFO("decoder " << decoder[i] << " mode " << mode[i]);
+		source.caps.can_pip = decoder[i];
+		source.caps.pip_boot_mode_ok = mode[i];
+		CHECK(pipUsable() == (decoder[i] && mode[i]));
+	}
+
+	source.caps.can_pip = 1;
+	source.caps.pip_boot_mode_ok = 1;
+	source.caps_status = Status::Internal;
+	CHECK_FALSE(pipUsable());
+}
+
+/* The command line of a box that starts in numbered modes: only the one with room
+   for the picture lets it run. */
+TEST_CASE("the boot command line allows picture in picture only in mode 12 on a box with modes", "[system]")
+{
+	CHECK(bootModeAllowsPip(true, true, "console=ttyS0 boxmode=12 root=/dev/mmcblk0p3"));
+	CHECK_FALSE(bootModeAllowsPip(true, true, "console=ttyS0 boxmode=1 root=/dev/mmcblk0p3"));
+	CHECK_FALSE(bootModeAllowsPip(true, true, "console=ttyS0 root=/dev/mmcblk0p3"));
+	CHECK_FALSE(bootModeAllowsPip(true, true, ""));
+
+	// No modes on this box, or a line that cannot be read: not refused.
+	CHECK(bootModeAllowsPip(false, true, "boxmode=1"));
+	CHECK(bootModeAllowsPip(true, false, ""));
+	CHECK(bootModeAllowsPip(true, true, NULL));
 }
 
 TEST_CASE("the play time predicate needs eight characters of display", "[system]")

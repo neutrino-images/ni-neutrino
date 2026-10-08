@@ -36,7 +36,12 @@ bool canCec();
 bool canCpufreq();
 // The front panel takes a brightness.
 bool canSetBrightness();
+// The decoder can show a second picture.
 bool canPip();
+// It can, and the way the box was started leaves room for it. What a screen
+// has to ask before it offers a second picture, since canPip alone says yes
+// where the start refuses.
+bool pipUsable();
 // Goes to deep standby and so can shut itself down.
 bool canShutdown();
 bool hasFormatButton();

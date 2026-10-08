@@ -625,13 +625,17 @@ Result<Wrote> writeFile(const std::string &path, const std::string &bytes, bool 
 	return ok(what);
 }
 
-Result<std::vector<MountInfo> > mounts()
+namespace internal
 {
-	FILE *f = fopen(internal::mounts_path, "r");
-	if (f == NULL)
-		return fail(Status::Internal, ErrorCode::NoMountTable, "the kernel's list of mounted filesystems could not be read");
 
-	std::vector<MountInfo> out;
+bool readMountTable(std::vector<MountLine> &out, bool keepCovered)
+{
+	out.clear();
+	FILE *f = fopen(mounts_path, "r");
+	if (f == NULL)
+		return false;
+
+	std::vector<MountLine> all;
 	char line[4096];
 	while (fgets(line, sizeof(line), f) != NULL)
 	{
@@ -641,10 +645,40 @@ Result<std::vector<MountInfo> > mounts()
 		if (sscanf(line, "%1023s %1023s %255s", device, mountpoint, fstype) != 3)
 			continue;
 
-		MountInfo m;
+		MountLine m;
 		m.device = unescapeMountField(device);
 		m.mountpoint = unescapeMountField(mountpoint);
 		m.fstype = unescapeMountField(fstype);
+		all.push_back(m);
+	}
+	fclose(f);
+
+	for (size_t i = 0; i < all.size(); i++)
+	{
+		bool covered = false;
+		for (size_t j = i + 1; j < all.size() && !covered && !keepCovered; j++)
+			covered = all[j].mountpoint == all[i].mountpoint;
+		if (!covered)
+			out.push_back(all[i]);
+	}
+	return true;
+}
+
+} // namespace internal
+
+Result<std::vector<MountInfo> > mounts()
+{
+	std::vector<internal::MountLine> table;
+	if (!internal::readMountTable(table))
+		return fail(Status::Internal, ErrorCode::NoMountTable, "the kernel's list of mounted filesystems could not be read");
+
+	std::vector<MountInfo> out;
+	for (size_t i = 0; i < table.size(); i++)
+	{
+		MountInfo m;
+		m.device = table[i].device;
+		m.mountpoint = table[i].mountpoint;
+		m.fstype = table[i].fstype;
 
 		struct statfs s;
 		if (statfs(m.mountpoint.c_str(), &s) == 0)
@@ -654,7 +688,6 @@ Result<std::vector<MountInfo> > mounts()
 		}
 		out.push_back(m);
 	}
-	fclose(f);
 	return ok(std::move(out));
 }
 

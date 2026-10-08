@@ -20,6 +20,7 @@
 
 #include <config.h>
 
+#include "coreapi/base/bootmode.h"
 #include "coreapi/base/deps.h"
 
 #include <stdio.h>
@@ -57,6 +58,32 @@ std::string readImageVersion()
 	if (!version.loadConfig(IMAGE_VERSION_FILE))
 		return std::string();
 	return version.getString("imageversion", "");
+}
+
+/* Read once and kept: the line cannot change after the box has started. */
+bool pipBootModeOk()
+{
+	static const bool held = []()
+	{
+#if BOXMODEL_HD51 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7
+		const bool has_modes = true;
+#else
+		const bool has_modes = false;
+#endif
+		char line[4096] = "";
+		bool readable = false;
+		if (has_modes)
+		{
+			FILE *f = fopen("/proc/cmdline", "r");
+			if (f != NULL)
+			{
+				readable = fgets(line, sizeof(line), f) != NULL;
+				fclose(f);
+			}
+		}
+		return bootModeAllowsPip(has_modes, readable, line);
+	}();
+	return held;
 }
 
 const std::string &imageVersion()
@@ -230,6 +257,7 @@ class RealSystemSource : public SystemSource
 			out.video_hdmi_colorimetry = file_exists("/proc/stb/video/hdmi_colorimetry");
 #endif
 			out.board_revision = cs_get_revision();
+			out.pip_boot_mode_ok = pipBootModeOk();
 			return Status::Ok;
 		}
 

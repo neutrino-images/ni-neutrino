@@ -78,11 +78,10 @@ class CHDDMenuHandler : public CMenuTarget
 		bool is_mounted(const char *dev);
 		void getBlkIds();
 		std::string getFmtType(std::string name, std::string part = "");
-		std::string getDefaultPart(std::string dev);
 		bool mount_dev(std::string name);
 		bool umount_dev(std::string name);
 		bool umount_all(std::string dev);
-		bool add_dev(std::string dev, std::string part);
+		bool add_dev(std::string dev, std::string partition);
 		bool waitfordev(std::string dev, int maxwait);
 		void check_dev_tools();
 		void check_kernel_fs();

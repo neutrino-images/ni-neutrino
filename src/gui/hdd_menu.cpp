@@ -48,6 +48,7 @@
 #include "hdd_menu.h"
 
 #include <cs_api.h> //NI
+#include <coreapi/box/storage_disks.h>
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
 #include <gui/widget/stringinput.h>
@@ -82,11 +83,6 @@ devtool_s CHDDMenuHandler::devtools[] = {
 };
 #define FS_MAX (sizeof(CHDDMenuHandler::devtools)/sizeof(devtool_s))
 
-static int my_filter(const struct dirent * dent)
-{
-	return CHDDMenuHandler::getInstance()->filterDevName(dent->d_name);
-}
-
 CHDDMenuHandler::CHDDMenuHandler()
 {
 	width = 58;
@@ -112,13 +108,7 @@ CHDDMenuHandler* CHDDMenuHandler::getInstance()
 
 int CHDDMenuHandler::filterDevName(const char * name)
 {
-	if (((name[0] == 's' || name[0] == 'h') && (name[1] == 'd' || name[1] == 'r'))
-#if !HAVE_ARM_HARDWARE
-		|| !strncmp(name, "mmcblk", 6)
-#endif
-	)
-		return 1;
-	return 0;
+	return coreapi::storage::isUserDevice(name) ? 1 : 0;
 }
 
 static std::string readlink(const char *path)
@@ -179,6 +169,7 @@ void CHDDMenuHandler::getBlkIds()
 	}
 
 	hdd_list.clear();
+	const std::vector<coreapi::storage::DiskInfo> user_disks = coreapi::storage::disks();
 	char buff[512];
 	while (fgets(buff, sizeof(buff), f)) {
 		std::string ret = buff;
@@ -199,10 +190,8 @@ void CHDDMenuHandler::getBlkIds()
 
 		hdd_s hdd;
 		hdd.devname = std::string(buff + 5);
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-		if (strncmp(hdd.devname.c_str(), "mmcblk", 6) == 0)
+		if (!coreapi::storage::isUserDevice(user_disks, hdd.devname))
 			continue;
-#endif
 		hdd.mounted = is_mounted(buff + 5);
 		hdd.fmt = ret;
 		hdd.desc = hdd.devname + " (" + hdd.fmt + ")";
@@ -211,14 +200,6 @@ void CHDDMenuHandler::getBlkIds()
 	}
 	fclose(f);
 	waitpid(pid, NULL, 0); /* beware of the zombie apocalypse! */
-}
-
-std::string CHDDMenuHandler::getDefaultPart(std::string dev)
-{
-	std::string part = "1";
-	if (strncmp(dev.c_str(), "mmcblk", 6) == 0)
-		part = "p1";
-	return part;
 }
 
 std::string CHDDMenuHandler::getFmtType(std::string name, std::string part)
@@ -339,8 +320,7 @@ bool CHDDMenuHandler::umount_all(std::string dev)
 {
 	bool ret = true;
 	for (std::vector<hdd_s>::iterator it = hdd_list.begin(); it != hdd_list.end(); ++it) {
-		std::string mdev = it->devname.substr(0, dev.size());
-		if (mdev == dev) {
+		if (coreapi::storage::ownsDevice(dev, it->devname)) {
 			if (is_mounted(it->devname.c_str()))
 				ret &= umount_dev(it->devname);
 		}
@@ -349,9 +329,9 @@ bool CHDDMenuHandler::umount_all(std::string dev)
 }
 
 #ifdef ASSUME_MDEV
-bool CHDDMenuHandler::add_dev(std::string dev, std::string part)
+bool CHDDMenuHandler::add_dev(std::string dev, std::string partition)
 {
-	std::string filename = "/sys/block/" + dev + "/" + dev + part + "/uevent";
+	std::string filename = "/sys/block/" + dev + "/" + partition + "/uevent";
 	if (!access(filename.c_str(), W_OK)) {
 		FILE *f = fopen(filename.c_str(), "w");
 		if (!f)
@@ -469,14 +449,16 @@ int CHDDMenuHandler::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t dat
 				dev = dev.substr(5); /* strip off /dev/ */
 		}
 		printf("CHDDMenuHandler::handleMsg: MDEV=%s\n", dev.c_str());
-		if (!filterDevName(dev.c_str()))
-			return messages_return::handled;
 
 		it = smap.find("ACTION");
 		if (it == smap.end())
 			return messages_return::handled;
 
 		bool added = it->second == "add";
+		// A device that was just removed is no longer there to be asked
+		// what it is, so its name has to do.
+		if (it->second == "remove" ? !coreapi::storage::looksLikeDisk(dev) : !filterDevName(dev.c_str()))
+			return messages_return::handled;
 		bool mounted = false;
 		if (added) {
 			/* Retry: mount may not yet be visible in /proc/mounts
@@ -530,7 +512,7 @@ int CHDDMenuHandler::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t dat
 		getBlkIds();
 		scanDevices();
 		for (std::map<std::string, std::string>::iterator it = devtitle.begin(); it != devtitle.end(); ++it) {
-			if (dev.substr(0, it->first.size()) == it->first) {
+			if (coreapi::storage::ownsDevice(it->first, dev)) {
 				showDeviceMenu(it->first);
 				break;
 			}
@@ -578,9 +560,9 @@ int CHDDMenuHandler::exec(CMenuTarget* parent, const std::string &actionkey)
 	else if (actionkey[0] == 'f') {
 		int ret = formatDevice(dev);
 #if 0
-		std::string devname = "/dev/" + dev + getDefaultPart(dev);
+		std::string devname = "/dev/" + coreapi::storage::partitionName(dev, 1);
 		if (show_menu && is_mounted(devname.c_str())) {
-			devname = dev + getDefaultPart(dev);
+			devname = coreapi::storage::partitionName(dev, 1);
 			setRecordPath(devname);
 		}
 #endif
@@ -597,7 +579,7 @@ int CHDDMenuHandler::showDeviceMenu(std::string dev)
 
 	CMenuForwarder * mf;
 
-	std::string fmt_type = getFmtType(dev, getDefaultPart(dev));
+	std::string fmt_type = getFmtType(coreapi::storage::partitionName(dev, 1));
 	bool fsck_enabled = false;
 	for (unsigned i = 0; i < FS_MAX; i++) {
 		if (fmt_type == devtools[i].fmt)
@@ -606,8 +588,7 @@ int CHDDMenuHandler::showDeviceMenu(std::string dev)
 	int cnt = 0;
 	bool found = false;
 	for (std::vector<hdd_s>::iterator it = hdd_list.begin(); it != hdd_list.end(); ++it) {
-		std::string mdev = it->devname.substr(0, dev.size());
-		if (mdev == dev) {
+		if (coreapi::storage::ownsDevice(dev, it->devname)) {
 			printf("found %s partition %s\n", dev.c_str(), it->devname.c_str());
 			fsck_enabled = false;
 			devtool_s * devtool = get_dev_tool(it->fmt);
@@ -649,24 +630,8 @@ int CHDDMenuHandler::showDeviceMenu(std::string dev)
 
 bool CHDDMenuHandler::scanDevices()
 {
-	struct dirent **namelist;
-	struct stat s;
-	int root_dev = -1;
-
-	int n = scandir("/sys/block", &namelist, my_filter, alphasort);
-	if (n < 0) {
-		perror("CHDDMenuHandler::scanDevices: scandir(\"/sys/block\") failed");
-		return false;
-	}
-
-	int drive_mask = 0xfff0;
-	if (stat("/", &s) != -1)
-	{
-		if ((s.st_dev & drive_mask) == 0x0300) /* hda, hdb,... has max 63 partitions */
-			drive_mask = 0xffc0; /* hda: 0x0300, hdb: 0x0340, sda: 0x0800, sdb: 0x0810 */
-		root_dev = (s.st_dev & drive_mask);
-	}
-	printf("HDD: root_dev: 0x%04x\n", root_dev);
+	const std::vector<coreapi::storage::DiskInfo> user_disks = coreapi::storage::disks();
+	const int n = user_disks.size();
 
 	for(int i = 0; i < n;i++) {
 		char str[281];
@@ -675,37 +640,24 @@ bool CHDDMenuHandler::scanDevices()
 		int64_t bytes = 0;
 		int64_t megabytes;
 		bool oldkernel = false;
-		bool isroot = false;
 
-		printf("HDD: checking /sys/block/%s\n", namelist[i]->d_name);
-		snprintf(str, sizeof(str), "/dev/%s", namelist[i]->d_name);
+		printf("HDD: checking /sys/block/%s\n", user_disks[i].name.c_str());
+		snprintf(str, sizeof(str), "/dev/%s", user_disks[i].name.c_str());
 		int fd = open(str, O_RDONLY);
 		if (fd >= 0) {
 			if (ioctl(fd, BLKGETSIZE64, &bytes))
 				perror("BLKGETSIZE64");
-
-			int ret = fstat(fd, &s);
-			if (ret != -1) {
-				if ((int)(s.st_rdev & drive_mask) == root_dev) {
-					isroot = true;
-					/* dev_t is different sized on different architectures :-( */
-					printf("-> root device is on this disk 0x%04x, skipping\n", (int)s.st_rdev);
-				}
-			}
 			close(fd);
 		} else {
 			printf("Cant open %s\n", str);
 		}
-		if (isroot)
-			continue;
-
 		megabytes = bytes/1000000;
 
-		snprintf(str, sizeof(str), "/sys/block/%s/device/vendor", namelist[i]->d_name);
+		snprintf(str, sizeof(str), "/sys/block/%s/device/vendor", user_disks[i].name.c_str());
 		FILE * f = fopen(str, "r");
 		if(!f) {
 			printf("Cant open %s\n", str);
-			snprintf(str, sizeof(str), "/sys/block/%s/device/type", namelist[i]->d_name);
+			snprintf(str, sizeof(str), "/sys/block/%s/device/type", user_disks[i].name.c_str());
 			f = fopen(str, "r");
 		}
 		if (f) {
@@ -717,13 +669,13 @@ bool CHDDMenuHandler::scanDevices()
 		}
 
 		if (oldkernel)
-			snprintf(str, sizeof(str), "/proc/ide/%s/model", namelist[i]->d_name);
+			snprintf(str, sizeof(str), "/proc/ide/%s/model", user_disks[i].name.c_str());
 		else
-			snprintf(str, sizeof(str), "/sys/block/%s/device/model", namelist[i]->d_name);
+			snprintf(str, sizeof(str), "/sys/block/%s/device/model", user_disks[i].name.c_str());
 		f = fopen(str, "r");
 		if(!f) {
 			printf("Cant open %s\n", str);
-			snprintf(str, sizeof(str), "/sys/block/%s/device/name", namelist[i]->d_name);
+			snprintf(str, sizeof(str), "/sys/block/%s/device/name", user_disks[i].name.c_str());
 			f = fopen(str, "r");
 		}
 		if (f) {
@@ -732,7 +684,7 @@ bool CHDDMenuHandler::scanDevices()
 		}
 #if 0
 		int removable = 0;
-		snprintf(str, sizeof(str), "/sys/block/%s/removable", namelist[i]->d_name);
+		snprintf(str, sizeof(str), "/sys/block/%s/removable", user_disks[i].name.c_str());
 		f = fopen(str, "r");
 		if(!f) {
 			printf("Cant open %s\n", str);
@@ -741,12 +693,12 @@ bool CHDDMenuHandler::scanDevices()
 		fscanf(f, "%d", &removable);
 		fclose(f);
 #endif
-		std::string dev = std::string(namelist[i]->d_name).substr(0, 2);
-		std::string fmt = getFmtType(namelist[i]->d_name);
+		std::string dev = std::string(user_disks[i].name.c_str()).substr(0, 2);
+		std::string fmt = getFmtType(user_disks[i].name.c_str());
 		/* epmty cdrom do not appear in blkid output */
 		if (fmt.empty() && dev == "sr") {
 			hdd_s hdd;
-			hdd.devname = namelist[i]->d_name;
+			hdd.devname = user_disks[i].name.c_str();
 			hdd.mounted = false;
 			hdd.fmt = "";
 			hdd.desc = hdd.devname;
@@ -756,12 +708,8 @@ bool CHDDMenuHandler::scanDevices()
 
 		snprintf(str, sizeof(str), "%s %s %ld %s", vendor, model, (long)(megabytes < 10000 ? megabytes : megabytes/1000), megabytes < 10000 ? "MB" : "GB");
 		printf("HDD: %s\n", str);
-		devtitle[namelist[i]->d_name] = str;
-
-		free(namelist[i]);
+		devtitle[user_disks[i].name.c_str()] = str;
 	}
-	if (n >= 0)
-		free(namelist);
 	return !devtitle.empty();
 }
 
@@ -925,7 +873,7 @@ static int umount_all(const char *dev)
 	printf("HDD: %s dev = '%s' d = '%s'\n", __func__, dev, d);
 	for (i = 1; i < 16; i++)
 	{
-		sprintf(buffer, "/dev/%s%d", d, i);
+		sprintf(buffer, "/dev/%s", coreapi::storage::partitionName(d, i).c_str());
 		// printf("checking for '%s'\n", buffer);
 		if (access(buffer, R_OK))
 			continue;	/* device does not exist? */
@@ -933,12 +881,12 @@ static int umount_all(const char *dev)
 		/* we can't use a 'remove' uevent, as that would also remove the device node
 		 * which we certainly need for formatting :-) */
 		if (! access("/etc/mdev/mdev-mount.sh", X_OK)) {
-			sprintf(buffer, "MDEV=%s%d ACTION=remove /etc/mdev/mdev-mount.sh block", d, i);
+			sprintf(buffer, "MDEV=%s ACTION=remove /etc/mdev/mdev-mount.sh block", coreapi::storage::partitionName(d, i).c_str());
 			printf("-> running '%s'\n", buffer);
 			my_system(3, "/bin/sh", "-c", buffer);
 		}
 #endif
-		sprintf(buffer, "/dev/%s%d", d, i);
+		sprintf(buffer, "/dev/%s", coreapi::storage::partitionName(d, i).c_str());
 		/* just to make sure */
 		swapoff(buffer);
 		if (dev_umount(buffer) && errno != ENOENT)
@@ -963,7 +911,7 @@ static int mount_all(const char *dev)
 	for (i = 1; i < 16; i++)
 	{
 #ifdef ASSUME_MDEV
-		sprintf(buffer, "/sys/block/%s/%s%d/uevent", d, d, i);
+		sprintf(buffer, "/sys/block/%s/%s/uevent", d, coreapi::storage::partitionName(d, i).c_str());
 		if (!access(buffer, W_OK)) {
 			FILE *f = fopen(buffer, "w");
 			if (!f)
@@ -1034,10 +982,8 @@ int CHDDMenuHandler::formatDevice(std::string dev)
 	}
 
 	std::string devname = "/dev/" + dev;
-	std::string part = getDefaultPart(dev);
-
-	std::string devpart = dev + part;
-	std::string partname = devname + part;
+	std::string devpart = coreapi::storage::partitionName(dev, 1);
+	std::string partname = "/dev/" + devpart;
 
 	std::string mkfscmd = devtool->mkfs + " " + devtool->mkfs_options + " ";
 	if (!devtool->mkfs_labelswitch.empty() && !mkfs_label.empty())
@@ -1118,8 +1064,8 @@ int CHDDMenuHandler::formatDevice(std::string dev)
 	}
 	sleep(2);
 #ifdef ASSUME_MDEV
-	add_dev(dev, part);
-	waitfordev(devname + part, 30);
+	add_dev(dev, devpart);
+	waitfordev(partname, 30);
 #endif
 
 	progress->showStatusMessageUTF(mkfscmd.c_str());
@@ -1360,11 +1306,8 @@ ret1:
 
 int CHDDDestExec::exec(CMenuTarget* /*parent*/, const std::string&)
 {
-	struct dirent **namelist;
-	int n = scandir("/sys/block", &namelist, my_filter, alphasort);
-
-	if (n < 0)
-		return menu_return::RETURN_NONE;
+	const std::vector<coreapi::storage::DiskInfo> user_disks = coreapi::storage::disks();
+	int n = user_disks.size();
 
 	if (g_settings.hdd_sleep > 0 && g_settings.hdd_sleep < 60)
 		g_settings.hdd_sleep = 60;
@@ -1387,41 +1330,30 @@ int CHDDDestExec::exec(CMenuTarget* /*parent*/, const std::string&)
 		if (sleep_seconds)
 			my_system(3, hdidle.c_str(), "-i", to_string(sleep_seconds).c_str());
 
-		while (n--)
-			free(namelist[n]);
-		free(namelist);
 		return menu_return::RETURN_NONE;
 	}
 
 	std::string hdparm = find_executable("hdparm");
 	printf("CHDDDestExec::exec: hdparm = %s\n", hdparm.c_str());
-	if (!hdparm.empty())
-	{
-		while (n--)
-			free(namelist[n]);
-		free(namelist);
+	if (hdparm.empty())
 		return menu_return::RETURN_NONE;
-	}
 
 	struct stat stat_buf;
 	bool have_nonbb_hdparm = !::lstat(hdparm.c_str(), &stat_buf) && !S_ISLNK(stat_buf.st_mode);
 
 	for (int i = 0; i < n; i++) {
 		printf("CHDDDestExec: noise %d sleep %d /dev/%s\n",
-			 g_settings.hdd_noise, g_settings.hdd_sleep, namelist[i]->d_name);
+			 g_settings.hdd_noise, g_settings.hdd_sleep, user_disks[i].name.c_str());
 
 		char M_opt[50],S_opt[50], opt[261];
 		snprintf(S_opt, sizeof(S_opt), "-S%d", g_settings.hdd_sleep);
 		snprintf(M_opt, sizeof(M_opt), "-M%d", g_settings.hdd_noise);
-		snprintf(opt, sizeof(opt), "/dev/%s",namelist[i]->d_name);
+		snprintf(opt, sizeof(opt), "/dev/%s", user_disks[i].name.c_str());
 
 		if (have_nonbb_hdparm)
 			my_system(4, hdparm.c_str(), M_opt, S_opt, opt);
 		else // busybox hdparm doesn't support "-M"
 			my_system(3, hdparm.c_str(), S_opt, opt);
-
-		free(namelist[i]);
 	}
-	free(namelist);
 	return menu_return::RETURN_NONE;
 }
