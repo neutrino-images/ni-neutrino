@@ -24,12 +24,14 @@
 // here fetches on a timer of its own. The screen around this hands down a number, and
 // every time that number changes this fetches once; see remote.js.
 import { html, useState, useEffect, useRef } from '../../runtime.js';
-import { buildUrl } from '../../api.js';
+import { api, buildUrl } from '../../api.js';
 import { t } from '../../i18n.js';
 import text from './now.text.js';
 import { Button } from '../../ui/button.js';
 import { Switch } from '../../ui/switch.js';
 import { Card, useOnScreen } from './parts.js';
+import { shotLoader, pictureForSaving } from './shotloader.js';
+import { toast } from '../../ui/toast.js';
 
 // How often the preview is fetched again while it is asked to do so by itself
 // and while it can be seen. A capture costs the box real work, so this is the
@@ -125,24 +127,41 @@ export function useCapture(bump) {
 	const [osd, setOsd] = useState(function () { return kept(KEEP_OSD, true); });
 	const [video, setVideo] = useState(function () { return kept(KEEP_VIDEO, true); });
 	const [again, setAgain] = useState(function () { return kept(KEEP_AGAIN, false); });
-	/* Nought means nothing has been fetched yet, and that is what the frame
-	   says instead of showing a picture. */
-	const [round, setRound] = useState(0);
+	/* Whether a capture has been asked for, the last one that arrived, and
+	   whether the first one never did. A refused or failed capture keeps the
+	   last picture; see shotloader.js. */
+	const [asked, setAsked] = useState(false);
+	const [shot, setShot] = useState(/** @type {{ src: string, n: number } | null} */ (null));
 	const [failed, setFailed] = useState(false);
-	/* The round whose picture arrived, and whether what is on screen is that
-	   older round rather than the newest.
-
-	   A CAPTURE CAN BE TURNED DOWN AND NOTHING BE WRONG. The box takes one
-	   picture of its screen at a time and tells a second asker it is busy rather
-	   than queueing it behind a driver read that has no deadline. The element
-	   below cannot read that answer, it only sees an error, so the first error
-	   falls back to the last picture that did arrive, which is a moment old and
-	   is what somebody driving the box is looking at anyway. Only a round with
-	   nothing left to fall back on says so in words. */
-	const [shown, setShown] = useState(0);
-	const [stale, setStale] = useState(false);
 	const nothing = !osd && !video;
-	const at = stale ? shown : round;
+	// Read when a capture is sent, so a coalesced ask uses the newest options.
+	const choice = useRef({ osd: osd, video: video });
+	choice.current = { osd: osd, video: video };
+	const loader = useRef(/** @type {{ want: () => void, stop: () => void } | null} */ (null));
+	if (loader.current === null) {
+		loader.current = shotLoader({
+			address: function (n) { return pictureUrl(choice.current.osd, choice.current.video, 'jpeg', n); },
+			shown: function (src, n) {
+				setShot({ src: src, n: n });
+				setFailed(false);
+			},
+			lost: function () { setFailed(true); },
+		});
+	}
+	const load = loader.current;
+
+	useEffect(function () {
+		return function () { load.stop(); };
+	}, []);
+
+	/**
+	 * @returns {void}
+	 */
+	function ask() {
+		setAsked(true);
+		setFailed(false);
+		load.want();
+	}
 
 	// One capture per raise of the number above, which is the whole of what
 	// the screen around this asks for.
@@ -150,17 +169,14 @@ export function useCapture(bump) {
 		if (bump <= 0 || nothing) {
 			return;
 		}
-		forget();
-		setRound(function (n) { return n + 1; });
+		ask();
 	}, [bump]);
 
 	useEffect(function () {
 		if (!again || !watching || nothing) {
 			return undefined;
 		}
-		const timer = window.setInterval(function () {
-			setRound(function (n) { return n + 1; });
-		}, AGAIN_EVERY_MS);
+		const timer = window.setInterval(ask, AGAIN_EVERY_MS);
 		return function () { window.clearInterval(timer); };
 	}, [again, watching, nothing]);
 
@@ -171,8 +187,8 @@ export function useCapture(bump) {
 	function chooseOsd(next) {
 		setOsd(next);
 		keep(KEEP_OSD, next);
-		forget();
-		fetchAgain();
+		choice.current = { osd: next, video: video };
+		fetchAgain(next || video);
 	}
 
 	/**
@@ -182,8 +198,8 @@ export function useCapture(bump) {
 	function chooseVideo(next) {
 		setVideo(next);
 		keep(KEEP_VIDEO, next);
-		forget();
-		fetchAgain();
+		choice.current = { osd: osd, video: next };
+		fetchAgain(osd || next);
 	}
 
 	/**
@@ -195,37 +211,18 @@ export function useCapture(bump) {
 		keep(KEEP_AGAIN, next);
 	}
 
-	/* Only where one has been fetched already. Turning a switch on a frame
-	   that is still saying nothing has been fetched is not the same as asking
-	   for one. */
-	function fetchAgain() {
-		setRound(function (n) { return n === 0 ? 0 : n + 1; });
-	}
-
 	/**
-	 * What every fresh ask clears, so a round is judged on its own answer and
-	 * not on the one before it.
+	 * Only where one has been asked for already. Turning a switch on a frame
+	 * that is still saying nothing has been fetched is not the same as asking
+	 * for one.
 	 *
+	 * @param {boolean} some whether either layer is still on
 	 * @returns {void}
 	 */
-	function forget() {
-		setFailed(false);
-		setStale(false);
-	}
-
-	/**
-	 * A picture that did not arrive. The first one falls back to the last that
-	 * did; a second, with that fallback gone as well, is the case where there is
-	 * nothing left to show.
-	 *
-	 * @returns {void}
-	 */
-	function missed() {
-		if (shown > 0 && !stale) {
-			setStale(true);
-			return;
+	function fetchAgain(some) {
+		if (asked && some) {
+			load.want();
 		}
-		setFailed(true);
 	}
 
 	/* Pressing the picture makes it bigger, pressing it again puts it back.
@@ -238,28 +235,52 @@ export function useCapture(bump) {
 	   Only where the picture is pinned over the keys. Wide it already has the
 	   room it needs, and a control that changes nothing is worse than none. */
 	const [large, setLarge] = useState(false);
+	const [saving, setSaving] = useState(false);
+
+	/* Fetched and handed to the browser as a file, and not a plain link: a
+	   link cannot be retried when the box is busy with the preview. */
+	function save() {
+		setSaving(true);
+		pictureForSaving(function () {
+			return api('GET', '/api/v1/osd/screenshot', {
+				query: { osd: osd, video: video, format: 'png' }, accept: 'blob',
+			});
+		}).then(function (picture) {
+			const address = URL.createObjectURL(/** @type {Blob} */ (picture));
+			const link = document.createElement('a');
+			link.href = address;
+			link.download = 'neutrino.png';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.setTimeout(function () { URL.revokeObjectURL(address); }, 0);
+		}, function (/** @type {{ status?: number, aborted?: boolean, problem?: { title: string } } | undefined} */ failed) {
+			if (failed && failed.aborted === true) {
+				return;
+			}
+			toast(failed && failed.status === 409 ? t(text, 'now.shot.busy')
+				: failed && failed.problem ? failed.problem.title : t(text, 'now.shot.failed'), 'bad');
+		}).then(function () { setSaving(false); });
+	}
 
 	return {
 		seen: html`<div class="now-shot now-shot-live" data-large=${large ? 'one' : null} ref=${box}>
 			${nothing
 				? html`<p class="now-empty">${t(text, 'now.shot.empty')}</p>`
-				: round === 0
-					? html`<p class="now-empty">${t(text, 'now.shot.waiting')}</p>`
-					: failed
-						? html`<p class="now-empty" role="status">${t(text, 'now.shot.failed')}</p>`
-						: html`<button
+				: shot === null
+					? html`<p class="now-empty" role=${failed ? 'status' : null}>${t(text, failed ? 'now.shot.failed' : 'now.shot.waiting')}</p>`
+					: html`<button
 							type="button"
 							class="now-shot-zoom"
 							aria-pressed=${large ? 'true' : 'false'}
 							title=${t(text, large ? 'now.shot.smaller' : 'now.shot.bigger')}
 							onClick=${function () { setLarge(!large); }}>
+							${/* One element for the life of the screen, given only an
+							     address that has already arrived. */''}
 							<img
-								key=${'shot-' + at}
 								class="now-shot-image"
-								src=${pictureUrl(osd, video, 'jpeg', at)}
-								alt=${t(text, 'now.shot.alt')}
-								onLoad=${function () { setShown(at); }}
-								onError=${missed} />
+								src=${shot.src}
+								alt=${t(text, 'now.shot.alt')} />
 							<span class="sr">${t(text, large ? 'now.shot.smaller' : 'now.shot.bigger')}</span>
 						</button>`}
 		</div>`,
@@ -268,10 +289,7 @@ export function useCapture(bump) {
 				<${Button}
 					primary=${true}
 					disabled=${nothing}
-					onClick=${function () {
-						forget();
-						setRound(function (n) { return n + 1; });
-					}}>${t(text, 'now.shot.refresh')}<//>
+					onClick=${ask}>${t(text, 'now.shot.refresh')}<//>
 			</p>
 			${/* FOLDED, AND THE ONE BUTTON ABOVE IS NOT. This picture shares a
 			     screen with the keys and a telephone is 390 pixels wide: three
@@ -297,10 +315,9 @@ export function useCapture(bump) {
 				<p class="now-buttons">
 					${nothing
 						? null
-						: html`<a
-							class="btn"
-							href=${pictureUrl(osd, video, 'png', at)}
-							download="neutrino.png">${t(text, 'now.shot.download')}</a>`}
+						: html`<${Button}
+							disabled=${saving}
+							onClick=${save}>${t(text, 'now.shot.download')}<//>`}
 				</p>
 				<p class="now-hint">${t(text, 'now.shot.hint')}</p>
 			</details>

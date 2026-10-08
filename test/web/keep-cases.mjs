@@ -19,6 +19,8 @@ const storage = { getItem(/** @type {string} */ k) { return tab.has(k) ? tab.get
 globalThis.window = /** @type {any} */ ({ sessionStorage: storage, localStorage: storage,
 	setTimeout: setTimeout, clearTimeout: clearTimeout, setInterval: function () { return 0; }, clearInterval: function () {},
 	addEventListener() {}, removeEventListener() {},
+	// The remote screen's picture loads into one of these; it never arrives here.
+	Image: function () { return { onload: null, onerror: null, src: '' }; },
 	matchMedia: function () { return { matches: false, addEventListener() {}, removeEventListener() {} }; } });
 // A screen effect left running at the end is not what is asked here.
 process.on('unhandledRejection', function () { });
