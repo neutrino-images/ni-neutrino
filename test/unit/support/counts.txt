@@ -12,7 +12,7 @@
 answer members narrower than free text	46
 arrays held to a row for every element	14
 body examples their routes accepted	27
-body members the examples carry	25
+body members the examples carry	26
 choice value names compared	585
 choices compared against a screen	1
 chooser call sites read	459
@@ -44,7 +44,7 @@ lists and lists of records held to a read of the load	5
 locale names the program has	3233
 memory backed folders tried	1
 number elements written and read back among their neighbours	145
-parameters the document describes	147
+parameters the document describes	148
 refusals the document states against a route	854
 refusals the header names	13
 refusals the routes declare of their own	137

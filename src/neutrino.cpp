@@ -5128,14 +5128,14 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	}
 	else if( msg == NeutrinoMessages::STANDBY_ON ) {
 		if( mode != NeutrinoModes::mode_standby ) {
-			standbyMode( true );
+			standbyMode( true, false, data == NeutrinoStandby::leave_tv );
 		}
 		g_RCInput->clearRCMsg();
 		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::STANDBY_OFF ) {
 		if( mode == NeutrinoModes::mode_standby ) {
-			standbyMode( false );
+			standbyMode( false, false, data == NeutrinoStandby::leave_tv );
 		}
 		cancelDeferredDeepStandby();
 		g_RCInput->clearRCMsg();
@@ -5347,18 +5347,6 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		return messages_return::handled;
 //		ShowHint(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_EXTRA_ZAPIT_SDT_CHANGED),
 //				CMsgBox::mbrBack,CMsgBox::mbBack, NEUTRINO_ICON_INFO);
-	}
-	else if (msg == NeutrinoMessages::EVT_HDMI_CEC_VIEW_ON) {
-		if(g_settings.hdmi_cec_view_on)
-			videoDecoder->SetCECAutoView(g_settings.hdmi_cec_view_on);
-
-		return messages_return::handled;
-	}
-	else if (msg == NeutrinoMessages::EVT_HDMI_CEC_STANDBY) {
-		if(g_settings.hdmi_cec_standby)
-			videoDecoder->SetCECAutoStandby(g_settings.hdmi_cec_standby);
-
-		return messages_return::handled;
 	}
 	else if (msg == NeutrinoMessages::EVT_SET_MUTE) {
 		g_audioMute->AudioMute((int)data, true);
@@ -5882,7 +5870,7 @@ void CNeutrinoApp::AVInputMode(bool bOnOff)
 #endif // !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
 }
 
-void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
+void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby, bool leaveTv)
 {
 	//static bool wasshift = false;
 	INFO("%s", bOnOff ? "ON" : "OFF" );
@@ -5934,7 +5922,10 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 			g_Zapit->lockPlayBack();
 		}
 
+		// The decoder's standby is what switches the television off, synchronously.
+		coreapi::holdCecPower(true, true, leaveTv);
 		videoDecoder->Standby(true);
+		coreapi::holdCecPower(true, false, leaveTv);
 
 		g_Sectionsd->setServiceChanged(0, false);
 		g_Sectionsd->setPauseScanning(!fromDeepStandby);
@@ -6051,6 +6042,9 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 		applyKeyLogged("zappingmode");
 #endif
 
+		/* Held up to the CEC run below as well: on a box woken for a recording that run
+		   starts the link, which switches the television on with the view flag set. */
+		coreapi::holdCecPower(false, true, leaveTv);
 		videoDecoder->Standby(false);
 		CEpgScan::getInstance()->Stop();
 		CSectionsdClient::CurrentNextInfo dummy;
@@ -6066,6 +6060,7 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 		init_cec_setting = false;
 		if (coreapi::cecStandby(false) != coreapi::Status::Ok)
 			dprintf(DEBUG_NORMAL, "[neutrino] the CEC settings were not applied on waking\n");
+		coreapi::holdCecPower(false, false, leaveTv);
 
 		if(!recordingstatus && g_settings.ci_standby_reset) {
 			g_CamHandler->exec(NULL, "ca_ci_reset0");

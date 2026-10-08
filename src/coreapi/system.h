@@ -43,18 +43,18 @@ Result<BoxInfo> info();
 // that loses it and the call answers Internal rather than holding the caller.
 Result<void> standby(bool on);
 
+// The same, and with cec false the television is left as it is: going to standby
+// does not switch it off and waking does not switch it on, whatever the CEC
+// settings say. The choice travels with the event; the loop acts on it around
+// the change, so a wake that is put off or comes from a recording boot keeps it.
+Result<void> standby(bool on, bool cec);
+
 // Said once the box has gone into standby or come out of it. Asking is not
 // going: a request can be refused, and one can be dropped half way.
 void announceStandby(bool on);
 Result<void> reboot();
 Result<void> shutdown();
 Result<void> restart();
-
-// What the box tells the television over the cable beside a standby change.
-// Separate from standby rather than folded into it, because whether it is
-// wanted at all is a setting this layer does not read, and the two are sent as
-// two events even where both are wanted.
-Result<void> hdmiCec(bool view_on);
 
 /* A command like the ones above: what comes back says the message reached the
    loop's socket and nothing about what the box made of it. */

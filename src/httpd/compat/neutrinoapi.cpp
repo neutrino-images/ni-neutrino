@@ -164,8 +164,6 @@ CNeutrinoAPI::CNeutrinoAPI()
 	EventServer->registerEvent2( NeutrinoMessages::LOCK_RC, CEventServer::INITID_HTTPD, NEUTRINO_UDS_NAME);
 	EventServer->registerEvent2( NeutrinoMessages::UNLOCK_RC, CEventServer::INITID_HTTPD, NEUTRINO_UDS_NAME);
 	EventServer->registerEvent2( NeutrinoMessages::RELOAD_SETUP, CEventServer::INITID_HTTPD, NEUTRINO_UDS_NAME);//reload neutrino conf
-	EventServer->registerEvent2( NeutrinoMessages::EVT_HDMI_CEC_VIEW_ON, CEventServer::INITID_HTTPD, NEUTRINO_UDS_NAME);
-	EventServer->registerEvent2( NeutrinoMessages::EVT_HDMI_CEC_STANDBY, CEventServer::INITID_HTTPD, NEUTRINO_UDS_NAME);
 	EventServer->registerEvent2( NeutrinoMessages::EVT_SET_MUTE, CEventServer::INITID_HTTPD, NEUTRINO_UDS_NAME);
 	EventServer->registerEvent2( NeutrinoMessages::EVT_SET_VOLUME, CEventServer::INITID_HTTPD, NEUTRINO_UDS_NAME);
 	EventServer->registerEvent2( NeutrinoMessages::RECORD_START, CEventServer::INITID_HTTPD, NEUTRINO_UDS_NAME);

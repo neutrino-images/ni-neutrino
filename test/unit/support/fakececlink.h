@@ -23,8 +23,12 @@
 
 #include "coreapi/box/apply_cec.h"
 
+#include <system/settings.h>
+
 #include <string>
 #include <vector>
+
+extern SNeutrinoSettings g_settings;
 
 /* Every call the CEC group makes, in order, with the number each carried. */
 struct FakeCecLink : public coreapi::CecLink
@@ -55,6 +59,27 @@ struct FakeCecLink : public coreapi::CecLink
 	{
 		calls.clear();
 		values.clear();
+	}
+};
+
+/* The link installed and the two settings that ask for it, put back however the case ends. */
+struct CecSettingsAndLink
+{
+	FakeCecLink link;
+	int standby, view_on;
+
+	CecSettingsAndLink(int on_standby, int on_view)
+		: standby(g_settings.hdmi_cec_standby), view_on(g_settings.hdmi_cec_view_on)
+	{
+		g_settings.hdmi_cec_standby = on_standby;
+		g_settings.hdmi_cec_view_on = on_view;
+		coreapi::setCecLink(&link);
+	}
+	~CecSettingsAndLink()
+	{
+		coreapi::setCecLink(0);
+		g_settings.hdmi_cec_standby = standby;
+		g_settings.hdmi_cec_view_on = view_on;
 	}
 };
 

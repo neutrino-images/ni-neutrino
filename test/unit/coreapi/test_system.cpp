@@ -29,6 +29,7 @@
 #include "coreapi/settings/predicates.h"
 #include "coreapi/settings/settings.h"
 #include "coreapi/system.h"
+#include "support/fakececlink.h"
 
 #include <neutrinoMessages.h>
 
@@ -76,17 +77,69 @@ TEST_CASE("the two directions of standby are two events", "[system]")
 	REQUIRE(sink.sent[1].id == (unsigned) NeutrinoMessages::STANDBY_OFF);
 }
 
-TEST_CASE("the two directions of the television cable are two events", "[system]")
+TEST_CASE("standby without the television says so in the event and leaves the link to the loop", "[system][cec]")
+{
+	FakeEventSink sink;
+	InstalledEventSink installed(&sink);
+	CecSettingsAndLink cec(1, 1);
+
+	const std::string leave(1, (char) NeutrinoStandby::leave_tv);
+	REQUIRE(system::standby(true, false).ok());
+	REQUIRE(system::standby(false, false).ok());
+
+	// The link and the settings are the loop's: nothing is written from the caller's thread.
+	REQUIRE(cec.link.calls.empty());
+	REQUIRE(sink.sent.size() == 2);
+	REQUIRE(sink.sent[0].id == (unsigned) NeutrinoMessages::STANDBY_ON);
+	REQUIRE(sink.sent[0].body == leave);
+	REQUIRE(sink.sent[1].id == (unsigned) NeutrinoMessages::STANDBY_OFF);
+	REQUIRE(sink.sent[1].body == leave);
+}
+
+TEST_CASE("standby with the television sends the event as the plain call does", "[system][cec]")
+{
+	FakeEventSink sink;
+	InstalledEventSink installed(&sink);
+	CecSettingsAndLink cec(1, 1);
+
+	REQUIRE(system::standby(true, true).ok());
+	REQUIRE(system::standby(false, true).ok());
+	REQUIRE(cec.link.calls.empty());
+	REQUIRE(sink.sent.size() == 2);
+	REQUIRE(sink.sent[0].id == (unsigned) NeutrinoMessages::STANDBY_ON);
+	REQUIRE(sink.sent[0].body.empty());
+	REQUIRE(sink.sent[1].id == (unsigned) NeutrinoMessages::STANDBY_OFF);
+	REQUIRE(sink.sent[1].body.empty());
+}
+
+TEST_CASE("the loop reads the television choice back off the event body", "[system][cec]")
 {
 	FakeEventSink sink;
 	InstalledEventSink installed(&sink);
 
-	REQUIRE(system::hdmiCec(true).ok());
-	REQUIRE(system::hdmiCec(false).ok());
-
+	REQUIRE(system::standby(true, false).ok());
+	REQUIRE(system::standby(true, true).ok());
 	REQUIRE(sink.sent.size() == 2);
-	REQUIRE(sink.sent[0].id == (unsigned) NeutrinoMessages::EVT_HDMI_CEC_VIEW_ON);
-	REQUIRE(sink.sent[1].id == (unsigned) NeutrinoMessages::EVT_HDMI_CEC_STANDBY);
+
+	const std::string &kept = sink.sent[0].body;
+	REQUIRE(NeutrinoStandby::dataOf((const unsigned char *) kept.data(), kept.size()) ==
+		(neutrino_msg_data_t) NeutrinoStandby::leave_tv);
+	// No body, as from every other sender, follows the settings.
+	REQUIRE(NeutrinoStandby::dataOf(0, 0) == 0);
+	const unsigned char other = 7;
+	REQUIRE(NeutrinoStandby::dataOf(&other, 1) == 0);
+}
+
+TEST_CASE("a refused standby change without the television says it failed", "[system][cec]")
+{
+	FakeEventSink sink;
+	sink.unsupported = NeutrinoMessages::STANDBY_ON;
+	InstalledEventSink installed(&sink);
+	CecSettingsAndLink cec(1, 1);
+
+	REQUIRE_FALSE(system::standby(true, false).ok());
+	REQUIRE(sink.sent.empty());
+	REQUIRE(cec.link.calls.empty());
 }
 
 /* The real sink walks an empty list of clients without a word, so an event it

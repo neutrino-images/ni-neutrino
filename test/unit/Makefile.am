@@ -217,6 +217,7 @@ coreapi_tests_SOURCES = \
 	httpd/compat/test_compat_mount.cpp \
 	httpd/compat/test_compat_levels.cpp \
 	httpd/compat/test_compat_usage.cpp \
+	httpd/compat/test_compat_standby.cpp \
 	coreapi/test_filebody.cpp \
 	coreapi/test_requesthost.cpp \
 	httpd/test_xmltv.cpp \

@@ -52,6 +52,7 @@ httpd/compat/test_compat_levels.cpp	0
 httpd/compat/test_compat_mount.cpp	2000
 httpd/compat/test_compat_query.cpp	0
 httpd/compat/test_compat_serializer.cpp	0
+httpd/compat/test_compat_standby.cpp	0
 httpd/compat/test_compat_usage.cpp	0
 httpd/mcp/test_aiguides.cpp	0
 httpd/mcp/test_aisettings.cpp	0

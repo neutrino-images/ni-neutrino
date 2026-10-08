@@ -227,4 +227,21 @@ struct NeutrinoModes
 	};
 };
 
+/* The data word of STANDBY_ON and STANDBY_OFF. Zero, what every other sender
+   passes, follows the CEC settings. */
+struct NeutrinoStandby
+{
+	enum
+	{
+		// The television keeps its power state for this one change.
+		leave_tv = 1
+	};
+
+	// The word an event body carries over the event socket: one byte, or none.
+	static neutrino_msg_data_t dataOf(const unsigned char *body, size_t size)
+	{
+		return (body != 0 && size >= 1 && body[0] == leave_tv) ? leave_tv : 0;
+	}
+};
+
 #endif

@@ -128,7 +128,7 @@ private:
 	void tvMode( bool rezap = true );
 	void radioMode( bool rezap = true );
 	void AVInputMode( bool bOnOff );
-	void standbyMode( bool bOnOff, bool fromDeepStandby = false );
+	void standbyMode( bool bOnOff, bool fromDeepStandby = false, bool leaveTv = false );
 	bool wakeOnto(const t_channel_id channel_id, bool tv);
 	void cancelDeferredDeepStandby(void);
 	void getAnnounceEpgName(CTimerd::RecordingInfo * eventinfo, std::string &name);

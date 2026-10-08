@@ -286,8 +286,6 @@ unsigned eventNumber(BoxEvent e)
 		case BoxEvent::Shutdown:       return NeutrinoMessages::SHUTDOWN;
 		case BoxEvent::Reboot:         return NeutrinoMessages::REBOOT;
 		case BoxEvent::Restart:        return NeutrinoMessages::RESTART;
-		case BoxEvent::HdmiCecViewOn:  return NeutrinoMessages::EVT_HDMI_CEC_VIEW_ON;
-		case BoxEvent::HdmiCecStandby: return NeutrinoMessages::EVT_HDMI_CEC_STANDBY;
 		case BoxEvent::Hint:           return NeutrinoMessages::EVT_POPUP;
 		case BoxEvent::Message:        return NeutrinoMessages::EVT_EXTMSG;
 		case BoxEvent::SetVolume:      return NeutrinoMessages::EVT_SET_VOLUME;

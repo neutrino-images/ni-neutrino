@@ -557,8 +557,6 @@ enum class BoxEvent
 	Shutdown,
 	Reboot,
 	Restart,
-	HdmiCecViewOn,
-	HdmiCecStandby,
 	Hint,
 	Message,
 	SetVolume,

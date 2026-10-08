@@ -60,14 +60,18 @@ struct CecState
 };
 
 CecState g_state;
-// Nothing else writes the link's state from outside the group, so nothing is marked or held.
+/* Only a standby that leaves the television alone holds a state, and nothing outside the
+   group writes the link, so nothing is marked. */
 SentFlags g_flags;
 bool g_deferred = false;
 
+const unsigned kStandbyHeld = 1;
+const unsigned kViewHeld = 2;
+
 template <class Call>
-void send(Status &first, Sent<int> &sent, int v, Call call)
+void send(Status &first, Sent<int> &sent, int v, Call call, unsigned what = 0)
 {
-	sendChanged(first, g_flags, 0, sent, v, call);
+	sendChanged(first, g_flags, what, sent, v, call);
 }
 
 /* The order the program set these at startup: what the television is told to do
@@ -88,9 +92,9 @@ Status runCec()
 	Status first = Status::Ok;
 
 	const int standby = g_settings.hdmi_cec_standby == 1 ? 1 : 0;
-	send(first, g_state.standby, standby, [&]() { return link.setAutoStandby(standby); });
+	send(first, g_state.standby, standby, [&]() { return link.setAutoStandby(standby); }, kStandbyHeld);
 	const int view_on = g_settings.hdmi_cec_view_on == 1 ? 1 : 0;
-	send(first, g_state.view_on, view_on, [&]() { return link.setAutoView(view_on); });
+	send(first, g_state.view_on, view_on, [&]() { return link.setAutoView(view_on); }, kViewHeld);
 
 	/* With the link off a changed destination waits for the link to come on, as the
 	   screen had it; the first run sends it whatever the mode, as startup did. */
@@ -138,6 +142,42 @@ Status cecStandby(bool asleep)
 	if (asleep)
 		return Status::Ok;
 	return applyKey("hdmi_cec_mode");
+}
+
+void holdCecPower(bool asleep, bool held, bool leave_tv)
+{
+	const unsigned what = asleep ? kStandbyHeld : kViewHeld;
+	Sent<int> &sent = asleep ? g_state.standby : g_state.view_on;
+	CecLink &link = cecLink();
+	if (held)
+	{
+		/* A setting turned off while asleep is not on the link yet, as the group is deferred,
+		   so the change would still act on the 1 the link has. */
+		const int setting = asleep ? g_settings.hdmi_cec_standby : g_settings.hdmi_cec_view_on;
+		if (sent.known && sent.value == 0)
+			return;
+		if (!leave_tv && setting == 1)
+			return;
+		g_flags.hold(what, true);
+		sent.known = false;
+		if (asleep)
+			link.setAutoStandby(0);
+		else
+			link.setAutoView(0);
+		return;
+	}
+	if (!g_flags.isHeld(what))
+		return;
+	g_flags.hold(what, false);
+	/* Sent here, as no run need come before the next change. The setting is read now, as a
+	   write while held was not sent. A refused send stays unknown, so the next run retries. */
+	const int v = (asleep ? g_settings.hdmi_cec_standby : g_settings.hdmi_cec_view_on) == 1 ? 1 : 0;
+	const Status s = asleep ? link.setAutoStandby(v) : link.setAutoView(v);
+	if (s == Status::Ok)
+	{
+		sent.known = true;
+		sent.value = v;
+	}
 }
 
 void resetSentCec()

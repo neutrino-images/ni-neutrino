@@ -23,6 +23,7 @@
 #include "support/catch.hpp"
 #include "support/answers.h"
 #include "support/fakes.h"
+#include "support/fakececlink.h"
 
 #include "httpd/auth.h"
 #include "httpd/webconfig.h"
@@ -1078,6 +1079,31 @@ TEST_CASE("a state change answers accepted and not done", "[write]")
 	// did nothing would answer either.
 	REQUIRE(box.commands.posted.size() == 2);
 	REQUIRE(box.events.sent.size() == 4);
+}
+
+TEST_CASE("standby takes an optional cec that leaves the television alone", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	CecSettingsAndLink cec(1, 1);
+	const std::string leave(1, (char) NeutrinoStandby::leave_tv);
+
+	// Absent and true are what the route did before.
+	REQUIRE(authedPost("/api/v1/system/standby", "{\"on\":true}").code == 202);
+	REQUIRE(authedPost("/api/v1/system/standby", "{\"on\":false,\"cec\":true}").code == 202);
+	REQUIRE(authedPost("/api/v1/system/standby", "{\"on\":true,\"cec\":false}").code == 202);
+	REQUIRE(authedPost("/api/v1/system/standby", "{\"on\":false,\"cec\":false}").code == 202);
+
+	REQUIRE(cec.link.calls.empty());
+	REQUIRE(box.events.sent.size() == 4);
+	REQUIRE(box.events.sent[0].id == (unsigned) NeutrinoMessages::STANDBY_ON);
+	REQUIRE(box.events.sent[0].body.empty());
+	REQUIRE(box.events.sent[1].id == (unsigned) NeutrinoMessages::STANDBY_OFF);
+	REQUIRE(box.events.sent[1].body.empty());
+	REQUIRE(box.events.sent[2].id == (unsigned) NeutrinoMessages::STANDBY_ON);
+	REQUIRE(box.events.sent[2].body == leave);
+	REQUIRE(box.events.sent[3].id == (unsigned) NeutrinoMessages::STANDBY_OFF);
+	REQUIRE(box.events.sent[3].body == leave);
 }
 
 TEST_CASE("a zap to a channel the box does not have posts nothing", "[write]")

@@ -230,6 +230,210 @@ TEST_CASE("a CEC mode written while the box sleeps is sent once when it wakes", 
 	REQUIRE(box.link.calls.empty());
 }
 
+namespace
+{
+
+// Where the first call with that name and value is, or the number of calls where there is none.
+size_t firstCall(const FakeCecLink &link, const std::string &what, int v)
+{
+	for (size_t i = 0; i < link.calls.size(); ++i)
+		if (link.calls[i] == what && link.values[i] == v)
+			return i;
+	return link.calls.size();
+}
+
+} // namespace
+
+// The order standbyMode runs it in: held across the decoder's standby, let go right after.
+TEST_CASE("a standby that leaves the television on holds the standby flag at 0 across the change", "[apply][cec]")
+{
+	CecBox box;
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_TUNER;
+	g_settings.hdmi_cec_standby = 1;
+	g_settings.hdmi_cec_view_on = 1;
+	REQUIRE(runPhase(ApplyPhase::Zapit) == Status::Ok);
+	box.link.forget();
+
+	holdCecPower(true, true, true);
+	REQUIRE(box.link.calls.size() == 1);
+	REQUIRE(box.link.calls[0] == "standby");
+	REQUIRE(box.link.values[0] == 0);
+
+	// A run while held leaves the flag alone.
+	REQUIRE(applyKey("hdmi_cec_standby") == Status::Ok);
+	REQUIRE(box.link.count("standby") == 1);
+
+	holdCecPower(true, false, true);
+	REQUIRE(box.link.calls.back() == "standby");
+	REQUIRE(box.link.values.back() == 1);
+	REQUIRE(cecStandby(true) == Status::Ok);
+
+	// Given back as sent, so the run on waking does not send it again.
+	box.link.forget();
+	REQUIRE(cecStandby(false) == Status::Ok);
+	REQUIRE(box.link.calls.empty());
+}
+
+TEST_CASE("a wake that leaves the television off holds the view flag at 0 through the run on waking", "[apply][cec]")
+{
+	CecBox box;
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_TUNER;
+	g_settings.hdmi_cec_standby = 1;
+	g_settings.hdmi_cec_view_on = 1;
+	REQUIRE(runPhase(ApplyPhase::Zapit) == Status::Ok);
+	REQUIRE(cecStandby(true) == Status::Ok);
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_RECORDER;
+	REQUIRE(applyKey("hdmi_cec_mode") == Status::Ok);
+	box.link.forget();
+
+	holdCecPower(false, true, true);
+	REQUIRE(cecStandby(false) == Status::Ok);
+	// The mode written while asleep starts the link over, and the view flag is still 0 then.
+	const size_t mode = firstCall(box.link, "mode", VIDEO_HDMI_CEC_MODE_RECORDER);
+	REQUIRE(mode < box.link.calls.size());
+	REQUIRE(firstCall(box.link, "view", 0) < mode);
+	REQUIRE(firstCall(box.link, "view", 1) == box.link.calls.size());
+
+	holdCecPower(false, false, true);
+	REQUIRE(box.link.calls.back() == "view");
+	REQUIRE(box.link.values.back() == 1);
+}
+
+/* A box started for a recording has sent nothing yet, and its first run starts the link. A
+   wake that leaves the television off keeps the view flag at 0 until that run is done. */
+TEST_CASE("a wake that leaves the television off after a recording boot sends the view flag only after the link started", "[apply][cec]")
+{
+	CecBox box;
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_TUNER;
+	g_settings.hdmi_cec_standby = 1;
+	g_settings.hdmi_cec_view_on = 1;
+	deferCec(true);
+	REQUIRE(runPhase(ApplyPhase::Zapit) == Status::Ok);
+	REQUIRE(box.link.calls.empty());
+
+	holdCecPower(false, true, true);
+	REQUIRE(cecStandby(false) == Status::Ok);
+	const size_t mode = firstCall(box.link, "mode", VIDEO_HDMI_CEC_MODE_TUNER);
+	REQUIRE(mode < box.link.calls.size());
+	REQUIRE(box.link.count("standby") == 1);
+	REQUIRE(firstCall(box.link, "view", 1) == box.link.calls.size());
+
+	holdCecPower(false, false, true);
+	REQUIRE(firstCall(box.link, "view", 1) > mode);
+	REQUIRE(box.link.calls.back() == "view");
+	REQUIRE(box.link.values.back() == 1);
+}
+
+TEST_CASE("leaving the television alone does nothing where the setting does not ask for it", "[apply][cec]")
+{
+	CecBox box;
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_TUNER;
+	g_settings.hdmi_cec_standby = 0;
+	g_settings.hdmi_cec_view_on = 0;
+	REQUIRE(runPhase(ApplyPhase::Zapit) == Status::Ok);
+	box.link.forget();
+
+	holdCecPower(true, true, true);
+	holdCecPower(true, false, true);
+	holdCecPower(false, true, true);
+	holdCecPower(false, false, true);
+	REQUIRE(box.link.calls.empty());
+}
+
+/* Asleep the group is deferred, so a view setting turned off then is still 1 on the link
+   when the box wakes. The hold goes by the link, and gives back the 0 after. */
+TEST_CASE("a wake that leaves the television off holds the view flag the link still has from before a write while asleep", "[apply][cec]")
+{
+	CecBox box;
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_TUNER;
+	g_settings.hdmi_cec_standby = 1;
+	g_settings.hdmi_cec_view_on = 1;
+	REQUIRE(runPhase(ApplyPhase::Zapit) == Status::Ok);
+	REQUIRE(cecStandby(true) == Status::Ok);
+	g_settings.hdmi_cec_view_on = 0;
+	REQUIRE(applyKey("hdmi_cec_view_on") == Status::Ok);
+	box.link.forget();
+
+	holdCecPower(false, true, true);
+	REQUIRE(box.link.calls.size() == 1);
+	REQUIRE(box.link.calls[0] == "view");
+	REQUIRE(box.link.values[0] == 0);
+	REQUIRE(cecStandby(false) == Status::Ok);
+	holdCecPower(false, false, true);
+	REQUIRE(firstCall(box.link, "view", 1) == box.link.calls.size());
+	REQUIRE(box.link.calls.back() == "view");
+	REQUIRE(box.link.values.back() == 0);
+}
+
+// The same gap on a plain wake: the setting says off, the link still says on.
+TEST_CASE("a plain wake after the view setting was turned off while asleep does not switch the television on", "[apply][cec]")
+{
+	CecBox box;
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_TUNER;
+	g_settings.hdmi_cec_standby = 1;
+	g_settings.hdmi_cec_view_on = 1;
+	REQUIRE(runPhase(ApplyPhase::Zapit) == Status::Ok);
+	REQUIRE(cecStandby(true) == Status::Ok);
+	g_settings.hdmi_cec_view_on = 0;
+	REQUIRE(applyKey("hdmi_cec_view_on") == Status::Ok);
+	box.link.forget();
+
+	holdCecPower(false, true, false);
+	REQUIRE(box.link.calls.size() == 1);
+	REQUIRE(box.link.calls[0] == "view");
+	REQUIRE(box.link.values[0] == 0);
+	REQUIRE(cecStandby(false) == Status::Ok);
+	holdCecPower(false, false, false);
+	REQUIRE(firstCall(box.link, "view", 1) == box.link.calls.size());
+	REQUIRE(box.link.values.back() == 0);
+
+	// Sent as the setting, so the next run has nothing to send.
+	box.link.forget();
+	REQUIRE(applyKey("hdmi_cec_view_on") == Status::Ok);
+	REQUIRE(box.link.calls.empty());
+}
+
+TEST_CASE("a plain standby change holds nothing where the link has what the setting says", "[apply][cec]")
+{
+	CecBox box;
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_TUNER;
+	g_settings.hdmi_cec_standby = 1;
+	g_settings.hdmi_cec_view_on = 1;
+	REQUIRE(runPhase(ApplyPhase::Zapit) == Status::Ok);
+	box.link.forget();
+
+	holdCecPower(true, true, false);
+	holdCecPower(true, false, false);
+	REQUIRE(cecStandby(true) == Status::Ok);
+	holdCecPower(false, true, false);
+	REQUIRE(cecStandby(false) == Status::Ok);
+	holdCecPower(false, false, false);
+	REQUIRE(box.link.calls.empty());
+}
+
+// The flag given back is the setting as it is then, not as it was when held.
+TEST_CASE("a CEC setting written while the television is held back is what is given back", "[apply][cec]")
+{
+	CecBox box;
+	g_settings.hdmi_cec_mode = VIDEO_HDMI_CEC_MODE_TUNER;
+	g_settings.hdmi_cec_standby = 1;
+	g_settings.hdmi_cec_view_on = 1;
+	REQUIRE(runPhase(ApplyPhase::Zapit) == Status::Ok);
+	box.link.forget();
+
+	holdCecPower(false, true, true);
+	g_settings.hdmi_cec_view_on = 0;
+	REQUIRE(applyKey("hdmi_cec_view_on") == Status::Ok);
+	REQUIRE(box.link.count("view") == 1);
+
+	holdCecPower(false, false, true);
+	REQUIRE(box.link.count("view") == 2);
+	REQUIRE(box.link.values.back() == 0);
+	box.link.forget();
+	REQUIRE(applyKey("hdmi_cec_view_on") == Status::Ok);
+	REQUIRE(box.link.calls.empty());
+}
+
 TEST_CASE("a CEC volume destination written while deferred leaves the box volume at full", "[apply][cec]")
 {
 	CecBox box;

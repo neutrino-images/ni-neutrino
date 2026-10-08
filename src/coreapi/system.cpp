@@ -26,6 +26,8 @@
 #include "coreapi/base/deps.h"
 #include "coreapi/base/eventbus.h"
 
+#include <neutrinoMessages.h>
+
 #include <OpenThreads/Mutex>
 #include <OpenThreads/ScopedLock>
 
@@ -49,6 +51,16 @@ Result<void> standby(bool on)
 	return postEvent(on ? BoxEvent::StandbyOn : BoxEvent::StandbyOff);
 }
 
+Result<void> standby(bool on, bool cec)
+{
+	if (cec)
+		return standby(on);
+	/* The loop holds the television back around the change itself: only there is
+	   the order known against a wake that is put off or a group run. */
+	const unsigned char leave = NeutrinoStandby::leave_tv;
+	return postEvent(on ? BoxEvent::StandbyOn : BoxEvent::StandbyOff, &leave, sizeof(leave));
+}
+
 void announceStandby(bool on)
 {
 	Event e;
@@ -62,11 +74,6 @@ Result<void> reboot() { return postEvent(BoxEvent::Reboot); }
 Result<void> shutdown() { return postEvent(BoxEvent::Shutdown); }
 
 Result<void> restart() { return postEvent(BoxEvent::Restart); }
-
-Result<void> hdmiCec(bool view_on)
-{
-	return postEvent(view_on ? BoxEvent::HdmiCecViewOn : BoxEvent::HdmiCecStandby);
-}
 
 Result<void> reloadSetup() { return postEvent(BoxEvent::ReloadSetup); }
 

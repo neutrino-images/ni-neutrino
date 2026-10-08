@@ -56,6 +56,7 @@ extern CPictureViewer *g_PicViewer;
 #include "httpd/compat/helper.h"
 #include "httpd/compat/query.h"
 #include "httpd/compat/scriptrunner.h"
+#include "httpd/compat/standby.h"
 #include "httpd/compat/neutrinoapi.h"
 #include "httpd/compat/controlapi.h"
 #include <hardware/video.h>
@@ -593,84 +594,12 @@ void CControlAPI::SystemCGI(CyhookHandler *hh)
 }
 
 //-----------------------------------------------------------------------------
-// An unsettled box is not in standby, which is what the raw mode read said
-// before it had a status of its own to say it with.
-static bool isInStandby()
-{
-	coreapi::Result<int> m = coreapi::channels::mode();
-	return m.ok() && m.value() == NeutrinoModes::mode_standby;
-}
-
 void CControlAPI::StandbyCGI(CyhookHandler *hh)
 {
-	if (!(hh->ParamList.empty()))
-	{
-		bool CEC_HDMI_off = false;
-		if (!(hh->ParamList["cec"].empty())){
-			if(hh->ParamList["cec"]=="off"){
-				CEC_HDMI_off = true;
-			}
-		}
-
-		// Both arms send up to two commands and answer once, after the last
-		// of them, so that a command that did not go out is reported here as
-		// it is everywhere else rather than answered with ok.
-		if (hh->ParamList["1"] == "on")	// standby mode on
-		{
-			bool sent = true;
-
-			//dont use CEC with standbyoff (TV off) --- use: control/standby?off&cec=off
-			if(g_settings.hdmi_cec_standby && CEC_HDMI_off){
-				// The event or call after this restores the setting, so the CEC group's sent state stays true.
-				videoDecoder->SetCECAutoStandby(0);
-			}
-
-			if (!isInStandby())
-				sent = coreapi::system::standby(true).ok();
-
-			if(g_settings.hdmi_cec_standby && CEC_HDMI_off){//dont use CEC with standbyoff (TV off)
-				if (!coreapi::system::hdmiCec(false).ok())
-					sent = false;
-			}
-
-			if (sent)
-				hh->SendOk();
-			else
-				hh->SendError();
-		}
-		else if (hh->ParamList["1"] == "off")// standby mode off
-		{
-			bool sent = true;
-
-			//dont use CEC with with view on (TV on) --- use: control/standby?off&cec=off
-			if(g_settings.hdmi_cec_view_on && CEC_HDMI_off){
-				// The event or call after this restores the setting, so the CEC group's sent state stays true.
-				videoDecoder->SetCECAutoView(0);
-			}
-
-			NeutrinoAPI->Zapit->setStandby(false);
-			if (isInStandby())
-				sent = coreapi::system::standby(false).ok();
-
-			if(g_settings.hdmi_cec_view_on && CEC_HDMI_off){//dont use CEC with view on (TV on)
-				if (!coreapi::system::hdmiCec(true).ok())
-					sent = false;
-			}
-
-			if (sent)
-				hh->SendOk();
-			else
-				hh->SendError();
-		}
-		else
-			hh->SendError();
-
-	}
-	else
-		if (isInStandby())
-			hh->WriteLn("on");
-		else
-			hh->WriteLn("off");
+	// The channel daemon is woken before the mode is read, as it always was.
+	if (!hh->ParamList.empty() && hh->ParamList["1"] == "off")
+		NeutrinoAPI->Zapit->setStandby(false);
+	httpd::compat::answerStandby(*hh);
 }
 
 //-----------------------------------------------------------------------------

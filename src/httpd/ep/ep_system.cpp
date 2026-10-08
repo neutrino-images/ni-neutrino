@@ -410,7 +410,9 @@ Response decryptionState(const Request &)
 
 Response standby(const Request &r)
 {
-	coreapi::Result<void> done = coreapi::system::standby(r.asBool("on"));
+	// Absent keeps the box's CEC settings as they are.
+	const bool cec = !r.has("cec") || r.asBool("cec");
+	coreapi::Result<void> done = coreapi::system::standby(r.asBool("on"), cec);
 	if (!done.ok())
 		return problemFor(done.error());
 	return accepted();
@@ -446,6 +448,8 @@ const Param kStandbyParams[] = {
 	   other would be told nothing about it; naming which of the two is meant is
 	   the one thing that keeps the request from being ambiguous. */
 	HTTPD_BODY_REQUIRED("on", ParamType::Bool, "whether the box is to go to standby or come out of it"),
+	HTTPD_BODY("cec", ParamType::Bool,
+		"`false` leaves the television as it is: going to standby does not switch it off (when the CEC setting `hdmi_cec_standby` would) and coming out of it does not switch it on (when `hdmi_cec_view_on` would); `true` or absent (the default) follows those settings"),
 };
 
 const RouteRefusal kBoxInfoRefusals[] = {
@@ -519,6 +523,8 @@ const Endpoint kSystemEndpoints[] = {
 	  "already running is not stopped by it. While the box is in standby, `POST /api/v1/zap` "
 	  "and `POST /api/v1/mode` are refused with `409 box-in-standby` unless sent with "
 	  "`wake: true`, which switches the box on again as part of carrying out that request.\n\n"
+	  "**CEC:** with `cec: false` the television keeps its power state for this one change, "
+	  "whichever direction `on` names; the CEC settings themselves are not changed.\n\n"
 	  "**Related:** `GET /api/v1/system/standby`, `POST /api/v1/zap`, `POST /api/v1/mode`.",
 	  HTTPD_PARAMS(kStandbyParams), NULL, &standby, false,
 	  Answers202, HTTPD_NO_REFUSALS },
@@ -575,7 +581,7 @@ const ToolFlag kSystemTools[] = {
 	HTTPD_TOOL_AS(Method::Get, "/api/v1/system/standby", "standby_state",
 		"Whether the box is in standby."),
 	HTTPD_TOOL_AS(Method::Post, "/api/v1/system/standby", "set_standby",
-		"Puts the box into standby (on true) or wakes it (on false)."),
+		"Puts the box into standby (on true) or wakes it (on false). cec false leaves the television's power as it is for this change."),
 };
 
 } // namespace

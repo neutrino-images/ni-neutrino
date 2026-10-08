@@ -52,7 +52,7 @@ awk -v keepstrings=0 -f "$STRIP" "$APP" | awk -f "$BLANK" > "$tmp/app"
 # single line. The parentheses of the signature are a set rather than an escape,
 # because the pattern goes into awk through -v, which reads the assignment for
 # escapes of its own first.
-BODY=`awk -v pat='^void CNeutrinoApp::standbyMode[(]bool bOnOff, bool fromDeepStandby[)][ \t]*$' '
+BODY=`awk -v pat='^void CNeutrinoApp::standbyMode[(]bool bOnOff, bool fromDeepStandby, bool leaveTv[)][ \t]*$' '
 	found == 0 && $0 ~ pat { found = 1 }
 	found == 1 {
 		print

@@ -63,6 +63,13 @@ void deferCec(bool deferred);
    (a box woken for a recording). Waking answers what that run answered. */
 Status cecStandby(bool asleep);
 
+/* Around one standby change: held, the auto flag the change would act on (standby when
+   asleep, view on when waking) goes to 0 and no run sends it; let go, the setting goes back
+   on the link. Held where the television is to be left alone, and where the setting is off
+   but the link may still have it on. Nothing is held where the link is known to have 0. On
+   the loop, around the change and the CEC run that follows a wake. */
+void holdCecPower(bool asleep, bool held, bool leave_tv);
+
 // Forgets what was sent and the deferral, for a case that needs the first run again.
 void resetSentCec();
 
