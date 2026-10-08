@@ -45,6 +45,7 @@
 
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 
 #include <driver/screen_max.h>
 
@@ -248,9 +249,7 @@ void COsdLangSetup::showPrefMenu(CMenuWidget *prefMenu, CLangSelectNotifier *lan
 	prefMenu->addItem(GenericMenuBack);
 	prefMenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_AUDIOMENU_PREF_LANG_HEAD));
 
-	CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_AUDIOMENU_AUTO_LANG, &g_settings.auto_lang, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL);
-	mc->setHint("", LOCALE_MENU_HINT_AUTO_LANG);
-	prefMenu->addItem(mc);
+	addSetting(prefMenu, "auto_lang");
 
 	for(int i = 0; i < 3; i++)
 	{
@@ -265,9 +264,7 @@ void COsdLangSetup::showPrefMenu(CMenuWidget *prefMenu, CLangSelectNotifier *lan
 	}
 
 	prefMenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_AUDIOMENU_PREF_SUBS_HEAD));
-	mc = new CMenuOptionChooser(LOCALE_AUDIOMENU_AUTO_SUBS, &g_settings.auto_subs, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL);
-	mc->setHint("", LOCALE_MENU_HINT_AUTO_SUBS);
-	prefMenu->addItem(mc);
+	addSetting(prefMenu, "auto_subs");
 	for(int i = 0; i < 3; i++)
 	{
 		CMenuOptionStringChooser * langSelect = new CMenuOptionStringChooser(LOCALE_AUDIOMENU_PREF_SUBS, &g_settings.pref_subs[i], true, NULL, CRCInput::convertDigitToKey(i+4), "", true);

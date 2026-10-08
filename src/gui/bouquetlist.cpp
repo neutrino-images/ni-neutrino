@@ -255,7 +255,7 @@ int CBouquetList::doMenu()
 	if (zapitBouquet && !zapitBouquet->bUser)
 	{
 		menu->addItem(new CMenuForwarder(LOCALE_FAVORITES_COPY, true, NULL, selector, cnt, CRCInput::RC_blue), old_selected == i ++);
-		if ((!zapitBouquet->bWebtv && !zapitBouquet->bWebradio) && g_settings.epg_scan == CEpgScan::SCAN_SEL)
+		if ((!zapitBouquet->bWebtv && !zapitBouquet->bWebradio) && g_settings.epg_scan == EPG_SCAN_SEL)
 			menu->addItem(new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_SCAN, &zapitBouquet->bScanEpg, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true));
 		if (!zapitBouquet->bWebtv && !zapitBouquet->bWebradio)
 			menu->addItem(new CMenuOptionChooser(LOCALE_CI_USE, &zapitBouquet->bUseCI, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true));
@@ -340,7 +340,7 @@ int CBouquetList::doMenu()
 	{
 		// user or satellite bouquet
 		menu->addItem(new CMenuForwarder(LOCALE_BOUQUETEDITOR_DELETE, true, NULL, selector, cnt, CRCInput::RC_red), old_selected == i ++);
-		if (zapitBouquet && (!zapitBouquet->bWebtv && !zapitBouquet->bWebradio) && (g_settings.epg_scan == CEpgScan::SCAN_SEL))
+		if (zapitBouquet && (!zapitBouquet->bWebtv && !zapitBouquet->bWebradio) && (g_settings.epg_scan == EPG_SCAN_SEL))
 			menu->addItem(new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_SCAN, &zapitBouquet->bScanEpg, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true));
 		if (zapitBouquet && (!zapitBouquet->bWebtv && !zapitBouquet->bWebradio))
 			menu->addItem(new CMenuOptionChooser(LOCALE_CI_USE, &zapitBouquet->bUseCI, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true));
@@ -695,7 +695,7 @@ int CBouquetList::show(bool bShowChannelList)
 			g_bouquetManager->saveBouquets();
 #endif
 
-		if (g_settings.epg_scan == CEpgScan::SCAN_SEL)
+		if (g_settings.epg_scan == EPG_SCAN_SEL)
 			CEpgScan::getInstance()->Start();
 	}
 
@@ -767,7 +767,7 @@ void CBouquetList::paintItem(int pos)
 		char num[12];
 		snprintf(num, sizeof(num), "%d", npos + 1);
 		int iw = 0, ih = 0;
-		if ((g_settings.epg_scan == CEpgScan::SCAN_SEL) &&
+		if ((g_settings.epg_scan == EPG_SCAN_SEL) &&
 			Bouquets[npos]->zapitBouquet && Bouquets[npos]->zapitBouquet->bScanEpg)
 		{
 			frameBuffer->getIconSize(NEUTRINO_ICON_MARKER_EPG, &iw, &ih);

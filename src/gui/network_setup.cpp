@@ -44,6 +44,7 @@
 #include <gui/widget/icons.h>
 #include <gui/widget/buttons.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/stringinput_ext.h>
 #include <gui/widget/keyboard_input.h>
@@ -199,13 +200,6 @@ void CNetworkSetup::backupNetworkSettings()
 	old_ifname 			= g_settings.ifname;
 	old_mac_addr			= mac_addr;
 }
-
-#define OPTIONS_NTPENABLE_OPTION_COUNT 2
-const CMenuOptionChooser::keyval OPTIONS_NTPENABLE_OPTIONS[OPTIONS_NTPENABLE_OPTION_COUNT] =
-{
-	{ CNetworkSetup::NETWORK_NTP_OFF, LOCALE_OPTIONS_NTP_OFF },
-	{ CNetworkSetup::NETWORK_NTP_ON, LOCALE_OPTIONS_NTP_ON }
-};
 
 static const struct button_label CNetworkSetupFooterButtons[] =
 {
@@ -511,18 +505,16 @@ void CNetworkSetup::showNetworkNTPSetup(CMenuWidget *menu_ntp)
 
 	CStringInput *networkSettings_NtpRefresh = new CStringInput(LOCALE_NETWORKMENU_NTPREFRESH, &g_settings.network_ntprefresh, 3, LOCALE_NETWORKMENU_NTPREFRESH_HINT1, LOCALE_NETWORKMENU_NTPREFRESH_HINT2, "0123456789 ", sectionsdConfigNotifier);
 
-	CMenuOptionChooser *ntp1 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPENABLE, &g_settings.network_ntpenable, OPTIONS_NTPENABLE_OPTIONS, OPTIONS_NTPENABLE_OPTION_COUNT, true, sectionsdConfigNotifier);
 	//CMenuOptionChooser *ntp9 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPATBOOT, &g_settings.network_ntpatboot, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true); //NI
 	CMenuForwarder *ntp2 = new CMenuDForwarder(LOCALE_NETWORKMENU_NTPSERVER, true, g_settings.network_ntpserver, networkSettings_NtpServer);
 	CMenuForwarder *ntp3 = new CMenuDForwarder(LOCALE_NETWORKMENU_NTPREFRESH, true, g_settings.network_ntprefresh, networkSettings_NtpRefresh);
 
-	ntp1->setHint("", LOCALE_MENU_HINT_NET_NTPENABLE);
 	//ntp9->setHint("", LOCALE_MENU_HINT_NET_NTPATBOOT); //NI
 	ntp2->setHint("", LOCALE_MENU_HINT_NET_NTPSERVER);
 	ntp3->setHint("", LOCALE_MENU_HINT_NET_NTPREFRESH);
 
 	menu_ntp->addIntroItems(LOCALE_NETWORKMENU_NTPTITLE);
-	menu_ntp->addItem(ntp1);
+	addSetting(menu_ntp, "network_ntpenable", true, sectionsdConfigNotifier);
 	//menu_ntp->addItem(ntp9); //NI
 	menu_ntp->addItem(ntp2);
 	menu_ntp->addItem(ntp3);

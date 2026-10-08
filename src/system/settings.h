@@ -1496,10 +1496,145 @@ struct SglobalInfo
 	hw_caps_t *hw_caps;
 };
 
+// How a picture is scaled when it is shown.
+const int PICVIEWER_SCALING_NONE   = 0;
+const int PICVIEWER_SCALING_SIMPLE = 1;
+const int PICVIEWER_SCALING_COLOR  = 2;
+
+// Which list a channel list opens on.
+enum {
+	LIST_MODE_FAV,
+	LIST_MODE_PROV,
+	LIST_MODE_WEB,
+	LIST_MODE_SAT,
+	LIST_MODE_ALL,
+	LIST_MODE_LAST
+};
+
+// Where the mode icons are drawn.
+enum INFOICONS
+{
+	INFOICONS_STATIC	= 0,
+	INFOICONS_INFOVIEWER	= 1,
+	INFOICONS_POPUP		= 2
+};
+
+// Whether the time is taken from a time server.
+const int NETWORK_NTP_OFF = 0;
+const int NETWORK_NTP_ON  = 1;
+
 const int PARENTALLOCK_PROMPT_NEVER          = 0;
 const int PARENTALLOCK_PROMPT_ONSTART        = 1;
 const int PARENTALLOCK_PROMPT_CHANGETOLOCKED = 2;
 const int PARENTALLOCK_PROMPT_ONSIGNAL       = 3;
+
+// Which half of a track the audio player names it by first.
+enum
+{
+	ARTIST_TITLE = 0,
+	TITLE_ARTIST = 1
+};
+
+// How the image written by the extended update is named.
+enum
+{
+	SOFTUPDATE_NAME_DEFAULT       = 0,
+	SOFTUPDATE_NAME_HOSTNAME_TIME = 1,
+	SOFTUPDATE_NAME_ORGNAME_TIME  = 2
+};
+
+const int FOLLOWSCREENINGS_OFF    = 0;
+const int FOLLOWSCREENINGS_ON     = 1;
+const int FOLLOWSCREENINGS_ALWAYS = 2; //NI
+
+// Which channels the background EPG scan visits, the values of epg_scan.
+enum
+{
+	EPG_SCAN_OFF		= 0,
+	EPG_SCAN_CURRENT	= 1,
+	EPG_SCAN_FAV		= 2,
+	EPG_SCAN_SEL		= 3
+};
+
+// When the background EPG scan runs, the values of epg_scan_mode: a pair of
+// bits, live and standby.
+enum
+{
+	EPG_SCAN_MODE_OFF	= 0,
+	EPG_SCAN_MODE_LIVE	= 0x1,
+	EPG_SCAN_MODE_STANDBY	= 0x2,
+	EPG_SCAN_MODE_ALWAYS	= 0x3
+};
+
+// The sizes the box draws its own screen at, the values of osd_resolution.
+enum
+{
+	OSDMODE_720	= 0,
+	OSDMODE_1080	= 1
+};
+
+// Where the volume bar sits, the values of volume_pos.
+enum
+{
+	VOLUMEBAR_POS_TOP_RIGHT		= 0,
+	VOLUMEBAR_POS_TOP_LEFT		= 1,
+	VOLUMEBAR_POS_BOTTOM_LEFT	= 2,
+	VOLUMEBAR_POS_BOTTOM_RIGHT	= 3,
+	VOLUMEBAR_POS_TOP_CENTER	= 4,
+	VOLUMEBAR_POS_BOTTOM_CENTER	= 5,
+	VOLUMEBAR_POS_HIGHER_CENTER	= 6
+};
+
+// Where the menus sit, the values of menu_pos.
+enum
+{
+	MENU_POS_CENTER		= 0,
+	MENU_POS_TOP_LEFT	= 1,
+	MENU_POS_TOP_RIGHT	= 2,
+	MENU_POS_BOTTOM_LEFT	= 3,
+	MENU_POS_BOTTOM_RIGHT	= 4
+};
+
+// Where the channel logo sits, the values of channellist_show_channellogo.
+// They are bits of a mask, which is why there is a gap.
+typedef enum
+{
+	CC_LOGO_RIGHT	= 0x01,
+	CC_LOGO_LEFT	= 0x02,
+	CC_LOGO_CENTER	= 0x04
+} cc_logo_alignment_t;
+
+// Where the channel list puts the text of the event, the values of channellist_epgtext_alignment.
+enum
+{
+	EPGTEXT_ALIGN_LEFT_MIDDLE = 0,
+	EPGTEXT_ALIGN_LEFT_BOTTOM = 1,
+	EPGTEXT_ALIGN_RIGHT_MIDDLE = 2,
+	EPGTEXT_ALIGN_RIGHT_BOTTOM = 3
+};
+
+// The two sets of screen positions, the values of screen_preset.
+enum
+{
+	PRESET_SCREEN_A = 0,
+	PRESET_SCREEN_B = 1
+};
+
+// The picture formats of a screenshot, the values of screenshot_format.
+typedef enum
+{
+	FORMAT_PNG = 0,
+	FORMAT_JPG = 1,
+	FORMAT_BMP = 2
+} screenshot_format_t;
+
+// What the screensaver shows, the values of screensaver_mode.
+typedef enum
+{
+	SCR_MODE_IMAGE = 0,
+	SCR_MODE_CLOCK = 1,
+	SCR_MODE_CLOCK_COLOR = 2
+} SCR_MODE_T;
 
 class CScanSettings
 {

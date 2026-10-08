@@ -32,12 +32,11 @@ namespace
 {
 
 /* The pair the timer daemon holds, in the seconds it holds them in. The settings
-   struct has two members under these names and they are not this: the setup
-   screen fills them from here as it opens, src/gui/record_setup.cpp:302, and
-   between two visits they hold whatever was last left in them.
+   struct has two members under these names and they are not this: nothing
+   loads, saves or fills them, and the daemon is the only holder.
 
    The client answers a failed exchange by handing back a pair of noughts rather
-   than saying so, lib/timerdclient/timerdclient.cpp:574, which is a real value
+   than saying so (CTimerdClient::getRecordingSafety), which is a real value
    of this setting and not one to pass on as read. So what is asked first is
    whether the client is there at all. */
 class RealRecordingSafety : public RecordingSafetySource

@@ -94,8 +94,7 @@ const AppliedSetting kVideoRows[] =
 	{ "video_dbdr", LOCALE_VIDEOMENU_DBDR },
 	{ "video_Mode", LOCALE_VIDEOMENU_VIDEOMODE },
 	/* The screen offers the first of these under either of two labels depending
-	   on the revision, src/gui/videosettings.cpp:389, and the notifier's two
-	   branches do the same thing, :859 and :863. */
+	   on the revision, and the notifier's two branches do the same thing. */
 	{ "analog_mode1", LOCALE_VIDEOMENU_ANALOG_MODE },
 	{ "analog_mode2", LOCALE_VIDEOMENU_CINCH },
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE

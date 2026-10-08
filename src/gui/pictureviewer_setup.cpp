@@ -40,6 +40,7 @@
 #include <neutrino_menue.h>
 
 #include <gui/widget/icons.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/stringinput_ext.h>
 
@@ -84,14 +85,6 @@ int CPictureViewerSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 	return res;
 }
 
-#define PICTUREVIEWER_SCALING_OPTION_COUNT 3
-const CMenuOptionChooser::keyval PICTUREVIEWER_SCALING_OPTIONS[PICTUREVIEWER_SCALING_OPTION_COUNT] =
-{
-	{ CPictureViewer::SIMPLE, LOCALE_PICTUREVIEWER_RESIZE_SIMPLE        },
-	{ CPictureViewer::COLOR , LOCALE_PICTUREVIEWER_RESIZE_COLOR_AVERAGE },
-	{ CPictureViewer::NONE  , LOCALE_PICTUREVIEWER_RESIZE_NONE          }
-};
-
 /*shows the picviewer setup menue*/
 int CPictureViewerSetup::showPictureViewerSetup()
 {
@@ -100,14 +93,10 @@ int CPictureViewerSetup::showPictureViewerSetup()
 	// intros: back ande save
 	picviewsetup->addIntroItems(LOCALE_PICTUREVIEWER_HEAD);
 
-	CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_PICTUREVIEWER_SCALING, &g_settings.picviewer_scaling, PICTUREVIEWER_SCALING_OPTIONS, PICTUREVIEWER_SCALING_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_PICTUREVIEWER_SCALING);
-	picviewsetup->addItem(mc);
+	addSetting(picviewsetup, "picviewer_scaling");
 
-	CMenuOptionNumberChooser *cc = new CMenuOptionNumberChooser(LOCALE_PICTUREVIEWER_SLIDE_TIME, &g_settings.picviewer_slide_time, true, 0, 999);
+	CMenuOptionNumberChooser *cc = static_cast<CMenuOptionNumberChooser *>(addSetting(picviewsetup, "picviewer_slide_time"));
 	cc->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_SECOND));
-	cc->setHint("", LOCALE_MENU_HINT_PICTUREVIEWER_SLIDE_TIME);
-	picviewsetup->addItem(cc);
 
 	CMenuForwarder *mf = new CMenuForwarder(LOCALE_PICTUREVIEWER_DEFDIR, true, g_settings.network_nfs_picturedir, this, "picturedir");
 	mf->setHint("", LOCALE_MENU_HINT_PICTUREVIEWER_DEFDIR);

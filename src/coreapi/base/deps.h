@@ -31,6 +31,8 @@
 #include <libeventserver/eventserver.h>
 
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <driver/neutrino_msg_t.h>
 
@@ -323,6 +325,15 @@ struct SystemSource
 	   slot, which is why it is read apart from the two above: a box with a
 	   module seated and this false is descrambling some other way. */
 	virtual Status ciInUse(bool &out) const = 0;
+
+	// What the hardware library says the box can do.
+	virtual Status capabilities(BoxCapabilities &out) const = 0;
+	// The file systems the kernel knows and a mkfs exists for, named as the
+	// disk menu names them.
+	virtual Status formatTools(std::vector<std::string> &out) const = 0;
+	// Whether the image fixes the parental lock. Read at every call, so a
+	// caller never acts on a state older than the request.
+	virtual Status parentalLocked(bool &out) const = 0;
 };
 
 SystemSource &systemSource();
@@ -707,6 +718,11 @@ struct TunerSource
 	   picture returned: the tuning happens on the channel stack's own thread
 	   and is answered for by the reading beside this. */
 	virtual Status reset() = 0;
+
+	/* How many frontends the tuner setup has switched on, which is what a
+	   choice that needs a second tuner is offered by. Anything but Ok says
+	   the frontends could not be reached. */
+	virtual Status enabledCount(unsigned &out) const = 0;
 };
 
 TunerSource &tunerSource();
@@ -848,10 +864,9 @@ Status boxRecordings(RecordingList &out);
 bool dependenciesInstalled();
 
 /* How long before a programme a recording starts and how long after it stops.
-   The timer daemon holds the pair; the settings struct has two members under
-   those names, but they are the buffer the setup screen fills as it opens,
-   src/gui/record_setup.cpp:302, so nothing but this answers what the box is
-   really running on.
+   The timer daemon holds the pair and nothing else does: the settings struct
+   has two members under those names, but nothing loads, saves or fills them,
+   so only this answers what the box is really running on.
 
    Seconds, because that is what the daemon keeps. The API offers minutes, and
    the conversion is made where the row is declared.
@@ -878,50 +893,28 @@ void setRecordingSafetySource(RecordingSafetySource *s);
 // Binds the accessor above to the running timer daemon.
 void installRealRecordingSafetySource();
 
-/* The values a setting offers, where the box numbers them itself and the screen
-   builds the list as it opens. A list written into a table would be right for
-   one box model and quietly wrong for the next.
-
-   Reached upwards like the applier above: the lists are the screens' own and
-   this layer may not reach into the screens.
-
-   NotFound for a name nobody registered, which is not an empty list: a set that
-   is really empty is a setting the box offers nothing for, and one nobody
-   answers for is a row whose values cannot be told at all. Either way no value
-   is accepted for it.
-
-   The text is what a person reads, already in the box's language. Not a name
-   for the catalog to resolve: half of these lists carry words the catalog has
-   no name for at all, "1080p 50Hz" among them. */
-struct SettingChoices
-{
-	virtual ~SettingChoices() {}
-	virtual Status values(const char *name, std::vector<SettingChoice> &out) const = 0;
-};
-
-SettingChoices &settingChoices();
-void setSettingChoices(SettingChoices *s);
-
 /* Which of the sizes the box draws its own screen at. The settings struct has a
    member under that name, filled at load, but it is not what the program saves:
-   the save writes the copy another object keeps, src/neutrino.cpp:2026, because
-   the running value can be forced down to the smaller size while the copy keeps
-   what was chosen. A row over the member would be a value the next save quietly
-   dropped.
+   the save writes the copy another object keeps, because the running value can
+   be forced down to the smaller size while the copy keeps what was chosen. A
+   row over the member would be a value the next save quietly dropped.
 
    The mode and not a position in a list. The two the program has are
-   src/gui/osd_helpers.h:7, and every driver-built resolution list is in that
-   order, so a position happens to be the same number; what reads the value
-   reads it as a mode, src/neutrino.cpp:1431.
+   OSDMODE_720 and OSDMODE_1080 in src/system/settings.h, and every
+   driver-built resolution list is in that order, so a position happens to be
+   the same number; what reads the value reads it as a mode.
 
    Reached upwards like the applier and the value sets above. A write changes
    what the box is drawing at once, on the calling thread, which is the thread
-   the setup screen does the same thing on. */
+   a menu does the same thing on. */
 struct OsdResolutionSource
 {
 	virtual ~OsdResolutionSource() {}
 	virtual Status read(int &mode) const = 0;
 	virtual Status write(int mode) = 0;
+	// The sizes the box can draw at, width and height, in the order of the
+	// modes. Empty is a box that has none to offer.
+	virtual Status available(std::vector<std::pair<int, int> > &out) const = 0;
 };
 
 OsdResolutionSource &osdResolutionSource();

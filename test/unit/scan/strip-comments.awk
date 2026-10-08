@@ -8,6 +8,8 @@
 # parenthesis inside a literal out of an argument scan without joining the
 # tokens on either side of it.
 #
+# markspan=1 marks a #if or #elif left open by a block comment, see below.
+#
 # mark is what a scan reading a whole tree in one pass needs: the name of each
 # file ahead of it, on a line of its own behind that prefix. Thousands of files
 # read by one process rather than by several apiece halves what such a scan
@@ -41,5 +43,8 @@ FNR == 1 { inblock = 0; instr = 0; if (mark != "") print mark FILENAME }
 	}
 	# a literal does not span lines, a block comment does
 	instr = 0
+	# markspan=1: a conditional a block comment runs on from is read from its first
+	# line by the scans that parse guards, so it is marked as one they cannot match.
+	if (markspan && inblock && out ~ /^[ \t]*#[ \t]*(if|elif)/) out = out " || @@spans@@"
 	print out
 }

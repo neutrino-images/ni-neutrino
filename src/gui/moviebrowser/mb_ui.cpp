@@ -299,7 +299,7 @@ void CMovieBrowser::refreshChannelLogo(void)
 	// set channel logo
 	if (g_settings.channellist_show_channellogo)
 	{
-		m_header->setChannelLogo(m_movieSelectionHandler->epgId >> 16, m_movieSelectionHandler->channelName, (CCHeaderTypes::cc_logo_alignment_t)g_settings.channellist_show_channellogo);
+		m_header->setChannelLogo(m_movieSelectionHandler->epgId >> 16, m_movieSelectionHandler->channelName, (cc_logo_alignment_t)g_settings.channellist_show_channellogo);
 	}
 
 	if (old_EpgId != m_movieSelectionHandler->epgId >> 16 || old_ChannelName != m_movieSelectionHandler->channelName)

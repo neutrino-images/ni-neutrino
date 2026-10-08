@@ -50,8 +50,8 @@ namespace
    socket. */
 CScreenShot::screenshot_format_t encoderFor(PictureFormat f)
 {
-	return (f == PictureFormat::Jpeg) ? CScreenShot::FORMAT_JPG
-					  : CScreenShot::FORMAT_PNG;
+	return (f == PictureFormat::Jpeg) ? FORMAT_JPG
+					  : FORMAT_PNG;
 }
 #endif
 

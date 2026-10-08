@@ -46,6 +46,7 @@
 #include <gui/update_settings.h>
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 #include <driver/screen_max.h>
 #include <system/debug.h>
 
@@ -68,29 +69,11 @@ CUpdateSettings::~CUpdateSettings()
 #define SOFTUPDATE_NAME_MODE1_OPTION_COUNT 3
 const CMenuOptionChooser::keyval SOFTUPDATE_NAME_MODE1_OPTIONS[SOFTUPDATE_NAME_MODE1_OPTION_COUNT] =
 {
-	{ CExtUpdate::SOFTUPDATE_NAME_DEFAULT, LOCALE_FLASHUPDATE_NAMEMODE1_DEFAULT },
-	{ CExtUpdate::SOFTUPDATE_NAME_HOSTNAME_TIME, LOCALE_FLASHUPDATE_NAMEMODE1_HOSTNAME_TIME },
-	{ CExtUpdate::SOFTUPDATE_NAME_ORGNAME_TIME, LOCALE_FLASHUPDATE_NAMEMODE1_ORGNAME_TIME }
-};
-
-#define SOFTUPDATE_NAME_MODE2_OPTION_COUNT 2
-const CMenuOptionChooser::keyval SOFTUPDATE_NAME_MODE2_OPTIONS[SOFTUPDATE_NAME_MODE2_OPTION_COUNT] =
-{
-	{ CExtUpdate::SOFTUPDATE_NAME_DEFAULT, LOCALE_FLASHUPDATE_NAMEMODE2_DEFAULT },
-	{ CExtUpdate::SOFTUPDATE_NAME_HOSTNAME_TIME, LOCALE_FLASHUPDATE_NAMEMODE2_HOSTNAME_TIME }
+	{ SOFTUPDATE_NAME_DEFAULT, LOCALE_FLASHUPDATE_NAMEMODE1_DEFAULT },
+	{ SOFTUPDATE_NAME_HOSTNAME_TIME, LOCALE_FLASHUPDATE_NAMEMODE1_HOSTNAME_TIME },
+	{ SOFTUPDATE_NAME_ORGNAME_TIME, LOCALE_FLASHUPDATE_NAMEMODE1_ORGNAME_TIME }
 };
 #endif
-
-const CMenuOptionChooser::keyval AUTOUPDATE_CHECK_OPTIONS[] =
-{
-	{ -1,	LOCALE_AUTO_UPDATE_CHECK_ON_START_ONLY	},
-	{ 0,	LOCALE_AUTO_UPDATE_CHECK_OFF		},
-	{ 6,	LOCALE_AUTO_UPDATE_CHECK_6_HOURS	},
-	{ 24,	LOCALE_AUTO_UPDATE_CHECK_DAILY		},
-	{ 168,	LOCALE_AUTO_UPDATE_CHECK_WEEKLY		},
-	{ 672,	LOCALE_AUTO_UPDATE_CHECK_MONTHLY	}
-};
-size_t auto_update_options_count = sizeof(AUTOUPDATE_CHECK_OPTIONS) / sizeof(AUTOUPDATE_CHECK_OPTIONS[0]);
 
 int CUpdateSettings::exec(CMenuTarget *parent, const std::string &actionKey)
 {
@@ -141,13 +124,7 @@ int CUpdateSettings::initMenu()
 	CMenuForwarder *fw_update_dir = new CMenuForwarder(LOCALE_EXTRA_UPDATE_DIR, true, g_settings.update_dir, this, "update_dir", CRCInput::RC_red);
 	//fw_update_dir->setHint("", LOCALE_MENU_HINT_XXX);
 #if ENABLE_EXTUPDATE
-	CMenuOptionChooser *name_backup = new CMenuOptionChooser(LOCALE_FLASHUPDATE_NAMEMODE2, &g_settings.softupdate_name_mode_backup, SOFTUPDATE_NAME_MODE2_OPTIONS, SOFTUPDATE_NAME_MODE2_OPTION_COUNT, true);
-	//name_backup->setHint("", LOCALE_MENU_HINT_XXX);
-
 #ifndef BOXMODEL_CST_HD2
-	CMenuOptionChooser *apply_settings = new CMenuOptionChooser(LOCALE_FLASHUPDATE_MENU_APPLY_SETTINGS, &g_settings.apply_settings, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, OnOffNotifier);
-	//apply_settings->setHint("", LOCALE_MENU_HINT_XXX);
-
 	CMenuOptionChooser *name_apply = new CMenuOptionChooser(LOCALE_FLASHUPDATE_NAMEMODE1, &g_settings.softupdate_name_mode_apply, SOFTUPDATE_NAME_MODE1_OPTIONS, SOFTUPDATE_NAME_MODE1_OPTION_COUNT, g_settings.apply_settings);
 	//name_apply->setHint("", LOCALE_MENU_HINT_XXX);
 	OnOffNotifier->addItem(name_apply);
@@ -160,35 +137,21 @@ int CUpdateSettings::initMenu()
 	OnOffNotifier->addItem(apply_kernel);
 #endif
 
-	CMenuOptionChooser *autocheck = NULL;
-	autocheck = new CMenuOptionChooser(LOCALE_FLASHUPDATE_AUTOCHECK, &g_settings.softupdate_autocheck, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-	autocheck->setHint("", LOCALE_MENU_HINT_AUTO_UPDATE_CHECK);
-
-#if ENABLE_PKG_MANAGEMENT
-	CMenuOptionChooser *package_autocheck = NULL;
-	if (COPKGManager::hasOpkgSupport())
-	{
-		package_autocheck = new CMenuOptionChooser(LOCALE_FLASHUPDATE_AUTOCHECK_PACKAGES, &g_settings.softupdate_autocheck_packages, AUTOUPDATE_CHECK_OPTIONS, auto_update_options_count, true, this);
-		package_autocheck->setHint("", LOCALE_MENU_HINT_AUTO_UPDATE_CHECK);
-	}
-#endif
-
 	w_upsettings.addItem(fw_update_dir);
 	if (fw_url)
 		w_upsettings.addItem(fw_url);
 #if ENABLE_EXTUPDATE
-	w_upsettings.addItem(name_backup);
+	addSetting(&w_upsettings, "softupdate_name_mode_backup");
 #ifndef BOXMODEL_CST_HD2
 	w_upsettings.addItem(GenericMenuSeparatorLine);
-	w_upsettings.addItem(apply_settings);
+	addSetting(&w_upsettings, "apply_settings", true, OnOffNotifier);
 	w_upsettings.addItem(name_apply);
 #endif
 #endif
-	if (autocheck)
-		w_upsettings.addItem(autocheck);
+	addSetting(&w_upsettings, "softupdate_autocheck", true, this);
 #if ENABLE_PKG_MANAGEMENT
-	if (package_autocheck)
-		w_upsettings.addItem(package_autocheck);
+	if (COPKGManager::hasOpkgSupport())
+		addSetting(&w_upsettings, "softupdate_autocheck_packages", true, this);
 #endif
 #if 0
 	w_upsettings.addItem(apply_kernel);

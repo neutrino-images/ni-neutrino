@@ -43,6 +43,7 @@
 #include <gui/widget/icons.h>
 #include <gui/widget/menue.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 
 #include <gui/lcd4l_setup.h>
 
@@ -51,14 +52,6 @@
 #include <driver/screen_max.h>
 
 #include "driver/lcd4l.h"
-
-const CMenuOptionChooser::keyval LCD4L_SUPPORT_OPTIONS[] =
-{
-	{ 0, LOCALE_LCD4L_SUPPORT_OFF },
-	{ 1, LOCALE_LCD4L_SUPPORT_AUTO },
-	{ 2, LOCALE_LCD4L_SUPPORT_ON }
-};
-#define LCD4L_SUPPORT_OPTION_COUNT (sizeof(LCD4L_SUPPORT_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
 const CMenuOptionChooser::keyval_ext LCD4L_DISPLAY_TYPE_OPTIONS[] =
 {
@@ -182,9 +175,9 @@ int CLCD4lSetup::show()
 	CMenuWidget *lcd4lSetup = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_LCD4L_SETUP);
 	lcd4lSetup->addIntroItems(LOCALE_LCD4L_SUPPORT);
 
-	mc = new CMenuOptionChooser(LOCALE_LCD4L_SUPPORT, &g_settings.lcd4l_support, LCD4L_SUPPORT_OPTIONS, LCD4L_SUPPORT_OPTION_COUNT, true, this, CRCInput::RC_red);
-	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SUPPORT);
-	lcd4lSetup->addItem(mc);
+	CMenuItem *support = addSetting(lcd4lSetup, "lcd4l_support", true, this, CRCInput::RC_red);
+	if (support)
+		support->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SUPPORT);
 
 	lcd4lSetup->addItem(GenericMenuSeparatorLine);
 
@@ -220,9 +213,9 @@ int CLCD4lSetup::show()
 
 	lcd4lSetup->addItem(GenericMenuSeparator);
 
-	mc = new CMenuOptionChooser(LOCALE_LCD4L_CONVERT, &g_settings.lcd4l_convert, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
-	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_CONVERT);
-	lcd4lSetup->addItem(mc);
+	CMenuItem *convert = addSetting(lcd4lSetup, "lcd4l_convert", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (convert)
+		convert->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_CONVERT);
 
 	mc = new CMenuOptionChooser(LOCALE_LCD4L_SCREENSHOTS, &temp_lcd4l_screenshots, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SCREENSHOTS);
@@ -311,9 +304,9 @@ int CLCD4lSetup::showTypeSetup()
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SKIN);
 	typeSetup->addItem(mc);
 
-	mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN_RADIO, &g_settings.lcd4l_skin_radio, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
-	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SKIN_RADIO);
-	typeSetup->addItem(mc);
+	CMenuItem *skin_radio = addSetting(typeSetup, "lcd4l_skin_radio", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (skin_radio)
+		skin_radio->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SKIN_RADIO);
 
 	nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS, (int *)&temp_lcd4l_brightness, true, 1, CLCD4l::getInstance()->GetMaxBrightness(), this);
 	nc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS);

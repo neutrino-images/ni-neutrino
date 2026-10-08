@@ -4,10 +4,7 @@
 
 #include <sigc++/signal.h>
 
-enum {
-	OSDMODE_720  = 0,
-	OSDMODE_1080 = 1
-};
+#include <system/settings.h>
 
 /* Hands the settings layer the size the box draws its own screen at. The value
    that survives a save is the copy this object keeps and not the member of the
@@ -33,6 +30,8 @@ class COsdHelpers : public sigc::trackable
 		int setVideoSystem(int newSystem, bool remember = true);
 		sigc::signal<void> OnAfterChangeResolution;
 		sigc::signal<void> OnBeforeChangeResolution;
+		// Only where the size really changes, ahead of the switch itself.
+		sigc::signal<void> OnBeforeResizeOsd;
 };
 
 

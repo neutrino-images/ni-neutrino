@@ -34,6 +34,7 @@
 #include <gui/widget/menue.h>
 
 #include <string>
+#include <vector>
 
 class CAudioSetup : public CMenuTarget
 {
@@ -55,11 +56,10 @@ class CAudioSetup : public CMenuTarget
 class CTruVolumeNotifier : public CChangeObserver
 {
 	private:
-		CMenuOptionChooser* toDisable_oj[2];
-		CMenuOptionNumberChooser* toDisable_nj;
-		
+		std::vector<CMenuItem *> toDisable;
+
 	public:
-		CTruVolumeNotifier( CMenuOptionChooser* o1, CMenuOptionChooser* o2, CMenuOptionNumberChooser *n1);
+		void add(CMenuItem *item);
 		bool changeNotify(const neutrino_locale_t, void * data);
 };
 

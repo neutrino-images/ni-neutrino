@@ -50,20 +50,20 @@ class CMiscMenue : public CMenuTarget, CChangeObserver
 		CCpuFreqNotifier *cpuNotifier;
 		CSectionsdConfigNotifier *sectionsdConfigNotifier;
 		//COnOffNotifier* miscNotifier;
-		CMenuOptionChooser *epg_save;
-		CMenuOptionChooser *epg_save_standby;
-		CMenuOptionChooser *epg_save_frequently;
-		CMenuOptionChooser *epg_read;
-		CMenuOptionChooser *epg_read_frequently;
-		CMenuOptionChooser *epg_scan;
-		CMenuOptionChooser *tmdb_onoff;
-		CMenuOptionChooser *omdb_onoff;
-		CMenuOptionChooser *youtube_onoff;
-		CMenuOptionChooser *shoutcast_onoff;
+		CMenuItem *epg_save;
+		CMenuItem *epg_save_standby;
+		CMenuItem *epg_save_frequently;
+		CMenuItem *epg_read;
+		CMenuItem *epg_read_frequently;
+		CMenuItem *epg_scan;
+		CMenuItem *tmdb_onoff;
+		CMenuItem *omdb_onoff;
+		CMenuItem *youtube_onoff;
+		CMenuItem *shoutcast_onoff;
 		CMenuForwarder *epg_dir;
 		CMenuForwarder *epg_read_now;
-		CMenuOptionChooser *ecm_onoff;
-		CMenuOptionChooser *dec_onoff;
+		CMenuItem *ecm_onoff;
+		CMenuItem *dec_onoff;
 
 		int width;
 

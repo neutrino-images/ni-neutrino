@@ -54,11 +54,9 @@ const Descriptor kSettings[] =
 		COREAPI_TEXT_FIELD(language)
 	},
 	/* The name of a zone as the box's own list spells it, which is why this is
-	   text and not a choice: the screen reads the list out of /etc/timezone.xml
-	   at run time, src/gui/osdlang_setup.cpp:162. The running box links its
-	   clock to the zone at start, src/neutrino.cpp:3009, and the screen's
-	   notifier does it again; a value written here reaches neither. */
-	// src/neutrino.cpp:774 src/gui/osdlang_setup.cpp:162
+	   text and not a choice: the list is read out of /etc/timezone.xml at run
+	   time. The running box links its clock to the zone at start, and changing
+	   the zone in a menu does it again; a value written here reaches neither. */
 	{
 		"timezone", ValueType::String, "general",
 		"mainsettings.timezone", "menu.hint_timezone",
@@ -66,14 +64,12 @@ const Descriptor kSettings[] =
 		true, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(timezone)
 	},
-	// src/neutrino.cpp:747 src/gui/osdlang_setup.cpp:251
 	{
 		"auto_lang", ValueType::Bool, "general",
 		"audiomenu.auto_lang", "menu.hint_auto_lang",
 		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(auto_lang)
 	},
-	// src/neutrino.cpp:748 src/gui/osdlang_setup.cpp:268
 	{
 		"auto_subs", ValueType::Bool, "general",
 		"audiomenu.auto_subs", "menu.hint_auto_subs",

@@ -33,13 +33,6 @@
 
 #include <string>
 
-enum INFOICONS
-{
-	INFOICONS_STATIC	= 0,
-	INFOICONS_INFOVIEWER	= 1,
-	INFOICONS_POPUP		= 2
-};
-
 class CInfoIcons
 {
 	private:

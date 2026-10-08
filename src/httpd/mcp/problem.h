@@ -34,7 +34,7 @@ namespace mcp
 {
 
 // Last member of ErrorCode; a case holds it there.
-const coreapi::ErrorCode kLastErrorCode = coreapi::ErrorCode::ChoicesUnavailable;
+const coreapi::ErrorCode kLastErrorCode = coreapi::ErrorCode::SettingNotOnThisBox;
 
 bool codeFromWire(const std::string &wire, coreapi::ErrorCode &out);
 

@@ -55,6 +55,7 @@
 #include <gui/widget/hintbox.h>
 #include <gui/widget/progresswindow.h>
 #include <gui/widget/keyboard_input.h>
+#include <gui/widget/settingitem.h>
 
 #include <system/helpers.h>
 #include <system/settings.h>
@@ -68,27 +69,8 @@
 
 #define MKFS_LABEL_DEFAULT "records"
 
-#define HDD_NOISE_OPTION_COUNT 4
-const CMenuOptionChooser::keyval HDD_NOISE_OPTIONS[HDD_NOISE_OPTION_COUNT] =
-{
-	{ 0,   LOCALE_OPTIONS_OFF },
-	{ 128, LOCALE_HDD_SLOW },
-	{ 190, LOCALE_HDD_MIDDLE },
-	{ 254, LOCALE_HDD_FAST }
-};
-
-#define HDD_SLEEP_OPTION_COUNT 6
-const CMenuOptionChooser::keyval HDD_SLEEP_OPTIONS[HDD_SLEEP_OPTION_COUNT] =
-{
-	{ 0,   LOCALE_OPTIONS_OFF },
-	//{ 12,  LOCALE_HDD_1MIN },
-	{ 60,  LOCALE_HDD_5MIN },
-	{ 120, LOCALE_HDD_10MIN },
-	{ 240, LOCALE_HDD_20MIN },
-	{ 241, LOCALE_HDD_30MIN },
-	{ 242, LOCALE_HDD_60MIN }
-};
-
+// hdd_fs stores a position in this table; its row in
+// src/coreapi/settings/settingstable_hdd.cpp lists the same order.
 devtool_s CHDDMenuHandler::devtools[] = {
 	{ "ext4",  "fsck.ext4",  "-C 1 -f -y", "mkfs.ext4",  "-m 0", "-L", false, false },
 	{ "ext3",  "fsck.ext3",  "-C 1 -f -y", "mkfs.ext3",  "-m 0", "-L", false, false },
@@ -617,24 +599,9 @@ int CHDDMenuHandler::showDeviceMenu(std::string dev)
 
 	std::string fmt_type = getFmtType(dev, getDefaultPart(dev));
 	bool fsck_enabled = false;
-	bool mkfs_enabled = false;
-	struct CMenuOptionChooser::keyval_ext fsoptions[FS_MAX];
-	int opcount = 0;
 	for (unsigned i = 0; i < FS_MAX; i++) {
-		if (devtools[i].mkfs_supported) {
-			fsoptions[opcount].key = i;
-			fsoptions[opcount].value = NONEXISTANT_LOCALE;
-			fsoptions[opcount].valname = devtools[i].fmt.c_str();
-			mkfs_enabled = true;
-			opcount++;
-		}
 		if (fmt_type == devtools[i].fmt)
 			g_settings.hdd_fs = i;
-	}
-	if (!opcount) {
-		fsoptions[0].key = 0;
-		fsoptions[0].valname = devtools[0].fmt.c_str();
-		opcount++;
 	}
 	int cnt = 0;
 	bool found = false;
@@ -660,9 +627,8 @@ int CHDDMenuHandler::showDeviceMenu(std::string dev)
 	if (found)
 		hddmenu->addItem(new CMenuSeparator(CMenuSeparator::LINE));
 
-	CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_HDD_FS, &g_settings.hdd_fs, fsoptions, opcount, mkfs_enabled, NULL, RC_NOKEY, NULL, true);
-	mc->setHint("", LOCALE_MENU_HINT_HDD_FMT);
-	hddmenu->addItem(mc);
+	// Left out where the box has no mkfs at all.
+	addSetting(hddmenu, "hdd_fs", true, NULL, CRCInput::RC_nokey, false, true);
 
 	char hint2[1024];
 	snprintf(hint2, sizeof(hint2)-1, g_Locale->getText(LOCALE_HDD_LABEL_HINT2), MKFS_LABEL_DEFAULT);
@@ -820,19 +786,14 @@ _show_menu:
 	mf->setHint("", LOCALE_MENU_HINT_HDD_APPLY);
 	hddmenu->addItem(mf);
 
-	CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_HDD_SLEEP, &g_settings.hdd_sleep, HDD_SLEEP_OPTIONS, HDD_SLEEP_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_HDD_SLEEP);
-	hddmenu->addItem(mc);
+	addSetting(hddmenu, "hdd_sleep");
 
 	std::string hdparm = find_executable("hdparm");
 	printf("CHDDMenuHandler::doMenu: hdparm = %s\n", hdparm.c_str());
 	struct stat stat_buf;
 	bool have_nonbb_hdparm = !::lstat(hdparm.c_str(), &stat_buf) && !S_ISLNK(stat_buf.st_mode);
-	if (have_nonbb_hdparm) {
-		mc = new CMenuOptionChooser(LOCALE_HDD_NOISE, &g_settings.hdd_noise, HDD_NOISE_OPTIONS, HDD_NOISE_OPTION_COUNT, true);
-		mc->setHint("", LOCALE_MENU_HINT_HDD_NOISE);
-		hddmenu->addItem(mc);
-	}
+	if (have_nonbb_hdparm)
+		addSetting(hddmenu, "hdd_noise");
 
 	//NI
 	int fake_hddpower = 0;
@@ -843,24 +804,16 @@ _show_menu:
 		const char *flag_hddpower = FLAGDIR "/.hddpower";
 		fake_hddpower = file_exists(flag_hddpower);
 		hddpowerNotifier = new CTouchFileNotifier(flag_hddpower);
-		mc = new CMenuOptionChooser(LOCALE_HDD_POWER, &fake_hddpower, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, hddpowerNotifier, CRCInput::RC_yellow);
+		CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_HDD_POWER, &fake_hddpower, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, hddpowerNotifier, CRCInput::RC_yellow);
 		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_HDD_POWER);
 		hddmenu->addItem(mc);
 		hddmenu->addItem(new CMenuSeparator());
 	}
-	mc = new CMenuOptionChooser(LOCALE_HDD_FORMAT_ON_MOUNT_FAILED, &g_settings.hdd_format_on_mount_failed, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_HDD_FORMAT_ON_MOUNT_FAILED);
-	hddmenu->addItem(mc);
-	mc = new CMenuOptionChooser(LOCALE_HDD_WAKEUP, &g_settings.hdd_wakeup, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_HDD_WAKEUP);
-	hddmenu->addItem(mc);
-	mc = new CMenuOptionChooser(LOCALE_HDD_WAKEUP_MSG, &g_settings.hdd_wakeup_msg, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_HDD_WAKEUP_MSG);
-	hddmenu->addItem(mc);
+	addSetting(hddmenu, "hdd_format_on_mount_failed");
+	addSetting(hddmenu, "hdd_wakeup");
+	addSetting(hddmenu, "hdd_wakeup_msg");
 	hddmenu->addItem(new CMenuSeparator());
-	mc = new CMenuOptionChooser(LOCALE_HDD_ALLOW_SET_RECDIR, &g_settings.hdd_allow_set_recdir, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_HDD_ALLOW_SET_RECDIR);
-	hddmenu->addItem(mc);
+	addSetting(hddmenu, "hdd_allow_set_recdir");
 
 	hddmenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_HDD_MANAGE));
 

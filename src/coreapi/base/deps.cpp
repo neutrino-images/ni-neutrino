@@ -453,34 +453,6 @@ void setRecordingSafetySource(RecordingSafetySource *s) { g_recording_safety_sou
 
 namespace
 {
-/* What a read reaches while no screen has registered its lists. Every name
-   answers NotFound, so a row whose values are asked for offers none and takes
-   none. The alternative is accepting a value on a box that cannot show it. */
-class NoChoices : public SettingChoices
-{
-	public:
-		Status values(const char *, std::vector<SettingChoice> &) const
-		{
-			return Status::NotFound;
-		}
-};
-
-NoChoices g_no_choices;
-} // anonymous namespace
-
-static SettingChoices *g_setting_choices = 0;
-
-SettingChoices &settingChoices()
-{
-	if (!g_setting_choices)
-		return g_no_choices;
-	return *g_setting_choices;
-}
-
-void setSettingChoices(SettingChoices *s) { g_setting_choices = s; }
-
-namespace
-{
 /* What a read reaches while no screen has handed its copy over. NotSupported and
    not the smaller of the two sizes: both are real values of this setting, so
    answering either would report the box as drawing at a size nothing knows it is
@@ -490,6 +462,7 @@ class NoOsdResolution : public OsdResolutionSource
 	public:
 		Status read(int &) const { return Status::NotSupported; }
 		Status write(int) { return Status::NotSupported; }
+		Status available(std::vector<std::pair<int, int> > &) const { return Status::NotSupported; }
 };
 
 NoOsdResolution g_no_osd_resolution;

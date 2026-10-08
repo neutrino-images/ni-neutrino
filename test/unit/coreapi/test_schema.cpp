@@ -25,7 +25,7 @@
 
 using namespace coreapi;
 
-static const EnumValue kTwo[] = { { 0, "off" }, { 1, "on" } };
+static const EnumValue kTwo[] = { { 0, "off", NULL, NULL }, { 1, "on", NULL, NULL } };
 static const long kModes[] = { 2, 5, 9 };
 
 static const Condition kOneCondition[] = {
@@ -78,10 +78,10 @@ bool fitsNumber(long) { return true; }
 void readText(const SNeutrinoSettings &, std::string &) {}
 void writeText(SNeutrinoSettings &, const std::string &) {}
 
-const FieldRef kNumber = { readNumber, writeNumber, fitsNumber, NULL, NULL, NULL, NULL, NULL,
-			   "number", FieldOrigin::Member };
-const FieldRef kText = { NULL, NULL, NULL, readText, writeText, NULL, NULL, NULL,
-			 "text", FieldOrigin::Member };
+const FieldRef kNumber = { readNumber, writeNumber, NULL, fitsNumber, NULL, NULL, NULL, NULL,
+			   "number", FieldOrigin::Member, NULL, NULL };
+const FieldRef kText = { NULL, NULL, NULL, NULL, readText, writeText, NULL, NULL,
+			 "text", FieldOrigin::Member, NULL, NULL };
 } // namespace
 
 TEST_CASE("a field that can be read and not written is not sane", "[schema]")
@@ -207,6 +207,22 @@ TEST_CASE("an Enum whose default names no listed value is not sane", "[schema]")
 	REQUIRE(descriptorIsSane(d));
 }
 
+TEST_CASE("an enum entry carries a key or a fixed text, never both or neither", "[schema]")
+{
+	const EnumValue both[] = { { 0, "options.off", "Off", NULL } };
+	const EnumValue neither[] = { { 0, NULL, NULL, NULL } };
+	const EnumValue key[] = { { 0, "options.off", NULL, NULL } };
+	const EnumValue text[] = { { 0, NULL, "ext4", NULL } };
+	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, both, 1, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD };
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = neither;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = key;
+	REQUIRE(descriptorIsSane(d));
+	d.values = text;
+	REQUIRE(descriptorIsSane(d));
+}
+
 TEST_CASE("an Enum with no values is not sane", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD };
@@ -280,6 +296,171 @@ TEST_CASE("a Bool whose default is neither of its two values is not sane", "[sch
 	REQUIRE(descriptorIsSane(d));
 	d.default_int = 0;
 	REQUIRE(descriptorIsSane(d));
+}
+
+namespace
+{
+bool notOffered() { return false; }
+} // namespace
+
+TEST_CASE("a Bool that names its words names exactly nought and one", "[schema]")
+{
+	const EnumValue noYes[] = { { 0, "messagebox.no", NULL, NULL }, { 1, "messagebox.yes", NULL, NULL } };
+	const EnumValue yesNo[] = { { 1, "messagebox.yes", NULL, NULL }, { 0, "messagebox.no", NULL, NULL } };
+	const EnumValue twice[] = { { 0, "messagebox.no", NULL, NULL }, { 0, "messagebox.yes", NULL, NULL } };
+	const EnumValue third[] = { { 0, "messagebox.no", NULL, NULL }, { 2, "messagebox.yes", NULL, NULL } };
+	const EnumValue unlabelled[] = { { 0, NULL, NULL, NULL }, { 1, "messagebox.yes", NULL, NULL } };
+	const EnumValue withheld[] = { { 0, "messagebox.no", NULL, NULL }, { 1, "messagebox.yes", NULL, notOffered } };
+	const EnumValue three[] = { { 0, "messagebox.no", NULL, NULL }, { 1, "messagebox.yes", NULL, NULL }, { 2, "x", NULL, NULL } };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, noYes, 2, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD };
+	REQUIRE(descriptorIsSane(d));
+	d.values = yesNo;
+	REQUIRE(descriptorIsSane(d));
+	d.values = twice;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = third;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = unlabelled;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = withheld;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = three;
+	d.value_count = 3;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = noYes;
+	d.value_count = 1;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = NULL;
+	d.value_count = 2;
+	REQUIRE_FALSE(descriptorIsSane(d));
+}
+
+TEST_CASE("a number names one value in words, at its floor or outside its bounds", "[schema]")
+{
+	const EnumValue below[] = { { 0, "options.off", NULL, NULL } };
+	const EnumValue floor[] = { { 1, "options.off", NULL, NULL } };
+	const EnumValue above[] = { { 15, "options.off", NULL, NULL } };
+	const EnumValue inside[] = { { 5, "options.off", NULL, NULL } };
+	const EnumValue ceiling[] = { { 14, "options.off", NULL, NULL } };
+	const EnumValue unworded[] = { { 0, NULL, NULL, NULL } };
+	const EnumValue emptyWord[] = { { 0, "", NULL, NULL } };
+	const EnumValue fixedText[] = { { 0, NULL, "off", NULL } };
+	const EnumValue withheld[] = { { 0, "options.off", NULL, notOffered } };
+	const EnumValue two[] = { { 0, "options.off", NULL, NULL }, { 15, "options.on", NULL, NULL } };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD };
+	REQUIRE(descriptorIsSane(d));
+	REQUIRE(namedNumber(d) == NULL);
+
+	d.values = below;
+	d.value_count = 1;
+	REQUIRE(descriptorIsSane(d));
+	REQUIRE(namedNumber(d) == &below[0]);
+	d.values = floor;
+	REQUIRE(descriptorIsSane(d));
+	d.values = above;
+	REQUIRE(descriptorIsSane(d));
+
+	d.values = inside;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = ceiling;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = unworded;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = emptyWord;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = fixedText;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = withheld;
+	REQUIRE_FALSE(descriptorIsSane(d));
+
+	// Words with no value to stand for, a count with no list, and two values.
+	d.values = below;
+	d.value_count = 0;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.values = NULL;
+	d.value_count = 1;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	REQUIRE(namedNumber(d) == NULL);
+	d.values = two;
+	d.value_count = 2;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	REQUIRE(namedNumber(d) == NULL);
+
+	// Only a number names a value this way.
+	d.values = below;
+	d.value_count = 1;
+	d.type = ValueType::Enum;
+	REQUIRE(namedNumber(d) == NULL);
+}
+
+namespace
+{
+bool g_has = false;
+bool boxHas() { return g_has; }
+} // namespace
+
+TEST_CASE("a row in two shapes needs its test and its other shape is held to every rule", "[schema]")
+{
+	const EnumValue off[] = { { 0, "options.off", NULL, NULL } };
+	const Shape flag = { ValueType::Bool, "flag", 0, 1, NULL, 0, NULL };
+	const Shape text = { ValueType::String, "text", 0, 0, NULL, 0, NULL };
+	const Shape emptyLabel = { ValueType::Bool, "", 0, 1, NULL, 0, NULL };
+	const Shape narrow = { ValueType::Int, "narrow", 2, 5, NULL, 0, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 999, off, 1, 1, NULL, false, false, COREAPI_ALWAYS, kNumber };
+	REQUIRE(descriptorIsSane(d));
+
+	d.field.available = boxHas;
+	REQUIRE(descriptorIsSane(d));
+	d.field.otherwise = &flag;
+	REQUIRE(descriptorIsSane(d));
+
+	// A shape nothing chooses.
+	d.field.available = NULL;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.field.available = boxHas;
+
+	// Text over a number field, a label present and empty, and a default of
+	// the row the other shape cannot hold.
+	d.field.otherwise = &text;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.field.otherwise = &emptyLabel;
+	REQUIRE_FALSE(descriptorIsSane(d));
+	d.field.otherwise = &narrow;
+	REQUIRE_FALSE(descriptorIsSane(d));
+}
+
+TEST_CASE("the row this box offers is the declared one or its other shape or none", "[schema]")
+{
+	const EnumValue off[] = { { 0, "options.off", NULL, NULL } };
+	const Shape flag = { ValueType::Bool, "flag", 0, 1, NULL, 0, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 999, off, 1, 1, NULL, false, false, COREAPI_ALWAYS, kNumber };
+	Descriptor here;
+
+	REQUIRE(rowOnThisBox(d, here));
+	REQUIRE(here.type == ValueType::Int);
+
+	d.field.available = boxHas;
+	g_has = true;
+	REQUIRE(rowOnThisBox(d, here));
+	REQUIRE(here.max == 999);
+	g_has = false;
+	REQUIRE_FALSE(rowOnThisBox(d, here));
+	REQUIRE(here.type == ValueType::Int);
+
+	d.field.otherwise = &flag;
+	REQUIRE(rowOnThisBox(d, here));
+	REQUIRE(here.type == ValueType::Bool);
+	REQUIRE(std::string(here.label_key) == "flag");
+	REQUIRE(here.min == 0);
+	REQUIRE(here.max == 1);
+	REQUIRE(here.values == NULL);
+	REQUIRE(here.value_count == 0);
+	REQUIRE(std::string(here.hint_key) == "h");
+	REQUIRE(here.default_int == 1);
+	g_has = true;
+	REQUIRE(rowOnThisBox(d, here));
+	REQUIRE(here.type == ValueType::Int);
+	REQUIRE(here.value_count == 1);
 }
 
 TEST_CASE("a type that is none of the four is not sane", "[schema]")

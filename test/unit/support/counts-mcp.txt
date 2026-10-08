@@ -3,9 +3,9 @@ answer members narrower than free text	50
 body examples their routes accepted	33
 groups the document declares	21
 parameters the document describes	160
-refusals the document states against a route	944
-refusals the routes declare of their own	153
-refusals the shipped routes were seen to give	237
+refusals the document states against a route	946
+refusals the routes declare of their own	155
+refusals the shipped routes were seen to give	239
 routes the document describes	119
 shapes the document files against a route	60
 success codes the document states	131

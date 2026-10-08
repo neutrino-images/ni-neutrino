@@ -19,16 +19,20 @@
  */
 
 #include "support/catch.hpp"
+#include <config.h>
+#include <hardware/video.h>
 #include "support/fakes.h"
 
 #include "coreapi/decryption.h"
 #include "coreapi/osd.h"
+#include "coreapi/settings/predicates.h"
 #include "coreapi/system.h"
 
 #include <neutrinoMessages.h>
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 
 #include <sys/stat.h>
@@ -616,4 +620,238 @@ TEST_CASE("a slot that cannot be read is a failure even where the count could be
 	REQUIRE_FALSE(bad.ok());
 	REQUIRE(bad.error().status == Status::NotSupported);
 	REQUIRE(bad.error().code == ErrorCode::DecryptionUnreadable);
+}
+
+TEST_CASE("hardware predicates follow the capabilities and fail closed", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+
+	source.caps.can_ps_14_9 = 1;
+	source.caps.has_SCART = 1;
+	CHECK(canPanScan149());
+	CHECK(hasScart());
+
+	source.caps.can_ps_14_9 = 0;
+	CHECK_FALSE(canPanScan149());
+	CHECK(hasScart());
+
+	source.caps.can_ps_14_9 = 1;
+	source.caps.has_SCART = 0;
+	CHECK(canPanScan149());
+	CHECK_FALSE(hasScart());
+
+	source.caps.has_SCART = 1;
+	source.caps_status = Status::Internal;
+	CHECK_FALSE(canPanScan149());
+	CHECK_FALSE(hasScart());
+}
+
+/* One board revision at a time, with and without a SCART socket: the analog
+   entries follow the revision, and below 6 only a socket makes an entry. */
+TEST_CASE("analog output predicates follow the board revision", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+
+	struct Row
+	{
+		unsigned rev;
+		int scart;
+		bool one, split, sd, hd;
+	};
+	const Row rows[] = {
+		{ 1, 0, false, false, false, false },
+		{ 1, 1, false, false, true, false },
+		{ 5, 1, false, false, true, false },
+		{ 6, 1, true, false, false, false },
+		{ 7, 0, false, true, true, true },
+		{ 10, 1, false, true, false, false },
+		{ 11, 0, false, true, true, true }
+	};
+	for (size_t i = 0; i < sizeof(rows) / sizeof(rows[0]); ++i)
+	{
+		INFO("revision " << rows[i].rev << " scart " << rows[i].scart);
+		source.caps.board_revision = rows[i].rev;
+		source.caps.has_SCART = rows[i].scart;
+		CHECK(analogOneItem() == rows[i].one);
+		CHECK(analogOutputsSplit() == rows[i].split);
+		CHECK(scartSdOffered() == rows[i].sd);
+		CHECK(scartHdOffered() == rows[i].hd);
+#if defined(BOXMODEL_CST_HD2) && defined(ANALOG_MODE)
+		CHECK_FALSE(hasAnalogCinch());
+#else
+		CHECK(hasAnalogCinch() == rows[i].split);
+#endif
+	}
+
+	source.caps.board_revision = 7;
+	source.caps_status = Status::Internal;
+	CHECK_FALSE(analogOutputsSplit());
+	CHECK_FALSE(scartSdOffered());
+	CHECK_FALSE(scartHdOffered());
+	CHECK_FALSE(hasAnalogCinch());
+}
+
+namespace
+{
+struct CapabilityTest
+{
+	bool (*test)();
+	int coreapi::BoxCapabilities::*member;
+	const char *name;
+};
+} // namespace
+
+TEST_CASE("each setting predicate reads its own capability and fails closed", "[system]")
+{
+	const CapabilityTest tests[] =
+	{
+		{ canAspect149, &coreapi::BoxCapabilities::can_ar_14_9, "canAspect149" },
+		{ hasHdmi, &coreapi::BoxCapabilities::has_HDMI, "hasHdmi" },
+		{ hasFan, &coreapi::BoxCapabilities::has_fan, "hasFan" },
+		{ canCec, &coreapi::BoxCapabilities::can_cec, "canCec" },
+		{ canCpufreq, &coreapi::BoxCapabilities::can_cpufreq, "canCpufreq" },
+		{ canSetBrightness, &coreapi::BoxCapabilities::display_can_set_brightness, "canSetBrightness" },
+		{ canPip, &coreapi::BoxCapabilities::can_pip, "canPip" },
+		{ canShutdown, &coreapi::BoxCapabilities::can_shutdown, "canShutdown" },
+		{ hasFormatButton, &coreapi::BoxCapabilities::has_button_vformat, "hasFormatButton" },
+		{ countsScrolls, &coreapi::BoxCapabilities::display_scroll_repeats, "countsScrolls" },
+		{ takesZappingMode, &coreapi::BoxCapabilities::video_zapmode, "takesZappingMode" },
+		{ takesHdmiColorimetry, &coreapi::BoxCapabilities::video_hdmi_colorimetry, "takesHdmiColorimetry" },
+	};
+	const size_t n = sizeof(tests) / sizeof(tests[0]);
+
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+	for (size_t i = 0; i < n; ++i)
+	{
+		INFO(tests[i].name);
+		memset(&source.caps, 0, sizeof(source.caps));
+		source.caps_status = Status::Ok;
+		CHECK_FALSE(tests[i].test());
+
+		// Every other capability on and this one off.
+		for (size_t j = 0; j < n; ++j)
+			source.caps.*(tests[j].member) = 1;
+		source.caps.*(tests[i].member) = 0;
+		CHECK_FALSE(tests[i].test());
+
+		source.caps.*(tests[i].member) = 1;
+		CHECK(tests[i].test());
+
+		source.caps_status = Status::Internal;
+		CHECK_FALSE(tests[i].test());
+	}
+}
+
+TEST_CASE("the play time predicate needs eight characters of display", "[system]")
+{
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+	source.caps.display_xres = 8;
+	CHECK(displayFitsPlaytime());
+	source.caps.display_xres = 7;
+	CHECK_FALSE(displayFitsPlaytime());
+	source.caps.display_xres = 12;
+	source.caps_status = Status::Internal;
+	CHECK_FALSE(displayFitsPlaytime());
+}
+
+TEST_CASE("the second tuner predicate counts the switched on tuners and fails closed", "[system]")
+{
+	FakeTunerSource tuner;
+	InstalledTunerSource installed(&tuner);
+
+	tuner.enabled = 2;
+	CHECK(severalTunersEnabled());
+	tuner.enabled = 4;
+	CHECK(severalTunersEnabled());
+	tuner.enabled = 1;
+	CHECK_FALSE(severalTunersEnabled());
+	tuner.enabled = 0;
+	CHECK_FALSE(severalTunersEnabled());
+
+	tuner.enabled = 2;
+	tuner.enabled_status = Status::NotSupported;
+	CHECK_FALSE(severalTunersEnabled());
+}
+
+namespace
+{
+struct FormatTest
+{
+	bool (*test)();
+	const char *fs;
+};
+} // namespace
+
+TEST_CASE("each file system predicate asks for its own tool and fails closed", "[system]")
+{
+	const FormatTest tests[] =
+	{
+		{ formatsExt4, "ext4" },
+		{ formatsExt3, "ext3" },
+		{ formatsExt2, "ext2" },
+		{ formatsF2fs, "f2fs" },
+		{ formatsVfat, "vfat" },
+		{ formatsExfat, "exfat" },
+		{ formatsXfs, "xfs" },
+	};
+	const size_t n = sizeof(tests) / sizeof(tests[0]);
+
+	FakeSystemSource source;
+	InstalledSystemSource installed(&source);
+	for (size_t i = 0; i < n; ++i)
+	{
+		INFO(tests[i].fs);
+		source.format_tools_status = Status::Ok;
+		source.format_tools.clear();
+		CHECK_FALSE(tests[i].test());
+
+		// Every other tool there and this one missing.
+		for (size_t j = 0; j < n; ++j)
+			if (j != i)
+				source.format_tools.push_back(tests[j].fs);
+		CHECK_FALSE(tests[i].test());
+
+		source.format_tools.push_back(tests[i].fs);
+		CHECK(tests[i].test());
+
+		source.format_tools_status = Status::Internal;
+		CHECK_FALSE(tests[i].test());
+	}
+}
+
+TEST_CASE("the screen size predicates look for their own size and fail closed", "[system]")
+{
+	FakeOsdResolution osd;
+	InstalledOsdResolution installed(&osd);
+
+	CHECK(drawsOsd720());
+	CHECK(drawsOsd1080());
+
+	osd.sizes.clear();
+	osd.sizes.push_back(std::make_pair(1280, 720));
+	CHECK(drawsOsd720());
+	CHECK_FALSE(drawsOsd1080());
+
+	osd.sizes.clear();
+	osd.sizes.push_back(std::make_pair(1920, 1080));
+	CHECK_FALSE(drawsOsd720());
+	CHECK(drawsOsd1080());
+
+	// Same pixels, the two numbers the other way round, is not the size.
+	osd.sizes.clear();
+	osd.sizes.push_back(std::make_pair(720, 1280));
+	osd.sizes.push_back(std::make_pair(1080, 1920));
+	CHECK_FALSE(drawsOsd720());
+	CHECK_FALSE(drawsOsd1080());
+
+	osd.sizes.clear();
+	osd.sizes.push_back(std::make_pair(1280, 720));
+	osd.sizes.push_back(std::make_pair(1920, 1080));
+	osd.sizes_status = Status::NotSupported;
+	CHECK_FALSE(drawsOsd720());
+	CHECK_FALSE(drawsOsd1080());
 }

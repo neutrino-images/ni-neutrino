@@ -144,7 +144,7 @@ void CEpgScan::AddBouquet(CChannelList * clist)
 bool CEpgScan::AddFavorites()
 {
 	INFO("allfav_done: %d", allfav_done);
-	if ((g_settings.epg_scan != SCAN_FAV) || allfav_done)
+	if ((g_settings.epg_scan != EPG_SCAN_FAV) || allfav_done)
 		return false;
 
 	/* The bouquet lists are built by channelsInit() and do not exist before
@@ -169,7 +169,7 @@ bool CEpgScan::AddFavorites()
 bool CEpgScan::AddSelected()
 {
 	INFO("selected_done: %d", selected_done);
-	if ((g_settings.epg_scan != SCAN_SEL) || selected_done)
+	if ((g_settings.epg_scan != EPG_SCAN_SEL) || selected_done)
 		return false;
 
 	// The same two lists, and the same reason as above.
@@ -212,7 +212,7 @@ void CEpgScan::AddTransponders()
 	}
 
 	int mode = CNeutrinoApp::getInstance()->GetChannelMode();
-	if (g_settings.epg_scan == SCAN_SEL) {
+	if (g_settings.epg_scan == EPG_SCAN_SEL) {
 		if (current_bmode != mode) {
 			current_bmode = mode;
 			current_bnum = -1;
@@ -230,7 +230,7 @@ void CEpgScan::AddTransponders()
 		return;
 	}
 
-	if ((g_settings.epg_scan == SCAN_CURRENT) || (mode == LIST_MODE_FAV)) {
+	if ((g_settings.epg_scan == EPG_SCAN_CURRENT) || (mode == LIST_MODE_FAV)) {
 		/* current bouquet mode */
 		if (current_bmode != mode) {
 			current_bmode = mode;
@@ -243,7 +243,7 @@ void CEpgScan::AddTransponders()
 			AddBouquet(bouquetList->Bouquets[current_bnum]->channelList);
 			INFO("Added bouquet #%d, scan map size: %zd", current_bnum, scanmap.size());
 		}
-	} else if (g_settings.epg_scan == SCAN_FAV) {
+	} else if (g_settings.epg_scan == EPG_SCAN_FAV) {
 		AddFavorites();
 	}
 }
@@ -251,9 +251,9 @@ void CEpgScan::AddTransponders()
 bool CEpgScan::CheckMode()
 {
 	bool webchan = IS_WEBCHAN(CZapit::getInstance()->GetCurrentChannelID());
-	if ((g_settings.epg_scan_mode == CEpgScan::MODE_OFF)
-			|| (standby && !(g_settings.epg_scan_mode & MODE_STANDBY))
-			|| (!standby && !(g_settings.epg_scan_mode & MODE_LIVE))
+	if ((g_settings.epg_scan_mode == EPG_SCAN_MODE_OFF)
+			|| (standby && !(g_settings.epg_scan_mode & EPG_SCAN_MODE_STANDBY))
+			|| (!standby && !(g_settings.epg_scan_mode & EPG_SCAN_MODE_LIVE))
 			|| (!standby && !webchan && (CFEManager::getInstance()->getEnabledCount() <= 1))) {
 		return false;
 	}
@@ -273,7 +273,7 @@ void CEpgScan::Start(bool instandby)
 
 void CEpgScan::Stop()
 {
-	if (g_settings.epg_scan_mode == CEpgScan::MODE_OFF)
+	if (g_settings.epg_scan_mode == EPG_SCAN_MODE_OFF)
 		return;
 
 	INFO("stopping %s scan...", standby ? "standby" : "live");
@@ -429,9 +429,9 @@ void CEpgScan::Next()
 		   channel map, the one answering requests over the network among them,
 		   and a tune is the longest thing this function does. */
 		CServiceManager::ChannelGuard guard;
-		if (g_settings.epg_scan == SCAN_FAV && scanmap.empty())
+		if (g_settings.epg_scan == EPG_SCAN_FAV && scanmap.empty())
 			AddFavorites();
-		if (g_settings.epg_scan == SCAN_SEL && scanmap.empty())
+		if (g_settings.epg_scan == EPG_SCAN_SEL && scanmap.empty())
 			AddSelected();
 	}
 
@@ -490,9 +490,9 @@ _repeat:
 				INFO("skip [%s], cannot tune", newchan->getName().c_str());
 			++it;
 		}
-		if (!next_chid && ((g_settings.epg_scan == SCAN_FAV) && AddFavorites()))
+		if (!next_chid && ((g_settings.epg_scan == EPG_SCAN_FAV) && AddFavorites()))
 			goto _repeat;
-		if (!next_chid && ((g_settings.epg_scan == SCAN_SEL) && AddSelected()))
+		if (!next_chid && ((g_settings.epg_scan == EPG_SCAN_SEL) && AddSelected()))
 			goto _repeat;
 	}
 

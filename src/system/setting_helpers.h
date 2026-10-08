@@ -46,7 +46,8 @@ class CGenericMenuActivate
 		CGenericMenuActivate() {};
 		~CGenericMenuActivate() { items.clear(); };
 
-		void Add(CMenuItem *item) { items.push_back(item); }
+		// NULL is an item a setup screen did not build.
+		void Add(CMenuItem *item) { if (item) items.push_back(item); }
 		void Clear() { items.clear(); }
 		void Activate(bool enable)
 		{

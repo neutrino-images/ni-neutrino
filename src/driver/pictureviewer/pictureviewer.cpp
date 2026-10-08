@@ -198,7 +198,7 @@ bool CPictureViewer::DecodeImage (const std::string & _name, bool showBusySign, 
 		//      dbout("---Decoding Start(%d/%d)\n",x,y);
 		if (fh->get_pic (name.c_str (), &m_NextPic_Buffer, &x, &y) == FH_ERROR_OK) {
 			//          dbout("---Decoding Done\n");
-			if ((x > (m_endx - m_startx) || y > (m_endy - m_starty)) && m_scaling != NONE && !unscaled) {
+			if ((x > (m_endx - m_startx) || y > (m_endy - m_starty)) && m_scaling != PICVIEWER_SCALING_NONE && !unscaled) {
 				if ((m_aspect_ratio_correction * y * (m_endx - m_startx) / x) <= (m_endy - m_starty)) {
 					imx = (m_endx - m_startx);
 					imy = (int) (m_aspect_ratio_correction * y * (m_endx - m_startx) / x);
@@ -401,7 +401,7 @@ CPictureViewer::CPictureViewer ()
 	int xs, ys;
 
 	fh_root = NULL;
-	m_scaling = COLOR;
+	m_scaling = PICVIEWER_SCALING_COLOR;
 	//m_aspect = 4.0 / 3;
 	m_aspect = float(16.0 / 9.0);
 	m_CurrentPic_Name = "";
@@ -932,7 +932,7 @@ fb_pixel_t * CPictureViewer::int_getImage(const std::string & name, int *width, 
 #endif
 					buffer = ResizeA(buffer, x, y, *width, *height);
 				else
-					buffer = Resize(buffer, x, y, *width, *height, COLOR);
+					buffer = Resize(buffer, x, y, *width, *height, PICVIEWER_SCALING_COLOR);
 				x = *width;
 				y = *height;
 			}
@@ -987,7 +987,7 @@ unsigned char * CPictureViewer::int_Resize(unsigned char *orgin, int ox, int oy,
 	}else
 		cr = dst;
 
-	if(type == SIMPLE)
+	if(type == PICVIEWER_SCALING_SIMPLE)
 	{
 		unsigned char *p,*l;
 		int i,j,k,ip;
@@ -1080,7 +1080,7 @@ unsigned char * CPictureViewer::Resize(unsigned char *orgin, int ox, int oy, int
 
 unsigned char * CPictureViewer::ResizeA(unsigned char *orgin, int ox, int oy, int dx, int dy)
 {
-	return int_Resize(orgin, ox, oy, dx, dy, COLOR, NULL, true);
+	return int_Resize(orgin, ox, oy, dx, dy, PICVIEWER_SCALING_COLOR, NULL, true);
 }
 
 static size_t getCachedMemSize(void)

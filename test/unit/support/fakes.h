@@ -25,6 +25,7 @@
 #include "coreapi/settings/settingstable.h"
 
 #include <cstdio>
+#include <cstring>
 #include <map>
 #include <string>
 #include <utility>
@@ -953,6 +954,13 @@ struct FakeSystemSource : public coreapi::SystemSource
 	// show that the walk stops at the module it found.
 	mutable std::vector<unsigned> ci_asked;
 
+	coreapi::BoxCapabilities caps;
+	coreapi::Status          caps_status;
+	std::vector<std::string> format_tools;
+	coreapi::Status          format_tools_status;
+	bool                     parental_locked;
+	coreapi::Status          parental_status;
+
 	FakeSystemSource()
 		: volume_level(0), is_muted(false),
 		  box_status(coreapi::Status::Ok),
@@ -961,7 +969,14 @@ struct FakeSystemSource : public coreapi::SystemSource
 		  ci_slots(0), ci_used(false),
 		  ci_slot_status(coreapi::Status::Ok),
 		  ci_present_status(coreapi::Status::Ok),
-		  ci_use_status(coreapi::Status::Ok) {}
+		  ci_use_status(coreapi::Status::Ok),
+		  caps_status(coreapi::Status::Ok),
+		  format_tools_status(coreapi::Status::Ok),
+		  parental_locked(false),
+		  parental_status(coreapi::Status::Ok)
+	{
+		memset(&caps, 0, sizeof(caps));
+	}
 
 	coreapi::Status boxInfo(coreapi::BoxInfo &out) const
 	{
@@ -1009,6 +1024,30 @@ struct FakeSystemSource : public coreapi::SystemSource
 		if (ci_use_status != coreapi::Status::Ok)
 			return ci_use_status;
 		out = ci_used;
+		return coreapi::Status::Ok;
+	}
+
+	coreapi::Status capabilities(coreapi::BoxCapabilities &out) const
+	{
+		if (caps_status != coreapi::Status::Ok)
+			return caps_status;
+		out = caps;
+		return coreapi::Status::Ok;
+	}
+
+	coreapi::Status formatTools(std::vector<std::string> &out) const
+	{
+		if (format_tools_status != coreapi::Status::Ok)
+			return format_tools_status;
+		out = format_tools;
+		return coreapi::Status::Ok;
+	}
+
+	coreapi::Status parentalLocked(bool &out) const
+	{
+		if (parental_status != coreapi::Status::Ok)
+			return parental_status;
+		out = parental_locked;
 		return coreapi::Status::Ok;
 	}
 };
@@ -1346,6 +1385,10 @@ struct FakeTunerSource : public coreapi::TunerSource
 	coreapi::Status reset_status;
 	unsigned resets;
 
+	// What the count of switched on frontends answers.
+	unsigned enabled;
+	coreapi::Status enabled_status;
+
 	// Counted, because a read refused before it got here and one that got here
 	// and found no tuner both leave an empty answer behind.
 	mutable unsigned list_reads;
@@ -1355,6 +1398,7 @@ struct FakeTunerSource : public coreapi::TunerSource
 		: list_status(coreapi::Status::Ok),
 		  live_status(coreapi::Status::NotSupported),
 		  reset_status(coreapi::Status::Ok), resets(0),
+		  enabled(1), enabled_status(coreapi::Status::Ok),
 		  list_reads(0), live_reads(0) {}
 
 	coreapi::Status frontends(coreapi::FrontendList &out) const
@@ -1379,6 +1423,13 @@ struct FakeTunerSource : public coreapi::TunerSource
 	{
 		resets++;
 		return reset_status;
+	}
+
+	// Written whatever the status, so a caller reading it after a refusal is caught.
+	coreapi::Status enabledCount(unsigned &out) const
+	{
+		out = enabled;
+		return enabled_status;
 	}
 };
 
@@ -1664,50 +1715,6 @@ struct InstalledRecordingSafety
 	~InstalledRecordingSafety() { coreapi::setRecordingSafetySource(0); }
 };
 
-/* The sets a screen would answer for, as a map a case fills by hand: a case
-   names exactly what it means to have an answer for, and every other name is
-   NotFound, which is what a name nobody registered really answers. */
-struct FakeSettingChoices : public coreapi::SettingChoices
-{
-	std::map<std::string, std::vector<coreapi::SettingChoice> > sets;
-
-	// Counted, so a case can tell an answer that came from here from one a
-	// table carried all along.
-	mutable unsigned asked;
-
-	FakeSettingChoices() : asked(0) {}
-
-	void offer(const std::string &name, long value, const std::string &label)
-	{
-		coreapi::SettingChoice one;
-		one.value = value;
-		one.label = label;
-		sets[name].push_back(one);
-	}
-
-	coreapi::Status values(const char *name, std::vector<coreapi::SettingChoice> &out) const
-	{
-		asked++;
-		if (name == 0)
-			return coreapi::Status::NotFound;
-		std::map<std::string, std::vector<coreapi::SettingChoice> >::const_iterator it =
-			sets.find(name);
-		if (it == sets.end())
-			return coreapi::Status::NotFound;
-		out = it->second;
-		return coreapi::Status::Ok;
-	}
-};
-
-struct InstalledSettingChoices
-{
-	explicit InstalledSettingChoices(coreapi::SettingChoices *s)
-	{
-		coreapi::setSettingChoices(s);
-	}
-	~InstalledSettingChoices() { coreapi::setSettingChoices(0); }
-};
-
 /* The size the box draws at, as the object beside the settings keeps it.
    Counted for the reason the pair above is: a write that reached this and one
    that only looked as though it had leave the same number behind otherwise. */
@@ -1720,7 +1727,15 @@ struct FakeOsdResolution : public coreapi::OsdResolutionSource
 
 	mutable bool fail_next;
 
-	FakeOsdResolution() : mode(0), reads(0), writes(0), fail_next(false) {}
+	// Both sizes, as a box with a full HD screen draws.
+	std::vector<std::pair<int, int> > sizes;
+	coreapi::Status sizes_status;
+
+	FakeOsdResolution() : mode(0), reads(0), writes(0), fail_next(false), sizes_status(coreapi::Status::Ok)
+	{
+		sizes.push_back(std::make_pair(1280, 720));
+		sizes.push_back(std::make_pair(1920, 1080));
+	}
 
 	bool failing() const
 	{
@@ -1747,6 +1762,14 @@ struct FakeOsdResolution : public coreapi::OsdResolutionSource
 		mode = in;
 		return coreapi::Status::Ok;
 	}
+
+	coreapi::Status available(std::vector<std::pair<int, int> > &out) const
+	{
+		if (sizes_status != coreapi::Status::Ok)
+			return sizes_status;
+		out = sizes;
+		return coreapi::Status::Ok;
+	}
 };
 
 struct InstalledOsdResolution
@@ -1756,6 +1779,18 @@ struct InstalledOsdResolution
 		coreapi::setOsdResolutionSource(s);
 	}
 	~InstalledOsdResolution() { coreapi::setOsdResolutionSource(0); }
+};
+
+/* What a case that reads the settings schema needs under it: the box, for the
+   rows that are on some boxes only and for the lock the parental setting puts on
+   four others. Without it the schema is not a thing the code can answer, and it
+   says so by ending the process. */
+struct FakeSettingsBox
+{
+	FakeSystemSource system;
+	InstalledSystemSource in_system;
+
+	FakeSettingsBox() : in_system(&system) {}
 };
 
 #endif

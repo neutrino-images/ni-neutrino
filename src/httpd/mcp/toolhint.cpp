@@ -63,6 +63,12 @@ const Hint kHints[] = {
 	{ coreapi::ErrorCode::SettingsSectionNotAllowed,
 	  "Tell the user the owner has to allow this in the Freigaben screen of the KI tab in ni-web; "
 	  "do not try another way." },
+	{ coreapi::ErrorCode::SettingLocked,
+	  "The box's image fixes its parental lock; tell the user this setting cannot be changed on "
+	  "this box. Do not try another way." },
+	{ coreapi::ErrorCode::SettingNotOnThisBox,
+	  "This box does not have what the setting controls; tell the user it does not apply to this "
+	  "box. Do not try another way." },
 	{ coreapi::ErrorCode::SettingsSectionDenied,
 	  "No AI client may ever change this section or credential; tell the user to change it in "
 	  "ni-web directly. Do not try another way." },

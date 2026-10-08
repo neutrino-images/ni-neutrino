@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <gui/adzap.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/hintbox.h>
 #include <eitd/sectionsd.h>
 #include <driver/screen_max.h>
@@ -323,14 +324,6 @@ int CAdZapMenu::exec(CMenuTarget *parent, const std::string & actionKey)
 
 void CAdZapMenu::ShowMenu()
 {
-	#define ADZAP_ZAP_OPTION_COUNT 3
-	const CMenuOptionChooser::keyval ADZAP_ZAP_OPTIONS[ADZAP_ZAP_OPTION_COUNT] =
-	{
-		{ SNeutrinoSettings::ADZAP_ZAP_OFF, LOCALE_ADZAP_ZAP_OFF },
-		{ SNeutrinoSettings::ADZAP_ZAP_TO_LAST, LOCALE_ADZAP_ZAP_TO_LAST_CHANNEL },
-		{ SNeutrinoSettings::ADZAP_ZAP_TO_START, LOCALE_ADZAP_ZAP_TO_START_CHANNEL },
-	};
-
 	bool show_monitor = monitorLifeTime.tv_sec;
 
 	CMenuWidget *menu = new CMenuWidget(LOCALE_ADZAP, NEUTRINO_ICON_SETTINGS, width);
@@ -339,13 +332,11 @@ void CAdZapMenu::ShowMenu()
 	menu->addKey(CRCInput::RC_blue, this, "monitor");
 	menu->addIntroItems();
 
-	CMenuOptionChooser *oc = new CMenuOptionChooser(LOCALE_ADZAP_WRITEDATA, &g_settings.adzap_writeData, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	oc->setHint(NEUTRINO_ICON_HINT_ADZAP, LOCALE_MENU_HINT_ADZAP_WRITEDATA);
-	menu->addItem(oc);
+	CMenuItem *oc = addSetting(menu, "adzap_writeData");
+	oc->hintIcon = NEUTRINO_ICON_HINT_ADZAP;
 
-	CMenuOptionChooser *oc_zap = new CMenuOptionChooser(LOCALE_ADZAP_ZAP, &g_settings.adzap_zapOnActivation, ADZAP_ZAP_OPTIONS, ADZAP_ZAP_OPTION_COUNT, true);
-	oc_zap->setHint(NEUTRINO_ICON_HINT_ADZAP, LOCALE_MENU_HINT_ADZAP_ZAP);
-	menu->addItem(oc_zap);
+	CMenuItem *oc_zap = addSetting(menu, "adzap_zapOnActivation");
+	oc_zap->hintIcon = NEUTRINO_ICON_HINT_ADZAP;
 
 	menu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_ADZAP_SWITCHBACK));
 

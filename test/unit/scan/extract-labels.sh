@@ -22,9 +22,11 @@ trap 'rm -rf "$tmp"' EXIT
 
 MARK='@@file@@'
 
-find "$SRC/gui" -name '*.cpp' -o -name '*.h' | LC_ALL=C sort > "$tmp/files"
+find "$SRC/gui" ${SCAN_EXTRA:+"$SCAN_EXTRA"} -name '*.cpp' -o -name '*.h' | LC_ALL=C sort > "$tmp/files"
 xargs awk -v keepstrings=0 -v mark="$MARK" -f "$STRIP" < "$tmp/files" > "$tmp/code"
 awk -v mark="$MARK" -f "$HERE/labels.awk" "$tmp/code" | sort -u > "$tmp/raw"
+xargs awk -v keepstrings=1 -v mark="$MARK" -f "$STRIP" < "$tmp/files" \
+	| awk -v mark="$MARK" -f "$HERE/addsetting.awk" | sort -u > "$tmp/derived"
 
 # The label a call site names is an enumerator and a row declares the string it
 # stands for, so it is turned into the other through the one map every scan
@@ -35,6 +37,10 @@ awk -F'\t' -v locfile="$tmp/locale" '
 	FILENAME == locfile { loc[$1] = $2; next }
 	{ print $1 "\t" (($2 in loc) ? loc[$2] : "?") "\t" $3 }
 ' "$tmp/locale" "$tmp/raw" > "$tmp/out"
+
+# A site built from the declaration states no label of its own: DERIVED stands
+# where the label would be, and counts as a pairing below.
+awk -F'\t' '{ print $1 "\tDERIVED\t" $2 }' "$tmp/derived" >> "$tmp/out"
 
 # How many pairings this prints is not held here but in counts.txt beside it,
 # which carries every such number the suite has in one place, for the reason

@@ -21,6 +21,7 @@
 #include "support/catch.hpp"
 
 #include "coreapi/base/schema.h"
+#include "coreapi/settings/menuspec.h"
 #include "coreapi/settings/settingstable.h"
 
 #include <cstdio>
@@ -43,6 +44,9 @@
    build rather than leaving these cases comparing nothing. */
 
 #include "support/counts.h"
+#include <config.h>
+#include <hardware/video.h>
+#include "support/fakes.h"
 
 using namespace coreapi;
 
@@ -100,6 +104,58 @@ struct Site
 	bool                readable;
 };
 
+// The keys of the sites a screen builds from the declaration. Such a site states no
+// table, so there is nothing of it to compare, and it is counted as a site all the
+// same. Filled by offered(), which reads the one file both come from.
+//
+// Counted from the source like every other site, whether or not this build compiles
+// the screen or the row: the scan cannot tell, and the counts are one rule.
+std::vector<std::string> &derivedKeys()
+{
+	static std::vector<std::string> v;
+	return v;
+}
+
+// Where the row behind each derived key stands in the source, as extract-choices.sh
+// writes it: "-" outside any preprocessor arm, "?" when no table file declares it,
+// "arm <arms>" when the site is left out under the row's arms as well, "row <arms>"
+// when only the row is. One entry per key: "arm" only when every site of it says so.
+std::map<std::string, std::string> &derivedGuards()
+{
+	static std::map<std::string, std::string> m;
+	return m;
+}
+
+/* A key whose row this build does not compile, where the source puts both the row
+   and the site that builds the item under the same arms: the arm is one this build
+   does not take, and the screen is left out with the row. Reported with its arms
+   and passed over. A site built without the row would show nothing, so a row in
+   an arm the site is not in is no reason to pass over a key, and neither is a row
+   the source does not declare or declares under #if 0. */
+bool rowBehindAnUntakenArm(const std::string &key, const std::set<std::string> &declared)
+{
+	if (declared.count(key) != 0)
+		return false;
+	std::map<std::string, std::string>::const_iterator g = derivedGuards().find(key);
+	return g != derivedGuards().end() && g->second.compare(0, 4, "arm ") == 0;
+}
+
+// A key is passed over only when every site of it is; the first site that is not
+// decides what is kept.
+void foldGuard(std::string &kept, const std::string &site)
+{
+	if (kept.empty() || kept.compare(0, 4, "arm ") == 0)
+		kept = site;
+}
+
+std::set<std::string> declaredKeys()
+{
+	std::set<std::string> declared;
+	for (size_t i = 0; i < settingsTableCount(); ++i)
+		declared.insert(settingsTable()[i].key);
+	return declared;
+}
+
 // The file is written by make before the suite runs. A missing one is a failure
 // of these cases and not something to work around.
 const std::map<std::string, std::vector<Site> > &offered()
@@ -127,7 +183,12 @@ const std::map<std::string, std::vector<Site> > &offered()
 		if (!line.empty())
 		{
 			std::vector<std::string> col = split(line, '\t');
-			if (col.size() == 5)
+			if (col.size() == 5 && col[3] == "DERIVED")
+			{
+				derivedKeys().push_back(col[0]);
+				foldGuard(derivedGuards()[col[0]], col[4]);
+			}
+			else if (col.size() == 5)
 			{
 				Site s;
 				s.label = col[1];
@@ -247,6 +308,34 @@ bool agrees(const Descriptor &d, const Site &s)
 
 } // namespace
 
+/* The rule that a key is passed over only when every one of its sites reads "arm":
+   one site in the row's arm and one outside it build the item in a build without the
+   row, so that key must stay checked, whichever site the scan met first. */
+TEST_CASE("a key with one site in the row's arm and one outside it is not passed over", "[settingschoices]")
+{
+	const std::string arm = "arm defined(X)";
+	const std::string row = "row defined(X)";
+	const std::set<std::string> none;
+
+	const char *const keys[] = { "fold_all_arm", "fold_arm_first", "fold_bare_first" };
+	derivedGuards()[keys[0]].clear();
+	foldGuard(derivedGuards()[keys[0]], arm);
+	foldGuard(derivedGuards()[keys[0]], arm);
+	derivedGuards()[keys[1]].clear();
+	foldGuard(derivedGuards()[keys[1]], arm);
+	foldGuard(derivedGuards()[keys[1]], row);
+	derivedGuards()[keys[2]].clear();
+	foldGuard(derivedGuards()[keys[2]], row);
+	foldGuard(derivedGuards()[keys[2]], arm);
+
+	CHECK(rowBehindAnUntakenArm(keys[0], none));
+	CHECK_FALSE(rowBehindAnUntakenArm(keys[1], none));
+	CHECK_FALSE(rowBehindAnUntakenArm(keys[2], none));
+
+	for (size_t i = 0; i < 3; ++i)
+		derivedGuards().erase(keys[i]);
+}
+
 TEST_CASE("the choices read out of the screens are as many as the screens offer", "[settingschoices]")
 {
 	size_t sites = 0;
@@ -262,12 +351,191 @@ TEST_CASE("the choices read out of the screens are as many as the screens offer"
 		}
 	}
 
+	// Built from the declaration, so whole by construction.
+	sites += derivedKeys().size();
+	resolved += derivedKeys().size();
+
 	INFO("call sites read: " << sites << " over " << offered().size() << " fields");
 	REQUIRE(sites > 0);
 	recordCount("chooser call sites read", sites);
 	recordCount("fields the chooser scan read", offered().size());
 	INFO("call sites whose every choice the scan could read: " << resolved);
 	recordCount("chooser call sites read whole", resolved);
+}
+
+/* A key a screen hands to the declaration has to be one the declaration holds, or
+   the screen offers nothing and no other case here would notice. */
+TEST_CASE("every setting a screen builds from the declaration is declared", "[settingschoices]")
+{
+	offered();
+	const std::set<std::string> declared = declaredKeys();
+
+	std::string unknown;
+	for (size_t i = 0; i < derivedKeys().size(); ++i)
+	{
+		const std::string &k = derivedKeys()[i];
+		if (rowBehindAnUntakenArm(k, declared))
+			WARN("skipped " << k << ": row and site are compiled only under " << derivedGuards()[k].substr(4));
+		else if (declared.count(k) == 0)
+		{
+			unknown += " " + k;
+			if (derivedGuards()[k].compare(0, 4, "row ") == 0)
+				unknown += " (row only under " + derivedGuards()[k].substr(4) + ", the site is built without it)";
+		}
+	}
+	INFO("keys no row declares:" << unknown);
+	CHECK(unknown.empty());
+}
+
+#if !(defined(BOXMODEL_CST_HD2) && defined(ANALOG_MODE))
+namespace
+{
+struct Entry
+{
+	long        value;
+	const char *label_key;
+};
+
+const Entry kScart[] = {
+	{ 0x10, "videomenu.analog_sd_rgb_scart" },
+	{ 0x11, "videomenu.analog_sd_yprpb_scart" },
+	{ 0x12, "videomenu.analog_hd_rgb_scart" },
+	{ 0x13, "videomenu.analog_hd_yprpb_scart" }
+};
+const Entry kOneItem[] = {
+	{ 0x10, "videomenu.analog_sd_rgb_scart" },
+	{ 0x00, "videomenu.analog_sd_rgb_cinch" },
+	{ 0x11, "videomenu.analog_sd_yprpb_scart" },
+	{ 0x01, "videomenu.analog_sd_yprpb_cinch" },
+	{ 0x12, "videomenu.analog_hd_rgb_scart" },
+	{ 0x02, "videomenu.analog_hd_rgb_cinch" },
+	{ 0x13, "videomenu.analog_hd_yprpb_scart" },
+	{ 0x03, "videomenu.analog_hd_yprpb_cinch" }
+};
+const Entry kCinch[] = {
+	{ 0x00, "videomenu.analog_sd_rgb_cinch" },
+	{ 0x01, "videomenu.analog_sd_yprpb_cinch" },
+	{ 0x02, "videomenu.analog_hd_rgb_cinch" },
+	{ 0x03, "videomenu.analog_hd_yprpb_cinch" }
+};
+
+void sameEntries(const MenuItemSpec &spec, const Entry *want, size_t count)
+{
+	REQUIRE(spec.choices.size() == count);
+	for (size_t i = 0; i < count; ++i)
+	{
+		INFO("entry " << i);
+		CHECK(spec.choices[i].value == want[i].value);
+		CHECK(spec.choices[i].label_key == want[i].label_key);
+	}
+}
+} // anonymous namespace
+
+/* The analog outputs by board revision and SCART socket, every entry in its
+   order with its words. The generic build compiles the arm with the SCART and
+   Cinch lists, so that is the one read here. */
+TEST_CASE("the analog outputs offered follow the board revision and the SCART socket", "[settingschoices]")
+{
+	struct Case
+	{
+		unsigned rev;
+		int scart;
+		const char *mode1_label; // NULL where the item is not offered
+		const char *mode1_hint;
+		const Entry *mode1;
+		size_t mode1_count;
+		bool mode2;
+	};
+	const Case cases[] = {
+		{ 1, 0, NULL, NULL, NULL, 0, false },
+		{ 1, 1, "videomenu.scart", "menu.hint_video_scart_mode", kScart, 2, false },
+		{ 6, 0, "videomenu.analog_mode", "menu.hint_video_analog_mode", kOneItem, 8, false },
+		{ 7, 0, "videomenu.scart", "menu.hint_video_scart_mode", kScart, 4, true },
+		{ 10, 1, NULL, NULL, NULL, 0, true }
+	};
+
+	for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i)
+	{
+		INFO("revision " << cases[i].rev << " scart " << cases[i].scart);
+		FakeSystemSource box;
+		InstalledSystemSource installed(&box);
+		box.caps.board_revision = cases[i].rev;
+		box.caps.has_SCART = cases[i].scart;
+
+		Result<MenuItemSpec> one = menuItem("analog_mode1");
+		if (cases[i].mode1_label == NULL)
+		{
+			REQUIRE_FALSE(one.ok());
+			CHECK(one.error().code == ErrorCode::ChoicesUnavailable);
+		}
+		else
+		{
+			REQUIRE(one.ok());
+			CHECK(one.value().label_key == cases[i].mode1_label);
+			CHECK(one.value().hint_key == cases[i].mode1_hint);
+			sameEntries(one.value(), cases[i].mode1, cases[i].mode1_count);
+		}
+
+		Result<MenuItemSpec> two = menuItem("analog_mode2");
+		if (!cases[i].mode2)
+		{
+			REQUIRE_FALSE(two.ok());
+			CHECK(two.error().code == ErrorCode::SettingNotOnThisBox);
+		}
+		else
+		{
+			REQUIRE(two.ok());
+			CHECK(two.value().label_key == "videomenu.cinch");
+			CHECK(two.value().hint_key == "menu.hint_video_cinch_mode");
+			sameEntries(two.value(), kCinch, 4);
+		}
+	}
+}
+#endif
+
+/* A row can exist and still not be showable (a member no widget edits, a table the
+   builder refuses), and the screen then shows no item and says nothing. */
+TEST_CASE("every setting a screen builds from the declaration can be shown", "[settingschoices]")
+{
+	offered();
+	REQUIRE(!derivedKeys().empty());
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	// A box that has everything a row may ask about, so no row is left out
+	// for want of hardware.
+	box.caps.can_ar_14_9 = 1;
+	box.caps.can_cec = 1;
+	box.caps.can_cpufreq = 1;
+	box.caps.can_pip = 1;
+	box.caps.display_can_set_brightness = 1;
+	box.caps.can_ps_14_9 = 1;
+	box.caps.can_shutdown = 1;
+	box.caps.display_xres = 16;
+	box.caps.has_button_vformat = 1;
+	box.caps.has_fan = 1;
+	box.caps.has_HDMI = 1;
+	box.caps.has_SCART = 1;
+	box.caps.display_scroll_repeats = 1;
+	box.caps.video_zapmode = 1;
+	box.caps.video_hdmi_colorimetry = 1;
+	box.caps.board_revision = 7;
+	box.format_tools.push_back("ext4");
+	FakeOsdResolution drawing;
+	InstalledOsdResolution installed_drawing(&drawing);
+
+	const std::set<std::string> declared = declaredKeys();
+	std::string refused;
+	for (size_t i = 0; i < derivedKeys().size(); ++i)
+	{
+		if (rowBehindAnUntakenArm(derivedKeys()[i], declared))
+			continue;
+		if (!menuItem(derivedKeys()[i]).ok())
+			refused += " " + derivedKeys()[i];
+	}
+	INFO("keys menuItem refuses:" << refused);
+	CHECK(refused.empty());
 }
 
 /* The values, which no other case reads. A row offering a value the screen does
@@ -279,7 +547,6 @@ TEST_CASE("every value a declared choice offers is one the screen offers", "[set
 {
 	size_t checked = 0;
 	size_t rows = 0;
-	size_t asked = 0;
 	std::string unread;
 	std::string unoffered;
 
@@ -288,20 +555,6 @@ TEST_CASE("every value a declared choice offers is one the screen offers", "[set
 		const Descriptor &d = settingsTable()[i];
 		if (d.type != ValueType::Enum || d.field.name == NULL)
 			continue;
-
-		/* A row whose set is the box's own carries no list to compare, and the screen's
-		   table is not the comparison either: it is one of several the screen picks
-		   between on a revision read at run time, or a table with the modes this model
-		   cannot draw marked out. What holds these rows is check-choices.sh and the
-		   cases over the layer. Counted, so a row quietly gaining a set of its own is a
-		   change in a figure rather than nothing at all. */
-		if (d.field.choices != NULL)
-		{
-			++asked;
-			INFO("row " << d.key << " asks for its values under " << d.field.choices);
-			CHECK(d.value_count == 0);
-			continue;
-		}
 
 		++rows;
 
@@ -352,9 +605,6 @@ TEST_CASE("every value a declared choice offers is one the screen offers", "[set
 	     << (unoffered.empty() ? "none" : unoffered));
 	recordCount("choices compared against a screen", checked);
 
-	INFO("rows whose set of values the box decides: " << asked);
-	recordCount("rows whose set of values the box decides", asked);
-	REQUIRE(asked > 0);
 }
 
 /* A Bool carries no values of its own, so the only thing to hold it to is that
@@ -468,7 +718,7 @@ const std::map<std::string, std::set<std::string> > &ranged()
 		if (!line.empty())
 		{
 			std::vector<std::string> col = split(line, '\t');
-			if (col.size() == 5 && col[3] != "?")
+			if (col.size() == 5 && col[1] != "DERIVED" && col[3] != "?")
 				m[col[0]].insert(col[3]);
 			line.clear();
 		}

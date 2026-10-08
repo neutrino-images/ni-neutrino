@@ -28,6 +28,7 @@
 #include <vector>
 #include <string>
 #include "gui/components/cc.h"
+#include <system/settings.h>
 #include <atomic>
 #include <mutex>
 #include <thread>
@@ -80,12 +81,7 @@ class CScreenSaver : public sigc::trackable
 		sigc::slot<void> sl_scr_stop;
 
 	public:
-		typedef enum
-		{
-			SCR_MODE_IMAGE,
-			SCR_MODE_CLOCK,
-			SCR_MODE_CLOCK_COLOR
-		} SCR_MODE_T;
+		typedef ::SCR_MODE_T SCR_MODE_T;
 
 		typedef enum
 		{

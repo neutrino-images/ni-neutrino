@@ -45,6 +45,7 @@
 
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/msgbox.h>
 #include <gui/widget/keyboard_input.h>
@@ -190,76 +191,6 @@ int CMiscMenue::exec(CMenuTarget *parent, const std::string &actionKey)
 	return showMiscSettingsMenu();
 }
 
-#define MISCSETTINGS_FILESYSTEM_IS_UTF8_OPTION_COUNT 2
-const CMenuOptionChooser::keyval MISCSETTINGS_FILESYSTEM_IS_UTF8_OPTIONS[MISCSETTINGS_FILESYSTEM_IS_UTF8_OPTION_COUNT] =
-{
-	{ 0, LOCALE_FILESYSTEM_IS_UTF8_OPTION_ISO8859_1 },
-	{ 1, LOCALE_FILESYSTEM_IS_UTF8_OPTION_UTF8 }
-};
-
-#define CHANNELLIST_NEW_ZAP_MODE_OPTION_COUNT 3
-const CMenuOptionChooser::keyval CHANNELLIST_NEW_ZAP_MODE_OPTIONS[CHANNELLIST_NEW_ZAP_MODE_OPTION_COUNT] =
-{
-	{ 0, LOCALE_CHANNELLIST_NEW_ZAP_MODE_OFF },
-	{ 1, LOCALE_CHANNELLIST_NEW_ZAP_MODE_ALLOW },
-	{ 2, LOCALE_CHANNELLIST_NEW_ZAP_MODE_ACTIVE }
-};
-
-#define CHANNELLIST_ENABLESDT_OPTION_COUNT 3
-const CMenuOptionChooser::keyval CHANNELLIST_ENABLESDT_OPTIONS[CHANNELLIST_ENABLESDT_OPTION_COUNT] =
-{
-	{ 0, LOCALE_CHANNELLIST_ENABLESDT_OFF },
-	{ 1, LOCALE_CHANNELLIST_ENABLESDT_ON },
-	{ 2, LOCALE_CHANNELLIST_ENABLESDT_ON_EXTENDED }
-};
-
-
-#define CPU_FREQ_OPTION_COUNT 13
-const CMenuOptionChooser::keyval_ext CPU_FREQ_OPTIONS[CPU_FREQ_OPTION_COUNT] =
-{
-	{ 0, LOCALE_CPU_FREQ_DEFAULT, NULL },
-	{ 50,  NONEXISTANT_LOCALE,  "50 Mhz"},
-	{ 100, NONEXISTANT_LOCALE, "100 Mhz"},
-	{ 150, NONEXISTANT_LOCALE, "150 Mhz"},
-	{ 200, NONEXISTANT_LOCALE, "200 Mhz"},
-	{ 250, NONEXISTANT_LOCALE, "250 Mhz"},
-	{ 300, NONEXISTANT_LOCALE, "300 Mhz"},
-	{ 350, NONEXISTANT_LOCALE, "350 Mhz"},
-	{ 400, NONEXISTANT_LOCALE, "400 Mhz"},
-	{ 450, NONEXISTANT_LOCALE, "450 Mhz"},
-	{ 500, NONEXISTANT_LOCALE, "500 Mhz"},
-	{ 550, NONEXISTANT_LOCALE, "550 Mhz"},
-	{ 600, NONEXISTANT_LOCALE, "600 Mhz"}
-};
-
-const CMenuOptionChooser::keyval EPG_SCAN_OPTIONS[] =
-{
-	{ CEpgScan::SCAN_CURRENT, LOCALE_MISCSETTINGS_EPG_SCAN_BQ },
-	{ CEpgScan::SCAN_FAV, LOCALE_MISCSETTINGS_EPG_SCAN_FAV },
-	{ CEpgScan::SCAN_SEL, LOCALE_MISCSETTINGS_EPG_SCAN_SEL },
-};
-#define EPG_SCAN_OPTION_COUNT (sizeof(EPG_SCAN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
-
-const CMenuOptionChooser::keyval EPG_SCAN_MODE_OPTIONS[] =
-{
-	{ CEpgScan::MODE_OFF, LOCALE_OPTIONS_OFF },
-	{ CEpgScan::MODE_STANDBY, LOCALE_MISCSETTINGS_EPG_SCAN_STANDBY },
-	{ CEpgScan::MODE_LIVE, LOCALE_MISCSETTINGS_EPG_SCAN_LIVE },
-	{ CEpgScan::MODE_ALWAYS, LOCALE_MISCSETTINGS_EPG_SCAN_ALWAYS }
-};
-#define EPG_SCAN_MODE_OPTION_COUNT (sizeof(EPG_SCAN_MODE_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
-
-const CMenuOptionChooser::keyval_ext SLEEPTIMER_MIN_OPTIONS[] =
-{
-	{ 0,	NONEXISTANT_LOCALE, "EPG"	},
-	{ 30,	NONEXISTANT_LOCALE, "30 min"	},
-	{ 60,	NONEXISTANT_LOCALE, "60 min"	},
-	{ 90,	NONEXISTANT_LOCALE, "90 min"	},
-	{ 120,	NONEXISTANT_LOCALE, "120 min"	},
-	{ 150,	NONEXISTANT_LOCALE, "150 min"	}
-};
-#define SLEEPTIMER_MIN_OPTION_COUNT (sizeof(SLEEPTIMER_MIN_OPTIONS)/sizeof(SLEEPTIMER_MIN_OPTIONS[0]))
-
 // show misc settings menue
 int CMiscMenue::showMiscSettingsMenu()
 {
@@ -388,23 +319,13 @@ void CMiscMenue::showMiscSettingsMenuGeneral(CMenuWidget *ms_general)
 	ms_general->addIntroItems(LOCALE_MISCSETTINGS_GENERAL);
 
 	// standby after boot
-	CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_EXTRA_START_TOSTANDBY, &g_settings.power_standby, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_START_TOSTANDBY);
-	ms_general->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_EXTRA_CACHE_TXT, (int *)&g_settings.cacheTXT, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_CACHE_TXT);
-	ms_general->addItem(mc);
+	addSetting(ms_general, "power_standby");
+	addSetting(ms_general, "cacheTXT");
 
 	// fan speed
-	if (g_info.hw_caps->has_fan)
-	{
-		if (fanNotifier == NULL)
-			fanNotifier = new CFanControlNotifier();
-		CMenuOptionNumberChooser *mn = new CMenuOptionNumberChooser(LOCALE_FAN_SPEED, &g_settings.fan_speed, true, 1, 14, fanNotifier, CRCInput::RC_nokey, NULL, 0, 0, LOCALE_OPTIONS_OFF);
-		mn->setHint("", LOCALE_MENU_HINT_FAN_SPEED);
-		ms_general->addItem(mn);
-	}
+	if (fanNotifier == NULL)
+		fanNotifier = new CFanControlNotifier();
+	addSetting(ms_general, "fan_speed", true, fanNotifier);
 
 	// set debug level
 	ms_general->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_DEBUG));
@@ -419,8 +340,10 @@ int CMiscMenue::showMiscSettingsMenuEnergy(neutrino_locale_t title, neutrino_loc
 	CMenuWidget *ms_energy = new CMenuWidget(title, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_MISCSETUP_ENERGY);
 	ms_energy->addIntroItems(sub_title);
 
-	CMenuOptionChooser *m1 = new CMenuOptionChooser(LOCALE_MISCSETTINGS_SHUTDOWN_REAL_RCDELAY, &g_settings.shutdown_real_rcdelay, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, !g_settings.shutdown_real);
-	m1->setHint("", LOCALE_MENU_HINT_SHUTDOWN_RCDELAY);
+	COnOffNotifier *miscNotifier = new COnOffNotifier(1);
+	addSetting(ms_energy, "shutdown_real", true, miscNotifier);
+
+	miscNotifier->addItem(addSetting(ms_energy, "shutdown_real_rcdelay", !g_settings.shutdown_real));
 
 	std::string shutdown_count = to_string(g_settings.shutdown_count);
 	if (shutdown_count.length() < 3)
@@ -428,33 +351,17 @@ int CMiscMenue::showMiscSettingsMenuEnergy(neutrino_locale_t title, neutrino_loc
 	CStringInput *miscSettings_shutdown_count = new CStringInput(LOCALE_MISCSETTINGS_SHUTDOWN_COUNT, &shutdown_count, 3, LOCALE_MISCSETTINGS_SHUTDOWN_COUNT_HINT1, LOCALE_MISCSETTINGS_SHUTDOWN_COUNT_HINT2, "0123456789 ");
 	CMenuForwarder *m2 = new CMenuDForwarder(LOCALE_MISCSETTINGS_SHUTDOWN_COUNT, !g_settings.shutdown_real, shutdown_count, miscSettings_shutdown_count);
 	m2->setHint("", LOCALE_MENU_HINT_SHUTDOWN_COUNT);
-
-	COnOffNotifier *miscNotifier = new COnOffNotifier(1);
-	miscNotifier->addItem(m1);
 	miscNotifier->addItem(m2);
-
-	CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_SHUTDOWN_REAL, &g_settings.shutdown_real, OPTIONS_OFF1_ON0_OPTIONS, OPTIONS_OFF1_ON0_OPTION_COUNT, true, miscNotifier);
-	mc->setHint("", LOCALE_MENU_HINT_SHUTDOWN_REAL);
-
-	ms_energy->addItem(mc);
-	ms_energy->addItem(m1);
 	ms_energy->addItem(m2);
 
 	// keep box in soft-standby while recordings are pending (deep-standby boxes only)
-	if (g_info.hw_caps->can_shutdown)
-	{
-		CMenuOptionChooser *mrec = new CMenuOptionChooser(LOCALE_MISCSETTINGS_SHUTDOWN_BLOCK_RECORDING, &g_settings.shutdown_block_while_recording, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-		mrec->setHint("", LOCALE_MENU_HINT_SHUTDOWN_BLOCK_RECORDING);
-		ms_energy->addItem(mrec);
-	}
+	addSetting(ms_energy, "shutdown_block_while_recording");
 
 	m2 = new CMenuDForwarder(LOCALE_MISCSETTINGS_SLEEPTIMER, true, NULL, new CSleepTimerWidget(true));
 	m2->setHint("", LOCALE_MENU_HINT_INACT_TIMER);
 	ms_energy->addItem(m2);
 
-	CMenuOptionChooser *m4 = new CMenuOptionChooser(LOCALE_MISCSETTINGS_SLEEPTIMER_MIN, &g_settings.sleeptimer_min, SLEEPTIMER_MIN_OPTIONS, SLEEPTIMER_MIN_OPTION_COUNT, true);
-	m4->setHint("", LOCALE_MENU_HINT_SLEEPTIMER_MIN);
-	ms_energy->addItem(m4);
+	addSetting(ms_energy, "sleeptimer_min");
 
 	int res = ms_energy->exec(NULL, "");
 
@@ -472,26 +379,23 @@ void CMiscMenue::showMiscSettingsMenuEpg(CMenuWidget *ms_epg)
 	ms_epg->addKey(CRCInput::RC_help, this, "info");
 	ms_epg->addKey(CRCInput::RC_info, this, "info");
 
-	epg_save = new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_SAVE, &g_settings.epg_save, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-	epg_save->setHint("", LOCALE_MENU_HINT_EPG_SAVE);
+	epg_save = addSetting(ms_epg, "epg_save", true, this);
+	epg_save_standby = addSetting(ms_epg, "epg_save_standby", g_settings.epg_save);
+	epg_save_frequently = addSetting(ms_epg, "epg_save_frequently", g_settings.epg_save, this);
+	ms_epg->addItem(GenericMenuSeparator);
 
-	epg_save_standby = new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_SAVE_STANDBY, &g_settings.epg_save_standby, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.epg_save);
-	epg_save_standby->setHint("", LOCALE_MENU_HINT_EPG_SAVE_STANDBY);
-
-	epg_save_frequently = new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_SAVE_FREQUENTLY, &g_settings.epg_save_frequently, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.epg_save, this);
-	epg_save_frequently->setHint("", LOCALE_MENU_HINT_EPG_SAVE_FREQUENTLY);
-
-	epg_read = new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_READ, &g_settings.epg_read, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-	epg_read->setHint("", LOCALE_MENU_HINT_EPG_READ);
-
-	epg_read_frequently = new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_READ_FREQUENTLY, &g_settings.epg_read_frequently, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.epg_read, this);
-	epg_read_frequently->setHint("", LOCALE_MENU_HINT_EPG_READ_FREQUENTLY);
+	epg_read = addSetting(ms_epg, "epg_read", true, this);
+	epg_read_frequently = addSetting(ms_epg, "epg_read_frequently", g_settings.epg_read, this);
 
 	epg_read_now = new CMenuForwarder(LOCALE_MISCSETTINGS_EPG_READ_NOW, g_settings.epg_read, NULL, this, "epg_read_now");
 	epg_read_now->setHint("", LOCALE_MENU_HINT_EPG_READ_NOW);
+	ms_epg->addItem(epg_read_now);
+	ms_epg->addItem(GenericMenuSeparator);
 
 	epg_dir = new CMenuForwarder(LOCALE_MISCSETTINGS_EPG_DIR, (g_settings.epg_save || g_settings.epg_read), g_settings.epg_dir, this, "epgdir");
 	epg_dir->setHint("", LOCALE_MENU_HINT_EPG_DIR);
+	ms_epg->addItem(epg_dir);
+	ms_epg->addItem(GenericMenuSeparatorLine);
 
 	epg_cache = to_string(g_settings.epg_cache);
 	if (epg_cache.length() < 2)
@@ -499,6 +403,7 @@ void CMiscMenue::showMiscSettingsMenuEpg(CMenuWidget *ms_epg)
 	CStringInput *miscSettings_epg_cache = new CStringInput(LOCALE_MISCSETTINGS_EPG_CACHE, &epg_cache, 2, LOCALE_MISCSETTINGS_EPG_CACHE_HINT1, LOCALE_MISCSETTINGS_EPG_CACHE_HINT2, "0123456789 ", sectionsdConfigNotifier);
 	CMenuForwarder *mf = new CMenuDForwarder(LOCALE_MISCSETTINGS_EPG_CACHE, true, epg_cache, miscSettings_epg_cache);
 	mf->setHint("", LOCALE_MENU_HINT_EPG_CACHE);
+	ms_epg->addItem(mf);
 
 	epg_extendedcache = to_string(g_settings.epg_extendedcache);
 	if (epg_extendedcache.length() < 3)
@@ -506,6 +411,7 @@ void CMiscMenue::showMiscSettingsMenuEpg(CMenuWidget *ms_epg)
 	CStringInput *miscSettings_epg_cache_e = new CStringInput(LOCALE_MISCSETTINGS_EPG_EXTENDEDCACHE, &epg_extendedcache, 3, LOCALE_MISCSETTINGS_EPG_EXTENDEDCACHE_HINT1, LOCALE_MISCSETTINGS_EPG_EXTENDEDCACHE_HINT2, "0123456789 ", sectionsdConfigNotifier);
 	CMenuForwarder *mf1 = new CMenuDForwarder(LOCALE_MISCSETTINGS_EPG_EXTENDEDCACHE, true, epg_extendedcache, miscSettings_epg_cache_e);
 	mf1->setHint("", LOCALE_MENU_HINT_EPG_EXTENDEDCACHE);
+	ms_epg->addItem(mf1);
 
 	epg_old_events = to_string(g_settings.epg_old_events);
 	if (epg_old_events.length() < 3)
@@ -513,6 +419,7 @@ void CMiscMenue::showMiscSettingsMenuEpg(CMenuWidget *ms_epg)
 	CStringInput *miscSettings_epg_old_events = new CStringInput(LOCALE_MISCSETTINGS_EPG_OLD_EVENTS, &epg_old_events, 3, LOCALE_MISCSETTINGS_EPG_OLD_EVENTS_HINT1, LOCALE_MISCSETTINGS_EPG_OLD_EVENTS_HINT2, "0123456789 ", sectionsdConfigNotifier);
 	CMenuForwarder *mf2 = new CMenuDForwarder(LOCALE_MISCSETTINGS_EPG_OLD_EVENTS, true, epg_old_events, miscSettings_epg_old_events);
 	mf2->setHint("", LOCALE_MENU_HINT_EPG_OLD_EVENTS);
+	ms_epg->addItem(mf2);
 
 	epg_max_events = to_string(g_settings.epg_max_events);
 	if (epg_max_events.length() < 6)
@@ -520,36 +427,14 @@ void CMiscMenue::showMiscSettingsMenuEpg(CMenuWidget *ms_epg)
 	CStringInput *miscSettings_epg_max_events = new CStringInput(LOCALE_MISCSETTINGS_EPG_MAX_EVENTS, &epg_max_events, 6, LOCALE_MISCSETTINGS_EPG_MAX_EVENTS_HINT1, LOCALE_MISCSETTINGS_EPG_MAX_EVENTS_HINT2, "0123456789 ", sectionsdConfigNotifier);
 	CMenuForwarder *mf3 = new CMenuDForwarder(LOCALE_MISCSETTINGS_EPG_MAX_EVENTS, true, epg_max_events, miscSettings_epg_max_events);
 	mf3->setHint("", LOCALE_MENU_HINT_EPG_MAX_EVENTS);
-
-	epg_scan = new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_SCAN_BOUQUETS, &g_settings.epg_scan, EPG_SCAN_OPTIONS, EPG_SCAN_OPTION_COUNT, true);
-	epg_scan->setHint("", LOCALE_MENU_HINT_EPG_SCAN);
-
-	CMenuOptionChooser *mc3 = new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_SCAN, &g_settings.epg_scan_mode, EPG_SCAN_MODE_OPTIONS,
-		CFEManager::getInstance()->getEnabledCount() > 1 ? EPG_SCAN_MODE_OPTION_COUNT : 2, true, this);
-	mc3->setHint("", LOCALE_MENU_HINT_EPG_SCAN_MODE);
-
-	CMenuOptionChooser *mc4 = new CMenuOptionChooser(LOCALE_MISCSETTINGS_EPG_SAVE_MODE, &g_settings.epg_save_mode, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT,
-		true, this);
-	mc4->setHint("", LOCALE_MENU_HINT_EPG_SAVE_MODE);
-
-	ms_epg->addItem(epg_save);
-	ms_epg->addItem(epg_save_standby);
-	ms_epg->addItem(epg_save_frequently);
-	ms_epg->addItem(GenericMenuSeparator);
-	ms_epg->addItem(epg_read);
-	ms_epg->addItem(epg_read_frequently);
-	ms_epg->addItem(epg_read_now);
-	ms_epg->addItem(GenericMenuSeparator);
-	ms_epg->addItem(epg_dir);
-	ms_epg->addItem(GenericMenuSeparatorLine);
-	ms_epg->addItem(mf);
-	ms_epg->addItem(mf1);
-	ms_epg->addItem(mf2);
 	ms_epg->addItem(mf3);
-	ms_epg->addItem(mc4);
+
+	addSetting(ms_epg, "epg_save_mode", true, this);
 	ms_epg->addItem(GenericMenuSeparatorLine);
-	ms_epg->addItem(mc3);
-	ms_epg->addItem(epg_scan);
+
+	addSetting(ms_epg, "epg_scan_mode", true, this);
+
+	epg_scan = addSetting(ms_epg, "epg_scan");
 }
 
 // filebrowser settings
@@ -557,17 +442,9 @@ void CMiscMenue::showMiscSettingsMenuFBrowser(CMenuWidget *ms_fbrowser)
 {
 	ms_fbrowser->addIntroItems(LOCALE_FILEBROWSER_HEAD);
 
-	CMenuOptionChooser *mc;
-	mc = new CMenuOptionChooser(LOCALE_FILESYSTEM_IS_UTF8, &g_settings.filesystem_is_utf8, MISCSETTINGS_FILESYSTEM_IS_UTF8_OPTIONS, MISCSETTINGS_FILESYSTEM_IS_UTF8_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_FILESYSTEM_IS_UTF8);
-	ms_fbrowser->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_FILEBROWSER_SHOWRIGHTS, &g_settings.filebrowser_showrights, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_FILEBROWSER_SHOWRIGHTS);
-	ms_fbrowser->addItem(mc);
-	mc = new CMenuOptionChooser(LOCALE_FILEBROWSER_DENYDIRECTORYLEAVE, &g_settings.filebrowser_denydirectoryleave, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_FILEBROWSER_DENYDIRECTORYLEAVE);
-	ms_fbrowser->addItem(mc);
+	addSetting(ms_fbrowser, "filesystem_is_utf8");
+	addSetting(ms_fbrowser, "filebrowser_showrights");
+	addSetting(ms_fbrowser, "filebrowser_denydirectoryleave");
 }
 
 // channellist
@@ -581,50 +458,17 @@ int CMiscMenue::showMiscSettingsMenuChanlist()
 	bool make_webradio_list = g_settings.make_webradio_list;
 	bool show_empty_favorites = g_settings.show_empty_favorites;
 
-	CMenuOptionChooser *mc;
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_MAKE_HDLIST, &g_settings.make_hd_list, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_MAKE_HDLIST);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_MAKE_WEBTVLIST, &g_settings.make_webtv_list, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_MAKE_WEBTVLIST);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_MAKE_WEBRADIOLIST, &g_settings.make_webradio_list, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_MAKE_WEBRADIOLIST);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_MAKE_NEWLIST, &g_settings.make_new_list, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_MAKE_NEWLIST);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_MAKE_REMOVEDLIST, &g_settings.make_removed_list, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_MAKE_REMOVEDLIST);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_KEEP_NUMBERS, &g_settings.keep_channel_numbers, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_KEEP_NUMBERS);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_EXTRA_ZAP_CYCLE, &g_settings.zap_cycle, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_ZAP_CYCLE);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_NEW_ZAP_MODE, &g_settings.channellist_new_zap_mode, CHANNELLIST_NEW_ZAP_MODE_OPTIONS, CHANNELLIST_NEW_ZAP_MODE_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_NEW_ZAP_MODE);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_NUMERIC_ADJUST, &g_settings.channellist_numeric_adjust, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_NUMERIC_ADJUST);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_SHOW_EMPTY_FAVS, &g_settings.show_empty_favorites, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_CHANNELLIST_SHOW_EMPTY_FAVS);
-	ms_chanlist->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_CHANNELLIST_ENABLESDT, &g_settings.enable_sdt, CHANNELLIST_ENABLESDT_OPTIONS, CHANNELLIST_ENABLESDT_OPTION_COUNT, true, this);
-	mc->setHint("", LOCALE_MENU_HINT_CHANNELLIST_ENABLESDT);
-	ms_chanlist->addItem(mc);
+	addSetting(ms_chanlist, "make_hd_list");
+	addSetting(ms_chanlist, "make_webtv_list");
+	addSetting(ms_chanlist, "make_webradio_list");
+	addSetting(ms_chanlist, "make_new_list");
+	addSetting(ms_chanlist, "make_removed_list");
+	addSetting(ms_chanlist, "keep_channel_numbers");
+	addSetting(ms_chanlist, "zap_cycle");
+	addSetting(ms_chanlist, "channellist_new_zap_mode");
+	addSetting(ms_chanlist, "channellist_numeric_adjust");
+	addSetting(ms_chanlist, "show_empty_favorites");
+	addSetting(ms_chanlist, "enable_sdt", true, this);
 
 	int res = ms_chanlist->exec(NULL, "");
 	delete ms_chanlist;
@@ -652,9 +496,8 @@ int CMiscMenue::showMiscSettingsMenuOnlineServices()
 	ms_oservices->addItem(GenericMenuSeparator);
 
 	// tmdb
-	tmdb_onoff = new CMenuOptionChooser(LOCALE_TMDB_ENABLED, &g_settings.tmdb_enabled, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, CApiKey::check_tmdb_api_key());
-	tmdb_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_TMDB_ENABLED);
-	ms_oservices->addItem(tmdb_onoff);
+	tmdb_onoff = addSetting(ms_oservices, "tmdb_enabled", CApiKey::check_tmdb_api_key());
+	tmdb_onoff->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
 
 #if ENABLE_TMDB_KEY_MANAGE
 	changeNotify(LOCALE_TMDB_API_KEY, NULL);
@@ -667,9 +510,8 @@ int CMiscMenue::showMiscSettingsMenuOnlineServices()
 	ms_oservices->addItem(GenericMenuSeparator);
 
 	// omdb
-	omdb_onoff = new CMenuOptionChooser(LOCALE_OMDB_ENABLED, &g_settings.omdb_enabled, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, CApiKey::check_omdb_api_key());
-	omdb_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_OMDB_ENABLED);
-	ms_oservices->addItem(omdb_onoff);
+	omdb_onoff = addSetting(ms_oservices, "omdb_enabled", CApiKey::check_omdb_api_key());
+	omdb_onoff->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
 
 #if ENABLE_OMDB_KEY_MANAGE
 	changeNotify(LOCALE_OMDB_API_KEY, NULL);
@@ -682,9 +524,8 @@ int CMiscMenue::showMiscSettingsMenuOnlineServices()
 	ms_oservices->addItem(GenericMenuSeparator);
 
 	// shoutcast
-	shoutcast_onoff = new CMenuOptionChooser(LOCALE_SHOUTCAST_ENABLED, &g_settings.shoutcast_enabled, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, CApiKey::check_shoutcast_dev_id());
-	shoutcast_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_SHOUTCAST_ENABLED);
-	ms_oservices->addItem(shoutcast_onoff);
+	shoutcast_onoff = addSetting(ms_oservices, "shoutcast_enabled", CApiKey::check_shoutcast_dev_id());
+	shoutcast_onoff->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
 
 #if ENABLE_SHOUTCAST_ID_MANAGE
 	changeNotify(LOCALE_SHOUTCAST_DEV_ID, NULL);
@@ -697,9 +538,8 @@ int CMiscMenue::showMiscSettingsMenuOnlineServices()
 	ms_oservices->addItem(GenericMenuSeparator);
 
 	// youtube
-	youtube_onoff = new CMenuOptionChooser(LOCALE_YOUTUBE_ENABLED, &g_settings.youtube_enabled, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, CApiKey::check_youtube_api_key());
-	youtube_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_YOUTUBE_ENABLED);
-	ms_oservices->addItem(youtube_onoff);
+	youtube_onoff = addSetting(ms_oservices, "youtube_enabled", CApiKey::check_youtube_api_key());
+	youtube_onoff->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
 
 #if ENABLE_YOUTUBE_KEY_MANAGE
 	changeNotify(LOCALE_YOUTUBE_API_KEY, NULL);
@@ -752,14 +592,12 @@ int CMiscMenue::showMiscSettingsMenuStreaming()
 	ms_sservices->addItem(mf);
 
 	// ecm
-	ecm_onoff = new CMenuOptionChooser(LOCALE_STREAMING_ECMMODE, &g_settings.streaming_ecmmode, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	ecm_onoff = addSetting(ms_sservices, "streaming_ecmmode");
 	//ecm_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_ECMMODE_ENABLED);
-	ms_sservices->addItem(ecm_onoff);
 
 	// ecm
-	dec_onoff = new CMenuOptionChooser(LOCALE_STREAMING_DECRYPTMODE, &g_settings.streaming_decryptmode, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
+	dec_onoff = addSetting(ms_sservices, "streaming_decryptmode");
 	//dec_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_DECRYPTMODE_ENABLED);
-	ms_sservices->addItem(dec_onoff);
 
 	int res = ms_sservices->exec(NULL, "");
 	delete ms_sservices;
@@ -771,8 +609,8 @@ void CMiscMenue::showMiscSettingsMenuCPUFreq(CMenuWidget *ms_cpu)
 {
 	ms_cpu->addIntroItems(LOCALE_MISCSETTINGS_CPU);
 
-	ms_cpu->addItem(new CMenuOptionChooser(LOCALE_CPU_FREQ_NORMAL, &g_settings.cpufreq, CPU_FREQ_OPTIONS, CPU_FREQ_OPTION_COUNT, true, cpuNotifier));
-	ms_cpu->addItem(new CMenuOptionChooser(LOCALE_CPU_FREQ_STANDBY, &g_settings.standby_cpufreq, CPU_FREQ_OPTIONS, CPU_FREQ_OPTION_COUNT, true));
+	addSetting(ms_cpu, "cpufreq", true, cpuNotifier);
+	addSetting(ms_cpu, "standby_cpufreq");
 }
 
 bool CMiscMenue::changeNotify(const neutrino_locale_t OptionName, void */*data*/)
@@ -843,13 +681,13 @@ bool CMiscMenue::changeNotify(const neutrino_locale_t OptionName, void */*data*/
 	}
 	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_EPG_SCAN))
 	{
-		epg_scan->setActive(g_settings.epg_scan_mode != CEpgScan::MODE_OFF /*&& g_settings.epg_save_mode == 0*/);
+		epg_scan->setActive(g_settings.epg_scan_mode != EPG_SCAN_MODE_OFF /*&& g_settings.epg_save_mode == 0*/);
 	}
 #if 0
 	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_MISCSETTINGS_EPG_SAVE_MODE))
 	{
-		g_settings.epg_scan = CEpgScan::SCAN_FAV;
-		epg_scan->setActive(g_settings.epg_scan_mode != CEpgScan::MODE_OFF && g_settings.epg_save_mode == 0);
+		g_settings.epg_scan = EPG_SCAN_FAV;
+		epg_scan->setActive(g_settings.epg_scan_mode != EPG_SCAN_MODE_OFF && g_settings.epg_save_mode == 0);
 		ret = menu_return::RETURN_REPAINT;
 	}
 #endif

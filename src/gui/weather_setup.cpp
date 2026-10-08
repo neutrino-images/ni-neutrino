@@ -28,6 +28,7 @@
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
 #include <gui/widget/msgbox.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/keyboard_input.h>
 
@@ -94,9 +95,8 @@ int CWeatherSetup::showWeatherSetup()
 	CMenuWidget *ms_oservices = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_MISCSETUP_ONLINESERVICES);
 	ms_oservices->addIntroItems(LOCALE_MISCSETTINGS_ONLINESERVICES);
 
-	weather_onoff = new CMenuOptionChooser(LOCALE_WEATHER_ENABLED, &g_settings.weather_enabled, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, CApiKey::check_weather_api_key());
-	weather_onoff->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_WEATHER_ENABLED);
-	ms_oservices->addItem(weather_onoff);
+	weather_onoff = static_cast<CMenuOptionChooser *>(addSetting(ms_oservices, "weather_enabled", CApiKey::check_weather_api_key()));
+	weather_onoff->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
 
 #if ENABLE_WEATHER_KEY_MANAGE
 	changeNotify(LOCALE_WEATHER_API_KEY, NULL);

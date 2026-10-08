@@ -39,6 +39,7 @@
 #include "glcdsetup.h"
 #include <gui/widget/menue_options.h>
 #include <gui/widget/colorchooser.h>
+#include <gui/widget/settingitem.h>
 #include <neutrino_menue.h>
 #include "glcdthemes.h"
 
@@ -303,7 +304,7 @@ int GLCD_Menu::GLCD_Menu_Settings()
 
 	//sigc::slot0<void> slot_repaint = sigc::mem_fun(gms, &CMenuWidget::paint); // we want to repaint after changed Option
 
-	gms->addItem(new CMenuOptionChooser(LOCALE_GLCD_ENABLE, &g_settings.glcd_enable, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::RC_red));
+	addSetting(gms, "glcd_enable", true, this, CRCInput::RC_red);
 
 	select_driver = new CMenuForwarder(LOCALE_GLCD_DISPLAY, (cGLCD::getInstance()->GetConfigSize() > 1), cGLCD::getInstance()->GetConfigName(g_settings.glcd_selected_config).c_str(), this, "select_driver", CRCInput::RC_green);
 	gms->addItem(select_driver);
@@ -318,13 +319,13 @@ int GLCD_Menu::GLCD_Menu_Settings()
 
 	gms->addItem(new CMenuForwarder(LOCALE_GLCD_BRIGHTNESS_SETTINGS, true, NULL, this, "brightness_settings", CRCInput::convertDigitToKey(shortcut++)));
 
-	gms->addItem(new CMenuOptionChooser(LOCALE_GLCD_SCROLL, &g_settings.glcd_scroll, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++)));
+	addSetting(gms, "glcd_scroll", true, this, CRCInput::convertDigitToKey(shortcut++));
 
-	gms->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_SCROLL_SPEED, &g_settings.glcd_scroll_speed, true, 1, 63, this));
+	addSetting(gms, "glcd_scroll_speed", true, this);
 
-	gms->addItem(new CMenuOptionChooser(LOCALE_GLCD_MIRROR_OSD, &g_settings.glcd_mirror_osd, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++)));
+	addSetting(gms, "glcd_mirror_osd", true, this, CRCInput::convertDigitToKey(shortcut++));
 
-	gms->addItem(new CMenuOptionChooser(LOCALE_GLCD_MIRROR_VIDEO, &g_settings.glcd_mirror_video, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++)));
+	addSetting(gms, "glcd_mirror_video", true, this, CRCInput::convertDigitToKey(shortcut++));
 
 	gms->addItem(GenericMenuSeparatorLine);
 
@@ -407,22 +408,15 @@ int GLCD_Menu::GLCD_Brightness_Settings()
 	CMenuWidget *gbs = new CMenuWidget(LOCALE_GLCD_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_GLCD_BRIGHTNESS_SETTINGS);
 	gbs->addIntroItems(LOCALE_GLCD_BRIGHTNESS_SETTINGS);
 
-	CMenuOptionNumberChooser *mn;
 	CMenuForwarder *mf;
 
-	mn = new CMenuOptionNumberChooser(LOCALE_GLCD_BRIGHTNESS, &g_settings.glcd_brightness, true, 0, 10, this, CRCInput::RC_nokey, NULL, 0, 0, NONEXISTANT_LOCALE, true);
-	//mn->setHint("", LOCALE_TODO);
-	gbs->addItem(mn);
+	addSetting(gbs, "glcd_brightness", true, this, CRCInput::RC_nokey, true);
 
-	mn = new CMenuOptionNumberChooser(LOCALE_GLCD_BRIGHTNESS_STANDBY, &g_settings.glcd_brightness_standby, !g_settings.shutdown_real, 0, 10, this, CRCInput::RC_nokey, NULL, 0, 0, NONEXISTANT_LOCALE, true);
-	//mn->setHint("", LOCALE_TODO);
-	gbs->addItem(mn);
+	addSetting(gbs, "glcd_brightness_standby", !g_settings.shutdown_real, this, CRCInput::RC_nokey, true);
 
 	gbs->addItem(GenericMenuSeparatorLine);
 
-	mn = new CMenuOptionNumberChooser(LOCALE_GLCD_BRIGHTNESS_DIM, &g_settings.glcd_brightness_dim, true, 0, 10, this, CRCInput::RC_nokey, NULL, 0, 0, NONEXISTANT_LOCALE, true);
-	//mn->setHint("", LOCALE_TODO);
-	gbs->addItem(mn);
+	addSetting(gbs, "glcd_brightness_dim", true, this, CRCInput::RC_nokey, true);
 
 	CStringInput *dim_time = new CStringInput(LOCALE_GLCD_BRIGHTNESS_DIM_TIME, &g_settings.glcd_brightness_dim_time, 5, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, "0123456789 ");
 	mf = new CMenuForwarder(LOCALE_GLCD_BRIGHTNESS_DIM_TIME, true, g_settings.glcd_brightness_dim_time, dim_time);

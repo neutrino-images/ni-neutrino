@@ -129,6 +129,9 @@ TEST_CASE("a condition naming a key nothing declares is caught", "[settingstable
 
 TEST_CASE("every condition the program declares names a key it declares", "[settingstable]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	REQUIRE(settingsTableCount() > 0);
 
 	size_t looked = 0;
@@ -149,6 +152,27 @@ TEST_CASE("every condition the program declares names a key it declares", "[sett
 	   above is what says a bad condition would be refused. */
 	INFO("conditions checked: " << looked);
 	recordCount("conditions checked", looked);
+}
+
+/* A key misspelt in the list holds no row, so the row it meant stays writable on a
+   locked box and nothing else would say so. */
+TEST_CASE("every key the parental lock holds is a declared parental row", "[settingstable]")
+{
+	size_t count = 0;
+	const char *const *keys = parentalLockKeys(count);
+	REQUIRE(count == 4);
+	for (size_t i = 0; i < count; ++i)
+	{
+		INFO("held key " << keys[i]);
+		const Descriptor *d = settings::findRow(keys[i]);
+		REQUIRE(d != NULL);
+		CHECK(std::string(d->section) == "parental");
+		// clearSecret writes a secret row without asking the lock.
+		CHECK_FALSE(d->secret);
+		CHECK(heldByParentalLock(keys[i]));
+	}
+	CHECK_FALSE(heldByParentalLock("parentallock_pincode"));
+	CHECK_FALSE(heldByParentalLock(NULL));
 }
 
 /* The declared side alone, split by section, which is the unit the remaining

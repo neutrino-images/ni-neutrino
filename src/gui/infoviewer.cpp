@@ -579,10 +579,10 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 
 	current_epg_id = channel->getEpgID();
 
-	if (g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_LEFT || 
-	    g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_RIGHT || 
-	    g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_CENTER || 
-	    g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_HIGHER_CENTER)
+	if (g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_LEFT ||
+	    g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_RIGHT ||
+	    g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_CENTER ||
+	    g_settings.volume_pos == VOLUMEBAR_POS_HIGHER_CENTER)
 		isVolscale = CVolume::getInstance()->hideVolscale();
 	else
 		isVolscale = false;
@@ -816,10 +816,10 @@ void CInfoViewer::showMovieTitle(const int playState, const t_channel_id &Channe
 {
 	CInfoClock::getInstance()->disableInfoClock();
 
-	if (g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_LEFT ||
-	    g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_RIGHT ||
-	    g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_CENTER ||
-	    g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_HIGHER_CENTER)
+	if (g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_LEFT ||
+	    g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_RIGHT ||
+	    g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_CENTER ||
+	    g_settings.volume_pos == VOLUMEBAR_POS_HIGHER_CENTER)
 		isVolscale = CVolume::getInstance()->hideVolscale();
 	else
 		isVolscale = false;

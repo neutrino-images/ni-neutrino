@@ -240,6 +240,52 @@ TEST_CASE("every key an applier lists is a row its own section declares", "[sett
 	recordCount("listed keys compared against the table", checked);
 }
 
+/* What the comparison below found. A row whose value is not in the member it is
+   named after must not be listed, and the direction is the opposite of the rule
+   for the others: the notifier's branch reads that member, the write went where
+   the value really lives and left the member alone, so running the notifier
+   would apply whatever the screen last left in it. Refused rather than passed
+   over, so adding such a key to a list is a failure. */
+struct ActedMatch
+{
+	size_t checked;
+	size_t elsewhere;
+	std::string wrong;
+
+	ActedMatch() : checked(0), elsewhere(0) {}
+};
+
+static ActedMatch matchActed(const std::vector<Acts> &acts, const std::set<std::string> &listedKeys)
+{
+	ActedMatch m;
+	for (size_t i = 0; i < acts.size(); ++i)
+	{
+		const Acts &a = acts[i];
+		for (size_t j = 0; j < settingsTableCount(); ++j)
+		{
+			const Descriptor &d = settingsTable()[j];
+			if (d.label_key == NULL || sectionOf(d) != a.section || std::string(d.label_key) != a.label)
+				continue;
+
+			const bool isListed = listedKeys.count(a.section + "\t" + std::string(d.key)) == 1;
+			if (!valueIsInNamedMember(d.field))
+			{
+				++m.elsewhere;
+				if (isListed)
+					m.wrong += " " + std::string(d.key) + "(listed, value is elsewhere)"
+					           " [" + a.label + ", acted on by " + a.where + "]";
+				continue;
+			}
+
+			++m.checked;
+			if (!isListed)
+				m.wrong += " " + std::string(d.key) + "(acted on, not listed)"
+				           " [" + a.label + ", acted on by " + a.where + "]";
+		}
+	}
+	return m;
+}
+
 /* The other direction, and the one a hand written list loses first: a notifier
    that gains a branch for a setting the section declares leaves the list short,
    and the row is written, saved and never applied with nothing to say so. */
@@ -249,44 +295,72 @@ TEST_CASE("every option a notifier acts on is one its applier lists", "[settings
 	for (size_t i = 0; i < listed().size(); ++i)
 		listedKeys.insert(listed()[i].section + "\t" + listed()[i].key);
 
-	size_t checked = 0;
-	size_t elsewhere = 0;
-	for (size_t i = 0; i < actsOn().size(); ++i)
-	{
-		const Acts &a = actsOn()[i];
-		for (size_t j = 0; j < settingsTableCount(); ++j)
-		{
-			const Descriptor &d = settingsTable()[j];
-			if (d.label_key == NULL || sectionOf(d) != a.section || std::string(d.label_key) != a.label)
-				continue;
+	ActedMatch m = matchActed(actsOn(), listedKeys);
+	INFO("rows wrongly listed or left out:" << m.wrong);
+	CHECK(m.wrong.empty());
 
-			/* A row whose value is not in the member it is named after must not be
-			   listed, and the direction is the opposite of the rule above: the
-			   notifier's branch reads that member, the write went where the value
-			   really lives and left the member alone, so running the notifier would
-			   apply whatever the screen last left in it. Refused rather than passed
-			   over, so adding such a key to a list is a failure here. */
-			if (!valueIsInNamedMember(d.field))
-			{
-				++elsewhere;
-				INFO("row " << d.key << " carries " << a.label
-				     << ", which " << a.where << " acts on through a member the row does not write");
-				CHECK(listedKeys.count(a.section + "\t" + std::string(d.key)) == 0);
-				continue;
-			}
+	recordCount("acted options matched to a declared row", m.checked);
+	/* Counted, or a table that stopped declaring any of them would satisfy the
+	   comparison by never matching a row. Rows whose value lives elsewhere are
+	   no longer required of the tree: the proof for that path is the fixture
+	   below. */
+	recordCount("acted options whose row writes another member", m.elsewhere);
+	REQUIRE(m.checked > 0);
+}
 
-			++checked;
-			INFO("row " << d.key << " carries " << a.label
-			     << ", which " << a.where << " acts on");
-			CHECK(listedKeys.count(a.section + "\t" + std::string(d.key)) == 1);
-		}
-	}
+/* The path for a row whose value is not in its named member needs a notifier
+   branch on such a row to be exercised, and the tree no longer has one. So the
+   same comparison is run over a branch written here, on rows the table does
+   declare: the three bits of the audio pid mask and the daemon's safety time. */
+TEST_CASE("a notifier branch on a row whose value lives elsewhere is refused when listed", "[settingsappliers]")
+{
+	std::vector<Acts> acts;
+	Acts a;
+	a.section = "recording";
+	a.label = "recordingmenu.apids_std";
+	a.where = "fixture";
+	acts.push_back(a);
+	a.label = "timersettings.record_safety_time_before";
+	acts.push_back(a);
 
-	recordCount("acted options matched to a declared row", checked);
-	// Counted, or a table that stopped declaring any of them would satisfy the
-	// branch above by never taking it.
-	recordCount("acted options whose row writes another member", elsewhere);
-	REQUIRE(elsewhere > 0);
+	std::set<std::string> none;
+	ActedMatch clean = matchActed(acts, none);
+	INFO("wrong:" << clean.wrong);
+	REQUIRE(clean.elsewhere == 2);
+	REQUIRE(clean.checked == 0);
+	CHECK(clean.wrong.empty());
+
+	std::set<std::string> listedAnyway;
+	listedAnyway.insert("recording\trecording_audio_pids_std");
+	ActedMatch broken = matchActed(acts, listedAnyway);
+	REQUIRE(broken.elsewhere == 2);
+	CHECK(broken.wrong.find("recording_audio_pids_std(listed, value is elsewhere)") != std::string::npos);
+	// Names which notifier branch to look at, which a bare key does not.
+	CHECK(broken.wrong.find("[recordingmenu.apids_std, acted on by fixture]") != std::string::npos);
+}
+
+/* And the other side of the same comparison, on a row whose value is in its
+   member: acted on and not listed is a failure, and listed is not. */
+TEST_CASE("a notifier branch on an ordinary row must be listed", "[settingsappliers]")
+{
+	std::vector<Acts> acts;
+	Acts a;
+	a.section = "recording";
+	a.label = "recordingmenu.fill_warn";
+	a.where = "fixture";
+	acts.push_back(a);
+
+	std::set<std::string> none;
+	ActedMatch missing = matchActed(acts, none);
+	REQUIRE(missing.checked == 1);
+	CHECK(missing.wrong.find("recording_fill_warning(acted on, not listed)") != std::string::npos);
+	CHECK(missing.wrong.find("[recordingmenu.fill_warn, acted on by fixture]") != std::string::npos);
+
+	std::set<std::string> listedKeys;
+	listedKeys.insert("recording\trecording_fill_warning");
+	ActedMatch fine = matchActed(acts, listedKeys);
+	REQUIRE(fine.checked == 1);
+	CHECK(fine.wrong.empty());
 }
 
 /* The figure the build states about this seam. Sections are the wrong unit:

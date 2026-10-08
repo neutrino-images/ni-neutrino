@@ -32,6 +32,7 @@
 #include <stdio.h>    /* printf       */
 #include <sys/time.h> /* gettimeofday */
 #include <inttypes.h>
+#include <system/settings.h>
 class CPictureViewer
 {
 	struct cformathandler 
@@ -44,12 +45,7 @@ class CPictureViewer
 	typedef  struct cformathandler CFormathandler;
 
  public:
-	enum ScalingMode
-		{
-			NONE=0,
-			SIMPLE=1,
-			COLOR=2
-		};
+	typedef int ScalingMode; // PICVIEWER_SCALING_* in system/settings.h
 	enum {
 		NOPE = 0,
 		LCD4LINUX = 1,

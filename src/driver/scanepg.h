@@ -28,19 +28,6 @@ typedef eit_scanmap_t::iterator eit_scanmap_iterator_t;
 
 class CEpgScan
 {
-	public:
-		enum {
-			SCAN_OFF,
-			SCAN_CURRENT,
-			SCAN_FAV,
-			SCAN_SEL
-		};
-		enum {
-			MODE_OFF = 0,
-			MODE_LIVE = 0x1,
-			MODE_STANDBY = 0x2,
-			MODE_ALWAYS = 0x3
-		};
 	private:
 		int current_bnum;
 		int current_mode;

@@ -46,6 +46,7 @@
 #include <gui/widget/msgbox.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/keyboard_input.h>
+#include <gui/widget/settingitem.h>
 
 #include <gui/filebrowser.h>
 
@@ -145,13 +146,6 @@ int CKeybindSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 
 	return res;
 }
-
-#define KEYBINDINGMENU_BOUQUETLIST_MODE_OPTION_COUNT 2
-const CMenuOptionChooser::keyval KEYBINDINGMENU_BOUQUETLIST_MODE_OPTIONS[KEYBINDINGMENU_BOUQUETLIST_MODE_OPTION_COUNT] =
-{
-	{ SNeutrinoSettings::CHANNELLIST, LOCALE_KEYBINDINGMENU_CHANNELLIST },
-	{ SNeutrinoSettings::FAVORITES,   LOCALE_KEYBINDINGMENU_FAVORITES   }
-};
 
 #define KEYBINDINGMENU_REMOTECONTROL_HARDWARE_OPTION_COUNT 3
 const CMenuOptionChooser::keyval KEYBINDINGMENU_REMOTECONTROL_HARDWARE_OPTIONS[KEYBINDINGMENU_REMOTECONTROL_HARDWARE_OPTION_COUNT] =
@@ -423,9 +417,7 @@ void CKeybindSetup::showKeyBindSetup(CMenuWidget *bindSettings)
 		mf->setHint("", key_settings[i].hint);
 		bindSettings->addItem(mf);
 	}
-	CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_EXTRA_MENU_LEFT_EXIT, &g_settings.menu_left_exit, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_KEY_LEFT_EXIT);
-	bindSettings->addItem(mc);
+	addSetting(bindSettings, "menu_left_exit");
 
 	// volume
 	bindSettings->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_KEYBINDINGMENU_VOLUME));
@@ -495,6 +487,7 @@ void CKeybindSetup::showKeyBindSetup(CMenuWidget *bindSettings)
 	bindSettings->addItem(new CMenuSeparator());
 
 	// left/right keys
+	CMenuOptionChooser *mc;
 	mc = new CMenuOptionChooser(LOCALE_KEYBINDINGMENU_MODE_LEFT_RIGHT_KEY_TV, &g_settings.mode_left_right_key_tv, KEYBINDINGMENU_MODE_LEFT_RIGHT_KEY_TV_OPTIONS, KEYBINDINGMENU_MODE_LEFT_RIGHT_KEY_TV_COUNT, true);
 	mc->setHint("", LOCALE_MENU_HINT_KEY_RIGHT);
 	bindSettings->addItem(mc);
@@ -523,8 +516,7 @@ void CKeybindSetup::showKeyBindChannellistSetup(CMenuWidget *bindSettings_chlist
 {
 	bindSettings_chlist->addIntroItems(LOCALE_KEYBINDINGMENU_CHANNELLIST);
 
-	CMenuOptionChooser *oj = new CMenuOptionChooser(LOCALE_KEYBINDINGMENU_BOUQUETLIST_MODE, &g_settings.bouquetlist_mode, KEYBINDINGMENU_BOUQUETLIST_MODE_OPTIONS, KEYBINDINGMENU_BOUQUETLIST_MODE_OPTION_COUNT, true);
-	bindSettings_chlist->addItem(oj);
+	addSetting(bindSettings_chlist, "bouquetlist_mode");
 
 	for (int i = NKEY_LIST_START; i <= NKEY_CURRENT_TRANSPONDER; i++)
 	{
@@ -533,9 +525,7 @@ void CKeybindSetup::showKeyBindChannellistSetup(CMenuWidget *bindSettings_chlist
 		bindSettings_chlist->addItem(mf);
 	}
 
-	CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_EXTRA_SMS_CHANNEL, &g_settings.sms_channel, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_SMS_CHANNEL);
-	bindSettings_chlist->addItem(mc);
+	addSetting(bindSettings_chlist, "sms_channel");
 }
 
 void CKeybindSetup::showKeyBindQuickzapSetup(CMenuWidget *bindSettings_qzap)
@@ -581,26 +571,15 @@ void CKeybindSetup::showKeyBindMoviebrowserSetup(CMenuWidget *bindSettings_mbrow
 		bindSettings_mbrowser->addItem(mf);
 	}
 
-	CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_EXTRA_SMS_MOVIE, &g_settings.sms_movie, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_SMS_MOVIE);
-	bindSettings_mbrowser->addItem(mc);
+	addSetting(bindSettings_mbrowser, "sms_movie");
 }
 
 void CKeybindSetup::showKeyBindSpecialSetup(CMenuWidget *bindSettings_special)
 {
 	bindSettings_special->addIntroItems(LOCALE_KEYBINDINGMENU_SPECIAL_ACTIVE);
-	int nkey;
-	if (g_info.hw_caps->has_button_vformat)
-		nkey = NKEY_FORMAT_MODE;
-	else
-		nkey = NKEY_PIC_MODE;
-
-	for (; nkey <= NKEY_PIC_SIZE; nkey++)
-	{
-		CMenuOptionChooser *mf = new CMenuOptionChooser(key_settings[nkey].keydescription, key_settings[nkey].keyvalue_p, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-		mf->setHint("", key_settings[nkey].hint);
-		bindSettings_special->addItem(mf);
-	}
+	addSetting(bindSettings_special, "key_format_mode_active");
+	addSetting(bindSettings_special, "key_pic_mode_active");
+	addSetting(bindSettings_special, "key_pic_size_active");
 }
 
 bool CKeybindSetup::changeNotify(const neutrino_locale_t OptionName, void * /* data */)

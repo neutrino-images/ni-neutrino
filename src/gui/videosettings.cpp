@@ -45,6 +45,7 @@
 #include <gui/widget/stringinput.h>
 #include <gui/widget/hintbox.h>
 #include <gui/widget/msgbox.h>
+#include <gui/widget/settingitem.h>
 #include <gui/osd_setup.h>
 #include <gui/osd_helpers.h>
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
@@ -64,6 +65,8 @@
 #include <hardware/video.h>
 
 #include <coreapi/base/deps.h>
+#include <coreapi/settings/menuspec.h>
+#include <coreapi/settings/videomodes.h>
 
 #include <cstring>
 
@@ -96,12 +99,10 @@ CVideoSettings::CVideoSettings(int wizard_mode)
 	prev_video_mode = g_settings.video_Mode;
 
 	setupVideoSystem(false);
-	Init43ModeOptions();
 }
 
 CVideoSettings::~CVideoSettings()
 {
-	videomenu_43mode_options.clear();
 }
 
 int CVideoSettings::exec(CMenuTarget *parent, const std::string &/*actionKey*/)
@@ -119,453 +120,41 @@ int CVideoSettings::exec(CMenuTarget *parent, const std::string &/*actionKey*/)
 	return res;
 }
 
-const CMenuOptionChooser::keyval VIDEOMENU_43MODE_OPTIONS[] =
+/* The video modes by the number the settings file gives each, the index of
+   enabled_video_modes and enabled_auto_modes, with the value the video_Mode
+   row gives the mode on this box, or -1 where this box does not draw it.
+   Filled once out of the declaration. */
+const CMenuOptionChooser::keyval_ext *videoModeSlots()
 {
-	{ DISPLAY_AR_MODE_PANSCAN, LOCALE_VIDEOMENU_PANSCAN },
-	{ DISPLAY_AR_MODE_PANSCAN2, LOCALE_VIDEOMENU_PANSCAN2 },
-	{ DISPLAY_AR_MODE_LETTERBOX, LOCALE_VIDEOMENU_LETTERBOX },
-	{ DISPLAY_AR_MODE_NONE, LOCALE_VIDEOMENU_FULLSCREEN }
-	//{ 2, LOCALE_VIDEOMENU_AUTO } // whatever is this auto mode, it seems its totally broken
-};
-#define VIDEOMENU_43MODE_OPTION_COUNT (sizeof(VIDEOMENU_43MODE_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
+	static CMenuOptionChooser::keyval_ext slots[VIDEOMENU_VIDEOMODE_OPTION_COUNT];
+	static bool filled = false;
+	if (filled)
+		return slots;
 
-#ifndef BOXMODEL_CST_HD2
-#define VIDEOMENU_VIDEOSIGNAL_TD_OPTION_COUNT 2
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_TD_OPTIONS[VIDEOMENU_VIDEOSIGNAL_TD_OPTION_COUNT] =
-{
-	{ ANALOG_SD_RGB_SCART,   LOCALE_VIDEOMENU_ANALOG_SD_RGB_SCART   },
-	{ ANALOG_SD_YPRPB_SCART, LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_SCART }
-};
-#endif
-
-#ifdef ANALOG_MODE
-#define VIDEOMENU_VIDEOSIGNAL_HD1_OPTION_COUNT 8
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_HD1_OPTIONS[VIDEOMENU_VIDEOSIGNAL_HD1_OPTION_COUNT] =
-{
-	{ ANALOG_MODE(SCART, SD, RGB),   LOCALE_VIDEOMENU_ANALOG_SD_RGB_SCART   }, // composite + RGB (for both SCART and Cinch)
-	{ ANALOG_MODE(CINCH, SD, RGB),   LOCALE_VIDEOMENU_ANALOG_SD_RGB_CINCH   }, // composite + RGB (for both SCART and Cinch)
-	{ ANALOG_MODE(SCART, SD, YPRPB), LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_SCART }, // YPbPr SCART (with wrongly connected Cinch)
-	{ ANALOG_MODE(CINCH, SD, YPRPB), LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_CINCH }, // YPbPr Cinch (with wrongly connected SCART)
-	{ ANALOG_MODE(SCART, HD, RGB),   LOCALE_VIDEOMENU_ANALOG_HD_RGB_SCART   },
-	{ ANALOG_MODE(CINCH, HD, RGB),   LOCALE_VIDEOMENU_ANALOG_HD_RGB_CINCH   },
-	{ ANALOG_MODE(SCART, HD, YPRPB), LOCALE_VIDEOMENU_ANALOG_HD_YPRPB_SCART },
-	{ ANALOG_MODE(CINCH, HD, YPRPB), LOCALE_VIDEOMENU_ANALOG_HD_YPRPB_CINCH }
-};
-
-#define VIDEOMENU_VIDEOSIGNAL_HD2_OPTION_COUNT 6
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_HD2_OPTIONS[VIDEOMENU_VIDEOSIGNAL_HD2_OPTION_COUNT] =
-{
-	{ ANALOG_MODE(BOTH, xD, AUTO),  LOCALE_VIDEOMENU_ANALOG_AUTO     }, // Encoder automatically adjusts based on content
-	{ ANALOG_MODE(BOTH, xD, CVBS),  LOCALE_VIDEOMENU_ANALOG_CVBS     }, // CVBS on SCART (disables fastblank, un-used dacs)
-	{ ANALOG_MODE(BOTH, SD, RGB),   LOCALE_VIDEOMENU_ANALOG_SD_RGB   }, // SD RGB on Cinch and SCART
-	{ ANALOG_MODE(BOTH, SD, YPRPB), LOCALE_VIDEOMENU_ANALOG_SD_YPRPB }, // SD YPrPb on Cinch and SCART
-	{ ANALOG_MODE(BOTH, HD, RGB),   LOCALE_VIDEOMENU_ANALOG_HD_RGB   }, // HD RGB on Cinch and SCART
-	{ ANALOG_MODE(BOTH, HD, YPRPB), LOCALE_VIDEOMENU_ANALOG_HD_YPRPB }, // HD YPrPb on Cinch and SCART
-};
-
-#define VIDEOMENU_VIDEOSIGNAL_HD1PLUS_SCART_OPTION_COUNT 4
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_HD1PLUS_SCART_OPTIONS[VIDEOMENU_VIDEOSIGNAL_HD1PLUS_SCART_OPTION_COUNT] =
-{
-	{ ANALOG_MODE(SCART, SD, RGB),   LOCALE_VIDEOMENU_ANALOG_SD_RGB_SCART   }, // composite + RGB
-	{ ANALOG_MODE(SCART, SD, YPRPB), LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_SCART }, // YPbPr SCART
-	{ ANALOG_MODE(SCART, HD, RGB),   LOCALE_VIDEOMENU_ANALOG_HD_RGB_SCART   },
-	{ ANALOG_MODE(SCART, HD, YPRPB), LOCALE_VIDEOMENU_ANALOG_HD_YPRPB_SCART },
-};
-
-#define VIDEOMENU_VIDEOSIGNAL_HD1PLUS_CINCH_OPTION_COUNT 4
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_HD1PLUS_CINCH_OPTIONS[VIDEOMENU_VIDEOSIGNAL_HD1PLUS_CINCH_OPTION_COUNT] =
-{
-	{ ANALOG_MODE(CINCH, SD, RGB),   LOCALE_VIDEOMENU_ANALOG_SD_RGB_CINCH   }, // composite + RGB (for both SCART and Cinch)
-	{ ANALOG_MODE(CINCH, SD, YPRPB), LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_CINCH }, // YPbPr Cinch (with wrongly connected SCART)
-	{ ANALOG_MODE(CINCH, HD, RGB),   LOCALE_VIDEOMENU_ANALOG_HD_RGB_CINCH   },
-	{ ANALOG_MODE(CINCH, HD, YPRPB), LOCALE_VIDEOMENU_ANALOG_HD_YPRPB_CINCH }
-};
-#else
-#define VIDEOMENU_VIDEOSIGNAL_HD1_OPTION_COUNT 8
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_HD1_OPTIONS[VIDEOMENU_VIDEOSIGNAL_HD1_OPTION_COUNT] =
-{
-	{ ANALOG_SD_RGB_SCART,   LOCALE_VIDEOMENU_ANALOG_SD_RGB_SCART   }, // composite + RGB (for both SCART and Cinch)
-	{ ANALOG_SD_RGB_CINCH,   LOCALE_VIDEOMENU_ANALOG_SD_RGB_CINCH   }, // composite + RGB (for both SCART and Cinch)
-	{ ANALOG_SD_YPRPB_SCART, LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_SCART }, // YPbPr SCART (with wrongly connected Cinch)
-	{ ANALOG_SD_YPRPB_CINCH, LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_CINCH }, // YPbPr Cinch (with wrongly connected SCART)
-	{ ANALOG_HD_RGB_SCART,   LOCALE_VIDEOMENU_ANALOG_HD_RGB_SCART   },
-	{ ANALOG_HD_RGB_CINCH,   LOCALE_VIDEOMENU_ANALOG_HD_RGB_CINCH   },
-	{ ANALOG_HD_YPRPB_SCART, LOCALE_VIDEOMENU_ANALOG_HD_YPRPB_SCART },
-	{ ANALOG_HD_YPRPB_CINCH, LOCALE_VIDEOMENU_ANALOG_HD_YPRPB_CINCH }
-};
-
-#define VIDEOMENU_VIDEOSIGNAL_HD1PLUS_SCART_OPTION_COUNT 4
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_HD1PLUS_SCART_OPTIONS[VIDEOMENU_VIDEOSIGNAL_HD1PLUS_SCART_OPTION_COUNT] =
-{
-	{ ANALOG_SD_RGB_SCART,   LOCALE_VIDEOMENU_ANALOG_SD_RGB_SCART   }, // composite + RGB
-	{ ANALOG_SD_YPRPB_SCART, LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_SCART }, // YPbPr SCART
-	{ ANALOG_HD_RGB_SCART,   LOCALE_VIDEOMENU_ANALOG_HD_RGB_SCART   },
-	{ ANALOG_HD_YPRPB_SCART, LOCALE_VIDEOMENU_ANALOG_HD_YPRPB_SCART },
-};
-
-#define VIDEOMENU_VIDEOSIGNAL_HD1PLUS_CINCH_OPTION_COUNT 4
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOSIGNAL_HD1PLUS_CINCH_OPTIONS[VIDEOMENU_VIDEOSIGNAL_HD1PLUS_CINCH_OPTION_COUNT] =
-{
-	{ ANALOG_SD_RGB_CINCH,   LOCALE_VIDEOMENU_ANALOG_SD_RGB_CINCH   }, // composite + RGB (for both SCART and Cinch)
-	{ ANALOG_SD_YPRPB_CINCH, LOCALE_VIDEOMENU_ANALOG_SD_YPRPB_CINCH }, // YPbPr Cinch (with wrongly connected SCART)
-	{ ANALOG_HD_RGB_CINCH,   LOCALE_VIDEOMENU_ANALOG_HD_RGB_CINCH   },
-	{ ANALOG_HD_YPRPB_CINCH, LOCALE_VIDEOMENU_ANALOG_HD_YPRPB_CINCH }
-};
-#endif
-
-/*
- * key value of -1 means the mode is not available
- * TODO: instead of #ifdef select at run time
- */
-#if BOXMODEL_CST_HD1
-// numbers corresponding to video.cpp from zapit
-CMenuOptionChooser::keyval_ext VIDEOMENU_VIDEOMODE_OPTIONS[VIDEOMENU_VIDEOMODE_OPTION_COUNT] =
-{
-	{ VIDEO_STD_NTSC,	NONEXISTANT_LOCALE, "NTSC"		},
-	{ VIDEO_STD_PAL,	NONEXISTANT_LOCALE, "PAL"		},
-	{ VIDEO_STD_SECAM,	NONEXISTANT_LOCALE, "SECAM"		},
-	{ VIDEO_STD_480P,	NONEXISTANT_LOCALE, "480p"		},
-	{ VIDEO_STD_576P,	NONEXISTANT_LOCALE, "576p"		},
-	{ VIDEO_STD_720P50,	NONEXISTANT_LOCALE, "720p 50Hz"		},
-	{ VIDEO_STD_720P60,	NONEXISTANT_LOCALE, "720p 60Hz"		},
-	{ VIDEO_STD_1080I50,	NONEXISTANT_LOCALE, "1080i 50Hz"	},
-	{ VIDEO_STD_1080I60,	NONEXISTANT_LOCALE, "1080i 60Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 23.97Hz"	},
-	{ VIDEO_STD_1080P24,	NONEXISTANT_LOCALE, "1080p 24Hz"	},
-	{ VIDEO_STD_1080P25,	NONEXISTANT_LOCALE, "1080p 25Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 29.97Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 50Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 60Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 24Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 25Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 30Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 50Hz"	},
-	{ VIDEO_STD_AUTO,	NONEXISTANT_LOCALE, "Auto"		}
-};
-#elif BOXMODEL_CST_HD2
-// numbers corresponding to video.cpp from zapit
-CMenuOptionChooser::keyval_ext VIDEOMENU_VIDEOMODE_OPTIONS[VIDEOMENU_VIDEOMODE_OPTION_COUNT] =
-{
-	{ VIDEO_STD_NTSC,	NONEXISTANT_LOCALE, "NTSC"		},
-	{ VIDEO_STD_PAL,	NONEXISTANT_LOCALE, "PAL"		},
-	{ VIDEO_STD_SECAM,	NONEXISTANT_LOCALE, "SECAM"		},
-	{ VIDEO_STD_480P,	NONEXISTANT_LOCALE, "480p"		},
-	{ VIDEO_STD_576P,	NONEXISTANT_LOCALE, "576p"		},
-	{ VIDEO_STD_720P50,	NONEXISTANT_LOCALE, "720p 50Hz"		},
-	{ VIDEO_STD_720P60,	NONEXISTANT_LOCALE, "720p 60Hz"		},
-	{ VIDEO_STD_1080I50,	NONEXISTANT_LOCALE, "1080i 50Hz"	},
-	{ VIDEO_STD_1080I60,	NONEXISTANT_LOCALE, "1080i 60Hz"	},
-	{ VIDEO_STD_1080P2397,	NONEXISTANT_LOCALE, "1080p 23.97Hz"	},
-	{ VIDEO_STD_1080P24,	NONEXISTANT_LOCALE, "1080p 24Hz"	},
-	{ VIDEO_STD_1080P25,	NONEXISTANT_LOCALE, "1080p 25Hz"	},
-	{ VIDEO_STD_1080P2997,	NONEXISTANT_LOCALE, "1080p 29.97Hz"	},
-	{ VIDEO_STD_1080P50,	NONEXISTANT_LOCALE, "1080p 50Hz"	},
-	{ VIDEO_STD_1080P60,	NONEXISTANT_LOCALE, "1080p 60Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 24Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 25Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 30Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 50Hz"	},
-	{ VIDEO_STD_AUTO,	NONEXISTANT_LOCALE, "Auto"		}
-};
-#elif BOXMODEL_HD51 || BOXMODEL_BRE2ZE4K || BOXMODEL_H7 || BOXMODEL_E4HDULTRA || BOXMODEL_PROTEK4K || BOXMODEL_HD60 || BOXMODEL_HD61 || BOXMODEL_MULTIBOX || BOXMODEL_MULTIBOXSE || BOXMODEL_VUPLUS_ALL
-CMenuOptionChooser::keyval_ext VIDEOMENU_VIDEOMODE_OPTIONS[VIDEOMENU_VIDEOMODE_OPTION_COUNT] =
-{
-	{ -1,			NONEXISTANT_LOCALE, "NTSC"		},
-	{ VIDEO_STD_PAL,	NONEXISTANT_LOCALE, "PAL"		},
-	{ -1,			NONEXISTANT_LOCALE, "SECAM"		},
-	{ -1,			NONEXISTANT_LOCALE, "480p"		},
-	{ VIDEO_STD_576P,	NONEXISTANT_LOCALE, "576p"		},
-	{ VIDEO_STD_720P50,	NONEXISTANT_LOCALE, "720p 50Hz"		},
-	{ VIDEO_STD_720P60,	NONEXISTANT_LOCALE, "720p 60Hz"		},
-	{ VIDEO_STD_1080I50,	NONEXISTANT_LOCALE, "1080i 50Hz"	},
-	{ VIDEO_STD_1080I60,	NONEXISTANT_LOCALE, "1080i 60Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 23.97Hz"	},
-	{ VIDEO_STD_1080P24,	NONEXISTANT_LOCALE, "1080p 24Hz"	},
-	{ VIDEO_STD_1080P25,	NONEXISTANT_LOCALE, "1080p 25Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 29.97Hz"	},
-	{ VIDEO_STD_1080P50,	NONEXISTANT_LOCALE, "1080p 50Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 60Hz"	},
-	{ VIDEO_STD_2160P24,	NONEXISTANT_LOCALE, "2160p 24Hz"	},
-	{ VIDEO_STD_2160P25,	NONEXISTANT_LOCALE, "2160p 25Hz"	},
-	{ VIDEO_STD_2160P30,	NONEXISTANT_LOCALE, "2160p 30Hz"	},
-	{ VIDEO_STD_2160P50,	NONEXISTANT_LOCALE, "2160p 50Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "Auto"		}
-};
-#elif BOXMODEL_OSMIO4K || BOXMODEL_OSMIO4KPLUS
-CMenuOptionChooser::keyval_ext VIDEOMENU_VIDEOMODE_OPTIONS[VIDEOMENU_VIDEOMODE_OPTION_COUNT] =
-{
-	{ -1,			NONEXISTANT_LOCALE, "NTSC"		},
-	{ VIDEO_STD_PAL,	NONEXISTANT_LOCALE, "PAL"		},
-	{ -1,			NONEXISTANT_LOCALE, "SECAM"		},
-	{ -1,			NONEXISTANT_LOCALE, "480p"		},
-	{ VIDEO_STD_576P,	NONEXISTANT_LOCALE, "576p"		},
-	{ VIDEO_STD_720P50,	NONEXISTANT_LOCALE, "720p 50Hz"		},
-	{ VIDEO_STD_720P60,	NONEXISTANT_LOCALE, "720p 60Hz"		},
-	{ VIDEO_STD_1080I50,	NONEXISTANT_LOCALE, "1080i 50Hz"	},
-	{ VIDEO_STD_1080I60,	NONEXISTANT_LOCALE, "1080i 60Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 23.97Hz"	},
-	{ VIDEO_STD_1080P24,	NONEXISTANT_LOCALE, "1080p 24Hz"	},
-	{ VIDEO_STD_1080P25,	NONEXISTANT_LOCALE, "1080p 25Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 29.97Hz"	},
-	{ VIDEO_STD_1080P50,	NONEXISTANT_LOCALE, "1080p 50Hz"	},
-	{ VIDEO_STD_1080P60,	NONEXISTANT_LOCALE, "1080p 60Hz"	},
-	{ VIDEO_STD_2160P24,	NONEXISTANT_LOCALE, "2160p 24Hz"	},
-	{ VIDEO_STD_2160P25,	NONEXISTANT_LOCALE, "2160p 25Hz"	},
-	{ VIDEO_STD_2160P30,	NONEXISTANT_LOCALE, "2160p 30Hz"	},
-	{ VIDEO_STD_2160P50,	NONEXISTANT_LOCALE, "2160p 50Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "Auto"		}
-};
-#else
-/* generic PC -> 5 different resolutions, 480, 576, 720 and 1080 lines */
-CMenuOptionChooser::keyval_ext VIDEOMENU_VIDEOMODE_OPTIONS[VIDEOMENU_VIDEOMODE_OPTION_COUNT] =
-{
-	{ VIDEO_STD_NTSC,	NONEXISTANT_LOCALE, "NTSC"		},
-	{ VIDEO_STD_PAL,	NONEXISTANT_LOCALE, "PAL"		},
-	{ -1,			NONEXISTANT_LOCALE, "SECAM"		},
-	{ -1,			NONEXISTANT_LOCALE, "480p"		},
-	{ -1,			NONEXISTANT_LOCALE, "576p"		},
-	{ VIDEO_STD_720P50,	NONEXISTANT_LOCALE, "720p 50Hz"		},
-	{ VIDEO_STD_720P60,	NONEXISTANT_LOCALE, "720p 60Hz"		},
-	{ VIDEO_STD_1080I50,	NONEXISTANT_LOCALE, "1080i 50Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080i 60Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 23.97Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 24Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 25Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 29.97Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 50Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "1080p 60Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 24Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 25Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 30Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "2160p 50Hz"	},
-	{ -1,			NONEXISTANT_LOCALE, "Auto"		}
-};
-#endif
-
-/* What this screen offers for the three settings whose set of values the box
-   decides rather than the source: the video modes, which are a table per box
-   model with the ones that model cannot draw marked out, and the two analog
-   outputs, whose table is picked by a revision read at run time.
-
-   Written once and read twice, by the screen below and by the settings layer
-   through the seam at the foot of this file. A second copy of these conditions
-   would be right for one box model and quietly wrong for the next, which is
-   exactly the failure nothing running would report: the box would refuse a mode
-   a frontend offered, or take one it cannot show. */
-
-// The modes this box has, out of the table for its model. into holds at least
-// VIDEOMENU_VIDEOMODE_OPTION_COUNT of them, which is every row of that table.
-static unsigned videoModeOptions(CMenuOptionChooser::keyval_ext *into)
-{
-	unsigned count = 0;
+	size_t count = 0;
+	const char *const *names = coreapi::videoModeNames(count);
 	for (int i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
 	{
-		if (VIDEOMENU_VIDEOMODE_OPTIONS[i].key == -1)
-			continue;
-		into[count] = VIDEOMENU_VIDEOMODE_OPTIONS[i];
-		count++;
+		slots[i].key = -1;
+		slots[i].value = NONEXISTANT_LOCALE;
+		slots[i].valname = (size_t) i < count ? names[i] : "";
 	}
-	return count;
-}
 
-/* Which item the box offers for an analog output and out of which table. The
-   item is part of the answer because the three the screen can draw carry three
-   different labels and only one of them is drawn on any box, so which table it
-   is and which item it belongs to are one decision and not two. */
-enum analog_item
-{
-	ANALOG_ITEM_NONE,
-	ANALOG_ITEM_MODE,
-	ANALOG_ITEM_SCART,
-	ANALOG_ITEM_CINCH
-};
-
-struct analog_offer
-{
-	analog_item                       item;
-	const CMenuOptionChooser::keyval *table;
-	unsigned                          count;
-	// The wording under the item, which one of the arms has never set and which
-	// the settings layer does not read at all.
-	neutrino_locale_t                 hint;
-};
-
-static analog_offer analogMode1Offer()
-{
-	analog_offer offer = { ANALOG_ITEM_NONE, NULL, 0, NONEXISTANT_LOCALE };
-	const unsigned int system_rev = cs_get_revision();
-
-	if (system_rev == 0x06)
+	coreapi::Result<coreapi::MenuItemSpec> r = coreapi::menuItem("video_Mode");
+	if (!r.ok())
 	{
-		offer.item = ANALOG_ITEM_MODE;
-		offer.table = VIDEOMENU_VIDEOSIGNAL_HD1_OPTIONS;
-		offer.count = VIDEOMENU_VIDEOSIGNAL_HD1_OPTION_COUNT;
-		offer.hint = LOCALE_MENU_HINT_VIDEO_ANALOG_MODE;
+		// Tried again on the next call.
+		dprintf(DEBUG_NORMAL, "[CVideoSettings] [%s - %d], no video modes: %s\n", __func__, __LINE__, r.error().message.c_str());
+		return slots;
 	}
-	else if (system_rev > 0x06)
-	{
-#if defined(BOXMODEL_CST_HD2) && defined(ANALOG_MODE)
-		offer.item = ANALOG_ITEM_MODE;
-		offer.table = VIDEOMENU_VIDEOSIGNAL_HD2_OPTIONS;
-		offer.count = VIDEOMENU_VIDEOSIGNAL_HD2_OPTION_COUNT;
-		offer.hint = LOCALE_MENU_HINT_VIDEO_ANALOG_MODE;
-#else
-		if (system_rev != 10)
-		{
-			offer.item = ANALOG_ITEM_SCART;
-			offer.table = VIDEOMENU_VIDEOSIGNAL_HD1PLUS_SCART_OPTIONS;
-			offer.count = VIDEOMENU_VIDEOSIGNAL_HD1PLUS_SCART_OPTION_COUNT;
-			offer.hint = LOCALE_MENU_HINT_VIDEO_SCART_MODE;
-		}
-#endif
-	}
-#ifndef BOXMODEL_CST_HD2
-	else if (g_info.hw_caps->has_SCART)
-	{
-		offer.item = ANALOG_ITEM_SCART;
-		offer.table = VIDEOMENU_VIDEOSIGNAL_TD_OPTIONS;
-		offer.count = VIDEOMENU_VIDEOSIGNAL_TD_OPTION_COUNT;
-	}
-#endif
-
-	return offer;
+	const std::vector<coreapi::MenuChoice> &offered = r.value().choices;
+	for (size_t j = 0; j < offered.size(); j++)
+		for (size_t i = 0; i < count && i < (size_t) VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
+			if (offered[j].label_text == names[i])
+				slots[i].key = (int) offered[j].value;
+	filled = true;
+	return slots;
 }
-
-static analog_offer analogMode2Offer()
-{
-	analog_offer offer = { ANALOG_ITEM_NONE, NULL, 0, NONEXISTANT_LOCALE };
-
-#if !(defined(BOXMODEL_CST_HD2) && defined(ANALOG_MODE))
-	if (cs_get_revision() > 0x06)
-	{
-		offer.item = ANALOG_ITEM_CINCH;
-		offer.table = VIDEOMENU_VIDEOSIGNAL_HD1PLUS_CINCH_OPTIONS;
-		offer.count = VIDEOMENU_VIDEOSIGNAL_HD1PLUS_CINCH_OPTION_COUNT;
-		offer.hint = LOCALE_MENU_HINT_VIDEO_CINCH_MODE;
-	}
-#endif
-
-	return offer;
-}
-
-/* The same three sets, answered for the settings layer. Reached upwards, as an
-   applier is, because these lists are this screen's and that layer may not
-   reach into a screen.
-
-   The names are what a row asks under and are held to this list as text by
-   test/unit/scan/check-choices.sh, so a row asking under a name nothing here
-   answers stops the build rather than offering a setting with no values on
-   the box.
-
-   The text is what a person reads and not a name for the catalog. The video
-   modes carry no locale at all, "1080p 50Hz" among them, and the analog tables
-   carry one each, so both are turned into text here and a caller gets one
-   shape. */
-class CVideoSettingChoices : public coreapi::SettingChoices
-{
-	public:
-		coreapi::Status values(const char *name,
-				       std::vector<coreapi::SettingChoice> &out) const
-		{
-			if (name == NULL)
-				return coreapi::Status::NotFound;
-
-			if (strcmp(name, "video_mode") == 0)
-			{
-				CMenuOptionChooser::keyval_ext modes[VIDEOMENU_VIDEOMODE_OPTION_COUNT];
-				const unsigned count = videoModeOptions(modes);
-				for (unsigned i = 0; i < count; i++)
-				{
-					coreapi::SettingChoice one;
-					one.value = modes[i].key;
-					one.label = modes[i].valname;
-					out.push_back(one);
-				}
-				return coreapi::Status::Ok;
-			}
-
-			if (strcmp(name, "analog_mode1") == 0)
-				return fill(analogMode1Offer(), out);
-			if (strcmp(name, "analog_mode2") == 0)
-				return fill(analogMode2Offer(), out);
-
-			return coreapi::Status::NotFound;
-		}
-
-	private:
-		/* An item this box does not offer at all answers with nothing, which is
-		   what leaves the setting closed to a write: a box with no SCART socket
-		   has no analog mode to put on it. */
-		static coreapi::Status fill(const analog_offer &offer,
-					    std::vector<coreapi::SettingChoice> &out)
-		{
-			for (unsigned i = 0; i < offer.count; i++)
-			{
-				coreapi::SettingChoice one;
-				one.value = offer.table[i].key;
-				one.label = g_Locale->getText(offer.table[i].value);
-				out.push_back(one);
-			}
-			return coreapi::Status::Ok;
-		}
-};
-
-static CVideoSettingChoices g_video_setting_choices;
-
-/* Put in front of the settings layer once at start-up, from the same place the
-   appliers are registered, and not when this screen is first opened: a frontend
-   asks what a setting offers whether or not anybody has ever stood in front of
-   the television. */
-void installVideoSettingChoices()
-{
-	coreapi::setSettingChoices(&g_video_setting_choices);
-}
-
-#define VIDEOMENU_VIDEOFORMAT_OPTION_COUNT 3
-const CMenuOptionChooser::keyval VIDEOMENU_VIDEOFORMAT_OPTIONS[VIDEOMENU_VIDEOFORMAT_OPTION_COUNT] =
-{
-	{ DISPLAY_AR_4_3, LOCALE_VIDEOMENU_VIDEOFORMAT_43 },
-	{ DISPLAY_AR_16_9, LOCALE_VIDEOMENU_VIDEOFORMAT_169 },
-	{ DISPLAY_AR_14_9, LOCALE_VIDEOMENU_VIDEOFORMAT_149 }
-};
-
-#define VIDEOMENU_DBDR_OPTION_COUNT 3
-const CMenuOptionChooser::keyval VIDEOMENU_DBDR_OPTIONS[VIDEOMENU_DBDR_OPTION_COUNT] =
-{
-	{ 0, LOCALE_VIDEOMENU_DBDR_NONE },
-	{ 1, LOCALE_VIDEOMENU_DBDR_DEBLOCK },
-	{ 2, LOCALE_VIDEOMENU_DBDR_BOTH }
-};
-
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-#define VIDEOMENU_ZAPPINGMODE_OPTION_COUNT 4
-CMenuOptionChooser::keyval VIDEOMENU_ZAPPINGMODE_OPTIONS[VIDEOMENU_ZAPPINGMODE_OPTION_COUNT] =
-{
-	{ 0, LOCALE_VIDEOMENU_ZAPPINGMODE_MUTE },
-	{ 1, LOCALE_VIDEOMENU_ZAPPINGMODE_HOLD },
-	{ 2, LOCALE_VIDEOMENU_ZAPPINGMODE_MUTETILLLOCK },
-	{ 3, LOCALE_VIDEOMENU_ZAPPINGMODE_HOLDTILLLOCK }
-};
-
-#if BOXMODEL_VUPLUS_ARM
-#define VIDEOMENU_HDMI_COLORIMETRY_OPTION_COUNT 3
-const CMenuOptionChooser::keyval VIDEOMENU_HDMI_COLORIMETRY_OPTIONS[VIDEOMENU_HDMI_COLORIMETRY_OPTION_COUNT] =
-{
-	{ HDMI_COLORIMETRY_AUTO, LOCALE_VIDEOMENU_HDMI_COLORIMETRY_AUTO },
-	{ HDMI_COLORIMETRY_BT709, LOCALE_VIDEOMENU_HDMI_COLORIMETRY_BT709 },
-	{ HDMI_COLORIMETRY_BT470, LOCALE_VIDEOMENU_HDMI_COLORIMETRY_BT470 }
-};
-#else
-#define VIDEOMENU_HDMI_COLORIMETRY_OPTION_COUNT 4
-const CMenuOptionChooser::keyval VIDEOMENU_HDMI_COLORIMETRY_OPTIONS[VIDEOMENU_HDMI_COLORIMETRY_OPTION_COUNT] =
-{
-	{ HDMI_COLORIMETRY_AUTO, LOCALE_VIDEOMENU_HDMI_COLORIMETRY_AUTO },
-	{ HDMI_COLORIMETRY_BT2020NCL, LOCALE_VIDEOMENU_HDMI_COLORIMETRY_BT2020NCL },
-	{ HDMI_COLORIMETRY_BT2020CL, LOCALE_VIDEOMENU_HDMI_COLORIMETRY_BT2020CL },
-	{ HDMI_COLORIMETRY_BT709, LOCALE_VIDEOMENU_HDMI_COLORIMETRY_BT709 }
-};
-#endif
-#endif
 
 int CVideoSettings::showVideoSetup()
 {
@@ -574,51 +163,8 @@ int CVideoSettings::showVideoSetup()
 	videosetup->setSelected(selected);
 	videosetup->setWizardMode(is_wizard);
 
-	CMenuOptionChooser::keyval_ext vmode_options[VIDEOMENU_VIDEOMODE_OPTION_COUNT];
-	int vmode_option_count = (int) videoModeOptions(vmode_options);
+	const CMenuOptionChooser::keyval_ext *vmodes = videoModeSlots();
 
-	// analog options, out of the one place that says which item this box offers
-	// and which table it draws from
-	CMenuOptionChooser *vs_analg_ch = NULL;
-	CMenuOptionChooser *vs_scart_ch = NULL;
-	CMenuOptionChooser *vs_chinch_ch = NULL;
-	const analog_offer analog1 = analogMode1Offer();
-	if (analog1.item == ANALOG_ITEM_MODE)
-		vs_analg_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_ANALOG_MODE, &g_settings.analog_mode1, analog1.table, analog1.count, true, this);
-	else if (analog1.item == ANALOG_ITEM_SCART)
-		vs_scart_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_SCART, &g_settings.analog_mode1, analog1.table, analog1.count, true, this);
-
-	// One arm has never carried a hint, so an item without one is not an item
-	// whose hint went missing here.
-	if (analog1.hint != NONEXISTANT_LOCALE)
-	{
-		if (vs_analg_ch != NULL)
-			vs_analg_ch->setHint("", analog1.hint);
-		else if (vs_scart_ch != NULL)
-			vs_scart_ch->setHint("", analog1.hint);
-	}
-
-	const analog_offer analog2 = analogMode2Offer();
-	if (analog2.item == ANALOG_ITEM_CINCH)
-	{
-		vs_chinch_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_CINCH, &g_settings.analog_mode2, analog2.table, analog2.count, true, this);
-		if (analog2.hint != NONEXISTANT_LOCALE)
-			vs_chinch_ch->setHint("", analog2.hint);
-	}
-
-	// 4:3 mode
-	CMenuOptionChooser *vs_43mode_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_43MODE, &g_settings.video_43mode, videomenu_43mode_options, true, this);
-	vs_43mode_ch->setHint("", LOCALE_MENU_HINT_VIDEO_43MODE);
-
-	// display format
-	CMenuOptionChooser *vs_dispformat_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_VIDEOFORMAT, &g_settings.video_Format, VIDEOMENU_VIDEOFORMAT_OPTIONS, g_info.hw_caps->can_ar_14_9 ? VIDEOMENU_VIDEOFORMAT_OPTION_COUNT : VIDEOMENU_VIDEOFORMAT_OPTION_COUNT - 1, true, this); /* works only if 14:9 is last! */
-	vs_dispformat_ch->setHint("", LOCALE_MENU_HINT_VIDEO_FORMAT);
-
-	// video system
-	CMenuOptionChooser *vs_videomodes_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_VIDEOMODE, &g_settings.video_Mode, vmode_options, vmode_option_count, true, this, CRCInput::RC_nokey, "", true);
-	vs_videomodes_ch->setHint("", LOCALE_MENU_HINT_VIDEO_MODE);
-
-	CMenuOptionChooser *vs_dbdropt_ch = NULL;
 	CMenuWidget videomodes(LOCALE_MAINSETTINGS_VIDEO, NEUTRINO_ICON_SETTINGS);
 #ifdef BOXMODEL_CST_HD2
 	CMenuForwarder *vs_automodes_fw = NULL;
@@ -626,12 +172,6 @@ int CVideoSettings::showVideoSetup()
 #endif
 	CAutoModeNotifier anotify;
 	CMenuForwarder *vs_videomodes_fw = NULL;
-	// dbdr options only on COOLSTREAM
-	if (cs_get_revision() != 0x01)
-	{
-		vs_dbdropt_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_DBDR, &g_settings.video_dbdr, VIDEOMENU_DBDR_OPTIONS, VIDEOMENU_DBDR_OPTION_COUNT, true, this);
-		vs_dbdropt_ch->setHint("", LOCALE_MENU_HINT_VIDEO_DBDR);
-	}
 
 	// video system modes submenue
 	if (g_info.hw_caps->has_HDMI) // does this make sense on a box without HDMI?
@@ -639,8 +179,8 @@ int CVideoSettings::showVideoSetup()
 		videomodes.addIntroItems(LOCALE_VIDEOMENU_ENABLED_MODES);
 
 		for (int i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
-			if (VIDEOMENU_VIDEOMODE_OPTIONS[i].key != -1)
-				videomodes.addItem(new CMenuOptionChooser(VIDEOMENU_VIDEOMODE_OPTIONS[i].valname, &g_settings.enabled_video_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &anotify));
+			if (vmodes[i].key != -1)
+				videomodes.addItem(new CMenuOptionChooser(vmodes[i].valname, &g_settings.enabled_video_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &anotify));
 
 		if (g_info.hw_caps->has_button_vformat)
 		{
@@ -652,7 +192,7 @@ int CVideoSettings::showVideoSetup()
 		automodes.addIntroItems(LOCALE_VIDEOMENU_ENABLED_MODES_AUTO);
 
 		for (int i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT - 1; i++)
-			automodes.addItem(new CMenuOptionChooser(VIDEOMENU_VIDEOMODE_OPTIONS[i].valname, &g_settings.enabled_auto_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &anotify));
+			automodes.addItem(new CMenuOptionChooser(vmodes[i].valname, &g_settings.enabled_auto_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &anotify));
 
 		vs_automodes_fw = new CMenuForwarder(LOCALE_VIDEOMENU_ENABLED_MODES_AUTO, true, NULL, &automodes, NULL, CRCInput::RC_green);
 		vs_automodes_fw->setHint("", LOCALE_MENU_HINT_VIDEO_MODES_AUTO);
@@ -661,26 +201,23 @@ int CVideoSettings::showVideoSetup()
 
 	neutrino_locale_t tmp_locale = NONEXISTANT_LOCALE;
 	// TODO: check the locale
-	if (vs_analg_ch != NULL || vs_scart_ch != NULL || vs_chinch_ch != NULL)
+	if (coreapi::menuItem("analog_mode1").ok() || coreapi::menuItem("analog_mode2").ok())
 		tmp_locale = LOCALE_VIDEOMENU_TV_SCART;
 	// ---------------------------------------
 	videosetup->addIntroItems(LOCALE_MAINSETTINGS_VIDEO, tmp_locale);
 	// ---------------------------------------
 	//videosetup->addItem(vs_scart_sep); // separator scart
-	if (vs_analg_ch != NULL)
-		videosetup->addItem(vs_analg_ch); // analog option
-	if (vs_scart_ch != NULL)
-		videosetup->addItem(vs_scart_ch); // scart
-	if (vs_chinch_ch != NULL)
-		videosetup->addItem(vs_chinch_ch); // chinch
+	addSetting(videosetup, "analog_mode1", true, this); // analog option or scart
+	addSetting(videosetup, "analog_mode2", true, this); // chinch
 	//if (tmp_locale != NONEXISTANT_LOCALE)
 	//	videosetup->addItem(GenericMenuSeparatorLine);
 	// ---------------------------------------
-	videosetup->addItem(vs_43mode_ch); // 4:3 mode
-	videosetup->addItem(vs_dispformat_ch); // display format
-	videosetup->addItem(vs_videomodes_ch); // video system
-	if (vs_dbdropt_ch != NULL)
-		videosetup->addItem(vs_dbdropt_ch); // dbdr options
+	addSetting(videosetup, "video_43mode", true, this); // 4:3 mode
+	addSetting(videosetup, "video_Format", true, this); // display format
+	addSetting(videosetup, "video_Mode", true, this, CRCInput::RC_nokey, false, true); // video system
+	// dbdr options only on COOLSTREAM
+	if (cs_get_revision() != 0x01)
+		addSetting(videosetup, "video_dbdr", true, this);
 	if (vs_videomodes_fw != NULL)
 		videosetup->addItem(vs_videomodes_fw); // video modes submenue
 #ifdef BOXMODEL_CST_HD2
@@ -688,20 +225,12 @@ int CVideoSettings::showVideoSetup()
 #endif
 
 #ifdef BOXMODEL_CST_HD2
-	// values are from -128 to 127, but brightness really no sense after +/- 40. changeNotify multiply contrast and saturation to 3
-	CMenuOptionNumberChooser *bcont = new CMenuOptionNumberChooser(LOCALE_VIDEOMENU_BRIGHTNESS, &g_settings.brightness, true, -42, 42, this);
-	bcont->setHint("", LOCALE_MENU_HINT_VIDEO_BRIGHTNESS);
-	CMenuOptionNumberChooser *ccont = new CMenuOptionNumberChooser(LOCALE_VIDEOMENU_CONTRAST, &g_settings.contrast, true, -42, 42, this);
-	ccont->setHint("", LOCALE_MENU_HINT_VIDEO_CONTRAST);
-	CMenuOptionNumberChooser *scont = new CMenuOptionNumberChooser(LOCALE_VIDEOMENU_SATURATION, &g_settings.saturation, true, -42, 42, this);
-	scont->setHint("", LOCALE_MENU_HINT_VIDEO_SATURATION);
-	videosetup->addItem(bcont);
-	videosetup->addItem(ccont);
-	videosetup->addItem(scont);
+	// changeNotify multiplies contrast and saturation by 3
+	addSetting(videosetup, "brightness", true, this);
+	addSetting(videosetup, "contrast", true, this);
+	addSetting(videosetup, "saturation", true, this);
 
-	CMenuOptionChooser *sd = new CMenuOptionChooser(LOCALE_VIDEOMENU_SDOSD, &g_settings.enable_sd_osd, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-	sd->setHint("", LOCALE_MENU_HINT_VIDEO_SDOSD);
-	videosetup->addItem(sd);
+	addSetting(videosetup, "enable_sd_osd", true, this);
 #endif
 #if ENABLE_PIP
 	CPipSetup pip;
@@ -717,23 +246,8 @@ int CVideoSettings::showVideoSetup()
 #endif
 
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	if (file_exists("/proc/stb/video/zapmode"))
-	{
-		CMenuOptionChooser *zm = new CMenuOptionChooser(LOCALE_VIDEOMENU_ZAPPINGMODE, &g_settings.zappingmode, VIDEOMENU_ZAPPINGMODE_OPTIONS, VIDEOMENU_ZAPPINGMODE_OPTION_COUNT, true, this);
-		zm->setHint("", LOCALE_MENU_HINT_VIDEO_ZAPPINGMODE);
-		videosetup->addItem(zm);
-	}
-
-#if BOXMODEL_VUPLUS_ARM
-	if (file_exists("/proc/stb/video/hdmi_colorspace"))
-#else
-	if (file_exists("/proc/stb/video/hdmi_colorimetry"))
-#endif
-	{
-		CMenuOptionChooser *hm = new CMenuOptionChooser(LOCALE_VIDEOMENU_HDMI_COLORIMETRY, &g_settings.hdmi_colorimetry, VIDEOMENU_HDMI_COLORIMETRY_OPTIONS, VIDEOMENU_HDMI_COLORIMETRY_OPTION_COUNT, true, this);
-		hm->setHint("", LOCALE_MENU_HINT_VIDEO_HDMI_COLORIMETRY);
-		videosetup->addItem(hm);
-	}
+	addSetting(videosetup, "zappingmode", true, this);
+	addSetting(videosetup, "hdmi_colorimetry", true, this);
 
 	videosetup->addItem(GenericMenuSeparatorLine);
 
@@ -935,26 +449,40 @@ bool CVideoSettings::changeNotify(const neutrino_locale_t OptionName, void * /* 
 	return false;
 }
 
+/* The value a key press steps a declared setting on to, among the ones this box
+   offers, and the words it shows. False where the row offers none. */
+static bool nextOffered(const char *key, int current, int &value, neutrino_locale_t &text)
+{
+	coreapi::Result<coreapi::MenuItemSpec> r = coreapi::menuItem(key);
+	if (!r.ok() || r.value().choices.empty())
+		return false;
+	const std::vector<coreapi::MenuChoice> &offered = r.value().choices;
+	size_t at = 0;
+	for (size_t i = 0; i < offered.size(); i++)
+	{
+		if (offered[i].value == current)
+		{
+			at = i;
+			break;
+		}
+	}
+	at++;
+	if (at >= offered.size())
+		at = 0;
+	value = (int) offered[at].value;
+	text = localeFromKey(offered[at].label_key);
+	return true;
+}
+
 void CVideoSettings::next43Mode(void)
 {
 	dprintf(DEBUG_NORMAL, "[CVideoSettings] [%s - %d], setting 4:3 mode...", __func__, __LINE__);
 	neutrino_locale_t text;
-	unsigned int curmode = 0;
+	int mode;
+	if (!nextOffered("video_43mode", g_settings.video_43mode, mode, text))
+		return;
 
-	for (unsigned int i = 0; i < videomenu_43mode_options.size(); i++)
-	{
-		if (videomenu_43mode_options[i].key == g_settings.video_43mode)
-		{
-			curmode = i;
-			break;
-		}
-	}
-	curmode++;
-	if (curmode >= videomenu_43mode_options.size())
-		curmode = 0;
-
-	text = videomenu_43mode_options[curmode].value;
-	g_settings.video_43mode = videomenu_43mode_options[curmode].key;
+	g_settings.video_43mode = mode;
 	g_Zapit->setMode43(g_settings.video_43mode);
 #if ENABLE_PIP
 	if (pipVideoDecoder[0] != NULL)
@@ -967,23 +495,11 @@ void CVideoSettings::SwitchFormat()
 {
 	dprintf(DEBUG_NORMAL, "[CVideoSettings] [%s - %d], setting video format...\n", __func__, __LINE__);
 	neutrino_locale_t text;
-	int curmode = 0;
+	int format;
+	if (!nextOffered("video_Format", g_settings.video_Format, format, text))
+		return;
 
-	for (int i = 0; i < VIDEOMENU_VIDEOFORMAT_OPTION_COUNT; i++)
-	{
-		if (VIDEOMENU_VIDEOFORMAT_OPTIONS[i].key == g_settings.video_Format)
-		{
-			curmode = i;
-			break;
-		}
-	}
-	curmode++;
-	if (curmode >= VIDEOMENU_VIDEOFORMAT_OPTION_COUNT)
-		curmode = 0;
-	if (VIDEOMENU_VIDEOFORMAT_OPTIONS[curmode].key == DISPLAY_AR_14_9 && g_info.hw_caps->can_ar_14_9 == 0)
-		curmode = 0;
-	text = VIDEOMENU_VIDEOFORMAT_OPTIONS[curmode].value;
-	g_settings.video_Format = VIDEOMENU_VIDEOFORMAT_OPTIONS[curmode].key;
+	g_settings.video_Format = format;
 
 	videoDecoder->setAspectRatio(g_settings.video_Format, -1);
 #if ENABLE_PIP
@@ -996,6 +512,7 @@ void CVideoSettings::SwitchFormat()
 void CVideoSettings::nextMode(void)
 {
 	dprintf(DEBUG_NORMAL, "[CVideoSettings] [%s - %d], setting video mode...\n", __func__, __LINE__);
+	const CMenuOptionChooser::keyval_ext *vmodes = videoModeSlots();
 	const char *text;
 	int curmode = 0;
 	int i;
@@ -1004,13 +521,13 @@ void CVideoSettings::nextMode(void)
 
 	for (i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
 	{
-		if (VIDEOMENU_VIDEOMODE_OPTIONS[i].key == g_settings.video_Mode)
+		if (vmodes[i].key == g_settings.video_Mode)
 		{
 			curmode = i;
 			break;
 		}
 	}
-	text = VIDEOMENU_VIDEOMODE_OPTIONS[curmode].valname;
+	text = vmodes[curmode].valname;
 
 	while (1)
 	{
@@ -1032,7 +549,7 @@ void CVideoSettings::nextMode(void)
 				curmode++;
 				if (curmode >= VIDEOMENU_VIDEOMODE_OPTION_COUNT)
 					curmode = 0;
-				if (VIDEOMENU_VIDEOMODE_OPTIONS[curmode].key == -1)
+				if (vmodes[curmode].key == -1)
 					continue;
 				if (g_settings.enabled_video_modes[curmode])
 					break;
@@ -1044,11 +561,11 @@ void CVideoSettings::nextMode(void)
 				}
 			}
 
-			text = VIDEOMENU_VIDEOMODE_OPTIONS[curmode].valname;
+			text = vmodes[curmode].valname;
 		}
 		else if (res == messages_return::cancel_info)
 		{
-			g_settings.video_Mode = VIDEOMENU_VIDEOMODE_OPTIONS[curmode].key;
+			g_settings.video_Mode = vmodes[curmode].key;
 			//CVFD::getInstance()->ShowText(text);
 			COsdHelpers::getInstance()->setVideoSystem(g_settings.video_Mode);
 			COsdHelpers::getInstance()->changeOsdResolution(0, true, false);
@@ -1062,15 +579,3 @@ void CVideoSettings::nextMode(void)
 	//ShowHint(LOCALE_VIDEOMENU_VIDEOMODE, text, 450, 2);
 }
 
-void CVideoSettings::Init43ModeOptions()
-{
-	videomenu_43mode_options.clear();
-	for (unsigned int i = 0; i < VIDEOMENU_43MODE_OPTION_COUNT; i++)
-	{
-		if (VIDEOMENU_43MODE_OPTIONS[i].key == DISPLAY_AR_MODE_PANSCAN2 && g_info.hw_caps->can_ps_14_9 == 0)
-			continue;
-		CMenuOptionChooser::keyval_ext o;
-		o = VIDEOMENU_43MODE_OPTIONS[i];
-		videomenu_43mode_options.push_back(o);
-	}
-}

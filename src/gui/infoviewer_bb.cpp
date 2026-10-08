@@ -372,10 +372,10 @@ void CInfoViewerBB::getBBButtonInfo()
 
 void CInfoViewerBB::initVolscale()
 {
-	if (g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_LEFT ||
-		g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_RIGHT ||
-		g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_BOTTOM_CENTER ||
-		g_settings.volume_pos == CVolumeBar::VOLUMEBAR_POS_HIGHER_CENTER)
+	if (g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_LEFT ||
+		g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_RIGHT ||
+		g_settings.volume_pos == VOLUMEBAR_POS_BOTTOM_CENTER ||
+		g_settings.volume_pos == VOLUMEBAR_POS_HIGHER_CENTER)
 		g_InfoViewer->isVolscale = CVolume::getInstance()->hideVolscale();
 	else
 		g_InfoViewer->isVolscale = false;

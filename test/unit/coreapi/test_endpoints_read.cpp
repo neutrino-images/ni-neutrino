@@ -60,6 +60,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -448,7 +449,8 @@ void fillLocaleFromSchema(FakeLocaleSource &cat)
 		if (d.hint_key != NULL)
 			cat.texts[d.hint_key] = "hint text";
 		for (size_t v = 0; d.values != NULL && v < d.value_count; ++v)
-			cat.texts[d.values[v].label_key] = "choice text";
+			if (d.values[v].label_key != NULL)
+				cat.texts[d.values[v].label_key] = "choice text";
 	}
 }
 
@@ -1425,6 +1427,11 @@ TEST_CASE("one event answers the age, the class and the long text", "[endpoints]
 
 TEST_CASE("the settings schema answers every declared row", "[endpoints]")
 {
+	// The schema asks whether the parental lock holds its rows.
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/schema");
@@ -1439,6 +1446,11 @@ TEST_CASE("the settings schema answers every declared row", "[endpoints]")
 
 TEST_CASE("the schema answers one section when asked for it", "[settings][schema]")
 {
+	// The schema asks whether the parental lock holds its rows.
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
 	const Reply all = get("/api/v1/settings/schema");
@@ -1461,6 +1473,11 @@ TEST_CASE("the schema answers one section when asked for it", "[settings][schema
 
 TEST_CASE("a schema label resolves through the installed catalog, not the key", "[endpoints]")
 {
+	// The schema asks whether the parental lock holds its rows.
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
 	FakeLocaleSource cat;
@@ -1509,12 +1526,15 @@ TEST_CASE("a schema label resolves through the installed catalog, not the key", 
    whole of the settings surface and there is no second call to make. */
 TEST_CASE("the schema answers the values a setting's own box decides", "[endpoints]")
 {
+	// The schema asks whether the parental lock holds its rows.
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
-	FakeSettingChoices screens;
-	screens.offer("video_mode", 7, "720p 50Hz");
-	screens.offer("video_mode", 12, "1080p 50Hz");
-	InstalledSettingChoices installed(&screens);
+	unlocked.caps.board_revision = 1;
+	unlocked.caps.has_SCART = 1;
 
 	const Reply r = get("/api/v1/settings/schema");
 	REQUIRE(r.code == 200);
@@ -1524,7 +1544,7 @@ TEST_CASE("the schema answers the values a setting's own box decides", "[endpoin
 	bool have = false;
 	for (::Json::ArrayIndex i = 0; i < items.size() && !have; ++i)
 	{
-		if (items[i]["id"].asString() == "video_Mode")
+		if (items[i]["id"].asString() == "analog_mode1")
 		{
 			found = items[i];
 			have = true;
@@ -1533,11 +1553,8 @@ TEST_CASE("the schema answers the values a setting's own box decides", "[endpoin
 	REQUIRE(have);
 
 	REQUIRE(found["values"].size() == 2);
-	CHECK(found["values"][0]["value"].asInt() == 7);
-	CHECK(found["values"][0]["label"].asString() == "720p 50Hz");
-	CHECK(found["values"][1]["value"].asInt() == 12);
-	CHECK(found["values"][1]["label"].asString() == "1080p 50Hz");
-	CHECK(screens.asked > 0);
+	CHECK(found["values"][0]["value"].asInt() == 0x10);
+	CHECK(found["values"][1]["value"].asInt() == 0x11);
 }
 
 /* And what the same row looks like while the box cannot be asked, which is not
@@ -1545,6 +1562,12 @@ TEST_CASE("the schema answers the values a setting's own box decides", "[endpoin
    and a write of any value is refused for as long as that lasts. */
 TEST_CASE("a setting whose box cannot be asked answers an empty list of values", "[endpoints]")
 {
+	// The schema asks whether the parental lock holds its rows.
+	FakeSystemSource unlocked;
+	unlocked.caps_status = coreapi::Status::Internal;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/schema");
@@ -1554,20 +1577,125 @@ TEST_CASE("a setting whose box cannot be asked answers an empty list of values",
 	bool have = false;
 	for (::Json::ArrayIndex i = 0; i < items.size() && !have; ++i)
 	{
-		if (items[i]["id"].asString() != "video_Mode")
+		if (items[i]["id"].asString() != "analog_mode1")
 			continue;
 		have = true;
 		REQUIRE(items[i].isMember("values"));
 		CHECK(items[i]["values"].size() == 0);
 		// The member is there, which is what says the setting is a choice at
-		// all: a row of another kind carries no values member to be empty.
+		// all: no other kind carries an empty values member.
 		CHECK(items[i]["type"].asString() == "enum");
 	}
 	REQUIRE(have);
 }
 
+namespace
+{
+const coreapi::EnumValue kOffBelow[] = { { 0, "options.off", NULL, NULL } };
+const coreapi::Descriptor kNamedNumbers[] =
+{
+	{
+		"fixture_named", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		1, 14, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD
+	},
+	{
+		"fixture_plain", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD
+	},
+};
+} // namespace
+
+// A client draws the same words the box does and knows the value is taken
+// although it lies below min.
+TEST_CASE("the schema names the value a number shows in words", "[endpoints]")
+{
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	ShippedRoutes shipped;
+	FakeLocaleSource cat;
+	cat.texts["options.off"] = "off";
+	InstalledLocaleSource installed(&cat);
+	InstalledSettingsTable table(kNamedNumbers, 2);
+
+	const Reply r = get("/api/v1/settings/schema");
+	REQUIRE(r.code == 200);
+	const ::Json::Value items = parsed(r.body)["items"];
+	REQUIRE(items.size() == 2);
+
+	const ::Json::Value &named = items[0];
+	REQUIRE(named["id"].asString() == "fixture_named");
+	CHECK(named["min"].asInt() == 1);
+	CHECK(named["max"].asInt() == 14);
+	REQUIRE(named["values"].size() == 1);
+	CHECK(named["values"][0]["value"].asInt() == 0);
+	CHECK(named["values"][0]["key"].asString() == "options.off");
+	CHECK(named["values"][0]["label"].asString() == "off");
+
+	const ::Json::Value &plain = items[1];
+	REQUIRE(plain["id"].asString() == "fixture_plain");
+	CHECK_FALSE(plain.isMember("values"));
+}
+
+namespace
+{
+bool lacking() { return false; }
+const coreapi::Shape kFlagShape = { coreapi::ValueType::Bool, "flag_label", 0, 1, NULL, 0, NULL };
+const coreapi::Descriptor kOnBoxRows[] =
+{
+	{
+		"fixture_fan", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
+		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
+		  lacking, NULL }
+	},
+	{
+		"fixture_scroll", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
+		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
+		  lacking, &kFlagShape }
+	},
+	{
+		"fixture_plain", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD
+	},
+};
+} // namespace
+
+TEST_CASE("the schema says which settings this box has and in which shape", "[endpoints]")
+{
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	ShippedRoutes shipped;
+	InstalledSettingsTable table(kOnBoxRows, 3);
+
+	const Reply r = get("/api/v1/settings/schema");
+	REQUIRE(r.code == 200);
+	const ::Json::Value items = parsed(r.body)["items"];
+	REQUIRE(items.size() == 3);
+
+	REQUIRE(items[0]["id"].asString() == "fixture_fan");
+	CHECK(items[0]["available"].asBool() == false);
+	CHECK(items[0]["type"].asString() == "int");
+
+	REQUIRE(items[1]["id"].asString() == "fixture_scroll");
+	CHECK(items[1]["available"].asBool() == true);
+	CHECK(items[1]["type"].asString() == "bool");
+	CHECK_FALSE(items[1].isMember("min"));
+	CHECK_FALSE(items[1].isMember("values"));
+
+	REQUIRE(items[2]["id"].asString() == "fixture_plain");
+	CHECK(items[2]["available"].asBool() == true);
+}
+
 TEST_CASE("a schema label the catalog does not carry is left out, not the key", "[endpoints]")
 {
+	// The schema asks whether the parental lock holds its rows.
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
 	// Installed and empty rather than nothing installed at all, so this reads
@@ -1589,13 +1717,23 @@ TEST_CASE("a schema label the catalog does not carry is left out, not the key", 
 		REQUIRE_FALSE(items[i].isMember("label"));
 	}
 	REQUIRE(checked_one);
-	// Nowhere in the whole document, which is the stronger claim the field by
-	// field check above cannot make on its own.
-	CHECK(r.body.find("videomenu.videoformat") == std::string::npos);
+	// A choice names its catalog entry under "key", so the name is in the
+	// document by design. What must not happen is a label answering with it.
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		const ::Json::Value &values = items[i]["values"];
+		for (::Json::ArrayIndex k = 0; k < values.size(); ++k)
+			CHECK(values[k]["label"].asString() != values[k]["key"].asString());
+	}
 }
 
 TEST_CASE("a secret row is described but never valued", "[endpoints]")
 {
+	// The schema asks whether the parental lock holds its rows.
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
 	const std::vector<coreapi::Descriptor> rows = coreapi::settings::schema().value();
@@ -1627,8 +1765,42 @@ TEST_CASE("a secret row is described but never valued", "[endpoints]")
 	REQUIRE(one.body.find("hunter2") == std::string::npos);
 }
 
+TEST_CASE("the schema reports the rows the parental lock holds only while the box is locked", "[endpoints]")
+{
+	ShippedRoutes shipped;
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+
+	box.parental_locked = true;
+	::Json::Value items = parsed(get("/api/v1/settings/schema").body)["items"];
+	REQUIRE(items.size() > 0);
+	std::set<std::string> locked;
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		REQUIRE(items[i]["locked"].isBool());
+		if (items[i]["locked"].asBool())
+			locked.insert(items[i]["id"].asString());
+	}
+	const char *const held[] = { "parentallock_prompt", "parentallock_lockage",
+	                             "parentallock_defaultlocked", "parentallock_zaptime" };
+	REQUIRE(locked == std::set<std::string>(held, held + 4));
+
+	box.parental_locked = false;
+	items = parsed(get("/api/v1/settings/schema?section=parental").body)["items"];
+	REQUIRE(items.size() == 5);
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+		CHECK_FALSE(items[i]["locked"].asBool());
+}
+
 TEST_CASE("a section nobody declared is 404", "[endpoints]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/not-a-section");
@@ -1638,6 +1810,11 @@ TEST_CASE("a section nobody declared is 404", "[endpoints]")
 
 TEST_CASE("the sections are the ones the schema names", "[endpoints]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/sections");
@@ -2427,6 +2604,9 @@ TEST_CASE("every route that declares a shape declares a sane one", "[endpoints]"
 
 TEST_CASE("every answer carries the members its route says it does", "[endpoints]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	ShippedRoutes shipped;
 
 	/* Without this every label and hint in the settings schema answer is absent,
@@ -2472,6 +2652,8 @@ TEST_CASE("every answer carries the members its route says it does", "[endpoints
 
 	FakeSystemSource box;
 	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 
 	FakeSettingsSource store;
 	InstalledSettingsSource installed_store(&store);

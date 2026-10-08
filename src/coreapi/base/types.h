@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#include <hardware_caps.h>
+
 namespace coreapi
 {
 
@@ -400,6 +402,36 @@ struct BoxInfo
 
 	BoxInfo()
 		: uptime(0), memory_total(0), memory_free(0), root_total(0), root_free(0) {}
+};
+
+/* What the box can do, as the hardware library reports it. Members and types
+   are the library's own so a reader can compare against its constants. */
+struct BoxCapabilities
+{
+	int            can_ar_14_9;
+	int            can_cec;
+	int            can_cpufreq;
+	int            can_pip;
+	int            can_ps_14_9;
+	int            can_shutdown;
+	int            display_can_deepstandby;
+	int            display_can_set_brightness;
+	int            display_has_statusline;
+	display_type_t display_type;
+	int            display_xres;
+	int            has_button_vformat;
+	int            has_fan;
+	int            has_HDMI;
+	int            has_SCART;
+	int            pip_devs;
+	/* Not the library's: what the drivers offer under /proc, read with every
+	   call. Whether the front panel takes a scroll count rather than a flag,
+	   and whether the video driver takes a zapping mode and a colorimetry. */
+	int            display_scroll_repeats;
+	int            video_zapmode;
+	int            video_hdmi_colorimetry;
+	/* The board revision, which decides what analog outputs the box has. */
+	unsigned int   board_revision;
 };
 
 /* The pair of numbers is what names it: a box can carry several adapters and

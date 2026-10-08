@@ -32,15 +32,12 @@
 #endif
 
 #include <pthread.h>
+#include <system/settings.h>
 
 class CScreenShot
 {
 	public:
-		typedef enum {
-			FORMAT_PNG,
-			FORMAT_JPG,
-			FORMAT_BMP
-		} screenshot_format_t;
+		typedef ::screenshot_format_t screenshot_format_t;
 
 	private:
 		screenshot_format_t format;
@@ -77,7 +74,7 @@ class CScreenShot
 #endif // SCREENSHOT_INTERNAL
 
 	public:
-		CScreenShot(const std::string &fname = "", screenshot_format_t fmt = CScreenShot::FORMAT_JPG);
+		CScreenShot(const std::string &fname = "", screenshot_format_t fmt = FORMAT_JPG);
 		~CScreenShot();
 
 		void MakeFileName(const t_channel_id channel_id);

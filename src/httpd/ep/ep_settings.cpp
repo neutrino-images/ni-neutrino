@@ -84,13 +84,16 @@ std::string decimal(long v)
 	return std::string(buf);
 }
 
-/* label is not optional here the way the setting's own is: an Enum's own choice never
-   leaves label_key NULL, and check-locale-catalog.sh holds every one of those to the
-   catalog they name. appendDescriptor still guards against absence rather than
-   trusting that guard from a distance. */
+/* label is not optional here the way the setting's own is: every choice carries words,
+   either the catalog text its key names or fixed text of its own, and label is always
+   that text resolved. key is absent for a fixed-text choice. check-locale-catalog.sh
+   holds every key a choice names to the catalog. appendDescriptor still guards against
+   absence rather than trusting that guard from a distance. */
 const FieldDesc kEnumValueFields[] = {
 	HTTPD_MEMBER("value", FieldType::Int,
 		"the number the box stores when this choice is picked, matched against the setting's own stored value"),
+	HTTPD_MEMBER_OPTIONAL("key", FieldType::String,
+		"the name of the catalog text for this choice, absent where the box words it itself"),
 	HTTPD_MEMBER("label", FieldType::String,
 		"the text the box shows for this choice, already resolved into the box's configured language"),
 };
@@ -122,7 +125,7 @@ const FieldDesc kSettingFields[] = {
 	HTTPD_MEMBER_OF_SET("type", "bool,int,string,enum",
 		"what kind of value this setting holds, which decides how the rest of this descriptor is read",
 		"bool: stores 0 or 1 and is shown as a toggle\n"
-		"int: a whole number, bounded by min and max\n"
+		"int: a whole number, bounded by min and max, and possibly one more listed under values\n"
 		"string: free text or an identifier, with no numeric bounds\n"
 		"enum: one of a fixed or box reported set of choices, listed under values"),
 	HTTPD_MEMBER("section", FieldType::String,
@@ -133,11 +136,14 @@ const FieldDesc kSettingFields[] = {
 	HTTPD_MEMBER_OPTIONAL("hint", FieldType::String,
 		"the name of the longer text beside it, absent where there is none"),
 	HTTPD_MEMBER_OPTIONAL("min", FieldType::Int,
-		"the lowest whole number this setting accepts, present only when type is int"),
+		"the lowest whole number this setting accepts, present only when type is int; "
+		"a number listed under values is accepted as well"),
 	HTTPD_MEMBER_OPTIONAL("max", FieldType::Int,
 		"the highest whole number this setting accepts, present only when type is int"),
 	HTTPD_LIST_OF_OPTIONAL("values", &kEnumValueSchema,
-		"what it accepts, only for a setting that offers a set"),
+		"what it accepts, for a setting that offers a set; for an int, the one number the box "
+		"shows in words instead, such as off, which it accepts beside min to max. Empty for a "
+		"set this box cannot state, which includes a setting that is not available"),
 	HTTPD_MEMBER("default", FieldType::String,
 		"what the box falls back to, rendered the way a value is, and empty for a setting held to be a credential"),
 	HTTPD_MEMBER("needs_restart", FieldType::Bool,
@@ -146,6 +152,13 @@ const FieldDesc kSettingFields[] = {
 		"whether the setting is a credential, which is described here and never valued"),
 	HTTPD_MEMBER("path", FieldType::Bool,
 		"whether the value names a file or folder on the box, which no AI client may change"),
+	HTTPD_MEMBER("locked", FieldType::Bool,
+		"whether the box's parental lock fixes the setting right now, so every write of it is refused"),
+	HTTPD_MEMBER("available", FieldType::Bool,
+		"whether this box has what the setting controls, such as a fan; false also where the box cannot "
+		"say. A setting that is not available is offered on no screen and every write of it is refused, "
+		"while its value still reads. Where the box offers a setting in one of two ways, type, label, "
+		"bounds and values already describe the way this box offers it"),
 	HTTPD_LIST_OF("conditions", &kConditionSchema,
 		"every comparison that has to hold before the setting is worth showing, all of them together, empty for one always shown"),
 };
@@ -225,56 +238,59 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d)
 		j.value(d.min);
 		j.key("max");
 		j.value(d.max);
+
+		// The one value the box shows in words rather than as the number.
+		const coreapi::EnumValue *named = coreapi::namedNumber(d);
+		if (named != NULL)
+		{
+			std::string words;
+			coreapi::settings::resolveLabel(named->label_key, words);
+			j.key("values");
+			j.beginArray();
+			j.beginObject();
+			j.key("value");
+			j.value((long) named->value);
+			j.key("key");
+			j.value(named->label_key);
+			j.key("label");
+			j.value(words);
+			j.endObject();
+			j.endArray();
+		}
 	}
 
 	if (d.type == coreapi::ValueType::Enum)
 	{
-		/* A setting whose values the box decides carries none of its own, so the layer is
-		   asked for them and a caller reads one member either way.
+		/* The values are what the layer offers on this box, entries the box lacks left out.
 
-		   Every row reaching this branch is a choice, and one whose values are the box's own
-		   answers nothing while the box cannot be asked. A caller that finds it empty has a
-		   setting it cannot draw a chooser for at this moment, not one it may offer as free
-		   text, and a write of any value is refused for as long as that lasts. */
+		   Every row reaching this branch is a choice, and one the box has no entry of answers
+		   nothing. A caller that finds it empty has a setting it cannot draw a chooser for at
+		   this moment, not one it may offer as free text, and a write of any value is refused
+		   for as long as that lasts. */
 		j.key("values");
 		j.beginArray();
-		if (d.field.choices != NULL)
+		coreapi::Result<std::vector<coreapi::SettingChoice> > asked =
+			coreapi::settings::choices(d.key);
+		if (asked.ok())
 		{
-			coreapi::Result<std::vector<coreapi::SettingChoice> > asked =
-				coreapi::settings::choices(d.key);
-			if (asked.ok())
+			const std::vector<coreapi::SettingChoice> &offered = asked.value();
+			for (size_t i = 0; i < offered.size(); ++i)
 			{
-				const std::vector<coreapi::SettingChoice> &offered = asked.value();
-				for (size_t i = 0; i < offered.size(); ++i)
+				j.beginObject();
+				j.key("value");
+				j.value(offered[i].value);
+				if (!offered[i].label_key.empty())
 				{
-					j.beginObject();
-					j.key("value");
-					j.value(offered[i].value);
-					/* Always here, unlike the branch below: these words are the text itself and not the
-					   name of one, so there is no catalog that could fail to carry them. An empty one is a
-					   value the box offers under no wording, which a caller may still write. */
-					j.key("label");
-					j.value(offered[i].label);
-					j.endObject();
+					j.key("key");
+					j.value(offered[i].label_key);
 				}
-			}
-		}
-		for (size_t i = 0; d.values != NULL && i < d.value_count; ++i)
-		{
-			j.beginObject();
-			j.key("value");
-			j.value(d.values[i].value);
-			/* The schema declares this member always present, which check-locale-catalog.sh is
-			   what makes true. A schema entry is not the compiler, so this still asks, and answers
-			   the one way a resolve that somehow failed could be told apart from one that held:
-			   leaving the field out rather than answering a choice with its key. */
-			std::string text;
-			if (coreapi::settings::resolveLabel(d.values[i].label_key, text))
-			{
+				/* Always here: these words are the text itself and not the name of
+				   one. An empty one is a value the box offers under no wording, which
+				   a caller may still write. */
 				j.key("label");
-				j.value(text);
+				j.value(offered[i].label);
+				j.endObject();
 			}
-			j.endObject();
 		}
 		j.endArray();
 	}
@@ -289,6 +305,11 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d)
 	j.value(d.secret);
 	j.key("path");
 	j.value(coreapi::settings::holdsPath(d));
+	j.key("locked");
+	j.value(coreapi::settings::lockedNow(d.key));
+	coreapi::Descriptor here;
+	j.key("available");
+	j.value(coreapi::rowOnThisBox(d, here));
 
 	j.key("conditions");
 	j.beginArray();
@@ -762,6 +783,10 @@ const RouteRefusal kSettingsWriteRefusals[] = {
 		"no settings are declared under a section of that name"),
 	HTTPD_REFUSES(NotFound, UnknownSetting,
 		"this section declares no setting under that key"),
+	HTTPD_REFUSES(Conflict, SettingLocked,
+		"the box's parental lock fixes this setting"),
+	HTTPD_REFUSES(Conflict, SettingNotOnThisBox,
+		"this box does not have what the setting controls"),
 };
 
 const Endpoint kSettingsEndpoints[] = {
@@ -770,11 +795,16 @@ const Endpoint kSettingsEndpoints[] = {
 	  "Lists every setting the box declares, independent of any one section: its key, what kind of "
 	  "value it holds, which section it belongs to, the label and hint text to show beside it where "
 	  "the locale catalog carries one, the bounds or choices it accepts, its default, whether changing "
-	  "it needs a restart, and whether it is a credential. A setting marked a credential never carries "
+	  "it needs a restart, whether it is a credential, and whether the box's parental lock fixes it "
+	  "right now. A setting marked a credential never carries "
 	  "its real default here; its default is always reported as an empty string.\n"
 	  "\n"
 	  "Each item's `conditions` list states every comparison against another setting's current value "
 	  "that must hold before this setting is worth showing; an empty list means it is always shown.\n"
+	  "\n"
+	  "Each item is described the way this box offers it. `available` is false for a setting whose "
+	  "hardware this box lacks; such a setting is not worth showing, refuses every write, and a "
+	  "choice among them lists no `values`.\n"
 	  "\n"
 	  "`section` narrows the list to one section, which keeps the answer small.\n"
 	  "\n"
@@ -873,6 +903,10 @@ const Endpoint kSettingsEndpoints[] = {
 	  "`GET /api/v1/settings/sections`.\n"
 	  "- `404 no-such-setting`: a named key does not belong to this section, whether or not it exists "
 	  "elsewhere on the box.\n"
+	  "- `409 setting-locked`: the schema marks the key `locked`; the box's image fixes it and no "
+	  "write changes it.\n"
+	  "- `409 setting-not-on-this-box`: the schema marks the key not `available`; this box does not "
+	  "have what it controls.\n"
 	  "\n"
 	  "**Related:** `GET /api/v1/settings/schema`, `GET /api/v1/settings/{section}`, "
 	  "`POST /api/v1/settings/secret/clear`.",
@@ -885,7 +919,8 @@ const Endpoint kSettingsEndpoints[] = {
 
 const ToolFlag kSettingsTools[] = {
 	HTTPD_TOOL_AS(Method::Get, "/api/v1/settings/schema", "settings_schema",
-		"What the settings of one section are: key, kind, allowed values, label, and whether it needs a restart. "
+		"What the settings of one section are: key, kind, allowed values, label, whether it needs a restart, "
+		"and whether this box has it at all (available). "
 		"Always pass section; without it the answer is very large."),
 	HTTPD_TOOL_AS(Method::Get, "/api/v1/settings/{section}", "read_settings",
 		"What every setting of one section is set to now, as key and value text. Credentials always read as empty."),

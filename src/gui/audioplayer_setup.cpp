@@ -42,6 +42,7 @@
 
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 
 #include <gui/audioplayer.h>
@@ -95,18 +96,9 @@ int CAudioPlayerSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 }
 
 
-#define AUDIOPLAYER_DISPLAY_ORDER_OPTION_COUNT 2
-const CMenuOptionChooser::keyval AUDIOPLAYER_DISPLAY_ORDER_OPTIONS[AUDIOPLAYER_DISPLAY_ORDER_OPTION_COUNT] =
-{
-	{ CAudioPlayerGui::ARTIST_TITLE, LOCALE_AUDIOPLAYER_ARTIST_TITLE },
-	{ CAudioPlayerGui::TITLE_ARTIST, LOCALE_AUDIOPLAYER_TITLE_ARTIST }
-};
-
-
 /*shows the audio setup menue*/
 int CAudioPlayerSetup::showAudioPlayerSetup()
 {
-	CMenuOptionChooser * mc;
 	CMenuForwarder * mf;
 
 	CMenuWidget* audioplayerSetup = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_AUDIOSETUP);
@@ -114,33 +106,19 @@ int CAudioPlayerSetup::showAudioPlayerSetup()
 	audioplayerSetup->addIntroItems(LOCALE_AUDIOPLAYER_INTERNETRADIO_NAME);
 
 	// display order
-	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_DISPLAY_ORDER, &g_settings.audioplayer_display, AUDIOPLAYER_DISPLAY_ORDER_OPTIONS, AUDIOPLAYER_DISPLAY_ORDER_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_ORDER);
-	audioplayerSetup->addItem(mc);
+	addSetting(audioplayerSetup, "audioplayer_display");
 
-	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_FOLLOW, &g_settings.audioplayer_follow, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_FOLLOW);
-	audioplayerSetup->addItem(mc);
+	addSetting(audioplayerSetup, "audioplayer_follow");
 
-	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_SELECT_TITLE_BY_NAME, &g_settings.audioplayer_select_title_by_name, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true );
-	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_TITLE);
-	audioplayerSetup->addItem(mc);
+	addSetting(audioplayerSetup, "audioplayer_select_title_by_name");
 
-	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_REPEAT_ON, &g_settings.audioplayer_repeat_on, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true );
-	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_REPEAT);
-	audioplayerSetup->addItem(mc);
+	addSetting(audioplayerSetup, "audioplayer_repeat_on");
 
-	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_SHOW_PLAYLIST, &g_settings.audioplayer_show_playlist, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_PLAYLIST);
-	audioplayerSetup->addItem(mc);
+	addSetting(audioplayerSetup, "audioplayer_show_playlist");
 
-	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_COVER_AS_SCREENSAVER, &g_settings.audioplayer_cover_as_screensaver, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_COVER_AS_SCREENSAVER);
-	audioplayerSetup->addItem(mc);
+	addSetting(audioplayerSetup, "audioplayer_cover_as_screensaver");
 
-	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_HIGHPRIO, &g_settings.audioplayer_highprio, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true );
-	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_HIGHPRIO);
-	audioplayerSetup->addItem(mc);
+	addSetting(audioplayerSetup, "audioplayer_highprio");
 #if 0
 	if (CVFD::getInstance()->has_lcd) //FIXME
 		audioplayerSetup->addItem(new CMenuOptionChooser(LOCALE_AUDIOPLAYER_SPECTRUM     , &g_settings.spectrum    , MESSAGEBOX_NO_YES_OPTIONS      , MESSAGEBOX_NO_YES_OPTION_COUNT      , true ));
@@ -152,13 +130,11 @@ int CAudioPlayerSetup::showAudioPlayerSetup()
 	audioplayerSetup->addItem(GenericMenuSeparatorLine);
 
 	// internetradio autostart first entry from favorites
-	mc = new CMenuOptionChooser(LOCALE_INETRADIO_AUTOSTART, &g_settings.inetradio_autostart, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL);
-	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INETRADIO_AUTOSTART);
-	audioplayerSetup->addItem(mc);
+	CMenuItem *autostart = addSetting(audioplayerSetup, "inetradio_autostart", true, NULL);
+	if (autostart)
+		autostart->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INETRADIO_AUTOSTART);
 
-	mc = new CMenuOptionChooser(LOCALE_AUDIOPLAYER_ENABLE_SC_METADATA, &g_settings.audioplayer_enable_sc_metadata, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_SC_METADATA);
-	audioplayerSetup->addItem(mc);
+	addSetting(audioplayerSetup, "audioplayer_enable_sc_metadata");
 
 	mf = new CMenuForwarder(LOCALE_AUDIOPLAYER_STREAMRIPPER_DIR, true, g_settings.network_nfs_streamripperdir, this, "streamripperdir");
 	mf->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_STREAMRIPPER_DIR);

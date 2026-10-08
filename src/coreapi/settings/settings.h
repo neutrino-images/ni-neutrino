@@ -34,8 +34,18 @@ namespace settings
 
 /* Answered out of the declaration and not out of the store, so a box with no
    store behind it still answers. A row the schema marks secret keeps its place
-   and loses its declared default. */
+   and loses its declared default. Each row is in the shape this box offers it,
+   and one the box lacks is in as declared, see rowOnThisBox in schema.h. */
 Result<std::vector<Descriptor> > schema();
+
+// The declared row for a key, NULL when nothing declares it. Unlike describe() the
+// secret default is not withheld, so only a caller that never forwards it may use this.
+const Descriptor *findRow(const std::string &key);
+
+/* Whether the parental lock holds this row right now. Also true when whether the
+   box is locked cannot be read, so a failed read never unlocks a row. Asks the
+   box only for a row the lock can hold. */
+bool lockedNow(const std::string &key);
 
 // Each section once, in the order the schema first names it, so a frontend can
 // lay out its menu without walking the whole schema.
@@ -48,14 +58,16 @@ bool sectionHoldsSecret(const std::string &section);
 
 // NotFound for a key nothing declares: a zeroed descriptor would be a lie a
 // caller cannot tell from a setting that really has no label and no bounds. A
-// secret row comes back with its default withheld.
+// secret row comes back with its default withheld, and every row in the shape
+// this box offers it.
 Result<Descriptor> describe(const std::string &key);
 
 /* The current value, rendered the way the wire carries it. A key the store has never held
    reads as what the row declares, that being what the program's own load does with one. A
    secret row answers the empty string and the store is not asked at all. What a write left
    held reads back before the box has taken it, so a caller that writes and reads is not
-   told its own write did nothing; a write this layer answered with an error left nothing. */
+   told its own write did nothing; a write this layer answered with an error left nothing.
+   A row the box lacks still reads: the value is in the settings file whatever the box has. */
 Result<std::string> get(const std::string &key);
 
 /* One setting, given the way the wire carries it, so what get() answered can be sent again
@@ -70,7 +82,9 @@ Result<std::string> get(const std::string &key);
    number sign, no space at either end, and at most four kilobytes.
 
    A secret row refuses an empty value, so a form redrawn from a read that answered nothing
-   cannot clear the credential; emptying one is clearSecret.
+   cannot clear the credential; emptying one is clearSecret. A row lockedNow() holds is
+   refused with setting-locked whatever the value, and one the box lacks with
+   setting-not-on-this-box. A row in two shapes is held to the one this box offers.
 
    ok says the value passed all three, the store took it, and the box was asked on its own
    loop to put it into the program's settings, save them and tell whoever applies that
@@ -93,14 +107,12 @@ Result<void> set(const std::string &key, const std::string &value);
    for a name it already has. */
 Result<void> clearSecret(const std::string &key);
 
-/* Two kinds of row answer and they answer the same shape: a row carrying its own list
-   answers it with each label already resolved to the text the box would show, and a row
-   whose set is the box's own is asked for it, a list written into a table being right for
-   one box model and quietly wrong for the next.
+/* A row carrying its own list answers it with each label already resolved to the text
+   the box would show, and without the entries the box lacks.
 
-   choices-unavailable covers a setting that offers no set at all and one whose set is the
-   box's own while nobody has said what it is. An empty list is not that answer and does not
-   happen, so ok always carries at least one value. */
+   choices-unavailable covers a setting that offers no set at all and one whose entries
+   the box has none of. setting-not-on-this-box is a row the box lacks. An empty list is
+   not that answer and does not happen, so ok always carries at least one value. */
 Result<std::vector<SettingChoice> > choices(const std::string &key);
 
 /* The text a label_key names, in whatever language the box has loaded, through the seam in

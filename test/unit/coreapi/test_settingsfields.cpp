@@ -25,6 +25,7 @@
 #include "coreapi/settings/settings.h"
 #include "coreapi/settings/settingsfield.h"
 #include "coreapi/settings/settingstable.h"
+#include "coreapi/settings/videomodes.h"
 #include "support/fakes.h"
 
 #include <string>
@@ -435,74 +436,104 @@ TEST_CASE("the start channel name and its identifier are two settings", "[settin
 	CHECK(store.values.startchanneltv_id == 0x5678ULL);
 }
 
-/* The three settings whose set of values the box decides. What no scan of the
-   source can say about one of them is whether the set really is asked for, so
-   these ask it: a fake stands in for the screen, and what the layer offers and
-   what it takes both have to come back to what that fake said. */
-TEST_CASE("a setting whose values the box decides is asked for them", "[settingsfields]")
+/* A setting whose entries the box decides. What no scan of the source can say
+   is whether the entries follow the box, so these change the box under the
+   same rows and read what the layer offers and what it takes. */
+TEST_CASE("a setting whose entries the box decides offers the ones it has", "[settingsfields]")
 {
 	RealStore store;
-	FakeSettingChoices screens;
-	InstalledSettingChoices installed(&screens);
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
 
-	screens.offer("video_mode", 5, "720p 50Hz");
-	screens.offer("video_mode", 13, "1080p 50Hz");
+	box.caps.board_revision = 1;
+	box.caps.has_SCART = 1;
 
-	Result<std::vector<SettingChoice> > offered = settings::choices("video_Mode");
+	Result<std::vector<SettingChoice> > offered = settings::choices("analog_mode1");
 	REQUIRE(offered.ok());
 	REQUIRE(offered.value().size() == 2);
-	CHECK(offered.value()[0].value == 5);
-	CHECK(offered.value()[0].label == "720p 50Hz");
-	CHECK(offered.value()[1].value == 13);
-	CHECK(offered.value()[1].label == "1080p 50Hz");
-	CHECK(screens.asked > 0);
+	CHECK(offered.value()[0].value == 0x10);
+	CHECK(offered.value()[1].value == 0x11);
+
+	box.caps.board_revision = 7;
+	offered = settings::choices("analog_mode1");
+	REQUIRE(offered.ok());
+	REQUIRE(offered.value().size() == 4);
+	CHECK(offered.value()[3].value == 0x13);
 }
 
-// A value the box has no mode for is refused, and the row's own list is not
-// what it is held to: the row carries none.
+// A value the box has no mode for is refused.
 TEST_CASE("a value the box does not offer is refused", "[settingsfields]")
 {
 	RealStore store;
-	FakeSettingChoices screens;
-	InstalledSettingChoices installed(&screens);
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	box.caps.board_revision = 1;
+	box.caps.has_SCART = 1;
+	store.values.analog_mode1 = 0x10;
 
-	screens.offer("video_mode", 5, "720p 50Hz");
-	store.values.video_Mode = 5;
-
-	CHECK(settings::set("video_Mode", "5").ok());
+	CHECK(settings::set("analog_mode1", "16").ok());
 	applyPendingSettings();
-	CHECK(store.values.video_Mode == 5);
+	CHECK(store.values.analog_mode1 == 0x10);
 
-	CHECK_FALSE(settings::set("video_Mode", "13").ok());
+	CHECK_FALSE(settings::set("analog_mode1", "18").ok());
 	applyPendingSettings();
-	CHECK(store.values.video_Mode == 5);
+	CHECK(store.values.analog_mode1 == 0x10);
 }
 
-/* Nothing is taken while nobody can say what the set is. Writing a mode the box
+/* Nothing is taken while the box cannot say what it has. Writing a mode the box
    cannot show leaves a picture nobody gets back from with the remote control,
    so the safe direction is to refuse rather than to let anything through. */
-TEST_CASE("a setting whose values nobody can state takes none", "[settingsfields]")
+TEST_CASE("a setting whose entries nobody can state takes none", "[settingsfields]")
 {
 	RealStore store;
-	store.values.video_Mode = 5;
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	box.caps.board_revision = 1;
+	box.caps.has_SCART = 1;
+	box.caps_status = Status::Internal;
+	store.values.analog_mode1 = 0x10;
 
-	Result<std::vector<SettingChoice> > none = settings::choices("video_Mode");
+	Result<std::vector<SettingChoice> > none = settings::choices("analog_mode1");
 	CHECK_FALSE(none.ok());
 	CHECK(none.error().code == ErrorCode::ChoicesUnavailable);
 
-	CHECK_FALSE(settings::set("video_Mode", "5").ok());
+	CHECK_FALSE(settings::set("analog_mode1", "16").ok());
 	applyPendingSettings();
-	CHECK(store.values.video_Mode == 5);
+	CHECK(store.values.analog_mode1 == 0x10);
+}
 
-	// And an empty answer is the same thing as no answer: a set nothing offers
-	// a value for is a setting nothing can be drawn from.
-	FakeSettingChoices screens;
-	InstalledSettingChoices installed(&screens);
-	screens.sets["video_mode"].clear();
-	screens.sets["video_mode"];
+/* The video modes are the family's own table, in the words and the order of the
+   names the settings file numbers its lists of enabled modes by: the screen
+   finds a mode's number by its name. */
+TEST_CASE("the video modes are declared in the order and the words of the numbered names", "[settingsfields]")
+{
+	RealStore store;
 
-	Result<std::vector<SettingChoice> > empty = settings::choices("video_Mode");
-	CHECK_FALSE(empty.ok());
+	size_t count = 0;
+	const char *const *names = videoModeNames(count);
+	REQUIRE(count == VIDEOMENU_VIDEOMODE_OPTION_COUNT);
+
+	Result<std::vector<SettingChoice> > offered = settings::choices("video_Mode");
+	REQUIRE(offered.ok());
+	REQUIRE_FALSE(offered.value().empty());
+
+	size_t next = 0;
+	for (size_t i = 0; i < offered.value().size(); ++i)
+	{
+		const std::string &label = offered.value()[i].label;
+		INFO(label);
+		CHECK(offered.value()[i].label_key.empty());
+		size_t at = next;
+		while (at < count && label != names[at])
+			at++;
+		REQUIRE(at < count);
+		next = at + 1;
+	}
+
+	// Each name once, so a name finds one number.
+	for (size_t i = 0; i < count; ++i)
+		for (size_t j = i + 1; j < count; ++j)
+			CHECK(std::string(names[i]) != names[j]);
 }
 
 /* A row carrying its own list answers the same shape, with each label already
@@ -510,6 +541,9 @@ TEST_CASE("a setting whose values nobody can state takes none", "[settingsfields
    never has to tell the two kinds apart. */
 TEST_CASE("a setting carrying its own list answers the same shape", "[settingsfields]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	RealStore store;
 	FakeLocaleSource catalog;
 	InstalledLocaleSource installed(&catalog);
@@ -517,19 +551,32 @@ TEST_CASE("a setting carrying its own list answers the same shape", "[settingsfi
 	catalog.texts["videomenu.videoformat_149"] = "14:9";
 	catalog.texts["videomenu.videoformat_169"] = "16:9";
 
+	row_box.caps.can_ar_14_9 = 1;
 	Result<std::vector<SettingChoice> > offered = settings::choices("video_Format");
 	REQUIRE(offered.ok());
 	REQUIRE(offered.value().size() == 3);
 	CHECK(offered.value()[0].value == 1);
 	CHECK(offered.value()[0].label == "4:3");
-	CHECK(offered.value()[2].value == 3);
-	CHECK(offered.value()[2].label == "16:9");
+	CHECK(offered.value()[1].value == 3);
+	CHECK(offered.value()[1].label == "16:9");
+	CHECK(offered.value()[2].value == 2);
+	CHECK(offered.value()[2].label == "14:9");
+
+	// A box that cannot draw 14:9 is not offered it.
+	row_box.caps.can_ar_14_9 = 0;
+	Result<std::vector<SettingChoice> > narrow = settings::choices("video_Format");
+	REQUIRE(narrow.ok());
+	REQUIRE(narrow.value().size() == 2);
+	CHECK(narrow.value()[1].value == 3);
 }
 
 // A setting that offers no set at all is the same answer as one nobody can
 // state: either way a caller has no list and cannot draw a chooser.
 TEST_CASE("a setting that is not a choice offers no values", "[settingsfields]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	RealStore store;
 
 	Result<std::vector<SettingChoice> > number = settings::choices("lcd_scroll");
@@ -592,6 +639,33 @@ TEST_CASE("the drawing size takes one of the two modes the program has", "[setti
 	CHECK_FALSE(settings::set("osd_resolution", "-1").ok());
 }
 
+// Named by its size in pixels, and offered only where the box draws at it.
+TEST_CASE("the drawing sizes offered are the ones the box draws at", "[settingsfields]")
+{
+	RealStore store;
+	FakeOsdResolution drawing;
+	InstalledOsdResolution installed(&drawing);
+
+	Result<std::vector<SettingChoice> > both = settings::choices("osd_resolution");
+	REQUIRE(both.ok());
+	REQUIRE(both.value().size() == 2);
+	CHECK(both.value()[0].value == 0);
+	CHECK(both.value()[0].label == "1280x720");
+	CHECK(both.value()[1].value == 1);
+	CHECK(both.value()[1].label == "1920x1080");
+
+	drawing.sizes.pop_back();
+	Result<std::vector<SettingChoice> > small = settings::choices("osd_resolution");
+	REQUIRE(small.ok());
+	REQUIRE(small.value().size() == 1);
+	CHECK(small.value()[0].value == 0);
+	CHECK(settings::set("osd_resolution", "0").ok());
+	CHECK_FALSE(settings::set("osd_resolution", "1").ok());
+
+	drawing.sizes_status = Status::NotSupported;
+	CHECK_FALSE(settings::choices("osd_resolution").ok());
+}
+
 // Nobody is told afterwards: the object was changed directly, and the screen's
 // own notifier reads the value it is handed rather than the member, so running
 // it from here would read a pointer nothing filled.
@@ -624,4 +698,42 @@ TEST_CASE("a drawing size nobody keeps is not answered as a mode", "[settingsfie
 
 	Result<std::string> none = settings::get("osd_resolution");
 	CHECK_FALSE(none.ok());
+}
+
+TEST_CASE("an int member hands out its address, any other type none", "[settingsfields]")
+{
+	SNeutrinoSettings s;
+	int *(*p)(SNeutrinoSettings &) =
+		coreapi::NumberField<decltype(SNeutrinoSettings::parentallock_lockage), &SNeutrinoSettings::parentallock_lockage>::pointer;
+	REQUIRE(p != NULL);
+	REQUIRE(p(s) == &s.parentallock_lockage);
+	REQUIRE(coreapi::NumberField<decltype(SNeutrinoSettings::recording_audio_pids_default), &SNeutrinoSettings::recording_audio_pids_default>::pointer == NULL);
+}
+
+/* Which file system a disk is formatted with, offered where the box can write
+   it: the entry names the file system and keeps its place in the tool table. */
+TEST_CASE("the file systems offered are the ones the box can write", "[settingsfields]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	RealStore store;
+
+	box.format_tools.push_back("vfat");
+	box.format_tools.push_back("ext4");
+	Result<std::vector<SettingChoice> > offered = settings::choices("hdd_fs");
+	REQUIRE(offered.ok());
+	REQUIRE(offered.value().size() == 2);
+	CHECK(offered.value()[0].value == 0);
+	CHECK(offered.value()[0].label == "ext4");
+	CHECK(offered.value()[1].value == 4);
+	CHECK(offered.value()[1].label == "vfat");
+
+	CHECK(settings::set("hdd_fs", "4").ok());
+	CHECK_FALSE(settings::set("hdd_fs", "6").ok());
+
+	// A box that cannot say offers none.
+	box.format_tools_status = Status::Internal;
+	Result<std::vector<SettingChoice> > none = settings::choices("hdd_fs");
+	CHECK_FALSE(none.ok());
+	CHECK_FALSE(settings::set("hdd_fs", "0").ok());
 }

@@ -491,6 +491,7 @@ struct BoxFixture
 	FakeSystemSource         box;
 	FakeTimerSource          timers;
 	FakeSettingsSource       store;
+	FakeTunerSource          tuner;
 
 	InstalledChannelSource   installed_channels;
 	InstalledSink            installed_commands;
@@ -498,6 +499,7 @@ struct BoxFixture
 	InstalledSystemSource    installed_box;
 	InstalledTimerSource     installed_timers;
 	InstalledSettingsSource  installed_store;
+	InstalledTunerSource     installed_tuner;
 
 	BoxFixture()
 		: installed_channels(&channels),
@@ -505,7 +507,8 @@ struct BoxFixture
 		  installed_events(&events),
 		  installed_box(&box),
 		  installed_timers(&timers),
-		  installed_store(&store)
+		  installed_store(&store),
+		  installed_tuner(&tuner)
 	{
 		channels.channels.push_back(makeChannel(kChannel, "the one"));
 		channels.current = channels.channels[0];
@@ -1260,6 +1263,51 @@ TEST_CASE("a credential cannot be emptied by writing nothing to it", "[write]")
 	REQUIRE(r.code == 400);
 	REQUIRE(r.body.find("empty-credential") != std::string::npos);
 	REQUIRE(box.store.strings[secret] == "the password");
+}
+
+TEST_CASE("a write the parental lock holds is refused as setting-locked", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.box.parental_locked = true;
+
+	const Reply r = authedPatch("/api/v1/settings/parental", "{\"parentallock_lockage\":\"16\"}");
+	REQUIRE(r.code == 409);
+	REQUIRE(r.body.find("setting-locked") != std::string::npos);
+	REQUIRE(box.store.ints.count("parentallock_lockage") == 0);
+}
+
+namespace
+{
+bool g_has_fan = false;
+bool fixtureFan() { return g_has_fan; }
+const coreapi::Descriptor kFanRow[] =
+{
+	{
+		"fixture_fan", coreapi::ValueType::Int, "fixture", NULL, NULL,
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
+		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
+		  fixtureFan, NULL }
+	},
+};
+} // namespace
+
+TEST_CASE("a write of a setting the box lacks is refused as setting-not-on-this-box", "[write]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	InstalledSettingsTable table(kFanRow, 1);
+
+	g_has_fan = false;
+	const Reply r = authedPatch("/api/v1/settings/fixture", "{\"fixture_fan\":\"3\"}");
+	REQUIRE(r.code == 409);
+	REQUIRE(r.body.find("setting-not-on-this-box") != std::string::npos);
+	REQUIRE(box.store.ints.count("fixture_fan") == 0);
+
+	g_has_fan = true;
+	const Reply taken = authedPatch("/api/v1/settings/fixture", "{\"fixture_fan\":\"3\"}");
+	REQUIRE(taken.code == 200);
+	REQUIRE(box.store.ints["fixture_fan"] == 3);
 }
 
 TEST_CASE("clearing a credential is its own act", "[write]")

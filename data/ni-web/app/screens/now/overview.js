@@ -82,12 +82,8 @@ const RECORD_HOURS_FALLBACK = 4;
 const kNothingPlaying = '/errors/no-running-channel';
 
 /* The four ways a box can put a 4:3 picture on a 16:9 screen, as the driver
-   numbers them (DISPLAY_AR_MODE in the hardware library, and the same four the
-   video screen of the box offers). Written out here and not read off the
-   schema, because the setting is declared as a number and not as a choice: the
-   screen at the box builds this list as it opens and drops the last one where
-   the box cannot pan and scan 14:9, which no scan of the tables can see. A box
-   that cannot do one of them turns that write down. */
+   numbers them (DISPLAY_AR_MODE in the hardware library), in the words of this
+   page. Which of them this box offers is the schema's to say, see aspectModes. */
 const ASPECT_MODES = [
 	{ value: 0, key: 'now.quick.43.panscan' },
 	{ value: 1, key: 'now.quick.43.letterbox' },
@@ -156,7 +152,7 @@ export function settingValue(section, id) {
  * The choices the box declares for one setting, which for the video modes is a
  * list only the box can state.
  *
- * @param {{ items?: readonly { id: string, choices?: readonly { value: number, label: string }[] }[] } | null} schema
+ * @param {{ items?: readonly { id: string, values?: readonly { value: number, label: string }[] }[] } | null} schema
  * @param {string} id
  * @returns {{ value: number, label: string }[]}
  */
@@ -164,10 +160,26 @@ export function settingChoices(schema, id) {
 	const rows = (schema && schema.items) || [];
 	for (const row of rows) {
 		if (row.id === id) {
-			return (row.choices || []).slice();
+			return (row.values || []).slice();
 		}
 	}
 	return [];
+}
+
+/**
+ * The 4:3 modes this box offers, in the words of this page: the values the
+ * schema lists, and all four while it has not answered at all.
+ *
+ * @param {{ items?: readonly { id: string, values?: readonly { value: number, label: string }[] }[] } | null} schema
+ * @returns {{ value: number, key: string }[]}
+ */
+export function aspectModes(schema) {
+	if (!schema)
+		return ASPECT_MODES.slice();
+	const offered = settingChoices(schema, 'video_43mode');
+	return ASPECT_MODES.filter(function (one) {
+		return offered.some(function (o) { return o.value === one.value; });
+	});
 }
 
 /* The screen that plays a channel in the browser, as the navigation states it.
@@ -1056,7 +1068,7 @@ function Quick() {
 		<div class="now-quick">
 			<span class="now-quick-label">${t(text, 'now.quick.43')}</span>
 			<div class="now-quick-set">
-				${ASPECT_MODES.map(function (one) {
+				${aspectModes(schema.data).map(function (one) {
 					return html`<${Button}
 						key=${one.value}
 						primary=${String(one.value) === aspect}

@@ -169,6 +169,7 @@ coreapi_tests_SOURCES = \
 	coreapi/test_schema.cpp \
 	coreapi/test_settingspairs.cpp \
 	coreapi/test_settingschoices.cpp \
+	coreapi/test_menuspec.cpp \
 	coreapi/test_settingstable.cpp \
 	coreapi/test_settingsappliers.cpp \
 	httpd/test_server.cpp \
@@ -313,8 +314,7 @@ $(PART_TESTS) whole.merge:
 EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/counts-mcp.txt support/part-seconds.txt support/httpclient.h \
 	scan/extract-enum.sh support/merge-counts.sh \
 	scan/check-hook.sh scan/check-fieldtypes.sh \
-	scan/check-hardware.sh scan/check-appliers.sh scan/check-denominator.sh \
-	scan/check-choices.sh \
+	scan/check-hardware.sh scan/check-cecmodes.sh scan/check-appliers.sh scan/check-denominator.sh \
 	scan/check-sections.sh scan/check-callback-boundary.sh scan/check-legacy-mount.sh \
 	scan/check-legacybridge-order.sh scan/check-legacy-levels.sh \
 	scan/check-server-credentials.sh scan/check-legacy-bodygate.sh \
@@ -336,7 +336,15 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/rcfixture.h support/count
 	scan/check-timerlist-event.sh \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
 	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk scan/branches.awk \
-	scan/settingstext.awk \
+	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp \
+	scan/fixtures/arms/settingstable_arms.cpp scan/fixtures/arms/Makefile.am scan/fixtures/arms/site-in-arm.cpp \
+	scan/fixtures/arms/site-bare.cpp scan/fixtures/arms/site-negated.cpp scan/fixtures/arms/site-dead.cpp \
+	scan/fixtures/arms/site-built-under.cpp scan/fixtures/arms/site-built-other.cpp \
+	scan/fixtures/arms/site-else3.cpp scan/fixtures/arms/site-and3.cpp scan/fixtures/arms/site-notand3.cpp \
+	scan/fixtures/arms/site-elifelse.cpp scan/fixtures/arms/site-orand.cpp scan/fixtures/arms/site-bare2.cpp \
+	scan/fixtures/arms/site-amtwice.cpp scan/fixtures/arms/site-amtwo.cpp \
+	scan/fixtures/arms/site-continued.cpp scan/fixtures/arms/site-spans.cpp scan/fixtures/fixed-text.cpp scan/fixtures/bogus-key.cpp \
+	scan/fixtures/alternatives/settingstable_alternatives.cpp \
 	scan/extract-pairs.sh scan/extract-bounds.sh scan/extract-defines.sh \
 	scan/extract-choices.sh scan/extract-constants.sh scan/extract-labels.sh \
 	scan/extract-applied.sh scan/extract-httpcodes.sh \
@@ -449,11 +457,15 @@ SCAN_CHECKS = \
 	scan-legacy-bodygate \
 	scan-fieldtypes \
 	scan-hardware \
+	scan-cecmodes \
 	scan-denominator \
 	scan-appliers \
-	scan-choices \
 	scan-sections \
 	scan-locale-catalog \
+	scan-addsetting \
+	scan-addsetting-arms \
+	scan-row-alternatives \
+	scan-locale-fixed-text \
 	scan-callback-boundary \
 	scan-channellist-invalidation \
 	scan-bouquet-rename \
@@ -506,9 +518,18 @@ scan-legacy-bodygate:
 scan-fieldtypes:
 	@$(SHELL) $(srcdir)/scan/check-fieldtypes.sh "$(CXX)" $(DEFS) $(AM_CPPFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src/coreapi
 
+# A table may name a constant of the hardware library, and the coolstream
+# library is not the one this build was configured with, so its headers are
+# named here for the compilations that define its hardware. They come last:
+# every other compilation finds its own library's headers first. The scan asks
+# only whether a row compiles, so one of the two series stands for both.
 scan-hardware:
 	@$(SHELL) $(srcdir)/scan/check-hardware.sh "$(CXX)" $(top_builddir)/config.h $(top_srcdir)/src/coreapi/settings \
-		$(DEFS) $(AM_CPPFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src/coreapi
+		$(DEFS) $(AM_CPPFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src/coreapi \
+		-I$(top_srcdir)/lib/hardware/coolstream/hd2/libcoolstream -I$(top_srcdir)/lib/hardware/coolstream
+
+scan-cecmodes:
+	@$(SHELL) $(srcdir)/scan/check-cecmodes.sh $(top_srcdir)
 
 scan-denominator:
 	@$(SHELL) $(srcdir)/scan/check-denominator.sh $(top_srcdir)
@@ -516,14 +537,49 @@ scan-denominator:
 scan-appliers:
 	@$(SHELL) $(srcdir)/scan/check-appliers.sh $(top_srcdir)
 
-scan-choices:
-	@$(SHELL) $(srcdir)/scan/check-choices.sh $(top_srcdir)
-
 scan-sections:
 	@$(SHELL) $(srcdir)/scan/check-sections.sh $(top_srcdir)
 
 scan-locale-catalog:
 	@$(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir)
+
+# A call that builds an item from the declaration is a row the extractors mark
+# DERIVED. The fixture is read through the same scan as the tree, and the grep
+# names the fixture's key, so exactly one is what shows the scan recognises the call.
+# Pairs and the key list are not here: they read neutrino.cpp, not a screen.
+scan-addsetting:
+	@for x in choices bounds labels; do \
+		out=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib | grep -c '^scan_addsetting_fixture[[:space:]].*DERIVED'`; \
+		test "$$out" = 1 || { echo "extract-$$x.sh does not read an addSetting site as derived" >&2; exit 1; }; \
+		out=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib | grep -c '^scan_addsetting\.dotted_fixture[[:space:]].*DERIVED'`; \
+		test "$$out" = 1 || { echo "extract-$$x.sh does not read an addSetting site with a dotted key as derived" >&2; exit 1; }; \
+	done
+
+# A key whose row a build leaves out may be passed over only where the site goes
+# with it. Each fixture file is one shape, and each must come out as written here.
+scan-addsetting-arms:
+	@out=`SCAN_EXTRA=$(srcdir)/scan/fixtures/arms $(SHELL) $(srcdir)/scan/extract-choices.sh $(top_srcdir)/src $(top_srcdir)/lib \
+		| awk -F'\t' '$$4 == "DERIVED" && $$3 ~ /fixtures\/arms\// { f = $$3; sub(/^.*\//, "", f); sub(/:.*$$/, "", f); print f "=" $$5 }' \
+		| LC_ALL=C sort | tr '\n' '|'`; \
+	row='row defined(SCAN_ARMS_OPTION)'; arm='arm defined(SCAN_ARMS_OPTION)'; \
+	want="site-amtwice.cpp=$$row|site-amtwo.cpp=$$row|site-and3.cpp=$$arm|site-bare.cpp=$$row|site-bare2.cpp=$$row|site-built-other.cpp=$$row|site-built-under.cpp=$$arm|site-continued.cpp=$$row|site-dead.cpp=?|site-elifelse.cpp=$$row|site-else3.cpp=$$row|site-in-arm.cpp=$$arm|site-negated.cpp=$$row|site-notand3.cpp=$$row|site-orand.cpp=$$row|site-spans.cpp=$$row|"; \
+	test "$$out" = "$$want" || { echo "extract-choices.sh reads the arms of a derived site wrong:" >&2; echo "  got  $$out" >&2; echo "  want $$want" >&2; exit 1; }
+
+# The arms of one #if chain in a row's list are one position, and every value an
+# arm offers there is read. A number's list names a value in words and offers no
+# entry.
+scan-row-alternatives:
+	@out=`awk -v keepstrings=1 -f $(srcdir)/scan/strip-comments.awk $(srcdir)/scan/fixtures/alternatives/settingstable_alternatives.cpp \
+		| awk -f $(srcdir)/scan/blank-if0.awk | awk -f $(srcdir)/scan/rows.awk | tr '\t\n' ':|'`; \
+	want='E:kScanAlternatives:0|E:kScanAlternatives:5|E:kScanAlternatives:3|E:kScanAlternatives:1|E:kScanAlternatives:2|E:kScanNamedNumber:0|R:scan_alternatives:Enum:kScanAlternatives:-|R:scan_named_number:Int:-:-|'; \
+	test "$$out" = "$$want" || { echo "rows.awk reads a row's list wrong:" >&2; echo "  got  $$out" >&2; echo "  want $$want" >&2; exit 1; }
+
+# An entry's fixed text is no catalog name, and a mistyped key still is a failure.
+scan-locale-fixed-text:
+	@CATALOG_CHECK_EXTRA=$(srcdir)/scan/fixtures/fixed-text.cpp $(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir) >/dev/null \
+		|| { echo "check-locale-catalog.sh reads an entry's fixed text as a catalog key" >&2; exit 1; }
+	@err=`CATALOG_CHECK_EXTRA=$(srcdir)/scan/fixtures/bogus-key.cpp $(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir) 2>&1 >/dev/null`; \
+		case "$$err" in *no.such.catalog.key*) ;; *) echo "check-locale-catalog.sh passes a key the catalog does not carry" >&2; exit 1;; esac
 
 scan-callback-boundary:
 	@$(SHELL) $(srcdir)/scan/check-callback-boundary.sh $(top_srcdir)/src/httpd

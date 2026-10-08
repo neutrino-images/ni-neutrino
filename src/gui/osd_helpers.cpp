@@ -31,9 +31,9 @@ namespace
    may not reach into a screen's own object.
 
    What is read and written is g_settings_osd_resolution_save and not
-   g_settings.osd_resolution: the save writes that copy, src/neutrino.cpp:2026,
-   and changeOsdResolution can force the running value down to the smaller size
-   while the copy keeps what was chosen, :64 and :100 below. */
+   g_settings.osd_resolution: the save writes that copy, and
+   changeOsdResolution can force the running value down to the smaller size
+   while the copy keeps what was chosen. */
 class CRealOsdResolution : public coreapi::OsdResolutionSource
 {
 	public:
@@ -45,11 +45,22 @@ class CRealOsdResolution : public coreapi::OsdResolutionSource
 
 		coreapi::Status write(int mode)
 		{
-			/* Both, and in this order, because that is what the setup screen
-			   does, src/gui/osd_setup.cpp:1604: the copy is what the next save
-			   writes, and the call is what the box is drawing at now. */
+			/* Both, and in this order: the copy is what the next save writes,
+			   and the call is what the box is drawing at now. */
 			COsdHelpers::getInstance()->g_settings_osd_resolution_save = mode;
 			COsdHelpers::getInstance()->changeOsdResolution((uint32_t) mode);
+			return coreapi::Status::Ok;
+		}
+
+		/* The list the framebuffer built for this box, in the order of the modes.
+		   Built once at start-up and left alone after, so a read from another
+		   thread finds it whole. */
+		coreapi::Status available(std::vector<std::pair<int, int> > &out) const
+		{
+			out.clear();
+			const std::vector<osd_resolution_t> &sizes = CFrameBuffer::getInstance()->osd_resolutions;
+			for (size_t i = 0; i < sizes.size(); i++)
+				out.push_back(std::make_pair((int) sizes[i].xRes, (int) sizes[i].yRes));
 			return coreapi::Status::Ok;
 		}
 };
@@ -111,7 +122,8 @@ void COsdHelpers::changeOsdResolution(uint32_t mode, bool automode/*=false*/, bo
 //		modeNew = OSDMODE_720;
 
 	idx = frameBuffer->getIndexOsdResolution(modeNew);
-	resetOsd = (modeNew != getOsdResolution()) ? true : false;
+	const bool sizeChanges = (modeNew != getOsdResolution());
+	resetOsd = sizeChanges;
 #if 1
 	printf(">>>>>[%s:%d] osd mode: %s => %s, automode: %s, forceOsdReset: %s\n", __func__, __LINE__,
 		(g_settings.osd_resolution == OSDMODE_720)?"OSDMODE_720":"OSDMODE_1080",
@@ -125,6 +137,9 @@ void COsdHelpers::changeOsdResolution(uint32_t mode, bool automode/*=false*/, bo
 	if (frameBuffer->fullHdAvailable()) {
 		if (frameBuffer->osd_resolutions.empty())
 			return;
+
+		if (sizeChanges)
+			OnBeforeResizeOsd();
 
 		bool ivVisible = false;
 		if (g_InfoViewer && g_InfoViewer->is_visible) {

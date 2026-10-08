@@ -39,6 +39,7 @@
 
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 
 #include <driver/screen_max.h>
 
@@ -75,24 +76,6 @@ int CCECSetup::exec(CMenuTarget* parent, const std::string &/*actionKey*/)
 	return res;
 }
 
-#define VIDEOMENU_HDMI_CEC_MODE_OPTION_COUNT 3
-const CMenuOptionChooser::keyval VIDEOMENU_HDMI_CEC_MODE_OPTIONS[VIDEOMENU_HDMI_CEC_MODE_OPTION_COUNT] =
-{
-	{ VIDEO_HDMI_CEC_MODE_OFF	, LOCALE_VIDEOMENU_HDMI_CEC_MODE_OFF      },
-	{ VIDEO_HDMI_CEC_MODE_TUNER	, LOCALE_VIDEOMENU_HDMI_CEC_MODE_TUNER    },
-	{ VIDEO_HDMI_CEC_MODE_RECORDER	, LOCALE_VIDEOMENU_HDMI_CEC_MODE_RECORDER }
-};
-
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-#define VIDEOMENU_HDMI_CEC_VOL_OPTION_COUNT 3
-const CMenuOptionChooser::keyval VIDEOMENU_HDMI_CEC_VOL_OPTIONS[VIDEOMENU_HDMI_CEC_VOL_OPTION_COUNT] =
-{
-	{ VIDEO_HDMI_CEC_VOL_OFF		, LOCALE_VIDEOMENU_HDMI_CEC_VOL_OFF },
-	{ VIDEO_HDMI_CEC_VOL_AUDIOSYSTEM, LOCALE_VIDEOMENU_HDMI_CEC_VOL_AUDIOSYSTEM },
-	{ VIDEO_HDMI_CEC_VOL_TV			, LOCALE_VIDEOMENU_HDMI_CEC_VOL_TV }
-};
-#endif
-
 int CCECSetup::showMenu()
 {
 	//menue init
@@ -100,24 +83,13 @@ int CCECSetup::showMenu()
 	cec->addIntroItems(LOCALE_VIDEOMENU_HDMI_CEC);
 
 	//cec
-	CMenuOptionChooser *cec_ch = new CMenuOptionChooser(LOCALE_VIDEOMENU_HDMI_CEC_MODE, &g_settings.hdmi_cec_mode, VIDEOMENU_HDMI_CEC_MODE_OPTIONS, VIDEOMENU_HDMI_CEC_MODE_OPTION_COUNT, true, this);
-	cec_ch->setHint("", LOCALE_MENU_HINT_CEC_MODE);
-	cec1 = new CMenuOptionChooser(LOCALE_VIDEOMENU_HDMI_CEC_VIEW_ON, &g_settings.hdmi_cec_view_on, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF, this);
-	cec1->setHint("", LOCALE_MENU_HINT_CEC_VIEW_ON);
-	cec2 = new CMenuOptionChooser(LOCALE_VIDEOMENU_HDMI_CEC_STANDBY, &g_settings.hdmi_cec_standby, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF, this);
-	cec2->setHint("", LOCALE_MENU_HINT_CEC_STANDBY);
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	cec3 = new CMenuOptionChooser(LOCALE_VIDEOMENU_HDMI_CEC_VOLUME, &g_settings.hdmi_cec_volume, VIDEOMENU_HDMI_CEC_VOL_OPTIONS, VIDEOMENU_HDMI_CEC_VOL_OPTION_COUNT, g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF, this);
-	cec3->setHint("", LOCALE_MENU_HINT_CEC_VOLUME);
-#endif
-
-	cec->addItem(cec_ch);
+	addSetting(cec, "hdmi_cec_mode", true, this);
 	cec->addItem(GenericMenuSeparatorLine);
 	//-------------------------------------------------------
-	cec->addItem(cec1);
-	cec->addItem(cec2);
+	cec1 = static_cast<CMenuOptionChooser *>(addSetting(cec, "hdmi_cec_view_on", g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF, this));
+	cec2 = static_cast<CMenuOptionChooser *>(addSetting(cec, "hdmi_cec_standby", g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF, this));
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	cec->addItem(cec3);
+	cec3 = static_cast<CMenuOptionChooser *>(addSetting(cec, "hdmi_cec_volume", g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF, this));
 #endif
 
 	int res = cec->exec(NULL, "");
@@ -142,10 +114,13 @@ bool CCECSetup::changeNotify(const neutrino_locale_t OptionName, void * /*data*/
 	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_HDMI_CEC_MODE))
 	{
 		printf("[neutrino CEC Settings] %s set CEC settings...\n", __FUNCTION__);
-		cec1->setActive(g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF);
-		cec2->setActive(g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF);
+		if (cec1)
+			cec1->setActive(g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF);
+		if (cec2)
+			cec2->setActive(g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF);
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-		cec3->setActive(g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF);
+		if (cec3)
+			cec3->setActive(g_settings.hdmi_cec_mode != VIDEO_HDMI_CEC_MODE_OFF);
 #endif
 		videoDecoder->SetCECMode((VIDEO_HDMI_CEC_MODE)g_settings.hdmi_cec_mode);
 	}

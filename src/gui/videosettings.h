@@ -33,11 +33,11 @@
 #include <gui/widget/menue.h>
 #include <string>
 
-/* Hands the settings layer the three sets this screen builds as it opens: the
-   video modes and the two analog outputs. Their tables are this screen's and
-   that layer may not reach into a screen, so the answer is registered from here
-   rather than reached for from there. Called once at start-up. */
-void installVideoSettingChoices();
+/* The video modes by the number the settings file gives each, the index of
+   enabled_video_modes and enabled_auto_modes: VIDEOMENU_VIDEOMODE_OPTION_COUNT
+   of them, each with the value this box gives it or -1 where it does not draw
+   it, and its name. */
+const CMenuOptionChooser::keyval_ext *videoModeSlots();
 
 class CFrameBuffer;
 class CVideoSettings : public CMenuWidget, CChangeObserver
@@ -52,8 +52,6 @@ class CVideoSettings : public CMenuWidget, CChangeObserver
 
 		int width, selected;
 		int showVideoSetup();
-		std::vector<CMenuOptionChooser::keyval_ext> videomenu_43mode_options;
-		void Init43ModeOptions();
 
 	public:
 		CVideoSettings(int wizard_mode = SNeutrinoSettings::WIZARD_OFF);

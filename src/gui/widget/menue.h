@@ -39,6 +39,7 @@
 #include <sys/types.h> /* uint */
 #include <driver/neutrino_msg_t.h>
 #include <system/localize.h>
+#include <system/settings.h>
 #include <gui/widget/buttons.h>
 #include <gui/widget/icons.h>
 #include <gui/plugins.h>
@@ -669,14 +670,11 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		void paintHint(){hint_painted = false;}
 		enum 
 		{
-			MENU_POS_CENTER 	,
-			MENU_POS_TOP_LEFT	,
-			MENU_POS_TOP_RIGHT	,
-			MENU_POS_BOTTOM_LEFT	,
-			MENU_POS_BOTTOM_RIGHT	,
-
-			MENU_POS_CUSTOM
+			// the values before it are MENU_POS_* in system/settings.h
+			MENU_POS_CUSTOM = MENU_POS_BOTTOM_RIGHT + 1
 		};
+		// The value it had when the positions were unnamed.
+		static_assert(MENU_POS_CUSTOM == 5, "MENU_POS_CUSTOM must keep its value");
 		void addKey(neutrino_msg_t key, CMenuTarget *menue, const std::string &action);
 		void setFooter(const struct button_label *_fbutton_label, const int _fbutton_count, bool repaint = false);
 

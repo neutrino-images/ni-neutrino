@@ -11,7 +11,7 @@ import { describedBy, Notes } from './field.js';
  *   id?: string,
  *   label?: string,
  *   value?: string | number,
- *   options?: Array<{ value: string | number, label: string }>,
+ *   options?: Array<{ value: string | number, label: string, disabled?: boolean }>,
  *   hint?: string,
  *   error?: string,
  *   needsRestart?: boolean,
@@ -33,7 +33,7 @@ export function Select(props) {
 			aria-describedby=${describedBy(id, props)}
 			onChange=${props.onChange}>
 			${options.map(function (option) {
-				return html`<option key=${option.value} value=${option.value}>${option.label}</option>`;
+				return html`<option key=${option.value} value=${option.value} disabled=${option.disabled}>${option.label}</option>`;
 			})}
 		</select>
 		<${Notes} id=${id} hint=${props.hint} error=${props.error} needsRestart=${props.needsRestart} />

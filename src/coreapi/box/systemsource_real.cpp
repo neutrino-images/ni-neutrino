@@ -22,11 +22,18 @@
 
 #include "coreapi/base/deps.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <set>
+#include <string>
+#include <vector>
+
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
 #include <unistd.h>
 
 #include <configfile.h>
+#include <cs_api.h>
 #include <global.h>
 #include <hardware/ca.h>
 #include <hardware_caps.h>
@@ -191,6 +198,87 @@ class RealSystemSource : public SystemSource
 		Status ciInUse(bool &out) const
 		{
 			out = CCamManager::getInstance()->getUseCI();
+			return Status::Ok;
+		}
+
+		Status capabilities(BoxCapabilities &out) const
+		{
+			hw_caps_t *caps = get_hwcaps();
+			if (!caps)
+				return Status::Internal;
+			out.can_ar_14_9 = caps->can_ar_14_9;
+			out.can_cec = caps->can_cec;
+			out.can_cpufreq = caps->can_cpufreq;
+			out.can_pip = caps->can_pip;
+			out.can_ps_14_9 = caps->can_ps_14_9;
+			out.can_shutdown = caps->can_shutdown;
+			out.display_can_deepstandby = caps->display_can_deepstandby;
+			out.display_can_set_brightness = caps->display_can_set_brightness;
+			out.display_has_statusline = caps->display_has_statusline;
+			out.display_type = caps->display_type;
+			out.display_xres = caps->display_xres;
+			out.has_button_vformat = caps->has_button_vformat;
+			out.has_fan = caps->has_fan;
+			out.has_HDMI = caps->has_HDMI;
+			out.has_SCART = caps->has_SCART;
+			out.pip_devs = caps->pip_devs;
+			out.display_scroll_repeats = file_exists("/proc/stb/lcd/scroll_repeats");
+			out.video_zapmode = file_exists("/proc/stb/video/zapmode");
+#if BOXMODEL_VUPLUS_ARM
+			out.video_hdmi_colorimetry = file_exists("/proc/stb/video/hdmi_colorspace");
+#else
+			out.video_hdmi_colorimetry = file_exists("/proc/stb/video/hdmi_colorimetry");
+#endif
+			out.board_revision = cs_get_revision();
+			return Status::Ok;
+		}
+
+		// The test the program's own start applies.
+		Status parentalLocked(bool &out) const
+		{
+			out = access(NEUTRINO_PARENTALLOCKED_FILE, R_OK) == 0;
+			return Status::Ok;
+		}
+
+		/* Same test the disk menu applies: the kernel lists the file system
+		   and a mkfs for it is on the path. */
+		Status formatTools(std::vector<std::string> &out) const
+		{
+			static const char *const tools[][2] = {
+				{ "ext4",  "mkfs.ext4" },
+				{ "ext3",  "mkfs.ext3" },
+				{ "ext2",  "mkfs.ext2" },
+				{ "f2fs",  "mkfs.f2fs" },
+				{ "vfat",  "mkfs.vfat" },
+				{ "exfat", "mkfs.exfat" },
+				{ "xfs",   "mkfs.xfs" }
+			};
+
+			FILE *f = fopen("/proc/filesystems", "r");
+			if (!f)
+				return Status::Internal;
+			std::set<std::string> kernel;
+			char line[128]; // lines are shorter
+			while (fgets(line, sizeof(line), f))
+			{
+				size_t l = strlen(line);
+				if (l > 0)
+					line[l - 1] = 0;
+				// "nodev" lines carry a tab before the name, the others start with one
+				char *tab = strchr(line, '\t');
+				if (tab)
+					kernel.insert(std::string(tab + 1));
+			}
+			fclose(f);
+
+			out.clear();
+			for (size_t i = 0; i < sizeof(tools) / sizeof(tools[0]); i++)
+			{
+				if (kernel.find(tools[i][0]) == kernel.end())
+					continue;
+				if (!find_executable(tools[i][1]).empty())
+					out.push_back(tools[i][0]);
+			}
 			return Status::Ok;
 		}
 };

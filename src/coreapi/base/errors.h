@@ -399,9 +399,15 @@ enum class ErrorCode
 	Killed,
 	ExitStatus,
 	/* The values a setting offers could not be told: either it is not a setting
-	   that offers a set, or the set is the box's own and nobody has said what
-	   it is. Either way the caller has no list to draw from. */
+	   that offers a set, or the box has none of its entries or cannot say which
+	   it has. Either way the caller has no list to draw from. */
 	ChoicesUnavailable,
+	/* The box's image fixes this setting, so no caller may change it here.
+	   Also answered when whether the box is locked cannot be read. */
+	SettingLocked,
+	/* The box lacks what this setting controls, a fan or a socket, or cannot
+	   say whether it has it. The schema marks such a row unavailable. */
+	SettingNotOnThisBox,
 };
 
 /* The wire form. A code with no case here answers with nothing, and two things
@@ -581,6 +587,8 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::Killed: return "killed";
 		case ErrorCode::ExitStatus: return "exit-status";
 		case ErrorCode::ChoicesUnavailable: return "choices-unavailable";
+		case ErrorCode::SettingLocked: return "setting-locked";
+		case ErrorCode::SettingNotOnThisBox: return "setting-not-on-this-box";
 	}
 	return "";
 }

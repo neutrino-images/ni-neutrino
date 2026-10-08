@@ -46,6 +46,7 @@
 #include <set>
 #include <stdlib.h>
 #include <system/helpers.h>
+#include <gui/widget/settingitem.h>
 
 extern CBouquetManager *g_bouquetManager;
 
@@ -244,7 +245,7 @@ int CWebChannelsSetup::Show()
 	m->addItem(mf);
 #endif
 
-	CMenuOptionChooser *oc;
+	CMenuItem *oc;
 
 	if (!webradio)
 	{
@@ -252,10 +253,8 @@ int CWebChannelsSetup::Show()
 		oc = new CMenuOptionChooser(LOCALE_LIVESTREAM_RESOLUTION, &livestreamResolution, LIVESTREAM_RESOLUTION_OPTIONS, LIVESTREAM_RESOLUTION_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++), "", true);
 		// FIXME oc->setHint(NEUTRINO_ICON_HINT_DEFAULT, NONEXISTANT_LOCALE);
 		m->addItem(oc);
-		CMenuOptionNumberChooser *nc = new CMenuOptionNumberChooser(LOCALE_WEBTV_STREAM_RESTART_ATTEMPTS, &g_settings.webtv_stream_restart_attempts, true, 0, 3, NULL, CRCInput::convertDigitToKey(shortcut++));
-		m->addItem(nc);
-		oc = new CMenuOptionChooser(LOCALE_WEBTV_DNS_DIAGNOSTICS, &g_settings.webtv_dns_diagnostics, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
-		m->addItem(oc);
+		addSetting(m, "webtv_stream_restart_attempts", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+		addSetting(m, "webtv_dns_diagnostics", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 
 		m->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, webradio ? LOCALE_WEBRADIO_XML : LOCALE_WEBTV_XML));
 	}
@@ -265,15 +264,15 @@ int CWebChannelsSetup::Show()
 	if (webradio)
 	{
 		snprintf(hint_text, sizeof(hint_text) - 1, g_Locale->getText(LOCALE_MENU_HINT_WEBRADIO_XML_AUTO), WEBRADIODIR, WEBRADIODIR_VAR);
-		oc = new CMenuOptionChooser(LOCALE_WEBRADIO_XML_AUTO, &g_settings.webradio_xml_auto, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
+		oc = addSetting(m, "webradio_xml_auto", true, this, CRCInput::convertDigitToKey(shortcut++));
 	}
 	else
 	{
 		snprintf(hint_text, sizeof(hint_text) - 1, g_Locale->getText(LOCALE_MENU_HINT_WEBTV_XML_AUTO), WEBTVDIR, WEBTVDIR_VAR);
-		oc = new CMenuOptionChooser(LOCALE_WEBTV_XML_AUTO, &g_settings.webtv_xml_auto, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
+		oc = addSetting(m, "webtv_xml_auto", true, this, CRCInput::convertDigitToKey(shortcut++));
 	}
-	oc->setHint("", hint_text);
-	m->addItem(oc);
+	if (oc)
+		oc->setHint("", hint_text);
 	m->addItem(GenericMenuSeparator);
 
 	item_offset = m->getItemsCount();

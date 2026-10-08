@@ -96,7 +96,7 @@ fi
 #
 # Every install call is named here by hand, so a seam added below with nothing in this
 # list is a wiring this scan walks straight past.
-WIRING="coreapi::installRealChannelSource coreapi::installRealEpgSource coreapi::installRealTimerSource coreapi::installRealCommandSink coreapi::installRealSystemSource coreapi::installRealTunerSource coreapi::installRealInputDevice coreapi::installRealScreenshotSource coreapi::installRealLogoSource coreapi::installRealEventSink coreapi::installRealSettingsSource coreapi::installRealPluginSource coreapi::installRealLocaleSource coreapi::installRealRecordingSafetySource registerSettingsAppliers installVideoSettingChoices installOsdResolutionSource"
+WIRING="coreapi::installRealChannelSource coreapi::installRealEpgSource coreapi::installRealTimerSource coreapi::installRealCommandSink coreapi::installRealSystemSource coreapi::installRealTunerSource coreapi::installRealInputDevice coreapi::installRealScreenshotSource coreapi::installRealLogoSource coreapi::installRealEventSink coreapi::installRealSettingsSource coreapi::installRealPluginSource coreapi::installRealLocaleSource coreapi::installRealRecordingSafetySource registerSettingsAppliers installOsdResolutionSource"
 # The web server is started from the same object and is out of reach of a case for the
 # same reason. What a case cannot see at all is a start that was deleted: the program
 # would come up with no web server and nothing anywhere would be red, because every

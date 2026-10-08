@@ -31,21 +31,14 @@
 #include "cc_frm_icons.h"
 #include "cc_frm_clock.h"
 #include <driver/colorgradient.h>
+#include <system/settings.h>
 
-#define DEFAULT_LOGO_ALIGN CCHeaderTypes::CC_LOGO_RIGHT
+#define DEFAULT_LOGO_ALIGN CC_LOGO_RIGHT
 #define DEFAULT_TITLE_ALIGN CCHeaderTypes::CC_TITLE_LEFT
 
 class CCHeaderTypes
 {
 	public:
-		///logo position options
-		typedef enum
-		{
-			CC_LOGO_RIGHT 	= 0x01,
-			CC_LOGO_LEFT 	= 0x02,
-			CC_LOGO_CENTER  = 0x04
-		}cc_logo_alignment_t;
-
 		///title position options
 		typedef enum
 		{	/*for compatibilty use CTextBox enums values*/

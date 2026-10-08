@@ -72,10 +72,13 @@ fi
 # means off by.
 sh "$HERE/extract-defines.sh" "$SRC" > "$tmp/defines"
 
-find "$SRC/gui" -name '*.cpp' -o -name '*.h' | LC_ALL=C sort > "$tmp/files"
+find "$SRC/gui" ${SCAN_EXTRA:+"$SCAN_EXTRA"} -name '*.cpp' -o -name '*.h' | LC_ALL=C sort > "$tmp/files"
 while read -r f; do
 	awk -v keepstrings=0 -f "$STRIP" "$f" | awk -v where="$f" -f "$HERE/bounds.awk"
 done < "$tmp/files" | sort -u > "$tmp/raw"
+
+xargs awk -v keepstrings=1 -v mark='@@file@@' -f "$STRIP" < "$tmp/files" \
+	| awk -v mark='@@file@@' -f "$HERE/addsetting.awk" | sort -u > "$tmp/derived"
 
 # The names are resolved after the scan rather than inside it, so the scan has
 # one job and a name it cannot resolve stays visible as the name it was.
@@ -89,6 +92,10 @@ awk -F'\t' -v locfile="$tmp/locale" -v deffile="$tmp/defines" '
 		return "?"
 	}
 ' "$tmp/locale" "$tmp/defines" "$tmp/raw" > "$tmp/out"
+
+# A site built from the declaration states no bounds: DERIVED stands where both
+# would be, and the row counts as one with both resolved below.
+awk -F'\t' '{ print $1 "\tDERIVED\tDERIVED\t?\t" $2 }' "$tmp/derived" >> "$tmp/out"
 
 # How many rows this prints is not held here. Every one of them is counted
 # again by the suite, which holds all of its counts in counts.txt beside it: a

@@ -100,12 +100,6 @@ class COsdSetup : public CMenuTarget, public CChangeObserver
 			INFOBAR_LOGO_SHADED
 		};
 
-		enum
-		{
-			PRESET_SCREEN_A,
-			PRESET_SCREEN_B
-		};
-
 		COsdSetup(int wizard_mode = SNeutrinoSettings::WIZARD_OFF);
 		~COsdSetup();
 		int exec(CMenuTarget* parent, const std::string & actionKey);

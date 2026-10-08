@@ -344,7 +344,7 @@ int CChannelList::doChannelMenu(void)
 	CInfoClock::getInstance()->block();
 
 	//ensure stop header clock before paint context menu
-	if (g_settings.menu_pos == CMenuWidget::MENU_POS_TOP_RIGHT){
+	if (g_settings.menu_pos == MENU_POS_TOP_RIGHT){
 		//using native callback to ensure stop header clock before paint this menu window
 		menu->OnBeforePaint.connect(sigc::mem_fun(header->getClockObject(), &CComponentsFrmClock::block));
 		//... and start header clock after hide menu window
@@ -1842,7 +1842,7 @@ void CChannelList::showChannelLogo()
 		return;
 
 	if(g_settings.channellist_show_channellogo){
-		header->setChannelLogo((*chanlist)[selected]->getChannelID(), (*chanlist)[selected]->getName(), (CCHeaderTypes::cc_logo_alignment_t)g_settings.channellist_show_channellogo);
+		header->setChannelLogo((*chanlist)[selected]->getChannelID(), (*chanlist)[selected]->getName(), (cc_logo_alignment_t)g_settings.channellist_show_channellogo);
 		header->getChannelLogoObject()->hide();
 		header->getChannelLogoObject()->clearSavedScreen();
 		header->getChannelLogoObject()->paint();

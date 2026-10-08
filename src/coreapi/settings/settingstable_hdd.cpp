@@ -20,6 +20,7 @@
 
 #include "settingstable.h"
 #include "settingsfield.h"
+#include "predicates.h"
 
 namespace coreapi
 {
@@ -27,87 +28,86 @@ namespace coreapi
 namespace
 {
 
-/* The hard disk section, off src/gui/hdd_menu.cpp. That screen is the disk
-   manager the service menu opens rather than a settings screen, and everything
-   else it binds is a device it found at run time, which is why only these seven
-   are here. The two sleep values reach the disk through the screen's own apply
-   item, src/gui/hdd_menu.cpp:818. */
+/* The hard disk section. Everything else about disks is bound to devices found
+   at run time, which is why only these seven are here. The two sleep values
+   reach the disk through a separate apply step. */
 
-/* How long the disk waits before it spins down, src/gui/hdd_menu.cpp:823. The
-   last three are not minutes: the driver reads them as its own codes. */
+/* How long the disk waits before it spins down. The last three are not
+   minutes: the driver reads them as its own codes. */
 const EnumValue kHddSleep[] =
 {
-	{   0, "options.off" },
-	{  60, "hdd_5min" },
-	{ 120, "hdd_10min" },
-	{ 240, "hdd_20min" },
-	{ 241, "hdd_30min" },
-	{ 242, "hdd_60min" }
+	{   0, "options.off", NULL, NULL },
+	{  60, "hdd_5min", NULL, NULL },
+	{ 120, "hdd_10min", NULL, NULL },
+	{ 240, "hdd_20min", NULL, NULL },
+	{ 241, "hdd_30min", NULL, NULL },
+	{ 242, "hdd_60min", NULL, NULL }
 };
 
-// How loud the disk is allowed to be, src/gui/hdd_menu.cpp:832.
+// How loud the disk is allowed to be.
 const EnumValue kHddNoise[] =
 {
-	{   0, "options.off" },
-	{ 128, "hdd_slow" },
-	{ 190, "hdd_middle" },
-	{ 254, "hdd_fast" }
+	{   0, "options.off", NULL, NULL },
+	{ 128, "hdd_slow", NULL, NULL },
+	{ 190, "hdd_middle", NULL, NULL },
+	{ 254, "hdd_fast", NULL, NULL }
+};
+
+/* Positions in the disk manager's tool table, in the same order; named by the
+   file system, which the program has no other words for. An entry is offered
+   where its mkfs is there. */
+const EnumValue kHddFs[] =
+{
+	{ 0, NULL, "ext4", formatsExt4 },
+	{ 1, NULL, "ext3", formatsExt3 },
+	{ 2, NULL, "ext2", formatsExt2 },
+	{ 3, NULL, "f2fs", formatsF2fs },
+	{ 4, NULL, "vfat", formatsVfat },
+	{ 5, NULL, "exfat", formatsExfat },
+	{ 6, NULL, "xfs", formatsXfs }
 };
 
 const Descriptor kHdd[] =
 {
-	/* Which file system the box writes when it formats a disk, as an index into
-	   the tool table the screen walks. A number and not a choice: the screen
-	   names each entry with the tool's own name rather than a locale,
-	   src/gui/hdd_menu.cpp:627, so a choice here would offer words the program
-	   does not have. The ceiling is the last entry of that table,
-	   src/gui/hdd_menu.cpp:92. */
-	// src/neutrino.cpp:657 src/gui/hdd_menu.cpp:663
+	// Which file system the box writes when it formats a disk.
 	{
-		"hdd_fs", ValueType::Int, "hdd",
+		"hdd_fs", ValueType::Enum, "hdd",
 		"hdd_fs", "menu.hint_hdd_fmt",
-		0, 6, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
+		0, 0, COREAPI_VALUES(kHddFs), 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(hdd_fs)
 	},
-	// src/neutrino.cpp:658 src/gui/hdd_menu.cpp:823
 	{
 		"hdd_sleep", ValueType::Enum, "hdd",
 		"hdd_sleep", "menu.hint_hdd_sleep",
 		0, 0, COREAPI_VALUES(kHddSleep), 60, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(hdd_sleep)
 	},
-	/* The screen offers this one only where the box found a full hdparm,
-	   src/gui/hdd_menu.cpp:830, which is a file it looks for and not a setting,
-	   so the row carries no condition and is always shown. */
-	// src/neutrino.cpp:659 src/gui/hdd_menu.cpp:832
+	/* Only a full hdparm takes this one, which is a file the box looks for and
+	   not a setting, so the row carries no condition. */
 	{
 		"hdd_noise", ValueType::Enum, "hdd",
 		"hdd_noise", "menu.hint_hdd_noise",
 		0, 0, COREAPI_VALUES(kHddNoise), 254, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(hdd_noise)
 	},
-	// src/neutrino.cpp:661 src/gui/hdd_menu.cpp:851
 	{
 		"hdd_format_on_mount_failed", ValueType::Bool, "hdd",
 		"hdd_format_on_mount_failed", "menu.hint_hdd_format_on_mount_failed",
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(hdd_format_on_mount_failed)
 	},
-	// src/neutrino.cpp:662 src/gui/hdd_menu.cpp:854
 	{
 		"hdd_wakeup", ValueType::Bool, "hdd",
 		"hdd_wakeup", "menu.hint_hdd_wakeup",
 		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(hdd_wakeup)
 	},
-	// src/neutrino.cpp:663 src/gui/hdd_menu.cpp:857
 	{
 		"hdd_wakeup_msg", ValueType::Bool, "hdd",
 		"hdd_wakeup_msg", "menu.hint_hdd_wakeup_msg",
 		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(hdd_wakeup_msg)
 	},
-	// src/neutrino.cpp:664 src/gui/hdd_menu.cpp:861
 	{
 		"hdd_allow_set_recdir", ValueType::Bool, "hdd",
 		"hdd_allow_set_recdir", "menu.hint_hdd_allow_set_recdir",

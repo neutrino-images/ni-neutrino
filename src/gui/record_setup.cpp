@@ -45,11 +45,10 @@
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
 #include <gui/widget/msgbox.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/stringinput_ext.h>
 #include <gui/widget/keyboard_input.h>
-
-#include <timerdclient/timerdclient.h>
 
 #include <driver/screen_max.h>
 #include <driver/record.h>
@@ -158,21 +157,6 @@ const CMenuOptionChooser::keyval RECORDINGMENU_RECORDING_TYPE_OPTIONS[RECORDINGM
 };
 #endif
 
-#define END_OF_RECORDING_COUNT 2
-const CMenuOptionChooser::keyval END_OF_RECORDING[END_OF_RECORDING_COUNT] =
-{
-	{0, LOCALE_RECORDINGMENU_END_OF_RECORDING_MAX},
-	{1, LOCALE_RECORDINGMENU_END_OF_RECORDING_EPG}
-};
-
-const CMenuOptionChooser::keyval timer_followscreenings_options[] =
-{
-	{CFollowScreenings::FOLLOWSCREENINGS_OFF	,LOCALE_OPTIONS_OFF	},
-	{CFollowScreenings::FOLLOWSCREENINGS_ON		,LOCALE_OPTIONS_ON	},
-	{CFollowScreenings::FOLLOWSCREENINGS_ALWAYS	,LOCALE_OPTIONS_ALWAYS	} //NI
-};
-size_t timer_followscreenings_options_count = sizeof(timer_followscreenings_options)/sizeof(CMenuOptionChooser::keyval);
-
 int CRecordSetup::showRecordSetup()
 {
 	CMenuForwarder * mf;
@@ -200,41 +184,30 @@ int CRecordSetup::showRecordSetup()
 	fRecDir->setHint("", LOCALE_MENU_HINT_RECORD_DIR);
 	recordingSettings->addItem(fRecDir);
 
-	CMenuOptionChooser* channel_rec_dir;
-	channel_rec_dir = new CMenuOptionChooser(LOCALE_RECORDINGMENU_SAVE_IN_CHANNELDIR, &g_settings.recording_save_in_channeldir, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::RC_red); //NI
-	channel_rec_dir->setHint("", LOCALE_MENU_HINT_RECORD_CHANDIR);
-	recordingSettings->addItem(channel_rec_dir);
+	addSetting(recordingSettings, "recording_save_in_channeldir", true, NULL, CRCInput::RC_red); //NI
 
 	//rec hours
-	CMenuOptionNumberChooser * mc = new CMenuOptionNumberChooser(LOCALE_EXTRA_RECORD_TIME, &g_settings.record_hours, true, 1, 24, NULL);
-	mc->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_HOUR));
-	mc->setHint("", LOCALE_MENU_HINT_RECORD_TIME);
-	recordingSettings->addItem(mc);
+	CMenuOptionNumberChooser * mc = static_cast<CMenuOptionNumberChooser *>(addSetting(recordingSettings, "record_hours"));
+	if (mc)
+		mc->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_HOUR));
 
 	// end of recording
-	CMenuOptionChooser* end_of_recording = new CMenuOptionChooser(LOCALE_RECORDINGMENU_END_OF_RECORDING_NAME, &g_settings.recording_epg_for_end, END_OF_RECORDING, END_OF_RECORDING_COUNT, true);
-	end_of_recording->setHint("", LOCALE_MENU_HINT_RECORD_END);
-	recordingSettings->addItem(end_of_recording);
+	addSetting(recordingSettings, "recording_epg_for_end");
 
 	// already_found
-	CMenuOptionChooser* already_found = new CMenuOptionChooser(LOCALE_RECORDINGMENU_ALREADY_FOUND_CHECK, &g_settings.recording_already_found_check, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	already_found->setHint("", LOCALE_MENU_HINT_RECORD_ALREADY_FOUND_CHECK);
-	recordingSettings->addItem(already_found);
+	addSetting(recordingSettings, "recording_already_found_check");
 
-	CMenuOptionChooser* slow_warn = new CMenuOptionChooser(LOCALE_RECORDINGMENU_SLOW_WARN, &g_settings.recording_slow_warning, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	slow_warn->setHint("", LOCALE_MENU_HINT_RECORD_SLOW_WARN);
-	recordingSettings->addItem(slow_warn);
+	addSetting(recordingSettings, "recording_slow_warning");
 
 	//NI
-	mc = new CMenuOptionNumberChooser(LOCALE_RECORDINGMENU_FILL_WARN, &g_settings.recording_fill_warning, true, 75, 99, this);
-	mc->setHint("", LOCALE_MENU_HINT_RECORD_FILL_WARN);
-	mc->setNumericInput(true);
-	mc->setNumberFormat("%d%%");
-	recordingSettings->addItem(mc);
+	mc = static_cast<CMenuOptionNumberChooser *>(addSetting(recordingSettings, "recording_fill_warning", true, this));
+	if (mc)
+	{
+		mc->setNumericInput(true);
+		mc->setNumberFormat("%d%%");
+	}
 
-	CMenuOptionChooser* startstop_msg = new CMenuOptionChooser(LOCALE_RECORDING_STARTSTOP_MSG, &g_settings.recording_startstop_msg, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	startstop_msg->setHint("", LOCALE_MENU_HINT_RECORD_STARTSTOP_MSG);
-	recordingSettings->addItem(startstop_msg);
+	addSetting(recordingSettings, "recording_startstop_msg");
 
 	//filename template
 	CKeyboardInput* filename_template = new CKeyboardInput(LOCALE_RECORDINGMENU_FILENAME_TEMPLATE, &g_settings.recording_filename_template, 0, NULL, NULL, LOCALE_RECORDINGMENU_FILENAME_TEMPLATE_HINT, LOCALE_RECORDINGMENU_FILENAME_TEMPLATE_HINT2);
@@ -242,22 +215,18 @@ int CRecordSetup::showRecordSetup()
 	ft->setHint("", LOCALE_MENU_HINT_RECORD_FILENAME_TEMPLATE);
 	recordingSettings->addItem(ft);
 
-	CMenuOptionChooser* cover = new CMenuOptionChooser(LOCALE_RECORDINGMENU_AUTO_COVER, &g_settings.auto_cover, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	cover->setHint("", LOCALE_MENU_HINT_RECORD_AUTO_COVER);
-	recordingSettings->addItem(cover);
+	addSetting(recordingSettings, "auto_cover");
 
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 	CMenuOptionNumberChooser *ch;
 
-	ch = new CMenuOptionNumberChooser(LOCALE_EXTRA_RECORD_BUFSIZE, &g_settings.recording_bufsize, true, 1, 25, NULL);
-	ch->setNumberFormat("%d MB");
-	//TODO: ch->setHint("", LOCALE_MENU_HINT_RECORD_BUFSIZE);
-	recordingSettings->addItem(ch);
+	ch = static_cast<CMenuOptionNumberChooser *>(addSetting(recordingSettings, "recording_bufsize"));
+	if (ch)
+		ch->setNumberFormat("%d MB");
 
-	ch = new CMenuOptionNumberChooser(LOCALE_EXTRA_RECORD_BUFSIZE_DMX, &g_settings.recording_bufsize_dmx, true, 1, 25, NULL);
-	ch->setNumberFormat("%d MB");
-	//TODO: ch->setHint("", LOCALE_MENU_HINT_RECORD_BUFSIZE_DMX);
-	recordingSettings->addItem(ch);
+	ch = static_cast<CMenuOptionNumberChooser *>(addSetting(recordingSettings, "recording_bufsize_dmx"));
+	if (ch)
+		ch->setNumberFormat("%d MB");
 #endif
 
 	recordingSettings->addItem(GenericMenuSeparatorLine);
@@ -299,50 +268,33 @@ int CRecordSetup::showRecordSetup()
 
 void CRecordSetup::showRecordTimerSetup(CMenuWidget *menu_timersettings)
 {
-	//recording start/end correcture
-	int pre = 0,post = 0;
-	g_Timerd->getRecordingSafety(pre,post);
-	g_settings.record_safety_time_before = pre/60;
-	g_settings.record_safety_time_after = post/60;
-
 	menu_timersettings->addIntroItems(LOCALE_TIMERSETTINGS_SEPARATOR);
 
 	std::string nf = "%d ";
 	nf += g_Locale->getText(LOCALE_UNIT_SHORT_MINUTE);
 
 	//start
-	CMenuOptionNumberChooser *ch = new CMenuOptionNumberChooser(LOCALE_TIMERSETTINGS_RECORD_SAFETY_TIME_BEFORE,
-		&g_settings.record_safety_time_before, true, 0, 99, this);
-	ch->setNumberFormat(nf);
-	ch->setHint("", LOCALE_MENU_HINT_RECORD_TIMEBEFORE);
-	menu_timersettings->addItem(ch);
+	CMenuOptionNumberChooser *ch = static_cast<CMenuOptionNumberChooser *>(addSetting(menu_timersettings, "record_safety_time_before"));
+	if (ch)
+		ch->setNumberFormat(nf);
 
 	//end
-	ch = new CMenuOptionNumberChooser(LOCALE_TIMERSETTINGS_RECORD_SAFETY_TIME_AFTER,
-		&g_settings.record_safety_time_after, true, 0, 99, this);
-	ch->setNumberFormat(nf);
-	ch->setHint("", LOCALE_MENU_HINT_RECORD_TIMEAFTER);
-	menu_timersettings->addItem(ch);
+	ch = static_cast<CMenuOptionNumberChooser *>(addSetting(menu_timersettings, "record_safety_time_after"));
+	if (ch)
+		ch->setNumberFormat(nf);
 
 	//announce
-	CMenuOptionChooser* chzapAnnounce = new CMenuOptionChooser(LOCALE_RECORDINGMENU_ZAP_ON_ANNOUNCE,
-		&g_settings.recording_zap_on_announce, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	chzapAnnounce->setHint("", LOCALE_MENU_HINT_RECORD_ZAP);
-	menu_timersettings->addItem(chzapAnnounce);
+	addSetting(menu_timersettings, "recording_zap_on_announce");
 
 	//zapto
-	ch = new CMenuOptionNumberChooser(LOCALE_MISCSETTINGS_ZAPTO_PRE_TIME,
-		&g_settings.zapto_pre_time, true, 0, 10);
-	ch->setHint("", LOCALE_MENU_HINT_RECORD_ZAP_PRE_TIME);
-	ch->setNumberFormat(nf);
-	menu_timersettings->addItem(ch);
+	ch = static_cast<CMenuOptionNumberChooser *>(addSetting(menu_timersettings, "zapto_pre_time"));
+	if (ch)
+		ch->setNumberFormat(nf);
 
 	menu_timersettings->addItem(GenericMenuSeparatorLine);
 
 	//allow followscreenings
-	CMenuOptionChooser* followscreenings = new CMenuOptionChooser(LOCALE_TIMERSETTINGS_FOLLOWSCREENINGS, &g_settings.timer_followscreenings, timer_followscreenings_options, timer_followscreenings_options_count, true);
-	followscreenings->setHint("", LOCALE_MENU_HINT_TIMER_FOLLOWSCREENINGS);
-	menu_timersettings->addItem(followscreenings);
+	addSetting(menu_timersettings, "timer_followscreenings");
 }
 
 
@@ -351,23 +303,10 @@ void CRecordSetup::showRecordAudioSetup(CMenuWidget *menu_audiosettings)
 	//default recording audio pids
 	//CMenuWidget * apidMenu = new CMenuWidget(LOCALE_RECORDINGMENU_APIDS, NEUTRINO_ICON_AUDIO);
 	//CMenuForwarder* fApidMenu = new CMenuForwarder(LOCALE_RECORDINGMENU_APIDS ,true, NULL, apidMenu);
-	g_settings.recording_audio_pids_std = ( g_settings.recording_audio_pids_default & TIMERD_APIDS_STD ) ? 1 : 0 ;
-	g_settings.recording_audio_pids_alt = ( g_settings.recording_audio_pids_default & TIMERD_APIDS_ALT ) ? 1 : 0 ;
-	g_settings.recording_audio_pids_ac3 = ( g_settings.recording_audio_pids_default & TIMERD_APIDS_AC3 ) ? 1 : 0 ;
-
-	//audio pids
-	CMenuOptionChooser* aoj1 = new CMenuOptionChooser(LOCALE_RECORDINGMENU_APIDS_STD, &g_settings.recording_audio_pids_std, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true, this);
-	CMenuOptionChooser* aoj2 = new CMenuOptionChooser(LOCALE_RECORDINGMENU_APIDS_ALT, &g_settings.recording_audio_pids_alt, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true, this);
-	CMenuOptionChooser* aoj3 = new CMenuOptionChooser(LOCALE_RECORDINGMENU_APIDS_AC3, &g_settings.recording_audio_pids_ac3, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true, this);
-
-	aoj1->setHint("", LOCALE_MENU_HINT_RECORD_APID_STD);
-	aoj2->setHint("", LOCALE_MENU_HINT_RECORD_APID_ALT);
-	aoj3->setHint("", LOCALE_MENU_HINT_RECORD_APID_AC3);
-
 	menu_audiosettings->addIntroItems(LOCALE_RECORDINGMENU_APIDS);
-	menu_audiosettings->addItem(aoj1);
-	menu_audiosettings->addItem(aoj2);
-	menu_audiosettings->addItem(aoj3);
+	addSetting(menu_audiosettings, "recording_audio_pids_std");
+	addSetting(menu_audiosettings, "recording_audio_pids_alt");
+	addSetting(menu_audiosettings, "recording_audio_pids_ac3");
 }
 
 void CRecordSetup::showRecordDataSetup(CMenuWidget *menu_datasettings)
@@ -375,15 +314,9 @@ void CRecordSetup::showRecordDataSetup(CMenuWidget *menu_datasettings)
 	//recording data pids
 
 	//teletext pids
-	CMenuOptionChooser* doj1 = new CMenuOptionChooser(LOCALE_RECORDINGMENU_VTXT_PID, &g_settings.recording_stream_vtxt_pid, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-	CMenuOptionChooser* doj2 = new CMenuOptionChooser(LOCALE_RECORDINGMENU_DVBSUB_PIDS, &g_settings.recording_stream_subtitle_pids, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-
-	doj1->setHint("", LOCALE_MENU_HINT_RECORD_DATA_VTXT);
-	doj2->setHint("", LOCALE_MENU_HINT_RECORD_DATA_DVBSUB);
-
 	menu_datasettings->addIntroItems(LOCALE_RECORDINGMENU_DATA_PIDS);
-	menu_datasettings->addItem(doj1);
-	menu_datasettings->addItem(doj2);
+	addSetting(menu_datasettings, "recordingmenu.stream_vtxt_pid", true, this);
+	addSetting(menu_datasettings, "recordingmenu.stream_subtitle_pids", true, this);
 }
 
 void CRecordSetup::showRecordTimeShiftSetup(CMenuWidget *menu_ts)
@@ -398,43 +331,27 @@ void CRecordSetup::showRecordTimeShiftSetup(CMenuWidget *menu_ts)
 
 	if (1) //has_hdd
 	{
-		CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_EXTRA_TIMESHIFT_PAUSE, &g_settings.timeshift_pause, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-		mc->setHint("", LOCALE_MENU_HINT_RECORD_TIMESHIFT_PAUSE);
-		menu_ts->addItem(mc);
+		addSetting(menu_ts, "timeshift_pause");
 
-		CMenuOptionNumberChooser * mn = new CMenuOptionNumberChooser(LOCALE_EXTRA_TIMESHIFT_AUTO, &g_settings.timeshift_auto, true, 0, 300, NULL);
-		mn->setNumberFormat(g_Locale->getText(LOCALE_WORD_AFTER) + std::string(" %d ") + g_Locale->getText(LOCALE_UNIT_SHORT_SECOND));
-		mn->setLocalizedValue(0, LOCALE_OPTIONS_OFF);
-		mn->setHint("", LOCALE_MENU_HINT_RECORD_TIMESHIFT_AUTO);
-		menu_ts->addItem(mn);
+		CMenuOptionNumberChooser * mn = static_cast<CMenuOptionNumberChooser *>(addSetting(menu_ts, "timeshift_auto"));
+		if (mn)
+		{
+			mn->setNumberFormat(g_Locale->getText(LOCALE_WORD_AFTER) + std::string(" %d ") + g_Locale->getText(LOCALE_UNIT_SHORT_SECOND));
+			mn->setLocalizedValue(0, LOCALE_OPTIONS_OFF);
+		}
 
-		mc = new CMenuOptionChooser(LOCALE_EXTRA_TIMESHIFT_DELETE, &g_settings.timeshift_delete, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-		mc->setHint("", LOCALE_MENU_HINT_RECORD_TIMESHIFT_DELETE);
-		menu_ts->addItem(mc);
+		addSetting(menu_ts, "timeshift_delete");
 
-		mc = new CMenuOptionChooser(LOCALE_EXTRA_TIMESHIFT_TEMP, &g_settings.timeshift_temp, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-		mc->setHint("", LOCALE_MENU_HINT_RECORD_TIMESHIFT_TEMP);
-		menu_ts->addItem(mc);
+		addSetting(menu_ts, "timeshift_temp");
 
 		//rec hours
-		mn = new CMenuOptionNumberChooser(LOCALE_EXTRA_RECORD_TIME_TS, &g_settings.timeshift_hours, true, 1, 24, NULL);
-		mn->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_HOUR));
-		mn->setHint("", LOCALE_MENU_HINT_RECORD_TIME_TS);
-		menu_ts->addItem(mn);
+		mn = static_cast<CMenuOptionNumberChooser *>(addSetting(menu_ts, "timeshift_hours"));
+		if (mn)
+			mn->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_HOUR));
 	}
 }
 
-bool CRecordSetup::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
+bool CRecordSetup::changeNotify(const neutrino_locale_t /*OptionName*/, void * /*data*/)
 {
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_TIMERSETTINGS_RECORD_SAFETY_TIME_BEFORE) ||
-			ARE_LOCALES_EQUAL(OptionName, LOCALE_TIMERSETTINGS_RECORD_SAFETY_TIME_AFTER)) {
-		g_Timerd->setRecordingSafety(g_settings.record_safety_time_before*60, g_settings.record_safety_time_after*60);
-	} else if(ARE_LOCALES_EQUAL(OptionName, LOCALE_RECORDINGMENU_APIDS_STD) ||
-			ARE_LOCALES_EQUAL(OptionName, LOCALE_RECORDINGMENU_APIDS_ALT) ||
-			ARE_LOCALES_EQUAL(OptionName, LOCALE_RECORDINGMENU_APIDS_AC3)) {
-		g_settings.recording_audio_pids_default = ( (g_settings.recording_audio_pids_std ? TIMERD_APIDS_STD : 0) |
-				(g_settings.recording_audio_pids_alt ? TIMERD_APIDS_ALT : 0) |
-				(g_settings.recording_audio_pids_ac3 ? TIMERD_APIDS_AC3 : 0));
-	}
 	return false;
 }

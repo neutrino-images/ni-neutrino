@@ -226,6 +226,11 @@ const std::set<std::string> &localeNames()
 	return s;
 }
 
+/* Sites a screen builds from the declaration, counted toward the figures below
+   and compared against nothing. Filled by the readers that follow. */
+size_t derivedBounds = 0;
+size_t derivedLabels = 0;
+
 const std::map<std::string, std::vector<Offered> > &offered()
 {
 	static std::map<std::string, std::vector<Offered> > m;
@@ -237,6 +242,12 @@ const std::map<std::string, std::vector<Offered> > &offered()
 		{
 			if (rows[i].size() != 5)
 				continue;
+			// built from the declaration: no bounds on the screen to compare
+			if (rows[i][1] == "DERIVED")
+			{
+				++derivedBounds;
+				continue;
+			}
 			Offered o;
 			o.min = rows[i][1];
 			o.max = rows[i][2];
@@ -269,6 +280,12 @@ const std::map<std::string, std::vector<Stated> > &stated()
 		{
 			if (rows[i].size() != 3)
 				continue;
+			// built from the declaration: no label on the screen to compare
+			if (rows[i][1] == "DERIVED")
+			{
+				++derivedLabels;
+				continue;
+			}
 			Stated t;
 			t.label = rows[i][1];
 			t.where = rows[i][2];
@@ -306,7 +323,7 @@ size_t resolvedBounds()
 				++n;
 		}
 	}
-	return n;
+	return n + derivedBounds;
 }
 
 std::string sites(const std::vector<Offered> &v)
@@ -352,6 +369,7 @@ TEST_CASE("the map read out of the program is the size the program has", "[setti
 	for (std::map<std::string, std::vector<Offered> >::const_iterator it = offered().begin();
 	     it != offered().end(); ++it)
 		bounds += it->second.size();
+	bounds += derivedBounds;
 	INFO("bounds read off the screens: " << bounds << " over " << offered().size() << " fields");
 	recordCount("bounds read off the screens", bounds);
 	recordCount("fields the bound scan read", offered().size());
@@ -366,6 +384,7 @@ TEST_CASE("the map read out of the program is the size the program has", "[setti
 	for (std::map<std::string, std::vector<Stated> >::const_iterator it = stated().begin();
 	     it != stated().end(); ++it)
 		pairings += it->second.size();
+	pairings += derivedLabels;
 	INFO("labels stated beside a field: " << pairings << " over " << stated().size() << " fields");
 	recordCount("labels stated beside a field", pairings);
 	recordCount("fields with a stated label", stated().size());
@@ -596,6 +615,19 @@ TEST_CASE("every declared label names a locale the program has", "[settingspairs
 			INFO("row " << d.key << " declares hint " << d.hint_key);
 			CHECK(localeNames().count(d.hint_key) == 1);
 		}
+
+		// The other shape a row may take carries a label of its own.
+		if (d.field.otherwise != NULL && d.field.otherwise->label_key != NULL)
+		{
+			++checked;
+			INFO("row " << d.key << " declares label " << d.field.otherwise->label_key << " for its other shape");
+			CHECK(localeNames().count(d.field.otherwise->label_key) == 1);
+		}
+		if (d.field.otherwise != NULL && d.field.otherwise->hint_key != NULL)
+		{
+			INFO("row " << d.key << " declares hint " << d.field.otherwise->hint_key << " for its other shape");
+			CHECK(localeNames().count(d.field.otherwise->hint_key) == 1);
+		}
 	}
 
 	INFO("labels compared: " << checked << ", rows the program has no name for: " << nameless);
@@ -730,9 +762,13 @@ TEST_CASE("every value a choice offers names a locale the program has", "[settin
 			++checked;
 			INFO("row " << d.key << " offers " << d.values[v].value
 			     << " as " << (d.values[v].label_key ? d.values[v].label_key : "(none)"));
-			CHECK(d.values[v].label_key != NULL);
-			if (d.values[v].label_key != NULL)
-				CHECK(localeNames().count(d.values[v].label_key) == 1);
+			// An entry with a text of its own, such as a format name, has no locale to name.
+			if (d.values[v].label_key == NULL)
+			{
+				CHECK(d.values[v].label_text != NULL);
+				continue;
+			}
+			CHECK(localeNames().count(d.values[v].label_key) == 1);
 		}
 	}
 

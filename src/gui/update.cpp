@@ -952,7 +952,7 @@ void CFlashExpert::readmtd(int preadmtd)
 		}
 	}
 #endif
-	if (g_settings.softupdate_name_mode_backup == CExtUpdate::SOFTUPDATE_NAME_HOSTNAME_TIME)
+	if (g_settings.softupdate_name_mode_backup == SOFTUPDATE_NAME_HOSTNAME_TIME)
 		filename = (std::string)g_settings.update_dir + "/" + mtdInfo->getMTDName(preadmtd) + timeStr + "_" + hostName + tankStr + ".img";
 	else
 #endif

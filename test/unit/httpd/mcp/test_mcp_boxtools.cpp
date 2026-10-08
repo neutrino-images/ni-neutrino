@@ -296,6 +296,7 @@ TEST_CASE("list_archive takes a sort and an order", "[mcp-boxtools]")
 	disk.recording("r0", "beta");
 	disk.recording("r1", "Alpha");
 	disk.recording("r2", "gamma");
+	FakeSettingsBox box;
 	FakeSettingsSource settings;
 	settings.strings["network_nfs_recordingdir"] = disk.dir;
 	InstalledSettingsSource in_settings(&settings);
@@ -327,6 +328,7 @@ TEST_CASE("recording_details reads one finished recording by its id", "[mcp-boxt
 	RecordDir disk;
 	REQUIRE(!disk.dir.empty());
 	disk.recording("r0", "Tatort", "<info1>Krimi aus Wiesbaden</info1>\n");
+	FakeSettingsBox box;
 	FakeSettingsSource settings;
 	settings.strings["network_nfs_recordingdir"] = disk.dir;
 	InstalledSettingsSource in_settings(&settings);
@@ -369,6 +371,7 @@ TEST_CASE("play_recording wakes a sleeping box only when asked", "[mcp-boxtools]
 	RecordDir disk;
 	REQUIRE(!disk.dir.empty());
 	disk.recording("r0", "Tatort");
+	FakeSettingsBox box;
 	FakeSettingsSource settings;
 	settings.strings["network_nfs_recordingdir"] = disk.dir;
 	InstalledSettingsSource in_settings(&settings);
@@ -418,6 +421,7 @@ TEST_CASE("play_recording ends a file playing only when asked", "[mcp-boxtools]"
 	RecordDir disk;
 	REQUIRE(!disk.dir.empty());
 	disk.recording("r0", "Tatort");
+	FakeSettingsBox box;
 	FakeSettingsSource settings;
 	settings.strings["network_nfs_recordingdir"] = disk.dir;
 	InstalledSettingsSource in_settings(&settings);

@@ -37,6 +37,7 @@
 #include <gui/widget/listhelpers.h>
 #include <gui/components/cc.h>
 #include <system/lastchannel.h>
+#include <system/settings.h>
 
 #include <sectionsdclient/sectionsdclient.h>
 #include <zapit/client/zapitclient.h>
@@ -49,26 +50,10 @@
 #include <semaphore.h>
 
 enum {
-	LIST_MODE_FAV,
-	LIST_MODE_PROV,
-	LIST_MODE_WEB,
-	LIST_MODE_SAT,
-	LIST_MODE_ALL,
-	LIST_MODE_LAST
-};
-
-enum {
 	DISPLAY_MODE_NOW = 0,
 	DISPLAY_MODE_NEXT,
 	DISPLAY_MODE_PRIME,
 	DISPLAY_MODE_MAX
-};
-
-enum {
-	EPGTEXT_ALIGN_LEFT_MIDDLE = 0,
-	EPGTEXT_ALIGN_LEFT_BOTTOM,
-	EPGTEXT_ALIGN_RIGHT_MIDDLE,
-	EPGTEXT_ALIGN_RIGHT_BOTTOM
 };
 
 enum {

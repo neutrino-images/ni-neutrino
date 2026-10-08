@@ -14,7 +14,7 @@ import { Field, Notes, describedBy } from '../../ui/field.js';
 import { Select } from '../../ui/select.js';
 import { Switch } from '../../ui/switch.js';
 import { Button } from '../../ui/button.js';
-import { numberFault, fallbackLabel } from './model.js';
+import { numberFault, namedValue, fallbackLabel } from './model.js';
 import text from './settings.text.js';
 
 /**
@@ -95,7 +95,7 @@ export function SecretRow(props) {
 }
 
 /**
- * A setting the box could not state the choices of.
+ * A setting the box could not state the choices of, or one its parental lock holds.
  *
  * Shown and not hidden, and not offered as free text either: the row exists, the box is
  * simply unable to say what it takes at the moment, and every write to it is refused for
@@ -109,7 +109,7 @@ export function LockedRow(props) {
 	return html`<div class="field set-locked">
 		<span class="label">${props.row.label}</span>
 		<p class="mono">${props.value}</p>
-		<span class="hint">${t(text, 'settings.locked')}</span>
+		<span class="hint">${t(text, props.row.held ? 'settings.held' : 'settings.locked')}</span>
 	</div>`;
 }
 
@@ -154,13 +154,19 @@ export function Control(props) {
 	}
 
 	if (row.type === 'enum') {
+		/** @type {Array<{ value: string, label: string, disabled?: boolean }>} */
+		const options = row.choices.map(function (choice) {
+			return { value: String(choice.value), label: choice.label };
+		});
+		// A value another box wrote and this one does not offer: shown, so the
+		// select does not draw empty, and not choosable.
+		if (value !== '' && !options.some(function (o) { return o.value === value; }))
+			options.push({ value: value, label: t(text, 'settings.value.unlisted', { value: value }), disabled: true });
 		return html`<${Select}
 			label=${row.label}
 			value=${value}
 			needsRestart=${row.needsRestart}
-			options=${row.choices.map(function (choice) {
-				return { value: String(choice.value), label: choice.label };
-			})}
+			options=${options}
 			onChange=${function (/** @type {Event} */ event) {
 				const chooser = /** @type {HTMLSelectElement} */ (event.currentTarget);
 				changed(chooser.value);
@@ -168,10 +174,14 @@ export function Control(props) {
 	}
 
 	const fault = row.type === 'int' ? faultText(row, value) : '';
+	// The row's own word for the value it names, beside the number: the input stays
+	// a number whatever is shown.
+	const named = namedValue(row, value);
 	return html`<${Field}
 		label=${row.label}
 		type=${row.type === 'int' ? 'number' : 'text'}
 		value=${value}
+		hint=${named === null ? undefined : named.label}
 		min=${row.min === null ? null : String(row.min)}
 		max=${row.max === null ? null : String(row.max)}
 		error=${fault === '' ? null : fault}
@@ -214,13 +224,14 @@ export function Row(props) {
 		${drifts
 			// Never a claim about a credential: there is no value to hold
 			// against the delivered one, and this says so rather than leaving
-			// the line out, which would read as agreement.
+			// the line out, which would read as agreement. A locked row takes
+			// no write, so it is offered no way back either.
 			? html`<p class="set-back">
 				<span class="chip warn">${t(text, 'settings.drift.mark')}</span>
 				<span class="hint">${row.secret
 					? t(text, 'settings.drift.unknown')
 					: t(text, 'settings.drift.default', { value: deliveredWord(row) })}</span>
-				${row.secret ? null : html`<button
+				${row.secret || row.locked ? null : html`<button
 					type="button"
 					class="btn"
 					aria-label=${t(text, 'settings.drift.revert.one', { label: row.label })}

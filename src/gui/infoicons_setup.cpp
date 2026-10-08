@@ -33,6 +33,7 @@
 #include <neutrino_menue.h>
 #include <gui/widget/hintbox.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 #include <system/helpers.h>
 
 #include <driver/screen_max.h>
@@ -56,14 +57,6 @@ const menu_data_t menu_settings[MODE_ICONS_NR_OF_ENTRIES]=
 	{LOCALE_INFOICONS_FLAG_NAME5, LOCALE_MENU_HINT_INFOICONS_FLAG_NAME5, "del_flag5"},
 	{LOCALE_INFOICONS_FLAG_NAME6, LOCALE_MENU_HINT_INFOICONS_FLAG_NAME6, "del_flag6"},
 	{LOCALE_INFOICONS_FLAG_NAME7, LOCALE_MENU_HINT_INFOICONS_FLAG_NAME7, "del_flag7"}
-};
-
-#define OPTIONS_INFOICONS_MODE_OPTION_COUNT 3
-const CMenuOptionChooser::keyval OPTIONS_INFOICONS_MODE_OPTIONS[OPTIONS_INFOICONS_MODE_OPTION_COUNT] =
-{
-	{ INFOICONS_STATIC, 	LOCALE_INFOICONS_STATIC		},
-	{ INFOICONS_INFOVIEWER, LOCALE_INFOICONS_INFOVIEWER 	},
-	{ INFOICONS_POPUP,	LOCALE_INFOICONS_POPUP 		}
 };
 
 CInfoIconsSetup::CInfoIconsSetup()
@@ -153,13 +146,11 @@ int CInfoIconsSetup::menu()
 	if(g_settings.mode_icons && (infoiconsMenu->getSelected() == 4))
 		infoiconsMenu->setSelected(5);
 
-	oj_skin = new CMenuOptionChooser(LOCALE_INFOICONS_SKIN, &g_settings.mode_icons_skin, OPTIONS_INFOICONS_MODE_OPTIONS, OPTIONS_INFOICONS_MODE_OPTION_COUNT, !g_settings.mode_icons, this, CRCInput::convertDigitToKey(shortcut++));
-	oj_skin->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOICONS_SKIN);
-	infoiconsMenu->addItem(oj_skin);
+	oj_skin = static_cast<CMenuOptionChooser *>(addSetting(infoiconsMenu, "mode_icons_skin", !g_settings.mode_icons, this, CRCInput::convertDigitToKey(shortcut++)));
+	oj_skin->hintIcon = NEUTRINO_ICON_HINT_IMAGELOGO;
 
-	oj_modeicon = new CMenuOptionChooser(LOCALE_INFOICONS_MODEICON, &g_settings.mode_icons, OPTIONS_START0_STOP1_OPTIONS, OPTIONS_START0_STOP1_OPTION_COUNT, g_settings.mode_icons_skin != INFOICONS_INFOVIEWER, this, CRCInput::convertDigitToKey(shortcut++));
-	oj_modeicon->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOICONS_MODEICON);
-	infoiconsMenu->addItem(oj_modeicon);
+	oj_modeicon = static_cast<CMenuOptionChooser *>(addSetting(infoiconsMenu, "mode_icons", g_settings.mode_icons_skin != INFOICONS_INFOVIEWER, this, CRCInput::convertDigitToKey(shortcut++)));
+	oj_modeicon->hintIcon = NEUTRINO_ICON_HINT_IMAGELOGO;
 
 	infoiconsMenu->addItem(GenericMenuSeparatorLine);
 
@@ -201,9 +192,8 @@ int CInfoIconsSetup::menu()
 
 	infoiconsMenu->addItem(GenericMenuSeparatorLine);
 
-	CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_INFOICONS_BACKGROUND, &g_settings.mode_icons_background, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
-	mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOICONS_BACKGROUND);
-	infoiconsMenu->addItem(mc);
+	CMenuItem *mc = addSetting(infoiconsMenu, "mode_icons_background", true, this, CRCInput::convertDigitToKey(shortcut++));
+	mc->hintIcon = NEUTRINO_ICON_HINT_IMAGELOGO;
 
 	int res = infoiconsMenu->exec(NULL,"");
 	infoiconsMenu->hide();

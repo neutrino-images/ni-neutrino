@@ -80,12 +80,6 @@ class CAudioPlayerGui : public CMenuTarget
 			REV
 		};
 
-		enum DisplayOrder
-		{
-			ARTIST_TITLE = 0,
-			TITLE_ARTIST=1
-		};
-
 	private:
 		void Init(void);
 		CFrameBuffer *	m_frameBuffer;

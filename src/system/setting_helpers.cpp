@@ -70,6 +70,7 @@
 #include <gui/widget/hintbox.h>
 
 #include <gui/plugins.h>
+#include <gui/videosettings.h>
 #include <daemonc/remotecontrol.h>
 #include <xmlinterface.h>
 #include <hardware/audio.h>
@@ -110,7 +111,9 @@ bool COnOffNotifier::changeNotify(const neutrino_locale_t, void *Data)
 
 void COnOffNotifier::addItem(CMenuItem *menuItem)
 {
-	toDisable.push_back(menuItem);
+	// An item a setup screen did not build, such as a setting the box lacks.
+	if (menuItem)
+		toDisable.push_back(menuItem);
 }
 
 bool CSectionsdConfigNotifier::changeNotify(const neutrino_locale_t locale, void *data)
@@ -812,9 +815,9 @@ bool CCpuFreqNotifier::changeNotify(const neutrino_locale_t, void *data)
 	return false;
 }
 
-extern CMenuOptionChooser::keyval_ext VIDEOMENU_VIDEOMODE_OPTIONS[];
 bool CAutoModeNotifier::changeNotify(const neutrino_locale_t /*OptionName*/, void * /*data*/)
 {
+	const CMenuOptionChooser::keyval_ext *vmodes = videoModeSlots();
 	int i;
 	int modes[VIDEO_STD_MAX + 1];
 
@@ -822,25 +825,25 @@ bool CAutoModeNotifier::changeNotify(const neutrino_locale_t /*OptionName*/, voi
 
 	for (i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
 	{
-		if (VIDEOMENU_VIDEOMODE_OPTIONS[i].key < 0) // not available on this platform
+		if (vmodes[i].key < 0) // not available on this platform
 			continue;
-		if (VIDEOMENU_VIDEOMODE_OPTIONS[i].key >= VIDEO_STD_MAX)
+		if (vmodes[i].key >= VIDEO_STD_MAX)
 		{
 			// this must not happen
 			printf("CAutoModeNotifier::changeNotify VIDEOMODE_OPTIONS[%d].key = %d (>= %d)\n",
-				i, VIDEOMENU_VIDEOMODE_OPTIONS[i].key, VIDEO_STD_MAX);
+				i, vmodes[i].key, VIDEO_STD_MAX);
 			continue;
 		}
 #ifdef BOXMODEL_CST_HD2
 		for (i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
 		{
 			// A slot this box does not draw has no mode to set.
-			if (VIDEOMENU_VIDEOMODE_OPTIONS[i].key < 0)
+			if (vmodes[i].key < 0)
 				continue;
-			modes[VIDEOMENU_VIDEOMODE_OPTIONS[i].key] = g_settings.enabled_auto_modes[i];
+			modes[vmodes[i].key] = g_settings.enabled_auto_modes[i];
 		}
 #else
-		modes[VIDEOMENU_VIDEOMODE_OPTIONS[i].key] = g_settings.enabled_video_modes[i];
+		modes[vmodes[i].key] = g_settings.enabled_video_modes[i];
 #endif
 	}
 	videoDecoder->SetAutoModes(modes);

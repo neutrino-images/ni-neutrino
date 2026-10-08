@@ -27,9 +27,11 @@
 #include "support/fakes.h"
 
 #include <pthread.h>
+#include <cstring>
 #include <unistd.h>
 
 #include <neutrinoMessages.h>
+#include <hardware/video.h>
 
 /* The object the program saves its settings through, compiled in rather than
    linked: the archive it lives in is not one this binary links, and what a text
@@ -45,6 +47,11 @@ static const char *kRestartOnlyAudioKey = "start_volume";
 
 TEST_CASE("the schema is not empty and every entry is sane", "[settings]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
 	Result<std::vector<Descriptor> > r = settings::schema();
 	REQUIRE(r.ok());
 	REQUIRE(r.value().size() > 0);
@@ -91,6 +98,9 @@ TEST_CASE("a value the store has never held reads as the declared default", "[se
 
 TEST_CASE("sections are distinct and every declared key names one of them", "[settings]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	Result<std::vector<std::string> > s = settings::sections();
 	REQUIRE(s.ok());
 	REQUIRE(s.value().size() > 0);
@@ -115,6 +125,9 @@ TEST_CASE("sections are distinct and every declared key names one of them", "[se
    that names a section no row is in. */
 TEST_CASE("every section named is one some row is in", "[settings]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	Result<std::vector<std::string> > s = settings::sections();
 	REQUIRE(s.ok());
 	Result<std::vector<Descriptor> > sch = settings::schema();
@@ -137,6 +150,9 @@ TEST_CASE("every section named is one some row is in", "[settings]")
    store answers with the first of them. */
 TEST_CASE("no key is declared twice", "[settings]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	Result<std::vector<Descriptor> > sch = settings::schema();
 	REQUIRE(sch.ok());
 	REQUIRE(sch.value().size() > 1);
@@ -245,6 +261,45 @@ TEST_CASE("describing a key answers that row and not another", "[settings]")
 	REQUIRE(std::string(other.value().label_key) != std::string(d.value().label_key));
 }
 
+/* The hardware library numbers the HDMI link's modes per family, and the box
+   is told the stored number as one of them. So each entry is held to the
+   library's own name for it, which a build for another family resolves to
+   that family's number. The generic library numbers them as the literals the
+   row once carried, so this build cannot tell a name from a number written
+   out; scan-cecmodes holds the row to the names. */
+TEST_CASE("the HDMI link modes are the numbers the hardware library gives them", "[settings]")
+{
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
+	Result<Descriptor> d = settings::describe("hdmi_cec_mode");
+	REQUIRE(d.ok());
+	REQUIRE(d.value().type == ValueType::Enum);
+	REQUIRE(d.value().value_count == 3);
+
+	struct
+	{
+		const char *label_key;
+		int         value;
+	} const want[] =
+	{
+		{ "videomenu.hdmi_cec_mode_off", VIDEO_HDMI_CEC_MODE_OFF },
+		{ "videomenu.hdmi_cec_mode_tuner", VIDEO_HDMI_CEC_MODE_TUNER },
+		{ "videomenu.hdmi_cec_mode_recorder", VIDEO_HDMI_CEC_MODE_RECORDER }
+	};
+	for (size_t w = 0; w < sizeof(want) / sizeof(want[0]); ++w)
+	{
+		const EnumValue *found = NULL;
+		for (size_t i = 0; i < d.value().value_count; ++i)
+			if (d.value().values[i].label_key
+			    && std::string(d.value().values[i].label_key) == want[w].label_key)
+				found = &d.value().values[i];
+		INFO(want[w].label_key);
+		REQUIRE(found != NULL);
+		REQUIRE(found->value == want[w].value);
+	}
+}
+
 /* The three kinds that render as a number are rendered by one line, and a case
    set that only asks for one of them would not notice the day they stop being
    the same line. */
@@ -328,6 +383,51 @@ TEST_CASE("an accepted value is written and persisted", "[settings]")
 	REQUIRE(f.ints["audio_AnalogMode"] == 1);
 	REQUIRE(f.persisted == 1);
 	setSettingsSource(NULL);
+}
+
+TEST_CASE("a row the parental lock holds is refused on a locked box and nothing is written", "[settings]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource installed(&f);
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	box.parental_locked = true;
+
+	Result<void> r = settings::set("parentallock_lockage", "16");
+	REQUIRE_FALSE(r.ok());
+	CHECK(r.error().code == ErrorCode::SettingLocked);
+	CHECK(r.error().status == Status::Conflict);
+	CHECK(f.ints.empty());
+	CHECK(f.persisted == 0);
+
+	// The pin is not held, and neither is a row outside the parental section.
+	REQUIRE(settings::set("parentallock_pincode", "4711").ok());
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
+	CHECK(f.strings["parentallock_pincode"] == "4711");
+	CHECK(f.ints["audio_AnalogMode"] == 1);
+
+	box.parental_locked = false;
+	REQUIRE(settings::set("parentallock_lockage", "16").ok());
+	CHECK(f.ints["parentallock_lockage"] == 16);
+}
+
+TEST_CASE("a lock state the box cannot read refuses a held row", "[settings]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource installed(&f);
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	box.parental_status = Status::Internal;
+
+	Result<void> r = settings::set("parentallock_zaptime", "30");
+	REQUIRE_FALSE(r.ok());
+	CHECK(r.error().code == ErrorCode::SettingLocked);
+	CHECK(f.ints.empty());
+	REQUIRE(settings::set("audio_AnalogMode", "1").ok());
 }
 
 TEST_CASE("a store that refuses the write is reported rather than swallowed", "[settings]")
@@ -871,6 +971,49 @@ const Descriptor kBoolWithoutBounds[] =
 const size_t kBoolWithoutBoundsCount =
 	sizeof(kBoolWithoutBounds) / sizeof(kBoolWithoutBounds[0]);
 
+// A number from one to fourteen that shows nought as off, and one that names
+// nothing beside the same bounds.
+const EnumValue kOffBelow[] = { { 0, "options.off", NULL, NULL } };
+const Descriptor kNamedNumber[] =
+{
+	{
+		"fixture_named", ValueType::Int, "fixture", "label", NULL,
+		1, 14, COREAPI_VALUES(kOffBelow), 1, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD(channellist_descmode)
+	},
+	{
+		"fixture_plain", ValueType::Int, "fixture", "label", NULL,
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD(channellist_descmode)
+	},
+};
+const size_t kNamedNumberCount = sizeof(kNamedNumber) / sizeof(kNamedNumber[0]);
+
+// A fan the box may lack, and a count the box may take only as a flag.
+bool g_box_has = false;
+bool boxHas() { return g_box_has; }
+const Shape kFlagShape = { ValueType::Bool, "flag_label", 0, 1, NULL, 0, NULL };
+const EnumValue kOffFloor[] = { { 0, "options.off", NULL, NULL } };
+const Descriptor kOnBox[] =
+{
+	{
+		"fixture_fan", ValueType::Int, "fixture", "label", NULL,
+		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL)
+	},
+	{
+		"fixture_scroll", ValueType::Int, "fixture", "label", NULL,
+		0, 999, COREAPI_VALUES(kOffFloor), 1, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, &kFlagShape)
+	},
+	{
+		"fixture_choice", ValueType::Enum, "fixture", "label", NULL,
+		0, 0, COREAPI_VALUES(kOffFloor), 0, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL)
+	},
+};
+const size_t kOnBoxCount = sizeof(kOnBox) / sizeof(kOnBox[0]);
+
 // Rows descriptorIsSane refuses. set() does not call it, so what it does with
 // one is its own answer and not something the table check stands in for.
 const Descriptor kWrongRows[] =
@@ -923,6 +1066,91 @@ TEST_CASE("a bool is held to its two values and not to the bounds of its row", "
 	REQUIRE(r.error().status == Status::InvalidArgument);
 	REQUIRE(r.error().code == ErrorCode::OutOfRange);
 	REQUIRE(f.ints["fixture_bool"] == 0);
+}
+
+TEST_CASE("a number takes the value it names in words beside its bounds and nothing else", "[settings]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	InstalledSettingsTable table(kNamedNumber, kNamedNumberCount);
+	REQUIRE(descriptorIsSane(kNamedNumber[0]));
+	REQUIRE(descriptorIsSane(kNamedNumber[1]));
+
+	REQUIRE(settings::set("fixture_named", "0").ok());
+	REQUIRE(f.ints["fixture_named"] == 0);
+	REQUIRE(settings::set("fixture_named", "14").ok());
+	REQUIRE(f.ints["fixture_named"] == 14);
+
+	Result<void> under = settings::set("fixture_named", "-1");
+	REQUIRE_FALSE(under.ok());
+	REQUIRE(under.error().code == ErrorCode::OutOfRange);
+	REQUIRE(under.error().message == "the setting takes 1 to 14 or 0");
+	Result<void> over = settings::set("fixture_named", "15");
+	REQUIRE_FALSE(over.ok());
+	REQUIRE(over.error().code == ErrorCode::OutOfRange);
+	REQUIRE(f.ints["fixture_named"] == 14);
+
+	Result<void> plain = settings::set("fixture_plain", "0");
+	REQUIRE_FALSE(plain.ok());
+	REQUIRE(plain.error().code == ErrorCode::OutOfRange);
+	REQUIRE(plain.error().message == "the setting takes 1 to 14");
+	REQUIRE(f.ints.count("fixture_plain") == 0);
+}
+
+TEST_CASE("a setting the box lacks reads and refuses every write", "[settings]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	InstalledSettingsTable table(kOnBox, kOnBoxCount);
+	REQUIRE(descriptorIsSane(kOnBox[0]));
+	REQUIRE(descriptorIsSane(kOnBox[1]));
+	f.ints["fixture_fan"] = 5;
+
+	g_box_has = false;
+	Result<void> r = settings::set("fixture_fan", "6");
+	REQUIRE_FALSE(r.ok());
+	REQUIRE(r.error().status == Status::Conflict);
+	REQUIRE(r.error().code == ErrorCode::SettingNotOnThisBox);
+	REQUIRE(f.ints["fixture_fan"] == 5);
+	REQUIRE(settings::get("fixture_fan").value() == "5");
+	REQUIRE(settings::describe("fixture_fan").value().type == ValueType::Int);
+	Result<std::vector<SettingChoice> > none = settings::choices("fixture_choice");
+	REQUIRE_FALSE(none.ok());
+	REQUIRE(none.error().code == ErrorCode::SettingNotOnThisBox);
+
+	g_box_has = true;
+	REQUIRE(settings::choices("fixture_choice").ok());
+	REQUIRE(settings::set("fixture_fan", "6").ok());
+	REQUIRE(f.ints["fixture_fan"] == 6);
+}
+
+TEST_CASE("a setting in two shapes is written and described in the one the box offers", "[settings]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	InstalledSettingsTable table(kOnBox, kOnBoxCount);
+
+	g_box_has = true;
+	REQUIRE(settings::set("fixture_scroll", "500").ok());
+	REQUIRE(f.ints["fixture_scroll"] == 500);
+	REQUIRE(settings::describe("fixture_scroll").value().max == 999);
+
+	g_box_has = false;
+	Result<void> r = settings::set("fixture_scroll", "2");
+	REQUIRE_FALSE(r.ok());
+	REQUIRE(r.error().code == ErrorCode::OutOfRange);
+	REQUIRE(r.error().message == "the setting takes 0 or 1");
+	REQUIRE(settings::set("fixture_scroll", "1").ok());
+	REQUIRE(f.ints["fixture_scroll"] == 1);
+	Result<Descriptor> flag = settings::describe("fixture_scroll");
+	REQUIRE(flag.value().type == ValueType::Bool);
+	REQUIRE(std::string(flag.value().label_key) == "flag_label");
+
+	Result<std::vector<Descriptor> > all = settings::schema();
+	REQUIRE(all.ok());
+	REQUIRE(all.value().size() == kOnBoxCount);
+	REQUIRE(all.value()[0].type == ValueType::Int);
+	REQUIRE(all.value()[1].type == ValueType::Bool);
 }
 
 // A wrong row is refused rather than taken, and an enum list that is not there
@@ -987,6 +1215,55 @@ TEST_CASE("a value the row allows and the field cannot hold is refused by the st
 	REQUIRE(settings::set("fixture_byte", "200").ok());
 	applyPendingSettings();
 	REQUIRE((int) values.recording_audio_pids_default == 200);
+}
+
+namespace
+{
+bool never() { return false; }
+bool always() { return true; }
+
+const EnumValue kOffered[] =
+{
+	{ 0, "options.off", NULL, NULL },
+	{ 1, NULL, "ext4", NULL },
+	{ 2, NULL, "xfs", never },
+	{ 3, NULL, "f2fs", always },
+};
+const Descriptor kOfferedRows[] =
+{
+	{
+		"t_choice", ValueType::Enum, "fixture", "label", NULL,
+		0, 0, kOffered, sizeof(kOffered) / sizeof(kOffered[0]), 0, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD(repeat_blocker)
+	},
+};
+} // anonymous namespace
+
+TEST_CASE("choices carry the key, fixed text as text, and leave out what the box lacks", "[settings]")
+{
+	InstalledSettingsTable table(kOfferedRows, 1);
+	Result<std::vector<SettingChoice> > r = settings::choices("t_choice");
+	REQUIRE(r.ok());
+	REQUIRE(r.value().size() == 3);
+	REQUIRE(r.value()[0].label_key == "options.off");
+	REQUIRE(r.value()[1].label_key.empty());
+	REQUIRE(r.value()[1].label == "ext4");
+	REQUIRE(r.value()[2].value == 3);
+}
+
+TEST_CASE("a write of an entry the box lacks is refused, a stored one still reads", "[settings]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	InstalledSettingsTable table(kOfferedRows, 1);
+
+	Result<void> refused = settings::set("t_choice", "2");
+	REQUIRE_FALSE(refused.ok());
+	REQUIRE(refused.error().code == ErrorCode::NotAListedValue);
+	REQUIRE(f.ints.count("t_choice") == 0);
+	REQUIRE(settings::set("t_choice", "3").ok());
+	f.ints["t_choice"] = 2;
+	REQUIRE(settings::get("t_choice").value() == "2");
 }
 
 /* Every other case in this suite and in two others walks the shipped table, so
@@ -1301,6 +1578,9 @@ TEST_CASE("the credentials the program declares refuse an empty value", "[settin
 // table makes, and the number is what a reader checks it against.
 TEST_CASE("the secret rows of the shipped table are counted", "[settings]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	Result<std::vector<Descriptor> > sch = settings::schema();
 	REQUIRE(sch.ok());
 
@@ -1379,6 +1659,11 @@ TEST_CASE("a text value cannot carry a second setting into the settings file", "
 // kind and not to one row of it.
 TEST_CASE("no text row the program declares takes a value carrying a line end", "[settings]")
 {
+	// A box that has everything a row may ask about, so every text row is
+	// held to the rule rather than refused for want of hardware.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
+	memset(&row_box.caps, 0xff, sizeof(row_box.caps));
 	FakeSettingsSource f;
 	InstalledSettingsSource installed(&f);
 
@@ -1532,6 +1817,9 @@ TEST_CASE("a zero byte and an overlong value are refused whatever the row is", "
    it, so what is withheld is withheld here. */
 TEST_CASE("a secret row hands out no default and the row beside it keeps its own", "[settings]")
 {
+	// A row may ask the box whether it has what the row controls.
+	FakeSystemSource row_box;
+	InstalledSystemSource installed_row_box(&row_box);
 	const Descriptor *declared = NULL;
 	for (size_t i = 0; i < settingsTableCount(); ++i)
 	{

@@ -47,16 +47,27 @@ struct EnumValue
 {
 	int         value;
 	const char *label_key;
+	// Set instead of label_key where the screen names the entry without a locale.
+	const char *label_text;
+	// NULL is always offered. Evaluated per request, so it may ask the box.
+	bool      (*available)();
 };
 
-/* The text is what a person reads and not a name for the catalog: these lists
-   are the screens' own and half of them carry words the catalog has no name
-   for, which is why this is not an EnumValue. A value and not a range, because
-   what the box offers is a set with holes in it. */
+// One test for whether an entry is shown, so the lists built from a row agree.
+inline bool entryOffered(const EnumValue &e)
+{
+	return e.available == NULL || e.available();
+}
+
+/* One value a setting offers, with its label already the text the box shows.
+   A value and not a range, because what the box offers is a set with holes in
+   it. */
 struct SettingChoice
 {
 	long        value;
 	std::string label;
+	// The locale key when the entry has one, empty for fixed text.
+	std::string label_key;
 
 	SettingChoice() : value(0) {}
 };
@@ -94,6 +105,21 @@ struct Condition
 	long        value;
 	const long *values;
 	size_t      value_count;
+};
+
+/* The other way a setting is offered where the box lacks what its row
+   describes: another kind, label and set of values over the same field. The
+   rest of the row, its key, default, conditions and field, is the same in
+   both. The hint is the row's unless the shape names one. */
+struct Shape
+{
+	ValueType        type;
+	const char      *label_key;
+	long             min;
+	long             max;
+	const EnumValue *values;
+	size_t           value_count;
+	const char      *hint_key;
 };
 
 /* Where a setting's value lives in the program, as functions that read and
@@ -138,6 +164,9 @@ struct FieldRef
 {
 	long (*read_number)(const SNeutrinoSettings &);
 	void (*write_number)(SNeutrinoSettings &, long);
+	// The member itself for the screen's widgets, which edit through a pointer.
+	// NULL unless the member is an int.
+	int *(*int_pointer)(SNeutrinoSettings &);
 	// Whether the value survives the field's own type, which is narrower than a
 	// long for every one of them. Asked before the value is taken, because what
 	// takes it runs later and on another thread, where a refusal reaches nobody.
@@ -150,10 +179,6 @@ struct FieldRef
 	   daemon being a blocking exchange. */
 	bool (*ask)(long &);
 	bool (*tell)(long);
-	/* Where the values the setting offers are asked for, NULL for a row whose
-	   own list is the whole of them. The box numbers these itself, so a list
-	   written down here would be wrong for the next box model. */
-	const char *choices;
 	/* The member the row is found under, as data, so what a row stands for can
 	   be compared against what the program loads the row's key into: the
 	   functions above carry a field but not its name, and a check outside the
@@ -164,6 +189,14 @@ struct FieldRef
 	   beside it. */
 	const char *name;
 	FieldOrigin origin;
+	/* Whether the box has what the setting controls, NULL for every box. Asked
+	   per request and false when the box cannot say. Where it says no, the
+	   setting takes the shape below, or without one it is not on this box: no
+	   screen offers it and a write is refused, while its value still reads.
+	   Here and not beside the row's kind because the macros that write a field
+	   are the one place every row spells out in full. */
+	bool (*available)();
+	const Shape *otherwise;
 };
 
 /* Whether the value is in the member the row is named after. Two things follow
@@ -177,7 +210,8 @@ inline bool valueIsInNamedMember(const FieldRef &f)
 
 // What a setting whose value this layer cannot reach writes.
 #define COREAPI_NO_FIELD \
-	{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere }
+	{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere, \
+	  NULL, NULL }
 
 /* Hexadecimal, one to sixteen digits, no prefix. Read in either case and
    written back in lower. Beside the type rather than beside the field it stores
@@ -229,6 +263,9 @@ inline bool readChannelIdText(const std::string &text, unsigned long long &out)
 //
 // secret says the value is a credential and is never answered by a read. The
 // row stays in the schema, so a frontend knows the key is there.
+//
+// values are an Enum's choices, a Bool's two words, or the one value an Int
+// shows in words instead of as a number.
 struct Descriptor
 {
 	const char      *key;
@@ -258,6 +295,42 @@ struct Descriptor
 
 // What a setting that is always shown writes, so no row spells out an empty list.
 #define COREAPI_ALWAYS NULL, 0
+
+// The row in the other shape it names, the rest of it kept.
+inline void takeShape(Descriptor &d, const Shape &o)
+{
+	d.type = o.type;
+	d.label_key = o.label_key;
+	d.min = o.min;
+	d.max = o.max;
+	d.values = o.values;
+	d.value_count = o.value_count;
+	if (o.hint_key != NULL)
+		d.hint_key = o.hint_key;
+}
+
+/* The row as this box offers it: unchanged where its test holds or it has
+   none, in its other shape where the test says no and it has one. False where
+   the box lacks the setting, and out is then the row unchanged. One function,
+   so every reader of a row asks the box the same question. */
+inline bool rowOnThisBox(const Descriptor &d, Descriptor &out)
+{
+	out = d;
+	if (d.field.available == NULL || d.field.available())
+		return true;
+	if (d.field.otherwise == NULL)
+		return false;
+	takeShape(out, *d.field.otherwise);
+	return true;
+}
+
+// The value an Int row names in words, NULL for a plain number or another kind.
+inline const EnumValue *namedNumber(const Descriptor &d)
+{
+	if (d.type != ValueType::Int || d.values == NULL || d.value_count != 1)
+		return NULL;
+	return &d.values[0];
+}
 
 // Answers for the descriptor itself and not for a value offered against it.
 // Inline and free of any throwing construct, because consumers built without
@@ -351,39 +424,74 @@ inline bool descriptorIsSane(const Descriptor &d)
 	else if (d.field.read_text != NULL)
 		return false;
 
-	// Only a choice has a set of values, so only a choice can have one that is
-	// asked for rather than written down.
-	if (d.field.choices != NULL)
+	/* A shape no test ever chooses is one nobody sees. The other shape is held
+	   to every rule here as a row of its own, and it is no row in two shapes
+	   itself. */
+	if (d.field.otherwise != NULL)
 	{
-		if (d.type != ValueType::Enum)
+		if (d.field.available == NULL)
 			return false;
-		if (d.field.choices[0] == '\0')
-			return false;
-		/* Both at once would be two answers to one question, and which of them
-		   a reader took would decide what the setting offers. */
-		if (d.values != NULL || d.value_count != 0)
+		Descriptor other = d;
+		takeShape(other, *d.field.otherwise);
+		other.field.available = NULL;
+		other.field.otherwise = NULL;
+		if (!descriptorIsSane(other))
 			return false;
 	}
 
 	switch (d.type)
 	{
 		case ValueType::Bool:
+			/* A flag may name the words of its two values, and then names
+			   exactly those two, each once and always offered: anything else
+			   is a choice, which the type would hide. */
+			if (d.values != NULL || d.value_count != 0)
+			{
+				if (d.values == NULL || d.value_count != 2)
+					return false;
+				for (size_t i = 0; i < 2; ++i)
+				{
+					const EnumValue &e = d.values[i];
+					if ((e.label_key == NULL) == (e.label_text == NULL))
+						return false;
+					if (e.available != NULL)
+						return false;
+				}
+				if (d.values[0].value + d.values[1].value != 1 ||
+				    d.values[0].value * d.values[1].value != 0)
+					return false;
+			}
 			return d.default_int == 0 || d.default_int == 1;
 
 		case ValueType::Int:
+			/* A number may name one value in words, off or last used, and
+			   then takes it beside its bounds. It is the floor or outside the
+			   bounds, never above the floor: there it would hide a number the
+			   range offers. An entry without words is refused, and so is a
+			   list naming none or more than one. */
+			if (d.values != NULL || d.value_count != 0)
+			{
+				if (d.values == NULL || d.value_count != 1)
+					return false;
+				const EnumValue &e = d.values[0];
+				if (e.label_key == NULL || e.label_key[0] == '\0')
+					return false;
+				if (e.label_text != NULL || e.available != NULL)
+					return false;
+				if (e.value > d.min && e.value <= d.max)
+					return false;
+			}
 			return d.default_int >= d.min && d.default_int <= d.max;
 
 		case ValueType::String:
 			return d.default_string != NULL;
 
 		case ValueType::Enum:
-			/* A row whose values are asked for cannot be held to them here: what
-			   the box offers is known where the box is, and this header is read
-			   by builds that never reach one. */
-			if (d.field.choices != NULL)
-				return true;
 			if (d.values == NULL)
 				return false;
+			for (size_t i = 0; i < d.value_count; ++i)
+				if ((d.values[i].label_key == NULL) == (d.values[i].label_text == NULL))
+					return false;
 			for (size_t i = 0; i < d.value_count; ++i)
 			{
 				if (d.values[i].value == d.default_int)

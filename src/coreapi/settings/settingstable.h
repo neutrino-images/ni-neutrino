@@ -67,11 +67,10 @@ const UndeclaredSetting *settingsUndeclared(size_t &count);
 
    A row in one of those files states the key, the type and the default off the
    line that loads the setting, and the bounds, the choices and the labels off
-   the screen that offers it, and cites both, because a bound that is nearly
-   right reads as correct on the page and most of the numbers are ones no
-   extractor holds to. None of the sections needs a restart: each setting is read
-   again by whatever acts on it. A file says something here only where it departs
-   from that. */
+   the menu that offers it, because a bound that is nearly right reads as
+   correct on the page and most of the numbers are ones no extractor holds to.
+   None of the sections needs a restart: each setting is read again by whatever
+   acts on it. A file says something here only where it departs from that. */
 const Descriptor *settingsTableAudio(size_t &count);
 const Descriptor *settingsTableOsd(size_t &count);
 const Descriptor *settingsTableMisc(size_t &count);
@@ -87,6 +86,11 @@ const Descriptor *settingsTableParental(size_t &count);
 const Descriptor *settingsTableCam(size_t &count);
 const Descriptor *settingsTableHdd(size_t &count);
 const Descriptor *settingsTableUpdate(size_t &count);
+
+/* The rows a box whose image fixes the parental lock refuses to change. Kept as
+   a list beside the parental rows rather than as a member of every row. */
+const char *const *parentalLockKeys(size_t &count);
+bool heldByParentalLock(const char *key);
 
 } // namespace coreapi
 

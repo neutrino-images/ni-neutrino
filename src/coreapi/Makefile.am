@@ -82,6 +82,8 @@ libcoreapi_a_SOURCES = \
 	playback.cpp \
 	osd.cpp \
 	settings/settings.cpp \
+	settings/menuspec.cpp \
+	settings/predicates.cpp \
 	streaming.cpp \
 	browserplay.cpp \
 	shellcontract.cpp \
@@ -113,8 +115,11 @@ noinst_HEADERS = \
 	osd.h \
 	base/schema.h \
 	settings/settings.h \
+	settings/menuspec.h \
+	settings/predicates.h \
 	settings/settingsfield.h \
 	settings/settingstable.h \
+	settings/videomodes.h \
 	streaming.h \
 	browserplay.h \
 	shellcontract.h \

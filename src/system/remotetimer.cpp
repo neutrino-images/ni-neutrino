@@ -415,9 +415,9 @@ bool CRemoteTimerClient::readRecordingSafety(const std::string &body, int &pre, 
 			continue;
 
 		/* Minutes here and seconds everywhere the daemon is asked, which is the
-		   one thing this read is for. The screen that offers the two settings
-		   divides by sixty on its way in and multiplies on its way out, and the
-		   settings route answers what that screen shows. */
+		   one thing this read is for. The settings layer keeps the two in
+		   minutes, dividing by sixty on its way in and multiplying on its way
+		   out, and the settings route answers the minutes. */
 		if (id == "record_safety_time_before")
 		{
 			pre = (int) minutes * kSecondsPerMinute;

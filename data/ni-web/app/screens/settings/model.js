@@ -7,14 +7,17 @@
    whether it is worth showing. So a setting added to the tables in
    src/coreapi/settings/settingstable_*.cpp appears here without a line written for it.
 
-   Four things that look like details and are not. A row without a label is not drawn: the
+   Five things that look like details and are not. A row the box lacks the hardware for,
+   which the schema marks not available, is not drawn: every write of it is refused. A row
+   without a label is not drawn either: the
    endpoint leaves the member out where the box offers the setting on no screen of its own,
    and a form that fell back to the identifier would put start_volume on screen as a word.
    A hint is not drawn either, because what arrives under that name is the name of a text
    and not the text. An empty set of choices means the box could not be asked at the moment
    the schema was read, and a write is refused for as long as that lasts, so the row is
-   shown and locked. A credential has no value, and no value is not the empty value: this
-   file carries null for them everywhere a value would otherwise be. */
+   shown and locked, as is a row the box's parental lock holds. A credential has no value,
+   and no value is not the empty value: this file carries null for them everywhere a value
+   would otherwise be. */
 
 /**
  * @typedef {Object} Row
@@ -28,7 +31,8 @@
  * @property {number|null} min
  * @property {number|null} max
  * @property {{ value: number, label: string }[]} choices
- * @property {boolean} locked whether the box could not state what this takes
+ * @property {boolean} locked whether no write of it can land, for either reason below
+ * @property {boolean} held whether the box's parental lock holds it
  * @property {import('./model.js').Condition[]} conditions
  */
 
@@ -40,7 +44,7 @@
  */
 
 /** what the schema calls a setting, before this file has read it */
-/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, values?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, conditions?: unknown }} Declared */
+/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, values?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, available?: unknown, conditions?: unknown }} Declared */
 
 const kTypes = ['bool', 'int', 'string', 'enum'];
 
@@ -48,8 +52,8 @@ const kTypes = ['bool', 'int', 'string', 'enum'];
  * One declared setting, as this screen reads it.
  *
  * Undrawable rows are answered as null rather than repaired: a row with no label is one the
- * box deliberately left unnamed, and a kind this page has never heard of is a server newer
- * than this file.
+ * box deliberately left unnamed, one not available is one this box lacks, and a kind this
+ * page has never heard of is a server newer than this file.
  *
  * @param {Declared} declared
  * @returns {Row | null}
@@ -63,6 +67,9 @@ export function rowOf(declared) {
 	const section = typeof declared.section === 'string' ? declared.section : '';
 	const type = typeof declared.type === 'string' ? declared.type : '';
 	if (id === '' || label === '' || kTypes.indexOf(type) === -1)
+		return null;
+	// Only an explicit no: a server older than the member says nothing about it.
+	if (declared.available === false)
 		return null;
 
 	const kind = /** @type {'bool'|'int'|'string'|'enum'} */ (type);
@@ -79,6 +86,7 @@ export function rowOf(declared) {
 		choices.push({ value: value, label: typeof said === 'string' ? said : String(value) });
 	}
 
+	const held = declared.locked === true;
 	return {
 		id: id,
 		type: kind,
@@ -90,10 +98,11 @@ export function rowOf(declared) {
 		min: kind === 'int' && Number.isFinite(Number(declared.min)) ? Number(declared.min) : null,
 		max: kind === 'int' && Number.isFinite(Number(declared.max)) ? Number(declared.max) : null,
 		choices: choices,
-		// Only a choice can be locked this way. Every other kind states what it
+		// Only a choice can lack its values. Every other kind states what it
 		// takes in the row itself, so there is nothing the box could have
 		// failed to answer.
-		locked: kind === 'enum' && choices.length === 0,
+		locked: held || (kind === 'enum' && choices.length === 0),
+		held: held,
 		conditions: conditionsOf(declared.conditions),
 	};
 }
@@ -329,8 +338,8 @@ export function changed(rows, values, edits) {
 		const typed = edits[row.id];
 		if (typed === undefined)
 			continue;
-		// A row the box cannot state the choices of refuses every write, so a
-		// value for one is left out rather than sent to be turned down.
+		// A locked row refuses every write, so a value for one is left out
+		// rather than sent to be turned down.
 		if (row.locked)
 			continue;
 		const held = valueOf(row, values);
@@ -352,8 +361,28 @@ export function countOf(body) {
 }
 
 /**
+ * The value an int row names in words, when that is what the text holds, such as
+ * "off" or "last used". It may lie at or outside the bounds of the row.
+ *
+ * @param {Row} row
+ * @param {string} text
+ * @returns {{ value: number, label: string } | null}
+ */
+export function namedValue(row, text) {
+	if (row.type !== 'int' || !/^-?[0-9]+$/.test(text))
+		return null;
+	const value = Number(text);
+	for (const choice of row.choices) {
+		if (choice.value === value)
+			return choice;
+	}
+	return null;
+}
+
+/**
  * What a number field says when what is in it is not a number the row takes.
- * Null when there is nothing to say.
+ * Null when there is nothing to say. The row's named value is one it takes,
+ * wherever it lies.
  *
  * @param {Row} row
  * @param {string} text
@@ -366,6 +395,8 @@ export function numberFault(row, text) {
 		return 'empty';
 	if (!/^-?[0-9]+$/.test(text))
 		return 'notnumber';
+	if (namedValue(row, text) !== null)
+		return null;
 	const value = Number(text);
 	if (row.min !== null && value < row.min)
 		return 'range';

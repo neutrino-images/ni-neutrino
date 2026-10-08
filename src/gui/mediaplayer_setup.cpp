@@ -41,6 +41,7 @@
 
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 
 #include <gui/audioplayer_setup.h>
@@ -124,11 +125,9 @@ int CMediaPlayerSetup::showMediaPlayerSetup()
 
 	mediaSetup->addItem(GenericMenuSeparator);
 
-	CMenuOptionChooser *mc;
-	mc = new CMenuOptionChooser(LOCALE_MOVIEPLAYER_DISPLAY_PLAYTIME, &g_settings.movieplayer_display_playtime, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_info.hw_caps->display_xres >= 8);
-	mc->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_DISPLAY_PLAYTIME);
-	mediaSetup->addItem(mc);
+	addSetting(mediaSetup, "movieplayer_display_playtime");
 
+	CMenuOptionChooser *mc;
 	mc = new CMenuOptionChooser(LOCALE_MOVIEPLAYER_TIMEOSD_WHILE_SEARCHING, &g_settings.movieplayer_timeosd_while_searching, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
 	mc->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_TIMEOSD_WHILE_SEARCHING);
 	mediaSetup->addItem(mc);

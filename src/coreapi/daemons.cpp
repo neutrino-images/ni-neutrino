@@ -83,7 +83,7 @@ const Daemon kDaemons[] = {
 const size_t kDaemonCount = sizeof(kDaemons) / sizeof(kDaemons[0]);
 
 // Where a softcam sits once it is on the box, which is where the television's
-// own softcam screen looks for it (src/gui/daemon_control.cpp).
+// own softcam menu looks for it.
 const char kCamdDir[] = "/var/bin/";
 
 /* The two directories the box's own service command searches, in its order.

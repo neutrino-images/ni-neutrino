@@ -39,6 +39,8 @@ TABLEDIR="$SRC/src/coreapi/settings"
 # the fifteen files that each hold one further section's; a glob of
 # settingstable_*.cpp alone misses those five and the keys they name.
 set -- "$TABLEDIR/settingstable.cpp" "$TABLEDIR"/settingstable_*.cpp
+# One more table file, for the self test that holds a mistyped key to the catalog.
+[ -z "$CATALOG_CHECK_EXTRA" ] || set -- "$@" "$CATALOG_CHECK_EXTRA"
 for f in "$@"; do
 	[ -r "$f" ] || { echo "check-locale-catalog.sh: cannot read $f" >&2; exit 1; }
 done
@@ -85,9 +87,12 @@ awk '
 # kEnumValueFields), which is a claim this makes for the choices alone and
 # has to be checked, and reported, on its own count: a scan that stopped
 # matching only this shape would otherwise hide behind the pairs still
-# matching theirs.
+# matching theirs. An entry has four members: value, label key, fixed text, predicate.
+# Only a quoted second member is a key. An entry that carries fixed text has NULL
+# there and its text in the third, which is shown as written and is no catalog name,
+# so the pattern does not take a quote anywhere else.
 awk '
-	/^[ \t]*\{[^{}]*,[ \t]*"[^"]*"[ \t]*\},?[ \t]*$/ {
+	/^[ \t]*\{[ \t]*[^{},"]+,[ \t]*"[^"]*"[ \t]*,[ \t]*[^{},"]+,[ \t]*[^{},"]+\},?[ \t]*$/ {
 		line = $0
 		if (match(line, /"[^"]*"/))
 			print substr(line, RSTART + 1, RLENGTH - 2)

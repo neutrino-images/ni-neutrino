@@ -331,6 +331,7 @@ TEST_CASE("every call is checked against the list as it is now", "[allowlist][ga
 TEST_CASE("write_settings refuses a section off the list or a denied one or a secret key", "[allowlist][gate]")
 {
 	Lists back;
+	FakeSettingsBox box;
 	FakeSettingsSource store;
 	InstalledSettingsSource in_store(&store);
 	mcp::Allowlists a;
@@ -361,6 +362,7 @@ TEST_CASE("write_settings refuses a section off the list or a denied one or a se
 TEST_CASE("write_settings refuses every setting that names a place on the box's disk", "[allowlist][gate]")
 {
 	Lists back;
+	FakeSettingsBox box;
 	FakeSettingsSource store;
 	InstalledSettingsSource in_store(&store);
 	mcp::Allowlists a;
@@ -399,6 +401,7 @@ TEST_CASE("write_settings refuses every setting that names a place on the box's 
 
 TEST_CASE("the schema marks every setting that names a place on the box's disk", "[allowlist][gate]")
 {
+	FakeSettingsBox box;
 	coreapi::Result<std::vector<coreapi::Descriptor> > schema = coreapi::settings::schema();
 	REQUIRE(schema.ok());
 	std::set<std::string> marked, declared;
@@ -453,6 +456,7 @@ TEST_CASE("write_settings answers a mixed outcome as a tool error naming what di
 	  "[allowlist][gate]")
 {
 	Lists back;
+	FakeSettingsBox box;
 	FakeSettingsSource store;
 	InstalledSettingsSource in_store(&store);
 	mcp::Allowlists a;
@@ -473,6 +477,7 @@ TEST_CASE("write_settings answers a mixed outcome as a tool error naming what di
 
 TEST_CASE("read_settings never answers a secret value in any section", "[allowlist][secrets]")
 {
+	FakeSettingsBox box;
 	FakeSettingsSource store;
 	InstalledSettingsSource in_store(&store);
 	coreapi::Result<std::vector<coreapi::Descriptor> > schema = coreapi::settings::schema();

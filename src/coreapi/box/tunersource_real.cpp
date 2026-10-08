@@ -77,6 +77,13 @@ class RealTunerSource : public TunerSource
 			return Status::Ok;
 		}
 
+		Status enabledCount(unsigned &out) const
+		{
+			const int n = CFEManager::getInstance()->getEnabledCount();
+			out = n > 0 ? (unsigned) n : 0;
+			return Status::Ok;
+		}
+
 		Status liveSignal(SignalInfo &out) const
 		{
 			CFrontend *fe = CFEManager::getInstance()->getLiveFE();

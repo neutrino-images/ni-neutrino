@@ -165,9 +165,9 @@ bool CExtUpdate::applySettings(std::string &filename, int mode)
 
 	if (orgPath != "/tmp")
 	{
-		if (g_settings.softupdate_name_mode_apply == CExtUpdate::SOFTUPDATE_NAME_HOSTNAME_TIME)
+		if (g_settings.softupdate_name_mode_apply == SOFTUPDATE_NAME_HOSTNAME_TIME)
 			imgFilename = orgPath + "/" + hostName + timeStr + settingsStr + orgExt;
-		else if (g_settings.softupdate_name_mode_apply == CExtUpdate::SOFTUPDATE_NAME_ORGNAME_TIME)
+		else if (g_settings.softupdate_name_mode_apply == SOFTUPDATE_NAME_ORGNAME_TIME)
 			imgFilename = orgPath + "/" + orgName + timeStr + settingsStr + orgExt;
 		else
 			imgFilename = orgPath + "/" + orgName + settingsStr + orgExt;

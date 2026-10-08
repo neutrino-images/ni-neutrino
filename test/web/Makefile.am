@@ -22,6 +22,7 @@ WEB_CHECKS = \
 	check-web-decide.sh \
 	check-web-timerbody.sh \
 	check-web-timeredit.sh \
+	check-web-settingsrows.sh \
 	check-web-fileplay.sh \
 	check-web-archive.sh \
 	check-web-types.sh \
@@ -72,7 +73,7 @@ NOW_DIST = \
 # pages are held to; types/ holds what the type checker reads beside them.
 EXTRA_DIST = $(WEB_CHECKS) fetch-types.sh serve.js openapi-types.js drag-cases.mjs player-cases.mjs \
 	     decide-cases.mjs fileplay-cases.mjs archive-cases.mjs store-cases.mjs events-cases.mjs session-cases.mjs timerbody-cases.mjs \
-	     timeredit-cases.mjs guideclock-cases.mjs wake-cases.mjs nav-cases.mjs types \
+	     timeredit-cases.mjs settingsrows-cases.mjs guideclock-cases.mjs wake-cases.mjs nav-cases.mjs types \
 	     $(AI_GUIDE_DIST) $(AI_UI_DIST) $(CHANNEL_DIST) timerend-cases.mjs $(KEEP_DIST) $(NOW_DIST) state-cases.mjs
 
 # The document the server answers with, written out by the target that owns it

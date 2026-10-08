@@ -44,6 +44,7 @@
 #include "widget/stringinput.h"
 
 #include "widget/progresswindow.h"
+#include "widget/settingitem.h"
 
 #include <system/setting_helpers.h>
 #include <system/settings.h>
@@ -66,14 +67,6 @@ const CMenuOptionChooser::keyval OPTIONS_CA_INIT_OPTIONS[] =
 };
 #define OPTIONS_CA_INIT_OPTION_COUNT (sizeof(OPTIONS_CA_INIT_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
-const CMenuOptionChooser::keyval OPTIONS_CI_MODE_OPTIONS[] =
-{
-	{ 0, LOCALE_CI_MODE_0 },
-	{ 1, LOCALE_CI_MODE_1 },
-	{ 2, LOCALE_CI_MODE_2 }
-};
-#define OPTIONS_CI_MODE_OPTION_COUNT (sizeof(OPTIONS_CI_MODE_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
-
 static const CMenuOptionChooser::keyval CI_CLOCK_OPTIONS[] = {
 	{  6, LOCALE_CI_CLOCK_NORMAL },
 	{  7, LOCALE_CI_CLOCK_HIGH }
@@ -82,17 +75,6 @@ static const CMenuOptionChooser::keyval CI_CLOCK_OPTIONS[] = {
 #endif
 };
 #define CI_CLOCK_OPTION_COUNT (sizeof(CI_CLOCK_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
-
-#if BOXMODEL_VUPLUS_ALL
-#define CI_DELAY_OPTION_COUNT 5
-static const CMenuOptionChooser::keyval_ext CI_DELAY_OPTIONS[CI_DELAY_OPTION_COUNT] = {
-	{  16, NONEXISTANT_LOCALE, "16"  },
-	{  32, NONEXISTANT_LOCALE, "32"  },
-	{  64, NONEXISTANT_LOCALE, "64"  },
-	{ 128, NONEXISTANT_LOCALE, "128" },
-	{ 256, NONEXISTANT_LOCALE, "256" }
-};
-#endif
 
 void CCAMMenuHandler::init(void)
 {
@@ -157,18 +139,18 @@ int CCAMMenuHandler::doMainMenu()
 	int CiSlots = ca ? ca->GetNumberCISlots() : 0;
 	if(CiSlots) {
 #if BOXMODEL_VUPLUS_ALL
-		cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_DELAY, &g_settings.ci_delay, CI_DELAY_OPTIONS, CI_DELAY_OPTION_COUNT, true, this));
+		addSetting(cammenu, "ci_delay", true, this);
 #endif
-		cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_RESET_STANDBY, &g_settings.ci_standby_reset, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true));
+		addSetting(cammenu, "ci_standby_reset");
 	}
 #if HAVE_LIBSTB_HAL
-	cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_CHECK_LIVE_SLOT, &g_settings.ci_check_live, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
+	addSetting(cammenu, "ci_check_live", true, this);
 #endif
 	//NI
-	cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_REC_ZAPTO, &g_settings.ci_rec_zapto, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-	CMenuOptionChooser *ci_mode = new CMenuOptionChooser(LOCALE_CI_MODE, &g_settings.ci_mode, OPTIONS_CI_MODE_OPTIONS, OPTIONS_CI_MODE_OPTION_COUNT, true, NULL);
-	ci_mode->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CI_MODE);
-	cammenu->addItem(ci_mode);
+	addSetting(cammenu, "ci_rec_zapto", true, this);
+	CMenuItem *ci_mode = addSetting(cammenu, "ci_mode", true, NULL);
+	if (ci_mode)
+		ci_mode->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CI_MODE);
 
 #ifdef BOXMODEL_CST_HD2
 	int fecount = CFEManager::getInstance()->getFrontendCount();

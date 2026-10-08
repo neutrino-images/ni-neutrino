@@ -20,6 +20,9 @@
 
 #include "settingstable.h"
 #include "settingsfield.h"
+#include "predicates.h"
+
+#include <hardware/audio.h>
 
 namespace coreapi
 {
@@ -33,43 +36,46 @@ namespace
    on the other, so a row for the pair this build does not have would not
    compile. */
 
+// The floor of start_volume, shown in words.
+const EnumValue kVolumeLastUsed[] =
+{
+	{ -1, "audiomenu.volume_last_used", NULL, NULL }
+};
+
 const EnumValue kAnalogMode[] =
 {
-	// src/gui/audio_setup.cpp:90
-	{ 0, "audiomenu.stereo" },
-	{ 1, "audiomenu.monoleft" },
-	{ 2, "audiomenu.monoright" }
+	{ 0, "audiomenu.stereo", NULL, NULL },
+	{ 1, "audiomenu.monoleft", NULL, NULL },
+	{ 2, "audiomenu.monoright", NULL, NULL }
 };
 
 #if !(HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE)
 const EnumValue kHdmiDD[] =
 {
-	// src/gui/audio_setup.cpp:121 lib/hardware/coolstream/hd1/libcoolstream/audio_cs.h:41
-	{ 0, "options.off" },
-	{ 1, "audiomenu.hdmi_dd_auto" },
-	{ 2, "audiomenu.hdmi_dd_force" }
+	{ HDMI_ENCODED_OFF, "options.off", NULL, NULL },
+	{ HDMI_ENCODED_AUTO, "audiomenu.hdmi_dd_auto", NULL, NULL },
+	{ HDMI_ENCODED_FORCED, "audiomenu.hdmi_dd_force", NULL, NULL }
 };
 #endif
 
 const EnumValue kAvSync[] =
 {
-	// src/gui/audio_setup.cpp:113
-	{ 0, "options.off" },
-	{ 1, "options.on" },
-	{ 2, "audiomenu.avsync_am" }
+	{ AVSYNC_DISABLED, "options.off", NULL, NULL },
+	{ AVSYNC_ENABLED, "options.on", NULL, NULL },
+	{ AVSYNC_AUDIO_IS_MASTER, "audiomenu.avsync_am", NULL, NULL }
 };
 
-/* The third choice the screen offers only on one box model is left out, so
-   that no frontend offers a value the driver behind it was never given. */
 const EnumValue kSrsAlgo[] =
 {
-	// src/gui/audio_setup.cpp:102
-	{ 0, "audio.srs_algo_light" },
-	{ 1, "audio.srs_algo_normal" }
+	{ 0, "audio.srs_algo_light", NULL, NULL },
+	{ 1, "audio.srs_algo_normal", NULL, NULL },
+#ifdef BOXMODEL_CST_HD2
+	{ 2, "audio.srs_algo_heavy", NULL, NULL }
+#endif
 };
 
-// The screen hands srs_enable in as the active flag of the three below, so a
-// nonzero value is what makes them editable.
+// srs_enable switches the three below, so a nonzero value is what makes them
+// editable.
 const Condition kSrsOn[] =
 {
 	{ "srs_enable", CompareOp::Ne, 0, NULL, 0 }
@@ -77,7 +83,6 @@ const Condition kSrsOn[] =
 
 const Descriptor kAudio[] =
 {
-	// src/neutrino.cpp:742 src/gui/audio_setup.cpp:137
 	{
 		"audio_AnalogMode", ValueType::Enum, "audio",
 		"audiomenu.analog_mode", "menu.hint_audio_analog_mode",
@@ -85,14 +90,12 @@ const Descriptor kAudio[] =
 		COREAPI_NUMBER_FIELD(audio_AnalogMode)
 	},
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	// src/neutrino.cpp:536 src/gui/audio_setup.cpp:145
 	{
 		"ac3_pass", ValueType::Bool, "audio",
 		"audiomenu.ac3", "menu.hint_audio_ac3",
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(ac3_pass)
 	},
-	// src/neutrino.cpp:537 src/gui/audio_setup.cpp:148
 	{
 		"dts_pass", ValueType::Bool, "audio",
 		"audiomenu.dts", "menu.hint_audio_dts",
@@ -100,16 +103,12 @@ const Descriptor kAudio[] =
 		COREAPI_NUMBER_FIELD(dts_pass)
 	},
 #else
-	// The screen offers this one only where the box reports an HDMI socket,
-	// which is a capability read at run time and not a setting to condition on.
-	// src/neutrino.cpp:539 src/gui/audio_setup.cpp:154
 	{
 		"hdmi_dd", ValueType::Enum, "audio",
 		"audiomenu.hdmi_dd", "menu.hint_audio_hdmi_dd",
 		0, 0, COREAPI_VALUES(kHdmiDD), 0, NULL, false, false, COREAPI_ALWAYS,
-		COREAPI_NUMBER_FIELD(hdmi_dd)
+		COREAPI_NUMBER_FIELD_ON(hdmi_dd, hasHdmi, NULL)
 	},
-	// src/neutrino.cpp:540 src/gui/audio_setup.cpp:159
 	{
 		"spdif_dd", ValueType::Bool, "audio",
 		"audiomenu.spdif_dd", "menu.hint_audio_spdif_dd",
@@ -117,77 +116,68 @@ const Descriptor kAudio[] =
 		COREAPI_NUMBER_FIELD(spdif_dd)
 	},
 #endif
-	// src/neutrino.cpp:743 src/gui/audio_setup.cpp:141
 	{
 		"audio_DolbyDigital", ValueType::Bool, "audio",
 		"audiomenu.dolbydigital", "menu.hint_audio_dd",
 		0, 1, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(audio_DolbyDigital)
 	},
-	// src/neutrino.cpp:544 src/gui/audio_setup.cpp:168
 	{
 		"avsync", ValueType::Enum, "audio",
 		"audiomenu.avsync", "menu.hint_audio_avsync",
 		0, 0, COREAPI_VALUES(kAvSync), 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(avsync)
 	},
-	// src/neutrino.cpp:509 src/gui/audio_setup.cpp:172
 	{
 		"current_volume_step", ValueType::Int, "audio",
 		"audiomenu.volume_step", "menu.hint_audio_volstep",
 		1, 25, NULL, 0, 5, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(current_volume_step)
 	},
-	/* The floor is the one value that is not a volume: the screen names it
-	   separately and it says the box keeps whatever was last set.
+	/* The floor is the one value that is not a volume: it says the box keeps
+	   whatever was last set.
 
 	   The one row here a restart applies. The program reads it in the pass that
 	   loads its settings and nowhere else, where it seeds the running volume,
-	   so a change to it moves nothing until the box loads its settings again.
-	   The screen offers it with no notifier for that reason. */
-	// src/neutrino.cpp:510 src/gui/audio_setup.cpp:176
+	   so a change to it moves nothing until the box loads its settings again. */
 	{
 		"start_volume", ValueType::Int, "audio",
 		"audiomenu.volume_start", "menu.hint_audio_volstart",
-		-1, 100, NULL, 0, -1, NULL, true, false, COREAPI_ALWAYS,
+		-1, 100, COREAPI_VALUES(kVolumeLastUsed), -1, NULL, true, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(start_volume)
 	},
-	// src/neutrino.cpp:531 src/gui/audio_setup.cpp:196
 	{
 		"srs_enable", ValueType::Bool, "audio",
 		"audio.srs_iq", "menu.hint_audio_srs",
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(srs_enable)
 	},
-	// src/neutrino.cpp:532 src/gui/audio_setup.cpp:183
 	{
 		"srs_algo", ValueType::Enum, "audio",
 		"audio.srs_algo", "menu.hint_audio_srs_algo",
 		0, 0, COREAPI_VALUES(kSrsAlgo), 1, NULL, false, false, COREAPI_CONDITIONS(kSrsOn),
 		COREAPI_NUMBER_FIELD(srs_algo)
 	},
-	// src/neutrino.cpp:534 src/gui/audio_setup.cpp:187
+#ifndef BOXMODEL_CST_HD2
 	{
 		"srs_nmgr_enable", ValueType::Bool, "audio",
 		"audio.srs_nmgr", "menu.hint_audio_srs_nmgr",
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kSrsOn),
 		COREAPI_NUMBER_FIELD(srs_nmgr_enable)
 	},
-	// src/neutrino.cpp:533 src/gui/audio_setup.cpp:191
+#endif
 	{
 		"srs_ref_volume", ValueType::Int, "audio",
 		"audio.srs_volume", "menu.hint_audio_srs_volume",
 		1, 100, NULL, 0, 75, NULL, false, false, COREAPI_CONDITIONS(kSrsOn),
 		COREAPI_NUMBER_FIELD(srs_ref_volume)
 	},
-	// src/neutrino.cpp:515 src/gui/audio_setup.cpp:204
 	{
 		"audio_volume_percent_ac3", ValueType::Int, "audio",
 		"audiomenu.volume_adjustment_ac3", "menu.hint_audio_adjust_vol_ac3",
 		0, 100, NULL, 0, 100, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(audio_volume_percent_ac3)
 	},
-	// src/neutrino.cpp:516 src/gui/audio_setup.cpp:209
 	{
 		"audio_volume_percent_pcm", ValueType::Int, "audio",
 		"audiomenu.volume_adjustment_pcm", "menu.hint_audio_adjust_vol_pcm",
@@ -195,19 +185,15 @@ const Descriptor kAudio[] =
 		COREAPI_NUMBER_FIELD(audio_volume_percent_pcm)
 	},
 
-	/* The volume the box is at, which it writes on every change,
-	   src/driver/volume.cpp, and reads at the next start where the start volume
-	   beside it says to keep it. No item names it. */
-	// src/neutrino.cpp:507
+	/* The volume the box is at, which it writes on every change and reads at
+	   the next start where the start volume beside it says to keep it. */
 	{
 		"current_volume", ValueType::Int, "audio",
 		NULL, NULL,
 		0, 100, NULL, 0, 75, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(current_volume)
 	},
-	/* The analogue output, offered by the audio track chooser rather than by a
-	   settings screen, src/gui/audio_select.cpp:137. */
-	// src/neutrino.cpp:541 src/gui/audio_select.cpp:137
+	// Switches the analogue output on and off.
 	{
 		"analog_out", ValueType::Bool, "audio",
 		"audiomenu.analog_out", NULL,

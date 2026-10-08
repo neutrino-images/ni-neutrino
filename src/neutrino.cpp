@@ -711,7 +711,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 			g_settings.timer_remotebox_ip.push_back(timer_rb);
 		}
 	}
-	g_settings.timer_followscreenings = configfile.getInt32("timer_followscreenings", CFollowScreenings::FOLLOWSCREENINGS_ON);
+	g_settings.timer_followscreenings = configfile.getInt32("timer_followscreenings", FOLLOWSCREENINGS_ON);
 
 	// misc
 	g_settings.zap_cycle = configfile.getInt32("zap_cycle", 1);
@@ -747,7 +747,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	// screen saver
 	g_settings.screensaver_delay = configfile.getInt32("screensaver_delay", 1);
 	setSettingsText(g_settings.screensaver_dir, configfile.getString("screensaver_dir", ICONSDIR "/screensaver"));
-	g_settings.screensaver_mode = configfile.getInt32("screensaver_mode", CScreenSaver::SCR_MODE_CLOCK);
+	g_settings.screensaver_mode = configfile.getInt32("screensaver_mode", SCR_MODE_CLOCK);
 	g_settings.screensaver_mode_text = configfile.getInt32("screensaver_mode_text", CScreenSaver::SCR_MODE_TEXT_OFF);
 	g_settings.screensaver_random = configfile.getInt32("screensaver_random", 0);
 	g_settings.screensaver_timeout = configfile.getInt32("screensaver_timeout", 10);
@@ -803,13 +803,13 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.epg_save_frequently = configfile.getInt32("epg_save_frequently", 0);
 	g_settings.epg_save_mode = configfile.getInt32("epg_save_mode", 0);
 	g_settings.epg_save_standby = configfile.getBool("epg_save_standby", true);
-	g_settings.epg_scan = configfile.getInt32("epg_scan", CEpgScan::SCAN_FAV);
-	g_settings.epg_scan_mode = configfile.getInt32("epg_scan_mode", CEpgScan::MODE_STANDBY);
+	g_settings.epg_scan = configfile.getInt32("epg_scan", EPG_SCAN_FAV);
+	g_settings.epg_scan_mode = configfile.getInt32("epg_scan_mode", EPG_SCAN_MODE_STANDBY);
 	// backward-compatible check
 	if (g_settings.epg_scan == 0)
 	{
-		g_settings.epg_scan = CEpgScan::SCAN_CURRENT;
-		g_settings.epg_scan_mode = CEpgScan::MODE_OFF;
+		g_settings.epg_scan = EPG_SCAN_CURRENT;
+		g_settings.epg_scan_mode = EPG_SCAN_MODE_OFF;
 	}
 	g_settings.epg_scan_rescan = configfile.getInt32("epg_scan_rescan", 24);
 
@@ -1088,7 +1088,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.screen_EndX_b_1 = configfile.getInt32("screen_EndX_b_1", 1888 - g_settings.screen_StartX_b_1 - 1);
 	g_settings.screen_EndY_b_1 = configfile.getInt32("screen_EndY_b_1", 1062 - g_settings.screen_StartY_b_1 - 1);
 
-	g_settings.screen_preset = configfile.getInt32("screen_preset", COsdSetup::PRESET_SCREEN_A);
+	g_settings.screen_preset = configfile.getInt32("screen_preset", PRESET_SCREEN_A);
 
 	setScreenSettings();
 
@@ -1108,8 +1108,8 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.apply_settings = configfile.getBool("apply_settings", false);
 	setSettingsText(g_settings.softupdate_url_file, configfile.getString("softupdate_url_file", "/var/etc/update.urls"));
 #if ENABLE_EXTUPDATE
-	g_settings.softupdate_name_mode_apply = configfile.getInt32("softupdate_name_mode_apply", CExtUpdate::SOFTUPDATE_NAME_DEFAULT);
-	g_settings.softupdate_name_mode_backup = configfile.getInt32("softupdate_name_mode_backup", CExtUpdate::SOFTUPDATE_NAME_DEFAULT);
+	g_settings.softupdate_name_mode_apply = configfile.getInt32("softupdate_name_mode_apply", SOFTUPDATE_NAME_DEFAULT);
+	g_settings.softupdate_name_mode_backup = configfile.getInt32("softupdate_name_mode_backup", SOFTUPDATE_NAME_DEFAULT);
 #else
 	g_settings.softupdate_name_mode_apply = 0;
 	g_settings.softupdate_name_mode_backup = 0;
@@ -1254,7 +1254,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 
 	// audioplayer
 	g_settings.audioplayer_cover_as_screensaver = configfile.getInt32("audioplayer_cover_as_screensaver", 1);
-	g_settings.audioplayer_display = configfile.getInt32("audioplayer_display", (int)CAudioPlayerGui::ARTIST_TITLE);
+	g_settings.audioplayer_display = configfile.getInt32("audioplayer_display", (int)ARTIST_TITLE);
 	g_settings.audioplayer_enable_sc_metadata = configfile.getInt32("audioplayer_enable_sc_metadata", 1);
 	g_settings.audioplayer_follow = configfile.getInt32("audioplayer_follow", 0);
 	g_settings.audioplayer_highprio = configfile.getInt32("audioplayer_highprio", 0);
@@ -1293,11 +1293,11 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	// volume gui
 	g_settings.show_mute_icon = configfile.getInt32("show_mute_icon", 0);
 	g_settings.volume_digits = configfile.getBool("volume_digits", true);
-	g_settings.volume_pos = configfile.getInt32("volume_pos", CVolumeBar::VOLUMEBAR_POS_BOTTOM_CENTER);
+	g_settings.volume_pos = configfile.getInt32("volume_pos", VOLUMEBAR_POS_BOTTOM_CENTER);
 	g_settings.volume_size = configfile.getInt32("volume_size", 26);
 
 	// menu
-	g_settings.menu_pos = configfile.getInt32("menu_pos", CMenuWidget::MENU_POS_CENTER);
+	g_settings.menu_pos = configfile.getInt32("menu_pos", MENU_POS_CENTER);
 	g_settings.show_menu_hints = configfile.getBool("show_menu_hints", true);
 	g_settings.show_menu_hints_line = configfile.getBool("show_menu_hints_line", false);
 
@@ -1317,7 +1317,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.channellist_foot = configfile.getInt32("channellist_foot", 1); // default next Event
 	g_settings.channellist_new_zap_mode = configfile.getInt32("channellist_new_zap_mode", 0);
 	g_settings.channellist_numeric_adjust = configfile.getInt32("channellist_numeric_adjust", 0);
-	g_settings.channellist_show_channellogo = configfile.getInt32("channellist_show_channellogo", CCHeaderTypes::CC_LOGO_RIGHT);
+	g_settings.channellist_show_channellogo = configfile.getInt32("channellist_show_channellogo", CC_LOGO_RIGHT);
 	g_settings.channellist_show_eventlogo = configfile.getInt32("channellist_show_eventlogo", 1);
 	g_settings.channellist_show_infobox = configfile.getInt32("channellist_show_infobox", 1);
 	g_settings.channellist_show_numbers = configfile.getInt32("channellist_show_numbers", 1);
@@ -1439,13 +1439,13 @@ void CNeutrinoApp::setScreenSettings()
 		{
 			switch (g_settings.screen_preset)
 			{
-				case COsdSetup::PRESET_SCREEN_B:
+				case PRESET_SCREEN_B:
 					g_settings.screen_StartX = g_settings.screen_StartX_b_1;
 					g_settings.screen_StartY = g_settings.screen_StartY_b_1;
 					g_settings.screen_EndX   = g_settings.screen_EndX_b_1;
 					g_settings.screen_EndY   = g_settings.screen_EndY_b_1;
 					break;
-				case COsdSetup::PRESET_SCREEN_A:
+				case PRESET_SCREEN_A:
 				default:
 					g_settings.screen_StartX = g_settings.screen_StartX_a_1;
 					g_settings.screen_StartY = g_settings.screen_StartY_a_1;
@@ -1461,13 +1461,13 @@ void CNeutrinoApp::setScreenSettings()
 		{
 			switch (g_settings.screen_preset)
 			{
-				case COsdSetup::PRESET_SCREEN_B:
+				case PRESET_SCREEN_B:
 					g_settings.screen_StartX = g_settings.screen_StartX_b_0;
 					g_settings.screen_StartY = g_settings.screen_StartY_b_0;
 					g_settings.screen_EndX   = g_settings.screen_EndX_b_0;
 					g_settings.screen_EndY   = g_settings.screen_EndY_b_0;
 					break;
-				case COsdSetup::PRESET_SCREEN_A:
+				case PRESET_SCREEN_A:
 				default:
 					g_settings.screen_StartX = g_settings.screen_StartX_a_0;
 					g_settings.screen_StartY = g_settings.screen_StartY_a_0;
@@ -3273,9 +3273,6 @@ TIMER_START();
 	// Above the threads for the same reason, and below the store because a
 	// setting is applied only after it has reached the values.
 	registerSettingsAppliers();
-	// The sets of values the video screen builds as it opens, which the layer
-	// is asked for rather than carrying a copy of.
-	installVideoSettingChoices();
 	// The size the box draws at, which is kept beside the settings rather than
 	// in them: the save writes that copy and not the member.
 	installOsdResolutionSource();
@@ -3605,7 +3602,7 @@ void CNeutrinoApp::showMainMenu()
 	if (old_save_mode != g_settings.epg_save_mode)
 		CEpgScan::getInstance()->ConfigureEIT();
 	if (old_epg != g_settings.epg_scan || old_mode != g_settings.epg_scan_mode) {
-		if (g_settings.epg_scan_mode != CEpgScan::MODE_OFF)
+		if (g_settings.epg_scan_mode != EPG_SCAN_MODE_OFF)
 			CEpgScan::getInstance()->Start();
 		else
 			CEpgScan::getInstance()->Clear();
@@ -5903,7 +5900,7 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 #endif
 		CMoviePlayerGui::getInstance().stopPlayBack();
 		bool stream_status = CStreamManager::getInstance()->StreamStatus();
-		if((g_settings.epg_scan_mode == CEpgScan::MODE_OFF) && !fromDeepStandby &&
+		if((g_settings.epg_scan_mode == EPG_SCAN_MODE_OFF) && !fromDeepStandby &&
 				!CRecordManager::getInstance()->RecordingStatus() && !stream_status) {
 			g_Zapit->setStandby(true);
 		} else {
@@ -6544,7 +6541,7 @@ void stop_daemons(bool stopall, bool for_flash)
 		CVFD::getInstance()->Clear();
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->ShowText("Stop daemons...");
-		g_settings.epg_scan_mode = CEpgScan::MODE_OFF;
+		g_settings.epg_scan_mode = EPG_SCAN_MODE_OFF;
 //NI
 #ifdef BOXMODEL_CST_HD2
 		std::string backup_flash_sh = find_executable("backup_flash.sh");

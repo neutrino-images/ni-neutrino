@@ -41,6 +41,7 @@
 
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 
 #ifdef ENABLE_GRAPHLCD
 #include <gui/glcdsetup.h>
@@ -100,26 +101,6 @@ const CMenuOptionChooser::keyval LCDMENU_STATUSLINE_OPTIONS[LCDMENU_STATUSLINE_O
 	{ 0, LOCALE_LCDMENU_STATUSLINE_PLAYTIME },
 	{ 1, LOCALE_LCDMENU_STATUSLINE_VOLUME },
 	{ 2, LOCALE_OPTIONS_OFF }
-};
-
-#define LEDMENU_OPTION_COUNT 4
-const CMenuOptionChooser::keyval LEDMENU_OPTIONS[LEDMENU_OPTION_COUNT] =
-{
-	{ 0, LOCALE_LEDCONTROLER_OFF },
-	{ 1, LOCALE_LEDCONTROLER_ON_ALL },
-	{ 2, LOCALE_LEDCONTROLER_ON_LED1 },
-	{ 3, LOCALE_LEDCONTROLER_ON_LED2 }
-};
-
-#define LCD_INFO_OPTION_COUNT 2
-const CMenuOptionChooser::keyval LCD_INFO_OPTIONS[LCD_INFO_OPTION_COUNT] =
-{
-#if BOXMODEL_H7 || BOXMODEL_BRE2ZE4K
-	{ 0, LOCALE_LCD_INFO_LINE_CHANNELNUMBER },
-#else
-	{ 0, LOCALE_LCD_INFO_LINE_CHANNELNAME },
-#endif
-	{ 1, LOCALE_LCD_INFO_LINE_CLOCK }
 };
 
 int CVfdSetup::showSetup()
@@ -186,41 +167,20 @@ int CVfdSetup::showSetup()
 
 #ifndef ENABLE_LCD
 		// info line options
-		oj = new CMenuOptionChooser(LOCALE_LCD_INFO_LINE, &g_settings.lcd_info_line, LCD_INFO_OPTIONS, LCD_INFO_OPTION_COUNT, vfd_enabled);
-		oj->setHint("", LOCALE_MENU_HINT_VFD_INFOLINE);
-		vfds->addItem(oj);
+		addSetting(vfds, "lcd_info_line", vfd_enabled);
 
-		// scroll options
-		if (file_exists("/proc/stb/lcd/scroll_repeats"))
-		{
-			// allow to set scroll_repeats
-			CMenuOptionNumberChooser *nc = new CMenuOptionNumberChooser(LOCALE_LCDMENU_SCROLL_REPEATS, &g_settings.lcd_scroll, vfd_enabled, 0, 999, this);
-			nc->setLocalizedValue(0, LOCALE_OPTIONS_OFF);
-			nc->setHint("", LOCALE_MENU_HINT_VFD_SCROLL);
-			vfds->addItem(nc);
-		}
-		else
-		{
-			// simple on/off chooser
-			oj = new CMenuOptionChooser(LOCALE_LCDMENU_SCROLL, &g_settings.lcd_scroll, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, vfd_enabled, this);
-			oj->setHint("", LOCALE_MENU_HINT_VFD_SCROLL);
-			vfds->addItem(oj);
-		}
+		// scroll options: a count, or an on and an off where the panel takes none
+		addSetting(vfds, "lcd_scroll", vfd_enabled, this);
 
 		// notify rc-lock
-		oj = new CMenuOptionChooser(LOCALE_LCDMENU_NOTIFY_RCLOCK, &g_settings.lcd_notify_rclock, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, vfd_enabled);
-		oj->setHint("", LOCALE_MENU_HINT_VFD_NOTIFY_RCLOCK);
-		vfds->addItem(oj);
+		addSetting(vfds, "lcd_notify_rclock", vfd_enabled);
 #endif // ENABLE_LCD
 	}
 
 	if (g_info.hw_caps->display_type == HW_DISPLAY_LED_NUM)
 	{
 		// LED NUM info line options
-		CMenuOptionChooser *led_num;
-		led_num = new CMenuOptionChooser(LOCALE_LCD_INFO_LINE, &g_settings.lcd_info_line, LCD_INFO_OPTIONS, LCD_INFO_OPTION_COUNT, vfd_enabled);
-		led_num->setHint("", LOCALE_MENU_HINT_VFD_INFOLINE);
-		vfds->addItem(led_num);
+		addSetting(vfds, "lcd_info_line", vfd_enabled);
 	}
 
 	CMenuItem *glcd_setup = NULL;
@@ -321,13 +281,12 @@ int CVfdSetup::showBrightnessSetup()
 	}
 
 #ifdef ENABLE_LCD
-	nc = new CMenuOptionNumberChooser(LOCALE_LCDMENU_DIM_BRIGHTNESS, &g_settings.lcd_setting_dim_brightness, true, -1, 255, NULL, CRCInput::RC_nokey, NULL, 0, -1, LOCALE_OPTIONS_OFF, true);
+	nc = static_cast<CMenuOptionNumberChooser *>(addSetting(mn_widget, "lcd_dim_brightness", true, NULL, CRCInput::RC_nokey, true));
 #else
-	nc = new CMenuOptionNumberChooser(LOCALE_LCDMENU_DIM_BRIGHTNESS, &g_settings.lcd_setting_dim_brightness, vfd_enabled, -1, 15, NULL, CRCInput::RC_nokey, NULL, 0, -1, LOCALE_OPTIONS_OFF, true);
+	nc = static_cast<CMenuOptionNumberChooser *>(addSetting(mn_widget, "lcd_dim_brightness", vfd_enabled, NULL, CRCInput::RC_nokey, true));
 #endif
-	nc->setHint("", LOCALE_MENU_HINT_VFD_BRIGHTNESSDIM);
-	nc->setActivateObserver(this);
-	mn_widget->addItem(nc);
+	if (nc)
+		nc->setActivateObserver(this);
 
 	mn_widget->addItem(GenericMenuSeparatorLine);
 	CStringInput *dim_time = new CStringInput(LOCALE_LCDMENU_DIM_TIME, &g_settings.lcd_setting_dim_time, 3, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, "0123456789 ");
@@ -353,46 +312,22 @@ int CVfdSetup::showBrightnessSetup()
 
 void CVfdSetup::showLedSetup(CMenuWidget *mn_led_widget)
 {
-	CMenuOptionChooser *mc;
 	mn_led_widget->addIntroItems(LOCALE_LEDCONTROLER_MENU);
 
-	mc = new CMenuOptionChooser(LOCALE_LEDCONTROLER_MODE_TV, &g_settings.led_tv_mode, LEDMENU_OPTIONS, LEDMENU_OPTION_COUNT, true, this);
-	mc->setHint("", LOCALE_MENU_HINT_LEDS_TV);
-	mn_led_widget->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_LEDCONTROLER_MODE_STANDBY, &g_settings.led_standby_mode, LEDMENU_OPTIONS, LEDMENU_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_LEDS_STANDBY);
-	mn_led_widget->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_LEDCONTROLER_MODE_DEEPSTANDBY, &g_settings.led_deep_mode, LEDMENU_OPTIONS, LEDMENU_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_LEDS_DEEPSTANDBY);
-	mn_led_widget->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_LEDCONTROLER_MODE_RECORD, &g_settings.led_rec_mode, LEDMENU_OPTIONS, LEDMENU_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_LEDS_RECORD);
-	mn_led_widget->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_LEDCONTROLER_BLINK, &g_settings.led_blink, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_LEDS_BLINK);
-	mn_led_widget->addItem(mc);
+	addSetting(mn_led_widget, "led_tv_mode", true, this);
+	addSetting(mn_led_widget, "led_standby_mode");
+	addSetting(mn_led_widget, "led_deep_mode");
+	addSetting(mn_led_widget, "led_rec_mode");
+	addSetting(mn_led_widget, "led_blink");
 }
 
 void CVfdSetup::showBacklightSetup(CMenuWidget *mn_led_widget)
 {
-	CMenuOptionChooser *mc;
 	mn_led_widget->addIntroItems(LOCALE_LEDCONTROLER_BACKLIGHT);
 
-	mc = new CMenuOptionChooser(LOCALE_LEDCONTROLER_BACKLIGHT_TV, &g_settings.backlight_tv, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-	mc->setHint("", LOCALE_MENU_HINT_LEDS_TV);
-	mn_led_widget->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_LEDCONTROLER_MODE_STANDBY, &g_settings.backlight_standby, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_LEDS_STANDBY);
-	mn_led_widget->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_LEDCONTROLER_MODE_DEEPSTANDBY, &g_settings.backlight_deepstandby, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_LEDS_DEEPSTANDBY);
-	mn_led_widget->addItem(mc);
+	addSetting(mn_led_widget, "backlight_tv", true, this);
+	addSetting(mn_led_widget, "backlight_standby");
+	addSetting(mn_led_widget, "backlight_deepstandby");
 }
 
 bool CVfdSetup::changeNotify(const neutrino_locale_t OptionName, void * /* data */)

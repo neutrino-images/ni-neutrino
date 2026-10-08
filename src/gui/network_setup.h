@@ -114,12 +114,6 @@ class CNetworkSetup : public CMenuTarget, CChangeObserver
 			NETWORK_AUTOSTART_ON  =  1
 		};
 
-		enum NETWORK_NTP_MODE
-		{
-			NETWORK_NTP_OFF =  0,
-			NETWORK_NTP_ON  =  1
-		};
-		
 		CNetworkSetup(int wizard_mode = SNeutrinoSettings::WIZARD_OFF);
 		~CNetworkSetup();
 		

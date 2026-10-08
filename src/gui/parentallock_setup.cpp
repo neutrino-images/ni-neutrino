@@ -37,6 +37,7 @@
 #include "parentallock_setup.h"
 
 #include <gui/widget/icons.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 
 
@@ -65,38 +66,6 @@ int CParentalSetup::exec(CMenuTarget* parent, const std::string &/*actionKey*/)
 }
 
 
-#if 1
-#define PARENTALLOCK_PROMPT_OPTION_COUNT 3
-#else
-#define PARENTALLOCK_PROMPT_OPTION_COUNT 4
-#endif
-
-const CMenuOptionChooser::keyval PARENTALLOCK_PROMPT_OPTIONS[PARENTALLOCK_PROMPT_OPTION_COUNT] =
-{
-	{ PARENTALLOCK_PROMPT_NEVER         , LOCALE_PARENTALLOCK_NEVER          },
-#if 0
-	{ PARENTALLOCK_PROMPT_ONSTART       , LOCALE_PARENTALLOCK_ONSTART        },
-#endif
-	{ PARENTALLOCK_PROMPT_CHANGETOLOCKED, LOCALE_PARENTALLOCK_CHANGETOLOCKED },
-	{ PARENTALLOCK_PROMPT_ONSIGNAL      , LOCALE_PARENTALLOCK_ONSIGNAL       }
-};
-
-#define PARENTALLOCK_LOCKAGE_OPTION_COUNT 3
-const CMenuOptionChooser::keyval PARENTALLOCK_LOCKAGE_OPTIONS[PARENTALLOCK_LOCKAGE_OPTION_COUNT] =
-{
-	{ 12, LOCALE_PARENTALLOCK_LOCKAGE12 },
-	{ 16, LOCALE_PARENTALLOCK_LOCKAGE16 },
-	{ 18, LOCALE_PARENTALLOCK_LOCKAGE18 }
-};
-
-#define PARENTALLOCK_DEFAULTLOCKED_OPTION_COUNT 2
-const CMenuOptionChooser::keyval PARENTALLOCK_DEFAULTLOCKED_OPTIONS[PARENTALLOCK_DEFAULTLOCKED_OPTION_COUNT] =
-{
-	{ false, LOCALE_PARENTALLOCK_DEFAULTUNLOCKED },
-	{ true,  LOCALE_PARENTALLOCK_DEFAULTLOCKED }
-};
-
-extern bool parentallocked;
 int CParentalSetup::showParentalSetup()
 {
 	//menue init
@@ -107,18 +76,10 @@ int CParentalSetup::showParentalSetup()
 
 	CMenuForwarder * mf;
 
-	CMenuOptionChooser * mc;
-	mc = new CMenuOptionChooser(LOCALE_PARENTALLOCK_PROMPT , &g_settings.parentallock_prompt , PARENTALLOCK_PROMPT_OPTIONS, PARENTALLOCK_PROMPT_OPTION_COUNT , !parentallocked);
-	mc->setHint("", LOCALE_MENU_HINT_PARENTALLOCK_PROMPT);
-	plock->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_PARENTALLOCK_LOCKAGE, &g_settings.parentallock_lockage, PARENTALLOCK_LOCKAGE_OPTIONS, PARENTALLOCK_LOCKAGE_OPTION_COUNT, !parentallocked);
-	mc->setHint("", LOCALE_MENU_HINT_PARENTALLOCK_LOCKAGE);
-	plock->addItem(mc);
-
-	mc = new CMenuOptionChooser(LOCALE_PARENTALLOCK_BOUQUETMODE, &g_settings.parentallock_defaultlocked, PARENTALLOCK_DEFAULTLOCKED_OPTIONS, PARENTALLOCK_DEFAULTLOCKED_OPTION_COUNT, !parentallocked);
-	plock->addItem(mc);
-	plock->addItem(new CMenuOptionNumberChooser(LOCALE_PARENTALLOCK_ZAPTIME, (int *)&g_settings.parentallock_zaptime, !parentallocked, 0, 10000));
+	addSetting(plock, "parentallock_prompt");
+	addSetting(plock, "parentallock_lockage");
+	addSetting(plock, "parentallock_defaultlocked");
+	addSetting(plock, "parentallock_zaptime");
 
 	CPINChangeWidget pinChangeWidget(LOCALE_PARENTALLOCK_CHANGEPIN, &g_settings.parentallock_pincode, 4, LOCALE_PARENTALLOCK_CHANGEPIN_HINT1);
 	mf = new CMenuForwarder(LOCALE_PARENTALLOCK_CHANGEPIN, true, g_settings.parentallock_pincode, &pinChangeWidget);

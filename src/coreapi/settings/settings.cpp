@@ -40,21 +40,6 @@ namespace settings
 namespace
 {
 
-// Linear over a few hundred rows, for the reason the store's own lookup is:
-// what an index would save is less than building it costs for a request that
-// reads a handful of settings.
-const Descriptor *row(const std::string &key)
-{
-	const Descriptor *t = settingsTable();
-	const size_t n = settingsTableCount();
-	for (size_t i = 0; i < n; ++i)
-	{
-		if (t[i].key != NULL && key == t[i].key)
-			return &t[i];
-	}
-	return NULL;
-}
-
 std::string decimal(long value)
 {
 	char out[32];
@@ -164,24 +149,21 @@ Result<void> allowedByRow(const Descriptor &d, long value)
 			return ok();
 
 		case ValueType::Int:
+		{
+			const EnumValue *named = namedNumber(d);
+			if (named != NULL && value == named->value)
+				return ok();
 			if (value < d.min || value > d.max)
 				return fail(Status::InvalidArgument, ErrorCode::OutOfRange,
-					    "the setting takes " + decimal(d.min) + " to " + decimal(d.max));
+					    "the setting takes " + decimal(d.min) + " to " + decimal(d.max) +
+					    (named != NULL ? " or " + decimal(named->value) : std::string()));
 			return ok();
+		}
 
 		case ValueType::Enum:
-			/* A row whose set is the box's own carries no list here, and the value is held to what
-			   the box offers by the caller of this. Answering not a listed value from here would
-			   refuse every value such a row has. */
-			if (d.field.choices != NULL)
-				return ok();
-			for (size_t i = 0; d.values != NULL && i < d.value_count; ++i)
-			{
-				if (d.values[i].value == value)
-					return ok();
-			}
-			return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
-				    "the setting does not offer that value");
+			// Held to what the row offers by the caller, which asks the one function
+			// that also leaves out what the box lacks.
+			return ok();
 
 		case ValueType::String:
 			break;
@@ -191,27 +173,14 @@ Result<void> allowedByRow(const Descriptor &d, long value)
 		    "the setting is not of a kind a number is offered for");
 }
 
-/* The values a row offers, whichever of the two places they come from. One
-   function, because the write is held to the same set a read answers with:
-   written twice, a caller could be offered a value the write turns down. False is
-   a row that offers no set at all and a set nobody can state. */
+/* The values a row offers on this box. One function, because the write is held to the
+   same set a read answers with: written twice, a caller could be offered a value the
+   write turns down. False is a row that offers no set at all and a set the box has no
+   entry of. */
 bool valuesOffered(const Descriptor &d, std::vector<SettingChoice> &out)
 {
 	if (d.type != ValueType::Enum)
 		return false;
-
-	if (d.field.choices != NULL)
-	{
-		std::vector<SettingChoice> asked;
-		if (settingChoices().values(d.field.choices, asked) != Status::Ok)
-			return false;
-		// A set nobody offers a value for is a row nothing can be drawn from,
-		// which is the answer above rather than an empty list.
-		if (asked.empty())
-			return false;
-		out.swap(asked);
-		return true;
-	}
 
 	if (d.values == NULL || d.value_count == 0)
 		return false;
@@ -220,29 +189,62 @@ bool valuesOffered(const Descriptor &d, std::vector<SettingChoice> &out)
 	listed.reserve(d.value_count);
 	for (size_t i = 0; i < d.value_count; ++i)
 	{
+		const EnumValue &e = d.values[i];
+		if (!entryOffered(e))
+			continue;
 		SettingChoice one;
-		one.value = d.values[i].value;
-		/* The text and not the name of it, because that is what the other kind
-		   answers with and a caller must not have to tell the two apart. A name
-		   the catalog carries nothing under leaves the text empty. */
-		resolveLabel(d.values[i].label_key, one.label);
+		one.value = e.value;
+		if (e.label_text != NULL)
+			one.label = e.label_text;
+		else
+		{
+			/* The text and not the name of it, because that is what the other kind
+			   answers with and a caller must not have to tell the two apart. A name
+			   the catalog carries nothing under leaves the text empty. */
+			if (e.label_key != NULL)
+				one.label_key = e.label_key;
+			resolveLabel(e.label_key, one.label);
+		}
 		listed.push_back(one);
 	}
+	if (listed.empty())
+		return false;
 	out.swap(listed);
 	return true;
 }
 
 } // anonymous namespace
 
+// Linear over a few hundred rows, for the reason the store's own lookup is:
+// what an index would save is less than building it costs for a request that
+// reads a handful of settings.
+const Descriptor *findRow(const std::string &key)
+{
+	const Descriptor *t = settingsTable();
+	const size_t n = settingsTableCount();
+	for (size_t i = 0; i < n; ++i)
+	{
+		if (t[i].key != NULL && key == t[i].key)
+			return &t[i];
+	}
+	return NULL;
+}
+
 Result<std::vector<Descriptor> > schema()
 {
 	const Descriptor *t = settingsTable();
 	const size_t n = settingsTableCount();
 	std::vector<Descriptor> out;
-	if (t != NULL)
-		out.assign(t, t + n);
-	for (size_t i = 0; i < out.size(); ++i)
-		withhold(out[i]);
+	out.reserve(n);
+	for (size_t i = 0; t != NULL && i < n; ++i)
+	{
+		// A row the box lacks stays in, as it is declared, so a frontend
+		// knows the key and can say why it offers nothing for it.
+		Descriptor here;
+		rowOnThisBox(t[i], here);
+		withhold(here);
+		out.push_back(here);
+	}
 	return ok(std::move(out));
 }
 
@@ -299,20 +301,31 @@ Result<std::vector<std::string> > sections()
 	return ok(std::move(out));
 }
 
+bool lockedNow(const std::string &key)
+{
+	if (!heldByParentalLock(key.c_str()))
+		return false;
+	bool locked = true;
+	if (systemSource().parentalLocked(locked) != Status::Ok)
+		return true;
+	return locked;
+}
+
 Result<Descriptor> describe(const std::string &key)
 {
-	const Descriptor *d = row(key);
+	const Descriptor *d = findRow(key);
 	if (d == NULL)
 		return fail(Status::NotFound, ErrorCode::UnknownSetting,
 			    "no setting is declared under that key");
-	Descriptor out = *d;
+	Descriptor out;
+	rowOnThisBox(*d, out);
 	withhold(out);
 	return ok(out);
 }
 
 Result<std::string> get(const std::string &key)
 {
-	const Descriptor *d = row(key);
+	const Descriptor *d = findRow(key);
 	if (d == NULL)
 		return fail(Status::NotFound, ErrorCode::UnknownSetting,
 			    "no setting is declared under that key");
@@ -350,10 +363,22 @@ Result<std::string> get(const std::string &key)
 
 Result<void> set(const std::string &key, const std::string &value)
 {
-	const Descriptor *d = row(key);
+	const Descriptor *d = findRow(key);
 	if (d == NULL)
 		return fail(Status::NotFound, ErrorCode::UnknownSetting,
 			    "no setting is declared under that key");
+
+	// Ahead of every rule about the value: a held row takes none.
+	if (lockedNow(key))
+		return fail(Status::Conflict, ErrorCode::SettingLocked,
+			    "the box's parental lock fixes this setting");
+
+	// Held to the shape the box offers it in, and refused where the box lacks it.
+	Descriptor here;
+	if (!rowOnThisBox(*d, here))
+		return fail(Status::Conflict, ErrorCode::SettingNotOnThisBox,
+			    "this box does not have what the setting controls");
+	d = &here;
 
 	/* A credential reads as nothing, so a form that redraws itself from what it read offers
 	   nothing back here, and taking that would wipe the value the read protected. Refused for
@@ -401,16 +426,16 @@ Result<void> set(const std::string &key, const std::string &value)
 		if (!allowed.ok())
 			return fail(allowed.error());
 
-		/* A row whose set is the box's own is held to what the box offers rather than to a list
-		   nothing here has. Every value is refused while nobody can say what the set is: taking
-		   one then would write a number the box cannot show, which is a picture nobody gets back
-		   from with the remote control. */
-		if (d->field.choices != NULL)
+		/* Held to what the box offers, which leaves out the entries it lacks. Every value is
+		   refused while the box cannot say what it has: taking one then would write a number
+		   the box cannot show, which is a picture nobody gets back from with the remote
+		   control. */
+		if (d->type == ValueType::Enum)
 		{
 			std::vector<SettingChoice> offered;
 			if (!valuesOffered(*d, offered))
-				return fail(Status::InvalidArgument, ErrorCode::ChoicesUnavailable,
-					    "the values this setting offers are the box's own and nothing has said what they are");
+				return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
+					    "the setting does not offer that value");
 
 			bool listed = false;
 			for (size_t i = 0; !listed && i < offered.size(); ++i)
@@ -443,7 +468,7 @@ Result<void> set(const std::string &key, const std::string &value)
 
 Result<void> clearSecret(const std::string &key)
 {
-	const Descriptor *d = row(key);
+	const Descriptor *d = findRow(key);
 	if (d == NULL)
 		return fail(Status::NotFound, ErrorCode::UnknownSetting,
 			    "no setting is declared under that key");
@@ -479,13 +504,18 @@ Result<void> clearSecret(const std::string &key)
 
 Result<std::vector<SettingChoice> > choices(const std::string &key)
 {
-	const Descriptor *d = row(key);
+	const Descriptor *d = findRow(key);
 	if (d == NULL)
 		return fail(Status::NotFound, ErrorCode::UnknownSetting,
 			    "no setting is declared under that key");
 
+	Descriptor here;
+	if (!rowOnThisBox(*d, here))
+		return fail(Status::Conflict, ErrorCode::SettingNotOnThisBox,
+			    "this box does not have what the setting controls");
+
 	std::vector<SettingChoice> out;
-	if (!valuesOffered(*d, out))
+	if (!valuesOffered(here, out))
 		return fail(Status::InvalidArgument, ErrorCode::ChoicesUnavailable,
 			    "the setting offers no set of values this box can state");
 
