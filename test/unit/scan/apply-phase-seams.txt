@@ -1,0 +1,46 @@
+# Which seam an apply group may reach in which startup phase. One seam per line,
+# tab between: the seam's name (the one the test helper PhaseEnvironment knows it
+# by), the call that installs it, and the first phase it is installed for; it stays
+# for every later phase. A call that is in installApplySeams() counts as made where
+# neutrino.cpp calls that. check-hook.sh fails when neutrino.cpp makes a call later
+# than its line says, and PhaseEnvironment installs exactly the seams a phase has,
+# so a group that reaches a later seam fails in the suite and not on the box.
+#
+# A stream whose group needs a seam before the Sectionsd phase installs it in
+# installApplySeams() and adds its line here.
+system	coreapi::installRealSystemSource	Framebuffer
+video	coreapi::installRealVideoOutput	Framebuffer
+audio	coreapi::installRealAudioOutput	Framebuffer
+cec	coreapi::installRealCecLink	Framebuffer
+misc	coreapi::installRealMiscOutput	Framebuffer
+sectionsd	coreapi::installRealSectionsdOutput	Framebuffer
+rc	coreapi::installRealRcControl	Framebuffer
+localization	coreapi::installRealLocalization	Framebuffer
+ci	coreapi::installRealCiControl	Framebuffer
+services	coreapi::installRealServiceControl	Framebuffer
+updatecheck	coreapi::installRealUpdateCheck	Framebuffer
+pluginload	coreapi::installRealPluginLoader	Framebuffer
+weather	coreapi::installRealWeatherService	Framebuffer
+lcd4l	coreapi::installRealLcd4lControl	Framebuffer
+vfd	coreapi::installRealVfdPanel	Framebuffer
+glcd	coreapi::installRealGlcdPanel	Framebuffer
+osdout	coreapi::installRealOsdOutput	Framebuffer
+recordconfig	coreapi::installRealRecordConfigOutput	Framebuffer
+hdd	coreapi::installRealHddControl	Framebuffer
+webchannels	coreapi::installRealWebChannelsOutput	Framebuffer
+channel	coreapi::installRealChannelSource	Sectionsd
+epg	coreapi::installRealEpgSource	Sectionsd
+timer	coreapi::installRealTimerSource	Sectionsd
+command	coreapi::installRealCommandSink	Sectionsd
+tuner	coreapi::installRealTunerSource	Sectionsd
+input	coreapi::installRealInputDevice	Sectionsd
+screenshot	coreapi::installRealScreenshotSource	Sectionsd
+logo	coreapi::installRealLogoSource	Sectionsd
+plugin	coreapi::installRealPluginSource	Sectionsd
+recording	coreapi::installRealRecordingSource	Sectionsd
+event	coreapi::installRealEventSink	Sectionsd
+settings	coreapi::installRealSettingsSource	Sectionsd
+locale	coreapi::installRealLocaleSource	Sectionsd
+key	coreapi::installRealKeySource	Sectionsd
+safety	coreapi::installRealRecordingSafetySource	Sectionsd
+osdresolution	installOsdResolutionSource	Sectionsd

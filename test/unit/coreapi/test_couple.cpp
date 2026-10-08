@@ -19,6 +19,7 @@
  */
 
 #include "support/catch.hpp"
+#include "coreapi/settings/couple.h"
 #include "coreapi/settings/settings.h"
 #include "coreapi/base/deps.h"
 #include "support/fakes.h"
@@ -127,6 +128,9 @@ TEST_CASE("the module line follows its position", "[couple]")
 	REQUIRE(valueOf(shown, "show_ecm") != NULL);
 	CHECK(*valueOf(shown, "show_ecm") == "1");
 
+	// Held as the position it is moved from, so the batch is a change.
+	s.ints["show_ecm_pos"] = 2;
+	s.ints["show_ecm"] = 1;
 	BatchOverlay hidden = batchOf("show_ecm_pos", "0", "show_ecm", "0");
 	settings::settleBatch(hidden, refused);
 	CHECK(refused.empty());
@@ -134,17 +138,26 @@ TEST_CASE("the module line follows its position", "[couple]")
 	CHECK(*valueOf(hidden, "show_ecm") == "0");
 
 	// The infobar toggles the flag by itself, so a write of the flag alone stays one.
+	s.ints["show_ecm"] = 0;
 	BatchOverlay alone = batchOf("show_ecm", "1");
 	settings::settleBatch(alone, refused);
 	CHECK(alone.values.size() == 1);
 	CHECK(refused.empty());
 }
 
-TEST_CASE("a start channel's name and identifier are written together", "[couple]")
+TEST_CASE("a start channel's name follows its identifier and is not written alone", "[couple]")
 {
 	FakeSettingsSource s;
 	InstalledSettingsSource installed(&s);
+	FakeChannelSource channels;
+	InstalledChannelSource in_channels(&channels);
+	coreapi::ChannelInfo swr;
+	swr.id = 0x55;
+	swr.name = "SWR3";
+	swr.kind = coreapi::ServiceKind::Radio;
+	channels.channels.push_back(swr);
 	s.ints["uselastchannel"] = 0;
+	s.strings["startchannelradio_id"] = "0";
 	Refusals refused;
 
 	BatchOverlay pair = batchOf("startchanneltv", "Das Erste", "startchanneltv_id", "1234abcd");
@@ -165,10 +178,56 @@ TEST_CASE("a start channel's name and identifier are written together", "[couple
 	CHECK(refusedAs(refused, "startchanneltv", ErrorCode::SettingConditionNotMet));
 	CHECK(mixed.values.size() == 2);
 
+	// The identifier alone brings the name the channel list gives it.
 	refused.clear();
 	BatchOverlay id = batchOf("startchannelradio_id", "55");
 	settings::settleBatch(id, refused);
-	CHECK(refusedAs(refused, "startchannelradio_id", ErrorCode::SettingConditionNotMet));
+	CHECK(refused.empty());
+	REQUIRE(valueOf(id, "startchannelradio") != NULL);
+	CHECK(*valueOf(id, "startchannelradio") == "SWR3");
+
+	// No channel at all is no name.
+	s.strings["startchannelradio_id"] = "55";
+	BatchOverlay none = batchOf("startchannelradio_id", "0");
+	settings::settleBatch(none, refused);
+	CHECK(refused.empty());
+	REQUIRE(valueOf(none, "startchannelradio") != NULL);
+	CHECK(valueOf(none, "startchannelradio")->empty());
+
+	// An identifier the list does not hold names nothing and is refused as such.
+	BatchOverlay lost = batchOf("startchannelradio_id", "77");
+	settings::settleBatch(lost, refused);
+	CHECK(refusedAs(refused, "startchannelradio_id", ErrorCode::NoSuchChannel));
+	CHECK(lost.values.empty());
+
+	// A radio channel is no television start channel.
+	refused.clear();
+	BatchOverlay wrong = batchOf("startchanneltv_id", "55");
+	settings::settleBatch(wrong, refused);
+	CHECK(refusedAs(refused, "startchanneltv_id", ErrorCode::NotAListedValue));
+	CHECK(wrong.values.empty());
+
+	// The one stored already is no change, even for a channel the list has since lost.
+	refused.clear();
+	s.strings["startchannelradio_id"] = "77";
+	BatchOverlay same = batchOf("startchannelradio_id", "77");
+	settings::settleBatch(same, refused);
+	CHECK(refused.empty());
+	CHECK(valueOf(same, "startchannelradio") == NULL);
+}
+
+TEST_CASE("the schema data names both halves of each pair and how it is written", "[couple]")
+{
+	const char *writes = NULL;
+	CHECK(std::string(settings::pairPartner("startchanneltv", &writes)) == "startchanneltv_id");
+	CHECK(std::string(writes) == "id");
+	CHECK(std::string(settings::pairPartner("startchannelradio_id", &writes)) == "startchannelradio");
+	CHECK(std::string(settings::pairPartner("weather_location", &writes)) == "weather_city");
+	CHECK(std::string(writes) == "both");
+	CHECK(settings::pairPartner("weather_postalcode") == NULL);
+	CHECK(std::string(settings::startChannelKind("startchanneltv_id")) == "tv");
+	CHECK(std::string(settings::startChannelKind("startchannelradio")) == "radio");
+	CHECK(settings::startChannelKind("uselastchannel") == NULL);
 }
 
 TEST_CASE("a weather place is written with its coordinates and clears the postal code", "[couple]")
@@ -269,6 +328,8 @@ TEST_CASE("a reset writes the declared defaults and reports what it could not", 
 	s.strings["lcd_dim_time"] = "42";
 	s.ints["epg_save"] = 0;
 	s.ints["epg_read"] = 0;
+	// Held at something else, so the reset is a change and not a restatement of the default.
+	s.ints["epg_read_frequently"] = 17;
 
 	std::vector<std::string> keys;
 	keys.push_back("lcd_dim_brightness");
@@ -286,7 +347,7 @@ TEST_CASE("a reset writes the declared defaults and reports what it could not", 
 	   defaults action of the front panel menu used 3 and the row has always said 0. */
 	CHECK(s.ints["lcd_dim_brightness"] == 0);
 	CHECK(s.strings["lcd_dim_time"] == "0");
-	CHECK(s.ints.count("epg_read_frequently") == 0);
+	CHECK(s.ints["epg_read_frequently"] == 17);
 	CHECK(s.strings.count("personalize_pincode") == 0);
 	CHECK(refused.size() == 2);
 	CHECK(refusedAs(refused, "epg_read_frequently", ErrorCode::SettingConditionNotMet));
@@ -466,4 +527,167 @@ TEST_CASE("a plugin move that cannot land refuses the list that asked for it and
 	CHECK_FALSE(refusedAs(refused, "plugins_game", ErrorCode::SettingConditionNotMet));
 	REQUIRE(b.values.size() == 1);
 	CHECK(b.values[0].first == "plugins_game");
+}
+
+/* The pin a slot keeps is dropped by the write that switches the keeping off, so the file
+   that write is saved to does not go on holding it. */
+TEST_CASE("switching the keeping of a pin off empties that slot's pin in the same write", "[couple]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["ci_save_pincode_0"] = 1;
+	s.ints["ci_save_pincode_1"] = 1;
+	s.strings["ci_pincode_0"] = "1234";
+	s.strings["ci_pincode_1"] = "5678";
+
+	std::vector<std::pair<std::string, std::string> > members;
+	members.push_back(std::make_pair(std::string("ci_save_pincode_1"), std::string("0")));
+	Refusals refused;
+	settings::writeBatch(members, refused);
+
+	CHECK(refused.empty());
+	CHECK(s.ints["ci_save_pincode_1"] == 0);
+	CHECK(s.strings["ci_pincode_1"].empty());
+	// The other slot keeps its pin.
+	CHECK(s.strings["ci_pincode_0"] == "1234");
+	CHECK(s.persisted > 0);
+
+	// Switched on, nothing is asked of the pin.
+	s.strings["ci_pincode_0"] = "1234";
+	members.clear();
+	members.push_back(std::make_pair(std::string("ci_save_pincode_0"), std::string("1")));
+	settings::writeBatch(members, refused);
+	CHECK(s.strings["ci_pincode_0"] == "1234");
+
+	// A pin the same write names with text contradicts the switch and both are refused.
+	refused.clear();
+	s.ints["ci_save_pincode_0"] = 1;
+	members.clear();
+	members.push_back(std::make_pair(std::string("ci_save_pincode_0"), std::string("0")));
+	members.push_back(std::make_pair(std::string("ci_pincode_0"), std::string("4321")));
+	settings::writeBatch(members, refused);
+	CHECK(refused.size() == 2);
+	CHECK(s.ints["ci_save_pincode_0"] == 1);
+	CHECK(s.strings["ci_pincode_0"] == "1234");
+}
+
+/* A menu item puts its value into the settings itself and then asks for the change to be
+   followed. The couplings run there as they run on a web write, so the menu and the web
+   leave the same settings. */
+TEST_CASE("a menu that switches the guide save on switches the read on and saves it", "[couple]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 1;
+	s.ints["epg_read"] = 0;
+
+	settings::menuChanged("epg_save");
+
+	CHECK(s.ints["epg_read"] == 1);
+	CHECK(s.ints["epg_save"] == 1);
+	CHECK(s.persisted > 0);
+}
+
+TEST_CASE("a menu that switches the keeping of a pin off empties and saves that pin", "[couple]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["ci_save_pincode_0"] = 0;
+	s.ints["ci_save_pincode_1"] = 1;
+	s.strings["ci_pincode_0"] = "1234";
+	s.strings["ci_pincode_1"] = "5678";
+
+	settings::menuChanged("ci_save_pincode_0");
+
+	CHECK(s.strings["ci_pincode_0"].empty());
+	CHECK(s.strings["ci_pincode_1"] == "5678");
+	CHECK(s.persisted > 0);
+}
+
+// What a coupling only restates is not written again, so a menu change of such a key saves nothing.
+TEST_CASE("a menu change whose couplings restate the store writes nothing more", "[couple]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["epg_save"] = 1;
+	s.ints["epg_read"] = 1;
+
+	settings::menuChanged("epg_save");
+
+	CHECK(s.ints["epg_read"] == 1);
+	CHECK(s.persisted == 0);
+}
+
+// The panel limits the rows state and the coupling holds every write path to.
+TEST_CASE("the Pearl panel takes brightness up to seven and the Samsung panels up to ten", "[couple][lcd4l]")
+{
+	CHECK(settings::lcd4lBrightnessCeiling(0) == 7);
+	CHECK(settings::lcd4lBrightnessCeiling(1) == 10);
+	CHECK(settings::lcd4lBrightnessCeiling(2) == 10);
+	CHECK(settings::lcd4lBrightnessCeiling(3) == 10);
+	// A type nobody knows gets the lower ceiling, as the screen gave it.
+	CHECK(settings::lcd4lBrightnessCeiling(9) == 7);
+}
+
+TEST_CASE("only the Pearl panel has the skins one to three", "[couple][lcd4l]")
+{
+	CHECK(settings::lcd4lSkinOffered(0, 2));
+	CHECK(settings::lcd4lSkinOffered(1, 0));
+	CHECK(settings::lcd4lSkinOffered(1, 4));
+	CHECK(settings::lcd4lSkinOffered(3, 100));
+	CHECK_FALSE(settings::lcd4lSkinOffered(1, 1));
+	CHECK_FALSE(settings::lcd4lSkinOffered(2, 3));
+}
+
+TEST_CASE("a refusal names the settings that refused it", "[couple][depends]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	Refusals refused;
+
+	SECTION("a condition of the row")
+	{
+		InstalledSettingsTable table(kTriggerGated, sizeof(kTriggerGated) / sizeof(kTriggerGated[0]));
+		s.ints["fx_gate"] = 0;
+		BatchOverlay b = batchOf("show_ecm_pos", "2");
+		settings::settleBatch(b, refused);
+		REQUIRE(refused.size() == 1);
+		REQUIRE(refused[0].second.depends_on.size() == 1);
+		CHECK(refused[0].second.depends_on[0] == "fx_gate");
+		CHECK(refused[0].second.message.find("fx_gate") != std::string::npos);
+	}
+	SECTION("an addition that cannot land and what asked for it")
+	{
+		InstalledSettingsTable table(kAdditionGated, sizeof(kAdditionGated) / sizeof(kAdditionGated[0]));
+		s.ints["fx_gate"] = 0;
+		BatchOverlay b = batchOf("show_ecm_pos", "2");
+		settings::settleBatch(b, refused);
+		for (size_t i = 0; i < refused.size(); ++i)
+		{
+			INFO(refused[i].first);
+			REQUIRE(refused[i].second.depends_on.size() == 1);
+			CHECK(refused[i].second.depends_on[0] == (refused[i].first == "show_ecm" ? "fx_gate" : "show_ecm"));
+		}
+		CHECK(refused.size() == 2);
+	}
+	SECTION("one half of a pair")
+	{
+		s.ints["uselastchannel"] = 0;
+		BatchOverlay b = batchOf("startchanneltv", "ZDF");
+		settings::settleBatch(b, refused);
+		REQUIRE(refused.size() == 1);
+		REQUIRE(refused[0].second.depends_on.size() == 1);
+		CHECK(refused[0].second.depends_on[0] == "startchanneltv_id");
+	}
+	SECTION("two plugin lists naming one plugin")
+	{
+		BatchOverlay b = batchOf("plugins_game", "a", "plugins_tool", "a", "plugins_lua", "z");
+		settings::settleBatch(b, refused);
+		REQUIRE(refused.size() == 2);
+		for (size_t i = 0; i < refused.size(); ++i)
+		{
+			REQUIRE(refused[i].second.depends_on.size() == 1);
+			CHECK(refused[i].second.depends_on[0] == (refused[i].first == "plugins_game" ? "plugins_tool" : "plugins_game"));
+		}
+	}
 }

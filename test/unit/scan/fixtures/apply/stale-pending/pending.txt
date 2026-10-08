@@ -1,2 +1,0 @@
-# key, stream, reason
-scan_alpha	S1	scan

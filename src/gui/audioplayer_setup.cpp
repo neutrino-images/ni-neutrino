@@ -63,32 +63,13 @@ CAudioPlayerSetup::~CAudioPlayerSetup()
 
 }
 
-int CAudioPlayerSetup::exec(CMenuTarget* parent, const std::string &actionKey)
+int CAudioPlayerSetup::exec(CMenuTarget* parent, const std::string &/*actionKey*/)
 {
 	dprintf(DEBUG_DEBUG, "init audioplayer setup\n");
 	int   res = menu_return::RETURN_REPAINT;
 
 	if (parent)
 		parent->hide();
-
-
-	if(actionKey == "audioplayerdir")
-	{
-		CFileBrowser b;
-		b.Dir_Mode=true;
-		if (b.exec(g_settings.network_nfs_audioplayerdir.c_str()))
-			setSettingsText(g_settings.network_nfs_audioplayerdir, b.getSelectedFile()->Name);
-		return res;
-	}
-
-	if(actionKey == "streamripperdir")
-	{
-		CFileBrowser b;
-		b.Dir_Mode=true;
-		if (b.exec(g_settings.network_nfs_streamripperdir.c_str()))
-			setSettingsText(g_settings.network_nfs_streamripperdir, b.getSelectedFile()->Name);
-		return res;
-	}
 
 	res = showAudioPlayerSetup();
 
@@ -99,8 +80,6 @@ int CAudioPlayerSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 /*shows the audio setup menue*/
 int CAudioPlayerSetup::showAudioPlayerSetup()
 {
-	CMenuForwarder * mf;
-
 	CMenuWidget* audioplayerSetup = new CMenuWidget(LOCALE_MAINMENU_SETTINGS, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_AUDIOSETUP);
 
 	audioplayerSetup->addIntroItems(LOCALE_AUDIOPLAYER_INTERNETRADIO_NAME);
@@ -123,22 +102,18 @@ int CAudioPlayerSetup::showAudioPlayerSetup()
 	if (CVFD::getInstance()->has_lcd) //FIXME
 		audioplayerSetup->addItem(new CMenuOptionChooser(LOCALE_AUDIOPLAYER_SPECTRUM     , &g_settings.spectrum    , MESSAGEBOX_NO_YES_OPTIONS      , MESSAGEBOX_NO_YES_OPTION_COUNT      , true ));
 #endif
-	mf = new CMenuForwarder(LOCALE_AUDIOPLAYER_DEFDIR, true, g_settings.network_nfs_audioplayerdir, this, "audioplayerdir");
-	mf->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_DEFDIR);
-	audioplayerSetup->addItem(mf);
+	addSetting(audioplayerSetup, "network_nfs_audioplayerdir");
 
 	audioplayerSetup->addItem(GenericMenuSeparatorLine);
 
 	// internetradio autostart first entry from favorites
-	CMenuItem *autostart = addSetting(audioplayerSetup, "inetradio_autostart", true, NULL);
+	CMenuItem *autostart = addSetting(audioplayerSetup, "inetradio_autostart");
 	if (autostart)
-		autostart->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INETRADIO_AUTOSTART);
+		autostart->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, autostart->hint);
 
 	addSetting(audioplayerSetup, "audioplayer_enable_sc_metadata");
 
-	mf = new CMenuForwarder(LOCALE_AUDIOPLAYER_STREAMRIPPER_DIR, true, g_settings.network_nfs_streamripperdir, this, "streamripperdir");
-	mf->setHint("", LOCALE_MENU_HINT_AUDIOPLAYER_STREAMRIPPER_DIR);
-	audioplayerSetup->addItem(mf);
+	addSetting(audioplayerSetup, "network_nfs_streamripperdir");
 
 	int res = audioplayerSetup->exec (NULL, "");
 	delete audioplayerSetup;

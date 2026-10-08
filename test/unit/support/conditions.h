@@ -32,7 +32,7 @@
 inline coreapi::Descriptor rowWithConditions(const coreapi::Condition *c, size_t count)
 {
 	coreapi::Descriptor d = { "k", coreapi::ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL,
-				  false, false, c, count, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+				  false, false, c, count, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	return d;
 }
 

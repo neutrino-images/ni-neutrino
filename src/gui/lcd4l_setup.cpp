@@ -45,22 +45,19 @@
 #include <gui/widget/menue_options.h>
 #include <gui/widget/settingitem.h>
 
+#include <coreapi/base/apply.h>
+#include <coreapi/box/apply_lcd4l.h>
+#include <coreapi/box/applyworker.h>
+#include <coreapi/settings/settings.h>
+
 #include <gui/lcd4l_setup.h>
 
+#include <system/debug.h>
 #include <system/helpers.h>
 
 #include <driver/screen_max.h>
 
 #include "driver/lcd4l.h"
-
-const CMenuOptionChooser::keyval_ext LCD4L_DISPLAY_TYPE_OPTIONS[] =
-{
-	{ CLCD4l::DPF320x240,  NONEXISTANT_LOCALE, "320x240 Pearl DPF"},
-	{ CLCD4l::SPF800x480,  NONEXISTANT_LOCALE, "800x480 Samsung SPF"},
-	{ CLCD4l::SPF800x600,  NONEXISTANT_LOCALE, "800x600 Samsung SPF"},
-	{ CLCD4l::SPF1024x600, NONEXISTANT_LOCALE, "1024x600 Samsung SPF"}
-};
-#define LCD4L_DISPLAY_TYPE_OPTION_COUNT (sizeof(LCD4L_DISPLAY_TYPE_OPTIONS)/sizeof(CMenuOptionChooser::keyval_ext))
 
 const CMenuOptionChooser::keyval LCD4L_DPF_SKIN_OPTIONS[] =
 {
@@ -83,11 +80,27 @@ const CMenuOptionChooser::keyval LCD4L_SPF_SKIN_OPTIONS[] =
 
 using namespace sigc;
 
+/* These three run on the apply worker, so the restart leaves the hints alone: they
+   are painted, and only the program's loop paints. The menu shows its own. */
+bool coreapi::applicationRestartLcd4l(int mode)
+{
+	return CLCD4l::getInstance()->Restart(mode);
+}
+
+void coreapi::applicationReinitLcd4l()
+{
+	CLCD4l::getInstance()->InitLCD4l();
+}
+
+void coreapi::applicationForceRunLcd4l()
+{
+	CLCD4l::getInstance()->ForceRun();
+}
+
 CLCD4lSetup::CLCD4lSetup()
 {
 	width = 40;
 	hint = NULL;
-	lcd4l_display_type_changed = false;
 
 	sl_start = bind(mem_fun(*this, &CLCD4lSetup::showHint), "Starting lcd service...");
 	sl_stop = bind(mem_fun(*this, &CLCD4lSetup::showHint), "Stopping lcd service...");
@@ -119,13 +132,7 @@ int CLCD4lSetup::exec(CMenuTarget *parent, const std::string &actionkey)
 	if (parent)
 		parent->hide();
 
-	if (actionkey == "lcd4l_logodir")
-	{
-		const char *action_str = "lcd4l_logodir";
-		chooserDir(g_settings.lcd4l_logodir, false, action_str);
-		return menu_return::RETURN_REPAINT;
-	}
-	else if (actionkey == "typeSetup")
+	if (actionkey == "typeSetup")
 	{
 		return showTypeSetup();
 	}
@@ -137,25 +144,17 @@ int CLCD4lSetup::exec(CMenuTarget *parent, const std::string &actionkey)
 
 bool CLCD4lSetup::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
 {
-#if 0
-	int value = 0;
+	/* The items built by hand edit the setting itself, so the group is all that is left to tell. */
+	const char *key = NULL;
+	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_LCD4L_SKIN))
+		key = "lcd4l_skin";
 
-	if (data)
-		value = (*(int *)data);
-#endif
-
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_LCD4L_SUPPORT))
+	if (key != NULL)
 	{
-		CLCD4l::getInstance()->StopLCD4l();
-		if (g_settings.lcd4l_support)
-			CLCD4l::getInstance()->StartLCD4l();
+		const coreapi::Status st = coreapi::applyKey(key);
+		if (st != coreapi::Status::Ok && st != coreapi::Status::Busy)
+			dprintf(DEBUG_NORMAL, "[lcd4l] %s was not applied\n", key);
 	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_LCD4L_DISPLAY_TYPE))
-	{
-		g_settings.lcd4l_display_type = temp_lcd4l_display_type;
-		lcd4l_display_type_changed = true;
-	}
-
 	return false;
 }
 
@@ -163,27 +162,35 @@ int CLCD4lSetup::show()
 {
 	int shortcut = 1;
 
-	temp_lcd4l_display_type = g_settings.lcd4l_display_type;
-	temp_lcd4l_skin = g_settings.lcd4l_skin;
-	temp_lcd4l_brightness = g_settings.lcd4l_brightness;
-	temp_lcd4l_screenshots = g_settings.lcd4l_screenshots;
-
-	CMenuOptionChooser *mc;
+	CMenuItem *item;
 	CMenuForwarder *mf;
 
 	// lcd4l setup
 	CMenuWidget *lcd4lSetup = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_LCD4L_SETUP);
 	lcd4lSetup->addIntroItems(LOCALE_LCD4L_SUPPORT);
 
-	CMenuItem *support = addSetting(lcd4lSetup, "lcd4l_support", true, this, CRCInput::RC_red);
-	if (support)
-		support->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SUPPORT);
+	item = addSetting(lcd4lSetup, "lcd4l_support", true, NULL, CRCInput::RC_red);
+	if (item)
+	{
+		item->hintIcon = NEUTRINO_ICON_HINT_LCD4LINUX;
+		// The restart runs on the apply worker, and the menu says so while it waits.
+		afterApply(item, [this]()
+		{
+			// Only the restart: the force that follows every run is a flag and over at once.
+			if (!coreapi::applyWorker().pending("lcd4l.mode"))
+				return false;
+			showHint(g_settings.lcd4l_support ? "Starting lcd service..." : "Stopping lcd service...");
+			coreapi::applyWorker().waitFor("lcd4l.mode");
+			removeHint();
+			return false;
+		});
+	}
 
 	lcd4lSetup->addItem(GenericMenuSeparatorLine);
 
-	mc = new CMenuOptionChooser(LOCALE_LCD4L_DISPLAY_TYPE, &temp_lcd4l_display_type, LCD4L_DISPLAY_TYPE_OPTIONS, LCD4L_DISPLAY_TYPE_OPTION_COUNT, true, this, CRCInput::RC_green);
-	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_DISPLAY_TYPE);
-	lcd4lSetup->addItem(mc);
+	item = addSetting(lcd4lSetup, "lcd4l_display_type", true, NULL, CRCInput::RC_green);
+	if (item)
+		item->hintIcon = NEUTRINO_ICON_HINT_LCD4LINUX;
 
 	mf = new CMenuForwarder(LOCALE_LCD4L_DISPLAY_TYPE_SETUP, true, NULL, this, "typeSetup", CRCInput::RC_yellow);
 	mf->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_DISPLAY_TYPE_SETUP);
@@ -191,116 +198,56 @@ int CLCD4lSetup::show()
 
 	lcd4lSetup->addItem(GenericMenuSeparatorLine);
 
-	mf = new CMenuForwarder(LOCALE_LCD4L_LOGODIR, true, g_settings.lcd4l_logodir, this, "lcd4l_logodir", CRCInput::convertDigitToKey(shortcut++));
-	mf->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_LOGODIR);
-	lcd4lSetup->addItem(mf);
+	item = addSetting(lcd4lSetup, "lcd4l_logodir", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (item)
+		item->hintIcon = NEUTRINO_ICON_HINT_LCD4LINUX;
 
 	lcd4lSetup->addItem(GenericMenuSeparator);
 
-	const char *flag_lcd4l_weather = FLAGDIR "/.lcd-weather";
-	int fake_lcd4l_weather = file_exists(flag_lcd4l_weather);
-	CTouchFileNotifier *lcd_weather = new CTouchFileNotifier(flag_lcd4l_weather);
-	mc = new CMenuOptionChooser(LOCALE_LCD4L_WEATHER, &fake_lcd4l_weather, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.weather_enabled, lcd_weather, CRCInput::convertDigitToKey(shortcut++));
-	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_WEATHER);
-	lcd4lSetup->addItem(mc);
+	item = addSetting(lcd4lSetup, "flag_lcd4l_weather", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (item)
+		item->hintIcon = NEUTRINO_ICON_HINT_LCD4LINUX;
 
-	const char *flag_lcd4l_clock_a = FLAGDIR "/.lcd-clock_a";
-	int fake_lcd4l_clock_a = file_exists(flag_lcd4l_clock_a);
-	CTouchFileNotifier *lcd_clock_a = new CTouchFileNotifier(flag_lcd4l_clock_a);
-	mc = new CMenuOptionChooser(LOCALE_LCD4L_CLOCK_A, &fake_lcd4l_clock_a, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, lcd_clock_a, CRCInput::convertDigitToKey(shortcut++));
-	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_CLOCK_A);
-	lcd4lSetup->addItem(mc);
+	item = addSetting(lcd4lSetup, "flag_lcd4l_clock_a", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (item)
+		item->hintIcon = NEUTRINO_ICON_HINT_LCD4LINUX;
 
 	lcd4lSetup->addItem(GenericMenuSeparator);
 
-	CMenuItem *convert = addSetting(lcd4lSetup, "lcd4l_convert", true, NULL, CRCInput::convertDigitToKey(shortcut++));
-	if (convert)
-		convert->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_CONVERT);
+	item = addSetting(lcd4lSetup, "lcd4l_convert", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (item)
+		item->hintIcon = NEUTRINO_ICON_HINT_LCD4LINUX;
 
-	mc = new CMenuOptionChooser(LOCALE_LCD4L_SCREENSHOTS, &temp_lcd4l_screenshots, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
-	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SCREENSHOTS);
-	lcd4lSetup->addItem(mc);
+	// The web interface reads this one out of the saved file, so a change is saved at once.
+	CMenuOptionChooser *screenshots = addChoiceSetting(lcd4lSetup, "lcd4l_screenshots", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (screenshots)
+	{
+		screenshots->hintIcon = NEUTRINO_ICON_HINT_LCD4LINUX;
+		afterApply(screenshots, []() { CNeutrinoApp::getInstance()->saveSetup(NEUTRINO_SETTINGS_FILE); return false; });
+	}
 
 	int res = lcd4lSetup->exec(NULL, "");
 
 	lcd4lSetup->hide();
-
-	if (lcd_clock_a)
-		delete lcd_clock_a;
-	if (lcd4lSetup)
-		delete lcd4lSetup;
-	if (lcd_weather)
-		delete lcd_weather;
-
-	// the things to do on exit
-
-	bool initlcd4l = false;
-
-	if ((g_settings.lcd4l_display_type != temp_lcd4l_display_type) || lcd4l_display_type_changed)
-	{
-		g_settings.lcd4l_display_type = temp_lcd4l_display_type;
-		lcd4l_display_type_changed = false;
-		initlcd4l = true;
-	}
-
-	if (g_settings.lcd4l_skin != temp_lcd4l_skin)
-	{
-		g_settings.lcd4l_skin = temp_lcd4l_skin;
-		initlcd4l = true;
-	}
-
-	if (g_settings.lcd4l_brightness != temp_lcd4l_brightness)
-	{
-		g_settings.lcd4l_brightness = temp_lcd4l_brightness;
-		initlcd4l = true;
-	}
-
-	if (g_settings.lcd4l_screenshots != temp_lcd4l_screenshots)
-	{
-		g_settings.lcd4l_screenshots = temp_lcd4l_screenshots;
-		initlcd4l = true;
-
-		CNeutrinoApp::getInstance()->saveSetup(NEUTRINO_SETTINGS_FILE);
-	}
-
-	if (initlcd4l)
-		CLCD4l::getInstance()->InitLCD4l();
-
-	if (g_settings.lcd4l_support == 1 ) // automatic
-		CLCD4l::getInstance()->ForceRun();
+	delete lcd4lSetup;
 
 	return res;
 }
 
 int CLCD4lSetup::showTypeSetup()
 {
-	if (temp_lcd4l_display_type == CLCD4l::DPF320x240)
-	{
-		// fix brightness values for Pearl DPF
-		if (temp_lcd4l_brightness > 7)
-			temp_lcd4l_brightness = 7;
-		if (g_settings.lcd4l_brightness_standby > 7)
-			g_settings.lcd4l_brightness_standby = 7;
-	}
-	else
-	{
-		// fix skin value for Samsung SPF
-		if (temp_lcd4l_skin > 0 && temp_lcd4l_skin < 4)
-			temp_lcd4l_skin = 0;
-	}
-
 	int shortcut = 1;
 
 	CMenuOptionChooser *mc;
-	CMenuOptionNumberChooser *nc;
 
 	CMenuWidget *typeSetup = new CMenuWidget(LOCALE_LCD4L_DISPLAY_TYPE_SETUP, NEUTRINO_ICON_SETTINGS, width);
 	typeSetup->addIntroItems(); //FIXME: show lcd4l display type
 
-	if (temp_lcd4l_display_type == CLCD4l::DPF320x240)
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_DPF_SKIN_OPTIONS, LCD4L_DPF_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	// Two lists of skins, by the panel: a list that depends on another setting is not one a row states yet.
+	if (g_settings.lcd4l_display_type == CLCD4l::DPF320x240)
+		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &g_settings.lcd4l_skin, LCD4L_DPF_SKIN_OPTIONS, LCD4L_DPF_SKIN_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
 	else
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &temp_lcd4l_skin, LCD4L_SPF_SKIN_OPTIONS, LCD4L_SPF_SKIN_OPTION_COUNT, true, NULL, CRCInput::convertDigitToKey(shortcut++));
+		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &g_settings.lcd4l_skin, LCD4L_SPF_SKIN_OPTIONS, LCD4L_SPF_SKIN_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
 	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SKIN);
 	typeSetup->addItem(mc);
 
@@ -308,13 +255,14 @@ int CLCD4lSetup::showTypeSetup()
 	if (skin_radio)
 		skin_radio->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SKIN_RADIO);
 
-	nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS, (int *)&temp_lcd4l_brightness, true, 1, CLCD4l::getInstance()->GetMaxBrightness(), this);
-	nc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS);
-	typeSetup->addItem(nc);
+	// The rows state the panel's ceiling and when the standby value counts.
+	CMenuItem *brightness = addNumberSetting(typeSetup, "lcd4l_brightness");
+	if (brightness)
+		brightness->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS);
 
-	nc = new CMenuOptionNumberChooser(LOCALE_LCD4L_BRIGHTNESS_STANDBY, (int *)&g_settings.lcd4l_brightness_standby, !g_settings.shutdown_real, 1, CLCD4l::getInstance()->GetMaxBrightness(), this);
-	nc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS_STANDBY);
-	typeSetup->addItem(nc);
+	CMenuItem *standby = addNumberSetting(typeSetup, "lcd4l_brightness_standby");
+	if (standby)
+		standby->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_BRIGHTNESS_STANDBY);
 
 	return typeSetup->exec(NULL, "");
 }

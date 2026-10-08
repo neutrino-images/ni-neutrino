@@ -34,6 +34,7 @@
 #include <global.h>
 #include <neutrino.h>
 #include "hintbox.h"
+#include <gui/widget/menue.h>
 #include <gui/components/cc_timer.h>
 #include <driver/fontrenderer.h>
 #include <system/debug.h>
@@ -252,6 +253,7 @@ void CHintBox::initTimeOutBar(bool do_init, int start_ticks)
 
 int CHintBox::exec()
 {
+	CMenuWidget::Busy modal;
 	neutrino_msg_t msg;
 	neutrino_msg_data_t data;
 	int res = messages_return::none;

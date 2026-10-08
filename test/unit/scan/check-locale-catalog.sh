@@ -1,5 +1,5 @@
 #!/bin/sh
-# Every label_key, hint_key, unit_key and format_key a settings row declares, and every label_key one of
+# Every label_key, hint_key and unit_key a settings row declares, and every label_key one of
 # an Enum's own choices declares, held to the catalog each is said to be a name in:
 # data/locale/english.locale. check-fieldtypes.sh and check-sections.sh both read
 # these same tables and neither opens the catalog, so a key mistyped here compiles,
@@ -60,12 +60,12 @@ if [ "$cn" -lt 3000 ]; then
 	exit 1
 fi
 
-# A row names its label, hint, unit and format in calls of their own, one to a line, and
+# A row names its label, hint and unit in calls of their own, one to a line, and
 # an entry names its label in the same call on the line of its option. The two
 # are told apart by that line: a row's call starts the line, an entry's follows
 # the option it belongs to.
 awk '
-	/^[ \t]*\.(label|hint|unit|format)\("[^"]*"\)[ \t]*;?[ \t]*$/ {
+	/^[ \t]*\.(label|hint|unit)\("[^"]*"\)[ \t]*;?[ \t]*$/ {
 		line = $0
 		match(line, /"[^"]*"/)
 		print substr(line, RSTART + 1, RLENGTH - 2)
@@ -108,60 +108,52 @@ if [ "$ch" -lt 100 ]; then
 	exit 1
 fi
 
-# Every label(, hint(, unit( and format( call the tables make has to be one the two patterns
+# Every label(, hint( and unit( call the tables make has to be one the two patterns
 # above read, which the floors cannot say: a call wrapped onto the next line, or
 # two calls on one line, would drop out of the check one key at a time and leave
 # the totals standing. A line carrying such a call that neither pattern takes is
 # named and fails.
 awk '
-	function calls(l,   n, t) { n = 0; t = l; while (match(t, /\.(label|hint|unit|format)\(/)) { n++; t = substr(t, RSTART + RLENGTH) } return n }
+	function calls(l,   n, t) { n = 0; t = l; while (match(t, /\.(label|hint|unit)\(/)) { n++; t = substr(t, RSTART + RLENGTH) } return n }
 	{
 		n = calls($0)
 		if (n == 0) next
-		if (n == 1 && ($0 ~ /^[ \t]*\.(label|hint|unit|format)\("[^"]*"\)[ \t]*;?[ \t]*$/ ||
+		if (n == 1 && ($0 ~ /^[ \t]*\.(label|hint|unit)\("[^"]*"\)[ \t]*;?[ \t]*$/ ||
 		               $0 ~ /^[ \t]*option\([^"]*\)\.label\("[^"]*"\)/))
 			next
 		print
 	}
 ' "$tmp/stripped" > "$tmp/unread"
 if [ -s "$tmp/unread" ]; then
-	echo "check-locale-catalog.sh: a label, hint, unit or format call the scan does not read, so its key is held to nothing:" >&2
+	echo "check-locale-catalog.sh: a label, hint or unit call the scan does not read, so its key is held to nothing:" >&2
 	sed 's/^[ \t]*/  /' "$tmp/unread" >&2
 	exit 1
 fi
 
-# A unit is the text after a number and a format holds the number itself, so a
-# unit that carries a %d would print twice and a format without one would never
-# show the value. Told apart by the call, which is why they are read apart.
+# A unit is the text after a number, so a unit that carries a %d would print the
+# number twice.
 awk '
 	/^[ \t]*\.unit\("[^"]*"\)[ \t]*$/ { match($0, /"[^"]*"/); print substr($0, RSTART + 1, RLENGTH - 2) }
 ' "$tmp/stripped" | LC_ALL=C sort -u > "$tmp/units"
-awk '
-	/^[ \t]*\.format\("[^"]*"\)[ \t]*$/ { match($0, /"[^"]*"/); print substr($0, RSTART + 1, RLENGTH - 2) }
-' "$tmp/stripped" | LC_ALL=C sort -u > "$tmp/formats"
-if [ ! -s "$tmp/units" ] || [ ! -s "$tmp/formats" ]; then
-	echo "check-locale-catalog.sh: no unit or no format name read out of the tables, the scan has stopped matching that shape" >&2
+if [ ! -s "$tmp/units" ]; then
+	echo "check-locale-catalog.sh: no unit name read out of the tables, the scan has stopped matching that shape" >&2
 	exit 1
 fi
 while read -r k; do
 	text=`awk -v k="$k" '$1 == k { sub(/^[^ ]* /, ""); print }' "$CATALOG"`
 	case "$text" in *%d*) echo "check-locale-catalog.sh: the unit $k holds a %d, which the number would print twice" >&2; exit 1;; esac
 done < "$tmp/units"
-while read -r k; do
-	text=`awk -v k="$k" '$1 == k { sub(/^[^ ]* /, ""); print }' "$CATALOG"`
-	case "$text" in *%d*) ;; *) echo "check-locale-catalog.sh: the format $k holds no %d, so it would never show the value" >&2; exit 1;; esac
-done < "$tmp/formats"
 
 cat "$tmp/labelhint" "$tmp/choices" | LC_ALL=C sort -u > "$tmp/used"
 used=`wc -l < "$tmp/used"`
 
 missing=`comm -23 "$tmp/used" "$tmp/catalog"`
 if [ -n "$missing" ]; then
-	echo "check-locale-catalog.sh: a label_key, hint_key, unit_key, format_key or choice label the tables declare that the catalog does not carry:" >&2
+	echo "check-locale-catalog.sh: a label_key, hint_key, unit_key or choice label the tables declare that the catalog does not carry:" >&2
 	printf '%s\n' "$missing" | sed 's/^/  /' >&2
 	exit 1
 fi
 
-echo "settings label/hint/unit/format keys held to the catalog     $used"
+echo "settings label/hint/unit keys held to the catalog            $used"
 echo "  of which the choices' own labels                          $ch"
 exit 0

@@ -41,6 +41,13 @@
 #include <gui/widget/stringinput.h>
 #include <gui/widget/keyboard_input.h>
 
+#include <coreapi/base/apply.h>
+#include <coreapi/settings/menuspec.h>
+#include <coreapi/settings/settings.h>
+#include <gui/keybind_setup.h>
+#include <gui/videosettings.h>
+#include <gui/widget/settingactive.h>
+
 #include <driver/display.h>
 #include <driver/screen_max.h>
 #include <system/helpers.h>
@@ -59,6 +66,154 @@ CSettingsManager::~CSettingsManager()
 {
 }
 
+void CSettingsManager::replaceFromMenu(const std::function<void()> &replace)
+{
+	/* The remote control first: a question nobody can answer with the remote times out
+	   and puts back what it asks about, so the video mode asked after a remote that
+	   does not work would go back too. A box whose receiver cannot be programmed has
+	   nothing to ask about. */
+	std::vector<AskedSetting> asked;
+	if (coreapi::menuItem("remote_control_hardware").ok())
+	{
+		AskedSetting remote;
+		remote.value = &g_settings.remote_control_hardware;
+		remote.key = "remote_control_hardware";
+		remote.ask = askKeepRemoteControl;
+		asked.push_back(remote);
+	}
+	AskedSetting mode;
+	mode.value = &g_settings.video_Mode;
+	mode.key = "video_Mode";
+	mode.ask = [](int) { return askKeepVideoMode(); };
+	asked.push_back(mode);
+	replaceAsking(asked,
+		      [&replace]() { coreapi::settings::applyReplaced(replace); },
+		      [](const std::string &key)
+		      {
+			      const coreapi::Status s = coreapi::applyKey(key);
+			      if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
+				      dprintf(DEBUG_NORMAL, "[CSettingsManager] %s: apply failed\n", key.c_str());
+		      });
+}
+
+int CSettingsManager::loadConfig()
+{
+	int res = menu_return::RETURN_REPAINT;
+	CFileBrowser fileBrowser;
+	CFileFilter fileFilter;
+
+	fileFilter.addFilter("conf");
+	fileBrowser.Filter = &fileFilter;
+	if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
+	{
+		setSettingsText(g_settings.backup_dir, fileBrowser.getCurrentDir());
+		std::string new_config = fileBrowser.getSelectedFile()->Name.c_str();
+		/* The file may hold other values for anything, and the groups know how each
+		   is put in force. */
+		replaceFromMenu([&new_config]() { CNeutrinoApp::getInstance()->loadSetup(new_config.c_str()); });
+		dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] load config from %s\n", __func__, __LINE__, new_config.c_str());
+	}
+	return res;
+}
+
+int CSettingsManager::saveConfig()
+{
+	int res = menu_return::RETURN_REPAINT;
+	CFileBrowser fileBrowser;
+
+	char msgtxt[1024];
+	snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), g_settings.backup_dir.c_str());
+
+	int result = ShowMsg(LOCALE_EXTRA_SAVECONFIG, msgtxt, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel);
+	if (result == CMsgBox::mbrCancel)
+		return res;
+	if (result == CMsgBox::mbrNo)
+	{
+		fileBrowser.Dir_Mode = true;
+		if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
+			setSettingsText(g_settings.backup_dir, fileBrowser.getSelectedFile()->Name);
+		else
+			return res;
+	}
+
+	std::string fname = "neutrino_" + getBackupSuffix() + ".conf";
+	CKeyboardInput * sms = new CKeyboardInput(LOCALE_EXTRA_SAVECONFIG, &fname, 45);
+	sms->exec(NULL, "");
+	delete sms;
+
+	std::string sname = g_settings.backup_dir + "/" + fname;
+	dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] save neutrino settings to %s\n", __func__, __LINE__, sname.c_str());
+
+	CNeutrinoApp::getInstance()->saveSetup(sname.c_str());
+
+	return res;
+}
+
+int CSettingsManager::backup()
+{
+	int res = menu_return::RETURN_REPAINT;
+	CFileBrowser fileBrowser;
+
+	char msgtxt[1024];
+	snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), g_settings.backup_dir.c_str());
+
+	int result = ShowMsg(LOCALE_SETTINGS_BACKUP, msgtxt, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel);
+	if (result == CMsgBox::mbrCancel)
+		return res;
+	if (result == CMsgBox::mbrNo)
+	{
+		fileBrowser.Dir_Mode = true;
+		if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
+			setSettingsText(g_settings.backup_dir, fileBrowser.getSelectedFile()->Name);
+		else
+			return res;
+	}
+
+	struct statfs s;
+	int ret = ::statfs(g_settings.backup_dir.c_str(), &s);
+	if (ret == 0 && s.f_type != 0x72b6L) /*jffs2*/
+	{
+		CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SETTINGS_BACKUP));
+		hintBox->paint();
+
+		std::string backup_sh = find_executable("backup.sh");
+		std::string fname = "settings_" + getBackupSuffix(); // file ending is set by backup script;
+		dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] executing [%s %s]\n", __func__, __LINE__, backup_sh.c_str(), g_settings.backup_dir.c_str());
+		my_system(3, backup_sh.c_str(), g_settings.backup_dir.c_str(), fname.c_str());
+
+		hintBox->hide();
+		delete hintBox;
+	}
+	else
+		ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(LOCALE_SETTINGS_BACKUP_FAILED),CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_ERROR);
+
+	return res;
+}
+
+int CSettingsManager::restore()
+{
+	int res = menu_return::RETURN_REPAINT;
+	CFileBrowser fileBrowser;
+	CFileFilter fileFilter;
+
+	fileFilter.addFilter("tar");
+	fileFilter.addFilter("gz");
+	fileBrowser.Filter = &fileFilter;
+	if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
+	{
+		setSettingsText(g_settings.backup_dir, fileBrowser.getCurrentDir());
+		int result = ShowMsg(LOCALE_SETTINGS_RESTORE, g_Locale->getText(LOCALE_SETTINGS_RESTORE_WARN), CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo);
+		if(result == CMsgBox::mbrYes)
+		{
+			std::string restore_sh = find_executable("restore.sh");
+			std::string restore_file = fileBrowser.getSelectedFile()->Name;
+			dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] executing [%s %s]\n", __func__, __LINE__, restore_sh.c_str(), restore_file.c_str());
+			my_system(2, restore_sh.c_str(), restore_file.c_str());
+		}
+	}
+	return res;
+}
+
 int CSettingsManager::exec(CMenuTarget* parent, const std::string &actionKey)
 {
 	dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] actionKey = [%s]\n", __func__, __LINE__, actionKey.c_str());
@@ -67,112 +222,14 @@ int CSettingsManager::exec(CMenuTarget* parent, const std::string &actionKey)
 	if (parent)
 		parent->hide();
 
-	CFileBrowser fileBrowser;
-	CFileFilter fileFilter;
-
-	if(actionKey == "loadconfig")
-	{
-		fileFilter.addFilter("conf");
-		fileBrowser.Filter = &fileFilter;
-		if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
-		{
-			setSettingsText(g_settings.backup_dir, fileBrowser.getCurrentDir());
-			std::string new_config = fileBrowser.getSelectedFile()->Name.c_str();
-			CNeutrinoApp::getInstance()->loadSetup(new_config.c_str());
-			CColorSetupNotifier *colorSetupNotifier = new CColorSetupNotifier;
-			colorSetupNotifier->changeNotify(NONEXISTANT_LOCALE, NULL);
-			CNeutrinoApp::getInstance()->SetupFonts(CNeutrinoFonts::FONTSETUP_ALL);
-			CVFD::getInstance()->setlcdparameter();
-			dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] load config from %s\n", __func__, __LINE__, new_config.c_str());
-			delete colorSetupNotifier;
-		}
-		return res;
-	}
-	else if(actionKey == "saveconfig")
-	{
-		char msgtxt[1024];
-		snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), g_settings.backup_dir.c_str());
-
-		int result = ShowMsg(LOCALE_EXTRA_SAVECONFIG, msgtxt, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel);
-		if (result == CMsgBox::mbrCancel)
-			return res;
-		if (result == CMsgBox::mbrNo)
-		{
-			fileBrowser.Dir_Mode = true;
-			if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
-				setSettingsText(g_settings.backup_dir, fileBrowser.getSelectedFile()->Name);
-			else
-				return res;
-		}
-
-		std::string fname = "neutrino_" + getBackupSuffix() + ".conf";
-		CKeyboardInput * sms = new CKeyboardInput(LOCALE_EXTRA_SAVECONFIG, &fname, 45);
-		sms->exec(NULL, "");
-		delete sms;
-
-		std::string sname = g_settings.backup_dir + "/" + fname;
-		dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] save neutrino settings to %s\n", __func__, __LINE__, sname.c_str());
-
-		CNeutrinoApp::getInstance()->saveSetup(sname.c_str());
-
-		return res;
-	}
-	else if(actionKey == "backup")
-	{
-		char msgtxt[1024];
-		snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), g_settings.backup_dir.c_str());
-
-		int result = ShowMsg(LOCALE_SETTINGS_BACKUP, msgtxt, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel);
-		if (result == CMsgBox::mbrCancel)
-			return res;
-		if (result == CMsgBox::mbrNo)
-		{
-			fileBrowser.Dir_Mode = true;
-			if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
-				setSettingsText(g_settings.backup_dir, fileBrowser.getSelectedFile()->Name);
-			else
-				return res;
-		}
-
-		struct statfs s;
-		int ret = ::statfs(g_settings.backup_dir.c_str(), &s);
-		if (ret == 0 && s.f_type != 0x72b6L) /*jffs2*/
-		{
-			CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SETTINGS_BACKUP));
-			hintBox->paint();
-
-			std::string backup_sh = find_executable("backup.sh");
-			std::string fname = "settings_" + getBackupSuffix(); // file ending is set by backup script;
-			dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] executing [%s %s]\n", __func__, __LINE__, backup_sh.c_str(), g_settings.backup_dir.c_str());
-			my_system(3, backup_sh.c_str(), g_settings.backup_dir.c_str(), fname.c_str());
-
-			hintBox->hide();
-			delete hintBox;
-		}
-		else
-			ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(LOCALE_SETTINGS_BACKUP_FAILED),CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_ERROR);
-
-		return res;
-	}
-	else if(actionKey == "restore")
-	{
-		fileFilter.addFilter("tar");
-		fileFilter.addFilter("gz");
-		fileBrowser.Filter = &fileFilter;
-		if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
-		{
-			setSettingsText(g_settings.backup_dir, fileBrowser.getCurrentDir());
-			int result = ShowMsg(LOCALE_SETTINGS_RESTORE, g_Locale->getText(LOCALE_SETTINGS_RESTORE_WARN), CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo);
-			if(result == CMsgBox::mbrYes)
-			{
-				std::string restore_sh = find_executable("restore.sh");
-				std::string restore_file = fileBrowser.getSelectedFile()->Name;
-				dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] executing [%s %s]\n", __func__, __LINE__, restore_sh.c_str(), restore_file.c_str());
-				my_system(2, restore_sh.c_str(), restore_file.c_str());
-			}
-		}
-		return res;
-	}
+	if (actionKey == "loadconfig")
+		return loadConfig();
+	if (actionKey == "saveconfig")
+		return saveConfig();
+	if (actionKey == "backup")
+		return backup();
+	if (actionKey == "restore")
+		return restore();
 
 	res = is_wizard ? showMenu_wizard() : showMenu();
 

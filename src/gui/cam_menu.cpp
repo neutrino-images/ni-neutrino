@@ -55,6 +55,8 @@
 #include <zapit/zapit.h>
 #include <driver/abstime.h>
 
+#include <coreapi/base/apply.h>
+
 //NI CA init
 extern Zapit_config zapitCfg;
 
@@ -66,15 +68,6 @@ const CMenuOptionChooser::keyval OPTIONS_CA_INIT_OPTIONS[] =
 	{ 2, LOCALE_CA_INIT_2 }
 };
 #define OPTIONS_CA_INIT_OPTION_COUNT (sizeof(OPTIONS_CA_INIT_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
-
-static const CMenuOptionChooser::keyval CI_CLOCK_OPTIONS[] = {
-	{  6, LOCALE_CI_CLOCK_NORMAL },
-	{  7, LOCALE_CI_CLOCK_HIGH }
-#if BOXMODEL_VUPLUS_ALL
-	,{ 12, LOCALE_CI_CLOCK_EXTRA_HIGH }
-#endif
-};
-#define CI_CLOCK_OPTION_COUNT (sizeof(CI_CLOCK_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
 void CCAMMenuHandler::init(void)
 {
@@ -137,42 +130,20 @@ int CCAMMenuHandler::doMainMenu()
 	cammenu->addItem(GenericMenuSeparator);
 
 	int CiSlots = ca ? ca->GetNumberCISlots() : 0;
-	if(CiSlots) {
-#if BOXMODEL_VUPLUS_ALL
-		addSetting(cammenu, "ci_delay", true, this);
-#endif
-		addSetting(cammenu, "ci_standby_reset");
-	}
+	addSetting(cammenu, "ci_delay");
+	addSetting(cammenu, "ci_standby_reset");
 #if HAVE_LIBSTB_HAL
-	addSetting(cammenu, "ci_check_live", true, this);
+	addSetting(cammenu, "ci_check_live");
 #endif
 	//NI
-	addSetting(cammenu, "ci_rec_zapto", true, this);
+	addSetting(cammenu, "ci_rec_zapto");
 	CMenuItem *ci_mode = addSetting(cammenu, "ci_mode", true, NULL);
 	if (ci_mode)
 		ci_mode->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CI_MODE);
 
 #ifdef BOXMODEL_CST_HD2
-	int fecount = CFEManager::getInstance()->getFrontendCount();
-	char fename[fecount+1][255];
-
-	CMenuOptionChooser::keyval_ext feselect[fecount+1];
-	feselect[0].key = -1;
-	feselect[0].value = NONEXISTANT_LOCALE;
-	feselect[0].valname = g_Locale->getText(LOCALE_OPTIONS_OFF);
-	int select_count = 1;
-
-	for (int i = 0; i < fecount; i++) {
-		CFrontend * fe = CFEManager::getInstance()->getFE(i);
-		int num = fe->getNumber();
-		snprintf(fename[select_count], sizeof(fename[select_count]), "%d: %s", num+1, fe->getName());
-		feselect[select_count].key = num;
-		feselect[select_count].value = NONEXISTANT_LOCALE;
-		feselect[select_count].valname = fename[select_count];
-		select_count++;
-	}
-	CMenuOptionChooser * mc = new CMenuOptionChooser(LOCALE_CI_TUNER, &g_settings.ci_tuner, feselect, select_count, true, this);
-	cammenu->addItem(mc);
+	// The row offers off and the frontends the program found.
+	addSetting(cammenu, "ci_tuner");
 #endif
 
 	cammenu->addItem( GenericMenuSeparatorLine );
@@ -192,19 +163,19 @@ int CCAMMenuHandler::doMainMenu()
 			snprintf(tmp, sizeof(tmp), "ca_ci_reset%d", i);
 			cammenu->addItem(new CMenuForwarder(LOCALE_CI_RESET, true, NULL, this, tmp));
 			memset(name1,0,sizeof(name1));
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-			cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_CLOCK, &g_settings.ci_clock[i], CI_CLOCK_OPTIONS, CI_CLOCK_OPTION_COUNT, true, this));
-#else
-			cammenu->addItem(new CMenuOptionNumberChooser(LOCALE_CI_CLOCK, &g_settings.ci_clock[i], true, 6, 12, this));
-#endif
-#if BOXMODEL_VUPLUS_ALL
-			cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_RPR, &g_settings.ci_rpr[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-#endif
+			char key[32];
+			snprintf(key, sizeof(key), "ci_clock_%d", i);
+			addSetting(cammenu, key);
+			snprintf(key, sizeof(key), "ci_rpr_%d", i);
+			addSetting(cammenu, key);
 #if HAVE_LIBSTB_HAL
-			cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_OP, &g_settings.ci_op[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
+			snprintf(key, sizeof(key), "ci_op_%d", i);
+			addSetting(cammenu, key);
 #endif
-			cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_IGNORE_MSG, &g_settings.ci_ignore_messages[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true));
-			cammenu->addItem(new CMenuOptionChooser(LOCALE_CI_SAVE_PINCODE, &g_settings.ci_save_pincode[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
+			snprintf(key, sizeof(key), "ci_ignore_messages_%d", i);
+			addSetting(cammenu, key);
+			snprintf(key, sizeof(key), "ci_save_pincode_%d", i);
+			addSetting(cammenu, key);
 		} else {
 			snprintf(str1, sizeof(str1), "%s %d", g_Locale->getText(LOCALE_CI_EMPTY), i+1);
 			tempMenu = new CMenuWidget(str1, NEUTRINO_ICON_SETTINGS);
@@ -596,53 +567,4 @@ int CCAMMenuHandler::doMenu(int slot, CA_SLOT_TYPE slotType)
 	menu_type = menu_slot = -1;
 	printf("CCAMMenuHandler::doMenu: return\n");
 	return res;
-}
-
-bool CCAMMenuHandler::changeNotify(const neutrino_locale_t OptionName, void * Data)
-{
-#if BOXMODEL_VUPLUS_ALL
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_CI_DELAY)) {
-		printf("CCAMMenuHandler::changeNotify: ci_delay %d\n", g_settings.ci_delay);
-		ca->SetCIDelay(g_settings.ci_delay);
-		return true;
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_CI_RPR)) {
-		for (unsigned int i = 0; i < ca->GetNumberCISlots(); i++) {
-			printf("CCAMMenuHandler::changeNotify: ci_rpr[%d] %d\n", i, g_settings.ci_rpr[i]);
-			ca->SetCIRelevantPidsRouting(g_settings.ci_rpr[i], i);
-		}
-		return true;
-	}
-	else
-#endif
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_CI_CLOCK)) {
-		for (unsigned int i = 0; i < ca->GetNumberCISlots(); i++) {
-			printf("CCAMMenuHandler::changeNotify: ci_clock[%d] %d\n", i, g_settings.ci_clock[i]);
-#if HAVE_LIBSTB_HAL
-			ca->SetTSClock(g_settings.ci_clock[i] * 1000000, i);
-#else
-			ca->SetTSClock(g_settings.ci_clock[i] * 1000000);
-#endif
-		}
-		return true;
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_CI_SAVE_PINCODE)) {
-		int enabled = *(int *) Data;
-		if (!enabled) {
-			for (unsigned int i = 0; i < ca->GetNumberCISlots(); i++) {
-				printf("CCAMMenuHandler::changeNotify: clear saved pincode[%d]\n", i);
-				clearSettingsText(g_settings.ci_pincode[i]);
-			}
-		}
-	}
-#if HAVE_LIBSTB_HAL
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_CI_CHECK_LIVE_SLOT)) {
-		ca->setCheckLiveSlot(g_settings.ci_check_live);
-	}
-#endif
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_CI_TUNER)) {
-		printf("CCAMMenuHandler::changeNotify: bind CI to tuner %d\n", g_settings.ci_tuner);
-		CCamManager::getInstance()->SetCITuner(g_settings.ci_tuner);
-	}
-	return false;
 }

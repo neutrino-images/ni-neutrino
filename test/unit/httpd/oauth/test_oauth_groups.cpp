@@ -681,3 +681,27 @@ TEST_CASE("the groups PATCH body example is accepted", "[oauth][groups][api]")
 	fills["id"] = c.key;
 	REQUIRE(sendBodyExample("PATCH", "/api/v1/ai/clients/{id}", fills) == 200);
 }
+
+TEST_CASE("a caller carries its grant, or a static client's key, as what its writes are made for", "[oauth][writer]")
+{
+	oauth::Store s;
+	REQUIRE(s.open(std::string()));
+	oauth::Client c;
+	REQUIRE(s.registerClient("Claude", std::vector<std::string>(1, "https://claude.ai/api/mcp/auth_callback"), &c));
+	oauth::Issued out;
+	std::string grant;
+	REQUIRE(s.issue(c, "root", oauth::ScopeRead, "https://tv.example.org/mcp", &out, &grant));
+	REQUIRE_FALSE(grant.empty());
+	const coreapi::Result<mcp::Caller> who =
+		oauth::verifyAccessTokenIn(s, out.access_token, Origin::Tunnel, "https://tv.example.org/mcp");
+	REQUIRE(who.ok());
+	CHECK(who.value().connection == grant);
+
+	oauth::Client st;
+	std::string token;
+	REQUIRE(s.createStatic("ha", oauth::ScopeRead, "root", &st, &token));
+	const coreapi::Result<mcp::Caller> lan = oauth::verifyAccessTokenIn(s, token, Origin::Lan, std::string());
+	REQUIRE(lan.ok());
+	CHECK(lan.value().connection == lan.value().client_id);
+	CHECK_FALSE(lan.value().connection.empty());
+}

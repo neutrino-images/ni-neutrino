@@ -52,7 +52,6 @@ CTMDB *CTMDB::getInstance()
 
 CTMDB::CTMDB()
 {
-	key = g_settings.tmdb_api_key;
 	posterfile = "/tmp/tmdb.jpg";
 	hintbox = NULL;
 }
@@ -104,7 +103,7 @@ bool CTMDB::getMovieDetails(std::string lang, bool second)
 	printf("[TMDB]: %s\n", __func__);
 	Json::Value root;
 	const std::string urlapi = "http://api.themoviedb.org/3/";
-	std::string url	= urlapi + "search/multi?api_key=" + key + "&language=" + lang + "&query=" + encodeUrl(minfo.epgtitle);
+	std::string url	= urlapi + "search/multi?api_key=" + g_settings.tmdb_api_key + "&language=" + lang + "&query=" + encodeUrl(minfo.epgtitle);
 	if (!(getData(url, &root)))
 		return false;
 
@@ -118,7 +117,7 @@ bool CTMDB::getMovieDetails(std::string lang, bool second)
 		{
 			printf("[TMDB]: second try\n");
 			title.replace(pos1, pos2 - pos1 + 1, "");
-			url	= urlapi + "search/multi?api_key=" + key + "&language=" + lang + "&query=" + encodeUrl(title);
+			url	= urlapi + "search/multi?api_key=" + g_settings.tmdb_api_key + "&language=" + lang + "&query=" + encodeUrl(title);
 			if (!(getData(url, &root)))
 				return false;
 
@@ -142,7 +141,7 @@ bool CTMDB::getMovieDetails(std::string lang, bool second)
 		}
 		if (minfo.id > -1)
 		{
-			url = urlapi + minfo.media_type + "/" + to_string(minfo.id) + "?api_key=" + key + "&language=" + lang + "&append_to_response=credits";
+			url = urlapi + minfo.media_type + "/" + to_string(minfo.id) + "?api_key=" + g_settings.tmdb_api_key + "&language=" + lang + "&append_to_response=credits";
 			if (!(getData(url, &root)))
 				return false;
 

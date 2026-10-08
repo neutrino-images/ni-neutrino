@@ -27,7 +27,9 @@
 #include "coreapi/settings/settingsfield.h"
 #include "coreapi/settings/settingstable.h"
 #include "support/fakes.h"
+#include "support/boundedrows.h"
 
+#include "gui/widget/numberstep.h"
 #include "gui/widget/settingformat.h"
 
 #include <timerdclient/timerdtypes.h>
@@ -140,55 +142,55 @@ const Descriptor kRows[] =
 		"t_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kEntries, sizeof(kEntries) / sizeof(kEntries[0]), 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"t_none", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kNoneOffered, 1, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"t_bool", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"t_noyes", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, kNoYes, 2, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"t_named", ValueType::Int, "fixture", "label", NULL,
 		1, 14, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"t_words", ValueType::Int, "fixture", "label", NULL,
 		1, 14, kTwoWords, 2, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"t_fan", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, NULL),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"t_hinted", ValueType::Int, "fixture", "label", "row_hint",
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, &kFlagHinted),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"t_scroll", ValueType::Int, "fixture", "label", NULL,
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, &kFlag),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 };
 } // anonymous namespace
@@ -378,10 +380,68 @@ TEST_CASE("a text row carries its rule and is read and written whole", "[menuspe
 	CHECK_FALSE(r.value().secret);
 
 	SNeutrinoSettings s;
-	REQUIRE(menuTextWrite(r.value(), s, "/media/sda1/rec"));
+	REQUIRE(menuTextWrite(r.value(), s, "/usr"));
 	std::string back;
 	REQUIRE(menuTextRead(r.value(), s, back));
-	CHECK(back == "/media/sda1/rec");
+	CHECK(back == "/usr");
+}
+
+TEST_CASE("a text write answers false for a text the row cannot take and writes nothing", "[menuspec]")
+{
+	SNeutrinoSettings s;
+
+	Result<MenuItemSpec> id = menuItem("startchanneltv_id");
+	REQUIRE(id.ok());
+	REQUIRE(menuTextWrite(id.value(), s, "1a2b"));
+	CHECK_FALSE(menuTextWrite(id.value(), s, "xyz"));
+	CHECK_FALSE(menuTextWrite(id.value(), s, ""));
+	CHECK_FALSE(menuTextWrite(id.value(), s, "12345678901234567"));
+	std::string back;
+	REQUIRE(menuTextRead(id.value(), s, back));
+	CHECK(back == "1a2b");
+	CHECK(menuTextWrite(id.value(), s, "ABCDEF"));
+	REQUIRE(menuTextRead(id.value(), s, back));
+	CHECK(back == "abcdef");
+
+#if ENABLE_QUADPIP
+	// An element of an array has no origin of its own to say it is an identifier.
+	MenuItemSpec element;
+	element.field.origin = FieldOrigin::Element;
+	element.field.read_text = &ElementChannelId<decltype(SNeutrinoSettings::quadpip_channel_id_window),
+						    &SNeutrinoSettings::quadpip_channel_id_window, 1>::read;
+	element.field.write_text = &ElementChannelId<decltype(SNeutrinoSettings::quadpip_channel_id_window),
+						     &SNeutrinoSettings::quadpip_channel_id_window, 1>::write;
+	element.field.extra = &ElementChannelId<decltype(SNeutrinoSettings::quadpip_channel_id_window),
+						&SNeutrinoSettings::quadpip_channel_id_window, 1>::extra;
+	REQUIRE(menuTextWrite(element, s, "77"));
+	CHECK_FALSE(menuTextWrite(element, s, "not hex"));
+	REQUIRE(menuTextRead(element, s, back));
+	CHECK(back == "77");
+#endif
+
+	// A path that breaks its row's rule: the directory the row names does not exist.
+	Result<MenuItemSpec> dir = menuItem("network_nfs_recordingdir");
+	REQUIRE(dir.ok());
+	REQUIRE(menuTextWrite(dir.value(), s, "/usr"));
+	CHECK_FALSE(menuTextWrite(dir.value(), s, "/no/such/place/for/a/recording"));
+	CHECK_FALSE(menuTextWrite(dir.value(), s, ""));
+	REQUIRE(menuTextRead(dir.value(), s, back));
+	CHECK(back == "/usr");
+}
+
+TEST_CASE("a text the field already holds passes the rule again, whatever the place is now", "[menuspec]")
+{
+	SNeutrinoSettings s;
+	Result<MenuItemSpec> dir = menuItem("network_nfs_recordingdir");
+	REQUIRE(dir.ok());
+
+	// A disk that is not mounted this time: the stored value was good when it was chosen.
+	dir.value().field.write_text(s, "/no/such/stored/place");
+	CHECK(menuTextWrite(dir.value(), s, "/no/such/stored/place"));
+	CHECK_FALSE(menuTextWrite(dir.value(), s, "/no/such/other/place"));
+	std::string back;
+	REQUIRE(menuTextRead(dir.value(), s, back));
+	CHECK(back == "/no/such/stored/place");
 }
 
 TEST_CASE("a pin item carries its four digit rule and is a credential", "[menuspec]")
@@ -503,7 +563,7 @@ TEST_CASE("the shutdown choices of the energy menu are offered on a box that can
 	CHECK(block.error().code == ErrorCode::SettingNotOnThisBox);
 }
 
-TEST_CASE("a number's unit and format reach the menu item as names", "[menuspec][units]")
+TEST_CASE("a number's unit reaches the menu item as a name", "[menuspec][units]")
 {
 	FakeSystemSource box;
 	InstalledSystemSource installed(&box);
@@ -512,17 +572,18 @@ TEST_CASE("a number's unit and format reach the menu item as names", "[menuspec]
 	Result<MenuItemSpec> hours = menuItem("record_hours");
 	REQUIRE(hours.ok());
 	CHECK(hours.value().unit_key == "unit.short.hour");
-	CHECK(hours.value().format_key.empty());
 
+	// Seconds, and nought shown as off in words.
 	Result<MenuItemSpec> after = menuItem("timeshift_auto");
 	REQUIRE(after.ok());
-	CHECK(after.value().unit_key.empty());
-	CHECK(after.value().format_key == "format.after_second");
+	CHECK(after.value().unit_key == "unit.short.second");
+	REQUIRE(after.value().choices.size() == 1);
+	CHECK(after.value().choices[0].value == 0);
+	CHECK(after.value().choices[0].label_key == "options.off");
 
 	Result<MenuItemSpec> bare = menuItem("start_volume");
 	REQUIRE(bare.ok());
 	CHECK(bare.value().unit_key.empty());
-	CHECK(bare.value().format_key.empty());
 
 	// A choice has no number to put a unit after.
 	Result<MenuItemSpec> choice = menuItem("timeshift_pause");
@@ -532,17 +593,14 @@ TEST_CASE("a number's unit and format reach the menu item as names", "[menuspec]
 
 TEST_CASE("the number format a row's texts make is the one the screens wrote", "[menuspec][units]")
 {
-	CHECK(settingNumberFormat("", "") == "%d");
-	CHECK(settingNumberFormat("h", "") == "%d h");
-	CHECK(settingNumberFormat("min", "") == "%d min");
-	CHECK(settingNumberFormat("MB", "") == "%d MB");
+	CHECK(settingNumberFormat("") == "%d");
+	CHECK(settingNumberFormat("h") == "%d h");
+	CHECK(settingNumberFormat("min") == "%d min");
+	CHECK(settingNumberFormat("MB") == "%d MB");
 	// Against the number, and doubled for printf.
-	CHECK(settingNumberFormat("%", "") == "%d%%");
-	// The row's own format is used as it stands, and wins over a unit.
-	CHECK(settingNumberFormat("", "after %d s") == "after %d s");
-	CHECK(settingNumberFormat("s", "after %d s") == "after %d s");
+	CHECK(settingNumberFormat("%") == "%d%%");
 	// A letter outside ASCII is a letter, not a sign.
-	CHECK(settingNumberFormat("\xc3\xa9", "") == "%d \xc3\xa9");
+	CHECK(settingNumberFormat("\xc3\xa9") == "%d \xc3\xa9");
 }
 
 namespace
@@ -553,8 +611,8 @@ std::string fakeText(const std::string &key)
 		return "h";
 	if (key == "unit.short.percent")
 		return "%";
-	if (key == "format.after_second")
-		return "after %d s";
+	if (key == "unit.short.second")
+		return "s";
 	return "";
 }
 } // namespace
@@ -568,7 +626,7 @@ TEST_CASE("a row's number is printed with its own unit and no other", "[menuspec
 
 	CHECK(settingNumberFormat(menuItem("record_hours").value(), fakeText) == "%d h");
 	CHECK(settingNumberFormat(menuItem("recording_fill_warning").value(), fakeText) == "%d%%");
-	CHECK(settingNumberFormat(menuItem("timeshift_auto").value(), fakeText) == "after %d s");
+	CHECK(settingNumberFormat(menuItem("timeshift_auto").value(), fakeText) == "%d s");
 	// A row that names none leaves the chooser as it is.
 	CHECK(settingNumberFormat(menuItem("start_volume").value(), fakeText).empty());
 }
@@ -609,4 +667,365 @@ TEST_CASE("every row that prints a percent keeps it against the number", "[menus
 		CHECK(r.value().unit_key == "unit.short.percent");
 		CHECK(settingNumberFormat(r.value(), fakeText) == "%d%%");
 	}
+}
+
+namespace
+{
+const Descriptor kProvidedRows[] =
+{
+	{
+		"t_provided_text", ValueType::String, "fixture", "label", NULL,
+		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
+		COREAPI_TEXT_FIELD(language),
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL
+	},
+	{
+		"t_provided_number", ValueType::Int, "fixture", "label", NULL,
+		0, 100, kOffBelow, 1, 0, NULL, false, false, COREAPI_ALWAYS,
+		COREAPI_NUMBER_FIELD(repeat_blocker),
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL
+	},
+};
+} // anonymous namespace
+
+TEST_CASE("a row with a provider becomes a menu item with the provider's entries", "[menuspec][provided]")
+{
+	InstalledSettingsTable table(kProvidedRows, 2);
+	ProvidedChoices box;
+	box.text("de", "options.off");
+	box.text("fr", "", "Francais");
+	box.text("it");
+
+	Result<MenuItemSpec> r = menuItem("t_provided_text");
+	REQUIRE(r.ok());
+	REQUIRE(r.value().type == ValueType::String);
+	REQUIRE(r.value().choices.size() == 3);
+	CHECK(r.value().choices[0].text == "de");
+	CHECK(r.value().choices[0].label_key == "options.off");
+	CHECK(r.value().choices[1].text == "fr");
+	CHECK(r.value().choices[1].label_text == "Francais");
+	CHECK(r.value().choices[1].label_key.empty());
+	// An entry with no words of its own is shown as its text.
+	CHECK(r.value().choices[2].label_text == "it");
+
+	ProvidedChoices numbers;
+	numbers.number(3, "three");
+	Result<MenuItemSpec> n = menuItem("t_provided_number");
+	REQUIRE(n.ok());
+	// The provider's list replaces the row's own named values.
+	REQUIRE(n.value().choices.size() == 1);
+	CHECK(n.value().choices[0].value == 3);
+	CHECK(n.value().choices[0].label_text == "three");
+	CHECK(n.value().choices[0].text.empty());
+}
+
+TEST_CASE("a number whose provider lists its values is offered as that list, and a bare number where it cannot say", "[menuspec][provided]")
+{
+	InstalledSettingsTable table(kProvidedRows, 2);
+	ProvidedChoices numbers;
+	numbers.number(-1, "Off");
+	numbers.number(0, "1: tuner");
+
+	Result<MenuItemSpec> n = menuItem("t_provided_number");
+	REQUIRE(n.ok());
+	CHECK(offeredAsList(n.value()));
+
+	providedCanSay() = false;
+	Result<MenuItemSpec> silent = menuItem("t_provided_number");
+	REQUIRE(silent.ok());
+	CHECK_FALSE(offeredAsList(silent.value()));
+}
+
+TEST_CASE("a number that names a value in words is a number and a choice is a list", "[menuspec]")
+{
+	Result<MenuItemSpec> named = menuItem("start_volume");
+	REQUIRE(named.ok());
+	REQUIRE_FALSE(named.value().choices.empty());
+	CHECK_FALSE(offeredAsList(named.value()));
+
+	Result<MenuItemSpec> choice = menuItem("audio_AnalogMode");
+	REQUIRE(choice.ok());
+	CHECK(offeredAsList(choice.value()));
+}
+
+TEST_CASE("a row whose provider cannot say is still a menu item, without entries", "[menuspec][provided]")
+{
+	InstalledSettingsTable table(kProvidedRows, 2);
+	ProvidedChoices box;
+	providedCanSay() = false;
+
+	Result<MenuItemSpec> r = menuItem("t_provided_text");
+	REQUIRE(r.ok());
+	CHECK(r.value().choices.empty());
+	Result<MenuItemSpec> n = menuItem("t_provided_number");
+	REQUIRE(n.ok());
+	CHECK(n.value().choices.empty());
+}
+
+TEST_CASE("the menu writes of a row with a provider hold to what is offered or already held", "[menuspec][provided]")
+{
+	InstalledSettingsTable table(kProvidedRows, 2);
+	ProvidedChoices box;
+	box.text("de");
+	box.number(3, "three");
+	SNeutrinoSettings s;
+	std::string back;
+	long number = 0;
+
+	Result<MenuItemSpec> text = menuItem("t_provided_text");
+	REQUIRE(text.ok());
+	REQUIRE(menuTextWrite(text.value(), s, "de"));
+	CHECK_FALSE(menuTextWrite(text.value(), s, "es"));
+	REQUIRE(menuTextRead(text.value(), s, back));
+	CHECK(back == "de");
+	// What is held passes again after the entry has gone, and nothing else does.
+	providedList().clear();
+	box.text("fr");
+	box.number(3, "three");
+	CHECK(menuTextWrite(text.value(), s, "de"));
+	CHECK_FALSE(menuTextWrite(text.value(), s, "es"));
+	CHECK(menuTextWrite(text.value(), s, "fr"));
+
+	Result<MenuItemSpec> num = menuItem("t_provided_number");
+	REQUIRE(num.ok());
+	REQUIRE(menuValueWrite(num.value(), s, 3));
+	CHECK_FALSE(menuValueWrite(num.value(), s, 4));
+	REQUIRE(menuValueRead(num.value(), s, number));
+	CHECK(number == 3);
+	providedList().clear();
+	box.number(5, "five");
+	CHECK(menuValueWrite(num.value(), s, 3));
+	CHECK_FALSE(menuValueWrite(num.value(), s, 4));
+
+	// A provider that cannot say holds the write to nothing.
+	providedCanSay() = false;
+	CHECK(menuTextWrite(text.value(), s, "es"));
+	CHECK(menuValueWrite(num.value(), s, 4));
+}
+
+TEST_CASE("the menu writes of a row with a provider take its default and, on an empty list, anything", "[menuspec][provided]")
+{
+	InstalledSettingsTable table(kProvidedRows, 2);
+	ProvidedChoices box;
+	box.text("de");
+	box.number(3, "three");
+	SNeutrinoSettings s;
+
+	Result<MenuItemSpec> text = menuItem("t_provided_text");
+	REQUIRE(text.ok());
+	CHECK(text.value().default_text.empty());
+	// The default is no entry of the list and is still the way back.
+	CHECK(menuTextWrite(text.value(), s, "de"));
+	CHECK(menuTextWrite(text.value(), s, ""));
+	Result<MenuItemSpec> num = menuItem("t_provided_number");
+	REQUIRE(num.ok());
+	CHECK(menuValueWrite(num.value(), s, 3));
+	CHECK(menuValueWrite(num.value(), s, 0));
+	CHECK_FALSE(menuValueWrite(num.value(), s, 4));
+
+	// A list of nothing offers nothing to hold the row to.
+	providedList().clear();
+	CHECK(menuTextWrite(text.value(), s, "es"));
+	CHECK(menuValueWrite(num.value(), s, 4));
+}
+
+TEST_CASE("a number's menu item carries the range the box states now", "[menuspec][bounds]")
+{
+	InstalledSettingsTable table(kBoundedRows, 1);
+	BoundedProvider box;
+	boundedLow() = 20;
+	boundedHigh() = 200;
+
+	Result<MenuItemSpec> r = menuItem("t_bounded");
+	REQUIRE(r.ok());
+	CHECK(r.value().min == 20);
+	CHECK(r.value().max == 200);
+
+	// Outside the constants the envelope wins.
+	boundedHigh() = 5000;
+	boundedLow() = -4;
+	Result<MenuItemSpec> wide = menuItem("t_bounded");
+	REQUIRE(wide.ok());
+	CHECK(wide.value().min == 0);
+	CHECK(wide.value().max == 1000);
+}
+
+TEST_CASE("the menu write of a bounded number holds to the range and passes what is held", "[menuspec][bounds]")
+{
+	InstalledSettingsTable table(kBoundedRows, 1);
+	BoundedProvider box;
+	boundedLow() = 20;
+	boundedHigh() = 200;
+	SNeutrinoSettings s;
+
+	Result<MenuItemSpec> r = menuItem("t_bounded");
+	REQUIRE(r.ok());
+	CHECK(menuValueWrite(r.value(), s, 200));
+	CHECK_FALSE(menuValueWrite(r.value(), s, 201));
+	CHECK_FALSE(menuValueWrite(r.value(), s, 19));
+	long back = 0;
+	REQUIRE(menuValueRead(r.value(), s, back));
+	CHECK(back == 200);
+
+	// A stored value outside is left as it is and writing it again passes; the default is the way back.
+	s.repeat_blocker = 700;
+	REQUIRE(menuValueRead(r.value(), s, back));
+	CHECK(back == 700);
+	CHECK(menuValueWrite(r.value(), s, 700));
+	CHECK_FALSE(menuValueWrite(r.value(), s, 701));
+	CHECK(menuValueWrite(r.value(), s, 10));
+}
+
+TEST_CASE("a number that names values outside its range carries them with its range", "[menuspec][named]")
+{
+	static const EnumValue names[] =
+	{
+		{ 0, "options.off", NULL, NULL, NULL, 0 },
+		{ 90, "options.on", NULL, NULL, NULL, 0 },
+	};
+	static const Descriptor rows[] =
+	{
+		{
+			"t_timeout", ValueType::Int, "fixture", "label", NULL,
+			5, 60, names, 2, 0, NULL, false, false, COREAPI_ALWAYS,
+			COREAPI_NUMBER_FIELD(repeat_blocker),
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		},
+	};
+	InstalledSettingsTable table(rows, 1);
+
+	Result<MenuItemSpec> r = menuItem("t_timeout");
+	REQUIRE(r.ok());
+	CHECK(r.value().min == 5);
+	CHECK(r.value().max == 60);
+	REQUIRE(r.value().choices.size() == 2);
+	CHECK(r.value().choices[0].value == 0);
+	CHECK(r.value().choices[0].label_key == "options.off");
+	CHECK(r.value().choices[1].value == 90);
+
+	// The menu writes what the web takes: a name outside the range stays one.
+	SNeutrinoSettings s;
+	CHECK(menuValueWrite(r.value(), s, 0));
+	CHECK(menuValueWrite(r.value(), s, 90));
+}
+
+TEST_CASE("a number chooser steps through the names outside its range and wraps at both ends", "[menuspec][named]")
+{
+	std::vector<int> named;
+	named.push_back(0);
+	named.push_back(90);
+
+	// Floor 5, ceiling 60, off below and a word above.
+	CHECK(numberStep(5, 60, named, 5, false) == 0);
+	CHECK(numberStep(5, 60, named, 0, true) == 5);
+	CHECK(numberStep(5, 60, named, 60, true) == 90);
+	CHECK(numberStep(5, 60, named, 90, false) == 60);
+	CHECK(numberStep(5, 60, named, 90, true) == 0);
+	CHECK(numberStep(5, 60, named, 0, false) == 90);
+	CHECK(numberStep(5, 60, named, 30, true) == 31);
+	CHECK(numberStep(5, 60, named, 30, false) == 29);
+
+	// A stored value that is out of range and unnamed goes to the nearest element on its way.
+	CHECK(numberStep(5, 60, named, 3, true) == 5);
+	CHECK(numberStep(5, 60, named, 3, false) == 0);
+	CHECK(numberStep(5, 60, named, 70, true) == 90);
+	CHECK(numberStep(5, 60, named, 70, false) == 60);
+	CHECK(numberStep(5, 60, named, 100, true) == 0);
+	CHECK(numberStep(5, 60, named, 100, false) == 90);
+
+	// With no names the range alone wraps.
+	std::vector<int> none;
+	CHECK(numberStep(5, 60, none, 60, true) == 5);
+	CHECK(numberStep(5, 60, none, 5, false) == 60);
+	CHECK(numberStep(5, 60, none, 3, true) == 5);
+	CHECK(numberStep(5, 60, none, 70, false) == 60);
+
+	// The order stays one ascending list: the names below, the range, the names above.
+	const std::vector<int> order = numberStepOrder(5, 60, named);
+	REQUIRE(order.size() == 58);
+	CHECK(order.front() == 0);
+	CHECK(order[1] == 5);
+	CHECK(order[order.size() - 2] == 60);
+	CHECK(order.back() == 90);
+}
+
+/* The menus word these rows by the short word of their group, as origin/master builds them
+   (screensetup.cpp, osd_setup.cpp, videosettings.cpp and vfd_setup.cpp); the label that
+   tells them apart is the schema's. The menu item must keep the old key. */
+TEST_CASE("a row relabelled for the schema keeps its old text in the menu", "[menuspec][label]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	static const struct { const char *row; const char *menu; } kKept[] =
+	{
+		{ "window_width", "window_size" },
+		{ "window_height", "window_size" },
+		{ "screen_StartX_a_0", "screensetup.upperleft" },
+		{ "screen_StartY_a_0", "screensetup.upperleft" },
+		{ "screen_EndX_a_0", "screensetup.lowerright" },
+		{ "screen_EndY_a_0", "screensetup.lowerright" },
+		{ "screen_StartX_a_1", "screensetup.upperleft" },
+		{ "screen_StartY_a_1", "screensetup.upperleft" },
+		{ "screen_EndX_a_1", "screensetup.lowerright" },
+		{ "screen_EndY_a_1", "screensetup.lowerright" },
+		{ "screen_StartX_b_0", "screensetup.upperleft" },
+		{ "screen_StartY_b_0", "screensetup.upperleft" },
+		{ "screen_EndX_b_0", "screensetup.lowerright" },
+		{ "screen_EndY_b_0", "screensetup.lowerright" },
+		{ "screen_StartX_b_1", "screensetup.upperleft" },
+		{ "screen_StartY_b_1", "screensetup.upperleft" },
+		{ "screen_EndX_b_1", "screensetup.lowerright" },
+		{ "screen_EndY_b_1", "screensetup.lowerright" },
+		{ "pip_x", "videomenu.pip" },
+		{ "pip_y", "videomenu.pip" },
+		{ "pip_width", "videomenu.pip" },
+		{ "pip_height", "videomenu.pip" },
+		{ "pip_radio_x", "videomenu.pip" },
+		{ "pip_radio_y", "videomenu.pip" },
+		{ "pip_radio_width", "videomenu.pip" },
+		{ "pip_radio_height", "videomenu.pip" },
+		{ "pip_rotate_lastpos", "videomenu.pip" },
+		{ "backlight_standby", "ledcontroler.mode.standby" },
+		{ "backlight_deepstandby", "ledcontroler.mode.deepstandby" },
+		{ "theme.menu_Head", "colormenu.background" },
+		{ "theme.menu_Head_Text", "colormenu.textcolor" },
+		{ "theme.menu_Content", "colormenu.background" },
+		{ "theme.menu_Content_Text", "colormenu.textcolor" },
+		{ "theme.menu_Content_Selected", "colormenu.background" },
+		{ "theme.menu_Content_Selected_Text", "colormenu.textcolor" },
+		{ "theme.menu_Content_inactive", "colormenu.background" },
+		{ "theme.menu_Content_inactive_Text", "colormenu.textcolor" },
+		{ "theme.menu_Foot", "colormenu.background" },
+		{ "theme.menu_Foot_Text", "colormenu.textcolor" },
+		{ "theme.infobar", "colormenu.background" },
+		{ "theme.infobar_Text", "colormenu.textcolor" },
+		{ "theme.infobar_casystem", "miscsettings.infobar_casystem_display" },
+		{ "theme.colored_events", "colormenu.textcolor" },
+		{ "menu_Head_gradient", "color.gradient" },
+		{ "menu_Head_gradient_direction", "color.gradient_mode_direction" },
+		{ "menu_SubHead_gradient", "color.gradient" },
+		{ "menu_SubHead_gradient_direction", "color.gradient_mode_direction" },
+		{ "menu_Hint_gradient", "color.gradient" },
+		{ "menu_Hint_gradient_direction", "color.gradient_mode_direction" },
+		{ "infobar_gradient_top_direction", "color.gradient_mode_direction" },
+		{ "infobar_gradient_body_direction", "color.gradient_mode_direction" },
+		{ "infobar_gradient_bottom_direction", "color.gradient_mode_direction" }
+	};
+	size_t seen = 0;
+	for (size_t i = 0; i < sizeof(kKept) / sizeof(kKept[0]); ++i)
+	{
+		const Descriptor *d = settings::findRow(kKept[i].row);
+		if (d == NULL)
+			continue;
+		INFO(kKept[i].row);
+		CHECK(std::string(d->label_key) != kKept[i].menu);
+		Result<MenuItemSpec> r = menuItem(kKept[i].row);
+		if (!r.ok())
+			continue;
+		CHECK(r.value().label_key == kKept[i].menu);
+		++seen;
+	}
+	CHECK(seen > 30);
 }

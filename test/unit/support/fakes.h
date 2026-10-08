@@ -1078,38 +1078,88 @@ struct InstalledSettingsTable
 	~InstalledSettingsTable() { coreapi::setSettingsTable(0, 0); }
 };
 
-/* Counts what it was handed and answers what a case told it to. The key is
-   copied because the caller hands over a pointer into whichever table was
-   installed, and a case may read it back after that table is gone. */
-struct FakeApplier : public coreapi::SettingsApplier
+/* The provider a row names with choicesFrom, answering what a case put in it. A row
+   takes a plain function, so what it answers is state here, and a destructor puts it
+   back for the next case: a list left behind would offer the next case's row entries
+   it never asked for. */
+inline bool &providedCanSay()
 {
-	unsigned calls;
-	std::string last_key;
-	bool answer;
-
-	FakeApplier() : calls(0), answer(true) {}
-
-	bool apply(const char *key)
+	static bool says = true;
+	return says;
+}
+inline std::vector<coreapi::SettingChoice> &providedList()
+{
+	static std::vector<coreapi::SettingChoice> list;
+	return list;
+}
+inline bool providedChoices(std::vector<coreapi::SettingChoice> &out)
+{
+	if (!providedCanSay())
+		return false;
+	out = providedList();
+	return true;
+}
+/* The bounds a box states at run time, as a row's minNow and maxNow providers read them.
+   Reset on both ends of a case so that one that moved them leaves the next a wide range. */
+inline long &boundedLow()
+{
+	static long v = 0;
+	return v;
+}
+inline long &boundedHigh()
+{
+	static long v = 1000;
+	return v;
+}
+inline long boundedLowNow(const coreapi::ValueLookup *)
+{
+	return boundedLow();
+}
+inline long boundedHighNow(const coreapi::ValueLookup *)
+{
+	return boundedHigh();
+}
+struct BoundedProvider
+{
+	BoundedProvider()
 	{
-		calls++;
-		last_key = (key != 0) ? key : "";
-		return answer;
+		boundedLow() = 0;
+		boundedHigh() = 1000;
+	}
+	~BoundedProvider()
+	{
+		boundedLow() = 0;
+		boundedHigh() = 1000;
 	}
 };
 
-/* Takes the applier away from a destructor, for the reason every other guard
-   here has one: a check that fails unwinds past a last line, and the registry
-   would go on naming an object that is gone. The section name is kept rather
-   than copied, so a case has to hand over one that outlives the guard. */
-struct InstalledApplier
+struct ProvidedChoices
 {
-	const char *section;
-
-	InstalledApplier(const char *s, coreapi::SettingsApplier *a) : section(s)
+	ProvidedChoices()
 	{
-		coreapi::registerSettingsApplier(s, a);
+		providedCanSay() = true;
+		providedList().clear();
 	}
-	~InstalledApplier() { coreapi::registerSettingsApplier(section, 0); }
+	~ProvidedChoices()
+	{
+		providedCanSay() = true;
+		providedList().clear();
+	}
+	void number(long value, const char *label)
+	{
+		coreapi::SettingChoice c;
+		c.value = value;
+		c.label = label;
+		providedList().push_back(c);
+	}
+	void text(const char *text, const char *label_key = "", const char *label = "")
+	{
+		coreapi::SettingChoice c;
+		c.text = text;
+		c.label_key = label_key;
+		c.label = label;
+		providedList().push_back(c);
+	}
 };
 
 /* Keeps the two kinds apart in two maps, as the store on the box does not: a
@@ -1131,8 +1181,19 @@ struct FakeSettingsSource : public coreapi::SettingsSource
 	   way into a caller's error branches. One call rather than all of them, so
 	   a case can fail one read and see the calls around it still land. */
 	mutable bool fail_next;
+	/* Fails the next write or save only, for a case whose caller reads the store first and
+	   would otherwise spend the failure on that read. */
+	bool fail_next_write;
 
-	FakeSettingsSource() : persisted(0), fail_next(false) {}
+	FakeSettingsSource() : persisted(0), fail_next(false), fail_next_write(false) {}
+
+	bool failingWrite()
+	{
+		if (!fail_next_write)
+			return false;
+		fail_next_write = false;
+		return true;
+	}
 
 	bool failing() const
 	{
@@ -1166,7 +1227,7 @@ struct FakeSettingsSource : public coreapi::SettingsSource
 
 	coreapi::Status writeInt(const char *key, long value)
 	{
-		if (failing())
+		if (failing() || failingWrite())
 			return coreapi::Status::Internal;
 		ints[key] = value;
 		return coreapi::Status::Ok;
@@ -1174,7 +1235,7 @@ struct FakeSettingsSource : public coreapi::SettingsSource
 
 	coreapi::Status writeString(const char *key, const std::string &value)
 	{
-		if (failing())
+		if (failing() || failingWrite())
 			return coreapi::Status::Internal;
 		strings[key] = value;
 		return coreapi::Status::Ok;
@@ -1193,7 +1254,7 @@ struct FakeSettingsSource : public coreapi::SettingsSource
 
 	coreapi::Status writeList(const char *key, const std::vector<std::string> &value)
 	{
-		if (failing())
+		if (failing() || failingWrite())
 			return coreapi::Status::Internal;
 		lists[key] = value;
 		return coreapi::Status::Ok;
@@ -1212,7 +1273,7 @@ struct FakeSettingsSource : public coreapi::SettingsSource
 
 	coreapi::Status writeRecords(const char *key, const std::vector<std::vector<std::string> > &value)
 	{
-		if (failing())
+		if (failing() || failingWrite())
 			return coreapi::Status::Internal;
 		records[key] = value;
 		return coreapi::Status::Ok;
@@ -1220,7 +1281,7 @@ struct FakeSettingsSource : public coreapi::SettingsSource
 
 	coreapi::Status persist()
 	{
-		if (failing())
+		if (failing() || failingWrite())
 			return coreapi::Status::Internal;
 		persisted++;
 		return coreapi::Status::Ok;

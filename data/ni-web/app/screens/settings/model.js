@@ -32,10 +32,10 @@
  * @property {number|null} max
  * @property {string} unit the name of the text that follows the number, empty for none
  * @property {number|null} channels how many channels a colour has, null for any other row
- * @property {{ value: number, label: string }[]} choices
+ * @property {{ value: number, label: string, text?: string }[]} choices text is what a string row stores for the entry, absent for a number
+ * @property {boolean} listed an int whose choices are every number it takes, drawn as that list
  * @property {boolean} locked whether no write of it can land, for either reason below
  * @property {boolean} held whether the box's parental lock holds it
- * @property {boolean} pending whether the box holds it until its own screen's effect can be applied from outside
  * @property {import('./model.js').Condition[]} conditions
  */
 
@@ -57,7 +57,7 @@
  */
 
 /** what the schema calls a setting, before this file has read it */
-/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, unit?: unknown, channels?: unknown, values?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, held?: unknown, available?: unknown, conditions?: unknown }} Declared */
+/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, unit?: unknown, channels?: unknown, values?: unknown, listed?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, available?: unknown, conditions?: unknown }} Declared */
 
 const kTypes = ['bool', 'int', 'string', 'enum', 'key', 'color'];
 
@@ -89,11 +89,18 @@ export function rowOf(declared) {
 	   own, put on the row by withKeyNames, and until that arrives it is a number. */
 	const kind = /** @type {'bool'|'int'|'string'|'enum'|'key'} */ (type === 'color' ? 'string' : type);
 	const offered = Array.isArray(declared.values) ? declared.values : [];
-	/** @type {{ value: number, label: string }[]} */
+	/** @type {{ value: number, label: string, text?: string }[]} */
 	const choices = [];
 	for (const one of offered) {
 		if (!one || typeof one !== 'object')
 			continue;
+		// A string row's entry stands for its text and has no number to read.
+		if (kind === 'string') {
+			const stands = /** @type {{ text?: unknown, label?: unknown }} */ (one);
+			if (typeof stands.text === 'string')
+				choices.push({ value: 0, text: stands.text, label: typeof stands.label === 'string' && stands.label !== '' ? stands.label : stands.text });
+			continue;
+		}
 		const value = Number(/** @type {{ value?: unknown }} */ (one).value);
 		if (!Number.isFinite(value))
 			continue;
@@ -102,9 +109,6 @@ export function rowOf(declared) {
 	}
 
 	const held = declared.locked === true;
-	// Held for another reason: the screen that owns it still applies its effect, which a write
-	// from here would not. Not the parental lock, and it must not be worded as one.
-	const pending = declared.held === true;
 	return {
 		id: id,
 		type: kind,
@@ -118,12 +122,12 @@ export function rowOf(declared) {
 		unit: kind === 'int' && typeof declared.unit === 'string' ? declared.unit : '',
 		channels: type === 'color' && (declared.channels === 3 || declared.channels === 4) ? declared.channels : null,
 		choices: choices,
+		listed: kind === 'int' && declared.listed === true && choices.length > 0,
 		// Only a choice can lack its values. Every other kind states what it
 		// takes in the row itself, so there is nothing the box could have
 		// failed to answer.
-		locked: held || pending || (kind === 'enum' && choices.length === 0),
+		locked: held || (kind === 'enum' && choices.length === 0),
 		held: held,
-		pending: pending,
 		conditions: conditionsOf(declared.conditions),
 	};
 }
@@ -521,6 +525,13 @@ export function driftsFromDefault(row, values) {
  * @returns {string}
  */
 export function fallbackLabel(row) {
+	if (row.type === 'string') {
+		for (const choice of row.choices) {
+			if (choice.text === row.fallback)
+				return choice.label;
+		}
+		return row.fallback;
+	}
 	if (row.type !== 'enum' && row.type !== 'key')
 		return row.fallback;
 	const wanted = Number(row.fallback);

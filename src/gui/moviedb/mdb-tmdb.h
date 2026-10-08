@@ -51,7 +51,6 @@ class CTMDB
 	private:
 		tmdbinfo minfo;
 		CHintBox *hintbox;
-		std::string key; // tmdb api key
 		bool getMovieDetails(std::string lang, bool second = false);
 		bool getData(std::string url, Json::Value *root);
 		void selectResult(Json::Value elements, int results, int &used_result);

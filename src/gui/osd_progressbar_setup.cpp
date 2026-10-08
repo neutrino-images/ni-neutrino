@@ -35,34 +35,12 @@
 #include <neutrino_menue.h>
 
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
+
+#include <coreapi/settings/settings.h>
 #include <driver/screen_max.h>
 
 #include <system/debug.h>
-
-/* these are more descriptive... */
-#define _LOCALE_PROGRESSBAR_COLOR_MATRIX        LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_0
-#define _LOCALE_PROGRESSBAR_COLOR_VERTICAL      LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_1
-#define _LOCALE_PROGRESSBAR_COLOR_HORIZONTAL    LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_2
-#define _LOCALE_PROGRESSBAR_COLOR_FULL          LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_3
-#define _LOCALE_PROGRESSBAR_COLOR_MONO          LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_4
-
-#define PROGRESSBAR_COLOR_OPTION_COUNT 6
-const CMenuOptionChooser::keyval PROGRESSBAR_COLOR_OPTIONS[PROGRESSBAR_COLOR_OPTION_COUNT] =
-{
-	{ CProgressBar::PB_OFF,         LOCALE_OPTIONS_OFF },
-	{ CProgressBar::PB_MONO,        _LOCALE_PROGRESSBAR_COLOR_MONO },
-	{ CProgressBar::PB_MATRIX,      _LOCALE_PROGRESSBAR_COLOR_MATRIX },
-	{ CProgressBar::PB_LINES_V,     _LOCALE_PROGRESSBAR_COLOR_VERTICAL },
-	{ CProgressBar::PB_LINES_H,     _LOCALE_PROGRESSBAR_COLOR_HORIZONTAL },
-	{ CProgressBar::PB_COLOR,       _LOCALE_PROGRESSBAR_COLOR_FULL }
-};
-
-#define PROGRESSBAR_TIMESCALE_INVERT_OPTION_COUNT 2
-const CMenuOptionChooser::keyval PROGRESSBAR_TIMESCALE_INVERT_OPTIONS[PROGRESSBAR_TIMESCALE_INVERT_OPTION_COUNT] =
-{
-	{ 0, LOCALE_MISCSETTINGS_PROGRESSBAR_TIMESCALE_RED_GREEN },
-	{ 1, LOCALE_MISCSETTINGS_PROGRESSBAR_TIMESCALE_GREEN_RED }
-};
 
 CProgressbarSetup::CProgressbarSetup()
 {
@@ -84,10 +62,14 @@ int CProgressbarSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 	printf("[neutrino] init progressbar menu setup...\n");
 
 	if (actionKey == "reset") {
-		g_settings.theme.progressbar_timescale_red = 0;
-		g_settings.theme.progressbar_timescale_green = 100;
-		g_settings.theme.progressbar_timescale_yellow = 70;
-		g_settings.theme.progressbar_timescale_invert = false;
+		// The defaults are the rows' own, written like any other change.
+		std::vector<std::string> keys;
+		keys.push_back("progressbar_timescale_red");
+		keys.push_back("progressbar_timescale_green");
+		keys.push_back("progressbar_timescale_yellow");
+		keys.push_back("progressbar_timescale_invert");
+		coreapi::settings::Refusals refused;
+		coreapi::settings::resetDefaults(keys, refused, true);
 		return menu_return::RETURN_REPAINT;
 	}
 
@@ -104,15 +86,10 @@ int CProgressbarSetup::showMenu()
 	m.addIntroItems(LOCALE_MISCSETTINGS_PROGRESSBAR, LOCALE_MISCSETTINGS_PROGRESSBAR_GLOBAL);
 
 	// general progress bar design
-	CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_PROGRESSBAR_DESIGN_LONG,
-			&g_settings.theme.progressbar_design, PROGRESSBAR_COLOR_OPTIONS + 1, PROGRESSBAR_COLOR_OPTION_COUNT - 1, true, this);
-	mc->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_COLOR);
-	m.addItem(mc);
+	addChoiceSetting(&m, "progressbar_design", true, this);
 
 	// progress bar gradient
-	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_PROGRESSBAR_GRADIENT, &g_settings.theme.progressbar_gradient, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-	mc->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_GRADIENT);
-	m.addItem(mc);
+	addChoiceSetting(&m, "progressbar_gradient", true, this);
 
 	// preview
 	CMenuProgressbar *mb = new CMenuProgressbar(LOCALE_MISCSETTINGS_PROGRESSBAR_PREVIEW);
@@ -120,29 +97,10 @@ int CProgressbarSetup::showMenu()
 	m.addItem(mb);
 	m.addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_MISCSETTINGS_PROGRESSBAR_TIMESCALE));
 
-	CMenuOptionNumberChooser *nc;
-
-	nc = new CMenuOptionNumberChooser(LOCALE_MISCSETTINGS_PROGRESSBAR_TIMESCALE_RED, &g_settings.theme.progressbar_timescale_red, true, 0, 100, this);
-	nc->setNumericInput(true);
-	nc->setNumberFormat("%d %%");
-	nc->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_TIMESCALE_RED);
-	m.addItem(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_MISCSETTINGS_PROGRESSBAR_TIMESCALE_YELLOW, &g_settings.theme.progressbar_timescale_yellow, true, 0, 100, this);
-	nc->setNumericInput(true);
-	nc->setNumberFormat("%d %%");
-	nc->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_TIMESCALE_YELLOW);
-	m.addItem(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_MISCSETTINGS_PROGRESSBAR_TIMESCALE_GREEN, &g_settings.theme.progressbar_timescale_green, true, 0, 100, this);
-	nc->setNumericInput(true);
-	nc->setNumberFormat("%d %%");
-	nc->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_TIMESCALE_GREEN);
-	m.addItem(nc);
-
-	mc = new CMenuOptionChooser(LOCALE_MISCSETTINGS_PROGRESSBAR_TIMESCALE_INVERT, &g_settings.theme.progressbar_timescale_invert, PROGRESSBAR_TIMESCALE_INVERT_OPTIONS, PROGRESSBAR_TIMESCALE_INVERT_OPTION_COUNT, true, this);
-	mc->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_TIMESCALE_INVERT);
-	m.addItem(mc);
+	addNumberSetting(&m, "progressbar_timescale_red", true, this, CRCInput::RC_nokey, false, true);
+	addNumberSetting(&m, "progressbar_timescale_yellow", true, this, CRCInput::RC_nokey, false, true);
+	addNumberSetting(&m, "progressbar_timescale_green", true, this, CRCInput::RC_nokey, false, true);
+	addChoiceSetting(&m, "progressbar_timescale_invert", true, this);
 
 	mb = new CMenuProgressbar(LOCALE_MISCSETTINGS_PROGRESSBAR_PREVIEW);
 	mb->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_PREVIEW);
@@ -156,9 +114,7 @@ int CProgressbarSetup::showMenu()
 	// extended channel list (progressbars)
 	m.addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_MAINMENU_CHANNELS));
 
-	mc = new CMenuOptionChooser(LOCALE_CHANNELLIST_EXTENDED, &g_settings.theme.progressbar_design_channellist, PROGRESSBAR_COLOR_OPTIONS, PROGRESSBAR_COLOR_OPTION_COUNT, true, this);
-	mc->setHint("", LOCALE_MENU_HINT_CHANNELLIST_EXTENDED);
-	m.addItem(mc);
+	addChoiceSetting(&m, "progressbar_design_channellist", true, this);
 
 	mb = new CMenuProgressbar(LOCALE_MISCSETTINGS_PROGRESSBAR_PREVIEW);
 	mb->setHint("", LOCALE_MENU_HINT_PROGRESSBAR_PREVIEW);

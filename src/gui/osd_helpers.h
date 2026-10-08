@@ -24,7 +24,6 @@ class COsdHelpers : public sigc::trackable
 		int g_settings_osd_resolution_save;
 
 		void changeOsdResolution(uint32_t mode, bool automode=false, bool forceOsdReset=false);
-		int  isVideoSystem1080(int res);
 		int  getVideoSystem();
 		uint32_t getOsdResolution();
 		int setVideoSystem(int newSystem, bool remember = true);

@@ -153,25 +153,25 @@ const Descriptor kRows[] =
 		"repeat_blocker", ValueType::Int, "keybindings", "label", NULL,
 		0, 2000, NULL, 0, 450, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"current_volume", ValueType::Int, "audio", "label", NULL,
 		0, 100, NULL, 0, 75, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"channellist_descmode", ValueType::Bool, "channels", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"language", ValueType::String, "general", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	// Declared and not reachable, which is what the program's file only
 	// settings look like from here.
@@ -179,7 +179,7 @@ const Descriptor kRows[] =
 		"font_scaling_x", ValueType::Int, "osd", "label", NULL,
 		0, 200, NULL, 0, 100, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 };
 
@@ -291,6 +291,8 @@ TEST_CASE("a write is held for the loop and reads back before it lands", "[setti
 	REQUIRE(settingsSource().readString("language", t) == Status::Ok);
 	REQUIRE(t == "english");
 
+	// A drain takes what a post promised, so the writer posts as a caller does.
+	REQUIRE(settingsSource().persist() == Status::Ok);
 	applyPendingSettings();
 
 	REQUIRE(values.repeat_blocker == 700);
@@ -318,6 +320,7 @@ TEST_CASE("writing a setting twice keeps the second value", "[settingssource]")
 	REQUIRE(settingsSource().readInt("repeat_blocker", v) == Status::Ok);
 	REQUIRE(v == 800);
 
+	REQUIRE(settingsSource().persist() == Status::Ok);
 	applyPendingSettings();
 	REQUIRE(values.repeat_blocker == 800);
 }
@@ -433,6 +436,7 @@ TEST_CASE("a value too wide for its own field is refused", "[settingssource]")
 	// a value it cannot carry rather than one it rounds.
 	REQUIRE(settingsSource().writeInt("channellist_descmode", 2) == Status::InvalidArgument);
 
+	REQUIRE(settingsSource().persist() == Status::Ok);
 	applyPendingSettings();
 	REQUIRE((int) values.current_volume == 75);
 	REQUIRE(values.repeat_blocker == 300);
@@ -497,6 +501,7 @@ TEST_CASE("what the loop has taken is not applied a second time", "[settingssour
 	installRealSettingsSource(&values, countSave);
 
 	REQUIRE(settingsSource().writeInt("repeat_blocker", 700) == Status::Ok);
+	REQUIRE(settingsSource().persist() == Status::Ok);
 	applyPendingSettings();
 	REQUIRE(values.repeat_blocker == 700);
 
@@ -826,8 +831,14 @@ struct DrainingSink : public CommandSink
 
 	DrainingSink() : posts(0) {}
 
-	Status post(neutrino_msg_t, neutrino_msg_data_t)
+	// The drain's own word that settings landed is a message too, and not the one this counts.
+	Status post(neutrino_msg_t msg, neutrino_msg_data_t data)
 	{
+		if (msg == NeutrinoMessages::EVT_SETTINGS_WRITTEN)
+		{
+			delete[] (unsigned char *) data;
+			return Status::Ok;
+		}
 		++posts;
 		applyPendingSettings();
 		return Status::Busy;

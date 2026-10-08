@@ -33,6 +33,7 @@
 #include <neutrino.h>
 
 #include "msgbox.h"
+#include <gui/widget/menue.h>
 #include <system/debug.h>
 #include <driver/abstime.h>
 #include <system/settings.h>
@@ -286,6 +287,7 @@ CMsgBox::msg_result_t CMsgBox::getBackResult()
 
 int CMsgBox::exec()
 {
+	CMenuWidget::Busy modal;
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
 	int res = menu_return::RETURN_REPAINT;

@@ -44,6 +44,8 @@
 #include <neutrino.h>
 #include <driver/display.h>
 
+#include <coreapi/box/applyworker.h>
+
 #ifdef ENABLE_LCD4LINUX
 #include "driver/lcd4l.h"
 #endif
@@ -290,6 +292,8 @@ bool CFlashTool::program(const std::string &filename, int globalProgressEndErase
 	if (!erase(globalProgressEndErase))
 	{
 		close(fd1);
+		// The box goes back to its menu, where settings are written again.
+		coreapi::applyWorker().reopen();
 		return false;
 	}
 
@@ -308,6 +312,7 @@ bool CFlashTool::program(const std::string &filename, int globalProgressEndErase
 	{
 		ErrorMessage = g_Locale->getText(LOCALE_FLASHUPDATE_CANTOPENMTD);
 		close(fd1);
+		coreapi::applyWorker().reopen();
 		return false;
 	}
 
@@ -380,7 +385,10 @@ bool CFlashTool::program(const std::string &filename, int globalProgressEndErase
 	close(fd);
 	// FIXME error message
 	if (fsize)
+	{
+		coreapi::applyWorker().reopen();
 		return false;
+	}
 	CVFD::getInstance()->ShowText("Flash OK.");
 	return true;
 }
@@ -401,13 +409,9 @@ bool CFlashTool::getInfo()
 	return true;
 }
 
+// stop_daemons closes the apply worker and stops LCD4Linux first.
 void CFlashTool::stopDaemons()
 {
-#ifdef ENABLE_LCD4LINUX
-	if (g_settings.lcd4l_support)
-		CLCD4l::getInstance()->StopLCD4l();
-#endif
-
 	CNeutrinoApp::getInstance()->stopDaemonsForFlash();
 }
 

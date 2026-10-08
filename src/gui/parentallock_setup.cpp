@@ -74,17 +74,13 @@ int CParentalSetup::showParentalSetup()
 	// intros with sub head
 	plock->addIntroItems(LOCALE_PARENTALLOCK_PARENTALLOCK);
 
-	CMenuForwarder * mf;
-
 	addSetting(plock, "parentallock_prompt");
 	addSetting(plock, "parentallock_lockage");
 	addSetting(plock, "parentallock_defaultlocked");
 	addSetting(plock, "parentallock_zaptime");
 
-	CPINChangeWidget pinChangeWidget(LOCALE_PARENTALLOCK_CHANGEPIN, &g_settings.parentallock_pincode, 4, LOCALE_PARENTALLOCK_CHANGEPIN_HINT1);
-	mf = new CMenuForwarder(LOCALE_PARENTALLOCK_CHANGEPIN, true, g_settings.parentallock_pincode, &pinChangeWidget);
-	mf->setHint("", LOCALE_MENU_HINT_PARENTALLOCK_CHANGEPIN);
-	plock->addItem(mf);
+	addSetting(plock, "parentallock_pincode", true, NULL, CRCInput::RC_nokey, false, false, false,
+		   LOCALE_PARENTALLOCK_CHANGEPIN_HINT1);
 
 	int res = plock->exec(NULL, "");
 	delete plock;

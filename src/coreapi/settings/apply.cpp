@@ -19,6 +19,7 @@
  */
 
 #include "coreapi/base/apply.h"
+#include "coreapi/settings/settings.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -75,16 +76,22 @@ bool holdsKey(const ApplyGroup &g, const std::string &key)
 
 } // namespace
 
-Status registerApplyGroup(const ApplyGroup *g)
+namespace
+{
+
+// The registration itself; why is what a refusal is reported with.
+Status admit(const ApplyGroup *g, const char *&why)
 {
 	if (g == NULL || g->name == NULL || g->run == NULL || g->phase >= ApplyPhase::Count
 	    || (g->key_count > 0 && g->keys == NULL))
+	{
+		why = "it is not a whole group";
 		return Status::InvalidArgument;
+	}
 
 	if (phaseReached(g->phase))
 	{
-		std::fprintf(stderr, "coreapi: apply group %s registered after its phase was reached and refused\n",
-			     g->name);
+		why = "its phase was reached already";
 		return Status::InvalidArgument;
 	}
 
@@ -92,23 +99,46 @@ Status registerApplyGroup(const ApplyGroup *g)
 	for (size_t k = 0; k < g->key_count; ++k)
 	{
 		if (g->keys[k] == NULL)
+		{
+			why = "it lists a key that is no key";
 			return Status::InvalidArgument;
+		}
 		// Within the new group as well: a key listed twice would be one a later
 		// lookup could not tell from a clash.
 		for (size_t j = 0; j < k; ++j)
 		{
 			if (std::string(g->keys[j]) == g->keys[k])
+			{
+				why = "it lists a key twice";
 				return Status::Conflict;
+			}
 		}
 		for (size_t i = 0; i < list.size(); ++i)
 		{
 			if (holdsKey(*list[i], g->keys[k]))
+			{
+				why = "another group holds one of its keys";
 				return Status::Conflict;
+			}
 		}
 	}
 
 	list.push_back(g);
 	return Status::Ok;
+}
+
+} // namespace
+
+Status registerApplyGroup(const ApplyGroup *g)
+{
+	/* Said here because the callers register a fixed list at startup and look at no answer:
+	   a refused group is every key of it landing with nothing to put it in force. */
+	const char *why = "";
+	const Status s = admit(g, why);
+	if (s != Status::Ok)
+		std::fprintf(stderr, "coreapi: apply group %s was refused: %s\n",
+			     g != NULL && g->name != NULL ? g->name : "(unnamed)", why);
+	return s;
 }
 
 const ApplyGroup *groupOf(const std::string &key)
@@ -120,6 +150,11 @@ const ApplyGroup *groupOf(const std::string &key)
 			return list[i];
 	}
 	return NULL;
+}
+
+std::vector<const ApplyGroup *> applyGroups()
+{
+	return groups();
 }
 
 namespace
@@ -143,12 +178,48 @@ void noteFailure(const ApplyGroup &g, Status s, Status &first)
 
 } // namespace
 
+namespace
+{
+
+/* A row only a restart applies runs no group once the program is up, however it was
+   changed: the drain, a key, a batch and a loaded file all follow this one rule. Starting
+   up is the other way round and runs every group of the phase, as it must. */
+bool appliedByRestart(const std::string &key)
+{
+	const Descriptor *d = settings::findRow(key);
+	return d != NULL && d->needs_restart;
+}
+
+} // namespace
+
 Status applyKey(const std::string &key)
 {
 	const ApplyGroup *g = groupOf(key);
-	if (g == NULL)
+	if (g == NULL || appliedByRestart(key))
 		return Status::Ok;
 	return runGroup(*g);
+}
+
+namespace
+{
+// A pointer, so the thread local needs no constructor of its own.
+thread_local const std::string *g_writer = NULL;
+}
+
+const std::string &currentWriter()
+{
+	static const std::string none;
+	return g_writer != NULL ? *g_writer : none;
+}
+
+WriterScope::WriterScope(const std::string &who) : who_(who), was_(g_writer)
+{
+	g_writer = &who_;
+}
+
+WriterScope::~WriterScope()
+{
+	g_writer = was_;
 }
 
 void bindApplyLoop()
@@ -175,7 +246,7 @@ Status applyBatch(const std::vector<std::string> &keys)
 	for (size_t i = 0; i < keys.size(); ++i)
 	{
 		const ApplyGroup *g = groupOf(keys[i]);
-		if (g == NULL || std::find(done.begin(), done.end(), g) != done.end())
+		if (g == NULL || appliedByRestart(keys[i]) || std::find(done.begin(), done.end(), g) != done.end())
 			continue;
 		done.push_back(g);
 		const Status s = runGroup(*g);

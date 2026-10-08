@@ -1,3 +1,0 @@
-# key, stream, reason
-scan_alpha	S1	scan
-scan_gamma	S1	eval

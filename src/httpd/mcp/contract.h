@@ -47,6 +47,9 @@ struct Caller
 	bool        external;
 	// Bits of the group table (mcp/toolgroups.h); a tool is offered only in one of them.
 	unsigned    groups;
+	/* The grant the connection was given, or the static client's key where there is none:
+	   what a write the client makes is reported under. */
+	std::string connection;
 
 	Caller() : level(AuthLevel::Public), external(true), groups(0) {}
 };

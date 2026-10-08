@@ -37,6 +37,8 @@
 
 #include "update_check.h"
 
+#include <coreapi/box/apply_update.h>
+
 #define C4U_SLEEP (6 * 60 * 60) // 6 hours
 #define C4U_FLAGFILE FLAGDIR "/.update"
 
@@ -57,6 +59,15 @@ CFlashUpdateCheck *CFlashUpdateCheck::getInstance()
 		c4u = new CFlashUpdateCheck();
 
 	return c4u;
+}
+
+coreapi::Status coreapi::applicationFlashCheck(bool on)
+{
+	if (on)
+		CFlashUpdateCheck::getInstance()->startThread();
+	else
+		CFlashUpdateCheck::getInstance()->stopThread();
+	return coreapi::Status::Ok;
 }
 
 void CFlashUpdateCheck::startThread()

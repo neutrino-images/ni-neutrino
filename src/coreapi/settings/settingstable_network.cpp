@@ -21,6 +21,8 @@
 #include "settingstable.h"
 #include "settingsfield.h"
 
+#include "coreapi/network.h"
+
 namespace coreapi
 {
 
@@ -62,6 +64,7 @@ constexpr Descriptor kNetwork[] =
 		.hint("menu.hint_net_if")
 		.defaultValue("")
 		.text(kRuleNameFromList)
+		.choicesFrom(network::interfaceChoices)
 		.field(COREAPI_TEXT_FIELD(ifname)),
 
 	// time

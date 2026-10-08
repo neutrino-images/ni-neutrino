@@ -59,6 +59,7 @@ void CKeyChooser::reinitName()
 
 int CKeyChooserItem::exec(CMenuTarget* parent, const std::string &)
 {
+	CMenuWidget::Busy modal;
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
 

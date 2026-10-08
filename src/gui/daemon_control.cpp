@@ -31,8 +31,12 @@
 #include <neutrino.h>
 
 #include <gui/widget/menue_options.h>
+#include <gui/widget/hintbox.h>
+#include <gui/widget/settingitem.h>
 
 #include <system/helpers.h>
+
+#include <coreapi/box/applyworker.h>
 
 CDaemonControlMenu::CDaemonControlMenu()
 {
@@ -88,8 +92,6 @@ int CDaemonControlMenu::show()
 	CMenuWidget *daemonControlMenu = new CMenuWidget(LOCALE_DAEMON_CONTROL, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_PLUGINS_HIDE);
 	daemonControlMenu->addIntroItems();
 
-	CMenuOptionChooser *mc;
-	CFlagFileNotifier *flagFileNotifier[DAEMONS_COUNT];
 	for (unsigned int i = 0; i < DAEMONS_COUNT; i++)
 	{
 		std::string flagfile = FLAGDIR;
@@ -99,23 +101,24 @@ int CDaemonControlMenu::show()
 		daemons_data[i].flag_exist = file_exists(flagfile.c_str());
 		daemons_data[i].daemon_exist = !find_executable(daemons_data[i].daemon).empty();
 
+		// A flag left behind by a program that is gone would start nothing and show on.
 		if (!daemons_data[i].daemon_exist && daemons_data[i].flag_exist)
 		{
 			remove(flagfile.c_str());
 			daemons_data[i].flag_exist = 0;
 		}
 
-		flagFileNotifier[i] = new CFlagFileNotifier(daemons_data[i].flag);
-
-		mc = new CMenuOptionChooser(daemons_data[i].name, &daemons_data[i].flag_exist, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, daemons_data[i].daemon_exist, flagFileNotifier[i], CRCInput::convertDigitToKey(daemon_shortcut++));
+		std::string key = "flag_daemon_";
+		key += daemons_data[i].flag;
+		CMenuItem *mc = addSetting(daemonControlMenu, key.c_str(), true, NULL, CRCInput::convertDigitToKey(daemon_shortcut));
+		if (mc == NULL)
+			continue;
+		daemon_shortcut++;
 		mc->setHint(daemons_data[i].icon, daemons_data[i].desc);
-		daemonControlMenu->addItem(mc);
 	}
 
 	int res = daemonControlMenu->exec(NULL, "");
 	daemonControlMenu->hide();
-	for (unsigned int i = 0; i < DAEMONS_COUNT; i++)
-		delete flagFileNotifier[i];
 	delete daemonControlMenu;
 	return res;
 }
@@ -146,21 +149,48 @@ typedef struct camds_data_t
 	const char *camd_name;
 	const char *camd_file;
 	int camd_exist;
-	int camd_runs;
 }
 camds_data_struct;
 
 camds_data_t camds_data[] =
 {
-	{LOCALE_CAMD_ITEM_MGCAMD_NAME,	LOCALE_CAMD_ITEM_MGCAMD_HINT,	"MGCAMD",	"mgcamd",	0, 0},
-	{LOCALE_CAMD_ITEM_DOSCAM_NAME,	LOCALE_CAMD_ITEM_DOSCAM_HINT,	"DOSCAM",	"doscam",	0, 0},
-	{LOCALE_CAMD_ITEM_NCAM_NAME,	LOCALE_CAMD_ITEM_NCAM_HINT,	"NCAM",		"ncam",		0, 0},
-	{LOCALE_CAMD_ITEM_OSMOD_NAME,	LOCALE_CAMD_ITEM_OSMOD_HINT,	"OSMOD",	"osmod",	0, 0},
-	{LOCALE_CAMD_ITEM_OSCAM_NAME,	LOCALE_CAMD_ITEM_OSCAM_HINT,	"OSCAM",	"oscam",	0, 0},
-	{LOCALE_CAMD_ITEM_CCCAM_NAME,	LOCALE_CAMD_ITEM_CCCAM_HINT,	"CCCAM",	"cccam",	0, 0},
-	{LOCALE_CAMD_ITEM_GBOX_NAME,	LOCALE_CAMD_ITEM_GBOX_HINT,	"GBOX.NET",	"gbox",		0, 0}
+	{LOCALE_CAMD_ITEM_MGCAMD_NAME,	LOCALE_CAMD_ITEM_MGCAMD_HINT,	"MGCAMD",	"mgcamd",	0},
+	{LOCALE_CAMD_ITEM_DOSCAM_NAME,	LOCALE_CAMD_ITEM_DOSCAM_HINT,	"DOSCAM",	"doscam",	0},
+	{LOCALE_CAMD_ITEM_NCAM_NAME,	LOCALE_CAMD_ITEM_NCAM_HINT,	"NCAM",		"ncam",		0},
+	{LOCALE_CAMD_ITEM_OSMOD_NAME,	LOCALE_CAMD_ITEM_OSMOD_HINT,	"OSMOD",	"osmod",	0},
+	{LOCALE_CAMD_ITEM_OSCAM_NAME,	LOCALE_CAMD_ITEM_OSCAM_HINT,	"OSCAM",	"oscam",	0},
+	{LOCALE_CAMD_ITEM_CCCAM_NAME,	LOCALE_CAMD_ITEM_CCCAM_HINT,	"CCCAM",	"cccam",	0},
+	{LOCALE_CAMD_ITEM_GBOX_NAME,	LOCALE_CAMD_ITEM_GBOX_HINT,	"GBOX.NET",	"gbox",		0}
 };
 #define CAMDS_COUNT (sizeof(camds_data)/sizeof(struct camds_data_t))
+
+/* The message that stays up while a softcam is started or stopped. The observer paints it
+   before the services group runs and the item's after-apply hides it again once the
+   worker has run the script: the user asked for it here and sees it done. */
+static CHintBox *camd_message_box = NULL;
+
+static bool hideCamdMessage()
+{
+	if (camd_message_box == NULL)
+		return false;
+	camd_message_box->hide();
+	delete camd_message_box;
+	camd_message_box = NULL;
+	return false;
+}
+
+class CCamdMessage : public CChangeObserver
+{
+	public:
+		bool changeNotify(const neutrino_locale_t, void *data)
+		{
+			hideCamdMessage();
+			const bool on = data != NULL && *(int *) data != 0;
+			camd_message_box = new CHintBox(LOCALE_CAMD_CONTROL, g_Locale->getText(on ? LOCALE_CAMD_MSG_START : LOCALE_CAMD_MSG_STOP));
+			camd_message_box->paint();
+			return false;
+		}
+};
 
 int CCamdControlMenu::show()
 {
@@ -181,8 +211,7 @@ int CCamdControlMenu::show()
 
 	camdControlMenu->addItem(GenericMenuSeparatorLine);
 
-	CMenuOptionChooser *mc;
-	CFlagFileNotifier *flagFileNotifier[CAMDS_COUNT];
+	CCamdMessage camd_message;
 	for (unsigned int i = 0; i < CAMDS_COUNT; i++)
 	{
 		std::string vinfo = "";
@@ -211,11 +240,6 @@ int CCamdControlMenu::show()
 				printf("[vinfo] popen error\n");
 		}
 
-		if (getpidof(camds_data[i].camd_file))
-			camds_data[i].camd_runs = 1;
-		else
-			camds_data[i].camd_runs = 0;
-
 		// remove linebreaks from vinfo output
 		std::string::size_type spos = vinfo.find_first_of("\r\n");
 		while (spos != std::string::npos)
@@ -226,17 +250,22 @@ int CCamdControlMenu::show()
 		std::string hint(g_Locale->getText(camds_data[i].desc));
 		hint.append("\nvinfo: " + vinfo);
 
-		flagFileNotifier[i] = new CFlagFileNotifier(camds_data[i].camd_file);
-
-		mc = new CMenuOptionChooser(camds_data[i].name, &camds_data[i].camd_runs, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, camds_data[i].camd_exist, flagFileNotifier[i], CRCInput::convertDigitToKey(camd_shortcut++));
+		std::string key = "flag_camd_";
+		key += camds_data[i].camd_file;
+		CMenuOptionChooser *mc = addChoiceSetting(camdControlMenu, key.c_str(), true, &camd_message, CRCInput::convertDigitToKey(camd_shortcut));
+		if (mc == NULL)
+			continue;
+		camd_shortcut++;
+		afterApply(mc, []()
+		{
+			coreapi::applyWorker().waitFor("softcam.");
+			return hideCamdMessage();
+		});
 		mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, hint);
-		camdControlMenu->addItem(mc);
 	}
 
 	int res = camdControlMenu->exec(NULL, "");
 	camdControlMenu->hide();
-	for (unsigned int i = 0; i < CAMDS_COUNT; i++)
-		delete flagFileNotifier[i];
 	delete camdControlMenu;
 	return res;
 }

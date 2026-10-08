@@ -33,11 +33,9 @@
 
 #include <string>
 
-class CCECSetup : public CMenuTarget, CChangeObserver
+class CCECSetup : public CMenuTarget
 {
 	private:
-		CMenuOptionChooser 	*cec1, *cec2, *cec3;
-				
 		int width;
 
 		int showMenu();
@@ -46,9 +44,7 @@ class CCECSetup : public CMenuTarget, CChangeObserver
 	public:	
 		CCECSetup();
 		~CCECSetup();
-		void setCECSettings();
 		int exec(CMenuTarget* parent, const std::string & actionKey);
-		virtual bool changeNotify(const neutrino_locale_t OptionName, void * data);
 };
 
 

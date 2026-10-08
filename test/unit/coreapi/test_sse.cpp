@@ -22,14 +22,17 @@
 #include "support/fakes.h"
 #include "support/httpclient.h"
 
+#include "httpd/auth.h"
 #include "httpd/webconfig.h"
 #include "httpd/endpoint.h"
 #include "httpd/events.h"
 #include "httpd/http.h"
 #include "httpd/router.h"
 #include "httpd/server.h"
+#include "httpd/status.h"
 
 #include "coreapi/base/eventbus.h"
+#include "coreapi/box/applyworker.h"
 
 #include <atomic>
 #include <cstdio>
@@ -443,15 +446,17 @@ int connectLoopback(int port, int rcvbuf)
    makes every case below deterministic rather than a race: the head is queued after the
    stream is registered, so a case holding the head knows the subscription is in place
    and that whatever it publishes next cannot be lost. */
-int openStream(int port, int rcvbuf = 0)
+int openStream(int port, int rcvbuf = 0, const std::string &cookie = std::string())
 {
 	const int fd = connectLoopback(port, rcvbuf);
 	if (fd < 0)
 		return -1;
 
-	char req[160];
+	char req[320];
+	const std::string with = cookie.empty() ? std::string() :
+		std::string("Cookie: ") + sessionCookieName() + "=" + cookie + "\r\n";
 	std::snprintf(req, sizeof(req),
-	              "GET /api/v1/events HTTP/1.1\r\nHost: 127.0.0.1:%d\r\n\r\n", port);
+	              "GET /api/v1/events HTTP/1.1\r\nHost: 127.0.0.1:%d\r\n%s\r\n", port, with.c_str());
 	const size_t len = std::strlen(req);
 	size_t sent = 0;
 	while (sent < len)
@@ -573,7 +578,7 @@ void publish(coreapi::EventType t, uint64_t channel_id, int value)
 TEST_CASE("every event type has a name and no two share one", "[sse]")
 {
 	std::set<std::string> seen;
-	for (int i = 0; i <= (int) coreapi::EventType::Playback; ++i)
+	for (int i = 0; i <= (int) coreapi::EventType::SettingApplyFailed; ++i)
 	{
 		const char *n = events::typeName((coreapi::EventType) i);
 		INFO("type value " << i);
@@ -581,8 +586,19 @@ TEST_CASE("every event type has a name and no two share one", "[sse]")
 		REQUIRE(std::string(n).size() > 0);
 		REQUIRE(seen.insert(n).second);
 	}
-	REQUIRE(seen.size() == 12);
+	REQUIRE(seen.size() == 13);
 	REQUIRE(std::string(events::typeName(coreapi::EventType::Playback)) == "playback");
+	REQUIRE(std::string(events::typeName(coreapi::EventType::SettingApplyFailed)) == "setting-apply-failed");
+}
+
+// The event names the code a write route would have answered the same failure with.
+TEST_CASE("an apply failure carries the status a write route answers it with", "[sse]")
+{
+	for (int i = 0; i <= (int) coreapi::Status::Internal; ++i)
+	{
+		INFO("status " << i);
+		CHECK(coreapi::applyFailureCode((coreapi::Status) i) == httpStatus((coreapi::Status) i));
+	}
 }
 
 TEST_CASE("the shipped beat and the shipped ceiling are what the header says", "[sse]")
@@ -920,8 +936,9 @@ TEST_CASE("every event type reaches a stream under its own name", "[sse]")
 		coreapi::EventType::SettingsChanged,
 		coreapi::EventType::Playback
 	};
+	// The last type is sent only to the session that wrote, see below.
 	const size_t count = sizeof(kAll) / sizeof(kAll[0]);
-	REQUIRE(count == 12);
+	REQUIRE(count + 1 == 13);
 
 	for (size_t i = 0; i < count; ++i)
 	{
@@ -1147,4 +1164,48 @@ TEST_CASE("a server started a second time is subscribed a second time", "[sse]")
 	const std::string one = s.readFrame(2000);
 	INFO(one);
 	REQUIRE(one.find("\"value\":7") != std::string::npos);
+}
+
+/* A failure to put a setting in force is the writer's business: it reaches the streams of the
+   session that wrote and no other, neither another session nor a stream without one. */
+TEST_CASE("an apply failure reaches only the streams of the session that wrote", "[sse][writer]")
+{
+	Streaming serving(4, 5000);
+	const std::string mine = openSession("root");
+	const std::string theirs = openSession("root");
+	REQUIRE_FALSE(mine.empty());
+	REQUIRE_FALSE(theirs.empty());
+	StreamReader a(openStream(serving.port(), 0, mine));
+	StreamReader b(openStream(serving.port(), 0, theirs));
+	StreamReader none(openStream(serving.port()));
+	REQUIRE(a.ok());
+	REQUIRE(b.ok());
+	REQUIRE(none.ok());
+	REQUIRE(a.readFrame(2000).find("retry:") != std::string::npos);
+	REQUIRE(b.readFrame(2000).find("retry:") != std::string::npos);
+	REQUIRE(none.readFrame(2000).find("retry:") != std::string::npos);
+	REQUIRE(waitForStreams(3, 2000) == 3);
+
+	coreapi::Event failed;
+	failed.type = coreapi::EventType::SettingApplyFailed;
+	failed.value = 500;
+	failed.text = "hdd_sleep flag_daemon_samba";
+	failed.initiator = "box " + sessionWriter(mine) + " mcp:g1";
+	coreapi::EventBus::instance().publish(failed);
+	// A frame every stream gets, so a stream that was not sent the failure reads this first.
+	publish(coreapi::EventType::Zap, 0x2b66, 0);
+
+	const std::string got = a.readFrame(2000);
+	INFO(got);
+	REQUIRE(got.find("event: setting-apply-failed\n") != std::string::npos);
+	CHECK(got.find("\"keys\":[\"hdd_sleep\",\"flag_daemon_samba\"]") != std::string::npos);
+	CHECK(got.find("\"status\":500") != std::string::npos);
+	CHECK(got.find("\"detail\":\"") != std::string::npos);
+	CHECK(got.find("channel_id") == std::string::npos);
+	CHECK(a.readFrame(2000).find("event: zap") != std::string::npos);
+	CHECK(b.readFrame(2000).find("event: zap") != std::string::npos);
+	CHECK(none.readFrame(2000).find("event: zap") != std::string::npos);
+
+	closeSession(mine);
+	closeSession(theirs);
 }

@@ -61,6 +61,7 @@ extern CZapitClient::SatelliteList satList;
 
 // nhttpd
 #include "neutrinoapi.h"
+#include <coreapi/box/apply_video.h>
 
 //=============================================================================
 // No Class Helpers
@@ -468,7 +469,10 @@ int CNeutrinoAPI::setVideoAspectRatioAsString(std::string newRatioString)
 			break;
 		}
 	if(newRatioInt != -1)
+	{
 		videoDecoder->setAspectRatio(newRatioInt, -1);
+		coreapi::forgetSentVideo(coreapi::VideoSent::Aspect);
+	}
 	return newRatioInt;
 }
 //-------------------------------------------------------------------------

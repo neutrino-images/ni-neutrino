@@ -306,6 +306,7 @@ bool kindMatches(const ::Json::Value &v, FieldType t)
 		case FieldType::Time:   return whole;
 		case FieldType::ChannelId: return v.isString();
 		case FieldType::Object: return v.isObject();
+		case FieldType::NamedLists: return v.isObject();
 		case FieldType::Array:  return v.isArray();
 	}
 	return false;

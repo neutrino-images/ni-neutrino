@@ -47,22 +47,45 @@
 #include <stdlib.h>
 #include <system/helpers.h>
 #include <gui/widget/settingitem.h>
+#include <coreapi/box/apply_webchannels.h>
+#include <coreapi/settings/settings.h>
 
 extern CBouquetManager *g_bouquetManager;
 
-const CMenuOptionChooser::keyval_ext LIVESTREAM_RESOLUTION_OPTIONS[] =
+/* The lists as the settings now say, and the channel daemon told to read them. The
+   automatic folders are added to the lists of the side whose switch is on. */
+static void reloadWebChannels(const char *reason)
 {
-#if !HAVE_CST_HARDWARE
-	{ 3840, NONEXISTANT_LOCALE, "3840x2160" },
-	{ 2560, NONEXISTANT_LOCALE, "2560x1440" },
-#endif
-	{ 1920, NONEXISTANT_LOCALE, "1920x1080" },
-	{ 1280, NONEXISTANT_LOCALE, "1280x720"  },
-	{ 854,  NONEXISTANT_LOCALE, "854x480"   },
-	{ 640,  NONEXISTANT_LOCALE, "640x360"   },
-	{ 480,  NONEXISTANT_LOCALE, "480x270"   }
-};
-#define LIVESTREAM_RESOLUTION_OPTION_COUNT (sizeof(LIVESTREAM_RESOLUTION_OPTIONS)/sizeof(CMenuOptionChooser::keyval_ext))
+	CWebChannelsSetup lists;
+	lists.webtv_xml_auto();
+	lists.webradio_xml_auto();
+	CZapit::getInstance()->SetWebTVXML(&g_settings.webtv_xml);
+	CZapit::getInstance()->SetWebRadioXML(&g_settings.webradio_xml);
+	g_bouquetManager->setWebchannelsReloadReason(reason);
+	g_Zapit->reinitChannels();
+	CNeutrinoApp::getInstance()->xmltv_xml_auto_readepg();
+}
+
+coreapi::Status coreapi::applicationReloadWebChannels()
+{
+	if (!g_bouquetManager || !g_Zapit)
+		return Status::Internal;
+	reloadWebChannels("settings_reload");
+	return Status::Ok;
+}
+
+coreapi::Status coreapi::applicationRestartWebStream()
+{
+	CZapitChannel *cc = CZapit::getInstance()->GetCurrentChannel();
+	/* A stream without a script has no size to choose, so starting it over would only
+	   interrupt it. */
+	if (cc && IS_WEBCHAN(cc->getChannelID()) && !cc->getScriptName().empty())
+	{
+		/* one transition, no DVB bounce in between - see RestartBackground() */
+		CMoviePlayerGui::getInstance().RestartBackground(cc->getUrl(), cc->getName(), cc->getChannelID(), cc->getScriptName());
+	}
+	return Status::Ok;
+}
 
 CWebChannelsSetup::CWebChannelsSetup()
 {
@@ -72,7 +95,6 @@ CWebChannelsSetup::CWebChannelsSetup()
 	item_offset = 0;
 	changed = false;
 	m = NULL;
-	livestreamResolution = 0;
 }
 
 static const struct button_label CWebChannelsSetupFooterButtons[] =
@@ -249,10 +271,7 @@ int CWebChannelsSetup::Show()
 
 	if (!webradio)
 	{
-		livestreamResolution = g_settings.livestreamResolution;
-		oc = new CMenuOptionChooser(LOCALE_LIVESTREAM_RESOLUTION, &livestreamResolution, LIVESTREAM_RESOLUTION_OPTIONS, LIVESTREAM_RESOLUTION_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++), "", true);
-		// FIXME oc->setHint(NEUTRINO_ICON_HINT_DEFAULT, NONEXISTANT_LOCALE);
-		m->addItem(oc);
+		addChoiceSetting(m, "livestreamResolution", true, NULL, CRCInput::convertDigitToKey(shortcut++), true);
 		addSetting(m, "webtv_stream_restart_attempts", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 		addSetting(m, "webtv_dns_diagnostics", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 
@@ -260,16 +279,17 @@ int CWebChannelsSetup::Show()
 	}
 
 	// TODO: show/hide autoloaded content when switching g_settings.webradio/webtv_xml_auto
+	// The lists are read again by the web channel group when the switch changes.
 	char hint_text[1024];
 	if (webradio)
 	{
 		snprintf(hint_text, sizeof(hint_text) - 1, g_Locale->getText(LOCALE_MENU_HINT_WEBRADIO_XML_AUTO), WEBRADIODIR, WEBRADIODIR_VAR);
-		oc = addSetting(m, "webradio_xml_auto", true, this, CRCInput::convertDigitToKey(shortcut++));
+		oc = addSetting(m, "webradio_xml_auto", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	}
 	else
 	{
 		snprintf(hint_text, sizeof(hint_text) - 1, g_Locale->getText(LOCALE_MENU_HINT_WEBTV_XML_AUTO), WEBTVDIR, WEBTVDIR_VAR);
-		oc = addSetting(m, "webtv_xml_auto", true, this, CRCInput::convertDigitToKey(shortcut++));
+		oc = addSetting(m, "webtv_xml_auto", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	}
 	if (oc)
 		oc->setHint("", hint_text);
@@ -317,44 +337,13 @@ int CWebChannelsSetup::Show()
 			else
 				g_settings.webtv_xml = webchannels;
 		}
-		webchannels_auto();
-		if (webradio)
-			CZapit::getInstance()->SetWebRadioXML(&g_settings.webradio_xml);
-		else
-			CZapit::getInstance()->SetWebTVXML(&g_settings.webtv_xml);
-		g_bouquetManager->setWebchannelsReloadReason("manual_menu");
-		g_Zapit->reinitChannels();
-		CNeutrinoApp::getInstance()->xmltv_xml_auto_readepg();
+		reloadWebChannels("manual_menu");
 		changed = false;
 		hint.hide();
 	}
 
 	delete m;
 	return res;
-}
-
-bool CWebChannelsSetup::changeNotify(const neutrino_locale_t OptionName, void *data)
-{
-	int ret = menu_return::RETURN_NONE;
-
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_WEBTV_XML_AUTO) || ARE_LOCALES_EQUAL(OptionName, LOCALE_WEBRADIO_XML_AUTO))
-	{
-		changed = true;
-		ret = menu_return::RETURN_REPAINT;
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_LIVESTREAM_RESOLUTION))
-	{
-		if (livestreamResolution != g_settings.livestreamResolution)
-		{
-			m->hide();
-			g_settings.livestreamResolution = *(int *)data;
-			CWebTVResolution webtvresolution;
-			webtvresolution.RestartStream();
-			ret = menu_return::RETURN_REPAINT;
-		}
-	}
-
-	return ret;
 }
 
 int filefilter(const struct dirent *entry)
@@ -539,44 +528,27 @@ int CWebTVResolution::Show()
 	m = new CMenuWidget(LOCALE_WEBTV_HEAD, NEUTRINO_ICON_STREAMING, width, MN_WIDGET_ID_LIVESTREAM_RESOLUTION);
 	m->addIntroItems(LOCALE_LIVESTREAM_HEAD);
 
-	CMenuOptionChooser *mc;
-	mc = new CMenuOptionChooser(LOCALE_LIVESTREAM_RESOLUTION, &g_settings.livestreamResolution,
-				    LIVESTREAM_RESOLUTION_OPTIONS, LIVESTREAM_RESOLUTION_OPTION_COUNT,
-				    true, NULL, CRCInput::RC_nokey, NULL, true);
-	m->addItem(mc);
+	addChoiceSetting(m, "livestreamResolution", true, NULL, CRCInput::RC_nokey, true);
 
-	int livestreamResolution = g_settings.livestreamResolution;
 	int res = m->exec(NULL, "");
 	m->hide();
 	delete m;
 
-	bool _mode_webtv = (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_webtv)
-			   && CZapit::getInstance()->GetCurrentChannel()
-			   && (!CZapit::getInstance()->GetCurrentChannel()->getScriptName().empty());
-
-	if (livestreamResolution != g_settings.livestreamResolution && _mode_webtv)
-		RestartStream();
-
 	return res;
 }
 
-void CWebTVResolution::RestartStream()
-{
-	CZapitChannel *cc = CZapit::getInstance()->GetCurrentChannel();
-	if (cc && IS_WEBCHAN(cc->getChannelID()))
-	{
-		/* one transition, no DVB bounce in between - see RestartBackground() */
-		CMoviePlayerGui::getInstance().RestartBackground(cc->getUrl(), cc->getName(), cc->getChannelID(), cc->getScriptName());
-	}
-}
-
-
 const char *CWebTVResolution::getResolutionValue()
 {
-	for (unsigned int i = 0; i < LIVESTREAM_RESOLUTION_OPTION_COUNT; ++i)
+	static std::string name;
+	name.clear();
+	const coreapi::Result<std::vector<coreapi::SettingChoice> > choices = coreapi::settings::choices("livestreamResolution");
+	if (choices.ok())
 	{
-		if (g_settings.livestreamResolution == LIVESTREAM_RESOLUTION_OPTIONS[i].key)
-			return LIVESTREAM_RESOLUTION_OPTIONS[i].valname;
+		for (size_t i = 0; i < choices.value().size(); ++i)
+		{
+			if (choices.value()[i].value == g_settings.livestreamResolution)
+				name = choices.value()[i].label;
+		}
 	}
-	return "";
+	return name.c_str();
 }

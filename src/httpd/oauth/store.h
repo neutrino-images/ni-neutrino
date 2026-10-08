@@ -96,6 +96,8 @@ struct TokenFacts
 {
 	std::string client_id;
 	std::string key;
+	// The grant an access token was issued under; empty for a static token.
+	std::string grant_id;
 	std::string user;
 	unsigned    scopes;
 	unsigned    groups;

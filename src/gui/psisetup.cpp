@@ -33,33 +33,27 @@
 #include <gui/widget/icons.h>
 #include <driver/screen_max.h>
 
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <errno.h>
 
 #include <global.h>
 #include <neutrino.h>
 
-#include <hardware/video.h>
+#include <coreapi/base/apply.h>
+#include <coreapi/base/schema.h>
+#include <coreapi/settings/menuspec.h>
+#include <coreapi/settings/settings.h>
 
-extern cVideo * videoDecoder;
+#include <system/debug.h>
 
 struct PSI_list
 {
-	int control;
+	const char *key;
 	const neutrino_locale_t loc;
 	bool selected;
 	CProgressBar *scale;
-	unsigned char value;
-	unsigned char value_old;
 	int x;
 	int y;
 	int xLoc;
@@ -71,16 +65,12 @@ struct PSI_list
 #define PSI_SCALE_COUNT 5
 static PSI_list
 	psi_list[PSI_SCALE_COUNT] = {
-#define PSI_CONTRAST 0
-	{ VIDEO_CONTROL_CONTRAST, LOCALE_VIDEOMENU_PSI_CONTRAST, true, NULL, 0, 0, 0, 0, 0, 0, 0, 0 }
-#define PSI_SATURATION 1
-	, { VIDEO_CONTROL_SATURATION, LOCALE_VIDEOMENU_PSI_SATURATION, false, NULL, 0, 0, 0, 0, 0, 0, 0, 0 }
-#define PSI_BRIGHTNESS 2
-	, { VIDEO_CONTROL_BRIGHTNESS, LOCALE_VIDEOMENU_PSI_BRIGHTNESS, false, NULL, 0, 0, 0, 0, 0, 0, 0, 0 }
-#define PSI_TINT 3
-	, { VIDEO_CONTROL_HUE, LOCALE_VIDEOMENU_PSI_TINT, false, NULL, 0, 0, 0, 0, 0, 0, 0, 0 }
+	{ "video_psi_contrast", LOCALE_VIDEOMENU_PSI_CONTRAST, true, NULL, 0, 0, 0, 0, 0, 0 }
+	, { "video_psi_saturation", LOCALE_VIDEOMENU_PSI_SATURATION, false, NULL, 0, 0, 0, 0, 0, 0 }
+	, { "video_psi_brightness", LOCALE_VIDEOMENU_PSI_BRIGHTNESS, false, NULL, 0, 0, 0, 0, 0, 0 }
+	, { "video_psi_tint", LOCALE_VIDEOMENU_PSI_TINT, false, NULL, 0, 0, 0, 0, 0, 0 }
 #define PSI_RESET 4
-	, { -1, LOCALE_VIDEOMENU_PSI_RESET, false, NULL, 0, 0, 0, 0, 0, 0, 0, 0 }
+	, { NULL, LOCALE_VIDEOMENU_PSI_RESET, false, NULL, 0, 0, 0, 0, 0, 0 }
 };
 
 #define SLIDERWIDTH CFrameBuffer::getInstance()->scale2Res(200)
@@ -94,22 +84,48 @@ CPSISetup::CPSISetup (const neutrino_locale_t Name)
 	selected = 0;
 
 	for (int i = 0; i < PSI_RESET; i++)
+	{
 		psi_list[i].scale = new CProgressBar();
-
-	psi_list[PSI_CONTRAST].value = g_settings.psi_contrast;
-	psi_list[PSI_SATURATION].value = g_settings.psi_saturation;
-	psi_list[PSI_BRIGHTNESS].value = g_settings.psi_brightness;
-	psi_list[PSI_TINT].value = g_settings.psi_tint;
-
-	for (int i = 0; i < PSI_RESET; i++)
-		videoDecoder->SetControl (psi_list[i].control, psi_list[i].value);
+		value[i] = NULL;
+		kept[i] = 0;
+		lowest[i] = 0;
+		highest[i] = 255;
+		fallback[i] = 128;
+	}
 
 	needsBlit = true;
 }
 
-void CPSISetup::blankScreen(bool blank) {
+/* Each slider moves its row's own member and the picture group takes it from
+   there, so the preview is what any other change of the row does, and a web
+   write made while the screen is open is what the slider shows and moves on
+   from. */
+void CPSISetup::bindRows()
+{
 	for (int i = 0; i < PSI_RESET; i++)
-		videoDecoder->SetControl(psi_list[i].control, blank ? 0 : psi_list[i].value);
+	{
+		coreapi::Result<coreapi::MenuItemSpec> r = coreapi::menuItem(psi_list[i].key);
+		value[i] = (r.ok() && r.value().int_pointer != NULL) ? r.value().int_pointer(g_settings) : NULL;
+		if (value[i] == NULL)
+		{
+			dprintf(DEBUG_NORMAL, "[CPSISetup] %s: no value to move\n", psi_list[i].key);
+			continue;
+		}
+		lowest[i] = (int) r.value().min;
+		highest[i] = (int) r.value().max;
+		kept[i] = *value[i];
+		coreapi::Result<coreapi::Descriptor> d = coreapi::settings::describe(psi_list[i].key);
+		if (d.ok())
+			fallback[i] = (int) coreapi::defaultInt(d.value());
+	}
+}
+
+// One key is enough: the group sets all four from the rows.
+void CPSISetup::applyRows()
+{
+	const coreapi::Status s = coreapi::applyKey(psi_list[0].key);
+	if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
+		dprintf(DEBUG_NORMAL, "[CPSISetup] apply failed\n");
 }
 
 int CPSISetup::exec (CMenuTarget * parent, const std::string &)
@@ -149,7 +165,6 @@ int CPSISetup::exec (CMenuTarget * parent, const std::string &)
 
 	for (int i = 0; i < PSI_SCALE_COUNT; i++)
 	{
-		psi_list[i].value = psi_list[i].value_old = 128;
 		psi_list[i].x = x;
 		psi_list[i].y = y + locHeight * i + i * 2;
 		psi_list[i].xBox = psi_list[i].x + SLIDERWIDTH + LOCGAP;
@@ -161,13 +176,7 @@ int CPSISetup::exec (CMenuTarget * parent, const std::string &)
 	for (int i = 0; i < PSI_RESET; i++)
 		psi_list[i].scale->reset ();
 
-	psi_list[PSI_CONTRAST].value = g_settings.psi_contrast;
-	psi_list[PSI_SATURATION].value = g_settings.psi_saturation;
-	psi_list[PSI_BRIGHTNESS].value = g_settings.psi_brightness;
-	psi_list[PSI_TINT].value = g_settings.psi_tint;
-
-	for (int i = 0; i < PSI_RESET; i++)
-		psi_list[i].value_old = psi_list[i].value;
+	bindRows();
 
 	paint();
 
@@ -200,51 +209,48 @@ int CPSISetup::exec (CMenuTarget * parent, const std::string &)
 			}
 			break;
 		case CRCInput::RC_right:
-			if (selected < PSI_RESET && psi_list[selected].value < 255)
+			if (selected < PSI_RESET && value[selected] != NULL && *value[selected] < highest[selected])
 			{
-				int val = psi_list[selected].value + g_settings.psi_step;
-				psi_list[selected].value = (val > 255) ? 255 : val;
+				int val = *value[selected] + g_settings.psi_step;
+				*value[selected] = (val > highest[selected]) ? highest[selected] : val;
 				paintSlider (selected);
-				videoDecoder->SetControl(psi_list[selected].control, psi_list[selected].value);
+				applyRows();
 			}
 			break;
 		case CRCInput::RC_left:
-			if (selected < PSI_RESET && psi_list[selected].value > 0)
+			if (selected < PSI_RESET && value[selected] != NULL && *value[selected] > lowest[selected])
 			{
-				int val = psi_list[selected].value - g_settings.psi_step;
-				psi_list[selected].value = (val < 0) ? 0 : val;
+				int val = *value[selected] - g_settings.psi_step;
+				*value[selected] = (val < lowest[selected]) ? lowest[selected] : val;
 				paintSlider (selected);
-				videoDecoder->SetControl(psi_list[selected].control, psi_list[selected].value);
+				applyRows();
 			}
 			break;
 		case CRCInput::RC_back:
 		case CRCInput::RC_home:	// exit -> revert changes
-			for (i = 0; (i < PSI_RESET) && (psi_list[i].value == psi_list[i].value_old); i++);
 			if (ShowMsg(name, LOCALE_MESSAGEBOX_ACCEPT, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbCancel) == CMsgBox::mbrCancel)
+			{
 				for (i = 0; i < PSI_RESET; i++)
-				{
-					psi_list[i].value = psi_list[i].value_old;
-					videoDecoder->SetControl(psi_list[selected].control, psi_list[selected].value);
-				}
+					if (value[i] != NULL)
+						*value[i] = kept[i];
+				applyRows();
+			}
 			/* fall through */
 		case CRCInput::RC_ok:
 			if (selected != PSI_RESET)
 			{
 				loop = false;
-				g_settings.psi_contrast = psi_list[PSI_CONTRAST].value;
-				g_settings.psi_saturation = psi_list[PSI_SATURATION].value;
-				g_settings.psi_brightness = psi_list[PSI_BRIGHTNESS].value;
-				g_settings.psi_tint = psi_list[PSI_TINT].value;
 				break;
 			}
 			/* fall through */
 		case CRCInput::RC_red:
 			for (i = 0; i < PSI_RESET; i++)
 			{
-				psi_list[i].value = 128;
-				videoDecoder->SetControl(psi_list[i].control, psi_list[i].value);
+				if (value[i] != NULL)
+					*value[i] = fallback[i];
 				paintSlider (i);
 			}
+			applyRows();
 			break;
 		default:
 			;
@@ -275,7 +281,8 @@ void CPSISetup::paintSlider (int i)
 
 	if (i < PSI_RESET)
 	{
-		psi_list[i].scale->setProgress(psi_list[i].x, psi_list[i].y + sliderOffset, SLIDERWIDTH, SLIDERHEIGHT, psi_list[i].value, 255);
+		psi_list[i].scale->setProgress(psi_list[i].x, psi_list[i].y + sliderOffset, SLIDERWIDTH, SLIDERHEIGHT,
+					       value[i] != NULL ? *value[i] : 0, highest[i]);
 		psi_list[i].scale->paint();
 		f->RenderString (psi_list[i].xLoc, psi_list[i].yLoc, locWidth, g_Locale->getText(psi_list[i].loc), fg_col[psi_list[i].selected]);
 	}
@@ -286,18 +293,6 @@ void CPSISetup::paintSlider (int i)
 		f->RenderString (psi_list[i].xLoc, psi_list[i].yLoc, locWidth, g_Locale->getText(psi_list[i].loc), COL_MENUCONTENT_TEXT);
 	}
 	needsBlit = true;
-}
-
-bool CPSISetup::changeNotify (const neutrino_locale_t OptionName, void *Data)
-{
-	for (int i = 0; i < PSI_RESET; i++)
-		if (OptionName == psi_list[i].loc)
-		{
-			psi_list[i].value = *((int *) Data);
-			videoDecoder->SetControl(psi_list[i].control, psi_list[i].value);
-			return true;
-		}
-	return false;
 }
 
 static CPSISetup *inst = NULL;

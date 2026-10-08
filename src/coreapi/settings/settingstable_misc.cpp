@@ -116,10 +116,34 @@ constexpr EnumValue kCpuFreq[] =
 	option(600).text("600 Mhz")
 };
 
+// Nought is the switch-off time that is not set: the box stays in soft standby.
+constexpr EnumValue kShutdownCountOff[] =
+{
+	option(0).label("options.off")
+};
+
+// Nought is no ceiling on the events kept.
+constexpr EnumValue kEpgMaxEventsUnlimited[] =
+{
+	option(0).label("options.unlimited")
+};
+
+// The code is asked for only while the menu is guarded, and changed only then.
+constexpr Condition kPersonalizeGuarded[] =
+{
+	when("personalize_pinstatus").isNot(0)
+};
+
 // The two below are editable only while the box is left to switch off for real.
 constexpr Condition kShutdownRealOff[] =
 {
 	when("shutdown_real").is(0)
+};
+
+// The scan has bouquets to walk only while it is switched on.
+constexpr Condition kEpgScanOn[] =
+{
+	when("epg_scan_mode").isNot(EPG_SCAN_MODE_OFF)
 };
 
 constexpr Condition kEpgSaveOn[] =
@@ -150,6 +174,34 @@ constexpr EnumValue kAdzapZap[] =
 	option(SNeutrinoSettings::ADZAP_ZAP_OFF).label("adzap.zap_off"),
 	option(SNeutrinoSettings::ADZAP_ZAP_TO_LAST).label("adzap.zap_to_last_channel"),
 	option(SNeutrinoSettings::ADZAP_ZAP_TO_START).label("adzap.zap_to_start_channel")
+};
+
+/* What each service key holds before anybody enters one, which is also the text
+   the service switch is judged against: a key still holding it, or none, leaves
+   the service without a key to work with. */
+constexpr char kTmdbKeyPlaceholder[] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+constexpr char kOmdbKeyPlaceholder[] = "XXXXXXXX";
+constexpr char kShoutcastKeyPlaceholder[] = "XXXXXXXXXXXXXXXX";
+constexpr char kYoutubeKeyPlaceholder[] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+
+constexpr Condition kTmdbKeyEntered[] =
+{
+	when("tmdb_api_key").textValid(kTmdbKeyPlaceholder)
+};
+
+constexpr Condition kOmdbKeyEntered[] =
+{
+	when("omdb_api_key").textValid(kOmdbKeyPlaceholder)
+};
+
+constexpr Condition kShoutcastKeyEntered[] =
+{
+	when("shoutcast_dev_id").textValid(kShoutcastKeyPlaceholder)
+};
+
+constexpr Condition kYoutubeKeyEntered[] =
+{
+	when("youtube_api_key").textValid(kYoutubeKeyPlaceholder)
 };
 
 constexpr Descriptor kMisc[] =
@@ -264,6 +316,7 @@ constexpr Descriptor kMisc[] =
 		.hint("menu.hint_epg_scan")
 		.defaultValue(EPG_SCAN_FAV)
 		.values(kEpgScan)
+		.changeableWhen(kEpgScanOn)
 		.field(COREAPI_NUMBER_FIELD(epg_scan)),
 	/* The value is a pair of bits, live and standby. The two modes that scan
 	   live need a second tuner. */
@@ -368,12 +421,12 @@ constexpr Descriptor kMisc[] =
 		.values(kEnableSdt)
 		.field(COREAPI_NUMBER_FIELD(enable_sdt)),
 
-	/* Online services. Each of the four flags is editable only where the key
-	   beside it passes a check that reads the key itself, which is a function
-	   call and not a comparison against another setting, so none of them
-	   carries a condition. Each key defaults to the placeholder below only
-	   where the build carries none of its own; one configured with a key falls
-	   back to that key instead, which is not a constant this can carry.
+	/* Online services. Each of the four flags is editable only while the key
+	   beside it holds something other than its placeholder; the loader turns a
+	   flag off at start for a key that does not. Each key defaults to the
+	   placeholder only where the build carries none of its own; one configured
+	   with a key falls back to that key instead, which is not a constant this
+	   can carry.
 
 	   The four keys are credentials and are declared secret. The flags beside
 	   them are not: which service a box uses is not a secret, and marking them
@@ -383,12 +436,13 @@ constexpr Descriptor kMisc[] =
 		.label("tmdb.enabled")
 		.hint("menu.hint_tmdb_enabled")
 		.defaultValue(1)
+		.changeableWhen(kTmdbKeyEntered)
 		.field(COREAPI_NUMBER_FIELD(tmdb_enabled)),
 	textRow("tmdb_api_key")
 		.section("misc")
 		.label("tmdb.api_key")
 		.hint("menu.hint_tmdb_api_key")
-		.defaultValue("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+		.defaultValue(kTmdbKeyPlaceholder)
 		.secret()
 		.text(kRuleKey32)
 		.field(COREAPI_TEXT_FIELD(tmdb_api_key)),
@@ -397,12 +451,13 @@ constexpr Descriptor kMisc[] =
 		.label("omdb.enabled")
 		.hint("menu.hint_omdb_enabled")
 		.defaultValue(1)
+		.changeableWhen(kOmdbKeyEntered)
 		.field(COREAPI_NUMBER_FIELD(omdb_enabled)),
 	textRow("omdb_api_key")
 		.section("misc")
 		.label("omdb.api_key")
 		.hint("menu.hint_omdb_api_key")
-		.defaultValue("XXXXXXXX")
+		.defaultValue(kOmdbKeyPlaceholder)
 		.secret()
 		.text(kRuleKey8)
 		.field(COREAPI_TEXT_FIELD(omdb_api_key)),
@@ -411,26 +466,31 @@ constexpr Descriptor kMisc[] =
 		.label("shoutcast.enabled")
 		.hint("menu.hint_shoutcast_enabled")
 		.defaultValue(1)
+		.changeableWhen(kShoutcastKeyEntered)
 		.field(COREAPI_NUMBER_FIELD(shoutcast_enabled)),
 	textRow("shoutcast_dev_id")
 		.section("misc")
 		.label("shoutcast.dev_id")
 		.hint("menu.hint_shoutcast_dev_id")
-		.defaultValue("XXXXXXXXXXXXXXXX")
+		.defaultValue(kShoutcastKeyPlaceholder)
 		.secret()
 		.text(kRuleKey16)
 		.field(COREAPI_TEXT_FIELD(shoutcast_dev_id)),
+	/* Nothing in the program reads this back after the load: the switch is for the YouTube
+	   plugin, which takes it out of the settings file. */
 	boolRow("youtube_enabled")
 		.section("misc")
 		.label("youtube.enabled")
 		.hint("menu.hint_youtube_enabled")
 		.defaultValue(1)
+		.readOutside()
+		.changeableWhen(kYoutubeKeyEntered)
 		.field(COREAPI_NUMBER_FIELD(youtube_enabled)),
 	textRow("youtube_api_key")
 		.section("misc")
 		.label("youtube.api_key")
 		.hint("menu.hint_youtube_api_key")
-		.defaultValue("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+		.defaultValue(kYoutubeKeyPlaceholder)
 		.secret()
 		.text(kRuleKey39)
 		.field(COREAPI_TEXT_FIELD(youtube_api_key)),
@@ -453,11 +513,11 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_TEXT_FIELD(movieplayer_plugin)),
 
 	// streaming
-	// Bound: five digits.
+	// A port number; nought and anything above the sixteen bits name no port.
 	intRow("streaming_port")
 		.section("misc")
 		.label("streaming.port")
-		.range(0, 99999)
+		.range(1, 65535)
 		.defaultValue(31339)
 		.field(COREAPI_NUMBER_FIELD(streaming_port)),
 	boolRow("streaming_ecmmode")
@@ -503,6 +563,9 @@ constexpr Descriptor kMisc[] =
 		.hint("menu.hint_shutdown_count")
 		.range(0, 999)
 		.defaultValue(0)
+		.unit("unit.short.minute")
+		.values(kShutdownCountOff)
+		.changeableWhen(kShutdownRealOff)
 		.field(COREAPI_NUMBER_FIELD(shutdown_count)),
 	/* The standing sleep timer in minutes, held as three digits of text in the
 	   sleep timer box. That box is reached on every box, also where it cannot
@@ -551,6 +614,7 @@ constexpr Descriptor kMisc[] =
 		.hint("menu.hint_epg_extendedcache")
 		.range(0, 999)
 		.defaultValue(168)
+		.unit("unit.short.hour")
 		.field(COREAPI_NUMBER_FIELD(epg_extendedcache)),
 	intRow("epg_max_events")
 		.section("misc")
@@ -558,6 +622,7 @@ constexpr Descriptor kMisc[] =
 		.hint("menu.hint_epg_max_events")
 		.range(0, 999999)
 		.defaultValue(30000)
+		.values(kEpgMaxEventsUnlimited)
 		.field(COREAPI_NUMBER_FIELD(epg_max_events)),
 	intRow("epg_old_events")
 		.section("misc")
@@ -565,6 +630,7 @@ constexpr Descriptor kMisc[] =
 		.hint("menu.hint_epg_old_events")
 		.range(0, 999)
 		.defaultValue(1)
+		.unit("unit.short.hour")
 		.field(COREAPI_NUMBER_FIELD(epg_old_events)),
 	/* How many hours pass before the standby scan runs again. Nothing states a
 	   bound for it, so the row states the widest the field holds and a floor of
@@ -620,6 +686,7 @@ constexpr Descriptor kMisc[] =
 		.defaultValue("0000")
 		.secret()
 		.text(kRulePin)
+		.changeableWhen(kPersonalizeGuarded)
 		.field(COREAPI_TEXT_FIELD(personalize_pincode)),
 	/* The five below are lists of plugin file names joined with commas, which
 	   the personalisation menu rebuilds whole whenever it is left. A name this

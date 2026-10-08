@@ -26,6 +26,7 @@
 #include "json.h"
 #include "status.h"
 
+#include "coreapi/base/apply.h"
 #include "coreapi/base/errors.h"
 #include "coreapi/base/result.h"
 
@@ -798,6 +799,8 @@ Response runEndpoint(const Endpoint &ep,
 	req.setReportedPeer(reported);
 	req.setGranted(granted);
 	req.setSession(session);
+	// A session names its writer itself; a caller dispatching in process names it around the call.
+	req.setWriter(session.empty() ? coreapi::currentWriter() : sessionWriter(session));
 	req.setHost(host);
 	req.setScope(scope);
 	req.setAddressToken(address_token);

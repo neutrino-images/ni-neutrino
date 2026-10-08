@@ -33,6 +33,17 @@ namespace
    macros a header of the menu code states, which this layer may not include,
    so the literals below carry them. */
 
+#if ENABLE_WEATHER_KEY_MANAGE
+/* The key the build was configured with is checked at start; only a key a box
+   can enter is something a switch can be judged against. */
+constexpr char kWeatherKeyPlaceholder[] = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+
+constexpr Condition kWeatherKeyEntered[] =
+{
+	when("weather_api_key").textValid(kWeatherKeyPlaceholder)
+};
+#endif
+
 /* The three below are editable only while the weather is on. */
 constexpr Condition kWeatherOn[] =
 {
@@ -41,14 +52,17 @@ constexpr Condition kWeatherOn[] =
 
 constexpr Descriptor kWeather[] =
 {
-	/* Can only be on while an API key is present. That is a check on the key
-	   itself and not a comparison against another setting, so no condition is
-	   carried. The loader turns it off without a key. */
+	/* Can only be switched while the key beside it holds something other than
+	   its placeholder; the loader turns it off at start for a key that does not.
+	   Where the build fixes the key there is no row for it to be judged against. */
 	boolRow("weather_enabled")
 		.section("weather")
 		.label("weather.enabled")
 		.hint("menu.hint_weather_enabled")
 		.defaultValue(1)
+#if ENABLE_WEATHER_KEY_MANAGE
+		.changeableWhen(kWeatherKeyEntered)
+#endif
 		.field(COREAPI_NUMBER_FIELD(weather_enabled)),
 
 #if ENABLE_WEATHER_KEY_MANAGE
@@ -65,13 +79,12 @@ constexpr Descriptor kWeather[] =
 		.section("weather")
 		.label("weather.api_key")
 		.hint("menu.hint_weather_api_key")
-		.defaultValue("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+		.defaultValue(kWeatherKeyPlaceholder)
 		.secret()
 		.text(kRuleKey32)
 		.field(COREAPI_TEXT_FIELD(weather_api_key)),
-	/* No menu offers this one in this build, and its label comes from the item
-	   the build leaves out, which is the only statement of it there is. The
-	   value is the version part of a URL, so it is text and not a choice. */
+	/* No menu offers this one in this build. The value is the version part of a
+	   URL, so it is text and not a choice. */
 	textRow("weather_api_version")
 		.section("weather")
 		.label("weather.api_version")

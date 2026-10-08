@@ -60,6 +60,11 @@ const char *const *videoModeNames(size_t &count);
    video_Mode row offers a mode of that name here. */
 bool videoModeDrawn(size_t index);
 
+/* The driver's number for that mode on this box, -1 where it does not draw it.
+   The two numberings differ: the settings count the names, the driver its own
+   enum, and the families do not agree past its twelfth entry. */
+int videoModeValue(size_t index);
+
 } // namespace coreapi
 
 #endif

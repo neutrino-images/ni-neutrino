@@ -35,6 +35,7 @@
 #include <daemonc/remotecontrol.h>
 #include <driver/glcd/glcd.h>
 #include <driver/screen_max.h>
+#include <system/debug.h>
 #include <system/helpers.h>
 #include "glcdsetup.h"
 #include <gui/widget/menue_options.h>
@@ -42,6 +43,13 @@
 #include <gui/widget/settingitem.h>
 #include <neutrino_menue.h>
 #include "glcdthemes.h"
+
+#include <coreapi/base/apply.h>
+#include <coreapi/box/apply_glcd.h>
+#include <coreapi/settings/settings.h>
+
+#include <string>
+#include <vector>
 
 static const CMenuOptionChooser::keyval STANDBY_CLOCK_OPTIONS[] =
 {
@@ -152,14 +160,81 @@ uint32_t GLCD_Menu::index2color(int i)
 }
 #endif
 
+namespace
+{
+void noteSize();
+}
+
+coreapi::Status coreapi::applicationGlcd(int what, int value)
+{
+	switch (what)
+	{
+		case GlcdEnable:
+			if (value)
+				cGLCD::Resume();
+			else
+				cGLCD::Suspend();
+			break;
+		case GlcdMirrorOsd:
+			cGLCD::MirrorOSD(value != 0);
+			break;
+		case GlcdRespawn:
+			cGLCD::Respawn();
+			break;
+		case GlcdReinitFont:
+			cGLCD::getInstance()->ReInitFont();
+			break;
+		case GlcdBrightness:
+			cGLCD::getInstance()->UpdateBrightness();
+			break;
+		case GlcdUpdate:
+			cGLCD::Update();
+			break;
+		case GlcdRecordSize:
+			noteSize();
+			break;
+		default:
+			return Status::InvalidArgument;
+	}
+	return Status::Ok;
+}
+
+namespace
+{
+
+/* The loop records the panel's size where it sees the service, since the checks of a
+   written position run on another thread and must not reach it. */
+void noteSize()
+{
+	cGLCD *cglcd = cGLCD::getInstance();
+	if (cglcd != NULL && cglcd->lcd != NULL)
+		coreapi::noteGlcdPanelSize(cglcd->lcd->Width(), cglcd->lcd->Height());
+}
+
+void applyGlcd(const char *key)
+{
+	const coreapi::Status st = coreapi::applyKey(key);
+	if (st != coreapi::Status::Ok && st != coreapi::Status::Busy)
+		dprintf(DEBUG_NORMAL, "[glcd] %s was not applied\n", key);
+}
+
+/* While the position of the channel name is edited, the display shows the name of the
+   channel that is on. */
+bool previewChannelName()
+{
+	cGLCD *cglcd = cGLCD::getInstance();
+	cglcd->unlockChannel();
+	cglcd->lockChannel(CNeutrinoApp::getInstance()->channelList->getActiveChannelName());
+	return false;
+}
+
+} // namespace
+
 GLCD_Menu::GLCD_Menu()
 {
 	width = 40;
 
 	select_driver = NULL;
-	cdy = NULL;
-	csh = NULL;
-	csy = NULL;
 }
 
 int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
@@ -170,6 +245,8 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 
 	if (parent)
 		parent->hide();
+
+	noteSize();
 
 	if (actionKey == "rescan")
 	{
@@ -185,7 +262,7 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 		if (fileBrowser.exec(FONTDIR) == true)
 		{
 			setSettingsText(t.glcd_font, fileBrowser.getSelectedFile()->Name);
-			cglcd->ReInitFont();
+			applyGlcd("glcd_font");
 		}
 		return res;
 	}
@@ -201,15 +278,20 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 			setSettingsText(t.glcd_background_image, fileBrowser.getSelectedFile()->Name);
 		else
 			setSettingsText(t.glcd_background_image, "");
+		applyGlcd("glcd_background_image");
 		return res;
 	}
 	else if (actionKey == "brightness_default")
 	{
-		g_settings.glcd_brightness = GLCD_DEFAULT_BRIGHTNESS;
-		g_settings.glcd_brightness_standby = GLCD_DEFAULT_BRIGHTNESS_STANDBY;
-		g_settings.glcd_brightness_dim = GLCD_DEFAULT_BRIGHTNESS_DIM;
-		setSettingsText(g_settings.glcd_brightness_dim_time, GLCD_DEFAULT_BRIGHTNESS_DIM_TIME);
-		cglcd->UpdateBrightness();
+		std::vector<std::string> reset;
+		reset.push_back("glcd_brightness");
+		reset.push_back("glcd_brightness_standby");
+		reset.push_back("glcd_brightness_dim");
+		reset.push_back("glcd_brightness_dim_time");
+		coreapi::settings::Refusals refused;
+		coreapi::settings::resetDefaults(reset, refused, true);
+		for (size_t i = 0; i < refused.size(); i++)
+			dprintf(DEBUG_NORMAL, "[glcd] %s not reset: %s\n", refused[i].first.c_str(), refused[i].second.message.c_str());
 		return res;
 	}
 	else if (actionKey == "select_driver")
@@ -228,12 +310,6 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 	{
 		return GLCD_Standby_Settings();
 	}
-	else if (actionKey == "glcd_logodir")
-	{
-		const char *action_str = "glcd_logodir";
-		chooserDir(g_settings.glcd_logodir, false, action_str);
-		return menu_return::RETURN_REPAINT;
-	}
 	else
 	{
 		return GLCD_Menu_Settings();
@@ -246,55 +322,6 @@ void GLCD_Menu::hide()
 {
 }
 
-bool GLCD_Menu::changeNotify(const neutrino_locale_t OptionName, void *Data)
-{
-	if (!Data)
-		return false;
-
-	cGLCD *cglcd = cGLCD::getInstance();
-	cglcd->unlockChannel();
-	SNeutrinoGlcdTheme &t = g_settings.glcd_theme;
-
-	ChannelLogoActivate.Activate(t.glcd_logo);
-	TimeActivate.Activate(t.glcd_time);
-	DurationActivate.Activate(t.glcd_duration);
-	StartActivate.Activate(t.glcd_start);
-	EndActivate.Activate(t.glcd_end);
-	ProgressActivate.Activate(t.glcd_progressbar);
-	WeatherActivate.Activate(t.glcd_weather);
-	WeatherSBActivate.Activate(t.glcd_standby_weather);
-
-	switch (OptionName)
-	{
-		case LOCALE_GLCD_CHANNEL_X_POSITION:
-		case LOCALE_GLCD_CHANNEL_Y_POSITION:
-		case LOCALE_GLCD_CHANNEL_SIZE:
-		case LOCALE_GLCD_CHANNEL_ALIGN:
-			cglcd->lockChannel(CNeutrinoApp::getInstance()->channelList->getActiveChannelName());
-			break;
-		case LOCALE_GLCD_STANDBY_CLOCK:
-			cdy->setActive(t.glcd_standby_clock == cGLCD::CLOCK_DIGITAL);
-			csh->setActive(t.glcd_standby_clock == cGLCD::CLOCK_SIMPLE);
-			csy->setActive(t.glcd_standby_clock == cGLCD::CLOCK_SIMPLE);
-			break;
-		case LOCALE_GLCD_ENABLE:
-			if (g_settings.glcd_enable)
-				cglcd->Resume();
-			else
-				cglcd->Suspend();
-			return true;
-		case LOCALE_GLCD_MIRROR_OSD:
-			cglcd->MirrorOSD(*((int *) Data));
-			break;
-		default:
-			cglcd->Update();
-			break;
-	}
-
-	cglcd->Update();
-	return true;
-}
-
 int GLCD_Menu::GLCD_Menu_Settings()
 {
 	int shortcut = 1;
@@ -302,9 +329,7 @@ int GLCD_Menu::GLCD_Menu_Settings()
 	CMenuWidget *gms = new CMenuWidget(LOCALE_MAINSETTINGS_LCD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_GLCD_SETTINGS);
 	gms->addIntroItems(LOCALE_GLCD_HEAD);
 
-	//sigc::slot0<void> slot_repaint = sigc::mem_fun(gms, &CMenuWidget::paint); // we want to repaint after changed Option
-
-	addSetting(gms, "glcd_enable", true, this, CRCInput::RC_red);
+	addSetting(gms, "glcd_enable", true, NULL, CRCInput::RC_red);
 
 	select_driver = new CMenuForwarder(LOCALE_GLCD_DISPLAY, (cGLCD::getInstance()->GetConfigSize() > 1), cGLCD::getInstance()->GetConfigName(g_settings.glcd_selected_config).c_str(), this, "select_driver", CRCInput::RC_green);
 	gms->addItem(select_driver);
@@ -313,19 +338,19 @@ int GLCD_Menu::GLCD_Menu_Settings()
 
 	gms->addItem(GenericMenuSeparatorLine);
 
-	gms->addItem(new CMenuForwarder(LOCALE_GLCD_LOGODIR, true, g_settings.glcd_logodir, this, "glcd_logodir", CRCInput::convertDigitToKey(shortcut++)));
+	addSetting(gms, "glcd_logodir", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 
 	gms->addItem(GenericMenuSeparator);
 
 	gms->addItem(new CMenuForwarder(LOCALE_GLCD_BRIGHTNESS_SETTINGS, true, NULL, this, "brightness_settings", CRCInput::convertDigitToKey(shortcut++)));
 
-	addSetting(gms, "glcd_scroll", true, this, CRCInput::convertDigitToKey(shortcut++));
+	addSetting(gms, "glcd_scroll", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 
-	addSetting(gms, "glcd_scroll_speed", true, this);
+	addSetting(gms, "glcd_scroll_speed");
 
-	addSetting(gms, "glcd_mirror_osd", true, this, CRCInput::convertDigitToKey(shortcut++));
+	addSetting(gms, "glcd_mirror_osd", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 
-	addSetting(gms, "glcd_mirror_video", true, this, CRCInput::convertDigitToKey(shortcut++));
+	addSetting(gms, "glcd_mirror_video", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 
 	gms->addItem(GenericMenuSeparatorLine);
 
@@ -333,6 +358,7 @@ int GLCD_Menu::GLCD_Menu_Settings()
 
 	int res = gms->exec(NULL, "");
 	delete gms;
+	select_driver = NULL;
 	cGLCD::getInstance()->StandbyMode(false);
 	return res;
 }
@@ -340,62 +366,24 @@ int GLCD_Menu::GLCD_Menu_Settings()
 int GLCD_Menu::GLCD_Standby_Settings()
 {
 	cGLCD::getInstance()->StandbyMode(true);
-	WeatherSBActivate.Clear();
-	CMenuOptionNumberChooser *nc;
-	int oled_width = cGLCD::getInstance()->lcd->Width();
-	int oled_height = cGLCD::getInstance()->lcd->Height();
 
 	CMenuWidget *gss = new CMenuWidget(LOCALE_GLCD_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_GLCD_STANDBY_SETTINGS);
 	gss->addIntroItems(LOCALE_GLCD_STANDBY_SETTINGS);
 
-	SNeutrinoGlcdTheme &t = g_settings.glcd_theme;
-	CMenuOptionChooser *mc;
-
-	mc = new CMenuOptionChooser(LOCALE_GLCD_STANDBY_CLOCK, &t.glcd_standby_clock, STANDBY_CLOCK_OPTIONS, STANDBY_CLOCK_OPTION_COUNT, true, this);
-	//mc->setHint("", LOCALE_TODO);
-	gss->addItem(mc);
-
-	cdy = new CMenuOptionNumberChooser(LOCALE_GLCD_CLOCK_DIGITAL_Y_POSITION, &t.glcd_standby_clock_digital_y_position, (t.glcd_position_settings && t.glcd_standby_clock == cGLCD::CLOCK_DIGITAL), 0, 500, this);
-	//cdy->setHint("", LOCALE_TODO);
-	gss->addItem(cdy);
-
-	csh = new CMenuOptionNumberChooser(LOCALE_GLCD_CLOCK_SIMPLE_SIZE, &t.glcd_standby_clock_simple_size, (t.glcd_position_settings && t.glcd_standby_clock == cGLCD::CLOCK_SIMPLE), 0, 100, this);
-	//csh->setHint("", LOCALE_TODO);
-	gss->addItem(csh);
-
-	csy = new CMenuOptionNumberChooser(LOCALE_GLCD_CLOCK_SIMPLE_Y_POSITION, &t.glcd_standby_clock_simple_y_position, (t.glcd_position_settings && t.glcd_standby_clock == cGLCD::CLOCK_SIMPLE), 0, 500, this);
-	//csy->setHint("", LOCALE_TODO);
-	gss->addItem(csy);
+	addSetting(gss, "glcd_standby_clock");
+	addSetting(gss, "glcd_standby_clock_digital_y_position");
+	addSetting(gss, "glcd_standby_clock_simple_size");
+	addSetting(gss, "glcd_standby_clock_simple_y_position");
 
 	gss->addItem(GenericMenuSeparatorLine);
 
-	mc = new CMenuOptionChooser(LOCALE_GLCD_STANDBY_WEATHER, &t.glcd_standby_weather, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this);
-	//mc->setHint("", LOCALE_TODO);
-	gss->addItem(mc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_STANDBY_WEATHER_PERCENT, &t.glcd_standby_weather_percent, t.glcd_standby_weather, 0, 100, this);
-	gss->addItem(nc);
-	WeatherSBActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_STANDBY_WEATHER_CURR_TEMP_X_POSITION, &t.glcd_standby_weather_curr_temp_x_position, t.glcd_standby_weather, 0, oled_width, this);
-	gss->addItem(nc);
-	WeatherSBActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_STANDBY_WEATHER_CURR_ICON_X_POSITION, &t.glcd_standby_weather_curr_icon_x_position, t.glcd_standby_weather, 0, oled_width, this);
-	gss->addItem(nc);
-	WeatherSBActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_STANDBY_WEATHER_NEXT_TEMP_X_POSITION, &t.glcd_standby_weather_next_temp_x_position, t.glcd_standby_weather, 0, oled_width, this);
-	gss->addItem(nc);
-	WeatherSBActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_STANDBY_WEATHER_NEXT_ICON_X_POSITION, &t.glcd_standby_weather_next_icon_x_position, t.glcd_standby_weather, 0, oled_width, this);
-	gss->addItem(nc);
-	WeatherSBActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_STANDBY_WEATHER_Y_POSITION, &t.glcd_standby_weather_y_position, t.glcd_standby_weather, 0, oled_height, this);
-	gss->addItem(nc);
-	WeatherSBActivate.Add(nc);
+	addSetting(gss, "glcd_standby_weather");
+	addSetting(gss, "glcd_standby_weather_percent");
+	addSetting(gss, "glcd_standby_weather_curr_temp_x_position");
+	addSetting(gss, "glcd_standby_weather_curr_icon_x_position");
+	addSetting(gss, "glcd_standby_weather_next_temp_x_position");
+	addSetting(gss, "glcd_standby_weather_next_icon_x_position");
+	addSetting(gss, "glcd_standby_weather_y_position");
 
 	int res = gss->exec(NULL, "");
 	delete gss;
@@ -410,18 +398,15 @@ int GLCD_Menu::GLCD_Brightness_Settings()
 
 	CMenuForwarder *mf;
 
-	addSetting(gbs, "glcd_brightness", true, this, CRCInput::RC_nokey, true);
+	addSetting(gbs, "glcd_brightness", true, NULL, CRCInput::RC_nokey, true);
 
-	addSetting(gbs, "glcd_brightness_standby", !g_settings.shutdown_real, this, CRCInput::RC_nokey, true);
+	addSetting(gbs, "glcd_brightness_standby", true, NULL, CRCInput::RC_nokey, true);
 
 	gbs->addItem(GenericMenuSeparatorLine);
 
-	addSetting(gbs, "glcd_brightness_dim", true, this, CRCInput::RC_nokey, true);
+	addSetting(gbs, "glcd_brightness_dim", true, NULL, CRCInput::RC_nokey, true);
 
-	CStringInput *dim_time = new CStringInput(LOCALE_GLCD_BRIGHTNESS_DIM_TIME, &g_settings.glcd_brightness_dim_time, 5, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, "0123456789 ");
-	mf = new CMenuForwarder(LOCALE_GLCD_BRIGHTNESS_DIM_TIME, true, g_settings.glcd_brightness_dim_time, dim_time);
-	//mf->setHint("", LOCALE_TODO);
-	gbs->addItem(mf);
+	addSetting(gbs, "glcd_brightness_dim_time");
 
 	gbs->addItem(GenericMenuSeparatorLine);
 
@@ -430,7 +415,6 @@ int GLCD_Menu::GLCD_Brightness_Settings()
 	gbs->addItem(mf);
 
 	int res = gbs->exec(NULL, "");
-	delete dim_time;
 	delete gbs;
 	cGLCD::getInstance()->StandbyMode(false);
 	return res;
@@ -441,24 +425,9 @@ int GLCD_Menu::GLCD_Theme_Settings()
 	CMenuWidget *gts = new CMenuWidget(LOCALE_GLCD_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_GLCD_THEME_SETTINGS);
 	gts->addIntroItems(LOCALE_GLCD_THEME_SETTINGS);
 
-	ChannelLogoActivate.Clear();
-	TimeActivate.Clear();
-	DurationActivate.Clear();
-	StartActivate.Clear();
-	EndActivate.Clear();
-	ProgressActivate.Clear();
-	WeatherActivate.Clear();
-
-	CMenuOptionNumberChooser *nc;
-	CMenuOptionChooser *oc;
-	CMenuDForwarder *mf;
-	CColorSetupNotifier *colorSetupNotifier = new CColorSetupNotifier();
-
 	cGLCD::getInstance()->SetCfgMode(true);
 
 	SNeutrinoGlcdTheme &t = g_settings.glcd_theme;
-	int oled_width = cGLCD::getInstance()->lcd->Width();
-	int oled_height = cGLCD::getInstance()->lcd->Height();
 
 	// choose theme
 
@@ -482,229 +451,62 @@ int GLCD_Menu::GLCD_Theme_Settings()
 
 	// colors
 
-	CColorChooser *fg = new CColorChooser(LOCALE_GLCD_COLOR_FG, &t.glcd_foreground_color_red, &t.glcd_foreground_color_green, &t.glcd_foreground_color_blue, NULL, colorSetupNotifier);
-	gts->addItem(new CMenuDForwarder(LOCALE_GLCD_COLOR_FG, true, NULL, fg));
-
-	CColorChooser *bg = new CColorChooser(LOCALE_GLCD_COLOR_BG, &t.glcd_background_color_red, &t.glcd_background_color_green, &t.glcd_background_color_blue, NULL, colorSetupNotifier);
-	gts->addItem(new CMenuDForwarder(LOCALE_GLCD_COLOR_BG, true, NULL, bg));
+	addSetting(gts, "glcd_theme.glcd_foreground_color");
+	addSetting(gts, "glcd_theme.glcd_background_color");
 
 	gts->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_GLCD_POSITION_SETTINGS));
 
 	// channel name
 
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_CHANNEL_SIZE, &t.glcd_channel_percent, true, 0, 100, this));
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_CHANNEL_ALIGN, &t.glcd_channel_align, ALIGNMENT_OPTIONS, ALIGNMENT_OPTION_COUNT, true, NULL));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_CHANNEL_X_POSITION, &t.glcd_channel_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_CHANNEL_Y_POSITION, &t.glcd_channel_y_position, true, 0, oled_height, this));
+	CMenuItem *item;
+	const char *const channel[] = { "glcd_channel_percent", "glcd_channel_align", "glcd_channel_x_position", "glcd_channel_y_position" };
+	for (size_t i = 0; i < sizeof(channel) / sizeof(channel[0]); i++)
+	{
+		item = addSetting(gts, channel[i]);
+		if (item)
+			afterApply(item, previewChannelName);
+	}
 
 	gts->addItem(GenericMenuSeparator);
 
-	// channel logo
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_LOGO_SHOW, &t.glcd_logo, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_LOGO_SIZE, &t.glcd_logo_percent, t.glcd_logo, 0, 100, this);
-	gts->addItem(nc);
-	ChannelLogoActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_LOGO_WIDTH, &t.glcd_logo_width_percent, t.glcd_logo, 0, 100, this);
-	gts->addItem(nc);
-	ChannelLogoActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_LOGO_X_POSITION, &t.glcd_logo_x_position, t.glcd_logo, 0, oled_width, this);
-	gts->addItem(nc);
-	ChannelLogoActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_LOGO_Y_POSITION, &t.glcd_logo_y_position, t.glcd_logo, 0, oled_height, this);
-	gts->addItem(nc);
-	ChannelLogoActivate.Add(nc);
-
-	gts->addItem(GenericMenuSeparatorLine);
-
-	// event
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_EPG_SIZE, &t.glcd_epg_percent, true, 0, 100, this));
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_EPG_ALIGN, &t.glcd_epg_align, ALIGNMENT_OPTIONS, ALIGNMENT_OPTION_COUNT, true, NULL));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_EPG_X_POSITION, &t.glcd_epg_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_EPG_Y_POSITION, &t.glcd_epg_y_position, true, 0, oled_height, this));
-
-	gts->addItem(GenericMenuSeparatorLine);
-
-	// event duration
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_DURATION_SHOW, &t.glcd_duration, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_DURATION_SIZE, &t.glcd_duration_percent, t.glcd_duration, 0, 100, this);
-	gts->addItem(nc);
-	DurationActivate.Add(nc);
-
-	oc = new CMenuOptionChooser(LOCALE_GLCD_DURATION_ALIGN, &t.glcd_duration_align, ALIGNMENT_OPTIONS, ALIGNMENT_OPTION_COUNT, t.glcd_duration, NULL);
-	gts->addItem(oc);
-	DurationActivate.Add(oc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_DURATION_X_POSITION, &t.glcd_duration_x_position, t.glcd_duration, 0, oled_width, this);
-	gts->addItem(nc);
-	DurationActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_DURATION_Y_POSITION, &t.glcd_duration_y_position, t.glcd_duration, 0, oled_height, this);
-	gts->addItem(nc);
-	DurationActivate.Add(nc);
-
-	gts->addItem(GenericMenuSeparatorLine);
-
-	// event start
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_START_SHOW, &t.glcd_start, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_START_SIZE, &t.glcd_start_percent, t.glcd_start, 0, 100, this);
-	gts->addItem(nc);
-	StartActivate.Add(nc);
-
-	oc = new CMenuOptionChooser(LOCALE_GLCD_START_ALIGN, &t.glcd_start_align, ALIGNMENT_OPTIONS, ALIGNMENT_OPTION_COUNT, t.glcd_start, NULL);
-	gts->addItem(oc);
-	StartActivate.Add(oc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_START_X_POSITION, &t.glcd_start_x_position, t.glcd_start, 0, oled_width, this);
-	gts->addItem(nc);
-	StartActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_START_Y_POSITION, &t.glcd_start_y_position, t.glcd_start, 0, oled_height, this);
-	gts->addItem(nc);
-	StartActivate.Add(nc);
-
-	gts->addItem(GenericMenuSeparatorLine);
-
-	// event end
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_END_SHOW, &t.glcd_end, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_END_SIZE, &t.glcd_end_percent, t.glcd_end, 0, 100, this);
-	gts->addItem(nc);
-	EndActivate.Add(nc);
-
-	oc = new CMenuOptionChooser(LOCALE_GLCD_END_ALIGN, &t.glcd_end_align, ALIGNMENT_OPTIONS, ALIGNMENT_OPTION_COUNT, t.glcd_end, NULL);
-	gts->addItem(oc);
-	EndActivate.Add(oc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_END_X_POSITION, &t.glcd_end_x_position, t.glcd_end, 0, oled_width, this);
-	gts->addItem(nc);
-	EndActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_END_Y_POSITION, &t.glcd_end_y_position, t.glcd_end, 0, oled_height, this);
-	gts->addItem(nc);
-	EndActivate.Add(nc);
-
-	gts->addItem(GenericMenuSeparatorLine);
-
-	// progress bar
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_PROGRESSBAR_SHOW, &t.glcd_progressbar, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_PROGRESSBAR_SIZE, &t.glcd_progressbar_percent, t.glcd_progressbar, 0, 100, this);
-	gts->addItem(nc);
-	ProgressActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_PROGRESSBAR_WIDTH, &t.glcd_progressbar_width, t.glcd_progressbar, 0, oled_width, this);
-	gts->addItem(nc);
-	ProgressActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_PROGRESSBAR_X_POSITION, &t.glcd_progressbar_x_position, t.glcd_progressbar, 0, oled_width, this);
-	gts->addItem(nc);
-	ProgressActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_PROGRESSBAR_Y_POSITION, &t.glcd_progressbar_y_position, t.glcd_progressbar, 0, oled_height, this);
-	gts->addItem(nc);
-	ProgressActivate.Add(nc);
-
-	CColorChooser *bar = new CColorChooser(LOCALE_GLCD_PROGRESSBAR_COLOR, &t.glcd_progressbar_color_red, &t.glcd_progressbar_color_green, &t.glcd_progressbar_color_blue, NULL, colorSetupNotifier);
-	mf = new CMenuDForwarder(LOCALE_GLCD_PROGRESSBAR_COLOR, t.glcd_progressbar, NULL, bar);
-	gts->addItem(mf);
-	ProgressActivate.Add(mf);
-
-	gts->addItem(GenericMenuSeparatorLine);
-
-	// time
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_TIME_SHOW, &t.glcd_time, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_TIME_SIZE, &t.glcd_time_percent, t.glcd_time, 0, 100, this);
-	gts->addItem(nc);
-	TimeActivate.Add(nc);
-
-	oc = new CMenuOptionChooser(LOCALE_GLCD_TIME_ALIGN, &t.glcd_time_align, ALIGNMENT_OPTIONS, ALIGNMENT_OPTION_COUNT, t.glcd_time, NULL);
-	gts->addItem(oc);
-	TimeActivate.Add(oc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_TIME_X_POSITION, &t.glcd_time_x_position, t.glcd_time, 0, oled_width, this);
-	gts->addItem(nc);
-	TimeActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_TIME_Y_POSITION, &t.glcd_time_y_position, t.glcd_time, 0, oled_height, this);
-	gts->addItem(nc);
-	TimeActivate.Add(nc);
-
-	gts->addItem(GenericMenuSeparatorLine);
-
-	// weather
-
-	gts->addItem(new CMenuOptionChooser(LOCALE_GLCD_WEATHER_SHOW, &t.glcd_weather, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, this));
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_WEATHER_PERCENT, &t.glcd_weather_percent, t.glcd_weather, 0, 100, this);
-	gts->addItem(nc);
-	WeatherActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_WEATHER_CURR_TEMP_X_POSITION, &t.glcd_weather_curr_temp_x_position, t.glcd_weather, 0, oled_width, this);
-	gts->addItem(nc);
-	WeatherActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_WEATHER_CURR_ICON_X_POSITION, &t.glcd_weather_curr_icon_x_position, t.glcd_weather, 0, oled_width, this);
-	gts->addItem(nc);
-	WeatherActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_WEATHER_NEXT_TEMP_X_POSITION, &t.glcd_weather_next_temp_x_position, t.glcd_weather, 0, oled_width, this);
-	gts->addItem(nc);
-	WeatherActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_WEATHER_NEXT_ICON_X_POSITION, &t.glcd_weather_next_icon_x_position, t.glcd_weather, 0, oled_width, this);
-	gts->addItem(nc);
-	WeatherActivate.Add(nc);
-
-	nc = new CMenuOptionNumberChooser(LOCALE_GLCD_WEATHER_Y_POSITION, &t.glcd_weather_y_position, t.glcd_weather, 0, oled_height, this);
-	gts->addItem(nc);
-	WeatherActivate.Add(nc);
-
-	gts->addItem(GenericMenuSeparatorLine);
-
-	// status markers
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_Y_PERCENT, &t.glcd_icons_percent, true, 0, 100, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_Y_POSITION, &t.glcd_icons_y_position, true, 0, oled_height, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_CAM_X_POSITION, &t.glcd_icon_cam_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_DD_X_POSITION, &t.glcd_icon_dd_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_ECM_X_POSITION, &t.glcd_icon_ecm_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_MUTE_X_POSITION, &t.glcd_icon_mute_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_REC_X_POSITION, &t.glcd_icon_rec_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_TIMER_X_POSITION, &t.glcd_icon_timer_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_TS_X_POSITION, &t.glcd_icon_ts_x_position, true, 0, oled_width, this));
-
-	gts->addItem(new CMenuOptionNumberChooser(LOCALE_GLCD_ICON_TXT_X_POSITION, &t.glcd_icon_txt_x_position, true, 0, oled_width, this));
+	// the parts of the layout, each with its switch where it has one, in the order they are drawn
+	const char *const layout[] =
+	{
+		// channel logo
+		"glcd_logo", "glcd_logo_percent", "glcd_logo_width_percent", "glcd_logo_x_position", "glcd_logo_y_position", NULL,
+		// event
+		"glcd_epg_percent", "glcd_epg_align", "glcd_epg_x_position", "glcd_epg_y_position", NULL,
+		// event duration
+		"glcd_duration", "glcd_duration_percent", "glcd_duration_align", "glcd_duration_x_position", "glcd_duration_y_position", NULL,
+		// event start
+		"glcd_start", "glcd_start_percent", "glcd_start_align", "glcd_start_x_position", "glcd_start_y_position", NULL,
+		// event end
+		"glcd_end", "glcd_end_percent", "glcd_end_align", "glcd_end_x_position", "glcd_end_y_position", NULL,
+		// progress bar
+		"glcd_progressbar", "glcd_progressbar_percent", "glcd_progressbar_width", "glcd_progressbar_x_position", "glcd_progressbar_y_position", "glcd_theme.glcd_progressbar_color", NULL,
+		// time
+		"glcd_time", "glcd_time_percent", "glcd_time_align", "glcd_time_x_position", "glcd_time_y_position", NULL,
+		// weather
+		"glcd_weather", "glcd_weather_percent", "glcd_weather_curr_temp_x_position", "glcd_weather_curr_icon_x_position",
+		"glcd_weather_next_temp_x_position", "glcd_weather_next_icon_x_position", "glcd_weather_y_position", NULL,
+		// status markers
+		"glcd_icons_percent", "glcd_icons_y_position", "glcd_icon_cam_x_position", "glcd_icon_dd_x_position",
+		"glcd_icon_ecm_x_position", "glcd_icon_mute_x_position", "glcd_icon_rec_x_position", "glcd_icon_timer_x_position",
+		"glcd_icon_ts_x_position", "glcd_icon_txt_x_position", NULL
+	};
+	for (size_t i = 0; i < sizeof(layout) / sizeof(layout[0]); i++)
+	{
+		if (layout[i] == NULL)
+		{
+			// The last part has no line after it.
+			if (i + 1 < sizeof(layout) / sizeof(layout[0]))
+				gts->addItem(GenericMenuSeparatorLine);
+		}
+		else
+			addSetting(gts, layout[i]);
+	}
 
 	int res = gts->exec(NULL, "");
-	delete colorSetupNotifier;
 	delete gts;
 	cGLCD::getInstance()->StandbyMode(false);
 	cGLCD::getInstance()->SetCfgMode(false);
@@ -739,7 +541,8 @@ int GLCD_Menu::GLCD_Menu_Select_Driver()
 			return res;
 	}
 	g_settings.glcd_selected_config = select;
-	select_driver->setOption(cGLCD::getInstance()->GetConfigName(g_settings.glcd_selected_config).c_str());
-	cGLCD::getInstance()->Respawn();
+	if (select_driver)
+		select_driver->setOption(cGLCD::getInstance()->GetConfigName(g_settings.glcd_selected_config).c_str());
+	applyGlcd("glcd_selected_config");
 	return menu_return::RETURN_REPAINT;
 }

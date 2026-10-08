@@ -36,7 +36,9 @@ enum class EventType
 	RecordStart, RecordStop,
 	TimerChanged, EpgUpdated,
 	BouquetsChanged, SettingsChanged,
-	Playback
+	Playback,
+	// A setting a write stored and the box could not put in force; text names its keys.
+	SettingApplyFailed
 };
 
 // A value type by construction: the message payloads this is fed from are
@@ -50,6 +52,11 @@ struct Event
 	uint64_t    channel_id;
 	int         value;
 	std::string text;
+	/* Who started what the event reports, where the path knows, separated by spaces where
+	   one run carried several: "box" for the box's own menus, "web:<session id>" for a web
+	   session, "mcp:<grant>" for an AI client, "remote" for a network write naming none.
+	   Empty for every event that does not say. */
+	std::string initiator;
 
 	Event() : type(EventType::Zap), channel_id(0), value(0) {}
 };

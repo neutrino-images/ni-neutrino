@@ -530,6 +530,7 @@ void CKeyboardInput::forceSaveScreen(bool enable)
 
 int CKeyboardInput::exec(CMenuTarget* parent, const std::string &)
 {
+	CMenuWidget::Busy modal;
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
 	int res = menu_return::RETURN_REPAINT;

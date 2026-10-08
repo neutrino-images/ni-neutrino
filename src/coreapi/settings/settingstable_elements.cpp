@@ -22,6 +22,7 @@
 #include "settingsfield.h"
 #include "predicates.h"
 #include "videomodes.h"
+#include "choicesources.h"
 
 namespace coreapi
 {
@@ -55,6 +56,13 @@ bool autoModeOffered()
 #else
 	return false;
 #endif
+}
+
+// The module slot of that number is in the box, so a row of a slot it lacks is no setting there.
+template <unsigned I>
+bool ciSlotFittedAt()
+{
+	return ciSlotFitted(I);
 }
 
 /* What the personalize screen lets a menu entry be: out of the menu, in it, or in
@@ -119,6 +127,17 @@ constexpr EnumValue kCiClock[] =
 };
 #endif
 
+#if BOXMODEL_VUPLUS_ALL
+/* The routing is on at one and off at every other number, which is how the driver reads it; the
+   program wrote nine for off before the screen had a word for it, so that is still a value a
+   file may hold and the choice shows it as off. */
+constexpr EnumValue kCiRpr[] =
+{
+	option(0).label("options.off"),
+	option(1).label("options.on")
+};
+#endif
+
 // What the front display's second line shows.
 constexpr EnumValue kLcdStatusline[] =
 {
@@ -127,11 +146,6 @@ constexpr EnumValue kLcdStatusline[] =
 	option(2).label("options.off")
 };
 
-/* The three brightnesses of the front display are the one thing the applier test
-   holds pending: the screen edits each through a copy of its own and writes it into
-   the array when the item is focused, so applying one of these rows would apply what
-   the copy last held and not what a write left. The test names them, with the
-   stream that takes the screen over (test_settingsappliers.cpp). */
 constexpr Descriptor kElements[] =
 {
 	boolRow("personalize_pinstatus")
@@ -865,21 +879,25 @@ constexpr Descriptor kElements[] =
 		.section("cam")
 		.label("ci.op")
 		.defaultValue(0)
+		.availableIf(&ciSlotFittedAt<0>)
 		.field(COREAPI_ELEMENT_FIELD(ci_op, 0)),
 	boolRow("ci_op_1")
 		.section("cam")
 		.label("ci.op")
 		.defaultValue(0)
+		.availableIf(&ciSlotFittedAt<1>)
 		.field(COREAPI_ELEMENT_FIELD(ci_op, 1)),
 	boolRow("ci_op_2")
 		.section("cam")
 		.label("ci.op")
 		.defaultValue(0)
+		.availableIf(&ciSlotFittedAt<2>)
 		.field(COREAPI_ELEMENT_FIELD(ci_op, 2)),
 	boolRow("ci_op_3")
 		.section("cam")
 		.label("ci.op")
 		.defaultValue(0)
+		.availableIf(&ciSlotFittedAt<3>)
 		.field(COREAPI_ELEMENT_FIELD(ci_op, 3)),
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 	enumRow("ci_clock_0")
@@ -887,6 +905,7 @@ constexpr Descriptor kElements[] =
 		.label("ci.clock")
 		.defaultValue(6)
 		.values(kCiClock)
+		.availableIf(&ciSlotFittedAt<0>)
 		.field(COREAPI_ELEMENT_FIELD(ci_clock, 0)),
 #else
 	intRow("ci_clock_0")
@@ -894,6 +913,7 @@ constexpr Descriptor kElements[] =
 		.label("ci.clock")
 		.range(6, 12)
 		.defaultValue(9)
+		.availableIf(&ciSlotFittedAt<0>)
 		.field(COREAPI_ELEMENT_FIELD(ci_clock, 0)),
 #endif
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
@@ -902,6 +922,7 @@ constexpr Descriptor kElements[] =
 		.label("ci.clock")
 		.defaultValue(6)
 		.values(kCiClock)
+		.availableIf(&ciSlotFittedAt<1>)
 		.field(COREAPI_ELEMENT_FIELD(ci_clock, 1)),
 #else
 	intRow("ci_clock_1")
@@ -909,6 +930,7 @@ constexpr Descriptor kElements[] =
 		.label("ci.clock")
 		.range(6, 12)
 		.defaultValue(9)
+		.availableIf(&ciSlotFittedAt<1>)
 		.field(COREAPI_ELEMENT_FIELD(ci_clock, 1)),
 #endif
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
@@ -917,6 +939,7 @@ constexpr Descriptor kElements[] =
 		.label("ci.clock")
 		.defaultValue(6)
 		.values(kCiClock)
+		.availableIf(&ciSlotFittedAt<2>)
 		.field(COREAPI_ELEMENT_FIELD(ci_clock, 2)),
 #else
 	intRow("ci_clock_2")
@@ -924,6 +947,7 @@ constexpr Descriptor kElements[] =
 		.label("ci.clock")
 		.range(6, 12)
 		.defaultValue(9)
+		.availableIf(&ciSlotFittedAt<2>)
 		.field(COREAPI_ELEMENT_FIELD(ci_clock, 2)),
 #endif
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
@@ -932,6 +956,7 @@ constexpr Descriptor kElements[] =
 		.label("ci.clock")
 		.defaultValue(6)
 		.values(kCiClock)
+		.availableIf(&ciSlotFittedAt<3>)
 		.field(COREAPI_ELEMENT_FIELD(ci_clock, 3)),
 #else
 	intRow("ci_clock_3")
@@ -939,38 +964,43 @@ constexpr Descriptor kElements[] =
 		.label("ci.clock")
 		.range(6, 12)
 		.defaultValue(9)
+		.availableIf(&ciSlotFittedAt<3>)
 		.field(COREAPI_ELEMENT_FIELD(ci_clock, 3)),
 #endif
 #if BOXMODEL_VUPLUS_ALL
-	intRow("ci_rpr_0")
+	enumRow("ci_rpr_0")
 		.section("cam")
 		.label("ci.rpr")
-		.range(0, 9)
-		.defaultValue(9)
+		.defaultValue(0)
+		.values(kCiRpr)
+		.availableIf(&ciSlotFittedAt<0>)
 		.field(COREAPI_ELEMENT_FIELD(ci_rpr, 0)),
 #endif
 #if BOXMODEL_VUPLUS_ALL
-	intRow("ci_rpr_1")
+	enumRow("ci_rpr_1")
 		.section("cam")
 		.label("ci.rpr")
-		.range(0, 9)
-		.defaultValue(9)
+		.defaultValue(0)
+		.values(kCiRpr)
+		.availableIf(&ciSlotFittedAt<1>)
 		.field(COREAPI_ELEMENT_FIELD(ci_rpr, 1)),
 #endif
 #if BOXMODEL_VUPLUS_ALL
-	intRow("ci_rpr_2")
+	enumRow("ci_rpr_2")
 		.section("cam")
 		.label("ci.rpr")
-		.range(0, 9)
-		.defaultValue(9)
+		.defaultValue(0)
+		.values(kCiRpr)
+		.availableIf(&ciSlotFittedAt<2>)
 		.field(COREAPI_ELEMENT_FIELD(ci_rpr, 2)),
 #endif
 #if BOXMODEL_VUPLUS_ALL
-	intRow("ci_rpr_3")
+	enumRow("ci_rpr_3")
 		.section("cam")
 		.label("ci.rpr")
-		.range(0, 9)
-		.defaultValue(9)
+		.defaultValue(0)
+		.values(kCiRpr)
+		.availableIf(&ciSlotFittedAt<3>)
 		.field(COREAPI_ELEMENT_FIELD(ci_rpr, 3)),
 #endif
 	intRow("lcd_brightness")
@@ -1038,18 +1068,21 @@ constexpr Descriptor kElements[] =
 		.label("audiomenu.pref_lang")
 		.hint("menu.hint_pref_lang")
 		.defaultValue("German")
+		.choicesFrom(languageNames)
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_lang, 0)),
 	textRow("pref_lang_1")
 		.section("general")
 		.label("audiomenu.pref_lang")
 		.hint("menu.hint_pref_lang")
 		.defaultValue("English")
+		.choicesFrom(languageNames)
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_lang, 1)),
 	textRow("pref_lang_2")
 		.section("general")
 		.label("audiomenu.pref_lang")
 		.hint("menu.hint_pref_lang")
 		.defaultValue("French")
+		.choicesFrom(languageNames)
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_lang, 2)),
 	textRow("pref_subs_0")
 		.section("general")

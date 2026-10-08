@@ -74,6 +74,7 @@ coreapi::Result<mcp::Caller> verifyAccessTokenIn(Store &s, const std::string &be
 	c.level = level;
 	c.external = (origin == Origin::Tunnel);
 	c.groups = facts.groups;
+	c.connection = facts.grant_id.empty() ? facts.key : facts.grant_id;
 	return coreapi::Result<mcp::Caller>::success(c);
 }
 

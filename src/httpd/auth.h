@@ -221,6 +221,11 @@ std::string openSession(const std::string &user);
    something and carries a live cookie without it. Everything the cookie's own attributes
    buy is on top of that and not instead of it. */
 
+/* What a write made under this session is reported to, "web:" and a number the session was
+   given when it opened; empty for a token naming no live session. Not a secret and never a
+   credential: what it is good for is telling a session its own events apart. */
+std::string sessionWriter(const std::string &token);
+
 // Whether there was a session under this token to drop. The next request
 // carrying it is a request carrying nothing, with no interval in between.
 bool closeSession(const std::string &token);

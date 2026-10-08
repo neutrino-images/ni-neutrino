@@ -39,32 +39,31 @@
    it, and its name. */
 const CMenuOptionChooser::keyval_ext *videoModeSlots();
 
+/* The question about a video mode the screen now shows: true keeps it. Nobody may
+   be able to read the screen, so no answer is a no. */
+bool askKeepVideoMode();
+
 class CFrameBuffer;
-class CVideoSettings : public CMenuWidget, CChangeObserver
+class CVideoSettings : public CMenuWidget
 {
 	private:
 		CFrameBuffer *frameBuffer;
 		CMenuForwarder *SyncControlerForwarder;
 
-		int prev_video_mode;
-
 		int is_wizard;
 
 		int width, selected;
 		int showVideoSetup();
+		bool confirmVideoMode();
 
 	public:
 		CVideoSettings(int wizard_mode = SNeutrinoSettings::WIZARD_OFF);
 		~CVideoSettings();
 
-		virtual bool changeNotify(const neutrino_locale_t OptionName, void *data);
 		//virtual void paint();
 		void nextMode();
 		void next43Mode();
 		void SwitchFormat();
-
-		void initVideoSettings();
-		void setupVideoSystem(bool do_ask);
 
 		void setWizardMode(int mode) {is_wizard = mode;};
 

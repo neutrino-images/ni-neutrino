@@ -31,6 +31,8 @@
 #ifndef __lcd4l__
 #define __lcd4l__
 
+#include <atomic>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <sigc++/signal.h>
@@ -51,12 +53,24 @@ class CLCD4l
 			SPF1024x600	= 3
 		};
 
-		// Functions
+		/* tell false keeps the signals below silent: their slots paint, which only
+		   the program's loop may do. Start, stop and restart run one at a time. */
 		void	InitLCD4l();
-		void	StartLCD4l();
-		void	StopLCD4l();
+		void	StartLCD4l(bool tell = true);
+		void	StopLCD4l(bool tell = true);
 		void	SwitchLCD4l();
 		void	RestartLCD4lScript();
+		/* Stop, then start for a mode that is not off, as one step: nothing can run
+		   between the two. Silent, for the apply worker. False when the script for
+		   the mode failed, or a start came after Shutdown. */
+		bool	Restart(int mode);
+		/* For the end of the program: no start is made after this, so a restart still
+		   on the apply worker cannot start the service again behind it. The thread is
+		   ended whatever the mode, and stop_service runs the stop script as well, unless
+		   a script holds the service longer than the deadline. Once only: also after a
+		   flash that failed no start is made, since the teardown before it deleted what
+		   the thread reads. */
+		void	Shutdown(bool stop_service);
 		void	ForceRun() { wait4daemon = false; }
 		void	setActionKey(const std::string ActionKey) { m_ActionKey = ActionKey; }
 		void    clearActionKey(void) { m_ActionKey.clear(); }
@@ -67,8 +81,6 @@ class CLCD4l
 		int	CreateEventFile(std::string content = "", bool convert = false);
 		int	CreateMenuFile(std::string content = "", bool convert = false);
 		int	RemoveMenuFile();
-
-		int	GetMaxBrightness();
 
 		void	ResetParseID() { m_ParseID = 0; }
 
@@ -84,6 +96,12 @@ class CLCD4l
 					OnError;
 
 	private:
+		std::timed_mutex control;
+		std::atomic<bool> closing;
+		bool		start(bool tell);
+		bool		stop(bool tell);
+		void		restartScript(bool tell);
+
 		std::thread	*thrLCD4l;
 		static void	*LCD4lProc(void *arg);
 		bool		exit_proc;

@@ -77,8 +77,6 @@ class CNetworkSetup : public CMenuTarget, CChangeObserver
 		CGenericMenuActivate dhcpDisable;
 		CGenericMenuActivate wlanEnable;
 
-		CSectionsdConfigNotifier* sectionsdConfigNotifier;
-			
 		void restoreNetworkSettings();
 		void prepareSettings();
 		void readNetworkSettings();

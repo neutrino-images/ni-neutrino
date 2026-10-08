@@ -76,9 +76,13 @@ struct Session
 	std::string user;
 	std::string csrf;
 	time_t      expires;
+	// Counted, not drawn: it names a session to its own events and opens nothing.
+	unsigned long id;
 
-	Session() : expires(0) {}
+	Session() : expires(0), id(0) {}
 };
+
+unsigned long next_session_id = 0;
 
 /* One minted token: the first characters of it, the stored form of the whole of it, what
    it was minted at, what part of the box it stands for, and when it stops. The token
@@ -297,7 +301,7 @@ void sweepIfDue()
    and a session that stayed usable until the next one came round would have a
    lifetime of the setting plus up to an interval. */
 bool liveSession(const std::string &token, std::string *csrf,
-                 std::string *user = NULL, time_t *expires = NULL)
+                 std::string *user = NULL, time_t *expires = NULL, unsigned long *id = NULL)
 {
 	if (token.empty())
 		return false;
@@ -322,6 +326,8 @@ bool liveSession(const std::string &token, std::string *csrf,
 		*user = i->second.user;
 	if (expires != NULL)
 		*expires = i->second.expires;
+	if (id != NULL)
+		*id = i->second.id;
 	return true;
 }
 
@@ -784,6 +790,7 @@ std::string openSession(const std::string &user)
 
 	OpenThreads::ScopedLock<OpenThreads::Mutex> held(lock());
 	s.expires = expiryFrom(time(NULL), config().session_lifetime_s);
+	s.id = ++next_session_id;
 
 	/* A token already in the table is not a token to hand out twice, and the
 	   answer for one is no session rather than the other session under it. */
@@ -805,6 +812,16 @@ bool closeSession(const std::string &token)
 
 	OpenThreads::ScopedLock<OpenThreads::Mutex> held(lock());
 	return table().sessions.erase(token) > 0;
+}
+
+std::string sessionWriter(const std::string &token)
+{
+	unsigned long id = 0;
+	if (!liveSession(token, NULL, NULL, NULL, &id))
+		return std::string();
+	char text[32];
+	std::snprintf(text, sizeof(text), "web:%lu", id);
+	return text;
 }
 
 std::string csrfFor(const std::string &token)

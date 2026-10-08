@@ -375,13 +375,22 @@ color.gradient Color gradient
 color.gradient_a2b color A to B
 color.gradient_b2a color B to A
 color.gradient_d2l dark to light
+color.gradient_direction_head Menu title gradient direction
+color.gradient_direction_hint Menu hint gradient direction
+color.gradient_direction_infobar_body Infobar body gradient direction
+color.gradient_direction_infobar_bottom Infobar bottom gradient direction
+color.gradient_direction_infobar_top Infobar top gradient direction
+color.gradient_direction_subhead Menu subtitle gradient direction
 color.gradient_dld dark light dark
+color.gradient_head Menu title color gradient
+color.gradient_hint Menu hint color gradient
 color.gradient_l2d light to dark
 color.gradient_ldl light dark light
 color.gradient_mode_direction Direction
 color.gradient_mode_direction_hor horizontal
 color.gradient_mode_direction_ver vertical
 color.gradient_separator_enable Color gradient separator line
+color.gradient_subhead Menu subtitle color gradient
 colorchooser.alpha alpha
 colorchooser.blue blue
 colorchooser.green green
@@ -389,14 +398,28 @@ colorchooser.red red
 colormenu.background Background
 colormenu.channellist_description_text Text color for event description
 colormenu.clock_textcolor Digit color
+colormenu.colored_events_text Colored events text color
+colormenu.content_background Menu content background
+colormenu.content_text Menu content text color
 colormenu.fade Fade GUI
 colormenu.font Select GUI font
 colormenu.font_ttx Select teletext font
+colormenu.foot_background Menu footer background
+colormenu.foot_text Menu footer text color
+colormenu.head_background Menu title background
+colormenu.head_text Menu title text color
+colormenu.inactive_background Inactive entry background
+colormenu.inactive_text Inactive entry text color
+colormenu.infobar_background Infobar background
+colormenu.infobar_casystem Infobar CA system color
+colormenu.infobar_text Infobar text color
 colormenu.menucolors Themes
 colormenu.osd_preset Screen selection
 colormenu.osd_resolution OSD resolution
 colormenu.progressbar_active Active part color
 colormenu.progressbar_passive Background
+colormenu.selected_background Selected entry background
+colormenu.selected_text Selected entry text color
 colormenu.shadow_color Shadow color
 colormenu.textcolor Text color
 colormenu.themeselect Select theme
@@ -900,7 +923,6 @@ fontsize.moviebrowser_list List items
 fontsize.subtitles Text subtitles
 fontsize.window_radiotext_desc0 Radiotext infos
 fontsize.window_radiotext_desc1 Radiotext additional infos
-format.after_second after %d s
 fsk.all off
 fsk.from_12 from 12
 fsk.from_16 from 16
@@ -1264,6 +1286,8 @@ lcdmenu.statusline.playtime Playtime
 lcdmenu.statusline.volume Volume
 ledcontroler.backlight Buttons backlight
 ledcontroler.backlight.tv TV mode
+ledcontroler.backlight_deepstandby Button backlight in deep standby
+ledcontroler.backlight_standby Button backlight in standby
 ledcontroler.blink Blink in deep-standby, if timer set
 ledcontroler.menu Power Button LEDs
 ledcontroler.mode.deepstandby Deep-standby
@@ -2503,6 +2527,7 @@ options.off off
 options.on on
 options.start start
 options.stop stop
+options.unlimited unlimited
 osd.preset_screen_a Screen 1
 osd.preset_screen_b Screen 2
 parentallock.bouquetmode Bouquets are default
@@ -2812,7 +2837,11 @@ screensaver.mode_image Images
 screensaver.off Screensaver off
 screensaver.random Random images
 screensaver.timeout Change interval
+screensetup.end_x Screen margin bottom right, X
+screensetup.end_y Screen margin bottom right, Y
 screensetup.lowerright green = setup lower right
+screensetup.start_x Screen margin top left, X
+screensetup.start_y Screen margin top left, Y
 screensetup.upperleft red = setup upper left
 screenshot.count Count
 screenshot.cover Create moviecover for Moviebrowser
@@ -3099,6 +3128,15 @@ videomenu.panscan Pan & Scan
 videomenu.panscan2 14:9 Pan & Scan
 videomenu.pip PiP setup
 videomenu.pip_error PiP start failed
+videomenu.pip_height PiP height
+videomenu.pip_radio_height PiP height (radio)
+videomenu.pip_radio_width PiP width (radio)
+videomenu.pip_radio_x PiP position X (radio)
+videomenu.pip_radio_y PiP position Y (radio)
+videomenu.pip_rotate_lastpos PiP position after rotating
+videomenu.pip_width PiP width
+videomenu.pip_x PiP position X
+videomenu.pip_y PiP position Y
 videomenu.psi Color sliders
 videomenu.psi.brightness Brightness
 videomenu.psi.contrast Contrast
@@ -3158,6 +3196,8 @@ webtv.stream_restart_attempts Stream restarts after connection reset
 webtv.xml WebTV files
 webtv.xml.auto Auto-load WebTV files
 window_size Window size in %
+window_size_height Window height in %
+window_size_width Window width in %
 wizard.initial_settings Initial settings found
 wizard.install_settings Do you want to install channels for Astra 19.2°E?
 wizard.message_check_for_updates Update

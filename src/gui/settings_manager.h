@@ -35,14 +35,27 @@
 #include <string>
 
 
+#include <functional>
+
 class CSettingsManager : public CMenuTarget
 {
+	public:
+		/* replace puts other values over the settings, a file or the defaults, from
+		   the box's menu: everything changed is put in force, and a changed video
+		   mode or remote control is asked about as its own menu does. */
+		static void replaceFromMenu(const std::function<void()> &replace);
+
 	private:
 		int width;
 		int is_wizard;
 
 		int showMenu();
 		int showMenu_wizard();
+		// What the menu's actions do, each apart from the exec that picks it, so each reads as one action.
+		int loadConfig();
+		int saveConfig();
+		int backup();
+		int restore();
 
 	public:	
 		CSettingsManager(int wizard_mode = SNeutrinoSettings::WIZARD_OFF);

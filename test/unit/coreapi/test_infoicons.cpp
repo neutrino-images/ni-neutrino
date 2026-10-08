@@ -62,7 +62,7 @@ struct ShippedRoutes
 
 bool fixtureSave() { return true; }
 
-/* The store the box runs on, because what asks an applier is whatever carries
+/* The store the box runs on, because what applies a write is whatever carries
    the write into the program's own settings, and a fake carries none.
 
    The sink stands in for the message loop, so nothing is carried until a case
@@ -84,38 +84,6 @@ struct RealStore
 	private:
 		RealStore(const RealStore &);
 		RealStore &operator=(const RealStore &);
-};
-
-/* Records every key it is told about and what the program's own settings held
-   at that moment, which is the question a fake counting calls cannot answer: an
-   applier reads those settings, so a seam that told it before the value landed
-   would act on the state the box was leaving. */
-struct WatchingApplier : public coreapi::SettingsApplier
-{
-	const SNeutrinoSettings *values;
-	std::vector<std::string> keys;
-	std::vector<int>         mode_seen;
-
-	explicit WatchingApplier(const SNeutrinoSettings *v) : values(v) {}
-
-	bool apply(const char *key)
-	{
-		keys.push_back(key != 0 ? key : "");
-		mode_seen.push_back(values->mode_icons);
-		return true;
-	}
-
-	// Not found is a sentinel below zero, so a key that was never named and one
-	// named while the setting stood at nought cannot read alike.
-	int whenTold(const std::string &key) const
-	{
-		for (size_t i = 0; i < keys.size(); ++i)
-		{
-			if (keys[i] == key)
-				return mode_seen[i];
-		}
-		return -1;
-	}
 };
 
 std::string stateOf(const Response &r)
@@ -232,36 +200,36 @@ TEST_CASE("both settings land in one save", "[infoicons]")
 	REQUIRE(s.ints["mode_icons_skin"] == kSkinPopup);
 }
 
-TEST_CASE("writing the state asks somebody to act on it, and not before the box carries it",
-          "[infoicons]")
+TEST_CASE("every move between the four states lands", "[infoicons]")
 {
-	/* The half the settings API does not have today, and the reason this
-	   exists at all. What is checked is not that something was called but that
-	   the program's own settings already carried the new value when it was:
-	   the applier on the box reads them, so being told first would be being
-	   told about the state the box is leaving. */
-	RealStore store;
-	WatchingApplier a(&store.values);
-	InstalledApplier in("osd", &a);
+	/* Through the settings layer and its conditions, which lock the two rows against each other
+	   in the menu: a state change that passes only as raw writes would be refused here. */
+	InstalledDependencies deps;
+	FakeSettingsSource s;
+	InstalledSettingsSource in(&s);
+	s.ints["mode_icons"] = 0; s.ints["mode_icons_skin"] = kSkinStatic;
 
-	REQUIRE(store.values.mode_icons == 0);
-	REQUIRE(coreapi::osd::setInfoIcons(coreapi::osd::InfoIcons::Popup).ok());
-
-	// Written and saved, and nothing told: the loop has not run.
-	REQUIRE(a.keys.empty());
-	REQUIRE(store.values.mode_icons == 0);
-
-	coreapi::applyPendingSettings();
-
-	REQUIRE(store.values.mode_icons == 1);
-	REQUIRE(store.values.mode_icons_skin == (int) kSkinPopup);
-	REQUIRE(a.whenTold("mode_icons") == 1);
+	static const coreapi::osd::InfoIcons kAll[] =
+	{
+		coreapi::osd::InfoIcons::Static, coreapi::osd::InfoIcons::Popup,
+		coreapi::osd::InfoIcons::Infoviewer, coreapi::osd::InfoIcons::Off
+	};
+	for (size_t from = 0; from < 4; ++from)
+	{
+		for (size_t to = 0; to < 4; ++to)
+		{
+			INFO(from << " to " << to);
+			REQUIRE(coreapi::osd::setInfoIcons(kAll[from]).ok());
+			REQUIRE(coreapi::osd::setInfoIcons(kAll[to]).ok());
+			REQUIRE(coreapi::osd::infoIcons().value() == kAll[to]);
+		}
+	}
 }
 
-TEST_CASE("a section with no applier is still written", "[infoicons]")
+TEST_CASE("the state is written with no group behind it", "[infoicons]")
 {
-	// The other side of the case above: nothing here depends on an applier
-	// being there, so a box that registers none writes the state all the same.
+	// Nothing here depends on a group being there, so a box that has none
+	// writes the state all the same.
 	RealStore store;
 
 	REQUIRE(coreapi::osd::setInfoIcons(coreapi::osd::InfoIcons::Infoviewer).ok());

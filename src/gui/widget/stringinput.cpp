@@ -383,6 +383,7 @@ void CStringInput::forceSaveScreen(bool enable)
 
 int CStringInput::exec( CMenuTarget* parent, const std::string & )
 {
+	CMenuWidget::Busy modal;
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
 	int res = menu_return::RETURN_REPAINT;
@@ -795,6 +796,7 @@ void CPINInput::paintChar(int pos)
 
 int CPINInput::exec( CMenuTarget* parent, const std::string & )
 {
+	CMenuWidget::Busy modal;
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
 

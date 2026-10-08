@@ -374,13 +374,22 @@ color.gradient Kleur gradient
 color.gradient_a2b color A to B
 color.gradient_b2a color B to A
 color.gradient_d2l donker tot licht
+color.gradient_direction_head (((T))) Menütitel Verlaufsrichtung
+color.gradient_direction_hint (((T))) Menühinweis Verlaufsrichtung
+color.gradient_direction_infobar_body (((T))) Infobar Mitte Verlaufsrichtung
+color.gradient_direction_infobar_bottom (((T))) Infobar unten Verlaufsrichtung
+color.gradient_direction_infobar_top (((T))) Infobar oben Verlaufsrichtung
+color.gradient_direction_subhead (((T))) Menü-Untertitel Verlaufsrichtung
 color.gradient_dld donker licht donker
+color.gradient_head (((T))) Menütitel Farbverlauf
+color.gradient_hint (((T))) Menühinweis Farbverlauf
 color.gradient_l2d licht tot donker
 color.gradient_ldl licht donker licht
 color.gradient_mode_direction Richting
 color.gradient_mode_direction_hor horizontaal
 color.gradient_mode_direction_ver vertikaal
 color.gradient_separator_enable Gradiënt voor separator
+color.gradient_subhead (((T))) Menü-Untertitel Farbverlauf
 colorchooser.alpha Alpha
 colorchooser.blue Blauw
 colorchooser.green Groen
@@ -388,14 +397,28 @@ colorchooser.red Rood
 colormenu.background Achtergrond
 colormenu.channellist_description_text (((T))) Textfarbe für Sendungsbeschreibungen
 colormenu.clock_textcolor Digit kleur
+colormenu.colored_events_text (((T))) Textfarbe farbiger Sendungen
+colormenu.content_background (((T))) Menüinhalt Hintergrund
+colormenu.content_text (((T))) Menüinhalt Textfarbe
 colormenu.fade Menu's vervagen
 colormenu.font Selecteer lettertype gebruikersinterface
 colormenu.font_ttx Selecteer lettertype teletekst
+colormenu.foot_background (((T))) Menüfuß Hintergrund
+colormenu.foot_text (((T))) Menüfuß Textfarbe
+colormenu.head_background (((T))) Menütitel Hintergrund
+colormenu.head_text (((T))) Menütitel Textfarbe
+colormenu.inactive_background (((T))) Inaktiver Eintrag Hintergrund
+colormenu.inactive_text (((T))) Inaktiver Eintrag Textfarbe
+colormenu.infobar_background (((T))) Infobar Hintergrund
+colormenu.infobar_casystem (((T))) Infobar CA-System Farbe
+colormenu.infobar_text (((T))) Infobar Textfarbe
 colormenu.menucolors Kleuren
 colormenu.osd_preset Voorinstellingen TV
 colormenu.osd_resolution (((T))) OSD-Auflösung
 colormenu.progressbar_active (((T))) Farbe des aktiven Teils
 colormenu.progressbar_passive (((T))) Hintergrundfarbe
+colormenu.selected_background (((T))) Gewählter Eintrag Hintergrund
+colormenu.selected_text (((T))) Gewählter Eintrag Textfarbe
 colormenu.shadow_color (((T))) Schattenfarbe
 colormenu.textcolor Tekst kleur
 colormenu.themeselect Selecteer thema
@@ -899,7 +922,6 @@ fontsize.moviebrowser_list (((T))) Listen-Einträge
 fontsize.subtitles Text ondertitels
 fontsize.window_radiotext_desc0 (((T))) Radiotext Infos
 fontsize.window_radiotext_desc1 (((T))) Radiotext Zusatzinfo
-format.after_second (((T))) nach %d s
 fsk.all (((T))) aus
 fsk.from_12 (((T))) ab 12
 fsk.from_16 (((T))) ab 16
@@ -1259,6 +1281,8 @@ lcdmenu.statusline.playtime afspeelduur
 lcdmenu.statusline.volume volume
 ledcontroler.backlight Knop backlight
 ledcontroler.backlight.tv TV mode
+ledcontroler.backlight_deepstandby (((T))) Tastenbeleuchtung im Deep-Standby
+ledcontroler.backlight_standby (((T))) Tastenbeleuchtung im Standby
 ledcontroler.blink Knipper in deepstandby indien een timer actief is.
 ledcontroler.menu LED eigenschappen
 ledcontroler.mode.deepstandby Deep Standby
@@ -2495,6 +2519,7 @@ options.off Uit
 options.on Aan
 options.start (((T))) starten
 options.stop (((T))) stoppen
+options.unlimited (((T))) unbegrenzt
 osd.preset_screen_a (((T))) Bildschirm 1
 osd.preset_screen_b (((T))) Bildschirm 2
 parentallock.bouquetmode Favorieten lijsten zijn standaard:
@@ -2801,7 +2826,11 @@ screensaver.mode_image (((T))) Bilder
 screensaver.off (((T))) Bildschirmschoner aus
 screensaver.random (((T))) Zufällige Bilderwahl
 screensaver.timeout (((T))) Wechselintervall
+screensetup.end_x (((T))) Bildrand unten, rechts: X
+screensetup.end_y (((T))) Bildrand unten, rechts: Y
 screensetup.lowerright groen = rechts onder instellen
+screensetup.start_x (((T))) Bildrand oben, links: X
+screensetup.start_y (((T))) Bildrand oben, links: Y
 screensetup.upperleft rood = links boven instellen
 screenshot.count Aantal
 screenshot.cover Creeer film omslag voor moviebrowser
@@ -3083,6 +3112,15 @@ videomenu.panscan Pan&Scan
 videomenu.panscan2 14:9 Pan&Scan
 videomenu.pip PiP instelling
 videomenu.pip_error PiP start mislukt
+videomenu.pip_height (((T))) PiP Höhe
+videomenu.pip_radio_height (((T))) PiP Höhe (Radio)
+videomenu.pip_radio_width (((T))) PiP Breite (Radio)
+videomenu.pip_radio_x (((T))) PiP Position X (Radio)
+videomenu.pip_radio_y (((T))) PiP Position Y (Radio)
+videomenu.pip_rotate_lastpos (((T))) PiP Position nach dem Drehen
+videomenu.pip_width (((T))) PiP Breite
+videomenu.pip_x (((T))) PiP Position X
+videomenu.pip_y (((T))) PiP Position Y
 videomenu.psi (((T))) Farbregler
 videomenu.psi.brightness (((T))) Helligkeit
 videomenu.psi.contrast (((T))) Kontrast
@@ -3138,6 +3176,8 @@ webtv.head WebTV
 webtv.xml WebTV XML bestand
 webtv.xml.auto (((T))) WebTV-Dateien automatisch laden
 window_size Window size in %
+window_size_height (((T))) Fensterhöhe in %
+window_size_width (((T))) Fensterbreite in %
 wizard.initial_settings Initiële instellingen gevonden
 wizard.install_settings Wilt u de kanalen van Astra 1 (19.2º oost) inscannen?
 wizard.message_check_for_updates (((T))) Aktualisierung

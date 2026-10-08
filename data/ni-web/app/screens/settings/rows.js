@@ -125,7 +125,7 @@ export function LockedRow(props) {
 	return html`<div class="field set-locked">
 		<span class="label">${props.row.label}</span>
 		<p class="mono">${props.value}</p>
-		<span class="hint">${t(text, props.row.held ? 'settings.held' : props.row.pending ? 'settings.heldapply' : 'settings.locked')}</span>
+		<span class="hint">${t(text, props.row.held ? 'settings.held' : 'settings.locked')}</span>
 	</div>`;
 }
 
@@ -169,7 +169,7 @@ export function Control(props) {
 			}} />`;
 	}
 
-	if (row.type === 'enum' || (row.type === 'key' && row.choices.length > 0)) {
+	if (row.type === 'enum' || (row.type === 'key' && row.choices.length > 0) || (row.type === 'int' && row.listed)) {
 		/** @type {Array<{ value: string, label: string, disabled?: boolean }>} */
 		const options = row.choices.map(function (choice) {
 			return { value: String(choice.value), label: choice.label };
@@ -184,6 +184,32 @@ export function Control(props) {
 			else
 				options.push({ value: value, label: t(text, 'settings.value.unlisted', { value: value }), disabled: true });
 		}
+		return html`<${Select}
+			label=${row.label}
+			value=${value}
+			needsRestart=${row.needsRestart}
+			options=${options}
+			onChange=${function (/** @type {Event} */ event) {
+				const chooser = /** @type {HTMLSelectElement} */ (event.currentTarget);
+				changed(chooser.value);
+			}} />`;
+	}
+
+	if (row.type === 'string' && row.choices.length > 0) {
+		/** @type {Array<{ value: string, label: string, disabled?: boolean }>} */
+		const options = row.choices.map(function (choice) {
+			return { value: String(choice.text), label: choice.label };
+		});
+		/* An empty text is how the box says it picks for itself, and it is what such a row
+		   falls back to, so it is a choice of its own even though no list names it. Without
+		   it a stored empty text would draw as the first entry, and the way back to the
+		   default could not be picked. */
+		if (!options.some(function (o) { return o.value === ''; }) && (row.fallback === '' || value === ''))
+			options.unshift({ value: '', label: t(text, 'settings.value.automatic') });
+		/* What is stored passes a write again, so a text the box does not list right now stays
+		   shown and is still the value the row holds; it is not offered as a new pick. */
+		if (value !== '' && !options.some(function (o) { return o.value === value; }))
+			options.push({ value: value, label: t(text, 'settings.value.unlisted', { value: value }), disabled: true });
 		return html`<${Select}
 			label=${row.label}
 			value=${value}

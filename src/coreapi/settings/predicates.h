@@ -34,6 +34,8 @@ bool hasFan();
 bool canCec();
 // Can change its own clock speed.
 bool canCpufreq();
+// Can decode a web stream larger than full HD.
+bool decodesLargeStreams();
 // The front panel takes a brightness.
 bool canSetBrightness();
 // The decoder can show a second picture.
@@ -96,6 +98,8 @@ bool hasScartOsdFix();
 bool canSelectRemote();
 // The module offers a delay, the rpr setting and a clock above high.
 bool ciExtended();
+// The box has a module slot of that number, counted from nought. False where it cannot say.
+bool ciSlotFitted(unsigned slot);
 // More than one tuner in the box, whether switched on or not.
 bool severalTunersFitted();
 // More than one tuner switched on in the tuner setup.

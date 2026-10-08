@@ -18,14 +18,21 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+// First, so every header below reads the box family it was built for.
+#include <config.h>
+
 #include "osd.h"
 #include "coreapi/base/errors.h"
 
 #include "coreapi/base/deps.h"
 #include "coreapi/base/eventbus.h"
+#include "coreapi/settings/settings.h"
+#include "coreapi/settings/videomodes.h"
 
 #include <cstdio>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include <OpenThreads/Mutex>
 #include <OpenThreads/ScopedLock>
@@ -36,10 +43,56 @@
 #include <linux/input.h>
 #include <src/tools/rcsim.h>
 
+#include <hardware/video.h>
+
 namespace coreapi
 {
 namespace osd
 {
+
+bool autoModeEnabled(const int *flags, size_t count, int system)
+{
+	// -1 is what a position this box does not draw answers, not a standard.
+	if (system < 0)
+		return false;
+	for (size_t i = 0; i < count; ++i)
+	{
+		if (videoModeValue(i) == system)
+			return flags[i] == 1;
+	}
+	return false;
+}
+
+bool videoSystemNeeds1080(int system)
+{
+	switch (system)
+	{
+		case VIDEO_STD_1080I60:
+		case VIDEO_STD_1080I50:
+		case VIDEO_STD_1080P30:
+		case VIDEO_STD_1080P24:
+		case VIDEO_STD_1080P25:
+			return true;
+#ifdef BOXMODEL_CST_HD2
+		case VIDEO_STD_1080P50:
+		case VIDEO_STD_1080P60:
+		case VIDEO_STD_1080P2397:
+		case VIDEO_STD_1080P2997:
+			return true;
+#endif
+#if HAVE_ARM_HARDWARE
+		case VIDEO_STD_1080P50:
+		case VIDEO_STD_1080P60:
+		case VIDEO_STD_2160P24:
+		case VIDEO_STD_2160P25:
+		case VIDEO_STD_2160P30:
+		case VIDEO_STD_2160P50:
+			return true;
+#endif
+		default:
+			return false;
+	}
+}
 
 Result<void> message(MessageKind kind, const std::string &text)
 {
@@ -399,7 +452,7 @@ Result<InfoIcons> infoIcons()
 	return ok(skin == kSkinInfoviewer ? InfoIcons::Infoviewer : InfoIcons::Off);
 }
 
-Result<void> setInfoIcons(InfoIcons state)
+Result<void> setInfoIcons(InfoIcons state, const std::string &who)
 {
 	long skin_now = 0;
 	Status s = settingsSource().readInt(kSkinKey, skin_now);
@@ -413,19 +466,18 @@ Result<void> setInfoIcons(InfoIcons state)
 		return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
 			    "that is not a state the icons can be put in");
 
-	s = settingsSource().writeInt(kModeKey, mode);
-	if (s == Status::Ok)
-		s = settingsSource().writeInt(kSkinKey, skin);
-	if (s != Status::Ok)
-		return fail(s, ErrorCode::SettingNotWritten,
-			    "the state of the icons could not be written");
-
-	/* One save for the two, because the pair is one state. What this asks for is
-	   that both of them reach the box together. */
-	s = settingsSource().persist();
-	if (s != Status::Ok)
-		return fail(s, ErrorCode::SettingNotWritten,
-			    "the state of the icons was taken and not saved");
+	// One write, so the pair is judged as the state it leaves and both land in one save.
+	char mode_text[24];
+	char skin_text[24];
+	std::snprintf(mode_text, sizeof(mode_text), "%ld", mode);
+	std::snprintf(skin_text, sizeof(skin_text), "%ld", skin);
+	std::vector<std::pair<std::string, std::string> > members;
+	members.push_back(std::make_pair(std::string(kModeKey), std::string(mode_text)));
+	members.push_back(std::make_pair(std::string(kSkinKey), std::string(skin_text)));
+	settings::Refusals failed;
+	settings::writeBatch(members, failed, false, who);
+	if (!failed.empty())
+		return fail(failed[0].second);
 	return ok();
 }
 

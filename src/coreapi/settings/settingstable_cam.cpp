@@ -20,6 +20,10 @@
 
 #include "settingstable.h"
 #include "settingsfield.h"
+#include "predicates.h"
+#include "coreapi/base/deps.h"
+
+#include <stdio.h>
 
 namespace coreapi
 {
@@ -50,12 +54,46 @@ constexpr EnumValue kCiDelay[] =
 };
 #endif
 
+// The settings of the module slots as a whole are offered where the box has a slot.
+bool hasCiSlot()
+{
+	return ciSlotFitted(0);
+}
+
+/* The tuners the module can be bound to: none, and each frontend the box has under the
+   number the channel stack knows it by, shown as its place in the list and its name. False
+   where the box cannot say. */
+bool ciTuners(std::vector<SettingChoice> &out)
+{
+	FrontendList list;
+	if (tunerSource().frontends(list) != Status::Ok)
+		return false;
+
+	std::vector<SettingChoice> offered;
+	SettingChoice none;
+	none.value = -1;
+	none.label_key = "options.off";
+	offered.push_back(none);
+	for (size_t i = 0; i < list.size(); ++i)
+	{
+		SettingChoice one;
+		one.value = list[i].number;
+		char head[16];
+		snprintf(head, sizeof(head), "%d: ", list[i].number + 1);
+		one.label = std::string(head) + list[i].name;
+		offered.push_back(one);
+	}
+	out.swap(offered);
+	return true;
+}
+
 constexpr Descriptor kCam[] =
 {
 	boolRow("ci_standby_reset")
 		.section("cam")
 		.label("ci.reset_standby")
 		.defaultValue(0)
+		.availableIf(hasCiSlot)
 		.field(COREAPI_NUMBER_FIELD(ci_standby_reset)),
 	boolRow("ci_check_live")
 		.section("cam")
@@ -75,9 +113,9 @@ constexpr Descriptor kCam[] =
 		.values(kCiMode)
 		.field(COREAPI_NUMBER_FIELD(ci_mode)),
 	/* Which tuner the module reads, as the number the box gives it, and minus
-	   one for none. A number and not a choice: the tuners on offer are the ones
-	   the running box has, so no table in the source states the values. The
-	   ceiling is the largest tuner count any box is built for (the frontend
+	   one for none. A number with a provider and not an enum: the tuners on offer
+	   are the ones the running box has, so no table in the source states the
+	   values, and a surface offers the provider's list. The ceiling is the largest tuner count any box is built for (the frontend
 	   manager's maximum), which is wider than what most boxes offer; the
 	   narrower ceilings belong to other builds and refusing a value the box
 	   would take is the worse direction. */
@@ -86,6 +124,7 @@ constexpr Descriptor kCam[] =
 		.label("ci.tuner")
 		.range(-1, 23)
 		.defaultValue(-1)
+		.choicesFrom(&ciTuners)
 		.field(COREAPI_NUMBER_FIELD(ci_tuner)),
 #if BOXMODEL_VUPLUS_ALL
 	// Only where the settings struct has the field, which is on the VU+ boxes.
@@ -93,6 +132,7 @@ constexpr Descriptor kCam[] =
 		.section("cam")
 		.label("ci.delay")
 		.defaultValue(128)
+		.availableIf(hasCiSlot)
 		.values(kCiDelay)
 		.field(COREAPI_NUMBER_FIELD(ci_delay)),
 #endif

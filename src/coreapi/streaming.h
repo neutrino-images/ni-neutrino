@@ -68,6 +68,12 @@ Result<std::string> playlist(const std::string &authority, Scope s);
 // it. NotFound for a channel the box does not have.
 Result<std::string> playlistFor(const std::string &authority, ChannelId id);
 
+/* The port the box streams on when the stored one names none: a port is 1 to
+   65535, and a value outside it is not something the listener can bind to or
+   the stream URLs can carry. */
+const int DEFAULT_PORT = 31339;
+int portOrDefault(int stored);
+
 } // namespace streaming
 } // namespace coreapi
 

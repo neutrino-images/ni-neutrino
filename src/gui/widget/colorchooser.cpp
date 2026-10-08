@@ -159,6 +159,7 @@ fb_pixel_t CColorChooser::getColor()
 
 int CColorChooser::exec(CMenuTarget *parent, const std::string &)
 {
+	CMenuWidget::Busy modal;
 	Init();
 	neutrino_msg_t msg;
 	neutrino_msg_data_t data;

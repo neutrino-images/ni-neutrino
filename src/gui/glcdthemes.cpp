@@ -51,6 +51,8 @@
 
 #include "glcdthemes.h"
 
+#include <coreapi/base/apply.h>
+
 #define FILE_SUFFIX ".otheme"
 
 static 	SNeutrinoGlcdTheme &t = g_settings.glcd_theme;
@@ -74,6 +76,15 @@ CGLCDThemes* CGLCDThemes::getInstance()
 	return th;
 }
 
+/* The theme was written into the settings member by member, which no group hears of; the
+   font is the one a group key stands for and a run of the group draws the layout again. */
+void CGLCDThemes::themeChanged()
+{
+	const coreapi::Status st = coreapi::applyKey("glcd_font");
+	if (st != coreapi::Status::Ok && st != coreapi::Status::Busy)
+		dprintf(DEBUG_NORMAL, "[glcd theme] the theme was not applied\n");
+}
+
 int CGLCDThemes::exec(CMenuTarget* parent, const std::string & actionKey)
 {
 	int res = menu_return::RETURN_REPAINT;
@@ -84,7 +95,7 @@ int CGLCDThemes::exec(CMenuTarget* parent, const std::string & actionKey)
 		{
 			if(!applyDefaultTheme())
 				setupDefaultColors(); // fallback
-			changeNotify(NONEXISTANT_LOCALE, NULL);
+			themeChanged();
 		}
 		else
 		{
@@ -232,7 +243,7 @@ void CGLCDThemes::rememberOldTheme(bool remember)
 		t = oldTheme;
 		setSettingsText(g_settings.glcd_theme_name, oldTheme_name);
 
-		changeNotify(NONEXISTANT_LOCALE, NULL);
+		themeChanged();
 		hasThemeChanged = false;
 	}
 }
@@ -243,7 +254,7 @@ void CGLCDThemes::readFile(const char *themename)
 	{
 		getTheme(themefile);
 
-		changeNotify(NONEXISTANT_LOCALE, NULL);
+		themeChanged();
 		hasThemeChanged = true;
 	}
 	else

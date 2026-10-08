@@ -24,6 +24,8 @@
 
 #include "coreapi/base/deps.h"
 
+#include <hardware/video.h>
+
 namespace coreapi
 {
 
@@ -198,6 +200,23 @@ constexpr Condition kCaSystemDrawn[] =
 	when("infobar_casystem_display").below(2)
 };
 
+constexpr Condition kWeatherOn[] =
+{
+	when("weather_enabled").isNot(0)
+};
+
+// The digits are drawn in their own colour only on the clock without a background.
+constexpr Condition kClockWithoutBackground[] =
+{
+	when("infoClockBackground").is(0)
+};
+
+// The larger size is not offered while the box picks the video standard itself.
+constexpr Condition kVideoModeNotAuto[] =
+{
+	when("video_Mode").isNot(VIDEO_STD_AUTO)
+};
+
 constexpr Condition kSysfsHddOn[] =
 {
 	when("infobar_show_sysfs_hdd").isNot(0)
@@ -298,14 +317,16 @@ constexpr Descriptor kOsd[] =
 	   part of it a constant can carry. */
 	intRow("window_width")
 		.section("osd")
-		.label("window_size")
+		.label("window_size_width")
+		.menuLabel("window_size")
 		.hint("menu.hint_window_size")
 		.range(50, 100)
 		.defaultValue(100)
 		.field(COREAPI_NUMBER_FIELD(window_width)),
 	intRow("window_height")
 		.section("osd")
-		.label("window_size")
+		.label("window_size_height")
+		.menuLabel("window_size")
 		.hint("menu.hint_window_size")
 		.range(50, 100)
 		.defaultValue(100)
@@ -414,13 +435,13 @@ constexpr Descriptor kOsd[] =
 		.hint("menu.hint_infobar_analogclock")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(infobar_analogclock)),
-	// Meaningful only where the weather is switched on, which is a key another
-	// section declares and a condition cannot name yet.
+	// Meaningful only where the weather is switched on.
 	boolRow("infobar_weather")
 		.section("osd")
 		.label("miscsettings.infobar_weather")
 		.hint("menu.hint_infobar_weather")
 		.defaultValue(0)
+		.changeableWhen(kWeatherOn)
 		.field(COREAPI_NUMBER_FIELD(infobar_weather)),
 	enumRow("infobar_show_channellogo")
 		.section("osd")
@@ -780,6 +801,7 @@ constexpr Descriptor kOsd[] =
 		.defaultValue(OSDMODE_720)
 #endif
 		.values(kOsdResolution)
+		.changeableWhen(kVideoModeNotAuto)
 		.field(COREAPI_SERVICE_FIELD(osd_resolution, askOsdResolution, tellOsdResolution)),
 	/* The corners of the drawn area, four of them for each pairing of an OSD
 	   resolution and a preset. All sixteen share the two words that are drawn
@@ -787,125 +809,123 @@ constexpr Descriptor kOsd[] =
 	   pixel preset and b the other, while 0 names the 720 line OSD and 1 the
 	   1080 line one.
 
-	   Each needs a restart. The box copies the quartet its resolution and
-	   preset name into the four values it draws with, and that runs at start
-	   and where the resolution or the preset changes, not where one of these
-	   does.
+	   The box copies the quartet its resolution and preset name into the four
+	   values it draws with, and a write of any of them has it do that again.
 
 	   The upper left corner is held to 200 in both directions and the lower
 	   right to at least 400; the ceiling of the lower right is the OSD's own
 	   size, which the suffix names. */
 	intRow("screen_StartX_a_0")
 		.section("osd")
-		.label("screensetup.upperleft")
+		.label("screensetup.start_x")
+		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
 		.defaultValue(0)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_StartX_a_0)),
 	intRow("screen_StartY_a_0")
 		.section("osd")
-		.label("screensetup.upperleft")
+		.label("screensetup.start_y")
+		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
 		.defaultValue(0)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_StartY_a_0)),
 	intRow("screen_EndX_a_0")
 		.section("osd")
-		.label("screensetup.lowerright")
+		.label("screensetup.end_x")
+		.menuLabel("screensetup.lowerright")
 		.range(400, 1279)
 		.defaultValue(1279)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_EndX_a_0)),
 	intRow("screen_EndY_a_0")
 		.section("osd")
-		.label("screensetup.lowerright")
+		.label("screensetup.end_y")
+		.menuLabel("screensetup.lowerright")
 		.range(400, 719)
 		.defaultValue(719)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_EndY_a_0)),
 	intRow("screen_StartX_a_1")
 		.section("osd")
-		.label("screensetup.upperleft")
+		.label("screensetup.start_x")
+		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
 		.defaultValue(0)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_StartX_a_1)),
 	intRow("screen_StartY_a_1")
 		.section("osd")
-		.label("screensetup.upperleft")
+		.label("screensetup.start_y")
+		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
 		.defaultValue(0)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_StartY_a_1)),
 	intRow("screen_EndX_a_1")
 		.section("osd")
-		.label("screensetup.lowerright")
+		.label("screensetup.end_x")
+		.menuLabel("screensetup.lowerright")
 		.range(400, 1919)
 		.defaultValue(1919)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_EndX_a_1)),
 	intRow("screen_EndY_a_1")
 		.section("osd")
-		.label("screensetup.lowerright")
+		.label("screensetup.end_y")
+		.menuLabel("screensetup.lowerright")
 		.range(400, 1079)
 		.defaultValue(1079)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_EndY_a_1)),
 	intRow("screen_StartX_b_0")
 		.section("osd")
-		.label("screensetup.upperleft")
+		.label("screensetup.start_x")
+		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
 		.defaultValue(22)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_StartX_b_0)),
 	intRow("screen_StartY_b_0")
 		.section("osd")
-		.label("screensetup.upperleft")
+		.label("screensetup.start_y")
+		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
 		.defaultValue(12)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_StartY_b_0)),
 	intRow("screen_EndX_b_0")
 		.section("osd")
-		.label("screensetup.lowerright")
+		.label("screensetup.end_x")
+		.menuLabel("screensetup.lowerright")
 		.range(400, 1279)
 		.defaultValue(1236)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_EndX_b_0)),
 	intRow("screen_EndY_b_0")
 		.section("osd")
-		.label("screensetup.lowerright")
+		.label("screensetup.end_y")
+		.menuLabel("screensetup.lowerright")
 		.range(400, 719)
 		.defaultValue(695)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_EndY_b_0)),
 	intRow("screen_StartX_b_1")
 		.section("osd")
-		.label("screensetup.upperleft")
+		.label("screensetup.start_x")
+		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
 		.defaultValue(33)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_StartX_b_1)),
 	intRow("screen_StartY_b_1")
 		.section("osd")
-		.label("screensetup.upperleft")
+		.label("screensetup.start_y")
+		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
 		.defaultValue(18)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_StartY_b_1)),
 	intRow("screen_EndX_b_1")
 		.section("osd")
-		.label("screensetup.lowerright")
+		.label("screensetup.end_x")
+		.menuLabel("screensetup.lowerright")
 		.range(400, 1919)
 		.defaultValue(1854)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_EndX_b_1)),
 	intRow("screen_EndY_b_1")
 		.section("osd")
-		.label("screensetup.lowerright")
+		.label("screensetup.end_y")
+		.menuLabel("screensetup.lowerright")
 		.range(400, 1079)
 		.defaultValue(1043)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(screen_EndY_b_1)),
 
 	/* Whether the infobar shows the module line at all. No item sets it: the
@@ -937,88 +957,102 @@ constexpr Descriptor kOsd[] =
 	   ones a theme file falls back to for a channel it does not name. */
 	colorRow("theme.menu_Head")
 		.section("osd")
-		.label("colormenu.background")
+		.label("colormenu.head_background")
+		.menuLabel("colormenu.background")
 		.hint("menu.hint_head_back")
 		.withAlpha()
 		.defaultValue("#0000001a")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Head, true)),
 	colorRow("theme.menu_Head_Text")
 		.section("osd")
-		.label("colormenu.textcolor")
+		.label("colormenu.head_text")
+		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_head_textcolor")
 		.defaultValue("#fc6e12")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Head_Text, false)),
 	colorRow("theme.menu_Content")
 		.section("osd")
-		.label("colormenu.background")
+		.label("colormenu.content_background")
+		.menuLabel("colormenu.background")
 		.hint("menu.hint_content_back")
 		.withAlpha()
 		.defaultValue("#2121211a")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content, true)),
 	colorRow("theme.menu_Content_Text")
 		.section("osd")
-		.label("colormenu.textcolor")
+		.label("colormenu.content_text")
+		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_content_textcolor")
 		.defaultValue("#fafafa")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_Text, false)),
 	colorRow("theme.menu_Content_Selected")
 		.section("osd")
-		.label("colormenu.background")
+		.label("colormenu.selected_background")
+		.menuLabel("colormenu.background")
 		.hint("menu.hint_selected_back")
 		.withAlpha()
 		.defaultValue("#fc6e121a")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_Selected, true)),
 	colorRow("theme.menu_Content_Selected_Text")
 		.section("osd")
-		.label("colormenu.textcolor")
+		.label("colormenu.selected_text")
+		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_selected_text")
 		.defaultValue("#000000")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_Selected_Text, false)),
 	colorRow("theme.menu_Content_inactive")
 		.section("osd")
-		.label("colormenu.background")
+		.label("colormenu.inactive_background")
+		.menuLabel("colormenu.background")
 		.hint("menu.hint_inactive_back")
 		.withAlpha()
 		.defaultValue("#2121211a")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_inactive, true)),
 	colorRow("theme.menu_Content_inactive_Text")
 		.section("osd")
-		.label("colormenu.textcolor")
+		.label("colormenu.inactive_text")
+		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_inactive_textcolor")
 		.defaultValue("#9e9e9e")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_inactive_Text, false)),
 	colorRow("theme.menu_Foot")
 		.section("osd")
-		.label("colormenu.background")
+		.label("colormenu.foot_background")
+		.menuLabel("colormenu.background")
 		.hint("menu.hint_foot_back")
 		.withAlpha()
 		.defaultValue("#0000001a")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Foot, true)),
 	colorRow("theme.menu_Foot_Text")
 		.section("osd")
-		.label("colormenu.textcolor")
+		.label("colormenu.foot_text")
+		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_foot_textcolor")
 		.defaultValue("#fafafa")
 		.field(COREAPI_COLOR_FIELD(theme, menu_Foot_Text, false)),
 	colorRow("theme.infobar")
 		.section("osd")
-		.label("colormenu.background")
+		.label("colormenu.infobar_background")
+		.menuLabel("colormenu.background")
 		.hint("menu.hint_infobar_back")
 		.withAlpha()
 		.defaultValue("#2121211a")
 		.field(COREAPI_COLOR_FIELD(theme, infobar, true)),
 	colorRow("theme.infobar_Text")
 		.section("osd")
-		.label("colormenu.textcolor")
+		.label("colormenu.infobar_text")
+		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_infobar_textcolor")
 		.defaultValue("#fafafa")
 		.field(COREAPI_COLOR_FIELD(theme, infobar_Text, false)),
 	colorRow("theme.infobar_casystem")
 		.section("osd")
-		.label("miscsettings.infobar_casystem_display")
+		.label("colormenu.infobar_casystem")
+		.menuLabel("miscsettings.infobar_casystem_display")
 		.hint("menu.hint_infobar_casys_color")
 		.withAlpha()
 		.defaultValue("#2121211a")
+		.changeableWhen(kCaSystemDrawn)
 		.field(COREAPI_COLOR_FIELD(theme, infobar_casystem, true)),
 	colorRow("theme.channellist_Description_Text")
 		.section("osd")
@@ -1028,7 +1062,8 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, channellist_Description_Text, false)),
 	colorRow("theme.colored_events")
 		.section("osd")
-		.label("colormenu.textcolor")
+		.label("colormenu.colored_events_text")
+		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_colored_events_textcolor")
 		.defaultValue("#fc6e12")
 		.field(COREAPI_COLOR_FIELD(theme, colored_events, false)),
@@ -1056,6 +1091,7 @@ constexpr Descriptor kOsd[] =
 		.label("colormenu.clock_textcolor")
 		.hint("menu.hint_clock_textcolor")
 		.defaultValue("#9e9e9e")
+		.changeableWhen(kClockWithoutBackground)
 		.field(COREAPI_COLOR_FIELD(theme, clock_Digit, false)),
 };
 

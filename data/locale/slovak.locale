@@ -375,13 +375,22 @@ color.gradient Farebný prechod
 color.gradient_a2b farba A do B
 color.gradient_b2a farba B do A
 color.gradient_d2l tmavá -> svetlá
+color.gradient_direction_head Smer prechodu nadpisu menu
+color.gradient_direction_hint Smer prechodu nápovedy menu
+color.gradient_direction_infobar_body Smer prechodu strednej časti panela
+color.gradient_direction_infobar_bottom Smer prechodu dolnej časti panela
+color.gradient_direction_infobar_top Smer prechodu hornej časti panela
+color.gradient_direction_subhead Smer prechodu podnadpisu menu
 color.gradient_dld tmavá svetlá tmavá
+color.gradient_head Farebný prechod nadpisu menu
+color.gradient_hint Farebný prechod nápovedy menu
 color.gradient_l2d svetlá -> tmavá
 color.gradient_ldl svetlá tmavá svetlá
 color.gradient_mode_direction Smer
 color.gradient_mode_direction_hor horizontálny
 color.gradient_mode_direction_ver vertikálny
 color.gradient_separator_enable Oddelovacia čiara farebnej výplne
+color.gradient_subhead Farebný prechod podnadpisu menu
 colorchooser.alpha Priehľadnosť
 colorchooser.blue Modrý
 colorchooser.green Zelený
@@ -389,14 +398,28 @@ colorchooser.red Červený
 colormenu.background Pozadie
 colormenu.channellist_description_text Farba textu pre popis udalosti
 colormenu.clock_textcolor Farba číslic
+colormenu.colored_events_text Farba textu farebných udalostí
+colormenu.content_background Pozadie obsahu menu
+colormenu.content_text Farba textu obsahu menu
 colormenu.fade Miznúce menu
 colormenu.font Výber písma
 colormenu.font_ttx Výber teletextového písma
+colormenu.foot_background Pozadie päty menu
+colormenu.foot_text Farba textu päty menu
+colormenu.head_background Pozadie nadpisu menu
+colormenu.head_text Farba textu nadpisu menu
+colormenu.inactive_background Pozadie neaktívnej položky
+colormenu.inactive_text Farba textu neaktívnej položky
+colormenu.infobar_background Pozadie informačného panela
+colormenu.infobar_casystem Farba CA systému v paneli
+colormenu.infobar_text Farba textu informačného panela
 colormenu.menucolors Farby menu
 colormenu.osd_preset Druh TV
 colormenu.osd_resolution OSD rozlíšenie
 colormenu.progressbar_active Farebne aktívna časť
 colormenu.progressbar_passive Na pozadí
+colormenu.selected_background Pozadie vybranej položky
+colormenu.selected_text Farba textu vybranej položky
 colormenu.shadow_color Farba tieňa
 colormenu.textcolor Farba textu
 colormenu.themeselect Výber tém
@@ -900,7 +923,6 @@ fontsize.moviebrowser_list Zoznam položiek
 fontsize.subtitles Text titulkov
 fontsize.window_radiotext_desc0 Rádiotext informácie
 fontsize.window_radiotext_desc1 Ďaľšie rádiotext informácie
-format.after_second po %d s
 fsk.all vyp
 fsk.from_12 od 12
 fsk.from_16 od 16
@@ -1264,6 +1286,8 @@ lcdmenu.statusline.playtime Odohratý čas
 lcdmenu.statusline.volume Hlasitosť
 ledcontroler.backlight Podsvietené tlačidlá
 ledcontroler.backlight.tv TV režim
+ledcontroler.backlight_deepstandby Podsvietenie tlačidiel v hlbokom standby
+ledcontroler.backlight_standby Podsvietenie tlačidiel v standby
 ledcontroler.blink Blikať pri vypnutí, ak je nastavený časovač
 ledcontroler.menu Podsvietenie tlačidla napájania
 ledcontroler.mode.deepstandby Vypnutie
@@ -2503,6 +2527,7 @@ options.off nie
 options.on áno
 options.start spustiť
 options.stop zastaviť
+options.unlimited neobmedzene
 osd.preset_screen_a Obraz 1
 osd.preset_screen_b Obraz 2
 parentallock.bouquetmode Predvolené bukety
@@ -2812,7 +2837,11 @@ screensaver.mode_image Obrázky
 screensaver.off Šetrič obrazovky
 screensaver.random Náhodné obrázky
 screensaver.timeout Zmena intervalu
+screensetup.end_x Dolný pravý okraj: X
+screensetup.end_y Dolný pravý okraj: Y
 screensetup.lowerright zelený = dolný, pravý okraj
+screensetup.start_x Horný ľavý okraj: X
+screensetup.start_y Horný ľavý okraj: Y
 screensetup.upperleft červený = horný, ľavý oraj
 screenshot.count Počet
 screenshot.cover Vytvoriť obálku pre prehrávač filmov
@@ -3099,6 +3128,15 @@ videomenu.panscan Pan&Scan
 videomenu.panscan2 14:9 Pan&Scan
 videomenu.pip Nastavenie PiP
 videomenu.pip_error Chyba spustenia PiP
+videomenu.pip_height Výška PiP
+videomenu.pip_radio_height Výška PiP (rádio)
+videomenu.pip_radio_width Šírka PiP (rádio)
+videomenu.pip_radio_x Poloha PiP X (rádio)
+videomenu.pip_radio_y Poloha PiP Y (rádio)
+videomenu.pip_rotate_lastpos Poloha PiP po otočení
+videomenu.pip_width Šírka PiP
+videomenu.pip_x Poloha PiP X
+videomenu.pip_y Poloha PiP Y
 videomenu.psi Farba posúvačov
 videomenu.psi.brightness Jas
 videomenu.psi.contrast Kontrast
@@ -3158,6 +3196,8 @@ webtv.stream_restart_attempts Stream sa reštartuje po obnovení spojenia
 webtv.xml WebTV súbory
 webtv.xml.auto Automatické načítanie WebTV súborov
 window_size Veľkosť okna v %
+window_size_height Výška okna v %
+window_size_width Šírka okna v %
 wizard.initial_settings Najdené základné nastavenia
 wizard.install_settings Chcete inštalovať kanály pre Astru 19.2°E?
 wizard.message_check_for_updates Aktualizácia

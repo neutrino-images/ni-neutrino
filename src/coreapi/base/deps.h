@@ -462,11 +462,12 @@ struct SettingsSource
 	   other's values. A refusal cannot promise that nothing landed: another
 	   caller's message may be draining the store as this one is refused. */
 	virtual Status persist() = 0;
-	/* persist() for a caller that is the program's loop itself. Carries every write held
-	   into the program's settings and saves at once, so what the caller wrote is in effect
-	   when this returns, which a message to the loop could not give a caller that is on it.
-	   Writes other callers had held go in with them, as they would on the loop's next turn.
-	   Other sources have no loop and answer as persist() does. */
+	/* persist() for a caller that is the program's loop itself. Carries what the caller
+	   wrote into the program's settings and saves at once, so it is in effect when this
+	   returns, which a message to the loop could not give a caller that is on it. What other
+	   callers already posted goes in with it, as it would on the loop's next turn; a write
+	   another caller has not posted yet stays held for its own post, so no batch is carried
+	   in halves. Other sources have no loop and answer as persist() does. */
 	virtual Status persistNow() { return persist(); }
 };
 
@@ -491,49 +492,8 @@ void setSettingsSource(SettingsSource *s);
    already changed and a write to it is undone by the next save. */
 void installRealSettingsSource(SNeutrinoSettings *values, bool (*save)());
 
-/* How a written setting takes effect. Every other seam here is reached
-   downwards, this one upwards on purpose: what applies a change is a notifier a
-   setup screen owns, and this layer may not reach into the screens.
-
-   A section at a time, because one notifier stands behind a whole screen and
-   the key tells it which setting moved.
-
-   Called on the thread that carries the write into the program's settings and
-   after it has landed, so an applier may read the new value and touch what that
-   thread owns. Not on the thread that asked for the write: that one is a worker
-   of the web layer.
-
-   apply() answers whether the applier knew the key. It reaches no caller,
-   because the write was answered before this runs. A virtual call and not a
-   function object, so that nothing here allocates. */
-struct SettingsApplier
-{
-	virtual ~SettingsApplier() {}
-	virtual bool apply(const char *key) = 0;
-};
-
-/* How many sections may have one at once. The registry is an array of this size
-   rather than a map, so registering allocates nothing and cannot fail for want
-   of memory in the middle of startup. */
-const size_t SETTINGS_APPLIER_LIMIT = 32;
-
-/* Puts a on the section, replacing whoever was there, or takes the section's
-   applier away when a is NULL. Undoing a registration that was never made is Ok
-   rather than an error.
-
-   The name is kept and not copied, because nothing here allocates, so it has to
-   outlive the registration. InvalidArgument for a section with no name;
-   Internal when the table is full, which is a fault here and not at the
-   caller. */
-Status registerSettingsApplier(const char *section, SettingsApplier *a);
-
-// Who applies that section, or NULL for one nobody registered for. Not an
-// error: a setting that nothing running has to be told about is written and
-// that is the whole of it.
-SettingsApplier *settingsApplier(const char *section);
-
 /* The other half of that source, run by the message loop when the command
-   persist() sends arrives: it puts what was written into the values, asks for
+   persist() sends arrives: it puts what every post promised into the values, asks for
    the save, and then asks whoever applies each written setting. All three on
    the loop's thread, and in that order, so that nothing is applied before the
    value it stands for is there to be read.
@@ -958,7 +918,7 @@ void installRealRecordingSafetySource();
    driver-built resolution list is in that order, so a position happens to be
    the same number; what reads the value reads it as a mode.
 
-   Reached upwards like the applier and the value sets above. A write changes
+   Reached upwards like the value sets above. A write changes
    what the box is drawing at once, on the calling thread, which is the thread
    a menu does the same thing on. */
 struct OsdResolutionSource

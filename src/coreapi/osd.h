@@ -146,7 +146,20 @@ Result<InfoIcons> infoIcons();
    infoviewer as well. The skin says who draws the icons, so a box left in it with
    the drawing turned off answers infoviewer for ever after and cannot be turned
    off at all. */
-Result<void> setInfoIcons(InfoIcons state);
+Result<void> setInfoIcons(InfoIcons state, const std::string &who = std::string());
+
+/* Whether a television standard, the driver's number for it, takes the larger
+   of the two sizes the box draws its own screen at. Which standards do is the
+   family's: the HD2 and the ARM boxes count their faster 1080p modes as well,
+   the ARM boxes their 2160p ones too, the others only the five every driver
+   has. */
+bool videoSystemNeeds1080(int system);
+
+/* Whether the automatic mode may switch to a standard, the driver's number for it. The flags
+   are numbered by the position of the mode's name and not by the driver's number, so the
+   standard is looked up among the positions and not used as one. A standard this box does not
+   draw is not enabled. */
+bool autoModeEnabled(const int *flags, size_t count, int system);
 
 } // namespace osd
 } // namespace coreapi

@@ -348,6 +348,8 @@ private:
 	std::string		numberFormat;
 	std::string		(*numberFormatFunction)(int num);
 
+	std::vector<int>	namedOutside() const;
+
 	void			init(	const neutrino_locale_t& lName,
 					const std::string &sName,
 					int* const Option_Value,
@@ -647,6 +649,24 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		virtual void paint();
 		virtual void hide();
 		virtual int exec(CMenuTarget* parent, const std::string & actionKey);
+		/* The menu that waits for a key in its own loop and is the one on the
+		   screen, NULL while an item's own work runs (a pulldown, a question, a
+		   dialog) or no menu is open: what may be drawn into from outside. */
+		static const CMenuWidget *waiting();
+		/* Clears the mark of the menu on top for as long as it lives and puts
+		   it back on every way out. A modal that runs its own loop holds one:
+		   it is on the screen over the menu, whoever opened it, and a menu
+		   drawn from outside must not paint into it. */
+		class Busy
+		{
+			public:
+				Busy();
+				~Busy();
+			private:
+				const CMenuWidget *before;
+				Busy(const Busy &);
+				Busy &operator=(const Busy &);
+		};
 		virtual const char *getName();
 		virtual void integratePlugins(int integration, const unsigned int shortcut=RC_NOKEY, bool enabled=true);
 		void initSelectable();

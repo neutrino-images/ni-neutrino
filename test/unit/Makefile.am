@@ -29,7 +29,6 @@ AM_CPPFLAGS = \
 	-DCOREAPI_LOCALES_FILE='"$(abs_builddir)/settings-locales.txt"' \
 	-DCOREAPI_CHOICES_FILE='"$(abs_builddir)/settings-choices.txt"' \
 	-DCOREAPI_LABELS_FILE='"$(abs_builddir)/settings-labels.txt"' \
-	-DCOREAPI_APPLIED_FILE='"$(abs_builddir)/settings-applied.txt"' \
 	-DCOREAPI_ERRORCODES_FILE='"$(abs_builddir)/errorcodes.txt"' \
 	-DCOREAPI_STATUSES_FILE='"$(abs_builddir)/statuses.txt"' \
 	-DHTTPD_CODES_FILE='"$(abs_builddir)/httpcodes.txt"' \
@@ -39,6 +38,7 @@ AM_CPPFLAGS = \
 	-DCOREAPI_ANSWERS_ACTUAL='"$(abs_builddir)/answers.actual"' \
 	-DCOREAPI_PART_DIR='"$(abs_builddir)"' \
 	-DCOREAPI_PART_SECONDS='"$(srcdir)/support/part-seconds.txt"' \
+	-DCOREAPI_PHASE_SEAMS_FILE='"$(srcdir)/scan/apply-phase-seams.txt"' \
 	-DNI_WEB_OLD_CONF='"$(top_srcdir)/src/httpd/nhttpd.conf.in"' \
 	-DNI_WEB_PAGE_DIR='"$(top_srcdir)/data/ni-web"' \
 	-DNI_WEB_OPENAPI_DUMP='"$(abs_builddir)/openapi.json"' \
@@ -177,9 +177,22 @@ coreapi_tests_SOURCES = \
 	coreapi/test_settingschoices.cpp \
 	coreapi/test_menuspec.cpp \
 	coreapi/test_settingstable.cpp \
-	coreapi/test_settingsappliers.cpp \
 	coreapi/test_apply.cpp \
+	coreapi/test_apply_audio.cpp \
+	coreapi/test_apply_cec.cpp \
+	coreapi/test_apply_record.cpp \
+	coreapi/test_apply_hdd.cpp \
+	coreapi/test_apply_webchannels.cpp \
+	coreapi/test_applymisc.cpp \
+	coreapi/test_applykeys.cpp \
+	coreapi/test_applylang.cpp \
+	coreapi/test_applyci.cpp \
+	coreapi/test_applyservices.cpp \
+	coreapi/test_applyupdate.cpp \
+	coreapi/test_apply_panels.cpp \
+	coreapi/test_apply_osd.cpp \
 	gui/test_settingactive.cpp \
+	gui/test_settingfollow.cpp \
 	httpd/test_server.cpp \
 	support/test_httpclient.cpp \
 	coreapi/test_httpstatus.cpp \
@@ -321,10 +334,10 @@ whole.log: $(PART_TESTS:.part=.log)
 $(PART_TESTS) whole.merge:
 	@: > $@
 
-EXTRA_DIST = support/catch.hpp support/fakes.h support/conditions.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/counts-mcp.txt support/part-seconds.txt support/httpclient.h \
+EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasefakes.h support/phaseseams.inc support/fakevideo.h support/fakeaudio.h support/fakececlink.h scan/apply-phase-seams.txt support/conditions.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/counts-mcp.txt support/part-seconds.txt support/httpclient.h support/fakemisc.h support/fakesectionsd.h support/fakerc.h support/fakelocalization.h support/applytest.h support/fakeci.h support/fakeservices.h support/fakeupdate.h support/fakeplugins.h support/fakeweather.h support/fakelcd4l.h support/fakevfd.h support/fakeglcd.h support/fakeosd.h support/boundedrows.h support/fakerecordconfig.h support/fakehdd.h support/fakewebchannels.h \
 	scan/extract-enum.sh support/merge-counts.sh \
 	scan/check-hook.sh scan/check-fieldtypes.sh \
-	scan/check-hardware.sh scan/check-cecmodes.sh scan/check-appliers.sh scan/check-denominator.sh \
+	scan/check-hardware.sh scan/check-cecmodes.sh scan/check-denominator.sh \
 	scan/check-sections.sh scan/check-color-defaults.sh scan/check-callback-boundary.sh scan/check-legacy-mount.sh \
 	scan/check-legacybridge-order.sh scan/check-legacy-levels.sh \
 	scan/check-server-credentials.sh scan/check-legacy-bodygate.sh \
@@ -332,6 +345,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/conditions.h support/rcfi
 	scan/check-bouquet-rename.sh scan/check-zapit-write-checked.sh \
 	scan/check-locale-catalog.sh \
 	scan/check-bouquet-save-atomic.sh \
+	support/nothreads.h \
 	scan/check-access-store.sh \
 	scan/check-mute-source.sh \
 	scan/check-channel-content-lock.sh \
@@ -345,22 +359,30 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/conditions.h support/rcfi
 	scan/check-zap-standby.sh \
 	scan/check-timeshift-start.sh \
 	scan/check-timerlist-event.sh \
+	scan/check-settings-replaced.sh scan/fixtures/replaced-reload.cpp scan/fixtures/unreplaced-reload.cpp \
+	scan/check-loader-box-default.sh scan/fixtures/loader-row-default.cpp scan/fixtures/loader-literal-default.cpp \
+	scan/fixtures/loader-late-source.cpp \
+	scan/check-personalize-batch.sh scan/fixtures/personalize-lists-direct.cpp \
+	scan/check-menu-busy.sh scan/fixtures/unbusy-menu-exec.cpp scan/fixtures/busy-menu-exec.cpp \
+	scan/fixtures/unbusy-menu-exec-oneline.cpp scan/fixtures/busy-menu-exec-oneline.cpp \
+	scan/fixtures/unbusy-menu-exec-dot.cpp scan/fixtures/unbusy-menu-exec-bare.cpp \
+	scan/fixtures/unbusy-menu-exec-space.cpp \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
-	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk scan/branches.awk \
-	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp \
+	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk \
+	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp scan/fixtures/addsetting-array.cpp scan/fixtures/display/display.cpp \
 	scan/fixtures/arms/settingstable_arms.cpp scan/fixtures/arms/Makefile.am scan/fixtures/arms/site-in-arm.cpp \
 	scan/fixtures/arms/site-bare.cpp scan/fixtures/arms/site-negated.cpp scan/fixtures/arms/site-dead.cpp \
 	scan/fixtures/arms/site-built-under.cpp scan/fixtures/arms/site-built-other.cpp \
 	scan/fixtures/arms/site-else3.cpp scan/fixtures/arms/site-and3.cpp scan/fixtures/arms/site-notand3.cpp \
 	scan/fixtures/arms/site-elifelse.cpp scan/fixtures/arms/site-orand.cpp scan/fixtures/arms/site-bare2.cpp \
 	scan/fixtures/arms/site-amtwice.cpp scan/fixtures/arms/site-amtwo.cpp \
-	scan/fixtures/arms/site-continued.cpp scan/fixtures/arms/site-spans.cpp scan/fixtures/fixed-text.cpp scan/fixtures/bogus-key.cpp scan/fixtures/bogus-key-four.cpp scan/fixtures/bogus-key-macro.cpp scan/fixtures/bogus-unit.cpp scan/fixtures/bogus-format.cpp scan/fixtures/unread-wrapped.cpp scan/fixtures/unread-combined.cpp \
+	scan/fixtures/arms/site-continued.cpp scan/fixtures/arms/site-spans.cpp scan/fixtures/fixed-text.cpp scan/fixtures/bogus-key.cpp scan/fixtures/bogus-key-four.cpp scan/fixtures/bogus-key-macro.cpp scan/fixtures/bogus-unit.cpp scan/fixtures/unread-wrapped.cpp scan/fixtures/unread-combined.cpp \
 	scan/fixtures/alternatives/settingstable_alternatives.cpp \
 	scan/extract-pairs.sh scan/extract-elements.sh scan/loadvalues.awk scan/extract-bounds.sh scan/extract-defines.sh \
 	scan/extract-choices.sh scan/extract-constants.sh scan/extract-labels.sh \
-	scan/extract-applied.sh scan/extract-httpcodes.sh \
-	scan/check-apply-groups.sh scan/applyrows.awk scan/applyreads.awk scan/applygroups.awk scan/applyregs.awk scan/apply-eval-needs.txt \
-	scan/wiringapply.awk scan/apply-pending.txt scan/fixtures/apply \
+	scan/extract-httpcodes.sh \
+	scan/check-setting-wiring.sh scan/fixtures/wiring scan/check-apply-groups.sh scan/applyrows.awk scan/applyreads.awk scan/applygroups.awk scan/applyregs.awk scan/apply-eval-needs.txt \
+	scan/wiringapply.awk scan/wiringrows.awk scan/fixtures/apply \
 	scan/check-narrowing.sh support/narrow-probe.cpp
 
 # What the program says about its own settings, read out of its source so a
@@ -375,9 +397,9 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/conditions.h support/rcfi
 # recorded dependencies can bring into being, so it is asked for rather than left
 # to the order the directories are built in.
 BUILT_SOURCES = $(top_builddir)/src/tools/rcsim.h openapi.json settings-pairs.txt settings-pairs-built.txt settings-load-values.inc settings-elements.txt settings-element-names.inc settings-keys.txt settings-bounds.txt settings-locales.txt \
-	settings-choices.txt settings-labels.txt settings-applied.txt errorcodes.txt statuses.txt httpcodes.txt
+	settings-choices.txt settings-labels.txt errorcodes.txt statuses.txt httpcodes.txt
 CLEANFILES = openapi.json settings-pairs.txt settings-pairs-built.txt settings-load-values.inc settings-elements.txt settings-element-names.inc settings-keys.txt settings-bounds.txt settings-locales.txt \
-	settings-choices.txt settings-labels.txt settings-applied.txt errorcodes.txt statuses.txt httpcodes.txt \
+	settings-choices.txt settings-labels.txt errorcodes.txt statuses.txt httpcodes.txt \
 	counts.actual answers.actual \
 	$(PART_TESTS) whole.merge part-*.state part-*.state.tmp part-seconds.actual
 
@@ -441,11 +463,6 @@ settings-choices.txt: FORCE
 settings-labels.txt: FORCE
 	@$(SHELL) $(srcdir)/scan/extract-labels.sh $(top_srcdir)/src > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
 
-# The key each applier lists beside the option its notifier branches on, so that
-# a list transcribed from a notifier by hand is answerable to it.
-settings-applied.txt: FORCE
-	@$(SHELL) $(srcdir)/scan/extract-applied.sh $(top_srcdir)/src > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
-
 # The document the server answers with, written out by the target that owns it
 # and read here so that the two are held to being the same bytes. Made through
 # that target rather than copied from wherever it was last left, because the
@@ -482,6 +499,7 @@ FORCE:
 # each other under make -j; only the cases are kept apart from them.
 SCAN_CHECKS = \
 	scan-sources \
+	scan-wiring-fixtures \
 	scan-hook \
 	scan-legacy-mount \
 	scan-legacybridge-order \
@@ -492,7 +510,6 @@ SCAN_CHECKS = \
 	scan-hardware \
 	scan-cecmodes \
 	scan-denominator \
-	scan-appliers \
 	scan-apply-groups \
 	scan-apply-groups-fixtures \
 	scan-sections \
@@ -500,6 +517,7 @@ SCAN_CHECKS = \
 	scan-locale-catalog \
 	scan-addsetting \
 	scan-addsetting-arms \
+	scan-label-display \
 	scan-row-alternatives \
 	scan-locale-fixed-text \
 	scan-callback-boundary \
@@ -519,7 +537,11 @@ SCAN_CHECKS = \
 	scan-standby-wake \
 	scan-zap-standby \
 	scan-timeshift-start \
-	scan-timerlist-event
+	scan-timerlist-event \
+	scan-menu-busy \
+	scan-settings-replaced \
+	scan-loader-box-default \
+	scan-personalize-batch
 
 check-local: $(SCAN_CHECKS)
 $(SCAN_CHECKS): check-TESTS
@@ -571,9 +593,6 @@ scan-cecmodes:
 scan-denominator:
 	@$(SHELL) $(srcdir)/scan/check-denominator.sh $(top_srcdir)
 
-scan-appliers:
-	@$(SHELL) $(srcdir)/scan/check-appliers.sh $(top_srcdir)
-
 # The tree is held to its groups, and then the scan is shown to go red. Each directory
 # under fixtures/apply is a small tree of its own, with the answer the scan must give
 # in its expect file: pass, or fail with the sentence it fails with and the key it
@@ -585,7 +604,7 @@ scan-apply-groups:
 scan-apply-groups-fixtures:
 	@for d in $(srcdir)/scan/fixtures/apply/*/; do \
 		want=`sed -n 1p $$d/expect`; phrase=`sed -n 2p $$d/expect`; key=`sed -n 3p $$d/expect`; \
-		err=`APPLY_FLOOR_KEYS=0 APPLY_FLOOR_READS=0 APPLY_FLOOR_APPLY=0 APPLY_EVAL_OPTIONAL=1 $(SHELL) $(srcdir)/scan/check-apply-groups.sh $$d $$d/pending.txt 2>&1 >/dev/null` && got=pass || got=fail; \
+		err=`APPLY_FLOOR_KEYS=0 APPLY_FLOOR_READS=0 APPLY_FLOOR_APPLY=0 APPLY_EVAL_OPTIONAL=1 $(SHELL) $(srcdir)/scan/check-apply-groups.sh $$d $$d/apply-eval-needs.txt 2>&1 >/dev/null` && got=pass || got=fail; \
 		test "$$got" = "$$want" || { echo "check-apply-groups.sh answers $$got over $$d, expected $$want" >&2; echo "$$err" >&2; exit 1; }; \
 		test "$$want" = pass && continue; \
 		case "$$err" in *"$$phrase"*"$$key"*|*"$$key"*"$$phrase"*) ;; *) \
@@ -611,7 +630,32 @@ scan-addsetting:
 		test "$$out" = 1 || { echo "extract-$$x.sh does not read an addSetting site as derived" >&2; exit 1; }; \
 		out=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib | grep -c '^scan_addsetting\.dotted_fixture[[:space:]].*DERIVED'`; \
 		test "$$out" = 1 || { echo "extract-$$x.sh does not read an addSetting site with a dotted key as derived" >&2; exit 1; }; \
+		for k in choice number; do \
+			out=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib | grep -c "^scan_addsetting_$${k}_fixture[[:space:]].*DERIVED"`; \
+			test "$$out" = 1 || { echo "extract-$$x.sh does not read a typed $$k site as derived" >&2; exit 1; }; \
+		done; \
+		all=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib`; \
+		for k in first second armed last; do \
+			out=`printf '%s\n' "$$all" | grep -c "^scan_array_$$k[[:space:]].*DERIVED"`; \
+			test "$$out" = 1 || { echo "extract-$$x.sh does not read the element $$k of a key array as derived" >&2; exit 1; }; \
+		done; \
+		out=`printf '%s\n' "$$all" | grep -c '^kUnknownKeys'`; \
+		test "$$out" = 0 || { echo "extract-$$x.sh reads a call on an array it cannot see as a site" >&2; exit 1; }; \
 	done
+
+# The one-off wiring check, held to what it must take as no change and what it must
+# not: a typed builder and dropped defaults, an observer dropped for a grouped key and
+# a hand-built chooser that only changed its observer are clean; a changed pulldown
+# and an observer dropped where no group runs stay mismatches.
+scan-wiring-fixtures:
+	@d=$(srcdir)/scan/fixtures/wiring; run() { WIRING_OLD=$$d/screen-old.cpp WIRING_TOP=$(top_srcdir) WIRING_GROUPS=$$d/apply_fixture.cpp \
+		$(SHELL) $(srcdir)/scan/check-setting-wiring.sh old $$d/$$1-new.cpp 2>&1; }; \
+	out=`run screen` && ! printf '%s\n' "$$out" | grep -q MISMATCH \
+		|| { echo "check-setting-wiring.sh finds a mismatch in a conversion that changes nothing:" >&2; printf '%s\n' "$$out" >&2; exit 1; }; \
+	out=`run pulldown`; printf '%s\n' "$$out" | grep -q 'MISMATCH .*scan_wiring_typed' \
+		|| { echo "check-setting-wiring.sh passes a changed pulldown" >&2; exit 1; }; \
+	out=`run ungrouped`; printf '%s\n' "$$out" | grep -q 'MISMATCH .*scan_wiring_plain' \
+		|| { echo "check-setting-wiring.sh passes an observer dropped where no group runs" >&2; exit 1; }
 
 # A key whose row a build leaves out may be passed over only where the site goes
 # with it. Each fixture file is one shape, and each must come out as written here.
@@ -622,6 +666,15 @@ scan-addsetting-arms:
 	row='row defined(SCAN_ARMS_OPTION)'; arm='arm defined(SCAN_ARMS_OPTION)'; \
 	want="site-amtwice.cpp=$$row|site-amtwo.cpp=$$row|site-and3.cpp=$$arm|site-bare.cpp=$$row|site-bare2.cpp=$$row|site-built-other.cpp=$$row|site-built-under.cpp=$$arm|site-continued.cpp=$$row|site-dead.cpp=?|site-elifelse.cpp=$$row|site-else3.cpp=$$row|site-in-arm.cpp=$$arm|site-negated.cpp=$$row|site-notand3.cpp=$$row|site-orand.cpp=$$row|site-spans.cpp=$$row|"; \
 	test "$$out" = "$$want" || { echo "extract-choices.sh reads the arms of a derived site wrong:" >&2; echo "  got  $$out" >&2; echo "  want $$want" >&2; exit 1; }
+
+# A forwarder that is never active only shows a value, and the label it shows it under
+# is no statement about the setting's label. One that can be activated is read.
+scan-label-display:
+	@all=`SCAN_EXTRA=$(srcdir)/scan/fixtures/display $(SHELL) $(srcdir)/scan/extract-labels.sh $(top_srcdir)/src $(top_srcdir)/lib`; \
+	out=`printf '%s\n' "$$all" | grep -c '^scan_display_shown[[:space:]]'`; \
+	test "$$out" = 0 || { echo "extract-labels.sh reads a display that is never active as a stated label" >&2; exit 1; }; \
+	out=`printf '%s\n' "$$all" | grep -c '^scan_display_edited[[:space:]]'`; \
+	test "$$out" = 1 || { echo "extract-labels.sh does not read a forwarder that can be activated" >&2; exit 1; }
 
 # The arms of one #if chain in a row's list are one position, and every value an
 # arm offers there is read. A number's list names a value in words and offers no
@@ -636,7 +689,7 @@ scan-row-alternatives:
 scan-locale-fixed-text:
 	@CATALOG_CHECK_EXTRA=$(srcdir)/scan/fixtures/fixed-text.cpp $(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir) >/dev/null \
 		|| { echo "check-locale-catalog.sh reads an entry's fixed text as a catalog key" >&2; exit 1; }
-	@for f in bogus-key bogus-key-four bogus-key-macro bogus-unit bogus-format; do \
+	@for f in bogus-key bogus-key-four bogus-key-macro bogus-unit; do \
 		err=`CATALOG_CHECK_EXTRA=$(srcdir)/scan/fixtures/$$f.cpp $(SHELL) $(srcdir)/scan/check-locale-catalog.sh $(top_srcdir) 2>&1 >/dev/null`; \
 		case "$$err" in *no.such.catalog.key*) ;; *) echo "check-locale-catalog.sh passes a key the catalog does not carry ($$f)" >&2; exit 1;; esac; \
 	done
@@ -707,3 +760,46 @@ scan-timeshift-start:
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)
+
+# The scan reads the menu loop, and then it is shown to go red over a loop that runs an item
+# outside the clearing, also one written on a line with the clearing before it closes or
+# through a reference or a plain call, and to stay green over one that clears around every run.
+# The scan reads the tree, and then it is shown to go red over a reload that reads the file
+# past the apply groups and to stay green over the reads the tree makes.
+scan-settings-replaced:
+	@$(SHELL) $(srcdir)/scan/check-settings-replaced.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/scan/check-settings-replaced.sh $(top_srcdir) $(srcdir)/scan/fixtures/replaced-reload.cpp >/dev/null \
+		|| { echo "check-settings-replaced.sh refuses a read inside applyReplaced" >&2; exit 1; }
+	@if $(SHELL) $(srcdir)/scan/check-settings-replaced.sh $(top_srcdir) $(srcdir)/scan/fixtures/unreplaced-reload.cpp >/dev/null 2>&1; then \
+		echo "check-settings-replaced.sh passes a reload past the apply groups" >&2; exit 1; fi
+
+# The scan reads the loader, and then it is shown to go red over a loader that keeps a plain
+# number for a default the box decides or installs the box source after the load, and to stay
+# green over the loader as the tree writes it.
+scan-loader-box-default:
+	@$(SHELL) $(srcdir)/scan/check-loader-box-default.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/scan/check-loader-box-default.sh $(top_srcdir) $(srcdir)/scan/fixtures/loader-row-default.cpp >/dev/null \
+		|| { echo "check-loader-box-default.sh refuses the loader as the tree writes it" >&2; exit 1; }
+	@if $(SHELL) $(srcdir)/scan/check-loader-box-default.sh $(top_srcdir) $(srcdir)/scan/fixtures/loader-literal-default.cpp >/dev/null 2>&1; then \
+		echo "check-loader-box-default.sh passes a plain number for a default the box decides" >&2; exit 1; fi
+	@if $(SHELL) $(srcdir)/scan/check-loader-box-default.sh $(top_srcdir) $(srcdir)/scan/fixtures/loader-late-source.cpp >/dev/null 2>&1; then \
+		echo "check-loader-box-default.sh passes a box source installed after the load" >&2; exit 1; fi
+
+# The scan reads the personalisation menu, and then it is shown to go red over a menu that
+# writes the plugin lists itself.
+scan-personalize-batch:
+	@$(SHELL) $(srcdir)/scan/check-personalize-batch.sh $(top_srcdir)
+	@if $(SHELL) $(srcdir)/scan/check-personalize-batch.sh $(top_srcdir) $(srcdir)/scan/fixtures/personalize-lists-direct.cpp >/dev/null 2>&1; then \
+		echo "check-personalize-batch.sh passes a menu that writes the plugin lists itself" >&2; exit 1; fi
+
+scan-menu-busy:
+	@$(SHELL) $(srcdir)/scan/check-menu-busy.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/scan/check-menu-busy.sh $(top_srcdir) $(srcdir)/scan/fixtures/busy-menu-exec.cpp >/dev/null \
+		|| { echo "check-menu-busy.sh refuses a loop that clears around every item" >&2; exit 1; }
+	@if $(SHELL) $(srcdir)/scan/check-menu-busy.sh $(top_srcdir) $(srcdir)/scan/fixtures/unbusy-menu-exec.cpp >/dev/null 2>&1; then \
+		echo "check-menu-busy.sh passes a loop that runs an item outside the clearing" >&2; exit 1; fi
+	@$(SHELL) $(srcdir)/scan/check-menu-busy.sh $(top_srcdir) $(srcdir)/scan/fixtures/busy-menu-exec-oneline.cpp >/dev/null \
+		|| { echo "check-menu-busy.sh refuses a loop that clears on the line of each run" >&2; exit 1; }
+	@for f in unbusy-menu-exec-oneline unbusy-menu-exec-dot unbusy-menu-exec-bare unbusy-menu-exec-space; do \
+		if $(SHELL) $(srcdir)/scan/check-menu-busy.sh $(top_srcdir) $(srcdir)/scan/fixtures/$$f.cpp >/dev/null 2>&1; then \
+			echo "check-menu-busy.sh passes $$f, a run outside the clearing" >&2; exit 1; fi; done

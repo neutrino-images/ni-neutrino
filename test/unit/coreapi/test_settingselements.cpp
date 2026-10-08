@@ -20,6 +20,7 @@
 
 #include "support/catch.hpp"
 
+#include "coreapi/base/apply.h"
 #include "coreapi/base/deps.h"
 #include "coreapi/base/errors.h"
 #include "coreapi/base/schema.h"
@@ -39,6 +40,7 @@
 #include <vector>
 
 #include <driver/neutrino_msg_t.h>
+#include <driver/rcinput.h>
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -584,6 +586,10 @@ TEST_CASE("writing a text element moves that element and no other", "[settingsel
 TEST_CASE("a write by key lands in the element of the array it names", "[settingselements]")
 {
 	RealStore store;
+	// The module slot a row names is one the box has.
+	FakeSystemSource box;
+	box.ci_slots = 3;
+	InstalledSystemSource installed_box(&box);
 
 	REQUIRE(settings::set("timing.menu", "17").ok());
 	REQUIRE(settings::set("timing.static_messages", "99").ok());
@@ -1012,7 +1018,7 @@ TEST_CASE("a row of records names the members of a record", "[settingselements]"
 	REQUIRE(usermenu.value().field.extra->record_field_count == 3);
 	CHECK(std::string(usermenu.value().field.extra->record_fields[0].name) == "title");
 	CHECK(std::string(usermenu.value().field.extra->record_fields[1].name) == "key");
-	CHECK(usermenu.value().field.extra->record_fields[1].type == ValueType::Int);
+	CHECK(usermenu.value().field.extra->record_fields[1].type == ValueType::Key);
 	CHECK(std::string(usermenu.value().field.extra->record_fields[2].name) == "items");
 
 	Result<Descriptor> boxes = settings::describe("timer_remotebox_ip");
@@ -1128,6 +1134,113 @@ TEST_CASE("a flag file row is the existence of its file", "[settingselements]")
 	CHECK_FALSE(settings::set("flag_case", "2").ok());
 }
 
+namespace
+{
+
+std::vector<RecordValues> keyRecordHeld;
+
+void readKeyRecords(const SNeutrinoSettings &, std::vector<RecordValues> &out) { out = keyRecordHeld; }
+void writeKeyRecords(SNeutrinoSettings &, const std::vector<RecordValues> &in) { keyRecordHeld = in; }
+
+const RecordField kKeyRecordFields[] =
+{
+	{ "title", ValueType::String, 0, 0, false, NULL },
+	{ "key", ValueType::Key, 0, 2147483647, false, NULL }
+};
+
+const FieldExtra kKeyRecordExtra = { 0, NULL, NULL, readKeyRecords, writeKeyRecords, kKeyRecordFields, 2, 0, 0, false };
+
+/* The table a case installs when it needs a list of records with a key among its
+   members: the shipped records carry their key as a number until a later change
+   moves them. */
+struct KeyRecordTable
+{
+	Descriptor rows[1];
+
+	KeyRecordTable()
+	{
+		keyRecordHeld.clear();
+		rows[0] = recordsRow("key_record_case")
+			.section("misc")
+			.defaultValue("")
+			.field(COREAPI_RECORDS_FIELD(usermenu, kKeyRecordExtra));
+		setSettingsTable(rows, 1);
+	}
+
+	~KeyRecordTable() { setSettingsTable(NULL, 0); }
+};
+
+std::string keyText(long code)
+{
+	char out[32];
+	snprintf(out, sizeof(out), "%ld", code);
+	return out;
+}
+
+} // namespace
+
+/* A key among the members of a record reads and writes as the number it is and is held to
+   what a key row is held to, so a record cannot store a code the input layer never sends. */
+TEST_CASE("a record member that is a key is held to the codes a remote can send", "[settingselements]")
+{
+	KeyRecordTable table;
+	RealStore store;
+	installRealKeySource();
+	struct Restore { ~Restore() { setKeySource(0); } } restore;
+	REQUIRE(descriptorIsSane(table.rows[0]));
+
+	const long ok = (long) CRCInput::RC_ok;
+	const long held = ok | (long) CRCInput::RC_Repeat;
+	REQUIRE(settings::set("key_record_case", "A\t" + keyText(ok) + "\nB\t" + keyText(held) + "\nC\t0").ok());
+	applyPendingSettings();
+	REQUIRE(keyRecordHeld.size() == 3);
+	CHECK(keyRecordHeld[0][1] == keyText(ok));
+	CHECK(keyRecordHeld[1][1] == keyText(held));
+	CHECK(keyRecordHeld[2][1] == "0");
+
+	Result<std::string> got = settings::get("key_record_case");
+	REQUIRE(got.ok());
+	CHECK(got.value() == "A\t" + keyText(ok) + "\nB\t" + keyText(held) + "\nC\t0");
+
+	// A release is an event and a code past the table is nothing a remote sends.
+	Result<void> r = settings::check("key_record_case", "A\t" + keyText(ok | (long) CRCInput::RC_Release));
+	REQUIRE_FALSE(r.ok());
+	CHECK(r.error().code == ErrorCode::NotAListedValue);
+	r = settings::check("key_record_case", "A\t" + keyText((long) CRCInput::RC_MaxRC + 1));
+	REQUIRE_FALSE(r.ok());
+	CHECK_FALSE(settings::set("key_record_case", "A\t" + keyText(ok | (long) CRCInput::RC_Release)).ok());
+	CHECK_FALSE(settings::set("key_record_case", "A\tx").ok());
+	CHECK_FALSE(settings::set("key_record_case", "A\t-5").ok());
+
+	// Nothing of the refused was held.
+	applyPendingSettings();
+	REQUIRE(keyRecordHeld.size() == 3);
+	CHECK(keyRecordHeld[0][1] == keyText(ok));
+}
+
+/* A key the input layer stopped delivering stays writable where the record already holds it
+   at that place, as the stored value of a number row does, and nowhere else. */
+TEST_CASE("a record member that is a key passes again where the record holds it", "[settingselements]")
+{
+	KeyRecordTable table;
+	RealStore store;
+	installRealKeySource();
+	struct Restore { ~Restore() { setKeySource(0); } } restore;
+
+	const long ok = (long) CRCInput::RC_ok;
+	const long gone = ok | (long) CRCInput::RC_Release;
+	RecordValues held;
+	held.push_back("A");
+	held.push_back(keyText(gone));
+	keyRecordHeld.push_back(held);
+
+	CHECK(settings::check("key_record_case", "A\t" + keyText(gone)).ok());
+	CHECK(settings::check("key_record_case", "B\t" + keyText(gone)).ok());
+	// Another place, or another code, is a new pick.
+	CHECK_FALSE(settings::check("key_record_case", "A\t" + keyText(ok) + "\nB\t" + keyText(gone)).ok());
+	CHECK_FALSE(settings::check("key_record_case", "A\t" + keyText(gone | 1)).ok());
+}
+
 /* A menu draws a flag file as the flag it is and moves it through the two calls that
    reach the file, because the row has no member for a widget to edit. */
 TEST_CASE("a menu reads and writes a flag file row through the file", "[settingselements]")
@@ -1157,71 +1270,6 @@ TEST_CASE("a menu reads and writes a flag file row through the file", "[settings
 	Result<MenuItemSpec> lost = menuItem("flag_case");
 	REQUIRE(lost.ok());
 	CHECK_FALSE(menuValueWrite(lost.value(), values, 1));
-}
-
-/* A flag file whose screen also starts or stops a program, or rewrites other settings, would
-   be half done by a write of the file alone, so such a row is read-only until the stream that
-   owns it moves the effect into something that applies it. The ones that only touch a file
-   are not. */
-TEST_CASE("the flag files whose screen does more than touch a file are read-only", "[settingselements]")
-{
-	// A row may ask the box whether it has what the row controls.
-	FakeSystemSource box;
-	InstalledSystemSource installed_box(&box);
-	size_t held = 0, plain = 0;
-	for (size_t i = 0; i < settingsTableCount(); ++i)
-	{
-		const Descriptor &d = settingsTable()[i];
-		if (d.field.origin != FieldOrigin::FlagFile)
-			continue;
-		const std::string key = d.key;
-		const bool does_more = key.compare(0, 12, "flag_daemon_") == 0 || key.compare(0, 10, "flag_camd_") == 0 ||
-		                       key == "flag_scart_osd_fix";
-		INFO("row " << key);
-		// Held is its own state: the parental lock is not what fixes these rows, and the box's
-		// own screen does not take them for locked.
-		CHECK(settings::heldNow(key) == does_more);
-		CHECK_FALSE(settings::lockedNow(key));
-		if (does_more)
-		{
-			++held;
-			// Refused as every fixed row is, before anything of the value is looked at, and
-			// worded as held and not as the parental lock.
-			Result<void> r = settings::check(key, "1");
-			REQUIRE_FALSE(r.ok());
-			CHECK(r.error().code == ErrorCode::SettingLocked);
-			CHECK(r.error().message.find("held") != std::string::npos);
-			CHECK(r.error().message.find("parental") == std::string::npos);
-		}
-		else
-			++plain;
-	}
-	CHECK(held == 21);
-	CHECK(plain >= 1);
-	recordCount("flag file rows held read-only", held);
-}
-
-/* A menu does not grey a held row. The screen that owns it applies its effect itself, so
-   only a write through the layer is held off; the menu spec is as for any row. */
-TEST_CASE("a held flag row is not greyed in a menu", "[settingselements]")
-{
-	FakeSystemSource box;
-	box.caps.has_scart_osd_fix = true;
-	InstalledSystemSource installed_box(&box);
-	REQUIRE(settings::heldNow("flag_scart_osd_fix"));
-
-	Result<MenuItemSpec> spec = menuItem("flag_scart_osd_fix");
-	REQUIRE(spec.ok());
-	CHECK_FALSE(spec.value().locked);
-
-	// And with the parental lock on, a row it holds is greyed as before: the two are apart.
-	box.parental_locked = true;
-	Result<MenuItemSpec> lock = menuItem("parentallock_prompt");
-	REQUIRE(lock.ok());
-	CHECK(lock.value().locked);
-	Result<MenuItemSpec> still = menuItem("flag_scart_osd_fix");
-	REQUIRE(still.ok());
-	CHECK_FALSE(still.value().locked);
 }
 
 /* The three kinds of row the tables now hold are sane as they are written, and the
@@ -1259,4 +1307,125 @@ TEST_CASE("the shipped rows of the new kinds are sane", "[settingselements]")
 	CHECK(elementRowCount() > 100);
 	recordCount("list, records and flag file rows", lists + records + flags);
 	recordCount("rows of the theme struct", nested);
+}
+
+namespace
+{
+
+long serviceHeld = 0;
+bool askService(long &out) { out = serviceHeld; return true; }
+bool tellService(long v) { serviceHeld = v; return true; }
+
+template <int N> struct GroupRuns
+{
+	static int runs;
+	static Status run() { ++runs; return Status::Ok; }
+};
+template <int N> int GroupRuns<N>::runs = 0;
+
+const size_t kKindCount = 10;
+const char *const kKindKeys[kKindCount] =
+{
+	"kind_number", "kind_text", "kind_mask", "kind_channel", "kind_service",
+	"kind_colour", "kind_flag", "kind_element", "kind_list", "kind_records"
+};
+const char *const kKindValues[kKindCount] =
+{
+	"5", "xx", "1", "1f", "7", "#11223344", "1", "1", "alpha", "A\t0"
+};
+const char *const kKindGroupKeys[kKindCount][1] =
+{
+	{ "kind_number" }, { "kind_text" }, { "kind_mask" }, { "kind_channel" }, { "kind_service" },
+	{ "kind_colour" }, { "kind_flag" }, { "kind_element" }, { "kind_list" }, { "kind_records" }
+};
+int *const kKindRuns[kKindCount] =
+{
+	&GroupRuns<0>::runs, &GroupRuns<1>::runs, &GroupRuns<2>::runs, &GroupRuns<3>::runs,
+	&GroupRuns<4>::runs, &GroupRuns<5>::runs, &GroupRuns<6>::runs, &GroupRuns<7>::runs,
+	&GroupRuns<8>::runs, &GroupRuns<9>::runs
+};
+Status (*const kKindRun[kKindCount])() =
+{
+	&GroupRuns<0>::run, &GroupRuns<1>::run, &GroupRuns<2>::run, &GroupRuns<3>::run,
+	&GroupRuns<4>::run, &GroupRuns<5>::run, &GroupRuns<6>::run, &GroupRuns<7>::run,
+	&GroupRuns<8>::run, &GroupRuns<9>::run
+};
+
+} // namespace
+
+/* A web write reaches the group of its row whatever the row's value is made of. The
+   drain used to skip every row whose value is not in the member it is named after, and
+   the group of a colour, a flag file, a daemon's value or one bit of a mask never ran. */
+TEST_CASE("a web batch of every kind of row runs the row's group once", "[settingselements][apply]")
+{
+	TempDir dir;
+	REQUIRE(!dir.path.empty());
+	const std::string flag = dir.path + "/.flag";
+	serviceHeld = 0;
+	keyRecordHeld.clear();
+
+	Descriptor rows[kKindCount] =
+	{
+		{ "kind_number", ValueType::Int, "misc", "label", NULL, 0, 2000, NULL, 0, 450, NULL, false, false,
+		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_text", ValueType::String, "misc", "label", NULL, 0, 0, NULL, 0, 0, "", false, false,
+		  COREAPI_ALWAYS, COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_mask", ValueType::Bool, "misc", "label", NULL, 0, 1, NULL, 0, 0, NULL, false, false,
+		  COREAPI_ALWAYS, COREAPI_MASK_BIT_FIELD(recording_audio_pids_std, recording_audio_pids_default, 1),
+		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_channel", ValueType::String, "misc", "label", NULL, 0, 0, NULL, 0, 0, "0", false, false,
+		  COREAPI_ALWAYS, COREAPI_CHANNEL_ID_FIELD(startchanneltv_id), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_service", ValueType::Int, "misc", "label", NULL, 0, 99, NULL, 0, 0, NULL, false, false,
+		  COREAPI_ALWAYS, COREAPI_SERVICE_FIELD(record_safety_time_before, askService, tellService),
+		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_colour", ValueType::Color, "misc", "label", NULL, 4, 4, NULL, 0, 0, "#00000000", false, false,
+		  COREAPI_ALWAYS, COREAPI_COLOR_FIELD(theme, menu_Head, true), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_flag", ValueType::Bool, "misc", "label", NULL, 0, 1, NULL, 0, 0, NULL, false, false,
+		  COREAPI_ALWAYS,
+		  FieldRef{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, flag.c_str(), FieldOrigin::FlagFile,
+		            NULL, NULL, NULL },
+		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_element", ValueType::Int, "misc", "label", NULL, 0, 2, NULL, 0, 0, NULL, false, false,
+		  COREAPI_ALWAYS, COREAPI_ELEMENT_FIELD(personalize, 0), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_list", ValueType::List, "misc", "label", NULL, 0, 0, NULL, 0, 0, "", false, false,
+		  COREAPI_ALWAYS, COREAPI_LIST_FIELD(webtv_xml), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		{ "kind_records", ValueType::Records, "misc", "label", NULL, 0, 0, NULL, 0, 0, "", false, false,
+		  COREAPI_ALWAYS, COREAPI_RECORDS_FIELD(usermenu, kKeyRecordExtra), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+	};
+	for (size_t i = 0; i < kKindCount; ++i)
+	{
+		INFO("row " << rows[i].key);
+		REQUIRE(descriptorIsSane(rows[i]));
+	}
+	InstalledSettingsTable table(rows, kKindCount);
+	RealStore store;
+	installRealKeySource();
+	struct Restore { ~Restore() { setKeySource(0); resetApplyRegistry(); } } restore;
+
+	resetApplyRegistry();
+	ApplyGroup groups[kKindCount];
+	for (size_t i = 0; i < kKindCount; ++i)
+	{
+		const ApplyGroup g = { kKindKeys[i], ApplyPhase::Zapit, kKindGroupKeys[i], 1, kKindRun[i] };
+		groups[i] = g;
+		REQUIRE(registerApplyGroup(&groups[i]) == Status::Ok);
+	}
+	runPhase(ApplyPhase::Zapit);
+	for (size_t i = 0; i < kKindCount; ++i)
+		*kKindRuns[i] = 0;
+
+	// The route the web takes: one batch of every row, as the settings endpoint writes it.
+	std::vector<std::pair<std::string, std::string> > members;
+	for (size_t i = 0; i < kKindCount; ++i)
+		members.push_back(std::make_pair(std::string(kKindKeys[i]), std::string(kKindValues[i])));
+	settings::Refusals failed;
+	settings::writeBatch(members, failed);
+	REQUIRE(failed.empty());
+	applyPendingSettings();
+
+	for (size_t i = 0; i < kKindCount; ++i)
+	{
+		INFO("group of " << kKindKeys[i]);
+		CHECK(*kKindRuns[i] == 1);
+	}
 }

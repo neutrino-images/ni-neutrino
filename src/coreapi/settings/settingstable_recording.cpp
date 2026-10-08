@@ -35,9 +35,8 @@ namespace
    audio pids, data pids) and the descriptor carries no sub-section, so that
    structure is not in the table.
 
-   The two data pid rows reach the recorder only through a recorder
-   reconfiguration, which is a call the recording applier makes rather than a
-   restart.
+   The directories and the data pid rows reach the recorder through one apply
+   group, which tells it everything at once rather than needing a restart.
 
    The one row of this section declared elsewhere is
    recording_audio_pids_default, in settingstable.cpp. Three rows here are the
@@ -91,6 +90,12 @@ bool tellSafetyAfter(long value)
 	return recordingSafetySource().write(before, (int) value * kSecondsPerMinute) == Status::Ok;
 }
 
+// No pause before the timeshift starts by itself is no start at all.
+constexpr EnumValue kTimeshiftAutoOff[] =
+{
+	option(0).label("options.off")
+};
+
 constexpr EnumValue kEndOfRecording[] =
 {
 	option(0).label("recordingmenu.end_of_recording_max"),
@@ -121,8 +126,8 @@ constexpr EnumValue kNoYes[] =
 
 constexpr Descriptor kRecording[] =
 {
-	/* Refused while a recording is running, as is the timeshift directory below,
-	   which is a state of the box and not a setting. */
+	/* The screen greys this item and the timeshift directory below while a recording
+	   runs; the row carries no such condition. */
 	textRow("network_nfs_recordingdir")
 		.section("recording")
 		.label("recordingmenu.defdir")
@@ -269,14 +274,15 @@ constexpr Descriptor kRecording[] =
 		.hint("menu.hint_record_timeshift_pause")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(timeshift_pause)),
-	// Seconds; nought means off.
+	// Seconds after a channel starts.
 	intRow("timeshift_auto")
 		.section("recording")
 		.label("extra.timeshift_auto")
 		.hint("menu.hint_record_timeshift_auto")
 		.range(0, 300)
 		.defaultValue(0)
-		.format("format.after_second")
+		.unit("unit.short.second")
+		.values(kTimeshiftAutoOff)
 		.field(COREAPI_NUMBER_FIELD(timeshift_auto)),
 	boolRow("timeshift_delete")
 		.section("recording")

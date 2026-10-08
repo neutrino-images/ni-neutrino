@@ -8,24 +8,22 @@
 # unless an apply group names it. This reads the keys of the declared rows, the
 # members they live in, every read of those members in the tree and the key lists
 # of the groups, and fails on:
-#   a key whose every read is an applying one, with no group and not on the list
-#       of keys not yet moved
-#   a key on that list that has a group now, or no longer needs one
+#   a key whose every read is an applying one and that has no group
 #   a key in two groups, or twice in one
 #   a group that names a key no row declares
-#
-# The list is apply-pending.txt: key, the stream that moves it and why it is listed;
-# the file says what the reasons mean. It only ever shrinks, and the day it is
-# empty the allowance in this script goes with it.
 #
 # The key lists of a group are read as text, because the files they live in link
 # against the drivers: a COREAPI_KEYS(list) in a group's initialiser names an array
 # of strings in the same file. Comments are blanked first.
 #
+# A row that takes .needsRestart() is read only by the start that loads it and one
+# that takes .readOutside() by a plugin, a script or a page the tree cannot see;
+# neither needs a group, and the scan takes the row's word for it, so the word is
+# the row's to keep true.
+#
 # A key the scan does not find itself but the hand reading in bugsV5/settings-eval
-# did is in apply-eval-needs.txt. It needs a group like the rest, so leaving the
-# pending list without gaining one is red whatever the line's reason. That file
-# is never shortened before the list is gone.
+# did is in apply-eval-needs.txt. It needs a group like the rest, and stays on that
+# file because the scan cannot tell such a key from one read where it is used.
 #
 # A group is written in src/coreapi/box/apply_*.cpp, as the shape in
 # coreapi/base/apply.h says, and every ApplyGroup initialiser there has to be read:
@@ -33,7 +31,7 @@
 # registered or written anywhere else is an error too; registerApplyGroups is the
 # only function that registers.
 #
-# usage: check-apply-groups.sh <top source directory> [pending list [eval list]]
+# usage: check-apply-groups.sh <top source directory> [eval list]
 # Floors for what a run must have read are set by APPLY_FLOOR_* in the
 # environment; a fixture sets them to 0.
 set -e
@@ -42,24 +40,27 @@ export LC_ALL
 
 SRC="$1"
 [ -n "$SRC" ] && [ -d "$SRC" ] || {
-	echo "usage: check-apply-groups.sh <top source directory> [pending list]" >&2
+	echo "usage: check-apply-groups.sh <top source directory> [eval list]" >&2
 	exit 2
 }
 
 HERE=`dirname "$0"`
-PENDING="${2:-$HERE/apply-pending.txt}"
-EVALNEEDS="${3:-`dirname "$PENDING"`/apply-eval-needs.txt}"
+EVALNEEDS="${2:-$HERE/apply-eval-needs.txt}"
 STRIP="$HERE/strip-comments.awk"
 BLANK="$HERE/blank-if0.awk"
-for f in "$STRIP" "$BLANK" "$HERE/applyrows.awk" "$HERE/applyreads.awk" "$HERE/applygroups.awk" "$HERE/applyregs.awk" "$PENDING"; do
+for f in "$STRIP" "$BLANK" "$HERE/applyrows.awk" "$HERE/applyreads.awk" "$HERE/applygroups.awk" "$HERE/applyregs.awk"; do
 	[ -r "$f" ] || { echo "check-apply-groups.sh: cannot read $f" >&2; exit 1; }
 done
 
-# Below these the scan is not reading the tree any more. The tree held 752 keys,
-# 2450 reads of their members and 449 that apply when this was written.
+# Below these the scan is not reading the tree any more. The applying reads fall as
+# screens hand their effects to groups and are not expected to rise, so their floor
+# sits about a tenth under what the finished tree holds (242 of them, beside 752 keys
+# and 2266 reads): close enough that a pattern that stops matching a shape of screen
+# is caught, far enough that taking one screen's notifier out is not. Set once, from
+# the tree the settings series ends with; move it only with a measured figure.
 FLOOR_KEYS="${APPLY_FLOOR_KEYS:-650}"
 FLOOR_READS="${APPLY_FLOOR_READS:-2000}"
-FLOOR_APPLY="${APPLY_FLOOR_APPLY:-350}"
+FLOOR_APPLY="${APPLY_FLOOR_APPLY:-218}"
 
 tmp=`mktemp -d`
 trap 'rm -rf "$tmp"' EXIT
@@ -87,6 +88,9 @@ if [ -s "$tmp/nomember" ]; then
 	exit 1
 fi
 cut -f1 "$tmp/rows" | sort -u > "$tmp/declared"
+# A row that says its value is read only by the start that loads it, or by something
+# outside the tree, has nothing a group could run, so it needs none.
+awk -F'\t' '$3 == "restart" || $3 == "outside" { print $1 }' "$tmp/rows" | sort -u > "$tmp/exempt"
 
 # member, kind, file, function
 find "$SRC/src" "$SRC/lib" \( -name '*.cpp' -o -name '*.h' \) 2>/dev/null | sort > "$tmp/files"
@@ -130,7 +134,7 @@ for pair in "keys:$keys:$FLOOR_KEYS" "reads:$nreads:$FLOOR_READS" "applying read
 done
 
 awk -F'\t' '$2 > 0 && $3 == 0 { print $1 }' "$tmp/counts" | sort > "$tmp/needs.scan"
-sort -u "$tmp/needs.scan" "$tmp/evalneeds" > "$tmp/needs"
+sort -u "$tmp/needs.scan" "$tmp/evalneeds" | comm -23 - "$tmp/exempt" > "$tmp/needs"
 
 # The groups: the name and the array a group's initialiser hands COREAPI_KEYS, then
 # the strings of that array.
@@ -152,13 +156,6 @@ for f in $GROUPS_FILES; do
 		exit 1
 	fi
 done
-
-# grep answers 1 for an empty list, which is the state this ends in
-{ grep -v '^[ 	]*#' "$PENDING" | grep -v '^[ 	]*$' || true; } > "$tmp/pending-rows"
-cut -f1 "$tmp/pending-rows" | sort > "$tmp/pending"
-sort "$tmp/pending" | uniq -d > "$tmp/pending-dup"
-awk -F'\t' '$3 != "scan" && $3 != "eval" { print $1 " (" $3 ")" }' "$tmp/pending-rows" > "$tmp/pending-bad"
-awk -F'\t' '$3 == "scan" { print $1 }' "$tmp/pending-rows" | sort > "$tmp/pending-scan"
 
 fail=0
 report()
@@ -191,31 +188,16 @@ xargs awk -v keepstrings=0 -v mark=@@file@@ -f "$STRIP" < "$tmp/files" | awk -f 
 comm -13 "$tmp/declared" "$tmp/evalneeds" > "$tmp/eval-undeclared"
 [ -s "$tmp/eval-undeclared" ] && report "apply-eval-needs.txt names a key no row declares:" "$tmp/eval-undeclared"
 
-comm -13 "$tmp/declared" "$tmp/pending" > "$tmp/pending-undeclared"
-[ -s "$tmp/pending-undeclared" ] && report "listed as not yet moved and no row declares it:" "$tmp/pending-undeclared"
-
-[ -s "$tmp/pending-bad" ] && report "listed with a reason that is neither scan nor eval:" "$tmp/pending-bad"
-
-comm -23 "$tmp/needs" "$tmp/in-group" | comm -23 - "$tmp/pending" > "$tmp/missing"
+comm -23 "$tmp/needs" "$tmp/in-group" > "$tmp/missing"
 [ -s "$tmp/missing" ] && report "a setting needs an apply group, since only a change notifier, an action branch or startup reads it, and has none:" "$tmp/missing"
-
-comm -12 "$tmp/pending" "$tmp/in-group" > "$tmp/moved"
-[ -s "$tmp/moved" ] && report "listed as not yet moved and now in a group, take it off the list:" "$tmp/moved"
-
-comm -23 "$tmp/pending-scan" "$tmp/needs" | comm -23 - "$tmp/in-group" > "$tmp/gone"
-[ -s "$tmp/gone" ] && report "listed as needing a group and no longer does, take it off the list:" "$tmp/gone"
-
-[ -s "$tmp/pending-dup" ] && report "listed twice:" "$tmp/pending-dup"
 
 [ "$fail" -eq 0 ] || exit 1
 
 needs=`awk 'END { print NR }' "$tmp/needs"`
 groups=`cut -f1 "$tmp/grouped" | sort -u | awk 'END { print NR }'`
-pending=`awk 'END { print NR }' "$tmp/pending"`
 echo "declared keys                                      $keys"
 echo "settings reads outside persistence                 $nreads, $napply of them applying"
 echo "keys read only by what applies                     $needs"
 echo "apply groups                                       $groups"
 echo "keys in a group                                    `awk 'END { print NR }' "$tmp/in-group"`"
-echo "keys on the list of those not yet moved            $pending"
 exit 0

@@ -20,6 +20,7 @@
 
 #include "settingstable.h"
 #include "settingsfield.h"
+#include "choicesources.h"
 
 #include <vector>
 
@@ -45,25 +46,25 @@ namespace
    whole struct is a check that reads the struct rather than a number. */
 constexpr Descriptor kSettings[] =
 {
-	// The name of a locale file, which is why an empty one is a default and
-	// means the box picks.
+	/* The name of a locale file, which is why an empty one is a default and
+	   means the box picks. The catalogs installed are the list on offer. */
 	textRow("language")
 		.section("general")
 		.label("languagesetup.osd")
 		.defaultValue("")
 		.text(kRuleNameFromList)
+		.choicesFrom(installedLocales)
 		.field(COREAPI_TEXT_FIELD(language)),
 	/* The name of a zone as the box's own list spells it, which is why this is
 	   text and not a choice: the list is read out of /etc/timezone.xml at run
-	   time. The running box links its clock to the zone at start, and changing
-	   the zone in a menu does it again; a value written here reaches neither. */
+	   time. The box links its clock to the zone at start and on every change. */
 	textRow("timezone")
 		.section("general")
 		.label("mainsettings.timezone")
 		.hint("menu.hint_timezone")
 		.defaultValue("(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Vienna")
-		.needsRestart()
 		.text(kRuleNameFromList)
+		.choicesFrom(timezoneNames)
 		.field(COREAPI_TEXT_FIELD(timezone)),
 	boolRow("auto_lang")
 		.section("general")

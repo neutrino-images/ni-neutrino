@@ -50,6 +50,9 @@
 #include <driver/screen_max.h>
 #include <system/debug.h>
 
+#include <coreapi/box/apply_update.h>
+#include <coreapi/settings/menuspec.h>
+
 CUpdateSettings::CUpdateSettings()
 {
 	width = 40;
@@ -64,16 +67,6 @@ CUpdateSettings::~CUpdateSettings()
 	delete input_url_file;
 #endif
 }
-
-#if ENABLE_EXTUPDATE
-#define SOFTUPDATE_NAME_MODE1_OPTION_COUNT 3
-const CMenuOptionChooser::keyval SOFTUPDATE_NAME_MODE1_OPTIONS[SOFTUPDATE_NAME_MODE1_OPTION_COUNT] =
-{
-	{ SOFTUPDATE_NAME_DEFAULT, LOCALE_FLASHUPDATE_NAMEMODE1_DEFAULT },
-	{ SOFTUPDATE_NAME_HOSTNAME_TIME, LOCALE_FLASHUPDATE_NAMEMODE1_HOSTNAME_TIME },
-	{ SOFTUPDATE_NAME_ORGNAME_TIME, LOCALE_FLASHUPDATE_NAMEMODE1_ORGNAME_TIME }
-};
-#endif
 
 int CUpdateSettings::exec(CMenuTarget *parent, const std::string &actionKey)
 {
@@ -114,8 +107,6 @@ int CUpdateSettings::exec(CMenuTarget *parent, const std::string &actionKey)
 // init options for software update
 int CUpdateSettings::initMenu()
 {
-	COnOffNotifier *OnOffNotifier = new COnOffNotifier(0);
-
 	CMenuWidget w_upsettings(LOCALE_SERVICEMENU_UPDATE, NEUTRINO_ICON_UPDATE, width, MN_WIDGET_ID_SOFTWAREUPDATE_SETTINGS);
 	w_upsettings.addIntroItems(LOCALE_FLASHUPDATE_SETTINGS);
 
@@ -123,61 +114,35 @@ int CUpdateSettings::initMenu()
 	//fw_url->setHint("", LOCALE_MENU_HINT_XXX);
 	CMenuForwarder *fw_update_dir = new CMenuForwarder(LOCALE_EXTRA_UPDATE_DIR, true, g_settings.update_dir, this, "update_dir", CRCInput::RC_red);
 	//fw_update_dir->setHint("", LOCALE_MENU_HINT_XXX);
-#if ENABLE_EXTUPDATE
-#ifndef BOXMODEL_CST_HD2
-	CMenuOptionChooser *name_apply = new CMenuOptionChooser(LOCALE_FLASHUPDATE_NAMEMODE1, &g_settings.softupdate_name_mode_apply, SOFTUPDATE_NAME_MODE1_OPTIONS, SOFTUPDATE_NAME_MODE1_OPTION_COUNT, g_settings.apply_settings);
-	//name_apply->setHint("", LOCALE_MENU_HINT_XXX);
-	OnOffNotifier->addItem(name_apply);
-#endif
-#endif
-
-#if 0
-	CMenuOptionChooser *apply_kernel = new CMenuOptionChooser(LOCALE_FLASHUPDATE_MENU_APPLY_KERNEL, &g_settings.apply_kernel, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, g_settings.apply_settings);
-	//apply_kernel->setHint("", LOCALE_MENU_HINT_XXX);
-	OnOffNotifier->addItem(apply_kernel);
-#endif
-
 	w_upsettings.addItem(fw_update_dir);
 	if (fw_url)
 		w_upsettings.addItem(fw_url);
 #if ENABLE_EXTUPDATE
 	addSetting(&w_upsettings, "softupdate_name_mode_backup");
-#ifndef BOXMODEL_CST_HD2
-	w_upsettings.addItem(GenericMenuSeparatorLine);
-	addSetting(&w_upsettings, "apply_settings", true, OnOffNotifier);
-	w_upsettings.addItem(name_apply);
+	// Only where the box offers the settings to be applied, so the line is not left alone.
+	if (coreapi::menuItem("apply_settings").ok())
+		w_upsettings.addItem(GenericMenuSeparatorLine);
+	addSetting(&w_upsettings, "apply_settings");
+	addSetting(&w_upsettings, "softupdate_name_mode_apply");
 #endif
-#endif
-	addSetting(&w_upsettings, "softupdate_autocheck", true, this);
+	addSetting(&w_upsettings, "softupdate_autocheck");
 #if ENABLE_PKG_MANAGEMENT
 	if (COPKGManager::hasOpkgSupport())
-		addSetting(&w_upsettings, "softupdate_autocheck_packages", true, this);
-#endif
-#if 0
-	w_upsettings.addItem(apply_kernel);
+		addSetting(&w_upsettings, "softupdate_autocheck_packages");
 #endif
 
-	int res = w_upsettings.exec(NULL, "");
-	delete OnOffNotifier;
-
-	return res;
+	return w_upsettings.exec(NULL, "");
 }
 
-bool CUpdateSettings::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
+coreapi::Status coreapi::applicationPackageCheck(bool on)
 {
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_FLASHUPDATE_AUTOCHECK))
-	{
-		CFlashUpdateCheck::getInstance()->stopThread();
-		if (g_settings.softupdate_autocheck)
-			CFlashUpdateCheck::getInstance()->startThread();
-	}
 #if ENABLE_PKG_MANAGEMENT
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_FLASHUPDATE_AUTOCHECK_PACKAGES))
-	{
-		CUpdateCheckPackages::getInstance()->stopTimer();
-		if (g_settings.softupdate_autocheck_packages)
-			CUpdateCheckPackages::getInstance()->startThread();
-	}
+	CUpdateCheckPackages::getInstance()->stopTimer();
+	if (on)
+		CUpdateCheckPackages::getInstance()->startThread();
+	return coreapi::Status::Ok;
+#else
+	(void) on;
+	return coreapi::Status::NotSupported;
 #endif
-	return false;
 }

@@ -62,6 +62,7 @@
 #include <system/helpers.h>
 #include <system/helpers-json.h>
 #include <coreapi/archive.h>
+#include <coreapi/osd.h>
 #include <coreapi/playback.h>
 
 #include <unistd.h>
@@ -1101,7 +1102,7 @@ void CMoviePlayerGui::restoreNeutrino()
 #ifdef ENABLE_CHANGE_OSD_RESOLUTION
 	if ((currentVideoSystem > -1) &&
 	    (g_settings.video_Mode == VIDEO_STD_AUTO) &&
-	    (g_settings.enabled_auto_modes[currentVideoSystem] == 1)) {
+	    coreapi::osd::autoModeEnabled(g_settings.enabled_auto_modes, VIDEOMENU_VIDEOMODE_OPTION_COUNT, currentVideoSystem)) {
 		COsdHelpers *coh = COsdHelpers::getInstance();
 		if (currentVideoSystem != coh->getVideoSystem()) {
 			coh->setVideoSystem(currentVideoSystem, false);
@@ -4059,10 +4060,10 @@ void CMoviePlayerGui::selectAudioPid()
 	}
 
 	APIDSelector.addItem(new CMenuSeparator(CMenuSeparator::LINE));
-	extern CAudioSetupNotifier * audioSetupNotifier;
+	static CApplyKeyNotifier analogOutNotifier("analog_out");
 	APIDSelector.addItem( new CMenuOptionChooser(LOCALE_AUDIOMENU_ANALOG_OUT, &g_settings.analog_out,
 				OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT,
-				true, audioSetupNotifier, CRCInput::RC_green, NEUTRINO_ICON_BUTTON_GREEN) );
+				true, &analogOutNotifier, CRCInput::RC_green, NEUTRINO_ICON_BUTTON_GREEN) );
 
 	APIDSelector.exec(NULL, "");
 	delete selector;

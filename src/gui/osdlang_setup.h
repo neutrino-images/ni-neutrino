@@ -42,25 +42,16 @@
 #include "widget/menue.h"
 
 
-class CLangSelectNotifier : public CChangeObserver
-{
-	public:
-		bool changeNotify(const neutrino_locale_t, void * data);
-};
-
-class COsdLangSetup : public CMenuTarget, CChangeObserver
+class COsdLangSetup : public CMenuTarget
 {	
 	private:				
 		int  width;
 		int is_wizard;
-		CTZChangeNotifier * tzNotifier;
 		
 		int showLocalSetup();
-		void showPrefMenu(CMenuWidget *prefMenu, CLangSelectNotifier *langNotifier);
+		void showPrefMenu(CMenuWidget *prefMenu);
 		
 		CMenuOptionStringChooser* getTzItems();
-		
-		bool changeNotify(const neutrino_locale_t, void *);
 
 	public:
 		COsdLangSetup(int wizard_mode = SNeutrinoSettings::WIZARD_OFF);

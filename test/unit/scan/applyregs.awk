@@ -10,24 +10,24 @@ index($0, mark) == 1 {
 	if (root != "" && index(rel, root) == 1) rel = substr(rel, length(root) + 1)
 	rel = "/" rel
 	skip = (rel ~ /\/apply_[a-z0-9_]+\.cpp$/ || rel ~ /\/coreapi\/settings\/apply\.cpp$/ || rel ~ /\/coreapi\/base\/apply\.h$/)
-	func = ""; pending = ""
+	fn_name = ""; pending = ""
 	next
 }
 {
 	l = $0
-	if (func == "") {
+	if (fn_name == "") {
 		if (l ~ /^\}/ || l ~ /;[ \t]*$/) pending = ""
 		else if (l ~ /^[A-Za-z_]/ && l ~ /\(/) {
 			h = substr(l, 1, index(l, "(") - 1); sub(/[ \t]+$/, "", h)
 			if (match(h, /[A-Za-z_0-9~:]+$/)) pending = substr(h, RSTART, RLENGTH)
 		}
-		if (l ~ /^\{/ && pending != "") { func = pending; pending = "" }
+		if (l ~ /^\{/ && pending != "") { fn_name = pending; pending = "" }
 	}
-	else if (l ~ /^\}/) func = ""
+	else if (l ~ /^\}/) fn_name = ""
 	if (skip) next
-	base = func; sub(/^.*::/, "", base)
+	base = fn_name; sub(/^.*::/, "", base)
 	if (l ~ /registerApplyGroup[ \t]*\(/ && base != "registerApplyGroups")
-		print file "\t" (func == "" ? "-" : func) "\tregisterApplyGroup call"
+		print file "\t" (fn_name == "" ? "-" : fn_name) "\tregisterApplyGroup call"
 	if (l ~ /ApplyGroup[ ]+[A-Za-z_0-9]+[ ]*(\[[^]]*\])?[ ]*=/)
-		print file "\t" (func == "" ? "-" : func) "\tApplyGroup initialiser"
+		print file "\t" (fn_name == "" ? "-" : fn_name) "\tApplyGroup initialiser"
 }

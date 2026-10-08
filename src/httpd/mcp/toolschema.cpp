@@ -325,6 +325,22 @@ void appendMember(Json &j, const FieldDesc &f, size_t depth)
 				j.value("object");
 			}
 			break;
+		case FieldType::NamedLists:
+			j.key("type");
+			j.value("object");
+			if (f.nested != NULL)
+			{
+				j.key("additionalProperties");
+				j.beginObject();
+				j.key("type");
+				j.value("array");
+				j.key("items");
+				j.beginObject();
+				appendShapeBody(j, *f.nested, depth + 1);
+				j.endObject();
+				j.endObject();
+			}
+			break;
 		case FieldType::Array:
 			j.key("type");
 			j.value("array");

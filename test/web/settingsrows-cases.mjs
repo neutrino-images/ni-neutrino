@@ -127,10 +127,10 @@ same(drawn('3').options[3].label, '3, auf dieser Box nicht verfügbar', 'the Ger
 // A row the schema reports locked is drawn read only, even with its choices there,
 // and an edit of it is never sent.
 setLanguage('en');
-/** @param {boolean} locked @param {boolean} [pending] */
-function declared(locked, pending) {
+/** @param {boolean} locked */
+function declared(locked) {
 	return rowOf({
-		id: 'x.age', label: 'Age', type: 'enum', section: 'x', locked: locked, held: pending === true,
+		id: 'x.age', label: 'Age', type: 'enum', section: 'x', locked: locked,
 		values: [{ value: 12, label: '12' }, { value: 18, label: '18' }], conditions: [],
 	});
 }
@@ -144,17 +144,6 @@ same(changed([held], { 'x.age': '18' }, { 'x.age': '12' }), {}, 'an edit of a he
 const free = /** @type {any} */ (declared(false));
 same([free.locked, free.held], [false, false], 'an unlocked schema row is neither');
 same(changed([free], { 'x.age': '18' }, { 'x.age': '12' }), { 'x.age': '12' }, 'an edit of an unlocked row is sent');
-
-// A row the box holds until its own screen can apply it is read only too, and says so in
-// words of its own: the parental lock is not the reason.
-const pending = /** @type {any} */ (declared(false, true));
-same([pending.locked, pending.held, pending.pending], [true, false, true], 'a pending row is locked and not held');
-const pendingTree = Control(/** @type {any} */ ({ row: pending, value: '18', onChange: function () {}, onClear: function () {} }));
-same(find(pendingTree, 'select', []).length, 0, 'a pending row offers no chooser');
-same(find(pendingTree, 'span', []).map(function (n) { return n.props.children; })[1],
-	'The box still applies this itself, so it cannot be changed here yet.', 'a pending row says why, without the parental lock');
-same(changed([pending], { 'x.age': '18' }, { 'x.age': '12' }), {}, 'an edit of a pending row is not sent');
-same(free.pending, false, 'an ordinary row is not pending');
 
 // A held row drifting from its default is marked but offered no way back, which
 // would be an edit that is never sent.
@@ -349,6 +338,73 @@ same(isVisible(unread, { a: '0' }), true, 'a member the page cannot read makes i
 same(unread.conditions[0].any.length, 2, 'a member the page cannot read is kept');
 same(gated([{ any: [{ key: 'a', op: 'ne', values: [0] }] }]).conditions,
 	[{ any: [{ key: 'a', op: 'ne', values: [0], text: '' }] }], 'a group is read with its members');
+
+// A string row that names the entries it accepts is drawn as a select over their texts.
+const { fallbackLabel } = await import('../../data/ni-web/app/screens/settings/model.js');
+/** @param {unknown[]} values */
+function localeRow(values) {
+	return rowOf(/** @type {any} */ ({
+		id: 'x.locale', type: 'string', section: 'x', label: 'Locale', default: 'de',
+		values: values,
+	}));
+}
+const withList = localeRow([{ text: 'de', label: 'Deutsch' }, { text: 'fr', key: 'k', label: 'Francais' }, { text: 'it' }, { label: 'no text' }]);
+same(withList === null ? null : withList.choices.map(function (c) { return [c.text, c.label]; }),
+	[['de', 'Deutsch'], ['fr', 'Francais'], ['it', 'it']], 'a string row keeps the text of each entry, the text standing for a missing label');
+same(withList === null ? null : withList.locked, false, 'a string row with entries is not locked');
+same(fallbackLabel(/** @type {any} */ (withList)), 'Deutsch', 'the default of a string row is named by its entry');
+same(localeRow([]) === null ? null : /** @type {any} */ (localeRow([])).choices, [], 'a string row without entries has no choices');
+
+/** @param {string} value @param {unknown[]} values */
+function drawnText(value, values) {
+	const tree = Control(/** @type {any} */ ({ row: localeRow(values), value: value, onChange: function () {}, onClear: function () {} }));
+	return {
+		selects: find(tree, 'select', []).length,
+		inputs: find(tree, 'input', []).length,
+		options: find(tree, 'option', []).map(function (o) {
+			return { value: o.props.value, disabled: o.props.disabled === true, label: o.props.children };
+		}),
+	};
+}
+setLanguage('en');
+const pickText = drawnText('fr', [{ text: 'de', label: 'Deutsch' }, { text: 'fr', label: 'Francais' }]);
+same(pickText.selects, 1, 'a string row with entries is a select');
+same(pickText.options.map(function (o) { return o.value; }), ['de', 'fr'], 'the options carry the texts');
+same(pickText.options.some(function (o) { return o.disabled; }), false, 'every listed text is choosable');
+const absent = drawnText('xx', [{ text: 'de', label: 'Deutsch' }]);
+same(absent.options.length, 2, 'a stored text the box does not list is shown');
+same(absent.options[1].value, 'xx', 'the extra option is the stored text');
+same(absent.options[1].disabled, true, 'the extra option cannot be picked');
+const emptyStored = drawnText('', [{ text: 'de', label: 'Deutsch' }]);
+same(emptyStored.options.map(function (o) { return o.value; }), ['', 'de'], 'a stored empty text is an option of its own, first');
+same(emptyStored.options[0].label, 'automatic', 'and is worded as the box picking');
+const plainString = drawnText('fr', []);
+same([plainString.selects, plainString.inputs], [0, 1], 'a string row without entries stays a text field');
+
+// A number whose values the box lists in full, such as the tuners it has, is drawn as that
+// list, so no number the box lacks can be picked; one that only names a value stays a number.
+/** @param {boolean} full @param {string} value */
+function tunerDrawn(full, value) {
+	/** @type {any} */
+	const said = { id: 'x.tuner', label: 'Tuner', type: 'int', section: 'x', min: -1, max: 23, conditions: [],
+		values: [{ value: -1, label: 'Off' }, { value: 0, label: '1: DVB-S2' }, { value: 1, label: '2: DVB-C' }] };
+	if (full)
+		said.listed = true;
+	const tree = Control(/** @type {any} */ ({ row: rowOf(said), value: value, onChange: function () {}, onClear: function () {} }));
+	return {
+		selects: find(tree, 'select', []).length,
+		options: find(tree, 'option', []).map(function (o) {
+			return { value: o.props.value, disabled: o.props.disabled === true, label: o.props.children };
+		}),
+	};
+}
+setLanguage('en');
+const tuners = tunerDrawn(true, '0');
+same(tuners.selects, 1, 'a listed int is a select');
+same(tuners.options.map(function (o) { return [o.value, o.label]; }), [['-1', 'Off'], ['0', '1: DVB-S2'], ['1', '2: DVB-C']], 'its options are the box\'s values and words');
+const goneTuner = tunerDrawn(true, '5');
+same(goneTuner.options[3], { value: '5', disabled: true, label: '5, not available on this box' }, 'a stored number the box does not list is shown and not choosable');
+same(tunerDrawn(false, '0').selects, 0, 'an int that only names values stays a number field');
 
 if (failed > 0) {
 	process.stderr.write('settingsrows: ' + failed + ' of ' + checked + ' failed\n');

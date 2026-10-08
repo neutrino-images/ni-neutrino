@@ -29,7 +29,7 @@
 #include <hardware/ca.h>
 
 
-class CCAMMenuHandler : public CMenuTarget, public CChangeObserver
+class CCAMMenuHandler : public CMenuTarget
 {
 	private:
 		CHintBox * hintBox;
@@ -48,7 +48,6 @@ class CCAMMenuHandler : public CMenuTarget, public CChangeObserver
 		void init(void);
 		int exec(CMenuTarget* parent,  const std::string &actionkey);
 		int handleMsg (const neutrino_msg_t msg, neutrino_msg_data_t data);
-		bool changeNotify(const neutrino_locale_t OptionName, void * /*data*/);
 };
 #endif
 

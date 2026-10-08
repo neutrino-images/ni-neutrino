@@ -40,6 +40,8 @@ class CInfoClock : public CComponentsFrmClock
 		CInfoClock();
 		virtual ~CInfoClock(){}; // inherited from CComponentsFrmClock
 		static		CInfoClock* getInstance();
+		// Null before the first getInstance(); for callers that must not build the clock.
+		static		CInfoClock* existing();
 
 		bool 		StartInfoClock();
 		bool 		StopInfoClock(bool exit_thread = false);

@@ -57,6 +57,7 @@ extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
 extern CZapitClient::SatelliteList satList;
 
 #include "httpd/compat/neutrinoapi.h"
+#include <coreapi/box/apply_video.h>
 
 // Same reasoning as controlapi.cpp: CNeutrinoAPI now lives in httpd::compat,
 // and every out-of-class definition below needs the bare name resolvable to
@@ -488,7 +489,10 @@ int CNeutrinoAPI::setVideoAspectRatioAsString(std::string newRatioString)
 			break;
 		}
 	if(newRatioInt != -1)
+	{
 		videoDecoder->setAspectRatio(newRatioInt, -1);
+		coreapi::forgetSentVideo(coreapi::VideoSent::Aspect);
+	}
 	return newRatioInt;
 }
 //-------------------------------------------------------------------------

@@ -45,6 +45,7 @@
 #include <hardware/video.h>
 
 #include <system/debug.h>
+#include <coreapi/settings/predicates.h>
 
 extern cVideo *videoDecoder;		// VIDEO0
 extern cAudio *audioDecoder;		// AUDIO0
@@ -67,7 +68,7 @@ int fb_h;
 
 CQuadPiPSetup::CQuadPiPSetup()
 {
-	pip_devs = g_info.hw_caps->pip_devs + 1;
+	pip_devs = coreapi::pipWindows() + 1;
 	fb_w = CFrameBuffer::getInstance()->getScreenWidth(true) / 2;
 	fb_h = CFrameBuffer::getInstance()->getScreenHeight(true) / 2;
 }
@@ -170,7 +171,7 @@ bool CQuadPiPSetupNotifier::changeNotify(const neutrino_locale_t, void */*Data*/
 	else
 	{
 		videoDecoder->QuadPiP(false);
-		for (unsigned i = 0; i < (unsigned int) g_info.hw_caps->pip_devs; i++)
+		for (unsigned i = 0; i < (unsigned int) coreapi::pipWindows(); i++)
 		{
 			CCamManager::getInstance()->Stop(g_settings.quadpip_channel_id_window[i], CCamManager::PIP);
 			CZapit::getInstance()->StopPip(i);
@@ -387,7 +388,7 @@ int CQuadPiPSetupSelectChannelWidget::exec(CMenuTarget *parent, const std::strin
 				// switch to selected channel
 				videoDecoder->QuadPiP(false);
 				quadpip = 0;
-				for (unsigned i = 0; i < (unsigned int) g_info.hw_caps->pip_devs; i++)
+				for (unsigned i = 0; i < (unsigned int) coreapi::pipWindows(); i++)
 				{
 					CCamManager::getInstance()->Stop(g_settings.quadpip_channel_id_window[i], CCamManager::PIP);
 					CZapit::getInstance()->StopPip(i);
@@ -427,7 +428,7 @@ int CQuadPiPSetupSelectChannelWidget::exec(CMenuTarget *parent, const std::strin
 						switchAudio(-1, 0);
 						paintWindow(1);
 					}
-					else if ((aw == 2) && (g_info.hw_caps->pip_devs > 2) && (g_settings.quadpip_channel_id_window[3]))
+					else if ((aw == 2) && (coreapi::pipWindows() > 2) && (g_settings.quadpip_channel_id_window[3]))
 					{
 						switchAudio(1, 2);
 						paintWindow(3);
@@ -448,12 +449,12 @@ int CQuadPiPSetupSelectChannelWidget::exec(CMenuTarget *parent, const std::strin
 				}
 				if (msg == CRCInput::RC_down)
 				{
-					if ((aw == 0) && (g_info.hw_caps->pip_devs > 1) && (g_settings.quadpip_channel_id_window[2]))
+					if ((aw == 0) && (coreapi::pipWindows() > 1) && (g_settings.quadpip_channel_id_window[2]))
 					{
 						switchAudio(-1, 1);
 						paintWindow(2);
 					}
-					else if ((aw == 1) && (g_info.hw_caps->pip_devs > 2) && (g_settings.quadpip_channel_id_window[3]))
+					else if ((aw == 1) && (coreapi::pipWindows() > 2) && (g_settings.quadpip_channel_id_window[3]))
 					{
 						switchAudio(0, 2);
 						paintWindow(3);

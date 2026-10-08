@@ -47,33 +47,43 @@ function builds_menu(base) {
 }
 
 function applies_for(base) {
-	return base == "MakeSectionsdConfig" || base == "setCECSettings" || base == "SetupNeutrinoFonts"
+	return base == "MakeSectionsdConfig" || base == "SetupNeutrinoFonts"
 }
 
 function basename(f) { sub(/^.*::/, "", f); return f }
 
-function emit(member, kind) { print member "\t" kind "\t" file "\t" (func == "" ? "-" : func) }
+function emit(member, kind) { print member "\t" kind "\t" file "\t" (fn_name == "" ? "-" : fn_name) }
 
 # One read, found at position i of the line, in the state the walk has reached.
 function classify(rest, before, inaction,   base, r) {
 	r = rest
-	if (before ~ /&[ \t]*$/) return "skip"
+	# the address of a member, and not the && of a condition that goes on to read it
+	if (before ~ /(^|[^&])&[ \t]*$/) return "skip"
 	# the helper the settings file load assigns its text through
 	if (before ~ /setSettingsText\([ \t]*$/) return "skip"
 	sub(/^[ \t]*(\[[^]]*\]|\.[A-Za-z_0-9]+)*/, "", r)
 	if (r ~ /^=([^=]|$)/) return "skip"
-	base = basename(func)
+	base = basename(fn_name)
 	if (base == "saveSetup" || base == "upgradeSetup") return "skip"
 	if (skipfile) return "skip"
 	if (builds_menu(base)) return "skip"
 	if (base == "changeNotify" || applies_for(base)) return "apply"
-	if (base == "loadSetup" && func ~ /CNeutrinoApp/) return "apply"
-	if (base == "run" && func ~ /CNeutrinoApp/) return "apply"
-	if (base == "exec" && inaction) return "apply"
+	if (base == "loadSetup" && fn_name ~ /CNeutrinoApp/) return "apply"
+	if (base == "run" && fn_name ~ /CNeutrinoApp/) return "apply"
+	# A browser opened on a stored folder reads it where it is used; the screen's action
+	# key is only how the user got there.
+	if (before ~ /[Bb]rowser[A-Za-z_]*\.exec\([^;]*$/) return "use"
+	# The image creation of the flash expert screen takes its options when the user starts
+	# it, which is the only place they are read; no change of one needs anything done.
+	if (base == "exec" && fn_name ~ /CFlashExpertSetup::/) return "use"
+	# The action key of a setup screen's exec is what selects a change. The exec of a
+	# driver class takes its actions from the remote control and reads its settings
+	# where it acts on them.
+	if (base == "exec" && inaction && rel !~ /\/driver\//) return "apply"
 	return "use"
 }
 
-function reset() { func = ""; pending = ""; depth = 0; inact = 0; actpend = 0; actdepth = 0 }
+function reset() { fn_name = ""; pending = ""; depth = 0; inact = 0; actpend = 0; actdepth = 0 }
 
 FNR == 1 { reset() }
 index($0, mark) == 1 {
@@ -85,7 +95,7 @@ index($0, mark) == 1 {
 	reset()
 	skipfile = 0
 	if (rel ~ /\/nhttpd\// || rel ~ /\/coreapi\/settings\// || rel ~ /\/apply_[a-z0-9_]+\.cpp$/ ||
-	    rel ~ /settingssource_real\.cpp$/ || rel ~ /settings_appliers\.cpp$/ ||
+	    rel ~ /settingssource_real\.cpp$/ ||
 	    rel ~ /settings_manager/ || rel ~ /\/test\//)
 		skipfile = 1
 	next
@@ -94,15 +104,15 @@ index($0, mark) == 1 {
 	l = $0
 	# a function starts at its signature and ends at the closing brace in the
 	# first column
-	if (func == "") {
+	if (fn_name == "") {
 		if (l ~ /^\}/ || l ~ /;[ \t]*$/) pending = ""
 		else if (l ~ /^[A-Za-z_]/ && l ~ /\(/) pending = funcname(l)
 		if (l ~ /^\{/ && pending != "") {
-			func = pending; pending = ""; depth = 0; inact = 0; actpend = 0
+			fn_name = pending; pending = ""; depth = 0; inact = 0; actpend = 0
 		}
 	}
 	else if (l ~ /^\}/) {
-		func = ""; pending = ""; inact = 0; actpend = 0; depth = 0
+		fn_name = ""; pending = ""; inact = 0; actpend = 0; depth = 0
 	}
 
 	# where the reads and the action key test are on the line
@@ -116,7 +126,7 @@ index($0, mark) == 1 {
 		s = substr(s, RSTART + RLENGTH)
 	}
 	ak = 0
-	if (basename(func) == "exec" && match(l, /actionKey[ \t]*==/)) ak = RSTART
+	if (basename(fn_name) == "exec" && match(l, /actionKey[ \t]*==/)) ak = RSTART
 
 	next_read = 1
 	len = length(l)

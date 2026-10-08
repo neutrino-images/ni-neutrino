@@ -29,13 +29,12 @@
 #include <system/settings.h>
 #include <gui/widget/stringinput.h>
 
-class CInfoIconsSetup : public CMenuTarget, CChangeObserver
+class CInfoIconsSetup : public CMenuTarget
 {
 	private:
 		int menu();
 		CStringInputSMS * flagchooser[MODE_ICONS_NR_OF_ENTRIES];
 		CMenuForwarder * mforwarder[MODE_ICONS_NR_OF_ENTRIES];
-		CMenuOptionChooser * oj_modeicon, * oj_skin;
 
 	protected:
 		int width;
@@ -44,7 +43,6 @@ class CInfoIconsSetup : public CMenuTarget, CChangeObserver
 		CInfoIconsSetup();
 		~CInfoIconsSetup();
 		int exec(CMenuTarget* parent, const std::string & actionKey);
-		virtual bool changeNotify(const neutrino_locale_t OptionName, void *data);
 };
 
 #endif

@@ -196,7 +196,11 @@ struct NeutrinoMessages
 		EVT_WEBTV_RESTART			= CRCInput::RC_WithData + 31, /* data: (t_channel_id *) */
 
 		/* from nhttpd: a finished recording to play, data: the path, NUL terminated */
-		EVT_PLAY_RECORDING			= CRCInput::RC_WithData + 32
+		EVT_PLAY_RECORDING			= CRCInput::RC_WithData + 32,
+
+		/* from the settings layer once written settings have landed and been
+		   applied: the keys, one to a line, NUL terminated */
+		EVT_SETTINGS_WRITTEN			= CRCInput::RC_WithData + 33
 	};
 };
 

@@ -349,6 +349,11 @@ class Request
 		   or a log. */
 		const std::string &session() const;
 
+		/* Who a write this request makes is for, as coreapi::currentWriter() names one:
+		   "web:<session id>" for a live browser session, the caller's own name where it set
+		   one around the dispatch, empty otherwise. Never the token. */
+		const std::string &writer() const;
+
 		/* The authority the request named: the name and port a caller reached this box
 		   under, as it wrote them. A box answers under as many of these as there are
 		   ways to reach it, and the only one right for an address handed back is the one
@@ -378,6 +383,7 @@ class Request
 		void setScope(const std::string &s);
 		void setAddressToken(const std::string &t);
 		void setSession(const std::string &t);
+		void setWriter(const std::string &w);
 		void setHost(const std::string &h);
 		void setLocalAddress(const std::string &a);
 
@@ -402,6 +408,7 @@ class Request
 		std::string        peer_;
 		std::string        reported_peer_;
 		std::string        session_;
+		std::string        writer_;
 		std::string        host_;
 		std::string        local_address_;
 		std::string        scope_;

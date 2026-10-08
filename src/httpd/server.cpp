@@ -1566,7 +1566,7 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 	if (m == Get && events::isStream(r))
 	{
 		Response no_room;
-		switch (events::openStream(connection, r, no_room))
+		switch (events::openStream(connection, r, no_room, sessionWriter(cred.cookie_token)))
 		{
 			case events::StreamOpened:
 				// The connection is the stream's now, and nothing else here

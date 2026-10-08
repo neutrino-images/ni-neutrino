@@ -607,6 +607,7 @@ void CControlAPI::StandbyCGI(CyhookHandler *hh)
 		{
 			//dont use CEC with standbyoff (TV off) --- use: control/standby?off&cec=off
 			if(g_settings.hdmi_cec_standby && CEC_HDMI_off){
+				// The event or call after this restores the setting, so the CEC group's sent state stays true.
 				videoDecoder->SetCECAutoStandby(0);
 			}
 
@@ -622,6 +623,7 @@ void CControlAPI::StandbyCGI(CyhookHandler *hh)
 		{
 			//dont use CEC with with view on (TV on) --- use: control/standby?off&cec=off
 			if(g_settings.hdmi_cec_view_on && CEC_HDMI_off){
+				// The event or call after this restores the setting, so the CEC group's sent state stays true.
 				videoDecoder->SetCECAutoView(0);
 			}
 

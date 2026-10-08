@@ -29,12 +29,6 @@
 #include <gui/widget/hintbox.h>
 #include <coreapi/box/storage_disks.h>
 
-class CHDDDestExec : public CMenuTarget
-{
-public:
-        int exec(CMenuTarget* parent, const std::string&);
-};
-
 class CHDDMenuHandler : public CMenuTarget
 {
 	private:

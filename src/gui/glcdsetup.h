@@ -32,29 +32,17 @@
 #include <driver/glcd/glcd.h>
 #include <gui/widget/menue.h>
 
-class GLCD_Menu : public CMenuTarget, public CChangeObserver
+class GLCD_Menu : public CMenuTarget
 {
 	private:
 		int width;
 		SNeutrinoGlcdTheme oldTheme;
 		int GLCD_Menu_Select_Driver();
 		CMenuForwarder *select_driver;
-		CMenuOptionNumberChooser *cdy;
-		CMenuOptionNumberChooser *csh;
-		CMenuOptionNumberChooser *csy;
-		CGenericMenuActivate ChannelLogoActivate;
-		CGenericMenuActivate TimeActivate;
-		CGenericMenuActivate DurationActivate;
-		CGenericMenuActivate StartActivate;
-		CGenericMenuActivate EndActivate;
-		CGenericMenuActivate ProgressActivate;
-		CGenericMenuActivate WeatherActivate;
-		CGenericMenuActivate WeatherSBActivate;
 	public:
 		GLCD_Menu();
 		void hide();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
-		bool changeNotify(const neutrino_locale_t, void *);
 		int GLCD_Menu_Settings();
 		int GLCD_Standby_Settings();
 		int GLCD_Brightness_Settings();

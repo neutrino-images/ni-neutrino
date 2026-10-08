@@ -90,6 +90,7 @@ void couplePlugins(CoupledBatch &b)
 		return;
 
 	bool clash[kLists] = { false, false, false, false, false };
+	bool with[kLists][kLists] = {};
 	for (size_t i = 0; i < kLists; ++i)
 	{
 		for (size_t j = i + 1; j < kLists; ++j)
@@ -101,7 +102,7 @@ void couplePlugins(CoupledBatch &b)
 				for (size_t m = 0; m < names[j].size(); ++m)
 				{
 					if (names[i][n] == names[j][m])
-						clash[i] = clash[j] = true;
+						clash[i] = clash[j] = with[i][j] = with[j][i] = true;
 				}
 			}
 		}
@@ -110,7 +111,13 @@ void couplePlugins(CoupledBatch &b)
 	{
 		if (!clash[i])
 			continue;
-		b.refuse(kListKeys[i], "a plugin is in one list only and two lists written together name the same one");
+		std::vector<std::string> others;
+		for (size_t j = 0; j < kLists; ++j)
+		{
+			if (with[i][j])
+				others.push_back(kListKeys[j]);
+		}
+		b.refuse(kListKeys[i], "a plugin is in one list only and two lists written together name the same one", others);
 		named[i] = false;
 	}
 

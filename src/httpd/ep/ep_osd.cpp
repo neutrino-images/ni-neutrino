@@ -269,7 +269,7 @@ Response setInfoIcons(const Request &r)
 				       "the box does not know which state that name stands for");
 	}
 
-	coreapi::Result<void> done = coreapi::osd::setInfoIcons(want);
+	coreapi::Result<void> done = coreapi::osd::setInfoIcons(want, r.writer());
 	if (!done.ok())
 		return problemFor(done.error());
 

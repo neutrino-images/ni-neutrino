@@ -24,6 +24,8 @@
 #include "coreapi/base/result.h"
 #include "coreapi/base/schema.h"
 
+#include <functional>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -53,15 +55,17 @@ bool lockedNow(const std::string &key);
    for a condition nothing can answer, the way set() judges them. */
 bool conditionsHoldNow(const std::string &key);
 
-/* Whether the row is held until the stream that owns it moves its effect to something that
-   applies it from outside. Not the parental lock, and not a reason for a screen to grey the
-   item: the screen that owns it applies the effect itself. Only a write through this layer,
-   from the web or from an AI client, is refused for it. */
-bool heldNow(const std::string &key);
-
 // Each section once, in the order the schema first names it, so a frontend can
 // lay out its menu without walking the whole schema.
 Result<std::vector<std::string> > sections();
+
+/* The other half of a setting that is one fact in two parts, NULL for one that is not.
+   writes says how the pair is written: "both" together or not at all, or "id" where the
+   identifier alone is taken and the box fills the other half from it. */
+const char *pairPartner(const std::string &key, const char **writes = NULL);
+
+// "tv" or "radio" for a start channel row, the list its channel comes from; NULL otherwise.
+const char *startChannelKind(const std::string &key);
 
 // Whether the value names a file or folder on the box.
 bool holdsPath(const Descriptor &d);
@@ -75,6 +79,16 @@ bool sectionHoldsSecret(const std::string &section);
    again. Touches the file system only for a rule that asks for an existing path. */
 Result<void> holdsTextRule(const TextRule &rule, const std::string &value,
 			   const std::string *current = NULL);
+
+/* Whether a row that takes its list from a provider accepts a text, or a number for the
+   second. Only an entry the provider offers now, except the value given as always, which
+   is what the row holds without an entry, such as its default. A caller adds the value
+   stored, which passes again so that an entry absent at this moment never makes the
+   stored setting unwritable, after this has refused. A provider that cannot say, or says
+   nothing, holds the row to no list. */
+Result<void> holdsOffered(ChoiceSource from, const std::string &text,
+			  const std::string *always = NULL);
+Result<void> holdsOfferedNumber(ChoiceSource from, long number, const long *always = NULL);
 
 // Whether a folder on a file system of this type (the kernel's type number) is
 // acceptable at the given level of MustExist.
@@ -94,6 +108,10 @@ Result<Descriptor> describe(const std::string &key);
    A row the box lacks still reads: the value is in the settings file whatever the box has. */
 Result<std::string> get(const std::string &key);
 
+/* The settings as they stand now, as a condition reads them, for a list whose entries
+   depend on another setting. */
+ValueLookup currentValues();
+
 // Each setting a write could not keep, with the answer its own write would have had.
 typedef std::vector<std::pair<std::string, Error> > Refusals;
 
@@ -104,6 +122,10 @@ typedef std::vector<std::pair<std::string, Error> > Refusals;
 struct BatchOverlay
 {
 	std::vector<std::pair<std::string, std::string> > values;
+	/* Credentials a coupling empties because the setting that kept them went off. A write of
+	   nothing is refused for a credential everywhere else, so the landing needs to know this
+	   one is the coupling's and not a caller's. */
+	std::vector<std::string> cleared;
 };
 
 /* One setting, given the way the wire carries it, so what get() answered can be sent again
@@ -119,8 +141,7 @@ struct BatchOverlay
 
    A secret row refuses an empty value, so a form redrawn from a read that answered nothing
    cannot clear the credential; emptying one is clearSecret. A row lockedNow() holds is
-   refused with setting-locked whatever the value, as is one that is held (heldNow()),
-   and one the box lacks with
+   refused with setting-locked whatever the value, and one the box lacks with
    setting-not-on-this-box. A row in two shapes is held to the one this box offers.
 
    A value that passed all three is still refused with setting-condition-not-met where the
@@ -139,14 +160,21 @@ struct BatchOverlay
    setting-not-written says the value is not in the box and will not get there, and what this
    call wrote is taken back rather than left for a later write of some other setting to carry
    in. What is taken back is this call's own write, so two requests at once do not undo each
-   other. The one thing it cannot promise is that nothing landed. */
+   other. The one thing it cannot promise is that nothing landed.
+
+   A value equal to the stored one, a missing entry counting as its default, skips the
+   conditions and is answered ok without a write, a save or an apply. */
 Result<void> set(const std::string &key, const std::string &value, const BatchOverlay *batch = NULL,
-		 bool onLoop = false);
+		 bool onLoop = false, const std::string &who = std::string());
 
 /* set() without the conditions and without the store: the same answer set() gives for
    everything about the key and the value alone, and nothing is written. The first pass of
    a write of several settings, so a value refused for itself never enters the batch. */
 Result<void> check(const std::string &key, const std::string &value);
+
+/* What check() would say to emptying a credential a coupling clears: every rule but the
+   one against a write of nothing. */
+Result<void> checkCleared(const std::string &key);
 
 /* The second pass of a write of several settings, between check() and set(). First runs the
    couplings over batch, which are the settings that cannot be written apart:
@@ -174,16 +202,34 @@ Result<void> check(const std::string &key, const std::string &value);
    members whose conditions each refuse the other's new value are both taken out, although
    either alone might have been allowed. And a store that fails to take a member in the
    write after this cannot be foreseen here, so a member may still land on one that did
-   not. */
-void settleBatch(BatchOverlay &batch, Refusals &refused);
+   not.
 
-/* All three passes of a write of several settings: check() on each, settleBatch(), then set()
-   on what is left. The one entry for a caller that writes more than one setting, so none can
-   skip a coupling. Each key may be named once. Every setting that did not land, whichever pass
+   A member equal to the stored value is judged by no condition and is taken out of batch as
+   done, not put into refused, so nothing is written, saved or applied for it. keepUnchanged
+   leaves such members in and judges them, for a menu that has put the value into the
+   program's settings itself and needs its key applied. */
+void settleBatch(BatchOverlay &batch, Refusals &refused, bool keepUnchanged = false);
+
+/* All three passes of a write of several settings: check() on each, settleBatch(), then what
+   set() does on what is left, with one save for all of them. The one entry for a caller that
+   writes more than one setting, so none can skip a coupling. Every member is in the store
+   before the save carries them in, so whoever applies them runs once on the whole batch and
+   never on part of it. Each key may be named once. Every setting that did not land, whichever pass
    refused it, is in failed with the answer its own write would have had, and what the
-   couplings added is among them when it fails. */
+   couplings added is among them when it fails.
+
+   who, for set() too, is the writer as currentWriter() names one; a failure the box meets
+   later, putting what landed in force, is reported to that writer alone. */
 void writeBatch(const std::vector<std::pair<std::string, std::string> > &members, Refusals &failed,
-		bool onLoop = false);
+		bool onLoop = false, const std::string &who = std::string());
+
+/* What a menu item asks for once it has put a new value of key into the program's settings
+   itself, on the program's loop. The couplings run on that value as they do on a write of
+   this layer, and what they add that differs from the store is written with the key and
+   saved, so a menu and a web write leave the same settings, and the open menus hear which
+   settings moved. Whoever applies them runs once. Where the couplings add nothing the key
+   alone is applied. */
+Status menuChanged(const std::string &key);
 
 /* Sets each listed setting to the default its row declares on this box, as writeBatch() does:
    every value is held to what check() holds one to, the couplings run, and the conditions are
@@ -208,14 +254,19 @@ Result<void> resetDefaults(const std::vector<std::string> &keys, Refusals &refus
 
    not-a-credential rather than no-such-setting for a key that is declared and is not one,
    because the key is right and telling a caller there is no such setting sends it looking
-   for a name it already has. */
-Result<void> clearSecret(const std::string &key);
+   for a name it already has.
 
-/* A row carrying its own list answers it with each label already resolved to the text
-   the box would show, and without the entries the box lacks.
+   who is the writer as for writeBatch(). */
+Result<void> clearSecret(const std::string &key, const std::string &who = std::string());
 
-   choices-unavailable covers a setting that offers no set at all and one whose entries
-   the box has none of. setting-not-on-this-box is a row the box lacks. An empty list is
+/* A row carrying its own list, or naming a provider for one that exists only at run time,
+   answers it with each label already resolved to the text the box would show, and without
+   the entries the box lacks. A provider's entry for a String row carries the text the row
+   stores, and its label is that text where it names no other.
+
+   choices-unavailable covers a setting that offers no set at all, one whose entries
+   the box has none of and a provider that cannot say or lists nothing.
+   setting-not-on-this-box is a row the box lacks. An empty list is
    not that answer and does not happen, so ok always carries at least one value. */
 Result<std::vector<SettingChoice> > choices(const std::string &key);
 
@@ -226,8 +277,34 @@ Result<std::vector<SettingChoice> > choices(const std::string &key);
    itself did and is the whole reason this exists. */
 bool resolveLabel(const char *key, std::string &out);
 
+/* The text the box shows for a row, resolveLabel() of its label_key. A row that is one of
+   several indexed alike, key_0, key_1 and on under one label, has its slot counted from one
+   after the text, the way the box numbers its slots, so the rows can be told apart. */
+bool rowLabel(const Descriptor &d, std::string &out);
+
 // Called once changed settings are saved, from a menu or a write alike.
 void announceSettingsChanged();
+
+/* Every declared setting as the store holds it, a credential included, to be compared with a
+   later reading. Never to be answered to a caller outside the box. */
+typedef std::map<std::string, std::string> Snapshot;
+Snapshot snapshot();
+
+/* The keys whose reading differs from the snapshot, for a caller that replaced
+   many settings at once and cannot name what it changed. */
+std::vector<std::string> changedSince(const Snapshot &before);
+
+/* Puts in force every group that holds a key changed since the snapshot, so that
+   a file loaded over the settings leaves nothing at its old value. The groups
+   compare with what they last sent, so a group whose keys all read as before is
+   not asked. */
+Status applyChangedSince(const Snapshot &before);
+
+/* Takes a snapshot, lets replace put other values over the settings, a file loaded or the
+   defaults, and puts in force what changed, as applyChangedSince() does. The one way to
+   replace the settings wholesale, so a load and a reset leave every group knowing what it
+   last sent. */
+Status applyReplaced(const std::function<void()> &replace);
 
 } // namespace settings
 } // namespace coreapi

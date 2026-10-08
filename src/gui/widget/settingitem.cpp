@@ -25,6 +25,7 @@
 
 #include "settingitem.h"
 #include "settingformat.h"
+#include "settingfollow.h"
 
 #include <global.h>
 
@@ -36,11 +37,13 @@
 #include <coreapi/settings/menuspec.h>
 #include <coreapi/settings/settings.h>
 #include <gui/widget/colorchooser.h>
+#include <gui/widget/hintbox.h>
 #include <gui/widget/icons.h>
 #include <gui/widget/keychooser.h>
 #include <system/settings.h>
 #include <system/localize.h>
 #include <system/debug.h>
+#include <system/helpers.h>
 #include <system/sms_input.h>
 
 #include <gui/filebrowser.h>
@@ -49,6 +52,7 @@
 #include <gui/widget/stringinput.h>
 
 #include <map>
+#include <set>
 #include <vector>
 
 extern SNeutrinoSettings g_settings;
@@ -83,19 +87,44 @@ SettingActiveSet<CMenuItem> &activeSet()
 }
 
 /* What follows a change of any row the builder makes, whatever its shape: the
-   change goes to the apply registry and the menu's other items are judged
-   again, so a text, key or colour row moves its dependents as a number does. */
-void settleRow(const std::string &key, CMenuWidget *menu)
+   change runs the couplings a web write runs and goes to the apply registry, and
+   the menu's other items are judged again, so a text, key or colour row moves
+   its dependents as a number does.
+   changed is the item whose row it is, for what its screen does after the
+   apply; NULL where no screen can ask for that. */
+bool settleRow(const std::string &key, CMenuWidget *menu, const CMenuItem *changed = NULL)
 {
-	settleChange<CMenuItem>(activeSet(), key,
+	return settleChange<CMenuItem>(activeSet(), key, changed,
 				[](const std::string &k)
 				{
-					const coreapi::Status s = coreapi::applyKey(k);
+					const coreapi::Status s = coreapi::settings::menuChanged(k);
 					// Busy is a group whose phase is not reached yet, which runPhase() makes good.
 					if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
 						dprintf(DEBUG_NORMAL, "[settingitem] %s: apply failed\n", k.c_str());
 				},
 				menu != NULL ? &menu->getItems() : NULL, coreapi::settings::conditionsHoldNow);
+}
+
+/* What every item built here does after settings were written elsewhere: take
+   its value again from the settings and show it if it is on the screen. */
+class SettingFollow
+{
+	public:
+		virtual ~SettingFollow() {}
+		// paint is whether the item's menu is the one on top, waiting for a key.
+		virtual void followValue(bool paint) = 0;
+		// The active state of an item whose menu something else covers.
+		virtual void setActiveQuietly(bool active) = 0;
+};
+
+// Whether item is the one its menu has selected, so it is drawn as such again.
+bool selectedIn(CMenuWidget *menu, const CMenuItem *item)
+{
+	if (menu == NULL)
+		return false;
+	const int s = menu->getSelected();
+	const std::vector<CMenuItem *> &items = menu->getItems();
+	return s >= 0 && (size_t) s < items.size() && items[s] == item;
 }
 
 /* The int a widget edits for a row with no int member of its own: filled
@@ -116,9 +145,13 @@ class SettingValue : public CChangeObserver
 		CMenuWidget *const menu;
 		int value;
 		bool known;
+		// The item this is part of, set by it once it is whole.
+		const CMenuItem *self;
+		// What the widget edits once the item is deferred.
+		HeldValue held;
 
 		SettingValue(const coreapi::MenuItemSpec &s, CChangeObserver *observer, CMenuWidget *owner)
-			: spec(s), next(observer), menu(owner), value(0), known(true)
+			: spec(s), next(observer), menu(owner), value(0), known(true), self(NULL)
 		{
 			if (spec.int_pointer != NULL)
 				return;
@@ -131,10 +164,25 @@ class SettingValue : public CChangeObserver
 		}
 
 		int *editTarget() { return spec.int_pointer != NULL ? spec.int_pointer(g_settings) : &value; }
+
+		// The copy a row without an int member keeps, taken again; the others edit the member.
+		void reread()
+		{
+			rereadCopy(spec, value, known);
+			held.follow();
+		}
 		CChangeObserver *notifier() { return this; }
 
+	public:
+		// A deferred item's change, put into the setting before it is settled.
+		void commitHeld()
+		{
+			held.commit();
+			write();
+		}
+
 	private:
-		void store()
+		void write()
 		{
 			if (spec.int_pointer != NULL)
 				return;
@@ -142,29 +190,40 @@ class SettingValue : public CChangeObserver
 				dprintf(DEBUG_NORMAL, "[settingitem] %s: %d not written\n", spec.key.c_str(), value);
 		}
 
-		void settled() { settleRow(spec.key, menu); }
+		void store()
+		{
+			if (!held.holding())
+				write();
+		}
+
+		bool settled()
+		{
+			if (activeSet().holdChange(self))
+				return false;
+			return settleRow(spec.key, menu, self);
+		}
 
 	public:
 		bool changeNotify(const neutrino_locale_t name, void *data)
 		{
 			store();
 			const bool r = next != NULL && next->changeNotify(name, data);
-			settled();
-			return r;
+			const bool after = settled();
+			return r || after;
 		}
 		bool changeNotify(const std::string &name, void *data)
 		{
 			store();
 			const bool r = next != NULL && next->changeNotify(name, data);
-			settled();
-			return r;
+			const bool after = settled();
+			return r || after;
 		}
 		bool changeNotify(lua_State *L, const std::string &id, const std::string &action, void *data)
 		{
 			store();
 			const bool r = next != NULL && next->changeNotify(L, id, action, data);
-			settled();
-			return r;
+			const bool after = settled();
+			return r || after;
 		}
 };
 
@@ -217,7 +276,7 @@ struct SettingOptions
 	}
 };
 
-class CSettingChooser : private SettingValue, private SettingOptions, public CMenuOptionChooser
+class CSettingChooser : private SettingValue, private SettingOptions, public CMenuOptionChooser, public SettingFollow
 {
 	public:
 		CSettingChooser(const coreapi::MenuItemSpec &s, bool is_active,
@@ -227,13 +286,39 @@ class CSettingChooser : private SettingValue, private SettingOptions, public CMe
 			  SettingOptions(s.choices, known ? NULL : &value),
 			  CMenuOptionChooser(localeFromKey(s.label_key), editTarget(),
 					     entries.data(), entries.size(), is_active && known, notifier(), direct_key,
-					     NULL, opens_list)
+					     NULL, opens_list),
+			  list_on_step(false)
 		{
+			self = this;
 		}
 
 		~CSettingChooser() { activeSet().forget(this); }
 
+		using SettingValue::commitHeld;
+		void holdValue() { optionValue = held.hold(editTarget()); }
+
+		void openListOnStep() { list_on_step = true; }
+
+		int exec(CMenuTarget *parent)
+		{
+			if (list_on_step)
+				msg = CRCInput::RC_ok;
+			return CMenuOptionChooser::exec(parent);
+		}
+
 		void setActive(const bool Active) { CMenuOptionChooser::setActive(Active && known); }
+
+		void followValue(bool on_top)
+		{
+			reread();
+			if (on_top && used && x != -1)
+				paint(selectedIn(menu, this));
+		}
+
+		void setActiveQuietly(bool a) { active = current_active = a && known; }
+
+	private:
+		bool list_on_step;
 };
 
 /* The one value the chooser shows in words: the row's own, or while there is
@@ -258,7 +343,7 @@ std::string textOf(const std::string &key)
 	return locale == NONEXISTANT_LOCALE ? std::string() : std::string(g_Locale->getText(locale));
 }
 
-class CSettingNumberChooser : private SettingValue, public CMenuOptionNumberChooser
+class CSettingNumberChooser : private SettingValue, public CMenuOptionNumberChooser, public SettingFollow
 {
 	public:
 		CSettingNumberChooser(const coreapi::MenuItemSpec &s, bool is_active,
@@ -269,6 +354,7 @@ class CSettingNumberChooser : private SettingValue, public CMenuOptionNumberChoo
 						   is_active && known, (int) s.min, (int) s.max, notifier(), direct_key,
 						   NULL, 0, specialValue(s, known), specialName(s, known), slider)
 		{
+			self = this;
 			setNumericInput(numeric);
 			// Every word after the first, which the constructor took.
 			for (size_t i = 1; known && i < s.choices.size(); i++)
@@ -281,7 +367,19 @@ class CSettingNumberChooser : private SettingValue, public CMenuOptionNumberChoo
 
 		~CSettingNumberChooser() { activeSet().forget(this); }
 
+		using SettingValue::commitHeld;
+		void holdValue() { optionValue = held.hold(editTarget()); }
+
 		void setActive(const bool Active) { CMenuOptionNumberChooser::setActive(Active && known); }
+
+		void followValue(bool on_top)
+		{
+			reread();
+			if (on_top && used && x != -1)
+				paint(selectedIn(menu, this));
+		}
+
+		void setActiveQuietly(bool a) { active = current_active = a && known; }
 };
 
 /* The text a String row holds, edited by the widget its rule names and written
@@ -294,16 +392,18 @@ class SettingText : public CMenuTarget, public CChangeObserver
 		const coreapi::MenuItemSpec spec;
 		CChangeObserver *const next;
 		CMenuWidget *const menu;
-		std::string value;
+		FollowedText text;
+		// What the dialogs edit in place: the followed text itself.
+		std::string &value;
 		CMenuForwarder *item;
 		// What the dialog says beside its field, which is not the menu's hint.
 		const neutrino_locale_t hint1, hint2;
 
 		SettingText(const coreapi::MenuItemSpec &s, CChangeObserver *observer, CMenuWidget *owner,
 			    neutrino_locale_t dialog_hint1, neutrino_locale_t dialog_hint2)
-			: spec(s), next(observer), menu(owner), value(), item(NULL), hint1(dialog_hint1), hint2(dialog_hint2)
+			: spec(s), next(observer), menu(owner), text(s), value(text.value), item(NULL), hint1(dialog_hint1), hint2(dialog_hint2)
 		{
-			if (!coreapi::menuTextRead(spec, g_settings, value))
+			if (!text.reread())
 				dprintf(DEBUG_NORMAL, "[settingitem] %s: no text to show\n", spec.key.c_str());
 		}
 
@@ -312,7 +412,16 @@ class SettingText : public CMenuTarget, public CChangeObserver
 		std::string shown() const
 		{
 			const bool pin = spec.text != NULL && spec.text->kind == coreapi::TextKind::Pin;
-			return (spec.secret && !pin) ? std::string() : value;
+			if (spec.secret && !pin)
+				return std::string();
+			/* A file picked by extension is long and its name is what tells it apart, so
+			   the item shows the name in brackets as the font items always did. */
+			if (spec.text != NULL && spec.text->kind == coreapi::TextKind::File && spec.text->extensions != NULL && !value.empty())
+			{
+				std::string path(value);
+				return "(" + getBaseName(path) + ")";
+			}
+			return value;
 		}
 
 		CMenuTarget *target() { return this; }
@@ -338,8 +447,16 @@ class SettingText : public CMenuTarget, public CChangeObserver
 
 		void store()
 		{
-			if (!coreapi::menuTextWrite(spec, g_settings, value))
+			if (!text.write())
+			{
 				dprintf(DEBUG_NORMAL, "[settingitem] %s: text not written\n", spec.key.c_str());
+				/* The field drops a channel id it cannot read without a word, which an empty
+				   one from a dialog is; the person who typed it is told. */
+				const bool channel_id = spec.field.origin == coreapi::FieldOrigin::ChannelIdField
+					|| (spec.field.extra != NULL && spec.field.extra->channel_id);
+				if (channel_id)
+					ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
+			}
 			if (item != NULL)
 				item->setOption(shown());
 		}
@@ -382,8 +499,7 @@ class SettingText : public CMenuTarget, public CChangeObserver
 			}
 		}
 
-	public:
-		int exec(CMenuTarget *parent, const std::string &)
+		int edit(CMenuTarget *parent)
 		{
 			switch (kind())
 			{
@@ -441,6 +557,19 @@ class SettingText : public CMenuTarget, public CChangeObserver
 			return menu_return::RETURN_REPAINT;
 		}
 
+	public:
+		/* A write made elsewhere while a dialog edits the text is taken once the
+		   dialog has ended: the dialogs edit it in place. */
+		int exec(CMenuTarget *parent, const std::string &)
+		{
+			text.beginEdit();
+			const int res = edit(parent);
+			text.endEdit();
+			if (item != NULL)
+				item->setOption(shown());
+			return res;
+		}
+
 		bool changeNotify(const neutrino_locale_t n, void *data)
 		{
 			store();
@@ -464,7 +593,7 @@ class SettingText : public CMenuTarget, public CChangeObserver
 		}
 };
 
-class CSettingText : private SettingText, public CMenuForwarder
+class CSettingText : private SettingText, public CMenuForwarder, public SettingFollow
 {
 	public:
 		CSettingText(const coreapi::MenuItemSpec &s, bool is_active, CChangeObserver *observer, CMenuWidget *owner,
@@ -477,6 +606,17 @@ class CSettingText : private SettingText, public CMenuForwarder
 		}
 
 		~CSettingText() { activeSet().forget(this); }
+
+		void followValue(bool on_top)
+		{
+			if (!text.follow())
+				return;
+			setOption(shown());
+			if (on_top && used && x != -1)
+				paint(selectedIn(menu, this));
+		}
+
+		void setActiveQuietly(bool a) { active = current_active = a; }
 };
 
 /* The chooser a key row opens, built before the forwarder that points at it and
@@ -495,7 +635,7 @@ struct SettingKeyChooser
 /* A key row as an item: the key's name beside the label, and the chooser behind
    it. The chooser edits the member itself, so the observer is only told that it
    changed, once the chooser has been left. */
-class CSettingKey : private SettingKeyChooser, public CMenuForwarder
+class CSettingKey : private SettingKeyChooser, public CMenuForwarder, public SettingFollow
 {
 		const int *const member;
 		CChangeObserver *const next;
@@ -513,6 +653,15 @@ class CSettingKey : private SettingKeyChooser, public CMenuForwarder
 		}
 
 		~CSettingKey() { activeSet().forget(this); }
+
+		void followValue(bool on_top)
+		{
+			setOption(chooser.getKeyName());
+			if (on_top && used && x != -1)
+				paint(selectedIn(menu, this));
+		}
+
+		void setActiveQuietly(bool a) { active = current_active = a; }
 
 		int exec(CMenuTarget *parent)
 		{
@@ -539,14 +688,14 @@ class SettingColor : public CChangeObserver
 		CChangeObserver *const next;
 		CMenuWidget *const menu;
 		unsigned char steps[VALUES];
+		FollowedColor color;
 
 		SettingColor(const coreapi::MenuItemSpec &s, CChangeObserver *observer, CMenuWidget *owner)
-			: spec(s), next(observer), menu(owner)
+			: spec(s), next(observer), menu(owner), color(s, steps)
 		{
 			for (size_t i = 0; i < VALUES; i++)
 				steps[i] = 0;
-			std::string text;
-			if (!coreapi::menuTextRead(spec, g_settings, text) || !coreapi::readColorText(text, channels(), steps))
+			if (!color.reread())
 				dprintf(DEBUG_NORMAL, "[settingitem] %s: no colour to show\n", spec.key.c_str());
 		}
 
@@ -554,31 +703,30 @@ class SettingColor : public CChangeObserver
 
 		unsigned char *alpha() { return channels() == 4 ? &steps[VALUE_A] : NULL; }
 
-	private:
-		void store()
-		{
-			if (!coreapi::menuTextWrite(spec, g_settings, coreapi::colorText(steps, channels())))
-				dprintf(DEBUG_NORMAL, "[settingitem] %s: colour not written\n", spec.key.c_str());
-		}
-
 	public:
+		/* The chooser tells this whenever it is left, cancelled too; a chooser
+		   that ends on the channels it started on changed nothing and is told
+		   to nobody. */
 		bool changeNotify(const neutrino_locale_t name, void *data)
 		{
-			store();
+			if (!color.leave())
+				return false;
 			const bool r = next != NULL && next->changeNotify(name, data);
 			settleRow(spec.key, menu);
 			return r;
 		}
 		bool changeNotify(const std::string &name, void *data)
 		{
-			store();
+			if (!color.leave())
+				return false;
 			const bool r = next != NULL && next->changeNotify(name, data);
 			settleRow(spec.key, menu);
 			return r;
 		}
 		bool changeNotify(lua_State *L, const std::string &id, const std::string &action, void *data)
 		{
-			store();
+			if (!color.leave())
+				return false;
 			const bool r = next != NULL && next->changeNotify(L, id, action, data);
 			settleRow(spec.key, menu);
 			return r;
@@ -595,7 +743,7 @@ struct SettingColorChooser
 	}
 };
 
-class CSettingColor : private SettingColor, private SettingColorChooser, public CSettingColorItem
+class CSettingColor : private SettingColor, private SettingColorChooser, public CSettingColorItem, public SettingFollow
 {
 	public:
 		CSettingColor(const coreapi::MenuItemSpec &s, bool is_active,
@@ -607,6 +755,25 @@ class CSettingColor : private SettingColor, private SettingColorChooser, public 
 		}
 
 		~CSettingColor() { activeSet().forget(this); }
+
+		// A write made elsewhere while the chooser is open is taken once it is left.
+		int exec(CMenuTarget *parent)
+		{
+			color.beginEdit();
+			const int res = CSettingColorItem::exec(parent);
+			color.endEdit();
+			return res;
+		}
+
+		void followValue(bool on_top)
+		{
+			if (!color.follow())
+				return;
+			if (on_top && used && x != -1)
+				paint(selectedIn(menu, this));
+		}
+
+		void setActiveQuietly(bool a) { active = current_active = a; }
 
 		CColorChooser *colorChooser() { return &chooser; }
 };
@@ -628,9 +795,21 @@ CMenuItem *build(CMenuWidget *menu, const char *key, ScreenActive screen, CChang
 	coreapi::Result<coreapi::MenuItemSpec> r = coreapi::menuItem(key ? key : "");
 	if (!r.ok())
 	{
-		// A setting the box lacks is no fault of the declaration.
-		const int level = (r.error().code == coreapi::ErrorCode::SettingNotOnThisBox) ? DEBUG_INFO : DEBUG_NORMAL;
-		dprintf(level, "[settingitem] %s: %s\n", key ? key : "(null)", r.error().message.c_str());
+		// A setting the board lacks is no fault of the declaration.
+		if (r.error().code == coreapi::ErrorCode::SettingNotOnThisBox)
+		{
+			dprintf(DEBUG_INFO, "[settingitem] %s: %s\n", key ? key : "(null)", r.error().message.c_str());
+			return NULL;
+		}
+		/* A key this build does not declare is either a row behind arms the
+		   build leaves out, which a screen names rather than repeating them, or a
+		   key a screen got wrong, which only a key built at run time can be once
+		   the suite holds the literal ones. Said once per key, so the second is
+		   seen and a menu opened again does not repeat the first. */
+		static std::set<std::string> told;
+		const std::string named(key ? key : "(null)");
+		if (told.insert(named).second)
+			dprintf(DEBUG_NORMAL, "[settingitem] %s: %s\n", named.c_str(), r.error().message.c_str());
 		return NULL;
 	}
 
@@ -641,8 +820,8 @@ CMenuItem *build(CMenuWidget *menu, const char *key, ScreenActive screen, CChang
 	const bool locked = spec.locked;
 	SettingActiveSet<CMenuItem>::Screen allowed = [screen, locked]() { return !locked && screen(); };
 	const bool active = allowed() && coreapi::settings::conditionsHoldNow(spec.key);
-	const bool number = spec.type == coreapi::ValueType::Int;
-	const bool choice = spec.type == coreapi::ValueType::Bool || spec.type == coreapi::ValueType::Enum;
+	const bool choice = coreapi::offeredAsList(spec);
+	const bool number = spec.type == coreapi::ValueType::Int && !choice;
 	if ((want == WantNumber && !number) || (want == WantChoice && !choice))
 	{
 		dprintf(DEBUG_NORMAL, "[settingitem] %s: not a row of the shape asked for\n", key ? key : "(null)");
@@ -650,10 +829,25 @@ CMenuItem *build(CMenuWidget *menu, const char *key, ScreenActive screen, CChang
 	}
 
 	CMenuItem *item = NULL;
+	SettingFollow *follow = NULL;
+	SettingActiveSet<CMenuItem>::Hold hold;
+	SettingActiveSet<CMenuItem>::Commit commit;
 	if (number)
-		item = new CSettingNumberChooser(spec, active, observer, direct_key, slider, numeric, menu);
+	{
+		CSettingNumberChooser *c = new CSettingNumberChooser(spec, active, observer, direct_key, slider, numeric, menu);
+		item = c;
+		follow = c;
+		hold = [c]() { c->holdValue(); };
+		commit = [c]() { c->commitHeld(); };
+	}
 	else if (choice)
-		item = new CSettingChooser(spec, active, observer, direct_key, pulldown, menu);
+	{
+		CSettingChooser *c = new CSettingChooser(spec, active, observer, direct_key, pulldown, menu);
+		item = c;
+		follow = c;
+		hold = [c]() { c->holdValue(); };
+		commit = [c]() { c->commitHeld(); };
+	}
 	else if (spec.type == coreapi::ValueType::Key)
 	{
 		// The chooser edits the member, which a key row without one cannot offer.
@@ -662,10 +856,16 @@ CMenuItem *build(CMenuWidget *menu, const char *key, ScreenActive screen, CChang
 			dprintf(DEBUG_NORMAL, "[settingitem] %s: a key without a member to edit\n", key ? key : "(null)");
 			return NULL;
 		}
-		item = new CSettingKey(spec, active, observer, menu, direct_key);
+		CSettingKey *k = new CSettingKey(spec, active, observer, menu, direct_key);
+		item = k;
+		follow = k;
 	}
 	else if (spec.type == coreapi::ValueType::Color)
-		item = new CSettingColor(spec, active, observer, menu, direct_key);
+	{
+		CSettingColor *c = new CSettingColor(spec, active, observer, menu, direct_key);
+		item = c;
+		follow = c;
+	}
 	else if (spec.type == coreapi::ValueType::String)
 	{
 		// A row nothing names has no caption to draw, which is not a row to offer.
@@ -674,7 +874,9 @@ CMenuItem *build(CMenuWidget *menu, const char *key, ScreenActive screen, CChang
 			dprintf(DEBUG_NORMAL, "[settingitem] %s: a text row without a label\n", key ? key : "(null)");
 			return NULL;
 		}
-		item = new CSettingText(spec, active, observer, menu, direct_key, dialog_hint1, dialog_hint2);
+		CSettingText *t = new CSettingText(spec, active, observer, menu, direct_key, dialog_hint1, dialog_hint2);
+		item = t;
+		follow = t;
 	}
 	else
 	{
@@ -685,7 +887,10 @@ CMenuItem *build(CMenuWidget *menu, const char *key, ScreenActive screen, CChang
 	if (!spec.hint_key.empty())
 		item->setHint("", localeFromKey(spec.hint_key));
 
-	activeSet().add(item, spec.key, allowed, active);
+	activeSet().add(item, spec.key, allowed, active, menu);
+	activeSet().rereadWith(item, [follow](bool paint) { follow->followValue(paint); },
+			       [follow](bool a) { follow->setActiveQuietly(a); });
+	activeSet().deferWith(item, hold, commit);
 	menu->addItem(item);
 	return item;
 }
@@ -704,6 +909,71 @@ CMenuOptionChooser *addChoiceSetting(CMenuWidget *menu, const char *key, ScreenA
 {
 	// The item is built as a CSettingChooser, a CMenuOptionChooser.
 	return static_cast<CMenuOptionChooser *>(build(menu, key, active, observer, direct_key, false, pulldown, false, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, WantChoice));
+}
+
+void settingsWrittenElsewhere(const std::vector<std::string> &keys)
+{
+	followWrites<CMenuItem>(activeSet(), keys, CMenuWidget::waiting(),
+				[](void *menu) -> const std::vector<CMenuItem *> & { return static_cast<CMenuWidget *>(menu)->getItems(); },
+				coreapi::settings::conditionsHoldNow);
+}
+
+CFollowForwarder::CFollowForwarder(const neutrino_locale_t text, const bool is_active, const std::string &option,
+				   CMenuTarget *target, const char *action_key, const neutrino_msg_t direct_key)
+	: CMenuForwarder(text, is_active, option, target, action_key, direct_key)
+{
+}
+
+CFollowForwarder::CFollowForwarder(const neutrino_locale_t text, const bool is_active, const char *option,
+				   CMenuTarget *target, const char *action_key, const neutrino_msg_t direct_key)
+	: CMenuForwarder(text, is_active, option, target, action_key, direct_key)
+{
+}
+
+CFollowForwarder::~CFollowForwarder()
+{
+	activeSet().forget(this);
+}
+
+void CFollowForwarder::follow(CMenuWidget *menu, const std::string &key, const std::vector<std::string> &keys,
+			      ScreenActive screen, const std::function<void()> &refresh)
+{
+	activeSet().add(this, key, screen, active, menu);
+	activeSet().rereadOnAlso(this, keys);
+	activeSet().rereadWith(this,
+			       [this, menu, refresh](bool paint_now)
+			       {
+				       if (refresh)
+					       refresh();
+				       if (paint_now && used && x != -1)
+					       paint(selectedIn(menu, this));
+			       },
+			       [this](bool a) { active = current_active = a; });
+}
+
+void afterApply(CMenuItem *item, const std::function<bool()> &after)
+{
+	activeSet().afterApply(item, after);
+}
+
+void applyOnLeave(CMenuItem *item)
+{
+	activeSet().deferApply(item);
+}
+
+void openListOnStep(CMenuOptionChooser *item)
+{
+	// What addChoiceSetting hands back is a CSettingChooser.
+	if (item != NULL)
+		static_cast<CSettingChooser *>(item)->openListOnStep();
+}
+
+void settleLeft(CMenuItem *item)
+{
+	std::string key;
+	// The menu is gone from the screen, so its items are not judged again.
+	if (activeSet().takePending(item, key))
+		settleRow(key, NULL, item);
 }
 
 CMenuOptionNumberChooser *addNumberSetting(CMenuWidget *menu, const char *key, ScreenActive active,

@@ -46,11 +46,17 @@ CInfoClock::CInfoClock():CComponentsFrmClock( 1, 1, NULL, "%H:%M:%S", NULL, fals
 	initCCLockItems();
 }
 
+static CInfoClock* InfoClock = NULL;
+
 CInfoClock* CInfoClock::getInstance()
 {
-	static CInfoClock* InfoClock = NULL;
 	if(!InfoClock)
 		InfoClock = new CInfoClock();
+	return InfoClock;
+}
+
+CInfoClock* CInfoClock::existing()
+{
 	return InfoClock;
 }
 

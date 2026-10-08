@@ -36,7 +36,7 @@
 
 #include <string>
 
-class CVfdSetup : public CMenuTarget, CChangeObserver, CActivateObserver
+class CVfdSetup : public CMenuTarget, CActivateObserver
 {
 	private:
 		int width;
@@ -46,26 +46,22 @@ class CVfdSetup : public CMenuTarget, CChangeObserver, CActivateObserver
 		void showLedSetup(CMenuWidget *mn_led_widget);
 		void showBacklightSetup(CMenuWidget *mn_led_widget);
 		virtual void activateNotify(const neutrino_locale_t OptionName);
-		int brightness;
-		int brightnessstandby;
-		int brightnessdeepstandby;
-
-		bool vfd_enabled;
 
 	public:
 		CVfdSetup();
 		~CVfdSetup();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
-		// Public for the same reason the other setup screens declare it so:
-		// a setting written from outside the menus is applied through it.
-		virtual bool changeNotify(const neutrino_locale_t OptionName, void *data);
 };
 
 #ifdef ENABLE_LCD
 // lcd notifier
 class CLCDNotifier : public CChangeObserver
 {
+	private:
+		// The setting of the chooser this observes.
+		const char *const key;
 	public:
+		explicit CLCDNotifier(const char *setting) : key(setting) {}
 		bool changeNotify(const neutrino_locale_t, void *Data);
 };
 #endif

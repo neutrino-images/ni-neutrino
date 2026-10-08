@@ -53,15 +53,5 @@ class CAudioSetup : public CMenuTarget
 		int exec(CMenuTarget* parent, const std::string & actionKey);
 };
 
-class CTruVolumeNotifier : public CChangeObserver
-{
-	private:
-		std::vector<CMenuItem *> toDisable;
-
-	public:
-		void add(CMenuItem *item);
-		bool changeNotify(const neutrino_locale_t, void * data);
-};
-
 
 #endif

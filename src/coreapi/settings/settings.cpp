@@ -20,12 +20,16 @@
 
 #include "settings.h"
 
+#include "coreapi/base/apply.h"
 #include "coreapi/base/deps.h"
 #include "coreapi/base/errors.h"
 #include "coreapi/base/eventbus.h"
 #include "couple.h"
 #include "settingstable.h"
 
+#include <algorithm>
+#include <mutex>
+#include <set>
 #include <vector>
 
 #include <cctype>
@@ -271,6 +275,13 @@ Result<void> allowedAsMember(const RecordField &f, const std::string &v)
 	if (n < f.min || n > f.max)
 		return fail(Status::InvalidArgument, ErrorCode::OutOfRange,
 			    "a member of the record takes " + decimal(f.min) + " to " + decimal(f.max));
+	/* Nought stays legal where the bounds allow it: a record that holds no key
+	   keeps that as nought, which no remote control sends. Every other code is held
+	   to what a key row is held to, so that a member cannot store a code the input
+	   layer never delivers. */
+	if (f.type == ValueType::Key && n != 0 && !keySource().known(n))
+		return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
+			    "a member of the record takes the code of a key a remote control can send, or no key");
 	return ok();
 }
 
@@ -290,7 +301,7 @@ void withhold(Descriptor &d)
    refuse what they refuse and neither stands in for the other, because a row's
    bounds can be wider than its field and a field is wider than most rows'
    bounds. */
-Result<void> allowedByRow(const Descriptor &d, long value)
+Result<void> allowedByRow(const Descriptor &d, long value, const ValueLookup *now)
 {
 	switch (d.type)
 	{
@@ -313,9 +324,10 @@ Result<void> allowedByRow(const Descriptor &d, long value)
 					return ok();
 				also += (i == 0 ? " or " : ", ") + decimal(d.values[i].value);
 			}
-			if (value < d.min || value > d.max)
+			const Bounds b = boundsNow(d, now);
+			if (value < b.min || value > b.max)
 				return fail(Status::InvalidArgument, ErrorCode::OutOfRange,
-					    "the setting takes " + decimal(d.min) + " to " + decimal(d.max) + also);
+					    "the setting takes " + decimal(b.min) + " to " + decimal(b.max) + also);
 			return ok();
 		}
 
@@ -325,7 +337,9 @@ Result<void> allowedByRow(const Descriptor &d, long value)
 			return ok();
 
 		case ValueType::Key:
-			if (value < d.min || value > d.max)
+		{
+			const Bounds b = boundsNow(d, now);
+			if (value < b.min || value > b.max)
 				return fail(Status::InvalidArgument, ErrorCode::OutOfRange,
 					    "the setting takes the code of a key of the remote control");
 			// Inside the bounds is still no key where the code is one the input layer
@@ -334,6 +348,7 @@ Result<void> allowedByRow(const Descriptor &d, long value)
 				return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
 					    "the setting takes the code of a key a remote control can send, or no key");
 			return ok();
+		}
 
 		case ValueType::String:
 		case ValueType::Color:
@@ -346,12 +361,78 @@ Result<void> allowedByRow(const Descriptor &d, long value)
 		    "the setting is not of a kind a number is offered for");
 }
 
+/* The default and the stored value of a number row: writing either again is no new pick,
+   whatever the row offers now. The store is read only when the default does not match. */
+bool keptValue(const Descriptor &d, long number)
+{
+	if (number == defaultInt(d))
+		return true;
+	long stored = 0;
+	return settingsSource().readInt(d.key, stored) == Status::Ok && stored == number;
+}
+
+// Once per row, since a screen asks again on every redraw.
+void saidNameless(const char *key)
+{
+	static std::mutex lock;
+	static std::set<std::string> told;
+	std::lock_guard<std::mutex> hold(lock);
+	if (told.insert(key).second)
+		fprintf(stderr, "coreapi: the list of %s has entries without text and they are left out\n", key);
+}
+
+/* The list a row takes from its provider, with each label resolved the way an own list's
+   is. False where the provider cannot say and where it says nothing, since a list of no
+   entry offers nothing to choose and the two are answered alike. */
+bool providedChoices(const Descriptor &d, std::vector<SettingChoice> &out)
+{
+	std::vector<SettingChoice> listed;
+	if (!d.choices_from(listed) || listed.empty())
+		return false;
+
+	std::vector<SettingChoice> kept;
+	kept.reserve(listed.size());
+	bool nameless = false;
+	for (size_t i = 0; i < listed.size(); ++i)
+	{
+		SettingChoice &one = listed[i];
+		/* A String entry stands for its text. One without it is a provider that filled the
+		   number and the label like a number row's, and every write would be refused for it
+		   without a word, so it is left out and said once. */
+		if (d.type == ValueType::String && one.text.empty())
+		{
+			nameless = true;
+			continue;
+		}
+		std::string words;
+		if (!one.label_key.empty() && resolveLabel(one.label_key.c_str(), words))
+			one.label = words;
+		else if (one.label.empty() && d.type == ValueType::String)
+			one.label = one.text;
+		kept.push_back(one);
+	}
+	if (nameless)
+		saidNameless(d.key);
+	if (kept.empty())
+		return false;
+	out.swap(kept);
+	return true;
+}
+
+ValueLookup lookupAfter(const BatchOverlay *batch);
+
 /* The values a row offers on this box. One function, because the write is held to the
    same set a read answers with: written twice, a caller could be offered a value the
    write turns down. False is a row that offers no set at all and a set the box has no
-   entry of. */
-bool valuesOffered(const Descriptor &d, std::vector<SettingChoice> &out)
+   entry of. The entries' own conditions are judged on batch first and the store after it;
+   ignoreWhen leaves them out, for the pass that has no batch yet. */
+bool valuesOffered(const Descriptor &d, std::vector<SettingChoice> &out,
+		   const BatchOverlay *batch = NULL, bool ignoreWhen = false)
 {
+	const ValueLookup now = lookupAfter(batch);
+	if (d.choices_from != NULL)
+		return providedChoices(d, out);
+
 	if (d.type != ValueType::Enum)
 		return false;
 
@@ -363,7 +444,7 @@ bool valuesOffered(const Descriptor &d, std::vector<SettingChoice> &out)
 	for (size_t i = 0; i < d.value_count; ++i)
 	{
 		const EnumValue &e = d.values[i];
-		if (!entryOffered(e))
+		if (ignoreWhen ? (e.available != NULL && !e.available()) : !entryOffered(e, now))
 			continue;
 		SettingChoice one;
 		one.value = e.value;
@@ -447,17 +528,63 @@ bool readTextAfterBatch(const char *key, std::string *value, void *context)
 	return true;
 }
 
-/* Asked last, once the value has passed every rule of its own: a value no row could
-   take is wrong whatever the other settings hold, and that answer is the one a caller
-   can act on without changing anything else. */
-Result<void> allowedByConditions(const Descriptor &d, const BatchOverlay *batch)
+ValueLookup lookupAfter(const BatchOverlay *batch)
 {
 	// The cast only fits the lookup's untyped context; both readers take it back as const.
 	ValueLookup after_batch = { readNumberAfterBatch, readTextAfterBatch,
 	                            const_cast<BatchOverlay *>(batch) };
-	if (!conditionsHold(d, after_batch))
-		return fail(Status::Conflict, ErrorCode::SettingConditionNotMet,
-			    "the settings this one depends on do not allow it to be set");
+	return after_batch;
+}
+
+/* Asked last, once the value has passed every rule of its own: a value no row could
+   take is wrong whatever the other settings hold, and that answer is the one a caller
+   can act on without changing anything else. The entry of an enum that the value names
+   is judged here too, on the batch and then the store, because the settings its own
+   condition reads can be written in the same batch. value is NULL where there is none. */
+void addOnce(std::vector<std::string> &keys, const char *key)
+{
+	if (key != NULL && std::find(keys.begin(), keys.end(), key) == keys.end())
+		keys.push_back(key);
+}
+
+// The settings read by the conditions of d that do not hold, a group that fails naming all it reads.
+std::vector<std::string> failingKeys(const Descriptor &d, const ValueLookup &lookup)
+{
+	std::vector<std::string> keys;
+	for (size_t i = 0; d.conditions != NULL && i < d.condition_count; ++i)
+	{
+		const Condition &c = d.conditions[i];
+		if (conditionsHold(&c, 1, lookup))
+			continue;
+		if (!conditionIsGroup(c))
+			addOnce(keys, c.key);
+		for (size_t m = 0; conditionIsGroup(c) && c.any_of != NULL && m < c.any_count; ++m)
+			addOnce(keys, c.any_of[m].key);
+	}
+	return keys;
+}
+
+Result<void> allowedByConditions(const Descriptor &d, const BatchOverlay *batch, const std::string *value = NULL)
+{
+	const ValueLookup after_batch = lookupAfter(batch);
+	// A batch has been through the couplings, and for such a pair theirs is the answer.
+	if (!(batch != NULL && judgedByCoupling(d)) && !conditionsHold(d, after_batch))
+		return Result<void>::failure(conditionRefusal("the settings this one depends on do not allow it to be set",
+							      failingKeys(d, after_batch)));
+
+	long number = 0;
+	if (value != NULL && d.type == ValueType::Enum && d.choices_from == NULL && d.values != NULL &&
+	    parseNumber(*value, number))
+	{
+		for (size_t i = 0; i < d.value_count; ++i)
+		{
+			const EnumValue &e = d.values[i];
+			if (e.value == number && e.when_count > 0 && !conditionsHold(e.when, e.when_count, after_batch) &&
+			    !keptValue(d, number))
+				return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
+					    "the setting does not offer that value");
+		}
+	}
 	return ok();
 }
 
@@ -525,6 +652,8 @@ Result<void> checkCollection(const Descriptor &d, const std::string &value, Chec
 
 	const FieldExtra *x = d.field.extra;
 	std::vector<RecordValues> records;
+	std::vector<RecordValues> stored;
+	bool storedRead = false;
 	for (size_t i = 0; i < lines.size(); ++i)
 	{
 		RecordValues members;
@@ -537,7 +666,20 @@ Result<void> checkCollection(const Descriptor &d, const std::string &value, Chec
 		{
 			Result<void> one = allowedAsMember(x->record_fields[m], members[m]);
 			if (!one.ok())
-				return one;
+			{
+				/* A key the input layer no longer delivers passes again where the record
+				   already holds it at that place, as a number row's stored value does. */
+				if (x->record_fields[m].type != ValueType::Key || one.error().code != ErrorCode::NotAListedValue)
+					return one;
+				if (!storedRead)
+				{
+					storedRead = true;
+					if (settingsSource().readRecords(d.key, stored) != Status::Ok)
+						stored.clear();
+				}
+				if (i >= stored.size() || m >= stored[i].size() || stored[i][m] != members[m])
+					return one;
+			}
 		}
 		records.push_back(members);
 	}
@@ -548,24 +690,18 @@ Result<void> checkCollection(const Descriptor &d, const std::string &value, Chec
 /* Every rule set() holds a value to that is about the value and the row alone: what a write
    takes without asking another setting or touching the store. One function for both, so
    that check() cannot pass a value set() would refuse for itself. */
-Result<void> checkValue(const std::string &key, const std::string &value, Checked &out)
+Result<void> checkValue(const std::string &key, const std::string &value, Checked &out, bool cleared = false,
+			bool deferWhen = false, const BatchOverlay *batch = NULL)
 {
 	const Descriptor *d = findRow(key);
 	if (d == NULL)
 		return fail(Status::NotFound, ErrorCode::UnknownSetting,
 			    "no setting is declared under that key");
 
-	// Ahead of every rule about the value: a held row takes none.
+	// Ahead of every rule about the value: a row the lock fixes takes none.
 	if (lockedNow(key))
 		return fail(Status::Conflict, ErrorCode::SettingLocked,
 			    "the box's parental lock fixes this setting");
-	/* Not the lock, and worded apart from it: the screen that owns this setting still starts
-	   or stops a program, or changes other settings, when it is switched, and a write of the
-	   value alone would leave the box half changed. The schema marks such a row held. */
-	if (heldNow(key))
-		return fail(Status::Conflict, ErrorCode::SettingLocked,
-			    "this setting is held: the screen that owns it still applies its effect on the box itself, which a write from here would not");
-
 	// Held to the shape the box offers it in, and refused where the box lacks it.
 	Descriptor here;
 	if (!rowOnThisBox(*d, here))
@@ -577,7 +713,7 @@ Result<void> checkValue(const std::string &key, const std::string &value, Checke
 	   nothing back here, and taking that would wipe the value the read protected. Refused for
 	   every kind rather than only for text, so the answer says why: a number row would
 	   otherwise turn an emptied field down as a bad number. */
-	if (d->secret && value.empty())
+	if (d->secret && value.empty() && !cleared)
 		return fail(Status::InvalidArgument, ErrorCode::EmptyCredential,
 			    "the setting is a credential and is not cleared by writing nothing");
 
@@ -632,11 +768,29 @@ Result<void> checkValue(const std::string &key, const std::string &value, Checke
 				return fail(rule.error());
 		}
 
+		if (d->choices_from != NULL)
+		{
+			/* The default counts as offered: a row reads as its default until something is
+			   stored, so refusing it would make the way back to it a write that fails. The
+			   stored value is read only once the list has refused. */
+			const std::string fallback = d->default_string != NULL ? d->default_string : "";
+			Result<void> offered = holdsOffered(d->choices_from, value, &fallback);
+			if (!offered.ok())
+			{
+				std::string stored;
+				if (settingsSource().readString(d->key, stored) == Status::Ok && stored == value)
+					offered = ok();
+			}
+			if (!offered.ok())
+				return fail(offered.error());
+		}
+
 		/* An identifier is text here and a number where the program keeps it, so the one
 		   spelling that survives is the one a channel is named by everywhere else. A value the
 		   store cannot read would travel as far as the field, be dropped there and read back as
 		   whatever the field already held, on a thread with nobody left to answer. */
-		if (d->field.origin == FieldOrigin::ChannelIdField)
+		if (d->field.origin == FieldOrigin::ChannelIdField
+		    || (d->field.extra != NULL && d->field.extra->channel_id))
 		{
 			unsigned long long id = 0;
 			if (!readChannelIdText(value, id))
@@ -651,27 +805,54 @@ Result<void> checkValue(const std::string &key, const std::string &value, Checke
 			return fail(Status::InvalidArgument, ErrorCode::NotANumber,
 				    "the setting takes a whole number");
 
-		Result<void> allowed = allowedByRow(*d, number);
+		// A bound that follows another setting reads the value the same write gives it.
+		const ValueLookup after_batch = lookupAfter(batch);
+		Result<void> allowed = allowedByRow(*d, number, batch != NULL ? &after_batch : NULL);
+		if (!allowed.ok() && boundsVary(*d) && number >= d->min && number <= d->max)
+		{
+			/* Inside the constants and outside what the box states now: the default is the
+			   way back and the stored value is what a bound that has moved since leaves
+			   behind, so writing either again is no new pick. The stored value is read only
+			   on a refusal. */
+			long stored = 0;
+			if (number == defaultInt(*d) ||
+			    (settingsSource().readInt(d->key, stored) == Status::Ok && stored == number))
+				allowed = ok();
+		}
 		if (!allowed.ok())
 			return fail(allowed.error());
 
-		/* Held to what the box offers, which leaves out the entries it lacks. Every value is
-		   refused while the box cannot say what it has: taking one then would write a number
-		   the box cannot show, which is a picture nobody gets back from with the remote
-		   control. */
+		/* Held to what the box offers, which leaves out the entries it lacks. While the box
+		   cannot say what it has, only the default and the stored value pass: any other
+		   could be a number the box cannot show. */
 		if (d->type == ValueType::Enum)
 		{
 			std::vector<SettingChoice> offered;
-			if (!valuesOffered(*d, offered))
-				return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
-					    "the setting does not offer that value");
-
 			bool listed = false;
-			for (size_t i = 0; !listed && i < offered.size(); ++i)
-				listed = offered[i].value == number;
-			if (!listed)
+			if (valuesOffered(*d, offered, NULL, deferWhen))
+			{
+				for (size_t i = 0; !listed && i < offered.size(); ++i)
+					listed = offered[i].value == number;
+			}
+			/* The default and the stored value pass again, as for a number: what a box
+			   that lacks the entry now falls back to or still holds is the way back. */
+			if (!listed && !keptValue(*d, number))
 				return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
 					    "the setting does not offer that value");
+		}
+		else if (d->choices_from != NULL)
+		{
+			// As for text: the default is offered, and the stored number is read only on a refusal.
+			const long fallback = defaultInt(*d);
+			Result<void> offered = holdsOfferedNumber(d->choices_from, number, &fallback);
+			if (!offered.ok())
+			{
+				long stored = 0;
+				if (settingsSource().readInt(d->key, stored) == Status::Ok && stored == number)
+					offered = ok();
+			}
+			if (!offered.ok())
+				return fail(offered.error());
 		}
 
 		out.number = number;
@@ -682,6 +863,12 @@ Result<void> checkValue(const std::string &key, const std::string &value, Checke
 }
 
 } // anonymous namespace
+
+ValueLookup currentValues()
+{
+	ValueLookup now = { readNumberAfterBatch, readTextAfterBatch, NULL };
+	return now;
+}
 
 // Linear over a few hundred rows, for the reason the store's own lookup is:
 // what an index would save is less than building it costs for a request that
@@ -729,9 +916,10 @@ const char *const kRelativePaths[] =
 	"mode_icons_flag7"
 };
 
-/* Read off the declaration: every row naming a file or folder either defaults to an
-   absolute name or is a directory whose empty default means "beside another one",
-   and the few relative names are listed above. */
+/* Read off the declaration. A row with a text rule is a path exactly when the rule says
+   it names a folder or a file; a list of plugin names is not one. A row without one either defaults to an
+   absolute name or is a directory whose empty default means "beside another one", and
+   the few relative names are listed above. */
 bool holdsPath(const Descriptor &d)
 {
 	// The lists of texts hold files and addresses the box reads from.
@@ -739,6 +927,8 @@ bool holdsPath(const Descriptor &d)
 		return true;
 	if (d.type != ValueType::String || d.key == NULL)
 		return false;
+	if (d.text != NULL)
+		return d.text->kind == TextKind::Directory || d.text->kind == TextKind::File;
 	if (d.default_string != NULL && d.default_string[0] == '/')
 		return true;
 	for (size_t i = 0; i < sizeof(kRelativePaths) / sizeof(kRelativePaths[0]); ++i)
@@ -748,6 +938,52 @@ bool holdsPath(const Descriptor &d)
 	}
 	const size_t n = strlen(d.key);
 	return n >= 3 && strcmp(d.key + n - 3, "dir") == 0;
+}
+
+Result<void> holdsOffered(ChoiceSource from, const std::string &text, const std::string *always)
+{
+	// A value the caller knows the row holds, such as its default, needs no entry.
+	if (always != NULL && *always == text)
+		return ok();
+
+	std::vector<SettingChoice> listed;
+	// A box that cannot say what it has holds the row to nothing, as a rule of text would.
+	if (!from(listed))
+		return ok();
+
+	/* An entry without text stands for nothing a text row can store, as in the list a read
+	   answers, so it neither matches nor counts as an offer. */
+	bool offered = false;
+	for (size_t i = 0; i < listed.size(); ++i)
+	{
+		if (listed[i].text.empty())
+			continue;
+		offered = true;
+		if (listed[i].text == text)
+			return ok();
+	}
+	if (!offered)
+		return ok();
+	return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
+		    "the setting does not offer that value");
+}
+
+Result<void> holdsOfferedNumber(ChoiceSource from, long number, const long *always)
+{
+	if (always != NULL && *always == number)
+		return ok();
+
+	std::vector<SettingChoice> listed;
+	if (!from(listed) || listed.empty())
+		return ok();
+
+	for (size_t i = 0; i < listed.size(); ++i)
+	{
+		if (listed[i].value == number)
+			return ok();
+	}
+	return fail(Status::InvalidArgument, ErrorCode::NotAListedValue,
+		    "the setting does not offer that value");
 }
 
 Result<void> holdsTextRule(const TextRule &rule, const std::string &value, const std::string *current)
@@ -821,11 +1057,6 @@ Result<std::vector<std::string> > sections()
 	return ok(std::move(out));
 }
 
-bool heldNow(const std::string &key)
-{
-	return heldUntilApplied(key.c_str());
-}
-
 bool lockedNow(const std::string &key)
 {
 	if (!heldByParentalLock(key.c_str()))
@@ -856,20 +1087,12 @@ Result<Descriptor> describe(const std::string &key)
 	return ok(out);
 }
 
-Result<std::string> get(const std::string &key)
+namespace
 {
-	const Descriptor *d = findRow(key);
-	if (d == NULL)
-		return fail(Status::NotFound, ErrorCode::UnknownSetting,
-			    "no setting is declared under that key");
 
-	/* A credential is answered with nothing rather than with what is stored, and the store is
-	   not asked at all. Empty and not an error: the schema says the row is secret, while an
-	   error could not be told from a store that failed and would leave a frontend unable to
-	   draw the field at all. */
-	if (d->secret)
-		return ok(std::string());
-
+// What the store holds for a row, a credential included. Never handed to a caller outside.
+Result<std::string> readStored(const Descriptor *d)
+{
 	if (d->type == ValueType::List)
 	{
 		std::vector<std::string> items;
@@ -919,20 +1142,97 @@ Result<std::string> get(const std::string &key)
 	return ok(decimal(value));
 }
 
+} // anonymous namespace
+
+Result<std::string> get(const std::string &key)
+{
+	const Descriptor *d = findRow(key);
+	if (d == NULL)
+		return fail(Status::NotFound, ErrorCode::UnknownSetting,
+			    "no setting is declared under that key");
+
+	/* A credential is answered with nothing rather than with what is stored, and the store is
+	   not asked at all. Empty and not an error: the schema says the row is secret, while an
+	   error could not be told from a store that failed and would leave a frontend unable to
+	   draw the field at all. */
+	if (d->secret)
+		return ok(std::string());
+
+	return readStored(d);
+}
+
+Result<void> checkCleared(const std::string &key)
+{
+	Checked unused;
+	return checkValue(key, std::string(), unused, true);
+}
+
 Result<void> check(const std::string &key, const std::string &value)
 {
 	Checked unused;
 	return checkValue(key, value, unused);
 }
 
-Result<void> set(const std::string &key, const std::string &value, const BatchOverlay *batch, bool onLoop)
+namespace
+{
+
+/* Whether the checked value is the one the store holds, a missing entry counting as its
+   default. The text is the checked one, so a colour and a list compare in the spelling they
+   are stored in. A credential never counts: answering ok to a guess of it where a different
+   write would be refused would tell the guess apart. */
+bool sameAsStored(const Checked &c)
+{
+	if (c.row.secret)
+		return false;
+	std::string text;
+	if (c.row.type == ValueType::List)
+		text = joinOn(c.list, '\n');
+	else if (c.row.type == ValueType::Records)
+	{
+		std::vector<std::string> lines;
+		for (size_t i = 0; i < c.records.size(); ++i)
+			lines.push_back(joinOn(c.records[i], '\t'));
+		text = joinOn(lines, '\n');
+	}
+	else if (holdsText(c.row))
+		text = c.text;
+	else
+		text = decimal(c.number);
+	const Result<std::string> was = readStored(&c.row);
+	return was.ok() && was.value() == text;
+}
+
+// For a member nobody has checked yet: one a check refuses is not the stored value.
+bool holdsStored(const std::string &key, const std::string &value)
 {
 	Checked c;
-	Result<void> checked = checkValue(key, value, c);
+	return checkValue(key, value, c, false, true).ok() && sameAsStored(c);
+}
+
+/* set() up to the store and no further: the value is held and nobody is asked to carry it
+   in yet, so a batch can hold all of its members before one drain applies them together.
+   A value the store holds already is answered ok without a write, unless the caller asks
+   for it to be written all the same, and unchanged says which happened. */
+Result<void> store(const std::string &key, const std::string &value, const BatchOverlay *batch,
+		   bool *unchanged = NULL, bool writeUnchanged = false)
+{
+	Checked c;
+	const bool cleared = batch != NULL && std::find(batch->cleared.begin(), batch->cleared.end(), key) != batch->cleared.end();
+	// The entries' own conditions wait for the batch, which the first pass of a batch has not got.
+	Result<void> checked = checkValue(key, value, c, cleared, true, batch);
 	if (!checked.ok())
 		return checked;
 
-	Result<void> allowed = allowedByConditions(c.row, batch);
+	/* The conditions are asked first and their answer is dropped for a value the store holds:
+	   writing back what a row holds is no change for them to judge, and a client that sends a
+	   whole section back must not be refused for a row it did not touch. */
+	Result<void> allowed = allowedByConditions(c.row, batch, &value);
+	if (!writeUnchanged && sameAsStored(c))
+	{
+		if (unchanged != NULL)
+			*unchanged = true;
+		return ok();
+	}
 	if (!allowed.ok())
 		return allowed;
 
@@ -948,17 +1248,63 @@ Result<void> set(const std::string &key, const std::string &value, const BatchOv
 	if (written != Status::Ok)
 		return fail(written, ErrorCode::SettingNotWritten,
 			    "the setting could not be written");
+	return ok();
+}
 
-	/* Saved here rather than left to the caller: a value the store took and
-	   nobody saved is gone the next time the program writes its file. */
-	Status saved = onLoop ? settingsSource().persistNow() : settingsSource().persist();
+/* Saved here rather than left to the caller: a value the store took and nobody saved is
+   gone the next time the program writes its file. */
+Status persistStored(bool onLoop)
+{
+	return onLoop ? settingsSource().persistNow() : settingsSource().persist();
+}
+
+/* Every member is held before one save carries them in, so each group runs once on the
+   batch as a whole and never on a half of it, and the file is written once. */
+void storeAll(const BatchOverlay &batch, Refusals &failed, bool onLoop, bool writeUnchanged = false)
+{
+	std::vector<std::string> stored;
+	for (size_t i = 0; i < batch.values.size(); ++i)
+	{
+		bool unchanged = false;
+		Result<void> done = store(batch.values[i].first, batch.values[i].second, &batch, &unchanged, writeUnchanged);
+		if (!done.ok())
+			failed.push_back(std::make_pair(batch.values[i].first, done.error()));
+		else if (!unchanged)
+			stored.push_back(batch.values[i].first);
+	}
+	if (stored.empty())
+		return;
+
+	Status saved = persistStored(onLoop);
+	if (saved == Status::Ok)
+		return;
+	for (size_t i = 0; i < stored.size(); ++i)
+		failed.push_back(std::make_pair(stored[i],
+			Error(saved, ErrorCode::SettingNotWritten, "the setting was taken and not saved")));
+}
+
+} // anonymous namespace
+
+Result<void> set(const std::string &key, const std::string &value, const BatchOverlay *batch, bool onLoop,
+		 const std::string &who)
+{
+	WriterScope writer(who.empty() ? currentWriter() : who);
+	bool unchanged = false;
+	Result<void> stored = store(key, value, batch, &unchanged);
+	if (!stored.ok())
+		return stored;
+	// Nothing to save, post or apply for a value the store holds.
+	if (unchanged)
+		return ok();
+
+	Status saved = persistStored(onLoop);
 	if (saved != Status::Ok)
 		return fail(saved, ErrorCode::SettingNotWritten,
 			    "the setting was taken and not saved");
 
 	/* Nothing is applied from here. The value is not in the program's own settings yet: the
 	   store holds it and the save above is what carries it there, so whoever applies the change
-	   is asked by whatever carries the write. An applier run here would read the value the box
+	   is asked by whatever carries the write. An apply run here would read the value the box
 	   was running on before. */
 	return ok();
 }
@@ -989,16 +1335,40 @@ bool eraseMember(BatchOverlay &batch, const std::string &key)
 	return false;
 }
 
-void refuseByCondition(Refusals &refused, const std::string &key, const char *message)
+/* What is left of a settled batch. A member the caller named that the store holds already is
+   done and goes out of it, so no write, save or apply is made for it; a menu keeps it, because
+   its screen has put the value into the program's settings and the key is what the drain
+   applies. What a coupling added stays: the write skips it where it is unchanged. */
+void leaveSettled(BatchOverlay &batch, const BatchOverlay &made, const BatchOverlay &named, bool keepUnchanged)
+{
+	batch = made;
+	if (keepUnchanged)
+		return;
+	for (size_t i = batch.values.size(); i-- > 0;)
+	{
+		const std::string &key = batch.values[i].first;
+		bool asked = false;
+		for (size_t n = 0; n < named.values.size() && !asked; ++n)
+			asked = named.values[n].first == key;
+		if (asked && holdsStored(key, batch.values[i].second))
+			batch.values.erase(batch.values.begin() + i);
+	}
+}
+
+void refuseByCondition(Refusals &refused, const std::string &key, const Error &why)
 {
 	if (!alreadyRefused(refused, key))
-		refused.push_back(std::make_pair(key,
-			Error(Status::Conflict, ErrorCode::SettingConditionNotMet, message)));
+		refused.push_back(std::make_pair(key, why));
+}
+
+void refuseByCondition(Refusals &refused, const std::string &key, const char *message)
+{
+	refuseByCondition(refused, key, conditionRefusal(message, std::vector<std::string>()));
 }
 
 } // anonymous namespace
 
-void settleBatch(BatchOverlay &batch, Refusals &refused)
+void settleBatch(BatchOverlay &batch, Refusals &refused, bool keepUnchanged)
 {
 	/* What the caller named is kept apart from what the couplings made of it. Every round
 	   makes the couplings over again from the survivors, so a member that fell takes what it
@@ -1041,17 +1411,27 @@ void settleBatch(BatchOverlay &batch, Refusals &refused)
 		/* Judged round by round against what is still in, because dropping one member can take
 		   away what another one leaned on. */
 		std::vector<std::string> failing;
+		std::vector<Error> why;
 		for (size_t i = 0; i < made.values.size(); ++i)
 		{
 			const Descriptor *row = findRow(made.values[i].first);
 			if (row == NULL)
 				continue;
-			if (!allowedByConditions(*row, &made).ok())
+			Result<void> allowed = allowedByConditions(*row, &made, &made.values[i].second);
+			if (allowed.ok())
+				continue;
+			if (keepUnchanged || !holdsStored(made.values[i].first, made.values[i].second))
+			{
 				failing.push_back(made.values[i].first);
+				// An entry's own condition names no setting of the row's.
+				why.push_back(allowed.error().code == ErrorCode::SettingConditionNotMet ? allowed.error() :
+					conditionRefusal("the settings this one depends on do not allow it to be set",
+							 std::vector<std::string>()));
+			}
 		}
 		if (failing.empty())
 		{
-			batch = made;
+			leaveSettled(batch, made, named, keepUnchanged);
 			return;
 		}
 
@@ -1060,8 +1440,7 @@ void settleBatch(BatchOverlay &batch, Refusals &refused)
 		{
 			if (eraseMember(named, failing[f]))
 			{
-				refuseByCondition(refused, failing[f],
-					"the settings this one depends on do not allow it to be set");
+				refuseByCondition(refused, failing[f], why[f]);
 				progress = true;
 				continue;
 			}
@@ -1069,8 +1448,7 @@ void settleBatch(BatchOverlay &batch, Refusals &refused)
 			/* Not named by the caller: a coupling put it. It is reported under its own key, and
 			   what asked for it is refused with it, since one without the other is the state the
 			   coupling exists to prevent. */
-			refuseByCondition(refused, failing[f],
-				"the settings this one depends on do not allow it to be set");
+			refuseByCondition(refused, failing[f], why[f]);
 			for (size_t a = 0; a < added.size(); ++a)
 			{
 				if (added[a].key != failing[f])
@@ -1078,7 +1456,8 @@ void settleBatch(BatchOverlay &batch, Refusals &refused)
 				if (eraseMember(named, added[a].trigger))
 				{
 					refuseByCondition(refused, added[a].trigger,
-						"the setting it brings with it cannot be set");
+						conditionRefusal("the setting it brings with it cannot be set",
+								 std::vector<std::string>(1, failing[f])));
 					progress = true;
 				}
 			}
@@ -1090,23 +1469,28 @@ void settleBatch(BatchOverlay &batch, Refusals &refused)
 		{
 			for (size_t f = 0; f < failing.size(); ++f)
 				eraseMember(made, failing[f]);
-			batch = made;
+			leaveSettled(batch, made, named, keepUnchanged);
 			return;
 		}
 	}
 }
 
 void writeBatch(const std::vector<std::pair<std::string, std::string> > &members, Refusals &failed,
-		bool onLoop)
+		bool onLoop, const std::string &who)
 {
+	WriterScope writer(who.empty() ? currentWriter() : who);
 	/* The three passes of one write, so every caller that writes more than one setting gets
 	   the couplings and the settling and none can leave them out. The first refuses what is
 	   wrong on its own, and only what passed goes into the batch, since a value that never
-	   lands must not allow another one. */
+	   lands must not allow another one. A bound that follows another setting reads the request
+	   there; the third pass judges it again on what passed. */
+	BatchOverlay asked;
+	asked.values = members;
 	BatchOverlay batch;
 	for (size_t i = 0; i < members.size(); ++i)
 	{
-		Result<void> checked = check(members[i].first, members[i].second);
+		Checked unused;
+		Result<void> checked = checkValue(members[i].first, members[i].second, unused, false, true, &asked);
 		if (!checked.ok())
 		{
 			failed.push_back(std::make_pair(members[i].first, checked.error()));
@@ -1117,12 +1501,46 @@ void writeBatch(const std::vector<std::pair<std::string, std::string> > &members
 
 	settleBatch(batch, failed);
 
-	for (size_t i = 0; i < batch.values.size(); ++i)
+	storeAll(batch, failed, onLoop);
+}
+
+Status menuChanged(const std::string &key)
+{
+	const Descriptor *d = findRow(key);
+	if (d == NULL)
+		return applyKey(key);
+	Result<std::string> now = readStored(d);
+	if (!now.ok())
+		return applyKey(key);
+
+	BatchOverlay batch;
+	batch.values.push_back(std::make_pair(key, now.value()));
+	Refusals refused;
+	settleBatch(batch, refused, true);
+
+	// A coupling that only restates what is stored has nothing to write and nothing to save.
+	bool more = false;
+	for (size_t i = 0; i < batch.values.size() && !more; ++i)
 	{
-		Result<void> done = set(batch.values[i].first, batch.values[i].second, &batch, onLoop);
-		if (!done.ok())
-			failed.push_back(std::make_pair(batch.values[i].first, done.error()));
+		if (batch.values[i].first == key)
+			continue;
+		const Descriptor *row = findRow(batch.values[i].first);
+		if (row == NULL)
+			continue;
+		Result<std::string> was = readStored(row);
+		more = !was.ok() || was.value() != batch.values[i].second;
 	}
+	if (!more)
+		return applyKey(key);
+
+	/* The key goes in with what it brought, so the one drain runs each group once on all of
+	   them, saves, and tells the open menus which settings moved. */
+	Refusals failed;
+	storeAll(batch, failed, true, true);
+	for (size_t i = 0; i < failed.size(); ++i)
+		std::fprintf(stderr, "coreapi: %s, coupled to %s, was not written: %s\n", failed[i].first.c_str(),
+			     key.c_str(), failed[i].second.message.c_str());
+	return failed.empty() ? Status::Ok : Status::Internal;
 }
 
 Result<void> resetDefaults(const std::vector<std::string> &requested, Refusals &refused, bool onLoop)
@@ -1161,8 +1579,9 @@ Result<void> resetDefaults(const std::vector<std::string> &requested, Refusals &
 	return ok();
 }
 
-Result<void> clearSecret(const std::string &key)
+Result<void> clearSecret(const std::string &key, const std::string &who)
 {
+	WriterScope writer(who.empty() ? currentWriter() : who);
 	const Descriptor *d = findRow(key);
 	if (d == NULL)
 		return fail(Status::NotFound, ErrorCode::UnknownSetting,
@@ -1232,11 +1651,101 @@ bool resolveLabel(const char *key, std::string &out)
 	return localeSource().text(key, out) == Status::Ok;
 }
 
+namespace
+{
+
+// The number after the last underscore of key, -1 where it does not end in one; stem is the rest.
+long slotOf(const char *key, std::string &stem)
+{
+	const char *bar = strrchr(key, '_');
+	if (bar == NULL || bar[1] == '\0')
+		return -1;
+	for (const char *c = bar + 1; *c != '\0'; ++c)
+	{
+		if (!isdigit((unsigned char) *c))
+			return -1;
+	}
+	stem.assign(key, bar - key);
+	return strtol(bar + 1, NULL, 10);
+}
+
+} // anonymous namespace
+
+bool rowLabel(const Descriptor &d, std::string &out)
+{
+	if (!resolveLabel(d.label_key, out))
+		return false;
+	if (d.key == NULL)
+		return true;
+	std::string stem;
+	const long slot = slotOf(d.key, stem);
+	if (slot < 0)
+		return true;
+	// Read off the table: a sibling under the same stem and the same label is what makes it a slot.
+	const Descriptor *table = settingsTable();
+	const size_t count = settingsTableCount();
+	for (size_t i = 0; i < count; ++i)
+	{
+		std::string other;
+		if (table[i].key == NULL || strcmp(table[i].key, d.key) == 0 || table[i].label_key == NULL ||
+		    strcmp(table[i].label_key, d.label_key) != 0 || slotOf(table[i].key, other) < 0 || other != stem)
+			continue;
+		char n[24];
+		snprintf(n, sizeof(n), " %ld", slot + 1);
+		out += n;
+		return true;
+	}
+	return true;
+}
+
 void announceSettingsChanged()
 {
 	Event e;
 	e.type = EventType::SettingsChanged;
 	EventBus::instance().publish(e);
+}
+
+Snapshot snapshot()
+{
+	Snapshot out;
+	const Descriptor *t = settingsTable();
+	const size_t n = settingsTableCount();
+	for (size_t i = 0; t != NULL && i < n; ++i)
+	{
+		if (t[i].key == NULL)
+			continue;
+		/* Read past the rule that answers a credential with nothing: a file that changed only
+		   a key is a change its group has to put in force. The snapshot never leaves here. */
+		const Result<std::string> v = readStored(&t[i]);
+		if (v.ok())
+			out[t[i].key] = v.value();
+	}
+	return out;
+}
+
+std::vector<std::string> changedSince(const Snapshot &before)
+{
+	std::vector<std::string> changed;
+	const Snapshot now = snapshot();
+	for (Snapshot::const_iterator it = now.begin(); it != now.end(); ++it)
+	{
+		const Snapshot::const_iterator was = before.find(it->first);
+		if (was == before.end() || was->second != it->second)
+			changed.push_back(it->first);
+	}
+	return changed;
+}
+
+Status applyChangedSince(const Snapshot &before)
+{
+	return applyBatch(changedSince(before));
+}
+
+Status applyReplaced(const std::function<void()> &replace)
+{
+	const Snapshot before = snapshot();
+	replace();
+	return applyChangedSince(before);
 }
 
 } // namespace settings

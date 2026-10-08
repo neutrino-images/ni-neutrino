@@ -27,9 +27,18 @@
 #include <system/localize.h>
 #include <string>
 
-class CPSISetup : public CMenuTarget, public CChangeObserver
+class CPSISetup : public CMenuTarget
 {
 	private:
+		enum { PSI_CONTROLS = 4 };
+		// Each control's row member, and what the screen holds beside it: the
+		// value on entry for a cancel, the row's bounds and its default.
+		int *value[PSI_CONTROLS];
+		int kept[PSI_CONTROLS];
+		int lowest[PSI_CONTROLS];
+		int highest[PSI_CONTROLS];
+		int fallback[PSI_CONTROLS];
+
 		CFrameBuffer * frameBuffer;
 		int x;
 		int y;
@@ -45,18 +54,14 @@ class CPSISetup : public CMenuTarget, public CChangeObserver
 		neutrino_locale_t name;
 
 		void paint ();
-		void setPSI ();
 		void paintSlider (int i);
-		// unsigned char readProcPSI(int);
+		void bindRows ();
+		void applyRows ();
 		CPSISetup (const neutrino_locale_t Name);
-		void writeProcPSI ();
-		void writeProcPSI (int);
 
 	public:
 		int exec (CMenuTarget * parent, const std::string & actionKey);
 		void hide ();
-		void blankScreen (bool b = true);
-		bool changeNotify(const neutrino_locale_t, void *);
 		static CPSISetup *getInstance();
 };
 #endif

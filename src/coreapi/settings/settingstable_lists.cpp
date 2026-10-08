@@ -51,11 +51,10 @@ namespace
 constexpr RecordField kUsermenuFields[] =
 {
 	{ "title", ValueType::String, 0, 0, false, "usermenu.name" },
-	/* A key code, which is a number until a key has a kind of its own. Nought is a
-	   button with no key: the program keeps that as a code of its own and the
-	   program's own load treats nought and that code alike, so both read as nought
-	   and nought writes the code, which lets what was read be written back. */
-	{ "key", ValueType::Int, 0, 2147483647, false, "usermenu.key" },
+	/* A key code. Nought is a button with no key: the program keeps that as a code of its
+	   own and the program's own load treats nought and that code alike, so both read as
+	   nought and nought writes the code, which lets what was read be written back. */
+	{ "key", ValueType::Key, 0, 2147483647, false, "usermenu.key" },
 	// The numbers of the entries the button opens, separated by commas.
 	{ "items", ValueType::String, 0, 0, false, "usermenu.items" }
 };
@@ -123,7 +122,7 @@ void writeUsermenu(SNeutrinoSettings &s, const std::vector<RecordValues> &in)
 constexpr FieldExtra kUsermenuExtra =
 {
 	0, NULL, NULL, &readUsermenu, &writeUsermenu,
-	kUsermenuFields, sizeof(kUsermenuFields) / sizeof(kUsermenuFields[0]), 0, true
+	kUsermenuFields, sizeof(kUsermenuFields) / sizeof(kUsermenuFields[0]), 0, true, false
 };
 
 /* The remote boxes a timer can be sent to. Whether one is reachable is found out
@@ -173,7 +172,7 @@ void writeRemoteboxes(SNeutrinoSettings &s, const std::vector<RecordValues> &in)
 constexpr FieldExtra kRemoteboxExtra =
 {
 	0, NULL, NULL, &readRemoteboxes, &writeRemoteboxes,
-	kRemoteboxFields, sizeof(kRemoteboxFields) / sizeof(kRemoteboxFields[0]), 0, true
+	kRemoteboxFields, sizeof(kRemoteboxFields) / sizeof(kRemoteboxFields[0]), 0, true, false
 };
 
 
@@ -201,6 +200,14 @@ bool camd_osmod() { return fileIsThere("/var/bin/osmod"); }
 bool camd_oscam() { return fileIsThere("/var/bin/oscam"); }
 bool camd_cccam() { return fileIsThere("/var/bin/cccam"); }
 bool camd_gbox() { return fileIsThere("/var/bin/gbox"); }
+
+#ifdef ENABLE_LCD4LINUX
+// The weather line of the panel is offered only while the weather itself is on.
+constexpr Condition kLcd4lWeatherOn[] =
+{
+	when("weather_enabled").isNot(0)
+};
+#endif
 
 constexpr Descriptor kLists[] =
 {
@@ -240,141 +247,180 @@ constexpr Descriptor kLists[] =
 	// The flag files, each the existence of a file in the directory the program keeps them in.
 	boolRow("flag_hddpower")
 		.section("hdd")
+		.label("hdd_power")
+		.hint("menu.hint_hdd_power")
 		.defaultValue(0)
 		.availableIf(hasHddPowerFlag)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.hddpower")),
-	/* The flag files of the daemons and the softcams the box starts at boot. Each is
-	   only the file: the screen that makes one also starts or stops the program and,
-	   for the SCART picture fix, rewrites the screen's size and the font scale, and
-	   that stays in the screen's notifier until the stream that owns the setting
-	   moves it to a group that applies it. So none of these carries a label: a page
-	   that drew one would offer a toggle that starts nothing. */
+	/* The flag files of the daemons and the softcams the box starts at boot. The file is
+	   the setting; the services group starts or stops the program when it appears or
+	   goes. The SCART picture fix beside them moves the screen's corners and the font
+	   scale with it through a coupling, so a write of it from anywhere does both. */
 	boolRow("flag_daemon_fritzcallmonitor")
 		.section("misc")
+		.label("daemon_item.fcm_name")
+		.hint("daemon_item.fcm_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_fritzcallmonitor)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.fritzcallmonitor")),
 	boolRow("flag_daemon_nfsd")
 		.section("misc")
+		.label("daemon_item.nfsserver_name")
+		.hint("daemon_item.nfsserver_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_nfsd)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.nfsd")),
 	boolRow("flag_daemon_samba")
 		.section("misc")
+		.label("daemon_item.sambaserver_name")
+		.hint("daemon_item.sambaserver_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_samba)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.samba")),
 	boolRow("flag_daemon_tuxcald")
 		.section("misc")
+		.label("daemon_item.tuxcald_name")
+		.hint("daemon_item.tuxcald_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_tuxcald)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.tuxcald")),
 	boolRow("flag_daemon_tuxmaild")
 		.section("misc")
+		.label("daemon_item.tuxmaild_name")
+		.hint("daemon_item.tuxmaild_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_tuxmaild)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.tuxmaild")),
 	boolRow("flag_daemon_emmrd")
 		.section("misc")
+		.label("daemon_item.emmremind_name")
+		.hint("daemon_item.emmremind_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_emmrd)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.emmrd")),
 	boolRow("flag_daemon_inadyn")
 		.section("misc")
+		.label("daemon_item.inadyn_name")
+		.hint("daemon_item.inadyn_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_inadyn)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.inadyn")),
 	boolRow("flag_daemon_dropbear")
 		.section("misc")
+		.label("daemon_item.dropbear_name")
+		.hint("daemon_item.dropbear_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_dropbear)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.dropbear")),
 	boolRow("flag_daemon_djmount")
 		.section("misc")
+		.label("daemon_item.djmount_name")
+		.hint("daemon_item.djmount_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_djmount)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.djmount")),
 	boolRow("flag_daemon_ushare")
 		.section("misc")
+		.label("daemon_item.ushare_name")
+		.hint("daemon_item.ushare_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_ushare)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.ushare")),
 	boolRow("flag_daemon_minidlnad")
 		.section("misc")
+		.label("daemon_item.minidlna_name")
+		.hint("daemon_item.minidlna_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_minidlnad)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.minidlnad")),
 	boolRow("flag_daemon_xupnpd")
 		.section("misc")
+		.label("daemon_item.xupnpd_name")
+		.hint("daemon_item.xupnpd_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_xupnpd)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.xupnpd")),
 	boolRow("flag_daemon_crond")
 		.section("misc")
+		.label("daemon_item.crond_name")
+		.hint("daemon_item.crond_desc")
 		.defaultValue(0)
 		.availableIf(&daemon_crond)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.crond")),
 	boolRow("flag_camd_mgcamd")
 		.section("cam")
+		.label("camd_item_mgcamd_name")
+		.hint("camd_item_mgcamd_hint")
 		.defaultValue(0)
 		.availableIf(&camd_mgcamd)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.mgcamd")),
 	boolRow("flag_camd_doscam")
 		.section("cam")
+		.label("camd_item_doscam_name")
+		.hint("camd_item_doscam_hint")
 		.defaultValue(0)
 		.availableIf(&camd_doscam)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.doscam")),
 	boolRow("flag_camd_ncam")
 		.section("cam")
+		.label("camd_item_ncam_name")
+		.hint("camd_item_ncam_hint")
 		.defaultValue(0)
 		.availableIf(&camd_ncam)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.ncam")),
 	boolRow("flag_camd_osmod")
 		.section("cam")
+		.label("camd_item_osmod_name")
+		.hint("camd_item_osmod_hint")
 		.defaultValue(0)
 		.availableIf(&camd_osmod)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.osmod")),
 	boolRow("flag_camd_oscam")
 		.section("cam")
+		.label("camd_item_oscam_name")
+		.hint("camd_item_oscam_hint")
 		.defaultValue(0)
 		.availableIf(&camd_oscam)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.oscam")),
 	boolRow("flag_camd_cccam")
 		.section("cam")
+		.label("camd_item_cccam_name")
+		.hint("camd_item_cccam_hint")
 		.defaultValue(0)
 		.availableIf(&camd_cccam)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.cccam")),
 	boolRow("flag_camd_gbox")
 		.section("cam")
+		.label("camd_item_gbox_name")
+		.hint("camd_item_gbox_hint")
 		.defaultValue(0)
 		.availableIf(&camd_gbox)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.gbox")),
 	boolRow("flag_scart_osd_fix")
 		.section("osd")
+		.label("scart_osd_fix")
+		.hint("menu.hint_scart_osd_fix")
 		.defaultValue(0)
 		.availableIf(hasScartOsdFix)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.scart_osd_fix")),
 #ifdef ENABLE_LCD4LINUX
 	boolRow("flag_lcd4l_weather")
 		.section("display")
+		.label("lcd4l_weather")
+		.hint("menu.hint_lcd4l_weather")
 		.defaultValue(0)
+		.changeableWhen(kLcd4lWeatherOn)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.lcd-weather")),
 	boolRow("flag_lcd4l_clock_a")
 		.section("display")
+		.label("lcd4l_clock_a")
+		.hint("menu.hint_lcd4l_clock_a")
 		.defaultValue(0)
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.lcd-clock_a")),
 #endif
 };
 
 } // anonymous namespace
-
-/* The flag files of the daemons, the softcams and the SCART picture fix. Named by their
-   keys' leading words, so a daemon added to the screen's list gets the rule with its row. */
-bool heldUntilApplied(const char *key)
-{
-	return strncmp(key, "flag_daemon_", 12) == 0 || strncmp(key, "flag_camd_", 10) == 0 ||
-	       strcmp(key, "flag_scart_osd_fix") == 0;
-}
 
 const Descriptor *settingsTableLists(size_t &count)
 {

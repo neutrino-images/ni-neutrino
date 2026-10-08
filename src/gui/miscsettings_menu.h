@@ -33,11 +33,8 @@
 
 #include <string>
 
-class CFanControlNotifier;
-class CCpuFreqNotifier;
-class CSectionsdConfigNotifier;
 
-class CMiscMenue : public CMenuTarget, CChangeObserver
+class CMiscMenue : public CMenuTarget
 {
 	private:
 		enum
@@ -46,36 +43,7 @@ class CMiscMenue : public CMenuTarget, CChangeObserver
 			NORWAY = 1,
 		};
 
-		CFanControlNotifier *fanNotifier;
-		CCpuFreqNotifier *cpuNotifier;
-		CSectionsdConfigNotifier *sectionsdConfigNotifier;
-		//COnOffNotifier* miscNotifier;
-		CMenuItem *epg_save;
-		CMenuItem *epg_save_standby;
-		CMenuItem *epg_save_frequently;
-		CMenuItem *epg_read;
-		CMenuItem *epg_read_frequently;
-		CMenuItem *epg_scan;
-		CMenuItem *tmdb_onoff;
-		CMenuItem *omdb_onoff;
-		CMenuItem *youtube_onoff;
-		CMenuItem *shoutcast_onoff;
-		CMenuForwarder *epg_dir;
-		CMenuForwarder *epg_read_now;
-		CMenuItem *ecm_onoff;
-		CMenuItem *dec_onoff;
-
 		int width;
-
-		std::string epg_cache;
-		std::string epg_extendedcache;
-		std::string epg_old_events;
-		std::string epg_max_events;
-
-		std::string tmdb_api_key_short;
-		std::string omdb_api_key_short;
-		std::string youtube_api_key_short;
-		std::string shoutcast_dev_id_short;
 
 		int showMiscSettingsMenu();
 		void showMiscSettingsMenuGeneral(CMenuWidget *ms_general);
@@ -91,7 +59,6 @@ class CMiscMenue : public CMenuTarget, CChangeObserver
 		CMiscMenue();
 		~CMiscMenue();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
-		bool changeNotify(const neutrino_locale_t OptionName, void */*data*/);
 };
 
 #endif

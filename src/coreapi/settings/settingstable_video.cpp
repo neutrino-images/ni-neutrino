@@ -423,28 +423,32 @@ constexpr Descriptor kVideo[] =
 	   are the widest a value can be. */
 	intRow("pip_x")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_x")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(0, 1920)
 		.defaultValue(50)
 		.field(COREAPI_NUMBER_FIELD_ON(pip_x, pipUsable, NULL)),
 	intRow("pip_y")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_y")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(0, 1080)
 		.defaultValue(50)
 		.field(COREAPI_NUMBER_FIELD_ON(pip_y, pipUsable, NULL)),
 	intRow("pip_width")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_width")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(0, 1920)
 		.defaultValue(365)
 		.field(COREAPI_NUMBER_FIELD_ON(pip_width, pipUsable, NULL)),
 	intRow("pip_height")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_height")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(0, 1080)
 		.defaultValue(200)
@@ -452,28 +456,32 @@ constexpr Descriptor kVideo[] =
 	// The radio pair falls back to the television one rather than to a number.
 	intRow("pip_radio_x")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_radio_x")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(0, 1920)
 		.defaultValue(50)
 		.field(COREAPI_NUMBER_FIELD_ON(pip_radio_x, pipUsable, NULL)),
 	intRow("pip_radio_y")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_radio_y")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(0, 1080)
 		.defaultValue(50)
 		.field(COREAPI_NUMBER_FIELD_ON(pip_radio_y, pipUsable, NULL)),
 	intRow("pip_radio_width")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_radio_width")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(0, 1920)
 		.defaultValue(365)
 		.field(COREAPI_NUMBER_FIELD_ON(pip_radio_width, pipUsable, NULL)),
 	intRow("pip_radio_height")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_radio_height")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(0, 1080)
 		.defaultValue(200)
@@ -482,7 +490,8 @@ constexpr Descriptor kVideo[] =
 	   that means no corner at all and the rest are the four. */
 	intRow("pip_rotate_lastpos")
 		.section("video")
-		.label("videomenu.pip")
+		.label("videomenu.pip_rotate_lastpos")
+		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
 		.range(-1, 3)
 		.defaultValue(-1)
@@ -593,14 +602,19 @@ const char *const *videoModeNames(size_t &count)
 
 bool videoModeDrawn(size_t index)
 {
+	return videoModeValue(index) >= 0;
+}
+
+int videoModeValue(size_t index)
+{
 	if (index >= sizeof(kVideoModeNames) / sizeof(kVideoModeNames[0]))
-		return false;
+		return -1;
 	for (size_t i = 0; i < sizeof(kVideoMode) / sizeof(kVideoMode[0]); ++i)
 	{
 		if (kVideoMode[i].label_text != NULL && strcmp(kVideoMode[i].label_text, kVideoModeNames[index]) == 0)
-			return true;
+			return kVideoMode[i].value;
 	}
-	return false;
+	return -1;
 }
 
 } // namespace coreapi

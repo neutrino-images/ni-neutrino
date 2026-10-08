@@ -160,6 +160,9 @@ int CScreenSetup::exec(CMenuTarget *parent, const std::string &)
 					break;
 				}
 
+				// The slot just written is what the preset names now; the group takes it into the drawn area.
+				applyKeyLogged("screen_preset");
+
 				if (g_InfoViewer) /* recalc infobar position */
 					g_InfoViewer->start();
 				if (CNeutrinoApp::getInstance()->channelList)

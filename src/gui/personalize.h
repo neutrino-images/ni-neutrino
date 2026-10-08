@@ -76,17 +76,6 @@ class CUserMenuNotifier : public CChangeObserver
 		bool changeNotify(const neutrino_locale_t = NONEXISTANT_LOCALE, void *data = NULL);
 };
 
-//helper class to enable/disable pin setup
-class CPinSetupNotifier : public CChangeObserver
-{
-	private:
-		CMenuItem* toDisable;
-	public:
-		CPinSetupNotifier( CMenuItem*);
-		bool changeNotify(const neutrino_locale_t = NONEXISTANT_LOCALE, void *data = NULL);
-};
-
-
 //some required typedefs
 typedef struct mn_widget_t
 {
@@ -142,7 +131,6 @@ class CPersonalizeGui : public CMenuTarget, public CChangeObserver, public CPINP
 
 	private:
 		CUserMenuNotifier *user_menu_notifier;
-		CPinSetupNotifier *pin_setup_notifier;
 		CMenuWidget* tmpW;
 		CMenuWidget* uMenu;
 
@@ -166,7 +154,7 @@ class CPersonalizeGui : public CMenuTarget, public CChangeObserver, public CPINP
 		int 	ShowPersonalizationMenu();
 		int 	ShowMenuOptions(const int& menu);
 		void 	ShowHelpPersonalize();
-		void 	ShowPinSetup(CMenuWidget* p_widget, CPINChangeWidget * &pin_widget);
+		void 	ShowPinSetup(CMenuWidget* p_widget);
 		void 	ShowUserMenu();
 		void 	ShowPluginMenu(CMenuWidget* p_widget, std::string da[], int ia[]);
 		void 	SaveAndExit();

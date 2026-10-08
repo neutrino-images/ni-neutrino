@@ -44,7 +44,6 @@
 #include <zapit/zapit.h>
 
 extern CRemoteControl		* g_RemoteControl; /* neutrino.cpp */
-extern CAudioSetupNotifier	* audioSetupNotifier;
 
 #include <gui/audio_select.h>
 #include <gui/movieplayer.h>
@@ -127,16 +126,18 @@ int CAudioSelectMenuHandler::doMenu ()
 		AudioSelector.addItem(GenericMenuSeparatorLine);
 
 	// -- setup menue for to Dual Channel Stereo
+	static CApplyKeyNotifier analogModeNotifier("audio_AnalogMode");
+	static CApplyKeyNotifier analogOutNotifier("analog_out");
 	CMenuOptionChooser* oj = new CMenuOptionChooser(LOCALE_AUDIOMENU_ANALOG_MODE,
 			&g_settings.audio_AnalogMode,
 			AUDIOMENU_ANALOGOUT_OPTIONS, AUDIOMENU_ANALOGOUT_OPTION_COUNT,
-			true, audioSetupNotifier, CRCInput::RC_red);
+			true, &analogModeNotifier, CRCInput::RC_red);
 
 	AudioSelector.addItem( oj );
 
 	oj = new CMenuOptionChooser(LOCALE_AUDIOMENU_ANALOG_OUT, &g_settings.analog_out,
 			OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT,
-			true, audioSetupNotifier, CRCInput::RC_green);
+			true, &analogOutNotifier, CRCInput::RC_green);
 	AudioSelector.addItem( oj );
 
 	CChannelList *channelList = CNeutrinoApp::getInstance ()->channelList;

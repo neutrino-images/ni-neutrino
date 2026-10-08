@@ -35,6 +35,7 @@
 #include "httpd/mcp/toolguard.h"
 #include "httpd/mcp/toolhint.h"
 
+#include "coreapi/base/apply.h"
 #include "coreapi/base/errors.h"
 
 #include <cstring>
@@ -267,11 +268,11 @@ bool gateAdmits(const Endpoint &ep, const JsonText &args, coreapi::Error &refuse
 	}
 	std::string body;
 	std::string key;
-	if (v["settings"].isObject() && toJson(v["settings"], body) && !(key = deniedKeyIn(body)).empty())
+	std::string why;
+	if (v["settings"].isObject() && toJson(v["settings"], body) && !(key = deniedKeyIn(body, &why)).empty())
 	{
 		refused = coreapi::Error(coreapi::Status::InvalidArgument, coreapi::ErrorCode::SettingsSectionDenied,
-		                         "no AI client may change the setting " + key +
-		                         ", which is a credential or names a place on the box's disk");
+		                         "no AI client may change the setting " + key + ", which " + why);
 		return false;
 	}
 	return true;
@@ -376,6 +377,34 @@ coreapi::Result<JsonText> pictureFrom(Response &r)
 	return coreapi::ok(out);
 }
 
+/* A per key answer as text a client can act on: which keys landed, so it does not send them
+   again, and for each one that did not its code, detail and the settings it depends on. */
+std::string partlyWritten(const std::string &body)
+{
+	JsonValue v;
+	if (!parseJson(body, limits().max_json_depth, v) || !v.isObject() || !v["results"].isObject())
+		return "not every value was written: " + body;
+	const JsonValue &results = v["results"];
+	std::string landed;
+	std::string refused;
+	const std::vector<std::string> keys = results.getMemberNames();
+	for (size_t i = 0; i < keys.size(); ++i)
+	{
+		const JsonValue &one = results[keys[i]];
+		if (!one.isMember("code"))
+		{
+			landed += (landed.empty() ? "" : ", ") + keys[i];
+			continue;
+		}
+		refused += "\n- " + keys[i] + ": " + one["code"].asString() + ", " + one["detail"].asString();
+		const JsonValue &deps = one["depends_on"];
+		for (JsonValue::ArrayIndex d = 0; deps.isArray() && d < deps.size(); ++d)
+			refused += (d == 0 ? " (depends on " : ", ") + deps[d].asString() + (d + 1 == deps.size() ? ")" : "");
+	}
+	return "some settings were written and some were not.\nwritten: " + (landed.empty() ? std::string("none") : landed) +
+	       "\nnot written:" + refused;
+}
+
 coreapi::Result<JsonText> resultFrom(Response &r, const Endpoint &ep, bool image)
 {
 	if (image)
@@ -395,7 +424,7 @@ coreapi::Result<JsonText> resultFrom(Response &r, const Endpoint &ep, bool image
 	// A results object cannot be a tool's declared structured answer.
 	if (r.code == StatusMultiStatus)
 		return coreapi::fail(coreapi::Status::Internal, coreapi::ErrorCode::SettingNotWritten,
-		                     "not every value was written: " + r.body);
+		                     partlyWritten(r.body));
 	if (r.body.empty())
 		return coreapi::ok(std::string(r.code == StatusAccepted ? "{\"status\":\"accepted\"}"
 		                                                        : "{\"status\":\"done\"}"));
@@ -553,6 +582,7 @@ coreapi::Result<JsonText> RouteTools::call(const Caller &c, const std::string &n
 
 	// Only this route can match, so no value steers the call to a sibling.
 	const RouteTable one = { HTTPD_TABLE_N(e->table->tag, e->route, 1) };
+	const coreapi::WriterScope writer(c.connection.empty() ? std::string() : "mcp:" + c.connection);
 	Response r = dispatchIn(one, e->route->method, path, query, body, std::string(), c.level,
 	                        std::string(), std::string(), std::string(), std::string(),
 	                        c.external ? Origin::Tunnel : Origin::Lan);

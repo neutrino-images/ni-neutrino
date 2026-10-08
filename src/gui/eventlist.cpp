@@ -54,6 +54,7 @@
 #include <driver/fade.h>
 #include <driver/record.h>
 #include <driver/fontrenderer.h>
+#include <gui/widget/settingitem.h>
 
 #include <system/helpers.h>
 #include <zapit/client/zapittools.h>
@@ -1479,7 +1480,6 @@ int CEventFinderMenu::showMenu(void)
 	CMenuWidget searchMenu(LOCALE_EVENTFINDER_HEAD, NEUTRINO_ICON_FEATURES, 40);
 
 	CMenuForwarder* mf2	= new CMenuForwarder(LOCALE_EVENTFINDER_HISTORY, true, NULL, this, "#history", CRCInput::RC_yellow);
-	CMenuOptionNumberChooser* moc1 = new CMenuOptionNumberChooser(LOCALE_EVENTFINDER_MAX_HISTORY, &g_settings.epg_search_history_max, true, 0, 50, NULL);
 
 	searchMenu.addItem(GenericMenuSeparator);
 	searchMenu.addItem(GenericMenuBack);
@@ -1495,7 +1495,7 @@ int CEventFinderMenu::showMenu(void)
 	searchMenu.addItem(mfsk);
 	searchMenu.addItem(GenericMenuSeparatorLine);
 	searchMenu.addItem(mf2);
-	searchMenu.addItem(moc1);
+	addNumberSetting(&searchMenu, "epg_search_history_max");
 
 	res = searchMenu.exec(NULL,"");
 	return(res);

@@ -35,8 +35,16 @@
 #include <neutrino_menue.h>
 
 #include <driver/screen_max.h>
+#include <gui/widget/hintbox.h>
 #include <gui/widget/menue_options.h>
 #include <gui/widget/settingitem.h>
+#include <coreapi/settings/settings.h>
+#include <system/debug.h>
+
+#include <stdio.h>
+#include <string>
+#include <utility>
+#include <vector>
 
 CZapitSetup::CZapitSetup()
 {
@@ -67,34 +75,41 @@ int CZapitSetup::showMenu()
 	// menue init
 	CMenuWidget *zapit = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_ZAPIT);
 	zapit->addIntroItems(LOCALE_ZAPITSETUP_HEAD);
-	COnOffNotifier *miscZapitNotifier = new COnOffNotifier(1);
-
 	// zapit
 	CSelectChannelWidget select1;
 	CSelectChannelWidget select2;
 
-	CMenuForwarder *zapit1 = new CMenuForwarder(LOCALE_ZAPITSETUP_LAST_TV, !g_settings.uselastchannel, g_settings.StartChannelTV, &select1, "tv", CRCInput::RC_green);
+	// The start channels follow the row's own condition on uselastchannel.
+	const bool changeable = coreapi::settings::conditionsHoldNow("startchanneltv");
+	/* A forwarder points at a text only where it is not empty when handed over, and keeps
+	   a copy otherwise, so each takes a copy and takes it again on a write. */
+	CFollowForwarder *zapit1 = new CFollowForwarder(LOCALE_ZAPITSETUP_LAST_TV, changeable, NULL, &select1, "tv", CRCInput::RC_green);
+	zapit1->setOption(settingsText(g_settings.StartChannelTV));
 	zapit1->setHint("", LOCALE_MENU_HINT_LAST_TV);
 
-	CMenuForwarder *zapit2 = new CMenuForwarder(LOCALE_ZAPITSETUP_LAST_RADIO, !g_settings.uselastchannel, g_settings.StartChannelRadio, &select2, "radio", CRCInput::RC_yellow);
+	CFollowForwarder *zapit2 = new CFollowForwarder(LOCALE_ZAPITSETUP_LAST_RADIO, changeable, NULL, &select2, "radio", CRCInput::RC_yellow);
+	zapit2->setOption(settingsText(g_settings.StartChannelRadio));
 	zapit2->setHint("", LOCALE_MENU_HINT_LAST_RADIO);
 
-	miscZapitNotifier->addItem(zapit1);
-	miscZapitNotifier->addItem(zapit2);
-
-	addSetting(zapit, "uselastchannel", true, miscZapitNotifier, CRCInput::RC_red);
+	addChoiceSetting(zapit, "uselastchannel", true, NULL, CRCInput::RC_red);
+	// The rows' conditions judge them on every pass, and a write of a channel shows in them.
+	zapit1->follow(zapit, "startchanneltv", std::vector<std::string>(1, "startchanneltv_id"), true,
+		       [zapit1]() { zapit1->setOption(settingsText(g_settings.StartChannelTV)); });
+	zapit2->follow(zapit, "startchannelradio", std::vector<std::string>(1, "startchannelradio_id"), true,
+		       [zapit2]() { zapit2->setOption(settingsText(g_settings.StartChannelRadio)); });
 	zapit->addItem(GenericMenuSeparatorLine);
 	zapit->addItem(zapit1);
 	zapit->addItem(zapit2);
 	zapit->addItem(GenericMenuSeparatorLine);
-	CMenuOptionChooser *channel_mode = static_cast<CMenuOptionChooser *>(addSetting(zapit, "channel_mode_initial", true, NULL, CRCInput::RC_1));
-	channel_mode->OnAfterChangeOption.connect(sigc::bind(sigc::mem_fun(*this, &CZapitSetup::changeStartChannel), zapit1, zapit2));
+	CMenuOptionChooser *channel_mode = addChoiceSetting(zapit, "channel_mode_initial", true, NULL, CRCInput::RC_1);
+	if (channel_mode)
+		channel_mode->OnAfterChangeOption.connect(sigc::bind(sigc::mem_fun(*this, &CZapitSetup::changeStartChannel), zapit1, zapit2));
 
-	CMenuOptionChooser *channel_mode_radio = static_cast<CMenuOptionChooser *>(addSetting(zapit, "channel_mode_initial_radio", true, NULL, CRCInput::RC_2));
-	channel_mode_radio->OnAfterChangeOption.connect(sigc::bind(sigc::mem_fun(*this, &CZapitSetup::changeStartChannel), zapit1, zapit2));
+	CMenuOptionChooser *channel_mode_radio = addChoiceSetting(zapit, "channel_mode_initial_radio", true, NULL, CRCInput::RC_2);
+	if (channel_mode_radio)
+		channel_mode_radio->OnAfterChangeOption.connect(sigc::bind(sigc::mem_fun(*this, &CZapitSetup::changeStartChannel), zapit1, zapit2));
 
 	int res = zapit->exec(NULL, "");
-	delete miscZapitNotifier;
 	delete zapit;
 	return res;
 }
@@ -130,15 +145,20 @@ int CSelectChannelWidget::exec(CMenuTarget *parent, const std::string &actionKey
 		t_channel_id channel_id = 0;
 		sscanf(&(actionKey[4]), "%u|%" SCNx64 "", &cnr, &channel_id);
 
-		if (strncmp(actionKey.c_str(), "ZCT:", 4) == 0) // tv
+		// The name and the identifier are one start channel, so they go in together or not at all.
+		const bool tv = strncmp(actionKey.c_str(), "ZCT:", 4) == 0;
+		char id_text[24];
+		snprintf(id_text, sizeof(id_text), "%llx", (unsigned long long) channel_id);
+		std::vector<std::pair<std::string, std::string> > pair;
+		pair.push_back(std::make_pair(std::string(tv ? "startchanneltv" : "startchannelradio"),
+					      actionKey.substr(actionKey.find_first_of("#") + 1)));
+		pair.push_back(std::make_pair(std::string(tv ? "startchanneltv_id" : "startchannelradio_id"), std::string(id_text)));
+		coreapi::settings::Refusals failed;
+		coreapi::settings::writeBatch(pair, failed, true);
+		if (!failed.empty())
 		{
-			setSettingsText(g_settings.StartChannelTV, actionKey.substr(actionKey.find_first_of("#") + 1));
-			g_settings.startchanneltv_id = channel_id;
-		}
-		else if (strncmp(actionKey.c_str(), "ZCR:", 4) == 0) // radio
-		{
-			setSettingsText(g_settings.StartChannelRadio, actionKey.substr(actionKey.find_first_of("#") + 1));
-			g_settings.startchannelradio_id = channel_id;
+			dprintf(DEBUG_NORMAL, "[zapit setup] the start channel was not written\n");
+			ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
 		}
 
 		// leave bouquet/channel menu and show a refreshed zapit menu with current start channel(s)

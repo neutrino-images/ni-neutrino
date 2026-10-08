@@ -147,6 +147,7 @@ void CListBox::updateSelection(unsigned int newpos)
 
 int CListBox::exec(CMenuTarget* parent, const std::string & /*actionKey*/)
 {
+	CMenuWidget::Busy modal;
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
 

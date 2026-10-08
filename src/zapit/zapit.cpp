@@ -87,6 +87,8 @@
 #include <dmx_hal.h>
 extern void CCamManager_SetDvbApiClient(CDvbApiClient *client);
 #endif
+#include <coreapi/box/apply_video.h>
+#include <coreapi/box/mode43.h>
 
 #ifdef PEDANTIC_VALGRIND_SETUP
 #define VALGRIND_PARANOIA(x) memset(&x, 0, sizeof(x))
@@ -2322,6 +2324,7 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		COsdHelpers::getInstance()->setVideoSystem(msg.val);
 		COsdHelpers::getInstance()->changeOsdResolution(0, true);
 		CNeutrinoApp::getInstance()->g_settings_video_Mode(msg.val);
+		coreapi::forgetSentVideo(coreapi::VideoSent::System);
 		break;
 	}
 #if 0
@@ -2434,6 +2437,7 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		CBasicServer::receive_data(connfd, &msg, sizeof(msg));
 		aspectratio=(int) msg.val;
 		videoDecoder->setAspectRatio(aspectratio, -1);
+		coreapi::forgetSentVideo(coreapi::VideoSent::Aspect);
 		break;
 	}
 
@@ -2451,6 +2455,10 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 		CBasicServer::receive_data(connfd, &msg, sizeof(msg));
 		mode43=(int) msg.val;
 		videoDecoder->setAspectRatio(-1, mode43);
+		/* The video group sends the setting's own 4:3 mode through here; any
+		   other one is a change past it, which the group sends over again. */
+		if (coreapi::mode43PastGroup(mode43, g_settings.video_43mode))
+			coreapi::forgetSentVideo(coreapi::VideoSent::Aspect);
 		break;
 	}
 
@@ -3718,32 +3726,6 @@ bool CZapit::Start(Z_start_arg *ZapStart_arg)
 			ca->SetInitMask(CA_INIT_BOTH);
 			break;
 	}
-
-	// set ci clock to ZapStart_arg->ci_clock
-	for (unsigned int i = 0; i < ca->GetNumberCISlots(); i++) {
-#if HAVE_LIBSTB_HAL
-		ca->SetTSClock(ZapStart_arg->ci_clock[i] * 1000000, i);
-#else
-		ca->SetTSClock(ZapStart_arg->ci_clock[i] * 1000000);
-#endif
-	}
-
-#if BOXMODEL_VUPLUS_ALL
-	// dvb wait delay for ci response
-	ca->SetCIDelay(ZapStart_arg->ci_delay);
-
-	// relevant pids routing
-	for (unsigned int i = 0; i < ca->GetNumberCISlots(); i++) {
-		ca->SetCIRelevantPidsRouting(ZapStart_arg->ci_rpr[i], i);
-	}
-#endif
-
-#if HAVE_LIBSTB_HAL
-	// ci operator mode
-	for (unsigned int i = 0; i < ca->GetNumberCISlots(); i++) {
-		ca->SetCIOperator(ZapStart_arg->ci_op[i], i);
-	}
-#endif
 
 	ca->Start();
 

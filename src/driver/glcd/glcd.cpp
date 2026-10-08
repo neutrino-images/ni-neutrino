@@ -37,6 +37,7 @@
 #include <hardware_caps.h>
 #include <eitd/sectionsd.h>
 #include <math.h>
+#include <coreapi/box/apply_glcd.h>
 
 #include "glcd.h"
 #include "analogclock.h"
@@ -956,6 +957,8 @@ void cGLCD::Run(void)
 #ifdef GLCD_DEBUG
 		fprintf(stderr, "LCD init succeeded.\n");
 #endif
+		// A respawn can bring another panel; the position bounds follow the one that is up.
+		coreapi::noteGlcdPanelSize(lcd->Width(), lcd->Height());
 		lcd->SetBrightness(0);
 
 		if (!bitmap)

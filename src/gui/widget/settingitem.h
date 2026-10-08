@@ -29,6 +29,7 @@
 #include <functional>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 /* What a screen allows of an item, for reasons that are not the row's own
    conditions (a hardware revision, a recording running). A function is asked on
@@ -68,8 +69,8 @@ class ScreenActive
    before observer is told. One whose daemon cannot be asked stays inactive
    and shows that there is no value.
 
-   A number shows its row's unit after it, or the row's own format where it
-   names one, so a screen sets no number format for a row that declares one.
+   A number shows its row's unit after it, so a screen sets no number format
+   for a row that declares one.
 
    A text row gets a forwarder that opens the dialog its rule names: a pin
    entry, a digit entry, a folder or file browser, a hidden-text dialog for a
@@ -99,6 +100,57 @@ CMenuOptionNumberChooser *addNumberSetting(CMenuWidget *menu, const char *key, S
 					   CChangeObserver *observer = NULL,
 					   const neutrino_msg_t direct_key = CRCInput::RC_nokey, bool slider = false,
 					   bool numeric = false);
+
+/* What a screen does on a change of an item it built here once the item's row
+   has taken effect: the observer handed to addSetting hears of the change
+   before the row's group runs, this after it, and before the menu's items are
+   judged again. A question whose answer can undo the change goes here, since
+   the box has to show the change first. True repaints the menu. For a number or
+   choice item; kept until the item goes, and never run for any other item. */
+void afterApply(CMenuItem *item, const std::function<bool()> &after);
+
+/* For a choice or number item whose row is put in force once its menu is left,
+   a remote control that would be asked about on every step otherwise: a change
+   stays in the item, so neither another key of the row's group nor a save takes
+   it up, and settleLeft() after the menu's exec puts the last one into the
+   setting, applies it and runs what afterApply() gave. Nothing happens there
+   without a change. */
+void applyOnLeave(CMenuItem *item);
+void settleLeft(CMenuItem *item);
+
+/* For a choice item built as a list that is asked about after each change, the
+   video mode: left and right open the list as OK does, so no value on the way to
+   the one wanted is put on the screen. For an item addChoiceSetting returned. */
+void openListOnStep(CMenuOptionChooser *item);
+
+/* Settings that were written elsewhere, a web write, have landed and been
+   applied: every item built here for one of them takes its value again and is
+   drawn again if it is on the screen, and every item of their menus is judged
+   again, since the write moves the state of rows it did not write. A menu not on
+   the screen shows the values when it is drawn next. An open input dialog keeps
+   what is typed in it, and leaving it with OK writes that. Nothing is applied
+   again. For the program's loop only. */
+void settingsWrittenElsewhere(const std::vector<std::string> &keys);
+
+/* A forwarder a screen builds for something that is no row of its own, a dialog or a
+   display of a setting, and that has to follow the menu as the rows do. follow() puts
+   it in step with the menu: it is judged with the rows on every pass, as the row of
+   key and the screen allow, and drawn again when a write elsewhere moves one of keys,
+   after refresh has taken its value again. Leaves the set when it is deleted. */
+class CFollowForwarder : public CMenuForwarder
+{
+	public:
+		CFollowForwarder(const neutrino_locale_t text, const bool is_active, const std::string &option,
+				 CMenuTarget *target = NULL, const char *action_key = NULL,
+				 const neutrino_msg_t direct_key = CRCInput::RC_nokey);
+		CFollowForwarder(const neutrino_locale_t text, const bool is_active, const char *option = NULL,
+				 CMenuTarget *target = NULL, const char *action_key = NULL,
+				 const neutrino_msg_t direct_key = CRCInput::RC_nokey);
+		~CFollowForwarder();
+
+		void follow(CMenuWidget *menu, const std::string &key, const std::vector<std::string> &keys,
+			    ScreenActive screen = true, const std::function<void()> &refresh = std::function<void()>());
+};
 
 class CColorChooser;
 

@@ -32,7 +32,7 @@
 
 #define MIGRATE_THEME_NAME "Unknown-Migrated-Theme"
 
-class CThemes : public CMenuTarget, CColorSetupNotifier, public sigc::trackable
+class CThemes : public CMenuTarget, public sigc::trackable
 {
 	private:
 		CConfigFile themefile;
@@ -50,6 +50,7 @@ class CThemes : public CMenuTarget, CColorSetupNotifier, public sigc::trackable
 		void rememberOldTheme(bool remember);
 		void move_userDir();
 		bool applyDefaultTheme();
+		void applyColors();
 		///signal after select theme is completed
 		sigc::signal<void> OnAfterSelectTheme;
 		void markSelectedTheme(CMenuWidget *w);

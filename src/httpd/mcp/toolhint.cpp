@@ -64,19 +64,26 @@ const Hint kHints[] = {
 	  "Tell the user the owner has to allow this in the Freigaben screen of the KI tab in ni-web; "
 	  "do not try another way." },
 	{ coreapi::ErrorCode::SettingLocked,
-	  "The box fixes this setting, by its parental lock or because its own screen still applies "
-	  "the effect (settings_schema marks it locked or held); tell the user this setting cannot be "
-	  "changed from here. Do not try another way." },
+	  "The box's parental lock fixes this setting (settings_schema marks it locked); tell the user "
+	  "this setting cannot be changed from here. Do not try another way." },
 	{ coreapi::ErrorCode::SettingNotOnThisBox,
 	  "This box does not have what the setting controls; tell the user it does not apply to this "
 	  "box. Do not try another way." },
 	{ coreapi::ErrorCode::SettingConditionNotMet,
-	  "Read the refusal's detail first. If another setting does not allow this one right now, "
-	  "settings_schema lists its conditions: send the setting it depends on in the same call, after "
-	  "telling the user, and if you already sent it, fix the refusal answered for it first. If the "
-	  "setting is one half of a pair (the name and id of a start channel, the city and location of the "
-	  "weather), send both halves together. If two values contradict each other or one plugin is in two "
-	  "lists, correct the values; sending the same call again will be refused again." },
+	  "Read the refusal's detail first: it names the settings that do not allow this one right now. "
+	  "Such a setting may belong to another section. Change it first, after telling the user: in a write "
+	  "of its own section if the owner allowed that section, else tell the user to change it on the box; "
+	  "then write this one again. A setting of the same section may go into the same call. "
+	  "If you already sent it and it was refused, fix that refusal first. If the setting is one half of a "
+	  "pair (settings_schema marks it pair): send a start channel by its id alone, the box fills the name; "
+	  "send the city and location of the weather together. If two values contradict each other or one "
+	  "plugin is in two lists, correct the values; sending the same call again will be refused again." },
+	{ coreapi::ErrorCode::SettingNotWritten,
+	  "If the error lists settings as written, those did land: do not send them again. Fix each "
+	  "one that was not written by its own code and send only those: setting-condition-not-met needs "
+	  "the settings it depends on changed first, a value refused for itself needs another value, "
+	  "setting-locked and setting-not-on-this-box cannot be changed from here. One refused with "
+	  "setting-not-written itself could not be stored by the box; try it once more later." },
 	{ coreapi::ErrorCode::SettingsSectionDenied,
 	  "No AI client may ever change this section or credential; tell the user to change it in "
 	  "ni-web directly. Do not try another way." },

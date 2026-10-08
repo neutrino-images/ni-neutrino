@@ -576,6 +576,26 @@ void appendFieldType(Json &j, const FieldDesc &f, const std::vector<SchemaRef> &
 			}
 			return;
 		}
+		case FieldType::NamedLists:
+		{
+			j.key("type");
+			j.value("object");
+			j.key("additionalProperties");
+			j.beginObject();
+			j.key("type");
+			j.value("array");
+			const std::string ref = refFor(f.nested, refs);
+			j.key("items");
+			j.beginObject();
+			if (!ref.empty())
+			{
+				j.key("$ref");
+				j.value(ref);
+			}
+			j.endObject();
+			j.endObject();
+			return;
+		}
 		case FieldType::Array:
 		{
 			j.key("type");
@@ -694,6 +714,23 @@ void appendProblemSchema(Json &j, bool prose)
 		}
 		j.endObject();
 	}
+	// Optional, so it stays out of required: only setting-condition-not-met carries it.
+	j.key("depends_on");
+	j.beginObject();
+	j.key("type");
+	j.value("array");
+	j.key("items");
+	j.beginObject();
+	j.key("type");
+	j.value("string");
+	j.endObject();
+	if (prose)
+	{
+		j.key("description");
+		j.value("present only for `setting-condition-not-met`: the keys of the settings whose values refused "
+		        "this one, which `detail` names as well");
+	}
+	j.endObject();
 	j.endObject();
 	j.key("required");
 	j.beginArray();

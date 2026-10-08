@@ -32,6 +32,7 @@
 #include <global.h>
 #include <neutrino.h>
 #include "menue.h"
+#include "numberstep.h"
 
 #include <driver/fontrenderer.h>
 #include <driver/screen_max.h>
@@ -851,8 +852,37 @@ const char *CMenuWidget::getName()
 	return nameString.c_str();
 }
 
+namespace
+{
+const CMenuWidget *g_waiting_menu = NULL;
+
+// Names the waiting menu for as long as it lives and puts the one before back.
+struct WaitingMenu
+{
+	const CMenuWidget *before;
+	explicit WaitingMenu(const CMenuWidget *m) : before(g_waiting_menu) { g_waiting_menu = m; }
+	~WaitingMenu() { g_waiting_menu = before; }
+};
+} // anonymous namespace
+
+const CMenuWidget *CMenuWidget::waiting()
+{
+	return g_waiting_menu;
+}
+
+CMenuWidget::Busy::Busy() : before(g_waiting_menu)
+{
+	g_waiting_menu = NULL;
+}
+
+CMenuWidget::Busy::~Busy()
+{
+	g_waiting_menu = before;
+}
+
 int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 {
+	WaitingMenu waiting_here(this);
 	neutrino_msg_t msg;
 	neutrino_msg_data_t data;
 	bool bAllowRepeatLR = false;
@@ -918,7 +948,11 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 			std::map<neutrino_msg_t, keyAction>::iterator it = keyActionMap.find(msg);
 			if (it != keyActionMap.end()) {
 				fader.StopFade();
-				int rv = it->second.menue->exec(this, it->second.action);
+				int rv;
+				{
+					WaitingMenu busy(NULL);
+					rv = it->second.menue->exec(this, it->second.action);
+				}
 				switch ( rv ) {
 					case menu_return::RETURN_EXIT_ALL:
 						retval = menu_return::RETURN_EXIT_ALL;
@@ -1083,7 +1117,11 @@ int CMenuWidget::exec(CMenuTarget* parent, const std::string &)
 						break;
 					item->msg = msg;
 					fader.StopFade();
-					int rv = item->exec( this );
+					int rv;
+					{
+						WaitingMenu busy(NULL);
+						rv = item->exec( this );
+					}
 
 #ifdef ENABLE_GRAPHLCD
 					if (g_settings.glcd_enable && !cGLCD::getInstance()->GetCfgMode())
@@ -1913,31 +1951,55 @@ void CMenuOptionNumberChooser::init(	const neutrino_locale_t& lName,
 	numeric_input		= false;
 }
 
+/* The names of the chooser that sit outside the range are part of what it steps
+   through (see numberstep.h). A name without words is no name: the chooser is given one of those as
+   a placeholder, and the value that stands for a number nobody could read is
+   never to be landed on. */
+std::vector<int> CMenuOptionNumberChooser::namedOutside() const
+{
+	std::vector<int> named;
+	for (size_t i = 0; i < localized.size(); i++)
+	{
+		if (localized[i].value_name != NONEXISTANT_LOCALE &&
+		    (localized[i].value < lower_bound || localized[i].value > upper_bound))
+			named.push_back(localized[i].value);
+	}
+	return named;
+}
+
 int CMenuOptionNumberChooser::exec(CMenuTarget*)
 {
 	int res = menu_return::RETURN_NONE;
 
+	const std::vector<int> named = namedOutside();
 	if(msg == CRCInput::RC_left) {
-		if (((*optionValue) > upper_bound) || ((*optionValue) <= lower_bound))
-			*optionValue = upper_bound;
-		else
-			(*optionValue)--;
+		*optionValue = numberStep(lower_bound, upper_bound, named, *optionValue, false);
 	} else if (numeric_input && msg == CRCInput::RC_ok) {
 		int size = 0;
-		int b = lower_bound;
+		int low = lower_bound;
+		int high = upper_bound;
+		for (size_t i = 0; i < named.size(); i++)
+		{
+			low = std::min(low, named[i]);
+			high = std::max(high, named[i]);
+		}
+		int b = low;
 		if (b < 0) {
 			size++,
 			b = -b;
 		}
-		if (b < upper_bound)
-			b = upper_bound;
+		if (b < high)
+			b = high;
 		for (; b; b /= 10, size++);
 		CIntInput cii(name, optionValue, size, LOCALE_IPSETUP_HINT_1, LOCALE_IPSETUP_HINT_2);
 		cii.exec(NULL, "");
-		if (*optionValue > upper_bound)
-			*optionValue = upper_bound;
-		else if (*optionValue < lower_bound)
-			*optionValue = lower_bound;
+		if (std::find(named.begin(), named.end(), *optionValue) == named.end())
+		{
+			if (*optionValue > upper_bound)
+				*optionValue = upper_bound;
+			else if (*optionValue < lower_bound)
+				*optionValue = lower_bound;
+		}
 		res = menu_return::RETURN_REPAINT;
 	} else if (msg == CRCInput::RC_prev || msg == CRCInput::RC_next)
 	{
@@ -1954,10 +2016,7 @@ int CMenuOptionNumberChooser::exec(CMenuTarget*)
 				*optionValue = lower_bound;
 		}
 	} else {
-		if (((*optionValue) >= upper_bound) || ((*optionValue) < lower_bound))
-			*optionValue = lower_bound;
-		else
-			(*optionValue)++;
+		*optionValue = numberStep(lower_bound, upper_bound, named, *optionValue, true);
 	}
 
 	bool wantsRepaint = false;
@@ -2009,7 +2068,7 @@ int CMenuOptionNumberChooser::paint(bool selected)
 	//paint item icon
 	paintItemButton(selected, height, NEUTRINO_ICON_BUTTON_OKAY);
 	if(slider_on)
-		paintItemSlider(selected, height, *optionValue, (upper_bound - lower_bound), getName(), l_option);
+		paintItemSlider(selected, height, std::min(std::max(*optionValue, lower_bound), upper_bound), (upper_bound - lower_bound), getName(), l_option);
 	//paint text
 	paintItemCaption(selected, l_option);
 

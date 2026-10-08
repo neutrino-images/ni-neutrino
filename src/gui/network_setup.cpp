@@ -31,7 +31,7 @@
 #include <config.h>
 #endif
 
-#include <dirent.h>
+#include <algorithm>
 #include <vector>
 
 #include "network_setup.h"
@@ -67,6 +67,9 @@
 #include <system/debug.h>
 #include <system/helpers.h>
 
+#include <coreapi/network.h>
+#include <coreapi/settings/menuspec.h>
+
 #include <libnet.h>
 #include <libiw/iwscan.h>
 #include <libconfigfile/configfile.h>
@@ -80,8 +83,6 @@ extern int pinghost(const std::string &hostname, std::string *ip = NULL);
 CNetworkSetup::CNetworkSetup(int wizard_mode)
 {
 	networkConfig = CNetworkConfig::getInstance();
-
-	sectionsdConfigNotifier = NULL;
 
 	is_wizard = wizard_mode;
 
@@ -208,13 +209,16 @@ static const struct button_label CNetworkSetupFooterButtons[] =
 };
 #define CNetworkSetupFooterButtonCount (sizeof(CNetworkSetupFooterButtons)/sizeof(CNetworkSetupFooterButtons[0]))
 
-static int my_filter(const struct dirent *dent)
+// The interfaces the row offers, none where the box cannot say.
+static std::vector<std::string> offeredInterfaces()
 {
-	if (dent->d_name[0] == 'l' && dent->d_name[1] == 'o')
-		return 0;
-	if (dent->d_name[0] == '.')
-		return 0;
-	return 1;
+	std::vector<std::string> names;
+	const coreapi::Result<coreapi::MenuItemSpec> row = coreapi::menuItem("ifname");
+	if (!row.ok())
+		return names;
+	for (size_t i = 0; i < row.value().choices.size(); ++i)
+		names.push_back(row.value().choices[i].text);
+	return names;
 }
 
 void CNetworkSetup::setBroadcast(void)
@@ -229,23 +233,10 @@ void CNetworkSetup::setBroadcast(void)
 
 int CNetworkSetup::showNetworkSetup()
 {
-	struct dirent **namelist;
+	const std::vector<std::string> interfaces = offeredInterfaces();
+	const int ifcount = (int) interfaces.size();
 
-	//if select
-
-	int ifcount = scandir("/sys/class/net", &namelist, my_filter, alphasort);
-
-	bool found = false;
-
-	for (int i = 0; i < ifcount; i++)
-	{
-		if (strcmp(g_settings.ifname.c_str(), namelist[i]->d_name) == 0)
-			found = true;
-		free(namelist[i]);
-	}
-
-	if (ifcount >= 0)
-		free(namelist);
+	const bool found = std::find(interfaces.begin(), interfaces.end(), g_settings.ifname) != interfaces.end();
 
 	if (!found)
 	{
@@ -337,7 +328,6 @@ int CNetworkSetup::showNetworkSetup()
 #endif
 
 	//ntp submenu
-	sectionsdConfigNotifier = new CSectionsdConfigNotifier;
 	mf = new CMenuForwarder(LOCALE_NETWORKMENU_NTPTITLE, true, NULL, &ntp, NULL, CRCInput::RC_yellow);
 	mf->setHint("", LOCALE_MENU_HINT_NET_NTP);
 	networkSettings->addItem(mf);
@@ -434,20 +424,15 @@ int CNetworkSetup::showNetworkSetup()
 	dhcpDisable.Clear();
 	wlanEnable.Clear();
 	delete networkSettings;
-	delete sectionsdConfigNotifier;
 	return ret;
 }
 
 int CNetworkSetup::showInterfaceSelectMenu()
 {
 	int res = menu_return::RETURN_REPAINT;
-	struct dirent **namelist;
-
-	int ifcount = scandir("/sys/class/net", &namelist, my_filter, alphasort);
-	if (ifcount <= 0)
+	std::vector<std::string> ifnames = offeredInterfaces();
+	if (ifnames.empty())
 	{
-		if (ifcount >= 0)
-			free(namelist);
 		ShowMsg(LOCALE_MESSAGEBOX_ERROR, g_Locale->getText(LOCALE_NETWORKMENU_NO_INTERFACE), CMsgBox::mbrBack, CMsgBox::mbBack);
 		return res;
 	}
@@ -457,16 +442,6 @@ int CNetworkSetup::showInterfaceSelectMenu()
 
 	int select = -1;
 	CMenuSelectorTarget *selector = new CMenuSelectorTarget(&select);
-	std::vector<std::string> ifnames;
-	ifnames.reserve(ifcount);
-
-	for (int i = 0; i < ifcount; i++)
-	{
-		ifnames.push_back(namelist[i]->d_name);
-		free(namelist[i]);
-	}
-	free(namelist);
-
 	for (size_t i = 0; i < ifnames.size(); ++i)
 	{
 		std::string ip;
@@ -500,24 +475,12 @@ int CNetworkSetup::showInterfaceSelectMenu()
 
 void CNetworkSetup::showNetworkNTPSetup(CMenuWidget *menu_ntp)
 {
-	//prepare ntp input
-	CKeyboardInput *networkSettings_NtpServer = new CKeyboardInput(LOCALE_NETWORKMENU_NTPSERVER, &g_settings.network_ntpserver, 0, sectionsdConfigNotifier, NULL, LOCALE_NETWORKMENU_NTPSERVER_HINT1, LOCALE_NETWORKMENU_NTPSERVER_HINT2);
-
-	CStringInput *networkSettings_NtpRefresh = new CStringInput(LOCALE_NETWORKMENU_NTPREFRESH, &g_settings.network_ntprefresh, 3, LOCALE_NETWORKMENU_NTPREFRESH_HINT1, LOCALE_NETWORKMENU_NTPREFRESH_HINT2, "0123456789 ", sectionsdConfigNotifier);
-
-	//CMenuOptionChooser *ntp9 = new CMenuOptionChooser(LOCALE_NETWORKMENU_NTPATBOOT, &g_settings.network_ntpatboot, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true); //NI
-	CMenuForwarder *ntp2 = new CMenuDForwarder(LOCALE_NETWORKMENU_NTPSERVER, true, g_settings.network_ntpserver, networkSettings_NtpServer);
-	CMenuForwarder *ntp3 = new CMenuDForwarder(LOCALE_NETWORKMENU_NTPREFRESH, true, g_settings.network_ntprefresh, networkSettings_NtpRefresh);
-
-	//ntp9->setHint("", LOCALE_MENU_HINT_NET_NTPATBOOT); //NI
-	ntp2->setHint("", LOCALE_MENU_HINT_NET_NTPSERVER);
-	ntp3->setHint("", LOCALE_MENU_HINT_NET_NTPREFRESH);
-
 	menu_ntp->addIntroItems(LOCALE_NETWORKMENU_NTPTITLE);
-	addSetting(menu_ntp, "network_ntpenable", true, sectionsdConfigNotifier);
-	//menu_ntp->addItem(ntp9); //NI
-	menu_ntp->addItem(ntp2);
-	menu_ntp->addItem(ntp3);
+	addSetting(menu_ntp, "network_ntpenable");
+	addSetting(menu_ntp, "network_ntpserver", true, NULL, CRCInput::RC_nokey, false, false, false,
+		   LOCALE_NETWORKMENU_NTPSERVER_HINT1, LOCALE_NETWORKMENU_NTPSERVER_HINT2);
+	addSetting(menu_ntp, "network_ntprefresh", true, NULL, CRCInput::RC_nokey, false, false, false,
+		   LOCALE_NETWORKMENU_NTPREFRESH_HINT1, LOCALE_NETWORKMENU_NTPREFRESH_HINT2);
 }
 
 #ifdef ENABLE_GUI_MOUNT

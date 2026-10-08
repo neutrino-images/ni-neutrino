@@ -48,6 +48,8 @@
 #include "hdd_menu.h"
 
 #include <cs_api.h> //NI
+#include <coreapi/base/apply.h>
+#include <coreapi/settings/predicates.h>
 #include <coreapi/box/storage_disks.h>
 #include <gui/widget/icons.h>
 #include <gui/widget/menue_options.h>
@@ -259,15 +261,12 @@ void CHDDMenuHandler::setRecordPath(std::string &dev)
 	in_menu = false;
 	int res = ShowMsg(LOCALE_RECORDINGMENU_DEFDIR, LOCALE_HDD_SET_RECDIR, CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo);
 	if(res == CMsgBox::mbrYes) {
+		/* The folder is not there yet on a fresh disk, which the row's rule would
+		   refuse, so the member is written and the group told. */
 		setSettingsText(g_settings.network_nfs_recordingdir, newpath);
-		CRecordManager::getInstance()->SetDirectory(g_settings.network_nfs_recordingdir);
-		if(g_settings.timeshiftdir.empty())
-		{
-			std::string timeshiftDir = g_settings.network_nfs_recordingdir + "/.timeshift";
-			safe_mkdir(timeshiftDir.c_str());
-			printf("New timeshift dir: %s\n", timeshiftDir.c_str());
-			CRecordManager::getInstance()->SetTimeshiftDirectory(timeshiftDir);
-		}
+		const coreapi::Status applied = coreapi::applyKey("network_nfs_recordingdir");
+		if (applied != coreapi::Status::Ok && applied != coreapi::Status::Busy)
+			dprintf(DEBUG_NORMAL, "[hdd] the recording folder was not applied\n");
 	}
 	in_menu = old_menu;
 }
@@ -523,10 +522,7 @@ int CHDDMenuHandler::doMenu()
 
 		hddmenu->addIntroItems(LOCALE_HDD_SETTINGS, LOCALE_HDD_EXTENDED_SETTINGS);
 
-		CHDDDestExec hddexec;
-		CMenuForwarder * mf = new CMenuForwarder(LOCALE_HDD_ACTIVATE, true, "", &hddexec, NULL, CRCInput::RC_red);
-		mf->setHint("", LOCALE_MENU_HINT_HDD_APPLY);
-		hddmenu->addItem(mf);
+		CMenuForwarder * mf;
 
 		addSetting(hddmenu, "hdd_sleep");
 
@@ -538,17 +534,12 @@ int CHDDMenuHandler::doMenu()
 			addSetting(hddmenu, "hdd_noise");
 
 		//NI
-		int fake_hddpower = 0;
-		CTouchFileNotifier * hddpowerNotifier = NULL;
 		hddmenu->addItem(new CMenuSeparator());
-		if (cs_get_revision() < 8) {
-			//NI HDD power (HD1/BSE only)
-			const char *flag_hddpower = FLAGDIR "/.hddpower";
-			fake_hddpower = file_exists(flag_hddpower);
-			hddpowerNotifier = new CTouchFileNotifier(flag_hddpower);
-			CMenuOptionChooser *mc = new CMenuOptionChooser(LOCALE_HDD_POWER, &fake_hddpower, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, hddpowerNotifier, CRCInput::RC_yellow);
-			mc->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_HDD_POWER);
-			hddmenu->addItem(mc);
+		//NI HDD power (HD1/BSE only), which the row is offered for
+		CMenuItem *hddpower = addSetting(hddmenu, "flag_hddpower", true, NULL, CRCInput::RC_yellow);
+		if (hddpower)
+		{
+			hddpower->hintIcon = NEUTRINO_ICON_HINT_IMAGELOGO;
 			hddmenu->addItem(new CMenuSeparator());
 		}
 		addSetting(hddmenu, "hdd_format_on_mount_failed");
@@ -610,8 +601,6 @@ int CHDDMenuHandler::doMenu()
 		}
 
 		ret = hddmenu->exec(NULL, "");
-		if (hddpowerNotifier)
-			delete hddpowerNotifier;
 		delete hddmenu;
 		hdd_list.clear();
 		devtitle.clear();
@@ -937,58 +926,4 @@ int CHDDMenuHandler::checkDevice(std::string dev)
 
 	//NI if (!srun) my_system(1, "smbd");
 	return menu_return::RETURN_REPAINT;
-}
-
-int CHDDDestExec::exec(CMenuTarget* /*parent*/, const std::string&)
-{
-	const std::vector<coreapi::storage::DiskInfo> user_disks = coreapi::storage::disks();
-	int n = user_disks.size();
-
-	if (g_settings.hdd_sleep > 0 && g_settings.hdd_sleep < 60)
-		g_settings.hdd_sleep = 60;
-
-	std::string hdidle = find_executable("hd-idle");
-	printf("CHDDDestExec::exec: hd-idle = %s\n", hdidle.c_str());
-	if (!hdidle.empty() && g_settings.hdd_sleep > 0) {
-		system("kill $(pidof hd-idle)");
-		int sleep_seconds = g_settings.hdd_sleep;
-		switch (sleep_seconds) {
-			case 241:
-					sleep_seconds = 30 * 60;
-					break;
-			case 242:
-					sleep_seconds = 60 * 60;
-					break;
-			default:
-					sleep_seconds *= 5;
-		}
-		if (sleep_seconds)
-			my_system(3, hdidle.c_str(), "-i", to_string(sleep_seconds).c_str());
-
-		return menu_return::RETURN_NONE;
-	}
-
-	std::string hdparm = find_executable("hdparm");
-	printf("CHDDDestExec::exec: hdparm = %s\n", hdparm.c_str());
-	if (hdparm.empty())
-		return menu_return::RETURN_NONE;
-
-	struct stat stat_buf;
-	bool have_nonbb_hdparm = !::lstat(hdparm.c_str(), &stat_buf) && !S_ISLNK(stat_buf.st_mode);
-
-	for (int i = 0; i < n; i++) {
-		printf("CHDDDestExec: noise %d sleep %d /dev/%s\n",
-			 g_settings.hdd_noise, g_settings.hdd_sleep, user_disks[i].name.c_str());
-
-		char M_opt[50],S_opt[50], opt[261];
-		snprintf(S_opt, sizeof(S_opt), "-S%d", g_settings.hdd_sleep);
-		snprintf(M_opt, sizeof(M_opt), "-M%d", g_settings.hdd_noise);
-		snprintf(opt, sizeof(opt), "/dev/%s", user_disks[i].name.c_str());
-
-		if (have_nonbb_hdparm)
-			my_system(4, hdparm.c_str(), M_opt, S_opt, opt);
-		else // busybox hdparm doesn't support "-M"
-			my_system(3, hdparm.c_str(), S_opt, opt);
-	}
-	return menu_return::RETURN_NONE;
 }

@@ -134,11 +134,6 @@ constexpr TextRule kRulePostalCode = { TextKind::Plain, 0, 5, "0123456789. ", Mu
 const char *const *parentalLockKeys(size_t &count);
 bool heldByParentalLock(const char *key);
 
-/* The rows that are read-only until the stream that owns them moves their effect to
-   something that applies it: a flag file whose screen also starts or stops a program, or
-   rewrites other settings, would be only half done by a write of the file alone. */
-bool heldUntilApplied(const char *key);
-
 } // namespace coreapi
 
 #endif

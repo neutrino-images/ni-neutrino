@@ -22,10 +22,15 @@
 #include "coreapi/base/deps.h"
 #include "coreapi/base/flagfile.h"
 #include "coreapi/base/schema.h"
+#include "coreapi/box/applyworker.h"
 #include "coreapi/settings/settingstable.h"
 
+#include <neutrinoMessages.h>
+
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <vector>
 
 #include <pthread.h>
@@ -252,6 +257,10 @@ class RealSettingsSource : public SettingsSource
 				return Status::Internal;
 			if (save == 0)
 				return Status::NotSupported;
+			{
+				OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
+				stampMine(caller());
+			}
 			applyAndSave();
 			return Status::Ok;
 		}
@@ -270,21 +279,10 @@ class RealSettingsSource : public SettingsSource
 			if (save == 0)
 				return Status::NotSupported;
 
-			const pthread_t mine = caller();
 			unsigned batch = 0;
 			{
 				OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
-				// Nought is the mark of a write nobody has promised, so the
-				// counter steps over it where it wraps.
-				batch = stamp + 1;
-				if (batch == 0)
-					batch = 1;
-				stamp = batch;
-				for (size_t i = 0; i < held.size(); ++i)
-				{
-					if (held[i].batch == 0 && pthread_equal(held[i].owner, mine))
-						held[i].batch = batch;
-				}
+				batch = stampMine(caller());
 			}
 
 			/* Posted with the lock let go, because the loop takes the same lock
@@ -327,9 +325,19 @@ class RealSettingsSource : public SettingsSource
 				OpenThreads::ScopedLock<OpenThreads::Mutex> lock(guard);
 				if (!values)
 					return;
-				// Everything held. What a refused post would have carried is
-				// not here: that call took its own back before answering.
-				taken.swap(held);
+				/* Only what a post promised. A write nobody has posted yet is a batch its
+				   caller is still filling, and a drain that took it would apply that batch
+				   in halves. What a refused post would have carried is not here either: that
+				   call took its own back before answering. */
+				std::vector<Write> kept;
+				for (size_t i = 0; i < held.size(); ++i)
+				{
+					if (held[i].batch != 0)
+						taken.push_back(held[i]);
+					else
+						kept.push_back(held[i]);
+				}
+				held.swap(kept);
 
 				/* Under the same lock the reads take, or a read of a value runs
 				   beside the write of it. This one holds the list of pending
@@ -382,45 +390,85 @@ class RealSettingsSource : public SettingsSource
 
 			/* Driven by the writes themselves rather than by a list of keys kept beside them: a
 			   second record of the same thing can come apart from the first, and a value that landed
-			   without its notifier is the defect this exists to stop. A setting only a restart
-			   applies has nobody to tell.
+			   without its group is the defect this exists to stop. A setting only a restart applies
+			   has nobody to tell, and one read where it is used needs nothing.
 
 			   A key a group holds goes to that group, once per drain however many of its keys were
-			   written, and never to its section's applier as well: the transition ends when every
-			   key has a group, and until then a key with none still reaches the applier. The
-			   registry has no lock and belongs to this thread, the one the program's loop drains
-			   on, so nothing here may be moved to the thread that wrote. A group whose phase of
-			   startup is not reached yet is skipped and run by that phase, with the values it finds
-			   then, so a write that arrives early is not lost. */
+			   written. A key with no group has no effect to run, which the apply scan holds every
+			   row to. The registry has no lock and belongs to this thread, the one the program's
+			   loop drains on, so nothing here may be moved to the thread that wrote. A group whose
+			   phase of startup is not reached yet is skipped and run by that phase, with the values
+			   it finds then, so a write that arrives early is not lost. */
 			std::vector<std::string> grouped;
 			for (size_t i = 0; i < taken.size(); ++i)
 			{
 				const Descriptor *row = taken[i].row;
 				if (row->needs_restart)
 					continue;
-				/* A row whose value is not in the member it is named after has nobody to tell. Every
-				   notifier reads that member, and this layer never wrote it: one run for such a row
-				   would apply whatever a screen last left there, over the value just written. */
-				if (!valueIsInNamedMember(row->field))
-					continue;
+				/* A group reads its values through the rows, so it runs for a row of any origin: a
+				   colour, a flag file, a daemon's value and a bit of a mask are all written by this
+				   layer, and a group left out for them is a write that lands and is never applied. */
 				if (groupOf(row->key) != NULL)
-				{
 					grouped.push_back(row->key);
-					continue;
-				}
-				SettingsApplier *a = settingsApplier(row->section);
-				// Reported here because it reaches no caller: the value was
-				// stored and saved before anything was asked to apply it.
-				if (a != 0 && !a->apply(row->key))
-					std::fprintf(stderr, "coreapi: %s was written and no applier acted on it\n",
-						     row->key);
 			}
 			// Failures are logged by group name inside, for the same reason.
-			if (!grouped.empty())
-				applyBatch(grouped);
+			/* A job a group queues reports a later failure to whoever wrote a key of that group:
+			   each writer once, a menu as box and a network caller that names none as remote.
+			   So the groups run one by one, each in its writers' scope, in the order applyBatch
+			   would run them. */
+			std::vector<const ApplyGroup *> ran;
+			for (size_t i = 0; i < grouped.size(); ++i)
+			{
+				const ApplyGroup *g = groupOf(grouped[i]);
+				if (std::find(ran.begin(), ran.end(), g) != ran.end())
+					continue;
+				ran.push_back(g);
+				std::vector<std::string> keys;
+				for (size_t k = i; k < grouped.size(); ++k)
+					if (groupOf(grouped[k]) == g)
+						keys.push_back(grouped[k]);
+				std::string who;
+				for (size_t t = 0; t < taken.size(); ++t)
+				{
+					if (taken[t].row->needs_restart || groupOf(taken[t].row->key) != g)
+						continue;
+					const std::string one = taken[t].on_loop ? std::string("box") :
+						(taken[t].writer.empty() ? std::string("remote") : taken[t].writer);
+					if ((" " + who + " ").find(" " + one + " ") == std::string::npos)
+						who += (who.empty() ? "" : " ") + one;
+				}
+				ApplyInitiatorScope scope(who);
+				applyBatch(keys);
+			}
+
+			announce(taken);
 		}
 
 	private:
+		struct Write;
+
+		/* Tells the loop which settings landed, after they were applied: a menu open
+		   on the box holds some of them, and one that kept showing the old value
+		   would write it back with its next change. Posted rather than called, so
+		   the screens hear of it in their own turn and this layer reaches no
+		   screen. A refused post leaves a menu showing an old value until it is
+		   drawn again, which is reported and not retried. */
+		static void announce(const std::vector<Write> &taken)
+		{
+			std::string keys;
+			for (size_t i = 0; i < taken.size(); ++i)
+			{
+				const std::string k(taken[i].row->key);
+				if (("\n" + keys).find("\n" + k + "\n") != std::string::npos)
+					continue;
+				keys += k + "\n";
+			}
+			if (keys.empty())
+				return;
+			if (!postPayload(NeutrinoMessages::EVT_SETTINGS_WRITTEN, keys.c_str(), keys.size() + 1).ok())
+				std::fprintf(stderr, "coreapi: the loop was not told which settings were written\n");
+		}
+
 		struct Write
 		{
 			const Descriptor *row;
@@ -434,8 +482,13 @@ class RealSettingsSource : public SettingsSource
 			// Who wrote it, so that a post promises what its own caller wrote
 			// and a refused one takes back no more than that.
 			pthread_t         owner;
+			// Written by the box's own loop, a menu, rather than over the network.
+			bool              on_loop;
+			// The writer the write was made for, see currentWriter().
+			std::string       writer;
 
-			Write() : row(0), number(0), batch(0), owner(pthread_self()) {}
+			Write() : row(0), number(0), batch(0), owner(pthread_self()), on_loop(onApplyLoop()),
+				  writer(currentWriter()) {}
 		};
 
 		/* Linear over the table, read once per call and a few hundred rows: what an index would
@@ -454,6 +507,24 @@ class RealSettingsSource : public SettingsSource
 					return &table[i];
 			}
 			return 0;
+		}
+
+		/* Promises to the loop every write the caller holds that nobody has promised yet, under
+		   a new stamp. Caller holds the lock. */
+		unsigned stampMine(pthread_t mine)
+		{
+			// Nought is the mark of a write nobody has promised, so the
+			// counter steps over it where it wraps.
+			unsigned batch = stamp + 1;
+			if (batch == 0)
+				batch = 1;
+			stamp = batch;
+			for (size_t i = 0; i < held.size(); ++i)
+			{
+				if (held[i].batch == 0 && pthread_equal(held[i].owner, mine))
+					held[i].batch = batch;
+			}
+			return batch;
 		}
 
 		// The last write of a setting is the one that counts, so the search runs

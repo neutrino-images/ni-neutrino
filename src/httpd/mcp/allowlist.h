@@ -44,9 +44,9 @@ std::string sectionDenial(const std::string &section);
 bool pluginAllowed(const std::string &name);
 bool sectionAllowed(const std::string &section); // listed and not denied
 
-// The first key of a flat JSON object of settings that is a credential or names a
-// file or folder on the box, empty for none.
-std::string deniedKeyIn(const std::string &settings_json);
+/* The first key of a flat JSON object of settings that no AI client may write, empty for
+   none. why, when given, is set to the reason for that key, worded to follow "which". */
+std::string deniedKeyIn(const std::string &settings_json, std::string *why = NULL);
 
 } // namespace mcp
 } // namespace httpd

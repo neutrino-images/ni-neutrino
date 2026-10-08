@@ -171,6 +171,7 @@ void CExtendedInput::enableSaveScreen(bool enable)
 
 int CExtendedInput::exec( CMenuTarget* parent, const std::string & )
 {
+	CMenuWidget::Busy modal;
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
 

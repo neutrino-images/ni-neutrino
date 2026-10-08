@@ -65,12 +65,15 @@
 #include <driver/volume.h>
 #include <system/helpers.h>
 #include <system/debug.h>
+#include <coreapi/base/apply.h>
+#include <coreapi/box/apply_misc.h>
+#include <coreapi/settings/settings.h>
 
+#include <gui/settings_manager.h>
 #include <gui/widget/msgbox.h>
 #include <gui/widget/hintbox.h>
 
 #include <gui/plugins.h>
-#include <gui/videosettings.h>
 #include <daemonc/remotecontrol.h>
 #include <xmlinterface.h>
 #include <hardware/audio.h>
@@ -116,22 +119,6 @@ void COnOffNotifier::addItem(CMenuItem *menuItem)
 		toDisable.push_back(menuItem);
 }
 
-bool CSectionsdConfigNotifier::changeNotify(const neutrino_locale_t locale, void *data)
-{
-	char *str = (char *) data;
-	if (locale == LOCALE_MISCSETTINGS_EPG_CACHE)
-		g_settings.epg_cache = atoi(str);
-	else if (locale == LOCALE_MISCSETTINGS_EPG_EXTENDEDCACHE)
-		g_settings.epg_extendedcache = atoi(str);
-	else if (locale == LOCALE_MISCSETTINGS_EPG_OLD_EVENTS)
-		g_settings.epg_old_events = atoi(str);
-	else if (locale == LOCALE_MISCSETTINGS_EPG_MAX_EVENTS)
-		g_settings.epg_max_events = atoi(str);
-
-	CNeutrinoApp::getInstance()->SendSectionsdConfig();
-	return false;
-}
-
 bool CTouchFileNotifier::changeNotify(const neutrino_locale_t, void *data)
 {
 	if ((*(int *)data) != 0)
@@ -145,114 +132,6 @@ bool CTouchFileNotifier::changeNotify(const neutrino_locale_t, void *data)
 	else
 		remove(filename);
 	return true;
-}
-
-bool CFlagFileNotifier::changeNotify(const neutrino_locale_t, void *data)
-{
-	std::string flagfile = FLAGDIR;
-	flagfile += "/.";
-	flagfile += filename;
-
-	if ((*(int *)data) != 0)
-	{
-		FILE *fd = fopen(flagfile.c_str(), "w");
-		if (fd)
-		{
-			fclose(fd);
-			if (strstr(filename, "scart_osd_fix"))
-			{
-				// change to scart-osd-fix values
-				g_settings.screen_StartX_b_0 = 30;
-				g_settings.screen_StartY_b_0 = 45;
-				g_settings.screen_EndX_b_0 = 690;
-				g_settings.screen_EndY_b_0 = 535;
-				g_settings.screen_preset = 1;
-
-				// set values
-				g_settings.screen_StartX = g_settings.screen_StartX_b_0;
-				g_settings.screen_StartY = g_settings.screen_StartY_b_0;
-				g_settings.screen_EndX = g_settings.screen_EndX_b_0;
-				g_settings.screen_EndY = g_settings.screen_EndY_b_0;
-
-				CFrameBuffer::getInstance()->Clear();
-
-				g_settings.font_scaling_x = 100;
-				g_settings.font_scaling_y = 100;
-			}
-			else if (strstr(filename, "mgcamd")	||
-				strstr(filename, "doscam")	||
-				strstr(filename, "ncam")	||
-				strstr(filename, "osmod")	||
-				strstr(filename, "oscam")	||
-				strstr(filename, "cccam")	||
-				strstr(filename, "gbox"))
-			{
-				CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_START));
-				hintbox.paint();
-
-				printf("[CFlagFileNotifier] executing \"service camd start %s\"\n", filename);
-				if (my_system(4, "service", "camd", "start", filename) != 0)
-					printf("[CFlagFileNotifier] executing failed\n");
-				sleep(1);
-
-				hintbox.hide();
-			}
-			else
-			{
-				printf("[CFlagFileNotifier] executing \"service %s start\"\n", filename);
-				if (my_system(3, "service", filename, "start") != 0)
-					printf("[CFlagFileNotifier] executing failed\n");
-			}
-		}
-	}
-	else
-	{
-		if (strstr(filename, "scart_osd_fix"))
-		{
-			// reset to defaults
-			g_settings.screen_StartX_b_0 = 22;
-			g_settings.screen_StartY_b_0 = 12;
-			g_settings.screen_EndX_b_0 = 1259 - g_settings.screen_StartX_b_0 - 1;
-			g_settings.screen_EndY_b_0 =  708 - g_settings.screen_StartY_b_0 - 1;
-
-			// set values
-			g_settings.screen_StartX = g_settings.screen_preset ? g_settings.screen_StartX_b_0 : g_settings.screen_StartX_a_0;
-			g_settings.screen_StartY = g_settings.screen_preset ? g_settings.screen_StartY_b_0 : g_settings.screen_StartY_a_0;
-			g_settings.screen_EndX = g_settings.screen_preset ? g_settings.screen_EndX_b_0 : g_settings.screen_EndX_a_0;
-			g_settings.screen_EndY = g_settings.screen_preset ? g_settings.screen_EndY_b_0 : g_settings.screen_EndY_a_0;
-
-			CFrameBuffer::getInstance()->Clear();
-
-			g_settings.font_scaling_x = 105;
-			g_settings.font_scaling_y = 105;
-		}
-		else if (strstr(filename, "mgcamd")	||
-			strstr(filename, "doscam")	||
-			strstr(filename, "ncam")	||
-			strstr(filename, "osmod")	||
-			strstr(filename, "oscam")	||
-			strstr(filename, "cccam")	||
-			strstr(filename, "gbox"))
-		{
-			CHintBox hintbox(LOCALE_CAMD_CONTROL, g_Locale->getText(LOCALE_CAMD_MSG_STOP));
-			hintbox.paint();
-
-			printf("[CFlagFileNotifier] executing \"service camd stop %s\"\n", filename);
-			if (my_system(4, "service", "camd", "stop", filename) != 0)
-				printf("[CFlagFileNotifier] executing failed\n");
-			sleep(1);
-
-			hintbox.hide();
-		}
-		else
-		{
-			printf("[CFlagFileNotifier] executing \"service %s stop\"\n", filename);
-			if (my_system(3, "service", filename, "stop") != 0)
-				printf("[CFlagFileNotifier] executing failed\n");
-		}
-		remove(flagfile.c_str());
-	}
-	return menu_return::RETURN_REPAINT;
 }
 
 void CColorSetupNotifier::setPalette()
@@ -421,56 +300,16 @@ bool CColorSetupNotifier::changeNotify(const neutrino_locale_t, void *)
 	return false;
 }
 
-bool CAudioSetupNotifier::changeNotify(const neutrino_locale_t OptionName, void *)
+void applyKeyLogged(const char *key)
 {
-	//printf("notify: %d\n", OptionName);
-#if 0
-	// FIXME to do ? manual audio delay
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIOMENU_PCMOFFSET))
-	{
-	}
-#endif
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIOMENU_ANALOG_MODE))
-	{
-		g_Zapit->setAudioMode(g_settings.audio_AnalogMode);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIOMENU_ANALOG_OUT))
-	{
-		audioDecoder->EnableAnalogOut(g_settings.analog_out ? true : false);
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIOMENU_AC3))
-	{
-		audioDecoder->SetHdmiDD(g_settings.ac3_pass ? true : false);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIOMENU_DTS))
-	{
-		audioDecoder->SetSpdifDD(g_settings.dts_pass ? true : false);
-#else
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIOMENU_HDMI_DD))
-	{
-		audioDecoder->SetHdmiDD((HDMI_ENCODED_MODE) g_settings.hdmi_dd);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIOMENU_SPDIF_DD))
-	{
-		audioDecoder->SetSpdifDD(g_settings.spdif_dd ? true : false);
-#endif
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIOMENU_AVSYNC))
-	{
-		videoDecoder->SetSyncMode((AVSYNC_TYPE)g_settings.avsync);
-		audioDecoder->SetSyncMode((AVSYNC_TYPE)g_settings.avsync);
-		videoDemux->SetSyncMode((AVSYNC_TYPE)g_settings.avsync);
-		audioDemux->SetSyncMode((AVSYNC_TYPE)g_settings.avsync);
-		pcrDemux->SetSyncMode((AVSYNC_TYPE)g_settings.avsync);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIO_SRS_ALGO) ||
-		ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIO_SRS_NMGR) ||
-		ARE_LOCALES_EQUAL(OptionName, LOCALE_AUDIO_SRS_VOLUME))
-	{
-		audioDecoder->SetSRS(g_settings.srs_enable, g_settings.srs_nmgr_enable, g_settings.srs_algo, g_settings.srs_ref_volume);
-	}
+	const coreapi::Status s = coreapi::applyKey(key);
+	if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
+		dprintf(DEBUG_NORMAL, "[settings] %s: apply failed\n", key);
+}
+
+bool CApplyKeyNotifier::changeNotify(const neutrino_locale_t, void *)
+{
+	applyKeyLogged(key);
 	return false;
 }
 
@@ -743,12 +582,10 @@ int CDataResetNotifier::exec(CMenuTarget * /*parent*/, const std::string &action
 	{
 		unlink(NEUTRINO_SETTINGS_FILE);
 		//unlink(NEUTRINO_SCAN_SETTINGS_FILE);
-		CNeutrinoApp::getInstance()->loadSetup(NEUTRINO_SETTINGS_FILE);
+		/* The defaults are put in force by the groups, as a loaded file is, so each knows what
+		   it last sent and a later change back is not taken for no change. */
+		CSettingsManager::replaceFromMenu([]() { CNeutrinoApp::getInstance()->loadSetup(NEUTRINO_SETTINGS_FILE); });
 		CNeutrinoApp::getInstance()->saveSetup(NEUTRINO_SETTINGS_FILE);
-		//CNeutrinoApp::getInstance()->loadColors(NEUTRINO_SETTINGS_FILE);
-		CNeutrinoApp::getInstance()->SetupFonts();
-		CColorSetupNotifier::setPalette();
-		CVFD::getInstance()->setlcdparameter();
 		CFrameBuffer::getInstance()->Clear();
 	}
 	if (delete_chan)
@@ -768,7 +605,7 @@ int CDataResetNotifier::exec(CMenuTarget * /*parent*/, const std::string &action
 }
 
 #if HAVE_CST_HARDWARE
-void CFanControlNotifier::setSpeed(unsigned int speed)
+void CFanControl::setSpeed(unsigned int speed)
 {
 	printf("FAN Speed %d\n", speed);
 #ifndef BOXMODEL_CST_HD2
@@ -784,68 +621,24 @@ void CFanControlNotifier::setSpeed(unsigned int speed)
 	close(cfd);
 #endif
 }
-
-bool CFanControlNotifier::changeNotify(const neutrino_locale_t, void *data)
-{
-	unsigned int speed = * (int *) data;
-	setSpeed(speed);
-	return false;
-}
 #else
-void CFanControlNotifier::setSpeed(unsigned int)
+void CFanControl::setSpeed(unsigned int)
 {
-}
-
-bool CFanControlNotifier::changeNotify(const neutrino_locale_t, void *)
-{
-	return false;
 }
 #endif
 
-bool CCpuFreqNotifier::changeNotify(const neutrino_locale_t, void *data)
+extern cCpuFreqManager *cpuFreq;
+
+coreapi::Status coreapi::applicationSetCpuFreq(int mhz)
 {
-	extern cCpuFreqManager *cpuFreq;
-	int freq = * (int *) data;
-
-	printf("CCpuFreqNotifier: %d Mhz\n", freq);
-	freq *= 1000 * 1000;
-
 	if (cpuFreq)
-		cpuFreq->SetCpuFreq(freq);
-	return false;
+		cpuFreq->SetCpuFreq(mhz * 1000 * 1000);
+	return coreapi::Status::Ok;
 }
 
-bool CAutoModeNotifier::changeNotify(const neutrino_locale_t /*OptionName*/, void * /*data*/)
+coreapi::Status coreapi::applicationSetFanSpeed(int speed)
 {
-	const CMenuOptionChooser::keyval_ext *vmodes = videoModeSlots();
-	int i;
-	int modes[VIDEO_STD_MAX + 1];
-
-	memset(modes, 0, sizeof(modes));
-
-	for (i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
-	{
-		if (vmodes[i].key < 0) // not available on this platform
-			continue;
-		if (vmodes[i].key >= VIDEO_STD_MAX)
-		{
-			// this must not happen
-			printf("CAutoModeNotifier::changeNotify VIDEOMODE_OPTIONS[%d].key = %d (>= %d)\n",
-				i, vmodes[i].key, VIDEO_STD_MAX);
-			continue;
-		}
-#ifdef BOXMODEL_CST_HD2
-		for (i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
-		{
-			// A slot this box does not draw has no mode to set.
-			if (vmodes[i].key < 0)
-				continue;
-			modes[vmodes[i].key] = g_settings.enabled_auto_modes[i];
-		}
-#else
-		modes[vmodes[i].key] = g_settings.enabled_video_modes[i];
-#endif
-	}
-	videoDecoder->SetAutoModes(modes);
-	return false;
+	if (g_info.hw_caps->has_fan)
+		CFanControl::setSpeed(speed);
+	return coreapi::Status::Ok;
 }

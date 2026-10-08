@@ -69,25 +69,11 @@ class COnOffNotifier : public CChangeObserver
 		void addItem(CMenuItem *menuItem);
 };
 
-class CSectionsdConfigNotifier : public CChangeObserver
-{
-	public:
-		bool changeNotify(const neutrino_locale_t, void *);
-};
-
 class CTouchFileNotifier : public CChangeObserver
 {
 		const char *filename;
 	public:
 		inline CTouchFileNotifier(const char *_filename) { filename = _filename; };
-		bool changeNotify(const neutrino_locale_t, void *data);
-};
-
-class CFlagFileNotifier : public CChangeObserver
-{
-		const char *filename;
-	public:
-		inline CFlagFileNotifier(const char *_filename) { filename = _filename; };
 		bool changeNotify(const neutrino_locale_t, void *data);
 };
 
@@ -98,10 +84,19 @@ class CColorSetupNotifier : public CChangeObserver
 		static void setPalette();
 };
 
-class CAudioSetupNotifier : public CChangeObserver
+/* Applies the group of a key and logs a failure. Busy is a group whose startup
+   phase is not reached, which the phase makes good. */
+void applyKeyLogged(const char *key);
+
+/* For an item a screen binds to a member of its own, the audio selector and the movie
+   player's audio dialog: the change has been stored by the item, and the key's group is
+   what makes it take effect. */
+class CApplyKeyNotifier : public CChangeObserver
 {
+		const char *key;
 	public:
-		bool changeNotify(const neutrino_locale_t OptionName, void *);
+		explicit CApplyKeyNotifier(const char *_key) : key(_key) {}
+		bool changeNotify(const neutrino_locale_t, void *);
 };
 
 class CFontSizeNotifier : public CChangeObserver
@@ -140,23 +135,10 @@ class CDataResetNotifier : public CMenuTarget
 		int exec(CMenuTarget *parent, const std::string &actionKey);
 };
 
-class CFanControlNotifier : public CChangeObserver
+class CFanControl
 {
 	public:
-		bool changeNotify(const neutrino_locale_t, void *data);
 		static void setSpeed(unsigned int speed);
-};
-
-class CCpuFreqNotifier : public CChangeObserver
-{
-	public:
-		bool changeNotify(const neutrino_locale_t, void *data);
-};
-
-class CAutoModeNotifier : public CChangeObserver
-{
-	public:
-		bool changeNotify(const neutrino_locale_t, void *data);
 };
 
 class CApiKey

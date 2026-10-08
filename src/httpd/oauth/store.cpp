@@ -1014,6 +1014,7 @@ bool Store::checkToken(const std::string &token, TokenFacts *out, bool *failed)
 		}
 		out->client_id = c->first;
 		out->key = c->second.key;
+		out->grant_id = g->first;
 		out->user = g->second.user;
 		out->scopes = a->second.scopes;
 		out->groups = g->second.groups;
@@ -1038,6 +1039,7 @@ bool Store::checkToken(const std::string &token, TokenFacts *out, bool *failed)
 		out->scopes = it->second.scopes;
 		out->groups = it->second.groups;
 		out->resource.clear();
+		out->grant_id.clear();
 		out->is_static = true;
 		return true;
 	}

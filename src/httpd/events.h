@@ -78,7 +78,8 @@ const char *typeName(coreapi::EventType t);
    Every member every time and never a shape that depends on the type: what each of
    them means does depend on the type, but a client reading a member that is absent
    for the type it arrived with would have to know which types carry which before it
-   can read any of them.
+   can read any of them. setting-apply-failed is the one exception: only the session
+   that wrote receives it, and it carries the shape that reader asks for.
 
    The identifier is written as hexadecimal text and not as a number, being sixty four
    bits wide where the numbers a browser parses out of JSON carry fifty three. */
@@ -119,7 +120,14 @@ enum Opened
 /* Attaches a stream to this connection, carrying over the media type and the headers
    the handler wrote. Called from the access handler and from nowhere else, the library
    allowing a response to be queued for a live connection only from there. */
-Opened openStream(struct MHD_Connection *connection, const Response &r, Response &refusal);
+/* writer names the browser session the stream was opened under, sessionWriter() of its
+   cookie, and empty for none: a setting-apply-failed event goes only to a stream whose
+   writer the event names as its initiator. */
+Opened openStream(struct MHD_Connection *connection, const Response &r, Response &refusal,
+                  const std::string &writer = std::string());
+
+// Whether a stream opened for writer is sent e.
+bool deliveredTo(const coreapi::Event &e, const std::string &writer);
 
 /* How long one stream may be silent before a comment frame is sent down it, measured
    per stream from whatever last went into it and not from a clock the whole server

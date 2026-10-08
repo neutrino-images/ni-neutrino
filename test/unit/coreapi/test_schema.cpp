@@ -88,7 +88,7 @@ const FieldRef kText = { NULL, NULL, NULL, NULL, readText, writeText, NULL, NULL
 TEST_CASE("a field that can be read and not written is not sane", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false,
-			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	d.field.write_number = NULL;
@@ -104,7 +104,7 @@ TEST_CASE("a field that can be read and not written is not sane", "[schema]")
 TEST_CASE("a number field that cannot say what fits is not sane", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false,
-			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	d.field.fits_number = NULL;
@@ -119,7 +119,7 @@ TEST_CASE("a number field that cannot say what fits is not sane", "[schema]")
 TEST_CASE("a text field that can be read and not written is not sane", "[schema]")
 {
 	Descriptor d = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, "", false, false,
-			 COREAPI_ALWAYS, kText, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kText, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	d.field.write_text = NULL;
@@ -136,7 +136,7 @@ TEST_CASE("a text field that can be read and not written is not sane", "[schema]
 TEST_CASE("a field reached but not named is not sane", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false,
-			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	d.field.name = NULL;
@@ -146,7 +146,7 @@ TEST_CASE("a field reached but not named is not sane", "[schema]")
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	Descriptor e = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(e));
 
 	e.field.name = "menu_left_exit";
@@ -159,7 +159,7 @@ TEST_CASE("a field reached but not named is not sane", "[schema]")
 TEST_CASE("a String whose field holds a number is not sane", "[schema]")
 {
 	Descriptor d = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, "", false, false,
-			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	d.field = kText;
@@ -169,7 +169,7 @@ TEST_CASE("a String whose field holds a number is not sane", "[schema]")
 TEST_CASE("a setting that is not a String whose field holds text is not sane", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 1, NULL, false, false,
-			 COREAPI_ALWAYS, kText, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kText, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	d.field = kNumber;
@@ -177,7 +177,7 @@ TEST_CASE("a setting that is not a String whose field holds text is not sane", "
 
 	// And an Enum, because the rule is written against the one kind that is
 	// text rather than against the one kind that is not.
-	Descriptor e = { "k", ValueType::Enum, "s", "l", "h", 0, 0, COREAPI_ENUM(kTwo), 1, NULL, false, false, COREAPI_ALWAYS, kText, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor e = { "k", ValueType::Enum, "s", "l", "h", 0, 0, COREAPI_ENUM(kTwo), 1, NULL, false, false, COREAPI_ALWAYS, kText, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(e));
 	e.field = kNumber;
 	REQUIRE(descriptorIsSane(e));
@@ -188,13 +188,13 @@ TEST_CASE("a setting that is not a String whose field holds text is not sane", "
 TEST_CASE("a row that names no field at all is sane", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false,
-			 COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 }
 
 TEST_CASE("an Int whose default sits outside its bounds is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 5, NULL, 0, 7, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 5, NULL, 0, 7, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 	d.default_int = 3;
 	REQUIRE(descriptorIsSane(d));
@@ -202,7 +202,7 @@ TEST_CASE("an Int whose default sits outside its bounds is not sane", "[schema]"
 
 TEST_CASE("an Enum whose default names no listed value is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, kTwo, 2, 2, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, kTwo, 2, 2, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 	d.default_int = 1;
 	REQUIRE(descriptorIsSane(d));
@@ -214,7 +214,7 @@ TEST_CASE("an enum entry carries a key or a fixed text, never both or neither", 
 	const EnumValue neither[] = { { 0, NULL, NULL, NULL, NULL, 0 } };
 	const EnumValue key[] = { { 0, "options.off", NULL, NULL, NULL, 0 } };
 	const EnumValue text[] = { { 0, NULL, "ext4", NULL, NULL, 0 } };
-	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, both, 1, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, both, 1, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 	d.values = neither;
 	REQUIRE_FALSE(descriptorIsSane(d));
@@ -226,13 +226,13 @@ TEST_CASE("an enum entry carries a key or a fixed text, never both or neither", 
 
 TEST_CASE("an Enum with no values is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 }
 
 TEST_CASE("a String with no default string is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 	d.default_string = "";
 	REQUIRE(descriptorIsSane(d));
@@ -240,7 +240,7 @@ TEST_CASE("a String with no default string is not sane", "[schema]")
 
 TEST_CASE("an absent key or section is not sane and an absent label is", "[schema]")
 {
-	Descriptor ok = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor ok = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(ok));
 
 	Descriptor no_key = ok;    no_key.key = NULL;         REQUIRE_FALSE(descriptorIsSane(no_key));
@@ -254,13 +254,13 @@ TEST_CASE("an absent key or section is not sane and an absent label is", "[schem
 
 TEST_CASE("an Int whose bounds are inverted is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 5, 1, NULL, 0, 3, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 5, 1, NULL, 0, 3, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 }
 
 TEST_CASE("a section or a label that is present but empty is not sane", "[schema]")
 {
-	Descriptor ok = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor ok = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(ok));
 
 	Descriptor empty_sect = ok;  empty_sect.section = "";    REQUIRE_FALSE(descriptorIsSane(empty_sect));
@@ -269,7 +269,7 @@ TEST_CASE("a section or a label that is present but empty is not sane", "[schema
 
 TEST_CASE("an Int whose default sits below its floor is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 5, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 5, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 	d.default_int = 1;
 	REQUIRE(descriptorIsSane(d));
@@ -277,13 +277,13 @@ TEST_CASE("an Int whose default sits below its floor is not sane", "[schema]")
 
 TEST_CASE("an Enum that counts values it does not carry is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, NULL, 2, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, NULL, 2, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 }
 
 TEST_CASE("the enum macro writes the values and the count as one pair", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, COREAPI_ENUM(kTwo), 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Enum, "s", "l", "h", 0, 0, COREAPI_ENUM(kTwo), 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(d.values == kTwo);
 	REQUIRE(d.value_count == 2u);
 	REQUIRE(descriptorIsSane(d));
@@ -291,7 +291,7 @@ TEST_CASE("the enum macro writes the values and the count as one pair", "[schema
 
 TEST_CASE("a Bool whose default is neither of its two values is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 7, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 7, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 	d.default_int = 1;
 	REQUIRE(descriptorIsSane(d));
@@ -313,7 +313,7 @@ TEST_CASE("a Bool that names its words names exactly nought and one", "[schema]"
 	const EnumValue unlabelled[] = { { 0, NULL, NULL, NULL, NULL, 0 }, { 1, "messagebox.yes", NULL, NULL, NULL, 0 } };
 	const EnumValue withheld[] = { { 0, "messagebox.no", NULL, NULL, NULL, 0 }, { 1, "messagebox.yes", NULL, notOffered, NULL, 0 } };
 	const EnumValue three[] = { { 0, "messagebox.no", NULL, NULL, NULL, 0 }, { 1, "messagebox.yes", NULL, NULL, NULL, 0 }, { 2, "x", NULL, NULL, NULL, 0 } };
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, noYes, 2, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, noYes, 2, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 	d.values = yesNo;
 	REQUIRE(descriptorIsSane(d));
@@ -347,7 +347,7 @@ TEST_CASE("a number names a value in words, at its floor or outside its bounds",
 	const EnumValue emptyWord[] = { { 0, "", NULL, NULL, NULL, 0 } };
 	const EnumValue fixedText[] = { { 0, NULL, "off", NULL, NULL, 0 } };
 	const EnumValue withheld[] = { { 0, "options.off", NULL, notOffered, NULL, 0 } };
-	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 	REQUIRE(namedNumber(d) == NULL);
 
@@ -400,7 +400,7 @@ TEST_CASE("a number may name several values, each outside the range and each onc
 		{ -4, "a", NULL, NULL, NULL, 0 }, { -3, "b", NULL, NULL, NULL, 0 }, { -2, "c", NULL, NULL, NULL, 0 },
 		{ -1, "d", NULL, NULL, NULL, 0 }, { 0, "e", NULL, NULL, NULL, 0 }
 	};
-	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	d.values = two;
 	d.value_count = 2;
@@ -424,7 +424,7 @@ TEST_CASE("a number may name several values, each outside the range and each onc
 
 namespace
 {
-long boundNow() { return 3; }
+long boundNow(const ValueLookup *) { return 3; }
 bool noChoices(std::vector<SettingChoice> &) { return false; }
 } // namespace
 
@@ -438,20 +438,14 @@ TEST_CASE("the members that shape how a value is shown belong to one kind each",
 	const EnumValue lost[] = { { 0, "a", NULL, NULL, NULL, 1 }, { 1, "b", NULL, NULL, NULL, 0 } };
 	const EnumValue nested[] = { { 0, "a", NULL, NULL, &group, 1 }, { 1, "b", NULL, NULL, NULL, 0 } };
 	const EnumValue unsane[] = { { 0, "a", NULL, NULL, &empty, 1 }, { 1, "b", NULL, NULL, NULL, 0 } };
-	Descriptor num = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-	Descriptor str = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-	Descriptor flag = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-	Descriptor en = { "k", ValueType::Enum, "s", "l", "h", 0, 0, offered, 2, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor num = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
+	Descriptor str = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
+	Descriptor flag = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
+	Descriptor en = { "k", ValueType::Enum, "s", "l", "h", 0, 0, offered, 2, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	Descriptor d = num;
 	d.unit_key = "unit.s";
 	REQUIRE(descriptorIsSane(d));
-	d.format_key = "format.after";
-	REQUIRE_FALSE(descriptorIsSane(d));
-	d.unit_key = NULL;
-	REQUIRE(descriptorIsSane(d));
-	d.format_key = "";
-	REQUIRE_FALSE(descriptorIsSane(d));
 	d = num;
 	d.unit_key = "";
 	REQUIRE_FALSE(descriptorIsSane(d));
@@ -459,7 +453,7 @@ TEST_CASE("the members that shape how a value is shown belong to one kind each",
 	d.unit_key = "unit.s";
 	REQUIRE_FALSE(descriptorIsSane(d));
 	d = flag;
-	d.format_key = "format.after";
+	d.unit_key = "unit.s";
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	d = str;
@@ -505,7 +499,7 @@ TEST_CASE("the members that shape how a value is shown belong to one kind each",
 
 TEST_CASE("a row of a kind nothing offers yet is refused", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 	// A list and a list of records are kinds, but a row of one without the pair that
 	// carries it has nothing to read.
@@ -529,8 +523,8 @@ const RecordField kFields[] =
 	{ "on", ValueType::Bool, 0, 0, false, NULL }
 };
 
-const FieldExtra kListExtra = { 0, readList, writeList, NULL, NULL, NULL, 0, 0, 0 };
-const FieldExtra kRecordsExtra = { 0, NULL, NULL, readRecords, writeRecords, kFields, 3, 0, 0 };
+const FieldExtra kListExtra = { 0, readList, writeList, NULL, NULL, NULL, 0, 0, 0, false };
+const FieldExtra kRecordsExtra = { 0, NULL, NULL, readRecords, writeRecords, kFields, 3, 0, 0, false };
 
 const FieldRef kListField = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 			      "list", FieldOrigin::Member, NULL, NULL, &kListExtra };
@@ -542,7 +536,7 @@ const FieldRef kRecordsField = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 TEST_CASE("a list row is sane with the pair that carries it and not otherwise", "[schema]")
 {
 	Descriptor d = { "k", ValueType::List, "s", "l", "h", 0, 0, NULL, 0, 0, "", false, false,
-			 COREAPI_ALWAYS, kListField, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kListField, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	// A default is a text, of no entries where it is empty.
@@ -595,7 +589,7 @@ TEST_CASE("a list row is sane with the pair that carries it and not otherwise", 
 TEST_CASE("a records row names what a record is made of", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Records, "s", "l", "h", 0, 0, NULL, 0, 0, "", false, false,
-			 COREAPI_ALWAYS, kRecordsField, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kRecordsField, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	RecordField fields[3] = { kFields[0], kFields[1], kFields[2] };
@@ -639,7 +633,7 @@ TEST_CASE("a flag file row is a flag named by an absolute path", "[schema]")
 {
 	const FieldRef flag = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 				"/var/tmp/.flag", FieldOrigin::FlagFile, NULL, NULL, NULL };
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, flag, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, flag, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	d.field.name = "var/tmp/.flag";
@@ -668,26 +662,26 @@ TEST_CASE("a flag file row is a flag named by an absolute path", "[schema]")
 // An element names the array it is of and carries a number or a text, and its place.
 TEST_CASE("an element row says which element it is", "[schema]")
 {
-	const FieldExtra place = { 2, NULL, NULL, NULL, NULL, NULL, 0, 5, 0 };
+	const FieldExtra place = { 2, NULL, NULL, NULL, NULL, NULL, 0, 5, 0, false };
 	FieldRef element = kNumber;
 	element.origin = FieldOrigin::Element;
 	element.extra = &place;
 	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false,
-			 COREAPI_ALWAYS, element, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, element, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	// Without its place it is no element, and no place is before the first.
 	d.field.extra = NULL;
 	REQUIRE_FALSE(descriptorIsSane(d));
-	const FieldExtra before = { -1, NULL, NULL, NULL, NULL, NULL, 0, 5, 0 };
+	const FieldExtra before = { -1, NULL, NULL, NULL, NULL, NULL, 0, 5, 0, false };
 	d.field.extra = &before;
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	// And no place is past the end of the array it is of.
-	const FieldExtra past = { 5, NULL, NULL, NULL, NULL, NULL, 0, 5, 0 };
+	const FieldExtra past = { 5, NULL, NULL, NULL, NULL, NULL, 0, 5, 0, false };
 	d.field.extra = &past;
 	REQUIRE_FALSE(descriptorIsSane(d));
-	const FieldExtra none = { 0, NULL, NULL, NULL, NULL, NULL, 0, 0, 0 };
+	const FieldExtra none = { 0, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, false };
 	d.field.extra = &none;
 	REQUIRE_FALSE(descriptorIsSane(d));
 
@@ -713,7 +707,7 @@ TEST_CASE("a row in two shapes needs its test and its other shape is held to eve
 	const Shape text = shape(ValueType::String, "text");
 	const Shape emptyLabel = shape(ValueType::Bool, "").range(0, 1);
 	const Shape narrow = shape(ValueType::Int, "narrow").range(2, 5);
-	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 999, off, 1, 1, NULL, false, false, COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 999, off, 1, 1, NULL, false, false, COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	d.field.available = boxHas;
@@ -740,7 +734,7 @@ TEST_CASE("the row this box offers is the declared one or its other shape or non
 {
 	const EnumValue off[] = { { 0, "options.off", NULL, NULL, NULL, 0 } };
 	const Shape flag = shape(ValueType::Bool, "flag").range(0, 1);
-	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 999, off, 1, 1, NULL, false, false, COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 999, off, 1, 1, NULL, false, false, COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	Descriptor here;
 
 	REQUIRE(rowOnThisBox(d, here));
@@ -772,7 +766,7 @@ TEST_CASE("the row this box offers is the declared one or its other shape or non
 
 TEST_CASE("a type that is none of the four is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 	d.type = static_cast<ValueType>(99);
 	REQUIRE_FALSE(descriptorIsSane(d));
@@ -780,13 +774,13 @@ TEST_CASE("a type that is none of the four is not sane", "[schema]")
 
 TEST_CASE("a hint is the one thing a setting may leave out", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Bool, "s", "l", NULL, 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", NULL, 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 }
 
 TEST_CASE("a setting with no condition is always shown and is sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(d.conditions == NULL);
 	REQUIRE(d.condition_count == 0u);
 	REQUIRE(descriptorIsSane(d));
@@ -795,7 +789,7 @@ TEST_CASE("a setting with no condition is always shown and is sane", "[schema]")
 TEST_CASE("conditions are carried as a list and every one of them is read", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(kTwoConditions), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(kTwoConditions), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(d.conditions == kTwoConditions);
 	REQUIRE(d.condition_count == 2u);
 	REQUIRE(descriptorIsSane(d));
@@ -811,7 +805,7 @@ TEST_CASE("conditions are carried as a list and every one of them is read", "[sc
 
 TEST_CASE("a condition count without the conditions is not sane", "[schema]")
 {
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, NULL, 2, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, NULL, 2, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	// One is the count a dropped list leaves behind, and it is the boundary the
@@ -823,7 +817,7 @@ TEST_CASE("a condition count without the conditions is not sane", "[schema]")
 TEST_CASE("a condition that names no setting is not sane", "[schema]")
 {
 	Condition c[] = { { NULL, CompareOp::Eq, 1, NULL, 0, NULL, NULL, 0 } };
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	c[0].key = "";
@@ -836,7 +830,7 @@ TEST_CASE("a condition that names no setting is not sane", "[schema]")
 TEST_CASE("an In condition that lists no value is not sane", "[schema]")
 {
 	Condition c[] = { { "mode", CompareOp::In, 0, NULL, 2, NULL, NULL, 0 } };
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	c[0].values = kModes;
@@ -850,7 +844,7 @@ TEST_CASE("an In condition that lists no value is not sane", "[schema]")
 TEST_CASE("only an In condition is asked for a value list", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(kOneCondition), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(kOneCondition), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(kOneCondition[0].values == NULL);
 	REQUIRE(kOneCondition[0].value_count == 0u);
 	REQUIRE(descriptorIsSane(d));
@@ -867,13 +861,13 @@ TEST_CASE("a malformed condition is refused whatever the type of the setting is"
 	Condition bad[] = { { NULL, CompareOp::Eq, 1, NULL, 0, NULL, NULL, 0 } };
 
 	Descriptor as_bool = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			       COREAPI_CONDITIONS(bad), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			       COREAPI_CONDITIONS(bad), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	Descriptor as_int = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false,
-			      COREAPI_CONDITIONS(bad), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			      COREAPI_CONDITIONS(bad), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	Descriptor as_string = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, "", false, false,
-				 COREAPI_CONDITIONS(bad), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+				 COREAPI_CONDITIONS(bad), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	Descriptor as_enum = { "k", ValueType::Enum, "s", "l", "h", 0, 0, COREAPI_ENUM(kTwo), 1, NULL, false, false,
-			       COREAPI_CONDITIONS(bad), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			       COREAPI_CONDITIONS(bad), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	REQUIRE_FALSE(descriptorIsSane(as_bool));
 	REQUIRE_FALSE(descriptorIsSane(as_int));
@@ -894,7 +888,7 @@ TEST_CASE("a setting that carries no condition is shown", "[schema]")
 	FakeSetting t[] = { { "other", 0 }, { NULL, 0 } };
 	ValueLookup lookup = { readFake, NULL, t };
 
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(conditionsHold(d, lookup));
 }
 
@@ -903,7 +897,7 @@ TEST_CASE("a list of no conditions is shown though its first entry would not hol
 	FakeSetting t[] = { { "other", 0 }, { NULL, 0 } };
 	ValueLookup lookup = { readFake, NULL, t };
 
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, kOneCondition, 0, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, kOneCondition, 0, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(conditionsHold(d, lookup));
 
 	d.condition_count = 1;
@@ -917,7 +911,7 @@ TEST_CASE("every condition has to hold and not merely one of them", "[schema]")
 		{ "b", CompareOp::Eq, 1, NULL, 0, NULL, NULL, 0 }
 	};
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(both), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(both), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	FakeSetting yes_yes[] = { { "a", 1 }, { "b", 1 }, { NULL, 0 } };
 	FakeSetting yes_no[] = { { "a", 1 }, { "b", 0 }, { NULL, 0 } };
@@ -945,7 +939,7 @@ TEST_CASE("each operator answers against the value its own condition carries", "
 
 	Condition c[] = { { "a", CompareOp::Eq, 5, NULL, 0, NULL, NULL, 0 } };
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	REQUIRE(conditionsHold(d, lookup));
 	c[0].value = 4;
@@ -975,7 +969,7 @@ TEST_CASE("In holds for any listed value and for no other", "[schema]")
 {
 	Condition c[] = { { "mode", CompareOp::In, 0, COREAPI_VALUES(kModes), NULL, NULL, 0 } };
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	FakeSetting first[] = { { "mode", 2 }, { NULL, 0 } };
 	FakeSetting middle[] = { { "mode", 5 }, { NULL, 0 } };
@@ -1003,7 +997,7 @@ TEST_CASE("a key the lookup does not know leaves the setting shown", "[schema]")
 {
 	Condition c[] = { { "absent", CompareOp::Eq, 1, NULL, 0, NULL, NULL, 0 } };
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	FakeSetting without[] = { { "other", 0 }, { NULL, 0 } };
 	ValueLookup cannot_answer = { readFake, NULL, without };
@@ -1019,7 +1013,7 @@ TEST_CASE("a key the lookup does not know leaves the setting shown", "[schema]")
 TEST_CASE("a lookup that reads nothing leaves every setting shown", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(kTwoConditions), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(kTwoConditions), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	ValueLookup none = { NULL, NULL, NULL };
 	REQUIRE(conditionsHold(d, none));
 }
@@ -1029,7 +1023,7 @@ TEST_CASE("a count whose conditions are absent is shown rather than walked", "[s
 	FakeSetting t[] = { { "other", 0 }, { NULL, 0 } };
 	ValueLookup lookup = { readFake, NULL, t };
 
-	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, NULL, 2, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false, NULL, 2, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(conditionsHold(d, lookup));
 }
 
@@ -1040,7 +1034,7 @@ TEST_CASE("an In condition whose list is absent is shown rather than walked", "[
 
 	Condition c[] = { { "mode", CompareOp::In, 0, NULL, 3, NULL, NULL, 0 } };
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(conditionsHold(d, lookup));
 }
 
@@ -1051,7 +1045,7 @@ TEST_CASE("an operator that is none of the five leaves the setting shown", "[sch
 
 	Condition c[] = { { "a", static_cast<CompareOp>(99), 1, NULL, 0, NULL, NULL, 0 } };
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(conditionsHold(d, lookup));
 }
 
@@ -1062,7 +1056,7 @@ TEST_CASE("the closed comparisons hold at the bound where the strict ones do not
 
 	Condition c[] = { { "a", CompareOp::Lt, 5, NULL, 0, NULL, NULL, 0 } };
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(c), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	// At the bound itself the strict one refuses and the closed one holds. That
 	// difference is the whole reason both exist.
@@ -1097,7 +1091,7 @@ TEST_CASE("a closed range is two conditions and needs no arithmetic on a bound",
 		{ "mode", CompareOp::Le, 3, NULL, 0, NULL, NULL, 0 }
 	};
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(range), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(range), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 
 	FakeSetting below[] = { { "mode", 0 }, { NULL, 0 } };
@@ -1126,7 +1120,7 @@ TEST_CASE("a key named by two conditions is read once for each of them", "[schem
 		{ "mode", CompareOp::Le, 3, NULL, 0, NULL, NULL, 0 }
 	};
 	Descriptor d = { "k", ValueType::Bool, "s", "l", "h", 0, 1, NULL, 0, 0, NULL, false, false,
-			 COREAPI_CONDITIONS(twice), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_CONDITIONS(twice), COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	FakeSetting t[] = { { "mode", 2 }, { NULL, 0 } };
 	ValueLookup lookup = { readFake, NULL, t };
@@ -1273,7 +1267,7 @@ long sevenOnThisBox() { return 7; }
 TEST_CASE("a default function answers in place of the constant and only for numbers", "[schema]")
 {
 	Descriptor d = { "k", ValueType::Int, "s", "l", "h", 0, 9, NULL, 0, 3, NULL, false, false,
-			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kNumber, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(d));
 	REQUIRE(defaultInt(d) == 3);
 
@@ -1286,7 +1280,7 @@ TEST_CASE("a default function answers in place of the constant and only for numb
 	REQUIRE_FALSE(descriptorIsSane(d));
 
 	Descriptor t = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, "x", false, false,
-			 COREAPI_ALWAYS, kText, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+			 COREAPI_ALWAYS, kText, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 	REQUIRE(descriptorIsSane(t));
 	t.default_fn = sevenOnThisBox;
 	REQUIRE_FALSE(descriptorIsSane(t));
@@ -1296,7 +1290,7 @@ TEST_CASE("a text rule has to be possible and its row's default has to keep it",
 {
 	const TextRule backwards = { TextKind::Plain, 5, 3, NULL, MustExist::No, NULL, false };
 	const TextRule digits = { TextKind::Pin, 4, 4, "0123456789", MustExist::No, NULL, false };
-	Descriptor d = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, "0000", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+	Descriptor d = { "k", ValueType::String, "s", "l", "h", 0, 0, NULL, 0, 0, "0000", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL };
 
 	d.text = &digits;
 	REQUIRE(descriptorIsSane(d));

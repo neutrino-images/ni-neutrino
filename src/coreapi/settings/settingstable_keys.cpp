@@ -98,6 +98,18 @@ constexpr EnumValue kRemoteHardware[] =
 	option(2).label("keybindingmenu.remotecontrol_hardware_philips")
 };
 
+// Nought is no blocking and no jump, which the screens say in words.
+constexpr EnumValue kOffAtZero[] =
+{
+	option(0).label("options.off")
+};
+
+// The floor of the long key press is the value that means it is off.
+constexpr EnumValue kOffAtLongPressFloor[] =
+{
+	option(LONGKEYPRESS_OFF).label("options.off")
+};
+
 constexpr EnumValue kLeftRightKeyTv[] =
 {
 	option(0).label("keybindingmenu.mode_left_right_key_tv_zap"),
@@ -521,15 +533,14 @@ constexpr Descriptor kSettings[] =
 		.defaultValue(0)
 		.values(kBouquetlistMode)
 		.field(COREAPI_NUMBER_FIELD(bouquetlist_mode)),
-	/* The running box reads this once, when the input driver is built, and again
-	   only where a caller that changes it applies it by hand. */
+	// The receiver is programmed for the remote control when the input driver is
+	// built and again whenever this changes.
 	enumRow("remote_control_hardware")
 		.section("keybindings")
 		.label("keybindingmenu.remotecontrol_hardware")
 		.hint("menu.hint_key_hardware")
 		.defaultValue(0)
 		.values(kRemoteHardware)
-		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD_ON(remote_control_hardware, canSelectRemote, NULL)),
 	// Milliseconds, and zero is off.
 	intRow("repeat_genericblocker")
@@ -539,6 +550,7 @@ constexpr Descriptor kSettings[] =
 		.range(0, 999)
 		.defaultValue(100)
 		.unit("unit.short.millisecond")
+		.values(kOffAtZero)
 		.field(COREAPI_NUMBER_FIELD(repeat_genericblocker)),
 	boolRow("sms_channel")
 		.section("keybindings")
@@ -567,6 +579,7 @@ constexpr Descriptor kSettings[] =
 		.range(0, 10)
 		.defaultValue(5)
 		.unit("unit.short.minute")
+		.values(kOffAtZero)
 		.field(COREAPI_NUMBER_FIELD(movieplayer_bisection_jump)),
 	/* The three below are loaded and saved beside the keybindings, which is why
 	   they are here and not with the other options: the program loads them in
@@ -585,6 +598,7 @@ constexpr Descriptor kSettings[] =
 		.range(0, 999)
 		.defaultValue(450)
 		.unit("unit.short.millisecond")
+		.values(kOffAtZero)
 		.field(COREAPI_NUMBER_FIELD(repeat_blocker)),
 	/* Milliseconds again, and here the floor is what off means rather than
 	   zero: anything above it is a duration and the value itself is the only
@@ -596,6 +610,7 @@ constexpr Descriptor kSettings[] =
 		.range(LONGKEYPRESS_OFF, 9999)
 		.defaultValue(LONGKEYPRESS_OFF)
 		.unit("unit.short.millisecond")
+		.values(kOffAtLongPressFloor)
 		.field(COREAPI_NUMBER_FIELD(longkeypress_duration)),
 };
 

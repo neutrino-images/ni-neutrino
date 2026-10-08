@@ -143,6 +143,7 @@ std::string fieldType(FieldType t)
 		case FieldType::Time:   return "integer";
 		case FieldType::ChannelId: return "string";
 		case FieldType::Object: return "object";
+		case FieldType::NamedLists: return "object";
 		case FieldType::Array:  return "array";
 	}
 	return "";
@@ -2011,6 +2012,23 @@ TEST_CASE("the target that writes the document out writes the bytes the route an
 	REQUIRE(written == openapi::document());
 }
 
+TEST_CASE("lists stated under names the answer chooses are an object of lists of one shape", "[openapi]")
+{
+	ShippedRoutes shipped;
+
+	const ::Json::Value doc = parsed(openapi::document());
+	const ::Json::Value list = pointed(doc, "#/components/schemas/setting-list");
+	REQUIRE(list.isObject());
+	const ::Json::Value shared = list["properties"]["value_lists"];
+	REQUIRE(shared["type"].asString() == "object");
+	REQUIRE(shared["additionalProperties"]["type"].asString() == "array");
+	REQUIRE(shared["additionalProperties"]["items"]["$ref"].asString() == "#/components/schemas/setting-choice");
+	REQUIRE(pointed(doc, "#/components/schemas/setting-choice").isObject());
+	// Sometimes absent.
+	for (::Json::ArrayIndex i = 0; i < list["required"].size(); ++i)
+		REQUIRE(list["required"][i].asString() != "value_lists");
+}
+
 TEST_CASE("a shape this layer wrote wrong is refused, and says what is wrong with it", "[openapi]")
 {
 	/* The other half of the shapes the server ships, which every case that
@@ -2038,6 +2056,8 @@ TEST_CASE("a shape this layer wrote wrong is refused, and says what is wrong wit
 		{ "a member that carries a shape and is neither an object nor a list",
 		  { HTTPD_MEMBER_AS_WRITTEN("n", FieldType::Int, false, "a number", &kProbeSchema, NULL,
 					    ElementType::None) } },
+		{ "lists under names the answer chooses that carry no shape",
+		  { HTTPD_MEMBER("n", FieldType::NamedLists, "lists by name") } },
 		{ "a list of plain values that says nothing about them",
 		  { HTTPD_MEMBER("l", FieldType::Array, "a list") } },
 		{ "a member that says what its elements are and is not a list of plain values",

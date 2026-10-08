@@ -33,84 +33,18 @@
 
 #include <gui/widget/menue.h>
 #include <gui/widget/icons.h>
-#include <gui/widget/keychooser.h>
 
 #include <system/setting_helpers.h>
 
 #include <string>
 
-class CKeybindSetup : public CMenuTarget, public CChangeObserver
+/* The question about the remote control the receiver is now programmed for,
+   before being the one it had: true keeps it, no answer is a no. */
+bool askKeepRemoteControl(int before);
+
+class CKeybindSetup : public CMenuTarget
 {
-	public:
-		enum keynames
-		{
-			NKEY_TV_RADIO_MODE,
-			NKEY_POWER_OFF,
-			NKEY_STANDBY_OFF_ADD,
-			NKEY_FAVORITES,
-			NKEY_PAGE_UP,
-			NKEY_PAGE_DOWN,
-			NKEY_VOLUME_UP,
-			NKEY_VOLUME_DOWN,
-			NKEY_LIST_START,
-			NKEY_LIST_END,
-			NKEY_CANCEL_ACTION,
-			NKEY_SORT,
-			NKEY_ADD_RECORD,
-			NKEY_ADD_REMIND,
-			NKEY_BOUQUET_UP,
-			NKEY_BOUQUET_DOWN,
-			NKEY_CURRENT_TRANSPONDER,
-			NKEY_CHANNEL_UP,
-			NKEY_CHANNEL_DOWN,
-			NKEY_SUBCHANNEL_UP,
-			NKEY_SUBCHANNEL_DOWN,
-			NKEY_ZAP_HISTORY,
-			NKEY_LASTCHANNEL,
-			MPKEY_PLAY,
-			MPKEY_PAUSE,
-			MPKEY_STOP,
-			MPKEY_FORWARD,
-			MPKEY_REWIND,
-			MPKEY_AUDIO,
-			MPKEY_SUBTITLE,
-			MPKEY_TIME,
-			MPKEY_BOOKMARK,
-			MPKEY_GOTO,
-			MPKEY_NEXT_REPEAT_MODE,
-			MPKEY_PLUGIN,
-			NKEY_TIMESHIFT,
-			NKEY_UNLOCK,
-			NKEY_HELP,
-			NKEY_NEXT43MODE,
-			NKEY_SWITCHFORMAT,
-			NKEY_SCREENSHOT,
-			NKEY_SLEEP,
-#if ENABLE_PIP
-			NKEY_PIP_CLOSE,
-			NKEY_PIP_CLOSE_AVINPUT,
-			NKEY_PIP_ROTATE_CW,
-			NKEY_PIP_ROTATE_CCW,
-			NKEY_PIP_SETUP,
-			NKEY_PIP_SWAP,
-#endif
-			NKEY_FORMAT_MODE,
-			NKEY_PIC_MODE,
-			NKEY_PIC_SIZE,
-			NKEY_RECORD,
-			MBKEY_COPY_ONEFILE,
-			MBKEY_COPY_SEVERAL,
-			MBKEY_CUT,
-			MBKEY_TRUNCATE,
-			MBKEY_TOGGLE_VIEW_CW,
-			MBKEY_TOGGLE_VIEW_CCW,
-			MBKEY_COVER,
-
-			KEYBINDS_COUNT
-		};
-
 	private:
-		CKeyChooser *keychooser[KEYBINDS_COUNT];
 		int width;
 
 		int showKeySetup();
@@ -121,12 +55,12 @@ class CKeybindSetup : public CMenuTarget, public CChangeObserver
 		void showKeyBindMovieplayerSetup(CMenuWidget *bindSettings_mplayer);
 		void showKeyBindMoviebrowserSetup(CMenuWidget *bindSettings_mbrowser);
 		void showKeyBindSpecialSetup(CMenuWidget *bindSettings_special);
+		bool confirmRemoteControl();
 
 	public:
 		CKeybindSetup();
 		~CKeybindSetup();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
-		bool changeNotify(const neutrino_locale_t OptionName, void *data);
 		static const char *getMoviePlayerButtonName(const neutrino_msg_t key, bool &active, bool return_title = false);
 };
 

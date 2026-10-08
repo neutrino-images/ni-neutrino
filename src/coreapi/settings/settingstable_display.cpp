@@ -22,6 +22,8 @@
 #include "settingsfield.h"
 #include "predicates.h"
 #include "boxdefaults.h"
+#include "couple.h"
+#include "coreapi/base/deps.h"
 
 namespace coreapi
 {
@@ -79,6 +81,31 @@ constexpr EnumValue kLcd4lSupport[] =
 	option(2).label("lcd4l_support_on")
 };
 
+/* The four panels the box can drive, named by their sizes and not by words a
+   locale would carry. The numbers are those of the driver's panel enum. */
+constexpr EnumValue kLcd4lDisplayType[] =
+{
+	option(0).text("320x240 Pearl DPF"),
+	option(1).text("800x480 Samsung SPF"),
+	option(2).text("800x600 Samsung SPF"),
+	option(3).text("1024x600 Samsung SPF")
+};
+
+#ifdef ENABLE_LCD4LINUX
+/* The panel's ceiling, read as a write is checked, so the screen and every write path stop at
+   the same number. A write that names the panel too is judged on that one. Ten is the wider
+   panel's, which the row's constants keep as the outer limit. */
+long lcd4lBrightnessMax(const ValueLookup *now)
+{
+	long type = 0;
+	const bool read = now != NULL ? now->read("lcd4l_display_type", &type, now->context)
+	                              : settingsSource().readInt("lcd4l_display_type", type) == Status::Ok;
+	if (!read)
+		return 10;
+	return settings::lcd4lBrightnessCeiling(type);
+}
+#endif
+
 #if defined(ENABLE_GRAPHLCD) || defined(ENABLE_LCD4LINUX)
 /* Both standby brightnesses are offered only where the box really goes to
    standby. The flag is inverted and reads nought as on, which is why the
@@ -90,6 +117,12 @@ constexpr Condition kNotRealShutdown[] =
 #endif
 
 #ifdef ENABLE_GRAPHLCD
+// The bar's colour matters only while the bar is drawn.
+constexpr Condition kGlcdProgressbarColorOn[] =
+{
+	when("glcd_progressbar").isNot(0)
+};
+
 long glcdEnableDefault()
 {
 	return hasGraphicPanel() ? 1 : 0;
@@ -201,13 +234,15 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD_ON(backlight_tv, hasBacklight, NULL)),
 	boolRow("backlight_standby")
 		.section("display")
-		.label("ledcontroler.mode.standby")
+		.label("ledcontroler.backlight_standby")
+		.menuLabel("ledcontroler.mode.standby")
 		.hint("menu.hint_leds_standby")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD_ON(backlight_standby, hasBacklight, NULL)),
 	boolRow("backlight_deepstandby")
 		.section("display")
-		.label("ledcontroler.mode.deepstandby")
+		.label("ledcontroler.backlight_deepstandby")
+		.menuLabel("ledcontroler.mode.deepstandby")
 		.hint("menu.hint_leds_deepstandby")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD_ON(backlight_deepstandby, hasBacklight, NULL)),
@@ -303,15 +338,12 @@ constexpr Descriptor kSettings[] =
 		.defaultValue(TARGET_ROOT "/media/sda1/logos")
 		.text(kRuleDirectory)
 		.field(COREAPI_TEXT_FIELD(lcd4l_logodir)),
-	/* A number and not a choice: the four panels are named by literal sizes
-	   rather than locales, so a choice here would offer words the program does
-	   not have. The range is that of the driver's panel enum. */
-	intRow("lcd4l_display_type")
+	enumRow("lcd4l_display_type")
 		.section("display")
 		.label("lcd4l_display_type")
 		.hint("menu.hint_lcd4l_display_type")
-		.range(0, 3)
 		.defaultValue(0)
+		.values(kLcd4lDisplayType)
 		.field(COREAPI_NUMBER_FIELD(lcd4l_display_type)),
 	/* A number and not a choice for a different reason: there are two lists of
 	   skins and which one applies depends on the panel. The ceiling is the
@@ -337,6 +369,7 @@ constexpr Descriptor kSettings[] =
 		.label("lcd4l_brightness")
 		.hint("menu.hint_lcd4l_brightness")
 		.range(1, 10)
+		.maxNow(lcd4lBrightnessMax)
 		.defaultValue(7)
 		.field(COREAPI_NUMBER_FIELD(lcd4l_brightness)),
 	intRow("lcd4l_brightness_standby")
@@ -344,6 +377,7 @@ constexpr Descriptor kSettings[] =
 		.label("lcd4l_brightness_standby")
 		.hint("menu.hint_lcd4l_brightness_standby")
 		.range(1, 10)
+		.maxNow(lcd4lBrightnessMax)
 		.defaultValue(3)
 		.changeableWhen(kNotRealShutdown)
 		.field(COREAPI_NUMBER_FIELD(lcd4l_brightness_standby)),
@@ -390,6 +424,7 @@ constexpr Descriptor kSettings[] =
 		.section("display")
 		.label("glcd.progressbar_color")
 		.defaultValue("#fafafa")
+		.changeableWhen(kGlcdProgressbarColorOn)
 		.field(COREAPI_COLOR_FIELD(glcd_theme, glcd_progressbar_color, false)),
 #endif
 };

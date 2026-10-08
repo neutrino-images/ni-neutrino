@@ -225,7 +225,7 @@ struct ElementNumber
 		return (long) narrowed == v;
 	}
 
-	static constexpr FieldExtra extra = { (long) I, NULL, NULL, NULL, NULL, NULL, 0, std::extent<A>::value, false };
+	static constexpr FieldExtra extra = { (long) I, NULL, NULL, NULL, NULL, NULL, 0, std::extent<A>::value, false, false };
 };
 template <typename A, A SNeutrinoSettings::*M, size_t I>
 constexpr FieldExtra ElementNumber<A, M, I>::extra;
@@ -257,7 +257,7 @@ struct ElementText
 	static void read(const SNeutrinoSettings &s, std::string &out) { out = settingsText((s.*M)[I]); }
 	static void write(SNeutrinoSettings &s, const std::string &v) { setSettingsText((s.*M)[I], v); }
 
-	static constexpr FieldExtra extra = { (long) I, NULL, NULL, NULL, NULL, NULL, 0, std::extent<A>::value, false };
+	static constexpr FieldExtra extra = { (long) I, NULL, NULL, NULL, NULL, NULL, 0, std::extent<A>::value, false, false };
 };
 template <typename A, A SNeutrinoSettings::*M, size_t I>
 constexpr FieldExtra ElementText<A, M, I>::extra;
@@ -285,7 +285,7 @@ struct ElementChannelId
 		(s.*M)[I] = (T) id;
 	}
 
-	static constexpr FieldExtra extra = { (long) I, NULL, NULL, NULL, NULL, NULL, 0, std::extent<A>::value, false };
+	static constexpr FieldExtra extra = { (long) I, NULL, NULL, NULL, NULL, NULL, 0, std::extent<A>::value, false, true };
 };
 template <typename A, A SNeutrinoSettings::*M, size_t I>
 constexpr FieldExtra ElementChannelId<A, M, I>::extra;
@@ -308,7 +308,7 @@ struct ListField
 		(s.*M).assign(in.begin(), in.end());
 	}
 
-	static constexpr FieldExtra extra = { 0, &read, &write, NULL, NULL, NULL, 0, 0, false };
+	static constexpr FieldExtra extra = { 0, &read, &write, NULL, NULL, NULL, 0, 0, false, false };
 };
 template <std::list<std::string> SNeutrinoSettings::*M>
 constexpr FieldExtra ListField<M>::extra;

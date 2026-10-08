@@ -1,8 +1,0 @@
-namespace coreapi
-{
-namespace
-{
-constexpr const char *const kScanKeys[] = { "scan_alpha" };
-constexpr ApplyGroup kGroup = { "scan", ApplyPhase::Decoders, COREAPI_KEYS(kScanKeys), &runScan };
-}
-}

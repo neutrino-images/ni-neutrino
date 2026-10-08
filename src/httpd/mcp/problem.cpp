@@ -22,6 +22,8 @@
 
 #include "httpd/json.h"
 #include "httpd/status.h"
+#include "httpd/mcp/jsonrpc.h"
+#include "httpd/mcp/limits.h"
 
 #include <string>
 #include <vector>
@@ -52,19 +54,22 @@ coreapi::Error errorFromProblem(const Response &r)
 	static const char kPrefix[] = "/errors/";
 	const size_t prefix_len = sizeof(kPrefix) - 1;
 
+	// Not a flat object: depends_on is a list.
 	std::string type;
 	std::string detail;
-	std::vector<JsonMember> members;
-	if (readFlatObject(r.body, members))
+	std::vector<std::string> depends_on;
+	JsonValue doc;
+	if (parseJson(r.body, limits().max_json_depth, doc) && doc.isObject())
 	{
-		for (size_t i = 0; i < members.size(); ++i)
+		if (doc["type"].isString())
+			type = doc["type"].asString();
+		if (doc["detail"].isString())
+			detail = doc["detail"].asString();
+		const JsonValue &keys = doc["depends_on"];
+		for (JsonValue::const_iterator it = keys.begin(); keys.isArray() && it != keys.end(); ++it)
 		{
-			if (members[i].kind != JsonValueKind::String)
-				continue;
-			if (members[i].name == "type")
-				type = members[i].text;
-			else if (members[i].name == "detail")
-				detail = members[i].text;
+			if ((*it).isString())
+				depends_on.push_back((*it).asString());
 		}
 	}
 
@@ -73,7 +78,9 @@ coreapi::Error errorFromProblem(const Response &r)
 	if (type.compare(0, prefix_len, kPrefix) != 0 || !codeFromWire(type.substr(prefix_len), code))
 		return coreapi::Error(status, coreapi::ErrorCode::BadTable,
 		                      "the route refused without saying why");
-	return coreapi::Error(status, code, detail);
+	coreapi::Error e(status, code, detail);
+	e.depends_on = depends_on;
+	return e;
 }
 
 } // namespace mcp

@@ -45,13 +45,9 @@
 
 #include <driver/screen_max.h>
 
-#include <hardware/audio.h>
 #include <zapit/zapit.h>
 
 #include <system/debug.h>
-
-extern CAudioSetupNotifier	* audioSetupNotifier;
-extern cAudio *audioDecoder;
 
 CAudioSetup::CAudioSetup(int wizard_mode)
 {
@@ -70,7 +66,6 @@ int CAudioSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 {
 	if (actionKey == "clear_vol_map") {
 		CZapit::getInstance()->ClearVolumeMap();
-		CZapit::getInstance()->SetVolumePercent(g_settings.audio_volume_percent_ac3, g_settings.audio_volume_percent_pcm);
 		return menu_return::RETURN_NONE;
 	}
 
@@ -99,24 +94,23 @@ int CAudioSetup::showAudioSetup()
 	audioSettings->addIntroItems(LOCALE_MAINSETTINGS_AUDIO);
 	//---------------------------------------------------------
 	//analog modes (stereo, mono l/r...)
-	addSetting(audioSettings, "audio_AnalogMode", true, audioSetupNotifier);
+	addSetting(audioSettings, "audio_AnalogMode");
 	audioSettings->addItem(GenericMenuSeparatorLine);
 	//---------------------------------------------------------
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	addSetting(audioSettings, "ac3_pass", true, audioSetupNotifier);
-	addSetting(audioSettings, "dts_pass", true, audioSetupNotifier);
-#else
+	/* The pair this box has: the row of the other pair is not declared here and
+	   adds nothing. */
+	addSetting(audioSettings, "ac3_pass");
+	addSetting(audioSettings, "dts_pass");
 	//dd via hdmi
-	addSetting(audioSettings, "hdmi_dd", true, audioSetupNotifier);
+	addSetting(audioSettings, "hdmi_dd");
 	//dd via spdif
-	addSetting(audioSettings, "spdif_dd", true, audioSetupNotifier);
-#endif // HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+	addSetting(audioSettings, "spdif_dd");
 	//dd subchannel auto on/off
-	addSetting(audioSettings, "audio_DolbyDigital", true, audioSetupNotifier);
+	addSetting(audioSettings, "audio_DolbyDigital");
 	//---------------------------------------------------------
 	audioSettings->addItem(GenericMenuSeparatorLine);
 	//av synch
-	addSetting(audioSettings, "avsync", true, audioSetupNotifier);
+	addSetting(audioSettings, "avsync");
 	//volume steps
 	addSetting(audioSettings, "current_volume_step");
 	addSetting(audioSettings, "start_volume");
@@ -124,23 +118,16 @@ int CAudioSetup::showAudioSetup()
 #if HAVE_CST_HARDWARE
 	/* only coolstream has SRS stuff, so only compile it there */
 	audioSettings->addItem(GenericMenuSeparatorLine);
-	//SRS on/off, switching the items below
-	CTruVolumeNotifier truevolSetupNotifier;
-	addSetting(audioSettings, "srs_enable", true, &truevolSetupNotifier);
-	truevolSetupNotifier.add(addSetting(audioSettings, "srs_algo", g_settings.srs_enable, audioSetupNotifier));
-#ifndef BOXMODEL_CST_HD2
-	truevolSetupNotifier.add(addSetting(audioSettings, "srs_nmgr_enable", g_settings.srs_enable, audioSetupNotifier));
-#endif
-	truevolSetupNotifier.add(addSetting(audioSettings, "srs_ref_volume", g_settings.srs_enable, audioSetupNotifier));
+	//SRS on/off, the three below follow the row's condition
+	addSetting(audioSettings, "srs_enable");
+	addSetting(audioSettings, "srs_algo");
+	addSetting(audioSettings, "srs_nmgr_enable");
+	addSetting(audioSettings, "srs_ref_volume");
 #endif
 	// ac3,pcm and clear volume adjustment
 	audioSettings->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_AUDIOMENU_VOLUME_ADJUSTMENT));
-	CMenuOptionNumberChooser *adj = static_cast<CMenuOptionNumberChooser *>(addSetting(audioSettings, "audio_volume_percent_ac3", true, audioSetupNotifier));
-	if (adj)
-		adj->setNumberFormat("%d%%");
-	adj = static_cast<CMenuOptionNumberChooser *>(addSetting(audioSettings, "audio_volume_percent_pcm", true, audioSetupNotifier));
-	if (adj)
-		adj->setNumberFormat("%d%%");
+	addSetting(audioSettings, "audio_volume_percent_ac3");
+	addSetting(audioSettings, "audio_volume_percent_pcm");
 
 	CMenuForwarder *adj_clear = new CMenuForwarder(LOCALE_AUDIOMENU_VOLUME_ADJUSTMENT_CLEAR, true, NULL, this, "clear_vol_map");
 	adj_clear->setHint("", LOCALE_MENU_HINT_AUDIO_ADJUST_VOL_CLEAR);
@@ -149,25 +136,6 @@ int CAudioSetup::showAudioSetup()
 	int res = audioSettings->exec(NULL, "");
 	selected = audioSettings->getSelected();
 	delete audioSettings;
-	CZapit::getInstance()->SetVolumePercent(g_settings.audio_volume_percent_ac3, g_settings.audio_volume_percent_pcm);
 
 	return res;
-}
-
-void CTruVolumeNotifier::add(CMenuItem *item)
-{
-	if (item)
-		toDisable.push_back(item);
-}
-
-bool CTruVolumeNotifier::changeNotify(const neutrino_locale_t, void * data)
-{
-	int active = (*(int *)data);
-
-	for (size_t i = 0; i < toDisable.size(); i++)
-		toDisable[i]->setActive(active);
-
-	audioDecoder->SetSRS(g_settings.srs_enable, g_settings.srs_nmgr_enable, g_settings.srs_algo, g_settings.srs_ref_volume);
-
-	return false;
 }

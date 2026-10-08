@@ -93,6 +93,14 @@ function emit(   i, lab, rest, seen, f, lo, hi, r) {
 	# the declaration of the widget itself takes a type here rather than a name
 	if (lab !~ /^LOCALE_[A-Z0-9_]+$/) return
 
+	# A forwarder that is never active only shows the value under a name of its own, as a
+	# read-only line does; nothing is edited there, so the label is no statement about the row.
+	if (want == "3") {
+		act = args[2]
+		gsub(/[ \t]+/, "", act)
+		if (act == "false") return
+	}
+
 	split(want, r, "-")
 	lo = r[1] + 0
 	hi = (r[2] == "") ? lo : r[2] + 0

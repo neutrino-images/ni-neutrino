@@ -30,7 +30,6 @@ coreapi/test_result.cpp	0
 coreapi/test_schema.cpp	0
 coreapi/test_screenshot.cpp	2000
 coreapi/test_settings.cpp	0
-coreapi/test_settingsappliers.cpp	0
 coreapi/test_settingschoices.cpp	0
 coreapi/test_settingsfields.cpp	0
 coreapi/test_settingspairs.cpp	0

@@ -68,10 +68,12 @@ bool guardsCredential(const std::string &key)
 
 /* The flag files that switch a program on at boot: the services, which a client could use to
    export the box's disks or to close its login, and the softcams, which hold the keys that
-   descramble. Named for good, whatever the owner ticks and whatever the rows come to do. */
+   descramble, and the one that moves the screen corners for a scart output. Named for good,
+   whatever the owner ticks and whatever the rows come to do. */
 bool switchesAProgram(const std::string &key)
 {
-	return key.compare(0, 12, "flag_daemon_") == 0 || key.compare(0, 10, "flag_camd_") == 0;
+	return key.compare(0, 12, "flag_daemon_") == 0 || key.compare(0, 10, "flag_camd_") == 0 ||
+	       key == "flag_scart_osd_fix";
 }
 
 // Never writable by an AI client, whatever the owner ticks.
@@ -117,18 +119,36 @@ bool sectionAllowed(const std::string &section)
 	return sectionDenial(section).empty();
 }
 
-std::string deniedKeyIn(const std::string &settings_json)
+// Why a key is denied, the class it is in; NULL for one that is not.
+static const char *denialOf(const std::string &key)
+{
+	if (guardsCredential(key))
+		return "is a module's PIN in effect: it lets the box answer the CI module's PIN enquiry by itself";
+	if (switchesAProgram(key))
+		return "switches a service or a softcam on at boot, or moves the screen of a scart output";
+	coreapi::Result<coreapi::Descriptor> d = coreapi::settings::describe(key);
+	if (!d.ok())
+		return NULL;
+	if (d.value().secret)
+		return "is a credential";
+	if (coreapi::settings::holdsPath(d.value()))
+		return "names a place on the box's disk";
+	return NULL;
+}
+
+std::string deniedKeyIn(const std::string &settings_json, std::string *why)
 {
 	std::vector<JsonMember> members;
 	if (!readFlatObject(settings_json, members))
 		return std::string();
 	for (size_t i = 0; i < members.size(); ++i)
 	{
-		if (guardsCredential(members[i].name) || switchesAProgram(members[i].name))
-			return members[i].name;
-		coreapi::Result<coreapi::Descriptor> d = coreapi::settings::describe(members[i].name);
-		if (d.ok() && (d.value().secret || coreapi::settings::holdsPath(d.value())))
-			return members[i].name;
+		const char *said = denialOf(members[i].name);
+		if (said == NULL)
+			continue;
+		if (why != NULL)
+			*why = said;
+		return members[i].name;
 	}
 	return std::string();
 }

@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <iomanip>
+#include <chrono>
 #include <system/set_threadname.h>
 
 #include <global.h>
@@ -127,6 +128,7 @@ CLCD4l::CLCD4l()
 {
 	thrLCD4l = NULL;
 	exit_proc = false;
+	closing = false;
 }
 
 CLCD4l::~CLCD4l()
@@ -150,6 +152,7 @@ CLCD4l *CLCD4l::getInstance()
 
 void CLCD4l::InitLCD4l()
 {
+	std::lock_guard<std::timed_mutex> lock(control);
 	if (thrLCD4l)
 	{
 		dprintf(DEBUG_NORMAL, "\033[32m[CLCD4l] [%s - %d] initializing CLCD4l \033[0m\n", __func__, __LINE__);
@@ -157,9 +160,21 @@ void CLCD4l::InitLCD4l()
 	}
 }
 
-void CLCD4l::StartLCD4l()
+void CLCD4l::StartLCD4l(bool tell)
 {
-	OnBeforeStart();
+	std::lock_guard<std::timed_mutex> lock(control);
+	start(tell);
+}
+
+bool CLCD4l::start(bool tell)
+{
+	if (closing)
+	{
+		dprintf(DEBUG_NORMAL, "[CLCD4l] not started: the program is ending\n");
+		return false;
+	}
+	if (tell)
+		OnBeforeStart();
 	if (!thrLCD4l)
 	{
 		dprintf(DEBUG_NORMAL, "\033[32m[CLCD4l] [%s - %d] starting thread with mode %d \033[0m\n", __func__, __LINE__, g_settings.lcd4l_support);
@@ -171,16 +186,26 @@ void CLCD4l::StartLCD4l()
 
 	if (g_settings.lcd4l_support)
 	{
-		if (exec_initscript("lcd4linux", "start"))
+		const bool ok = exec_initscript("lcd4linux", "start");
+		if (tell && ok)
 			OnAfterStart();
-		else
+		else if (tell)
 			OnError();
+		return ok;
 	}
+	return true;
 }
 
-void CLCD4l::StopLCD4l()
+void CLCD4l::StopLCD4l(bool tell)
 {
-	OnBeforeStop();
+	std::lock_guard<std::timed_mutex> lock(control);
+	stop(tell);
+}
+
+bool CLCD4l::stop(bool tell)
+{
+	if (tell)
+		OnBeforeStop();
 	if (thrLCD4l)
 	{
 		dprintf(DEBUG_NORMAL, "\033[32m[CLCD4l] [%s - %d] stopping thread [%p]\033[0m\n", __func__, __LINE__, thrLCD4l);
@@ -194,30 +219,75 @@ void CLCD4l::StopLCD4l()
 		dprintf(DEBUG_NORMAL, "\033[32m[CLCD4l] [%s - %d] thread [%p] terminated\033[0m\n", __func__, __LINE__, thrLCD4l);
 	}
 
-	if (exec_initscript("lcd4linux", "stop"))
+	const bool ok = exec_initscript("lcd4linux", "stop");
+	if (tell && ok)
 		OnAfterStop();
-	else
+	else if (tell)
 		OnError();
+	return ok;
+}
+
+bool CLCD4l::Restart(int mode)
+{
+	std::lock_guard<std::timed_mutex> lock(control);
+	const bool stopped = stop(false);
+	if (!mode)
+		return stopped;
+	return start(false);
+}
+
+void CLCD4l::Shutdown(bool stop_service)
+{
+	// The first call has stopped it or given up, so a second one waits for nothing.
+	if (closing.exchange(true))
+		return;
+	// A hung script on the worker must not hold up the end of the program.
+	std::unique_lock<std::timed_mutex> lock(control, std::chrono::seconds(10));
+	if (!lock.owns_lock())
+	{
+		dprintf(DEBUG_NORMAL, "[CLCD4l] still busy after 10 s, not stopped\n");
+		return;
+	}
+	/* The thread reads objects the teardown deletes next, and it can run while the mode
+	   is off: a restart for the new mode that close() dropped never stopped it. */
+	if (stop_service)
+		stop(true);
+	else if (thrLCD4l)
+	{
+		exit_proc = true;
+		thrLCD4l->join();
+		delete thrLCD4l;
+		thrLCD4l = NULL;
+	}
 }
 
 void CLCD4l::RestartLCD4lScript()
 {
-	OnBeforeStart();
+	std::lock_guard<std::timed_mutex> lock(control);
+	restartScript(true);
+}
+
+void CLCD4l::restartScript(bool tell)
+{
+	if (tell)
+		OnBeforeStart();
 	if (thrLCD4l && g_settings.lcd4l_support)
 	{
-		if (exec_initscript("lcd4linux", "restart"))
+		const bool ok = exec_initscript("lcd4linux", "restart");
+		if (tell && ok)
 			OnAfterRestart();
-		else
+		else if (tell)
 			OnError();
 	}
 }
 
 void CLCD4l::SwitchLCD4l()
 {
+	std::lock_guard<std::timed_mutex> lock(control);
 	if (thrLCD4l)
-		StopLCD4l();
+		stop(true);
 	else
-		StartLCD4l();
+		start(true);
 }
 
 int CLCD4l::CreateFile(const char *file, std::string content, bool convert)
@@ -265,26 +335,6 @@ int CLCD4l::CreateMenuFile(std::string content, bool convert)
 int CLCD4l::RemoveMenuFile()
 {
 	return RemoveFile(MENU);
-}
-
-int CLCD4l::GetMaxBrightness()
-{
-	int max_brightness;
-
-	switch (g_settings.lcd4l_display_type)
-	{
-		case SPF800x480:
-		case SPF800x600:
-		case SPF1024x600:
-			max_brightness = 10;
-			break;
-		case DPF320x240:
-		default:
-			max_brightness = 7;
-			break;
-	}
-
-	return max_brightness;
 }
 
 /* ----------------------------------------------------------------- */
@@ -967,9 +1017,14 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 			WriteFile(LAYOUT, Layout);
 			m_Layout = Layout;
 
+			/* From the service's own thread, which a stop holding the lock joins: a
+			   start or stop under way runs the script anyway, so it is skipped then.
+			   Silent, since this is not the program's loop. */
 			if (!firstRun)
 			{
-				RestartLCD4lScript();
+				std::unique_lock<std::timed_mutex> lock(control, std::try_to_lock);
+				if (lock.owns_lock())
+					restartScript(false);
 			}
 		}
 	}

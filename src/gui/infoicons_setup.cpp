@@ -105,34 +105,6 @@ int CInfoIconsSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 	return res;
 }
 
-bool CInfoIconsSetup::changeNotify(const neutrino_locale_t OptionName, void *data)
-{
-	int val = 0;
-	if(data)
-		val = (*(int *)data);
-
-	if(ARE_LOCALES_EQUAL(OptionName, LOCALE_INFOICONS_SKIN))
-	{
-		if(val == INFOICONS_INFOVIEWER)
-			oj_modeicon->setActive(false);
-		else
-			oj_modeicon->setActive(true);
-	}
-	else if(ARE_LOCALES_EQUAL(OptionName, LOCALE_INFOICONS_MODEICON))
-	{
-		if(val == 0) {
-			oj_skin->setActive(true);
-			printf("CInfoIconsSetup::changeNotify: stop InfoIcons\n");
-		}
-		else {
-			oj_skin->setActive(false);
-			printf("CInfoIconsSetup::changeNotify: start InfoIcons\n");
-		}
-	}
-
-	return true;
-}
-
 int CInfoIconsSetup::menu()
 {
 	int shortcut = 1;
@@ -146,10 +118,10 @@ int CInfoIconsSetup::menu()
 	if(g_settings.mode_icons && (infoiconsMenu->getSelected() == 4))
 		infoiconsMenu->setSelected(5);
 
-	oj_skin = static_cast<CMenuOptionChooser *>(addSetting(infoiconsMenu, "mode_icons_skin", !g_settings.mode_icons, this, CRCInput::convertDigitToKey(shortcut++)));
+	CMenuItem *oj_skin = addSetting(infoiconsMenu, "mode_icons_skin", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	oj_skin->hintIcon = NEUTRINO_ICON_HINT_IMAGELOGO;
 
-	oj_modeicon = static_cast<CMenuOptionChooser *>(addSetting(infoiconsMenu, "mode_icons", g_settings.mode_icons_skin != INFOICONS_INFOVIEWER, this, CRCInput::convertDigitToKey(shortcut++)));
+	CMenuItem *oj_modeicon = addSetting(infoiconsMenu, "mode_icons", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	oj_modeicon->hintIcon = NEUTRINO_ICON_HINT_IMAGELOGO;
 
 	infoiconsMenu->addItem(GenericMenuSeparatorLine);
@@ -192,7 +164,7 @@ int CInfoIconsSetup::menu()
 
 	infoiconsMenu->addItem(GenericMenuSeparatorLine);
 
-	CMenuItem *mc = addSetting(infoiconsMenu, "mode_icons_background", true, this, CRCInput::convertDigitToKey(shortcut++));
+	CMenuItem *mc = addSetting(infoiconsMenu, "mode_icons_background", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	mc->hintIcon = NEUTRINO_ICON_HINT_IMAGELOGO;
 
 	int res = infoiconsMenu->exec(NULL,"");

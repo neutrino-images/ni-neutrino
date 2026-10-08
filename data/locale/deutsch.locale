@@ -375,13 +375,22 @@ color.gradient Farbverlauf
 color.gradient_a2b Farbe A zu B
 color.gradient_b2a Farbe B zu A
 color.gradient_d2l dunkel nach hell
+color.gradient_direction_head Menütitel Verlaufsrichtung
+color.gradient_direction_hint Menühinweis Verlaufsrichtung
+color.gradient_direction_infobar_body Infobar Mitte Verlaufsrichtung
+color.gradient_direction_infobar_bottom Infobar unten Verlaufsrichtung
+color.gradient_direction_infobar_top Infobar oben Verlaufsrichtung
+color.gradient_direction_subhead Menü-Untertitel Verlaufsrichtung
 color.gradient_dld dunkel hell dunkel
+color.gradient_head Menütitel Farbverlauf
+color.gradient_hint Menühinweis Farbverlauf
 color.gradient_l2d hell nach dunkel
 color.gradient_ldl hell dunkel hell
 color.gradient_mode_direction Richtung
 color.gradient_mode_direction_hor horizontal
 color.gradient_mode_direction_ver vertikal
 color.gradient_separator_enable Farbverlauf für Trennlinie
+color.gradient_subhead Menü-Untertitel Farbverlauf
 colorchooser.alpha alpha
 colorchooser.blue blau
 colorchooser.green grün
@@ -389,14 +398,28 @@ colorchooser.red rot
 colormenu.background Hintergrundfarbe
 colormenu.channellist_description_text Textfarbe für Sendungsbeschreibungen
 colormenu.clock_textcolor Ziffernfarbe
+colormenu.colored_events_text Textfarbe farbiger Sendungen
+colormenu.content_background Menüinhalt Hintergrund
+colormenu.content_text Menüinhalt Textfarbe
 colormenu.fade Ein-/Ausblenden
 colormenu.font Verwendete Schriftart
 colormenu.font_ttx Videotext Schriftart
+colormenu.foot_background Menüfuß Hintergrund
+colormenu.foot_text Menüfuß Textfarbe
+colormenu.head_background Menütitel Hintergrund
+colormenu.head_text Menütitel Textfarbe
+colormenu.inactive_background Inaktiver Eintrag Hintergrund
+colormenu.inactive_text Inaktiver Eintrag Textfarbe
+colormenu.infobar_background Infobar Hintergrund
+colormenu.infobar_casystem Infobar CA-System Farbe
+colormenu.infobar_text Infobar Textfarbe
 colormenu.menucolors Themes
 colormenu.osd_preset Bildschirmauswahl
 colormenu.osd_resolution OSD-Auflösung
 colormenu.progressbar_active Farbe des aktiven Teils
 colormenu.progressbar_passive Hintergrundfarbe
+colormenu.selected_background Gewählter Eintrag Hintergrund
+colormenu.selected_text Gewählter Eintrag Textfarbe
 colormenu.shadow_color Schattenfarbe
 colormenu.textcolor Textfarbe
 colormenu.themeselect Theme auswählen
@@ -900,7 +923,6 @@ fontsize.moviebrowser_list Listen-Einträge
 fontsize.subtitles Text Untertitel
 fontsize.window_radiotext_desc0 Radiotext Infos
 fontsize.window_radiotext_desc1 Radiotext Zusatzinfo
-format.after_second nach %d s
 fsk.all aus
 fsk.from_12 ab 12
 fsk.from_16 ab 16
@@ -1264,6 +1286,8 @@ lcdmenu.statusline.playtime Sendungsfortschritt
 lcdmenu.statusline.volume Lautstärke
 ledcontroler.backlight Hintergrundbeleuchtung Buttons
 ledcontroler.backlight.tv TV Modus
+ledcontroler.backlight_deepstandby Tastenbeleuchtung im Deep-Standby
+ledcontroler.backlight_standby Tastenbeleuchtung im Standby
 ledcontroler.blink Blinke im Deep-Standby, wenn Timer aktiv
 ledcontroler.menu Power Button LEDs
 ledcontroler.mode.deepstandby Deep-Standby
@@ -2503,6 +2527,7 @@ options.off aus
 options.on ein
 options.start starten
 options.stop stoppen
+options.unlimited unbegrenzt
 osd.preset_screen_a Bildschirm 1
 osd.preset_screen_b Bildschirm 2
 parentallock.bouquetmode Bouquets sind standardmässig
@@ -2812,7 +2837,11 @@ screensaver.mode_image Bilder
 screensaver.off Bildschirmschoner aus
 screensaver.random Zufällige Bilderwahl
 screensaver.timeout Wechselintervall
+screensetup.end_x Bildrand unten, rechts: X
+screensetup.end_y Bildrand unten, rechts: Y
 screensetup.lowerright grün = Bildrand unten, rechts
+screensetup.start_x Bildrand oben, links: X
+screensetup.start_y Bildrand oben, links: Y
 screensetup.upperleft rot = Bildrand oben, links
 screenshot.count Anzahl
 screenshot.cover Erzeuge Filmcover für Moviebrowser
@@ -3099,6 +3128,15 @@ videomenu.panscan Pan & Scan
 videomenu.panscan2 14:9 Pan & Scan
 videomenu.pip PiP Setup
 videomenu.pip_error PiP Startfehler
+videomenu.pip_height PiP Höhe
+videomenu.pip_radio_height PiP Höhe (Radio)
+videomenu.pip_radio_width PiP Breite (Radio)
+videomenu.pip_radio_x PiP Position X (Radio)
+videomenu.pip_radio_y PiP Position Y (Radio)
+videomenu.pip_rotate_lastpos PiP Position nach dem Drehen
+videomenu.pip_width PiP Breite
+videomenu.pip_x PiP Position X
+videomenu.pip_y PiP Position Y
 videomenu.psi Farbregler
 videomenu.psi.brightness Helligkeit
 videomenu.psi.contrast Kontrast
@@ -3158,6 +3196,8 @@ webtv.stream_restart_attempts Stream-Neustarts nach Verbindungsabbruch
 webtv.xml WebTV-Dateien
 webtv.xml.auto WebTV-Dateien automatisch laden
 window_size Fenstergröße in %
+window_size_height Fensterhöhe in %
+window_size_width Fensterbreite in %
 wizard.initial_settings Grundeinstellungen gefunden
 wizard.install_settings Kanalliste für Astra 19.2°E installieren?
 wizard.message_check_for_updates Aktualisierung

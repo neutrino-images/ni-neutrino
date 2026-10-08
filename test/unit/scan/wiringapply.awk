@@ -7,19 +7,19 @@
 #     each setting they read has to be named in the condition of some row, or the
 #     greying went with the code
 #   a branch of a change notifier, found by the locale it tests
-#     the setting it stands for has to be in an apply group or on the list of
-#     those not yet moved, or what the branch did is read nowhere
+#     the setting it stands for has to be in an apply group, or what the branch
+#     did is read nowhere
 #
 # Everything here is read as text and can say only that nothing names a setting,
 # never that what a row says is the same thing the code did, so each setting is
 # printed with the condition the rows state for it and the person reading the
 # screen decides. A line is a NOTE when there is something to compare and a WARN
 # when there is nothing: no row names the setting in a condition, or a branch's
-# setting has no group and is not listed.
+# setting has no group.
 #
 # Files: removed (the removed lines, comments dropped), rows (the declaration
 # behind strip-comments.awk with literals kept), members (key and member, tab
-# between), groups (group, key, file), pending (key, stream, reason) and locales
+# between), groups (group, key, file) and locales
 # (enumerator and the label it stands for).
 function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
 function readlines(path, arr,   n, l) {
@@ -104,11 +104,6 @@ BEGIN {
 	for (i = 1; i <= n; i++) { split(M[i], f, "\t"); keysof[f[2]] = keysof[f[2]] " " f[1] }
 	n = readlines(groups, G)
 	for (i = 1; i <= n; i++) { split(G[i], f, "\t"); grp[f[2]] = f[1] }
-	n = readlines(pending, P)
-	for (i = 1; i <= n; i++) {
-		if (P[i] ~ /^[ \t]*#/ || P[i] ~ /^[ \t]*$/) continue
-		split(P[i], f, "\t"); pend[f[1]] = f[2]
-	}
 	n = readlines(locales, L)
 	for (i = 1; i <= n; i++) { split(L[i], f, "\t"); loc[f[1]] = f[2] }
 
@@ -177,7 +172,6 @@ function branch(e,   lab, ks, n, i, k, status) {
 	for (i = 1; i <= n; i++) {
 		k = ks[i]
 		if (k in grp) note("removed notifier branch of " k ": group " grp[k])
-		else if (k in pend) note("removed notifier branch of " k ": no group yet, listed for " pend[k])
-		else warn("removed notifier branch of " k " (" e "): no group and not listed, so what the branch did is read nowhere")
+		else warn("removed notifier branch of " k " (" e "): no group, so what the branch did is read nowhere")
 	}
 }

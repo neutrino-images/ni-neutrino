@@ -1,19 +1,16 @@
 # Keys the hand reading in bugsV5/settings-eval found to need an apply group and
 # the text scan cannot tell from a read where it is used. check-apply-groups.sh
-# holds each to a group or to apply-pending.txt, so a key cannot leave the pending
-# list without gaining a group. Deleted with the pending list.
+# holds each to a group, so such a key cannot lose its group unnoticed.
 audio_AnalogMode
 avsync
 backlight_tv
 cacheTXT
-cpufreq
 epg_dir
 epg_read
 epg_save
 epg_save_mode
 epg_scan
 epg_scan_mode
-fan_speed
 font_file
 font_file_monospace
 font_scaling_x
@@ -33,7 +30,6 @@ lcd4l_display_type
 lcd4l_screenshots
 lcd4l_skin
 lcd4l_support
-lcd_dim_brightness
 lcd_scroll
 led_tv_mode
 livestreamResolution
@@ -41,7 +37,6 @@ make_hd_list
 make_webradio_list
 make_webtv_list
 mode_clock
-mode_icons
 network_nfs_recordingdir
 plugin_hdd_dir
 plugins_disabled
@@ -57,7 +52,6 @@ recordingmenu.stream_vtxt_pid
 repeat_blocker
 repeat_genericblocker
 screen_preset
-show_ecm_pos
 show_empty_favorites
 softupdate_autocheck_packages
 streaming_port
@@ -74,7 +68,6 @@ weather_api_key
 weather_api_version
 weather_city
 weather_location
-weather_postalcode
 webradio_xml_auto
 webtv_xml_auto
 zappingmode

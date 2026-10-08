@@ -44,6 +44,7 @@ void CTermWindow::setCommand(const std::string &Command, const int Mode, int* Re
 
 void CTermWindow::exec()
 {
+	CMenuWidget::Busy modal;
 	fprintf(stderr, "CTermWindow::exec: mode %d command: %s\n", mode, command.c_str());
 	std::string cmd;
 	if (mode == 0){ /* not used */

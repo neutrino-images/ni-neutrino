@@ -66,9 +66,21 @@
 
 #include <coreapi/archive.h>
 #include <coreapi/channels.h>
+#include <coreapi/streaming.h>
 #include <coreapi/system.h>
+#include <coreapi/box/applyworker.h>
 #include <coreapi/settings/settings.h>
 #include <coreapi/base/apply.h>
+#include <coreapi/box/apply_cec.h>
+#include <coreapi/box/apply_record.h>
+#include <coreapi/box/apply_misc.h>
+#include <coreapi/box/apply_sectionsd.h>
+#include <coreapi/box/apply_lang.h>
+#include <coreapi/box/apply_update.h>
+#include <coreapi/box/apply_vfd.h>
+#include <coreapi/box/apply_osd.h>
+#include <coreapi/box/apply_video.h>
+#include <coreapi/box/apply_weather.h>
 #include <coreapi/base/deps.h>
 #include <coreapi/base/messagebridge.h>
 
@@ -87,15 +99,11 @@
 #endif
 #endif
 
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-#include "gui/psisetup.h"
-#endif
 #include "gui/adzap.h"
 #include "gui/audiomute.h"
 #include "gui/audioplayer.h"
 #include "gui/bouquetlist.h"
 #include "gui/cam_menu.h"
-#include "gui/cec_setup.h"
 #include "gui/epgview.h"
 #include "gui/eventlist.h"
 #include "gui/favorites.h"
@@ -122,9 +130,6 @@
 #include "gui/update_ext.h"
 #include "gui/update.h"
 #include "gui/update_check.h"
-#if ENABLE_PKG_MANAGEMENT
-#include "gui/update_check_packages.h"
-#endif
 #include "gui/videosettings.h"
 #include "gui/audio_select.h"
 #include "gui/weather.h"
@@ -134,6 +139,8 @@
 #include "gui/widget/hintbox.h"
 #include "gui/widget/icons.h"
 #include "gui/widget/menue.h"
+#include "gui/widget/settingitem.h"
+#include "gui/widget/settingfollow.h"
 #include "gui/widget/msgbox.h"
 #include "gui/infoclock.h"
 #include "gui/timeosd.h"
@@ -236,7 +243,6 @@ cCpuFreqManager *cpuFreq;
 void stop_daemons(bool stopall = true, bool for_flash = false);
 void stop_video(void);
 
-CAudioSetupNotifier	* audioSetupNotifier;
 CBouquetList   * bouquetList; // current list
 
 CBouquetList   * TVbouquetList;
@@ -636,7 +642,8 @@ int CNeutrinoApp::loadSetup(const char *fname)
 #endif
 #if BOXMODEL_VUPLUS_ALL
 		sprintf(cfg_key, "ci_rpr_%d", i);
-		g_settings.ci_rpr[i] = configfile.getInt32(cfg_key, 9);
+		// Only one means yes; the old default of nine was a no.
+		g_settings.ci_rpr[i] = configfile.getInt32(cfg_key, 0) == 1 ? 1 : 0;
 #endif
 	}
 
@@ -675,7 +682,11 @@ int CNeutrinoApp::loadSetup(const char *fname)
 #endif
 
 	// hdd
-	g_settings.hdd_fs = configfile.getInt32("hdd_fs", 0);
+	{
+		// The row's default asks the box which file systems it can make.
+		const coreapi::Descriptor *hdd_fs_row = coreapi::settings::findRow("hdd_fs");
+		g_settings.hdd_fs = configfile.getInt32("hdd_fs", hdd_fs_row != NULL ? coreapi::defaultInt(*hdd_fs_row) : 0);
+	}
 	g_settings.hdd_sleep = configfile.getInt32("hdd_sleep", 60);
 	g_settings.hdd_noise = configfile.getInt32("hdd_noise", 254);
 	g_settings.hdd_statfs_mode = configfile.getInt32("hdd_statfs_mode", SNeutrinoSettings::HDD_STATFS_RECORDING);
@@ -893,6 +904,8 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.streaming_ecmmode = configfile.getInt32("streaming_ecmmode", 0);
 	g_settings.streaming_decryptmode = configfile.getInt32("streaming_decryptmode", 1);
 	g_settings.streaming_port = configfile.getInt32("streaming_port", 31339);
+	// A stored port outside 1..65535 names no port the box can listen on.
+	g_settings.streaming_port = coreapi::streaming::portOrDefault(g_settings.streaming_port);
 
 	// timeshift
 	setSettingsText(g_settings.timeshiftdir, configfile.getString("timeshiftdir", ""));
@@ -902,23 +915,11 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.timeshift_pause = configfile.getInt32("timeshift_pause", 1);
 	g_settings.timeshift_temp = configfile.getInt32("timeshift_temp", 1);
 
-	std::string timeshiftdir;
-	if (g_settings.timeshiftdir.empty())
-	{
-		timeshiftdir = g_settings.network_nfs_recordingdir + "/.timeshift";
-		safe_mkdir(timeshiftdir.c_str());
-	}
-	else
-	{
-		if (g_settings.timeshiftdir != g_settings.network_nfs_recordingdir)
-			timeshiftdir = g_settings.timeshiftdir;
-		else
-			timeshiftdir = g_settings.network_nfs_recordingdir + "/.timeshift";
-	}
+	/* The recorder is told its directories by the recordConfig group; the old timeshift
+	   files below are cleaned out here because they are the previous run's. */
+	const std::string timeshiftdir = coreapi::timeshiftDirectoryFor(g_settings.network_nfs_recordingdir, g_settings.timeshiftdir);
 	dprintf(DEBUG_NORMAL, "recording dir: %s\n", g_settings.network_nfs_recordingdir.c_str());
 	dprintf(DEBUG_NORMAL, "timeshift dir: %s\n", timeshiftdir.c_str());
-
-	CRecordManager::getInstance()->SetTimeshiftDirectory(timeshiftdir.c_str());
 
 	// remove old timeshift recordings
 	if (g_settings.timeshift_delete)
@@ -2880,11 +2881,52 @@ void CNeutrinoApp::MakeSectionsdConfig(CSectionsdClient::epg_config& config)
 	config.network_ntpenable        = g_settings.network_ntpenable;
 }
 
-void CNeutrinoApp::SendSectionsdConfig(void)
+/* The group's one call. The program's client exists only once the menus are
+   built, which is after the phase this runs in at startup, and the daemon is
+   listening since it was started, so a client of its own is used until then. */
+coreapi::Status coreapi::applicationSetRecordDirectory(const std::string &dir)
+{
+	CRecordManager::getInstance()->SetDirectory(dir);
+	return Status::Ok;
+}
+
+coreapi::Status coreapi::applicationSetTimeshiftDirectory(const std::string &dir)
+{
+	CRecordManager::getInstance()->SetTimeshiftDirectory(dir);
+	return Status::Ok;
+}
+
+coreapi::Status coreapi::applicationConfigureRecorder(bool stop_sectionsd, bool stream_vtxt_pid, bool stream_pmt_pid,
+						       bool stream_subtitle_pids)
+{
+	CRecordManager::getInstance()->Config(stop_sectionsd, stream_vtxt_pid, stream_pmt_pid, stream_subtitle_pids);
+	return Status::Ok;
+}
+
+bool coreapi::applicationRecordingRunning()
+{
+	return CRecordManager::getInstance()->RecordingStatus();
+}
+
+coreapi::Status coreapi::applicationSetUsageDirectory(const std::string &dir)
+{
+	std::string d = dir;
+	cHddStat::getInstance()->setDir(d);
+	return Status::Ok;
+}
+
+coreapi::Status coreapi::applicationSendSectionsdConfig()
 {
 	CSectionsdClient::epg_config config;
-	MakeSectionsdConfig(config);
-	g_Sectionsd->setConfig(config);
+	CNeutrinoApp::getInstance()->MakeSectionsdConfig(config);
+	if (g_Sectionsd != NULL)
+	{
+		g_Sectionsd->setConfig(config);
+		return coreapi::Status::Ok;
+	}
+	CSectionsdClient client;
+	client.setConfig(config);
+	return coreapi::Status::Ok;
 }
 
 void CNeutrinoApp::InitZapper()
@@ -2892,7 +2934,6 @@ void CNeutrinoApp::InitZapper()
 	struct stat my_stat;
 
 	g_InfoViewer->start();
-	SendSectionsdConfig();
 	if (g_settings.epg_read) {
 		if(stat(g_settings.epg_dir.c_str(), &my_stat) == 0)
 			g_Sectionsd->readSIfromXML(g_settings.epg_dir.c_str());
@@ -2910,18 +2951,9 @@ void CNeutrinoApp::InitZapper()
 	else
 		radioMode(true);
 
-	if(g_settings.cacheTXT)
-		tuxtxt_init();
-
 	t_channel_id live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 	if(channelList->getSize() && live_channel_id  && !IS_WEBCHAN(live_channel_id))
 		g_Sectionsd->setServiceChanged(live_channel_id, false);
-}
-
-void CNeutrinoApp::setupRecordingDevice(void)
-{
-	CRecordManager::getInstance()->SetDirectory(g_settings.network_nfs_recordingdir);
-	CRecordManager::getInstance()->Config(g_settings.recording_stopsectionsd, g_settings.recording_stream_vtxt_pid, g_settings.recording_stream_pmt_pid, g_settings.recording_stream_subtitle_pids);
 }
 
 static void CSSendMessage(uint32_t msg, uint32_t data)
@@ -3107,17 +3139,24 @@ TIMER_START();
 
 	g_Locale        = new CLocaleManager;
 
+	// The loader asks the box for the defaults some rows compute per box.
+	coreapi::installRealSystemSource();
 	int loadSettingsErg = loadSetup(NEUTRINO_SETTINGS_FILE);
 
 	/* This thread is the loop that applies written settings, and every group is
 	   registered before the first phase, since a group registered after its phase
 	   is refused rather than run at startup. */
+	{
+		// What the guide keeps in its own file is not replaced by the settings at every start.
+		std::vector<std::string> guide_languages(g_settings.pref_lang, g_settings.pref_lang + 3);
+		coreapi::noteGuideLanguagesLoaded(guide_languages);
+	}
 	coreapi::bindApplyLoop();
 	coreapi::registerApplyGroups();
-
-	// Keep the system timezone aligned with the stored Neutrino setting
-	// before any DVB/NTP time handling starts.
-	CTZChangeNotifier().changeNotify(NONEXISTANT_LOCALE, (void *) "startup");
+	/* What a group reaches before the program's own block of installs below,
+	   the box source among it: it ends the process while it is missing, and the
+	   phases run long before that block. */
+	coreapi::installApplySeams();
 
 	initialize_iso639_map();
 
@@ -3129,6 +3168,8 @@ TIMER_START();
 		loadLocale_ret = g_Locale->loadLocale(g_settings.language.c_str());
 		show_startwizard = true;
 	}
+	// Menus built from here on hold this catalog's texts, so the language group must not load it again.
+	coreapi::noteLanguageLoaded(g_settings.language);
 
 	// default usermenu titles correspond to gui/user_menue_setup.h:struct usermenu_props_t usermenu
 	if (g_settings.usermenu[0]->title.empty() && !g_settings.usermenu[0]->items.empty())
@@ -3142,11 +3183,10 @@ TIMER_START();
 
 	/* setup GUI */
 	neutrinoFonts = CNeutrinoFonts::getInstance();
-	SetupFonts();
 	g_PicViewer = new CPictureViewer();
-	CColorSetupNotifier::setPalette();
-	// The framebuffer was set up before this and the fonts just now, so a group that
-	// draws can be told from here on.
+	// The framebuffer was set up before this, so a group that draws can be told from
+	// here on; the fonts and palette groups build the fonts and fill the palette where
+	// startup did.
 	coreapi::runPhase(coreapi::ApplyPhase::Framebuffer);
 
 	char start_text [100];
@@ -3164,8 +3204,6 @@ TIMER_START();
 	CVFD::getInstance()->init(neutrinoFonts->fontDescr.filename.c_str(), neutrinoFonts->fontDescr.name.c_str());
 	CVFD::getInstance()->Clear();
 	CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_NI)); //NI
-	CVFD::getInstance()->setBacklight(g_settings.backlight_tv);
-	CVFD::getInstance()->setScrollMode(g_settings.lcd_scroll);
 
 #ifdef ENABLE_GRAPHLCD
 	cGLCD::getInstance();
@@ -3185,48 +3223,32 @@ TIMER_START();
 	ZapStart_arg.startchannelradio_id = g_settings.startchannelradio_id;
 	ZapStart_arg.uselastchannel = g_settings.uselastchannel;
 	ZapStart_arg.video_mode = g_settings.video_Mode;
-	memcpy(ZapStart_arg.ci_clock, g_settings.ci_clock, sizeof(g_settings.ci_clock));
-#if BOXMODEL_VUPLUS_ALL
-	ZapStart_arg.ci_delay = g_settings.ci_delay;
-	memcpy(ZapStart_arg.ci_rpr, g_settings.ci_rpr, sizeof(g_settings.ci_rpr));
-#endif
-	memcpy(ZapStart_arg.ci_op, g_settings.ci_op, sizeof(g_settings.ci_op));
 	ZapStart_arg.volume = g_settings.current_volume;
 	ZapStart_arg.webtv_xml = &g_settings.webtv_xml;
 	ZapStart_arg.webradio_xml = &g_settings.webradio_xml;
 
 	ZapStart_arg.osd_resolution = g_settings.osd_resolution;
 
-	CCamManager::getInstance()->SetCITuner(g_settings.ci_tuner);
 	/* create decoders, read channels */
 	bool zapit_init = CZapit::getInstance()->Start(&ZapStart_arg);
 	//get zapit config for writeChannelsNames
 	CZapit::getInstance()->GetConfig(zapitCfg);
 
-	// init audio settings
-	audioDecoder->SetSRS(g_settings.srs_enable, g_settings.srs_nmgr_enable, g_settings.srs_algo, g_settings.srs_ref_volume);
-	//audioDecoder->setVolume(g_settings.current_volume, g_settings.current_volume);
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	audioDecoder->SetHdmiDD(g_settings.ac3_pass ? true : false);
-	audioDecoder->SetSpdifDD(g_settings.dts_pass ? true : false);
-#else
-	audioDecoder->SetHdmiDD((HDMI_ENCODED_MODE)g_settings.hdmi_dd);
-	audioDecoder->SetSpdifDD(g_settings.spdif_dd ? true : false);
-#endif
-	audioDecoder->EnableAnalogOut(g_settings.analog_out ? true : false);
-	audioSetupNotifier        = new CAudioSetupNotifier;
-	// trigger a change
-	if(g_settings.avsync != (AVSYNC_TYPE) AVSYNC_ENABLED)
-		audioSetupNotifier->changeNotify(LOCALE_AUDIOMENU_AVSYNC, NULL);
 
-	//init video settings
 	g_videoSettings = new CVideoSettings;
-	g_videoSettings->initVideoSettings();
+
+	/* CZapit::Start created both decoders above; the phase gives the audio, the
+	   video and the picture their settings, where the lines above and the video
+	   screen did before, ahead of the small picture's place and the main picture
+	   going back to full screen. */
+	coreapi::runPhase(coreapi::ApplyPhase::Decoders);
+#if ENABLE_PIP
+	if (pipVideoDecoder[0] != NULL)
+		pipVideoDecoder[0]->Pig(pip_recalc_pos_x(g_settings.pip_x), pip_recalc_pos_y(g_settings.pip_y), g_settings.pip_width, g_settings.pip_height, g_settings.screen_width, g_settings.screen_height);
+#endif
 
 	// reset videodecoder to fullscreen
 	videoDecoder->Pig(-1, -1, -1, -1);
-	// CZapit::Start created both decoders above, and the lines since gave them their settings.
-	coreapi::runPhase(coreapi::ApplyPhase::Decoders);
 
 	// show startlogo
 	if (startlogo)
@@ -3236,6 +3258,13 @@ TIMER_START();
 
 	InitZapitClient();
 	g_Zapit->setStandby(false);
+
+	/* Decided ahead of the phase because the phase starts the CEC link, and a box
+	   woken for a recording leaves the television alone until it is woken for real. */
+	timer_wakeup = (is_wakeup() && g_settings.shutdown_timer_record_type);
+	g_settings.shutdown_timer_record_type = false;
+	init_cec_setting = timer_wakeup && g_settings.hdmi_cec_mode;
+	coreapi::deferCec(init_cec_setting);
 	coreapi::runPhase(coreapi::ApplyPhase::Zapit);
 
 	CheckFastScan();
@@ -3255,18 +3284,6 @@ TIMER_START();
 	}
 
 	//timer start
-	timer_wakeup = (is_wakeup() && g_settings.shutdown_timer_record_type);
-	g_settings.shutdown_timer_record_type = false;
-
-	init_cec_setting = true;
-	if(!(timer_wakeup && g_settings.hdmi_cec_mode))
-	{
-		//init cec settings
-		CCECSetup cecsetup;
-		cecsetup.setCECSettings();
-		init_cec_setting = false;
-	}
-
 	long timerd_signal = timer_wakeup;
 	pthread_create (&timer_thread, NULL, timerd_main_thread, (void *)&timerd_signal);
 	timerd_thread_started = true;
@@ -3274,13 +3291,8 @@ TIMER_START();
 	powerManager = new cPowerManager;
 	powerManager->Open();
 
+	// The clock and the fan are set by their groups in the network phase.
 	cpuFreq = g_info.hw_caps->can_cpufreq ? new cCpuFreqManager() : NULL;
-	if (cpuFreq)
-		cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
-
-	//fan speed
-	if (g_info.hw_caps->has_fan)
-		CFanControlNotifier::setSpeed(g_settings.fan_speed);
 
 	dvbsub_init();
 
@@ -3291,7 +3303,6 @@ TIMER_START();
 	coreapi::installRealEpgSource();
 	coreapi::installRealTimerSource();
 	coreapi::installRealCommandSink();
-	coreapi::installRealSystemSource();
 	coreapi::installRealTunerSource();
 	/* Made here, on this thread, rather than left to whoever asks for it
 	   first: what makes it is not written for two askers at once, and from the
@@ -3313,9 +3324,6 @@ TIMER_START();
 	// them in the settings are the setup screen's own buffer, so nothing but
 	// this answers what a recording really starts and stops on.
 	coreapi::installRealRecordingSafetySource();
-	// Above the threads for the same reason, and below the store because a
-	// setting is applied only after it has reached the values.
-	registerSettingsAppliers();
 	// The size the box draws at, which is kept beside the settings rather than
 	// in them: the save writes that copy and not the member.
 	installOsdResolutionSource();
@@ -3445,14 +3453,11 @@ TIMER_START();
 	CFSMounter::automount();
 	// The interfaces are configured by the system before this program starts and the
 	// mounts above are what needed them.
-	coreapi::runPhase(coreapi::ApplyPhase::Network);
+	// The list is made first because the plugins group of this phase reads it, and it has to be
+	// read before the main menu, which shows the script menu only if at least one script exists.
 	g_Plugins = new CPlugins;
 	g_Plugins->setPluginDir(PLUGINDIR);
-	//load Pluginlist before main menu (only show script menu if at least one script is available
-	g_Plugins->loadPlugins();
-
-	// setup recording device
-	setupRecordingDevice();
+	coreapi::runPhase(coreapi::ApplyPhase::Network);
 
 	dprintf( DEBUG_NORMAL, "menue setup\n");
 	//init Menues
@@ -3478,7 +3483,6 @@ TIMER_START();
 	g_audioMute = CAudioMute::getInstance();
 
 	g_audioMute->AudioMute(current_muted, true);
-	CZapit::getInstance()->SetVolumePercent(g_settings.audio_volume_percent_ac3, g_settings.audio_volume_percent_pcm);
 	CVFD::getInstance()->setMuted(current_muted);
 	if (g_info.hw_caps->display_has_statusline)
 		CVFD::getInstance()->showVolume(g_settings.current_volume, false);
@@ -3518,30 +3522,18 @@ TIMER_START();
 
 	InitZapper();
 
-	CHDDDestExec * hdd = new CHDDDestExec();
-	hdd->exec(NULL, "");
-	delete hdd;
-
 	hintBox->hide(); // InitZapper also displays a hintbox
 	delete hintBox;
 
 	cCA::GetInstance()->Ready(true);
-#if HAVE_LIBSTB_HAL
-	cCA::GetInstance()->setCheckLiveSlot(g_settings.ci_check_live);
-#endif
 	//InitZapper();
 
-#if HAVE_ARM_HARDWARE
-	CPSISetup::getInstance()->blankScreen(false);
-#endif
 	SHTDCNT::getInstance()->init();
 
 #ifdef ENABLE_LCD4LINUX
 	if (g_settings.lcd4l_support)
 		CLCD4l::getInstance()->StartLCD4l();
 #endif
-
-	CZapit::getInstance()->SetScanSDT(g_settings.enable_sdt);
 
 	cSysLoad::getInstance();
 	cHddStat::getInstance();
@@ -3560,21 +3552,13 @@ TIMER_START();
 	CFileHelpers::createDir(WEBTVDIR_VAR);
 	CFileHelpers::createDir(PUBLIC_HTTPDDIR);
 
-	CWeather::getInstance()->setCoords(settingsText(g_settings.weather_location), settingsText(g_settings.weather_city));
-
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	videoDecoder->SetControl(VIDEO_CONTROL_ZAPPING_MODE, g_settings.zappingmode);
-	videoDecoder->SetHDMIColorimetry((HDMI_COLORIMETRY) g_settings.hdmi_colorimetry);
-#endif
+	// The weather group only learns at its phase; the first fetch is here, as it always was.
+	coreapi::fetchWeather();
 
 TIMER_STOP("################################## after all ##################################");
 
-	if (g_settings.softupdate_autocheck)
-		CFlashUpdateCheck::getInstance()->startThread();
-#if ENABLE_PKG_MANAGEMENT
-	if (g_settings.softupdate_autocheck_packages)
-		CUpdateCheckPackages::getInstance()->startThread();
-#endif
+	// Last of all, as before: the checks reach out over the network.
+	coreapi::startUpdateChecks();
 
 	xmltv_xml_readepg();
 	xmltv_xml_auto_readepg();
@@ -3637,31 +3621,12 @@ void CNeutrinoApp::showMainMenu()
 	StopSubtitles();
 	InfoClock->enableInfoClock(false);
 	InfoIcons->enableInfoIcons(false); //NI InfoIcons
-	int old_ttx = g_settings.cacheTXT;
-	int old_epg = g_settings.epg_scan;
-	int old_mode = g_settings.epg_scan_mode;
-	int old_save_mode = g_settings.epg_save_mode;
 	mainMenu->exec(NULL, "");
 	CVFD::getInstance()->UpdateIcons();
 	InfoClock->enableInfoClock(true);
 	InfoIcons->enableInfoIcons(true); //NI InfoIcons
 	StartSubtitles();
 	saveSetup(NEUTRINO_SETTINGS_FILE);
-
-	if (old_save_mode != g_settings.epg_save_mode)
-		CEpgScan::getInstance()->ConfigureEIT();
-	if (old_epg != g_settings.epg_scan || old_mode != g_settings.epg_scan_mode) {
-		if (g_settings.epg_scan_mode != EPG_SCAN_MODE_OFF)
-			CEpgScan::getInstance()->Start();
-		else
-			CEpgScan::getInstance()->Clear();
-	}
-	if (old_ttx != g_settings.cacheTXT) {
-		if(g_settings.cacheTXT) {
-			tuxtxt_init();
-		} else
-			tuxtxt_close();
-	}
 }
 
 void CNeutrinoApp::RealRun()
@@ -3692,6 +3657,7 @@ void CNeutrinoApp::RealRun()
 	CScreenSaver::getInstance()->resetIdleTime();
 
 	while( true ) {
+		setupWaitingFonts();
 #ifdef ENABLE_LUA
 		luaServer->UnBlock();
 #endif
@@ -4343,7 +4309,10 @@ void CNeutrinoApp::standbyToStandby(void)
 		g_Zapit->setStandby(true);
 		g_Sectionsd->setPauseScanning(true);
 		if (cpuFreq)
+		{
+			coreapi::holdCpuFreq(true);
 			cpuFreq->SetCpuFreq(g_settings.standby_cpufreq * 1000 * 1000);
+		}
 		tryDeferredDeepStandby();
 	}
 }
@@ -4814,12 +4783,12 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 	}
 	else if( msg == CRCInput::RC_analog_on ) {
 		g_settings.analog_out = 1;
-		audioDecoder->EnableAnalogOut(true);
+		applyKeyLogged("analog_out");
 		return messages_return::handled;
 	}
 	else if( msg == CRCInput::RC_analog_off ) {
 		g_settings.analog_out = 0;
-		audioDecoder->EnableAnalogOut(false);
+		applyKeyLogged("analog_out");
 		return messages_return::handled;
 	}
 	else if(( msg == CRCInput::RC_mode ) && g_settings.key_format_mode_active ) {
@@ -4897,6 +4866,9 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		/* should be sent when no record running */
 		printf("NeutrinoMessages::EVT_RECORDMODE: %s\n", ( data ) ? "on" : "off");
 		recordingstatus = data;
+		/* The recorder's flags were held back while a recording ran. */
+		if (!data)
+			coreapi::applyKey("recording_stopsectionsd");
 		CEpgScan::getInstance()->Next();
 		standbyToStandby();
 		autoshift = CRecordManager::getInstance()->TimeshiftOnly();
@@ -5126,6 +5098,12 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 			g_RCInput->postMsg(NeutrinoMessages::STANDBY_ON, 0);
 		return messages_return::handled;
 	}
+	else if (msg == NeutrinoMessages::EVT_SETTINGS_WRITTEN) {
+		// An open menu shows what was written instead of a copy it would write back.
+		settingsWrittenElsewhere(writtenKeys((const char *) data));
+		delete[] (unsigned char*) data;
+		return messages_return::handled;
+	}
 	else if (msg == NeutrinoMessages::APPLY_SETTINGS) {
 		// Settings written from outside, put into g_settings here because this
 		// is the thread that reads them, and saved in the same breath so that
@@ -5134,14 +5112,9 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::RELOAD_SETUP ) {
-		bool tmp1 = g_settings.make_hd_list;
-		bool tmp2 = g_settings.make_webtv_list;
-		bool tmp3 = g_settings.make_webradio_list;
-		loadSetup(NEUTRINO_SETTINGS_FILE);
-		if(tmp1 != g_settings.make_hd_list || tmp2 != g_settings.make_webtv_list || tmp3 != g_settings.make_webradio_list)
-			g_Zapit->reinitChannels();
-
-		SendSectionsdConfig();
+		/* The file may hold other values for anything; every group whose keys moved is
+		   put in force, and asks nothing, since nobody at the box asked for this. */
+		coreapi::settings::applyReplaced([this]() { loadSetup(NEUTRINO_SETTINGS_FILE); });
 		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::STANDBY_TOGGLE ) {
@@ -5540,9 +5513,12 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	printf("[neutrino] %s(int %d)\n", __func__, exit_code);
 	printf("[neutrino] hw_caps->can_shutdown: %d\n", g_info.hw_caps->can_shutdown);
 
+	// A setting's job left on the worker would meet what is stopped and deleted below.
+	coreapi::applyWorker().close();
+
 #ifdef ENABLE_LCD4LINUX
-	if (g_settings.lcd4l_support)
-		CLCD4l::getInstance()->StopLCD4l();
+	// A restart the close above gave up on cannot start the service again after this.
+	CLCD4l::getInstance()->Shutdown(g_settings.lcd4l_support != 0);
 #endif
 
 	//NI InfoIcons
@@ -5664,7 +5640,7 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	g_RCInput = NULL;
 
 	if (g_info.hw_caps->has_fan)
-		CFanControlNotifier::setSpeed(0);
+		CFanControl::setSpeed(0);
 
 	delete CVFD::getInstance();
 	delete SHTDCNT::getInstance();
@@ -5922,7 +5898,8 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 			fclose(f);
 
 #if BOXMODEL_E4HDULTRA
-		// ensure a blank screen in standby mode
+		// ensure a blank screen in standby mode, held so no write of a video setting undoes it
+		coreapi::holdVideoState(coreapi::VideoSent::ZappingMode, true);
 		videoDecoder->SetControl(VIDEO_CONTROL_ZAPPING_MODE, 2); // force mutetilllock
 #endif
 
@@ -5993,7 +5970,8 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 			INFO("woken to %s while the guide was being written, standby dropped",
 				neutrinoMode_to_string(mode));
 #if BOXMODEL_E4HDULTRA
-			videoDecoder->SetControl(VIDEO_CONTROL_ZAPPING_MODE, g_settings.zappingmode);
+			coreapi::holdVideoState(coreapi::VideoSent::ZappingMode, false);
+			applyKeyLogged("zappingmode");
 #endif
 #ifdef ENABLE_GRAPHLCD
 			cGLCD::Resume();
@@ -6013,6 +5991,9 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 		CVFD::getInstance()->Clear();
 		CVFD::getInstance()->setMode(CVFD::MODE_STANDBY);
 		CVFD::getInstance()->setBacklight(g_settings.backlight_standby);
+		// The panel keeps the standby backlight until the box wakes; the group must not put the TV one over it.
+		coreapi::holdVfdBacklight(true);
+		coreapi::cecStandby(true);
 
 		InfoClock->enableInfoClock(false);
 		InfoIcons->enableInfoIcons(false); //NI InfoIcons
@@ -6030,11 +6011,18 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 
 		bool alive = recordingstatus || CEpgScan::getInstance()->Running() || CStreamManager::getInstance()->StreamStatus();
 		if (!alive && cpuFreq)
+		{
+			// The standby clock is the box's own until it wakes, whatever a web write says.
+			coreapi::holdCpuFreq(true);
 			cpuFreq->SetCpuFreq(g_settings.standby_cpufreq * 1000 * 1000);
+		}
 
 		//fan speed
 		if (g_info.hw_caps->has_fan)
-			CFanControlNotifier::setSpeed(1);
+		{
+			coreapi::holdFanSpeed(true);
+			CFanControl::setSpeed(1);
+		}
 
 		if (g_InfoViewer->is_visible)
 			g_InfoViewer->killTitle();
@@ -6054,12 +6042,13 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 		powerManager->SetStandby(false, false);
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->ShowText("Resume ...");
-		if (cpuFreq)
-			cpuFreq->SetCpuFreq(g_settings.cpufreq * 1000 * 1000);
+		coreapi::holdCpuFreq(false);
+		applyKeyLogged("cpufreq");
 
 #if BOXMODEL_E4HDULTRA
 		// reset to users choice
-		videoDecoder->SetControl(VIDEO_CONTROL_ZAPPING_MODE, g_settings.zappingmode);
+		coreapi::holdVideoState(coreapi::VideoSent::ZappingMode, false);
+		applyKeyLogged("zappingmode");
 #endif
 
 		videoDecoder->Standby(false);
@@ -6073,12 +6062,10 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 		cGLCD::StandbyMode(false);
 #endif
 
-		if(init_cec_setting){
-			//init cec settings
-			CCECSetup cecsetup;
-			cecsetup.setCECSettings();
-			init_cec_setting = false;
-		}
+		// Also what a box woken for a recording kept from the television until now.
+		init_cec_setting = false;
+		if (coreapi::cecStandby(false) != coreapi::Status::Ok)
+			dprintf(DEBUG_NORMAL, "[neutrino] the CEC settings were not applied on waking\n");
 
 		if(!recordingstatus && g_settings.ci_standby_reset) {
 			g_CamHandler->exec(NULL, "ca_ci_reset0");
@@ -6088,12 +6075,13 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby)
 		frameBuffer->setActive(true);
 
 		//fan speed
-		if (g_info.hw_caps->has_fan)
-			CFanControlNotifier::setSpeed(g_settings.fan_speed);
+		coreapi::holdFanSpeed(false);
+		applyKeyLogged("fan_speed");
 
 		exec_controlscript(NEUTRINO_LEAVE_STANDBY_SCRIPT);
 
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
+		coreapi::holdVfdBacklight(false);
 		CVFD::getInstance()->setBacklight(g_settings.backlight_tv);
 		if (g_info.hw_caps->display_has_statusline)
 			CVFD::getInstance()->showVolume(g_settings.current_volume, false);
@@ -6326,6 +6314,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	else if (actionKey=="clock_switch")
 	{
 		InfoClock->switchClockOnOff();
+		// The flag moved past the group, which kept the value it last drew the clock with.
+		coreapi::forgetSentOsd(coreapi::OsdSent::InfoClock);
 		returnval = menu_return::RETURN_EXIT_ALL;
 	}
 	else if (actionKey=="tv_radio_switch")//used in mainmenu
@@ -6371,19 +6361,10 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 
 		saveSetup(NEUTRINO_SETTINGS_FILE);
 
-		if(g_settings.cacheTXT) {
-			tuxtxt_init();
-		} else
-			tuxtxt_close();
-
 		//g_Sectionsd->setEventsAreOldInMinutes((unsigned short) (g_settings.epg_old_hours*60));
 		//g_Sectionsd->setHoursToCache((unsigned short) (g_settings.epg_cache_days*24));
 
 		delete lh;
-	}
-	else if (actionKey=="recording")
-	{
-		setupRecordingDevice();
 	}
 	else if (actionKey=="reloadplugins")
 	{
@@ -6484,9 +6465,10 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 			CHint * hint = new CHint(LOCALE_SERVICEMENU_RESTART_HINT);
 			hint->paint();
 
+			coreapi::applyWorker().close();
+
 #ifdef ENABLE_LCD4LINUX
-			if (g_settings.lcd4l_support)
-				CLCD4l::getInstance()->StopLCD4l();
+			CLCD4l::getInstance()->Shutdown(g_settings.lcd4l_support != 0);
 #endif
 
 			saveSetup(NEUTRINO_SETTINGS_FILE);
@@ -6560,13 +6542,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 /**************************************************************************************
 *          changeNotify - features menu recording start / stop                        *
 **************************************************************************************/
-bool CNeutrinoApp::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
+bool CNeutrinoApp::changeNotify(const neutrino_locale_t /*OptionName*/, void * /*data*/)
 {
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_LANGUAGESETUP_SELECT))
-	{
-		g_Locale->loadLocale(g_settings.language.c_str());
-		return true;
-	}
 	return false;
 }
 
@@ -6581,6 +6558,7 @@ void CNeutrinoApp::stopDaemonsForFlash()
 void stop_daemons(bool stopall, bool for_flash)
 {
 	shutdown_in_progress = 1;
+	coreapi::applyWorker().close();
 	CMoviePlayerGui::getInstance().stopPlayBack();
 	if (for_flash)
 	{
@@ -6609,9 +6587,9 @@ void stop_daemons(bool stopall, bool for_flash)
 	tuxtxt_close();
 
 #ifdef ENABLE_LCD4LINUX
-	if (g_settings.lcd4l_support)
-		CLCD4l::getInstance()->StopLCD4l();
-	delete CLCD4l::getInstance();
+	/* Kept, not deleted: a job the close above gave up on may still reach it, and after a
+	   flash that failed the worker takes jobs again. */
+	CLCD4l::getInstance()->Shutdown(g_settings.lcd4l_support != 0);
 #endif
 #ifdef ENABLE_GRAPHLCD
 	cGLCD::Exit();
@@ -7246,8 +7224,6 @@ void CNeutrinoApp::Cleanup()
 	printf("cleanup g_Radiotext\n"); fflush(stdout);
 	delete g_Radiotext; g_Radiotext = NULL;
 
-	printf("cleanup audioSetupNotifier\n"); fflush(stdout);
-	delete audioSetupNotifier; audioSetupNotifier = NULL;
 
 	printf("cleanup TVbouquetList\n"); fflush(stdout);
 	delete TVbouquetList; TVbouquetList = NULL;

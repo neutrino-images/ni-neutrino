@@ -62,23 +62,13 @@ CPictureViewerSetup::~CPictureViewerSetup()
 
 }
 
-int CPictureViewerSetup::exec(CMenuTarget* parent, const std::string &actionKey)
+int CPictureViewerSetup::exec(CMenuTarget* parent, const std::string &/*actionKey*/)
 {
 	dprintf(DEBUG_DEBUG, "init pctureviwer setup\n");
 	int   res = menu_return::RETURN_REPAINT;
 
 	if (parent)
 		parent->hide();
-
-
-	if(actionKey == "picturedir")
-	{
-		CFileBrowser b;
-		b.Dir_Mode=true;
-		if (b.exec(g_settings.network_nfs_picturedir.c_str()))
-			setSettingsText(g_settings.network_nfs_picturedir, b.getSelectedFile()->Name);
-		return res;
-	}
 
 	res = showPictureViewerSetup();
 
@@ -95,12 +85,9 @@ int CPictureViewerSetup::showPictureViewerSetup()
 
 	addSetting(picviewsetup, "picviewer_scaling");
 
-	CMenuOptionNumberChooser *cc = static_cast<CMenuOptionNumberChooser *>(addSetting(picviewsetup, "picviewer_slide_time"));
-	cc->setNumberFormat(std::string("%d ") + g_Locale->getText(LOCALE_UNIT_SHORT_SECOND));
+	addSetting(picviewsetup, "picviewer_slide_time");
 
-	CMenuForwarder *mf = new CMenuForwarder(LOCALE_PICTUREVIEWER_DEFDIR, true, g_settings.network_nfs_picturedir, this, "picturedir");
-	mf->setHint("", LOCALE_MENU_HINT_PICTUREVIEWER_DEFDIR);
-	picviewsetup->addItem(mf);
+	addSetting(picviewsetup, "network_nfs_picturedir");
 
 	int res = picviewsetup->exec(NULL, "");
 	delete picviewsetup;

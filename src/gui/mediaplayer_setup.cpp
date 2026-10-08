@@ -127,16 +127,11 @@ int CMediaPlayerSetup::showMediaPlayerSetup()
 
 	addSetting(mediaSetup, "movieplayer_display_playtime");
 
-	CMenuOptionChooser *mc;
-	mc = new CMenuOptionChooser(LOCALE_MOVIEPLAYER_TIMEOSD_WHILE_SEARCHING, &g_settings.movieplayer_timeosd_while_searching, OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	mc->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_TIMEOSD_WHILE_SEARCHING);
-	mediaSetup->addItem(mc);
+	addSetting(mediaSetup, "movieplayer_timeosd_while_searching");
 
 	mediaSetup->addItem(GenericMenuSeparator);
 
-	CMenuOptionNumberChooser *ef = new CMenuOptionNumberChooser(LOCALE_MOVIEPLAYER_EOF_CNT, &g_settings.movieplayer_eof_cnt, true, 1, 10, NULL);
-//	ef->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_EOF_CNT);
-	mediaSetup->addItem(ef);
+	addSetting(mediaSetup, "movieplayer_eof_cnt");
 
 	int res = mediaSetup->exec(NULL, "");
 	selected = mediaSetup->getSelected();

@@ -85,7 +85,9 @@ constexpr Descriptor kUpdate[] =
 		.field(COREAPI_NUMBER_FIELD(softupdate_autocheck_packages)),
 #endif
 	/* Used only by the extended update; the struct and the loader carry all three
-	   in every build, so the rows are unconditional. */
+	   in every build. The first family of box has its own way to apply settings and
+	   its screen leaves these two out. */
+#ifndef BOXMODEL_CST_HD2
 	boolRow("apply_settings")
 		.section("update")
 		.label("flashupdate.menu_apply_settings")
@@ -98,6 +100,7 @@ constexpr Descriptor kUpdate[] =
 		.values(kNameModeApply)
 		.changeableWhen(kApplyingSettings)
 		.field(COREAPI_NUMBER_FIELD(softupdate_name_mode_apply)),
+#endif
 	enumRow("softupdate_name_mode_backup")
 		.section("update")
 		.label("flashupdate.namemode2")

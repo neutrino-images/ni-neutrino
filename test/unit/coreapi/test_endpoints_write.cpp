@@ -640,6 +640,26 @@ std::string plainKeyIn(const char *section)
 	return std::string();
 }
 
+// A text row that takes any text: a list or a rule would refuse what the case sends.
+bool freeTextRow(std::string &section, std::string &key)
+{
+	coreapi::Result<std::vector<coreapi::Descriptor> > got = coreapi::settings::schema();
+	REQUIRE(got.ok());
+	const std::vector<coreapi::Descriptor> rows = std::move(got).value();
+	for (size_t i = 0; i < rows.size(); ++i)
+	{
+		const coreapi::Descriptor &d = rows[i];
+		if (d.section == NULL || d.secret || d.type != coreapi::ValueType::String)
+			continue;
+		if (d.choices_from != NULL || d.text != NULL)
+			continue;
+		section = d.section;
+		key = d.key;
+		return true;
+	}
+	return false;
+}
+
 std::string messageOfBytes(size_t n)
 {
 	std::string out = "{\"text\":\"";
@@ -1289,7 +1309,7 @@ const coreapi::Descriptor kFanRow[] =
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  fixtureFan, NULL, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 };
 } // namespace
@@ -1416,20 +1436,79 @@ TEST_CASE("a setting whose controller is refused for its value is refused too", 
 	}
 }
 
-TEST_CASE("two settings whose new values refuse each other both stay as they were", "[write]")
+/* The two icon settings are judged on the pair a write leaves, not on their conditions, which
+   only grey the menu: a client that sends only the row it changed has to keep working. */
+TEST_CASE("the infobar icon settings are judged on the pair they leave", "[write]")
 {
 	ShippedRoutes shipped;
 	BoxFixture box;
-	box.store.ints["mode_icons"] = 0;
-	box.store.ints["mode_icons_skin"] = INFOICONS_INFOVIEWER;
 
-	const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons\":\"1\",\"mode_icons_skin\":\"0\"}");
-	REQUIRE(r.code == 207);
-	const ::Json::Value results = parsed(r.body)["results"];
-	REQUIRE(results["mode_icons"]["code"].asString() == "setting-condition-not-met");
-	REQUIRE(results["mode_icons_skin"]["code"].asString() == "setting-condition-not-met");
-	REQUIRE(box.store.ints["mode_icons"] == 0);
-	REQUIRE(box.store.ints["mode_icons_skin"] == INFOICONS_INFOVIEWER);
+	SECTION("both, from the infoviewer skin to icons on")
+	{
+		box.store.ints["mode_icons"] = 0;
+		box.store.ints["mode_icons_skin"] = INFOICONS_INFOVIEWER;
+		const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons\":\"1\",\"mode_icons_skin\":\"0\"}");
+		REQUIRE(r.code == 200);
+		REQUIRE(box.store.ints["mode_icons"] == 1);
+		REQUIRE(box.store.ints["mode_icons_skin"] == INFOICONS_STATIC);
+	}
+	SECTION("the skin alone while the icons are on")
+	{
+		box.store.ints["mode_icons"] = 1;
+		box.store.ints["mode_icons_skin"] = INFOICONS_STATIC;
+		const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons_skin\":\"2\"}");
+		REQUIRE(r.code == 200);
+		REQUIRE(box.store.ints["mode_icons"] == 1);
+		REQUIRE(box.store.ints["mode_icons_skin"] == INFOICONS_POPUP);
+	}
+	SECTION("the icons alone, off")
+	{
+		box.store.ints["mode_icons"] = 1;
+		box.store.ints["mode_icons_skin"] = INFOICONS_POPUP;
+		const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons\":\"0\"}");
+		REQUIRE(r.code == 200);
+		REQUIRE(box.store.ints["mode_icons"] == 0);
+		REQUIRE(box.store.ints["mode_icons_skin"] == INFOICONS_POPUP);
+	}
+	SECTION("the icons alone, on over the infoviewer skin")
+	{
+		box.store.ints["mode_icons"] = 0;
+		box.store.ints["mode_icons_skin"] = INFOICONS_INFOVIEWER;
+		const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons\":\"1\"}");
+		REQUIRE(r.code == 409);
+		REQUIRE(r.body.find("setting-condition-not-met") != std::string::npos);
+		REQUIRE(box.store.ints["mode_icons"] == 0);
+	}
+	SECTION("the skin alone, infoviewer under icons that are on")
+	{
+		box.store.ints["mode_icons"] = 1;
+		box.store.ints["mode_icons_skin"] = INFOICONS_STATIC;
+		const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons_skin\":\"1\"}");
+		REQUIRE(r.code == 409);
+		REQUIRE(r.body.find("setting-condition-not-met") != std::string::npos);
+		REQUIRE(box.store.ints["mode_icons_skin"] == INFOICONS_STATIC);
+	}
+	SECTION("both, into the one pair that is refused")
+	{
+		box.store.ints["mode_icons"] = 0;
+		box.store.ints["mode_icons_skin"] = INFOICONS_STATIC;
+		const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons\":\"1\",\"mode_icons_skin\":\"1\"}");
+		REQUIRE(r.code == 207);
+		const ::Json::Value results = parsed(r.body)["results"];
+		REQUIRE(results["mode_icons"]["code"].asString() == "setting-condition-not-met");
+		REQUIRE(results["mode_icons_skin"]["code"].asString() == "setting-condition-not-met");
+		REQUIRE(box.store.ints["mode_icons"] == 0);
+		REQUIRE(box.store.ints["mode_icons_skin"] == INFOICONS_STATIC);
+	}
+	SECTION("a refused pair already stored, written back unchanged")
+	{
+		box.store.ints["mode_icons"] = 1;
+		box.store.ints["mode_icons_skin"] = INFOICONS_INFOVIEWER;
+		const Reply r = authedPatch("/api/v1/settings/osd", "{\"mode_icons\":\"1\",\"mode_icons_skin\":\"1\"}");
+		REQUIRE(r.code == 200);
+		REQUIRE(box.store.ints["mode_icons"] == 1);
+		REQUIRE(box.store.ints["mode_icons_skin"] == INFOICONS_INFOVIEWER);
+	}
 }
 
 namespace
@@ -1447,14 +1526,14 @@ const coreapi::Descriptor kKeyAndService[] =
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  NULL, NULL, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"fixture_service", coreapi::ValueType::Bool, "fixture", NULL, NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kFixtureKeyValid),
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  NULL, NULL, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 };
 } // namespace
@@ -2169,13 +2248,14 @@ TEST_CASE("a settings value that cannot be answered back is not stored", "[write
 	ShippedRoutes shipped;
 	BoxFixture box;
 
-	const std::string plain = plainKeyIn("network");
-	REQUIRE_FALSE(plain.empty());
+	std::string section, plain;
+	REQUIRE(freeTextRow(section, plain));
+	const std::string route = "/api/v1/settings/" + section;
 	box.store.strings[plain] = "before";
 
 	// Two bytes that begin no sequence there is, between two that are text.
 	const std::string bad = "{\"" + plain + "\":\"a\xff\xfe b\"}";
-	const Reply r = authedPatch("/api/v1/settings/network", bad);
+	const Reply r = authedPatch(route, bad);
 	REQUIRE(r.code == 400);
 	REQUIRE(r.body.find("bad-string") != std::string::npos);
 	REQUIRE(box.store.strings[plain] == "before");
@@ -2183,14 +2263,14 @@ TEST_CASE("a settings value that cannot be answered back is not stored", "[write
 	// Text above the first hundred and twenty eight characters is still text
 	// and is still stored, so the refusal is about what cannot be read and not
 	// about what is not plain.
-	const Reply fine = authedPatch("/api/v1/settings/network",
+	const Reply fine = authedPatch(route,
 	                               "{\"" + plain + "\":\"\xc3\xa4\xe2\x82\xac\"}");
 	REQUIRE(fine.code == 200);
 	REQUIRE(box.store.strings[plain] == "\xc3\xa4\xe2\x82\xac");
 
 	// And what is stored reads back as what was sent, which is the round trip
 	// that did not settle before.
-	REQUIRE(valueOf(authedGet("/api/v1/settings/network").body, plain) == "\xc3\xa4\xe2\x82\xac");
+	REQUIRE(valueOf(authedGet(route).body, plain) == "\xc3\xa4\xe2\x82\xac");
 }
 
 TEST_CASE("the wait after a wrong guess grows and stops growing", "[write]")
@@ -3852,5 +3932,125 @@ TEST_CASE("the body examples of the routes that write files are requests those r
 		c.password_hash = hashSecret("ni", 2000);
 		setConfigForTest(c);
 		REQUIRE(sendBodyExample("POST", "/api/v1/login", std::map<std::string, std::string>()) == 200);
+	}
+}
+
+TEST_CASE("a write a condition refuses names the settings it depends on, alone and per key", "[write][depends]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.store.ints["epg_save"] = 0;
+	box.store.ints["epg_read"] = 0;
+
+	const Reply one = authedPatch("/api/v1/settings/misc", "{\"epg_dir\":\"/usr\"}");
+	REQUIRE(one.code == 409);
+	// Its condition is a group, either of the two on, so both are named.
+	const ::Json::Value problem = parsed(one.body);
+	REQUIRE(problem["depends_on"].isArray());
+	REQUIRE(problem["depends_on"].size() == 2);
+	CHECK(problem["depends_on"][0].asString() == "epg_save");
+	CHECK(problem["depends_on"][1].asString() == "epg_read");
+	CHECK(problem["detail"].asString().find("epg_save, epg_read") != std::string::npos);
+
+	const Reply both = authedPatch("/api/v1/settings/misc", "{\"epg_dir\":\"/usr\",\"epg_save\":\"5\"}");
+	REQUIRE(both.code == 207);
+	const ::Json::Value results = parsed(both.body)["results"];
+	REQUIRE(results["epg_dir"]["depends_on"].size() == 2);
+	CHECK(results["epg_dir"]["depends_on"][0].asString() == "epg_save");
+	// Only the condition refusal carries the member.
+	CHECK_FALSE(results["epg_save"].isMember("depends_on"));
+
+	const Reply against = authedPatch("/api/v1/settings/misc", "{\"epg_save\":\"1\",\"epg_read\":\"0\"}");
+	REQUIRE(against.code == 207);
+	const ::Json::Value pair = parsed(against.body)["results"];
+	CHECK(pair["epg_save"]["depends_on"][0].asString() == "epg_read");
+	CHECK(pair["epg_read"]["depends_on"][0].asString() == "epg_save");
+}
+
+TEST_CASE("a start channel is written by its identifier and the name comes from the channel list", "[write][startchannel]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	box.store.ints["uselastchannel"] = 0;
+	box.store.strings["startchanneltv_id"] = "0";
+	box.store.strings["startchanneltv"] = "";
+
+	const Reply r = authedPatch("/api/v1/settings/channel", "{\"startchanneltv_id\":\"2b66\"}");
+	REQUIRE(r.code == 200);
+	CHECK(box.store.strings["startchanneltv"] == "the one");
+
+	const Reply lost = authedPatch("/api/v1/settings/channel", "{\"startchanneltv_id\":\"abc\"}");
+	REQUIRE(lost.code == 404);
+	CHECK(lost.body.find("no-such-channel") != std::string::npos);
+	CHECK(box.store.strings["startchanneltv"] == "the one");
+
+	box.channels.channels_status = coreapi::Status::Internal;
+	const Reply unread = authedPatch("/api/v1/settings/channel", "{\"startchanneltv_id\":\"abc\"}");
+	REQUIRE(unread.code == 500);
+	CHECK(unread.body.find("channel-list-unavailable") != std::string::npos);
+	box.channels.channels_status = coreapi::Status::Ok;
+
+	const Reply name = authedPatch("/api/v1/settings/channel", "{\"startchanneltv\":\"ZDF\"}");
+	REQUIRE(name.code == 409);
+	CHECK(parsed(name.body)["depends_on"][0].asString() == "startchanneltv_id");
+}
+
+TEST_CASE("the schema states the pairs and the start channel lists as data", "[write][startchannel]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	const ::Json::Value items = parsed(authedGet("/api/v1/settings/schema?section=channel").body)["items"];
+	size_t seen = 0;
+	for (Json::Value::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		const std::string id = items[i]["id"].asString();
+		if (id.compare(0, 12, "startchannel") != 0)
+			continue;
+		++seen;
+		INFO(id);
+		const bool is_id = id.size() > 3 && id.compare(id.size() - 3, 3, "_id") == 0;
+		CHECK(items[i]["pair"].asString() == (is_id ? id.substr(0, id.size() - 3) : id + "_id"));
+		CHECK(items[i]["pair_writes"].asString() == "id");
+		CHECK(items[i]["channel_kind"].asString() == (id.find("radio") != std::string::npos ? "radio" : "tv"));
+	}
+	CHECK(seen == 4);
+	CHECK_FALSE(items[0u].isMember("pair"));
+
+	const ::Json::Value weather = parsed(authedGet("/api/v1/settings/schema?section=weather").body)["items"];
+	size_t halves = 0;
+	for (Json::Value::ArrayIndex i = 0; i < weather.size(); ++i)
+	{
+		if (!weather[i].isMember("pair"))
+			continue;
+		++halves;
+		CHECK(weather[i]["pair_writes"].asString() == "both");
+		CHECK_FALSE(weather[i].isMember("channel_kind"));
+	}
+	CHECK(halves == 2);
+}
+
+TEST_CASE("a write of one key is refused with the code its value earns", "[write][refusals]")
+{
+	ShippedRoutes shipped;
+	BoxFixture box;
+	struct P { const char *path; std::string body; bool fail_read; bool fail_write; int code; const char *type; };
+	const std::string longText(5000, 'a');
+	const P ps[] = {
+		{ "/api/v1/settings/channel", "{\"livestreamScriptPath\":\"a#b\"}", false, false, 400, "bad-string" },
+		{ "/api/v1/settings/channel", "{\"webtv_stream_restart_attempts\":\"on\"}", false, false, 400, "not-a-number" },
+		{ "/api/v1/settings/channel", "{\"livestreamResolution\":\"1234\"}", false, false, 400, "not-a-listed-value" },
+		{ "/api/v1/settings/channel", "{\"livestreamScriptPath\":\"" + longText + "\"}", false, false, 400, "value-too-long" },
+		{ "/api/v1/settings/channel", "{\"livestreamScriptPath\":\"a\\u0000b\"}", false, false, 400, "value-has-zero-byte" },
+		{ "/api/v1/settings/channel", "{\"webtv_stream_restart_attempts\":\"2\"}", false, true, 500, "setting-not-written" },
+		{ "/api/v1/settings/misc", "{\"usermenu\":\"x\"}", true, false, 500, "setting-unreadable" },
+	};
+	for (size_t i = 0; i < sizeof(ps) / sizeof(ps[0]); ++i)
+	{
+		INFO(ps[i].type);
+		box.store.fail_next = ps[i].fail_read;
+		box.store.fail_next_write = ps[i].fail_write;
+		const Reply r = authedPatch(ps[i].path, ps[i].body);
+		CHECK(r.code == ps[i].code);
+		CHECK(parsed(r.body)["type"].asString() == std::string("/errors/") + ps[i].type);
 	}
 }

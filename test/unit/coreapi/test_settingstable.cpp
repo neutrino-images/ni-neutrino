@@ -70,12 +70,12 @@ const Descriptor kSound[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kOnRow), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	}
 };
 
@@ -84,12 +84,12 @@ const Descriptor kDangling[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kOnNothing), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	}
 };
 
@@ -121,12 +121,12 @@ const Descriptor kDanglingInGroup[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kInGroup), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	}
 };
 
@@ -135,22 +135,22 @@ const Descriptor kWrongKind[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"fixture_text", ValueType::String, "fixture", "fixture.text", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kTextOfNumber), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	},
 	{
 		"fixture_other", ValueType::Int, "fixture", "fixture.other", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kNumberOfText), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	}
 };
 
@@ -228,12 +228,12 @@ WHEN_ENUM(kWhenWrongKind, kTextOfNumber);
 		{ \
 			"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL, \
 			0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, \
-			NULL, NULL, NULL, NULL, NULL, NULL, NULL \
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL \
 		}, \
 		{ \
 			"fixture_choice", ValueType::Enum, "fixture", "fixture.choice", NULL, \
 			0, 0, COREAPI_VALUES(list), 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, \
-			NULL, NULL, NULL, NULL, NULL, NULL, NULL \
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL \
 		} \
 	}
 WHEN_TABLE(kWhenSoundTable, kWhenSound);
@@ -597,8 +597,8 @@ namespace
 bool builderBoxHas() { return true; }
 bool builderEntryOffered() { return true; }
 long builderDefault() { return 3; }
-long builderLow() { return 1; }
-long builderHigh() { return 9; }
+long builderLow(const ValueLookup *) { return 1; }
+long builderHigh(const ValueLookup *) { return 9; }
 bool builderChoices(std::vector<SettingChoice> &) { return true; }
 
 constexpr long kBuilderModes[] = { 1, 2 };
@@ -662,9 +662,10 @@ bool sameDescriptor(const Descriptor &a, const Descriptor &b)
 	       a.value_count == b.value_count && a.default_int == b.default_int &&
 	       a.default_string == b.default_string && a.needs_restart == b.needs_restart && a.secret == b.secret &&
 	       a.conditions == b.conditions && a.condition_count == b.condition_count && sameField(a.field, b.field) &&
-	       a.unit_key == b.unit_key && a.format_key == b.format_key && a.text == b.text &&
+	       a.unit_key == b.unit_key && a.text == b.text &&
 	       a.choices_from == b.choices_from && a.min_now == b.min_now && a.max_now == b.max_now &&
-	       a.default_fn == b.default_fn;
+	       a.default_fn == b.default_fn && a.read_outside == b.read_outside &&
+	       (a.menu_label_key == NULL ? std::string() : a.menu_label_key) == (b.menu_label_key == NULL ? std::string() : b.menu_label_key);
 }
 
 bool sameCondition(const Condition &a, const Condition &b)
@@ -688,8 +689,8 @@ bool sameEntry(const EnumValue &a, const EnumValue &b)
 // which a pointer comparison cannot say for two literals.
 bool sameRowText(const Descriptor &a, const Descriptor &b)
 {
-	const char *x[] = { a.key, a.section, a.label_key, a.hint_key, a.default_string, a.unit_key, a.format_key };
-	const char *y[] = { b.key, b.section, b.label_key, b.hint_key, b.default_string, b.unit_key, b.format_key };
+	const char *x[] = { a.key, a.section, a.label_key, a.hint_key, a.default_string, a.unit_key };
+	const char *y[] = { b.key, b.section, b.label_key, b.hint_key, b.default_string, b.unit_key };
 	for (size_t i = 0; i < sizeof(x) / sizeof(x[0]); ++i)
 	{
 		if ((x[i] == NULL) != (y[i] == NULL) || (x[i] != NULL && std::string(x[i]) != y[i]))
@@ -702,7 +703,7 @@ bool sameRowText(const Descriptor &a, const Descriptor &b)
 // held to each other with the text members blanked once they have been compared.
 Descriptor withoutText(Descriptor d)
 {
-	d.key = d.section = d.label_key = d.hint_key = d.default_string = d.unit_key = d.format_key = NULL;
+	d.key = d.section = d.label_key = d.hint_key = d.default_string = d.unit_key = NULL;
 	d.field.name = NULL;
 	return d;
 }
@@ -737,6 +738,7 @@ TEST_CASE("a row built by name is the one written by position", "[settingstable]
 	const Descriptor built = intRow("builder_row")
 		.section("builder")
 		.label("builder.label")
+		.menuLabel("builder.menu")
 		.hint("builder.hint")
 		.range(1, 9)
 		.defaultValue(2)
@@ -748,6 +750,7 @@ TEST_CASE("a row built by name is the one written by position", "[settingstable]
 		.minNow(builderLow)
 		.maxNow(builderHigh)
 		.needsRestart()
+		.readOutside()
 		.secret()
 		.changeableWhen(kBuilderConditions)
 		.availableIf(builderBoxHas)
@@ -756,8 +759,8 @@ TEST_CASE("a row built by name is the one written by position", "[settingstable]
 	Descriptor by_position = {
 		"builder_row", ValueType::Int, "builder", "builder.label", "builder.hint", 1, 9,
 		kBuilderEntries, 3, 2, NULL, true, true, kBuilderConditions, 9,
-		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", NULL, &kBuilderRule, builderChoices, builderLow,
-		builderHigh, builderDefault
+		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", &kBuilderRule, builderChoices, builderLow,
+		builderHigh, builderDefault, true, "builder.menu"
 	};
 	by_position.field.available = builderBoxHas;
 
@@ -794,20 +797,20 @@ TEST_CASE("the kinds of row start from the bounds and defaults their kind has", 
 	CHECK(none.field.available == NULL);
 }
 
-TEST_CASE("the single-bound, format and default calls each set their own member", "[settingstable][builders]")
+TEST_CASE("the single-bound, unit and default calls each set their own member", "[settingstable][builders]")
 {
 	const Descriptor number = intRow("builder_number")
 		.section("builder")
 		.label("builder.label")
 		.min(-4)
 		.max(40)
-		.format("builder.format")
+		.unit("builder.unit")
 		.defaultValue(7L)
 		.field(COREAPI_NUMBER_FIELD(auto_lang));
 	const Descriptor number_by_position = {
 		"builder_number", ValueType::Int, "builder", "builder.label", NULL, -4, 40,
 		NULL, 0, 7, NULL, false, false, NULL, 0,
-		COREAPI_NUMBER_FIELD(auto_lang), NULL, "builder.format", NULL, NULL, NULL, NULL, NULL
+		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", NULL, NULL, NULL, NULL, NULL, false, NULL
 	};
 	CHECK(sameRowText(number, number_by_position));
 	CHECK(sameDescriptor(withoutText(number), withoutText(number_by_position)));
@@ -820,7 +823,7 @@ TEST_CASE("the single-bound, format and default calls each set their own member"
 	const Descriptor words_by_position = {
 		"builder_text", ValueType::String, "builder", "builder.label", NULL, 0, 0,
 		NULL, 0, 0, "fallback", false, false, NULL, 0,
-		COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, NULL
+		COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 	};
 	CHECK(sameRowText(words, words_by_position));
 	CHECK(sameDescriptor(withoutText(words), withoutText(words_by_position)));
@@ -852,43 +855,49 @@ TEST_CASE("every shipped row names a section, and a row with a hint names a labe
    bare number on every screen that draws it. */
 TEST_CASE("every number row that shows a unit says which, and nothing else carries one", "[settingstable][units]")
 {
-	static const struct { const char *key; const char *unit; const char *format; } kExpected[] = {
-		{ "audio_volume_percent_ac3", "unit.short.percent", NULL },
-		{ "audio_volume_percent_pcm", "unit.short.percent", NULL },
-		{ "picviewer_slide_time", "unit.short.second", NULL },
-		{ "repeat_genericblocker", "unit.short.millisecond", NULL },
-		{ "repeat_blocker", "unit.short.millisecond", NULL },
-		{ "longkeypress_duration", "unit.short.millisecond", NULL },
-		{ "movieplayer_bisection_jump", "unit.short.minute", NULL },
-		{ "record_hours", "unit.short.hour", NULL },
-		{ "recording_fill_warning", "unit.short.percent", NULL },
+	static const struct { const char *key; const char *unit; } kExpected[] = {
+		{ "audio_volume_percent_ac3", "unit.short.percent" },
+		{ "audio_volume_percent_pcm", "unit.short.percent" },
+		{ "picviewer_slide_time", "unit.short.second" },
+		{ "repeat_genericblocker", "unit.short.millisecond" },
+		{ "repeat_blocker", "unit.short.millisecond" },
+		{ "longkeypress_duration", "unit.short.millisecond" },
+		{ "movieplayer_bisection_jump", "unit.short.minute" },
+		{ "record_hours", "unit.short.hour" },
+		{ "recording_fill_warning", "unit.short.percent" },
 		// The two the table carries only where the settings struct has the fields.
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-		{ "recording_bufsize", "unit.short.megabyte", NULL },
-		{ "recording_bufsize_dmx", "unit.short.megabyte", NULL },
+		{ "recording_bufsize", "unit.short.megabyte" },
+		{ "recording_bufsize_dmx", "unit.short.megabyte" },
 #endif
-		{ "zapto_pre_time", "unit.short.minute", NULL },
-		{ "record_safety_time_before", "unit.short.minute", NULL },
-		{ "record_safety_time_after", "unit.short.minute", NULL },
-		{ "timeshift_hours", "unit.short.hour", NULL },
-		{ "timeshift_auto", NULL, "format.after_second" },
-		{ "font_scaling_x", "unit.short.percent", NULL },
-		{ "font_scaling_y", "unit.short.percent", NULL },
-		{ "screensaver_delay", "unit.short.minute", NULL },
-		{ "screensaver_timeout", "unit.short.second", NULL },
+		{ "zapto_pre_time", "unit.short.minute" },
+		{ "record_safety_time_before", "unit.short.minute" },
+		{ "record_safety_time_after", "unit.short.minute" },
+		{ "timeshift_hours", "unit.short.hour" },
+		{ "timeshift_auto", "unit.short.second" },
+		{ "shutdown_count", "unit.short.minute" },
+		{ "epg_extendedcache_time", "unit.short.hour" },
+		{ "epg_old_events", "unit.short.hour" },
+		{ "font_scaling_x", "unit.short.percent" },
+		{ "font_scaling_y", "unit.short.percent" },
+		{ "screensaver_delay", "unit.short.minute" },
+		{ "screensaver_timeout", "unit.short.second" },
+		{ "progressbar_timescale_red", "unit.short.percent" },
+		{ "progressbar_timescale_green", "unit.short.percent" },
+		{ "progressbar_timescale_yellow", "unit.short.percent" },
 		// The display times of the screens, one row to each element of the timing array.
-		{ "timing.menu", "unit.short.second", NULL },
-		{ "timing.chanlist", "unit.short.second", NULL },
-		{ "timing.epg", "unit.short.second", NULL },
-		{ "timing.volumebar", "unit.short.second", NULL },
-		{ "timing.filebrowser", "unit.short.second", NULL },
-		{ "timing.numericzap", "unit.short.second", NULL },
-		{ "timing.popup_messages", "unit.short.second", NULL },
-		{ "timing.static_messages", "unit.short.second", NULL },
-		{ "timing.infobar_tv", "unit.short.second", NULL },
-		{ "timing.infobar_radio", "unit.short.second", NULL },
-		{ "timing.infobar_media_audio", "unit.short.second", NULL },
-		{ "timing.infobar_media_video", "unit.short.second", NULL },
+		{ "timing.menu", "unit.short.second" },
+		{ "timing.chanlist", "unit.short.second" },
+		{ "timing.epg", "unit.short.second" },
+		{ "timing.volumebar", "unit.short.second" },
+		{ "timing.filebrowser", "unit.short.second" },
+		{ "timing.numericzap", "unit.short.second" },
+		{ "timing.popup_messages", "unit.short.second" },
+		{ "timing.static_messages", "unit.short.second" },
+		{ "timing.infobar_tv", "unit.short.second" },
+		{ "timing.infobar_radio", "unit.short.second" },
+		{ "timing.infobar_media_audio", "unit.short.second" },
+		{ "timing.infobar_media_video", "unit.short.second" },
 	};
 	const size_t n = sizeof(kExpected) / sizeof(kExpected[0]);
 
@@ -897,11 +906,9 @@ TEST_CASE("every number row that shows a unit says which, and nothing else carri
 	{
 		const Descriptor &d = settingsTable()[i];
 		INFO("row " << d.key);
-		const bool carries = d.unit_key != NULL || d.format_key != NULL;
+		const bool carries = d.unit_key != NULL;
 		if (carries)
 			CHECK(d.type == ValueType::Int);
-		const bool both = d.unit_key != NULL && d.format_key != NULL;
-		CHECK_FALSE(both);
 
 		bool listed = false;
 		for (size_t j = 0; j < n; ++j)
@@ -910,12 +917,8 @@ TEST_CASE("every number row that shows a unit says which, and nothing else carri
 				continue;
 			listed = true;
 			++seen;
-			REQUIRE((d.unit_key == NULL) == (kExpected[j].unit == NULL));
-			REQUIRE((d.format_key == NULL) == (kExpected[j].format == NULL));
-			if (kExpected[j].unit != NULL)
-				CHECK(std::string(d.unit_key) == kExpected[j].unit);
-			if (kExpected[j].format != NULL)
-				CHECK(std::string(d.format_key) == kExpected[j].format);
+			REQUIRE(d.unit_key != NULL);
+			CHECK(std::string(d.unit_key) == kExpected[j].unit);
 		}
 		CHECK(carries == listed);
 	}

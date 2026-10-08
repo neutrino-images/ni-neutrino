@@ -26,6 +26,7 @@
 #include <config.h>
 #endif
 
+#include <mutex>
 #include <string>
 #include <time.h>
 #include <vector>
@@ -86,12 +87,19 @@ class CWeather
 		bool GetWeatherDetails();
 		time_t last_time;
 		std::string getDirectionString(int degree);
+		/* The worker that fetches, the two display threads and the loop all read and
+		   write the members; never held across a fetch. */
+		std::mutex mutex;
+		// A copy of entry i, clamped to the last one, or an empty one when there is none.
+		forecast_data forecastAt(int i);
 
 	public:
 		static CWeather *getInstance();
 		CWeather();
 		~CWeather();
 		void updateApi();
+		// For a caller that is not the loop and so has read the settings itself.
+		void updateApi(const std::string &new_key, const std::string &new_api);
 		bool checkUpdate(bool forceUpdate = false);
 		void setCoords(std::string new_coords, std::string new_city = "Unknown");
 		bool FindCoords(std::string postalcode, std::string country = "DE");
@@ -99,6 +107,7 @@ class CWeather
 		// globals
 		std::string getCity()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return city;
 		};
 
@@ -111,93 +120,91 @@ class CWeather
 #endif
 		time_t getCurrentTimestamp()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return current.timestamp;
 		};
 		std::string getCurrentTemperature()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return to_string((int)(current.temperature + 0.5));
 		};
 		std::string getCurrentHumidity()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return to_string((int)(current.humidity * 100.0));
 		};
 		std::string getCurrentPressure()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return to_string(current.pressure);
 		};
 		std::string getCurrentWindSpeed()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return to_string(current.windSpeed);
 		};
 		std::string getCurrentWindBearing()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return to_string(current.windBearing);
 		};
 		std::string getCurrentWindDirection()
 		{
-			return getDirectionString(current.windBearing);
+			int bearing;
+			{
+				std::lock_guard<std::mutex> g(mutex);
+				bearing = current.windBearing;
+			}
+			return getDirectionString(bearing);
 		};
 		std::string getCurrentIcon()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return ICONSDIR"/weather/" + current.icon;
 		};
 		std::string getCurrentIconOnlyName()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return current.icon_only_name;
 		};
 
 		// forecast conditions
 		int getForecastSize()
 		{
+			std::lock_guard<std::mutex> g(mutex);
 			return (int)v_forecast.size();
 		};
 		int getForecastWeekday(int i = 0)
 		{
-			if (i > (int)v_forecast.size())
-				i = (int)v_forecast.size();
-			return v_forecast[i].weekday;
+			return forecastAt(i).weekday;
 		};
 		std::string getForecastTemperatureMin(int i = 0)
 		{
-			if (i > (int)v_forecast.size())
-				i = (int)v_forecast.size();
-			return to_string((int)(v_forecast[i].temperatureMin + 0.5));
+			return to_string((int)(forecastAt(i).temperatureMin + 0.5));
 		};
 		std::string getForecastTemperatureMax(int i = 0)
 		{
-			if (i > (int)v_forecast.size())
-				i = (int)v_forecast.size();
-			return to_string((int)(v_forecast[i].temperatureMax + 0.5));
+			return to_string((int)(forecastAt(i).temperatureMax + 0.5));
 		};
 		std::string getForecastWindSpeed(int i = 0)
 		{
-			if (i > (int)v_forecast.size())
-				i = (int)v_forecast.size();
-			return to_string(v_forecast[i].windSpeed);
+			return to_string(forecastAt(i).windSpeed);
 		};
 		std::string getForecastWindBearing(int i = 0)
 		{
-			if (i > (int)v_forecast.size())
-				i = (int)v_forecast.size();
-			return to_string(v_forecast[i].windBearing);
+			return to_string(forecastAt(i).windBearing);
 		};
 		std::string getForecastWindDirection(int i = 0)
 		{
-			if (i > (int)v_forecast.size())
-				i = (int)v_forecast.size();
-			return getDirectionString(v_forecast[i].windBearing);
+			return getDirectionString(forecastAt(i).windBearing);
 		};
 		std::string getForecastIcon(int i = 0)
 		{
-			if (i > (int)v_forecast.size())
-				i = (int)v_forecast.size();
-			return ICONSDIR"/weather/" + v_forecast[i].icon;
+			return ICONSDIR"/weather/" + forecastAt(i).icon;
 		};
 		std::string getForecastIconOnlyNane(int i = 0)
 		{
-			if (i > (int)v_forecast.size())
-				i = (int)v_forecast.size();
-			return v_forecast[i].icon_only_name;
+			return forecastAt(i).icon_only_name;
 		};
 
 		void show(int x = 50, int y = 50);

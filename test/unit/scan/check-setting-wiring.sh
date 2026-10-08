@@ -30,6 +30,17 @@
 # <rev> is diffed against the working tree file, so the check runs before a
 # commit as well as after one (use HEAD~1 or the parent then).
 #
+# addChoiceSetting and addNumberSetting are read as addSetting with their arguments
+# put in addSetting's places, and every argument left out is compared as its
+# default, so moving a call to a typed builder or dropping a trailing default is
+# no change. An observer the conversion dropped is a NOTE where the key is in an
+# apply group, whose run is what the observer did, and a MISMATCH otherwise. A
+# chooser built by hand that stays, its observer the only change, is a NOTE.
+#
+# For the suite's fixtures: WIRING_OLD names a file that stands for the screen at
+# <rev>, WIRING_TOP the source tree, and WIRING_GROUPS one more file of apply
+# groups to read; git is not asked then.
+#
 # Exit 0 when every pair matches and nothing needs a second look, 1 on a mismatch
 # or when nothing was found, 2 on bad usage, 3 when there is no mismatch but at
 # least one WARN (an entry in an #if arm, a row entry with an availability
@@ -42,8 +53,8 @@
 # menu and the branches of a change notifier. Each setting they read is set against
 # the conditions the rows state and the apply groups; a NOTE shows both sides for the
 # reader to compare and a WARN says there is nothing to compare, either because no
-# row's condition names the setting or because the branch's setting has no group
-# and is not on apply-pending.txt. Its WARNs count as this check's WARNs.
+# row's condition names the setting or because the branch's setting has no group. Its WARNs count
+# as this check's WARNs.
 #
 # Not checked, and so left to the review of each screen: the #if around the item,
 # an if that is not on the box, the order of the items in the menu, arguments of the addItem call other
@@ -62,7 +73,11 @@ FILE="$2"
 }
 
 HERE=`cd "\`dirname "$0"\`" && pwd`
-TOP=`git rev-parse --show-toplevel`
+if [ -n "$WIRING_TOP" ]; then
+	TOP=`cd "$WIRING_TOP" && pwd`
+else
+	TOP=`git rev-parse --show-toplevel`
+fi
 [ -r "$FILE" ] || { echo "check-setting-wiring.sh: cannot read $FILE" >&2; exit 2; }
 ABS=`cd "\`dirname "$FILE"\`" && pwd`/`basename "$FILE"`
 REL=${ABS#$TOP/}
@@ -72,18 +87,34 @@ tmp=`mktemp -d`
 trap 'rm -rf "$tmp"' EXIT
 
 cd "$TOP"
-git show "$REV:$REL" > "$tmp/old.raw" 2>/dev/null || {
-	echo "check-setting-wiring.sh: $REL does not exist in $REV" >&2
-	exit 2
-}
+if [ -n "$WIRING_OLD" ]; then
+	cp "$WIRING_OLD" "$tmp/old.raw" || exit 2
+	diff -U0 "$tmp/old.raw" "$REL" > "$tmp/diff" || true
+else
+	git show "$REV:$REL" > "$tmp/old.raw" 2>/dev/null || {
+		echo "check-setting-wiring.sh: $REL does not exist in $REV" >&2
+		exit 2
+	}
+	git diff -U0 "$REV" -- "$REL" > "$tmp/diff" || true
+fi
 awk -v keepstrings=1 -f "$STRIP" "$tmp/old.raw" > "$tmp/old.c"
 awk -v keepstrings=1 -f "$STRIP" "$REL" > "$tmp/new.c"
 awk -v keepstrings=1 -f "$STRIP" src/coreapi/settings/settingstable*.cpp > "$tmp/rows.c"
+# The rows are built with calls; the item scan reads them in the places a positional row had them.
+awk -f "$HERE/wiringrows.awk" "$tmp/rows.c" > "$tmp/rows-pos.c"
 # What each test of the box reads, where the tree has tests yet.
 : > "$tmp/preds.c"; : > "$tmp/caps.c"
 [ -r src/coreapi/settings/predicates.cpp ] && awk -v keepstrings=1 -f "$STRIP" src/coreapi/settings/predicates.cpp > "$tmp/preds.c"
 [ -r src/coreapi/box/systemsource_real.cpp ] && awk -v keepstrings=1 -f "$STRIP" src/coreapi/box/systemsource_real.cpp > "$tmp/caps.c"
-git diff -U0 "$REV" -- "$REL" | grep '^@@' > "$tmp/hunks" || true
+grep '^@@' "$tmp/diff" > "$tmp/hunks" || true
+
+# The apply groups, which say where an observer the conversion dropped went.
+: > "$tmp/groups.tsv"
+for g in src/coreapi/box/apply_*.cpp $WIRING_GROUPS; do
+	[ -r "$g" ] || continue
+	awk -v keepstrings=1 -f "$STRIP" "$g" | awk -f "$HERE/blank-if0.awk" \
+		| awk -v file="$g" -f "$HERE/applygroups.awk" | grep -v '^ERR	' >> "$tmp/groups.tsv" || true
+done
 # Enumerators by value, those of the old screen first: a block the screen itself
 # declared is gone from the tree once it is converted.
 {
@@ -93,8 +124,8 @@ git diff -U0 "$REV" -- "$REL" | grep '^@@' > "$tmp/hunks" || true
 
 # the pass below still has to run when this one finds a mismatch
 set +e
-awk -v old="$tmp/old.c" -v new="$tmp/new.c" -v rows="$tmp/rows.c" -v hunks="$tmp/hunks" -v names="$tmp/names" \
-	-v preds="$tmp/preds.c" -v capsrc="$tmp/caps.c" \
+awk -v old="$tmp/old.c" -v new="$tmp/new.c" -v rows="$tmp/rows-pos.c" -v hunks="$tmp/hunks" -v names="$tmp/names" \
+	-v preds="$tmp/preds.c" -v capsrc="$tmp/caps.c" -v groups="$tmp/groups.tsv" \
 	-v localesh="src/system/locals.h" -v localesi="src/system/locals_intern.h" \
 	-v rev="$REV" -v strip="$STRIP" -v rel="$REL" '
 function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
@@ -106,6 +137,39 @@ function readfile(path, arr,    n, l) {
 	return n
 }
 function fail(msg) { print "MISMATCH " msg; nfail++ }
+
+# A call of addSetting or one of its typed forms, its arguments put in the places
+# addSetting has for them, and every one left out filled with its default, so two spellings of one
+# item compare equal. fname names the builder, A holds the arguments as written.
+function norm_call(fname, n, A, OUT,    j) {
+	delete OUT
+	if (fname == "addChoiceSetting") {
+		for (j = 1; j <= n && j <= 5; j++) OUT[j] = A[j]
+		if (n >= 6) OUT[7] = A[6]
+	} else if (fname == "addNumberSetting") {
+		for (j = 1; j <= n && j <= 6; j++) OUT[j] = A[j]
+		if (n >= 7) OUT[8] = A[7]
+	} else
+		for (j = 1; j <= n; j++) OUT[j] = A[j]
+	if (!(3 in OUT)) OUT[3] = "true"
+	if (!(4 in OUT)) OUT[4] = "NULL"
+	if (!(5 in OUT)) OUT[5] = "CRCInput::RC_nokey"
+	if (!(6 in OUT)) OUT[6] = "false"
+	if (!(7 in OUT)) OUT[7] = "false"
+	if (!(8 in OUT)) OUT[8] = "false"
+	if (!(9 in OUT)) OUT[9] = "NONEXISTANT_LOCALE"
+	if (!(10 in OUT)) OUT[10] = "NONEXISTANT_LOCALE"
+	if (nows(OUT[4]) == "0" || nows(OUT[4]) == "nullptr") OUT[4] = "NULL"
+	return 10
+}
+
+# A chooser construction told apart from another by everything but its observer,
+# the sixth argument of both kinds.
+function chooser_sig(kind, n, A,    j, t) {
+	t = kind
+	for (j = 1; j <= n; j++) if (j != 6) t = t "|" nows(A[j])
+	return t
+}
 function warn(msg) { print "WARN " msg; nwarn++ }
 
 # Splits at top-level commas, quotes and brackets honoured.
@@ -947,7 +1011,21 @@ BEGIN {
 	load_rows()
 	load_tests()
 	load_hunks()
+	while ((getline l < groups) > 0) {
+		split(l, gx, "\t")
+		grouped[gx[2]] = gx[1]
+	}
+	close(groups)
 	nnew = readfile(new, NEW)
+	# hand-built choosers the new file adds, by everything but their observer
+	for (i = 1; i <= nnew; i++) {
+		if (!(i in added)) continue
+		if (!match(NEW[i], /new[ \t]+CMenuOption(Number)?Chooser[ \t]*\(/)) continue
+		k2 = (NEW[i] ~ /CMenuOptionNumberChooser/) ? "n" : "c"
+		call_text(NEW, nnew, i, RSTART + RLENGTH - 1)
+		nk = split_args(STMT, tmpk)
+		keptobs[chooser_sig(k2, nk, tmpk)] = (nk >= 6) ? nows(tmpk[6]) : "NULL"
+	}
 	line_guards(OLD, nold, OGD, OGC)
 	line_guards(NEW, nnew, NGD, NGC)
 
@@ -966,6 +1044,13 @@ BEGIN {
 		}
 		call_text(OLD, nold, i, cpos)
 		cstmt = STMT; cend = STMTEND
+		nk = split_args(cstmt, tmpk)
+		sig = chooser_sig(kind, nk, tmpk)
+		if (sig in keptobs) {
+			print "NOTE " rel ":" i ": chooser kept, its observer " ((nk >= 6) ? nows(tmpk[6]) : "NULL") " is now " keptobs[sig]; nnote++
+			delete keptobs[sig]
+			continue
+		}
 		nr++
 		# Every addItem the item was handed to: the menu, and any notifier that
 		# switches it on and off.
@@ -1038,13 +1123,14 @@ BEGIN {
 	# may have lost the condition on the box around it.
 	na = 0
 	for (i = 1; i <= nnew; i++) {
-		if (!match(NEW[i], /addSetting[ \t]*\(/)) continue
-		if (NEW[i] ~ /addSetting[ \t]*\([ \t]*CMenuWidget/) continue
+		if (!match(NEW[i], /add(Choice|Number)?Setting[ \t]*\(/)) continue
+		if (NEW[i] ~ /add(Choice|Number)?Setting[ \t]*\([ \t]*CMenuWidget/) continue
 		pre = substr(NEW[i], 1, RSTART - 1)
+		fname = substr(NEW[i], RSTART, RLENGTH); sub(/[ \t]*\($/, "", fname)
 		call_text(NEW, nnew, i, RSTART + RLENGTH - 1)
 		na++
-		aline[na] = i; aargs_n[na] = split_args(STMT, tmpa)
-		for (j = 1; j <= aargs_n[na]; j++) aarg[na, j] = tmpa[j]
+		aline[na] = i; aargs_n[na] = norm_call(fname, split_args(STMT, tmpa), tmpa, tmpn)
+		for (j = 1; j <= aargs_n[na]; j++) aarg[na, j] = tmpn[j]
 		akey[na] = str_lit(aarg[na, 2])
 		aisadd[na] = (i in added)
 		if (aisadd[na]) nadded++
@@ -1084,12 +1170,13 @@ BEGIN {
 	# addSetting has to be the same.
 	no = 0; nchanged = 0
 	for (i = 1; i <= nold; i++) {
-		if (!match(OLD[i], /addSetting[ \t]*\(/)) continue
-		if (OLD[i] ~ /addSetting[ \t]*\([ \t]*CMenuWidget/) continue
+		if (!match(OLD[i], /add(Choice|Number)?Setting[ \t]*\(/)) continue
+		if (OLD[i] ~ /add(Choice|Number)?Setting[ \t]*\([ \t]*CMenuWidget/) continue
+		fname = substr(OLD[i], RSTART, RLENGTH); sub(/[ \t]*\($/, "", fname)
 		call_text(OLD, nold, i, RSTART + RLENGTH - 1)
 		no++
-		oline[no] = i; oargs_n[no] = split_args(STMT, tmpa)
-		for (j = 1; j <= oargs_n[no]; j++) oarg[no, j] = tmpa[j]
+		oline[no] = i; oargs_n[no] = norm_call(fname, split_args(STMT, tmpa), tmpa, tmpn)
+		for (j = 1; j <= oargs_n[no]; j++) oarg[no, j] = tmpn[j]
 		okey[no] = str_lit(oarg[no, 2])
 		if (i in removed) nchanged++
 	}
@@ -1104,10 +1191,13 @@ BEGIN {
 		lbl = rel ":" oline[o] " " okey[o]
 		if (!b) { fail(lbl ": addSetting of " rev " has no addSetting in its place"); continue }
 		aused[b] = 1; acarry[b] = o
-		x = ""; y = ""
+		x = ""; y = ""; other = 0
 		for (j = 1; j <= oargs_n[o]; j++) x = x "," nows(oarg[o, j])
 		for (j = 1; j <= aargs_n[b]; j++) y = y "," nows(aarg[b, j])
-		if (x != y) fail(lbl ": addSetting moved and its arguments changed from (" substr(x, 2) ") to (" substr(y, 2) ")")
+		for (j = 1; j <= 10; j++) if (j != 4 && nows(oarg[o, j]) != nows(aarg[b, j])) other = 1
+		if (x != y && !other && nows(aarg[b, 4]) == "NULL" && (okey[o] in grouped)) {
+			print "NOTE " lbl ": observer " nows(oarg[o, 4]) " dropped, the apply group " grouped[okey[o]] " runs for the key"; nnote++
+		} else if (x != y) fail(lbl ": addSetting moved and its arguments changed from (" substr(x, 2) ") to (" substr(y, 2) ")")
 		check_box(lbl, okey[o], "primary", OLD, nold, oline[o], aline[b], "")
 	}
 
@@ -1269,7 +1359,10 @@ BEGIN {
 		ao = (aargs_n[a] >= 4) ? nows(aarg[a, 4]) : "NULL"
 		if (ro == "0" || ro == "nullptr") ro = "NULL"
 		if (ao == "0" || ao == "nullptr") ao = "NULL"
-		if (ro != ao) fail(lbl ": observer " ro " removed, addSetting has " ao)
+		if (ro != ao) {
+			if (ao == "NULL" && (akey[a] in grouped)) { print "NOTE " lbl ": observer " ro " dropped, the apply group " grouped[akey[a]] " runs for the key"; nnote++ }
+			else fail(lbl ": observer " ro " removed, addSetting has " ao)
+		}
 		rd = dkey((rargs_n[r] >= idk) ? rarg[r, idk] : "")
 		ad = dkey((aargs_n[a] >= 5) ? aarg[a, 5] : "")
 		if (rd != ad) fail(lbl ": direct key " rd " removed, addSetting has " ad)
@@ -1278,8 +1371,18 @@ BEGIN {
 		ap = (aargs_n[a] >= 7) ? nows(aarg[a, 7]) : "false"
 		if (truth(rpull) != truth(ap)) fail(lbl ": pulldown " rpull " removed, addSetting has " ap)
 	}
-	for (j = 1; j <= na; j++)
-		if (!aused[j]) fail(rel ":" aline[j] " addSetting " akey[j] " replaces no removed chooser")
+	for (j = 1; j <= na; j++) {
+		if (aused[j]) continue
+		# A key, a colour or a text row is no chooser: its item replaces a forwarder, which has
+		# nothing here to compare. The key of a call in a loop over an array is read by
+		# addsetting.awk, not here.
+		if (akey[j] ~ /\[/ || rtype[akey[j]] ~ /^(Key|String|Color)$/) {
+			print "NOTE " rel ":" aline[j] " addSetting " akey[j] " replaces a forwarder, not a chooser"
+			nnote++
+			continue
+		}
+		fail(rel ":" aline[j] " addSetting " akey[j] " replaces no removed chooser")
+	}
 
 	printf "check-setting-wiring: %d pair(s) checked, %d mismatch(es), %d WARN, %d note(s)\n", npairs, nfail + 0, nwarn + 0, nnote + 0
 	exit (nfail > 0) ? 1 : ((nwarn > 0) ? 3 : 0)
@@ -1291,22 +1394,13 @@ set -e
 # What the conversion took out beside the items, against the rows and the apply
 # groups. Its WARN lines count as this check's WARN: exit 3 unless the items
 # already failed.
-git diff -U0 "$REV" -- "$REL" | sed -n 's/^-\([^-].*\)$/\1/p; s/^-$//p' \
+sed -n 's/^-\([^-].*\)$/\1/p; s/^-$//p' "$tmp/diff" \
 	| awk -v keepstrings=1 -f "$STRIP" > "$tmp/removed.c"
 awk -v keepstrings=1 -f "$STRIP" src/coreapi/settings/settingstable*.cpp | awk -f "$HERE/blank-if0.awk" \
 	| awk -f "$HERE/applyrows.awk" | sort -u > "$tmp/members.tsv"
-: > "$tmp/groups.tsv"
-for g in src/coreapi/box/apply_*.cpp; do
-	[ -r "$g" ] || continue
-	awk -v keepstrings=1 -f "$STRIP" "$g" | awk -f "$HERE/blank-if0.awk" \
-		| awk -v file="$g" -f "$HERE/applygroups.awk" | grep -v '^ERR	' >> "$tmp/groups.tsv" || true
-done
 sh "$HERE/extract-bounds.sh" -m src > "$tmp/locales.tsv"
-PENDING="$HERE/apply-pending.txt"
-[ -r "$PENDING" ] || : > "$tmp/pending.txt"
-[ -r "$PENDING" ] && cp "$PENDING" "$tmp/pending.txt"
 awk -v removed="$tmp/removed.c" -v rows="$tmp/rows.c" -v members="$tmp/members.tsv" -v groups="$tmp/groups.tsv" \
-	-v pending="$tmp/pending.txt" -v locales="$tmp/locales.tsv" -f "$HERE/wiringapply.awk" < /dev/null
+	-v locales="$tmp/locales.tsv" -f "$HERE/wiringapply.awk" < /dev/null
 arc=$?
 [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ] && exit "$rc"
 [ "$rc" -eq 3 ] || [ "$arc" -eq 3 ] && exit 3

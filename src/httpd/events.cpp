@@ -115,6 +115,8 @@ struct Stream
 	   beside this says it is: how long this stream may be silent. One clock for the
 	   server would send a comment down a stream that had just carried an event. */
 	int64_t     last_written;
+	// The browser session it was opened under, see openStream.
+	std::string writer;
 
 	Stream() : conn(NULL), fd(-1), overflowed(false), closing(false),
 	           suspended(false), shut(false), last_written(0)
@@ -283,6 +285,8 @@ void Fanout::onEvent(const coreapi::Event &e)
 		for (size_t i = 0; i < list.size(); ++i)
 		{
 			Stream *s = list[i];
+			if (!deliveredTo(e, s->writer))
+				continue;
 			if (!appendTo(s, frame.data(), frame.size(), now))
 				continue;
 			if (s->suspended)
@@ -630,6 +634,7 @@ const char *typeName(coreapi::EventType t)
 		case coreapi::EventType::BouquetsChanged: return "bouquets-changed";
 		case coreapi::EventType::SettingsChanged: return "settings-changed";
 		case coreapi::EventType::Playback:     return "playback";
+		case coreapi::EventType::SettingApplyFailed: return "setting-apply-failed";
 	}
 
 	// Only a value that is not one of the enumerators reaches here, which is
@@ -637,8 +642,62 @@ const char *typeName(coreapi::EventType t)
 	return NULL;
 }
 
+bool deliveredTo(const coreapi::Event &e, const std::string &writer)
+{
+	if (e.type != coreapi::EventType::SettingApplyFailed)
+		return true;
+	// Its own session alone: another one did not write it, and an AI client has no stream here.
+	return !writer.empty() && (" " + e.initiator + " ").find(" " + writer + " ") != std::string::npos;
+}
+
+namespace
+{
+
+// What a failure to put a setting in force means, by the status it is answered with.
+const char *applyFailureDetail(int status)
+{
+	switch (status)
+	{
+		case 400: return "the box did not take the value when it put it in force";
+		case 403: return "the box refused to put the setting in force";
+		case 404: return "what the setting needs is not on the box";
+		case 409: return "the box was busy and did not put the setting in force";
+		case 501: return "the box cannot put the setting in force";
+		default:  break;
+	}
+	return "putting the setting in force failed on the box";
+}
+
+} // namespace
+
 void appendEventJson(std::string &out, const coreapi::Event &e)
 {
+	/* The stored value is kept; the next write of the group tries again. Its own shape, the
+	   one the writing session reads: the keys as a list, the status a write answers it with. */
+	if (e.type == coreapi::EventType::SettingApplyFailed)
+	{
+		Json j(out, 96);
+		j.beginObject();
+		j.key("keys");
+		j.beginArray();
+		for (size_t at = 0; at < e.text.size();)
+		{
+			size_t end = e.text.find(' ', at);
+			if (end == std::string::npos)
+				end = e.text.size();
+			if (end > at)
+				j.value(e.text.substr(at, end - at));
+			at = end + 1;
+		}
+		j.endArray();
+		j.key("status");
+		j.value(e.value);
+		j.key("detail");
+		j.value(std::string(applyFailureDetail(e.value)) + "; the next write of the setting tries again");
+		j.endObject();
+		return;
+	}
+
 	char id[24];
 	std::snprintf(id, sizeof(id), "%llx", (unsigned long long) e.channel_id);
 
@@ -678,7 +737,8 @@ bool isStreamRoute(const Endpoint &ep)
 	return false;
 }
 
-Opened openStream(struct MHD_Connection *connection, const Response &r, Response &refusal)
+Opened openStream(struct MHD_Connection *connection, const Response &r, Response &refusal,
+                  const std::string &writer)
 {
 	if (connection == NULL)
 		return StreamFailed;
@@ -714,6 +774,7 @@ Opened openStream(struct MHD_Connection *connection, const Response &r, Response
 			made.held->conn = connection;
 			made.held->fd = info->connect_fd;
 			made.held->last_written = monotonicMs();
+			made.held->writer = writer;
 
 			/* Seeded before the stream is registered, so the first thing the reader finds is
 			   bytes rather than nothing. That is what puts the head of the answer on the wire
@@ -957,7 +1018,8 @@ const Endpoint kEventsEndpoints[] = {
 	  "10 to 19 seconds, the time a client waits before it reconnects, and carries a comment line "
 	  "(`:`) as a heartbeat when nothing happens.\n\n"
 	  "Each event is an `event:` line with its name and a `data:` line with a JSON object "
-	  "`{\"channel_id\": hex string, \"value\": integer, \"text\": string}`. Events say what changed, "
+	  "`{\"channel_id\": hex string, \"value\": integer, \"text\": string}`, except "
+	  "`setting-apply-failed`, whose object the table below states. Events say what changed, "
 	  "not everything about it: reread the matching route.\n\n"
 	  "| event | meaning | carries |\n"
 	  "|---|---|---|\n"
@@ -972,7 +1034,8 @@ const Endpoint kEventsEndpoints[] = {
 	  "| `epg-updated` | the guide got now and next for a channel | `channel_id`: only its lower 48 bits; at most 1 per 500 milliseconds, others in between are dropped |\n"
 	  "| `bouquets-changed` | the bouquet list changed | nothing; reread `GET /api/v1/bouquets` |\n"
 	  "| `settings-changed` | settings were written | nothing; reread `GET /api/v1/settings/{section}` |\n"
-	  "| `playback` | the movie player started, stopped, paused, resumed, jumped or changed speed | `text`: the state (`playing`, `paused`, `forward`, `rewind` or `stopped`), the source as `GET /api/v1/playback` names it and, for a recording, its archive id, separated by spaces; `value`: the position in seconds; `channel_id`: the channel of a recording or a timeshift, else 0 |\n\n"
+	  "| `playback` | the movie player started, stopped, paused, resumed, jumped or changed speed | `text`: the state (`playing`, `paused`, `forward`, `rewind` or `stopped`), the source as `GET /api/v1/playback` names it and, for a recording, its archive id, separated by spaces; `value`: the position in seconds; `channel_id`: the channel of a recording or a timeshift, else 0 |\n"
+	  "| `setting-apply-failed` | a setting a write of this browser session stored could not be put in force on the box, such as a service that would not start; sent only to the streams opened under the session that wrote | its own object `{\"keys\": [setting keys], \"status\": integer, \"detail\": string}`: the settings, the HTTP status the failure maps to, and what went wrong; the stored value is kept and the next write of the group tries again |\n\n"
 	  "**Refusals:**\n"
 	  "- `503 too-many-streams`: the server already carries as many event streams as it is set to "
 	  "(8 by default); close another one or try later.\n\n"

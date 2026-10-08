@@ -31,7 +31,7 @@
 #define WEBTV_XML	WEBTVDIR_VAR "/webtv_usr.xml"
 #define WEBRADIO_XML	WEBRADIODIR_VAR "/webradio_usr.xml"
 
-class CWebChannelsSetup : public CMenuTarget, CChangeObserver
+class CWebChannelsSetup : public CMenuTarget
 {
 	private:
 		bool webradio;
@@ -40,13 +40,11 @@ class CWebChannelsSetup : public CMenuTarget, CChangeObserver
 		int item_offset;
 		bool changed;
 		CMenuWidget *m;
-		int livestreamResolution;
 
 	public:
 		CWebChannelsSetup();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
 		int Show();
-		bool changeNotify(const neutrino_locale_t OptionName, void *data);
 
 		// webradio wrappers
 		void webradio_xml_auto();
@@ -67,7 +65,6 @@ class CWebTVResolution : public CMenuTarget
 		CMenuWidget *m;
 	public:
 		CWebTVResolution();
-		void RestartStream();
 		const char *getResolutionValue();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
 		int Show();

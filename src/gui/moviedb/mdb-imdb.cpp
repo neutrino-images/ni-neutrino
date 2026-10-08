@@ -50,12 +50,10 @@ CIMDB *CIMDB::getInstance()
 
 CIMDB::CIMDB()
 {
-	key = g_settings.omdb_api_key;
 	hintbox = NULL;
 	search_url	= "http://www.google.de/search?q=";
 	search_outfile	= "/tmp/google.out";
 	search_error	= "IMDb: Google download failed";
-	imdb_url	= "http://www.omdbapi.com/?plot=full&r=json&apikey=" + key + "&i=";
 	imdb_outfile	= "/tmp/imdb.json";
 	posterfile	= "/tmp/imdb.jpg";
 
@@ -328,7 +326,8 @@ int CIMDB::getMovieDetails(const std::string &epgTitle)
 	if (((imdb_id.find(search_error)) != std::string::npos))
 		return ret;
 
-	std::string url = imdb_url + imdb_id;
+	// The key is read here and not kept, so a key entered after the first lookup is the one used.
+	std::string url = "http://www.omdbapi.com/?plot=full&r=json&apikey=" + g_settings.omdb_api_key + "&i=" + imdb_id;
 
 	if (httpTool.downloadFile(url, imdb_outfile.c_str()))
 	{

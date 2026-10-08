@@ -14,6 +14,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \
 	-I$(top_srcdir)/lib/connection \
+	-I$(top_srcdir)/lib/xmltree \
 	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/lib/libconfigfile \
 	-I$(top_srcdir)/lib/timerdclient \
@@ -88,12 +89,57 @@ libcoreapi_a_SOURCES = \
 	settings/settings.cpp \
 	settings/apply.cpp \
 	settings/apply_groups.cpp \
+	box/applyseams.cpp \
+	box/apply_video.cpp \
+	box/videooutput_real.cpp \
+	box/apply_audio.cpp \
+	box/audiooutput_real.cpp \
+	box/apply_cec.cpp \
+	box/cecoutput_real.cpp \
+	network.cpp \
+	box/apply_channels.cpp \
+	box/apply_misc.cpp \
+	box/miscoutput_real.cpp \
+	box/apply_sectionsd.cpp \
+	box/sectionsdoutput_real.cpp \
+	box/apply_keys.cpp \
+	box/rccontrol_real.cpp \
+	box/apply_lang.cpp \
+	box/localization_real.cpp \
+	settings/choicesources.cpp \
+	box/apply_ci.cpp \
+	box/cicontrol_real.cpp \
+	box/applyworker.cpp \
+	box/apply_services.cpp \
+	box/servicecontrol_real.cpp \
+	box/apply_update.cpp \
+	box/updatecheck_real.cpp \
+	box/apply_plugins.cpp \
+	box/pluginloader_real.cpp \
+	box/apply_weather.cpp \
+	box/weather_real.cpp \
+	box/apply_lcd4l.cpp \
+	box/lcd4l_real.cpp \
+	box/apply_vfd.cpp \
+	box/vfdpanel_real.cpp \
+	box/apply_glcd.cpp \
+	box/glcdpanel_real.cpp \
+	box/apply_osd.cpp \
+	box/osdoutput_real.cpp \
+	box/apply_record.cpp \
+	box/recordconfig_real.cpp \
+	box/apply_hdd.cpp \
+	box/hddcontrol_real.cpp \
+	box/apply_webchannels.cpp \
+	box/webchannels_real.cpp \
 	settings/couple.cpp \
 	settings/couple_epg.cpp \
 	settings/couple_osd.cpp \
 	settings/couple_channel.cpp \
 	settings/couple_weather.cpp \
 	settings/couple_plugins.cpp \
+	settings/couple_ci.cpp \
+	settings/couple_lcd4l.cpp \
 	settings/menuspec.cpp \
 	settings/predicates.cpp \
 	streaming.cpp \
@@ -128,6 +174,31 @@ noinst_HEADERS = \
 	osd.h \
 	base/bootmode.h \
 	base/apply.h \
+	box/apply_video.h \
+	box/apply_audio.h \
+	box/apply_cec.h \
+	network.h \
+	box/apply_channels.h \
+	box/apply_misc.h \
+	box/apply_sectionsd.h \
+	box/apply_keys.h \
+	box/apply_lang.h \
+	settings/choicesources.h \
+	box/apply_ci.h \
+	box/applyworker.h \
+	box/apply_services.h \
+	box/apply_update.h \
+	box/apply_plugins.h \
+	box/apply_weather.h \
+	box/apply_lcd4l.h \
+	box/apply_vfd.h \
+	box/apply_glcd.h \
+	box/apply_osd.h \
+	box/apply_record.h \
+	box/apply_hdd.h \
+	box/apply_webchannels.h \
+	box/sentstate.h \
+	box/mode43.h \
 	base/schema.h \
 	base/flagfile.h \
 	settings/settings.h \

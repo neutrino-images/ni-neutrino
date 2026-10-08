@@ -386,7 +386,16 @@ TEST_CASE("write_settings judges a setting on the whole call and says what to se
 
 	const std::string hint = mcp::boxTools().hint("write_settings", coreapi::ErrorCode::SettingConditionNotMet);
 	REQUIRE(hint.find("settings_schema") != std::string::npos);
-	REQUIRE(hint.find("same call") != std::string::npos);
+	// Conditions cross sections and one call is one section, so the other one goes first.
+	REQUIRE(hint.find("another section") != std::string::npos);
+	REQUIRE(hint.find("first") != std::string::npos);
+	const mcp::ToolDef *write = NULL;
+	const std::vector<mcp::ToolDef> all = mcp::boxTools().list();
+	for (size_t i = 0; i < all.size(); ++i)
+		if (all[i].name == "write_settings")
+			write = &all[i];
+	REQUIRE(write != NULL);
+	REQUIRE(write->description.find("another section") != std::string::npos);
 }
 
 TEST_CASE("write_settings refuses every setting that names a place on the box's disk", "[allowlist][gate]")
@@ -455,7 +464,7 @@ TEST_CASE("write_settings refuses the flag that answers a module's pin enquiry",
 
 	// A plain row of the same section is still written, so the refusal is the key's and not the section's.
 	REQUIRE(mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
-		"{\"section\":\"cam\",\"settings\":{\"ci_standby_reset\":\"1\"}}").ok());
+		"{\"section\":\"cam\",\"settings\":{\"ci_rec_zapto\":\"1\"}}").ok());
 }
 
 /* The flags that switch a service or a softcam on at boot are never an AI client's, in a
@@ -469,11 +478,12 @@ TEST_CASE("write_settings refuses the flags that switch a service or a softcam o
 	mcp::Allowlists a;
 	a.sections.push_back("misc");
 	a.sections.push_back("cam");
+	a.sections.push_back("osd");
 	mcp::installAllowlists(a);
 
 	const char *const flags[][2] = {
 		{ "misc", "flag_daemon_samba" }, { "misc", "flag_daemon_dropbear" }, { "misc", "flag_daemon_nfsd" },
-		{ "cam", "flag_camd_oscam" }, { "cam", "flag_camd_cccam" },
+		{ "cam", "flag_camd_oscam" }, { "cam", "flag_camd_cccam" }, { "osd", "flag_scart_osd_fix" },
 	};
 	for (size_t i = 0; i < sizeof(flags) / sizeof(flags[0]); ++i)
 	{
@@ -541,8 +551,8 @@ TEST_CASE("the schema marks every setting that names a place on the box's disk",
 	{
 		const std::string id = v["items"][i]["id"].asString();
 		INFO(id);
-		REQUIRE(v["items"][i]["path"].isBool());
-		REQUIRE(v["items"][i]["path"].asBool() == (want.count(id) == 1));
+		// Only a path row carries the member, and then it is true.
+		REQUIRE(v["items"][i].isMember("path") == (want.count(id) == 1));
 		seen += want.count(id);
 	}
 	REQUIRE(seen == 4);
@@ -563,9 +573,9 @@ TEST_CASE("write_settings answers a mixed outcome as a tool error naming what di
 		"{\"section\":\"audio\",\"settings\":{\"audio_volume_percent_ac3\":\"50\",\"nope\":\"1\"}}");
 	REQUIRE_FALSE(r.ok());
 	REQUIRE(r.error().code == coreapi::ErrorCode::SettingNotWritten);
-	REQUIRE(r.error().message.find("not every value was written") != std::string::npos);
-	REQUIRE(r.error().message.find("audio_volume_percent_ac3") != std::string::npos);
-	REQUIRE(r.error().message.find("no-such-setting") != std::string::npos);
+	REQUIRE(r.error().message.find("some settings were written and some were not") != std::string::npos);
+	REQUIRE(r.error().message.find("written: audio_volume_percent_ac3") != std::string::npos);
+	REQUIRE(r.error().message.find("- nope: no-such-setting") != std::string::npos);
 
 	// The key that did land is not rolled back by the one that did not.
 	REQUIRE(store.ints["audio_volume_percent_ac3"] == 50);
@@ -594,4 +604,115 @@ TEST_CASE("read_settings never answers a secret value in any section", "[allowli
 		REQUIRE(r.ok());
 		REQUIRE(r.value().find("the-secret-value") == std::string::npos);
 	}
+}
+
+TEST_CASE("a condition refusal reaches an MCP client naming the settings it depends on", "[allowlist][depends]")
+{
+	Lists back;
+	FakeSettingsSource store;
+	InstalledSettingsSource in_store(&store);
+	FakeSystemSource box;
+	InstalledSystemSource in_box(&box);
+	memset(&box.caps, 0xff, sizeof(box.caps));
+	store.ints["srs_enable"] = 0;
+	mcp::Allowlists a;
+	a.sections.push_back("audio");
+	mcp::installAllowlists(a);
+
+	const coreapi::Result<mcp::JsonText> r = mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+		"{\"section\":\"audio\",\"settings\":{\"srs_algo\":\"0\"}}");
+	REQUIRE_FALSE(r.ok());
+	REQUIRE(r.error().code == coreapi::ErrorCode::SettingConditionNotMet);
+	REQUIRE(r.error().depends_on.size() == 1);
+	CHECK(r.error().depends_on[0] == "srs_enable");
+	CHECK(r.error().message.find("srs_enable") != std::string::npos);
+}
+
+TEST_CASE("a partly refused write tells an MCP client what landed and why the rest did not", "[allowlist][partly]")
+{
+	Lists back;
+	FakeSettingsSource store;
+	InstalledSettingsSource in_store(&store);
+	FakeSystemSource box;
+	InstalledSystemSource in_box(&box);
+	memset(&box.caps, 0xff, sizeof(box.caps));
+	store.ints["srs_enable"] = 0;
+	store.ints["start_volume"] = 50;
+	mcp::Allowlists a;
+	a.sections.push_back("audio");
+	mcp::installAllowlists(a);
+
+	const coreapi::Result<mcp::JsonText> r = mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+		"{\"section\":\"audio\",\"settings\":{\"srs_algo\":\"0\",\"start_volume\":\"60\"}}");
+	REQUIRE_FALSE(r.ok());
+	REQUIRE(r.error().code == coreapi::ErrorCode::SettingNotWritten);
+	const std::string &said = r.error().message;
+	INFO(said);
+	CHECK(said.find("written: start_volume") != std::string::npos);
+	CHECK(said.find("- srs_algo: setting-condition-not-met") != std::string::npos);
+	CHECK(said.find("(depends on srs_enable)") != std::string::npos);
+	// Not the raw document.
+	CHECK(said.find("\"results\"") == std::string::npos);
+	CHECK(store.ints["start_volume"] == 60);
+
+	const std::string hint = mcp::boxTools().hint("write_settings", coreapi::ErrorCode::SettingNotWritten);
+	CHECK(hint.find("do not send them again") != std::string::npos);
+}
+
+TEST_CASE("a denied key is refused with the reason of its own class", "[allowlist][denial]")
+{
+	Lists back;
+	FakeSettingsBox box;
+	FakeSettingsSource store;
+	InstalledSettingsSource in_store(&store);
+	mcp::Allowlists a;
+	a.sections.push_back("cam");
+	a.sections.push_back("misc");
+	a.sections.push_back("audio");
+	a.sections.push_back("recording");
+	mcp::installAllowlists(a);
+
+	std::string why;
+	REQUIRE(mcp::deniedKeyIn("{\"flag_camd_oscam\":\"1\"}", &why) == "flag_camd_oscam");
+	CHECK(why.find("softcam") != std::string::npos);
+	REQUIRE(mcp::deniedKeyIn("{\"ci_save_pincode_0\":\"1\"}", &why) == "ci_save_pincode_0");
+	CHECK(why.find("PIN") != std::string::npos);
+	REQUIRE(mcp::deniedKeyIn("{\"tmdb_api_key\":\"x\"}", &why) == "tmdb_api_key");
+	CHECK(why == "is a credential");
+	REQUIRE(mcp::deniedKeyIn("{\"timeshiftdir\":\"/x\"}", &why) == "timeshiftdir");
+	CHECK(why.find("disk") != std::string::npos);
+
+	const coreapi::Result<mcp::JsonText> r = mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+		"{\"section\":\"cam\",\"settings\":{\"flag_camd_oscam\":\"1\"}}");
+	REQUIRE_FALSE(r.ok());
+	CHECK(r.error().message.find("softcam") != std::string::npos);
+	CHECK(r.error().message.find("credential") == std::string::npos);
+}
+
+TEST_CASE("the settings tools say what a client needs to write a setting", "[allowlist][tooltext]")
+{
+	Lists back;
+	mcp::Allowlists a;
+	a.sections.push_back("audio");
+	mcp::installAllowlists(a);
+	std::string schema, write;
+	const std::vector<mcp::ToolDef> all = mcp::boxTools().list();
+	INFO(mcp::boxToolsRefusal());
+	REQUIRE_FALSE(all.empty());
+	for (size_t i = 0; i < all.size(); ++i)
+	{
+		if (all[i].name == "settings_schema")
+			schema = all[i].description;
+		if (all[i].name == "write_settings")
+			write = all[i].description;
+	}
+	const char *const both[] = { "locked", "line to each", "tab", "pair" };
+	for (size_t i = 0; i < sizeof(both) / sizeof(both[0]); ++i)
+	{
+		INFO(both[i]);
+		CHECK(schema.find(both[i]) != std::string::npos);
+		CHECK(write.find(both[i]) != std::string::npos);
+	}
+	CHECK(write.find("put in force afterwards") != std::string::npos);
+	CHECK(write.find("others still land") != std::string::npos);
 }

@@ -47,7 +47,6 @@
 #include <gui/widget/msgbox.h>
 #include <gui/widget/settingitem.h>
 #include <gui/osd_setup.h>
-#include <gui/osd_helpers.h>
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 #include <gui/psisetup.h>
 #endif
@@ -61,29 +60,55 @@
 #include <system/debug.h>
 #include <system/helpers.h>
 
-#include <cs_api.h>
-#include <hardware/video.h>
-
+#include <coreapi/base/apply.h>
 #include <coreapi/base/deps.h>
+#include <coreapi/box/apply_video.h>
 #include <coreapi/settings/menuspec.h>
+#include <coreapi/settings/predicates.h>
 #include <coreapi/settings/videomodes.h>
 
+#include <gui/widget/settingactive.h>
+
+#include <cstdio>
 #include <cstring>
 
-#ifdef BOXMODEL_CST_HD2
-#include <cnxtfb.h>
-#endif
-
-extern cVideo *videoDecoder;
 #if ENABLE_PIP
-extern cVideo *pipVideoDecoder[3];
 #include <gui/pipsetup.h>
 #endif
 #if ENABLE_QUADPIP
 #include <gui/quadpip_setup.h>
 #endif
-extern int prev_video_mode;
 extern CRemoteControl *g_RemoteControl; /* neutrino.cpp */
+
+// Busy is a group whose startup phase is not reached, which the phase makes good.
+static void applyRow(const std::string &key)
+{
+	const coreapi::Status s = coreapi::applyKey(key);
+	if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
+		dprintf(DEBUG_NORMAL, "[CVideoSettings] %s: apply failed\n", key.c_str());
+}
+
+/* The enabled modes are listed under their names, which no locale holds, so
+   their items are built here and not by addSetting; only their apply goes the
+   way of the rows. */
+class CVideoModeSlotApply : public CChangeObserver
+{
+	private:
+		std::string key;
+
+	public:
+		explicit CVideoModeSlotApply(const std::string &k) : key(k) {}
+		bool changeNotify(const neutrino_locale_t, void *)
+		{
+			applyRow(key);
+			return false;
+		}
+		bool changeNotify(const std::string &, void *)
+		{
+			applyRow(key);
+			return false;
+		}
+};
 
 CVideoSettings::CVideoSettings(int wizard_mode)
 {
@@ -95,10 +120,6 @@ CVideoSettings::CVideoSettings(int wizard_mode)
 
 	width = 35;
 	selected = -1;
-
-	prev_video_mode = g_settings.video_Mode;
-
-	setupVideoSystem(false);
 }
 
 CVideoSettings::~CVideoSettings()
@@ -170,19 +191,26 @@ int CVideoSettings::showVideoSetup()
 	CMenuForwarder *vs_automodes_fw = NULL;
 	CMenuWidget automodes(LOCALE_MAINSETTINGS_VIDEO, NEUTRINO_ICON_SETTINGS);
 #endif
-	CAutoModeNotifier anotify;
 	CMenuForwarder *vs_videomodes_fw = NULL;
+	// One per item, alive as long as the submenus that hold them.
+	std::vector<CVideoModeSlotApply> slot_apply;
+	slot_apply.reserve(2 * VIDEOMENU_VIDEOMODE_OPTION_COUNT);
+	char slot_key[32];
 
 	// video system modes submenue
-	if (g_info.hw_caps->has_HDMI) // does this make sense on a box without HDMI?
+	if (coreapi::hasHdmi()) // does this make sense on a box without HDMI?
 	{
 		videomodes.addIntroItems(LOCALE_VIDEOMENU_ENABLED_MODES);
 
 		for (int i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
 			if (vmodes[i].key != -1)
-				videomodes.addItem(new CMenuOptionChooser(vmodes[i].valname, &g_settings.enabled_video_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &anotify));
+			{
+				snprintf(slot_key, sizeof(slot_key), "enabled_video_mode_%d", i);
+				slot_apply.push_back(CVideoModeSlotApply(slot_key));
+				videomodes.addItem(new CMenuOptionChooser(vmodes[i].valname, &g_settings.enabled_video_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &slot_apply.back()));
+			}
 
-		if (g_info.hw_caps->has_button_vformat)
+		if (coreapi::hasFormatButton())
 		{
 			vs_videomodes_fw = new CMenuForwarder(LOCALE_VIDEOMENU_ENABLED_MODES, true, NULL, &videomodes, NULL, CRCInput::RC_red);
 			vs_videomodes_fw->setHint("", LOCALE_MENU_HINT_VIDEO_MODES);
@@ -192,7 +220,11 @@ int CVideoSettings::showVideoSetup()
 		automodes.addIntroItems(LOCALE_VIDEOMENU_ENABLED_MODES_AUTO);
 
 		for (int i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT - 1; i++)
-			automodes.addItem(new CMenuOptionChooser(vmodes[i].valname, &g_settings.enabled_auto_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &anotify));
+		{
+			snprintf(slot_key, sizeof(slot_key), "enabled_auto_mode_%d", i);
+			slot_apply.push_back(CVideoModeSlotApply(slot_key));
+			automodes.addItem(new CMenuOptionChooser(vmodes[i].valname, &g_settings.enabled_auto_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &slot_apply.back()));
+		}
 
 		vs_automodes_fw = new CMenuForwarder(LOCALE_VIDEOMENU_ENABLED_MODES_AUTO, true, NULL, &automodes, NULL, CRCInput::RC_green);
 		vs_automodes_fw->setHint("", LOCALE_MENU_HINT_VIDEO_MODES_AUTO);
@@ -207,48 +239,49 @@ int CVideoSettings::showVideoSetup()
 	videosetup->addIntroItems(LOCALE_MAINSETTINGS_VIDEO, tmp_locale);
 	// ---------------------------------------
 	//videosetup->addItem(vs_scart_sep); // separator scart
-	addSetting(videosetup, "analog_mode1", true, this); // analog option or scart
-	addSetting(videosetup, "analog_mode2", true, this); // chinch
+	addSetting(videosetup, "analog_mode1"); // analog option or scart
+	addSetting(videosetup, "analog_mode2"); // chinch
 	//if (tmp_locale != NONEXISTANT_LOCALE)
 	//	videosetup->addItem(GenericMenuSeparatorLine);
 	// ---------------------------------------
-	addSetting(videosetup, "video_43mode", true, this); // 4:3 mode
-	addSetting(videosetup, "video_Format", true, this); // display format
-	addSetting(videosetup, "video_Mode", true, this, CRCInput::RC_nokey, false, true); // video system
-	// dbdr options only on COOLSTREAM
-	if (cs_get_revision() != 0x01)
-		addSetting(videosetup, "video_dbdr", true, this);
+	addSetting(videosetup, "video_43mode"); // 4:3 mode
+	addSetting(videosetup, "video_Format"); // display format
+	// video system, asked about once it is on the screen, and only for the one picked
+	CMenuOptionChooser *video_mode = addChoiceSetting(videosetup, "video_Mode", true, NULL, CRCInput::RC_nokey, true);
+	if (video_mode != NULL)
+	{
+		afterApply(video_mode, [this]() { return confirmVideoMode(); });
+		openListOnStep(video_mode);
+	}
+	addSetting(videosetup, "video_dbdr");
 	if (vs_videomodes_fw != NULL)
 		videosetup->addItem(vs_videomodes_fw); // video modes submenue
 #ifdef BOXMODEL_CST_HD2
 	videosetup->addItem(vs_automodes_fw); // video auto modes submenue
 #endif
 
-#ifdef BOXMODEL_CST_HD2
-	// changeNotify multiplies contrast and saturation by 3
-	addSetting(videosetup, "brightness", true, this);
-	addSetting(videosetup, "contrast", true, this);
-	addSetting(videosetup, "saturation", true, this);
+	addSetting(videosetup, "brightness");
+	addSetting(videosetup, "contrast");
+	addSetting(videosetup, "saturation");
 
-	addSetting(videosetup, "enable_sd_osd", true, this);
-#endif
+	addSetting(videosetup, "enable_sd_osd");
 #if ENABLE_PIP
 	CPipSetup pip;
-	CMenuForwarder *pipsetup = new CMenuForwarder(LOCALE_VIDEOMENU_PIP, g_info.hw_caps->can_pip, NULL, &pip);
+	CMenuForwarder *pipsetup = new CMenuForwarder(LOCALE_VIDEOMENU_PIP, coreapi::pipUsable(), NULL, &pip);
 	pipsetup->setHint("", LOCALE_MENU_HINT_VIDEO_PIP);
 	videosetup->addItem(pipsetup);
 #endif
 
 #if ENABLE_QUADPIP
-	CMenuForwarder *quadpip = new CMenuForwarder(LOCALE_QUADPIP, g_info.hw_caps->pip_devs >= 1, NULL, new CQuadPiPSetup());
+	CMenuForwarder *quadpip = new CMenuForwarder(LOCALE_QUADPIP, coreapi::pipWindows() >= 1, NULL, new CQuadPiPSetup());
 	quadpip->setHint(NEUTRINO_ICON_HINT_QUADPIP, LOCALE_MENU_HINT_QUADPIP);
 	videosetup->addItem(quadpip);
 #endif
 
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	addSetting(videosetup, "zappingmode", true, this);
-	addSetting(videosetup, "hdmi_colorimetry", true, this);
+	addSetting(videosetup, "zappingmode");
+	addSetting(videosetup, "hdmi_colorimetry");
 
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 	videosetup->addItem(GenericMenuSeparatorLine);
 
 	CPSISetup *psiSetup = CPSISetup::getInstance();
@@ -292,161 +325,25 @@ int CVideoSettings::showVideoSetup()
 	return res;
 }
 
-void CVideoSettings::initVideoSettings()
+/* After the video group has put the new mode on the screen: somebody has to see
+   it to keep it, and a no or no answer at all puts back the mode the box had
+   right before, which is one written from elsewhere if that came in between.
+   The menu is drawn again whatever happened, as the screen always did after a
+   change of the mode. */
+bool CVideoSettings::confirmVideoMode()
 {
-	dprintf(DEBUG_NORMAL, "[CVideoSettings] [%s - %d], init video settings...\n", __func__, __LINE__);
-#if 0
-	// FIXME focus: ?? this is different for different boxes
-	videoDecoder->SetVideoMode((analog_mode_t) g_settings.analog_mode1);
-	videoDecoder->SetVideoMode((analog_mode_t) g_settings.analog_mode2);
-#endif
-#ifdef BOXMODEL_CST_HD2
-	changeNotify(LOCALE_VIDEOMENU_ANALOG_MODE, NULL);
-#else
-	unsigned int system_rev = cs_get_revision();
-	if (system_rev == 0x06)
-	{
-		changeNotify(LOCALE_VIDEOMENU_ANALOG_MODE, NULL);
-	}
-	else
-	{
-		changeNotify(LOCALE_VIDEOMENU_SCART, NULL);
-		changeNotify(LOCALE_VIDEOMENU_CINCH, NULL);
-	}
-#endif
-	//setupVideoSystem(false/*don't ask*/); // focus: CVideoSettings constructor do this already ?
-
-#if 0
-	videoDecoder->setAspectRatio(-1, g_settings.video_43mode);
-	videoDecoder->setAspectRatio(g_settings.video_Format, -1);
-#endif
-	videoDecoder->setAspectRatio(g_settings.video_Format, g_settings.video_43mode);
-#if ENABLE_PIP
-	if (pipVideoDecoder[0] != NULL)
-		pipVideoDecoder[0]->setAspectRatio(g_settings.video_Format, g_settings.video_43mode);
-#endif
-
-	videoDecoder->SetDBDR(g_settings.video_dbdr);
-	CAutoModeNotifier anotify;
-	anotify.changeNotify(NONEXISTANT_LOCALE, 0);
-#ifdef BOXMODEL_CST_HD2
-	changeNotify(LOCALE_VIDEOMENU_BRIGHTNESS, NULL);
-	changeNotify(LOCALE_VIDEOMENU_CONTRAST, NULL);
-	changeNotify(LOCALE_VIDEOMENU_SATURATION, NULL);
-	changeNotify(LOCALE_VIDEOMENU_SDOSD, NULL);
-#endif
-#if ENABLE_PIP
-	if (pipVideoDecoder[0] != NULL)
-		pipVideoDecoder[0]->Pig(CNeutrinoApp::getInstance()->pip_recalc_pos_x(g_settings.pip_x),CNeutrinoApp::getInstance()->pip_recalc_pos_y(g_settings.pip_y), g_settings.pip_width, g_settings.pip_height, g_settings.screen_width, g_settings.screen_height);
-#endif
-}
-
-void CVideoSettings::setupVideoSystem(bool do_ask)
-{
-	dprintf(DEBUG_NORMAL, "[CVideoSettings] [%s - %d], setup video system...\n", __func__, __LINE__);
-	COsdHelpers::getInstance()->setVideoSystem(g_settings.video_Mode); // FIXME
-	COsdHelpers::getInstance()->changeOsdResolution(0, true, false);
-
-	if (do_ask)
-	{
-		if (prev_video_mode != g_settings.video_Mode)
-		{
-			frameBuffer->paintBackground();
-			if (ShowMsg(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_VIDEO_MODE_OK), CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_INFO) != CMsgBox::mbrYes)
-			{
-				g_settings.video_Mode = prev_video_mode;
-				COsdHelpers::getInstance()->setVideoSystem(g_settings.video_Mode);
-				COsdHelpers::getInstance()->changeOsdResolution(0, true, false);
-			}
-			else
-				prev_video_mode = g_settings.video_Mode;
-		}
-	}
-}
-
-bool CVideoSettings::changeNotify(const neutrino_locale_t OptionName, void * /* data */)
-{
-#if 0
-	int val = 0;
-	if (data)
-		val = * (int *) data;
-#endif
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_ANALOG_MODE))
-	{
-		videoDecoder->SetVideoMode((analog_mode_t) g_settings.analog_mode1);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_SCART))
-	{
-		videoDecoder->SetVideoMode((analog_mode_t) g_settings.analog_mode1);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_CINCH))
-	{
-		videoDecoder->SetVideoMode((analog_mode_t) g_settings.analog_mode2);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_DBDR))
-	{
-		videoDecoder->SetDBDR(g_settings.video_dbdr);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_VIDEOFORMAT) || ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_43MODE))
-	{
-		if (g_settings.video_Format != 1 && g_settings.video_Format != 3 && g_settings.video_Format != 2)
-			g_settings.video_Format = 3;
-
-		g_Zapit->setMode43(g_settings.video_43mode);
-		videoDecoder->setAspectRatio(g_settings.video_Format, -1);
-#if ENABLE_PIP
-		if (pipVideoDecoder[0] != NULL)
-			pipVideoDecoder[0]->setAspectRatio(g_settings.video_Format, g_settings.video_43mode);
-#endif
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_VIDEOMODE))
-	{
-		setupVideoSystem(true /*ask*/);
+	int kept = coreapi::videoModeBeforeLastChange();
+	if (kept < 0)
 		return true;
-	}
-#ifdef BOXMODEL_CST_HD2
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_BRIGHTNESS))
-	{
-		videoDecoder->SetControl(VIDEO_CONTROL_BRIGHTNESS, g_settings.brightness);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_CONTRAST))
-	{
-		videoDecoder->SetControl(VIDEO_CONTROL_CONTRAST, g_settings.contrast * 3);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_SATURATION))
-	{
-		videoDecoder->SetControl(VIDEO_CONTROL_SATURATION, g_settings.saturation * 3);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_SDOSD))
-	{
-		int val = g_settings.enable_sd_osd;
-		dprintf(DEBUG_NORMAL, "[CVideoSettings] [%s - %d], SD OSD enable: %d\n", __func__, __LINE__, val);
-		int fd = CFrameBuffer::getInstance()->getFileHandle();
-		if (ioctl(fd, FBIO_SCALE_SD_OSD, &val))
-			perror("FBIO_SCALE_SD_OSD");
-	}
-#endif
-#if 0
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_SHARPNESS))
-	{
-		videoDecoder->SetControl(VIDEO_CONTROL_SHARPNESS, val);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_HUE))
-	{
-		videoDecoder->SetControl(VIDEO_CONTROL_HUE, val);
-	}
-#endif
-#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_ZAPPINGMODE))
-	{
-		videoDecoder->SetControl(VIDEO_CONTROL_ZAPPING_MODE, g_settings.zappingmode);
-	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_VIDEOMENU_HDMI_COLORIMETRY))
-	{
-		videoDecoder->SetHDMIColorimetry((HDMI_COLORIMETRY) g_settings.hdmi_colorimetry);
-	}
-#endif
-	return false;
+	keepOrRestore(g_settings.video_Mode, kept, "video_Mode", askKeepVideoMode, applyRow);
+	return true;
+}
+
+bool askKeepVideoMode()
+{
+	CFrameBuffer::getInstance()->paintBackground();
+	return ShowMsg(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_VIDEO_MODE_OK), CMsgBox::mbrNo,
+		       CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_INFO) == CMsgBox::mbrYes;
 }
 
 /* The value a key press steps a declared setting on to, among the ones this box
@@ -483,11 +380,7 @@ void CVideoSettings::next43Mode(void)
 		return;
 
 	g_settings.video_43mode = mode;
-	g_Zapit->setMode43(g_settings.video_43mode);
-#if ENABLE_PIP
-	if (pipVideoDecoder[0] != NULL)
-		pipVideoDecoder[0]->setAspectRatio(-1, g_settings.video_43mode);
-#endif
+	applyRow("video_43mode");
 	ShowHint(LOCALE_VIDEOMENU_43MODE, g_Locale->getText(text), 450, 2);
 }
 
@@ -500,12 +393,7 @@ void CVideoSettings::SwitchFormat()
 		return;
 
 	g_settings.video_Format = format;
-
-	videoDecoder->setAspectRatio(g_settings.video_Format, -1);
-#if ENABLE_PIP
-	if (pipVideoDecoder[0] != NULL)
-		pipVideoDecoder[0]->setAspectRatio(g_settings.video_Format, -1);
-#endif
+	applyRow("video_Format");
 	ShowHint(LOCALE_VIDEOMENU_VIDEOFORMAT, g_Locale->getText(text), 450, 2);
 }
 
@@ -567,8 +455,7 @@ void CVideoSettings::nextMode(void)
 		{
 			g_settings.video_Mode = vmodes[curmode].key;
 			//CVFD::getInstance()->ShowText(text);
-			COsdHelpers::getInstance()->setVideoSystem(g_settings.video_Mode);
-			COsdHelpers::getInstance()->changeOsdResolution(0, true, false);
+			applyRow("video_Mode");
 			//return;
 			disp_cur = 1;
 		}

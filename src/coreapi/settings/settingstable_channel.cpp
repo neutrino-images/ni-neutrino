@@ -20,6 +20,7 @@
 
 #include "settingstable.h"
 #include "settingsfield.h"
+#include "predicates.h"
 
 namespace coreapi
 {
@@ -37,11 +38,8 @@ namespace
    carried as the text a channel is named by everywhere else in this layer. The
    two beside them hold the name a person reads.
 
-   A caller is expected to write the pair together, and nothing here couples
-   them: one that writes an identifier alone leaves the old name standing beside
-   it. Both rows say so, because the alternative is reaching the channel stack
-   from the thread that carries a settings write, which is not a thread that
-   may take that lock. */
+   The coupling in couple_channel.cpp fills the name from the channel list when
+   an identifier is written alone, and refuses a name written alone. */
 
 // LIST_MODE_WEB is not on offer. -1 keeps the list mode last used.
 constexpr EnumValue kChannelListMode[] =
@@ -51,6 +49,20 @@ constexpr EnumValue kChannelListMode[] =
 	option(LIST_MODE_PROV).label("channellist.provs"),
 	option(LIST_MODE_SAT).label("channellist.sats"),
 	option(LIST_MODE_ALL).label("channellist.head")
+};
+
+/* The pixels across of a web stream, named by the picture it makes. The steps are
+   literal sizes without a locale. The boxes that cannot decode the larger two
+   do not offer them. */
+constexpr EnumValue kLivestreamResolution[] =
+{
+	option(3840).text("3840x2160").availableIf(decodesLargeStreams),
+	option(2560).text("2560x1440").availableIf(decodesLargeStreams),
+	option(1920).text("1920x1080"),
+	option(1280).text("1280x720"),
+	option(854).text("854x480"),
+	option(640).text("640x360"),
+	option(480).text("480x270")
 };
 
 /* The four start channel rows apply only while the box is not told to come up
@@ -133,22 +145,12 @@ constexpr Descriptor kChannel[] =
 		.field(COREAPI_TEXT_FIELD(StartChannelRadio)),
 
 	/* Web channels. Which of the rows below a menu shows is a matter of which
-	   menu was opened and not a setting, so none of them carries a condition.
-
-	   A number of pixels across, and a number rather than a choice: the steps
-	   are literal sizes without a locale, so every value between the offered
-	   ones is one a frontend can write and the box has no step for. Bound: the
-	   first and the last of the steps, which are fewer on the boxes that
-	   cannot decode the larger ones. */
-	intRow("livestreamResolution")
+	   menu was opened and not a setting, so none of them carries a condition. */
+	enumRow("livestreamResolution")
 		.section("channel")
 		.label("livestream.resolution")
-#if HAVE_CST_HARDWARE
-		.range(480, 1920)
-#else
-		.range(480, 3840)
-#endif
 		.defaultValue(1920)
+		.values(kLivestreamResolution)
 		.field(COREAPI_NUMBER_FIELD(livestreamResolution)),
 	intRow("webtv_stream_restart_attempts")
 		.section("channel")

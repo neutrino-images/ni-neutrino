@@ -208,6 +208,16 @@ void Request::setSession(const std::string &t)
 	session_ = t;
 }
 
+const std::string &Request::writer() const
+{
+	return writer_;
+}
+
+void Request::setWriter(const std::string &w)
+{
+	writer_ = w;
+}
+
 void Request::setHost(const std::string &h)
 {
 	host_ = h;

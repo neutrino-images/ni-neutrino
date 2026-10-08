@@ -95,6 +95,7 @@
 #include <hardware/video.h>
 
 #include <daemonc/remotecontrol.h>
+#include <coreapi/settings/settings.h>
 extern CRemoteControl *g_RemoteControl; /* neutrino.cpp */
 extern CPlugins *g_Plugins; /* neutrino.cpp */
 extern cVideo *videoDecoder;
@@ -399,7 +400,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 			case SNeutrinoSettings::ITEM_INFOICONS:
 			{
 				keyhelper.get(&key, &icon);
-				menu_item = new CMenuForwarder(!g_settings.mode_icons ? LOCALE_INFOICONS_SWITCH_ON : LOCALE_INFOICONS_SWITCH_OFF, g_settings.mode_icons_skin != INFOICONS_INFOVIEWER, NULL, new CInfoIconsSetup, "infoicons_switch", key, icon);
+				menu_item = new CMenuForwarder(!g_settings.mode_icons ? LOCALE_INFOICONS_SWITCH_ON : LOCALE_INFOICONS_SWITCH_OFF, coreapi::settings::conditionsHoldNow("mode_icons"), NULL, new CInfoIconsSetup, "infoicons_switch", key, icon);
 				// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
 				break;
 			}

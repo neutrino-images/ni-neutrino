@@ -44,27 +44,14 @@ class COsdSetup : public CMenuTarget, public CChangeObserver
 {
 	private:
 		CFrameBuffer *frameBuffer;
-		CColorSetupNotifier *colorSetupNotifier;
 		CFontSizeNotifier *fontsizenotifier;
 		CMenuWidget *osd_menu;
 		CMenuWidget *submenu_menus, *osd_menu_colors;
-		CMenuForwarder *mfFontFile, *mfTtxFontFile, *mfWindowSize;
+		CMenuForwarder *mfWindowSize;
 		char window_size_value[10];
-		std::string osdFontFile, osdTtxFontFile;
 		CComponentsShapeSquare *win_demo;
-		COnOffNotifier* colorInfoclockNotifier;
-		COnOffNotifier* screensaverNotifier;
-		COnOffNotifier* channellistNotifier;
-		COnOffNotifier* infobarHddNotifier;
-		CGenericMenuActivate casystemActivate;
-		CGenericMenuActivate screensaverActivate;
-		CGenericMenuActivate screensaverOptActivate;
-		CGenericMenuActivate gradentHeadDirection, gradentHintDirection, gradentInfobarTopDirection, gradentInfobarBodyDirection, gradentInfobarFootDirection;
 		int width;
 		int is_wizard;
-		int show_menu_hints;
-		int show_menu_hints_line;
-		int show_tuner_icon;
 
 		int showOsdSetup();
  		void showOsdMenueColorSetup(CMenuWidget *menu_colors);
@@ -83,7 +70,7 @@ class COsdSetup : public CMenuTarget, public CChangeObserver
 		void paintWindowSize(int w, int h);
 
 		void AddFontSettingItem(CMenuWidget &font_Settings, const SNeutrinoSettings::FONT_TYPES number_of_fontsize_entry);
-		void resetRadioText();
+		void hideAtOldValue(int &flag);
 	public:
 		enum INFOBAR_CHANNEL_LOGO_POS_OPTIONS
 		{
@@ -106,5 +93,9 @@ class COsdSetup : public CMenuTarget, public CChangeObserver
 		bool changeNotify(const neutrino_locale_t OptionName, void * data);
 		int showContextChanlistMenu(CChannelList *parent_channellist = NULL);
 };
+
+/* A font rebuild a write asked for while a screen with a painter thread of its own
+   was open, run once the program's loop is back at its top. */
+void setupWaitingFonts();
 
 #endif

@@ -54,6 +54,7 @@ enum class ValueType
 };
 
 struct Condition;
+struct ValueLookup;
 
 // One choice an Enum offers. The number is what the setting stores and
 // label_key names the text a frontend shows for it, so the wording can move
@@ -67,17 +68,10 @@ struct EnumValue
 	// NULL is always offered. Evaluated per request, so it may ask the box.
 	bool      (*available)();
 	// The entry is offered only while every one of these holds, NULL for always.
-	// Not read yet: the rows leave it empty until the lists that depend on
-	// another setting are declared.
+	// Judged with the settings as they stand, wherever the list is built.
 	const Condition *when;
 	size_t            when_count;
 };
-
-// One test for whether an entry is shown, so the lists built from a row agree.
-inline bool entryOffered(const EnumValue &e)
-{
-	return e.available == NULL || e.available();
-}
 
 /* One value a setting offers, with its label already the text the box shows.
    A value and not a range, because what the box offers is a set with holes in
@@ -88,6 +82,9 @@ struct SettingChoice
 	std::string label;
 	// The locale key when the entry has one, empty for fixed text.
 	std::string label_key;
+	// What a String row stores for this entry. A number row leaves it empty and
+	// a String row leaves value alone, since neither kind has a use for the other.
+	std::string text;
 
 	SettingChoice() : value(0) {}
 };
@@ -218,9 +215,9 @@ enum class FieldOrigin
 struct RecordField
 {
 	const char *name;
-	// Bool, Int or String.
+	// Bool, Int, Key or String.
 	ValueType   type;
-	// The bounds of an Int, nought for the other kinds.
+	// The bounds of an Int or a Key, nought for the other kinds.
 	long        min;
 	long        max;
 	// A credential: the list is never answered, and the schema says which
@@ -256,6 +253,8 @@ struct FieldExtra
 	   write arrives from inside their message loop, so a record may neither be freed nor
 	   moved from here. Adding and removing one stays on the screen. */
 	bool               fixed_count;
+	// A text that is a channel identifier, for an element row, whose origin does not say so.
+	bool               channel_id;
 };
 
 struct FieldRef
@@ -496,16 +495,21 @@ typedef bool (*ChoiceSource)(std::vector<SettingChoice> &out);
 // values are an Enum's choices, a Bool's two words, or the values an Int shows
 // in words instead of as a number.
 //
-// The members after field are all "none" in every row for now and say nothing
-// until something reads them. The order of all the members is written out once,
+// The members after field are all "none" in a row that does not use them. The order of all the members is written out once,
 // in RowBuilder below, and a table never lists them by position: that is why a
 // member can be added here without a row being touched. unit_key names the
-// locale text that follows the number and format_key one that holds the number
-// itself as %d, for formats that are more than a unit; a row names at most one
-// of the two. A frontend draws the unit beside the number and the format in
-// its place, and the schema answers the unit's key and not the format's, whose
-// %d only a box's own screen can fill. min_now and max_now answer the bound when
-// the constant is not the whole story and the constant stays the fallback.
+// locale text that follows the number, which a frontend draws beside it from its
+// own texts. min_now and max_now answer the bound when the constant is not the
+// whole story and the constant stays the fallback. They are read through
+// boundsNow() and nowhere else, which holds the answer inside the constants: the
+// constants are the outer envelope, so a provider that answers wrongly cannot
+// widen a row. They may be called from the thread that serves a write, while the
+// value is checked, and from the loop, so a provider reads atomics or its own
+// lock and never a screen's objects.
+//
+// A row holds what a setting means: its type, bounds, default, conditions, the
+// names of its label and hint, and its unit. How it is laid out, worded around
+// the number and asked for in a dialog stays with the screen that shows it.
 //
 // default_fn is the number a box falls back to when it is not the same on every
 // box, or depends on what the box has, for a Bool, an Int or an Enum. The
@@ -533,12 +537,19 @@ struct Descriptor
 	// Where the value is, which every row writes even when it is nowhere.
 	FieldRef         field;
 	const char      *unit_key;
-	const char      *format_key;
 	const TextRule  *text;
 	ChoiceSource     choices_from;
-	long           (*min_now)();
-	long           (*max_now)();
+	/* NULL for the store, else the lookup a write is judged with, so a bound that follows
+	   another setting reads the value the same write gives it. */
+	long           (*min_now)(const ValueLookup *);
+	long           (*max_now)(const ValueLookup *);
 	long           (*default_fn)();
+	// See readOutside() in the builder.
+	bool             read_outside;
+	/* The text a menu item carries where it is not the label: the menu names the row by the
+	   short word of its group, and the label that tells rows apart is for a page that lists
+	   them all at once. NULL: the label. */
+	const char      *menu_label_key;
 };
 
 /* How many channels a Color row has, three or four. The row keeps it in min and
@@ -552,6 +563,45 @@ inline size_t colorChannels(const Descriptor &d)
 inline long defaultInt(const Descriptor &d)
 {
 	return d.default_fn != NULL ? d.default_fn() : d.default_int;
+}
+
+struct Bounds
+{
+	long min;
+	long max;
+};
+
+/* The range a number takes on this box right now: what the row's providers say,
+   held inside the constant range, and the constants where a provider is absent.
+   A provider whose two answers cross is taken as no answer, because the range
+   they would leave holds nothing and a row that takes nothing is no row. */
+inline Bounds boundsNow(const Descriptor &d, const ValueLookup *now = NULL)
+{
+	Bounds b = { d.min, d.max };
+	if (d.min_now == NULL && d.max_now == NULL)
+		return b;
+
+	long lo = d.min_now != NULL ? d.min_now(now) : d.min;
+	long hi = d.max_now != NULL ? d.max_now(now) : d.max;
+	if (lo < d.min)
+		lo = d.min;
+	if (lo > d.max)
+		lo = d.max;
+	if (hi < d.min)
+		hi = d.min;
+	if (hi > d.max)
+		hi = d.max;
+	if (lo > hi)
+		return b;
+	b.min = lo;
+	b.max = hi;
+	return b;
+}
+
+// Whether the range of the row can be narrower than its constants.
+inline bool boundsVary(const Descriptor &d)
+{
+	return d.min_now != NULL || d.max_now != NULL;
 }
 
 // Each writes an array and its count as one pair, so the two cannot disagree: a
@@ -738,7 +788,7 @@ public:
 	{
 		return RowBuilder(Descriptor{
 			key, t, NULL, NULL, NULL, low, high, NULL, 0, 0, NULL, false, false, NULL, 0, COREAPI_NO_FIELD,
-			NULL, NULL, NULL, NULL, NULL, NULL, NULL
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
 		}, NULL);
 	}
 
@@ -747,8 +797,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, name, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -757,8 +807,18 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+		}, avail_);
+	}
+
+	constexpr RowBuilder menuLabel(const char *key) const
+	{
+		return RowBuilder(Descriptor{
+			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
+			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, key
 		}, avail_);
 	}
 
@@ -767,8 +827,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -777,8 +837,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, v, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -787,8 +847,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, v, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -797,8 +857,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, low, high, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -807,8 +867,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, v, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -817,8 +877,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, v, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -827,8 +887,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, text, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -837,8 +897,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -848,7 +908,7 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, list, N, d_.default_int,
 			d_.default_string, d_.needs_restart, d_.secret, d_.conditions, d_.condition_count, d_.field,
-			d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn
+			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -857,18 +917,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
-		}, avail_);
-	}
-
-	constexpr RowBuilder format(const char *key) const
-	{
-		return RowBuilder(Descriptor{
-			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
-			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, key, d_.text, d_.choices_from, d_.min_now, d_.max_now,
-			d_.default_fn
+			d_.condition_count, d_.field, key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -877,8 +927,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, &rule, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, &rule, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -887,28 +937,28 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, fn, d_.min_now, d_.max_now,
-			d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, fn, d_.min_now, d_.max_now,
+			d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
-	constexpr RowBuilder minNow(long (*fn)()) const
+	constexpr RowBuilder minNow(long (*fn)(const ValueLookup *)) const
 	{
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, fn,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, fn,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
-	constexpr RowBuilder maxNow(long (*fn)()) const
+	constexpr RowBuilder maxNow(long (*fn)(const ValueLookup *)) const
 	{
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			fn, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			fn, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -923,8 +973,22 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, true, d_.secret, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+		}, avail_);
+	}
+
+	/* The value is read by something the program cannot see from inside: a plugin, a script
+	   or a web page reads it from the settings file. The apply scan finds no reader of such
+	   a row in the tree and would ask for a group, which has nothing to run. Say so on the
+	   row that has a reader outside, and say nothing on one that has none at all. */
+	constexpr RowBuilder readOutside() const
+	{
+		return RowBuilder(Descriptor{
+			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
+			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, true, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -933,8 +997,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, true, d_.conditions,
-			d_.condition_count, d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -944,8 +1008,8 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, list, N,
-			d_.field, d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now, d_.max_now,
-			d_.default_fn
+			d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now,
+			d_.default_fn, d_.read_outside, d_.menu_label_key
 		}, avail_);
 	}
 
@@ -966,7 +1030,7 @@ public:
 				f.read_number, f.write_number, f.int_pointer, f.fits_number, f.read_text, f.write_text, f.ask,
 				f.tell, f.name, f.origin, avail_ != NULL ? avail_ : f.available, f.otherwise, f.extra
 			},
-			d_.unit_key, d_.format_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn
+			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
 		};
 	}
 
@@ -1085,9 +1149,9 @@ inline bool comparisonIsSane(const Condition &c)
 // Inline and free of any throwing construct, because consumers built without
 // exceptions include this header.
 //
-// An Int needs no rule against inverted bounds and an Enum none against an
-// empty list: neither can hold the default that is checked below, so both rules
-// are implied by that one check and by nothing else.
+// An Enum needs no rule against an empty list: it cannot hold the default that
+// is checked below. An Int does need one against inverted bounds, because its
+// default may be a value it names beside the range.
 inline bool descriptorIsSane(const Descriptor &d)
 {
 	if (d.key == NULL || d.key[0] == '\0')
@@ -1244,11 +1308,7 @@ inline bool descriptorIsSane(const Descriptor &d)
 	   each, and a name that is empty names nothing. */
 	if (d.unit_key != NULL && d.unit_key[0] == '\0')
 		return false;
-	if (d.format_key != NULL && d.format_key[0] == '\0')
-		return false;
-	if (d.unit_key != NULL && d.format_key != NULL)
-		return false;
-	if ((d.unit_key != NULL || d.format_key != NULL || d.min_now != NULL || d.max_now != NULL) &&
+	if ((d.unit_key != NULL || d.min_now != NULL || d.max_now != NULL) &&
 	    d.type != ValueType::Int)
 		return false;
 	// A list's rule is the one each of its texts is held to.
@@ -1349,7 +1409,18 @@ inline bool descriptorIsSane(const Descriptor &d)
 							return false;
 				}
 			}
-			return d.default_int >= d.min && d.default_int <= d.max;
+			if (d.min > d.max)
+				return false;
+			/* The default is a value of the range or one the row names: off is
+			   the natural default of a timeout whose floor is above it. */
+			if (d.default_int >= d.min && d.default_int <= d.max)
+				return true;
+			for (size_t i = 0; d.values != NULL && i < d.value_count; ++i)
+			{
+				if (d.values[i].value == d.default_int)
+					return true;
+			}
+			return false;
 
 		case ValueType::String:
 			return d.default_string != NULL;
@@ -1371,9 +1442,10 @@ inline bool descriptorIsSane(const Descriptor &d)
 				const RecordField &f = extra->record_fields[i];
 				if (f.name == NULL || f.name[0] == '\0')
 					return false;
-				if (f.type != ValueType::Bool && f.type != ValueType::Int && f.type != ValueType::String)
+				if (f.type != ValueType::Bool && f.type != ValueType::Int &&
+				    f.type != ValueType::Key && f.type != ValueType::String)
 					return false;
-				if (f.type == ValueType::Int && f.min > f.max)
+				if ((f.type == ValueType::Int || f.type == ValueType::Key) && f.min > f.max)
 					return false;
 				if (f.label_key != NULL && f.label_key[0] == '\0')
 					return false;
@@ -1516,14 +1588,14 @@ inline bool comparisonHolds(const Condition &c, const ValueLookup &lookup)
 //
 // A frontend that reads the list itself and disagrees with this function is
 // wrong.
-inline bool conditionsHold(const Descriptor &d, const ValueLookup &lookup)
+inline bool conditionsHold(const Condition *list, size_t count, const ValueLookup &lookup)
 {
-	if (d.conditions == NULL)
+	if (list == NULL)
 		return true;
 
-	for (size_t i = 0; i < d.condition_count; ++i)
+	for (size_t i = 0; i < count; ++i)
 	{
-		const Condition &c = d.conditions[i];
+		const Condition &c = list[i];
 
 		bool holds = true;
 		if (!conditionIsGroup(c))
@@ -1540,6 +1612,21 @@ inline bool conditionsHold(const Descriptor &d, const ValueLookup &lookup)
 	}
 
 	return true;
+}
+
+inline bool conditionsHold(const Descriptor &d, const ValueLookup &lookup)
+{
+	return conditionsHold(d.conditions, d.condition_count, lookup);
+}
+
+/* Whether an entry of a list is offered: the box has what it stands for and the
+   settings it depends on allow it. One test for every list built from a row, so
+   they agree. */
+inline bool entryOffered(const EnumValue &e, const ValueLookup &lookup)
+{
+	if (e.available != NULL && !e.available())
+		return false;
+	return conditionsHold(e.when, e.when_count, lookup);
 }
 
 } // namespace coreapi

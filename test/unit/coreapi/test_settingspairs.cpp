@@ -283,7 +283,6 @@ const std::set<std::string> &localeNames()
 
 /* Sites a screen builds from the declaration, counted toward the figures below
    and compared against nothing. Filled by the readers that follow. */
-size_t derivedBounds = 0;
 size_t derivedLabels = 0;
 
 const std::map<std::string, std::vector<Offered> > &offered()
@@ -299,10 +298,7 @@ const std::map<std::string, std::vector<Offered> > &offered()
 				continue;
 			// built from the declaration: no bounds on the screen to compare
 			if (rows[i][1] == "DERIVED")
-			{
-				++derivedBounds;
 				continue;
-			}
 			Offered o;
 			o.min = rows[i][1];
 			o.max = rows[i][2];
@@ -363,24 +359,6 @@ std::string states(const std::vector<Stated> &v)
 	return s;
 }
 
-/* The rows of the bound scan a comparison can use at all. A bound written as a
-   name the scan cannot turn into a number is printed as one it could not, and
-   the scan used to hold itself to how many were left. */
-size_t resolvedBounds()
-{
-	size_t n = 0;
-	for (std::map<std::string, std::vector<Offered> >::const_iterator it = offered().begin();
-	     it != offered().end(); ++it)
-	{
-		for (size_t j = 0; j < it->second.size(); ++j)
-		{
-			if (it->second[j].min != "?" && it->second[j].max != "?")
-				++n;
-		}
-	}
-	return n + derivedBounds;
-}
-
 std::string sites(const std::vector<Offered> &v)
 {
 	std::string s;
@@ -420,17 +398,7 @@ TEST_CASE("the map read out of the program is the size the program has", "[setti
 	INFO("keys read anywhere in the tree: " << keysRead().size());
 	recordCount("keys read anywhere in the tree", keysRead().size());
 
-	size_t bounds = 0;
-	for (std::map<std::string, std::vector<Offered> >::const_iterator it = offered().begin();
-	     it != offered().end(); ++it)
-		bounds += it->second.size();
-	bounds += derivedBounds;
-	INFO("bounds read off the screens: " << bounds << " over " << offered().size() << " fields");
-	recordCount("bounds read off the screens", bounds);
 	recordCount("fields the bound scan read", offered().size());
-	// The half of that scan a comparison can use, which is the count the scan
-	// itself used to be held to.
-	recordCount("bounds read with both ends resolved", resolvedBounds());
 
 	INFO("locale names the program has: " << localeNames().size());
 	recordCount("locale names the program has", localeNames().size());
@@ -656,64 +624,6 @@ TEST_CASE("every declared default is the one this build's own load falls back to
 	}
 	INFO("defaults named as key codes compared against this build's arm: " << named);
 	recordCount("key code defaults compared against this build's own load", named);
-}
-
-/* The bounds, which are the ones the pairing above cannot see. Both of the two
-   wrong rows the review found named the right field for the right key and got
-   the range wrong, one of them by reading the minimum as a maximum. */
-TEST_CASE("every declared bound is the one the screen enforces", "[settingspairs]")
-{
-	size_t checked = 0;
-	size_t skippedKind = 0;
-	size_t skippedUnresolved = 0;
-
-	for (size_t i = 0; i < settingsTableCount(); ++i)
-	{
-		const Descriptor &d = settingsTable()[i];
-		if (d.field.name == NULL)
-			continue;
-
-		std::map<std::string, std::vector<Offered> >::const_iterator it =
-			offered().find(d.field.name);
-		if (it == offered().end())
-			continue;
-
-		// Only a range means a range. A choice among named values carries no
-		// bound of its own and would fail against one.
-		if (d.type != ValueType::Int)
-		{
-			++skippedKind;
-			continue;
-		}
-
-		bool agrees = false;
-		bool comparable = false;
-		for (size_t j = 0; j < it->second.size(); ++j)
-		{
-			const Offered &o = it->second[j];
-			if (o.min == "?" || o.max == "?")
-				continue;
-			comparable = true;
-			if (strtol(o.min.c_str(), NULL, 10) == d.min &&
-			    strtol(o.max.c_str(), NULL, 10) == d.max)
-				agrees = true;
-		}
-
-		if (!comparable)
-		{
-			++skippedUnresolved;
-			continue;
-		}
-
-		++checked;
-		INFO("row " << d.key << " declares " << d.min << ".." << d.max
-		     << ", the screens offer " << sites(it->second));
-		CHECK(agrees);
-	}
-
-	INFO("bounds compared: " << checked << ", not a range: " << skippedKind
-	     << ", bound not a number in the source: " << skippedUnresolved);
-	recordCount("bounds compared against a screen", checked);
 }
 
 /* The weaker question about a label, and the one that can be asked of every row

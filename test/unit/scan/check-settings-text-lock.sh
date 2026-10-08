@@ -66,8 +66,9 @@ done
 FLOOR_NAMES=70
 FLOOR_REFS=700
 FLOOR_PUBLISHED=15
-# The two the weather fetch writes were mentioned 15 times.
-FLOOR_THREADWRITTEN=12
+# The two the weather fetch writes were mentioned 15 times; the setup screen now writes the
+# pair through the settings layer by key and the group reads each once, which leaves 10.
+FLOOR_THREADWRITTEN=10
 
 tmp=`mktemp -d`
 trap 'rm -rf "$tmp"' EXIT

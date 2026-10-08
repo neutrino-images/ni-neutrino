@@ -31,6 +31,8 @@
 
 #include <gui/plugins_hide.h>
 
+#include <coreapi/box/apply_plugins.h>
+
 #include <global.h>
 #include <neutrino.h>
 #include <neutrino_menue.h>
@@ -43,6 +45,14 @@
 #include "gui/plugins.h"
 
 extern CPlugins *g_Plugins;
+
+coreapi::Status coreapi::applicationReloadPlugins()
+{
+	if (!g_Plugins)
+		return Status::Ok;
+	g_Plugins->loadPlugins();
+	return Status::Ok;
+}
 
 const CMenuOptionChooser::keyval PLUGIN_HIDE_OPTIONS[] =
 {
@@ -145,7 +155,8 @@ bool CPluginsHideNotifier::changeNotify(const neutrino_locale_t, void *data)
 	f << cfg << std::endl;
 	f.close();
 
-	g_Plugins->loadPlugins();
+	/* The hide flag is a file of the plugin and no setting, so no group hears of it. */
+	coreapi::reloadPlugins();
 
 	return menu_return::RETURN_REPAINT;
 }

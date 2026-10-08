@@ -62,6 +62,7 @@ CRCLock* CRCLock::getInstance()
 
 int CRCLock::exec(CMenuTarget* parent, const std::string &actionKey)
 {
+	CMenuWidget::Busy modal;
 	if (locked)
 	{
 		printf("CRCLock::%s: already locked; exiting\n", __func__);

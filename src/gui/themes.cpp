@@ -40,6 +40,8 @@
 #include <system/helpers.h>
 #include <system/debug.h>
 #include <system/setting_helpers.h>
+#include <coreapi/base/apply.h>
+#include <coreapi/box/apply_osd.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/stringinput_ext.h>
 #include <gui/widget/keyboard_input.h>
@@ -75,6 +77,21 @@ CThemes *CThemes::getInstance()
 	return th;
 }
 
+/* A theme is read into the members as a whole, and any one colour key stands for the
+   palette group that puts them on the screen. */
+void CThemes::applyColors()
+{
+	const coreapi::Status s = coreapi::applyKey("theme.menu_Head");
+	if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
+		dprintf(DEBUG_NORMAL, "[CThemes] the colours were not applied\n");
+}
+
+coreapi::Status coreapi::applicationSetPalette()
+{
+	CColorSetupNotifier::setPalette();
+	return coreapi::Status::Ok;
+}
+
 int CThemes::exec(CMenuTarget *parent, const std::string &actionKey)
 {
 	int res = menu_return::RETURN_REPAINT;
@@ -85,7 +102,7 @@ int CThemes::exec(CMenuTarget *parent, const std::string &actionKey)
 		{
 			if (!applyDefaultTheme())
 				setupDefaultColors(); // fallback
-			changeNotify(NONEXISTANT_LOCALE, NULL);
+			applyColors();
 		}
 		else
 		{
@@ -295,7 +312,7 @@ void CThemes::rememberOldTheme(bool remember)
 		t = oldTheme;
 		setSettingsText(g_settings.theme_name, oldTheme_name);
 
-		changeNotify(NONEXISTANT_LOCALE, NULL);
+		applyColors();
 		hasThemeChanged = false;
 	}
 }
@@ -306,7 +323,7 @@ void CThemes::readFile(const char *themename)
 	{
 		getTheme(themefile);
 
-		changeNotify(NONEXISTANT_LOCALE, NULL);
+		applyColors();
 		hasThemeChanged = true;
 	}
 	else

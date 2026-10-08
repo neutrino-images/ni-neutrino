@@ -72,26 +72,36 @@ CWeather::~CWeather()
 
 void CWeather::setCoords(std::string new_coords, std::string new_city)
 {
-	if (coords.compare(new_coords))
 	{
+		std::lock_guard<std::mutex> g(mutex);
+		if (!coords.compare(new_coords))
+			return;
 		coords = new_coords;
 		city = new_city;
-		checkUpdate(true);
 	}
+	checkUpdate(true);
 }
 
 void CWeather::updateApi()
 {
+	updateApi(settingsText(g_settings.weather_api_key), settingsText(g_settings.weather_api_version));
+}
+
+void CWeather::updateApi(const std::string &new_key, const std::string &new_api)
+{
 	bool force = false;
-	if (key.compare(g_settings.weather_api_key))
 	{
-		key = g_settings.weather_api_key;
-		force = true;
-	}
-	if (api.compare(g_settings.weather_api_version))
-	{
-		api = g_settings.weather_api_version;
-		force = true;
+		std::lock_guard<std::mutex> g(mutex);
+		if (key.compare(new_key))
+		{
+			key = new_key;
+			force = true;
+		}
+		if (api.compare(new_api))
+		{
+			api = new_api;
+			force = true;
+		}
 	}
 	checkUpdate(force);
 }
@@ -99,8 +109,13 @@ void CWeather::updateApi()
 bool CWeather::checkUpdate(bool forceUpdate)
 {
 	time_t current_time = time(NULL);
+	time_t last;
+	{
+		std::lock_guard<std::mutex> g(mutex);
+		last = last_time;
+	}
 
-	if (forceUpdate || (difftime(current_time, last_time) > (UPDATE_CYCLE * 60)))
+	if (forceUpdate || (difftime(current_time, last) > (UPDATE_CYCLE * 60)))
 		return GetWeatherDetails();
 
 	return false;
@@ -110,21 +125,26 @@ bool CWeather::GetWeatherDetails()
 {
 	printf("[CWeather]: %s\n", __func__);
 
-	last_time = time(NULL);
+	std::string place, name, use_key, use_api;
+	{
+		std::lock_guard<std::mutex> g(mutex);
+		last_time = time(NULL);
+		if (!g_settings.weather_enabled)
+			return false;
+		place = coords;
+		name = city;
+		use_key = key;
+		use_api = api;
+	}
 
-	if (!g_settings.weather_enabled)
-		return false;
+	std::string lat = place.substr(0, place.find_first_of(','));
+	std::string lon = place.substr(place.find_first_of(',') + 1);
 
-	std::string lat = coords.substr(0, coords.find_first_of(','));
-	std::string lon = coords.substr(coords.find_first_of(',') + 1);
-
-	std::string data = "https://api.openweathermap.org/data/" + api + "/onecall?lat=" + lat + "&lon=" + lon + "&units=metric&lang=de&exclude=minutely,hourly,flags,alerts&appid=" + key;
+	std::string data = "https://api.openweathermap.org/data/" + use_api + "/onecall?lat=" + lat + "&lon=" + lon + "&units=metric&lang=de&exclude=minutely,hourly,flags,alerts&appid=" + use_key;
 	JSONCPP_STRING answer;
 	JSONCPP_STRING formattedErrors;
 
 	double found = 0;
-
-	v_forecast.clear();
 
 	Json::CharReaderBuilder builder;
 	Json::CharReader *reader = builder.newCharReader();
@@ -153,24 +173,25 @@ bool CWeather::GetWeatherDetails()
 
 	if (found > 0)
 	{
-		timezone = DataValues["timezone"].asString();
-		current.timestamp = DataValues["current"].get("dt", 0).asDouble();
-		current.temperature = DataValues["current"].get("temp", "").asFloat();
-		current.pressure = DataValues["current"].get("pressure", "").asFloat();
-		current.humidity = DataValues["current"].get("humidity", "").asFloat();
-		current.windSpeed = DataValues["current"].get("wind_speed", "").asFloat();
-		current.windBearing = DataValues["current"].get("wind_deg", "").asDouble();
-		current.icon = DataValues["current"]["weather"][0].get("icon", "").asString();
-		if (current.icon.empty())
-			current.icon = "unknown.png";
+		/* Filled apart and put in at once: two fetches can overlap, and one whose
+		   list is put in beside the other's would leave both. */
+		const std::string zone = DataValues["timezone"].asString();
+		current_data now;
+		now.timestamp = DataValues["current"].get("dt", 0).asDouble();
+		now.temperature = DataValues["current"].get("temp", "").asFloat();
+		now.pressure = DataValues["current"].get("pressure", "").asFloat();
+		now.humidity = DataValues["current"].get("humidity", "").asFloat();
+		now.windSpeed = DataValues["current"].get("wind_speed", "").asFloat();
+		now.windBearing = DataValues["current"].get("wind_deg", "").asDouble();
+		now.icon = DataValues["current"]["weather"][0].get("icon", "").asString();
+		if (now.icon.empty())
+			now.icon = "unknown.png";
 		else
-			current.icon = current.icon + ".png";
+			now.icon = now.icon + ".png";
 
-		if (current.icon_only_name.empty())
-			current.icon_only_name = "unknown";
+		printf("[CWeather]: temp in %s (%s): %.1f - %s\n", name.c_str(), zone.c_str(), now.temperature, now.icon.c_str());
 
-		printf("[CWeather]: temp in %s (%s): %.1f - %s\n", city.c_str(), timezone.c_str(), current.temperature, current.icon.c_str());
-
+		std::vector<forecast_data> days;
 		forecast_data daily_data;
 		Json::Value elements = DataValues["daily"];
 		for (unsigned int i = 0; i < elements.size(); i++)
@@ -193,11 +214,32 @@ bool CWeather::GetWeatherDetails()
 			timeinfo = localtime(&daily_data.timestamp);
 
 			printf("[CWeather]: temp %d.%d.%d: min %.1f - max %.1f -> %s\n", timeinfo->tm_mday, timeinfo->tm_mon + 1, timeinfo->tm_year + 1900, daily_data.temperatureMin, daily_data.temperatureMax, daily_data.icon.c_str());
-			v_forecast.push_back(daily_data);
+			days.push_back(daily_data);
 		}
+
+		std::lock_guard<std::mutex> g(mutex);
+		// A fetch for a place given up meanwhile ended after the one for the new place.
+		if (coords != place)
+			return false;
+		now.icon_only_name = current.icon_only_name.empty() ? std::string("unknown") : current.icon_only_name;
+		current = now;
+		timezone = zone;
+		v_forecast.swap(days);
 		return true;
 	}
 	return false;
+}
+
+forecast_data CWeather::forecastAt(int i)
+{
+	std::lock_guard<std::mutex> g(mutex);
+	if (v_forecast.empty())
+		return forecast_data();
+	if (i < 0)
+		i = 0;
+	if (i >= (int)v_forecast.size())
+		i = (int)v_forecast.size() - 1;
+	return v_forecast[i];
 }
 
 std::string CWeather::getDirectionString(int degree)
@@ -247,7 +289,11 @@ std::string CWeather::getDirectionString(int degree)
 
 bool CWeather::FindCoords(std::string postalcode, std::string country)
 {
-	std::string data = "http://api.openweathermap.org/geo/1.0/zip?zip=" + postalcode + "," + country + "&appid=" + key;
+	std::string data;
+	{
+		std::lock_guard<std::mutex> g(mutex);
+		data = "http://api.openweathermap.org/geo/1.0/zip?zip=" + postalcode + "," + country + "&appid=" + key;
+	}
 	JSONCPP_STRING answer;
 	JSONCPP_STRING formattedErrors;
 	Json::CharReaderBuilder builder;
@@ -288,7 +334,12 @@ void CWeather::show(int x, int y)
 	if (form == NULL)
 		form = new CComponentsForm();
 
-	if (!g_settings.weather_enabled || coords.empty())
+	bool placed;
+	{
+		std::lock_guard<std::mutex> g(mutex);
+		placed = !coords.empty();
+	}
+	if (!g_settings.weather_enabled || !placed)
 		return;
 
 	CComponentsPicture *ptmp = new CComponentsPicture(RADIUS_MID, RADIUS_MID, getCurrentIcon());

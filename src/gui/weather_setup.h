@@ -43,14 +43,13 @@ class CWeatherSetup : public CMenuTarget, CChangeObserver
 
 		int width, selected;
 
-		CMenuOptionChooser *weather_onoff;
-		CMenuOptionChooser *weather_api;
-		std::string weather_api_key_short;
-		int weather_api_version;
+		CMenuForwarder *location_item;
 
 		int showWeatherSetup();
 		int selectLocation();
-		int findLocation();
+		void findLocation();
+		void setPlace(const std::string &coords, const std::string &city);
+		void placeChanged();
 		void loadLocations(std::string filename);
 
 	public:

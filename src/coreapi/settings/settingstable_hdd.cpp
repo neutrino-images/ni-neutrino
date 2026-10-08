@@ -30,7 +30,7 @@ namespace
 
 /* The hard disk section. Everything else about disks is bound to devices found
    at run time, which is why only these seven are here. The two sleep values
-   reach the disk through a separate apply step. */
+   reach the disk through an apply group. */
 
 /* How long the disk waits before it spins down. The last three are not
    minutes: the driver reads them as its own codes. */
@@ -67,6 +67,18 @@ constexpr EnumValue kHddFs[] =
 	option(6).text("xfs").availableIf(formatsXfs)
 };
 
+/* The first file system the box can write, so a box without mkfs.ext4 does not fall back to
+   a format it cannot make. Ext4 where the box cannot say, as it was. */
+long hddFsDefault()
+{
+	for (size_t i = 0; i < sizeof(kHddFs) / sizeof(kHddFs[0]); ++i)
+	{
+		if (kHddFs[i].available != NULL && kHddFs[i].available())
+			return kHddFs[i].value;
+	}
+	return 0;
+}
+
 constexpr Descriptor kHdd[] =
 {
 	// Which file system the box writes when it formats a disk.
@@ -75,6 +87,7 @@ constexpr Descriptor kHdd[] =
 		.label("hdd_fs")
 		.hint("menu.hint_hdd_fmt")
 		.defaultValue(0)
+		.defaultFrom(hddFsDefault)
 		.values(kHddFs)
 		.field(COREAPI_NUMBER_FIELD(hdd_fs)),
 	enumRow("hdd_sleep")

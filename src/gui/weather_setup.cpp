@@ -34,31 +34,38 @@
 
 #include <gui/weather.h>
 
+#include <coreapi/base/apply.h>
+#include <coreapi/box/apply_weather.h>
+#include <coreapi/settings/settings.h>
+
 #include <driver/screen_max.h>
 
 #include <system/debug.h>
 
-CMenuOptionChooser::keyval_ext WEATHER_API_OPTIONS[] =
-{
-	{ 0, NONEXISTANT_LOCALE, "3.0"	},
-	{ 1, NONEXISTANT_LOCALE, "?.?"	} // prepared for next API version
+#include <utility>
 
-};
-#define WEATHER_API_OPTION_COUNT (sizeof(WEATHER_API_OPTIONS)/sizeof(CMenuOptionChooser::keyval_ext))
+void coreapi::applicationPrepareWeather()
+{
+	CWeather::getInstance();
+}
+
+/* Runs on the weather worker, which reads no setting that holds text: the job carries
+   them. The service is read by the loop and by the two display threads while this
+   fetches, as it is when they fetch themselves. */
+void coreapi::applicationRunWeatherJob(const WeatherJob &job)
+{
+	CWeather *weather = CWeather::getInstance();
+	if (job.place)
+		weather->setCoords(job.coords, job.city);
+	if (job.api)
+		weather->updateApi(job.api_key, job.api_version);
+}
 
 CWeatherSetup::CWeatherSetup()
 {
 	width = 40;
 	selected = -1;
-	weather_api_version = 0;
-	for (size_t i = 0; i < WEATHER_API_OPTION_COUNT; i++)
-	{
-		if (WEATHER_API_OPTIONS[i].valname == g_settings.weather_api_version)
-		{
-			weather_api_version = i;
-			break;
-		}
-	}
+	location_item = NULL;
 	locations.clear();
 	loadLocations(CONFIGDIR "/weather-favorites.xml");
 	loadLocations(WEATHERDIR "/weather-locations.xml");
@@ -71,7 +78,6 @@ CWeatherSetup::~CWeatherSetup()
 int CWeatherSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 {
 	dprintf(DEBUG_DEBUG, "init weather setup menu\n");
-	int res = menu_return::RETURN_REPAINT;
 
 	if (parent)
 		parent->hide();
@@ -80,14 +86,8 @@ int CWeatherSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 	{
 		return selectLocation();
 	}
-	else if (actionKey == "find_location")
-	{
-		return findLocation();
-	}
 
-	res = showWeatherSetup();
-
-	return res;
+	return showWeatherSetup();
 }
 
 int CWeatherSetup::showWeatherSetup()
@@ -95,35 +95,62 @@ int CWeatherSetup::showWeatherSetup()
 	CMenuWidget *ms_oservices = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_MISCSETUP_ONLINESERVICES);
 	ms_oservices->addIntroItems(LOCALE_MISCSETTINGS_ONLINESERVICES);
 
-	weather_onoff = static_cast<CMenuOptionChooser *>(addSetting(ms_oservices, "weather_enabled", CApiKey::check_weather_api_key()));
-	weather_onoff->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
+	CMenuItem *onoff = addSetting(ms_oservices, "weather_enabled");
+	if (onoff)
+		onoff->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
 
-#if ENABLE_WEATHER_KEY_MANAGE
-	changeNotify(LOCALE_WEATHER_API_KEY, NULL);
-	CKeyboardInput weather_api_key_input(LOCALE_WEATHER_API_KEY, &g_settings.weather_api_key, 32, this);
-	CMenuForwarder *mf_we = new CMenuForwarder(LOCALE_WEATHER_API_KEY, true, weather_api_key_short, &weather_api_key_input);
-	mf_we->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_WEATHER_API_KEY);
-	ms_oservices->addItem(mf_we);
-#endif
+	// Not there where the build keeps the key itself.
+	CMenuItem *key = addSetting(ms_oservices, "weather_api_key");
+	if (key)
+		key->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
 
-#if 0
-	weather_api = new CMenuOptionChooser(LOCALE_WEATHER_API_VERSION, &weather_api_version, WEATHER_API_OPTIONS, WEATHER_API_OPTION_COUNT, CApiKey::check_weather_api_key(), this);
-	weather_api->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_WEATHER_API_VERSION);
-	ms_oservices->addItem(weather_api);
-#endif
+	// The list of places is the screen's own dialog, so this item is not one the declaration builds.
+	// A forwarder keeps a pointer to a text handed to it; setOption keeps a copy.
+	CFollowForwarder *place = new CFollowForwarder(LOCALE_WEATHER_LOCATION, coreapi::settings::conditionsHoldNow("weather_city"), NULL, this, "select_location");
+	place->setOption(settingsText(g_settings.weather_city));
+	location_item = place;
+	// A copy of the place and no row: a write from elsewhere moves the place and the switch that allows it.
+	std::vector<std::string> moves;
+	moves.push_back("weather_location");
+	moves.push_back("weather_enabled");
+	place->follow(ms_oservices, "weather_city", moves, true, [place]() { place->setOption(settingsText(g_settings.weather_city)); });
+	location_item->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_WEATHER_LOCATION);
+	ms_oservices->addItem(location_item);
 
-	CMenuForwarder *mf_wl = new CMenuForwarder(LOCALE_WEATHER_LOCATION, g_settings.weather_enabled, settingsText(g_settings.weather_city), this, "select_location");
-	mf_wl->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_WEATHER_LOCATION);
-	ms_oservices->addItem(mf_wl);
-
-	CMenuForwarder *mf_zip = new CMenuForwarder(LOCALE_WEATHER_POSTALCODE, g_settings.weather_enabled, g_settings.weather_postalcode, this, "find_location");
-	mf_zip->setHint(NEUTRINO_ICON_HINT_SETTINGS, LOCALE_MENU_HINT_WEATHER_POSTALCODE);
-	ms_oservices->addItem(mf_zip);
+	CMenuItem *zip = addSetting(ms_oservices, "weather_postalcode", true, this);
+	if (zip)
+		zip->hintIcon = NEUTRINO_ICON_HINT_SETTINGS;
 
 	int res = ms_oservices->exec(NULL, "");
 	selected = ms_oservices->getSelected();
 	delete ms_oservices;
+	location_item = NULL;
 	return res;
+}
+
+void CWeatherSetup::setPlace(const std::string &coords, const std::string &city)
+{
+	// Written as the pair it is, which also empties the postal code that described the old place.
+	std::vector<std::pair<std::string, std::string> > members;
+	members.push_back(std::make_pair(std::string("weather_city"), city));
+	members.push_back(std::make_pair(std::string("weather_location"), coords));
+	coreapi::settings::Refusals failed;
+	coreapi::settings::writeBatch(members, failed, true);
+	for (size_t i = 0; i < failed.size(); i++)
+		dprintf(DEBUG_NORMAL, "[weather] %s not written: %s\n", failed[i].first.c_str(), failed[i].second.message.c_str());
+
+	// The write applied and announced itself; the place shown here is a copy and no row.
+	if (location_item)
+		location_item->setOption(settingsText(g_settings.weather_city));
+}
+
+void CWeatherSetup::placeChanged()
+{
+	const coreapi::Status s = coreapi::applyKey("weather_location");
+	if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
+		dprintf(DEBUG_NORMAL, "[weather] the place was not applied\n");
+	if (location_item)
+		location_item->setOption(settingsText(g_settings.weather_city));
 }
 
 int CWeatherSetup::selectLocation()
@@ -135,87 +162,54 @@ int CWeatherSetup::selectLocation()
 	{
 		// TODO: localize hint
 		ShowHint("Warning", "Failed to load weather-favorites.xml or weather-locations.xml\nPlease press any key or wait some seconds! ...", 700, 10, NULL, NEUTRINO_ICON_HINT_IMAGEINFO, CComponentsHeader::CC_BTN_EXIT);
-		setSettingsText(g_settings.weather_location, WEATHER_DEFAULT_LOCATION);
-		setSettingsText(g_settings.weather_city, WEATHER_DEFAULT_CITY);
-		CWeather::getInstance()->setCoords(settingsText(g_settings.weather_location), settingsText(g_settings.weather_city));
+		setPlace(WEATHER_DEFAULT_LOCATION, WEATHER_DEFAULT_CITY);
 		return menu_return::RETURN_REPAINT;
 	}
 
-	if (locations.size() > 0)
+	CMenuWidget *m = new CMenuWidget(LOCALE_WEATHER_LOCATION, NEUTRINO_ICON_LANGUAGE);
+	CMenuSelectorTarget *selector = new CMenuSelectorTarget(&select);
+
+	m->addItem(GenericMenuSeparator);
+
+	CMenuForwarder *mf;
+	for (size_t i = 0; i < locations.size(); i++)
 	{
-		CMenuWidget *m = new CMenuWidget(LOCALE_WEATHER_LOCATION, NEUTRINO_ICON_LANGUAGE);
-		CMenuSelectorTarget *selector = new CMenuSelectorTarget(&select);
+		std::string hint = locations[i].country;
+		hint += ": ";
+		hint += locations[i].coords.c_str();
 
-		m->addItem(GenericMenuSeparator);
-
-		CMenuForwarder *mf;
-		for (size_t i = 0; i < locations.size(); i++)
-		{
-			std::string hint = locations[i].country;
-			hint += ": ";
-			hint += locations[i].coords.c_str();
-
-			mf = new CMenuForwarder(locations[i].city, true, NULL, selector, to_string(i).c_str());
-			mf->setHint(NEUTRINO_ICON_HINT_SETTINGS, hint);
-			m->addItem(mf);
-		}
-
-		m->enableSaveScreen();
-		res = m->exec(NULL, "");
-
-		if (!m->gotAction())
-			return res;
-
-		delete selector;
+		mf = new CMenuForwarder(locations[i].city, true, NULL, selector, to_string(i).c_str());
+		mf->setHint(NEUTRINO_ICON_HINT_SETTINGS, hint);
+		m->addItem(mf);
 	}
 
-	clearSettingsText(g_settings.weather_postalcode);
+	m->enableSaveScreen();
+	res = m->exec(NULL, "");
 
-	setSettingsText(g_settings.weather_location, locations[select].coords);
-	setSettingsText(g_settings.weather_city, std::string(locations[select].city));
-	CWeather::getInstance()->setCoords(settingsText(g_settings.weather_location), settingsText(g_settings.weather_city));
+	if (!m->gotAction())
+		return res;
+
+	delete selector;
+
+	setPlace(locations[select].coords, std::string(locations[select].city));
 
 	return res;
 }
 
-int CWeatherSetup::findLocation()
+void CWeatherSetup::findLocation()
 {
-	int ret = menu_return::RETURN_REPAINT;
-
-	CStringInput zipcode(LOCALE_WEATHER_POSTALCODE, &g_settings.weather_postalcode, 5);
-	ret = zipcode.exec(NULL, "");
-	zipcode.hide();
-
-	if (CWeather::getInstance()->FindCoords(g_settings.weather_postalcode))
-	{
-		CWeather::getInstance()->setCoords(settingsText(g_settings.weather_location), settingsText(g_settings.weather_city));
-	}
-
-	return ret;
+	if (CWeather::getInstance()->FindCoords(settingsText(g_settings.weather_postalcode)))
+		placeChanged();
 }
 
-bool CWeatherSetup::changeNotify(const neutrino_locale_t OptionName, void */*data*/)
+bool CWeatherSetup::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
 {
-	int ret = menu_return::RETURN_NONE;
-
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_WEATHER_API_KEY))
+	// A switch left on without a key is kept and locked by its row condition, as on the web.
+	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_WEATHER_POSTALCODE))
 	{
-		g_settings.weather_enabled = g_settings.weather_enabled && CApiKey::check_weather_api_key();
-		if (g_settings.weather_enabled)
-		{
-			CWeather::getInstance()->updateApi();
-			weather_api_key_short = g_settings.weather_api_key.substr(0, 8) + "...";
-		}
-		else
-			weather_api_key_short.clear();
-		weather_onoff->setActive(CApiKey::check_weather_api_key());
+		findLocation();
 	}
-	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_WEATHER_API_VERSION))
-	{
-		setSettingsText(g_settings.weather_api_version, WEATHER_API_OPTIONS[weather_api_version].valname);
-		CWeather::getInstance()->updateApi();
-	}
-	return ret;
+	return false;
 }
 
 void CWeatherSetup::loadLocations(std::string filename)

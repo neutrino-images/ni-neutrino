@@ -59,6 +59,7 @@ bool typeMatches(const ::Json::Value &v, FieldType t)
 		   answering anything else is a document the server does not hold to. */
 		case FieldType::ChannelId: return got == ::Json::stringValue && isHexIdentifier(v.asString());
 		case FieldType::Object: return got == ::Json::objectValue;
+		case FieldType::NamedLists: return got == ::Json::objectValue;
 		case FieldType::Array:  return got == ::Json::arrayValue;
 	}
 	// A value cast into the enum from outside it, which no table here writes.
@@ -77,6 +78,7 @@ const char *typeName(FieldType t)
 		case FieldType::Time:   return "time";
 		case FieldType::ChannelId: return "channel id";
 		case FieldType::Object: return "object";
+		case FieldType::NamedLists: return "named lists";
 		case FieldType::Array:  return "array";
 	}
 	return "?";
@@ -105,6 +107,19 @@ void checkShape(const ::Json::Value &v, const Schema &s, const std::string &wher
 		{
 			REQUIRE(f.nested != NULL);
 			checkShape(member, *f.nested, where + "." + f.name);
+			continue;
+		}
+		if (f.type == FieldType::NamedLists)
+		{
+			REQUIRE(f.nested != NULL);
+			const ::Json::Value::Members listed = member.getMemberNames();
+			for (size_t n = 0; n < listed.size(); ++n)
+			{
+				INFO("list " << listed[n]);
+				REQUIRE(member[listed[n]].isArray());
+				for (::Json::ArrayIndex e = 0; e < member[listed[n]].size(); ++e)
+					checkShape(member[listed[n]][e], *f.nested, where + "." + f.name + "." + listed[n]);
+			}
 			continue;
 		}
 		if (f.type == FieldType::Array)

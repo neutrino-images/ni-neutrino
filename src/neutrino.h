@@ -152,9 +152,6 @@ private:
 	void CmdParser(int argc, char **argv);
 	void Cleanup();
 	void CheckFastScan(bool standby = false, bool reload = true);
-	// Puts the appliers of the settings screens into the facade. Defined beside
-	// them in src/gui, because what they call is the screens' own notifiers.
-	void registerSettingsAppliers();
 	CNeutrinoApp();
 
 public:
@@ -168,7 +165,6 @@ public:
 	void saveKeys(const char * fname = NULL);
 	void SetupTiming();
 	void SetupFonts(int fmode = CNeutrinoFonts::FONTSETUP_ALL);
-	void setupRecordingDevice(void);
 
 	~CNeutrinoApp();
 	CScanSettings& getScanSettings() {
@@ -223,7 +219,6 @@ public:
 	void setCurrentMuted(int m) { current_muted = m; }
 	int recordingstatus;
 	void MakeSectionsdConfig(CSectionsdClient::epg_config& config);
-	void SendSectionsdConfig(void);
 	int GetChannelMode(void) {
 		return lastChannelMode;
 	};
@@ -249,6 +244,9 @@ public:
 	void allowChannelList(bool allow){channelList_allowed = allow;}
 	CPersonalizeGui & getPersonalizeGui() { return personalize; }
 	bool getChannellistIsVisible() { return channelList_painted; }
+	/* A screen whose own thread paints with the fonts is in its nested loop: the
+	   channel list, the picture viewer or the movie player. */
+	bool ownPainterOpen() { return channelList_painted || mode == NeutrinoModes::mode_pic || mode == NeutrinoModes::mode_ts; }
 	void zapTo(t_channel_id channel_id);
 	bool zapPossible(const t_channel_id channel_id);
 	bool wakeupFromStandby(void);

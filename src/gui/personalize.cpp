@@ -155,6 +155,7 @@
 
 */
 
+#include <gui/widget/settingitem.h>
 #include <global.h>
 #include <neutrino.h>
 #include <neutrino_menue.h>
@@ -181,6 +182,10 @@
 
 #include <system/settings.h>
 #include <system/helpers.h>
+#include <system/debug.h>
+#include <coreapi/settings/settings.h>
+#include <utility>
+#include <vector>
 
 using namespace std;
 
@@ -212,7 +217,6 @@ CPersonalizeGui::CPersonalizeGui() : CPINProtection(g_settings.personalize_pinco
 	show_pluginmenu = false;
 	show_pin_setup = false;
 	user_menu_notifier = NULL;
-	pin_setup_notifier = NULL;
 	tmpW = NULL;
 	v_observ.clear();
 	options_count = 0;
@@ -340,9 +344,8 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 	pMenu->addIntroItems(NONEXISTANT_LOCALE, LOCALE_PERSONALIZE_ACCESS);
 
 	//pin
-	CPINChangeWidget *pinChangeWidget = NULL;
 	if (show_pin_setup)
-		ShowPinSetup(pMenu, pinChangeWidget);
+		ShowPinSetup(pMenu);
 
 	//personalized menues
 	CMenuForwarder *p_mn[widget_count];
@@ -389,40 +392,27 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 
 	int res = pMenu->exec(NULL, "");
 	if (show_pluginmenu) {
-		setSettingsText(g_settings.plugins_disabled, "");
-		setSettingsText(g_settings.plugins_game, "");
-		setSettingsText(g_settings.plugins_tool, "");
-		setSettingsText(g_settings.plugins_script, "");
-		setSettingsText(g_settings.plugins_lua, "");
+		// A plugin has one type, so the five lists are one write: the coupling and the plugin group run once on the whole answer.
+		static const char *const kKeys[] = { "plugins_disabled", "plugins_game", "plugins_tool", "plugins_script", "plugins_lua" };
+		static const int kTypes[] = { CPlugins::P_TYPE_DISABLED, CPlugins::P_TYPE_GAME, CPlugins::P_TYPE_TOOL, CPlugins::P_TYPE_SCRIPT, CPlugins::P_TYPE_LUA };
+		std::string lists[5];
 		for (int i = 0; i < pcount; i++) {
-			if (pltype[i] & CPlugins::P_TYPE_DISABLED) {
-				if (!g_settings.plugins_disabled.empty())
-					appendSettingsText(g_settings.plugins_disabled, ",");
-				appendSettingsText(g_settings.plugins_disabled, g_Plugins->getFileName(i));
-				g_Plugins->setType(i, CPlugins::P_TYPE_DISABLED);
-			} else if (pltype[i] & CPlugins::P_TYPE_GAME) {
-				if (!g_settings.plugins_game.empty())
-					appendSettingsText(g_settings.plugins_game, ",");
-				appendSettingsText(g_settings.plugins_game, g_Plugins->getFileName(i));
-				g_Plugins->setType(i, CPlugins::P_TYPE_GAME);
-			} else if (pltype[i] & CPlugins::P_TYPE_TOOL) {
-				if (!g_settings.plugins_tool.empty())
-					appendSettingsText(g_settings.plugins_tool, ",");
-				appendSettingsText(g_settings.plugins_tool, g_Plugins->getFileName(i));
-				g_Plugins->setType(i, CPlugins::P_TYPE_TOOL);
-			} else if (pltype[i] & CPlugins::P_TYPE_SCRIPT) {
-				if (!g_settings.plugins_script.empty())
-					appendSettingsText(g_settings.plugins_script, ",");
-				appendSettingsText(g_settings.plugins_script, g_Plugins->getFileName(i));
-				g_Plugins->setType(i, CPlugins::P_TYPE_SCRIPT);
-			} else if (pltype[i] & CPlugins::P_TYPE_LUA) {
-				if (!g_settings.plugins_lua.empty())
-					appendSettingsText(g_settings.plugins_lua, ",");
-				appendSettingsText(g_settings.plugins_lua, g_Plugins->getFileName(i));
-				g_Plugins->setType(i, CPlugins::P_TYPE_LUA);
+			for (size_t t = 0; t < 5; t++) {
+				if (!(pltype[i] & kTypes[t]))
+					continue;
+				if (!lists[t].empty())
+					lists[t] += ",";
+				lists[t] += g_Plugins->getFileName(i);
+				break;
 			}
 		}
-		g_Plugins->loadPlugins();
+		std::vector<std::pair<std::string, std::string> > members;
+		for (size_t t = 0; t < 5; t++)
+			members.push_back(std::make_pair(std::string(kKeys[t]), lists[t]));
+		coreapi::settings::Refusals failed;
+		coreapi::settings::writeBatch(members, failed, true);
+		for (size_t f = 0; f < failed.size(); f++)
+			dprintf(DEBUG_NORMAL, "[personalize] %s not written: %s\n", failed[f].first.c_str(), failed[f].second.message.c_str());
 	}
 
 	if (show_usermenu)
@@ -438,25 +428,17 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 
 	delete pMenu;
 	delete uMenu;
-	delete pinChangeWidget;
 	delete plMenu;
 	delete user_menu_notifier;
-	delete pin_setup_notifier;
 
 	return res;
 }
 
 //init pin setup dialog
-void CPersonalizeGui::ShowPinSetup(CMenuWidget* p_widget, CPINChangeWidget * &pin_widget)
+void CPersonalizeGui::ShowPinSetup(CMenuWidget* p_widget)
 {
-	pin_widget = new CPINChangeWidget(LOCALE_PERSONALIZE_PINCODE, &g_settings.personalize_pincode, 4, LOCALE_PERSONALIZE_PINHINT);
-
-	CMenuForwarder * fw_pin_setup = new CMenuForwarder(LOCALE_PERSONALIZE_PINCODE, true, g_settings.personalize_pincode, pin_widget, NULL, CRCInput::RC_red);
- 	pin_setup_notifier = new CPinSetupNotifier(fw_pin_setup);
- 	p_widget->addItem(new CMenuOptionChooser(LOCALE_PERSONALIZE_PIN_IN_USE, &g_settings.personalize[SNeutrinoSettings::P_MAIN_PINSTATUS], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, pin_setup_notifier));
-
-	pin_setup_notifier->changeNotify();
-	p_widget->addItem(fw_pin_setup);
+	addSetting(p_widget, "personalize_pinstatus");
+	addSetting(p_widget, "personalize_pincode", true, NULL, CRCInput::RC_red, false, false, false, LOCALE_PERSONALIZE_PINHINT);
 
 	p_widget->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_PERSONALIZE_MENUCONFIGURATION));
 }
@@ -1119,19 +1101,5 @@ bool CUserMenuNotifier::changeNotify(const neutrino_locale_t, void *)
 	toDisable[2]->setActive(g_settings.personalize[SNeutrinoSettings::P_MAIN_YELLOW_BUTTON]);
 	toDisable[3]->setActive(g_settings.personalize[SNeutrinoSettings::P_MAIN_BLUE_BUTTON]);
 
-	return false;
-}
-
-//helper class to enable/disable pin setup
-CPinSetupNotifier::CPinSetupNotifier( CMenuItem* item)
-{
-	toDisable=item;
-}
-
-bool CPinSetupNotifier::changeNotify(const neutrino_locale_t, void *)
-{
-	toDisable->setActive(g_settings.personalize[SNeutrinoSettings::P_MAIN_PINSTATUS]);
-
-	//   return g_settings.personalize[SNeutrinoSettings::P_MAIN_PINSTATUS];
 	return false;
 }

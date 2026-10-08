@@ -49,27 +49,33 @@
 
 #include <driver/screen_max.h>
 
-#include <xmlinterface.h>
 #include <system/helpers.h>
 #include <system/debug.h>
+#include <system/setting_helpers.h>
+
+#include <coreapi/base/apply.h>
+#include <coreapi/box/apply_lang.h>
+#include <coreapi/settings/menuspec.h>
 
 #include <algorithm>
-#include <dirent.h>
-#include <eitd/sectionsd.h>
+#include <gui/plugins.h>
 
-namespace {
-
-std::string getZoneinfoPath(const std::string &zone)
+namespace coreapi
 {
-	const std::string standard = std::string(TARGET_PREFIX) + "/usr/share/zoneinfo/" + zone;
-	if (!access(standard.c_str(), R_OK))
-		return standard;
 
-	const std::string legacy = std::string(TARGET_PREFIX) + "/share/zoneinfo/" + zone;
-	if (!access(legacy.c_str(), R_OK))
-		return legacy;
+Status applicationLoadLanguage(const std::string &name)
+{
+	if (g_Plugins != NULL)
+		g_Plugins->loadPlugins();
+	if (g_Locale->loadLocale(name.c_str()) == CLocaleManager::NO_SUCH_LOCALE)
+		return Status::NotFound;
+	return Status::Ok;
+}
 
-	return standard;
+Status applicationLinkTimezone()
+{
+	CTZChangeNotifier().changeNotify(NONEXISTANT_LOCALE, (void *) "apply");
+	return Status::Ok;
 }
 
 }
@@ -80,7 +86,6 @@ COsdLangSetup::COsdLangSetup(int wizard_mode)
 	is_wizard = wizard_mode;
 
 	width = 45;
-	tzNotifier = NULL;
 }
 
 COsdLangSetup::~COsdLangSetup()
@@ -95,9 +100,16 @@ int COsdLangSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 		parent->hide();
 
 	if (!actionKey.empty()) {
+		const std::string before = g_settings.language;
 		setSettingsText(g_settings.language, actionKey);
-		g_Plugins->loadPlugins();
-		g_Locale->loadLocale(g_settings.language.c_str());
+		// Busy is a group whose startup phase is not reached, which the phase makes good.
+		const coreapi::Status s = coreapi::applyKey("language");
+		if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
+		{
+			dprintf(DEBUG_NORMAL, "[osdlang_setup] language %s not loaded, keeping %s\n", actionKey.c_str(), before.c_str());
+			setSettingsText(g_settings.language, before);
+			coreapi::applyKey("language");
+		}
 		return menu_return::RETURN_EXIT;
 	}
 
@@ -125,26 +137,21 @@ int COsdLangSetup::showLocalSetup()
 	localSettings->addItem(mf);
 
  	//timezone setup
-	tzNotifier = new CTZChangeNotifier();
 	CMenuOptionStringChooser* tzSelect = getTzItems();
 	if (tzSelect != NULL)
 		localSettings->addItem(tzSelect);
 
 	//prefered audio language
-	CLangSelectNotifier *langNotifier = new CLangSelectNotifier();
 	CMenuWidget prefMenu(LOCALE_AUDIOMENU_PREF_LANGUAGES, NEUTRINO_ICON_LANGUAGE, width, MN_WIDGET_ID_LANGUAGESETUP_PREFAUDIO_LANGUAGE);
 	//call menue for prefered audio languages
-	showPrefMenu(&prefMenu, langNotifier);
+	showPrefMenu(&prefMenu);
 
 	mf = new CMenuForwarder(LOCALE_AUDIOMENU_PREF_LANGUAGES, true, NULL, &prefMenu, NULL, CRCInput::RC_yellow);
 	mf->setHint("", LOCALE_MENU_HINT_LANG_PREF);
 	localSettings->addItem(mf);
-	//langNotifier->changeNotify(NONEXISTANT_LOCALE, NULL);
 
 	int res = localSettings->exec(NULL, "");
 	delete localSettings;
-	delete langNotifier;
-	delete tzNotifier;
 #ifdef ENABLE_LCD4LINUX
 	CLCD4l::getInstance()->RestartLCD4lScript();
 #endif
@@ -155,50 +162,19 @@ int COsdLangSetup::showLocalSetup()
 //returns items for selectable timezones
 CMenuOptionStringChooser* COsdLangSetup::getTzItems()
 {
-	xmlDocPtr parser = parseXmlFile("/etc/timezone.xml");
+	// The row offers the zones this box has installed, or none where it cannot say.
+	const coreapi::Result<coreapi::MenuItemSpec> row = coreapi::menuItem("timezone");
+	if (!row.ok() || row.value().choices.empty())
+		return NULL;
+	const std::vector<coreapi::MenuChoice> &zones = row.value().choices;
 
-	CMenuOptionStringChooser* tzSelect = NULL;
-	if (parser != NULL)
-	{
-		tzSelect = new CMenuOptionStringChooser(LOCALE_MAINSETTINGS_TIMEZONE, &g_settings.timezone, true, tzNotifier, CRCInput::RC_green, NULL, true);
-		tzSelect->setHint("", LOCALE_MENU_HINT_TIMEZONE);
-		xmlNodePtr search = xmlDocGetRootElement(parser);
-		search = xmlChildrenNode(search);
-		bool found = false;
-
-		while (search)
-		{
-			if (!strcmp(xmlGetName(search), "zone"))
-			{
-				const char* zptr = xmlGetAttribute(search, "zone");
-				std::string zone;
-				if(zptr)
-					zone = zptr;
-				//printf("Timezone: %s -> %s\n", name.c_str(), zone.c_str());
-				const std::string zonefile = getZoneinfoPath(zone);
-				if (access(zonefile.c_str(), R_OK))
-					printf("[neutrino] timezone file '%s' not installed\n", zone.c_str());
-				else
-				{
-					const char* ptr = xmlGetAttribute(search, "name");
-					if(ptr){
-						std::string name = ptr;
-						tzSelect->addOption(name);
-						found = true;
-					}
-				}
-			}
-			search = xmlNextNode(search);
-		}
-
-		if (!found)
-		{
-			delete tzSelect;
-			tzSelect = NULL;
-		}
-
-		xmlFreeDoc(parser);
-	}
+	/* Lives as long as the menu does, which is as long as the process: the menu
+	   is built again on every visit and the observer is a few bytes. */
+	static CApplyKeyNotifier tzObserver("timezone");
+	CMenuOptionStringChooser* tzSelect = new CMenuOptionStringChooser(LOCALE_MAINSETTINGS_TIMEZONE, &g_settings.timezone, true, &tzObserver, CRCInput::RC_green, NULL, true);
+	tzSelect->setHint("", LOCALE_MENU_HINT_TIMEZONE);
+	for (size_t i = 0; i < zones.size(); i++)
+		tzSelect->addOption(zones[i].text);
 
 	return tzSelect;
 }
@@ -206,44 +182,27 @@ CMenuOptionStringChooser* COsdLangSetup::getTzItems()
 //shows locale setup for language selection
 void COsdLangSetup::showLanguageSetup(CMenuWidget *osdl_setup)
 {
-	struct dirent **namelist;
-	int n;
-	const char *pfad[] = { LOCALEDIR, LOCALEDIR_VAR };
-
 	osdl_setup->addIntroItems();
 
-	for (int p = 0; p < 2; p++)
-	{
-		n = scandir(pfad[p], &namelist, 0, alphasort);
-		if (n < 0)
-		{
-			perror("loading locales: scandir");
-		}
-		else
-		{
-			for (int count=0; count<n; count++)
-			{
-				char * locale = namelist[count]->d_name;
-				char * pos = strstr(locale, ".locale");
-				if (pos != NULL)
-				{
-					*pos = '\0';
-					std::string loc(locale);
-					loc.at(0) = toupper(loc.at(0));
+	const coreapi::Result<coreapi::MenuItemSpec> row = coreapi::menuItem("language");
+	if (!row.ok())
+		return;
+	const std::vector<coreapi::MenuChoice> &locales = row.value().choices;
 
-					CMenuForwarder *mf = new CMenuForwarder(loc, true, NULL, this, locale);
-					mf->iconName = mf->getActionKey();
-					osdl_setup->addItem(mf, !strcmp(locale, g_settings.language.c_str()));
-				}
-				free(namelist[count]);
-			}
-			free(namelist);
-		}
+	for (size_t i = 0; i < locales.size(); i++)
+	{
+		const std::string &locale = locales[i].text;
+		std::string loc(locale);
+		loc.at(0) = toupper(loc.at(0));
+
+		CMenuForwarder *mf = new CMenuForwarder(loc, true, NULL, this, locale.c_str());
+		mf->iconName = mf->getActionKey();
+		osdl_setup->addItem(mf, locale == g_settings.language);
 	}
 }
 
 //shows menue for prefered audio/epg languages
-void COsdLangSetup::showPrefMenu(CMenuWidget *prefMenu, CLangSelectNotifier *langNotifier)
+void COsdLangSetup::showPrefMenu(CMenuWidget *prefMenu)
 {
 	prefMenu->addItem(GenericMenuSeparator);
 	prefMenu->addItem(GenericMenuBack);
@@ -253,12 +212,19 @@ void COsdLangSetup::showPrefMenu(CMenuWidget *prefMenu, CLangSelectNotifier *lan
 
 	for(int i = 0; i < 3; i++)
 	{
-		CMenuOptionStringChooser * langSelect = new CMenuOptionStringChooser(LOCALE_AUDIOMENU_PREF_LANG, &g_settings.pref_lang[i], true, langNotifier, CRCInput::convertDigitToKey(i+1), "", true);
+		static CApplyKeyNotifier langObservers[3] = { CApplyKeyNotifier("pref_lang_0"), CApplyKeyNotifier("pref_lang_1"), CApplyKeyNotifier("pref_lang_2") };
+		CMenuOptionStringChooser * langSelect = new CMenuOptionStringChooser(LOCALE_AUDIOMENU_PREF_LANG, &g_settings.pref_lang[i], true, &langObservers[i], CRCInput::convertDigitToKey(i+1), "", true);
 		langSelect->setHint("", LOCALE_MENU_HINT_PREF_LANG);
-		langSelect->addOption("none");
-		std::map<std::string, std::string>::const_iterator it;
-		for(it = iso639rev.begin(); it != iso639rev.end(); ++it)
-			langSelect->addOption(it->first.c_str());
+		// The row offers "none" and the languages of the box's table.
+		char key[16];
+		snprintf(key, sizeof(key), "pref_lang_%d", i);
+		const coreapi::Result<coreapi::MenuItemSpec> row = coreapi::menuItem(key);
+		if (row.ok())
+		{
+			const std::vector<coreapi::MenuChoice> &names = row.value().choices;
+			for (size_t n = 0; n < names.size(); n++)
+				langSelect->addOption(names[n].text);
+		}
 
 		prefMenu->addItem(langSelect);
 	}
@@ -276,43 +242,4 @@ void COsdLangSetup::showPrefMenu(CMenuWidget *prefMenu, CLangSelectNotifier *lan
 
 		prefMenu->addItem(langSelect);
 	}
-}
-
-bool COsdLangSetup::changeNotify(const neutrino_locale_t, void *)
-{
-	//apply osd language
-	g_Locale->loadLocale(g_settings.language.c_str());
-
-	// TODO: reload channellists to apply changes to localized bouquet names?
-
-	return true;
-}
-
-bool CLangSelectNotifier::changeNotify(const neutrino_locale_t, void *)
-{
-	std::vector<std::string> v_languages;
-	//bool found = false;
-	std::map<std::string, std::string>::const_iterator it;
-
-	//prefered audio languages
-	for(int i = 0; i < 3; i++)
-	{
-		if(!g_settings.pref_lang[i].empty() && g_settings.pref_lang[i] !=  "none")
-		{
-			printf("setLanguages: %d: %s\n", i, g_settings.pref_lang[i].c_str());
-
-			for(it = iso639.begin(); it != iso639.end(); ++it)
-			{
-				if(g_settings.pref_lang[i] == it->second)
-				{
-					v_languages.push_back(it->first);
-					printf("setLanguages: adding %s\n", it->first.c_str());
-					//found = true;
-				}
-			}
-		}
-	}
-	CEitManager::getInstance()->setLanguages(v_languages);
-
-	return false;
 }

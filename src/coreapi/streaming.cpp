@@ -392,5 +392,10 @@ Result<std::string> playlistFor(const std::string &authority, ChannelId id)
 	return finish(f, path, written);
 }
 
+int portOrDefault(int stored)
+{
+	return (stored < 1 || stored > 65535) ? DEFAULT_PORT : stored;
+}
+
 } // namespace streaming
 } // namespace coreapi

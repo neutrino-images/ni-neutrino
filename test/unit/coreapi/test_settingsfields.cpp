@@ -235,30 +235,6 @@ TEST_CASE("a safety time is held to the bounds the screen offers", "[settingsfie
 	CHECK(safety.before == 99 * 60);
 }
 
-// Nobody is told about it afterwards. Every notifier reads the member named
-// after the row, which this layer never wrote, so one run for this row would
-// apply whatever a screen last left in it over the value that was just written.
-TEST_CASE("a written safety time asks no applier", "[settingsfields]")
-{
-	RealStore store;
-	FakeRecordingSafety safety;
-	InstalledRecordingSafety installed(&safety);
-
-	FakeApplier recording;
-	REQUIRE(registerSettingsApplier("recording", &recording) == Status::Ok);
-
-	REQUIRE(settings::set(kBefore, "2").ok());
-	applyPendingSettings();
-	CHECK(recording.calls == 0);
-
-	// And the section really is one an applier would otherwise be asked for.
-	REQUIRE(settings::set("recording_save_in_channeldir", "1").ok());
-	applyPendingSettings();
-	CHECK(recording.calls == 1);
-
-	registerSettingsApplier("recording", NULL);
-}
-
 /* The three questions the screen splits one mask into. Each has to reach its
    own bit and leave the others where they are: a row writing the whole field
    would read as right everywhere else and would clear the two questions beside
@@ -491,15 +467,16 @@ TEST_CASE("a setting whose entries nobody can state takes none", "[settingsfield
 	box.caps.board_revision = 1;
 	box.caps.has_SCART = 1;
 	box.caps_status = Status::Internal;
-	store.values.analog_mode1 = 0x10;
+	store.values.analog_mode1 = 0;
 
 	Result<std::vector<SettingChoice> > none = settings::choices("analog_mode1");
 	CHECK_FALSE(none.ok());
 	CHECK(none.error().code == ErrorCode::ChoicesUnavailable);
 
-	CHECK_FALSE(settings::set("analog_mode1", "16").ok());
+	// The value it falls back to is no pick from a list it cannot state, any other is.
+	CHECK_FALSE(settings::set("analog_mode1", "32").ok());
 	applyPendingSettings();
-	CHECK(store.values.analog_mode1 == 0x10);
+	CHECK(store.values.analog_mode1 == 0);
 }
 
 /* The video modes are the family's own table, in the words and the order of the
@@ -666,29 +643,6 @@ TEST_CASE("the drawing sizes offered are the ones the box draws at", "[settingsf
 	CHECK_FALSE(settings::choices("osd_resolution").ok());
 }
 
-// Nobody is told afterwards: the object was changed directly, and the screen's
-// own notifier reads the value it is handed rather than the member, so running
-// it from here would read a pointer nothing filled.
-TEST_CASE("a written drawing size asks no applier", "[settingsfields]")
-{
-	RealStore store;
-	FakeOsdResolution drawing;
-	InstalledOsdResolution installed(&drawing);
-
-	FakeApplier osd;
-	REQUIRE(registerSettingsApplier("osd", &osd) == Status::Ok);
-
-	REQUIRE(settings::set("osd_resolution", "1").ok());
-	applyPendingSettings();
-	CHECK(osd.calls == 0);
-
-	REQUIRE(settings::set("mode_icons", "1").ok());
-	applyPendingSettings();
-	CHECK(osd.calls == 1);
-
-	registerSettingsApplier("osd", NULL);
-}
-
 // A screen that has not handed its copy over is an answer and not a mode:
 // either mode is a real value of this setting, so answering one would report
 // the box as drawing at a size nothing knows it is drawing at.
@@ -731,11 +685,31 @@ TEST_CASE("the file systems offered are the ones the box can write", "[settingsf
 	CHECK(settings::set("hdd_fs", "4").ok());
 	CHECK_FALSE(settings::set("hdd_fs", "6").ok());
 
-	// A box that cannot say offers none.
+	// A box that cannot say offers none, and only its default or the stored value is taken.
 	box.format_tools_status = Status::Internal;
 	Result<std::vector<SettingChoice> > none = settings::choices("hdd_fs");
 	CHECK_FALSE(none.ok());
-	CHECK_FALSE(settings::set("hdd_fs", "0").ok());
+	CHECK_FALSE(settings::set("hdd_fs", "3").ok());
+	CHECK(settings::check("hdd_fs", "0").ok());
+}
+
+TEST_CASE("the file system a disk is formatted with by default is one the box can write", "[settingsfields]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+
+	box.format_tools.push_back("vfat");
+	box.format_tools.push_back("ext2");
+	Result<Descriptor> d = settings::describe("hdd_fs");
+	REQUIRE(d.ok());
+	CHECK(defaultInt(d.value()) == 2);
+
+	box.format_tools.push_back("ext4");
+	CHECK(defaultInt(settings::describe("hdd_fs").value()) == 0);
+
+	// A box that cannot say keeps ext4.
+	box.format_tools_status = Status::Internal;
+	CHECK(defaultInt(settings::describe("hdd_fs").value()) == 0);
 }
 
 /* A reset from a menu runs on the loop that would otherwise be sent a message, so the values

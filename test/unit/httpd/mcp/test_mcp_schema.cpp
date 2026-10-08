@@ -81,6 +81,7 @@ const FieldDesc kRootFields[] = {
 	HTTPD_OBJECT("one", &kLeaf, "a leaf"),
 	HTTPD_LIST_OF("many", &kLeaf, "leaves"),
 	HTTPD_LIST_OF_VALUES("ns", ElementType::Int, "numbers"),
+	HTTPD_NAMED_LISTS_OPTIONAL("by_name", &kLeaf, "leaves under names the answer chooses"),
 };
 const Schema kRoot = { "root", HTTPD_FIELDS(kRootFields) };
 
@@ -231,6 +232,9 @@ TEST_CASE("an answer is described inline with its nested shapes", "[mcp-schema]"
 	REQUIRE(p["many"]["items"]["properties"]["t"]["format"].asString() == "unix-time");
 	REQUIRE(p["ns"]["items"]["type"].asString() == "integer");
 	REQUIRE(p["one"]["description"].asString() == "a leaf");
+	REQUIRE(p["by_name"]["type"].asString() == "object");
+	REQUIRE(p["by_name"]["additionalProperties"]["type"].asString() == "array");
+	REQUIRE(p["by_name"]["additionalProperties"]["items"]["properties"]["t"]["format"].asString() == "unix-time");
 }
 
 TEST_CASE("the answer of a route with no document is one of two words", "[mcp-schema]")

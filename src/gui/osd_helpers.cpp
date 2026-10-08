@@ -18,6 +18,8 @@
 #include <hardware/video.h>
 
 #include <coreapi/base/deps.h>
+#include <coreapi/box/apply_video.h>
+#include <coreapi/osd.h>
 
 extern CInfoClock *InfoClock;
 extern CTimeOSD *FileTimeOSD;
@@ -49,6 +51,8 @@ class CRealOsdResolution : public coreapi::OsdResolutionSource
 			   and the call is what the box is drawing at now. */
 			COsdHelpers::getInstance()->g_settings_osd_resolution_save = mode;
 			COsdHelpers::getInstance()->changeOsdResolution((uint32_t) mode);
+			// The icons were cached at the size the box drew at; the screen menu clears them after the change and so must a write from elsewhere.
+			CFrameBuffer::getInstance()->clearIconCache();
 			return coreapi::Status::Ok;
 		}
 
@@ -71,6 +75,16 @@ CRealOsdResolution g_real_osd_resolution;
 void installOsdResolutionSource()
 {
 	coreapi::setOsdResolutionSource(&g_real_osd_resolution);
+}
+
+/* The video group's standard: what the video screen did for a new mode, the
+   screen redrawn in automatic mode, and no question, which stays with the
+   screen. */
+coreapi::Status coreapi::applicationSetVideoSystem(int system)
+{
+	COsdHelpers::getInstance()->setVideoSystem(system);
+	COsdHelpers::getInstance()->changeOsdResolution(0, true, false);
+	return coreapi::Status::Ok;
 }
 
 COsdHelpers::COsdHelpers()
@@ -114,12 +128,9 @@ void COsdHelpers::changeOsdResolution(uint32_t mode, bool automode/*=false*/, bo
 	int videoSystem = getVideoSystem();
 
 	if ((g_settings.video_Mode == VIDEO_STD_AUTO) &&
-	    (g_settings.enabled_auto_modes[videoSystem] == 1) &&
-	    (!isVideoSystem1080(videoSystem)))
+	    coreapi::osd::autoModeEnabled(g_settings.enabled_auto_modes, VIDEOMENU_VIDEOMODE_OPTION_COUNT, videoSystem) &&
+	    (!coreapi::osd::videoSystemNeeds1080(videoSystem)))
 		modeNew = OSDMODE_720;
-
-//	if (!isVideoSystem1080(videoSystem))
-//		modeNew = OSDMODE_720;
 
 	idx = frameBuffer->getIndexOsdResolution(modeNew);
 	const bool sizeChanges = (modeNew != getOsdResolution());
@@ -193,42 +204,6 @@ void COsdHelpers::changeOsdResolution(uint32_t, bool, bool)
 {
 }
 #endif
-
-int COsdHelpers::isVideoSystem1080(int res)
-{
-	if ((res == VIDEO_STD_1080I60) ||
-	    (res == VIDEO_STD_1080I50) ||
-	    (res == VIDEO_STD_1080P30) ||
-	    (res == VIDEO_STD_1080P24) ||
-	    (res == VIDEO_STD_1080P25))
-		return true;
-
-#ifdef BOXMODEL_CST_HD2
-	if ((res == VIDEO_STD_1080P50) ||
-	    (res == VIDEO_STD_1080P60) ||
-	    (res == VIDEO_STD_1080P2397) ||
-	    (res == VIDEO_STD_1080P2997))
-		return true;
-#endif
-
-#if HAVE_ARM_HARDWARE
-	if ((res == VIDEO_STD_1080P50) ||
-	    (res == VIDEO_STD_1080P60) ||
-	    (res == VIDEO_STD_2160P24) ||
-	    (res == VIDEO_STD_2160P25) ||
-	    (res == VIDEO_STD_2160P30) ||
-	    (res == VIDEO_STD_2160P50))
-		return true;
-#endif
-
-#if 0
-	/* for testing only */
-	if (res == VIDEO_STD_720P50)
-		return true;
-#endif
-
-	return false;
-}
 
 int COsdHelpers::getVideoSystem()
 {

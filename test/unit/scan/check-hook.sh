@@ -70,10 +70,6 @@ fi
 # The install calls and the registration below them cannot be linked either, and they
 # have to run before the threads below them, so their order is checked as text.
 #
-# The registration is here and not left to a case because nothing at run time can miss
-# it: a section with no applier is a setting nothing has to be told about, so a
-# forgotten registration and a section that has nothing to apply are the same silence.
-#
 # Presence and line order alone used to be all that was checked, which a dead wrapper
 # around any of these calls satisfies word for word. What is checked below is not a
 # line number but a position inside the one function each call belongs to
@@ -96,7 +92,23 @@ fi
 #
 # Every install call is named here by hand, so a seam added below with nothing in this
 # list is a wiring this scan walks straight past.
-WIRING="coreapi::installRealChannelSource coreapi::installRealEpgSource coreapi::installRealTimerSource coreapi::installRealCommandSink coreapi::installRealSystemSource coreapi::installRealTunerSource coreapi::installRealInputDevice coreapi::installRealScreenshotSource coreapi::installRealLogoSource coreapi::installRealEventSink coreapi::installRealSettingsSource coreapi::installRealPluginSource coreapi::installRealLocaleSource coreapi::installRealRecordingSafetySource registerSettingsAppliers installOsdResolutionSource"
+WIRING="
+coreapi::installApplySeams
+coreapi::installRealChannelSource
+coreapi::installRealEpgSource
+coreapi::installRealTimerSource
+coreapi::installRealCommandSink
+coreapi::installRealTunerSource
+coreapi::installRealInputDevice
+coreapi::installRealScreenshotSource
+coreapi::installRealLogoSource
+coreapi::installRealEventSink
+coreapi::installRealSettingsSource
+coreapi::installRealPluginSource
+coreapi::installRealLocaleSource
+coreapi::installRealRecordingSafetySource
+installOsdResolutionSource
+"
 # The web server is started from the same object and is out of reach of a case for the
 # same reason. What a case cannot see at all is a start that was deleted: the program
 # would come up with no web server and nothing anywhere would be red, because every
@@ -121,6 +133,14 @@ WEB_STOP="httpd::stop();"
 # on the start where it writes, the file being read is the one it wrote.
 WEB_MIGRATE="httpd::ensureConfigFile("
 WEB_LOAD="httpd::load("
+
+# What an apply group run by a startup phase may reach is stated, phase by phase, in
+# apply-phase-seams.txt: each seam's install call and the first phase it is there for.
+# A call in installApplySeams() counts as made where run() calls that. The phases
+# run long before the program's own block of installs, so a call made later than its
+# line says leaves a group asking a seam that is not there, which ends the process.
+PHASE_TABLE="$HERE/apply-phase-seams.txt"
+APPLY_SEAMS="$HERE/../../../src/coreapi/box/applyseams.cpp"
 
 # The body of the one function named by the pattern given, brace balanced on
 # $CODE (comments and #if 0 already gone, one line kept per input line), the
@@ -359,5 +379,42 @@ lbad=$(printf '%s\n' "$result" | cut -f2)
 	echo "the migration is reachable after the read in $FILE, not before it" >&2
 	exit 1
 }
+
+for f in "$PHASE_TABLE" "$APPLY_SEAMS"; do
+	[ -r "$f" ] || { echo "check-hook.sh: cannot read $f" >&2; exit 1; }
+done
+SEAMSBODY=$(uncommented "$APPLY_SEAMS" | awk -f "$BLANK" | awk '
+	/^void installApplySeams\(\)/ { found = 1 }
+	found { print; n = gsub(/\{/, "{"); m = gsub(/\}/, "}"); depth += n - m; if (n + m > 0 && depth == 0) exit }
+' | flatten)
+[ -n "$SEAMSBODY" ] || { echo "check-hook.sh: no installApplySeams() read out of $APPLY_SEAMS" >&2; exit 1; }
+aline=$(reachable "$RUNFLAT" "coreapi::installApplySeams(" | cut -f1)
+
+# Every phase is reached, and each in the order the enum gives them.
+prev=0
+for phase in Framebuffer Decoders Zapit Sectionsd Network; do
+	p=$(reachable "$RUNFLAT" "coreapi::runPhase(coreapi::ApplyPhase::$phase)" | cut -f1)
+	[ "$p" -ne 0 ] || { echo "the $phase phase is not reached in CNeutrinoApp::run in $FILE" >&2; exit 1; }
+	[ "$p" -gt "$prev" ] || { echo "the $phase phase is reached before the one ahead of it in $FILE" >&2; exit 1; }
+	prev=$p
+done
+
+rows=0
+while IFS='	' read -r seam call first; do
+	case "$seam" in ''|'#'*) continue;; esac
+	rows=$((rows + 1))
+	short=${call#coreapi::}
+	case "$SEAMSBODY" in
+		*" $short("*|*"{$short("*|*" $call("*) where=$aline; how="installApplySeams()";;
+		*) where=$(reachable "$RUNFLAT" "$call(" | cut -f1); how="$call(...)";;
+	esac
+	p=$(reachable "$RUNFLAT" "coreapi::runPhase(coreapi::ApplyPhase::$first)" | cut -f1)
+	[ "$p" -ne 0 ] || { echo "apply-phase-seams.txt names the phase $first for $seam, which run() does not reach" >&2; exit 1; }
+	[ "$where" -ne 0 ] && [ "$where" -lt "$p" ] || {
+		echo "$seam: $how is not reachable in front of the $first phase in $FILE, as apply-phase-seams.txt says, and a group of that phase would find nothing installed" >&2
+		exit 1
+	}
+done < "$PHASE_TABLE"
+[ "$rows" -gt 0 ] || { echo "check-hook.sh: no seam read out of $PHASE_TABLE" >&2; exit 1; }
 
 exit 0

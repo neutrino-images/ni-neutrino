@@ -67,6 +67,9 @@ Status registerApplyGroup(const ApplyGroup *g);
 // NULL: the setting is read where it is used and nothing needs doing.
 const ApplyGroup *groupOf(const std::string &key);
 
+// Every registered group, in the order it was registered.
+std::vector<const ApplyGroup *> applyGroups();
+
 /* Ok when the group ran, or when there is no group. Busy when the group's phase
    has not been reached: nothing ran, and runPhase() will run it later. Busy
    here means "deferred", not the "turned away, retry" it means for a command
@@ -91,6 +94,25 @@ Status runPhase(ApplyPhase p);
    runPhase(). A group added anywhere else can miss its phase. */
 void registerApplyGroups();
 
+/* Installs every seam a group may reach before the first phase, called once right
+   after registerApplyGroups(). A group's seam is installed here and nowhere else.
+
+   What a group may reach depends on its phase, because the program installs the
+   other seams later. test/unit/scan/apply-phase-seams.txt states it, one seam per
+   line with the first phase it is there for; check-hook.sh holds neutrino.cpp to it
+   and the test helper PhaseEnvironment installs exactly those seams for a phase:
+   - Framebuffer, Decoders, Zapit: the box source and what is installed here. Every
+     other seam either ends the process when asked (channels, guide, timers, tuner,
+     input, screenshot, logos, plugins, recordings, the event and command sinks) or
+     answers a silent default (settings, locale, keys, recording safety, the OSD
+     size).
+   - Sectionsd, Network: every seam.
+   Predicates that answer false before their seam is there, though the box has the
+   thing: drawsOsd720/drawsOsd1080 before Sectionsd, and severalTunersFitted before
+   the Decoders phase, whose CZapit::Start finds the frontends. severalTunersEnabled
+   asks the tuner source and so ends the process before Sectionsd. */
+void installApplySeams();
+
 /* Names the calling thread as the one that applies settings: the program's loop,
    which is also where the registry is used. The registry has no lock, so once a
    thread is named, applyBatch() and the drain of written settings refuse to run
@@ -100,6 +122,25 @@ void bindApplyLoop();
 
 // True on the bound thread, and anywhere while none is bound.
 bool onApplyLoop();
+
+/* Who a settings write on this thread is made for, as Event::initiator names a writer:
+   "web:<session id>" or "mcp:<grant>", and empty for a writer that does not say. The store
+   keeps it with each value written, so a group that fails later can say whose write it was.
+   Set for the length of a scope by the write itself, from what its caller passed. */
+const std::string &currentWriter();
+
+class WriterScope
+{
+public:
+	explicit WriterScope(const std::string &who);
+	~WriterScope();
+
+private:
+	WriterScope(const WriterScope &);
+	WriterScope &operator=(const WriterScope &);
+	std::string        who_;
+	const std::string *was_;
+};
 
 /* Empties the registry and forgets every phase and the bound thread. For a test that needs a clean
    registry; nothing in the program calls it. */

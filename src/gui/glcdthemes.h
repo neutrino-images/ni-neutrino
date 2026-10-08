@@ -32,7 +32,7 @@
 
 #define MIGRATE_THEME_OLED_NAME "Unknown-Migrated-Oled-Theme"
 
-class CGLCDThemes : public CMenuTarget, CColorSetupNotifier, public sigc::trackable
+class CGLCDThemes : public CMenuTarget, public sigc::trackable
 {
 	private:
 		CConfigFile themefile;
@@ -42,6 +42,8 @@ class CGLCDThemes : public CMenuTarget, CColorSetupNotifier, public sigc::tracka
 		std::string oldTheme_name;
 
 		bool hasThemeChanged;
+
+		void themeChanged();
 
 		int Show();
 		void readFile(const char *themename);
