@@ -29,8 +29,8 @@ import { t } from '../../i18n.js';
 import text from './now.text.js';
 import { Button } from '../../ui/button.js';
 import { Switch } from '../../ui/switch.js';
-import { Card, useOnScreen } from './parts.js';
-import { shotLoader, pictureForSaving } from './shotloader.js';
+import { Card, useOnScreen, useResource } from './parts.js';
+import { shotLoader, pictureForSaving, displaysOf } from './shotloader.js';
 import { toast } from '../../ui/toast.js';
 
 // How often the preview is fetched again while it is asked to do so by itself
@@ -326,18 +326,19 @@ export function useCapture(bump) {
 }
 
 /**
- * The little display on the front of the box.
+ * One display on the front of the box, with the picture it shows.
  *
  * Nothing is fetched here until the button is pressed: whoever is driving the box from
  * a browser is looking at the television and not at the two lines on its front.
  *
+ * @param {{ name: string, title: string }} props
  * @returns {Web.Drawn}
  */
-export function Display() {
+export function Display(props) {
 	const [round, setRound] = useState(0);
 	const [failed, setFailed] = useState(false);
 
-	return html`<${Card} title=${t(text, 'now.shot.card.display')}>
+	return html`<${Card} title=${props.title}>
 		<div class="now-shot now-shot-small">
 			${round === 0
 				? html`<p class="now-empty">${t(text, 'now.shot.waiting')}</p>`
@@ -346,8 +347,8 @@ export function Display() {
 					: html`<img
 						key=${'display-' + round}
 						class="now-shot-image"
-						src=${buildUrl('/api/v1/osd/display/screenshot', null, { at: round })}
-						alt=${t(text, 'now.shot.displayalt')}
+						src=${displayUrl(props.name, round)}
+						alt=${t(text, 'now.shot.displayalt') + ': ' + props.title}
 						onError=${function () { setFailed(true); }} />`}
 		</div>
 		<p class="now-buttons">
@@ -358,4 +359,33 @@ export function Display() {
 				}}>${t(text, 'now.shot.refresh')}<//>
 		</p>
 	<//>`;
+}
+
+/**
+ * The address of one display's picture; the round makes two captures two addresses.
+ *
+ * @param {string} name
+ * @param {number} round
+ * @returns {string}
+ */
+export function displayUrl(name, round) {
+	return buildUrl('/api/v1/osd/displays/{name}/screenshot', { name: name }, { at: round });
+}
+
+/**
+ * A card for every display the box says is drawing, and nothing inside when it says
+ * none: a card that can only read "failed" is worse than no card.
+ *
+ * The wrapper is always there. The grid fills left, right, left, right and the cards
+ * after this one are placed by counting, so a display count of 0 or 2 would move the
+ * lock card to the other column; one wrapper is one grid item whatever the count.
+ *
+ * @returns {Web.Drawn}
+ */
+export function Displays() {
+	const listed = useResource('GET', '/api/v1/osd/displays');
+	const shown = displaysOf(listed.data);
+	return html`<div class="now-displays">${shown.map(function (d) {
+		return html`<${Display} key=${d.name} name=${d.name} title=${d.title} />`;
+	})}</div>`;
 }

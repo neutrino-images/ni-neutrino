@@ -152,3 +152,21 @@ export function pictureForSaving(get, later) {
 		return new Promise(function (resolve) { wait(function () { resolve(undefined); }, RETRY_MS); }).then(get);
 	});
 }
+
+/**
+ * The displays out of what GET /api/v1/osd/displays answered. Nothing for no answer
+ * yet or one that is not a list, so the page draws no card until the box has named one.
+ *
+ * @param {{ items?: Array<{ name: string, title: string }> } | null | undefined} answer
+ * @returns {Array<{ name: string, title: string }>}
+ */
+export function displaysOf(answer) {
+	if (!answer || !Array.isArray(answer.items)) {
+		return [];
+	}
+	return answer.items.filter(function (d) {
+		return d && typeof d.name === 'string' && d.name !== '';
+	}).map(function (d) {
+		return { name: d.name, title: typeof d.title === 'string' && d.title !== '' ? d.title : d.name };
+	});
+}

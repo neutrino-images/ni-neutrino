@@ -36,11 +36,12 @@ const kStale = {
 	'timer-changed': ['/api/v1/timers'],
 	'epg-updated': ['/api/v1/epg'],
 	'bouquets-changed': ['/api/v1/bouquets', '/api/v1/channels'],
-	'settings-changed': ['/api/v1/settings/'],
+	// The front displays follow glcd_enable and the LCD4Linux settings.
+	'settings-changed': ['/api/v1/settings/', '/api/v1/osd/displays'],
 	/* Only the stream of the session that wrote gets this one, so another tab never
 	   sees a failure that was not its own. The box took the value and could not put it
 	   in force, so what the page reads may differ from what was written. */
-	'setting-apply-failed': ['/api/v1/settings/'],
+	'setting-apply-failed': ['/api/v1/settings/', '/api/v1/osd/displays'],
 	// What plays, so the running channel too, and the archive's mark of it.
 	'playback': ['/api/v1/playback', '/api/v1/channels/current', '/api/v1/epg/current', '/api/v1/tuner',
 		'/api/v1/recordings/archive'],

@@ -3,7 +3,7 @@
 // Images and timers are faked: an image is loaded or refused by hand, the way the
 // box answers a capture with a picture or with 409 while another one runs.
 import { readFileSync } from 'node:fs';
-import { shotLoader, pictureForSaving, RETRY_MS, GIVE_UP_MS } from '../../data/ni-web/app/screens/now/shotloader.js';
+import { shotLoader, pictureForSaving, displaysOf, RETRY_MS, GIVE_UP_MS } from '../../data/ni-web/app/screens/now/shotloader.js';
 
 let checked = 0;
 let failed = 0;
@@ -184,11 +184,39 @@ function rig() {
 	// an address that has arrived. A key on it would make every capture a new,
 	// empty element, and an error handler on it would mean it still loads itself.
 	const src = readFileSync(new URL('../../data/ni-web/app/screens/now/screenshot.js', import.meta.url), 'utf8');
-	const live = src.slice(src.indexOf('export function useCapture'), src.indexOf('export function Display'));
+	const live = src.slice(src.indexOf('export function useCapture'), src.indexOf('export function Display('));
 	same(live.indexOf('shotLoader(') >= 0, true, 'the picture is fetched through the loader');
 	const img = live.slice(live.indexOf('<img'), live.indexOf('/>', live.indexOf('<img')));
 	same([/\bkey=/.test(img), /onError=|onLoad=/.test(img), /src=\$\{shot\.src\}/.test(img)], [false, false, true],
 		'the live image has no key, loads nothing itself and shows what arrived');
+}
+
+// One card per listed display, none for an empty list.
+{
+	const two = { items: [{ name: 'graphlcd', title: 'GraphLCD' }, { name: 'lcd4linux', title: 'LCD4Linux' }] };
+	same(displaysOf({ items: [] }), [], 'no display lists no card');
+	same(displaysOf(null), [], 'no answer yet draws no card');
+	same(displaysOf({ items: [{ name: 'lcd4linux', title: 'LCD4Linux' }] }).map(function (d) { return d.name; }),
+		['lcd4linux'], 'one display is one card');
+	same(displaysOf(two).map(function (d) { return d.title; }), ['GraphLCD', 'LCD4Linux'], 'two displays are two cards, in the box order');
+	same(displaysOf({ items: [{ name: 'x', title: '' }] })[0].title, 'x', 'a display without a title is called by its name');
+
+	const src = readFileSync(new URL('../../data/ni-web/app/screens/now/screenshot.js', import.meta.url), 'utf8');
+	const card = src.slice(src.indexOf('export function Displays'));
+	same(/shown\.map\(/.test(card), true, 'a card is drawn per listed display, so none for an empty list');
+	// The cards after the displays are placed by counting, so the displays are one
+	// grid item for any count: the wrapper is drawn for the empty list as well and
+	// the stack is a column of its own.
+	same(/return null/.test(card), false, 'the displays are never a missing grid item');
+	same(/return html`<div class="now-displays">/.test(card), true, 'the displays are drawn in one wrapper');
+	const css = readFileSync(new URL('../../data/ni-web/app/screens/now/now.css', import.meta.url), 'utf8');
+	same(/\.now-displays \{[^}]*flex-direction: column/.test(css), true, 'the wrapper stacks the cards');
+	const remote = readFileSync(new URL('../../data/ni-web/app/screens/now/remote.js', import.meta.url), 'utf8');
+	const grid = remote.slice(remote.indexOf('<${Displays} />'));
+	same([(remote.match(/<\$\{Displays\} \/>/g) || []).length, grid.indexOf('remote.card.lock') > 0], [1, true],
+		'the displays stand once, right before the lock card');
+	same(src.indexOf('/api/v1/osd/display/') < 0, true, 'the page does not ask the route that is gone');
+	same(src.indexOf("'/api/v1/osd/displays/{name}/screenshot'") > 0, true, 'each card asks for its own display by name');
 }
 
 // Saving the full size picture: tried once more when the box was busy.

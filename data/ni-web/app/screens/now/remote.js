@@ -60,7 +60,7 @@ import { toast } from '../../ui/toast.js';
 import { fold } from '../../ui/kept.js';
 import { Card, useResource } from './parts.js';
 import { HANDSETS, PICTURE_FOR, PICTURE_FOR_HARDWARE, keySpots } from './handsets.js';
-import { useCapture, Display } from './screenshot.js';
+import { useCapture, Displays } from './screenshot.js';
 
 export const css = '/app/screens/now/now.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -598,10 +598,11 @@ export default function Remote() {
 			? null
 			: html`<${Card} title=${t(text, 'now.shot.card.screen')}>${shot.options}<//>`}
 		${/* The order is the layout. Two columns fill left, right, left, right,
-		     so the front panel lands under the picture and the switch about the
+		     so the front panels land under the picture and the switch about the
 		     box's own handset lands in the card of the keys it stands for,
-		     without a rule naming a position. */''}
-		<${Display} />
+		     without a rule naming a position. The panels are one item for
+		     any count of them, which is what keeps the switch in its column. */''}
+		<${Displays} />
 		<${Card}
 			title=${t(text, 'now.remote.card.lock')}
 			snapshot=${lock}>

@@ -29,6 +29,7 @@
 
 #include "coreapi/base/deps.h"
 #include "coreapi/base/errors.h"
+#include "coreapi/box/displaypicture.h"
 #include "coreapi/osd.h"
 #include "coreapi/base/result.h"
 
@@ -50,6 +51,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <utime.h>
 
 using namespace coreapi;
 
@@ -591,35 +593,203 @@ TEST_CASE("the route answers a capture asked for while one is running as busy", 
 	REQUIRE(parsed(body)["type"].asString() == "/errors/screen-not-captured");
 }
 
-TEST_CASE("the display is a capture of its own", "[screenshot]")
+/* The two drivers run side by side, so the list is built from what each says
+   and the settings of the one that has them. */
+struct DisplaysOn
 {
 	FakeScreenshotSource source;
-	source.display_status = Status::Ok;
-	InstalledScreenshotSource installed(&source);
+	FakeSettingsSource settings;
+	InstalledScreenshotSource installed_source;
+	InstalledSettingsSource installed_settings;
 
-	Result<std::string> taken = osd::displayScreenshot();
+	DisplaysOn() : installed_source(&source), installed_settings(&settings)
+	{
+		source.display_status = Status::Ok;
+		settings.ints["glcd_enable"] = 1;
+	}
+};
+
+static std::vector<std::string> namesOf(const std::vector<osd::Display> &all)
+{
+	std::vector<std::string> names;
+	for (size_t i = 0; i < all.size(); ++i)
+		names.push_back(all[i].name);
+	return names;
+}
+
+TEST_CASE("no display running lists none", "[screenshot]")
+{
+	DisplaysOn on;
+	Result<std::vector<osd::Display> > got = osd::displays();
+	REQUIRE(got.ok());
+	REQUIRE(got.value().empty());
+}
+
+TEST_CASE("graphlcd is listed when it is drawing, lcd4linux only with both settings", "[screenshot]")
+{
+	DisplaysOn on;
+	on.source.live_displays.insert("graphlcd");
+	on.source.live_displays.insert("lcd4linux");
+
+	// The picture file is there but the settings do not ask for it.
+	REQUIRE(namesOf(osd::displays().value()) == std::vector<std::string>(1, "graphlcd"));
+
+	on.settings.ints["lcd4l_support"] = 2;
+	REQUIRE(namesOf(osd::displays().value()) == std::vector<std::string>(1, "graphlcd"));
+
+	on.settings.ints["lcd4l_screenshots"] = 1;
+	std::vector<std::string> both;
+	both.push_back("graphlcd");
+	both.push_back("lcd4linux");
+	REQUIRE(namesOf(osd::displays().value()) == both);
+	REQUIRE(osd::displays().value()[1].title == "LCD4Linux");
+
+	// Settings on and no picture being written is not a display.
+	on.source.live_displays.erase("lcd4linux");
+	REQUIRE(namesOf(osd::displays().value()) == std::vector<std::string>(1, "graphlcd"));
+}
+
+/* The driver keeps its bitmap once it has drawn, so a box that switched GraphLCD
+   off still answers that it is live. Only the setting tells the two apart. */
+TEST_CASE("graphlcd switched off is not listed and not captured", "[screenshot]")
+{
+	DisplaysOn on;
+	on.source.live_displays.insert("graphlcd");
+	REQUIRE(namesOf(osd::displays().value()) == std::vector<std::string>(1, "graphlcd"));
+
+	on.settings.ints["glcd_enable"] = 0;
+	REQUIRE(osd::displays().value().empty());
+	Result<std::string> taken = osd::displayScreenshot("graphlcd");
+	REQUIRE_FALSE(taken.ok());
+	REQUIRE(taken.error().status == Status::NotSupported);
+	REQUIRE(on.source.display_shots == 0u);
+}
+
+static void writeText(const std::string &path, const std::string &body)
+{
+	FILE *f = fopen(path.c_str(), "wb");
+	REQUIRE(f != NULL);
+	fwrite(body.data(), 1, body.size(), f);
+	fclose(f);
+}
+
+static std::string readText(const std::string &path)
+{
+	std::string out;
+	FILE *f = fopen(path.c_str(), "rb");
+	if (f == NULL)
+		return out;
+	char buf[512];
+	size_t n;
+	while ((n = fread(buf, 1, sizeof(buf), f)) > 0)
+		out.append(buf, n);
+	fclose(f);
+	return out;
+}
+
+// The one part of the display path that runs on the generic build.
+TEST_CASE("the lcd4linux picture is copied whole and and a display is live only while its program runs", "[screenshot]")
+{
+	const std::string tag = std::to_string((long) getpid());
+	const std::string source = "/tmp/ni-lcd4l-test-" + tag + ".png";
+	const std::string target = "/tmp/ni-lcd4l-test-copy-" + tag + ".png";
+	unlink(source.c_str());
+	unlink(target.c_str());
+
+	// Not written: not a display, and a copy says so.
+	REQUIRE_FALSE(displayPictureLive(source.c_str(), true));
+	REQUIRE_FALSE(displayPictureLive(source.c_str(), false));
+	REQUIRE(copyDisplayPicture(source.c_str(), target) == Status::NotSupported);
+	REQUIRE_FALSE(exists(target));
+
+	std::string body(10000, 'x');
+	body[0] = 'P';
+	body[9999] = 'Z';
+	writeText(source, body);
+	REQUIRE(displayPictureLive(source.c_str(), true));
+	REQUIRE_FALSE(displayPictureLive(source.c_str(), false));
+	REQUIRE(copyDisplayPicture(source.c_str(), target) == Status::Ok);
+	REQUIRE(readText(target) == body);
+	REQUIRE_FALSE(exists(target + ".tmp"));
+
+	// A picture that has stood still for hours is still live while the program runs.
+	struct utimbuf old = { time(NULL) - 3600, time(NULL) - 3600 };
+	REQUIRE(utime(source.c_str(), &old) == 0);
+	REQUIRE(displayPictureLive(source.c_str(), true));
+
+	// Nowhere to write: a fault, and nothing left under either name.
+	REQUIRE(copyDisplayPicture(source.c_str(), "/nonexistent-dir/x.png") == Status::Internal);
+	unlink(source.c_str());
+	unlink(target.c_str());
+}
+
+TEST_CASE("a display picture that could not be written answers 500", "[screenshot]")
+{
+	ServingPictures serving;
+	REQUIRE(serving.port > 0);
+	FakeSettingsSource settings;
+	InstalledSettingsSource installed(&settings);
+	settings.ints["glcd_enable"] = 1;
+	serving.wired.screen.live_displays.insert("graphlcd");
+	serving.wired.screen.display_status = Status::Internal;
+
+	const testhttp::Reply r = testhttp::request(serving.port, "GET",
+						    "/api/v1/osd/displays/graphlcd/screenshot");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 500);
+	REQUIRE(parsed(r.body)["type"].asString() == "/errors/display-not-captured");
+}
+
+TEST_CASE("the display is a capture of its own", "[screenshot]")
+{
+	DisplaysOn on;
+	on.source.live_displays.insert("graphlcd");
+
+	Result<std::string> taken = osd::displayScreenshot("graphlcd");
 	REQUIRE(taken.ok());
-	REQUIRE(source.display_shots == 1u);
+	REQUIRE(on.source.display_shots == 1u);
+	REQUIRE(on.source.last_display == "graphlcd");
 	// The screen was not asked, which is what makes these two captures and not
 	// one with a flag.
-	REQUIRE(source.screen_shots == 0u);
+	REQUIRE(on.source.screen_shots == 0u);
 	REQUIRE(exists(taken.value()));
 	// A file of its own as well, or one would be answered as the other.
 	REQUIRE(taken.value() != osd::screenshot(true, true, PictureFormat::Png).value());
+
+	on.source.live_displays.insert("lcd4linux");
+	on.settings.ints["lcd4l_support"] = 1;
+	on.settings.ints["lcd4l_screenshots"] = 1;
+	Result<std::string> second = osd::displayScreenshot("lcd4linux");
+	REQUIRE(second.ok());
+	REQUIRE(second.value() != taken.value());
 }
 
-// Most boxes have none and no build made without it has one, so this is the
-// common answer rather than the rare one, and it is an answer about the box
-// rather than a fault.
-TEST_CASE("a box with no such display says so rather than failing", "[screenshot]")
+TEST_CASE("a display that is not running says so rather than failing", "[screenshot]")
 {
-	FakeScreenshotSource source;
-	InstalledScreenshotSource installed(&source);
+	DisplaysOn on;
 
-	Result<std::string> taken = osd::displayScreenshot();
+	Result<std::string> taken = osd::displayScreenshot("graphlcd");
 	REQUIRE_FALSE(taken.ok());
 	REQUIRE(taken.error().status == Status::NotSupported);
 	REQUIRE(taken.error().code == ErrorCode::DisplayNotCaptured);
+	REQUIRE(on.source.display_shots == 0u);
+
+	// Running, but switched off by the settings.
+	on.source.live_displays.insert("lcd4linux");
+	taken = osd::displayScreenshot("lcd4linux");
+	REQUIRE_FALSE(taken.ok());
+	REQUIRE(taken.error().code == ErrorCode::DisplayNotCaptured);
+}
+
+TEST_CASE("a display nobody has is told apart from one that is off", "[screenshot]")
+{
+	DisplaysOn on;
+	Result<std::string> taken = osd::displayScreenshot("tft");
+	REQUIRE_FALSE(taken.ok());
+	REQUIRE(taken.error().status == Status::NotFound);
+	REQUIRE(taken.error().code == ErrorCode::NoSuchDisplay);
+	// Not a path either.
+	REQUIRE(osd::displayScreenshot("../etc/passwd").error().code == ErrorCode::NoSuchDisplay);
 }
 
 /* Through the whole server and not through the router alone. A handler that
@@ -680,16 +850,32 @@ TEST_CASE("a capture the box could not take answers a problem and no picture", "
 	REQUIRE(parsed(r.body)["type"].asString() == "/errors/screen-not-captured");
 }
 
-TEST_CASE("a box with no display answers that and no picture", "[screenshot]")
+TEST_CASE("the display routes list, refuse and tell unknown from off", "[screenshot]")
 {
 	ServingPictures serving;
 	REQUIRE(serving.port > 0);
+	FakeSettingsSource settings;
+	InstalledSettingsSource installed(&settings);
 
-	const testhttp::Reply r = testhttp::request(serving.port, "GET",
-						    "/api/v1/osd/display/screenshot");
+	testhttp::Reply r = testhttp::request(serving.port, "GET", "/api/v1/osd/displays");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 200);
+	REQUIRE(parsed(r.body)["items"].size() == 0u);
+
+	r = testhttp::request(serving.port, "GET", "/api/v1/osd/displays/graphlcd/screenshot");
 	REQUIRE(r.transport_ok);
 	REQUIRE(r.code == 501);
 	REQUIRE(parsed(r.body)["type"].asString() == "/errors/display-not-captured");
+
+	r = testhttp::request(serving.port, "GET", "/api/v1/osd/displays/tft/screenshot");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 404);
+	REQUIRE(parsed(r.body)["type"].asString() == "/errors/no-such-display");
+
+	// The route this replaces is gone.
+	r = testhttp::request(serving.port, "GET", "/api/v1/osd/display/screenshot");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 404);
 }
 
 /* The answer is sent out of an open file, and every way out of the transport has to
@@ -854,16 +1040,31 @@ TEST_CASE("the display route offers no form and answers one", "[screenshot]")
 	   declare. */
 	ServingPictures serving;
 	REQUIRE(serving.port > 0);
+	FakeSettingsSource settings;
+	InstalledSettingsSource installed(&settings);
+	settings.ints["glcd_enable"] = 1;
+	settings.ints["lcd4l_support"] = 2;
+	settings.ints["lcd4l_screenshots"] = 1;
 	serving.wired.screen.display_status = Status::Ok;
+	serving.wired.screen.live_displays.insert("graphlcd");
+	serving.wired.screen.live_displays.insert("lcd4linux");
+
+	testhttp::Reply listed = testhttp::request(serving.port, "GET", "/api/v1/osd/displays");
+	REQUIRE(listed.code == 200);
+	const Json::Value items = parsed(listed.body)["items"];
+	REQUIRE(items.size() == 2u);
+	REQUIRE(items[0u]["name"].asString() == "graphlcd");
+	REQUIRE(items[1u]["name"].asString() == "lcd4linux");
 
 	const testhttp::Reply r = testhttp::request(serving.port, "GET",
-						    "/api/v1/osd/display/screenshot");
+						    "/api/v1/osd/displays/lcd4linux/screenshot?at=3");
 	REQUIRE(r.transport_ok);
 	REQUIRE(r.code == 200);
 	REQUIRE(r.header("Content-Type") == "image/png");
+	REQUIRE(serving.wired.screen.last_display == "lcd4linux");
 
 	const testhttp::Reply asked = testhttp::request(serving.port, "GET",
-							"/api/v1/osd/display/screenshot?format=jpeg");
+							"/api/v1/osd/displays/lcd4linux/screenshot?format=jpeg");
 	REQUIRE(asked.transport_ok);
 	REQUIRE(asked.code == 400);
 }

@@ -27,6 +27,7 @@
 #include <stddef.h>
 
 #include <string>
+#include <vector>
 
 namespace coreapi
 {
@@ -119,9 +120,23 @@ Result<std::string> screenshot(bool osd, bool video, PictureFormat format);
 // overwrite the file.
 Result<std::string> screenshotBytes(bool osd, bool video, PictureFormat format, size_t max_bytes);
 
-// The same for the small display on the front of the box. NotSupported where
-// there is none, which is most of them and every build made without it.
-Result<std::string> displayScreenshot();
+// One of the displays on the front of the box that can be pictured.
+struct Display
+{
+	// The identifier the picture is asked for under: graphlcd or lcd4linux.
+	std::string name;
+	std::string title;
+};
+
+/* The displays that can be pictured right now. Empty on a box with none, which
+   is most of them, and that is an answer and not a fault. Two can be listed at
+   once, because the two drivers run side by side. */
+Result<std::vector<Display> > displays();
+
+/* The same picture for one display of that list. NoSuchDisplay for a name this
+   box has never had; NotSupported for one it has and that is not running, which
+   a caller tells apart from the first by the status. */
+Result<std::string> displayScreenshot(const std::string &name);
 
 /* What the box draws in the corner to say what the channel is carrying. Four
    states and not two, because the box keeps this in two settings and only some

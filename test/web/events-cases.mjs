@@ -281,6 +281,20 @@ same(failures.length, 1, 'another type is not one');
 stopFailures();
 stopSchema();
 
+// The front displays come and go with glcd_enable and the LCD4Linux settings.
+const kDisplays = 'GET /api/v1/osd/displays';
+const stopDisplays = store.watch('GET', '/api/v1/osd/displays', null, function () {});
+await settle();
+asked = [];
+last().emit('settings-changed', '{"channel_id":"0","value":0,"text":"glcd_enable"}');
+await settle();
+same(timesAsked(kDisplays), 1, 'a settings change reads the list of displays again');
+asked = [];
+last().emit('setting-apply-failed', '{"keys":["glcd_enable"],"status":500,"detail":"no"}');
+await settle();
+same(timesAsked(kDisplays), 1, 'and so does a setting that could not be put in force');
+stopDisplays();
+
 // --------------------------------- the browser reconnects after one drop
 
 asked = [];
