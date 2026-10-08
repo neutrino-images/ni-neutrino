@@ -151,7 +151,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 
 /* One overlay for menu, sign in and question: one trap, one escape. The plain
    one is anchored where the control that opened it is. */
-.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 20; }
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 20; }
 .sheet { position: fixed; inset: auto 0 0 0; z-index: 21; max-height: 82%; overflow: auto;
 	padding: var(--gap-3) var(--gap-3) calc(var(--gap-3) + env(safe-area-inset-bottom, 0px));
 	background: var(--ground-1); border-top: 1px solid var(--line);
@@ -215,8 +215,8 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 	background: var(--ground-1); border: 1px solid var(--line); border-radius: var(--radius-pill);
 	color: var(--text-dim); font-size: 0.8125rem; }
 .chip.on-air { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--on-air); }
-.chip.good { border-color: rgba(59, 165, 93, 0.45); color: var(--state-running); }
-.chip.warn { border-color: rgba(224, 163, 59, 0.45); color: var(--state-warning); }
+.chip.good { border-color: var(--state-running-edge); color: var(--state-running); }
+.chip.warn { border-color: var(--state-warning-edge); color: var(--state-warning); }
 
 /* A row of pills that runs off the side. A touch screen draws no bar to say
    so, so what says it is the pill at the edge being cut: the margin after the

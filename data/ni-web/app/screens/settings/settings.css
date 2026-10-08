@@ -92,7 +92,8 @@
 		align-items: stretch;
 		gap: var(--gap-2);
 	}
-	.set-row > .set-secret > .field { margin-bottom: 0; }
+	/* Its basis is a width in a row and would become a height in this column. */
+	.set-row > .set-secret > .field { flex: none; margin-bottom: 0; }
 	.set-row > .set-secret > :last-child { align-self: flex-end; }
 
 	/* A yes or no is one child of the field where every other kind is two, so
@@ -144,7 +145,9 @@
 	display: flex;
 	align-items: flex-start;
 	gap: var(--gap-3);
-	margin-bottom: var(--gap-4);
+	/* No margin of its own: the row around it already spaces, and a second one
+	   made this row taller than every other. */
+	margin-bottom: 0;
 	flex-wrap: wrap;
 }
 
@@ -203,4 +206,6 @@
 		flex-direction: column;
 		align-items: stretch;
 	}
+	/* Its basis is a width in a row and would become a height in this column. */
+	.set-secret .field { flex: none; }
 }

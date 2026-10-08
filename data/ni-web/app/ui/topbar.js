@@ -19,6 +19,7 @@ import text from '../shell.text.js';
 import { labelOf, hrefFor } from '../nav.js';
 import { askToSignIn, signOut } from './signin.js';
 import { SIZES, chosen, choose } from './textsize.js';
+import { THEMES, chosenTheme, chooseTheme } from './theme.js';
 import { OnAir } from './onair.js';
 import { Sheet } from './sheet.js';
 import { Dialog } from './dialog.js';
@@ -93,6 +94,41 @@ function TextSize() {
 			})}
 		</div>
 		<p class="text-size-where">${t(text, 'shell.textsize.where')}</p>
+	</fieldset>`;
+}
+
+/* Icons: monitor, sun, moon. One stroke weight so none looks heavier. */
+/** @type {Record<string, Web.Drawn>} */
+const THEME_ICONS = {
+	system: html`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13" rx="2.5" /><path d="M8.5 21h7M12 17v4" /></svg>`,
+	light: html`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" /></svg>`,
+	dark: html`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5a6.6 6.6 0 0 0 10.8 10.8Z" /></svg>`
+};
+
+/* Light, dark or system: one choice of three, so radios like the text size. */
+/**
+ * @returns {Web.Drawn}
+ */
+function Theme() {
+	const group = useId();
+	const [theme, setTheme] = useState(chosenTheme());
+
+	return html`<fieldset class="text-size theme-pick">
+		<legend>${t(text, 'shell.theme')}</legend>
+		<div class="text-size-set">
+			${THEMES.map(function (id) {
+				return html`<label key=${id}>
+					<input
+						type="radio"
+						name=${group}
+						value=${id}
+						checked=${id === theme}
+						onChange=${function () { chooseTheme(id); setTheme(id); }} />
+					${THEME_ICONS[id]}
+					<span>${t(text, 'shell.theme.' + id)}</span>
+				</label>`;
+			})}
+		</div>
 	</fieldset>`;
 }
 
@@ -175,6 +211,7 @@ export function Status(props) {
 				? (may ? html`<p class="session-may">${t(text, may)}</p>` : null)
 				: html`<p class="session-may">${t(text, 'shell.signin.why')}</p>`}
 			<${TextSize} />
+			<${Theme} />
 			<ul class="sheet-areas session-menu">
 				${signedIn
 					? html`<li>

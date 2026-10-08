@@ -76,6 +76,70 @@
 	--tap-height: 44px;
 	--focus-ring: 2px solid var(--accent);
 	--focus-offset: 2px;
+
+	/* Colours that were literals in the screens, named so the light theme can
+	   change them. The media ground stays black in both: video has black edges. */
+	--media-ground: #000;
+	--scrim: rgba(0, 0, 0, 0.55);
+	--shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
+	--state-running-edge: rgba(59, 165, 93, 0.45);
+	--state-warning-edge: rgba(224, 163, 59, 0.45);
+}
+
+/* Light: chosen by the page, or followed from the system unless dark is forced.
+   The block is written twice because a media query and an attribute cannot be
+   one selector. Keep both identical. The same cool neutrals as the dark theme,
+   lightened; the accent is a muted blue instead of the orange, which on a light
+   ground reads as a warning, and white on it is above six to one. */
+@media (prefers-color-scheme: light) {
+	:root:not([data-theme="dark"]) {
+		--accent: #2f5f9e;
+		--accent-dim: #264d80;
+		--accent-ink: #ffffff;
+		--accent-edge: rgba(47, 95, 158, 0.45);
+		--accent-wash: rgba(47, 95, 158, 0.08);
+		--ground-0: #eef1f5;
+		--ground-1: #fbfcfd;
+		--ground-2: #e4e9ef;
+		--line: #d3dae3;
+		--text: #1b2129;
+		--text-dim: #5b6676;
+		--state-recording: #c8302c;
+		--state-running: #2a7d4c;
+		--state-warning: #9a6400;
+		--session-open: #4f7f62;
+		--session-open-edge: rgba(79, 127, 98, 0.45);
+		--failure: #c8302c;
+		--scrim: rgba(27, 33, 41, 0.35);
+		--shadow-float: 0 10px 30px rgba(27, 33, 41, 0.16);
+		--state-running-edge: rgba(42, 125, 76, 0.45);
+		--state-warning-edge: rgba(154, 100, 0, 0.45);
+		color-scheme: light;
+	}
+}
+:root[data-theme="light"] {
+	--accent: #2f5f9e;
+	--accent-dim: #264d80;
+	--accent-ink: #ffffff;
+	--accent-edge: rgba(47, 95, 158, 0.45);
+	--accent-wash: rgba(47, 95, 158, 0.08);
+	--ground-0: #eef1f5;
+	--ground-1: #fbfcfd;
+	--ground-2: #e4e9ef;
+	--line: #d3dae3;
+	--text: #1b2129;
+	--text-dim: #5b6676;
+	--state-recording: #c8302c;
+	--state-running: #2a7d4c;
+	--state-warning: #9a6400;
+	--session-open: #4f7f62;
+	--session-open-edge: rgba(79, 127, 98, 0.45);
+	--failure: #c8302c;
+	--scrim: rgba(27, 33, 41, 0.35);
+	--shadow-float: 0 10px 30px rgba(27, 33, 41, 0.16);
+	--state-running-edge: rgba(42, 125, 76, 0.45);
+	--state-warning-edge: rgba(154, 100, 0, 0.45);
+	color-scheme: light;
 }
 
 /* The one size everything else is a fraction of. A hundred per cent of what

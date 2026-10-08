@@ -27,7 +27,7 @@
 	flex-direction: column;
 	overflow: hidden;
 	border-radius: var(--radius-lg);
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+	box-shadow: var(--shadow-float);
 	/* Taken away again for anybody who asked for less motion, by the one rule
 	   in app/css/shell.css that says so for the whole page. */
 	animation: fp-appear 120ms ease-out;
@@ -104,7 +104,7 @@
    edges of its own wherever the picture is not the shape of the window. */
 .fp-media {
 	min-width: 0;
-	background: #000;
+	background: var(--media-ground);
 }
 
 .fp[data-sound] .fp-media {

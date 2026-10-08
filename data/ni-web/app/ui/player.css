@@ -10,7 +10,7 @@
 	width: 100%;
 	max-width: 60rem;
 	margin: var(--gap) 0;
-	background: #000;
+	background: var(--media-ground);
 	border-radius: var(--radius);
 }
 
