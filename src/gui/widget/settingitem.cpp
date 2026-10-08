@@ -431,11 +431,11 @@ class SettingText : public CMenuTarget, public CChangeObserver
 
 		std::string dialogHint() const
 		{
-			std::string text = g_Locale->getText(hint1);
+			std::string said = g_Locale->getText(hint1);
 			const std::string more = g_Locale->getText(hint2);
 			if (!more.empty())
-				text += (text.empty() ? "" : "\n") + more;
-			return text;
+				said += (said.empty() ? "" : "\n") + more;
+			return said;
 		}
 
 		coreapi::TextKind kind() const
@@ -597,8 +597,8 @@ class CSettingText : private SettingText, public CMenuForwarder, public SettingF
 {
 	public:
 		CSettingText(const coreapi::MenuItemSpec &s, bool is_active, CChangeObserver *observer, CMenuWidget *owner,
-			     const neutrino_msg_t direct_key, neutrino_locale_t hint1, neutrino_locale_t hint2)
-			: SettingText(s, observer, owner, hint1, hint2),
+			     const neutrino_msg_t direct_key, neutrino_locale_t dialog_hint1, neutrino_locale_t dialog_hint2)
+			: SettingText(s, observer, owner, dialog_hint1, dialog_hint2),
 			  CMenuForwarder(localeFromKey(s.label_key), is_active, std::string(), target(), NULL, direct_key)
 		{
 			item = this;

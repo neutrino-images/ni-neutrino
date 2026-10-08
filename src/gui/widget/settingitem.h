@@ -161,9 +161,9 @@ class CColorChooser;
 class CSettingColorItem : public CMenuForwarder
 {
 	public:
-		CSettingColorItem(const neutrino_locale_t text, const bool active, const char *option,
+		CSettingColorItem(const neutrino_locale_t text, const bool is_active, const char *option,
 				  CMenuTarget *target, const char *action_key, const neutrino_msg_t direct_key)
-			: CMenuForwarder(text, active, option, target, action_key, direct_key) {}
+			: CMenuForwarder(text, is_active, option, target, action_key, direct_key) {}
 		virtual CColorChooser *colorChooser() = 0;
 };
 
