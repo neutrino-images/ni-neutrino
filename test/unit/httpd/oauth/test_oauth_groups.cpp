@@ -534,13 +534,13 @@ TEST_CASE("a group counts its tools at every level, since any level can be ticke
 	REQUIRE(label.find("(3 ") == std::string::npos);
 }
 
-TEST_CASE("the plugins group counts start_plugin only when the plugin allowlist is not empty, singular right", "[oauth][groups][consent]")
+TEST_CASE("the plugins group counts start_plugin whatever the plugin allowlist holds, singular right", "[oauth][groups][consent]")
 {
 	// AccountConfigured (inside ConsentRun) installs its own, empty allowlist; the
 	// allowlist a case wants on the page has to be set after that, not before it.
 	{
 		ConsentRun run(oauth::ScopeSystem);
-		REQUIRE(labelFor(run.form(), "plugins").find("(0 Werkzeuge)") != std::string::npos);
+		REQUIRE(labelFor(run.form(), "plugins").find("(1 Werkzeug)") != std::string::npos);
 	}
 	{
 		ConsentRun run(oauth::ScopeSystem);

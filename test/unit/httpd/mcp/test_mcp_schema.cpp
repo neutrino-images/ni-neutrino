@@ -191,7 +191,9 @@ TEST_CASE("every argument kind is described the way the router reads it", "[mcp-
 	REQUIRE(p["at"]["format"].asString() == "unix-time");
 	REQUIRE(p["on"]["type"].asString() == "boolean");
 	REQUIRE(p["words"]["maxLength"].asInt() == 40);
-	REQUIRE(p["pick"]["enum"][0].asString() == "first");
+	// A set the box is asked for at run time is not stated: a client keeps the list for long.
+	REQUIRE(p["pick"]["type"].asString() == "string");
+	REQUIRE_FALSE(p["pick"].isMember("enum"));
 
 	REQUIRE(s["required"].size() == 3);
 	REQUIRE(s["required"][0].asString() == "id");
@@ -303,6 +305,12 @@ TEST_CASE("every shipped argument is described as the document describes it", "[
 				theirs.removeMember("description");
 				// The same words are in the description.
 				theirs.removeMember("x-enum-descriptions");
+				// A set the box is asked for is the document's; a tool takes the name as text.
+				if (p.choices != NULL)
+				{
+					REQUIRE_FALSE(ours.isMember("enum"));
+					theirs.removeMember("enum");
+				}
 				REQUIRE(theirs.isObject());
 				REQUIRE(ours == theirs);
 				++compared;

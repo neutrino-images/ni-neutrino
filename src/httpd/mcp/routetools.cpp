@@ -30,6 +30,7 @@
 #include "httpd/mcp/limits.h"
 #include "httpd/mcp/picture.h"
 #include "httpd/mcp/problem.h"
+#include "httpd/mcp/settingsindex.h"
 #include "httpd/mcp/toolgen.h"
 #include "httpd/mcp/toolgroups.h"
 #include "httpd/mcp/toolguard.h"
@@ -213,24 +214,6 @@ bool buildRequest(const Endpoint &ep, const std::vector<JsonMember> &args, std::
 	if (any_body)
 		j.endObject();
 	return true;
-}
-
-// Parses the input schema, sets properties[property]["enum"] to values, and serializes it
-// back; the schema unchanged on a parse failure.
-std::string withEnum(const std::string &schema, const char *property,
-                     const std::vector<std::string> &values)
-{
-	JsonValue v;
-	if (!parseJson(schema, limits().max_json_depth, v) || !v.isObject())
-		return schema;
-	JsonValue arr(::Json::arrayValue);
-	for (size_t i = 0; i < values.size(); ++i)
-		arr.append(values[i]);
-	v["properties"][property]["enum"] = arr;
-	std::string out;
-	if (!toJson(v, out))
-		return schema;
-	return out;
 }
 
 bool gateAdmits(const Endpoint &ep, const JsonText &args, coreapi::Error &refused)
@@ -465,6 +448,8 @@ void RouteTools::add(const RouteTable &t)
 		e.flag = &t.tools[i];
 		e.def = toolFor(*e.route, t.tools[i]);
 		e.def.group = groupOfTool(e.def.name);
+		if (isSettingsSchemaRoute(*e.route))
+			e.def.output = withSettingsIndex(e.def.output);
 		entries_.push_back(e);
 	}
 }
@@ -479,33 +464,19 @@ const RouteTools::Entry *RouteTools::find(const std::string &name) const
 	return NULL;
 }
 
+// Every tool, gated ones too: a client keeps the list, and the allowlists are checked per call.
 std::vector<ToolDef> RouteTools::list()
 {
-	const Allowlists now = currentAllowlists();
-	std::vector<std::string> sections;
-	for (size_t i = 0; i < now.sections.size(); ++i)
-	{
-		if (sectionDenial(now.sections[i]).empty())
-			sections.push_back(now.sections[i]);
-	}
 	std::vector<ToolDef> out;
 	for (size_t i = 0; i < entries_.size(); ++i)
-	{
-		const Entry &e = entries_[i];
-		if (!gated(e.route->method, e.route->path))
-		{
-			out.push_back(e.def);
-			continue;
-		}
-		const bool plugin = e.route->method == Post;
-		const std::vector<std::string> &allowed = plugin ? now.plugins : sections;
-		if (allowed.empty())
-			continue;
-		ToolDef d = e.def;
-		d.input = withEnum(d.input, plugin ? "name" : "section", allowed);
-		out.push_back(d);
-	}
+		out.push_back(entries_[i].def);
 	return out;
+}
+
+bool RouteTools::offers(const Caller &c, const char *name) const
+{
+	const Entry *e = find(name);
+	return e != NULL && (e->def.group & c.groups) != 0 && (int) c.level >= (int) e->def.level;
 }
 
 std::string RouteTools::hint(const std::string &name, coreapi::ErrorCode code) const
@@ -527,6 +498,9 @@ coreapi::Result<JsonText> RouteTools::call(const Caller &c, const std::string &n
 	if ((int) c.level < (int) e->def.level)
 		return coreapi::fail(coreapi::Status::Denied, coreapi::ErrorCode::NotPermitted,
 		                     std::string("this tool needs the ") + authLevelName(e->def.level) + " scope");
+
+	if (isSettingsSchemaRoute(*e->route) && asksSettingsIndex(args))
+		return settingsIndex(offers(c, "read_settings"), offers(c, "write_settings"));
 
 	if (gated(e->route->method, e->route->path))
 	{

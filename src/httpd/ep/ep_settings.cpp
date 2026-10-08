@@ -732,6 +732,8 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d, const RowValues &va
 	j.endObject();
 }
 
+const coreapi::Descriptor *rowFor(const std::vector<coreapi::Descriptor> &rows, const std::string &key);
+
 Response settingsSchema(const Request &r)
 {
 	coreapi::Result<std::vector<coreapi::Descriptor> > got = coreapi::settings::schema();
@@ -752,11 +754,43 @@ Response settingsSchema(const Request &r)
 			                       "no setting is declared under a section of that name");
 	}
 
+	std::set<std::string> keys;
+	const std::string &asked = r.asString("keys");
+	for (size_t at = 0; r.has("keys") && at <= asked.size();)
+	{
+		size_t end = asked.find(',', at);
+		if (end == std::string::npos)
+			end = asked.size();
+		// A client writes "a, b" as often as "a,b".
+		size_t from = at, to = end;
+		while (from < to && (asked[from] == ' ' || asked[from] == '\t'))
+			++from;
+		while (to > from && (asked[to - 1] == ' ' || asked[to - 1] == '\t'))
+			--to;
+		if (to > from)
+			keys.insert(asked.substr(from, to - from));
+		at = end + 1;
+	}
+	// Answering the whole schema to a keys that names nothing would hide the typo.
+	if (r.has("keys") && keys.empty())
+		return problemResponse(StatusBadRequest, coreapi::ErrorCode::BadString,
+		                       "keys names no setting; pass setting keys separated by commas");
+	for (std::set<std::string>::const_iterator k = keys.begin(); k != keys.end(); ++k)
+	{
+		const coreapi::Descriptor *d = rowFor(rows, *k);
+		if (d == NULL || (narrowed && (d->section == NULL || section != d->section)))
+			return problemResponse(StatusNotFound, coreapi::ErrorCode::UnknownSetting,
+			                       (narrowed ? "the section declares no setting " : "no setting is declared under the key ") + *k);
+	}
+
 	std::vector<size_t> chosen;
 	for (size_t i = 0; i < rows.size(); ++i)
 	{
-		if (!narrowed || (rows[i].section != NULL && section == rows[i].section))
-			chosen.push_back(i);
+		if (narrowed && (rows[i].section == NULL || section != rows[i].section))
+			continue;
+		if (!keys.empty() && keys.count(rows[i].key) == 0)
+			continue;
+		chosen.push_back(i);
 	}
 
 	/* A list that two or more rows of this answer carry is stated once under value_lists, and
@@ -1218,6 +1252,7 @@ const Param kSectionParams[] = {
 
 const Param kSchemaParams[] = {
 	HTTPD_QUERY_FROM_ASKED_SET("section", "only the settings of this section, as GET /api/v1/settings/sections names it", &sectionNames),
+	HTTPD_QUERY_TEXT("keys", "only the settings of these keys, separated by commas; spaces around a key are ignored", 2048),
 };
 
 /* The route that writes a section takes a body the table cannot list, its members being
@@ -1249,8 +1284,12 @@ const Param kClearParams[] = {
 };
 
 const RouteRefusal kSettingsSchemaRefusals[] = {
+	HTTPD_REFUSES(InvalidArgument, BadString,
+		"keys is given but names no setting"),
 	HTTPD_REFUSES(NotFound, NoSuchName,
 		"no setting is declared under a section of that name"),
+	HTTPD_REFUSES(NotFound, UnknownSetting,
+		"a key in keys is not declared, or not in the section named"),
 };
 
 const RouteRefusal kSettingsSectionRefusals[] = {
@@ -1332,11 +1371,13 @@ const Endpoint kSettingsEndpoints[] = {
 	  "that several items carry alike is stated once in the answer's `value_lists` object, and each such "
 	  "item names it in `values_from` instead of carrying `values`; read its entries the same way.\n"
 	  "\n"
-	  "`section` narrows the list to one section, which keeps the answer small.\n"
+	  "`section` narrows the list to one section, which keeps the answer small. `keys` narrows it to "
+	  "the settings named, separated by commas; with `section` they have to be in that section.\n"
 	  "\n"
 	  "**Refusals:**\n"
 	  "- `404 no-such-name`: no setting is declared under a section of that name. Take section ids "
 	  "from `GET /api/v1/settings/sections`.\n"
+	  "- `404 no-such-setting`: a key in `keys` is not declared, or not in `section`.\n"
 	  "\n"
 	  "**Related:** `GET /api/v1/settings/sections`, `GET /api/v1/settings/{section}`, "
 	  "`PATCH /api/v1/settings/{section}`.",
@@ -1504,20 +1545,27 @@ const ToolFlag kSettingsTools[] = {
 		"What the settings of one section are: key, kind, allowed values, label, whether it needs a restart, "
 		"whether this box has it at all (available) and whether the parental lock fixes it now (locked); "
 		"neither kind can be written. Its conditions say when it is shown, and they also gate writes: a write of "
-		"it is refused while they do not hold. pair names the other half of a setting written in two parts. "
+		"it is refused while they do not hold. A member left out has its default: available true; locked, secret, "
+		"path, listed and needs_restart false; no conditions. A list several settings share is in value_lists, "
+		"named by the row's values_from. pair names the other half of a setting written in two parts. "
 		"A list is read and written as one text with a line to each entry, a list of records the same with a "
-		"tab between the members fields names. Always pass section; without it the answer is very large."),
+		"tab between the members fields names. Without section and keys it answers an index of the sections: "
+		"label, number of settings, and whether this connection may read and change each. Then pass section, "
+		"or keys separated by commas for just those settings."),
 	HTTPD_TOOL_AS(Method::Get, "/api/v1/settings/{section}", "read_settings",
-		"What every setting of one section is set to now, as key and value text. Credentials always read as empty."),
+		"What every setting of one section is set to now, as key and value text. Credentials always read as empty. "
+		"The sections are in the index settings_schema answers."),
 	HTTPD_TOOL_AS(Method::Patch, "/api/v1/settings/{section}", "write_settings",
-		"Changes settings of one section the owner allowed AI clients to change: settings is a JSON object of "
+		"Changes settings of one section the owner allowed AI clients to change (the index of settings_schema "
+		"says which): settings is a JSON object of "
 		"key and new value as text, keys from settings_schema of that section. Refused: sections not allowed, "
 		"credentials, settings marked path, locked or not available, and settings whose conditions do not hold; "
 		"that refusal names the settings it depends on, which may belong to another section: change those "
 		"first in their own call, then this one. Settings marked pair: a start channel is written by its id "
 		"alone and the box fills its name; the weather city and location go together. A list is one text with "
 		"a line to each entry, records the same with a tab between members. Success means stored; a few, such "
-		"as services, are put in force afterwards and may still fail there. If some keys are refused the others "
+		"as services, are put in force afterwards and may still fail there, which a later answer to this "
+		"connection may note. If some keys are refused the others "
 		"still land and the error lists both. Tell the user what will change before calling this."),
 };
 

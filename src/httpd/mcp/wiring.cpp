@@ -20,6 +20,7 @@
 
 #include "httpd/mcp/wiring.h"
 
+#include "httpd/mcp/applynotes.h"
 #include "httpd/mcp/callrunner.h"
 
 #include <OpenThreads/Mutex>
@@ -59,6 +60,7 @@ void set(const Wiring &w)
 
 void install(const Wiring &w)
 {
+	watchApplyFailures();
 	set(w);
 	closeCalls(false);
 }

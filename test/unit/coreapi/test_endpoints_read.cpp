@@ -1473,6 +1473,45 @@ TEST_CASE("the schema answers one section when asked for it", "[settings][schema
 	REQUIRE(unknown.body.find("no-such-name") != std::string::npos);
 }
 
+TEST_CASE("the schema narrowed to keys answers those rows and refuses a key it does not hold", "[settings][schema]")
+{
+	FakeSystemSource unlocked;
+	InstalledSystemSource installed_unlocked(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	ShippedRoutes shipped;
+
+	const Reply two = get("/api/v1/settings/schema?keys=audio_AnalogMode,auto_lang");
+	REQUIRE(two.code == 200);
+	const ::Json::Value items = parsed(two.body)["items"];
+	REQUIRE(items.size() == 2);
+	std::set<std::string> ids;
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+		ids.insert(items[i]["id"].asString());
+	CHECK(ids.count("audio_AnalogMode") == 1);
+	CHECK(ids.count("auto_lang") == 1);
+
+	const Reply one = get("/api/v1/settings/schema?section=audio&keys=audio_AnalogMode");
+	REQUIRE(one.code == 200);
+	REQUIRE(parsed(one.body)["items"].size() == 1);
+
+	const Reply unknown = get("/api/v1/settings/schema?keys=audio_AnalogMode,nonsense");
+	REQUIRE(unknown.code == 404);
+	CHECK(unknown.body.find("no-such-setting") != std::string::npos);
+	CHECK(unknown.body.find("nonsense") != std::string::npos);
+
+	const Reply spaced = get("/api/v1/settings/schema?keys=audio_AnalogMode,%20auto_lang%20");
+	REQUIRE(spaced.code == 200);
+	CHECK(parsed(spaced.body)["items"].size() == 2);
+
+	// A keys that names nothing is not the same as no keys.
+	CHECK(get("/api/v1/settings/schema?keys=,%20,").code == 400);
+
+	const Reply elsewhere = get("/api/v1/settings/schema?section=audio&keys=auto_lang");
+	REQUIRE(elsewhere.code == 404);
+	CHECK(elsewhere.body.find("no-such-setting") != std::string::npos);
+}
+
 /* The one place a caller other than the tables themselves reads label_key: the
    wire. Before this the field carried label_key's own spelling, such as
    videomenu.videoformat_169 for the choice a screen shows as 16:9, and these
@@ -3811,12 +3850,17 @@ TEST_CASE("the schema of the shipped rows states every shared list once, the lan
 
 	// A rule the answer keeps whatever the section: the narrowed answer names the same list.
 	const ::Json::Value general = parsed(get("/api/v1/settings/schema?section=general").body);
+	bool seen = false;
 	for (::Json::ArrayIndex i = 0; i < general["items"].size(); ++i)
 	{
 		const std::string id = general["items"][i]["id"].asString();
 		if (id == "pref_lang_0")
+		{
+			seen = true;
 			CHECK(general["items"][i]["values_from"].asString() == *languages.begin());
+		}
 	}
+	REQUIRE(seen);
 	CHECK(general["value_lists"].size() <= all["value_lists"].size());
 }
 

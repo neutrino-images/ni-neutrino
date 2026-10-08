@@ -44,11 +44,11 @@ lists and lists of records held to a read of the load	5
 locale names the program has	3233
 memory backed folders tried	1
 number elements written and read back among their neighbours	145
-parameters the document describes	146
-refusals the document states against a route	853
+parameters the document describes	147
+refusals the document states against a route	854
 refusals the header names	13
-refusals the routes declare of their own	135
-refusals the shipped routes were seen to give	210
+refusals the routes declare of their own	137
+refusals the shipped routes were seen to give	212
 routes the document describes	107
 rows compared against the load and save pass	394
 rows of the theme struct	26

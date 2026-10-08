@@ -58,6 +58,8 @@ class RouteTools : public ToolSource
 
 		void add(const RouteTable &t);
 		const Entry *find(const std::string &name) const;
+		// Whether the tool is in one of the caller's groups and within its level.
+		bool offers(const Caller &c, const char *name) const;
 
 		std::vector<Entry> entries_;
 		std::string        refusal_;

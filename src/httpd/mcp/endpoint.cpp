@@ -25,6 +25,7 @@
 #include "httpd/auth.h"
 #include "httpd/json.h"
 #include "httpd/status.h"
+#include "httpd/mcp/applynotes.h"
 #include "httpd/mcp/callrunner.h"
 #include "httpd/mcp/headers.h"
 #include "httpd/mcp/jsonrpc.h"
@@ -131,7 +132,8 @@ const char kInstructions[] =
 	"and the message names the argument: correct it and call again. A tool's description lists "
 	"only the refusals beyond these.";
 
-// The tool set changes with the firmware, not while the box runs.
+/* How long a client may keep the list: it changes with the firmware, and with the level and
+   tool groups of the connection, which the owner can change while the box runs. */
 const unsigned kListTtlMs = 300000;
 
 enum class Era
@@ -424,7 +426,21 @@ Response insufficientScope(const JsonValue &id, const std::string &metadata_url,
 	return r;
 }
 
-std::string toolResult(const std::string &text, bool is_error, const std::string *structured, Era era)
+// A text block of its own, so the result's own text and structure stay as the tool answered.
+void appendNote(httpd::Json &j, const std::string &note)
+{
+	if (note.empty())
+		return;
+	j.beginObject();
+	j.key("type");
+	j.value("text");
+	j.key("text");
+	j.value(note);
+	j.endObject();
+}
+
+std::string toolResult(const std::string &text, bool is_error, const std::string *structured, Era era,
+                       const std::string &note = std::string())
 {
 	std::string out;
 	httpd::Json j(out);
@@ -437,6 +453,7 @@ std::string toolResult(const std::string &text, bool is_error, const std::string
 	j.key("text");
 	j.value(text);
 	j.endObject();
+	appendNote(j, note);
 	j.endArray();
 	if (structured != NULL)
 	{
@@ -451,13 +468,13 @@ std::string toolResult(const std::string &text, bool is_error, const std::string
 	return out;
 }
 
-std::string failedResult(const char *message, Era era)
+std::string failedResult(const char *message, Era era, const std::string &note)
 {
 	const coreapi::Error e(coreapi::Status::Internal, coreapi::ErrorCode::BoxUnreadable, message);
-	return toolResult(errorText(e, std::string()), true, NULL, era);
+	return toolResult(errorText(e, std::string()), true, NULL, era, note);
 }
 
-std::string imageResult(const JsonValue &v, Era era)
+std::string imageResult(const JsonValue &v, Era era, const std::string &note)
 {
 	std::string out;
 	httpd::Json j(out);
@@ -482,6 +499,7 @@ std::string imageResult(const JsonValue &v, Era era)
 		        v["mime_type"].asString());
 		j.endObject();
 	}
+	appendNote(j, note);
 	j.endArray();
 	j.key("isError");
 	j.value(false);
@@ -492,13 +510,13 @@ std::string imageResult(const JsonValue &v, Era era)
 }
 
 std::string callResult(const CallAnswer &ans, Era era, unsigned timeout_ms, const ToolSource &tools,
-                       const std::string &name, bool image)
+                       const std::string &name, bool image, const std::string &note)
 {
 	switch (ans.outcome)
 	{
 		case CallOutcome::Busy:
 			return toolResult("The box is still working on earlier requests. Try again in a few seconds.",
-			                  true, NULL, era);
+			                  true, NULL, era, note);
 		case CallOutcome::TimedOut:
 		{
 			char text[200];
@@ -506,38 +524,38 @@ std::string callResult(const CallAnswer &ans, Era era, unsigned timeout_ms, cons
 			              "The box did not finish this within %u s. It may still complete; "
 			              "read the current state before trying again.",
 			              (timeout_ms + 999) / 1000);
-			return toolResult(text, true, NULL, era);
+			return toolResult(text, true, NULL, era, note);
 		}
 		case CallOutcome::Done:
 			break;
 	}
 
 	if (ans.thrown)
-		return failedResult("the tool failed", era);
+		return failedResult("the tool failed", era, note);
 	if (!ans.ok)
-		return toolResult(errorText(ans.error, tools.hint(name, ans.error.code)), true, NULL, era);
+		return toolResult(errorText(ans.error, tools.hint(name, ans.error.code)), true, NULL, era, note);
 
 	// Re-written, because the parser lets a raw control byte through inside a string.
 	JsonValue value;
 	if (!parseJson(ans.value, limits().max_json_depth, value))
-		return failedResult("the tool answered with something that is not JSON", era);
+		return failedResult("the tool answered with something that is not JSON", era, note);
 
 	if (image)
 	{
 		if (!value.isObject() || !value["mime_type"].isString() || !value["data"].isString())
-			return failedResult("the tool answered a picture without its data", era);
-		return imageResult(value, era);
+			return failedResult("the tool answered a picture without its data", era, note);
+		return imageResult(value, era, note);
 	}
 
 	// The older revisions take structured content only as an object.
 	const bool structured = value.isObject() || era == Era::Modern;
 	if (!structured)
-		return toolResult(ans.value, false, NULL, era);
+		return toolResult(ans.value, false, NULL, era, note);
 
 	std::string restructured;
 	if (!toJson(value, restructured))
-		return failedResult("the tool answered with something that is not JSON", era);
-	return toolResult(ans.value, false, &restructured, era);
+		return failedResult("the tool answered with something that is not JSON", era, note);
+	return toolResult(ans.value, false, &restructured, era, note);
 }
 
 // Set when the call is to be left running.
@@ -553,7 +571,8 @@ Response callAnswer(const Deferred &d, const CallAnswer &ans)
 {
 	const Era era = d.modern ? Era::Modern : Era::Legacy;
 	return jsonAnswer(StatusOk,
-	                  resultResponse(d.id, callResult(ans, era, d.timeout_ms, *d.tools, d.tool, d.image)));
+	                  resultResponse(d.id, callResult(ans, era, d.timeout_ms, *d.tools, d.tool, d.image,
+	                                                  takeApplyNote(d.connection))));
 }
 
 Response callTool(const Head &h, const Message &m, Era era, const Admission &a, ToolSource *tools, Later *later)
@@ -610,6 +629,7 @@ Response callTool(const Head &h, const Message &m, Era era, const Admission &a, 
 	d.image = def->image;
 	d.timeout_ms = l.call_timeout_ms;
 	d.tools = tools;
+	d.connection = a.caller.connection;
 	if (later == NULL)
 		return callAnswer(d, runCall(tools, a.caller, def->name, args, l.call_timeout_ms, l.max_running_calls));
 

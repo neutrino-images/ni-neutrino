@@ -196,8 +196,10 @@ TEST_CASE("the box offers the proposed set at the proposed levels", "[mcp-boxtoo
 	REQUIRE(write.size() == sizeof(kWrite) / sizeof(kWrite[0]));
 	for (size_t i = 0; i < sizeof(kWrite) / sizeof(kWrite[0]); ++i)
 		REQUIRE(write.count(kWrite[i]) == 1);
-	REQUIRE(system.size() == 1);
+	REQUIRE(system.size() == 3);
 	REQUIRE(system.count("set_standby") == 1);
+	REQUIRE(system.count("start_plugin") == 1);
+	REQUIRE(system.count("write_settings") == 1);
 	REQUIRE(names(all, AuthLevel::Public).empty());
 }
 
@@ -565,10 +567,15 @@ TEST_CASE("set_bouquet_channels through the box refuses a channels body of the w
 	REQUIRE(deps.channels.saves == 0);
 }
 
-TEST_CASE("with both allowlists filled the box offers both gated tools", "[boxtools][gate]")
+TEST_CASE("with both allowlists empty the box still offers both gated tools", "[boxtools][gate]")
 {
-	OpenAllowlists open;
-	REQUIRE(mcp::boxTools().list().size() == kOfferedToolsGated);
+	mcp::installAllowlists(mcp::Allowlists());
+	const std::vector<mcp::ToolDef> all = mcp::boxTools().list();
+	REQUIRE(all.size() == kOfferedTools);
+	size_t gated = 0;
+	for (size_t i = 0; i < all.size(); ++i)
+		gated += (all[i].name == "start_plugin" || all[i].name == "write_settings") ? 1 : 0;
+	REQUIRE(gated == 2);
 }
 
 TEST_CASE("now_playing reads what the television shows and only reads", "[mcp-boxtools]")

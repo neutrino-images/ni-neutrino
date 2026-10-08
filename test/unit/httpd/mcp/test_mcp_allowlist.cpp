@@ -25,6 +25,7 @@
 #include "httpd/mcp/allowlist.h"
 #include "httpd/mcp/contract.h"
 #include "httpd/mcp/jsonrpc.h"
+#include "httpd/mcp/toolgroups.h"
 #include "httpd/router.h"
 #include "httpd/webconfig.h"
 
@@ -273,18 +274,21 @@ TEST_CASE("a configuration file that went away is a server fault for the allowli
 	REQUIRE(r.body.find("webserver-not-configured") != std::string::npos);
 }
 
-TEST_CASE("a gated tool is not offered while its allowlist is empty", "[allowlist][gate]")
+TEST_CASE("a gated tool is offered while its allowlist is empty and refused at the call", "[allowlist][gate]")
 {
 	Lists back;
 	mcp::installAllowlists(mcp::Allowlists());
 	const std::vector<mcp::ToolDef> all = mcp::boxTools().list();
-	REQUIRE(named(all, "start_plugin") == NULL);
-	REQUIRE(named(all, "write_settings") == NULL);
+	REQUIRE(named(all, "start_plugin") != NULL);
+	REQUIRE(named(all, "write_settings") != NULL);
 	REQUIRE(mcp::boxTools().call(callerAt(AuthLevel::System), "start_plugin", "{\"name\":\"Tierpark\"}").error().code ==
 	        coreapi::ErrorCode::PluginNotAllowed);
+	REQUIRE(mcp::boxTools().call(callerAt(AuthLevel::System), "write_settings",
+	                             "{\"section\":\"audio\",\"settings\":{\"audio_AnalogMode\":\"1\"}}").error().code ==
+	        coreapi::ErrorCode::SettingsSectionNotAllowed);
 }
 
-TEST_CASE("a gated tool keeps its route's system level and takes the allowlist as its enum", "[allowlist][gate]")
+TEST_CASE("a gated tool keeps its route's system level and names no allowed values", "[allowlist][gate]")
 {
 	Lists back;
 	mcp::Allowlists a;
@@ -300,11 +304,20 @@ TEST_CASE("a gated tool keeps its route's system level and takes the allowlist a
 	REQUIRE(write->level == AuthLevel::System);
 	mcp::JsonValue in;
 	REQUIRE(mcp::parseJson(start->input, 64, in));
-	REQUIRE(in["properties"]["name"]["enum"].size() == 1);
-	REQUIRE(in["properties"]["name"]["enum"][0].asString() == "Tierpark");
+	REQUIRE(in["properties"]["name"]["type"].asString() == "string");
+	REQUIRE_FALSE(in["properties"]["name"].isMember("enum"));
 	REQUIRE(mcp::parseJson(write->input, 64, in));
-	REQUIRE(in["properties"]["section"]["enum"].size() == 1);
-	REQUIRE(in["properties"]["section"]["enum"][0].asString() == "audio");
+	REQUIRE(in["properties"]["section"]["type"].asString() == "string");
+	REQUIRE_FALSE(in["properties"]["section"].isMember("enum"));
+	// Nor do the tools that read settings, whose section is the same text.
+	const char *reads[] = { "settings_schema", "read_settings" };
+	for (size_t i = 0; i < 2; ++i)
+	{
+		INFO(reads[i]);
+		REQUIRE(named(all, reads[i]) != NULL);
+		REQUIRE(mcp::parseJson(named(all, reads[i])->input, 64, in));
+		REQUIRE_FALSE(in["properties"]["section"].isMember("enum"));
+	}
 }
 
 TEST_CASE("every call is checked against the list as it is now", "[allowlist][gate]")
@@ -713,6 +726,170 @@ TEST_CASE("the settings tools say what a client needs to write a setting", "[all
 		CHECK(schema.find(both[i]) != std::string::npos);
 		CHECK(write.find(both[i]) != std::string::npos);
 	}
+	// A client that drops a member at its default must be told what that means.
+	CHECK(schema.find("values_from") != std::string::npos);
+	CHECK(schema.find("available true") != std::string::npos);
 	CHECK(write.find("put in force afterwards") != std::string::npos);
 	CHECK(write.find("others still land") != std::string::npos);
+}
+
+TEST_CASE("list_plugins says of each plugin whether an AI client may start it", "[allowlist][gate]")
+{
+	Lists back;
+	FakePluginSource plugins;
+	plugins.add("Tierpark");
+	plugins.add("Wetter");
+	InstalledPluginSource in_plugins(&plugins);
+	mcp::Allowlists a;
+	a.plugins.push_back("Tierpark");
+	mcp::installAllowlists(a);
+	const coreapi::Result<mcp::JsonText> r = mcp::boxTools().call(callerAt(AuthLevel::Read), "list_plugins", "{}");
+	REQUIRE(r.ok());
+	mcp::JsonValue v;
+	REQUIRE(mcp::parseJson(r.value(), 64, v));
+	REQUIRE(v["items"].size() == 2);
+	CHECK(v["items"][0]["name"].asString() == "Tierpark");
+	CHECK(v["items"][0]["ai_allowed"].asBool());
+	CHECK(v["items"][1]["name"].asString() == "Wetter");
+	REQUIRE(v["items"][1]["ai_allowed"].isBool());
+	CHECK_FALSE(v["items"][1]["ai_allowed"].asBool());
+}
+
+namespace
+{
+
+mcp::Caller connectionAt(AuthLevel l, unsigned groups)
+{
+	mcp::Caller c = callerAt(l);
+	c.groups = groups;
+	c.connection = "g1";
+	return c;
+}
+
+const mcp::JsonValue *sectionIn(const mcp::JsonValue &index, const char *name)
+{
+	for (mcp::JsonValue::ArrayIndex i = 0; i < index["sections"].size(); ++i)
+	{
+		if (index["sections"][i]["name"].asString() == name)
+			return &index["sections"][i];
+	}
+	return NULL;
+}
+
+} // namespace
+
+TEST_CASE("settings_schema without section or keys answers the sections for this connection", "[allowlist][index]")
+{
+	Lists back;
+	FakeSettingsBox box;
+	// The rows ask whether the parental lock holds them and how many tuners there are.
+	FakeSystemSource unlocked;
+	InstalledSystemSource in_system(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource in_tuner(&tuner);
+	FakeLocaleSource cat;
+	cat.texts["mainsettings.audio"] = "Ton";
+	InstalledLocaleSource in_cat(&cat);
+	mcp::Allowlists a;
+	a.sections.push_back("audio");
+	a.sections.push_back("network");
+	mcp::installAllowlists(a);
+
+	const coreapi::Result<std::vector<coreapi::Descriptor> > rows = coreapi::settings::schema();
+	REQUIRE(rows.ok());
+	long audio_rows = 0;
+	for (size_t i = 0; i < rows.value().size(); ++i)
+		audio_rows += std::string(rows.value()[i].section) == "audio" ? 1 : 0;
+	const coreapi::Result<std::vector<std::string> > names = coreapi::settings::sections();
+	REQUIRE(names.ok());
+
+	mcp::JsonValue v;
+	const coreapi::Result<mcp::JsonText> owner =
+		mcp::boxTools().call(connectionAt(AuthLevel::System, mcp::kAllGroups), "settings_schema", "{}");
+	REQUIRE(owner.ok());
+	REQUIRE(mcp::parseJson(owner.value(), 64, v));
+	REQUIRE_FALSE(v.isMember("items"));
+	REQUIRE(v["sections"].size() == names.value().size());
+	const mcp::JsonValue *audio = sectionIn(v, "audio");
+	REQUIRE(audio != NULL);
+	CHECK((*audio)["label"].asString() == "Ton");
+	CHECK((*audio)["count"].asInt() == audio_rows);
+	CHECK((*audio)["readable"].asBool());
+	CHECK((*audio)["writable"].asBool());
+	// network is in the allowlist but denied; osd is not in the allowlist. Neither is writable.
+	CHECK_FALSE((*sectionIn(v, "network"))["writable"].asBool());
+	CHECK_FALSE((*sectionIn(v, "osd"))["writable"].asBool());
+	CHECK_FALSE((*sectionIn(v, "osd")).isMember("label"));
+
+	// A connection that may only read, and one without the status group.
+	REQUIRE(mcp::parseJson(mcp::boxTools().call(connectionAt(AuthLevel::Read, mcp::kAllGroups), "settings_schema",
+	                                            "{\"section\":null}").value(), 64, v));
+	CHECK((*sectionIn(v, "audio"))["readable"].asBool());
+	CHECK_FALSE((*sectionIn(v, "audio"))["writable"].asBool());
+	REQUIRE(mcp::parseJson(mcp::boxTools().call(connectionAt(AuthLevel::System, mcp::GroupSettings), "settings_schema",
+	                                            "{}").value(), 64, v));
+	CHECK_FALSE((*sectionIn(v, "audio"))["readable"].asBool());
+	CHECK((*sectionIn(v, "audio"))["writable"].asBool());
+
+	// With a section the rows as before.
+	REQUIRE(mcp::parseJson(mcp::boxTools().call(connectionAt(AuthLevel::Read, mcp::kAllGroups), "settings_schema",
+	                                            "{\"section\":\"audio\"}").value(), 64, v));
+	CHECK(v["items"].size() == (mcp::JsonValue::ArrayIndex) audio_rows);
+	CHECK_FALSE(v.isMember("sections"));
+}
+
+TEST_CASE("settings_schema states the index beside the rows in its answer shape", "[allowlist][index]")
+{
+	const std::vector<mcp::ToolDef> all = mcp::boxTools().list();
+	REQUIRE(named(all, "settings_schema") != NULL);
+	mcp::JsonValue out;
+	REQUIRE(mcp::parseJson(named(all, "settings_schema")->output, 64, out));
+	REQUIRE(out["properties"].isMember("items"));
+	REQUIRE(out["properties"]["sections"]["type"].asString() == "array");
+	REQUIRE(out["properties"]["sections"]["items"]["required"].size() == 4);
+	for (mcp::JsonValue::ArrayIndex i = 0; out["required"].isArray() && i < out["required"].size(); ++i)
+		CHECK(out["required"][i].asString() != "items");
+}
+
+TEST_CASE("settings_schema hands keys to the route, which answers only those rows", "[allowlist][index]")
+{
+	Lists back;
+	FakeSettingsBox box;
+	// The rows ask whether the parental lock holds them and how many tuners there are.
+	FakeSystemSource unlocked;
+	InstalledSystemSource in_system(&unlocked);
+	FakeTunerSource tuner;
+	InstalledTunerSource in_tuner(&tuner);
+	mcp::JsonValue v;
+	const coreapi::Result<mcp::JsonText> two = mcp::boxTools().call(connectionAt(AuthLevel::Read, mcp::kAllGroups),
+		"settings_schema", "{\"keys\":\"audio_AnalogMode,auto_lang\"}");
+	REQUIRE(two.ok());
+	REQUIRE(mcp::parseJson(two.value(), 64, v));
+	REQUIRE(v["items"].size() == 2);
+	std::set<std::string> ids;
+	ids.insert(v["items"][0]["id"].asString());
+	ids.insert(v["items"][1]["id"].asString());
+	CHECK(ids.count("auto_lang") == 1);
+	CHECK(ids.count("audio_AnalogMode") == 1);
+
+	// A misspelled or mistyped argument is refused, not answered as the index.
+	const coreapi::Result<mcp::JsonText> typo = mcp::boxTools().call(connectionAt(AuthLevel::Read, mcp::kAllGroups),
+		"settings_schema", "{\"sectoin\":\"audio\"}");
+	REQUIRE_FALSE(typo.ok());
+	CHECK(typo.error().code == coreapi::ErrorCode::NoSuchParameter);
+	const coreapi::Result<mcp::JsonText> number = mcp::boxTools().call(connectionAt(AuthLevel::Read, mcp::kAllGroups),
+		"settings_schema", "{\"section\":5}");
+	REQUIRE_FALSE(number.ok());
+	CHECK(number.error().code == coreapi::ErrorCode::BadString);
+	const coreapi::Result<mcp::JsonText> empty = mcp::boxTools().call(connectionAt(AuthLevel::Read, mcp::kAllGroups),
+		"settings_schema", "{\"keys\":\"\"}");
+	REQUIRE(empty.ok());
+	REQUIRE(mcp::parseJson(empty.value(), 64, v));
+	CHECK(v.isMember("sections"));
+
+	const coreapi::Result<mcp::JsonText> outside = mcp::boxTools().call(connectionAt(AuthLevel::Read, mcp::kAllGroups),
+		"settings_schema", "{\"section\":\"audio\",\"keys\":\"auto_lang\"}");
+	REQUIRE_FALSE(outside.ok());
+	CHECK(outside.error().code == coreapi::ErrorCode::UnknownSetting);
+	CHECK(outside.error().message.find("auto_lang") != std::string::npos);
 }

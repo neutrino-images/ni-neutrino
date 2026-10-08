@@ -88,6 +88,7 @@ endif
 
 # Named in both configurations, so check-sources can tell a file left out from one switched off.
 MCP_CORE_SOURCES = \
+	mcp/applynotes.cpp \
 	mcp/callrunner.cpp \
 	mcp/endpoint.cpp \
 	mcp/headers.cpp \
@@ -104,6 +105,7 @@ MCP_TOOL_SOURCES = \
 	mcp/problem.cpp \
 	mcp/registry.cpp \
 	mcp/routetools.cpp \
+	mcp/settingsindex.cpp \
 	mcp/toolgen.cpp \
 	mcp/toolguard.cpp \
 	mcp/toolhint.cpp \
@@ -148,6 +150,7 @@ OAUTHdir =
 MCPdir =
 
 MCP_CORE_HEADERS = \
+	mcp/applynotes.h \
 	mcp/callrunner.h \
 	mcp/endpoint.h \
 	mcp/headers.h \
@@ -163,6 +166,7 @@ MCP_TOOL_HEADERS = \
 	mcp/picture.h \
 	mcp/problem.h \
 	mcp/routetools.h \
+	mcp/settingsindex.h \
 	mcp/toolgen.h \
 	mcp/toolguard.h \
 	mcp/toolhint.h \

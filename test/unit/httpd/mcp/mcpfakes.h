@@ -23,6 +23,7 @@
 
 #include "httpd/endpoint.h"
 #include "httpd/json.h"
+#include "httpd/mcp/applynotes.h"
 #include "httpd/mcp/callrunner.h"
 #include "httpd/mcp/contract.h"
 #include "httpd/mcp/endpoint.h"
@@ -242,6 +243,7 @@ inline coreapi::Result<httpd::mcp::Caller> verify(const std::string &bearer, htt
 	c.user = "root";
 	c.external = (origin == httpd::Origin::Tunnel);
 	c.groups = ~0u;
+	c.connection = "grant-" + bearer;
 	return coreapi::ok(c);
 }
 
@@ -256,6 +258,7 @@ struct Wired
 		httpd::mcp::setLimits(httpd::mcp::defaultLimits());
 		httpd::mcp::forgetRatesForTest();
 		httpd::mcp::setRateClockForTest(0);
+		httpd::mcp::forgetApplyNotesForTest();
 		const httpd::mcp::Wiring w = { &tools(), &verify };
 		httpd::mcp::install(w);
 	}

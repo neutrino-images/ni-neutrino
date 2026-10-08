@@ -91,6 +91,7 @@ struct Deferred
 	unsigned    timeout_ms;
 	ToolSource *tools;
 	bool        image;
+	std::string connection;
 
 	Deferred() : modern(true), timeout_ms(0), tools(NULL), image(false) {}
 };

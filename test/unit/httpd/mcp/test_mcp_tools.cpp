@@ -26,6 +26,8 @@
 #include "httpd/mcp/limits.h"
 #include "httpd/mcp/mcpfakes.h"
 
+#include "coreapi/base/eventbus.h"
+
 #include <chrono>
 #include <string>
 
@@ -315,4 +317,74 @@ TEST_CASE("the tool sees the caller as admitted", "[mcp]")
 
 	const JsonValue tunnel_doc = parsed(callTunnel("whoami", "{}").body);
 	REQUIRE(tunnel_doc["result"]["structuredContent"]["external"].asBool() == true);
+}
+
+namespace
+{
+
+void applyFailed(const std::string &keys, const std::string &initiator)
+{
+	coreapi::Event e;
+	e.type = coreapi::EventType::SettingApplyFailed;
+	e.value = 500;
+	e.text = keys;
+	e.initiator = initiator;
+	coreapi::EventBus::instance().publish(e);
+}
+
+std::string noteOf(const JsonValue &doc)
+{
+	const JsonValue &content = doc["result"]["content"];
+	return content.size() == 2 ? content[1]["text"].asString() : std::string();
+}
+
+} // namespace
+
+TEST_CASE("the next answer of the connection that wrote a setting tells it the box did not put it in force", "[mcp]")
+{
+	mcpfake::Wired wired;
+	applyFailed("hdd_sleep hdd_noise", "web:3 mcp:grant-tok-read box");
+
+	// Another connection is not told, and keeps nothing back from the one that wrote.
+	JsonValue doc = parsed(callModern("echo", "{}", "tok-other").body);
+	REQUIRE(doc["result"]["content"].size() == 1);
+
+	doc = parsed(callModern("echo", "{\"a\":1}").body);
+	REQUIRE_FALSE(isError(doc));
+	REQUIRE(textOf(doc) == "{\"a\":1}");
+	REQUIRE(doc["result"]["structuredContent"]["a"].asInt() == 1);
+	const std::string note = noteOf(doc);
+	CHECK(note.find("hdd_sleep,hdd_noise") != std::string::npos);
+	CHECK(note.find("500") != std::string::npos);
+	CHECK(note.find("not put") != std::string::npos);
+
+	// Told once.
+	doc = parsed(callModern("echo", "{}").body);
+	REQUIRE(doc["result"]["content"].size() == 1);
+
+	// A refused call and an older revision carry it too.
+	applyFailed("hdd_sleep", "mcp:grant-tok-read");
+	doc = parsed(callModern("standby", "{}", "tok-write").body);
+	REQUIRE(doc["result"]["content"].size() == 1);
+	doc = parsed(callLegacy("echo", "{}").body);
+	CHECK(noteOf(doc).find("hdd_sleep") != std::string::npos);
+	applyFailed("hdd_sleep", "mcp:grant-tok-write");
+	doc = parsed(callModern("standby", "{}", "tok-write").body);
+	REQUIRE(isError(doc));
+	CHECK(noteOf(doc).find("hdd_sleep") != std::string::npos);
+}
+
+TEST_CASE("a setting a web session or the box menu wrote never reaches an MCP client", "[mcp]")
+{
+	mcpfake::Wired wired;
+	applyFailed("hdd_sleep", "web:3");
+	applyFailed("hdd_sleep", "box");
+	applyFailed("hdd_sleep", "remote");
+	applyFailed("hdd_sleep", "mcp:");
+	const char *tokens[] = { "tok-read", "tok-write", "tok-other", "tok-system" };
+	for (size_t i = 0; i < 4; ++i)
+	{
+		INFO(tokens[i]);
+		REQUIRE(parsed(callModern("echo", "{}", tokens[i]).body)["result"]["content"].size() == 1);
+	}
 }

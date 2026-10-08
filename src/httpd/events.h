@@ -129,6 +129,9 @@ Opened openStream(struct MHD_Connection *connection, const Response &r, Response
 // Whether a stream opened for writer is sent e.
 bool deliveredTo(const coreapi::Event &e, const std::string &writer);
 
+// What a failure to put a setting in force means, by the status it is answered with.
+const char *applyFailureDetail(int status);
+
 /* How long one stream may be silent before a comment frame is sent down it, measured
    per stream from whatever last went into it and not from a clock the whole server
    shares.

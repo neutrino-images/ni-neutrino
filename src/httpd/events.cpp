@@ -650,10 +650,6 @@ bool deliveredTo(const coreapi::Event &e, const std::string &writer)
 	return !writer.empty() && (" " + e.initiator + " ").find(" " + writer + " ") != std::string::npos;
 }
 
-namespace
-{
-
-// What a failure to put a setting in force means, by the status it is answered with.
 const char *applyFailureDetail(int status)
 {
 	switch (status)
@@ -667,8 +663,6 @@ const char *applyFailureDetail(int status)
 	}
 	return "putting the setting in force failed on the box";
 }
-
-} // namespace
 
 void appendEventJson(std::string &out, const coreapi::Event &e)
 {

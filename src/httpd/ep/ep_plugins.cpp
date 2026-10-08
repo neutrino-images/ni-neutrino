@@ -18,6 +18,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <config.h>
+
 #include "httpd/endpoints.h"
 
 #include "httpd/endpoint.h"
@@ -25,6 +27,9 @@
 #include "httpd/json.h"
 #include "httpd/schema.h"
 #include "httpd/status.h"
+#ifdef ENABLE_MCP
+#include "httpd/mcp/allowlist.h"
+#endif
 
 #include "coreapi/base/errors.h"
 #include "coreapi/plugins.h"
@@ -87,6 +92,8 @@ const FieldDesc kPluginFields[] = {
 		"unknown: the box reports a sort this server has no word for"),
 	HTTPD_MEMBER("hidden", FieldType::Bool,
 		"whether the box keeps it out of its own menus, which says nothing about whether it can be started"),
+	HTTPD_MEMBER_OPTIONAL("ai_allowed", FieldType::Bool,
+		"whether the owner allowed AI clients to start it, which every reader of the list sees; absent where the firmware has no AI endpoint"),
 };
 
 const Schema kPluginSchema = { "plugin", HTTPD_FIELDS(kPluginFields) };
@@ -131,6 +138,10 @@ Response listPlugins(const Request &)
 		j.value(std::string(kindName(all[i].kind)));
 		j.key("hidden");
 		j.value(all[i].hidden);
+#ifdef ENABLE_MCP
+		j.key("ai_allowed");
+		j.value(mcp::pluginAllowed(all[i].name));
+#endif
 		j.endObject();
 	}
 	j.endArray();
@@ -313,10 +324,10 @@ const Endpoint kPluginEndpoints[] = {
 
 const ToolFlag kPluginTools[] = {
 	HTTPD_TOOL_AS(Method::Get, "/api/v1/plugins", "list_plugins",
-		"The plugins installed on the box, by name."),
+		"The plugins installed on the box, by name, and whether the owner allowed AI clients to start each (ai_allowed)."),
 	HTTPD_TOOL_AS(Method::Post, "/api/v1/plugins/{name}/start", "start_plugin",
-		"Starts one plugin the owner allowed AI clients to start, by its name from list_plugins. A plugin may take "
-		"over the screen until it ends. Ask the user before starting one."),
+		"Starts one plugin the owner allowed AI clients to start, by its name from list_plugins, which says which "
+		"are allowed. A plugin may take over the screen until it ends. Ask the user before starting one."),
 };
 
 } // namespace

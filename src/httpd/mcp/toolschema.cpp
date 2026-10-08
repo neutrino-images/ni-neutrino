@@ -151,8 +151,7 @@ void appendArgType(Json &j, const Param &p)
 		case ParamType::String:
 			j.key("type");
 			j.value("string");
-			if (p.choices != NULL)
-				appendAskedEnum(j, p.choices);
+			// No asked set: a client keeps the list for long, and the call checks the name.
 			if (p.max > 0)
 			{
 				j.key("maxLength");

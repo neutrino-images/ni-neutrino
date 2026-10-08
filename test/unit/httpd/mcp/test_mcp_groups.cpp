@@ -52,7 +52,7 @@ TEST_CASE("the group table is the eight groups in their order with fixed bits", 
 		tools += g[i].tool_count;
 	}
 	REQUIRE(all == mcp::kAllGroups);
-	REQUIRE(tools == kOfferedToolsGated);
+	REQUIRE(tools == kOfferedTools);
 	REQUIRE(mcp::kDefaultGroups == 7u);
 	REQUIRE(g[6].least == AuthLevel::System);
 	REQUIRE(g[7].least == AuthLevel::System);
@@ -115,10 +115,9 @@ TEST_CASE("every tool this box offers is in exactly one group", "[groups][box]")
 
 TEST_CASE("every group names only tools the box offers and every tool is in one group", "[groups][box]")
 {
-	OpenAllowlists open;
 	const std::vector<mcp::ToolDef> all = mcp::boxTools().list();
 	REQUIRE(mcp::boxToolsRefusal().empty());
-	REQUIRE(all.size() == kOfferedToolsGated);
+	REQUIRE(all.size() == kOfferedTools);
 	const std::string outside = mcp::toolOutsideGroups(all);
 	const std::string without = mcp::groupNameWithoutTool(all);
 	const std::string least = mcp::groupLeastIsRight(all);

@@ -25,25 +25,8 @@
 #include <cstring>
 #include <string>
 
-// What the box offers with both allowlists empty, and with one entry in each.
-const size_t kOfferedTools = 46;
-const size_t kOfferedToolsGated = kOfferedTools + 2;
-
-// One plugin and one section allowed for the case, nothing after it.
-struct OpenAllowlists
-{
-	OpenAllowlists()
-	{
-		httpd::mcp::Allowlists open;
-		open.plugins.push_back("anything");
-		open.sections.push_back("audio");
-		httpd::mcp::installAllowlists(open);
-	}
-	~OpenAllowlists()
-	{
-		httpd::mcp::installAllowlists(httpd::mcp::Allowlists());
-	}
-};
+// What the box offers, whatever the allowlists hold.
+const size_t kOfferedTools = 48;
 
 inline httpd::mcp::Caller callerAt(httpd::AuthLevel l)
 {
