@@ -25,28 +25,20 @@ export const KINDS = [
 		title: '', repeat: true, announce: true, standby: false, dir: false,
 	},
 	{
-		id: 'zapto', channel: true, start: true, duration: false,
-		title: 'form.title.programme', repeat: true, announce: true, standby: false, dir: false,
-	},
-	{
 		id: 'standby', channel: false, start: true, duration: false,
 		title: '', repeat: true, announce: true, standby: true, dir: false,
-	},
-	{
-		id: 'record', channel: true, start: true, duration: true,
-		title: 'form.title.programme', repeat: true, announce: true, standby: false, dir: true,
-	},
-	{
-		id: 'remind', channel: false, start: true, duration: false,
-		title: 'form.title.words', repeat: true, announce: true, standby: false, dir: false,
 	},
 	{
 		id: 'sleeptimer', channel: false, start: true, duration: false,
 		title: '', repeat: true, announce: true, standby: false, dir: false,
 	},
 	{
-		id: 'exec-plugin', channel: false, start: true, duration: false,
-		title: 'form.title.plugin', repeat: true, announce: true, standby: false, dir: false,
+		id: 'zapto', channel: true, start: true, duration: false,
+		title: 'form.title.programme', repeat: true, announce: true, standby: false, dir: false,
+	},
+	{
+		id: 'record', channel: true, start: true, duration: true,
+		title: 'form.title.programme', repeat: true, announce: true, standby: false, dir: true,
 	},
 	/* The one kind with no start and no repeat of its own. It means now, and
 	   the box builds it as a recording whose start has come, so a repeat on it
@@ -54,6 +46,14 @@ export const KINDS = [
 	{
 		id: 'immediate-record', channel: true, start: false, duration: true,
 		title: 'form.title.programme', repeat: false, announce: false, standby: false, dir: true,
+	},
+	{
+		id: 'remind', channel: false, start: true, duration: false,
+		title: 'form.title.words', repeat: true, announce: true, standby: false, dir: false,
+	},
+	{
+		id: 'exec-plugin', channel: false, start: true, duration: false,
+		title: 'form.title.plugin', repeat: true, announce: true, standby: false, dir: false,
 	},
 ];
 

@@ -49,13 +49,13 @@ bool creatableType(int t)
 	switch (t)
 	{
 		case (int) TimerType::Shutdown:
-		case (int) TimerType::Zapto:
 		case (int) TimerType::Standby:
-		case (int) TimerType::Record:
-		case (int) TimerType::Remind:
 		case (int) TimerType::Sleeptimer:
-		case (int) TimerType::ExecPlugin:
+		case (int) TimerType::Zapto:
+		case (int) TimerType::Record:
 		case (int) TimerType::ImmediateRecord:
+		case (int) TimerType::Remind:
+		case (int) TimerType::ExecPlugin:
 			return true;
 		default:
 			return false;
