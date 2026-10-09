@@ -173,7 +173,7 @@ tr[data-on-air] .ch-name {
 }
 
 .ch-marks {
-	display: flex;
+	display: inline-block;
 	align-items: center;
 	gap: var(--gap-1);
 	flex-wrap: wrap;

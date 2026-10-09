@@ -46,7 +46,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
    fitting is the width at which it folds into the bar along the bottom. What
    gives in between is what is playing, which shortens visibly. */
 .areas { display: flex; align-items: center; gap: var(--gap-1); flex: none; }
-.areas a { display: block; padding: 6px 10px; border-radius: var(--radius);
+.areas a { display: block; padding: var(--gap-1) var(--gap-3); border-radius: var(--radius);
 	color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: 0.8125rem; }
 .areas a:hover { background: var(--ground-2); color: var(--text); }
 /* A surface and not a fill: a filled pill in a row of eight reads as chosen.
@@ -59,9 +59,9 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 
    The rule is drawn beside the link and not as its own edge, so that it is a
    short mark between two words rather than a line as tall as the link. */
-.areas a.apart { position: relative; margin-left: var(--gap-3); padding-left: var(--gap-3); }
+.areas a.apart { position: relative; padding-left: var(--gap-3); }
 .areas a.apart::before { content: ""; position: absolute; left: 0; top: 50%;
-	transform: translateY(-50%); width: 1px; height: 18px; background: var(--line); }
+	transform: translateY(-50%); width: 1px; height: 0.8125rem; background: var(--line); }
 
 /* Who is signed in, and the only place on the page that says anything about
    it. Signed in it is a quiet pill carrying the name; signed out it is one
@@ -401,6 +401,7 @@ table.grid tbody tr.grid-more:hover { background: none; }
 }
 
 @media (max-width: 1151px) {
+	.chip.on-air { display: none; }
 	/* Two rows: mark and session above, what is playing across the whole width
 	   below, where a channel name and an event title have room to be read. The
 	   second row is the only reason this bar has a bottom edge at all. */
@@ -415,6 +416,7 @@ table.grid tbody tr.grid-more:hover { background: none; }
 }
 
 @media (max-width: 599px) {
+	.chip.on-air { display: inline-flex; }
 	.content, .topbar-main { padding: var(--gap-2) var(--gap-3); }
 	h1.scr { font-size: 1.125rem; }
 	.entries { padding-left: var(--gap-3); padding-right: var(--gap-3); }

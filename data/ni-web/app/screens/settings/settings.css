@@ -186,7 +186,8 @@
    A reader who has asked for larger writing has larger buttons. */
 .set-bar {
 	position: sticky;
-	bottom: 0;
+	/* reduce bottom position by padding from .content */
+	bottom: calc(-1 * var(--gap-4));
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
