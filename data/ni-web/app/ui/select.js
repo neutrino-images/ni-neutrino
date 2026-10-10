@@ -12,6 +12,7 @@ import { describedBy, Notes } from './field.js';
  *   label?: string,
  *   value?: string | number,
  *   options?: Array<{ value: string | number, label: string, disabled?: boolean }>,
+ *   disabled?: boolean,
  *   hint?: string,
  *   error?: string,
  *   needsRestart?: boolean,
@@ -29,6 +30,7 @@ export function Select(props) {
 		<select
 			id=${id}
 			value=${props.value}
+			disabled=${props.disabled}
 			aria-invalid=${props.error ? 'true' : null}
 			aria-describedby=${describedBy(id, props)}
 			onChange=${props.onChange}>

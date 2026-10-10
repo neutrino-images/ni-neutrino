@@ -243,7 +243,6 @@ export default function Box() {
 
 		<section class="sys-block">
 			<h2>${t(text, 'sys.power.title')}</h2>
-			<p class="sys-lead">${t(text, 'sys.power.nostate')}</p>
 			${/* The one sentence in front of these that is still drawn before
 			     anybody presses anything, and it earns it: it says the controls
 			     are off for a moment and why, which is a fact about the box and

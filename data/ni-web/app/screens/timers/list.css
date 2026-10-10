@@ -147,6 +147,18 @@
 	margin: var(--gap-5) 0 0;
 }
 
+/* The button's wrapper would grow to the width of its reason and push Cancel
+   away; the reason goes on its own line under both buttons instead. */
+.timers-actions > span {
+	display: contents;
+}
+
+.timers-actions .hint {
+	order: 1;
+	flex-basis: 100%;
+	margin-top: 0;
+}
+
 /* What the address brought with it, said in one line above the fields it filled
    in, so that whoever came here from a guide entry can see what was taken over
    without reading eight controls to find out. */

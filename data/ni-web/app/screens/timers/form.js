@@ -607,13 +607,17 @@ export function TimerForm(props) {
 					onInput=${function (/** @type {Web.On<HTMLInputElement, InputEvent>} */ e) { change({ announce: e.currentTarget.value }); }} />` : null}
 
 			${shape && shape.standby ? html`
-				<${Switch}
+				<${Select}
 					id="timer-standby"
 					label=${t(text, 'form.standby')}
-					checked=${here.standby_on}
+					value=${here.standby_on ? 'on' : 'off'}
+					options=${[
+						{ value: 'on', label: t(text, 'form.standby.on') },
+						{ value: 'off', label: t(text, 'form.standby.off') }
+					]}
 					disabled=${changing}
 					hint=${changing ? t(text, 'form.fixed') : null}
-					onChange=${function (/** @type {Web.On<HTMLInputElement>} */ e) { change({ standby_on: e.currentTarget.checked }); }} />` : null}
+					onChange=${function (/** @type {Web.On<HTMLSelectElement>} */ e) { change({ standby_on: e.currentTarget.value === 'on' }); }} />` : null}
 
 			${shape && shape.dir && changing ? html`
 				<${Field}
