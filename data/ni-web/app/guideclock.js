@@ -2,6 +2,7 @@
    for the box to announce a new programme from. */
 
 import * as store from './store.js';
+import { boxNow } from './boxclock.js';
 
 const kPath = '/api/v1/epg/current';
 
@@ -75,7 +76,7 @@ export function watchOnAir(channel, watcher) {
 		if (due === 0) {
 			return;
 		}
-		const left = due - Date.now();
+		const left = due - boxNow();
 		if (left > 0) {
 			timer = setTimeout(look, Math.min(left, kLookMs));
 			return;
@@ -97,7 +98,7 @@ export function watchOnAir(channel, watcher) {
 			return;
 		}
 		judged = answer;
-		const next = nextRead(shot, Date.now(), misses);
+		const next = nextRead(shot, boxNow(), misses);
 		due = next.due;
 		misses = next.misses;
 		look();

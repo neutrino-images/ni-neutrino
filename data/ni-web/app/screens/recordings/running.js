@@ -15,6 +15,7 @@ import { Select } from '../../ui/select.js';
 import { ChannelName } from '../../ui/channels.js';
 import { toast } from '../../ui/toast.js';
 import { refusalKey } from './archive.model.js';
+import { boxNowSeconds } from '../../boxclock.js';
 
 export const css = '/app/screens/recordings/recordings.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -208,7 +209,7 @@ export default function Running() {
 	function startHere() {
 		if (!channel)
 			return;
-		const from = Math.floor(Date.now() / 1000);
+		const from = boxNowSeconds();
 		store.write('POST', '/api/v1/timers', {
 			body: {
 				kind: 'immediate-record',
@@ -261,7 +262,7 @@ export default function Running() {
 		},
 		{
 			id: 'running', label: t(text, 'rec.col.running'), sortable: false, mono: false,
-			cell: function (/** @type {Api.Recording} */ one) { return duration(Math.floor(Date.now() / 1000) - one.start); },
+			cell: function (/** @type {Api.Recording} */ one) { return duration(boxNowSeconds() - one.start); },
 		},
 		{
 			id: 'size', label: t(text, 'rec.col.size'), sortable: false, mono: false,

@@ -8,6 +8,7 @@ import { t } from '../i18n.js';
 import { clock, duration } from '../fmt.js';
 import { hrefFor } from '../nav.js';
 import { problemHref } from '../problem.js';
+import { boxNowSeconds } from '../boxclock.js';
 import { ensureCss } from '../css.js';
 import { Button } from './button.js';
 import { RowActions } from './actions.js';
@@ -104,14 +105,22 @@ export function zapTo(id, said) {
 	ask(function () { return zap(id); }, said);
 }
 
-// The start is read now: the box refuses a one-off that begins in the past.
+// Judged again at the click, which can come long after the list was drawn.
 /**
  * @param {Api.Event} event
  * @returns {void}
  */
 function recordNow(event) {
-	const from = Math.floor(Date.now() / 1000);
 	ask(function () {
+		const from = boxNowSeconds();
+		if (from < event.start) {
+			route(timerHref(event, 'record'));
+			return Promise.resolve(false);
+		}
+		if (!isOnAir(event, from)) {
+			toast(t(text, 'epg.event.record.over'), 'bad');
+			return Promise.resolve(false);
+		}
 		return store.write('POST', '/api/v1/timers', {
 			touches: kRecordTouches,
 			body: {

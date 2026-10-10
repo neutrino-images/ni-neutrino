@@ -90,7 +90,9 @@ const char kKindDocs[] =
 	"remind: shows `title` on the screen at `start`\n"
 	"sleeptimer: at `start` switches the box off or puts it into standby, whichever the box's own shutdown setting chooses\n"
 	"exec-plugin: starts the plugin named in `title` at `start`\n"
-	"immediate-record: a recording of `channel_id` that begins at once: send the current time as `start` and the end as `stop`; it is filed, and read back, as `record`";
+	"immediate-record: a recording of `channel_id` that begins at once, at the box's own time, whatever `start` says; "
+	"with `epg_start` and a `stop` still ahead on the box's clock, `stop` is kept as the end, otherwise `stop - start` "
+	"is the length counted from the box's now; it is filed, and read back, as `record`";
 
 /* The number a timer read off the box carries, as the word for it, and the number
    itself for a kind this build has no word for. A timer file written by another image
@@ -469,8 +471,10 @@ const Param kCreateParams[] = {
 		"the channel to switch to or record, hexadecimal as `GET /api/v1/channels` answers it; "
 		"required for `zapto`, `record` and `immediate-record`, ignored by the other kinds"),
 	HTTPD_BODY_REQUIRED("start", ParamType::Time,
-		"when the timer fires, Unix time in seconds; for a timer that runs once it may not lie before the "
-		"current minute, while a repeating timer may start in the past and then fires at once"),
+		"when the timer fires, Unix time in seconds; for a timer that runs once it may lie at most 120 seconds "
+		"before the box's current time and then fires at once, while a repeating timer may start further in "
+		"the past and also fires at once; an "
+		"`immediate-record` begins at the box's current time and uses `start` only to measure its length"),
 	HTTPD_BODY("stop", ParamType::Time,
 		"when a recording ends, Unix time in seconds, after `start`; any value but `0` is refused for the "
 		"kinds that do not record"),
@@ -512,8 +516,8 @@ const Param kChangeParams[] = {
 	HTTPD_SEGMENT_IN("id", ParamType::UInt,
 		"the timer, by the decimal `id` `GET /api/v1/timers` answers for it", 1, kMaxTimerId),
 	HTTPD_BODY("start", ParamType::Time,
-		"the new moment the timer fires, Unix time in seconds; a timer that runs once may not be moved before "
-		"the current minute, and a recording that is running keeps its start"),
+		"the new moment the timer fires, Unix time in seconds; a timer that runs once may not be moved more "
+		"than 120 seconds before the box's current time, and a recording that is running keeps its start"),
 	HTTPD_BODY("stop", ParamType::Time,
 		"the new end of a recording, Unix time in seconds, after `start` (and, for a running recording, after "
 		"now); any value but `0` is refused for a timer that does not record"),
@@ -582,6 +586,9 @@ const Endpoint kTimerEndpoints[] = {
 	  "`start` and `start + duration` as `stop`, and optionally `epg_id`, `epg_start` and `title` from "
 	  "`GET /api/v1/epg/event`. `recording_safety` and `auto_adjust` are off unless sent, so the timer keeps "
 	  "exactly the times given.\n\n"
+	  "For a recording that starts at once, send `kind` `immediate-record`. It begins at the box's own time, "
+	  "so a caller whose clock is behind or stale is not refused: a `stop` that ends the guide event named by "
+	  "`epg_start` stays as sent while it lies ahead, and any other `stop` keeps its distance from `start`.\n\n"
 	  "**Preconditions:** none on the box state: a timer can be made in standby, and a `record` or `zapto` "
 	  "timer wakes the box from deep standby before it is due.\n\n"
 	  "**Side effects:** the daemon stores the timer in its file and every client sees a `timer-changed` "
@@ -591,8 +598,8 @@ const Endpoint kTimerEndpoints[] = {
 	  "- `400 recording-without-duration`: a recording whose `stop` is not after `start`.\n"
 	  "- `400 no-such-parameter`: a `stop` other than `0` for a kind that does not record.\n"
 	  "- `400 not-a-listed-value`: a `repeat` value outside the table under `repeat`.\n"
-	  "- `400 timer-in-the-past`: a timer that runs once (`repeat` 0) with a `start` before the current "
-	  "minute. Send a later `start`.\n"
+	  "- `400 timer-in-the-past`: a timer that runs once (`repeat` 0) with a `start` more than 120 seconds "
+	  "before the box's current time, except `immediate-record`. Send a later `start`.\n"
 	  "- `409 timer-exists`: the daemon already holds a timer like this one; find it with `GET /api/v1/timers`.\n"
 	  "- `timer-not-created`, `clock-unavailable`: the daemon declined or the box could not read its clock; "
 	  "try again.\n\n"
@@ -617,7 +624,8 @@ const Endpoint kTimerEndpoints[] = {
 	  "- `404 no-such-timer`: the daemon holds no timer with that id; read the ids again from "
 	  "`GET /api/v1/timers`.\n"
 	  "- `409 recording-running`: a `start` other than the current one for a recording that is running.\n"
-	  "- `400 timer-in-the-past`: a timer that runs once moved before the current minute, or a running "
+	  "- `400 timer-in-the-past`: a timer that runs once moved more than 120 seconds before the box's "
+	  "current time, or a running "
 	  "recording given a `stop` before now.\n"
 	  "- `400 recording-without-duration`: a recording whose `stop` would not lie after its `start`.\n"
 	  "- `400 no-such-parameter`: a `stop` other than `0` for a timer that does not record.\n"

@@ -11,6 +11,7 @@
 
 import { ApiError, toProblem, abortError, offlineError } from './problem.js';
 import * as session from './session.js';
+import { noteBoxDate } from './boxclock.js';
 
 /* The methods that ask for something rather than change it, named the way the server names
    them (src/httpd/auth.cpp, safeMethod). The second token is asked for on everything else. */
@@ -274,6 +275,7 @@ async function send(method, url, options, mayRecover, seen) {
 	const believedIn = session.state().authenticated;
 
 	let response;
+	const sentMs = Date.now();
 	try {
 		response = await fetch(url, init);
 	} catch (caught) {
@@ -291,6 +293,7 @@ async function send(method, url, options, mayRecover, seen) {
 	   come back as nothing at all and are opposite statements: the box has done it, or the
 	   box has the message in front of it. */
 	seen.code = response.status;
+	noteBoxDate(response.headers ? response.headers.get('Date') : null, sentMs, Date.now());
 
 	if (response.ok) {
 		return readAnswer(response, options.accept);

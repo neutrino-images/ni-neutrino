@@ -19,6 +19,7 @@ import { Dot } from './dot.js';
 import * as store from '../store.js';
 import { readPlayback, isPlayback } from '../playback.js';
 import { useRefused } from './refused.js';
+import { boxNowSeconds } from '../boxclock.js';
 
 /* The share of the programme that has gone, as a whole number. Nought where
    the guide said nothing, so a bar drawn from this is empty rather than absent
@@ -118,7 +119,7 @@ export function OnAir(props) {
 		</span>`;
 	}
 
-	const share = elapsedShare(props.event, props.now || Math.floor(Date.now() / 1000));
+	const share = elapsedShare(props.event, props.now || boxNowSeconds());
 	const title = props.event && props.event.title ? props.event.title : '';
 
 	return html`<a

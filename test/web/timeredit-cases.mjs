@@ -39,7 +39,7 @@ loader.registerHooks({
 	},
 });
 
-const { draftOf, draftProblems, changeBody, createBody, startFixed, emptyDraft, momentSeconds } =
+const { draftOf, draftProblems, changeBody, createBody, startFixed, emptyDraft, draftAtSend } =
 	await import('../../data/ni-web/app/screens/timers/list.model.js');
 
 let checked = 0;
@@ -122,12 +122,36 @@ function held(kind, state, repeat, start, stop) {
 	const draft = draftOf(held('record', RUNNING, DAILY, began, began + 1800));
 	same(startFixed(draft), false, 'a running series keeps a start that can move');
 	same(draftProblems(draft, NOW), [], 'and is not asked about the past, as before');
-	same(changeBody(draft, NOW).start, momentSeconds(draft.start), 'and sends the start it shows, as before');
+	same(changeBody(draft, NOW).start, began, 'and sends the start the box holds, to the second, which is no move');
 
 	draft.repeat = 'once';
 	same(startFixed(draft), true, 'turned into a one-off it is one, and its start is fixed');
 	same(draftProblems(draft, NOW), [], 'without a refusal for the start it began at');
 	same(changeBody(draft, NOW).start, undefined, 'and without sending that start');
+}
+
+// ------------------------------------------ a start a little behind the box's clock
+
+{
+	const draft = draftOf(held('record', SCHEDULED, 0, NOW - 120, NOW + 1200));
+	same(draftProblems(draft, NOW), [], 'a one-off up to two minutes behind the box is taken as now');
+	const later = draftOf(held('record', SCHEDULED, 0, NOW - 121, NOW + 1200));
+	same(draftProblems(later, NOW), ['form.bad.past'], 'and one a second further is refused');
+}
+
+{
+	// Opened before it began, sent after: the box now holds it as running.
+	const began = NOW - 30 + 17;
+	const timer = held('record', SCHEDULED, 0, began, began + 1800);
+	const draft = draftOf(timer);
+	draft.minutes = '90';
+	same(changeBody(draft, NOW).start, began, 'a start left alone is sent to the second');
+	timer.state = RUNNING;
+	const sent = draftAtSend(draft, timer);
+	same(startFixed(sent), true, 'at the send it is read as running');
+	same(changeBody(sent, NOW).start, undefined, 'and its start is not sent');
+	same(changeBody(sent, NOW).stop, began + 90 * 60, 'while its new end is');
+	same(draftAtSend(draft, null), draft, 'a timer the box no longer lists leaves the draft as it was');
 }
 
 // ---------------------------------------- everything else, held as it was before
@@ -202,7 +226,7 @@ for (const [kind, carries] of [
 
 // ------------------------------------------------------------------------ verdict
 
-const FLOOR = 61;
+const FLOOR = 68;
 if (checked < FLOOR) {
 	process.stderr.write('timeredit-cases.mjs: only ' + checked + ' assertions ran, and there are more than ' + FLOOR + '\n');
 	process.exit(1);

@@ -34,6 +34,7 @@ import { dayKeyOf, dayStart, shiftDay, problemOf } from './schedule.js';
 import words from '../../ui/event.text.js';
 import shared from './schedule.text.js';
 import text from './search.text.js';
+import { boxNowSeconds } from '../../boxclock.js';
 
 export const css = '/app/screens/epg/schedule.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -78,7 +79,7 @@ export function namesById(tv, radio) {
  * @returns {Web.Drawn}
  */
 export default function Search(_props) {
-	const [today] = useState(dayKeyOf(Math.floor(Date.now() / 1000)));
+	const [today] = useState(dayKeyOf(boxNowSeconds()));
 	const [query, setQuery] = useState('');
 	const [fromDay, setFromDay] = useState(today);
 	const [toDay, setToDay] = useState(shiftDay(today, kDefaultDays));
@@ -131,7 +132,7 @@ export default function Search(_props) {
 	/* The clock as this draw read it. What may be done to a hit that has begun
 	   is not what may be done to one that has not, and that is the only thing
 	   on this screen the moment decides. */
-	const now = Math.floor(Date.now() / 1000);
+	const now = boxNowSeconds();
 
 	/** @param {{ currentTarget: HTMLInputElement }} event */
 	function typeQuery(event) {

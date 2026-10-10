@@ -38,6 +38,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 namespace
@@ -101,6 +102,42 @@ TEST_CASE("the server binds, answers and stops", "[httpd]")
 
 	testhttp::Reply gone = testhttp::request(port, "GET", "/nothing-is-here");
 	REQUIRE_FALSE(gone.transport_ok);
+}
+
+// A page judges what is past by the box's clock, and this is where it reads it.
+TEST_CASE("every answer carries the box's time as a Date header", "[httpd]")
+{
+	InstalledDependencies wired;
+
+	httpd::ServerConfig c = httpd::defaultConfig();
+	c.port = 0;
+	c.bind_address = "127.0.0.1";
+	REQUIRE(httpd::start(c));
+	const int port = httpd::boundPort();
+
+	const char *paths[] = { "/nothing-is-here", "/api/v1/timers" };
+	for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); i++)
+	{
+		const time_t before = time(NULL);
+		testhttp::Reply r = testhttp::request(port, "GET", paths[i]);
+		const time_t after = time(NULL);
+		INFO(paths[i]);
+		REQUIRE(r.transport_ok);
+
+		const std::string date = r.header("Date");
+		REQUIRE(date.size() == 29);
+		CHECK(date.compare(25, 4, " GMT") == 0);
+		struct tm tm;
+		std::memset(&tm, 0, sizeof(tm));
+		const char *end = strptime(date.c_str(), "%a, %d %b %Y %H:%M:%S GMT", &tm);
+		REQUIRE(end != NULL);
+		CHECK(*end == '\0');
+		const time_t said = timegm(&tm);
+		CHECK(said >= before - 1);
+		CHECK(said <= after + 1);
+	}
+
+	httpd::stop();
 }
 
 TEST_CASE("the server binds an IPv6 address and answers on it", "[httpd]")

@@ -26,6 +26,7 @@ import { Dot } from '../../ui/dot.js';
 import { EventActions, EventSheet, isOnAir, whenOf } from '../../ui/event.js';
 import words from '../../ui/event.text.js';
 import text from './schedule.text.js';
+import { boxNowSeconds } from '../../boxclock.js';
 
 export const css = '/app/screens/epg/schedule.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -208,7 +209,7 @@ export default function Schedule(props) {
 	   under and not the channel's own identifier. */
 	const asked = channelId(props.param === undefined ? '' : props.param);
 
-	const [today] = useState(dayKeyOf(Math.floor(Date.now() / 1000)));
+	const [today] = useState(dayKeyOf(boxNowSeconds()));
 	const [when, setWhen] = useState(today);
 	const [bouquet, setBouquet] = useState(0);
 
@@ -362,7 +363,7 @@ export default function Schedule(props) {
 	   depends on it: what may be done to a showing that has begun is not what
 	   may be done to one that has not. Read at the draw and not held, because
 	   nothing here moves by itself and every act reads the clock again. */
-	const now = Math.floor(Date.now() / 1000);
+	const now = boxNowSeconds();
 
 	/** @param {{ currentTarget: HTMLSelectElement }} event */
 	function pickBouquet(event) {

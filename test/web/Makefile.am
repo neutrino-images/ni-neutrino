@@ -32,6 +32,7 @@ WEB_CHECKS = \
 	check-web-mcp.sh \
 	check-web-grid.sh \
 	check-web-state.sh \
+	check-web-boxclock.sh \
 	$(AI_GUIDE_CHECKS) \
 	$(AI_UI_CHECKS) \
 	$(CHANNEL_CHECKS) \
@@ -81,7 +82,8 @@ SHOT_DIST = \
 EXTRA_DIST = $(WEB_CHECKS) fetch-types.sh serve.js openapi-types.js drag-cases.mjs player-cases.mjs \
 	     decide-cases.mjs fileplay-cases.mjs archive-cases.mjs store-cases.mjs events-cases.mjs session-cases.mjs timerbody-cases.mjs \
 	     timeredit-cases.mjs settingsrows-cases.mjs guideclock-cases.mjs wake-cases.mjs nav-cases.mjs types \
-	     $(AI_GUIDE_DIST) $(AI_UI_DIST) $(CHANNEL_DIST) timerend-cases.mjs $(KEEP_DIST) $(NOW_DIST) $(SHOT_DIST) state-cases.mjs
+	     $(AI_GUIDE_DIST) $(AI_UI_DIST) $(CHANNEL_DIST) timerend-cases.mjs $(KEEP_DIST) $(NOW_DIST) $(SHOT_DIST) state-cases.mjs \
+	     boxclock-cases.mjs
 
 # The document the server answers with, written out by the target that owns it
 # and read here so that what the page asks for is held to it. Made through that

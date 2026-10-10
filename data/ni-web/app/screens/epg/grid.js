@@ -56,6 +56,7 @@ import { EventButtons, EventFacts, timerHref, zapTo } from '../../ui/event.js';
 import { holdingBouquet } from './schedule.js';
 import text from './grid.text.js';
 import * as model from './grid.model.js';
+import { boxNow, boxNowSeconds } from '../../boxclock.js';
 
 export const css = '/app/screens/epg/grid.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -88,14 +89,14 @@ const SETTLE_MS = 1500;
 const BOTTOM_PX = 16;
 
 function nowSeconds() {
-	return Math.floor(Date.now() / 1000);
+	return boxNowSeconds();
 }
 
 /* The clock as this screen holds it. Whole minutes, because that is what the
    flag says and what the mark of the moment is drawn to, and because a state
    that changes every second is a screen that draws every second. */
 function nowMinute() {
-	return Math.floor(Date.now() / 60000);
+	return Math.floor(boxNow() / 60000);
 }
 
 /**

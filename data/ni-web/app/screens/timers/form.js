@@ -37,8 +37,9 @@ import timers from './nav.js';
 import {
 	KINDS, kindOf, isKnownKind, PLAIN_REPEATS, momentInput, emptyDraft, draftOf,
 	draftProblems, createBody, changeBody, useAnswer, startFixed, startSeconds, stopSeconds,
-	endInput, minutesUntil, canPickEnd,
+	endInput, minutesUntil, canPickEnd, draftAtSend,
 } from './list.model.js';
+import { boxNowSeconds } from '../../boxclock.js';
 
 const WEEKDAY_WORDS = ['weekday.mo', 'weekday.tu', 'weekday.we', 'weekday.th', 'weekday.fr', 'weekday.sa', 'weekday.su'];
 
@@ -248,7 +249,7 @@ function durationError(wrong) {
 }
 
 function nowSeconds() {
-	return Math.floor(Date.now() / 1000);
+	return boxNowSeconds();
 }
 
 /**
@@ -400,7 +401,20 @@ export function TimerForm(props) {
 		}
 		/* Read when the button is pressed and not when the screen was drawn. An
 		   immediate recording begins now, and now is the press. */
+		let sent = here;
+		if (changing) {
+			try {
+				sent = draftAtSend(here, findTimer(await store.reload('GET', '/api/v1/timers'), props.id));
+			} catch (unread) {
+				// Sent as drawn, and a refusal then says why.
+			}
+		}
 		const now = nowSeconds();
+		if (draftProblems(sent, now).length > 0) {
+			setDraft(sent);
+			setSending(false);
+			return;
+		}
 		try {
 			if (changing) {
 				await store.write('PATCH', '/api/v1/timers/{id}', {
@@ -408,13 +422,13 @@ export function TimerForm(props) {
 					   number. It cannot be anything else here: the form is only drawn
 					   for an address the listing matched a timer to (findTimer). */
 					params: { id: Number(props.id) },
-					body: changeBody(here, now),
+					body: changeBody(sent, now),
 					touches: ['/api/v1/timers'],
 				});
 				toast(t(text, 'form.changed'));
 			} else {
 				await store.write('POST', '/api/v1/timers', {
-					body: createBody(here, now),
+					body: createBody(sent, now),
 					touches: ['/api/v1/timers'],
 				});
 				toast(t(text, 'form.created'));

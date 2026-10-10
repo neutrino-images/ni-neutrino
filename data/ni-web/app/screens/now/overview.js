@@ -37,6 +37,7 @@ import { useRefused } from '../../ui/refused.js';
 import * as pagePlayer from '../../ui/playing.js';
 import { hrefFor, areaById, entryById, labelOf } from '../../nav.js';
 import { Card, Meter, useResource, useOnScreen } from './parts.js';
+import { boxNowSeconds } from '../../boxclock.js';
 import { readPlayback, isPlayback, positionAt, timeText, tileActions, kResyncMs } from '../../playback.js';
 import { ArchiveDetails, usePlaylist, playHereNow, isHere } from '../recordings/archive.js';
 import recText from '../recordings/recordings.text.js';
@@ -92,17 +93,17 @@ const ASPECT_MODES = [
 ];
 
 /**
- * The clock of whoever is looking, in the unit the box counts in, redrawn now
- * and then so that a bar drawn from it does not stand still.
+ * The box's clock, in the unit the box counts in, redrawn now and then so that
+ * a bar drawn from it does not stand still.
  *
  * @returns {number}
  */
 function useNowSeconds() {
-	const [at, setAt] = useState(Math.floor(Date.now() / 1000));
+	const [at, setAt] = useState(boxNowSeconds());
 
 	useEffect(function () {
 		const timer = window.setInterval(function () {
-			setAt(Math.floor(Date.now() / 1000));
+			setAt(boxNowSeconds());
 		}, TICK_MS);
 		return function () { window.clearInterval(timer); };
 	}, []);
@@ -129,6 +130,41 @@ function announce(running, said) {
 		}
 		toast(failed && failed.problem ? failed.problem.title : t(text, 'now.failed'), 'bad');
 	});
+}
+
+/**
+ * Where the programme on air ends, while that is still ahead of the box's clock,
+ * and nought otherwise.
+ *
+ * @param {{ start: number, duration: number } | null | undefined} on
+ * @param {number} from the box's time, in seconds
+ * @returns {number}
+ */
+export function programmeEnd(on, from) {
+	return on && on.duration > 0 && on.start + on.duration > from ? on.start + on.duration : 0;
+}
+
+/**
+ * What pressing record sends. The guide event goes along only with the
+ * programme's own end, which the box then keeps as it is.
+ *
+ * @param {{ id: string, name: string }} playing
+ * @param {{ id: string, title: string, start: number, duration: number } | null | undefined} on
+ * @param {number} from the box's time of the press, in seconds
+ * @param {number} stop
+ * @returns {Api.BodyValue<'POST /api/v1/timers'>}
+ */
+export function recordNowBody(playing, on, from, stop) {
+	const ownEnd = stop > 0 && stop === programmeEnd(on, from);
+	return {
+		kind: 'immediate-record',
+		channel_id: playing.id,
+		start: from,
+		stop: stop,
+		title: on ? on.title : playing.name,
+		epg_id: ownEnd && on ? on.id : undefined,
+		epg_start: ownEnd && on ? on.start : undefined,
+	};
 }
 
 /**
@@ -366,7 +402,7 @@ function Playing() {
 	const rows = [];
 	const items = (after.data && after.data.items) || [];
 	// The quarter hour window also holds what has ended, and the tick may be old.
-	const drawn = Math.floor(Date.now() / 1000);
+	const drawn = boxNowSeconds();
 	for (const row of items) {
 		if ((!on || row.id !== on.id) && row.start + row.duration > drawn) {
 			rows.push(row);
@@ -400,31 +436,26 @@ function Playing() {
 		   the box itself says a recording with no programme behind it should
 		   run otherwise. Asked for at the moment it is needed and not held on
 		   screen, because it is one number out of a whole section and this is
-		   the only place on the screen that wants it. */
-		const known = on && on.duration > 0 && on.start + on.duration > at;
-		const ends = known && on
-			? Promise.resolve(on.start + on.duration)
-			: store.load('GET', '/api/v1/settings/{section}', { params: { section: 'recording' } })
-				.then(function (answer) {
-					const hours = Number(settingValue(answer, 'record_hours'));
-					const runs = Number.isFinite(hours) && hours > 0 ? hours : RECORD_HOURS_FALLBACK;
-					return at + runs * 3600;
-				}, function () {
-					return at + RECORD_HOURS_FALLBACK * 3600;
+		   the only place on the screen that wants it. The time is read after
+		   signing in, because a sign in can outlast the programme. */
+		announce(session.requireWrite().then(function () {
+			const from = boxNowSeconds();
+			const end = programmeEnd(on, from);
+			const ends = end > 0
+				? Promise.resolve(end)
+				: store.load('GET', '/api/v1/settings/{section}', { params: { section: 'recording' } })
+					.then(function (answer) {
+						const hours = Number(settingValue(answer, 'record_hours'));
+						const runs = Number.isFinite(hours) && hours > 0 ? hours : RECORD_HOURS_FALLBACK;
+						return from + runs * 3600;
+					}, function () {
+						return from + RECORD_HOURS_FALLBACK * 3600;
+					});
+			return ends.then(function (stop) {
+				return store.write('POST', '/api/v1/timers', {
+					body: recordNowBody(playing, on, from, stop),
+					touches: touchesRecordings,
 				});
-
-		announce(ends.then(function (stop) {
-			return store.write('POST', '/api/v1/timers', {
-				body: {
-					kind: 'immediate-record',
-					channel_id: playing.id,
-					start: at,
-					stop: stop,
-					title: on ? on.title : playing.name,
-					epg_id: on && guideId !== '' ? guideId : undefined,
-					epg_start: on ? on.start : undefined,
-				},
-				touches: touchesRecordings,
 			});
 		}), t(text, 'now.act.recording.started'));
 	}

@@ -49,6 +49,7 @@ import { zap, switchMode } from '../../ui/wake.js';
 import text from './list.text.js';
 import { fetchPlaylist } from './stream.js';
 import { emptyWalk, beginPage, failPage, extend, wants, byName, isWeb } from './list.paging.js';
+import { boxNowSeconds } from '../../boxclock.js';
 
 export const css = '/app/screens/channels/list.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -438,7 +439,7 @@ export default function ChannelList(props) {
 			return;
 		}
 
-		const at = Math.floor(Date.now() / 1000);
+		const at = boxNowSeconds();
 		guideBusy.current = true;
 		askGuide(missing, at, guide.current).then(function () {
 			guideBusy.current = false;
@@ -742,7 +743,7 @@ export default function ChannelList(props) {
 
 		<${EventSheet}
 			event=${about}
-			at=${Math.floor(Date.now() / 1000)}
+			at=${boxNowSeconds()}
 			channelHref=${about ? hrefFor('epg', 'schedule', channelId(about.channel_id)) : undefined}
 			onClose=${function () { setAbout(null); }} />
 	</div>`;
@@ -772,7 +773,7 @@ function Showing(props) {
 		return html`<span class="ch-now-none">${t(text, showing ? 'list.now.none' : 'list.now.asking')}</span>`;
 	}
 
-	const at = Math.floor(Date.now() / 1000);
+	const at = boxNowSeconds();
 	const share = elapsedShare(now, at);
 	const left = now ? Math.round((now.start + now.duration - at) / 60) : 0;
 

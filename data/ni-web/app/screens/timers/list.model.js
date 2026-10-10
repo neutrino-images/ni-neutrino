@@ -200,12 +200,6 @@ export function momentSeconds(value) {
 	return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
 }
 
-/* The box refuses a one-off that begins before the current minute, and it
-   rounds down to that minute rather than to the second (src/coreapi/timers.cpp,
-   startOfMinute), because a caller building a moment out of separate fields has
-   no seconds to give. The same rounding is done here so that the two answer the
-   same thing about the same moment. */
-
 /**
  * @param {number} seconds
  * @returns {number}
@@ -213,6 +207,10 @@ export function momentSeconds(value) {
 export function startOfMinute(seconds) {
 	return seconds - (seconds % 60);
 }
+
+// How far behind its clock the box still takes a one-off as starting now
+// (src/coreapi/timers.cpp).
+export const NOW_GRACE = 120;
 
 /* ------------------------------------------------------------------- form */
 
@@ -233,7 +231,7 @@ export function startOfMinute(seconds) {
  * @property {string} epg_id
  * @property {number} epg_start
  * @property {boolean} running a recording the daemon has already begun
- * @property {number} began when it began, to the second
+ * @property {number} began the start the box holds, to the second
  */
 
 // How long a recording lasts when nothing else said. A number, and any number
@@ -304,6 +302,19 @@ export function draftOf(timer) {
 }
 
 /**
+ * The draft against the timer as the box holds it when the draft is sent: a
+ * recording can have begun since the form was opened.
+ * @param {Draft} draft
+ * @param {Api.Timer | null} timer
+ * @returns {Draft}
+ */
+export function draftAtSend(draft, timer) {
+	if (timer === null)
+		return draft;
+	return Object.assign({}, draft, { running: draftOf(timer).running, began: timer.start });
+}
+
+/**
  * A whole number a field was typed into, and nought for anything else. An empty
  * field is nought and not NaN, because nought is a number the rules below can
  * say something about and NaN is one every comparison answers false to.
@@ -350,6 +361,9 @@ export function startSeconds(draft, now) {
 	if (draft.kind === 'immediate-record')
 		return now;
 	if (startFixed(draft))
+		return draft.began;
+	// The field has no seconds, and a start left alone keeps the box's own.
+	if (draft.began > 0 && draft.start === momentInput(draft.began))
 		return draft.began;
 	return momentSeconds(draft.start);
 }
@@ -460,7 +474,7 @@ export function draftProblems(draft, now) {
 
 	// Asked of a one-off only, as the box asks it.
 	const fixed = startFixed(draft);
-	if (!fixed && repeatsOf(draft) === REPEAT_ONCE && start > 0 && start < startOfMinute(now))
+	if (!fixed && repeatsOf(draft) === REPEAT_ONCE && start > 0 && start < now - NOW_GRACE)
 		out.push('form.bad.past');
 
 	// An end behind now would have the daemon end it at its next pass.
