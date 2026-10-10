@@ -23,6 +23,7 @@
 #include "predicates.h"
 
 #include "coreapi/base/deps.h"
+#include "coreapi/box/apply_osd.h"
 
 #include <hardware/video.h>
 
@@ -596,15 +597,13 @@ constexpr Descriptor kOsd[] =
 		.defaultValue(5)
 		.values(kVolumePos)
 		.field(COREAPI_NUMBER_FIELD(volume_pos)),
-	/* A height in pixels. The floor the box enforces is the height of the
-	   volume icon it loaded, so the floor below is the widest one that holds
-	   every value that could be offered rather than the box's own. */
 	intRow("volume_size")
 		.section("osd")
 		.label("extra.volume_size")
 		.hint("menu.hint_volume_size")
 		.range(0, 50)
 		.defaultValue(26)
+		.minNow(volumeSizeMin)
 		.field(COREAPI_NUMBER_FIELD(volume_size)),
 	boolRow("volume_digits")
 		.section("osd")

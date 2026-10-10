@@ -18,6 +18,10 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "support/catch.hpp"
 
 #include "coreapi/base/apply.h"
@@ -1241,6 +1245,68 @@ TEST_CASE("a record member that is a key passes again where the record holds it"
 	CHECK_FALSE(settings::check("key_record_case", "A\t" + keyText(gone | 1)).ok());
 }
 
+namespace
+{
+
+std::vector<RecordValues> portRecordHeld;
+
+void readPortRecords(const SNeutrinoSettings &, std::vector<RecordValues> &out) { out = portRecordHeld; }
+void writePortRecords(SNeutrinoSettings &, const std::vector<RecordValues> &in) { portRecordHeld = in; }
+
+const RecordField kPortRecordFields[] =
+{
+	{ "name", ValueType::String, 0, 0, false, NULL },
+	{ "port", ValueType::Int, 1, 65535, false, NULL }
+};
+
+const FieldExtra kPortRecordExtra = { 0, NULL, NULL, readPortRecords, writePortRecords, kPortRecordFields, 2, 0, 0, false };
+
+struct PortRecordTable
+{
+	Descriptor rows[1];
+
+	PortRecordTable()
+	{
+		portRecordHeld.clear();
+		rows[0] = recordsRow("port_record_case")
+			.section("misc")
+			.defaultValue("")
+			.field(COREAPI_RECORDS_FIELD(usermenu, kPortRecordExtra));
+		setSettingsTable(rows, 1);
+	}
+
+	~PortRecordTable() { setSettingsTable(NULL, 0); }
+};
+
+RecordValues portRecord(const std::string &name, const std::string &port)
+{
+	RecordValues r;
+	r.push_back(name);
+	r.push_back(port);
+	return r;
+}
+
+} // namespace
+
+/* A member a rule refuses passes again where the record already holds it at that place,
+   so a held record does not block writing the others. */
+TEST_CASE("a record member the rules refuse passes again where the record holds it", "[settingselements]")
+{
+	PortRecordTable table;
+	RealStore store;
+	portRecordHeld.push_back(portRecord(" Sport", "0"));
+	portRecordHeld.push_back(portRecord("News", "80"));
+
+	// The held record unchanged and the other one edited.
+	CHECK(settings::check("port_record_case", " Sport\t0\nMovies\t81").ok());
+	// The held record's member changed to another refused value.
+	CHECK_FALSE(settings::check("port_record_case", " Sports\t0\nNews\t80").ok());
+	CHECK_FALSE(settings::check("port_record_case", " Sport\t-1\nNews\t80").ok());
+	// A record of its own with a refused member.
+	CHECK_FALSE(settings::check("port_record_case", " Sport\t0\nNews\t80\n Extra\t81").ok());
+	CHECK_FALSE(settings::check("port_record_case", " Sport\t0\nNews\t80\nExtra\t0").ok());
+}
+
 /* A menu draws a flag file as the flag it is and moves it through the two calls that
    reach the file, because the row has no member for a widget to edit. */
 TEST_CASE("a menu reads and writes a flag file row through the file", "[settingselements]")
@@ -1300,8 +1366,12 @@ TEST_CASE("the shipped rows of the new kinds are sane", "[settingselements]")
 	}
 	CHECK(lists == 3);
 	CHECK(records == 2);
-	// The hard disk power, the SCART picture fix, thirteen daemons and seven softcams.
+	// The hard disk power, the SCART picture fix, thirteen daemons, seven softcams and the display's two.
+#ifdef ENABLE_LCD4LINUX
+	CHECK(flags == 24);
+#else
 	CHECK(flags == 22);
+#endif
 	// The twenty six numbers and choices of the theme; its colours are the colour rows' own.
 	CHECK(nested == 26);
 	CHECK(elementRowCount() > 100);
@@ -1367,30 +1437,30 @@ TEST_CASE("a web batch of every kind of row runs the row's group once", "[settin
 	Descriptor rows[kKindCount] =
 	{
 		{ "kind_number", ValueType::Int, "misc", "label", NULL, 0, 2000, NULL, 0, 450, NULL, false, false,
-		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_text", ValueType::String, "misc", "label", NULL, 0, 0, NULL, 0, 0, "", false, false,
-		  COREAPI_ALWAYS, COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_mask", ValueType::Bool, "misc", "label", NULL, 0, 1, NULL, 0, 0, NULL, false, false,
 		  COREAPI_ALWAYS, COREAPI_MASK_BIT_FIELD(recording_audio_pids_std, recording_audio_pids_default, 1),
-		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_channel", ValueType::String, "misc", "label", NULL, 0, 0, NULL, 0, 0, "0", false, false,
-		  COREAPI_ALWAYS, COREAPI_CHANNEL_ID_FIELD(startchanneltv_id), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_CHANNEL_ID_FIELD(startchanneltv_id), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_service", ValueType::Int, "misc", "label", NULL, 0, 99, NULL, 0, 0, NULL, false, false,
 		  COREAPI_ALWAYS, COREAPI_SERVICE_FIELD(record_safety_time_before, askService, tellService),
-		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_colour", ValueType::Color, "misc", "label", NULL, 4, 4, NULL, 0, 0, "#00000000", false, false,
-		  COREAPI_ALWAYS, COREAPI_COLOR_FIELD(theme, menu_Head, true), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_COLOR_FIELD(theme, menu_Head, true), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_flag", ValueType::Bool, "misc", "label", NULL, 0, 1, NULL, 0, 0, NULL, false, false,
 		  COREAPI_ALWAYS,
 		  FieldRef{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, flag.c_str(), FieldOrigin::FlagFile,
 		            NULL, NULL, NULL },
-		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_element", ValueType::Int, "misc", "label", NULL, 0, 2, NULL, 0, 0, NULL, false, false,
-		  COREAPI_ALWAYS, COREAPI_ELEMENT_FIELD(personalize, 0), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_ELEMENT_FIELD(personalize, 0), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_list", ValueType::List, "misc", "label", NULL, 0, 0, NULL, 0, 0, "", false, false,
-		  COREAPI_ALWAYS, COREAPI_LIST_FIELD(webtv_xml), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_LIST_FIELD(webtv_xml), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "kind_records", ValueType::Records, "misc", "label", NULL, 0, 0, NULL, 0, 0, "", false, false,
-		  COREAPI_ALWAYS, COREAPI_RECORDS_FIELD(usermenu, kKeyRecordExtra), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_RECORDS_FIELD(usermenu, kKeyRecordExtra), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 	};
 	for (size_t i = 0; i < kKindCount; ++i)
 	{

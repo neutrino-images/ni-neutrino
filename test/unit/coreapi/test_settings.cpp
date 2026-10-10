@@ -18,7 +18,16 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "support/catch.hpp"
+#include "coreapi/box/apply_glcd.h"
+#include "coreapi/box/apply_osd.h"
+#include "coreapi/settings/choicesources.h"
+#include "coreapi/settings/couple.h"
+#include "coreapi/settings/videomodes.h"
 #include "coreapi/settings/menuspec.h"
 #include "coreapi/settings/settings.h"
 #include "coreapi/base/apply.h"
@@ -144,13 +153,13 @@ const Descriptor kBoxDefaultThenCondition[] =
 		"fixture_basis", ValueType::Int, "fixture", "label", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, threeOnThisBox, false, NULL
+		NULL, NULL, NULL, NULL, NULL, threeOnThisBox, false, NULL, NULL
 	},
 	{
 		"fixture_dependent", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kBasisIsThree),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -696,7 +705,7 @@ const Descriptor kWiderThanItsField[] =
 		"fixture_byte", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(recording_audio_pids_default),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kWiderThanItsFieldCount =
@@ -1188,7 +1197,7 @@ const Descriptor kBoolWithoutBounds[] =
 		"fixture_bool", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kBoolWithoutBoundsCount =
@@ -1203,13 +1212,13 @@ const Descriptor kNamedNumber[] =
 		"fixture_named", ValueType::Int, "fixture", "label", NULL,
 		1, 14, COREAPI_VALUES(kOffBelow), 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_plain", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kNamedNumberCount = sizeof(kNamedNumber) / sizeof(kNamedNumber[0]);
@@ -1226,7 +1235,7 @@ const Descriptor kSeveralNamed[] =
 		"fixture_several", ValueType::Int, "fixture", "label", NULL,
 		1, 14, COREAPI_VALUES(kAutoAndOff), 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kSeveralNamedCount = sizeof(kSeveralNamed) / sizeof(kSeveralNamed[0]);
@@ -1242,19 +1251,19 @@ const Descriptor kOnBox[] =
 		"fixture_fan", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_scroll", ValueType::Int, "fixture", "label", NULL,
 		0, 999, COREAPI_VALUES(kOffFloor), 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, &kFlagShape),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, COREAPI_VALUES(kOffFloor), 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kOnBoxCount = sizeof(kOnBox) / sizeof(kOnBox[0]);
@@ -1268,14 +1277,14 @@ const Descriptor kWrongRows[] =
 		"fixture_unknown_kind", (ValueType) 99, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	// An Enum whose list is not there, which offers no value at all.
 	{
 		"fixture_empty_enum", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	/* An Enum counting three values it does not have. The macro that writes the
 	   pair cannot say this and a row written by hand can, which is the reason
@@ -1284,7 +1293,7 @@ const Descriptor kWrongRows[] =
 		"fixture_lying_enum", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, NULL, 3, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kWrongRowCount = sizeof(kWrongRows) / sizeof(kWrongRows[0]);
@@ -1504,7 +1513,7 @@ const Descriptor kOfferedRows[] =
 		"t_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kOffered, sizeof(kOffered) / sizeof(kOffered[0]), 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -1570,13 +1579,13 @@ const Descriptor kRestartAndNot[] =
 		"fixture_at_once", ValueType::Int, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_on_restart", ValueType::Int, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, true, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kRestartAndNotCount =
@@ -1645,25 +1654,25 @@ const Descriptor kSecretAndNot[] =
 		"fixture_secret_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_plain_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(epg_dir),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_secret_number", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, true, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_plain_number", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kSecretAndNotCount = sizeof(kSecretAndNot) / sizeof(kSecretAndNot[0]);
@@ -1680,7 +1689,6 @@ const char *const kShippedSecrets[] =
 #if ENABLE_WEATHER_KEY_MANAGE
 	"weather_api_key",
 #endif
-	"softupdate_proxyusername",
 	"softupdate_proxypassword",
 	"parentallock_pincode",
 	"personalize_pincode",
@@ -1807,6 +1815,10 @@ TEST_CASE("the credentials the program declares are secret and answer nothing", 
 	REQUIRE_FALSE(settings::describe("epg_dir").value().secret);
 	REQUIRE(std::string(settings::describe("epg_dir").value().section) == "misc");
 	REQUIRE(settings::get("epg_dir").value() == "/media/sda1/epg");
+
+	// The proxy's user name is no credential, only its password is.
+	CHECK_FALSE(settings::describe("softupdate_proxyusername").value().secret);
+	CHECK(settings::get("softupdate_proxyusername").value() == "proxy-user");
 }
 
 /* The write a redaction makes likely. A frontend that reads a form and writes it back
@@ -2399,13 +2411,13 @@ const Descriptor kKeyAndService[] =
 		"fixture_key", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_service", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kFixtureKeyValid),
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -2462,25 +2474,25 @@ const Descriptor kWrongKind[] =
 		"fixture_key", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_number", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_by_number", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kNumberOnText),
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_by_text", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kTextOnNumber),
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -2554,13 +2566,13 @@ const Descriptor kLockedPair[] =
 		"fixture_first", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kFirstNotOne),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_second", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kSecondWhileFirstOff),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 
@@ -2810,13 +2822,13 @@ const Descriptor kProvidedRows[] =
 		"t_provided_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, &kLocaleRule, providedChoices, NULL, NULL, NULL, false, NULL
+		NULL, &kLocaleRule, providedChoices, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_provided_number", ValueType::Int, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kProvidedRowsCount = sizeof(kProvidedRows) / sizeof(kProvidedRows[0]);
@@ -3140,7 +3152,7 @@ const Descriptor kTimeoutRows[] =
 		"t_timeout", ValueType::Int, "fixture", "label", NULL,
 		5, 60, kTimeoutNames, 2, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const size_t kTimeoutRowsCount = sizeof(kTimeoutRows) / sizeof(kTimeoutRows[0]);
@@ -3407,13 +3419,13 @@ const Descriptor kPanelAndLevel[] =
 		"fixture_panel", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_level", ValueType::Int, "fixture", "label", NULL,
 		0, 10, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, fixtureLevelCeiling, NULL, false, NULL
+		NULL, NULL, NULL, NULL, fixtureLevelCeiling, NULL, false, NULL, NULL
 	},
 };
 
@@ -3465,13 +3477,13 @@ const Descriptor kGatedPanelAndLevel[] =
 		"fixture_gate", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_panel", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kGateOn),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	kPanelAndLevel[1],
 };
@@ -3521,13 +3533,13 @@ const Descriptor kSwitchAndSecret[] =
 		"fixture_switch", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_secret", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_CONDITIONS(kSwitchOn),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 
@@ -3652,3 +3664,262 @@ TEST_CASE("no two rows indexed alike under one stem read alike", "[settings][slo
 		seen[where] = t[i].key;
 	}
 }
+
+namespace
+{
+
+bool g_fixture_named = true;
+
+bool fixtureName(const Descriptor &, std::string &out)
+{
+	if (!g_fixture_named)
+		return false;
+	out = "Named by the box";
+	return true;
+}
+
+const Descriptor kBoxNamedRow[] =
+{
+	boolRow("fixture_named")
+		.section("fixture")
+		.labelFrom(fixtureName)
+		.defaultValue(0)
+		.field(COREAPI_NUMBER_FIELD(auto_lang))
+};
+
+struct BoxNames
+{
+	~BoxNames() { g_fixture_named = true; }
+};
+
+} // anonymous namespace
+
+TEST_CASE("a row the box names carries that name, and one it cannot name is not on the box", "[settings][boxlabel]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	InstalledSettingsTable table(kBoxNamedRow, 1);
+	BoxNames restore;
+	REQUIRE(descriptorIsSane(kBoxNamedRow[0]));
+
+	std::string label;
+	Descriptor here;
+	REQUIRE(settings::rowLabel(kBoxNamedRow[0], label));
+	CHECK(label == "Named by the box");
+	CHECK(rowOnThisBox(kBoxNamedRow[0], here));
+	Result<MenuItemSpec> item = menuItem("fixture_named");
+	REQUIRE(item.ok());
+	CHECK(item.value().label_text == "Named by the box");
+	CHECK(item.value().label_key.empty());
+	CHECK(settings::set("fixture_named", "1").ok());
+
+	g_fixture_named = false;
+	label.clear();
+	CHECK_FALSE(settings::rowLabel(kBoxNamedRow[0], label));
+	CHECK(label.empty());
+	CHECK_FALSE(rowOnThisBox(kBoxNamedRow[0], here));
+	Result<MenuItemSpec> gone = menuItem("fixture_named");
+	REQUIRE_FALSE(gone.ok());
+	CHECK(gone.error().code == ErrorCode::SettingNotOnThisBox);
+	CHECK(refusedAs(settings::set("fixture_named", "0"), ErrorCode::SettingNotOnThisBox));
+}
+
+TEST_CASE("a row the box names takes no locale name beside it", "[settings][boxlabel]")
+{
+	Descriptor both = kBoxNamedRow[0];
+	both.label_key = "options.on";
+	CHECK_FALSE(descriptorIsSane(both));
+	Descriptor menu = kBoxNamedRow[0];
+	menu.menu_label_key = "options.on";
+	CHECK_FALSE(descriptorIsSane(menu));
+}
+
+TEST_CASE("each video mode slot is named after its mode or is not on the box", "[settings][boxlabel]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed(&box);
+	box.caps.has_HDMI = 1;
+
+	size_t count = 0;
+	const char *const *names = videoModeNames(count);
+	size_t named = 0;
+	size_t lacking = 0;
+	for (size_t i = 0; i < count; ++i)
+	{
+		char key[32];
+		snprintf(key, sizeof(key), "enabled_video_mode_%u", (unsigned) i);
+		const Descriptor *d = settings::findRow(key);
+		REQUIRE(d != NULL);
+		INFO(key);
+		std::string label;
+		Descriptor here;
+		const bool labelled = settings::rowLabel(*d, label);
+		CHECK(labelled == videoModeDrawn(i));
+		CHECK(rowOnThisBox(*d, here) == labelled);
+		if (labelled)
+		{
+			CHECK(label == names[i]);
+			Result<MenuItemSpec> item = menuItem(key);
+			REQUIRE(item.ok());
+			CHECK(item.value().label_text == names[i]);
+			++named;
+		}
+		else
+		{
+			CHECK(label.empty());
+			Result<MenuItemSpec> gone = menuItem(key);
+			REQUIRE_FALSE(gone.ok());
+			CHECK(gone.error().code == ErrorCode::SettingNotOnThisBox);
+			++lacking;
+		}
+	}
+	CHECK(named > 0);
+	CHECK(lacking > 0);
+}
+
+TEST_CASE("the sleep timer names its off", "[settings][menurows]")
+{
+	const Descriptor *d = settings::findRow("shutdown_min");
+	REQUIRE(d != NULL);
+	const EnumValue *off = namedNumber(*d);
+	REQUIRE(off != NULL);
+	CHECK(off->value == 0);
+	CHECK(std::string(off->label_key) == "options.off");
+}
+
+TEST_CASE("the preferred subtitle languages offer the language names", "[settings][menurows]")
+{
+	const char *const keys[] = { "pref_subs_0", "pref_subs_1", "pref_subs_2" };
+	for (size_t i = 0; i < 3; ++i)
+	{
+		INFO(keys[i]);
+		const Descriptor *d = settings::findRow(keys[i]);
+		REQUIRE(d != NULL);
+		CHECK(d->choices_from == &languageNames);
+	}
+}
+
+TEST_CASE("the volume bar size starts at the height of the loaded icon", "[settings][menurows]")
+{
+	struct Reset { ~Reset() { noteVolumeIconHeight(0); } } reset;
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	const Descriptor *d = settings::findRow("volume_size");
+	REQUIRE(d != NULL);
+
+	noteVolumeIconHeight(0);
+	CHECK(boundsNow(*d).min == d->min);
+
+	noteVolumeIconHeight(31);
+	CHECK(boundsNow(*d).min == 31);
+	CHECK(boundsNow(*d).max == d->max);
+	CHECK(refusedAs(settings::check("volume_size", "30"), ErrorCode::OutOfRange));
+	CHECK(settings::check("volume_size", "31").ok());
+}
+
+TEST_CASE("the movie player key offers none and the plugins the menus show", "[settings][menurows]")
+{
+	FakePluginSource plugins;
+	InstalledPluginSource installed(&plugins);
+	plugins.add("ytube", "YouTube");
+	plugins.add("secret", "Hidden one");
+	plugins.plugins.back().hidden = true;
+	plugins.add("mediathek", "Mediathek");
+
+	std::vector<SettingChoice> offered;
+	REQUIRE(moviePlayerPlugins(offered));
+	REQUIRE(offered.size() == 3);
+	CHECK(offered[0].text == "---");
+	CHECK(offered[0].label_key == "plugins.no_plugin");
+	CHECK(offered[1].text == "YouTube");
+	CHECK(offered[1].label == "YouTube");
+	CHECK(offered[2].text == "Mediathek");
+
+	const Descriptor *d = settings::findRow("movieplayer_plugin");
+	REQUIRE(d != NULL);
+	CHECK(d->choices_from == &moviePlayerPlugins);
+
+	plugins.list_status = Status::NotSupported;
+	std::vector<SettingChoice> none;
+	CHECK_FALSE(moviePlayerPlugins(none));
+}
+
+TEST_CASE("the display panels are offered from the names kept when the file was read", "[settings][menurows]")
+{
+	struct Reset { ~Reset() { noteGlcdConfigNames(std::vector<std::string>()); } } reset;
+	std::vector<SettingChoice> offered;
+	noteGlcdConfigNames(std::vector<std::string>());
+	CHECK_FALSE(glcdConfigs(offered));
+
+	std::vector<std::string> names;
+	names.push_back("dpf320x240");
+	names.push_back("vuplus4k");
+	noteGlcdConfigNames(names);
+	REQUIRE(glcdConfigs(offered));
+	REQUIRE(offered.size() == 2);
+	CHECK(offered[0].value == 0);
+	CHECK(offered[0].label == "dpf320x240");
+	CHECK(offered[1].value == 1);
+	CHECK(offered[1].label == "vuplus4k");
+	CHECK(offered[1].text.empty());
+#ifdef ENABLE_GRAPHLCD
+	CHECK(settings::findRow("glcd_selected_config")->choices_from == &glcdConfigs);
+#endif
+}
+
+#ifdef ENABLE_LCD4LINUX
+TEST_CASE("the display skins one to three are offered for the first panel only", "[settings][menurows]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	f.ints["lcd4l_display_type"] = 1;
+	f.ints["lcd4l_skin"] = 0;
+
+	CHECK(refusedAs(settings::set("lcd4l_skin", "1"), ErrorCode::NotAListedValue));
+	CHECK(settings::set("lcd4l_skin", "4").ok());
+
+	settings::Refusals failed;
+	std::vector<std::pair<std::string, std::string> > members;
+	members.push_back(std::make_pair(std::string("lcd4l_display_type"), std::string("0")));
+	members.push_back(std::make_pair(std::string("lcd4l_skin"), std::string("1")));
+	settings::writeBatch(members, failed);
+	CHECK(failed.empty());
+
+	CHECK_FALSE(settings::lcd4lSkinOffered(1, 2));
+	CHECK(settings::lcd4lSkinOffered(0, 2));
+	CHECK(settings::lcd4lSkinOffered(1, 100));
+}
+
+TEST_CASE("a stored skin no list names still reads and the menu offers the default first", "[settings][menurows]")
+{
+	FakeSettingsSource f;
+	InstalledSettingsSource source(&f);
+	f.ints["lcd4l_display_type"] = 0;
+	f.ints["lcd4l_skin"] = 7;
+
+	Result<std::string> read = settings::get("lcd4l_skin");
+	REQUIRE(read.ok());
+	CHECK(read.value() == "7");
+	CHECK(settings::check("lcd4l_skin", "7").ok());
+	CHECK(refusedAs(settings::check("lcd4l_skin", "8"), ErrorCode::NotAListedValue));
+	Result<MenuItemSpec> item = menuItem("lcd4l_skin");
+	REQUIRE(item.ok());
+	REQUIRE(item.value().choices.size() == 6);
+	CHECK(item.value().choices[0].value == defaultInt(*settings::findRow("lcd4l_skin")));
+}
+#endif
+
+#ifdef ENABLE_PIP
+TEST_CASE("the picture in picture corner is one of five named places", "[settings][menurows]")
+{
+	const Descriptor *d = settings::findRow("pip_rotate_lastpos");
+	REQUIRE(d != NULL);
+	CHECK(d->type == ValueType::Enum);
+	REQUIRE(d->value_count == 5);
+	for (size_t i = 0; i < 5; ++i)
+	{
+		CHECK(d->values[i].value == (int) i - 1);
+		CHECK(d->values[i].label_key != NULL);
+	}
+}
+#endif

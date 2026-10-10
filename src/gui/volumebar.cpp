@@ -37,6 +37,7 @@
 #include <driver/neutrinofonts.h>
 #include <driver/fontrenderer.h>
 #include <system/debug.h>
+#include <coreapi/box/apply_osd.h>
 
 extern CTimeOSD *FileTimeOSD;
 
@@ -372,6 +373,7 @@ void CVolumeHelper::initVolBarSize()
 	icon_height = max(icon_height, 18); // if no icon available
 	icon_height += OFFSET_INNER_MIN;
 	icon_width += OFFSET_INNER_MID;
+	coreapi::noteVolumeIconHeight(icon_height);
 	g_settings.volume_size = max(g_settings.volume_size, icon_height);
 	vol_height = CFrameBuffer::getInstance()->scale2Res(g_settings.volume_size);
 

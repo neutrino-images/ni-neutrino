@@ -42,6 +42,14 @@ bool installedLocales(std::vector<SettingChoice> &out);
 bool languageNames(std::vector<SettingChoice> &out);
 bool languagesFrom(const std::string &table, std::vector<SettingChoice> &out);
 
+/* The panels of the display's configuration file, each as its index with its name as the
+   label. False while the file has not been read. */
+bool glcdConfigs(std::vector<SettingChoice> &out);
+
+/* What the movie player key may start: none, stored as "---", and then every plugin the
+   menus show, stored by the name it calls itself. */
+bool moviePlayerPlugins(std::vector<SettingChoice> &out);
+
 // The names of the time zones the box lists whose zone file is installed, in the box's order.
 bool timezoneNames(std::vector<SettingChoice> &out);
 

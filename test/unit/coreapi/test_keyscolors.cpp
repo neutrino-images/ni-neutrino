@@ -498,10 +498,19 @@ TEST_CASE("a colour row's default is the colour its channels start on", "[keysco
 		INFO(t[i].key);
 		CHECK(t[i].field.origin == FieldOrigin::ColorBytes);
 		CHECK(descriptorIsSane(t[i]));
-		CHECK(std::string(t[i].key).find("theme.") == 0);
+		const std::string key(t[i].key);
+#ifdef ENABLE_GRAPHLCD
+		CHECK((key.find("theme.") == 0 || key.find("glcd_theme.") == 0));
+#else
+		CHECK(key.find("theme.") == 0);
+#endif
 	}
-	// Nineteen groups of the theme; the three of the panel exist only where the panel does.
+	// Nineteen groups of the theme, and the panel's three where the panel is built.
+#ifdef ENABLE_GRAPHLCD
+	CHECK(colors == 22);
+#else
 	CHECK(colors == 19);
+#endif
 }
 
 TEST_CASE("a menu item for a key or a colour row says what a widget needs", "[keyscolors]")

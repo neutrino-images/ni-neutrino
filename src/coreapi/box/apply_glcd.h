@@ -26,6 +26,7 @@
 
 #include <cstddef>
 #include <string>
+#include <vector>
 
 namespace coreapi
 {
@@ -71,6 +72,11 @@ constexpr long kGlcdPanelHeightMax = 1080;
    until the loop has noted one. */
 void noteGlcdPanelSize(int width, int height);
 Status recordedGlcdPanelSize(int &width, int &height);
+
+/* The names of the panels the display's configuration file lists, in its order, kept when it
+   is read so the list is answered without touching the display. */
+void noteGlcdConfigNames(const std::vector<std::string> &names);
+std::vector<std::string> recordedGlcdConfigNames();
 
 /* The width and height of the connected panel, for the rows of the theme that bound a
    position by it; the constants above while the panel cannot say. */

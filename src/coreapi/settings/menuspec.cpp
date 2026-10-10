@@ -63,6 +63,8 @@ Result<MenuItemSpec> menuItem(const std::string &key)
 		spec.label_key = d->menu_label_key;
 	else if (d->label_key != NULL)
 		spec.label_key = d->label_key;
+	if (d->label_from != NULL)
+		d->label_from(*d, spec.label_text);
 	if (d->hint_key != NULL)
 		spec.hint_key = d->hint_key;
 	spec.int_pointer = d->field.int_pointer;

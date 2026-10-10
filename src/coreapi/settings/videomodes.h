@@ -25,6 +25,9 @@
 #include <config.h>
 
 #include <stddef.h>
+#include <string>
+
+#include "coreapi/base/schema.h"
 
 /* Decided here and not around the rows: the conditions name more box models
    than the scan that compiles every combination of a table's own conditions
@@ -64,6 +67,9 @@ bool videoModeDrawn(size_t index);
    The two numberings differ: the settings count the names, the driver its own
    enum, and the families do not agree past its twelfth entry. */
 int videoModeValue(size_t index);
+
+// The label of an enabled_video_mode_<n> row: the mode's name, false where this box does not draw it.
+bool videoModeSlotLabel(const Descriptor &d, std::string &out);
 
 } // namespace coreapi
 

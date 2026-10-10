@@ -25,6 +25,7 @@
 
 #include <system/settings.h>
 
+#include <atomic>
 #include <string>
 #include <utility>
 #include <vector>
@@ -56,6 +57,9 @@ class NoOsdOutput : public OsdOutput
 
 NoOsdOutput g_no_osd_output;
 OsdOutput *g_osd_output = 0;
+
+// Written by the loop, read by any thread.
+std::atomic<int> g_volume_icon_height(0);
 
 struct OsdState
 {
@@ -390,5 +394,15 @@ const ApplyGroup kVolumeBarApplyGroup = { "volumeBar", ApplyPhase::Network, CORE
 const ApplyGroup kRadioTextApplyGroup = { "radioText", ApplyPhase::Network, COREAPI_KEYS(kRadioTextKeys), &runRadioText };
 
 const ApplyGroup kOsdResolutionApplyGroup = { "osdResolution", ApplyPhase::Framebuffer, COREAPI_KEYS(kOsdResolutionKeys), &runOsdResolution };
+
+void noteVolumeIconHeight(int height)
+{
+	g_volume_icon_height = height;
+}
+
+long volumeSizeMin(const ValueLookup *)
+{
+	return g_volume_icon_height;
+}
 
 } // namespace coreapi

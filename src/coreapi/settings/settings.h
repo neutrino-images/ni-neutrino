@@ -112,6 +112,12 @@ Result<std::string> get(const std::string &key);
    depend on another setting. */
 ValueLookup currentValues();
 
+/* How a list travels as text: a line to each entry and, inside a record, a tab between
+   its members. An empty text splits into one empty entry, so a caller reading a list
+   tests for the empty text first. */
+void splitOn(const std::string &text, char sep, std::vector<std::string> &out);
+std::string joinOn(const std::vector<std::string> &items, char sep);
+
 // Each setting a write could not keep, with the answer its own write would have had.
 typedef std::vector<std::pair<std::string, Error> > Refusals;
 
@@ -277,9 +283,10 @@ Result<std::vector<SettingChoice> > choices(const std::string &key);
    itself did and is the whole reason this exists. */
 bool resolveLabel(const char *key, std::string &out);
 
-/* The text the box shows for a row, resolveLabel() of its label_key. A row that is one of
-   several indexed alike, key_0, key_1 and on under one label, has its slot counted from one
-   after the text, the way the box numbers its slots, so the rows can be told apart. */
+/* The text the box shows for a row: what its label_from answers, else resolveLabel() of its
+   label_key. A row that is one of several indexed alike, key_0, key_1 and on under one
+   label, has its slot counted from one after the text, the way the box numbers its slots,
+   so the rows can be told apart. */
 bool rowLabel(const Descriptor &d, std::string &out);
 
 // Called once changed settings are saved, from a menu or a write alike.

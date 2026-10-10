@@ -550,6 +550,9 @@ struct Descriptor
 	   short word of its group, and the label that tells rows apart is for a page that lists
 	   them all at once. NULL: the label. */
 	const char      *menu_label_key;
+	/* The label where the box names the row itself, in place of label_key. False says the box
+	   has no name for it, and the row is then not on this box. NULL: label_key. */
+	bool           (*label_from)(const Descriptor &, std::string &);
 };
 
 /* How many channels a Color row has, three or four. The row keeps it in min and
@@ -788,7 +791,7 @@ public:
 	{
 		return RowBuilder(Descriptor{
 			key, t, NULL, NULL, NULL, low, high, NULL, 0, 0, NULL, false, false, NULL, 0, COREAPI_NO_FIELD,
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 		}, NULL);
 	}
 
@@ -798,7 +801,7 @@ public:
 			d_.key, d_.type, name, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -808,7 +811,7 @@ public:
 			d_.key, d_.type, d_.section, key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -818,7 +821,17 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, key
+			d_.max_now, d_.default_fn, d_.read_outside, key, d_.label_from
+		}, avail_);
+	}
+
+	constexpr RowBuilder labelFrom(bool (*fn)(const Descriptor &, std::string &)) const
+	{
+		return RowBuilder(Descriptor{
+			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
+			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, fn
 		}, avail_);
 	}
 
@@ -828,7 +841,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -838,7 +851,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, v, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -848,7 +861,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, v, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -858,7 +871,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, low, high, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -868,7 +881,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, v, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -878,7 +891,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, v, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -888,7 +901,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, text, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -898,7 +911,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -908,7 +921,7 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, list, N, d_.default_int,
 			d_.default_string, d_.needs_restart, d_.secret, d_.conditions, d_.condition_count, d_.field,
-			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -918,7 +931,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -928,7 +941,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, &rule, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -938,7 +951,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, fn, d_.min_now, d_.max_now,
-			d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -948,7 +961,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, fn,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -958,7 +971,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			fn, d_.default_fn, d_.read_outside, d_.menu_label_key
+			fn, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -974,7 +987,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, true, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -988,7 +1001,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, true, d_.menu_label_key
+			d_.max_now, d_.default_fn, true, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -998,7 +1011,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, true, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -1009,7 +1022,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, list, N,
 			d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now,
-			d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		}, avail_);
 	}
 
@@ -1030,7 +1043,7 @@ public:
 				f.read_number, f.write_number, f.int_pointer, f.fits_number, f.read_text, f.write_text, f.ask,
 				f.tell, f.name, f.origin, avail_ != NULL ? avail_ : f.available, f.otherwise, f.extra
 			},
-			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key
+			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
 		};
 	}
 
@@ -1104,6 +1117,12 @@ inline void takeShape(Descriptor &d, const Shape &o)
 inline bool rowOnThisBox(const Descriptor &d, Descriptor &out)
 {
 	out = d;
+	if (d.label_from != NULL)
+	{
+		std::string name;
+		if (!d.label_from(d, name))
+			return false;
+	}
 	if (d.field.available == NULL || d.field.available())
 		return true;
 	if (d.field.otherwise == NULL)
@@ -1159,6 +1178,8 @@ inline bool descriptorIsSane(const Descriptor &d)
 	if (d.section == NULL || d.section[0] == '\0')
 		return false;
 	if (d.label_key != NULL && d.label_key[0] == '\0')
+		return false;
+	if (d.label_from != NULL && (d.label_key != NULL || d.menu_label_key != NULL))
 		return false;
 
 	// A count without the array it counts reads memory that is not there. Unlike

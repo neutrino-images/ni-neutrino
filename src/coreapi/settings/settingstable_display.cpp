@@ -23,6 +23,7 @@
 #include "predicates.h"
 #include "boxdefaults.h"
 #include "couple.h"
+#include "choicesources.h"
 #include "coreapi/base/deps.h"
 
 namespace coreapi
@@ -90,6 +91,24 @@ constexpr EnumValue kLcd4lDisplayType[] =
 	option(2).text("800x600 Samsung SPF"),
 	option(3).text("1024x600 Samsung SPF")
 };
+
+#ifdef ENABLE_LCD4LINUX
+// Only the 320x240 panel has the skins 1 to 3.
+constexpr Condition kPearlPanel[] =
+{
+	when("lcd4l_display_type").is(0)
+};
+
+constexpr EnumValue kLcd4lSkin[] =
+{
+	option(0).label("lcd4l_skin_0"),
+	option(1).label("lcd4l_skin_1").offeredWhen(kPearlPanel),
+	option(2).label("lcd4l_skin_2").offeredWhen(kPearlPanel),
+	option(3).label("lcd4l_skin_3").offeredWhen(kPearlPanel),
+	option(4).label("lcd4l_skin_4"),
+	option(100).label("lcd4l_skin_100")
+};
+#endif
 
 #ifdef ENABLE_LCD4LINUX
 /* The panel's ceiling, read as a write is checked, so the screen and every write path stop at
@@ -255,14 +274,14 @@ constexpr Descriptor kSettings[] =
 		.defaultValue(0)
 		.defaultFrom(glcdEnableDefault)
 		.field(COREAPI_NUMBER_FIELD(glcd_enable)),
-	/* An index into the driver list the graphlcd configuration file holds, so
-	   no constant states the ceiling. Anything outside it the box turns into
-	   nought, which is why a wide one is safe. */
+	/* An index into the driver list of the display's configuration file. The box turns
+	   one outside it into nought, which is why a wide ceiling is safe. */
 	intRow("glcd_selected_config")
 		.section("display")
 		.label("glcd.display")
 		.range(0, 99)
 		.defaultValue(0)
+		.choicesFrom(glcdConfigs)
 		.field(COREAPI_NUMBER_FIELD(glcd_selected_config)),
 	textRow("glcd_logodir")
 		.section("display")
@@ -345,15 +364,12 @@ constexpr Descriptor kSettings[] =
 		.defaultValue(0)
 		.values(kLcd4lDisplayType)
 		.field(COREAPI_NUMBER_FIELD(lcd4l_display_type)),
-	/* A number and not a choice for a different reason: there are two lists of
-	   skins and which one applies depends on the panel. The ceiling is the
-	   highest either lists and the values between are ones neither offers. */
-	intRow("lcd4l_skin")
+	enumRow("lcd4l_skin")
 		.section("display")
 		.label("lcd4l_skin")
 		.hint("menu.hint_lcd4l_skin")
-		.range(0, 100)
 		.defaultValue(0)
+		.values(kLcd4lSkin)
 		.field(COREAPI_NUMBER_FIELD(lcd4l_skin)),
 	boolRow("lcd4l_skin_radio")
 		.section("display")

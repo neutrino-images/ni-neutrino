@@ -13,7 +13,7 @@ answer members narrower than free text	47
 arrays held to a row for every element	14
 body examples their routes accepted	27
 body members the examples carry	26
-choice value names compared	585
+choice value names compared	586
 choices compared against a screen	1
 chooser call sites read	459
 chooser call sites read whole	459
@@ -37,7 +37,7 @@ keys whose default the scan can compare	444
 labels compared against a chooser	10
 labels compared against a number chooser	1
 labels compared against a stated field	9
-labels compared against the locale names	465
+labels compared against the locale names	466
 labels stated beside a field	456
 list, records and flag file rows	27
 lists and lists of records held to a read of the load	5

@@ -221,7 +221,9 @@ Result<void> existsAsRequired(const TextRule &rule, const std::string &value)
    from the end of the text. */
 const size_t kMaxListItems = 1000;
 
-bool splitOn(const std::string &text, char sep, std::vector<std::string> &out)
+} // anonymous namespace
+
+void splitOn(const std::string &text, char sep, std::vector<std::string> &out)
 {
 	out.clear();
 	size_t from = 0;
@@ -231,7 +233,7 @@ bool splitOn(const std::string &text, char sep, std::vector<std::string> &out)
 		if (at == std::string::npos)
 		{
 			out.push_back(text.substr(from));
-			return true;
+			return;
 		}
 		out.push_back(text.substr(from, at - from));
 		from = at + 1;
@@ -249,6 +251,9 @@ std::string joinOn(const std::vector<std::string> &items, char sep)
 	}
 	return out;
 }
+
+namespace
+{
 
 /* One member of a record, held to what its field says it is. The text rule of a
    String is the one every row's text is held to. */
@@ -667,10 +672,9 @@ Result<void> checkCollection(const Descriptor &d, const std::string &value, Chec
 			Result<void> one = allowedAsMember(x->record_fields[m], members[m]);
 			if (!one.ok())
 			{
-				/* A key the input layer no longer delivers passes again where the record
-				   already holds it at that place, as a number row's stored value does. */
-				if (x->record_fields[m].type != ValueType::Key || one.error().code != ErrorCode::NotAListedValue)
-					return one;
+				/* A member the rules refuse passes again where the record already holds it
+				   at that place, as a number row's stored value does, so a held record does
+				   not block writing the others. */
 				if (!storedRead)
 				{
 					storedRead = true;
@@ -1673,6 +1677,14 @@ long slotOf(const char *key, std::string &stem)
 
 bool rowLabel(const Descriptor &d, std::string &out)
 {
+	if (d.label_from != NULL)
+	{
+		std::string named;
+		if (!d.label_from(d, named))
+			return false;
+		out.swap(named);
+		return true;
+	}
 	if (!resolveLabel(d.label_key, out))
 		return false;
 	if (d.key == NULL)

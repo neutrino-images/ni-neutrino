@@ -70,12 +70,12 @@ const Descriptor kSound[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kOnRow), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	}
 };
 
@@ -84,12 +84,12 @@ const Descriptor kDangling[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kOnNothing), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	}
 };
 
@@ -121,12 +121,12 @@ const Descriptor kDanglingInGroup[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kInGroup), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	}
 };
 
@@ -135,22 +135,22 @@ const Descriptor kWrongKind[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_text", ValueType::String, "fixture", "fixture.text", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kTextOfNumber), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_other", ValueType::Int, "fixture", "fixture.other", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kNumberOfText), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	}
 };
 
@@ -228,12 +228,12 @@ WHEN_ENUM(kWhenWrongKind, kTextOfNumber);
 		{ \
 			"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL, \
 			0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, \
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL \
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL \
 		}, \
 		{ \
 			"fixture_choice", ValueType::Enum, "fixture", "fixture.choice", NULL, \
 			0, 0, COREAPI_VALUES(list), 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, \
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL \
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL \
 		} \
 	}
 WHEN_TABLE(kWhenSoundTable, kWhenSound);
@@ -600,6 +600,7 @@ long builderDefault() { return 3; }
 long builderLow(const ValueLookup *) { return 1; }
 long builderHigh(const ValueLookup *) { return 9; }
 bool builderChoices(std::vector<SettingChoice> &) { return true; }
+bool builderLabel(const Descriptor &, std::string &) { return true; }
 
 constexpr long kBuilderModes[] = { 1, 2 };
 constexpr Condition kBuilderInner[] =
@@ -664,7 +665,7 @@ bool sameDescriptor(const Descriptor &a, const Descriptor &b)
 	       a.conditions == b.conditions && a.condition_count == b.condition_count && sameField(a.field, b.field) &&
 	       a.unit_key == b.unit_key && a.text == b.text &&
 	       a.choices_from == b.choices_from && a.min_now == b.min_now && a.max_now == b.max_now &&
-	       a.default_fn == b.default_fn && a.read_outside == b.read_outside &&
+	       a.default_fn == b.default_fn && a.read_outside == b.read_outside && a.label_from == b.label_from &&
 	       (a.menu_label_key == NULL ? std::string() : a.menu_label_key) == (b.menu_label_key == NULL ? std::string() : b.menu_label_key);
 }
 
@@ -739,6 +740,7 @@ TEST_CASE("a row built by name is the one written by position", "[settingstable]
 		.section("builder")
 		.label("builder.label")
 		.menuLabel("builder.menu")
+		.labelFrom(builderLabel)
 		.hint("builder.hint")
 		.range(1, 9)
 		.defaultValue(2)
@@ -760,7 +762,7 @@ TEST_CASE("a row built by name is the one written by position", "[settingstable]
 		"builder_row", ValueType::Int, "builder", "builder.label", "builder.hint", 1, 9,
 		kBuilderEntries, 3, 2, NULL, true, true, kBuilderConditions, 9,
 		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", &kBuilderRule, builderChoices, builderLow,
-		builderHigh, builderDefault, true, "builder.menu"
+		builderHigh, builderDefault, true, "builder.menu", builderLabel
 	};
 	by_position.field.available = builderBoxHas;
 
@@ -810,7 +812,7 @@ TEST_CASE("the single-bound, unit and default calls each set their own member", 
 	const Descriptor number_by_position = {
 		"builder_number", ValueType::Int, "builder", "builder.label", NULL, -4, 40,
 		NULL, 0, 7, NULL, false, false, NULL, 0,
-		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", NULL, NULL, NULL, NULL, NULL, false, NULL
+		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	};
 	CHECK(sameRowText(number, number_by_position));
 	CHECK(sameDescriptor(withoutText(number), withoutText(number_by_position)));
@@ -823,7 +825,7 @@ TEST_CASE("the single-bound, unit and default calls each set their own member", 
 	const Descriptor words_by_position = {
 		"builder_text", ValueType::String, "builder", "builder.label", NULL, 0, 0,
 		NULL, 0, 0, "fallback", false, false, NULL, 0,
-		COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	};
 	CHECK(sameRowText(words, words_by_position));
 	CHECK(sameDescriptor(withoutText(words), withoutText(words_by_position)));
@@ -876,6 +878,8 @@ TEST_CASE("every number row that shows a unit says which, and nothing else carri
 		{ "timeshift_hours", "unit.short.hour" },
 		{ "timeshift_auto", "unit.short.second" },
 		{ "shutdown_count", "unit.short.minute" },
+		{ "shutdown_min", "unit.short.minute" },
+		{ "adzap_zapBackPeriod", "unit.short.second" },
 		{ "epg_extendedcache_time", "unit.short.hour" },
 		{ "epg_old_events", "unit.short.hour" },
 		{ "font_scaling_x", "unit.short.percent" },

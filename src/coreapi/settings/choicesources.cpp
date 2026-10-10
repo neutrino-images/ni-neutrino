@@ -21,6 +21,8 @@
 #include <config.h>
 
 #include "coreapi/settings/choicesources.h"
+#include "coreapi/base/deps.h"
+#include "coreapi/box/apply_glcd.h"
 
 #include <xmlinterface.h>
 
@@ -144,6 +146,46 @@ bool languagesFrom(const std::string &table, std::vector<SettingChoice> &out)
 		SettingChoice one;
 		one.text = *it;
 		one.label = *it;
+		found.push_back(one);
+	}
+	out.swap(found);
+	return true;
+}
+
+bool glcdConfigs(std::vector<SettingChoice> &out)
+{
+	const std::vector<std::string> names = recordedGlcdConfigNames();
+	if (names.empty())
+		return false;
+	std::vector<SettingChoice> found;
+	for (size_t i = 0; i < names.size(); ++i)
+	{
+		SettingChoice one;
+		one.value = (long) i;
+		one.label = names[i];
+		found.push_back(one);
+	}
+	out.swap(found);
+	return true;
+}
+
+bool moviePlayerPlugins(std::vector<SettingChoice> &out)
+{
+	PluginList plugins;
+	if (pluginSource().list(plugins) != Status::Ok)
+		return false;
+	std::vector<SettingChoice> found;
+	SettingChoice none;
+	none.text = "---";
+	none.label_key = "plugins.no_plugin";
+	found.push_back(none);
+	for (size_t i = 0; i < plugins.size(); ++i)
+	{
+		if (plugins[i].hidden || plugins[i].title.empty())
+			continue;
+		SettingChoice one;
+		one.text = plugins[i].title;
+		one.label = plugins[i].title;
 		found.push_back(one);
 	}
 	out.swap(found);

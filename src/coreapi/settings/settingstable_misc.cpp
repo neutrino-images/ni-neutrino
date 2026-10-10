@@ -21,6 +21,7 @@
 #include "settingstable.h"
 #include "settingsfield.h"
 #include "predicates.h"
+#include "choicesources.h"
 
 namespace coreapi
 {
@@ -47,6 +48,11 @@ constexpr EnumValue kNoYes[] =
 {
 	option(0).label("messagebox.no"),
 	option(1).label("messagebox.yes")
+};
+
+constexpr EnumValue kOff[] =
+{
+	option(0).label("options.off")
 };
 
 constexpr EnumValue kSleeptimerMin[] =
@@ -510,6 +516,7 @@ constexpr Descriptor kMisc[] =
 		.hint("menu.hint_movieplayer_plugin")
 		.defaultValue("---")
 		.text(kRuleNameFromList)
+		.choicesFrom(moviePlayerPlugins)
 		.field(COREAPI_TEXT_FIELD(movieplayer_plugin)),
 
 	// streaming
@@ -575,6 +582,8 @@ constexpr Descriptor kMisc[] =
 		.label("sleeptimerbox.title2")
 		.range(0, 999)
 		.defaultValue(0)
+		.unit("unit.short.minute")
+		.values(kOff)
 		.field(COREAPI_NUMBER_FIELD(shutdown_min)),
 	/* Which of the three the power menu did last, standby, off or restart. The
 	   menu writes it and reads it back to mark the entry. Its default is the
@@ -716,14 +725,12 @@ constexpr Descriptor kMisc[] =
 		.defaultValue("")
 		.text(kRulePathList)
 		.field(COREAPI_TEXT_FIELD(plugins_tool)),
-	/* Where the box goes back to after an advert break, in seconds. The menu
-	   offers nine fixed minutes and then a chooser over ten to a hundred and
-	   twenty, so the floor is the smallest of the nine and the ceiling the
-	   chooser's own, both in seconds. That chooser binds a local in minutes
-	   rather than the field, so its label names minutes and this row is
-	   seconds; the row therefore states no label. */
+	/* Seconds. The menu offers whole minutes one to nine and then ten to a hundred and
+	   twenty; steps inside the range cannot be named values of a number. */
 	intRow("adzap_zapBackPeriod")
 		.section("misc")
+		.label("adzap.switchback")
+		.unit("unit.short.second")
 		.range(60, 7200)
 		.defaultValue(180)
 		.field(COREAPI_NUMBER_FIELD(adzap_zapBackPeriod)),

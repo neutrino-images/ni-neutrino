@@ -23,6 +23,7 @@
 
 #include "coreapi/base/apply.h"
 #include "coreapi/base/result.h"
+#include "coreapi/base/schema.h"
 
 namespace coreapi
 {
@@ -114,6 +115,12 @@ Status applicationResetRadioText();
 Status applicationClearIconCache();
 Status applicationResetInfoIcons();
 Status applicationResetChannelList();
+
+/* The height of the volume icon the box loaded, nought while none is. Any thread may read
+   it, so a bound asked while a write is checked never reaches the drawing objects. */
+void noteVolumeIconHeight(int height);
+// The floor of volume_size: the bar is never drawn lower than its icon.
+long volumeSizeMin(const ValueLookup * = NULL);
 
 // The face of both fonts and their scaling.
 extern const ApplyGroup kFontsApplyGroup;

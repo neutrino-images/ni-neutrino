@@ -1439,6 +1439,8 @@ TEST_CASE("the settings schema answers every declared row", "[endpoints]")
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/schema");
@@ -1458,6 +1460,8 @@ TEST_CASE("the schema answers one section when asked for it", "[settings][schema
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const Reply all = get("/api/v1/settings/schema");
@@ -1524,6 +1528,8 @@ TEST_CASE("a schema label resolves through the installed catalog, not the key", 
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	FakeLocaleSource cat;
@@ -1575,6 +1581,8 @@ TEST_CASE("the schema carries the text rule of a string setting", "[endpoints]")
 	InstalledSystemSource installed_box(&box);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/schema");
@@ -1625,6 +1633,8 @@ TEST_CASE("the schema answers the values a setting's own box decides", "[endpoin
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	unlocked.caps.board_revision = 1;
@@ -1658,6 +1668,8 @@ TEST_CASE("the schema answers the default its own box falls back to", "[endpoint
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	unlocked.caps.display_xres = 8;
@@ -1693,6 +1705,8 @@ TEST_CASE("a setting whose box cannot be asked answers an empty list of values",
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/schema");
@@ -1727,7 +1741,7 @@ const coreapi::Descriptor kSeveralNamed[] =
 	{
 		"fixture_several", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, kTwoNamed, 2, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 const coreapi::Descriptor kNamedNumbers[] =
@@ -1735,12 +1749,12 @@ const coreapi::Descriptor kNamedNumbers[] =
 	{
 		"fixture_named", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_plain", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // namespace
@@ -1787,6 +1801,8 @@ TEST_CASE("the schema names the unit a number is shown with", "[endpoints]")
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/schema");
@@ -1892,6 +1908,8 @@ TEST_CASE("the schema names the kind of a list and the members of a record", "[e
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const Reply r = get("/api/v1/settings/schema?section=misc");
@@ -1956,19 +1974,19 @@ const coreapi::Descriptor kOnBoxRows[] =
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  lacking, NULL, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_scroll", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  lacking, &kFlagShape, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_plain", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // namespace
@@ -2029,12 +2047,12 @@ const coreapi::Descriptor kConditionForms[] =
 	{
 		"fixture_gated", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_CONDITIONS(kKeyAndEither), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_nested", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_CONDITIONS(kNestedGroup), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // namespace
@@ -2087,6 +2105,8 @@ TEST_CASE("a schema label the catalog does not carry is left out, not the key", 
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	// Installed and empty rather than nothing installed at all, so this reads
@@ -2125,6 +2145,8 @@ TEST_CASE("a secret row is described but never valued", "[endpoints]")
 	InstalledSystemSource installed_unlocked(&unlocked);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const std::vector<coreapi::Descriptor> rows = coreapi::settings::schema().value();
@@ -2163,6 +2185,8 @@ TEST_CASE("the schema reports the rows the parental lock holds only while the bo
 	InstalledSystemSource installed(&box);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 
 	box.parental_locked = true;
 	::Json::Value items = parsed(get("/api/v1/settings/schema").body)["items"];
@@ -2198,6 +2222,8 @@ TEST_CASE("the schema describes a key row by its bounds and a colour row by its 
 	InstalledSystemSource installed(&box);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const ::Json::Value items = parsed(get("/api/v1/settings/schema").body)["items"];
@@ -3141,6 +3167,8 @@ TEST_CASE("every answer carries the members its route says it does", "[endpoints
 	InstalledSystemSource installed_box(&box);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 
 	FakeSettingsSource store;
 	InstalledSettingsSource installed_store(&store);
@@ -3630,12 +3658,12 @@ const coreapi::Descriptor kProvidedRows[] =
 	{
 		"fixture_provided_text", coreapi::ValueType::String, "fixture", "fixture.label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"fixture_provided_number", coreapi::ValueType::Int, "fixture", "fixture.label", NULL,
 		0, 9, kOffBelow, 1, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // namespace
@@ -3740,7 +3768,7 @@ TEST_CASE("the schema lists a name outside the range beside the range", "[endpoi
 			"t_timeout", coreapi::ValueType::Int, "fixture", "label", NULL,
 			5, 60, names, 1, 0, NULL, false, false, COREAPI_ALWAYS,
 			COREAPI_NUMBER_FIELD(repeat_blocker),
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 		},
 	};
 	InstalledSettingsTable table(rows, 1);
@@ -3773,11 +3801,11 @@ TEST_CASE("the schema states a list several rows share once and names it from ea
 	static const coreapi::Descriptor rows[] =
 	{
 		{ "t_a", coreapi::ValueType::Int, "fixture", "label", NULL, 0, 9, shared, 2, 0, NULL, false, false,
-		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "t_b", coreapi::ValueType::Int, "fixture", "label", NULL, 0, 9, shared, 2, 0, NULL, false, false,
-		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 		{ "t_c", coreapi::ValueType::Int, "other", "label", NULL, 0, 9, alone, 1, 0, NULL, false, false,
-		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL },
+		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
 	};
 	InstalledSettingsTable table(rows, 3);
 
@@ -3816,6 +3844,8 @@ TEST_CASE("the schema of the shipped rows states every shared list once, the lan
 	InstalledSystemSource installed(&box);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const ::Json::Value all = parsed(get("/api/v1/settings/schema").body);
@@ -3870,6 +3900,8 @@ TEST_CASE("the schema leaves out a member at its default", "[endpoints]")
 	InstalledSystemSource installed(&box);
 	FakeTunerSource tuner;
 	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 	ShippedRoutes shipped;
 
 	const ::Json::Value items = parsed(get("/api/v1/settings/schema").body)["items"];

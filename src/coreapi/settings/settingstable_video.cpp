@@ -163,6 +163,17 @@ constexpr EnumValue kVideoMode[] =
 #endif
 };
 
+#if ENABLE_PIP
+constexpr EnumValue kPipCorner[] =
+{
+	option(-1).label("options.off"),
+	option(0).label("settings.pos_top_left"),
+	option(1).label("settings.pos_top_right"),
+	option(2).label("settings.pos_bottom_right"),
+	option(3).label("settings.pos_bottom_left")
+};
+#endif
+
 constexpr EnumValue kDbDr[] =
 {
 	option(0).label("videomenu.dbdr_none"),
@@ -486,15 +497,13 @@ constexpr Descriptor kVideo[] =
 		.range(0, 1080)
 		.defaultValue(200)
 		.field(COREAPI_NUMBER_FIELD_ON(pip_radio_height, pipUsable, NULL)),
-	/* Which corner the small picture was last moved to. The floor is the value
-	   that means no corner at all and the rest are the four. */
-	intRow("pip_rotate_lastpos")
+	enumRow("pip_rotate_lastpos")
 		.section("video")
 		.label("videomenu.pip_rotate_lastpos")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
-		.range(-1, 3)
 		.defaultValue(-1)
+		.values(kPipCorner)
 		.field(COREAPI_NUMBER_FIELD_ON(pip_rotate_lastpos, pipUsable, NULL)),
 #endif
 	/* The video mode, out of the table of the family the build is for. The
@@ -598,6 +607,14 @@ const char *const *videoModeNames(size_t &count)
 {
 	count = sizeof(kVideoModeNames) / sizeof(kVideoModeNames[0]);
 	return kVideoModeNames;
+}
+
+bool videoModeSlotLabel(const Descriptor &d, std::string &out)
+{
+	if (d.field.extra == NULL || d.field.extra->index < 0 || !videoModeDrawn((size_t) d.field.extra->index))
+		return false;
+	out = kVideoModeNames[d.field.extra->index];
+	return true;
 }
 
 bool videoModeDrawn(size_t index)

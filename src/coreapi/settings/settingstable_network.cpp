@@ -97,11 +97,8 @@ constexpr Descriptor kNetwork[] =
 	/* The proxy. The three below are one setting in three parts: the loader
 	   joins them into one URL, and so does every reader.
 
-	   The name and the password are the credential in that URL and are both
-	   declared secret: a name that identifies an account against a password is
-	   the half of a credential that names the account, the box shows neither,
-	   and the password is typed behind stars. The server is not secret. Which proxy
-	   a box goes through is not a credential, and hiding it would leave a
+	   Only the password is secret. The user name and the server say which
+	   account and which proxy the box uses, and hiding them would leave a
 	   frontend unable to show whether one is set at all. */
 	textRow("softupdate_proxyserver")
 		.section("network")
@@ -115,7 +112,6 @@ constexpr Descriptor kNetwork[] =
 		.label("flashupdate.proxyusername")
 		.hint("menu.hint_net_proxyuser")
 		.defaultValue("")
-		.secret()
 		.field(COREAPI_TEXT_FIELD(softupdate_proxyusername)),
 	textRow("softupdate_proxypassword")
 		.section("network")

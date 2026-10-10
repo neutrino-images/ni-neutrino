@@ -26,7 +26,9 @@
 #include <system/settings.h>
 
 #include <atomic>
+#include <mutex>
 #include <string>
+#include <vector>
 
 extern SNeutrinoSettings g_settings;
 
@@ -203,6 +205,26 @@ void noteGlcdPanelSize(int width, int height)
 {
 	g_panel_width = width;
 	g_panel_height = height;
+}
+
+namespace
+{
+
+std::mutex g_config_names_lock;
+std::vector<std::string> g_config_names;
+
+} // namespace
+
+void noteGlcdConfigNames(const std::vector<std::string> &names)
+{
+	std::lock_guard<std::mutex> hold(g_config_names_lock);
+	g_config_names = names;
+}
+
+std::vector<std::string> recordedGlcdConfigNames()
+{
+	std::lock_guard<std::mutex> hold(g_config_names_lock);
+	return g_config_names;
 }
 
 Status recordedGlcdPanelSize(int &width, int &height)

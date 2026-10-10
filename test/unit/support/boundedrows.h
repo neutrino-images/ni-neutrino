@@ -32,7 +32,7 @@ static const coreapi::Descriptor kBoundedRows[] =
 		"t_bounded", coreapi::ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 10, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, boundedLowNow, boundedHighNow, NULL, false, NULL
+		NULL, NULL, NULL, boundedLowNow, boundedHighNow, NULL, false, NULL, NULL
 	},
 };
 static const size_t kBoundedRowsCount = sizeof(kBoundedRows) / sizeof(kBoundedRows[0]);

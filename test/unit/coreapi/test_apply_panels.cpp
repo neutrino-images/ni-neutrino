@@ -1226,7 +1226,7 @@ TEST_CASE("every run of the display group has the loop record the panel's size, 
 // Every row the theme bounds by the panel asks for it.
 TEST_CASE("the position rows of the display theme state the connected panel as their bound", "[apply][glcd]")
 {
-	size_t wide = 0, high = 0;
+	size_t wide = 0, high = 0, other = 0;
 	for (size_t i = 0; i < settingsTableCount(); ++i)
 	{
 		const Descriptor &d = settingsTable()[i];
@@ -1234,13 +1234,25 @@ TEST_CASE("the position rows of the display theme state the connected panel as t
 			++wide;
 		if (d.max_now == glcdPanelHeight)
 			++high;
-		if (d.max_now != NULL)
+		if (d.max_now == glcdPanelWidth || d.max_now == glcdPanelHeight)
 		{
 			INFO(d.key);
 			CHECK((d.max == kGlcdPanelWidthMax || d.max == kGlcdPanelHeightMax));
 		}
+		else if (d.max_now != NULL)
+		{
+			++other;
+			INFO(d.key);
+			CHECK(std::string(d.key).compare(0, 16, "lcd4l_brightness") == 0);
+		}
 	}
 	CHECK(wide == 25);
 	CHECK(high == 11);
+	// Besides the panel only the display brightness rows have a bound that moves.
+#ifdef ENABLE_LCD4LINUX
+	CHECK(other == 2);
+#else
+	CHECK(other == 0);
+#endif
 }
 #endif

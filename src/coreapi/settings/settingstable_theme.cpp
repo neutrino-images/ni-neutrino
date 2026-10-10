@@ -382,10 +382,12 @@ constexpr Descriptor kGlcdTheme[] =
 {
 	textRow("glcd_background_image")
 		.section("display")
+		.label("glcd.background")
 		.defaultValue("")
 		.field(COREAPI_GLCD_THEME_TEXT_FIELD(glcd_background_image)),
 	textRow("glcd_font")
 		.section("display")
+		.label("glcd.font")
 		.defaultValue("")
 		.field(COREAPI_GLCD_THEME_TEXT_FIELD(glcd_font)),
 	intRow("glcd_channel_percent")

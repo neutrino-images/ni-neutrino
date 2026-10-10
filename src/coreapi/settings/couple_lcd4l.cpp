@@ -22,6 +22,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 namespace coreapi
 {
@@ -34,10 +35,32 @@ long lcd4lBrightnessCeiling(long display_type)
 	return (display_type >= 1 && display_type <= 3) ? 10 : 7;
 }
 
+namespace
+{
+
+bool readPanel(const char *key, long *value, void *context)
+{
+	if (std::strcmp(key, "lcd4l_display_type") != 0)
+		return false;
+	*value = *static_cast<const long *>(context);
+	return true;
+}
+
+} // namespace
+
+// Judged by the skin row's own entry, so a write and the coupling hold to one rule.
 bool lcd4lSkinOffered(long display_type, long skin)
 {
-	// Only the Pearl panel has the skins 1 to 3.
-	return display_type == 0 || skin < 1 || skin > 3;
+	const Descriptor *row = findRow("lcd4l_skin");
+	if (row == NULL || row->values == NULL)
+		return true;
+	const ValueLookup panel = { readPanel, NULL, &display_type };
+	for (size_t i = 0; i < row->value_count; ++i)
+	{
+		if (row->values[i].value == skin)
+			return entryOffered(row->values[i], panel);
+	}
+	return true;
 }
 
 namespace

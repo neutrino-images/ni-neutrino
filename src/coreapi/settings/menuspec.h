@@ -48,6 +48,7 @@ struct MenuItemSpec
 	std::string key;
 	ValueType   type;
 	std::string label_key;   // empty: none
+	std::string label_text;
 	std::string hint_key;    // empty: none
 	long        min, max;    // Int and Key
 	// Int only: min and max are what the box states now and can move, so a write is held to them.

@@ -18,6 +18,10 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "support/catch.hpp"
 #include "coreapi/settings/couple.h"
 #include "coreapi/settings/settings.h"
@@ -629,6 +633,7 @@ TEST_CASE("the Pearl panel takes brightness up to seven and the Samsung panels u
 	CHECK(settings::lcd4lBrightnessCeiling(9) == 7);
 }
 
+#ifdef ENABLE_LCD4LINUX
 TEST_CASE("only the Pearl panel has the skins one to three", "[couple][lcd4l]")
 {
 	CHECK(settings::lcd4lSkinOffered(0, 2));
@@ -638,6 +643,7 @@ TEST_CASE("only the Pearl panel has the skins one to three", "[couple][lcd4l]")
 	CHECK_FALSE(settings::lcd4lSkinOffered(1, 1));
 	CHECK_FALSE(settings::lcd4lSkinOffered(2, 3));
 }
+#endif
 
 TEST_CASE("a refusal names the settings that refused it", "[couple][depends]")
 {

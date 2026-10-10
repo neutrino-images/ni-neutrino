@@ -142,55 +142,55 @@ const Descriptor kRows[] =
 		"t_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kEntries, sizeof(kEntries) / sizeof(kEntries[0]), 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_none", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kNoneOffered, 1, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_bool", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_noyes", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, kNoYes, 2, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_named", ValueType::Int, "fixture", "label", NULL,
 		1, 14, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_words", ValueType::Int, "fixture", "label", NULL,
 		1, 14, kTwoWords, 2, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_fan", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, NULL),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_hinted", ValueType::Int, "fixture", "label", "row_hint",
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, &kFlagHinted),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_scroll", ValueType::Int, "fixture", "label", NULL,
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(repeat_blocker, boxHas, &kFlag),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -677,13 +677,13 @@ const Descriptor kProvidedRows[] =
 		"t_provided_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL
 	},
 	{
 		"t_provided_number", ValueType::Int, "fixture", "label", NULL,
 		0, 100, kOffBelow, 1, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -889,7 +889,7 @@ TEST_CASE("a number that names values outside its range carries them with its ra
 			"t_timeout", ValueType::Int, "fixture", "label", NULL,
 			5, 60, names, 2, 0, NULL, false, false, COREAPI_ALWAYS,
 			COREAPI_NUMBER_FIELD(repeat_blocker),
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
 		},
 	};
 	InstalledSettingsTable table(rows, 1);
