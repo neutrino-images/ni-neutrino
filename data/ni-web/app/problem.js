@@ -69,6 +69,34 @@ export function problemHref(problem) {
 	return '';
 }
 
+const kCodePrefix = '/errors/';
+
+/* The reason for a refusal as one line, for a screen with room for one only. The title
+   cannot be that line: it names the status, so every conflict reads the same. */
+/**
+ * @param {unknown} problem
+ * @returns {string} words of this page for the code where it has them, else what the
+ *          box said, and empty for anything that is no problem document
+ */
+export function refusalLine(problem) {
+	if (!problem || typeof problem !== 'object') {
+		return '';
+	}
+	const body = /** @type {{ type?: unknown, title?: unknown, detail?: unknown }} */ (problem);
+	const type = typeof body.type === 'string' ? body.type : '';
+	if (type.startsWith(kCodePrefix)) {
+		const key = 'problem.code.' + type.slice(kCodePrefix.length);
+		const said = word(key);
+		if (said !== key) {
+			return said;
+		}
+	}
+	if (typeof body.detail === 'string' && body.detail !== '') {
+		return body.detail;
+	}
+	return typeof body.title === 'string' ? body.title : '';
+}
+
 /* What is thrown out of every call, so one catch in a screen sees every way a call
    can fail: a refusal the box wrote, a box that did not answer at all, and a call
    the page itself stopped. The message is the detail and not the title, because the

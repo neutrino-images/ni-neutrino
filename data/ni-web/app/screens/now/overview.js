@@ -32,6 +32,7 @@ import { Field } from '../../ui/field.js';
 import { Dot } from '../../ui/dot.js';
 import { Dialog } from '../../ui/dialog.js';
 import { toast } from '../../ui/toast.js';
+import { refusalLine } from '../../problem.js';
 import { Logo } from '../../ui/logo.js';
 import { useRefused } from '../../ui/refused.js';
 import * as pagePlayer from '../../ui/playing.js';
@@ -128,7 +129,7 @@ function announce(running, said) {
 		if (failed && failed.aborted === true) {
 			return;
 		}
-		toast(failed && failed.problem ? failed.problem.title : t(text, 'now.failed'), 'bad');
+		toast(refusalLine(failed && failed.problem) || t(text, 'now.failed'), 'bad');
 	});
 }
 
@@ -584,7 +585,7 @@ function Sound() {
 			touches: ['/api/v1/osd/volume'],
 		}).catch(function (failed) {
 			store.reload('GET', '/api/v1/osd/volume');
-			toast(failed && failed.problem ? failed.problem.title : t(text, 'now.failed'), 'bad');
+			toast(refusalLine(failed && failed.problem) || t(text, 'now.failed'), 'bad');
 		});
 	}
 
@@ -601,7 +602,7 @@ function Sound() {
 			touches: ['/api/v1/osd/volume'],
 		}).catch(function (failed) {
 			store.reload('GET', '/api/v1/osd/volume');
-			toast(failed && failed.problem ? failed.problem.title : t(text, 'now.failed'), 'bad');
+			toast(refusalLine(failed && failed.problem) || t(text, 'now.failed'), 'bad');
 		});
 	}
 

@@ -57,6 +57,7 @@ import { t } from '../../i18n.js';
 import text from './now.text.js';
 import { Switch } from '../../ui/switch.js';
 import { toast } from '../../ui/toast.js';
+import { refusalLine } from '../../problem.js';
 import { fold } from '../../ui/kept.js';
 import { Card, useResource } from './parts.js';
 import { HANDSETS, PICTURE_FOR, PICTURE_FOR_HARDWARE, keySpots } from './handsets.js';
@@ -451,7 +452,7 @@ export default function Remote() {
 				if (failed && failed.aborted === true) {
 					return;
 				}
-				toast(failed && failed.problem ? failed.problem.title : t(text, 'now.failed'), 'bad');
+				toast(refusalLine(failed && failed.problem) || t(text, 'now.failed'), 'bad');
 			});
 	}
 
@@ -512,7 +513,7 @@ export default function Remote() {
 			if (failed && failed.aborted === true) {
 				return;
 			}
-			toast(failed && failed.problem ? failed.problem.title : t(text, 'now.failed'), 'bad');
+			toast(refusalLine(failed && failed.problem) || t(text, 'now.failed'), 'bad');
 		});
 	}
 

@@ -1,5 +1,6 @@
 /* What the archive routes answer, as plain values, and the addresses of one recording. */
 import { buildUrl } from '../../api.js';
+import { refusalLine } from '../../problem.js';
 
 /**
  * @typedef {object} ArchiveItem
@@ -275,24 +276,10 @@ export function lengthWords(seconds) {
 }
 
 /**
- * The words for a refusal the page has no sentence of its own for, by its status class:
- * the box writes its problems in English.
- *
  * @param {unknown} caught
- * @returns {string} a catalogue key
+ * @returns {string} why the box refused, and empty where no refusal came back
  */
-export function refusalKey(caught) {
-	const failure = /** @type {{ problem?: { status?: unknown } } | null} */ (caught);
-	const status = failure && failure.problem && typeof failure.problem.status === 'number' ? failure.problem.status : 0;
-	if (status === 401)
-		return 'rec.refused.signin';
-	if (status === 403)
-		return 'rec.refused.forbidden';
-	if (status === 409)
-		return 'rec.refused.conflict';
-	if (status >= 400 && status < 500)
-		return 'rec.refused.other';
-	if (status >= 500)
-		return 'rec.refused.box';
-	return 'rec.refused.none';
+export function refusalReason(caught) {
+	const failure = /** @type {{ problem?: unknown } | null} */ (caught);
+	return refusalLine(failure && typeof failure === 'object' ? failure.problem : null);
 }

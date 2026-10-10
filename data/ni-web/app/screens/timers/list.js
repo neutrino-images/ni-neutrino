@@ -26,6 +26,7 @@ import { StateChip } from '../../ui/dot.js';
 import { ChannelName } from '../../ui/channels.js';
 import { State } from '../../ui/state.js';
 import { toast } from '../../ui/toast.js';
+import { refusalLine } from '../../problem.js';
 import text from './list.text.js';
 import { isKnownKind, useAnswer } from './list.model.js';
 import { TimerForm, kindLabel } from './form.js';
@@ -209,7 +210,7 @@ function TimerList() {
 			toast(t(text, 'timers.deleted'));
 		} catch (caught) {
 			const failed = /** @type {{ problem?: { title: string, detail: string } } | null} */ (caught);
-			toast(failed && failed.problem ? failed.problem.title : t(text, 'timers.notdeleted'), 'bad');
+			toast(refusalLine(failed && failed.problem) || t(text, 'timers.notdeleted'), 'bad');
 		}
 	}
 

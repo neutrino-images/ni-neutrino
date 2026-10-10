@@ -15,7 +15,7 @@ import { toast } from '../../ui/toast.js';
 import * as playing from '../../ui/playing.js';
 import { DetailSheet, FactList, genreWord } from '../../ui/event.js';
 import { waking } from '../../ui/wake.js';
-import { refusalKey, readArchive, archiveQuery, lengthWords, archiveFileHref, archivePlaylistHref, kArchiveSortKeys,
+import { refusalReason, readArchive, archiveQuery, lengthWords, archiveFileHref, archivePlaylistHref, kArchiveSortKeys,
 	nextArchiveSort, onlyKeys, readArchiveDetails, archiveCoverHref, paragraphsOf, kAlwaysLocked, kTvRefusals,
 	kDeleteRefusals, sourceName, sourceChoices } from './archive.model.js';
 
@@ -550,8 +550,7 @@ function refusalOf(caught, words) {
 	if (key) {
 		return t(text, key);
 	}
-	const said = refusalKey(caught);
-	return t(text, said);
+	return refusalReason(caught) || t(text, 'rec.refused.none');
 }
 
 /**

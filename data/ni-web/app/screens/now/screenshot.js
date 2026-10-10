@@ -32,6 +32,7 @@ import { Switch } from '../../ui/switch.js';
 import { Card, useOnScreen, useResource } from './parts.js';
 import { shotLoader, pictureForSaving, displaysOf } from './shotloader.js';
 import { toast } from '../../ui/toast.js';
+import { refusalLine } from '../../problem.js';
 
 // How often the preview is fetched again while it is asked to do so by itself
 // and while it can be seen. A capture costs the box real work, so this is the
@@ -259,7 +260,7 @@ export function useCapture(bump) {
 				return;
 			}
 			toast(failed && failed.status === 409 ? t(text, 'now.shot.busy')
-				: failed && failed.problem ? failed.problem.title : t(text, 'now.shot.failed'), 'bad');
+				: refusalLine(failed && failed.problem) || t(text, 'now.shot.failed'), 'bad');
 		}).then(function () { setSaving(false); });
 	}
 

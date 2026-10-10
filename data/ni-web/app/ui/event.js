@@ -7,7 +7,7 @@ import * as session from '../session.js';
 import { t } from '../i18n.js';
 import { clock, duration } from '../fmt.js';
 import { hrefFor } from '../nav.js';
-import { problemHref } from '../problem.js';
+import { problemHref, refusalLine } from '../problem.js';
 import { boxNowSeconds } from '../boxclock.js';
 import { ensureCss } from '../css.js';
 import { Button } from './button.js';
@@ -91,7 +91,7 @@ function ask(run, said) {
 				toast(said, '');
 			}
 		}, function (failed) {
-			toast(failed && failed.problem ? failed.problem.title : t(text, 'epg.event.failed'), 'bad');
+			toast(refusalLine(failed && failed.problem) || t(text, 'epg.event.failed'), 'bad');
 		});
 	}, function () { });
 }

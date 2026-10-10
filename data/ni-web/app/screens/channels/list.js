@@ -30,7 +30,7 @@ import { api } from '../../api.js';
 import * as store from '../../store.js';
 import * as events from '../../events.js';
 import * as session from '../../session.js';
-import { isAborted } from '../../problem.js';
+import { isAborted, refusalLine } from '../../problem.js';
 import { t, language } from '../../i18n.js';
 import { channelId, clock, sameChannel } from '../../fmt.js';
 import { hrefFor } from '../../nav.js';
@@ -483,7 +483,7 @@ export default function ChannelList(props) {
 					toast(t(text, 'list.zap.done', { name: channel.name }));
 				}
 			}, function (error) {
-				toast(error && error.problem ? error.problem.title : t(text, 'list.failed'), 'bad');
+				toast(refusalLine(error && error.problem) || t(text, 'list.failed'), 'bad');
 			});
 		}, function () {});
 	}
@@ -495,7 +495,7 @@ export default function ChannelList(props) {
 					toast(t(text, 'list.boxmode.done', { mode: t(text, 'list.mode.' + mode) }));
 				}
 			}, function (error) {
-				toast(error && error.problem ? error.problem.title : t(text, 'list.failed'), 'bad');
+				toast(refusalLine(error && error.problem) || t(text, 'list.failed'), 'bad');
 			});
 		}, function () {});
 	}
@@ -521,7 +521,7 @@ export default function ChannelList(props) {
 				toast(where.url, '');
 			});
 		}, function (error) {
-			toast(error && error.problem ? error.problem.title : t(text, 'list.failed'), 'bad');
+			toast(refusalLine(error && error.problem) || t(text, 'list.failed'), 'bad');
 		});
 	}
 

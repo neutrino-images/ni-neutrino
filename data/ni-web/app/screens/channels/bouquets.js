@@ -48,6 +48,7 @@ import { Dialog } from '../../ui/dialog.js';
 import { State } from '../../ui/state.js';
 import { Logo } from '../../ui/logo.js';
 import { toast } from '../../ui/toast.js';
+import { refusalLine } from '../../problem.js';
 import {
 	MAX_IN_HALF, MAX_NAME_BYTES, rowsOf, byName, moved, idsOf, sameOrder, holds,
 	placeOfId, matching, nameFault, readValue, readChecked
@@ -545,9 +546,11 @@ export default function Bouquets(props) {
 			if (take)
 				remove(id);
 			say(t(text, 'editor.handed', { name: coming.name, bouquet: to }));
-		}, function () {
-			say(t(text, 'editor.handfailed', { bouquet: to }));
-			toast(t(text, 'editor.handfailed', { bouquet: to }), 'bad');
+		}, function (failed) {
+			const why = refusalLine(failed && failed.problem);
+			const said = t(text, 'editor.handfailed', { bouquet: to }) + (why === '' ? '' : ' ' + why);
+			say(said);
+			toast(said, 'bad');
 		});
 	}
 

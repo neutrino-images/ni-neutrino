@@ -14,7 +14,7 @@ import { Dialog } from '../../ui/dialog.js';
 import { Select } from '../../ui/select.js';
 import { ChannelName } from '../../ui/channels.js';
 import { toast } from '../../ui/toast.js';
-import { refusalKey } from './archive.model.js';
+import { refusalReason } from './archive.model.js';
 import { boxNowSeconds } from '../../boxclock.js';
 
 export const css = '/app/screens/recordings/recordings.css';
@@ -169,8 +169,7 @@ export default function Running() {
 	 * @returns {void}
 	 */
 	function refused(caught) {
-		const key = refusalKey(caught);
-		toast(t(text, key), 'bad');
+		toast(refusalReason(caught) || t(text, 'rec.refused.none'), 'bad');
 	}
 
 	/**

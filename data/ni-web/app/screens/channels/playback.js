@@ -23,7 +23,7 @@ import { html, useState, useEffect, useRef } from '../../runtime.js';
 import { api } from '../../api.js';
 import * as store from '../../store.js';
 import * as session from '../../session.js';
-import { isAborted } from '../../problem.js';
+import { isAborted, refusalLine } from '../../problem.js';
 import { t } from '../../i18n.js';
 import { channelId } from '../../fmt.js';
 import { hrefFor } from '../../nav.js';
@@ -113,7 +113,7 @@ export default function Playback(props) {
 					toast(t(text, 'play.zap.done', { name: one.name }));
 				}
 			}, function (error) {
-				toast(error && error.problem ? error.problem.title : t(text, 'play.failed'), 'bad');
+				toast(refusalLine(error && error.problem) || t(text, 'play.failed'), 'bad');
 			});
 		}, function () {});
 	}

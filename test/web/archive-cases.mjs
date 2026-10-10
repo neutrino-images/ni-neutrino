@@ -158,15 +158,25 @@ for (const code of ['recording-playing', 'mode-unavailable', 'playback-running',
 		'the words for ' + code + ' are there in German and English');
 }
 
-// A refusal with no words of its own is said by its status, never in the box's English.
-const refusalKey = model.refusalKey;
-const kRaw = { title: 'Forbidden', detail: 'this endpoint is not open to this caller' };
-same([403, 401, 409, 404, 500, 0].map(function (status) { return refusalKey({ problem: Object.assign({ status: status }, kRaw) }); }),
-	['rec.refused.forbidden', 'rec.refused.signin', 'rec.refused.conflict', 'rec.refused.other', 'rec.refused.box', 'rec.refused.none'],
-	'a refusal is one of this area\'s own sentences, chosen by its status');
-same(refusalKey(new Error('offline')), 'rec.refused.none', 'no answer is the box not answering');
-for (const key of ['rec.refused.forbidden', 'rec.refused.signin', 'rec.refused.conflict', 'rec.refused.other', 'rec.refused.box', 'rec.refused.none'])
-	same([typeof words.de[key], typeof words.en[key]], ['string', 'string'], key + ' is there in German and English');
+// A refusal with no words of its own gives the box's reason, never the name of its status.
+const refusalReason = model.refusalReason;
+const kWords = (await import('../../data/ni-web/app/data.text.js')).text;
+same(refusalReason({ problem: { type: '/errors/recording-not-stopped', title: 'Internal Server Error', status: 500,
+	detail: 'the box did not take the request to stop recording' } }), kWords.de['problem.code.recording-not-stopped'],
+	'a refusal with a known code is said in the words of the page');
+same(refusalReason({ problem: { type: '/errors/change-refused', title: 'Conflict', status: 409,
+	detail: 'the recording could not be removed' } }), 'the recording could not be removed',
+	'a code without words of its own is said as the box said it');
+same(refusalReason({ problem: { type: '/errors/change-refused', title: 'Conflict', status: 409, detail: '' } }), 'Conflict',
+	'a refusal without a reason is said by its title, as the last thing there is');
+same(refusalReason(new Error('offline')), '', 'no refusal is no reason, and the caller says the box did not answer');
+same(refusalReason(null), '', 'nothing thrown is no reason');
+same(refusalReason({}), '', 'a failure carrying no document is no reason');
+same(refusalReason({ problem: { type: '/errors/recording-running', title: 'Conflict', status: 409,
+	detail: 'the box is still writing this recording' } }), kWords.de['problem.code.recording-running'],
+	'a recording that cannot go while it runs says so');
+same([typeof words.de['rec.refused.none'], typeof words.en['rec.refused.none']], ['string', 'string'],
+	'rec.refused.none is there in German and English');
 
 // verdict
 
