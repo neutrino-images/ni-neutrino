@@ -8,23 +8,23 @@
 // spelled out.
 export default {
 	de: {
-		'webtv.starting': 'Der Sender wird geholt.',
-		'webtv.playing': 'Läuft.',
-		'webtv.unplayable.title': 'Dieser Sender läuft nicht im Browser',
-		'webtv.unplayable.body': 'Die Box hat den Stream geholt, dieser Browser kann ihn nicht abspielen. Die Adresse unten lässt sich in einem Player wie VLC öffnen.',
 		'webtv.address.label': 'Adresse für einen Player',
-		'webtv.retry': 'Noch einmal versuchen',
 		'webtv.label': 'Web-TV: {name}',
 		'webtv.name.unknown': 'unbenannter Sender',
+		'webtv.playing': 'Läuft.',
+		'webtv.retry': 'Noch einmal versuchen',
+		'webtv.starting': 'Der Sender wird geholt.',
+		'webtv.unplayable.body': 'Die Box hat den Stream geholt, dieser Browser kann ihn nicht abspielen. Die Adresse unten lässt sich in einem Player wie VLC öffnen.',
+		'webtv.unplayable.title': 'Dieser Sender läuft nicht im Browser',
 	},
 	en: {
-		'webtv.starting': 'Fetching the channel.',
-		'webtv.playing': 'Playing.',
-		'webtv.unplayable.title': 'This channel does not play in the browser',
-		'webtv.unplayable.body': 'The box fetched the stream and this browser cannot decode it. The address below opens in a player such as VLC.',
 		'webtv.address.label': 'Address for a player',
-		'webtv.retry': 'Try again',
 		'webtv.label': 'Web TV: {name}',
 		'webtv.name.unknown': 'unnamed channel',
+		'webtv.playing': 'Playing.',
+		'webtv.retry': 'Try again',
+		'webtv.starting': 'Fetching the channel.',
+		'webtv.unplayable.body': 'The box fetched the stream and this browser cannot decode it. The address below opens in a player such as VLC.',
+		'webtv.unplayable.title': 'This channel does not play in the browser',
 	},
 };

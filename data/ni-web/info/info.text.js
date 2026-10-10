@@ -9,20 +9,20 @@
 export default {
 	de: {
 		'info.asking': 'Die Box wird gefragt.',
-		'info.standby': 'Die Box ist im Standby.',
-		'info.nothing': 'Die Box spielt gerade nichts.',
-		'info.denied': 'Von hier aus gibt die Box ohne Anmeldung nichts her.',
 		'info.away': 'Die Box antwortet nicht.',
-		'info.noevent': 'Zu diesem Kanal steht nichts im Programm.',
+		'info.denied': 'Von hier aus gibt die Box ohne Anmeldung nichts her.',
 		'info.left': 'noch {time}',
+		'info.noevent': 'Zu diesem Kanal steht nichts im Programm.',
+		'info.nothing': 'Die Box spielt gerade nichts.',
+		'info.standby': 'Die Box ist im Standby.',
 	},
 	en: {
 		'info.asking': 'Asking the box.',
-		'info.standby': 'The box is in standby.',
-		'info.nothing': 'The box is playing nothing.',
-		'info.denied': 'From here the box gives nothing away without signing in.',
 		'info.away': 'The box is not answering.',
-		'info.noevent': 'Nothing stands in the guide for this channel.',
+		'info.denied': 'From here the box gives nothing away without signing in.',
 		'info.left': '{time} left',
+		'info.noevent': 'Nothing stands in the guide for this channel.',
+		'info.nothing': 'The box is playing nothing.',
+		'info.standby': 'The box is in standby.',
 	},
 };

@@ -13,25 +13,25 @@
 // costs the box a tuner and forgetting a file costs an open request.
 export default {
 	de: {
-		'float.label': 'Player: {name}',
-		'float.move': 'Fenster verschieben',
-		'float.size': 'Fenstergröße ändern',
 		'float.close': 'Player schließen',
-		'float.loading': 'Lädt',
 		'float.failed': 'Abgebrochen',
 		'float.keys': 'Die Pfeiltasten verschieben das Fenster, mit der Umschalttaste ändern sie die Größe.',
 		'float.kind.channel': 'Sender',
 		'float.kind.file': 'Datei',
+		'float.label': 'Player: {name}',
+		'float.loading': 'Lädt',
+		'float.move': 'Fenster verschieben',
+		'float.size': 'Fenstergröße ändern',
 	},
 	en: {
-		'float.label': 'Player: {name}',
-		'float.move': 'Move the window',
-		'float.size': 'Resize the window',
 		'float.close': 'Close the player',
-		'float.loading': 'Loading',
 		'float.failed': 'Stopped',
 		'float.keys': 'The arrow keys move the window, and with shift they resize it.',
 		'float.kind.channel': 'Channel',
 		'float.kind.file': 'File',
+		'float.label': 'Player: {name}',
+		'float.loading': 'Loading',
+		'float.move': 'Move the window',
+		'float.size': 'Resize the window',
 	},
 };
