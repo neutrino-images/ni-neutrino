@@ -50,7 +50,7 @@ export function Notes(props) {
 /**
  * @param {{
  *   id?: string,
- *   label?: string,
+ *   label?: string | Web.Drawn,
  *   type?: string,
  *   value?: string | number,
  *   rows?: number,

@@ -8,7 +8,7 @@
  *
  * Nothing here reaches the box.
  */
-import { html, useId } from '../../runtime.js';
+import { html, useId, useState } from '../../runtime.js';
 import { t } from '../../i18n.js';
 import { Field, Notes, describedBy } from '../../ui/field.js';
 import { Select } from '../../ui/select.js';
@@ -218,6 +218,56 @@ export function LockedRow(props) {
 	</div>`;
 }
 
+const kCustom = 'custom';
+
+/**
+ * @param {{ row: import('./model.js').Row, value: string, onChange: (id: string, value: string) => void }} props
+ * @returns {Web.Drawn}
+ */
+export function NamedNumber(props) {
+	const row = props.row;
+	const value = props.value;
+	// The value the field was taken at, so a named value typed into it does not close it.
+	const [ownAt, setOwnAt] = useState(/** @type {string | null} */ (null));
+	const named = namedValue(row, value);
+	const custom = named === null || ownAt === value;
+
+	/** @type {Array<{ value: string, label: string }>} */
+	const options = row.choices.map(function (choice) {
+		return { value: String(choice.value), label: choice.label };
+	});
+	options.push({ value: kCustom, label: t(text, 'settings.value.custom') });
+	const fault = custom ? faultText(row, value) : '';
+
+	return html`<${Select}
+			label=${row.label}
+			value=${custom ? kCustom : String(/** @type {{ value: number }} */ (named).value)}
+			needsRestart=${row.needsRestart}
+			options=${options}
+			onChange=${function (/** @type {Event} */ event) {
+				const chosen = /** @type {HTMLSelectElement} */ (event.currentTarget).value;
+				if (chosen === kCustom) {
+					setOwnAt(value);
+					return;
+				}
+				setOwnAt(null);
+				props.onChange(row.id, chosen);
+			}} />
+		${custom ? html`<${Field}
+			label=${html`<span aria-hidden="true">${t(text, 'settings.value.custom')}</span><span class="sr">${t(text, 'settings.value.custom.for', { label: row.label })}</span>`}
+			type="number"
+			value=${value}
+			unit=${unitText(row)}
+			min=${row.min === null ? null : String(row.min)}
+			max=${row.max === null ? null : String(row.max)}
+			error=${fault === '' ? null : fault}
+			onInput=${function (/** @type {Event} */ event) {
+				const next = /** @type {HTMLInputElement} */ (event.currentTarget).value;
+				setOwnAt(next);
+				props.onChange(row.id, next);
+			}} />` : null}`;
+}
+
 /**
  * The control alone, without anything this screen says around it.
  *
@@ -317,16 +367,16 @@ export function Control(props) {
 			}} />`;
 	}
 
+	if (row.type === 'int' && row.choices.length > 0)
+		return html`<${NamedNumber} row=${row} value=${value} onChange=${props.onChange} />`;
+
 	const fault = row.type === 'int' || row.type === 'string' ? faultText(row, value) : '';
-	// The row's own word for the value it names, beside the number: the input stays
-	// a number whatever is shown.
-	const named = namedValue(row, value);
 	const colorHint = row.channels === null ? undefined : t(text, row.channels === 4 ? 'settings.color.rgba' : 'settings.color.rgb');
 	return html`<${Field}
 		label=${row.label}
 		type=${row.type === 'int' || row.type === 'key' ? 'number' : 'text'}
 		value=${value}
-		hint=${named === null ? colorHint : named.label}
+		hint=${colorHint}
 		unit=${row.type === 'int' ? unitText(row) : ''}
 		min=${row.min === null ? null : String(row.min)}
 		max=${row.max === null ? null : String(row.max)}

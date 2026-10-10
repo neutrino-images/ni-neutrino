@@ -69,6 +69,8 @@ export default {
 		'settings.unit.short.percent': '%',
 		'settings.unit.short.second': 's',
 		'settings.value.automatic': 'automatisch',
+		'settings.value.custom': 'Eigener Wert',
+		'settings.value.custom.for': 'Eigener Wert für {label}',
 		'settings.value.unlisted': '{value}, auf dieser Box nicht verfügbar',
 	},
 	en: {
@@ -141,6 +143,8 @@ export default {
 		'settings.unit.short.percent': '%',
 		'settings.unit.short.second': 's',
 		'settings.value.automatic': 'automatic',
+		'settings.value.custom': 'Custom value',
+		'settings.value.custom.for': 'Custom value for {label}',
 		'settings.value.unlisted': '{value}, not available on this box',
 	}
 };

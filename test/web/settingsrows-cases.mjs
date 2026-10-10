@@ -22,8 +22,16 @@ const kReal = {
 };
 const kStubs = {
 	'/vendor/hooks.module.js':
-		['useState', 'useEffect', 'useLayoutEffect', 'useRef', 'useMemo', 'useCallback']
+		['useEffect', 'useLayoutEffect', 'useRef', 'useMemo', 'useCallback']
 			.map(function (name) { return 'export function ' + name + '() {}\n'; }).join('') +
+		// Holds state across renders only while a case sets globalThis.hookSlots.
+		'export function useState(first) {\n' +
+		'\tconst h = globalThis.hookSlots;\n' +
+		'\tif (!h) return [first, function () {}];\n' +
+		'\tconst i = h.next++;\n' +
+		'\tif (!(i in h.slots)) h.slots[i] = first;\n' +
+		'\treturn [h.slots[i], function (v) { h.slots[i] = v; }];\n' +
+		'}\n' +
 		'export function useId() { return "id"; }\n',
 	'/vendor/preact-router.module.js':
 		'export default function Router() { return null; }\n' +
@@ -46,7 +54,7 @@ loader.registerHooks({
 
 globalThis.document = /** @type {any} */ ({ documentElement: {} });
 
-const { Control, Row, ChannelPick, ChannelSelect, ReadOnlyRow, channelChoices, faultText } = await import('../../data/ni-web/app/screens/settings/rows.js');
+const { Control, NamedNumber, Row, ChannelPick, ChannelSelect, ReadOnlyRow, channelChoices, faultText } = await import('../../data/ni-web/app/screens/settings/rows.js');
 const { conditionKeys, rowOf, rowsOf, changed, numberFault, textFault, hasFault, isVisible, withKeyNames, lineOf, risksOf } = await import('../../data/ni-web/app/screens/settings/model.js');
 const { outcomeOf, refusedOfSent, refusalText, applyFailedText } = await import('../../data/ni-web/app/screens/settings/refusal.js');
 const { default: words } = await import('../../data/ni-web/app/screens/settings/settings.text.js');
@@ -253,8 +261,8 @@ const sharedSchema = { items: [
 same(settingChoices(sharedSchema, 'video_Mode'), [{ value: 9, label: '1080i 50Hz' }], 'a setting\'s choices come from the shared list it names');
 same(aspectModes(sharedSchema).map(function (one) { return one.value; }), [0, 3], 'the 4:3 buttons come from the shared list too');
 
-// A number row that names a value in words takes it wherever it lies and says the words
-// beside the number. The row shape is a declared one: start_volume names -1 at its floor.
+// A number row with named values: a choice of the names plus a custom number. The row
+// shape is a declared one: start_volume names -1 at its floor.
 /**
  * @param {number} min
  * @param {any[]} values
@@ -267,7 +275,15 @@ function intRow(min, values) {
 }
 const named = intRow(-1, [{ value: -1, label: 'Last used' }]);
 const below = intRow(0, [{ value: -1, label: 'Last used' }]);
+/** @type {unknown[][]} */
+const warned = [];
+const consoleWarn = console.warn;
+console.warn = function (/** @type {unknown[]} */ ...args) { warned.push(args); };
 const plain = intRow(0, []);
+rowOf({ id: 'x.count', label: 'Count', type: 'int', section: 'x', min: 0, max: 9, conditions: [] });
+console.warn = consoleWarn;
+same(warned.length, 1, 'an empty list of names warns once and a row without a list does not');
+same(String(warned[0] && warned[0][0]).indexOf('x.volume') !== -1, true, 'the warning names the key');
 same(numberFault(named, '-1'), null, 'the named value at the floor is no fault');
 same(numberFault(named, '-2'), 'range', 'another number below the floor is a fault');
 same(numberFault(below, '-1'), null, 'a named value below the range is no fault');
@@ -278,19 +294,65 @@ same(numberFault(plain, '-1'), 'range', 'without a named value the same number i
 function numberField(row, value) {
 	const tree = Control(/** @type {any} */ ({ row: row, value: value, onChange: function () {}, onClear: function () {} }));
 	const input = find(tree, 'input', [])[0];
+	const select = find(tree, 'select', [])[0];
 	return {
-		type: input.props.type,
-		shown: input.props.value,
-		notes: find(tree, 'span', []).filter(function (n) { return n.props.class === 'hint'; })
-			.map(function (n) { return n.props.children; }),
+		selected: select ? select.props.value : null,
+		options: find(tree, 'option', []).map(function (o) { return o.props.children; }),
+		shown: input ? input.props.value : null,
+		bounds: input ? [input.props.min, input.props.max] : null,
 		faults: find(tree, 'span', []).filter(function (n) { return n.props.class === 'err'; }).length,
 	};
 }
-same(numberField(named, '-1'), { type: 'number', shown: '-1', notes: ['Last used'], faults: 0 }, 'the named value is a number with its words beside it');
-same(numberField(named, '50'), { type: 'number', shown: '50', notes: [], faults: 0 }, 'another number has no words');
-same(numberField(named, ''), { type: 'number', shown: '', notes: [], faults: 1 }, 'an empty field has no words and a fault');
-same(numberField(below, '-1'), { type: 'number', shown: '-1', notes: ['Last used'], faults: 0 }, 'the words show for a value below the range too');
-same(numberField(plain, '-1'), { type: 'number', shown: '-1', notes: [], faults: 1 }, 'without a named value it is faulted');
+same(numberField(named, '-1'), { selected: '-1', options: ['Last used', 'Custom value'], shown: null, bounds: null, faults: 0 }, 'a stored named value selects its name and draws no number');
+same(numberField(named, '50'), { selected: 'custom', options: ['Last used', 'Custom value'], shown: '50', bounds: ['-1', '100'], faults: 0 }, 'another number is a custom value in a number field with its bounds');
+same(numberField(named, '200').faults, 1, 'a custom value outside the bounds is faulted');
+same(numberField(named, '').faults, 1, 'an empty custom value is faulted');
+same(numberField(below, '-1').selected, '-1', 'a named value below the range is selected by name too');
+same(numberField(plain, '-1'), { selected: null, options: [], shown: '-1', bounds: ['0', '100'], faults: 1 }, 'without a named value it is a plain number and faulted');
+setLanguage('de');
+same(numberField(named, '50').options[1], 'Eigener Wert', 'the German word for a custom value');
+setLanguage('en');
+
+{
+	/** @type {string[][]} */
+	const writes = [];
+	const tree = NamedNumber(/** @type {any} */ ({ row: named, value: '-1', onChange: function (/** @type {string} */ id, /** @type {string} */ v) { writes.push([id, v]); } }));
+	const select = find(tree, 'select', [])[0];
+	select.props.onChange({ currentTarget: { value: '-1' } });
+	select.props.onChange({ currentTarget: { value: 'custom' } });
+	same(writes, [['x.volume', '-1']], 'a name writes its value and the custom entry writes nothing');
+}
+
+{
+	const slots = { slots: /** @type {unknown[]} */ ([]), next: 0 };
+	let stored = '-1';
+	const g = /** @type {any} */ (globalThis);
+	g.hookSlots = slots;
+	function render() {
+		slots.next = 0;
+		return NamedNumber(/** @type {any} */ ({ row: named, value: stored, onChange: function (/** @type {string} */ id, /** @type {string} */ v) { stored = v; } }));
+	}
+	find(render(), 'select', [])[0].props.onChange({ currentTarget: { value: 'custom' } });
+	let tree = render();
+	let input = find(tree, 'input', [])[0];
+	same(input ? [input.props.value, input.props.min, input.props.max] : null, ['-1', '-1', '100'], 'custom opens the field on the stored named value with its bounds');
+	same(find(tree, 'span', []).filter(function (n) { return n.props['aria-hidden'] === 'true'; }).map(function (n) { return n.props.children; }),
+		['Custom value'], 'the field shows the short word under its row');
+	same(find(tree, 'span', []).filter(function (n) { return n.props.class === 'sr'; }).map(function (n) { return n.props.children; }),
+		['Custom value for Volume'], 'a screen reader hears which row the field belongs to');
+	if (input) {
+		input.props.onInput({ currentTarget: { value: '40' } });
+		find(render(), 'input', [])[0].props.onInput({ currentTarget: { value: '-1' } });
+		tree = render();
+		same([stored, find(tree, 'select', [])[0].props.value, find(tree, 'input', []).length], ['-1', 'custom', 1], 'a named value typed into the open field keeps it open');
+	}
+	slots.slots = [];
+	stored = '50';
+	find(render(), 'input', [])[0].props.onInput({ currentTarget: { value: '-1' } });
+	same(find(render(), 'input', []).length, 1, 'a named value typed over a custom one keeps the field open');
+	g.hookSlots = undefined;
+}
+
 
 // A number shows its unit beside the input, in the page's own words. The schema names the
 // unit by the box's catalog key; a key this page has no word for shows nothing, and the raw
@@ -398,7 +460,7 @@ const plainString = drawnText('fr', []);
 same([plainString.selects, plainString.inputs], [0, 1], 'a string row without entries stays a text field');
 
 // A number whose values the box lists in full, such as the tuners it has, is drawn as that
-// list, so no number the box lacks can be picked; one that only names a value stays a number.
+// list, so no number the box lacks can be picked; one that only names values also offers a custom number.
 /** @param {boolean} full @param {string} value */
 function tunerDrawn(full, value) {
 	/** @type {any} */
@@ -420,7 +482,7 @@ same(tuners.selects, 1, 'a listed int is a select');
 same(tuners.options.map(function (o) { return [o.value, o.label]; }), [['-1', 'Off'], ['0', '1: DVB-S2'], ['1', '2: DVB-C']], 'its options are the box\'s values and words');
 const goneTuner = tunerDrawn(true, '5');
 same(goneTuner.options[3], { value: '5', disabled: true, label: '5, not available on this box' }, 'a stored number the box does not list is shown and not choosable');
-same(tunerDrawn(false, '0').selects, 0, 'an int that only names values stays a number field');
+same(tunerDrawn(false, '0').options.map(function (o) { return o.value; }), ['-1', '0', '1', 'custom'], 'an int that only names values adds a custom entry');
 
 
 // ---------------------------------------------------------------- pairs the box states

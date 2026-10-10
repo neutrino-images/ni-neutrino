@@ -130,6 +130,9 @@ export function rowOf(declared, lists) {
 		choices.push({ value: value, label: typeof said === 'string' ? said : String(value) });
 	}
 
+	if (kind === 'int' && (Array.isArray(declared.values) || typeof declared.values_from === 'string') && choices.length === 0)
+		console.warn('settings: the box named no values for ' + id + ', drawn as a plain number');
+
 	const held = declared.locked === true;
 	return {
 		id: id,
