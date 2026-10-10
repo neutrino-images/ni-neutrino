@@ -179,7 +179,7 @@ export default {
 		'now.shot.download': 'Als PNG in voller Größe holen',
 		'now.shot.empty': 'Ohne eines von beiden gibt es nichts zu holen.',
 		'now.shot.failed': 'Die Box hat kein Bild geliefert.',
-		'now.shot.hint': 'Die Vorschau holt ein JPEG, der Knopf darunter ein PNG in voller Größe.'
+		'now.shot.hint': 'Die Vorschau holt ein JPEG, der Knopf darunter ein PNG in voller Größe.',
 		'now.shot.more': 'Was geholt wird',
 		'now.shot.osd': 'Was die Box darüber zeichnet',
 		'now.shot.refresh': 'Neu holen',
@@ -378,7 +378,7 @@ export default {
 		'now.shot.download': 'Fetch a full size PNG',
 		'now.shot.empty': 'With neither of the two there is nothing to fetch.',
 		'now.shot.failed': 'The box handed back no picture.',
-		'now.shot.hint': 'The preview fetches a JPEG, the button below a full size PNG.'
+		'now.shot.hint': 'The preview fetches a JPEG, the button below a full size PNG.',
 		'now.shot.more': 'What is fetched',
 		'now.shot.osd': 'What the box draws over it',
 		'now.shot.refresh': 'Fetch again',

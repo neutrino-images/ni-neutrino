@@ -28,7 +28,7 @@ export default {
 		'settings.code.value-too-long': 'Der Wert ist zu lang.',
 		'settings.color.rgb': 'Farbe als #rrggbb',
 		'settings.color.rgba': 'Farbe als #rrggbbaa, die letzten zwei Ziffern sind die Transparenz',
-		'settings.count': '{count} Einstellungen, {drifting} davon vom Auslieferungszustand abweichend'
+		'settings.count': '{count} Einstellungen, {drifting} davon vom Auslieferungszustand abweichend',
 		'settings.drift.default': 'Auslieferungszustand: {value}',
 		'settings.drift.label': 'Nur was vom Auslieferungszustand abweicht',
 		'settings.drift.mark': 'geändert',
@@ -100,7 +100,7 @@ export default {
 		'settings.code.value-too-long': 'The value is too long.',
 		'settings.color.rgb': 'Colour as #rrggbb',
 		'settings.color.rgba': 'Colour as #rrggbbaa, the last two digits are the transparency',
-		'settings.count': '{count} settings, {drifting} of them off the delivered value'
+		'settings.count': '{count} settings, {drifting} of them off the delivered value',
 		'settings.drift.default': 'Delivered as: {value}',
 		'settings.drift.label': 'Only what differs from the delivered state',
 		'settings.drift.mark': 'changed',

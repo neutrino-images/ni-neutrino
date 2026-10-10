@@ -71,7 +71,7 @@ export default {
 		'editor.partial': 'Von {bouquet} ist noch nicht alles gelesen. Gespeichert würde nur, was hier steht.',
 		'editor.place': 'Stelle {pos} von {count}',
 		'editor.pool': 'Alle Kanäle',
-		'editor.pool.open': 'Sender hinzufügen'
+		'editor.pool.open': 'Sender hinzufügen',
 		'editor.reload': 'Neu laden',
 		'editor.remove.one': '{name} entfernen',
 		'editor.removed': '{name} entfernt',
@@ -149,7 +149,7 @@ export default {
 		'editor.partial': 'Not all of {bouquet} has been read. Saving would write only what is here.',
 		'editor.place': 'Place {pos} of {count}',
 		'editor.pool': 'All channels',
-		'editor.pool.open': 'Add channels'
+		'editor.pool.open': 'Add channels',
 		'editor.reload': 'Load again',
 		'editor.remove.one': 'Remove {name}',
 		'editor.removed': '{name} removed',

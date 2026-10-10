@@ -19,7 +19,7 @@ export default {
 		'sys.web.moved.go': 'Dorthin wechseln',
 		'sys.web.moved.lead': 'Gespeichert. Unter dieser Adresse hier antwortet gleich nichts mehr; die Box ist jetzt unter {address} zu finden.',
 		'sys.web.moved.title': 'Die Box ist umgezogen',
-		'sys.web.moved.wait': 'Am besten einen Moment warten, bis der Server wieder oben ist.'
+		'sys.web.moved.wait': 'Am besten einen Moment warten, bis der Server wieder oben ist.',
 		'sys.web.nothing': 'Es ist nichts geändert worden.',
 		'sys.web.password': 'Passwort',
 		'sys.web.password.hint': 'Leer lassen heißt: bleibt wie es ist. Was hier steht, wird als Passwort genommen; die Box gibt weder das Passwort noch seine gespeicherte Form je wieder heraus.',
@@ -57,7 +57,7 @@ export default {
 		'sys.web.moved.go': 'Go there',
 		'sys.web.moved.lead': 'Saved. Nothing answers at this address in a moment; the box is at {address} now.',
 		'sys.web.moved.title': 'The box has moved',
-		'sys.web.moved.wait': 'Best to wait a moment until the server is back up.'
+		'sys.web.moved.wait': 'Best to wait a moment until the server is back up.',
 		'sys.web.nothing': 'Nothing has been changed.',
 		'sys.web.password': 'Password',
 		'sys.web.password.hint': 'Left empty means it stays as it is. What is written here is taken as the password; the box hands back neither the password nor the form it stores it as.',

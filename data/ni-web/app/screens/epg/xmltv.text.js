@@ -3,7 +3,7 @@
 export default {
 	de: {
 		'epg.xmltv.address': 'Die Adresse, zum Kopieren in ein anderes Programm:',
-		'epg.xmltv.cost': 'Die Box baut das Dokument bei jedem Abruf neu. Auf einer vollen Kanalliste dauert das einen Moment.'
+		'epg.xmltv.cost': 'Die Box baut das Dokument bei jedem Abruf neu. Auf einer vollen Kanalliste dauert das einen Moment.',
 		'epg.xmltv.mode': 'Enthalten',
 		'epg.xmltv.mode.all': 'Fernsehen und Radio',
 		'epg.xmltv.mode.radio': 'nur Radio',
@@ -14,7 +14,7 @@ export default {
 	},
 	en: {
 		'epg.xmltv.address': 'The address, to copy into another program:',
-		'epg.xmltv.cost': 'The box builds the document afresh on every fetch. On a full channel list that takes a moment.'
+		'epg.xmltv.cost': 'The box builds the document afresh on every fetch. On a full channel list that takes a moment.',
 		'epg.xmltv.mode': 'Included',
 		'epg.xmltv.mode.all': 'Television and radio',
 		'epg.xmltv.mode.radio': 'radio only',

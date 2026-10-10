@@ -72,7 +72,7 @@ export default {
 		'shell.loading': 'Wird geladen',
 		'shell.more': 'Mehr dazu',
 		'shell.more.areas': 'Mehr',
-		'shell.notfound.body': 'Die Adresse {path} gehört zu keinem Bildschirm dieser Oberfläche.'
+		'shell.notfound.body': 'Die Adresse {path} gehört zu keinem Bildschirm dieser Oberfläche.',
 		'shell.notfound.title': 'Diese Seite gibt es nicht',
 		'shell.onair.event': '{title} · {percent} %',
 		'shell.onair.noevent': 'Kein Programm bekannt',
@@ -180,7 +180,7 @@ export default {
 		'shell.loading': 'Loading',
 		'shell.more': 'More about this',
 		'shell.more.areas': 'More',
-		'shell.notfound.body': 'The address {path} belongs to no screen of this interface.'
+		'shell.notfound.body': 'The address {path} belongs to no screen of this interface.',
 		'shell.notfound.title': 'There is no such page',
 		'shell.onair.event': '{title} · {percent} %',
 		'shell.onair.noevent': 'No programme known',

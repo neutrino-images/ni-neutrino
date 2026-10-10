@@ -15,7 +15,7 @@ export default {
 		'epg.search.idle.try': 'Ein Wort aus dem Titel reicht. Probier „Tagesschau“, „Tatort“ oder „Doku“.',
 		'epg.search.limit': 'Höchstens',
 		'epg.search.query': 'Suchbegriff',
-		'epg.search.results': 'Treffer'
+		'epg.search.results': 'Treffer',
 		'epg.search.submit': 'Suchen',
 		'epg.search.truncated': 'Die Box hat die Liste an der Obergrenze abgeschnitten. Ein engerer Zeitraum zeigt den Rest.',
 	},
@@ -31,7 +31,7 @@ export default {
 		'epg.search.idle.try': 'One word out of the title is enough. Try "news", "film" or "documentary".',
 		'epg.search.limit': 'At most',
 		'epg.search.query': 'Search for',
-		'epg.search.results': 'Hits'
+		'epg.search.results': 'Hits',
 		'epg.search.submit': 'Search',
 		'epg.search.truncated': 'The box cut the list at its ceiling. A narrower window shows the rest.',
 	}

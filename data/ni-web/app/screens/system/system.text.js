@@ -82,7 +82,7 @@ export default {
 		'sys.reload.hard': 'Was auf der Platte steht gewinnt',
 		'sys.reload.hard.hint': 'Die Box schreibt die Kanäle, die sie im Speicher hält, vorher nicht heraus.',
 		'sys.reload.setup': 'Einstellungen neu einlesen',
-		'sys.reload.setup.ask': 'Die Box ihre Einstellungen neu einlesen lassen? Sie ist dabei einen Moment beschäftigt und zeichnet ihre Bildschirme neu auf.'
+		'sys.reload.setup.ask': 'Die Box ihre Einstellungen neu einlesen lassen? Sie ist dabei einen Moment beschäftigt und zeichnet ihre Bildschirme neu auf.',
 		'sys.reload.title': 'Neu einlesen',
 		'sys.scripts.args': 'Argumente',
 		'sys.scripts.args.hint': 'An Leerzeichen geteilt, jedes Stück erreicht das Skript als ein Argument.',
@@ -178,7 +178,7 @@ export default {
 		'sys.reload.hard': 'What is on the disc wins',
 		'sys.reload.hard.hint': 'The box does not write out the channels it is holding in memory first.',
 		'sys.reload.setup': 'Read the settings again',
-		'sys.reload.setup.ask': 'Let the box read its settings again? It is busy with that for a moment and draws its screens afresh.'
+		'sys.reload.setup.ask': 'Let the box read its settings again? It is busy with that for a moment and draws its screens afresh.',
 		'sys.reload.title': 'Read again',
 		'sys.scripts.args': 'Arguments',
 		'sys.scripts.args.hint': 'Split at whitespace, each piece reaching the script as one argument.',

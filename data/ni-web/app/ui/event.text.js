@@ -26,7 +26,7 @@ export default {
 		'epg.event.zap.now': 'Jetzt umschalten',
 		'epg.event.zap.timer': 'Umschalten vormerken',
 		'epg.genre.1': 'Spielfilm',
-		'epg.genre.10': 'Freizeit'
+		'epg.genre.10': 'Freizeit',
 		'epg.genre.2': 'Nachrichten',
 		'epg.genre.3': 'Show',
 		'epg.genre.4': 'Sport',
@@ -55,7 +55,7 @@ export default {
 		'epg.event.zap.now': 'Switch over now',
 		'epg.event.zap.timer': 'Set a switch timer',
 		'epg.genre.1': 'movie',
-		'epg.genre.10': 'leisure'
+		'epg.genre.10': 'leisure',
 		'epg.genre.2': 'news',
 		'epg.genre.3': 'show',
 		'epg.genre.4': 'sports',

@@ -33,7 +33,7 @@ export default {
 		'ai.error.ai-totp-no-pending': 'Die Einrichtung ist abgelaufen. Bitte 2FA neu einrichten.',
 		'ai.error.ai-totp-not-set-up': '2FA ist nicht eingerichtet.',
 		'ai.error.ai-trusted-proxies-refused': 'Jeder Eintrag muss eine Adresse oder ein Netz bis /24 (IPv6 bis /64) sein, höchstens 16 Einträge, und keiner darf die Box selbst sein.',
-		'ai.error.forwarded-by-untrusted-peer': 'Die Anfrage kam über einen Proxy, der nicht in der Liste der vertrauenswürdigen Proxys steht.'
+		'ai.error.forwarded-by-untrusted-peer': 'Die Anfrage kam über einen Proxy, der nicht in der Liste der vertrauenswürdigen Proxys steht.',
 		'ai.note.public.ready': 'Läuft über die öffentliche Adresse, also nur mit Tunnel.',
 		'ai.note.public.waiting': 'Dafür erst eine öffentliche Adresse eintragen und KI-Zugriff einschalten.',
 		'ai.note.token.ready': 'Läuft im Heimnetz mit einem Zugangsschlüssel, ohne Tunnel.',
@@ -106,7 +106,7 @@ export default {
 		'ai.error.ai-totp-no-pending': 'The setup has expired. Please set up 2FA again.',
 		'ai.error.ai-totp-not-set-up': '2FA is not set up.',
 		'ai.error.ai-trusted-proxies-refused': 'Each entry has to be an address or a network of at most /24 (IPv6 /64), at most 16 entries, and none may be the box itself.',
-		'ai.error.forwarded-by-untrusted-peer': 'The request came through a proxy that is not on the list of trusted proxies.'
+		'ai.error.forwarded-by-untrusted-peer': 'The request came through a proxy that is not on the list of trusted proxies.',
 		'ai.note.public.ready': 'Goes through the public address, so only with a tunnel.',
 		'ai.note.public.waiting': 'Enter a public address and switch AI access on first.',
 		'ai.note.token.ready': 'Works in the home network with an access token, without a tunnel.',

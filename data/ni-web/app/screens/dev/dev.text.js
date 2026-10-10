@@ -34,7 +34,7 @@ export default {
 		'dev.events.clear': 'Leeren',
 		'dev.events.connected': 'verbunden',
 		'dev.events.denied': 'Diese Sitzung darf den Stream nicht lesen.',
-		'dev.events.held': 'Die letzten {count} von höchstens {max}. Ältere fallen hinten heraus; mitgeschrieben wird nichts.'
+		'dev.events.held': 'Die letzten {count} von höchstens {max}. Ältere fallen hinten heraus; mitgeschrieben wird nichts.',
 		'dev.events.lead': 'Was die Box von sich aus meldet, mitgelesen. Derselbe Stream, an dem der Rahmen hängt; hier steht er roh.',
 		'dev.events.waiting': 'Bisher hat die Box nichts gemeldet.',
 	},
@@ -66,7 +66,7 @@ export default {
 		'dev.events.clear': 'Empty it',
 		'dev.events.connected': 'connected',
 		'dev.events.denied': 'This session may not read the stream.',
-		'dev.events.held': 'The last {count} of at most {max}. Older ones fall off the end, and nothing is written down.'
+		'dev.events.held': 'The last {count} of at most {max}. Older ones fall off the end, and nothing is written down.',
 		'dev.events.lead': 'What the box reports of its own accord, read along. The same stream the frame hangs on, here in the raw.',
 		'dev.events.waiting': 'The box has reported nothing yet.',
 	}
