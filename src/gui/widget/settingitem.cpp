@@ -1139,6 +1139,16 @@ bool writeRow(const std::string &key, const std::string &value, bool asked)
 	return writeRows(std::vector<std::pair<std::string, std::string> >(1, std::make_pair(key, value)), asked);
 }
 
+bool writeRow(const std::string &key, const coreapi::settings::Records &records, bool asked)
+{
+	return writeRow(key, coreapi::settings::recordsText(records), asked);
+}
+
+bool writeRow(const std::string &key, const std::vector<std::string> &list, bool asked)
+{
+	return writeRow(key, coreapi::settings::listText(list), asked);
+}
+
 void afterApply(CMenuItem *item, const std::function<bool()> &after)
 {
 	activeSet().afterApply(item, after);

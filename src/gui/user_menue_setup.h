@@ -80,7 +80,7 @@ class CUserMenuSetup : public CMenuTarget
 
 		int showSetup();
 		void checkButtonName();
-		bool writeMember(size_t member, const std::string &value, bool asked);
+		bool writeMember(const char *member, const std::string &value, bool asked);
 		int editTitle(CMenuTarget *parent);
 		int editKey(CMenuTarget *parent);
 

@@ -112,11 +112,39 @@ Result<std::string> get(const std::string &key);
    depend on another setting. */
 ValueLookup currentValues();
 
-/* How a list travels as text: a line to each entry and, inside a record, a tab between
-   its members. An empty text splits into one empty entry, so a caller reading a list
-   tests for the empty text first. */
-void splitOn(const std::string &text, char sep, std::vector<std::string> &out);
-std::string joinOn(const std::vector<std::string> &items, char sep);
+/* A records row as its records, each member reached by the name the row gives it.
+   A name the row does not give is logged: get reads it as empty, set changes nothing
+   and answers false. */
+class Records
+{
+public:
+	size_t size() const { return records.size(); }
+	std::string get(size_t record, const char *member) const;
+	bool set(size_t record, const char *member, const std::string &value);
+	// A record with every member empty, at the end; answers its index.
+	size_t add();
+
+private:
+	friend Result<Records> getRecords(const std::string &key);
+	friend Result<Records> emptyRecords(const std::string &key);
+	friend std::string recordsText(const Records &records);
+	int memberIndex(const char *member) const;
+
+	const RecordField *fields = NULL;
+	size_t field_count = 0;
+	std::vector<RecordValues> records;
+};
+
+// What get() reads, as records or entries. A key that is no such row is UnknownSetting.
+Result<Records> getRecords(const std::string &key);
+Result<std::vector<std::string> > getList(const std::string &key);
+
+// No records, for a caller that builds the whole value itself. UnknownSetting as getRecords.
+Result<Records> emptyRecords(const std::string &key);
+
+// The text set() and writeBatch() take for these values.
+std::string recordsText(const Records &records);
+std::string listText(const std::vector<std::string> &items);
 
 // Each setting a write could not keep, with the answer its own write would have had.
 typedef std::vector<std::pair<std::string, Error> > Refusals;

@@ -1012,6 +1012,192 @@ TEST_CASE("a list of records that holds a password is a credential", "[settingse
 	CHECK_FALSE(settings::set("timer_remotebox_ip", "1\t10.0.0.3\tnew\tuser\tsecret\t65536").ok());
 }
 
+/* The records and the entries of a row are one reading of what get answers, so the text
+   made of them is the text get answers. */
+TEST_CASE("records and entries read back as the text get answers", "[settingselements]")
+{
+	RealStore store;
+	fillUsermenu(store.values, 5);
+	store.values.webtv_xml.push_back("/a.xml");
+	store.values.webtv_xml.push_back("http://x/b.xml");
+	timer_remotebox_item b;
+	b.port = 80;
+	b.pass = "swordfish";
+	b.rbname = "box";
+	b.rbaddress = "10.0.0.2";
+	store.values.timer_remotebox_ip.push_back(b);
+
+	Result<settings::Records> menu = settings::getRecords("usermenu");
+	REQUIRE(menu.ok());
+	CHECK(menu.value().size() == 5);
+	REQUIRE(settings::get("usermenu").ok());
+	CHECK_FALSE(settings::get("usermenu").value().empty());
+	CHECK(settings::recordsText(menu.value()) == settings::get("usermenu").value());
+
+	// A credential row is answered empty, as get answers it, and the store is not read.
+	Result<settings::Records> boxes = settings::getRecords("timer_remotebox_ip");
+	REQUIRE(boxes.ok());
+	CHECK(boxes.value().size() == 0);
+	CHECK(settings::recordsText(boxes.value()) == settings::get("timer_remotebox_ip").value());
+
+	Result<std::vector<std::string> > list = settings::getList("webtv_xml");
+	REQUIRE(list.ok());
+	REQUIRE(list.value().size() == 2);
+	CHECK(list.value()[1] == "http://x/b.xml");
+	CHECK(settings::listText(list.value()) == settings::get("webtv_xml").value());
+
+	store.values.webtv_xml.clear();
+	list = settings::getList("webtv_xml");
+	REQUIRE(list.ok());
+	CHECK(list.value().empty());
+	CHECK(settings::listText(list.value()) == settings::get("webtv_xml").value());
+}
+
+TEST_CASE("a member of a record is reached by its name", "[settingselements]")
+{
+	RealStore store;
+	fillUsermenu(store.values, 5);
+	REQUIRE(settings::set("usermenu", "Red\t1\t2,3\nB\t2\t6\nC\t3\t7\nD\t4\t8\nE\t5\t9").ok());
+	applyPendingSettings();
+
+	Result<settings::Records> menu = settings::getRecords("usermenu");
+	REQUIRE(menu.ok());
+	settings::Records records = menu.value();
+	CHECK(records.get(0, "title") == "Red");
+	CHECK(records.get(0, "key") == "1");
+	CHECK(records.get(0, "items") == "2,3");
+	CHECK(records.get(4, "title") == "E");
+
+	REQUIRE(records.set(1, "title", "Changed"));
+	CHECK(records.get(1, "title") == "Changed");
+	CHECK(records.get(1, "key") == "2");
+
+	// The text of the changed records is what a hand-built text stores.
+	REQUIRE(settings::set("usermenu", settings::recordsText(records)).ok());
+	applyPendingSettings();
+	const std::string by_records = settings::get("usermenu").value();
+	REQUIRE(settings::set("usermenu", "Red\t1\t2,3\nChanged\t2\t6\nC\t3\t7\nD\t4\t8\nE\t5\t9").ok());
+	applyPendingSettings();
+	CHECK(by_records == settings::get("usermenu").value());
+	CHECK(store.values.usermenu[1]->title == "Changed");
+}
+
+TEST_CASE("a name or a record the row does not have changes nothing", "[settingselements]")
+{
+	RealStore store;
+	fillUsermenu(store.values, 5);
+
+	Result<settings::Records> menu = settings::getRecords("usermenu");
+	REQUIRE(menu.ok());
+	settings::Records records = menu.value();
+	const std::string before = settings::recordsText(records);
+
+	CHECK(records.get(0, "nope").empty());
+	CHECK_FALSE(records.set(0, "nope", "x"));
+	CHECK(records.get(5, "title").empty());
+	CHECK_FALSE(records.set(5, "title", "x"));
+	CHECK(settings::recordsText(records) == before);
+}
+
+TEST_CASE("records of a key that holds none are unknown", "[settingselements]")
+{
+	RealStore store;
+
+	Result<settings::Records> text = settings::getRecords("webtv_xml");
+	REQUIRE_FALSE(text.ok());
+	CHECK(text.error().code == ErrorCode::UnknownSetting);
+	Result<settings::Records> none = settings::getRecords("no_such_setting");
+	REQUIRE_FALSE(none.ok());
+	CHECK(none.error().code == ErrorCode::UnknownSetting);
+	Result<std::vector<std::string> > notlist = settings::getList("usermenu");
+	REQUIRE_FALSE(notlist.ok());
+	CHECK(notlist.error().code == ErrorCode::UnknownSetting);
+	Result<std::vector<std::string> > nolist = settings::getList("no_such_setting");
+	REQUIRE_FALSE(nolist.ok());
+	CHECK(nolist.error().code == ErrorCode::UnknownSetting);
+}
+
+/* A credential row cannot be read, so a caller builds its whole value from nothing. The
+   text is the same as a hand-joined one and is held to the same rules. */
+TEST_CASE("records built from nothing make the text a hand-joined record makes", "[settingselements]")
+{
+	RealStore store;
+	// A write carries as many boxes as there are.
+	timer_remotebox_item held;
+	held.port = 80;
+	store.values.timer_remotebox_ip.push_back(held);
+
+	Result<settings::Records> made = settings::emptyRecords("timer_remotebox_ip");
+	REQUIRE(made.ok());
+	settings::Records records = made.value();
+	CHECK(records.size() == 0);
+	CHECK(settings::recordsText(records).empty());
+
+	const size_t at = records.add();
+	CHECK(at == 0);
+	CHECK(records.size() == 1);
+	CHECK(records.get(at, "address").empty());
+	const char *const members[][2] = {
+		{ "enabled", "1" }, { "address", "10.0.0.3" }, { "name", "new" },
+		{ "user", "user" }, { "pass", "secret" }, { "port", "8080" }
+	};
+	Result<Descriptor> d = settings::describe("timer_remotebox_ip");
+	REQUIRE(d.ok());
+	const FieldExtra *x = d.value().field.extra;
+	REQUIRE(x->record_field_count == sizeof(members) / sizeof(members[0]));
+	for (size_t i = 0; i < x->record_field_count; ++i)
+	{
+		REQUIRE(std::string(x->record_fields[i].name) == members[i][0]);
+		REQUIRE(records.set(at, members[i][0], members[i][1]));
+	}
+	const std::string hand = "1\t10.0.0.3\tnew\tuser\tsecret\t8080";
+	CHECK(settings::recordsText(records) == hand);
+	CHECK(settings::check("timer_remotebox_ip", settings::recordsText(records)).ok());
+
+	REQUIRE(records.set(at, "port", "0"));
+	const Result<void> via_records = settings::check("timer_remotebox_ip", settings::recordsText(records));
+	const Result<void> by_hand = settings::check("timer_remotebox_ip", "1\t10.0.0.3\tnew\tuser\tsecret\t0");
+	REQUIRE_FALSE(via_records.ok());
+	REQUIRE_FALSE(by_hand.ok());
+	CHECK(via_records.error().code == by_hand.error().code);
+
+	CHECK_FALSE(settings::emptyRecords("webtv_xml").ok());
+	CHECK_FALSE(settings::emptyRecords("no_such_setting").ok());
+}
+
+// The text made of the records is held to the same rules as a text typed by hand.
+TEST_CASE("a value refused as text is refused the same way through records", "[settingselements]")
+{
+	RealStore store;
+	fillUsermenu(store.values, 4);
+
+	struct Case
+	{
+		const char *member;
+		const char *value;
+		const char *first;
+	};
+	const Case bad[] = {
+		{ "key", "x", "old\tx\t1" },
+		{ "key", "-3", "old\t-3\t1" },
+		{ "title", "Re#d", "Re#d\t10\t1" },
+		{ "title", " old", " old\t10\t1" }
+	};
+	for (size_t i = 0; i < sizeof(bad) / sizeof(bad[0]); ++i)
+	{
+		Result<settings::Records> menu = settings::getRecords("usermenu");
+		REQUIRE(menu.ok());
+		settings::Records records = menu.value();
+		REQUIRE(records.set(0, bad[i].member, bad[i].value));
+		const Result<void> via_records = settings::set("usermenu", settings::recordsText(records));
+		const Result<void> by_hand =
+			settings::set("usermenu", std::string(bad[i].first) + "\nold\t10\t1\nold\t10\t1\nold\t10\t1");
+		REQUIRE_FALSE(via_records.ok());
+		REQUIRE_FALSE(by_hand.ok());
+		CHECK(via_records.error().code == by_hand.error().code);
+	}
+}
+
 // The usermenu and the remote boxes are made of the members their rows say, in that order.
 TEST_CASE("a row of records names the members of a record", "[settingselements]")
 {

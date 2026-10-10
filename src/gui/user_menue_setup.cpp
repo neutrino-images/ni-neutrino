@@ -293,7 +293,7 @@ int CUserMenuSetup::showSetup()
 	key_item = NULL;
 
 	// A list left as shown is not written: that keeps a write made elsewhere and entries no option names.
-	refused = left != shown && !writeMember(2, chosen, true);
+	refused = left != shown && !writeMember("items", chosen, true);
 
 	return res;
 }
@@ -306,7 +306,7 @@ int CUserMenuSetup::editTitle(CMenuTarget *parent)
 	const int res = name.exec(parent, "");
 	// Against the value the dialog opened with: a write made elsewhere while it was open stays.
 	if (edit_title != before)
-		writeMember(0, edit_title, true);
+		writeMember("title", edit_title, true);
 	return res;
 }
 
@@ -319,7 +319,7 @@ int CUserMenuSetup::editKey(CMenuTarget *parent)
 	if (edit_key != before)
 	{
 		// The record keeps no key as 0.
-		if (!writeMember(1, to_string(edit_key == (unsigned int) CRCInput::RC_nokey ? 0 : (int) edit_key), true))
+		if (!writeMember("key", to_string(edit_key == (unsigned int) CRCInput::RC_nokey ? 0 : (int) edit_key), true))
 			return res;
 		const std::string name = CRCInput::getKeyName(g_settings.usermenu[button]->key);
 		if (key_item)
@@ -331,7 +331,7 @@ int CUserMenuSetup::editKey(CMenuTarget *parent)
 }
 
 // Only one member changes, so writes made elsewhere to the others stay.
-bool CUserMenuSetup::writeMember(size_t member, const std::string &value, bool asked)
+bool CUserMenuSetup::writeMember(const char *member, const std::string &value, bool asked)
 {
 	// The row skips the empty slots a removed button leaves behind.
 	size_t record = 0;
@@ -339,25 +339,23 @@ bool CUserMenuSetup::writeMember(size_t member, const std::string &value, bool a
 		if (g_settings.usermenu[i] != NULL)
 			record++;
 
-	coreapi::Result<std::string> now = coreapi::settings::get("usermenu");
-	std::vector<std::string> lines;
-	std::vector<std::string> members;
-	if (now.ok())
+	coreapi::Result<coreapi::settings::Records> got = coreapi::settings::getRecords("usermenu");
+	if (!got.ok())
 	{
-		coreapi::settings::splitOn(now.value(), '\n', lines);
-		if (record < lines.size())
-			coreapi::settings::splitOn(lines[record], '\t', members);
+		dprintf(DEBUG_NORMAL, "[usermenu] setting not readable: %s\n", got.error().message.c_str());
+		if (asked)
+			ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
+		return false;
 	}
-	if (member >= members.size())
+	coreapi::settings::Records records = std::move(got).value();
+	if (!records.set(record, member, value))
 	{
 		dprintf(DEBUG_NORMAL, "[usermenu] button %d not found in the setting\n", button);
 		if (asked)
 			ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
 		return false;
 	}
-	members[member] = value;
-	lines[record] = coreapi::settings::joinOn(members, '\t');
-	return writeRow("usermenu", coreapi::settings::joinOn(lines, '\n'), asked);
+	return writeRow("usermenu", records, asked);
 }
 
 // check button name for details like empty string and show an user message on issue
@@ -372,7 +370,7 @@ void CUserMenuSetup::checkButtonName()
 		if (!g_settings.usermenu[button]->title.empty())
 		{
 			//DisplayInfoMessage(g_Locale->getText(LOCALE_USERMENU_MSG_WARNING_NO_ITEMS));
-			writeMember(0, "", false);
+			writeMember("title", "", false);
 		}
 		// exit function
 		return;
@@ -393,7 +391,7 @@ void CUserMenuSetup::checkButtonName()
 		msg += g_Locale->getText(usermenu[button].def_name);
 		DisplayInfoMessage(msg.c_str());
 
-		writeMember(0, g_Locale->getText(usermenu[button].def_name), false);
+		writeMember("title", g_Locale->getText(usermenu[button].def_name), false);
 	}
 }
 

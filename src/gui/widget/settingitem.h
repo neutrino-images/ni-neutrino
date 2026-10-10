@@ -32,6 +32,14 @@
 #include <utility>
 #include <vector>
 
+namespace coreapi
+{
+namespace settings
+{
+class Records;
+}
+}
+
 /* What a screen allows of an item, for reasons that are not the row's own
    conditions (a hardware revision, a recording running). A function is asked on
    every pass, so it answers for the moment. A bool is a decision that does not
@@ -170,6 +178,8 @@ CFollowForwarder *addTextForwarder(CMenuWidget *menu, const neutrino_locale_t na
    when everything landed. */
 bool writeRows(const std::vector<std::pair<std::string, std::string> > &values, bool asked);
 bool writeRow(const std::string &key, const std::string &value, bool asked);
+bool writeRow(const std::string &key, const coreapi::settings::Records &records, bool asked);
+bool writeRow(const std::string &key, const std::vector<std::string> &list, bool asked);
 
 class CColorChooser;
 

@@ -58,7 +58,7 @@ static void writeList(const char *key, const std::list<std::string> &list, bool 
 	for (std::list<std::string>::const_iterator it = list.begin(); it != list.end(); ++it)
 		if (!it->empty())
 			files.push_back(*it);
-	writeRow(key, coreapi::settings::joinOn(files, '\n'), asked);
+	writeRow(key, files, asked);
 }
 
 /* The lists as the settings now say, and the channel daemon told to read them. The

@@ -28,8 +28,6 @@
 #include <gui/widget/keyboard_input.h>
 #include <gui/widget/settingitem.h>
 
-#include <coreapi/settings/settings.h>
-
 CXMLTVSetup::CXMLTVSetup()
 {
 	width = 55;
@@ -187,7 +185,7 @@ int CXMLTVSetup::Show()
 			if (!name.empty())
 				chosen.push_back(name);
 		}
-		writeRow("xmltv_xml", coreapi::settings::joinOn(chosen, '\n'), true);
+		writeRow("xmltv_xml", chosen, true);
 
 		CNeutrinoApp::getInstance()->xmltv_xml_readepg();
 	}

@@ -200,12 +200,19 @@ std::vector<std::string> pluginList(const std::string &key)
 	coreapi::Result<std::string> now = coreapi::settings::get(key);
 	if (!now.ok())
 		return names;
-	std::vector<std::string> parts;
-	coreapi::settings::splitOn(now.value(), ',', parts);
+	const std::vector<std::string> parts = ::split(now.value(), ',');
 	for (size_t i = 0; i < parts.size(); i++)
 		if (!parts[i].empty())
 			names.push_back(parts[i]);
 	return names;
+}
+
+std::string commaList(const std::vector<std::string> &names)
+{
+	std::string text;
+	for (size_t i = 0; i < names.size(); i++)
+		text += (i ? "," : "") + names[i];
+	return text;
 }
 
 // Callers name a mode by its address, writes need its row.
@@ -479,7 +486,7 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 		for (size_t t = 0; t < 5; t++) {
 			if (!changed[t])
 				continue;
-			members.push_back(std::make_pair(std::string(kKeys[t]), coreapi::settings::joinOn(lists[t], ',')));
+			members.push_back(std::make_pair(std::string(kKeys[t]), commaList(lists[t])));
 		}
 		if (!members.empty())
 			writeRows(members, true);

@@ -1124,21 +1124,23 @@ static bool sameBox(const timer_remotebox_item &a, const timer_remotebox_item &b
 		&& a.user == b.user && a.pass == b.pass;
 }
 
-static std::string remoteBoxRecords(const std::vector<timer_remotebox_item> &boxes)
+static coreapi::settings::Records remoteBoxRecords(const std::vector<timer_remotebox_item> &boxes)
 {
-	std::vector<std::string> records;
+	coreapi::Result<coreapi::settings::Records> got = coreapi::settings::emptyRecords("timer_remotebox_ip");
+	coreapi::settings::Records records;
+	if (got.ok())
+		records = std::move(got).value();
 	for (size_t i = 0; i < boxes.size(); i++)
 	{
-		std::vector<std::string> members;
-		members.push_back(boxes[i].enabled ? "1" : "0");
-		members.push_back(boxes[i].rbaddress);
-		members.push_back(boxes[i].rbname);
-		members.push_back(boxes[i].user);
-		members.push_back(boxes[i].pass);
-		members.push_back(to_string(boxes[i].port));
-		records.push_back(coreapi::settings::joinOn(members, '\t'));
+		const size_t r = records.add();
+		records.set(r, "enabled", boxes[i].enabled ? "1" : "0");
+		records.set(r, "address", boxes[i].rbaddress);
+		records.set(r, "name", boxes[i].rbname);
+		records.set(r, "user", boxes[i].user);
+		records.set(r, "pass", boxes[i].pass);
+		records.set(r, "port", to_string(boxes[i].port));
 	}
-	return coreapi::settings::joinOn(records, '\n');
+	return records;
 }
 
 // A box this screen left as it found it is taken from the store, so a write made elsewhere stays.
@@ -1196,7 +1198,7 @@ static void writeRemoteBoxes(const std::vector<timer_remotebox_item> &entry, con
 	}
 	if (!boxes.empty())
 	{
-		const coreapi::Result<void> checked = coreapi::settings::check("timer_remotebox_ip", remoteBoxRecords(boxes));
+		const coreapi::Result<void> checked = coreapi::settings::check("timer_remotebox_ip", coreapi::settings::recordsText(remoteBoxRecords(boxes)));
 		if (!checked.ok())
 		{
 			{

@@ -221,8 +221,6 @@ Result<void> existsAsRequired(const TextRule &rule, const std::string &value)
    from the end of the text. */
 const size_t kMaxListItems = 1000;
 
-} // anonymous namespace
-
 void splitOn(const std::string &text, char sep, std::vector<std::string> &out)
 {
 	out.clear();
@@ -250,6 +248,41 @@ std::string joinOn(const std::vector<std::string> &items, char sep)
 		out += items[i];
 	}
 	return out;
+}
+
+std::string joinRecords(const std::vector<RecordValues> &records)
+{
+	std::vector<std::string> lines;
+	for (size_t i = 0; i < records.size(); ++i)
+		lines.push_back(joinOn(records[i], '\t'));
+	return joinOn(lines, '\n');
+}
+
+void splitRecords(const std::string &text, std::vector<RecordValues> &out)
+{
+	out.clear();
+	if (text.empty())
+		return;
+	std::vector<std::string> lines;
+	splitOn(text, '\n', lines);
+	for (size_t i = 0; i < lines.size(); ++i)
+	{
+		RecordValues members;
+		splitOn(lines[i], '\t', members);
+		out.push_back(members);
+	}
+}
+
+} // anonymous namespace
+
+std::string recordsText(const Records &records)
+{
+	return joinRecords(records.records);
+}
+
+std::string listText(const std::vector<std::string> &items)
+{
+	return joinOn(items, '\n');
 }
 
 namespace
@@ -1105,7 +1138,7 @@ Result<std::string> readStored(const Descriptor *d)
 			return ok(std::string(d->default_string != NULL ? d->default_string : ""));
 		if (s != Status::Ok)
 			return fail(s, ErrorCode::SettingUnreadable, "the setting could not be read");
-		return ok(joinOn(items, '\n'));
+		return ok(listText(items));
 	}
 
 	if (d->type == ValueType::Records)
@@ -1116,10 +1149,7 @@ Result<std::string> readStored(const Descriptor *d)
 			return ok(std::string(d->default_string != NULL ? d->default_string : ""));
 		if (s != Status::Ok)
 			return fail(s, ErrorCode::SettingUnreadable, "the setting could not be read");
-		std::vector<std::string> lines;
-		for (size_t i = 0; i < records.size(); ++i)
-			lines.push_back(joinOn(records[i], '\t'));
-		return ok(joinOn(lines, '\n'));
+		return ok(joinRecords(records));
 	}
 
 	if (holdsText(*d))
@@ -1165,6 +1195,103 @@ Result<std::string> get(const std::string &key)
 	return readStored(d);
 }
 
+Result<Records> emptyRecords(const std::string &key)
+{
+	const Descriptor *d = findRow(key);
+	if (d == NULL || d->type != ValueType::Records)
+		return fail(Status::NotFound, ErrorCode::UnknownSetting,
+			    "no records setting is declared under that key");
+
+	Records out;
+	out.fields = d->field.extra->record_fields;
+	out.field_count = d->field.extra->record_field_count;
+	return ok(std::move(out));
+}
+
+Result<Records> getRecords(const std::string &key)
+{
+	Result<Records> empty = emptyRecords(key);
+	if (!empty.ok())
+		return empty;
+	const Descriptor *d = findRow(key);
+	Records out = empty.value();
+	if (d->secret)
+		return ok(std::move(out));
+
+	Status s = settingsSource().readRecords(d->key, out.records);
+	if (s == Status::NotFound)
+		splitRecords(d->default_string != NULL ? d->default_string : "", out.records);
+	else if (s != Status::Ok)
+		return fail(s, ErrorCode::SettingUnreadable, "the setting could not be read");
+	return ok(std::move(out));
+}
+
+Result<std::vector<std::string> > getList(const std::string &key)
+{
+	const Descriptor *d = findRow(key);
+	if (d == NULL || d->type != ValueType::List)
+		return fail(Status::NotFound, ErrorCode::UnknownSetting,
+			    "no list setting is declared under that key");
+
+	std::vector<std::string> items;
+	if (d->secret)
+		return ok(std::move(items));
+
+	Status s = settingsSource().readList(d->key, items);
+	if (s == Status::NotFound)
+	{
+		items.clear();
+		const std::string text(d->default_string != NULL ? d->default_string : "");
+		if (!text.empty())
+			splitOn(text, '\n', items);
+	}
+	else if (s != Status::Ok)
+		return fail(s, ErrorCode::SettingUnreadable, "the setting could not be read");
+	return ok(std::move(items));
+}
+
+size_t Records::add()
+{
+	records.push_back(RecordValues(field_count));
+	return records.size() - 1;
+}
+
+int Records::memberIndex(const char *member) const
+{
+	for (size_t i = 0; i < field_count; ++i)
+		if (strcmp(fields[i].name, member) == 0)
+			return (int)i;
+	fprintf(stderr, "coreapi: a record has no member named %s\n", member);
+	return -1;
+}
+
+std::string Records::get(size_t record, const char *member) const
+{
+	const int at = memberIndex(member);
+	if (at < 0)
+		return std::string();
+	if (record >= records.size() || (size_t)at >= records[record].size())
+	{
+		fprintf(stderr, "coreapi: record %lu is out of range\n", (unsigned long)record);
+		return std::string();
+	}
+	return records[record][at];
+}
+
+bool Records::set(size_t record, const char *member, const std::string &value)
+{
+	const int at = memberIndex(member);
+	if (at < 0)
+		return false;
+	if (record >= records.size() || (size_t)at >= records[record].size())
+	{
+		fprintf(stderr, "coreapi: record %lu is out of range\n", (unsigned long)record);
+		return false;
+	}
+	records[record][at] = value;
+	return true;
+}
+
 Result<void> checkCleared(const std::string &key)
 {
 	Checked unused;
@@ -1190,14 +1317,9 @@ bool sameAsStored(const Checked &c)
 		return false;
 	std::string text;
 	if (c.row.type == ValueType::List)
-		text = joinOn(c.list, '\n');
+		text = listText(c.list);
 	else if (c.row.type == ValueType::Records)
-	{
-		std::vector<std::string> lines;
-		for (size_t i = 0; i < c.records.size(); ++i)
-			lines.push_back(joinOn(c.records[i], '\t'));
-		text = joinOn(lines, '\n');
-	}
+		text = joinRecords(c.records);
 	else if (holdsText(c.row))
 		text = c.text;
 	else
