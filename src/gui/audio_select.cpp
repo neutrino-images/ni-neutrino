@@ -39,6 +39,7 @@
 #include <gui/widget/icons.h>
 #include <gui/widget/menue.h>
 #include <gui/widget/menue_options.h>
+#include <gui/widget/settingitem.h>
 #include <driver/screen_max.h>
 #include <driver/volume.h>
 #include <zapit/zapit.h>
@@ -64,15 +65,6 @@ CAudioSelectMenuHandler::~CAudioSelectMenuHandler()
 {
 
 }
-
-// -- this is a copy from neutrino.cpp!!
-#define AUDIOMENU_ANALOGOUT_OPTION_COUNT 3
-const CMenuOptionChooser::keyval AUDIOMENU_ANALOGOUT_OPTIONS[AUDIOMENU_ANALOGOUT_OPTION_COUNT] =
-{
-	{ 0, LOCALE_AUDIOMENU_STEREO },
-	{ 1, LOCALE_AUDIOMENU_MONOLEFT },
-	{ 2, LOCALE_AUDIOMENU_MONORIGHT }
-};
 
 int CAudioSelectMenuHandler::exec(CMenuTarget* parent, const std::string &actionkey)
 {
@@ -126,19 +118,8 @@ int CAudioSelectMenuHandler::doMenu ()
 		AudioSelector.addItem(GenericMenuSeparatorLine);
 
 	// -- setup menue for to Dual Channel Stereo
-	static CApplyKeyNotifier analogModeNotifier("audio_AnalogMode");
-	static CApplyKeyNotifier analogOutNotifier("analog_out");
-	CMenuOptionChooser* oj = new CMenuOptionChooser(LOCALE_AUDIOMENU_ANALOG_MODE,
-			&g_settings.audio_AnalogMode,
-			AUDIOMENU_ANALOGOUT_OPTIONS, AUDIOMENU_ANALOGOUT_OPTION_COUNT,
-			true, &analogModeNotifier, CRCInput::RC_red);
-
-	AudioSelector.addItem( oj );
-
-	oj = new CMenuOptionChooser(LOCALE_AUDIOMENU_ANALOG_OUT, &g_settings.analog_out,
-			OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT,
-			true, &analogOutNotifier, CRCInput::RC_green);
-	AudioSelector.addItem( oj );
+	addSetting(&AudioSelector, "audio_AnalogMode", true, NULL, CRCInput::RC_red);
+	addSetting(&AudioSelector, "analog_out", true, NULL, CRCInput::RC_green);
 
 	CChannelList *channelList = CNeutrinoApp::getInstance ()->channelList;
 	int curnum = channelList->getActiveChannelNumber();

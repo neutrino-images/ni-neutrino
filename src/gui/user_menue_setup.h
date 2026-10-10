@@ -73,9 +73,16 @@ class CUserMenuSetup : public CMenuTarget
 		std::vector<std::string> options;
 		std::map<std::string, std::string> keys;
 		std::map<std::string, std::string> vals;
+		std::string edit_title;
+		unsigned int edit_key;
+		CMenuForwarder *key_item;
+		bool refused;
 
 		int showSetup();
 		void checkButtonName();
+		bool writeMember(size_t member, const std::string &value, bool asked);
+		int editTitle(CMenuTarget *parent);
+		int editKey(CMenuTarget *parent);
 
 	public:
 		CUserMenuSetup(neutrino_locale_t menue_title, int menue_button);

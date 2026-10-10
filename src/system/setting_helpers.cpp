@@ -73,7 +73,6 @@
 #include <gui/widget/msgbox.h>
 #include <gui/widget/hintbox.h>
 
-#include <gui/plugins.h>
 #include <daemonc/remotecontrol.h>
 #include <xmlinterface.h>
 #include <hardware/audio.h>
@@ -86,7 +85,6 @@
 #include <zapit/satconfig.h>
 #include <zapit/zapit.h>
 
-extern CPlugins *g_Plugins; /* neutrino.cpp */
 extern CRemoteControl *g_RemoteControl; /* neutrino.cpp */
 extern cVideo *videoDecoder;
 extern cAudio *audioDecoder;
@@ -371,25 +369,6 @@ int CNVODChangeExec::exec(CMenuTarget *parent, const std::string &actionKey)
 
 	parent->hide();
 	g_InfoViewer->showSubchan();
-	return menu_return::RETURN_EXIT;
-}
-
-int CMoviePluginChangeExec::exec(CMenuTarget *parent, const std::string &actionKey)
-{
-	if (parent)
-		parent->hide();
-
-	if (actionKey == "---")
-	{
-		setSettingsText(g_settings.movieplayer_plugin, actionKey);
-	}
-	else
-	{
-		int sel = atoi(actionKey.c_str());
-		if (sel >= 0)
-			setSettingsText(g_settings.movieplayer_plugin, g_Plugins->getName(sel));
-	}
-
 	return menu_return::RETURN_EXIT;
 }
 

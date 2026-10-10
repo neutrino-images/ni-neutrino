@@ -438,6 +438,20 @@ static const char *const kInfobarTimingKeys[] =
 	"timing.infobar_tv", "timing.infobar_radio", "timing.infobar_media_audio", "timing.infobar_media_video"
 };
 
+// The size is kept to the bounds of its row, which are the ones a write from outside is held to.
+static int withinRow(const char *key, int value)
+{
+	coreapi::Result<coreapi::MenuItemSpec> row = coreapi::menuItem(key);
+	if (!row.ok())
+		return value;
+	return std::min((int) row.value().max, std::max((int) row.value().min, value));
+}
+
+static std::string windowSizeText()
+{
+	return to_string(g_settings.window_width) + " / " + to_string(g_settings.window_height);
+}
+
 int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 {
 	dprintf(DEBUG_DEBUG, "init osd setup\n");
@@ -452,10 +466,13 @@ int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 
 	if (actionKey=="window_size")
 	{
-		int old_window_width = g_settings.window_width;
-		int old_window_height = g_settings.window_height;
+		// The settings take the size on OK only, so a cancel leaves them as they are.
+		const int w_open = withinRow("window_width", g_settings.window_width);
+		const int h_open = withinRow("window_height", g_settings.window_height);
+		int w = w_open;
+		int h = h_open;
 
-		paintWindowSize(old_window_width, old_window_height);
+		paintWindowSize(w, h);
 
 		uint64_t timeoutEnd = CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
 
@@ -469,16 +486,20 @@ int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 
 			if (msg == CRCInput::RC_ok)
 			{
-				memset(window_size_value, 0, sizeof(window_size_value));
-				snprintf(window_size_value, sizeof(window_size_value), "%d / %d", g_settings.window_width, g_settings.window_height);
-				mfWindowSize->setOption(window_size_value);
+				// Only what was changed here, so a write made elsewhere meanwhile stands.
+				std::vector<std::pair<std::string, std::string> > members;
+				if (w != w_open)
+					members.push_back(std::make_pair(std::string("window_width"), to_string(w)));
+				if (h != h_open)
+					members.push_back(std::make_pair(std::string("window_height"), to_string(h)));
+				if (!members.empty())
+					writeRows(members, true);
+				mfWindowSize->setOption(windowSizeText());
 				CNeutrinoApp::getInstance()->channelList->ResetModules();
 				break;
 			}
 			else if (CNeutrinoApp::getInstance()->backKey(msg) || (msg == CRCInput::RC_timeout))
 			{
-				g_settings.window_width = old_window_width;
-				g_settings.window_height = old_window_height;
 				loop = false;
 			}
 			else if ((msg == CRCInput::RC_page_up) || (msg == CRCInput::RC_page_down) ||
@@ -496,11 +517,11 @@ int COsdSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 				else if ((msg == CRCInput::RC_up) || (msg == CRCInput::RC_down))
 					mask = 2;
 				if (mask & 1)
-					g_settings.window_width += dir;
+					w = withinRow("window_width", w + dir);
 				if (mask & 2)
-					g_settings.window_height += dir;
+					h = withinRow("window_height", h + dir);
 
-				paintWindowSize(g_settings.window_width, g_settings.window_height);
+				paintWindowSize(w, h);
 
 			}
 			else if ((msg == CRCInput::RC_left) || (msg == CRCInput::RC_right))
@@ -690,11 +711,9 @@ int COsdSetup::showOsdSetup()
 	addSetting(osd_menu, "widget_fade");
 
 	// window size
-	memset(window_size_value, 0, sizeof(window_size_value));
-	snprintf(window_size_value, sizeof(window_size_value), "%d / %d", g_settings.window_width, g_settings.window_height);
-	mfWindowSize = new CMenuForwarder(LOCALE_WINDOW_SIZE, true, window_size_value, this, "window_size", CRCInput::convertDigitToKey(shortcut++));
+	mfWindowSize = addTextForwarder(osd_menu, LOCALE_WINDOW_SIZE, this, "window_size", CRCInput::convertDigitToKey(shortcut++),
+					windowSizeText, "window_width", std::vector<std::string>(1, "window_height"));
 	mfWindowSize->setHint("", LOCALE_MENU_HINT_WINDOW_SIZE);
-	osd_menu->addItem(mfWindowSize);
 
 	// subchannel menu position
 	addSetting(osd_menu, "infobar_subchan_disp_pos");
@@ -1126,12 +1145,7 @@ void COsdSetup::showOsdVolumeSetup(CMenuWidget *menu_volume)
 	// volume position
 	addSetting(menu_volume, "volume_pos");
 
-	// volume size
-	int vMin = CVolumeHelper::getInstance()->getVolIconHeight();
-	g_settings.volume_size = std::max(g_settings.volume_size, vMin);
-	CMenuOptionNumberChooser * nc = new CMenuOptionNumberChooser(LOCALE_EXTRA_VOLUME_SIZE, &g_settings.volume_size, true, vMin, 50, this);
-	nc->setHint("", LOCALE_MENU_HINT_VOLUME_SIZE);
-	menu_volume->addItem(nc);
+	addSetting(menu_volume, "volume_size");
 
 	// volume digits
 	addSetting(menu_volume, "volume_digits");
@@ -1238,20 +1252,10 @@ bool COsdSetup::changeNotify(const neutrino_locale_t OptionName, void * data)
 	{
 		/* The fix moves the area and the fonts with it, which the settings layer states as a
 		   coupling of the flag, so the flag goes in as a write of the layer. */
-		std::vector<std::pair<std::string, std::string> > members(1, std::make_pair(std::string("flag_scart_osd_fix"), std::string(*(int *) data ? "1" : "0")));
-		coreapi::settings::Refusals failed;
-		coreapi::settings::writeBatch(members, failed, true);
+		writeRow("flag_scart_osd_fix", *(int *) data ? "1" : "0", true);
 		// The screen is cleared once the corners are moved, as the notifier did.
 		frameBuffer->Clear();
 		return true;
-	}
-	else if(ARE_LOCALES_EQUAL(OptionName, LOCALE_EXTRA_VOLUME_SIZE))
-	{
-		// A hand-built item, since its floor is the height of the icon the box loaded.
-		const coreapi::Status st = coreapi::applyKey("volume_size");
-		if (st != coreapi::Status::Ok && st != coreapi::Status::Busy)
-			dprintf(DEBUG_NORMAL, "[COsdSetup] volume_size: apply failed\n");
-		return false;
 	}
 	// menu_hints_line
 	else if (ARE_LOCALES_EQUAL(OptionName, LOCALE_SETTINGS_MENU_HINTS_LINE))
@@ -1365,15 +1369,6 @@ void COsdSetup::showOsdScreensaverSetup(CMenuWidget *menu_screensaver)
 	addSetting(menu_screensaver, "screensaver_random");
 }
 
-// The size is kept to the bounds of its row, which are the ones a write from outside is held to.
-static int withinRow(const char *key, int value)
-{
-	coreapi::Result<coreapi::MenuItemSpec> row = coreapi::menuItem(key);
-	if (!row.ok())
-		return value;
-	return std::min((int) row.value().max, std::max((int) row.value().min, value));
-}
-
 void COsdSetup::paintWindowSize(int w, int h)
 {
 	if (win_demo == NULL)
@@ -1391,11 +1386,8 @@ void COsdSetup::paintWindowSize(int w, int h)
 			win_demo->kill();
 	}
 
-	g_settings.window_width = withinRow("window_width", w);
-	g_settings.window_height = withinRow("window_height", h);
-
-	win_demo->setWidth(frameBuffer->getWindowWidth());
-	win_demo->setHeight(frameBuffer->getWindowHeight());
+	win_demo->setWidth(frameBuffer->windowWidth(w));
+	win_demo->setHeight(frameBuffer->windowHeight(h));
 	win_demo->setXPos(getScreenStartX(win_demo->getWidth()));
 	win_demo->setYPos(getScreenStartY(win_demo->getHeight()));
 

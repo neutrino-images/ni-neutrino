@@ -136,10 +136,6 @@ int CNetworkSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 	{
 		return showWlanList();
 	}
-	else if (actionKey == "select_if")
-	{
-		return showInterfaceSelectMenu();
-	}
 #ifdef ENABLE_GUI_MOUNT
 	else if (actionKey == "networkmounts")
 	{
@@ -236,20 +232,18 @@ int CNetworkSetup::showNetworkSetup()
 	const std::vector<std::string> interfaces = offeredInterfaces();
 	const int ifcount = (int) interfaces.size();
 
-	const bool found = std::find(interfaces.begin(), interfaces.end(), g_settings.ifname) != interfaces.end();
-
-	if (!found)
+	if (std::find(interfaces.begin(), interfaces.end(), g_settings.ifname) == interfaces.end())
 	{
-		if (!getDefaultNetworkInterface(g_settings.ifname, false))
+		std::string ifname = g_settings.ifname;
+		if (getDefaultNetworkInterface(ifname, false))
+			writeRow("ifname", ifname, false);
+		else
 		{
 			int sel_res = showInterfaceSelectMenu();
-			if (g_settings.ifname.empty())
+			if (std::find(interfaces.begin(), interfaces.end(), g_settings.ifname) == interfaces.end())
 				return sel_res;
 		}
 	}
-
-	CMenuForwarder *ifSelect = new CMenuForwarder(LOCALE_NETWORKMENU_SELECT_IF, ifcount > 1, g_settings.ifname, this, "select_if");
-	ifSelect->setHint("", LOCALE_MENU_HINT_NET_IF);
 
 	networkConfig->readConfig(g_settings.ifname);
 	readNetworkSettings();
@@ -344,9 +338,7 @@ int CNetworkSetup::showNetworkSetup()
 	networkSettings->addItem(GenericMenuSeparatorLine);
 	//------------------------------------------------
 	if (ifcount)
-		networkSettings->addItem(ifSelect);	//if select
-	else
-		delete ifSelect;
+		addSetting(networkSettings, "ifname", ifcount > 1, this, CRCInput::RC_nokey, false, true);
 
 	networkSettings->addItem(o1);	//set on start
 	networkSettings->addItem(GenericMenuSeparatorLine);
@@ -466,7 +458,7 @@ int CNetworkSetup::showInterfaceSelectMenu()
 
 	if (select >= 0 && select < (int)ifnames.size())
 	{
-		setSettingsText(g_settings.ifname, ifnames[select]);
+		writeRow("ifname", ifnames[select], true);
 		changeNotify(LOCALE_NETWORKMENU_SELECT_IF, NULL);
 	}
 
@@ -698,7 +690,7 @@ int  CNetworkSetup::saveChangesDialog()
 //restores settings
 void CNetworkSetup::restoreNetworkSettings()
 {
-	setSettingsText(g_settings.ifname, old_ifname);
+	writeRow("ifname", old_ifname, true);
 	networkConfig->readConfig(g_settings.ifname);//FIXME ?
 
 	mac_addr			= networkConfig->mac_addr;

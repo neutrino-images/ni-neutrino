@@ -44,6 +44,8 @@ class CAdZapMenu: public CMenuTarget, CChangeObserver
 		std::string channelName;
 		CMenuForwarder *forwarders[9];
 		CMenuOptionNumberChooser *nc;
+		// The chooser's minutes are the last pick, written once the menu is left.
+		bool chooserPicked;
 		CChannelEventList evtlist;
 		struct timespec monitorLifeTime;
 		t_channel_id channelId;
@@ -60,7 +62,7 @@ class CAdZapMenu: public CMenuTarget, CChangeObserver
 	public:
 		static CAdZapMenu *getInstance();
 		int exec(CMenuTarget * parent, const std::string & actionKey);
-		bool changeNotify(const neutrino_locale_t, void * data);
+		bool changeNotify(const neutrino_locale_t, void *);
 		bool isActive() { return (armed || monitor); };
 		void Zap_On_Activation(t_channel_id channel_id);
 };

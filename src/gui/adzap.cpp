@@ -71,6 +71,8 @@ CAdZapMenu::CAdZapMenu()
 	armed = false;
 	monitor = false;
 	alerted = false;
+	nc = NULL;
+	chooserPicked = false;
 
 	pthread_t thr;
 	if (pthread_create(&thr, 0, CAdZapMenu::Run, this))
@@ -301,15 +303,15 @@ int CAdZapMenu::exec(CMenuTarget *parent, const std::string & actionKey)
 	}
 	if (actionKey.length() == 1)
 	{
-		g_settings.adzap_zapBackPeriod = actionKey[0] - '0';
+		writeRow("adzap_zapBackPeriod", to_string(60 * (actionKey[0] - '0')), true);
 		for (int shortcut = 1; shortcut < 10; shortcut++)
 		{
-			bool selected = (g_settings.adzap_zapBackPeriod == shortcut);
+			bool selected = (g_settings.adzap_zapBackPeriod == 60 * shortcut);
 			forwarders[shortcut - 1]->setMarked(selected);
 			forwarders[shortcut - 1]->iconName_Info_right = selected ? NEUTRINO_ICON_MARKER_DIALOG_OK : NULL;
 		}
 		nc->setMarked(false);
-		g_settings.adzap_zapBackPeriod *= 60;
+		chooserPicked = false;
 		return menu_return::RETURN_REPAINT;
 	}
 
@@ -356,7 +358,9 @@ void CAdZapMenu::ShowMenu()
 
 	menu->addItem(GenericMenuSeparator);
 
-	int zapBackPeriod = g_settings.adzap_zapBackPeriod / 60;
+	const int atOpen = g_settings.adzap_zapBackPeriod / 60;
+	int zapBackPeriod = atOpen;
+	chooserPicked = false;
 	nc = new CMenuOptionNumberChooser(minute, &zapBackPeriod, true, 10, 120, this, CRCInput::RC_0);
 	nc->setMarked(g_settings.adzap_zapBackPeriod / 60 > 9);
 	nc->setHint(NEUTRINO_ICON_HINT_ADZAP, "");
@@ -366,13 +370,14 @@ void CAdZapMenu::ShowMenu()
 	menu->exec(NULL, "");
 	menu->hide();
 	delete menu;
+	if (chooserPicked && zapBackPeriod != atOpen)
+		writeRow("adzap_zapBackPeriod", to_string(zapBackPeriod * 60), true);
 	Update();
 }
 
-bool CAdZapMenu::changeNotify(const neutrino_locale_t, void * data)
+bool CAdZapMenu::changeNotify(const neutrino_locale_t, void *)
 {
-	int z = (*(int *)data);
-	g_settings.adzap_zapBackPeriod = z * 60;
+	chooserPicked = true;
 	for (int shortcut = 1; shortcut < 10; shortcut++)
 		forwarders[shortcut - 1]->setMarked(false);
 	nc->setMarked(true);

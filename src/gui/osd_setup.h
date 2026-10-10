@@ -48,7 +48,6 @@ class COsdSetup : public CMenuTarget, public CChangeObserver
 		CMenuWidget *osd_menu;
 		CMenuWidget *submenu_menus, *osd_menu_colors;
 		CMenuForwarder *mfWindowSize;
-		char window_size_value[10];
 		CComponentsShapeSquare *win_demo;
 		int width;
 		int is_wizard;

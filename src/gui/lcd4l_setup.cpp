@@ -45,10 +45,8 @@
 #include <gui/widget/menue_options.h>
 #include <gui/widget/settingitem.h>
 
-#include <coreapi/base/apply.h>
 #include <coreapi/box/apply_lcd4l.h>
 #include <coreapi/box/applyworker.h>
-#include <coreapi/settings/settings.h>
 
 #include <gui/lcd4l_setup.h>
 
@@ -58,25 +56,6 @@
 #include <driver/screen_max.h>
 
 #include "driver/lcd4l.h"
-
-const CMenuOptionChooser::keyval LCD4L_DPF_SKIN_OPTIONS[] =
-{
-	{ 0, LOCALE_LCD4L_SKIN_0 },
-	{ 1, LOCALE_LCD4L_SKIN_1 },
-	{ 2, LOCALE_LCD4L_SKIN_2 },
-	{ 3, LOCALE_LCD4L_SKIN_3 },
-	{ 4, LOCALE_LCD4L_SKIN_4 },
-	{ 100, LOCALE_LCD4L_SKIN_100 }
-};
-#define LCD4L_DPF_SKIN_OPTION_COUNT (sizeof(LCD4L_DPF_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
-
-const CMenuOptionChooser::keyval LCD4L_SPF_SKIN_OPTIONS[] =
-{
-	{ 0, LOCALE_LCD4L_SKIN_0 },
-	{ 4, LOCALE_LCD4L_SKIN_4 },
-	{ 100, LOCALE_LCD4L_SKIN_100 }
-};
-#define LCD4L_SPF_SKIN_OPTION_COUNT (sizeof(LCD4L_SPF_SKIN_OPTIONS)/sizeof(CMenuOptionChooser::keyval))
 
 using namespace sigc;
 
@@ -140,22 +119,6 @@ int CLCD4lSetup::exec(CMenuTarget *parent, const std::string &actionkey)
 	res = show();
 
 	return res;
-}
-
-bool CLCD4lSetup::changeNotify(const neutrino_locale_t OptionName, void * /*data*/)
-{
-	/* The items built by hand edit the setting itself, so the group is all that is left to tell. */
-	const char *key = NULL;
-	if (ARE_LOCALES_EQUAL(OptionName, LOCALE_LCD4L_SKIN))
-		key = "lcd4l_skin";
-
-	if (key != NULL)
-	{
-		const coreapi::Status st = coreapi::applyKey(key);
-		if (st != coreapi::Status::Ok && st != coreapi::Status::Busy)
-			dprintf(DEBUG_NORMAL, "[lcd4l] %s was not applied\n", key);
-	}
-	return false;
 }
 
 int CLCD4lSetup::show()
@@ -238,18 +201,13 @@ int CLCD4lSetup::showTypeSetup()
 {
 	int shortcut = 1;
 
-	CMenuOptionChooser *mc;
-
 	CMenuWidget *typeSetup = new CMenuWidget(LOCALE_LCD4L_DISPLAY_TYPE_SETUP, NEUTRINO_ICON_SETTINGS, width);
 	typeSetup->addIntroItems(); //FIXME: show lcd4l display type
 
-	// Two lists of skins, by the panel: a list that depends on another setting is not one a row states yet.
-	if (g_settings.lcd4l_display_type == CLCD4l::DPF320x240)
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &g_settings.lcd4l_skin, LCD4L_DPF_SKIN_OPTIONS, LCD4L_DPF_SKIN_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
-	else
-		mc = new CMenuOptionChooser(LOCALE_LCD4L_SKIN, &g_settings.lcd4l_skin, LCD4L_SPF_SKIN_OPTIONS, LCD4L_SPF_SKIN_OPTION_COUNT, true, this, CRCInput::convertDigitToKey(shortcut++));
-	mc->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SKIN);
-	typeSetup->addItem(mc);
+	// The panel that decides which skins the row offers is chosen in the menu above.
+	CMenuItem *skin = addSetting(typeSetup, "lcd4l_skin", true, NULL, CRCInput::convertDigitToKey(shortcut++));
+	if (skin)
+		skin->setHint(NEUTRINO_ICON_HINT_LCD4LINUX, LOCALE_MENU_HINT_LCD4L_SKIN);
 
 	CMenuItem *skin_radio = addSetting(typeSetup, "lcd4l_skin_radio", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	if (skin_radio)

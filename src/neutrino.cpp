@@ -7096,8 +7096,13 @@ bool CNeutrinoApp::StartPip(const t_channel_id channel_id, int pip)
 
 int CNeutrinoApp::pip_recalc_pos_x(int x)
 {
+	return pip_recalc_pos_x(x, g_settings.pip_width, g_settings.pip_rotate_lastpos);
+}
+
+int CNeutrinoApp::pip_recalc_pos_x(int x, int width, int pos)
+{
 	int new_x = x;
-	switch(g_settings.pip_rotate_lastpos)
+	switch(pos)
 	{
 		case PIP_UP_LEFT:
 		case PIP_DOWN_LEFT:
@@ -7105,7 +7110,7 @@ int CNeutrinoApp::pip_recalc_pos_x(int x)
 			break;
 		case PIP_UP_RIGHT:
 		case PIP_DOWN_RIGHT:
-			new_x = g_settings.screen_width - g_settings.pip_width - x;
+			new_x = g_settings.screen_width - width - x;
 			break;
 		case PIP_NO_POS:
 		default:
@@ -7116,8 +7121,13 @@ int CNeutrinoApp::pip_recalc_pos_x(int x)
 
 int CNeutrinoApp::pip_recalc_pos_y(int y)
 {
+	return pip_recalc_pos_y(y, g_settings.pip_height, g_settings.pip_rotate_lastpos);
+}
+
+int CNeutrinoApp::pip_recalc_pos_y(int y, int height, int pos)
+{
 	int new_y = y;
-	switch(g_settings.pip_rotate_lastpos)
+	switch(pos)
 	{
 		case PIP_UP_LEFT:
 		case PIP_UP_RIGHT:
@@ -7125,7 +7135,7 @@ int CNeutrinoApp::pip_recalc_pos_y(int y)
 			break;
 		case PIP_DOWN_RIGHT:
 		case PIP_DOWN_LEFT:
-			new_y = g_settings.screen_height - g_settings.pip_height - y;
+			new_y = g_settings.screen_height - height - y;
 			break;
 		case PIP_NO_POS:
 		default:

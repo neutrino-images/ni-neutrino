@@ -184,10 +184,56 @@
 #include <system/helpers.h>
 #include <system/debug.h>
 #include <coreapi/settings/settings.h>
+#include <algorithm>
+#include <map>
 #include <utility>
 #include <vector>
 
 using namespace std;
+
+namespace
+{
+
+std::vector<std::string> pluginList(const std::string &key)
+{
+	std::vector<std::string> names;
+	coreapi::Result<std::string> now = coreapi::settings::get(key);
+	if (!now.ok())
+		return names;
+	std::vector<std::string> parts;
+	coreapi::settings::splitOn(now.value(), ',', parts);
+	for (size_t i = 0; i < parts.size(); i++)
+		if (!parts[i].empty())
+			names.push_back(parts[i]);
+	return names;
+}
+
+// Callers name a mode by its address, writes need its row.
+std::string rowKey(const int *mode)
+{
+	static std::map<long, std::string> keys;
+	const int *first = g_settings.personalize;
+	if (mode == NULL || mode < first || mode >= first + SNeutrinoSettings::P_SETTINGS_MAX)
+		return std::string();
+	if (keys.empty())
+	{
+		coreapi::Result<std::vector<coreapi::Descriptor> > rows = coreapi::settings::schema();
+		if (rows.ok())
+		{
+			const std::vector<coreapi::Descriptor> &all = rows.value();
+			for (size_t i = 0; i < all.size(); i++)
+			{
+				const coreapi::FieldRef &f = all[i].field;
+				if (f.origin == coreapi::FieldOrigin::Element && f.extra != NULL && f.name != NULL && strcmp(f.name, "personalize") == 0)
+					keys[f.extra->index] = all[i].key;
+			}
+		}
+	}
+	std::map<long, std::string>::const_iterator it = keys.find((long) (mode - first));
+	return it != keys.end() ? it->second : std::string();
+}
+
+} // namespace
 
 const CMenuOptionChooser::keyval PERSONALIZE_MODE_OPTIONS[CPersonalizeGui::PERSONALIZE_MODE_MAX] =
 {
@@ -218,6 +264,10 @@ CPersonalizeGui::CPersonalizeGui() : CPINProtection(g_settings.personalize_pinco
 	show_pin_setup = false;
 	user_menu_notifier = NULL;
 	tmpW = NULL;
+	options_widget = NULL;
+	uMenu = NULL;
+	customkey_offset = 0;
+	built_pinstatus = g_settings.personalize[SNeutrinoSettings::P_MAIN_PINSTATUS];
 	v_observ.clear();
 	options_count = 0;
 }
@@ -309,14 +359,6 @@ int CPersonalizeGui::exec(CMenuTarget* parent, const string & actionKey)
 		return res;
 	}
 
-	if (actionKey=="restore") {
-		ShowPersonalizationMenu	();
-		return menu_return::RETURN_EXIT_ALL;
-	}
-
-	//also handle pin access
-	handleSetting(&g_settings.personalize[SNeutrinoSettings::P_MAIN_PINSTATUS]);
-
 	//pin protected access to personalize menu also if found any pin protected items
 	bool is_pin_protected = g_settings.personalize[SNeutrinoSettings::P_MAIN_PINSTATUS];
 
@@ -328,7 +370,13 @@ int CPersonalizeGui::exec(CMenuTarget* parent, const string & actionKey)
 	}
 	if (!is_pin_protected){
 		res = ShowPersonalizationMenu();
-		SaveAndExit();
+		if (haveChangedSettings())
+		{
+			CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT)); // UTF-8
+			hintBox.paint();
+			ApplySettings();
+			hintBox.hide();
+		}
 	}
 
 	return res;
@@ -371,11 +419,12 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 		ShowUserMenu();
 	}
 	CMenuWidget* plMenu = NULL;
-	int pcount = g_Plugins->getNumberOfPlugins();
-	if (!pcount)
-		pcount = 1;
-	std::string pldesc[pcount];
-	int pltype[pcount];
+	// Plugins can be reloaded while the menu is open, so the leave works on what was shown.
+	const int pcount = show_pluginmenu ? g_Plugins->getNumberOfPlugins() : 0;
+	std::vector<std::string> pldesc(pcount);
+	std::vector<std::string> plfile(pcount);
+	std::vector<int> pltype(pcount);
+	std::vector<int> plopened(pcount);
 	if (show_pluginmenu)
 	{
 		if (!show_usermenu)
@@ -383,7 +432,12 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 		plMenu = new CMenuWidget(LOCALE_PERSONALIZE_HEAD, NEUTRINO_ICON_PERSONALIZE, width, MN_WIDGET_ID_PERSONALIZE_PLUGINS);
 		pMenu->addItem(new CMenuForwarder(LOCALE_PERSONALIZE_PLUGINS, true, NULL, plMenu, NULL, CRCInput::RC_blue));
 
-		ShowPluginMenu(plMenu, pldesc, pltype);
+		ShowPluginMenu(plMenu, pcount, pldesc.data(), pltype.data());
+		for (int i = 0; i < pcount; i++)
+		{
+			plopened[i] = pltype[i];
+			plfile[i] = g_Plugins->getFileName(i);
+		}
 	}
 
 	//help
@@ -392,27 +446,43 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 
 	int res = pMenu->exec(NULL, "");
 	if (show_pluginmenu) {
-		// A plugin has one type, so the five lists are one write: the coupling and the plugin group run once on the whole answer.
+		// Only the plugins whose type was changed in this menu are rewritten, so a change made elsewhere stays.
 		static const char *const kKeys[] = { "plugins_disabled", "plugins_game", "plugins_tool", "plugins_script", "plugins_lua" };
 		static const int kTypes[] = { CPlugins::P_TYPE_DISABLED, CPlugins::P_TYPE_GAME, CPlugins::P_TYPE_TOOL, CPlugins::P_TYPE_SCRIPT, CPlugins::P_TYPE_LUA };
-		std::string lists[5];
+		std::vector<std::string> lists[5];
+		bool changed[5] = { false, false, false, false, false };
+		bool read = false;
 		for (int i = 0; i < pcount; i++) {
+			if (pltype[i] == plopened[i] || plfile[i].empty())
+				continue;
+			if (!read) {
+				for (size_t t = 0; t < 5; t++)
+					lists[t] = pluginList(kKeys[t]);
+				read = true;
+			}
+			for (size_t t = 0; t < 5; t++) {
+				std::vector<std::string>::iterator it = std::find(lists[t].begin(), lists[t].end(), plfile[i]);
+				if (it != lists[t].end()) {
+					lists[t].erase(it);
+					changed[t] = true;
+				}
+			}
 			for (size_t t = 0; t < 5; t++) {
 				if (!(pltype[i] & kTypes[t]))
 					continue;
-				if (!lists[t].empty())
-					lists[t] += ",";
-				lists[t] += g_Plugins->getFileName(i);
+				lists[t].push_back(plfile[i]);
+				changed[t] = true;
 				break;
 			}
 		}
 		std::vector<std::pair<std::string, std::string> > members;
-		for (size_t t = 0; t < 5; t++)
-			members.push_back(std::make_pair(std::string(kKeys[t]), lists[t]));
-		coreapi::settings::Refusals failed;
-		coreapi::settings::writeBatch(members, failed, true);
-		for (size_t f = 0; f < failed.size(); f++)
-			dprintf(DEBUG_NORMAL, "[personalize] %s not written: %s\n", failed[f].first.c_str(), failed[f].second.message.c_str());
+		for (size_t t = 0; t < 5; t++) {
+			if (!changed[t])
+				continue;
+			members.push_back(std::make_pair(std::string(kKeys[t]), coreapi::settings::joinOn(lists[t], ',')));
+		}
+		if (!members.empty())
+			writeRows(members, true);
 	}
 
 	if (show_usermenu)
@@ -455,7 +525,7 @@ void CPersonalizeGui::ShowUserMenu()
 
 	uMenu->addIntroItems(LOCALE_USERMENUS_HEAD);
 
-	uMenu->addItem(new CMenuOptionChooser(LOCALE_PERSONALIZE_USERMENU_SHOW_CANCEL, &g_settings.personalize[SNeutrinoSettings::P_UMENU_SHOW_CANCEL], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true));
+	addSetting(uMenu, "personalize_usermenu_show_cancel");
 
 	uMenu->addItem(GenericMenuSeparatorLine);
 	//define usermenu items
@@ -469,9 +539,10 @@ void CPersonalizeGui::ShowUserMenu()
 	}
 	user_menu_notifier = new CUserMenuNotifier(v_umenu_fw[0], v_umenu_fw[1], v_umenu_fw[2], v_umenu_fw[3]);
 
-	int  buttons[USERMENU_ITEMS_COUNT] = { SNeutrinoSettings::P_MAIN_RED_BUTTON, SNeutrinoSettings::P_MAIN_GREEN_BUTTON, SNeutrinoSettings::P_MAIN_YELLOW_BUTTON, SNeutrinoSettings::P_MAIN_BLUE_BUTTON };
-	for (int i = 0; i < USERMENU_ITEMS_COUNT; i++)
-		uMenu->addItem(new CMenuOptionChooser(usermenu[i].menue_title, &g_settings.personalize[buttons[i]], PERSONALIZE_ACTIVE_MODE_OPTIONS, PERSONALIZE_ACTIVE_MODE_MAX, true, user_menu_notifier));
+	addSetting(uMenu, "personalize_redbutton", true, user_menu_notifier);
+	addSetting(uMenu, "personalize_greenbutton", true, user_menu_notifier);
+	addSetting(uMenu, "personalize_yellowbutton", true, user_menu_notifier);
+	addSetting(uMenu, "personalize_bluebutton", true, user_menu_notifier);
 
 	//add usermenu items
 	uMenu->addItem(new CMenuSeparator(CMenuSeparator::ALIGN_RIGHT | CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_USERMENU_NAME));
@@ -484,22 +555,18 @@ void CPersonalizeGui::ShowUserMenu()
 	CMenuWidget *pluginSelectionMenu = new CMenuWidget(LOCALE_PERSONALIZE_USERMENU_PLUGIN_TYPES, NEUTRINO_ICON_SETTINGS);
 	pluginSelectionMenu->addIntroItems(LOCALE_MAINMENU_SETTINGS);
 
-	CMenuOptionChooser * /*oc = NULL;*/
-	oc = new CMenuOptionChooser(LOCALE_MAINMENU_GAMES, &g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_GAMES], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_GAMES);
-	pluginSelectionMenu->addItem(oc);
-
-	oc = new CMenuOptionChooser(LOCALE_MAINMENU_TOOLS, &g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_TOOLS], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_TOOLS);
-	pluginSelectionMenu->addItem(oc);
-
-	oc = new CMenuOptionChooser(LOCALE_MAINMENU_SCRIPTS, &g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_SCRIPTS], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_SCRIPTS);
-	pluginSelectionMenu->addItem(oc);
-
-	oc = new CMenuOptionChooser(LOCALE_MAINMENU_LUA, &g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_LUA], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true);
-	oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_LUA);
-	pluginSelectionMenu->addItem(oc);
+	CMenuItem *oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_games");
+	if (oc)
+		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_GAMES);
+	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_tools");
+	if (oc)
+		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_TOOLS);
+	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_scripts");
+	if (oc)
+		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_SCRIPTS);
+	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_lua");
+	if (oc)
+		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_LUA);
 
 	uMenu->addItem(new CMenuDForwarder(LOCALE_PERSONALIZE_USERMENU_PLUGIN_TYPES, true, NULL, pluginSelectionMenu, NULL, CRCInput::convertDigitToKey(uMenu_shortcut++)));
 
@@ -531,13 +598,12 @@ const CMenuOptionChooser::keyval PERSONALIZE_PLUGINTYPE_OPTIONS[PERSONALIZE_PLUG
 };
 
 //init plugin settings
-void CPersonalizeGui::ShowPluginMenu(CMenuWidget* p_widget, std::string da[], int ia[])
+void CPersonalizeGui::ShowPluginMenu(CMenuWidget* p_widget, int count, std::string da[], int ia[])
 {
 	p_widget->addIntroItems(LOCALE_PERSONALIZE_PLUGINS);
 
 	uint  d_key = 1;
-	int pcount = g_Plugins->getNumberOfPlugins();
-	for (int i = 0; i < pcount; i++)
+	for (int i = 0; i < count; i++)
 	{
 		ia[i] = g_Plugins->getType(i);
 		da[i] = g_Plugins->getName(i);
@@ -563,6 +629,7 @@ int CPersonalizeGui::ShowMenuOptions(const int& widget)
 	//reuqired in changeNotify()
 	options_count = 0;
 	tmpW = pm;
+	options_widget = v_widget[widget];
 	//*************************
 
 	//subhead
@@ -586,24 +653,27 @@ int CPersonalizeGui::ShowMenuOptions(const int& widget)
 					{
 						//get locale name and personalize mode
 						neutrino_locale_t name = v_item[i].locale_name;
-						int* p_mode = v_item[i].personalize_mode;
+						int mode = *v_item[i].personalize_mode;
 
-						//found observer item and if found, then define 'this' as observer for current option chooser and run changeNotify
+						//found observer item and if found, then define 'this' as observer for current option chooser
 						bool is_observer = isObserver(v_item[i].widget, v_item[i].menuItem) ? true : false;
 						CChangeObserver* observer = is_observer ? this : NULL;
-						CMenuOptionChooser * opt = new CMenuOptionChooser(name, p_mode, PERSONALIZE_MODE_OPTIONS, PERSONALIZE_MODE_MAX, v_item[i].menuItem->current_active || is_observer, observer);
-						if (is_observer)
-							changeNotify(name, (void*)p_mode);
+						CMenuOptionChooser *opt = addChoiceSetting(pm, v_item[i].key.c_str(), v_item[i].menuItem->current_active || is_observer, observer);
+						if (opt == NULL)
+						{
+							dprintf(DEBUG_NORMAL, "[personalize] no row for %s\n", g_Locale->getText(name));
+							continue;
+						}
+						opt->setName(name);
 
 						bool active_observer = hasActiveObserver(v_item[i].widget, v_item[i].locale_name);
-						if (isObservedItem(v_item[i].widget, v_item[i].locale_name) && (*p_mode == PERSONALIZE_MODE_NOTVISIBLE || active_observer))
+						if (isObservedItem(v_item[i].widget, v_item[i].locale_name) && (mode == PERSONALIZE_MODE_NOTVISIBLE || active_observer))
 						{
-							if (active_observer)
-								opt->setOption(PERSONALIZE_MODE_NOTVISIBLE);
+							// Nobody asked for this write, so a refusal is only logged.
+							if (active_observer && mode != PERSONALIZE_MODE_NOTVISIBLE)
+								writeRow(v_item[i].key, to_string(PERSONALIZE_MODE_NOTVISIBLE), false);
 							opt->setActive(false);
 						}
-
-						pm->addItem(opt); //add option chooser
 					}
 					else
 						pm->addItem(v_item[i].menuItem); //separator
@@ -617,7 +687,17 @@ int CPersonalizeGui::ShowMenuOptions(const int& widget)
 					itm_name += g_Locale->getText(LOCALE_PERSONALIZE_PINSTATUS);
 
 					if (v_item[i].personalize_mode != NULL)
-						pm->addItem(new CMenuOptionChooser(itm_name.c_str(), v_item[i].personalize_mode, PERSONALIZE_PROTECT_MODE_OPTIONS, PERSONALIZE_PROTECT_MODE_MAX, v_item[i].menuItem->active));
+					{
+						CMenuOptionChooser *opt = addChoiceSetting(pm, v_item[i].key.c_str(), v_item[i].menuItem->active);
+						if (opt == NULL)
+						{
+							dprintf(DEBUG_NORMAL, "[personalize] no row for %s\n", itm_name.c_str());
+							continue;
+						}
+						opt->setName(itm_name);
+						// The row also allows 1, which an entry opening a whole menu is not offered.
+						opt->setOptions(PERSONALIZE_PROTECT_MODE_OPTIONS, PERSONALIZE_PROTECT_MODE_MAX);
+					}
 				}
 
 				//only show in personalize menu, usefull to hide separators in menu, but visible only in personalizing menu
@@ -630,6 +710,8 @@ int CPersonalizeGui::ShowMenuOptions(const int& widget)
 	options_count = pm->getItemsCount();
 	int res = pm->exec (NULL, "");
 	delete pm;
+	tmpW = NULL;
+	options_widget = NULL;
 	return res;
 }
 
@@ -710,13 +792,14 @@ bool CPersonalizeGui::changeNotify(const neutrino_locale_t locale, void *data)
 					if (opt_name == g_Locale->getText(v_observ[j].to_observ_locale))
 					{
 						//and if found an observed item, then set properties
+						const std::string key = keyOf(options_widget, v_observ[j].to_observ_locale);
 						if (opt_val == PERSONALIZE_MODE_VISIBLE || opt_val == PERSONALIZE_MODE_PIN)
 						{
 							chooser->setActive(false);
-							chooser->setOption(PERSONALIZE_MODE_NOTVISIBLE);
+							writeRow(key, to_string(PERSONALIZE_MODE_NOTVISIBLE), true);
 						}else{
 							chooser->setActive(true);
-							chooser->setOption(PERSONALIZE_MODE_VISIBLE);
+							writeRow(key, to_string(PERSONALIZE_MODE_VISIBLE), true);
 						}
 						chooser->paint(false);
 					}
@@ -743,33 +826,18 @@ void CPersonalizeGui::ShowHelpPersonalize()
 
 void CPersonalizeGui::ApplySettings()
 {
-	// replace old settings with new settings
-	for (uint i = 0; i < v_int_settings.size(); i++)
-		v_int_settings[i].old_val = *v_int_settings[i].p_val;
 	for (int i = 0; i<(widget_count); i++)
 		v_widget[i]->resetWidget();
 
 	addPersonalizedItems();
 }
 
-void CPersonalizeGui::SaveAndExit()
+std::string CPersonalizeGui::keyOf(CMenuWidget* widget, const neutrino_locale_t locale)
 {
-	// Save the settings and left menu, if user wants to!
-	if (haveChangedSettings())
-	{
-		if (ShowMsg(LOCALE_PERSONALIZE_HEAD, g_Locale->getText(LOCALE_PERSONALIZE_APPLY_SETTINGS), CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_QUESTION) == CMsgBox::mbrYes)
-		{
-			CHintBox hintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_MAINSETTINGS_SAVESETTINGSNOW_HINT)); // UTF-8
-			hintBox.paint();
-			ApplySettings();
-			hintBox.hide();
-		}
-		else
-		{
-			if (ShowMsg(LOCALE_PERSONALIZE_HEAD, g_Locale->getText(LOCALE_MESSAGEBOX_DISCARD), CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo, NEUTRINO_ICON_QUESTION) == CMsgBox::mbrYes)
-				exec(NULL, "restore");
-		}
-	}
+	for (uint i = 0; i < v_item.size(); i++)
+		if (v_item[i].widget == widget && v_item[i].locale_name == locale)
+			return v_item[i].key;
+	return std::string();
 }
 
 
@@ -841,21 +909,9 @@ void CPersonalizeGui::addItem(CMenuWidget *widget, CMenuItem *menu_Item, const i
 
 	CMenuForwarder *fw = static_cast <CMenuForwarder*> (menu_Item);
 
-	menu_item_t item = {widget, menu_Item, defaultselected, fw->getTextLocale(), (int*)personalize_mode, item_mode, observer_Item, disable_condition};
-
-	if (item_mode == PERSONALIZE_SHOW_AS_ACCESS_OPTION)
-	{
-		v_item.push_back(item);
-		handleSetting((int*)personalize_mode);
-	}
-	else if (personalize_mode != NULL)
-	{
-		v_item.push_back(item);
-		if (item_mode != PERSONALIZE_SHOW_NO) //handle only relevant items
-			handleSetting((int*)personalize_mode);
-	}
-	else if (personalize_mode == NULL)
-		v_item.push_back(item);
+	menu_item_t item = {widget, menu_Item, defaultselected, fw->getTextLocale(), personalize_mode, item_mode, observer_Item, disable_condition,
+			    rowKey(personalize_mode), personalize_mode != NULL ? *personalize_mode : 0, menu_Item->directKey};
+	v_item.push_back(item);
 }
 
 //overloaded version from 'addSeparator', first parameter is an id from widget collection 'v_widget',
@@ -869,10 +925,10 @@ void CPersonalizeGui::addSeparator(const int& widget_id, const neutrino_locale_t
 void CPersonalizeGui::addSeparator(CMenuWidget &widget, const neutrino_locale_t locale_text, const int& item_mode)
 {
 	if (locale_text == NONEXISTANT_LOCALE) {
-		menu_item_t to_add_sep = {&widget, GenericMenuSeparatorLine, false, locale_text, NULL, item_mode, NULL, DCOND_MODE_NONE };
+		menu_item_t to_add_sep = {&widget, GenericMenuSeparatorLine, false, locale_text, NULL, item_mode, NULL, DCOND_MODE_NONE, std::string(), 0, CRCInput::RC_nokey };
 		v_item.push_back(to_add_sep);
 	} else {
-		menu_item_t to_add_sep = {&widget, new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, locale_text), false, locale_text, NULL, item_mode, NULL, DCOND_MODE_NONE };
+		menu_item_t to_add_sep = {&widget, new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, locale_text), false, locale_text, NULL, item_mode, NULL, DCOND_MODE_NONE, std::string(), 0, CRCInput::RC_nokey };
 		v_item.push_back(to_add_sep);
 	}
 }
@@ -907,6 +963,11 @@ void CPersonalizeGui::addPersonalizedItems()
 	//get current mode of personlize itself
 	int in_pinmode = hasPinItems() ? PERSONALIZE_PROTECT_MODE_PIN_PROTECTED : PERSONALIZE_PROTECT_MODE_NOT_PROTECTED;
 
+	built_pinstatus = g_settings.personalize[SNeutrinoSettings::P_MAIN_PINSTATUS];
+	for (uint i = 0; i < v_item.size(); i++)
+		if (v_item[i].personalize_mode != NULL)
+			v_item[i].built_mode = *v_item[i].personalize_mode;
+
 	for (uint i = 0; i < v_item.size(); i++)
 	{
 		int i_mode = v_item[i].item_mode;
@@ -934,7 +995,7 @@ void CPersonalizeGui::addPersonalizedItems()
 
 				bool use_pin 		= false;
 				int p_mode 		= *v_item[i].personalize_mode;
-				neutrino_msg_t d_key 	= fw->directKey;
+				neutrino_msg_t d_key 	= v_item[i].direct_key;
 				bool add_shortcut 	= false;
 
 
@@ -1043,19 +1104,13 @@ neutrino_msg_t CPersonalizeGui::getShortcut(const int & shortcut_num, neutrino_m
 		return alternate_rc_key;
 }
 
-//handle/collects old int settings
-void  CPersonalizeGui::handleSetting(int *setting)
-{
-	settings_int_t val	= {*setting, setting};
-	v_int_settings.push_back(val);
-}
-
-//check for setup changes
+// Also true after a write made elsewhere, so the menus never keep stale modes.
 bool  CPersonalizeGui::haveChangedSettings()
 {
-	//compare old settings with current settings
-	for (uint i = 0; i < v_int_settings.size(); i++)
-		if (v_int_settings[i].old_val != *v_int_settings[i].p_val)
+	if (built_pinstatus != g_settings.personalize[SNeutrinoSettings::P_MAIN_PINSTATUS])
+		return true;
+	for (uint i = 0; i < v_item.size(); i++)
+		if (v_item[i].personalize_mode != NULL && v_item[i].built_mode != *v_item[i].personalize_mode)
 			return true;
 
 	return false;
@@ -1064,24 +1119,19 @@ bool  CPersonalizeGui::haveChangedSettings()
 //checks for pin protected item
 bool  CPersonalizeGui::hasPinItems()
 {
-	for (uint i = 0; i < v_int_settings.size(); i++)
-		if (*v_int_settings[i].p_val == PERSONALIZE_MODE_PIN || *v_int_settings[i].p_val == PERSONALIZE_PROTECT_MODE_PIN_PROTECTED)
+	for (uint i = 0; i < v_item.size(); i++)
+	{
+		if (v_item[i].personalize_mode == NULL || v_item[i].item_mode == PERSONALIZE_SHOW_NO)
+			continue;
+		const int mode = *v_item[i].personalize_mode;
+		if (mode == PERSONALIZE_MODE_PIN || mode == PERSONALIZE_PROTECT_MODE_PIN_PROTECTED)
 		{
 			printf("[neutrino personalize] %s found pin protected item...[item %d]\n", __FUNCTION__, i);
 			return true;
 		}
+	}
 
 	return false;
-}
-
-//restore old settings
-void CPersonalizeGui::restoreSettings()
-{
-	//restore settings with current settings
-	for (uint i = 0; i < v_int_settings.size(); i++)
-		*v_int_settings[i].p_val = v_int_settings[i].old_val;
-
-	exec(NULL, "restore");
 }
 
 

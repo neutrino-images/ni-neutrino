@@ -202,6 +202,9 @@ class CFrameBuffer : public sigc::trackable
 		unsigned int getScreenHeight(const bool& real = false) const;
 		unsigned int getWindowWidth(bool force_small = false);
 		unsigned int getWindowHeight(bool force_small = false);
+		// The size a window of percent of the screen gets, for a size not in the settings yet.
+		unsigned int windowWidth(int percent);
+		unsigned int windowHeight(int percent);
 		unsigned int getScreenX();
 		unsigned int getScreenY();
 

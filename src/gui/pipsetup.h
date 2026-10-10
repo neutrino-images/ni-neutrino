@@ -19,7 +19,11 @@ class CPipSetup : public CMenuTarget
 		int minw;
 		int minh;
 
-		int *gx, *gy, *gw, *gh, *gp;
+		bool radio;
+		void load();
+		void store(const int before[5]);
+		int placedX() const;
+		int placedY() const;
 		void paint();
 		void hide();
 		void clear();

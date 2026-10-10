@@ -26,6 +26,9 @@
 #include <neutrino.h>
 #include <gui/filebrowser.h>
 #include <gui/widget/keyboard_input.h>
+#include <gui/widget/settingitem.h>
+
+#include <coreapi/settings/settings.h>
 
 CXMLTVSetup::CXMLTVSetup()
 {
@@ -175,18 +178,16 @@ int CXMLTVSetup::Show()
 
 	if (changed)
 	{
-		std::list<std::string> chosen;
+		std::vector<std::string> chosen;
 		for (int i = item_offset; i < m->getItemsCount(); i++)
 		{
 			CMenuItem *item = m->getItem(i);
 			CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
-			chosen.push_back(f->getName());
+			const std::string name = f->getName();
+			if (!name.empty())
+				chosen.push_back(name);
 		}
-		{
-			// A request reads the list under this lock, so it is replaced under it.
-			CSettingsTextGuard lock;
-			g_settings.xmltv_xml = chosen;
-		}
+		writeRow("xmltv_xml", coreapi::settings::joinOn(chosen, '\n'), true);
 
 		CNeutrinoApp::getInstance()->xmltv_xml_readepg();
 	}

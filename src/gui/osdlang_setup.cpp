@@ -57,7 +57,6 @@
 #include <coreapi/box/apply_lang.h>
 #include <coreapi/settings/menuspec.h>
 
-#include <algorithm>
 #include <gui/plugins.h>
 
 namespace coreapi
@@ -100,15 +99,17 @@ int COsdLangSetup::exec(CMenuTarget* parent, const std::string &actionKey)
 		parent->hide();
 
 	if (!actionKey.empty()) {
-		const std::string before = g_settings.language;
-		setSettingsText(g_settings.language, actionKey);
-		// Busy is a group whose startup phase is not reached, which the phase makes good.
+		const std::string before = settingsText(g_settings.language);
+		if (!writeRow("language", actionKey, true))
+			return menu_return::RETURN_EXIT;
+		// Busy: the startup phase loads it later.
 		const coreapi::Status s = coreapi::applyKey("language");
 		if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
 		{
 			dprintf(DEBUG_NORMAL, "[osdlang_setup] language %s not loaded, keeping %s\n", actionKey.c_str(), before.c_str());
-			setSettingsText(g_settings.language, before);
-			coreapi::applyKey("language");
+			// The catalog the box starts on when its own is gone.
+			if (!writeRow("language", before, false) && !writeRow("language", "deutsch", false))
+				dprintf(DEBUG_NORMAL, "[osdlang_setup] no language to go back to\n");
 		}
 		return menu_return::RETURN_EXIT;
 	}
@@ -132,21 +133,18 @@ int COsdLangSetup::showLocalSetup()
 	CMenuWidget osdl_setup(LOCALE_LANGUAGESETUP_OSD, NEUTRINO_ICON_LANGUAGE, width, MN_WIDGET_ID_LANGUAGESETUP_LOCALE);
 	showLanguageSetup(&osdl_setup);
 
-	CMenuForwarder * mf = new CMenuForwarder(LOCALE_LANGUAGESETUP_OSD, true, g_settings.language, &osdl_setup, NULL, CRCInput::RC_red);
-	mf->setHint("", LOCALE_MENU_HINT_OSD_LANGUAGE);
-	localSettings->addItem(mf);
+	CFollowForwarder *language = addTextForwarder(localSettings, LOCALE_LANGUAGESETUP_OSD, &osdl_setup, NULL, CRCInput::RC_red,
+						     []() { return settingsText(g_settings.language); }, "language");
+	language->setHint("", LOCALE_MENU_HINT_OSD_LANGUAGE);
 
- 	//timezone setup
-	CMenuOptionStringChooser* tzSelect = getTzItems();
-	if (tzSelect != NULL)
-		localSettings->addItem(tzSelect);
+	addSetting(localSettings, "timezone", true, NULL, CRCInput::RC_green, false, true);
 
 	//prefered audio language
 	CMenuWidget prefMenu(LOCALE_AUDIOMENU_PREF_LANGUAGES, NEUTRINO_ICON_LANGUAGE, width, MN_WIDGET_ID_LANGUAGESETUP_PREFAUDIO_LANGUAGE);
 	//call menue for prefered audio languages
 	showPrefMenu(&prefMenu);
 
-	mf = new CMenuForwarder(LOCALE_AUDIOMENU_PREF_LANGUAGES, true, NULL, &prefMenu, NULL, CRCInput::RC_yellow);
+	CMenuForwarder *mf = new CMenuForwarder(LOCALE_AUDIOMENU_PREF_LANGUAGES, true, NULL, &prefMenu, NULL, CRCInput::RC_yellow);
 	mf->setHint("", LOCALE_MENU_HINT_LANG_PREF);
 	localSettings->addItem(mf);
 
@@ -158,26 +156,6 @@ int COsdLangSetup::showLocalSetup()
 	return res;
 }
 
-
-//returns items for selectable timezones
-CMenuOptionStringChooser* COsdLangSetup::getTzItems()
-{
-	// The row offers the zones this box has installed, or none where it cannot say.
-	const coreapi::Result<coreapi::MenuItemSpec> row = coreapi::menuItem("timezone");
-	if (!row.ok() || row.value().choices.empty())
-		return NULL;
-	const std::vector<coreapi::MenuChoice> &zones = row.value().choices;
-
-	/* Lives as long as the menu does, which is as long as the process: the menu
-	   is built again on every visit and the observer is a few bytes. */
-	static CApplyKeyNotifier tzObserver("timezone");
-	CMenuOptionStringChooser* tzSelect = new CMenuOptionStringChooser(LOCALE_MAINSETTINGS_TIMEZONE, &g_settings.timezone, true, &tzObserver, CRCInput::RC_green, NULL, true);
-	tzSelect->setHint("", LOCALE_MENU_HINT_TIMEZONE);
-	for (size_t i = 0; i < zones.size(); i++)
-		tzSelect->addOption(zones[i].text);
-
-	return tzSelect;
-}
 
 //shows locale setup for language selection
 void COsdLangSetup::showLanguageSetup(CMenuWidget *osdl_setup)
@@ -210,36 +188,18 @@ void COsdLangSetup::showPrefMenu(CMenuWidget *prefMenu)
 
 	addSetting(prefMenu, "auto_lang");
 
-	for(int i = 0; i < 3; i++)
+	char key[16];
+	for (int i = 0; i < 3; i++)
 	{
-		static CApplyKeyNotifier langObservers[3] = { CApplyKeyNotifier("pref_lang_0"), CApplyKeyNotifier("pref_lang_1"), CApplyKeyNotifier("pref_lang_2") };
-		CMenuOptionStringChooser * langSelect = new CMenuOptionStringChooser(LOCALE_AUDIOMENU_PREF_LANG, &g_settings.pref_lang[i], true, &langObservers[i], CRCInput::convertDigitToKey(i+1), "", true);
-		langSelect->setHint("", LOCALE_MENU_HINT_PREF_LANG);
-		// The row offers "none" and the languages of the box's table.
-		char key[16];
 		snprintf(key, sizeof(key), "pref_lang_%d", i);
-		const coreapi::Result<coreapi::MenuItemSpec> row = coreapi::menuItem(key);
-		if (row.ok())
-		{
-			const std::vector<coreapi::MenuChoice> &names = row.value().choices;
-			for (size_t n = 0; n < names.size(); n++)
-				langSelect->addOption(names[n].text);
-		}
-
-		prefMenu->addItem(langSelect);
+		addSetting(prefMenu, key, true, NULL, CRCInput::convertDigitToKey(i + 1), false, true);
 	}
 
 	prefMenu->addItem(new CMenuSeparator(CMenuSeparator::LINE | CMenuSeparator::STRING, LOCALE_AUDIOMENU_PREF_SUBS_HEAD));
 	addSetting(prefMenu, "auto_subs");
-	for(int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		CMenuOptionStringChooser * langSelect = new CMenuOptionStringChooser(LOCALE_AUDIOMENU_PREF_SUBS, &g_settings.pref_subs[i], true, NULL, CRCInput::convertDigitToKey(i+4), "", true);
-		langSelect->setHint("", LOCALE_MENU_HINT_PREF_SUBS);
-		std::map<std::string, std::string>::const_iterator it;
-		langSelect->addOption("none");
-		for(it = iso639rev.begin(); it != iso639rev.end(); ++it)
-			langSelect->addOption(it->first.c_str());
-
-		prefMenu->addItem(langSelect);
+		snprintf(key, sizeof(key), "pref_subs_%d", i);
+		addSetting(prefMenu, key, true, NULL, CRCInput::convertDigitToKey(i + 4), false, true);
 	}
 }

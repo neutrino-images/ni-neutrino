@@ -53,6 +53,7 @@
 
 #include <map>
 #include <set>
+#include <utility>
 #include <vector>
 
 extern SNeutrinoSettings g_settings;
@@ -632,6 +633,147 @@ struct SettingKeyChooser
 	}
 };
 
+/* A text row whose provider lists what it may hold, offered as that list as it was
+   when the item was made: each entry under its name and stored as its text. A
+   stored text the list lacks is shown as it is, as one more entry that writes
+   nothing. */
+class SettingTextChoice : public CChangeObserver
+{
+	protected:
+		const coreapi::MenuItemSpec spec;
+		CChangeObserver *const next;
+		CMenuWidget *const menu;
+		FollowedText text;
+		// What the chooser edits: the entry of the stored text, -1 for one the list lacks.
+		int index;
+		// The fixed names and, last, the stored text the list lacks; the chooser keeps pointers.
+		std::vector<std::string> names;
+		std::vector<CMenuOptionChooser::keyval_ext> entries;
+
+		SettingTextChoice(const coreapi::MenuItemSpec &s, CChangeObserver *observer, CMenuWidget *owner)
+			: spec(s), next(observer), menu(owner), text(s), index(-1)
+		{
+			if (!text.reread())
+				dprintf(DEBUG_NORMAL, "[settingitem] %s: no text to show\n", spec.key.c_str());
+			names.reserve(s.choices.size() + 1);
+			for (size_t i = 0; i < s.choices.size(); i++)
+				names.push_back(s.choices[i].label_text.empty() ? s.choices[i].text : s.choices[i].label_text);
+			names.push_back(std::string());
+			for (size_t i = 0; i < s.choices.size(); i++)
+			{
+				CMenuOptionChooser::keyval_ext e;
+				e.key = (int) i;
+				e.value = s.choices[i].label_key.empty() ? NONEXISTANT_LOCALE : localeFromKey(s.choices[i].label_key);
+				e.valname = s.choices[i].label_key.empty() ? names[i].c_str() : NULL;
+				entries.push_back(e);
+			}
+			CMenuOptionChooser::keyval_ext stray;
+			stray.key = -1;
+			stray.value = NONEXISTANT_LOCALE;
+			stray.valname = NULL;
+			entries.push_back(stray);
+			locate();
+		}
+
+		CChangeObserver *notifier() { return this; }
+
+		// Hands the entries to the chooser again once the stray one changed.
+		virtual void offerAgain() = 0;
+
+		// The entries the chooser offers: the stray one only while it holds the stored text.
+		size_t offered() const { return index < 0 ? entries.size() : entries.size() - 1; }
+
+		// False where the stray entry changed, which the chooser has to be handed again.
+		bool locate()
+		{
+			index = -1;
+			for (size_t i = 0; i < spec.choices.size() && index < 0; i++)
+				if (spec.choices[i].text == text.value)
+					index = (int) i;
+			const std::string stray = index < 0 ? text.value : std::string();
+			if (stray == names.back())
+				return true;
+			names.back() = stray;
+			entries.back().valname = names.back().c_str();
+			return false;
+		}
+
+	private:
+		bool store()
+		{
+			if (index < 0 || (size_t) index >= spec.choices.size())
+				return false;
+			std::string stored;
+			if (coreapi::menuTextRead(spec, g_settings, stored) && stored == spec.choices[index].text)
+				return false;
+			text.value = spec.choices[index].text;
+			const bool written = text.write();
+			if (!written)
+			{
+				dprintf(DEBUG_NORMAL, "[settingitem] %s: text not written\n", spec.key.c_str());
+				text.reread();
+			}
+			if (!locate())
+				offerAgain();
+			return written;
+		}
+
+	public:
+		bool changeNotify(const neutrino_locale_t n, void *data)
+		{
+			if (!store())
+				return false;
+			const bool r = next != NULL && next->changeNotify(n, data);
+			settleRow(spec.key, menu);
+			return r;
+		}
+		bool changeNotify(const std::string &n, void *data)
+		{
+			if (!store())
+				return false;
+			const bool r = next != NULL && next->changeNotify(n, data);
+			settleRow(spec.key, menu);
+			return r;
+		}
+		bool changeNotify(lua_State *L, const std::string &id, const std::string &action, void *data)
+		{
+			if (!store())
+				return false;
+			const bool r = next != NULL && next->changeNotify(L, id, action, data);
+			settleRow(spec.key, menu);
+			return r;
+		}
+};
+
+class CSettingTextChoice : private SettingTextChoice, public CMenuOptionChooser, public SettingFollow
+{
+	public:
+		CSettingTextChoice(const coreapi::MenuItemSpec &s, bool is_active, CChangeObserver *observer,
+				   const neutrino_msg_t direct_key, bool opens_list, CMenuWidget *owner)
+			: SettingTextChoice(s, observer, owner),
+			  CMenuOptionChooser(localeFromKey(s.label_key), &index, entries.data(), offered(), is_active,
+					     notifier(), direct_key, NULL, opens_list)
+		{
+		}
+
+		~CSettingTextChoice() { activeSet().forget(this); }
+
+		void followValue(bool on_top)
+		{
+			if (!text.follow())
+				return;
+			if (!locate())
+				offerAgain();
+			if (on_top && used && x != -1)
+				paint(selectedIn(menu, this));
+		}
+
+		void setActiveQuietly(bool a) { active = current_active = a; }
+
+	private:
+		void offerAgain() { setOptions(entries.data(), offered()); }
+};
+
 /* A key row as an item: the key's name beside the label, and the chooser behind
    it. The chooser edits the member itself, so the observer is only told that it
    changed, once the chooser has been left. */
@@ -869,14 +1011,29 @@ CMenuItem *build(CMenuWidget *menu, const char *key, ScreenActive screen, CChang
 	else if (spec.type == coreapi::ValueType::String)
 	{
 		// A row nothing names has no caption to draw, which is not a row to offer.
-		if (spec.label_key.empty())
+		if (spec.label_key.empty() && spec.label_text.empty())
 		{
 			dprintf(DEBUG_NORMAL, "[settingitem] %s: a text row without a label\n", key ? key : "(null)");
 			return NULL;
 		}
-		CSettingText *t = new CSettingText(spec, active, observer, menu, direct_key, dialog_hint1, dialog_hint2);
-		item = t;
-		follow = t;
+		if (spec.choices_from != NULL)
+		{
+			// The write takes only what the list offers, so typing a text instead would get nowhere.
+			if (spec.choices.empty())
+			{
+				dprintf(DEBUG_NORMAL, "[settingitem] %s: nothing on offer\n", key ? key : "(null)");
+				return NULL;
+			}
+			CSettingTextChoice *c = new CSettingTextChoice(spec, active, observer, direct_key, pulldown, menu);
+			item = c;
+			follow = c;
+		}
+		else
+		{
+			CSettingText *t = new CSettingText(spec, active, observer, menu, direct_key, dialog_hint1, dialog_hint2);
+			item = t;
+			follow = t;
+		}
 	}
 	else
 	{
@@ -884,6 +1041,8 @@ CMenuItem *build(CMenuWidget *menu, const char *key, ScreenActive screen, CChang
 		return NULL;
 	}
 
+	if (spec.label_key.empty() && !spec.label_text.empty())
+		item->setName(spec.label_text);
 	if (!spec.hint_key.empty())
 		item->setHint("", localeFromKey(spec.hint_key));
 
@@ -949,6 +1108,35 @@ void CFollowForwarder::follow(CMenuWidget *menu, const std::string &key, const s
 					       paint(selectedIn(menu, this));
 			       },
 			       [this](bool a) { active = current_active = a; });
+}
+
+CFollowForwarder *addTextForwarder(CMenuWidget *menu, const neutrino_locale_t name, CMenuTarget *target,
+				   const char *action_key, const neutrino_msg_t direct_key,
+				   const std::function<std::string()> &text, const std::string &key,
+				   const std::vector<std::string> &keys)
+{
+	// A forwarder keeps a pointer to a text handed to it; setOption keeps a copy.
+	CFollowForwarder *f = new CFollowForwarder(name, true, NULL, target, action_key, direct_key);
+	f->setOption(text());
+	f->follow(menu, key, keys, true, [f, text]() { f->setOption(text()); });
+	menu->addItem(f);
+	return f;
+}
+
+bool writeRows(const std::vector<std::pair<std::string, std::string> > &values, bool asked)
+{
+	coreapi::settings::Refusals failed;
+	coreapi::settings::writeBatch(values, failed, true);
+	for (size_t i = 0; i < failed.size(); i++)
+		dprintf(DEBUG_NORMAL, "[settingitem] %s not written: %s\n", failed[i].first.c_str(), failed[i].second.message.c_str());
+	if (!failed.empty() && asked)
+		ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
+	return failed.empty();
+}
+
+bool writeRow(const std::string &key, const std::string &value, bool asked)
+{
+	return writeRows(std::vector<std::pair<std::string, std::string> >(1, std::make_pair(key, value)), asked);
 }
 
 void afterApply(CMenuItem *item, const std::function<bool()> &after)

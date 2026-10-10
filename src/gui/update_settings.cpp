@@ -36,7 +36,6 @@
 #include <global.h>
 #include <neutrino.h>
 #include <neutrino_menue.h>
-#include <gui/filebrowser.h>
 #include <gui/update_check.h>
 #if ENABLE_PKG_MANAGEMENT
 #include <gui/opkg_manager.h>
@@ -56,52 +55,20 @@
 CUpdateSettings::CUpdateSettings()
 {
 	width = 40;
-#ifdef USE_SMS_INPUT
-	input_url_file = new CStringInputSMS(LOCALE_FLASHUPDATE_URL_FILE, g_settings.softupdate_url_file, 30, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, "abcdefghijklmnopqrstuvwxyz0123456789!""$%&/()=?-. ");
-#endif
 }
 
 CUpdateSettings::~CUpdateSettings()
 {
-#ifdef USE_SMS_INPUT
-	delete input_url_file;
-#endif
 }
 
-int CUpdateSettings::exec(CMenuTarget *parent, const std::string &actionKey)
+int CUpdateSettings::exec(CMenuTarget *parent, const std::string &/*actionKey*/)
 {
 	dprintf(DEBUG_DEBUG, "init software-update settings\n");
-	int res = menu_return::RETURN_REPAINT;
 
 	if (parent)
 		parent->hide();
 
-	if (actionKey == "update_dir")
-	{
-		const char *action_str = "update";
-		if (chooserDir(g_settings.update_dir, true, action_str, true))
-			printf("[neutrino] new %s dir %s\n", action_str, g_settings.update_dir.c_str());
-
-		return res;
-	}
-#ifndef USE_SMS_INPUT
-	else if (actionKey == "select_url_config_file")
-	{
-		CFileBrowser fileBrowser;
-		CFileFilter fileFilter;
-
-		fileFilter.addFilter("conf");
-		fileFilter.addFilter("urls");
-		fileBrowser.Filter = &fileFilter;
-		if (fileBrowser.exec("/var/etc") == true)
-			setSettingsText(g_settings.softupdate_url_file, fileBrowser.getSelectedFile()->Name);
-
-		return res;
-	}
-#endif
-
-	res = initMenu();
-	return res;
+	return initMenu();
 }
 
 // init options for software update
@@ -110,13 +77,8 @@ int CUpdateSettings::initMenu()
 	CMenuWidget w_upsettings(LOCALE_SERVICEMENU_UPDATE, NEUTRINO_ICON_UPDATE, width, MN_WIDGET_ID_SOFTWAREUPDATE_SETTINGS);
 	w_upsettings.addIntroItems(LOCALE_FLASHUPDATE_SETTINGS);
 
-	CMenuForwarder *fw_url = new CMenuForwarder(LOCALE_FLASHUPDATE_URL_FILE, true, g_settings.softupdate_url_file, this, "select_url_config_file", CRCInput::RC_green);
-	//fw_url->setHint("", LOCALE_MENU_HINT_XXX);
-	CMenuForwarder *fw_update_dir = new CMenuForwarder(LOCALE_EXTRA_UPDATE_DIR, true, g_settings.update_dir, this, "update_dir", CRCInput::RC_red);
-	//fw_update_dir->setHint("", LOCALE_MENU_HINT_XXX);
-	w_upsettings.addItem(fw_update_dir);
-	if (fw_url)
-		w_upsettings.addItem(fw_url);
+	addSetting(&w_upsettings, "update_dir", true, NULL, CRCInput::RC_red);
+	addSetting(&w_upsettings, "softupdate_url_file", true, NULL, CRCInput::RC_green);
 #if ENABLE_EXTUPDATE
 	addSetting(&w_upsettings, "softupdate_name_mode_backup");
 	// Only where the box offers the settings to be applied, so the line is not left alone.

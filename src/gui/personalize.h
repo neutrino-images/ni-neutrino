@@ -84,22 +84,19 @@ typedef struct mn_widget_t
 	const int width;
 } mn_widget_struct_t;
 
-typedef struct settings_int_t
-{
-	int old_val;
-	int *p_val;
-}settings_int_struct_t;
-
 typedef struct menu_item_t
 {
 	CMenuWidget *widget;
 	CMenuItem* menuItem;
 	bool default_selected;
 	neutrino_locale_t locale_name;
-	int* personalize_mode;
+	const int* personalize_mode;
 	int item_mode;
 	CMenuItem *observer_Item;
 	int condition;
+	std::string key;
+	int built_mode;
+	neutrino_msg_t direct_key;
 }menu_item_struct_t;
 
 typedef struct observ_menu_item_t
@@ -140,12 +137,10 @@ class CPersonalizeGui : public CMenuTarget, public CChangeObserver, public CPINP
 
 		int customkey_offset;
 
-		//stuff for settings handlers
-		void	handleSetting(int *setting);
-		void	restoreSettings();
 		bool	haveChangedSettings();
-
-		std::vector<settings_int_t> v_int_settings;
+		int	built_pinstatus;
+		CMenuWidget* options_widget;
+		std::string	keyOf(CMenuWidget* widget, const neutrino_locale_t locale);
 
 		std::vector<menu_item_t> v_item;
 		std::vector<CMenuWidget *> v_widget;
@@ -156,8 +151,7 @@ class CPersonalizeGui : public CMenuTarget, public CChangeObserver, public CPINP
 		void 	ShowHelpPersonalize();
 		void 	ShowPinSetup(CMenuWidget* p_widget);
 		void 	ShowUserMenu();
-		void 	ShowPluginMenu(CMenuWidget* p_widget, std::string da[], int ia[]);
-		void 	SaveAndExit();
+		void 	ShowPluginMenu(CMenuWidget* p_widget, int count, std::string da[], int ia[]);
 		void	ApplySettings();
 
 		bool	hasPinItems();

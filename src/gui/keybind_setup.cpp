@@ -258,8 +258,9 @@ int CKeybindSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 	{
 		CFileBrowser fileBrowser;
 
+		std::string dir = g_settings.backup_dir;
 		char msgtxt[1024];
-		snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), g_settings.backup_dir.c_str());
+		snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), dir.c_str());
 
 		int result = ShowMsg(LOCALE_EXTRA_SAVECONFIG, msgtxt, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel);
 		if (result == CMsgBox::mbrCancel)
@@ -267,8 +268,11 @@ int CKeybindSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 		if (result == CMsgBox::mbrNo)
 		{
 			fileBrowser.Dir_Mode = true;
-			if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
-				setSettingsText(g_settings.backup_dir, fileBrowser.getSelectedFile()->Name);
+			if (fileBrowser.exec(dir.c_str()) == true)
+			{
+				dir = fileBrowser.getSelectedFile()->Name;
+				writeRow("backup_dir", dir, true);
+			}
 			else
 				return res;
 		}
@@ -278,7 +282,7 @@ int CKeybindSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 		sms->exec(NULL, "");
 		delete sms;
 
-		std::string sname = g_settings.backup_dir + "/" + fname;
+		std::string sname = dir + "/" + fname;
 		printf("[neutrino keybind_setup] save keys: %s\n", sname.c_str());
 
 		CNeutrinoApp::getInstance()->saveKeys(sname.c_str());

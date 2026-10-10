@@ -33,8 +33,6 @@ class CInfoIconsSetup : public CMenuTarget
 {
 	private:
 		int menu();
-		CStringInputSMS * flagchooser[MODE_ICONS_NR_OF_ENTRIES];
-		CMenuForwarder * mforwarder[MODE_ICONS_NR_OF_ENTRIES];
 
 	protected:
 		int width;

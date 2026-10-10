@@ -50,8 +50,6 @@ class COsdLangSetup : public CMenuTarget
 		
 		int showLocalSetup();
 		void showPrefMenu(CMenuWidget *prefMenu);
-		
-		CMenuOptionStringChooser* getTzItems();
 
 	public:
 		COsdLangSetup(int wizard_mode = SNeutrinoSettings::WIZARD_OFF);

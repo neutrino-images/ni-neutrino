@@ -13,6 +13,11 @@
 #include <neutrino.h>
 #include <gui/pipsetup.h>
 #include <hardware/video.h>
+#include <gui/widget/settingitem.h>
+
+#include <cstdio>
+#include <utility>
+#include <vector>
 
 #define PERCENT 5
 #define XMOVE 5
@@ -26,32 +31,52 @@ CPipSetup::CPipSetup()
 {
 	frameBuffer = CFrameBuffer::getInstance();
 
-	if (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_radio)
-	{
-		gx = &g_settings.pip_radio_x;
-		gy = &g_settings.pip_radio_y;
-		gw = &g_settings.pip_radio_width;
-		gh = &g_settings.pip_radio_height;
-	}
-	else
-	{
-		gx = &g_settings.pip_x;
-		gy = &g_settings.pip_y;
-		gw = &g_settings.pip_width;
-		gh = &g_settings.pip_height;
-	}
-	gp = &g_settings.pip_rotate_lastpos;
-
-	x_coord = *gx;
-	y_coord = *gy;
-	width = *gw;
-	height = *gh;
-	pos = *gp;
+	load();
 
 	maxw = frameBuffer->getScreenWidth(true);
 	maxh = frameBuffer->getScreenHeight(true);
 	minw = maxw / 8;
 	minh = minw * 1000 / 1825;
+}
+
+void CPipSetup::load()
+{
+	radio = CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_radio;
+	x_coord = radio ? g_settings.pip_radio_x : g_settings.pip_x;
+	y_coord = radio ? g_settings.pip_radio_y : g_settings.pip_y;
+	width = radio ? g_settings.pip_radio_width : g_settings.pip_width;
+	height = radio ? g_settings.pip_radio_height : g_settings.pip_height;
+	pos = g_settings.pip_rotate_lastpos;
+}
+
+// Only what was moved, so a write made elsewhere meanwhile is not undone.
+void CPipSetup::store(const int before[5])
+{
+	std::vector<std::pair<std::string, std::string> > members;
+	const int values[5] = { x_coord, y_coord, width, height, pos };
+	const char *const tv[] = { "pip_x", "pip_y", "pip_width", "pip_height", "pip_rotate_lastpos" };
+	const char *const rd[] = { "pip_radio_x", "pip_radio_y", "pip_radio_width", "pip_radio_height", "pip_rotate_lastpos" };
+	for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++)
+	{
+		if (values[i] == before[i])
+			continue;
+		char text[16];
+		snprintf(text, sizeof(text), "%d", values[i]);
+		members.push_back(std::make_pair(std::string(radio ? rd[i] : tv[i]), std::string(text)));
+	}
+	if (!members.empty())
+		writeRows(members, true);
+}
+
+// As the box places the window: in radio mode it counts from the television size too.
+int CPipSetup::placedX() const
+{
+	return CNeutrinoApp::pip_recalc_pos_x(x_coord, radio ? g_settings.pip_width : width, pos);
+}
+
+int CPipSetup::placedY() const
+{
+	return CNeutrinoApp::pip_recalc_pos_y(y_coord, radio ? g_settings.pip_height : height, pos);
 }
 
 void CPipSetup::move(int x, int y, bool abs)
@@ -79,12 +104,10 @@ void CPipSetup::move(int x, int y, bool abs)
 
 	x_coord = newx;
 	y_coord = newy;
-	*gx = x_coord;
-	*gy = y_coord;
 
 	printf("CPipSetup::move: x %d y %d\n", x_coord, y_coord);
 	if (pipVideoDecoder[0] != NULL)
-		pipVideoDecoder[0]->Pig(CNeutrinoApp::getInstance()->pip_recalc_pos_x(x_coord), CNeutrinoApp::getInstance()->pip_recalc_pos_y(y_coord), width, height, maxw, maxh);
+		pipVideoDecoder[0]->Pig(placedX(), placedY(), width, height, maxw, maxh);
 }
 
 void CPipSetup::rotate(int cw)
@@ -95,11 +118,9 @@ void CPipSetup::rotate(int cw)
 	if (pos > PIP_DOWN_LEFT)
 		pos = PIP_UP_LEFT;
 
-	*gp = pos;
-
-	printf("CPipSetup::rotate: x %d y %d\n", CNeutrinoApp::getInstance()->pip_recalc_pos_x(x_coord), CNeutrinoApp::getInstance()->pip_recalc_pos_y(y_coord));
+	printf("CPipSetup::rotate: x %d y %d\n", placedX(), placedY());
 	if (pipVideoDecoder[0] != NULL)
-		pipVideoDecoder[0]->Pig(CNeutrinoApp::getInstance()->pip_recalc_pos_x(x_coord), CNeutrinoApp::getInstance()->pip_recalc_pos_y(y_coord), width, height, maxw, maxh);
+		pipVideoDecoder[0]->Pig(placedX(), placedY(), width, height, maxw, maxh);
 }
 
 // w and h is percent, if not absolute
@@ -134,18 +155,19 @@ void CPipSetup::resize(int w, int h, bool abs)
 		height = newh;
 	}
 
-	*gw = width;
-	*gh = height;
-
 	printf("CPipSetup::resize: w %d h %d \n", width, height);
 	if (pipVideoDecoder[0] != NULL)
-		pipVideoDecoder[0]->Pig(CNeutrinoApp::getInstance()->pip_recalc_pos_x(x_coord), CNeutrinoApp::getInstance()->pip_recalc_pos_y(y_coord), width, height, maxw, maxh);
+		pipVideoDecoder[0]->Pig(placedX(), placedY(), width, height, maxw, maxh);
 }
 
 int CPipSetup::exec(CMenuTarget *parent, const std::string &)
 {
 	neutrino_msg_t      msg;
 	neutrino_msg_data_t data;
+
+	// Taken again, since a write from elsewhere may have moved the window since this was built.
+	load();
+	const int before[5] = { x_coord, y_coord, width, height, pos };
 
 	int oldx = x_coord;
 	int oldy = y_coord;
@@ -224,6 +246,7 @@ int CPipSetup::exec(CMenuTarget *parent, const std::string &)
 		}
 	}
 	hide();
+	store(before);
 	return res;
 }
 
@@ -239,7 +262,7 @@ void CPipSetup::hide()
 
 void CPipSetup::clear()
 {
-	frameBuffer->paintBackgroundBoxRel(CNeutrinoApp::getInstance()->pip_recalc_pos_x(x_coord), CNeutrinoApp::getInstance()->pip_recalc_pos_y(y_coord), width, height);
+	frameBuffer->paintBackgroundBoxRel(placedX(), placedY(), width, height);
 }
 
 void CPipSetup::paint()
@@ -270,10 +293,10 @@ void CPipSetup::paint()
 	if (pipVideoDecoder[0] != NULL)
 	{
 		if (pipVideoDecoder[0]->getBlank())
-			frameBuffer->paintBoxRel(CNeutrinoApp::getInstance()->pip_recalc_pos_x(x_coord), CNeutrinoApp::getInstance()->pip_recalc_pos_y(y_coord), width, height, COL_MENUCONTENT_PLUS_0);
+			frameBuffer->paintBoxRel(placedX(), placedY(), width, height, COL_MENUCONTENT_PLUS_0);
 	}
 	else
-		frameBuffer->paintBoxRel(CNeutrinoApp::getInstance()->pip_recalc_pos_x(x_coord), CNeutrinoApp::getInstance()->pip_recalc_pos_y(y_coord), width, height, COL_MENUCONTENT_PLUS_0);
+		frameBuffer->paintBoxRel(placedX(), placedY(), width, height, COL_MENUCONTENT_PLUS_0);
 
 	frameBuffer->paintBoxRel(x, y, w, h, COL_MENUCONTENT_PLUS_0);
 

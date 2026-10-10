@@ -31,6 +31,7 @@
 
 #include <system/helpers.h>
 #include <gui/widget/stringinput.h>
+#include <gui/widget/settingitem.h>
 
 #include <timerdclient/timerdclient.h>
 
@@ -101,8 +102,8 @@ int CSleepTimerWidget::exec(CMenuTarget* parent, const std::string &/*actionKey*
 
 	int new_val = atoi(value.c_str());
 	if(permanent) {
-		g_settings.shutdown_min = new_val;
-		printf("permanent sleeptimer min: %d\n", g_settings.shutdown_min);
+		if (writeRow("shutdown_min", to_string(new_val), true))
+			printf("permanent sleeptimer min: %d\n", g_settings.shutdown_min);
 	}
 	else if(shutdown_min != new_val) {
 		shutdown_min = new_val;

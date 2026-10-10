@@ -47,6 +47,7 @@
 #include <gui/keybind_setup.h>
 #include <gui/videosettings.h>
 #include <gui/widget/settingactive.h>
+#include <gui/widget/settingitem.h>
 
 #include <driver/display.h>
 #include <driver/screen_max.h>
@@ -106,7 +107,7 @@ int CSettingsManager::loadConfig()
 	fileBrowser.Filter = &fileFilter;
 	if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
 	{
-		setSettingsText(g_settings.backup_dir, fileBrowser.getCurrentDir());
+		writeRow("backup_dir", fileBrowser.getCurrentDir(), true);
 		std::string new_config = fileBrowser.getSelectedFile()->Name.c_str();
 		/* The file may hold other values for anything, and the groups know how each
 		   is put in force. */
@@ -121,8 +122,9 @@ int CSettingsManager::saveConfig()
 	int res = menu_return::RETURN_REPAINT;
 	CFileBrowser fileBrowser;
 
+	std::string dir = g_settings.backup_dir;
 	char msgtxt[1024];
-	snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), g_settings.backup_dir.c_str());
+	snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), dir.c_str());
 
 	int result = ShowMsg(LOCALE_EXTRA_SAVECONFIG, msgtxt, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel);
 	if (result == CMsgBox::mbrCancel)
@@ -130,8 +132,11 @@ int CSettingsManager::saveConfig()
 	if (result == CMsgBox::mbrNo)
 	{
 		fileBrowser.Dir_Mode = true;
-		if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
-			setSettingsText(g_settings.backup_dir, fileBrowser.getSelectedFile()->Name);
+		if (fileBrowser.exec(dir.c_str()) == true)
+		{
+			dir = fileBrowser.getSelectedFile()->Name;
+			writeRow("backup_dir", dir, true);
+		}
 		else
 			return res;
 	}
@@ -141,7 +146,7 @@ int CSettingsManager::saveConfig()
 	sms->exec(NULL, "");
 	delete sms;
 
-	std::string sname = g_settings.backup_dir + "/" + fname;
+	std::string sname = dir + "/" + fname;
 	dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] save neutrino settings to %s\n", __func__, __LINE__, sname.c_str());
 
 	CNeutrinoApp::getInstance()->saveSetup(sname.c_str());
@@ -154,8 +159,9 @@ int CSettingsManager::backup()
 	int res = menu_return::RETURN_REPAINT;
 	CFileBrowser fileBrowser;
 
+	std::string dir = g_settings.backup_dir;
 	char msgtxt[1024];
-	snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), g_settings.backup_dir.c_str());
+	snprintf(msgtxt, sizeof(msgtxt), g_Locale->getText(LOCALE_SETTINGS_BACKUP_DIR), dir.c_str());
 
 	int result = ShowMsg(LOCALE_SETTINGS_BACKUP, msgtxt, CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel);
 	if (result == CMsgBox::mbrCancel)
@@ -163,14 +169,17 @@ int CSettingsManager::backup()
 	if (result == CMsgBox::mbrNo)
 	{
 		fileBrowser.Dir_Mode = true;
-		if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
-			setSettingsText(g_settings.backup_dir, fileBrowser.getSelectedFile()->Name);
+		if (fileBrowser.exec(dir.c_str()) == true)
+		{
+			dir = fileBrowser.getSelectedFile()->Name;
+			writeRow("backup_dir", dir, true);
+		}
 		else
 			return res;
 	}
 
 	struct statfs s;
-	int ret = ::statfs(g_settings.backup_dir.c_str(), &s);
+	int ret = ::statfs(dir.c_str(), &s);
 	if (ret == 0 && s.f_type != 0x72b6L) /*jffs2*/
 	{
 		CHintBox * hintBox = new CHintBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_SETTINGS_BACKUP));
@@ -178,8 +187,8 @@ int CSettingsManager::backup()
 
 		std::string backup_sh = find_executable("backup.sh");
 		std::string fname = "settings_" + getBackupSuffix(); // file ending is set by backup script;
-		dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] executing [%s %s]\n", __func__, __LINE__, backup_sh.c_str(), g_settings.backup_dir.c_str());
-		my_system(3, backup_sh.c_str(), g_settings.backup_dir.c_str(), fname.c_str());
+		dprintf(DEBUG_NORMAL, "[CSettingsManager]\t[%s - %d] executing [%s %s]\n", __func__, __LINE__, backup_sh.c_str(), dir.c_str());
+		my_system(3, backup_sh.c_str(), dir.c_str(), fname.c_str());
 
 		hintBox->hide();
 		delete hintBox;
@@ -201,7 +210,7 @@ int CSettingsManager::restore()
 	fileBrowser.Filter = &fileFilter;
 	if (fileBrowser.exec(g_settings.backup_dir.c_str()) == true)
 	{
-		setSettingsText(g_settings.backup_dir, fileBrowser.getCurrentDir());
+		writeRow("backup_dir", fileBrowser.getCurrentDir(), true);
 		int result = ShowMsg(LOCALE_SETTINGS_RESTORE, g_Locale->getText(LOCALE_SETTINGS_RESTORE_WARN), CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo);
 		if(result == CMsgBox::mbrYes)
 		{

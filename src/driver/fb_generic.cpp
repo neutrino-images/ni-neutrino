@@ -349,14 +349,22 @@ unsigned int CFrameBuffer::getScreenHeight(const bool& real) const
 
 unsigned int CFrameBuffer::getWindowWidth(bool force_small)
 {
-	int percent = force_small ? WINDOW_SIZE_SMALL : g_settings.window_width;
-	// always reduce a possible detailsline
-	return (g_settings.screen_EndX - g_settings.screen_StartX - 2*DETAILSLINE_WIDTH) * percent / 100;
+	return windowWidth(force_small ? WINDOW_SIZE_SMALL : g_settings.window_width);
 }
 
 unsigned int CFrameBuffer::getWindowHeight(bool force_small)
 {
-	int percent = force_small ? WINDOW_SIZE_SMALL : g_settings.window_height;
+	return windowHeight(force_small ? WINDOW_SIZE_SMALL : g_settings.window_height);
+}
+
+unsigned int CFrameBuffer::windowWidth(int percent)
+{
+	// always reduce a possible detailsline
+	return (g_settings.screen_EndX - g_settings.screen_StartX - 2*DETAILSLINE_WIDTH) * percent / 100;
+}
+
+unsigned int CFrameBuffer::windowHeight(int percent)
+{
 	return (g_settings.screen_EndY - g_settings.screen_StartY) * percent / 100;
 }
 

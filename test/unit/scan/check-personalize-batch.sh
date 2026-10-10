@@ -6,7 +6,7 @@
 # layer does with the five lists; it does not link the menu, so this reads the menu as text.
 #
 # The menu writes no plugin list itself, sets no type on a plugin, and hands the lists to
-# writeBatch.
+# writeBatch, itself or through writeRows.
 #
 # An optional second argument names one file to read instead of the menu, for the self test.
 set -e
@@ -35,7 +35,7 @@ BAD=`printf '%s\n' "$STRIPPED" | awk -v file="$FILE" '
 	/setType[ \t]*\(/ { print "    " file ":" NR ": " $0 }
 '`
 
-if ! printf '%s\n' "$STRIPPED" | grep -q 'writeBatch[ 	]*('; then
+if ! printf '%s\n' "$STRIPPED" | grep -Eq '(writeBatch|writeRows)[ 	]*\('; then
 	BAD="$BAD
     $FILE: the plugin lists are not handed to writeBatch"
 fi

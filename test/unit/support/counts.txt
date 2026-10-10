@@ -14,9 +14,9 @@ arrays held to a row for every element	14
 body examples their routes accepted	27
 body members the examples carry	26
 choice value names compared	586
-choices compared against a screen	1
-chooser call sites read	459
-chooser call sites read whole	459
+choices compared against a screen	0
+chooser call sites read	478
+chooser call sites read whole	478
 conditions checked	48
 defaults compared against the program	258
 defaults compared against this build's own load	256
@@ -24,21 +24,21 @@ element defaults compared against the load	149
 element rows compared against the load	163
 elements of arrays held to a row	163
 error codes the header declares	165
-fields the bound scan read	6
-fields the chooser scan read	11
-fields with a stated label	10
-flags compared against a screen	9
+fields the bound scan read	5
+fields the chooser scan read	8
+fields with a stated label	1
+flags compared against a screen	8
 groups the document declares	20
 key code defaults compared against this build's own load	50
 key to field pairs read out of the program	608
 keys compared against what the program reads	397
 keys read anywhere in the tree	732
 keys whose default the scan can compare	444
-labels compared against a chooser	10
-labels compared against a number chooser	1
-labels compared against a stated field	9
+labels compared against a chooser	8
+labels compared against a number chooser	0
+labels compared against a stated field	1
 labels compared against the locale names	466
-labels stated beside a field	456
+labels stated beside a field	471
 list, records and flag file rows	27
 lists and lists of records held to a read of the load	5
 locale names the program has	3233

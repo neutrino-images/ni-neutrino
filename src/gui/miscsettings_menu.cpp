@@ -35,10 +35,8 @@
 #include <gui/miscsettings_menu.h>
 #include <gui/weather_setup.h>
 #include <gui/cec_setup.h>
-#include <gui/filebrowser.h>
 #include <gui/infoicons_setup.h>
 #include <gui/keybind_setup.h>
-#include <gui/plugins.h>
 #include <gui/plugins_hide.h>
 #include <gui/sleeptimer.h>
 #include <gui/zapit_setup.h>
@@ -53,8 +51,6 @@
 #include <eitd/sectionsd.h>
 
 #include <coreapi/settings/predicates.h>
-
-extern CPlugins *g_Plugins;
 
 CMiscMenue::CMiscMenue()
 {
@@ -74,36 +70,7 @@ int CMiscMenue::exec(CMenuTarget *parent, const std::string &actionKey)
 	if ((parent != NULL) && (actionKey.find("epg_read_now") == std::string::npos))
 		parent->hide();
 
-	if (actionKey == "plugin_dir")
-	{
-		const char *action_str = "plugin";
-		if (chooserDir(g_settings.plugin_hdd_dir, false, action_str))
-			g_Plugins->loadPlugins();
-
-		return menu_return::RETURN_REPAINT;
-	}
-	else if (actionKey == "movieplayer_plugin")
-	{
-		CMenuWidget MoviePluginSelector(LOCALE_MOVIEPLAYER_PLUGIN, NEUTRINO_ICON_FEATURES);
-		MoviePluginSelector.addItem(GenericMenuSeparator);
-		MoviePluginSelector.addItem(new CMenuForwarder(LOCALE_PLUGINS_NO_PLUGIN, true, NULL, new CMoviePluginChangeExec(), "---", CRCInput::RC_red));
-		MoviePluginSelector.addItem(GenericMenuSeparatorLine);
-		char id[5];
-		int enabled_count = 0;
-		for (unsigned int count = 0; count < (unsigned int) g_Plugins->getNumberOfPlugins(); count++)
-		{
-			if (!g_Plugins->isHidden(count))
-			{
-				sprintf(id, "%d", count);
-				enabled_count++;
-				MoviePluginSelector.addItem(new CMenuForwarder(g_Plugins->getName(count), true, NULL, new CMoviePluginChangeExec(), id, CRCInput::convertDigitToKey(count)));
-			}
-		}
-
-		MoviePluginSelector.exec(NULL, "");
-		return menu_return::RETURN_REPAINT;
-	}
-	else if (actionKey == "info")
+	if (actionKey == "info")
 	{
 		unsigned num = CEitManager::getInstance()->getEventsCount();
 		char str[128];
@@ -467,18 +434,14 @@ int CMiscMenue::showMiscSettingsMenuPlugins()
 	CMenuWidget *ms_plugins = new CMenuWidget(LOCALE_MISCSETTINGS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_MISCSETUP_PLUGINS);
 	ms_plugins->addIntroItems(LOCALE_PLUGINS_CONTROL);
 
-	CMenuForwarder *mf = new CMenuForwarder(LOCALE_PLUGINS_HDD_DIR, true, g_settings.plugin_hdd_dir, this, "plugin_dir");
-	mf->setHint("", LOCALE_MENU_HINT_PLUGINS_HDD_DIR);
-	ms_plugins->addItem(mf);
+	addSetting(ms_plugins, "plugin_hdd_dir");
 
-	mf = new CMenuForwarder(LOCALE_MPKEY_PLUGIN, true, g_settings.movieplayer_plugin, this, "movieplayer_plugin");
-	mf->setHint("", LOCALE_MENU_HINT_MOVIEPLAYER_PLUGIN);
-	ms_plugins->addItem(mf);
+	addSetting(ms_plugins, "movieplayer_plugin", true, NULL, CRCInput::RC_nokey, false, true);
 
 	ms_plugins->addItem(GenericMenuSeparatorLine);
 
 	CPluginsHideMenu pluginsHideMenu;
-	mf = new CMenuForwarder(LOCALE_PLUGINS_HIDE, true, NULL, &pluginsHideMenu, NULL, CRCInput::RC_red);
+	CMenuForwarder *mf = new CMenuForwarder(LOCALE_PLUGINS_HIDE, true, NULL, &pluginsHideMenu, NULL, CRCInput::RC_red);
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_PLUGINS_HIDE);
 	ms_plugins->addItem(mf);
 

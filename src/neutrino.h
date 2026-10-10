@@ -189,6 +189,9 @@ public:
 #endif
 	int pip_recalc_pos_x(int x);
 	int pip_recalc_pos_y(int y);
+	// Where a window of these values is placed, for one not in the settings yet.
+	static int pip_recalc_pos_x(int x, int width, int pos);
+	static int pip_recalc_pos_y(int y, int height, int pos);
 	void pip_rotate(int cw);
 #endif
 

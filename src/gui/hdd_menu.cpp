@@ -48,7 +48,6 @@
 #include "hdd_menu.h"
 
 #include <cs_api.h> //NI
-#include <coreapi/base/apply.h>
 #include <coreapi/settings/predicates.h>
 #include <coreapi/box/storage_disks.h>
 #include <gui/widget/icons.h>
@@ -261,12 +260,9 @@ void CHDDMenuHandler::setRecordPath(std::string &dev)
 	in_menu = false;
 	int res = ShowMsg(LOCALE_RECORDINGMENU_DEFDIR, LOCALE_HDD_SET_RECDIR, CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo);
 	if(res == CMsgBox::mbrYes) {
-		/* The folder is not there yet on a fresh disk, which the row's rule would
-		   refuse, so the member is written and the group told. */
-		setSettingsText(g_settings.network_nfs_recordingdir, newpath);
-		const coreapi::Status applied = coreapi::applyKey("network_nfs_recordingdir");
-		if (applied != coreapi::Status::Ok && applied != coreapi::Status::Busy)
-			dprintf(DEBUG_NORMAL, "[hdd] the recording folder was not applied\n");
+		// A fresh disk has no such folder yet, and the row takes only one that exists.
+		safe_mkdir(newpath);
+		writeRow("network_nfs_recordingdir", newpath, true);
 	}
 	in_menu = old_menu;
 }
@@ -426,8 +422,10 @@ int CHDDMenuHandler::showDeviceMenu(std::string dev)
 	std::string fmt_type = getFmtType(coreapi::storage::partitionName(dev, 1));
 	bool fsck_enabled = false;
 	for (unsigned i = 0; i < fs_tools.size(); i++) {
-		if (fmt_type == fs_tools[i].fmt)
-			g_settings.hdd_fs = i;
+		if (fmt_type != fs_tools[i].fmt)
+			continue;
+		writeRow("hdd_fs", to_string(i), false);
+		break;
 	}
 	int cnt = 0;
 	bool found = false;

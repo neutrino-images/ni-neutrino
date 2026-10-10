@@ -29,6 +29,7 @@
 #include <functional>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 /* What a screen allows of an item, for reasons that are not the row's own
@@ -76,7 +77,12 @@ class ScreenActive
    entry, a digit entry, a folder or file browser, a hidden-text dialog for a
    credential, or the keyboard, limited to the rule's length. dialog_hint1 and
    dialog_hint2 are the words that dialog shows beside its field; they are not
-   the menu hint. A text row without a label is not offered.
+   the menu hint. A text row without a label is not offered. A text row whose
+   provider lists what it may hold is a choice of those entries instead, each
+   shown by its name and stored as its text, which pulldown opens as a list, and
+   is not offered while the list is empty.
+
+   A row the box names itself carries that name and no label key.
 
    A key row gets the forwarder the keybinding screen showed for it: the key's
    name beside the label and the key chooser behind it. A colour row gets a
@@ -151,6 +157,19 @@ class CFollowForwarder : public CMenuForwarder
 		void follow(CMenuWidget *menu, const std::string &key, const std::vector<std::string> &keys,
 			    ScreenActive screen = true, const std::function<void()> &refresh = std::function<void()>());
 };
+
+/* A CFollowForwarder for a dialog of the screen's own that shows a setting as text,
+   added to menu: text is asked again whenever key or one of keys is written elsewhere. */
+CFollowForwarder *addTextForwarder(CMenuWidget *menu, const neutrino_locale_t name, CMenuTarget *target,
+				   const char *action_key, const neutrino_msg_t direct_key,
+				   const std::function<std::string()> &text, const std::string &key,
+				   const std::vector<std::string> &keys = std::vector<std::string>());
+
+/* What a screen's own dialog chose, written through the rows as one write. Every refusal
+   is logged; the user is told only where asked, the change being the user's own. True
+   when everything landed. */
+bool writeRows(const std::vector<std::pair<std::string, std::string> > &values, bool asked);
+bool writeRow(const std::string &key, const std::string &value, bool asked);
 
 class CColorChooser;
 

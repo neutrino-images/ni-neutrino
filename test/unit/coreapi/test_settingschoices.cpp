@@ -546,6 +546,8 @@ TEST_CASE("every setting a screen builds from the declaration can be shown", "[s
 	box.ci_slots = 4;
 	FakeOsdResolution drawing;
 	InstalledOsdResolution installed_drawing(&drawing);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
 
 	const std::set<std::string> declared = declaredKeys();
 	std::string refused;

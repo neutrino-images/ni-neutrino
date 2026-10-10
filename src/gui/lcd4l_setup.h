@@ -34,7 +34,7 @@
 #include "gui/widget/hintbox.h"
 #include <sigc++/signal.h>
 
-class CLCD4lSetup : public CMenuTarget, CChangeObserver
+class CLCD4lSetup : public CMenuTarget
 {
 	private:
 		int width;
@@ -53,7 +53,6 @@ class CLCD4lSetup : public CMenuTarget, CChangeObserver
 		CLCD4lSetup();
 		~CLCD4lSetup();
 		int exec(CMenuTarget *parent, const std::string &actionkey);
-		virtual bool changeNotify(const neutrino_locale_t OptionName, void * /*data*/);
 		void connectSlots();
 };
 

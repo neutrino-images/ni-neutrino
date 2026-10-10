@@ -44,7 +44,6 @@
 #include <neutrino_menue.h>
 #include "glcdthemes.h"
 
-#include <coreapi/base/apply.h>
 #include <coreapi/box/apply_glcd.h>
 #include <coreapi/settings/settings.h>
 
@@ -211,13 +210,6 @@ void noteSize()
 		coreapi::noteGlcdPanelSize(cglcd->lcd->Width(), cglcd->lcd->Height());
 }
 
-void applyGlcd(const char *key)
-{
-	const coreapi::Status st = coreapi::applyKey(key);
-	if (st != coreapi::Status::Ok && st != coreapi::Status::Busy)
-		dprintf(DEBUG_NORMAL, "[glcd] %s was not applied\n", key);
-}
-
 /* While the position of the channel name is edited, the display shows the name of the
    channel that is on. */
 bool previewChannelName()
@@ -233,15 +225,12 @@ bool previewChannelName()
 GLCD_Menu::GLCD_Menu()
 {
 	width = 40;
-
-	select_driver = NULL;
 }
 
 int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 {
 	int res = menu_return::RETURN_REPAINT;
 	cGLCD *cglcd = cGLCD::getInstance();
-	SNeutrinoGlcdTheme &t = g_settings.glcd_theme;
 
 	if (parent)
 		parent->hide();
@@ -260,10 +249,7 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 		fileFilter.addFilter("ttf");
 		fileBrowser.Filter = &fileFilter;
 		if (fileBrowser.exec(FONTDIR) == true)
-		{
-			setSettingsText(t.glcd_font, fileBrowser.getSelectedFile()->Name);
-			applyGlcd("glcd_font");
-		}
+			writeRow("glcd_font", fileBrowser.getSelectedFile()->Name, true);
 		return res;
 	}
 	else if (actionKey == "select_background")
@@ -274,11 +260,8 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 		fileFilter.addFilter("jpeg");
 		fileFilter.addFilter("png");
 		fileBrowser.Filter = &fileFilter;
-		if (fileBrowser.exec(THEMESDIR"/oled") == true)
-			setSettingsText(t.glcd_background_image, fileBrowser.getSelectedFile()->Name);
-		else
-			setSettingsText(t.glcd_background_image, "");
-		applyGlcd("glcd_background_image");
+		// Leaving the browser without a pick is how the image is removed.
+		writeRow("glcd_background_image", fileBrowser.exec(THEMESDIR"/oled") ? fileBrowser.getSelectedFile()->Name : std::string(), true);
 		return res;
 	}
 	else if (actionKey == "brightness_default")
@@ -293,10 +276,6 @@ int GLCD_Menu::exec(CMenuTarget *parent, const std::string &actionKey)
 		for (size_t i = 0; i < refused.size(); i++)
 			dprintf(DEBUG_NORMAL, "[glcd] %s not reset: %s\n", refused[i].first.c_str(), refused[i].second.message.c_str());
 		return res;
-	}
-	else if (actionKey == "select_driver")
-	{
-		return GLCD_Menu_Select_Driver();
 	}
 	else if (actionKey == "theme_settings")
 	{
@@ -331,8 +310,7 @@ int GLCD_Menu::GLCD_Menu_Settings()
 
 	addSetting(gms, "glcd_enable", true, NULL, CRCInput::RC_red);
 
-	select_driver = new CMenuForwarder(LOCALE_GLCD_DISPLAY, (cGLCD::getInstance()->GetConfigSize() > 1), cGLCD::getInstance()->GetConfigName(g_settings.glcd_selected_config).c_str(), this, "select_driver", CRCInput::RC_green);
-	gms->addItem(select_driver);
+	addSetting(gms, "glcd_selected_config", []() { return cGLCD::getInstance()->GetConfigSize() > 1; }, NULL, CRCInput::RC_green, false, true);
 
 	gms->addItem(new CMenuForwarder(LOCALE_GLCD_THEME_SETTINGS, true, NULL, this, "theme_settings", CRCInput::RC_yellow));
 
@@ -358,7 +336,6 @@ int GLCD_Menu::GLCD_Menu_Settings()
 
 	int res = gms->exec(NULL, "");
 	delete gms;
-	select_driver = NULL;
 	cGLCD::getInstance()->StandbyMode(false);
 	return res;
 }
@@ -427,8 +404,6 @@ int GLCD_Menu::GLCD_Theme_Settings()
 
 	cGLCD::getInstance()->SetCfgMode(true);
 
-	SNeutrinoGlcdTheme &t = g_settings.glcd_theme;
-
 	// choose theme
 
 	gts->addItem(new CMenuForwarder(LOCALE_GLCD_THEME, true, NULL, CGLCDThemes::getInstance(), NULL, CRCInput::RC_red));
@@ -443,9 +418,10 @@ int GLCD_Menu::GLCD_Theme_Settings()
 
 	// font, background image
 
-	gts->addItem(new CMenuForwarder(LOCALE_GLCD_FONT, true, t.glcd_font, this, "select_font", CRCInput::RC_yellow));
-
-	gts->addItem(new CMenuForwarder(LOCALE_GLCD_BACKGROUND, true, t.glcd_background_image, this, "select_background", CRCInput::RC_blue));
+	addTextForwarder(gts, LOCALE_GLCD_FONT, this, "select_font", CRCInput::RC_yellow,
+			 []() { return settingsText(g_settings.glcd_theme.glcd_font); }, "glcd_font");
+	addTextForwarder(gts, LOCALE_GLCD_BACKGROUND, this, "select_background", CRCInput::RC_blue,
+			 []() { return settingsText(g_settings.glcd_theme.glcd_background_image); }, "glcd_background_image");
 
 	gts->addItem(GenericMenuSeparatorLine);
 
@@ -511,38 +487,4 @@ int GLCD_Menu::GLCD_Theme_Settings()
 	cGLCD::getInstance()->StandbyMode(false);
 	cGLCD::getInstance()->SetCfgMode(false);
 	return res;
-}
-
-int GLCD_Menu::GLCD_Menu_Select_Driver()
-{
-	int select = 0;
-	int res = menu_return::RETURN_NONE;
-
-	if (cGLCD::getInstance()->GetConfigSize() > 1)
-	{
-		CMenuWidget *m = new CMenuWidget(LOCALE_GLCD_HEAD, NEUTRINO_ICON_SETTINGS);
-		m->addIntroItems(LOCALE_GLCD_DISPLAY);
-		CMenuSelectorTarget *selector = new CMenuSelectorTarget(&select);
-
-		CMenuForwarder *mf;
-		for (int i = 0; i < cGLCD::getInstance()->GetConfigSize(); i++)
-		{
-			mf = new CMenuForwarder(cGLCD::getInstance()->GetConfigName(i), true, NULL, selector, to_string(i).c_str());
-			mf->setInfoIconRight(i == g_settings.glcd_selected_config ? NEUTRINO_ICON_MARKER_DIALOG_OK : NULL);
-			m->addItem(mf);
-		}
-
-		m->enableSaveScreen();
-		res = m->exec(NULL, "");
-
-		delete selector;
-
-		if (!m->gotAction() || g_settings.glcd_selected_config == select)
-			return res;
-	}
-	g_settings.glcd_selected_config = select;
-	if (select_driver)
-		select_driver->setOption(cGLCD::getInstance()->GetConfigName(g_settings.glcd_selected_config).c_str());
-	applyGlcd("glcd_selected_config");
-	return menu_return::RETURN_REPAINT;
 }

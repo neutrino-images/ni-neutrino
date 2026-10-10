@@ -144,18 +144,15 @@ int CInfoIconsSetup::menu()
 	mf->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_INFOICONS_FLAG_DEL_HEAD);
 	infoiconsMenu->addItem(mf);
 
-		for(int i=0 ; i < MODE_ICONS_NR_OF_ENTRIES; i++) {
-			flagchooser[i] = new CStringInputSMS(menu_settings[i].caption, &g_settings.mode_icons_flag[i], 30, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE,"abcdefghijklmnopqrstuvwxyz0123456789-_.:/ ");
-		}
-
 		CMenuWidget* flagMenu = new CMenuWidget(LOCALE_INFOICONS_HEAD, NEUTRINO_ICON_SETTINGS, width, MN_WIDGET_ID_INFOICONS_SETFLAG);
 		flagMenu->addIntroItems(LOCALE_INFOICONS_FLAG_HEAD);
 
 		for(int i=0 ; i < MODE_ICONS_NR_OF_ENTRIES; i++)
 		{
-			mforwarder[i] = new CMenuForwarder(menu_settings[i].caption , true , g_settings.mode_icons_flag[i], flagchooser[i], "", CRCInput::convertDigitToKey(shortcut_flagname++));
-			mforwarder[i]->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, menu_settings[i].caption_hint);
-			flagMenu->addItem(mforwarder[i]);
+			const std::string key = "mode_icons_flag" + to_string(i);
+			CMenuItem *flag = addSetting(flagMenu, key.c_str(), true, NULL, CRCInput::convertDigitToKey(shortcut_flagname++));
+			if (flag)
+				flag->hintIcon = NEUTRINO_ICON_HINT_IMAGELOGO;
 		}
 
 	mf = new CMenuForwarder(LOCALE_INFOICONS_FLAG_HEAD, true, NULL, flagMenu, "", CRCInput::convertDigitToKey(shortcut++));
@@ -171,8 +168,6 @@ int CInfoIconsSetup::menu()
 	infoiconsMenu->hide();
 	delete infoiconsMenu;
 	delete delFlagMenu;
-	for (int i = 0 ; i < MODE_ICONS_NR_OF_ENTRIES; i++)
-		delete flagchooser[i];
 	delete flagMenu;
 	return res;
 }

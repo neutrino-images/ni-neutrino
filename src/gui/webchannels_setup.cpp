@@ -52,13 +52,29 @@
 
 extern CBouquetManager *g_bouquetManager;
 
+static void writeList(const char *key, const std::list<std::string> &list, bool asked)
+{
+	std::vector<std::string> files;
+	for (std::list<std::string>::const_iterator it = list.begin(); it != list.end(); ++it)
+		if (!it->empty())
+			files.push_back(*it);
+	writeRow(key, coreapi::settings::joinOn(files, '\n'), asked);
+}
+
 /* The lists as the settings now say, and the channel daemon told to read them. The
    automatic folders are added to the lists of the side whose switch is on. */
 static void reloadWebChannels(const char *reason)
 {
 	CWebChannelsSetup lists;
-	lists.webtv_xml_auto();
-	lists.webradio_xml_auto();
+	for (int radio = 0; radio < 2; radio++)
+	{
+		std::list<std::string> have = settingsCopy(radio ? g_settings.webradio_xml : g_settings.webtv_xml);
+		const std::list<std::string> add = lists.autoFiles(radio != 0, have);
+		if (add.empty())
+			continue;
+		have.insert(have.end(), add.begin(), add.end());
+		writeList(radio ? "webradio_xml" : "webtv_xml", have, false);
+	}
 	CZapit::getInstance()->SetWebTVXML(&g_settings.webtv_xml);
 	CZapit::getInstance()->SetWebRadioXML(&g_settings.webradio_xml);
 	g_bouquetManager->setWebchannelsReloadReason(reason);
@@ -219,7 +235,9 @@ int CWebChannelsSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 	if (actionKey == "script_path")
 	{
 		const char *action_str = "ScriptPath";
-		chooserDir(g_settings.livestreamScriptPath, false, action_str);
+		std::string dir = g_settings.livestreamScriptPath;
+		if (chooserDir(dir, false, action_str))
+			writeRow("livestreamScriptPath", dir, true);
 		return res;
 	}
 	if (actionKey == "webtv_menu")
@@ -329,14 +347,9 @@ int CWebChannelsSetup::Show()
 			CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
 			webchannels.push_back(f->getName());
 		}
-		{
-			// What a request answers with is copied under this lock, so the swap is too.
-			CSettingsTextGuard lock;
-			if (webradio)
-				g_settings.webradio_xml = webchannels;
-			else
-				g_settings.webtv_xml = webchannels;
-		}
+		const std::list<std::string> add = autoFiles(webradio, webchannels);
+		webchannels.insert(webchannels.end(), add.begin(), add.end());
+		writeList(webradio ? "webradio_xml" : "webtv_xml", webchannels, true);
 		reloadWebChannels("manual_menu");
 		changed = false;
 		hint.hide();
@@ -401,26 +414,33 @@ void CWebChannelsSetup::webtv_xml_auto()
 	webchannels_auto();
 }
 
+// Part of the settings load, which fills the members itself.
 void CWebChannelsSetup::webchannels_auto()
 {
-	std::list<std::string> webchannels;
+	const std::list<std::string> add = autoFiles(webradio, settingsCopy(webradio ? g_settings.webradio_xml : g_settings.webtv_xml));
+	CSettingsTextGuard lock;
+	std::list<std::string> &target = webradio ? g_settings.webradio_xml : g_settings.webtv_xml;
+	target.insert(target.end(), add.begin(), add.end());
+}
+
+std::list<std::string> CWebChannelsSetup::autoFiles(bool radio, std::list<std::string> webchannels)
+{
+	std::list<std::string> added;
 	const char *dirs[2];
 
-	if (webradio)
+	if (radio)
 	{
 		if (!g_settings.webradio_xml_auto)
-			return;
+			return added;
 
-		webchannels = settingsCopy(g_settings.webradio_xml);
 		dirs[0] = WEBRADIODIR_VAR;
 		dirs[1] = WEBRADIODIR;
 	}
 	else
 	{
 		if (!g_settings.webtv_xml_auto)
-			return;
+			return added;
 
-		webchannels = settingsCopy(g_settings.webtv_xml);
 		dirs[0] = WEBTVDIR_VAR;
 		dirs[1] = WEBTVDIR;
 	}
@@ -452,13 +472,7 @@ void CWebChannelsSetup::webchannels_auto()
 					if (!found)
 					{
 						printf("[CWebChannelsSetup] loading: %s\n", webchannel_file);
-						{
-							CSettingsTextGuard lock;
-							if (webradio)
-								g_settings.webradio_xml.push_back(webchannel_file);
-							else
-								g_settings.webtv_xml.push_back(webchannel_file);
-						}
+						added.push_back(webchannel_file);
 						webchannels.push_back(webchannel_file);
 					}
 					else
@@ -471,6 +485,7 @@ void CWebChannelsSetup::webchannels_auto()
 			free(filelist);
 		}
 	}
+	return added;
 }
 
 // webradio wrapper for webchannels_autodir()

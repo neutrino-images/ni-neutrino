@@ -48,6 +48,7 @@
 #include <gui/infoclock.h>
 #include <gui/plugins.h>
 #include <gui/videosettings.h>
+#include <gui/widget/settingitem.h>
 #include <gui/lua/luainstance.h>
 #include <gui/lua/lua_video.h>
 #include <gui/screensaver.h>
@@ -4060,10 +4061,7 @@ void CMoviePlayerGui::selectAudioPid()
 	}
 
 	APIDSelector.addItem(new CMenuSeparator(CMenuSeparator::LINE));
-	static CApplyKeyNotifier analogOutNotifier("analog_out");
-	APIDSelector.addItem( new CMenuOptionChooser(LOCALE_AUDIOMENU_ANALOG_OUT, &g_settings.analog_out,
-				OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT,
-				true, &analogOutNotifier, CRCInput::RC_green, NEUTRINO_ICON_BUTTON_GREEN) );
+	addSetting(&APIDSelector, "analog_out", true, NULL, CRCInput::RC_green);
 
 	APIDSelector.exec(NULL, "");
 	delete selector;
@@ -4533,7 +4531,9 @@ void CMoviePlayerGui::selectSubtitle()
 	if (!numsubs)
 		playback->FindAllSubs(spids, sub_supported, &numsubs, slanguage);
 
-	CMenuOptionStringChooser * sc = new CMenuOptionStringChooser(LOCALE_SUBTITLES_CHARSET, &g_settings.subs_charset, currentspid == -1, NULL, CRCInput::RC_red, NULL, true);
+	const std::string charset_shown = g_settings.subs_charset;
+	std::string charset = charset_shown;
+	CMenuOptionStringChooser * sc = new CMenuOptionStringChooser(LOCALE_SUBTITLES_CHARSET, &charset, currentspid == -1, NULL, CRCInput::RC_red, NULL, true);
 	sc->addOption("UTF-8");
 	sc->addOption("UCS-2");
 	sc->addOption("CP1250");
@@ -4565,17 +4565,19 @@ void CMoviePlayerGui::selectSubtitle()
 
 	APIDSelector.exec(NULL, "");
 	delete selector;
+	if (charset != charset_shown)
+		writeRow("subs_charset", charset, true);
 	printf("CMoviePlayerGui::selectSubtitle: selected %d (%x) current %x\n", select, (select >= 0) ? spids[select] : -1, currentspid);
 	if ((select >= 0) && (select < numsubs) && (currentspid != spids[select])) {
 		currentspid = spids[select];
 		/* external subtitles pid is 0x1FFF */
 		ext_subs = (currentspid == 0x1FFF);
-		playback->SelectSubtitles(currentspid, g_settings.subs_charset);
+		playback->SelectSubtitles(currentspid, charset);
 		printf("[movieplayer] spid changed to %d\n", currentspid);
 	} else if (select > 0) {
 		ext_subs = false;
 		currentspid = -1;
-		playback->SelectSubtitles(currentspid, g_settings.subs_charset);
+		playback->SelectSubtitles(currentspid, charset);
 		printf("[movieplayer] spid changed to %d\n", currentspid);
 	}
 }

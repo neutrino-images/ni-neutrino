@@ -742,6 +742,9 @@ TEST_CASE("every declared label is the one the screen offers", "[settingspairs]"
 		CHECK(agrees);
 	}
 
+	// A tree whose number choosers all come from their rows has nothing here to compare.
+	if (checked == 0)
+		SUCCEED("no screen builds a number chooser for a declared row by hand");
 	INFO("labels compared: " << checked);
 	recordCount("labels compared against a number chooser", checked);
 }

@@ -47,11 +47,18 @@
 #include <gui/widget/keyboard_input.h>
 #include <gui/widget/keychooser.h>
 #include <gui/widget/msgbox.h>
+#include <gui/widget/hintbox.h>
+#include <gui/widget/settingitem.h>
 
 #include <driver/screen_max.h>
 
 #include <system/helpers.h>
 #include <system/debug.h>
+
+#include <coreapi/settings/settings.h>
+
+#include <map>
+#include <utility>
 
 static bool usermenu_show = true;
 static bool usermenu_show_cam = true; // FIXME -- use hwcaps?
@@ -118,6 +125,9 @@ CUserMenuSetup::CUserMenuSetup(neutrino_locale_t menue_title, int menue_button)
 	if (menue_button < (int) g_settings.usermenu.size())
 		pref_name = g_settings.usermenu[button]->title; // set current button name as prefered name
 	forwarder = NULL;
+	edit_key = CRCInput::RC_nokey;
+	key_item = NULL;
+	refused = false;
 
 	for (int i = 0; usermenu_items[i].key != SNeutrinoSettings::ITEM_MAX; i++)
 	{
@@ -149,6 +159,11 @@ CUserMenuSetup::~CUserMenuSetup()
 
 int CUserMenuSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 {
+	if (actionKey == ">n")
+		return editTitle(parent);
+	if (actionKey == ">k")
+		return editKey(parent);
+
 	if (actionKey == ">d")
 	{
 		int selected = ums->getSelected();
@@ -182,7 +197,9 @@ int CUserMenuSetup::exec(CMenuTarget *parent, const std::string &actionKey)
 	}
 
 	int res = showSetup();
-	checkButtonName();
+	// One hint is enough; the name is checked again on the next visit.
+	if (!refused)
+		checkButtonName();
 
 	return res;
 }
@@ -214,22 +231,20 @@ int CUserMenuSetup::showSetup()
 
 	ums->addIntroItems();
 
-	int old_key = g_settings.usermenu[button]->key;
-	CKeyboardInput name(LOCALE_USERMENU_NAME, &g_settings.usermenu[button]->title);
-	CMenuForwarder *mf = new CMenuForwarder(LOCALE_USERMENU_NAME, true, NULL, &name);
+	ums->addItem(new CMenuForwarder(LOCALE_USERMENU_NAME, true, NULL, this, ">n"));
 
-	ums->addItem(mf);
-
+	key_item = NULL;
 	if (button >= SNeutrinoSettings::BUTTON_MAX)
 	{
-		CKeyChooser *kc = new CKeyChooser(&g_settings.usermenu[button]->key, LOCALE_USERMENU_KEY_SELECT, NEUTRINO_ICON_SETTINGS);
-		CMenuDForwarder *kf = new CMenuDForwarder(LOCALE_USERMENU_KEY, true, kc->getKeyName(), kc);
-		ums->addItem(kf);
+		key_item = new CMenuForwarder(LOCALE_USERMENU_KEY, true, CRCInput::getKeyNameC(g_settings.usermenu[button]->key), this, ">k");
+		ums->addItem(key_item);
 	}
 
 	ums->addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, LOCALE_USERMENU_ITEMS));
 
-	std::vector<std::string> items = ::split(g_settings.usermenu[button]->items, ',');
+	std::vector<std::string> items = ::split(settingsText(g_settings.usermenu[button]->items), ',');
+	std::vector<std::string> shown;
+	std::map<const CMenuItem *, std::string> unnamed;
 	item_offset = ums->getItemsCount();
 	for (std::vector<std::string>::iterator it = items.begin(); it != items.end(); ++it)
 	{
@@ -238,6 +253,9 @@ int CUserMenuSetup::showSetup()
 		c->setOptions(options);
 		c->setOptionValue(vals[*it]);
 		ums->addItem(c);
+		shown.push_back(c->getOptionValue());
+		if (shown.back().empty())
+			unnamed[c] = *it;
 	}
 
 	const struct button_label footerButtons[2] =
@@ -253,23 +271,93 @@ int CUserMenuSetup::showSetup()
 	int items_end = ums->getItemsCount();
 
 	const char *delim = "";
-	setSettingsText(g_settings.usermenu[button]->items, "");
+	std::string chosen;
+	std::vector<std::string> left;
 	std::string none = to_string(SNeutrinoSettings::ITEM_NONE);
 	for (int count = item_offset; count < items_end; count++)
 	{
-		std::string lk = keys[static_cast<CMenuOptionStringChooser *>(ums->getItem(count))->getOptionValue()];
-		if (lk == none)
+		CMenuItem *item = ums->getItem(count);
+		const std::string value = static_cast<CMenuOptionStringChooser *>(item)->getOptionValue();
+		left.push_back(value);
+		std::string lk = keys[value];
+		// An entry no option names, such as a plugin not installed now, is kept as it was.
+		if (value.empty() && unnamed.count(item))
+			lk = unnamed[item];
+		if (lk == none || lk.empty())
 			continue;
-		appendSettingsText(g_settings.usermenu[button]->items, delim + lk);
+		chosen += delim + lk;
 		delim = ",";
 	}
 
 	delete ums;
+	key_item = NULL;
 
-	if (forwarder && (old_key != (int) g_settings.usermenu[button]->key))
-		forwarder->setName(CRCInput::getKeyName(g_settings.usermenu[button]->key));
+	// A list left as shown is not written: that keeps a write made elsewhere and entries no option names.
+	refused = left != shown && !writeMember(2, chosen, true);
 
 	return res;
+}
+
+int CUserMenuSetup::editTitle(CMenuTarget *parent)
+{
+	const std::string before = settingsText(g_settings.usermenu[button]->title);
+	edit_title = before;
+	CKeyboardInput name(LOCALE_USERMENU_NAME, &edit_title);
+	const int res = name.exec(parent, "");
+	// Against the value the dialog opened with: a write made elsewhere while it was open stays.
+	if (edit_title != before)
+		writeMember(0, edit_title, true);
+	return res;
+}
+
+int CUserMenuSetup::editKey(CMenuTarget *parent)
+{
+	const unsigned int before = g_settings.usermenu[button]->key;
+	edit_key = before;
+	CKeyChooser kc(&edit_key, LOCALE_USERMENU_KEY_SELECT, NEUTRINO_ICON_SETTINGS);
+	const int res = kc.exec(parent, "");
+	if (edit_key != before)
+	{
+		// The record keeps no key as 0.
+		if (!writeMember(1, to_string(edit_key == (unsigned int) CRCInput::RC_nokey ? 0 : (int) edit_key), true))
+			return res;
+		const std::string name = CRCInput::getKeyName(g_settings.usermenu[button]->key);
+		if (key_item)
+			key_item->setOption(name);
+		if (forwarder)
+			forwarder->setName(name);
+	}
+	return res;
+}
+
+// Only one member changes, so writes made elsewhere to the others stay.
+bool CUserMenuSetup::writeMember(size_t member, const std::string &value, bool asked)
+{
+	// The row skips the empty slots a removed button leaves behind.
+	size_t record = 0;
+	for (int i = 0; i < button && i < (int) g_settings.usermenu.size(); i++)
+		if (g_settings.usermenu[i] != NULL)
+			record++;
+
+	coreapi::Result<std::string> now = coreapi::settings::get("usermenu");
+	std::vector<std::string> lines;
+	std::vector<std::string> members;
+	if (now.ok())
+	{
+		coreapi::settings::splitOn(now.value(), '\n', lines);
+		if (record < lines.size())
+			coreapi::settings::splitOn(lines[record], '\t', members);
+	}
+	if (member >= members.size())
+	{
+		dprintf(DEBUG_NORMAL, "[usermenu] button %d not found in the setting\n", button);
+		if (asked)
+			ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
+		return false;
+	}
+	members[member] = value;
+	lines[record] = coreapi::settings::joinOn(members, '\t');
+	return writeRow("usermenu", coreapi::settings::joinOn(lines, '\n'), asked);
 }
 
 // check button name for details like empty string and show an user message on issue
@@ -284,7 +372,7 @@ void CUserMenuSetup::checkButtonName()
 		if (!g_settings.usermenu[button]->title.empty())
 		{
 			//DisplayInfoMessage(g_Locale->getText(LOCALE_USERMENU_MSG_WARNING_NO_ITEMS));
-			setSettingsText(g_settings.usermenu[button]->title, "");
+			writeMember(0, "", false);
 		}
 		// exit function
 		return;
@@ -305,7 +393,7 @@ void CUserMenuSetup::checkButtonName()
 		msg += g_Locale->getText(usermenu[button].def_name);
 		DisplayInfoMessage(msg.c_str());
 
-		setSettingsText(g_settings.usermenu[button]->title, g_Locale->getText(usermenu[button].def_name));
+		writeMember(0, g_Locale->getText(usermenu[button].def_name), false);
 	}
 }
 

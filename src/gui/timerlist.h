@@ -109,6 +109,9 @@ class CTimerList : public CMenuTarget, public CListHelpers
 		bool changed;
 		int bselected;
 		CMenuWidget *remboxmenu;
+		std::vector<timer_remotebox_item> rb_entry;
+		std::vector<timer_remotebox_item> rb_edit;
+		std::vector<size_t> rb_shown;
 		bool askUserOnRemoteTimerConflict(time_t announceTime, time_t stopTime, char *remotebox_ip);
 
 	public:

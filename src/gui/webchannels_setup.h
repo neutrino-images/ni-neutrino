@@ -26,6 +26,8 @@
 
 #include <sys/types.h>
 #include <string.h>
+#include <list>
+#include <string>
 #include <gui/widget/menue.h>
 
 #define WEBTV_XML	WEBTVDIR_VAR "/webtv_usr.xml"
@@ -56,6 +58,8 @@ class CWebChannelsSetup : public CMenuTarget
 
 		void webchannels_auto();
 		bool webchannels_autodir(std::string directory);
+
+		std::list<std::string> autoFiles(bool radio, std::list<std::string> webchannels);
 };
 
 class CWebTVResolution : public CMenuTarget

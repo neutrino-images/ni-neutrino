@@ -184,10 +184,9 @@ int CVideoSettings::showVideoSetup()
 	videosetup->setSelected(selected);
 	videosetup->setWizardMode(is_wizard);
 
-	const CMenuOptionChooser::keyval_ext *vmodes = videoModeSlots();
-
 	CMenuWidget videomodes(LOCALE_MAINSETTINGS_VIDEO, NEUTRINO_ICON_SETTINGS);
 #ifdef BOXMODEL_CST_HD2
+	const CMenuOptionChooser::keyval_ext *vmodes = videoModeSlots();
 	CMenuForwarder *vs_automodes_fw = NULL;
 	CMenuWidget automodes(LOCALE_MAINSETTINGS_VIDEO, NEUTRINO_ICON_SETTINGS);
 #endif
@@ -203,12 +202,10 @@ int CVideoSettings::showVideoSetup()
 		videomodes.addIntroItems(LOCALE_VIDEOMENU_ENABLED_MODES);
 
 		for (int i = 0; i < VIDEOMENU_VIDEOMODE_OPTION_COUNT; i++)
-			if (vmodes[i].key != -1)
-			{
-				snprintf(slot_key, sizeof(slot_key), "enabled_video_mode_%d", i);
-				slot_apply.push_back(CVideoModeSlotApply(slot_key));
-				videomodes.addItem(new CMenuOptionChooser(vmodes[i].valname, &g_settings.enabled_video_modes[i], OPTIONS_OFF0_ON1_OPTIONS, OPTIONS_OFF0_ON1_OPTION_COUNT, true, &slot_apply.back()));
-			}
+		{
+			snprintf(slot_key, sizeof(slot_key), "enabled_video_mode_%d", i);
+			addSetting(&videomodes, slot_key);
+		}
 
 		if (coreapi::hasFormatButton())
 		{

@@ -61,6 +61,7 @@
 #include <gui/widget/hintbox.h>
 #include <gui/widget/icons.h>
 #include <gui/widget/msgbox.h>
+#include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/stringinput_ext.h>
 #include <gui/widget/keyboard_input.h>
@@ -69,6 +70,9 @@
 #include <system/fsmounter.h>
 #include <system/helpers.h>
 #include <system/remotetimer.h>
+#include <system/debug.h>
+
+#include <coreapi/settings/settings.h>
 
 #include <global.h>
 #include <neutrino.h>
@@ -319,23 +323,24 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 		rbsetup->enableSaveScreen();
 		if ((rbsetup->exec(NULL, "") == true) && (!rbaddress.empty()))
 		{
-			remboxmenu->hide();
-			remboxmenu->disableSaveScreen();
-			remboxmenu->addItem(new CMenuForwarder(rbname, true, NULL, this, "cha_ip"));
-			remboxmenu->enableSaveScreen();
 			timer_remotebox_item timer_rb;
 			timer_rb.rbaddress = rbaddress;
-			if (!timer_rb.rbaddress.empty())
-			{
-				timer_rb.port = atoi(port);
-				timer_rb.user = user;
-				timer_rb.pass = pass;
-				timer_rb.rbname = rbname;
-				if (timer_rb.rbname.empty())
-					timer_rb.rbname = timer_rb.rbaddress;
-				CSettingsTextGuard lock;
-				g_settings.timer_remotebox_ip.push_back(timer_rb);
-			}
+			timer_rb.port = atoi(port);
+			timer_rb.user = user;
+			timer_rb.pass = pass;
+			timer_rb.rbname = rbname;
+			if (timer_rb.rbname.empty())
+				timer_rb.rbname = timer_rb.rbaddress;
+			timer_rb.enabled = true;
+			timer_rb.online = false;
+			rb_edit.push_back(timer_rb);
+			rb_shown.push_back(rb_edit.size() - 1);
+			remboxmenu->hide();
+			remboxmenu->disableSaveScreen();
+			CMenuForwarder *added = new CMenuForwarder(timer_rb.rbname, true, NULL, this, "cha_ip");
+			added->setInfoIconRight(NEUTRINO_ICON_MARKER_DIALOG_OK);
+			remboxmenu->addItem(added);
+			remboxmenu->enableSaveScreen();
 			changed = true;
 		}
 		return menu_return::RETURN_REPAINT;
@@ -350,6 +355,7 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 			remboxmenu->disableSaveScreen();
 			remboxmenu->removeItem(bselected);
 			remboxmenu->enableSaveScreen();
+			rb_shown.erase(rb_shown.begin() + (bselected - item_offset));
 			bselected = remboxmenu->getSelected();
 			changed = true;
 		}
@@ -363,8 +369,8 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 			return menu_return::RETURN_NONE;
 		CMenuItem *item = remboxmenu->getItem(bselected);
 		CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
-		std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin();
-		std::advance(it, bselected - item_offset);
+		std::vector<timer_remotebox_item>::iterator it = rb_edit.begin();
+		std::advance(it, rb_shown[bselected - item_offset]);
 		it->enabled = !it->enabled;
 		f->setInfoIconRight(it->enabled ? NEUTRINO_ICON_MARKER_DIALOG_OK : NEUTRINO_ICON_MARKER_DIALOG_OFF);
 		changed = true;
@@ -376,8 +382,8 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 		bselected = remboxmenu->getSelected();
 		CMenuItem *item = remboxmenu->getItem(bselected);
 		CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
-		std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin();
-		std::advance(it, bselected - item_offset);
+		std::vector<timer_remotebox_item>::iterator it = rb_edit.begin();
+		std::advance(it, rb_shown[bselected - item_offset]);
 		std::string port = to_string(it->port);
 		CKeyboardInput remotebox_name(LOCALE_REMOTEBOX_RBNAME, &it->rbname, 25);
 		remotebox_name.forceSaveScreen(true);
@@ -1112,9 +1118,113 @@ void CTimerList::hide()
 	}
 }
 
+static bool sameBox(const timer_remotebox_item &a, const timer_remotebox_item &b)
+{
+	return a.enabled == b.enabled && a.port == b.port && a.rbaddress == b.rbaddress && a.rbname == b.rbname
+		&& a.user == b.user && a.pass == b.pass;
+}
+
+static std::string remoteBoxRecords(const std::vector<timer_remotebox_item> &boxes)
+{
+	std::vector<std::string> records;
+	for (size_t i = 0; i < boxes.size(); i++)
+	{
+		std::vector<std::string> members;
+		members.push_back(boxes[i].enabled ? "1" : "0");
+		members.push_back(boxes[i].rbaddress);
+		members.push_back(boxes[i].rbname);
+		members.push_back(boxes[i].user);
+		members.push_back(boxes[i].pass);
+		members.push_back(to_string(boxes[i].port));
+		records.push_back(coreapi::settings::joinOn(members, '\t'));
+	}
+	return coreapi::settings::joinOn(records, '\n');
+}
+
+// A box this screen left as it found it is taken from the store, so a write made elsewhere stays.
+static void writeRemoteBoxes(const std::vector<timer_remotebox_item> &entry, const std::vector<timer_remotebox_item> &edit,
+			     const std::vector<size_t> &shown)
+{
+	std::vector<timer_remotebox_item> current;
+	{
+		CSettingsTextGuard lock;
+		current = g_settings.timer_remotebox_ip;
+	}
+	// The list was rebuilt meanwhile, a load or a restore, so the rows here name other boxes.
+	if (current.size() != entry.size())
+	{
+		dprintf(DEBUG_NORMAL, "[timerlist] timer_remotebox_ip changed elsewhere, not written\n");
+		ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
+		return;
+	}
+	std::vector<timer_remotebox_item> boxes;
+	for (size_t i = 0; i < shown.size(); i++)
+	{
+		const size_t k = shown[i];
+		const bool untouched = k < entry.size() && sameBox(edit[k], entry[k]);
+		boxes.push_back(untouched ? current[k] : edit[k]);
+	}
+
+	bool same = boxes.size() == current.size();
+	for (size_t i = 0; same && i < boxes.size(); i++)
+		same = sameBox(boxes[i], current[i]);
+	if (same)
+		return;
+
+	if (boxes.size() == current.size())
+	{
+		writeRow("timer_remotebox_ip", remoteBoxRecords(boxes), true);
+		return;
+	}
+
+	// The row takes only the boxes there are, so adding or removing one is this screen's own write.
+	bool moved = false;
+	{
+		CSettingsTextGuard lock;
+		const std::vector<timer_remotebox_item> &now = g_settings.timer_remotebox_ip;
+		moved = now.size() != current.size();
+		for (size_t i = 0; !moved && i < now.size(); i++)
+			moved = !sameBox(now[i], current[i]);
+		if (!moved)
+			g_settings.timer_remotebox_ip = boxes;
+	}
+	if (moved)
+	{
+		dprintf(DEBUG_NORMAL, "[timerlist] timer_remotebox_ip changed elsewhere, not written\n");
+		ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
+		return;
+	}
+	if (!boxes.empty())
+	{
+		const coreapi::Result<void> checked = coreapi::settings::check("timer_remotebox_ip", remoteBoxRecords(boxes));
+		if (!checked.ok())
+		{
+			{
+				CSettingsTextGuard lock;
+				g_settings.timer_remotebox_ip = current;
+			}
+			dprintf(DEBUG_NORMAL, "[timerlist] timer_remotebox_ip not written: %s\n", checked.error().message.c_str());
+			ShowHint(LOCALE_MESSAGEBOX_ERROR, LOCALE_STRINGINPUT_SAVE_FAILED);
+			return;
+		}
+	}
+	const coreapi::Status s = coreapi::settings::menuChanged("timer_remotebox_ip");
+	if (s != coreapi::Status::Ok && s != coreapi::Status::Busy)
+		dprintf(DEBUG_NORMAL, "[timerlist] timer_remotebox_ip was not applied\n");
+	CNeutrinoApp::getInstance()->saveSetup(NEUTRINO_SETTINGS_FILE);
+}
+
 bool CTimerList::RemoteBoxSetup()
 {
 	bool ret = false;
+	{
+		CSettingsTextGuard lock;
+		rb_entry = g_settings.timer_remotebox_ip;
+	}
+	rb_edit = rb_entry;
+	rb_shown.clear();
+	for (size_t i = 0; i < rb_edit.size(); i++)
+		rb_shown.push_back(i);
 	remboxmenu = new CMenuWidget(LOCALE_REMOTEBOX_HEAD, NEUTRINO_ICON_TIMER, 50);
 	remboxmenu->addKey(CRCInput::RC_red, this, "del_ip");
 	remboxmenu->addKey(CRCInput::RC_green, this, "add_ip");
@@ -1124,7 +1234,7 @@ bool CTimerList::RemoteBoxSetup()
 
 	item_offset = remboxmenu->getItemsCount();
 	CMenuForwarder *mf;
-	for (std::vector<timer_remotebox_item>::iterator it = g_settings.timer_remotebox_ip.begin(); it != g_settings.timer_remotebox_ip.end(); ++it)
+	for (std::vector<timer_remotebox_item>::iterator it = rb_edit.begin(); it != rb_edit.end(); ++it)
 	{
 		mf = new CMenuForwarder(it->rbname, true, NULL, this, "cha_ip");
 		mf->setInfoIconRight(it->enabled ? NEUTRINO_ICON_MARKER_DIALOG_OK : NEUTRINO_ICON_MARKER_DIALOG_OFF);
@@ -1137,23 +1247,7 @@ bool CTimerList::RemoteBoxSetup()
 	remboxmenu->exec(NULL, "");
 	if (changed)
 	{
-		std::vector<timer_remotebox_item> old_timer_remotebox_ip = g_settings.timer_remotebox_ip;
-		std::vector<timer_remotebox_item> kept;
-		for (int i = item_offset; i < remboxmenu->getItemsCount(); i++)
-		{
-			CMenuItem *item = remboxmenu->getItem(i);
-			CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
-			for (std::vector<timer_remotebox_item>::iterator it = old_timer_remotebox_ip.begin(); it != old_timer_remotebox_ip.end(); ++it)
-			{
-				if (it->rbname == f->getName())
-					kept.push_back(*it);
-			}
-		}
-		{
-			// A request reads the list under this lock, so it is replaced under it.
-			CSettingsTextGuard lock;
-			g_settings.timer_remotebox_ip = kept;
-		}
+		writeRemoteBoxes(rb_entry, rb_edit, rb_shown);
 		changed = false;
 		ret = true;
 	}
