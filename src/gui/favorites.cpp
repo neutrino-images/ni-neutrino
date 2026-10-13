@@ -103,7 +103,10 @@ int CFavorites::addChannelToFavorites(bool show_list)
 		   it, and that is worth saying before the viewer walks away believing
 		   otherwise. */
 		if (!saved)
+		{
 			DisplayErrorMessage(g_Locale->getText(LOCALE_BOUQUETEDITOR_SAVEFAILED));
+			printf("[favorites] saving the bouquet files failed\n");
+		}
 	}
 
 	return status;

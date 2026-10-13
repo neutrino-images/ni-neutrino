@@ -776,7 +776,10 @@ int CScanSetup::showScanMenu()
 		// taken while the files were not rewritten is a setting that did not
 		// take.
 		if (!g_Zapit->saveBouquets())
+		{
 			DisplayErrorMessage(g_Locale->getText(LOCALE_BOUQUETEDITOR_SAVEFAILED));
+			printf("[scan_setup] saving the bouquet files failed\n");
+		}
 	}
 
 	delete satOnOff;

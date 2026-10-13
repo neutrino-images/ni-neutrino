@@ -538,7 +538,10 @@ void CBEBouquetWidget::saveChanges()
 	// The editor closes after this, so a viewer who is not told here is told
 	// nowhere: what was moved or renamed is in the running list and in no file.
 	if (!saved)
+	{
 		DisplayErrorMessage(g_Locale->getText(LOCALE_BOUQUETEDITOR_SAVEFAILED));
+		printf("[bouqueteditor] saving the bouquet files failed\n");
+	}
 }
 
 void CBEBouquetWidget::discardChanges()

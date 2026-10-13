@@ -3425,7 +3425,8 @@ void CControlAPI::saveBouquetCGI(CyhookHandler *hh)
 	   the route that was built to say so. Named rather than cast to void
 	   because a cast does not quiet the compiler's own complaint about a
 	   discarded result. */
-	const bool saved __attribute__((unused)) = NeutrinoAPI->Zapit->saveBouquets();
+	if (!NeutrinoAPI->Zapit->saveBouquets())
+		printf("[controlapi] saving the bouquet files failed\n");
 	NeutrinoAPI->UpdateBouquets();
 	hh->SendOk();
 }

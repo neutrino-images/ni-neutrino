@@ -4118,6 +4118,8 @@ _repeat:
 
 		if (favorites_changed) {
 			saved = g_bouquetManager->saveUBouquets();
+			if (!saved)
+				printf("[neutrino] saving the user bouquets failed\n");
 			if (!channels_init)
 				CEpgScan::getInstance()->ConfigureEIT();
 		}
@@ -4129,7 +4131,10 @@ _repeat:
 		   hold different lists and the one that can still be written should
 		   be. */
 		if (bouquets_changed && !g_bouquetManager->saveBouquets())
+		{
 			saved = false;
+			printf("[neutrino] saving the bouquets failed\n");
+		}
 
 		if (channels_init) {
 			g_bouquetManager->renumServices();
