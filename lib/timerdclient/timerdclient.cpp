@@ -538,7 +538,7 @@ bool CTimerdClient::modifyTimerAPid(int eventid, unsigned char apids)
 	VALGRIND_PARANOIA(data);
 	data.eventID=eventid;
 	data.apids = apids;
-	bool sent = send(CTimerdMsg::CMD_SETAPID, (char*) &data, sizeof(data)); 
+	bool sent = send(CTimerdMsg::CMD_SETAPID, (char*) &data, sizeof(data));
 	close_connection();
 	return sent;
 }

@@ -266,7 +266,12 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 
 		case CTimerdMsg::CMD_ADDTIMER:						// add new timer
 			CTimerdMsg::commandAddTimer msgAddTimer;
-			CBasicServer::receive_data(connfd,&msgAddTimer, sizeof(msgAddTimer));
+			/* A timer is made only from a request that arrived whole. What
+			   a client that broke off part way through left in these
+			   buffers is the stack's, and it reads no answer either; one
+			   whose payload stops short is answered 0, its "not made". */
+			if (!CBasicServer::receive_data(connfd,&msgAddTimer, sizeof(msgAddTimer)))
+				break;
 
 			CTimerdMsg::responseAddTimer rspAddTimer;
 			CTimerEvent* event;
@@ -276,7 +281,8 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 			{
 				case CTimerd::TIMER_STANDBY :
 					CTimerdMsg::commandSetStandby standby;
-					CBasicServer::receive_data(connfd, &standby, sizeof(CTimerdMsg::commandSetStandby));
+					if (!CBasicServer::receive_data(connfd, &standby, sizeof(CTimerdMsg::commandSetStandby)))
+						break;
 
 					event = new CTimerEvent_Standby(
 						msgAddTimer.announceTime,
@@ -309,10 +315,10 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 				{
 
 					CTimerd::TransferRecordingInfo recInfo;
-					CBasicServer::receive_data(connfd, &recInfo, sizeof(CTimerd::TransferRecordingInfo));
-					/* Read as a string below, and a read that stopped short
-					   leaves whatever was on the stack behind the last byte
-					   it did write. */
+					if (!CBasicServer::receive_data(connfd, &recInfo, sizeof(CTimerd::TransferRecordingInfo)))
+						break;
+					// read as a string below: a title that fills the field
+					// ends inside it all the same
 					recInfo.epgTitle[sizeof(recInfo.epgTitle) - 1] = 0;
 					if(recInfo.recordingSafety)
 					{
@@ -343,7 +349,8 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 					break;
 				}
 				case CTimerd::TIMER_IMMEDIATE_RECORD :
-					CBasicServer::receive_data(connfd, &evInfo, sizeof(CTimerd::TransferEventInfo));
+					if (!CBasicServer::receive_data(connfd, &evInfo, sizeof(CTimerd::TransferEventInfo)))
+						break;
 					event = new CTimerEvent_Record(
 						msgAddTimer.announceTime,
 						msgAddTimer.alarmTime,
@@ -359,7 +366,8 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 					break;
 
 				case CTimerd::TIMER_ZAPTO :
-					CBasicServer::receive_data(connfd, &evInfo, sizeof(CTimerd::TransferEventInfo));
+					if (!CBasicServer::receive_data(connfd, &evInfo, sizeof(CTimerd::TransferEventInfo)))
+						break;
 					if(evInfo.channel_id > 0)
 					{
 						event = new CTimerEvent_Zapto(
@@ -406,7 +414,8 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 #endif
 				case CTimerd::TIMER_REMIND :
 					CTimerdMsg::commandRemind remind;
-					CBasicServer::receive_data(connfd, &remind, sizeof(CTimerdMsg::commandRemind));
+					if (!CBasicServer::receive_data(connfd, &remind, sizeof(CTimerdMsg::commandRemind)))
+						break;
 					event = new CTimerEvent_Remind(msgAddTimer.announceTime,
 									msgAddTimer.alarmTime,
 									remind.message,
@@ -417,7 +426,8 @@ bool timerd_parse_command(CBasicMessage::Header &rmsg, int connfd)
 
 				case CTimerd::TIMER_EXEC_PLUGIN :
 					CTimerdMsg::commandExecPlugin pluginMsg;
-					CBasicServer::receive_data(connfd, &pluginMsg, sizeof(CTimerdMsg::commandExecPlugin));
+					if (!CBasicServer::receive_data(connfd, &pluginMsg, sizeof(CTimerdMsg::commandExecPlugin)))
+						break;
 					event = new CTimerEvent_ExecPlugin(msgAddTimer.announceTime,
 									msgAddTimer.alarmTime,
 									pluginMsg.name,
