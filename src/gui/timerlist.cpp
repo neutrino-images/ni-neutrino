@@ -371,7 +371,11 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 		CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
 		std::vector<timer_remotebox_item>::iterator it = rb_edit.begin();
 		std::advance(it, rb_shown[bselected - item_offset]);
-		it->enabled = !it->enabled;
+		{
+			// under the lock, as every change to the remote boxes is
+			CSettingsTextGuard lock;
+			it->enabled = !it->enabled;
+		}
 		f->setInfoIconRight(it->enabled ? NEUTRINO_ICON_MARKER_DIALOG_OK : NEUTRINO_ICON_MARKER_DIALOG_OFF);
 		changed = true;
 		return menu_return::RETURN_REPAINT;
@@ -406,7 +410,11 @@ int CTimerList::exec(CMenuTarget *parent, const std::string &actionKey)
 		rbsetup->enableSaveScreen();
 		if ((rbsetup->exec(NULL, "") == true) && (!it->rbaddress.empty()))
 		{
-			it->port = atoi(port);
+			{
+				// under the lock: nhttpd's remote box lookup reads the port
+				CSettingsTextGuard lock;
+				it->port = atoi(port);
+			}
 			f->setName(it->rbname);
 			remboxmenu->hide();
 			changed = true;
@@ -832,7 +840,12 @@ void CTimerList::RemoteBoxTimerList(CTimerd::TimerList &rtimerlist, bool with_ch
 		remotebox_address_t box;
 		if (!RemoteBoxAddress(it->rbname, box))
 		{
-			it->online = false;
+			{
+				/* The assignment alone: the download in this loop takes
+				   the same lock, which is not recursive. */
+				CSettingsTextGuard lock;
+				it->online = false;
+			}
 			continue;
 		}
 
@@ -840,7 +853,10 @@ void CTimerList::RemoteBoxTimerList(CTimerd::TimerList &rtimerlist, bool with_ch
 		   every channel name below is asked over. */
 		CRemoteTimerClient client(box, httpConnectTimeout);
 		const size_t first = rtimerlist.size();
-		it->online = client.getTimers(it->rbname, rtimerlist) == CRemoteTimerClient::RESULT_OK;
+		{
+			CSettingsTextGuard lock;
+			it->online = client.getTimers(it->rbname, rtimerlist) == CRemoteTimerClient::RESULT_OK;
+		}
 		if (!it->online)
 			continue;
 

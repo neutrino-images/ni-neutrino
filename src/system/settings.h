@@ -331,9 +331,12 @@ struct SNeutrinoGlcdTheme
    and it runs from the display threads as well, so every read of those two
    takes the lock too.
 
-   Every read off the loop goes through settingsText, which answers with a copy:
-   a reference or a c_str handed out from under the lock would outlive it, and
-   the next write frees what it points at. */
+   Every read off the loop is to go through settingsText, which answers with a
+   copy: a reference or a c_str handed out from under the lock would outlive
+   it, and the next write frees what it points at. The strings of the GLCD
+   theme and the members of the containers named at the setters below are
+   still read bare; nhttpd's remote box lookup reads timer_remotebox_ip with
+   the guard held instead. */
 class CSettingsTextGuard
 {
 	public:
@@ -364,7 +367,10 @@ class CSettingsTextGuard
 
    Where one assignment of a string is not the unit, the writer holds
    CSettingsTextGuard itself: the string input and the extended input for each
-   character they change. */
+   character they change, and every change to the remote boxes
+   (timer_remotebox_ip) other than an entry's strings, which go through
+   setSettingsText; nhttpd's remote box lookup walks those entries with the
+   guard held. */
 inline void setSettingsText(std::string &field, const std::string &value)
 {
 	CSettingsTextGuard lock;
