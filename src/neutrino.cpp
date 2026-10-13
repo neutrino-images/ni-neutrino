@@ -5938,6 +5938,20 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby, bool leaveTv)
 			g_Zapit->lockPlayBack();
 		}
 
+		/* The radio picture is a still frame on the video plane, which the
+		   decoder keeps across its stop. Going into standby took it off
+		   nowhere, and it stayed on screen over the blanked OSD. Waking in
+		   radio mode shows it again. On ARM boxes stopFrame alone leaves the
+		   last frame standing; a black frame shown first is what stays
+		   there, as the screen saver does it. */
+		if (mode == NeutrinoModes::mode_radio || mode == NeutrinoModes::mode_webradio)
+		{
+#if HAVE_ARM_HARDWARE
+			frameBuffer->showFrame("blackscreen.jpg");
+#endif
+			frameBuffer->stopFrame();
+		}
+
 		// The decoder's standby is what switches the television off, synchronously.
 		coreapi::holdCecPower(true, true, leaveTv);
 		videoDecoder->Standby(true);
