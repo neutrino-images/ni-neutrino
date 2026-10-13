@@ -235,7 +235,9 @@ int CNetworkSetup::showNetworkSetup()
 	if (std::find(interfaces.begin(), interfaces.end(), g_settings.ifname) == interfaces.end())
 	{
 		std::string ifname = g_settings.ifname;
-		if (getDefaultNetworkInterface(ifname, false))
+		bool have_default = getDefaultNetworkInterface(ifname, false);
+		setSettingsText(g_settings.ifname, ifname);
+		if (have_default)
 			writeRow("ifname", ifname, false);
 		else
 		{
