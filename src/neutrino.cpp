@@ -2345,22 +2345,22 @@ static void clearBouquetChannels(CBouquetList *list)
 		list->Bouquets[i]->channelList->ClearChannelList();
 }
 
-/* Called from the zapit thread the moment CServiceManager has destroyed every
-   CZapitChannel it owns. Each list below holds borrowed raw pointers into that
-   map and nothing binds their lifetime to it, so from that moment until
-   channelsInit() has built the lists again everything they hold names a freed
-   object. Emptying them costs a reader that arrives in the window nothing it
-   would not also see on a box whose bouquets are empty, which is a state every
-   one of these lists reaches anyway. The set is the one channelsInit() deletes
-   and creates again, so a list added there belongs here too. */
+/* Called from PrepareChannels() once the services have been read again - on
+   the zapit thread, or on the main loop from CZapit::Start() and the start
+   wizard - after CServiceManager has destroyed every CZapitChannel it owned.
+   Each list below holds borrowed raw pointers into that map and nothing binds
+   their lifetime to it, so from that moment until channelsInit() has built the
+   lists again everything they hold names a freed object. Emptying them costs a
+   reader that arrives in the window nothing it would not also see on a box
+   whose bouquets are empty, which is a state every one of these lists reaches
+   anyway. The set is the one channelsInit() deletes and creates again, so a
+   list added there belongs here too. */
 void CNeutrinoApp::invalidateChannelLists()
 {
 	/* Under the channel manager's own lock, although nothing here touches the
 	   channel map: what is emptied are the lists whose readers hold that lock
 	   while they walk them, and a walk and this running at once is a reader
-	   asking a list its length and then indexing a list that has none. Taken
-	   here rather than around the call, so that the one call site stays the
-	   single statement the check over it reads.
+	   asking a list its length and then indexing a list that has none.
 
 	   Safe to take from the thread that calls this: the read of the services
 	   above it has already given the lock back, and nothing below reaches into
