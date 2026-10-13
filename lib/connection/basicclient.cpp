@@ -218,7 +218,8 @@ CBasicClient::RequestGuard::RequestGuard(CBasicClient & c) : client(c), held(fal
 	/* Taking the guard twice on one thread hangs the process with no output.
 	   Reported unconditionally rather than through assert, because a release
 	   build that defines NDEBUG is exactly where the hang is hardest to find. */
-	if (client.request_owner && pthread_equal(client.request_owner, pthread_self()))
+	const pthread_t owner = client.request_owner.load();
+	if (owner && pthread_equal(owner, pthread_self()))
 	{
 		printf("[CBasicClient] re-entrant request guard: %s\n", client.getSocketName());
 		fflush(stdout);
@@ -231,7 +232,7 @@ CBasicClient::RequestGuard::RequestGuard(CBasicClient & c) : client(c), held(fal
 		t_turn_denied++;
 		return;
 	}
-	client.request_owner = pthread_self();
+	client.request_owner.store(pthread_self());
 }
 
 CBasicClient::RequestGuard::~RequestGuard()
@@ -242,7 +243,7 @@ CBasicClient::RequestGuard::~RequestGuard()
 		return;
 	}
 
-	client.request_owner = 0;
+	client.request_owner.store(0);
 	client.request_mutex.unlock();
 }
 

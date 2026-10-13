@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <poll.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -84,15 +85,21 @@ bool waitReady(int fd, short events, int64_t deadline)
 	}
 }
 
-// Every byte or none of them. A stream that stopped half way through a header
-// or a body leaves the reader waiting for a length that will never arrive, and
-// answering that as a send is what makes the loss invisible.
+// True only when every byte went out. A stream that stops half way through a
+// header or a body cannot be taken back: the reader is left with less than the
+// header says and drops it, and false is what has the sender keep the event and
+// send it again whole.
 bool writeAll(int fd, const void *data, size_t size, int64_t deadline)
 {
 	const char *p = (const char *) data;
 	size_t done = 0;
 	while (done < size)
 	{
+		// before every write and not only once the buffer is full: a run of
+		// short writes must not carry a send past its bound either
+		const int64_t now = nowMs();
+		if (now < 0 || now >= deadline)
+			return false;
 		const ssize_t n = write(fd, p + done, size - done);
 		if (n > 0)
 		{
@@ -175,12 +182,11 @@ bool connectBy(int fd, const struct sockaddr *addr, socklen_t len, int64_t deadl
    them. What is not reported is the drops after the last line until the next
    one arrives; there is no timer here to flush them.
 
-   Both fields are read and written from more than one thread without a lock.
-   They are 32 bits and aligned, which is a single store on the host and on the
-   target, so a reader sees an old value or a new one and never half of each.
-   The cost of a race is a repeated or a late line, which is what a rate limiter
-   is allowed to do; it cannot affect a send. The seconds are enough because the
-   interval is measured in them. */
+   Every sending thread and the outbox thread count here, so the table is only
+   touched under drop_lock: a count two threads raised at once lost one of
+   them, and a slot a name was being written into could be read half written.
+   The line itself is written after letting go. The seconds are enough because
+   the interval is measured in them. */
 struct DropCount
 {
 	// The same width the client name is registered with.
@@ -189,6 +195,9 @@ struct DropCount
 	unsigned dropped;
 };
 
+pthread_mutex_t drop_lock = PTHREAD_MUTEX_INITIALIZER;
+
+// with drop_lock held
 DropCount &slotFor(const char *udsName)
 {
 	static DropCount slots[8];
@@ -215,21 +224,25 @@ DropCount &slotFor(const char *udsName)
 void reportDrop(const char *udsName)
 {
 	const int saved = errno;
-	DropCount &slot = slotFor(udsName);
-
-	slot.dropped++;
-
 	const int64_t ms = nowMs();
 	const unsigned now = (ms < 0) ? 0 : (unsigned)(ms / 1000);
+
+	pthread_mutex_lock(&drop_lock);
+	DropCount &slot = slotFor(udsName);
+	slot.dropped++;
 	if (now != 0 && slot.last_reported != 0 &&
 	    now - slot.last_reported < (unsigned)(kDropReportMs / 1000))
 	{
+		pthread_mutex_unlock(&drop_lock);
 		errno = saved;
 		return;
 	}
 	slot.last_reported = (now == 0) ? 1 : now;
+	const unsigned dropped = slot.dropped;
+	pthread_mutex_unlock(&drop_lock);
+
 	fprintf(stderr, "[eventserver]: dropped %u event(s) so far for %s: %s\n",
-		slot.dropped, udsName, strerror(saved));
+		dropped, udsName, strerror(saved));
 	errno = saved;
 }
 

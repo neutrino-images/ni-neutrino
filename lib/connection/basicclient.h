@@ -31,6 +31,8 @@
 #include <sys/types.h>
 #include <time.h>
 
+#include <atomic>
+
 #include <OpenThreads/Mutex>
 
 class CBasicClient
@@ -59,10 +61,11 @@ class CBasicClient
 	   reopens, so two callers would trade descriptors mid exchange. */
 	OpenThreads::Mutex request_mutex;
 
-	/* Only ever written by the thread holding request_mutex, and read without
-	   it before taking it, so the loads must be single aligned words. Zero
-	   means free, no thread id is zero. */
-	volatile pthread_t request_owner;
+	/* Only ever written by the thread holding request_mutex, and read by any
+	   thread before it takes it, to tell a second guard on its own thread.
+	   Atomic, because a plain read of a word another thread writes is a race
+	   however the word is stored. Zero means free, no thread id is zero. */
+	std::atomic<pthread_t> request_owner;
 
  public:
 	/* Bounds every wait this thread makes through any client of this
