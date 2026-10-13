@@ -1860,9 +1860,11 @@ bool CZapit::ParseCommand(CBasicMessage::Header &rmsg, int connfd)
 			//msgCurrentServiceInfo.pmt_version = (current_channel->getCaPmt() != NULL) ? current_channel->getCaPmt()->version_number : 0xff;
 			msgCurrentServiceInfo.pmt_version = current_channel->getPmtVersion();
 			msgCurrentServiceInfo.pcrpid = current_channel->getPcrPid();
-			/* The pc build answers this without a tuner, and the struct
-			 * was memset above, so leaving the transponder fields at zero
-			 * is the honest answer rather than inventing one. */
+			/* Without a live frontend there is no transponder to report,
+			 * and the struct was memset above, so the transponder fields
+			 * stay at zero; only the fallbacks below fill in the code rate
+			 * and the polarisation. This tree does not start the daemon
+			 * without a frontend, so here this only guards. */
 			if (live_fe) {
 				msgCurrentServiceInfo.tsfrequency = live_fe->getFrequency();
 				msgCurrentServiceInfo.rate = live_fe->getRate();
@@ -3872,12 +3874,11 @@ void CZapit::run()
 #endif
 	delete pcrDemux;
 	delete pmtDemux;
-	/* Cleared as well as freed, because a reader outside this thread checks it
-	   for null before using it: the web server runs detached and is never
-	   stopped, so a request in flight while this runs would otherwise find a
-	   pointer that is still set and read the object after it is gone. The
-	   pointers around it are global in the same way and are left as they are,
-	   because none of them has a reader that outlives this. */
+	/* Cleared as well as freed, so that a reader which checks it after the
+	   teardown finds it gone. None does here yet: the web server runs detached
+	   and is never stopped, and its audio info reads the decoder without a
+	   check. The pointers around it are global in the same way and are left
+	   as they are, because none of them has a reader that outlives this. */
 	delete audioDecoder;
 	audioDecoder = NULL;
 	delete audioDemux;
