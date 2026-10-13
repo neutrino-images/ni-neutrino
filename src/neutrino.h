@@ -178,7 +178,8 @@ public:
 	static CNeutrinoApp* getInstance();
 
 	void channelsInit(bool bOnly = false);
-	void invalidateChannelLists();
+	/* lock_held: the caller holds the channel lock, the full reload does */
+	void invalidateChannelLists(bool lock_held = false);
 	int run(int argc, char **argv);
 
 #if ENABLE_PIP
