@@ -33,6 +33,7 @@
 #include <cs_api.h>
 #include <system/configure_network.h>
 #include <system/helpers.h>
+#include <httpd/webconfig.h>
 
 #include "gui/plugins.h"
 extern CPlugins *g_Plugins;
@@ -97,7 +98,7 @@ THandleStatus CNeutrinoYParser::Hook_ReadConfig(CConfigFile *Config, CStringList
 	{
 		Config->setString("Tuxbox.LogosURL", Config->getString("ExtrasDocURL", EXTRASDOCUMENTURL) +"/logos");
 		Config->setInt32("configfile.version", CONF_VERSION);
-		Config->saveConfig(HTTPD_CONFIGFILE);
+		httpd::saveServerFile(HTTPD_CONFIGFILE, Config->getConfigDataMap());
 	}
 	//std::string logo = 
 	ConfigList["TUXBOX_LOGOS_URL"];
