@@ -158,12 +158,12 @@ if grep -q 'channelList' "$tmp/logo"; then
 	exit 1
 fi
 
-# What it has to use instead: the copy the service manager takes under its own
-# lock. Without this the check above would pass on a version that looks up no
-# channel at all.
-if ! grep -q 'CServiceManager::getInstance()->CopyChannel' "$tmp/logo"; then
-	echo "check-list-reader-lock.sh: CPictureViewer::GetLogoName no longer takes" >&2
-	echo "  its channel as a copy from the service manager, so the scan has" >&2
+# What it has to use instead: the values the service manager reads under its
+# own lock. Without this the check above would pass on a version that looks up
+# no channel at all.
+if ! grep -q 'CServiceManager::getInstance()->GetLogoKeys' "$tmp/logo"; then
+	echo "check-list-reader-lock.sh: CPictureViewer::GetLogoName no longer reads" >&2
+	echo "  its channel's logo keys from the service manager, so the scan has" >&2
 	echo "  stopped matching" >&2
 	exit 1
 fi
