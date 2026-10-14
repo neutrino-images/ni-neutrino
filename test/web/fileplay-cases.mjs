@@ -77,7 +77,7 @@ for (const name of ['clip.mp4', 'clip.m4v', 'clip.mkv', 'clip.webm', 'clip.mov']
 	same(fileRoad(name), { how: 'here', sound: false, why: '' },
 		name + ' is handed to the browser as it is');
 }
-for (const name of ['song.mp3', 'song.m4a', 'song.aac', 'song.flac', 'song.ogg', 'song.wav']) {
+for (const name of ['song.mp3', 'song.m4a', 'song.aac', 'song.flac', 'song.ogg', 'song.opus', 'song.wav']) {
 	same(fileRoad(name), { how: 'here', sound: true, why: '' },
 		name + ' is sound with no picture');
 }
@@ -96,7 +96,7 @@ same(fileRoad('README'), { how: 'none', sound: false, why: 'unknown' },
    would be a player nobody can reach. */
 for (const name of ['film.ts', 'film.m2ts', 'alt.mpg', 'alt.mpeg', 'x.vob', 'clip.mp4',
 	'clip.m4v', 'clip.mkv', 'clip.webm', 'clip.mov', 'song.mp3', 'song.m4a', 'song.aac',
-	'song.flac', 'song.ogg', 'song.wav', 'neutrino.conf', 'README', 'film.ts.gz']) {
+	'song.flac', 'song.ogg', 'song.opus', 'song.wav', 'neutrino.conf', 'README', 'film.ts.gz']) {
 	const offered = mediaKind(name) !== '';
 	const road = fileRoad(name);
 	is(offered === (road.why !== 'unknown'),

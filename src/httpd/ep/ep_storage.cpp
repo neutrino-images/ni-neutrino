@@ -410,6 +410,7 @@ const char *storedContentType(const std::string &name)
 		{ ".aac",   "audio/aac" },
 		{ ".flac",  "audio/flac" },
 		{ ".ogg",   "audio/ogg" },
+		{ ".opus",  "audio/ogg" },
 		{ ".wav",   "audio/wav" },
 		{ ".m3u",   "audio/x-mpegurl" },
 		{ ".m3u8",  "audio/x-mpegurl" },

@@ -99,7 +99,7 @@ export function crumbsOf(path) {
    Stored compression is left out on purpose. A name ending in .gz leaves the box as
    the bytes it is, packed, and a player handed those has nothing to play. */
 const kVideo = ['.ts', '.m2ts', '.mpg', '.mpeg', '.vob', '.mp4', '.m4v', '.mkv', '.webm', '.mov'];
-const kAudio = ['.mp3', '.m4a', '.aac', '.flac', '.ogg', '.wav'];
+const kAudio = ['.mp3', '.m4a', '.aac', '.flac', '.ogg', '.opus', '.wav'];
 
 /* THE THREE ROADS A FILE TAKES, WHICH ARE NOT THE THREE A CHANNEL TAKES.
 
