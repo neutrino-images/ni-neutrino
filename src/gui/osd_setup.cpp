@@ -159,8 +159,8 @@ coreapi::Status coreapi::applicationResetInfoViewer()
 }
 
 /* The decoder is made with the radio programme, so with the setting on there is something
-   to start only while one is on, and the one that runs is given the audio pid on the
-   screen. With the setting off it is stopped and dropped wherever the box is. */
+   to start only while one is on, and the one that runs is given the audio zapit plays.
+   With the setting off it is stopped and dropped wherever the box is. */
 coreapi::Status coreapi::applicationResetRadioText()
 {
 	if (simulate_fe_enabled())
@@ -182,16 +182,8 @@ coreapi::Status coreapi::applicationResetRadioText()
 			delete g_RadiotextWin;
 			g_RadiotextWin = NULL;
 		}
-		unsigned int pid = 0;
-		bool latm = false;
-		if(!g_RemoteControl->current_PIDs.APIDs.empty())
-		{
-			pid = g_RemoteControl->current_PIDs.APIDs[g_RemoteControl->current_PIDs.PIDs.selected_apid].pid;
-			latm = g_RemoteControl->current_PIDs.APIDs[g_RemoteControl->current_PIDs.PIDs.selected_apid].is_aache;
-		}
-
-		g_Radiotext->setPid(pid, latm);
-		printf("\033[32m[COsdSetup] %s - %d: %d\033[0m\n", __func__, __LINE__, pid);
+		// current_PIDs stays empty after boot until the first zap, zapit knows the audio
+		CNeutrinoApp::getInstance()->pointRadiotextAtLiveAudio();
 	}
 	else
 	{
