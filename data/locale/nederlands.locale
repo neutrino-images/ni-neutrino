@@ -238,6 +238,7 @@ bouqueteditor.newbouquetname Nieuwe naam van de favorietenlijst
 bouqueteditor.rename Hernoem
 bouqueteditor.return Gereed
 bouqueteditor.savechanges? Wilt u de veranderingen opslaan?
+bouqueteditor.savefailed (((T))) Die Änderungen konnten nicht gespeichert werden.
 bouqueteditor.savingchanges Veranderingen opslaan. Een moment geduld aub.
 bouqueteditor.switch Toevoegen / Verwijderen
 bouqueteditor.switchmode TV/Radio
@@ -1173,13 +1174,17 @@ infoviewer.nocurrent Geen informatie beschikbaar over huidige programma
 infoviewer.noepg EPG is niet beschikbaar
 infoviewer.notavailable Geen of slecht antennesignaal
 infoviewer.notavailable.hint_check_tuner_setup (((T))) Bitte prüfen Sie die Tuner-Konfiguration.
+infoviewer.notavailable.needs_reception (((T))) Dieser Sender braucht: %s
 infoviewer.notavailable.reason_no_active_tuner (((T))) Kein aktiver Tuner verfügbar.
 infoviewer.notavailable.reason_no_delivery (((T))) Kein aktiver Tuner unterstützt den Empfangsweg dieses Senders.
 infoviewer.notavailable.reason_no_free_tuner (((T))) Zurzeit ist kein freier Tuner verfügbar.
 infoviewer.notavailable.reason_no_source_config (((T))) Für den gewählten Satelliten/Provider ist kein aktiver Tuner konfiguriert.
+infoviewer.notavailable.reason_no_standard (((T))) Kein aktiver Tuner beherrscht den Übertragungsstandard dieses Senders.
 infoviewer.notavailable.reason_stream_start_failed (((T))) Stream konnte nicht gestartet werden.
 infoviewer.notavailable.reason_tune_failed (((T))) Tuning fehlgeschlagen (kein Signal oder Transponder nicht verfügbar).
 infoviewer.notavailable.source (((T))) Quelle: %s
+infoviewer.notavailable.tuner_disabled (((T))) %s könnte diesen Sender empfangen, steht aber auf "%s".
+infoviewer.notavailable.tuner_disabled_source (((T))) %s könnte diesen Sender empfangen, steht aber auf "%s", und ihm ist noch kein Satellit zugeordnet.
 infoviewer.now Nu
 infoviewer.subchan_disp_pos Toon subkanalen
 infoviewer.subchan_infobar Volledige infobalk
@@ -1319,6 +1324,7 @@ mainmenu.mediaplayer (((T))) Mediaplayer
 mainmenu.movieplayer Videospeler
 mainmenu.pausesectionsd Lees EPG
 mainmenu.pictureviewer Afbeeldingen
+mainmenu.poweroff_menu (((T))) Ausschalten
 mainmenu.radiomode Radio mode
 mainmenu.reboot Herstart systeem
 mainmenu.recording Opnemen
@@ -1751,6 +1757,7 @@ menu.hint_plugins_control (((T))) Plugin-Einstellungen und Verwaltung von instal
 menu.hint_plugins_hdd_dir Selecteer plugin directory
 menu.hint_plugins_hide (((T))) Integrierte Plugins oder Plugins in den Benutzermenüs verstecken oder anzeigen
 menu.hint_power_leds Configureer LED power-button
+menu.hint_poweroff_menu (((T))) Öffnet ein Untermenü mit Energie-Optionen: Herunterfahren, Standby, Neustart, SleepTimer, Energieverbrauch und Plugins.
 menu.hint_pref_lang Selecteer de gewenste audio en EPG taal.\nSelecteer 'geen' om geen voorkeurstaal in te stellen.
 menu.hint_pref_subs Selecteer de gewenste ondertitelingstaal.\nSelecteer 'geen' om geen voorkeurstaal in te stellen.
 menu.hint_progressbar Selecteer de opties voor de voortgangsbalk
@@ -2400,6 +2407,7 @@ networkmenu.apply_settings Wijzigingen worden toegepast...
 networkmenu.apply_settings_now Wilt u de instellingen toepassen?
 networkmenu.broadcast broadcast adres
 networkmenu.dhcp DHCP
+networkmenu.error_hostname (((T))) Ungültiger Hostname!\nErlaubt sind Buchstaben, Ziffern und Bindestriche.
 networkmenu.error_no_address Adres ontbreekt
 networkmenu.gateway Standaard gateway
 networkmenu.hostname Hostnaam
@@ -2414,9 +2422,11 @@ networkmenu.httpd_save_failed ni-web.conf opslaan mislukt
 networkmenu.httpd_user Gebruikersnaam
 networkmenu.inactive_network Netwerk inactief!
 networkmenu.ipaddress IP adres
+networkmenu.managed_by_system (((T))) Wird vom System verwaltet
 networkmenu.mount Beheer netwerklocaties
 networkmenu.nameserver Naamserver
 networkmenu.netmask Subnetmasker
+networkmenu.no_interface (((T))) Keine Netzwerkschnittstelle gefunden!
 networkmenu.ntpatboot (((T))) Zeit beim Booten synchronisieren
 networkmenu.ntpenable Synchronisatie via
 networkmenu.ntprefresh NTP/DVB verversen (min)
@@ -2437,6 +2447,9 @@ networkmenu.ssid Netwerk naam (SSID)
 networkmenu.ssid_scan WLAN netwerk scan
 networkmenu.ssid_scan_error Geen WLAN netwerken gevonden.
 networkmenu.ssid_scan_wait WLAN netwerk scan is bezig...
+networkmenu.state_no_address (((T))) keine Adresse
+networkmenu.state_no_cable (((T))) kein Kabel
+networkmenu.state_not_connected (((T))) nicht verbunden
 networkmenu.test Netwerktest uitvoeren
 neutrino_starting %s %s starting ...
 nfs.active_shares Actieve koppelingen
@@ -2690,12 +2703,15 @@ remotebox_add (((T))) Hinzufügen
 remotebox_channel_na (((T))) Kanal auf Remote-Box nicht verfügbar
 remotebox_del (((T))) Löschen
 remotebox_head (((T))) Remote-Boxen
+remotebox_login_failed (((T))) Remote-Box weist Benutzername oder Passwort zurück
 remotebox_mod (((T))) Bearbeiten
+remotebox_no_answer (((T))) Remote-Box antwortet nicht
 remotebox_onoff (((T))) Ein/Aus
 remotebox_pass (((T))) Passwort
 remotebox_port (((T))) Port
 remotebox_rbaddr (((T))) Adresse
 remotebox_rbname (((T))) Anzeigename
+remotebox_refused (((T))) Remote-Box hat die Anfrage abgelehnt
 remotebox_user (((T))) Benutzer
 reset_all Fabrieksreset en herstart
 reset_channels Wis alle kanalen
@@ -2914,9 +2930,14 @@ streaming.slow Systeem/hdd te traag, overweeg enkele opnames te stoppen
 streaming.write_error De opname was afgebroken,\nomdat er een fout optrad gedurende het opname proces.
 stringinput.backspace Backspace
 stringinput.caps Hoofd- / kleine letters
+stringinput.char_not_allowed (((T))) Zeichen ist hier nicht erlaubt.
 stringinput.clear alle invoer wissen
+stringinput.empty_not_allowed (((T))) Eingabe darf nicht leer sein.
 stringinput.insert (((T))) Einfügen
+stringinput.maxchars_reached (((T))) Maximale Zeichenzahl erreicht.
 stringinput.save (((T))) Speichern
+stringinput.save_failed (((T))) Eingabe kann nicht gespeichert werden.
+stringinput.space (((T))) Leerzeichen
 subtitles.charset karakterset
 subtitles.head Ondertiteling
 subtitles.stop Stop ondertiteling
@@ -3172,7 +3193,11 @@ webchannels.xml.reload (((T))) Neu laden
 webradio.head (((T))) WebRadio
 webradio.xml (((T))) WebRadio-Dateien
 webradio.xml.auto (((T))) WebRadio-Dateien automatisch laden
+webtv.dns.blocker_suspected (((T))) Der Stream-Host wurde auf eine Block-Adresse aufgelöst:\n\nHost: %s\nAdresse: %s\n\nDas kann auf einen DNS-Blocker wie Pi-hole, AdGuard Home oder einen\nRouter-Filter hinweisen.
+webtv.dns.diagnostics (((T))) DNS-Diagnose
+webtv.dns.failed (((T))) DNS-Auflösung fehlgeschlagen für:\n%s\n\nBitte Internetverbindung, DNS-Einstellungen oder Router prüfen.
 webtv.head WebTV
+webtv.stream_restart_attempts (((T))) Stream-Neustarts nach Verbindungsabbruch
 webtv.xml WebTV XML bestand
 webtv.xml.auto (((T))) WebTV-Dateien automatisch laden
 window_size Window size in %

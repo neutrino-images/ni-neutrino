@@ -2407,6 +2407,7 @@ networkmenu.apply_settings Zmeny sa aplikujú...
 networkmenu.apply_settings_now Chcete teraz aplikovať zmeny?
 networkmenu.broadcast Vysielanie / Broadcast
 networkmenu.dhcp Načítanie IP adresy z DHCP
+networkmenu.error_hostname (((T))) Ungültiger Hostname!\nErlaubt sind Buchstaben, Ziffern und Bindestriche.
 networkmenu.error_no_address Chýbajúce %s adresy!
 networkmenu.gateway Predvolená brána
 networkmenu.hostname Názov hostiteľa
@@ -2421,6 +2422,7 @@ networkmenu.httpd_save_failed Nepodarilo sa uložiť ni-web.conf
 networkmenu.httpd_user Používateľ
 networkmenu.inactive_network Sieť neaktívna!
 networkmenu.ipaddress IP adresa
+networkmenu.managed_by_system (((T))) Wird vom System verwaltet
 networkmenu.mount Úprava sieťových priečinkov (NFS / CIFS)
 networkmenu.nameserver DNS
 networkmenu.netmask Maska podsiete
@@ -2445,6 +2447,9 @@ networkmenu.ssid Názov siete (SSID)
 networkmenu.ssid_scan Hľadanie WLAN sietí
 networkmenu.ssid_scan_error Nenájdené WLAN siete
 networkmenu.ssid_scan_wait Prebieha hľadanie WLAN sietí
+networkmenu.state_no_address (((T))) keine Adresse
+networkmenu.state_no_cable (((T))) kein Kabel
+networkmenu.state_not_connected (((T))) nicht verbunden
 networkmenu.test Test siete
 neutrino_starting %s %s štartuje ...
 nfs.active_shares Aktívne pripojenia
