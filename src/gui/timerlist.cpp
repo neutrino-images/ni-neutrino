@@ -841,8 +841,7 @@ void CTimerList::RemoteBoxTimerList(CTimerd::TimerList &rtimerlist, bool with_ch
 		if (!RemoteBoxAddress(it->rbname, box))
 		{
 			{
-				/* The assignment alone: the download in this loop takes
-				   the same lock, which is not recursive. */
+				// under the lock, as every change to the remote boxes is
 				CSettingsTextGuard lock;
 				it->online = false;
 			}
@@ -853,9 +852,12 @@ void CTimerList::RemoteBoxTimerList(CTimerd::TimerList &rtimerlist, bool with_ch
 		   every channel name below is asked over. */
 		CRemoteTimerClient client(box, httpConnectTimeout);
 		const size_t first = rtimerlist.size();
+		/* Outside the lock: the download reads the proxy setting through it,
+		   and the lock is not recursive. */
+		const bool online = client.getTimers(it->rbname, rtimerlist) == CRemoteTimerClient::RESULT_OK;
 		{
 			CSettingsTextGuard lock;
-			it->online = client.getTimers(it->rbname, rtimerlist) == CRemoteTimerClient::RESULT_OK;
+			it->online = online;
 		}
 		if (!it->online)
 			continue;

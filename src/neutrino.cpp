@@ -699,10 +699,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.hdd_allow_set_recdir = configfile.getInt32("hdd_allow_set_recdir", 1);
 
 	// timer
-	{
-		CSettingsTextGuard lock;
-		g_settings.timer_remotebox_ip.clear();
-	}
+	std::vector<timer_remotebox_item> remote_boxes;
 	int timer_remotebox_itemcount = configfile.getInt32("timer_remotebox_ip_count", 0);
 	if (timer_remotebox_itemcount)
 	{
@@ -728,9 +725,14 @@ int CNeutrinoApp::loadSetup(const char *fname)
 			k = "timer_remotebox_port_" + to_string(i);
 			timer_rb.port = configfile.getInt32(k, 80);
 
-			CSettingsTextGuard lock;
-			g_settings.timer_remotebox_ip.push_back(timer_rb);
+			remote_boxes.push_back(timer_rb);
 		}
+	}
+	{
+		/* Published whole, since web threads copy the list. Assigned, not
+		   swapped, so an entry editor open during a reload keeps live strings. */
+		CSettingsTextGuard lock;
+		g_settings.timer_remotebox_ip = remote_boxes;
 	}
 	g_settings.timer_followscreenings = configfile.getInt32("timer_followscreenings", FOLLOWSCREENINGS_ON);
 
