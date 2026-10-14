@@ -109,14 +109,12 @@ bool CPmt::ParseInternal(CZapitChannel * const channel)
 	/* Everything below rewrites what the channel holds rather than the map it
 	   sits in: resetPids deletes every audio track and the subtitle list,
 	   setRawPmt deletes the table, and the two CA containers are assigned
-	   whole. Threads other than this one read those - the stream server, the
-	   CAM manager, the recorder, the front display, nhttpd and the GUI - but
-	   none of them under the channel lock. It is taken all the same for those
-	   that do hold it: a reload, which destroys every channel in the map
-	   under it, waits for the parse to end; the SDT monitor's copy of the
-	   current services sets the scrambled flag set below as well; and a copy
-	   taken through CopyChannel, which nothing in this tree takes at present,
-	   would read the CA containers, the teletext language and the pids and
+	   whole. Other threads read those. Some hold the channel lock while they
+	   do: a reload, which destroys every channel in the map under it, waits
+	   for the parse to end; the SDT monitor's copy of the current services
+	   sets the scrambled flag set below as well; and the API layer reads the
+	   streams of a channel, and takes a copy through CopyChannel, under it,
+	   which reads the CA containers, the teletext language and the pids and
 	   flags. Whoever holds the lock first is waited for.
 
 	   Held across the parse and not around each write, so that a reload

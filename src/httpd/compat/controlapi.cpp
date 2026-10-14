@@ -3419,12 +3419,9 @@ void CControlAPI::setBouquetCGI(CyhookHandler *hh)
 //-------------------------------------------------------------------------
 void CControlAPI::saveBouquetCGI(CyhookHandler *hh)
 {
-	/* Thrown away on purpose. What this layer answers is held to the old
-	   server's answer byte for byte, and that one is "ok" whatever became of
-	   the files; a caller that wants to know whether they were written asks
-	   the route that was built to say so. Named rather than cast to void
-	   because a cast does not quiet the compiler's own complaint about a
-	   discarded result. */
+	/* The answer stays "ok" whatever became of the files, as this layer's
+	   answers are held byte for byte to what it always gave; the failure is
+	   only logged. */
 	if (!NeutrinoAPI->Zapit->saveBouquets())
 		printf("[controlapi] saving the bouquet files failed\n");
 	NeutrinoAPI->UpdateBouquets();
