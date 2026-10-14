@@ -28,6 +28,10 @@ shift 3
 	exit 2
 }
 
+HERE=`dirname "$0"`
+PASTES="$HERE/pastes.awk"
+[ -r "$PASTES" ] || { echo "check-hardware.sh: cannot read $PASTES" >&2; exit 1; }
+
 tmp=`mktemp -d`
 trap 'rm -rf "$tmp"' EXIT
 
@@ -66,9 +70,12 @@ fi
 # cannot change a token the compiler sees, so it compiles exactly what the table
 # compiles with no condition added. That one compilation stands for all of them;
 # the rest went to reading the same headers again a thousand times. A name glued
-# together with ## could hide a mention, so a table whose own headers paste at
-# all, or whose system headers paste beside one of the prefixes, is compiled
-# under every condition as before.
+# together with ## could hide a mention, so a table whose own headers paste in a
+# way that could spell a condition (pastes.awk says which way that is), or whose
+# system headers paste beside one of the prefixes, is compiled under every
+# condition as before. Any paste at all was too wide: the colour fields paste
+# names in settingsfield.h, which every table includes, and that alone tripled
+# the run.
 #
 # grep over a list of files. xargs answers 123 for a file without a match;
 # anything else is a grep that did not run, which must not read as no mention.
@@ -106,7 +113,10 @@ for t in $TABLES; do
 		exit 1
 	fi
 	grep -v '^/usr/' "$tmp/files.$idx" > "$tmp/own.files.$idx" || true
-	grepList "$tmp/own.files.$idx" -l '##' > "$tmp/pasted.$idx"
+	tr '\n' '\000' < "$tmp/own.files.$idx" | xargs -0 awk -f "$PASTES" > "$tmp/pasted.$idx" || {
+		echo "check-hardware.sh: reading the pastes of what $t includes failed" >&2
+		exit 1
+	}
 	if [ ! -s "$tmp/pasted.$idx" ]; then
 		grepList "$tmp/files.$idx" -lE \
 			'##[[:space:]]*(HAVE|ENABLE|BOXMODEL)_|(HAVE|ENABLE|BOXMODEL)_[A-Z_0-9]*[[:space:]]*##' \

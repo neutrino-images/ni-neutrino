@@ -122,12 +122,18 @@ done
 	sh "$HERE/extract-constants.sh" src lib
 } > "$tmp/names"
 
+# Every line of the tree a definition can stand on, comments removed per file first so a
+# line inside a block comment is not read as one. Asking the whole tree once per name took
+# most of a run.
+find src \( -name '*.h' -o -name '*.cpp' \) -print0 | xargs -0 awk -v keepstrings=1 -f "$STRIP" \
+	| grep -E '#[[:space:]]*define|=[^=]' > "$tmp/treedefs" || true
+
 # the pass below still has to run when this one finds a mismatch
 set +e
 awk -v old="$tmp/old.c" -v new="$tmp/new.c" -v rows="$tmp/rows-pos.c" -v hunks="$tmp/hunks" -v names="$tmp/names" \
 	-v preds="$tmp/preds.c" -v capsrc="$tmp/caps.c" -v groups="$tmp/groups.tsv" \
 	-v localesh="src/system/locals.h" -v localesi="src/system/locals_intern.h" \
-	-v rev="$REV" -v strip="$STRIP" -v rel="$REL" '
+	-v rev="$REV" -v strip="$STRIP" -v rel="$REL" -v treedefs="$tmp/treedefs" '
 function trim(s) { sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
 function nows(s) { gsub(/[ \t\r]+/, "", s); return s }
 function readfile(path, arr,    n, l) {
@@ -279,8 +285,8 @@ function defvalues(name,    cmd, l, i) {
 	for (i = 1; i <= nold; i++) if (index(OLD[i], name)) consider(OLD[i], name)
 	# The old revision of the screen is the authority for what it defines itself.
 	if (DVN > 0 || DSN > 0 || DVBAD) return
-	# Comments are removed per file first, so a line inside a block comment is not read as a definition.
-	cmd = "grep -rlw -- '"'"'" name "'"'"' src --include='"'"'*.h'"'"' --include='"'"'*.cpp'"'"' 2>/dev/null | xargs awk -v keepstrings=1 -f '"'"'" strip "'"'"' 2>/dev/null | grep -w -- '"'"'" name "'"'"'"
+	# The lines of the tree that can define a name, read once below with comments removed per file.
+	cmd = "grep -w -- '"'"'" name "'"'"' '"'"'" treedefs "'"'"'"
 	while ((cmd | getline l) > 0) consider(l, name)
 	close(cmd)
 }

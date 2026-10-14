@@ -344,7 +344,7 @@ $(PART_TESTS) whole.merge:
 EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasefakes.h support/phaseseams.inc support/fakevideo.h support/fakeaudio.h support/fakececlink.h scan/apply-phase-seams.txt support/conditions.h support/rcfixture.h support/counts.h support/answers.h support/counts.txt support/counts-mcp.txt support/part-seconds.txt support/httpclient.h support/fakemisc.h support/fakesectionsd.h support/fakerc.h support/fakelocalization.h support/applytest.h support/fakeci.h support/fakeservices.h support/fakeupdate.h support/fakeplugins.h support/fakeweather.h support/fakelcd4l.h support/fakevfd.h support/fakeglcd.h support/fakeosd.h support/boundedrows.h support/fakerecordconfig.h support/fakehdd.h support/fakewebchannels.h \
 	scan/extract-enum.sh support/merge-counts.sh \
 	scan/check-hook.sh scan/check-fieldtypes.sh \
-	scan/check-hardware.sh scan/check-cecmodes.sh scan/check-denominator.sh \
+	scan/check-hardware.sh scan/pastes.awk scan/fixtures/pastes scan/check-cecmodes.sh scan/check-denominator.sh \
 	scan/check-sections.sh scan/check-color-defaults.sh scan/check-callback-boundary.sh scan/check-legacy-mount.sh \
 	scan/check-legacybridge-order.sh scan/check-legacy-levels.sh \
 	scan/check-server-credentials.sh scan/check-legacy-bodygate.sh \
@@ -593,6 +593,13 @@ scan-hardware:
 	@$(SHELL) $(srcdir)/scan/check-hardware.sh "$(CXX)" $(top_builddir)/config.h $(top_srcdir)/src/coreapi/settings \
 		$(DEFS) $(AM_CPPFLAGS) $(AM_CXXFLAGS) -I$(top_srcdir)/src/coreapi \
 		-I$(top_srcdir)/lib/hardware/coolstream/hd2/libcoolstream -I$(top_srcdir)/lib/hardware/coolstream
+	@test -z "`awk -f $(srcdir)/scan/pastes.awk $(srcdir)/scan/fixtures/pastes/cannot.h`" \
+		|| { echo "pastes.awk names a paste that cannot spell a build condition" >&2; exit 1; }
+	@for d in PASTE_PREFIX PASTE_SUFFIX PASTE_BOTH PASTE_SPLIT PASTE_QUOTED; do \
+		sed -n "/define $$d/{p;/\\\\$$/{n;p;}}" $(srcdir)/scan/fixtures/pastes/spells.h > pastes-one.h; \
+		test "`awk -f $(srcdir)/scan/pastes.awk pastes-one.h`" = pastes-one.h \
+			|| { echo "pastes.awk passes $$d, which can spell a build condition" >&2; rm -f pastes-one.h; exit 1; }; \
+	done; rm -f pastes-one.h
 
 scan-cecmodes:
 	@$(SHELL) $(srcdir)/scan/check-cecmodes.sh $(top_srcdir)
@@ -633,15 +640,16 @@ scan-locale-catalog:
 # Pairs and the key list are not here: they read neutrino.cpp, not a screen.
 scan-addsetting:
 	@for x in choices bounds labels; do \
-		out=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib | grep -c '^scan_addsetting_fixture[[:space:]].*DERIVED'`; \
+		all=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib` \
+			|| { echo "extract-$$x.sh failed" >&2; exit 1; }; \
+		out=`printf '%s\n' "$$all" | grep -c '^scan_addsetting_fixture[[:space:]].*DERIVED'`; \
 		test "$$out" = 1 || { echo "extract-$$x.sh does not read an addSetting site as derived" >&2; exit 1; }; \
-		out=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib | grep -c '^scan_addsetting\.dotted_fixture[[:space:]].*DERIVED'`; \
+		out=`printf '%s\n' "$$all" | grep -c '^scan_addsetting\.dotted_fixture[[:space:]].*DERIVED'`; \
 		test "$$out" = 1 || { echo "extract-$$x.sh does not read an addSetting site with a dotted key as derived" >&2; exit 1; }; \
 		for k in choice number; do \
-			out=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib | grep -c "^scan_addsetting_$${k}_fixture[[:space:]].*DERIVED"`; \
+			out=`printf '%s\n' "$$all" | grep -c "^scan_addsetting_$${k}_fixture[[:space:]].*DERIVED"`; \
 			test "$$out" = 1 || { echo "extract-$$x.sh does not read a typed $$k site as derived" >&2; exit 1; }; \
 		done; \
-		all=`SCAN_EXTRA=$(srcdir)/scan/fixtures $(SHELL) $(srcdir)/scan/extract-$$x.sh $(top_srcdir)/src $(top_srcdir)/lib`; \
 		for k in first second armed last; do \
 			out=`printf '%s\n' "$$all" | grep -c "^scan_array_$$k[[:space:]].*DERIVED"`; \
 			test "$$out" = 1 || { echo "extract-$$x.sh does not read the element $$k of a key array as derived" >&2; exit 1; }; \
