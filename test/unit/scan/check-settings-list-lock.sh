@@ -56,10 +56,10 @@ trap 'rm -rf "$tmp"' EXIT
 
 # nhttpd is the removed server's source and is built by nothing.
 if [ "$#" -gt 0 ]; then
-	FLOOR=0
+	ANCHORED=0
 	for f in "$@"; do echo "$f"; done > "$tmp/files"
 else
-	FLOOR=20
+	ANCHORED=1
 	find "$SRC/src" \( -name '*.cpp' -o -name '*.h' \) -not -path "$SRC/src/nhttpd/*" | LC_ALL=C sort > "$tmp/files"
 fi
 
@@ -69,13 +69,13 @@ while read -r f; do
 	function mutates(line,   m) {
 		for (m in members) {
 			q = "g_settings\\." members[m]
-			if (line ~ ("delete[ \t]+" q)) return 1
-			if (line ~ (q "[ \t]*\\.[ \t]*(clear|push_back|pop_back|erase|insert|assign|swap|emplace|emplace_back|sort|splice|remove|resize|reverse|unique)[ \t]*\\(")) return 1
-			if (line ~ (q "[ \t]*=[^=]")) return 1
-			if (line ~ (q "[ \t]*\\[[^]]*\\][ \t]*=[^=]")) return 1
-			if (line ~ (q "[ \t]*\\[[^]]*\\][ \t]*(->|\\.)[ \t]*[A-Za-z_]+[ \t]*=[^=]")) return 1
+			if (line ~ ("delete[ \t]+" q)) return members[m]
+			if (line ~ (q "[ \t]*\\.[ \t]*(clear|push_back|pop_back|erase|insert|assign|swap|emplace|emplace_back|sort|splice|remove|resize|reverse|unique)[ \t]*\\(")) return members[m]
+			if (line ~ (q "[ \t]*=[^=]")) return members[m]
+			if (line ~ (q "[ \t]*\\[[^]]*\\][ \t]*=[^=]")) return members[m]
+			if (line ~ (q "[ \t]*\\[[^]]*\\][ \t]*(->|\\.)[ \t]*[A-Za-z_]+[ \t]*=[^=]")) return members[m]
 		}
-		return 0
+		return ""
 	}
 	function mentions(line,   m) {
 		for (m in members)
@@ -105,13 +105,14 @@ while read -r f; do
 			else if (c == "}") { delete guards[depth]; depth-- }
 			else if (substr(line, i, 18) == "CSettingsTextGuard") { guards[depth] = 1; i += 17 }
 		}
-		if (mutates(line)) {
-			if (held || hasguard) print "G\t" file ":" NR
+		changed = mutates(line)
+		if (changed != "") {
+			if (held || hasguard) print "G\t" file ":" NR "\t" changed
 			else print "U\t" file ":" NR ": " line
 		}
 		# the reads
 		m = mentions(line)
-		if (m != "" && !mutates(line)) {
+		if (m != "" && changed == "") {
 			copied = (index(line, "settingsCopy(") > 0)
 			handed = (line ~ ("&g_settings\\." m "([^A-Za-z_0-9]|$)"))
 			loopowned = onloop && (m == "usermenu" || m == "timer_remotebox_ip")
@@ -138,9 +139,16 @@ if [ "$unguarded" -ne 0 ]; then
 	grep '^U' "$tmp/found" | cut -f2- | sed 's/^/  /' >&2
 	exit 1
 fi
-if [ "$guarded" -lt "$FLOOR" ]; then
-	echo "check-settings-list-lock.sh: $guarded guarded changes found, below the floor of $FLOOR, the scan has stopped matching" >&2
-	exit 1
+# The load in neutrino.cpp fills all five containers under the guard, so a scan that
+# does not see each of them there has stopped seeing the tree. A count would fall
+# with every write that moves into the settings layer and mean nothing.
+if [ "$ANCHORED" -eq 1 ]; then
+	for m in webtv_xml webradio_xml xmltv_xml usermenu timer_remotebox_ip; do
+		grep -q "^G	$SRC/src/neutrino\.cpp:[0-9]*	$m\$" "$tmp/found" || {
+			echo "check-settings-list-lock.sh: no guarded change of $m found in src/neutrino.cpp, the scan has stopped matching" >&2
+			exit 1
+		}
+	done
 fi
 
 echo "changes of the settings lists, held under the guard   $guarded"
