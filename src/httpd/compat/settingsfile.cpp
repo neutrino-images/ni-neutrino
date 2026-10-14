@@ -9,6 +9,9 @@
 #include "coreapi/settings/settings.h"
 #include "coreapi/settings/settingstable.h"
 
+#include <utility>
+#include <vector>
+
 namespace httpd
 {
 namespace compat
@@ -100,6 +103,29 @@ bool recordMemberWithheld(const Descriptor &row, const std::string &key)
 	return nameLooksSecret(key);
 }
 
+// A line to each entry, without the control bytes a pasted list brings and without empty lines.
+std::string webListText(const CStringList &params, const char *name)
+{
+	CStringList::const_iterator p = params.find(name);
+	if (p == params.end())
+		return std::string();
+	std::vector<std::string> entries;
+	std::string line;
+	const std::string &text = p->second;
+	for (size_t i = 0; i <= text.size(); ++i)
+	{
+		if (i == text.size() || text[i] == '\n')
+		{
+			if (!line.empty())
+				entries.push_back(line);
+			line.clear();
+		}
+		else if (text[i] != '\r' && text[i] != '\t')
+			line += text[i];
+	}
+	return coreapi::settings::listText(entries);
+}
+
 } // namespace
 
 bool legacyConfigWithheld(const std::string &config, const std::string &key)
@@ -122,6 +148,18 @@ CStringList legacyConfigReadable(const std::string &config, const CStringList &a
 		if (!legacyConfigWithheld(config, it->first))
 			out.insert(*it);
 	return out;
+}
+
+void legacyWriteWebLists(const CStringList &params, coreapi::settings::Refusals &failed)
+{
+	static const char *const kLists[][2] =
+	{
+		{ "webtv", "webtv_xml" }, { "webradio", "webradio_xml" }, { "xmltv", "xmltv_xml" }
+	};
+	std::vector<std::pair<std::string, std::string> > members;
+	for (size_t i = 0; i < sizeof(kLists) / sizeof(kLists[0]); ++i)
+		members.push_back(std::make_pair(std::string(kLists[i][1]), webListText(params, kLists[i][0])));
+	coreapi::settings::writeBatch(members, failed);
 }
 
 } // namespace compat

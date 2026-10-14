@@ -3711,83 +3711,12 @@ void CControlAPI::xmltvm3uCGI(CyhookHandler *hh)
 
 void CControlAPI::xmltvlistCGI(CyhookHandler *hh)
 {
-	std::vector<std::string>::iterator it;
-	std::vector<std::string> url_list;
-	std::string tmp;
-
-	if (!hh->ParamList["webtv"].empty())
-	{
-		std::string webtv_url = hh->ParamList["webtv"];
-		std::list<std::string> chosen;
-		url_list = ::split(webtv_url, '\n');
-		for (it = url_list.begin(); it != url_list.end(); it++)
-		{
-			tmp = (*it);
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\n'), tmp.end());
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\t'), tmp.end());
-			if (!tmp.empty())
-				chosen.push_back(tmp);
-		}
-		// The settings answer reads the list under this lock, so it is replaced under it.
-		CSettingsTextGuard lock;
-		g_settings.webtv_xml = chosen;
-	}
+	coreapi::settings::Refusals failed;
+	legacyWriteWebLists(hh->ParamList, failed);
+	if (failed.empty())
+		hh->SendOk();
 	else
-	{
-		CSettingsTextGuard lock;
-		g_settings.webtv_xml.clear();
-	}
-
-	if (!hh->ParamList["webradio"].empty())
-	{
-		std::string webradio_url = hh->ParamList["webradio"];
-		std::list<std::string> chosen;
-		url_list = ::split(webradio_url, '\n');
-		for (it = url_list.begin(); it != url_list.end(); it++)
-		{
-			tmp = (*it);
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\n'), tmp.end());
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\t'), tmp.end());
-			if (!tmp.empty())
-				chosen.push_back(tmp);
-		}
-		// The settings answer reads the list under this lock, so it is replaced under it.
-		CSettingsTextGuard lock;
-		g_settings.webradio_xml = chosen;
-	}
-	else
-	{
-		CSettingsTextGuard lock;
-		g_settings.webradio_xml.clear();
-	}
-
-	if (!hh->ParamList["xmltv"].empty())
-	{
-		std::string xmltv_url = hh->ParamList["xmltv"];
-		std::list<std::string> chosen;
-		url_list = ::split(xmltv_url, '\n');
-		for (it = url_list.begin(); it != url_list.end(); it++)
-		{
-			tmp = (*it);
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\n'), tmp.end());
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\r'), tmp.end());
-			tmp.erase(std::remove(tmp.begin(), tmp.end(), '\t'), tmp.end());
-			if (!tmp.empty())
-				chosen.push_back(tmp);
-		}
-		// The settings answer reads the list under this lock, so it is replaced under it.
-		CSettingsTextGuard lock;
-		g_settings.xmltv_xml = chosen;
-	}
-	else
-	{
-		CSettingsTextGuard lock;
-		g_settings.xmltv_xml.clear();
-	}
-
-	hh->SendOk();
+		hh->SendError(failed.front().first + ": " + failed.front().second.message);
 }
 //-------------------------------------------------------------------------
 // host : (optional) ip of dbox

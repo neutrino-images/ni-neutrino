@@ -27,17 +27,46 @@
 
 #include "httpd/compat/settingsfile.h"
 
+#include "coreapi/base/deps.h"
 #include "coreapi/settings/settings.h"
 #include "coreapi/settings/settingstable.h"
+#include "support/fakes.h"
+
+#include <system/settings.h>
 
 #include <string>
 #include <vector>
 
 using httpd::compat::CStringList;
 using httpd::compat::legacyConfigReadable;
+using httpd::compat::legacyWriteWebLists;
 
 namespace
 {
+
+bool listsSaved = false;
+bool listsSave() { listsSaved = true; return true; }
+
+// The program's own struct behind the real source, as the box has it.
+struct ListsStore
+{
+	SNeutrinoSettings     values;
+	FakeCommandSink       sink;
+	InstalledSink         installed;
+	ClearedSettingsSource cleared;
+
+	ListsStore() : values(SNeutrinoSettings()), installed(&sink)
+	{
+		listsSaved = false;
+		coreapi::installRealSettingsSource(&values, listsSave);
+	}
+	~ListsStore() { coreapi::installRealSettingsSource(NULL, NULL); }
+};
+
+std::vector<std::string> entries(const std::list<std::string> &l)
+{
+	return std::vector<std::string>(l.begin(), l.end());
+}
 
 /* The names a secret row's value has in the settings file. A list files each
    entry with an index and the count beside them. A records row files each member
@@ -186,6 +215,55 @@ TEST_CASE("every other entry is still handed out as it is", "[compat][settingsfi
 		CHECK(out.at(kReadable[i]) == "1");
 	}
 	CHECK(out.size() == sizeof(kReadable) / sizeof(kReadable[0]));
+}
+
+TEST_CASE("the legacy list form lands through the settings and is saved", "[compat][settingsfile]")
+{
+	ListsStore store;
+	store.values.xmltv_xml.push_back("http://old/epg.xml");
+
+	CStringList form;
+	form["webtv"] = "http://a/tv.xml\r\n\n/media/b.xml\t\n";
+	form["webradio"] = "http://a/radio.xml";
+	form["tmpl"] = "Y_Settings_xmltv.yhtm";
+	coreapi::settings::Refusals failed;
+	legacyWriteWebLists(form, failed);
+	REQUIRE(failed.empty());
+
+	// Read back before the loop has carried it in, as every layer write is.
+	CHECK(coreapi::settings::get("webtv_xml").value() == "http://a/tv.xml\n/media/b.xml");
+	CHECK(store.values.webtv_xml.empty());
+
+	coreapi::applyPendingSettings();
+	const std::vector<std::string> tv = entries(store.values.webtv_xml);
+	REQUIRE(tv.size() == 2);
+	CHECK(tv[0] == "http://a/tv.xml");
+	CHECK(tv[1] == "/media/b.xml");
+	REQUIRE(store.values.webradio_xml.size() == 1);
+	CHECK(store.values.webradio_xml.front() == "http://a/radio.xml");
+	// No parameter empties the list, as the form always did.
+	CHECK(store.values.xmltv_xml.empty());
+	// The save is the program's own, which also files the lists as listed.
+	CHECK(listsSaved);
+}
+
+TEST_CASE("a list the settings refuse is answered and left as it was", "[compat][settingsfile]")
+{
+	ListsStore store;
+	store.values.webtv_xml.push_back("/keep.xml");
+
+	CStringList form;
+	form["webtv"] = "/a.xml#cut";
+	form["webradio"] = "/r.xml";
+	coreapi::settings::Refusals failed;
+	legacyWriteWebLists(form, failed);
+	REQUIRE(failed.size() == 1);
+	CHECK(failed.front().first == "webtv_xml");
+
+	coreapi::applyPendingSettings();
+	REQUIRE(store.values.webtv_xml.size() == 1);
+	CHECK(store.values.webtv_xml.front() == "/keep.xml");
+	REQUIRE(store.values.webradio_xml.size() == 1);
 }
 
 #endif // DISABLE_LEGACY_API
