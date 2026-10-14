@@ -243,9 +243,11 @@ int CNetworkSetup::showNetworkSetup()
 		std::string ifname = g_settings.ifname;
 		/* nothing to choose on a managed system, show the interface that is in use */
 		bool have_default = getDefaultNetworkInterface(ifname, managed);
-		setSettingsText(g_settings.ifname, ifname);
+		/* the row only persists and announces what differs from the field */
 		if (have_default)
 			writeRow("ifname", ifname, false);
+		else
+			setSettingsText(g_settings.ifname, ifname);
 
 		if (!have_default && !managed)
 		{

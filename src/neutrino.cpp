@@ -851,10 +851,10 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.epg_search_history_size = g_settings.epg_search_history.size();
 
 	// network
+	setSettingsText(g_settings.ifname, configfile.getString("ifname", ""));
 	{
-		/* A copy, published under the lock, as settings.h asks of every
-		   write of a text setting. */
-		std::string ifname = configfile.getString("ifname", "");
+		/* text settings are only written under the lock */
+		std::string ifname = g_settings.ifname;
 		getDefaultNetworkInterface(ifname, false);
 		setSettingsText(g_settings.ifname, ifname);
 	}
