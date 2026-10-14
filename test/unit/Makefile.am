@@ -136,6 +136,7 @@ coreapi_tests_SOURCES = \
 	coreapi/test_playback.cpp \
 	coreapi/test_result.cpp \
 	lib/connection/test_basicclient.cpp \
+	lib/libnet/test_defaultroute.cpp \
 	coreapi/test_channelsource.cpp \
 	zapit/test_zapitchannel_copy.cpp \
 	coreapi/test_channelstreams.cpp \
@@ -286,7 +287,7 @@ coreapi_tests_SOURCES = \
 # does with a daemon that answers short drives that code and not a copy; it needs
 # the connection library after it.
 # The network library answers the address an interface choice shows and the
-# host name helpers.o reads.
+# host name and default route helpers.o reads.
 coreapi_tests_LDADD = \
 	$(top_builddir)/src/httpd/libhttpd.a \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
