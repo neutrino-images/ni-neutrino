@@ -161,10 +161,10 @@ body_of() {
 	'
 }
 
-RUNBODY=$(body_of '^int CNeutrinoApp::run\(.*\)[ \t]*$')
+RUNBODY=$(body_of '^int CNeutrinoApp::run[(].*[)][ \t]*$')
 [ -n "$RUNBODY" ] || { echo "no CNeutrinoApp::run definition found in $FILE" >&2; exit 1; }
 
-EXITBODY=$(body_of '^void CNeutrinoApp::ExitRun\(.*\)[ \t]*$')
+EXITBODY=$(body_of '^void CNeutrinoApp::ExitRun[(].*[)][ \t]*$')
 [ -n "$EXITBODY" ] || { echo "no CNeutrinoApp::ExitRun definition found in $FILE" >&2; exit 1; }
 
 # Runs of whitespace collapsed to one space and each body joined onto one

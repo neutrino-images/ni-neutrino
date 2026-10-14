@@ -150,6 +150,10 @@ awk '{ n = toupper($0); gsub(/\./, "_", n); print "LOCALE_" n "\t" $0 }' "$LOCAL
 # A table of entries in the order of an enumeration, one line for each entry.
 #   $1 member, $2 the enumeration, $3 the file, $4 how an entry is read:
 #   key "name", default   |   timing { default, LOCALE_X, ...
+#   $5 the line the table starts on, as a pattern. It reaches awk through -v,
+#   which reads backslash escapes the way a string literal does, and gawk and
+#   BSD awk turn \[ into a plain [ there while mawk keeps it. A bracket meant
+#   literally is spelt [[] or []], which every awk reads the same.
 table() {
 	member="$1"; enum="$2"; file="$3"; mode="$4"; start="$5"
 	enumerators "$enum" > "$tmp/enum.$member"
@@ -187,13 +191,13 @@ table() {
 }
 
 : > "$tmp/tables"
-table personalize PERSONALIZE_SETTINGS "$tmp/settings.cpp" key 'personalize_settings\[SNeutrinoSettings::P_SETTINGS_MAX\][ \t]*=' \
+table personalize PERSONALIZE_SETTINGS "$tmp/settings.cpp" key 'personalize_settings[[]SNeutrinoSettings::P_SETTINGS_MAX[]][ \t]*=' \
 	| awk -F'\t' '{ print "personalize\t" $1 "\t" $3 "\t" $4 "\t" $2 }' >> "$tmp/tables"
-table lcd_setting LCD_SETTINGS "$tmp/neutrino" key 'lcd_setting\[SNeutrinoSettings::LCD_SETTING_COUNT\][ \t]*=' \
+table lcd_setting LCD_SETTINGS "$tmp/neutrino" key 'lcd_setting[[]SNeutrinoSettings::LCD_SETTING_COUNT[]][ \t]*=' \
 	| awk -F'\t' '{ print "lcd_setting\t" $1 "\t" $3 "\t" $4 "\t" $2 }' >> "$tmp/tables"
-table timing TIMING_SETTINGS "$tmp/settings.h" locale 'timing_setting\[SNeutrinoSettings::TIMING_SETTING_COUNT\][ \t]*=' \
+table timing TIMING_SETTINGS "$tmp/settings.h" locale 'timing_setting[[]SNeutrinoSettings::TIMING_SETTING_COUNT[]][ \t]*=' \
 	| awk -F'\t' -v names="$tmp/localenames" 'BEGIN { while ((getline l < names) > 0) { split(l, a, "\t"); real[a[1]] = a[2] } } { print "timing\t" $1 "\t" real[$3] "\t" $4 "\t" $2 }' >> "$tmp/tables"
-table handling_infobar HANDLING_INFOBAR_SETTINGS "$tmp/settings.h" locale 'handling_infobar_setting\[SNeutrinoSettings::HANDLING_INFOBAR_SETTING_COUNT\][ \t]*=' \
+table handling_infobar HANDLING_INFOBAR_SETTINGS "$tmp/settings.h" locale 'handling_infobar_setting[[]SNeutrinoSettings::HANDLING_INFOBAR_SETTING_COUNT[]][ \t]*=' \
 	| awk -F'\t' -v names="$tmp/localenames" 'BEGIN { while ((getline l < names) > 0) { split(l, a, "\t"); real[a[1]] = a[2] } } { print "handling_infobar\t" $1 "\t" real[$3] "\t" $4 "\t" $2 }' >> "$tmp/tables"
 
 # member, enumerator, key, raw default, guard: the default classified as a loop's is.
