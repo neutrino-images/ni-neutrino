@@ -471,7 +471,8 @@ inline TextFault textFault(const TextRule &rule, const std::string &value)
 
 // The values a setting offers right now, for a setting whose list is not
 // fixed. False where the box cannot say. NULL in a row means the list is the
-// row's own.
+// row's own. For a List row the entries the box holds beside the stored ones,
+// which a write of the list neither offers nor carries.
 typedef bool (*ChoiceSource)(std::vector<SettingChoice> &out);
 
 // An aggregate with no constructor of its own, so a table of these is a
@@ -1349,7 +1350,8 @@ inline bool descriptorIsSane(const Descriptor &d)
 	}
 	if (d.default_fn != NULL && (d.type == ValueType::String || d.type == ValueType::Color))
 		return false;
-	if (d.choices_from != NULL && d.type != ValueType::Int && d.type != ValueType::String)
+	if (d.choices_from != NULL && d.type != ValueType::Int && d.type != ValueType::String &&
+	    d.type != ValueType::List)
 		return false;
 	for (size_t i = 0; i < d.value_count && d.values != NULL; ++i)
 	{

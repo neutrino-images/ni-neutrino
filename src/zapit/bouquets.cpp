@@ -54,6 +54,7 @@
 #include "settings.h"
 #include "zapit.h"
 #include <xmlinterface.h>
+#include <coreapi/webchannels.h>
 
 #define M3U_START_MARKER	"#EXTM3U"
 #define M3U_INFO_MARKER		"#EXTINF"
@@ -1128,134 +1129,33 @@ void CBouquetManager::setWebchannelsReloadReason(const std::string &reason)
 }
 
 /*
- * Normalize a directory path for exact comparison: resolve symlinks
- * when possible, otherwise just strip trailing slashes.
- */
-static std::string webchannelDirKey(const std::string &dir)
-{
-	char resolved[PATH_MAX];
-	if (realpath(dir.c_str(), resolved))
-		return resolved;
-
-	std::string normalized = dir;
-	while (normalized.length() > 1 && normalized[normalized.length() - 1] == '/')
-		normalized.erase(normalized.length() - 1);
-	return normalized;
-}
-
-/*
- * A source entry counts as auto-dir entry only if its parent directory
- * IS one of the auto directories; subdirectories and lookalike sibling
- * paths stay manual sources.
- */
-static bool isWebchannelAutoDirEntry(const std::string &entry, const std::string &dir_key0, const std::string &dir_key1)
-{
-	if (entry.empty() || entry[0] != '/')
-		return false;
-
-	std::string::size_type pos = entry.find_last_of('/');
-	if (pos == std::string::npos || pos == 0)
-		return false;
-
-	std::string parent = webchannelDirKey(entry.substr(0, pos));
-	return (parent == dir_key0) || (parent == dir_key1);
-}
-
-// same file types the WebTV/WebRadio setup menu scans (webchannels_setup.cpp)
-static int webchannelAutoFileFilter(const struct dirent *entry)
-{
-	int len = strlen(entry->d_name);
-	if (len > 3 && (
-		   (entry->d_name[len - 3] == 'x' && entry->d_name[len - 2] == 'm' && entry->d_name[len - 1] == 'l')
-		|| (entry->d_name[len - 3] == 'm' && entry->d_name[len - 2] == '3' && entry->d_name[len - 1] == 'u')
-		|| (                                 entry->d_name[len - 2] == 't' && entry->d_name[len - 1] == 'v')
-		)
-	)
-		return 1;
-	return 0;
-}
-
-/*
- * Build the effective source list for one reload pass: manual/remote
- * sources from the configured list plus a fresh scan of the auto
- * directories. Works on a zapit-local list only; the GUI-owned
+ * Build the effective source list for one reload pass: every source of
+ * the configured list, wherever it lies, plus a fresh scan of the auto
+ * directories while autoloading is on. The configured list holds only
+ * what the user entered; a file found by the scan whose name is already
+ * listed is loaded once. Works on a zapit-local list only; the GUI-owned
  * g_settings source lists are never written here.
  */
 static void buildWebchannelSources(int mode, std::list<std::string> &sources)
 {
-	const char *dirs[2];
-	bool auto_enabled;
-	std::list<std::string> *cfg;
-
-	if (mode == MODE_WEBTV)
-	{
-		dirs[0] = WEBTVDIR_VAR;
-		dirs[1] = WEBTVDIR;
-		auto_enabled = g_settings.webtv_xml_auto;
-		cfg = CZapit::getInstance()->GetWebTVXML();
-	}
-	else
-	{
-		dirs[0] = WEBRADIODIR_VAR;
-		dirs[1] = WEBRADIODIR;
-		auto_enabled = g_settings.webradio_xml_auto;
-		cfg = CZapit::getInstance()->GetWebRadioXML();
-	}
-
-	std::string dir_keys[2] = { webchannelDirKey(dirs[0]), webchannelDirKey(dirs[1]) };
+	const bool radio = (mode != MODE_WEBTV);
+	const bool auto_enabled = radio ? g_settings.webradio_xml_auto : g_settings.webtv_xml_auto;
+	std::list<std::string> *cfg = radio ? CZapit::getInstance()->GetWebRadioXML() : CZapit::getInstance()->GetWebTVXML();
 
 	if (cfg)
 	{
 		/* The list is the settings'. A write from another thread releases its entries, so
-		   it is copied under the lock the settings layer copies it under, and walked there
-		   after; the real path of each entry is looked up outside the lock. */
+		   it is copied under the lock the settings layer copies it under. */
 		std::list<std::string> configured = settingsCopy(*cfg);
-		for (std::list<std::string>::iterator it = configured.begin(); it != configured.end(); ++it)
-		{
-			if (!isWebchannelAutoDirEntry(*it, dir_keys[0], dir_keys[1]))
-				sources.push_back(*it);
-		}
+		sources.insert(sources.end(), configured.begin(), configured.end());
 	}
 
 	if (!auto_enabled)
 		return;
 
-	struct dirent **filelist;
-	char webchannel_file[1024] = {0};
-	std::set<std::string> scanned_dirs;
-	for (int i = 0; i < 2; i++)
-	{
-		/* static and var dir may collapse to the same directory */
-		if (!scanned_dirs.insert(dir_keys[i]).second)
-			continue;
-
-		int file_count = scandir(dirs[i], &filelist, webchannelAutoFileFilter, alphasort);
-		if (file_count < 0)
-			continue;
-
-		for (int count = 0; count < file_count; count++)
-		{
-			snprintf(webchannel_file, sizeof(webchannel_file), "%s/%s", dirs[i], filelist[count]->d_name);
-			if (file_size(webchannel_file))
-			{
-				/* same basename means same list, may be shipped in both
-				   auto dirs or configured manually (see webchannels_auto) */
-				bool found = false;
-				for (std::list<std::string>::iterator it = sources.begin(); it != sources.end(); ++it)
-				{
-					std::string base = *it;
-					std::string::size_type pos = base.find_last_of('/');
-					if (pos != std::string::npos)
-						base = base.substr(pos + 1);
-					found |= (base == filelist[count]->d_name);
-				}
-				if (!found)
-					sources.push_back(webchannel_file);
-			}
-			free(filelist[count]);
-		}
-		free(filelist);
-	}
+	const std::vector<std::string> listed(sources.begin(), sources.end());
+	const std::vector<std::string> found = coreapi::webchannels::autoloadIn(coreapi::webchannels::autoloadDirs(radio), listed);
+	sources.insert(sources.end(), found.begin(), found.end());
 }
 
 void CBouquetManager::loadWebchannels(int mode)

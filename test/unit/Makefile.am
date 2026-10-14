@@ -183,6 +183,7 @@ coreapi_tests_SOURCES = \
 	coreapi/test_apply_record.cpp \
 	coreapi/test_apply_hdd.cpp \
 	coreapi/test_apply_webchannels.cpp \
+	coreapi/test_webchannels.cpp \
 	coreapi/test_applymisc.cpp \
 	coreapi/test_applykeys.cpp \
 	coreapi/test_applylang.cpp \

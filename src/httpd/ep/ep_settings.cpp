@@ -257,7 +257,9 @@ const FieldDesc kSettingFields[] = {
 		"number it accepts where listed is true. Empty for a "
 		"set this box cannot state, which includes a setting that is not available. A string setting "
 		"lists values only where the box names what it accepts, such as the languages installed, and "
-		"then each carries the text to write as text"),
+		"then each carries the text to write as text. A list setting lists values only where the box "
+		"loads entries beside the list by itself, such as the web channel files of its own folders; each "
+		"carries the entry as text, takes no part in a write and is never written into the list"),
 	HTTPD_MEMBER_OPTIONAL("values_from", FieldType::String,
 		"instead of values, for a list that several settings of this answer carry alike: the name of that list "
 		"under the answer's value_lists, whose entries are read exactly as values would be"),

@@ -47,19 +47,6 @@ class CWebChannelsSetup : public CMenuTarget
 		CWebChannelsSetup();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
 		int Show();
-
-		// webradio wrappers
-		void webradio_xml_auto();
-		bool webradio_xml_autodir(std::string directory);
-
-		// webtv wrappers
-		void webtv_xml_auto();
-		bool webtv_xml_autodir(std::string directory);
-
-		void webchannels_auto();
-		bool webchannels_autodir(std::string directory);
-
-		std::list<std::string> autoFiles(bool radio, std::list<std::string> webchannels);
 };
 
 class CWebTVResolution : public CMenuTarget

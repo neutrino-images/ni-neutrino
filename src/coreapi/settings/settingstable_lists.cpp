@@ -23,6 +23,7 @@
 #include "predicates.h"
 
 #include "coreapi/base/flagfile.h"
+#include "coreapi/webchannels.h"
 
 #include <driver/neutrino_msg_t.h>
 
@@ -213,14 +214,18 @@ constexpr Descriptor kLists[] =
 {
 	/* The channel lists the box fetches from the net, as files or addresses. The
 	   program starts from the one it ships where it has none of its own, which
-	   depends on a file being there, so the default is none. */
+	   depends on a file being there, so the default is none. The choices are the
+	   files the channel daemon loads beside the list by itself, so a write of the
+	   list leaves them out. */
 	listRow("webtv_xml")
 		.section("channel")
 		.defaultValue("")
+		.choicesFrom(webchannels::webtvAutoloaded)
 		.field(COREAPI_LIST_FIELD(webtv_xml)),
 	listRow("webradio_xml")
 		.section("channel")
 		.defaultValue("")
+		.choicesFrom(webchannels::webradioAutoloaded)
 		.field(COREAPI_LIST_FIELD(webradio_xml)),
 	listRow("xmltv_xml")
 		.section("misc")

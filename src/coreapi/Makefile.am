@@ -99,6 +99,7 @@ libcoreapi_a_SOURCES = \
 	box/apply_cec.cpp \
 	box/cecoutput_real.cpp \
 	network.cpp \
+	webchannels.cpp \
 	box/apply_channels.cpp \
 	box/apply_misc.cpp \
 	box/miscoutput_real.cpp \
@@ -183,6 +184,7 @@ noinst_HEADERS = \
 	box/apply_audio.h \
 	box/apply_cec.h \
 	network.h \
+	webchannels.h \
 	box/apply_channels.h \
 	box/apply_misc.h \
 	box/apply_sectionsd.h \

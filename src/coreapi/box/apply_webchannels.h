@@ -34,8 +34,8 @@ struct WebChannelsOutput
 {
 	virtual ~WebChannelsOutput() {}
 
-	/* The files of the automatic folders are added to the lists, where the
-	   switch for the list is on, and the channel daemon reads the lists again. */
+	/* The channel daemon reads the lists again, and the automatic folders of
+	   each kind whose switch is on. */
 	virtual Status reloadLists() = 0;
 	// Nothing happens when no web stream is playing.
 	virtual Status restartStream() = 0;

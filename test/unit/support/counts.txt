@@ -32,7 +32,7 @@ groups the document declares	20
 key code defaults compared against this build's own load	50
 key to field pairs read out of the program	608
 keys compared against what the program reads	397
-keys read anywhere in the tree	732
+keys read anywhere in the tree	734
 keys whose default the scan can compare	444
 labels compared against a chooser	8
 labels compared against a number chooser	0

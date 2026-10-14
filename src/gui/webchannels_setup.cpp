@@ -42,8 +42,6 @@
 #include <neutrino_menue.h>
 #include "webchannels_setup.h"
 
-#include <dirent.h>
-#include <set>
 #include <stdlib.h>
 #include <system/helpers.h>
 #include <gui/widget/settingitem.h>
@@ -61,20 +59,9 @@ static void writeList(const char *key, const std::list<std::string> &list, bool 
 	writeRow(key, files, asked);
 }
 
-/* The lists as the settings now say, and the channel daemon told to read them. The
-   automatic folders are added to the lists of the side whose switch is on. */
+// The channel daemon scans the automatic folders itself on every reload.
 static void reloadWebChannels(const char *reason)
 {
-	CWebChannelsSetup lists;
-	for (int radio = 0; radio < 2; radio++)
-	{
-		std::list<std::string> have = settingsCopy(radio ? g_settings.webradio_xml : g_settings.webtv_xml);
-		const std::list<std::string> add = lists.autoFiles(radio != 0, have);
-		if (add.empty())
-			continue;
-		have.insert(have.end(), add.begin(), add.end());
-		writeList(radio ? "webradio_xml" : "webtv_xml", have, false);
-	}
 	CZapit::getInstance()->SetWebTVXML(&g_settings.webtv_xml);
 	CZapit::getInstance()->SetWebRadioXML(&g_settings.webradio_xml);
 	g_bouquetManager->setWebchannelsReloadReason(reason);
@@ -314,22 +301,17 @@ int CWebChannelsSetup::Show()
 	m->addItem(GenericMenuSeparator);
 
 	item_offset = m->getItemsCount();
-	// show autoloaded webradio/webtvtv files
-	for (std::list<std::string>::iterator it = webchannels.begin(); it != webchannels.end(); ++it)
-	{
-		if (webchannels_autodir((*it)))
-			m->addItem(new CMenuForwarder(*it, false, "auto"));
-	}
+	// show autoloaded webradio/webtv files
+	coreapi::Result<std::vector<coreapi::SettingChoice> > autofiles = coreapi::settings::choices(webradio ? "webradio_xml" : "webtv_xml");
+	for (size_t i = 0; autofiles.ok() && i < autofiles.value().size(); i++)
+		m->addItem(new CMenuForwarder(autofiles.value()[i].text, false, "auto"));
 	if (item_offset < m->getItemsCount())
 		m->addItem(GenericMenuSeparator);
 
 	item_offset = m->getItemsCount();
-	// show users webradio/webtv files
+	// show users webradio/webtv files, wherever they lie
 	for (std::list<std::string>::iterator it = webchannels.begin(); it != webchannels.end(); ++it)
-	{
-		if (!webchannels_autodir((*it)))
-			m->addItem(new CMenuForwarder(*it, true, NULL, this, "c"));
-	}
+		m->addItem(new CMenuForwarder(*it, true, NULL, this, "c"));
 
 	m->setFooter(CWebChannelsSetupFooterButtons, CWebChannelsSetupFooterButtonCount);
 
@@ -347,8 +329,6 @@ int CWebChannelsSetup::Show()
 			CMenuForwarder *f = static_cast<CMenuForwarder *>(item);
 			webchannels.push_back(f->getName());
 		}
-		const std::list<std::string> add = autoFiles(webradio, webchannels);
-		webchannels.insert(webchannels.end(), add.begin(), add.end());
 		writeList(webradio ? "webradio_xml" : "webtv_xml", webchannels, true);
 		reloadWebChannels("manual_menu");
 		changed = false;
@@ -357,170 +337,6 @@ int CWebChannelsSetup::Show()
 
 	delete m;
 	return res;
-}
-
-int filefilter(const struct dirent *entry)
-{
-	std::string f = entry->d_name;
-
-	int len = strlen(entry->d_name);
-	if (len > 3 && (
-		   (entry->d_name[len - 3] == 'x' && entry->d_name[len - 2] == 'm' && entry->d_name[len - 1] == 'l')
-		|| (entry->d_name[len - 3] == 'm' && entry->d_name[len - 2] == '3' && entry->d_name[len - 1] == 'u')
-		|| (                                 entry->d_name[len - 2] == 't' && entry->d_name[len - 1] == 'v')
-		)
-	)
-		return 1;
-	return 0;
-}
-
-static std::string normalizeLocalPath(const std::string &path)
-{
-	if (path.empty())
-		return path;
-
-	char resolved[PATH_MAX];
-	if (realpath(path.c_str(), resolved))
-		return resolved;
-
-	std::string normalized = path;
-	while (normalized.length() > 1 && normalized[normalized.length() - 1] == '/')
-		normalized.erase(normalized.length() - 1);
-	return normalized;
-}
-
-static std::string pathBasename(std::string path)
-{
-	while (path.length() > 1 && path[path.length() - 1] == '/')
-		path.erase(path.length() - 1);
-
-	std::string::size_type pos = path.find_last_of('/');
-	if (pos == std::string::npos)
-		return path;
-	return path.substr(pos + 1);
-}
-
-// webradio wrapper for webchannels_auto()
-void CWebChannelsSetup::webradio_xml_auto()
-{
-	webradio = true;
-	webchannels_auto();
-}
-
-// webtv wrapper for webchannels_auto()
-void CWebChannelsSetup::webtv_xml_auto()
-{
-	webradio = false;
-	webchannels_auto();
-}
-
-// Part of the settings load, which fills the members itself.
-void CWebChannelsSetup::webchannels_auto()
-{
-	const std::list<std::string> add = autoFiles(webradio, settingsCopy(webradio ? g_settings.webradio_xml : g_settings.webtv_xml));
-	CSettingsTextGuard lock;
-	std::list<std::string> &target = webradio ? g_settings.webradio_xml : g_settings.webtv_xml;
-	target.insert(target.end(), add.begin(), add.end());
-}
-
-std::list<std::string> CWebChannelsSetup::autoFiles(bool radio, std::list<std::string> webchannels)
-{
-	std::list<std::string> added;
-	const char *dirs[2];
-
-	if (radio)
-	{
-		if (!g_settings.webradio_xml_auto)
-			return added;
-
-		dirs[0] = WEBRADIODIR_VAR;
-		dirs[1] = WEBRADIODIR;
-	}
-	else
-	{
-		if (!g_settings.webtv_xml_auto)
-			return added;
-
-		dirs[0] = WEBTVDIR_VAR;
-		dirs[1] = WEBTVDIR;
-	}
-
-	struct dirent **filelist;
-	char webchannel_file[1024] = {0};
-	std::set<std::string> scanned_dirs;
-	for (int i = 0; i < 2; i++)
-	{
-		std::string normalized_dir = normalizeLocalPath(dirs[i]);
-		if (!scanned_dirs.insert(normalized_dir).second)
-		{
-			printf("[CWebChannelsSetup] skipping duplicate autodir: %s\n", dirs[i]);
-			continue;
-		}
-
-		int file_count = scandir(dirs[i], &filelist, filefilter, alphasort);
-		if (file_count > -1)
-		{
-			for (int count = 0; count < file_count; count++)
-			{
-				snprintf(webchannel_file, sizeof(webchannel_file), "%s/%s", dirs[i], filelist[count]->d_name);
-				if (file_size(webchannel_file))
-				{
-					bool found = false;
-					for (std::list<std::string>::iterator it = webchannels.begin(); it != webchannels.end(); it++)
-						found |= (pathBasename(*it) == filelist[count]->d_name);
-
-					if (!found)
-					{
-						printf("[CWebChannelsSetup] loading: %s\n", webchannel_file);
-						added.push_back(webchannel_file);
-						webchannels.push_back(webchannel_file);
-					}
-					else
-					{
-						printf("[CWebChannelsSetup] skipping: %s\n", webchannel_file);
-					}
-				}
-				free(filelist[count]);
-			}
-			free(filelist);
-		}
-	}
-	return added;
-}
-
-// webradio wrapper for webchannels_autodir()
-bool CWebChannelsSetup::webradio_xml_autodir(std::string directory)
-{
-	webradio = true;
-	return webchannels_autodir(directory);
-}
-
-// webtv wrapper for webchannels_autodir()
-bool CWebChannelsSetup::webtv_xml_autodir(std::string directory)
-{
-	webradio = false;
-	return webchannels_autodir(directory);
-}
-
-bool CWebChannelsSetup::webchannels_autodir(std::string directory)
-{
-	if (webradio)
-	{
-		if (
-			   (directory.find(WEBRADIODIR) != std::string::npos)
-			|| (directory.find(WEBRADIODIR_VAR) != std::string::npos)
-		)
-			return true;
-	}
-	else
-	{
-		if (
-			   (directory.find(WEBTVDIR) != std::string::npos)
-			|| (directory.find(WEBTVDIR_VAR) != std::string::npos)
-		)
-			return true;
-	}
-	return false;
 }
 
 /* ## CWebTVResolution ############################################# */

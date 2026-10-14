@@ -539,6 +539,11 @@ TEST_CASE("a list row is sane with the pair that carries it and not otherwise", 
 			 COREAPI_ALWAYS, kListField, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL };
 	REQUIRE(descriptorIsSane(d));
 
+	// A provider names the entries the box holds beside the list.
+	d.choices_from = noChoices;
+	REQUIRE(descriptorIsSane(d));
+	d.choices_from = NULL;
+
 	// A default is a text, of no entries where it is empty.
 	d.default_string = NULL;
 	REQUIRE_FALSE(descriptorIsSane(d));
