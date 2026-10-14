@@ -79,9 +79,11 @@ struct NeutrinoMessages
 		RESTART					= CRCInput::RC_Messages + 27,
 		POWER_MENU				= CRCInput::RC_Messages + 28,
 		APPLY_SETTINGS				= CRCInput::RC_Messages + 29,
-
 		// timerd's own list changed, whoever caused it
 		EVT_TIMERLIST_CHANGED			= CRCInput::RC_Messages + 30,
+		/* Posted by the last string input to close, when a message that puts
+		   values into the settings waited for the inputs (CStringInputOpen). */
+		STRING_INPUTS_CLOSED			= CRCInput::RC_Messages + 31,
 
 		/* END of CRCInput::RC_Messages */
 

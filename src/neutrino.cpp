@@ -142,6 +142,7 @@
 #include "gui/widget/settingitem.h"
 #include "gui/widget/settingfollow.h"
 #include "gui/widget/msgbox.h"
+#include "gui/widget/stringinput.h"
 #include "gui/infoclock.h"
 #include "gui/timeosd.h"
 #include "gui/parentallock_setup.h"
@@ -320,6 +321,8 @@ CNeutrinoApp::CNeutrinoApp()
 	favorites_changed	= false;
 	bouquets_changed	= false;
 	channels_init		= false;
+	reload_setup_pending	= false;
+	apply_settings_pending	= false;
 	channelList_allowed	= true;
 	channelList_painted	= false;
 	blank_screen		= false; //NI
@@ -1610,6 +1613,13 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 void CNeutrinoApp::saveSetup(const char *fname)
 {
 	char cfg_key[81];
+
+	/* What waited for the string inputs is taken up before the settings file
+	   is written, or this save would put the values the box runs on over a
+	   file a reload was asked to read. Not while an input is open: the ways
+	   out that save with one open take it up themselves first. */
+	if (strcmp(fname, NEUTRINO_SETTINGS_FILE) == 0 && !CStringInputOpen::any())
+		carryWaitingSettings();
 
 	// scansettings
 	if (!scansettings.saveSettings(NEUTRINO_SCAN_SETTINGS_FILE))
@@ -2940,6 +2950,32 @@ coreapi::Status coreapi::applicationSendSectionsdConfig()
 	return coreapi::Status::Ok;
 }
 
+/* What RELOAD_SETUP asks for: the settings file read again and every group
+   whose keys it moved put in force. */
+void CNeutrinoApp::reloadSetup()
+{
+	/* The file may hold other values for anything; every group whose keys moved is
+	   put in force, and asks nothing, since nobody at the box asked for this. */
+	coreapi::settings::applyReplaced([this]() { loadSetup(NEUTRINO_SETTINGS_FILE); });
+}
+
+/* What waited for the string inputs to close, taken up in the order that keeps
+   both a reload of the settings file and what was changed meanwhile: the
+   reload first, so that it reads the file before anything is saved over it,
+   then the values written from outside, which are newer than the file.
+   Called where no input is open, or on a way out that never returns to one. */
+void CNeutrinoApp::carryWaitingSettings()
+{
+	if (reload_setup_pending) {
+		reload_setup_pending = false;
+		reloadSetup();
+	}
+	if (apply_settings_pending) {
+		apply_settings_pending = false;
+		coreapi::applyPendingSettings();
+	}
+}
+
 void CNeutrinoApp::InitZapper()
 {
 	struct stat my_stat;
@@ -3669,6 +3705,11 @@ void CNeutrinoApp::RealRun()
 
 	while( true ) {
 		setupWaitingFonts();
+		/* What waited for the string inputs, taken up here if nothing took
+		   it up before, where no screen of this loop is open, and before
+		   luaclient scripts are let in. */
+		if (!CStringInputOpen::any())
+			carryWaitingSettings();
 #ifdef ENABLE_LUA
 		luaServer->UnBlock();
 #endif
@@ -5121,16 +5162,45 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		return messages_return::handled;
 	}
 	else if (msg == NeutrinoMessages::APPLY_SETTINGS) {
-		// Settings written from outside, put into g_settings here because this
-		// is the thread that reads them, and saved in the same breath so that
-		// the reload below cannot land between the two.
-		coreapi::applyPendingSettings();
+		/* Settings written from outside, put into g_settings here because this
+		   is the thread that reads them, and saved in the same breath so that a
+		   reload cannot land between the two. Not while a string input is open,
+		   for the same reason as RELOAD_SETUP below; the writes stay held until
+		   then. */
+		apply_settings_pending = true;
+		if (CStringInputOpen::any())
+			CStringInputOpen::notifyWhenClosed();
+		else
+			carryWaitingSettings();
 		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::RELOAD_SETUP ) {
-		/* The file may hold other values for anything; every group whose keys moved is
-		   put in force, and asks nothing, since nobody at the box asked for this. */
-		coreapi::settings::applyReplaced([this]() { loadSetup(NEUTRINO_SETTINGS_FILE); });
+		/* Not while a string input is open: the reload puts the file's values
+		   into the settings such an input may be editing in place, and a value
+		   shorter than the width the input padded it to ends neutrino at the
+		   next key; an input that edits a copy puts it back over the reloaded
+		   value when it closes. It is taken up when the last input closes,
+		   below, and in any case before the settings are saved next. */
+		reload_setup_pending = true;
+		if (CStringInputOpen::any())
+			CStringInputOpen::notifyWhenClosed();
+		else
+			carryWaitingSettings();
+		return messages_return::handled;
+	}
+	else if (msg == NeutrinoMessages::STRING_INPUTS_CLOSED) {
+		/* The last string input closed with something waiting for it. Taken
+		   up here, in the screen the input was opened from and before that
+		   screen saves on its way out. Another input may have opened before
+		   this arrived: then the next close is asked to post again, and asked
+		   before looking a second time, so that one closing in between is not
+		   missed. */
+		if (CStringInputOpen::any()) {
+			CStringInputOpen::notifyWhenClosed();
+			if (CStringInputOpen::any())
+				return messages_return::handled;
+		}
+		carryWaitingSettings();
 		return messages_return::handled;
 	}
 	else if( msg == NeutrinoMessages::STANDBY_TOGGLE ) {
@@ -5478,6 +5548,12 @@ void CNeutrinoApp::ExitRun(int exit_code)
 		return;
 
 	shutdown_in_progress = 1;
+
+	/* What waited for a string input is taken up now, while the daemons it
+	   may have to reach are up: this can run inside such an input and does
+	   not come back to it, and the saves below would otherwise put the values
+	   the box runs on over a file a reload was asked to read. */
+	carryWaitingSettings();
 
 #ifdef ENABLE_NI_WEB
 	/* Ahead of everything else that is torn down below, so that a request
@@ -6523,6 +6599,8 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 			CLCD4l::getInstance()->Shutdown(g_settings.lcd4l_support != 0);
 #endif
 
+			// A restart does not come back to the main loop either.
+			carryWaitingSettings();
 			saveSetup(NEUTRINO_SETTINGS_FILE);
 
 			/* this is an ugly mess :-( */
