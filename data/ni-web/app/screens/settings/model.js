@@ -22,7 +22,7 @@
 /**
  * @typedef {Object} Row
  * @property {string} id
- * @property {'bool'|'int'|'string'|'enum'|'key'} type
+ * @property {'bool'|'int'|'string'|'enum'|'key'|'list'} type
  * @property {string} label
  * @property {string} section
  * @property {boolean} secret
@@ -32,7 +32,8 @@
  * @property {number|null} max
  * @property {string} unit the name of the text that follows the number, empty for none
  * @property {number|null} channels how many channels a colour has, null for any other row
- * @property {{ value: number, label: string, text?: string }[]} choices text is what a string row stores for the entry, absent for a number
+ * @property {{ value: number, label: string, text?: string }[]} choices text is what a string row stores for the entry, absent for a number.
+ *   For a list, the entries the box loads beside it by itself, which are never sent
  * @property {boolean} listed an int whose choices are every number it takes, drawn as that list
  * @property {boolean} locked whether no write of it can land, for either reason below
  * @property {boolean} held whether the box's parental lock holds it
@@ -69,7 +70,7 @@
 /** what the schema calls a setting, before this file has read it */
 /** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, unit?: unknown, channels?: unknown, values?: unknown, values_from?: unknown, listed?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, available?: unknown, conditions?: unknown, pair?: unknown, pair_writes?: unknown, channel_kind?: unknown, text_kind?: unknown, min_length?: unknown, max_length?: unknown, allowed_chars?: unknown }} Declared */
 
-const kTypes = ['bool', 'int', 'string', 'enum', 'key', 'color'];
+const kTypes = ['bool', 'int', 'string', 'enum', 'key', 'color', 'list'];
 
 /**
  * One declared setting, as this screen reads it.
@@ -108,7 +109,7 @@ export function rowOf(declared, lists) {
 
 	/* A colour is drawn as text. A key keeps its own kind: its names are a list of their
 	   own, put on the row by withKeyNames, and until that arrives it is a number. */
-	const kind = /** @type {'bool'|'int'|'string'|'enum'|'key'} */ (type === 'color' ? 'string' : type);
+	const kind = /** @type {'bool'|'int'|'string'|'enum'|'key'|'list'} */ (type === 'color' ? 'string' : type);
 	const shared = typeof declared.values_from === 'string' && lists ? lists[declared.values_from] : undefined;
 	const offered = Array.isArray(declared.values) ? declared.values : Array.isArray(shared) ? shared : [];
 	/** @type {{ value: number, label: string, text?: string }[]} */
@@ -116,8 +117,8 @@ export function rowOf(declared, lists) {
 	for (const one of offered) {
 		if (!one || typeof one !== 'object')
 			continue;
-		// A string row's entry stands for its text and has no number to read.
-		if (kind === 'string') {
+		// A string row's entry stands for its text and has no number to read, as does a list's.
+		if (kind === 'string' || kind === 'list') {
 			const stands = /** @type {{ text?: unknown, label?: unknown }} */ (one);
 			if (typeof stands.text === 'string')
 				choices.push({ value: 0, text: stands.text, label: typeof stands.label === 'string' && stands.label !== '' ? stands.label : stands.text });
@@ -567,14 +568,29 @@ export function changed(rows, values, edits) {
 		// rather than sent to be turned down.
 		if (row.locked || row.readOnly)
 			continue;
+		const sent = row.type === 'list' ? listText(typed) : typed;
 		const held = valueOf(row, values);
-		if (held !== null && typed === held)
+		if (held !== null && sent === held)
 			continue;
-		if (row.secret && typed === '')
+		if (row.secret && sent === '')
 			continue;
-		out[row.id] = typed;
+		out[row.id] = sent;
 	}
 	return out;
+}
+
+/**
+ * A list as the box takes it: one entry to a line, which refuses an empty line and a space
+ * at either end of an entry, both of which a text area leaves behind easily.
+ *
+ * @param {string} typed
+ * @returns {string}
+ */
+export function listText(typed) {
+	return typed.split('\n')
+		.map(function (line) { return line.trim(); })
+		.filter(function (line) { return line !== ''; })
+		.join('\n');
 }
 
 /**

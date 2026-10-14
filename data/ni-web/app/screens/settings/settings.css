@@ -156,6 +156,25 @@
 	margin-bottom: 0;
 }
 
+/* What the box loads beside a list by itself: under the field, quieter than it,
+   and not a field, since none of it is the list's to change. */
+.set-auto {
+	color: var(--text-dim);
+}
+
+.set-auto ul {
+	margin: var(--gap-1) 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.set-auto li {
+	display: flex;
+	align-items: baseline;
+	gap: var(--gap-2);
+	overflow-wrap: anywhere;
+}
+
 .set-locked p {
 	margin: 0;
 	padding: var(--gap-2) var(--gap-3);

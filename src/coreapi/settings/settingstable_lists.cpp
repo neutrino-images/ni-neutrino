@@ -219,11 +219,13 @@ constexpr Descriptor kLists[] =
 	   list leaves them out. */
 	listRow("webtv_xml")
 		.section("channel")
+		.label("webtv.xml")
 		.defaultValue("")
 		.choicesFrom(webchannels::webtvAutoloaded)
 		.field(COREAPI_LIST_FIELD(webtv_xml)),
 	listRow("webradio_xml")
 		.section("channel")
+		.label("webradio.xml")
 		.defaultValue("")
 		.choicesFrom(webchannels::webradioAutoloaded)
 		.field(COREAPI_LIST_FIELD(webradio_xml)),

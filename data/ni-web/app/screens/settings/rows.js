@@ -218,6 +218,37 @@ export function LockedRow(props) {
 	</div>`;
 }
 
+/**
+ * A list: what the box keeps, one entry to a line, and under it what the box loads beside
+ * the list by itself. Those are shown so the page lists what the box loads, and are not in
+ * the field, so a save never writes them into the list.
+ *
+ * @param {{ row: import('./model.js').Row, value: string, onChange: (id: string, value: string) => void }} props
+ * @returns {Web.Drawn}
+ */
+export function ListRow(props) {
+	const row = props.row;
+	const lines = props.value === '' ? 0 : props.value.split('\n').length;
+	return html`<${Field}
+			label=${row.label}
+			rows=${Math.max(3, lines + 1)}
+			value=${props.value}
+			hint=${t(text, 'settings.list.hint')}
+			needsRestart=${row.needsRestart}
+			onInput=${function (/** @type {Event} */ event) {
+				const field = /** @type {HTMLTextAreaElement} */ (event.currentTarget);
+				props.onChange(row.id, field.value);
+			}} />
+		${row.choices.length > 0 ? html`<div class="set-auto">
+			<span class="hint">${t(text, 'settings.list.auto')}</span>
+			<ul>
+				${row.choices.map(function (choice) {
+					return html`<li><span class="chip">${t(text, 'settings.list.auto.mark')}</span> <span class="mono">${choice.text}</span></li>`;
+				})}
+			</ul>
+		</div>` : null}`;
+}
+
 const kCustom = 'custom';
 
 /**
@@ -300,6 +331,9 @@ export function Control(props) {
 
 	if (row.picker)
 		return html`<${ChannelPick} row=${row} value=${value} onChange=${props.onChange} />`;
+
+	if (row.type === 'list')
+		return html`<${ListRow} row=${row} value=${value} onChange=${props.onChange} />`;
 
 	if (row.type === 'bool') {
 		// Anything but the box's own nought is on. A value this page has never

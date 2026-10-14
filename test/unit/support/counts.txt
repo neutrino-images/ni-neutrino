@@ -37,7 +37,7 @@ keys whose default the scan can compare	444
 labels compared against a chooser	8
 labels compared against a number chooser	0
 labels compared against a stated field	1
-labels compared against the locale names	466
+labels compared against the locale names	468
 labels stated beside a field	471
 list, records and flag file rows	27
 lists and lists of records held to a read of the load	5

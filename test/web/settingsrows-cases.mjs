@@ -636,7 +636,7 @@ for (const unit of Object.keys(units)) {
 }
 
 // A list row with a label has to be drawn. Reading the tables as text is what finds one
-// before a box does; the page draws none today because no list row has a label.
+// before a box does.
 /** @param {string} source @returns {string[]} */
 function labelledLists(source) {
 	/** @type {string[]} */
@@ -654,6 +654,25 @@ for (const source of kSources) {
 	for (const key of labelledLists(source))
 		same(drawsLists, true, 'the list row ' + key + ' has a label, so the page has to draw lists');
 }
+
+// A list is edited one entry to a line. What the box loads beside it by itself comes as the
+// row's values, is shown under the field and is never part of what is sent.
+const webList = /** @type {any} */ (rowOf({ id: 'x.web', label: 'Web lists', type: 'list', section: 'x', default: '',
+	values: [{ value: 0, text: '/var/webtv/a.xml', label: '/var/webtv/a.xml' }, { value: 1, text: '/share/webtv/b.m3u', label: '/share/webtv/b.m3u' }] }));
+same(webList === null ? null : [webList.type, webList.choices.map(function (/** @type {any} */ c) { return c.text; })],
+	['list', ['/var/webtv/a.xml', '/share/webtv/b.m3u']], 'a list row reads what the box loads beside it by its text');
+setLanguage('en');
+const listTree = Control(/** @type {any} */ ({ row: webList, value: '/media/own.xml', onChange: function () {}, onClear: function () {} }));
+same(find(listTree, 'textarea', []).map(function (n) { return n.props.value; }), ['/media/own.xml'], 'the list is one field holding only its own entries');
+same(find(listTree, 'li', []).length, 2, 'each loaded entry is drawn under the field');
+same(find(listTree, 'span', []).some(function (n) { return n.props.children === 'auto'; }), true, 'a loaded entry is marked auto');
+same(find(listTree, 'input', []).length + find(listTree, 'select', []).length, 0, 'a loaded entry offers nothing to edit');
+const bareList = /** @type {any} */ (rowOf({ id: 'x.bare', label: 'Bare list', type: 'list', section: 'x', default: '' }));
+same(find(Control(/** @type {any} */ ({ row: bareList, value: '', onChange: function () {}, onClear: function () {} })), 'li', []).length, 0,
+	'a list without loaded entries draws none');
+same(changed([webList], { 'x.web': '/media/own.xml' }, { 'x.web': '/media/own.xml\n /media/two.xml \n\n' }),
+	{ 'x.web': '/media/own.xml\n/media/two.xml' }, 'a list is sent without empty lines and spaces, and without what the box loads');
+same(changed([webList], { 'x.web': '/media/own.xml' }, { 'x.web': '/media/own.xml\n' }), {}, 'a trailing line is no change');
 
 // The box leaves a member out when it has its default: the page reads that as the default.
 const bare = /** @type {any} */ (rowOf({ id: 'x.bare', label: 'Bare', type: 'bool', section: 'x', default: '0' }));
