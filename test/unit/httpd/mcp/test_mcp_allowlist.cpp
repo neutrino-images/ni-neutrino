@@ -692,6 +692,9 @@ TEST_CASE("a denied key is refused with the reason of its own class", "[allowlis
 	CHECK(why.find("PIN") != std::string::npos);
 	REQUIRE(mcp::deniedKeyIn("{\"tmdb_api_key\":\"x\"}", &why) == "tmdb_api_key");
 	CHECK(why == "is a credential");
+	// A list whose records carry a password, although the row itself is none.
+	REQUIRE(mcp::deniedKeyIn("{\"timer_remotebox_ip\":\"x\"}", &why) == "timer_remotebox_ip");
+	CHECK(why == "is a credential");
 	REQUIRE(mcp::deniedKeyIn("{\"timeshiftdir\":\"/x\"}", &why) == "timeshiftdir");
 	CHECK(why.find("disk") != std::string::npos);
 

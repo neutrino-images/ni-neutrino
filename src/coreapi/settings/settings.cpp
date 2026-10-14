@@ -334,6 +334,18 @@ void withhold(Descriptor &d)
 	d.default_int = 0;
 }
 
+// A record's credentials read as nothing, its other members as they are stored.
+void withholdMembers(const Descriptor &d, std::vector<RecordValues> &records)
+{
+	const FieldExtra *x = d.field.extra;
+	if (d.type != ValueType::Records || x == NULL)
+		return;
+	for (size_t r = 0; r < records.size(); ++r)
+		for (size_t m = 0; m < x->record_field_count && m < records[r].size(); ++m)
+			if (x->record_fields[m].secret)
+				records[r][m].clear();
+}
+
 /* Whether the row allows the value, which is not the question the store asks.
    That one is whether the field can hold it, and it is narrower. Both have to
    refuse what they refuse and neither stands in for the other, because a row's
@@ -1063,13 +1075,26 @@ Result<void> holdsTextRule(const TextRule &rule, const std::string &value, const
 	return ok();
 }
 
+bool holdsCredential(const Descriptor &d)
+{
+	if (d.secret)
+		return true;
+	const FieldExtra *x = d.field.extra;
+	if (d.type != ValueType::Records || x == NULL)
+		return false;
+	for (size_t m = 0; m < x->record_field_count; ++m)
+		if (x->record_fields[m].secret)
+			return true;
+	return false;
+}
+
 bool sectionHoldsSecret(const std::string &section)
 {
 	const Descriptor *t = settingsTable();
 	const size_t n = settingsTableCount();
 	for (size_t i = 0; t != NULL && i < n; ++i)
 	{
-		if (t[i].secret && t[i].section != NULL && section == t[i].section)
+		if (holdsCredential(t[i]) && t[i].section != NULL && section == t[i].section)
 			return true;
 	}
 	return false;
@@ -1192,6 +1217,14 @@ Result<std::string> get(const std::string &key)
 	if (d->secret)
 		return ok(std::string());
 
+	if (d->type == ValueType::Records && holdsCredential(*d))
+	{
+		Result<Records> records = getRecords(key);
+		if (!records.ok())
+			return fail(records.error());
+		return ok(recordsText(records.value()));
+	}
+
 	return readStored(d);
 }
 
@@ -1223,6 +1256,7 @@ Result<Records> getRecords(const std::string &key)
 		splitRecords(d->default_string != NULL ? d->default_string : "", out.records);
 	else if (s != Status::Ok)
 		return fail(s, ErrorCode::SettingUnreadable, "the setting could not be read");
+	withholdMembers(*d, out.records);
 	return ok(std::move(out));
 }
 

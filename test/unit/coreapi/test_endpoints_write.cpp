@@ -1240,6 +1240,13 @@ TEST_CASE("a settings write reaches the layer and a refused one says which rule"
 	const Reply elsewhere = authedPatch("/api/v1/settings/audio", "{\"network_ntprefresh\":\"30\"}");
 	REQUIRE(elsewhere.code == 404);
 	REQUIRE(elsewhere.body.find("no-such-setting") != std::string::npos);
+
+	/* The remote boxes read with their passwords empty, so a list sent back would be
+	   the list without them. Refused, and the box's own screen edits it. */
+	const Reply boxes = authedPatch("/api/v1/settings/misc",
+		"{\"timer_remotebox_ip\":\"1\\t10.0.0.3\\tnew\\tuser\\t\\t80\"}");
+	REQUIRE(boxes.code == 409);
+	REQUIRE(boxes.body.find("setting-locked") != std::string::npos);
 }
 
 TEST_CASE("a settings write of several keys reports each key's outcome", "[write]")

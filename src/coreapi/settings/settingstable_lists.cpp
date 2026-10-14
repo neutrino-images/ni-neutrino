@@ -240,16 +240,15 @@ constexpr Descriptor kLists[] =
 		.section("misc")
 		.defaultValue("")
 		.field(COREAPI_RECORDS_FIELD(usermenu, kUsermenuExtra)),
-	/* A password among the members makes the whole list a credential: a read of
-	   it answers nothing, a write replaces it whole and cannot be nothing. The box
-	   lists it on the screen of the timers, which reads the list out of the
-	   struct. Under the section that already holds credentials, because a section
-	   with one in it is one no AI client may write, and this one must not widen
-	   what they may. */
+	/* The password is the one credential among the members: a read answers every
+	   box with it empty, and the web cannot write the list, since a list read
+	   without its passwords and written back would lose them. The box edits it on
+	   the screen of the timers, which reads the list out of the struct. Under the
+	   section that already holds credentials, because a section with one in it is
+	   one no AI client may write, and this one must not widen what they may. */
 	recordsRow("timer_remotebox_ip")
 		.section("misc")
 		.defaultValue("")
-		.secret()
 		.field(COREAPI_RECORDS_FIELD(timer_remotebox_ip, kRemoteboxExtra)),
 	// The flag files, each the existence of a file in the directory the program keeps them in.
 	boolRow("flag_hddpower")

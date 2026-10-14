@@ -1953,8 +1953,8 @@ TEST_CASE("the schema names the kind of a list and the members of a record", "[e
 	CHECK_FALSE(fields[1].isMember("secret"));
 	CHECK(fields[2]["name"].asString() == "items");
 
-	// A password among the members is said, and the list is a credential.
-	CHECK((*boxes)["secret"].asBool());
+	// A password among the members is said on the member, and the list is no credential.
+	CHECK_FALSE(boxes->isMember("secret"));
 	const ::Json::Value &remote = (*boxes)["fields"];
 	REQUIRE(remote.size() == 6);
 	CHECK(remote[4]["name"].asString() == "pass");

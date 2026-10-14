@@ -950,11 +950,11 @@ TEST_CASE("a records write for a count the list no longer has changes nothing", 
 	CHECK(values.timer_remotebox_ip[0].rbname == "box");
 }
 
-/* The remote boxes carry a password, which makes the whole list a credential: a read
-   answers nothing and the write replaces it whole and cannot be nothing. The screen of
+/* The remote boxes carry a password, the one credential among their members: a read
+   answers every box with it empty, and the row itself is no credential. The screen of
    the timers reads the list out of the struct, so what a read of it through the layer
    withholds is not what the screen shows. */
-TEST_CASE("a list of records that holds a password is a credential", "[settingselements]")
+TEST_CASE("a list of records that holds a password withholds only the password", "[settingselements]")
 {
 	RealStore store;
 	timer_remotebox_item b;
@@ -969,17 +969,24 @@ TEST_CASE("a list of records that holds a password is a credential", "[settingse
 
 	Result<std::string> got = settings::get("timer_remotebox_ip");
 	REQUIRE(got.ok());
-	CHECK(got.value().empty());
+	CHECK(got.value() == "1\t10.0.0.2\tbox\troot\t\t80");
+	CHECK(got.value().find("swordfish") == std::string::npos);
+
+	Result<settings::Records> records = settings::getRecords("timer_remotebox_ip");
+	REQUIRE(records.ok());
+	REQUIRE(records.value().size() == 1);
+	CHECK(records.value().get(0, "user") == "root");
+	CHECK(records.value().get(0, "pass") == "");
 
 	Result<Descriptor> d = settings::describe("timer_remotebox_ip");
 	REQUIRE(d.ok());
-	CHECK(d.value().secret);
+	CHECK_FALSE(d.value().secret);
+	CHECK(settings::holdsCredential(d.value()));
+	CHECK(settings::sectionHoldsSecret("misc"));
 	CHECK(std::string(d.value().default_string) == "");
 
-	// Not the whole list over a form that read nothing.
-	Result<void> empty = settings::set("timer_remotebox_ip", "");
-	REQUIRE_FALSE(empty.ok());
-	CHECK(empty.error().code == ErrorCode::EmptyCredential);
+	// The read left the store as it was.
+	CHECK(store.values.timer_remotebox_ip[0].pass == "swordfish");
 
 	/* The timer screen holds iterators into the list and the address of the texts of a box
 	   while it is open, so a write carries exactly the boxes there are and changes each in
@@ -1034,10 +1041,12 @@ TEST_CASE("records and entries read back as the text get answers", "[settingsele
 	CHECK_FALSE(settings::get("usermenu").value().empty());
 	CHECK(settings::recordsText(menu.value()) == settings::get("usermenu").value());
 
-	// A credential row is answered empty, as get answers it, and the store is not read.
+	// The password is answered empty in both readings alike.
 	Result<settings::Records> boxes = settings::getRecords("timer_remotebox_ip");
 	REQUIRE(boxes.ok());
-	CHECK(boxes.value().size() == 0);
+	REQUIRE(boxes.value().size() == 1);
+	CHECK(boxes.value().get(0, "name") == "box");
+	CHECK(boxes.value().get(0, "pass") == "");
 	CHECK(settings::recordsText(boxes.value()) == settings::get("timer_remotebox_ip").value());
 
 	Result<std::vector<std::string> > list = settings::getList("webtv_xml");

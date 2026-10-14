@@ -1692,12 +1692,11 @@ const char *const kShippedSecrets[] =
 	"softupdate_proxypassword",
 	"parentallock_pincode",
 	"personalize_pincode",
-	// The pin of each module slot, and the remote boxes, whose list carries a password.
+	// The pin of each module slot.
 	"ci_pincode_0",
 	"ci_pincode_1",
 	"ci_pincode_2",
-	"ci_pincode_3",
-	"timer_remotebox_ip"
+	"ci_pincode_3"
 };
 const size_t kShippedSecretsCount = sizeof(kShippedSecrets) / sizeof(kShippedSecrets[0]);
 } // anonymous namespace

@@ -1148,6 +1148,18 @@ Response settingsWrite(const Request &r)
 			continue;
 		}
 
+		/* A list whose records carry a credential reads with it empty, so what a caller
+		   sends back is the list without its passwords. The box's own screen edits it. */
+		if (d->type == coreapi::ValueType::Records && coreapi::settings::holdsCredential(*d))
+		{
+			w.failed = true;
+			w.code = StatusConflict;
+			w.error = coreapi::Error(coreapi::Status::Conflict, coreapi::ErrorCode::SettingLocked,
+			                         "a credential is among the members of this list, so it is edited at the box");
+			all_ok = false;
+			continue;
+		}
+
 		toWrite.push_back(std::make_pair(members[i].name, members[i].text));
 	}
 
@@ -1338,7 +1350,8 @@ const RouteRefusal kSettingsWriteRefusals[] = {
 	HTTPD_REFUSES(Internal, ChannelListUnavailable,
 		"the channel list could not be read"),
 	HTTPD_REFUSES(Conflict, SettingLocked,
-		"the box's parental lock fixes this setting"),
+		"the box's parental lock fixes this setting, or a credential is among the members of its records "
+		"and the box's own screen edits it"),
 	HTTPD_REFUSES(Conflict, SettingNotOnThisBox,
 		"this box does not have what the setting controls"),
 	HTTPD_REFUSES(Conflict, SettingConditionNotMet,

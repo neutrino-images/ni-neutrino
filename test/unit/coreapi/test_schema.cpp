@@ -622,11 +622,10 @@ TEST_CASE("a records row names what a record is made of", "[schema]")
 	fields[1].min = 1;
 	REQUIRE(descriptorIsSane(d));
 
-	// A credential among the members makes the whole list one, because the list is what is read.
+	// A credential among the members needs no mark on the row: a read answers it empty in each record.
 	fields[0].secret = true;
-	REQUIRE_FALSE(descriptorIsSane(d));
-	d.secret = true;
 	REQUIRE(descriptorIsSane(d));
+	fields[0].secret = false;
 
 	// And it is a list of records and not a list of texts.
 	d.field = kListField;

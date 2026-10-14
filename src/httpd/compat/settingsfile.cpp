@@ -84,9 +84,9 @@ bool nameLooksSecret(const std::string &key)
 	return false;
 }
 
-/* The file keeps a record member by member, and a secret record is secret only
-   in the members its declaration marks; the address, name and user of a remote
-   box stay readable beside its password. */
+/* The file keeps a record member by member, and only the members the declaration
+   marks are credentials; the address, name and user of a remote box stay readable
+   beside its password. */
 bool recordMemberWithheld(const Descriptor &row, const std::string &key)
 {
 	const std::string stem(row.key);
@@ -133,7 +133,7 @@ bool legacyConfigWithheld(const std::string &config, const std::string &key)
 	if (config == "neutrino")
 	{
 		const Descriptor *d = declaredFor(key);
-		if (d != NULL && d->type == ValueType::Records && d->secret)
+		if (d != NULL && d->type == ValueType::Records)
 			return recordMemberWithheld(*d, key);
 		if (d != NULL)
 			return d->secret;

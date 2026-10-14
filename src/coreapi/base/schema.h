@@ -220,8 +220,8 @@ struct RecordField
 	// The bounds of an Int or a Key, nought for the other kinds.
 	long        min;
 	long        max;
-	// A credential: the list is never answered, and the schema says which
-	// member it is.
+	// A credential: a read answers it empty in every record, and the web does
+	// not write a list that has one.
 	bool        secret;
 	// The locale name of the text beside it, NULL where there is none.
 	const char *label_key;
@@ -1471,10 +1471,6 @@ inline bool descriptorIsSane(const Descriptor &d)
 				if ((f.type == ValueType::Int || f.type == ValueType::Key) && f.min > f.max)
 					return false;
 				if (f.label_key != NULL && f.label_key[0] == '\0')
-					return false;
-				// A credential among the members is a credential of the whole list: the
-				// list is what is read, and a read of it must not hand one out.
-				if (f.secret && !d.secret)
 					return false;
 				for (size_t j = 0; j < i; ++j)
 				{

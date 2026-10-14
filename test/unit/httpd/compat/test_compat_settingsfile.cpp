@@ -105,7 +105,7 @@ std::vector<std::string> secretFileKeys()
 	const size_t n = coreapi::settingsTableCount();
 	for (size_t i = 0; i < n; ++i)
 	{
-		if (t[i].key == NULL || !t[i].secret)
+		if (t[i].key == NULL || !coreapi::settings::holdsCredential(t[i]))
 			continue;
 		const std::vector<std::string> keys = fileKeysOf(t[i]);
 		out.insert(out.end(), keys.begin(), keys.end());
@@ -175,7 +175,7 @@ TEST_CASE("of a remote box only the password is withheld", "[compat][settingsfil
 	all["timer_remotebox_pass_1"] = "s3cr3t";
 	const coreapi::Descriptor *row = coreapi::settings::findRow("timer_remotebox_ip");
 	REQUIRE(row != NULL);
-	REQUIRE(row->secret);
+	REQUIRE(coreapi::settings::holdsCredential(*row));
 
 	const CStringList out = legacyConfigReadable("neutrino", all);
 	CHECK(out.find("timer_remotebox_pass_0") == out.end());

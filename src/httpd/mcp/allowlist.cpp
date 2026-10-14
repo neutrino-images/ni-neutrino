@@ -129,7 +129,7 @@ static const char *denialOf(const std::string &key)
 	coreapi::Result<coreapi::Descriptor> d = coreapi::settings::describe(key);
 	if (!d.ok())
 		return NULL;
-	if (d.value().secret)
+	if (coreapi::settings::holdsCredential(d.value()))
 		return "is a credential";
 	if (coreapi::settings::holdsPath(d.value()))
 		return "names a place on the box's disk";

@@ -70,6 +70,9 @@ const char *startChannelKind(const std::string &key);
 // Whether the value names a file or folder on the box.
 bool holdsPath(const Descriptor &d);
 
+// Whether the row carries a credential: it is one, or a member of its records is.
+bool holdsCredential(const Descriptor &d);
+
 bool sectionHoldsSecret(const std::string &section);
 
 /* Whether a text is one the rule takes: its length, its characters, and for a
