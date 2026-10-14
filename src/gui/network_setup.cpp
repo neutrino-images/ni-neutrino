@@ -262,9 +262,6 @@ int CNetworkSetup::showNetworkSetup()
 	if (managed)
 		return showManagedNetworkSetup();
 
-	CMenuForwarder *ifSelect = new CMenuForwarder(LOCALE_NETWORKMENU_SELECT_IF, ifcount > 1, g_settings.ifname, this, "select_if");
-	ifSelect->setHint("", LOCALE_MENU_HINT_NET_IF);
-
 	/* with something else in charge of the interface the menu only shows
 	   what is set */
 	const bool can_configure = networkConfig->canConfigure();
