@@ -81,6 +81,7 @@ COMPAT_SOURCES = \
 	compat/neutrinoapi.cpp \
 	compat/query.cpp \
 	compat/scriptrunner.cpp \
+	compat/settingsfile.cpp \
 	compat/standby.cpp
 
 if ENABLE_LEGACY_API
@@ -265,6 +266,7 @@ noinst_HEADERS = \
 	compat/neutrinoapi.h \
 	compat/query.h \
 	compat/scriptrunner.h \
+	compat/settingsfile.h \
 	compat/standby.h \
 	$(MCP_HEADERS) \
 	$(OAUTH_HEADERS) \

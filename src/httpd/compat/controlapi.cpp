@@ -56,6 +56,7 @@ extern CPictureViewer *g_PicViewer;
 #include "httpd/compat/helper.h"
 #include "httpd/compat/query.h"
 #include "httpd/compat/scriptrunner.h"
+#include "httpd/compat/settingsfile.h"
 #include "httpd/compat/standby.h"
 #include "httpd/compat/neutrinoapi.h"
 #include "httpd/compat/controlapi.h"
@@ -3983,17 +3984,15 @@ void CControlAPI::ConfigCGI(CyhookHandler *hh)
 		Config->loadConfig(config_filename);
 
 		if (load) {	// get and output list
-			conf = Config->getConfigDataMap();
+			conf = legacyConfigReadable(configFileName, Config->getConfigDataMap());
 			ConfigDataMap::iterator it, end, start;
 			for (start = conf.begin(), it=start, end = conf.end(); it != end; ++it) {
 				std::string key = it->first;
 				replace(key, ".", "_dot_");
 				replace(key, "-", "_bind_");
-				if (!(hh->ParamList["config"] == "nhttpd" && it->first == "mod_auth.password")) {
-					if(it != start)
-						result += hh->outNext();
-					result += hh->outPair(key, it->second, false);
-				}
+				if(it != start)
+					result += hh->outNext();
+				result += hh->outPair(key, it->second, false);
 			}
 		}
 		else { // set values and save list
