@@ -463,10 +463,11 @@ int CNetworkSetup::showManagedNetworkSetup()
 
 	networkSettings.addIntroItems(LOCALE_MAINSETTINGS_NETWORK);
 
+	CMenuForwarder *mf = NULL;
 #ifdef ENABLE_NI_WEB
 	//web interface submenu
 	CWebserverSetup webserver;
-	CMenuForwarder *mf = new CMenuForwarder(LOCALE_NETWORKMENU_HTTPD, true, NULL, &webserver, NULL, CRCInput::RC_green);
+	mf = new CMenuForwarder(LOCALE_NETWORKMENU_HTTPD, true, NULL, &webserver, NULL, CRCInput::RC_green);
 	mf->setHint("", LOCALE_MENU_HINT_NET_HTTPD);
 	networkSettings.addItem(mf);
 #endif
