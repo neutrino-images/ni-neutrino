@@ -41,7 +41,7 @@ labels compared against the locale names	466
 labels stated beside a field	471
 list, records and flag file rows	27
 lists and lists of records held to a read of the load	5
-locale names the program has	3233
+locale names the program has	3238
 memory backed folders tried	1
 number elements written and read back among their neighbours	145
 parameters the document describes	150
