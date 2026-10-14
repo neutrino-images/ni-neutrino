@@ -450,6 +450,7 @@ openapi_dump_SOURCES = doc/openapi-dump.cpp doc/openapi-dump-stubs.cpp doc/opena
 # md5sum answers the one hash helpers.o computes over a whole file.
 # libtimerdclient answers the announce time the timer layer fills in.
 # jpeg answers the screenshot tool the AI client routes reach through the tool list.
+# libnet answers the interface address the network choices show and the host name.
 openapi_dump_LDADD = \
 	libhttpd.a \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
@@ -460,6 +461,7 @@ openapi_dump_LDADD = \
 	$(top_builddir)/lib/jsoncpp/libjsoncpp.a \
 	$(top_builddir)/lib/libmd5sum/libmd5sum.a \
 	$(top_builddir)/lib/xmltree/libxmltree.a \
+	$(top_builddir)/lib/libnet/libnet.a \
 	$(PUGIXML_LIBS) \
 	-lOpenThreads \
 	-lcurl \

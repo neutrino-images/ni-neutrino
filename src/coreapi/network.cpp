@@ -21,9 +21,15 @@
 #include <config.h>
 
 #include "coreapi/network.h"
+#include "coreapi/settings/settings.h"
 
+#include <libnet/libnet.h>
+
+#include <arpa/inet.h>
 #include <dirent.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <algorithm>
 
@@ -72,9 +78,60 @@ std::vector<std::string> interfaces()
 	return interfacesIn("/sys/class/net");
 }
 
-bool interfaceChoices(std::vector<SettingChoice> &out)
+namespace
 {
-	const std::vector<std::string> names = interfaces();
+
+std::string systemAddress(const std::string &name)
+{
+	std::string dev = name;
+	std::string ip;
+	std::string mask;
+	std::string broadcast;
+	netGetIP(dev, ip, mask, broadcast);
+	struct in_addr addr;
+	if (ip == "0.0.0.0" || inet_pton(AF_INET, ip.c_str(), &addr) != 1)
+		return "";
+	return ip;
+}
+
+std::string statusIn(const std::string &directory, const std::string &name, AddressOf address)
+{
+	const std::string ip = address(name);
+	if (!ip.empty())
+		return ip;
+	std::string words;
+	if (!settings::resolveLabel(stateKeyIn(directory, name), words))
+		return "";
+	return words;
+}
+
+} // namespace
+
+const char *stateKeyIn(const std::string &directory, const std::string &name)
+{
+	const std::string entry = directory + "/" + name;
+	if (access((entry + "/wireless").c_str(), F_OK) == 0)
+		return "networkmenu.state_not_connected";
+
+	int carrier = 0;
+	FILE *f = fopen((entry + "/carrier").c_str(), "r");
+	if (f != NULL)
+	{
+		if (fscanf(f, "%d", &carrier) != 1)
+			carrier = 0;
+		fclose(f);
+	}
+	return carrier ? "networkmenu.state_no_address" : "networkmenu.state_no_cable";
+}
+
+std::string interfaceStatus(const std::string &name)
+{
+	return statusIn("/sys/class/net", name, systemAddress);
+}
+
+bool interfaceChoicesIn(const std::string &directory, AddressOf address, std::vector<SettingChoice> &out)
+{
+	const std::vector<std::string> names = interfacesIn(directory);
 	if (names.empty())
 		return false;
 
@@ -84,10 +141,16 @@ bool interfaceChoices(std::vector<SettingChoice> &out)
 		SettingChoice one;
 		one.value = (long) i;
 		one.text = names[i];
-		one.label = names[i];
+		const std::string status = statusIn(directory, names[i], address);
+		one.label = status.empty() ? names[i] : names[i] + " (" + status + ")";
 		out.push_back(one);
 	}
 	return true;
+}
+
+bool interfaceChoices(std::vector<SettingChoice> &out)
+{
+	return interfaceChoicesIn("/sys/class/net", systemAddress, out);
 }
 
 } // namespace network

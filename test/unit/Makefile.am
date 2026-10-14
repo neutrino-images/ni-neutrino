@@ -285,6 +285,8 @@ coreapi_tests_SOURCES = \
 # The zapit client archive is what getPIDS lives in, so the case that pins what it
 # does with a daemon that answers short drives that code and not a copy; it needs
 # the connection library after it.
+# The network library answers the address an interface choice shows and the
+# host name helpers.o reads.
 coreapi_tests_LDADD = \
 	$(top_builddir)/src/httpd/libhttpd.a \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
@@ -302,6 +304,7 @@ coreapi_tests_LDADD = \
 	$(top_builddir)/lib/libmd5sum/libmd5sum.a \
 	$(top_builddir)/lib/libconfigfile/libconfigfile.a \
 	$(top_builddir)/lib/timerdclient/libtimerdclient.a \
+	$(top_builddir)/lib/libnet/libnet.a \
 	$(top_builddir)/lib/connection/libconnection.a \
 	-lOpenThreads \
 	-lcurl \

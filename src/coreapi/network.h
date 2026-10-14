@@ -39,10 +39,25 @@ std::vector<std::string> interfaces();
 // The same for a directory other than the system's, for a case that needs its own.
 std::vector<std::string> interfacesIn(const std::string &directory);
 
-/* The interface setting's choices. The name is the label; the value is the
-   position in the list, since a choice carries no text of its own yet. False
+/* Why an interface has no address, as the locale key of the words for it: a
+   wireless one is on no network, a wired one has no cable or no lease. Read
+   from the interface's entry under the directory given. */
+const char *stateKeyIn(const std::string &directory, const std::string &name);
+
+/* What an interface shows beside its name: its IPv4 address, else why it has
+   none in the box's language. Empty when neither can be said. */
+std::string interfaceStatus(const std::string &name);
+
+// The address an interface has, empty for none.
+typedef std::string (*AddressOf)(const std::string &name);
+
+/* The interface setting's choices. The text is the name, which is what the row
+   stores; the label adds the status above, so every frontend shows it. False
    when there are none. */
 bool interfaceChoices(std::vector<SettingChoice> &out);
+
+// The same for a directory and an address reader other than the system's.
+bool interfaceChoicesIn(const std::string &directory, AddressOf address, std::vector<SettingChoice> &out);
 
 } // namespace network
 } // namespace coreapi

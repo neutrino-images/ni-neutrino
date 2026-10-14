@@ -236,8 +236,70 @@ TEST_CASE("an interface is offered by its name as text", "[misc][choices]")
 	for (size_t i = 0; i < got.size(); ++i)
 	{
 		CHECK_FALSE(got[i].text.empty());
-		CHECK(got[i].text == got[i].label);
+		CHECK(got[i].label.compare(0, got[i].text.size(), got[i].text) == 0);
 	}
+}
+
+namespace
+{
+
+std::string addressOfEth0(const std::string &name)
+{
+	return name == "eth0" ? "192.168.1.5" : "";
+}
+
+void writeFile(const std::string &path, const char *text)
+{
+	FILE *f = fopen(path.c_str(), "w");
+	REQUIRE(f != NULL);
+	fputs(text, f);
+	fclose(f);
+}
+
+} // namespace
+
+/* Every frontend draws the label, so the state has to be in it, while the row
+   keeps storing the bare name. */
+TEST_CASE("an interface is labelled with its address or why it has none", "[misc][choices][ifstate]")
+{
+	FakeLocaleSource locale;
+	locale.texts["networkmenu.state_not_connected"] = "nicht verbunden";
+	locale.texts["networkmenu.state_no_cable"] = "kein Kabel";
+	locale.texts["networkmenu.state_no_address"] = "keine Adresse";
+	InstalledLocaleSource installed(&locale);
+
+	char dir[] = "/tmp/ifstateXXXXXX";
+	REQUIRE(mkdtemp(dir) != NULL);
+	const std::string base = dir;
+	const char *const made[] = { "eth0", "eth1", "eth2", "wlan0", "wlan0/wireless" };
+	for (size_t i = 0; i < sizeof(made) / sizeof(made[0]); ++i)
+		REQUIRE(mkdir((base + "/" + made[i]).c_str(), 0755) == 0);
+	writeFile(base + "/eth1/carrier", "1\n");
+	writeFile(base + "/eth2/carrier", "0\n");
+
+	CHECK(std::string(network::stateKeyIn(base, "wlan0")) == "networkmenu.state_not_connected");
+	CHECK(std::string(network::stateKeyIn(base, "eth1")) == "networkmenu.state_no_address");
+	CHECK(std::string(network::stateKeyIn(base, "eth2")) == "networkmenu.state_no_cable");
+
+	std::vector<SettingChoice> got;
+	const bool listed = network::interfaceChoicesIn(base, addressOfEth0, got);
+
+	unlink((base + "/eth1/carrier").c_str());
+	unlink((base + "/eth2/carrier").c_str());
+	for (size_t i = sizeof(made) / sizeof(made[0]); i > 0; --i)
+		rmdir((base + "/" + made[i - 1]).c_str());
+	rmdir(dir);
+
+	REQUIRE(listed);
+	REQUIRE(got.size() == 4);
+	CHECK(got[0].text == "eth0");
+	CHECK(got[0].label == "eth0 (192.168.1.5)");
+	CHECK(got[1].text == "eth1");
+	CHECK(got[1].label == "eth1 (keine Adresse)");
+	CHECK(got[2].text == "eth2");
+	CHECK(got[2].label == "eth2 (kein Kabel)");
+	CHECK(got[3].text == "wlan0");
+	CHECK(got[3].label == "wlan0 (nicht verbunden)");
 }
 
 TEST_CASE("the misc groups are registered by the one hook and each key has one", "[apply][misc]")

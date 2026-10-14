@@ -86,6 +86,3 @@ CHintBox::CHintBox(neutrino_locale_t, const char *, int, const char *, const cha
 		   const int &, const int &, const int &, const unsigned int &,
 		   const unsigned int &, const unsigned int &, const int &) {}
 CHintBox::~CHintBox() {}
-
-void netGetHostname(std::string &);
-void netGetHostname(std::string &) {}
