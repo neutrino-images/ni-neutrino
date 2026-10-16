@@ -22,5 +22,6 @@ libyhttpd_a_SOURCES = \
 	yrequest.cpp \
 	yresponse.cpp \
 	ysocket.cpp \
+	ystatic.cpp \
 	ywebserver.cpp
 
