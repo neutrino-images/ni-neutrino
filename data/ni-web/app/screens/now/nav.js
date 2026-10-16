@@ -14,6 +14,7 @@ export default {
 	ic: '▦',
 	items: [
 		{ id: 'overview', text: 'nav.now.overview', load: () => import('./overview.js') },
-		{ id: 'remote', text: 'nav.now.remote', was: ['screenshot'], load: () => import('./remote.js') }
+		{ id: 'remote', text: 'nav.now.remote', was: ['screenshot'], load: () => import('./remote.js') },
+		{ id: 'displays', text: 'nav.now.displays', was: ['screenshot'], load: () => import('./displays.js') }
 	]
 };
