@@ -66,6 +66,9 @@
    arrangement is touched here, never a colour or a word. */
 .now-card > .note { padding: var(--gap-3) 0; text-align: left; }
 
+/* Separate cards in cards */
+.now-card .now-card { margin-top: var(--gap-4); background: var(--ground-2); }
+
 /* The refusal colour and not the recording one. The red is the same red, and
    the name is what says which of the two this is: a card that could not be
    read is something this page asked for and did not get, and the recording red
@@ -205,10 +208,10 @@
    twice because there is nowhere both can read it from: the layout needs it here
    and the drawing of the photograph needs it in remote.js, which says why it is
    this number and not the two the rest of the page turns at. */
-.now-remote { display: grid; grid-template-columns: minmax(0, 1fr);
+.now-remote, .now-display { display: grid; grid-template-columns: minmax(0, 1fr);
 	gap: var(--gap-4); align-items: start; }
 @media (min-width: 900px) {
-	.now-remote { grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); }
+	.now-remote, .now-display { grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); }
 }
 
 /* The front displays are one grid item however many there are, so the cards

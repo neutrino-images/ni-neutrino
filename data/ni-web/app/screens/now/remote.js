@@ -61,7 +61,7 @@ import { refusalLine } from '../../problem.js';
 import { fold } from '../../ui/kept.js';
 import { Card, useResource } from './parts.js';
 import { HANDSETS, PICTURE_FOR, PICTURE_FOR_HARDWARE, keySpots } from './handsets.js';
-import { useCapture, Displays } from './screenshot.js';
+import { useCapture } from './screenshot.js';
 
 export const css = '/app/screens/now/now.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -590,6 +590,16 @@ export default function Remote() {
 						</section>`;
 					})}
 				</div>`}
+			${/* A card section in a card section to separate */''}
+			<${Card}
+				title=${t(text, 'now.remote.card.lock')}
+				snapshot=${lock}>
+				<${Switch}
+					label=${t(text, 'now.remote.lock')}
+					checked=${!!(lock.data && lock.data.locked)}
+					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { writeLock(e.currentTarget.checked); }} />
+			<p class="now-hint">${t(text, 'now.remote.lock.hint')}</p>
+			<//>
 		<//>
 		${/* Over the keys, what the picture is fetched with is a card of its own
 		     and it comes after them. It is not pinned, and a card standing
@@ -598,19 +608,5 @@ export default function Remote() {
 		${beside
 			? null
 			: html`<${Card} title=${t(text, 'now.shot.card.screen')}>${shot.options}<//>`}
-		${/* The order is the layout. Two columns fill left, right, left, right,
-		     so the front panels land under the picture and the switch about the
-		     box's own handset lands in the card of the keys it stands for,
-		     without a rule naming a position. The panels are one item for
-		     any count of them, which is what keeps the switch in its column. */''}
-		<${Displays} />
-		<${Card}
-			title=${t(text, 'now.remote.card.lock')}
-			snapshot=${lock}>
-			<${Switch}
-				label=${t(text, 'now.remote.lock')}
-				checked=${!!(lock.data && lock.data.locked)}
-				onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { writeLock(e.currentTarget.checked); }} />
-		<//>
 	</div>`;
 }
