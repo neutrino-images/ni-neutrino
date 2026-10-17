@@ -78,7 +78,7 @@
 .now-card-bad p { margin: 0; }
 
 .now-empty { margin: 0; color: var(--text-dim); }
-.now-hint { margin: var(--gap-2) 0 0; color: var(--text-dim); font-size: 0.8125rem; }
+.now-hint { margin: var(--gap-2) 0; color: var(--text-dim); font-size: 0.8125rem; }
 .now-hint:empty { margin: 0; }
 
 /* The state a card is about, which is the label of that card's own switch and
@@ -211,7 +211,7 @@
 .now-remote, .now-display { display: grid; grid-template-columns: minmax(0, 1fr);
 	gap: var(--gap-4); align-items: start; }
 @media (min-width: 900px) {
-	.now-remote, .now-display { grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); }
+	.now-remote, .now-display { grid-template-columns: minmax(0, 4fr) minmax(280px, 2fr); }
 }
 
 /* The front displays are one grid item however many there are, so the cards
@@ -321,8 +321,9 @@
 	.now-remote-head::before, .now-remote-head::after { content: none; }
 }
 .now-remote-sent { margin: var(--gap-3) 0 0; color: var(--text-dim); min-height: 1.45em; }
-.now-keygroup + .now-keygroup { margin-top: var(--gap-4); }
-.now-keyset { display: flex; flex-wrap: wrap; gap: var(--gap-2); }
+.now-keygroup + .now-keygroup { padding-top: var(--gap-4); }
+.now-keyingroup { border-left: 1px solid red; border-right: 1px solid red; }
+.now-keyset { display: flex; flex-wrap: wrap; gap: var(--gap-2); justify-content: space-between; }
 
 /* Everything the box names that no group asked for: on the list and out of the
    way. The marker is the browser's own, because a disclosure that does not
@@ -333,32 +334,63 @@
 
 .now-key {
 	min-height: var(--control-height); min-width: var(--control-height);
-	padding: 0 var(--gap-3);
+	padding: 0;
 	background: var(--ground-2); color: var(--text);
 	border: 1px solid var(--line); border-radius: var(--radius);
-	font: inherit; font-size: 0.8125rem; cursor: pointer;
+	font-family: var(--font-mono); font-size: 0.8125rem; cursor: pointer;
 }
 .now-key:hover:not(:disabled) { border-color: var(--text-dim); }
 .now-key:active:not(:disabled) { background: var(--ground-0); }
 .now-key:disabled { opacity: 0.5; cursor: default; }
 
-/* The digits keep the arrangement they have on the handset, so that a hand
-   that knows where the five is finds it here. */
-.now-keys-digits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-	max-width: 210px; }
-.now-keys-digits .now-key-KEY_0 { grid-column: 2; }
+.now-keys-top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
-/* And the cross keeps its own, which is what makes the arrow keys on the
-   keyboard read as the same thing rather than as a second way in. */
-.now-keys-cross { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-	max-width: 210px; }
-.now-key-KEY_UP { grid-column: 2; grid-row: 1; }
-.now-key-KEY_LEFT { grid-column: 1; grid-row: 2; }
-.now-key-KEY_OK { grid-column: 2; grid-row: 2; font-weight: 600; }
-.now-key-KEY_RIGHT { grid-column: 3; grid-row: 2; }
-.now-key-KEY_DOWN { grid-column: 2; grid-row: 3; }
+.now-key-KEY_POWER { grid-row: 1; grid-column: 1; }
+.now-key-KEY_MUTE { grid-row: 1; grid-column: 3; }
 
-.now-keys-colour .now-key { min-width: 6ch; }
+.now-keys-control { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+.now-keys-digits { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.now-key-KEY_VOLUMEUP,
+.now-key-KEY_PAGEUP
+	{ grid-row: span 2; border-top-left-radius: 50%; border-top-right-radius: 50%; }
+
+.now-key-KEY_VOLUMEDOWN,
+.now-key-KEY_PAGEDOWN
+	{ grid-row: span 2; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%; }
+
+.now-keys-cross { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+/* cross: line 1 */
+.now-key-MENU { grid-row: 1; grid-column: 1; }
+.now-key-KEY_UP { grid-row: 1; grid-column: 3; }
+.now-key-KEY_HOME { grid-row: 1; grid-column: 5; }
+/* cross: line 2 */
+.now-key-KEY_LEFT { grid-row: 2; grid-column: 2; }
+.now-key-KEY_OK { grid-row: 2; grid-column: 3; font-weight: bold; }
+.now-key-KEY_RIGHT { grid-row: 2; grid-column: 4; }
+/* cross: line 3 */
+.now-key-KEY_EPG { grid-row: 3; grid-column: 1; }
+.now-key-KEY_DOWN { grid-row: 3; grid-column: 3; }
+.now-key-KEY_INFO { grid-row: 3; grid-column: 5; }
+
+.now-key-KEY_MENU,
+.now-key-KEY_HOME
+	 { grid-row: span 2; border-radius: 50%; }
+
+.now-keys-colour { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/*
+.now-key-KEY_RED { background-color: #f44336; }
+.now-key-KEY_GREEN { background-color: #4caf50; }
+.now-key-KEY_YELLOW { background-color: #ffeb3b; }
+.now-key-KEY_BLUE { background-color: #3f51b5; }
+*/
+
+.now-keys-transport { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); }
+
+.now-keys-bottom { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 
 /* The photograph, with the hot spots over it. The picture keeps its own
    proportions and the overlay is stretched over exactly the box it ends up in,
