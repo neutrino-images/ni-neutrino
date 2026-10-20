@@ -322,7 +322,6 @@
 }
 .now-remote-sent { margin: var(--gap-3) 0 0; color: var(--text-dim); min-height: 1.45em; }
 .now-keygroup + .now-keygroup { padding-top: var(--gap-4); }
-.now-keyingroup { border-left: 1px solid red; border-right: 1px solid red; }
 .now-keyset { display: flex; flex-wrap: wrap; gap: var(--gap-2); justify-content: space-between; }
 
 /* Everything the box names that no group asked for: on the list and out of the
