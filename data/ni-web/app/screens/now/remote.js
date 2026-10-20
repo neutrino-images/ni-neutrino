@@ -55,6 +55,7 @@ import { html, useState, useEffect, useRef } from '../../runtime.js';
 import * as store from '../../store.js';
 import { t } from '../../i18n.js';
 import text from './now.text.js';
+import icons from './remote.icons.js';
 import { Switch } from '../../ui/switch.js';
 import { toast } from '../../ui/toast.js';
 import { refusalLine } from '../../problem.js';
@@ -82,27 +83,26 @@ const PICTURE_DIR = '/rc/';
    A shape is the arrangement the group is worth having. Empty means the row
    everything else falls into. */
 const GROUPS = [
+	{ id: 'top', shape: 'now-keys-top',
+	  keys: ['KEY_POWER', 'KEY_MUTE'] },
+	{ id: 'control', shape: 'now-keys-control',
+	  keys: ['KEY_TV', 'KEY_RADIO', 'KEY_PVR', 'KEY_FAVORITES', 'KEY_TIME', 'KEY_SLEEP'] },
 	{ id: 'digits', shape: 'now-keys-digits',
-	  keys: ['KEY_1', 'KEY_2', 'KEY_3', 'KEY_4', 'KEY_5', 'KEY_6', 'KEY_7', 'KEY_8', 'KEY_9', 'KEY_0'] },
+	  keys: ['KEY_VOLUMEUP'  , 'KEY_1', 'KEY_2', 'KEY_3', 'KEY_PAGEUP',
+		                   'KEY_4', 'KEY_5', 'KEY_6',
+		 'KEY_VOLUMEDOWN', 'KEY_7', 'KEY_8', 'KEY_9', 'KEY_PAGEDOWN',
+		            'KEY_PREVIOUS', 'KEY_0', 'KEY_NEXT'] },
 	{ id: 'cross', shape: 'now-keys-cross',
-	  keys: ['KEY_UP', 'KEY_LEFT', 'KEY_OK', 'KEY_RIGHT', 'KEY_DOWN'] },
-	{ id: 'volume', shape: '',
-	  keys: ['KEY_VOLUMEUP', 'KEY_VOLUMEDOWN', 'KEY_MUTE', 'KEY_PAGEUP', 'KEY_PAGEDOWN'] },
+	  keys: ['KEY_MENU', 'KEY_UP', 'KEY_HOME',
+		 'KEY_LEFT', 'KEY_OK', 'KEY_RIGHT',
+		 'KEY_EPG', 'KEY_DOWN', 'KEY_INFO'] },
 	{ id: 'colour', shape: 'now-keys-colour',
 	  keys: ['KEY_RED', 'KEY_GREEN', 'KEY_YELLOW', 'KEY_BLUE'] },
-	{ id: 'transport', shape: '',
-	  keys: ['KEY_PLAY', 'KEY_PAUSE', 'KEY_PLAYPAUSE', 'KEY_STOP', 'KEY_RECORD',
-		 'KEY_REWIND', 'KEY_FORWARD', 'KEY_PREVIOUS', 'KEY_NEXT',
-		 'KEY_PREVIOUSSONG', 'KEY_NEXTSONG'] },
-	{ id: 'screen', shape: '',
-	  keys: ['KEY_MENU', 'KEY_SETUP', 'KEY_HOME', 'KEY_BACK', 'KEY_BACKSPACE', 'KEY_INFO',
-		 'KEY_EPG', 'KEY_HELP', 'KEY_TEXT', 'KEY_LAST', 'KEY_FAVORITES', 'KEY_SUBTITLE',
-		 'KEY_TIME', 'KEY_PROGRAM', 'KEY_BOOKMARKS', 'KEY_MOVE', 'KEY_MODE',
-		 'KEY_WWW', 'KEY_GAMES'] },
-	{ id: 'source', shape: '',
-	  keys: ['KEY_TV', 'KEY_TV2', 'KEY_RADIO', 'KEY_AUDIO', 'KEY_VIDEO', 'KEY_SAT', 'KEY_PVR'] },
-	{ id: 'power', shape: '',
-	  keys: ['KEY_POWER', 'KEY_SLEEP', 'KEY_STANDBYON', 'KEY_STANDBYOFF'] },
+	{ id: 'transport', shape: 'now-keys-transport',
+	  keys: ['KEY_PLAY', 'KEY_PAUSE', 'KEY_STOP', 'KEY_RECORD',
+		 'KEY_REWIND', 'KEY_FORWARD', 'KEY_PREVIOUSSONG', 'KEY_NEXTSONG'] },
+	{ id: 'bottom', shape: 'now-keys-bottom',
+	  keys: ['KEY_SUBTITLE', 'KEY_TEXT', 'KEY_AUDIO', 'KEY_VIDEO', 'KEY_SAT', 'KEY_WWW', 'KEY_HELP'] },
 ];
 
 /* What a key on the keyboard stands for. Only the three the plan of this
@@ -275,6 +275,16 @@ export function labelFor(name) {
 }
 
 /**
+ * What a key is displayed on screen: the icon this page has for it.
+ *
+ * @param {string} name
+ * @returns {string}
+ */
+function iconFor(name) {
+	return icons[name] || null;
+}
+
+/**
  * The handset, with a shape over every key of it that this box also names.
  *
  * Drawn as one picture and one overlay in the picture's own pixels, so the whole
@@ -360,7 +370,8 @@ function keysOf(group, onPress) {
 				type="button"
 				class=${'now-key now-key-' + name}
 				title=${name}
-				onClick=${function () { onPress(name); }}>${labelFor(name)}</button>`;
+				aria-label=${labelFor(name)}
+				onClick=${function () { onPress(name); }}>${iconFor(name) || labelFor(name)}</button>`;
 		})}
 	</div>`;
 }
@@ -552,16 +563,8 @@ export default function Remote() {
 			${/* Which of the two forms the keys are drawn in, read before them
 			     rather than at the foot of the screen under a card about
 			     something else. */''}
-			${offer
-				? html`<${Switch}
-					label=${t(text, 'now.remote.photo')}
-					checked=${wanted}
-					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { choosePhoto(e.currentTarget.checked); }} />`
-				: null}
-			<p class="now-hint">${t(text, 'now.remote.lead')}</p>
 			${showing
-				? html`<p class="now-hint">${t(text, 'now.remote.photo.lead')}</p>
-					<${Photograph} name=${picture} named=${named} onPress=${press} />`
+				? html`<${Photograph} name=${picture} named=${named} onPress=${press} />`
 				: html`<div
 					role="group"
 					tabindex="0"
@@ -578,18 +581,23 @@ export default function Remote() {
 						if (group.id === 'rest') {
 							return html`<details key=${group.id} class="now-keygroup now-keyrest" ...${fold('now.remote:rest')}>
 								<summary class="now-sub">
-									${t(text, 'now.group.rest')}
-									${' '}<span class="now-hint">${t(text, 'now.remote.count', { count: group.keys.length })}</span>
+									${t(text, 'now.remote.count', { count: group.keys.length })}
 								</summary>
 								${drawn}
 							</details>`;
 						}
 						return html`<section key=${group.id} class="now-keygroup">
-							<h3 class="now-sub">${t(text, 'now.group.' + group.id)}</h3>
 							${drawn}
 						</section>`;
 					})}
 				</div>`}
+			<p class="now-hint">${t(text, 'now.remote.hint')}</p>
+			${offer
+				? html`<${Switch}
+					label=${t(text, 'now.remote.photo')}
+					checked=${wanted}
+					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { choosePhoto(e.currentTarget.checked); }} />`
+				: null}
 			${/* A card section in a card section to separate */''}
 			<${Card}
 				title=${t(text, 'now.remote.card.lock')}
