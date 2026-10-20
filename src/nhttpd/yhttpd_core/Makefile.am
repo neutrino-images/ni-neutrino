@@ -17,7 +17,6 @@ libyhttpd_a_SOURCES = \
 	helper.cpp \
 	yconnection.cpp \
 	yhook.cpp \
-	ylanguage.cpp\
 	ylogging.cpp \
 	yrequest.cpp \
 	yresponse.cpp \
