@@ -76,7 +76,7 @@ void CLuaInstMenu::MenuRegister(lua_State *L)
 		{ "setActive", CLuaInstMenu::MenuSetActive },
 		{ "setName",   CLuaInstMenu::MenuSetName },
 		{ "setSelected",   CLuaInstMenu::MenuSetSelected },
-                { "getSelected",   CLuaInstMenu::MenuGetSelected },
+		{ "getSelected",   CLuaInstMenu::MenuGetSelected },
 		{ "setValue",   CLuaInstMenu::MenuSetValue },
 		{ "paintItem",   CLuaInstMenu::MenuPaintItem },
 		{ "__gc",      CLuaInstMenu::MenuDelete },
@@ -633,15 +633,15 @@ int CLuaInstMenu::MenuSetSelected(lua_State *L)
 
 int CLuaInstMenu::MenuGetSelected(lua_State *L)
 {
-    CLuaMenu *D = MenuCheck(L, 1);
+	CLuaMenu *D = MenuCheck(L, 1);
 
-    if (!D) {
-        lua_pushnil(L);
-        return 1;
-    }
+	if (!D) {
+		lua_pushnil(L);
+		return 1;
+	}
 
-    lua_pushinteger(L, D->m->getSelected());
-    return 1;
+	lua_pushinteger(L, D->m->getSelected());
+	return 1;
 }
 
 int CLuaInstMenu::MenuSetValue(lua_State *L)
