@@ -19,6 +19,8 @@ TOBACKUP="\
 	@CONFIGDIR@/softcsa.conf \
 	@CONFIGDIR@/timerd.conf \
 	@CONFIGDIR@/weather-favorites.xml \
+	@CONFIGDIR@/xstreamity.conf \
+	@CONFIGDIR@/xstreamity_favorites.json \
 	\
 	@CONFIGDIR@/doscam.* \
 	@CONFIGDIR@/oscam.* \
