@@ -86,6 +86,10 @@
 	--content-pad-x: var(--gap-4);
 	--control-height: 36px;
 	--tap-height: 44px;
+	/* How tall the bar along the bottom is: a finger's height and the 4px over
+	   and under it, and its 1px edge. Read by what floats over the page, which
+	   has to stand above that bar and not over its buttons. */
+	--dock-height: calc(var(--tap-height) + 2 * var(--gap-1) + 1px);
 	--focus-ring: 2px solid var(--accent);
 	--focus-offset: 2px;
 

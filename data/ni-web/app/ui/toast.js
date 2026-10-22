@@ -75,9 +75,10 @@ export function Toasts() {
 		return function () { listeners.delete(setShown); };
 	}, []);
 
-	if (!shown.length)
-		return null;
-
+	/* THE REGION IS THERE BEFORE ANYTHING IS SAID IN IT. A live region that
+	   arrives in the document together with its first message is one a screen
+	   reader has not been listening to yet, and several of them let that first
+	   message pass unread. Empty it is an empty box that takes no pointer. */
 	return html`<div class="toasts" role="status" aria-live="polite">
 		${shown.map(function (note) {
 			return html`<div class=${note.kind === 'bad' ? 'toast bad' : 'toast'} key=${note.id}>

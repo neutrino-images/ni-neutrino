@@ -413,6 +413,15 @@ table.grid tbody tr.grid-more:hover { background: none; }
 
 @media (max-width: 1151px) {
 	.chip.on-air { display: none; }
+	/* A message stands over the bar along the bottom and never over its
+	   buttons: one standing on them is six seconds in which the destinations
+	   it covers cannot be pressed. Over the playing bar as well where there is
+	   one, which is 54 of picture, 8 over and under it and its 1px edge. */
+	.toasts { bottom: calc(var(--gap-4) + var(--dock-height) + env(safe-area-inset-bottom, 0px)); }
+	/* By the attribute alone: the playing window's class is its own sheet's,
+	   and naming it here would make it one the frame owns. */
+	.shell:has([data-form="bar"]) .toasts {
+		bottom: calc(var(--gap-4) + var(--dock-height) + 71px + env(safe-area-inset-bottom, 0px)); }
 	/* Two rows: mark and session above, what is playing across the whole width
 	   below, where a channel name and an event title have room to be read. The
 	   second row is the only reason this bar has a bottom edge at all. */
