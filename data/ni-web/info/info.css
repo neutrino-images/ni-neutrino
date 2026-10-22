@@ -19,19 +19,22 @@
    mark carries its own word. */
 :root {
 	--info-ground: #000000;
-	--info-ink: #d7dbe2;
-	--info-dim: #99a1ad;
-	/* An off flag is still a word somebody reads from across the room to learn
-	   that it is off: over three to one on the black, and still well under the
+	--info-ink: #e0e0e0;
+	--info-dim: #9e9e9e;
+	/* The same Material greys and swatches as the application's dark theme,
+	   and its own orange, so a mark here is the colour it is there. Grey 300 for the writing and
+	   not white, Grey 500 for the row, Grey 900 under the bar.
+	   An off flag is still a word somebody reads from across the room to learn
+	   that it is off: Grey 700, 3.4:1 on the black, and still well under the
 	   grey of the row, so on and off stay two things. */
-	--info-faint: #585f69;
-	--info-bar: #21252b;
+	--info-faint: #616161;
+	--info-bar: #212121;
 	--info-fill: #fd6d13;
 	--info-ecm: #fd6d13;
-	--info-ci: #e0a33b;
-	--info-timer: #e0a33b;
-	--info-rec: #e03b3b;
-	--info-ts: #3ba55d;
+	--info-ci: #ffca28;
+	--info-timer: #ffca28;
+	--info-rec: #e57373;
+	--info-ts: #66bb6a;
 	--info-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
