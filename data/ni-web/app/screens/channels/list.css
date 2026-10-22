@@ -170,10 +170,8 @@ tr[data-on-air] .ch-name {
 }
 
 .ch-marks {
-	display: inline-flex;
+	display: inline-block;
 	align-items: center;
-	gap: var(--gap-1) var(--gap-2);
-	flex-wrap: wrap;
 }
 
 .ch-mark {
