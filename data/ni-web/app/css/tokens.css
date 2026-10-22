@@ -1,32 +1,47 @@
 /* The names every colour and every measure is spelled with. A screen uses the
    names and never a literal, which is what lets ten of them be written at once
-   without a second palette turning up in one. The colours are inherited, and
-   the docs page beside these is drawn from the same set. */
+   without a second palette turning up in one. The dark colours are Material's,
+   and the docs page beside these is drawn from the same set. */
 :root {
-	/* Inherited, not invented: this accent is what the community recognises.
-	   White over this orange is under three to one and dark over it above
-	   seven, so what goes ON the accent is dark. The two washes are the only
-	   amounts it may tint a surface by, so that a row, a pill and a card that
-	   all mean "this is the one" tint alike. */
+	/* THE DARK THEME IS GOOGLE'S MATERIAL PALETTE, every colour a named swatch
+	   or a step the Material dark theme defines, so the set is one somebody
+	   else has already balanced and can be looked up rather than argued. The
+	   one colour that is not Material's is the accent, which is ours.
+	   Every pair below that carries words was measured against all three
+	   grounds by the WCAG 2.x formula; the figures are the lowest of the three.
+
+	   Inherited, not invented: this accent is what the community recognises,
+	   and it is not swapped for the nearest swatch. It is 5.4:1 or more on
+	   every ground, and 4.8:1 as words on its own wash. White over it is under
+	   three to one and the ground colour over it is six and a half, so what
+	   goes ON the accent is dark. The pressed step is its own darker orange,
+	   which it has always had. The two
+	   washes are the only amounts it may tint a surface by, so that a row, a
+	   pill and a card that all mean "this is the one" tint alike. */
 	--accent: #fd6d13;
 	--accent-dim: #c5540c;
-	--accent-ink: #14100b;
+	--accent-ink: #121212;
 	--accent-edge: rgba(253, 109, 19, 0.45);
 	--accent-wash: rgba(253, 109, 19, 0.09);
 
-	/* Neutrals with a slight cool bias instead of a flat near-black, so a
-	   surface separates from the one under it without a border on everything. */
-	--ground-0: #0d0f12;
-	--ground-1: #14171c;
-	--ground-2: #1c2027;
-	--line:     #2a2f38;
+	/* Material's dark surface and its elevation steps: #121212, and the same
+	   with white laid over it at 5 and 8 per cent, which is how Material
+	   separates a surface from the one under it without a border on
+	   everything. Neutral grey, where the old set leaned cool. */
+	--ground-0: #121212;
+	--ground-1: #1e1e1e;
+	--ground-2: #252525;
+	/* Material's divider: white at 12 per cent. */
+	--line:     #2e2e2e;
 	/* The edge of something that is operated: a field, a choice, a switch. --line
 	   is a quiet divider at under one and a half to one, which is right for a
-	   rule between rows and too little to find a control by; this one is above
-	   three to one against all three grounds a control stands on (WCAG 1.4.11). */
-	--line-strong: #646c7a;
-	--text:     #e6e9ee;
-	--text-dim: #9aa3b0;
+	   rule between rows and too little to find a control by. Grey 600 is 3.3:1
+	   against all three grounds a control stands on (WCAG 1.4.11). */
+	--line-strong: #757575;
+	/* Grey 300 and Grey 500, which are Material's high and medium emphasis on
+	   this ground (white at 87 and 60 per cent): 11.6:1 and 5.7:1. */
+	--text:     #e0e0e0;
+	--text-dim: #9e9e9e;
 
 	/* State is not interaction, so it does not borrow the accent's hue. Each of
 	   these names a condition the box is in, never a control.
@@ -34,22 +49,27 @@
 	   THE RED IS THE BOX WRITING TO A DISC AND NOTHING ELSE. It had also been
 	   the colour of whatever is playing, and then a page with a recording on it
 	   and a page without one were the same red meaning two things. Green is
-	   running or connected; amber wants looking at and is not yet a failure. */
-	--state-recording: #e03b3b;
-	--state-running:   #3ba55d;
-	--state-warning:   #e0a33b;
+	   running or connected; amber wants looking at and is not yet a failure.
 
-	/* An open session, which is no condition of the box: the running green at
-	   half the saturation. */
-	--session-open:      #6f9c7f;
-	--session-open-edge: rgba(111, 156, 127, 0.45);
+	   The lighter swatches and not the 500s, as Material asks of a dark theme:
+	   a saturated colour on a dark ground vibrates. Red 300 because Red 400 is
+	   4.4:1 on the raised ground and this red is also written as words; Green
+	   400 is 6.5:1 and Amber 400 10:1. */
+	--state-recording: #e57373;
+	--state-running:   #66bb6a;
+	--state-warning:   #ffca28;
+
+	/* An open session, which is no condition of the box: the running green a
+	   step paler, Green 200 (9.3:1). */
+	--session-open:      #a5d6a7;
+	--session-open-edge: rgba(165, 214, 167, 0.45);
 
 	/* The same red under a second name, for the one thing that is not a
 	   condition of the box: something this page asked for and did not get. A
 	   refusal and a recording never stand in one vocabulary, so they may share
 	   a colour and may not share a name. Sharing the name is what makes "where
 	   is the recording red spent" a question nobody can answer by looking. */
-	--failure: #e03b3b;
+	--failure: #e57373;
 
 	/* What the box is playing, wherever it is drawn: the channel in the bar,
 	   its row in the channel list, its row in the guide. The accent under its
@@ -117,8 +137,8 @@
 	--media-ground: #000;
 	--scrim: rgba(0, 0, 0, 0.55);
 	--shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
-	--state-running-edge: rgba(59, 165, 93, 0.45);
-	--state-warning-edge: rgba(224, 163, 59, 0.45);
+	--state-running-edge: rgba(102, 187, 106, 0.45);
+	--state-warning-edge: rgba(255, 202, 40, 0.45);
 }
 
 /* Light: chosen by the page, or followed from the system unless dark is forced.
