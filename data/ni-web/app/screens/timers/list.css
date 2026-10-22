@@ -92,9 +92,13 @@
 	cursor: pointer;
 }
 
-.timers-end-open:hover,
 .timers-end-open:focus-visible {
 	color: var(--accent);
+}
+@media (hover: hover) {
+	.timers-end-open:hover {
+		color: var(--accent);
+	}
 }
 
 /* Still rendered, because the browser only opens a picker for an input it

@@ -41,8 +41,10 @@
 	text-decoration: none;
 }
 
-.files-crumbs a:hover {
-	background: var(--ground-2);
+@media (hover: hover) {
+	.files-crumbs a:hover {
+		background: var(--ground-2);
+	}
 }
 
 .files-crumbs .files-here {

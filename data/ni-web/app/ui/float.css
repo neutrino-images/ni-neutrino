@@ -182,10 +182,12 @@
 	cursor: pointer;
 }
 
-.fp-grip:hover,
-.fp-shut:hover {
-	background: var(--ground-1);
-	color: var(--text);
+@media (hover: hover) {
+	.fp-grip:hover,
+	.fp-shut:hover {
+		background: var(--ground-1);
+		color: var(--text);
+	}
 }
 
 .fp-grip {

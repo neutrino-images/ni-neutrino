@@ -60,7 +60,9 @@
 .rec-cut { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
 .rec-archive-name { display: inline-flex; align-items: baseline; gap: var(--gap-2); max-width: 100%; vertical-align: bottom;
 	padding: 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.rec-archive-name:hover .rec-cut { text-decoration: underline; }
+@media (hover: hover) {
+	.rec-archive-name:hover .rec-cut { text-decoration: underline; }
+}
 .rec-archive-name .rec-cut { min-width: 0; }
 .rec-archive-on { flex: none; color: var(--on-air); font-size: 0.8125rem; }
 .rec-archive-more { margin: var(--gap-3) 0; }

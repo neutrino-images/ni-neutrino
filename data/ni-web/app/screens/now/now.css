@@ -338,7 +338,9 @@
 	border: 1px solid var(--line); border-radius: var(--radius);
 	font-family: var(--font-mono); font-size: 0.8125rem; cursor: pointer;
 }
-.now-key:hover:not(:disabled) { border-color: var(--text-dim); }
+@media (hover: hover) {
+	.now-key:hover:not(:disabled) { border-color: var(--text-dim); }
+}
 .now-key:active:not(:disabled) { background: var(--ground-0); }
 .now-key:disabled { opacity: 0.5; cursor: default; }
 
@@ -402,8 +404,13 @@
 .now-handset-map { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 .now-spot { fill: transparent; stroke: transparent; stroke-width: 2; cursor: pointer; }
-.now-spot:hover, .now-spot:focus {
+.now-spot:focus {
 	fill: var(--accent-wash); stroke: var(--accent); outline: none;
+}
+@media (hover: hover) {
+	.now-spot:hover {
+		fill: var(--accent-wash); stroke: var(--accent);
+	}
 }
 /* A key this box does not name is part of the photograph and nothing else. */
 .now-spot-dead { pointer-events: none; }

@@ -376,9 +376,11 @@
 	cursor: pointer;
 }
 
-.bq-mini:hover:not(:disabled) {
-	border-color: var(--accent);
-	color: var(--accent);
+@media (hover: hover) {
+	.bq-mini:hover:not(:disabled) {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
 }
 
 .bq-foot,

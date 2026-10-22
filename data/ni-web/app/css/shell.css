@@ -9,6 +9,11 @@ html, body, #app { height: 100%; }
 body { margin: 0; background: var(--ground-0); color: var(--text); font: 0.9375rem/1.45 var(--font); overflow: hidden; }
 a { color: var(--accent); }
 
+/* EVERY :hover IN THE TREE STANDS INSIDE @media (hover: hover). A touch screen
+   keeps the hover of the last thing tapped until something else is, so without
+   the query a button pressed once goes on wearing its hover edge, and a row
+   tapped once reads as a second row chosen. Where there is no pointer to hover
+   with, nothing is drawn for one. */
 /* One ring: one that differs per control is the one nobody looks for. */
 :focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
@@ -48,7 +53,9 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .areas { display: flex; align-items: center; gap: var(--gap-1); flex: none; }
 .areas a { display: block; padding: var(--gap-1) var(--gap-3); border-radius: var(--radius);
 	color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: 0.8125rem; }
-.areas a:hover { background: var(--ground-2); color: var(--text); }
+@media (hover: hover) {
+	.areas a:hover { background: var(--ground-2); color: var(--text); }
+}
 /* A surface and not a fill: a filled pill in a row of eight reads as chosen.
    And the surface is the whole of it; an accent rule under it as well was a
    second mark for one fact. */
@@ -73,12 +80,16 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .session-act { display: inline-flex; align-items: center; gap: var(--gap-2); min-height: 28px;
 	padding: 4px var(--gap-3); background: var(--ground-1); border: 1px solid var(--line);
 	border-radius: var(--radius-pill); font: inherit; font-size: 0.75rem; }
-.session-act:hover { color: var(--text); border-color: var(--text-dim); }
+@media (hover: hover) {
+	.session-act:hover { color: var(--text); border-color: var(--text-dim); }
+}
 .status[data-session="out"] .session-act { background: var(--ground-2); color: var(--text); border-radius: var(--radius); }
 /* Green where a session is open, grey where there is none, so the pill and
    not only the word in it says which. */
 .status[data-session="in"] .session-act { border-color: var(--session-open-edge); color: var(--session-open); }
-.status[data-session="in"] .session-act:hover { border-color: var(--session-open); }
+@media (hover: hover) {
+	.status[data-session="in"] .session-act:hover { border-color: var(--session-open); }
+}
 .status[data-session="in"] .session-act .dot { background: currentColor; }
 
 /* What this session may do, as a sentence: a word does not explain a refusal. */
@@ -92,7 +103,9 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .onair { display: flex; align-items: center; gap: var(--gap-2); flex: 1 1 200px; min-width: 0; max-width: 320px;
 	margin-left: auto; padding: 5px 11px 5px 6px; background: var(--accent-wash);
 	border: 1px solid var(--accent-edge); border-radius: var(--radius-pill); color: inherit; text-decoration: none; }
-.onair:hover { border-color: var(--accent); }
+@media (hover: hover) {
+	.onair:hover { border-color: var(--accent); }
+}
 .onair-logo { width: 24px; height: 24px; flex: none; border-radius: 5px;
 	background: var(--ground-2); object-fit: contain; }
 .onair-monogram { display: grid; place-items: center; border: 1px solid var(--line);
@@ -129,7 +142,9 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .entries { display: flex; gap: var(--gap-1); padding: 0 var(--gap-4) var(--gap-2); overflow-x: auto; }
 .entries a { display: block; flex: none; padding: var(--gap-1) var(--gap-3); border: 1px solid transparent;
 	border-radius: var(--radius-pill); color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: 0.8125rem; }
-.entries a:hover { color: var(--text); }
+@media (hover: hover) {
+	.entries a:hover { color: var(--text); }
+}
 .entries a[aria-current] { color: var(--accent); border-color: var(--accent-edge); background: var(--accent-wash); }
 
 /* ------------------------------------------- the bar along the bottom */
@@ -202,20 +217,26 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 	/* A control that leads somewhere is a link and wears this class, and a
 	   link that is drawn as a button does not also wear the underline. */
 	text-decoration: none; cursor: pointer; }
-.btn:hover:not(:disabled) { border-color: var(--text-dim); }
+@media (hover: hover) {
+	.btn:hover:not(:disabled) { border-color: var(--text-dim); }
+}
 .btn:active:not(:disabled) { background: var(--ground-1); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 /* The grey edge every other button takes on a hover is a grey line around the
-   one orange thing on the screen, so the primary answers with its own darker
-   fill instead, and the press goes on from there. */
-.btn.primary:hover:not(:disabled),
+   one filled button on the screen, so the primary answers with its own darker
+   fill instead, the same one a press gives it. */
+@media (hover: hover) {
+	.btn.primary:hover:not(:disabled) { background: var(--accent-dim); border-color: var(--accent-dim); }
+}
 .btn.primary:active:not(:disabled) { background: var(--accent-dim); border-color: var(--accent-dim); }
 /* One of a set that is the one in force: television or radio, which half, which
    level. Written once here and not on every screen that has such a set, so the
    three of them cannot drift apart. The two washes are the frame's own, and a
    hover keeps it in the accent rather than greying the edge that says so. */
 .btn.on { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--accent); }
-.btn.on:hover:not(:disabled) { border-color: var(--accent); }
+@media (hover: hover) {
+	.btn.on:hover:not(:disabled) { border-color: var(--accent); }
+}
 /* Faded says it is out; the pointer says so to whoever reaches for it anyway. */
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -273,7 +294,9 @@ select {
 	font: inherit;
 	cursor: pointer;
 }
-select:hover { border-color: var(--text-dim); }
+@media (hover: hover) {
+	select:hover { border-color: var(--text-dim); }
+}
 select:disabled { opacity: 0.5; cursor: default; }
 /* High contrast throws the backgrounds away, arrow included. */
 @media (forced-colors: active) {
@@ -328,7 +351,9 @@ table.grid thead th button { padding: 0; background: none; border: 0; color: inh
    that says neither keeps what it holds. */
 table.grid th[data-align="end"], table.grid td[data-align="end"] { text-align: right; }
 table.grid th[data-fit="wide"] { width: 100%; }
-table.grid tbody tr:hover { background: var(--ground-1); }
+@media (hover: hover) {
+	table.grid tbody tr:hover { background: var(--ground-1); }
+}
 /* The row the box is playing, wherever a screen says which one that is. */
 table.grid tbody tr[data-on-air] { background: var(--accent-wash); }
 table.grid tbody tr[data-on-air] td:first-child { box-shadow: inset 3px 0 0 var(--on-air); }
@@ -336,7 +361,9 @@ table.grid tbody tr[data-on-air] td:first-child { box-shadow: inset 3px 0 0 var(
    above hold their content on one line and this one must not, since what opens
    there is a paragraph or a player and neither is a line. */
 table.grid tbody tr.grid-more td { white-space: normal; }
-table.grid tbody tr.grid-more:hover { background: none; }
+@media (hover: hover) {
+	table.grid tbody tr.grid-more:hover { background: none; }
+}
 
 /* What may be done to one row: the marks side by side where there is a
    pointer, one control that opens a sheet where there is a finger. Both are in

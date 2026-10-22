@@ -163,7 +163,9 @@
 	text-align: left;
 	cursor: pointer;
 }
-.grid__name:hover .grid__channel { text-decoration: underline; }
+@media (hover: hover) {
+	.grid__name:hover .grid__channel { text-decoration: underline; }
+}
 .grid__place { flex: none; width: 4ch; color: var(--text-dim); text-align: right; }
 /* Narrower here than in a list, because this cell is two hundred pixels wide
    and the name is what a guide is read for. */
@@ -208,7 +210,9 @@
 	text-align: left;
 	white-space: nowrap;
 }
-.grid__event:hover { border-color: var(--text-dim); }
+@media (hover: hover) {
+	.grid__event:hover { border-color: var(--text-dim); }
+}
 .grid__event.is-picked { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .grid__event.is-picked .grid__clock { color: var(--accent-ink); }
 .grid__clock { flex: none; color: var(--text-dim); font-size: 0.75rem; }
