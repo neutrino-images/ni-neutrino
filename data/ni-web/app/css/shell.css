@@ -201,16 +201,23 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 	border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); font: inherit;
 	/* A control that leads somewhere is a link and wears this class, and a
 	   link that is drawn as a button does not also wear the underline. */
-	text-decoration: none; }
+	text-decoration: none; cursor: pointer; }
 .btn:hover:not(:disabled) { border-color: var(--text-dim); }
 .btn:active:not(:disabled) { background: var(--ground-1); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+/* The grey edge every other button takes on a hover is a grey line around the
+   one orange thing on the screen, so the primary answers with its own darker
+   fill instead, and the press goes on from there. */
+.btn.primary:hover:not(:disabled),
 .btn.primary:active:not(:disabled) { background: var(--accent-dim); border-color: var(--accent-dim); }
 /* One of a set that is the one in force: television or radio, which half, which
    level. Written once here and not on every screen that has such a set, so the
-   three of them cannot drift apart. The two washes are the frame's own. */
+   three of them cannot drift apart. The two washes are the frame's own, and a
+   hover keeps it in the accent rather than greying the edge that says so. */
 .btn.on { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--accent); }
-.btn:disabled { opacity: 0.5; }
+.btn.on:hover:not(:disabled) { border-color: var(--accent); }
+/* Faded says it is out; the pointer says so to whoever reaches for it anyway. */
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* A word about something, in a pill: neutral, what is playing, running, and
    wanting a look. Four and no more, so a screen picks from the vocabulary the
