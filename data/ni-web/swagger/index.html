@@ -23,21 +23,24 @@
    DELETE row in the accent would read as a button. So they are their own cool
    set, and none of them is near the accent. */
 :root {
+  /* The application's dark theme: its own orange, and Material's grounds
+     and the same two greys for the writing. */
   --ni-accent: #fd6d13;
   --ni-accent-dim: #c5540c;
-  --ni-bg: #14171c;
-  --ni-surface: #1b1f26;
-  --ni-surface-2: #222833;
-  --ni-line: #2f3742;
-  --ni-text: #dfe4ec;
-  --ni-dim: #9aa6b6;
-  /* Slightly cool rather than neutral grey, so that two surfaces lying on
-     each other come apart without a border between them. */
-  --ni-get: #4aa3df;
-  --ni-post: #3fb984;
-  --ni-put: #d9b54a;
-  --ni-patch: #3fbfb1;
-  --ni-delete: #e0574d;
+  --ni-bg: #121212;
+  --ni-surface: #1e1e1e;
+  --ni-surface-2: #252525;
+  --ni-line: #2e2e2e;
+  --ni-text: #e0e0e0;
+  --ni-dim: #9e9e9e;
+  /* Material swatches as well, the lighter steps a dark ground wants: Blue,
+     Green, Amber, Teal and Red. Amber is the one warm one beside the orange
+     accent, and it says PUT in words on every row it colours. */
+  --ni-get: #42a5f5;
+  --ni-post: #66bb6a;
+  --ni-put: #ffca28;
+  --ni-patch: #4db6ac;
+  --ni-delete: #e57373;
 }
 
 body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
