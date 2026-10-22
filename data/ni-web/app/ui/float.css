@@ -140,7 +140,7 @@
 .fp-kind {
 	flex: none;
 	color: var(--text-dim);
-	font-size: 0.75rem;
+	font-size: var(--fs-xs);
 }
 
 /* A name is as long as somebody named it and the window is as wide as somebody
@@ -151,13 +151,13 @@
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
-	font-size: 0.8125rem;
+	font-size: var(--fs-sm);
 }
 
 .fp-said {
 	flex: none;
 	color: var(--text-dim);
-	font-size: 0.75rem;
+	font-size: var(--fs-xs);
 }
 
 .fp[data-phase="failed"] .fp-said {

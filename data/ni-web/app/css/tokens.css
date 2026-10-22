@@ -68,6 +68,22 @@
 	   app/ui/textsize.js. */
 	--text-scale: 1;
 
+	/* THE SIZES THE WRITING COMES IN, and a screen picks one of these and never
+	   a number. Sixteen sizes had grown in the screens, three of them a
+	   sixteenth of a rem apart, which is a difference nobody sees and a
+	   hierarchy nobody can follow. md is the body; nothing that is read is set
+	   under xs, which is twelve pixels at the ordinary scale. The one size
+	   below it is for the initials inside a channel's 22 to 30 pixel box, which
+	   is a picture made of letters and not a line of text. */
+	--fs-mark: 0.625rem;
+	--fs-xs:  0.75rem;
+	--fs-sm:  0.8125rem;
+	--fs-md:  0.9375rem;
+	--fs-lg:  1.0625rem;
+	--fs-xl:  1.1875rem;
+	--fs-2xl: 1.3125rem;
+	--fs-3xl: 1.5rem;
+
 	/* Shape on one scale for the same reason the colours are on one: twenty
 	   screens line up without anybody measuring. --tap-height is what a finger
 	   is given below the phone width, where there is no pointer to be precise

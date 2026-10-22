@@ -138,7 +138,7 @@ tr[data-on-air] .ch-name {
 .ch-now-left {
 	flex: none;
 	color: var(--text-dim);
-	font-size: 0.75rem;
+	font-size: var(--fs-xs);
 }
 
 .ch-now-none {
@@ -163,7 +163,7 @@ tr[data-on-air] .ch-name {
 
 .ch-next {
 	color: var(--text-dim);
-	font-size: 0.75rem;
+	font-size: var(--fs-xs);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -182,7 +182,7 @@ tr[data-on-air] .ch-name {
 	padding: 0 var(--gap-1);
 	border: 1px solid var(--line);
 	border-radius: var(--radius);
-	font-size: 0.6875rem;
+	font-size: var(--fs-xs);
 	line-height: 18px;
 	letter-spacing: 0.04em;
 	color: var(--text-dim);
@@ -213,7 +213,7 @@ tr[data-on-air] .ch-name {
 .ch-screen .acts-inline .btn {
 	min-height: 28px;
 	padding: 0 var(--gap-2);
-	font-size: 0.8125rem;
+	font-size: var(--fs-sm);
 }
 
 .ch-more {
@@ -256,7 +256,7 @@ tr[data-on-air] .ch-name {
 
 	.ch-name {
 		white-space: normal;
-		font-size: 0.9375rem;
+		font-size: var(--fs-md);
 	}
 
 	.ch-next {

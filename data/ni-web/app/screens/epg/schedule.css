@@ -9,7 +9,9 @@
  * of cards below the phone width, so nothing about a narrow window is decided
  * here: what is left is the shape of one cell and of the page around it. */
 
-.epg h2 { margin: 0 0 var(--gap-4); font-size: 1.1875rem; }
+/* A section's heading is lg on every screen; the screen's own name above it is
+   the frame's and the larger of the two. */
+.epg h2 { margin: 0 0 var(--gap-4); font-size: var(--fs-lg); }
 
 /* The controls of the window. They wrap rather than scroll: three of them are
    a row at a desk and a column in one hand, and nothing is lost either way. */
@@ -30,7 +32,7 @@
 @media (min-width: 600px) {
 	.epg td[data-col="what"] { max-width: 0; }
 }
-.epg-what small { color: var(--text-dim); font-size: 0.75rem; }
+.epg-what small { color: var(--text-dim); font-size: var(--fs-xs); }
 
 /* A channel the listing has not named yet, drawn as the identifier it is, so
    that a screen still waiting is not read as a screen that has answered. */

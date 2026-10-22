@@ -14,7 +14,7 @@
 	overflow: hidden;
 	height: 0;
 	color: var(--text-dim);
-	font-size: 0.8125rem;
+	font-size: var(--fs-sm);
 	pointer-events: none;
 }
 

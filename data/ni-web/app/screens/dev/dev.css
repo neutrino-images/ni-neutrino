@@ -9,7 +9,7 @@
 .dev { display: flex; flex-direction: column; gap: var(--gap-5); }
 
 .dev-block { min-width: 0; }
-.dev-block > h2 { margin: 0 0 var(--gap-2); font-size: 1.0625rem; }
+.dev-block > h2 { margin: 0 0 var(--gap-2); font-size: var(--fs-lg); }
 .dev-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: 72ch; }
 
 .dev-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-2); }
@@ -43,13 +43,13 @@
 /* The method of a route, and the clock of an event, in the same quiet face.
    The four that change something are marked, because the level beside them
    says what a caller needs and not what the call does. */
-.dev-method { font-weight: 600; font-size: 0.75rem; letter-spacing: .04em; color: var(--text-dim); }
+.dev-method { font-weight: 600; font-size: var(--fs-xs); letter-spacing: .04em; color: var(--text-dim); }
 .dev-method[data-method="POST"],
 .dev-method[data-method="PUT"],
 .dev-method[data-method="PATCH"],
 .dev-method[data-method="DELETE"] { color: var(--state-warning); }
 
-.dev-said { display: block; color: var(--text-dim); font-size: 0.8125rem; white-space: normal; }
+.dev-said { display: block; color: var(--text-dim); font-size: var(--fs-sm); white-space: normal; }
 
 /* What came off the stream. It scrolls inside itself, because a box that has
    been on for an hour has more of these than a page should grow by. */

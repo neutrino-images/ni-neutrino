@@ -77,7 +77,7 @@
 
 .files-panel h2 {
 	margin: 0 0 var(--gap-2);
-	font-size: 1.0625rem;
+	font-size: var(--fs-lg);
 }
 
 /* The field and the button on one line where there is room for one, and the
@@ -126,7 +126,7 @@
 	display: block;
 	max-width: 52ch;
 	color: var(--text-dim);
-	font-size: 0.8125rem;
+	font-size: var(--fs-sm);
 	white-space: normal;
 }
 
@@ -148,7 +148,7 @@
 
 .files-play h3 {
 	margin: 0 0 var(--gap-2);
-	font-size: 1.0625rem;
+	font-size: var(--fs-lg);
 }
 
 .files-play-how,

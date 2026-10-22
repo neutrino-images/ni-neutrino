@@ -6,7 +6,7 @@ html, body, #app { height: 100%; }
 
 /* The window does not scroll: the bars stay put by lying outside the one box
    that does. */
-body { margin: 0; background: var(--ground-0); color: var(--text); font: 0.9375rem/1.45 var(--font); overflow: hidden; }
+body { margin: 0; background: var(--ground-0); color: var(--text); font: var(--fs-md)/1.45 var(--font); overflow: hidden; }
 a { color: var(--accent); }
 
 /* EVERY :hover IN THE TREE STANDS INSIDE @media (hover: hover). A touch screen
@@ -28,8 +28,8 @@ a { color: var(--accent); }
 /* The name of the screen and the sentence under it, drawn by the frame for
    every screen. The sentence is often the only place that says what a screen
    is for. */
-h1.scr { margin: 0 0 3px; font-size: 1.3125rem; font-weight: 600; letter-spacing: -0.01em; }
-p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem; max-width: 60rem; }
+h1.scr { margin: 0 0 3px; font-size: var(--fs-2xl); font-weight: 600; letter-spacing: -0.01em; }
+p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-sm); max-width: 60rem; }
 
 /* ------------------------------------------------------------ the header */
 
@@ -38,7 +38,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
    sideways, and a bottom edge appears only where the row wraps. */
 .topbar-main { display: flex; align-items: center; gap: var(--gap-3); flex-wrap: wrap;
 	min-height: var(--bar-height); padding: 0 var(--gap-4); }
-.brand { display: flex; align-items: center; gap: var(--gap-2); flex: none; font-size: 0.9375rem; font-weight: 700; color: var(--accent); }
+.brand { display: flex; align-items: center; gap: var(--gap-2); flex: none; font-size: var(--fs-md); font-weight: 700; color: var(--accent); }
 /* Grey until the event stream carries, and its own colour and not the word's:
    the name of the page is the name of the page whatever the box is doing. */
 .brand-mark { width: 22px; height: 22px; flex: none; color: var(--text-dim); }
@@ -52,7 +52,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
    gives in between is what is playing, which shortens visibly. */
 .areas { display: flex; align-items: center; gap: var(--gap-1); flex: none; }
 .areas a { display: block; padding: var(--gap-1) var(--gap-3); border-radius: var(--radius);
-	color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: 0.8125rem; }
+	color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: var(--fs-sm); }
 @media (hover: hover) {
 	.areas a:hover { background: var(--ground-2); color: var(--text); }
 }
@@ -79,7 +79,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
    bar is. Below the phone width the folding gives it a finger's height. */
 .session-act { display: inline-flex; align-items: center; gap: var(--gap-2); min-height: 28px;
 	padding: 4px var(--gap-3); background: var(--ground-1); border: 1px solid var(--line);
-	border-radius: var(--radius-pill); font: inherit; font-size: 0.75rem; }
+	border-radius: var(--radius-pill); font: inherit; font-size: var(--fs-xs); }
 @media (hover: hover) {
 	.session-act:hover { color: var(--text); border-color: var(--text-dim); }
 }
@@ -109,12 +109,12 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .onair-logo { width: 24px; height: 24px; flex: none; border-radius: 5px;
 	background: var(--ground-2); object-fit: contain; }
 .onair-monogram { display: grid; place-items: center; border: 1px solid var(--line);
-	font-size: 0.625rem; font-weight: 700; color: var(--text-dim); }
+	font-size: var(--fs-mark); font-weight: 700; color: var(--text-dim); }
 .onair-meta { min-width: 0; }
 .onair-name, .onair-event { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.onair-name { font-size: 0.78125rem; font-weight: 600; color: var(--on-air); }
-.onair-event { font-size: 0.6875rem; color: var(--text-dim); }
-.onair .state-mark { margin-left: auto; font-size: 0.75rem; color: var(--text-dim); }
+.onair-name { font-size: var(--fs-sm); font-weight: 600; color: var(--on-air); }
+.onair-event { font-size: var(--fs-xs); color: var(--text-dim); }
+.onair .state-mark { margin-left: auto; font-size: var(--fs-xs); color: var(--text-dim); }
 
 /* A channel's picture wherever a screen draws one, and the initials that take
    over for a channel that has none or on a box that draws none. Here and not
@@ -132,16 +132,16 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .logo[data-pic] .logo-mg { visibility: hidden; }
 .logo.sm { width: 22px; height: 22px; }
 .logo.lg { width: 48px; height: 48px; }
-.logo-word { font-size: 0.625rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text-dim); }
-.logo.sm.logo-word { font-size: 0.5625rem; }
-.logo.lg.logo-word { font-size: 0.9375rem; font-weight: 600; letter-spacing: 0; }
+.logo-word { font-size: var(--fs-mark); font-weight: 700; letter-spacing: -0.02em; color: var(--text-dim); }
+.logo.sm.logo-word { font-size: calc(var(--fs-mark) * 0.9); }
+.logo.lg.logo-word { font-size: var(--fs-md); font-weight: 600; letter-spacing: 0; }
 
 /* The second level, under the first and not beside it: a column down the left
    costs two hundred pixels on every screen, and the two screens that want the
    width most are the guide and the bouquets. */
 .entries { display: flex; gap: var(--gap-1); padding: 0 var(--gap-4) var(--gap-2); overflow-x: auto; }
 .entries a { display: block; flex: none; padding: var(--gap-1) var(--gap-3); border: 1px solid transparent;
-	border-radius: var(--radius-pill); color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: 0.8125rem; }
+	border-radius: var(--radius-pill); color: var(--text-dim); text-decoration: none; white-space: nowrap; font-size: var(--fs-sm); }
 @media (hover: hover) {
 	.entries a:hover { color: var(--text); }
 }
@@ -158,8 +158,8 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .dock a, .dock button { flex: 1 1 0; display: flex; flex-direction: column; align-items: center;
 	justify-content: center; gap: 2px; min-height: var(--tap-height); padding: var(--gap-1) 2px;
 	background: none; border: 0; border-radius: var(--radius); color: var(--text-dim);
-	font: inherit; font-size: 0.6875rem; text-decoration: none; }
-.dock .ic { font-size: 1.0625rem; line-height: 1; }
+	font: inherit; font-size: var(--fs-xs); text-decoration: none; }
+.dock .ic { font-size: var(--fs-lg); line-height: 1; }
 /* A drawn mark is as tall as a line of the words it stands with, and drawn in
    their colour, so the current one turns the accent with its label. */
 .ic-mark { display: block; width: 1.25em; height: 1.25em; fill: none; stroke: currentColor;
@@ -177,7 +177,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 	border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 .sheet.centred { inset: 10% auto auto 50%; transform: translateX(-50%); width: min(480px, 92%);
 	border: 1px solid var(--line); border-radius: var(--radius-lg); }
-.sheet h2 { margin: 0 0 var(--gap-3); font-size: 1.0625rem; overflow-wrap: anywhere; }
+.sheet h2 { margin: 0 0 var(--gap-3); font-size: var(--fs-lg); overflow-wrap: anywhere; }
 .sheet-areas { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-2); list-style: none; margin: 0; padding: 0; }
 .sheet-areas a, .sheet-areas button { display: flex; align-items: center; gap: var(--gap-2); width: 100%;
 	min-height: var(--tap-height); padding: var(--gap-2) var(--gap-3); background: var(--ground-2);
@@ -196,13 +196,13 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
    every width and not only below the phone one, because whoever opens this
    cannot see the page well enough, on whatever they are holding. */
 .text-size { margin: 0 0 var(--gap-3); padding: 0; border: 0; }
-.text-size legend { padding: 0; margin-bottom: var(--gap-2); color: var(--text-dim); font-size: 0.8125rem; }
+.text-size legend { padding: 0; margin-bottom: var(--gap-2); color: var(--text-dim); font-size: var(--fs-sm); }
 .text-size-set { display: flex; gap: var(--gap-2); }
 .text-size-set label { flex: 1; display: flex; align-items: center; justify-content: center;
 	gap: var(--gap-2); min-height: var(--tap-height); padding: var(--gap-2) var(--gap-3);
 	background: var(--ground-2); border: 1px solid var(--line); border-radius: var(--radius); }
 .text-size-set input { flex: none; margin: 0; accent-color: var(--accent); }
-.text-size-where { margin: var(--gap-2) 0 0; color: var(--text-dim); font-size: 0.75rem; }
+.text-size-where { margin: var(--gap-2) 0 0; color: var(--text-dim); font-size: var(--fs-xs); }
 
 /* ---------------------------------------------------------- the pieces */
 
@@ -249,7 +249,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
    marks already use rather than inventing a fifth. */
 .chip { display: inline-flex; align-items: center; gap: var(--gap-2); flex: none; padding: var(--gap-1) var(--gap-3);
 	background: var(--ground-1); border: 1px solid var(--line); border-radius: var(--radius-pill);
-	color: var(--text-dim); font-size: 0.8125rem; }
+	color: var(--text-dim); font-size: var(--fs-sm); }
 .chip.on-air { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--on-air); }
 .chip.good { border-color: var(--state-running-edge); color: var(--state-running); }
 .chip.warn { border-color: var(--state-warning-edge); color: var(--state-warning); }
@@ -274,8 +274,8 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .field-unit { display: flex; align-items: center; gap: var(--gap-2); }
 .field-unit > input { flex: 1 1 auto; min-width: 0; }
 .field-unit > .unit { flex: none; color: var(--text-dim); }
-.field .hint { margin-top: var(--gap-1); color: var(--text-dim); font-size: 0.8125rem; }
-.field .err { margin-top: var(--gap-1); color: var(--failure); font-size: 0.8125rem; }
+.field .hint { margin-top: var(--gap-1); color: var(--text-dim); font-size: var(--fs-sm); }
+.field .err { margin-top: var(--gap-1); color: var(--failure); font-size: var(--fs-sm); }
 .field.bad input, .field.bad select { border-color: var(--failure); }
 
 /* A choice, drawn like everything else: the same fault the switch had, a
@@ -381,7 +381,7 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 	border-bottom: 1px solid var(--line); }
 
 .note { padding: var(--gap-5); color: var(--text-dim); text-align: center; }
-.note h2 { margin: 0 0 var(--gap-2); color: var(--text); font-size: 1.0625rem; }
+.note h2 { margin: 0 0 var(--gap-2); color: var(--text); font-size: var(--fs-lg); }
 .note.bad h2 { color: var(--failure); }
 /* A sentence set apart from what is around it: what the box last said, why a
    control is out, what a form took over. One shape on every screen, which had
@@ -481,7 +481,7 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 	.chip.on-air { display: inline-flex; }
 	:root { --content-pad-y: var(--gap-2); --content-pad-x: var(--gap-3); }
 	.topbar-main { padding: var(--gap-2) var(--gap-3); }
-	h1.scr { font-size: 1.125rem; }
+	h1.scr { font-size: var(--fs-xl); }
 	.entries { padding-left: var(--gap-3); padding-right: var(--gap-3); }
 	/* A finger and not a pointer. The switch is in this list because the label
 	   is the target: the box inside it is eighteen pixels whatever the width,
@@ -518,7 +518,7 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 	table.grid td > a:only-child { display: inline-flex; align-items: center; min-height: var(--tap-height); }
 	/* Written by the one table widget, so a column with no name puts nothing
 	   in front of its cells. */
-	table.grid td[data-label]::before { content: attr(data-label) " "; color: var(--text-dim); font-size: 0.75rem; }
+	table.grid td[data-label]::before { content: attr(data-label) " "; color: var(--text-dim); font-size: var(--fs-xs); }
 	table.grid td[data-label=""]::before { content: none; }
 	/* Words in one column and values beside them on one baseline, as the Now
 	   tile's facts are drawn. */

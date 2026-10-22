@@ -8,6 +8,7 @@
 
 .netfs > h2 {
 	margin: 0 0 var(--gap-2);
+	font-size: var(--fs-lg);
 }
 
 /* A way back in for somebody who closed the sign in sheet, which is the whole
@@ -32,7 +33,7 @@
 
 .netfs-file-head h3 {
 	margin: 0;
-	font-size: 1.0625rem;
+	font-size: var(--fs-lg);
 }
 
 /* The acts go to the far end of the line and drop to their own line before
@@ -66,7 +67,7 @@
 .netfs-ran h4 {
 	margin: 0 0 var(--gap-2);
 	color: var(--text-dim);
-	font-size: 0.8125rem;
+	font-size: var(--fs-sm);
 	font-weight: 600;
 }
 
@@ -74,7 +75,7 @@
 	margin: 0;
 	overflow-x: auto;
 	font-family: var(--font-mono);
-	font-size: 0.8125rem;
+	font-size: var(--fs-sm);
 	white-space: pre-wrap;
 	word-break: break-word;
 }
@@ -131,7 +132,7 @@
 
 .netfs-number {
 	color: var(--text-dim);
-	font-size: 0.8125rem;
+	font-size: var(--fs-sm);
 }
 
 /* The five things a card states, each as a word above the value rather than
@@ -145,7 +146,7 @@
 
 .netfs-facts dt {
 	color: var(--text-dim);
-	font-size: 0.75rem;
+	font-size: var(--fs-xs);
 }
 
 .netfs-facts dd {
