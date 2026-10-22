@@ -275,7 +275,7 @@
 		left: 0;
 		right: 0;
 		bottom: 100%;
-		height: var(--gap-4);
+		height: var(--content-pad-y);
 		background: var(--ground-0);
 	}
 	/* AND WHAT PASSES UNDER IT DISSOLVES RATHER THAN BEING CUT IN HALF. A hard

@@ -18,7 +18,7 @@ a { color: var(--accent); }
    is on screen (app/ui/pulldown.js), and a browser's own scroll anchoring
    would answer that by moving scrollTop to keep the view still, which is
    exactly the reveal the gesture is drawing. */
-.content { flex: 1; min-width: 0; overflow: auto; padding: var(--gap-4); overflow-anchor: none; }
+.content { flex: 1; min-width: 0; overflow: auto; padding: var(--content-pad-y) var(--content-pad-x); overflow-anchor: none; }
 
 /* The name of the screen and the sentence under it, drawn by the frame for
    every screen. The sentence is often the only place that says what a screen
@@ -428,7 +428,8 @@ table.grid tbody tr.grid-more:hover { background: none; }
 
 @media (max-width: 599px) {
 	.chip.on-air { display: inline-flex; }
-	.content, .topbar-main { padding: var(--gap-2) var(--gap-3); }
+	:root { --content-pad-y: var(--gap-2); --content-pad-x: var(--gap-3); }
+	.topbar-main { padding: var(--gap-2) var(--gap-3); }
 	h1.scr { font-size: 1.125rem; }
 	.entries { padding-left: var(--gap-3); padding-right: var(--gap-3); }
 	/* A finger and not a pointer. The switch is in this list because the label

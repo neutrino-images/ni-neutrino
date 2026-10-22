@@ -205,8 +205,12 @@
    A reader who has asked for larger writing has larger buttons. */
 .set-bar {
 	position: sticky;
-	/* reduce bottom position by padding from .content */
-	bottom: calc(-1 * var(--gap-4));
+	/* A sticky box comes to rest inside the scrolling box's padding, so it is
+	   pulled down by exactly that padding to sit on the edge of the window.
+	   The token and not the number: the padding is half as deep on a
+	   telephone, where the number left the two answers eight pixels under the
+	   edge of the screen. */
+	bottom: calc(-1 * var(--content-pad-y));
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;

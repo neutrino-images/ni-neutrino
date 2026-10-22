@@ -77,6 +77,13 @@
 	--radius-lg: 10px;
 	--radius-pill: 999px;
 	--bar-height: 52px;
+	/* What the one scrolling box is set in from its edges by. Named, because
+	   what is pinned inside that box (the bar under the settings, the picture
+	   over the handset) has to come to rest against exactly this, and a copy of
+	   the number in each of them was a copy the narrow folding never changed.
+	   app/css/shell.css narrows it below the phone width. */
+	--content-pad-y: var(--gap-4);
+	--content-pad-x: var(--gap-4);
 	--control-height: 36px;
 	--tap-height: 44px;
 	--focus-ring: 2px solid var(--accent);
