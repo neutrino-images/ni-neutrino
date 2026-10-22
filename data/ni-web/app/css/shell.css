@@ -160,6 +160,10 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 	background: none; border: 0; border-radius: var(--radius); color: var(--text-dim);
 	font: inherit; font-size: 0.6875rem; text-decoration: none; }
 .dock .ic { font-size: 1.0625rem; line-height: 1; }
+/* A drawn mark is as tall as a line of the words it stands with, and drawn in
+   their colour, so the current one turns the accent with its label. */
+.ic-mark { display: block; width: 1.25em; height: 1.25em; fill: none; stroke: currentColor;
+	stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .dock [data-current] { color: var(--accent); background: var(--accent-wash); }
 
 /* ------------------------------------------------------- what lies over */

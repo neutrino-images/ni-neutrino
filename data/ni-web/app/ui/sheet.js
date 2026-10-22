@@ -9,6 +9,7 @@ import { html, Fragment, Link, useRef, useEffect } from '../runtime.js';
 import { t } from '../i18n.js';
 import text from '../shell.text.js';
 import { labelOf, hrefFor } from '../nav.js';
+import { NavIcon } from './navicon.js';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -146,7 +147,7 @@ export function MenuSheet(props) {
 						href=${area.href}
 						data-current=${area.current ? 'page' : null}
 						onClick=${props.onClose}>
-						<span class="ic" aria-hidden="true">${area.icon}</span>
+						<${NavIcon} id=${area.id} fallback=${area.icon} />
 						<span>${area.label}</span>
 					<//>
 				</li>`;

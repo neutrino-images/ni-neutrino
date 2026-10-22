@@ -13,6 +13,7 @@ import { html, Link } from '../runtime.js';
 import { t } from '../i18n.js';
 import text from '../shell.text.js';
 import { labelOf, areaById, hrefFor } from '../nav.js';
+import { NavIcon } from './navicon.js';
 
 // The four, by identifier, in the order they are drawn. Written out here
 // rather than taken as the first four of the navigation, because which of them
@@ -59,7 +60,7 @@ export function Dock(props) {
 				key=${area.id}
 				href=${hrefFor(area.id)}
 				data-current=${area.id === props.activeArea ? 'page' : null}>
-				<span class="ic" aria-hidden="true">${area.ic || '•'}</span>
+				<${NavIcon} id=${area.id} fallback=${area.ic} />
 				<span>${labelOf(area)}</span>
 			<//>`;
 		})}
@@ -70,7 +71,7 @@ export function Dock(props) {
 			aria-expanded=${props.open ? 'true' : 'false'}
 			data-current=${elsewhere ? 'page' : null}
 			onClick=${props.onOpen}>
-			<span class="ic" aria-hidden="true">⋯</span>
+			<${NavIcon} id="more" />
 			<span>${elsewhere && here ? labelOf(here) : t(text, 'shell.more.areas')}</span>
 		</button>
 	</nav>`;
