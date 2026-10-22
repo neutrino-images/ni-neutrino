@@ -205,6 +205,11 @@
 	padding: 0 var(--gap-2);
 	background: var(--ground-2);
 	border: 1px solid var(--line);
+	/* The small radius and not none: square boxes in a lane were the one
+	   square thing on a page of rounded ones, and the marker beside them at
+	   the end of a cut row was rounded. Small, because two programmes meet
+	   edge to edge and a large one would open a notch between them. */
+	border-radius: var(--radius-sm);
 	color: var(--text);
 	font: inherit;
 	text-align: left;

@@ -89,6 +89,9 @@
 	   is given below the phone width, where there is no pointer to be precise
 	   with. */
 	--gap-1: 4px; --gap-2: 8px; --gap-3: 12px; --gap-4: 16px; --gap-5: 24px;
+	/* The small one is for what is too thin or too tightly packed for six: a
+	   bar four pixels high, a programme in a lane of the guide. */
+	--radius-sm: 2px;
 	--radius: 6px;
 	--radius-lg: 10px;
 	--radius-pill: 999px;

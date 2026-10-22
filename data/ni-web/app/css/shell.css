@@ -106,7 +106,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-sm
 @media (hover: hover) {
 	.onair:hover { border-color: var(--accent); }
 }
-.onair-logo { width: 24px; height: 24px; flex: none; border-radius: 5px;
+.onair-logo { width: 24px; height: 24px; flex: none; border-radius: var(--radius);
 	background: var(--ground-2); object-fit: contain; }
 .onair-monogram { display: grid; place-items: center; border: 1px solid var(--line);
 	font-size: var(--fs-mark); font-weight: 700; color: var(--text-dim); }

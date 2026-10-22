@@ -149,7 +149,7 @@ tr[data-on-air] .ch-name {
 .ch-meter {
 	display: block;
 	height: 4px;
-	border-radius: 2px;
+	border-radius: var(--radius-sm);
 	background: var(--ground-2);
 	overflow: hidden;
 }
@@ -157,7 +157,7 @@ tr[data-on-air] .ch-name {
 .ch-meter i {
 	display: block;
 	height: 100%;
-	border-radius: 2px;
+	border-radius: var(--radius-sm);
 	background: var(--accent);
 }
 
