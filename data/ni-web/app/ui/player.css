@@ -9,7 +9,7 @@
 	display: block;
 	width: 100%;
 	max-width: 60rem;
-	margin: var(--gap) 0;
+	margin: var(--gap-3) 0;
 	background: var(--media-ground);
 	border-radius: var(--radius);
 }
@@ -29,11 +29,11 @@
 
 .pl-how,
 .pl-vlc-hint {
-	color: var(--muted);
+	color: var(--text-dim);
 }
 
 .pl-state {
-	margin: var(--gap) 0 0;
+	margin: var(--gap-3) 0 0;
 }
 
 .pl-phase.bad {
@@ -49,9 +49,9 @@
 }
 
 .pl-vlc {
-	margin-top: var(--gap);
-	padding-top: var(--gap);
-	border-top: 1px solid var(--edge);
+	margin-top: var(--gap-3);
+	padding-top: var(--gap-3);
+	border-top: 1px solid var(--line);
 }
 
 .pl-address {

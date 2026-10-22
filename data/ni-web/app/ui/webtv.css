@@ -13,7 +13,7 @@
 .webtv {
 	position: relative;
 	display: grid;
-	gap: 8px;
+	gap: var(--gap-2);
 }
 
 /* Sixteen to nine and never taller than the window, so that a channel opened
@@ -25,25 +25,25 @@
 	max-height: 70vh;
 	aspect-ratio: 16 / 9;
 	background: var(--media-ground);
-	border-radius: 8px;
+	border-radius: var(--radius);
 	display: block;
 }
 
 .webtv-say {
 	margin: 0;
-	font-size: 0.9em;
-	opacity: 0.75;
+	font-size: 0.8125rem;
+	color: var(--text-dim);
 }
 
 .webtv-refused {
 	display: grid;
-	gap: 8px;
+	gap: var(--gap-2);
 	justify-items: start;
 }
 
 .webtv-refused h3 {
 	margin: 0;
-	font-size: 1em;
+	font-size: 1rem;
 }
 
 .webtv-refused p {
@@ -59,5 +59,5 @@
 
 .webtv-address code {
 	overflow-wrap: anywhere;
-	font-size: 0.9em;
+	font-size: 0.8125rem;
 }

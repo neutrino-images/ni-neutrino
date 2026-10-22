@@ -57,11 +57,6 @@
 	gap: var(--gap-1);
 }
 
-.ch-mode .btn.on {
-	border-color: var(--accent-edge);
-	background: var(--accent-wash);
-	color: var(--accent);
-}
 
 .ch-count {
 	margin: 0;
@@ -173,16 +168,15 @@ tr[data-on-air] .ch-name {
 }
 
 .ch-marks {
-	display: inline-block;
+	display: inline-flex;
 	align-items: center;
-	gap: var(--gap-1);
+	gap: var(--gap-1) var(--gap-2);
 	flex-wrap: wrap;
 }
 
 .ch-mark {
 	display: inline-flex;
 	align-items: center;
-	margin: 0 var(--gap-2) 0 0;
 	padding: 0 var(--gap-1);
 	border: 1px solid var(--line);
 	border-radius: var(--radius);

@@ -52,11 +52,6 @@
 	gap: var(--gap-1);
 }
 
-.bq-halves .btn.on {
-	border-color: var(--accent-edge);
-	background: var(--accent-wash);
-	color: var(--accent);
-}
 
 .bq3 {
 	display: grid;

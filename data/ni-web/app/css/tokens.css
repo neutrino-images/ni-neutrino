@@ -20,6 +20,11 @@
 	--ground-1: #14171c;
 	--ground-2: #1c2027;
 	--line:     #2a2f38;
+	/* The edge of something that is operated: a field, a choice, a switch. --line
+	   is a quiet divider at under one and a half to one, which is right for a
+	   rule between rows and too little to find a control by; this one is above
+	   three to one against all three grounds a control stands on (WCAG 1.4.11). */
+	--line-strong: #646c7a;
 	--text:     #e6e9ee;
 	--text-dim: #9aa3b0;
 
@@ -102,6 +107,7 @@
 		--ground-1: #fbfcfd;
 		--ground-2: #e4e9ef;
 		--line: #d3dae3;
+		--line-strong: #7a8493;
 		--text: #1b2129;
 		--text-dim: #5b6676;
 		--state-recording: #c8302c;
@@ -127,6 +133,7 @@
 	--ground-1: #fbfcfd;
 	--ground-2: #e4e9ef;
 	--line: #d3dae3;
+	--line-strong: #7a8493;
 	--text: #1b2129;
 	--text-dim: #5b6676;
 	--state-recording: #c8302c;

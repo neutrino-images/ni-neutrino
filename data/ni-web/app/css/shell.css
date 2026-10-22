@@ -206,6 +206,10 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .btn:active:not(:disabled) { background: var(--ground-1); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .btn.primary:active:not(:disabled) { background: var(--accent-dim); border-color: var(--accent-dim); }
+/* One of a set that is the one in force: television or radio, which half, which
+   level. Written once here and not on every screen that has such a set, so the
+   three of them cannot drift apart. The two washes are the frame's own. */
+.btn.on { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--accent); }
 .btn:disabled { opacity: 0.5; }
 
 /* A word about something, in a pill: neutral, what is playing, running, and
@@ -231,7 +235,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: 0.84375rem;
 .field > .label { display: block; margin-bottom: var(--gap-1); color: var(--text-dim); }
 /* background-color and not the shorthand, which would clear the arrow. */
 .field input, .field select, .field textarea { width: 100%; min-height: var(--control-height);
-	padding: 0 var(--gap-3); background-color: var(--ground-0); border: 1px solid var(--line);
+	padding: 0 var(--gap-3); background-color: var(--ground-0); border: 1px solid var(--line-strong);
 	border-radius: var(--radius); color: var(--text); font: inherit; }
 .field select { padding-right: 26px; }
 .field textarea { padding: var(--gap-2) var(--gap-3); font-family: var(--font-mono); }
@@ -256,7 +260,7 @@ select {
 	background-position: calc(100% - 15px) calc(50% + 1px), calc(100% - 10px) calc(50% + 1px);
 	background-size: 5px 5px;
 	background-repeat: no-repeat;
-	border: 1px solid var(--line);
+	border: 1px solid var(--line-strong);
 	border-radius: var(--radius);
 	color: var(--text);
 	font: inherit;
@@ -281,7 +285,7 @@ select:disabled { opacity: 0.5; cursor: default; }
 	background-image: radial-gradient(circle 8.5px at 8.5px 50%, var(--text-dim) 99%, transparent 100%);
 	background-repeat: no-repeat;
 	background-position: 2px 50%;
-	border: 1px solid var(--line); border-radius: var(--radius-pill);
+	border: 1px solid var(--line-strong); border-radius: var(--radius-pill);
 	transition: background-color 140ms, background-position 140ms, border-color 140ms;
 	cursor: pointer;
 }
