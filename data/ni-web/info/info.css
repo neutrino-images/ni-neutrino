@@ -21,7 +21,10 @@
 	--info-ground: #000000;
 	--info-ink: #d7dbe2;
 	--info-dim: #99a1ad;
-	--info-faint: #464c55;
+	/* An off flag is still a word somebody reads from across the room to learn
+	   that it is off: over three to one on the black, and still well under the
+	   grey of the row, so on and off stay two things. */
+	--info-faint: #585f69;
 	--info-bar: #21252b;
 	--info-fill: #fd6d13;
 	--info-ecm: #fd6d13;
