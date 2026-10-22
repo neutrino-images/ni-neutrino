@@ -60,7 +60,7 @@ function QrCode(props) {
 	if (rows === null)
 		return html`<p class="hint" data-part="totp-qr-wait">${t(text, 'ai.totp.qr.wait')}</p>`;
 	if (rows.length === 0)
-		return html`<p class="ai-warn" data-part="totp-qr-failed">${t(text, 'ai.totp.qr.failed')}</p>`;
+		return html`<p class="callout warn ai-warn" data-part="totp-qr-failed">${t(text, 'ai.totp.qr.failed')}</p>`;
 	const size = rows.length + 2 * kQuiet;
 	return html`<svg class="ai-qr" data-part="totp-qr" viewBox=${'0 0 ' + size + ' ' + size}
 		shape-rendering="crispEdges" role="img" aria-label=${t(text, 'ai.totp.qr')}>
@@ -207,7 +207,7 @@ export function TotpPart(props) {
 			: html`<div class="ai-row" data-act="totp-setup">
 				<${Button} primary=${true} disabled=${f.busy} onClick=${f.begin}>${t(text, 'ai.totp.setup')}<//>
 			</div>`}
-		${f.said === '' ? null : html`<p class="ai-said" role="status" data-part="totp-said">${f.said}</p>`}
+		${f.said === '' ? null : html`<p class="callout ai-said" role="status" data-part="totp-said">${f.said}</p>`}
 		<${Dialog} open=${f.setup !== null} title=${t(text, 'ai.totp.setup')} confirmLabel=${t(text, 'ai.totp.confirm')}
 			onCancel=${f.cancel} onConfirm=${f.confirm}>
 			${f.setup ? html`<div class="ai-totp-setup" data-part="totp-setup">

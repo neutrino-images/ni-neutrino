@@ -75,7 +75,7 @@ export default function Access() {
 			phase=${shot === null ? '' : shot.phase}
 			problem=${refusalShown(shot !== null ? shot.error : null)}>
 			${(now && draft) ? html`<section class="ai-block">
-				<p class="ai-reach" data-part="reach" data-reach=${reachOf(draftOf(now), now.defaultPassword)}>${t(text, 'ai.reach.' + reachOf(draftOf(now), now.defaultPassword))}</p>
+				<p class="callout ai-reach" data-part="reach" data-reach=${reachOf(draftOf(now), now.defaultPassword)}>${t(text, 'ai.reach.' + reachOf(draftOf(now), now.defaultPassword))}</p>
 				<${Switch} id="ai-enabled" label=${t(text, 'ai.enabled')} hint=${t(text, 'ai.enabled.hint')}
 					checked=${draft.enabled}
 					onChange=${function (/** @type {Event} */ e) { edit({ enabled: /** @type {HTMLInputElement} */ (e.currentTarget).checked }); }} />
@@ -88,7 +88,7 @@ export default function Access() {
 					value=${draft.publicUrl} autocomplete="off"
 					error=${urlProblem === '' ? '' : t(text, urlProblem)}
 					onInput=${function (/** @type {Event} */ e) { edit({ publicUrl: /** @type {HTMLInputElement} */ (e.currentTarget).value }); }} />
-				${urlProblem === '' && publicUrlOffPort(draft.publicUrl) ? html`<p class="ai-warn" data-part="public-port">${t(text, 'ai.public.port')}</p>` : null}
+				${urlProblem === '' && publicUrlOffPort(draft.publicUrl) ? html`<p class="callout warn ai-warn" data-part="public-port">${t(text, 'ai.public.port')}</p>` : null}
 				<p class="ai-row" data-part="mcp-url">${mcpUrlOf(draft.publicUrl) === ''
 					? t(text, 'ai.mcpurl.none')
 					: html`${t(text, 'ai.mcpurl')} <code class="mono">${mcpUrlOf(draft.publicUrl)}</code>`}</p>
@@ -102,7 +102,7 @@ export default function Access() {
 					<${Button} primary=${true} disabled=${busy || nothing || urlProblem !== ''}
 						onClick=${function () { setAsking(true); }}>${t(text, 'ai.save')}<//>
 				</div>
-				${said === '' ? null : html`<p class="ai-said" role="status" data-part="said">${said}</p>`}
+				${said === '' ? null : html`<p class="callout ai-said" role="status" data-part="said">${said}</p>`}
 				${restarting ? html`<p class="ai-row" data-act="again"><${Button} onClick=${function () { window.location.reload(); }}>${t(text, 'ai.again')}<//></p>` : null}
 			</section>` : null}
 		<//>

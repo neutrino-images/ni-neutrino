@@ -169,10 +169,6 @@
 .timers-from-epg {
 	max-width: 32rem;
 	margin: 0 0 var(--gap-4);
-	padding: var(--gap-3);
-	background: var(--ground-1);
-	border-left: 3px solid var(--accent);
-	border-radius: var(--radius);
 }
 
 .timers-now {

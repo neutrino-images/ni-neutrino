@@ -84,7 +84,7 @@ function Document(props) {
 			<a class="btn" href=${href} download=${props.id + '.xml'}>${t(text, 'sys.config.download')}</a>
 		</div>
 		${loading ? html`<p class="sys-lead" role="status">${t(text, 'sys.config.loading')}</p>` : null}
-		${failed !== '' ? html`<p class="sys-said" role="status">${failed}</p>` : null}
+		${failed !== '' ? html`<p class="callout sys-said" role="status">${failed}</p>` : null}
 		${body !== null ? html`<pre class="sys-pre mono">${body}</pre>` : null}
 	</div>`;
 }
@@ -148,7 +148,7 @@ export default function Config() {
 						});
 					}} />
 			</div>
-			${said !== '' ? html`<p class="sys-said" role="status">${said}</p>` : null}
+			${said !== '' ? html`<p class="callout sys-said" role="status">${said}</p>` : null}
 		</section>
 	</div>`;
 }

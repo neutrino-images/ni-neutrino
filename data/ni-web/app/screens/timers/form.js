@@ -449,7 +449,7 @@ export function TimerForm(props) {
 		${problem ? html`<${State} problem=${problem} />` : null}
 
 		${seeded !== null && seeded.epg_id !== '' && seeded.epg_start > 0
-			? html`<p class="timers-from-epg">${t(text, 'form.epg.summary', {
+			? html`<p class="callout timers-from-epg">${t(text, 'form.epg.summary', {
 				title: seeded.title,
 				when: dayAndClock(seeded.epg_start),
 				minutes: seeded.minutes,

@@ -177,7 +177,7 @@ function Found() {
 				</table>
 			</div>
 		<//>
-		${said !== '' ? html`<p class="sys-said" role="status">${said}</p>` : null}
+		${said !== '' ? html`<p class="callout sys-said" role="status">${said}</p>` : null}
 	</section>`;
 }
 
@@ -230,7 +230,7 @@ function Script() {
 				busy=${running || name === ''}
 				onClick=${run} />
 		</div>
-		${failed !== '' ? html`<p class="sys-said" role="status">${failed}</p>` : null}
+		${failed !== '' ? html`<p class="callout sys-said" role="status">${failed}</p>` : null}
 		${output !== null
 			? html`<div class="sys-doc">
 				<h3>${t(text, 'sys.scripts.output')}</h3>

@@ -99,7 +99,7 @@ export default function Allow() {
 		<${SignInRow} shown=${!may} why=${t(text, 'ai.allow.signin')} />
 		${may ? html`<section class="ai-block ai-allow-plugins">
 			<h2>${t(text, 'ai.allow.plugins')}</h2>
-			<p class="ai-warn">${t(text, 'ai.allow.plugins.warn')}</p>
+			<p class="callout warn ai-warn">${t(text, 'ai.allow.plugins.warn')}</p>
 			<${State} phase=${shot === null ? '' : shot.phase} problem=${refusalShown(shot !== null ? shot.error : null)}>
 				${lists.plugins.length === 0 ? html`<p class="hint">${t(text, 'ai.allow.none')}</p>` : html`<div class="ai-list ai-allow">
 					${lists.plugins.map(function (p) {
@@ -128,6 +128,6 @@ export default function Allow() {
 			</div>
 		</section>
 		<div class="ai-row" data-act="allow-save"><${Button} primary=${true} disabled=${busy || ticks === null} onClick=${save}>${t(text, 'ai.allow.save')}<//></div>
-		${said === '' ? null : html`<p class="ai-said" role="status" data-part="said">${said}</p>`}` : null}
+		${said === '' ? null : html`<p class="callout ai-said" role="status" data-part="said">${said}</p>`}` : null}
 	</div>`;
 }

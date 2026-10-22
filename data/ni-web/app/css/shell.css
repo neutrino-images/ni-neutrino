@@ -383,6 +383,17 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 .note { padding: var(--gap-5); color: var(--text-dim); text-align: center; }
 .note h2 { margin: 0 0 var(--gap-2); color: var(--text); font-size: 1.0625rem; }
 .note.bad h2 { color: var(--failure); }
+/* A sentence set apart from what is around it: what the box last said, why a
+   control is out, what a form took over. One shape on every screen, which had
+   been written out nine times with three paddings. The edge says what kind:
+   the accent for a report, amber for something to look at, the refusal red
+   for something that was asked and not done. Margins and width stay with the
+   screen, since where it stands is the screen's question. */
+.callout { padding: var(--gap-2) var(--gap-3); background: var(--ground-1);
+	border-left: 3px solid var(--accent); border-radius: var(--radius); }
+.callout.warn { border-left-color: var(--state-warning); }
+.callout.bad { border-left-color: var(--failure); }
+
 /* Loading again is not loading: a curtain over what is drawn loses the row
    somebody was reading. */
 .busy { opacity: 0.6; }

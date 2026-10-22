@@ -247,7 +247,7 @@ export default function Box() {
 			     anybody presses anything, and it earns it: it says the controls
 			     are off for a moment and why, which is a fact about the box and
 			     not about this session. */ null}
-			${held ? html`<p class="sys-why" role="status">${t(text, 'sys.power.settling')}</p>` : null}
+			${held ? html`<p class="callout warn sys-why" role="status">${t(text, 'sys.power.settling')}</p>` : null}
 			<div class="sys-row">
 				<${Ask}
 					label=${t(text, 'sys.power.standby')}
@@ -297,7 +297,7 @@ export default function Box() {
 						drive(function () { return store.write('POST', '/api/v1/system/shutdown', {}); });
 					}} />
 			</div>
-			${said !== '' ? html`<p class="sys-said" role="status">${said}</p>` : null}
+			${said !== '' ? html`<p class="callout sys-said" role="status">${said}</p>` : null}
 		</section>
 
 		<${Usage} />

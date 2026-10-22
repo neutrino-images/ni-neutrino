@@ -248,7 +248,7 @@ export default function Daemons() {
 				<${Rows} rows=${services} busy=${busy} needs="system" onDrive=${drive} />
 			</section>
 		<//>
-		${said !== '' ? html`<p class="sys-said" role="status">${said}</p>` : null}
+		${said !== '' ? html`<p class="callout sys-said" role="status">${said}</p>` : null}
 		<p class="sys-lead">${t(text, 'sys.daemons.noverb')}</p>
 		<p class="sys-lead">${t(text, 'sys.daemons.noshell')}</p>
 	</div>`;

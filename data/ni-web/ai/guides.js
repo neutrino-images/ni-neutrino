@@ -32,7 +32,7 @@ function Steps(props) {
 
 /** @param {{ ids: string[] }} props @returns {Web.Drawn} */
 function Warnings(props) {
-	return props.ids.length ? html`${props.ids.map(function (w) { return html`<p class="ai-warn" key=${w} data-warning=${w}>${or(warningText(w), w)}</p>`; })}` : null;
+	return props.ids.length ? html`${props.ids.map(function (w) { return html`<p class="callout warn ai-warn" key=${w} data-warning=${w}>${or(warningText(w), w)}</p>`; })}` : null;
 }
 
 /**
@@ -43,7 +43,7 @@ function Tunnel(props) {
 	const g = props.tunnel;
 	return html`<details class="ai-guide" data-tunnel=${g.id} ...${fold('ai.guides:tunnel:' + g.id)}>
 		<summary>${or(tunnelTitle(g.id), g.id)}</summary>
-		${g.ready ? null : html`<p class="ai-warn" data-part="tokens">${or(tokenText(), '')}</p>`}
+		${g.ready ? null : html`<p class="callout warn ai-warn" data-part="tokens">${or(tokenText(), '')}</p>`}
 		<${Steps} steps=${tunnelSteps(g.id, props.values)} />
 		<${Warnings} ids=${g.warnings} />
 		${g.snippet === '' ? null : html`<${Snippet} id=${'tunnel-' + g.id} label=${or(fileText(g.id), g.file || g.id)} value=${g.snippet} />`}

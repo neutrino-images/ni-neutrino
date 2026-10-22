@@ -323,7 +323,7 @@ export default function Clients() {
 
 			${created ? html`<div class="ai-block ai-token" data-part="token">
 				<h3 tabindex="-1" ref=${shown}>${t(text, 'ai.token.shown', { name: created.client.name })}</h3>
-				<p class="ai-warn">${t(text, 'ai.token.once')}</p>
+				<p class="callout warn ai-warn">${t(text, 'ai.token.once')}</p>
 				<${Snippet} id="token" label=${t(text, 'ai.token.header')} value=${created.token} codeId="ai-token-value" />
 				<p class="ai-row"><button type="button" class="btn primary" data-act="token-done" onClick=${function () { setCreated(null); }}>${t(text, 'ai.token.done')}</button></p>
 			</div>` : null}
@@ -349,7 +349,7 @@ export default function Clients() {
 				<div class="ai-row" data-act="create">
 					<${Button} primary=${true} disabled=${busy || tokenNameProblem(name) !== '' || !hasLevel(chosen)} onClick=${create}>${t(text, 'ai.token.create')}<//>
 				</div>
-				${said === '' ? null : html`<p class="ai-said" role="status" data-part="said">${said}</p>`}
+				${said === '' ? null : html`<p class="callout ai-said" role="status" data-part="said">${said}</p>`}
 			</div>
 		</section>
 

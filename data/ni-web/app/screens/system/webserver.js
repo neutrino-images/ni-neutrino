@@ -357,7 +357,7 @@ export default function Webserver() {
 								busy=${busy}
 								onConfirm=${save} />`}
 					</div>
-					${said !== '' ? html`<p class="sys-said" role="status" data-part="said">${said}</p>` : null}
+					${said !== '' ? html`<p class="callout sys-said" role="status" data-part="said">${said}</p>` : null}
 					${said !== '' ? html`<p><${Act}
 						label=${t(text, 'sys.web.again')}
 						onClick=${function () { window.location.reload(); }} /></p>` : null}

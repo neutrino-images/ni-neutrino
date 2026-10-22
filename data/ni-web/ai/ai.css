@@ -11,11 +11,8 @@
 .ai-part[data-remote="shut"] .ai-warn, .ai-part[data-remote="shut"] .ai-say, .ai-part[data-remote="shut"] [data-part="remote-list"] button { color: var(--text); }
 .ai-connect code { min-width: 0; overflow-wrap: anywhere; }
 .ai-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-2); margin: var(--gap-2) 0; }
-.ai-reach, .ai-said { margin: 0 0 var(--gap-3); padding: var(--gap-2) var(--gap-3);
-	background: var(--ground-1); border-left: 3px solid var(--accent); border-radius: var(--radius); }
+.ai-reach, .ai-said { margin: 0 0 var(--gap-3); }
 .ai-reach[data-reach="none"], .ai-reach[data-reach$="noproxy"] { border-left-color: var(--state-warning); }
-.ai-warn { padding: var(--gap-2) var(--gap-3); background: var(--ground-1);
-	border-left: 3px solid var(--state-warning); border-radius: var(--radius); }
 .ai-snippet { margin: var(--gap-3) 0; }
 .ai-snippet figcaption { margin-bottom: var(--gap-1); color: var(--text-dim); }
 .ai-snippet pre { margin: 0 0 var(--gap-2); padding: var(--gap-3); white-space: pre-wrap;

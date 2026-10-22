@@ -50,10 +50,6 @@
    not a failure. */
 .netfs-broken {
 	margin: 0 0 var(--gap-3);
-	padding: var(--gap-2) var(--gap-3);
-	border-left: 3px solid var(--state-warning);
-	border-radius: var(--radius);
-	background: var(--ground-1);
 	color: var(--text-dim);
 }
 
@@ -172,10 +168,6 @@
    refused still is, so that it can be corrected and sent again. */
 .netfs-refusal {
 	margin: 0 0 var(--gap-3);
-	padding: var(--gap-2) var(--gap-3);
-	border-left: 3px solid var(--failure);
-	border-radius: var(--radius);
-	background: var(--ground-1);
 }
 
 .acts-row {

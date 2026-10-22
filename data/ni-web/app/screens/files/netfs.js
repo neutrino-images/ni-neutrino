@@ -330,7 +330,7 @@ function FileSection(props) {
 		<p class="files-hint">${t(text, auto ? 'netfs.automount.what' : 'netfs.fstab.what')}</p>
 
 		${broken > 0
-			? html`<p class="netfs-broken" role="status">
+			? html`<p class="callout warn netfs-broken" role="status">
 				${t(text, broken === 1 ? 'netfs.unreadable' : 'netfs.unreadable.many', { count: broken })}
 			</p>`
 			: null}
@@ -392,7 +392,7 @@ function SlotForm(props) {
 	return html`<${Sheet} open=${true} label=${title} onClose=${props.onClose}>
 		<h2>${title}</h2>
 
-		${props.refusal ? html`<p class="netfs-refusal" role="alert">${props.refusal}</p>` : null}
+		${props.refusal ? html`<p class="callout bad netfs-refusal" role="alert">${props.refusal}</p>` : null}
 
 		<${Switch}
 			label=${t(text, 'netfs.active')}

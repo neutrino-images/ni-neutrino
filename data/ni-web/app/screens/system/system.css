@@ -22,15 +22,11 @@
 /* Why a control is out. One per screen and tied to every control it is about,
    which is what keeps fifty seven buttons from carrying fifty seven copies of
    the same sentence. */
-.sys-why { margin: 0 0 var(--gap-3); padding: var(--gap-2) var(--gap-3); max-width: 72ch;
-	background: var(--ground-1); border-left: 3px solid var(--state-warning);
-	border-radius: var(--radius); color: var(--text-dim); }
+.sys-why { margin: 0 0 var(--gap-3); max-width: 72ch; color: var(--text-dim); }
 
 /* What the box last answered about something that was asked of it. Polite, not
    alarming: it is a report and not a question, or it would be a dialog. */
-.sys-said { margin: var(--gap-3) 0 0; padding: var(--gap-2) var(--gap-3); max-width: 72ch;
-	background: var(--ground-1); border-left: 3px solid var(--accent);
-	border-radius: var(--radius); }
+.sys-said { margin: var(--gap-3) 0 0; max-width: 72ch; }
 
 /* Controls beside each other, wrapping rather than pushing the page sideways:
    five commands do not fit across three hundred and sixty pixels and must not

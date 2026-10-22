@@ -95,7 +95,7 @@ const kFix = {
  */
 function Reason(props) {
 	const fix = kFix[props.why];
-	return html`<p class="ai-warn" data-reason=${props.why}>
+	return html`<p class="callout warn ai-warn" data-reason=${props.why}>
 		${t(text, 'ai.why.' + props.why)}
 		${props.why === 'password' ? html` <span data-part="strong">${t(text, 'ai.remote.strong')}</span>` : null}
 		${props.why === 'totp' && props.onTotp
