@@ -704,7 +704,14 @@ export default function Remote() {
 		     and five keys pinned as well came to two thirds of the reading, and
 		     what is under the block is the whole of what somebody came here to
 		     press. */''}
-		${full ? null : html`<div class="now-remote-head">
+		${/* KEPT IN THE DOCUMENT IN FULL SCREEN, AND HIDDEN. The picture's
+		     watcher (useOnScreen) is tied to the element it was first given;
+		     taken out and drawn anew, it went on watching the old one, which
+		     never came back on screen, so a picture set to refresh itself
+		     stayed still after full screen was left. Hidden, it is the same
+		     element, out of sight is not on screen, and nothing is fetched
+		     for it until it is back. */''}
+		<div class="now-remote-head">
 			${beside
 				? html`<${Card} title=${t(text, 'now.shot.card.screen')}>
 					${shot.seen}
@@ -712,7 +719,7 @@ export default function Remote() {
 					${shot.options}
 				<//>`
 				: html`${shot.seen}${sent}`}
-		</div>`}
+		</div>
 		<${Card}
 			title=${t(text, 'now.remote.card.keys')}
 			snapshot=${keys}

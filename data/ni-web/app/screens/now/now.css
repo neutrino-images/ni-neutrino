@@ -379,6 +379,7 @@
 /* The keys and nothing else: the card's heading, the line about the keyboard,
    the lock and the picture's own options are all left out. The card itself
    stays, at the width it always has, so the keys are the same keys. */
+.now-remote.is-full .now-remote-head,
 .now-remote.is-full .now-card-title,
 .now-remote.is-full .now-hint,
 .now-remote.is-full .now-card .now-card,
