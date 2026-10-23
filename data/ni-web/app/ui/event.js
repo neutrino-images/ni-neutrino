@@ -1,7 +1,7 @@
 /* One guide event and what may be done to it. A list's short text may be the long one
    cut, so details come from the single event route only. */
 
-import { html, route, useState, useEffect } from '../runtime.js';
+import { html, Fragment, route, useState, useEffect } from '../runtime.js';
 import * as store from '../store.js';
 import * as session from '../session.js';
 import { t } from '../i18n.js';
@@ -45,6 +45,18 @@ export function genreKey(genre) {
  */
 export function isOnAir(event, at) {
 	return event.start <= at && at < event.start + event.duration;
+}
+
+/**
+ * Whether the programme has ended by then: from its last second on, the same
+ * half open edge isOnAir draws.
+ *
+ * @param {Api.Event} event
+ * @param {number} at seconds since the epoch
+ * @returns {boolean}
+ */
+export function isOver(event, at) {
+	return at >= event.start + event.duration;
 }
 
 /**
@@ -144,6 +156,13 @@ function recordNow(event) {
 export function eventActions(props) {
 	const event = props.event;
 	const onAir = isOnAir(event, props.at);
+	/* A PROGRAMME THAT HAS ENDED OFFERS NEITHER A RECORDING NOR A TIMER. The
+	   box would refuse a timer in the past and recordNow would only say the
+	   programme is over, so a control that leads there is a control that
+	   cannot work. It stays in its place, disabled, so that the marks of a
+	   list of rows still stand in their columns; the details and the day
+	   stay open, since a past programme is still worth reading about. */
+	const over = isOver(event, props.at);
 	const open = props.onOpen;
 	/** @type {import('./actions.js').RowAction[]} */
 	const actions = [];
@@ -168,7 +187,8 @@ export function eventActions(props) {
 			id: 'record',
 			label: t(text, 'epg.event.record.timer'),
 			mark: '⏺︎',
-			onAct: function () { route(timerHref(event, 'record')); }
+			disabled: over,
+			onAct: function () { if (!over) route(timerHref(event, 'record')); }
 		});
 
 	actions.push(onAir
@@ -184,7 +204,8 @@ export function eventActions(props) {
 			id: 'zap',
 			label: t(text, 'epg.event.zap.timer'),
 			mark: '▶︎',
-			onAct: function () { route(timerHref(event, 'zapto')); }
+			disabled: over,
+			onAct: function () { if (!over) route(timerHref(event, 'zapto')); }
 		});
 
 	if (props.channelHref) {
@@ -218,15 +239,21 @@ export function EventActions(props) {
 export function EventButtons(props) {
 	const event = props.event;
 	const onAir = isOnAir(event, props.at);
+	const over = isOver(event, props.at);
 	const leave = props.onClose;
 	useEffect(function () { ensureCss(kCss); }, []);
 
-	return html`<p class="ev-acts">
-		${eventActions(props).map(function (one) {
-			return html`<${Button} primary=${onAir && one.id === 'record'} key=${one.id} onClick=${one.onAct}>${one.label}<//>`;
-		})}
-		${leave ? html`<${Button} onClick=${leave}>${t(text, 'epg.event.details.close')}<//>` : null}
-	</p>`;
+	/* Said once, under the row, rather than under each of the two controls
+	   it is about. */
+	return html`<${Fragment}>
+		<p class="ev-acts">
+			${eventActions(props).map(function (one) {
+				return html`<${Button} primary=${onAir && one.id === 'record'} key=${one.id} disabled=${one.disabled} onClick=${one.onAct}>${one.label}<//>`;
+			})}
+			${leave ? html`<${Button} onClick=${leave}>${t(text, 'epg.event.details.close')}<//>` : null}
+		</p>
+		${over ? html`<p class="hint ev-over" data-part="over">${t(text, 'epg.event.record.over')}</p>` : null}
+	<//>`;
 }
 
 /**

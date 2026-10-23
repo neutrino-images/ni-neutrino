@@ -52,7 +52,7 @@ import { Field } from '../../ui/field.js';
 import { Sheet } from '../../ui/sheet.js';
 import { elapsedShare } from '../../ui/onair.js';
 import { Logo } from '../../ui/logo.js';
-import { EventButtons, EventFacts, timerHref, zapTo } from '../../ui/event.js';
+import { EventButtons, EventFacts, isOver, timerHref, zapTo } from '../../ui/event.js';
 import { holdingBouquet } from './schedule.js';
 import text from './grid.text.js';
 import * as model from './grid.model.js';
@@ -495,9 +495,16 @@ function Slots(props) {
 					${onAir ? html`<${Dot} kind="onair" word=${t(text, 'grid.running')} />` : null}
 					${onAir ? html`<span class="grid__sbar"><i style=${{ width: share + '%' }}></i></span>` : null}
 				</button>
-				<${Link} class="btn grid__srec" href=${timerHref(event, 'record')} title=${t(text, 'grid.record')}>
-					<span aria-hidden="true">${timers.ic}</span><span class="sr">${t(text, 'grid.record')}</span>
-				<//>
+				${/* An ended programme keeps the key in its place, so the column
+				     of them stays a column, and it cannot be pressed: a timer
+				     for the past is one the box refuses. */''}
+				${isOver(event, props.at)
+					? html`<button type="button" class="btn grid__srec" disabled title=${t(text, 'grid.record.over')}>
+						<span aria-hidden="true">${timers.ic}</span><span class="sr">${t(text, 'grid.record.over')}</span>
+					</button>`
+					: html`<${Link} class="btn grid__srec" href=${timerHref(event, 'record')} title=${t(text, 'grid.record')}>
+						<span aria-hidden="true">${timers.ic}</span><span class="sr">${t(text, 'grid.record')}</span>
+					<//>`}
 			</li>`;
 		})}
 	</ul>`;

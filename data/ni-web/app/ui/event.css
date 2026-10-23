@@ -32,3 +32,8 @@
    last thing, which is the sheet, the same margin would be a gap at the bottom
    of a panel that has already ended. */
 .ev-acts:not(:last-child) { margin-bottom: var(--gap-4); }
+/* Why the two controls above are out, close under them, and the same room
+   below it the row would have had. */
+.ev-acts + .ev-over { margin-top: calc(-1 * var(--gap-2)); }
+.ev-over { margin-bottom: var(--gap-4); color: var(--text-dim); }
+.ev-over:last-child { margin-bottom: 0; }
