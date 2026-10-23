@@ -49,12 +49,12 @@ body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
   font: 14px/1.5 system-ui, sans-serif;
   /* Its own colour and not the ground's: it is the one warning on this page
      and it has to leave the surface it sits on. */
-  background: #3a2e10;
-  color: #f3dc9a;
-  border-bottom: 1px solid #6b5412;
+  background: #3e2723;
+  color: #ffecb3;
+  border-bottom: 1px solid #6d4c41;
   padding: 12px 20px;
 }
-#warning code { color: #ffd27f; }
+#warning code { color: #ffd180; }
 
 .swagger-ui { color: var(--ni-text); }
 .swagger-ui .info .title,
@@ -84,7 +84,7 @@ body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
 .swagger-ui .opblock { background: var(--ni-surface); border-color: var(--ni-line); }
 .swagger-ui .opblock .opblock-section-header { background: var(--ni-surface-2); box-shadow: none; }
 .swagger-ui .opblock-body pre.microlight,
-.swagger-ui .highlight-code > .microlight { background: #0f1216; color: #d7e2c8; }
+.swagger-ui .highlight-code > .microlight { background: #000000; color: #dcedc8; }
 .swagger-ui section.models, .swagger-ui section.models .model-container {
   background: var(--ni-surface); border-color: var(--ni-line);
 }
@@ -105,7 +105,7 @@ body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
 
 /* What a person acts on, and only that. */
 .swagger-ui .btn.execute { background: var(--ni-accent); border-color: var(--ni-accent);
-  color: #17120c; }
+  color: #121212; }
 .swagger-ui .btn.execute:hover { background: var(--ni-accent-dim); }
 .swagger-ui .btn.authorize { color: var(--ni-accent); border-color: var(--ni-accent); }
 .swagger-ui .btn.authorize svg { fill: var(--ni-accent); }
@@ -127,7 +127,7 @@ body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
 .swagger-ui .opblock.opblock-put, .swagger-ui .opblock.opblock-patch,
 .swagger-ui .opblock.opblock-delete { background: var(--ni-surface); }
 .swagger-ui .opblock .tab-header .tab-item.active h4 span:after { background: var(--ni-accent); }
-.swagger-ui .opblock .opblock-summary-method { color: #10141a; text-shadow: none; }
+.swagger-ui .opblock .opblock-summary-method { color: #121212; text-shadow: none; }
 .swagger-ui .opblock.opblock-get .opblock-summary,
 .swagger-ui .opblock.opblock-post .opblock-summary,
 .swagger-ui .opblock.opblock-put .opblock-summary,
@@ -149,7 +149,7 @@ body { margin: 0; background: var(--ni-bg); color: var(--ni-text); }
 .swagger-ui .btn.authorize svg, .swagger-ui .authorization__btn svg { fill: var(--ni-accent); }
 
 /* Dark form controls, and readable stand-ins for the viewer's purples. */
-:root { color-scheme: dark; --ni-code: #e8c58a; --ni-type: #7cc0ef; }
+:root { color-scheme: dark; --ni-code: #ffcc80; --ni-type: #90caf9; }
 .swagger-ui .markdown code, .swagger-ui .renderedMarkdown code {
   background: var(--ni-surface-2); color: var(--ni-code); font-weight: 500;
   font-size: 13px; padding: 1px 5px;

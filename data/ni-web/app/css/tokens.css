@@ -148,59 +148,73 @@
 
 /* Light: chosen by the page, or followed from the system unless dark is forced.
    The block is written twice because a media query and an attribute cannot be
-   one selector. Keep both identical. The same cool neutrals as the dark theme,
-   lightened; the accent is a muted blue instead of the orange, which on a light
-   ground reads as a warning, and white on it is above six to one. */
+   one selector. Keep both identical.
+
+   MATERIAL'S PALETTE AS WELL, each the swatch nearest the colour this theme had
+   (by CIELAB distance) among those that still carry words at 4.5:1 on all three
+   grounds, or 3:1 for an edge. The figures are the lowest of the three.
+     grounds   Grey 100, White, Blue Grey 50; the divider Blue Grey 100
+     edge      Blue Grey 500, 3.8:1 (Blue Grey 400 is nearer and under 3:1)
+     writing   Grey 900 13.9:1, Blue Grey 600 4.7:1
+     accent    Light Blue 900, 6.4:1 and white on it 7.4:1; Blue 900 pressed.
+               A blue and not the orange, which on a light ground reads as a
+               warning.
+     red       Red 800 4.9:1
+     green     Green 900 6.8:1 (Green 800 is nearer and under 4.5:1)
+     session   Teal 700 4.6:1, a green apart from the running one
+     warning   Brown 500 5.7:1. No amber or orange in the palette carries
+               words on a light ground (Orange 900 is 3.8:1 on white), and the
+               brown is the nearest warm swatch that does and is not the red. */
 @media (prefers-color-scheme: light) {
 	:root:not([data-theme="dark"]) {
-		--accent: #2f5f9e;
-		--accent-dim: #264d80;
+		--accent: #01579b;
+		--accent-dim: #0d47a1;
 		--accent-ink: #ffffff;
-		--accent-edge: rgba(47, 95, 158, 0.45);
-		--accent-wash: rgba(47, 95, 158, 0.08);
-		--ground-0: #eef1f5;
-		--ground-1: #fbfcfd;
-		--ground-2: #e4e9ef;
-		--line: #d3dae3;
-		--line-strong: #7a8493;
-		--text: #1b2129;
-		--text-dim: #5b6676;
-		--state-recording: #c8302c;
-		--state-running: #2a7d4c;
-		--state-warning: #9a6400;
-		--session-open: #4f7f62;
-		--session-open-edge: rgba(79, 127, 98, 0.45);
-		--failure: #c8302c;
-		--scrim: rgba(27, 33, 41, 0.35);
-		--shadow-float: 0 10px 30px rgba(27, 33, 41, 0.16);
-		--state-running-edge: rgba(42, 125, 76, 0.45);
-		--state-warning-edge: rgba(154, 100, 0, 0.45);
+		--accent-edge: rgba(1, 87, 155, 0.45);
+		--accent-wash: rgba(1, 87, 155, 0.08);
+		--ground-0: #f5f5f5;
+		--ground-1: #ffffff;
+		--ground-2: #eceff1;
+		--line: #cfd8dc;
+		--line-strong: #607d8b;
+		--text: #212121;
+		--text-dim: #546e7a;
+		--state-recording: #c62828;
+		--state-running: #1b5e20;
+		--state-warning: #795548;
+		--session-open: #00796b;
+		--session-open-edge: rgba(0, 121, 107, 0.45);
+		--failure: #c62828;
+		--scrim: rgba(33, 33, 33, 0.35);
+		--shadow-float: 0 10px 30px rgba(33, 33, 33, 0.16);
+		--state-running-edge: rgba(27, 94, 32, 0.45);
+		--state-warning-edge: rgba(121, 85, 72, 0.45);
 		color-scheme: light;
 	}
 }
 :root[data-theme="light"] {
-	--accent: #2f5f9e;
-	--accent-dim: #264d80;
+	--accent: #01579b;
+	--accent-dim: #0d47a1;
 	--accent-ink: #ffffff;
-	--accent-edge: rgba(47, 95, 158, 0.45);
-	--accent-wash: rgba(47, 95, 158, 0.08);
-	--ground-0: #eef1f5;
-	--ground-1: #fbfcfd;
-	--ground-2: #e4e9ef;
-	--line: #d3dae3;
-	--line-strong: #7a8493;
-	--text: #1b2129;
-	--text-dim: #5b6676;
-	--state-recording: #c8302c;
-	--state-running: #2a7d4c;
-	--state-warning: #9a6400;
-	--session-open: #4f7f62;
-	--session-open-edge: rgba(79, 127, 98, 0.45);
-	--failure: #c8302c;
-	--scrim: rgba(27, 33, 41, 0.35);
-	--shadow-float: 0 10px 30px rgba(27, 33, 41, 0.16);
-	--state-running-edge: rgba(42, 125, 76, 0.45);
-	--state-warning-edge: rgba(154, 100, 0, 0.45);
+	--accent-edge: rgba(1, 87, 155, 0.45);
+	--accent-wash: rgba(1, 87, 155, 0.08);
+	--ground-0: #f5f5f5;
+	--ground-1: #ffffff;
+	--ground-2: #eceff1;
+	--line: #cfd8dc;
+	--line-strong: #607d8b;
+	--text: #212121;
+	--text-dim: #546e7a;
+	--state-recording: #c62828;
+	--state-running: #1b5e20;
+	--state-warning: #795548;
+	--session-open: #00796b;
+	--session-open-edge: rgba(0, 121, 107, 0.45);
+	--failure: #c62828;
+	--scrim: rgba(33, 33, 33, 0.35);
+	--shadow-float: 0 10px 30px rgba(33, 33, 33, 0.16);
+	--state-running-edge: rgba(27, 94, 32, 0.45);
+	--state-warning-edge: rgba(121, 85, 72, 0.45);
 	color-scheme: light;
 }
 
