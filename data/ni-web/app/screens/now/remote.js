@@ -615,6 +615,56 @@ export default function Remote() {
 		};
 	}, [full]);
 
+	/* AND THE TELEPHONE STAYS AWAKE WHILE IT IS THE HANDSET. A handset whose
+	   screen goes dark between two presses is one nobody holds for a film, so
+	   for as long as this screen lies over the window it asks the browser to
+	   keep the display on, and gives that back the moment it is left.
+
+	   The browser drops the lock by itself whenever the page is out of sight
+	   (another app, the screen turned off by hand), so it is taken again when
+	   the page comes back. And it is only offered where the browser has it,
+	   which is a secure page: over plain http on the home network there is no
+	   wake lock, nothing is said about it, and the full screen is the same
+	   full screen without it. Nothing on the screen says so either way: the
+	   keys and nothing else. */
+	useEffect(function () {
+		if (!full || !navigator.wakeLock) {
+			return undefined;
+		}
+		const wake = navigator.wakeLock;
+		/** @type {WakeLockSentinel | null} */
+		let held = null;
+		let left = false;
+		function take() {
+			if (document.visibilityState !== 'visible' || held !== null) {
+				return;
+			}
+			wake.request('screen').then(function (got) {
+				if (left) {
+					got.release().catch(function () {});
+					return;
+				}
+				held = got;
+				got.addEventListener('release', function () {
+					if (held === got) {
+						held = null;
+					}
+				});
+			}, function () {});
+		}
+		take();
+		document.addEventListener('visibilitychange', take);
+		return function () {
+			left = true;
+			document.removeEventListener('visibilitychange', take);
+			if (held !== null) {
+				const was = held;
+				held = null;
+				was.release().catch(function () {});
+			}
+		};
+	}, [full]);
+
 	/* Left the screen while it lay over the window: the browser's full
 	   screen goes with it, or the next screen would open without its bars. */
 	useEffect(function () {
