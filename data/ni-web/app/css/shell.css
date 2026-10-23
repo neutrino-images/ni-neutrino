@@ -250,7 +250,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-sm
 .chip { display: inline-flex; align-items: center; gap: var(--gap-2); flex: none; padding: var(--gap-1) var(--gap-3);
 	background: var(--ground-1); border: 1px solid var(--line); border-radius: var(--radius-pill);
 	color: var(--text-dim); font-size: var(--fs-sm); }
-.chip.on-air { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--on-air); margin-left: var(--gap-2); }
+.chip.on-air { border-color: var(--accent-edge); background: var(--accent-wash); color: var(--on-air); }
 .chip.good { border-color: var(--state-running-edge); color: var(--state-running); }
 .chip.warn { border-color: var(--state-warning-edge); color: var(--state-warning); }
 
