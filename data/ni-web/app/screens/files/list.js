@@ -499,6 +499,10 @@ function PathForm(props) {
 			label=${t(text, 'files.path.label')}
 			value=${props.value}
 			onInput=${function (/** @type {Web.On<HTMLInputElement, InputEvent>} */ event) { props.onInput(event.currentTarget.value); }} />
-		<${Button} type="submit" primary=${true}>${t(text, 'files.path.open')}<//>
+		${/* Dimmed while there is nothing to open: the press did nothing then
+		     anyway, and a primary button that does nothing looks like one that
+		     failed. Judged by what would be sent, so a field of spaces counts
+		     as empty too. */''}
+		<${Button} type="submit" primary=${true} disabled=${tidy(props.value) === ''}>${t(text, 'files.path.open')}<//>
 	</form>`;
 }
