@@ -242,18 +242,27 @@
 	   below and by the inset the frame's scrolling box is given further down.
 	   Written on the body because that is the one element both are under.
 
-	   THE THREE FIGURES, AND THE MIDDLE ONE IS DERIVED. Below, what is still
-	   worth calling a picture. Above, what stops a very tall window spending
-	   itself on one.
+	   THE PICTURE IS AS WIDE AS THE PAGE, AND THE HEIGHT FOLLOWS FROM THAT. It
+	   had been held to a quarter of the reading, which on a telephone 390 wide
+	   and 844 tall drew a 222 by 125 picture with 140 pixels of the width
+	   unused beside it, and a menu on the television at that size is not
+	   read. Now the first figure is the width the page has, less its padding
+	   on both sides, at sixteen to nine: 366 by 206 on that telephone.
 
-	   The middle one is measured rather than guessed. The frame's bars take 222
-	   of the window at these widths, so the reading is the window less that.
-	   Pinned under the picture stand the line that answers a press, the gap
-	   over it and the block's own foot, which come to 30 whatever the window
-	   is. A quarter of the reading for the whole block is a quarter of the
-	   window less a quarter of those 222, and the picture is that less the 30,
-	   which is 25vh minus 86. */
-	body:has(.now-remote) { --now-shot-cap: clamp(64px, 25vh - 86px, 200px); }
+	   THE SECOND FIGURE IS WHAT STOPS IT, AND IT IS DERIVED. The frame's bars
+	   take 222 of the window at these widths, so the reading is the window
+	   less that. Pinned under the picture stand the line that answers a press,
+	   the gap over it and the block's own foot, which come to 30 whatever the
+	   window is. Two fifths of the reading for the whole block is two fifths
+	   of the window less two fifths of those 222, and the picture is that less
+	   the 30, which is 40vh minus 119. On an upright telephone that is above
+	   the width's figure, so the width decides; on a tablet held upright the
+	   width would give a picture of half the window, and this decides.
+
+	   And 64 under it all, below which a picture is not worth calling one. */
+	body:has(.now-remote) {
+		--now-shot-cap: max(64px, min((100vw - 2 * var(--content-pad-x)) * 9 / 16, 40vh - 119px));
+	}
 
 	/* Not the gap of a flex box, because the block is one box on a telephone
 	   and a card's child everywhere else. */
@@ -318,10 +327,20 @@
    is not worth calling one, and the 30 the line under it costs. A third of the
    reading is 94 where the reading is 282, which is a window of 504, so under 520
    the block is more than the share this form allows itself however small the
-   picture is drawn. A telephone held sideways is well under it. */
+   picture is drawn. A telephone held sideways is well under it. (The share is
+   two fifths now, which would put the line at 457; the stricter 520 stays.) */
 @media (max-width: 899px) and (max-height: 519px) {
 	.now-remote-head { position: static; }
 	.now-remote-head::before, .now-remote-head::after { content: none; }
+	/* AND WHAT IS NOT PINNED IS NOT HELD TO A PINNED PICTURE'S SHARE. The share
+	   above is what a pinned block may take from the keys passing under it;
+	   here nothing passes under it, so the picture is as wide as the page and
+	   at most most of the window tall, and the keys follow it down the page.
+	   It had kept the share's floor, which drew a telephone held sideways a
+	   picture 64 pixels high. */
+	body:has(.now-remote) {
+		--now-shot-cap: max(64px, min((100vw - 2 * var(--content-pad-x)) * 9 / 16, 85vh));
+	}
 }
 .now-remote-sent { margin: var(--gap-3) 0 0; color: var(--text-dim); min-height: 1.45em; }
 .now-keygroup + .now-keygroup { padding-top: var(--gap-4); }
@@ -435,14 +454,22 @@
    rules. */
 @media (max-width: 899px) {
 	.now-shot-live { min-height: 0; padding: 0; border: 0; background: none; }
+	/* As wide as the column, which is what the ceiling above is worked out
+	   from, so on an upright telephone the two meet and nothing is
+	   letterboxed. Where the ceiling is the smaller, contain keeps the
+	   picture whole inside the box rather than stretched across it. */
+	.now-shot-live .now-shot-zoom { width: 100%; }
 	.now-shot-live .now-shot-image {
+		width: 100%;
 		max-height: var(--now-shot-cap);
 		object-fit: contain;
 	}
 	/* Pressed, the ceiling lifts to what a menu on the television can be read
 	   at. Not the whole window: the keys under it have to stay reachable by
 	   scrolling, and a picture that fills the screen is a second view and not
-	   a bigger picture. Pressing again puts the ceiling back. */
+	   a bigger picture. Pressing again puts the ceiling back.
+	   On a telephone held upright the picture is already as wide as the page,
+	   so there the press has nothing left to give; it is a tablet's. */
 	.now-shot-live[data-large] .now-shot-image { max-height: 55vh; }
 }
 /* Wide the picture already has its room, so the control is a plain frame
