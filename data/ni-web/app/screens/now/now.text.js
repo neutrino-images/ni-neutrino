@@ -134,9 +134,6 @@ export default {
 		'now.signal.strength': 'Pegel',
 		'now.signal.tuner': 'Tuner {adapter}/{number}',
 		'now.signal.unlocked': 'Kein brauchbares Signal',
-		'now.standby': 'In Standby schalten',
-		'now.standby.ask': 'Die Box in Standby schalten? Das Bild geht aus.',
-		'now.standby.sent': 'Die Box wurde in Standby geschickt.',
 		'now.standby.state': 'Die Box steht im Standby.',
 		'now.store.free': '{free} von {total} frei',
 		'now.store.none': 'Die Box nennt keinen Speicher.',
@@ -152,7 +149,6 @@ export default {
 		'now.volume.audible': 'An',
 		'now.volume.label': 'Lautstärke',
 		'now.volume.muted': 'Stumm geschaltet',
-		'now.wake.sent': 'Die Box wurde geweckt.',
 	},
 	en: {
 		'now.act.m3u': 'M3U',
@@ -270,9 +266,6 @@ export default {
 		'now.signal.strength': 'Strength',
 		'now.signal.tuner': 'Tuner {adapter}/{number}',
 		'now.signal.unlocked': 'No usable signal',
-		'now.standby': 'Put into standby',
-		'now.standby.ask': 'Put the box into standby? The picture goes off.',
-		'now.standby.sent': 'The box was sent into standby.',
 		'now.standby.state': 'The box is in standby.',
 		'now.store.free': '{free} free of {total}',
 		'now.store.none': 'This box names no storage.',
@@ -288,6 +281,5 @@ export default {
 		'now.volume.audible': 'On',
 		'now.volume.label': 'Volume',
 		'now.volume.muted': 'Muted',
-		'now.wake.sent': 'The box was woken up.',
 	}
 };

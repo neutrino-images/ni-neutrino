@@ -45,6 +45,8 @@ import recText from '../recordings/recordings.text.js';
 import { archiveCoverHref } from '../recordings/archive.model.js';
 import { useKept } from '../../ui/kept.js';
 import { ensureCss } from '../../css.js';
+import shell from '../../shell.text.js';
+import { sendStandby } from '../../ui/power.js';
 
 export const css = '/app/screens/now/now.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -677,18 +679,15 @@ function BoxCard() {
 	const box = info.data;
 	const [asking, setAsking] = useState(false);
 
+	/* The command and its words are the header's power key's (app/ui/power.js),
+	   so the two ways of sending it are one. */
 	/**
 	 * @param {boolean} on
 	 * @returns {void}
 	 */
-	function sendStandby(on) {
+	function send(on) {
 		setAsking(false);
-		announce(session.requireSystem().then(function () {
-			return store.write('POST', '/api/v1/system/standby', {
-				body: { on: on },
-				touches: ['/api/v1/system/info', '/api/v1/tuner'],
-			});
-		}), t(text, on ? 'now.standby.sent' : 'now.wake.sent'));
+		sendStandby(on);
 	}
 
 	const mode = rest.data;
@@ -719,7 +718,7 @@ function BoxCard() {
 							setAsking(true);
 							return;
 						}
-						sendStandby(false);
+						send(false);
 					}} />
 			</div>`}
 		${box
@@ -730,10 +729,10 @@ function BoxCard() {
 			: null}
 		<${Dialog}
 			open=${asking}
-			title=${t(text, 'now.standby')}
+			title=${t(shell, 'shell.power.standby')}
 			onCancel=${function () { setAsking(false); }}
-			onConfirm=${function () { sendStandby(true); }}>
-			<p>${t(text, 'now.standby.ask')}</p>
+			onConfirm=${function () { send(true); }}>
+			<p>${t(shell, 'shell.power.ask')}</p>
 		<//>
 	<//>`;
 }

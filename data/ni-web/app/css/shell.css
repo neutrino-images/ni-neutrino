@@ -92,6 +92,23 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-sm
 }
 .status[data-session="in"] .session-act .dot { background: currentColor; }
 
+/* The box's power key, beside the session and as small as it: a round key the
+   height of the pill, the mark in the dim grey while the box runs and in the
+   accent while it sleeps, because then it is the thing on the page to press.
+   app/ui/power.js says why it asks before it sends the box to sleep. */
+.power { display: flex; flex: none; }
+.power-key { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0;
+	background: var(--ground-1); border: 1px solid var(--line); border-radius: var(--radius-pill);
+	color: var(--text-dim); cursor: pointer; }
+.power-key svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;
+	stroke-linecap: round; stroke-linejoin: round; }
+.power-key[data-standby="on"] { color: var(--accent); border-color: var(--accent-edge); background: var(--accent-wash); }
+.power-key:disabled { opacity: 0.5; cursor: default; }
+@media (hover: hover) {
+	.power-key:hover:not(:disabled) { color: var(--text); border-color: var(--text-dim); }
+	.power-key[data-standby="on"]:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+}
+
 /* What this session may do, as a sentence: a word does not explain a refusal. */
 .session-may { margin: 0 0 var(--gap-3); color: var(--text-dim); }
 .sheet-areas.session-menu { grid-template-columns: 1fr; }
@@ -448,6 +465,9 @@ table.grid tbody tr.grid-more td { white-space: normal; }
    1091 is where it stops sharing the line, and the figure here leaves sixty
    pixels over that for a wider system font. Guessing is what put the eighth
    destination off the edge of a bar that scrolled in silence.
+   The power key (app/ui/power.js) came after that measurement: 28 and a 12
+   gap, so 1131 by arithmetic and twenty pixels over, not yet measured. Where
+   a font takes those twenty, the wrapping below is what catches it.
 
    BELOW 1152: tablet and phone alike get the bar along the bottom.
 
@@ -483,7 +503,10 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 	   second row is the only reason this bar has a bottom edge at all. */
 	.topbar-main { padding-bottom: var(--gap-2); }
 	.onair { order: 3; flex: 1 0 100%; max-width: none; }
-	/* Nothing on the first row grows, so a margin holds the session right. */
+	/* Nothing on the first row grows, so a margin holds the power key and the
+	   session right, the key first. */
+	.power { margin-left: auto; }
+	.power + .status { margin-left: 0; }
 	.status { margin-left: auto; }
 	/* No permanent bar down the side of the one box that scrolls: a touch
 	   screen draws its own while a finger is moving. */
@@ -502,6 +525,8 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 	   and what a thumb lands on is the row around it. */
 	.btn, .session-act, .sheet-areas a, .sheet-areas button,
 	.switch { min-height: var(--tap-height); }
+	/* Drawn as small as above and given a finger's width all the same. */
+	.power-key { width: var(--tap-height); height: var(--tap-height); }
 	/* What a finger types into, and the one control in the bar it presses. */
 	.field input, .field select, .field textarea { min-height: var(--tap-height); }
 	.onair { min-height: var(--tap-height); }

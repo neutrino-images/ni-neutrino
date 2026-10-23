@@ -23,6 +23,7 @@ import { THEMES, chosenTheme, chooseTheme } from './theme.js';
 import { OnAir } from './onair.js';
 import { Sheet } from './sheet.js';
 import { Dialog } from './dialog.js';
+import { Power } from './power.js';
 
 /* WHO IS SIGNED IN, AND THE ONLY PLACE ON THE PAGE THAT SAYS SO.
 
@@ -360,6 +361,7 @@ export function Topbar(props) {
 				event=${props.event}
 				standby=${status && status.standby ? status.standby.on : null}
 				recordings=${status && status.recordings ? status.recordings.length : 0} />
+			<${Power} standby=${status && status.standby ? status.standby.on : null} />
 			<${Status} status=${status} />
 		</div>
 		<${EntryTabs} area=${props.area} items=${props.items} activeEntry=${props.activeEntry} />
