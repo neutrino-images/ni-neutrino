@@ -401,6 +401,7 @@ export default function Remote() {
 	const mode = useResource('GET', '/api/v1/system/standby');
 	const [last, setLast] = useState('');
 	const [askingPower, setAskingPower] = useState(false);
+	const [full, setFull] = useState(false);
 	const beside = useBeside();
 	const [wanted, setWanted] = useState(photoWanted);
 	/* One on opening, and one more for every run of presses that has come to
@@ -461,7 +462,11 @@ export default function Remote() {
 		   there is no answer that describes it; what this can honestly report is
 		   that the key went, and a refused key never went, whether the refusal
 		   is the sign in sheet or a line of its own. */
-		askForPicture();
+		/* No picture is drawn while the keys are alone on the screen, so none
+		   is fetched for them either. */
+		if (!full) {
+			askForPicture();
+		}
 		store.write('POST', '/api/v1/osd/remote/key', { body: { name: name } })
 			.then(function () {
 				setLast(name);
@@ -557,6 +562,69 @@ export default function Remote() {
 		});
 	}
 
+	/* THE TELEPHONE AS THE HANDSET. Pressed, this screen lies over the whole
+	   window and shows the keys and nothing else: no frame, no picture of the
+	   television, no line about the last press, no heading, no hint. The one
+	   thing beside them is the way back, a small key in the corner above, and
+	   on a telephone the browser's own back gesture as well. The keys are
+	   drawn as they always are.
+
+	   Where the browser can, the page also asks for the whole screen, which
+	   takes the browser's own bars away as well. A telephone that cannot
+	   (Safari on an iPhone gives an element no full screen) still gets the
+	   overlay, which is most of the gain. Leaving the browser's full screen
+	   by its own gesture leaves this too, so the two never disagree, and so
+	   does the escape key where there is one. */
+	/**
+	 * @param {boolean} next
+	 * @returns {void}
+	 */
+	function goFull(next) {
+		setFull(next);
+		const root = document.documentElement;
+		if (next && root.requestFullscreen && !document.fullscreenElement) {
+			root.requestFullscreen({ navigationUI: 'hide' }).catch(function () {});
+		}
+		if (!next && document.fullscreenElement && document.exitFullscreen) {
+			document.exitFullscreen().catch(function () {});
+		}
+	}
+
+	useEffect(function () {
+		if (!full) {
+			return undefined;
+		}
+		function onChange() {
+			if (!document.fullscreenElement) {
+				setFull(false);
+			}
+		}
+		/** @param {KeyboardEvent} event */
+		function onEscape(event) {
+			/* A question over the keys has the escape key first, and
+			   answers it by closing itself. */
+			if (event.key === 'Escape' && !event.defaultPrevented) {
+				goFull(false);
+			}
+		}
+		document.addEventListener('fullscreenchange', onChange);
+		document.addEventListener('keydown', onEscape);
+		return function () {
+			document.removeEventListener('fullscreenchange', onChange);
+			document.removeEventListener('keydown', onEscape);
+		};
+	}, [full]);
+
+	/* Left the screen while it lay over the window: the browser's full
+	   screen goes with it, or the next screen would open without its bars. */
+	useEffect(function () {
+		return function () {
+			if (document.fullscreenElement && document.exitFullscreen) {
+				document.exitFullscreen().catch(function () {});
+			}
+		};
+	}, []);
+
 	/* THE LINE THAT ANSWERS A PRESS STANDS UNDER THE PICTURE. Under the keys it
 	   is under the block that is pinned, so the one press somebody makes
 	   without scrolling was the one press nothing answered on screen; beside
@@ -567,7 +635,17 @@ export default function Remote() {
 		${last === '' ? '' : t(text, 'now.remote.sent', { key: labelFor(last) })}
 	</p>`;
 
-	return html`<div class="now-remote">
+	return html`<div class=${full ? 'now-remote is-full' : 'now-remote'}>
+		${full
+			? html`<div class="now-full-back">
+				<button type="button" class="btn now-full-close" data-act="full-close"
+					title=${t(text, 'now.remote.full.close')}
+					aria-label=${t(text, 'now.remote.full.close')}
+					onClick=${function () { goFull(false); }}>
+					<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" /></svg>
+				</button>
+			</div>`
+			: null}
 		${/* THE PICTURE, AND OVER THE KEYS THE ONE THING THAT IS PINNED. Beside
 		     them it is a card like any other, with its heading and what it is
 		     fetched with inside it. Over them the stylesheet pins this block and
@@ -576,7 +654,7 @@ export default function Remote() {
 		     and five keys pinned as well came to two thirds of the reading, and
 		     what is under the block is the whole of what somebody came here to
 		     press. */''}
-		<div class="now-remote-head">
+		${full ? null : html`<div class="now-remote-head">
 			${beside
 				? html`<${Card} title=${t(text, 'now.shot.card.screen')}>
 					${shot.seen}
@@ -584,11 +662,20 @@ export default function Remote() {
 					${shot.options}
 				<//>`
 				: html`${shot.seen}${sent}`}
-		</div>
+		</div>`}
 		<${Card}
 			title=${t(text, 'now.remote.card.keys')}
 			snapshot=${keys}
 			empty=${keys.data && named.length === 0 ? t(text, 'now.remote.none') : undefined}>
+			${/* Offered where the picture stands over the keys, which is a
+			     telephone or a tablet held upright, and gone once it is taken. */''}
+			${full
+				? null
+				: html`<p class="now-full-open">
+					<button type="button" class="btn" data-act="full-open" onClick=${function () { goFull(true); }}>
+						${t(text, 'now.remote.full')}
+					</button>
+				</p>`}
 			${/* Which of the two forms the keys are drawn in, read before them
 			     rather than at the foot of the screen under a card about
 			     something else. */''}

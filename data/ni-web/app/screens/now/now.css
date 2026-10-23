@@ -343,6 +343,47 @@
 	}
 }
 .now-remote-sent { margin: var(--gap-3) 0 0; color: var(--text-dim); min-height: 1.45em; }
+
+/* ------------------------------------------------- the handset, full screen */
+
+/* THE BUTTON THAT TAKES IT, where the picture stands over the keys and nowhere
+   else: beside them there is a desk and a pointer, and nothing to gain. */
+.now-full-open { margin: 0 0 var(--gap-3); }
+.now-full-open .btn { width: 100%; }
+@media (min-width: 900px) { .now-full-open { display: none; } }
+
+/* THE SCREEN OVER THE WHOLE WINDOW, and on it the keys alone. Over the
+   frame's bars and the playing window, under a question and under a message:
+   a question about the power key has to be answerable from here, and a
+   message about a refused key is about what happens here. It scrolls in
+   itself, and a scroll that reaches its end stays in it rather than moving
+   the page under it. */
+.now-remote.is-full {
+	position: fixed;
+	inset: 0;
+	z-index: 16;
+	display: block;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: env(safe-area-inset-top, 0px) var(--content-pad-x)
+		calc(var(--content-pad-y) + env(safe-area-inset-bottom, 0px));
+	background: var(--ground-0);
+}
+/* The way back, small and at the far end of a line of its own, so that it
+   stands over no key: the power key and the mute key are the corners of the
+   handset's first row. */
+.now-full-back { display: flex; justify-content: flex-end; padding: var(--gap-2) 0; }
+.now-full-close { width: var(--tap-height); min-height: var(--tap-height); padding: 0; }
+.now-full-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor;
+	stroke-width: 2; stroke-linecap: round; }
+/* The keys and nothing else: the card's heading, the line about the keyboard,
+   the lock and the picture's own options are all left out. The card itself
+   stays, at the width it always has, so the keys are the same keys. */
+.now-remote.is-full .now-card-title,
+.now-remote.is-full .now-hint,
+.now-remote.is-full .now-card .now-card,
+.now-remote.is-full > section.now-card ~ section.now-card { display: none; }
+
 .now-keygroup + .now-keygroup { padding-top: var(--gap-4); }
 .now-keyset { display: flex; flex-wrap: wrap; gap: var(--gap-2); justify-content: space-between; }
 
