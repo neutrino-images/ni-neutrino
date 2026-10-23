@@ -121,6 +121,11 @@
 	   over the handset) has to come to rest against exactly this, and a copy of
 	   the number in each of them was a copy the narrow folding never changed.
 	   app/css/shell.css narrows it below the phone width. */
+	/* HOW WIDE A FORM IS ALLOWED TO RUN. The settings and the AI pages are both
+	   a column of rows with a bar under them, and they had two widths of their
+	   own (44rem and 72ch, which is about 34rem here). One name, so the two are
+	   one column and the bar under each is as wide as the rows above it. */
+	--content-width: 44rem;
 	--content-pad-y: var(--gap-4);
 	--content-pad-x: var(--gap-4);
 	--control-height: 36px;

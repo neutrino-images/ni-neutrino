@@ -7,6 +7,7 @@ import { useSystemSession, useWatch, SignInRow, refusalShown, refusalText } from
 import { readAllowlists, allowBody } from './model.js';
 import { codeOf } from './read.js';
 import text from './ai.text.js';
+import shell from '../app/shell.text.js';
 
 export const css = '/ai/ai.css';
 /** @returns {string} */
@@ -41,6 +42,23 @@ function ticksOf(lists) {
 	};
 }
 
+/**
+ * How many ticks differ from what the box holds: one for every item on one side
+ * and not on the other, which is what the bar under the lists counts.
+ *
+ * @param {Ticks} a
+ * @param {Ticks} b
+ * @returns {number}
+ */
+function changes(a, b) {
+	/** @param {string[]} x @param {string[]} y */
+	function apart(x, y) {
+		return x.filter(function (one) { return y.indexOf(one) === -1; }).length
+			+ y.filter(function (one) { return x.indexOf(one) === -1; }).length;
+	}
+	return apart(a.plugins, b.plugins) + apart(a.sections, b.sections);
+}
+
 /** @returns {Web.Drawn} */
 export default function Allow() {
 	const may = useSystemSession();
@@ -54,6 +72,7 @@ export default function Allow() {
 	const [said, setSaid] = useState('');
 	const plugins = ticks ? ticks.plugins : [];
 	const sections = ticks ? ticks.sections : [];
+	const pending = (ticks && data) ? changes(ticks, ticksOf(lists)) : 0;
 
 	// Seeded once, from the first answer. An answer that arrives afterwards
 	// for a reason that has nothing to do with this screen's own save (an
@@ -95,7 +114,7 @@ export default function Allow() {
 		});
 	}
 
-	return html`<div class="ai">
+	return html`<div class="ai ai-form">
 		<${SignInRow} shown=${!may} why=${t(text, 'ai.allow.signin')} />
 		${may ? html`<section class="ai-block ai-allow-plugins">
 			<h2>${t(text, 'ai.allow.plugins')}</h2>
@@ -127,7 +146,16 @@ export default function Allow() {
 				})}
 			</div>
 		</section>
-		<div class="ai-row" data-act="allow-save"><${Button} primary=${true} disabled=${busy || ticks === null} onClick=${save}>${t(text, 'ai.allow.save')}<//></div>
-		${said === '' ? null : html`<p class="callout ai-said" role="status" data-part="said">${said}</p>`}` : null}
+		${said === '' ? null : html`<p class="callout ai-said" role="status" data-part="said">${said}</p>`}
+		<footer class="save-bar">
+			<span class="hint" data-part="pending">${t(shell, 'shell.save.pending', { count: pending })}</span>
+			<span data-act="allow-revert">
+				<${Button} disabled=${busy || pending === 0}
+					onClick=${function () { setTicks(ticksOf(lists)); setSaid(''); }}>${t(shell, 'shell.save.revert')}<//>
+			</span>
+			<span data-act="allow-save">
+				<${Button} primary=${true} disabled=${busy || ticks === null || pending === 0} onClick=${save}>${t(shell, 'shell.save')}<//>
+			</span>
+		</footer>` : null}
 	</div>`;
 }

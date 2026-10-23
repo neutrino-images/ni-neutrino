@@ -398,6 +398,20 @@ table.grid tbody tr.grid-more td { white-space: normal; }
    somebody was reading. */
 .busy { opacity: 0.6; }
 
+/* WHAT IS ABOUT TO BE SENT, AND THE TWO ANSWERS TO IT, where a thumb reaches
+   them: a form is long and a bar at its foot would be several screens below
+   the row somebody just changed. Pinned to the foot of the one scrolling box,
+   and the frame's because more than one screen has it: the settings and the AI
+   pages draw the same bar, and two copies of it were about to drift.
+   The two answers drop under the sentence rather than push the row off the
+   screen. A reader who has asked for larger writing has larger buttons.
+   A sticky box comes to rest inside the scrolling box's padding, so it is
+   pulled down by exactly that padding to sit on the edge of the window. */
+.save-bar { position: sticky; bottom: calc(-1 * var(--content-pad-y)); z-index: 1;
+	display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-3);
+	padding: var(--gap-3) 0; border-top: 1px solid var(--line); background: var(--ground-0); }
+.save-bar > .hint { flex: 1; color: var(--text-dim); }
+
 /* Pressed through, and why each one ends at its own text: data/ni-web/app/ui/toast.js */
 .toasts { position: fixed; right: var(--gap-4); bottom: var(--gap-4); z-index: 30; display: flex;
 	flex-direction: column; align-items: flex-end; gap: var(--gap-2); pointer-events: none; }

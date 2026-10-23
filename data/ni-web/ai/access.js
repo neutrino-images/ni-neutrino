@@ -12,6 +12,7 @@ import { codeOf, worded } from './read.js';
 import { errorText } from './guidewords.js';
 import { useTotp, TotpPart } from './totp.js';
 import text from './ai.text.js';
+import shell from '../app/shell.text.js';
 
 export const css = '/ai/ai.css';
 /** @returns {string} */
@@ -39,7 +40,8 @@ export default function Access() {
 
 	const body = (now && draft) ? settingsBody(draft, now) : {};
 	const urlProblem = draft ? publicUrlProblem(draft.publicUrl) : '';
-	const nothing = Object.keys(body).length === 0;
+	const pending = Object.keys(body).length;
+	const nothing = pending === 0;
 
 	/** @param {Partial<import('./model.js').AiDraft>} change */
 	function edit(change) {
@@ -69,7 +71,10 @@ export default function Access() {
 		});
 	}
 
-	return html`<div class="ai">
+	/* The bar is the settings screen's bar, the frame's .save-bar, with the same
+	   three parts: what is waiting, the way back, and the way on. Its question
+	   before saving stays, since a save here restarts the web server. */
+	return html`<div class="ai ai-form">
 		<${SignInRow} shown=${!may} why=${t(text, 'ai.access.signin')} />
 		<${State}
 			phase=${shot === null ? '' : shot.phase}
@@ -98,18 +103,25 @@ export default function Access() {
 				<${RemoteState} here="/ai/access" settings=${now} onTotp=${totp.begin} />
 				<${TotpPart} flow=${totp} on=${now.totp} />
 				${nothing ? null : html`<p class="hint" data-part="remote-unsaved">${t(text, 'ai.remote.unsaved')}</p>`}
-				<div class="ai-row" data-act="save">
-					<${Button} primary=${true} disabled=${busy || nothing || urlProblem !== ''}
-						onClick=${function () { setAsking(true); }}>${t(text, 'ai.save')}<//>
-				</div>
 				${said === '' ? null : html`<p class="callout ai-said" role="status" data-part="said">${said}</p>`}
 				${restarting ? html`<p class="ai-row" data-act="again"><${Button} onClick=${function () { window.location.reload(); }}>${t(text, 'ai.again')}<//></p>` : null}
-			</section>` : null}
+			</section>
+			<footer class="save-bar">
+				<span class="hint" data-part="pending">${t(shell, 'shell.save.pending', { count: pending })}</span>
+				<span data-act="revert">
+					<${Button} disabled=${busy || nothing}
+						onClick=${function () { setDraft(draftOf(now)); setSaid(''); }}>${t(shell, 'shell.save.revert')}<//>
+				</span>
+				<span data-act="save">
+					<${Button} primary=${true} disabled=${busy || nothing || urlProblem !== ''}
+						onClick=${function () { setAsking(true); }}>${t(shell, 'shell.save')}<//>
+				</span>
+			</footer>` : null}
 		<//>
 		<${Dialog}
 			open=${asking}
-			title=${t(text, 'ai.save')}
-			confirmLabel=${t(text, 'ai.save')}
+			title=${t(shell, 'shell.save')}
+			confirmLabel=${t(shell, 'shell.save')}
 			onCancel=${function () { setAsking(false); }}
 			onConfirm=${save}>
 			<p data-part="save-ask">${t(text, 'ai.save.ask')}</p>

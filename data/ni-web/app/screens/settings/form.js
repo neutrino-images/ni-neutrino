@@ -42,6 +42,7 @@ import {
 	search
 } from './model.js';
 import text from './settings.text.js';
+import shell from '../../shell.text.js';
 
 export const css = '/app/screens/settings/settings.css';
 
@@ -430,10 +431,10 @@ export default function SettingsForm(props) {
 				})}</div>`}
 		<//>
 
-		<footer class="set-bar">
-			<span class="hint" id="set-pending">${t(text, 'settings.pending', { count: pending })}</span>
+		<footer class="save-bar">
+			<span class="hint" id="set-pending">${t(shell, 'shell.save.pending', { count: pending })}</span>
 			<${Button} onClick=${function () { forget(Object.keys(edits)); }} disabled=${pending === 0}>
-				${t(text, 'settings.revert')}
+				${t(shell, 'shell.save.revert')}
 			<//>
 			<${Button}
 				primary=${true}
@@ -451,7 +452,7 @@ export default function SettingsForm(props) {
 						// screen and Save is still there to be pressed again.
 					});
 				}}>
-				${t(text, 'settings.save')}
+				${t(shell, 'shell.save')}
 			<//>
 		</footer>
 

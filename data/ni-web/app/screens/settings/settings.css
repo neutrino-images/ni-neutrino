@@ -9,7 +9,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--gap-4);
-	max-width: 44rem;
+	max-width: var(--content-width);
 	/* The gutter the mark on a changed row lives in, reserved on everything
 	   this screen draws so that one left edge runs down the whole of it. */
 	--set-mark: calc(var(--gap-3) + 3px);
@@ -195,34 +195,6 @@
 	flex-wrap: wrap;
 	margin: 0 0 var(--gap-3);
 	padding-left: var(--set-mark);
-}
-
-/* What is about to be sent, and the two answers to it, where a thumb reaches them:
-   the form is long and a bar at its foot would be several screens below the row
-   somebody just changed.
-
-   The two answers drop under the sentence rather than push the row off the screen.
-   A reader who has asked for larger writing has larger buttons. */
-.set-bar {
-	position: sticky;
-	/* A sticky box comes to rest inside the scrolling box's padding, so it is
-	   pulled down by exactly that padding to sit on the edge of the window.
-	   The token and not the number: the padding is half as deep on a
-	   telephone, where the number left the two answers eight pixels under the
-	   edge of the screen. */
-	bottom: calc(-1 * var(--content-pad-y));
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--gap-3);
-	padding: var(--gap-3) 0 var(--gap-3) var(--set-mark);
-	border-top: 1px solid var(--line);
-	background: var(--ground-0);
-}
-
-.set-bar .hint {
-	flex: 1;
-	color: var(--text-dim);
 }
 
 @media (max-width: 480px) {
