@@ -63,6 +63,8 @@ import { fold } from '../../ui/kept.js';
 import { Card, useResource } from './parts.js';
 import { HANDSETS, PICTURE_FOR, PICTURE_FOR_HARDWARE, keySpots } from './handsets.js';
 import { useCapture } from './screenshot.js';
+import { Dialog } from '../../ui/dialog.js';
+import shell from '../../shell.text.js';
 
 export const css = '/app/screens/now/now.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -393,7 +395,12 @@ export default function Remote() {
 	const lock = useResource('GET', '/api/v1/osd/remote');
 	const info = useResource('GET', '/api/v1/system/info');
 	const binding = useResource('GET', '/api/v1/settings/{section}', { params: { section: 'keybindings' } });
+	/* Asked so that the power key knows which way it is about to send the box.
+	   The frame asks for the same address, so this is answered from the store
+	   and costs no second request. */
+	const mode = useResource('GET', '/api/v1/system/standby');
 	const [last, setLast] = useState('');
+	const [askingPower, setAskingPower] = useState(false);
 	const beside = useBeside();
 	const [wanted, setWanted] = useState(photoWanted);
 	/* One on opening, and one more for every run of presses that has come to
@@ -449,7 +456,7 @@ export default function Remote() {
 	 * @param {string} name
 	 * @returns {void}
 	 */
-	function press(name) {
+	function send(name) {
 		/* Said once the box took it. What the key did is the box's business and
 		   there is no answer that describes it; what this can honestly report is
 		   that the key went, and a refused key never went, whether the refusal
@@ -465,6 +472,28 @@ export default function Remote() {
 				}
 				toast(refusalLine(failed && failed.problem) || t(text, 'now.failed'), 'bad');
 			});
+	}
+
+	/* THE POWER KEY ASKS FIRST WHILE THE BOX IS ON, and so does the header's
+	   key and the switch on the box card: it takes the picture off the
+	   television, and on a screen of sixty keys it is the one a slip costs
+	   most. Every way of pressing comes through here, the drawn keys, the
+	   photograph and the keyboard alike, so none of them gets round it.
+	   Waking does not ask. A box that has not yet said which it is in is taken
+	   to be on, because asking once too often costs a press and not asking
+	   once too often costs the evening's film.
+	   What is sent on yes is still the key and not the standby address: the
+	   box decides what its power key does, and this screen presses keys. */
+	/**
+	 * @param {string} name
+	 * @returns {void}
+	 */
+	function press(name) {
+		if (name === 'KEY_POWER' && !(mode.data && mode.data.on === true)) {
+			setAskingPower(true);
+			return;
+		}
+		send(name);
 	}
 
 	/**
@@ -616,5 +645,13 @@ export default function Remote() {
 		${beside
 			? null
 			: html`<${Card} title=${t(text, 'now.shot.card.screen')}>${shot.options}<//>`}
+		<${Dialog}
+			open=${askingPower}
+			title=${t(shell, 'shell.power.standby')}
+			confirmLabel=${t(shell, 'shell.power.standby')}
+			onCancel=${function () { setAskingPower(false); }}
+			onConfirm=${function () { setAskingPower(false); send('KEY_POWER'); }}>
+			<p>${t(shell, 'shell.power.ask')}</p>
+		<//>
 	</div>`;
 }
