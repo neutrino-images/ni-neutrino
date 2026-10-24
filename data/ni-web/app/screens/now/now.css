@@ -58,7 +58,7 @@
 
 .now-sub {
 	margin: var(--gap-4) 0 var(--gap-2);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 	font-weight: 600;
 	color: var(--text-dim);
 }
@@ -77,18 +77,18 @@
    read is something this page asked for and did not get, and the recording red
    is the box writing to a disc. */
 .now-card-bad { padding: var(--gap-3); text-align: left; }
-.now-card-bad h3 { margin: 0 0 var(--gap-1); color: var(--failure); font-size: var(--fs-md); }
+.now-card-bad h3 { margin: 0 0 var(--gap-1); color: var(--failure); font-size: var(--fs-m); }
 .now-card-bad p { margin: 0; }
 
 .now-empty { margin: 0; color: var(--text-dim); }
-.now-hint { margin: var(--gap-2) 0; color: var(--text-dim); font-size: var(--fs-sm); }
+.now-hint { margin: var(--gap-2) 0; color: var(--text-dim); font-size: var(--fs-s); }
 .now-hint:empty { margin: 0; }
 
 /* The state a card is about, which is the label of that card's own switch and
    is read as a reading, so the two cards that have one read alike. */
 .now-state .switch > span { margin: 0; font-size: var(--fs-3xl); font-weight: 600; }
 .now-facts { display: flex; flex-wrap: wrap; gap: var(--gap-3); margin: var(--gap-1) 0 0;
-	color: var(--text-dim); font-size: var(--fs-sm); }
+	color: var(--text-dim); font-size: var(--fs-s); }
 /* Read as one line and not as a list, so the pieces are parted by a mark
    rather than by a gap alone. */
 .now-facts > span + span::before { content: '\00b7'; margin-right: var(--gap-3); }
@@ -104,10 +104,10 @@
 
 .now-channel-name { margin: 0; font-size: var(--fs-2xl); font-weight: 600; }
 .now-channel-facts { display: flex; flex-wrap: wrap; gap: var(--gap-3); margin: var(--gap-1) 0 0;
-	color: var(--text-dim); font-size: var(--fs-sm); }
+	color: var(--text-dim); font-size: var(--fs-s); }
 .now-event { margin-top: var(--gap-4); }
-.now-event-title { margin: 0; font-size: var(--fs-lg); }
-.now-event-when { margin: var(--gap-1) 0 0; color: var(--text-dim); font-size: var(--fs-sm); }
+.now-event-title { margin: 0; font-size: var(--fs-l); }
+.now-event-when { margin: var(--gap-1) 0 0; color: var(--text-dim); font-size: var(--fs-s); }
 .now-event-text { margin: var(--gap-2) 0 0; color: var(--text-dim); }
 .now-next-list { list-style: none; margin: 0; padding: 0; }
 .now-next-list li { display: flex; gap: var(--gap-3); padding: var(--gap-1) 0;
@@ -127,7 +127,7 @@
    the line instead moves the figure under the name and leaves the name whole. */
 .now-meter { display: flex; flex-wrap: wrap; gap: 0 var(--gap-3);
 	align-items: baseline; margin-top: var(--gap-3); }
-.now-meter-label { color: var(--text-dim); font-size: var(--fs-sm); }
+.now-meter-label { color: var(--text-dim); font-size: var(--fs-s); }
 /* Dimmed and in the page's own face. At full contrast, monospaced, beside a
    quiet label, a figure reads as the loudest thing on the card, which is not
    what a number beside a bar is. The digits still hold their column while a
@@ -135,7 +135,7 @@
 
    The margin is what puts it at the right edge, on the line it shares with the
    name and on a line of its own alike. */
-.now-meter-value { margin-left: auto; font-size: var(--fs-sm); color: var(--text-dim);
+.now-meter-value { margin-left: auto; font-size: var(--fs-s); color: var(--text-dim);
 	font-variant-numeric: tabular-nums; }
 /* Last in the markup and across the whole of it, for the reason the sound
    control below spells out: automatic placement never goes back a row. */
@@ -164,7 +164,7 @@
 }
 .now-tuners > li:first-child, .now-recordings > li:first-child { border-top: 0; }
 .now-tuner-name { font-weight: 600; }
-.now-tuner-kinds { color: var(--text-dim); font-size: var(--fs-sm); }
+.now-tuner-kinds { color: var(--text-dim); font-size: var(--fs-s); }
 .now-recording-title { flex: 1; min-width: 8ch; overflow: hidden; text-overflow: ellipsis;
 	white-space: nowrap; }
 /* A box answers with every filesystem the kernel has mounted, which in a
@@ -196,7 +196,7 @@
 /* The four the old interface kept a page of its own for: a word, then the
    values it takes, which wrap rather than run off the card. */
 .now-quick { margin-top: var(--gap-3); }
-.now-quick-label { display: block; color: var(--text-dim); font-size: var(--fs-sm);
+.now-quick-label { display: block; color: var(--text-dim); font-size: var(--fs-s);
 	margin-bottom: var(--gap-2); }
 .now-quick-set { display: flex; flex-wrap: wrap; gap: var(--gap-2); }
 
@@ -400,7 +400,7 @@
 	padding: 0;
 	background: var(--ground-2); color: var(--text);
 	border: 1px solid var(--line); border-radius: var(--radius);
-	font-family: var(--font-mono); font-size: var(--fs-sm); cursor: pointer;
+	font-family: var(--font-mono); font-size: var(--fs-s); cursor: pointer;
 }
 @media (hover: hover) {
 	.now-key:hover:not(:disabled) { border-color: var(--text-dim); }
@@ -545,7 +545,7 @@
    arrives and goes; the card grows with it, and the box card grown by one line
    is taller than the tallest card beside it, which moved everything below the
    row down by eight pixels on being switched off. Measured. */
-.now-state .field-switch > span { display: block; font-size: var(--fs-sm);
+.now-state .field-switch > span { display: block; font-size: var(--fs-s);
 	min-height: calc(var(--gap-1) + 1.4em); }
 
 /* The message under a line of its own: it is a note to whoever is in front of

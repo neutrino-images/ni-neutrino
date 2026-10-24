@@ -4,8 +4,8 @@
    whole column is held to the width the settings are, so the bar is as wide as
    the rows above it on both. */
 .ai-form { max-width: var(--content-width); }
-.ai-block > h2 { margin: 0 0 var(--gap-2); font-size: var(--fs-lg); }
-.ai-block > h3 { margin: var(--gap-3) 0 var(--gap-2); font-size: var(--fs-md); }
+.ai-block > h2 { margin: 0 0 var(--gap-2); font-size: var(--fs-l); }
+.ai-block > h3 { margin: var(--gap-3) 0 var(--gap-2); font-size: var(--fs-m); }
 /* Home network and internet are two parts with a line between them, not one list. */
 .ai-part { display: flex; flex-direction: column; gap: var(--gap-4); min-width: 0; }
 .ai-part + .ai-part { padding-top: var(--gap-5); border-top: 1px solid var(--line); }
@@ -21,7 +21,7 @@
 .ai-snippet figcaption { margin-bottom: var(--gap-1); color: var(--text-dim); }
 .ai-snippet pre { margin: 0 0 var(--gap-2); padding: var(--gap-3); white-space: pre-wrap;
 	overflow-wrap: anywhere; background: var(--ground-0); border: 1px solid var(--line);
-	border-radius: var(--radius); font-family: var(--font-mono); font-size: var(--fs-sm); }
+	border-radius: var(--radius); font-family: var(--font-mono); font-size: var(--fs-s); }
 .ai-copy { display: inline-flex; align-items: center; gap: var(--gap-2); }
 /* Off screen rather than hidden: a hidden field cannot be selected for copying. */
 .ai-offscreen { position: fixed; top: 0; left: -100vw; opacity: 0; }
@@ -36,7 +36,6 @@
 .ai-examples > li { margin: var(--gap-1) 0; }
 .ai-examples small { color: var(--text-dim); }
 
-.ai-block.ai-list { max-width: none; }
 .ai-cut { display: inline-block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis;
 	white-space: nowrap; vertical-align: bottom; }
 .ai-clients table.grid td[data-col="kind"], .ai-clients table.grid td[data-col="where"],
@@ -44,7 +43,7 @@
 	.ai-clients table.grid td[data-col="used"] { white-space: normal; }
 .ai-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--gap-1) var(--gap-2); margin: var(--gap-1) 0; }
 .ai-group small { flex: 1 0 100%; color: var(--text-dim); overflow-wrap: anywhere; }
-.ai-group [data-cost] { color: var(--text-dim); font-size: var(--fs-sm); }
+.ai-group [data-cost] { color: var(--text-dim); font-size: var(--fs-s); }
 @media (min-width: 600px) and (max-width: 1151px) {
 	/* No room spare at this width for a fixed-width cut on top of the one the groups column adds. */
 	.ai-clients table.grid td[data-col="groups"] { white-space: normal; }

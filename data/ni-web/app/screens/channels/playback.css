@@ -32,7 +32,7 @@
 
 .pb-card h2 {
 	margin: 0;
-	font-size: var(--fs-lg);
+	font-size: var(--fs-l);
 }
 
 .pb-card p {
@@ -94,7 +94,7 @@
 
 .pb-kind-tag {
 	color: var(--text-dim);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 }
 
 .pb-none,
@@ -114,5 +114,5 @@
 .pb-why {
 	margin: 0;
 	color: var(--text-dim);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 }

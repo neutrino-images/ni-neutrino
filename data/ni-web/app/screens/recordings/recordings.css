@@ -2,7 +2,7 @@
    size of the screen's name and not of a section under it. */
 .rec > h2 {
 	margin: 0 0 var(--gap-2);
-	font-size: var(--fs-lg);
+	font-size: var(--fs-l);
 }
 
 .rec-summary {
@@ -67,7 +67,7 @@
 	.rec-archive-name:hover .rec-cut { text-decoration: underline; }
 }
 .rec-archive-name .rec-cut { min-width: 0; }
-.rec-archive-on { flex: none; color: var(--on-air); font-size: var(--fs-sm); }
+.rec-archive-on { flex: none; color: var(--on-air); font-size: var(--fs-s); }
 .rec-archive-more { margin: var(--gap-3) 0; }
 @media (min-width: 600px) {
 	.rec-archive td[data-col="title"] { max-width: 0; }

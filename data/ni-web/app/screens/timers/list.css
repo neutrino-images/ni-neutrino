@@ -26,7 +26,7 @@
 
 .timers h2 {
 	margin: 0;
-	font-size: var(--fs-lg);
+	font-size: var(--fs-l);
 }
 
 /* A hint or a refusal that stands beside a control rather than under a field,
@@ -36,7 +36,7 @@
 	display: block;
 	margin-top: var(--gap-1);
 	color: var(--text-dim);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 }
 
 /* A refusal, in the colour a refusal is drawn in. It had the recording colour,
@@ -45,7 +45,7 @@
 .timers .err {
 	margin: var(--gap-1) 0 0;
 	color: var(--failure);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 }
 
 /* Two lines in one cell: what it is on, and what it is called. The table keeps
@@ -57,7 +57,7 @@
 
 .timers-title {
 	color: var(--text-dim);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 }
 
 /* Wide enough to read and no wider. A field of forty characters on a screen of

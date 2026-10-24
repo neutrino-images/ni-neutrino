@@ -5,15 +5,15 @@
 
 .sys { display: flex; flex-direction: column; gap: var(--gap-5); }
 
-.sys-block { min-width: 0; }
+.sys-block { min-width: 0; max-width: var(--content-width); }
 /* Two blocks that stand inside one box rather than beside each other under the
    destination, so the gap of the column above does not reach between them. A
    heading with a table over it and a table under it belongs to the one under
    it, and without the air above it the eye reads it as the last line of the
    one over it. */
 .sys-group + .sys-group { margin-top: var(--gap-5); }
-.sys-block > h2 { margin: 0 0 var(--gap-2); font-size: var(--fs-lg); }
-.sys-block > h3, .sys-doc > h3 { margin: var(--gap-3) 0 var(--gap-2); font-size: var(--fs-md); }
+.sys-block > h2 { margin: 0 0 var(--gap-2); font-size: var(--fs-l); }
+.sys-block > h3, .sys-doc > h3 { margin: var(--gap-3) 0 var(--gap-2); font-size: var(--fs-m); }
 
 /* A sentence that stands in front of a table or a set of controls and explains
    it, rather than a hint hanging off one control. */
@@ -41,7 +41,7 @@
 
 /* A second line inside a cell: the name a thing is started by under the name a
    person reads, or what a plugin says about itself. */
-.sys-sub { display: block; color: var(--text-dim); font-size: var(--fs-sm); white-space: normal; }
+.sys-sub { display: block; color: var(--text-dim); font-size: var(--fs-s); white-space: normal; }
 
 .sys-doc { margin-bottom: var(--gap-4); padding: var(--gap-3);
 	background: var(--ground-1); border: 1px solid var(--line); border-radius: var(--radius); }
@@ -52,7 +52,7 @@
    neither of those is the page's business. */
 .sys-pre { max-height: 60vh; margin: var(--gap-3) 0 0; padding: var(--gap-3); overflow: auto;
 	background: var(--ground-0); border: 1px solid var(--line); border-radius: var(--radius);
-	font-size: var(--fs-sm); }
+	font-size: var(--fs-s); }
 
 /* The first column of these three tables is a name and stays readable; the
    cells around it may wrap, since a plugin's own sentence about itself is a

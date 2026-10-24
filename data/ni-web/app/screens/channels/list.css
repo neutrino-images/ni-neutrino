@@ -217,7 +217,7 @@ tr[data-on-air] .ch-name {
 .ch-screen .acts-inline .btn {
 	min-height: 28px;
 	padding: 0 var(--gap-2);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 }
 
 .ch-more {
@@ -260,7 +260,7 @@ tr[data-on-air] .ch-name {
 
 	.ch-name {
 		white-space: normal;
-		font-size: var(--fs-md);
+		font-size: var(--fs-m);
 	}
 
 	.ch-next {

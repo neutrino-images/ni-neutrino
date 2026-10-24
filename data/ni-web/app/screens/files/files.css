@@ -67,7 +67,7 @@
 }
 
 .files-panel {
-	max-width: 68ch;
+	max-width: var(--content-width);
 	margin-bottom: var(--gap-4);
 	padding: var(--gap-4);
 	background: var(--ground-1);
@@ -77,7 +77,7 @@
 
 .files-panel h2 {
 	margin: 0 0 var(--gap-2);
-	font-size: var(--fs-lg);
+	font-size: var(--fs-l);
 }
 
 /* The field and the button on one line where there is room for one, and the
@@ -126,7 +126,7 @@
 	display: block;
 	max-width: 52ch;
 	color: var(--text-dim);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 	white-space: normal;
 }
 
@@ -148,7 +148,7 @@
 
 .files-play h3 {
 	margin: 0 0 var(--gap-2);
-	font-size: var(--fs-lg);
+	font-size: var(--fs-l);
 }
 
 .files-play-how,

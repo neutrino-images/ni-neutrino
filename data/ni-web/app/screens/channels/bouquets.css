@@ -27,7 +27,7 @@
 .bq-keys {
 	margin: 0;
 	color: var(--text-dim);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 }
 
 .bq-bar {
@@ -137,7 +137,7 @@
 .pane h2.named {
 	text-transform: none;
 	letter-spacing: 0;
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 	color: var(--text);
 }
 
@@ -275,7 +275,7 @@
 	border: 0;
 	background: none;
 	color: var(--text-dim);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 	line-height: 1;
 	cursor: grab;
 	touch-action: none;

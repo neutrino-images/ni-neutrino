@@ -9,8 +9,8 @@
 .dev { display: flex; flex-direction: column; gap: var(--gap-5); }
 
 .dev-block { min-width: 0; }
-.dev-block > h2 { margin: 0 0 var(--gap-2); font-size: var(--fs-lg); }
-.dev-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: 72ch; }
+.dev-block > h2 { margin: 0 0 var(--gap-2); font-size: var(--fs-l); }
+.dev-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: var(--content-width); }
 
 .dev-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-2); }
 .dev-row a.btn { text-decoration: none; color: var(--text); }
@@ -49,7 +49,7 @@
 .dev-method[data-method="PATCH"],
 .dev-method[data-method="DELETE"] { color: var(--state-warning); }
 
-.dev-said { display: block; color: var(--text-dim); font-size: var(--fs-sm); white-space: normal; }
+.dev-said { display: block; color: var(--text-dim); font-size: var(--fs-s); white-space: normal; }
 
 /* What came off the stream. It scrolls inside itself, because a box that has
    been on for an hour has more of these than a page should grow by. */

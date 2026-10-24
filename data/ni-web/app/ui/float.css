@@ -151,7 +151,7 @@
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 }
 
 .fp-said {

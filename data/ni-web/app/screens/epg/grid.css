@@ -43,7 +43,7 @@
 	border-radius: var(--radius);
 }
 .grid__dhead { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-3); }
-.grid__dtitle { margin: 0; font-size: var(--fs-lg); }
+.grid__dtitle { margin: 0; font-size: var(--fs-l); }
 .grid__dwhen { margin: var(--gap-1) 0 0; color: var(--text-dim); }
 /* What the programme is and what may be done to it are drawn by the shared
    module and dressed by its own sheet (app/ui/event.css). */
@@ -53,6 +53,7 @@
 .grid__scroll {
 	position: relative;
 	overflow: auto;
+	overflow-x: hidden;
 	background: var(--ground-0);
 	border: 1px solid var(--line);
 	border-radius: var(--radius);
@@ -231,7 +232,7 @@
 	top: 0;
 	left: var(--gap-3);
 	color: var(--text-dim);
-	font-size: var(--fs-sm);
+	font-size: var(--fs-s);
 	line-height: 40px;
 }
 
@@ -303,7 +304,7 @@
 
 /* The mark of the moment, where there is no axis to stand on: the same colour
    saying the same thing, over a list instead of across one. */
-.grid__nowbar { display: flex; align-items: center; gap: var(--gap-2); margin: 0 0 var(--gap-2); color: var(--on-air); font-size: var(--fs-sm); }
+.grid__nowbar { display: flex; align-items: center; gap: var(--gap-2); margin: 0 0 var(--gap-2); color: var(--on-air); font-size: var(--fs-s); }
 .grid__nowmark { display: inline-block; flex: none; width: 2px; height: 13px; background: var(--on-air); }
 
 .grid__slots { display: grid; gap: var(--gap-2); list-style: none; margin: 0; padding: 0; }

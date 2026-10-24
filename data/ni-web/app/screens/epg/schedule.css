@@ -11,7 +11,7 @@
 
 /* A section's heading is lg on every screen; the screen's own name above it is
    the frame's and the larger of the two. */
-.epg h2 { margin: 0 0 var(--gap-4); font-size: var(--fs-lg); }
+.epg h2 { margin: 0 0 var(--gap-4); font-size: var(--fs-l); }
 
 /* The controls of the window. They wrap rather than scroll: three of them are
    a row at a desk and a column in one hand, and nothing is lost either way. */
