@@ -51,11 +51,12 @@
 // Drawn keys are also worked with a keyboard. The arrows reach the direction keys,
 // the digits reach the digits and the enter key reaches OK, which is the one thing
 // hot spots on a photograph could never do.
-import { html, useState, useEffect, useRef } from '../../runtime.js';
+import { html, useState, useEffect, useRef, route } from '../../runtime.js';
 import * as store from '../../store.js';
 import { t } from '../../i18n.js';
 import text from './now.text.js';
 import icons from './remote.icons.js';
+import { hrefFor } from '../../nav.js';
 import { Switch } from '../../ui/switch.js';
 import { toast } from '../../ui/toast.js';
 import { refusalLine } from '../../problem.js';
@@ -388,9 +389,10 @@ const SETTLE_MS = 700;
 const LEAST_GAP_MS = 1500;
 
 /**
+ * @param {{ param?: string }} props
  * @returns {Web.Drawn}
  */
-export default function Remote() {
+export default function Remote(props) {
 	const keys = useResource('GET', '/api/v1/osd/remote/keys');
 	const lock = useResource('GET', '/api/v1/osd/remote');
 	const info = useResource('GET', '/api/v1/system/info');
@@ -401,7 +403,9 @@ export default function Remote() {
 	const mode = useResource('GET', '/api/v1/system/standby');
 	const [last, setLast] = useState('');
 	const [askingPower, setAskingPower] = useState(false);
-	const [full, setFull] = useState(false);
+	// The address is the truth: /now/remote/control is the handset full screen.
+	const full = props.param === 'control';
+	const pushed = useRef(false);
 	const beside = useBeside();
 	const [wanted, setWanted] = useState(photoWanted);
 	/* One on opening, and one more for every run of presses that has come to
@@ -580,13 +584,26 @@ export default function Remote() {
 	 * @returns {void}
 	 */
 	function goFull(next) {
-		setFull(next);
 		const root = document.documentElement;
-		if (next && root.requestFullscreen && !document.fullscreenElement) {
-			root.requestFullscreen({ navigationUI: 'hide' }).catch(function () {});
+		if (next) {
+			// Has to happen inside the click itself, the browser wants a gesture.
+			if (root.requestFullscreen && !document.fullscreenElement) {
+				root.requestFullscreen({ navigationUI: 'hide' }).catch(function () {});
+			}
+			pushed.current = true;
+			route(hrefFor('now', 'remote', 'control'));
+			return;
 		}
-		if (!next && document.fullscreenElement && document.exitFullscreen) {
+		if (document.fullscreenElement && document.exitFullscreen) {
 			document.exitFullscreen().catch(function () {});
+		}
+		if (pushed.current) {
+			// Entered by the button: step back instead of stacking another entry.
+			pushed.current = false;
+			history.back();
+		} else {
+			// Arrived by address: replace, so Back does not lead into full screen again.
+			route(hrefFor('now', 'remote'), true);
 		}
 	}
 
@@ -596,7 +613,7 @@ export default function Remote() {
 		}
 		function onChange() {
 			if (!document.fullscreenElement) {
-				setFull(false);
+				goFull(false);
 			}
 		}
 		/** @param {KeyboardEvent} event */
@@ -674,6 +691,16 @@ export default function Remote() {
 			}
 		};
 	}, []);
+
+	/* The address left full screen (Back gesture, a link, escape): this visit's
+	   bookkeeping and the browser's own full screen go with it. */
+	useEffect(function () {
+		if (full)
+			return;
+		pushed.current = false;
+		if (document.fullscreenElement && document.exitFullscreen)
+			document.exitFullscreen().catch(function () {});
+	}, [full]);
 
 	/* THE LINE THAT ANSWERS A PRESS STANDS UNDER THE PICTURE. Under the keys it
 	   is under the block that is pinned, so the one press somebody makes
