@@ -29,12 +29,12 @@
 	   grey of the row, so on and off stay two things. */
 	--info-faint: #616161;
 	--info-bar: #212121;
-	--info-fill: #fd6d13;
-	--info-ecm: #fd6d13;
-	--info-ci: #ffca28;
-	--info-timer: #ffca28;
-	--info-rec: #ef9a9a;
-	--info-ts: #66bb6a;
+	--info-fill: #616161;
+	--info-ecm: #ff9800;
+	--info-ci: #ffc107;
+	--info-timer: #ffeb3b;
+	--info-rec: #f44336;
+	--info-ts: #f44336;
 	--info-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
