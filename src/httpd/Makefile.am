@@ -451,6 +451,8 @@ openapi_dump_SOURCES = doc/openapi-dump.cpp doc/openapi-dump-stubs.cpp doc/opena
 # libtimerdclient answers the announce time the timer layer fills in.
 # jpeg answers the screenshot tool the AI client routes reach through the tool list.
 # libnet answers the interface address the network choices show and the host name.
+# libutil answers the pseudo terminal helpers.o opens; a C library before 2.34
+# keeps it outside libc.
 openapi_dump_LDADD = \
 	libhttpd.a \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
@@ -469,6 +471,7 @@ openapi_dump_LDADD = \
 	-lcrypto \
 	-ljpeg \
 	-lz \
+	-lutil \
 	-lpthread
 
 # Written through a temporary and moved, so a run that stopped half way leaves

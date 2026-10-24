@@ -288,6 +288,8 @@ coreapi_tests_SOURCES = \
 # the connection library after it.
 # The network library answers the address an interface choice shows and the
 # host name and default route helpers.o reads.
+# libutil answers the pseudo terminal helpers.o opens; a C library before 2.34
+# keeps it outside libc.
 coreapi_tests_LDADD = \
 	$(top_builddir)/src/httpd/libhttpd.a \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
@@ -314,6 +316,7 @@ coreapi_tests_LDADD = \
 	-lcrypto \
 	-ljpeg \
 	-lz \
+	-lutil \
 	-lpthread
 
 # The cases mostly wait on timeouts rather than compute, so the suite runs as
