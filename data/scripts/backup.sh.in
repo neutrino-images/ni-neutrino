@@ -21,6 +21,8 @@ TOBACKUP="\
 	@CONFIGDIR@/weather-favorites.xml \
 	@CONFIGDIR@/xstreamity.conf \
 	@CONFIGDIR@/xstreamity_favorites.json \
+	@CONFIGDIR@/xstreamity_favorites_2.json \
+	@CONFIGDIR@/xstreamity_servers.json \		
 	\
 	@CONFIGDIR@/doscam.* \
 	@CONFIGDIR@/oscam.* \
