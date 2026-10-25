@@ -212,14 +212,24 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
    thirteen pixels wide whatever a page asks for. Given a finger's height at
    every width and not only below the phone one, because whoever opens this
    cannot see the page well enough, on whatever they are holding. */
-.text-size { margin: 0 0 var(--gap-3); padding: 0; border: 0; }
+.text-size { margin: 0 0 var(--gap-3); padding: 0; border: 0; min-width: 0; }
 .text-size legend { padding: 0; margin-bottom: var(--gap-2); color: var(--text-dim); font-size: var(--fs-s); }
-.text-size-set { display: flex; gap: var(--gap-2); }
+/* Wrapped and not squeezed: a fieldset is as wide as its widest row unless told
+   otherwise, and three choices with an icon each are wider than the narrowest
+   phone, so the last one went past the edge of the sheet and took every row
+   under it along. Now a choice that does not fit starts a row of its own. */
+.text-size-set { display: flex; flex-wrap: wrap; gap: var(--gap-2); }
 .text-size-set label { flex: 1; display: flex; align-items: center; justify-content: center;
 	gap: var(--gap-2); min-height: var(--tap-height); padding: var(--gap-2) var(--gap-3);
 	background: var(--ground-2); border: 1px solid var(--line); border-radius: var(--radius); }
 .text-size-set input { flex: none; margin: 0; accent-color: var(--accent); }
 .text-size-where { margin: var(--gap-2) 0 0; color: var(--text-dim); font-size: var(--fs-xs); }
+
+/* The face, inside the appearance and under the theme. Each name is written
+   in the face it stands for, so the choice can be seen before it is made. */
+.font-pick { margin: var(--gap-3) 0 0; padding: 0; border: 0; min-width: 0; }
+.font-pick [data-face="ubuntu"] { font-family: var(--font-ubuntu); }
+.font-pick [data-face="system"] { font-family: var(--font-system); }
 
 /* ---------------------------------------------------------- the pieces */
 

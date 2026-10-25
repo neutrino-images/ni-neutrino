@@ -27,7 +27,9 @@
 	--state-warning-edge: rgb(from var(--state-warning) r g b / 45%));
 	--session-open-edge: rgb(from var(--session-open) r g b / 45%));
 	--on-air: var(--accent);
-	--font:"Ubuntu derivative NI-Web", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	--font-system: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	--font-ubuntu: "Ubuntu derivative NI-Web", var(--font-system);
+	--font: var(--font-ubuntu);
 	--font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 	--text-scale: 1;
 	--fs-mark: 0.625rem;
@@ -54,6 +56,12 @@
 	--focus-ring: 2px solid var(--accent);
 	--focus-offset: 2px;
 	--media-ground: #000;
+}
+
+/* The face the device draws everything else in, chosen in this browser
+   (app/ui/font.js). Without the attribute the page is drawn in Ubuntu. */
+:root[data-font="system"] {
+	--font: var(--font-system);
 }
 
 @media (prefers-color-scheme: light) {

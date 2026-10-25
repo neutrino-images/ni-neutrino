@@ -20,6 +20,7 @@ import { labelOf, hrefFor } from '../nav.js';
 import { askToSignIn, signOut } from './signin.js';
 import { SIZES, chosen, choose } from './textsize.js';
 import { THEMES, chosenTheme, chooseTheme } from './theme.js';
+import { FONTS, chosenFont, chooseFont } from './font.js';
 import { OnAir } from './onair.js';
 import { Sheet } from './sheet.js';
 import { Dialog } from './dialog.js';
@@ -106,7 +107,39 @@ const THEME_ICONS = {
 	dark: html`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5a6.6 6.6 0 0 0 10.8 10.8Z" /></svg>`
 };
 
-/* Light, dark or system: one choice of three, so radios like the text size. */
+/* Ubuntu or whatever the device draws in: one choice of two, so radios again.
+   A fieldset of its own inside the appearance, because two sets of radios
+   under one legend would be read out as one choice of five. */
+/**
+ * @returns {Web.Drawn}
+ */
+function Font() {
+	const group = useId();
+	const [font, setFont] = useState(chosenFont());
+
+	return html`<fieldset class="font-pick">
+		<legend>${t(text, 'shell.font')}</legend>
+		<div class="text-size-set">
+			${FONTS.map(function (id) {
+				return html`<label key=${id}>
+					<input
+						type="radio"
+						name=${group}
+						value=${id}
+						checked=${id === font}
+						onChange=${function () { chooseFont(id); setFont(id); }} />
+					<span data-face=${id}>${t(text, 'shell.font.' + id)}</span>
+				</label>`;
+			})}
+		</div>
+		<p class="text-size-where">${t(text, 'shell.textsize.where')}</p>
+	</fieldset>`;
+}
+
+/* Light, dark or system: one choice of three, so radios like the text size.
+   The face sits under it. Each of the three rows says under itself that it is
+   this browser's alone: said once at the bottom, it reads as said of the last
+   row only. */
 /**
  * @returns {Web.Drawn}
  */
@@ -130,6 +163,8 @@ function Theme() {
 				</label>`;
 			})}
 		</div>
+		<p class="text-size-where">${t(text, 'shell.textsize.where')}</p>
+		<${Font} />
 	</fieldset>`;
 }
 
