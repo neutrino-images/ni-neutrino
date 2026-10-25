@@ -62,7 +62,13 @@
 
 /* Wide enough to read and no wider. A field of forty characters on a screen of
    a hundred is a field whose end nobody looks at. */
+/* The fields keep their one narrow column; the save bar at the foot of the form
+   is as wide as the one on the settings and the AI pages. */
 .timers-form {
+	max-width: var(--content-width);
+}
+
+.timers-form > :not(.save-bar) {
 	max-width: 32rem;
 }
 
@@ -143,24 +149,29 @@
 	margin: 0 var(--gap-3) 0 0;
 }
 
-.timers-actions {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	gap: var(--gap-3);
-	margin: var(--gap-5) 0 0;
+.timers-form > .save-bar {
+	margin-top: var(--gap-5);
+}
+
+/* The count is the frame's line, drawn as it is on the other save bars and not
+   as the small hint under a control this screen otherwise makes of .hint. */
+.timers .save-bar > .hint {
+	display: block;
+	margin-top: 0;
+	font-size: inherit;
 }
 
 /* The button's wrapper would grow to the width of its reason and push Cancel
-   away; the reason goes on its own line under both buttons instead. */
-.timers-actions > span {
+   away; the reason goes on its own line under the bar's row instead. */
+.timers .save-bar > span:not(.hint) {
 	display: contents;
 }
 
-.timers-actions .hint {
+.timers .save-bar > span:not(.hint) > .hint {
 	order: 1;
 	flex-basis: 100%;
 	margin-top: 0;
+	text-align: right;
 }
 
 /* What the address brought with it, said in one line above the fields it filled

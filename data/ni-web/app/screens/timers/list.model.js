@@ -239,6 +239,33 @@ export const NOW_GRACE = 120;
 // is right for the programme somebody has in mind.
 export const DEFAULT_MINUTES = 120;
 
+/* The parts of a draft a control writes. The rest is what the draft carries
+   along for the box (where it came from in the guide, what the daemon holds)
+   and nobody can have changed it on this screen. */
+const EDITED = ['kind', 'mode', 'channel_id', 'start', 'minutes', 'title', 'repeat', 'days',
+	'count', 'announce', 'standby_on', 'recording_dir'];
+
+/**
+ * How many of the controls hold something other than what the form started with, which is
+ * the number the save bar reports. A kind picked afresh counts the values it brought along
+ * as well: they are on screen now and were not before.
+ * @param {Draft | null} from
+ * @param {Draft | null} now
+ * @returns {number}
+ */
+export function changedCount(from, now) {
+	if (from === null || now === null)
+		return 0;
+	let count = 0;
+	for (const key of EDITED) {
+		const was = /** @type {Record<string, unknown>} */ (from)[key];
+		const is = /** @type {Record<string, unknown>} */ (now)[key];
+		if (JSON.stringify(was) !== JSON.stringify(is))
+			count++;
+	}
+	return count;
+}
+
 /**
  * An empty draft, for the kind asked for.
  * @param {string} kind

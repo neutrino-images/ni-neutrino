@@ -32,12 +32,13 @@ import { Button } from '../../ui/button.js';
 import { State } from '../../ui/state.js';
 import { toast } from '../../ui/toast.js';
 import text from './list.text.js';
+import shell from '../../shell.text.js';
 import { useAllChannels } from '../../ui/channels.js';
 import timers from './nav.js';
 import {
 	KINDS, kindOf, isKnownKind, PLAIN_REPEATS, momentInput, emptyDraft, draftOf,
 	draftProblems, createBody, changeBody, useAnswer, startFixed, startSeconds, stopSeconds,
-	endInput, minutesUntil, canPickEnd, draftAtSend,
+	endInput, minutesUntil, canPickEnd, draftAtSend, changedCount,
 } from './list.model.js';
 import { boxNowSeconds } from '../../boxclock.js';
 
@@ -268,6 +269,8 @@ export function TimerForm(props) {
 		return changing ? null : draftFromAddress(askedFor(getCurrentUrl()), nowSeconds());
 	});
 	const [draft, setDraft] = useState(/** @type {import('./list.model.js').Draft | null} */ (null));
+	// What the form started from, which is what the save bar counts against.
+	const [base, setBase] = useState(/** @type {import('./list.model.js').Draft | null} */ (null));
 	const [problem, setProblem] = useState(/** @type {{ title: string, detail: string } | null} */ (null));
 	const [sending, setSending] = useState(false);
 	const endPick = useRef(/** @type {HTMLInputElement | null} */ (null));
@@ -290,10 +293,14 @@ export function TimerForm(props) {
 			return;
 		if (!changing) {
 			setDraft(seeded);
+			setBase(seeded);
 			return;
 		}
-		if (timer !== null)
-			setDraft(draftOf(timer));
+		if (timer !== null) {
+			const first = draftOf(timer);
+			setDraft(first);
+			setBase(first);
+		}
 	}, [changing, timer === null ? '' : String(timer.id)]);
 
 	if (changing && held.state === 'error')
@@ -317,6 +324,7 @@ export function TimerForm(props) {
 	   form somebody has just filled in is not a form they are told they may not
 	   have filled in. */
 	const reason = firstProblem(wrong);
+	const pending = changedCount(base, here);
 
 	/**
 	 * @param {Partial<import('./list.model.js').Draft>} patch
@@ -636,15 +644,20 @@ export function TimerForm(props) {
 					options=${targetOptions(targets.data, here.recording_dir)}
 					onChange=${function (/** @type {Web.On<HTMLSelectElement>} */ e) { change({ recording_dir: e.currentTarget.value }); }} />` : null}
 
-			<p class="timers-actions">
+			${/* The bar of the settings and the AI pages, the frame's .save-bar, with the
+			     same three parts in the same order: what is waiting, the way back and the
+			     way on. The way back leaves, because this is a page of its own under the
+			     list and leaving it is how what was typed is let go. Inside the form,
+			     so that its button still submits it. */ null}
+			<footer class="save-bar">
+				<span class="hint" data-part="pending">${t(shell, 'shell.save.pending', { count: pending })}</span>
+				<${Button} onClick=${function () { route(hrefFor('timers', 'list')); }}>${t(text, 'form.cancel')}<//>
 				<${Button}
 					type="submit"
 					primary=${true}
 					disabled=${sending}
 					reason=${reason}>${changing ? t(text, 'form.save') : t(text, 'form.create')}<//>
-				${' '}
-				<${Button} onClick=${function () { route(hrefFor('timers', 'list')); }}>${t(text, 'form.cancel')}<//>
-			</p>
+			</footer>
 		</form>
 	</div>`;
 }
