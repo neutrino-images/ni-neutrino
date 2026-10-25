@@ -42,7 +42,8 @@ import { Switch } from '../../ui/switch.js';
 import { toast } from '../../ui/toast.js';
 import { refusalLine } from '../../problem.js';
 import { fold } from '../../ui/kept.js';
-import { Card, useResource } from './parts.js';
+import { State } from '../../ui/state.js';
+import { Card, useResource, drawableProblem } from './parts.js';
 import { useCapture } from './screenshot.js';
 import { Dialog } from '../../ui/dialog.js';
 import shell from '../../shell.text.js';
@@ -713,16 +714,21 @@ export default function Remote(props) {
 				})}
 			</div>
 			<p class="now-hint">${t(text, 'now.remote.hint')}</p>
-			${/* A card section in a card section to separate */''}
-			<${Card}
-				title=${t(text, 'now.remote.card.lock')}
-				snapshot=${lock}>
-				<${Switch}
-					label=${t(text, 'now.remote.lock')}
-					checked=${!!(lock.data && lock.data.locked)}
-					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { writeLock(e.currentTarget.checked); }} />
-			<p class="now-hint">${t(text, 'now.remote.lock.hint')}</p>
-			<//>
+			${/* The lock belongs to the keys and stands under them, without a
+			     card of its own inside this one: a heading and an edge inside a
+			     card read as a second screen. What it is read with still draws
+			     its loading, its failure and its writing. */''}
+			<div class="now-remote-lock">
+				<${State}
+					phase=${lock.phase}
+					problem=${drawableProblem(lock.error)}>
+					<${Switch}
+						label=${t(text, 'now.remote.lock')}
+						checked=${!!(lock.data && lock.data.locked)}
+						onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { writeLock(e.currentTarget.checked); }} />
+					<p class="now-hint">${t(text, 'now.remote.lock.hint')}</p>
+				<//>
+			</div>
 		<//>
 		${/* Over the keys, what the picture is fetched with is a card of its own
 		     and it comes after them. It is not pinned, and a card standing

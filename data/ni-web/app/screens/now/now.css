@@ -396,7 +396,7 @@
 .now-remote.is-full .now-remote-head,
 .now-remote.is-full .now-card-title,
 .now-remote.is-full .now-hint,
-.now-remote.is-full .now-card .now-card,
+.now-remote.is-full .now-remote-lock,
 .now-remote.is-full > section.now-card ~ section.now-card { display: none; }
 
 /* A HANDSET AND NOT A KEYBOARD. Full screen on a monitor, the keys had been as
