@@ -385,6 +385,41 @@
 .now-remote.is-full .now-card .now-card,
 .now-remote.is-full > section.now-card ~ section.now-card { display: none; }
 
+/* A HANDSET AND NOT A KEYBOARD. Full screen on a monitor, the keys had been as
+   wide as the window: a cross of buttons a hand wide, digits a palm apart and a
+   row of colour keys like the bar along a desk, which is a board of switches
+   and not anything anybody has held in front of a television. So the handset is
+   held to the width of one, whatever the window is, and stands in the middle
+   of it.
+
+   FOUR HUNDRED AND SIXTEEN, BECAUSE THAT IS A TELEPHONE. Held upright a
+   telephone is the handset this was drawn as, and at 416 the lettering on the
+   keys still fits at its full size (remote.js fits it, and the row of seven
+   decides; at 400 it was a quarter of a pixel short). A telephone narrower
+   than that loses nothing: the handset is as wide as it was.
+
+   In the middle of the height as well, with the way back over it, and with
+   margins rather than with the box's own centring: a handset taller than the
+   window starts at the top and scrolls, where centring would cut its head
+   off. */
+.now-remote.is-full { display: flex; flex-direction: column; align-items: center; }
+.now-remote.is-full > .now-full-back,
+.now-remote.is-full > section.now-card { width: 100%; max-width: 416px; }
+.now-remote.is-full > .now-full-back { margin-top: auto; }
+.now-remote.is-full > section.now-card { margin-bottom: auto; }
+/* And where there is room around it, it is a thing lying on the ground of the
+   page and not a card drawn on it: rounder at the corners, lifted off by its
+   shadow, and with a little more room inside its edge. Below that width the
+   handset is the whole screen, and a shadow there is a line nobody can see
+   the far side of. */
+@media (min-width: 480px) {
+	.now-remote.is-full > section.now-card {
+		border-radius: calc(3 * var(--radius-lg));
+		box-shadow: var(--shadow-float);
+		padding: var(--gap-5) var(--gap-4);
+	}
+}
+
 .now-keygroup + .now-keygroup { padding-top: var(--gap-4); }
 .now-keyset { display: flex; flex-wrap: wrap; gap: var(--gap-2); justify-content: space-between; }
 
