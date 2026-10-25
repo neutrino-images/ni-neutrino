@@ -843,11 +843,17 @@ function Recordings() {
  * How much room the box still has, which is the other half of the question a
  * running recording raises.
  *
+ * Only what is mounted from a device node under /dev is listed: the disks and
+ * flash a recording can land on. Pseudo filesystems and network shares are on
+ * the mount points screen.
+ *
  * @returns {Web.Drawn}
  */
 function Storage() {
 	const all = useResource('GET', '/api/v1/storage/mounts');
-	const rows = (all.data && all.data.items) || [];
+	const rows = ((all.data && all.data.items) || []).filter(function (/** @type {Api.Mount} */ row) {
+		return typeof row.device === 'string' && row.device.startsWith('/dev/');
+	});
 
 	return html`<${Card} double=${true}
 		title=${t(text, 'now.card.storage')}
