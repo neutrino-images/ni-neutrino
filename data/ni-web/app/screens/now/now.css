@@ -431,7 +431,10 @@
 .now-keyrest[open] > summary { margin-bottom: var(--gap-2); }
 
 .now-key {
-	min-height: var(--control-height); min-width: var(--control-height);
+	/* The height of one key, named because the round keys are worked out
+	   from it. */
+	--now-key-h: var(--control-height);
+	min-height: var(--now-key-h); min-width: var(--control-height);
 	padding: 0;
 	background: var(--ground-2); color: var(--text);
 	border: 1px solid var(--line); border-radius: var(--radius);
@@ -479,7 +482,7 @@
 .now-keys-cross { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
 /* cross: line 1 */
-.now-key-MENU { grid-row: 1; grid-column: 1; }
+.now-key-KEY_MENU { grid-row: 1; grid-column: 1; }
 .now-key-KEY_UP { grid-row: 1; grid-column: 3; }
 .now-key-KEY_HOME { grid-row: 1; grid-column: 5; }
 /* cross: line 2 */
@@ -491,9 +494,26 @@
 .now-key-KEY_DOWN { grid-row: 3; grid-column: 3; }
 .now-key-KEY_INFO { grid-row: 3; grid-column: 5; }
 
+/* MENU AND HOME ARE ROUND, AND ROUND IS A CIRCLE. They stand in one column and
+   over two lines, and a key that fills that and is rounded by half its sides
+   is a circle only where the column happens to be exactly as wide as two
+   lines are tall: on a telephone it was an egg on its end and on a desk an
+   egg on its side. So the key no longer fills its place. It is as wide as
+   the narrower of the two, the column or the two lines with the gap between
+   them, as tall as it is wide, and stands in the middle of the place it was
+   given. The two lines are worked out from the height of one key and not
+   measured, because those lines are as tall as their keys and nothing in
+   them is taller. */
 .now-key-KEY_MENU,
-.now-key-KEY_HOME
-	 { grid-row: span 2; border-radius: 50%; }
+.now-key-KEY_HOME {
+	grid-row: 1 / span 2;
+	width: min(100%, 2 * var(--now-key-h) + var(--gap-2));
+	min-height: 0;
+	aspect-ratio: 1;
+	align-self: center;
+	justify-self: center;
+	border-radius: 50%;
+}
 
 .now-keys-colour { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
@@ -560,7 +580,7 @@
 /* A finger and not a pointer: the keys of the handset and the slider under the
    volume are what this destination is worked with. */
 @media (max-width: 599px) {
-	.now-key { min-height: var(--tap-height); min-width: var(--tap-height); }
+	.now-key { --now-key-h: var(--tap-height); min-width: var(--tap-height); }
 	.now-range { min-height: var(--tap-height); }
 }
 
