@@ -299,6 +299,13 @@ export default function Remote(props) {
 	   The frame asks for the same address, so this is answered from the store
 	   and costs no second request. */
 	const mode = useResource('GET', '/api/v1/system/standby');
+	/* NOT LOCKED IN STANDBY. Locking puts a notice on the television, and in
+	   standby nobody is looking at it, so the lock would be set without
+	   anybody being told how it is undone. Unlocking stays, so a lock set
+	   before the box went to sleep can still be taken off. */
+	const asleep = !!(mode.data && mode.data.on === true);
+	const isLocked = !!(lock.data && lock.data.locked);
+	const lockBarred = asleep && !isLocked;
 	const [last, setLast] = useState('');
 	const [askingPower, setAskingPower] = useState(false);
 	// The address is the truth: /now/remote/control is the handset full screen.
@@ -453,6 +460,9 @@ export default function Remote(props) {
 	 * @returns {void}
 	 */
 	function writeLock(locked) {
+		if (locked && asleep) {
+			return;
+		}
 		if (lock.data) {
 			store.put('GET', '/api/v1/osd/remote', null, { locked: locked });
 		}
@@ -724,9 +734,10 @@ export default function Remote(props) {
 					problem=${drawableProblem(lock.error)}>
 					<${Switch}
 						label=${t(text, 'now.remote.lock')}
-						checked=${!!(lock.data && lock.data.locked)}
+						checked=${isLocked}
+						disabled=${lockBarred}
 						onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { writeLock(e.currentTarget.checked); }} />
-					<p class="now-hint">${t(text, 'now.remote.lock.hint')}</p>
+					<p class="now-hint">${t(text, lockBarred ? 'now.remote.lock.standby' : 'now.remote.lock.hint')}</p>
 				<//>
 			</div>
 		<//>
