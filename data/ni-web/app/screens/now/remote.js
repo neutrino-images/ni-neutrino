@@ -32,7 +32,7 @@
 //
 // The keys are also worked with a keyboard. The arrows reach the direction keys,
 // the digits reach the digits and the enter key reaches OK.
-import { html, useState, useEffect, useRef, route } from '../../runtime.js';
+import { html, useState, useEffect, useLayoutEffect, useRef, route } from '../../runtime.js';
 import * as store from '../../store.js';
 import { t } from '../../i18n.js';
 import text from './now.text.js';
@@ -216,9 +216,63 @@ function keysOf(group, onPress) {
 				class=${'now-key now-key-' + name}
 				title=${name}
 				aria-label=${labelFor(name)}
-				onClick=${function () { onPress(name); }}>${iconFor(name) || labelFor(name)}</button>`;
+				onClick=${function () { onPress(name); }}>${iconFor(name) || html`<span class="now-key-label">${labelFor(name)}</span>`}</button>`;
 		})}
 	</div>`;
+}
+
+/* THE LETTERING ON THE KEYS IS ONE SIZE, AND IT IS THE SIZE THE LONGEST NAME
+   FITS AT. The keys are as wide as their column and the columns are as wide as
+   the screen allows, so a name that fits on a desk is cut off on a telephone:
+   AUDIO in a row of seven, at 390 wide, is a pixel wider than its key. Each key
+   shrinking its own name until it fits was the other way, and it makes a row
+   of keys in four sizes, which reads as four kinds of key.
+
+   So the names are measured where they stand, the one that has least room sets
+   the scale, and every key is given the same size. Measured and not worked out
+   from the number of columns and the number of letters, because the font is
+   whatever monospace the machine has and the names are whatever the language
+   calls them.
+
+   The air is what is left between a name and the edge of its key, and the
+   floor is the size below which a name is no longer read; under it the name
+   is allowed to touch the edges rather than become a smudge. The keys no group
+   claimed are not measured: they lie in a row that wraps, as wide as their
+   names, so they always fit and would only ever say "smaller". */
+const KEY_AIR_PX = 4;
+const KEY_LEAST_PX = 8;
+
+/**
+ * Sets the one size of lettering every key on the handset is drawn at.
+ *
+ * Starts from the stylesheet's own size every time, so a window that grows
+ * gives the lettering back as well as taking it away. The size of a name is in
+ * proportion to its width, so one measurement is the answer and nothing is
+ * tried twice.
+ *
+ * @param {HTMLElement} box
+ * @returns {void}
+ */
+function fitLettering(box) {
+	box.style.removeProperty('--now-key-fs');
+	let scale = 1;
+	let size = 0;
+	for (const label of box.querySelectorAll('.now-keygroup:not(.now-keyrest) span.now-key-label')) {
+		const key = label.parentElement;
+		const wide = label.getBoundingClientRect().width;
+		if (key === null || key.clientWidth === 0 || wide === 0) {
+			continue;
+		}
+		if (size === 0) {
+			size = parseFloat(window.getComputedStyle(label).fontSize);
+		}
+		scale = Math.min(scale, (key.clientWidth - KEY_AIR_PX) / wide);
+	}
+	if (scale < 1 && size > 0) {
+		// Rounded down to a quarter pixel, so rounding never puts it back over.
+		const fitted = Math.floor(size * scale * 4) / 4;
+		box.style.setProperty('--now-key-fs', Math.max(KEY_LEAST_PX, fitted) + 'px');
+	}
 }
 
 /* How long the presses have to stop before the picture is fetched again, and
@@ -255,6 +309,35 @@ export default function Remote(props) {
 	const shot = useCapture(bump);
 	const named = (keys.data && keys.data.items) || [];
 	const groups = groupsFor(named);
+	const pad = useRef(/** @type {HTMLDivElement | null} */ (null));
+	/* What the lettering is fitted to: the names as they are written, so a
+	   box that names other keys, or a page switched to another language, is
+	   measured again. */
+	const lettering = named.map(labelFor).join(' ');
+
+	/* Fitted before the keys are first painted, and again whenever the width
+	   they are drawn in changes: a telephone turned, a window dragged, the
+	   handset taken full screen. Only the width. The lettering decides the
+	   height of the keys and not their width, so a change of height is this
+	   fitting's own doing and answering it would be chasing itself. */
+	useLayoutEffect(function () {
+		const box = pad.current;
+		if (box === null) {
+			return undefined;
+		}
+		let width = -1;
+		function measure() {
+			if (box === null || box.clientWidth === width) {
+				return;
+			}
+			width = box.clientWidth;
+			fitLettering(box);
+		}
+		measure();
+		const watch = new ResizeObserver(measure);
+		watch.observe(box);
+		return function () { watch.disconnect(); };
+	}, [lettering]);
 
 	useEffect(function () {
 		return function () {
@@ -576,6 +659,7 @@ export default function Remote(props) {
 					</button>
 				</p>`}
 			<div
+				ref=${pad}
 				role="group"
 				tabindex="0"
 				aria-label=${t(text, 'now.remote.card.keys')}

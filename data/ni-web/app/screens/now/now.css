@@ -400,8 +400,24 @@
 	padding: 0;
 	background: var(--ground-2); color: var(--text);
 	border: 1px solid var(--line); border-radius: var(--radius);
-	font-family: var(--font-mono); font-size: var(--fs-s); cursor: pointer;
+	/* The size remote.js fits every name to, and the sheet's own size until
+	   it has measured. One size for all of them; why is said there. */
+	font-family: var(--font-mono); font-size: var(--now-key-fs, var(--fs-s)); cursor: pointer;
 }
+/* A name is one line or it is not the name of a key. */
+.now-key-label { white-space: nowrap; }
+/* THE KEYS IN A ROW ARE AS WIDE AS THEIR COLUMN AND NO WIDER. A row's columns
+   share out the width the card has, but a key that insists on its own least
+   width holds its column open, and eight of them at 44 are 408 pixels where a
+   telephone 390 wide has 332: the row of transport keys ran out of the card.
+   Here the column decides. The height a finger needs stays as it is; it is the
+   width that there is not enough of.
+   Not the keys no group claimed: they lie in a row that wraps, and there the
+   least width is what keeps a short name from becoming a sliver. */
+.now-keygroup:not(.now-keyrest) .now-key { min-width: 0; }
+/* And the picture on a key gives way with it, rather than standing out past
+   the edges of a key narrower than itself. */
+.now-key svg { max-width: calc(100% - 2px); height: auto; }
 @media (hover: hover) {
 	.now-key:hover:not(:disabled) { border-color: var(--text-dim); }
 }
