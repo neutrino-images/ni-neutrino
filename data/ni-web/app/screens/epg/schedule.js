@@ -24,8 +24,8 @@ import { Field } from '../../ui/field.js';
 import { Table } from '../../ui/table.js';
 import { Dot } from '../../ui/dot.js';
 import { EventActions, EventSheet, isOnAir, whenOf } from '../../ui/event.js';
-import words from '../../ui/event.text.js';
 import text from './schedule.text.js';
+import channelText from '../channels/list.text.js';
 import { boxNowSeconds } from '../../boxclock.js';
 
 export const css = '/app/screens/epg/schedule.css';
@@ -493,10 +493,20 @@ function Listing(props) {
 			cell: function (one) {
 				return html`<span class="epg-what">
 					<b title=${one.title}>${one.title}</b>
-					${isOnAir(one, now)
-						? html`<span class="chip on-air"><${Dot} kind="onair" word=${t(words, 'epg.event.running')} /></span>`
-						: null}
 				</span>`;
+			}
+		},
+		{
+			/* The channel list's column, with its word and its pill: what is on
+			   reads the same on both screens. Nothing at all in every other row,
+			   so that a card does not carry the column's word over an empty
+			   line. */
+			id: 'state',
+			label: t(channelText, 'list.col.state'),
+			cell: function (one) {
+				return isOnAir(one, now)
+					? html`<span class="chip on-air"><${Dot} kind="onair" word=${t(channelText, 'list.running')} /></span>`
+					: null;
 			}
 		},
 		{
