@@ -728,7 +728,7 @@ export default function Remote(props) {
 			     card of its own inside this one: a heading and an edge inside a
 			     card read as a second screen. What it is read with still draws
 			     its loading, its failure and its writing. */''}
-			<div class="now-remote-lock">
+			<div class="now-remote-lock now-apart">
 				<${State}
 					phase=${lock.phase}
 					problem=${drawableProblem(lock.error)}>

@@ -611,8 +611,8 @@
 .now-state .field-switch > span { display: block; font-size: var(--fs-s);
 	min-height: calc(var(--gap-1) + 1.4em); }
 
-/* The message under a line of its own: it is a note to whoever is in front of
-   the television and not part of what the box is. */
+/* Under a line of its own, inside a card: what belongs to the card but is not
+   the same thing as the rest of it, such as the lock under the keys. */
 .now-apart { margin-top: var(--gap-4); padding-top: var(--gap-4);
 	border-top: 1px solid var(--line); }
 .now-message { display: flex; align-items: flex-end; gap: var(--gap-2); }
