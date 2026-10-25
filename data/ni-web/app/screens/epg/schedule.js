@@ -493,7 +493,9 @@ function Listing(props) {
 			cell: function (one) {
 				return html`<span class="epg-what">
 					<b title=${one.title}>${one.title}</b>
-					${isOnAir(one, now) ? html`<${Dot} kind="onair" word=${t(words, 'epg.event.running')} />` : null}
+					${isOnAir(one, now)
+						? html`<span class="chip on-air"><${Dot} kind="onair" word=${t(words, 'epg.event.running')} /></span>`
+						: null}
 				</span>`;
 			}
 		},
@@ -513,6 +515,7 @@ function Listing(props) {
 			: html`<${Table}
 				columns=${columns}
 				rows=${rows}
+				onAir=${function (/** @type {Api.Event} */ one) { return isOnAir(one, now); }}
 				rowKey=${function (/** @type {Api.Event} */ one) { return one.id + '-' + String(one.start); }} />`}
 	<//>`;
 }

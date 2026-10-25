@@ -34,6 +34,11 @@
 }
 .epg-what small { color: var(--text-dim); font-size: var(--fs-xs); }
 
+/* The showing that is on now carries the accent from the frame's own rule, and
+   its name takes the same colour, as the channel the box is playing does in
+   the channel list. The pill under it is that list's pill too. */
+.epg tr[data-on-air] .epg-what b { color: var(--on-air); }
+
 /* A channel the listing has not named yet, drawn as the identifier it is, so
    that a screen still waiting is not read as a screen that has answered. */
 .epg-unnamed { color: var(--text-dim); }
