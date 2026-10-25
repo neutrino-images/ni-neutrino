@@ -193,9 +193,10 @@ declare namespace Web {
 		 * The module a screen is. Beside the screen itself it may name a
 		 * stylesheet and offer the sentence the frame draws under the name of
 		 * the screen; the sentence is a function because a value read at load
-		 * would be read before anybody has chosen a language.
+		 * would be read before anybody has chosen a language. Absent on an
+		 * entry that has an href instead.
 		 */
-		load: () => Promise<{ default: (props: any) => Drawn, css?: string, lead?: () => string }>;
+		load?: () => Promise<{ default: (props: any) => Drawn, css?: string, lead?: () => string }>;
 		/**
 		 * Identifiers this entry used to be reached under, so that an address
 		 * somebody wrote down before two screens became one still opens the
@@ -203,6 +204,12 @@ declare namespace Web {
 		 * a bar shows is id.
 		 */
 		was?: readonly string[];
+		/**
+		 * An address outside this page that the entry stands for instead of a
+		 * screen, such as /info. The bar opens it in a tab of its own, and
+		 * the entry is never resolved as a screen.
+		 */
+		href?: string;
 	};
 
 	/**

@@ -149,12 +149,13 @@ export function firstEntry(area) {
  */
 export function entryById(area, entryId) {
 	const items = secondLevel(area) || [];
+	// An entry with an address of its own is no screen here
 	for (const entry of items) {
-		if (entry.id === entryId)
+		if (!entry.href && entry.id === entryId)
 			return entry;
 	}
 	for (const entry of items) {
-		if (entry.was && entry.was.indexOf(entryId) !== -1)
+		if (!entry.href && entry.was && entry.was.indexOf(entryId) !== -1)
 			return entry;
 	}
 	return null;

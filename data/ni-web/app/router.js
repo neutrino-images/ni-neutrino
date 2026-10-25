@@ -102,7 +102,7 @@ function Screen(props) {
 		setView(null);
 		setProblem(null);
 
-		if (!entry)
+		if (!entry || !entry.load)
 			return undefined;
 
 		entry.load().then(function (module) {

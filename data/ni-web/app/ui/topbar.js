@@ -298,6 +298,15 @@ export function EntryTabs(props) {
 
 	return html`<nav class="entries" aria-label=${t(text, 'shell.second', { area: labelOf(area) })}>
 		${items.map(function (entry) {
+			// Leaves the page for one beside it, in a tab of its own; the
+			// router leaves an anchor with a target alone.
+			if (entry.href) {
+				return html`<a
+					key=${entry.id}
+					href=${entry.href}
+					target="_blank"
+					rel="noopener">${labelOf(entry)}<span aria-hidden="true"> ↗</span></a>`;
+			}
 			return html`<${Link}
 				key=${entry.id}
 				href=${hrefFor(area.id, entry.id)}

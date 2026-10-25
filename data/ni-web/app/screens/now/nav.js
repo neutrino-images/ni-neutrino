@@ -15,6 +15,8 @@ export default {
 	items: [
 		{ id: 'overview', text: 'nav.now.overview', load: () => import('./overview.js') },
 		{ id: 'remote', text: 'nav.now.remote', was: ['screenshot'], load: () => import('./remote.js') },
-		{ id: 'displays', text: 'nav.now.displays', was: ['screenshot'], load: () => import('./displays.js') }
+		{ id: 'displays', text: 'nav.now.displays', was: ['screenshot'], load: () => import('./displays.js') },
+		// Not a screen of this page but the info page beside it
+		{ id: 'info', text: 'nav.now.info', href: '/info' }
 	]
 };
