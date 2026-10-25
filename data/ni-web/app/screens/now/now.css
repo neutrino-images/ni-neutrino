@@ -369,13 +369,27 @@
 		calc(var(--content-pad-y) + env(safe-area-inset-bottom, 0px));
 	background: var(--ground-0);
 }
-/* The way back, small and at the far end of a line of its own, so that it
-   stands over no key: the power key and the mute key are the corners of the
-   handset's first row. */
+/* The way back while there are no keys to stand among (the list on its way,
+   refused or empty): small and at the far end of a line of its own over the
+   card. Once there are keys it is one of them, below. */
 .now-full-back { display: flex; justify-content: flex-end; padding: var(--gap-2) 0; }
 .now-full-close { width: var(--tap-height); min-height: var(--tap-height); padding: 0; }
 .now-full-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor;
 	stroke-width: 2; stroke-linecap: round; }
+/* The way out where there are keys: in the handset's first row, between power
+   and mute, a key without a key cap. remote.js says why it is there. Square,
+   as tall as the keys beside it, and dim until a pointer or the focus is on
+   it. */
+.now-key.now-full-exit {
+	grid-row: 1; grid-column: 2; justify-self: center;
+	width: var(--now-key-h);
+	background: none; border-color: transparent; color: var(--text-dim);
+}
+@media (hover: hover) {
+	.now-key.now-full-exit:hover:not(:disabled) { border-color: transparent; color: var(--text); }
+}
+.now-key.now-full-exit:focus-visible { color: var(--text); }
+.now-key.now-full-exit:active:not(:disabled) { background: none; color: var(--text); }
 /* The keys and nothing else: the card's heading, the line about the keyboard,
    the lock and the picture's own options are all left out. The card itself
    stays, at the width it always has, so the keys are the same keys. */
@@ -398,15 +412,15 @@
    decides; at 400 it was a quarter of a pixel short). A telephone narrower
    than that loses nothing: the handset is as wide as it was.
 
-   In the middle of the height as well, with the way back over it, and with
-   margins rather than with the box's own centring: a handset taller than the
-   window starts at the top and scrolls, where centring would cut its head
-   off. */
+   In the middle of the height as well, and with margins rather than with the
+   box's own centring: a handset taller than the window starts at the top and
+   scrolls, where centring would cut its head off. */
 .now-remote.is-full { display: flex; flex-direction: column; align-items: center; }
 .now-remote.is-full > .now-full-back,
 .now-remote.is-full > section.now-card { width: 100%; max-width: 416px; }
+.now-remote.is-full > section.now-card { margin-top: auto; margin-bottom: auto; }
 .now-remote.is-full > .now-full-back { margin-top: auto; }
-.now-remote.is-full > section.now-card { margin-bottom: auto; }
+.now-remote.is-full > .now-full-back ~ section.now-card { margin-top: 0; }
 /* And where there is room around it, it is a thing lying on the ground of the
    page and not a card drawn on it: rounder at the corners, lifted off by its
    shadow, and with a little more room inside its edge. Below that width the

@@ -205,10 +205,13 @@ function iconFor(name) {
  *
  * @param {{ id: string, shape: string, keys: string[] }} group
  * @param {(key: string) => void} onPress
+ * @param {Web.Drawn} [also] a control of this page's own that stands in the
+ *   group's row without being a key of the box
  * @returns {Web.Drawn}
  */
-function keysOf(group, onPress) {
+function keysOf(group, onPress, also) {
 	return html`<div class=${group.shape === '' ? 'now-keyset' : 'now-keyset ' + group.shape}>
+		${also || null}
 		${group.keys.map(function (name) {
 			return html`<button
 				key=${name}
@@ -606,12 +609,36 @@ export default function Remote(props) {
 	   the keys it took a third of the width off them and left the cross
 	   leaning into one half of the screen. Under the picture it takes a line
 	   and no width from anything. */
+	/* THE WAY OUT OF FULL SCREEN IS PART OF THE HANDSET. It had a line of
+	   its own over the keys, a framed cross at the far end of it, and on a
+	   monitor that cross was the loudest thing on the screen after the
+	   handset itself. Now it stands in the first row, in the place between
+	   power and mute that a handset leaves free, drawn like a key with no
+	   key cap: the sign a browser uses for leaving full screen, dimmed.
+	   Next to power is not a risk worth avoiding, because power asks first.
+
+	   The first row is drawn for it even where the box names neither power
+	   nor mute. And where no key is drawn at all (the list still on its way,
+	   refused, or empty) the old line over the card comes back, because
+	   then there is no row to stand in and a full screen with no way out of
+	   it on a telephone without an escape key is a trap. */
+	const exit = html`<button type="button" class="now-key now-full-exit" data-act="full-close"
+		title=${t(text, 'now.remote.full.close')}
+		aria-label=${t(text, 'now.remote.full.close')}
+		onClick=${function () { goFull(false); }}>
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24px" height="24px" fill="currentColor" aria-hidden="true" focusable="false"><path d="M240-120v-120H120v-80h200v200h-80Zm400 0v-200h200v80H720v120h-80ZM120-640v-80h120v-120h80v200H120Zm520 0v-200h80v120h120v80H640Z"/></svg>
+	</button>`;
+	const keysDrawn = !keys.error && keys.phase !== 'first' && named.length > 0;
+	const rows = full && keysDrawn && !groups.some(function (group) { return group.id === 'top'; })
+		? [{ id: 'top', shape: 'now-keys-top', keys: /** @type {string[]} */ ([]) }].concat(groups)
+		: groups;
+
 	const sent = html`<p class="now-remote-sent" role="status">
 		${last === '' ? '' : t(text, 'now.remote.sent', { key: labelFor(last) })}
 	</p>`;
 
 	return html`<div class=${full ? 'now-remote is-full' : 'now-remote'}>
-		${full
+		${full && !keysDrawn
 			? html`<div class="now-full-back">
 				<button type="button" class="btn now-full-close" data-act="full-close"
 					title=${t(text, 'now.remote.full.close')}
@@ -664,8 +691,8 @@ export default function Remote(props) {
 				tabindex="0"
 				aria-label=${t(text, 'now.remote.card.keys')}
 				onKeyDown=${onKey}>
-				${groups.map(function (group) {
-					const drawn = keysOf(group, press);
+				${rows.map(function (group) {
+					const drawn = keysOf(group, press, full && group.id === 'top' ? exit : null);
 					/* THE ONES NO GROUP CLAIMED ARE FOLDED AWAY AND NOT
 					   DROPPED. A kernel names a hundred keys and a handset
 					   has forty of them. Dropping them would make a key
