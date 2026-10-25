@@ -855,6 +855,8 @@ function Storage() {
 	const rows = ((all.data && all.data.items) || []).filter(function (/** @type {Api.Mount} */ row) {
 		return typeof row.device === 'string' && row.device.startsWith('/dev/')
 			&& row.id !== '/boot' && !row.id.startsWith('/boot/');
+	}).sort(function (/** @type {Api.Mount} */ a, /** @type {Api.Mount} */ b) {
+		return a.id.localeCompare(b.id);
 	});
 
 	return html`<${Card} double=${true}
