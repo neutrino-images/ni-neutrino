@@ -195,6 +195,12 @@ body {
 	overflow: hidden;
 }
 
+/* With no programme to measure, the bar keeps its place and only stops being
+   seen, so nothing above it moves (info.js, tick). */
+.info-bar[data-empty] {
+	visibility: hidden;
+}
+
 .info-fill {
 	height: 100%;
 	width: 0;

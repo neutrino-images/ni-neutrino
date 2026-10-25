@@ -344,7 +344,10 @@ function tick() {
 
 	const event = playing() ? seen.event : null;
 	const total = event ? event.duration : 0;
-	shown.bar.hidden = !event || total <= 0;
+	/* Not shown but still there: a bar that left the page would take its
+	   height with it, and the row above it would jump down the screen every
+	   time the box went to standby or a channel had no programme. */
+	shown.bar.toggleAttribute('data-empty', !event || total <= 0);
 	if (!event || total <= 0) {
 		write(shown.left, '');
 		return;
