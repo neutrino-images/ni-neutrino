@@ -241,30 +241,13 @@ export function useCapture(bump) {
 	const [large, setLarge] = useState(false);
 	const [saving, setSaving] = useState(false);
 
-	/* Fetched and handed to the browser as a file, and not a plain link: a
-	   link cannot be retried when the box is busy with the preview. */
 	function save() {
 		setSaving(true);
-		pictureForSaving(function () {
+		savePicture(function () {
 			return api('GET', '/api/v1/osd/screenshot', {
 				query: { osd: osd, video: video, format: 'png' }, accept: 'blob',
 			});
-		}).then(function (picture) {
-			const address = URL.createObjectURL(/** @type {Blob} */ (picture));
-			const link = document.createElement('a');
-			link.href = address;
-			link.download = 'neutrino.png';
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
-			window.setTimeout(function () { URL.revokeObjectURL(address); }, 0);
-		}, function (/** @type {{ status?: number, aborted?: boolean, problem?: { title: string } } | undefined} */ failed) {
-			if (failed && failed.aborted === true) {
-				return;
-			}
-			toast(failed && failed.status === 409 ? t(text, 'now.shot.busy')
-				: refusalLine(failed && failed.problem) || t(text, 'now.shot.failed'), 'bad');
-		}).then(function () { setSaving(false); });
+		}, 'neutrino.png').then(function () { setSaving(false); });
 	}
 
 	return {
@@ -330,9 +313,37 @@ export function useCapture(bump) {
 }
 
 /**
+ * One full size picture, fetched and handed to the browser as a file, and not a
+ * plain link: a link cannot be retried when the box is busy with the preview. A
+ * failure is said in a toast; the promise settles either way.
+ *
+ * @param {() => Promise<unknown>} get
+ * @param {string} name what the file is called on the viewer's disc
+ * @returns {Promise<void>}
+ */
+function savePicture(get, name) {
+	return pictureForSaving(get).then(function (picture) {
+		const address = URL.createObjectURL(/** @type {Blob} */ (picture));
+		const link = document.createElement('a');
+		link.href = address;
+		link.download = name;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		window.setTimeout(function () { URL.revokeObjectURL(address); }, 0);
+	}, function (/** @type {{ status?: number, aborted?: boolean, problem?: { title: string } } | undefined} */ failed) {
+		if (failed && failed.aborted === true) {
+			return;
+		}
+		toast(failed && failed.status === 409 ? t(text, 'now.shot.busy')
+			: refusalLine(failed && failed.problem) || t(text, 'now.shot.failed'), 'bad');
+	});
+}
+
+/**
  * One display on the front of the box, with the picture it shows.
  *
- * Nothing is fetched here until the button is pressed or the switch under it is on:
+ * Nothing is fetched here until the button is pressed or the folded switch is on:
  * whoever is driving the box from a browser is looking at the television and not at
  * the two lines on its front.
  *
@@ -402,6 +413,19 @@ export function Display(props) {
 		keep(keepAgain, next);
 	}
 
+	/* The display is written as a PNG at the size it is drawn, so the file
+	   is the same picture as the preview, fetched once more on its own. */
+	const [saving, setSaving] = useState(false);
+
+	function save() {
+		setSaving(true);
+		savePicture(function () {
+			return api('GET', '/api/v1/osd/displays/{name}/screenshot', {
+				params: { name: props.name }, accept: 'blob',
+			});
+		}, 'neutrino-' + props.name + '.png').then(function () { setSaving(false); });
+	}
+
 	return html`<${Card} title=${props.title}>
 		<div class="now-shot now-shot-small" ref=${box}>
 			${shot === null
@@ -411,13 +435,26 @@ export function Display(props) {
 					src=${shot.src}
 					alt=${t(text, 'now.shot.displayalt') + ': ' + props.title} />`}
 		</div>
-		<p class="now-buttons">
-			<${Button} onClick=${ask}>${t(text, 'now.shot.refresh')}<//>
-		</p>
-		<${Switch}
-			label=${t(text, 'now.shot.auto')}
-			checked=${again}
-			onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { chooseAgain(e.currentTarget.checked); }} />
+		${/* Laid out as the television picture's options are, under the same
+		     classes, so the two read alike and sit at the same distances: the
+		     button that fetches one in the open, the switch folded under it. */''}
+		<div class="now-shot-options">
+			<p class="now-buttons">
+				<${Button} onClick=${ask}>${t(text, 'now.shot.refresh')}<//>
+			</p>
+			<details class="now-shot-more">
+				<summary class="now-sub">${t(text, 'now.shot.display.more')}</summary>
+				<${Switch}
+					label=${t(text, 'now.shot.auto')}
+					checked=${again}
+					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { chooseAgain(e.currentTarget.checked); }} />
+				<p class="now-buttons">
+					<${Button}
+						disabled=${saving}
+						onClick=${save}>${t(text, 'now.shot.download')}<//>
+				</p>
+			</details>
+		</div>
 	<//>`;
 }
 

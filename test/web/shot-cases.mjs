@@ -200,6 +200,11 @@ function rig() {
 	same([/<\$\{Switch\}/.test(card), /'now\.shot\.auto'/.test(card), /useOnScreen\(/.test(card), /setInterval\(ask, AGAIN_EVERY_MS\)/.test(card)],
 		[true, true, true, true], 'a display card can fetch again by itself, only while it is seen');
 	same(/KEEP_DISPLAY_AGAIN \+ props\.name/.test(card), true, 'each display keeps its own choice');
+	const fold = card.slice(card.indexOf('<details class="now-shot-more">'), card.indexOf('</details>'));
+	same([/<div class="now-shot-options">/.test(card), /<summary class="now-sub">\$\{t\(text, 'now\.shot\.display\.more'\)\}/.test(fold), /'now\.shot\.auto'/.test(fold)],
+		[true, true, true], 'a display card folds its switch the way the television picture does');
+	same([/'now\.shot\.download'/.test(fold), /savePicture\(/.test(card), /'\/api\/v1\/osd\/displays\/\{name\}\/screenshot'/.test(card)],
+		[true, true, true], 'a display card offers its picture as a file, folded with the switch');
 }
 
 // One card per listed display, none for an empty list.
