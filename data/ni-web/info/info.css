@@ -10,29 +10,29 @@
    an address outside the application, so a sheet it did not load is a sheet it
    would not inherit anyway.
 
-   The five marks keep the application's own colour vocabulary, because they
-   mean the same things: the accent is what is on air, amber wants looking at,
-   red is the box writing to a disc, green is something running. The display
-   this replaces painted descrambling orange and the module amber, which is the
-   same pair of hues, and the amber standing for two of the five is no
-   collision: the left two and the right three are read as two groups and every
-   mark carries its own word. */
+   The five marks take their colours from the same Material swatches as the
+   application. Descrambling is orange and the module amber, the pair the
+   display this replaces painted them in; a timer still to fire is yellow; a
+   recording and a shift are red, the box writing to a disc. Orange, amber and
+   yellow lie close together, which is no collision: the left two and the right
+   three are read as two groups and every mark carries its own word. */
 :root {
 	--info-ground: #000000;
-	--info-ink: #e0e0e0;
-	--info-dim: #9e9e9e;
 	/* The same Material greys and swatches as the application's dark theme,
-	   and its own orange, so a mark here is the colour it is there. Grey 300 for the writing and
-	   not white, Grey 500 for the row, Grey 900 under the bar.
+	   so a mark here is the colour it is there. Grey 300 for the writing and
+	   not white, Grey 500 for the rows of small type, Grey 900 under the bar
+	   and Grey 700 for what of the programme has gone.
 	   An off flag is still a word somebody reads from across the room to learn
 	   that it is off: Grey 700, 3.4:1 on the black, and still well under the
 	   grey of the row, so on and off stay two things. */
+	--info-ink: #e0e0e0;
+	--info-dim: #9e9e9e;
 	--info-faint: #616161;
 	--info-bar: #212121;
 	--info-fill: #616161;
-	/* The mark drawn in standby. Grey 800, so it is there for somebody who
-	   looks and not a light left on: a box asleep is the least there is to
-	   read off this page. */
+	/* Standby: the NI mark, and with it every grey of the page (the rule
+	   below). Grey 800, so it is there for somebody who looks and not a light
+	   left on: a box asleep is the least there is to read off this page. */
 	--info-mark: #424242;
 	--info-ecm: #ff9800;
 	--info-ci: #ffc107;
@@ -43,11 +43,12 @@
 	--info-font:"Ubuntu derivative NI-Web", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* In standby every grey of the page is the mark's: the writing, the row of
-   small type and the marks that are off. A display left standing all night
-   by a box that is asleep should be no more than there. The marks that are
-   on keep their colour, because one lit in standby, a recording or a timer
-   still to fire, is exactly what somebody looks over to see (info.js, paint). */
+/* In standby every grey of the page is the mark's: the writing, the rows of
+   small type and the marks that are off, so a display left standing all night
+   beside a box asleep is as dark as it can be and still be read. The marks
+   that are on keep their colour, because one lit in standby, a recording or a
+   timer still to fire, is exactly what somebody looks over to see (info.js,
+   paint). */
 :root[data-standby] {
 	--info-ink: var(--info-mark);
 	--info-dim: var(--info-mark);
@@ -117,9 +118,9 @@ body {
 	gap: 0.9em;
 }
 
-/* Off is the grey the whole row is written in, on is the mark's own colour.
-   Nothing else changes, so the row keeps its width and its rhythm whatever the
-   box is doing. */
+/* Off is a grey darker than the row the words stand in, on is the mark's own
+   colour. Nothing else changes, so the row keeps its width and its rhythm
+   whatever the box is doing. */
 .info-flag {
 	color: var(--info-faint);
 }
@@ -147,11 +148,12 @@ body {
 
 /* The mark as a mask and not as a picture, because /app/icon.svg picks its own
    colour off the scheme of whatever draws it, and this page wants the one
-   colour above whatever the telephone is set to. The size is the logo's, kept
-   to the drawing's own 850 by 650. */
+   colour above whatever the telephone is set to. The height is the most the
+   logo may take, and the width follows from the drawing's own 850 by 650:
+   with the height never above 40vw, it never comes to more than about 52vw,
+   so it needs no limit of its own. */
 .info-mark {
 	height: min(26vh, 40vw);
-	max-width: 80vw;
 	aspect-ratio: 850 / 650;
 	background: var(--info-mark);
 	-webkit-mask: url(/app/icon.svg) center / contain no-repeat;
@@ -195,7 +197,6 @@ body {
 .info-event {
 	margin: 0;
 	font-size: clamp(1rem, min(4.5vh, 5.5vw), 2.5rem);
-	color: var(--info-ink);
 }
 
 .info-bar {
