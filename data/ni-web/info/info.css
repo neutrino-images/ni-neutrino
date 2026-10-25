@@ -135,7 +135,6 @@ body {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 2vh;
 	min-width: 0;
 }
 
