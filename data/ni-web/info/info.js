@@ -304,7 +304,12 @@ function paint() {
 	/* In standby there is no channel and so no logo, and the box's own mark
 	   stands where the logo would, rather than a black middle with nothing in
 	   it. */
-	shown.mark.hidden = !(seen.asked && seen.standby);
+	const asleep = seen.asked && seen.standby;
+	shown.mark.hidden = !asleep;
+
+	/* And everything else on the page dims to the mark's grey, the marks
+	   along the top that are on excepted; the sheet says which colours. */
+	document.documentElement.toggleAttribute('data-standby', asleep);
 
 	/* The picture instead of the name where the box has one, which is what the
 	   display this replaces did. Nothing the box says about a channel tells

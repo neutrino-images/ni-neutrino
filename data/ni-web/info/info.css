@@ -43,6 +43,17 @@
 	--info-font:"Ubuntu derivative NI-Web", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* In standby every grey of the page is the mark's: the writing, the row of
+   small type and the marks that are off. A display left standing all night
+   by a box that is asleep should be no more than there. The marks that are
+   on keep their colour, because one lit in standby, a recording or a timer
+   still to fire, is exactly what somebody looks over to see (info.js, paint). */
+:root[data-standby] {
+	--info-ink: var(--info-mark);
+	--info-dim: var(--info-mark);
+	--info-faint: var(--info-mark);
+}
+
 /* The rule for the attribute is the browser's own and loses to any rule of this
    sheet that sets display, which several below do. Said once here, so hiding a
    thing is the attribute everywhere and never a second class beside it. */
