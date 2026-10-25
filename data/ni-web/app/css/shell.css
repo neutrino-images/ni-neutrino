@@ -528,6 +528,16 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 	.chip.on-air { display: inline-flex; }
 	:root { --content-pad-y: var(--gap-2); --content-pad-x: var(--gap-3); }
 	.topbar-main { padding: var(--gap-2) var(--gap-3); }
+	/* THE MARK AS TALL AS THE TWO KEYS ON THE OTHER END OF THE ROW. Here they
+	   take a finger's height, and a mark of seventeen pixels beside two keys
+	   of forty four read as an afterthought. The mark's own letters fill its
+	   picture from top to bottom, so the picture's height is the letters'
+	   height; the width follows from the picture's own proportions.
+	   The name grows with it, to the size of a screen's heading and not to
+	   the same height: name capitals forty four pixels tall would be 250
+	   pixels of name, and at 360 wide the row has about 150 for it. */
+	.brand-mark { width: auto; height: var(--tap-height); }
+	.brand { font-size: var(--fs-2xl); }
 	h1.scr { font-size: var(--fs-xl); }
 	.entries { padding-left: var(--gap-3); padding-right: var(--gap-3); }
 	/* A finger and not a pointer. The switch is in this list because the label
@@ -581,4 +591,14 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 	.acts { justify-content: flex-start; margin-top: var(--gap-1); }
 	.acts-more { display: inline-flex; }
 	.acts-inline { display: none; }
+}
+
+/* AND UNDER 360 THE MARK STANDS FOR THE NAME. The mark at a finger's height,
+   the name beside it, the power key and the session come to more than a row
+   of 320 has, and what gave was the session, which fell onto a line of its
+   own. The mark is the name in two letters, so the name is the one to go: by
+   its size and not by its display, because it is the bare text of the brand
+   and has no element of its own to hide. */
+@media (max-width: 359px) {
+	.brand { font-size: 0; }
 }
