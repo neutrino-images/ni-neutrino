@@ -68,6 +68,7 @@ const shown = {
 	timer: node('info-timer'),
 	rec: node('info-rec'),
 	ts: node('info-ts'),
+	mark: node('info-mark'),
 	logo: /** @type {HTMLImageElement} */ (node('info-logo')),
 	name: node('info-name'),
 	said: node('info-said'),
@@ -303,6 +304,11 @@ function paint() {
 
 	write(shown.said, sentence);
 	shown.said.hidden = sentence === '';
+
+	/* In standby there is no channel and so no logo, and the box's own mark
+	   stands where the logo would, with the sentence saying standby under it,
+	   rather than one sentence alone on the black. */
+	shown.mark.hidden = !(seen.asked && seen.standby);
 
 	/* The picture instead of the name where the box has one, which is what the
 	   display this replaces did. Nothing the box says about a channel tells

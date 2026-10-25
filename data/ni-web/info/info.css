@@ -30,6 +30,10 @@
 	--info-faint: #616161;
 	--info-bar: #212121;
 	--info-fill: #616161;
+	/* The mark drawn in standby. Grey 800, so it is there for somebody who
+	   looks and not a light left on: a box asleep is the least there is to
+	   read off this page. */
+	--info-mark: #424242;
 	--info-ecm: #ff9800;
 	--info-ci: #ffc107;
 	--info-timer: #ffeb3b;
@@ -129,6 +133,19 @@ body {
 	max-height: min(26vh, 40vw);
 	max-width: 80vw;
 	object-fit: contain;
+}
+
+/* The mark as a mask and not as a picture, because /app/icon.svg picks its own
+   colour off the scheme of whatever draws it, and this page wants the one
+   colour above whatever the telephone is set to. The size is the logo's, kept
+   to the drawing's own 850 by 650. */
+.info-mark {
+	height: min(26vh, 40vw);
+	max-width: 80vw;
+	aspect-ratio: 850 / 650;
+	background: var(--info-mark);
+	-webkit-mask: url(/app/icon.svg) center / contain no-repeat;
+	mask: url(/app/icon.svg) center / contain no-repeat;
 }
 
 /* The name and the programme wrap and are then cut after two lines.
