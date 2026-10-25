@@ -34,15 +34,18 @@ import { shotLoader, pictureForSaving, displaysOf } from './shotloader.js';
 import { toast } from '../../ui/toast.js';
 import { refusalLine } from '../../problem.js';
 
-// How often the preview is fetched again while it is asked to do so by itself
-// and while it can be seen. A capture costs the box real work, so this is the
-// rate of somebody watching and not the rate of a video.
+// How often a picture is fetched again while it is asked to do so by itself
+// and while it can be seen, the television's and each display's. A capture
+// costs the box real work, so this is the rate of somebody watching and not
+// the rate of a video.
 const AGAIN_EVERY_MS = 5000;
 
 // This browser's choice, kept across reloads the way the size of the writing is.
 const KEEP_OSD = 'ni-web.remote.shot.osd';
 const KEEP_VIDEO = 'ni-web.remote.shot.video';
 const KEEP_AGAIN = 'ni-web.remote.shot.again';
+// The same for each display on the front of the box, followed by its name.
+const KEEP_DISPLAY_AGAIN = 'ni-web.now.display.again.';
 
 /**
  * @param {string} key
@@ -329,36 +332,92 @@ export function useCapture(bump) {
 /**
  * One display on the front of the box, with the picture it shows.
  *
- * Nothing is fetched here until the button is pressed: whoever is driving the box from
- * a browser is looking at the television and not at the two lines on its front.
+ * Nothing is fetched here until the button is pressed or the switch under it is on:
+ * whoever is driving the box from a browser is looking at the television and not at
+ * the two lines on its front.
+ *
+ * THROUGH THE SAME LOADER AS THE TELEVISION PICTURE, and for the same reasons. One
+ * element for the life of the card, given only an address that has arrived, so a
+ * picture fetched again by itself does not blank the card while the next one loads,
+ * and asks made while one is under way are folded into one after it.
+ *
+ * FETCHED AGAIN BY ITSELF only while the switch is on and the card can be seen, at
+ * the rate of the television picture. Each display keeps its own choice in this
+ * browser, so a clock on one of them can be watched without the other being asked.
+ * On, the first picture is fetched at once rather than after the first interval:
+ * on this screen there is no key press that fetches one.
  *
  * @param {{ name: string, title: string }} props
  * @returns {Web.Drawn}
  */
 export function Display(props) {
-	const [round, setRound] = useState(0);
+	const box = useRef(/** @type {HTMLElement | null} */ (null));
+	const watching = useOnScreen(box);
+	const keepAgain = KEEP_DISPLAY_AGAIN + props.name;
+	const [again, setAgain] = useState(function () { return kept(keepAgain, false); });
+	const [asked, setAsked] = useState(false);
+	const [shot, setShot] = useState(/** @type {{ src: string, n: number } | null} */ (null));
 	const [failed, setFailed] = useState(false);
+	const loader = useRef(/** @type {{ want: () => void, stop: () => void } | null} */ (null));
+	if (loader.current === null) {
+		loader.current = shotLoader({
+			address: function (n) { return displayUrl(props.name, n); },
+			shown: function (src, n) {
+				setShot({ src: src, n: n });
+				setFailed(false);
+			},
+			lost: function () { setFailed(true); },
+		});
+	}
+	const load = loader.current;
+
+	useEffect(function () {
+		return function () { load.stop(); };
+	}, []);
+
+	/**
+	 * @returns {void}
+	 */
+	function ask() {
+		setAsked(true);
+		setFailed(false);
+		load.want();
+	}
+
+	useEffect(function () {
+		if (!again || !watching) {
+			return undefined;
+		}
+		ask();
+		const timer = window.setInterval(ask, AGAIN_EVERY_MS);
+		return function () { window.clearInterval(timer); };
+	}, [again, watching]);
+
+	/**
+	 * @param {boolean} next
+	 * @returns {void}
+	 */
+	function chooseAgain(next) {
+		setAgain(next);
+		keep(keepAgain, next);
+	}
 
 	return html`<${Card} title=${props.title}>
-		<div class="now-shot now-shot-small">
-			${round === 0
-				? html`<p class="now-empty">${t(text, 'now.shot.waiting')}</p>`
-				: failed
-					? html`<p class="now-empty" role="status">${t(text, 'now.shot.failed')}</p>`
-					: html`<img
-						key=${'display-' + round}
-						class="now-shot-image"
-						src=${displayUrl(props.name, round)}
-						alt=${t(text, 'now.shot.displayalt') + ': ' + props.title}
-						onError=${function () { setFailed(true); }} />`}
+		<div class="now-shot now-shot-small" ref=${box}>
+			${shot === null
+				? html`<p class="now-empty" role=${failed ? 'status' : null}>${t(text, failed ? 'now.shot.failed' : asked ? 'now.shot.loading' : 'now.shot.waiting')}</p>`
+				: html`<img
+					class="now-shot-image"
+					src=${shot.src}
+					alt=${t(text, 'now.shot.displayalt') + ': ' + props.title} />`}
 		</div>
 		<p class="now-buttons">
-			<${Button}
-				onClick=${function () {
-					setFailed(false);
-					setRound(function (n) { return n + 1; });
-				}}>${t(text, 'now.shot.refresh')}<//>
+			<${Button} onClick=${ask}>${t(text, 'now.shot.refresh')}<//>
 		</p>
+		<${Switch}
+			label=${t(text, 'now.shot.auto')}
+			checked=${again}
+			onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { chooseAgain(e.currentTarget.checked); }} />
 	<//>`;
 }
 

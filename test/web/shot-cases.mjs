@@ -189,6 +189,17 @@ function rig() {
 	const img = live.slice(live.indexOf('<img'), live.indexOf('/>', live.indexOf('<img')));
 	same([/\bkey=/.test(img), /onError=|onLoad=/.test(img), /src=\$\{shot\.src\}/.test(img)], [false, false, true],
 		'the live image has no key, loads nothing itself and shows what arrived');
+
+	// Each display card goes the same way, and can be asked to fetch again by
+	// itself, each display under a choice of its own.
+	const card = src.slice(src.indexOf('export function Display('), src.indexOf('export function displayUrl'));
+	same(card.indexOf('shotLoader(') >= 0, true, 'a display picture is fetched through the loader');
+	const shown = card.slice(card.indexOf('<img'), card.indexOf('/>', card.indexOf('<img')));
+	same([/\bkey=/.test(shown), /onError=|onLoad=/.test(shown), /src=\$\{shot\.src\}/.test(shown)], [false, false, true],
+		'a display image has no key, loads nothing itself and shows what arrived');
+	same([/<\$\{Switch\}/.test(card), /'now\.shot\.auto'/.test(card), /useOnScreen\(/.test(card), /setInterval\(ask, AGAIN_EVERY_MS\)/.test(card)],
+		[true, true, true, true], 'a display card can fetch again by itself, only while it is seen');
+	same(/KEEP_DISPLAY_AGAIN \+ props\.name/.test(card), true, 'each display keeps its own choice');
 }
 
 // One card per listed display, none for an empty list.
