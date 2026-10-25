@@ -844,7 +844,8 @@ function Recordings() {
  * running recording raises.
  *
  * Only what is mounted from a device node under /dev is listed: the disks and
- * flash a recording can land on. Pseudo filesystems and network shares are on
+ * flash a recording can land on. /boot and anything under it is left out, as
+ * no recording goes there. Pseudo filesystems, network shares and /boot are on
  * the mount points screen.
  *
  * @returns {Web.Drawn}
@@ -852,7 +853,8 @@ function Recordings() {
 function Storage() {
 	const all = useResource('GET', '/api/v1/storage/mounts');
 	const rows = ((all.data && all.data.items) || []).filter(function (/** @type {Api.Mount} */ row) {
-		return typeof row.device === 'string' && row.device.startsWith('/dev/');
+		return typeof row.device === 'string' && row.device.startsWith('/dev/')
+			&& row.id !== '/boot' && !row.id.startsWith('/boot/');
 	});
 
 	return html`<${Card} double=${true}
