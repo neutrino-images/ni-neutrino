@@ -176,18 +176,6 @@ body {
 	text-align: center;
 }
 
-/* What the box is doing when there is no channel to name: standby, an idle box,
-   a refusal, or a box that is not answering. Dim and small, because it is a
-   sentence and the rest of this page is not. */
-.info-said {
-	margin: 0;
-	max-width: 90%;
-	font-size: clamp(1rem, min(4vh, 4.5vw), 2rem);
-	color: var(--info-dim);
-	text-align: center;
-	text-wrap: balance;
-}
-
 .info-bottom {
 	display: grid;
 	gap: 2vh;

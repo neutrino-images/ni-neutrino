@@ -71,7 +71,6 @@ const shown = {
 	mark: node('info-mark'),
 	logo: /** @type {HTMLImageElement} */ (node('info-logo')),
 	name: node('info-name'),
-	said: node('info-said'),
 	event: node('info-event'),
 	bar: node('info-bar'),
 	fill: node('info-fill'),
@@ -261,8 +260,8 @@ function mark(where, on) {
 	}
 }
 
-/* The sentence under the name, and the empty string while there is a channel to
-   name instead. The order is what the box is doing and not what this page asked
+/* The sentence in the row the programme stands in, and the empty string while
+   there is a channel whose programme stands there instead. The order is what the box is doing and not what this page asked
    for: a box in standby is in standby whether or not the guide answered. */
 /** @returns {string} */
 function said() {
@@ -302,12 +301,9 @@ function paint() {
 	mark(shown.rec, seen.recording);
 	mark(shown.ts, seen.shifting);
 
-	write(shown.said, sentence);
-	shown.said.hidden = sentence === '';
-
 	/* In standby there is no channel and so no logo, and the box's own mark
-	   stands where the logo would, with the sentence saying standby under it,
-	   rather than one sentence alone on the black. */
+	   stands where the logo would, rather than a black middle with nothing in
+	   it. */
 	shown.mark.hidden = !(seen.asked && seen.standby);
 
 	/* The picture instead of the name where the box has one, which is what the
@@ -330,8 +326,12 @@ function paint() {
 	write(shown.name, channel ? channel.name : '');
 	shown.name.hidden = !channel || picture;
 
-	write(shown.event, event ? event.title : (channel ? t(text, 'info.noevent') : ''));
-	shown.event.hidden = !channel;
+	/* The programme, or where there is no channel to have one, the sentence
+	   saying why: one row at the bottom that always says what is going on,
+	   and nothing under the logo but the name. */
+	const told = channel ? (event ? event.title : t(text, 'info.noevent')) : sentence;
+	write(shown.event, told);
+	shown.event.hidden = told === '';
 
 	tick();
 }
