@@ -1,0 +1,15 @@
+# The names the directories that install whatever they find (app, info, ai)
+# pass over, one find -name pattern each, in one place so a name to leave out
+# is added here and not in every walk.
+#
+# Makefile* for the ones make and automake leave lying about in a build inside
+# the source tree; *.orig and *.rej for the ones a patch that did not apply
+# cleanly leaves beside its target, which would otherwise be gzipped onto the
+# box and copied into the archive.
+#
+# The patterns reach find unexpanded (the walks turn globbing off first), so a
+# pattern may hold * and ? but not a space.
+exclude_files = \
+	Makefile* \
+	*.orig \
+	*.rej
