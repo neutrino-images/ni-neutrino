@@ -1,6 +1,7 @@
 SUBDIRS = \
 	app \
-	info
+	info \
+	fonts
 
 # The handset photographs, under a switch of their own: the screen draws the
 # keys where there is no picture for the model, so a box short of flash can

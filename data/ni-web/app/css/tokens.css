@@ -27,7 +27,7 @@
 	--state-warning-edge: rgb(from var(--state-warning) r g b / 45%));
 	--session-open-edge: rgb(from var(--session-open) r g b / 45%));
 	--on-air: var(--accent);
-	--font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	--font:"Ubuntu derivative NI-Web", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	--font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 	--text-scale: 1;
 	--fs-mark: 0.625rem;

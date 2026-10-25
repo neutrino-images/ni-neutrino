@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Narrower than the application's own policy by two entries. Nothing here is
      played, so media-src stays shut, and the one picture this page draws is the
-     channel logo the box answers with, which is this origin. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+     channel logo the box answers with, which is this origin. font-src is the
+     application's face under /fonts/. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <title>NI-Info</title>
 <meta name="theme-color" content="#000000">
 <!-- Pinned to a home screen is what this page is for, so it says so twice: the
@@ -18,6 +19,7 @@
 <link rel="manifest" href="/info/manifest.json">
 <link rel="apple-touch-icon" href="/info/icon.png">
 <link rel="icon" href="/app/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/fonts/ubuntu.css">
 <link rel="stylesheet" href="/info/info.css">
 </head>
 <body>

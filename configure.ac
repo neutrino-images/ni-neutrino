@@ -862,6 +862,7 @@ data/oled/themes/800x480/Makefile
 data/ni-web/Makefile
 data/ni-web/ai/Makefile
 data/ni-web/app/Makefile
+data/ni-web/fonts/Makefile
 data/ni-web/info/Makefile
 data/ni-web/rc/Makefile
 data/ni-web/swagger/Makefile
