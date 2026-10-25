@@ -26,31 +26,12 @@
 // key down cannot turn into a stream of them. One is spent on opening.
 //
 // The keys are the ones this box names and no others: the route that lists them
-// is the truth about what the box will act on, and a picture of somebody else's
-// handset is a promise about keys that may not exist here. The box names a few of
-// them twice, so the list is read as a set.
+// is the truth about what the box will act on, and a layout copied from somebody
+// else's handset is a promise about keys that may not exist here. The box names a
+// few of them twice, so the list is read as a set.
 //
-// THE PHOTOGRAPH IS THE ONE SOMEBODY IS HOLDING, or there is none. Which handset a
-// box is sold with is worked out from what the box calls itself, and only the
-// pictures a build's own model can want are installed, so a picture that is not
-// there is not a fault: the switch is simply not offered.
-//
-// AND IT IS NOT OFFERED AT ALL WHERE THE PICTURE STANDS OVER THE KEYS RATHER THAN
-// BESIDE THEM. The photographs are about 169 by 716, one to four and a fifth, and
-// the stylesheet holds them to 320 wide: that is 1355 tall, longer than any window
-// this page is read in. Over the picture, every key of it is a scroll away from
-// the thing it changed, and at 320 a key is some 38 pixels across, under the 44 a
-// thumb lands on. So below the width at which the two stand side by side there is
-// no photograph and no switch for one either: a switch that would draw nothing
-// reads as a thing this screen can do and will not.
-//
-// WHAT THE SWITCH REMEMBERS IS THIS BROWSER'S AND NOT THE BOX'S. Which of the two
-// forms somebody reads the handset in is a convenience of the machine in their
-// hand, so it is a thing for local storage rather than for a setting on the box.
-//
-// Drawn keys are also worked with a keyboard. The arrows reach the direction keys,
-// the digits reach the digits and the enter key reaches OK, which is the one thing
-// hot spots on a photograph could never do.
+// The keys are also worked with a keyboard. The arrows reach the direction keys,
+// the digits reach the digits and the enter key reaches OK.
 import { html, useState, useEffect, useRef, route } from '../../runtime.js';
 import * as store from '../../store.js';
 import { t } from '../../i18n.js';
@@ -62,7 +43,6 @@ import { toast } from '../../ui/toast.js';
 import { refusalLine } from '../../problem.js';
 import { fold } from '../../ui/kept.js';
 import { Card, useResource } from './parts.js';
-import { HANDSETS, PICTURE_FOR, PICTURE_FOR_HARDWARE, keySpots } from './handsets.js';
 import { useCapture } from './screenshot.js';
 import { Dialog } from '../../ui/dialog.js';
 import shell from '../../shell.text.js';
@@ -70,12 +50,6 @@ import shell from '../../shell.text.js';
 export const css = '/app/screens/now/now.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
 export function lead() { return t(text, 'now.remote.head'); }
-
-
-/* Where the pictures are installed. Written once here, because it is a
-   directory of this page's own and not a route of the API, and a path built at
-   three call sites is a path that gets renamed at two of them. */
-const PICTURE_DIR = '/rc/';
 
 /* The order the keys are laid out in, and the only thing on this screen that is
    written down rather than read off the box. A group names keys it would like;
@@ -123,11 +97,7 @@ const FROM_KEYBOARD = {
 	5: 'KEY_5', 6: 'KEY_6', 7: 'KEY_7', 8: 'KEY_8', 9: 'KEY_9',
 };
 
-/* THE WIDTH AT WHICH THE PICTURE STANDS BESIDE THE KEYS RATHER THAN OVER THEM,
-   and with it whether a photograph of the handset is worth offering at all. One
-   number for both: side by side the photograph is a column somebody scrolls past,
-   stacked it is a thousand pixels between the picture and the key that changed
-   it.
+/* THE WIDTH AT WHICH THE PICTURE STANDS BESIDE THE KEYS RATHER THAN OVER THEM.
 
    Nine hundred and not the width at which the frame moves its destinations into
    the bar along the bottom. That one is 1152, and a tablet held sideways is under
@@ -160,41 +130,6 @@ function useBeside() {
 	}, []);
 
 	return beside;
-}
-
-/* Where the answer to the switch is kept. This browser's and nobody else's,
-   and it survives a reload rather than a session, which is what the switch is
-   worth: somebody who prefers the drawn keys prefers them tomorrow as well. */
-const PHOTO_KEY = 'ni-web.remote.photo';
-
-/**
- * Whether the photograph is wanted, as this browser last said.
- *
- * Absent means yes, which is what this screen did before anything was remembered.
- * Read inside a try, because storage throws rather than answering nothing in a
- * browser told to keep no site data.
- *
- * @returns {boolean}
- */
-function photoWanted() {
-	try {
-		return window.localStorage.getItem(PHOTO_KEY) !== 'no';
-	} catch (e) {
-		return true;
-	}
-}
-
-/**
- * @param {boolean} wanted
- * @returns {void}
- */
-function rememberPhoto(wanted) {
-	try {
-		window.localStorage.setItem(PHOTO_KEY, wanted ? 'yes' : 'no');
-	} catch (e) {
-		// The switch still works for as long as the page is open; the next
-		// visit simply starts from the default again.
-	}
 }
 
 /**
@@ -240,28 +175,6 @@ export function groupsFor(named) {
 }
 
 /**
- * Which photograph belongs to this box.
- *
- * The setting comes first, because somebody who told the box it is being driven by
- * an old dbox handset is holding that handset. Nought there means the box's own,
- * looked up under the name the box gives itself: the vendor and the model joined
- * by a space, which is what the old interface matched on as well.
- *
- * @param {string} vendor
- * @param {string} model
- * @param {number} hardware keybindings.remote_control_hardware
- * @returns {string} the name of the picture, empty for a box with none
- */
-export function pictureFor(vendor, model, hardware) {
-	const byHand = PICTURE_FOR_HARDWARE[hardware];
-	if (byHand) {
-		return byHand;
-	}
-	const said = vendor === '' ? model : vendor + ' ' + model;
-	return PICTURE_FOR[said] || '';
-}
-
-/**
  * What a key is called on screen: the word this page has for it, and the name
  * the box gave with its prefix taken off where it has none.
  *
@@ -285,77 +198,6 @@ export function labelFor(name) {
  */
 function iconFor(name) {
 	return icons[name] || null;
-}
-
-/**
- * The handset, with a shape over every key of it that this box also names.
- *
- * Drawn as one picture and one overlay in the picture's own pixels, so the whole
- * thing scales with the column it sits in. That is also why it is not an image
- * map: the browser measures those against the picture's natural size and not
- * against the size it was drawn at, so every hot spot moves as soon as the
- * picture is scaled.
- *
- * @param {{ name: string, named: readonly string[], onPress: (key: string) => void }} props
- * @returns {Web.Drawn}
- */
-function Photograph(props) {
-	const handset = HANDSETS[props.name];
-	if (!handset) {
-		return html`<p class="now-empty">${t(text, 'now.remote.photo.gone')}</p>`;
-	}
-
-	const spots = keySpots(handset.spots);
-
-	return html`<div class="now-handset">
-		<img
-			class="now-handset-picture"
-			src=${PICTURE_DIR + props.name + '.webp'}
-			width=${handset.w}
-			height=${handset.h}
-			alt=${t(text, 'now.remote.photo.alt')} />
-		<svg
-			class="now-handset-map"
-			viewBox=${'0 0 ' + handset.w + ' ' + handset.h}
-			preserveAspectRatio="none"
-			role="group"
-			aria-label=${t(text, 'now.remote.card.keys')}>
-			${spots.map(function (spot, index) {
-				/* A key the box does not name is part of the photograph and
-				   nothing else: no focus, no pointer, nothing to press. */
-				const live = props.named.indexOf(spot.key) !== -1;
-				const common = {
-					class: live ? 'now-spot' : 'now-spot now-spot-dead',
-					role: live ? 'button' : undefined,
-					tabindex: live ? '0' : undefined,
-					'aria-label': live ? labelFor(spot.key) : undefined,
-					onClick: live ? function () { props.onPress(spot.key); } : undefined,
-					onKeyDown: live
-						? function (/** @type {KeyboardEvent} */ e) {
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								props.onPress(spot.key);
-							}
-						}
-						: undefined,
-				};
-				const key = spot.key + '-' + index;
-				if (spot.shape === 'c') {
-					return html`<circle key=${key} ...${common}
-						cx=${spot.at[0]} cy=${spot.at[1]} r=${spot.at[2]} />`;
-				}
-				if (spot.shape === 'p') {
-					const points = [];
-					for (let i = 0; i + 1 < spot.at.length; i += 2) {
-						points.push(spot.at[i] + ',' + spot.at[i + 1]);
-					}
-					return html`<polygon key=${key} ...${common} points=${points.join(' ')} />`;
-				}
-				return html`<rect key=${key} ...${common}
-					x=${spot.at[0]} y=${spot.at[1]} width=${spot.at[2]} height=${spot.at[3]} />`;
-			})}
-		</svg>
-	</div>`;
 }
 
 /**
@@ -395,8 +237,6 @@ const LEAST_GAP_MS = 1500;
 export default function Remote(props) {
 	const keys = useResource('GET', '/api/v1/osd/remote/keys');
 	const lock = useResource('GET', '/api/v1/osd/remote');
-	const info = useResource('GET', '/api/v1/system/info');
-	const binding = useResource('GET', '/api/v1/settings/{section}', { params: { section: 'keybindings' } });
 	/* Asked so that the power key knows which way it is about to send the box.
 	   The frame asks for the same address, so this is answered from the store
 	   and costs no second request. */
@@ -407,7 +247,6 @@ export default function Remote(props) {
 	const full = props.param === 'control';
 	const pushed = useRef(false);
 	const beside = useBeside();
-	const [wanted, setWanted] = useState(photoWanted);
 	/* One on opening, and one more for every run of presses that has come to
 	   an end. The picture reads this and nothing else. */
 	const [bump, setBump] = useState(1);
@@ -442,21 +281,6 @@ export default function Remote(props) {
 		}, wait);
 	}
 
-	let hardware = 0;
-	for (const row of (binding.data && binding.data.items) || []) {
-		if (row.id === 'remote_control_hardware') {
-			hardware = Number(row.value) || 0;
-		}
-	}
-	const box = info.data;
-	const picture = box ? pictureFor(box.vendor, box.model, hardware) : '';
-	/* Offered where there is a photograph and room to stand it beside the
-	   television picture, and drawn where it is also wanted. Two words for two
-	   things: a window narrowed past the threshold stops drawing the
-	   photograph without forgetting that somebody asked for one. */
-	const offer = picture !== '' && beside;
-	const showing = offer && wanted;
-
 	/**
 	 * @param {string} name
 	 * @returns {void}
@@ -486,8 +310,8 @@ export default function Remote(props) {
 	/* THE POWER KEY ASKS FIRST WHILE THE BOX IS ON, and so does the header's
 	   key and the switch on the box card: it takes the picture off the
 	   television, and on a screen of sixty keys it is the one a slip costs
-	   most. Every way of pressing comes through here, the drawn keys, the
-	   photograph and the keyboard alike, so none of them gets round it.
+	   most. Every way of pressing comes through here, the drawn keys and the
+	   keyboard alike, so neither of them gets round it.
 	   Waking does not ask. A box that has not yet said which it is in is taken
 	   to be on, because asking once too often costs a press and not asking
 	   once too often costs the evening's film.
@@ -535,15 +359,6 @@ export default function Remote(props) {
 		}
 		event.preventDefault();
 		press(wanted);
-	}
-
-	/**
-	 * @param {boolean} next
-	 * @returns {void}
-	 */
-	function choosePhoto(next) {
-		setWanted(next);
-		rememberPhoto(next);
 	}
 
 	/**
@@ -760,44 +575,33 @@ export default function Remote(props) {
 						${t(text, 'now.remote.full')}
 					</button>
 				</p>`}
-			${/* Which of the two forms the keys are drawn in, read before them
-			     rather than at the foot of the screen under a card about
-			     something else. */''}
-			${showing
-				? html`<${Photograph} name=${picture} named=${named} onPress=${press} />`
-				: html`<div
-					role="group"
-					tabindex="0"
-					aria-label=${t(text, 'now.remote.card.keys')}
-					onKeyDown=${onKey}>
-					${groups.map(function (group) {
-						const drawn = keysOf(group, press);
-						/* THE ONES NO GROUP CLAIMED ARE FOLDED AWAY AND NOT
-						   DROPPED. A kernel names a hundred keys and a handset
-						   has forty of them. Dropping them would make a key
-						   unreachable that the box would act on; leaving them
-						   out in the open made the screen a catalogue rather
-						   than a handset. */
-						if (group.id === 'rest') {
-							return html`<details key=${group.id} class="now-keygroup now-keyrest" ...${fold('now.remote:rest')}>
-								<summary class="now-sub">
-									${t(text, 'now.remote.count', { count: group.keys.length })}
-								</summary>
-								${drawn}
-							</details>`;
-						}
-						return html`<section key=${group.id} class="now-keygroup">
+			<div
+				role="group"
+				tabindex="0"
+				aria-label=${t(text, 'now.remote.card.keys')}
+				onKeyDown=${onKey}>
+				${groups.map(function (group) {
+					const drawn = keysOf(group, press);
+					/* THE ONES NO GROUP CLAIMED ARE FOLDED AWAY AND NOT
+					   DROPPED. A kernel names a hundred keys and a handset
+					   has forty of them. Dropping them would make a key
+					   unreachable that the box would act on; leaving them
+					   out in the open made the screen a catalogue rather
+					   than a handset. */
+					if (group.id === 'rest') {
+						return html`<details key=${group.id} class="now-keygroup now-keyrest" ...${fold('now.remote:rest')}>
+							<summary class="now-sub">
+								${t(text, 'now.remote.count', { count: group.keys.length })}
+							</summary>
 							${drawn}
-						</section>`;
-					})}
-				</div>`}
+						</details>`;
+					}
+					return html`<section key=${group.id} class="now-keygroup">
+						${drawn}
+					</section>`;
+				})}
+			</div>
 			<p class="now-hint">${t(text, 'now.remote.hint')}</p>
-			${offer
-				? html`<${Switch}
-					label=${t(text, 'now.remote.photo')}
-					checked=${wanted}
-					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { choosePhoto(e.currentTarget.checked); }} />`
-				: null}
 			${/* A card section in a card section to separate */''}
 			<${Card}
 				title=${t(text, 'now.remote.card.lock')}

@@ -125,7 +125,6 @@ that is where its test goes.
     info/           a display page of its own, for pinning to a home screen
     vendor/         fetched, not committed
     swagger/        the API documentation page, fetched the same way
-    rc/             photographs of the handsets, one per shape of remote
 
 A screen owns its stylesheet and names it in `export const css`; the frame
 loads it when the screen is first drawn.

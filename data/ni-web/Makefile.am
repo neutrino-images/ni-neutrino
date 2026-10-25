@@ -3,14 +3,6 @@ SUBDIRS = \
 	info \
 	fonts
 
-# The handset photographs, under a switch of their own: the screen draws the
-# keys where there is no picture for the model, so a box short of flash can
-# have the remote control without the likeness of it.
-if ENABLE_HANDSET_PICTURES
-SUBDIRS += \
-	rc
-endif
-
 # The reader for the API document, under the same switch as the document's own
 # prose: a build told to leave the descriptions out has nothing for this page to
 # show, and installing it regardless spent four hundred kilobytes on saying so.

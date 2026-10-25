@@ -175,19 +175,6 @@ fi
 # between fitting and not.
 AM_CONDITIONAL(ENABLE_API_DOC, test "$enable_api_doc" = "yes")
 
-# The photographs of the handset that belongs to the box, drawn under the keys
-# on the remote control screen. One model's set is between 28 and 134 kilobytes
-# depending on how many shapes of handset it was sold with, and the screen
-# falls back to drawing the keys where there is no picture, so this is a size
-# lever that costs a likeness and nothing else. On by default: a box with the
-# room for it is better with the handset somebody is holding.
-AC_ARG_ENABLE(handset-pictures,
-	AS_HELP_STRING([--disable-handset-pictures], [draw the keys rather than the handset @<:@default=yes@:>@]),
-	[enable_handset_pictures="$enableval"],
-	[enable_handset_pictures="yes"])
-
-AM_CONDITIONAL(ENABLE_HANDSET_PICTURES, test "$enable_handset_pictures" = "yes")
-
 # The copied control API, the seventy-four handlers under /control/ that the
 # old web server used to answer alone (see src/httpd/compat/). A size lever
 # for a box like nevis, which nothing still calling that surface runs on: off
@@ -864,7 +851,6 @@ data/ni-web/ai/Makefile
 data/ni-web/app/Makefile
 data/ni-web/fonts/Makefile
 data/ni-web/info/Makefile
-data/ni-web/rc/Makefile
 data/ni-web/swagger/Makefile
 data/pictures/Makefile
 data/pictures/backgrounds/Makefile

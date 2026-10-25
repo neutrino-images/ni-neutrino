@@ -209,7 +209,7 @@
 
    NINE HUNDRED IS THE SAME NUMBER THE SCREEN READS IN JAVASCRIPT, and it is read
    twice because there is nowhere both can read it from: the layout needs it here
-   and the drawing of the photograph needs it in remote.js, which says why it is
+   and the drawing of the screen needs it in remote.js, which says why it is
    this number and not the two the rest of the page turns at. */
 .now-remote, .now-display { display: grid; grid-template-columns: minmax(0, 1fr);
 	gap: var(--gap-4); align-items: start; }
@@ -456,28 +456,6 @@
 .now-keys-transport { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); }
 
 .now-keys-bottom { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-
-/* The photograph, with the hot spots over it. The picture keeps its own
-   proportions and the overlay is stretched over exactly the box it ends up in,
-   which is what lets the shapes stay in the pixels of the photograph. The
-   width is a ceiling and not a size: a handset drawn larger than it is on a
-   desk is a photograph blown up. */
-.now-handset { position: relative; max-width: 320px; margin-top: var(--gap-3); }
-.now-handset-picture { display: block; width: 100%; height: auto;
-	border-radius: var(--radius-lg); }
-.now-handset-map { position: absolute; inset: 0; width: 100%; height: 100%; }
-
-.now-spot { fill: transparent; stroke: transparent; stroke-width: 2; cursor: pointer; }
-.now-spot:focus {
-	fill: var(--accent-wash); stroke: var(--accent); outline: none;
-}
-@media (hover: hover) {
-	.now-spot:hover {
-		fill: var(--accent-wash); stroke: var(--accent);
-	}
-}
-/* A key this box does not name is part of the photograph and nothing else. */
-.now-spot-dead { pointer-events: none; }
 
 /* -------------------------------------------------------------- pictures */
 
