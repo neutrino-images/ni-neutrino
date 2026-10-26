@@ -594,9 +594,11 @@
 	min-height: 0;
 	aspect-ratio: 1;
 	align-self: center;
-	justify-self: center;
 	border-radius: 50%;
 }
+
+.now-key-KEY_MENU { justify-self: start; }
+.now-key-KEY_HOME { justify-self: end; }
 
 .now-keys-colour { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
