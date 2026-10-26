@@ -173,7 +173,10 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
    (app/ui/topbar.js says which side that is). The fade lets clicks and taps
    through to the pill under it. */
 .entries-row { position: relative; }
-.entries-row::before, .entries-row::after { position: absolute; top: 0; bottom: var(--gap-2); width: 2.5rem;
+/* As tall as a pill and not as the row, which a bar under the pills makes
+   taller, so the mark stands level with the words it points past. */
+.entries-row::before, .entries-row::after { position: absolute; top: 0; width: 2.5rem;
+	height: calc(var(--fs-s) * 1.45 + 2 * var(--gap-1) + 2px);
 	display: none; align-items: center; pointer-events: none; color: var(--text-dim); font-size: var(--fs-l); }
 .entries-row::before { content: "‹"; content: "‹" / ""; left: 0; justify-content: flex-start;
 	padding-left: var(--gap-1); background: linear-gradient(to right, var(--ground-1) 45%, transparent); }
@@ -477,15 +480,26 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
 	clip-path: inset(50%); white-space: nowrap; }
 
-/* A bar where one is unavoidable: thin and quiet. The two rows of pills carry
-   none at any width, because a bar 3 pixels high under a row of pills is a
-   stripe that says nothing. */
+/* A bar where one is unavoidable: thin and quiet. The rows of pills carry none
+   where a finger scrolls them, because a bar 3 pixels high under a row of pills
+   is a stripe that says nothing to a thumb that can swipe the row itself. */
 .content, .scroll-x { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 .content::-webkit-scrollbar, .scroll-x::-webkit-scrollbar { width: 7px; height: 7px; }
 .content::-webkit-scrollbar-thumb, .scroll-x::-webkit-scrollbar-thumb { background: var(--line); border-radius: var(--radius); }
 .content::-webkit-scrollbar-track, .scroll-x::-webkit-scrollbar-track { background: transparent; }
 .entries, .chipbar { scrollbar-width: none; }
 .entries::-webkit-scrollbar, .chipbar::-webkit-scrollbar { width: 0; height: 0; }
+/* WITH A MOUSE THE SCREENS OF A DESTINATION DO CARRY ONE. A wheel turns a page
+   up and down and not a row sideways, so the bar is the one thing a mouse can
+   take hold of to reach the screens past the edge. Drawn only where the row
+   runs past an edge, as a bar is, and in the same colours as the one beside
+   the content. */
+@media (hover: hover) and (pointer: fine) {
+	.entries { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+	.entries::-webkit-scrollbar { width: 7px; height: 7px; }
+	.entries::-webkit-scrollbar-thumb { background: var(--line); border-radius: var(--radius); }
+	.entries::-webkit-scrollbar-track { background: transparent; }
+}
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
@@ -577,6 +591,7 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 	.field input, .field select, .field textarea { min-height: var(--tap-height); }
 	.onair { min-height: var(--tap-height); }
 	.entries a { display: flex; align-items: center; min-height: var(--tap-height); }
+	.entries-row::before, .entries-row::after { height: max(var(--tap-height), calc(var(--fs-s) * 1.45 + 2 * var(--gap-1) + 2px)); }
 
 	/* A TABLE IS NOT A TABLE HERE. Seven columns at 360 pixels is either a row
 	   broken over three lines or a page pushed sideways, and both stop being a
