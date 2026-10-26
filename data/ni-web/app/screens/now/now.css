@@ -2,14 +2,16 @@
    colour or a measure written out here.
 
    The cards fall into as many columns as the width allows and into one at the
-   narrow folding. They are not stretched to a common height, because a card with
-   three lines in it pulled down to the height of one with twelve is a screen
-   with nothing for the eye to find. */
+   narrow folding. The cards in one row stand as tall as the tallest of them, so
+   a row reads as one band and not as a ragged line of boxes. The grid does that
+   by itself: the row is as high as its highest card, and stretch pulls the
+   others down to it. Nothing measures a card, so a card that grows or shrinks
+   takes its row with it on the next layout. */
 .now-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 	gap: var(--gap-4);
-	align-items: start;
+	align-items: stretch;
 }
 
 .now-card {

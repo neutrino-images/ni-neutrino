@@ -6,8 +6,9 @@
 // question and each failing on its own: a box that turns one of them down
 // colours that card and leaves the rest standing.
 //
-// The cards are not pulled to one height, and the two that carry a set of
-// readings rather than one figure are given two columns instead of one.
+// The cards in one row stand as tall as the tallest of them (now.css), and the
+// two that carry a set of readings rather than one figure are given two columns
+// instead of one.
 //
 // What changes by itself arrives as an event and is never polled. Zapping, the
 // mode, standby, the volume and the silence are all on the stream, the store
