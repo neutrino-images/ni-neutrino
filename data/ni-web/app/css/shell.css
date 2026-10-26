@@ -176,6 +176,15 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
 	justify-content: center; gap: 2px; min-height: var(--tap-height); padding: var(--gap-1) 2px;
 	background: none; border: 0; border-radius: var(--radius); color: var(--text-dim);
 	font: inherit; font-size: var(--fs-xs); text-decoration: none; }
+/* THE FIFTH NAMES THE PAGE IT IS ON, AND "EINSTELLUNGEN" IS LONGER THAN A FIFTH.
+   A key in a flex row is never narrower than its word, so that one word pushed
+   the bar past the edge of a narrow telephone, or of any telephone once the
+   writing was larger, and the page could be pushed sideways under it.
+   The fifth may be as wide as its name where there is room, and no wider than
+   what the four leave when each keeps a finger's width; a name longer than
+   that ends in an ellipsis. The four keep their words: theirs are short. */
+.dock .dock-more { max-width: calc(100% - 4 * (var(--tap-height) + var(--gap-1))); }
+.dock a > span, .dock button > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dock .ic { font-size: var(--fs-l); line-height: 1; }
 /* A drawn mark is as tall as a line of the words it stands with, and drawn in
    their colour, so the current one turns the accent with its label. */
