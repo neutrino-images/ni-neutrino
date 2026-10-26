@@ -30,8 +30,10 @@ import { State } from '../../ui/state.js';
 import { Field } from '../../ui/field.js';
 import { Switch } from '../../ui/switch.js';
 import { Button } from '../../ui/button.js';
-import { Ask, Act, failureText } from './parts.js';
+import { Dialog } from '../../ui/dialog.js';
+import { Act, withSession, failureText } from './parts.js';
 import text from './webserver.text.js';
+import shell from '../../shell.text.js';
 
 export const css = '/app/screens/system/system.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -96,6 +98,23 @@ export function changes(draft, now) {
 	if (logosOf(now) !== null && draft.logos !== logosOf(now))
 		body.channel_logos = draft.logos;
 	return body;
+}
+
+/**
+ * The fields as the box holds them, which is where the form starts and where the way back
+ * on the save bar returns to. The password is never read back, so it starts empty.
+ *
+ * @param {Api.Webserver} now
+ * @returns {{ port: string, bind: string, user: string, password: string, logos: boolean }}
+ */
+export function draftOf(now) {
+	return {
+		port: String(now.port),
+		bind: now.bind,
+		user: now.user,
+		password: '',
+		logos: logosOf(now) !== false
+	};
 }
 
 /**
@@ -186,26 +205,22 @@ export default function Webserver() {
 
 	const held = shot === null ? null : shot.data;
 
+	const [asking, setAsking] = useState(false);
+
 	/* Seeded once and never again. A second reading arriving while somebody is
 	   typing would otherwise take the field out from under them, and there is
 	   nothing on this box that changes these values behind this page's back
 	   except the screen at the television, which is a person standing in the
 	   same room. */
 	useEffect(function () {
-		if (draft === null && held) {
-			setDraft({
-				port: String(held.port),
-				bind: held.bind,
-				user: held.user,
-				password: '',
-				logos: logosOf(held) !== false
-			});
-		}
+		if (draft === null && held)
+			setDraft(draftOf(held));
 	}, [held, draft]);
 
 	const now = held || null;
 	const wanted = (now && draft) ? changes(draft, now) : {};
-	const nothing = Object.keys(wanted).length === 0;
+	const pending = Object.keys(wanted).length;
+	const nothing = pending === 0;
 
 	/* The sentence in front of the save, which is the whole of what this screen
 	   owes somebody about to lose the connection they are reading it on. */
@@ -344,19 +359,6 @@ export default function Webserver() {
 							}} />
 					</div>`}
 
-					<div class="sys-row" data-act="save">
-						${nothing
-							? html`<${Act}
-								label=${t(text, 'sys.web.save')}
-								busy=${true}
-								onClick=${function () {}} />`
-							: html`<${Ask}
-								label=${t(text, 'sys.web.save')}
-								question=${question}
-								needs="system"
-								busy=${busy}
-								onConfirm=${save} />`}
-					</div>
 					${said !== '' ? html`<p class="callout sys-said" role="status" data-part="said">${said}</p>` : null}
 					${said !== '' ? html`<p><${Act}
 						label=${t(text, 'sys.web.again')}
@@ -386,5 +388,33 @@ export default function Webserver() {
 					: t(text, 'sys.web.legacy.off')}</dd>
 			</dl>
 		</section>`}
+
+		${/* The bar of the settings, the AI pages and the timer form, the frame's
+		     .save-bar, with the same three parts: what is waiting, the way back
+		     and the way on. At the foot of the screen and not under the last field,
+		     because it is pinned to the window and the lines of the second part
+		     would otherwise scroll out from under it. The question before saving
+		     stays, and it still comes before the sign in, so that the two are
+		     never on the screen at once (parts.js, Ask). */
+			(now && draft) ? html`<footer class="save-bar">
+			<span class="hint" data-part="pending">${t(shell, 'shell.save.pending', { count: pending })}</span>
+			<span data-act="revert">
+				<${Button} disabled=${busy || nothing}
+					onClick=${function () { setDraft(draftOf(now)); setSaid(''); }}>${t(shell, 'shell.save.revert')}<//>
+			</span>
+			<span data-act="save">
+				<${Button} primary=${true} disabled=${busy || nothing}
+					onClick=${function () { setAsking(true); }}>${t(text, 'sys.web.save')}<//>
+			</span>
+		</footer>` : null}
+
+		<${Dialog}
+			open=${asking}
+			title=${t(text, 'sys.web.save')}
+			confirmLabel=${t(text, 'sys.web.save')}
+			onCancel=${function () { setAsking(false); }}
+			onConfirm=${function () { setAsking(false); withSession('system', save); }}>
+			<p data-part="save-ask">${question}</p>
+		<//>
 	</div>`;
 }

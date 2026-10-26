@@ -92,3 +92,7 @@
 	.sys-read dt { margin-top: var(--gap-3); }
 	.sys-read dt:first-child { margin-top: 0; }
 }
+
+/* The save bar of the server's screen, as wide as the blocks above it, as it is
+   on the settings and the AI pages. */
+.sys > .save-bar { max-width: var(--content-width); }
