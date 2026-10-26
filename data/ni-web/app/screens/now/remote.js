@@ -192,10 +192,11 @@ export function labelFor(name) {
 }
 
 /**
- * What a key is displayed on screen: the icon this page has for it.
+ * What a key is displayed on screen: the icon this page has for it, or nothing
+ * where it has none, and then the caller writes the key's name instead.
  *
  * @param {string} name
- * @returns {string}
+ * @returns {Web.Drawn}
  */
 function iconFor(name) {
 	return icons[name] || null;

@@ -1,7 +1,6 @@
 import { html } from '../../runtime.js';
 import { t } from '../../i18n.js';
 import text from './now.text.js';
-import { Card, useResource } from './parts.js';
 import { Displays } from './screenshot.js';
 
 export const css = '/app/screens/now/now.css';
