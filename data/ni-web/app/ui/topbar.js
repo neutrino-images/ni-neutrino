@@ -13,7 +13,7 @@
 // The second level is under the first and not beside it. A column down the left costs
 // two hundred pixels on every screen, and the two screens that need the width most are
 // the guide and the bouquets.
-import { html, Link, useState, useEffect, useId } from '../runtime.js';
+import { html, Link, useState, useEffect, useLayoutEffect, useRef, useId } from '../runtime.js';
 import { t } from '../i18n.js';
 import text from '../shell.text.js';
 import { labelOf, hrefFor } from '../nav.js';
@@ -328,26 +328,78 @@ export function AreaTabs(props) {
 export function EntryTabs(props) {
 	const area = props.area;
 	const items = props.items;
+	const row = useRef(/** @type {HTMLElement | null} */ (null));
+	const [more, setMore] = useState('');
+
+	/* WHERE THE ROW GOES ON PAST THE EDGE. It scrolls sideways at every width
+	   and carries no bar, and a row cut at the edge of the window looks like a
+	   row that ends there: the settings have sixteen screens, and on a
+	   telephone four of them were in sight. So the side that has more says so, and the one somebody
+	   is on is brought into sight when the page opens on it.
+
+	   Read, not decided: what is drawn at which width is still the
+	   stylesheet's, and this only asks the row where it has been scrolled to.
+	   A row that fits runs past no edge, and nothing is drawn. */
+	useLayoutEffect(function () {
+		const nav = row.current;
+		if (!nav)
+			return undefined;
+
+		function measure() {
+			if (!nav)
+				return;
+			const start = nav.scrollLeft > 1;
+			const end = nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 1;
+			setMore((start ? 'start' : '') + (start && end ? ' ' : '') + (end ? 'end' : ''));
+		}
+
+		const here = /** @type {HTMLElement | null} */ (nav.querySelector('[aria-current]'));
+		if (here) {
+			const box = nav.getBoundingClientRect();
+			const it = here.getBoundingClientRect();
+			if (it.left < box.left || it.right > box.right)
+				nav.scrollLeft += it.left - box.left - (box.width - it.width) / 2;
+		}
+		measure();
+
+		nav.addEventListener('scroll', measure, { passive: true });
+		/* The row and every pill in it, since a larger writing or a face that
+		   arrives late widens the pills without the row changing width. */
+		const sizes = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : null;
+		if (sizes) {
+			sizes.observe(nav);
+			for (const pill of Array.from(nav.children))
+				sizes.observe(pill);
+		}
+		return function () {
+			nav.removeEventListener('scroll', measure);
+			if (sizes)
+				sizes.disconnect();
+		};
+	}, [area ? area.id : '', items, props.activeEntry]);
+
 	if (!area || !items || items.length === 0)
 		return null;
 
-	return html`<nav class="entries" aria-label=${t(text, 'shell.second', { area: labelOf(area) })}>
-		${items.map(function (entry) {
-			// Leaves the page for one beside it, in a tab of its own; the
-			// router leaves an anchor with a target alone.
-			if (entry.href) {
-				return html`<a
+	return html`<div class="entries-row" data-more=${more || null}>
+		<nav class="entries" ref=${row} aria-label=${t(text, 'shell.second', { area: labelOf(area) })}>
+			${items.map(function (entry) {
+				// Leaves the page for one beside it, in a tab of its own; the
+				// router leaves an anchor with a target alone.
+				if (entry.href) {
+					return html`<a
+						key=${entry.id}
+						href=${entry.href}
+						target="_blank"
+						rel="noopener">${labelOf(entry)}<span aria-hidden="true"> ↗</span></a>`;
+				}
+				return html`<${Link}
 					key=${entry.id}
-					href=${entry.href}
-					target="_blank"
-					rel="noopener">${labelOf(entry)}<span aria-hidden="true"> ↗</span></a>`;
-			}
-			return html`<${Link}
-				key=${entry.id}
-				href=${hrefFor(area.id, entry.id)}
-				aria-current=${entry.id === props.activeEntry ? 'page' : null}>${labelOf(entry)}<//>`;
-		})}
-	</nav>`;
+					href=${hrefFor(area.id, entry.id)}
+					aria-current=${entry.id === props.activeEntry ? 'page' : null}>${labelOf(entry)}<//>`;
+			})}
+		</nav>
+	</div>`;
 }
 
 /* THE MARK SAYS WHETHER THE EVENT STREAM IS CARRYING. Accent while a stream is

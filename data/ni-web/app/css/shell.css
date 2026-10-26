@@ -164,6 +164,23 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
 }
 .entries a[aria-current] { color: var(--accent); border-color: var(--accent-edge); background: var(--accent-wash); }
 
+/* ONE LINE AT EVERY WIDTH, AND IT SAYS WHERE IT GOES ON. The row scrolls sideways
+   and carries no bar, so a row cut at the edge read as a row that ends there:
+   three of the sixteen settings were out of sight at 1280 pixels and twelve on a
+   telephone, and nothing said so. Folded onto more lines it would push the
+   screen down by a line on a desktop and by six on a telephone, so it stays one
+   line, and the side that has more fades out under a mark that points that way
+   (app/ui/topbar.js says which side that is). The fade lets clicks and taps
+   through to the pill under it. */
+.entries-row { position: relative; }
+.entries-row::before, .entries-row::after { position: absolute; top: 0; bottom: var(--gap-2); width: 2.5rem;
+	display: none; align-items: center; pointer-events: none; color: var(--text-dim); font-size: var(--fs-l); }
+.entries-row::before { content: "‹"; content: "‹" / ""; left: 0; justify-content: flex-start;
+	padding-left: var(--gap-1); background: linear-gradient(to right, var(--ground-1) 45%, transparent); }
+.entries-row::after { content: "›"; content: "›" / ""; right: 0; justify-content: flex-end;
+	padding-right: var(--gap-1); background: linear-gradient(to left, var(--ground-1) 45%, transparent); }
+.entries-row[data-more~="start"]::before, .entries-row[data-more~="end"]::after { display: flex; }
+
 /* ------------------------------------------- the bar along the bottom */
 
 /* Four asked for all day and a fifth that opens the rest. Four and not eight:
