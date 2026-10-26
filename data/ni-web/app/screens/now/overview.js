@@ -18,7 +18,12 @@
 // EVERY CONTROL HERE IS LIVE. What needs more than this request carries raises
 // the sign in sheet as it is pressed and goes through afterwards, and the two
 // that take the picture away ask first.
-import { html, useState, useEffect, useRef } from '../../runtime.js';
+//
+// THE ORDER IS THE PAGE'S UNLESS THIS BROWSER SAYS OTHERWISE. With the switch in
+// the header's menu on (app/ui/arrange.js), every card carries a grip and stands
+// where this browser last put it (order.js). Off, which is the default, this
+// screen is drawn exactly as it was before that switch existed.
+import { html, useState, useEffect, useRef, useId } from '../../runtime.js';
 import { api, buildUrl } from '../../api.js';
 import * as store from '../../store.js';
 import * as session from '../../session.js';
@@ -37,7 +42,9 @@ import { Logo } from '../../ui/logo.js';
 import { useRefused } from '../../ui/refused.js';
 import * as pagePlayer from '../../ui/playing.js';
 import { hrefFor, areaById, entryById, labelOf } from '../../nav.js';
-import { Card, Meter, useResource, useOnScreen } from './parts.js';
+import { Card, Title, Meter, useResource, useOnScreen } from './parts.js';
+import { CARDS, keptOrder, keepOrder, isOwn, shifted, dropped, behind } from './order.js';
+import { chosenArrange, onArrange } from '../../ui/arrange.js';
 import { boxNowSeconds } from '../../boxclock.js';
 import { readPlayback, isPlayback, positionAt, timeText, tileActions, kResyncMs } from '../../playback.js';
 import { ArchiveDetails, usePlaylist, playHereNow, isHere } from '../recordings/archive.js';
@@ -362,9 +369,10 @@ function PlaybackShown(props) {
  * What is playing, what is on, what comes after it, and what can be done with
  * it without leaving this screen.
  *
+ * @param {{ slot?: import('./parts.js').Slot | null }} props
  * @returns {Web.Drawn}
  */
-function Playing() {
+function Playing(props) {
 	const at = useNowSeconds();
 	const channel = useResource('GET', '/api/v1/channels/current');
 	const running = useResource('GET', '/api/v1/recordings');
@@ -487,7 +495,8 @@ function Playing() {
 		snapshot=${standby && standby.on ? standbyStatus
 			: (playingBack ? playback : (idle ? Object.assign({}, channel, { error: null }) : channel))}
 		wide=${true}
-		lead=${true}>
+		lead=${true}
+		slot=${props.slot}>
 		${standby && standby.on
 			? html`<p class="now-empty">${t(text, 'now.standby.state')}</p>`
 			: playingBack
@@ -562,9 +571,10 @@ function Playing() {
 /**
  * How loud the box is, and whether it is making any sound at all.
  *
+ * @param {{ slot?: import('./parts.js').Slot | null }} props
  * @returns {Web.Drawn}
  */
-function Sound() {
+function Sound(props) {
 	const sound = useResource('GET', '/api/v1/osd/volume');
 	const level = sound.data;
 	const [draft, setDraft] = useState(/** @type {number | null} */ (null));
@@ -608,7 +618,7 @@ function Sound() {
 		});
 	}
 
-	return html`<${Card} title=${t(text, 'now.card.sound')} snapshot=${sound}>
+	return html`<${Card} title=${t(text, 'now.card.sound')} snapshot=${sound} slot=${props.slot}>
 		${!level
 			/* Nothing is drawn from a reading that has not arrived. A slider
 			   standing at nought while the box is being asked is a control
@@ -658,9 +668,10 @@ function Sound() {
 /**
  * The box itself: whether it is on, what it is, how long it has been up.
  *
+ * @param {{ slot?: import('./parts.js').Slot | null }} props
  * @returns {Web.Drawn}
  */
-function BoxCard() {
+function BoxCard(props) {
 	const info = useResource('GET', '/api/v1/system/info');
 	const rest = useResource('GET', '/api/v1/system/standby');
 
@@ -692,7 +703,7 @@ function BoxCard() {
 
 	const mode = rest.data;
 
-	return html`<${Card} title=${t(text, 'now.card.box')} snapshot=${info}>
+	return html`<${Card} title=${t(text, 'now.card.box')} snapshot=${info} slot=${props.slot}>
 		${/* ONE SWITCH AND NOT TWO BUTTONS, because two of them meant one
 		     press that changes nothing. Its word is its name and never its
 		     state, the same as on the card beside it and for the same reason:
@@ -740,9 +751,10 @@ function BoxCard() {
 /**
  * Note somebody at a browser puts on the television without walking over.
  *
+ * @param {{ slot?: import('./parts.js').Slot | null }} props
  * @returns {Web.Drawn}
  */
-function Message() {
+function Message(props) {
 	const [message, setMessage] = useState('');
 	const [waits, setWaits] = useState(false);
 	const standbyStatus = useResource('GET', '/api/v1/system/standby');
@@ -759,7 +771,7 @@ function Message() {
 		}), t(text, 'now.message.sent'));
 	}
 
-	return html`<${Card} title=${t(text, 'now.card.message')} snapshot=none>
+	return html`<${Card} title=${t(text, 'now.card.message')} snapshot=none slot=${props.slot}>
 		<div class="now-message">
 			<${Field}
 				label=${t(text, 'now.message.label')}
@@ -781,9 +793,10 @@ function Message() {
  * What the box is writing to a disc right now, and what it is going to write
  * next.
  *
+ * @param {{ slot?: import('./parts.js').Slot | null }} props
  * @returns {Web.Drawn}
  */
-function Recordings() {
+function Recordings(props) {
 	const at = useNowSeconds();
 	const all = useResource('GET', '/api/v1/recordings');
 	const timers = useResource('GET', '/api/v1/timers');
@@ -813,7 +826,8 @@ function Recordings() {
 	return html`<${Card}
 		title=${t(text, 'now.card.recording')}
 		snapshot=${all}
-		empty=${all.data && rows.length === 0 ? t(text, 'now.rec.none') : undefined}>
+		empty=${all.data && rows.length === 0 ? t(text, 'now.rec.none') : undefined}
+		slot=${props.slot}>
 		<ul class="now-recordings">
 			${rows.map(function (row) {
 				return html`<li key=${row.id} class="now-recording">
@@ -848,9 +862,10 @@ function Recordings() {
  * no recording goes there. Pseudo filesystems, network shares and /boot are on
  * the mount points screen.
  *
+ * @param {{ slot?: import('./parts.js').Slot | null }} props
  * @returns {Web.Drawn}
  */
-function Storage() {
+function Storage(props) {
 	const all = useResource('GET', '/api/v1/storage/mounts');
 	const rows = ((all.data && all.data.items) || []).filter(function (/** @type {Api.Mount} */ row) {
 		return typeof row.device === 'string' && row.device.startsWith('/dev/')
@@ -862,7 +877,8 @@ function Storage() {
 	return html`<${Card} double=${true}
 		title=${t(text, 'now.card.storage')}
 		snapshot=${all}
-		empty=${all.data && rows.length === 0 ? t(text, 'now.store.none') : undefined}>
+		empty=${all.data && rows.length === 0 ? t(text, 'now.store.none') : undefined}
+		slot=${props.slot}>
 		<ul class="now-mounts">
 			${rows.map(function (row) {
 				return html`<li key=${row.id} class="now-mount">
@@ -886,9 +902,10 @@ function Storage() {
  *
  * The readings are taken while this card can be seen and no longer.
  *
+ * @param {{ slot?: import('./parts.js').Slot | null }} props
  * @returns {Web.Drawn}
  */
-function Reception() {
+function Reception(props) {
 	const box = useRef(/** @type {HTMLElement | null} */ (null));
 	const watching = useOnScreen(box);
 	const all = useResource('GET', '/api/v1/tuner/frontends');
@@ -974,8 +991,16 @@ function Reception() {
 	const scale = reading ? reading.full_scale : 0;
 	const rows = (all.data && all.data.items) || [];
 
-	return html`<section class="now-card now-double" ref=${box} aria-label=${t(text, 'now.card.reception')}>
-		<h2 class="now-card-title">${t(text, 'now.card.reception')}</h2>
+	const slot = props.slot || null;
+
+	return html`<section
+		class="now-card now-double"
+		ref=${box}
+		aria-label=${t(text, 'now.card.reception')}
+		data-card=${slot ? slot.id : null}
+		data-drop=${slot && slot.drop ? slot.drop : null}
+		data-carried=${slot && slot.carried ? 'yes' : null}>
+		<${Title} text=${t(text, 'now.card.reception')} slot=${slot} />
 		${problem
 			? html`<div class="now-card-bad note bad" role="alert">
 				<h3>${problem.title}</h3>
@@ -1049,9 +1074,10 @@ function Reception() {
  * the box puts out, what it does with a 4:3 picture, reading the channel lists
  * again, and putting the tuner back to where it started.
  *
+ * @param {{ slot?: import('./parts.js').Slot | null }} props
  * @returns {Web.Drawn}
  */
-function Quick() {
+function Quick(props) {
 	const schema = useResource('GET', '/api/v1/settings/schema');
 	const video = useResource('GET', '/api/v1/settings/{section}', { params: { section: 'video' } });
 	const [asking, setAsking] = useState(false);
@@ -1101,7 +1127,7 @@ function Quick() {
 		}), t(text, 'now.quick.reset.sent'));
 	}
 
-	return html`<${Card} title=${t(text, 'now.card.quick')} snapshot=${video} double=${true}>
+	return html`<${Card} title=${t(text, 'now.card.quick')} snapshot=${video} double=${true} slot=${props.slot}>
 		<div class="now-quick">
 			<span class="now-quick-label">${t(text, 'now.quick.mode')}</span>
 			${modes.length === 0
@@ -1157,10 +1183,407 @@ function Quick() {
 	<//>`;
 }
 
+/* Which card each name in the order draws, and what its grip is called. */
+/** @type {Record<string, (props: { slot?: import('./parts.js').Slot | null }) => Web.Drawn>} */
+const CARD_OF = {
+	playing: Playing,
+	box: BoxCard,
+	sound: Sound,
+	message: Message,
+	recordings: Recordings,
+	storage: Storage,
+	reception: Reception,
+	quick: Quick,
+};
+
+/** @type {Record<string, string>} */
+const NAME_OF = {
+	playing: 'now.card.playing',
+	box: 'now.card.box',
+	sound: 'now.card.sound',
+	message: 'now.card.message',
+	recordings: 'now.card.recording',
+	storage: 'now.card.storage',
+	reception: 'now.card.reception',
+	quick: 'now.card.quick',
+};
+
+/* How far the pointer travels before this is a drag rather than a press, the
+   same allowance the bouquet screen gives a hand that trembles. */
+const SLACK = 4;
+
+/* How close to the top or the bottom of the scrolling pane a card being
+   carried has to come before the pane scrolls under it, and by how much each
+   frame. On a telephone the cards are one column several screens long, and a
+   card that can only be dropped on what is already in view could never be
+   carried from the top to the bottom. */
+const EDGE = 48;
+const EDGE_STEP = 12;
+
 /**
+ * Where a card being carried would land, as the grid reads under a point.
+ *
+ * @typedef {object} Aim
+ * @property {string} id the card it would land against
+ * @property {boolean} after behind that card rather than in front of it
+ * @property {boolean} alone whether that card has its row to itself
+ */
+
+/**
+ * @typedef {object} Held
+ * @property {string} id the card being carried
+ * @property {number} x where the press began
+ * @property {number} y
+ * @property {number} atX where the pointer is now
+ * @property {number} atY
+ * @property {boolean} moved whether it has travelled further than SLACK
+ * @property {Aim | null} aim
+ */
+
+/**
+ * The cards in the order this browser left them, each with a grip.
+ *
+ * THE GRIP IS THE ONE PLACE A DRAG BEGINS, for the reason the bouquet screen
+ * gives (channels/drag.js): a card that started one wherever it was pressed
+ * could not be scrolled past on a telephone, and its sliders could not be
+ * moved. AND IT IS THE SECOND WAY AND NEVER THE ONLY ONE: the arrow keys on a
+ * grip move its card one place, and the place it lands is read out.
+ *
+ * The order is written down as soon as a card lands. There is no draft and
+ * nothing to save, because nothing about it reaches the box.
+ *
+ * @returns {Web.Drawn}
+ */
+function Arranged() {
+	const [order, setOrder] = useState(keptOrder);
+	const [carry, setCarry] = useState(/** @type {{ id: string, aim: Aim | null } | null} */ (null));
+	const [said, setSaid] = useState('');
+	const grid = useRef(/** @type {HTMLDivElement | null} */ (null));
+	const held = useRef(/** @type {Held | null} */ (null));
+	const frame = useRef(0);
+	// The card whose grip the keyboard was on, to be given it back once drawn.
+	const refocus = useRef('');
+	const hint = useId();
+
+	/* A card moved with the keyboard is a node the draw has taken out of the
+	   grid and put back somewhere else, and a node taken out loses the focus.
+	   Given back here, after the draw, so the next press of the arrow moves the
+	   same card again. */
+	useEffect(function () {
+		const id = refocus.current;
+		refocus.current = '';
+		if (id === '' || !grid.current) {
+			return undefined;
+		}
+		const grip = grid.current.querySelector('[data-card="' + id + '"] .now-grip');
+		if (grip instanceof HTMLElement && document.activeElement !== grip) {
+			grip.focus();
+		}
+		return undefined;
+	}, [order]);
+
+	useEffect(function () {
+		return function () {
+			if (frame.current !== 0) {
+				window.cancelAnimationFrame(frame.current);
+			}
+		};
+	}, []);
+
+	/**
+	 * @param {string} id
+	 * @returns {string}
+	 */
+	function nameOf(id) {
+		return t(text, NAME_OF[id] || 'now.card.box');
+	}
+
+	/**
+	 * @param {readonly string[]} next
+	 * @param {string} id
+	 * @returns {void}
+	 */
+	function land(next, id) {
+		if (next === order) {
+			return;
+		}
+		setOrder(next);
+		keepOrder(next);
+		setSaid(t(text, 'now.arrange.moved', {
+			card: nameOf(id), pos: next.indexOf(id) + 1, count: next.length,
+		}));
+	}
+
+	/**
+	 * The card under a point, read off the document, and which side of it.
+	 *
+	 * Nothing is aimed at that would leave the order as it is, so the line that
+	 * says where a card lands is drawn only where letting go would move it.
+	 *
+	 * @param {string} id the card being carried
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns {Aim | null}
+	 */
+	function aimAt(id, x, y) {
+		const whole = grid.current;
+		const under = document.elementFromPoint(x, y);
+		const card = under ? under.closest('[data-card]') : null;
+		if (!whole || !card || !whole.contains(card)) {
+			return null;
+		}
+		const target = card.getAttribute('data-card') || '';
+		if (target === '' || target === id) {
+			return null;
+		}
+		const box = card.getBoundingClientRect();
+		// Most of the grid's width, and not all of it: a border is a border.
+		const alone = box.width > whole.getBoundingClientRect().width * 0.75;
+		const after = behind(box, x, y, alone);
+		if (dropped(order, id, target, after) === order) {
+			return null;
+		}
+		return { id: target, after: after, alone: alone };
+	}
+
+	/**
+	 * Draws where the card would land, and only when that has changed: the
+	 * pointer moves a great deal more often than the place does, and every draw
+	 * here is a draw of all eight cards.
+	 *
+	 * @param {Held} now
+	 * @param {Aim | null} aim
+	 * @returns {void}
+	 */
+	function aimFor(now, aim) {
+		const was = now.aim;
+		now.aim = aim;
+		if (carry && carry.id === now.id && (was === aim || (was && aim
+			&& was.id === aim.id && was.after === aim.after && was.alone === aim.alone))) {
+			return;
+		}
+		setCarry({ id: now.id, aim: aim });
+	}
+
+	/**
+	 * @returns {void}
+	 */
+	function stopScrolling() {
+		if (frame.current !== 0) {
+			window.cancelAnimationFrame(frame.current);
+			frame.current = 0;
+		}
+	}
+
+	/**
+	 * Scrolls the pane while a carried card is held against its top or its
+	 * bottom, and reads what is under the pointer again as it goes, since a
+	 * pointer that holds still over a moving page is over something else.
+	 *
+	 * @returns {void}
+	 */
+	function scrollAtEdge() {
+		const now = held.current;
+		const pane = grid.current ? grid.current.closest('.content') : null;
+		if (!now || !now.moved || !pane) {
+			stopScrolling();
+			return;
+		}
+		const box = pane.getBoundingClientRect();
+		const by = now.atY < box.top + EDGE ? -EDGE_STEP : (now.atY > box.bottom - EDGE ? EDGE_STEP : 0);
+		if (by === 0) {
+			stopScrolling();
+			return;
+		}
+		if (frame.current !== 0) {
+			return;
+		}
+		/** @returns {void} */
+		function step() {
+			const still = held.current;
+			if (!still) {
+				frame.current = 0;
+				return;
+			}
+			const edge = pane ? pane.getBoundingClientRect() : box;
+			const again = still.atY < edge.top + EDGE ? -EDGE_STEP : (still.atY > edge.bottom - EDGE ? EDGE_STEP : 0);
+			if (again === 0 || !pane) {
+				frame.current = 0;
+				return;
+			}
+			pane.scrollBy(0, again);
+			aimFor(still, aimAt(still.id, still.atX, still.atY));
+			frame.current = window.requestAnimationFrame(step);
+		}
+		frame.current = window.requestAnimationFrame(step);
+	}
+
+	/**
+	 * @param {string} id
+	 * @param {PointerEvent} event
+	 * @returns {void}
+	 */
+	function grab(id, event) {
+		// The main button, or a finger or a pen. The others open menus.
+		if (event.pointerType === 'mouse' && event.button !== 0) {
+			return;
+		}
+		const grip = /** @type {Element & { setPointerCapture?: (id: number) => void }} */ (event.currentTarget);
+		// Everything after this reaches the grip whatever it is over, which is
+		// what makes one gesture out of a press and everything after it.
+		if (grip && typeof grip.setPointerCapture === 'function') {
+			grip.setPointerCapture(event.pointerId);
+		}
+		event.preventDefault();
+		held.current = {
+			id: id, x: event.clientX, y: event.clientY,
+			atX: event.clientX, atY: event.clientY, moved: false, aim: null,
+		};
+	}
+
+	/**
+	 * @param {PointerEvent} event
+	 * @returns {void}
+	 */
+	function slide(event) {
+		const now = held.current;
+		if (!now) {
+			return;
+		}
+		event.preventDefault();
+		now.atX = event.clientX;
+		now.atY = event.clientY;
+		if (!now.moved && Math.abs(now.atX - now.x) <= SLACK && Math.abs(now.atY - now.y) <= SLACK) {
+			return;
+		}
+		now.moved = true;
+		aimFor(now, aimAt(now.id, now.atX, now.atY));
+		scrollAtEdge();
+	}
+
+	/**
+	 * @returns {void}
+	 */
+	function letGo() {
+		const done = held.current;
+		held.current = null;
+		stopScrolling();
+		setCarry(null);
+		if (!done || !done.moved || !done.aim) {
+			return;
+		}
+		land(dropped(order, done.id, done.aim.id, done.aim.after), done.id);
+	}
+
+	/**
+	 * @returns {void}
+	 */
+	function giveUp() {
+		held.current = null;
+		stopScrolling();
+		setCarry(null);
+	}
+
+	/**
+	 * The arrow keys on a grip: up and left in front of the card before it,
+	 * down and right behind the one after it, which in a grid read from the
+	 * left and down is the same thing.
+	 *
+	 * @param {string} id
+	 * @param {KeyboardEvent} event
+	 * @returns {void}
+	 */
+	function onKey(id, event) {
+		const key = event.key;
+		let by = 0;
+		if (key === 'ArrowUp' || key === 'ArrowLeft') {
+			by = -1;
+		} else if (key === 'ArrowDown' || key === 'ArrowRight') {
+			by = 1;
+		} else if (key === 'Escape' && held.current) {
+			event.preventDefault();
+			giveUp();
+			return;
+		} else {
+			return;
+		}
+		event.preventDefault();
+		const next = shifted(order, id, by);
+		if (next === order) {
+			return;
+		}
+		refocus.current = id;
+		land(next, id);
+	}
+
+	/**
+	 * @param {string} id
+	 * @returns {import('./parts.js').Slot}
+	 */
+	function slotOf(id) {
+		const aim = carry ? carry.aim : null;
+		/** @type {import('./parts.js').Slot['drop']} */
+		let drop = '';
+		if (aim && aim.id === id) {
+			drop = aim.alone ? (aim.after ? 'below' : 'above') : (aim.after ? 'right' : 'left');
+		}
+		return {
+			id: id,
+			drop: drop,
+			carried: !!(carry && carry.id === id && carry.aim),
+			grip: html`<button
+				type="button"
+				class="now-grip"
+				aria-label=${t(text, 'now.arrange.grip', { card: nameOf(id) })}
+				aria-describedby=${hint}
+				title=${t(text, 'now.arrange.grip', { card: nameOf(id) })}
+				onPointerDown=${function (/** @type {PointerEvent} */ e) { grab(id, e); }}
+				onPointerMove=${slide}
+				onPointerUp=${letGo}
+				onPointerCancel=${giveUp}
+				onKeyDown=${function (/** @type {KeyboardEvent} */ e) { onKey(id, e); }}>⠿</button>`,
+		};
+	}
+
+	function reset() {
+		if (isOwn(order)) {
+			return;
+		}
+		setOrder(CARDS);
+		keepOrder(CARDS);
+		setSaid(t(text, 'now.arrange.reset.done'));
+	}
+
+	return html`<div class="now-grid now-arranging" ref=${grid}>
+			${order.map(function (id) {
+				const Drawn = CARD_OF[id];
+				return Drawn ? html`<${Drawn} key=${id} slot=${slotOf(id)} />` : null;
+			})}
+		</div>
+		<div class="now-arrange">
+			<p id=${hint} class="now-hint">${t(text, 'now.arrange.hint')}</p>
+			<${Button} disabled=${isOwn(order)} onClick=${reset}>${t(text, 'now.arrange.reset')}<//>
+			<p class="sr" role="status">${said}</p>
+		</div>`;
+}
+
+/**
+ * The cards as the page orders them, or as this browser has arranged them where
+ * it has chosen to (app/ui/arrange.js). The first is the default, and it is the
+ * overview exactly as it was drawn before the second existed.
+ *
  * @returns {Web.Drawn}
  */
 export default function Overview() {
+	const [arranging, setArranging] = useState(chosenArrange());
+
+	useEffect(function () {
+		return onArrange(setArranging);
+	}, []);
+
+	if (arranging) {
+		return html`<${Arranged} />`;
+	}
 	return html`<div class="now-grid">
 		<${Playing} />
 		<${BoxCard} />

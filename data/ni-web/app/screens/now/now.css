@@ -56,6 +56,75 @@
 	letter-spacing: 0.06em;
 }
 
+/* ONLY WHILE THE CARDS CAN BE MOVED (app/ui/arrange.js). None of the rules
+   below reaches a card drawn without its grip, so the overview with the
+   setting off is the overview as it was.
+
+   The word and the grip on one line, the grip at the end of it. The line keeps
+   the gap the word had under it on its own. */
+.now-card-top {
+	display: flex;
+	align-items: center;
+	gap: var(--gap-2);
+	margin: 0 0 var(--gap-3);
+}
+
+.now-card-top .now-card-title {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
+}
+
+/* THE GRIP TAKES THE GESTURE AND THE CARD DOES NOT, for the reason the bouquet
+   rows give (channels/bouquets.css): none here is what stops the browser
+   taking a drag that starts on it as a scroll, and the card around it keeps
+   its own so a finger can still scroll past it. */
+.now-grip {
+	flex: none;
+	min-width: 32px;
+	min-height: 32px;
+	margin: calc(-1 * var(--gap-2)) calc(-1 * var(--gap-2)) calc(-1 * var(--gap-2)) 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius);
+	background: none;
+	color: var(--text-dim);
+	font-size: var(--fs-m);
+	line-height: 1;
+	cursor: grab;
+	touch-action: none;
+}
+
+.now-grip:active { cursor: grabbing; }
+
+@media (hover: hover) {
+	.now-grip:hover { color: var(--accent); background: var(--ground-2); }
+}
+
+/* A finger, so the grip is a target and not a glyph. */
+@media (hover: none) {
+	.now-grip { min-width: var(--tap-height); min-height: var(--tap-height); }
+}
+
+/* The card being carried stays where it is, faded, and the card it would land
+   against says which of its edges by a line along it. Inset, so the grid does
+   not move by a pixel under the pointer while it is being read. */
+.now-grid > [data-carried] { opacity: 0.5; }
+.now-grid > [data-drop="above"] { box-shadow: inset 0 3px 0 var(--accent); }
+.now-grid > [data-drop="below"] { box-shadow: inset 0 -3px 0 var(--accent); }
+.now-grid > [data-drop="left"] { box-shadow: inset 3px 0 0 var(--accent); }
+.now-grid > [data-drop="right"] { box-shadow: inset -3px 0 0 var(--accent); }
+
+.now-arrange {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-3);
+	margin-top: var(--gap-4);
+}
+
+.now-arrange .now-hint { flex: 1 1 280px; margin: 0; }
+
 .now-sub {
 	margin: var(--gap-4) 0 var(--gap-2);
 	font-size: var(--fs-s);

@@ -21,6 +21,8 @@ import { askToSignIn, signOut } from './signin.js';
 import { SIZES, chosen, choose } from './textsize.js';
 import { THEMES, chosenTheme, chooseTheme } from './theme.js';
 import { FONTS, chosenFont, chooseFont } from './font.js';
+import { chosenArrange, chooseArrange } from './arrange.js';
+import { Switch } from './switch.js';
 import { OnAir } from './onair.js';
 import { Sheet } from './sheet.js';
 import { Dialog } from './dialog.js';
@@ -168,6 +170,31 @@ function Theme() {
 	</fieldset>`;
 }
 
+/* Whether the cards of the overview carry a grip and can be put in another
+   order. Off is the overview as it always was, so the switch is a yes or no and
+   not a choice between two orders: what order it is once it is on is decided on
+   the overview itself, where the cards are. Named by the screen it is about,
+   in the word the bar names that screen with, because a switch in a menu that
+   every screen opens has to say which screen it moves. See ui/arrange.js. */
+/**
+ * @returns {Web.Drawn}
+ */
+function Arrange() {
+	const [on, setOn] = useState(chosenArrange());
+
+	return html`<fieldset class="text-size">
+		<legend>${t(text, 'nav.now.overview')}</legend>
+		<${Switch}
+			label=${t(text, 'shell.arrange')}
+			checked=${on}
+			onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) {
+				chooseArrange(e.currentTarget.checked);
+				setOn(e.currentTarget.checked);
+			}} />
+		<p class="text-size-where">${t(text, 'shell.textsize.where')}</p>
+	</fieldset>`;
+}
+
 /**
  * @param {{
  *   status?: Web.ShellStatus | null,
@@ -248,6 +275,7 @@ export function Status(props) {
 				: html`<p class="session-may">${t(text, 'shell.signin.why')}</p>`}
 			<${TextSize} />
 			<${Theme} />
+			<${Arrange} />
 			<ul class="sheet-areas session-menu">
 				${signedIn
 					? html`<li>

@@ -85,6 +85,35 @@ export function drawableProblem(error) {
 }
 
 /**
+ * What a card on the overview is given while the cards can be moved.
+ *
+ * @typedef {object} Slot
+ * @property {string} id the name the order is kept under (order.js)
+ * @property {Web.Drawn} grip what it is taken hold of by
+ * @property {'' | 'above' | 'below' | 'left' | 'right'} drop which edge of it a
+ *           card being carried would land against
+ * @property {boolean} carried whether this is the card being carried
+ */
+
+/**
+ * The word over a card, and the grip beside it while the cards can be moved.
+ *
+ * Beside the word and not in place of any of the card: the card goes on working
+ * while it can be moved, and the grip is the one place a drag begins, so a card
+ * full of sliders and switches is still a card full of sliders and switches.
+ *
+ * @param {{ id?: string | undefined, text: string, slot?: Slot | null | undefined }} props
+ * @returns {Web.Drawn}
+ */
+export function Title(props) {
+	const heading = html`<h2 id=${props.id} class="now-card-title">${props.text}</h2>`;
+	if (!props.slot) {
+		return heading;
+	}
+	return html`<div class="now-card-top">${heading}${props.slot.grip}</div>`;
+}
+
+/**
  * One card of this destination, with its own heading and its own failure.
  *
  * Its own, and that is the point of the shape: the tuner readings are the one
@@ -94,10 +123,14 @@ export function drawableProblem(error) {
  * wide is the whole row and double is two columns of it, which are the same thing
  * wherever the grid has two columns and are not where it has four.
  *
+ * slot is there only while the cards can be moved, and without it the card is
+ * drawn exactly as it was before they could be.
+ *
  * @param {{ title: string, snapshot?: Web.Snapshot<unknown> | undefined,
  *           empty?: string | undefined, onRetry?: (() => void) | undefined,
  *           wide?: boolean | undefined, double?: boolean | undefined,
- *           lead?: boolean | undefined, children?: unknown }} props
+ *           lead?: boolean | undefined, slot?: Slot | null | undefined,
+ *           children?: unknown }} props
  * @returns {Web.Drawn}
  */
 export function Card(props) {
@@ -115,10 +148,15 @@ export function Card(props) {
 		cls += ' now-lead';
 	}
 
+	const slot = props.slot || null;
+
 	return html`<section
 		class=${cls}
-		aria-labelledby=${id}>
-		<h2 id=${id} class="now-card-title">${props.title}</h2>
+		aria-labelledby=${id}
+		data-card=${slot ? slot.id : null}
+		data-drop=${slot && slot.drop ? slot.drop : null}
+		data-carried=${slot && slot.carried ? 'yes' : null}>
+		<${Title} id=${id} text=${props.title} slot=${slot} />
 		<${State}
 			phase=${snapshot ? snapshot.phase : ''}
 			problem=${problem}

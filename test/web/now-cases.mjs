@@ -57,9 +57,54 @@ same(model.tileActions(Object.assign({}, file, { returnsTo: '2b66' })), ['stop']
 same(model.tileActions(model.readPlayback({ source: 'none' })), [], 'nothing playing offers nothing');
 same(model.kResyncMs, 15000, 'a playback is read again every fifteen seconds');
 
+// The order of the overview's cards, while this browser moves them.
+const order = await import('../../data/ni-web/app/screens/now/order.js');
+const own = order.CARDS.slice();
+
+same(order.orderOf(null), own, 'nothing kept is the page\'s own order');
+same(order.orderOf(''), own, 'an empty line is the page\'s own order');
+same(order.orderOf('quick,playing,box,sound,message,recordings,storage,reception'),
+	['quick', 'playing', 'box', 'sound', 'message', 'recordings', 'storage', 'reception'],
+	'a whole line is read as it stands');
+same(order.orderOf('quick, nonsense ,quick,playing'),
+	['quick', 'playing', 'box', 'sound', 'message', 'recordings', 'storage', 'reception'],
+	'an unknown name and a second mention are dropped, and the rest follow their own neighbours');
+same(order.orderOf('quick,sound,box,playing,recordings,storage,reception'),
+	['quick', 'sound', 'message', 'box', 'playing', 'recordings', 'storage', 'reception'],
+	'a card the line does not name goes in behind the one it follows in the page');
+same(order.orderOf('sound,playing'),
+	['sound', 'message', 'recordings', 'storage', 'reception', 'quick', 'playing', 'box'],
+	'and so does every one of several, each behind the one before it');
+same(order.orderOf('nonsense'), own, 'a line naming nothing this page draws is the page\'s own order');
+same(order.orderOf(own.join(',')) === order.CARDS, true, 'the page\'s own order read back is the page\'s own order');
+
+same([order.isOwn(own), order.isOwn(own.slice().reverse()), order.isOwn(own.slice(1))], [true, false, false],
+	'only all eight in the page\'s order are the page\'s own order');
+
+same(order.shifted(own, 'box', -1), ['box', 'playing', 'sound', 'message', 'recordings', 'storage', 'reception', 'quick'],
+	'a card moves one place forward');
+same(order.shifted(own, 'box', 1), ['playing', 'sound', 'box', 'message', 'recordings', 'storage', 'reception', 'quick'],
+	'and one place back');
+same([order.shifted(own, 'playing', -1) === own, order.shifted(own, 'quick', 1) === own, order.shifted(own, 'gone', 1) === own],
+	[true, true, true], 'past either end, or for a card that is not there, the list is handed back as it is');
+
+same(order.dropped(own, 'quick', 'playing', false),
+	['quick', 'playing', 'box', 'sound', 'message', 'recordings', 'storage', 'reception'],
+	'a card dropped in front of another lands there');
+same(order.dropped(own, 'playing', 'storage', true),
+	['box', 'sound', 'message', 'recordings', 'storage', 'playing', 'reception', 'quick'],
+	'and behind it');
+same(order.dropped(own, 'box', 'sound', false) === own, true, 'a drop that changes nothing changes nothing');
+
+const box = { left: 100, top: 200, width: 300, height: 100 };
+same([order.behind(box, 120, 280, true), order.behind(box, 380, 220, true)], [true, false],
+	'a card alone in its row is split across, top and bottom');
+same([order.behind(box, 120, 280, false), order.behind(box, 380, 220, false)], [false, true],
+	'one that shares its row is split down, left and right');
+
 // verdict
 
-const FLOOR = 19;
+const FLOOR = 36;
 if (checked < FLOOR) {
 	process.stderr.write('now-cases.mjs: only ' + checked + ' assertions ran, and there are ' + FLOOR + '\n');
 	process.exit(1);
