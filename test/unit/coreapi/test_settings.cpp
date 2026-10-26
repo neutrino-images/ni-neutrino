@@ -2314,8 +2314,11 @@ TEST_CASE("an unchanged value is answered ok whatever the conditions say", "[set
 
 	REQUIRE(settings::set("epg_dir", "/usr").ok());
 	CHECK(s.persisted == 0);
-	// A different value is judged as before.
-	CHECK(refusedAs(settings::set("epg_dir", "/tmp"), ErrorCode::SettingConditionNotMet));
+	/* A different value is judged as before. One the row's own rule takes on any
+	   machine, so that what refuses it is the condition: /tmp is a tmpfs on many
+	   systems (Debian since 13), and the rule refuses a directory on one before the
+	   condition is asked. */
+	CHECK(refusedAs(settings::set("epg_dir", "/etc"), ErrorCode::SettingConditionNotMet));
 
 	// Alone and with a member that lands: the unchanged one is done, not refused.
 	settings::Refusals failed;
