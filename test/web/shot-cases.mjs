@@ -227,10 +227,13 @@ function rig() {
 	same(/return html`<div class="now-displays">/.test(card), true, 'the displays are drawn in one wrapper');
 	const css = readFileSync(new URL('../../data/ni-web/app/screens/now/now.css', import.meta.url), 'utf8');
 	same(/\.now-displays \{[^}]*flex-direction: column/.test(css), true, 'the wrapper stacks the cards');
+	// The displays are a screen of their own (now/displays) since the remote was
+	// split in two, and the remote carries none of them any more.
 	const remote = readFileSync(new URL('../../data/ni-web/app/screens/now/remote.js', import.meta.url), 'utf8');
-	const grid = remote.slice(remote.indexOf('<${Displays} />'));
-	same([(remote.match(/<\$\{Displays\} \/>/g) || []).length, grid.indexOf('remote.card.lock') > 0], [1, true],
-		'the displays stand once, right before the lock card');
+	const screen = readFileSync(new URL('../../data/ni-web/app/screens/now/displays.js', import.meta.url), 'utf8');
+	const drawn = /<\$\{Displays\} \/>/g;
+	same([(screen.match(drawn) || []).length, (remote.match(drawn) || []).length], [1, 0],
+		'the displays stand once, on their own screen and not under the remote');
 	same(src.indexOf('/api/v1/osd/display/') < 0, true, 'the page does not ask the route that is gone');
 	same(src.indexOf("'/api/v1/osd/displays/{name}/screenshot'") > 0, true, 'each card asks for its own display by name');
 }

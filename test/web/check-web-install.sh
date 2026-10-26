@@ -130,8 +130,28 @@ for one in $WALKED; do
 		echo "check-web-install.sh: $MK has no install-data-local rule" >&2
 		exit 1
 	}
-	walk=$(grep -E '^[[:blank:]]*@?cd \$\(srcdir\) && find \.' "$MK" || true)
-	[ -n "$walk" ] || {
+	# The recipe of that rule as one line per command, the continuations joined,
+	# because where a walk breaks its line is the author's business and a check
+	# that reads one physical line holds the file to a layout rather than to what
+	# it does.
+	walk=$(awk '
+		/^install-data-local:/ { on = 1; next }
+		on && /^\t/ {
+			line = $0
+			sub(/^\t/, "", line)
+			buf = cont ? buf " " line : line
+			cont = (buf ~ /\\$/)
+			if (cont)
+				sub(/\\$/, "", buf)
+			else {
+				print buf
+				buf = ""
+			}
+			next
+		}
+		on { exit }
+	' "$MK")
+	printf '%s\n' "$walk" | grep -qE 'cd \$\(srcdir\) &&.*find \. ' || {
 		echo "check-web-install.sh: the rule in $MK does not walk \$(srcdir)," >&2
 		echo "  so a build outside the source tree installs a different set of files" >&2
 		exit 1
@@ -139,7 +159,7 @@ for one in $WALKED; do
 	# Read as a set and not as a spelling: which order the tests of the walk are
 	# written in is the author's business, and a check that reads one order holds
 	# the file to a habit rather than to what it does.
-	printf '%s\n' "$walk" | grep -q -- '-type f' || {
+	printf '%s\n' "$walk" | grep -qE 'find \. [^|]*-type f' || {
 		echo "check-web-install.sh: the walk in $MK does not ask for files," >&2
 		echo "  so it would hand a directory to the compressor" >&2
 		exit 1
@@ -157,18 +177,64 @@ for one in $WALKED; do
 		exit 1
 	}
 
-	# What the walk passes over. Only the makefiles of this directory may be
-	# passed over, because everything else under it is the page.
-	skipped=$(grep -oE "! -name '[^']*'" "$MK" | sort -u)
-	for name in $(printf '%s\n' "$skipped" | sed "s/.*! -name '//; s/'$//"); do
+	# What the walk passes over: names written into the walk itself, and the
+	# shared list in ../exclude.am where the walk reads that. The list reaches
+	# find as patterns only with globbing off, or the shell expands *.orig against
+	# the directory the walk stands in, and it is applied only where the find is
+	# handed what the loop built.
+	skipped=$(printf '%s\n' "$walk" | grep -oE "! -name '[^']*'" | sed "s/.*! -name '//; s/'$//" || true)
+	case "$walk" in
+	*'$(exclude_files)'*)
+		grep -qE '^include[[:blank:]]+\$\(srcdir\)/\.\./exclude\.am[[:blank:]]*$' "$MK" || {
+			echo "check-web-install.sh: the walk in $MK reads \$(exclude_files)" >&2
+			echo "  but $MK does not include \$(srcdir)/../exclude.am, so it passes over nothing" >&2
+			exit 1
+		}
+		printf '%s\n' "$walk" | grep -qE 'set -f &&.*for [a-z]+ in \$\(exclude_files\)' || {
+			echo "check-web-install.sh: the walk in $MK reads \$(exclude_files) with globbing on," >&2
+			echo "  so the shell expands the patterns before find sees them" >&2
+			exit 1
+		}
+		printf '%s\n' "$walk" | grep -qE 'find \. [^|]*\$\$ex' || {
+			echo "check-web-install.sh: the walk in $MK builds its exclusions" >&2
+			echo "  and does not hand them to find" >&2
+			exit 1
+		}
+		EXCLUDE="$WEB/exclude.am"
+		[ -r "$EXCLUDE" ] || { echo "check-web-install.sh: cannot read $EXCLUDE" >&2; exit 1; }
+		shared=$(awk '
+			{ sub(/#.*/, "") }
+			/^exclude_files[[:blank:]]*=/ { on = 1; sub(/^exclude_files[[:blank:]]*=/, "") }
+			on {
+				more = /\\[[:blank:]]*$/
+				sub(/\\[[:blank:]]*$/, "")
+				print
+				if (!more) exit
+			}
+		' "$EXCLUDE" | tr -s ' \t' '\n\n' | grep -v '^$' || true)
+		[ -n "$shared" ] || {
+			echo "check-web-install.sh: $EXCLUDE sets no exclude_files" >&2
+			exit 1
+		}
+		skipped="$skipped
+$shared"
+		;;
+	esac
+
+	# Only names that are never part of the page may be passed over: the
+	# makefiles of this directory, and what a patch that did not apply leaves
+	# beside its target. Everything else under it is the page.
+	set -f
+	for name in $skipped; do
 		case "$name" in
-		Makefile*) ;;
+		Makefile*|'*.orig'|'*.rej') ;;
 		*)
 			echo "check-web-install.sh: the walk in $MK passes over '$name'," >&2
-			echo "  which is not one of the makefiles of this directory" >&2
+			echo "  which is neither a makefile of this directory nor a patch's leftover" >&2
 			exit 1;;
 		esac
 	done
+	set +f
 
 	# The stored form is what the rule makes, so a source file already in it
 	# would be stored twice and answered as a script that is a gzip stream.
