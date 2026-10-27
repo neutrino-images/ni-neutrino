@@ -1138,7 +1138,9 @@ export default function Grid(props) {
 			<div class="grid__when">
 				<${Button} onClick=${function () { setFrom(from - model.WINDOW_MINUTES * 60); }}>${t(text, 'grid.back')}<//>
 				<${Button} onClick=${function () { setFrom(model.windowStart(nowSeconds())); }}>${t(text, 'grid.now')}<//>
+				<${Button} onClick=${function () { setFrom(model.primetime(from)); }}>${t(text, 'grid.prime')}<//>
 				<${Button} onClick=${function () { setFrom(from + model.WINDOW_MINUTES * 60); }}>${t(text, 'grid.forward')}<//>
+				<${Button} onClick=${function () { setFrom(model.dayLater(from)); }}>${t(text, 'grid.forward.24')}<//>
 			</div>
 			<p class="grid__window">${t(text, 'grid.window', { from: dayAndClock(from), to: clock(to) })}</p>
 		</div>

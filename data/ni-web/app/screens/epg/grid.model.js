@@ -123,6 +123,46 @@ export function windowEnd(from) {
 	return from + WINDOW_MINUTES * 60;
 }
 
+/** The hour the evening is reckoned from, on the clock of whoever is reading. */
+export const PRIME_HOUR = 20;
+
+/**
+ * WHERE THE WINDOW OPENS FOR THE EVENING OF THE DAY IT IS SHOWING.
+ *
+ * The day the window is on and not the day it is now, so that somebody who has
+ * gone forward a day and asks for the evening gets that day's evening and not
+ * tonight's again. Going back to tonight is what the button for now is for.
+ *
+ * On the clock of the page and not of the box, which is the clock every time on
+ * this screen is written in (app/fmt.js), and through the calendar rather than
+ * through arithmetic on seconds, so that the night the clocks change is still an
+ * evening that begins at eight.
+ *
+ * @param {number} from where the window opens now, in seconds
+ * @returns {number}
+ */
+export function primetime(from) {
+	const at = new Date(from * 1000);
+	at.setHours(PRIME_HOUR, 0, 0, 0);
+	return Math.floor(at.getTime() / 1000);
+}
+
+/**
+ * WHERE THE WINDOW OPENS A DAY LATER.
+ *
+ * A calendar day and not eighty six thousand four hundred seconds: on the two
+ * nights a year the clocks change, the second is an evening that begins at seven
+ * or at nine, and what somebody pressing it means is the same hour tomorrow.
+ *
+ * @param {number} from
+ * @returns {number}
+ */
+export function dayLater(from) {
+	const at = new Date(from * 1000);
+	at.setDate(at.getDate() + 1);
+	return Math.floor(at.getTime() / 1000);
+}
+
 /**
  * HOW WIDE ONE MINUTE IS DRAWN, OUT OF THE ROOM THE BOX ACTUALLY HAS.
  *

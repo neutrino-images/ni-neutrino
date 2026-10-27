@@ -32,7 +32,7 @@
 	max-width: 22ch;
 	padding: 0 26px 0 var(--gap-3);
 }
-.grid__when { display: flex; align-items: center; gap: var(--gap-2); }
+.grid__when { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-2); }
 .grid__window { margin: 0; color: var(--text-dim); }
 
 .grid__detail {
