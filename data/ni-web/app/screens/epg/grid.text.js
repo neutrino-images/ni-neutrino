@@ -1,6 +1,7 @@
 export default {
 	de: {
 		'grid.back': '-3 h',
+		'grid.back.24': '-24 h',
 		'grid.bouquet': 'Bouquet',
 		'grid.channels': 'Sender',
 		'grid.cut': 'gekappt',
@@ -37,6 +38,7 @@ export default {
 	},
 	en: {
 		'grid.back': '-3 h',
+		'grid.back.24': '-24 h',
 		'grid.bouquet': 'Bouquet',
 		'grid.channels': 'Channels',
 		'grid.cut': 'cut',

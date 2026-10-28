@@ -164,6 +164,19 @@ export function dayLater(from) {
 }
 
 /**
+ * WHERE THE WINDOW OPENS A DAY EARLIER, by the same calendar as dayLater: the
+ * same hour yesterday, on the nights the clocks change as on every other.
+ *
+ * @param {number} from
+ * @returns {number}
+ */
+export function dayEarlier(from) {
+	const at = new Date(from * 1000);
+	at.setDate(at.getDate() - 1);
+	return Math.floor(at.getTime() / 1000);
+}
+
+/**
  * HOW WIDE ONE MINUTE IS DRAWN, OUT OF THE ROOM THE BOX ACTUALLY HAS.
  *
  * Measured and not fixed, because a fixed figure is a fixed axis, and a fixed

@@ -1,9 +1,9 @@
-// Where the grid's window opens for the evening, and a day later.
+// Where the grid's window opens for the evening, and a day later or earlier.
 //
 // Run on a Berlin clock (check-web-gridtime.sh says so), and checked to be on
 // one, because a case about the night the clocks change says nothing on a
 // clock that never changes.
-import { primetime, dayLater, windowStart, PRIME_HOUR } from '../../data/ni-web/app/screens/epg/grid.model.js';
+import { primetime, dayLater, dayEarlier, windowStart, PRIME_HOUR } from '../../data/ni-web/app/screens/epg/grid.model.js';
 
 let checked = 0;
 let failed = 0;
@@ -70,6 +70,19 @@ same(dayLater(sec('2026-03-28T20:00:00+01:00')), sec('2026-03-29T20:00:00+02:00'
 	'across the clocks going forward it is eight again, twenty three hours on');
 same(dayLater(primetime(sec('2026-10-27T06:30:00+01:00'))), sec('2026-10-28T20:00:00+01:00'),
 	'the evening, then a day: tomorrow evening');
+
+// ------------------------------------------------------------- a day earlier
+
+same(dayEarlier(sec('2026-10-28T06:30:00+01:00')), sec('2026-10-27T06:30:00+01:00'),
+	'an ordinary day back is twenty four hours');
+same(dayEarlier(sec('2026-11-01T20:00:00+01:00')), sec('2026-10-31T20:00:00+01:00'),
+	'the first of a month goes back to the last of the one before');
+same(dayEarlier(sec('2026-10-25T20:00:00+01:00')), sec('2026-10-24T20:00:00+02:00'),
+	'back across the clocks going back it is eight again, twenty five hours back');
+same(dayEarlier(sec('2026-03-29T20:00:00+02:00')), sec('2026-03-28T20:00:00+01:00'),
+	'back across the clocks going forward it is eight again, twenty three hours back');
+same(dayEarlier(dayLater(sec('2026-10-24T20:00:00+02:00'))), sec('2026-10-24T20:00:00+02:00'),
+	'a day on and a day back, across a change of the clocks, is where it began');
 
 if (failed > 0) {
 	process.stderr.write('gridtime: ' + failed + ' of ' + checked + ' cases failed\n');
