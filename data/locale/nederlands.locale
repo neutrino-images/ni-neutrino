@@ -2407,7 +2407,7 @@ networkmenu.apply_settings Wijzigingen worden toegepast...
 networkmenu.apply_settings_now Wilt u de instellingen toepassen?
 networkmenu.broadcast broadcast adres
 networkmenu.dhcp DHCP
-networkmenu.error_hostname (((T))) Ungültiger Hostname!\nErlaubt sind Buchstaben, Ziffern und Bindestriche.
+networkmenu.error_hostname (((T))) Ungültiger Hostname!\nErlaubt sind Buchstaben, Ziffern, Bindestriche und Unterstriche.
 networkmenu.error_no_address Adres ontbreekt
 networkmenu.gateway Standaard gateway
 networkmenu.hostname Hostnaam

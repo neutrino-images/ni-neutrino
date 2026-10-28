@@ -2407,7 +2407,7 @@ networkmenu.apply_settings Zmeny sa aplikujú...
 networkmenu.apply_settings_now Chcete teraz aplikovať zmeny?
 networkmenu.broadcast Vysielanie / Broadcast
 networkmenu.dhcp Načítanie IP adresy z DHCP
-networkmenu.error_hostname (((T))) Ungültiger Hostname!\nErlaubt sind Buchstaben, Ziffern und Bindestriche.
+networkmenu.error_hostname (((T))) Ungültiger Hostname!\nErlaubt sind Buchstaben, Ziffern, Bindestriche und Unterstriche.
 networkmenu.error_no_address Chýbajúce %s adresy!
 networkmenu.gateway Predvolená brána
 networkmenu.hostname Názov hostiteľa

@@ -219,7 +219,8 @@ bool CNetworkConfig::systemManaged(void)
 	return geteuid() != 0;
 }
 
-/* letters, digits and hyphens in dot separated labels (RFC 1123) */
+/* letters, digits, hyphens and underscores in dot separated labels.
+ * RFC 1123 knows no underscore, but the kernel and systemd take it.
 bool CNetworkConfig::validHostname(const std::string &name)
 {
 	if (name.empty() || name.length() > 64)
@@ -237,7 +238,7 @@ bool CNetworkConfig::validHostname(const std::string &name)
 			continue;
 		}
 		const bool alnum = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
-		if (!alnum && !(c == '-' && label > 0))
+		if (!alnum && c != '_' && !(c == '-' && label > 0))
 			return false;
 		if (++label > 63)
 			return false;
