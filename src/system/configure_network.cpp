@@ -221,6 +221,7 @@ bool CNetworkConfig::systemManaged(void)
 
 /* letters, digits, hyphens and underscores in dot separated labels.
  * RFC 1123 knows no underscore, but the kernel and systemd take it.
+ */
 bool CNetworkConfig::validHostname(const std::string &name)
 {
 	if (name.empty() || name.length() > 64)
