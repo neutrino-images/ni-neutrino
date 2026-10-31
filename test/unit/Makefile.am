@@ -204,6 +204,7 @@ coreapi_tests_SOURCES = \
 	httpd/test_server.cpp \
 	support/test_httpclient.cpp \
 	coreapi/test_httpstatus.cpp \
+	gui/test_yaftreap.cpp \
 	httpd/test_httpjson.cpp \
 	httpd/test_router.cpp \
 	httpd/test_toolflag.cpp \
@@ -277,6 +278,8 @@ coreapi_tests_SOURCES = \
 # same way: what it sends, how it logs in when the other end refuses, and how it
 # reads a list back are all visible only from the other side of a socket.
 # timerwake.o is the one object of the timer daemon that links on its own.
+# reap.o is how the terminal collects its own child, linked so the cases
+# drive the object the program runs; it needs nothing but the C library.
 # helpers.o carries the spawn helper the shipped program uses, so the case that
 # pins what it does with an ampersand drives that object and not a copy. debug.o,
 # the json archive and the network library are what it needs besides;
@@ -306,6 +309,7 @@ coreapi_tests_LDADD = \
 	$(top_builddir)/src/coreapi/libcoreapi.a \
 	$(top_builddir)/lib/xmltree/libxmltree.a \
 	$(top_builddir)/src/system/helpers.o \
+	$(top_builddir)/src/gui/widget/yaft/reap.o \
 	$(top_builddir)/src/system/httptool.o \
 	$(top_builddir)/src/system/remotetimer.o \
 	$(top_builddir)/src/timerd/timerwake.o \
