@@ -1065,8 +1065,10 @@ bool CZapit::StopPip(int pip)
 		CCamManager::getInstance()->Stop(pip_channel_id[pip], CCamManager::PIP);
 		pipVideoDemux[pip]->Stop();
 		pipVideoDecoder[pip]->Stop();
+		CFEManager::getInstance()->Lock();
 		pip_fe[pip] = NULL;
 		pip_channel_id[pip] = 0;
+		CFEManager::getInstance()->Unlock();
 		return true;
 	}
 	return false;
@@ -1084,8 +1086,6 @@ bool CZapit::StopPip(int pip)
 			sendDvbapiSessionStop(pip_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
 #endif
 		CCamManager::getInstance()->Stop(pip_channel_id[pip], CCamManager::PIP);
-		pip_fe[pip] = NULL;
-		pip_channel_id[pip] = 0;
 	}
 
 	if (pipVideoDemux[pip])
@@ -1115,6 +1115,14 @@ bool CZapit::StopPip(int pip)
 		delete pipAudioDecoder[pip];
 		pipAudioDecoder[pip] = NULL;
 	}
+	/* The slot is said to be free only now that nothing reads its demux,
+	   and under the lock a stream admission reads it in: one that sees
+	   it free never binds under a PiP still running. The GUI calls this
+	   as well as zapit's thread. */
+	CFEManager::getInstance()->Lock();
+	pip_fe[pip] = NULL;
+	pip_channel_id[pip] = 0;
+	CFEManager::getInstance()->Unlock();
 	return true;
 #endif
 }

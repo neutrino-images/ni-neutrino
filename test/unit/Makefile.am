@@ -411,6 +411,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/fixtures/unbusy-menu-exec-dot.cpp scan/fixtures/unbusy-menu-exec-bare.cpp \
 	scan/fixtures/unbusy-menu-exec-space.cpp \
 	scan/check-wire-arms-top-level.sh \
+	scan/check-pip-source-order.sh \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
 	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk \
 	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp scan/fixtures/addsetting-array.cpp scan/fixtures/display/display.cpp \
@@ -588,6 +589,7 @@ SCAN_CHECKS = \
 	scan-zap-standby \
 	scan-timeshift-start \
 	scan-wire-arms-top-level \
+	scan-pip-source-order \
 	scan-timerlist-event \
 	scan-menu-busy \
 	scan-settings-replaced \
@@ -820,6 +822,9 @@ scan-timeshift-start:
 
 scan-wire-arms-top-level:
 	@$(SHELL) $(srcdir)/scan/check-wire-arms-top-level.sh $(top_srcdir)
+
+scan-pip-source-order:
+	@$(SHELL) $(srcdir)/scan/check-pip-source-order.sh $(top_srcdir)
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)
