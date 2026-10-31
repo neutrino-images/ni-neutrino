@@ -55,6 +55,7 @@ libneutrino_driver_a_SOURCES = \
 	shutdown_count.cpp \
 	streamts.cpp \
 	tsaudiotype.cpp \
+	streamsetup.cpp \
 	volume.cpp
 
 if ENABLE_LCD4LINUX
