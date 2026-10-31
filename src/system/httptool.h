@@ -77,6 +77,9 @@ class CHTTPTool
 		/* Set an extra HTTP header sent with the next download call, e.g.
 		 * "X-Tuxbox-Service-Key: <value>". Pass an empty string to clear. */
 		void setExtraHeader(const std::string& header);
+		/* The User-Agent sent from the next call on. Some services refuse
+		 * a generic one and want the program and a way to reach its makers. */
+		void setUserAgent(const std::string& ua) { userAgent = ua; }
 		/* HTTP response code of the last request (0 if none). */
 		long getLastHttpCode() const { return lastHttpCode; }
 
