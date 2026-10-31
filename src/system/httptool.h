@@ -39,6 +39,14 @@
 #include <string>
 #include <vector>
 
+/* A User-Agent that names the program, where its makers are found and why it
+   asks, for services that refuse a generic one. The reason is a string
+   literal or a std::string, e.g. NEUTRINO_USER_AGENT("IMDb lookup").
+   PACKAGE_NAME, PACKAGE_VERSION and PACKAGE_URL come from config.h, which the
+   file using this has to include. */
+#define NEUTRINO_USER_AGENT(reason) \
+	(std::string(PACKAGE_NAME "/" PACKAGE_VERSION " (" PACKAGE_URL "; ") + (reason) + ")")
+
 /* Named rather than included: the window is only pointed at from here, and its
    header carries the whole screen behind it into everything that wants an HTTP
    client. */

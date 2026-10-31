@@ -98,7 +98,7 @@ std::string CIMDB::searchIMDbId(const std::string &title)
 std::string CIMDB::wikidataIMDbId(const std::string &title)
 {
 	CHTTPTool httpTool;
-	httpTool.setUserAgent(PACKAGE_NAME "/" PACKAGE_VERSION " (https://github.com/neutrino-images/ni-neutrino; IMDb lookup)");
+	httpTool.setUserAgent(NEUTRINO_USER_AGENT("IMDb lookup"));
 
 	std::vector<std::string> items = wikidata::pickItems(httpTool.downloadString(wikidata::searchUrl(title), -1, 5000, 15));
 
