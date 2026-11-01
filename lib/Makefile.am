@@ -11,8 +11,14 @@ SUBDIRS = \
 	libtuxtxt \
 	libiw \
 	libdvbsub \
-	luaclient \
+	luaclient
+
+# The client for the socket the bindings answer on: a build without them has
+# no server to talk to, so it is left out with them.
+if ENABLE_PYTHON
+SUBDIRS += \
 	pyclient
+endif
 
 if ENABLE_UPNP
 SUBDIRS += \
