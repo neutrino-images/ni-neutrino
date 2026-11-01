@@ -27,6 +27,7 @@
 
 #include <global.h>
 #include <system/debug.h>
+#include <system/helpers.h>
 #include <system/settings.h>
 #include <neutrino.h>
 
