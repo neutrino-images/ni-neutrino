@@ -36,8 +36,10 @@
 #include <map>
 #include <string>
 
+#include <driver/fb_generic.h>
 #include <driver/fb_window.h>
 
+class CRCInput;
 class Font;
 
 typedef std::pair<long, Font *> pyfontmap_pair_t;
