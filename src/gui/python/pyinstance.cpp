@@ -40,6 +40,8 @@
 #include <driver/rcinput.h>
 #include <neutrino.h>
 
+#include "py_configfile.h"
+#include "py_hintbox.h"
 #include "py_hourglass.h"
 #include "py_messagebox.h"
 #include "py_misc.h"
@@ -978,6 +980,8 @@ void PythonInstRegisterFunctions(PyObject *module)
 	if (module == NULL)
 		return;
 
+	CPythonInstConfigFile::ConfigFileRegister(module);
+	CPythonInstHintbox::HintboxRegister(module);
 	CPythonInstHourGlass::HourGlassRegister(module);
 	CPythonInstMessagebox::MessageboxRegister(module);
 	CPythonInstMisc::MiscRegister(module);

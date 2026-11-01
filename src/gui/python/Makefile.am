@@ -25,6 +25,8 @@ noinst_LIBRARIES = libneutrino_gui_python.a
 libneutrino_gui_python_a_SOURCES = \
 	pyinstance.cpp \
 	pyinstance_helpers.cpp \
+	py_configfile.cpp \
+	py_hintbox.cpp \
 	py_hourglass.cpp \
 	py_messagebox.cpp \
 	py_misc.cpp
