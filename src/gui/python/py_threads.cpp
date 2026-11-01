@@ -479,6 +479,9 @@ bool CPythonInstThreads::ThreadsRegister(PyObject *module)
 		PY_METHODDEF("detached",  CPythonInstThreads::ThreadDetached),
 		PY_METHODDEF("joinable",  CPythonInstThreads::ThreadJoinable),
 		PY_METHODDEF("setLogger", CPythonInstThreads::ThreadSetLogger),
+		/* the spelling llthreads uses, so that a script carried over from it
+		   is left as it is */
+		PY_METHODDEF("set_logger", CPythonInstThreads::ThreadSetLogger),
 		PY_METHODDEF("result",    CPythonInstThreads::ThreadResult),
 		{ NULL, NULL, 0, NULL }
 	};

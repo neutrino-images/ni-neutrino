@@ -813,6 +813,26 @@ PyObject *CPythonInstMenu::MenuSetValue(PyObject *self, PyObject *args, PyObject
 	Py_RETURN_NONE;
 }
 
+/* m.paintItem(item=id): the row is painted again where it stands. */
+PyObject *CPythonInstMenu::MenuPaintItem(PyObject *self, PyObject *args, PyObject *kwds)
+{
+	CPyMenu *D = menuOf(self);
+	if (D == NULL)
+	{
+		PyErr_SetString(PyExc_RuntimeError, "menu is gone");
+		return NULL;
+	}
+
+	long item = 0;
+	pyLookupInt(kwds, "item", item);
+
+	CPyMenuItem *it = getMenuItem(D, item);
+	if (it != NULL && it->mi != NULL)
+		it->mi->paint();
+
+	Py_RETURN_NONE;
+}
+
 bool CPythonInstMenu::MenuRegister(PyObject *module)
 {
 	static PyMethodDef menu_methods[] =
@@ -826,6 +846,7 @@ bool CPythonInstMenu::MenuRegister(PyObject *module)
 		PY_METHODDEF("setSelected", CPythonInstMenu::MenuSetSelected),
 		PY_METHODDEF("getSelected", CPythonInstMenu::MenuGetSelected),
 		PY_METHODDEF("setValue",    CPythonInstMenu::MenuSetValue),
+		PY_METHODDEF("paintItem",   CPythonInstMenu::MenuPaintItem),
 		{ NULL, NULL, 0, NULL }
 	};
 

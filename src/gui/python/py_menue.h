@@ -181,6 +181,7 @@ class CPythonInstMenu
 		static PyObject *MenuSetSelected(PyObject *self, PyObject *args, PyObject *kwds);
 		static PyObject *MenuGetSelected(PyObject *self, PyObject *args, PyObject *kwds);
 		static PyObject *MenuSetValue(PyObject *self, PyObject *args, PyObject *kwds);
+		static PyObject *MenuPaintItem(PyObject *self, PyObject *args, PyObject *kwds);
 };
 
 #endif //_PYMENUE_H

@@ -283,6 +283,7 @@ TEST_CASE("the five plugin lists stay one partition", "[couple]")
 	InstalledSettingsSource installed(&s);
 	s.strings["plugins_tool"] = "b,c";
 	s.strings["plugins_lua"] = "d";
+	s.strings["plugins_python"] = "";
 	Refusals refused;
 
 	// A name written into a list leaves the lists that held it, and only those.
@@ -455,6 +456,7 @@ const Descriptor kPluginsGated[] =
 	textRow("plugins_tool").section("fx").defaultValue("").changeableWhen(kGateOpen).field(COREAPI_NO_FIELD),
 	textRow("plugins_script").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
 	textRow("plugins_lua").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
+	textRow("plugins_python").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
 	intRow("fx_gate").section("fx").range(0, 1).defaultValue(0).field(COREAPI_NO_FIELD)
 };
 
