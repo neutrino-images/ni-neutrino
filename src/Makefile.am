@@ -65,6 +65,11 @@ LUALIBS = \
 	gui/lua/libneutrino_gui_lua.a
 endif
 
+if ENABLE_PYTHON
+PYTHONLIBS = \
+	gui/python/libneutrino_gui_python.a
+endif
+
 # What the new web server costs the program, and nothing when it is left out.
 #
 # Two variables and not one, because the two halves go to different ends of the
@@ -119,6 +124,7 @@ neutrino_LDADD = \
 	gui/moviedb/libneutrino_gui_moviedb.a \
 	gui/components/libneutrino_gui_components.a \
 	$(LUALIBS) \
+	$(PYTHONLIBS) \
 	eitd/libsectionsd.a \
 	gui/volumebar.o \
 	driver/libneutrino_driver.a \
@@ -191,6 +197,10 @@ endif
 
 if ENABLE_LUA
 neutrino_LDADD += @LUA_LIBS@
+endif
+
+if ENABLE_PYTHON
+neutrino_LDADD += @PYTHON_LIBS@
 endif
 
 if ENABLE_UPNP

@@ -22,6 +22,10 @@ if ENABLE_LUA
 SUBDIRS += lua
 endif
 
+if ENABLE_PYTHON
+SUBDIRS += python
+endif
+
 AM_CPPFLAGS += \
 	-I$(top_builddir) \
 	-I$(top_srcdir) \
@@ -41,6 +45,7 @@ AM_CPPFLAGS += \
 	@AVFORMAT_CFLAGS@ \
 	@AVUTIL_CFLAGS@ \
 	@LUA_CFLAGS@ \
+	@PYTHON_CFLAGS@ \
 	@HWLIB_CFLAGS@
 
 noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a

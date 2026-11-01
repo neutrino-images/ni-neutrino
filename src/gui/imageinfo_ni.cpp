@@ -53,6 +53,9 @@
 #ifdef ENABLE_LUA
 #include <gui/lua/lua_api_version.h>
 #endif
+#ifdef ENABLE_PYTHON
+#include <gui/python/python_api_version.h>
+#endif
 #include <coreapi/base/version.h>
 #include <system/helpers.h>
 #include <system/debug.h>
@@ -345,6 +348,12 @@ void CImageInfoNI::paint()
 	ypos += iheight;
 	paintLine(xpos, font_info, "Lua-API:");
 	paintLine(xpos + offset, font_info, to_string(LUA_API_VERSION_MAJOR) + "." + to_string(LUA_API_VERSION_MINOR));
+#endif
+
+#ifdef ENABLE_PYTHON
+	ypos += iheight;
+	paintLine(xpos, font_info, "Python-API:");
+	paintLine(xpos + offset, font_info, to_string(PYTHON_API_VERSION_MAJOR) + "." + to_string(PYTHON_API_VERSION_MINOR));
 #endif
 
 	/* The version of the core API, out of the same header that fills in
