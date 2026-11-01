@@ -269,6 +269,7 @@ CFEManager * CFEManager::manager = NULL;
 CFEManager::CFEManager() : configfile(',', true)
 {
 	livefe = NULL;
+	recording_starts = 0;
 	mode = FE_MODE_SINGLE;
 	config_exist = false;
 	have_locked = false;
@@ -1458,6 +1459,25 @@ CFrontend * CFEManager::getScanFrontend(t_satellite_position satellitePosition)
 	}
 	INFO("Selected fe: %d", frontend ? frontend->fenumber : -1);
 	return frontend;
+}
+
+void CFEManager::beginRecordingStart()
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	recording_starts++;
+}
+
+void CFEManager::endRecordingStart()
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	if (recording_starts > 0)
+		recording_starts--;
+}
+
+bool CFEManager::recordingStarting()
+{
+	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	return recording_starts > 0;
 }
 
 bool CFEManager::lockFrontend(CFrontend * frontend, CZapitChannel * channel)
