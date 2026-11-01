@@ -6884,6 +6884,9 @@ void stop_daemons(bool stopall, bool for_flash)
 {
 	shutdown_in_progress = 1;
 	coreapi::applyWorker().close();
+	/* First, so that whatever zapit is tuning ends while the rest stops,
+	   rather than holding up the join of zapit's thread below. */
+	CZapit::getInstance()->RequestStop();
 	CMoviePlayerGui::getInstance().stopPlayBack();
 	if (for_flash)
 	{
