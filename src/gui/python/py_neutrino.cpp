@@ -518,7 +518,8 @@ PyObject *CPythonInstNeutrino::GetDynFont(PyObject *self, PyObject *args, PyObje
 			style = CNeutrinoFonts::FONT_STYLE_REGULAR;
 	}
 
-	Font *f = CNeutrinoFonts::getInstance()->getDynFontExt((int)dx, (int)dy, (int)fontID, text, (int)style);
+	int dx_i = (int)dx, dy_i = (int)dy, font_i = (int)fontID, style_i = (int)style;
+	Font *f = CNeutrinoFonts::getInstance()->getDynFontExt(dx_i, dy_i, font_i, text, style_i);
 
 	long id = fontID + 1;
 	W->fontmap.insert(pyfontmap_pair_t(id, f));
