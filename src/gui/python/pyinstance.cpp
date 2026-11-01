@@ -46,6 +46,7 @@
 #include "py_cc_text.h"
 #include "py_cc_window.h"
 #include "py_configfile.h"
+#include "py_curl.h"
 #include "py_filehelpers.h"
 #include "py_hint.h"
 #include "py_hintbox.h"
@@ -998,6 +999,7 @@ void PythonInstRegisterFunctions(PyObject *module)
 	CPythonInstCCText::CCTextRegister(module);
 	CPythonInstCCWindow::CCWindowRegister(module);
 	CPythonInstConfigFile::ConfigFileRegister(module);
+	CPythonInstCurl::CurlRegister(module);
 	CPythonInstFileHelpers::FileHelpersRegister(module);
 	CPythonInstHint::HintRegister(module);
 	CPythonInstHintbox::HintboxRegister(module);
