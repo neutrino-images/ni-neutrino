@@ -19,6 +19,7 @@
 #include "channel.h"
 #include "bouquets.h"
 #include "femanager.h"
+#include "streamadmission.h"
 #include "fastscan.h"
 #if ENABLE_AITSCAN
 #include "scanait.h"
@@ -209,6 +210,13 @@ class CZapit : public OpenThreads::Thread
 		   CMD_STREAM_PROBE), on this thread. */
 		class StreamHoldOps;
 		void HoldForStream(int connfd, bool probe);
+		/* Ends the stream holds a recording needs (CMD_STREAM_YIELD), on
+		   this thread. */
+		class StreamYieldOps;
+		void YieldStreams(int connfd);
+		/* What a stream's admission and a recording's yield read of the
+		   picture and the PiPs; under the frontend manager's lock. */
+		void StreamFacts(streamadmission::Facts &f);
 
 		//CZapitSdtMonitor SdtMonitor;
 
