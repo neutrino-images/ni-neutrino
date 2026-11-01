@@ -305,6 +305,9 @@ static std::string reportScriptError(std::string *error_string)
 
 	Py_XDECREF(type);
 	Py_XDECREF(value);
+	Py_XDECREF(traceback);
+	return msg;
+}
 
 static void (*script_ui_cb)(bool, void *) = NULL;
 static void *script_ui_cb_data = NULL;

@@ -97,8 +97,6 @@ class CPythonInstance
 		 * scripts run one after the other do not see each other's names,
 		 * as two Lua states do not. */
 		PyObject *globals;
-
-		void reportError(const char *fileName, std::string *error_string);
 };
 
 #endif /* _PYINSTANCE_H */
