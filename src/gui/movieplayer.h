@@ -49,6 +49,10 @@
 #include <string>
 #include <vector>
 
+/* PyObject, without dragging Python.h into this header: a script of that
+   language can leave the player an info function as well. */
+struct _object;
+
 #include <OpenThreads/Thread>
 #include <OpenThreads/Condition>
 
@@ -195,6 +199,8 @@ class CMoviePlayerGui : public CMenuTarget
 	bool isLuaPlay;
 	bool haveLuaInfoFunc;
 	lua_State* luaState;
+	bool havePythonInfoFunc;
+	struct _object* pythonState;
 	bool blockedFromPlugin;
 	int speed;
 	int startposition;
@@ -404,6 +410,9 @@ class CMoviePlayerGui : public CMenuTarget
 	void setBlockedFromPlugin(bool b) { blockedFromPlugin = b; };
 	bool getBlockedFromPlugin() { return blockedFromPlugin; };
 	void setLuaInfoFunc(lua_State* L, bool func) { luaState = L; haveLuaInfoFunc = func; };
+	/* A Python script hands its info function over the same way, and the
+	   player calls it with the four numbers the Lua one is called with. */
+	void setPythonInfoFunc(struct _object* obj, bool func) { pythonState = obj; havePythonInfoFunc = func; };
 	void getLivestreamInfo(std::string *i1, std::string *i2) { *i1=livestreamInfo1; *i2=livestreamInfo2; };
 	bool getLiveUrl(const std::string &url, const std::string &script, std::string &realUrl, std::string &_pretty_name, std::string &info1, std::string &info2, std::string &header, std::string &url2);
 	bool IsAudioPlaying() { return is_audio_playing; };

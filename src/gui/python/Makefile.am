@@ -40,4 +40,5 @@ libneutrino_gui_python_a_SOURCES = \
 	py_misc.cpp \
 	py_neutrino.cpp \
 	py_progresswindow.cpp \
-	py_stringinput.cpp
+	py_stringinput.cpp \
+	py_video.cpp
