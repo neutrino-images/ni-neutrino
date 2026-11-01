@@ -23,6 +23,8 @@
 
 #include <inttypes.h>
 
+#define SLIDETIME 2*5000
+
 class COSDSlider
 {
 	private:
@@ -45,6 +47,7 @@ class COSDSlider
 		bool SlideDone();
 		bool SlideInDone() { return !slideIn && !slideOut; };
 		uint32_t GetSlideTimer() { return slideTimer; };
+		uint32_t GetSlideTime() { return SLIDETIME; };
 
 		enum
 		{

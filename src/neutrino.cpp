@@ -1367,6 +1367,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.infobar_casystem_display = configfile.getInt32("infobar_casystem_display", 0);
 	g_settings.infobar_casystem_dotmatrix = configfile.getInt32("infobar_casystem_dotmatrix", 0);
 	g_settings.infobar_casystem_frame = configfile.getInt32("infobar_casystem_frame", 0);
+	g_settings.infobar_evo_infoviewer = configfile.getInt32("infobar_evo_infoviewer", 1);
 	g_settings.infobar_progressbar = configfile.getInt32("infobar_progressbar", 2);
 	g_settings.infobar_sat_display = configfile.getBool("infobar_sat_display", true);
 	g_settings.infobar_show = configfile.getInt32("infobar_show", 0);
@@ -2278,6 +2279,7 @@ void CNeutrinoApp::saveSetup(const char *fname)
 	configfile.setInt32("infobar_casystem_display", g_settings.infobar_casystem_display);
 	configfile.setInt32("infobar_casystem_dotmatrix", g_settings.infobar_casystem_dotmatrix);
 	configfile.setInt32("infobar_casystem_frame", g_settings.infobar_casystem_frame);
+	configfile.setInt32("infobar_evo_infoviewer", g_settings.infobar_evo_infoviewer);
 	configfile.setInt32("infobar_progressbar", g_settings.infobar_progressbar);
 	configfile.setBool("infobar_sat_display", g_settings.infobar_sat_display);
 	configfile.setInt32("infobar_show", g_settings.infobar_show);
@@ -3474,7 +3476,7 @@ TIMER_START();
 	if(g_settings.mode_icons)
 		InfoIcons->StartIcons();
 	FileTimeOSD = CTimeOSD::getInstance();
-	g_InfoViewer = new CInfoViewer;
+	g_InfoViewer = CInfoViewerBase::create();
 	g_EventList = new CEventList;
 
 	g_CamHandler = new CCAMMenuHandler();

@@ -444,6 +444,15 @@ constexpr Descriptor kOsd[] =
 		.defaultValue(0)
 		.changeableWhen(kWeatherOn)
 		.field(COREAPI_NUMBER_FIELD(infobar_weather)),
+	/* Which infobar is built. The one is chosen at start and lives as long as
+	   the program does, so a change of this row is applied by a restart. */
+	boolRow("infobar_evo_infoviewer")
+		.section("osd")
+		.label("miscsettings.infobar_evo_infoviewer")
+		.hint("menu.hint_infobar_evo_infoviewer")
+		.defaultValue(1)
+		.needsRestart()
+		.field(COREAPI_NUMBER_FIELD(infobar_evo_infoviewer)),
 	enumRow("infobar_show_channellogo")
 		.section("osd")
 		.label("miscsettings.infobar_disp")

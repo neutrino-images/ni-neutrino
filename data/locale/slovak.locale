@@ -1529,6 +1529,7 @@ menu.hint_infobar_casys_dotmatrix zap: CA-Systém s bodmi v pozadí
 menu.hint_infobar_casys_frame zap: CA-Systém s rámom
 menu.hint_infobar_dd Zobrazenie DolbyDigital ikony
 menu.hint_infobar_ecminfo Zobrazenie ECM-infa počas zobrazovania infolišty
+menu.hint_infobar_evo_infoviewer Zap.: evo infolišta. Vyp.: klasická NI infolišta (nutný reštart)
 menu.hint_infobar_filesys Zobrazenie úrovne obsadenia pamäte a disku
 menu.hint_infobar_fonts Zmena veľkosti fontu informačnej lišty
 menu.hint_infobar_logo Zobrazenie loga, čísla kanálu a signálu; Voľby v [zátvorkách] budú zobrazené v malom informačnom okne
@@ -2075,6 +2076,7 @@ miscsettings.infobar_disp_3 Logo, Názov kanálu [Signál]
 miscsettings.infobar_disp_4 Logo, Názov kanálu [Číslo kanálu]
 miscsettings.infobar_disp_5 Logo [Signál]
 miscsettings.infobar_disp_6 Číslo kanálu, Logo [Signál]
+miscsettings.infobar_evo_infoviewer Evo infolišta
 miscsettings.infobar_gradient_body Gradient stred
 miscsettings.infobar_gradient_bottom Gradient dole
 miscsettings.infobar_gradient_top Gradient hore

@@ -1529,6 +1529,7 @@ menu.hint_infobar_casys_dotmatrix on: CA-System with dot matrix in background
 menu.hint_infobar_casys_frame on: CA-System with frame
 menu.hint_infobar_dd Show DD icon
 menu.hint_infobar_ecminfo Show ecm-info while infobar is displayed
+menu.hint_infobar_evo_infoviewer On: the evo infobar. Off: the classic NI infobar (needs a restart)
 menu.hint_infobar_filesys Show flash and HDD used space levels
 menu.hint_infobar_fonts Change infobar font sizes
 menu.hint_infobar_logo Logo, channelnumber and signal display; Options in [brackets] will be displayed in small infobox
@@ -2075,6 +2076,7 @@ miscsettings.infobar_disp_3 Logo, Channelname [Signal]
 miscsettings.infobar_disp_4 Logo, Channelname [Channelnumber]
 miscsettings.infobar_disp_5 Logo [Signal]
 miscsettings.infobar_disp_6 Channelnumber, Logo [Signal]
+miscsettings.infobar_evo_infoviewer Evo infobar
 miscsettings.infobar_gradient_body Gradient EPG-area
 miscsettings.infobar_gradient_bottom Gradient bottom
 miscsettings.infobar_gradient_top Gradient top

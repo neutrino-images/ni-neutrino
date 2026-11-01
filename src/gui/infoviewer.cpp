@@ -2522,7 +2522,7 @@ void CInfoViewer::showAnalogClock(int posx,int posy,int dia)
 	frameBuffer->paintLine(posx,posy,posx+sx,posy+sy,COL_COLORED_EVENTS_TEXT);
 }
 
-void CInfoViewer::ResetModules()
+void CInfoViewer::ResetModules(bool /*kill*/)
 {
 	delete header; 			header 		= NULL;
 	delete body; 			body 		= NULL;

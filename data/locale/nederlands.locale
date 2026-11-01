@@ -1529,6 +1529,7 @@ menu.hint_infobar_casys_dotmatrix (((T))) ein: CA-Systemanzeige mit Punktematrix
 menu.hint_infobar_casys_frame (((T))) ein: CA-Systemanzeige mit Rahmen
 menu.hint_infobar_dd Dolbydigital icoon weergeven
 menu.hint_infobar_ecminfo (((T))) Anzeigen der ECM-Info, während die Infobar eingeblendet ist
+menu.hint_infobar_evo_infoviewer Aan: de evo-infobalk. Uit: de klassieke NI-infobalk (herstart nodig)
 menu.hint_infobar_filesys Gebruikte schijfruimte van Flashgeheugen en HDD weergeven
 menu.hint_infobar_fonts Wijzig lettertype grote van de infobalk
 menu.hint_infobar_logo Logo / signaal opties
@@ -2075,6 +2076,7 @@ miscsettings.infobar_disp_3 Logo, Kanaalnaam [Signaal]
 miscsettings.infobar_disp_4 Logo, Kanaalnaam [Kanaalnummer]
 miscsettings.infobar_disp_5 Logo [Signaal]
 miscsettings.infobar_disp_6 Kanaalnummer, Logo [Signaal]
+miscsettings.infobar_evo_infoviewer Evo infobalk
 miscsettings.infobar_gradient_body Gradient EPG-area
 miscsettings.infobar_gradient_bottom Gradient knoppenbalk beschikbaar
 miscsettings.infobar_gradient_top Gradient top

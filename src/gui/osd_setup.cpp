@@ -1050,6 +1050,9 @@ void COsdSetup::showOsdInfobarSetup(CMenuWidget *menu_infobar)
 	// weather
 	addSetting(menu_infobar, "infobar_weather");
 
+	// infobar implementation (restart applies)
+	addSetting(menu_infobar, "infobar_evo_infoviewer");
+
 	menu_infobar->addItem(GenericMenuSeparator);
 
 	// display options
