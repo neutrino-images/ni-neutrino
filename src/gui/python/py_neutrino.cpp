@@ -504,6 +504,27 @@ PyObject *CPythonInstNeutrino::GetDynFont(PyObject *self, PyObject *args, PyObje
 	if (!pyArgLong(PyTuple_GET_ITEM(args, 1), dy))
 	{
 		PyErr_SetString(PyExc_TypeError, "getDynFont() takes a height");
+		return NULL;
+	}
+	if (dy > 100)
+		return Py_BuildValue("(Oi)", Py_None, CPythonInstance::DYNFONT_TOO_HIGH);
+
+	if (numargs > 2)
+		pyArgString(PyTuple_GET_ITEM(args, 2), text);
+	if (numargs > 3)
+	{
+		pyArgLong(PyTuple_GET_ITEM(args, 3), style);
+		if (style > CNeutrinoFonts::FONT_STYLE_ITALIC)
+			style = CNeutrinoFonts::FONT_STYLE_REGULAR;
+	}
+
+	Font *f = CNeutrinoFonts::getInstance()->getDynFontExt((int)dx, (int)dy, (int)fontID, text, (int)style);
+
+	long id = fontID + 1;
+	W->fontmap.insert(pyfontmap_pair_t(id, f));
+
+	return Py_BuildValue("(ii)", (int)id, CPythonInstance::DYNFONT_NO_ERROR);
+}
 
 /* w.PaintIcon(fname, x, y, h, o) */
 PyObject *CPythonInstNeutrino::PaintIcon(PyObject *self, PyObject *args, PyObject *kwds)
@@ -668,28 +689,6 @@ PyObject *CPythonInstNeutrino::Scale2Res(PyObject *self, PyObject *args, PyObjec
 		return NULL;
 
 	return PyLong_FromLong(CFrameBuffer::getInstance()->scale2Res((int)value));
-}
-
-		return NULL;
-	}
-	if (dy > 100)
-		return Py_BuildValue("(Oi)", Py_None, CPythonInstance::DYNFONT_TOO_HIGH);
-
-	if (numargs > 2)
-		pyArgString(PyTuple_GET_ITEM(args, 2), text);
-	if (numargs > 3)
-	{
-		pyArgLong(PyTuple_GET_ITEM(args, 3), style);
-		if (style > CNeutrinoFonts::FONT_STYLE_ITALIC)
-			style = CNeutrinoFonts::FONT_STYLE_REGULAR;
-	}
-
-	Font *f = CNeutrinoFonts::getInstance()->getDynFontExt((int)dx, (int)dy, (int)fontID, text, (int)style);
-
-	long id = fontID + 1;
-	W->fontmap.insert(pyfontmap_pair_t(id, f));
-
-	return Py_BuildValue("(ii)", (int)id, CPythonInstance::DYNFONT_NO_ERROR);
 }
 
 
