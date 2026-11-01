@@ -89,7 +89,7 @@ class CTimerd
 			unsigned char apids;
 			bool          recordingSafety;
 			bool          autoAdjustToEPG;
-			bool          channel_ci; //NI - channel is member of CI bouquet?
+			bool          channel_ci; // channel is member of CI bouquet?
 		};
 
 		struct TransferEventInfo
@@ -100,7 +100,7 @@ class CTimerd
 			unsigned char apids;
 			bool          recordingSafety;
 			bool          autoAdjustToEPG;
-			bool          channel_ci; //NI - channel is member of CI bouquet?
+			bool          channel_ci; // channel is member of CI bouquet?
 		};
 
 		struct TransferRecordingInfo : TransferEventInfo
@@ -128,7 +128,7 @@ class CTimerd
 						epg_starttime = e.epg_starttime;
 						recordingSafety = e.recordingSafety;
 						autoAdjustToEPG = e.autoAdjustToEPG;
-						channel_ci = e.channel_ci; //NI
+						channel_ci = e.channel_ci;
 					};
 				RecordingInfo& operator = (EventInfo& e)
 					{
@@ -138,7 +138,7 @@ class CTimerd
 						epg_starttime = e.epg_starttime;
 						recordingSafety = e.recordingSafety;
 						autoAdjustToEPG = e.autoAdjustToEPG;
-						channel_ci = e.channel_ci; //NI
+						channel_ci = e.channel_ci;
 						return *this;
 					}
 				unsigned char apids;
@@ -175,7 +175,7 @@ class CTimerd
 			char              remotebox_name[25];
 			int               rem_pre;
 			int               rem_post;
-			bool              channel_ci; //NI
+			bool              channel_ci;
 
 			bool operator< (const responseGetTimer& a) const
 			{

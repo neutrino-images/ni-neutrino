@@ -837,7 +837,6 @@ bool CPictureViewer::DisplayImage(const std::string & name, int posx, int posy, 
 	return false;
 }
 
-//NI
 bool CPictureViewer::DisplayImage_unscaled(const std::string & name, int posx, int posy, int width, int height, int transp)
 {
 	if(width < 1 || height < 1){

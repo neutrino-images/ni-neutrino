@@ -281,13 +281,12 @@ void CFbAccelCSHD1::fbCopyArea(uint32_t width, uint32_t height, uint32_t dst_x, 
 //	printf("\033[31m>>>>\033[0m%s hw blit w: %d, h: %d, dst_x: %d, dst_y: %d, src_x: %d, src_y: %d\n", __func_ext__, w_, h_, dst_x, dst_y, src_x, src_y);
 }
 
-void CFbAccelCSHD1::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
+void CFbAccelCSHD1::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h)
 {
 	uint32_t xc, yc;
 	xc = (width > xRes) ? xRes : width;
 	yc = (height > yRes) ? yRes : height;
 
-	//NI
 	if (unscaled_w != 0 && unscaled_w < xc)
 		xc = unscaled_w;
 	if (unscaled_h != 0 && unscaled_h < yc)
@@ -327,7 +326,7 @@ void CFbAccelCSHD1::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint3
 	}
 	printf(LOGTAG "%s(%p+%d, %u %u %u %u %u %u %d) swrender fallback\n",
 			__func__, fbbuff, bb, width, height, xoff, yoff, xp, yp, transp);
-	CFrameBuffer::blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp, unscaled_w, unscaled_h); //NI
+	CFrameBuffer::blit2FB(fbbuff, width, height, xoff, yoff, xp, yp, transp, unscaled_w, unscaled_h);
 }
 
 void CFbAccelCSHD1::blitBox2FB(const fb_pixel_t* boxBuf, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff)

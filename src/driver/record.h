@@ -163,7 +163,6 @@ class CRecordInstance
 		int tshift_mode;
 		bool move_ts2rec;
 		void SetStopMessage(const char* text) {rec_stop_msg = text;} ;
-//NI
 #if 0
 		int  GetStatus();
 #endif
@@ -215,7 +214,6 @@ class CRecordManager : public CMenuTarget /*, public CChangeObserver*/
 		uint32_t	shift_timer;
 		CMenuWidget	*menu;
 
-//NI
 #if 0
 		uint32_t	check_timer;
 		bool		error_display;
@@ -301,7 +299,7 @@ class CRecordManager : public CMenuTarget /*, public CChangeObserver*/
 		void StartTimeshift();
 		int GetRecordMode(const t_channel_id channel_id=0);
 		CRecordInstance* getRecordInstance(std::string file);
-		CRecordInstance* getUseCI(); //NI
+		CRecordInstance* getUseCI();
 		// old code
 #if 0
 		bool MountDirectory(const char *recordingDir);

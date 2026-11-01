@@ -3804,12 +3804,10 @@ static bool zapit_parse_command(CBasicMessage::Header &rmsg, int connfd)
 {
 	return CZapit::getInstance()->ParseCommand(rmsg, connfd);
 }
-//NI
 bool CZapit::getUseChannelFilter()
 {
 	return CCamManager::getInstance()->getChannelFilter();
 }
-//NI
 void CZapit::setMoviePlayer(bool enable)
 {
 	CCamManager::getInstance()->enableMoviePlayer(enable);

@@ -142,9 +142,9 @@ void Helpbox::addSeparatorLine(const int& line_height, const int& line_indent)
 	line->setXPos(line_indent);
 	line->setColorBody(ccw_body->getColorBody());
 
-	CComponentsShapeSquare *sepline = new CComponentsShapeSquare (0, 0, line->getWidth(), 1); //NI
+	CComponentsShapeSquare *sepline = new CComponentsShapeSquare (0, 0, line->getWidth(), 1);
 	sepline->setYPos(line->getHeight()/2 - sepline->getHeight()/2);
-	sepline->setColorBody(COL_MENUCONTENT_PLUS_1); //NI
+	sepline->setColorBody(COL_MENUCONTENT_PLUS_1);
 	if (g_settings.theme.menu_Separator_gradient_enable)
 	{
 		sepline->enableColBodyGradient(true);

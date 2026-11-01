@@ -261,7 +261,6 @@ const char * CLocaleManager::getText(const neutrino_locale_t keyName) const
 	return localeData[keyName];
 }
 
-//NI
 /* A copy, taken with the lock held, which is the whole of what makes this one
    safe to ask from a thread other than the one that loads a language. */
 std::string CLocaleManager::getString(const neutrino_locale_t keyName) const

@@ -67,7 +67,6 @@ using namespace std;
 #include <curl/types.h>
 #endif
 
-//NI
 #include <global.h> // to get g_settings
 
 #include <vector>
@@ -329,7 +328,6 @@ bool CAtomicFileWriter::commit()
 
 void wakeup_hdd(const char *hdd_dir, bool msg)
 {
-	//NI
 	CHintBox loadBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_HDD_WAKEUP_START));
 
 	if (!g_settings.hdd_wakeup_msg)
@@ -372,7 +370,6 @@ void wakeup_hdd(const char *hdd_dir, bool msg)
 		hdd_flush(hdd_dir);
 		remove(wakeup_file.c_str());
 	}
-	//NI
 	if (msg)
 		loadBox.hide();
 }

@@ -68,7 +68,7 @@
 
 
 #include <system/settings.h>
-#include <system/helpers.h> //NI
+#include <system/helpers.h>
 
 #include <algorithm>
 #include <sys/stat.h>
@@ -79,7 +79,7 @@
 #include <hardware/video.h>
 extern cVideo * videoDecoder;
 
-//NI InfoIcons
+// InfoIcons
 #include <gui/infoicons.h>
 
 #define PICTUREVIEWER_START_SCRIPT "pictureviewer.start"
@@ -222,7 +222,6 @@ int CPictureViewerGui::exec(CMenuTarget* parent, const std::string & actionKey)
 		frameBuffer->Clear();
 	}
 
-	//NI
 	printf("[pictureviewer.cpp] wakeup_hdd(%s)\n", g_settings.network_nfs_picturedir.c_str());
 	wakeup_hdd(g_settings.network_nfs_picturedir.c_str(),true);
 
@@ -281,7 +280,7 @@ int CPictureViewerGui::show()
 
 	CAudioMute::getInstance()->enableMuteIcon(false);
 	CInfoClock::getInstance()->enableInfoClock(false);
-	CInfoIcons::getInstance()->enableInfoIcons(false); //NI InfoIcons
+	CInfoIcons::getInstance()->enableInfoIcons(false); // InfoIcons
 
 	while (loop)
 	{
@@ -684,7 +683,7 @@ int CPictureViewerGui::show()
 
 	CAudioMute::getInstance()->enableMuteIcon(true);
 	CInfoClock::getInstance()->enableInfoClock(true);
-	CInfoIcons::getInstance()->enableInfoIcons(true); //NI InfoIcons
+	CInfoIcons::getInstance()->enableInfoIcons(true); // InfoIcons
 
 	return(res);
 }

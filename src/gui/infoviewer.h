@@ -84,9 +84,9 @@ class CInfoViewer : public sigc::trackable
 	int            ChanHeight;
 	int            numbox_offset;
 	int            numbox_maxtxtwidth;
-	int            analogclock_size; //NI
-	int            analogclock_offset; //NI
-	fb_pixel_t*    analogclock_buf; //NI
+	int            analogclock_size;
+	int            analogclock_offset;
+	fb_pixel_t*    analogclock_buf;
 
 	CSectionsdClient::CurrentNextInfo info_CurrentNext;
 	CSectionsdClient::CurrentNextInfo oldinfo;
@@ -129,7 +129,7 @@ class CInfoViewer : public sigc::trackable
 			  const char *nextStart = NULL, const char *nextDuration = NULL,
 			  bool update_current = true, bool update_next = true);
 	void initClock();
-	void showAnalogClock(int posx,int posy,int dia); //NI
+	void showAnalogClock(int posx,int posy,int dia);
 	void showRecordIcon(const bool show);
 	void showIcon_Tuner() const;
 
@@ -154,7 +154,7 @@ class CInfoViewer : public sigc::trackable
 	void initLiveStreamInfo();
 	bool showLivestreamInfo();
 
-	CComponentsWindowMax *ecmInfoBox; //NI
+	CComponentsWindowMax *ecmInfoBox;
 
  public:
 	bool     chanready;
@@ -171,7 +171,6 @@ class CInfoViewer : public sigc::trackable
 	bool     showButtonBar;
 	bool     isVolscale;
 
-	//NI
 	std::string	md5_ecmInfo;
 	void ecmInfoBox_hide();
 	void ecmInfoBox_show(const char * txt, int w, int h, Font * font);

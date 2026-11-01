@@ -28,7 +28,7 @@
 #include <system/debug.h>
 #include <gui/widget/menue.h>
 #include <gui/widget/msgbox.h>
-#include <gui/update.h> //NI
+#include <gui/update.h>
 #include <driver/volume.h>
 #include <gui/audiomute.h>
 #include <gui/infoclock.h>
@@ -82,7 +82,7 @@ void CLuaInstMisc::LuaMiscRegister(lua_State *L)
 		{ "checkVersion",    CLuaInstMisc::checkVersion },
 		{ "postMsg",         CLuaInstMisc::postMsg },
 		{ "getTimeOfDay",    CLuaInstMisc::getTimeOfDay },
-		{ "FlashUpdate",     CLuaInstMisc::FlashUpdate }, //NI
+		{ "FlashUpdate",     CLuaInstMisc::FlashUpdate },
 		{ "__gc",            CLuaInstMisc::MiscDelete },
 		{ NULL, NULL }
 	};
@@ -372,7 +372,6 @@ int CLuaInstMisc::getTimeOfDay(lua_State *L)
 	return 1;
 }
 
-//NI
 int CLuaInstMisc::FlashUpdate(lua_State *L)
 {
 	CLuaMisc *D = MiscCheckData(L, 1);

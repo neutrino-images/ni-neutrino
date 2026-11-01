@@ -81,10 +81,9 @@
 #include <eitd/sectionsd.h>
 #include <hardware/video.h>
 
-//NI
 #include <driver/screen_max.h>
 
-//NI InfoIcons
+// InfoIcons
 #include "gui/infoicons.h"
 
 extern CRemoteControl *g_RemoteControl;	/* neutrino.cpp */
@@ -151,8 +150,8 @@ CInfoViewer::CInfoViewer ()
 	weather = CWeather::getInstance();
 	rec = NULL;
 
-	ecmInfoBox = NULL; //NI
-	md5_ecmInfo = "0"; //NI
+	ecmInfoBox = NULL;
+	md5_ecmInfo = "0";
 	InfoHeightY = 0;
 	ButtonWidth = 0;
 	ChanNameX = 0;
@@ -168,7 +167,7 @@ CInfoViewer::CInfoViewer ()
 	lasttime = 0;
 	aspectRatio = 0;
 	ChanInfoX = 0;
-	analogclock_buf = NULL; //NI
+	analogclock_buf = NULL;
 	Init();
 	infoViewerBB->Init();
 	oldinfo.current_uniqueKey = 0;
@@ -217,7 +216,6 @@ void CInfoViewer::Init()
 	_livestreamInfo1.clear();
 	_livestreamInfo2.clear();
 
-	//NI
 	if (analogclock_buf) {
 		delete analogclock_buf;
 		analogclock_buf = NULL;
@@ -276,7 +274,6 @@ void CInfoViewer::start ()
 	time_height = std::max(ChanHeight / 2, clock->getHeight());
 	time_width = clock->getWidth();
 
-	//NI
 	analogclock_offset = !g_settings.infobar_analogclock ? 0 : OFFSET_INNER_MID;
 	analogclock_size   = !g_settings.infobar_analogclock ? 0 : InfoHeightY - 2*analogclock_offset;
 	clock->setXPos(clock->getXPos() - analogclock_offset - analogclock_size);
@@ -634,7 +631,6 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 	paintBackground(col_NumBox);
 
 	bool show_dot = true;
-	//NI
 	if (timeset)
 	{
 		if (g_settings.infobar_analogclock)
@@ -645,7 +641,7 @@ void CInfoViewer::showTitle(CZapitChannel * channel, const bool calledFromNumZap
 	showRecordIcon (show_dot);
 	show_dot = !show_dot;
 
-	//NI InfoIcons
+	// InfoIcons
 	if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
 		CInfoIcons::getInstance()->paintIcons(true);
 
@@ -848,7 +844,6 @@ void CInfoViewer::showMovieTitle(const int playState, const t_channel_id &Channe
 	paintBackground(COL_INFOBAR_PLUS_0);
 
 	bool show_dot = true;
-	//NI
 	if (timeset)
 	{
 		if (g_settings.infobar_analogclock)
@@ -859,7 +854,7 @@ void CInfoViewer::showMovieTitle(const int playState, const t_channel_id &Channe
 	showRecordIcon (show_dot);
 	show_dot = !show_dot;
 
-	//NI InfoIcons
+	// InfoIcons
 	if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
 		CInfoIcons::getInstance()->paintIcons(true);
 
@@ -1154,7 +1149,6 @@ void CInfoViewer::loop(bool show_dot)
 
 		showLivestreamInfo();
 
-		//NI
 		if (msg == CRCInput::RC_help && g_settings.show_ecm_pos)
 		{
 			if (g_settings.show_ecm)
@@ -1234,7 +1228,6 @@ void CInfoViewer::loop(bool show_dot)
 			if (frameBuffer->getActive() && is_visible)
 			{
 				showSNR ();
-				//NI
 				if (timeset)
 				{
 					if (g_settings.infobar_analogclock)
@@ -1250,7 +1243,6 @@ void CInfoViewer::loop(bool show_dot)
 
 				infoViewerBB->showIcon_16_9();
 				//infoViewerBB->paint_ca_icons(0);
-				//NI
 				if(file_exists("/tmp/ecm.info"))
 				{
 					std::string md5_tmp = filehash((char *)"/tmp/ecm.info");
@@ -1907,13 +1899,13 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 	if (pb_pos > -1)
 	{
 		int pb_w = 112;
-		int pb_startx = BoxEndX - pb_w; //NI
+		int pb_startx = BoxEndX - pb_w;
 		int pb_starty = ChanNameY - (pb_h + OFFSET_INNER_MID);
 		if (g_settings.infobar_progressbar)
 		{
 			pb_startx = xStart;
 			pb_w = BoxEndX - OFFSET_INNER_MID - xStart;
-			pb_w -= analogclock_size + analogclock_offset; //NI
+			pb_w -= analogclock_size + analogclock_offset;
 		}
 		int tmpY = CurrInfoY - height - ChanNameY + header_height -
 			g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_CHANNAME]->getDigitOffset()/3+OFFSET_SHADOW;
@@ -1955,9 +1947,9 @@ void CInfoViewer::display_Info(const char *current, const char *next,
 	if (nextDuration)
 		nextTimeW = g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO]->getRenderWidth("000 min") + OFFSET_INNER_MID;
 	int currTimeX = BoxEndX - currTimeW - OFFSET_INNER_MID;
-	currTimeX -= analogclock_size + analogclock_offset; //NI
+	currTimeX -= analogclock_size + analogclock_offset;
 	int nextTimeX = BoxEndX - nextTimeW - OFFSET_INNER_MID;
-	nextTimeX -= analogclock_size + analogclock_offset; //NI
+	nextTimeX -= analogclock_size + analogclock_offset;
 
 	//colored_events init
 	bool colored_event_C = (g_settings.theme.colored_events_infobar == 1);
@@ -2258,14 +2250,14 @@ void CInfoViewer::killTitle()
 		is_visible = false;
 		infoViewerBB->is_visible = false;
 
-		//NI InfoIcons
+		// InfoIcons
 		if (!g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_INFOVIEWER)
 			CInfoIcons::getInstance()->hideIcons();
 
 		if (weather)
 			weather->hide();
 
-		//NI hide ecm.info
+		// hide ecm.info
 		if (g_settings.show_ecm)
 			ecmInfoBox_hide();
 
@@ -2474,7 +2466,6 @@ void CInfoViewer::setUpdateTimer(uint64_t interval)
 		lcdUpdateTimer = g_RCInput->addTimer(interval, false);
 }
 
-//NI
 void CInfoViewer::showAnalogClock(int posx,int posy,int dia)
 {
 	int ts,tm,th,sx,sy,mx,my,hx,hy;
@@ -2542,14 +2533,12 @@ void CInfoViewer::ResetModules()
 	delete rec; 			rec 		= NULL;
 	infoViewerBB->ResetModules();
 
-	//NI
 	if (analogclock_buf) {
 		delete analogclock_buf;
 		analogclock_buf = NULL;
 	}
 }
 
-//NI
 void CInfoViewer::ecmInfoBox_show(const char * txt, int w, int h, Font * font)
 {
 	if (ecmInfoBox != NULL)
@@ -2618,7 +2607,6 @@ void CInfoViewer::ecmInfoBox_show(const char * txt, int w, int h, Font * font)
 	g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE]->setSize(storedSize);
 }
 
-//NI
 void CInfoViewer::ecmInfoBox_hide()
 {
 	if (ecmInfoBox != NULL) {

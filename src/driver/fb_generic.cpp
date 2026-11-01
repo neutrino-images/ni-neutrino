@@ -1950,13 +1950,12 @@ void CFrameBuffer::fbCopyArea(uint32_t width, uint32_t height, uint32_t dst_x, u
  *  xoff, yoff is the offset into the *target* (framebuffer) surface.
  *  transp == false (default): alpha blend src and dst, transp == true => just copy over src to dest
  */
-void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h) //NI
+void CFrameBuffer::blit2FB(void *fbbuff, uint32_t width, uint32_t height, uint32_t xoff, uint32_t yoff, uint32_t xp, uint32_t yp, bool transp, uint32_t unscaled_w, uint32_t unscaled_h)
 {
 	uint32_t xc, yc;
 	xc = (width > xRes) ? xRes + xp : width;
 	yc = (height > yRes) ? yRes + yp: height;
 
-	//NI
 	if (unscaled_w != 0 && unscaled_w < xc)
 		xc = unscaled_w;
 	if (unscaled_h != 0 && unscaled_h < yc)

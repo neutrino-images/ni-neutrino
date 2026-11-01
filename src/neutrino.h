@@ -123,7 +123,7 @@ private:
 	int				first_mode_found;
 	int				osd_resolution_tmp;
 	bool				frameBufferInitialized;
-	bool				blank_screen; //NI
+	bool				blank_screen;
 
 	void SDT_ReloadChannels();
 	void setupNetwork( bool force= false );
@@ -219,7 +219,7 @@ public:
 	}
 	int getVideoFormat() { return g_settings.video_Format; }
 	void switchTvRadioMode(const int prev_mode = NeutrinoModes::mode_unknown);
-	void switchInfoIconsOnOff(); //NI
+	void switchInfoIconsOnOff();
 
 	time_t getStartTime() { return neutrino_start_time; }
 	

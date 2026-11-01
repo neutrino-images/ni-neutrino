@@ -102,11 +102,9 @@ extern cVideo * videoDecoder;
 // "::" instead of redeclaring it locally.
 extern CRemoteControl * g_RemoteControl;
 
-//NI
 #include <system/helpers.h>
 #include "gui/infoicons.h"
 
-//NI
 #include "gui/update.h"
 
 extern CPlugins *g_Plugins;//for relodplugins
@@ -277,7 +275,6 @@ const CControlAPI::TyCgiCall CControlAPI::yCgiCallList[]=
 	{"statfs",		&CControlAPI::StatfsCGI,		"+xml"},
 	{"getdir",		&CControlAPI::getDirCGI,		"+xml"},
 	{"getmovies",		&CControlAPI::getMoviesCGI,		"+xml"},
-	//NI
 	{"infoicons",		&CControlAPI::InfoIconsCGI,		"text/plain"},
 	{"updateinfo",		&CControlAPI::UpdateInfoCGI,		""}
 };
@@ -4524,7 +4521,6 @@ std::string CControlAPI::readMovies(CyhookHandler *hh, std::string path, std::st
 	return result;
 }
 
-//NI
 //-----------------------------------------------------------------------------
 void CControlAPI::InfoIconsCGI(CyhookHandler *hh)
 {
@@ -4596,7 +4592,6 @@ void CControlAPI::InfoIconsCGI(CyhookHandler *hh)
 	hh->SendOk();
 }
 
-//NI
 //-------------------------------------------------------------------------
 /** Display update info
  *

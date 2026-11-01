@@ -1570,7 +1570,7 @@ enum
 
 const int FOLLOWSCREENINGS_OFF    = 0;
 const int FOLLOWSCREENINGS_ON     = 1;
-const int FOLLOWSCREENINGS_ALWAYS = 2; //NI
+const int FOLLOWSCREENINGS_ALWAYS = 2;
 
 // Which channels the background EPG scan visits, the values of epg_scan.
 enum

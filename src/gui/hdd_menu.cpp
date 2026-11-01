@@ -47,7 +47,7 @@
 #include <neutrino_menue.h>
 #include "hdd_menu.h"
 
-#include <cs_api.h> //NI
+#include <cs_api.h>
 #include <coreapi/settings/predicates.h>
 #include <coreapi/box/storage_disks.h>
 #include <gui/widget/icons.h>
@@ -315,7 +315,6 @@ int CHDDMenuHandler::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t dat
 
 		if (added && !mounted && tmp != "sr") {
 			std::string message = dev + ": " + g_Locale->getText(LOCALE_HDD_MOUNT_FAILED);
-		    //NI
 		    if (!g_settings.hdd_format_on_mount_failed)
 			showHint(message);
 		    else {
@@ -335,7 +334,7 @@ int CHDDMenuHandler::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t dat
 					g_Locale->getText(mounted ? LOCALE_HDD_MOUNT_OK : LOCALE_HDD_MOUNT_FAILED)
 					: g_Locale->getText(LOCALE_HDD_UMOUNTED));
 			showHint(message);
-			if (added && tmp != "sr" && g_settings.hdd_allow_set_recdir) //NI
+			if (added && tmp != "sr" && g_settings.hdd_allow_set_recdir)
 				setRecordPath(dev);
 		}
 		if (in_menu && !lock_refresh) {
@@ -531,9 +530,8 @@ int CHDDMenuHandler::doMenu()
 		if (have_nonbb_hdparm)
 			addSetting(hddmenu, "hdd_noise");
 
-		//NI
 		hddmenu->addItem(new CMenuSeparator());
-		//NI HDD power (HD1/BSE only), which the row is offered for
+		// HDD power (HD1/BSE only), which the row is offered for
 		CMenuItem *hddpower = addSetting(hddmenu, "flag_hddpower", true, NULL, CRCInput::RC_yellow);
 		if (hddpower)
 		{
@@ -793,7 +791,7 @@ int CHDDMenuHandler::formatDevice(std::string dev)
 	if(res != CMsgBox::mbrYes)
 		return menu_return::RETURN_REPAINT;
 
-	//NI bool srun = my_system(3, "killall", "-9", "smbd");
+	//bool srun = my_system(3, "killall", "-9", "smbd");
 
 	CHDDFormatProgress progress;
 	coreapi::storage::FormatResult result = coreapi::storage::format(dev, devtool.fmt, mkfs_label,
@@ -817,7 +815,7 @@ int CHDDMenuHandler::formatDevice(std::string dev)
 			break;
 	}
 
-	//NI if (!srun) my_system(1, "smbd");
+	//if (!srun) my_system(1, "smbd");
 	if (show_menu)
 		return menu_return::RETURN_EXIT_ALL;
 
@@ -850,7 +848,7 @@ int CHDDMenuHandler::checkDevice(std::string dev)
 	std::string cmd = devtool->fsck + " " + devtool->fsck_options + " " + devname;
 	printf("fsck cmd: [%s]\n", cmd.c_str());
 
-	//NI bool srun = my_system(3, "killall", "-9", "smbd");
+	//bool srun = my_system(3, "killall", "-9", "smbd");
 
 	res = true;
 	if (is_mounted(dev.c_str()))
@@ -922,6 +920,6 @@ int CHDDMenuHandler::checkDevice(std::string dev)
 	res = mount_dev(dev);
 	printf("CHDDMenuHandler::checkDevice: mount res %d\n", res);
 
-	//NI if (!srun) my_system(1, "smbd");
+	//if (!srun) my_system(1, "smbd");
 	return menu_return::RETURN_REPAINT;
 }

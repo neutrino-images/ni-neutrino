@@ -94,10 +94,10 @@ extern cVideo * videoDecoder;
 #define AUDIOPLAYER_START_SCRIPT "audioplayer.start"
 #define AUDIOPLAYER_END_SCRIPT "audioplayer.end"
 #define DEFAULT_RADIOSTATIONS_XMLFILE CONFIGDIR "/radio-stations.xml"
-#define DEFAULT_RADIOFAVORITES_XMLFILE CONFIGDIR "/radio-favorites.xml" //NI
+#define DEFAULT_RADIOFAVORITES_XMLFILE CONFIGDIR "/radio-favorites.xml"
 
 const char RADIO_STATION_XML_FILE[] = {DEFAULT_RADIOSTATIONS_XMLFILE};
-const char RADIO_FAVORITES_XML_FILE[] = {DEFAULT_RADIOFAVORITES_XMLFILE}; //NI
+const char RADIO_FAVORITES_XML_FILE[] = {DEFAULT_RADIOFAVORITES_XMLFILE};
 
 CAudiofileExt::CAudiofileExt() : CAudiofile(), firstChar('\0')
 {
@@ -311,7 +311,6 @@ int CAudioPlayerGui::exec(CMenuTarget* parent, const std::string &actionKey)
 	m_LastMode = CNeutrinoApp::getInstance()->getMode();
 	CNeutrinoApp::getInstance()->handleMsg(NeutrinoMessages::CHANGEMODE , NeutrinoModes::mode_audio);
 
-	//NI
 	printf("[audioplayer.cpp] wakeup_hdd(%s)\n", g_settings.network_nfs_audioplayerdir.c_str());
 	wakeup_hdd(g_settings.network_nfs_audioplayerdir.c_str(),true);
 
@@ -372,7 +371,7 @@ int CAudioPlayerGui::show()
 	bool clear_before_update = false;
 	m_key_level = 0;
 
-	//NI auto-play first entry from favorites
+	// auto-play first entry from favorites
 	if (g_settings.inetradio_autostart)
 	{
 		if ((m_inetmode) && (!m_playlist.empty()))
@@ -470,7 +469,7 @@ int CAudioPlayerGui::show()
 			if (m_state != CAudioPlayerGui::STOP)
 				stop();
 		}
-		//NI - add key_favorites for internetradio
+		// add key_favorites for internetradio
 		else if ((msg == (neutrino_msg_t) g_settings.key_favorites) && (m_inetmode))
 		{
 			if (m_key_level == 0)

@@ -60,7 +60,7 @@ int main(int /*argc*/, char **argv)
 
 	if (connect(sock_fd, (struct sockaddr *) &servaddr, clilen) < 0)
 	{
-		//NI perror("error connect socket " NEUTRINO_UDS_NAME);
+		//perror("error connect socket " NEUTRINO_UDS_NAME);
 		goto _error;
 	}
 

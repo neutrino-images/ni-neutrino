@@ -57,10 +57,9 @@
 
 #include <coreapi/base/apply.h>
 
-//NI CA init
+// CA init
 extern Zapit_config zapitCfg;
 
-//NI
 const CMenuOptionChooser::keyval OPTIONS_CA_INIT_OPTIONS[] =
 {
 	{ 0, LOCALE_CA_INIT_0 },
@@ -122,7 +121,7 @@ int CCAMMenuHandler::doMainMenu()
 	CMenuWidget* cammenu = new CMenuWidget(LOCALE_CI_SETTINGS, NEUTRINO_ICON_SETTINGS);
 	cammenu->addIntroItems();
 
-	//NI CA init CI|CARD|BOTH
+	// CA init CI|CARD|BOTH
 	CZapit::getInstance()->GetConfig(zapitCfg);
 	CMenuOptionChooser *ca_init = new CMenuOptionChooser(LOCALE_CA_INIT, (int *)&zapitCfg.cam_ci, OPTIONS_CA_INIT_OPTIONS, OPTIONS_CA_INIT_OPTION_COUNT, true, NULL);
 	ca_init->setHint(NEUTRINO_ICON_HINT_IMAGELOGO, LOCALE_MENU_HINT_CA_INIT);
@@ -135,7 +134,6 @@ int CCAMMenuHandler::doMainMenu()
 #if HAVE_LIBSTB_HAL
 	addSetting(cammenu, "ci_check_live");
 #endif
-	//NI
 	addSetting(cammenu, "ci_rec_zapto");
 	CMenuItem *ci_mode = addSetting(cammenu, "ci_mode", true, NULL);
 	if (ci_mode)
@@ -222,7 +220,7 @@ int CCAMMenuHandler::doMainMenu()
 	delete cammenu;
 	in_menu = false;
 
-	//NI CA init
+	// CA init
 	CZapit::getInstance()->SetConfig(&zapitCfg);
 
 	return ret;

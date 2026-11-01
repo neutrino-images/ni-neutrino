@@ -56,7 +56,7 @@ class CScreenSaver : public sigc::trackable
 		// force_refresh is set from the main thread and polled by the worker.
 		std::atomic<bool> force_refresh;
 		bool		status_mute;
-		bool		status_icons; //NI
+		bool		status_icons;
 		uint 		seed[6];
 
 		void		handleRadioText(bool enable_paint);

@@ -60,7 +60,7 @@
 
 #include <zapit/femanager.h>
 #include <zapit/zapit.h>
-#include <zapit/capmt.h> //NI
+#include <zapit/capmt.h>
 
 #include <hardware/video.h>
 
@@ -110,7 +110,7 @@ void CInfoViewerBB::Init()
 	fta			= true;
 	minX			= 0;
 
-	//NI init
+	// init
 	DecEndx = 0;
 	decode = UNKNOWN;
 	camCI = false;
@@ -236,7 +236,7 @@ void CInfoViewerBB::getBBIconInfo()
 			bbIconMaxH = std::max(bbIconMaxH, bbIconInfo[i].h);
 	}
 	if (g_settings.infobar_show_sysfs_hdd)
-		bbIconMinX -= hddwidth + OFFSET_INNER_MID; //NI
+		bbIconMinX -= hddwidth + OFFSET_INNER_MID;
 }
 
 void CInfoViewerBB::getBBButtonInfo()
@@ -479,7 +479,6 @@ void CInfoViewerBB::paintshowButtonBar(bool noTimer/*=false*/)
 	// Buttons
 	showBBButtons();
 
-	//NI
 	if (g_settings.infobar_casystem_display < 2)
 		paint_cam_icons();
 
@@ -784,7 +783,7 @@ void CInfoViewerBB::paint_ca_icon(int caid, const char *icon, int &icon_space_of
 		int icon_sizeH = 0, index = 0;
 		std::map<int, std::pair<int,const char*> >::const_iterator it;
 
-		icon_map[0x0000] = std::make_pair(index++,"dec"); //NI
+		icon_map[0x0000] = std::make_pair(index++,"dec");
 		icon_map[0x0E00] = std::make_pair(index++,"powervu");
 		icon_map[0x1000] = std::make_pair(index++,"tan");
 		icon_map[0x2600] = std::make_pair(index++,"biss");
@@ -800,7 +799,7 @@ void CInfoViewerBB::paint_ca_icon(int caid, const char *icon, int &icon_space_of
 		icon_map[0x5600] = std::make_pair(index  ,"vmx");
 
 		for (it=icon_map.begin(); it!=icon_map.end(); ++it) {
-			snprintf(buf, sizeof(buf), "%s_%s", (*it).second.second, (*it).second.first==0 ? "na" : "white"); //NI
+			snprintf(buf, sizeof(buf), "%s_%s", (*it).second.second, (*it).second.first==0 ? "na" : "white");
 			frameBuffer->getIconSize(buf, &icon_sizeW[(*it).second.first], &icon_sizeH);
 		}
 
@@ -820,7 +819,7 @@ void CInfoViewerBB::paint_ca_icon(int caid, const char *icon, int &icon_space_of
 	} else {
 		icon_space_offset += icon_sizeW[icon_map[caid].first];
 		px = endx - icon_space_offset;
-		icon_space_offset += icon_space; //NI
+		icon_space_offset += icon_space;
 	}
 
 	if (px) {
@@ -828,14 +827,13 @@ void CInfoViewerBB::paint_ca_icon(int caid, const char *icon, int &icon_space_of
 		if ((px >= (endx-OFFSET_INNER_MID)) || (px <= 0))
 			printf("#####[%s:%d] Error paint icon %s, px: %d,  py: %d, endx: %d, icon_offset: %d\n", 
 				__FUNCTION__, __LINE__, buf, px, py, endx, icon_offset[icon_map[caid].first]);
-		else if (strstr(buf,"dec_white") == 0) //NI
+		else if (strstr(buf,"dec_white") == 0)
 			frameBuffer->paintIcon(buf, px, py);
 	}
 }
 
 void CInfoViewerBB::paint_ca_icons(int notfirst)
 {
-	//NI
 	int acaid = 0;
 	if (g_settings.show_ecm && (notfirst || g_settings.infobar_casystem_display > 1)) //bad mess :(
 		acaid = check_ecmInfo();
@@ -852,12 +850,11 @@ void CInfoViewerBB::paint_ca_icons(int notfirst)
 	}
 
 	int caids[] = { 0x5600, 0x900, 0xD00, 0xB00, 0x1800, 0x0500, 0x0100, 0x1700, 0x600, 0x4a00, 0x2600, 0x1000, 0x0E00, 0x0000 };
-	const char *green = "green"; //NI
+	const char *green = "green";
 	const char *white = "white";
 	const char *yellow = "yellow";
 	int icon_space_offset = 0;
 
-	//NI
 	const char *dec_icon_name[] = {"na","na","fta","int","card","net", "softcsa"};
 	decode = UNKNOWN;
 
@@ -892,7 +889,7 @@ void CInfoViewerBB::paint_ca_icons(int notfirst)
 #endif
 
 	if(!notfirst) {
-		//NI - check ecm.info
+		// check ecm.info
 		acaid = check_ecmInfo();
 		if(acaid == 0){
 			if(camCI)
@@ -904,19 +901,18 @@ void CInfoViewerBB::paint_ca_icons(int notfirst)
 			decode = SOFTCSA;
 #endif
 
-		//NI - map betacrypt to nagra
+		// map betacrypt to nagra
 		if((acaid & 0xFF00)== 0x1700 && (caids[3]& 0xFF00) == 0x1800)
 			acaid=0x1800;
 
 		for (int i = 0; i < (int)(sizeof(caids)/sizeof(int)); i++) {
-			//printf("caids[%i] = %X\n",i,caids[i]); //NI
-			bool dcaid = false; //NI
+			//printf("caids[%i] = %X\n",i,caids[i]);
+			bool dcaid = false;
 			bool found = false;
 			for(casys_map_iterator_t it = channel->camap.begin(); it != channel->camap.end(); ++it) {
 				int caid = (*it) & 0xFF00;
 				if((found = (caid == caids[i])))
 				{
-					//NI
 					//printf("   ****** caid = %X -  acaid = %X ******\n", caid, acaid & 0xFF00);
 					dcaid = ((caid) == (acaid & 0xFF00));
 					fta=false;
@@ -924,19 +920,18 @@ void CInfoViewerBB::paint_ca_icons(int notfirst)
 					break;
 				}
 			}
-			//NI - decode info
+			// decode info
 			if(i == (int)(sizeof(caids)/sizeof(int))-1) {
 				paint_ca_icon(caids[i], fta ? "fta" : dec_icon_name[decode], icon_space_offset);
 				continue;
 			}
 
 			if(g_settings.infobar_casystem_display == 0)
-				paint_ca_icon(caids[i], (found ? (dcaid ? green : yellow) : white), icon_space_offset); //NI
+				paint_ca_icon(caids[i], (found ? (dcaid ? green : yellow) : white), icon_space_offset);
 			else if(found)
-				paint_ca_icon(caids[i], (dcaid ? green : yellow), icon_space_offset); //NI
+				paint_ca_icon(caids[i], (dcaid ? green : yellow), icon_space_offset);
 		}
 
-		//NI
 		if (camCI)
 			paint_cam_icons();
 	}
@@ -969,7 +964,6 @@ void CInfoViewerBB::paint_ca_bar()
 
 	ca_bar->paint(CC_SAVE_SCREEN_NO);
 
-//NI
 #if 0
 	if (g_settings.infobar_casystem_dotmatrix)
 	{
@@ -1072,7 +1066,6 @@ void CInfoViewerBB::scrambledCheck(bool force)
 	}
 }
 
-//NI
 void CInfoViewerBB::paint_cam_icons()
 {
 	std::ostringstream buf;
@@ -1110,7 +1103,7 @@ void CInfoViewerBB::paint_cam_icons()
 	}
 }
 
-//NI ecm-Info
+// ecm-Info
 int CInfoViewerBB::check_ecmInfo()
 {
 	int caid = 0;

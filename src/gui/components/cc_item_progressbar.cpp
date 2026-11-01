@@ -39,7 +39,7 @@
 #define GREEN  0x00FF00
 #define YELLOW 0xFFFF00
 
-//NI starbar
+// starbar
 #include <gui/pictureviewer.h>
 extern CPictureViewer * g_PicViewer;
 
@@ -416,7 +416,6 @@ void CProgressBar::paintProgress(const bool &do_save_bg)
 
 	if (cc_allow_paint){
 		if (!is_painted || (pb_active_width != pb_last_width)) {
-			//NI start
 			if(pb_type == PB_STARBAR) {
 				paintStarBar();
 				is_painted = true;
@@ -434,7 +433,7 @@ void CProgressBar::paintProgress(const bool &do_save_bg)
 		pb_last_width = pb_active_width;
 }
 
-//NI starbar
+// starbar
 void CProgressBar::paintStarBar()
 {
 	std::string pb_active_graphic(frameBuffer->getIconPath(NEUTRINO_ICON_STARS));

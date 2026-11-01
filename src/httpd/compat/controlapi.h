@@ -144,8 +144,8 @@ private:
 			       coreapi::Result<void> *refusal);
 	std::string getSubdirectories(CyhookHandler *hh, std::string path, std::string result);
 
-	void InfoIconsCGI(CyhookHandler *hh); //NI
-	void UpdateInfoCGI(CyhookHandler *hh); //NI
+	void InfoIconsCGI(CyhookHandler *hh);
+	void UpdateInfoCGI(CyhookHandler *hh);
 
 protected:
 	CNeutrinoAPI	*NeutrinoAPI;

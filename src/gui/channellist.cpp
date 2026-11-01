@@ -529,7 +529,7 @@ void CChannelList::calcSize()
 
 	minitv_is_active = ( (g_settings.channellist_additional == SNeutrinoSettings::CHANNELLIST_ADDITIONAL_MODE_MINITV) && (CNeutrinoApp::getInstance()->getMode() != NeutrinoModes::mode_ts) );
 	// calculate width
-	full_width = frameBuffer->getWindowWidth(); //NI
+	full_width = frameBuffer->getWindowWidth();
 
 	if (g_settings.channellist_additional)
 		width = full_width / 3 * 2;
@@ -541,7 +541,7 @@ void CChannelList::calcSize()
 		info_height = 2*fheight + fdescrheight + 2*OFFSET_INNER_SMALL;
 	else
 		info_height = 0;
-	height = frameBuffer->getWindowHeight(); //NI
+	height = frameBuffer->getWindowHeight();
 	height = height - OFFSET_INTER - info_height;
 
 	// calculate x position
@@ -1041,7 +1041,7 @@ int CChannelList::show()
 	if(zapOnExit)
 		res = selected;
 
-	//NI printf("CChannelList::show *********** res %d\n", res);
+	//printf("CChannelList::show *********** res %d\n", res);
 	return(res);
 }
 
@@ -1057,7 +1057,7 @@ void CChannelList::hide()
 	if(header)
 		header->kill();
 
-	frameBuffer->paintBackground(); //NI clear whole screen
+	frameBuffer->paintBackground(); // clear whole screen
 
 	//remove details line
 	if (dline)
@@ -1679,7 +1679,7 @@ void CChannelList::paintDetails(int index)
 	int ypos_a = ypos + OFFSET_INNER_SMALL;
 
 	frameBuffer->paintBoxRel(x, ypos, full_width, info_height, COL_MENUCONTENTDARK_PLUS_0, RADIUS_LARGE);
-	frameBuffer->paintBoxFrame(x, ypos, full_width, info_height, 1, COL_FRAME_PLUS_0, RADIUS_LARGE); //NI
+	frameBuffer->paintBoxFrame(x, ypos, full_width, info_height, 1, COL_FRAME_PLUS_0, RADIUS_LARGE);
 
 	if ((*chanlist).empty())
 		return;
@@ -2038,7 +2038,6 @@ void CChannelList::paintItem(int pos, const bool firstpaint)
 		paintbuttons = true;
 	}
 
-//NI
 #if 0
 	if (displayMode != DISPLAY_MODE_NOW)
 	{
@@ -2544,7 +2543,7 @@ bool CChannelList::SameTP(CZapitChannel * channel)
 		if (IS_WEBCHAN(channel->getChannelID()))
 			return true;
 
-		//NI - Usable CI channel while recording
+		// Usable CI channel while recording
 		if(g_settings.ci_mode != 0 && channel->bUseCI && CRecordManager::getInstance()->getUseCI()) {
 			if(g_settings.ci_mode == 1)
 				return (CRecordManager::getInstance()->SameTransponder(channel->getChannelID())); // SameTransponder
