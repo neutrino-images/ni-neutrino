@@ -27,6 +27,7 @@
 #include <system/debug.h>
 #include <system/helpers.h>
 #include <gui/widget/menue.h>
+#include <gui/widget/keyboard_input.h>
 #include <gui/widget/msgbox.h>
 #include <gui/widget/stringinput.h>
 #include <gui/filebrowser.h>
@@ -284,41 +285,18 @@ int CPyMenuKeyboardinput::exec(CMenuTarget * /*parent*/, const std::string & /*a
 
 int CPyMenuFilebrowser::exec(CMenuTarget * /*parent*/, const std::string & /*actionKey*/)
 {
-	CFileBrowser browser;
-	browser.multiAction = NULL;
-	browser.dirAction = NULL;
+	CFileBrowser fileBrowser;
+	fileBrowser.Dir_Mode = dirMode;
 
-	// the filters the script asked for, kept for the length of the call
-	std::list<char *> filter_texts;
-	for (size_t i = 0; i < filter.size(); i++)
-	{
-		char *t = strdup(filter[i].c_str());
-		if (t == NULL)
-			continue;
-		filter_texts.push_back(t);
-		browser.addFilter(t);
-	}
+	CFileFilter fileFilter;
+	for (std::vector<std::string>::iterator it = filter.begin(); it != filter.end(); ++it)
+		fileFilter.addFilter(*it);
+	if (!filter.empty())
+		fileBrowser.Filter = &fileFilter;
 
-	CFile *file = NULL;
-	if (dirMode)
-	{
-		file = browser.exec(NULL, "");
-		if (file == NULL)
-		{
-			// a directory chosen: the browser answers with the one it stands in
-			*value = browser.getCurrentDir();
-			file = NULL;
-		}
-	}
-	else
-	{
-		file = browser.exec(NULL, "");
-		if (file != NULL)
-			*value = file->Name;
-	}
-
-	for (std::list<char *>::iterator it = filter_texts.begin(); it != filter_texts.end(); ++it)
-		free(*it);
+	std::string tmpValue = (dirMode) ? *value : getPathName(*value);
+	if (fileBrowser.exec(tmpValue.c_str()) == true)
+		*value = fileBrowser.getSelectedFile()->Name;
 
 	PyGILState_STATE gstate = PyGILState_Ensure();
 	PyObject *val = PyUnicode_FromString(value->c_str());
