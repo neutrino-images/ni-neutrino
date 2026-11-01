@@ -1,4 +1,6 @@
 installdir = $(PYTHONPLUGINDIR)
 
 install_DATA = \
-	apiinfo.py
+	apiinfo.py \
+	replay.py \
+	replay.cfg

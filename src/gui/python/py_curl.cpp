@@ -491,7 +491,9 @@ PyObject *CPythonInstCurl::CurlDownload(PyObject *self, PyObject *args, PyObject
 	if (verbose == true)
 		printf("%s\n \n", msg.c_str());
 
-	return Py_BuildValue("(is)", PY_CURL_OK, retString.c_str());
+	/* The body is handed over as it came: a document is bytes, and one that
+	 * is not text is not a string. The Lua binding answers the same bytes. */
+	return Py_BuildValue("(iy#)", PY_CURL_OK, retString.c_str(), (Py_ssize_t)retString.length());
 #undef CURL_MSG_ERROR
 }
 
