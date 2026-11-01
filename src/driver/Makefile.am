@@ -55,6 +55,7 @@ libneutrino_driver_a_SOURCES = \
 	screenshot.cpp \
 	shutdown_count.cpp \
 	streamts.cpp \
+	tsaudiotype.cpp \
 	volume.cpp
 
 if ENABLE_LCD
