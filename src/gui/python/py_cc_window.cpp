@@ -110,9 +110,9 @@ PyObject *CPythonInstCCWindow::CCWindowNew(PyTypeObject *type, PyObject *args, P
 		{ "btn8",         NEUTRINO_ICON_BUTTON_8 },
 		{ "btn9",         NEUTRINO_ICON_BUTTON_9 },
 		{ "btnPlay",      NEUTRINO_ICON_BUTTON_PLAY },
-		{ "btnPlayPause", NEUTRINO_ICON_BUTTON_PLAYPAUSE },
-		{ "btnOk",        NEUTRINO_ICON_BUTTON_OK },
-		{ "btnSetup",     NEUTRINO_ICON_BUTTON_SETUP },
+		{ "btnPlayPause", NEUTRINO_ICON_BUTTON_PLAY },
+		{ "btnOk",        NEUTRINO_ICON_BUTTON_OKAY },
+		{ "btnSetup",     NEUTRINO_ICON_BUTTON_MENU },
 		{ NULL, NULL }
 	};
 
@@ -231,7 +231,7 @@ PyObject *CPythonInstCCWindow::CCWindowSetCaption(PyObject *self, PyObject *args
 	long alignment = (long)DEFAULT_TITLE_ALIGN;
 	pyLookupInt(kwds, "alignment", alignment);
 
-	w->setWindowCaption(name, (cc_title_alignment_t)alignment);
+	w->setWindowCaption(name, (CCHeaderTypes::cc_title_alignment_t)alignment);
 	Py_RETURN_NONE;
 }
 
