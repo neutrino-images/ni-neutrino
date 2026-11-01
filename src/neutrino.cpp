@@ -6025,6 +6025,9 @@ void CNeutrinoApp::saveEpg(int _mode)
 
 void CNeutrinoApp::tvMode(bool rezap)
 {
+	/* Also reached past standbyMode(false), by saveEpg: the box shows a
+	   picture from here on. */
+	CZapit::getInstance()->SetBoxStandby(false);
 	if (mode == NeutrinoModes::mode_webradio) {
 		CMoviePlayerGui::getInstance().setLastMode(NeutrinoModes::mode_unknown);
 		CMoviePlayerGui::getInstance().stopPlayBack();
@@ -6170,6 +6173,9 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby, bool leaveTv)
 		g_Zapit->stopPip();
 #endif
 		CMoviePlayerGui::getInstance().stopPlayBack();
+		/* Whether zapit sleeps or stays awake below, nothing is shown from
+		   here on: a stream does not keep a picture's frontend for it. */
+		CZapit::getInstance()->SetBoxStandby(true);
 		bool stream_status = CStreamManager::getInstance()->StreamStatus();
 		if((g_settings.epg_scan_mode == EPG_SCAN_MODE_OFF) && !fromDeepStandby &&
 				!CRecordManager::getInstance()->RecordingStatus() && !stream_status) {
@@ -6305,6 +6311,7 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby, bool leaveTv)
 		// Here and not where the message arrives: this is where it happened.
 		coreapi::system::announceStandby(true);
 	} else {
+		CZapit::getInstance()->SetBoxStandby(false);
 		// Active standby off
 		powerManager->SetStandby(false, false);
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
@@ -6415,6 +6422,8 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby, bool leaveTv)
 
 void CNeutrinoApp::radioMode(bool rezap)
 {
+	// As in tvMode.
+	CZapit::getInstance()->SetBoxStandby(false);
 	//printf("radioMode: rezap %s\n", rezap ? "yes" : "no");
 	INFO("rezap %d current mode %s", rezap, neutrinoMode_to_string(mode));
 	if (mode == NeutrinoModes::mode_webtv) {

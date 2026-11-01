@@ -426,6 +426,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/check-stream-keeps-picture.sh \
 	scan/check-record-tuner.sh \
 	scan/check-epgscan-resume.sh \
+	scan/check-standby-flag.sh \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
 	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk \
 	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp scan/fixtures/addsetting-array.cpp scan/fixtures/display/display.cpp \
@@ -607,6 +608,7 @@ SCAN_CHECKS = \
 	scan-stream-keeps-picture \
 	scan-record-tuner \
 	scan-epgscan-resume \
+	scan-standby-flag \
 	scan-timerlist-event \
 	scan-menu-busy \
 	scan-settings-replaced \
@@ -851,6 +853,9 @@ scan-record-tuner:
 
 scan-epgscan-resume:
 	@$(SHELL) $(srcdir)/scan/check-epgscan-resume.sh $(top_srcdir)
+
+scan-standby-flag:
+	@$(SHELL) $(srcdir)/scan/check-standby-flag.sh $(top_srcdir)
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)
