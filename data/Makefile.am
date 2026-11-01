@@ -33,6 +33,11 @@ SUBDIRS += \
 	luaplugins
 endif
 
+if ENABLE_PYTHON
+SUBDIRS += \
+	pythonplugins
+endif
+
 if ENABLE_GRAPHLCD
 SUBDIRS += \
 	oled

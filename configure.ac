@@ -860,6 +860,7 @@ data/logos/Makefile
 data/license/Makefile
 data/locale/Makefile
 data/luaplugins/Makefile
+data/pythonplugins/Makefile
 data/oled/Makefile
 data/oled/fonts/Makefile
 data/oled/icons/Makefile

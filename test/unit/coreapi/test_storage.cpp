@@ -952,7 +952,8 @@ TEST_CASE("the roots a fresh layer starts with are the media and the plugins", "
 
 	static const char *const wanted[] = {
 		"/media", "/mnt", "/var", "/tmp", "/hdd",
-		PLUGINDIR, PLUGINDIR_VAR, PLUGINDIR_MNT, LUAPLUGINDIR, LUAPLUGINDIR_VAR
+		PLUGINDIR, PLUGINDIR_VAR, PLUGINDIR_MNT, LUAPLUGINDIR, LUAPLUGINDIR_VAR,
+		PYTHONPLUGINDIR, PYTHONPLUGINDIR_VAR
 	};
 	for (size_t i = 0; i < sizeof(wanted) / sizeof(wanted[0]); i++)
 	{
