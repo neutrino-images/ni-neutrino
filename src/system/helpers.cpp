@@ -2144,8 +2144,9 @@ bool getUrl(std::string &url, std::string &answer, std::string userAgent, unsign
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, false);
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, userAgent.c_str());
 
-	/* Copied under the lock: this is reached from the web server's own threads
-	   and the box's loop assigns to the same members from a screen. */
+	/* Copied under the lock: the weather fetch reaches this from the front
+	   display threads, and the box's loop assigns to the same members from a
+	   screen. */
 	const std::string proxy = settingsText(g_settings.softupdate_proxyserver);
 	if (!proxy.empty())
 	{
@@ -2195,8 +2196,10 @@ bool downloadUrl(std::string url, std::string file, std::string userAgent, unsig
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, false);
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, userAgent.c_str());
 
-	/* Copied under the lock: this is reached from the web server's own threads
-	   and the box's loop assigns to the same members from a screen. */
+	/* Copied under the lock: the logo lookup of the web server and of the display
+	   threads, the channel daemon's web channel download and the XMLTV import
+	   reach this off the box's loop, and the box's loop assigns to the same
+	   members from a screen. */
 	const std::string proxy = settingsText(g_settings.softupdate_proxyserver);
 	if (!proxy.empty())
 	{
