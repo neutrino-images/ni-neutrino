@@ -63,4 +63,4 @@ install_DATA = \
 	tuner_03.png \
 	tuner_04.png \
 	tuner_webtv.png \
-	up.png \
+	up.png
