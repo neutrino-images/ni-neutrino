@@ -374,9 +374,11 @@ PyObject *CPythonInstMisc::checkVersion(PyObject *self, PyObject *args, PyObject
 			g_Locale->getText(LOCALE_LUA_VERSIONSCHECK2),
 			major, minor);
 		DisplayErrorMessage(msg, "Python Script Error:");
+		/* the script is no longer stopped here, so tell it */
+		return PyLong_FromLong(0);
 	}
 
-	return PyBool_FromLong(1); /* for backward compatibility */
+	return PyLong_FromLong(1);
 }
 
 PyObject *CPythonInstMisc::postMsg(PyObject *self, PyObject *args, PyObject *kwds)

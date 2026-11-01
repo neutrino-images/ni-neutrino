@@ -60,7 +60,9 @@ enum record_error_msg_t
         RECORD_BUSY			= -1,
         RECORD_INVALID_DIRECTORY	= -2,
         RECORD_INVALID_CHANNEL		= -3,
-        RECORD_FAILURE			= -4
+        RECORD_FAILURE			= -4,
+        // the folder lies on the box's own storage (rootdisk.h)
+        RECORD_INTERNAL_DIRECTORY	= -5
 };
 
 class CRecordInstance
@@ -161,7 +163,6 @@ class CRecordInstance
 		int tshift_mode;
 		bool move_ts2rec;
 		void SetStopMessage(const char* text) {rec_stop_msg = text;} ;
-//NI
 #if 0
 		int  GetStatus();
 #endif
@@ -213,7 +214,6 @@ class CRecordManager : public CMenuTarget /*, public CChangeObserver*/
 		uint32_t	shift_timer;
 		CMenuWidget	*menu;
 
-//NI
 #if 0
 		uint32_t	check_timer;
 		bool		error_display;
@@ -299,7 +299,7 @@ class CRecordManager : public CMenuTarget /*, public CChangeObserver*/
 		void StartTimeshift();
 		int GetRecordMode(const t_channel_id channel_id=0);
 		CRecordInstance* getRecordInstance(std::string file);
-		CRecordInstance* getUseCI(); //NI
+		CRecordInstance* getUseCI();
 		// old code
 #if 0
 		bool MountDirectory(const char *recordingDir);

@@ -167,11 +167,14 @@ void *CPythonServer::pyserver_thread(void *arg) {
 
 	pyserver_data *psd = (class pyserver_data *)arg;
 
+	/* The watchdog aborts this instance as soon as the client is gone, which
+	   may already be the case when a request had to wait for may_run. */
+	CPythonInstance *python = new CPythonInstance();
+	psd->python = python;
+
 	pthread_t wdthr;
 	pthread_create (&wdthr, NULL, pyclient_watchdog, (void *) psd);
 
-	CPythonInstance *python = new CPythonInstance();
-	psd->python = python;
 	std::string result_code;
 	std::string result_string;
 	std::string error_string;

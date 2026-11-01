@@ -94,17 +94,17 @@ TEST_CASE("every endpoint in the table has a level", "[compat][levels]")
 // The case above is read off the same table endpointCount() and
 // endpointName() answer for, so a row going missing from it removes itself
 // from what that case ever asks about rather than failing it. A bare count
-// is what notices a row missing, without copying the table's own 74 names
+// is what notices a row missing, without copying the table's own 75 names
 // in here to drift against it.
-TEST_CASE("the table carries all 74 legacy endpoints", "[compat][levels]")
+TEST_CASE("the table carries all 75 legacy endpoints", "[compat][levels]")
 {
-	REQUIRE(httpd::compat::endpointCount() == 74);
+	REQUIRE(httpd::compat::endpointCount() == 75);
 }
 
 namespace
 {
 
-/* The level every one of the 74 legacy endpoints is meant to answer for an empty query.
+/* The level every one of the 75 legacy endpoints is meant to answer for an empty query.
    An empty query is answerable for every Kind without knowing which handler a name
    reaches: Read for Read, Write for Write, System for System, and Read for Mixed too,
    since every Mixed handler's own empty-ParamList branch only ever reports.
@@ -161,6 +161,7 @@ const ExpectedLevel kExpectedLevel[] =
 	{ "logolist",         AuthLevel::Read },
 	{ "message",          AuthLevel::Write },
 	{ "movebouquet",      AuthLevel::Write },
+	{ "osinfo",           AuthLevel::Read },
 	{ "rc",               AuthLevel::Read },
 	{ "rcem",             AuthLevel::Write },
 	{ "reboot",           AuthLevel::System },

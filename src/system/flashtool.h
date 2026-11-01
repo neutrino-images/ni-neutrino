@@ -51,6 +51,7 @@ class CFlashTool
 
 		bool getInfo();
 		bool erase(int globalProgressEnd = -1);
+		bool copyImage(const std::string &from, const std::string &to, int globalProgressEnd = -1);
 		void stopDaemons();
 
 	public:

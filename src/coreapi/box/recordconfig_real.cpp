@@ -22,7 +22,10 @@
 
 #include "coreapi/box/apply_record.h"
 
+#include <cstdio>
+
 #include <system/helpers.h>
+#include <system/rootdisk.h>
 
 namespace coreapi
 {
@@ -49,6 +52,13 @@ class RealRecordConfigOutput : public RecordConfigOutput
 
 		Status makeDirectory(const std::string &dir)
 		{
+			/* Not into the box's own storage: with the drive not mounted its mount
+			   point is a folder on the root file system (rootdisk.h). */
+			if (dir_on_root_disk(dir.c_str()))
+			{
+				printf("[recordconfig] %s lies on the box's own storage, not made\n", dir.c_str());
+				return Status::Ok;
+			}
 			safe_mkdir(dir.c_str());
 			return Status::Ok;
 		}

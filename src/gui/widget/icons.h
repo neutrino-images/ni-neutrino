@@ -152,7 +152,7 @@
 #define NEUTRINO_ICON_HINT_SETTINGS	"hint_settings"
 #define NEUTRINO_ICON_HINT_SERVICE	"hint_service"
 #define NEUTRINO_ICON_HINT_SLEEPTIMER	"hint_sleeptimer"
-#define NEUTRINO_ICON_HINT_BLANK_SCREEN	"hint_blank_screen" //NI
+#define NEUTRINO_ICON_HINT_BLANK_SCREEN	"hint_blank_screen"
 #define NEUTRINO_ICON_HINT_REBOOT	"hint_reboot"
 #define NEUTRINO_ICON_HINT_SHUTDOWN	"hint_shutdown"
 #define NEUTRINO_ICON_HINT_INFO		"hint_info"
@@ -328,7 +328,6 @@
 /* activity */
 #define NEUTRINO_ICON_LOADER		"hourglass"
 
-//NI
 #define NEUTRINO_ICON_HINT_IMAGELOGO	"hint_imagelogo"
 #define NEUTRINO_ICON_HINT_VTXT		"hint_vtxt"
 #define NEUTRINO_ICON_HINT_FCM		"hint_FritzCallMonitor"

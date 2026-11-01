@@ -133,7 +133,7 @@ class CTimerEvent_Record : public CTimerEvent
 			   CTimerd::CTimerEventRepeat evrepeat = CTimerd::TIMERREPEAT_ONCE,
 			   uint32_t repeatcount = 1, const std::string &recDir = "",
 			   bool _recordingSafety = true, bool _autoAdjustToEPG = true,
-			   bool channel_ci=false, //NI
+			   bool channel_ci=false,
 			   /* What the caller named the recording. Last and with a
 			      default so that the callers which have no name to give,
 			      which is every one of them but the one that takes a

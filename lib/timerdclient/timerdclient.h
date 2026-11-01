@@ -141,7 +141,7 @@ class CTimerdClient:private CBasicClient
 			eventInfo.apids = apids;
 			eventInfo.recordingSafety = safety;
 			eventInfo.autoAdjustToEPG = autoAdjust;
-			eventInfo.channel_ci = channel_ci; //NI
+			eventInfo.channel_ci = channel_ci;
 			strncpy(eventInfo.recordingDir, recDir.c_str(), RECORD_DIR_MAXLEN-1);
 			return addTimerEvent(CTimerd::TIMER_RECORD, &eventInfo, announcetime, alarmtime, stoptime, evrepeat, repeatcount,forceAdd);
 		};

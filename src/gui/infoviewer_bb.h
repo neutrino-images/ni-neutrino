@@ -65,8 +65,8 @@ class CInfoViewerBB
 			ICON_DD		= 3,
 			ICON_16_9	= 4,
 			ICON_RES	= 5,
-			ICON_TUNER	= 6, //NI
-			ICON_CA		= 7, //NI; ICON_CA should always be the last in this enum
+			ICON_TUNER	= 6,
+			ICON_CA		= 7, // ICON_CA should always be the last in this enum
 			ICON_MAX	= 8
 		};
 
@@ -82,7 +82,6 @@ class CInfoViewerBB
 			bool active;
 		} bbButtonInfoStruct;
 
-		//NI
 		enum CAM_DECODE_NUM {UNKNOWN, NA, FTA, LOCAL, CARD, REMOTE, SOFTCSA};
 		void 		paint_cam_icons();
 		unsigned short int decode;

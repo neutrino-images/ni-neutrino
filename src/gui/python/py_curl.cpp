@@ -431,6 +431,13 @@ PyObject *CPythonInstCurl::CurlDownload(PyObject *self, PyObject *args, PyObject
 	printf("\n");
 
 	std::string redirectUrl;
+	/* not part of the report below: silent must not switch redirectOnly off */
+	if (redirectOnly)
+	{
+		char *effective = NULL;
+		if ((curl_easy_getinfo(curl_handle, CURLINFO_EFFECTIVE_URL, &effective) == CURLE_OK) && effective)
+			redirectUrl = effective;
+	}
 	std::string msg;
 	if (!silent)
 	{
@@ -459,9 +466,6 @@ PyObject *CPythonInstCurl::CurlDownload(PyObject *self, PyObject *args, PyObject
 			std::string tmp2 = url;
 			if (trim(tmp1, " /") != trim(tmp2, " /"))
 				msg += std::string("\n\t    effektive url: ") + deffektive;
-
-			if (redirectOnly)
-				redirectUrl = deffektive;
 		}
 		if ((res2 == CURLE_OK) && dredirect)
 			msg += std::string("\n\t      redirect to: ") + dredirect;

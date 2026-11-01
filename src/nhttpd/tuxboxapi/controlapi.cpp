@@ -55,11 +55,9 @@ extern CPictureViewer *g_PicViewer;
 
 extern cVideo * videoDecoder;
 
-//NI
 #include <system/helpers.h>
 #include "gui/infoicons.h"
 
-//NI
 #include "gui/update.h"
 
 extern CPlugins *g_Plugins;//for relodplugins
@@ -291,7 +289,6 @@ const CControlAPI::TyCgiCall CControlAPI::yCgiCallList[]=
 	{"statfs",		&CControlAPI::StatfsCGI,		"+xml"},
 	{"getdir",		&CControlAPI::getDirCGI,		"+xml"},
 	{"getmovies",		&CControlAPI::getMoviesCGI,		"+xml"},
-	//NI
 	{"infoicons",		&CControlAPI::InfoIconsCGI,		"text/plain"},
 	{"updateinfo",		&CControlAPI::UpdateInfoCGI,		""}
 };
@@ -3493,12 +3490,13 @@ void CControlAPI::xmltvepgCGI(CyhookHandler *hh)
 							programmeTag  = "programme ";
 							programmeTag += "channel=\""+string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id)+"\" ";
 							char zbuffer[25] = { 0 };
-							struct tm *mtime = gmtime(&eventIterator->startTime);
-							strftime(zbuffer, 21, "%Y%m%d%H%M%S %z", mtime);
+							struct tm mtime;
+							gmtime_r(&eventIterator->startTime, &mtime);
+							strftime(zbuffer, 21, "%Y%m%d%H%M%S %z", &mtime);
 							programmeTag += "start=\""+std::string(zbuffer)+"\" ";
 							time_t _stoptime = eventIterator->startTime + eventIterator->duration;
-							mtime = gmtime(&_stoptime);
-							strftime(zbuffer, 21, "%Y%m%d%H%M%S %z", mtime);
+							gmtime_r(&_stoptime, &mtime);
+							strftime(zbuffer, 21, "%Y%m%d%H%M%S %z", &mtime);
 							programmeTag += "stop=\""+std::string(zbuffer)+"\" ";
 
 							programmeData  = hh->outPair("title lang=\"de\"", hh->outValue(eventIterator->description, xml_cdata), false);
@@ -4358,7 +4356,6 @@ std::string CControlAPI::readMovies(CyhookHandler *hh, std::string path, std::st
 	return result;
 }
 
-//NI
 //-----------------------------------------------------------------------------
 void CControlAPI::InfoIconsCGI(CyhookHandler *hh)
 {
@@ -4430,7 +4427,6 @@ void CControlAPI::InfoIconsCGI(CyhookHandler *hh)
 	hh->SendOk();
 }
 
-//NI
 //-------------------------------------------------------------------------
 /** Display update info
  *

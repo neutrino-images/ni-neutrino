@@ -122,7 +122,7 @@ int CRecordSetup::showRecordSetup()
 
 	addSetting(recordingSettings, "network_nfs_recordingdir", notRecording);
 
-	addSetting(recordingSettings, "recording_save_in_channeldir", true, NULL, CRCInput::RC_red); //NI
+	addSetting(recordingSettings, "recording_save_in_channeldir", true, NULL, CRCInput::RC_red);
 
 	//rec hours
 	addSetting(recordingSettings, "record_hours");
@@ -135,7 +135,6 @@ int CRecordSetup::showRecordSetup()
 
 	addSetting(recordingSettings, "recording_slow_warning");
 
-	//NI
 	addNumberSetting(recordingSettings, "recording_fill_warning", true, NULL, CRCInput::RC_nokey, false, true);
 
 	addSetting(recordingSettings, "recording_startstop_msg");

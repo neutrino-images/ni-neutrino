@@ -394,7 +394,7 @@ int CTimerdClient::addTimerEvent( CTimerd::CTimerEventTypes evType, void* data, 
 		tri.epg_id = ri->epg_id;
 		tri.recordingSafety = ri->recordingSafety;
 		tri.autoAdjustToEPG = ri->autoAdjustToEPG;
-		tri.channel_ci = ri->channel_ci; //NI
+		tri.channel_ci = ri->channel_ci;
 		strncpy(tri.recordingDir, ri->recordingDir, RECORD_DIR_MAXLEN);
 		/* The block on the wire has carried a title field all along and
 		   nothing was ever written into it, so the only name a recording

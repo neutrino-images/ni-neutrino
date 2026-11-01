@@ -99,7 +99,7 @@
 #define COL_CHANNELLIST_DESCRIPTION_TEXT	(CFrameBuffer::getInstance()->realcolor[(COL_NEUTRINO_TEXT + 22)])
 
 // some wrappers to get more readability
-#define COL_FRAME			COL_MENUCONTENT_PLUS_1 //NI
+#define COL_FRAME			COL_MENUCONTENT_PLUS_1
 #define COL_FRAME_PLUS_0		COL_FRAME
 
 #define COL_SCROLLBAR			COL_MENUCONTENT_PLUS_1

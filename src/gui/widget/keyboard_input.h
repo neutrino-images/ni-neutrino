@@ -105,6 +105,7 @@ class CKeyboardInput : public CMenuTarget,  public sigc::trackable
 		void paintChar(int pos);
 		void paintKeyboard();
 		void paintKey(int row, int column);
+		std::string getVfdText();
 
 		void NormalKeyPressed();
 		void clearString();
@@ -127,9 +128,11 @@ class CKeyboardInput : public CMenuTarget,  public sigc::trackable
 
 		void hide();
 		int exec( CMenuTarget* parent, const std::string & actionKey );
+		std::string &getValue();
 
 		void forceSaveScreen(bool enable);
-		/* for secrets: every character but the one being edited shows as '*' */
+		/* for secrets: every character but the one being edited shows as '*';
+		   the text for the front display and the graphic LCD masks all of them */
 		void setMasked(bool enable) { masked = enable; }
 		sigc::signal<void> OnAfterSave;
 };

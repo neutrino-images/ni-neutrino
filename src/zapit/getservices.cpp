@@ -240,7 +240,6 @@ CZapitChannel * CServiceManager::FindChannelByName(std::string name)
 	return NULL;
 }
 
-//NI
 CZapitChannel * CServiceManager::FindChannelByPattern(std::string pattern)
 {
 	for (channel_map_iterator_t it = allchans.begin(); it != allchans.end(); ++it) {

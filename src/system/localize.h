@@ -83,7 +83,7 @@ class CLocaleManager
 		const char * getText(const neutrino_locale_t keyName) const;
 		// A copy taken under the lock, which is what a thread other than the
 		// loop's may ask for.
-		std::string getString(const neutrino_locale_t keyName) const; //NI
+		std::string getString(const neutrino_locale_t keyName) const;
 		std::string getTextAsString(const neutrino_locale_t keyName) const {return (static_cast<std::string>(getText(keyName)));}
 
 		// NONEXISTANT_LOCALE for a name nothing is written under, which is

@@ -207,7 +207,7 @@ int old_b_id = -1;
 CInfoClock      *InfoClock;
 CTimeOSD	*FileTimeOSD;
 
-//NI InfoIcons
+// InfoIcons
 #include "gui/infoicons.h"
 CInfoIcons *InfoIcons;
 
@@ -328,7 +328,7 @@ CNeutrinoApp::CNeutrinoApp()
 	apply_settings_pending	= false;
 	channelList_allowed	= true;
 	channelList_painted	= false;
-	blank_screen		= false; //NI
+	blank_screen		= false;
 
 #if ENABLE_PIP
 #if !HAVE_CST_HARDWARE && !HAVE_GENERIC_HARDWARE
@@ -3218,7 +3218,7 @@ TIMER_START();
 	CLocaleManager::loadLocale_ret_t loadLocale_ret = g_Locale->loadLocale(g_settings.language.c_str());
 	if (loadLocale_ret == CLocaleManager::NO_SUCH_LOCALE)
 	{
-		setSettingsText(g_settings.language, "deutsch"); //NI
+		setSettingsText(g_settings.language, "deutsch");
 		loadLocale_ret = g_Locale->loadLocale(g_settings.language.c_str());
 		show_startwizard = true;
 	}
@@ -3257,7 +3257,7 @@ TIMER_START();
 
 	CVFD::getInstance()->init(neutrinoFonts->fontDescr.filename.c_str(), neutrinoFonts->fontDescr.name.c_str());
 	CVFD::getInstance()->Clear();
-	CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_NI)); //NI
+	CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_NI));
 
 #ifdef ENABLE_GRAPHLCD
 	cGLCD::getInstance();
@@ -3476,7 +3476,7 @@ TIMER_START();
 	g_RemoteControl = new CRemoteControl;
 	g_EpgData = new CEpgData;
 	InfoClock = CInfoClock::getInstance();
-	//NI InfoIcons
+	// InfoIcons
 	InfoIcons = CInfoIcons::getInstance();
 	if(g_settings.mode_icons)
 		InfoIcons->StartIcons();
@@ -3592,7 +3592,7 @@ TIMER_START();
 	cSysLoad::getInstance();
 	cHddStat::getInstance();
 
-	//NI create userdirs
+	// create userdirs
 	CFileHelpers::createDir(CONTROLDIR_VAR);
 	CFileHelpers::createDir(FONTDIR_VAR);
 	CFileHelpers::createDir(ICONSDIR_VAR);
@@ -3675,11 +3675,11 @@ void CNeutrinoApp::showMainMenu()
 {
 	StopSubtitles();
 	InfoClock->enableInfoClock(false);
-	InfoIcons->enableInfoIcons(false); //NI InfoIcons
+	InfoIcons->enableInfoIcons(false); // InfoIcons
 	mainMenu->exec(NULL, "");
 	CVFD::getInstance()->UpdateIcons();
 	InfoClock->enableInfoClock(true);
-	InfoIcons->enableInfoIcons(true); //NI InfoIcons
+	InfoIcons->enableInfoIcons(true); // InfoIcons
 	StartSubtitles();
 	saveSetup(NEUTRINO_SETTINGS_FILE);
 }
@@ -3774,7 +3774,6 @@ void CNeutrinoApp::RealRun()
 		}
 
 		if( ( mode == NeutrinoModes::mode_tv ) || ( mode == NeutrinoModes::mode_radio ) || ( mode == NeutrinoModes::mode_webtv ) || ( mode == NeutrinoModes::mode_webradio ) ) {
-			//NI
 			if (blank_screen) {
 				if (!videoDecoder->getBlank()) {
 					INFO("blank_screen auto off");
@@ -3795,12 +3794,12 @@ void CNeutrinoApp::RealRun()
 			}
 			if (msg == NeutrinoMessages::SHOW_EPG) {
 				InfoClock->enableInfoClock(false);
-				InfoIcons->enableInfoIcons(false); //NI InfoIcons
+				InfoIcons->enableInfoIcons(false); // InfoIcons
 				StopSubtitles();
 				t_channel_id live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 				g_EpgData->show(live_channel_id);
 				InfoClock->enableInfoClock(true);
-				InfoIcons->enableInfoIcons(true); //NI InfoIcons
+				InfoIcons->enableInfoIcons(true); // InfoIcons
 				StartSubtitles();
 			}
 			/* the only hardcoded key to check before key bindings */
@@ -3852,7 +3851,7 @@ void CNeutrinoApp::RealRun()
 				numericZap(msg);
 			}
 			else if (msg == (neutrino_msg_t) g_settings.key_zaphistory || msg == (neutrino_msg_t) g_settings.key_current_transponder) {
-				//NI InfoIcons; hide, if one of the keys above is assigned to RC_home or RC_back
+				// InfoIcons; hide, if one of the keys above is assigned to RC_home or RC_back
 				if (backKey(msg))
 				{
 					if (g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
@@ -3938,7 +3937,7 @@ void CNeutrinoApp::RealRun()
 			else if( msg == CRCInput::RC_text) {
 				g_RCInput->clearRCMsg();
 				InfoClock->enableInfoClock(false);
-				InfoIcons->enableInfoIcons(false); //NI InfoIcons
+				InfoIcons->enableInfoIcons(false); // InfoIcons
 				StopSubtitles();
 				tuxtx_stop_subtitle();
 
@@ -3949,7 +3948,7 @@ void CNeutrinoApp::RealRun()
 				//	tuxtxt_stop();
 				g_RCInput->clearRCMsg();
 				InfoClock->enableInfoClock(true);
-				InfoIcons->enableInfoIcons(true); //NI InfoIcons
+				InfoIcons->enableInfoIcons(true); // InfoIcons
 				StartSubtitles();
 			}
 			else if (((msg == CRCInput::RC_tv) || (msg == CRCInput::RC_radio)) && (g_settings.key_tvradio_mode == (int)CRCInput::RC_nokey)) {
@@ -3991,12 +3990,12 @@ void CNeutrinoApp::RealRun()
 			}
 			else if( msg == CRCInput::RC_epg ) {
 				InfoClock->enableInfoClock(false);
-				InfoIcons->enableInfoIcons(false); //NI InfoIcons
+				InfoIcons->enableInfoIcons(false); // InfoIcons
 				StopSubtitles();
 				t_channel_id live_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 				g_EventList->exec(live_channel_id, channelList->getActiveChannelName());
 				InfoClock->enableInfoClock(true);
-				InfoIcons->enableInfoIcons(true); //NI InfoIcons
+				InfoIcons->enableInfoIcons(true); // InfoIcons
 				StartSubtitles();
 			}
 			else if (CRCInput::isNumeric(msg)) {
@@ -4064,7 +4063,7 @@ void CNeutrinoApp::RealRun()
 			else {
 				if (CNeutrinoApp::getInstance()->backKey(msg))
 				{
-					//NI InfoIcons
+					// InfoIcons
 					if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP) {
 						InfoIcons->hideIcons();
 					}
@@ -4105,7 +4104,7 @@ int CNeutrinoApp::showChannelList(const neutrino_msg_t _msg, bool from_menu)
 
 	neutrino_msg_t msg = _msg;
 	InfoClock->enableInfoClock(false);//TODO: use callback in channel list class
-	InfoIcons->enableInfoIcons(false); //NI InfoIcons
+	InfoIcons->enableInfoIcons(false); // InfoIcons
 	StopSubtitles();
 
 	int nNewChannel = -1;
@@ -4252,7 +4251,7 @@ _repeat:
 	if (!from_menu)
 		InfoClock->enableInfoClock(true);
 	if (!from_menu)
-		InfoIcons->enableInfoIcons(true); //NI InfoIcons
+		InfoIcons->enableInfoIcons(true); // InfoIcons
 
 	return ((nNewChannel >= 0) ? menu_return::RETURN_EXIT_ALL : menu_return::RETURN_REPAINT);
 }
@@ -4984,7 +4983,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 			if((eventinfo->channel_id != live_channel_id) && !(SAME_TRANSPONDER(live_channel_id, eventinfo->channel_id)))
 				zapTo(eventinfo->channel_id);
 		}
-		//NI zap to CI Channel
+		// zap to CI Channel
 		if(g_settings.ci_rec_zapto){
 			CZapitChannel * ch = CServiceManager::getInstance()->FindChannel(eventinfo->channel_id);
 			if (ch && ch->bUseCI && (eventinfo->channel_id != live_channel_id))
@@ -5126,7 +5125,7 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 					break;
 				}
 			}
-			printf("CNeutrinoApp::%s: wakeup hdd...\n", __func__); //NI
+			printf("CNeutrinoApp::%s: wakeup hdd...\n", __func__);
 			wakeup_hdd(recordingDir);
 		}
 
@@ -5625,7 +5624,7 @@ void CNeutrinoApp::ExitRun(int exit_code)
 	CLCD4l::getInstance()->Shutdown(g_settings.lcd4l_support != 0);
 #endif
 
-	//NI InfoIcons
+	// InfoIcons
 	if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
 		InfoIcons->saveIconstate();
 
@@ -5801,7 +5800,7 @@ void CNeutrinoApp::saveEpg(int _mode)
 		}
 
 		CVFD::getInstance()->Clear();
-		//NI CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
+		//CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->ShowText(g_Locale->getText(LOCALE_EPG_SAVING));
 
 		printf("[neutrino] Saving EPG to %s...\n", g_settings.epg_dir.c_str());
@@ -6117,14 +6116,14 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby, bool leaveTv)
 		coreapi::cecStandby(true);
 
 		InfoClock->enableInfoClock(false);
-		InfoIcons->enableInfoIcons(false); //NI InfoIcons
+		InfoIcons->enableInfoIcons(false); // InfoIcons
 
 		//remember tuned channel-id
 		standby_channel_id = CZapit::getInstance()->GetCurrentChannelID();
 
 		exec_controlscript(NEUTRINO_ENTER_STANDBY_SCRIPT);
 
-		//NI InfoIcons
+		// InfoIcons
                 if(g_settings.mode_icons && g_settings.mode_icons_skin == INFOICONS_POPUP)
 			InfoIcons->saveIconstate();
 
@@ -6251,7 +6250,7 @@ void CNeutrinoApp::standbyMode(bool bOnOff, bool fromDeepStandby, bool leaveTv)
 		g_Sectionsd->setPauseScanning(false);
 
 		InfoClock->enableInfoClock(true);
-		InfoIcons->enableInfoIcons(true); //NI InfoIcons
+		InfoIcons->enableInfoIcons(true); // InfoIcons
 
 		// remove standby flag
 		if (access("/tmp/.standby", F_OK) == 0)
@@ -6673,7 +6672,6 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		g_RCInput->postMsg(NeutrinoMessages::STANDBY_ON, 0);
 		return menu_return::RETURN_EXIT_ALL;
 	}
-	//NI
 	else if (actionKey == "blank_screen") {
 		INFO("blank_screen on");
 		blank_screen = true;
@@ -6723,7 +6721,6 @@ void stop_daemons(bool stopall, bool for_flash)
 		CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
 		CVFD::getInstance()->ShowText("Stop daemons...");
 		g_settings.epg_scan_mode = EPG_SCAN_MODE_OFF;
-//NI
 #ifdef BOXMODEL_CST_HD2
 		std::string backup_flash_sh = find_executable("backup_flash.sh");
 		if (!backup_flash_sh.empty())
@@ -6735,7 +6732,7 @@ void stop_daemons(bool stopall, bool for_flash)
 	}
 
 	InfoClock->enableInfoClock(false);
-	InfoIcons->enableInfoIcons(false); //NI InfoIcons
+	InfoIcons->enableInfoIcons(false); // InfoIcons
 	dvbsub_close();
 	tuxtxt_stop();
 	tuxtxt_close();

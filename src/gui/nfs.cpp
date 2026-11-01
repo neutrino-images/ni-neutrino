@@ -194,8 +194,8 @@ int CNFSMountGui::exec( CMenuTarget* parent, const std::string & actionKey )
 			g_settings.network_nfs[i].type = 0;
 			setSettingsText(g_settings.network_nfs[i].username, "");
 			setSettingsText(g_settings.network_nfs[i].password, "");
-			setSettingsText(g_settings.network_nfs[i].mount_options1, "soft"); //NI
-			setSettingsText(g_settings.network_nfs[i].mount_options2, "nolock"); //NI
+			setSettingsText(g_settings.network_nfs[i].mount_options1, "soft");
+			setSettingsText(g_settings.network_nfs[i].mount_options2, "nolock");
 			setSettingsText(g_settings.network_nfs[i].mac, "11:22:33:44:55:66");
 			updateMountEntry(i);
 		}

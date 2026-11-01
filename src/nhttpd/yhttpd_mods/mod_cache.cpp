@@ -49,10 +49,15 @@ THandleStatus CmodCache::Hook_PrepareResponse(CyhookHandler *hh) {
 		}
 
 		// normalize obj_last_modified to GMT
-		struct tm *tmp = gmtime(&(CacheList[url].created));
-		time_t obj_last_modified_gmt = mktime(tmp);
+		struct tm created_tm;
+		time_t obj_last_modified_gmt = mktime(gmtime_r(&(CacheList[url].created), &created_tm));
+		/* Current only with exactly the date this page was cached under, as
+		   for files: the client sends back the date it was given, and any
+		   other date belongs to another version. After the clock was set
+		   back, a page cached since carries an earlier date than a copy the
+		   client still holds. */
 		bool modified = (if_modified_since == (time_t) - 1)
-				|| (if_modified_since < obj_last_modified_gmt);
+				|| (if_modified_since != obj_last_modified_gmt);
 
 		// Send file or not-modified header
 		if (modified) {
@@ -205,7 +210,8 @@ void CmodCache::yshowCacheInfo(CyhookHandler *hh) {
 	for (; i != CacheList.end(); ++i) {
 		TCache *item = &((*i).second);
 		char timeStr[80];
-		strftime(timeStr, sizeof(timeStr), RFC1123FMT, gmtime(&(item->created)));
+		struct tm created_tm;
+		strftime(timeStr, sizeof(timeStr), RFC1123FMT, gmtime_r(&(item->created), &created_tm));
 		yresult
 				+= string_printf(
 						"<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>"

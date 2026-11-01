@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <system/httptool.h>
+#include <system/progressscale.h>
 #include <gui/widget/progresswindow.h>
 
 #include <curl/curl.h>
@@ -385,13 +386,10 @@ int CHTTPTool::show_progress(void *clientp, curl_off_t dltotal, curl_off_t dlnow
 	CHTTPTool* hTool = ((CHTTPTool*)clientp);
 	if(hTool->statusViewer)
 	{
-		int progress = int( dlnow*100.0/dltotal);
+		unsigned int progress = progressPercent(dlnow, dltotal);
 		hTool->statusViewer->showLocalStatus(progress);
 		if(hTool->iGlobalProgressEnd!=-1)
-		{
-			int globalProg = hTool->iGlobalProgressBegin + int((hTool->iGlobalProgressEnd-hTool->iGlobalProgressBegin) * progress/100. );
-			hTool->statusViewer->showGlobalStatus(globalProg);
-		}
+			hTool->statusViewer->showGlobalStatus(progressBetween(hTool->iGlobalProgressBegin, hTool->iGlobalProgressEnd, progress));
 	}
 	return 0;
 }

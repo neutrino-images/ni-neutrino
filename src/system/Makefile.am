@@ -43,6 +43,7 @@ libneutrino_system_a_SOURCES = \
 	ping.cpp \
 	proc_tools.cpp \
 	remotetimer.cpp \
+	rootdisk.cpp \
 	settings.cpp \
 	stacktrace.cpp \
 	supportinfo.cpp \

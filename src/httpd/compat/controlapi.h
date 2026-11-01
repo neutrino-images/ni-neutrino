@@ -87,6 +87,7 @@ private:
 	void InfoCGI(CyhookHandler *hh);
 	void BoxInfoCGI(CyhookHandler *hh);
 	void HWInfoCGI(CyhookHandler *hh);
+	void OsInfoCGI(CyhookHandler *hh);
 	void ShutdownCGI(CyhookHandler *hh);
 	void VolumeCGI(CyhookHandler *hh);
 	void ChannellistCGI(CyhookHandler *hh);
@@ -144,8 +145,8 @@ private:
 			       coreapi::Result<void> *refusal);
 	std::string getSubdirectories(CyhookHandler *hh, std::string path, std::string result);
 
-	void InfoIconsCGI(CyhookHandler *hh); //NI
-	void UpdateInfoCGI(CyhookHandler *hh); //NI
+	void InfoIconsCGI(CyhookHandler *hh);
+	void UpdateInfoCGI(CyhookHandler *hh);
 
 protected:
 	CNeutrinoAPI	*NeutrinoAPI;
@@ -164,7 +165,7 @@ public:
 
 	void Execute(CyhookHandler *hh);
 
-	// yCgiCallList stays private; a caller that needs the 74 names it carries
+	// yCgiCallList stays private; a caller that needs the 75 names it carries
 	// reads them through here rather than keeping its own copy that could drift.
 	size_t endpointCount();
 	const char *endpointName(size_t index);

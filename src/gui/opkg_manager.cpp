@@ -85,6 +85,10 @@
 
 #define INFOBAR_TXT_FILE "/tmp/infobar.txt"
 
+/* where opkg takes its lock: poky's opkg recipe sets the default to /run/opkg.lock,
+   and no opkg.conf of the image names another lock_file */
+#define OPKG_LOCK_FILE "/run/opkg.lock"
+
 using namespace std;
 
 enum
@@ -512,7 +516,7 @@ bool COPKGManager::isFilteredPackage(std::string &package_name, opkg_pattern_lis
 		}
 		else if (p.substr(0, 1) == "^")
 		{ /* match at beginning */
-			if (package_name.find(p.substr(1)) != std::string::npos)
+			if (package_name.compare(0, patlen, p, 1, patlen) == 0)
 				res = true;
 		}
 		else
@@ -627,9 +631,31 @@ int COPKGManager::getNumUpdates()
 	return num_updates;
 }
 
+/* Whether a running opkg holds its lock. opkg takes it with lockf() and
+   removes the file when it is done; one that was killed or crashed leaves
+   the file behind, but its lock ended with the process. The file alone
+   used to count as taken, and kept the update check from running again
+   until a reboot emptied /run. A file that cannot be asked still counts
+   as taken. */
+static bool opkgLockHeld()
+{
+	int fd = open(OPKG_LOCK_FILE, O_RDONLY | O_CLOEXEC);
+	if (fd < 0)
+		return errno != ENOENT;
+
+	struct flock fl = {};
+	fl.l_type = F_WRLCK;
+	fl.l_whence = SEEK_SET;
+	bool held = true;
+	if (fcntl(fd, F_GETLK, &fl) == 0)
+		held = (fl.l_type != F_UNLCK);
+	close(fd);
+	return held;
+}
+
 bool COPKGManager::checkUpdates(bool show_progress)
 {
-	if (!hasOpkgSupport() || file_exists("/run/opkg.lock"))
+	if (!hasOpkgSupport() || opkgLockHeld())
 		return false;
 
 	silent = !show_progress;
@@ -871,8 +897,8 @@ int COPKGManager::initMenu()
 		}
 	}
 	/* remove the package-generated files... */
-	unlink("/tmp/.restart");
-	unlink("/tmp/.force_restart");
+	unlink("/tmp/.restart_neutrino");
+	unlink("/tmp/.force_restart_neutrino");
 	unlink("/tmp/.reboot");
 
 	delete menu;

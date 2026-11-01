@@ -374,7 +374,6 @@ void Cyhttpd::ReadConfig(void) {
 	if (CLogging::getInstance()->LogLevel > 0)
 		CLogging::getInstance()->setDebug(true);
 
-//NI
 #if 0
 #ifdef Y_CONFIG_FEATURE_THREADING
 	Config->setBool("webserver.threading", true);

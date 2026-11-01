@@ -501,6 +501,7 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 		{
 			b->str_val = value;
 			CPyMenuTarget *forwarder = new CPyMenuTarget(action, id);
+			forwarder->showValue(&b->str_val);
 			mi = new CMenuForwarder(b->name, enabled, b->str_val, forwarder, NULL, directkey, icon, right_icon);
 			if (!hint.empty() || hint_icon)
 				mi->setHint(hint_icon, hint);
@@ -785,8 +786,14 @@ PyObject *CPythonInstMenu::MenuSetValue(PyObject *self, PyObject *args, PyObject
 	 */
 	if (!it->mi->isMenueOptionChooser())
 	{
-		// a masked entry shows whether the value given is empty, never the value
-		static_cast<CMenuForwarder *>(it->mi)->setOption(it->masked ? maskedText(value) : value);
+		/*
+		 * Set the value the entry edits, so that its input opens with it.
+		 * Without a text of its own the row shows that value through the
+		 * entry's target and follows every later input; a masked row is
+		 * told whether a value is set, never the value.
+		 */
+		it->str_val = value;
+		static_cast<CMenuForwarder *>(it->mi)->setOption(it->masked ? maskedText(value) : "");
 		Py_RETURN_NONE;
 	}
 

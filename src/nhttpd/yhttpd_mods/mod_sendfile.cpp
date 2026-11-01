@@ -37,6 +37,11 @@
 //			Modified-Since date, the server SHOULD return a 304 (Not
 //			Modified) response.
 //
+//	Note (RFC 2616 / 14.25): some servers use an exact date comparison
+//	rather than a less-than function; clients are advised to send back the
+//	exact Last-Modified string. This handler compares exactly, so a newer
+//	file carrying an earlier date (clock set back) goes out again.
+//
 //	yjogol: ASSUMPTION Date-Format is ONLY RFC 1123 compatible!
 //=============================================================================
 
@@ -92,7 +97,15 @@ THandleStatus CmodSendfile::Hook_PrepareResponse(CyhookHandler *hh) {
 			if (S_ISREG(statbuf.st_mode)) {
 				// get file size and modify date
 				hh->ContentLength = statbuf.st_size;
-				hh->LastModified = statbuf.st_mtime;
+				// Packages and images clamp their files to one reference time
+				// per build, and two builds can share it: an update can bring
+				// a file with the modification time of the one it replaces.
+				// The change time cannot be set from user space; a file
+				// unpacked on the box carries the time of that unpacking, so
+				// the later of the two tells the versions apart as long as
+				// the box's clock was past the reference time at installation.
+				hh->LastModified = (statbuf.st_ctime > statbuf.st_mtime)
+						? statbuf.st_ctime : statbuf.st_mtime;
 			}
 			close(filed);
 
@@ -108,27 +121,65 @@ THandleStatus CmodSendfile::Hook_PrepareResponse(CyhookHandler *hh) {
 			}
 
 			// normalize obj_last_modified to GMT
-			struct tm *tmp = gmtime(&(hh->LastModified));
-			time_t LastModifiedGMT = mktime(tmp);
+			struct tm lm_tm;
+			time_t LastModifiedGMT = mktime(gmtime_r(&(hh->LastModified), &lm_tm));
+			// A copy is current only if it carries exactly the date this
+			// file goes out with: the client sends back the date it was
+			// given. Any other date, earlier or later, belongs to another
+			// version; once the clock has been set back, a newer file can
+			// carry an earlier date.
 			bool modified = (if_modified_since == (time_t) - 1)
-					|| (if_modified_since < LastModifiedGMT);
+					|| (if_modified_since != LastModifiedGMT);
 
 			// Send normal or not-modified header
 			if (modified) {
 				hh->RangeStart = 0;
 				hh->RangeEnd = hh->ContentLength - 1;
 				const char *range = (hh->HeaderList["Range"].empty()) ? NULL : hh->HeaderList["Range"].c_str();
-				if ((range &&
-				     (sscanf(range, "bytes=%" PRId64 "-%" PRId64, &hh->RangeStart, &hh->RangeEnd) != 2) &&
-				     (sscanf(range, "bytes=%" PRId64 "-", &hh->RangeStart) != 1))
-				 || (hh->RangeStart > hh->RangeEnd)
-				 || (hh->RangeEnd > hh->ContentLength - 1)) {
-					hh->SetError(HTTP_REQUEST_RANGE_NOT_SATISFIABLE);
+				/* bytes=first-last, bytes=first- up to the end, and bytes=-n
+				   for the last n bytes; a last byte past the end means the
+				   end. A Range that cannot be read, in another unit or with
+				   its last byte before its first, is ignored and the whole
+				   file goes out (RFC 7233); one that starts past the end, or
+				   asks for no bytes at all, cannot be served. */
+				bool satisfiable = true;
+				if (range) {
+					int64_t first = 0, last = hh->ContentLength - 1, suffix = 0;
+					bool readable = true;
+					if (sscanf(range, "bytes=-%" SCNd64, &suffix) == 1) {
+						satisfiable = suffix > 0;
+						if (satisfiable)
+							first = (suffix < hh->ContentLength) ? hh->ContentLength - suffix : 0;
+					} else if (sscanf(range, "bytes=%" SCNd64 "-%" SCNd64, &first, &last) == 2) {
+						if (first < 0 || last < first)
+							readable = false;
+						else if (last > hh->ContentLength - 1)
+							last = hh->ContentLength - 1;
+					} else if (sscanf(range, "bytes=%" SCNd64 "-", &first) != 1 || first < 0)
+						readable = false;
+					if (!readable)
+						range = NULL;
+					else {
+						if (first > last)
+							satisfiable = false;
+						hh->RangeStart = first;
+						hh->RangeEnd = last;
+					}
+				}
+				if (!satisfiable) {
+					// handled here: without HANDLED_ERROR the next modules
+					// take the request on and it ends as 404
+					hh->SetError(HTTP_REQUEST_RANGE_NOT_SATISFIABLE, HANDLED_ERROR);
 					aprintf("mod_sendfile: Client requested range '%s' which is outside of [0,%lld]\n", range, hh->ContentLength - 1);
 				} else {
 					hh->SendFile(fullfilename);
 					hh->ResponseMimeType = mime;
-					if (hh->RangeStart && (hh->RangeEnd != hh->ContentLength - 1))
+					/* Every range that was asked for and is served goes out as
+					   206 with its Content-Range, the one from the first byte and
+					   the one up to the last included: a 200 says that the body
+					   is the whole file, and a player seeking in a recording
+					   takes a part of it for all of it. */
+					if (range)
 						hh->httpStatus = HTTP_PARTIAL_CONTENT;
 				}
 			} else

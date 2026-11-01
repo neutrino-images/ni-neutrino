@@ -159,7 +159,7 @@ class CProgressBar : public CComponentsItem
 
 		///paints graph
 		void paintProgress(const bool &do_save_bg = CC_SAVE_SCREEN_NO);
-		void paintStarBar(); //NI starbar
+		void paintStarBar(); // starbar
 
 	public:
 		///parameters:
@@ -222,7 +222,7 @@ class CProgressBar : public CComponentsItem
 			PB_REDLEFT = 0,
 			PB_REDRIGHT,
 			PB_TIMESCALE,
-			PB_STARBAR, //NI starbar
+			PB_STARBAR, // starbar
 		};
 
 		void setType(pb_type_t type);

@@ -40,6 +40,8 @@
 typedef uint64_t t_channel_id;
 
 int my_system(const char *cmd);
+/* An argument "&" ends the list and runs the command detached through
+   /bin/sh: the call does not wait for it and cannot report its exit status. */
 int my_system(int argc, const char *arg, ...); /* argc is number of arguments including command */
 
 FILE *my_popen(pid_t &pid, const char *cmdstring, const char *type);
@@ -110,7 +112,7 @@ class CAtomicFileWriter
 		FILE       *fh;
 };
 
-void wakeup_hdd(const char *hdd_dir, bool msg = false); //NI
+void wakeup_hdd(const char *hdd_dir, bool msg = false);
 int check_dir(const char *dir, bool allow_tmp = false);
 bool get_fs_usage(const char *dir, uint64_t &btotal, uint64_t &bused, long *bsize = NULL);
 bool get_mem_usage(unsigned long &total, unsigned long &free);
@@ -168,7 +170,6 @@ class CFileHelpers
 		CFileHelpers();
 		~CFileHelpers();
 		static CFileHelpers *getInstance();
-		bool doCopyFlag;
 
 		void clearDebugInfo();
 		void readDebugInfo(helpersDebugInfo *di);

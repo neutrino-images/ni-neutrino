@@ -109,7 +109,7 @@ extern "C" {
 #include <gui/webtv_failure_map.h>
 #endif
 
-//NI InfoIcons
+// InfoIcons
 #include <gui/infoicons.h>
 
 #if HAVE_CST_HARDWARE || HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
@@ -1125,7 +1125,6 @@ void CMoviePlayerGui::restoreNeutrino()
 	if (isUPNP)
 		return;
 
-	//NI
 	CZapit::getInstance()->setMoviePlayer(true);// let CCamManager::SetMode know, the call is from MoviePlayer
 
 #if ! HAVE_CST_HARDWARE
@@ -1518,7 +1517,7 @@ void CMoviePlayerGui::enableOsdElements(bool mute)
 		CAudioMute::getInstance()->enableMuteIcon(true);
 
 	CInfoClock::getInstance()->enableInfoClock(true);
-	CInfoIcons::getInstance()->enableInfoIcons(true); //NI InfoIcons
+	CInfoIcons::getInstance()->enableInfoIcons(true); // InfoIcons
 }
 
 void CMoviePlayerGui::disableOsdElements(bool mute)
@@ -1527,7 +1526,7 @@ void CMoviePlayerGui::disableOsdElements(bool mute)
 		CAudioMute::getInstance()->enableMuteIcon(false);
 
 	CInfoClock::getInstance()->enableInfoClock(false);
-	CInfoIcons::getInstance()->enableInfoIcons(false); //NI InfoIcons
+	CInfoIcons::getInstance()->enableInfoIcons(false); // InfoIcons
 }
 
 void CMoviePlayerGui::makeFilename()
@@ -3207,7 +3206,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 	bool at_eof = !(playstate >= CMoviePlayerGui::PLAY);;
 	keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_NORMAL;
 
-	//NI - bisectional jumps
+	// bisectional jumps
 	int bisection_jump = g_settings.movieplayer_bisection_jump * 60;
 	int bisection_loop = -1;
 	int bisection_loop_max = 5;
@@ -3244,7 +3243,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				handle_key_pause = false;
 		}
 
-		//NI - bisectional jumps
+		// bisectional jumps
 		if (bisection_loop > -1)
 			bisection_loop++;
 		if (bisection_loop > bisection_loop_max)
@@ -3507,7 +3506,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 			}
 			updateLcd();
 
-			//NI if (timeshift == TSHIFT_MODE_OFF)
+			//if (timeshift == TSHIFT_MODE_OFF)
 				callInfoViewer();
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_bookmark) {
 #if HAVE_CST_HARDWARE || HAVE_ARM_HARDWARE
@@ -3583,7 +3582,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 		} else if (msg == CRCInput::RC_page_down) {
 			SetPosition(-10 * 1000);
 #endif
-		//NI - bisectional jumps
+		// bisectional jumps
 		} else if (msg == CRCInput::RC_page_up || msg == CRCInput::RC_page_down) {
 			int direction = (msg == CRCInput::RC_page_up) ? 1 : -1;
 			int jump = 10;
@@ -3701,7 +3700,6 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				clearSubtitle();
 			}
 		}
-		//NI
 		if (msg < CRCInput::RC_MaxRC)
 			lastmsg = msg;
 

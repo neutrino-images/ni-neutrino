@@ -571,7 +571,7 @@ TEST_CASE("a dispatcher's answer becomes the response verbatim", "[compat][mount
 // handler runs there, so an old-server handler that answers without touching the
 // response head still gets 200. CyhookHandler here starts at HTTP_NIL instead, and
 // answer() is what has to supply the old server's default once nothing else set it:
-// twenty of the 74 legacy names are registered with an empty mime type and can return
+// twenty of the 75 legacy names are registered with an empty mime type and can return
 // down a path exactly like this one.
 TEST_CASE("a dispatcher that never sets a status still answers 200, like the old server's own default", "[compat][mount]")
 {

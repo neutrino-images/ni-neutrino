@@ -33,6 +33,7 @@
 #include <sys/un.h>
 #include <sys/stat.h>
 #include <sys/vfs.h>
+#include <sys/sysinfo.h>
 #include <errno.h>
 #include <math.h>
 
@@ -49,6 +50,7 @@
 #include <system/fsmounter.h>
 #include <system/helpers.h>
 #include <system/hddstat.h>
+#include <system/rootdisk.h>
 
 #include <driver/display.h>
 #include <driver/record.h>
@@ -230,7 +232,6 @@ void recordingFailureHelper(void *data)
 }
 #endif
 
-//NI
 #if 0
 int CRecordInstance::GetStatus()
 {
@@ -435,7 +436,7 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 	if ((!(autoshift && g_settings.timeshift_auto)) && g_settings.recording_startstop_msg)
 		hintBox.paint();
 
-	//NI wakeup_hdd(Directory.c_str());
+	//wakeup_hdd(Directory.c_str());
 
 	std::string tsfile = std::string(filename) + ".ts";
 	printf("%s: file %s vpid %x apid %x\n", __FUNCTION__, tsfile.c_str(), allpids.PIDs.vpid, apids[0]);
@@ -1069,23 +1070,48 @@ void CRecordInstance::FillMovieInfo(CZapitChannel * channel, APIDList & apid_lis
 	recMovieInfo->VtxtPid = allpids.PIDs.vtxtpid;
 }
 
+/* A folder a recording may go into: not on the box's own storage, made if it
+   is missing, and on a file system check_dir takes. The box mounts its drives
+   without making Neutrino wait, so a timer that woke the box can meet a mount
+   point that is still empty: for a timer recording in the first two minutes
+   after the system start the folder is asked about again every 2 s, for up to
+   20 s. Recordings started by hand and timeshift do not wait, as this runs on
+   the thread that draws the screen. */
+static record_error_msg_t recordingDirectory(const std::string &dir, bool timer)
+{
+	for (int tries = 0; dir_on_root_disk(dir.c_str()); tries++)
+	{
+		struct sysinfo info;
+		if (!timer || tries == 10 || sysinfo(&info) != 0 || info.uptime > 120)
+		{
+			printf("[record] %s lies on the box's own storage\n", dir.c_str());
+			return RECORD_INTERNAL_DIRECTORY;
+		}
+		sleep(2);
+	}
+	safe_mkdir(dir.c_str());
+	return check_dir(dir.c_str()) ? RECORD_INVALID_DIRECTORY : RECORD_OK;
+}
+
 record_error_msg_t CRecordInstance::MakeFileName(CZapitChannel * channel)
 {
 	std::string ext_channel_name;
 	unsigned int pos;
 
-	//NI safe_mkdir(Directory.c_str());
-	if(check_dir(Directory.c_str())) {
+	/* recording_id is the timer's event id, and 0 for a recording started by
+	   hand; a timer waits for its own folder only, the fallback is asked once */
+	record_error_msg_t usable = recordingDirectory(Directory, recording_id != 0);
+	if (usable != RECORD_OK) {
 		/* check if Directory and network_nfs_recordingdir the same */
 		if(g_settings.network_nfs_recordingdir != Directory) {
-			//NI safe_mkdir(g_settings.network_nfs_recordingdir.c_str());
 			/* not the same, check network_nfs_recordingdir and return error if not ok */
-			if(check_dir(g_settings.network_nfs_recordingdir.c_str()))
-				return RECORD_INVALID_DIRECTORY;
+			usable = recordingDirectory(g_settings.network_nfs_recordingdir, false);
+			if (usable != RECORD_OK)
+				return usable;
 			/* fallback to g_settings.network_nfs_recordingdir */
 			Directory = g_settings.network_nfs_recordingdir;
 		}else{
-			return RECORD_INVALID_DIRECTORY;
+			return usable;
 		}
 	}
 
@@ -1131,7 +1157,7 @@ record_error_msg_t CRecordInstance::MakeFileName(CZapitChannel * channel)
 	MakeExtFileName(channel, ext_file_name);
 	strcpy(&(filename[pos]), UTF8_TO_FILESYSTEM_ENCODING(ext_file_name.c_str()));
 
-	//NI auto change record filename
+	// auto change record filename
 	std::string tsfile = std::string(filename) + ".ts";
 	if (access(tsfile, F_OK) == 0) {
 		printf("CRecordInstance::%s: ts file already found: %s\n", __func__, tsfile.c_str());
@@ -1223,7 +1249,7 @@ void CRecordInstance::GetRecordString(std::string &str, std::string &dur)
 		return;
 	}
 	char stime[15];
-	//NI int err = GetStatus();
+	//int err = GetStatus();
 	strftime(stime, sizeof(stime), "%H:%M:%S ", localtime(&start_time));
 	time_t duration = (time(0) - start_time) / 60;
 	char dtime[22];
@@ -1231,7 +1257,7 @@ void CRecordInstance::GetRecordString(std::string &str, std::string &dur)
 	int m = duration - (h * 60);
 	snprintf(dtime, sizeof(dtime), "(%d %s %02d %s)", h, h == 1 ? g_Locale->getText(LOCALE_RECORDING_TIME_HOUR) : g_Locale->getText(LOCALE_RECORDING_TIME_HOURS), 
 							  m, g_Locale->getText(LOCALE_RECORDING_TIME_MIN));
-	str = stime + channel->getName() + ": " + GetEpgTitle(); //NI
+	str = stime + channel->getName() + ": " + GetEpgTitle();
 	dur = dtime;
 }
 
@@ -1252,7 +1278,6 @@ CRecordManager::CRecordManager()
 	autoshift = false;
 	shift_timer = 0;
 	menu = NULL;
-//NI
 #if 0
 	check_timer = 0;
 	error_display = true;
@@ -1391,6 +1416,8 @@ static neutrino_locale_t recordErrorToLocale(record_error_msg_t error_msg)
 			return LOCALE_STREAMING_BUSY;
 		case RECORD_INVALID_DIRECTORY:
 			return LOCALE_STREAMING_DIR_NOT_WRITABLE;
+		case RECORD_INTERNAL_DIRECTORY:
+			return LOCALE_STREAMING_DIR_INTERNAL;
 		case RECORD_INVALID_CHANNEL:
 			return LOCALE_CHANNELLIST_RECORDING_NOT_POSSIBLE;
 		case RECORD_FAILURE:
@@ -1515,7 +1542,6 @@ bool CRecordManager::Record(const CTimerd::RecordingInfo * const eventinfo, cons
 	mutex.unlock();
 
 	if (error_msg == RECORD_OK) {
-//NI
 #if 0
 		if (check_timer == 0)
 			check_timer = g_RCInput->addTimer(5*1000*1000, false);
@@ -1778,7 +1804,6 @@ void CRecordManager::StopPostProcess()
 	RestoreNeutrino();
 	StartNextRecording();
 	RunStopScript();
-//NI
 #if 0
 	if(!RecordingStatus())
 		g_RCInput->killTimer(check_timer);
@@ -1816,7 +1841,6 @@ int CRecordManager::handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t data
 				StartAutoRecord(true);
 			return messages_return::handled;
 		}
-//NI
 #if 0
 		else if(data == check_timer) {
 			if(CNeutrinoApp::getInstance()->getMode() != NeutrinoModes::mode_standby) {
@@ -1935,7 +1959,6 @@ int CRecordManager::exec(CMenuTarget* parent, const std::string & actionKey )
 			tostart = (ShowMsg(LOCALE_RECORDING_IS_RUNNING, title.c_str(),
 						CMsgBox::mbrYes, CMsgBox::mbYes | CMsgBox::mbNo, NULL, 450, DEFAULT_TIMEOUT) == CMsgBox::mbrYes);
 		}
-		//NI
 		if (g_settings.recording_startstop_msg) {
 			int ret = ShowMsg(LOCALE_RECORDING_END, g_Locale->getText(LOCALE_RECORDING_END_TEXT),
 					g_settings.recording_epg_for_end ? CMsgBox::mbrYes : CMsgBox::mbrNo, CMsgBox::mbYes | CMsgBox::mbNo | CMsgBox::mbCancel, NULL, 450, 20, true);
@@ -2154,7 +2177,6 @@ bool CRecordManager::RunStartScript(void)
 	if(RecordingStatus())
 		return false;
 
-	//NI
 	printf("CRecordManager::%s: wakeup hdd...\n", __func__);
 	wakeup_hdd(g_settings.network_nfs_recordingdir.c_str(),true);
 
@@ -2319,7 +2341,6 @@ CRecordInstance* CRecordManager::getRecordInstance(std::string file)
 	return NULL;
 }
 
-//NI
 CRecordInstance* CRecordManager::getUseCI()
 {
 	mutex.lock();

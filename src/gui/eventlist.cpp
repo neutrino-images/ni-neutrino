@@ -1004,7 +1004,7 @@ void CEventList::paintFoot(t_channel_id channel_id)
 	CColorKeyHelper keyhelper; //user_menue.h
 	neutrino_msg_t dummy = CRCInput::RC_nokey;
 	const char * icon = NULL;
-	struct button_label buttons[7]; //NI //TODO dbt: add directly into footer object with setButtonLabels()
+	struct button_label buttons[7]; //TODO dbt: add directly into footer object with setButtonLabels()
 	int btn_cnt = 0;
 
 	int tID = -1; //any value, not NULL

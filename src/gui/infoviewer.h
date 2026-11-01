@@ -86,9 +86,9 @@ class CInfoViewer : public CInfoViewerBase
 	int            ChanHeight;
 	int            numbox_offset;
 	int            numbox_maxtxtwidth;
-	int            analogclock_size; //NI
-	int            analogclock_offset; //NI
-	fb_pixel_t*    analogclock_buf; //NI
+	int            analogclock_size;
+	int            analogclock_offset;
+	fb_pixel_t*    analogclock_buf;
 
 	CSectionsdClient::CurrentNextInfo oldinfo;
         t_channel_id   current_epg_id;
@@ -125,7 +125,7 @@ class CInfoViewer : public CInfoViewerBase
 			  const char *nextStart = NULL, const char *nextDuration = NULL,
 			  bool update_current = true, bool update_next = true);
 	void initClock();
-	void showAnalogClock(int posx,int posy,int dia); //NI
+	void showAnalogClock(int posx,int posy,int dia);
 	void showRecordIcon(const bool show);
 	void showIcon_Tuner() const;
 
@@ -149,7 +149,7 @@ class CInfoViewer : public CInfoViewerBase
 	void sendNoEpg(const t_channel_id channel_id);
 	bool showLivestreamInfo();
 
-	CComponentsWindowMax *ecmInfoBox; //NI
+	CComponentsWindowMax *ecmInfoBox;
 
  public:
 	void ecmInfoBox_hide() override;

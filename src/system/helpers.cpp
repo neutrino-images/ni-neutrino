@@ -67,7 +67,6 @@ using namespace std;
 #include <curl/types.h>
 #endif
 
-//NI
 #include <global.h> // to get g_settings
 
 #include <vector>
@@ -329,7 +328,6 @@ bool CAtomicFileWriter::commit()
 
 void wakeup_hdd(const char *hdd_dir, bool msg)
 {
-	//NI
 	CHintBox loadBox(LOCALE_MESSAGEBOX_INFO, g_Locale->getText(LOCALE_HDD_WAKEUP_START));
 
 	if (!g_settings.hdd_wakeup_msg)
@@ -372,7 +370,6 @@ void wakeup_hdd(const char *hdd_dir, bool msg)
 		hdd_flush(hdd_dir);
 		remove(wakeup_file.c_str());
 	}
-	//NI
 	if (msg)
 		loadBox.hide();
 }
@@ -390,18 +387,15 @@ int my_system(int argc, const char *arg, ...)
 {
 	// Per call, and never shared: the ampersand belongs to the one command that
 	// carried it, and a value that outlived the call would detach commands that
-	// did not ask and leave this process unable to be told what any of its
-	// children exit with.
-	// volatile because vfork() shares this stack with the child: a copy the
-	// compiler keeps in a register instead of reloading from memory is not
-	// guaranteed to still hold the parent's value once the child (which reads
-	// it too, to decide the SIGCHLD handling) has run.
-	volatile bool background = false; //NI
+	// did not ask.
+	// volatile only to keep gcc's -Wclobbered quiet: the flag is live across
+	// vfork(), and the child reads it to pick what it execs.
+	volatile bool background = false;
 	int i = 0, ret, childExit = 0;
 #define ARGV_MAX 64
 	// static right now but could be made dynamic if necessary
 	int argv_max = ARGV_MAX;
-	const char *argv[ARGV_MAX];
+	const char *argv[ARGV_MAX + 1]; /* ARGV_MAX arguments and the sentinel */
 	va_list args;
 	argv[0] = arg;
 	va_start(args, arg);
@@ -416,12 +410,10 @@ int my_system(int argc, const char *arg, ...)
 		}
 		argv[i] = va_arg(args, const char *);
 
-		//NI
 		// The argument has to be the ampersand, not merely carry one: a file
 		// name such as "Film & Serie.iso" is a value and not a request to
-		// detach, and matching it here both cut the argument list short at
-		// that point and left this process unable to be told about any of its
-		// children afterwards.
+		// detach, and matching it here would cut the argument list short at
+		// that point.
 		if (argv[i] != NULL && strcmp(argv[i], "&") == 0)
 		{
 			background = true;
@@ -435,9 +427,25 @@ int my_system(int argc, const char *arg, ...)
 
 	pid_t pid;
 	int maxfd = getdtablesize(); // sysconf(_SC_OPEN_MAX);
-	//NI
+	/* A command to run detached is handed to a shell that starts it in the
+	   background and ends at once: the call waits for that shell alone, and
+	   the command, left without its parent, is collected by init. SIGCHLD
+	   stays as it is, so every other child of this process still tells what
+	   it exits with. The shell looks the command up by itself, so a name it
+	   has as a builtin (echo, kill, test) runs as that builtin. Put together
+	   before vfork(): the child only reads it. */
+	const char *detach[ARGV_MAX + 5];
 	if (background)
-		signal(SIGCHLD, SIG_IGN);
+	{
+		int n = 0;
+		detach[n++] = "sh";
+		detach[n++] = "-c";
+		detach[n++] = "\"$@\" &";
+		detach[n++] = "sh";
+		for (int k = 0; argv[k] != NULL; k++)
+			detach[n++] = argv[k];
+		detach[n] = NULL;
+	}
 	switch (pid = vfork())
 	{
 		case -1: // can't vfork
@@ -446,16 +454,12 @@ int my_system(int argc, const char *arg, ...)
 			break;
 		case 0: // child process
 			ret = 0;
-
-			//NI
-			if (background)
-				signal(SIGCHLD, SIG_DFL);
-
 			for (i = 3; i < maxfd; i++)
 				close(i);
 			if (setsid() == -1)
 				perror("my_system setsid");
-			if (execvp(argv[0], (char *const *)argv))
+			if (background ? execv("/bin/sh", (char *const *)detach)
+				       : execvp(argv[0], (char *const *)argv))
 			{
 				ret = -errno;
 				if (errno != ENOENT) // don't complain if argv[0] only does not exist
@@ -464,6 +468,8 @@ int my_system(int argc, const char *arg, ...)
 			_exit(ret); // terminate c h i l d process only
 		default: // parent returns to calling process
 			ret = 0;
+			/* for a detached command the shell that started it, which ends
+			   at once */
 			waitpid(pid, &childExit, 0);
 			if (WEXITSTATUS(childExit) != 0)
 				ret = (signed char)WEXITSTATUS(childExit);
@@ -732,13 +738,30 @@ bool exec_initscript(std::string script, std::string command, std::string system
 		dprintf(DEBUG_NORMAL, "[helpers] [%s - %d] WARNING: current user is not root!\n", __func__, __LINE__);
 #endif
 
-	if (find_executable(system_command.c_str()).empty())
-		dprintf(DEBUG_NORMAL, "[helpers] [%s - %d] WARNING: %s not found at system!\n", __func__, __LINE__, system_command.c_str());
+	if (system_command.empty())
+		system_command = "service";
 
-	const std::string sysctl_bin = "systemctl";
-	bool use_systemd = !find_executable(sysctl_bin.c_str()).empty();
+	std::string sys_command = system_command;
+	bool use_systemd = (sys_command == "systemctl");
 
-	std::string sys_command = use_systemd ? sysctl_bin : "service"; // fallback to 'service' if no 'systemctl' was found
+	if (find_executable(sys_command.c_str()).empty())
+	{
+		dprintf(DEBUG_NORMAL, "[helpers] [%s - %d] WARNING: %s not found at system!\n", __func__, __LINE__, sys_command.c_str());
+		if (use_systemd)
+		{
+			sys_command = "service";
+			use_systemd = false;
+			if (find_executable(sys_command.c_str()).empty())
+			{
+				dprintf(DEBUG_NORMAL, "[helpers] [%s - %d] WARNING: %s not found at system!\n", __func__, __LINE__, sys_command.c_str());
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
 	std::string cmd = command;
 	int ret = 1;
 
@@ -1231,8 +1254,6 @@ bool CFileHelpers::cp(const char *Src, const char *Dst, const char *Flags/*=""*/
 
 bool CFileHelpers::copyFile(const char *Src, const char *Dst, mode_t forceMode/*=0*/)
 {
-	doCopyFlag = true;
-
 	/*
 	set mode for Dst
 	----------------
@@ -1270,78 +1291,30 @@ bool CFileHelpers::copyFile(const char *Src, const char *Dst, mode_t forceMode/*
 	uint32_t block;
 	off64_t fsizeSrc64 = lseek64(fd1, 0, SEEK_END);
 	lseek64(fd1, 0, SEEK_SET);
-	if (fsizeSrc64 > 0x7FFFFFF0) // >2GB
+	off64_t fsize64 = fsizeSrc64;
+	uint32_t FileBufSize = (fsizeSrc64 < (off_t)FileBufMaxSize) ? (uint32_t)fsizeSrc64 : FileBufMaxSize;
+	FileBuf = initFileBuf(FileBuf, FileBufSize);
+	block = FileBufSize;
+	//printf("#####[%s] fsizeSrc64: %lld 0x%010llX - large file\n", __func__, fsizeSrc64, fsizeSrc64);
+	while (fsize64 > 0)
 	{
-		uint32_t FileBufSize = FileBufMaxSize;
-		FileBuf = initFileBuf(FileBuf, FileBufSize);
-		off64_t fsize64 = fsizeSrc64;
-		block = FileBufSize;
-		//printf("#####[%s] fsizeSrc64: %lld 0x%010llX - large file\n", __FUNCTION__, fsizeSrc64, fsizeSrc64);
-		while (fsize64 > 0)
-		{
-			if (fsize64 < (off64_t)FileBufSize)
-				block = (uint32_t)fsize64;
-			read(fd1, FileBuf, block);
-			write(fd2, FileBuf, block);
-			fsize64 -= block;
-			if (!doCopyFlag)
-				break;
-		}
-		if (doCopyFlag)
-		{
-			lseek64(fd2, 0, SEEK_SET);
-			off64_t fsizeDst64 = lseek64(fd2, 0, SEEK_END);
-			if (fsizeSrc64 != fsizeDst64)
-			{
-				close(fd1);
-				close(fd2);
-				FileBuf = deleteFileBuf(FileBuf);
-				return false;
-			}
-		}
+		if (fsize64 < (off64_t)FileBufSize)
+			block = (uint32_t)fsize64;
+		read(fd1, FileBuf, block);	/* FIXME: short read??? */
+		write(fd2, FileBuf, block);	/* FIXME: short write?? */
+		fsize64 -= block;
 	}
-	else // <2GB
+	lseek64(fd2, 0, SEEK_SET);
+	off64_t fsizeDst64 = lseek64(fd2, 0, SEEK_END);
+	if (fsizeSrc64 != fsizeDst64)
 	{
-		off_t fsizeSrc = lseek(fd1, 0, SEEK_END);
-		uint32_t FileBufSize = (fsizeSrc < (off_t)FileBufMaxSize) ? fsizeSrc : FileBufMaxSize;
-		FileBuf = initFileBuf(FileBuf, FileBufSize);
-		lseek(fd1, 0, SEEK_SET);
-		off_t fsize = fsizeSrc;
-		block = FileBufSize;
-		//printf("#####[%s] fsizeSrc: %ld 0x%08lX - normal file\n", __FUNCTION__, fsizeSrc, fsizeSrc);
-		while (fsize > 0)
-		{
-			if (fsize < (off_t)FileBufSize)
-				block = (uint32_t)fsize;
-			read(fd1, FileBuf, block);
-			write(fd2, FileBuf, block);
-			fsize -= block;
-			if (!doCopyFlag)
-				break;
-		}
-		if (doCopyFlag)
-		{
-			lseek(fd2, 0, SEEK_SET);
-			off_t fsizeDst = lseek(fd2, 0, SEEK_END);
-			if (fsizeSrc != fsizeDst)
-			{
-				close(fd1);
-				close(fd2);
-				FileBuf = deleteFileBuf(FileBuf);
-				return false;
-			}
-		}
-	}
-	close(fd1);
-	close(fd2);
-
-	if (!doCopyFlag)
-	{
-		sync();
-		unlink(Dst);
+		close(fd1);
+		close(fd2);
 		FileBuf = deleteFileBuf(FileBuf);
 		return false;
 	}
+	close(fd1);
+	close(fd2);
 
 	FileBuf = deleteFileBuf(FileBuf);
 	return true;
@@ -2171,8 +2144,9 @@ bool getUrl(std::string &url, std::string &answer, std::string userAgent, unsign
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, false);
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, userAgent.c_str());
 
-	/* Copied under the lock: this is reached from the web server's own threads
-	   and the box's loop assigns to the same members from a screen. */
+	/* Copied under the lock: the weather fetch reaches this from the front
+	   display threads, and the box's loop assigns to the same members from a
+	   screen. */
 	const std::string proxy = settingsText(g_settings.softupdate_proxyserver);
 	if (!proxy.empty())
 	{
@@ -2222,8 +2196,10 @@ bool downloadUrl(std::string url, std::string file, std::string userAgent, unsig
 	curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, false);
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, userAgent.c_str());
 
-	/* Copied under the lock: this is reached from the web server's own threads
-	   and the box's loop assigns to the same members from a screen. */
+	/* Copied under the lock: the logo lookup of the web server and of the display
+	   threads, the channel daemon's web channel download and the XMLTV import
+	   reach this off the box's loop, and the box's loop assigns to the same
+	   members from a screen. */
 	const std::string proxy = settingsText(g_settings.softupdate_proxyserver);
 	if (!proxy.empty())
 	{

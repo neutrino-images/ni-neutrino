@@ -744,8 +744,8 @@ void CTimerManager::loadRecordingSafety()
 	{
 		/* set defaults if no configuration file exists */
 		dprintf("%s not found\n", TIMERDCONFIGFILE);
-		m_extraTimeStart = 0; //NI
-		m_extraTimeEnd = 600; //NI
+		m_extraTimeStart = 0;
+		m_extraTimeEnd = 600;
 		config.saveConfig(TIMERDCONFIGFILE);
 	}
 	else
@@ -818,7 +818,7 @@ bool CTimerManager::shutdown()
 		bool standby_on_timer = (event->eventType == CTimerd::TIMER_STANDBY && static_cast<CTimerEvent_Standby*>(event)->standby_on); // wakeup without CEC-on from deep standby
 
 		if ((event->eventType == CTimerd::TIMER_RECORD ||
-			event->eventType == CTimerd::TIMER_EXEC_PLUGIN || //NI
+			event->eventType == CTimerd::TIMER_EXEC_PLUGIN ||
 			event->eventType == CTimerd::TIMER_ZAPTO || standby_on_timer) &&
 			event->eventState < CTimerd::TIMERSTATE_ISRUNNING)
 		{
@@ -853,7 +853,7 @@ void CTimerManager::shutdownOnWakeup(int currEventID)
 	{
 		CTimerEvent *event = pos->second;
 		if((event->eventType == CTimerd::TIMER_RECORD ||
-		    event->eventType == CTimerd::TIMER_EXEC_PLUGIN || //NI
+		    event->eventType == CTimerd::TIMER_EXEC_PLUGIN ||
 		    event->eventType == CTimerd::TIMER_ZAPTO ) &&
 		   (event->eventState == CTimerd::TIMERSTATE_SCHEDULED ||
 		    event->eventState == CTimerd::TIMERSTATE_PREANNOUNCE ||
@@ -1237,7 +1237,7 @@ CTimerEvent_Record::CTimerEvent_Record(time_t announce_Time, time_t alarm_Time, 
 				       CTimerd::CTimerEventRepeat evrepeat,
 				       uint32_t repeatcount, const std::string &recDir,
 				       bool _recordingSafety, bool _autoAdjustToEPG,
-				       bool channel_ci, //NI
+				       bool channel_ci,
 				       const std::string &epg_title) :
 	CTimerEvent(getEventType(), announce_Time, alarm_Time, stop_Time, evrepeat, repeatcount)
 {
@@ -1247,7 +1247,7 @@ CTimerEvent_Record::CTimerEvent_Record(time_t announce_Time, time_t alarm_Time, 
 	eventInfo.apids = apids;
 	eventInfo.autoAdjustToEPG = _autoAdjustToEPG;
 	eventInfo.recordingSafety = _recordingSafety;
-	eventInfo.channel_ci = channel_ci; //NI
+	eventInfo.channel_ci = channel_ci;
 
 	recordingDir = recDir;
 	epgTitle=epg_title;
@@ -1301,7 +1301,6 @@ CTimerEvent_Record::CTimerEvent_Record(CConfigFile *config, int iId):
 	autoAdjustToEPG = config->getInt32("EPG_AUTO_ADJUST_"+id, true);
 	dprintf("read EPG_AUTO_ADJUST_TO_EPG_%s %d\n",id.c_str(), autoAdjustToEPG);
 
-	//NI
 	eventInfo.channel_ci = config->getBool("EVENT_INFO_CHANNEL_CI_"+id);
 	dprintf("read EVENT_INFO_CHANNEL_CI_%s %i\n",id.c_str(),eventInfo.channel_ci);
 }
@@ -1384,7 +1383,6 @@ void CTimerEvent_Record::saveToConfig(CConfigFile *config)
 	config->setInt32("EPG_AUTO_ADJUST_"+id, autoAdjustToEPG);
 	dprintf("set EPG_AUTO_ADJUST_TO_EPG_%s to %d\n",id.c_str(), autoAdjustToEPG);
 
-	//NI
 	config->setBool("EVENT_INFO_CHANNEL_CI_"+id, eventInfo.channel_ci);
 	dprintf("set EVENT_INFO_CHANNEL_CI_%s to %i\n",id.c_str(),eventInfo.channel_ci);
 }

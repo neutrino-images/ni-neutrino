@@ -138,24 +138,21 @@ TEST_CASE("an argument that is the ampersand still asks for the background behav
 	REQUIRE(sp().ready);
 	unlink(sp().argfile.c_str());
 
-	struct sigaction previous;
-	bool saved = (sigaction(SIGCHLD, NULL, &previous) == 0);
-
 	int ret = my_system(3, sp().script.c_str(), "&", "second");
-	bool discarded = childrenAreDiscarded();
-	std::string args = readArgs();
 
-	// Put back before anything can fail: every later case in this binary would
-	// otherwise run in the state this file exists to keep out of the suite.
-	if (saved)
-		REQUIRE(sigaction(SIGCHLD, &previous, NULL) == 0);
+	// The command is started by a shell that ends at once, and that shell's
+	// status is what comes back: not the 3 the command exits with.
+	REQUIRE(ret == 0);
+	// SIGCHLD is left alone, so a later call still tells its exit status.
+	REQUIRE_FALSE(childrenAreDiscarded());
 
-	REQUIRE(saved);
+	// The command runs on after the call; give it up to five seconds to write.
+	for (int tries = 0; tries < 50 && access(sp().argfile.c_str(), F_OK) != 0; tries++)
+		usleep(100000);
+	usleep(100000);
 	// The ampersand and everything behind it is dropped, which is what asking
 	// for it has always meant.
-	REQUIRE(args == "");
-	// Collected by the kernel rather than by the call, so there is no status.
-	REQUIRE(ret == 0);
-	REQUIRE(discarded);
-	REQUIRE_FALSE(childrenAreDiscarded());
+	REQUIRE(readArgs() == "");
+
+	REQUIRE(my_system(2, sp().script.c_str(), "after") == 3);
 }
