@@ -199,6 +199,9 @@
 #ifdef ENABLE_LUA
 #include <system/luaserver.h>
 #endif
+#ifdef ENABLE_PYTHON
+#include <system/pyserver.h>
+#endif
 int old_b_id = -1;
 
 CInfoClock      *InfoClock;
@@ -3700,6 +3703,9 @@ void CNeutrinoApp::RealRun()
 #ifdef ENABLE_LUA
 	CLuaServer *luaServer = CLuaServer::getInstance();
 #endif
+#ifdef ENABLE_PYTHON
+	CPythonServer *pyServer = CPythonServer::getInstance();
+#endif
 	g_Plugins->startPlugin("startup");
 	if (!g_Plugins->getScriptOutput().empty()) {
 		ShowMsg(LOCALE_PLUGINS_RESULT, g_Plugins->getScriptOutput(), CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_SHELL);
@@ -3718,9 +3724,16 @@ void CNeutrinoApp::RealRun()
 #ifdef ENABLE_LUA
 		luaServer->UnBlock();
 #endif
+#ifdef ENABLE_PYTHON
+		pyServer->UnBlock();
+#endif
 		g_RCInput->getMsg(&msg, &data, 100, ((g_settings.mode_left_right_key_tv == SNeutrinoSettings::VOLUME) && (g_RemoteControl->subChannels.size() < 1)) ? true : false);	// 10 secs..
 #ifdef ENABLE_LUA
 		if (luaServer->Block(msg, data))
+			continue;
+#endif
+#ifdef ENABLE_PYTHON
+		if (pyServer->Block(msg, data))
 			continue;
 #endif
 

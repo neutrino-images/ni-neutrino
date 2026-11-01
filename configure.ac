@@ -918,6 +918,7 @@ lib/libnet/Makefile
 lib/libtuxtxt/Makefile
 lib/libupnpclient/Makefile
 lib/luaclient/Makefile
+lib/pyclient/Makefile
 lib/sectionsdclient/Makefile
 lib/timerdclient/Makefile
 lib/xmltree/Makefile

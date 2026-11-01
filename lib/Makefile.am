@@ -11,7 +11,8 @@ SUBDIRS = \
 	libtuxtxt \
 	libiw \
 	libdvbsub \
-	luaclient
+	luaclient \
+	pyclient
 
 if ENABLE_UPNP
 SUBDIRS += \
