@@ -447,9 +447,6 @@ void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *
 	PyGILState_Release(gstate);
 }
 
-}
-
-
 // Example: runScript(fileName, "Arg1", "Arg2", "Arg3", ..., NULL);
 //	Type of all parameters: const char*
 //	The last parameter to NULL is imperative.
