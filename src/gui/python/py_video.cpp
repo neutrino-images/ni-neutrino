@@ -27,6 +27,7 @@
 #include <system/debug.h>
 #include <system/helpers.h>
 #include <gui/movieplayer.h>
+#include <gui/widget/msgbox.h>
 #include <driver/framebuffer.h>
 #include <hardware/video.h>
 #include <neutrino.h>
