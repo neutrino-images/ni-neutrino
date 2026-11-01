@@ -359,9 +359,6 @@ CPythonInstance::~CPythonInstance()
 	globals = NULL;
 }
 
-	Py_XDECREF(traceback);
-	return msg;
-
 void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *argv, std::string *result_code, std::string *result_string, std::string *error_string)
 {
 	if (fileName == NULL || !startInterpreter())
