@@ -1415,16 +1415,7 @@ std::string CControlAPI::_GetBouquetWriteItem(CyhookHandler *hh, t_channel_id ch
 // case, so accept any spelling instead of silently falling back. Zapit reports
 // MODE_CURRENT while neither tv nor radio is active - callers count channels
 // per mode and would come up empty on it, so never hand that out.
-// It sits in httpd::compat, next to the class it serves, because the file's
-// top level only sees CControlAPI through the alias above and not the rest
-// of that namespace, CyhookHandler included.
-namespace httpd
-{
-namespace compat
-{
-namespace
-{
-int requestedChannelsMode(CyhookHandler *hh, int fallback)
+static int requestedChannelsMode(httpd::compat::CyhookHandler *hh, int fallback)
 {
 	std::string mode = hh->ParamList["mode"];
 	std::transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
@@ -1440,9 +1431,6 @@ int requestedChannelsMode(CyhookHandler *hh, int fallback)
 		return fallback;
 	return CZapitClient::MODE_TV;
 }
-} // namespace
-} // namespace compat
-} // namespace httpd
 
 //-------------------------------------------------------------------------
 /** List all channels for given bouquet (or all) or show actual bouquet number
