@@ -38,7 +38,6 @@
  * macros those are then read under. */
 #include "pyinstance_helpers.h"
 
-#include <driver/fb_window.h>
 #include <string>
 #include <vector>
 
