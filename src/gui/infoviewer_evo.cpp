@@ -942,7 +942,7 @@ void CInfoViewerEvo::initLiveStreamInfo()
 					tmp2 = g_Locale->getText(LOCALE_STREAMINFO_FRAMERATE_UNKNOWN);
 					break;
 				}
-				livestreamInfo2 = std::to_string(xres) + "x" + std::to_string(yres) + ", " + tmp2;
+				livestreamInfo2 = to_string(xres) + "x" + to_string(yres) + ", " + tmp2;
 				if (!tmp1.empty())
 					livestreamInfo2 += (std::string)", " + tmp1;
 			}
