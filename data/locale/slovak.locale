@@ -1325,6 +1325,7 @@ mainmenu.movieplayer Prehrávač filmov
 mainmenu.pausesectionsd Načítavanie EPG
 mainmenu.pictureviewer Prehliadač obrázkov
 mainmenu.poweroff_menu Vypnutie
+mainmenu.python Python doplnky
 mainmenu.radiomode Rádio
 mainmenu.reboot Reštartovať
 mainmenu.recording Nahrávanie
@@ -1644,6 +1645,7 @@ menu.hint_leds_tv Funkčný stav LED
 menu.hint_load Načítanie Neutrino-HD nastavení grafického užívateľského rozhrania (GUI) zo súboru
 menu.hint_longkeypress_duration Stlačenie klávesy bude vyhodnotené ako "dlhý stisk klávesy" ak bude stlačené dlhšie ako špecifikovaný čas.
 menu.hint_lua Spustenie Lua doplnkov
+menu.hint_python Spustenie Python doplnkov
 menu.hint_make_hdlist Automaticky vytvorí HD zoznam kanálov na základe\ntypu kanálu a názvu
 menu.hint_make_newlist Vytvorí zoznam nedávno pridaných kanálov
 menu.hint_make_removedlist Vytvorí zoznam nedávno odstránených kanálov
@@ -1752,6 +1754,7 @@ menu.hint_pictureviewer_slide_time Interval zmeny obrázka, v sekundách
 menu.hint_picview Sledovanie obrázkov
 menu.hint_plugin_type_games Zobrazí hry v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_lua Zobrazí doplnky v užívateľskom menu pri výbere 'Typy doplnkov'
+menu.hint_plugin_type_python Zobrazí Python doplnky v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_scripts Zobrazí skripty v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_tools Zobrazí nástroje v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugins_control Konfigurácia nainštalovaných doplnkov a služieb
@@ -2641,6 +2644,7 @@ plugins.result Výstup doplnku
 plugintype.disabled Nepoužitý
 plugintype.game Hra
 plugintype.lua Lua doplnok
+plugintype.python Python doplnok
 plugintype.script Skript
 plugintype.tool Nástroj
 poweroff.rec_protected Nahrávky chránené

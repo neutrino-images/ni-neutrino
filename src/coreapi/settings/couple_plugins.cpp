@@ -30,11 +30,11 @@ namespace settings
 namespace
 {
 
-const size_t kLists = 5;
+const size_t kLists = 6;
 
 const char *const kListKeys[kLists] =
 {
-	"plugins_disabled", "plugins_game", "plugins_tool", "plugins_script", "plugins_lua"
+	"plugins_disabled", "plugins_game", "plugins_tool", "plugins_script", "plugins_lua", "plugins_python"
 };
 
 // The names of a list in the order written, each once and none empty.
@@ -89,7 +89,7 @@ void couplePlugins(CoupledBatch &b)
 	if (!any)
 		return;
 
-	bool clash[kLists] = { false, false, false, false, false };
+	bool clash[kLists] = { false, false, false, false, false, false };
 	bool with[kLists][kLists] = {};
 	for (size_t i = 0; i < kLists; ++i)
 	{
@@ -141,7 +141,7 @@ void couplePlugins(CoupledBatch &b)
 			continue;
 
 		std::vector<std::string> keep;
-		bool took[kLists] = { false, false, false, false, false };
+		bool took[kLists] = { false, false, false, false, false, false };
 		const std::vector<std::string> had = namesOf(stored);
 		for (size_t n = 0; n < had.size(); ++n)
 		{

@@ -112,6 +112,7 @@ static keyvals usermenu_items[] =
 	{ SNeutrinoSettings::ITEM_TOOLS,		LOCALE_MAINMENU_TOOLS,			usermenu_show },
 	{ SNeutrinoSettings::ITEM_SCRIPTS,		LOCALE_MAINMENU_SCRIPTS,		usermenu_show },
 	{ SNeutrinoSettings::ITEM_LUA,			LOCALE_MAINMENU_LUA,			usermenu_show },
+	{ SNeutrinoSettings::ITEM_PYTHON,		LOCALE_MAINMENU_PYTHON,			usermenu_show },
 	{ SNeutrinoSettings::ITEM_PLUGIN_TYPES,		LOCALE_USERMENU_ITEM_PLUGIN_TYPES,	usermenu_show },
 	{ SNeutrinoSettings::ITEM_MAX,			NONEXISTANT_LOCALE,			usermenu_show }
 };

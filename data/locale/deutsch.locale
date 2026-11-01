@@ -1325,6 +1325,7 @@ mainmenu.movieplayer Movieplayer
 mainmenu.pausesectionsd EPG auslesen
 mainmenu.pictureviewer Bildbetrachter
 mainmenu.poweroff_menu Ausschalten
+mainmenu.python Python-Plugins
 mainmenu.radiomode Radio-Modus
 mainmenu.reboot Neustart
 mainmenu.recording Aufnehmen
@@ -1644,6 +1645,7 @@ menu.hint_leds_tv Definiert den Status der Power-LEDs im TV-Modus
 menu.hint_load Laden der Einstellungen aus einer Datei
 menu.hint_longkeypress_duration Tasten, die länger als die angegebene Zeit betätigt werden, werden als "langer Tastendruck" behandelt.
 menu.hint_lua Plugins ausführen
+menu.hint_python Python-Plugins ausführen
 menu.hint_make_hdlist Bei aktiver Option werden Bouquets namens 'HD' und 'UHD' erzeugt, in denen alle HD- bzw. UHD-Sender zusammengefasst sind
 menu.hint_make_newlist Nach einer Kanalsuche wird ein Bouquet namens 'neue Kanäle' erzeugt
 menu.hint_make_removedlist Nach einer Kanalsuche wird ein Bouquet namens 'gelöschte Kanäle' erzeugt
@@ -1752,6 +1754,7 @@ menu.hint_pictureviewer_slide_time Ändern Sie den Diashow-Intervall.\nStandardm
 menu.hint_picview Bilder anzeigen
 menu.hint_plugin_type_games Legt fest, ob Spiele im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_lua Legt fest, ob Plugins im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
+menu.hint_plugin_type_python Legt fest, ob Python-Plugins im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_scripts Legt fest, ob Skripte im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_tools Legt fest, ob Werkzeuge im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugins_control Plugin-Einstellungen und Verwaltung von installierten Plugins
@@ -2642,6 +2645,7 @@ plugins.result Pluginausgabe
 plugintype.disabled Deaktiviert
 plugintype.game Spiel
 plugintype.lua Lua-Plugin
+plugintype.python Python-Plugin
 plugintype.script Skript
 plugintype.tool Werkzeug
 poweroff.rec_protected Aufnahmen geschützt

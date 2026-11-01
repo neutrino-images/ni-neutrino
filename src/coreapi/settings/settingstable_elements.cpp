@@ -234,6 +234,11 @@ constexpr Descriptor kElements[] =
 		.defaultValue(0)
 		.values(kPersonalizeMode)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_MAIN_LUA)),
+	enumRow("personalize_python")
+		.section("misc")
+		.defaultValue(0)
+		.values(kPersonalizeMode)
+		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_MAIN_PYTHON)),
 	enumRow("personalize_settings")
 		.section("misc")
 		.defaultValue(0)
@@ -504,6 +509,11 @@ constexpr Descriptor kElements[] =
 		.label("mainmenu.lua")
 		.defaultValue(1)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_LUA)),
+	boolRow("personalize_usermenu_plugin_type_python")
+		.section("misc")
+		.label("mainmenu.python")
+		.defaultValue(1)
+		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_PYTHON)),
 	intRow("timing.menu")
 		.section("osd")
 		.label("timing.menu")

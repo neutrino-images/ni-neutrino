@@ -51,6 +51,7 @@ const char *const kPluginsKeys[] =
 	"plugins_disabled",
 	"plugins_game",
 	"plugins_lua",
+	"plugins_python",
 	"plugins_script",
 	"plugins_tool"
 };

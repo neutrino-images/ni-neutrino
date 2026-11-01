@@ -67,6 +67,7 @@ const char *kindName(coreapi::PluginKind k)
 		case coreapi::PluginKind::Tool:     return "tool";
 		case coreapi::PluginKind::Script:   return "script";
 		case coreapi::PluginKind::Lua:      return "lua";
+		case coreapi::PluginKind::Python:   return "python";
 		case coreapi::PluginKind::Unknown:  break;
 	}
 	// A sort this box has and this server has no word for. Named rather than

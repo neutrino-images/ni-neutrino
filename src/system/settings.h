@@ -797,6 +797,7 @@ struct SNeutrinoSettings
 #endif
 		P_MAIN_SCRIPTS,
 		P_MAIN_LUA,
+		P_MAIN_PYTHON,
 		P_MAIN_SETTINGS,
 		P_MAIN_SERVICE,
 		P_MAIN_SLEEPTIMER,
@@ -865,6 +866,7 @@ struct SNeutrinoSettings
 		P_UMENU_PLUGIN_TYPE_TOOLS,
 		P_UMENU_PLUGIN_TYPE_SCRIPTS,
 		P_UMENU_PLUGIN_TYPE_LUA,
+		P_UMENU_PLUGIN_TYPE_PYTHON,
 
 		P_SETTINGS_MAX
 	};
@@ -899,6 +901,7 @@ struct SNeutrinoSettings
 	std::string plugins_disabled;
 	std::string plugins_game;
 	std::string plugins_lua;
+	std::string plugins_python;
 	std::string plugins_script;
 	std::string plugins_tool;
 
@@ -1305,6 +1308,7 @@ struct SNeutrinoSettings
 		ITEM_FILEPLAY_AUDIO = 38,
 		ITEM_TIMESHIFT = 39,
 		ITEM_LCD4LINUX = 40,
+		ITEM_PYTHON = 41,
 
 		ITEM_MAX // MUST be always the last in the list
 	} USER_ITEM;

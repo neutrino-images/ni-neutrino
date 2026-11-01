@@ -1081,6 +1081,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	setSettingsText(g_settings.plugins_disabled, configfile.getString("plugins_disabled", ""));
 	setSettingsText(g_settings.plugins_game, configfile.getString("plugins_game", ""));
 	setSettingsText(g_settings.plugins_lua, configfile.getString("plugins_lua", ""));
+	setSettingsText(g_settings.plugins_python, configfile.getString("plugins_python", ""));
 	setSettingsText(g_settings.plugins_script, configfile.getString("plugins_script", ""));
 	setSettingsText(g_settings.plugins_tool, configfile.getString("plugins_tool", ""));
 
@@ -2057,6 +2058,7 @@ void CNeutrinoApp::saveSetup(const char *fname)
 	configfile.setString("plugins_disabled", g_settings.plugins_disabled);
 	configfile.setString("plugins_game", g_settings.plugins_game);
 	configfile.setString("plugins_lua", g_settings.plugins_lua);
+	configfile.setString("plugins_python", g_settings.plugins_python);
 	configfile.setString("plugins_script", g_settings.plugins_script);
 	configfile.setString("plugins_tool", g_settings.plugins_tool);
 
@@ -4482,6 +4484,7 @@ coreapi::Status coreapi::boxPlugins(coreapi::PluginList &out)
 			case CPlugins::P_TYPE_TOOL:     one.kind = coreapi::PluginKind::Tool; break;
 			case CPlugins::P_TYPE_SCRIPT:   one.kind = coreapi::PluginKind::Script; break;
 			case CPlugins::P_TYPE_LUA:      one.kind = coreapi::PluginKind::Lua; break;
+			case CPlugins::P_TYPE_PYTHON:   one.kind = coreapi::PluginKind::Python; break;
 			default:                        one.kind = coreapi::PluginKind::Unknown; break;
 		}
 		one.hidden = g_Plugins->isHidden(i);

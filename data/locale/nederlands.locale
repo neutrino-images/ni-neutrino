@@ -1325,6 +1325,7 @@ mainmenu.movieplayer Videospeler
 mainmenu.pausesectionsd Lees EPG
 mainmenu.pictureviewer Afbeeldingen
 mainmenu.poweroff_menu (((T))) Ausschalten
+mainmenu.python Python Plugins
 mainmenu.radiomode Radio mode
 mainmenu.reboot Herstart systeem
 mainmenu.recording Opnemen
@@ -1644,6 +1645,7 @@ menu.hint_leds_tv LEDs status indien de ontvanger in werking is
 menu.hint_load Laad gebruikersinterface \ninstellingen van back-up bestand
 menu.hint_longkeypress_duration Een toets-indruk wordt gezien als "lange toets indruk" wanneer deze langer is ingedrukt dan de gespecificeerde tijd.
 menu.hint_lua Start Lua Plugins
+menu.hint_python Start Python Plugins
 menu.hint_make_hdlist Automatisch HD kanalenlijst maken \ngebaseerd op kanaaltype en naam
 menu.hint_make_newlist Kanalenlijst aanmaken met recent toegevoegde kanalen
 menu.hint_make_removedlist Kanalenlijst aanmaken met recent verwijderde kanalen
@@ -1752,6 +1754,7 @@ menu.hint_pictureviewer_slide_time Slideshow interval, in seconden
 menu.hint_picview Bekijk afbeeldingen
 menu.hint_plugin_type_games Toon games in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_lua Toon plugins in usermenu bij selectie 'Plugin types'
+menu.hint_plugin_type_python Toon Python plugins in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_scripts Toon scripts in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_tools Toon tools in usermenu bij selectie 'Plugin types'
 menu.hint_plugins_control (((T))) Plugin-Einstellungen und Verwaltung von installierten Plugins
@@ -2641,6 +2644,7 @@ plugins.result plugin output
 plugintype.disabled Uitgeschakeld
 plugintype.game Game
 plugintype.lua Lua plugin
+plugintype.python Python plugin
 plugintype.script Script
 plugintype.tool Tool
 poweroff.rec_protected Opnames beschermd

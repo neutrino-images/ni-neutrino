@@ -1325,6 +1325,7 @@ mainmenu.movieplayer Movieplayer
 mainmenu.pausesectionsd Read EPG
 mainmenu.pictureviewer Picture viewer
 mainmenu.poweroff_menu Power off
+mainmenu.python Python Plugins
 mainmenu.radiomode Radio mode
 mainmenu.reboot Reboot
 mainmenu.recording Recording
@@ -1644,6 +1645,7 @@ menu.hint_leds_tv Working LEDs state
 menu.hint_load Load GUI settings from file
 menu.hint_longkeypress_duration A key press will be considered as "long key press" if it's pressed longer than the specified time.
 menu.hint_lua Run Lua Plugins
+menu.hint_python Run Python Plugins
 menu.hint_make_hdlist Auto-create HD and UHD channel lists based on\nchannel type and name
 menu.hint_make_newlist Create list of recently added channels
 menu.hint_make_removedlist Create list of recently removed channels
@@ -1752,6 +1754,7 @@ menu.hint_pictureviewer_slide_time Slideshow interval, in seconds
 menu.hint_picview View pictures
 menu.hint_plugin_type_games Show games in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_lua Show plugins in usermenu at selection 'Plugin types'
+menu.hint_plugin_type_python Show Python plugins in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_scripts Show scripts in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_tools Show tools in usermenu at selection 'Plugin types'
 menu.hint_plugins_control Plugin settings and management of installed plugins
@@ -2642,6 +2645,7 @@ plugins.result plugin output
 plugintype.disabled Disabled
 plugintype.game Game
 plugintype.lua Lua plugin
+plugintype.python Python plugin
 plugintype.script Script
 plugintype.tool Tool
 poweroff.rec_protected Recordings protected
