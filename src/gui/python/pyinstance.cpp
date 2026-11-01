@@ -40,6 +40,9 @@
 #include <driver/rcinput.h>
 #include <neutrino.h>
 
+#include "py_cc_header.h"
+#include "py_cc_picture.h"
+#include "py_cc_signalbox.h"
 #include "py_cc_text.h"
 #include "py_cc_window.h"
 #include "py_configfile.h"
@@ -989,6 +992,9 @@ void PythonInstRegisterFunctions(PyObject *module)
 	if (module == NULL)
 		return;
 
+	CPythonInstCCHeader::CCHeaderRegister(module);
+	CPythonInstCCPicture::CCPictureRegister(module);
+	CPythonInstCCSignalbox::CCSignalBoxRegister(module);
 	CPythonInstCCText::CCTextRegister(module);
 	CPythonInstCCWindow::CCWindowRegister(module);
 	CPythonInstConfigFile::ConfigFileRegister(module);

@@ -25,6 +25,9 @@ noinst_LIBRARIES = libneutrino_gui_python.a
 libneutrino_gui_python_a_SOURCES = \
 	pyinstance.cpp \
 	pyinstance_helpers.cpp \
+	py_cc_header.cpp \
+	py_cc_picture.cpp \
+	py_cc_signalbox.cpp \
 	py_cc_text.cpp \
 	py_cc_window.cpp \
 	py_configfile.cpp \
