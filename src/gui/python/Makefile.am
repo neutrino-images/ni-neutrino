@@ -34,5 +34,6 @@ libneutrino_gui_python_a_SOURCES = \
 	py_hourglass.cpp \
 	py_messagebox.cpp \
 	py_misc.cpp \
+	py_neutrino.cpp \
 	py_progresswindow.cpp \
 	py_stringinput.cpp

@@ -118,6 +118,29 @@ bool pyLookupInt(PyObject *kw, const char *what, long &value)
 	return pyToLong(item, value);
 }
 
+bool pyArgLong(PyObject *item, long &value)
+{
+	if (item == NULL)
+		return false;
+	return pyToLong(item, value);
+}
+
+bool pyArgString(PyObject *item, std::string &value)
+{
+	if (item == NULL)
+		return false;
+	if (!PyUnicode_Check(item))
+		return false;
+	Py_ssize_t len = 0;
+	const char *s = PyUnicode_AsUTF8AndSize(item, &len);
+	if (s == NULL) {
+		PyErr_Clear();
+		return false;
+	}
+	value.assign(s, (size_t)len);
+	return true;
+}
+
 bool pyLookupUnsigned(PyObject *kw, const char *what, unsigned long &value)
 {
 	long v = 0;

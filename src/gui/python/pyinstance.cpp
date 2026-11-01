@@ -49,6 +49,7 @@
 #include "py_hourglass.h"
 #include "py_messagebox.h"
 #include "py_misc.h"
+#include "py_neutrino.h"
 #include "py_progresswindow.h"
 #include "py_stringinput.h"
 
@@ -997,6 +998,7 @@ void PythonInstRegisterFunctions(PyObject *module)
 	CPythonInstHourGlass::HourGlassRegister(module);
 	CPythonInstMessagebox::MessageboxRegister(module);
 	CPythonInstMisc::MiscRegister(module);
+	CPythonInstNeutrino::NeutrinoRegister(module);
 	CPythonInstProgressWindow::ProgressWindowRegister(module);
 	CPythonInstStringInput::StringInputRegister(module);
 }

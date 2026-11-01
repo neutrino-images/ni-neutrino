@@ -75,6 +75,13 @@ bool pyHaveKeywords(PyObject *kw);
 bool pyLookupString(PyObject *kw, const char *what, std::string &value);
 bool pyLookupInt(PyObject *kw, const char *what, long &value);
 bool pyLookupUnsigned(PyObject *kw, const char *what, unsigned long &value);
+
+/* Reads one value as a number, the way a positional argument of a call is
+ * read, which is what the Lua bindings' luaL_checkint does. */
+bool pyArgLong(PyObject *item, long &value);
+
+/* The same for a text. */
+bool pyArgString(PyObject *item, std::string &value);
 bool pyLookupBool(PyObject *kw, const char *what, bool &value);
 bool pyLookupObject(PyObject *kw, const char *what, PyObject **value);
 bool pyLookupList(PyObject *kw, const char *what, PyObject **value);
