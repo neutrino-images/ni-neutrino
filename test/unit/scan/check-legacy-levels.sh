@@ -1,8 +1,8 @@
 #!/bin/sh
-# levels.cpp keeps its own table of the 74 legacy endpoint names and their assigned
+# levels.cpp keeps its own table of the 75 legacy endpoint names and their assigned
 # level, because a host test cannot call into controlapi.cpp's own yCgiCallList:
 # the symbol lives in controlapi.o, and asking the linker for any symbol in that
-# object pulls it whole, with every real Neutrino singleton every one of the 74
+# object pulls it whole, with every real Neutrino singleton every one of the 75
 # handlers reaches (see levels.h). Nothing at run time can notice the two tables
 # drifting apart, in either direction: an endpoint added to yCgiCallList and never
 # given a row here answers whatever levelFor() does for a name nobody wrote down,
@@ -81,7 +81,7 @@ if [ -n "$MISSING_ENDPOINT" ]; then
 	STATUS=1
 fi
 
-# The level every one of the 74 names is meant to carry, read off kTable by
+# The level every one of the 75 names is meant to carry, read off kTable by
 # hand when this guard was written and kept here on purpose rather than
 # derived: deriving it from kTable would compare kTable with itself and
 # notice nothing.
@@ -127,6 +127,7 @@ lcd:KindRead
 logolist:KindRead
 message:KindWrite
 movebouquet:KindWrite
+osinfo:KindRead
 rc:KindMixed
 rcem:KindWrite
 reboot:KindSystem
@@ -163,8 +164,8 @@ zapto:KindMixed
 EOF
 sort -u "$tmp/expected_pairs" -o "$tmp/expected_pairs"
 
-[ `wc -l < "$tmp/expected_pairs"` -eq 74 ] || {
-	echo "check-legacy-levels.sh's own recorded name:kind list does not have 74 rows" >&2
+[ `wc -l < "$tmp/expected_pairs"` -eq 75 ] || {
+	echo "check-legacy-levels.sh's own recorded name:kind list does not have 75 rows" >&2
 	STATUS=1
 }
 

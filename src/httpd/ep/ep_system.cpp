@@ -148,7 +148,7 @@ const Schema kDaemonListSchema = { "daemon-list", HTTPD_FIELDS(kDaemonListFields
 
 const FieldDesc kUsageFields[] = {
 	HTTPD_MEMBER("name", FieldType::String,
-		"one of the legacy table's own 74 names, or a name /control/ was asked for that the table never had"),
+		"one of the legacy table's own 75 names, or a name /control/ was asked for that the table never had"),
 	HTTPD_MEMBER("calls", FieldType::UInt,
 		"how many times this name has been asked for since this program started"),
 };
@@ -504,7 +504,7 @@ const Endpoint kSystemEndpoints[] = {
 	{ Method::Get, "/api/v1/system/legacy-usage", AuthLevel::Read,
 	  "how many times /control/ has been asked for each of its names, so retiring one can rest on what still calls it rather than on a guess, and no names at all where this build carries none of that surface",
 	  "Reads how many times the copied `/control/` surface has been asked for each of its own "
-	  "74 names since this program started, plus any name it was asked for that table never "
+	  "75 names since this program started, plus any name it was asked for that table never "
 	  "had. It exists so that retiring a legacy name can rest on what still calls it rather "
 	  "than on a guess.\n\n"
 	  "**Preconditions:** none, but on a build without the copied `/control/` surface at all "

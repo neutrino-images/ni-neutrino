@@ -40,7 +40,7 @@ struct Row
 	Kind        kind;
 };
 
-/* The 74 names yCgiCallList carries, each with the kind its own handler
+/* The 75 names yCgiCallList carries, each with the kind its own handler
    earns it. exec, system, startplugin and yweb are System without exception
    and without Mixed: they run a command, a script or a plugin, and no
    parameter on any of them only reads. build_live_url and build_playlist
@@ -77,6 +77,7 @@ const Row kTable[] =
 	{ "gettime",           KindRead },
 	{ "info",              KindRead },
 	{ "boxinfo",           KindRead },
+	{ "osinfo",            KindRead },
 	{ "version",           KindRead },
 	{ "reloadsetup",       KindWrite },
 	{ "reloadplugins",     KindWrite },

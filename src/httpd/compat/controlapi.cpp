@@ -159,6 +159,14 @@ static const time_t EPG_WHOLE_TO = std::numeric_limits<time_t>::max();
 //=============================================================================
 std::string CControlAPI::PLUGIN_DIRS[PLUGIN_DIR_COUNT];
 
+static const char *getVersionInfoPath()
+{
+	if (access(IMAGE_METADATA_FILE, R_OK) == 0)
+		return IMAGE_METADATA_FILE;
+
+	return IMAGE_VERSION_FILE;
+}
+
 //=============================================================================
 // constructor und destructor
 //=============================================================================
@@ -218,6 +226,7 @@ const CControlAPI::TyCgiCall CControlAPI::yCgiCallList[]=
 	{"gettime",		&CControlAPI::GetTimeCGI,		"text/plain"},
 	{"info",		&CControlAPI::InfoCGI,			"text/plain"},
 	{"boxinfo",		&CControlAPI::BoxInfoCGI,		"text/plain"},
+	{"osinfo",		&CControlAPI::OsInfoCGI,		"text/plain"},
 	{"version",		&CControlAPI::VersionCGI,		""},
 	{"reloadsetup",		&CControlAPI::ReloadNeutrinoSetupCGI,	""},
 	{"reloadplugins",	&CControlAPI::ReloadPluginsCGI,		""},
@@ -744,10 +753,13 @@ void CControlAPI::GetChannelInfoCGI(CyhookHandler *hh)
 	t_channel_id channel_id = CZapit::getInstance()->GetCurrentChannelID();
 	coreapi::Result<coreapi::ChannelInfo> current = coreapi::channels::current();
 
-	hh->outStart();
+	/* outObject() wraps its content in braces, so every field came out as
+	   "name": {Das Erste} - no json parser accepts that. outStart(true) keeps
+	   the plain output at bare values. */
+	hh->outStart(true /*old mode*/);
 	std::string result = "";
 	// An idle box answers with an empty name rather than no answer.
-	result = hh->outObject("name", hh->outValue(current.ok() ? current.value().name : std::string()) + "\n");
+	result = hh->outPair("name", hh->outValue(current.ok() ? current.value().name : std::string()), true);
 
 	CShortEPGData epg;
 	CSectionsdClient::CurrentNextInfo CurrentNext;
@@ -755,21 +767,21 @@ void CControlAPI::GetChannelInfoCGI(CyhookHandler *hh)
 
 	if (CurrentNext.flags & CSectionsdClient::epgflags::has_current)
 	{
-		result += hh->outObject("epg_now", hh->outValue(CurrentNext.current_name) + "\n");
-		result += hh->outObject("duration", string_printf("%d/", (abs(time(NULL) - CurrentNext.current_zeit.startzeit) + 30) / 60) + string_printf("%d\n", CurrentNext.current_zeit.dauer / 60));
+		result += hh->outPair("epg_now", hh->outValue(CurrentNext.current_name), true);
+		result += hh->outPair("duration", string_printf("%d/", (abs(time(NULL) - CurrentNext.current_zeit.startzeit) + 30) / 60) + string_printf("%d", CurrentNext.current_zeit.dauer / 60), true);
 	}
 	else
 	{
-		result += hh->outObject("epg_now", "\n");
-		result += hh->outObject("duration", "0/0\n");
+		result += hh->outPair("epg_now", "", true);
+		result += hh->outPair("duration", "0/0", true);
 	}
 
 	if (CurrentNext.flags & CSectionsdClient::epgflags::has_next)
 	{
-		result += hh->outObject("epg_next", hh->outValue(CurrentNext.next_name) + "\n");
+		result += hh->outPair("epg_next", hh->outValue(CurrentNext.next_name), false);
 	}
 	else
-		result += hh->outObject("epg_next", "\n");
+		result += hh->outPair("epg_next", "", false);
 
 	hh->SendResult(result);
 }
@@ -867,7 +879,7 @@ void CControlAPI::InfoCGI(CyhookHandler *hh)
 		if (hh->ParamList["1"] == "streaminfo")		// print streaminfo
 			SendStreamInfo(hh);
 		else if (hh->ParamList["1"] == "version")	// send version file
-			hh->SendFile(IMAGE_VERSION_FILE);
+			hh->SendFile(getVersionInfoPath());
 		else if (hh->ParamList["1"] == "httpdversion")	// print httpd version typ (just for compatibility)
 			hh->Write("3");
 		else if (hh->ParamList["1"] == "nhttpd_version")// print nhttpd version
@@ -913,6 +925,28 @@ void CControlAPI::HWInfoCGI(CyhookHandler *hh)
 
 	hh->printf("%s %s (%s)\nMAC:%s\n", boxvendor.c_str(), g_info.hw_caps->boxname, g_info.hw_caps->boxarch, eth_id.c_str());
 }
+
+//-----------------------------------------------------------------------------
+void CControlAPI::OsInfoCGI(CyhookHandler *hh)
+{
+	std::string result;
+	std::ifstream osrelease("/etc/os-release");
+	if (osrelease.is_open())
+	{
+		std::string line;
+		while (std::getline(osrelease, line))
+		{
+			if (!line.empty())
+				result += line + "\n";
+		}
+		osrelease.close();
+	}
+	if (result.empty())
+		hh->SendError();
+	else
+		hh->printf("%s", result.c_str());
+}
+
 //-----------------------------------------------------------------------------
 void CControlAPI::ShutdownCGI(CyhookHandler *hh)
 {
@@ -1377,6 +1411,28 @@ std::string CControlAPI::_GetBouquetWriteItem(CyhookHandler *hh, t_channel_id ch
 	return result;
 }
 //-------------------------------------------------------------------------
+// mode=tv|radio|all for the bouquet calls. /control/getmode answers in lower
+// case, so accept any spelling instead of silently falling back. Zapit reports
+// MODE_CURRENT while neither tv nor radio is active - callers count channels
+// per mode and would come up empty on it, so never hand that out.
+static int requestedChannelsMode(CyhookHandler *hh, int fallback)
+{
+	std::string mode = hh->ParamList["mode"];
+	std::transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
+
+	if (mode == "tv")
+		return CZapitClient::MODE_TV;
+	if (mode == "radio")
+		return CZapitClient::MODE_RADIO;
+	if (mode == "all")
+		return CZapitClient::MODE_ALL;
+
+	if (fallback == CZapitClient::MODE_TV || fallback == CZapitClient::MODE_RADIO || fallback == CZapitClient::MODE_ALL)
+		return fallback;
+	return CZapitClient::MODE_TV;
+}
+
+//-------------------------------------------------------------------------
 /** List all channels for given bouquet (or all) or show actual bouquet number
  * @param hh CyhookHandler
  *
@@ -1384,7 +1440,7 @@ std::string CControlAPI::_GetBouquetWriteItem(CyhookHandler *hh, t_channel_id ch
  * Get bouquet list (all) oder filtered to a given bouquet number
  * Option epg=true for actual and next epg data for each channel
  * @code
- * /control/getbouquet?[bouquet=<bouquet number>][&mode=TV|RADIO][&epg=true[&epginfo=false]]
+ * /control/getbouquet?[bouquet=<bouquet number>][&mode=tv|radio|all][&epg=true[&epginfo=false]]
  * @endcode
  * Get the actual used bouquet number
  * @code
@@ -1475,14 +1531,7 @@ void CControlAPI::GetBouquetCGI(CyhookHandler *hh)
 
 	std::string result = "";
 	if (!(hh->ParamList.empty())) {
-		int mode = NeutrinoAPI->Zapit->getMode();
-
-		if (hh->ParamList["mode"].compare("TV") == 0)
-			mode = CZapitClient::MODE_TV;
-		else if (hh->ParamList["mode"].compare("RADIO") == 0)
-			mode = CZapitClient::MODE_RADIO;
-		else if (hh->ParamList["mode"].compare("all") == 0)
-			mode = CZapitClient::MODE_ALL;
+		int mode = requestedChannelsMode(hh, NeutrinoAPI->Zapit->getMode());
 
 		// Get Bouquet Number. First matching current channel
 		if (hh->ParamList["1"] == "actual") {
@@ -1685,12 +1734,32 @@ void CControlAPI::GetChannelCGI(CyhookHandler *hh)
 }
 
 //-------------------------------------------------------------------------
+// Is bouquet b part of the requested listing? Used twice per bouquet: once for
+// the bouquet itself and once to look ahead for the array separator.
+static bool listedBouquet(const coreapi::BouquetInfo &b, int mode, bool show_hidden, bool fav)
+{
+	unsigned int channel_count = 0;
+
+	switch (mode) {
+		case CZapitClient::MODE_RADIO:
+			channel_count = b.radio_count;
+			break;
+		case CZapitClient::MODE_TV:
+			channel_count = b.tv_count;
+			break;
+		case CZapitClient::MODE_ALL:
+			channel_count = b.radio_count + b.tv_count;
+	}
+	return channel_count && (!b.hidden || show_hidden) && (!fav || b.user_bouquet);
+}
+
+//-------------------------------------------------------------------------
 /** Return all bouquets
  * @param hh CyhookHandler
  *
  * @par nhttpd-usage
  * @code
- * /control/getbouquets?[showhidden=true|false][&encode=true|false][&format=|xml|json]
+ * /control/getbouquets?[showhidden=true|false][&encode=true|false][&mode=tv|radio|all][&format=|xml|json]
  *
  * @endcode
  * @par
@@ -1765,49 +1834,43 @@ void CControlAPI::GetBouquetsCGI(CyhookHandler *hh)
 	if (hh->ParamList["fav"] == "true")
 		fav = true;
 
-	int mode = NeutrinoAPI->Zapit->getMode();
-	if (hh->ParamList["mode"].compare("all") == 0)
-		mode = CZapitClient::MODE_ALL;
-	else if (hh->ParamList["mode"].compare("TV") == 0)
-		mode = CZapitClient::MODE_TV;
-	else if (hh->ParamList["mode"].compare("RADIO") == 0)
-		mode = CZapitClient::MODE_RADIO;
- 
+	int mode = requestedChannelsMode(hh, NeutrinoAPI->Zapit->getMode());
+
+	/* The only way this read fails is a bouquet manager zapit has not built
+	   yet. Answer with an empty but well formed list, like LogolistCGI does. */
 	coreapi::Result<coreapi::BouquetList> bl = coreapi::channels::bouquets();
 	if (!bl.ok())
 	{
-		hh->SendError();
+		result = hh->outArray("bouquets", result);
+		hh->SendResult(result);
 		return;
 	}
 	const coreapi::BouquetList &bouquets = bl.value();
 
 	std::string bouquet;
 	for (int i = 0, size = (int) bouquets.size(); i < size; i++) {
+		if (!listedBouquet(bouquets[i], mode, show_hidden, fav))
+			continue;
+
+		/* The separator belongs after the last *listed* bouquet, not after the
+		   last one in the list. Filtered-out entries at the end of the list
+		   would otherwise leave a trailing comma and break the json. */
+		bool has_next = false;
+		for (int j = i + 1; j < size && !has_next; j++)
+			has_next = listedBouquet(bouquets[j], mode, show_hidden, fav);
+
 		std::string item = "";
-		unsigned int channel_count = 0;
-		switch (mode) {
-			case CZapitClient::MODE_RADIO:
-				channel_count = bouquets[i].radio_count;
-				break;
-			case CZapitClient::MODE_TV:
-				channel_count = bouquets[i].tv_count;
-				break;
-			case CZapitClient::MODE_ALL:
-				channel_count = bouquets[i].radio_count + bouquets[i].tv_count;
+		bouquet = bouquets[i].name;
+		if (encode)
+			bouquet = encodeString(bouquet); // encode (URLencode) the bouquetname
+		if (outType == httpd::compat::plain)
+			item = string_printf("%u", bouquets[i].id) + " " + bouquet + "\n";
+		else
+		{
+			item = hh->outPair("number", string_printf("%u", bouquets[i].id), true);
+			item += hh->outPair("name", hh->outValue(bouquet), false);
 		}
-		if (channel_count && (!bouquets[i].hidden || show_hidden) && (!fav || bouquets[i].user_bouquet)) {
-			bouquet = bouquets[i].name;
-			if (encode)
-				bouquet = encodeString(bouquet); // encode (URLencode) the bouquetname
-			if (outType == httpd::compat::plain)
-				item = string_printf("%u", bouquets[i].id) + " " + bouquet + "\n";
-			else
-			{
-				item = hh->outPair("number", string_printf("%u", bouquets[i].id), true);
-				item += hh->outPair("name", bouquet, false);
-			}
-			result += hh->outArrayItem("bouquet", item, (i < size-1));
-		}
+		result += hh->outArrayItem("bouquet", item, has_next);
 	}
 	result = hh->outArray("bouquets", result);
 
@@ -2298,7 +2361,7 @@ void CControlAPI::EpgCGI(CyhookHandler *hh)
 //-----------------------------------------------------------------------------
 void CControlAPI::VersionCGI(CyhookHandler *hh)
 {
-	hh->SendFile(IMAGE_VERSION_FILE);
+	hh->SendFile(getVersionInfoPath());
 }
 //-----------------------------------------------------------------------------
 void CControlAPI::ReloadNeutrinoSetupCGI(CyhookHandler *hh)
@@ -3595,12 +3658,13 @@ void CControlAPI::xmltvepgCGI(CyhookHandler *hh)
 							programmeTag  = "programme ";
 							programmeTag += "channel=\""+string_printf(PRINTF_CHANNEL_ID_TYPE_NO_LEADING_ZEROS, channel_id)+"\" ";
 							char zbuffer[25] = { 0 };
-							struct tm *mtime = gmtime(&eventIterator->startTime);
-							strftime(zbuffer, 21, "%Y%m%d%H%M%S %z", mtime);
+							struct tm mtime;
+							gmtime_r(&eventIterator->startTime, &mtime);
+							strftime(zbuffer, 21, "%Y%m%d%H%M%S %z", &mtime);
 							programmeTag += "start=\""+std::string(zbuffer)+"\" ";
 							time_t _stoptime = eventIterator->startTime + eventIterator->duration;
-							mtime = gmtime(&_stoptime);
-							strftime(zbuffer, 21, "%Y%m%d%H%M%S %z", mtime);
+							gmtime_r(&_stoptime, &mtime);
+							strftime(zbuffer, 21, "%Y%m%d%H%M%S %z", &mtime);
 							programmeTag += "stop=\""+std::string(zbuffer)+"\" ";
 
 							programmeData  = hh->outPair("title lang=\"de\"", hh->outValue(eventIterator->description, xml_cdata), false);

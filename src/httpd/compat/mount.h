@@ -6,9 +6,9 @@
 //
 // answer() does not call CControlAPI::Execute itself. That call lives in
 // legacybridge.cpp, reached only through the function pointer below, because
-// CControlAPI::Execute dispatches through a table of seventy-four member
+// CControlAPI::Execute dispatches through a table of seventy-five member
 // functions and the linker resolves an archive member whole: asking for
-// Execute at all pulls in every one of those seventy-four bodies, and they
+// Execute at all pulls in every one of those seventy-five bodies, and they
 // reach real channel, EPG, zapit and GUI singletons this program's own host
 // test binary never links. Nothing here calls a handler on the host, so
 // answer() has to stay able to answer without Execute ever being asked for,

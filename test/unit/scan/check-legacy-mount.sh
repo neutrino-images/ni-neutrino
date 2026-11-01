@@ -1,7 +1,7 @@
 #!/bin/sh
 # The real legacy dispatcher lives in legacybridge.o, which cannot be linked into
 # the test binary (see the comment in httpd/compat/mount.h: naming
-# CControlAPI::Execute at all pulls in a table of seventy-four handlers and the
+# CControlAPI::Execute at all pulls in a table of seventy-five handlers and the
 # real Neutrino singletons behind them). So installDispatch's one real caller is
 # out of reach of every case in test_compat_mount.cpp. If the install call were
 # deleted, /control/ would silently fall back to mount.cpp's own "nobody answers

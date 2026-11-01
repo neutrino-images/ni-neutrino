@@ -195,7 +195,7 @@ const char kRFC1123Fmt[] = "%a, %d %b %Y %H:%M:%S GMT";
    GetServicesxmlCGI, GetBouquetsxmlCGI, GetUBouquetsxmlCGI, VersionCGI, and
    InfoCGI's own "version" branch - the five call sites that call SendFile at
    all) names a fixed path a macro supplies at compile time (ZAPITDIR,
-   IMAGE_VERSION_FILE), never a request parameter. There is
+   IMAGE_METADATA_FILE or IMAGE_VERSION_FILE), never a request parameter. There is
    nothing here for a caller to steer and nothing to check the name against,
    only the one thing worth doing right regardless: open it once and act on
    the descriptor from there, the same discipline static.cpp's own
@@ -412,7 +412,7 @@ Response answer(Method m, const std::string &path, const std::string &query,
 	// between that and here carried the old server's per-request default
 	// forward: a handler with such a path leaves httpStatus at HTTP_NIL,
 	// which reads as no status at all to whatever answers this call.
-	// Twenty of the 74 legacy names are registered with an empty mime type
+	// Twenty of the 75 legacy names are registered with an empty mime type
 	// ("decide in function") and can return down such a path; matching the
 	// old server's default here, once, is what makes all of them agree with
 	// it, instead of a status fixed inside each one.
@@ -449,7 +449,7 @@ Response answer(Method m, const std::string &path, const std::string &query,
 
 		/* CyhookHandler::BuildHeader (yhook.cpp) writes this on every answer
 		   whose cache argument is false and whose CacheCategory is empty, and
-		   none of the 74 legacy names ever sets CacheCategory (that only
+		   none of the 75 legacy names ever sets CacheCategory (that only
 		   happens in mod_yparser.cpp, which nothing under /control/ runs
 		   through) or passes a true cache argument (that is yresponse.cpp's
 		   own SendResponse, for the HANDLED_SENDFILE branch above, not this
@@ -476,7 +476,7 @@ Response answer(Method m, const std::string &path, const std::string &query,
 		   mod_time follows the same two-source split BuildHeader reads:
 		   time(NULL) unless LastModified carries something other than its
 		   -1 sentinel. Checked directly against controlapi.cpp rather than
-		   assumed: none of its 74 registered handlers ever assigns
+		   assumed: none of its 75 registered handlers ever assigns
 		   hh->LastModified themselves, and the one place in the old tree
 		   that does (mod_sendfile.cpp's Hook_PrepareResponse, stamping a
 		   real file's st_mtime) is a hook for the document-root file server,
@@ -499,8 +499,11 @@ Response answer(Method m, const std::string &path, const std::string &query,
 			if (hh.LastModified != (time_t) -1)
 				mod_time = hh.LastModified;
 
+			/* gmtime_r and not gmtime: every connection has a thread of
+			   its own, and gmtime hands all of them the same static struct. */
 			char timeStr[80];
-			strftime(timeStr, sizeof(timeStr), kRFC1123Fmt, gmtime(&mod_time));
+			struct tm mod_tm;
+			strftime(timeStr, sizeof(timeStr), kRFC1123Fmt, gmtime_r(&mod_time, &mod_tm));
 			r.headers.push_back(std::make_pair(std::string("Last-Modified"),
 			                                   std::string(timeStr)));
 		}
@@ -508,7 +511,7 @@ Response answer(Method m, const std::string &path, const std::string &query,
 	return r;
 }
 
-// 200: generous next to the 74 names this table actually holds, and still a
+// 200: generous next to the 75 names this table actually holds, and still a
 // hard ceiling on what asking for a name nobody registered can cost this
 // program, at no charge to whoever asks.
 const std::size_t kMaxUnknownLegacyNames = 200;
