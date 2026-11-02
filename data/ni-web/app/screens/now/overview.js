@@ -33,10 +33,10 @@ import { t } from '../../i18n.js';
 import text from './now.text.js';
 import { clock, day, duration, bytes, percent, ratio, channelId, recordingMark } from '../../fmt.js';
 import { Button } from '../../ui/button.js';
+import { Dialog } from '../../ui/dialog.js';
 import { Switch } from '../../ui/switch.js';
 import { Field } from '../../ui/field.js';
 import { Dot } from '../../ui/dot.js';
-import { Dialog } from '../../ui/dialog.js';
 import { toast } from '../../ui/toast.js';
 import { refusalLine } from '../../problem.js';
 import { Logo } from '../../ui/logo.js';
@@ -53,8 +53,7 @@ import recText from '../recordings/recordings.text.js';
 import { archiveCoverHref } from '../recordings/archive.model.js';
 import { useKept } from '../../ui/kept.js';
 import { ensureCss } from '../../css.js';
-import shell from '../../shell.text.js';
-import { sendStandby } from '../../ui/power.js';
+import { useStandby } from '../../ui/power.js';
 
 export const css = '/app/screens/now/now.css';
 /** @returns {string} the sentence the frame draws under the name of this screen */
@@ -689,18 +688,10 @@ function BoxCard(props) {
 	}, []);
 
 	const box = info.data;
-	const [asking, setAsking] = useState(false);
 
-	/* The command and its words are the header's power key's (app/ui/power.js),
-	   so the two ways of sending it are one. */
-	/**
-	 * @param {boolean} on
-	 * @returns {void}
-	 */
-	function send(on) {
-		setAsking(false);
-		sendStandby(on);
-	}
+	/* The command, its question and its words are the header's power key's
+	   (app/ui/power.js), so the two ways of sending it are one. */
+	const standby = useStandby();
 
 	const mode = rest.data;
 
@@ -714,7 +705,8 @@ function BoxCard(props) {
 		     which is read after the state and not instead of it.
 
 		     Going into standby asks first, since it takes the picture off the
-		     television. Coming out of it does not. */''}
+		     television. Coming out of it asks only where the box would switch
+		     the television on with it. */''}
 		${!mode
 			/* Nothing is drawn from an answer that has not arrived. A switch
 			   standing at off while the box is being asked says the box is in
@@ -726,11 +718,7 @@ function BoxCard(props) {
 					hint=${mode.on ? t(text, 'now.box.standby') : ''}
 					checked=${!mode.on}
 					onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) {
-						if (!e.currentTarget.checked) {
-							setAsking(true);
-							return;
-						}
-						send(false);
+						standby.request(!e.currentTarget.checked);
 					}} />
 			</div>`}
 		${box
@@ -739,13 +727,7 @@ function BoxCard(props) {
 				<span>${t(text, 'now.box.uptime', { duration: duration(box.uptime) })}</span>
 			</p>`
 			: null}
-		<${Dialog}
-			open=${asking}
-			title=${t(shell, 'shell.power.standby')}
-			onCancel=${function () { setAsking(false); }}
-			onConfirm=${function () { send(true); }}>
-			<p>${t(shell, 'shell.power.ask')}</p>
-		<//>
+		${standby.question}
 	<//>`;
 }
 

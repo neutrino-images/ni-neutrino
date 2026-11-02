@@ -237,6 +237,46 @@ recordLater.onAct();
 await settle();
 same(globalThis.__toasts, [[words.de['problem.code.timer-exists'], 'bad']], 'a timer the box turns down says why, and not as set');
 
+// -------------------------------------------- standby, and the television with it
+//
+// Whether the television follows is the box's setting; what somebody answered in
+// the question is sent for that one change as cec, and nothing is sent where
+// nobody was asked.
+
+const power = await import('../../data/ni-web/app/ui/power.js');
+const shellWords = (await import('../../data/ni-web/app/shell.text.js')).default;
+
+/** @param {Record<string, string>} rows */
+function video(rows) {
+	return { items: Object.keys(rows).map(function (id) { return { id: id, value: rows[id] }; }) };
+}
+same(power.tvFollows(video({ hdmi_cec_mode: '1', hdmi_cec_view_on: '1', hdmi_cec_standby: '0' }), false), true,
+	'waking takes the television along where CEC is on and view on is set');
+same(power.tvFollows(video({ hdmi_cec_mode: '1', hdmi_cec_view_on: '1', hdmi_cec_standby: '0' }), true), false,
+	'and standby does not, its own switch being off');
+same(power.tvFollows(video({ hdmi_cec_mode: '2', hdmi_cec_view_on: '0', hdmi_cec_standby: '1' }), true), true,
+	'standby takes it along under its own switch, in either CEC mode');
+same(power.tvFollows(video({ hdmi_cec_mode: '0', hdmi_cec_view_on: '1', hdmi_cec_standby: '1' }), false), false,
+	'with CEC off neither switch counts');
+same([power.tvFollows(video({}), false), power.tvFollows(null, true)], [false, false],
+	'a box without CEC rows, or none that answered, takes no television along');
+
+globalThis.__toasts = [];
+sentToBox = [];
+answers = [];
+await power.sendStandby(false, false);
+await settle();
+same(sentToBox.map(function (one) { return [one.method, one.body]; }), [['POST', { on: false, cec: false }]],
+	'a wake answered without the television says so to the box');
+same(globalThis.__toasts, [[shellWords.de['shell.power.sent.wake'], '']], 'and is said as sent');
+
+sentToBox = [];
+await power.sendStandby(true, true);
+await power.sendStandby(true);
+await settle();
+same(sentToBox.map(function (one) { return one.body; }), [{ on: true, cec: true }, { on: true }],
+	'the answer is sent when there was one, and the box decides when there was none');
+
 // ------------------------------------------------------ the recordings
 
 const archive = await import('../../data/ni-web/app/screens/recordings/archive.model.js');
