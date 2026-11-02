@@ -54,6 +54,30 @@ export function countMark(n) {
 	return n > 99 ? '99+' : String(Math.floor(n));
 }
 
+/* Which destinations carry a number, and the sentence a reader is told in
+   its place. Only the timers. The circle is not what is read out: a reader
+   meeting "Timer 3" cannot tell three of what, so the link is named in a
+   sentence and the figure itself is hidden from it. Here and not in either
+   bar, because the bar along the top and the one along the bottom draw the
+   same number and must say the same thing about it. */
+/** @type {Record<string, string>} */
+const COUNTED = { timers: 'shell.count.timers' };
+
+/**
+ * @param {Web.NavArea} area
+ * @param {Record<string, number> | null | undefined} counts
+ * @returns {{ mark: string, said: string | null }} the figures to draw, empty
+ *          for none, and what the link is read out as, null where it is read
+ *          out as its name
+ */
+export function areaCount(area, counts) {
+	const key = COUNTED[area.id];
+	const mark = key && counts ? countMark(counts[area.id]) : '';
+	if (!key || mark === '')
+		return { mark: '', said: null };
+	return { mark: mark, said: t(text, key, { area: labelOf(area), n: mark }) };
+}
+
 /**
  * @param {string} id
  * @returns {Web.NavArea | null}

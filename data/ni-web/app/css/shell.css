@@ -74,7 +74,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
    not the red: the red is the box writing to a disc, and a timer that is only
    waiting is not that. A circle while it holds one figure and a pill once it
    holds two, sized in the root's fractions so it grows with the writing. */
-.areas a .area-count { display: inline-block; min-width: 1.125rem; height: 1.125rem;
+.area-count { display: inline-block; min-width: 1.125rem; height: 1.125rem;
 	margin-left: var(--gap-1); padding: 0 0.3125rem; box-sizing: border-box;
 	border-radius: var(--radius-pill); background: var(--accent); color: var(--accent-ink);
 	font-size: var(--fs-2xs); font-weight: 500; line-height: 1.125rem; text-align: center;
@@ -221,6 +221,13 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
 .ic-mark { display: block; width: 1.25em; height: 1.25em; fill: none; stroke: currentColor;
 	stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .dock [data-current] { color: var(--accent); background: var(--accent-wash); }
+/* The number on the shoulder of the mark, out of the column of mark and word,
+   so the word stays under its mark. Held from the middle of the key and not
+   from its edge, because the key is a fifth of whatever is there. A rim of the
+   bar's own ground, so it stands off the stroke of the mark it overlaps. */
+.dock a { position: relative; }
+.dock a > .area-count { position: absolute; top: 2px; left: calc(50% + 0.375rem); max-width: none;
+	margin: 0; box-shadow: 0 0 0 2px var(--ground-1); }
 
 /* ------------------------------------------------------- what lies over */
 
