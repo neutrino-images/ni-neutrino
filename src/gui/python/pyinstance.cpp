@@ -68,6 +68,7 @@
  * state of its own; what a Lua state kept apart, the namespace a script is
  * run in keeps apart here. */
 static PyObject *neutrino_module = NULL;
+static bool faulthandler_on = false;
 static bool interpreter_started = false;
 static pthread_mutex_t interpreter_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -423,6 +424,16 @@ void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *
 	pthread_mutex_lock(&running_mutex);
 	running_thread_ident = PyThread_get_thread_ident();
 	pthread_mutex_unlock(&running_mutex);
+
+	/* A fault inside the script is a fault in the script: faulthandler prints
+	 * the Python stack it was on, which is the line the trace above cannot
+	 * name. It is a builtin, so it is there whatever the box installed. */
+	if (!faulthandler_on) {
+		faulthandler_on = true;
+		PyRun_SimpleString("import faulthandler\nfaulthandler.enable()");
+		if (PyErr_Occurred())
+			PyErr_Clear();
+	}
 
 	PyObject *res = PyRun_FileExFlags(fp, fileName, Py_file_input, globals, globals, 1, NULL);
 printf("[pytrace] runScript: the script returned (%s)\n", res != NULL ? "ok" : "failed");
