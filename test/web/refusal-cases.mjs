@@ -71,7 +71,15 @@ function refusal(status, code, detail) {
 	};
 }
 
-globalThis.fetch = function (url) {
+/** Every request the page sent other than the session, as its method, address and body. */
+/** @type {{ method: string, url: string, body: any }[]} */
+let sentToBox = [];
+
+globalThis.fetch = function (url, init) {
+	if (String(url).indexOf('/api/v1/session') === -1) {
+		sentToBox.push({ method: (init && init.method) || 'GET', url: String(url),
+			body: init && typeof init.body === 'string' ? JSON.parse(init.body) : null });
+	}
 	const said = String(url).indexOf('/api/v1/session') !== -1
 		? { status: 200, body: JSON.stringify({ authenticated: true, level: 'system', user: 'root', csrf: 't', csrf_header: 'X-CSRF-Token' }) }
 		: (answers.length ? answers.shift() : { status: 202, body: '' });
@@ -189,6 +197,45 @@ zap.onAct();
 await settle();
 same(globalThis.__toasts, [[i18n.t(eventWords, 'epg.event.zap.done', { title: onAir.title }), '']],
 	'a zap the box took is said as done, so the cases above saw a refusal and not a stub');
+
+// ------------------------------------ a timer out of the guide, made at the press
+//
+// No form in between: the box is asked straight away and the corner says so, the
+// way it says a switch.
+
+const ahead = /** @type {any} */ ({ id: '8', channel_id: 'b9b0040200016dcb', title: 'Polizeiruf',
+	start: Math.floor(Date.now() / 1000) + 7200, duration: 5400 });
+const recordLater = event.eventActions({ event: ahead, at: ahead.start - 3600 }).find(function (a) { return a.id === 'record'; });
+const zapLater = event.eventActions({ event: ahead, at: ahead.start - 3600 }).find(function (a) { return a.id === 'zap'; });
+const { dayAndClock } = await import('../../data/ni-web/app/fmt.js');
+
+globalThis.__toasts = [];
+sentToBox = [];
+answers = [];
+recordLater.onAct();
+await settle();
+same(sentToBox.map(function (one) { return [one.method, one.url.replace(/\?.*$/, '')]; }), [['POST', '/api/v1/timers']],
+	'a recording for later is sent to the box at the press, with no form in between');
+same(sentToBox.length && [sentToBox[0].body.kind, sentToBox[0].body.channel_id, sentToBox[0].body.epg_id],
+	['record', ahead.channel_id, ahead.id], 'as a recording of that entry');
+same(globalThis.__toasts, [[i18n.t(eventWords, 'epg.event.record.set', { title: ahead.title, when: dayAndClock(ahead.start) }), '']],
+	'and is said as set in the corner');
+
+globalThis.__toasts = [];
+sentToBox = [];
+answers = [];
+zapLater.onAct();
+await settle();
+same(sentToBox.length && [sentToBox[0].method, sentToBox[0].body.kind, sentToBox[0].body.channel_id],
+	['POST', 'zapto', ahead.channel_id], 'a switch for later is sent as a switch timer at the press');
+same(globalThis.__toasts, [[i18n.t(eventWords, 'epg.event.zap.set', { title: ahead.title, when: dayAndClock(ahead.start) }), '']],
+	'and is said as set in the corner');
+
+globalThis.__toasts = [];
+answers = [refusal(409, 'timer-exists', 'there is a timer for that already')];
+recordLater.onAct();
+await settle();
+same(globalThis.__toasts, [[words.de['problem.code.timer-exists'], 'bad']], 'a timer the box turns down says why, and not as set');
 
 // ------------------------------------------------------ the recordings
 

@@ -5,8 +5,7 @@ import { html, Fragment, route, useState, useEffect } from '../runtime.js';
 import * as store from '../store.js';
 import * as session from '../session.js';
 import { t } from '../i18n.js';
-import { clock, duration } from '../fmt.js';
-import { hrefFor } from '../nav.js';
+import { clock, duration, dayAndClock } from '../fmt.js';
 import { problemHref, refusalLine } from '../problem.js';
 import { boxNowSeconds } from '../boxclock.js';
 import { ensureCss } from '../css.js';
@@ -16,6 +15,7 @@ import { Sheet } from './sheet.js';
 import { State } from './state.js';
 import { toast } from './toast.js';
 import { zap } from './wake.js';
+import { eventBody } from '../screens/timers/list.model.js';
 import text from './event.text.js';
 
 const kCss = '/app/ui/event.css';
@@ -71,35 +71,15 @@ export function whenOf(event) {
 }
 
 /**
- * The kind is always named: the form falls back to a recording.
- *
- * @param {Api.Event} event
- * @param {'record' | 'zapto'} kind what the timer is to do, as the box spells it
- *        (src/httpd/ep/ep_timers.cpp)
- * @returns {string}
- */
-export function timerHref(event, kind) {
-	const values = [
-		'kind=' + encodeURIComponent(kind),
-		'channel=' + encodeURIComponent(event.channel_id),
-		'epg=' + encodeURIComponent(event.id),
-		'start=' + encodeURIComponent(String(event.start)),
-		'stop=' + encodeURIComponent(String(event.start + event.duration)),
-		'title=' + encodeURIComponent(event.title)
-	];
-	return hrefFor('timers', 'list', 'new') + '?' + values.join('&');
-}
-
-/**
- * @param {() => Promise<unknown>} run
- * @param {string} said what is put on screen once the box has taken it
+ * @param {() => Promise<string | false>} run what is put on screen once the
+ *        box has taken it, or false where there is nothing to say: somebody
+ *        declined to switch the box on, or was already told why not
  * @returns {void}
  */
-function ask(run, said) {
+function ask(run) {
 	session.requireWrite().then(function () {
-		run().then(function (sent) {
-			// false is somebody declining to switch the box on.
-			if (sent !== false) {
+		run().then(function (said) {
+			if (said !== false) {
 				toast(said, '');
 			}
 		}, function (failed) {
@@ -109,12 +89,68 @@ function ask(run, said) {
 }
 
 /**
+ * @param {Promise<unknown>} sent
+ * @param {string} said
+ * @returns {Promise<string | false>}
+ */
+function saying(sent, said) {
+	return sent.then(function (answer) { return answer === false ? false : said; });
+}
+
+/**
  * @param {string} id the channel, hexadecimal
  * @param {string} said what is put on screen once the box has taken it
  * @returns {void}
  */
 export function zapTo(id, said) {
-	ask(function () { return zap(id); }, said);
+	ask(function () { return saying(zap(id), said); });
+}
+
+/* A TIMER OUT OF A GUIDE ENTRY IS MADE AT THE PRESS, and said as made in the
+   corner the way a switch is.
+
+   It used to open the timer form filled in from the entry, which is a second
+   press on a screen of fourteen fields for the one case where nothing on it
+   is to be changed. The body is the one that form sends for an entry left as
+   it was opened (eventBody), margins and following included, so the two ways
+   in make the same timer; the form stays where it always was, under the
+   timers, for the case where something is to be changed.
+
+   Judged again at the press, by the box's clock, because a list can have been
+   on screen since before the programme began: one that has begun since is
+   recorded now or switched to now, and one that has ended is said to have. */
+/**
+ * @param {Api.Event} event
+ * @param {'record' | 'zapto'} kind
+ * @param {number} from the box's clock at the press
+ * @returns {Promise<string | false>}
+ */
+function writeTimer(event, kind, from) {
+	return saying(store.write('POST', '/api/v1/timers', {
+		touches: ['/api/v1/timers'],
+		body: eventBody(event, kind, from)
+	}), t(text, kind === 'record' ? 'epg.event.record.set' : 'epg.event.zap.set', {
+		title: event.title,
+		when: dayAndClock(event.start)
+	}));
+}
+
+/**
+ * @param {Api.Event} event
+ * @returns {void}
+ */
+export function zapLater(event) {
+	ask(function () {
+		const from = boxNowSeconds();
+		if (isOver(event, from)) {
+			toast(t(text, 'epg.event.record.over'), 'bad');
+			return Promise.resolve(false);
+		}
+		if (isOnAir(event, from)) {
+			return saying(zap(event.channel_id), t(text, 'epg.event.zap.done', { title: event.title }));
+		}
+		return writeTimer(event, 'zapto', from);
+	});
 }
 
 // Judged again at the click, which can come long after the list was drawn.
@@ -122,18 +158,17 @@ export function zapTo(id, said) {
  * @param {Api.Event} event
  * @returns {void}
  */
-function recordNow(event) {
+export function recordEvent(event) {
 	ask(function () {
 		const from = boxNowSeconds();
 		if (from < event.start) {
-			route(timerHref(event, 'record'));
-			return Promise.resolve(false);
+			return writeTimer(event, 'record', from);
 		}
 		if (!isOnAir(event, from)) {
 			toast(t(text, 'epg.event.record.over'), 'bad');
 			return Promise.resolve(false);
 		}
-		return store.write('POST', '/api/v1/timers', {
+		return saying(store.write('POST', '/api/v1/timers', {
 			touches: kRecordTouches,
 			body: {
 				kind: 'immediate-record',
@@ -144,8 +179,8 @@ function recordNow(event) {
 				epg_id: event.id,
 				epg_start: event.start
 			}
-		});
-	}, t(text, 'epg.event.record.done', { title: event.title }));
+		}), t(text, 'epg.event.record.done', { title: event.title }));
+	});
 }
 
 /**
@@ -157,7 +192,7 @@ export function eventActions(props) {
 	const event = props.event;
 	const onAir = isOnAir(event, props.at);
 	/* A PROGRAMME THAT HAS ENDED OFFERS NEITHER A RECORDING NOR A TIMER. The
-	   box would refuse a timer in the past and recordNow would only say the
+	   box would refuse a timer in the past and recordEvent would only say the
 	   programme is over, so a control that leads there is a control that
 	   cannot work. It stays in its place, disabled, so that the marks of a
 	   list of rows still stand in their columns; the details and the day
@@ -181,14 +216,14 @@ export function eventActions(props) {
 			id: 'record',
 			label: t(text, 'epg.event.record.now'),
 			mark: '⏺︎',
-			onAct: function () { recordNow(event); }
+			onAct: function () { recordEvent(event); }
 		}
 		: {
 			id: 'record',
 			label: t(text, 'epg.event.record.timer'),
 			mark: '⏺︎',
 			disabled: over,
-			onAct: function () { if (!over) route(timerHref(event, 'record')); }
+			onAct: function () { if (!over) recordEvent(event); }
 		});
 
 	actions.push(onAir
@@ -205,7 +240,7 @@ export function eventActions(props) {
 			label: t(text, 'epg.event.zap.timer'),
 			mark: '▶︎',
 			disabled: over,
-			onAct: function () { if (!over) route(timerHref(event, 'zapto')); }
+			onAct: function () { if (!over) zapLater(event); }
 		});
 
 	if (props.channelHref) {

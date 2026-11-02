@@ -55,7 +55,7 @@ loader.registerHooks({
 	},
 });
 
-const { createBody, changeBody, draftOf, emptyDraft, PLAIN_REPEATS } = await import('../../data/ni-web/app/screens/timers/list.model.js');
+const { createBody, changeBody, draftOf, emptyDraft, PLAIN_REPEATS, eventBody, draftFromAddress } = await import('../../data/ni-web/app/screens/timers/list.model.js');
 const { timerRepeat } = await import('../../data/ni-web/app/fmt.js');
 const { text } = await import('../../data/ni-web/app/data.text.js');
 
@@ -132,6 +132,32 @@ function momentOf(at) {
 	const body = createBody(recording(NOW - HOUR, 0), NOW);
 	same(body.recording_safety, true, 'a running programme still asks for the margins');
 	same(body.auto_adjust, false, 'but not to be followed, there being nothing ahead to follow');
+}
+
+// ---------------------------------------- a guide entry made a timer at the press
+//
+// No form in between, and the same body as the form sends for that entry left as
+// it was opened, so the two ways in make the same timer.
+
+{
+	const entry = { id: 'b4cc03fd00016eac0000', channel_id: 'b4cc03fd00016eac', title: 'Tatort',
+		start: NOW + 2 * HOUR + 30, duration: 90 * 60 };
+	const asked = { kind: 'record', channel: entry.channel_id, epg: entry.id, title: entry.title,
+		start: entry.start, stop: entry.start + entry.duration };
+	const record = eventBody(entry, 'record', NOW);
+	same(record, createBody(draftFromAddress(asked, NOW), NOW), 'a recording at the press is the body the form sends');
+	same(record.kind, 'record', 'and is a recording');
+	same(record.channel_id, entry.channel_id, 'on the channel of the entry');
+	same(record.start, NOW + 2 * HOUR, 'beginning at the entry\'s minute, as the form\'s field holds it');
+	same(record.stop, NOW + 2 * HOUR + 90 * 60, 'for the length of the entry');
+	same([record.epg_id, record.epg_start], [entry.id, entry.start], 'naming the entry it came from');
+	same([record.recording_safety, record.auto_adjust], [true, true], 'with the margins, and following it');
+
+	const zap = eventBody(entry, 'zapto', NOW);
+	same(zap, createBody(draftFromAddress(Object.assign({}, asked, { kind: 'zapto' }), NOW), NOW),
+		'a switch at the press is the body the form sends');
+	same([zap.kind, zap.channel_id, zap.start], ['zapto', entry.channel_id, NOW + 2 * HOUR], 'a switch to that channel at that minute');
+	same([zap.stop, zap.recording_safety], [undefined, undefined], 'with no end and no margins');
 }
 
 // ------------------------------------------------------- every other kind of timer
