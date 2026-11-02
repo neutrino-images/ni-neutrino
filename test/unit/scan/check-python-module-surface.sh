@@ -66,17 +66,27 @@ if [ "$rn" -lt 15 ]; then
 fi
 
 # One name per line, with the line it was read on, out of every "from neutrino
-# import" a plugin carries. A plugin file is read as the tree holds it, so a CR
-# before the newline is taken off the name it would otherwise sit at the end of.
+# import" a plugin carries. The list may be written inside brackets, over as
+# many lines as it takes, so it is read to the line that closes the bracket;
+# the line it started on is the one written down. A plugin file is read as the
+# tree holds it, so a CR before the newline is taken off the name it would
+# otherwise sit at the end of.
 awk '
-	/^[ \t]*from[ \t]+neutrino[ \t]+import[ \t]/ {
+	/^[ \t]*from[ \t]+neutrino[ \t]+import/ {
 		line = $0
-		sub(/^[ \t]*from[ \t]+neutrino[ \t]+import[ \t]+/, "", line)
+		first = FNR
+		sub(/^[ \t]*from[ \t]+neutrino[ \t]+import[ \t]*/, "", line)
+		while (line ~ /\(/ && line !~ /\)/) {
+			if (getline <= 0)
+				break
+			line = line " " $0
+		}
+		gsub(/[()]/, "", line)
 		sub(/[ \t\r]*(#.*)?$/, "", line)
 		n = split(line, parts, /[ \t]*,[ \t]*/)
 		for (i = 1; i <= n; i++)
 			if (parts[i] != "")
-				printf "%s\t%s:%d\n", parts[i], FILENAME, FNR
+				printf "%s\t%s:%d\n", parts[i], FILENAME, first
 	}
 ' "$@" > "$tmp/imported"
 

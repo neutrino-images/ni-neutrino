@@ -259,7 +259,7 @@ def test_video():
 
 def test_threads():
 	code = ("import time\n"
-		"time.sleep(0.2)\n"
+		"time.sleep(1)\n"
 		"result = 'worker ' + str(argv[0])\n")
 	t = threads.new(code, "one")
 	check("threads", "new(code, 'one')", lambda: t)
