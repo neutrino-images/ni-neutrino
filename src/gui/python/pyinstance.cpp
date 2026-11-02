@@ -425,6 +425,7 @@ void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *
 	pthread_mutex_unlock(&running_mutex);
 
 	PyObject *res = PyRun_FileExFlags(fp, fileName, Py_file_input, globals, globals, 1, NULL);
+printf("[pytrace] runScript: the script returned (%s)\n", res != NULL ? "ok" : "failed");
 
 	pthread_mutex_lock(&running_mutex);
 	running_thread_ident = 0;
@@ -461,12 +462,17 @@ void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *
 	 * or that took the screen. What they add where the video is blank,
 	 * the rezap of the channel, belongs to the video binding and comes
 	 * with it. */
+printf("[pytrace] runScript: before the restore, blocked %d playing %d\n",
+       (int)CMoviePlayerGui::getInstance().getBlockedFromPlugin(),
+       (int)CMoviePlayerGui::getInstance().Playing());
 	if (CMoviePlayerGui::getInstance().getBlockedFromPlugin()) {
 		CMoviePlayerGui::getInstance().setBlockedFromPlugin(false);
 		CMoviePlayerGui::getInstance().restoreNeutrino();
 	}
+printf("[pytrace] runScript: after the restore\n");
 
 	PyGILState_Release(gstate);
+printf("[pytrace] runScript: done\n");
 }
 
 // Example: runScript(fileName, "Arg1", "Arg2", "Arg3", ..., NULL);

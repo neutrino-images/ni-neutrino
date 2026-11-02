@@ -1273,12 +1273,16 @@ int CMoviePlayerGui::exec(CMenuTarget * parent, const std::string & actionKey)
 		while (repeat_mode || filelist_it != filelist.end());
 	}
 	selecting = false;
+printf("[pytrace] exec: play done, entering the tail\n");
 
 	bookmarkmanager->flush();
+printf("[pytrace] exec: bookmarks flushed\n");
 
 	exec_controlscript(MOVIEPLAYER_END_SCRIPT);
+printf("[pytrace] exec: control script run\n");
 
 	CVFD::getInstance()->setMode(CVFD::MODE_TVRADIO);
+printf("[pytrace] exec: vfd back to TVRADIO\n");
 
 	if (timeshift != TSHIFT_MODE_OFF){
 		timeshift = TSHIFT_MODE_OFF;

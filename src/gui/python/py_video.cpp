@@ -223,11 +223,14 @@ PyObject *CPythonInstVideo::PlayFile(PyObject *self, PyObject *args, PyObject *k
 		CMoviePlayerGui::getInstance().setPythonInfoFunc((PyObject *)self, true);
 	CMoviePlayerGui::getInstance().SetFile(title, file, info1, info2, file2);
 	CMoviePlayerGui::getInstance().exec(NULL, "http_lua");
+printf("[pytrace] py PlayFile: the play returned\n");
 	CMoviePlayerGui::getInstance().setPythonInfoFunc(NULL, false);
+printf("[pytrace] py PlayFile: info func cleared\n");
 	if (D->infoFunc != NULL && D->infoFunc != Py_None)
 		Py_CLEAR(D->infoFunc);
 
 	int ret = CMoviePlayerGui::getInstance().getKeyPressed();
+printf("[pytrace] py PlayFile: key %d, returning to the script\n", ret);
 	return PyLong_FromLong(ret);
 }
 
