@@ -30,7 +30,10 @@
 #include <gui/personalize.h>
 
 //enum PERSONALIZE_SETTINGS to find in settings.h
-const struct personalize_settings_t personalize_settings[SNeutrinoSettings::P_SETTINGS_MAX] =
+/* An entry for every P_* the enum names, in the order the enum names them:
+   the loops that load and save the personalisation walk it up to
+   P_SETTINGS_MAX. The assert below is what holds that to the enum. */
+const struct personalize_settings_t personalize_settings[] =
 {
 	{"personalize_pinstatus"		, CPersonalizeGui::PERSONALIZE_PROTECT_MODE_NOT_PROTECTED},
 	
@@ -55,6 +58,7 @@ const struct personalize_settings_t personalize_settings[SNeutrinoSettings::P_SE
 #endif
 	{"personalize_scripts"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
 	{"personalize_lua"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
+	{"personalize_python"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
 	{"personalize_settings"			, CPersonalizeGui::PERSONALIZE_PROTECT_MODE_NOT_PROTECTED},
 	{"personalize_service"			, CPersonalizeGui::PERSONALIZE_PROTECT_MODE_NOT_PROTECTED},
 	{"personalize_sleeptimer"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE}, // legacy layout default; power-off submenu is opt-in
@@ -123,6 +127,7 @@ const struct personalize_settings_t personalize_settings[SNeutrinoSettings::P_SE
 	{"personalize_usermenu_plugin_type_tools"	, true},
 	{"personalize_usermenu_plugin_type_scripts"	, false},
 	{"personalize_usermenu_plugin_type_lua"		, true},
+	{"personalize_usermenu_plugin_type_python"	, true},
 };
 
 CScanSettings::CScanSettings(void)
@@ -259,3 +264,13 @@ bool CScanSettings::saveSettings(const char * const fileName)
 
 	return true;
 }
+
+/* The table is read up to P_SETTINGS_MAX, so a P_* left out of it would be a
+   row whose name is NULL: the startup loop hands that name to the settings
+   file, and a std::string built from it aborts the program. With the array
+   left unsized the count is the initialisers', and this is where it is held
+   to the enum. */
+static_assert(sizeof(personalize_settings) / sizeof(personalize_settings[0]) ==
+	      SNeutrinoSettings::P_SETTINGS_MAX,
+	      "personalize_settings must have an entry for every P_SETTINGS entry");
+

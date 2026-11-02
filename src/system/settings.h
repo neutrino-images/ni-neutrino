@@ -1424,7 +1424,9 @@ struct SNeutrinoSettings
 	int mode_left_right_key_tv;
 };
 
-extern const struct personalize_settings_t personalize_settings[SNeutrinoSettings::P_SETTINGS_MAX];
+/* Sized by the enum, so an entry left out is a compile error rather than a
+   row whose name is NULL, which the loop that reads it would hand on. */
+extern const struct personalize_settings_t personalize_settings[];
 
 //#define FILESYSTEM_ENCODING_TO_UTF8(a) (g_settings.filesystem_is_utf8 ? (a) : ZapitTools::Latin1_to_UTF8(a).c_str())
 #define FILESYSTEM_ENCODING_TO_UTF8(a) (isUTF8(a) ? (a) : ZapitTools::Latin1_to_UTF8(a).c_str())
