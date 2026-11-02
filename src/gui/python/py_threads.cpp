@@ -161,8 +161,11 @@ void CPythonInstThreads::ThreadDelete(PyObject *self)
 	if (o->d != NULL && o->d->started && !o->d->detached)
 	{
 		/* a thread nobody joined is waited for, so that nothing it holds is
-		   let go of while it still runs */
+		   let go of while it still runs, and the wait lets the interpreter
+		   go, since the thread needs it in order to finish */
+		Py_BEGIN_ALLOW_THREADS
 		pthread_join(o->d->thread, NULL);
+		Py_END_ALLOW_THREADS
 	}
 	delete o->d;
 	o->d = NULL;
@@ -305,7 +308,13 @@ PyObject *CPythonInstThreads::ThreadStart(PyObject *self, PyObject *args, PyObje
 	T->joined = false;
 	T->started = true;
 
-	if (pthread_create(&T->thread, NULL, CPythonInstThreads::runThread, (void *)T) != 0)
+	/* the thread is let go of here so that it can take the interpreter and
+	 * run, which it is waiting to do as soon as it is made */
+	int created = 0;
+	Py_BEGIN_ALLOW_THREADS
+	created = pthread_create(&T->thread, NULL, CPythonInstThreads::runThread, (void *)T);
+	Py_END_ALLOW_THREADS
+	if (created != 0)
 	{
 		T->started = false;
 		PyErr_SetString(PyExc_RuntimeError, "the thread could not be started");
@@ -338,8 +347,14 @@ PyObject *CPythonInstThreads::ThreadJoin(PyObject *self, PyObject *args, PyObjec
 
 	if (timeout < 0)
 	{
-		if (pthread_join(T->thread, NULL) == 0)
-			T->joined = true;
+		/* the thread runs Python and needs the interpreter to do it, so a
+		 * wait that held on to the interpreter would be waiting for what
+		 * cannot run until it is let go of */
+		bool joined = false;
+		Py_BEGIN_ALLOW_THREADS
+		joined = (pthread_join(T->thread, NULL) == 0);
+		Py_END_ALLOW_THREADS
+		T->joined = joined;
 		Py_RETURN_NONE;
 	}
 
@@ -354,10 +369,17 @@ PyObject *CPythonInstThreads::ThreadJoin(PyObject *self, PyObject *args, PyObjec
 		long long now_ms = (long long)now.tv_sec * 1000 + now.tv_usec / 1000;
 		if (now_ms >= end_ms)
 			Py_RETURN_NONE;
+		Py_BEGIN_ALLOW_THREADS
 		usleep(10000);
+		Py_END_ALLOW_THREADS
 	}
-	if (pthread_join(T->thread, NULL) == 0)
-		T->joined = true;
+	{
+		bool joined = false;
+		Py_BEGIN_ALLOW_THREADS
+		joined = (pthread_join(T->thread, NULL) == 0);
+		Py_END_ALLOW_THREADS
+		T->joined = joined;
+	}
 	Py_RETURN_NONE;
 }
 
