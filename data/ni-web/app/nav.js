@@ -40,6 +40,20 @@ export function visibleAreas(all, build) {
 	});
 }
 
+/* THE NUMBER BESIDE A DESTINATION, as it is drawn: nothing for none, and two
+   figures at most, because the mark is a circle the size of a capital letter
+   and a third figure makes it a pill that pushes the row apart. Ninety nine
+   timers are a box nobody counts any more. */
+/**
+ * @param {number | null | undefined} n
+ * @returns {string}
+ */
+export function countMark(n) {
+	if (typeof n !== 'number' || !Number.isFinite(n) || n < 1)
+		return '';
+	return n > 99 ? '99+' : String(Math.floor(n));
+}
+
 /**
  * @param {string} id
  * @returns {Web.NavArea | null}

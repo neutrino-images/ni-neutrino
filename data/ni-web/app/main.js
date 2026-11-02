@@ -38,6 +38,7 @@ import * as store from './store.js';
 import { watchOnAir } from './guideclock.js';
 import { toast } from './ui/toast.js';
 import { watchApplyFailed } from './screens/settings/applyfailed.js';
+import { setTimers } from './screens/timers/nav.js';
 
 // The header's progress share moves with the clock and not with any event.
 const CLOCK_MS = 60000;
@@ -107,7 +108,7 @@ function App() {
 	/* Said and not left to the first value: every member of this starts empty,
 	   so what it would settle on is a frame that can only ever be empty. */
 	const [status, setStatus] = useState(/** @type {Web.ShellStatus} */ ({
-		channel: null, event: null, recordings: [], standby: null, session: null, build: null, carrying: false,
+		channel: null, event: null, recordings: [], standby: null, session: null, build: null, carrying: false, timers: 0,
 	}));
 	// The words on screen change when the language does, and nothing else does,
 	// so the frame is drawn again and the catalogue answers differently.
@@ -136,7 +137,7 @@ function App() {
 				setStatus(function (was) {
 					return {
 						channel: was.channel, event: was.event, recordings: was.recordings, standby: was.standby,
-						session: granted, build: was.build, carrying: was.carrying,
+						session: granted, build: was.build, carrying: was.carrying, timers: was.timers,
 					};
 				});
 		}
@@ -150,7 +151,7 @@ function App() {
 				setStatus(function (was) {
 					return {
 						channel: was.channel, event: was.event, recordings: was.recordings, standby: was.standby,
-						session: was.session, build: build, carrying: was.carrying,
+						session: was.session, build: build, carrying: was.carrying, timers: was.timers,
 					};
 				});
 		});
@@ -162,7 +163,7 @@ function App() {
 				setStatus(function (was) {
 					return {
 						channel: channel, event: was.event, recordings: was.recordings, standby: was.standby,
-						session: was.session, build: was.build, carrying: was.carrying,
+						session: was.session, build: was.build, carrying: was.carrying, timers: was.timers,
 					};
 				});
 			}
@@ -177,7 +178,32 @@ function App() {
 				setStatus(function (was) {
 					return {
 						channel: was.channel, event: was.event, recordings: recordings, standby: was.standby,
-						session: was.session, build: was.build, carrying: was.carrying,
+						session: was.session, build: was.build, carrying: was.carrying, timers: was.timers,
+					};
+				});
+			}
+		});
+
+		/* How many timers are set, for the number beside the destination in
+		   the bar. The list's own answer and not one of its own, so the screen
+		   and the bar read the same entry: the box's event invalidates it, and
+		   a timer removed on the list is put into it before the box has said.
+		   A request that may not read timers is refused, and refused draws no
+		   number rather than a nought.
+
+		   Held while the entry is asked again, which it is after every event
+		   about timers: a number that went out and came back at each of them
+		   would blink in the corner of the eye. */
+		const stopTimers = store.watch('GET', '/api/v1/timers', null, function (snapshot) {
+			if (alive && snapshot.state !== store.LOADING) {
+				const answer = snapshot.state === store.READY ? snapshot.data : null;
+				const timers = setTimers((answer && answer.items) || []);
+				setStatus(function (was) {
+					if (was.timers === timers)
+						return was;
+					return {
+						channel: was.channel, event: was.event, recordings: was.recordings, standby: was.standby,
+						session: was.session, build: was.build, carrying: was.carrying, timers: timers,
 					};
 				});
 			}
@@ -190,7 +216,7 @@ function App() {
 				setStatus(function (was) {
 					return {
 						channel: was.channel, event: was.event, recordings: was.recordings, standby: mode,
-						session: was.session, build: was.build, carrying: was.carrying,
+						session: was.session, build: was.build, carrying: was.carrying, timers: was.timers,
 					};
 				});
 			}
@@ -207,7 +233,7 @@ function App() {
 				setStatus(function (was) {
 					return {
 						channel: was.channel, event: null, recordings: was.recordings, standby: was.standby,
-						session: was.session, build: was.build, carrying: was.carrying,
+						session: was.session, build: was.build, carrying: was.carrying, timers: was.timers,
 					};
 				});
 				return;
@@ -223,7 +249,7 @@ function App() {
 					setStatus(function (was) {
 						return {
 							channel: was.channel, event: event, recordings: was.recordings, standby: was.standby,
-							session: was.session, build: was.build, carrying: was.carrying,
+							session: was.session, build: was.build, carrying: was.carrying, timers: was.timers,
 						};
 					});
 				}
@@ -245,7 +271,7 @@ function App() {
 						return was;
 					return {
 						channel: was.channel, event: was.event, recordings: was.recordings, standby: was.standby,
-						session: was.session, build: was.build, carrying: stream.carrying,
+						session: was.session, build: was.build, carrying: stream.carrying, timers: was.timers,
 					};
 				});
 		});
@@ -263,6 +289,7 @@ function App() {
 			stopChannel();
 			stopRecordings();
 			stopStandby();
+			stopTimers();
 			stopChannelForEvent();
 			stopEvent();
 			stopWatching();

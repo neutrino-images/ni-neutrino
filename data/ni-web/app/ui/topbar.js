@@ -16,7 +16,7 @@
 import { html, Link, useState, useEffect, useLayoutEffect, useRef, useId } from '../runtime.js';
 import { t } from '../i18n.js';
 import text from '../shell.text.js';
-import { labelOf, hrefFor } from '../nav.js';
+import { labelOf, hrefFor, countMark } from '../nav.js';
 import { askToSignIn, signOut } from './signin.js';
 import { SIZES, chosen, choose } from './textsize.js';
 import { THEMES, chosenTheme, chooseTheme } from './theme.js';
@@ -320,24 +320,42 @@ export function Status(props) {
    says "and then there is this"; a coloured button in a row of plain ones says
    "this is the one you are on", which is a statement this row already makes
    with the attribute above and must not make twice. */
+/* A NUMBER BESIDE A DESTINATION, drawn as a small circle at the end of its
+   name. Only the timers carry one, and only while there are timers set: a
+   nought in the bar is a mark that says nothing and is still a mark.
+
+   The circle is not what is read out. A reader meeting "Timer 3" cannot tell
+   three of what, so the link is named in a sentence and the figure itself is
+   hidden from it. */
+/** @type {Record<string, string>} */
+const COUNTED = { timers: 'shell.count.timers' };
+
 /**
  * @param {{
  *   areas?: readonly Web.NavArea[],
- *   activeArea?: string
+ *   activeArea?: string,
+ *   counts?: Record<string, number>
  * }} props
  * @returns {Web.Drawn}
  */
 export function AreaTabs(props) {
 	const areas = props.areas || [];
+	const counts = props.counts || {};
 
 	return html`<nav class="areas" aria-label=${t(text, 'shell.areas')}>
 		${areas.map(function (area) {
 			const here = area.id === props.activeArea;
+			const said = COUNTED[area.id];
+			const mark = said ? countMark(counts[area.id]) : '';
+			const label = labelOf(area);
 			return html`<${Link}
 				key=${area.id}
 				href=${hrefFor(area.id)}
 				class=${area.apart ? 'apart' : null}
-				data-current=${here ? 'page' : null}>${labelOf(area)}<//>`;
+				aria-label=${mark ? t(text, said, { area: label, n: mark }) : null}
+				data-current=${here ? 'page' : null}>${label}${mark
+					? html`<span class="area-count" aria-hidden="true">${mark}</span>`
+					: null}<//>`;
 		})}
 	</nav>`;
 }
@@ -479,7 +497,10 @@ export function Topbar(props) {
 			<span class="brand">
 				<${Mark} carrying=${!!(status && status.carrying)} />${t(text, 'shell.brand')}
 			</span>
-			<${AreaTabs} areas=${props.areas} activeArea=${props.activeArea} />
+			<${AreaTabs}
+				areas=${props.areas}
+				activeArea=${props.activeArea}
+				counts=${{ timers: status ? status.timers : 0 }} />
 			<${OnAir}
 				channel=${status ? status.channel : null}
 				event=${props.event}

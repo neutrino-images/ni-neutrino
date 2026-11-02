@@ -70,6 +70,16 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
 .areas a.apart::before { content: ""; position: absolute; left: 0; top: 50%;
 	transform: translateY(-50%); width: 1px; height: 0.8125rem; background: var(--line); }
 
+/* How many timers are set, as a small circle after the name. The accent and
+   not the red: the red is the box writing to a disc, and a timer that is only
+   waiting is not that. A circle while it holds one figure and a pill once it
+   holds two, sized in the root's fractions so it grows with the writing. */
+.areas a .area-count { display: inline-block; min-width: 1.125rem; height: 1.125rem;
+	margin-left: var(--gap-1); padding: 0 0.3125rem; box-sizing: border-box;
+	border-radius: var(--radius-pill); background: var(--accent); color: var(--accent-ink);
+	font-size: var(--fs-2xs); font-weight: 500; line-height: 1.125rem; text-align: center;
+	vertical-align: 0.0625rem; font-variant-numeric: tabular-nums; }
+
 /* Who is signed in, and the only place on the page that says anything about
    it. Signed in it is a quiet pill carrying the name; signed out it is one
    button and no sentence beside it. What needs a session says so when it is
