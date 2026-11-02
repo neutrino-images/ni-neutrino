@@ -366,7 +366,9 @@ bool CPyMenuObserver::changeNotify(const std::string &optionName, void *data)
 	return repaint;
 }
 
-/* m.addKey(action=callable, id="", directkey=RC["nokey"]) */
+/* m.addKey(action=callable, id="", directkey=RC[...]), where a direct key is
+ * one of the keys the RC table names; the row is made without one, which is
+ * what the Lua binding's RC_nokey default is, where none is given. */
 PyObject *CPythonInstMenu::MenuAddKey(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	CPyMenu *D = menuOf(self);

@@ -128,7 +128,8 @@ def test_constants():
 		check("constants", "%s (%d entries)" % (name, len(table)),
 		      lambda t=table: ", ".join(sorted(t)[:3]))
 	check("constants", "APIVERSION['MAJOR']", lambda: APIVERSION["MAJOR"])
-	check("constants", "RC['OK']", lambda: RC["OK"])
+	check("constants", "RC['tv']", lambda: RC["tv"])
+	check("constants", "RC['info']", lambda: RC["info"])
 	check("constants", "CURL['OK']", lambda: CURL["OK"])
 	check("constants", "MENU_RETURN['EXIT']", lambda: MENU_RETURN["EXIT"])
 	check("constants", "PLAYSTATE['NORMAL']", lambda: PLAYSTATE["NORMAL"])
@@ -156,7 +157,8 @@ def test_misc():
 	# the volume is set to what it already is, and the mute icon to what the
 	# box already says, so that a test leaves the box where it found it
 	check("misc", "setVolume(getVolume())", lambda: m.setVolume(volume=m.getVolume()))
-	check("misc", "AudioMute(isMuted())", lambda: m.AudioMute(enable=m.isMuted()))
+	check("misc", "AudioMute(isMuted())",
+	      lambda: m.AudioMute(newValue=m.isMuted()))
 	check("misc", "enableMuteIcon(isMuted())",
 	      lambda: m.enableMuteIcon(enable=m.isMuted()))
 
@@ -193,19 +195,24 @@ def test_filehelpers():
 	f = filehelpers.new()
 	check("filehelpers", "new()", lambda: f)
 	check("filehelpers", "mkdir", lambda: f.mkdir(dir=SCRATCH + "/sub"))
-	check("filehelpers", "exist (the directory)", lambda: f.exist(file=SCRATCH + "/sub"))
+	check("filehelpers", "exist (the directory, as a directory)",
+	      lambda: f.exist(file=SCRATCH + "/sub", flags="d"))
+	check("filehelpers", "exist (a name that is not there)",
+	      lambda: f.exist(file=SCRATCH + "/sub/nothing", flags="f"))
 	check("filehelpers", "touch", lambda: f.touch(file=SCRATCH + "/sub/one"))
 	check("filehelpers", "cp", lambda: f.cp(**{"from": SCRATCH + "/sub/one",
 						   "to": SCRATCH + "/sub/two"}))
 	check("filehelpers", "ln", lambda: f.ln(src=SCRATCH + "/sub/two",
-						link=SCRATCH + "/sub/link"))
+						link=SCRATCH + "/sub/link", flags="s"))
 	check("filehelpers", "readlink", lambda: f.readlink(link=SCRATCH + "/sub/link"))
+	check("filehelpers", "exist (the link, as a link)",
+	      lambda: f.exist(file=SCRATCH + "/sub/link", flags="l"))
 	check("filehelpers", "chmod", lambda: f.chmod(file=SCRATCH + "/sub/two", mode=0o644))
-	check("filehelpers", "empty (of a directory that has something in it)",
-	      lambda: f.empty(dir=SCRATCH + "/sub"))
+	check("filehelpers", "empty (of a file that holds nothing)",
+	      lambda: f.empty(file=SCRATCH + "/sub/two"))
 	check("filehelpers", "rmdir", lambda: f.rmdir(dir=SCRATCH + "/sub"))
 	check("filehelpers", "exist (the directory, gone)",
-	      lambda: f.exist(file=SCRATCH + "/sub"))
+	      lambda: f.exist(file=SCRATCH + "/sub", flags="d"))
 
 
 # ------------------------------------------------------------------- curl
@@ -296,7 +303,7 @@ def test_menu():
 	check_screen("menu", "addItem(back)/addItem(cancel)",
 		     lambda: m.addItem(type="back"))
 	check_screen("menu", "addKey",
-		     lambda: m.addKey(id="key",
+		     lambda: m.addKey(id="key", directkey=RC["tv"],
 				      action=lambda item: MENU_RETURN["REPAINT"]))
 	check_screen("menu", "setName", lambda: m.setName(name="menu: renamed"))
 	check_screen("menu", "getSelected", lambda: m.getSelected())
