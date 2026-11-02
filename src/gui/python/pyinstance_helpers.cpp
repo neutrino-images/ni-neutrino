@@ -125,6 +125,22 @@ bool pyArgLong(PyObject *item, long &value)
 	return pyToLong(item, value);
 }
 
+/* A colour, a mask and the like are unsigned where a coordinate is not, so a
+ * value above LONG_MAX is one of those rather than an error: the Lua
+ * bindings read them with luaL_checkunsigned. */
+bool pyArgUnsigned(PyObject *item, unsigned long &value)
+{
+	if (item == NULL)
+		return false;
+	unsigned long v = PyLong_AsUnsignedLong(item);
+	if (v == (unsigned long)-1 && PyErr_Occurred()) {
+		PyErr_Clear();
+		return false;
+	}
+	value = v;
+	return true;
+}
+
 bool pyArgString(PyObject *item, std::string &value)
 {
 	if (item == NULL)
@@ -143,13 +159,10 @@ bool pyArgString(PyObject *item, std::string &value)
 
 bool pyLookupUnsigned(PyObject *kw, const char *what, unsigned long &value)
 {
-	long v = 0;
-	if (!pyLookupInt(kw, what, v))
+	PyObject *item = pyLookupKey(kw, what);
+	if (item == NULL)
 		return false;
-	if (v < 0)
-		v = 0;
-	value = (unsigned long)v;
-	return true;
+	return pyArgUnsigned(item, value);
 }
 
 /* Only a boolean, as the Lua bindings read a field they are told is one.

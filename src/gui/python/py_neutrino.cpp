@@ -245,7 +245,7 @@ PyObject *CPythonInstNeutrino::PaintBox(PyObject *self, PyObject *args, PyObject
 		PyErr_SetString(PyExc_RuntimeError, "window is gone");
 		return NULL;
 	}
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiiii|ii", (char **)kwlist, &x, &y, &w, &h, &c, &radius, &corner))
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiiik|ii", (char **)kwlist, &x, &y, &w, &h, &c, &radius, &corner))
 		return NULL;
 
 	/* those checks should be done in CFBWindow instead... */
@@ -276,7 +276,7 @@ PyObject *CPythonInstNeutrino::PaintHLineRel(PyObject *self, PyObject *args, PyO
 		PyErr_SetString(PyExc_RuntimeError, "window is gone");
 		return NULL;
 	}
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiii", (char **)kwlist, &x, &dx, &y, &c))
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiik", (char **)kwlist, &x, &dx, &y, &c))
 		return NULL;
 
 	if (x < 0)
@@ -304,7 +304,7 @@ PyObject *CPythonInstNeutrino::PaintVLineRel(PyObject *self, PyObject *args, PyO
 		PyErr_SetString(PyExc_RuntimeError, "window is gone");
 		return NULL;
 	}
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiii", (char **)kwlist, &x, &y, &dy, &c))
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiik", (char **)kwlist, &x, &y, &dy, &c))
 		return NULL;
 
 	if (x < 0)
@@ -366,12 +366,8 @@ PyObject *CPythonInstNeutrino::RenderString(PyObject *self, PyObject *args, PyOb
 		PyErr_SetString(PyExc_TypeError, "RenderString() takes a text, an x and a y");
 		return NULL;
 	}
-	long c_long = (long)COL_MENUCONTENT_TEXT;
 	if (numargs > 4 + step)
-	{
-		pyArgLong(PyTuple_GET_ITEM(args, 4 + step), c_long);
-		c = (unsigned long)c_long;
-	}
+		pyArgUnsigned(PyTuple_GET_ITEM(args, 4 + step), c);
 	if (numargs > 5 + step)
 		pyArgLong(PyTuple_GET_ITEM(args, 5 + step), w);
 	else
