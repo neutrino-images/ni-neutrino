@@ -6,6 +6,11 @@
  *	from neutrino import curl, CURL
  *	c = curl.new()
  *	ret, data = c.download(url="http://example.com")
+ *	query = c.setUriData("name", "a value", "other", "another")
+ *	text = c.encodeUri(data="a b/c")
+ *
+ * setUriData takes names and values in pairs and answers the query string
+ * they make, with the values escaped; the Lua binding's does the same.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

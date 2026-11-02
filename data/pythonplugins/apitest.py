@@ -223,7 +223,11 @@ def test_curl():
 	check("curl", "new()", lambda: c)
 	check("curl", "encodeUri('a b/c')", lambda: c.encodeUri(data="a b/c"))
 	check("curl", "decodeUri('a%20b%2Fc')", lambda: c.decodeUri(data="a%20b%2Fc"))
-	check("curl", "setUriData", lambda: c.setUriData(data="a b"))
+	check("curl", "setUriData('name', 'a value')",
+	      lambda: c.setUriData("name", "a value"))
+	check("curl", "setUriData('a', 'b', 'c', 'd')",
+	      lambda: c.setUriData("a", "b", "c", "d"))
+	check("curl", "setUriData, with nothing to set", lambda: c.setUriData())
 	check("curl", "download, the box's own web server",
 	      lambda: c.download(s=True, url=box))
 	check("curl", "download, to a file",
