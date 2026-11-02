@@ -336,7 +336,7 @@ PyObject *CPythonInstNeutrino::RenderString(PyObject *self, PyObject *args, PyOb
 	Py_ssize_t step = 0;
 	bool isDynFont = false;
 
-	if (numargs < 5)
+	if (numargs < 4)
 	{
 		PyErr_SetString(PyExc_TypeError, "RenderString() takes a font, a text, an x and a y");
 		return NULL;
@@ -356,27 +356,30 @@ PyObject *CPythonInstNeutrino::RenderString(PyObject *self, PyObject *args, PyOb
 	long x = 0, y = 0, w = 0, boxh = 0, center = 0;
 	unsigned long c = COL_MENUCONTENT_TEXT;
 
-	if (!pyArgString(PyTuple_GET_ITEM(args, 2 + step), text) ||
-	    !pyArgLong(PyTuple_GET_ITEM(args, 3 + step), x) ||
-	    !pyArgLong(PyTuple_GET_ITEM(args, 4 + step), y))
+	/* The Lua binding counts from its own first argument, which is the
+	 * window; the window is the method here, so every index it names after
+	 * the font is one further along than the argument tuple goes. */
+	if (!pyArgString(PyTuple_GET_ITEM(args, 1 + step), text) ||
+	    !pyArgLong(PyTuple_GET_ITEM(args, 2 + step), x) ||
+	    !pyArgLong(PyTuple_GET_ITEM(args, 3 + step), y))
 	{
 		PyErr_SetString(PyExc_TypeError, "RenderString() takes a text, an x and a y");
 		return NULL;
 	}
 	long c_long = (long)COL_MENUCONTENT_TEXT;
-	if (numargs > 5 + step)
+	if (numargs > 4 + step)
 	{
-		pyArgLong(PyTuple_GET_ITEM(args, 5 + step), c_long);
+		pyArgLong(PyTuple_GET_ITEM(args, 4 + step), c_long);
 		c = (unsigned long)c_long;
 	}
-	if (numargs > 6 + step)
-		pyArgLong(PyTuple_GET_ITEM(args, 6 + step), w);
+	if (numargs > 5 + step)
+		pyArgLong(PyTuple_GET_ITEM(args, 5 + step), w);
 	else
 		w = W->fbwin->dx - x;
+	if (numargs > 6 + step)
+		pyArgLong(PyTuple_GET_ITEM(args, 6 + step), boxh);
 	if (numargs > 7 + step)
-		pyArgLong(PyTuple_GET_ITEM(args, 7 + step), boxh);
-	if (numargs > 8 + step)
-		pyArgLong(PyTuple_GET_ITEM(args, 8 + step), center);
+		pyArgLong(PyTuple_GET_ITEM(args, 7 + step), center);
 
 	int rwidth = font->getRenderWidth(text);
 
@@ -407,7 +410,7 @@ PyObject *CPythonInstNeutrino::GetRenderWidth(PyObject *self, PyObject *args, Py
 	Py_ssize_t step = 0;
 	bool isDynFont = false;
 
-	if (numargs < 3)
+	if (numargs < 2)
 	{
 		PyErr_SetString(PyExc_TypeError, "getRenderWidth() takes a font and a text");
 		return NULL;
@@ -424,7 +427,7 @@ PyObject *CPythonInstNeutrino::GetRenderWidth(PyObject *self, PyObject *args, Py
 		return PyLong_FromLong(0); /* no font found */
 
 	std::string text = "";
-	if (!pyArgString(PyTuple_GET_ITEM(args, 2 + step), text))
+	if (!pyArgString(PyTuple_GET_ITEM(args, 1 + step), text))
 	{
 		PyErr_SetString(PyExc_TypeError, "getRenderWidth() takes a text");
 		return NULL;
@@ -447,7 +450,7 @@ PyObject *CPythonInstNeutrino::FontHeight(PyObject *self, PyObject *args, PyObje
 	Py_ssize_t step = 0;
 	bool isDynFont = false;
 
-	if (numargs < 2)
+	if (numargs < 1)
 	{
 		PyErr_SetString(PyExc_TypeError, "FontHeight() takes a font");
 		return NULL;
