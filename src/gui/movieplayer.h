@@ -305,6 +305,9 @@ class CMoviePlayerGui : public CMenuTarget
 	void showHelp(void);
 	void callInfoViewer(bool init_vzap_it = true);
 	void fillPids();
+#if HAVE_CST_HARDWARE
+	void fixAudioTypes();
+#endif
 	bool getAudioName(int pid, std::string &apidtitle);
 	void getCurrentAudioName( bool file_player, std::string &audioname);
 	void addAudioFormat(int count, std::string &apidtitle, bool& enabled );

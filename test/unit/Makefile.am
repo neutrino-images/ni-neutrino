@@ -145,6 +145,7 @@ coreapi_tests_SOURCES = \
 	zapit/test_zapitclient_bouquetwrite.cpp \
 	system/test_atomicfile.cpp \
 	driver/test_postmsg.cpp \
+	driver/test_tsaudiotype.cpp \
 	coreapi/test_eventbus.cpp \
 	coreapi/test_messagebridge.cpp \
 	coreapi/test_channels.cpp \
@@ -260,6 +261,8 @@ coreapi_tests_SOURCES = \
 # rcinput.o carries the message queue under test; abstime.o is the only object it
 # needs besides the stubs in test_postmsg.cpp. commandsink_real.o comes out of the
 # archive with it, which is why that adapter lives in a file of its own.
+# tsaudiotype.o reads the audio type of a recording from its frames and needs
+# nothing besides the C library.
 # The timer daemon's client is linked for the same reason as the channel object:
 # what a list read does with an answer that stops early is its own logic.
 # httptool.o is the client the box talks to another box with, and the cases that
@@ -304,6 +307,7 @@ coreapi_tests_LDADD = \
 	$(top_builddir)/src/zapit/client/libzapitclient.a \
 	$(top_builddir)/src/driver/rcinput.o \
 	$(top_builddir)/src/driver/abstime.o \
+	$(top_builddir)/src/driver/tsaudiotype.o \
 	$(top_builddir)/lib/libmd5sum/libmd5sum.a \
 	$(top_builddir)/lib/libconfigfile/libconfigfile.a \
 	$(top_builddir)/lib/timerdclient/libtimerdclient.a \

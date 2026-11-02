@@ -62,6 +62,7 @@
 #include <driver/abstime.h>
 #include <driver/record.h>
 #include <driver/fontrenderer.h>
+#include <driver/tsaudiotype.h>
 #include <eitd/edvbstring.h>
 #include <system/helpers.h>
 #include <system/helpers-json.h>
@@ -1464,7 +1465,37 @@ void CMoviePlayerGui::fillPids()
 			currentac3 = p_movie_info->audioPids[i].atype;
 		}
 	}
+#if HAVE_CST_HARDWARE
+	if (timeshift == TSHIFT_MODE_OFF)
+		fixAudioTypes();
+#endif
 }
+
+#if HAVE_CST_HARDWARE
+/* The decoder here plays an audio pid only with the type it really has, and
+ * the xml of a recording made before the audio types were renumbered in 2021
+ * names the wrong one. The frames in the file say which it is. */
+void CMoviePlayerGui::fixAudioTypes()
+{
+	if (numpida == 0 || file_name.empty())
+		return;
+
+	std::vector<uint16_t> pids(apids, apids + numpida);
+	std::map<uint16_t, int> types;
+	if (!tsaudiotype::detectFile(file_name, pids, types))
+		return;
+
+	for (unsigned int i = 0; i < numpida; i++) {
+		std::map<uint16_t, int>::const_iterator t = types.find(apids[i]);
+		if (t == types.end() || t->second == ac3flags[i])
+			continue;
+		printf("%s: apid 0x%x type %d in the xml, %d in the file\n", __func__, apids[i], ac3flags[i], t->second);
+		ac3flags[i] = t->second;
+		if (apids[i] == currentapid)
+			currentac3 = t->second;
+	}
+}
+#endif
 
 void CMoviePlayerGui::Cleanup()
 {
@@ -3755,6 +3786,16 @@ void CMoviePlayerGui::PlayFileEnd(bool restore)
 		cGLCD::lockEnd("00:00");
 	}
 #endif
+
+#if HAVE_CST_HARDWARE
+	/* the older AC3 audio type is meant for the recording just played;
+	 * the next one starts with the type stored in it */
+	if (this == instance_mp && g_settings.movieplayer_select_ac3_atype0) {
+		g_settings.movieplayer_select_ac3_atype0 = false;
+		printf("%s: AC3 audio type reset to default\n", __func__);
+	}
+#endif
+
 	if (iso_file) {
 		iso_file = false;
 		if (umount2(ISO_MOUNT_POINT, MNT_FORCE))

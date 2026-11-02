@@ -46,6 +46,7 @@ coreapi/test_system.cpp	0
 coreapi/test_timers.cpp	0
 coreapi/test_tuner.cpp	0
 driver/test_postmsg.cpp	0
+driver/test_tsaudiotype.cpp	0
 httpd/compat/test_compat_hook.cpp	0
 httpd/compat/test_compat_legacyconfig.cpp	0
 httpd/compat/test_compat_levels.cpp	0
