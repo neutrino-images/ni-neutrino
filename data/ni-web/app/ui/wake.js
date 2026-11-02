@@ -6,6 +6,9 @@ import { api } from '../api.js';
 import { ensureCss } from '../css.js';
 import { t } from '../i18n.js';
 import { Dialog } from './dialog.js';
+import { Switch } from './switch.js';
+import { tvFollows } from './power.js';
+import shell from '../shell.text.js';
 import text from './wake.text.js';
 
 const kInStandby = '/errors/box-in-standby';
@@ -29,11 +32,16 @@ const kGonePause = 250;
  *   topic: Topic,
  *   what: WakeFor,
  *   recordings: Api.Recording[],
+ *   tv: boolean,
  *   resolve: (said: Said) => void
- * }} Asker
+ * }} Asker tv: whether the question about waking carries the switch for the
+ *   television, which it does where the box would switch it on with it
  */
-/** @typedef {{ yes: boolean, chosen: number | null }} Said */
-/** @typedef {{ wake: boolean, stop: boolean, freed: boolean }} Leave */
+/** @typedef {{ yes: boolean, chosen: number | null, tv: boolean | null }} Said */
+/**
+ * @typedef {{ wake: boolean, stop: boolean, freed: boolean, tv: boolean | null }} Leave
+ *   tv: what was answered about the television, null where nobody was asked
+ */
 
 // Oldest first; askers of one topic share a question, except recordings.
 /** @type {Asker[]} */
@@ -51,11 +59,12 @@ function announce() {
  * @param {Topic} topic
  * @param {WakeFor} what
  * @param {Api.Recording[]} recordings
+ * @param {boolean} [tv] whether the switch for the television is offered
  * @returns {Promise<Said>} the answer, and the recording chosen for that question
  */
-function ask(topic, what, recordings) {
+function ask(topic, what, recordings, tv) {
 	return new Promise(function (resolve) {
-		waiting.push({ topic: topic, what: what, recordings: recordings, resolve: resolve });
+		waiting.push({ topic: topic, what: what, recordings: recordings, tv: !!tv, resolve: resolve });
 		announce();
 	});
 }
@@ -63,9 +72,10 @@ function ask(topic, what, recordings) {
 /**
  * @param {boolean} yes
  * @param {number | null} [chosen] the recording to end, for that question
+ * @param {boolean} [tv] what the switch for the television said, where it was there
  * @returns {void}
  */
-export function answer(yes, chosen) {
+export function answer(yes, chosen, tv) {
 	const first = waiting[0];
 	if (!first) {
 		return;
@@ -76,7 +86,11 @@ export function answer(yes, chosen) {
 	waiting = waiting.filter(function (one) { return done.indexOf(one) === -1; });
 	announce();
 	for (const one of done) {
-		one.resolve({ yes: yes, chosen: chosen === undefined ? null : chosen });
+		one.resolve({
+			yes: yes,
+			chosen: chosen === undefined ? null : chosen,
+			tv: one.tv && tv !== undefined ? tv : null,
+		});
 	}
 }
 
@@ -128,6 +142,17 @@ async function freeTuner() {
 	return true;
 }
 
+/* WHETHER WAKING TAKES THE TELEVISION ALONG, read when the question is about
+   to be asked and not before: the box's own setting, as the power key reads it
+   (app/ui/power.js). A box that will not say is one whose television does not
+   follow, and then the question is the one it always was. */
+/** @returns {Promise<boolean>} */
+function tvComesOn() {
+	return store.load('GET', '/api/v1/settings/{section}', { params: { section: 'video' } }).then(function (video) {
+		return tvFollows(/** @type {any} */ (video), false);
+	}, function () { return false; });
+}
+
 /**
  * @param {unknown} failed
  * @param {WakeFor} what
@@ -137,19 +162,20 @@ async function freeTuner() {
 async function grant(failed, what, leave) {
 	const type = typeOf(failed);
 	if (type === kHoldsTuner && !leave.freed) {
-		return (await freeTuner()) ? { wake: leave.wake, stop: leave.stop, freed: true } : null;
+		return (await freeTuner()) ? { wake: leave.wake, stop: leave.stop, freed: true, tv: leave.tv } : null;
 	}
 	if (type === kPlaying && !leave.stop) {
-		return (await ask('playback', what, [])).yes ? { wake: leave.wake, stop: true, freed: leave.freed } : null;
+		return (await ask('playback', what, [])).yes ? { wake: leave.wake, stop: true, freed: leave.freed, tv: leave.tv } : null;
 	}
 	if (type === kInStandby && !leave.wake) {
-		return (await ask('wake', what, [])).yes ? { wake: true, stop: leave.stop, freed: leave.freed } : null;
+		const said = await ask('wake', what, [], await tvComesOn());
+		return said.yes ? { wake: true, stop: leave.stop, freed: leave.freed, tv: said.tv } : null;
 	}
 	throw failed;
 }
 
 /**
- * @param {(wake: boolean, stop: boolean) => Promise<unknown>} send
+ * @param {Sender} send
  * @param {WakeFor} what
  * @param {Leave} leave
  * @returns {Promise<boolean>}
@@ -158,7 +184,7 @@ async function sendWith(send, what, leave) {
 	/** @type {Leave | null} */
 	let more = null;
 	try {
-		await send(leave.wake, leave.stop);
+		await send(leave.wake, leave.stop, leave.tv);
 		return true;
 	} catch (failed) {
 		more = await grant(failed, what, leave);
@@ -167,12 +193,33 @@ async function sendWith(send, what, leave) {
 }
 
 /**
- * @param {(wake: boolean, stop: boolean) => Promise<unknown>} send
+ * What a caller of waking sends, as often as it is asked to. tv is what was
+ * answered about the television, and null where nobody was asked: then it is
+ * left out of the body and the box goes by its CEC setting. See withTv.
+ * @typedef {(wake: boolean, stop: boolean, tv: boolean | null) => Promise<unknown>} Sender
+ */
+
+/**
+ * @param {Sender} send
  * @param {WakeFor} [what]
  * @returns {Promise<boolean>} false when whoever was asked said no
  */
 export function waking(send, what) {
-	return sendWith(send, what || 'switch', { wake: false, stop: false, freed: false });
+	return sendWith(send, what || 'switch', { wake: false, stop: false, freed: false, tv: null });
+}
+
+/**
+ * A body with the answer about the television written in, where there was
+ * one. The routes take it as cec beside wake, and false there is a box woken
+ * with the television left dark.
+ * @template {Record<string, unknown>} B
+ * @param {B} body
+ * @param {boolean} wake
+ * @param {boolean | null} tv
+ * @returns {B & { cec?: boolean }}
+ */
+export function withTv(body, wake, tv) {
+	return wake && tv !== null ? Object.assign({}, body, { cec: tv }) : body;
 }
 
 /**
@@ -180,10 +227,10 @@ export function waking(send, what) {
  * @returns {Promise<boolean>} as waking
  */
 export function zap(id) {
-	return waking(function (wake, stop) {
+	return waking(function (wake, stop, tv) {
 		return store.write('POST', '/api/v1/zap', {
 			touches: kZapTouches,
-			body: stop ? { channel_id: id, wake: wake, stop_playback: true } : { channel_id: id, wake: wake },
+			body: withTv(stop ? { channel_id: id, wake: wake, stop_playback: true } : { channel_id: id, wake: wake }, wake, tv),
 		});
 	});
 }
@@ -195,10 +242,10 @@ export function zap(id) {
  * @returns {Promise<boolean>} as waking
  */
 export function switchMode(mode) {
-	return waking(function (wake) {
+	return waking(function (wake, _stop, tv) {
 		return store.write('POST', '/api/v1/mode', {
 			touches: kModeTouches,
-			body: { mode: mode, wake: wake },
+			body: withTv({ mode: mode, wake: wake }, wake, tv),
 		});
 	});
 }
@@ -241,6 +288,8 @@ function Which(props) {
 export function WakeQuestion() {
 	const [shown, setShown] = useState(waiting[0] || null);
 	const [picked, setPicked] = useState(/** @type {{ of: Asker | null, id: number | null }} */ ({ of: null, id: null }));
+	// What the switch for the television says, for the question it was moved on.
+	const [moved, setMoved] = useState(/** @type {{ of: Asker | null, tv: boolean }} */ ({ of: null, tv: true }));
 
 	useEffect(function () {
 		listeners.add(setShown);
@@ -252,6 +301,10 @@ export function WakeQuestion() {
 	const recordings = shown ? shown.recordings : [];
 	const first = recordings[0];
 	const chosen = picked.of === shown && picked.of !== null ? picked.id : (first ? first.id : null);
+	/* Ticked as the box is set, which is why it is offered at all: only where
+	   waking would switch the television on. */
+	const tvOffered = !!shown && topic === 'wake' && shown.tv;
+	const tv = moved.of === shown && moved.of !== null ? moved.tv : true;
 
 	/** @type {Record<Topic, string>} */
 	const asked = {
@@ -265,8 +318,13 @@ export function WakeQuestion() {
 		title=${t(text, topic === 'wake' ? 'wake.title' : 'wake.' + topic + '.title')}
 		confirmLabel=${t(text, topic === 'wake' ? 'wake.confirm' : 'wake.' + topic + '.confirm')}
 		onCancel=${function () { answer(false); }}
-		onConfirm=${function () { answer(true, chosen); }}>
+		onConfirm=${function () { answer(true, chosen, tvOffered ? tv : undefined); }}>
 		<p>${t(text, asked[topic])}</p>
+		${tvOffered ? html`<${Switch}
+			label=${t(shell, 'shell.power.cec.on')}
+			hint=${t(shell, 'shell.power.cec.once')}
+			checked=${tv}
+			onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setMoved({ of: shown, tv: e.currentTarget.checked }); }} />` : null}
 		${recordings.length > 1 ? html`<${Which} shown=${shown} chosen=${chosen} choose=${function (/** @type {number} */ id) { setPicked({ of: shown, id: id }); }} />` : null}
 	<//>`;
 }

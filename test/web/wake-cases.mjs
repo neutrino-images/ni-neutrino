@@ -556,6 +556,58 @@ is((await drawnOn('playback-running', 'switch')).indexOf(words.de['wake.playback
 is((await drawnOn('playback-running', 'play')).indexOf(words.de['wake.playback.ask.play']) !== -1,
 	'a play asks whether to end the playback and play');
 
+// -------------------------------------------- waking, and the television with it
+//
+// Where the box would switch the television on with it, the question about waking
+// carries a switch for that, and what it said goes along as cec. Elsewhere the
+// question is the one it was and no cec is sent.
+
+const store = await import(pathToFileURL(join(web, 'app', 'store.js')).href);
+
+/** @param {string} viewOn */
+function video(viewOn) {
+	return { status: 200, body: JSON.stringify({ items: [
+		{ id: 'hdmi_cec_mode', value: '1' }, { id: 'hdmi_cec_view_on', value: viewOn }, { id: 'hdmi_cec_standby', value: '0' }] }) };
+}
+
+fresh();
+store.clear();
+answers = [refusal('box-in-standby'), video('1')];
+r = watch(wake.zap('ffffffff48deb591'));
+await settle();
+const tvAsk = globalThis.__wakeShown[globalThis.__wakeShown.length - 1];
+same([topic(), !!tvAsk && tvAsk.tv], ['wake', true], 'waking that takes the television along asks with the switch for it');
+wake.answer(true, null, false);
+await settle();
+same(posts(), [
+	['/api/v1/zap', { channel_id: 'ffffffff48deb591', wake: false }],
+	['/api/v1/zap', { channel_id: 'ffffffff48deb591', wake: true, cec: false }],
+], 'and the television left off goes along as cec');
+is(r.state === 'resolved' && r.value === true, 'the zap is sent');
+
+fresh();
+store.clear();
+answers = [refusal('box-in-standby'), video('1')];
+r = watch(wake.switchMode('radio'));
+await settle();
+wake.answer(true, null, true);
+await settle();
+same(posts()[1], ['/api/v1/mode', { mode: 'radio', wake: true, cec: true }], 'a mode change carries the answer too');
+
+fresh();
+store.clear();
+answers = [refusal('box-in-standby'), video('0')];
+r = watch(wake.zap('ffffffff48deb591'));
+await settle();
+const plainAsk = globalThis.__wakeShown[globalThis.__wakeShown.length - 1];
+same([topic(), !!plainAsk && plainAsk.tv], ['wake', false], 'where the television stays off anyway, no switch is offered');
+wake.answer(true, null, false);
+await settle();
+same(posts()[1], ['/api/v1/zap', { channel_id: 'ffffffff48deb591', wake: true }], 'and no cec is sent, whatever the answer carried');
+
+same([wake.withTv({ wake: true }, true, false), wake.withTv({ wake: false }, false, false), wake.withTv({ wake: true }, true, null)],
+	[{ wake: true, cec: false }, { wake: false }, { wake: true }], 'cec goes only beside a wake somebody was asked about');
+
 if (checked === 0) {
 	process.stderr.write('wake-cases.mjs: nothing was checked\n');
 	process.exit(1);
