@@ -1003,6 +1003,9 @@ static void setPythonVariables(PyObject *module)
 	addConstTable(module, "POSTMSG", post_msg);
 	addConstTable(module, "TEXT_ALIGNMENT", text_alignment);
 	addConstTable(module, "COL", colorlist);
+
+	/* The directories, read as DIR['CONFIGDIR']. */
+	addConstTableStrings(module, "DIR", directories);
 	addConstTableStrings(module, "DIR", directories);
 }
 

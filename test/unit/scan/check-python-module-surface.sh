@@ -54,7 +54,7 @@ trap 'rm -rf "$tmp"' EXIT
 {
 	grep -h -o 'PythonInstAddSubmodule(module, "[A-Za-z_][A-Za-z0-9_]*"' "$PYDIR"/*.cpp
 	grep -h -o 'PyModule_AddObject(module, "[A-Za-z_][A-Za-z0-9_]*"' "$PYDIR"/*.cpp
-	grep -h -o 'addConstTable(module, "[A-Za-z_][A-Za-z0-9_]*"' "$PYDIR"/*.cpp
+	grep -h -o 'addConstTable[A-Za-z]*(module, "[A-Za-z_][A-Za-z0-9_]*"' "$PYDIR"/*.cpp
 } | sed 's/^[^"]*"//; s/"$//' | LC_ALL=C sort -u > "$tmp/registered"
 
 rn=`wc -l < "$tmp/registered"`
