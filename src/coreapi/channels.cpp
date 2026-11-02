@@ -379,7 +379,35 @@ Result<void> standbyAllows(bool wake)
 	return ok();
 }
 
-Result<void> zap(ChannelId id, bool wake, bool stop_playback)
+/* THE TELEVISION LEFT AS IT IS, FOR A COMMAND THAT WAKES THE BOX.
+
+   The loop wakes a sleeping box itself for a zap, a mode change with wakeup and
+   a recording played, and wakes it with the CEC settings: hdmi_cec_view_on
+   switches the television on. None of those messages has room for a word
+   saying otherwise, so the box is woken here first, by the message the standby
+   route sends with the same word, and on the queue the command goes on after
+   it. The loop takes them in that order, and the command then finds a box that
+   is awake and does what it does on an awake box.
+
+   What that costs is a zap's one tune: woken this way the box comes up on the
+   channel it went to sleep on and is then switched, where a zap waking it
+   itself goes straight to the channel asked for. It is the price of a
+   television left dark, and only paid where somebody asked for that.
+
+   A mode that cannot be read is not woken from here. standbyAllows has already
+   refused it when it counted, and for a box still starting there is nothing
+   to wake. */
+Result<void> wakeLeavingTv(bool wake, bool cec)
+{
+	if (!wake || cec)
+		return ok();
+	int m = 0;
+	if (channelSource().currentMode(m) != Status::Ok || m != NeutrinoModes::mode_standby)
+		return ok();
+	return postCommand(NeutrinoMessages::STANDBY_OFF, NeutrinoStandby::leave_tv);
+}
+
+Result<void> zap(ChannelId id, bool wake, bool stop_playback, bool cec)
 {
 	ChannelInfo probe;
 	Status s = channelSource().findChannel(id, probe);
@@ -409,6 +437,10 @@ Result<void> zap(ChannelId id, bool wake, bool stop_playback)
 	if (!allowed.ok())
 		return allowed;
 
+	Result<void> woken = wakeLeavingTv(wake, cec);
+	if (!woken.ok())
+		return woken;
+
 	// Zeroed and not merely filled in, because the loop reads a whole event
 	// out of this message and only one of its fields is this command's.
 	CTimerd::EventInfo event = CTimerd::EventInfo();
@@ -417,11 +449,15 @@ Result<void> zap(ChannelId id, bool wake, bool stop_playback)
 	return postPayload(NeutrinoMessages::ZAPTO, &event, sizeof(event));
 }
 
-Result<void> setMode(Mode m, bool wake)
+Result<void> setMode(Mode m, bool wake, bool cec)
 {
 	Result<void> allowed = standbyAllows(wake);
 	if (!allowed.ok())
 		return allowed;
+
+	Result<void> woken = wakeLeavingTv(wake, cec);
+	if (!woken.ok())
+		return woken;
 
 	// The mode alone. The flag that can ride beside it would leave the running
 	// channel where it is, which is not what asking for a mode means.

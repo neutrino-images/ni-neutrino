@@ -456,7 +456,8 @@ Response archivedCover(const Request &r)
 Response playArchived(const Request &r)
 {
 	coreapi::Result<void> done = coreapi::archive::play(r.asString("id"), r.has("wake") && r.asBool("wake"),
-							    r.has("stop_playback") && r.asBool("stop_playback"));
+							    r.has("stop_playback") && r.asBool("stop_playback"),
+							    !r.has("cec") || r.asBool("cec"));
 	if (!done.ok())
 		return problemFor(done.error());
 	return accepted();
@@ -708,6 +709,8 @@ const Param kArchivePlayParams[] = {
 		"`true` switches a box in standby on and then plays the recording; `false` (the default) leaves a box in standby alone and the request is refused with `409 box-in-standby`"),
 	HTTPD_BODY("stop_playback", ParamType::Bool,
 		"`true` ends a file the movie player is playing and then plays the recording; `false` (the default) leaves the playback alone and the request is refused with `409 playback-running`"),
+	HTTPD_BODY("cec", ParamType::Bool,
+		"`false` with `wake` wakes a box in standby without switching the television on, where the CEC setting `hdmi_cec_view_on` would. `true` or absent (the default) follows the setting. Means nothing to a box that is awake"),
 };
 
 const RouteRefusal kArchiveDetailsRefusals[] = {

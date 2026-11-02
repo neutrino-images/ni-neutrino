@@ -133,8 +133,9 @@ Result<std::string> coverPath(const std::string &id);
 Result<void> remove(const std::string &id);
 // Order: no-such-recording, playback-running unless stop_playback, recording-playing
 // during a timeshift, mode-unavailable while the box starts, then box-in-standby
-// unless wake.
-Result<void> play(const std::string &id, bool wake, bool stop_playback);
+// unless wake. cec false wakes the box without the television, as on a zap
+// (channels::wakeLeavingTv).
+Result<void> play(const std::string &id, bool wake, bool stop_playback, bool cec = true);
 
 // What a play message carries: the path, and whether it may end a file playing.
 struct PlayAsked

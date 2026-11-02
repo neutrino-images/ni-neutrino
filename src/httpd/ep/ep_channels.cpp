@@ -872,7 +872,8 @@ Response zap(const Request &r)
 	   to an id nobody has would otherwise be accepted and change nothing. */
 	coreapi::Result<void> done = coreapi::channels::zap(r.asChannelId("channel_id"),
 							     r.has("wake") && r.asBool("wake"),
-							     r.has("stop_playback") && r.asBool("stop_playback"));
+							     r.has("stop_playback") && r.asBool("stop_playback"),
+							     !r.has("cec") || r.asBool("cec"));
 	if (!done.ok())
 		return problemFor(done.error());
 
@@ -889,7 +890,8 @@ Response setMode(const Request &r)
 		: coreapi::channels::Mode::Tv;
 
 	coreapi::Result<void> done = coreapi::channels::setMode(mode,
-								r.has("wake") && r.asBool("wake"));
+								r.has("wake") && r.asBool("wake"),
+								!r.has("cec") || r.asBool("cec"));
 	if (!done.ok())
 		return problemFor(done.error());
 	return accepted();
@@ -1138,6 +1140,8 @@ const Param kZapParams[] = {
 		"`true` switches a box in standby on and then plays the channel; `false` (the default) leaves a box in standby alone and the request is refused with `409 box-in-standby`"),
 	HTTPD_BODY("stop_playback", ParamType::Bool,
 		"`true` ends a file the movie player is playing and then plays the channel; `false` (the default) leaves the playback alone and the request is refused with `409 playback-running`"),
+	HTTPD_BODY("cec", ParamType::Bool,
+		"`false` with `wake` wakes a box in standby without switching the television on, where the CEC setting `hdmi_cec_view_on` would; the box then comes up on the channel it slept on and is switched from there. `true` or absent (the default) follows the setting. Means nothing to a box that is awake"),
 };
 
 const Param kModeParams[] = {
@@ -1146,6 +1150,8 @@ const Param kModeParams[] = {
 		"radio: radio mode, playing from the radio list"),
 	HTTPD_BODY("wake", ParamType::Bool,
 		"`true` switches a box in standby on and then changes the mode; `false` (the default) leaves a box in standby alone and the request is refused with `409 box-in-standby`"),
+	HTTPD_BODY("cec", ParamType::Bool,
+		"`false` with `wake` wakes a box in standby without switching the television on, where the CEC setting `hdmi_cec_view_on` would. `true` or absent (the default) follows the setting. Means nothing to a box that is awake"),
 };
 
 /* A bouquet's name, bounded because it is a name and not a document. The ceiling

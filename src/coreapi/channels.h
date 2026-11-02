@@ -73,13 +73,21 @@ enum class Mode { Tv, Radio };
 // unobservable. NotFound then, and nothing is posted. Conflict while a recording
 // holds the tuner the channel needs, while the movie player plays a file unless
 // stop_playback is set, and in standby unless wake is set, in that order.
-Result<void> zap(ChannelId id, bool wake, bool stop_playback);
+// cec false wakes a box in standby without switching the television on, whatever
+// hdmi_cec_view_on says; see wakeLeavingTv.
+Result<void> zap(ChannelId id, bool wake, bool stop_playback, bool cec = true);
 
-// Conflict in standby unless wake is set.
-Result<void> setMode(Mode m, bool wake);
+// Conflict in standby unless wake is set. cec as on a zap.
+Result<void> setMode(Mode m, bool wake, bool cec = true);
 
 // The standby rule of the two above, for any other command the loop wakes the box for.
 Result<void> standbyAllows(bool wake);
+
+// For a command that may wake the box and is to leave the television as it is:
+// with wake set, cec false and the box in standby, the box is woken first, with
+// the television left, on the same queue the command goes on after it. Ok and
+// nothing posted otherwise. Called after standbyAllows and before the command.
+Result<void> wakeLeavingTv(bool wake, bool cec);
 
 // A read, and wider than the enum above: standby and the players are modes as
 // well. A NeutrinoModes value, src/include/neutrinoMessages.h, and never
