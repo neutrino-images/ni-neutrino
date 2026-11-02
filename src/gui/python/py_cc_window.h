@@ -6,7 +6,11 @@
  *	from neutrino import cwindow, ctext
  *	w = cwindow.new(name="Title", x=100, y=100, dx=450, dy=250)
  *	t = ctext.new(parent=w, text="hello")
+ *	w.setDimensionsAll(x=100, y=100, w=450, h=250)
  *	w.paint()
+ *
+ * The dimensions a window is made with are named dx and dy and the ones it
+ * is moved to are named w and h, which is what the Lua binding calls them.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

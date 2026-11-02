@@ -319,10 +319,9 @@ def test_hintbox():
 	check_screen("hintbox", "new()", lambda: h)
 	check_screen("hintbox", "paint()", lambda: h.paint())
 	check_screen("hintbox", "hide()", lambda: h.hide())
-	check_screen("hintbox", "exec(timeout=1)",
-		     lambda: hintbox.exec(caption="hintbox",
-					  text="this one leaves after a second",
-					  timeout=1))
+	h = hintbox.new(caption="hintbox", text="this one leaves after a second")
+	check_screen("hintbox", "exec(timeout=1) on the box",
+		     lambda: h.exec(timeout=1))
 
 
 def test_messagebox():
@@ -404,7 +403,7 @@ def test_widgets():
 	check_screen("cwindow", "setWindowColor",
 		     lambda: w.setWindowColor(color_frame=COL["MENUHEAD"]))
 	check_screen("cwindow", "setDimensionsAll",
-		     lambda: w.setDimensionsAll(x=80, y=60, dx=470, dy=300))
+		     lambda: w.setDimensionsAll(x=80, y=60, w=470, h=300))
 	check_screen("cwindow", "headerHeight/footerHeight",
 		     lambda: (w.headerHeight(), w.footerHeight()))
 	check_screen("cwindow", "paintHeader", lambda: w.paintHeader())
