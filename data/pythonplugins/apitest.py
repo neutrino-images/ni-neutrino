@@ -62,6 +62,16 @@ def check_screen(area, what, call):
 	return answer
 
 
+def scratch():
+	"""The directory the tests that write are given, made where it is not,
+	so that an area run on its own is not waiting on another to have run."""
+	try:
+		os.makedirs(SCRATCH)
+	except OSError:
+		pass
+	return SCRATCH
+
+
 def passed():
 	return sum(1 for r in results if r[2])
 
@@ -88,10 +98,7 @@ def write_report():
 		lines.append("  %-30s %s%s" % (what, "ok" if ok else "FAIL",
 					       "   " + detail if detail else ""))
 	lines.append("")
-	try:
-		os.makedirs(SCRATCH)
-	except OSError:
-		pass
+	scratch()
 	try:
 		with open(LOGFILE, "w") as f:
 			f.write("\n".join(lines) + "\n")
@@ -166,7 +173,7 @@ def test_misc():
 # -------------------------------------------------------------- configfile
 
 def test_configfile():
-	path = SCRATCH + "/apitest.cfg"
+	path = scratch() + "/apitest.cfg"
 	check("configfile", "new()", lambda: configfile.new())
 	c = configfile.new()
 	check("configfile", "setString", lambda: c.setString(key="greeting", value="hello"))
@@ -192,6 +199,7 @@ def test_configfile():
 # ------------------------------------------------------------ filehelpers
 
 def test_filehelpers():
+	scratch()
 	f = filehelpers.new()
 	check("filehelpers", "new()", lambda: f)
 	check("filehelpers", "mkdir", lambda: f.mkdir(dir=SCRATCH + "/sub"))
@@ -231,7 +239,7 @@ def test_curl():
 	check("curl", "download, the box's own web server",
 	      lambda: c.download(s=True, url=box))
 	check("curl", "download, to a file",
-	      lambda: c.download(s=False, url=box, o=SCRATCH + "/channels.txt"))
+	      lambda: c.download(s=False, url=box, o=scratch() + "/channels.txt"))
 	check("curl", "download, a url that is not there",
 	      lambda: c.download(s=True, url="http://127.0.0.1/nothing-here"))
 
