@@ -156,8 +156,6 @@ void CPythonInstNeutrino::WindowDelete(PyObject *self)
 	PyWindowObject *o = (PyWindowObject *)self;
 	CPyWindowData *W = o->d;
 
-printf("[pytrace] window gone\n");
-
 	if (W != NULL && W->fbwin != NULL)
 	{
 		for (pyscreenmap_iterator_t it = W->screenmap.begin(); it != W->screenmap.end(); ++it)

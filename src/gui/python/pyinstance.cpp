@@ -426,8 +426,8 @@ void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *
 	pthread_mutex_unlock(&running_mutex);
 
 	/* A fault inside the script is a fault in the script: faulthandler prints
-	 * the Python stack it was on, which is the line the trace above cannot
-	 * name. It is a builtin, so it is there whatever the box installed. */
+	 * the Python stack it was on, which is the line a segfault otherwise does
+	 * not name. It is a builtin, so it is there whatever the box installed. */
 	if (!faulthandler_on) {
 		faulthandler_on = true;
 		PyRun_SimpleString("import faulthandler\nfaulthandler.enable()");
@@ -436,7 +436,6 @@ void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *
 	}
 
 	PyObject *res = PyRun_FileExFlags(fp, fileName, Py_file_input, globals, globals, 1, NULL);
-printf("[pytrace] runScript: the script returned (%s)\n", res != NULL ? "ok" : "failed");
 
 	pthread_mutex_lock(&running_mutex);
 	running_thread_ident = 0;
@@ -473,17 +472,12 @@ printf("[pytrace] runScript: the script returned (%s)\n", res != NULL ? "ok" : "
 	 * or that took the screen. What they add where the video is blank,
 	 * the rezap of the channel, belongs to the video binding and comes
 	 * with it. */
-printf("[pytrace] runScript: before the restore, blocked %d playing %d\n",
-       (int)CMoviePlayerGui::getInstance().getBlockedFromPlugin(),
-       (int)CMoviePlayerGui::getInstance().Playing());
 	if (CMoviePlayerGui::getInstance().getBlockedFromPlugin()) {
 		CMoviePlayerGui::getInstance().setBlockedFromPlugin(false);
 		CMoviePlayerGui::getInstance().restoreNeutrino();
 	}
-printf("[pytrace] runScript: after the restore\n");
 
 	PyGILState_Release(gstate);
-printf("[pytrace] runScript: done\n");
 }
 
 // Example: runScript(fileName, "Arg1", "Arg2", "Arg3", ..., NULL);

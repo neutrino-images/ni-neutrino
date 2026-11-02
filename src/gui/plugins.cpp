@@ -436,9 +436,7 @@ int CPlugins::startPythonPlugin(int number)
 	CPythonInstance *python = new CPythonInstance();
 	// FIXME: runScript() should return the exit-code from script
 	python->runScript(script);
-printf("[pytrace] startPythonPlugin: runScript returned\n");
 	delete python;
-printf("[pytrace] startPythonPlugin: the instance is gone\n");
 #endif
 	std::string keep_bg_flag = "/tmp/.keep_background";
 	if (!file_exists(keep_bg_flag))
