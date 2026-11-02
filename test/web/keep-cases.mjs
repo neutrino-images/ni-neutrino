@@ -346,6 +346,119 @@ answers['/api/v1/osd/remote'] = [200, { locked: false }];
 	unmount('s:remote');
 }
 
+// standby and the television, in the header, on the box card and on the remote
+{
+	const power = await import('../../data/ni-web/app/ui/power.js');
+	const remote = (await import('../../data/ni-web/app/screens/now/remote.js')).default;
+	const plain = globalThis.fetch;
+	/** @type {string[]} */
+	let posted = [];
+	globalThis.fetch = /** @type {any} */ (function (/** @type {string} */ url, /** @type {RequestInit} */ init) {
+		if (init && init.method && init.method !== 'GET')
+			posted.push(init.method + ' ' + String(url).split('?')[0] + ' ' + (typeof init.body === 'string' ? init.body : ''));
+		return plain(url, init);
+	});
+	/** @param {Record<string, string>} rows */
+	function cec(rows) {
+		store.clear();
+		answers['/api/v1/settings/video'] = [200, { items: Object.keys(rows).map(function (id) { return { id: id, value: rows[id] }; }) }];
+	}
+	/** @param {unknown} tree @returns {Drawn | undefined} */
+	function dialog(tree) {
+		return nodes(tree, function (n) { return n.type === 'component' && /** @type {any} */ (n).of && /** @type {any} */ (n).of.name === 'Dialog'; })[0];
+	}
+	/** @param {unknown} tree @returns {Drawn | undefined} */
+	function tvBox(tree) {
+		return nodes(tree, function (n) { return n.type === 'input' && n.props.type === 'checkbox'; })[0];
+	}
+	answers['/api/v1/system/standby'] = [200, { on: false }];
+	answers['/api/v1/osd/remote/key'] = [200, {}];
+
+	// The header's key, going to standby where the television would go along.
+	cec({ hdmi_cec_mode: '1', hdmi_cec_standby: '1', hdmi_cec_view_on: '0' });
+	posted = [];
+	let tree = await drawn('s:power', power.Power, { standby: false });
+	let key = nodes(tree, function (n) { return n.props.class === 'power-key'; })[0];
+	/** @type {() => void} */ (key.props.onClick)();
+	tree = await drawn('s:power', power.Power, { standby: false });
+	let asked = dialog(tree);
+	same(!!asked && asked.props.open, true, 'going to standby asks');
+	let box = tvBox(tree);
+	same(!!box && box.props.checked, true, 'with the television ticked as the box is set');
+	if (box)
+		/** @type {(e: unknown) => void} */ (box.props.onChange)({ currentTarget: { checked: false } });
+	tree = await drawn('s:power', power.Power, { standby: false });
+	asked = dialog(tree);
+	if (asked)
+		/** @type {() => void} */ (asked.props.onConfirm)();
+	await settle();
+	same(posted, ['POST /api/v1/system/standby {"on":true,"cec":false}'], 'and the television left on is said to the box');
+
+	// Waking where the television would not come on: nothing is asked.
+	cec({ hdmi_cec_mode: '1', hdmi_cec_standby: '1', hdmi_cec_view_on: '0' });
+	posted = [];
+	tree = await drawn('s:power', power.Power, { standby: true });
+	key = nodes(tree, function (n) { return n.props.class === 'power-key'; })[0];
+	/** @type {() => void} */ (key.props.onClick)();
+	tree = await drawn('s:power', power.Power, { standby: true });
+	same(!!dialog(tree) && dialog(tree).props.open, false, 'waking without the television asks nothing');
+	same(posted, ['POST /api/v1/system/standby {"on":false}'], 'and leaves the television to the box');
+	unmount('s:power');
+
+	// The remote's power key: the question with the switch, and the key where there is none.
+	/** @param {unknown} t */
+	function powerKey(t) { return nodes(t, function (n) { return n.type === 'button' && n.props.class === 'now-key now-key-KEY_POWER'; })[0]; }
+	answers['/api/v1/osd/remote/keys'] = [200, { items: ['KEY_POWER', 'KEY_OK'] }];
+	cec({ hdmi_cec_mode: '1', hdmi_cec_standby: '1', hdmi_cec_view_on: '1' });
+	posted = [];
+	tree = await drawn('s:rpower', remote, {});
+	same(!!powerKey(tree), true, 'the remote draws its power key');
+	if (powerKey(tree))
+		/** @type {() => void} */ (powerKey(tree).props.onClick)();
+	tree = await drawn('s:rpower', remote, {});
+	asked = dialog(tree);
+	same([!!asked && asked.props.open, !!tvBox(nodes(tree, function (n) { return n === asked; })[0])], [true, true],
+		'the remote\'s power key asks with the switch for the television');
+	if (asked)
+		/** @type {() => void} */ (asked.props.onConfirm)();
+	await settle();
+	same(posted, ['POST /api/v1/system/standby {"on":true,"cec":true}'],
+		'and what was answered goes with the standby address, the one that can carry it');
+
+	cec({ hdmi_cec_mode: '0', hdmi_cec_standby: '1', hdmi_cec_view_on: '1' });
+	posted = [];
+	tree = await drawn('s:rpower', remote, {});
+	/** @type {() => void} */ (powerKey(tree).props.onClick)();
+	tree = await drawn('s:rpower', remote, {});
+	asked = dialog(tree);
+	same([!!asked && asked.props.open, !!tvBox(nodes(tree, function (n) { return n === asked; })[0])], [true, false],
+		'without CEC the remote asks as it always did, with no switch');
+	if (asked)
+		/** @type {() => void} */ (asked.props.onConfirm)();
+	await settle();
+	same(posted.map(function (one) { return one.split(' ').slice(0, 2).join(' '); }), ['POST /api/v1/osd/remote/key'],
+		'and sends the key, as it always did');
+	unmount('s:rpower');
+	globalThis.fetch = plain;
+}
+
+// The overview drawn whole once, with the box awake. A name a card uses and no
+// import brings is thrown at the first draw, and the screen is then left empty
+// under the bar; drawn here, the throw is counted as a failure.
+{
+	answers['/api/v1/system/standby'] = [200, { on: false }];
+	answers['/api/v1/settings/video'] = [200, { items: [{ id: 'video_Mode', value: '1' }] }];
+	answers['/api/v1/settings/schema'] = [200, { items: [] }];
+	store.clear();
+	const before = failed;
+	const overview = (await import('../../data/ni-web/app/screens/now/overview.js')).default;
+	await drawn('s:overview', overview, {});
+	same(failed - before, 0, 'the overview draws every card without throwing');
+	unmount('s:overview');
+	// What it asked the box for and was refused is not left for the screens after it.
+	store.clear();
+}
+
 /**
  * The second row's sheet is opened, the box's answers are forgotten the way a gap in
  * the event stream forgets them, and the screen draws its list anew.

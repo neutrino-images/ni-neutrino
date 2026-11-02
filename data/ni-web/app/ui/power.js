@@ -91,10 +91,22 @@ export function tvFollows(video, on) {
    read without one and the command is not sent without one either. A box
    that does not answer is taken as one whose television does not follow:
    then the question is the one it always was and the box decides. */
+/* WHAT A SCREEN MAY CHANGE ABOUT IT, AND ONLY FOR THE REMOTE. The handset
+   presses the box's power key rather than posting the standby address, because
+   the box decides what its power key does. So where nobody was asked about the
+   television, plain is what is sent, and the key goes as it always went. Where
+   somebody was asked, only the standby address can carry the answer, so that
+   is what is sent then: a key has no way to say "and leave the television".
+   gate is the sign in asked for before the settings are read, which for keys
+   is writing and not the system level the address wants; the address asks for
+   its own when it is the one that is sent. */
 /**
+ * @param {{ plain?: (on: boolean) => void, gate?: () => Promise<unknown> }} [how]
  * @returns {{ request: (on: boolean) => void, question: Web.Drawn }}
  */
-export function useStandby() {
+export function useStandby(how) {
+	const plain = (how && how.plain) || function (/** @type {boolean} */ on) { sendStandby(on); };
+	const gate = (how && how.gate) || session.requireSystem;
 	const [asking, setAsking] = useState(/** @type {{ on: boolean, tv: boolean } | null} */ (null));
 	const [tv, setTv] = useState(true);
 
@@ -103,13 +115,13 @@ export function useStandby() {
 	 * @returns {void}
 	 */
 	function request(on) {
-		session.requireSystem().then(function () {
+		gate().then(function () {
 			return store.load('GET', '/api/v1/settings/{section}', { params: { section: 'video' } }).then(function (video) {
 				return tvFollows(/** @type {any} */ (video), on);
 			}, function () { return false; });
 		}).then(function (follows) {
 			if (!on && !follows) {
-				sendStandby(false);
+				plain(false);
 				return;
 			}
 			setTv(true);
@@ -128,8 +140,10 @@ export function useStandby() {
 		onConfirm=${function () {
 			const was = asking;
 			setAsking(null);
-			if (was)
-				sendStandby(was.on, was.tv ? tv : undefined);
+			if (was && was.tv)
+				sendStandby(was.on, tv);
+			else if (was)
+				plain(was.on);
 		}}>
 		<p>${t(text, on ? 'shell.power.ask' : 'shell.power.wake.ask')}</p>
 		${asking && asking.tv ? html`<${Switch}
