@@ -260,7 +260,7 @@ PyObject *CPythonInstCurl::CurlDownload(PyObject *self, PyObject *args, PyObject
 		return Py_BuildValue("(is)", PY_CURL_ERR_HANDLE, errMsg);
 	}
 
-	const char *url = "";
+	std::string url = "";
 	pyLookupString(kwds, "url", url);
 	if (url.empty())
 	{

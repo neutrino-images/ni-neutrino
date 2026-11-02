@@ -203,7 +203,8 @@ bool CPythonInstVideo::execPythonInfoFunc(PyObject *video, int xres, int yres, i
 PyObject *CPythonInstVideo::PlayFile(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "title", "file", "info1", "info2", "file2", NULL };
-	const char *title = "", *file = "", *info1 = "", *info2 = "", *file2 = "";
+	const char *p_title = "", *p_file = "", *p_info1 = "", *p_info2 = "", *p_file2 = "";
+	std::string title, file, info1, info2, file2;
 	CPyVideo *D = videoOf(self);
 
 	if (D == NULL)
@@ -211,13 +212,18 @@ PyObject *CPythonInstVideo::PlayFile(PyObject *self, PyObject *args, PyObject *k
 		PyErr_SetString(PyExc_RuntimeError, "video is gone");
 		return NULL;
 	}
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss|sss", (char **)kwlist, &title, &file, &info1, &info2, &file2))
+	/* "s" hands back a const char * into the argument, so it is taken as one
+	 * and the strings are made from it: parsed straight into a std::string,
+	 * the pointer lands where the string keeps its own data and the string's
+	 * destructor then frees the argument's buffer. */
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss|sss", (char **)kwlist, &p_title, &p_file, &p_info1, &p_info2, &p_file2))
 		return NULL;
+	title = p_title, file = p_file, info1 = p_info1, info2 = p_info2, file2 = p_file2;
 
 	if ((D->singlePlay == false) && (CMoviePlayerGui::getInstance().getBlockedFromPlugin() == false))
 		CMoviePlayerGui::getInstance().setBlockedFromPlugin(true);
 
-	printf("CPythonInstVideo::%s: title %s file %s\n", __func__, title, file);
+	printf("CPythonInstVideo::%s: title %s file %s\n", __func__, title.c_str(), file.c_str());
 
 	if (D->infoFunc != NULL && D->infoFunc != Py_None)
 		CMoviePlayerGui::getInstance().setPythonInfoFunc((PyObject *)self, true);
