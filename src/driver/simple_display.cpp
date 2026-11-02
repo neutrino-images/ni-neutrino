@@ -774,8 +774,19 @@ void CLCD::ShowIcon(fp_icon i, bool on)
 
 void CLCD::ShowText(const char * str, bool update_timestamp)
 {
-	int fd = dev_open();
-	int len = strlen(str);
+	int fd;
+	int len;
+
+	/* A text is counted against the width of the box's own display, and a
+	 * text longer than it is given longer before the display is left alone.
+	 * The caps are read once here: a driver that is shown none leaves the
+	 * text written, rather than reading the display through. */
+	if (str == NULL)
+		return;
+	int display_xres = g_info.hw_caps != NULL ? g_info.hw_caps->display_xres : 0;
+
+	fd = dev_open();
+	len = strlen(str);
 	if (fd < 0)
 		return;
 	printf("%s '%s'\n", __func__, str);
@@ -786,8 +797,8 @@ void CLCD::ShowText(const char * str, bool update_timestamp)
 		last_display = time(NULL);
 		/* increase timeout to ensure that everything is displayed
 		 * the driver displays 5 characters per second */
-		if (len > g_info.hw_caps->display_xres)
-			last_display += (len - g_info.hw_caps->display_xres) / 5;
+		if (len > display_xres)
+			last_display += (len - display_xres) / 5;
 	}
 }
 
