@@ -403,6 +403,12 @@ void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *
 		return;
 	}
 
+	/* The module a script imports is made before it runs: everything the API
+	 * offers is reached through it, so a script that says "from neutrino
+	 * import ..." has something to import. */
+	if (neutrino_module == NULL)
+		neutrino_module = buildModule();
+
 	/* The namespace this instance runs scripts in, where a Lua state is
 	 * the namespace a Lua script runs in. */
 	setGlobalString(globals, "__file__", fileName);
