@@ -534,7 +534,7 @@ PyObject *CPythonInstNeutrino::PaintIcon(PyObject *self, PyObject *args, PyObjec
 {
 	static const char *kwlist[] = { "fname", "x", "y", "h", "o", NULL };
 	CPyWindowData *W = windowOf(self);
-	std::string fname = "";
+	const char *fname = "";
 	long x = 0, y = 0, h = 0, o = 0;
 
 	if (W == NULL || W->fbwin == NULL)
@@ -545,7 +545,7 @@ PyObject *CPythonInstNeutrino::PaintIcon(PyObject *self, PyObject *args, PyObjec
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "siiii", (char **)kwlist, &fname, &x, &y, &h, &o))
 		return NULL;
 
-	W->fbwin->paintIcon(fname.c_str(), (int)x, (int)y, (int)h, (unsigned int)o);
+	W->fbwin->paintIcon(fname, (int)x, (int)y, (int)h, (unsigned int)o);
 	Py_RETURN_NONE;
 }
 
@@ -554,7 +554,7 @@ PyObject *CPythonInstNeutrino::DisplayImage(PyObject *self, PyObject *args, PyOb
 {
 	static const char *kwlist[] = { "fname", "x", "y", "w", "h", "trans", NULL };
 	CPyWindowData *W = windowOf(self);
-	std::string fname = "";
+	const char *fname = "";
 	long x = 0, y = 0, w = 0, h = 0, trans = 0;
 
 	if (W == NULL)
@@ -565,7 +565,7 @@ PyObject *CPythonInstNeutrino::DisplayImage(PyObject *self, PyObject *args, PyOb
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "siiii|i", (char **)kwlist, &fname, &x, &y, &w, &h, &trans))
 		return NULL;
 
-	g_PicViewer->DisplayImage(fname.c_str(), (int)x, (int)y, (int)w, (int)h, (int)trans);
+	g_PicViewer->DisplayImage(fname, (int)x, (int)y, (int)w, (int)h, (int)trans);
 	Py_RETURN_NONE;
 }
 
@@ -575,7 +575,7 @@ PyObject *CPythonInstNeutrino::GetSize(PyObject *self, PyObject *args, PyObject 
 {
 	static const char *kwlist[] = { "fname", NULL };
 	CPyWindowData *W = windowOf(self);
-	std::string fname = "";
+	const char *fname = "";
 	int w = 0, h = 0;
 
 	if (W == NULL)
@@ -586,7 +586,7 @@ PyObject *CPythonInstNeutrino::GetSize(PyObject *self, PyObject *args, PyObject 
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", (char **)kwlist, &fname))
 		return NULL;
 
-	g_PicViewer->getSize(fname.c_str(), &w, &h);
+	g_PicViewer->getSize(fname, &w, &h);
 	return Py_BuildValue("(ii)", w, h);
 }
 

@@ -175,7 +175,7 @@ std::string CPythonInstCurl::CurlUriInternal(std::string data, bool decode)
 PyObject *CPythonInstCurl::CurlEncodeUri(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "data", NULL };
-	std::string data = "";
+	const char *data = "";
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", (char **)kwlist, &data))
 		return NULL;
@@ -190,7 +190,7 @@ PyObject *CPythonInstCurl::CurlEncodeUri(PyObject *self, PyObject *args, PyObjec
 PyObject *CPythonInstCurl::CurlDecodeUri(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "data", NULL };
-	std::string data = "";
+	const char *data = "";
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", (char **)kwlist, &data))
 		return NULL;
@@ -260,7 +260,7 @@ PyObject *CPythonInstCurl::CurlDownload(PyObject *self, PyObject *args, PyObject
 		return Py_BuildValue("(is)", PY_CURL_ERR_HANDLE, errMsg);
 	}
 
-	std::string url = "";
+	const char *url = "";
 	pyLookupString(kwds, "url", url);
 	if (url.empty())
 	{

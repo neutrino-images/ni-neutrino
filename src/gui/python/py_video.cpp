@@ -114,7 +114,7 @@ PyObject *CPythonInstVideo::SetBlank(PyObject *self, PyObject *args, PyObject *k
 PyObject *CPythonInstVideo::ShowPicture(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "fname", NULL };
-	std::string fname = "";
+	const char *fname = "";
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", (char **)kwlist, &fname))
 		return NULL;
@@ -203,7 +203,7 @@ bool CPythonInstVideo::execPythonInfoFunc(PyObject *video, int xres, int yres, i
 PyObject *CPythonInstVideo::PlayFile(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "title", "file", "info1", "info2", "file2", NULL };
-	std::string title = "", file = "", info1 = "", info2 = "", file2 = "";
+	const char *title = "", *file = "", *info1 = "", *info2 = "", *file2 = "";
 	CPyVideo *D = videoOf(self);
 
 	if (D == NULL)
@@ -217,7 +217,7 @@ PyObject *CPythonInstVideo::PlayFile(PyObject *self, PyObject *args, PyObject *k
 	if ((D->singlePlay == false) && (CMoviePlayerGui::getInstance().getBlockedFromPlugin() == false))
 		CMoviePlayerGui::getInstance().setBlockedFromPlugin(true);
 
-	printf("CPythonInstVideo::%s: title %s file %s\n", __func__, title.c_str(), file.c_str());
+	printf("CPythonInstVideo::%s: title %s file %s\n", __func__, title, file);
 
 	if (D->infoFunc != NULL && D->infoFunc != Py_None)
 		CMoviePlayerGui::getInstance().setPythonInfoFunc((PyObject *)self, true);
@@ -267,14 +267,14 @@ PyObject *CPythonInstVideo::ChannelRezap(PyObject *self, PyObject *args, PyObjec
 PyObject *CPythonInstVideo::CreateChannelIDfromUrl(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "url", NULL };
-	std::string url = "";
+	const char *url = "";
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", (char **)kwlist, &url))
 		return NULL;
-	if (url.empty())
+	if (!*url)
 		Py_RETURN_NONE;
 
-	t_channel_id id = CREATE_CHANNEL_ID(0, 0, 0, url.c_str());
+	t_channel_id id = CREATE_CHANNEL_ID(0, 0, 0, url);
 	char id_str[17];
 	snprintf(id_str, sizeof(id_str), "%" PRIx64, id);
 
