@@ -365,7 +365,9 @@ answers['/api/v1/osd/remote'] = [200, { locked: false }];
 	}
 	/** @param {unknown} tree @returns {Drawn | undefined} */
 	function dialog(tree) {
-		return nodes(tree, function (n) { return n.type === 'component' && /** @type {any} */ (n).of && /** @type {any} */ (n).of.name === 'Dialog'; })[0];
+		// The open one where a screen draws several, as the system screen does.
+		const all = nodes(tree, function (n) { return n.type === 'component' && /** @type {any} */ (n).of && /** @type {any} */ (n).of.name === 'Dialog'; });
+		return all.filter(function (n) { return n.props.open; })[0] || all[0];
 	}
 	/** @param {unknown} tree @returns {Drawn | undefined} */
 	function tvBox(tree) {
@@ -439,6 +441,39 @@ answers['/api/v1/osd/remote'] = [200, { locked: false }];
 	same(posted.map(function (one) { return one.split(' ').slice(0, 2).join(' '); }), ['POST /api/v1/osd/remote/key'],
 		'and sends the key, as it always did');
 	unmount('s:rpower');
+
+	// The system screen's two buttons ask the same question, and send the same command.
+	const sysBox = (await import('../../data/ni-web/app/screens/system/box.js')).default;
+	const sysWords = (await import('../../data/ni-web/app/screens/system/system.text.js')).default;
+	/** @param {unknown} t @param {string} key */
+	function sysButton(t, key) {
+		return nodes(t, function (n) {
+			return n.type === 'button' && JSON.stringify(n.children).indexOf(sysWords.de[key]) !== -1;
+		})[0];
+	}
+	// The facts of the box are not what is asked here, and unanswered they draw a note instead.
+	delete answers['/api/v1/system/info'];
+	cec({ hdmi_cec_mode: '1', hdmi_cec_standby: '1', hdmi_cec_view_on: '0' });
+	posted = [];
+	tree = await drawn('s:sys', sysBox, {});
+	same(!!sysButton(tree, 'sys.power.standby'), true, 'the system screen draws its standby button');
+	if (sysButton(tree, 'sys.power.standby'))
+		/** @type {() => void} */ (sysButton(tree, 'sys.power.standby').props.onClick)();
+	tree = await drawn('s:sys', sysBox, {});
+	asked = dialog(tree);
+	same([!!asked && asked.props.open, !!tvBox(tree)], [true, true], 'and asks the shared question, with the switch for the television');
+	if (asked)
+		/** @type {() => void} */ (asked.props.onConfirm)();
+	await settle();
+	same(posted, ['POST /api/v1/system/standby {"on":true,"cec":true}'], 'and sends what was answered');
+
+	posted = [];
+	tree = await drawn('s:sys', sysBox, {});
+	/** @type {() => void} */ (sysButton(tree, 'sys.power.wake').props.onClick)();
+	tree = await drawn('s:sys', sysBox, {});
+	same([!!dialog(tree) && dialog(tree).props.open, posted], [false, ['POST /api/v1/system/standby {"on":false}']],
+		'waking where the television stays off is sent at once, as before');
+	unmount('s:sys');
 	globalThis.fetch = plain;
 }
 

@@ -6,9 +6,7 @@ import { api } from '../api.js';
 import { ensureCss } from '../css.js';
 import { t } from '../i18n.js';
 import { Dialog } from './dialog.js';
-import { Switch } from './switch.js';
-import { tvFollows } from './power.js';
-import shell from '../shell.text.js';
+import { tvComesAlong, TvSwitch } from './power.js';
 import text from './wake.text.js';
 
 const kInStandby = '/errors/box-in-standby';
@@ -142,17 +140,6 @@ async function freeTuner() {
 	return true;
 }
 
-/* WHETHER WAKING TAKES THE TELEVISION ALONG, read when the question is about
-   to be asked and not before: the box's own setting, as the power key reads it
-   (app/ui/power.js). A box that will not say is one whose television does not
-   follow, and then the question is the one it always was. */
-/** @returns {Promise<boolean>} */
-function tvComesOn() {
-	return store.load('GET', '/api/v1/settings/{section}', { params: { section: 'video' } }).then(function (video) {
-		return tvFollows(/** @type {any} */ (video), false);
-	}, function () { return false; });
-}
-
 /**
  * @param {unknown} failed
  * @param {WakeFor} what
@@ -168,7 +155,9 @@ async function grant(failed, what, leave) {
 		return (await ask('playback', what, [])).yes ? { wake: leave.wake, stop: true, freed: leave.freed, tv: leave.tv } : null;
 	}
 	if (type === kInStandby && !leave.wake) {
-		const said = await ask('wake', what, [], await tvComesOn());
+		/* Whether waking takes the television along, read when the question is
+		   about to be asked and not before, as the power key reads it. */
+		const said = await ask('wake', what, [], await tvComesAlong(false));
 		return said.yes ? { wake: true, stop: leave.stop, freed: leave.freed, tv: said.tv } : null;
 	}
 	throw failed;
@@ -320,11 +309,10 @@ export function WakeQuestion() {
 		onCancel=${function () { answer(false); }}
 		onConfirm=${function () { answer(true, chosen, tvOffered ? tv : undefined); }}>
 		<p>${t(text, asked[topic])}</p>
-		${tvOffered ? html`<${Switch}
-			label=${t(shell, 'shell.power.cec.on')}
-			hint=${t(shell, 'shell.power.cec.once')}
+		${tvOffered ? html`<${TvSwitch}
+			on=${false}
 			checked=${tv}
-			onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setMoved({ of: shown, tv: e.currentTarget.checked }); }} />` : null}
+			onChange=${function (/** @type {boolean} */ checked) { setMoved({ of: shown, tv: checked }); }} />` : null}
 		${recordings.length > 1 ? html`<${Which} shown=${shown} chosen=${chosen} choose=${function (/** @type {number} */ id) { setPicked({ of: shown, id: id }); }} />` : null}
 	<//>`;
 }

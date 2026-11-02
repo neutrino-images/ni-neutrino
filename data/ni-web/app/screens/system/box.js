@@ -21,6 +21,7 @@ import { t } from '../../i18n.js';
 import { State } from '../../ui/state.js';
 import { Table } from '../../ui/table.js';
 import { Ask, Act, failureText } from './parts.js';
+import { useStandby } from '../../ui/power.js';
 import text from './system.text.js';
 
 export const css = '/app/screens/system/system.css';
@@ -195,6 +196,10 @@ export default function Box() {
 	const [shot, setShot] = useState(store.read('GET', '/api/v1/system/info'));
 	const [said, setSaid] = useState('');
 	const [heldUntil, setHeldUntil] = useState(0);
+	/* Standby and waking are the header's key's (app/ui/power.js): the same
+	   question, with the switch for the television where HDMI-CEC would take
+	   it along, the same sign in and the same message once it is sent. */
+	const standby = useStandby();
 
 	useEffect(function () {
 		return store.watch('GET', '/api/v1/system/info', null, setShot);
@@ -249,29 +254,19 @@ export default function Box() {
 			     not about this session. */ null}
 			${held ? html`<p class="callout warn sys-why" role="status">${t(text, 'sys.power.settling')}</p>` : null}
 			<div class="sys-row">
-				<${Ask}
+				<${Act}
 					label=${t(text, 'sys.power.standby')}
-					question=${t(text, 'sys.power.standby.ask')}
-					needs="system"
 					busy=${held}
-					onConfirm=${function () {
-						drive(function () {
-							return store.write('POST', '/api/v1/system/standby', { body: { on: true } });
-						});
-					}} />
-				${/* No question in front of this one. It puts the picture back
-				     on the screen and takes nothing away, and a question in
+					onClick=${function () { standby.request(true); }} />
+				${/* A question in front of this one only where waking would
+				     switch the television on as well: otherwise it puts the
+				     picture back and takes nothing away, and a question in
 				     front of something harmless is what teaches everybody to
 				     click through the one that matters. */ null}
 				<${Act}
 					label=${t(text, 'sys.power.wake')}
-					needs="system"
 					busy=${held}
-					onClick=${function () {
-						drive(function () {
-							return store.write('POST', '/api/v1/system/standby', { body: { on: false } });
-						});
-					}} />
+					onClick=${function () { standby.request(false); }} />
 				<${Ask}
 					label=${t(text, 'sys.power.restart')}
 					question=${t(text, 'sys.power.restart.ask')}
@@ -298,6 +293,7 @@ export default function Box() {
 					}} />
 			</div>
 			${said !== '' ? html`<p class="callout sys-said" role="status">${said}</p>` : null}
+			${standby.question}
 		</section>
 
 		<${Usage} />

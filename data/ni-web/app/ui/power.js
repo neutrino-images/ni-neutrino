@@ -76,6 +76,36 @@ export function tvFollows(video, on) {
 	return value[on ? 'hdmi_cec_standby' : 'hdmi_cec_view_on'] === '1';
 }
 
+/* The same question, asked of the box at the moment it matters: its video
+   section read and answered as tvFollows answers it. A box that will not say
+   is one whose television does not follow. Here once, for the question below
+   and for the one wake.js asks before a zap or a play wakes the box. */
+/**
+ * @param {boolean} on the direction, as sendStandby takes it
+ * @returns {Promise<boolean>}
+ */
+export function tvComesAlong(on) {
+	return store.load('GET', '/api/v1/settings/{section}', { params: { section: 'video' } }).then(function (video) {
+		return tvFollows(/** @type {any} */ (video), on);
+	}, function () { return false; });
+}
+
+/* The switch for the television, in the words of its direction, and the one
+   drawing of it: every question that may wake the box or send it to sleep
+   carries this one and no copy of it. */
+/**
+ * @param {{ on: boolean, checked: boolean, onChange: (checked: boolean) => void }} props
+ *        on is the direction, as sendStandby takes it
+ * @returns {Web.Drawn}
+ */
+export function TvSwitch(props) {
+	return html`<${Switch}
+		label=${t(text, props.on ? 'shell.power.cec.off' : 'shell.power.cec.on')}
+		hint=${t(text, 'shell.power.cec.once')}
+		checked=${props.checked}
+		onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { props.onChange(e.currentTarget.checked); }} />`;
+}
+
 /* THE QUESTION BEFORE THE BOX GOES EITHER WAY, as one piece both the key in
    the header and the switch on the box card draw.
 
@@ -116,9 +146,7 @@ export function useStandby(how) {
 	 */
 	function request(on) {
 		gate().then(function () {
-			return store.load('GET', '/api/v1/settings/{section}', { params: { section: 'video' } }).then(function (video) {
-				return tvFollows(/** @type {any} */ (video), on);
-			}, function () { return false; });
+			return tvComesAlong(on);
 		}).then(function (follows) {
 			if (!on && !follows) {
 				plain(false);
@@ -146,11 +174,7 @@ export function useStandby(how) {
 				plain(was.on);
 		}}>
 		<p>${t(text, on ? 'shell.power.ask' : 'shell.power.wake.ask')}</p>
-		${asking && asking.tv ? html`<${Switch}
-			label=${t(text, on ? 'shell.power.cec.off' : 'shell.power.cec.on')}
-			hint=${t(text, 'shell.power.cec.once')}
-			checked=${tv}
-			onChange=${function (/** @type {{ currentTarget: HTMLInputElement }} */ e) { setTv(e.currentTarget.checked); }} />` : null}
+		${asking && asking.tv ? html`<${TvSwitch} on=${on} checked=${tv} onChange=${setTv} />` : null}
 	<//>`;
 
 	return { request: request, question: question };
