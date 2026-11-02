@@ -15,7 +15,9 @@
  *
  * Where the Lua binding names a function of the script and looks it up in
  * its globals, this one takes the callable itself, and calls it with the
- * item's id, or with the id and the value for the rows that carry one.
+ * item's id alone where the row carries no value of its own - a forwarder,
+ * and a key - and with the id and the value where it does: a chooser, a
+ * numeric, a string, a stringinput, a keyboardinput and a filebrowser.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

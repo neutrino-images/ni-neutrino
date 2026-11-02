@@ -269,7 +269,7 @@ def test_menu():
 		     lambda: m.addItem(type="separatorline", name="a line"))
 	check_screen("menu", "addItem(forwarder)",
 		     lambda: m.addItem(type="forwarder", name="forwarder", value="value",
-				       action=lambda item, value: MENU_RETURN["REPAINT"]))
+				       action=lambda item: MENU_RETURN["REPAINT"]))
 	check_screen("menu", "addItem(chooser)",
 		     lambda: m.addItem(type="chooser", name="chooser", id="chooser",
 				       options={0: "zero", 1: "one", 2: "two"}, value="one",
@@ -283,13 +283,16 @@ def test_menu():
 				       action=lambda item, value: MENU_RETURN["REPAINT"]))
 	check_screen("menu", "addItem(stringinput)",
 		     lambda: m.addItem(type="stringinput", name="stringinput",
-				       value="edit me"))
+				       value="edit me",
+				       action=lambda item, value: MENU_RETURN["REPAINT"]))
 	check_screen("menu", "addItem(keyboardinput)",
 		     lambda: m.addItem(type="keyboardinput", name="keyboardinput",
-				       value="", size=20))
+				       value="", size=20,
+				       action=lambda item, value: MENU_RETURN["REPAINT"]))
 	check_screen("menu", "addItem(filebrowser)",
 		     lambda: m.addItem(type="filebrowser", name="filebrowser",
-				       value=DIR["CONFIGDIR"], filter=["*.cfg"]))
+				       value=DIR["CONFIGDIR"], filter=["*.cfg"],
+				       action=lambda item, value: MENU_RETURN["REPAINT"]))
 	check_screen("menu", "addItem(back)/addItem(cancel)",
 		     lambda: m.addItem(type="back"))
 	check_screen("menu", "addKey",
@@ -504,12 +507,12 @@ def picker():
 	m = menu.new(name="Python API test")
 	for name, _run in AREAS:
 		m.addItem(type="forwarder", name=name,
-			  action=lambda item, value, n=name: run_area(n))
+			  action=lambda item, n=name: run_area(n))
 	m.addItem(type="separator")
 	m.addItem(type="forwarder", name="run the ones that need nobody",
-		  action=lambda item, value: (run_quiet(), MENU_RETURN["REPAINT"]))
+		  action=lambda item: (run_quiet(), MENU_RETURN["REPAINT"]))
 	m.addItem(type="forwarder", name="show the report",
-		  action=lambda item, value: (show_report(), MENU_RETURN["REPAINT"]))
+		  action=lambda item: (show_report(), MENU_RETURN["REPAINT"]))
 	m.addItem(type="back")
 	m.exec()
 
