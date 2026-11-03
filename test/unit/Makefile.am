@@ -434,6 +434,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/check-epgscan-resume.sh \
 	scan/check-zapit-stop.sh \
 	scan/check-standby-flag.sh \
+	scan/check-stream-send.sh \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
 	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk \
 	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp scan/fixtures/addsetting-array.cpp scan/fixtures/display/display.cpp \
@@ -617,6 +618,7 @@ SCAN_CHECKS = \
 	scan-epgscan-resume \
 	scan-standby-flag \
 	scan-zapit-stop \
+	scan-stream-send \
 	scan-timerlist-event \
 	scan-menu-busy \
 	scan-settings-replaced \
@@ -867,6 +869,9 @@ scan-standby-flag:
 
 scan-zapit-stop:
 	@$(SHELL) $(srcdir)/scan/check-zapit-stop.sh $(top_srcdir)
+
+scan-stream-send:
+	@$(SHELL) $(srcdir)/scan/check-stream-send.sh $(top_srcdir)
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)
