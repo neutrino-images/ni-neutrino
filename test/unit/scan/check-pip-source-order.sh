@@ -30,7 +30,7 @@ SRC="$1"
 	exit 2
 }
 HERE=`dirname "$0"`
-for f in src/neutrino.cpp src/zapit/zapit.cpp src/zapit/streamholdcmd.cpp; do
+for f in src/neutrino.cpp src/zapit/zapit.cpp src/zapit/streamholdcmd.cpp src/coreapi/box/apply_ci.cpp src/coreapi/box/cicontrol_real.cpp; do
 	[ -r "$SRC/$f" ] || { echo "check-pip-source-order.sh: cannot read $SRC/$f" >&2; exit 1; }
 done
 [ -r "$HERE/strip-comments.awk" ] || { echo "check-pip-source-order.sh: cannot read $HERE/strip-comments.awk" >&2; exit 1; }
@@ -145,7 +145,7 @@ for call in 'ops.holdLive(' 'ops.pickIdle('; do
 	c=`first "$tmp/run" "$call"`
 	[ "$c" -gt "$fa" ] || { echo "streamholdcmd::run: $call comes before the facts are read" >&2; fail=1; }
 done
-for call in 'ops.tune(' 'ops.offer(' 'ops.answer('; do
+for call in 'ops.tune(' 'ops.readPids(' 'ops.offer(' 'ops.answer('; do
 	c=`first "$tmp/run" "$call"`
 	if [ "$c" -gt "$l" ] && [ "$c" -lt "$u" ]; then
 		echo "streamholdcmd::run: $call sits in the hold of the frontend manager's lock" >&2
@@ -165,6 +165,46 @@ awk '/void facts\(/ { f = 1 } f { print } f && (/^\t\t}/ || /}[ \t]*$/) { exit }
 grep -q -F 'StreamFacts(' "$tmp/facts" || { echo "zapit.cpp: StreamHoldOps::facts does not read CZapit::StreamFacts" >&2; fail=1; }
 awk '/^void CZapit::StreamFacts\(/ { f = 1 } f { print } f && /^}/ { exit }' "$tmp/zapit" > "$tmp/facts"
 grep -q -F 'avinput_pip' "$tmp/facts" || { echo "zapit.cpp: CZapit::StreamFacts does not read avinput_pip" >&2; fail=1; }
+# The live frontend's transponder is read with whether a scan may have
+# tuned it away from that id, in the same facts.
+grep -q -F 'f.live_tp =' "$tmp/facts" || { echo "zapit.cpp: CZapit::StreamFacts does not read the live frontend's transponder" >&2; fail=1; }
+# A scan counts from its start, which clears the current channel, until a
+# zap sets one again, not only while the scan thread runs.
+grep -q -F 'f.scanning = current_channel == NULL || CServiceScan::getInstance()->Scanning();' "$tmp/facts" ||
+	{ echo "zapit.cpp: CZapit::StreamFacts does not read whether a scan runs or left no current channel" >&2; fail=1; }
+# ... and the CI rule with them.
+grep -q -F 'f.live_ci = current_channel != NULL && current_channel->getChannelID() == live_channel_id &&' "$tmp/facts" &&
+	grep -q -F 'current_channel->bUseCI;' "$tmp/facts" ||
+	{ echo "zapit.cpp: CZapit::StreamFacts does not read whether the live channel uses the CI module" >&2; fail=1; }
+grep -q -F 'f.ci_one_service = CCamManager::getInstance()->GetCIMode() == 2;' "$tmp/facts" ||
+	{ echo "zapit.cpp: CZapit::StreamFacts does not read the CI mode" >&2; fail=1; }
+awk '/void facts\(/ { f = 1 } f { print } f && /^\t\t}/ { exit }' "$tmp/ops" > "$tmp/opsfacts"
+grep -q -F 'f.channel_ci = channel_obj != NULL && channel_obj->bUseCI;' "$tmp/opsfacts" ||
+	{ echo "zapit.cpp: StreamHoldOps::facts does not read whether the channel uses the CI module" >&2; fail=1; }
 grep -F 'void lockFrontends()' "$tmp/ops" | grep -q -F "$LOCK" || { echo "zapit.cpp: StreamHoldOps::lockFrontends does not take the frontend manager's lock" >&2; fail=1; }
+
+# The CI mode those facts read is the user's: handed over by every read of
+# the settings file, the one before zapit starts included, and again
+# whenever the setting changes, on the screen or through its applier.
+awk -v keepstrings=1 -f "$HERE/strip-comments.awk" "$SRC/src/neutrino.cpp" > "$tmp/neutrino"
+awk '/^int CNeutrinoApp::loadSetup\(/ { f = 1 } f { print } f && /^}/ { exit }' "$tmp/neutrino" |
+	awk '/g_settings\.ci_mode = configfile\.getInt32\(/ && !r { r = NR } /SetCIMode\(g_settings\.ci_mode\)/ && !s { s = NR }
+	END { exit !(r > 0 && s > r) }' ||
+	{ echo "neutrino.cpp: loadSetup does not hand the CI mode it reads to the CAM manager" >&2; fail=1; }
+awk '/= loadSetup\(NEUTRINO_SETTINGS_FILE\)/ && !s { s = NR } /CZapit::getInstance\(\)->Start\(/ && !z { z = NR }
+	END { exit !(s > 0 && z > 0 && s < z) }' "$tmp/neutrino" ||
+	{ echo "neutrino.cpp: the settings are not read before zapit starts" >&2; fail=1; }
+# The screen and the web write the setting through the ci apply group, which
+# hands a changed CI mode to the CAM manager.
+awk -v keepstrings=1 -f "$HERE/strip-comments.awk" "$SRC/src/coreapi/box/apply_ci.cpp" > "$tmp/applyci"
+grep -q -F '"ci_mode",' "$tmp/applyci" ||
+	{ echo "apply_ci.cpp: the ci group does not answer for ci_mode" >&2; fail=1; }
+awk '/^Status runCi\(\)/ { f = 1 } f { print } f && /^}/ { exit }' "$tmp/applyci" | tr -d '[:space:]' |
+	grep -q -F 'constintmode=g_settings.ci_mode;send(first,g_state.mode,mode,[&](){returnci.setMode(mode);});' ||
+	{ echo "apply_ci.cpp: runCi does not hand a changed CI mode to the module seam" >&2; fail=1; }
+awk -v keepstrings=1 -f "$HERE/strip-comments.awk" "$SRC/src/coreapi/box/cicontrol_real.cpp" > "$tmp/cireal"
+awk '/Status setMode\(int mode\)/ { f = 1 } f { print } f && /^\t\t}/ { exit }' "$tmp/cireal" |
+	grep -q -F 'CCamManager::getInstance()->SetCIMode(mode)' ||
+	{ echo "cicontrol_real.cpp: setMode does not hand the CI mode to the CAM manager" >&2; fail=1; }
 
 exit $fail

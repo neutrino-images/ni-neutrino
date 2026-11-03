@@ -46,6 +46,7 @@ class NoCiControl : public CiControl
 		Status setOperator(int, int) { return Status::NotSupported; }
 		Status setCheckLiveSlot(int) { return Status::NotSupported; }
 		Status setTuner(int) { return Status::NotSupported; }
+		Status setMode(int) { return Status::NotSupported; }
 };
 
 NoCiControl g_no_ci_control;
@@ -62,6 +63,7 @@ struct CiState
 	Sent<int> delay;
 	Sent<int> check_live;
 	Sent<int> tuner;
+	Sent<int> mode;
 };
 
 CiState g_state;
@@ -91,6 +93,8 @@ Status runCi()
 	/* The tuner first: the module binds to it before it is asked for a clock. */
 	const int tuner = g_settings.ci_tuner;
 	send(first, g_state.tuner, tuner, [&]() { return ci.setTuner(tuner); });
+	const int mode = g_settings.ci_mode;
+	send(first, g_state.mode, mode, [&]() { return ci.setMode(mode); });
 
 	const unsigned slots = slotsFitted();
 	for (unsigned i = 0; i < slots; i++)
@@ -130,6 +134,7 @@ Status runCi()
 const char *const kCiKeys[] =
 {
 	"ci_tuner",
+	"ci_mode",
 	"ci_check_live",
 	"ci_delay",
 	"ci_clock_0",

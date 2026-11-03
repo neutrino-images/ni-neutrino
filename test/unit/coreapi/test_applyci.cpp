@@ -45,9 +45,9 @@ namespace
 // The members the cases write, put back so the rest of the suite finds them as they were.
 struct KeptCiSettings
 {
-	int tuner, clock[4], save_pin[4];
+	int tuner, mode, clock[4], save_pin[4];
 	std::string pin[4];
-	KeptCiSettings() : tuner(g_settings.ci_tuner)
+	KeptCiSettings() : tuner(g_settings.ci_tuner), mode(g_settings.ci_mode)
 	{
 		for (int i = 0; i < 4; ++i)
 		{
@@ -59,6 +59,7 @@ struct KeptCiSettings
 	~KeptCiSettings()
 	{
 		g_settings.ci_tuner = tuner;
+		g_settings.ci_mode = mode;
 		for (int i = 0; i < 4; ++i)
 		{
 			g_settings.ci_clock[i] = clock[i];
@@ -85,6 +86,7 @@ struct CiBox
 		system.ci_slots = slots;
 		resetSentCi();
 		g_settings.ci_tuner = -1;
+		g_settings.ci_mode = 0;
 		for (int i = 0; i < 4; ++i)
 			g_settings.ci_clock[i] = 6;
 	}
@@ -110,7 +112,7 @@ TEST_CASE("the ci group answers for the module slots' settings and for no other 
 {
 	CiBox box(2);
 	registerApplyGroups();
-	const char *const grouped[] = { "ci_tuner", "ci_check_live", "ci_delay", "ci_clock_0", "ci_clock_3",
+	const char *const grouped[] = { "ci_tuner", "ci_mode", "ci_check_live", "ci_delay", "ci_clock_0", "ci_clock_3",
 					"ci_rpr_0", "ci_rpr_3", "ci_op_0", "ci_op_3" };
 	for (size_t i = 0; i < sizeof(grouped) / sizeof(grouped[0]); ++i)
 	{
@@ -119,7 +121,6 @@ TEST_CASE("the ci group answers for the module slots' settings and for no other 
 	}
 	// Read where they are used. The pin a slot keeps follows its switch by a coupling of the write.
 	REQUIRE(groupOf("ci_save_pincode_0") == NULL);
-	REQUIRE(groupOf("ci_mode") == NULL);
 	REQUIRE(groupOf("ci_rec_zapto") == NULL);
 	REQUIRE(groupOf("ci_standby_reset") == NULL);
 	REQUIRE(kCiApplyGroup.phase == ApplyPhase::Framebuffer);
@@ -136,12 +137,29 @@ TEST_CASE("startup runs the ci group once, tells the tuner first and the clock o
 
 	REQUIRE(runPhase(ApplyPhase::Framebuffer) == Status::Ok);
 
-	REQUIRE(box.ci.calls.size() >= 3);
+	REQUIRE(box.ci.calls.size() >= 4);
 	REQUIRE(box.ci.calls[0] == "tuner");
 	REQUIRE(box.ci.args[0].first == 3);
+	REQUIRE(box.ci.calls[1] == "mode");
 	REQUIRE(box.ci.count("clock") == 2);
-	REQUIRE(box.ci.args[1] == std::make_pair(0, 7));
-	REQUIRE(box.ci.args[2] == std::make_pair(1, 8));
+	REQUIRE(box.ci.args[2] == std::make_pair(0, 7));
+	REQUIRE(box.ci.args[3] == std::make_pair(1, 8));
+}
+
+TEST_CASE("a change of the CI mode tells the channel stack that and nothing else", "[apply][ci]")
+{
+	CiBox box(2);
+	registerApplyGroups();
+	REQUIRE(runPhase(ApplyPhase::Framebuffer) == Status::Ok);
+	REQUIRE(box.ci.count("mode") == 1);
+	box.ci.forget();
+
+	g_settings.ci_mode = 2;
+	REQUIRE(applyKey("ci_mode") == Status::Ok);
+
+	REQUIRE(box.ci.calls.size() == 1);
+	REQUIRE(box.ci.calls[0] == "mode");
+	REQUIRE(box.ci.args[0].first == 2);
 }
 
 TEST_CASE("a box that cannot say how many slots it has gets no clock", "[apply][ci]")

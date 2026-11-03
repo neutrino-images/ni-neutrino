@@ -1385,7 +1385,11 @@ void CFEManager::holdLiveForStream(CFrontend * live, CZapitChannel * channel, bo
 {
 	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
 #ifndef DYNAMIC_DEMUX
+	/* For the live channel these are the demuxes its zap set already; for
+	   another channel on the live transponder the record demux is the one
+	   its PAT and PMT are read through. */
 	const fesearch::Binding b = fesearch::binding(live->fenumber);
+	channel->setRecordDemux(b.demux);
 	channel->setStreamDemux(b.demux);
 #if HAVE_CST_HARDWARE
 	if(femap.size() > 1)

@@ -55,6 +55,7 @@ struct FakeCiControl : public coreapi::CiControl
 	coreapi::Status setOperator(int slot, int on) { return note("op", slot, on); }
 	coreapi::Status setCheckLiveSlot(int on) { return note("check", on, 0); }
 	coreapi::Status setTuner(int tuner) { return note("tuner", tuner, 0); }
+	coreapi::Status setMode(int mode) { return note("mode", mode, 0); }
 
 	size_t count(const std::string &what) const
 	{

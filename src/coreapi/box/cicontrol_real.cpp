@@ -92,6 +92,12 @@ class RealCiControl : public CiControl
 			CCamManager::getInstance()->SetCITuner(tuner);
 			return Status::Ok;
 		}
+
+		Status setMode(int mode)
+		{
+			CCamManager::getInstance()->SetCIMode(mode);
+			return Status::Ok;
+		}
 };
 
 RealCiControl g_real_ci_control;

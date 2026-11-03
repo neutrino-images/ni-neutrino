@@ -46,6 +46,10 @@ struct CiControl
 	   module for a channel keeps it, so it is told even where the driver has no
 	   input to switch. */
 	virtual Status setTuner(int tuner) = 0;
+	/* Which channels marked for the module may run beside the one that has
+	   it, as the setting holds it. The channel stack keeps it for the streams
+	   it admits, so it is told even where there is no module. */
+	virtual Status setMode(int mode) = 0;
 };
 
 /* NotSupported for every call while nothing is installed, so a group run before
