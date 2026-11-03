@@ -182,6 +182,7 @@ coreapi_tests_SOURCES = \
 	system/test_httptool.cpp \
 	system/test_remotetimer.cpp \
 	timerd/test_timerwake.cpp \
+	timerd/test_timerepg.cpp \
 	lib/timerdclient/test_timerdannounce.cpp \
 	coreapi/test_storage.cpp \
 	coreapi/test_storagedisks.cpp \
@@ -291,13 +292,14 @@ coreapi_tests_SOURCES = \
 # nothing besides the C library.
 # The timer daemon's client is linked for the same reason as the channel object:
 # what a list read does with an answer that stops early is its own logic.
+# timerwake.o is one object of the timer daemon that links on its own;
+# timerepg.o, the moment a recording's guide event is looked up at, is the other.
 # httptool.o is the client the box talks to another box with, and the cases that
 # pin what it puts on the wire answer it with a socket rather than reading the
 # source: a header it stopped sending is only visible at the other end.
 # remotetimer.o is what the timer screen asks another box's API with, driven the
 # same way: what it sends, how it logs in when the other end refuses, and how it
 # reads a list back are all visible only from the other side of a socket.
-# timerwake.o is the one object of the timer daemon that links on its own.
 # reap.o is how the terminal collects its own child, linked so the cases
 # drive the object the program runs; it needs nothing but the C library.
 # helpers.o carries the spawn helper the shipped program uses, so the case that
@@ -342,6 +344,7 @@ coreapi_tests_LDADD = \
 	$(top_builddir)/src/system/httptool.o \
 	$(top_builddir)/src/system/remotetimer.o \
 	$(top_builddir)/src/timerd/timerwake.o \
+	$(top_builddir)/src/timerd/timerepg.o \
 	$(top_builddir)/src/system/debug.o \
 	$(top_builddir)/lib/jsoncpp/libjsoncpp.a \
 	$(top_builddir)/src/zapit/channel.o \
@@ -444,6 +447,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/check-standby-flag.sh \
 	scan/check-stream-send.sh \
 	scan/check-live-displaced.sh \
+	scan/check-timer-epgid.sh \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
 	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk \
 	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp scan/fixtures/addsetting-array.cpp scan/fixtures/display/display.cpp \
@@ -629,6 +633,7 @@ SCAN_CHECKS = \
 	scan-zapit-stop \
 	scan-stream-send \
 	scan-live-displaced \
+	scan-timer-epgid \
 	scan-timerlist-event \
 	scan-menu-busy \
 	scan-settings-replaced \
@@ -885,6 +890,9 @@ scan-stream-send:
 
 scan-live-displaced:
 	@$(SHELL) $(srcdir)/scan/check-live-displaced.sh $(top_srcdir)
+
+scan-timer-epgid:
+	@$(SHELL) $(srcdir)/scan/check-timer-epgid.sh $(top_srcdir)
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)
