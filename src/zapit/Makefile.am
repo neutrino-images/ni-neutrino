@@ -23,7 +23,6 @@ libzapit_a_SOURCES = \
 	bouquets.cpp \
 	capmt.cpp \
 	channel.cpp \
-	fbc.cpp \
 	femanager.cpp \
 	frontend.cpp \
 	getservices.cpp \
