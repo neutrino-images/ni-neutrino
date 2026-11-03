@@ -55,7 +55,7 @@ loader.registerHooks({
 globalThis.document = /** @type {any} */ ({ documentElement: {} });
 
 const { Control, NamedNumber, Row, ChannelPick, ChannelSelect, ReadOnlyRow, channelChoices, faultText } = await import('../../data/ni-web/app/screens/settings/rows.js');
-const { conditionKeys, rowOf, rowsOf, changed, numberFault, textFault, hasFault, isVisible, withKeyNames, lineOf, risksOf } = await import('../../data/ni-web/app/screens/settings/model.js');
+const { conditionKeys, rowOf, rowsOf, changed, numberFault, textFault, hasFault, isVisible, withKeyNames, lineOf, risksOf, groupsOf, headingsOf, headingLabel } = await import('../../data/ni-web/app/screens/settings/model.js');
 const { outcomeOf, refusedOfSent, refusalText, applyFailedText } = await import('../../data/ni-web/app/screens/settings/refusal.js');
 const { default: words } = await import('../../data/ni-web/app/screens/settings/settings.text.js');
 const { setLanguage } = await import('../../data/ni-web/app/i18n.js');
@@ -702,6 +702,53 @@ same(sharedRows[2].choices, [{ value: 5, label: 'Five' }], 'a row with its own v
 same(sharedRows[3].choices.map(function (/** @type {any} */ c) { return c.text; }), ['de', 'en'], 'a string row reads shared entries by their text');
 same([sharedRows[4].choices.length, sharedRows[4].locked], [0, true], 'a name the answer does not hold leaves a choice with no values, which is held');
 same(rowsOf({ items: sharedAnswer.items.slice(0, 1) })[0].choices, [], 'an answer with no value_lists leaves the named list empty');
+
+// ------------------------------------------------- the headings of the box's menu
+
+// A row carries the name of the heading the box files it under, and nothing for none.
+const filed = /** @type {any} */ (rowOf({ id: 'hdmi_cec_mode', label: 'CEC', type: 'bool', section: 'video', group: 'videomenu.hdmi_cec' }));
+same(filed.group, 'videomenu.hdmi_cec', 'a row reads the heading it stands under');
+const unfiled = /** @type {any} */ (rowOf({ id: 'video_Mode', label: 'Mode', type: 'bool', section: 'video', group: 7 }));
+same(unfiled.group, '', 'a row naming no heading it can read stands under none');
+
+// The answer lists the headings with their words; one this page cannot read is left out.
+const headings = headingsOf({ groups: [
+	{ id: 'g.two', section: 'video', label: 'Two' },
+	{ id: 'g.one', section: 'video', label: 'One' },
+	{ id: 'g.bare', section: 'video' },
+	{ id: '', section: 'video', label: 'Nameless' },
+	{ section: 'video', label: 'Idless' },
+	'g.text',
+] });
+same(headings, [{ id: 'g.two', section: 'video', label: 'Two' }, { id: 'g.one', section: 'video', label: 'One' }, { id: 'g.bare', section: 'video', label: '' }],
+	'the headings are read in the order listed, an untitled one with no words');
+same(headingsOf(null), [], 'no answer lists no heading');
+same(headingsOf({ items: [] }), [], 'an answer without groups lists no heading');
+
+// The section's own rows come first, then one group per heading in the order the answer lists
+// them, each with its rows in the order they were given; a heading the list leaves out last.
+const filedRows = /** @type {any[]} */ (rowsOf({ items: [
+	{ id: 'a', label: 'A', type: 'bool', section: 'video', group: 'g.one' },
+	{ id: 'b', label: 'B', type: 'bool', section: 'video' },
+	{ id: 'f', label: 'F', type: 'bool', section: 'video', group: 'g.lost' },
+	{ id: 'c', label: 'C', type: 'bool', section: 'video', group: 'g.two' },
+	{ id: 'd', label: 'D', type: 'bool', section: 'video', group: 'g.one' },
+	{ id: 'e', label: 'E', type: 'bool', section: 'video' },
+	{ id: 'g', label: 'G', type: 'bool', section: 'video', group: 'g.bare' },
+] }));
+same(groupsOf(filedRows, headings).map(function (/** @type {any} */ g) {
+	return [g.id, g.label, g.rows.map(function (/** @type {any} */ r) { return r.id; })];
+}), [['', '', ['b', 'e']], ['g.two', 'Two', ['c']], ['g.one', 'One', ['a', 'd']], ['g.bare', '', ['g']], ['g.lost', '', ['f']]],
+	'rows are grouped under the headings in the order the box lists them');
+same(groupsOf(filedRows.slice(0, 1), headings).map(function (/** @type {any} */ g) { return g.id; }), ['g.one'],
+	'a section none of whose listed rows stands on its own page draws no empty group for it');
+same(groupsOf([], headings), [], 'nothing listed is no group at all');
+same(groupsOf(/** @type {any[]} */ (rowsOf({ items: [{ id: 'p', label: 'P', type: 'bool', section: 'x' }] })), []).length, 1,
+	'a server that names no heading gives one group, the page as it was');
+same([headingLabel(headings, filedRows[0]), headingLabel(headings, filedRows[1]), headingLabel(headings, filedRows[2])], ['One', '', ''],
+	'the words a row is filed under are its heading\'s, and none for a row on the page or a heading not listed');
+const otherSection = /** @type {any} */ (rowOf({ id: 'z', label: 'Z', type: 'bool', section: 'audio', group: 'g.one' }));
+same(headingLabel(headings, otherSection), '', 'a heading of one section does not title a row of another');
 
 if (failed > 0) {
 	process.stderr.write('settingsrows: ' + failed + ' of ' + checked + ' failed\n');

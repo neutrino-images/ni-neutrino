@@ -70,6 +70,7 @@ constexpr Descriptor kNetwork[] =
 	// time
 	enumRow("network_ntpenable")
 		.section("network")
+		.group(&kNetworkNtp)
 		.label("networkmenu.ntpenable")
 		.hint("menu.hint_net_ntpenable")
 		.defaultValue(1)
@@ -77,6 +78,7 @@ constexpr Descriptor kNetwork[] =
 		.field(COREAPI_NUMBER_FIELD(network_ntpenable)),
 	textRow("network_ntpserver")
 		.section("network")
+		.group(&kNetworkNtp)
 		.label("networkmenu.ntpserver")
 		.hint("menu.hint_net_ntpserver")
 		.defaultValue("0.de.pool.ntp.org")
@@ -88,6 +90,7 @@ constexpr Descriptor kNetwork[] =
 	   can read. */
 	textRow("network_ntprefresh")
 		.section("network")
+		.group(&kNetworkNtp)
 		.label("networkmenu.ntprefresh")
 		.hint("menu.hint_net_ntprefresh")
 		.defaultValue("30")
@@ -102,6 +105,7 @@ constexpr Descriptor kNetwork[] =
 	   frontend unable to show whether one is set at all. */
 	textRow("softupdate_proxyserver")
 		.section("network")
+		.group(&kNetworkProxy)
 		.label("flashupdate.proxyserver")
 		.hint("menu.hint_net_proxyserver")
 		.defaultValue("")
@@ -109,12 +113,14 @@ constexpr Descriptor kNetwork[] =
 		.field(COREAPI_TEXT_FIELD(softupdate_proxyserver)),
 	textRow("softupdate_proxyusername")
 		.section("network")
+		.group(&kNetworkProxy)
 		.label("flashupdate.proxyusername")
 		.hint("menu.hint_net_proxyuser")
 		.defaultValue("")
 		.field(COREAPI_TEXT_FIELD(softupdate_proxyusername)),
 	textRow("softupdate_proxypassword")
 		.section("network")
+		.group(&kNetworkProxy)
 		.label("flashupdate.proxypassword")
 		.hint("menu.hint_net_proxypass")
 		.defaultValue("")

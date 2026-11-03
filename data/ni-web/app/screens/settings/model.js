@@ -1,10 +1,11 @@
 /* The form, worked out from what the box says about itself.
 
    Nothing in this file knows the name of a single setting. What it knows is the shape the
-   box declares them in: an identifier, a kind, a section, the text to put beside it,
-   bounds for a number, the set a choice offers, the value it falls back to, whether the
-   box has to be restarted, whether it is a credential, and the comparisons that decide
-   whether it is worth showing. So a setting added to the tables in
+   box declares them in: an identifier, a kind, a section, the heading of the box's own
+   menu it stands under within that section, the text to put beside it, bounds for a
+   number, the set a choice offers, the value it falls back to, whether the box has to be
+   restarted, whether it is a credential, and the comparisons that decide whether it is
+   worth showing. So a setting added to the tables in
    src/coreapi/settings/settingstable_*.cpp appears here without a line written for it.
 
    Five things that look like details and are not. A row the box lacks the hardware for,
@@ -25,6 +26,7 @@
  * @property {'bool'|'int'|'string'|'enum'|'key'|'list'} type
  * @property {string} label
  * @property {string} section
+ * @property {string} group the name of the heading of the box's menu the row stands under, empty for none
  * @property {boolean} secret
  * @property {boolean} needsRestart
  * @property {string} fallback what the box falls back to, empty for a credential
@@ -68,7 +70,7 @@
  */
 
 /** what the schema calls a setting, before this file has read it */
-/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, min?: unknown, max?: unknown, unit?: unknown, channels?: unknown, values?: unknown, values_from?: unknown, listed?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, available?: unknown, conditions?: unknown, pair?: unknown, pair_writes?: unknown, channel_kind?: unknown, text_kind?: unknown, min_length?: unknown, max_length?: unknown, allowed_chars?: unknown }} Declared */
+/** @typedef {{ id?: unknown, type?: unknown, section?: unknown, label?: unknown, group?: unknown, min?: unknown, max?: unknown, unit?: unknown, channels?: unknown, values?: unknown, values_from?: unknown, listed?: unknown, default?: unknown, needs_restart?: unknown, secret?: unknown, locked?: unknown, available?: unknown, conditions?: unknown, pair?: unknown, pair_writes?: unknown, channel_kind?: unknown, text_kind?: unknown, min_length?: unknown, max_length?: unknown, allowed_chars?: unknown }} Declared */
 
 const kTypes = ['bool', 'int', 'string', 'enum', 'key', 'color', 'list'];
 
@@ -94,6 +96,7 @@ export function rowOf(declared, lists) {
 	const id = typeof declared.id === 'string' ? declared.id : '';
 	const label = typeof declared.label === 'string' ? declared.label : '';
 	const section = typeof declared.section === 'string' ? declared.section : '';
+	const group = typeof declared.group === 'string' ? declared.group : '';
 	const type = typeof declared.type === 'string' ? declared.type : '';
 	const pair = typeof declared.pair === 'string' ? declared.pair : '';
 	const pairWrites = declared.pair_writes === 'both' || declared.pair_writes === 'id' ? declared.pair_writes : '';
@@ -140,6 +143,7 @@ export function rowOf(declared, lists) {
 		type: kind,
 		label: label,
 		section: section,
+		group: group,
 		secret: declared.secret === true,
 		needsRestart: declared.needs_restart === true,
 		fallback: typeof declared['default'] === 'string' ? declared['default'] : '',
@@ -374,6 +378,113 @@ export function withKeyNames(rows, answer) {
  */
 export function rowsOfSection(rows, section) {
 	return rows.filter(function (row) { return row.section === section; });
+}
+
+/**
+ * A heading of the box's own menu, as the answer lists it.
+ *
+ * @typedef {Object} Heading
+ * @property {string} id what the rows under it name as their group
+ * @property {string} section
+ * @property {string} label the words that title it, empty where the box sent none
+ */
+
+/**
+ * The headings the answer lists, in the order the box's menu shows them. One this page
+ * cannot read is left out, which leaves its rows under a heading without words.
+ *
+ * @param {{ groups?: unknown } | null} answer
+ * @returns {Heading[]}
+ */
+export function headingsOf(answer) {
+	/** @type {Heading[]} */
+	const out = [];
+	const listed = answer && Array.isArray(answer.groups) ? answer.groups : [];
+	for (const one of listed) {
+		if (!one || typeof one !== 'object')
+			continue;
+		const said = /** @type {{ id?: unknown, section?: unknown, label?: unknown }} */ (one);
+		if (typeof said.id !== 'string' || said.id === '' || typeof said.section !== 'string')
+			continue;
+		out.push({ id: said.id, section: said.section, label: typeof said.label === 'string' ? said.label : '' });
+	}
+	return out;
+}
+
+/**
+ * The words that title the heading a row stands under, empty for none.
+ *
+ * @param {Heading[]} headings
+ * @param {Row} row
+ * @returns {string}
+ */
+export function headingLabel(headings, row) {
+	if (row.group === '')
+		return '';
+	for (const one of headings) {
+		if (one.id === row.group && one.section === row.section)
+			return one.label;
+	}
+	return '';
+}
+
+/**
+ * One heading of a section and the rows under it.
+ *
+ * @typedef {Object} Group
+ * @property {string} id the name the box gave the heading, empty for the section's own rows
+ * @property {string} label the words that title it, empty for none
+ * @property {Row[]} rows
+ */
+
+/**
+ * The rows arranged the way the box's own menu files them: first those the menu shows on
+ * the section's own page, then one group per heading in the order the box lists the
+ * headings, each heading's rows in the order they were given. A heading the list leaves out
+ * comes after those it holds, in the order its first row comes in.
+ *
+ * Drawn from whatever rows are handed in, so a heading none of whose rows is listed, because
+ * it is hidden or agrees with what the box ships, is no heading at all. A server that names
+ * no heading gives one group holding every row, which is the page as it was.
+ *
+ * @param {Row[]} rows
+ * @param {Heading[]} headings
+ * @returns {Group[]}
+ */
+export function groupsOf(rows, headings) {
+	/** @type {Group} */
+	const page = { id: '', label: '', rows: [] };
+	/** @type {Record<string, Group>} */
+	const at = {};
+	/** @type {Group[]} */
+	const inOrder = [];
+	for (const row of rows) {
+		if (row.group === '') {
+			page.rows.push(row);
+			continue;
+		}
+		// Two sections may name a heading alike, so it is known by its section as well.
+		const name = row.section + '/' + row.group;
+		let group = at[name];
+		if (group === undefined) {
+			group = { id: row.group, label: headingLabel(headings, row), rows: [] };
+			at[name] = group;
+			inOrder.push(group);
+		}
+		group.rows.push(row);
+	}
+	/** @type {Group[]} */
+	const out = [page];
+	for (const one of headings) {
+		const group = at[one.section + '/' + one.id];
+		if (group !== undefined && out.indexOf(group) === -1)
+			out.push(group);
+	}
+	for (const group of inOrder) {
+		if (out.indexOf(group) === -1)
+			out.push(group);
+	}
+	return out.filter(function (group) { return group.rows.length > 0; });
 }
 
 /**

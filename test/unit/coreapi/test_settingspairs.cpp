@@ -30,6 +30,7 @@
 // and the compiler can.
 #include <driver/rcinput.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -673,6 +674,22 @@ TEST_CASE("every declared label names a locale the program has", "[settingspairs
 	recordCount("labels compared against the locale names", checked);
 }
 
+// The same question of the text each heading of the menu is titled with.
+TEST_CASE("every heading of the menu names a locale the program has", "[settingspairs]")
+{
+	size_t headed = 0;
+	for (size_t i = 0; i < settingsTableCount(); ++i)
+	{
+		const Descriptor &d = settingsTable()[i];
+		if (d.group == NULL)
+			continue;
+		++headed;
+		INFO("row " << d.key << " under " << d.group->label_key);
+		CHECK(localeNames().count(d.group->label_key) == 1);
+	}
+	CHECK(headed > 0);
+}
+
 /* The other half of allowing a row to say it has no name: one that says so
    while a screen does name the field is a name thrown away, and a frontend
    would then show the key where the box shows a word. This reads the ranges the
@@ -852,4 +869,257 @@ TEST_CASE("a row whose value is not in the settings file is not in it", "[settin
 	INFO("rows whose value is not in the settings file: " << checked);
 	recordCount("rows whose value is not in the settings file", checked);
 	REQUIRE(checked > 0);
+}
+
+/* ------------------------------------------------------------ the headings of the menus
+
+   What settings-groups.txt holds is said in scan/groups.awk. A row's heading is held to
+   the screens that build it: one of them has to file it there, by the text its widget is
+   introduced with, by the titled separator above it, or by the widget's title, which is
+   what a submenu inside a submenu carries of the one that leads to it. A row standing on
+   the section's own page has to be built in the menu that offers the section, under no
+   titled separator. A row no screen builds from the declaration has nothing to be held to
+   and is not compared. */
+namespace
+{
+
+struct GroupSite
+{
+	std::vector<std::string> intro;
+	std::string sep;
+	std::string title;
+	std::string where;
+};
+
+const std::map<std::string, std::vector<GroupSite> > &groupSites()
+{
+	static std::map<std::string, std::vector<GroupSite> > m;
+	static bool loaded = false;
+	if (!loaded)
+	{
+		std::vector<std::vector<std::string> > rows = readTable(COREAPI_GROUPS_FILE);
+		for (size_t i = 0; i < rows.size(); ++i)
+		{
+			if (rows[i].size() != 6 || rows[i][0] != "S")
+				continue;
+			GroupSite s;
+			const std::string &intro = rows[i][2];
+			for (size_t at = 0; at <= intro.size();)
+			{
+				size_t bar = intro.find('|', at);
+				if (bar == std::string::npos)
+					bar = intro.size();
+				s.intro.push_back(intro.substr(at, bar - at));
+				at = bar + 1;
+			}
+			s.sep = rows[i][3];
+			s.title = rows[i][4];
+			s.where = rows[i][5];
+			m[rows[i][1]].push_back(s);
+		}
+		loaded = true;
+	}
+	return m;
+}
+
+// The heading each menu that offers a whole section is introduced with.
+struct SectionPage
+{
+	const char *section;
+	const char *heading;
+};
+
+const SectionPage kSectionPages[] =
+{
+	{ "audio", "mainsettings.audio" },
+	{ "cam", "ci.settings" },
+	{ "display", "lcdmenu.head" },
+	{ "general", "languagesetup.head" },
+	{ "hdd", "hdd_settings" },
+	{ "keybindings", "mainsettings.keybinding" },
+	{ "network", "mainsettings.network" },
+	{ "osd", "mainsettings.osd" },
+	{ "parental", "parentallock.parentallock" },
+	{ "player", "mainmenu.media" },
+	{ "recording", "mainsettings.recording" },
+	{ "update", "flashupdate.settings" },
+	{ "video", "mainsettings.video" },
+	{ "weather", "miscsettings.onlineservices" },
+};
+
+bool isPage(const std::string &section, const std::string &heading)
+{
+	for (size_t i = 0; i < sizeof(kSectionPages) / sizeof(kSectionPages[0]); ++i)
+	{
+		if (section == kSectionPages[i].section && heading == kSectionPages[i].heading)
+			return true;
+	}
+	return false;
+}
+
+/* Rows whose heading the scan cannot read off the screen that builds them, each with why.
+   Held here rather than left uncompared, so that one more such row is a decision and not
+   something nobody noticed; a row listed here that the scan has learnt to read fails, so
+   the list cannot outlive its reason. */
+struct UnreadHeading
+{
+	const char *key;
+	const char *why;
+};
+
+const UnreadHeading kUnreadHeadings[] =
+{
+	{ "analog_out", "offered only by the audio selection while something plays, no settings menu" },
+	{ "hdd_fs", "a drive's own menu, titled with the drive's name at run time" },
+	{ "lcd4l_brightness", "the display type submenu inside the LCD4Linux menu, opened by an action and not a widget" },
+	{ "lcd4l_brightness_standby", "the display type submenu inside the LCD4Linux menu, opened by an action and not a widget" },
+	{ "lcd4l_skin", "the display type submenu inside the LCD4Linux menu, opened by an action and not a widget" },
+	{ "lcd4l_skin_radio", "the display type submenu inside the LCD4Linux menu, opened by an action and not a widget" },
+	{ "personalize_pincode", "built into a widget the function is handed under a name of its own" },
+	{ "personalize_pinstatus", "built into a widget the function is handed under a name of its own" },
+	{ "shutdown_block_while_recording", "the energy menu is introduced with a text its caller passes in" },
+	{ "shutdown_count", "the energy menu is introduced with a text its caller passes in" },
+	{ "shutdown_real", "the energy menu is introduced with a text its caller passes in" },
+	{ "shutdown_real_rcdelay", "the energy menu is introduced with a text its caller passes in" },
+	{ "sleeptimer_min", "the energy menu is introduced with a text its caller passes in" },
+	{ "softupdate_proxypassword", "the proxy menu is introduced with a text chosen by its caller" },
+	{ "softupdate_proxyserver", "the proxy menu is introduced with a text chosen by its caller" },
+	{ "softupdate_proxyusername", "the proxy menu is introduced with a text chosen by its caller" },
+};
+
+const char *unreadWhy(const std::string &key)
+{
+	for (size_t i = 0; i < sizeof(kUnreadHeadings) / sizeof(kUnreadHeadings[0]); ++i)
+	{
+		if (key == kUnreadHeadings[i].key)
+			return kUnreadHeadings[i].why;
+	}
+	return NULL;
+}
+
+bool siteFiles(const GroupSite &s, const Descriptor &d)
+{
+	if (d.group != NULL)
+	{
+		const std::string heading = d.group->label_key;
+		return std::find(s.intro.begin(), s.intro.end(), heading) != s.intro.end() ||
+		       s.sep == heading || s.title == heading;
+	}
+	if (s.sep != "-")
+		return false;
+	for (size_t i = 0; i < s.intro.size(); ++i)
+	{
+		if (isPage(d.section, s.intro[i]))
+			return true;
+	}
+	return isPage(d.section, s.title);
+}
+
+} // anonymous namespace
+
+TEST_CASE("every row stands under the heading a screen files it under", "[settingspairs][groups]")
+{
+	const std::map<std::string, std::vector<GroupSite> > &sites = groupSites();
+	REQUIRE_FALSE(sites.empty());
+
+	size_t compared = 0, unread = 0;
+	for (size_t i = 0; i < settingsTableCount(); ++i)
+	{
+		const Descriptor &d = settingsTable()[i];
+		std::map<std::string, std::vector<GroupSite> >::const_iterator at = sites.find(d.key);
+		if (at == sites.end())
+			continue;
+		++compared;
+		bool filed = false;
+		std::string seen;
+		for (size_t s = 0; s < at->second.size(); ++s)
+		{
+			filed = filed || siteFiles(at->second[s], d);
+			seen += " " + at->second[s].where;
+		}
+		const char *why = unreadWhy(d.key);
+		INFO("row " << d.key << " of " << d.section << " under "
+		     << (d.group != NULL ? d.group->label_key : "no heading") << ", built at" << seen);
+		if (why != NULL)
+		{
+			++unread;
+			INFO("listed as unread: " << why);
+			CHECK_FALSE(filed);
+			continue;
+		}
+		CHECK(filed);
+	}
+
+	// Every row listed as unread is still one a screen builds.
+	for (size_t u = 0; u < sizeof(kUnreadHeadings) / sizeof(kUnreadHeadings[0]); ++u)
+	{
+		INFO("listed as unread: " << kUnreadHeadings[u].key);
+		CHECK(sites.count(kUnreadHeadings[u].key) == 1);
+	}
+
+	INFO("rows compared: " << compared << ", of them listed as unread: " << unread);
+	/* Below this the scan or the table has stopped matching. A build compares some 380 to
+	   480, by how many of the rows the screens build it links. */
+	CHECK(compared > 300);
+}
+
+/* The order of a section's headings, held to the order in which the screens lead to them.
+   A file that leads to two or more headings of one section, by a forwarder or a titled
+   separator, has to do so in the order the headings state. */
+TEST_CASE("a section's headings stand in the order the screens lead to them", "[settingspairs][groups]")
+{
+	std::map<std::string, std::vector<const MenuGroup *> > bySection;
+	for (size_t i = 0; i < settingsTableCount(); ++i)
+	{
+		const Descriptor &d = settingsTable()[i];
+		if (d.group == NULL)
+			continue;
+		std::vector<const MenuGroup *> &list = bySection[d.section];
+		if (std::find(list.begin(), list.end(), d.group) == list.end())
+			list.push_back(d.group);
+	}
+	REQUIRE_FALSE(bySection.empty());
+
+	std::vector<std::vector<std::string> > rows = readTable(COREAPI_GROUPS_FILE);
+	std::map<std::string, std::vector<std::string> > byFile;
+	std::vector<std::string> files;
+	for (size_t i = 0; i < rows.size(); ++i)
+	{
+		if (rows[i].size() != 3 || rows[i][0] != "H")
+			continue;
+		const std::string file = rows[i][2].substr(0, rows[i][2].rfind(':'));
+		if (byFile.find(file) == byFile.end())
+			files.push_back(file);
+		byFile[file].push_back(rows[i][1]);
+	}
+	REQUIRE_FALSE(files.empty());
+
+	size_t held = 0;
+	for (std::map<std::string, std::vector<const MenuGroup *> >::const_iterator s = bySection.begin(); s != bySection.end(); ++s)
+	{
+		for (size_t f = 0; f < files.size(); ++f)
+		{
+			const std::vector<std::string> &led = byFile[files[f]];
+			std::vector<const MenuGroup *> met;
+			for (size_t h = 0; h < led.size(); ++h)
+			{
+				for (size_t g = 0; g < s->second.size(); ++g)
+				{
+					if (led[h] == s->second[g]->label_key &&
+					    std::find(met.begin(), met.end(), s->second[g]) == met.end())
+						met.push_back(s->second[g]);
+				}
+			}
+			for (size_t m = 1; m < met.size(); ++m)
+			{
+				INFO(files[f] << " leads to " << met[m - 1]->label_key << " before " << met[m]->label_key
+				     << " of " << s->first);
+				CHECK(met[m - 1]->order < met[m]->order);
+				++held;
+			}
+		}
+	}
+	INFO("pairs of headings held to a screen: " << held);
+	// The tree holds some forty such pairs; none says the scan has stopped reading.
+	CHECK(held > 20);
 }

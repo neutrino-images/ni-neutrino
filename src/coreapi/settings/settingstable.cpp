@@ -68,12 +68,14 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_TEXT_FIELD(timezone)),
 	boolRow("auto_lang")
 		.section("general")
+		.group(&kGeneralAudioLanguages)
 		.label("audiomenu.auto_lang")
 		.hint("menu.hint_auto_lang")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(auto_lang)),
 	boolRow("auto_subs")
 		.section("general")
+		.group(&kGeneralSubtitleLanguages)
 		.label("audiomenu.auto_subs")
 		.hint("menu.hint_auto_subs")
 		.defaultValue(0)
@@ -83,6 +85,7 @@ constexpr Descriptor kSettings[] =
 	   the ceiling is the three of them together rather than what a byte holds. */
 	intRow("recording_audio_pids_default")
 		.section("recording")
+		.group(&kRecordingAudioPids)
 		.label("recordingmenu.apids")
 		.range(0, TIMERD_APIDS_STD | TIMERD_APIDS_ALT | TIMERD_APIDS_AC3)
 		.defaultValue(TIMERD_APIDS_STD | TIMERD_APIDS_AC3)

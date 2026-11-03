@@ -86,6 +86,7 @@ constexpr Descriptor kChannel[] =
 	   nowhere else. */
 	boolRow("uselastchannel")
 		.section("channel")
+		.group(&kChannelStart)
 		.label("zapitsetup.last_use")
 		.hint("menu.hint_last_use")
 		.defaultValue(1)
@@ -93,6 +94,7 @@ constexpr Descriptor kChannel[] =
 		.field(COREAPI_NUMBER_FIELD(uselastchannel)),
 	enumRow("channel_mode_initial")
 		.section("channel")
+		.group(&kChannelStart)
 		.label("zapitsetup.channelmode")
 		.hint("menu.hint_channellist_mode")
 		.defaultValue(0)
@@ -101,6 +103,7 @@ constexpr Descriptor kChannel[] =
 		.field(COREAPI_NUMBER_FIELD(channel_mode_initial)),
 	enumRow("channel_mode_initial_radio")
 		.section("channel")
+		.group(&kChannelStart)
 		.label("zapitsetup.channelmode_radio")
 		.hint("menu.hint_channellist_mode_radio")
 		.defaultValue(0)
@@ -113,6 +116,7 @@ constexpr Descriptor kChannel[] =
 	   written one takes effect at the next. */
 	textRow("startchanneltv_id")
 		.section("channel")
+		.group(&kChannelStart)
 		.defaultValue("0")
 		.needsRestart()
 		.changeableWhen(kNoLastChannel)
@@ -120,6 +124,7 @@ constexpr Descriptor kChannel[] =
 		.field(COREAPI_CHANNEL_ID_FIELD(startchanneltv_id)),
 	textRow("startchannelradio_id")
 		.section("channel")
+		.group(&kChannelStart)
 		.defaultValue("0")
 		.needsRestart()
 		.changeableWhen(kNoLastChannel)
@@ -129,6 +134,7 @@ constexpr Descriptor kChannel[] =
 	   zaps to. */
 	textRow("startchanneltv")
 		.section("channel")
+		.group(&kChannelStart)
 		.label("zapitsetup.last_tv")
 		.hint("menu.hint_last_tv")
 		.defaultValue("")
@@ -137,6 +143,7 @@ constexpr Descriptor kChannel[] =
 		.field(COREAPI_TEXT_FIELD(StartChannelTV)),
 	textRow("startchannelradio")
 		.section("channel")
+		.group(&kChannelStart)
 		.label("zapitsetup.last_radio")
 		.hint("menu.hint_last_radio")
 		.defaultValue("")
@@ -148,18 +155,21 @@ constexpr Descriptor kChannel[] =
 	   menu was opened and not a setting, so none of them carries a condition. */
 	enumRow("livestreamResolution")
 		.section("channel")
+		.group(&kChannelWebTv)
 		.label("livestream.resolution")
 		.defaultValue(1920)
 		.values(kLivestreamResolution)
 		.field(COREAPI_NUMBER_FIELD(livestreamResolution)),
 	intRow("webtv_stream_restart_attempts")
 		.section("channel")
+		.group(&kChannelWebTv)
 		.label("webtv.stream_restart_attempts")
 		.range(0, 3)
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(webtv_stream_restart_attempts)),
 	boolRow("webtv_dns_diagnostics")
 		.section("channel")
+		.group(&kChannelWebTv)
 		.label("webtv.dns.diagnostics")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(webtv_dns_diagnostics)),
@@ -167,11 +177,13 @@ constexpr Descriptor kChannel[] =
 	   found at run time. */
 	boolRow("webtv_xml_auto")
 		.section("channel")
+		.group(&kChannelWebTv)
 		.label("webtv.xml.auto")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(webtv_xml_auto)),
 	boolRow("webradio_xml_auto")
 		.section("channel")
+		.group(&kChannelWebRadio)
 		.label("webradio.xml.auto")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(webradio_xml_auto)),
@@ -179,6 +191,7 @@ constexpr Descriptor kChannel[] =
 	   movie player still reads it. */
 	textRow("livestreamScriptPath")
 		.section("channel")
+		.group(&kChannelWebTv)
 		.label("livestream.scriptpath")
 		.defaultValue(WEBTVDIR)
 		.text(kRuleDirectory)

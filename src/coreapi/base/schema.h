@@ -54,6 +54,7 @@ enum class ValueType
 };
 
 struct Condition;
+struct MenuGroup;
 struct ValueLookup;
 
 // One choice an Enum offers. The number is what the setting stores and
@@ -554,6 +555,9 @@ struct Descriptor
 	/* The label where the box names the row itself, in place of label_key. False says the box
 	   has no name for it, and the row is then not on this box. NULL: label_key. */
 	bool           (*label_from)(const Descriptor &, std::string &);
+	/* The heading of the box's own menu the row stands under within its section, one of the
+	   objects settingstable.h declares. NULL: the section's own page, above every heading. */
+	const MenuGroup *group;
 };
 
 /* How many channels a Color row has, three or four. The row keeps it in min and
@@ -792,7 +796,7 @@ public:
 	{
 		return RowBuilder(Descriptor{
 			key, t, NULL, NULL, NULL, low, high, NULL, 0, 0, NULL, false, false, NULL, 0, COREAPI_NO_FIELD,
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 		}, NULL);
 	}
 
@@ -802,7 +806,7 @@ public:
 			d_.key, d_.type, name, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -812,7 +816,7 @@ public:
 			d_.key, d_.type, d_.section, key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -822,7 +826,20 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, key, d_.label_from, d_.group
+		}, avail_);
+	}
+
+	/* The heading of the box's own menu the row stands under within its section: the submenu,
+	   or the titled separator, the screen files it under. An object and not its name, so a
+	   heading misspelt is one the compiler does not know. */
+	constexpr RowBuilder group(const MenuGroup *heading) const
+	{
+		return RowBuilder(Descriptor{
+			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
+			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
+			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, heading
 		}, avail_);
 	}
 
@@ -832,7 +849,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, fn
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, fn, d_.group
 		}, avail_);
 	}
 
@@ -842,7 +859,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, key, d_.min, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -852,7 +869,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, v, d_.max, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -862,7 +879,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, v, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -872,7 +889,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, low, high, d_.values, d_.value_count,
 			d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -882,7 +899,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, v, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -892,7 +909,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, v, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -902,7 +919,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, text, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -912,7 +929,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -922,7 +939,7 @@ public:
 		return RowBuilder(Descriptor{
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, list, N, d_.default_int,
 			d_.default_string, d_.needs_restart, d_.secret, d_.conditions, d_.condition_count, d_.field,
-			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -932,7 +949,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -942,7 +959,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, &rule, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -952,7 +969,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, fn, d_.min_now, d_.max_now,
-			d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -962,7 +979,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, fn,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -972,7 +989,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			fn, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			fn, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -988,7 +1005,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, true, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -1002,7 +1019,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, true, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, true, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -1012,7 +1029,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, true, d_.conditions,
 			d_.condition_count, d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now,
-			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -1023,7 +1040,7 @@ public:
 			d_.key, d_.type, d_.section, d_.label_key, d_.hint_key, d_.min, d_.max, d_.values,
 			d_.value_count, d_.default_int, d_.default_string, d_.needs_restart, d_.secret, list, N,
 			d_.field, d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now,
-			d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		}, avail_);
 	}
 
@@ -1044,7 +1061,7 @@ public:
 				f.read_number, f.write_number, f.int_pointer, f.fits_number, f.read_text, f.write_text, f.ask,
 				f.tell, f.name, f.origin, avail_ != NULL ? avail_ : f.available, f.otherwise, f.extra
 			},
-			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from
+			d_.unit_key, d_.text, d_.choices_from, d_.min_now, d_.max_now, d_.default_fn, d_.read_outside, d_.menu_label_key, d_.label_from, d_.group
 		};
 	}
 

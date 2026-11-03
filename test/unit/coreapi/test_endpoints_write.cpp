@@ -1342,7 +1342,7 @@ const coreapi::Descriptor kFanRow[] =
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  fixtureFan, NULL, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // namespace
@@ -1559,14 +1559,14 @@ const coreapi::Descriptor kKeyAndService[] =
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  NULL, NULL, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_service", coreapi::ValueType::Bool, "fixture", NULL, NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kFixtureKeyValid),
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  NULL, NULL, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // namespace

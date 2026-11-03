@@ -137,36 +137,43 @@ constexpr Descriptor kUpdate[] =
 	   setting, so none of the rows carries a condition. */
 	boolRow("flashupdate_createimage_add_var")
 		.section("update")
+		.group(&kUpdateImage)
 		.label("flashupdate.createimage_add_var")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(flashupdate_createimage_add_var)),
 	boolRow("flashupdate_createimage_add_root1")
 		.section("update")
+		.group(&kUpdateImage)
 		.label("flashupdate.createimage_add_root1")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(flashupdate_createimage_add_root1)),
 	boolRow("flashupdate_createimage_add_uldr")
 		.section("update")
+		.group(&kUpdateImage)
 		.label("flashupdate.createimage_add_uldr")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(flashupdate_createimage_add_uldr)),
 	boolRow("flashupdate_createimage_add_u_boot")
 		.section("update")
+		.group(&kUpdateImage)
 		.label("flashupdate.createimage_add_u_boot")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(flashupdate_createimage_add_u_boot)),
 	boolRow("flashupdate_createimage_add_env")
 		.section("update")
+		.group(&kUpdateImage)
 		.label("flashupdate.createimage_add_env")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(flashupdate_createimage_add_env)),
 	boolRow("flashupdate_createimage_add_spare")
 		.section("update")
+		.group(&kUpdateImage)
 		.label("flashupdate.createimage_add_spare")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(flashupdate_createimage_add_spare)),
 	boolRow("flashupdate_createimage_add_kernel")
 		.section("update")
+		.group(&kUpdateImage)
 		.label("flashupdate.createimage_add_kernel")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(flashupdate_createimage_add_kernel)),

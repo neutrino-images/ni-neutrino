@@ -153,13 +153,13 @@ const Descriptor kBoxDefaultThenCondition[] =
 		"fixture_basis", ValueType::Int, "fixture", "label", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, threeOnThisBox, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, threeOnThisBox, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_dependent", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kBasisIsThree),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -705,7 +705,7 @@ const Descriptor kWiderThanItsField[] =
 		"fixture_byte", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(recording_audio_pids_default),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kWiderThanItsFieldCount =
@@ -1197,7 +1197,7 @@ const Descriptor kBoolWithoutBounds[] =
 		"fixture_bool", ValueType::Bool, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kBoolWithoutBoundsCount =
@@ -1212,13 +1212,13 @@ const Descriptor kNamedNumber[] =
 		"fixture_named", ValueType::Int, "fixture", "label", NULL,
 		1, 14, COREAPI_VALUES(kOffBelow), 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kNamedNumberCount = sizeof(kNamedNumber) / sizeof(kNamedNumber[0]);
@@ -1235,7 +1235,7 @@ const Descriptor kSeveralNamed[] =
 		"fixture_several", ValueType::Int, "fixture", "label", NULL,
 		1, 14, COREAPI_VALUES(kAutoAndOff), 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(channellist_descmode),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kSeveralNamedCount = sizeof(kSeveralNamed) / sizeof(kSeveralNamed[0]);
@@ -1251,19 +1251,19 @@ const Descriptor kOnBox[] =
 		"fixture_fan", ValueType::Int, "fixture", "label", NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_scroll", ValueType::Int, "fixture", "label", NULL,
 		0, 999, COREAPI_VALUES(kOffFloor), 1, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, &kFlagShape),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, COREAPI_VALUES(kOffFloor), 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD_ON(channellist_descmode, boxHas, NULL),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kOnBoxCount = sizeof(kOnBox) / sizeof(kOnBox[0]);
@@ -1277,14 +1277,14 @@ const Descriptor kWrongRows[] =
 		"fixture_unknown_kind", (ValueType) 99, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	// An Enum whose list is not there, which offers no value at all.
 	{
 		"fixture_empty_enum", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	/* An Enum counting three values it does not have. The macro that writes the
 	   pair cannot say this and a row written by hand can, which is the reason
@@ -1293,7 +1293,7 @@ const Descriptor kWrongRows[] =
 		"fixture_lying_enum", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, NULL, 3, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kWrongRowCount = sizeof(kWrongRows) / sizeof(kWrongRows[0]);
@@ -1513,7 +1513,7 @@ const Descriptor kOfferedRows[] =
 		"t_choice", ValueType::Enum, "fixture", "label", NULL,
 		0, 0, kOffered, sizeof(kOffered) / sizeof(kOffered[0]), 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -1579,13 +1579,13 @@ const Descriptor kRestartAndNot[] =
 		"fixture_at_once", ValueType::Int, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_on_restart", ValueType::Int, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, true, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kRestartAndNotCount =
@@ -1654,25 +1654,25 @@ const Descriptor kSecretAndNot[] =
 		"fixture_secret_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(epg_dir),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_secret_number", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, true, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain_number", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kSecretAndNotCount = sizeof(kSecretAndNot) / sizeof(kSecretAndNot[0]);
@@ -2413,13 +2413,13 @@ const Descriptor kKeyAndService[] =
 		"fixture_key", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_service", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kFixtureKeyValid),
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -2476,25 +2476,25 @@ const Descriptor kWrongKind[] =
 		"fixture_key", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_number", ValueType::Int, "fixture", "label", NULL,
 		0, 1000, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_by_number", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kNumberOnText),
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_by_text", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kTextOnNumber),
 		COREAPI_NUMBER_FIELD(current_volume),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // anonymous namespace
@@ -2568,13 +2568,13 @@ const Descriptor kLockedPair[] =
 		"fixture_first", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kFirstNotOne),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_second", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kSecondWhileFirstOff),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 
@@ -2824,13 +2824,13 @@ const Descriptor kProvidedRows[] =
 		"t_provided_text", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS,
 		COREAPI_TEXT_FIELD(language),
-		NULL, &kLocaleRule, providedChoices, NULL, NULL, NULL, false, NULL, NULL
+		NULL, &kLocaleRule, providedChoices, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"t_provided_number", ValueType::Int, "fixture", "label", NULL,
 		0, 100, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kProvidedRowsCount = sizeof(kProvidedRows) / sizeof(kProvidedRows[0]);
@@ -3154,7 +3154,7 @@ const Descriptor kTimeoutRows[] =
 		"t_timeout", ValueType::Int, "fixture", "label", NULL,
 		5, 60, kTimeoutNames, 2, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NUMBER_FIELD(repeat_blocker),
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const size_t kTimeoutRowsCount = sizeof(kTimeoutRows) / sizeof(kTimeoutRows[0]);
@@ -3421,13 +3421,13 @@ const Descriptor kPanelAndLevel[] =
 		"fixture_panel", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_level", ValueType::Int, "fixture", "label", NULL,
 		0, 10, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, fixtureLevelCeiling, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, fixtureLevelCeiling, NULL, false, NULL, NULL, NULL
 	},
 };
 
@@ -3479,13 +3479,13 @@ const Descriptor kGatedPanelAndLevel[] =
 		"fixture_gate", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_panel", ValueType::Int, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kGateOn),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	kPanelAndLevel[1],
 };
@@ -3535,13 +3535,13 @@ const Descriptor kSwitchAndSecret[] =
 		"fixture_switch", ValueType::Bool, "fixture", "label", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS,
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_secret", ValueType::String, "fixture", "label", NULL,
 		0, 0, NULL, 0, 0, "", false, true, COREAPI_CONDITIONS(kSwitchOn),
 		COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 

@@ -1573,6 +1573,97 @@ TEST_CASE("a schema label resolves through the installed catalog, not the key", 
 	REQUIRE(have_choice);
 }
 
+/* The heading of the box's own menu goes out on the setting as the name of its text, which
+   is the same in every language, and once on the answer with the words to title it, in the
+   order the menu shows the headings rather than the order the table joins the rows in. A row
+   on the section's own page names none, and a heading the catalog has no words for is still
+   listed, untitled. */
+TEST_CASE("the schema names the heading of the box's menu a setting stands under", "[endpoints]")
+{
+	FakeSystemSource box;
+	InstalledSystemSource installed_box(&box);
+	FakeTunerSource tuner;
+	InstalledTunerSource installed_tuner(&tuner);
+	FakePluginSource plugins;
+	InstalledPluginSource installed_plugins(&plugins);
+	ShippedRoutes shipped;
+
+	FakeLocaleSource cat;
+	cat.texts["videomenu.hdmi_cec"] = "HDMI-CEC";
+	InstalledLocaleSource installed(&cat);
+
+	const Reply r = get("/api/v1/settings/schema?section=video");
+	REQUIRE(r.code == 200);
+	const ::Json::Value answer = parsed(r.body);
+	const ::Json::Value items = answer["items"];
+
+	size_t cec = 0;
+	bool page = false;
+	for (::Json::ArrayIndex i = 0; i < items.size(); ++i)
+	{
+		const ::Json::Value &row = items[i];
+		const std::string id = row["id"].asString();
+		INFO(id);
+		if (id.compare(0, 9, "hdmi_cec_") == 0)
+		{
+			++cec;
+			CHECK(row["group"].asString() == "videomenu.hdmi_cec");
+		}
+		else if (id == "video_Mode")
+		{
+			page = true;
+			CHECK_FALSE(row.isMember("group"));
+		}
+	}
+	CHECK(cec == 4);
+	CHECK(page);
+
+	/* The video section's headings and nobody else's, each one a row of the answer stands
+	   under, in the order the headings state. */
+	std::vector<const coreapi::MenuGroup *> under;
+	for (size_t i = 0; i < coreapi::settingsTableCount(); ++i)
+	{
+		const coreapi::Descriptor &d = coreapi::settingsTable()[i];
+		if (d.group != NULL && std::string(d.section) == "video" &&
+		    std::find(under.begin(), under.end(), d.group) == under.end())
+			under.push_back(d.group);
+	}
+	std::sort(under.begin(), under.end(), [](const coreapi::MenuGroup *a, const coreapi::MenuGroup *b) {
+		return a->order < b->order;
+	});
+	std::vector<std::string> expected;
+	for (size_t g = 0; g < under.size(); ++g)
+		expected.push_back(under[g]->label_key);
+	const ::Json::Value listed = answer["groups"];
+	REQUIRE(listed.isArray());
+	std::vector<std::string> named;
+	bool titled = false, untitled = false;
+	for (::Json::ArrayIndex i = 0; i < listed.size(); ++i)
+	{
+		const std::string id = listed[i]["id"].asString();
+		named.push_back(id);
+		CHECK(listed[i]["section"].asString() == "video");
+		if (id == "videomenu.hdmi_cec")
+		{
+			titled = true;
+			CHECK(listed[i]["label"].asString() == "HDMI-CEC");
+		}
+		else if (id == "videomenu.enabled_modes")
+		{
+			untitled = true;
+			CHECK_FALSE(listed[i].isMember("label"));
+		}
+	}
+	CHECK(named == expected);
+	CHECK(titled);
+	CHECK(untitled);
+
+	// A row on the section's own page alone is an answer without a single heading.
+	const Reply page_only = get("/api/v1/settings/schema?keys=video_Mode");
+	REQUIRE(page_only.code == 200);
+	CHECK_FALSE(parsed(page_only.body).isMember("groups"));
+}
+
 /* A frontend draws its input from the rule, so the pin's four digits and a
    font's ending are in the schema and a row without a rule carries none. */
 TEST_CASE("the schema carries the text rule of a string setting", "[endpoints]")
@@ -1741,7 +1832,7 @@ const coreapi::Descriptor kSeveralNamed[] =
 	{
 		"fixture_several", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, kTwoNamed, 2, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 const coreapi::Descriptor kNamedNumbers[] =
@@ -1749,12 +1840,12 @@ const coreapi::Descriptor kNamedNumbers[] =
 	{
 		"fixture_named", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // namespace
@@ -1974,19 +2065,19 @@ const coreapi::Descriptor kOnBoxRows[] =
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  lacking, NULL, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_scroll", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		0, 999, kOffBelow, 1, 1, NULL, false, false, COREAPI_ALWAYS,
 		{ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, coreapi::FieldOrigin::Nowhere,
 		  lacking, &kFlagShape, NULL },
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_plain", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // namespace
@@ -2047,12 +2138,12 @@ const coreapi::Descriptor kConditionForms[] =
 	{
 		"fixture_gated", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_CONDITIONS(kKeyAndEither), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_nested", coreapi::ValueType::Int, "fixture", NULL, NULL,
 		1, 14, NULL, 0, 1, NULL, false, false, COREAPI_CONDITIONS(kNestedGroup), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // namespace
@@ -3664,12 +3755,12 @@ const coreapi::Descriptor kProvidedRows[] =
 	{
 		"fixture_provided_text", coreapi::ValueType::String, "fixture", "fixture.label", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_provided_number", coreapi::ValueType::Int, "fixture", "fixture.label", NULL,
 		0, 9, kOffBelow, 1, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, providedChoices, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 };
 } // namespace
@@ -3774,7 +3865,7 @@ TEST_CASE("the schema lists a name outside the range beside the range", "[endpoi
 			"t_timeout", coreapi::ValueType::Int, "fixture", "label", NULL,
 			5, 60, names, 1, 0, NULL, false, false, COREAPI_ALWAYS,
 			COREAPI_NUMBER_FIELD(repeat_blocker),
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 		},
 	};
 	InstalledSettingsTable table(rows, 1);
@@ -3807,11 +3898,11 @@ TEST_CASE("the schema states a list several rows share once and names it from ea
 	static const coreapi::Descriptor rows[] =
 	{
 		{ "t_a", coreapi::ValueType::Int, "fixture", "label", NULL, 0, 9, shared, 2, 0, NULL, false, false,
-		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
+		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL },
 		{ "t_b", coreapi::ValueType::Int, "fixture", "label", NULL, 0, 9, shared, 2, 0, NULL, false, false,
-		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
+		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL },
 		{ "t_c", coreapi::ValueType::Int, "other", "label", NULL, 0, 9, alone, 1, 0, NULL, false, false,
-		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL },
+		  COREAPI_ALWAYS, COREAPI_NUMBER_FIELD(repeat_blocker), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL },
 	};
 	InstalledSettingsTable table(rows, 3);
 

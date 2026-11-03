@@ -150,29 +150,34 @@ constexpr Descriptor kElements[] =
 {
 	boolRow("personalize_pinstatus")
 		.section("misc")
+		.group(&kMiscAccess)
 		.label("personalize.pin_in_use")
 		.defaultValue(0)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_MAIN_PINSTATUS)),
 	boolRow("personalize_bluebutton")
 		.section("misc")
+		.group(&kMiscUserMenus)
 		.label("usermenu.button_blue")
 		.defaultValue(1)
 		.values(kPersonalizeActive)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_MAIN_BLUE_BUTTON)),
 	boolRow("personalize_yellowbutton")
 		.section("misc")
+		.group(&kMiscUserMenus)
 		.label("usermenu.button_yellow")
 		.defaultValue(1)
 		.values(kPersonalizeActive)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_MAIN_YELLOW_BUTTON)),
 	boolRow("personalize_greenbutton")
 		.section("misc")
+		.group(&kMiscUserMenus)
 		.label("usermenu.button_green")
 		.defaultValue(1)
 		.values(kPersonalizeActive)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_MAIN_GREEN_BUTTON)),
 	boolRow("personalize_redbutton")
 		.section("misc")
+		.group(&kMiscUserMenus)
 		.label("usermenu.button_red")
 		.defaultValue(1)
 		.values(kPersonalizeActive)
@@ -481,31 +486,37 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_FEAT_KEY_RC_LOCK)),
 	boolRow("personalize_usermenu_show_cancel")
 		.section("misc")
+		.group(&kMiscUserMenus)
 		.label("personalize.usermenu_show_cancel")
 		.defaultValue(1)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_UMENU_SHOW_CANCEL)),
 	boolRow("personalize_usermenu_plugin_type_games")
 		.section("misc")
+		.group(&kMiscPluginTypes)
 		.label("mainmenu.games")
 		.defaultValue(0)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_GAMES)),
 	boolRow("personalize_usermenu_plugin_type_tools")
 		.section("misc")
+		.group(&kMiscPluginTypes)
 		.label("mainmenu.tools")
 		.defaultValue(1)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_TOOLS)),
 	boolRow("personalize_usermenu_plugin_type_scripts")
 		.section("misc")
+		.group(&kMiscPluginTypes)
 		.label("mainmenu.scripts")
 		.defaultValue(0)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_SCRIPTS)),
 	boolRow("personalize_usermenu_plugin_type_lua")
 		.section("misc")
+		.group(&kMiscPluginTypes)
 		.label("mainmenu.lua")
 		.defaultValue(1)
 		.field(COREAPI_ELEMENT_FIELD(personalize, SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_LUA)),
 	intRow("timing.menu")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.menu")
 		.hint("menu.hint_osd_timing")
 		.range(0, 240)
@@ -515,6 +526,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(timing, SNeutrinoSettings::TIMING_MENU)),
 	intRow("timing.chanlist")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.chanlist")
 		.hint("menu.hint_osd_timing")
 		.range(0, 240)
@@ -524,6 +536,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(timing, SNeutrinoSettings::TIMING_CHANLIST)),
 	intRow("timing.epg")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.epg")
 		.hint("menu.hint_osd_timing")
 		.range(0, 240)
@@ -533,6 +546,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(timing, SNeutrinoSettings::TIMING_EPG)),
 	intRow("timing.volumebar")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.volumebar")
 		.hint("menu.hint_osd_timing")
 		.range(0, 240)
@@ -542,6 +556,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(timing, SNeutrinoSettings::TIMING_VOLUMEBAR)),
 	intRow("timing.filebrowser")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.filebrowser")
 		.hint("menu.hint_osd_timing")
 		.range(0, 240)
@@ -551,6 +566,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(timing, SNeutrinoSettings::TIMING_FILEBROWSER)),
 	intRow("timing.numericzap")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.numericzap")
 		.hint("menu.hint_osd_timing")
 		.range(0, 240)
@@ -560,6 +576,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(timing, SNeutrinoSettings::TIMING_NUMERICZAP)),
 	intRow("timing.popup_messages")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.popup_messages")
 		.hint("menu.hint_osd_timing")
 		.range(0, 240)
@@ -569,6 +586,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(timing, SNeutrinoSettings::TIMING_POPUP_MESSAGES)),
 	intRow("timing.static_messages")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.static_messages")
 		.hint("menu.hint_timeouts_static_messages")
 		.range(0, 240)
@@ -578,6 +596,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(timing, SNeutrinoSettings::TIMING_STATIC_MESSAGES)),
 	intRow("timing.infobar_tv")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.infobar_tv")
 		.hint("menu.hint_osd_behavior_infobar")
 		.range(-1, 240)
@@ -587,6 +606,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(handling_infobar, SNeutrinoSettings::HANDLING_INFOBAR)),
 	intRow("timing.infobar_radio")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.infobar_radio")
 		.hint("menu.hint_osd_behavior_infobar")
 		.range(-1, 240)
@@ -596,6 +616,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(handling_infobar, SNeutrinoSettings::HANDLING_INFOBAR_RADIO)),
 	intRow("timing.infobar_media_audio")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.infobar_media_audio")
 		.hint("menu.hint_osd_behavior_infobar")
 		.range(-1, 240)
@@ -605,6 +626,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(handling_infobar, SNeutrinoSettings::HANDLING_INFOBAR_MEDIA_AUDIO)),
 	intRow("timing.infobar_media_video")
 		.section("osd")
+		.group(&kOsdTiming)
 		.label("timing.infobar_media_video")
 		.hint("menu.hint_osd_behavior_infobar")
 		.range(-1, 240)
@@ -614,221 +636,261 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(handling_infobar, SNeutrinoSettings::HANDLING_INFOBAR_MEDIA_VIDEO)),
 	boolRow("enabled_video_mode_0")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<0>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 0)),
 	boolRow("enabled_video_mode_1")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<1>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 1)),
 	boolRow("enabled_video_mode_2")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<2>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 2)),
 	boolRow("enabled_video_mode_3")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<3>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 3)),
 	boolRow("enabled_video_mode_4")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<4>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 4)),
 	boolRow("enabled_video_mode_5")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<5>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 5)),
 	boolRow("enabled_video_mode_6")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<6>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 6)),
 	boolRow("enabled_video_mode_7")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<7>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 7)),
 	boolRow("enabled_video_mode_8")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<8>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 8)),
 	boolRow("enabled_video_mode_9")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<9>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 9)),
 	boolRow("enabled_video_mode_10")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<10>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 10)),
 	boolRow("enabled_video_mode_11")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<11>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 11)),
 	boolRow("enabled_video_mode_12")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<12>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 12)),
 	boolRow("enabled_video_mode_13")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<13>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 13)),
 	boolRow("enabled_video_mode_14")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<14>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 14)),
 	boolRow("enabled_video_mode_15")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<15>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 15)),
 	boolRow("enabled_video_mode_16")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<16>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 16)),
 	boolRow("enabled_video_mode_17")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<17>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 17)),
 	boolRow("enabled_video_mode_18")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<18>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 18)),
 	boolRow("enabled_video_mode_19")
 		.section("video")
+		.group(&kVideoModes)
 		.labelFrom(videoModeSlotLabel)
 		.defaultValue(0)
 		.availableIf(&videoModeOffered<19>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_video_modes, 19)),
 	boolRow("enabled_auto_mode_0")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<0>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 0)),
 	boolRow("enabled_auto_mode_1")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<1>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 1)),
 	boolRow("enabled_auto_mode_2")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<2>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 2)),
 	boolRow("enabled_auto_mode_3")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<3>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 3)),
 	boolRow("enabled_auto_mode_4")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<4>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 4)),
 	boolRow("enabled_auto_mode_5")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<5>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 5)),
 	boolRow("enabled_auto_mode_6")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<6>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 6)),
 	boolRow("enabled_auto_mode_7")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<7>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 7)),
 	boolRow("enabled_auto_mode_8")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<8>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 8)),
 	boolRow("enabled_auto_mode_9")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<9>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 9)),
 	boolRow("enabled_auto_mode_10")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<10>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 10)),
 	boolRow("enabled_auto_mode_11")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<11>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 11)),
 	boolRow("enabled_auto_mode_12")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<12>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 12)),
 	boolRow("enabled_auto_mode_13")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<13>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 13)),
 	boolRow("enabled_auto_mode_14")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<14>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 14)),
 	boolRow("enabled_auto_mode_15")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<15>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 15)),
 	boolRow("enabled_auto_mode_16")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<16>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 16)),
 	boolRow("enabled_auto_mode_17")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<17>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 17)),
 	boolRow("enabled_auto_mode_18")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<18>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 18)),
 	boolRow("enabled_auto_mode_19")
 		.section("video")
+		.group(&kVideoAutoModes)
 		.defaultValue(1)
 		.availableIf(&autoModeOffered<19>)
 		.field(COREAPI_ELEMENT_FIELD(enabled_auto_modes, 19)),
@@ -1025,6 +1087,7 @@ constexpr Descriptor kElements[] =
 #endif
 	intRow("lcd_brightness")
 		.section("display")
+		.group(&kDisplayBrightness)
 		.label("lcdcontroler.brightness")
 		.hint("menu.hint_vfd_brightness")
 #ifdef ENABLE_LCD
@@ -1037,6 +1100,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(lcd_setting, SNeutrinoSettings::LCD_BRIGHTNESS)),
 	intRow("lcd_standbybrightness")
 		.section("display")
+		.group(&kDisplayBrightness)
 		.label("lcdcontroler.brightnessstandby")
 		.hint("menu.hint_vfd_brightnessstandby")
 #ifdef ENABLE_LCD
@@ -1049,15 +1113,18 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(lcd_setting, SNeutrinoSettings::LCD_STANDBY_BRIGHTNESS)),
 	intRow("lcd_contrast")
 		.section("display")
+		.group(&kDisplayBrightness)
 		.range(0, 255)
 		.defaultValue(15)
 		.field(COREAPI_ELEMENT_FIELD(lcd_setting, SNeutrinoSettings::LCD_CONTRAST)),
 	boolRow("lcd_power")
 		.section("display")
+		.group(&kDisplayBrightness)
 		.defaultValue(1)
 		.field(COREAPI_ELEMENT_FIELD(lcd_setting, SNeutrinoSettings::LCD_POWER)),
 	boolRow("lcd_inverse")
 		.section("display")
+		.group(&kDisplayBrightness)
 		.defaultValue(0)
 		.field(COREAPI_ELEMENT_FIELD(lcd_setting, SNeutrinoSettings::LCD_INVERSE)),
 	enumRow("lcd_show_volume")
@@ -1069,10 +1136,12 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(lcd_setting, SNeutrinoSettings::LCD_SHOW_VOLUME)),
 	boolRow("lcd_autodimm")
 		.section("display")
+		.group(&kDisplayBrightness)
 		.defaultValue(0)
 		.field(COREAPI_ELEMENT_FIELD(lcd_setting, SNeutrinoSettings::LCD_AUTODIMM)),
 	intRow("lcd_deepbrightness")
 		.section("display")
+		.group(&kDisplayBrightness)
 		.label("lcdcontroler.brightnessdeepstandby")
 		.hint("menu.hint_vfd_brightnessdeepstandby")
 #ifdef ENABLE_LCD
@@ -1085,6 +1154,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_FIELD(lcd_setting, SNeutrinoSettings::LCD_DEEPSTANDBY_BRIGHTNESS)),
 	textRow("pref_lang_0")
 		.section("general")
+		.group(&kGeneralAudioLanguages)
 		.label("audiomenu.pref_lang")
 		.hint("menu.hint_pref_lang")
 		.defaultValue("German")
@@ -1092,6 +1162,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_lang, 0)),
 	textRow("pref_lang_1")
 		.section("general")
+		.group(&kGeneralAudioLanguages)
 		.label("audiomenu.pref_lang")
 		.hint("menu.hint_pref_lang")
 		.defaultValue("English")
@@ -1099,6 +1170,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_lang, 1)),
 	textRow("pref_lang_2")
 		.section("general")
+		.group(&kGeneralAudioLanguages)
 		.label("audiomenu.pref_lang")
 		.hint("menu.hint_pref_lang")
 		.defaultValue("French")
@@ -1106,6 +1178,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_lang, 2)),
 	textRow("pref_subs_0")
 		.section("general")
+		.group(&kGeneralSubtitleLanguages)
 		.label("audiomenu.pref_subs")
 		.hint("menu.hint_pref_subs")
 		.defaultValue("German")
@@ -1113,6 +1186,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_subs, 0)),
 	textRow("pref_subs_1")
 		.section("general")
+		.group(&kGeneralSubtitleLanguages)
 		.label("audiomenu.pref_subs")
 		.hint("menu.hint_pref_subs")
 		.defaultValue("English")
@@ -1120,6 +1194,7 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_subs, 1)),
 	textRow("pref_subs_2")
 		.section("general")
+		.group(&kGeneralSubtitleLanguages)
 		.label("audiomenu.pref_subs")
 		.hint("menu.hint_pref_subs")
 		.defaultValue("French")
@@ -1127,48 +1202,56 @@ constexpr Descriptor kElements[] =
 		.field(COREAPI_ELEMENT_TEXT_FIELD(pref_subs, 2)),
 	textRow("mode_icons_flag0")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_flag_name0")
 		.hint("menu.hint_infoicons_flag_name0")
 		.defaultValue("/tmp/tuxmail.new")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(mode_icons_flag, 0)),
 	textRow("mode_icons_flag1")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_flag_name1")
 		.hint("menu.hint_infoicons_flag_name1")
 		.defaultValue("/var/etc/.call")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(mode_icons_flag, 1)),
 	textRow("mode_icons_flag2")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_flag_name2")
 		.hint("menu.hint_infoicons_flag_name2")
 		.defaultValue("/var/etc/.srv")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(mode_icons_flag, 2)),
 	textRow("mode_icons_flag3")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_flag_name3")
 		.hint("menu.hint_infoicons_flag_name3")
 		.defaultValue("/var/etc/.card")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(mode_icons_flag, 3)),
 	textRow("mode_icons_flag4")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_flag_name4")
 		.hint("menu.hint_infoicons_flag_name4")
 		.defaultValue("/var/etc/.update")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(mode_icons_flag, 4)),
 	textRow("mode_icons_flag5")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_flag_name5")
 		.hint("menu.hint_infoicons_flag_name5")
 		.defaultValue("")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(mode_icons_flag, 5)),
 	textRow("mode_icons_flag6")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_flag_name6")
 		.hint("menu.hint_infoicons_flag_name6")
 		.defaultValue("")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(mode_icons_flag, 6)),
 	textRow("mode_icons_flag7")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_flag_name7")
 		.hint("menu.hint_infoicons_flag_name7")
 		.defaultValue("")
@@ -1176,34 +1259,42 @@ constexpr Descriptor kElements[] =
 #if ENABLE_QUADPIP
 	textRow("quadpip_channel_window_0")
 		.section("video")
+		.group(&kVideoQuadPip)
 		.defaultValue("-")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(quadpip_channel_window, 0)),
 	textRow("quadpip_channel_id_window_0")
 		.section("video")
+		.group(&kVideoQuadPip)
 		.defaultValue("0")
 		.field(COREAPI_ELEMENT_CHANNEL_ID_FIELD(quadpip_channel_id_window, 0)),
 	textRow("quadpip_channel_window_1")
 		.section("video")
+		.group(&kVideoQuadPip)
 		.defaultValue("-")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(quadpip_channel_window, 1)),
 	textRow("quadpip_channel_id_window_1")
 		.section("video")
+		.group(&kVideoQuadPip)
 		.defaultValue("0")
 		.field(COREAPI_ELEMENT_CHANNEL_ID_FIELD(quadpip_channel_id_window, 1)),
 	textRow("quadpip_channel_window_2")
 		.section("video")
+		.group(&kVideoQuadPip)
 		.defaultValue("-")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(quadpip_channel_window, 2)),
 	textRow("quadpip_channel_id_window_2")
 		.section("video")
+		.group(&kVideoQuadPip)
 		.defaultValue("0")
 		.field(COREAPI_ELEMENT_CHANNEL_ID_FIELD(quadpip_channel_id_window, 2)),
 	textRow("quadpip_channel_window_3")
 		.section("video")
+		.group(&kVideoQuadPip)
 		.defaultValue("-")
 		.field(COREAPI_ELEMENT_TEXT_FIELD(quadpip_channel_window, 3)),
 	textRow("quadpip_channel_id_window_3")
 		.section("video")
+		.group(&kVideoQuadPip)
 		.defaultValue("0")
 		.field(COREAPI_ELEMENT_CHANNEL_ID_FIELD(quadpip_channel_id_window, 3)),
 #endif

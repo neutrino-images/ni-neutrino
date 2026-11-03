@@ -343,6 +343,7 @@ constexpr Descriptor kOsd[] =
 	// fonts
 	textRow("font_file")
 		.section("osd")
+		.group(&kOsdFonts)
 		.label("colormenu.font")
 		.hint("menu.hint_font_gui")
 		.defaultValue(FONTDIR "/neutrino.ttf")
@@ -350,6 +351,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_TEXT_FIELD(font_file)),
 	textRow("font_file_monospace")
 		.section("osd")
+		.group(&kOsdFonts)
 		.label("colormenu.font_ttx")
 		.hint("menu.hint_font_ttx")
 		.defaultValue(FONTDIR "/tuxtxt.ttf")
@@ -358,6 +360,7 @@ constexpr Descriptor kOsd[] =
 	// Per cent of the size each font is configured at.
 	intRow("font_scaling_x")
 		.section("osd")
+		.group(&kOsdFonts)
 		.label("fontmenu.scaling_x")
 		.hint("fontmenu.scaling_x_hint2")
 		.range(50, 200)
@@ -366,6 +369,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(font_scaling_x)),
 	intRow("font_scaling_y")
 		.section("osd")
+		.group(&kOsdFonts)
 		.label("fontmenu.scaling_y")
 		.hint("fontmenu.scaling_y_hint2")
 		.range(50, 200)
@@ -376,6 +380,7 @@ constexpr Descriptor kOsd[] =
 	// menus
 	enumRow("menu_pos")
 		.section("osd")
+		.group(&kOsdMenus)
 		.label("settings.menu_pos")
 		.hint("menu.hint_menu_pos")
 		.defaultValue(0)
@@ -383,12 +388,14 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(menu_pos)),
 	boolRow("show_menu_hints")
 		.section("osd")
+		.group(&kOsdMenus)
 		.label("settings.menu_hints")
 		.hint("menu.hint_menu_hints")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(show_menu_hints)),
 	boolRow("show_menu_hints_line")
 		.section("osd")
+		.group(&kOsdMenus)
 		.label("settings.menu_hints_line")
 		.hint("menu.hint_menu_hints_line")
 		.defaultValue(0)
@@ -397,6 +404,7 @@ constexpr Descriptor kOsd[] =
 	// channel logos
 	textRow("logo_hdd_dir")
 		.section("osd")
+		.group(&kOsdLogos)
 		.label("miscsettings.infobar_logo_hdd_dir")
 		.hint("menu.hint_infobar_logo_dir")
 		.defaultValue(TARGET_ROOT "/media/sda1/logos")
@@ -404,6 +412,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_TEXT_FIELD(logo_hdd_dir)),
 	enumRow("channellist_show_channellogo")
 		.section("osd")
+		.group(&kOsdLogos)
 		.label("channellist.show_channellogo")
 		.hint("menu.hint_channellist_show_channellogo")
 		.defaultValue(1)
@@ -411,6 +420,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(channellist_show_channellogo)),
 	boolRow("channellist_show_eventlogo")
 		.section("osd")
+		.group(&kOsdLogos)
 		.label("channellist.show_eventlogo")
 		.hint("menu.hint_channellist_show_eventlogo")
 		.defaultValue(1)
@@ -420,18 +430,21 @@ constexpr Descriptor kOsd[] =
 	// infobar
 	boolRow("infobar_show")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_show")
 		.hint("menu.hint_infobar_on_epg")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(infobar_show)),
 	boolRow("infobar_buttons_usertitle")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_buttons_usertitle")
 		.hint("menu.hint_infobar_buttons_usertitle")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(infobar_buttons_usertitle)),
 	boolRow("infobar_analogclock")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_analogclock")
 		.hint("menu.hint_infobar_analogclock")
 		.defaultValue(0)
@@ -439,6 +452,7 @@ constexpr Descriptor kOsd[] =
 	// Meaningful only where the weather is switched on.
 	boolRow("infobar_weather")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_weather")
 		.hint("menu.hint_infobar_weather")
 		.defaultValue(0)
@@ -446,6 +460,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(infobar_weather)),
 	enumRow("infobar_show_channellogo")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_disp")
 		.hint("menu.hint_infobar_logo")
 		.defaultValue(5)
@@ -453,12 +468,14 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(infobar_show_channellogo)),
 	boolRow("infobar_sat_display")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_sat_display")
 		.hint("menu.hint_infobar_sat")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(infobar_sat_display)),
 	enumRow("infobar_casystem_display")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_casystem_display")
 		.hint("menu.hint_infobar_casys")
 		.defaultValue(0)
@@ -470,6 +487,7 @@ constexpr Descriptor kOsd[] =
 	// that it works again when they do.
 	boolRow("infobar_casystem_dotmatrix")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_casystem_dotmatrix")
 		.hint("menu.hint_infobar_casys_dotmatrix")
 		.defaultValue(0)
@@ -477,6 +495,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(infobar_casystem_dotmatrix)),
 	boolRow("infobar_casystem_frame")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_casystem_frame")
 		.hint("menu.hint_infobar_casys_frame")
 		.defaultValue(0)
@@ -484,6 +503,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(infobar_casystem_frame)),
 	enumRow("show_ecm_pos")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("ecminfo_show")
 		.hint("menu.hint_infobar_ecminfo")
 		.defaultValue(0)
@@ -491,12 +511,14 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(show_ecm_pos)),
 	boolRow("infobar_show_sysfs_hdd")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_show_sysfs_hdd")
 		.hint("menu.hint_infobar_filesys")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(infobar_show_sysfs_hdd)),
 	enumRow("hdd_statfs_mode")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("hdd_statfs")
 		.hint("menu.hint_hdd_statfs")
 		.defaultValue(2)
@@ -508,12 +530,14 @@ constexpr Descriptor kOsd[] =
 	   count, and a tuner that is switched on later finds it already chosen. */
 	boolRow("infobar_show_tuner")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_show_tuner")
 		.hint("menu.hint_infobar_tuner")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD_ON(infobar_show_tuner, severalTunersFitted, NULL)),
 	enumRow("infobar_show_res")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_show_res")
 		.hint("menu.hint_infobar_res")
 		.defaultValue(0)
@@ -521,12 +545,14 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(infobar_show_res)),
 	boolRow("infobar_show_dd_available")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.infobar_show_dd_available")
 		.hint("menu.hint_infobar_dd")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(infobar_show_dd_available)),
 	enumRow("infobar_progressbar")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.label("miscsettings.progressbar_infobar_position")
 		.hint("menu.hint_progressbar_infobar_position")
 		.defaultValue(2)
@@ -536,6 +562,7 @@ constexpr Descriptor kOsd[] =
 	// channel list
 	enumRow("channellist_additional")
 		.section("osd")
+		.group(&kOsdChannelList)
 		.label("channellist.additional")
 		.hint("menu.hint_channellist_additional")
 		.defaultValue(1)
@@ -543,6 +570,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(channellist_additional)),
 	enumRow("channellist_epgtext_alignment")
 		.section("osd")
+		.group(&kOsdChannelList)
 		.label("miscsettings.channellist_epgtext_alignment")
 		.hint("menu.hint_channellist_epg_align")
 		.defaultValue(0)
@@ -550,18 +578,21 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(channellist_epgtext_alignment)),
 	boolRow("channellist_show_res_icon")
 		.section("osd")
+		.group(&kOsdChannelList)
 		.label("channellist.show_res_icon")
 		.hint("menu.hint_channellist_show_res_icon")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(channellist_show_res_icon)),
 	boolRow("channellist_show_infobox")
 		.section("osd")
+		.group(&kOsdChannelList)
 		.label("channellist.show_infobox")
 		.hint("menu.hint_channellist_show_infobox")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(channellist_show_infobox)),
 	enumRow("channellist_foot")
 		.section("osd")
+		.group(&kOsdChannelList)
 		.label("channellist.foot")
 		.hint("menu.hint_channellist_foot")
 		.defaultValue(1)
@@ -570,6 +601,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(channellist_foot)),
 	boolRow("channellist_show_numbers")
 		.section("osd")
+		.group(&kOsdChannelList)
 		.label("channellist.show_channelnumber")
 		.hint("menu.hint_channellist_show_channelnumber")
 		.defaultValue(1)
@@ -578,12 +610,14 @@ constexpr Descriptor kOsd[] =
 	// event list
 	boolRow("eventlist_additional")
 		.section("osd")
+		.group(&kOsdEventList)
 		.label("eventlist.additional")
 		.hint("menu.hint_eventlist_additional")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(eventlist_additional)),
 	boolRow("eventlist_epgplus")
 		.section("osd")
+		.group(&kOsdEventList)
 		.label("eventlist.epgplus")
 		.hint("menu.hint_eventlist_epgplus")
 		.defaultValue(1)
@@ -592,6 +626,7 @@ constexpr Descriptor kOsd[] =
 	// volume
 	enumRow("volume_pos")
 		.section("osd")
+		.group(&kOsdVolume)
 		.label("extra.volume_pos")
 		.hint("menu.hint_volume_pos")
 		.defaultValue(5)
@@ -599,6 +634,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(volume_pos)),
 	intRow("volume_size")
 		.section("osd")
+		.group(&kOsdVolume)
 		.label("extra.volume_size")
 		.hint("menu.hint_volume_size")
 		.range(0, 50)
@@ -607,12 +643,14 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(volume_size)),
 	boolRow("volume_digits")
 		.section("osd")
+		.group(&kOsdVolume)
 		.label("extra.volume_digits")
 		.hint("menu.hint_volume_digits")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(volume_digits)),
 	boolRow("show_mute_icon")
 		.section("osd")
+		.group(&kOsdVolume)
 		.label("extra.show_mute_icon")
 		.hint("menu.hint_show_mute_icon")
 		.defaultValue(0)
@@ -621,6 +659,7 @@ constexpr Descriptor kOsd[] =
 	// info clock
 	boolRow("mode_clock")
 		.section("osd")
+		.group(&kOsdClock)
 		.label("miscsettings.infoclock")
 		.hint("menu.hint_clock_mode")
 		.defaultValue(0)
@@ -629,6 +668,7 @@ constexpr Descriptor kOsd[] =
 	// the default back, which is the same number as the floor.
 	intRow("infoClockFontSize")
 		.section("osd")
+		.group(&kOsdClock)
 		.label("clock_size_height")
 		.hint("menu.hint_clock_size")
 		.range(30, 120)
@@ -636,12 +676,14 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(infoClockFontSize)),
 	boolRow("infoClockSeconds")
 		.section("osd")
+		.group(&kOsdClock)
 		.label("clock_seconds")
 		.hint("menu.hint_clock_seconds")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(infoClockSeconds)),
 	boolRow("infoClockBackground")
 		.section("osd")
+		.group(&kOsdClock)
 		.label("clock_background")
 		.hint("menu.hint_clock_background")
 		.defaultValue(0)
@@ -650,6 +692,7 @@ constexpr Descriptor kOsd[] =
 	// screen
 	enumRow("screen_preset")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("colormenu.osd_preset")
 		.hint("menu.hint_osd_preset")
 		.defaultValue(0)
@@ -659,6 +702,7 @@ constexpr Descriptor kOsd[] =
 	// screenshot
 	textRow("screenshot_dir")
 		.section("osd")
+		.group(&kOsdScreenshot)
 		.label("screenshot.defdir")
 		.hint("menu.hint_screenshot_dir")
 		.defaultValue(TARGET_ROOT "/media/sda1/movies")
@@ -666,6 +710,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_TEXT_FIELD(screenshot_dir)),
 	intRow("screenshot_count")
 		.section("osd")
+		.group(&kOsdScreenshot)
 		.label("screenshot.count")
 		.hint("menu.hint_screenshot_count")
 		.range(1, 5)
@@ -673,6 +718,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screenshot_count)),
 	enumRow("screenshot_format")
 		.section("osd")
+		.group(&kOsdScreenshot)
 		.label("screenshot.format")
 		.hint("menu.hint_screenshot_format")
 		.defaultValue(1)
@@ -680,6 +726,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screenshot_format)),
 	enumRow("screenshot_mode")
 		.section("osd")
+		.group(&kOsdScreenshot)
 		.label("screenshot.res")
 		.hint("menu.hint_screenshot_res")
 		.defaultValue(0)
@@ -687,18 +734,21 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screenshot_mode)),
 	boolRow("screenshot_video")
 		.section("osd")
+		.group(&kOsdScreenshot)
 		.label("screenshot.video")
 		.hint("menu.hint_screenshot_video")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(screenshot_video)),
 	boolRow("screenshot_scale")
 		.section("osd")
+		.group(&kOsdScreenshot)
 		.label("screenshot.scale")
 		.hint("menu.hint_screenshot_scale")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(screenshot_scale)),
 	boolRow("screenshot_cover")
 		.section("osd")
+		.group(&kOsdScreenshot)
 		.label("screenshot.cover")
 		.hint("menu.hint_screenshot_cover")
 		.defaultValue(0)
@@ -708,6 +758,7 @@ constexpr Descriptor kOsd[] =
 	// Minutes, and nought is off.
 	intRow("screensaver_delay")
 		.section("osd")
+		.group(&kOsdScreensaver)
 		.label("screensaver.delay")
 		.hint("menu.hint_screensaver_delay")
 		.range(0, 999)
@@ -717,6 +768,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screensaver_delay)),
 	enumRow("screensaver_mode")
 		.section("osd")
+		.group(&kOsdScreensaver)
 		.label("screensaver.mode")
 		.hint("menu.hint_screensaver_mode")
 		.defaultValue(1)
@@ -726,6 +778,7 @@ constexpr Descriptor kOsd[] =
 	// Seconds, and nought is off again.
 	intRow("screensaver_timeout")
 		.section("osd")
+		.group(&kOsdScreensaver)
 		.label("screensaver.timeout")
 		.hint("menu.hint_screensaver_timeout")
 		.range(0, 60)
@@ -736,6 +789,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screensaver_timeout)),
 	textRow("screensaver_dir")
 		.section("osd")
+		.group(&kOsdScreensaver)
 		.label("screensaver.dir")
 		.hint("menu.hint_screensaver_dir")
 		.defaultValue(ICONSDIR "/screensaver")
@@ -744,6 +798,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_TEXT_FIELD(screensaver_dir)),
 	boolRow("screensaver_random")
 		.section("osd")
+		.group(&kOsdScreensaver)
 		.label("screensaver.random")
 		.hint("menu.hint_screensaver_random")
 		.defaultValue(0)
@@ -753,6 +808,7 @@ constexpr Descriptor kOsd[] =
 	// screensaver reads the setting either way.
 	boolRow("screensaver_mode_text")
 		.section("osd")
+		.group(&kOsdScreensaver)
 		.label("screensaver.enable_text_info")
 		.hint("menu.hint_screensaver_enable_text_info")
 		.defaultValue(0)
@@ -761,6 +817,7 @@ constexpr Descriptor kOsd[] =
 	// infoicons
 	enumRow("mode_icons_skin")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_skin")
 		.hint("menu.hint_infoicons_skin")
 		.defaultValue(0)
@@ -769,6 +826,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(mode_icons_skin)),
 	enumRow("mode_icons")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_modeicon")
 		.hint("menu.hint_infoicons_modeicon")
 		.defaultValue(0)
@@ -777,6 +835,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(mode_icons)),
 	boolRow("mode_icons_background")
 		.section("osd")
+		.group(&kOsdInfoIcons)
 		.label("infoicons_background")
 		.hint("menu.hint_infoicons_background")
 		.defaultValue(0)
@@ -816,6 +875,7 @@ constexpr Descriptor kOsd[] =
 	   size, which the suffix names. */
 	intRow("screen_StartX_a_0")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.start_x")
 		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
@@ -823,6 +883,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_StartX_a_0)),
 	intRow("screen_StartY_a_0")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.start_y")
 		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
@@ -830,6 +891,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_StartY_a_0)),
 	intRow("screen_EndX_a_0")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.end_x")
 		.menuLabel("screensetup.lowerright")
 		.range(400, 1279)
@@ -837,6 +899,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_EndX_a_0)),
 	intRow("screen_EndY_a_0")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.end_y")
 		.menuLabel("screensetup.lowerright")
 		.range(400, 719)
@@ -844,6 +907,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_EndY_a_0)),
 	intRow("screen_StartX_a_1")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.start_x")
 		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
@@ -851,6 +915,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_StartX_a_1)),
 	intRow("screen_StartY_a_1")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.start_y")
 		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
@@ -858,6 +923,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_StartY_a_1)),
 	intRow("screen_EndX_a_1")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.end_x")
 		.menuLabel("screensetup.lowerright")
 		.range(400, 1919)
@@ -865,6 +931,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_EndX_a_1)),
 	intRow("screen_EndY_a_1")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.end_y")
 		.menuLabel("screensetup.lowerright")
 		.range(400, 1079)
@@ -872,6 +939,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_EndY_a_1)),
 	intRow("screen_StartX_b_0")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.start_x")
 		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
@@ -879,6 +947,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_StartX_b_0)),
 	intRow("screen_StartY_b_0")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.start_y")
 		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
@@ -886,6 +955,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_StartY_b_0)),
 	intRow("screen_EndX_b_0")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.end_x")
 		.menuLabel("screensetup.lowerright")
 		.range(400, 1279)
@@ -893,6 +963,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_EndX_b_0)),
 	intRow("screen_EndY_b_0")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.end_y")
 		.menuLabel("screensetup.lowerright")
 		.range(400, 719)
@@ -900,6 +971,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_EndY_b_0)),
 	intRow("screen_StartX_b_1")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.start_x")
 		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
@@ -907,6 +979,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_StartX_b_1)),
 	intRow("screen_StartY_b_1")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.start_y")
 		.menuLabel("screensetup.upperleft")
 		.range(0, 200)
@@ -914,6 +987,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_StartY_b_1)),
 	intRow("screen_EndX_b_1")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.end_x")
 		.menuLabel("screensetup.lowerright")
 		.range(400, 1919)
@@ -921,6 +995,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_NUMBER_FIELD(screen_EndX_b_1)),
 	intRow("screen_EndY_b_1")
 		.section("osd")
+		.group(&kOsdScreen)
 		.label("screensetup.end_y")
 		.menuLabel("screensetup.lowerright")
 		.range(400, 1079)
@@ -932,11 +1007,13 @@ constexpr Descriptor kOsd[] =
 	   alone leaves this one as it was and the line does not follow. */
 	boolRow("show_ecm")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(show_ecm)),
 	// Whether the infobar carries the channel description.
 	boolRow("infobar_show_channeldesc")
 		.section("osd")
+		.group(&kOsdInfobar)
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(infobar_show_channeldesc)),
 	/* The name of the colour theme, picked from a file list rather than typed,
@@ -945,6 +1022,7 @@ constexpr Descriptor kOsd[] =
 	   has saved once gets and what the row states. */
 	textRow("theme_name")
 		.section("osd")
+		.group(&kOsdColors)
 		.defaultValue("")
 		.needsRestart()
 		.text(kRuleNameFromList)
@@ -956,6 +1034,7 @@ constexpr Descriptor kOsd[] =
 	   ones a theme file falls back to for a channel it does not name. */
 	colorRow("theme.menu_Head")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.head_background")
 		.menuLabel("colormenu.background")
 		.hint("menu.hint_head_back")
@@ -964,6 +1043,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Head, true)),
 	colorRow("theme.menu_Head_Text")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.head_text")
 		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_head_textcolor")
@@ -971,6 +1051,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Head_Text, false)),
 	colorRow("theme.menu_Content")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.content_background")
 		.menuLabel("colormenu.background")
 		.hint("menu.hint_content_back")
@@ -979,6 +1060,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content, true)),
 	colorRow("theme.menu_Content_Text")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.content_text")
 		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_content_textcolor")
@@ -986,6 +1068,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_Text, false)),
 	colorRow("theme.menu_Content_Selected")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.selected_background")
 		.menuLabel("colormenu.background")
 		.hint("menu.hint_selected_back")
@@ -994,6 +1077,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_Selected, true)),
 	colorRow("theme.menu_Content_Selected_Text")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.selected_text")
 		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_selected_text")
@@ -1001,6 +1085,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_Selected_Text, false)),
 	colorRow("theme.menu_Content_inactive")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.inactive_background")
 		.menuLabel("colormenu.background")
 		.hint("menu.hint_inactive_back")
@@ -1009,6 +1094,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_inactive, true)),
 	colorRow("theme.menu_Content_inactive_Text")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.inactive_text")
 		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_inactive_textcolor")
@@ -1016,6 +1102,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Content_inactive_Text, false)),
 	colorRow("theme.menu_Foot")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.foot_background")
 		.menuLabel("colormenu.background")
 		.hint("menu.hint_foot_back")
@@ -1024,6 +1111,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Foot, true)),
 	colorRow("theme.menu_Foot_Text")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.foot_text")
 		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_foot_textcolor")
@@ -1031,6 +1119,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, menu_Foot_Text, false)),
 	colorRow("theme.infobar")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.infobar_background")
 		.menuLabel("colormenu.background")
 		.hint("menu.hint_infobar_back")
@@ -1039,6 +1128,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, infobar, true)),
 	colorRow("theme.infobar_Text")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.infobar_text")
 		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_infobar_textcolor")
@@ -1046,6 +1136,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, infobar_Text, false)),
 	colorRow("theme.infobar_casystem")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.infobar_casystem")
 		.menuLabel("miscsettings.infobar_casystem_display")
 		.hint("menu.hint_infobar_casys_color")
@@ -1055,12 +1146,14 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, infobar_casystem, true)),
 	colorRow("theme.channellist_Description_Text")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.channellist_description_text")
 		.hint("menu.hint_color_channellist_description_text")
 		.defaultValue("#fafafa")
 		.field(COREAPI_COLOR_FIELD(theme, channellist_Description_Text, false)),
 	colorRow("theme.colored_events")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.colored_events_text")
 		.menuLabel("colormenu.textcolor")
 		.hint("menu.hint_colored_events_textcolor")
@@ -1068,18 +1161,21 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, colored_events, false)),
 	colorRow("theme.progressbar_passive")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.progressbar_passive")
 		.hint("menu.hint_progressbar_passive")
 		.defaultValue("#424242")
 		.field(COREAPI_COLOR_FIELD(theme, progressbar_passive, false)),
 	colorRow("theme.progressbar_active")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.progressbar_active")
 		.hint("menu.hint_progressbar_active")
 		.defaultValue("#9e9e9e")
 		.field(COREAPI_COLOR_FIELD(theme, progressbar_active, false)),
 	colorRow("theme.shadow")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("colormenu.shadow_color")
 		.hint("menu.hint_colors_shadow")
 		.withAlpha()
@@ -1087,6 +1183,7 @@ constexpr Descriptor kOsd[] =
 		.field(COREAPI_COLOR_FIELD(theme, shadow, true)),
 	colorRow("theme.clock_Digit")
 		.section("osd")
+		.group(&kOsdClock)
 		.label("colormenu.clock_textcolor")
 		.hint("menu.hint_clock_textcolor")
 		.defaultValue("#9e9e9e")

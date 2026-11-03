@@ -106,6 +106,7 @@ constexpr Descriptor kTheme[] =
 {
 	enumRow("menu_Head_gradient")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_head")
 		.menuLabel("color.gradient")
 		.hint("menu.hint_color_gradient")
@@ -114,6 +115,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(menu_Head_gradient)),
 	enumRow("menu_Head_gradient_direction")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_direction_head")
 		.menuLabel("color.gradient_mode_direction")
 		.hint("menu.hint_color_gradient_direction")
@@ -122,6 +124,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(menu_Head_gradient_direction)),
 	enumRow("menu_SubHead_gradient")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_subhead")
 		.menuLabel("color.gradient")
 		.hint("menu.hint_color_gradient")
@@ -130,6 +133,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(menu_SubHead_gradient)),
 	enumRow("menu_SubHead_gradient_direction")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_direction_subhead")
 		.menuLabel("color.gradient_mode_direction")
 		.hint("menu.hint_color_gradient_direction")
@@ -138,22 +142,26 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(menu_SubHead_gradient_direction)),
 	boolRow("menu_Separator_gradient_enable")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_separator_enable")
 		.hint("menu.hint_color_gradient_separator_enable")
 		.defaultValue(0)
 		.field(COREAPI_THEME_FIELD(menu_Separator_gradient_enable)),
 	enumRow("menu_Foot_gradient")
 		.section("osd")
+		.group(&kOsdColors)
 		.defaultValue(0)
 		.values(kGradient)
 		.field(COREAPI_THEME_FIELD(menu_Foot_gradient)),
 	enumRow("menu_Foot_gradient_direction")
 		.section("osd")
+		.group(&kOsdColors)
 		.defaultValue(1)
 		.values(kGradientDirection)
 		.field(COREAPI_THEME_FIELD(menu_Foot_gradient_direction)),
 	enumRow("menu_Hint_gradient")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_hint")
 		.menuLabel("color.gradient")
 		.hint("menu.hint_color_gradient")
@@ -162,6 +170,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(menu_Hint_gradient)),
 	enumRow("menu_Hint_gradient_direction")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_direction_hint")
 		.menuLabel("color.gradient_mode_direction")
 		.hint("menu.hint_color_gradient_direction")
@@ -170,6 +179,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(menu_Hint_gradient_direction)),
 	enumRow("infobar_gradient_top")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("miscsettings.infobar_gradient_top")
 		.hint("menu.hint_color_gradient")
 		.defaultValue(0)
@@ -177,6 +187,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(infobar_gradient_top)),
 	enumRow("infobar_gradient_top_direction")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_direction_infobar_top")
 		.menuLabel("color.gradient_mode_direction")
 		.hint("menu.hint_color_gradient_direction")
@@ -185,6 +196,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(infobar_gradient_top_direction)),
 	enumRow("infobar_gradient_body")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("miscsettings.infobar_gradient_body")
 		.hint("menu.hint_color_gradient")
 		.defaultValue(0)
@@ -192,6 +204,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(infobar_gradient_body)),
 	enumRow("infobar_gradient_body_direction")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_direction_infobar_body")
 		.menuLabel("color.gradient_mode_direction")
 		.hint("menu.hint_color_gradient_direction")
@@ -200,6 +213,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(infobar_gradient_body_direction)),
 	enumRow("infobar_gradient_bottom")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("miscsettings.infobar_gradient_bottom")
 		.hint("menu.hint_color_gradient")
 		.defaultValue(0)
@@ -207,6 +221,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(infobar_gradient_bottom)),
 	enumRow("infobar_gradient_bottom_direction")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("color.gradient_direction_infobar_bottom")
 		.menuLabel("color.gradient_mode_direction")
 		.hint("menu.hint_color_gradient_direction")
@@ -215,6 +230,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(infobar_gradient_bottom_direction)),
 	enumRow("colored_events_channellist")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("miscsettings.colored_events_channellist")
 		.hint("menu.hint_colored_events")
 		.defaultValue(1)
@@ -222,6 +238,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(colored_events_channellist)),
 	enumRow("colored_events_infobar")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("miscsettings.colored_events_infobar")
 		.hint("menu.hint_colored_events")
 		.defaultValue(1)
@@ -229,6 +246,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(colored_events_infobar)),
 	enumRow("progressbar_design")
 		.section("osd")
+		.group(&kOsdProgressbar)
 		.label("miscsettings.progressbar_design_long")
 		.hint("menu.hint_progressbar_color")
 		.defaultValue(-1)
@@ -236,6 +254,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(progressbar_design)),
 	enumRow("progressbar_design_channellist")
 		.section("osd")
+		.group(&kOsdProgressbar)
 		.label("channellist.extended")
 		.hint("menu.hint_channellist_extended")
 		.defaultValue(-1)
@@ -243,12 +262,14 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(progressbar_design_channellist)),
 	boolRow("progressbar_gradient")
 		.section("osd")
+		.group(&kOsdProgressbar)
 		.label("miscsettings.progressbar_gradient")
 		.hint("menu.hint_progressbar_gradient")
 		.defaultValue(1)
 		.field(COREAPI_THEME_FIELD(progressbar_gradient)),
 	intRow("progressbar_timescale_red")
 		.section("osd")
+		.group(&kOsdProgressbar)
 		.label("miscsettings.progressbar_timescale_red")
 		.hint("menu.hint_progressbar_timescale_red")
 		.range(0, 100)
@@ -257,6 +278,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(progressbar_timescale_red)),
 	intRow("progressbar_timescale_green")
 		.section("osd")
+		.group(&kOsdProgressbar)
 		.label("miscsettings.progressbar_timescale_green")
 		.hint("menu.hint_progressbar_timescale_green")
 		.range(0, 100)
@@ -265,6 +287,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(progressbar_timescale_green)),
 	intRow("progressbar_timescale_yellow")
 		.section("osd")
+		.group(&kOsdProgressbar)
 		.label("miscsettings.progressbar_timescale_yellow")
 		.hint("menu.hint_progressbar_timescale_yellow")
 		.range(0, 100)
@@ -273,6 +296,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(progressbar_timescale_yellow)),
 	boolRow("progressbar_timescale_invert")
 		.section("osd")
+		.group(&kOsdProgressbar)
 		.label("miscsettings.progressbar_timescale_invert")
 		.hint("menu.hint_progressbar_timescale_invert")
 		.defaultValue(0)
@@ -280,6 +304,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(progressbar_timescale_invert)),
 	boolRow("rounded_corners")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("extra.rounded_corners")
 		.hint("menu.hint_rounded_corners")
 		.defaultValue(0)
@@ -287,6 +312,7 @@ constexpr Descriptor kTheme[] =
 		.field(COREAPI_THEME_FIELD(rounded_corners)),
 	boolRow("message_frame_enable")
 		.section("osd")
+		.group(&kOsdColors)
 		.label("message.frame_enable")
 		.hint("message.frame_enable_hint")
 		.defaultValue(0)
@@ -382,28 +408,33 @@ constexpr Descriptor kGlcdTheme[] =
 {
 	textRow("glcd_background_image")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.background")
 		.defaultValue("")
 		.field(COREAPI_GLCD_THEME_TEXT_FIELD(glcd_background_image)),
 	textRow("glcd_font")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.font")
 		.defaultValue("")
 		.field(COREAPI_GLCD_THEME_TEXT_FIELD(glcd_font)),
 	intRow("glcd_channel_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.channel_size")
 		.range(0, 100)
 		.defaultValue(25)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_channel_percent)),
 	enumRow("glcd_channel_align")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.channel_align")
 		.defaultValue(2)
 		.values(kGlcdAlign)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_channel_align)),
 	intRow("glcd_channel_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.channel_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -411,6 +442,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_channel_x_position)),
 	intRow("glcd_channel_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.channel_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -418,11 +450,13 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_channel_y_position)),
 	boolRow("glcd_logo")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.logo_show")
 		.defaultValue(1)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_logo)),
 	intRow("glcd_logo_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.logo_size")
 		.range(0, 100)
 		.defaultValue(25)
@@ -430,6 +464,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_logo_percent)),
 	intRow("glcd_logo_width_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.logo_width")
 		.range(0, 100)
 		.defaultValue(99)
@@ -437,6 +472,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_logo_width_percent)),
 	intRow("glcd_logo_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.logo_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -445,6 +481,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_logo_x_position)),
 	intRow("glcd_logo_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.logo_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -453,18 +490,21 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_logo_y_position)),
 	intRow("glcd_epg_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.epg_size")
 		.range(0, 100)
 		.defaultValue(15)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_epg_percent)),
 	enumRow("glcd_epg_align")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.epg_align")
 		.defaultValue(2)
 		.values(kGlcdAlign)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_epg_align)),
 	intRow("glcd_epg_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.epg_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -472,6 +512,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_epg_x_position)),
 	intRow("glcd_epg_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.epg_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -479,11 +520,13 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_epg_y_position)),
 	boolRow("glcd_start")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.start_show")
 		.defaultValue(0)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_start)),
 	intRow("glcd_start_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.start_size")
 		.range(0, 100)
 		.defaultValue(0)
@@ -491,6 +534,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_start_percent)),
 	enumRow("glcd_start_align")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.start_align")
 		.defaultValue(0)
 		.values(kGlcdAlign)
@@ -498,6 +542,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_start_align)),
 	intRow("glcd_start_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.start_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -506,6 +551,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_start_x_position)),
 	intRow("glcd_start_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.start_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -514,11 +560,13 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_start_y_position)),
 	boolRow("glcd_end")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.end_show")
 		.defaultValue(0)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_end)),
 	intRow("glcd_end_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.end_size")
 		.range(0, 100)
 		.defaultValue(0)
@@ -526,6 +574,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_end_percent)),
 	enumRow("glcd_end_align")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.end_align")
 		.defaultValue(0)
 		.values(kGlcdAlign)
@@ -533,6 +582,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_end_align)),
 	intRow("glcd_end_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.end_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -541,6 +591,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_end_x_position)),
 	intRow("glcd_end_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.end_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -549,11 +600,13 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_end_y_position)),
 	boolRow("glcd_duration")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.duration_show")
 		.defaultValue(0)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_duration)),
 	intRow("glcd_duration_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.duration_size")
 		.range(0, 100)
 		.defaultValue(0)
@@ -561,6 +614,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_duration_percent)),
 	enumRow("glcd_duration_align")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.duration_align")
 		.defaultValue(0)
 		.values(kGlcdAlign)
@@ -568,6 +622,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_duration_align)),
 	intRow("glcd_duration_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.duration_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -576,6 +631,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_duration_x_position)),
 	intRow("glcd_duration_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.duration_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -584,11 +640,13 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_duration_y_position)),
 	boolRow("glcd_progressbar")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.progressbar_show")
 		.defaultValue(0)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_progressbar)),
 	intRow("glcd_progressbar_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.progressbar_size")
 		.range(0, 100)
 		.defaultValue(0)
@@ -596,6 +654,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_progressbar_percent)),
 	intRow("glcd_progressbar_width")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.progressbar_width")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -604,6 +663,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_progressbar_width)),
 	intRow("glcd_progressbar_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.progressbar_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -612,6 +672,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_progressbar_x_position)),
 	intRow("glcd_progressbar_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.progressbar_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -620,11 +681,13 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_progressbar_y_position)),
 	boolRow("glcd_time")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.time_show")
 		.defaultValue(0)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_time)),
 	intRow("glcd_time_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.time_size")
 		.range(0, 100)
 		.defaultValue(0)
@@ -632,6 +695,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_time_percent)),
 	enumRow("glcd_time_align")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.time_align")
 		.defaultValue(0)
 		.values(kGlcdAlign)
@@ -639,6 +703,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_time_align)),
 	intRow("glcd_time_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.time_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -647,6 +712,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_time_x_position)),
 	intRow("glcd_time_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.time_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -655,12 +721,14 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_time_y_position)),
 	intRow("glcd_icons_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_y_percent")
 		.range(0, 100)
 		.defaultValue(0)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icons_percent)),
 	intRow("glcd_icons_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -668,6 +736,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icons_y_position)),
 	intRow("glcd_icon_ecm_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_ecm_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -675,6 +744,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icon_ecm_x_position)),
 	intRow("glcd_icon_cam_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_cam_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -682,6 +752,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icon_cam_x_position)),
 	intRow("glcd_icon_txt_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_txt_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -689,6 +760,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icon_txt_x_position)),
 	intRow("glcd_icon_dd_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_dd_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -696,6 +768,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icon_dd_x_position)),
 	intRow("glcd_icon_mute_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_mute_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -703,6 +776,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icon_mute_x_position)),
 	intRow("glcd_icon_timer_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_timer_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -710,6 +784,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icon_timer_x_position)),
 	intRow("glcd_icon_rec_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_rec_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -717,6 +792,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icon_rec_x_position)),
 	intRow("glcd_icon_ts_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.icon_ts_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -724,12 +800,14 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_icon_ts_x_position)),
 	enumRow("glcd_standby_clock")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.standby_clock")
 		.defaultValue(1)
 		.values(kGlcdStandbyClock)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_clock)),
 	intRow("glcd_standby_clock_digital_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.clock_digital_y_position")
 		.range(0, 500)
 		.defaultValue(0)
@@ -737,6 +815,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_clock_digital_y_position)),
 	intRow("glcd_standby_clock_simple_size")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.clock_simple_size")
 		.range(0, 100)
 		.defaultValue(0)
@@ -744,6 +823,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_clock_simple_size)),
 	intRow("glcd_standby_clock_simple_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.clock_simple_y_position")
 		.range(0, 500)
 		.defaultValue(0)
@@ -751,11 +831,13 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_clock_simple_y_position)),
 	boolRow("glcd_weather")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.weather_show")
 		.defaultValue(0)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_weather)),
 	intRow("glcd_weather_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.weather_percent")
 		.range(0, 100)
 		.defaultValue(15)
@@ -763,6 +845,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_weather_percent)),
 	intRow("glcd_weather_curr_temp_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.weather_curr_temp_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -771,6 +854,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_weather_curr_temp_x_position)),
 	intRow("glcd_weather_curr_icon_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.weather_curr_icon_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -779,6 +863,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_weather_curr_icon_x_position)),
 	intRow("glcd_weather_next_temp_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.weather_next_temp_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -787,6 +872,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_weather_next_temp_x_position)),
 	intRow("glcd_weather_next_icon_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.weather_next_icon_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -795,6 +881,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_weather_next_icon_x_position)),
 	intRow("glcd_weather_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.weather_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -803,11 +890,13 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_weather_y_position)),
 	boolRow("glcd_standby_weather")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.standby_weather")
 		.defaultValue(1)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_weather)),
 	intRow("glcd_standby_weather_percent")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.standby_weather_percent")
 		.range(0, 100)
 		.defaultValue(40)
@@ -815,6 +904,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_weather_percent)),
 	intRow("glcd_standby_weather_curr_temp_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.standby_weather_curr_temp_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -823,6 +913,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_weather_curr_temp_x_position)),
 	intRow("glcd_standby_weather_curr_icon_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.standby_weather_curr_icon_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -831,6 +922,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_weather_curr_icon_x_position)),
 	intRow("glcd_standby_weather_next_temp_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.standby_weather_next_temp_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -839,6 +931,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_weather_next_temp_x_position)),
 	intRow("glcd_standby_weather_next_icon_x_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.standby_weather_next_icon_x_position")
 		.range(0, kPanelWidth)
 		.maxNow(glcdPanelWidth)
@@ -847,6 +940,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_weather_next_icon_x_position)),
 	intRow("glcd_standby_weather_y_position")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.label("glcd.standby_weather_y_position")
 		.range(0, kPanelHeight)
 		.maxNow(glcdPanelHeight)
@@ -855,6 +949,7 @@ constexpr Descriptor kGlcdTheme[] =
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_standby_weather_y_position)),
 	boolRow("glcd_position_settings")
 		.section("display")
+		.group(&kDisplayGlcd)
 		.defaultValue(1)
 		.field(COREAPI_GLCD_THEME_FIELD(glcd_position_settings)),
 };

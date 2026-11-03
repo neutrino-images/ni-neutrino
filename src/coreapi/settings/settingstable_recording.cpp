@@ -224,6 +224,7 @@ constexpr Descriptor kRecording[] =
 	// timers
 	boolRow("recording_zap_on_announce")
 		.section("recording")
+		.group(&kRecordingTimer)
 		.label("recordingmenu.zap_on_announce")
 		.hint("menu.hint_record_zap")
 		.defaultValue(0)
@@ -231,6 +232,7 @@ constexpr Descriptor kRecording[] =
 	// Minutes.
 	intRow("zapto_pre_time")
 		.section("recording")
+		.group(&kRecordingTimer)
 		.label("miscsettings.zapto_pre_time")
 		.hint("menu.hint_record_zap_pre_time")
 		.range(0, 10)
@@ -239,6 +241,7 @@ constexpr Descriptor kRecording[] =
 		.field(COREAPI_NUMBER_FIELD(zapto_pre_time)),
 	enumRow("timer_followscreenings")
 		.section("recording")
+		.group(&kRecordingTimer)
 		.label("timersettings.followscreenings")
 		.hint("menu.hint_timer_followscreenings")
 		.defaultValue(1)
@@ -248,12 +251,14 @@ constexpr Descriptor kRecording[] =
 	// data pids, and neither key is its field name
 	boolRow("recordingmenu.stream_vtxt_pid")
 		.section("recording")
+		.group(&kRecordingDataPids)
 		.label("recordingmenu.vtxt_pid")
 		.hint("menu.hint_record_data_vtxt")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(recording_stream_vtxt_pid)),
 	boolRow("recordingmenu.stream_subtitle_pids")
 		.section("recording")
+		.group(&kRecordingDataPids)
 		.label("recordingmenu.dvbsub_pids")
 		.hint("menu.hint_record_data_dvbsub")
 		.defaultValue(1)
@@ -263,6 +268,7 @@ constexpr Descriptor kRecording[] =
 	   timeshift under the recording directory. */
 	textRow("timeshiftdir")
 		.section("recording")
+		.group(&kRecordingTimeshift)
 		.label("recordingmenu.tsdir")
 		.hint("menu.hint_record_tdir")
 		.defaultValue("")
@@ -270,6 +276,7 @@ constexpr Descriptor kRecording[] =
 		.field(COREAPI_TEXT_FIELD(timeshiftdir)),
 	boolRow("timeshift_pause")
 		.section("recording")
+		.group(&kRecordingTimeshift)
 		.label("extra.timeshift_pause")
 		.hint("menu.hint_record_timeshift_pause")
 		.defaultValue(1)
@@ -277,6 +284,7 @@ constexpr Descriptor kRecording[] =
 	// Seconds after a channel starts.
 	intRow("timeshift_auto")
 		.section("recording")
+		.group(&kRecordingTimeshift)
 		.label("extra.timeshift_auto")
 		.hint("menu.hint_record_timeshift_auto")
 		.range(0, 300)
@@ -286,12 +294,14 @@ constexpr Descriptor kRecording[] =
 		.field(COREAPI_NUMBER_FIELD(timeshift_auto)),
 	boolRow("timeshift_delete")
 		.section("recording")
+		.group(&kRecordingTimeshift)
 		.label("extra.timeshift_delete")
 		.hint("menu.hint_record_timeshift_delete")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(timeshift_delete)),
 	boolRow("timeshift_temp")
 		.section("recording")
+		.group(&kRecordingTimeshift)
 		.label("extra.timeshift_temp")
 		.hint("menu.hint_record_timeshift_temp")
 		.defaultValue(1)
@@ -299,6 +309,7 @@ constexpr Descriptor kRecording[] =
 	// Hours.
 	intRow("timeshift_hours")
 		.section("recording")
+		.group(&kRecordingTimeshift)
 		.label("extra.record_time_ts")
 		.hint("menu.hint_record_time_ts")
 		.range(1, 24)
@@ -310,6 +321,7 @@ constexpr Descriptor kRecording[] =
 	   written: the browser shows it and does not offer it for editing. */
 	textRow("network_nfs_moviedir")
 		.section("recording")
+		.group(&kRecordingMovieBrowser)
 		.label("moviebrowser.dir")
 		.defaultValue(TARGET_ROOT "/media/sda1/movies")
 		.text(kRuleDirectory)
@@ -348,6 +360,7 @@ constexpr Descriptor kRecording[] =
 		.field(COREAPI_NUMBER_FIELD(recording_stopsectionsd)),
 	boolRow("recordingmenu.stream_pmt_pid")
 		.section("recording")
+		.group(&kRecordingDataPids)
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(recording_stream_pmt_pid)),
 	/* The two that decide when a recording begins and ends. The settings file
@@ -356,6 +369,7 @@ constexpr Descriptor kRecording[] =
 	   that has none. */
 	intRow("record_safety_time_before")
 		.section("recording")
+		.group(&kRecordingTimer)
 		.label("timersettings.record_safety_time_before")
 		.hint("menu.hint_record_timebefore")
 		.range(0, 99)
@@ -364,6 +378,7 @@ constexpr Descriptor kRecording[] =
 		.field(COREAPI_SERVICE_FIELD(record_safety_time_before, askSafetyBefore, tellSafetyBefore)),
 	intRow("record_safety_time_after")
 		.section("recording")
+		.group(&kRecordingTimer)
 		.label("timersettings.record_safety_time_after")
 		.hint("menu.hint_record_timeafter")
 		.range(0, 99)
@@ -383,6 +398,7 @@ constexpr Descriptor kRecording[] =
 	   together with TIMERD_APIDS_AC3. */
 	boolRow("recording_audio_pids_std")
 		.section("recording")
+		.group(&kRecordingAudioPids)
 		.label("recordingmenu.apids_std")
 		.hint("menu.hint_record_apid_std")
 		.defaultValue(1)
@@ -391,6 +407,7 @@ constexpr Descriptor kRecording[] =
 			TIMERD_APIDS_STD)),
 	boolRow("recording_audio_pids_alt")
 		.section("recording")
+		.group(&kRecordingAudioPids)
 		.label("recordingmenu.apids_alt")
 		.hint("menu.hint_record_apid_alt")
 		.defaultValue(0)
@@ -399,6 +416,7 @@ constexpr Descriptor kRecording[] =
 			TIMERD_APIDS_ALT)),
 	boolRow("recording_audio_pids_ac3")
 		.section("recording")
+		.group(&kRecordingAudioPids)
 		.label("recordingmenu.apids_ac3")
 		.hint("menu.hint_record_apid_ac3")
 		.defaultValue(1)
