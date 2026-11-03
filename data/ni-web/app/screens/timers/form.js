@@ -6,9 +6,11 @@
        /timers/list/new     an empty one
        /timers/list/42      the one the daemon numbers 42
 
-   And the way that counts in daily use, which is out of a guide entry. What the entry knows
-   is handed over in the address, so whoever links here needs nothing of this file but its
-   name:
+   And out of a guide entry, with what the entry knows handed over in the address, so
+   whoever links here needs nothing of this file but its name. The guide and the channel
+   list no longer come this way: they make the timer at the press (app/ui/event.js) with
+   the body this form would send for the entry left as it was opened. The address still
+   opens the form filled in, for a link that wants something changed first:
 
        /timers/list/new?kind=record&channel=<hex>&epg=<hex>
                         &start=<seconds>&stop=<seconds>&title=<text>
@@ -38,7 +40,7 @@ import timers from './nav.js';
 import {
 	KINDS, kindOf, isKnownKind, PLAIN_REPEATS, momentInput, emptyDraft, draftOf,
 	draftProblems, createBody, changeBody, useAnswer, startFixed, startSeconds, stopSeconds,
-	endInput, minutesUntil, canPickEnd, draftAtSend, changedCount,
+	endInput, minutesUntil, canPickEnd, draftAtSend, changedCount, draftFromAddress,
 } from './list.model.js';
 import { boxNowSeconds } from '../../boxclock.js';
 
@@ -66,30 +68,11 @@ export function askedFor(url) {
 	};
 }
 
-/**
- * The draft a fresh form starts from, with whatever the address carried written over it. A
- * guide entry that is already running arrives with a start behind us and is left where it is
- * rather than quietly moved forward: the rule about it is said on screen.
- * @param {{ kind: string, channel: string, epg: string, title: string, start: number, stop: number }} asked
- * @param {number} now
- * @returns {import('./list.model.js').Draft}
- */
-export function draftFromAddress(asked, now) {
-	const draft = emptyDraft(asked.kind === '' ? 'record' : asked.kind, now);
-	if (asked.channel !== '')
-		draft.channel_id = asked.channel;
-	if (asked.title !== '')
-		draft.title = asked.title;
-	if (asked.epg !== '') {
-		draft.epg_id = asked.epg;
-		draft.epg_start = asked.start;
-	}
-	if (asked.start > 0)
-		draft.start = momentInput(asked.start);
-	if (asked.start > 0 && asked.stop > asked.start)
-		draft.minutes = String(Math.max(1, Math.round((asked.stop - asked.start) / 60)));
-	return draft;
-}
+/* The draft a fresh form starts from lives beside the rules now
+   (list.model.js), because a guide entry also makes a timer without this form
+   and the two have to make the same one. Exported here as well under the name
+   it always had. */
+export { draftFromAddress };
 
 /**
  * The word for a kind, and the number the read side kept for one this build has

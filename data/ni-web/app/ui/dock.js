@@ -12,7 +12,7 @@
 import { html, Link } from '../runtime.js';
 import { t } from '../i18n.js';
 import text from '../shell.text.js';
-import { labelOf, areaById, hrefFor } from '../nav.js';
+import { labelOf, areaById, hrefFor, areaCount } from '../nav.js';
 import { NavIcon } from './navicon.js';
 
 // The four, by identifier, in the order they are drawn. Written out here
@@ -42,8 +42,9 @@ export function dockAreas(areas) {
  *   areas?: readonly Web.NavArea[],
  *   activeArea?: string,
  *   open?: boolean,
- *   onOpen: () => void
- * }} props
+ *   onOpen: () => void,
+ *   counts?: Record<string, number>
+ * }} props the counts are the numbers the bar along the top draws too
  * @returns {Web.Drawn}
  */
 export function Dock(props) {
@@ -56,12 +57,18 @@ export function Dock(props) {
 
 	return html`<nav class="dock" aria-label=${t(text, 'shell.areas')}>
 		${shown.map(function (area) {
+			/* The same number as along the top, on the shoulder of the mark
+			   rather than after the word: a word under a mark has no room
+			   beside it in a fifth of a telephone. */
+			const count = areaCount(area, props.counts);
 			return html`<${Link}
 				key=${area.id}
 				href=${hrefFor(area.id)}
+				aria-label=${count.said}
 				data-current=${area.id === props.activeArea ? 'page' : null}>
 				<${NavIcon} id=${area.id} fallback=${area.ic} />
 				<span>${labelOf(area)}</span>
+				${count.mark ? html`<span class="area-count" aria-hidden="true">${count.mark}</span>` : null}
 			<//>`;
 		})}
 		<button

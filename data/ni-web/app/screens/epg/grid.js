@@ -36,7 +36,7 @@
    sign in at the moment they are used and never before, so a visitor granted Read
    reads this grid exactly as it always did and is turned down only where they
    reach for something. */
-import { html, Fragment, useState, useEffect, useLayoutEffect, useRef, Link, route } from '../../runtime.js';
+import { html, Fragment, useState, useEffect, useLayoutEffect, useRef, route } from '../../runtime.js';
 import { api } from '../../api.js';
 import * as store from '../../store.js';
 import { isAborted, problemHref } from '../../problem.js';
@@ -52,7 +52,7 @@ import { Field } from '../../ui/field.js';
 import { Sheet } from '../../ui/sheet.js';
 import { elapsedShare } from '../../ui/onair.js';
 import { Logo } from '../../ui/logo.js';
-import { EventButtons, EventFacts, isOver, timerHref, zapTo } from '../../ui/event.js';
+import { EventButtons, EventFacts, isOver, recordEvent, zapTo } from '../../ui/event.js';
 import { holdingBouquet } from './schedule.js';
 import text from './grid.text.js';
 import * as model from './grid.model.js';
@@ -502,9 +502,10 @@ function Slots(props) {
 					? html`<button type="button" class="btn grid__srec" disabled title=${t(text, 'grid.record.over')}>
 						<span aria-hidden="true">${timers.ic}</span><span class="sr">${t(text, 'grid.record.over')}</span>
 					</button>`
-					: html`<${Link} class="btn grid__srec" href=${timerHref(event, 'record')} title=${t(text, 'grid.record')}>
+					: html`<button type="button" class="btn grid__srec" title=${t(text, 'grid.record')}
+						onClick=${function () { recordEvent(event); }}>
 						<span aria-hidden="true">${timers.ic}</span><span class="sr">${t(text, 'grid.record')}</span>
-					<//>`}
+					</button>`}
 			</li>`;
 		})}
 	</ul>`;

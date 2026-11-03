@@ -296,6 +296,53 @@ export function emptyDraft(kind, now) {
 }
 
 /**
+ * The draft a fresh form starts from, with whatever the address carried written over it. A
+ * guide entry that is already running arrives with a start behind us and is left where it is
+ * rather than quietly moved forward: the rule about it is said on screen.
+ * @param {{ kind: string, channel: string, epg: string, title: string, start: number, stop: number }} asked
+ * @param {number} now
+ * @returns {Draft}
+ */
+export function draftFromAddress(asked, now) {
+	const draft = emptyDraft(asked.kind === '' ? 'record' : asked.kind, now);
+	if (asked.channel !== '')
+		draft.channel_id = asked.channel;
+	if (asked.title !== '')
+		draft.title = asked.title;
+	if (asked.epg !== '') {
+		draft.epg_id = asked.epg;
+		draft.epg_start = asked.start;
+	}
+	if (asked.start > 0)
+		draft.start = momentInput(asked.start);
+	if (asked.start > 0 && asked.stop > asked.start)
+		draft.minutes = String(Math.max(1, Math.round((asked.stop - asked.start) / 60)));
+	return draft;
+}
+
+/**
+ * What a guide entry is sent as when it is made a timer at the press, with no
+ * form in between: the very body the form would send for the same entry left as
+ * it was opened. Through the same two steps rather than written out a second
+ * time, so the margins, the following and the guide fields cannot differ
+ * between the two ways in.
+ * @param {{ channel_id: string, id: string, title: string, start: number, duration: number }} event
+ * @param {'record' | 'zapto'} kind
+ * @param {number} now
+ * @returns {CreateBody}
+ */
+export function eventBody(event, kind, now) {
+	return createBody(draftFromAddress({
+		kind: kind,
+		channel: event.channel_id,
+		epg: event.id,
+		title: event.title,
+		start: event.start,
+		stop: event.start + event.duration,
+	}, now), now);
+}
+
+/**
  * A timer the box holds, as a draft the form can edit.
  * @param {Api.Timer} timer
  * @returns {Draft}

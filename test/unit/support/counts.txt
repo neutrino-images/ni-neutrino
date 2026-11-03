@@ -44,7 +44,7 @@ lists and lists of records held to a read of the load	5
 locale names the program has	3240
 memory backed folders tried	1
 number elements written and read back among their neighbours	145
-parameters the document describes	150
+parameters the document describes	153
 refusals the document states against a route	860
 refusals the header names	13
 refusals the routes declare of their own	140

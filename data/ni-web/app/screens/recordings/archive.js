@@ -14,7 +14,7 @@ import { RowActions } from '../../ui/actions.js';
 import { toast } from '../../ui/toast.js';
 import * as playing from '../../ui/playing.js';
 import { DetailSheet, FactList, genreWord } from '../../ui/event.js';
-import { waking } from '../../ui/wake.js';
+import { waking, withTv } from '../../ui/wake.js';
 import { refusalReason, readArchive, archiveQuery, lengthWords, archiveFileHref, archivePlaylistHref, kArchiveSortKeys,
 	nextArchiveSort, onlyKeys, readArchiveDetails, archiveCoverHref, paragraphsOf, kAlwaysLocked, kTvRefusals,
 	kDeleteRefusals, sourceName, sourceChoices } from './archive.model.js';
@@ -303,11 +303,11 @@ function ArchivePages(props) {
 	 */
 	function playTv(row) {
 		session.requireLevel('write').then(function () {
-			waking(function (/** @type {boolean} */ wake, /** @type {boolean} */ stop) {
+			waking(function (/** @type {boolean} */ wake, /** @type {boolean} */ stop, /** @type {boolean | null} */ tv) {
 				return store.write('POST', '/api/v1/recordings/archive/{id}/play', {
 					params: { id: row.id },
 					touches: ['/api/v1/recordings/archive'],
-					body: stop ? { wake: wake, stop_playback: true } : { wake: wake },
+					body: withTv(stop ? { wake: wake, stop_playback: true } : { wake: wake }, wake, tv),
 				});
 			}, 'play').then(function (/** @type {boolean} */ sent) {
 				if (sent) {

@@ -939,7 +939,7 @@ Result<void> remove(const std::string &id)
 	return ok();
 }
 
-Result<void> play(const std::string &id, bool wake, bool stop_playback)
+Result<void> play(const std::string &id, bool wake, bool stop_playback, bool cec)
 {
 	Result<Entry> e = find(id);
 	if (!e.ok())
@@ -959,6 +959,9 @@ Result<void> play(const std::string &id, bool wake, bool stop_playback)
 	Result<void> allowed = channels::standbyAllows(wake);
 	if (!allowed.ok())
 		return allowed;
+	Result<void> woken = channels::wakeLeavingTv(wake, cec);
+	if (!woken.ok())
+		return woken;
 	// The loop wakes a sleeping box on this message before it plays, as on a zap.
 	// The leave travels along: a file may start between this check and the loop.
 	const std::string payload = (stop_playback ? "1" : "0") + e.value().path;

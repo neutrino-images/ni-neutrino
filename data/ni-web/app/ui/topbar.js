@@ -16,7 +16,7 @@
 import { html, Link, useState, useEffect, useLayoutEffect, useRef, useId } from '../runtime.js';
 import { t } from '../i18n.js';
 import text from '../shell.text.js';
-import { labelOf, hrefFor } from '../nav.js';
+import { labelOf, hrefFor, areaCount } from '../nav.js';
 import { askToSignIn, signOut } from './signin.js';
 import { SIZES, chosen, choose } from './textsize.js';
 import { THEMES, chosenTheme, chooseTheme } from './theme.js';
@@ -323,21 +323,27 @@ export function Status(props) {
 /**
  * @param {{
  *   areas?: readonly Web.NavArea[],
- *   activeArea?: string
+ *   activeArea?: string,
+ *   counts?: Record<string, number>
  * }} props
  * @returns {Web.Drawn}
  */
 export function AreaTabs(props) {
 	const areas = props.areas || [];
+	const counts = props.counts || {};
 
 	return html`<nav class="areas" aria-label=${t(text, 'shell.areas')}>
 		${areas.map(function (area) {
 			const here = area.id === props.activeArea;
+			const count = areaCount(area, counts);
 			return html`<${Link}
 				key=${area.id}
 				href=${hrefFor(area.id)}
 				class=${area.apart ? 'apart' : null}
-				data-current=${here ? 'page' : null}>${labelOf(area)}<//>`;
+				aria-label=${count.said}
+				data-current=${here ? 'page' : null}>${labelOf(area)}${count.mark
+					? html`<span class="area-count" aria-hidden="true">${count.mark}</span>`
+					: null}<//>`;
 		})}
 	</nav>`;
 }
@@ -479,7 +485,10 @@ export function Topbar(props) {
 			<span class="brand">
 				<${Mark} carrying=${!!(status && status.carrying)} />${t(text, 'shell.brand')}
 			</span>
-			<${AreaTabs} areas=${props.areas} activeArea=${props.activeArea} />
+			<${AreaTabs}
+				areas=${props.areas}
+				activeArea=${props.activeArea}
+				counts=${{ timers: status ? status.timers : 0 }} />
 			<${OnAir}
 				channel=${status ? status.channel : null}
 				event=${props.event}

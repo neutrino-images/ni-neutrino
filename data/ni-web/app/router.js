@@ -244,6 +244,7 @@ export function Shell(props) {
 		<${Dock}
 			areas=${offered}
 			activeArea=${area ? area.id : ''}
+			counts=${{ timers: props.status ? props.status.timers : 0 }}
 			open=${menuOpen}
 			onOpen=${function () { setMenuOpen(true); }} />
 		<${MenuSheet}

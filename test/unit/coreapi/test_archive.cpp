@@ -694,6 +694,28 @@ TEST_CASE("a sleeping box plays a recording only when asked to wake", "[archive]
 		delete[] (unsigned char *) sink.posted[i].second;
 }
 
+TEST_CASE("a sleeping box asked to play without the television is woken first", "[archive]")
+{
+	Archive a;
+	a.disk.recording("one", "One", "X", 1, 1790000000);
+	FakeChannelSource channels;
+	InstalledChannelSource in_channels(&channels);
+	FakeCommandSink sink;
+	InstalledSink in_sink(&sink);
+	const std::string id = archive::list("", 0, 1).value().items[0].id;
+	const std::string path = a.disk.base + "/one.ts";
+
+	channels.mode = NeutrinoModes::mode_standby;
+	REQUIRE(archive::play(id, true, false, false).ok());
+	REQUIRE(sink.posted.size() == 2);
+	REQUIRE(sink.posted[0].first == NeutrinoMessages::STANDBY_OFF);
+	REQUIRE(sink.posted[0].second == (neutrino_msg_data_t) NeutrinoStandby::leave_tv);
+	REQUIRE(sink.posted[1].first == NeutrinoMessages::EVT_PLAY_RECORDING);
+	REQUIRE(archive::playAsked((const char *) sink.posted[1].second).path == path);
+
+	delete[] (unsigned char *) sink.posted[1].second;
+}
+
 TEST_CASE("a box still starting refuses a play and posts nothing", "[archive]")
 {
 	Archive a;

@@ -249,6 +249,12 @@ declare namespace Web {
 		 * every screen behind that mark refreshes itself off that stream.
 		 */
 		carrying: boolean;
+		/**
+		 * How many timers are set, which is the number the bar draws beside
+		 * that destination, and nought while the box has not said or has
+		 * refused to.
+		 */
+		timers: number;
 	};
 
 	/**

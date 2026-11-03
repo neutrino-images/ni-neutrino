@@ -825,3 +825,69 @@ TEST_CASE("a mode change in standby is refused unless it may switch the box on",
 	REQUIRE(sink.posted[0].first == NeutrinoMessages::CHANGEMODE);
 	REQUIRE(sink.posted[0].second == (neutrino_msg_data_t) (NeutrinoModes::mode_radio | NeutrinoModes::wakeup));
 }
+
+TEST_CASE("a zap or mode change that wakes without the television wakes the box first", "[channels]")
+{
+	FakeChannelSource fake;
+	fake.channels.push_back(mk(ERSTE, ERSTE_NAME, ServiceKind::Tv));
+	fake.mode = NeutrinoModes::mode_standby;
+	InstalledChannelSource installed_source(&fake);
+
+	FakeCommandSink sink;
+	InstalledSink installed_sink(&sink);
+
+	// cec false: the box woken with the television left, then the zap behind it.
+	REQUIRE(channels::zap(ERSTE, true, false, false).ok());
+	REQUIRE(sink.posted.size() == 2);
+	REQUIRE(sink.posted[0].first == NeutrinoMessages::STANDBY_OFF);
+	REQUIRE(sink.posted[0].second == (neutrino_msg_data_t) NeutrinoStandby::leave_tv);
+	REQUIRE(sink.posted[1].first == NeutrinoMessages::ZAPTO);
+	REQUIRE(takePayload(sink.posted[1].second).channel_id == ERSTE);
+
+	// The same for a mode change.
+	REQUIRE(channels::setMode(channels::Mode::Radio, true, false).ok());
+	REQUIRE(sink.posted.size() == 4);
+	REQUIRE(sink.posted[2].first == NeutrinoMessages::STANDBY_OFF);
+	REQUIRE(sink.posted[2].second == (neutrino_msg_data_t) NeutrinoStandby::leave_tv);
+	REQUIRE(sink.posted[3].first == NeutrinoMessages::CHANGEMODE);
+
+	// cec true, the default: one message, and the loop wakes the box by its settings.
+	REQUIRE(channels::zap(ERSTE, true, false, true).ok());
+	REQUIRE(sink.posted.size() == 5);
+	REQUIRE(sink.posted[4].first == NeutrinoMessages::ZAPTO);
+	takePayload(sink.posted[4].second);
+
+	// Refused in standby without wake, cec or not, and nothing is woken.
+	REQUIRE(channels::zap(ERSTE, false, false, false).error().code == ErrorCode::BoxInStandby);
+	REQUIRE(sink.posted.size() == 5);
+
+	// An awake box has nothing to wake: the zap alone.
+	fake.mode = NeutrinoModes::mode_tv;
+	REQUIRE(channels::zap(ERSTE, true, false, false).ok());
+	REQUIRE(sink.posted.size() == 6);
+	REQUIRE(sink.posted[5].first == NeutrinoMessages::ZAPTO);
+	takePayload(sink.posted[5].second);
+}
+
+TEST_CASE("waking without the television posts nothing where it is not asked for", "[channels]")
+{
+	FakeChannelSource fake;
+	fake.mode = NeutrinoModes::mode_standby;
+	InstalledChannelSource installed_source(&fake);
+
+	FakeCommandSink sink;
+	InstalledSink installed_sink(&sink);
+
+	REQUIRE(channels::wakeLeavingTv(false, false).ok());
+	REQUIRE(channels::wakeLeavingTv(true, true).ok());
+	REQUIRE(sink.posted.empty());
+
+	fake.mode_status = Status::NotFound;
+	REQUIRE(channels::wakeLeavingTv(true, false).ok());
+	REQUIRE(sink.posted.empty());
+
+	fake.mode_status = Status::Ok;
+	REQUIRE(channels::wakeLeavingTv(true, false).ok());
+	REQUIRE(sink.posted.size() == 1);
+	REQUIRE(sink.posted[0].first == NeutrinoMessages::STANDBY_OFF);
+}
