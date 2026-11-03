@@ -830,6 +830,7 @@ const char * locale_real_names[] =
 	"flashupdate.getupdatefile",
 	"flashupdate.getupdatefileerror",
 	"flashupdate.head",
+	"flashupdate.install",
 	"flashupdate.install_image",
 	"flashupdate.install_package",
 	"flashupdate.md5check",
