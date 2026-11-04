@@ -170,6 +170,17 @@ bool CFBCTunerManager::IsFBCLink(int slot) const
 	return IsFBCTuner(slot) && !IsRoot(slot);
 }
 
+bool CFBCTunerManager::CanLinkTo(int slot, int master_slot) const
+{
+	if (slot == master_slot)
+		return false;
+	if (IsFBCLink(master_slot))
+		return false;
+	if (IsFBCLink(slot))
+		return IsRoot(master_slot) && IsSameSet(slot, master_slot);
+	return true;
+}
+
 bool CFBCTunerManager::IsSameSet(int slot_a, int slot_b) const
 {
 	fbc_tuner_map_const_iterator_t a = tuners.find(slot_a);
@@ -196,6 +207,24 @@ int CFBCTunerManager::GetConnectedTo(int slot) const
 {
 	fbc_tuner_map_const_iterator_t it = tuners.find(slot);
 	return (it == tuners.end()) ? -1 : it->second.connected_to;
+}
+
+int CFBCTunerManager::GetNumberInKind(int slot) const
+{
+	fbc_tuner_map_const_iterator_t me = tuners.find(slot);
+	fbc_tuner_map_const_iterator_t it;
+	int number = 1;
+
+	if (me == tuners.end())
+		return -1;
+
+	for (it = tuners.begin(); it != tuners.end(); ++it) {
+		if (it->second.set_id == me->second.set_id &&
+				it->second.is_root == me->second.is_root &&
+				it->second.position < me->second.position)
+			number++;
+	}
+	return number;
 }
 
 bool CFBCTunerManager::IsLinkedTo(int slot, int root_slot) const
