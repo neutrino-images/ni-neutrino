@@ -269,6 +269,30 @@ TEST_CASE("fbc: a root stays on its own input whatever it is tied to", "[fbc]")
 	CHECK_FALSE(proc.fbc->IsLinkedTo(1, 0));
 }
 
+TEST_CASE("fbc: the setup offers a link only the roots of its own set", "[fbc]")
+{
+	FakeProc proc;
+	proc.module(0, 0);
+	proc.module(8, 1);
+	proc.probe(0, 15);
+
+	CHECK(proc.fbc->CanLinkTo(2, 0));
+	CHECK(proc.fbc->CanLinkTo(2, 1));
+	/* a root of the other set, another link, a tuner that is no FBC */
+	CHECK_FALSE(proc.fbc->CanLinkTo(2, 8));
+	CHECK_FALSE(proc.fbc->CanLinkTo(2, 3));
+	CHECK_FALSE(proc.fbc->CanLinkTo(2, 20));
+	/* nothing is linked to a link, nor to itself */
+	CHECK_FALSE(proc.fbc->CanLinkTo(1, 2));
+	CHECK_FALSE(proc.fbc->CanLinkTo(20, 2));
+	CHECK_FALSE(proc.fbc->CanLinkTo(0, 0));
+	/* a root, like any other tuner, may still loop to another */
+	CHECK(proc.fbc->CanLinkTo(1, 0));
+	CHECK(proc.fbc->CanLinkTo(8, 0));
+	CHECK(proc.fbc->CanLinkTo(20, 0));
+	CHECK(proc.fbc->CanLinkTo(20, 21));
+}
+
 TEST_CASE("fbc: a fresh probe forgets how the links were tied", "[fbc]")
 {
 	FakeProc proc;
