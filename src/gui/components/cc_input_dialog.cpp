@@ -241,6 +241,9 @@ CCTextInputDialog::CCTextInputDialog(const std::string &title,
 	cid_value = value;
 	valueString = cid_value ? cid_value : &valueStringTmp;
 	cid_observ = observ;
+	cid_exit_result = menu_return::RETURN_EXIT_REPAINT;
+	cid_timeout_sec = -1;
+	cid_confirm_discard = true;
 	cid_hint = NULL;
 	cid_field = NULL;
 	cid_keyboard = NULL;
@@ -537,6 +540,8 @@ void CCInputDialogBase::initFooterButtons(const std::string &layout_name)
 		buttons[5].directKeys.push_back(CRCInput::RC_setup);
 	}
 
+	buttons.insert(buttons.end(), idb_extra_buttons.begin(), idb_extra_buttons.end());
+
 	getFooterObject()->setButtonLabels(buttons,
 		CFrameBuffer::getInstance()->scale2Res(20),
 		CFrameBuffer::getInstance()->scale2Res(220));
@@ -745,6 +750,7 @@ bool CCTextInputDialog::save()
 
 	if (cid_value)
 		setSettingsText(*cid_value, cid_buffer.getText());
+	commitValue();
 
 	OnAfterSave();
 	cid_saved = true;
@@ -847,6 +853,61 @@ void CCTextInputDialog::enableOnScreenKeyboard(bool enable)
 	layoutDialogItems();
 }
 
+void CCTextInputDialog::setValueTarget(std::string *value)
+{
+	cid_value = value;
+	valueString = cid_value ? cid_value : &valueStringTmp;
+}
+
+void CCTextInputDialog::setFieldColors(fb_pixel_t text, fb_pixel_t body, fb_pixel_t body_focus)
+{
+	cid_field_col_text = text;
+	cid_field_col_body = body;
+	cid_field_col_body_focus = body_focus;
+	applyFieldStyle();
+}
+
+void CCTextInputDialog::resetFieldColors()
+{
+	setFieldColors(getInputFieldTextColor(),
+		getInputFieldBodyColor(),
+		getInputFieldBodyFocusColor());
+}
+
+void CCTextInputDialog::setExtraFooterButtons(const std::vector<button_label_cc> &buttons)
+{
+	idb_extra_buttons = buttons;
+	initFooterButtons(cid_keyboard ? cid_keyboard->getLayoutName() : std::string());
+}
+
+int CCTextInputDialog::getTimeoutSec() const
+{
+	return cid_timeout_sec < 0 ?
+		g_settings.timing[SNeutrinoSettings::TIMING_MENU] :
+		cid_timeout_sec;
+}
+
+void CCTextInputDialog::applyHookResult(int hook, bool &loop, int &res)
+{
+	switch (hook)
+	{
+		case HOOK_REFRESH:
+			refreshField();
+			break;
+		case HOOK_SAVE:
+			if (save())
+				loop = false;
+			break;
+		case HOOK_EXIT:
+			loop = false;
+			res = cid_exit_result;
+			break;
+		case HOOK_DONE:
+		default:
+			break;
+	}
+}
+
 std::string &CCTextInputDialog::getValue(void)
 {
 	if (!cid_value)
@@ -875,6 +936,8 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 	if (parent)
 		parent->hide();
 
+	onBeforeExec();
+
 	const std::string original_value = cid_value ? *cid_value : "";
 
 	if (cid_enable_keyboard && !cid_keyboard)
@@ -886,7 +949,7 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		initFooterButtons(cid_keyboard->getLayoutName());
 
 	cid_saved = false;
-	cid_buffer.setText(original_value);
+	cid_buffer.setText(prepareInitialText(original_value));
 	cid_buffer.moveEnd();
 	syncDialogState();
 	/* What the field shows at the start, not what the target held: the
@@ -899,8 +962,7 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 
 	showDisplayText();
 
-	uint64_t timeoutEnd =
-		CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
+	uint64_t timeoutEnd = CRCInput::calcTimeoutEnd(getTimeoutSec());
 
 	bool loop = true;
 	while (loop)
@@ -908,8 +970,7 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd, true);
 
 		if (msg <= CRCInput::RC_MaxRC)
-			timeoutEnd =
-				CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
+			timeoutEnd = CRCInput::calcTimeoutEnd(getTimeoutSec());
 
 		bool state_changed = false;
 
@@ -920,6 +981,16 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		if (cid_keyboard && cid_keyboard->hasKeyFocus() &&
 			cid_keyboard->handleMsg(msg))
 			continue;
+
+		/* A derived dialog sees the message next, before any meaning
+		 * this class gives it - keys it takes never reach the cursor,
+		 * the footer or the application. */
+		const int hook = onDialogMsg(msg, data);
+		if (hook != HOOK_PASS)
+		{
+			applyHookResult(hook, loop, res);
+			continue;
+		}
 
 		/* 1. Cursor navigation (explicit, not button-dispatched) */
 		if (msg == CRCInput::RC_left)
@@ -974,15 +1045,15 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		}
 		else if (msg == CRCInput::RC_timeout)
 		{
-			if (cid_buffer.getText() != start_text &&
+			if (cid_confirm_discard &&
+				cid_buffer.getText() != start_text &&
 				!confirmDiscard())
 			{
 				/* RC_timeout is above RC_MaxRC, so the renewal at
 				 * the loop head never ran - without a fresh
 				 * deadline the next getMsgAbsoluteTimeout() fires
 				 * immediately and the discard prompt loops. */
-				timeoutEnd = CRCInput::calcTimeoutEnd(
-						g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
+				timeoutEnd = CRCInput::calcTimeoutEnd(getTimeoutSec());
 				continue;
 			}
 
@@ -1005,7 +1076,8 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 							loop = false;
 						break;
 					case RES_CANCEL:
-						if (cid_buffer.getText() != start_text &&
+						if (cid_confirm_discard &&
+							cid_buffer.getText() != start_text &&
 							!confirmDiscard())
 							break;
 						loop = false;
@@ -1042,6 +1114,14 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 						 * forgot a label would show a footer button
 						 * that does nothing, which is the defect this
 						 * whole change came from. */
+						{
+							const int btn_hook = onButtonResult(btn_res);
+							if (btn_hook != HOOK_PASS)
+							{
+								applyHookResult(btn_hook, loop, res);
+								break;
+							}
+						}
 						cid_field->setErrorState(false);
 						clearInlineError();
 						if (applyBufferResult(btn_res, &cid_buffer))
@@ -1071,7 +1151,19 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 					cid_field->setErrorState(false);
 					clearInlineError();
 					if (cid_buffer.insert(glyph))
-						state_changed = true;
+					{
+						const int insert_hook = onAfterInsert();
+						if (insert_hook == HOOK_PASS)
+							state_changed = true;
+						else
+						{
+							/* The glyph shows before the hook
+							 * acts on it - a dialog that closes
+							 * on its last digit still paints it. */
+							refreshField();
+							applyHookResult(insert_hook, loop, res);
+						}
+					}
 					else
 						showMaxCharsError();
 				}
