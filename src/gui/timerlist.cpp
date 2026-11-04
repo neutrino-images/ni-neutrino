@@ -64,6 +64,7 @@
 #include <gui/widget/settingitem.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/stringinput_ext.h>
+#include <gui/components/cc_structured_input_dialog.h>
 #include <gui/widget/keyboard_input.h>
 
 #include <system/settings.h>
@@ -1719,7 +1720,10 @@ int CTimerList::modifyTimer()
 
 	Timer->setWeekdaysToStr(timer->eventRepeat, m_weekdaysStr);
 	timer->eventRepeat = (CTimerd::CTimerEventRepeat)(((int)timer->eventRepeat) & 0x1FF);
-	CStringInput timerSettings_weekdays(LOCALE_TIMERLIST_WEEKDAYS, &m_weekdaysStr, 7, LOCALE_TIMERLIST_WEEKDAYS_HINT_1, LOCALE_TIMERLIST_WEEKDAYS_HINT_2, "-X");
+	/* Seven switches, Monday first; the first hint line names the days */
+	CCStructuredInputDialog timerSettings_weekdays(LOCALE_TIMERLIST_WEEKDAYS, CCStructuredInputDialog::FORMAT_WEEKDAYS, &m_weekdaysStr);
+	timerSettings_weekdays.setHintText(CCTextInputDialog::joinHintLines(g_Locale->getText(LOCALE_TIMERLIST_WEEKDAYS_HINT_1),
+			g_Locale->getText(LOCALE_TIMERLIST_WEEKDAYS_HINT_2)));
 	CMenuForwarder *m4 = new CMenuForwarder(LOCALE_TIMERLIST_WEEKDAYS, ((int)timer->eventRepeat) >= (int)CTimerd::TIMERREPEAT_WEEKDAYS, m_weekdaysStr, &timerSettings_weekdays);
 	CIntInput timerSettings_repeatCount(LOCALE_TIMERLIST_REPEATCOUNT, (int *)&timer->repeatCount, 3, LOCALE_TIMERLIST_REPEATCOUNT_HINT_1, LOCALE_TIMERLIST_REPEATCOUNT_HINT_2);
 
@@ -1829,7 +1833,10 @@ int CTimerList::newTimer()
 	CDateInput timerSettings_stopTime(LOCALE_TIMERLIST_STOPTIME, &(timerNew.stopTime), LOCALE_IPSETUP_HINT_1, LOCALE_IPSETUP_HINT_2);
 	CMenuForwarder *m2 = new CMenuForwarder(LOCALE_TIMERLIST_STOPTIME, true, timerSettings_stopTime.getValue(), &timerSettings_stopTime);
 
-	CStringInput timerSettings_weekdays(LOCALE_TIMERLIST_WEEKDAYS, &m_weekdaysStr, 7, LOCALE_TIMERLIST_WEEKDAYS_HINT_1, LOCALE_TIMERLIST_WEEKDAYS_HINT_2, "-X");
+	/* Seven switches, Monday first; the first hint line names the days */
+	CCStructuredInputDialog timerSettings_weekdays(LOCALE_TIMERLIST_WEEKDAYS, CCStructuredInputDialog::FORMAT_WEEKDAYS, &m_weekdaysStr);
+	timerSettings_weekdays.setHintText(CCTextInputDialog::joinHintLines(g_Locale->getText(LOCALE_TIMERLIST_WEEKDAYS_HINT_1),
+			g_Locale->getText(LOCALE_TIMERLIST_WEEKDAYS_HINT_2)));
 	CMenuForwarder *m4 = new CMenuForwarder(LOCALE_TIMERLIST_WEEKDAYS, false, m_weekdaysStr, &timerSettings_weekdays);
 
 	CIntInput timerSettings_repeatCount(LOCALE_TIMERLIST_REPEATCOUNT, (int *)&timerNew.repeatCount, 3, LOCALE_TIMERLIST_REPEATCOUNT_HINT_1, LOCALE_TIMERLIST_REPEATCOUNT_HINT_2);
