@@ -33,6 +33,8 @@
 #include <gui/widget/menue_options.h>
 #include <gui/widget/hintbox.h>
 #include <gui/widget/keyboard_input.h>
+#include <gui/widget/stringinput.h>
+#include <gui/widget/stringinput_ext.h>
 #include <driver/screen_max.h>
 
 #include <fstream>
