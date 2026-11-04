@@ -62,10 +62,11 @@ done
 
 # Below these the scan is not measuring the tree any more. The header held 78
 # text field names and the tree 874 mentions of one when this was written, and
-# the widgets published 21 of them.
+# the widgets published 21 of them. The string and keyboard inputs now run on
+# the cc input dialog, which publishes for all of them in one place; that left 9.
 FLOOR_NAMES=70
 FLOOR_REFS=700
-FLOOR_PUBLISHED=15
+FLOOR_PUBLISHED=9
 # The two the weather fetch writes were mentioned 15 times; the setup screen now writes the
 # pair through the settings layer by key and the group reads each once, which leaves 10.
 FLOOR_THREADWRITTEN=10
@@ -223,8 +224,8 @@ fi
 # user types, so the write is here and not at the screen. Every change that can
 # move the buffer goes through the accessor; a character written in place cannot
 # move it and is left as it stands.
-WIDGETS='src/gui/widget/stringinput.cpp src/gui/widget/keyboard_input.cpp src/gui/widget/menue.cpp src/gui/opkg_manager.cpp'
-RAW='\*(valueString|optionValuePtr|local_dir)[ ]*=[^=]|(valueString|optionValuePtr|local_dir)->(append|assign|insert|erase|resize|swap|push_back|clear)[ ]*\('
+WIDGETS='src/gui/widget/stringinput.cpp src/gui/widget/keyboard_input.cpp src/gui/widget/menue.cpp src/gui/opkg_manager.cpp src/gui/components/cc_input_dialog.cpp'
+RAW='\*(valueString|optionValuePtr|local_dir|cid_value)[ ]*=[^=]|(valueString|optionValuePtr|local_dir|cid_value)->(append|assign|insert|erase|resize|swap|push_back|clear)[ ]*\('
 published=0
 for f in $WIDGETS; do
 	[ -r "$SRC/$f" ] || {
