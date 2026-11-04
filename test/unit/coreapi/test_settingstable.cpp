@@ -30,6 +30,7 @@
 #include "coreapi/settings/settingstable.h"
 #include "support/fakes.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <map>
 #include <string>
@@ -70,12 +71,12 @@ const Descriptor kSound[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kOnRow), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	}
 };
 
@@ -84,12 +85,12 @@ const Descriptor kDangling[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kOnNothing), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	}
 };
 
@@ -121,12 +122,12 @@ const Descriptor kDanglingInGroup[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kInGroup), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	}
 };
 
@@ -135,22 +136,22 @@ const Descriptor kWrongKind[] =
 	{
 		"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL,
 		0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_text", ValueType::String, "fixture", "fixture.text", NULL,
 		0, 0, NULL, 0, 0, "", false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_gated", ValueType::Int, "fixture", "fixture.gated", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kTextOfNumber), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	},
 	{
 		"fixture_other", ValueType::Int, "fixture", "fixture.other", NULL,
 		0, 9, NULL, 0, 0, NULL, false, false, COREAPI_CONDITIONS(kNumberOfText), COREAPI_NO_FIELD,
-		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	}
 };
 
@@ -228,12 +229,12 @@ WHEN_ENUM(kWhenWrongKind, kTextOfNumber);
 		{ \
 			"fixture_flag", ValueType::Bool, "fixture", "fixture.flag", NULL, \
 			0, 1, NULL, 0, 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, \
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL \
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL \
 		}, \
 		{ \
 			"fixture_choice", ValueType::Enum, "fixture", "fixture.choice", NULL, \
 			0, 0, COREAPI_VALUES(list), 0, NULL, false, false, COREAPI_ALWAYS, COREAPI_NO_FIELD, \
-			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL \
+			NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL \
 		} \
 	}
 WHEN_TABLE(kWhenSoundTable, kWhenSound);
@@ -355,6 +356,58 @@ TEST_CASE("every key the parental lock holds is a declared parental row", "[sett
 	}
 	CHECK_FALSE(heldByParentalLock("parentallock_pincode"));
 	CHECK_FALSE(heldByParentalLock(NULL));
+}
+
+/* A row names its heading as an object, so a heading that does not exist does not compile.
+   What still compiles is a heading of the wrong section, which the answer would list on a
+   page it is not on, and two headings of one section in one place, which leaves the order
+   of the two to chance. */
+TEST_CASE("every heading a row stands under is one of its section, in a place of its own", "[settingstable]")
+{
+	std::vector<const MenuGroup *> seen;
+	for (size_t i = 0; i < settingsTableCount(); ++i)
+	{
+		const Descriptor &d = settingsTable()[i];
+		if (d.group == NULL)
+			continue;
+		INFO("row " << d.key << " of " << d.section << " under " << d.group->label_key);
+		REQUIRE(d.group->section != NULL);
+		REQUIRE(d.group->label_key != NULL);
+		CHECK(std::string(d.group->section) == d.section);
+		CHECK(std::string(d.group->label_key) != "");
+		CHECK(d.group->order > 0);
+		if (std::find(seen.begin(), seen.end(), d.group) == seen.end())
+			seen.push_back(d.group);
+	}
+	REQUIRE_FALSE(seen.empty());
+	for (size_t g = 0; g < seen.size(); ++g)
+	{
+		for (size_t h = 0; h < g; ++h)
+		{
+			INFO("headings " << seen[h]->label_key << " and " << seen[g]->label_key << " of " << seen[g]->section);
+			if (std::string(seen[h]->section) != seen[g]->section)
+				continue;
+			CHECK(seen[h]->order != seen[g]->order);
+			CHECK(std::string(seen[h]->label_key) != seen[g]->label_key);
+		}
+	}
+}
+
+TEST_CASE("the HDMI-CEC rows stand under one heading and the picture's own rows under none", "[settingstable]")
+{
+	const char *const cec[] = { "hdmi_cec_mode", "hdmi_cec_view_on", "hdmi_cec_standby", "hdmi_cec_volume" };
+	for (size_t i = 0; i < sizeof(cec) / sizeof(cec[0]); ++i)
+	{
+		INFO(cec[i]);
+		const Descriptor *d = settings::findRow(cec[i]);
+		REQUIRE(d != NULL);
+		CHECK(d->group == &kVideoCec);
+	}
+	CHECK(std::string(kVideoCec.label_key) == "videomenu.hdmi_cec");
+	CHECK(std::string(kVideoCec.section) == "video");
+	const Descriptor *mode = settings::findRow("video_Mode");
+	REQUIRE(mode != NULL);
+	CHECK(mode->group == NULL);
 }
 
 /* The declared side alone, split by section, which is the unit the remaining
@@ -646,6 +699,8 @@ const EnumValue kBuilderEntriesByPosition[] =
 	{ 2, "options.on", NULL, NULL, kBuilderInner, 2 }
 };
 
+const MenuGroup kBuilderGroup = { "builder", "builder.group", 1 };
+
 constexpr TextRule kBuilderRule = { TextKind::Pin, 4, 4, "0123456789", MustExist::No, NULL, false };
 
 bool sameField(const FieldRef &a, const FieldRef &b)
@@ -666,6 +721,7 @@ bool sameDescriptor(const Descriptor &a, const Descriptor &b)
 	       a.unit_key == b.unit_key && a.text == b.text &&
 	       a.choices_from == b.choices_from && a.min_now == b.min_now && a.max_now == b.max_now &&
 	       a.default_fn == b.default_fn && a.read_outside == b.read_outside && a.label_from == b.label_from &&
+	       a.group == b.group &&
 	       (a.menu_label_key == NULL ? std::string() : a.menu_label_key) == (b.menu_label_key == NULL ? std::string() : b.menu_label_key);
 }
 
@@ -740,6 +796,7 @@ TEST_CASE("a row built by name is the one written by position", "[settingstable]
 		.section("builder")
 		.label("builder.label")
 		.menuLabel("builder.menu")
+		.group(&kBuilderGroup)
 		.labelFrom(builderLabel)
 		.hint("builder.hint")
 		.range(1, 9)
@@ -762,7 +819,7 @@ TEST_CASE("a row built by name is the one written by position", "[settingstable]
 		"builder_row", ValueType::Int, "builder", "builder.label", "builder.hint", 1, 9,
 		kBuilderEntries, 3, 2, NULL, true, true, kBuilderConditions, 9,
 		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", &kBuilderRule, builderChoices, builderLow,
-		builderHigh, builderDefault, true, "builder.menu", builderLabel
+		builderHigh, builderDefault, true, "builder.menu", builderLabel, &kBuilderGroup
 	};
 	by_position.field.available = builderBoxHas;
 
@@ -812,7 +869,7 @@ TEST_CASE("the single-bound, unit and default calls each set their own member", 
 	const Descriptor number_by_position = {
 		"builder_number", ValueType::Int, "builder", "builder.label", NULL, -4, 40,
 		NULL, 0, 7, NULL, false, false, NULL, 0,
-		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		COREAPI_NUMBER_FIELD(auto_lang), "builder.unit", NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	};
 	CHECK(sameRowText(number, number_by_position));
 	CHECK(sameDescriptor(withoutText(number), withoutText(number_by_position)));
@@ -825,7 +882,7 @@ TEST_CASE("the single-bound, unit and default calls each set their own member", 
 	const Descriptor words_by_position = {
 		"builder_text", ValueType::String, "builder", "builder.label", NULL, 0, 0,
 		NULL, 0, 0, "fallback", false, false, NULL, 0,
-		COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL
+		COREAPI_TEXT_FIELD(language), NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL
 	};
 	CHECK(sameRowText(words, words_by_position));
 	CHECK(sameDescriptor(withoutText(words), withoutText(words_by_position)));

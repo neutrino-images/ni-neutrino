@@ -186,6 +186,7 @@ constexpr Descriptor kAudio[] =
 		.field(COREAPI_NUMBER_FIELD(srs_ref_volume)),
 	intRow("audio_volume_percent_ac3")
 		.section("audio")
+		.group(&kAudioVolumeAdjustment)
 		.label("audiomenu.volume_adjustment_ac3")
 		.hint("menu.hint_audio_adjust_vol_ac3")
 		.range(0, 100)
@@ -194,6 +195,7 @@ constexpr Descriptor kAudio[] =
 		.field(COREAPI_NUMBER_FIELD(audio_volume_percent_ac3)),
 	intRow("audio_volume_percent_pcm")
 		.section("audio")
+		.group(&kAudioVolumeAdjustment)
 		.label("audiomenu.volume_adjustment_pcm")
 		.hint("menu.hint_audio_adjust_vol_pcm")
 		.range(0, 100)

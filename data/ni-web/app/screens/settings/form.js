@@ -39,6 +39,9 @@ import {
 	changed,
 	countOf,
 	driftsFromDefault,
+	groupsOf,
+	headingsOf,
+	headingLabel,
 	search
 } from './model.js';
 import text from './settings.text.js';
@@ -101,7 +104,7 @@ export default function SettingsForm(props) {
 	   declaration. Everything this screen draws comes out of that reading, so a
 	   member the box stops sending is a row that stops being drawn and never a
 	   value read off undefined. */
-	const [schema, setSchema] = useState(/** @type {Web.Snapshot<{ items?: unknown, value_lists?: unknown }> | null} */ (null));
+	const [schema, setSchema] = useState(/** @type {Web.Snapshot<{ items?: unknown, value_lists?: unknown, groups?: unknown }> | null} */ (null));
 	// The names of the keys, which a failed or late answer only leaves out: a key row is then
 	// the number it is stored as.
 	const [keys, setKeys] = useState(/** @type {Web.Snapshot<{ items?: unknown }> | null} */ (null));
@@ -154,6 +157,10 @@ export default function SettingsForm(props) {
 	const allRows = useMemo(function () {
 		return withKeyNames(rowsOf(schema === null ? null : schema.data), keys === null ? null : keys.data);
 	}, [schema === null ? null : schema.data, keys === null ? null : keys.data]);
+
+	const headings = useMemo(function () {
+		return headingsOf(schema === null ? null : schema.data);
+	}, [schema === null ? null : schema.data]);
 
 	const sectionRows = useMemo(function () {
 		return rowsOfSection(allRows, section);
@@ -361,6 +368,64 @@ export default function SettingsForm(props) {
 	for (const row of visible)
 		editable[row.id] = true;
 
+	/* Where a hit of the search lives: its section, and the heading in it where it has one,
+	   which is where the box's own menu has it too. */
+	/** @param {import('./model.js').Row} row */
+	function placeOf(row) {
+		const section = sectionLabel(row.section);
+		const group = headingLabel(headings, row);
+		return group === ''
+			? t(text, 'settings.section.of', { section: section })
+			: t(text, 'settings.section.group', { section: section, group: group });
+	}
+
+	/** @param {import('./model.js').Row} row */
+	function drawRow(row) {
+		if (editable[row.id] !== true) {
+			return html`<p class="set-elsewhere" key=${row.id} data-setting=${row.id}>
+				<a href=${hrefFor('settings', row.section)}>${row.label}</a>
+				<span class="hint mono">${row.id}</span>
+				<span class="hint">${placeOf(row)}</span>
+			</p>`;
+		}
+		return html`<${Row}
+			key=${row.id}
+			row=${row}
+			value=${shownValue(row, held, edits)}
+			also=${row.partner === '' ? undefined : lineOf(row, held)}
+			${/* Held against what is on screen and not against what
+			     the box last said, so that a row put back stops
+			     being marked the moment it is put back. The list
+			     above is filtered on what the box said, which is
+			     what keeps a row from vanishing while somebody is
+			     typing in it. */ null}
+			drifts=${driftsFromDefault(row, now) === true}
+			place=${searching ? placeOf(row) : ''}
+			onChange=${edit}
+			onRevert=${revert}
+			onClear=${function (/** @type {import('./model.js').Row} */ one) {
+				session.requireSystem().then(function () { clearSecret(one); }, function () {});
+			}} />`;
+	}
+
+	/* A heading of the box's own menu over the rows it files, the way the box shows them in
+	   one of its submenus. The rows the menu shows on the section's own page come first and
+	   under no heading, as they come first there. A heading the box sent no words for is
+	   still a break in the column, so its rows are not read as the end of the ones above. */
+	/** @param {import('./model.js').Group} group */
+	function drawGroup(group) {
+		const rows = html`<div class="set-rows">${group.rows.map(drawRow)}</div>`;
+		if (group.id === '')
+			return html`<div class="set-group" key="">${rows}</div>`;
+		const heading = 'set-group-' + group.id.replace(/[^A-Za-z0-9_-]/g, '-');
+		return html`<section class="set-group" key=${group.id} data-group=${group.id} aria-labelledby=${group.label === '' ? null : heading}>
+			${group.label === ''
+				? html`<hr class="set-group-rule" />`
+				: html`<h2 class="set-group-head" id=${heading}>${group.label}</h2>`}
+			${rows}
+		</section>`;
+	}
+
 	const phase = saving ? 'writing' : values.phase;
 
 	/* A div and not a form, deliberately. The document forbids a form action altogether (the
@@ -402,33 +467,9 @@ export default function SettingsForm(props) {
 				? html`<p class="note">${searching
 					? t(text, 'settings.search.none')
 					: (driftOnly ? t(text, 'settings.drift.none') : t(text, 'settings.section.empty'))}</p>`
-				: html`<div class="set-rows">${listed.map(function (row) {
-					if (editable[row.id] !== true) {
-						return html`<p class="set-elsewhere" key=${row.id} data-setting=${row.id}>
-							<a href=${hrefFor('settings', row.section)}>${row.label}</a>
-							<span class="hint mono">${row.id}</span>
-							<span class="hint">${t(text, 'settings.section.of', { section: sectionLabel(row.section) })}</span>
-						</p>`;
-					}
-					return html`<${Row}
-						key=${row.id}
-						row=${row}
-						value=${shownValue(row, held, edits)}
-						also=${row.partner === '' ? undefined : lineOf(row, held)}
-						${/* Held against what is on screen and not against what
-						     the box last said, so that a row put back stops
-						     being marked the moment it is put back. The list
-						     above is filtered on what the box said, which is
-						     what keeps a row from vanishing while somebody is
-						     typing in it. */ null}
-						drifts=${driftsFromDefault(row, now) === true}
-						place=${searching ? t(text, 'settings.section.of', { section: sectionLabel(row.section) }) : ''}
-						onChange=${edit}
-						onRevert=${revert}
-						onClear=${function (/** @type {import('./model.js').Row} */ one) {
-							session.requireSystem().then(function () { clearSecret(one); }, function () {});
-						}} />`;
-				})}</div>`}
+				: (searching
+					? html`<div class="set-rows">${listed.map(drawRow)}</div>`
+					: groupsOf(listed, headings).map(drawGroup))}
 		<//>
 
 		<footer class="save-bar">

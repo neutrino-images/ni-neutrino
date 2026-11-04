@@ -31,6 +31,31 @@
 	flex-direction: column;
 }
 
+/* A HEADING OF THE BOX'S OWN MENU, over the rows it files. Quieter than the name of
+   the section above the whole page and louder than a row's name, with the rule the
+   menu draws between its parts under it, so a section of a hundred rows reads as
+   the handful of parts the box shows it in. The gutter is reserved here too, so the
+   heading starts where the names below it start. */
+.set-group + .set-group {
+	margin-top: var(--gap-3);
+}
+
+.set-group-head {
+	margin: 0 0 var(--gap-4);
+	padding: 0 0 var(--gap-2) var(--set-mark);
+	border-bottom: 1px solid var(--line);
+	font-size: var(--fs-xl);
+	font-weight: 600;
+	color: var(--text-dim);
+	overflow-wrap: anywhere;
+}
+
+.set-group-rule {
+	margin: 0 0 var(--gap-4);
+	border: 0;
+	border-top: 1px solid var(--line);
+}
+
 /* The control, and whatever the view around it adds under it. The gap lives here
    rather than on the control, because the frame's own field already carries a
    margin and two of them would stack.

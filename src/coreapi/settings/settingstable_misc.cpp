@@ -215,12 +215,14 @@ constexpr Descriptor kMisc[] =
 	// general
 	boolRow("power_standby")
 		.section("misc")
+		.group(&kMiscGeneral)
 		.label("extra.start_tostandby")
 		.hint("menu.hint_start_tostandby")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(power_standby)),
 	boolRow("cacheTXT")
 		.section("misc")
+		.group(&kMiscGeneral)
 		.label("extra.cache_txt")
 		.hint("menu.hint_cache_txt")
 		.defaultValue(1)
@@ -229,6 +231,7 @@ constexpr Descriptor kMisc[] =
 	   so no value names it off. */
 	intRow("fan_speed")
 		.section("misc")
+		.group(&kMiscGeneral)
 		.label("fan_speed")
 		.hint("menu.hint_fan_speed")
 		.range(1, 14)
@@ -241,6 +244,7 @@ constexpr Descriptor kMisc[] =
 	// energy and shutdown
 	enumRow("shutdown_real")
 		.section("misc")
+		.group(&kMiscEnergy)
 		.label("miscsettings.shutdown_real")
 		.hint("menu.hint_shutdown_real")
 		.defaultValue(0)
@@ -248,6 +252,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(shutdown_real)),
 	boolRow("shutdown_real_rcdelay")
 		.section("misc")
+		.group(&kMiscEnergy)
 		.label("miscsettings.shutdown_real_rcdelay")
 		.hint("menu.hint_shutdown_rcdelay")
 		.defaultValue(0)
@@ -255,6 +260,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(shutdown_real_rcdelay)),
 	boolRow("shutdown_block_while_recording")
 		.section("misc")
+		.group(&kMiscEnergy)
 		.label("miscsettings.shutdown_block_recording")
 		.hint("menu.hint_shutdown_block_recording")
 		.defaultValue(0)
@@ -262,6 +268,7 @@ constexpr Descriptor kMisc[] =
 	// Minutes; 0 takes the length off the programme being shown.
 	enumRow("sleeptimer_min")
 		.section("misc")
+		.group(&kMiscEnergy)
 		.label("miscsettings.sleeptimer_min")
 		.hint("menu.hint_sleeptimer_min")
 		.defaultValue(0)
@@ -271,12 +278,14 @@ constexpr Descriptor kMisc[] =
 	// epg
 	boolRow("epg_save")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_save")
 		.hint("menu.hint_epg_save")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(epg_save)),
 	boolRow("epg_save_standby")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_save_standby")
 		.hint("menu.hint_epg_save_standby")
 		.defaultValue(1)
@@ -284,6 +293,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(epg_save_standby)),
 	boolRow("epg_save_frequently")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_save_frequently")
 		.hint("menu.hint_epg_save_frequently")
 		.defaultValue(0)
@@ -291,18 +301,21 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(epg_save_frequently)),
 	boolRow("epg_save_mode")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_save_mode")
 		.hint("menu.hint_epg_save_mode")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(epg_save_mode)),
 	boolRow("epg_read")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_read")
 		.hint("menu.hint_epg_read")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(epg_read)),
 	boolRow("epg_read_frequently")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_read_frequently")
 		.hint("menu.hint_epg_read_frequently")
 		.defaultValue(1)
@@ -310,6 +323,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(epg_read_frequently)),
 	textRow("epg_dir")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_dir")
 		.hint("menu.hint_epg_dir")
 		.defaultValue(TARGET_ROOT "/media/sda1/epg")
@@ -318,6 +332,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_TEXT_FIELD(epg_dir)),
 	enumRow("epg_scan")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_scan_bouquets")
 		.hint("menu.hint_epg_scan")
 		.defaultValue(EPG_SCAN_FAV)
@@ -328,6 +343,7 @@ constexpr Descriptor kMisc[] =
 	   live need a second tuner. */
 	enumRow("epg_scan_mode")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_scan")
 		.hint("menu.hint_epg_scan_mode")
 		.defaultValue(EPG_SCAN_MODE_STANDBY)
@@ -337,6 +353,7 @@ constexpr Descriptor kMisc[] =
 	// file browser
 	enumRow("filesystem_is_utf8")
 		.section("misc")
+		.group(&kMiscFileBrowser)
 		.label("filesystem.is.utf8")
 		.hint("menu.hint_filesystem_is_utf8")
 		.defaultValue(1)
@@ -344,6 +361,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(filesystem_is_utf8)),
 	boolRow("filebrowser_showrights")
 		.section("misc")
+		.group(&kMiscFileBrowser)
 		.label("filebrowser.showrights")
 		.hint("menu.hint_filebrowser_showrights")
 		.defaultValue(1)
@@ -351,6 +369,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(filebrowser_showrights)),
 	boolRow("filebrowser_denydirectoryleave")
 		.section("misc")
+		.group(&kMiscFileBrowser)
 		.label("filebrowser.denydirectoryleave")
 		.hint("menu.hint_filebrowser_denydirectoryleave")
 		.defaultValue(0)
@@ -360,48 +379,56 @@ constexpr Descriptor kMisc[] =
 	// channel list
 	boolRow("make_hd_list")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.make_hdlist")
 		.hint("menu.hint_make_hdlist")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(make_hd_list)),
 	boolRow("make_webtv_list")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.make_webtvlist")
 		.hint("menu.hint_make_webtvlist")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(make_webtv_list)),
 	boolRow("make_webradio_list")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.make_webradiolist")
 		.hint("menu.hint_make_webradiolist")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(make_webradio_list)),
 	boolRow("make_new_list")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.make_newlist")
 		.hint("menu.hint_make_newlist")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(make_new_list)),
 	boolRow("make_removed_list")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.make_removedlist")
 		.hint("menu.hint_make_removedlist")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(make_removed_list)),
 	boolRow("keep_channel_numbers")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.keep_numbers")
 		.hint("menu.hint_keep_numbers")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(keep_channel_numbers)),
 	boolRow("zap_cycle")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("extra.zap_cycle")
 		.hint("menu.hint_zap_cycle")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(zap_cycle)),
 	enumRow("channellist_new_zap_mode")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.new_zap_mode")
 		.hint("menu.hint_new_zap_mode")
 		.defaultValue(0)
@@ -409,18 +436,21 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(channellist_new_zap_mode)),
 	boolRow("channellist_numeric_adjust")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.numeric_adjust")
 		.hint("menu.hint_numeric_adjust")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(channellist_numeric_adjust)),
 	boolRow("show_empty_favorites")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("channellist.show_empty_favs")
 		.hint("menu.hint_channellist_show_empty_favs")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(show_empty_favorites)),
 	enumRow("enable_sdt")
 		.section("misc")
+		.group(&kMiscChannelList)
 		.label("miscsettings.channellist_enablesdt")
 		.hint("menu.hint_channellist_enablesdt")
 		.defaultValue(1)
@@ -439,6 +469,7 @@ constexpr Descriptor kMisc[] =
 	   would hide the state of a switch a frontend has to draw. */
 	boolRow("tmdb_enabled")
 		.section("misc")
+		.group(&kMiscOnline)
 		.label("tmdb.enabled")
 		.hint("menu.hint_tmdb_enabled")
 		.defaultValue(1)
@@ -446,6 +477,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(tmdb_enabled)),
 	textRow("tmdb_api_key")
 		.section("misc")
+		.group(&kMiscOnline)
 		.label("tmdb.api_key")
 		.hint("menu.hint_tmdb_api_key")
 		.defaultValue(kTmdbKeyPlaceholder)
@@ -454,6 +486,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_TEXT_FIELD(tmdb_api_key)),
 	boolRow("omdb_enabled")
 		.section("misc")
+		.group(&kMiscOnline)
 		.label("omdb.enabled")
 		.hint("menu.hint_omdb_enabled")
 		.defaultValue(1)
@@ -461,6 +494,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(omdb_enabled)),
 	textRow("omdb_api_key")
 		.section("misc")
+		.group(&kMiscOnline)
 		.label("omdb.api_key")
 		.hint("menu.hint_omdb_api_key")
 		.defaultValue(kOmdbKeyPlaceholder)
@@ -469,6 +503,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_TEXT_FIELD(omdb_api_key)),
 	boolRow("shoutcast_enabled")
 		.section("misc")
+		.group(&kMiscOnline)
 		.label("shoutcast.enabled")
 		.hint("menu.hint_shoutcast_enabled")
 		.defaultValue(1)
@@ -476,6 +511,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(shoutcast_enabled)),
 	textRow("shoutcast_dev_id")
 		.section("misc")
+		.group(&kMiscOnline)
 		.label("shoutcast.dev_id")
 		.hint("menu.hint_shoutcast_dev_id")
 		.defaultValue(kShoutcastKeyPlaceholder)
@@ -486,6 +522,7 @@ constexpr Descriptor kMisc[] =
 	   plugin, which takes it out of the settings file. */
 	boolRow("youtube_enabled")
 		.section("misc")
+		.group(&kMiscOnline)
 		.label("youtube.enabled")
 		.hint("menu.hint_youtube_enabled")
 		.defaultValue(1)
@@ -494,6 +531,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(youtube_enabled)),
 	textRow("youtube_api_key")
 		.section("misc")
+		.group(&kMiscOnline)
 		.label("youtube.api_key")
 		.hint("menu.hint_youtube_api_key")
 		.defaultValue(kYoutubeKeyPlaceholder)
@@ -504,6 +542,7 @@ constexpr Descriptor kMisc[] =
 	// plugins
 	textRow("plugin_hdd_dir")
 		.section("misc")
+		.group(&kMiscPlugins)
 		.label("plugins.hdd_dir")
 		.hint("menu.hint_plugins_hdd_dir")
 		.defaultValue(TARGET_ROOT "/media/sda1/plugins")
@@ -512,6 +551,7 @@ constexpr Descriptor kMisc[] =
 	// The name of a plugin, and the default stands for none.
 	textRow("movieplayer_plugin")
 		.section("misc")
+		.group(&kMiscPlugins)
 		.label("mpkey.plugin")
 		.hint("menu.hint_movieplayer_plugin")
 		.defaultValue("---")
@@ -523,17 +563,20 @@ constexpr Descriptor kMisc[] =
 	// A port number; nought and anything above the sixteen bits name no port.
 	intRow("streaming_port")
 		.section("misc")
+		.group(&kMiscStreaming)
 		.label("streaming.port")
 		.range(1, 65535)
 		.defaultValue(31339)
 		.field(COREAPI_NUMBER_FIELD(streaming_port)),
 	boolRow("streaming_ecmmode")
 		.section("misc")
+		.group(&kMiscStreaming)
 		.label("streaming.ecmmode")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(streaming_ecmmode)),
 	boolRow("streaming_decryptmode")
 		.section("misc")
+		.group(&kMiscStreaming)
 		.label("streaming.decryptmode")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(streaming_decryptmode)),
@@ -542,12 +585,14 @@ constexpr Descriptor kMisc[] =
 	   first and fifty for the second. */
 	enumRow("cpufreq")
 		.section("misc")
+		.group(&kMiscCpu)
 		.label("cpu.freq_normal")
 		.defaultValue(0)
 		.values(kCpuFreq)
 		.field(COREAPI_NUMBER_FIELD_ON(cpufreq, canCpufreq, NULL)),
 	enumRow("standby_cpufreq")
 		.section("misc")
+		.group(&kMiscCpu)
 		.label("cpu.freq_standby")
 		.defaultValue(100)
 		.values(kCpuFreq)
@@ -566,6 +611,7 @@ constexpr Descriptor kMisc[] =
 	   in the menu and turned into a number on the way out. */
 	intRow("shutdown_count")
 		.section("misc")
+		.group(&kMiscEnergy)
 		.label("miscsettings.shutdown_count")
 		.hint("menu.hint_shutdown_count")
 		.range(0, 999)
@@ -579,6 +625,7 @@ constexpr Descriptor kMisc[] =
 	   switch itself off, so the row carries no test of the box. */
 	intRow("shutdown_min")
 		.section("misc")
+		.group(&kMiscEnergy)
 		.label("sleeptimerbox.title2")
 		.range(0, 999)
 		.defaultValue(0)
@@ -612,6 +659,7 @@ constexpr Descriptor kMisc[] =
 	   the daemon through the same call as the time settings. */
 	intRow("epg_cache_time")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_cache")
 		.hint("menu.hint_epg_cache")
 		.range(0, 99)
@@ -619,6 +667,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(epg_cache)),
 	intRow("epg_extendedcache_time")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_extendedcache")
 		.hint("menu.hint_epg_extendedcache")
 		.range(0, 999)
@@ -627,6 +676,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(epg_extendedcache)),
 	intRow("epg_max_events")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_max_events")
 		.hint("menu.hint_epg_max_events")
 		.range(0, 999999)
@@ -635,6 +685,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(epg_max_events)),
 	intRow("epg_old_events")
 		.section("misc")
+		.group(&kMiscEpg)
 		.label("miscsettings.epg_old_events")
 		.hint("menu.hint_epg_old_events")
 		.range(0, 999)
@@ -646,11 +697,13 @@ constexpr Descriptor kMisc[] =
 	   nought. A bound no menu governs and no check can compare. */
 	intRow("epg_scan_rescan")
 		.section("misc")
+		.group(&kMiscEpg)
 		.range(0, 2147483647)
 		.defaultValue(24)
 		.field(COREAPI_NUMBER_FIELD(epg_scan_rescan)),
 	intRow("epg_search_history_max")
 		.section("misc")
+		.group(&kMiscEventFinder)
 		.label("eventfinder.max_history")
 		.range(0, 50)
 		.defaultValue(10)
@@ -660,6 +713,7 @@ constexpr Descriptor kMisc[] =
 	   the ceiling is the one the list enforces. */
 	intRow("epg_search_history_size")
 		.section("misc")
+		.group(&kMiscEventFinder)
 		.range(0, 50)
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(epg_search_history_size)),
@@ -675,6 +729,7 @@ constexpr Descriptor kMisc[] =
 	   that count is the ceiling here. */
 	intRow("filebrowser_sortmethod")
 		.section("misc")
+		.group(&kMiscFileBrowser)
 		.range(0, 4)
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(filebrowser_sortmethod)),
@@ -690,6 +745,7 @@ constexpr Descriptor kMisc[] =
 	   the old code before taking a new one. */
 	textRow("personalize_pincode")
 		.section("misc")
+		.group(&kMiscAccess)
 		.label("personalize.pincode")
 		.hint("personalize.pinhint")
 		.defaultValue("0000")
@@ -734,6 +790,7 @@ constexpr Descriptor kMisc[] =
 	   twenty; steps inside the range cannot be named values of a number. */
 	intRow("adzap_zapBackPeriod")
 		.section("misc")
+		.group(&kMiscAdzap)
 		.label("adzap.switchback")
 		.unit("unit.short.second")
 		.range(60, 7200)
@@ -741,6 +798,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(adzap_zapBackPeriod)),
 	enumRow("adzap_zapOnActivation")
 		.section("misc")
+		.group(&kMiscAdzap)
 		.label("adzap.zap")
 		.hint("menu.hint_adzap_zap")
 		.defaultValue(0)
@@ -748,6 +806,7 @@ constexpr Descriptor kMisc[] =
 		.field(COREAPI_NUMBER_FIELD(adzap_zapOnActivation)),
 	boolRow("adzap_writeData")
 		.section("misc")
+		.group(&kMiscAdzap)
 		.label("adzap.writedata")
 		.hint("menu.hint_adzap_writedata")
 		.defaultValue(0)

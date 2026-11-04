@@ -29,6 +29,7 @@ AM_CPPFLAGS = \
 	-DCOREAPI_LOCALES_FILE='"$(abs_builddir)/settings-locales.txt"' \
 	-DCOREAPI_CHOICES_FILE='"$(abs_builddir)/settings-choices.txt"' \
 	-DCOREAPI_LABELS_FILE='"$(abs_builddir)/settings-labels.txt"' \
+	-DCOREAPI_GROUPS_FILE='"$(abs_builddir)/settings-groups.txt"' \
 	-DCOREAPI_ERRORCODES_FILE='"$(abs_builddir)/errorcodes.txt"' \
 	-DCOREAPI_STATUSES_FILE='"$(abs_builddir)/statuses.txt"' \
 	-DHTTPD_CODES_FILE='"$(abs_builddir)/httpcodes.txt"' \
@@ -141,6 +142,7 @@ coreapi_tests_SOURCES = \
 	zapit/test_zapitchannel_copy.cpp \
 	coreapi/test_channelstreams.cpp \
 	zapit/test_bouquetname.cpp \
+	zapit/test_fbc.cpp \
 	zapit/test_zapitclient_getpids.cpp \
 	zapit/test_zapitclient_bouquetwrite.cpp \
 	system/test_atomicfile.cpp \
@@ -286,6 +288,9 @@ coreapi_tests_SOURCES = \
 # otherwise be undefined symbols at the end of the line.
 # The xml library is named because the compatibility layer escapes a value with
 # the tree's own converter, and that converter shares an object with the parser.
+# fbc.o is how the slots of an FBC tuner are read from and written to the
+# driver's files, and nothing else, so the cases drive it against a tree of
+# their own.
 # The zapit client archive is what getPIDS lives in, so the case that pins what it
 # does with a daemon that answers short drives that code and not a copy; it needs
 # the connection library after it.
@@ -304,6 +309,7 @@ coreapi_tests_LDADD = \
 	$(top_builddir)/src/system/debug.o \
 	$(top_builddir)/lib/jsoncpp/libjsoncpp.a \
 	$(top_builddir)/src/zapit/channel.o \
+	$(top_builddir)/src/zapit/fbc.o \
 	$(top_builddir)/src/zapit/client/libzapitclient.a \
 	$(top_builddir)/src/driver/rcinput.o \
 	$(top_builddir)/src/driver/abstime.o \
@@ -396,6 +402,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/fixtures/alternatives/settingstable_alternatives.cpp \
 	scan/extract-pairs.sh scan/extract-elements.sh scan/loadvalues.awk scan/extract-bounds.sh scan/extract-defines.sh \
 	scan/extract-choices.sh scan/extract-constants.sh scan/extract-labels.sh \
+	scan/extract-groups.sh scan/groups.awk \
 	scan/extract-httpcodes.sh \
 	scan/check-setting-wiring.sh scan/fixtures/wiring scan/check-apply-groups.sh scan/applyrows.awk scan/applyreads.awk scan/applygroups.awk scan/applyregs.awk scan/apply-eval-needs.txt \
 	scan/wiringapply.awk scan/wiringrows.awk scan/fixtures/apply \
@@ -413,9 +420,9 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 # recorded dependencies can bring into being, so it is asked for rather than left
 # to the order the directories are built in.
 BUILT_SOURCES = $(top_builddir)/src/tools/rcsim.h openapi.json settings-pairs.txt settings-pairs-built.txt settings-load-values.inc settings-elements.txt settings-element-names.inc settings-keys.txt settings-bounds.txt settings-locales.txt \
-	settings-choices.txt settings-labels.txt errorcodes.txt statuses.txt httpcodes.txt
+	settings-choices.txt settings-labels.txt settings-groups.txt errorcodes.txt statuses.txt httpcodes.txt
 CLEANFILES = openapi.json settings-pairs.txt settings-pairs-built.txt settings-load-values.inc settings-elements.txt settings-element-names.inc settings-keys.txt settings-bounds.txt settings-locales.txt \
-	settings-choices.txt settings-labels.txt errorcodes.txt statuses.txt httpcodes.txt \
+	settings-choices.txt settings-labels.txt settings-groups.txt errorcodes.txt statuses.txt httpcodes.txt \
 	counts.actual answers.actual \
 	$(PART_TESTS) whole.merge part-*.state part-*.state.tmp part-seconds.actual
 
@@ -478,6 +485,11 @@ settings-choices.txt: FORCE
 # a table of choices, which is what the two scans above cannot reach.
 settings-labels.txt: FORCE
 	@$(SHELL) $(srcdir)/scan/extract-labels.sh $(top_srcdir)/src > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
+
+# The heading each screen files a setting under and the order the screens lead to the
+# headings, which the heading a row names and the order of a section's headings are held to.
+settings-groups.txt: FORCE
+	@$(SHELL) $(srcdir)/scan/extract-groups.sh $(top_srcdir)/src > $@.tmp && mv -f $@.tmp $@ || { rm -f $@.tmp $@; exit 1; }
 
 # The document the server answers with, written out by the target that owns it
 # and read here so that the two are held to being the same bytes. Made through

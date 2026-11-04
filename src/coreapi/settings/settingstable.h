@@ -134,6 +134,108 @@ constexpr TextRule kRulePostalCode = { TextKind::Plain, 0, 5, "0123456789. ", Mu
 const char *const *parentalLockKeys(size_t &count);
 bool heldByParentalLock(const char *key);
 
+/* A heading the box's own menu files a section's rows under: one submenu of the menu that
+   offers the section, or one titled separator where that menu files rows straight under
+   one. A row names its own (RowBuilder::group), as one of the objects below, so a heading
+   misspelt on a row does not compile.
+
+   label_key names the text the menu titles the heading with, and is what the schema
+   answers for it. order is where the heading stands among those of its section, counted
+   from one, as the menu shows them: the rows of one submenu are spread over several of the
+   files below and joined section by section, so the order the rows come in says nothing
+   about the order of the menu. menugroups.cpp defines them and says how they were read
+   off the screens. */
+struct MenuGroup
+{
+	const char *section;
+	const char *label_key;
+	unsigned    order;
+};
+
+extern const MenuGroup kVideoModes;
+extern const MenuGroup kVideoAutoModes;
+extern const MenuGroup kVideoPip;
+extern const MenuGroup kVideoQuadPip;
+extern const MenuGroup kVideoPsi;
+extern const MenuGroup kVideoCec;
+
+extern const MenuGroup kAudioVolumeAdjustment;
+
+extern const MenuGroup kGeneralAudioLanguages;
+extern const MenuGroup kGeneralSubtitleLanguages;
+
+extern const MenuGroup kChannelStart;
+extern const MenuGroup kChannelWebTv;
+extern const MenuGroup kChannelWebRadio;
+
+extern const MenuGroup kNetworkNtp;
+extern const MenuGroup kNetworkProxy;
+
+extern const MenuGroup kRecordingTimeshift;
+extern const MenuGroup kRecordingTimer;
+extern const MenuGroup kRecordingAudioPids;
+extern const MenuGroup kRecordingDataPids;
+extern const MenuGroup kRecordingMovieBrowser;
+
+extern const MenuGroup kPlayerAudio;
+extern const MenuGroup kPlayerPictures;
+extern const MenuGroup kPlayerMovies;
+
+extern const MenuGroup kUpdateImage;
+
+extern const MenuGroup kHddManage;
+
+extern const MenuGroup kCamDaemons;
+
+extern const MenuGroup kKeysModes;
+extern const MenuGroup kKeysChannelList;
+extern const MenuGroup kKeysQuickzap;
+extern const MenuGroup kKeysMoviePlayer;
+extern const MenuGroup kKeysMovieBrowser;
+extern const MenuGroup kKeysVideo;
+extern const MenuGroup kKeysNavigation;
+extern const MenuGroup kKeysVolume;
+extern const MenuGroup kKeysMisc;
+extern const MenuGroup kKeysSpecial;
+
+extern const MenuGroup kDisplayLeds;
+extern const MenuGroup kDisplayBrightness;
+extern const MenuGroup kDisplayBacklight;
+extern const MenuGroup kDisplayGlcd;
+extern const MenuGroup kDisplayLcd4l;
+
+extern const MenuGroup kOsdColors;
+extern const MenuGroup kOsdFonts;
+extern const MenuGroup kOsdTiming;
+extern const MenuGroup kOsdScreen;
+extern const MenuGroup kOsdMenus;
+extern const MenuGroup kOsdProgressbar;
+extern const MenuGroup kOsdLogos;
+extern const MenuGroup kOsdInfobar;
+extern const MenuGroup kOsdChannelList;
+extern const MenuGroup kOsdEventList;
+extern const MenuGroup kOsdVolume;
+extern const MenuGroup kOsdClock;
+extern const MenuGroup kOsdScreenshot;
+extern const MenuGroup kOsdScreensaver;
+extern const MenuGroup kOsdInfoIcons;
+
+extern const MenuGroup kMiscGeneral;
+extern const MenuGroup kMiscEnergy;
+extern const MenuGroup kMiscEpg;
+extern const MenuGroup kMiscFileBrowser;
+extern const MenuGroup kMiscChannelList;
+extern const MenuGroup kMiscOnline;
+extern const MenuGroup kMiscCpu;
+extern const MenuGroup kMiscPlugins;
+extern const MenuGroup kMiscStreaming;
+extern const MenuGroup kMiscEventFinder;
+extern const MenuGroup kMiscAdzap;
+extern const MenuGroup kMiscDaemons;
+extern const MenuGroup kMiscAccess;
+extern const MenuGroup kMiscUserMenus;
+extern const MenuGroup kMiscPluginTypes;
+
 } // namespace coreapi
 
 #endif

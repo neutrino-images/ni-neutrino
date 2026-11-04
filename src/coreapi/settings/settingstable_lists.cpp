@@ -219,12 +219,14 @@ constexpr Descriptor kLists[] =
 	   list leaves them out. */
 	listRow("webtv_xml")
 		.section("channel")
+		.group(&kChannelWebTv)
 		.label("webtv.xml")
 		.defaultValue("")
 		.choicesFrom(webchannels::webtvAutoloaded)
 		.field(COREAPI_LIST_FIELD(webtv_xml)),
 	listRow("webradio_xml")
 		.section("channel")
+		.group(&kChannelWebRadio)
 		.label("webradio.xml")
 		.defaultValue("")
 		.choicesFrom(webchannels::webradioAutoloaded)
@@ -264,6 +266,7 @@ constexpr Descriptor kLists[] =
 	   scale with it through a coupling, so a write of it from anywhere does both. */
 	boolRow("flag_daemon_fritzcallmonitor")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.fcm_name")
 		.hint("daemon_item.fcm_desc")
 		.defaultValue(0)
@@ -271,6 +274,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.fritzcallmonitor")),
 	boolRow("flag_daemon_nfsd")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.nfsserver_name")
 		.hint("daemon_item.nfsserver_desc")
 		.defaultValue(0)
@@ -278,6 +282,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.nfsd")),
 	boolRow("flag_daemon_samba")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.sambaserver_name")
 		.hint("daemon_item.sambaserver_desc")
 		.defaultValue(0)
@@ -285,6 +290,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.samba")),
 	boolRow("flag_daemon_tuxcald")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.tuxcald_name")
 		.hint("daemon_item.tuxcald_desc")
 		.defaultValue(0)
@@ -292,6 +298,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.tuxcald")),
 	boolRow("flag_daemon_tuxmaild")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.tuxmaild_name")
 		.hint("daemon_item.tuxmaild_desc")
 		.defaultValue(0)
@@ -299,6 +306,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.tuxmaild")),
 	boolRow("flag_daemon_emmrd")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.emmremind_name")
 		.hint("daemon_item.emmremind_desc")
 		.defaultValue(0)
@@ -306,6 +314,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.emmrd")),
 	boolRow("flag_daemon_inadyn")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.inadyn_name")
 		.hint("daemon_item.inadyn_desc")
 		.defaultValue(0)
@@ -313,6 +322,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.inadyn")),
 	boolRow("flag_daemon_dropbear")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.dropbear_name")
 		.hint("daemon_item.dropbear_desc")
 		.defaultValue(0)
@@ -320,6 +330,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.dropbear")),
 	boolRow("flag_daemon_djmount")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.djmount_name")
 		.hint("daemon_item.djmount_desc")
 		.defaultValue(0)
@@ -327,6 +338,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.djmount")),
 	boolRow("flag_daemon_ushare")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.ushare_name")
 		.hint("daemon_item.ushare_desc")
 		.defaultValue(0)
@@ -334,6 +346,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.ushare")),
 	boolRow("flag_daemon_minidlnad")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.minidlna_name")
 		.hint("daemon_item.minidlna_desc")
 		.defaultValue(0)
@@ -341,6 +354,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.minidlnad")),
 	boolRow("flag_daemon_xupnpd")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.xupnpd_name")
 		.hint("daemon_item.xupnpd_desc")
 		.defaultValue(0)
@@ -348,6 +362,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.xupnpd")),
 	boolRow("flag_daemon_crond")
 		.section("misc")
+		.group(&kMiscDaemons)
 		.label("daemon_item.crond_name")
 		.hint("daemon_item.crond_desc")
 		.defaultValue(0)
@@ -355,6 +370,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.crond")),
 	boolRow("flag_camd_mgcamd")
 		.section("cam")
+		.group(&kCamDaemons)
 		.label("camd_item_mgcamd_name")
 		.hint("camd_item_mgcamd_hint")
 		.defaultValue(0)
@@ -362,6 +378,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.mgcamd")),
 	boolRow("flag_camd_doscam")
 		.section("cam")
+		.group(&kCamDaemons)
 		.label("camd_item_doscam_name")
 		.hint("camd_item_doscam_hint")
 		.defaultValue(0)
@@ -369,6 +386,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.doscam")),
 	boolRow("flag_camd_ncam")
 		.section("cam")
+		.group(&kCamDaemons)
 		.label("camd_item_ncam_name")
 		.hint("camd_item_ncam_hint")
 		.defaultValue(0)
@@ -376,6 +394,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.ncam")),
 	boolRow("flag_camd_osmod")
 		.section("cam")
+		.group(&kCamDaemons)
 		.label("camd_item_osmod_name")
 		.hint("camd_item_osmod_hint")
 		.defaultValue(0)
@@ -383,6 +402,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.osmod")),
 	boolRow("flag_camd_oscam")
 		.section("cam")
+		.group(&kCamDaemons)
 		.label("camd_item_oscam_name")
 		.hint("camd_item_oscam_hint")
 		.defaultValue(0)
@@ -390,6 +410,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.oscam")),
 	boolRow("flag_camd_cccam")
 		.section("cam")
+		.group(&kCamDaemons)
 		.label("camd_item_cccam_name")
 		.hint("camd_item_cccam_hint")
 		.defaultValue(0)
@@ -397,6 +418,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.cccam")),
 	boolRow("flag_camd_gbox")
 		.section("cam")
+		.group(&kCamDaemons)
 		.label("camd_item_gbox_name")
 		.hint("camd_item_gbox_hint")
 		.defaultValue(0)
@@ -412,6 +434,7 @@ constexpr Descriptor kLists[] =
 #ifdef ENABLE_LCD4LINUX
 	boolRow("flag_lcd4l_weather")
 		.section("display")
+		.group(&kDisplayLcd4l)
 		.label("lcd4l_weather")
 		.hint("menu.hint_lcd4l_weather")
 		.defaultValue(0)
@@ -419,6 +442,7 @@ constexpr Descriptor kLists[] =
 		.field(COREAPI_FLAG_FILE_FIELD(FLAGDIR "/.lcd-weather")),
 	boolRow("flag_lcd4l_clock_a")
 		.section("display")
+		.group(&kDisplayLcd4l)
 		.label("lcd4l_clock_a")
 		.hint("menu.hint_lcd4l_clock_a")
 		.defaultValue(0)

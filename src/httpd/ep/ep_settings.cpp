@@ -31,7 +31,9 @@
 #include "coreapi/base/deps.h"
 #include "coreapi/base/schema.h"
 #include "coreapi/settings/settings.h"
+#include "coreapi/settings/settingstable.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -238,6 +240,10 @@ const FieldDesc kSettingFields[] = {
 		"one per CI slot, has its number counted from 1 after the text"),
 	HTTPD_MEMBER_OPTIONAL("hint", FieldType::String,
 		"the name of the longer text beside it, absent where there is none"),
+	HTTPD_MEMBER_OPTIONAL("group", FieldType::String,
+		"the heading the box's own menu puts it under within its section, as the id of one of the "
+		"answer's groups, such as videomenu.hdmi_cec; absent for a setting the menu shows on the "
+		"section's own page, above every heading"),
 	HTTPD_MEMBER_OPTIONAL("min", FieldType::Int,
 		"the lowest whole number this setting accepts, present only when type is int or key; "
 		"a number listed under values is accepted as well"),
@@ -319,10 +325,26 @@ const FieldDesc kSettingFields[] = {
 
 const Schema kSettingSchema = { "setting", HTTPD_FIELDS(kSettingFields) };
 
+const FieldDesc kMenuGroupFields[] = {
+	HTTPD_MEMBER("id", FieldType::String,
+		"what the settings under it name in group: the name of the text that titles the heading, the "
+		"same in every language"),
+	HTTPD_MEMBER("section", FieldType::String,
+		"the section whose page the heading belongs to"),
+	HTTPD_MEMBER_OPTIONAL("label", FieldType::String,
+		"the text that titles the heading, in the language the box shows; absent where its catalog "
+		"carries none, which leaves the heading untitled and its settings still together"),
+};
+
+const Schema kMenuGroupSchema = { "setting-group", HTTPD_FIELDS(kMenuGroupFields) };
+
 const FieldDesc kSettingListFields[] = {
 	HTTPD_NAMED_LISTS_OPTIONAL("value_lists", &kEnumValueSchema,
 		"present only when two or more settings of the answer carry the same list of choices: each such list "
 		"once, under the name those settings give in values_from; a list only one setting carries stays with it"),
+	HTTPD_LIST_OF_OPTIONAL("groups", &kMenuGroupSchema,
+		"the headings the box's own menu files the settings of this answer under, each section's in the "
+		"order that menu shows them; absent where no setting of the answer stands under one"),
 	HTTPD_LIST_OF("items", &kSettingSchema,
 		"every setting declared, in the order the tables state them"),
 };
@@ -529,6 +551,12 @@ void appendDescriptor(Json &j, const coreapi::Descriptor &d, const RowValues &va
 	{
 		j.key("hint");
 		j.value(d.hint_key);
+	}
+	// The words that title it are the answer's, once for every setting under it.
+	if (d.group != NULL)
+	{
+		j.key("group");
+		j.value(d.group->label_key);
 	}
 
 	// Only a whole number is bounded by these. Every other kind leaves both at
@@ -842,6 +870,51 @@ Response settingsSchema(const Request &r)
 			j.raw(values[i].json.c_str());
 		}
 		j.endObject();
+	}
+	/* The headings in the menu's order and not in the order their first rows come in: the
+	   table is joined section by section and file by file, which is not how any menu reads.
+	   Only those a row of this answer stands under, so a narrowed answer names its own, and
+	   the sections in the order the answer has them. */
+	std::vector<std::string> sectionsSeen;
+	std::vector<std::pair<std::pair<size_t, unsigned>, const coreapi::MenuGroup *> > filed;
+	for (size_t i = 0; i < chosen.size(); ++i)
+	{
+		const coreapi::Descriptor &d = rows[chosen[i]];
+		if (d.group == NULL)
+			continue;
+		size_t at = 0;
+		while (at < sectionsSeen.size() && sectionsSeen[at] != d.group->section)
+			++at;
+		if (at == sectionsSeen.size())
+			sectionsSeen.push_back(d.group->section);
+		bool known = false;
+		for (size_t k = 0; !known && k < filed.size(); ++k)
+			known = filed[k].second == d.group;
+		if (!known)
+			filed.push_back(std::make_pair(std::make_pair(at, d.group->order), d.group));
+	}
+	if (!filed.empty())
+	{
+		std::sort(filed.begin(), filed.end());
+		j.key("groups");
+		j.beginArray();
+		for (size_t g = 0; g < filed.size(); ++g)
+		{
+			const coreapi::MenuGroup &heading = *filed[g].second;
+			j.beginObject();
+			j.key("id");
+			j.value(heading.label_key);
+			j.key("section");
+			j.value(heading.section);
+			std::string words;
+			if (coreapi::settings::resolveLabel(heading.label_key, words))
+			{
+				j.key("label");
+				j.value(words);
+			}
+			j.endObject();
+		}
+		j.endArray();
 	}
 	j.key("items");
 	j.beginArray();
@@ -1385,6 +1458,11 @@ const Endpoint kSettingsEndpoints[] = {
 	  "`available` is true and `conditions` is empty unless the item says otherwise. A list of choices "
 	  "that several items carry alike is stated once in the answer's `value_lists` object, and each such "
 	  "item names it in `values_from` instead of carrying `values`; read its entries the same way.\n"
+	  "\n"
+	  "The box's own menu files most sections' settings under a few headings, such as HDMI-CEC under "
+	  "video. An item under one names it in `group`, and the answer's `groups` lists those headings in "
+	  "the order the menu shows them, with the words that title each. An item naming none stands on the "
+	  "section's own page, above every heading.\n"
 	  "\n"
 	  "`section` narrows the list to one section, which keeps the answer small. `keys` narrows it to "
 	  "the settings named, separated by commas; with `section` they have to be in that section.\n"

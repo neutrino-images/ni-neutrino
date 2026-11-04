@@ -62,6 +62,7 @@ constexpr Descriptor kSettings[] =
 {
 	enumRow("audioplayer_display")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.display_order")
 		.hint("menu.hint_audioplayer_order")
 		.defaultValue(0)
@@ -69,6 +70,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD(audioplayer_display)),
 	boolRow("audioplayer_follow")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.follow")
 		.hint("menu.hint_audioplayer_follow")
 		.defaultValue(0)
@@ -76,6 +78,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD(audioplayer_follow)),
 	boolRow("audioplayer_select_title_by_name")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.select_title_by_name")
 		.hint("menu.hint_audioplayer_title")
 		.defaultValue(0)
@@ -83,6 +86,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD(audioplayer_select_title_by_name)),
 	boolRow("audioplayer_repeat_on")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.repeat_on")
 		.hint("menu.hint_audioplayer_repeat")
 		.defaultValue(0)
@@ -90,6 +94,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD(audioplayer_repeat_on)),
 	boolRow("audioplayer_show_playlist")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.show_playlist")
 		.hint("menu.hint_audioplayer_playlist")
 		.defaultValue(1)
@@ -97,6 +102,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD(audioplayer_show_playlist)),
 	boolRow("audioplayer_cover_as_screensaver")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.cover_as_screensaver")
 		.hint("menu.hint_audioplayer_cover_as_screensaver")
 		.defaultValue(1)
@@ -104,6 +110,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD(audioplayer_cover_as_screensaver)),
 	boolRow("audioplayer_highprio")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.highprio")
 		.hint("menu.hint_audioplayer_highprio")
 		.defaultValue(0)
@@ -114,11 +121,13 @@ constexpr Descriptor kSettings[] =
 	   build leaves out, which is the only statement of them there is. */
 	boolRow("spectrum")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.spectrum")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(spectrum)),
 	textRow("network_nfs_audioplayerdir")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.defdir")
 		.hint("menu.hint_audioplayer_defdir")
 		.defaultValue(TARGET_ROOT "/media/sda1/music")
@@ -126,12 +135,14 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_TEXT_FIELD(network_nfs_audioplayerdir)),
 	boolRow("inetradio_autostart")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("inetradio.autostart")
 		.hint("menu.hint_inetradio_autostart")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(inetradio_autostart)),
 	boolRow("audioplayer_enable_sc_metadata")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.enable_sc_metadata")
 		.hint("menu.hint_audioplayer_sc_metadata")
 		.defaultValue(1)
@@ -139,6 +150,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD(audioplayer_enable_sc_metadata)),
 	textRow("network_nfs_streamripperdir")
 		.section("player")
+		.group(&kPlayerAudio)
 		.label("audioplayer.streamripper_dir")
 		.hint("menu.hint_audioplayer_streamripper_dir")
 		.defaultValue(TARGET_ROOT "/media/sda1/music/streamripper")
@@ -149,6 +161,7 @@ constexpr Descriptor kSettings[] =
 	   too narrow for the time has no use for it. */
 	boolRow("movieplayer_display_playtime")
 		.section("player")
+		.group(&kPlayerMovies)
 		.label("movieplayer.display_playtime")
 		.hint("menu.hint_movieplayer_display_playtime")
 		.defaultValue(0)
@@ -156,6 +169,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD_ON(movieplayer_display_playtime, displayFitsPlaytime, NULL)),
 	boolRow("movieplayer_timeosd_while_searching")
 		.section("player")
+		.group(&kPlayerMovies)
 		.label("movieplayer.timeosd_while_searching")
 		.hint("menu.hint_movieplayer_timeosd_while_searching")
 		.defaultValue(1)
@@ -163,12 +177,14 @@ constexpr Descriptor kSettings[] =
 	// How many times the end of a file has to be seen before the player stops.
 	intRow("movieplayer_eof_cnt")
 		.section("player")
+		.group(&kPlayerMovies)
 		.label("movieplayer.eof_cnt")
 		.range(1, 10)
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(movieplayer_eof_cnt)),
 	enumRow("picviewer_scaling")
 		.section("player")
+		.group(&kPlayerPictures)
 		.label("pictureviewer.scaling")
 		.hint("menu.hint_pictureviewer_scaling")
 		.defaultValue(1)
@@ -177,6 +193,7 @@ constexpr Descriptor kSettings[] =
 	// Seconds a slide is shown.
 	intRow("picviewer_slide_time")
 		.section("player")
+		.group(&kPlayerPictures)
 		.label("pictureviewer.slide_time")
 		.hint("menu.hint_pictureviewer_slide_time")
 		.range(0, 999)
@@ -185,6 +202,7 @@ constexpr Descriptor kSettings[] =
 		.field(COREAPI_NUMBER_FIELD(picviewer_slide_time)),
 	textRow("network_nfs_picturedir")
 		.section("player")
+		.group(&kPlayerPictures)
 		.label("pictureviewer.defdir")
 		.hint("menu.hint_pictureviewer_defdir")
 		.defaultValue(TARGET_ROOT "/media/sda1/pictures")
@@ -195,6 +213,7 @@ constexpr Descriptor kSettings[] =
 	   filled at run time, so this is text and not a choice. */
 	textRow("subs_charset")
 		.section("player")
+		.group(&kPlayerMovies)
 		.label("subtitles.charset")
 		.defaultValue("CP1252")
 		.text(kRuleNameFromList)
@@ -204,6 +223,7 @@ constexpr Descriptor kSettings[] =
 	   choice: the three modes have no locales of their own. */
 	intRow("movieplayer_repeat_on")
 		.section("player")
+		.group(&kPlayerMovies)
 		.range(0, 2)
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(movieplayer_repeat_on)),
@@ -214,6 +234,7 @@ constexpr Descriptor kSettings[] =
 	   name for it. */
 	boolRow("movieplayer_select_ac3_atype0")
 		.section("player")
+		.group(&kPlayerMovies)
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(movieplayer_select_ac3_atype0)),
 #endif

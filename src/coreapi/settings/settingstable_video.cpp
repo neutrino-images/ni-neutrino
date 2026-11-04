@@ -357,6 +357,7 @@ constexpr Descriptor kVideo[] =
 	   for the step. */
 	intRow("video_psi_brightness")
 		.section("video")
+		.group(&kVideoPsi)
 		.label("videomenu.psi.brightness")
 		.hint("menu.hint_video_brightness")
 		.range(0, 255)
@@ -364,6 +365,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD(psi_brightness)),
 	intRow("video_psi_contrast")
 		.section("video")
+		.group(&kVideoPsi)
 		.label("videomenu.psi.contrast")
 		.hint("menu.hint_video_contrast")
 		.range(0, 255)
@@ -371,6 +373,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD(psi_contrast)),
 	intRow("video_psi_saturation")
 		.section("video")
+		.group(&kVideoPsi)
 		.label("videomenu.psi.saturation")
 		.hint("menu.hint_video_saturation")
 		.range(0, 255)
@@ -378,6 +381,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD(psi_saturation)),
 	intRow("video_psi_tint")
 		.section("video")
+		.group(&kVideoPsi)
 		.label("videomenu.psi.tint")
 		.hint("menu.hint_video_tint")
 		.range(0, 255)
@@ -386,6 +390,7 @@ constexpr Descriptor kVideo[] =
 	// How far one press moves the four above, not a value of its own.
 	intRow("video_psi_step")
 		.section("video")
+		.group(&kVideoPsi)
 		.label("videomenu.psi.step")
 		.hint("menu.hint_video_psi_step")
 		.range(1, 100)
@@ -395,6 +400,7 @@ constexpr Descriptor kVideo[] =
 	// The HDMI link, only where the box can drive it.
 	enumRow("hdmi_cec_mode")
 		.section("video")
+		.group(&kVideoCec)
 		.label("videomenu.hdmi_cec_mode")
 		.hint("menu.hint_cec_mode")
 		.defaultValue(0)
@@ -402,6 +408,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(hdmi_cec_mode, canCec, NULL)),
 	boolRow("hdmi_cec_view_on")
 		.section("video")
+		.group(&kVideoCec)
 		.label("videomenu.hdmi_cec_view_on")
 		.hint("menu.hint_cec_view_on")
 		.defaultValue(0)
@@ -409,6 +416,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(hdmi_cec_view_on, canCec, NULL)),
 	boolRow("hdmi_cec_standby")
 		.section("video")
+		.group(&kVideoCec)
 		.label("videomenu.hdmi_cec_standby")
 		.hint("menu.hint_cec_standby")
 		.defaultValue(0)
@@ -416,6 +424,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(hdmi_cec_standby, canCec, NULL)),
 	enumRow("hdmi_cec_volume")
 		.section("video")
+		.group(&kVideoCec)
 		.label("videomenu.hdmi_cec_volume")
 		.hint("menu.hint_cec_volume")
 		.defaultValue(0)
@@ -434,6 +443,7 @@ constexpr Descriptor kVideo[] =
 	   are the widest a value can be. */
 	intRow("pip_x")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_x")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
@@ -442,6 +452,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(pip_x, pipUsable, NULL)),
 	intRow("pip_y")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_y")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
@@ -450,6 +461,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(pip_y, pipUsable, NULL)),
 	intRow("pip_width")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_width")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
@@ -458,6 +470,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(pip_width, pipUsable, NULL)),
 	intRow("pip_height")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_height")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
@@ -467,6 +480,7 @@ constexpr Descriptor kVideo[] =
 	// The radio pair falls back to the television one rather than to a number.
 	intRow("pip_radio_x")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_radio_x")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
@@ -475,6 +489,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(pip_radio_x, pipUsable, NULL)),
 	intRow("pip_radio_y")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_radio_y")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
@@ -483,6 +498,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(pip_radio_y, pipUsable, NULL)),
 	intRow("pip_radio_width")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_radio_width")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
@@ -491,6 +507,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(pip_radio_width, pipUsable, NULL)),
 	intRow("pip_radio_height")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_radio_height")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")
@@ -499,6 +516,7 @@ constexpr Descriptor kVideo[] =
 		.field(COREAPI_NUMBER_FIELD_ON(pip_radio_height, pipUsable, NULL)),
 	enumRow("pip_rotate_lastpos")
 		.section("video")
+		.group(&kVideoPip)
 		.label("videomenu.pip_rotate_lastpos")
 		.menuLabel("videomenu.pip")
 		.hint("menu.hint_video_pip")

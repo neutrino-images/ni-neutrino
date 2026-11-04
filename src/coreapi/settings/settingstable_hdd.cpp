@@ -84,6 +84,7 @@ constexpr Descriptor kHdd[] =
 	// Which file system the box writes when it formats a disk.
 	enumRow("hdd_fs")
 		.section("hdd")
+		.group(&kHddManage)
 		.label("hdd_fs")
 		.hint("menu.hint_hdd_fmt")
 		.defaultValue(0)

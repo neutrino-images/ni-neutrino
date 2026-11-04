@@ -40,6 +40,7 @@
 #include "zapit.h"
 #include "client/zapittools.h"
 #include "femanager.h"
+#include "fbc.h"
 #include "capmt.h"
 #include <hardware/dmx.h>
 #include <OpenThreads/ScopedLock>
@@ -700,6 +701,24 @@ void CFEManager::linkFrontends(bool init)
 	for(unsigned i = 0; i < MAX_DMX_UNITS; i++)
 		demuxes[i] = 0;
 	demuxes[0] = 1;
+	/* What the box says about its FBC tuners, before anything is tied to
+	 * anything. A slot the box names a set for is one of them, and a box
+	 * without them answers nothing here, so nothing below is done. */
+	CFBCTunerManager *fbc = CFBCTunerManager::getInstance();
+	if (init) {
+		/* Every slot, unused ones too, and from an empty map: the position
+		 * of a slot is counted by the slots of its set met before it, so a
+		 * slot left out moves the roots, and a slot met twice is no root. */
+		fbc->Clear();
+		for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
+			CFrontend * fe = it->second;
+			fbc->Init(fe->fenumber, fe->hasSat());
+		}
+	}
+	/* before a loop link is made a slave below, and on every round, not
+	 * only the first: a link whose setup changed has to move as well */
+	routeFBC();
+	fbc->PrintLinks();
 	for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
 		CFrontend * fe = it->second;
 		int femode = fe->getMode();
@@ -745,6 +764,13 @@ void CFEManager::linkFrontends(bool init)
 		} else if (femode == CFrontend::FE_MODE_INDEPENDENT) {
 			INFO("Frontend #%d: is independent", fe->fenumber);
 		}
+		/* An automatic FBC link only ever tunes from the input of a root
+		 * that is already tuned to the band and polarisation it needs, so
+		 * it leaves voltage, tone and DiSEqC to that root, as a loop link
+		 * does. Set without setMasterSlave(), which would switch the
+		 * voltage off on whatever input the link sees now. */
+		if (isFBCAuto(fe))
+			fe->slave = true;
 		if (init && femode != CFrontend::FE_MODE_UNUSED)
 			fe->Init();
 		if (femode != CFrontend::FE_MODE_UNUSED)
@@ -831,6 +857,166 @@ CFrontend::fe_open_result_t CFEManager::getFrontendOpenState(int adapter,
 		return CFrontend::FE_OPEN_ABSENT;
 
 	return it->second;
+}
+
+bool CFEManager::feIsUnicable(CFrontend * fe)
+{
+	frontend_config_t & fe_config = fe->getConfig();
+	return (fe_config.diseqcType == DISEQC_UNICABLE) ||
+		(fe_config.diseqcType == DISEQC_UNICABLE2);
+}
+
+/* An FBC link that is tied to a root when it is allocated: one set up as
+ * independent. A link set up as loop or twin is tied to its master by
+ * routeFBC(), and a unicable link tunes for itself on the first input. */
+bool CFEManager::isFBCAuto(CFrontend * fe)
+{
+	return CFBCTunerManager::getInstance()->IsFBCLink(fe->fenumber) &&
+		fe->getMode() == CFrontend::FE_MODE_INDEPENDENT && !feIsUnicable(fe);
+}
+
+/* Whether a link is busy with something: locked by a recording, a stream or
+ * PiP, or tuned as the live tuner, which is never locked for long. */
+bool CFEManager::fbcInUse(CFrontend * fe)
+{
+	return fe->Locked() || (fe == livefe && fe->tuned);
+}
+
+/* The root a link is tied to and linked with, NULL where there is none. */
+CFrontend * CFEManager::fbcRootOf(CFrontend * link)
+{
+	CFBCTunerManager *fbc = CFBCTunerManager::getInstance();
+	for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
+		if (fbc->IsLinkedTo(link->fenumber, it->second->fenumber))
+			return it->second;
+	}
+	return NULL;
+}
+
+/* Whether a root may tune to a channel without taking the input away from a
+ * link that is locked on it: what the root tunes decides the band and the
+ * polarisation the whole input carries. A loop link of a master is checked
+ * by getFrontend() itself; this is the same check for whatever is linked.
+ * Live TV on a link does not hold the root, as it does not hold a master:
+ * a zap that would move the root is one that moves live TV off the link. */
+bool CFEManager::fbcLinksCanTune(CFrontend * root, CZapitChannel * channel)
+{
+	CFBCTunerManager *fbc = CFBCTunerManager::getInstance();
+	if (!fbc->IsRoot(root->fenumber))
+		return true;
+	for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
+		CFrontend * fe = it->second;
+		if (fe == root || !fbc->IsLinkedTo(fe->fenumber, root->fenumber))
+			continue;
+		if (fe->Locked() && !loopCanTune(fe, channel)) {
+			FEDEBUG("FBC: root %d is busy for link %d", root->fenumber, fe->fenumber);
+			return false;
+		}
+	}
+	return true;
+}
+
+/* Tie every FBC slot to where its setup says. A root keeps its own input; a
+ * loop or twin link goes to its master where that is a root of its set, as
+ * loop with the LNB left to the master, as twin with its own control; any
+ * other link goes back to the first input, unlinked. An automatic link that is
+ * busy keeps the root allocateFE() tied it to. */
+void CFEManager::routeFBC()
+{
+	CFBCTunerManager *fbc = CFBCTunerManager::getInstance();
+	for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
+		CFrontend * fe = it->second;
+		int slot = fe->fenumber;
+		if (!fbc->IsFBCTuner(slot))
+			continue;
+		if (fbc->IsRoot(slot)) {
+			fbc->Connect(slot, slot);
+			continue;
+		}
+		if (isFBCAuto(fe) && fbcInUse(fe) && fbcRootOf(fe))
+			continue;
+		int femode = fe->getMode();
+		int master = fe->getMaster();
+		if (CFrontend::linked(femode) && fbc->IsRoot(master) && fbc->IsSameSet(slot, master))
+			fbc->Connect(slot, master, femode == CFrontend::FE_MODE_LINK_LOOP);
+		else
+			fbc->Disconnect(slot);
+	}
+}
+
+/* Tie an automatic link to a root that carries the channel, before zapit
+ * tunes it: a link tied only when it is locked has tuned on the wrong input
+ * by then, and the live tuner is never locked at all. A link still tied to a
+ * root that carries the channel stays where it is. */
+void CFEManager::fbcTie(CFrontend * fe, CZapitChannel * channel)
+{
+	if (!isFBCAuto(fe) || fe->Locked())
+		return;
+
+	CFrontend * cur = fbcRootOf(fe);
+	if (cur && cur->tuned && !feIsUnicable(cur) &&
+	    (cur->sameTsidOnid(channel->getTransponderId()) || loopCanTune(cur, channel)))
+		return;
+
+	CFrontend * root = findFBCRoot(fe, channel);
+	if (root) {
+		CFBCTunerManager::getInstance()->Connect(fe->fenumber, root->fenumber, true);
+	} else {
+		WARN("FBC: no root carries the channel for link %d", fe->fenumber);
+	}
+}
+
+/* Untie an automatic link nobody uses any more, back to the first input. */
+void CFEManager::fbcUntie(CFrontend * fe)
+{
+	if (!isFBCAuto(fe) || fbcInUse(fe))
+		return;
+	if (CFBCTunerManager::getInstance()->Disconnect(fe->fenumber))
+		fe->tuned = false;
+}
+
+/* The root an FBC link tunes from for a channel. Only a root that is already
+ * tuning is worth tying a link to: a root that is free will be tuned for
+ * itself, and a link on it would take the input away from it rather than
+ * share it. What the root is tuned to has to be something the link can
+ * share, which is the same transponder, or a transponder the same input
+ * carries - the same satellite, polarisation and band. */
+CFrontend * CFEManager::findFBCRoot(CFrontend * link, CZapitChannel * channel)
+{
+	CFBCTunerManager *fbc = CFBCTunerManager::getInstance();
+	CFrontend * best = NULL;
+
+	if (channel == NULL || !fbc->IsFBCLink(link->fenumber))
+		return NULL;
+
+	for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
+		CFrontend * root = it->second;
+
+		if (!fbc->IsRoot(root->fenumber))
+			continue;
+		if (!fbc->IsSameSet(root->fenumber, link->fenumber))
+			continue;
+		/* a root with its input to itself has nothing to share yet */
+		if (!root->tuned)
+			continue;
+		/* a unicable root serves each tuner at an address of its own, and
+		 * has nothing to share either */
+		if (feIsUnicable(root))
+			continue;
+		if (root->sameTsidOnid(channel->getTransponderId())) {
+			FEDEBUG("FBC: slot %d can share the transponder of root %d",
+					link->fenumber, root->fenumber);
+			return root;
+		}
+		/* the input carries this transponder as well as its own */
+		if (loopCanTune(root, channel)) {
+			FEDEBUG("FBC: root %d carries the transponder for slot %d",
+					root->fenumber, link->fenumber);
+			if (!best)
+				best = root;
+		}
+	}
+	return best;
 }
 
 /* compare polarization and band with fe values */
@@ -942,6 +1128,9 @@ CFrontend * CFEManager::getFrontend(CZapitChannel * channel)
 					}
 				}
 			}
+			/* the master tunes the input; links busy on it come first */
+			if (free_frontend == mfe && !fbcLinksCanTune(mfe, channel))
+				free_frontend = NULL;
 			if (!free_frontend)
 				free_frontend = free_twin;
 			if (free_frontend && !retfe)
@@ -960,8 +1149,22 @@ CFrontend * CFEManager::getFrontend(CZapitChannel * channel)
 						return mfe;
 					}
 				}
-			} else if(!retfe)
+			} else if(!retfe) {
+				/* an FBC link is only worth taking where a root of its set
+				 * can carry this transponder: without one its input is a
+				 * root busy with something else, and tying it there would
+				 * take that input away from what is already on it */
+				if (isFBCAuto(mfe) && !findFBCRoot(mfe, channel)) {
+					FEDEBUG("frontend %d: no FBC root to share, skipping...", mfe->fenumber);
+					continue;
+				}
+				/* a root tunes its input for the links busy on it as well */
+				if (!fbcLinksCanTune(mfe, channel)) {
+					FEDEBUG("frontend %d: FBC links busy on its input, skipping...", mfe->fenumber);
+					continue;
+				}
 				retfe = mfe;
+			}
 		}
 	}
 	FEDEBUG("Selected fe: %d", retfe ? retfe->fenumber : -1);
@@ -1022,6 +1225,7 @@ CFrontend * CFEManager::allocateFE(CZapitChannel * channel, bool forrecord)
 		fedebug = 1;
 	CFrontend * frontend = getFrontend(channel);
 	if (frontend) {
+		fbcTie(frontend, channel);
 #ifdef DYNAMIC_DEMUX
 		int dnum = getDemux(channel->getTransponderId(), frontend->getNumber());
 		INFO("record dyn demux: %d", dnum);
@@ -1063,7 +1267,11 @@ CFrontend * CFEManager::allocateFE(CZapitChannel * channel, bool forrecord)
 void CFEManager::setLiveFE(CFrontend * fe)
 {
 	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
+	CFrontend * oldfe = livefe;
 	livefe = fe; 
+	/* an automatic FBC link that live TV leaves, and nothing else holds */
+	if (oldfe && oldfe != fe)
+		fbcUntie(oldfe);
 #if HAVE_CST_HARDWARE
 	if(femap.size() > 1)
 #endif
@@ -1085,6 +1293,7 @@ CFrontend * CFEManager::getScanFrontend(t_satellite_position satellitePosition)
 	if (SAT_POSITION_TERR(satellitePosition))
 		delsys = ALL_TERR;
 	CFrontend * frontend = NULL;
+	CFBCTunerManager *fbc = CFBCTunerManager::getInstance();
 	for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
 		CFrontend * mfe = it->second;
 		if (mfe->hasCable() && SAT_POSITION_CABLE(satellitePosition) && !mfe->forcedDelivery(delsys)) {
@@ -1100,6 +1309,12 @@ CFrontend * CFEManager::getScanFrontend(t_satellite_position satellitePosition)
 		} else if (mfe->hasSat()) {
 			if (mfe->getMode() == CFrontend::FE_MODE_UNUSED || CFrontend::linked(mfe->getMode()))
 				continue;
+			/* a scan tunes for itself, and nothing is tuned to share from
+			 * yet: only a root has an input of its own to scan with */
+			if (fbc->IsFBCTuner(mfe->fenumber) && !fbc->IsRoot(mfe->fenumber)) {
+				INFO("frontend %d: FBC link, no input of its own to scan with", mfe->fenumber);
+				continue;
+			}
 			satellite_map_t & satmap = mfe->getSatellites();
 			sat_iterator_t sit = satmap.find(satellitePosition);
 			if ((sit != satmap.end()) && sit->second.configured) {
@@ -1133,6 +1348,9 @@ bool CFEManager::unlockFrontend(CFrontend * frontend, bool unlock_demux)
 	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
 	have_locked = false;
 	frontend->Unlock();
+	/* the one that lets go of an automatic FBC link last unties it, unless
+	 * it is still the live tuner; a link set up as loop or twin stays */
+	fbcUntie(frontend);
 	if (unlock_demux) {
 #ifdef DYNAMIC_DEMUX
 		for (unsigned int i = 1; i < dmap.size(); i++) {

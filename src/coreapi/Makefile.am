@@ -73,6 +73,7 @@ libcoreapi_a_SOURCES = \
 	settings/settingstable_theme.cpp \
 	settings/settingstable_elements.cpp \
 	settings/settingstable_lists.cpp \
+	settings/menugroups.cpp \
 	box/commandsink_real.cpp \
 	box/eventsink_real.cpp \
 	channels.cpp \
