@@ -44,7 +44,6 @@
 #include <system/localize.h>
 #include <system/debug.h>
 #include <system/helpers.h>
-#include <system/sms_input.h>
 
 #include <gui/filebrowser.h>
 #include <gui/components/cc_input_dialog.h>
@@ -517,19 +516,6 @@ class SettingText : public CMenuTarget, public CChangeObserver
 					chooseDirectory(parent);
 					break;
 				case coreapi::TextKind::File:
-#ifdef USE_SMS_INPUT
-					/* The update url file is typed by name here, not picked: a box built for
-					   the SMS input has no use for a browser on it. The characters are what
-					   the input offers, so they stay with the widget; the length is the rule's.
-					   Written as the screen wrote it, where the two quotes join to none. */
-					if (spec.key == "softupdate_url_file")
-					{
-						CStringInputSMS dialog(name(), &value, size(), hint1, hint2,
-								       "abcdefghijklmnopqrstuvwxyz0123456789!""$%&/()=?-. ", this);
-						dialog.exec(parent, "");
-						break;
-					}
-#endif
 					chooseFile(parent);
 					break;
 				default:

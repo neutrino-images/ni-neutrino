@@ -2771,10 +2771,8 @@ TEST_CASE("a row that names a place cannot be emptied unless its screen can", "[
 	CHECK(refusedAs(settings::set("font_file_monospace", ""), ErrorCode::BadString));
 	CHECK(refusedAs(settings::set("epg_dir", ""), ErrorCode::BadString));
 	CHECK(refusedAs(settings::set("network_nfs_audioplayerdir", ""), ErrorCode::BadString));
-#ifndef USE_SMS_INPUT
-	// Picked from existing files; the SMS arm types a name instead and may leave it empty.
+	// Picked from existing files.
 	CHECK(refusedAs(settings::set("softupdate_url_file", ""), ErrorCode::BadString));
-#endif
 	// The timeshift folder empty means the recording folder.
 	REQUIRE(settings::set("timeshiftdir", "").ok());
 	// A row naming no place is not made stricter.

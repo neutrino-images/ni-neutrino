@@ -36,12 +36,6 @@
 
 #include "update.h"
 
-#include <system/sms_input.h>
-
-#ifdef USE_SMS_INPUT
-#include "gui/widget/stringinput.h"
-#endif
-
 #include <string>
 
 // helper class to enable/disable update config url item
@@ -55,7 +49,7 @@ class CUrlConfigSetupNotifier : public CChangeObserver
 		bool changeNotify(const neutrino_locale_t = NONEXISTANT_LOCALE, void *data = NULL);
 };
 
-class CUpdateSettings : public CMenuTarget
+class CUpdateSettings : public CMenuTarget, CChangeObserver
 {
 	private:
 		int width;
@@ -65,6 +59,7 @@ class CUpdateSettings : public CMenuTarget
 		CUpdateSettings();
 		~CUpdateSettings();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
+		bool changeNotify(const neutrino_locale_t = NONEXISTANT_LOCALE, void *data = NULL);
 };
 
 #endif
