@@ -656,9 +656,19 @@ void CCTextInputDialog::refreshField()
 	clearInlineError();
 	cid_field->ensureCursorVisible();
 	cid_field->paint(false);
-	CVFD::getInstance()->showMenuText(1,
-		getVfdText().c_str(),
-		cid_buffer.getCursor() + 1);
+	showDisplayText();
+}
+
+void CCTextInputDialog::showDisplayText()
+{
+	const std::string text = getVfdText();
+
+	CVFD::getInstance()->showMenuText(1, text.c_str(), cid_buffer.getCursor() + 1);
+#ifdef ENABLE_GRAPHLCD
+	/* The graphic LCD shows the text being edited too, as it did for
+	 * the old keyboard dialog, and masked the same way. */
+	cGLCD::lockChannel(text, "", 0);
+#endif
 }
 
 void CCTextInputDialog::setFieldFocus(const bool &focused)
@@ -858,9 +868,7 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 	cid_field->ensureCursorVisible();
 	paint();
 
-	CVFD::getInstance()->showMenuText(1,
-		getVfdText().c_str(),
-		cid_buffer.getCursor() + 1);
+	showDisplayText();
 
 	uint64_t timeoutEnd =
 		CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
@@ -1056,6 +1064,9 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		setSettingsText(*cid_value, original_value);
 
 	hide();
+#ifdef ENABLE_GRAPHLCD
+	cGLCD::unlockChannel();
+#endif
 	return res;
 }
 
