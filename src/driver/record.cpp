@@ -462,9 +462,14 @@ record_error_msg_t CRecordInstance::Start(CZapitChannel * channel)
 
 #ifdef HAVE_SOFTCSA
 	/* Scrambled non-CI channels register with OSCam via dvbapi v3.
-	 * If runtime config denied the channel, the session is passive and
-	 * the wait is skipped. On timeout or passive: fall through to cRecord. */
-	if (channel->scrambled && !channel->bUseCI) {
+	 * A channel the runtime config denies is descrambled by the box,
+	 * and goes to cRecord at once: trying SoftCSA first registers a
+	 * passive session only to roll it back, and the rollback sends
+	 * NOT_SELECTED for the channel, which stops OSCam descrambling it
+	 * for live TV and every other recording of it until the cRecord
+	 * path below subscribes again. On timeout: fall through to cRecord. */
+	if (channel->scrambled && !channel->bUseCI
+	    && CSoftCSAConfig::getInstance()->decide(channel) != CSoftCSAConfig::DECISION_DENY) {
 		printf("CRecordInstance::Start: trying SoftCSA for channel %llx\n",
 		       (unsigned long long)channel->getChannelID());
 
