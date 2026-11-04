@@ -293,6 +293,36 @@ TEST_CASE("fbc: the setup offers a link only the roots of its own set", "[fbc]")
 	CHECK(proc.fbc->CanLinkTo(20, 21));
 }
 
+TEST_CASE("fbc: the setup numbers the inputs and the links of a set apart", "[fbc]")
+{
+	FakeProc proc;
+	proc.module(0, 0);
+	proc.module(8, 1);
+	proc.probe(0, 15);
+
+	/* the inputs 1 and 2, the links 1 to 6, in each set anew */
+	CHECK(proc.fbc->GetNumberInKind(0) == 1);
+	CHECK(proc.fbc->GetNumberInKind(1) == 2);
+	CHECK(proc.fbc->GetNumberInKind(2) == 1);
+	CHECK(proc.fbc->GetNumberInKind(7) == 6);
+	CHECK(proc.fbc->GetNumberInKind(9) == 2);
+	CHECK(proc.fbc->GetNumberInKind(10) == 1);
+	CHECK(proc.fbc->GetNumberInKind(16) == -1);
+}
+
+TEST_CASE("fbc: a link before the roots of its set is still counted among the links", "[fbc]")
+{
+	FakeProc proc;
+	proc.module(0, 0, "1 2\n");
+	proc.probe(0, 7);
+
+	CHECK(proc.fbc->IsFBCLink(0));
+	CHECK(proc.fbc->GetNumberInKind(0) == 1);
+	CHECK(proc.fbc->GetNumberInKind(1) == 1);
+	CHECK(proc.fbc->GetNumberInKind(2) == 2);
+	CHECK(proc.fbc->GetNumberInKind(3) == 2);
+}
+
 TEST_CASE("fbc: a fresh probe forgets how the links were tied", "[fbc]")
 {
 	FakeProc proc;
