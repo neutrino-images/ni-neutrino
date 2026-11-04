@@ -724,6 +724,20 @@ void CCTextInputDialog::setHintText(const std::string &hint)
 		layoutDialogItems();
 }
 
+std::string CCTextInputDialog::joinHintLines(const std::string &first, const std::string &second)
+{
+	std::string hint = first;
+
+	if (!second.empty())
+	{
+		if (!hint.empty())
+			hint += "\n";
+		hint += second;
+	}
+
+	return hint;
+}
+
 void CCTextInputDialog::setPlaceholder(const std::string &text)
 {
 	cid_placeholder = text;
@@ -818,6 +832,7 @@ std::string &CCTextInputDialog::getValue(void)
 
 int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey*/)
 {
+	CMenuWidget::Busy modal;
 	CStringInputOpen counted;
 	neutrino_msg_t msg = CRCInput::RC_nokey;
 	neutrino_msg_data_t data = 0;
