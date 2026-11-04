@@ -73,6 +73,7 @@ class CCam : public CBasicClient
 		bool sendCaPmt(uint64_t tpid, uint8_t *rawpmt, int rawlen, uint8_t type);
 #endif
 		int  makeMask(int demux, bool add);
+		int  getDemuxUsers(int demux);
 		int  getCaMask(void) { return camask; }
 		void setCaMask(int mask) { camask = mask; }
 		int  getSource() { return source_demux; }
@@ -112,6 +113,11 @@ class CCamManager
 		static CCamManager * getInstance(void);
 		bool Start(t_channel_id id, enum runmode mode, bool force_update = false) { return SetMode(id, mode, true, force_update); };
 		bool Stop(t_channel_id id, enum runmode mode) { return SetMode(id, mode, false); };
+		/* Whether anything still has the channel on that demux: live TV,
+		 * a recording, a stream or PiP. OSCam descrambles a channel once
+		 * per demux for all of them, so a stop for one of them must not
+		 * reach OSCam while this is true. */
+		bool IsDemuxInUse(t_channel_id id, int demux);
 		void SetCITuner(int tuner);
 		int  GetCITuner(void) { return tunerno; };
 		void EnableChannelFilter(bool enable) { filter_channels = enable; };
