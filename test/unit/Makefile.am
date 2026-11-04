@@ -142,6 +142,7 @@ coreapi_tests_SOURCES = \
 	zapit/test_zapitchannel_copy.cpp \
 	coreapi/test_channelstreams.cpp \
 	zapit/test_bouquetname.cpp \
+	zapit/test_fbc.cpp \
 	zapit/test_zapitclient_getpids.cpp \
 	zapit/test_zapitclient_bouquetwrite.cpp \
 	system/test_atomicfile.cpp \
@@ -287,6 +288,9 @@ coreapi_tests_SOURCES = \
 # otherwise be undefined symbols at the end of the line.
 # The xml library is named because the compatibility layer escapes a value with
 # the tree's own converter, and that converter shares an object with the parser.
+# fbc.o is how the slots of an FBC tuner are read from and written to the
+# driver's files, and nothing else, so the cases drive it against a tree of
+# their own.
 # The zapit client archive is what getPIDS lives in, so the case that pins what it
 # does with a daemon that answers short drives that code and not a copy; it needs
 # the connection library after it.
@@ -305,6 +309,7 @@ coreapi_tests_LDADD = \
 	$(top_builddir)/src/system/debug.o \
 	$(top_builddir)/lib/jsoncpp/libjsoncpp.a \
 	$(top_builddir)/src/zapit/channel.o \
+	$(top_builddir)/src/zapit/fbc.o \
 	$(top_builddir)/src/zapit/client/libzapitclient.a \
 	$(top_builddir)/src/driver/rcinput.o \
 	$(top_builddir)/src/driver/abstime.o \
