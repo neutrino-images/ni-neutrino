@@ -2661,6 +2661,7 @@ const char * locale_real_names[] =
 	"pinprotection.mismatch",
 	"pinprotection.repeat",
 	"pinprotection.repeat_head",
+	"pinprotection.wrong",
 	"pinprotection.wrongcode",
 	"plugin.hide_no",
 	"plugin.hide_yes",
