@@ -2630,6 +2630,8 @@ ping.protocol is unreachable (host or protocol error)
 ping.socket is unreachable (socket error)
 ping.unreachable is unreachable
 pinprotection.head Enter PIN code
+pinprotection.mismatch The two entries differ. Please enter the new PIN again.
+pinprotection.repeat Enter the new PIN once more to confirm it.
 pinprotection.wrongcode PIN-Code was wrong! Try again.
 plugin.hide_no Show
 plugin.hide_yes Hide

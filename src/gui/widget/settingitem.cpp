@@ -413,7 +413,10 @@ class SettingText : public CMenuTarget, public CChangeObserver
 		std::string shown() const
 		{
 			const bool pin = spec.text != NULL && spec.text->kind == coreapi::TextKind::Pin;
-			if (spec.secret && !pin)
+			// A PIN row shows one star per digit, as CPINChangeWidget::getValue() does.
+			if (pin)
+				return std::string(value.length(), '*');
+			if (spec.secret)
 				return std::string();
 			/* A file picked by extension is long and its name is what tells it apart, so
 			   the item shows the name in brackets as the font items always did. */
