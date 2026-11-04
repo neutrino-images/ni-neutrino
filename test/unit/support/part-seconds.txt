@@ -125,6 +125,7 @@ system/test_remotetimer.cpp	0
 timerd/test_timerwake.cpp	0
 zapit/test_bouquetname.cpp	0
 zapit/test_fbc.cpp	0
+zapit/test_unicable_check.cpp	0
 zapit/test_zapitchannel_copy.cpp	0
 zapit/test_zapitclient_bouquetwrite.cpp	0
 zapit/test_zapitclient_getpids.cpp	0
