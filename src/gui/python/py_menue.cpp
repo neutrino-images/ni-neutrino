@@ -245,13 +245,10 @@ int CPyMenuTarget::exec(CMenuTarget * /*parent*/, const std::string & /*actionKe
 /* The rows that open a dialog and hand what it answered to the script. */
 int CPyMenuStringinput::exec(CMenuTarget * /*parent*/, const std::string & /*actionKey*/)
 {
-	CStringInput *i;
-	if (sms)
-		i = new CStringInputSMS((char *)name.c_str(), value, size,
-				NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
-	else
-		i = new CStringInput((char *)name.c_str(), value, size,
-				NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
+	/* "sms" asked for the multi-tap letters on the digit keys; the input
+	 * dialog brings an on-screen keyboard for letters instead. */
+	CStringInput *i = new CStringInput((char *)name.c_str(), value, size,
+			NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
 	i->exec(NULL, "");
 	delete i;
 

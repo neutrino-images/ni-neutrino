@@ -73,13 +73,13 @@ PyObject *CPythonInstStringInput::StringInputExec(PyObject *self, PyObject *args
 	if (sms && pin)
 		dprintf(DEBUG_NORMAL, "[CPythonInstance][%s - %d]: 'sms' AND 'pin' is defined! 'pin' will be prefered.\n", __func__, __LINE__);
 
-	CStringInput *i;
+	/* The PIN input is a dialog of its own now, no string input, and the
+	 * sms multi-tap input is gone with it: the dialog brings an on-screen
+	 * keyboard for letters instead, so "sms" is read and does nothing. */
+	CMenuTarget *i;
 	if (pin)
 		i = new CPINInput(name, &value, (int)size,
 				NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL);
-	else if (sms)
-		i = new CStringInputSMS(name, &value, (int)size,
-				NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
 	else
 		i = new CStringInput(name, &value, (int)size,
 				NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
