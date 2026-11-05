@@ -28,75 +28,12 @@
 
 namespace
 {
-int getInputDialogWidth()
-{
-	CFrameBuffer *fb = CFrameBuffer::getInstance();
-	const int screen_w = fb->getScreenWidth(true);
-	const int preferred_w = std::max(fb->scale2Res(820), screen_w * 62 / 100);
-
-	return std::min(screen_w - 2 * OFFSET_INNER_MID, preferred_w);
-}
-
-int getInputDialogMinHeight()
-{
-	return std::max(CFrameBuffer::getInstance()->scale2Res(260),
-			HINTBOX_MIN_HEIGHT + CFrameBuffer::getInstance()->scale2Res(40));
-}
-
-int getInputDialogPad()
-{
-	return std::max(OFFSET_INNER_MID, CFrameBuffer::getInstance()->scale2Res(24));
-}
-
-int getInputFieldInset()
-{
-	return std::max(OFFSET_INNER_SMALL,
-			CFrameBuffer::getInstance()->scale2Res(18));
-}
-
-int getInputFieldPaddingX()
-{
-	return std::max(OFFSET_INNER_SMALL,
-			CFrameBuffer::getInstance()->scale2Res(12));
-}
-
-int getInputFieldPaddingY()
-{
-	return std::max(OFFSET_INNER_MIN,
-			CFrameBuffer::getInstance()->scale2Res(3));
-}
-
 int getInputFieldGlyphHeight(Font *font)
 {
 	if (!font)
 		return 0;
 
 	return std::max(0, font->getAscender() + font->getDescender());
-}
-
-fb_pixel_t getInputFieldTextColor()
-{
-	return COL_MENUCONTENTDARK_TEXT;
-}
-
-fb_pixel_t getInputFieldFrameColor()
-{
-	return COL_FRAME_PLUS_0;
-}
-
-fb_pixel_t getInputFieldBodyColor()
-{
-	return COL_MENUCONTENTDARK_PLUS_0;
-}
-
-fb_pixel_t getInputFieldBodyFocusColor()
-{
-	return COL_MENUCONTENTDARK_PLUS_2;
-}
-
-fb_pixel_t getInputFieldPlaceholderColor()
-{
-	return COL_MENUCONTENTINACTIVE_TEXT;
 }
 
 Font *getInputDialogDynFont(int max_w,
@@ -115,8 +52,72 @@ Font *getInputDialogDynFont(int max_w,
 
 	return (dyn_font && *dyn_font) ? *dyn_font : fallback;
 }
+}
 
-Font *getInputDialogFieldFont(const int body_w,
+int CCInputDialogBase::getInputDialogWidth()
+{
+	CFrameBuffer *fb = CFrameBuffer::getInstance();
+	const int screen_w = fb->getScreenWidth(true);
+	const int preferred_w = std::max(fb->scale2Res(820), screen_w * 62 / 100);
+
+	return std::min(screen_w - 2 * OFFSET_INNER_MID, preferred_w);
+}
+
+int CCInputDialogBase::getInputDialogMinHeight()
+{
+	return std::max(CFrameBuffer::getInstance()->scale2Res(260),
+			HINTBOX_MIN_HEIGHT + CFrameBuffer::getInstance()->scale2Res(40));
+}
+
+int CCInputDialogBase::getInputDialogPad()
+{
+	return std::max(OFFSET_INNER_MID, CFrameBuffer::getInstance()->scale2Res(24));
+}
+
+int CCInputDialogBase::getInputFieldInset()
+{
+	return std::max(OFFSET_INNER_SMALL,
+			CFrameBuffer::getInstance()->scale2Res(18));
+}
+
+int CCInputDialogBase::getInputFieldPaddingX()
+{
+	return std::max(OFFSET_INNER_SMALL,
+			CFrameBuffer::getInstance()->scale2Res(12));
+}
+
+int CCInputDialogBase::getInputFieldPaddingY()
+{
+	return std::max(OFFSET_INNER_MIN,
+			CFrameBuffer::getInstance()->scale2Res(3));
+}
+
+fb_pixel_t CCInputDialogBase::getInputFieldTextColor()
+{
+	return COL_MENUCONTENTDARK_TEXT;
+}
+
+fb_pixel_t CCInputDialogBase::getInputFieldFrameColor()
+{
+	return COL_FRAME_PLUS_0;
+}
+
+fb_pixel_t CCInputDialogBase::getInputFieldBodyColor()
+{
+	return COL_MENUCONTENTDARK_PLUS_0;
+}
+
+fb_pixel_t CCInputDialogBase::getInputFieldBodyFocusColor()
+{
+	return COL_MENUCONTENTDARK_PLUS_2;
+}
+
+fb_pixel_t CCInputDialogBase::getInputFieldPlaceholderColor()
+{
+	return COL_MENUCONTENTINACTIVE_TEXT;
+}
+
+Font *CCInputDialogBase::getInputDialogFieldFont(const int body_w,
 	const std::string &reference_text)
 {
 	return getInputDialogDynFont(body_w,
@@ -125,7 +126,7 @@ Font *getInputDialogFieldFont(const int body_w,
 			g_Font[SNeutrinoSettings::FONT_TYPE_MENU]);
 }
 
-int getInputDialogCaretWidth(Font *font)
+int CCInputDialogBase::getInputDialogCaretWidth(Font *font)
 {
 	if (!font)
 		return std::max(3, CFrameBuffer::getInstance()->scale2Res(3));
@@ -134,14 +135,13 @@ int getInputDialogCaretWidth(Font *font)
 			font->getRenderWidth("|") / 2);
 }
 
-int getInputFieldHeight(Font *font)
+int CCInputDialogBase::getInputFieldHeight(Font *font)
 {
 	const int glyph_h = getInputFieldGlyphHeight(font);
 	const int vertical_pad = getInputFieldPaddingY();
 
 	return std::max(CFrameBuffer::getInstance()->scale2Res(40),
 			glyph_h + 2 * vertical_pad + 2 * FRAME_WIDTH_MIN);
-}
 }
 
 CCInputDialogBase::CCInputDialogBase(const int &w,
@@ -162,22 +162,77 @@ CCInputDialogBase::CCInputDialogBase(const int &w,
 		  HINTBOX_DEFAULT_FRAME_WIDTH)
 {
 	cc_item_type.id = CC_ITEMTYPE_FRM_INPUT_DIALOG;
-
+	idb_title_locale = NONEXISTANT_LOCALE;
+	idb_prepared = false;
 	corner_rad = RADIUS_LARGE;
+}
+
+void CCInputDialogBase::prepareWindow()
+{
+	if (idb_prepared)
+		return;
+	idb_prepared = true;
+
 	setWindowHeaderColor(COL_MENUHEAD_PLUS_0);
 	setWindowHeaderTextColor(COL_MENUHEAD_TEXT);
 	setWindowFooterColor(COL_MENUFOOT_PLUS_0);
 	setWindowHeaderButtons(CComponentsHeader::CC_BTN_EXIT);
 	enableShadow();
 	Refresh();
+	applyDialogStyle();
 }
 
-int CCInputDialogBase::getDialogHintHeight(Font *font)
+int CCInputDialogBase::getDialogHintHeight(Font *font, int lines)
 {
 	const int font_h = font ? font->getHeight() : 0;
 
 	return std::max(CFrameBuffer::getInstance()->scale2Res(72),
-			2 * font_h + CFrameBuffer::getInstance()->scale2Res(16));
+			std::max(2, lines) * font_h + CFrameBuffer::getInstance()->scale2Res(16));
+}
+
+void CCInputDialogBase::notifyObserver(CChangeObserver *observ, std::string *value)
+{
+	if (!observ || !value)
+		return;
+
+	/* The menu observers implement the locale overload only, so a
+	 * localized title is announced there - as the old keyboard
+	 * dialog did until 3d6a0c381a passed its title string instead
+	 * and every such observer fell silent. */
+	if (idb_title_locale != NONEXISTANT_LOCALE)
+		observ->changeNotify(idb_title_locale, (void *) value->c_str());
+	else
+		observ->changeNotify(ccw_caption, (void *) value->c_str());
+}
+
+bool CCInputDialogBase::askDiscard()
+{
+	return ShowMsg(ccw_caption,
+			LOCALE_MESSAGEBOX_DISCARD,
+			CMsgBox::mbrYes,
+			CMsgBox::mbYes | CMsgBox::mbCancel) != CMsgBox::mbrCancel;
+}
+
+void CCInputDialogBase::showFrontDisplay(const std::string &text, size_t cursor)
+{
+	CVFD::getInstance()->showMenuText(1, text.c_str(), cursor + 1);
+#ifdef ENABLE_GRAPHLCD
+	/* The graphic LCD shows the text being edited too, as it did for
+	 * the old keyboard dialog, and masked the same way. */
+	cGLCD::lockChannel(text, "", 0);
+#endif
+}
+
+void CCInputDialogBase::releaseFrontDisplay()
+{
+#ifdef ENABLE_GRAPHLCD
+	cGLCD::unlockChannel();
+#endif
+}
+
+int CCInputDialogBase::forwardMessage(neutrino_msg_t msg, neutrino_msg_data_t data)
+{
+	return CNeutrinoApp::getInstance()->handleMsg(msg, data);
 }
 
 CCTextInputDialog::CCTextInputDialog(const std::string &title,
@@ -194,6 +249,10 @@ CCTextInputDialog::CCTextInputDialog(const std::string &title,
 	cid_value = value;
 	valueString = cid_value ? cid_value : &valueStringTmp;
 	cid_observ = observ;
+	cid_exit_result = menu_return::RETURN_EXIT_REPAINT;
+	cid_timeout_sec = -1;
+	cid_confirm_discard = true;
+	cid_close_on_cancel_info = false;
 	cid_hint = NULL;
 	cid_field = NULL;
 	cid_keyboard = NULL;
@@ -209,11 +268,31 @@ CCTextInputDialog::CCTextInputDialog(const std::string &title,
 	cid_field_col_body = getInputFieldBodyColor();
 	cid_field_col_body_focus = getInputFieldBodyFocusColor();
 	cid_field_col_placeholder = getInputFieldPlaceholderColor();
+	cid_built = false;
+}
 
+void CCTextInputDialog::ensureBuilt()
+{
+	if (cid_built)
+		return;
+	cid_built = true;
+
+	prepareWindow();
 	initDialogItems();
-	applyDialogStyle();
-	initFooterButtons();
+	initFooterButtons(cid_keyboard ? cid_keyboard->getLayoutName() : std::string());
 	layoutDialogItems();
+}
+
+CCTextInputDialog::CCTextInputDialog(const neutrino_locale_t title,
+	std::string *value,
+	CChangeObserver *observ,
+	const std::string &icon)
+	: CCTextInputDialog(title == NONEXISTANT_LOCALE ? "" : g_Locale->getText(title),
+		  value,
+		  observ,
+		  icon)
+{
+	idb_title_locale = title;
 }
 
 void CCInputDialogBase::applyDialogStyle()
@@ -353,7 +432,8 @@ void CCTextInputDialog::layoutDialogItems()
 	const int field_x = pad + field_inset;
 	const int field_w = std::max(0, body_w - 2 * field_inset);
 	const int hint_h = !has_hint ? 0 :
-		CCInputDialogBase::getDialogHintHeight(hint_font);
+		CCInputDialogBase::getDialogHintHeight(hint_font,
+			1 + (int) std::count(visible_hint.begin(), visible_hint.end(), '\n'));
 	const int field_h = getInputFieldHeight(input_font);
 	int keyboard_h = 0;
 	if (cid_keyboard)
@@ -383,8 +463,15 @@ void CCTextInputDialog::layoutDialogItems()
 			header_h + footer_h + body_content_h +
 			2 * fr_thickness);
 
+	const int field_y = has_hint ? (pad + hint_h + gap) : pad;
+
+	/* A hint that comes or goes moves the field even where the height
+	 * stays at its minimum, and a field moved inside a painted window
+	 * leaves its blinking caret behind: the window body is not painted
+	 * again over it. So that counts as a change of geometry too. */
+	const bool field_moves = isPainted() && cid_field->getYPos() != field_y;
 	bool geometry_changed = false;
-	if (height != target_h)
+	if (height != target_h || field_moves)
 	{
 		/* A painted window must give its pixels back before it moves:
 		 * paintForm() skips paintInit() while is_painted stands, so
@@ -395,15 +482,16 @@ void CCTextInputDialog::layoutDialogItems()
 		geometry_changed = isPainted();
 		if (geometry_changed)
 			hide();
-		height = target_h;
-		setCenterPos(CC_ALONG_X | CC_ALONG_Y);
-		Refresh();
-		applyDialogStyle();
+		if (height != target_h)
+		{
+			height = target_h;
+			setCenterPos(CC_ALONG_X | CC_ALONG_Y);
+			Refresh();
+			applyDialogStyle();
+		}
 	}
 
 	setCenterPos(CC_ALONG_X | CC_ALONG_Y);
-
-	const int field_y = has_hint ? (pad + hint_h + gap) : pad;
 
 	cid_hint->setTextFont(hint_font);
 	cid_hint->setDimensionsAll(pad, pad, body_w, hint_h);
@@ -477,6 +565,8 @@ void CCInputDialogBase::initFooterButtons(const std::string &layout_name)
 		buttons[5].btn_result = RES_LAYOUT;
 		buttons[5].directKeys.push_back(CRCInput::RC_setup);
 	}
+
+	buttons.insert(buttons.end(), idb_extra_buttons.begin(), idb_extra_buttons.end());
 
 	getFooterObject()->setButtonLabels(buttons,
 		CFrameBuffer::getInstance()->scale2Res(20),
@@ -562,7 +652,9 @@ std::string CCTextInputDialog::getFieldFontReference() const
 
 std::string CCTextInputDialog::getVisibleHintText() const
 {
-	return cid_error_text.empty() ? cid_hint_text : cid_error_text;
+	return cid_error_text.empty() ?
+		joinHintLines(cid_hint_text, cid_hint_suffix) :
+		cid_error_text;
 }
 
 void CCTextInputDialog::clearInlineError()
@@ -596,10 +688,7 @@ bool CCTextInputDialog::confirmDiscard()
 	 * of the field arms it again. */
 	cid_field->cancelCaretBlink();
 
-	const bool discard = ShowMsg(ccw_caption,
-			LOCALE_MESSAGEBOX_DISCARD,
-			CMsgBox::mbrYes,
-			CMsgBox::mbYes | CMsgBox::mbCancel) != CMsgBox::mbrCancel;
+	const bool discard = askDiscard();
 
 	if (!discard)
 		cid_field->paint(false);
@@ -643,9 +732,12 @@ void CCTextInputDialog::refreshField()
 	clearInlineError();
 	cid_field->ensureCursorVisible();
 	cid_field->paint(false);
-	CVFD::getInstance()->showMenuText(1,
-		getVfdText().c_str(),
-		cid_buffer.getCursor() + 1);
+	showDisplayText();
+}
+
+void CCTextInputDialog::showDisplayText()
+{
+	showFrontDisplay(getVfdText(), cid_buffer.getCursor());
 }
 
 void CCTextInputDialog::setFieldFocus(const bool &focused)
@@ -655,7 +747,11 @@ void CCTextInputDialog::setFieldFocus(const bool &focused)
 
 	cid_field->setFieldFocus(focused);
 	cid_keyboard->setKeyFocus(!focused);
-	cid_field->paint(false);
+	/* Also called while the dialog is not on screen - taking the
+	 * keyboard away before an open - and a field painted then lands
+	 * where the window is not, before it saves its backdrop. */
+	if (isPainted())
+		cid_field->paint(false);
 }
 
 bool CCTextInputDialog::save()
@@ -686,9 +782,7 @@ bool CCTextInputDialog::save()
 
 	if (cid_value)
 		setSettingsText(*cid_value, cid_buffer.getText());
-
-	if (cid_observ && cid_value)
-		cid_observ->changeNotify(ccw_caption, (void *) cid_value->c_str());
+	commitValue();
 
 	OnAfterSave();
 	cid_saved = true;
@@ -700,6 +794,27 @@ void CCTextInputDialog::setHintText(const std::string &hint)
 	cid_hint_text = hint;
 	if (cid_hint)
 		layoutDialogItems();
+}
+
+void CCTextInputDialog::setHintSuffix(const std::string &suffix)
+{
+	cid_hint_suffix = suffix;
+	if (cid_hint)
+		layoutDialogItems();
+}
+
+std::string CCTextInputDialog::joinHintLines(const std::string &first, const std::string &second)
+{
+	std::string hint = first;
+
+	if (!second.empty())
+	{
+		if (!hint.empty())
+			hint += "\n";
+		hint += second;
+	}
+
+	return hint;
 }
 
 void CCTextInputDialog::setPlaceholder(const std::string &text)
@@ -735,6 +850,11 @@ void CCTextInputDialog::setFilterMode(CCInputBuffer::input_filter_mode_t mode)
 {
 	cid_filter_mode = mode;
 	cid_buffer.setFilterMode(mode);
+}
+
+void CCTextInputDialog::setCharset(const std::string &glyphs)
+{
+	cid_buffer.setCharset(glyphs);
 }
 
 void CCTextInputDialog::setValidator(const sigc::slot<bool, const std::string &, std::string &> &validator)
@@ -777,6 +897,63 @@ void CCTextInputDialog::enableOnScreenKeyboard(bool enable)
 	layoutDialogItems();
 }
 
+void CCTextInputDialog::setValueTarget(std::string *value)
+{
+	cid_value = value;
+	valueString = cid_value ? cid_value : &valueStringTmp;
+}
+
+void CCTextInputDialog::setFieldColors(fb_pixel_t text, fb_pixel_t body, fb_pixel_t body_focus)
+{
+	cid_field_col_text = text;
+	cid_field_col_body = body;
+	cid_field_col_body_focus = body_focus;
+	applyFieldStyle();
+}
+
+void CCTextInputDialog::resetFieldColors()
+{
+	setFieldColors(getInputFieldTextColor(),
+		getInputFieldBodyColor(),
+		getInputFieldBodyFocusColor());
+}
+
+void CCTextInputDialog::setExtraFooterButtons(const std::vector<button_label_cc> &buttons)
+{
+	idb_extra_buttons = buttons;
+	/* Before the first open the footer is built with them anyway */
+	if (cid_built)
+		initFooterButtons(cid_keyboard ? cid_keyboard->getLayoutName() : std::string());
+}
+
+int CCTextInputDialog::getTimeoutSec() const
+{
+	return cid_timeout_sec < 0 ?
+		g_settings.timing[SNeutrinoSettings::TIMING_MENU] :
+		cid_timeout_sec;
+}
+
+void CCTextInputDialog::applyHookResult(int hook, bool &loop, int &res)
+{
+	switch (hook)
+	{
+		case HOOK_REFRESH:
+			refreshField();
+			break;
+		case HOOK_SAVE:
+			if (save())
+				loop = false;
+			break;
+		case HOOK_EXIT:
+			loop = false;
+			res = cid_exit_result;
+			break;
+		case HOOK_DONE:
+		default:
+			break;
+	}
+}
+
 std::string &CCTextInputDialog::getValue(void)
 {
 	if (!cid_value)
@@ -796,6 +973,7 @@ std::string &CCTextInputDialog::getValue(void)
 
 int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey*/)
 {
+	CMenuWidget::Busy modal;
 	CStringInputOpen counted;
 	neutrino_msg_t msg = CRCInput::RC_nokey;
 	neutrino_msg_data_t data = 0;
@@ -803,6 +981,9 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 
 	if (parent)
 		parent->hide();
+
+	ensureBuilt();
+	onBeforeExec();
 
 	const std::string original_value = cid_value ? *cid_value : "";
 
@@ -815,18 +996,20 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		initFooterButtons(cid_keyboard->getLayoutName());
 
 	cid_saved = false;
-	cid_buffer.setText(original_value);
+	cid_buffer.setText(prepareInitialText(original_value));
 	cid_buffer.moveEnd();
 	syncDialogState();
+	/* What the field shows at the start, not what the target held: the
+	 * buffer drops what its filter or limit refuses, and comparing with
+	 * the raw value would ask to discard edits nobody made. Leaving
+	 * unsaved still writes the raw value back. */
+	const std::string start_text = cid_buffer.getText();
 	cid_field->ensureCursorVisible();
 	paint();
 
-	CVFD::getInstance()->showMenuText(1,
-		getVfdText().c_str(),
-		cid_buffer.getCursor() + 1);
+	showDisplayText();
 
-	uint64_t timeoutEnd =
-		CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
+	uint64_t timeoutEnd = CRCInput::calcTimeoutEnd(getTimeoutSec());
 
 	bool loop = true;
 	while (loop)
@@ -834,8 +1017,7 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd, true);
 
 		if (msg <= CRCInput::RC_MaxRC)
-			timeoutEnd =
-				CRCInput::calcTimeoutEnd(g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
+			timeoutEnd = CRCInput::calcTimeoutEnd(getTimeoutSec());
 
 		bool state_changed = false;
 
@@ -846,6 +1028,16 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		if (cid_keyboard && cid_keyboard->hasKeyFocus() &&
 			cid_keyboard->handleMsg(msg))
 			continue;
+
+		/* A derived dialog sees the message next, before any meaning
+		 * this class gives it - keys it takes never reach the cursor,
+		 * the footer or the application. */
+		const int hook = onDialogMsg(msg, data);
+		if (hook != HOOK_PASS)
+		{
+			applyHookResult(hook, loop, res);
+			continue;
+		}
 
 		/* 1. Cursor navigation (explicit, not button-dispatched) */
 		if (msg == CRCInput::RC_left)
@@ -900,15 +1092,15 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		}
 		else if (msg == CRCInput::RC_timeout)
 		{
-			if (cid_buffer.getText() != original_value &&
+			if (cid_confirm_discard &&
+				cid_buffer.getText() != start_text &&
 				!confirmDiscard())
 			{
 				/* RC_timeout is above RC_MaxRC, so the renewal at
 				 * the loop head never ran - without a fresh
 				 * deadline the next getMsgAbsoluteTimeout() fires
 				 * immediately and the discard prompt loops. */
-				timeoutEnd = CRCInput::calcTimeoutEnd(
-						g_settings.timing[SNeutrinoSettings::TIMING_MENU]);
+				timeoutEnd = CRCInput::calcTimeoutEnd(getTimeoutSec());
 				continue;
 			}
 
@@ -931,7 +1123,8 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 							loop = false;
 						break;
 					case RES_CANCEL:
-						if (cid_buffer.getText() != original_value &&
+						if (cid_confirm_discard &&
+							cid_buffer.getText() != start_text &&
 							!confirmDiscard())
 							break;
 						loop = false;
@@ -968,6 +1161,14 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 						 * forgot a label would show a footer button
 						 * that does nothing, which is the defect this
 						 * whole change came from. */
+						{
+							const int btn_hook = onButtonResult(btn_res);
+							if (btn_hook != HOOK_PASS)
+							{
+								applyHookResult(btn_hook, loop, res);
+								break;
+							}
+						}
 						cid_field->setErrorState(false);
 						clearInlineError();
 						if (applyBufferResult(btn_res, &cid_buffer))
@@ -997,16 +1198,41 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 					cid_field->setErrorState(false);
 					clearInlineError();
 					if (cid_buffer.insert(glyph))
-						state_changed = true;
+					{
+						const int insert_hook = onAfterInsert();
+						if (insert_hook == HOOK_PASS)
+							state_changed = true;
+						else
+						{
+							/* The glyph shows before the hook
+							 * acts on it - a dialog that closes
+							 * on its last digit still paints it. */
+							refreshField();
+							applyHookResult(insert_hook, loop, res);
+						}
+					}
 					else
 						showMaxCharsError();
 				}
-				/* 4. System messages */
-				else if (CNeutrinoApp::getInstance()->handleMsg(msg, data) &
-					messages_return::cancel_all)
+				/* 4. System messages. The caret holds still while the
+				 * application has the message: it may raise a box of
+				 * its own over this dialog, and the blink would go on
+				 * painting through it. Every message - a timer tick
+				 * brings the scrambled channel hint. */
+				else
 				{
-					loop = false;
-					res = menu_return::RETURN_EXIT_ALL;
+					cid_field->cancelCaretBlink(true);
+
+					const int flags = forwardMessage(msg, data);
+					if ((flags & messages_return::cancel_all) ||
+						(cid_close_on_cancel_info &&
+						(flags & messages_return::cancel_info)))
+					{
+						loop = false;
+						res = menu_return::RETURN_EXIT_ALL;
+					}
+					else if (isPainted())
+						cid_field->paint(false);
 				}
 			}
 		}
@@ -1019,6 +1245,14 @@ int CCTextInputDialog::exec(CMenuTarget *parent, const std::string & /*actionKey
 		setSettingsText(*cid_value, original_value);
 
 	hide();
+	releaseFrontDisplay();
+
+	/* Told only once the dialog is gone, as the old input windows did:
+	 * an observer may paint a box of its own or set up the fonts anew,
+	 * and would do so over a dialog whose caret still blinks. */
+	if (cid_saved)
+		notifyObserver(cid_observ, cid_value);
+
 	return res;
 }
 

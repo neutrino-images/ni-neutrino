@@ -33,6 +33,8 @@
 #include <gui/widget/menue_options.h>
 #include <gui/widget/hintbox.h>
 #include <gui/widget/keyboard_input.h>
+#include <gui/widget/stringinput.h>
+#include <gui/widget/stringinput_ext.h>
 #include <driver/screen_max.h>
 
 #include <fstream>
@@ -561,10 +563,10 @@ int CNETFSMountGui::menuEntry(int mt, int nr)
 	CKeyboardInput options2Input(LOCALE_NFS_MOUNT_OPTIONS, &g_settings.netfs[mt][nr].options2);
 	CMenuForwarder *options2_fwd = new CMenuForwarder(LOCALE_NFS_MOUNT_OPTIONS, true, g_settings.netfs[mt][nr].options2, &options2Input);
 
-	CStringInputSMS dumpInput(LOCALE_NETFS_DUMP, &g_settings.netfs[mt][nr].dump, 2, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, "0123456789");
+	CStringInput dumpInput(LOCALE_NETFS_DUMP, &g_settings.netfs[mt][nr].dump, 2, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, "0123456789");
 	CMenuForwarder *dump_fwd = new CMenuForwarder(LOCALE_NETFS_DUMP, (mt == SNeutrinoSettings::FSTAB), g_settings.netfs[mt][nr].dump, &dumpInput);
 
-	CStringInputSMS passInput(LOCALE_NETFS_PASS, &g_settings.netfs[mt][nr].pass, 2, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, "0123456789");
+	CStringInput passInput(LOCALE_NETFS_PASS, &g_settings.netfs[mt][nr].pass, 2, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, "0123456789");
 	CMenuForwarder *pass_fwd = new CMenuForwarder(LOCALE_NETFS_PASS, (mt == SNeutrinoSettings::FSTAB), g_settings.netfs[mt][nr].pass, &passInput);
 
 	CMenuOptionChooser *activeInput= new CMenuOptionChooser(LOCALE_NETFS_ACTIVE_ONOFF, &g_settings.netfs[mt][nr].active, MESSAGEBOX_NO_YES_OPTIONS, MESSAGEBOX_NO_YES_OPTION_COUNT, true);

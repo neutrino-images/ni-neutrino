@@ -38,6 +38,7 @@
 #include <driver/screen_max.h>
 #include <gui/pluginlist.h>
 #include <gui/widget/stringinput.h>
+#include <gui/components/cc_numeric_input_dialog.h>
 #include <gui/infoclock.h>
 #include <gui/osd_helpers.h>
 
@@ -2001,7 +2002,12 @@ int CMenuOptionNumberChooser::exec(CMenuTarget*)
 	if(msg == CRCInput::RC_left) {
 		*optionValue = numberStep(lower_bound, upper_bound, named, *optionValue, false);
 	} else if (numeric_input && msg == CRCInput::RC_ok) {
-		int size = 0;
+		/* The chooser's bounds go to the dialog: it names them and refuses
+		   a value outside, where the clamp below used to change it behind
+		   the user's back. The title comes from getName(), which also
+		   serves a chooser built with a string instead of a locale.
+		   The range takes in the values the chooser names outside its
+		   bounds, so they can still be typed. */
 		int low = lower_bound;
 		int high = upper_bound;
 		for (size_t i = 0; i < named.size(); i++)
@@ -2009,15 +2015,10 @@ int CMenuOptionNumberChooser::exec(CMenuTarget*)
 			low = std::min(low, named[i]);
 			high = std::max(high, named[i]);
 		}
-		int b = low;
-		if (b < 0) {
-			size++,
-			b = -b;
-		}
-		if (b < high)
-			b = high;
-		for (; b; b /= 10, size++);
-		CIntInput cii(name, optionValue, size, LOCALE_IPSETUP_HINT_1, LOCALE_IPSETUP_HINT_2);
+		CCNumericInputDialog cii(std::string(getName()), optionValue);
+		cii.setHintText(CCTextInputDialog::joinHintLines(g_Locale->getText(LOCALE_IPSETUP_HINT_1),
+				g_Locale->getText(LOCALE_IPSETUP_HINT_2)));
+		cii.setRange(low, high);
 		cii.exec(NULL, "");
 		if (std::find(named.begin(), named.end(), *optionValue) == named.end())
 		{
@@ -2780,6 +2781,7 @@ bool CPINProtection::check()
 	{
 		cPIN = "";
 		CPINInput* PINInput = new CPINInput(title, &cPIN, 4, hint);
+		PINInput->setExpectedPin(validPIN);
 		PINInput->exec( getParent(), "");
 		delete PINInput; PINInput = NULL;
 		hint = LOCALE_PINPROTECTION_WRONGCODE;
@@ -2799,10 +2801,10 @@ bool CZapProtection::check()
 		cPIN = "";
 
 		CPLPINInput* PINInput = new CPLPINInput(title, &cPIN, 4, hint, fsk);
+		PINInput->setExpectedPin(validPIN);
 
 		res = PINInput->exec(getParent(), "");
 		delete PINInput; PINInput = NULL;
-		cPIN[4] = 0;
 		strcpy(systemstr, CONFIGDIR "/pinentered.sh ");
 		strcat(systemstr, cPIN.c_str());
 		system(systemstr);

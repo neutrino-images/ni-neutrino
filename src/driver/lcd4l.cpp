@@ -118,6 +118,7 @@ extern CPictureViewer *g_PicViewer;
 #define WEATHER_TEMP		LCD_DATADIR "weather_temp"
 #define WEATHER_WIND		LCD_DATADIR "weather_wind"
 #define WEATHER_ICON		LCD_DATADIR "weather_icon"
+#define WEATHER_LATER		LCD_DATADIR "weather_later"
 
 #define FLAG_LCD4LINUX		"/tmp/.lcd4linux"
 #define PIDFILE			"/var/run/lcd4linux.pid"
@@ -385,6 +386,7 @@ void CLCD4l::Init()
 	m_wtemp		= "";
 	m_wwind		= "";
 	m_wicon		= "";
+	m_wlater	= "";
 
 	if (!access(LCD_DATADIR, F_OK) == 0)
 		mkdir(LCD_DATADIR, 0755);
@@ -1269,7 +1271,16 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		strcpy(m_Duration, Duration);
 	}
 
-	if (g_settings.weather_enabled && CWeather::getInstance()->checkUpdate(firstRun))
+	/* checkUpdate fetches for whichever caller comes first once the cycle is up
+	   and answers false to every other one, the front display among them, so
+	   its answer says nothing about whether the files here are behind. It only
+	   starts the fetch; what is written is what the weather holds, and the
+	   comparisons below keep a file that has not changed from being written. */
+	if (g_settings.weather_enabled)
+		CWeather::getInstance()->checkUpdate(firstRun);
+
+	// Nothing before the first fetch that came back, or every value would read 0.
+	if (g_settings.weather_enabled && CWeather::getInstance()->getCurrentTimestamp() > 0)
 	{
 		std::string wcity = CWeather::getInstance()->getCity();
 		if (m_wcity.compare(wcity))
@@ -1325,6 +1336,17 @@ void CLCD4l::ParseInfo(uint64_t parseID, bool newID, bool firstRun)
 		{
 			WriteFile(WEATHER_ICON, wicon);
 			m_wicon = wicon;
+		}
+
+		/* The line of the files above that lcd4linux shows as later: line 1 is
+		   now, line 2 today, line 3 tomorrow. Decided here rather than by
+		   lcd4linux's own clock, which keeps the time zone it was started with
+		   and turns over at another moment than the front display. */
+		std::string wlater = to_string(CWeather::getLaterForecastIndex() + 2);
+		if (m_wlater.compare(wlater))
+		{
+			WriteFile(WEATHER_LATER, wlater);
+			m_wlater = wlater;
 		}
 	}
 }

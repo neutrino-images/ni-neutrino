@@ -23,8 +23,6 @@
 
 #include "coreapi/base/schema.h"
 
-#include <system/sms_input.h>
-
 namespace coreapi
 {
 
@@ -117,12 +115,7 @@ constexpr TextRule kRuleNameFromList = { TextKind::NameFromList, 0, 0, NULL, Mus
 constexpr TextRule kRulePathList = { TextKind::PathList, 0, 0, NULL, MustExist::No, NULL, false };
 constexpr TextRule kRuleChannelId = { TextKind::Plain, 1, 16, "0123456789abcdefABCDEF", MustExist::No, NULL, false };
 constexpr TextRule kRuleFontFile = { TextKind::File, 0, 0, NULL, MustExist::Yes, "ttf", false };
-#ifdef USE_SMS_INPUT
-// Typed by name on the SMS input, which takes thirty characters and a name that is not there yet.
-constexpr TextRule kRuleUrlFile = { TextKind::File, 0, 30, NULL, MustExist::No, NULL, true };
-#else
 constexpr TextRule kRuleUrlFile = { TextKind::File, 0, 0, NULL, MustExist::Yes, "conf,urls", false };
-#endif
 constexpr TextRule kRuleKey8 = { TextKind::Plain, 0, 8, NULL, MustExist::No, NULL, false };
 constexpr TextRule kRuleKey16 = { TextKind::Plain, 0, 16, NULL, MustExist::No, NULL, false };
 constexpr TextRule kRuleKey32 = { TextKind::Plain, 0, 32, NULL, MustExist::No, NULL, false };

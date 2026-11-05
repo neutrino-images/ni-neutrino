@@ -176,6 +176,7 @@
 #include "widget/msgbox.h"
 #include "widget/hintbox.h"
 #include "widget/keychooser.h"
+#include "widget/stringinput.h"
 #include "color.h"
 #include "personalize.h"
 #include "plugins.h"

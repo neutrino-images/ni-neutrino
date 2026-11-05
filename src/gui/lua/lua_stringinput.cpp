@@ -79,7 +79,7 @@ int CLuaInstStringInput::StringInputExec(lua_State *L)
 
 	// TODO: Locales?
 
-	std::string valid_chars = "abcdefghijklmnopqrstuvwxyz0123456789!\"ง$%&/()=?-.@,_: ";
+	std::string valid_chars = "abcdefghijklmnopqrstuvwxyz0123456789!\"ยง$%&/()=?-.@,_: ";
 	tableLookup(L, "valid_chars", valid_chars);
 
 	// TODO: CChangeObserver?
@@ -96,13 +96,11 @@ int CLuaInstStringInput::StringInputExec(lua_State *L)
 	if (sms && pin)
 		dprintf(DEBUG_NORMAL, "[CLuaInstance][%s - %d]: 'sms' AND 'pin' is defined! 'pin' will be prefered.\n", __func__, __LINE__);
 
-	CStringInput *i;
+	/* The PIN input is a dialog of its own now, no string input */
+	CMenuTarget *i;
 	if (pin)
 		i = new CPINInput(name, &value, size,
 				     NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL);
-	else if (sms)
-		i = new CStringInputSMS(name, &value, size,
-				     NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
 	else
 		i = new CStringInput(name, &value, size,
 				     NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());

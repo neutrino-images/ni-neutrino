@@ -36,12 +36,6 @@
 
 #include "update.h"
 
-#include <system/sms_input.h>
-
-#ifdef USE_SMS_INPUT
-#include "gui/widget/stringinput.h"
-#endif
-
 #include <string>
 
 // helper class to enable/disable update config url item

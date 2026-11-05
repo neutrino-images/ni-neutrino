@@ -2634,7 +2634,12 @@ ping.ok is reachable (ping)
 ping.protocol is unreachable (host or protocol error)
 ping.socket is unreachable (socket error)
 ping.unreachable is unreachable
+pinprotection.changed The new PIN is set.
 pinprotection.head Enter PIN code
+pinprotection.mismatch The two entries differ. Please enter the new PIN again.
+pinprotection.repeat Enter the new PIN once more to confirm it.
+pinprotection.repeat_head Repeat the new PIN
+pinprotection.wrong Wrong PIN. Please try again.
 pinprotection.wrongcode PIN-Code was wrong! Try again.
 plugin.hide_no Show
 plugin.hide_yes Hide
@@ -2945,7 +2950,9 @@ stringinput.char_not_allowed Character not allowed here.
 stringinput.clear clear all
 stringinput.empty_not_allowed Input must not be empty.
 stringinput.insert Insert
+stringinput.invalid_date This date does not exist.
 stringinput.maxchars_reached Maximum number of characters reached.
+stringinput.range Allowed values are %d to %d.
 stringinput.save Save
 stringinput.save_failed Input cannot be saved.
 stringinput.space Space
@@ -3054,11 +3061,14 @@ tunersetup.power 5V supply on DVB-T/T2 channels
 tunersetup.sat Satellite (DVB-S/S2)
 tunersetup.terr Terrestrial (DVB-T/T2)
 tunersetup.tunersetup Tuner setup
+unicable.clash_freq Tuner %d already uses the frequency %d MHz on the same cable.\nEvery tuner needs a user band of its own, or the two disturb each other.
+unicable.clash_scr Tuner %d already uses SCR %d on the same cable.\nEvery tuner needs a user band of its own, or the two disturb each other.
 unicable.freq Unicable Frequency
 unicable.lnb Unicable Input
 unicable.pin Unicable PIN
 unicable.pin_hint PIN (1 - 255) for user frequency\n0 means inactive / off
 unicable.scr Unicable SCR
+unicable.scr_hint Counted from 0 (like CH00 in the LNB data sheet)\nOther devices often count from 1
 unit.decimal .
 unit.long.years years
 unit.short.hour h

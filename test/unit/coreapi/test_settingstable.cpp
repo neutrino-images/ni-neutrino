@@ -1051,11 +1051,7 @@ const TextRuleExpectation kTextRules[] = {
 	{ "network_nfs_recordingdir", TextKind::Directory, 0, 0, NULL, MustExist::YesNotTmpfs, NULL, false },
 	{ "timeshiftdir", TextKind::Directory, 0, 0, NULL, MustExist::YesNotTmpfs, NULL, true },
 	{ "network_nfs_moviedir", TextKind::Directory, 0, 0, NULL, MustExist::No, NULL, false },
-#ifdef USE_SMS_INPUT
-	{ "softupdate_url_file", TextKind::File, 0, 30, NULL, MustExist::No, NULL, true },
-#else
 	{ "softupdate_url_file", TextKind::File, 0, 0, NULL, MustExist::Yes, "conf,urls", false },
-#endif
 	{ "update_dir", TextKind::Directory, 0, 0, NULL, MustExist::YesNotFlash, NULL, false },
 	{ "update_dir_opkg", TextKind::Directory, 0, 0, NULL, MustExist::Yes, NULL, false },
 	{ "weather_api_key", TextKind::Plain, 0, 32, NULL, MustExist::No, NULL, false },

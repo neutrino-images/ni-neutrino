@@ -58,6 +58,9 @@
 #include "color_custom.h"
 #include "components/cc_frm_input_row.h"
 #include "components/cc_input_dialog.h"
+#include "components/cc_numeric_input_dialog.h"
+#include "components/cc_pin_input_dialog.h"
+#include "components/cc_structured_input_dialog.h"
 #include "components/cc_timer.h"
 #include "rate_banner.h"
 #include "scan.h"
@@ -314,6 +317,152 @@ int execCCTextInputEmptyTest()
 	{
 		ShowMsg("CCTextInput Empty Dialog",
 			makeInputDialogSaveText("Gespeicherter Text", value),
+			CMsgBox::mbrBack,
+			CMsgBox::mbBack,
+			NEUTRINO_ICON_INFO);
+	}
+
+	return res;
+}
+
+/* Shows what a PIN prompt leaves behind: the result, whether it was
+ * saved and the digits, in clear for the test. Up and down leave the
+ * prompt and move on in this menu, so that case shows no box. */
+int execCCPinInputTest()
+{
+	std::string pin;
+	CCPinInputDialog dialog("PIN eingeben", &pin, 4);
+	dialog.setHintText("Die vierte Ziffer schliesst den Dialog, OK eine "
+		"kuerzere Eingabe. Hoch und Runter verlassen ihn.");
+
+	const int res = dialog.exec(NULL, "");
+	if (res != menu_return::RETURN_EXIT)
+		ShowMsg("CCPinInput Dialog",
+			std::string(dialog.wasSaved() ? "Gespeichert" : "Nicht gespeichert") +
+			", Ergebnis " + to_string(res) + ":\n\"" + pin + "\"",
+			CMsgBox::mbrBack,
+			CMsgBox::mbBack,
+			NEUTRINO_ICON_INFO);
+
+	return menu_return::RETURN_REPAINT;
+}
+
+/* One entry per format of the structured dialog, each showing what it
+ * saved. Static values, so a second open starts from the first one's. */
+int execCCStructuredInputTest(const std::string &variant)
+{
+	static std::string ip = "192.168.1.20";
+	static std::string mac = "00:1a:2b:3c:4d:5e";
+	static time_t when = time(NULL);
+	static std::string jump = "01:23:45";
+	static std::string weekdays = "XXXXX--";
+	static std::string coordinate = "52.520000";
+	std::string saved;
+	bool ok;
+
+	if (variant == "datetime")
+	{
+		CCStructuredInputDialog dialog(LOCALE_TIMERLIST_ALARMTIME, &when);
+		dialog.setHintText("Ziffern ueberschreiben, Hoch/Runter zaehlen die Stelle.");
+		dialog.exec(NULL, "");
+		ok = dialog.wasSaved();
+		saved = dialog.getValue();
+	}
+	else
+	{
+		CCStructuredInputDialog::format_t format = CCStructuredInputDialog::FORMAT_IP;
+		std::string *value = &ip;
+		std::string hint = "Zwoelf Ziffern am Stueck; alles 0 speichert leer.";
+		if (variant == "mac")
+		{
+			format = CCStructuredInputDialog::FORMAT_MAC;
+			value = &mac;
+			hint = "Hoch/Runter erreicht A-F.";
+		}
+		else if (variant == "time")
+		{
+			/* No hint, as the movie player's jump time has none: a
+			 * refused value then grows the window while it is open. */
+			format = CCStructuredInputDialog::FORMAT_TIME;
+			value = &jump;
+			hint.clear();
+		}
+		else if (variant == "weekdays")
+		{
+			format = CCStructuredInputDialog::FORMAT_WEEKDAYS;
+			value = &weekdays;
+			hint = g_Locale->getText(LOCALE_TIMERLIST_WEEKDAYS_HINT_1);
+			hint += "\n";
+			hint += g_Locale->getText(LOCALE_TIMERLIST_WEEKDAYS_HINT_2);
+		}
+		else if (variant == "decimal")
+		{
+			format = CCStructuredInputDialog::FORMAT_DECIMAL;
+			value = &coordinate;
+			hint = "Breitengrad 0 bis 90 mit sechs Stellen.";
+		}
+
+		CCStructuredInputDialog dialog(NONEXISTANT_LOCALE, format, value);
+		if (format == CCStructuredInputDialog::FORMAT_DECIMAL)
+			dialog.setDecimal(3, 6, 90);
+		dialog.setHintText(hint);
+		dialog.exec(NULL, "");
+		ok = dialog.wasSaved();
+		saved = *value;
+	}
+
+	if (ok)
+		ShowMsg("CCStructuredInput Dialog",
+			makeInputDialogSaveText("Gespeichert", saved),
+			CMsgBox::mbrBack,
+			CMsgBox::mbBack,
+			NEUTRINO_ICON_INFO);
+
+	return menu_return::RETURN_REPAINT;
+}
+
+/* The three shapes the numeric dialog takes over: an int with a range
+ * (number choosers, CIntInput), a range below zero, and a string padded
+ * with zeros as the sleep timer hands it in. Static values, so a second
+ * open shows what the first one saved. */
+int execCCNumericInputTest(const std::string &variant)
+{
+	static int number = 240;
+	static int offset = -15;
+	static std::string padded = "030";
+	int res;
+
+	if (variant == "negative")
+	{
+		CCNumericInputDialog dialog("Zahl mit Vorzeichen", &offset);
+		dialog.setHintText("Blau oder die Minustaste wechselt das "
+			"Vorzeichen.");
+		dialog.setRange(-300, 300);
+		res = dialog.exec(NULL, "");
+	}
+	else if (variant == "string")
+	{
+		CCNumericInputDialog dialog("Zahl als Text", &padded);
+		dialog.setHintText("Drei Stellen ohne Bereich, mit fuehrender "
+			"Null wie beim Sleeptimer.");
+		dialog.setMaxDigits(3);
+		res = dialog.exec(NULL, "");
+	}
+	else
+	{
+		CCNumericInputDialog dialog("Zahl eingeben", &number);
+		dialog.setHintText("Die erste Ziffer ersetzt den Wert, Hoch und "
+			"Runter zaehlen.");
+		dialog.setRange(1, 999);
+		res = dialog.exec(NULL, "");
+	}
+
+	if (res == menu_return::RETURN_REPAINT)
+	{
+		const std::string saved = variant == "negative" ? to_string(offset) :
+			variant == "string" ? padded : to_string(number);
+		ShowMsg("CCNumericInput Dialog",
+			makeInputDialogSaveText("Gespeicherte Zahl", saved),
 			CMsgBox::mbrBack,
 			CMsgBox::mbBack,
 			NEUTRINO_ICON_INFO);
@@ -745,7 +894,7 @@ class CCMultiFieldPhase0Dialog : public CCInputDialogBase
 				"speichert, Gruen loescht links vom "
 				"Cursor, Gelb leert das aktive Feld.";
 			md_focus_order.reserve(4);
-			applyDialogStyle();
+			prepareWindow();
 			initHint();
 			addEntry("Proxy-Server",
 				server,
@@ -1790,6 +1939,18 @@ int CTestMenu::exec(CMenuTarget *parent, const std::string &actionKey)
 	{
 		return execCCMultiFieldPhase0Test();
 	}
+	else if (actionKey == "cc_pin_input")
+	{
+		return execCCPinInputTest();
+	}
+	else if (actionKey.compare(0, 19, "cc_structured_input") == 0)
+	{
+		return execCCStructuredInputTest(actionKey.size() > 20 ? actionKey.substr(20) : "");
+	}
+	else if (actionKey.compare(0, 16, "cc_numeric_input") == 0)
+	{
+		return execCCNumericInputTest(actionKey.size() > 17 ? actionKey.substr(17) : "");
+	}
 	else if (actionKey == "window")
 	{
 		if (window == NULL)
@@ -2757,6 +2918,18 @@ void CTestMenu::showCCTests(CMenuWidget *widget)
 	widget->addItem(new CMenuForwarder("Scrollbar", true, NULL, this, "scrollbar"));
 	widget->addItem(new CMenuForwarder("Record", true, NULL, this, "show_records"));
 	widget->addItem(new CMenuForwarder("Icon", true, NULL, this, "icon"));
+	/* Appended behind the others: the GUI tests count their way down to
+	 * the entries above. */
+	widget->addItem(new CMenuForwarder("CCNumericInput 1-999", true, NULL, this, "cc_numeric_input"));
+	widget->addItem(new CMenuForwarder("CCNumericInput -300..300", true, NULL, this, "cc_numeric_input_negative"));
+	widget->addItem(new CMenuForwarder("CCNumericInput String", true, NULL, this, "cc_numeric_input_string"));
+	widget->addItem(new CMenuForwarder("CCPinInput", true, NULL, this, "cc_pin_input"));
+	widget->addItem(new CMenuForwarder("CCStructuredInput IP", true, NULL, this, "cc_structured_input_ip"));
+	widget->addItem(new CMenuForwarder("CCStructuredInput MAC", true, NULL, this, "cc_structured_input_mac"));
+	widget->addItem(new CMenuForwarder("CCStructuredInput Datum", true, NULL, this, "cc_structured_input_datetime"));
+	widget->addItem(new CMenuForwarder("CCStructuredInput Zeit", true, NULL, this, "cc_structured_input_time"));
+	widget->addItem(new CMenuForwarder("CCStructuredInput Wochentage", true, NULL, this, "cc_structured_input_weekdays"));
+	widget->addItem(new CMenuForwarder("CCStructuredInput Dezimal", true, NULL, this, "cc_structured_input_decimal"));
 }
 
 void CTestMenu::showHWTests(CMenuWidget *widget)

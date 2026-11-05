@@ -27,25 +27,21 @@
 #define __stringinput__
 
 #include "menue.h"
+#include <gui/components/cc_numeric_input_dialog.h>
+#include <gui/components/cc_pin_input_dialog.h>
 
 #include <system/localize.h>
 
 #include <string>
 
-class CFrameBuffer;
-/* Counts the string inputs that are open. The string input, the PIN input and
-   the extended input edit the string they were handed in place and count on
-   nothing else changing it while they are open: they pad the string once to
-   its width and index it up to that width, and the address inputs keep
-   pointers into it. A value put into that string from elsewhere meanwhile ends
-   neutrino at the next key, or leaves the input writing into a buffer that is
-   gone. The keyboard input and the text input dialog edit a copy, but put it
-   back into the setting when they close, on cancel too, over any value put
-   there meanwhile. So code that puts new values into the settings asks this
-   first and waits while an input is open, and asks to be told when the last
-   one closes: that one posts STRING_INPUTS_CLOSED, which the screen the input
-   was opened from hands on before it saves anything on its way out. One open
-   on a script's thread counts as well. */
+/* Counts the input dialogs that are open. Each of them edits a copy and
+   writes its target when the value is saved; the text input dialog also
+   writes back the value it started with when it is left otherwise, over
+   any value put there meanwhile. So code that puts new values into the
+   settings asks this first and waits while an input is open, and asks to
+   be told when the last one closes: that one posts STRING_INPUTS_CLOSED,
+   which the screen the input was opened from hands on before it saves
+   anything on its way out. One open on a script's thread counts as well. */
 class CStringInputOpen
 {
 	public:
@@ -61,144 +57,78 @@ class CStringInputOpen
 		CStringInputOpen &operator=(const CStringInputOpen &);
 };
 
-class CStringInput : public CMenuTarget
-{
-	protected:
-		CFrameBuffer	*frameBuffer;
-		int x;
-		int y;
-		int width;
-		int height;
-		int hheight; // head font height
-		int iheight;
-		int bheight; // body height
-		int fheight; // footer height
-		int input_h; // input field height
-		int input_w; // input field width
-		int offset;
-		int lower_bound;
-		int upper_bound;
-
-		uint32_t smstimer;
-
-		std::string  head;
-		neutrino_locale_t name;
-		neutrino_locale_t hint_1, hint_2;
-		std::string iconfile;
-		const char * validchars;
-		int          size;
-		int          selected;
-		CChangeObserver * observ;
-		bool force_saveScreen;
-		fb_pixel_t *pixBuf;
-
-		virtual void init(const std::string &Name, std::string *Value, int Size, const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2, const char * const Valid_Chars, CChangeObserver* Observ, const char * const Icon);
-
-		virtual void paint(bool sms = false);
-		virtual void paintChar(int pos, char c);
-		virtual void paintChar(int pos);
-
-		virtual void NormalKeyPressed(const neutrino_msg_t key);
-		virtual void keyBackspacePressed(void);
-		virtual void keyRedPressed();
-		virtual void keyYellowPressed();
-		virtual void keyBluePressed();
-		virtual void keyUpPressed();
-		virtual void keyDownPressed();
-		virtual void keyLeftPressed();
-		virtual void keyRightPressed();
-		virtual void keyPlusPressed();
-		virtual void keyMinusPressed();
-
-		virtual int handleOthers(const neutrino_msg_t msg, const neutrino_msg_data_t data);
-
-	public:
-		CStringInput(const neutrino_locale_t Name, std::string* Value, int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars= (const char *) "0123456789. ", CChangeObserver* Observ = NULL, const char * const Icon = NULL);
-		CStringInput(const std::string &Name, std::string* Value, int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars= (const char *) "0123456789. ", CChangeObserver* Observ = NULL, const char * const Icon = NULL);
-		~CStringInput();
-
-		void hide();
-		int exec( CMenuTarget* parent, const std::string & actionKey );
-		void setMinMax(const int min_value, const int max_value);
-
-		void forceSaveScreen(bool enable);
-};
-
-class CStringInputSMS : public CStringInput
-{
-		int 	arraySizes[10];
-		char	Chars[10][10];					// maximal 10 character in one CharList entry!
-
-		int keyCounter;
-		int last_digit;
-
-		virtual void NormalKeyPressed(const neutrino_msg_t key);
-		virtual void keyBackspacePressed(void);
-		virtual void keyRedPressed();
-		virtual void keyYellowPressed();
-		virtual void keyUpPressed();
-		virtual void keyDownPressed();
-		virtual void keyLeftPressed();
-		virtual void keyRightPressed();
-
-		virtual void paint(bool dummy = false);
-		void initSMS(const char * const Valid_Chars);
-
-	public:
-		CStringInputSMS(const neutrino_locale_t Name, std::string* Value, int Size, const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2, const char * const Valid_Chars, CChangeObserver* Observ = NULL, const char * const Icon = NULL);
-		CStringInputSMS(const std::string &Name, std::string* Value, int Size, const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2, const char * const Valid_Chars, CChangeObserver* Observ = NULL, const char * const Icon = NULL);
-};
-
-class CPINInput : public CStringInput
-{
-	protected:
-		virtual void paintChar(int pos);
-	public:
-		CPINInput(const neutrino_locale_t Name, std::string *Value, int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars= (const char *)"0123456789", CChangeObserver* Observ = NULL)
-		 : CStringInput(Name, Value, Size, Hint_1, Hint_2, Valid_Chars, Observ, (char *) NEUTRINO_ICON_LOCK) {};
-		CPINInput(const std::string &Name, std::string *Value, int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars= (const char *)"0123456789", CChangeObserver* Observ = NULL)
-		 : CStringInput(Name, Value, Size, Hint_1, Hint_2, Valid_Chars, Observ, (char *) NEUTRINO_ICON_LOCK) {};
-
-		 int exec( CMenuTarget* parent, const std::string & actionKey );
-};
-
-// For CI
-class CEnquiryInput : public CPINInput
+/* The string inputs run on the cc numeric dialog: nearly all of them ask
+   for a whole number kept as a string, and the old constructors stay. Size
+   is the most digits. A caller whose valid characters are more than digits
+   and a space - a decimal point, letters - or whose value is no number
+   gets a text input with the on-screen keyboard instead, limited to the
+   valid characters and Size of them: the keyboard has the point the remote
+   lacks, and the value reaches the field as it is. */
+class CStringInput : public CCNumericInputDialog
 {
 	private:
-		bool blind;
+		std::string valid_chars;
+		int size;
+		void init(const std::string &Name, int Size, const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2, const char * const Valid_Chars);
 	protected:
-		virtual void paintChar(int pos);
+		void onBeforeExec();
 	public:
-		CEnquiryInput(const neutrino_locale_t Name, std::string *Value, int Size, bool Blind, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars= (const char *)"0123456789", CChangeObserver* Observ = NULL)
-		 : CPINInput(Name, Value, Size, Hint_1, Hint_2, Valid_Chars, Observ) { blind = Blind; }
-		CEnquiryInput(const std::string &Name, std::string *Value, int Size, bool Blind, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars= (const char *)"0123456789", CChangeObserver* Observ = NULL)
-		 : CPINInput(Name, Value, Size, Hint_1, Hint_2, Valid_Chars, Observ) { blind = Blind; }
+		CStringInput(const neutrino_locale_t Name, std::string* Value, int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars= (const char *) "0123456789 ", CChangeObserver* Observ = NULL, const char * const Icon = NULL);
+		CStringInput(const std::string &Name, std::string* Value, int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars= (const char *) "0123456789 ", CChangeObserver* Observ = NULL, const char * const Icon = NULL);
+
+		///the dialog saves its background itself
+		void forceSaveScreen(bool /*enable*/) {}
 };
 
+/* The PIN prompts run on the cc PIN dialog: digits only, stars, closing on
+   the last digit, up and down handed on to the screen below. The old
+   constructors stay, so the menus that ask for a PIN keep their code.
+   Valid_Chars is gone with the old window: a PIN is digits. */
+class CPINInput : public CCPinInputDialog
+{
+	private:
+		void init(const neutrino_locale_t Hint_1, const neutrino_locale_t Hint_2);
+	public:
+		CPINInput(const neutrino_locale_t Name, std::string *Value, int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars = NULL, CChangeObserver* Observ = NULL);
+		CPINInput(const std::string &Name, std::string *Value, int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars = NULL, CChangeObserver* Observ = NULL);
+};
 
+// For CI: Blind says whether the CAM wants the answer hidden
+class CEnquiryInput : public CPINInput
+{
+	public:
+		CEnquiryInput(const neutrino_locale_t Name, std::string *Value, int Size, bool Blind, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars = NULL, CChangeObserver* Observ = NULL)
+		 : CPINInput(Name, Value, Size, Hint_1, Hint_2, Valid_Chars, Observ) { setMasked(Blind); }
+		CEnquiryInput(const std::string &Name, std::string *Value, int Size, bool Blind, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, const char * const Valid_Chars = NULL, CChangeObserver* Observ = NULL)
+		 : CPINInput(Name, Value, Size, Hint_1, Hint_2, Valid_Chars, Observ) { setMasked(Blind); }
+};
+
+/* The youth protection prompt: names the locked channel or the age of the
+   locked programme above the caller's hint, and leaves once a program lock
+   event names another age. */
 class CPLPINInput : public CPINInput
 {
-	protected:
-		int  fsk;
-		char hint[100];
-
-		virtual int handleOthers(const neutrino_msg_t msg, const neutrino_msg_data_t data);
-
-		virtual const char * getHint1(void);
-
 	public:
-		CPLPINInput(const neutrino_locale_t Name, std::string *Value, int Size, const neutrino_locale_t Hint_2, int FSK )
-		 : CPINInput(Name, Value, Size, NONEXISTANT_LOCALE, Hint_2) { fsk = FSK; };
-
-		int exec( CMenuTarget* parent, const std::string & actionKey );
+		CPLPINInput(const neutrino_locale_t Name, std::string *Value, int Size, const neutrino_locale_t Hint_2, int FSK);
 };
 
-class CPINChangeWidget : public CStringInput
+/* Sets a new PIN: asks for it twice, as stars both times, and stores it
+   only when both entries match - a PIN typed blind once is a PIN nobody
+   knows. Says that the PIN is set, or that the entries differed before
+   asking again. getValue() gives the menu row stars as well; a row that
+   is to show them must not get the PIN as its option text. */
+class CPINChangeWidget : public CMenuTarget
 {
+	private:
+		neutrino_locale_t name;
+		std::string *value;
+		int size;
+		neutrino_locale_t hint;
+		CChangeObserver *observ;
 	public:
-		CPINChangeWidget(const neutrino_locale_t Name, std::string *Value, int Size, const neutrino_locale_t Hint_1, const char * const Valid_Chars= (const char *) "0123456789", CChangeObserver* Observ = NULL)
-		: CStringInput(Name, Value, Size, Hint_1, NONEXISTANT_LOCALE, Valid_Chars, Observ){};
+		CPINChangeWidget(const neutrino_locale_t Name, std::string *Value, int Size, const neutrino_locale_t Hint_1, const char * const Valid_Chars = NULL, CChangeObserver* Observ = NULL);
+		int exec(CMenuTarget* parent, const std::string & actionKey);
+		std::string &getValue(void);
 };
 
 

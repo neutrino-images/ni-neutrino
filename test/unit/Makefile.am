@@ -143,6 +143,7 @@ coreapi_tests_SOURCES = \
 	coreapi/test_channelstreams.cpp \
 	zapit/test_bouquetname.cpp \
 	zapit/test_fbc.cpp \
+	zapit/test_unicable_check.cpp \
 	zapit/test_zapitclient_getpids.cpp \
 	zapit/test_zapitclient_bouquetwrite.cpp \
 	system/test_atomicfile.cpp \

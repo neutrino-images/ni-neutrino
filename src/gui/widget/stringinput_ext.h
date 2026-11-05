@@ -34,199 +34,59 @@
 #define __stringinput_ext__
 
 #include "menue.h"
+#include <gui/components/cc_numeric_input_dialog.h>
+#include <gui/components/cc_structured_input_dialog.h>
 
 #include <system/localize.h>
 
 #include <string>
-#include <vector>
 
-class CFrameBuffer;
-class CExtendedInput_Item;
-class CExtendedInput : public CMenuTarget
+/* The address inputs run on the cc structured dialog: four segments of
+   0-255, or six hex pairs. The old constructors stay; an address of zeros
+   still saves as "". */
+class CIPInput : public CCStructuredInputDialog
 {
-	protected:
-		void Init(void);
-		CFrameBuffer	*frameBuffer;
-		int x;
-		int y;
-		int width;
-		int height;
-		int hintPosY;
-		int hheight; // head font height
-		int iheight;
-		int bheight; // body height
-		int input_h; // input field height
-		int input_w; // input field width
-		int offset;
-
-		std::vector<CExtendedInput_Item*> inputFields;
-		int selectedChar;
-
-		neutrino_locale_t name;
-		std::string nameString;
-		neutrino_locale_t hint_1;
-		neutrino_locale_t hint_2;
-
-		CChangeObserver*   observ;
-		bool* cancel;
-
-		fb_pixel_t		*background;
-		bool			savescreen;
-		void saveScreen();
-		void restoreScreen();
-
-		virtual void paint();
-		virtual void onBeforeExec(){};
-		virtual void onAfterExec(){};
-
-	public:
-
-		CExtendedInput(const neutrino_locale_t Name, std::string *Value, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, CChangeObserver* Observ = NULL, bool* cancel = NULL);
-		CExtendedInput(std::string &Name, std::string *Value, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, CChangeObserver* Observ = NULL, bool* cancel = NULL);
-		~CExtendedInput();
-
-		void hide();
-		int exec( CMenuTarget* parent, const std::string & actionKey );
-		void calculateDialog();
-
-		void addInputField( CExtendedInput_Item* );
-
-		void enableSaveScreen(bool enable);
-};
-
-
-class CExtendedInput_Item
-{
-	protected:
-		CFrameBuffer	*frameBuffer;
-		int input_h; // input field height
-		int input_w; // input field width
-		int ix, iy;
-		char* data;
-
-	public:
-
-		virtual void setDataPointer(char* Data){data=Data;};
-		virtual void init(int &/*x*/, int &/*y*/){};
-		virtual void paint(int /*x*/, int /*y*/, bool /*focusGained*/){};
-		virtual bool isSelectable(){return true;};
-
-		virtual void keyPressed( int /*key*/ ){};
-		virtual ~CExtendedInput_Item() {};
-};
-
-class CExtendedInput_Item_Spacer : public CExtendedInput_Item
-{
-	protected:
-		int mSpacingX;
-		int mSpacingY;
-	public:
-		CExtendedInput_Item_Spacer(){mSpacingY = 0;mSpacingX = 0;};
-		CExtendedInput_Item_Spacer(int spaceX, int spaceY=0){mSpacingX=spaceX;mSpacingY=spaceY;};
-		virtual void init(int &x, int &y){x+=mSpacingX;y+=mSpacingY;};
-		virtual bool isSelectable(){return false;};
-};
-
-class CExtendedInput_Item_newLiner : public CExtendedInput_Item
-{
-	protected:
-		int mSpacingY;
-	public:
-		CExtendedInput_Item_newLiner(){mSpacingY=0;};
-		CExtendedInput_Item_newLiner(int spaceY){mSpacingY=spaceY;};
-		virtual void init(int &x, int &y){x=0;y+=mSpacingY;};
-		virtual bool isSelectable(){return false;};
-};
-
-
-class CExtendedInput_Item_Char : public CExtendedInput_Item
-{
-	protected:
-		std::string allowedChars;
-		bool selectable;
-
-		bool isAllowedChar( char );
-		int getCharID( char );
-
-	public:
-		CExtendedInput_Item_Char(const std::string & Chars="", bool Selectable=true );
-		virtual ~CExtendedInput_Item_Char(){};
-		void setAllowedChars( const std::string & );
-		virtual void init(int &x, int &y);
-		virtual void paint(int x, int y, bool focusGained);
-
-		virtual void keyPressed( int key );
-		virtual bool isSelectable(){return selectable;};
-};
-
-//----------------------------------------------------------------------------------------------------
-
-class CIPInput : public CExtendedInput
-{
-	protected:
-		virtual void onBeforeExec();
-		virtual void onAfterExec();
-
 	public:
 		CIPInput(const neutrino_locale_t Name, std::string *Value, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, CChangeObserver* Observ = NULL);
 };
 
 //----------------------------------------------------------------------------------------------------
 
-class CDateInput : public CExtendedInput
+/* The date and time inputs run on the cc structured dialog. The date keeps
+   the text its menu row shows in getValue() - the timer list writes into
+   it - and reads the time_t again at every open. */
+class CDateInput : public CCStructuredInputDialog
 {
-	private:
-		time_t* time;
-
-	protected:
-		virtual void onBeforeExec();
-		virtual void onAfterExec();
-
 	public:
 		CDateInput(const neutrino_locale_t Name, time_t* Time, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, CChangeObserver* Observ = NULL);
 };
 
 //----------------------------------------------------------------------------------------------------
 
-class CMACInput : public CExtendedInput
+class CMACInput : public CCStructuredInputDialog
 {
-	protected:
-		virtual void onBeforeExec();
-		virtual void onAfterExec();
-
 	public:
 		CMACInput(const neutrino_locale_t Name, std::string *Value, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, CChangeObserver* Observ = NULL);
 };
 
 //----------------------------------------------------------------------------------------------------
 
-class CTimeInput : public CExtendedInput
+///*cancel is true after exec() unless the time was saved
+class CTimeInput : public CCStructuredInputDialog
 {
-	protected:
-		virtual void onBeforeExec();
-		virtual void onAfterExec();
 	public:
 		CTimeInput(const neutrino_locale_t Name, std::string *Value, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, CChangeObserver* Observ = NULL, bool* cancel=NULL);
 };
 
 //----------------------------------------------------------------------------------------------------
 
-class CIntInput : public CExtendedInput
+/* The int inputs run on the cc numeric dialog; the old constructor stays.
+   Size is the most digits, updateValue() reads the int again, and
+   getValue() keeps returning one string for the menu rows that hold it. */
+class CIntInput : public CCNumericInputDialog
 {
-#define MAX_CINTINPUT_SIZE 16
-
- 	int* myValue;
-	unsigned int m_size;
-	protected:
-		virtual void onBeforeExec();
-		virtual void onAfterExec();
-
 	public:
-		/**
-		 *@param Size how many digits can be entered
-		 */
 		CIntInput(const neutrino_locale_t Name, int *Value, const unsigned int Size, const neutrino_locale_t Hint_1 = NONEXISTANT_LOCALE, const neutrino_locale_t Hint_2 = NONEXISTANT_LOCALE, CChangeObserver* Observ = NULL);
-		void updateValue() { onBeforeExec(); }
 };
 
 #endif
