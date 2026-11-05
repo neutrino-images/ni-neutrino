@@ -281,13 +281,6 @@ int CCam::makeMask(int demux, bool add)
 	return mask;
 }
 
-int CCam::getDemuxUsers(int demux)
-{
-	if (demux < 0 || demux >= (int) MAX_DMX_UNITS)
-		return 0;
-	return demuxes[demux];
-}
-
 CCamManager * CCamManager::manager = NULL;
 
 CCamManager::CCamManager()
@@ -313,15 +306,6 @@ CCamManager * CCamManager::getInstance(void)
 		manager = new CCamManager();
 
 	return manager;
-}
-
-bool CCamManager::IsDemuxInUse(t_channel_id channel_id, int demux)
-{
-	OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
-	cammap_iterator_t it = channel_map.find(channel_id);
-	if (it == channel_map.end())
-		return false;
-	return it->second->getDemuxUsers(demux) > 0;
 }
 
 void CCamManager::StopCam(t_channel_id channel_id, CCam *cam)
