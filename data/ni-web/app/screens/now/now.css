@@ -615,6 +615,12 @@
 
 .now-keys-bottom { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 
+/* The function keys are not the handset's, so they keep their distance from it:
+   more room above them than between two of its rows. Two rows of five, which
+   is the width of the digits and fits a telephone. */
+.now-keygroup + .now-keygroup-function { padding-top: calc(var(--gap-5) + var(--gap-4)); }
+.now-keys-function { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
 /* -------------------------------------------------------------- pictures */
 
 .now-shot { background: var(--ground-0); border: 1px solid var(--line);

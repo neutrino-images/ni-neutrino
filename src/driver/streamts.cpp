@@ -314,20 +314,8 @@ void CStreamInstance::run()
 		CZapitChannel *str_ch = CServiceManager::getInstance()->FindChannel(channel_id);
 		SoftCSAStopResult sr = CSoftCSAManager::getInstance()->stopSession(
 			channel_id, SOFTCSA_SESSION_STREAM, -1 /*record_fd*/, softcsa_stream_handle);
-		/* stopSession() counts only non-passive sessions as siblings,
-		 * so for a channel the box descrambles itself it always asks for
-		 * NOT_SELECTED, and OSCam then stops the channel on that demux
-		 * for live TV and recordings of it as well. CCamManager::Stop
-		 * above has already let go of this stream: whoever it still
-		 * counts on the demux needs OSCam to go on. */
-		for (auto &sn : sr.dvbapi_stops) {
-			if (CCamManager::getInstance()->IsDemuxInUse(channel_id, sn.capmt_demux)) {
-				printf("CStreamInstance::run: demux %d of %" PRIx64 " still in use, no NOT_SELECTED for session %u\n",
-				       sn.capmt_demux, channel_id, sn.session_id);
-				continue;
-			}
+		for (auto &sn : sr.dvbapi_stops)
 			sendDvbapiSessionStop(str_ch, sn.session_id, sn.capmt_demux, sn.capmt_ca_mask);
-		}
 		softcsa_stream_handle = 0;
 	}
 #endif

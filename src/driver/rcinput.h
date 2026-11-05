@@ -67,6 +67,26 @@
 std::vector<std::string> injectedKeyNodes();
 void setInjectedKeyNodeForTest(const char *path);
 
+/* Whether a key written to the node open on fd comes back off it. An event
+   node passes on only the keys its driver says it has and drops every other
+   one without a word, and the write that carried it still succeeds: a key
+   such as mute on, which no handset has, written there is a key nothing acts
+   on. A node that is not an event node at all (the fifo a build with no input
+   hardware reads) hands back whatever was written, so it carries every key.
+   The code is the one that goes on the wire.
+
+   The seam is for a case that needs a node lacking a key, which no test
+   machine has to hand; NULL puts the box's own answer back. */
+bool nodeCarriesKey(int fd, unsigned int code);
+void setNodeCarriesKeyForTest(bool (*probe)(int fd, unsigned int code));
+
+/* The reading of the bits an event node answers EVIOCGBIT(EV_KEY) with, kept
+   apart from the ioctl so the reading can be checked without a node. In longs
+   and not in bytes, because that is how the kernel lays them out, and on a
+   big-endian box the two orders differ. A code past the end is a key the node
+   does not have. */
+bool keyInBits(const unsigned long *bits, size_t longs, unsigned int code);
+
 class CRCInput
 {
 	private:
@@ -291,6 +311,11 @@ class CRCInput
 		int messageLoop(bool anyKeyCancels = false, int timeout = -1);
 
 		int translateRevert(int c) { return translate_revert(c); };
+		/* A key handed to the loop without going through a node, as what the
+		   loop would have made of it off one, and reported on the console in
+		   the line a key read off a node is. False for a code that is no key,
+		   and for a queue that would not take it. */
+		bool postInjectedKey(int wire);
 		void setLongPressAny(bool b) { longPressAny = b; };
 		void setKeyRepeatDelay(unsigned int start_ms, unsigned int repeat_ms);
 };

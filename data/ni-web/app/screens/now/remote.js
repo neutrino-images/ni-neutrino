@@ -81,6 +81,14 @@ const GROUPS = [
 		 'KEY_REWIND', 'KEY_FORWARD', 'KEY_PREVIOUSSONG', 'KEY_NEXTSONG'] },
 	{ id: 'bottom', shape: 'now-keys-bottom',
 	  keys: ['KEY_SUBTITLE', 'KEY_TEXT', 'KEY_AUDIO', 'KEY_VIDEO', 'KEY_SAT', 'KEY_WWW', 'KEY_HELP'] },
+	/* THE FUNCTION KEYS ARE NOT ON THE HANDSET, SO THEY STAND UNDER IT AND APART.
+	   A handset has none of them, but the box acts on them, and folded away
+	   among a hundred names they were keys nobody found. Under
+	   the last row and with more room above them than between two rows, so they
+	   read as keys of their own and not as one more row of the handset. */
+	{ id: 'function', shape: 'now-keys-function',
+	  keys: ['KEY_F1', 'KEY_F2', 'KEY_F3', 'KEY_F4', 'KEY_F5',
+		 'KEY_F6', 'KEY_F7', 'KEY_F8', 'KEY_F9', 'KEY_F10'] },
 ];
 
 /* What a key on the keyboard stands for. Only the three the plan of this
@@ -728,7 +736,7 @@ export default function Remote(props) {
 							${drawn}
 						</details>`;
 					}
-					return html`<section key=${group.id} class="now-keygroup">
+					return html`<section key=${group.id} class=${'now-keygroup now-keygroup-' + group.id}>
 						${drawn}
 					</section>`;
 				})}
