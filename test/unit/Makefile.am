@@ -442,6 +442,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/check-pip-source-order.sh \
 	scan/check-stream-keeps-picture.sh \
 	scan/check-record-tuner.sh \
+	scan/check-fesearch-fbc.sh \
 	scan/check-epgscan-resume.sh \
 	scan/check-zapit-stop.sh \
 	scan/check-standby-flag.sh \
@@ -634,6 +635,7 @@ SCAN_CHECKS = \
 	scan-stream-send \
 	scan-live-displaced \
 	scan-timer-epgid \
+	scan-fesearch-fbc \
 	scan-timerlist-event \
 	scan-menu-busy \
 	scan-settings-replaced \
@@ -893,6 +895,9 @@ scan-live-displaced:
 
 scan-timer-epgid:
 	@$(SHELL) $(srcdir)/scan/check-timer-epgid.sh $(top_srcdir)
+
+scan-fesearch-fbc:
+	@$(SHELL) $(srcdir)/scan/check-fesearch-fbc.sh $(top_srcdir)
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)
