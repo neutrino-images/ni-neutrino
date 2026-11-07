@@ -238,6 +238,23 @@ function rig() {
 	same(src.indexOf("'/api/v1/osd/displays/{name}/screenshot'") > 0, true, 'each card asks for its own display by name');
 }
 
+// The keys stand under no heading of their own: they are a remote control to
+// look at, and "the keys of this box" over them told nobody anything. The
+// group of keys still carries that name for a screen reader.
+{
+	const remote = readFileSync(new URL('../../data/ni-web/app/screens/now/remote.js', import.meta.url), 'utf8');
+	const parts = readFileSync(new URL('../../data/ni-web/app/screens/now/parts.js', import.meta.url), 'utf8');
+	const keys = remote.match(/<\$\{Card\}\s+snapshot=\$\{keys\}[^>]*>/);
+	same(keys !== null && !/\stitle=/.test(keys[0]), true, 'the card of keys has no title');
+	const screen = remote.match(/<\$\{Card\} title=\$\{t\(text, 'now\.shot\.card\.screen'\)\}[^>]*>/);
+	same(screen !== null, true, 'the picture beside the keys keeps its heading');
+	same(/aria-label=\$\{t\(text, 'now\.remote\.card\.keys'\)\}/.test(remote), true, 'the keys are still named as a group');
+	const title = parts.slice(parts.indexOf('export function Title'), parts.indexOf('export function Card'));
+	same(/if \(!props\.text\) \{\s*return props\.slot \? html`<div class="now-card-top">\$\{props\.slot\.grip\}<\/div>` : null;/.test(title), true,
+		'no text is no heading, and a card that can be moved keeps its grip');
+	same(/aria-labelledby=\$\{props\.title \? id : null\}/.test(parts), true, 'a card without a heading is not named by a missing one');
+}
+
 // Saving the full size picture: tried once more when the box was busy.
 {
 	/** @type {Array<() => void>} */

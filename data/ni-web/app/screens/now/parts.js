@@ -102,10 +102,15 @@ export function drawableProblem(error) {
  * while it can be moved, and the grip is the one place a drag begins, so a card
  * full of sliders and switches is still a card full of sliders and switches.
  *
- * @param {{ id?: string | undefined, text: string, slot?: Slot | null | undefined }} props
+ * No text, no heading: the grip of a card that can be moved is still drawn.
+ *
+ * @param {{ id?: string | undefined, text?: string | undefined, slot?: Slot | null | undefined }} props
  * @returns {Web.Drawn}
  */
 export function Title(props) {
+	if (!props.text) {
+		return props.slot ? html`<div class="now-card-top">${props.slot.grip}</div>` : null;
+	}
 	const heading = html`<h2 id=${props.id} class="now-card-title">${props.text}</h2>`;
 	if (!props.slot) {
 		return heading;
@@ -126,7 +131,11 @@ export function Title(props) {
  * slot is there only while the cards can be moved, and without it the card is
  * drawn exactly as it was before they could be.
  *
- * @param {{ title: string, snapshot?: Web.Snapshot<unknown> | undefined,
+ * A card without a title has no heading, for one whose contents say plainly
+ * enough what they are, and is then not named by one either: what it holds has
+ * to carry its own name.
+ *
+ * @param {{ title?: string | undefined, snapshot?: Web.Snapshot<unknown> | undefined,
  *           empty?: string | undefined, onRetry?: (() => void) | undefined,
  *           wide?: boolean | undefined, double?: boolean | undefined,
  *           lead?: boolean | undefined, slot?: Slot | null | undefined,
@@ -152,7 +161,7 @@ export function Card(props) {
 
 	return html`<section
 		class=${cls}
-		aria-labelledby=${id}
+		aria-labelledby=${props.title ? id : null}
 		data-card=${slot ? slot.id : null}
 		data-drop=${slot && slot.drop ? slot.drop : null}
 		data-carried=${slot && slot.carried ? 'yes' : null}>

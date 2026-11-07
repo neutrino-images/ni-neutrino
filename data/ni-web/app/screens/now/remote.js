@@ -701,8 +701,10 @@ export default function Remote(props) {
 				<//>`
 				: html`${shot.seen}${sent}`}
 		</div>
+		${/* NO HEADING OVER THE KEYS. They are plainly a remote control, and
+		     "the keys of this box" over them told nobody anything. The group of
+		     keys below carries that name for a screen reader. */''}
 		<${Card}
-			title=${t(text, 'now.remote.card.keys')}
 			snapshot=${keys}
 			empty=${keys.data && named.length === 0 ? t(text, 'now.remote.none') : undefined}>
 			${/* Offered where the picture stands over the keys, which is a
