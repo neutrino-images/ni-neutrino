@@ -539,8 +539,13 @@
    least width is what keeps a short name from becoming a sliver. */
 .now-keygroup:not(.now-keyrest) .now-key { min-width: 0; }
 /* And the picture on a key gives way with it, rather than standing out past
-   the edges of a key narrower than itself. */
-.now-key svg { max-width: calc(100% - 2px); height: auto; }
+   the edges of a key narrower than itself.
+   A BLOCK, NOT A LETTER. Left inline, the picture stands on the baseline of
+   the key's lettering like a capital, with the room for the descenders of a
+   line of text under it, and the key centres that line rather than the
+   picture: every picture sat a pixel and a half above the middle of its key.
+   As a block there is no line to centre, only the picture. */
+.now-key svg { display: block; margin: 0 auto; max-width: calc(100% - 2px); height: auto; }
 @media (hover: hover) {
 	.now-key:hover:not(:disabled) { border-color: var(--text-dim); }
 }
