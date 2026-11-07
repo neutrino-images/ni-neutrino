@@ -174,8 +174,9 @@ function Theme() {
    order. Off is the overview as it always was, so the switch is a yes or no and
    not a choice between two orders: what order it is once it is on is decided on
    the overview itself, where the cards are. Named by the screen it is about,
-   in the word the bar names that screen with, because a switch in a menu that
-   every screen opens has to say which screen it moves. See ui/arrange.js. */
+   as destination and screen in the words the two bars name them with, because
+   a switch in a menu that every screen opens has to say which screen it moves,
+   and Überblick alone does not say where that screen is. See ui/arrange.js. */
 /**
  * @returns {Web.Drawn}
  */
@@ -183,7 +184,7 @@ function Arrange() {
 	const [on, setOn] = useState(chosenArrange());
 
 	return html`<fieldset class="text-size">
-		<legend>${t(text, 'nav.now.overview')}</legend>
+		<legend>${t(text, 'nav.now')}/${t(text, 'nav.now.overview')}</legend>
 		<${Switch}
 			label=${t(text, 'shell.arrange')}
 			checked=${on}
