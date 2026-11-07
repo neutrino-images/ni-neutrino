@@ -87,6 +87,15 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
 	border-radius: var(--radius-pill); background: var(--accent); color: var(--accent-ink);
 	font-size: var(--fs-2xs); font-weight: 500; line-height: 1.125rem; text-align: center;
 	vertical-align: 0.0625rem; font-variant-numeric: tabular-nums; }
+/* ON THE SHOULDER, NOT IN THE LINE. After the name it made the key 22 pixels
+   wider and the row taller by its own height, so the key changed size as
+   timers came and went and every destination after it moved along. Laid over
+   the key's top right corner it takes no room in the row; the rim of the bar's
+   ground stands it off the key's surface where it overlaps it, as in the dock
+   (.dock a > .area-count). */
+.areas a { position: relative; }
+.areas a > .area-count { position: absolute; top: -0.375rem; right: -0.5rem; margin: 0;
+	box-shadow: 0 0 0 2px var(--ground-1); }
 
 /* Who is signed in, and the only place on the page that says anything about
    it. Signed in it is a quiet pill carrying the name; signed out it is one
