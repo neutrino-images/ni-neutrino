@@ -458,6 +458,11 @@ int CMiscMenue::showMiscSettingsMenuStreaming()
 
 	addNumberSetting(ms_sservices, "streaming_port", true, NULL, CRCInput::RC_nokey, false, true);
 
+	// a stream that finds no tuner free may switch the picture to its channel
+	CMenuItem *switch_picture = addSetting(ms_sservices, "streaming_switch_picture", true, NULL);
+	if (switch_picture)
+		switch_picture->setHint("", LOCALE_MENU_HINT_STREAMING_SWITCH_PICTURE);
+
 	addSetting(ms_sservices, "streaming_ecmmode");
 
 	addSetting(ms_sservices, "streaming_decryptmode");

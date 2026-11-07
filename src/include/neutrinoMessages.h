@@ -207,7 +207,11 @@ struct NeutrinoMessages
 		/* from coreapi::update::start(), for the web server's update route: an
 		   image update (.bin) out of the update directory to install as the
 		   menu's local update would, data: the absolute path, NUL terminated */
-		EVT_LOCAL_UPDATE			= CRCInput::RC_WithData + 34
+		EVT_LOCAL_UPDATE			= CRCInput::RC_WithData + 34,
+
+		/* from the stream server: switch the picture for a stream that found
+		   no tuner, data: CStreamManager::SwitchAsk */
+		EVT_STREAM_SWITCH			= CRCInput::RC_WithData + 35
 	};
 };
 

@@ -580,6 +580,15 @@ constexpr Descriptor kMisc[] =
 		.label("streaming.decryptmode")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(streaming_decryptmode)),
+	/* On unless switched off: a stream that finds no tuner free switches the
+	   picture to its channel, where nothing records and no PIN is asked. */
+	// src/neutrino.cpp:934 src/gui/miscsettings_menu.cpp:462
+	boolRow("streaming_switch_picture")
+		.section("misc")
+		.label("streaming.switch_picture")
+		.hint("menu.hint_streaming_switch_picture")
+		.defaultValue(1)
+		.field(COREAPI_NUMBER_FIELD(streaming_switch_picture)),
 
 	/* Where the box cannot change its clock the loader forces nought for the
 	   first and fifty for the second. */
