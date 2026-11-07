@@ -626,6 +626,9 @@
 .now-keygroup + .now-keygroup-function { padding-top: calc(var(--gap-5) + var(--gap-4)); }
 .now-keys-function { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
+/* The switches under them, as two rows of four the way the colour keys are. */
+.now-keys-switch { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
 /* -------------------------------------------------------------- pictures */
 
 .now-shot { background: var(--ground-0); border: 1px solid var(--line);
