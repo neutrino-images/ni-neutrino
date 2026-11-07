@@ -138,7 +138,7 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
 
 /* What this session may do, as a sentence: a word does not explain a refusal. */
 .session-may { margin: 0 0 var(--gap-3); color: var(--text-dim); }
-.sheet-areas.session-menu { grid-template-columns: 1fr; }
+.sheet-areas.session-menu { grid-template-columns: 1fr; margin-bottom: var(--gap-3); }
 
 /* WHAT THE BOX IS PLAYING: the accent and never the red. The red here is the
    dot, and it is there only while something is being written to a disc. It
