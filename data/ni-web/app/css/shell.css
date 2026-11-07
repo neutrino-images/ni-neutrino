@@ -38,7 +38,15 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
    sideways, and a bottom edge appears only where the row wraps. */
 .topbar-main { display: flex; align-items: center; gap: var(--gap-3); flex-wrap: wrap;
 	min-height: var(--bar-height); padding: 0 var(--gap-4); }
-.brand { display: flex; align-items: center; gap: var(--gap-2); flex: none; font-size: var(--fs-m); font-weight: 700; color: var(--accent); }
+/* THE FIRST ROW IS A BAR'S HEIGHT AT EVERY WIDTH, and the mark is what holds
+   it there. The bar's own min-height holds only while the bar is one row: once
+   what is playing folds underneath, a row is as tall as the tallest thing in
+   it, which was the session's 28 pixels, and the mark, the power key and the
+   session stood flush with the top of the window, twelve pixels higher than
+   on a wide one. A row of the bar's height centres them where they stand on
+   the wide one. */
+.brand { display: flex; align-items: center; gap: var(--gap-2); flex: none; min-height: var(--bar-height);
+	font-size: var(--fs-m); font-weight: 700; color: var(--accent); }
 /* Grey until the event stream carries, and its own colour and not the word's:
    the name of the page is the name of the page whatever the box is doing. */
 .brand-mark { width: 22px; height: 22px; flex: none; color: var(--text-dim); }
@@ -79,6 +87,15 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
 	border-radius: var(--radius-pill); background: var(--accent); color: var(--accent-ink);
 	font-size: var(--fs-2xs); font-weight: 500; line-height: 1.125rem; text-align: center;
 	vertical-align: 0.0625rem; font-variant-numeric: tabular-nums; }
+/* ON THE SHOULDER, NOT IN THE LINE. After the name it made the key 22 pixels
+   wider and the row taller by its own height, so the key changed size as
+   timers came and went and every destination after it moved along. Laid over
+   the key's top right corner it takes no room in the row; the rim of the bar's
+   ground stands it off the key's surface where it overlaps it, as in the dock
+   (.dock a > .area-count). */
+.areas a { position: relative; }
+.areas a > .area-count { position: absolute; top: -0.375rem; right: -0.5rem; margin: 0;
+	box-shadow: 0 0 0 2px var(--ground-1); }
 
 /* Who is signed in, and the only place on the page that says anything about
    it. Signed in it is a quiet pill carrying the name; signed out it is one
@@ -121,13 +138,22 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
 
 /* What this session may do, as a sentence: a word does not explain a refusal. */
 .session-may { margin: 0 0 var(--gap-3); color: var(--text-dim); }
-.sheet-areas.session-menu { grid-template-columns: 1fr; }
+.sheet-areas.session-menu { grid-template-columns: 1fr; margin-bottom: var(--gap-3); }
 
 /* WHAT THE BOX IS PLAYING: the accent and never the red. The red here is the
    dot, and it is there only while something is being written to a disc. It
    alone grows, so the slack lands in its left margin and it ends at the right
-   edge beside the session. */
-.onair { display: flex; align-items: center; gap: var(--gap-2); flex: 1 1 200px; min-width: 0; max-width: 320px;
+   edge beside the session.
+
+   IT ALONE GIVES, AND IT ASKS FOR NOTHING. A basis is what a wrapping row
+   measures to decide where it breaks, so a basis of 200 broke the row wherever
+   the rest left less than 200 for it, and what fell onto the second line was
+   not this but the two things after it: the session sat alone under the mark
+   from 1152 to 1188 pixels, and to 1352 with the writing at its largest. With
+   no basis the row breaks only where the mark, the destinations, the key and
+   the session do not fit by themselves, and in between this shortens, which
+   is what the names in it carry an ellipsis for. */
+.onair { display: flex; align-items: center; gap: var(--gap-2); flex: 1 1 0; min-width: 0; max-width: 320px;
 	margin-left: auto; padding: 5px 11px 5px 6px; background: var(--accent-wash);
 	border: 1px solid var(--accent-edge); border-radius: var(--radius-pill); color: inherit; text-decoration: none; }
 @media (hover: hover) {
@@ -524,17 +550,18 @@ table.grid tbody tr.grid-more td { white-space: normal; }
    WHICH FOLDING IS SHOWN. Last in this file on purpose: a media query carries
    no weight of its own, so a rule written after it beats it at every width.
 
-   1152 AND UP: the eight destinations along the top. The row was loaded in a
-   browser and measured, in German, which is the longer of the two languages this
-   page speaks: the mark is 105, the eight destinations with the rule before the
-   last are 620, the session pill is 98, and the padding and the gaps are 68,
-   which is 891 before what is playing has any room. Its flex-basis is 200, so
-   1091 is where it stops sharing the line, and the figure here leaves sixty
-   pixels over that for a wider system font. Guessing is what put the eighth
-   destination off the edge of a bar that scrolled in silence.
-   The power key (app/ui/power.js) came after that measurement: 28 and a 12
-   gap, so 1131 by arithmetic and twenty pixels over, not yet measured. Where
-   a font takes those twenty, the wrapping below is what catches it.
+   1152 AND UP: the destinations along the top. The row was loaded in a browser
+   and measured again at every width from 300 to 1920, in German, which is the
+   longer of the two languages this page speaks, with all ten destinations and
+   signed out, which is the wider of the two session pills: the mark is 83, the
+   destinations with the rule before the last are 716, the power key 28, the
+   session 82, and the padding and the gaps 80, which is 989 before what is
+   playing has any room. In the device's own face it is 1006, with the writing
+   large 1070 and at its largest 1153. What is playing asks for no room of its
+   own (.onair), so up to the largest writing the row is one line from 1152 on;
+   at the largest the session drops under the mark below 1172, which is the
+   guard below doing its work. Guessing is what put the eighth destination off
+   the edge of a bar that scrolled in silence.
 
    BELOW 1152: tablet and phone alike get the bar along the bottom.
 
@@ -567,8 +594,10 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 		bottom: calc(var(--gap-4) + var(--dock-height) + 71px + env(safe-area-inset-bottom, 0px)); }
 	/* Two rows: mark and session above, what is playing across the whole width
 	   below, where a channel name and an event title have room to be read. The
-	   second row is the only reason this bar has a bottom edge at all. */
-	.topbar-main { padding-bottom: var(--gap-2); }
+	   second row is the only reason this bar has a bottom edge at all.
+	   No gap between the rows: the first is a bar's height (.brand), so
+	   there are already twelve pixels under the session, as many as over it. */
+	.topbar-main { padding-bottom: var(--gap-2); row-gap: 0; }
 	.onair { order: 3; flex: 1 0 100%; max-width: none; }
 	/* Nothing on the first row grows, so a margin holds the power key and the
 	   session right, the key first. */
@@ -584,7 +613,11 @@ table.grid tbody tr.grid-more td { white-space: normal; }
 @media (max-width: 599px) {
 	.chip.on-air { display: inline-flex; }
 	:root { --content-pad-y: var(--gap-2); --content-pad-x: var(--gap-3); }
-	.topbar-main { padding: var(--gap-2) var(--gap-3); }
+	/* The keys are a finger high here, and the row of a bar's height under
+	   eight pixels of padding stands them twelve below the top of the window,
+	   as on every other width, with four under them that the gap makes
+	   twelve, as many as over them. */
+	.topbar-main { padding: var(--gap-2) var(--gap-3); row-gap: var(--gap-2); }
 	/* THE MARK AS TALL AS THE TWO KEYS ON THE OTHER END OF THE ROW. Here they
 	   take a finger's height, and a mark of seventeen pixels beside two keys
 	   of forty four read as an afterthought. The mark's own letters fill its

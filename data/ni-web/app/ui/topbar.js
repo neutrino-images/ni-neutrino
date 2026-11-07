@@ -174,8 +174,9 @@ function Theme() {
    order. Off is the overview as it always was, so the switch is a yes or no and
    not a choice between two orders: what order it is once it is on is decided on
    the overview itself, where the cards are. Named by the screen it is about,
-   in the word the bar names that screen with, because a switch in a menu that
-   every screen opens has to say which screen it moves. See ui/arrange.js. */
+   as destination and screen in the words the two bars name them with, because
+   a switch in a menu that every screen opens has to say which screen it moves,
+   and Überblick alone does not say where that screen is. See ui/arrange.js. */
 /**
  * @returns {Web.Drawn}
  */
@@ -183,7 +184,7 @@ function Arrange() {
 	const [on, setOn] = useState(chosenArrange());
 
 	return html`<fieldset class="text-size">
-		<legend>${t(text, 'nav.now.overview')}</legend>
+		<legend>${t(text, 'nav.now')}/${t(text, 'nav.now.overview')}</legend>
 		<${Switch}
 			label=${t(text, 'shell.arrange')}
 			checked=${on}
@@ -244,6 +245,11 @@ export function Status(props) {
 		setLeaving(true);
 	}
 
+	/* WHAT IS DONE ABOUT THE SESSION COMES FIRST, under the sentence that says
+	   what the session is, and what is chosen for this browser comes after it.
+	   Somebody who opens the menu from a button that says Anmelden came to sign
+	   in, and should not have to scroll past three settings on a telephone to
+	   reach the button that does it. */
 	const named = t(text, 'shell.session.user', { user: user });
 	const may = MAY[(session && session.level) || 'public'];
 
@@ -273,9 +279,6 @@ export function Status(props) {
 			${signedIn
 				? (may ? html`<p class="session-may">${t(text, may)}</p>` : null)
 				: html`<p class="session-may">${t(text, 'shell.signin.why')}</p>`}
-			<${TextSize} />
-			<${Theme} />
-			<${Arrange} />
 			<ul class="sheet-areas session-menu">
 				${signedIn
 					? html`<li>
@@ -293,6 +296,9 @@ export function Status(props) {
 						}}>${t(text, 'shell.signin.open')}<//>
 					</li>`}
 			</ul>
+			<${TextSize} />
+			<${Theme} />
+			<${Arrange} />
 		<//>
 		<${Dialog}
 			open=${signedIn && leaving}
