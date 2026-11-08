@@ -125,6 +125,8 @@ that is where its test goes.
     info/           a display page of its own, for pinning to a home screen
     vendor/         fetched, not committed
     swagger/        the API documentation page, fetched the same way
+    user.css        an example theme, commented out, installed where the
+                    box may write so a person can switch it on or change it
 
 A screen owns its stylesheet and names it in `export const css`; the frame
 loads it when the screen is first drawn.

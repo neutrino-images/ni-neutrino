@@ -29,6 +29,14 @@ installdir = $(PRIVATE_HTTPDDIR)/ni-web
 # would be seven kilobytes of flash nobody opens.
 install_DATA = index.html
 
+# The one file of the page a person may change on the box, so it goes where
+# the box may write (src/httpd/server.cpp answers /user.css out of there) and
+# not beside the rest. It ships with everything in it commented out: an
+# example of a theme to switch on, not a look anybody gets without asking.
+# Stored plain and not compressed, because it is there to be edited.
+userstyledir = $(PUBLIC_HTTPDDIR)
+userstyle_DATA = user.css
+
 # Compressed in place and not installed twice, the same way the docs page
 # beside it is: this server can inflate the stored form for a caller that did
 # not ask for it (src/httpd/static.cpp), so a plain copy beside it would only
