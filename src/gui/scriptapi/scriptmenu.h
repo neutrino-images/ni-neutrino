@@ -176,10 +176,6 @@ class ScriptMenu
 		 * item could not be made into a row. */
 		int	addRow(ScriptMenuItem *item, CMenuItem *mi,
 				const ScriptMenuItemParams &pars);
-		/* Where a binding still hands the hint over as it read it, until it
-		 * moves onto the parameters of an item. */
-		int	addRow(ScriptMenuItem *item, CMenuItem *mi,
-				const std::string &hint, const char *hint_icon);
 
 		/* The names a script wrote and the rows it made, kept until the
 		 * menu goes: a row holds the one and the other. */

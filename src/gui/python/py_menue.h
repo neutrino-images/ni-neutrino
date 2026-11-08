@@ -143,17 +143,33 @@ class CPyMenuObserver : public CChangeObserver
 		virtual bool changeNotify(const std::string &optionName, void *data);
 };
 
+/* What the python binding carries through with an item and no other binding
+ * has: the callable a row calls, and the filters of a filebrowser. */
+struct py_item_params : ScriptMenuItemParams
+{
+	PyObject			*action;
+	std::vector<std::string>	filters;
+};
+
 /* What a row of this menu hands on when it is picked, and what it is told of a
  * chooser, is the one thing about a menu that cannot be said without knowing
- * the interpreter. The rest of the menu, and the items in it, is the script
- * API. */
-class CPyMenu : public ScriptMenu
+ * the interpreter. The rest of the menu, and the rows themselves, is the script
+ * API. The menu is its own factory, so that what a row needs is made where the
+ * rows are kept and goes with them. */
+class CPyMenu : public ScriptMenu, public ScriptMenu::factory
 {
 	public:
 		std::list<CMenuTarget *> targets;
 		std::list<CPyMenuObserver *> observers;
 		CPyMenu(const params_t &pars);
 		~CPyMenu();
+
+		CMenuTarget	*forwarder(const ScriptMenuItemParams &pars);
+		CMenuTarget	*stringinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char *icon);
+		CMenuTarget	*keyboardinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char *icon);
+		CMenuTarget	*filebrowser(const ScriptMenuItemParams &pars, ScriptMenuItem *item);
+		void		setMaskedRow(CMenuTarget *target, CMenuForwarder *row);
+		CChangeObserver	*observer(const ScriptMenuItemParams &pars);
 };
 
 class CPythonInstMenu

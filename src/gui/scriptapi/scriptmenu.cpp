@@ -160,15 +160,6 @@ int ScriptMenu::addRow(ScriptMenuItem *item, CMenuItem *mi, const ScriptMenuItem
 	return id;
 }
 
-int ScriptMenu::addRow(ScriptMenuItem *item, CMenuItem *mi, const std::string &hint, const char *hint_icon)
-{
-	ScriptMenuItemParams pars;
-	pars.hint = hint;
-	pars.hint_icon = (hint_icon != NULL) ? hint_icon : "";
-
-	return addRow(item, mi, pars);
-}
-
 /* The row an item becomes, out of what the binding read and what its factory
  * makes for it. What every binding writes the same way is written once here;
  * what a row hands on when it is picked is the binding's, and so is the

@@ -81,6 +81,66 @@ CPyMenu::~CPyMenu()
 	}
 }
 
+/* What a row of this menu hands on when it is picked, and what a chooser tells
+ * the script. The menu is its own factory, so a row is made where the rows are
+ * kept, and is let go of with them. The callable a row calls is the script's,
+ * and is told the value the dialog answered where it has one of its own. */
+CMenuTarget *CPyMenu::forwarder(const ScriptMenuItemParams &pars)
+{
+	const py_item_params &pp = (const py_item_params &)pars;
+	CPyMenuTarget *forwarder = new CPyMenuTarget(pp.action, pars.id);
+	targets.push_back(forwarder);
+	return forwarder;
+}
+
+CMenuTarget *CPyMenu::stringinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char * /*icon*/)
+{
+	const py_item_params &pp = (const py_item_params &)pars;
+	/* "sms" asked for the multi-tap letters on the digit keys; the input
+	 * dialog brings an on-screen keyboard for letters instead. */
+	CPyMenuStringinput *stringinput = new CPyMenuStringinput(pp.action, pars.id, item->name,
+			&item->str_val, pars.size, pars.valid_chars, pars.icon, pars.sms);
+	targets.push_back(stringinput);
+	return stringinput;
+}
+
+CMenuTarget *CPyMenu::keyboardinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char * /*icon*/)
+{
+	const py_item_params &pp = (const py_item_params &)pars;
+	CPyMenuKeyboardinput *keyboardinput = new CPyMenuKeyboardinput(pp.action, pars.id, item->name,
+			&item->str_val, pars.size, pars.icon, pars.help, pars.help2, pars.masked);
+	targets.push_back(keyboardinput);
+	return keyboardinput;
+}
+
+CMenuTarget *CPyMenu::filebrowser(const ScriptMenuItemParams &pars, ScriptMenuItem *item)
+{
+	const py_item_params &pp = (const py_item_params &)pars;
+	CPyMenuFilebrowser *filebrowser = new CPyMenuFilebrowser(pp.action, pars.id, &item->str_val, pars.dir_mode);
+	for (unsigned int i = 0; i < pp.filters.size(); i++)
+		filebrowser->addFilter(pp.filters[i]);
+	targets.push_back(filebrowser);
+	return filebrowser;
+}
+
+/* A masked entry is told which row shows it, so that it can say after an input
+ * whether a value is set. Only this binding's keyboardinput has that. */
+void CPyMenu::setMaskedRow(CMenuTarget *target, CMenuForwarder *row)
+{
+	((CPyMenuKeyboardinput *)target)->setRow(row);
+}
+
+/* A chooser, a numeric and a string tell the script what they were changed to,
+ * each through its own observer, since what the script is told of is the item's
+ * and not the menu's. */
+CChangeObserver *CPyMenu::observer(const ScriptMenuItemParams &pars)
+{
+	const py_item_params &pp = (const py_item_params &)pars;
+	CPyMenuObserver *observ = new CPyMenuObserver(pp.action, pars.id);
+	observers.push_back(observ);
+	return observ;
+}
+
 /* menu.new(name="", title="", icon="", mwidth=..., btnRed=..., btnGreen=...,
  *	btnYellow=..., btnBlue=...) */
 PyObject *CPythonInstMenu::MenuNew(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -410,46 +470,52 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 	int row_id = 0;
 	if (!D->addIfPlain(type, b->name))
 	{
-		std::string right_icon_str = "", action_str = "", value = "", hint = "", hint_icon_str = "", icon_str = "", id = "";
-		pyLookupString(kwds, "right_icon", right_icon_str);
-		pyLookupString(kwds, "value", value);
-		pyLookupString(kwds, "hint", hint);
-		pyLookupString(kwds, "hint_icon", hint_icon_str);
-		pyLookupString(kwds, "icon", icon_str);
-		pyLookupString(kwds, "id", id);
+		/* What a script names of its own, read out of its call. The list a
+		 * chooser is built from, and the names a filebrowser takes, are read
+		 * into the parameters; the row itself is built where the menu is. */
+		py_item_params pars;
+		pyLookupString(kwds, "id", pars.id);
+		pyLookupString(kwds, "value", pars.value);
+		pyLookupString(kwds, "icon", pars.icon);
+		pyLookupString(kwds, "right_icon", pars.right_icon);
+		pyLookupString(kwds, "hint", pars.hint);
+		pyLookupString(kwds, "hint_icon", pars.hint_icon);
+		pyLookupString(kwds, "range", pars.range);
+		pyLookupString(kwds, "help", pars.help);
+		pyLookupString(kwds, "help2", pars.help2);
 
-		PyObject *action = NULL;
-		pyLookupObject(kwds, "action", &action);
+		/* the characters a stringinput takes, unless a script narrows them */
+		std::string valid_chars = "abcdefghijklmnopqrstuvwxyz0123456789!\"$%&/()=?-.@,_: ";
+		pyLookupString(kwds, "valid_chars", valid_chars);
+		pars.valid_chars = valid_chars;
 
-		char *right_icon = D->keepName(right_icon_str);
-		char *hint_icon = D->keepName(hint_icon_str);
-		char *icon = D->keepName(icon_str);
+		pyLookupObject(kwds, "action", &pars.action);
+
+		long size = (type == "stringinput") ? 30 : 0;
+		pyLookupInt(kwds, "size", size);
+		pars.size = (int)size;
 
 		unsigned long directkey = (unsigned long)CRCInput::RC_nokey;
 		pyLookupUnsigned(kwds, "directkey", directkey);
+		pars.directkey = directkey;
 
 		long pulldown = 0;
 		pyLookupInt(kwds, "pulldown", pulldown);
+		pars.pulldown = (pulldown != 0);
 
-		bool enabled = true;
-		pyLookupBoolCompat(kwds, "enabled", enabled);
+		pars.enabled = true;
+		pyLookupBoolCompat(kwds, "enabled", pars.enabled);
 
-		std::string range = "";
-		pyLookupString(kwds, "range", range);
-		int range_from = 0, range_to = 99;
-		sscanf(range.c_str(), "%d,%d", &range_from, &range_to);
+		pars.sms = false;
+		pyLookupBoolCompat(kwds, "sms", pars.sms);
 
-		if (type == "forwarder")
-		{
-			b->str_val = value;
-			CPyMenuTarget *forwarder = new CPyMenuTarget(action, id);
-			forwarder->showValue(&b->str_val);
-			mi = new CMenuForwarder(b->name, enabled, b->str_val, forwarder, NULL, directkey, icon, right_icon);
-			if (!hint.empty() || hint_icon)
-				mi->setHint(hint_icon, hint);
-			D->targets.push_back(forwarder);
-		}
-		else if (type == "chooser")
+		pars.masked = false;
+		pyLookupBoolCompat(kwds, "masked", pars.masked);
+
+		pars.dir_mode = false;
+		pyLookupBoolCompat(kwds, "dir_mode", pars.dir_mode);
+
+		if (type == "chooser")
 		{
 			/* the options the script wrote: a dict of value to text */
 			PyObject *options = NULL;
@@ -462,8 +528,6 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 				Py_RETURN_NONE;
 			}
 
-			/* The choices a script wrote, read into the item; the list the
-			 * widget is built from is the script API's to make. */
 			PyObject *key = NULL, *val = NULL;
 			Py_ssize_t pos = 0;
 			while (PyDict_Next(options, &pos, &key, &val))
@@ -480,102 +544,34 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 
 				b->options.push_back(std::pair<int, std::string>((int)k, v));
 			}
-
-			int keys_count = 0;
-			CMenuOptionChooser::keyval_ext *kext = D->chooserKeys(b, value, keys_count);
-
-			CPyMenuObserver *observ = new CPyMenuObserver(action, id);
-			D->observers.push_back(observ);
-			mi = new CMenuOptionChooser(b->name.c_str(), &b->int_val, kext, keys_count, enabled, observ, directkey, icon, pulldown);
-		}
-		else if (type == "numeric")
-		{
-			b->int_val = range_from;
-			sscanf(value.c_str(), "%d", &b->int_val);
-			CPyMenuObserver *observ = new CPyMenuObserver(action, id);
-			D->observers.push_back(observ);
-			mi = new CMenuOptionNumberChooser(b->name, &b->int_val, enabled, range_from, range_to, observ, 0, 0, NONEXISTANT_LOCALE, pulldown);
-		}
-		else if (type == "string")
-		{
-			b->str_val = value;
-			CPyMenuObserver *observ = new CPyMenuObserver(action, id);
-			D->observers.push_back(observ);
-			mi = new CMenuOptionStringChooser(b->name.c_str(), &b->str_val, enabled, observ, directkey, icon, pulldown);
-		}
-		else if (type == "stringinput")
-		{
-			b->str_val = value;
-			std::string valid_chars = "abcdefghijklmnopqrstuvwxyz0123456789!\"$%&/()=?-.@,_: ";
-			pyLookupString(kwds, "valid_chars", valid_chars);
-			bool sms = false;
-			pyLookupBoolCompat(kwds, "sms", sms);
-			long size = 30;
-			pyLookupInt(kwds, "size", size);
-
-			CPyMenuStringinput *stringinput = new CPyMenuStringinput(action, id, b->name, &b->str_val,
-					(int)size, valid_chars, icon_str, sms);
-			mi = new CMenuForwarder(b->name, enabled, b->str_val, stringinput, NULL, directkey, icon, right_icon);
-			D->targets.push_back(stringinput);
-		}
-		else if (type == "keyboardinput")
-		{
-			b->str_val = value;
-			long size = 0;
-			pyLookupInt(kwds, "size", size);
-			std::string help = "", help2 = "";
-			pyLookupString(kwds, "help", help);
-			pyLookupString(kwds, "help2", help2);
-
-			/* masked=True, or masked=1 */
-			bool masked = false;
-			pyLookupBoolCompat(kwds, "masked", masked);
-			b->masked = masked;
-
-			CPyMenuKeyboardinput *keyboardinput = new CPyMenuKeyboardinput(action, id, b->name, &b->str_val,
-					(int)size, icon_str, help, help2, masked);
-			CMenuForwarder *row = new CMenuForwarder(b->name, enabled, b->str_val, keyboardinput, NULL, directkey, icon, right_icon);
-			if (b->masked)
-			{
-				row->setOption(ScriptMenu::maskedText(b->str_val));
-				keyboardinput->setRow(row);
-			}
-			mi = row;
-			D->targets.push_back(keyboardinput);
 		}
 		else if (type == "filebrowser")
 		{
-			b->str_val = value;
-			bool dirMode = false;
-			pyLookupBoolCompat(kwds, "dir_mode", dirMode);
-
-			CPyMenuFilebrowser *filebrowser = new CPyMenuFilebrowser(action, id, &b->str_val, dirMode);
+			/* and the names it takes, where it named any */
 			PyObject *filters = NULL;
 			if (pyLookupList(kwds, "filter", &filters))
 			{
 				Py_ssize_t count = PySequence_Size(filters);
 				for (Py_ssize_t k = 0; k < count; k++)
 				{
-					PyObject *item = PySequence_GetItem(filters, k);
-					if (item == NULL)
+					PyObject *filter = PySequence_GetItem(filters, k);
+					if (filter == NULL)
 					{
 						PyErr_Clear();
 						continue;
 					}
-					const char *val = PyUnicode_Check(item) ? PyUnicode_AsUTF8(item) : NULL;
+					const char *val = PyUnicode_Check(filter) ? PyUnicode_AsUTF8(filter) : NULL;
 					if (val != NULL)
-						filebrowser->addFilter(val);
+						pars.filters.push_back(val);
 					else
 						PyErr_Clear();
-					Py_DECREF(item);
+					Py_DECREF(filter);
 				}
 			}
-
-			mi = new CMenuForwarder(b->name, enabled, b->str_val, filebrowser, NULL, directkey, icon, right_icon);
-			D->targets.push_back(filebrowser);
 		}
 
-		row_id = D->addRow(b, mi, hint, hint_icon);
+		mi = D->makeRow(b, pars, D);
+		row_id = D->addRow(b, mi, pars);
 	}
 
 	if (row_id > 0)
