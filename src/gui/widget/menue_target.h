@@ -36,6 +36,8 @@ class CMenuTarget
 		virtual void hide(){}
 		virtual int exec(CMenuTarget* parent, const std::string & actionKey) = 0;
 		virtual std::string& getValue(void) { return *valueString; }
+		/* what the row shows while it has no text of its own */
+		void setValue(std::string *value) { valueString = value; }
 		virtual fb_pixel_t getColor(void) { return 0; }
 };
 

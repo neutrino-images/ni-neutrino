@@ -52,6 +52,35 @@ struct ScriptMenuItem
 	std::vector<std::pair<int, std::string> >	options;
 };
 
+/* The parameters of an item a script added, as its binding read them out of
+ * its own table or dict: what the row is built from, and nothing of the
+ * interpreter.
+ *
+ * A binding that has something of its own to carry through - the lua binding
+ * the name of the function a row calls, the python binding the callable
+ * itself, and either of them the filters of a filebrowser - derives its own
+ * from this and casts it back in the factory it implements. */
+struct ScriptMenuItemParams
+{
+	std::string		id;		/* what the script knows it by */
+	std::string		value;
+	std::string		icon;
+	std::string		right_icon;
+	std::string		hint;
+	std::string		hint_icon;
+	std::string		range;		/* "from,to" of a numeric */
+	std::string		valid_chars;	/* of a stringinput */
+	std::string		help;
+	std::string		help2;
+	int			size;
+	neutrino_msg_t		directkey;
+	bool			pulldown;
+	bool			enabled;
+	bool			sms;
+	bool			masked;
+	bool			dir_mode;
+};
+
 /* The menu a script fills: the widget it draws in, the items it has added and
  * what has to be let go of when it goes.
  *
@@ -84,6 +113,40 @@ class ScriptMenu
 		/* The item an id is given: kept until the menu goes. */
 		void		keep(int id, ScriptMenuItem *item);
 
+		/* What a binding makes for a row: the object the row hands on when
+		 * it is picked, and the observer a chooser tells. That is the only
+		 * thing about a menu that cannot be said without knowing the
+		 * interpreter, so a binding implements this and the rows themselves
+		 * are built here. A binding may implement it on the menu itself. */
+		class factory
+		{
+			public:
+				virtual ~factory(void) {}
+
+				/* the row that hands on nothing of its own */
+				virtual CMenuTarget	*forwarder(const ScriptMenuItemParams &pars) = 0;
+				/* the rows that open a dialog and hand on what it
+				 * answered; each keeps the name it is given */
+				virtual CMenuTarget	*stringinput(const ScriptMenuItemParams &pars,
+							ScriptMenuItem *item, const char *icon) = 0;
+				virtual CMenuTarget	*keyboardinput(const ScriptMenuItemParams &pars,
+							ScriptMenuItem *item, const char *icon) = 0;
+				virtual CMenuTarget	*filebrowser(const ScriptMenuItemParams &pars,
+							ScriptMenuItem *item) = 0;
+				/* a masked entry is told, once it is made, which row
+				 * shows it */
+				virtual void		setMaskedRow(CMenuTarget *target, CMenuForwarder *row) = 0;
+				/* and what a chooser changes is told to the script */
+				virtual CChangeObserver	*observer(const ScriptMenuItemParams &pars) = 0;
+		};
+
+		/* The item a script added, made into the row a menu shows: built
+		 * from what the binding read out of its own table and from what its
+		 * factory makes for it. Answers NULL for an item that cannot become
+		 * a row, and says so in the menu where the row would have been. */
+		CMenuItem	*makeRow(ScriptMenuItem *item, const ScriptMenuItemParams &pars,
+					factory *maker);
+
 		/* What the row of a masked entry shows: whether a value is set,
 		 * never the value itself. */
 		static std::string	maskedText(const std::string &value);
@@ -111,6 +174,10 @@ class ScriptMenu
 		/* The row an item became: what it hints at, the menu it goes into
 		 * and the id a script knows it by. Answers that id, or 0 where the
 		 * item could not be made into a row. */
+		int	addRow(ScriptMenuItem *item, CMenuItem *mi,
+				const ScriptMenuItemParams &pars);
+		/* Where a binding still hands the hint over as it read it, until it
+		 * moves onto the parameters of an item. */
 		int	addRow(ScriptMenuItem *item, CMenuItem *mi,
 				const std::string &hint, const char *hint_icon);
 

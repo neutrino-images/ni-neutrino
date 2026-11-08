@@ -143,14 +143,14 @@ CMenuOptionChooser::keyval_ext *ScriptMenu::chooserKeys(ScriptMenuItem *item,
 	return keys;
 }
 
-int ScriptMenu::addRow(ScriptMenuItem *item, CMenuItem *mi,
-		const std::string &hint, const char *hint_icon)
+int ScriptMenu::addRow(ScriptMenuItem *item, CMenuItem *mi, const ScriptMenuItemParams &pars)
 {
 	if (mi == NULL)
 		return 0;
 
-	if (!hint.empty() || hint_icon)
-		mi->setHint(hint_icon, hint);
+	const char *hint_icon = keepName(pars.hint_icon);
+	if (!pars.hint.empty() || hint_icon)
+		mi->setHint(hint_icon, pars.hint);
 
 	m->addItem(mi);
 
@@ -158,4 +158,100 @@ int ScriptMenu::addRow(ScriptMenuItem *item, CMenuItem *mi,
 	item->mi = mi;
 	keep(id, item);
 	return id;
+}
+
+int ScriptMenu::addRow(ScriptMenuItem *item, CMenuItem *mi, const std::string &hint, const char *hint_icon)
+{
+	ScriptMenuItemParams pars;
+	pars.hint = hint;
+	pars.hint_icon = (hint_icon != NULL) ? hint_icon : "";
+
+	return addRow(item, mi, pars);
+}
+
+/* The row an item becomes, out of what the binding read and what its factory
+ * makes for it. What every binding writes the same way is written once here;
+ * what a row hands on when it is picked is the binding's, and so is the
+ * observer a chooser tells. */
+CMenuItem *ScriptMenu::makeRow(ScriptMenuItem *item, const ScriptMenuItemParams &pars, factory *maker)
+{
+	const std::string &type = item->type;
+
+	/* A row keeps the pointers it is given for as long as the menu lives, so
+	 * the names a script wrote are held here, before the row is built. */
+	char *icon = keepName(pars.icon);
+	char *right_icon = keepName(pars.right_icon);
+
+	CMenuItem *mi = NULL;
+	if (type == "forwarder")
+	{
+		item->str_val = pars.value;
+		CMenuTarget *target = maker->forwarder(pars);
+		target->setValue(&item->str_val);
+		mi = new CMenuForwarder(item->name, pars.enabled, item->str_val, target,
+				NULL/*ActionKey*/, pars.directkey, icon, right_icon);
+	}
+	else if (type == "chooser")
+	{
+		/* A chooser without options is a script that asked for something
+		 * the menu cannot show, and is said so where its row would have
+		 * been. */
+		if (item->options.empty())
+		{
+			optionError();
+			return NULL;
+		}
+
+		int keys_count = 0;
+		CMenuOptionChooser::keyval_ext *keys = chooserKeys(item, pars.value, keys_count);
+		mi = new CMenuOptionChooser(item->name.c_str(), &item->int_val, keys, keys_count,
+				pars.enabled, maker->observer(pars), pars.directkey, icon, pars.pulldown);
+	}
+	else if (type == "numeric")
+	{
+		int range_from = 0, range_to = 99;
+		sscanf(pars.range.c_str(), "%d,%d", &range_from, &range_to);
+
+		item->int_val = range_from;
+		sscanf(pars.value.c_str(), "%d", &item->int_val);
+		mi = new CMenuOptionNumberChooser(item->name, &item->int_val, pars.enabled,
+				range_from, range_to, maker->observer(pars), 0, 0, NONEXISTANT_LOCALE, pars.pulldown);
+	}
+	else if (type == "string")
+	{
+		item->str_val = pars.value;
+		mi = new CMenuOptionStringChooser(item->name.c_str(), &item->str_val, pars.enabled,
+				maker->observer(pars), pars.directkey, icon, pars.pulldown);
+	}
+	else if (type == "stringinput")
+	{
+		item->str_val = pars.value;
+		mi = new CMenuForwarder(item->name, pars.enabled, item->str_val,
+				maker->stringinput(pars, item, icon), NULL/*ActionKey*/,
+				pars.directkey, icon, right_icon);
+	}
+	else if (type == "keyboardinput")
+	{
+		item->str_val = pars.value;
+		item->masked = pars.masked;
+
+		CMenuTarget *target = maker->keyboardinput(pars, item, icon);
+		CMenuForwarder *row = new CMenuForwarder(item->name, pars.enabled, item->str_val, target,
+				NULL/*ActionKey*/, pars.directkey, icon, right_icon);
+		if (item->masked)
+		{
+			row->setOption(maskedText(item->str_val));
+			maker->setMaskedRow(target, row);
+		}
+		mi = row;
+	}
+	else if (type == "filebrowser")
+	{
+		item->str_val = pars.value;
+		mi = new CMenuForwarder(item->name, pars.enabled, item->str_val,
+				maker->filebrowser(pars, item), NULL/*ActionKey*/,
+				pars.directkey, icon, right_icon);
+	}
+
+	return mi;
 }

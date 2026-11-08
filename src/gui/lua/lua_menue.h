@@ -31,16 +31,35 @@ class CLuaMenuChangeObserver : public CChangeObserver
 		bool changeNotify(lua_State *, const std::string &, const std::string &, void *);
 };
 
+/* What the lua binding carries through with an item and no other binding has:
+ * the state it calls the script with, the name of the function a row calls, and
+ * the filters of a filebrowser. */
+struct lua_item_params : ScriptMenuItemParams
+{
+	lua_State			*L;
+	std::string			action;
+	std::vector<std::string>	filters;
+};
+
 /* What a row of this menu hands on when it is picked, which is the one thing
- * about a menu that cannot be said without knowing the interpreter. The rest
- * of the menu, and the items in it, is the script API. */
-class CLuaMenu : public ScriptMenu
+ * about a menu that cannot be said without knowing the interpreter. The rest of
+ * the menu, and the rows themselves, is the script API. The menu is its own
+ * factory, so that what a row needs is made where the rows are kept and goes
+ * with them. */
+class CLuaMenu : public ScriptMenu, public ScriptMenu::factory
 {
 	public:
 		CLuaMenuChangeObserver *observ;
 		std::list<CMenuTarget *> targets;
 		CLuaMenu(const params_t &pars);
 		~CLuaMenu();
+
+		CMenuTarget	*forwarder(const ScriptMenuItemParams &pars);
+		CMenuTarget	*stringinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char *icon);
+		CMenuTarget	*keyboardinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char *icon);
+		CMenuTarget	*filebrowser(const ScriptMenuItemParams &pars, ScriptMenuItem *item);
+		void		setMaskedRow(CMenuTarget *target, CMenuForwarder *row);
+		CChangeObserver	*observer(const ScriptMenuItemParams &pars);
 };
 
 class CLuaMenuForwarder : public CMenuTarget
@@ -55,7 +74,7 @@ class CLuaMenuForwarder : public CMenuTarget
 		~CLuaMenuForwarder();
 		int exec(CMenuTarget* parent=NULL, const std::string & actionKey="");
 		// what the menu row shows while it has no text of its own
-		void showValue(std::string *_value) { valueString = _value; }
+		void showValue(std::string *_value) { setValue(_value); }
 };
 
 class CLuaMenuFilebrowser : public CLuaMenuForwarder
