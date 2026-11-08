@@ -44,9 +44,11 @@ p.scr { margin: 0 0 var(--gap-4); color: var(--text-dim); font-size: var(--fs-s)
    it, which was the session's 28 pixels, and the mark, the power key and the
    session stood flush with the top of the window, twelve pixels higher than
    on a wide one. A row of the bar's height centres them where they stand on
-   the wide one. */
+   the wide one.
+   A link to the main page, drawn as the name and not as a link: no
+   underline, and the accent it had before it was one. */
 .brand { display: flex; align-items: center; gap: var(--gap-2); flex: none; min-height: var(--bar-height);
-	font-size: var(--fs-m); font-weight: 700; color: var(--accent); }
+	font-size: var(--fs-m); font-weight: 700; color: var(--accent); text-decoration: none; }
 /* Grey until the event stream carries, and its own colour and not the word's:
    the name of the page is the name of the page whatever the box is doing. */
 .brand-mark { width: 22px; height: 22px; flex: none; color: var(--text-dim); }
