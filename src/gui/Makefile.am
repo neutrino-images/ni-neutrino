@@ -56,6 +56,7 @@ AM_CPPFLAGS += \
 noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a
 
 libneutrino_gui_a_SOURCES = \
+	scriptapi/scriptwindow.cpp \
 	adzap.cpp \
 	audio_select.cpp \
 	audio_setup.cpp \
