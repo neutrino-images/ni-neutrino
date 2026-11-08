@@ -97,6 +97,11 @@ endif
 # Archives resolve left to right and the dependency is circular: the HTTP
 # layer needs coreapi, coreapi needs the channel, schedule and timer
 # archives. They are therefore named again behind it.
+#
+# The script API stands behind the bindings, and not in the gui archive that
+# they are read from: a binding asks for the window it makes after that archive
+# has been passed, and an archive answers only what something on the line has
+# asked for already.
 neutrino_LDADD = \
 	daemonc/libneutrino_daemonc.a \
 	gui/bedit/libneutrino_gui_bedit.a \
@@ -125,6 +130,7 @@ neutrino_LDADD = \
 	gui/components/libneutrino_gui_components.a \
 	$(LUALIBS) \
 	$(PYTHONLIBS) \
+	gui/libneutrino_gui_scriptapi.a \
 	eitd/libsectionsd.a \
 	gui/volumebar.o \
 	driver/libneutrino_driver.a \

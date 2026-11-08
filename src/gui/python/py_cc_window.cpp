@@ -47,10 +47,10 @@ CPythonInstCCWindow *CPythonInstCCWindow::getInstance()
 	return PythonInstCCWindow;
 }
 
-static CComponentsWindow *ccWindowOf(PyObject *self)
+static ScriptWindow *scriptWindowOf(PyObject *self)
 {
 	PyCCWindowObject *o = (PyCCWindowObject *)self;
-	return (o->d != NULL) ? o->d->w : NULL;
+	return (o->d != NULL) ? o->d->sw : NULL;
 }
 
 /* cwindow.new(name="", x=100, y=100, dx=450, dy=250, icon="info",
@@ -67,30 +67,45 @@ PyObject *CPythonInstCCWindow::CCWindowNew(PyTypeObject *type, PyObject *args, P
 		return NULL;
 	}
 
-	std::string name, icon = std::string(NEUTRINO_ICON_INFO);
-	long x = 100, y = 100, dx = 450, dy = 250;
+	/* The parameters the Lua binding reads, in the same names and with the
+	 * same defaults. What is done with them is done by the script API, so
+	 * that both bindings ask for one window and cannot come to differ. */
+	ScriptWindow::params_t pars;
+	pars.icon = std::string(NEUTRINO_ICON_INFO);
+	pars.x = 100;
+	pars.y = 100;
+	pars.dx = 450;
+	pars.dy = 250;
+	pars.shadow = CC_SHADOW_OFF;
+	pars.color_frame = (unsigned long)COL_FRAME_PLUS_0;
+	pars.color_body = (unsigned long)COL_MENUCONTENT_PLUS_0;
+	pars.color_shadow = (unsigned long)COL_SHADOW_PLUS_0;
+	pars.show_header = true;
+	pars.show_footer = true;
+
+	/* The four dimensions are handed over as a long, while the script API
+	 * keeps them as the int the components want. */
+	long x = (long)pars.x, y = (long)pars.y, dx = (long)pars.dx, dy = (long)pars.dy;
 	pyLookupInt(kwds, "x", x);
 	pyLookupInt(kwds, "y", y);
 	pyLookupInt(kwds, "dx", dx);
 	pyLookupInt(kwds, "dy", dy);
-	pyLookupString(kwds, "name", name) || pyLookupString(kwds, "title", name) || pyLookupString(kwds, "caption", name);
-	pyLookupString(kwds, "icon", icon);
+	pars.x = (int)x;
+	pars.y = (int)y;
+	pars.dx = (int)dx;
+	pars.dy = (int)dy;
+	pyLookupString(kwds, "name", pars.name) || pyLookupString(kwds, "title", pars.name) || pyLookupString(kwds, "caption", pars.name);
+	pyLookupString(kwds, "icon", pars.icon);
 
-	long has_shadow = CC_SHADOW_OFF;
 	bool shadow = false;
 	if (pyLookupBoolCompat(kwds, "has_shadow", shadow))
-		has_shadow = shadow ? CC_SHADOW_ON : CC_SHADOW_OFF;
+		pars.shadow = shadow ? CC_SHADOW_ON : CC_SHADOW_OFF;
 
-	unsigned long color_frame = (unsigned long)COL_FRAME_PLUS_0;
-	unsigned long color_body = (unsigned long)COL_MENUCONTENT_PLUS_0;
-	unsigned long color_shadow = (unsigned long)COL_SHADOW_PLUS_0;
-	pyLookupUnsigned(kwds, "color_frame", color_frame);
-	pyLookupUnsigned(kwds, "color_body", color_body);
-	pyLookupUnsigned(kwds, "color_shadow", color_shadow);
-
-	bool show_header = true, show_footer = true;
-	pyLookupBoolCompat(kwds, "show_header", show_header);
-	pyLookupBoolCompat(kwds, "show_footer", show_footer);
+	pyLookupUnsigned(kwds, "color_frame", pars.color_frame);
+	pyLookupUnsigned(kwds, "color_body", pars.color_body);
+	pyLookupUnsigned(kwds, "color_shadow", pars.color_shadow);
+	pyLookupBoolCompat(kwds, "show_header", pars.show_header);
+	pyLookupBoolCompat(kwds, "show_footer", pars.show_footer);
 
 	/* The labels of the footer's buttons, each with the icon of the key it
 	 * belongs to, in the order the Lua binding writes them. */
@@ -116,16 +131,15 @@ PyObject *CPythonInstCCWindow::CCWindowNew(PyTypeObject *type, PyObject *args, P
 		{ NULL, NULL }
 	};
 
-	std::vector<button_label_cc> buttons;
 	for (int i = 0; btn_keys[i].key != NULL; i++)
 	{
 		std::string label = "";
 		if (!pyLookupString(kwds, btn_keys[i].key, label) || label.empty())
 			continue;
-		button_label_cc btn;
+		ScriptWindow::button_t btn;
 		btn.button = btn_keys[i].icon;
 		btn.text = label;
-		buttons.push_back(btn);
+		pars.buttons.push_back(btn);
 	}
 
 	PyCCWindowObject *self = (PyCCWindowObject *)type->tp_alloc(type, 0);
@@ -136,30 +150,11 @@ PyObject *CPythonInstCCWindow::CCWindowNew(PyTypeObject *type, PyObject *args, P
 	}
 
 	self->d = new CPyCCWindow();
-	self->d->w = new CComponentsWindow((int)x, (int)y, (int)dx, (int)dy, name.c_str(), icon.c_str(), NULL,
-			(int)has_shadow,
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_frame),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_body),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_shadow));
-	/* Ignore percent conversion of width and height
-	 * to remain compatible with the Lua API */
-	self->d->w->setWidth((int)dx);
-	self->d->w->setHeight((int)dy);
-
-	if (!show_header)
-		self->d->w->showHeader(false);
-	if (!show_footer)
-		self->d->w->showFooter(false);
-	else if (!buttons.empty())
-	{
-		CComponentsFooter *footer = self->d->w->getFooterObject();
-		if (footer)
-			footer->setButtonLabels(buttons, footer->getWidth(), footer->getWidth() / buttons.size());
-	}
+	self->d->sw = new ScriptWindow(pars);
 
 	/* So that another binding can take this window as its parent, where a
 	 * Lua binding hands on its userdata. */
-	PyObject *capsule = PyCapsule_New(self->d->w->getBodyObject(), PY_FORM_CAPSULE, NULL);
+	PyObject *capsule = PyCapsule_New(self->d->sw->window()->getBodyObject(), PY_FORM_CAPSULE, NULL);
 	if (capsule != NULL)
 	{
 		if (PyObject_SetAttrString((PyObject *)self, PY_FORM_ATTRIBUTE, capsule) < 0)
@@ -192,21 +187,21 @@ void CPythonInstCCWindow::CCWindowDelete(PyObject *self)
 
 PyObject *CPythonInstCCWindow::CCWindowPaint(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
 	bool do_save_bg = true;
 	pyLookupBoolCompat(kwds, "do_save_bg", do_save_bg);
 
-	w->paint(do_save_bg);
+	sw->paint(do_save_bg);
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstCCWindow::CCWindowHide(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
 	bool tmp1 = false;
@@ -214,15 +209,15 @@ PyObject *CPythonInstCCWindow::CCWindowHide(PyObject *self, PyObject *args, PyOb
 	if (pyLookupBool(kwds, "no_restore", tmp1) || pyLookupString(kwds, "no_restore", tmp2))
 		pyObsoleteHideParameter();
 
-	w->hide();
+	sw->hide();
 	Py_RETURN_NONE;
 }
 
 
 PyObject *CPythonInstCCWindow::CCWindowSetCaption(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
 	std::string name = "";
@@ -231,66 +226,53 @@ PyObject *CPythonInstCCWindow::CCWindowSetCaption(PyObject *self, PyObject *args
 	long alignment = (long)DEFAULT_TITLE_ALIGN;
 	pyLookupInt(kwds, "alignment", alignment);
 
-	w->setWindowCaption(name, (CCHeaderTypes::cc_title_alignment_t)alignment);
+	sw->setCaption(name, (int)alignment);
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstCCWindow::CCWindowSetWindowColor(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
 	unsigned long color = 0;
 	if (pyLookupUnsigned(kwds, "color_frame", color))
-		w->setColorFrame((fb_pixel_t)pyCheckMagicMask((unsigned int)color));
+		sw->setColorFrame(color);
 	if (pyLookupUnsigned(kwds, "color_body", color))
-		w->setColorBody((fb_pixel_t)pyCheckMagicMask((unsigned int)color));
+		sw->setColorBody(color);
 	if (pyLookupUnsigned(kwds, "color_shadow", color))
-		w->setColorShadow((fb_pixel_t)pyCheckMagicMask((unsigned int)color));
+		sw->setColorShadow(color);
 
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstCCWindow::CCWindowPaintHeader(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
-	CComponentsHeader *header = w->getHeaderObject();
-	if (header)
-	{
-		w->showHeader();
-		header->paint();
-	}
+	sw->paintHeader();
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstCCWindow::CCWindowGetHeaderHeight(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
-	CComponentsHeader *header = w->getHeaderObject();
-	int hh = 0;
-	if (header)
-		hh = header->getHeight();
-	return PyLong_FromLong(hh);
+	return PyLong_FromLong(sw->headerHeight());
 }
 
 PyObject *CPythonInstCCWindow::CCWindowGetFooterHeight(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
-	CComponentsFooter *footer = w->getFooterObject();
-	int fh = 0;
-	if (footer)
-		fh = footer->getHeight();
-	return PyLong_FromLong(fh);
+	return PyLong_FromLong(sw->footerHeight());
 }
 
 /* the names the Lua binding keeps for a script that still writes them */
@@ -308,8 +290,8 @@ PyObject *CPythonInstCCWindow::CCWindowFooterHeightDep(PyObject *self, PyObject 
 
 PyObject *CPythonInstCCWindow::CCWindowSetCenterPos(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
 	long tmp_along_mode = 0, along_mode = CC_ALONG_X | CC_ALONG_Y;
@@ -319,17 +301,17 @@ PyObject *CPythonInstCCWindow::CCWindowSetCenterPos(PyObject *self, PyObject *ar
 			along_mode = tmp_along_mode;
 	}
 
-	w->setCenterPos((int)along_mode);
+	sw->setCenterPos((int)along_mode);
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstCCWindow::CCWindowSetDimensionsAll(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "x", "y", "w", "h", NULL };
-	CComponentsWindow *w = ccWindowOf(self);
+	ScriptWindow *sw = scriptWindowOf(self);
 	int x = 0, y = 0, dw = 0, dh = 0;
 
-	if (w == NULL)
+	if (sw == NULL)
 	{
 		PyErr_SetString(PyExc_RuntimeError, "cwindow is gone");
 		return NULL;
@@ -337,32 +319,23 @@ PyObject *CPythonInstCCWindow::CCWindowSetDimensionsAll(PyObject *self, PyObject
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiii", (char **)kwlist, &x, &y, &dw, &dh))
 		return NULL;
 
-	if (x > -1 && y > -1 && dw > 1 && dh > 1)
-	{
-		if (dh > (int)CFrameBuffer::getInstance()->getScreenHeight())
-			dh = (int)CFrameBuffer::getInstance()->getScreenHeight();
-		if (dw > (int)CFrameBuffer::getInstance()->getScreenWidth())
-			dw = (int)CFrameBuffer::getInstance()->getScreenWidth();
-		if (x > dw)
-			x = 0;
-		if (y > dh)
-			y = 0;
-		w->setDimensionsAll(x, y, dw, dh);
-	}
+	/* Keeping the window on the screen is not something a binding should
+	 * decide for itself, so it is the script API that decides it. */
+	sw->setDimensionsAll(x, y, dw, dh);
 
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstCCWindow::CCWindowSetBodyImage(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CComponentsWindow *w = ccWindowOf(self);
-	if (w == NULL)
+	ScriptWindow *sw = scriptWindowOf(self);
+	if (sw == NULL)
 		Py_RETURN_NONE;
 
 	std::string image = "";
 	pyLookupString(kwds, "image_path", image);
 
-	w->setBodyBGImage(image);
+	sw->setBodyImage(image);
 	Py_RETURN_NONE;
 }
 

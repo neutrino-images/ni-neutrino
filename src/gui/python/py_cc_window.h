@@ -33,13 +33,17 @@
 
 #include <gui/components/cc.h>
 #include <gui/components/cc_frm_header.h>
+#include <gui/scriptapi/scriptwindow.h>
 
+/* The window a script made, held as the shared ScriptWindow: what is done
+ * with it is the same for every interpreter, and this binding only fills its
+ * parameters out of a python call. */
 class CPyCCWindow
 {
 	public:
-		CComponentsWindow *w;
-		CPyCCWindow() { w = NULL; }
-		~CPyCCWindow() { delete w; }
+		ScriptWindow *sw;
+		CPyCCWindow() { sw = NULL; }
+		~CPyCCWindow() { delete sw; }
 };
 
 class CPythonInstCCWindow

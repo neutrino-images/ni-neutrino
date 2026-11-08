@@ -53,10 +53,9 @@ AM_CPPFLAGS += \
 	@PYTHON_CFLAGS@ \
 	@HWLIB_CFLAGS@
 
-noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a
+noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a libneutrino_gui_scriptapi.a
 
 libneutrino_gui_a_SOURCES = \
-	scriptapi/scriptwindow.cpp \
 	adzap.cpp \
 	audio_select.cpp \
 	audio_setup.cpp \
@@ -207,6 +206,14 @@ if ENABLE_UPNP
 libneutrino_gui2_a_SOURCES += \
 	upnpbrowser.cpp
 endif
+
+# The script API both bindings build their windows with. A library of its own,
+# and not a part of libneutrino_gui.a, because it has to stand behind the
+# bindings on the link line: an archive answers only what something on the line
+# has asked for already, and the bindings ask after the gui archive has been
+# passed, so a part of it would be drawn in one pass too late.
+libneutrino_gui_scriptapi_a_SOURCES = \
+	scriptapi/scriptwindow.cpp
 
 libtimerlist_a_SOURCES = \
 	timerlist.cpp
