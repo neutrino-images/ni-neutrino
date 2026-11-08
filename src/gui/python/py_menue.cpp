@@ -404,33 +404,11 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 
 	CMenuItem *mi = NULL;
 
-	if (type == "back")
-	{
-		D->m->addItem(GenericMenuBack);
-	}
-	else if (type == "next")
-	{
-		D->m->addItem(GenericMenuNext);
-	}
-	else if (type == "cancel")
-	{
-		D->m->addItem(GenericMenuCancel);
-	}
-	else if (type == "separator")
-	{
-		D->m->addItem(GenericMenuSeparator);
-	}
-	else if ((type == "separatorline") || (type == "subhead"))
-	{
-		if (!b->name.empty())
-		{
-			int flag = (type == "separatorline") ? CMenuSeparator::LINE : CMenuSeparator::SUB_HEAD;
-			D->m->addItem(new CMenuSeparator(CMenuSeparator::STRING | flag, b->name.c_str(), NONEXISTANT_LOCALE));
-		}
-		else
-			D->m->addItem(GenericMenuSeparatorLine);
-	}
-	else
+	/* The types that are the menu's own are the same for both bindings and are
+	 * built where the menu is; what is left here is the item a script names of
+	 * its own. */
+	int row_id = 0;
+	if (!D->addIfPlain(type, b->name))
 	{
 		std::string right_icon_str = "", action_str = "", value = "", hint = "", hint_icon_str = "", icon_str = "", id = "";
 		pyLookupString(kwds, "right_icon", right_icon_str);
@@ -443,24 +421,9 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 		PyObject *action = NULL;
 		pyLookupObject(kwds, "action", &action);
 
-		char *right_icon = NULL;
-		if (!right_icon_str.empty())
-		{
-			right_icon = strdup(right_icon_str.c_str());
-			D->tofree.push_back(right_icon);
-		}
-		char *hint_icon = NULL;
-		if (!hint_icon_str.empty())
-		{
-			hint_icon = strdup(hint_icon_str.c_str());
-			D->tofree.push_back(hint_icon);
-		}
-		char *icon = NULL;
-		if (!icon_str.empty())
-		{
-			icon = strdup(icon_str.c_str());
-			D->tofree.push_back(icon);
-		}
+		char *right_icon = D->keepName(right_icon_str);
+		char *hint_icon = D->keepName(hint_icon_str);
+		char *icon = D->keepName(icon_str);
 
 		unsigned long directkey = (unsigned long)CRCInput::RC_nokey;
 		pyLookupUnsigned(kwds, "directkey", directkey);
@@ -499,14 +462,11 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 				Py_RETURN_NONE;
 			}
 
-			CMenuOptionChooser::keyval_ext *kext = (CMenuOptionChooser::keyval_ext *)calloc(options_count, sizeof(CMenuOptionChooser::keyval_ext));
-			D->tofree.push_back(kext);
-			b->int_val = 0;
-
+			/* The choices a script wrote, read into the item; the list the
+			 * widget is built from is the script API's to make. */
 			PyObject *key = NULL, *val = NULL;
 			Py_ssize_t pos = 0;
-			int j = 0;
-			while (PyDict_Next(options, &pos, &key, &val) && j < options_count)
+			while (PyDict_Next(options, &pos, &key, &val))
 			{
 				long k = PyLong_AsLong(key);
 				if (k == -1 && PyErr_Occurred())
@@ -518,19 +478,15 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 				if (!pyArgString(val, v))
 					v = "ERROR";
 
-				kext[j].key = (int)k;
-				kext[j].value = NONEXISTANT_LOCALE;
-				kext[j].valname = strdup(v.c_str());
-				D->tofree.push_back((void *)kext[j].valname);
-				b->options.push_back(std::pair<int, std::string>(kext[j].key, kext[j].valname));
-				if (value == kext[j].valname)
-					b->int_val = kext[j].key;
-				j++;
+				b->options.push_back(std::pair<int, std::string>((int)k, v));
 			}
+
+			int keys_count = 0;
+			CMenuOptionChooser::keyval_ext *kext = D->chooserKeys(b, value, keys_count);
 
 			CPyMenuObserver *observ = new CPyMenuObserver(action, id);
 			D->observers.push_back(observ);
-			mi = new CMenuOptionChooser(b->name.c_str(), &b->int_val, kext, (int)options_count, enabled, observ, directkey, icon, pulldown);
+			mi = new CMenuOptionChooser(b->name.c_str(), &b->int_val, kext, keys_count, enabled, observ, directkey, icon, pulldown);
 		}
 		else if (type == "numeric")
 		{
@@ -619,21 +575,11 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 			D->targets.push_back(filebrowser);
 		}
 
-		if (mi)
-		{
-			if (!hint.empty() || hint_icon)
-				mi->setHint(hint_icon, hint);
-			D->m->addItem(mi);
-		}
+		row_id = D->addRow(b, mi, hint, hint_icon);
 	}
 
-	if (mi)
-	{
-		int id = D->nextId();
-		b->mi = mi;
-		D->keep(id, b);
-		return PyLong_FromLong(id);
-	}
+	if (row_id > 0)
+		return PyLong_FromLong(row_id);
 
 	Py_RETURN_NONE;
 }

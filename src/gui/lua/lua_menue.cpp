@@ -379,21 +379,12 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 	tableLookup(L, "name", b->name);
 	std::string type; tableLookup(L, "type", type);
 	b->type = type;
-	if (type == "back") {
-		D->m->addItem(GenericMenuBack);
-	} else if (type == "next") {
-		D->m->addItem(GenericMenuNext);
-	} else if (type == "cancel") {
-		D->m->addItem(GenericMenuCancel);
-	} else if (type == "separator") {
-		D->m->addItem(GenericMenuSeparator);
-	} else if ((type == "separatorline") || (type == "subhead")) {
-		if (!b->name.empty()) {
-			int flag = (type == "separatorline") ? CMenuSeparator::LINE : CMenuSeparator::SUB_HEAD;
-			D->m->addItem(new CMenuSeparator(CMenuSeparator::STRING | flag, b->name.c_str(), NONEXISTANT_LOCALE));
-		} else
-			D->m->addItem(GenericMenuSeparatorLine);
-	} else {
+
+	/* The types that are the menu's own are the same for both bindings and
+	 * are built where the menu is; what is left here is the item a script
+	 * names of its own. */
+	int row_id = 0;
+	if (!D->addIfPlain(type, b->name)) {
 		std::string right_icon_str;	tableLookup(L, "right_icon", right_icon_str);
 		std::string action;		tableLookup(L, "action", action);
 		std::string value;		tableLookup(L, "value", value);
@@ -402,21 +393,9 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 		std::string icon_str;		tableLookup(L, "icon", icon_str);
 		std::string id;			tableLookup(L, "id", id);
 		std::string tmp;
-		char *right_icon = NULL;
-		if (!right_icon_str.empty()) {
-			right_icon = strdup(right_icon_str.c_str());
-			D->tofree.push_back(right_icon);
-		}
-		char *hint_icon = NULL;
-		if (!hint_icon_str.empty()) {
-			hint_icon = strdup(hint_icon_str.c_str());
-			D->tofree.push_back(hint_icon);
-		}
-		char *icon = NULL;
-		if (!icon_str.empty()) {
-			icon = strdup(icon_str.c_str());
-			D->tofree.push_back(icon);
-		}
+		char *right_icon = D->keepName(right_icon_str);
+		char *hint_icon = D->keepName(hint_icon_str);
+		char *icon = D->keepName(icon_str);
 
 		lua_Unsigned directkey = CRCInput::RC_nokey;	tableLookup(L, "directkey", directkey);
 		lua_Integer pulldown = false;			tableLookup(L, "pulldown", pulldown);
@@ -457,29 +436,23 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 				return 1;
 			}
 
-			CMenuOptionChooser::keyval_ext *kext = (CMenuOptionChooser::keyval_ext *)calloc(options_count, sizeof(CMenuOptionChooser::keyval_ext));
-			D->tofree.push_back(kext);
+			/* The choices a script wrote, read into the item; the list the
+			 * widget is built from is the script API's to make. */
 			lua_pushstring(L, "options");
 			lua_gettable(L, -2);
-			b->int_val = 0;
 			if (lua_istable(L, -1)) {
-				int j = 0;
 				for (lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)) {
 					lua_pushvalue(L, -2);
 					const char *key = lua_tostring(L, -1);
 					const char *val = lua_tostring(L, -2);
-					kext[j].key = atoi(key);
-					kext[j].value = NONEXISTANT_LOCALE;
-					kext[j].valname = strdup(val?val:"ERROR");
-					D->tofree.push_back((void *)kext[j].valname);
-					b->options.push_back(std::pair<int, std::string>(kext[j].key, kext[j].valname));
-					if (!strcmp(value.c_str(), kext[j].valname))
-						b->int_val = kext[j].key;
-					j++;
+					b->options.push_back(std::pair<int, std::string>(atoi(key), val ? val : "ERROR"));
 				}
 			}
 			lua_pop(L, 1);
-			mi = new CMenuOptionChooser(b->name.c_str(), &b->int_val, kext, options_count, enabled, D->observ, directkey, icon, pulldown);
+
+			int keys_count = 0;
+			CMenuOptionChooser::keyval_ext *kext = D->chooserKeys(b, value, keys_count);
+			mi = new CMenuOptionChooser(b->name.c_str(), &b->int_val, kext, keys_count, enabled, D->observ, directkey, icon, pulldown);
 		} else if (type == "numeric") {
 			b->int_val = range_from;
 			sscanf(value.c_str(), "%d", &b->int_val);
@@ -533,20 +506,17 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 			mi = new CMenuForwarder(b->name, enabled, b->str_val, filebrowser, NULL/*ActionKey*/, directkey, icon, right_icon);
 			D->targets.push_back(filebrowser);
 		}
-		if (mi) {
+		/* What a row of this menu is told of the script, which is the one
+		 * thing the script API cannot say for it. */
+		if (mi)
 			mi->setLua(L, action, id);
-			if (!hint.empty() || hint_icon)
-				mi->setHint(hint_icon, hint);
-			D->m->addItem(mi);
-		}
+
+		row_id = D->addRow(b, mi, hint, hint_icon);
 	}
 
-	if (mi) {
-		int id = D->nextId();
-		b->mi = mi;
-		D->keep(id, b);
-		lua_pushinteger(L, id);
-	} else
+	if (row_id > 0)
+		lua_pushinteger(L, row_id);
+	else
 		lua_pushnil(L);
 
 	return 1;

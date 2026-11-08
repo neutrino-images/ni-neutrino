@@ -91,6 +91,29 @@ class ScriptMenu
 		/* The line a chooser that named no options leaves behind. */
 		void		optionError(void);
 
+		/* A name a script wrote, held until the menu goes: a row keeps the
+		 * pointer it is given, so what it points at has to outlive the call
+		 * that named it. */
+		char	*keepName(const std::string &text);
+
+		/* The item types that are the menu's own and name nothing of the
+		 * script: the back, the next, the cancel and the separators.
+		 * Answers whether the type was one of them. */
+		bool	addIfPlain(const std::string &type, const std::string &name);
+
+		/* The choices of a chooser, as the widget wants them: the list the
+		 * binding read out of its own table or dict, and the value the
+		 * script named marked in it. Held until the menu goes, and its
+		 * length is answered in count. */
+		CMenuOptionChooser::keyval_ext *chooserKeys(ScriptMenuItem *item,
+				const std::string &value, int &count);
+
+		/* The row an item became: what it hints at, the menu it goes into
+		 * and the id a script knows it by. Answers that id, or 0 where the
+		 * item could not be made into a row. */
+		int	addRow(ScriptMenuItem *item, CMenuItem *mi,
+				const std::string &hint, const char *hint_icon);
+
 		/* The names a script wrote and the rows it made, kept until the
 		 * menu goes: a row holds the one and the other. */
 		std::list<void *>	tofree;

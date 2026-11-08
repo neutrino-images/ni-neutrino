@@ -20,6 +20,7 @@
 #include "scriptmenu.h"
 
 #include <cstdlib>
+#include <cstring>
 
 #include <neutrino.h>
 
@@ -78,4 +79,83 @@ void ScriptMenu::optionError(void)
 {
 	m->addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE,
 			"ERROR! (options_count)", NONEXISTANT_LOCALE));
+}
+
+char *ScriptMenu::keepName(const std::string &text)
+{
+	if (text.empty())
+		return NULL;
+
+	char *kept = strdup(text.c_str());
+	tofree.push_back(kept);
+	return kept;
+}
+
+/* What the menu adds for these is the same for every interpreter, so what a
+ * script named is all they are. */
+bool ScriptMenu::addIfPlain(const std::string &type, const std::string &name)
+{
+	if (type == "back")
+		m->addItem(GenericMenuBack);
+	else if (type == "next")
+		m->addItem(GenericMenuNext);
+	else if (type == "cancel")
+		m->addItem(GenericMenuCancel);
+	else if (type == "separator")
+		m->addItem(GenericMenuSeparator);
+	else if ((type == "separatorline") || (type == "subhead"))
+	{
+		if (!name.empty())
+		{
+			int flag = (type == "separatorline") ? CMenuSeparator::LINE : CMenuSeparator::SUB_HEAD;
+			m->addItem(new CMenuSeparator(CMenuSeparator::STRING | flag, name.c_str(), NONEXISTANT_LOCALE));
+		}
+		else
+			m->addItem(GenericMenuSeparatorLine);
+	}
+	else
+		return false;
+
+	return true;
+}
+
+/* The list the binding read is the list the widget is built from; what is left
+ * to do here is to hand it over in the shape the widget wants and to find the
+ * value the script named in it. */
+CMenuOptionChooser::keyval_ext *ScriptMenu::chooserKeys(ScriptMenuItem *item,
+		const std::string &value, int &count)
+{
+	count = (int)item->options.size();
+
+	CMenuOptionChooser::keyval_ext *keys =
+		(CMenuOptionChooser::keyval_ext *)calloc(count, sizeof(CMenuOptionChooser::keyval_ext));
+	tofree.push_back(keys);
+
+	item->int_val = 0;
+	for (int j = 0; j < count; j++)
+	{
+		keys[j].key = item->options[j].first;
+		keys[j].value = NONEXISTANT_LOCALE;
+		keys[j].valname = keepName(item->options[j].second);
+		if (value == item->options[j].second)
+			item->int_val = keys[j].key;
+	}
+	return keys;
+}
+
+int ScriptMenu::addRow(ScriptMenuItem *item, CMenuItem *mi,
+		const std::string &hint, const char *hint_icon)
+{
+	if (mi == NULL)
+		return 0;
+
+	if (!hint.empty() || hint_icon)
+		mi->setHint(hint_icon, hint);
+
+	m->addItem(mi);
+
+	int id = nextId();
+	item->mi = mi;
+	keep(id, item);
+	return id;
 }
