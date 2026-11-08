@@ -21,12 +21,17 @@
 #ifndef _LUACCWINDOW_H
 #define _LUACCWINDOW_H
 
+#include <gui/scriptapi/scriptwindow.h>
+
+/* The window a script made, held as the shared ScriptWindow: what is done
+ * with it is the same for every interpreter, and this binding only fills its
+ * parameters out of a lua table. */
 class CLuaCCWindow
 {
 	public:
-		CComponentsWindow *w;
-		CLuaCCWindow() { w = NULL; }
-		~CLuaCCWindow() { delete w; }
+		ScriptWindow *sw;
+		CLuaCCWindow() { sw = NULL; }
+		~CLuaCCWindow() { delete sw; }
 };
 
 class CLuaInstCCWindow : CCHeaderTypes

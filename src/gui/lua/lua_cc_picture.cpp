@@ -117,7 +117,7 @@ int CLuaInstCCPicture::CCPictureNew(lua_State *L)
 	color_background = checkMagicMask(color_background);
 	color_shadow     = checkMagicMask(color_shadow);
 
-	CComponentsForm* pw = (parent && parent->w) ? parent->w->getBodyObject() : NULL;
+	CComponentsForm* pw = (parent && parent->sw) ? parent->sw->body() : NULL;
 
 	CLuaCCPicture **udata = (CLuaCCPicture **) lua_newuserdata(L, sizeof(CLuaCCPicture *));
 	*udata = new CLuaCCPicture();

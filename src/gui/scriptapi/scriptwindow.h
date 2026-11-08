@@ -66,6 +66,9 @@ class ScriptWindow : public CCHeaderTypes
 		 * parent to another component. */
 		CComponentsWindow	*window(void) { return w; }
 
+		/* The form a component a script adds to the window is parented to. */
+		CComponentsForm		*body(void) { return w->getBodyObject(); }
+
 		/* A colour as the box wants it, which both bindings run a colour
 		 * through so that neither normalises it differently. */
 		unsigned long	checkColor(unsigned long color);

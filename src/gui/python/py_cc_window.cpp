@@ -154,7 +154,7 @@ PyObject *CPythonInstCCWindow::CCWindowNew(PyTypeObject *type, PyObject *args, P
 
 	/* So that another binding can take this window as its parent, where a
 	 * Lua binding hands on its userdata. */
-	PyObject *capsule = PyCapsule_New(self->d->sw->window()->getBodyObject(), PY_FORM_CAPSULE, NULL);
+	PyObject *capsule = PyCapsule_New(self->d->sw->body(), PY_FORM_CAPSULE, NULL);
 	if (capsule != NULL)
 	{
 		if (PyObject_SetAttrString((PyObject *)self, PY_FORM_ATTRIBUTE, capsule) < 0)

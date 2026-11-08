@@ -81,7 +81,7 @@ int CLuaInstCCSignalbox::CCSignalBoxNew(lua_State *L)
 	tableLookup(L, "vertical", vertical);
 	tableLookup(L, "parent", (void**)&parent);
 
-	CComponentsForm* pw = (parent && parent->w) ? parent->w->getBodyObject() : NULL;
+	CComponentsForm* pw = (parent && parent->sw) ? parent->sw->body() : NULL;
 	CLuaCCSignalBox **udata = (CLuaCCSignalBox **) lua_newuserdata(L, sizeof(CLuaCCSignalBox *));
 	*udata = new CLuaCCSignalBox();
 	(*udata)->s = new CSignalBox(x, y, dx, dy, CFEManager::getInstance()->getLiveFE(), (vertical!=0)?true:false, pw);

@@ -152,7 +152,7 @@ int CLuaInstCCText::CCTextNew(lua_State *L)
 			htmlEntityDecode(text);
 	}
 
-	CComponentsForm* pw = (parent && parent->w) ? parent->w->getBodyObject() : NULL;
+	CComponentsForm* pw = (parent && parent->sw) ? parent->sw->body() : NULL;
 	if(pw){
 		if(dy < 1)
 			dy = pw->getHeight();

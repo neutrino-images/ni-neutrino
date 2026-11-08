@@ -86,7 +86,7 @@ int CLuaInstHourGlass::HourGlassNew(lua_State *L)
 	tableLookup(L, "color_background", color_background);
 	tableLookup(L, "color_shadow",     color_shadow);
 
-	CComponentsForm *parent_container = (parent && parent->w) ? parent->w->getBodyObject() : NULL;
+	CComponentsForm *parent_container = (parent && parent->sw) ? parent->sw->body() : NULL;
 
 	CLuaHourGlass **udata = (CLuaHourGlass **) lua_newuserdata(L, sizeof(CLuaHourGlass *));
 	*udata = new CLuaHourGlass();

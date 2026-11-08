@@ -94,7 +94,7 @@ int CLuaInstCCHeader::CCHeaderNew(lua_State *L)
 	color_body   = checkMagicMask(color_body);
 	color_shadow = checkMagicMask(color_shadow);
 
-	CComponentsForm* pw = (parent && parent->w) ? parent->w->getBodyObject() : NULL;
+	CComponentsForm* pw = (parent && parent->sw) ? parent->sw->body() : NULL;
 	CLuaCCHeader **udata = (CLuaCCHeader **) lua_newuserdata(L, sizeof(CLuaCCHeader *));
 	*udata = new CLuaCCHeader();
 	(*udata)->ch = new CComponentsHeader((const int&)x, (const int&)y, (const int&)dx, (const int&)dy,
