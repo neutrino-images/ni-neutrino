@@ -68,6 +68,10 @@ const char kAssetCache[] = "public, max-age=31536000, immutable";
 // answer from it worth never revalidating.
 const char kHashedDir[] = "assets";
 
+// The directory beside the pages that holds the service control's scripts
+// (data/httpd-scripts), which serveStatic does not answer out of.
+const char kScriptsDir[] = "scripts";
+
 std::string &rootRef()
 {
 	/* Inside a function so this file still needs nothing to have run before main: a
@@ -902,6 +906,15 @@ const char *contentTypeFor(const std::string &filename)
 Response serveStatic(const std::string &url_path, const std::string &accept_encoding,
                      const std::string &if_none_match)
 {
+	/* The service control's scripts live in the same directory as the pages
+	   (static.h). Read off the decoded segments, so that a target spelling the
+	   name with an escape meets the same refusal; a target the segments refuse
+	   for another reason goes on to be refused for that reason below. */
+	std::vector<std::string> seg;
+	const Refusal why = segmentsOf(url_path, seg);
+	if ((why == PathIsFine || why == PathNamesDirectory) && !seg.empty() && seg[0] == kScriptsDir)
+		return refuseMissing();
+
 	return serveStaticFrom(rootRef(), url_path, accept_encoding, if_none_match);
 }
 

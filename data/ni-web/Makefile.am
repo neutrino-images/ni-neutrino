@@ -16,7 +16,7 @@ SUBDIRS += \
 	ai
 endif
 
-installdir = $(PRIVATE_HTTPDDIR)/ni-web
+installdir = $(PRIVATE_HTTPDDIR)
 
 # The document the page is: the history fallback answers a path under an area
 # of the page with it (src/httpd/apppaths.cpp), so it is asked for under names

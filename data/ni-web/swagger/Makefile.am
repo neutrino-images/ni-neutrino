@@ -1,4 +1,4 @@
-installdir = $(PRIVATE_HTTPDDIR)/ni-web/swagger
+installdir = $(PRIVATE_HTTPDDIR)/swagger
 
 # The Swagger UI page this server's own default docroot points at (see
 # src/httpd/webconfig.cpp), reached as /swagger/ and not at the root: the

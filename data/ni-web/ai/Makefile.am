@@ -1,4 +1,4 @@
-installdir = $(PRIVATE_HTTPDDIR)/ni-web/ai
+installdir = $(PRIVATE_HTTPDDIR)/ai
 
 include $(srcdir)/../exclude.am
 

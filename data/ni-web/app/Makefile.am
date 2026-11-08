@@ -1,4 +1,4 @@
-installdir = $(PRIVATE_HTTPDDIR)/ni-web/app
+installdir = $(PRIVATE_HTTPDDIR)/app
 
 include $(srcdir)/../exclude.am
 

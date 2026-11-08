@@ -63,6 +63,13 @@ std::string docroot();
    A target written with a separator after it names a directory, and no directory is a
    file, so it is 404 whatever it names.
 
+   Nothing under scripts/ is answered: 404, the same answer as a file that is not
+   there. The pages share their directory with the service control's scripts
+   (data/httpd-scripts), which are run by this program and not read by a browser. The
+   segment is compared after decoding, so an escape cannot spell a way around it. This
+   holds for this directory only; the one name served out of the writable directory
+   (serveStaticFrom below) is not affected.
+
    What the confinement covers and what it cannot. A target is refused before the
    filesystem is touched when it carries a zero byte, a dot segment or a doubled
    separator, and after it is touched when the path it resolves to is not the resolved
