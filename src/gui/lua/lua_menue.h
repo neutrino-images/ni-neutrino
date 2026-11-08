@@ -23,18 +23,7 @@
 #ifndef _LUAMENUE_H
 #define _LUAMENUE_H
 
-/* key and displayed text of one option of a "chooser" item */
-typedef std::pair<int, std::string> luamenu_option_t;
-
-struct CLuaMenuItem {
-	int int_val;
-	std::string str_val;
-	std::string name;
-	std::string type;			/* item type as named by the script */
-	std::vector<luamenu_option_t> options;	/* "chooser" only */
-	bool masked;				/* "keyboardinput" only: its value is never shown */
-	CMenuItem *mi;
-};
+#include <gui/scriptapi/scriptmenu.h>
 
 class CLuaMenuChangeObserver : public CChangeObserver
 {
@@ -42,20 +31,15 @@ class CLuaMenuChangeObserver : public CChangeObserver
 		bool changeNotify(lua_State *, const std::string &, const std::string &, void *);
 };
 
-typedef std::pair<lua_Integer, CLuaMenuItem*> itemmap_pair_t;
-typedef std::map<lua_Integer, CLuaMenuItem*> itemmap_t;
-typedef itemmap_t::iterator itemmap_iterator_t;
-
-class CLuaMenu
+/* What a row of this menu hands on when it is picked, which is the one thing
+ * about a menu that cannot be said without knowing the interpreter. The rest
+ * of the menu, and the items in it, is the script API. */
+class CLuaMenu : public ScriptMenu
 {
 	public:
-		CMenuWidget *m;
 		CLuaMenuChangeObserver *observ;
-		std::list<CLuaMenuItem> items;
 		std::list<CMenuTarget *> targets;
-		std::list<void *> tofree;
-		itemmap_t itemmap;
-		CLuaMenu();
+		CLuaMenu(const params_t &pars);
 		~CLuaMenu();
 };
 

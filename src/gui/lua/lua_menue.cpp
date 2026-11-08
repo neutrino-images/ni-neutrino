@@ -104,23 +104,16 @@ CLuaMenu *CLuaInstMenu::MenuCheck(lua_State *L, int n)
 	return *(CLuaMenu **) luaL_checkudata(L, n, "menu");
 }
 
-/* Items are keyed by the id MenuAddItem handed out to the script. */
-static CLuaMenuItem *getMenuItem(CLuaMenu *D, lua_Integer id)
+CLuaMenu::CLuaMenu(const params_t &pars) : ScriptMenu(pars)
 {
-	itemmap_iterator_t it = D->itemmap.find(id);
-	return (it == D->itemmap.end()) ? NULL : it->second;
-}
-
-CLuaMenu::CLuaMenu()
-{
-	m      = NULL;
 	observ = new CLuaMenuChangeObserver();
 }
 
 CLuaMenu::~CLuaMenu()
 {
-	itemmap.clear();
-	delete m;
+	/* The widget and the items are the script API's and go with it. The rows
+	 * that call the script are this binding's; they are let go of by
+	 * MenuDelete, which is where a menu of a script ends. */
 	delete observ;
 }
 
@@ -256,12 +249,6 @@ int CLuaMenuStringinput::exec(CMenuTarget* /*parent*/, const std::string & /*act
 	return res;
 }
 
-/* What the row of a masked entry shows: whether a value is set, not the value. */
-static std::string maskedText(const std::string &value)
-{
-	return value.empty() ? "" : "********";
-}
-
 CLuaMenuKeyboardinput::CLuaMenuKeyboardinput(lua_State *_L, std::string _luaAction, std::string _luaId, const char *_name, std::string *_value, int _size, CChangeObserver *_observ, const char *_icon, std::string _help, std::string _help2, bool _masked) : CLuaMenuForwarder(_L, _luaAction, _luaId)
 {
 	Init(_name, _value, _size, _observ, _icon, _help, _help2, _masked);
@@ -292,7 +279,7 @@ int CLuaMenuKeyboardinput::exec(CMenuTarget* /*parent*/, const std::string & /*a
 	i->exec(NULL, "");
 	delete i;
 	if (masked && row)
-		row->setOption(maskedText(*value));
+		row->setOption(ScriptMenu::maskedText(*value));
 	if (!luaAction.empty()) {
 		lua_pushglobaltable(L);
 		lua_getfield(L, -1, luaAction.c_str());
@@ -315,54 +302,46 @@ int CLuaMenuKeyboardinput::exec(CMenuTarget* /*parent*/, const std::string & /*a
 
 int CLuaInstMenu::MenuNew(lua_State *L)
 {
-	CMenuWidget *m;
+	/* The parameters a script names in its table. What is done with them is
+	 * done by the script API, so that both bindings ask for one menu and
+	 * cannot come to differ. */
+	ScriptMenu::params_t pars;
+	pars.width_given = false;
+	pars.width = 0;
 
 	if (lua_istable(L, 1)) {
-		std::string name; tableLookup(L, "name", name) || tableLookup(L, "title", name);
-		std::string icon; tableLookup(L, "icon", icon);
-		lua_Integer mwidth;
-		if (tableLookup(L, "mwidth", mwidth))
-			m = new CMenuWidget(name.c_str(), icon.c_str(), mwidth);
-		else
-			m = new CMenuWidget(name.c_str(), icon.c_str());
+		tableLookup(L, "name", pars.name) || tableLookup(L, "title", pars.name);
+		tableLookup(L, "icon", pars.icon);
 
-		std::vector<button_label_cc> buttons;
-		std::string label;
-		if (tableLookup(L, "btnRed", label) && !label.empty()) {
-			button_label_cc b;
-			b.button = NEUTRINO_ICON_BUTTON_RED;
-			b.text = label;
-			buttons.push_back(b);
+		lua_Integer mwidth;
+		if (tableLookup(L, "mwidth", mwidth)) {
+			pars.width_given = true;
+			pars.width = (int)mwidth;
 		}
-		label.clear();
-		if (tableLookup(L, "btnGreen", label) && !label.empty()) {
+
+		/* The footer's buttons, each with the icon of the key it belongs
+		 * to, in the order the footer shows them. */
+		static const struct { const char *key; const char *icon; } btn_keys[] = {
+			{ "btnRed",    NEUTRINO_ICON_BUTTON_RED },
+			{ "btnGreen",  NEUTRINO_ICON_BUTTON_GREEN },
+			{ "btnYellow", NEUTRINO_ICON_BUTTON_YELLOW },
+			{ "btnBlue",   NEUTRINO_ICON_BUTTON_BLUE },
+			{ NULL, NULL }
+		};
+
+		for (int i = 0; btn_keys[i].key != NULL; i++) {
+			std::string label = "";
+			if (!tableLookup(L, btn_keys[i].key, label) || label.empty())
+				continue;
 			button_label_cc b;
-			b.button = NEUTRINO_ICON_BUTTON_GREEN;
+			b.button = btn_keys[i].icon;
 			b.text = label;
-			buttons.push_back(b);
+			pars.buttons.push_back(b);
 		}
-		label.clear();
-		if (tableLookup(L, "btnYellow", label) && !label.empty()) {
-			button_label_cc b;
-			b.button = NEUTRINO_ICON_BUTTON_YELLOW;
-			b.text = label;
-			buttons.push_back(b);
-		}
-		label.clear();
-		if (tableLookup(L, "btnBlue", label) && !label.empty()) {
-			button_label_cc b;
-			b.button = NEUTRINO_ICON_BUTTON_BLUE;
-			b.text = label;
-			buttons.push_back(b);
-		}
-		if (!buttons.empty())
-			m->setLuaFooter(buttons);
-	} else
-		m = new CMenuWidget();
+	}
 
 	CLuaMenu **udata = (CLuaMenu **) lua_newuserdata(L, sizeof(CLuaMenu *));
-	*udata = new CLuaMenu();
-	(*udata)->m = m;
+	*udata = new CLuaMenu(pars);
 	luaL_getmetatable(L, "menu");
 	lua_setmetatable(L, -2);
 	return 1;
@@ -395,9 +374,7 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 	lua_assert(lua_istable(L, 2));
 
 	CMenuItem *mi = NULL;
-	CLuaMenuItem i = {};
-	D->items.push_back(i);
-	CLuaMenuItem *b = &D->items.back();
+	ScriptMenuItem *b = D->add();
 
 	tableLookup(L, "name", b->name);
 	std::string type; tableLookup(L, "type", type);
@@ -475,7 +452,7 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 				}
 			lua_pop(L, 1);
 			if (options_count == 0) {
-				D->m->addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, "ERROR! (options_count)", NONEXISTANT_LOCALE));
+				D->optionError();
 				lua_pushnil(L);
 				return 1;
 			}
@@ -495,7 +472,7 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 					kext[j].value = NONEXISTANT_LOCALE;
 					kext[j].valname = strdup(val?val:"ERROR");
 					D->tofree.push_back((void *)kext[j].valname);
-					b->options.push_back(luamenu_option_t(kext[j].key, kext[j].valname));
+					b->options.push_back(std::pair<int, std::string>(kext[j].key, kext[j].valname));
 					if (!strcmp(value.c_str(), kext[j].valname))
 						b->int_val = kext[j].key;
 					j++;
@@ -534,7 +511,7 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 			CLuaMenuKeyboardinput *keyboardinput = new CLuaMenuKeyboardinput(L, action, id, b->name.c_str(), &b->str_val, size, D->observ, icon, help, help2, b->masked);
 			CMenuForwarder *row = new CMenuForwarder(b->name, enabled, b->str_val, keyboardinput, NULL/*ActionKey*/, directkey, icon, right_icon);
 			if (b->masked) {
-				row->setOption(maskedText(b->str_val));
+				row->setOption(ScriptMenu::maskedText(b->str_val));
 				keyboardinput->setRow(row);
 			}
 			mi = row;
@@ -565,9 +542,9 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 	}
 
 	if (mi) {
-		lua_Integer id = D->itemmap.size() + 1;
+		int id = D->nextId();
 		b->mi = mi;
-		D->itemmap.insert(itemmap_pair_t(id, b));
+		D->keep(id, b);
 		lua_pushinteger(L, id);
 	} else
 		lua_pushnil(L);
@@ -603,7 +580,7 @@ int CLuaInstMenu::MenuSetActive(lua_State *L)
 	lua_Integer id;	tableLookup(L, "item", id);
 	bool activ;	tableLookup(L, "activ", activ);
 
-	CLuaMenuItem *item = getMenuItem(D, id);
+	ScriptMenuItem *item = D->item((int)id);
 	if (item)
 		item->mi->setActive(activ);
 	return 0;
@@ -618,7 +595,7 @@ int CLuaInstMenu::MenuSetName(lua_State *L)
 	lua_Integer id;		tableLookup(L, "item", id);
 	std::string name;	tableLookup(L, "name", name);
 
-	CLuaMenuItem *item = getMenuItem(D, id);
+	ScriptMenuItem *item = D->item((int)id);
 	if (item)
 		item->mi->setName(name);
 	return 0;
@@ -632,10 +609,6 @@ int CLuaInstMenu::MenuDelete(lua_State *L)
 	while (!D->targets.empty()) {
 		delete D->targets.back();
 		D->targets.pop_back();
-	}
-	while (!D->tofree.empty()) {
-		free(D->tofree.back());
-		D->tofree.pop_back();
 	}
 
 	delete D;
@@ -676,7 +649,7 @@ int CLuaInstMenu::MenuSetValue(lua_State *L)
 	lua_Integer id;		tableLookup(L, "item", id);
 	std::string value;	tableLookup(L, "value", value);
 
-	CLuaMenuItem *item = getMenuItem(D, id);
+	ScriptMenuItem *item = D->item((int)id);
 	if (!item)
 		return 0;
 
@@ -695,7 +668,7 @@ int CLuaInstMenu::MenuSetValue(lua_State *L)
 		 * told whether a value is set, never the value.
 		 */
 		item->str_val = value;
-		static_cast<CMenuForwarder*>(item->mi)->setOption(item->masked ? maskedText(value) : "");
+		static_cast<CMenuForwarder*>(item->mi)->setOption(item->masked ? ScriptMenu::maskedText(value) : "");
 		return 0;
 	}
 
@@ -732,7 +705,7 @@ int CLuaInstMenu::MenuPaintItem(lua_State *L)
 
 	lua_Integer id;		tableLookup(L, "item", id);
 
-	CLuaMenuItem *item = getMenuItem(D, id);
+	ScriptMenuItem *item = D->item((int)id);
 	if (item)
 		item->mi->paint();
 	return 0;
