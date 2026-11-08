@@ -20,6 +20,7 @@ dist_install_DATA = \
 	LICENCE.txt
 
 install-data-hook:
+	$(WEB_STRIP) $(srcdir)/ubuntu.css $(DESTDIR)$(installdir)/ubuntu.css
 	cd $(DESTDIR)$(installdir); \
 		gzip -9 -nf ubuntu.css LICENCE.txt
 

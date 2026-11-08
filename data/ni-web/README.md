@@ -16,6 +16,13 @@ sources: **a changed file plus a reload in the browser is the whole edit
 cycle.** It is also why this interface leaves the tree as bytes that are
 already what they will be on the box, and why no firmware build needs node.
 
+The one exception is `--enable-web-strip`. With it the install runs the
+JavaScript and CSS through esbuild (`minify.sh`), a Go program on the build
+host and not node: ni-buildsystem builds it as host-esbuild. The tree keeps
+its prose and its layout, and a box with little flash does not pay for them.
+`test/web/check-web-strip.sh` holds every minified module to the imports,
+exports and html`` templates it had.
+
 If you are about to propose rewriting these files as TypeScript, read the head
 of `jsconfig.json` first. That trade is a build step in the path of every
 firmware image, in exchange for annotations that read a little better.

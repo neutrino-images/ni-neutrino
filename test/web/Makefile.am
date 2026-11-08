@@ -8,6 +8,7 @@
 # writes into, in that order. The second is where openapi.json is.
 WEB_CHECKS = \
 	check-web-install.sh \
+	check-web-strip.sh \
 	check-web-prefixes.sh \
 	check-web-paths.sh \
 	check-web-imports.sh \
@@ -98,7 +99,7 @@ EXTRA_DIST = $(WEB_CHECKS) fetch-types.sh serve.js openapi-types.js drag-cases.m
 	     decide-cases.mjs fileplay-cases.mjs archive-cases.mjs store-cases.mjs events-cases.mjs session-cases.mjs timerbody-cases.mjs \
 	     timeredit-cases.mjs settingsrows-cases.mjs guideclock-cases.mjs wake-cases.mjs nav-cases.mjs types \
 	     $(AI_GUIDE_DIST) $(AI_UI_DIST) $(CHANNEL_DIST) $(GRID_DIST) timerend-cases.mjs $(KEEP_DIST) $(NOW_DIST) $(REFUSAL_DIST) $(SHOT_DIST) state-cases.mjs \
-	     boxclock-cases.mjs topbar-cases.mjs
+	     boxclock-cases.mjs topbar-cases.mjs strip-cases.mjs
 
 # The document the server answers with, written out by the target that owns it
 # and read here so that what the page asks for is held to it. Made through that
@@ -136,7 +137,7 @@ $(WEB_RUNS): FORCE
 check-local: $(WEB_RUNS) web-orphans
 
 .sh.run:
-	@NI_WEB_MCP=$(WEB_MCP) $(SHELL) $< $(top_srcdir) $(abs_builddir)
+	@NI_WEB_MCP=$(WEB_MCP) ESBUILD=$(ESBUILD) $(SHELL) $< $(top_srcdir) $(abs_builddir)
 
 web-orphans:
 	@orphan=`cd $(srcdir) && for f in check-web-*.sh; do \

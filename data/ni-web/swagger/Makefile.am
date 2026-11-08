@@ -12,6 +12,7 @@ install_DATA = index.html
 # stored form for a caller that did not ask for it (src/httpd/static.cpp), so
 # a plain copy beside it would only be flash nothing ever reads.
 install-data-hook:
+	$(WEB_STRIP) $(srcdir)/index.html $(DESTDIR)$(installdir)/index.html
 	cd $(DESTDIR)$(installdir); \
 		gzip -9 -nf index.html
 
