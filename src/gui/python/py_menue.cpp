@@ -60,26 +60,15 @@ static CPyMenu *menuOf(PyObject *self)
 	return o->d;
 }
 
-/* Items are keyed by the id addItem handed out to the script. */
-static CPyMenuItem *getMenuItem(CPyMenu *D, long id)
+CPyMenu::CPyMenu(const params_t &pars) : ScriptMenu(pars)
 {
-	std::map<long, CPyMenuItem *>::iterator it = D->itemmap.find(id);
-	return (it == D->itemmap.end()) ? NULL : it->second;
-}
-
-/* What the row of a masked entry shows: whether a value is set, not the value. */
-static std::string maskedText(const std::string &value)
-{
-	return value.empty() ? "" : "********";
-}
-
-CPyMenu::CPyMenu()
-{
-	m = NULL;
 }
 
 CPyMenu::~CPyMenu()
 {
+	/* The widget and the items are the script API's and go with it. The rows
+	 * that call the script, and what they are told of a chooser, are this
+	 * binding's and are let go of here. */
 	while (!targets.empty())
 	{
 		delete targets.back();
@@ -90,13 +79,6 @@ CPyMenu::~CPyMenu()
 		delete observers.back();
 		observers.pop_back();
 	}
-	while (!tofree.empty())
-	{
-		free(tofree.back());
-		tofree.pop_back();
-	}
-	itemmap.clear();
-	delete m;
 }
 
 /* menu.new(name="", title="", icon="", mwidth=..., btnRed=..., btnGreen=...,
@@ -109,17 +91,25 @@ PyObject *CPythonInstMenu::MenuNew(PyTypeObject *type, PyObject *args, PyObject 
 		return NULL;
 	}
 
-	std::string name, icon;
-	pyLookupString(kwds, "name", name) || pyLookupString(kwds, "title", name);
-	pyLookupString(kwds, "icon", icon);
+	/* The parameters a script names in its call. What is done with them is
+	 * done by the script API, so that both bindings ask for one menu and
+	 * cannot come to differ. */
+	ScriptMenu::params_t pars;
+	pars.width_given = false;
+	pars.width = 0;
+
+	pyLookupString(kwds, "name", pars.name) || pyLookupString(kwds, "title", pars.name);
+	pyLookupString(kwds, "icon", pars.icon);
 
 	long mwidth = 0;
-	bool haveWidth = pyLookupInt(kwds, "mwidth", mwidth);
+	if (pyLookupInt(kwds, "mwidth", mwidth))
+	{
+		pars.width_given = true;
+		pars.width = (int)mwidth;
+	}
 
-	CMenuWidget *m = haveWidth ? new CMenuWidget(name.c_str(), icon.c_str(), (int)mwidth)
-				   : new CMenuWidget(name.c_str(), icon.c_str());
-
-	/* the footer's buttons, each with the icon of the key it belongs to */
+	/* The footer's buttons, each with the icon of the key it belongs to, in
+	 * the order the footer shows them. */
 	static const struct { const char *key; const char *icon; } btn_keys[] = {
 		{ "btnRed",    NEUTRINO_ICON_BUTTON_RED },
 		{ "btnGreen",  NEUTRINO_ICON_BUTTON_GREEN },
@@ -128,7 +118,6 @@ PyObject *CPythonInstMenu::MenuNew(PyTypeObject *type, PyObject *args, PyObject 
 		{ NULL, NULL }
 	};
 
-	std::vector<button_label_cc> buttons;
 	for (int i = 0; btn_keys[i].key != NULL; i++)
 	{
 		std::string label = "";
@@ -137,20 +126,16 @@ PyObject *CPythonInstMenu::MenuNew(PyTypeObject *type, PyObject *args, PyObject 
 		button_label_cc b;
 		b.button = btn_keys[i].icon;
 		b.text = label;
-		buttons.push_back(b);
+		pars.buttons.push_back(b);
 	}
-	if (!buttons.empty())
-		m->setFooterButtons(buttons);
 
 	PyMenuObject *self = (PyMenuObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
 	{
 		PyErr_Clear();
-		delete m;
 		return NULL;
 	}
-	self->d = new CPyMenu();
-	self->d->m = m;
+	self->d = new CPyMenu(pars);
 	return (PyObject *)self;
 }
 
@@ -270,7 +255,7 @@ int CPyMenuKeyboardinput::exec(CMenuTarget * /*parent*/, const std::string & /*a
 
 	/* a masked row shows whether a value is set, never the value */
 	if (masked && row)
-		row->setOption(maskedText(*value));
+		row->setOption(ScriptMenu::maskedText(*value));
 
 	PyGILState_STATE gstate = PyGILState_Ensure();
 	PyObject *val = PyUnicode_FromString(value->c_str());
@@ -410,12 +395,7 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 		return NULL;
 	}
 
-	CPyMenuItem i;
-	i.int_val = 0;
-	i.masked = false;
-	i.mi = NULL;
-	D->items.push_back(i);
-	CPyMenuItem *b = &D->items.back();
+	ScriptMenuItem *b = D->add();
 
 	pyLookupString(kwds, "name", b->name);
 	std::string type = "";
@@ -515,7 +495,7 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 				options_count = PyDict_Size(options);
 			if (options_count == 0)
 			{
-				D->m->addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, "ERROR! (options_count)", NONEXISTANT_LOCALE));
+				D->optionError();
 				Py_RETURN_NONE;
 			}
 
@@ -542,7 +522,7 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 				kext[j].value = NONEXISTANT_LOCALE;
 				kext[j].valname = strdup(v.c_str());
 				D->tofree.push_back((void *)kext[j].valname);
-				b->options.push_back(pymenu_option_t((long)kext[j].key, kext[j].valname));
+				b->options.push_back(std::pair<int, std::string>(kext[j].key, kext[j].valname));
 				if (value == kext[j].valname)
 					b->int_val = kext[j].key;
 				j++;
@@ -601,7 +581,7 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 			CMenuForwarder *row = new CMenuForwarder(b->name, enabled, b->str_val, keyboardinput, NULL, directkey, icon, right_icon);
 			if (b->masked)
 			{
-				row->setOption(maskedText(b->str_val));
+				row->setOption(ScriptMenu::maskedText(b->str_val));
 				keyboardinput->setRow(row);
 			}
 			mi = row;
@@ -649,9 +629,9 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 
 	if (mi)
 	{
-		long id = (long)D->itemmap.size() + 1;
+		int id = D->nextId();
 		b->mi = mi;
-		D->itemmap.insert(std::pair<long, CPyMenuItem *>(id, b));
+		D->keep(id, b);
 		return PyLong_FromLong(id);
 	}
 
@@ -701,7 +681,7 @@ PyObject *CPythonInstMenu::MenuSetActive(PyObject *self, PyObject *args, PyObjec
 	pyLookupInt(kwds, "item", item);
 	pyLookupBool(kwds, "activ", activ);
 
-	CPyMenuItem *it = getMenuItem(D, item);
+	ScriptMenuItem *it = D->item((int)item);
 	if (it != NULL && it->mi != NULL)
 		it->mi->setActive(activ);
 
@@ -723,7 +703,7 @@ PyObject *CPythonInstMenu::MenuSetName(PyObject *self, PyObject *args, PyObject 
 	pyLookupInt(kwds, "item", item);
 	pyLookupString(kwds, "name", name);
 
-	CPyMenuItem *it = getMenuItem(D, item);
+	ScriptMenuItem *it = D->item((int)item);
 	if (it != NULL && it->mi != NULL)
 		it->mi->setName(name);
 
@@ -772,7 +752,7 @@ PyObject *CPythonInstMenu::MenuSetValue(PyObject *self, PyObject *args, PyObject
 	pyLookupInt(kwds, "item", item);
 	pyLookupString(kwds, "value", value);
 
-	CPyMenuItem *it = getMenuItem(D, item);
+	ScriptMenuItem *it = D->item((int)item);
 	if (it == NULL || it->mi == NULL)
 		Py_RETURN_NONE;
 
@@ -792,7 +772,7 @@ PyObject *CPythonInstMenu::MenuSetValue(PyObject *self, PyObject *args, PyObject
 		 * told whether a value is set, never the value.
 		 */
 		it->str_val = value;
-		static_cast<CMenuForwarder *>(it->mi)->setOption(it->masked ? maskedText(value) : "");
+		static_cast<CMenuForwarder *>(it->mi)->setOption(it->masked ? ScriptMenu::maskedText(value) : "");
 		Py_RETURN_NONE;
 	}
 
@@ -832,7 +812,7 @@ PyObject *CPythonInstMenu::MenuPaintItem(PyObject *self, PyObject *args, PyObjec
 	long item = 0;
 	pyLookupInt(kwds, "item", item);
 
-	CPyMenuItem *it = getMenuItem(D, item);
+	ScriptMenuItem *it = D->item((int)item);
 	if (it != NULL && it->mi != NULL)
 		it->mi->paint();
 

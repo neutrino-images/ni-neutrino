@@ -43,21 +43,8 @@
 #include <string>
 #include <vector>
 
+#include <gui/scriptapi/scriptmenu.h>
 #include <gui/widget/menue.h>
-
-/* One option of a chooser, as a script writes it: the value and the text. */
-typedef std::pair<long, std::string> pymenu_option_t;
-
-struct CPyMenuItem
-{
-	int int_val;
-	std::string str_val;
-	std::string name;
-	std::string type;
-	std::vector<pymenu_option_t> options;
-	bool masked;
-	CMenuItem *mi;
-};
 
 /* A row that calls back into the script, where the Lua binding has its
  * CLuaMenuForwarder. */
@@ -156,16 +143,16 @@ class CPyMenuObserver : public CChangeObserver
 		virtual bool changeNotify(const std::string &optionName, void *data);
 };
 
-class CPyMenu
+/* What a row of this menu hands on when it is picked, and what it is told of a
+ * chooser, is the one thing about a menu that cannot be said without knowing
+ * the interpreter. The rest of the menu, and the items in it, is the script
+ * API. */
+class CPyMenu : public ScriptMenu
 {
 	public:
-		CMenuWidget *m;
-		std::list<CPyMenuItem> items;
 		std::list<CMenuTarget *> targets;
-		std::list<void *> tofree;
 		std::list<CPyMenuObserver *> observers;
-		std::map<long, CPyMenuItem *> itemmap;
-		CPyMenu();
+		CPyMenu(const params_t &pars);
 		~CPyMenu();
 };
 
