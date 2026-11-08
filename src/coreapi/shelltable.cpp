@@ -44,7 +44,7 @@ namespace
 // and started again by an init script that waits for the old process to go, and
 // a service script does less.
 const int kCamdTimeoutMs = 20000;
-const int kPluginTimeoutMs = 15000;
+const int kServiceTimeoutMs = 15000;
 
 // The branches answer with one line naming what they did. Anything beyond that
 // is a script that went wrong, and the runner cuts it off rather than carrying
@@ -52,13 +52,13 @@ const int kPluginTimeoutMs = 15000;
 const size_t kMaxOutput = 4096;
 
 #define CAMD_ENTRY(daemon, verb_prefix) \
-	{ daemon ".start",   "/Y_Camds.sh", verb_prefix "_start", NULL, 0, OutputFormat::Lines, kCamdTimeoutMs, kMaxOutput, false }, \
-	{ daemon ".stop",    "/Y_Camds.sh", verb_prefix "_stop",  NULL, 0, OutputFormat::Lines, kCamdTimeoutMs, kMaxOutput, false }, \
-	{ daemon ".restart", "/Y_Camds.sh", verb_prefix "_reset", NULL, 0, OutputFormat::Lines, kCamdTimeoutMs, kMaxOutput, false }
+	{ daemon ".start",   "/camds.sh", verb_prefix "_start", NULL, 0, OutputFormat::Lines, kCamdTimeoutMs, kMaxOutput, false }, \
+	{ daemon ".stop",    "/camds.sh", verb_prefix "_stop",  NULL, 0, OutputFormat::Lines, kCamdTimeoutMs, kMaxOutput, false }, \
+	{ daemon ".restart", "/camds.sh", verb_prefix "_reset", NULL, 0, OutputFormat::Lines, kCamdTimeoutMs, kMaxOutput, false }
 
-#define PLUGIN_ENTRY(daemon, verb_prefix) \
-	{ daemon ".start", "/Y_Plugins.sh", verb_prefix "_start", NULL, 0, OutputFormat::Lines, kPluginTimeoutMs, kMaxOutput, false }, \
-	{ daemon ".stop",  "/Y_Plugins.sh", verb_prefix "_stop",  NULL, 0, OutputFormat::Lines, kPluginTimeoutMs, kMaxOutput, false }
+#define SERVICE_ENTRY(daemon, verb_prefix) \
+	{ daemon ".start", "/services.sh", verb_prefix "_start", NULL, 0, OutputFormat::Lines, kServiceTimeoutMs, kMaxOutput, false }, \
+	{ daemon ".stop",  "/services.sh", verb_prefix "_stop",  NULL, 0, OutputFormat::Lines, kServiceTimeoutMs, kMaxOutput, false }
 
 const TableEntry kTable[] = {
 	CAMD_ENTRY("mgcamd", "mgcamd"),
@@ -68,22 +68,22 @@ const TableEntry kTable[] = {
 	CAMD_ENTRY("ncam", "ncam"),
 	CAMD_ENTRY("cccam", "cccam"),
 	CAMD_ENTRY("doscam", "doscam"),
-	PLUGIN_ENTRY("fritzcallmonitor", "fcm"),
-	PLUGIN_ENTRY("nfs", "nfs"),
-	PLUGIN_ENTRY("samba", "samba"),
-	PLUGIN_ENTRY("tuxcald", "tuxcald"),
-	PLUGIN_ENTRY("tuxmaild", "tuxmaild"),
-	PLUGIN_ENTRY("inadyn", "inadyn"),
-	PLUGIN_ENTRY("dropbear", "dropbear"),
-	PLUGIN_ENTRY("ushare", "ushare"),
-	PLUGIN_ENTRY("djmount", "djmount"),
-	PLUGIN_ENTRY("minidlna", "minidlna"),
-	PLUGIN_ENTRY("xupnpd", "xupnpd"),
-	PLUGIN_ENTRY("crond", "crond")
+	SERVICE_ENTRY("fritzcallmonitor", "fcm"),
+	SERVICE_ENTRY("nfs", "nfs"),
+	SERVICE_ENTRY("samba", "samba"),
+	SERVICE_ENTRY("tuxcald", "tuxcald"),
+	SERVICE_ENTRY("tuxmaild", "tuxmaild"),
+	SERVICE_ENTRY("inadyn", "inadyn"),
+	SERVICE_ENTRY("dropbear", "dropbear"),
+	SERVICE_ENTRY("ushare", "ushare"),
+	SERVICE_ENTRY("djmount", "djmount"),
+	SERVICE_ENTRY("minidlna", "minidlna"),
+	SERVICE_ENTRY("xupnpd", "xupnpd"),
+	SERVICE_ENTRY("crond", "crond")
 };
 
 #undef CAMD_ENTRY
-#undef PLUGIN_ENTRY
+#undef SERVICE_ENTRY
 
 const size_t kTableCount = sizeof(kTable) / sizeof(kTable[0]);
 
