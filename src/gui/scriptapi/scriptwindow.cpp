@@ -64,9 +64,7 @@ ScriptWindow::~ScriptWindow()
  * on, which is how they could come to do it differently. */
 unsigned long ScriptWindow::checkColor(unsigned long color)
 {
-	if ((color & MAGIC_MASK) == MAGIC_COLOR)
-		color = CFrameBuffer::getInstance()->realcolor[color & 0x000000ff];
-	return color;
+	return ScriptColorResolve(color);
 }
 
 void ScriptWindow::paint(bool do_save_bg)

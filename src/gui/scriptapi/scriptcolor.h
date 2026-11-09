@@ -23,7 +23,23 @@
 #ifndef _SCRIPTCOLOR_H
 #define _SCRIPTCOLOR_H
 
+#include <driver/framebuffer.h>
+
 #define MAGIC_COLOR	0x42424200
 #define MAGIC_MASK	0xFFFFFF00
+
+/* A colour a script names as one of the box's own carries the magic the colour
+ * tables are built with, and is resolved here to the pixel the display holds
+ * for it.
+ *
+ * Each binding carried a function of its own for this and the window of a
+ * script a third; the rule is the same in all three and is written once, so
+ * that neither can come to resolve a colour differently. */
+static inline unsigned long ScriptColorResolve(unsigned long color)
+{
+	if ((color & MAGIC_MASK) == MAGIC_COLOR)
+		color = CFrameBuffer::getInstance()->realcolor[color & 0x000000ff];
+	return color;
+}
 
 #endif /* _SCRIPTCOLOR_H */

@@ -26,6 +26,7 @@
 #include <system/debug.h>
 #include <gui/components/cc.h>
 #include <neutrino.h>
+#include <gui/scriptapi/scriptcolor.h>
 
 bool pyHaveKeywords(PyObject *kw)
 {
@@ -250,11 +251,13 @@ std::string pyScriptWhere(void)
 	return file + buf;
 }
 
+
+/* A colour a script named as one of the box's own is resolved where the window
+ * of a script resolves it, so that a window and a widget of a script cannot
+ * come to resolve one differently. */
 unsigned int pyCheckMagicMask(unsigned int col)
 {
-	if ((col & MAGIC_MASK) == MAGIC_COLOR)
-		col = CFrameBuffer::getInstance()->realcolor[col & 0x000000ff];
-	return col;
+	return (unsigned int)ScriptColorResolve(col);
 }
 
 CComponentsForm *pyLookupParentForm(PyObject *kw, const char *what)
