@@ -423,7 +423,7 @@ bool CFlashUpdate::getUpdateImage(const std::string &description)
 		return false;
 
 	sprintf(dest_name, "%s/%s", g_settings.update_dir.c_str(), fname);
-	showStatusMessageUTF(std::string(g_Locale->getText(LOCALE_FLASHUPDATE_GETUPDATEFILE)) + ': ' + description);
+	showStatusMessageUTF(std::string(g_Locale->getText(LOCALE_FLASHUPDATE_GETUPDATEFILE)) + ": " + description);
 
 	dprintf(DEBUG_NORMAL, "[update] get update (url): %s - %s\n", filename.c_str(), dest_name);
 	return httpTool.downloadFile(filename, dest_name, UPDATE_PROGRESS_IMAGE);
