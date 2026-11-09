@@ -927,6 +927,7 @@ const Param kScreenshotParams[] = {
 const RouteRefusal kScreenshotRefusals[] = {
 	HTTPD_REFUSES(Internal, ScreenNotCaptured, "the picture the box took could not be read"),
 	HTTPD_REFUSES(Busy, ScreenNotCaptured, "the box is already taking a picture of its screen"),
+	HTTPD_REFUSES(Conflict, PasswordOnScreen, "the television is showing a password, and no picture of the screen is taken while it does"),
 	HTTPD_REFUSES(Internal, OutputTooLarge, "the picture could not be made small enough to send"),
 };
 

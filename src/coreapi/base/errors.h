@@ -251,6 +251,11 @@ enum class ErrorCode
 	RecordingHoldsTuner,
 	// Asked again with stop_playback set, the file playing is ended first.
 	PlaybackRunning,
+	/* The television is showing a password, and no picture of the screen is
+	   taken while it does; a capture that was reading the screen when it came
+	   on keeps nothing either. Over once the message is gone, so a caller
+	   asks again then. */
+	PasswordOnScreen,
 	// The directory holding it may only be read, so nothing of it was removed.
 	MediumReadOnly,
 
@@ -534,6 +539,7 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::BoxInStandby: return "box-in-standby";
 		case ErrorCode::RecordingHoldsTuner: return "recording-holds-tuner";
 		case ErrorCode::PlaybackRunning: return "playback-running";
+		case ErrorCode::PasswordOnScreen: return "password-on-screen";
 		case ErrorCode::MediumReadOnly: return "medium-read-only";
 		case ErrorCode::BadScript: return "bad-script";
 		case ErrorCode::BadTable: return "bad-table";

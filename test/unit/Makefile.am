@@ -161,6 +161,7 @@ coreapi_tests_SOURCES = \
 	driver/test_recordtuner.cpp \
 	driver/test_scanpause.cpp \
 	driver/test_tsgrid.cpp \
+	driver/test_captureguard.cpp \
 	driver/test_keyrepeat.cpp \
 	driver/test_tsaudiotype.cpp \
 	coreapi/test_eventbus.cpp \
@@ -285,7 +286,8 @@ coreapi_tests_SOURCES = \
 # the EPG scan pauses for a stream, likewise.
 # tsgrid.o is how the stream server keeps every client on the packet grid,
 # plain code over a send seam, linked so the cases drive the object the
-# program runs.
+# program runs. captureguard.o, whether a picture of the screen may be taken
+# while a password is shown, is plain code over a lock and is linked likewise.
 # rcinput.o carries the message queue under test; abstime.o is the only object it
 # needs besides the stubs in test_postmsg.cpp. commandsink_real.o comes out of the
 # archive with it, which is why that adapter lives in a file of its own.
@@ -363,6 +365,7 @@ coreapi_tests_LDADD = \
 	$(top_builddir)/src/driver/recordtuner.o \
 	$(top_builddir)/src/driver/scanpause.o \
 	$(top_builddir)/src/driver/tsgrid.o \
+	$(top_builddir)/src/driver/captureguard.o \
 	$(top_builddir)/src/driver/tsaudiotype.o \
 	$(top_builddir)/lib/libmd5sum/libmd5sum.a \
 	$(top_builddir)/lib/libconfigfile/libconfigfile.a \
@@ -450,6 +453,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/check-stream-send.sh \
 	scan/check-live-displaced.sh \
 	scan/check-timer-epgid.sh \
+	scan/check-capture-exclusion.sh \
 	scan/check-timer-stop-saved.sh \
 	scan/check-record-shutdown.sh \
 	scan/check-record-readers.sh \
@@ -654,6 +658,7 @@ SCAN_CHECKS = \
 	scan-record-shutdown \
 	scan-timer-stop-saved \
 	scan-record-readers \
+	scan-capture-exclusion \
 	scan-timerlist-event \
 	scan-menu-busy \
 	scan-settings-replaced \
@@ -925,6 +930,9 @@ scan-timer-stop-saved:
 
 scan-record-readers:
 	@$(SHELL) $(srcdir)/scan/check-record-readers.sh $(top_srcdir)
+
+scan-capture-exclusion:
+	@$(SHELL) $(srcdir)/scan/check-capture-exclusion.sh $(top_srcdir)
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)

@@ -34,6 +34,7 @@ libneutrino_driver_a_SOURCES = \
 	audiofile.cpp \
 	audiometadata.cpp \
 	audioplay.cpp \
+	captureguard.cpp \
 	colorgradient.cpp \
 	fade.cpp \
 	fb_accel.cpp \

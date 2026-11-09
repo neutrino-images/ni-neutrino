@@ -46,6 +46,7 @@
 #include <cs_api.h>
 #include <gui/plugins.h>//for relodplugins
 #include <neutrino.h>
+#include <driver/captureguard.h>
 #include <driver/display.h>
 #include <driver/screenshot.h>
 #include <gui/rc_lock.h>
@@ -2390,6 +2391,21 @@ void CControlAPI::ReloadChannelsCGI(CyhookHandler *hh)
 	hh->SendOk();
 }
 
+#if defined(SCREENSHOT) || defined(ENABLE_GRAPHLCD)
+/* A picture's name names a file directly in /tmp: no slash, which would
+   lead out of it, and no control character, a NUL among them, which would
+   cut the name short or break the lines the capture writes it into. */
+static bool screenshotNameOk(const std::string &name)
+{
+	if (name.empty() || name.find('/') != std::string::npos)
+		return false;
+	for (size_t i = 0; i < name.size(); i++)
+		if ((unsigned char) name[i] < 0x20 || name[i] == 0x7f)
+			return false;
+	return true;
+}
+#endif
+
 #ifdef SCREENSHOT
 void CControlAPI::ScreenshotCGI(CyhookHandler *hh)
 {
@@ -2403,6 +2419,11 @@ void CControlAPI::ScreenshotCGI(CyhookHandler *hh)
 		enableVideo = false;
 	if(!hh->ParamList["name"].empty())
 		filename = hh->ParamList["name"];
+	// a name and not a path: the picture stays in /tmp, where it is read
+	if (!screenshotNameOk(filename)) {
+		hh->SendError();
+		return;
+	}
 
 	CScreenShot * screenshot = new CScreenShot("/tmp/" + filename + ".png", (CScreenShot::screenshot_format_t)0 /*PNG*/);
 	if(screenshot){
@@ -2410,6 +2431,9 @@ void CControlAPI::ScreenshotCGI(CyhookHandler *hh)
 		screenshot->EnableVideo(enableVideo);
 		if (screenshot->StartSync())
 			hh->SendOk();
+		else if (screenshot->Excluded())
+			// nothing was written: the TV showed a password
+			hh->SendError("the screen shows a password");
 		else
 			hh->SendError();
 		delete screenshot;
@@ -2424,6 +2448,10 @@ void CControlAPI::GlcdScreenshotCGI(CyhookHandler *hh)
 
 	if(!hh->ParamList["name"].empty())
 		filename = hh->ParamList["name"];
+	if (!screenshotNameOk(filename)) {
+		hh->SendError();
+		return;
+	}
 
 	filename = "/tmp/" + filename + ".png";
 
@@ -2433,7 +2461,22 @@ void CControlAPI::GlcdScreenshotCGI(CyhookHandler *hh)
 		hh->SendError();
 		return;
 	}
-	if (cGLCD::dumpDisplay(cGLCD::PNG, filename.c_str()))
+	/* The display can mirror the OSD, so it is pictured like the screen
+	   (captureguard): the bitmap is written into a file no name reaches,
+	   and that is given the name only once captureguard still agrees. */
+	captureguard::Capture capture;
+	if (!capture.admitted()) {
+		hh->SendError("the screen shows a password");
+		return;
+	}
+	captureguard::Staging staging;
+	const bool written = staging.ok()
+		&& cGLCD::dumpDisplay(cGLCD::PNG, staging.path().c_str());
+	if (written && !capture.clean()) {
+		hh->SendError("the screen shows a password");
+		return;
+	}
+	if (written && staging.publish(filename))
 		hh->SendOk();
 	else
 		hh->SendError();

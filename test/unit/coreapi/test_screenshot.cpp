@@ -593,6 +593,48 @@ TEST_CASE("the route answers a capture asked for while one is running as busy", 
 	REQUIRE(parsed(body)["type"].asString() == "/errors/screen-not-captured");
 }
 
+/* What the box's capture answers when the television shows a password, here
+   after it has already put something under the name it was given, as a
+   capture that was reading when the password came on may have. */
+struct PasswordShown : public FakeScreenshotSource
+{
+	bool shown;
+
+	PasswordShown() : shown(false) {}
+
+	coreapi::Status captureScreen(bool osd, bool video, coreapi::PictureFormat format,
+				      const std::string &path)
+	{
+		const coreapi::Status s =
+			FakeScreenshotSource::captureScreen(osd, video, format, path);
+		return shown ? coreapi::Status::Conflict : s;
+	}
+};
+
+TEST_CASE("while the television shows a password nothing is kept and the last picture stays", "[screenshot]")
+{
+	PasswordShown source;
+	source.content = "the picture before";
+	InstalledScreenshotSource installed(&source);
+	const std::string path = osd::screenshot(true, true, PictureFormat::Png).value();
+
+	source.shown = true;
+	source.content = "the password";
+	Result<std::string> refused = osd::screenshot(true, true, PictureFormat::Png);
+	REQUIRE_FALSE(refused.ok());
+	REQUIRE(refused.error().status == Status::Conflict);
+	REQUIRE(refused.error().code == ErrorCode::PasswordOnScreen);
+	REQUIRE(readPath(path) == "the picture before");
+	// Nor is it left beside the name.
+	REQUIRE(source.last_path != path);
+	REQUIRE_FALSE(exists(source.last_path));
+
+	source.shown = false;
+	source.content = "the picture after";
+	REQUIRE(osd::screenshot(true, true, PictureFormat::Png).value() == path);
+	REQUIRE(readPath(path) == "the picture after");
+}
+
 /* The two drivers run side by side, so the list is built from what each says
    and the settings of the one that has them. */
 struct DisplaysOn
@@ -764,6 +806,21 @@ TEST_CASE("the display is a capture of its own", "[screenshot]")
 	REQUIRE(second.value() != taken.value());
 }
 
+TEST_CASE("a display that can mirror the OSD is refused while the television shows a password", "[screenshot]")
+{
+	DisplaysOn on;
+	on.source.live_displays.insert("graphlcd");
+	on.source.display_status = Status::Conflict;
+
+	Result<std::string> taken = osd::displayScreenshot("graphlcd");
+	REQUIRE_FALSE(taken.ok());
+	REQUIRE(taken.error().status == Status::Conflict);
+	REQUIRE(taken.error().code == ErrorCode::PasswordOnScreen);
+
+	on.source.display_status = Status::Ok;
+	REQUIRE(osd::displayScreenshot("graphlcd").ok());
+}
+
 TEST_CASE("a display that is not running says so rather than failing", "[screenshot]")
 {
 	DisplaysOn on;
@@ -838,6 +895,48 @@ TEST_CASE("the request says which halves it wants", "[screenshot]")
    and went looking for a file that was never written would answer that the
    fault is here, which is the wrong half of the story and a different code on
    the wire. */
+TEST_CASE("a picture is refused with its own code while the television shows a password", "[screenshot]")
+{
+	ServingPictures serving;
+	REQUIRE(serving.port > 0);
+	serving.wired.screen.screen_status = Status::Conflict;
+
+	testhttp::Reply r = testhttp::request(serving.port, "GET", "/api/v1/osd/screenshot?format=jpeg");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 409);
+	REQUIRE(parsed(r.body)["type"].asString() == "/errors/password-on-screen");
+
+	// Once the message is gone, a picture as before.
+	serving.wired.screen.screen_status = Status::Ok;
+	r = testhttp::request(serving.port, "GET", "/api/v1/osd/screenshot?format=jpeg");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 200);
+}
+
+/* GraphLCD can mirror the television's menus, so its picture is refused the
+   same way. */
+TEST_CASE("a display that can mirror the OSD is refused with the same code over the route", "[screenshot]")
+{
+	ServingPictures serving;
+	REQUIRE(serving.port > 0);
+	FakeSettingsSource settings;
+	InstalledSettingsSource installed(&settings);
+	settings.ints["glcd_enable"] = 1;
+	serving.wired.screen.live_displays.insert("graphlcd");
+	serving.wired.screen.display_status = Status::Conflict;
+
+	testhttp::Reply r = testhttp::request(serving.port, "GET",
+					      "/api/v1/osd/displays/graphlcd/screenshot");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 409);
+	REQUIRE(parsed(r.body)["type"].asString() == "/errors/password-on-screen");
+
+	serving.wired.screen.display_status = Status::Ok;
+	r = testhttp::request(serving.port, "GET", "/api/v1/osd/displays/graphlcd/screenshot");
+	REQUIRE(r.transport_ok);
+	REQUIRE(r.code == 200);
+}
+
 TEST_CASE("a capture the box could not take answers a problem and no picture", "[screenshot]")
 {
 	ServingPictures serving;
