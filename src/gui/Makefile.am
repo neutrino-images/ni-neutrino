@@ -17,7 +17,13 @@ $(VERSION_H): FORCE
 	fi
 
 BUILT_SOURCES = $(VERSION_H)
-noinst_HEADERS = $(VERSION_H)
+noinst_HEADERS = \
+	$(VERSION_H) \
+	scriptapi/scriptcolor.h \
+	scriptapi/scripthintbox.h \
+	scriptapi/scriptmenu.h \
+	scriptapi/scriptprogresswindow.h \
+	scriptapi/scriptwindow.h
 
 FORCE:
 
