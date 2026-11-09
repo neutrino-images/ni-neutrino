@@ -96,7 +96,7 @@ int CLuaInstProgressWindow::CProgressWindowPaint(lua_State *L)
 			paramBoolDeprecated(L, tmp.c_str());
 		do_save_bg = (tmp == "true" || tmp == "1" || tmp == "yes");
 	}
-	D->w->paint(do_save_bg);
+	D->paint(do_save_bg);
 	return 0;
 }
 
@@ -111,7 +111,7 @@ int CLuaInstProgressWindow::CProgressWindowHide(lua_State *L)
 	if ((tableLookup(L, "no_restore", tmp1)) || (tableLookup(L, "no_restore", tmp2)))
 		obsoleteHideParameter(L);
 
-	D->w->hide();
+	D->hide();
 	return 0;
 }
 
@@ -124,7 +124,7 @@ int CLuaInstProgressWindow::CProgressWindowSetTitle(lua_State *L)
 	std::string name = "";
 	tableLookup(L, "name", name) || tableLookup(L, "title", name) || tableLookup(L, "caption", name);
 
-	D->w->setTitle(name);
+	D->setTitle(name);
 	return 0;
 }
 
@@ -142,10 +142,7 @@ int CLuaInstProgressWindow::CProgressWindowShowStatusInternal(lua_State *L, bool
 	tableLookup(L, "statusText", statusText);
 	tableLookup(L, "max", max);
 
-	if (local)
-		D->w->showLocalStatus(prog, max, statusText);
-	else
-		D->w->showGlobalStatus(prog, max, statusText);
+	D->showStatus(local, (unsigned int)prog, (unsigned int)max, statusText);
 
 	return 0;
 }

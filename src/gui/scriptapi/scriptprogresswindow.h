@@ -44,6 +44,13 @@ class ScriptProgressWindow
 
 		/* the window itself, for a binding that has a call of its own on it */
 		CProgressWindow	*w;
+
+		void	paint(bool do_save_bg);
+		void	hide(void);
+		void	setTitle(const std::string &name);
+		/* the status bar of the window itself, or the one of the program */
+		void	showStatus(bool local, unsigned int prog, unsigned int max,
+				   const std::string &statusText);
 };
 
 #endif /* _SCRIPTPROGRESSWINDOW_H */

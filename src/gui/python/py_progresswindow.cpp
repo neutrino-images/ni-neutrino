@@ -47,10 +47,10 @@ CPythonInstProgressWindow *CPythonInstProgressWindow::getInstance()
 	return PythonInstProgressWindow;
 }
 
-static CProgressWindow *progressWindowOf(PyObject *self)
+static CPyCProgressWindow *progressWindowOf(PyObject *self)
 {
 	PyProgressWindowObject *o = (PyProgressWindowObject *)self;
-	return (o->d != NULL) ? o->d->w : NULL;
+	return (o->d != NULL) ? o->d : NULL;
 }
 
 /* cprogresswindow.new(name="") */
@@ -105,21 +105,21 @@ void CPythonInstProgressWindow::ProgressWindowDelete(PyObject *self)
 
 PyObject *CPythonInstProgressWindow::ProgressWindowPaint(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CProgressWindow *w = progressWindowOf(self);
-	if (w == NULL)
+	CPyCProgressWindow *D = progressWindowOf(self);
+	if (D == NULL)
 		Py_RETURN_NONE;
 
 	bool do_save_bg = true;
 	pyLookupBoolCompat(kwds, "do_save_bg", do_save_bg);
 
-	w->paint(do_save_bg);
+	D->paint(do_save_bg);
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstProgressWindow::ProgressWindowHide(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CProgressWindow *w = progressWindowOf(self);
-	if (w == NULL)
+	CPyCProgressWindow *D = progressWindowOf(self);
+	if (D == NULL)
 		Py_RETURN_NONE;
 
 	bool tmp1 = false;
@@ -127,20 +127,20 @@ PyObject *CPythonInstProgressWindow::ProgressWindowHide(PyObject *self, PyObject
 	if (pyLookupBool(kwds, "no_restore", tmp1) || pyLookupString(kwds, "no_restore", tmp2))
 		pyObsoleteHideParameter();
 
-	w->hide();
+	D->hide();
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstProgressWindow::ProgressWindowSetTitle(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CProgressWindow *w = progressWindowOf(self);
-	if (w == NULL)
+	CPyCProgressWindow *D = progressWindowOf(self);
+	if (D == NULL)
 		Py_RETURN_NONE;
 
 	std::string name = "";
 	pyLookupString(kwds, "name", name) || pyLookupString(kwds, "title", name) || pyLookupString(kwds, "caption", name);
 
-	w->setTitle(name);
+	D->setTitle(name);
 	Py_RETURN_NONE;
 }
 
@@ -148,8 +148,8 @@ PyObject *CPythonInstProgressWindow::ProgressWindowSetTitle(PyObject *self, PyOb
  * the global status bar, as the Lua binding answers both. */
 PyObject *CPythonInstProgressWindow::ProgressWindowShowStatus(PyObject *self, PyObject *args, PyObject *kwds, bool local)
 {
-	CProgressWindow *w = progressWindowOf(self);
-	if (w == NULL)
+	CPyCProgressWindow *D = progressWindowOf(self);
+	if (D == NULL)
 		Py_RETURN_NONE;
 
 	unsigned long prog = 0;
@@ -161,9 +161,9 @@ PyObject *CPythonInstProgressWindow::ProgressWindowShowStatus(PyObject *self, Py
 	pyLookupInt(kwds, "max", max);
 
 	if (local)
-		w->showLocalStatus((unsigned int)prog, (unsigned int)max, statusText);
+		D->showStatus(true, (unsigned int)prog, (unsigned int)max, statusText);
 	else
-		w->showGlobalStatus((unsigned int)prog, (unsigned int)max, statusText);
+		D->showStatus(false, (unsigned int)prog, (unsigned int)max, statusText);
 
 	Py_RETURN_NONE;
 }

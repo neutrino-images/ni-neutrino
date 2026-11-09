@@ -32,3 +32,29 @@ ScriptProgressWindow::~ScriptProgressWindow()
 {
 	delete w;
 }
+
+void ScriptProgressWindow::paint(bool do_save_bg)
+{
+	w->paint(do_save_bg);
+}
+
+void ScriptProgressWindow::hide(void)
+{
+	w->hide();
+}
+
+void ScriptProgressWindow::setTitle(const std::string &name)
+{
+	w->setTitle(name);
+}
+
+/* What a script tells the window how far something has come: the status bar of
+ * the window itself, or the one the program shows for it. */
+void ScriptProgressWindow::showStatus(bool local, unsigned int prog, unsigned int max,
+		const std::string &statusText)
+{
+	if (local)
+		w->showLocalStatus(prog, max, statusText);
+	else
+		w->showGlobalStatus(prog, max, statusText);
+}
