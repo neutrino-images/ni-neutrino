@@ -71,6 +71,9 @@ PyObject *CPythonInstProgressWindow::ProgressWindowNew(PyTypeObject *type, PyObj
 	}
 	pyLookupString(kwds, "name", name) || pyLookupString(kwds, "title", name) || pyLookupString(kwds, "caption", name);
 
+	ScriptProgressWindow::params_t pars;
+	pars.name = name;
+
 	PyProgressWindowObject *self = (PyProgressWindowObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
 	{
@@ -78,9 +81,7 @@ PyObject *CPythonInstProgressWindow::ProgressWindowNew(PyTypeObject *type, PyObj
 		return NULL;
 	}
 
-	self->d = new CPyCProgressWindow();
-	self->d->w = new CProgressWindow();
-	self->d->w->setTitle(name);
+	self->d = new CPyCProgressWindow(pars);
 	return (PyObject *)self;
 }
 

@@ -30,12 +30,15 @@
 
 #include <gui/widget/progresswindow.h>
 
-class CPyCProgressWindow
+#include <gui/scriptapi/scriptprogresswindow.h>
+
+/* The window a script made, held as the shared ScriptProgressWindow: what is
+ * done with it is the same for every interpreter, and this binding only fills
+ * its parameters out of its call. */
+class CPyCProgressWindow : public ScriptProgressWindow
 {
 	public:
-		CProgressWindow *w;
-		CPyCProgressWindow() { w = NULL; }
-		~CPyCProgressWindow() { delete w; }
+		CPyCProgressWindow(const params_t &pars) : ScriptProgressWindow(pars) {}
 };
 
 class CPythonInstProgressWindow

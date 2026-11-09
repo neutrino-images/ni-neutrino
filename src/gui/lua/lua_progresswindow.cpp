@@ -64,19 +64,14 @@ int CLuaInstProgressWindow::CProgressWindowNew(lua_State *L)
 {
 	lua_assert(lua_istable(L,1));
 
-	std::string name = "";
-	tableLookup(L, "name", name) || tableLookup(L, "title", name) || tableLookup(L, "caption", name);
+	/* The parameters a script names in its table. What is done with them is
+	 * done by the script API, so that both bindings ask for one window and
+	 * cannot come to differ. */
+	ScriptProgressWindow::params_t pars;
+	tableLookup(L, "name", pars.name) || tableLookup(L, "title", pars.name) || tableLookup(L, "caption", pars.name);
 
 	CLuaCProgressWindow **udata = (CLuaCProgressWindow **) lua_newuserdata(L, sizeof(CLuaCProgressWindow *));
-	*udata = new CLuaCProgressWindow();
-
-#if 0
-	/* Enable when pu/fb-setmode branch is merged in master */
-	(*udata)->w = new CProgressWindow(name);
-#else
-	(*udata)->w = new CProgressWindow();
-	(*udata)->w->setTitle(name);
-#endif
+	*udata = new CLuaCProgressWindow(pars);
 
 	luaL_getmetatable(L, "cprogresswindow");
 	lua_setmetatable(L, -2);

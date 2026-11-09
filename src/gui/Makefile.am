@@ -215,6 +215,7 @@ endif
 libneutrino_gui_scriptapi_a_SOURCES = \
 	scriptapi/scripthintbox.cpp \
 	scriptapi/scriptmenu.cpp \
+	scriptapi/scriptprogresswindow.cpp \
 	scriptapi/scriptwindow.cpp
 
 libtimerlist_a_SOURCES = \
