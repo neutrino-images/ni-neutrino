@@ -18,6 +18,7 @@ libyhttpd_a_SOURCES = \
 	yconnection.cpp \
 	yhook.cpp \
 	ylogging.cpp \
+	yprotect.cpp \
 	yrequest.cpp \
 	yresponse.cpp \
 	ysocket.cpp \
