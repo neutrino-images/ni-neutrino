@@ -46,10 +46,10 @@ CPythonInstHintbox *CPythonInstHintbox::getInstance()
 	return PythonInstHintbox;
 }
 
-static CHintBox *hintBoxOf(PyObject *self)
+static CPyHintbox *hintboxOf(PyObject *self)
 {
 	PyHintboxObject *o = (PyHintboxObject *)self;
-	return (o->d != NULL) ? o->d->b : NULL;
+	return o->d;
 }
 
 /* hintbox.new(name="Title", text="text", icon="info", width=HINTBOX_MIN_WIDTH)
@@ -64,13 +64,20 @@ PyObject *CPythonInstHintbox::HintboxNew(PyTypeObject *type, PyObject *args, PyO
 		return NULL;
 	}
 
-	std::string name, text, icon = std::string(NEUTRINO_ICON_INFO);
-	pyLookupString(kwds, "name", name) || pyLookupString(kwds, "title", name) || pyLookupString(kwds, "caption", name);
-	pyLookupString(kwds, "text", text);
-	pyLookupString(kwds, "icon", icon);
+	/* The parameters a script names in its call. What is done with them is
+	 * done by the script API, so that both bindings ask for one box and
+	 * cannot come to differ. */
+	ScriptHintbox::params_t pars;
+	pars.icon = std::string(NEUTRINO_ICON_INFO);
+	pars.width = HINTBOX_MIN_WIDTH;
 
-	long width = HINTBOX_MIN_WIDTH;
+	pyLookupString(kwds, "name", pars.name) || pyLookupString(kwds, "title", pars.name) || pyLookupString(kwds, "caption", pars.name);
+	pyLookupString(kwds, "text", pars.text);
+	pyLookupString(kwds, "icon", pars.icon);
+
+	long width = (long)pars.width;
 	pyLookupInt(kwds, "width", width);
+	pars.width = (int)width;
 
 	PyHintboxObject *self = (PyHintboxObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
@@ -79,9 +86,7 @@ PyObject *CPythonInstHintbox::HintboxNew(PyTypeObject *type, PyObject *args, PyO
 		return NULL;
 	}
 
-	self->d = new CPyHintbox();
-	self->d->caption = strdup(name.c_str());
-	self->d->b = new CHintBox(self->d->caption, text.c_str(), (int)width, icon.c_str());
+	self->d = new CPyHintbox(pars);
 	return (PyObject *)self;
 }
 
@@ -105,29 +110,29 @@ void CPythonInstHintbox::HintboxDelete(PyObject *self)
 
 PyObject *CPythonInstHintbox::HintboxPaint(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CHintBox *b = hintBoxOf(self);
-	if (b != NULL)
-		b->paint();
+	CPyHintbox *D = hintboxOf(self);
+	if (D != NULL)
+		D->paint();
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstHintbox::HintboxHide(PyObject *self, PyObject *args, PyObject *kwds)
 {
-	CHintBox *b = hintBoxOf(self);
-	if (b != NULL)
-		b->hide();
+	CPyHintbox *D = hintboxOf(self);
+	if (D != NULL)
+		D->hide();
 	Py_RETURN_NONE;
 }
 
-/* b.exec(timeout=5): shows the box and waits for a key, with the loop the
- * Lua binding carries, which is the one gui/widget/hintbox.cpp runs. */
+/* b.exec(timeout=5): shows the box and waits for a key, with the loop the box
+ * runs when a menu of the program shows it, which is the script API's. */
 PyObject *CPythonInstHintbox::HintboxExec(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "timeout", NULL };
 	int timeout = -1;
-	CHintBox *b = hintBoxOf(self);
+	CPyHintbox *D = hintboxOf(self);
 
-	if (b == NULL)
+	if (D == NULL)
 	{
 		PyErr_SetString(PyExc_RuntimeError, "hintbox is gone");
 		return NULL;
@@ -136,57 +141,7 @@ PyObject *CPythonInstHintbox::HintboxExec(PyObject *self, PyObject *args, PyObje
 		return NULL;
 
 	CPythonInstance::scriptUiOpen();
-	b->paint();
-
-	neutrino_msg_t msg;
-	neutrino_msg_data_t data;
-	if (timeout == -1)
-		timeout = 5; /* default timeout 5 sec */
-
-	uint64_t timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
-	int res = messages_return::none;
-
-	while (!(res & (messages_return::cancel_info | messages_return::cancel_all)))
-	{
-		g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd);
-
-		if ((msg == CRCInput::RC_timeout) || (msg == CRCInput::RC_ok))
-			res = messages_return::cancel_info;
-		else if (CNeutrinoApp::getInstance()->backKey(msg))
-			res = messages_return::cancel_all;
-		else if ((msg == CRCInput::RC_up) || (msg == CRCInput::RC_down))
-		{
-			if (msg == CRCInput::RC_up)
-				b->scroll_up();
-			else
-				b->scroll_down();
-		}
-		else if (CNeutrinoApp::getInstance()->listModeKey(msg))
-		{
-			// do nothing
-		}
-		else if (msg == CRCInput::RC_mode)
-		{
-			break;
-		}
-		else if ((msg == CRCInput::RC_next) || (msg == CRCInput::RC_prev))
-		{
-			res = messages_return::cancel_all;
-			g_RCInput->postMsg(msg, data);
-		}
-		else
-		{
-			res = CNeutrinoApp::getInstance()->handleMsg(msg, data);
-			if (res & messages_return::unhandled)
-			{
-				// leave here and handle above...
-				g_RCInput->postMsg(msg, data);
-				res = messages_return::cancel_all;
-			}
-		}
-	}
-
-	b->hide();
+	D->exec(timeout);
 	CPythonInstance::scriptUiClose();
 	Py_RETURN_NONE;
 }

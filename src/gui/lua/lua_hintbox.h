@@ -22,13 +22,15 @@
 #ifndef _LUAHINTBOX_H
 #define _LUAHINTBOX_H
 
-class CLuaHintbox
+#include <gui/scriptapi/scripthintbox.h>
+
+/* The box a script made, held as the shared ScriptHintbox: what is done with it
+ * is the same for every interpreter, and this binding only fills its parameters
+ * out of a lua table. */
+class CLuaHintbox : public ScriptHintbox
 {
 	public:
-		CHintBox *b;
-		char *caption;
-		CLuaHintbox();
-		~CLuaHintbox();
+		CLuaHintbox(const params_t &pars) : ScriptHintbox(pars) {}
 };
 
 class CLuaInstHintbox

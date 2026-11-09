@@ -29,13 +29,15 @@
 
 #include <gui/widget/hintbox.h>
 
-class CPyHintbox
+#include <gui/scriptapi/scripthintbox.h>
+
+/* The box a script made, held as the shared ScriptHintbox: what is done with it
+ * is the same for every interpreter, and this binding only fills its parameters
+ * out of its call. */
+class CPyHintbox : public ScriptHintbox
 {
 	public:
-		CHintBox *b;
-		char *caption;
-		CPyHintbox() { b = NULL; caption = NULL; }
-		~CPyHintbox() { if (caption) free(caption); delete b; }
+		CPyHintbox(const params_t &pars) : ScriptHintbox(pars) {}
 };
 
 class CPythonInstHintbox

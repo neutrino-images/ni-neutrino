@@ -213,6 +213,7 @@ endif
 # has asked for already, and the bindings ask after the gui archive has been
 # passed, so a part of it would be drawn in one pass too late.
 libneutrino_gui_scriptapi_a_SOURCES = \
+	scriptapi/scripthintbox.cpp \
 	scriptapi/scriptmenu.cpp \
 	scriptapi/scriptwindow.cpp
 
