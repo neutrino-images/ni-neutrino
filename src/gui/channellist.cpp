@@ -149,6 +149,7 @@ CChannelList::CChannelList(const char * const pName, bool phistoryMode, bool _vl
 
 	paint_events_index = -2;
 	paint_events_deferred = false;
+	paint_events_retry_timer = 0;
 	CFrameBuffer::getInstance()->OnAfterSetPallette.connect(sigc::mem_fun(this, &CChannelList::ResetModules));
 	CNeutrinoApp::getInstance()->OnAfterSetupFonts.connect(sigc::mem_fun(this, &CChannelList::ResetModules));
 }
@@ -628,6 +629,10 @@ int CChannelList::getPrevNextBouquet(bool next)
 }
 
 #define CHANNEL_SMSKEY_TIMEOUT 800
+/* How long the list waits before it looks again at an infozone whose paint had
+ * to be deferred - see paint_events_deferred. Short enough to fill the area as
+ * soon as it is free, long enough not to keep the loop busy. */
+#define EPG_PAINT_RETRY_US (250 * 1000)
 /* return: >= 0 to zap, -1 on cancel, -3 on list mode change, -4 list edited, -2 zap but no restore old list/chan ?? */
 int CChannelList::show()
 {
@@ -672,20 +677,35 @@ int CChannelList::show()
 		 * thread and by showdescription(), so read and clear it under the lock
 		 * they set it under. */
 		bool repaint_events = false;
+		bool events_deferred = false;
 		{
 			std::lock_guard<std::recursive_mutex> lock(frameBuffer->overlay_paint_mutex);
 			/* Check everything that can stop the repaint before clearing the
 			 * note - clearing it for a repaint that then does not happen would
 			 * lose it for good. */
+			events_deferred = paint_events_deferred;
 			if (paint_events_deferred
 				&& selected < (*chanlist).size()
 				&& !frameBuffer->isObscured(x + width, y + theight + pig_height, infozone_width, infozone_height)) {
 				paint_events_deferred = false;
+				events_deferred = false;
 				repaint_events = true;
 			}
 		}
 		if (repaint_events)
 			paintAdditionals(selected);
+		/* A paint that had to be deferred is repeated until the area is free
+		 * again. The timer does nothing but wake this loop, the check above
+		 * decides whether there is anything to paint - without it the EPG
+		 * would stay missing until the user happens to press a key, and the
+		 * infozone would look empty for as long as he leaves the list alone. */
+		if (events_deferred) {
+			if (!paint_events_retry_timer)
+				paint_events_retry_timer = g_RCInput->addTimer(EPG_PAINT_RETRY_US, false);
+		} else if (paint_events_retry_timer) {
+			g_RCInput->killTimer(paint_events_retry_timer);
+			paint_events_retry_timer = 0;
+		}
 
 		g_RCInput->getMsgAbsoluteTimeout(&msg, &data, &timeoutEnd, true);
 		if ( msg <= CRCInput::RC_MaxRC )
@@ -695,6 +715,11 @@ int CChannelList::show()
 		if((msg == NeutrinoMessages::EVT_TIMER) && (data == fader.GetFadeTimer())) {
 			if(fader.FadeDone())
 				loop = false;
+		}
+		else if ((msg == NeutrinoMessages::EVT_TIMER) && paint_events_retry_timer
+				&& (data == (neutrino_msg_data_t)paint_events_retry_timer)) {
+			/* Only wakes this loop; the check at its top decides whether the
+			 * infozone can be painted now. */
 		}
 		else if ( ( msg == CRCInput::RC_timeout ) || ( msg == (neutrino_msg_t)g_settings.key_channelList_cancel) ) {
 			if (move_state == beMoving) {
@@ -1047,6 +1072,10 @@ int CChannelList::show()
 
 void CChannelList::hide()
 {
+	if (paint_events_retry_timer) {
+		g_RCInput->killTimer(paint_events_retry_timer);
+		paint_events_retry_timer = 0;
+	}
 	paint_events(-2); // cancel paint_events thread
 	if ((g_settings.channellist_additional == SNeutrinoSettings::CHANNELLIST_ADDITIONAL_MODE_MINITV) || (previous_channellist_additional == SNeutrinoSettings::CHANNELLIST_ADDITIONAL_MODE_MINITV)) // with miniTV
 	{

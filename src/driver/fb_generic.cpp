@@ -2227,6 +2227,15 @@ bool CFrameBuffer::isObscured(int x, int y, int dx, int dy)
 		/* rectangles that share no area are irrelevant */
 		if (o.x2 <= x || o.x1 >= x2 || o.y2 <= y || o.y1 >= y2)
 			continue;
+		/* NI temporary diagnostic: a painter that is held off cannot say by
+		 * what. Log who claims the area and how much of it, so the offender
+		 * can be found from the box. Remove once the infozone case is clear. */
+		FILE *f = fopen("/tmp/infozone.log", "a");
+		if (f) {
+			fprintf(f, "isObscured(%d,%d %dx%d): owner %p claims %d,%d %dx%d\n",
+				x, y, dx, dy, o.owner, o.x1, o.y1, o.x2 - o.x1, o.y2 - o.y1);
+			fclose(f);
+		}
 		return true;
 	}
 	return false;
