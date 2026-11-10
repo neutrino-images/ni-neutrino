@@ -48,13 +48,14 @@
 /* The colour a script names as one of the box's own is resolved in the script
  * API, where the constant it carries is: see script_color.h. */
 
-/* The statuses the curl binding answers with, the ones the Lua bindings
- * answer with. */
-#define PY_CURL_OK              0
-#define PY_CURL_ERR_HANDLE      1
-#define PY_CURL_ERR_NO_URL      2
-#define PY_CURL_ERR_CREATE_FILE 3
-#define PY_CURL_ERR_CURL        4
+/* The statuses the curl binding answers with, the ones the Lua binding
+ * answers with: they are the codes of the download in the script API, which
+ * is scriptapi/script_curl.h - ScriptCurl::OK and the four that follow it. */
+#define PY_CURL_OK              ScriptCurl::OK
+#define PY_CURL_ERR_HANDLE      ScriptCurl::ERR_HANDLE
+#define PY_CURL_ERR_NO_URL      ScriptCurl::ERR_NO_URL
+#define PY_CURL_ERR_CREATE_FILE ScriptCurl::ERR_CREATE_FILE
+#define PY_CURL_ERR_CURL        ScriptCurl::ERR_CURL
 
 /* A method of a binding, taking the arguments of the call and its keywords
  * the way the Lua bindings take a table and a list of arguments. */
