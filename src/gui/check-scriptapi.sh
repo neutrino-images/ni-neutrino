@@ -30,13 +30,14 @@ layer=src/gui/scriptapi
 # How many handles one binding builds for a class of the script API: it either
 # derives from it, or it holds one. Only the headers are looked at, because the
 # handle of a script's widget lives in one.
-handles_in()
+uses_in()
 {
 	dir=$1
 	class=$2
 	{
 		grep -rl "public $class" $dir/*.h 2>/dev/null
 		grep -rlF "$class *" $dir/*.h 2>/dev/null
+	grep -rl "$class::" $dir 2>/dev/null
 	} | sort -u | wc -l
 }
 
@@ -62,8 +63,8 @@ count=0
 on_api=0
 for class in $classes; do
 	count=$((count + 1))
-	in_lua=$(handles_in $lua $class)
-	in_python=$(handles_in $python $class)
+	in_lua=$(uses_in $lua $class)
+	in_python=$(uses_in $python $class)
 	if [ "$in_lua" != "0" ] && [ "$in_python" != "0" ]; then
 		on_api=$((on_api + 1))
 		echo "  on the script API: $class"
