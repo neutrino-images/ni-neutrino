@@ -992,13 +992,9 @@ int CLuaInstance::GetInput(lua_State *L)
 		return 0;
 	if (numargs > 1)
 		timeout = luaL_checkint(L, 2);
-	W->rcinput->getMsg_ms(&msg, &data, timeout);
-	/* TODO: I'm not sure if this works... */
-	if (msg != CRCInput::RC_timeout && msg > CRCInput::RC_MaxRC)
-	{
-		LUA_DEBUG("CLuaInstance::%s: msg 0x%08" PRIx32 " data 0x%08" PRIx32 "\n", __func__, msg, data);
-		CNeutrinoApp::getInstance()->handleMsg(msg, data);
-	}
+
+	ScriptNeutrino::GetInput(W->rcinput, timeout, msg, data);
+
 	/* signed int is debatable, but the "big" messages can't yet be handled
 	 * inside lua scripts anyway. RC_timeout == -1, RC_nokey == -2 */
 	lua_pushinteger(L, (int)msg);

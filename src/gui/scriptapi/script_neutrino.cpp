@@ -25,6 +25,7 @@
 #include <system/settings.h>
 
 #include <driver/fontrenderer.h>
+#include <driver/rcinput.h>
 
 #include "script_color.h"
 #include "script_neutrino.h"
@@ -56,6 +57,21 @@ int ScriptNeutrino::RenderString(CFBWindow *fbwin, Font *font, const std::string
 		fbwin->RenderString(font, x, params.y, w, text.c_str(), (fb_pixel_t)c, params.boxh);
 
 	return rwidth;
+}
+
+/* One message out of the window's input. The hand-off below is the TODO both
+ * bindings carried beside it, word for word: a message bigger than a key is
+ * given to the box, and neither side was sure that it belongs here. It is
+ * carried over as it stood. */
+void ScriptNeutrino::GetInput(CRCInput *rcinput, int timeout, neutrino_msg_t &msg, neutrino_msg_data_t &data)
+{
+	if (!rcinput)
+		return;
+
+	rcinput->getMsg_ms(&msg, &data, timeout);
+
+	if (msg != CRCInput::RC_timeout && msg > CRCInput::RC_MaxRC)
+		CNeutrinoApp::getInstance()->handleMsg(msg, data);
 }
 
 /* The dynamic font a script asks this window for. Both bindings asked the same

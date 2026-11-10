@@ -54,6 +54,7 @@
 #include <driver/fb_generic.h>
 #include <driver/fb_window.h>
 
+class CRCInput;
 class Font;
 
 /* The dynamic fonts one window of the API owns, under the numbers the script
@@ -64,6 +65,13 @@ typedef std::map<long, Font *> ScriptFontMap;
 class ScriptNeutrino
 {
 	public:
+		/* w.GetInput(timeout): one message out of the window's input, and where
+		 * that message is one of the bigger ones, handed on to the box - both
+		 * bindings did that, with the same doubt written beside it. Answers
+		 * the message and the data that came with it. */
+		static void GetInput(CRCInput *rcinput, int timeout,
+				neutrino_msg_t &msg, neutrino_msg_data_t &data);
+
 		/* The map of screens a window has saved, walked the same way in both
 		 * bindings: a screen is looked up by the number it was given, and then
 		 * either handed out as it is, handed out and forgotten, or freed. The

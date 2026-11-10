@@ -197,14 +197,7 @@ PyObject *CPythonInstNeutrino::GetInput(PyObject *self, PyObject *args, PyObject
 	}
 	pyLookupInt(kwds, "timeout", timeout);
 
-	W->rcinput->getMsg_ms(&msg, &data, (int)timeout);
-
-	/* TODO: I'm not sure if this works... */
-	if (msg != CRCInput::RC_timeout && msg > CRCInput::RC_MaxRC)
-	{
-		PY_DEBUG("CPythonInstNeutrino::%s: msg 0x%08x data 0x%08x\n", __func__, msg, data);
-		CNeutrinoApp::getInstance()->handleMsg(msg, data);
-	}
+	ScriptNeutrino::GetInput(W->rcinput, (int)timeout, msg, data);
 
 	return Py_BuildValue("(iI)", (int)msg, (unsigned int)data);
 }
