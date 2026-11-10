@@ -86,7 +86,7 @@ static void pyMiscDealloc(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-static PyObject *pyMiscNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+static PyObject *pyMiscNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (misc_type == NULL)
 	{
@@ -183,7 +183,7 @@ bool CPythonInstMisc::MiscRegister(PyObject *module)
 
 /* M.strFind(s, pattern, pos=0, n=0): where the pattern stands in the text,
  * or None where it does not, as the Lua binding answers. */
-PyObject *CPythonInstMisc::strFind(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::strFind(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "s", "pattern", "pos", "n", NULL };
 	const char *s1 = NULL;
@@ -202,7 +202,7 @@ PyObject *CPythonInstMisc::strFind(PyObject *self, PyObject *args, PyObject *kwd
 }
 
 /* M.strSub(s, pos, len=None) */
-PyObject *CPythonInstMisc::strSub(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::strSub(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "s", "pos", "len", NULL };
 	const char *s1 = NULL;
@@ -216,7 +216,7 @@ PyObject *CPythonInstMisc::strSub(PyObject *self, PyObject *args, PyObject *kwds
 	return PyUnicode_FromStringAndSize(ret.c_str(), (Py_ssize_t)ret.length());
 }
 
-PyObject *CPythonInstMisc::enableInfoClock(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::enableInfoClock(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "enable", NULL };
 	int enable = 1;
@@ -228,7 +228,7 @@ PyObject *CPythonInstMisc::enableInfoClock(PyObject *self, PyObject *args, PyObj
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstMisc::enableMuteIcon(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::enableMuteIcon(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "enable", NULL };
 	int enable = 1;
@@ -240,7 +240,7 @@ PyObject *CPythonInstMisc::enableMuteIcon(PyObject *self, PyObject *args, PyObje
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstMisc::setVolume(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::setVolume(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "volume", NULL };
 	int vol = 0;
@@ -261,12 +261,12 @@ PyObject *CPythonInstMisc::setVolume(PyObject *self, PyObject *args, PyObject *k
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstMisc::getVolume(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::getVolume(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	return PyLong_FromLong(g_settings.current_volume);
 }
 
-PyObject *CPythonInstMisc::AudioMute(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::AudioMute(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "newValue", "isEvent", NULL };
 	int newValue = 0;
@@ -279,7 +279,7 @@ PyObject *CPythonInstMisc::AudioMute(PyObject *self, PyObject *args, PyObject *k
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstMisc::isMuted(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::isMuted(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	return PyBool_FromLong(CNeutrinoApp::getInstance()->isMuted() ? 1 : 0);
 }
@@ -287,7 +287,7 @@ PyObject *CPythonInstMisc::isMuted(PyObject *self, PyObject *args, PyObject *kwd
 
 /* M.runScript(script, *args): runs another script, with what follows the
  * name handed to it, as the Lua binding hands its arguments on. */
-PyObject *CPythonInstMisc::runScript(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::runScript(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "script", NULL };
 	const char *script = NULL;
@@ -326,7 +326,7 @@ PyObject *CPythonInstMisc::runScript(PyObject *self, PyObject *args, PyObject *k
 
 /* Answers the revision and the hardware, as the Lua binding answers with
  * two values. */
-PyObject *CPythonInstMisc::GetRevision(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::GetRevision(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	unsigned int rev = 0;
 	std::string hw = "";
@@ -341,7 +341,7 @@ PyObject *CPythonInstMisc::GetRevision(PyObject *self, PyObject *args, PyObject 
 	return Py_BuildValue("(is)", (int)rev, hw.c_str());
 }
 
-PyObject *CPythonInstMisc::checkVersion(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::checkVersion(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "major", "minor", NULL };
 	int major = 0;
@@ -367,7 +367,7 @@ PyObject *CPythonInstMisc::checkVersion(PyObject *self, PyObject *args, PyObject
 	return PyLong_FromLong(1);
 }
 
-PyObject *CPythonInstMisc::postMsg(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::postMsg(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "msg", NULL };
 	int msg = 0;
@@ -389,7 +389,7 @@ PyObject *CPythonInstMisc::postMsg(PyObject *self, PyObject *args, PyObject *kwd
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstMisc::getTimeOfDay(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::getTimeOfDay(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	struct timeval t1;
 	gettimeofday(&t1, NULL);
@@ -399,7 +399,7 @@ PyObject *CPythonInstMisc::getTimeOfDay(PyObject *self, PyObject *args, PyObject
 }
 
 //NI
-PyObject *CPythonInstMisc::FlashUpdate(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMisc::FlashUpdate(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "mode", NULL };
 	const char *mode = NULL;

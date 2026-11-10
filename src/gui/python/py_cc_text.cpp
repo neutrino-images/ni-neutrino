@@ -130,7 +130,7 @@ PyObject *CPythonInstCCText::CCTextNew(PyTypeObject *type, PyObject *args, PyObj
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstCCText::CCTextNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCText::CCTextNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (cctext_type == NULL)
 	{
@@ -148,7 +148,7 @@ void CPythonInstCCText::CCTextDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstCCText::CCTextPaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCText::CCTextPaint(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCText *D = ccTextOf(self);
 	if (D == NULL || D->ct == NULL)
@@ -161,7 +161,7 @@ PyObject *CPythonInstCCText::CCTextPaint(PyObject *self, PyObject *args, PyObjec
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCText::CCTextHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCText::CCTextHide(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCText *D = ccTextOf(self);
 	if (D == NULL || D->ct == NULL)
@@ -183,7 +183,7 @@ PyObject *CPythonInstCCText::CCTextHide(PyObject *self, PyObject *args, PyObject
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCText::CCTextKill(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCText::CCTextKill(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCText *D = ccTextOf(self);
 	if (D == NULL || D->ct == NULL)
@@ -198,7 +198,7 @@ PyObject *CPythonInstCCText::CCTextKill(PyObject *self, PyObject *args, PyObject
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCText::CCTextSetText(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCText::CCTextSetText(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCText *D = ccTextOf(self);
 	if (D == NULL || D->ct == NULL)
@@ -253,7 +253,7 @@ PyObject *CPythonInstCCText::CCTextGetLines(PyObject *self, PyObject *args, PyOb
 
 
 /* t.scroll(dir="down", pages=1), pages=-1 for all of them */
-PyObject *CPythonInstCCText::CCTextScroll(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCText::CCTextScroll(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCText *D = ccTextOf(self);
 	if (D == NULL || D->ct == NULL)
@@ -281,7 +281,7 @@ PyObject *CPythonInstCCText::CCTextScroll(PyObject *self, PyObject *args, PyObje
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCText::CCTextSetCenterPos(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCText::CCTextSetCenterPos(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCText *D = ccTextOf(self);
 	if (D == NULL || D->ct == NULL)
@@ -298,7 +298,7 @@ PyObject *CPythonInstCCText::CCTextSetCenterPos(PyObject *self, PyObject *args, 
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCText::CCTextEnableUTF8(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCText::CCTextEnableUTF8(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCText *D = ccTextOf(self);
 	if (D == NULL || D->ct == NULL)

@@ -44,7 +44,7 @@ CPythonInstStringInput *CPythonInstStringInput::getInstance()
  *	valid_chars="...", icon="info", sms=False, pin=False)
  *
  * The keys are the ones the Lua binding reads out of its table. */
-PyObject *CPythonInstStringInput::StringInputExec(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstStringInput::StringInputExec(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (args != NULL && PyTuple_GET_SIZE(args) > 0)
 	{

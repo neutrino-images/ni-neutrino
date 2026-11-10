@@ -85,7 +85,7 @@ PyObject *CPythonInstProgressWindow::ProgressWindowNew(PyTypeObject *type, PyObj
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstProgressWindow::ProgressWindowNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstProgressWindow::ProgressWindowNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (progresswindow_type == NULL)
 	{
@@ -103,7 +103,7 @@ void CPythonInstProgressWindow::ProgressWindowDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstProgressWindow::ProgressWindowPaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstProgressWindow::ProgressWindowPaint(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCProgressWindow *D = progressWindowOf(self);
 	if (D == NULL)
@@ -116,7 +116,7 @@ PyObject *CPythonInstProgressWindow::ProgressWindowPaint(PyObject *self, PyObjec
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstProgressWindow::ProgressWindowHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstProgressWindow::ProgressWindowHide(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCProgressWindow *D = progressWindowOf(self);
 	if (D == NULL)
@@ -131,7 +131,7 @@ PyObject *CPythonInstProgressWindow::ProgressWindowHide(PyObject *self, PyObject
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstProgressWindow::ProgressWindowSetTitle(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstProgressWindow::ProgressWindowSetTitle(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCProgressWindow *D = progressWindowOf(self);
 	if (D == NULL)
@@ -146,7 +146,7 @@ PyObject *CPythonInstProgressWindow::ProgressWindowSetTitle(PyObject *self, PyOb
 
 /* w.showStatus(prog=0, max=100, statusText=""), the same for the local and
  * the global status bar, as the Lua binding answers both. */
-PyObject *CPythonInstProgressWindow::ProgressWindowShowStatus(PyObject *self, PyObject *args, PyObject *kwds, bool local)
+PyObject *CPythonInstProgressWindow::ProgressWindowShowStatus(PyObject *self, PyObject * /*args*/, PyObject *kwds, bool local)
 {
 	CPyCProgressWindow *D = progressWindowOf(self);
 	if (D == NULL)

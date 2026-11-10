@@ -74,7 +74,7 @@ PyObject *CPythonInstConfigFile::ConfigFileNew(PyTypeObject *type, PyObject *arg
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstConfigFile::ConfigFileNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstConfigFile::ConfigFileNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (configfile_type == NULL)
 	{
@@ -126,7 +126,7 @@ PyObject *CPythonInstConfigFile::SaveConfig(PyObject *self, PyObject *args, PyOb
 	return PyBool_FromLong(c->saveConfig(fname) ? 1 : 0);
 }
 
-PyObject *CPythonInstConfigFile::Clear(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstConfigFile::Clear(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CConfigFile *c = configFileOf(self);
 	if (c == NULL)

@@ -167,7 +167,7 @@ PyObject *CPythonInstCCWindow::CCWindowNew(PyTypeObject *type, PyObject *args, P
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstCCWindow::CCWindowNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (ccwindow_type == NULL)
 	{
@@ -185,7 +185,7 @@ void CPythonInstCCWindow::CCWindowDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstCCWindow::CCWindowPaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowPaint(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)
@@ -198,7 +198,7 @@ PyObject *CPythonInstCCWindow::CCWindowPaint(PyObject *self, PyObject *args, PyO
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCWindow::CCWindowHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowHide(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)
@@ -214,7 +214,7 @@ PyObject *CPythonInstCCWindow::CCWindowHide(PyObject *self, PyObject *args, PyOb
 }
 
 
-PyObject *CPythonInstCCWindow::CCWindowSetCaption(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowSetCaption(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)
@@ -230,7 +230,7 @@ PyObject *CPythonInstCCWindow::CCWindowSetCaption(PyObject *self, PyObject *args
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCWindow::CCWindowSetWindowColor(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowSetWindowColor(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)
@@ -247,7 +247,7 @@ PyObject *CPythonInstCCWindow::CCWindowSetWindowColor(PyObject *self, PyObject *
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCWindow::CCWindowPaintHeader(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowPaintHeader(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)
@@ -257,7 +257,7 @@ PyObject *CPythonInstCCWindow::CCWindowPaintHeader(PyObject *self, PyObject *arg
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCWindow::CCWindowGetHeaderHeight(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowGetHeaderHeight(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)
@@ -266,7 +266,7 @@ PyObject *CPythonInstCCWindow::CCWindowGetHeaderHeight(PyObject *self, PyObject 
 	return PyLong_FromLong(sw->headerHeight());
 }
 
-PyObject *CPythonInstCCWindow::CCWindowGetFooterHeight(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowGetFooterHeight(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)
@@ -288,7 +288,7 @@ PyObject *CPythonInstCCWindow::CCWindowFooterHeightDep(PyObject *self, PyObject 
 	return CCWindowGetFooterHeight(self, args, kwds);
 }
 
-PyObject *CPythonInstCCWindow::CCWindowSetCenterPos(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowSetCenterPos(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)
@@ -326,7 +326,7 @@ PyObject *CPythonInstCCWindow::CCWindowSetDimensionsAll(PyObject *self, PyObject
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCWindow::CCWindowSetBodyImage(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCWindow::CCWindowSetBodyImage(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	ScriptWindow *sw = scriptWindowOf(self);
 	if (sw == NULL)

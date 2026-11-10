@@ -68,7 +68,7 @@ PyObject *CPythonInstCurl::CurlNew(PyTypeObject *type, PyObject *args, PyObject 
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstCurl::CurlNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCurl::CurlNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (curl_type == NULL)
 	{
@@ -92,7 +92,7 @@ std::string CPythonInstCurl::CurlUriInternal(std::string data, bool decode)
 }
 
 /* c.encodeUri(data) */
-PyObject *CPythonInstCurl::CurlEncodeUri(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCurl::CurlEncodeUri(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "data", NULL };
 	const char *data = "";
@@ -107,7 +107,7 @@ PyObject *CPythonInstCurl::CurlEncodeUri(PyObject *self, PyObject *args, PyObjec
 }
 
 /* c.decodeUri(data) */
-PyObject *CPythonInstCurl::CurlDecodeUri(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCurl::CurlDecodeUri(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "data", NULL };
 	const char *data = "";
@@ -122,7 +122,7 @@ PyObject *CPythonInstCurl::CurlDecodeUri(PyObject *self, PyObject *args, PyObjec
 }
 
 /* c.setUriData(key, data, key2, data2, ...): the query string they make. */
-PyObject *CPythonInstCurl::CurlSetUriData(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCurl::CurlSetUriData(PyObject * /*self*/, PyObject *args, PyObject * /*kwds*/)
 {
 	Py_ssize_t numargs = (args != NULL) ? PyTuple_GET_SIZE(args) : 0;
 	if (numargs < 2 || (numargs % 2) != 0)
@@ -163,7 +163,7 @@ PyObject *CPythonInstCurl::CurlSetUriData(PyObject *self, PyObject *args, PyObje
  * The keyword arguments are read here; what they hold goes to
  * scriptapi/script_curl.cpp, where the download the Lua binding makes stands
  * too. */
-PyObject *CPythonInstCurl::CurlDownload(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCurl::CurlDownload(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (args != NULL && PyTuple_GET_SIZE(args) > 0)
 	{

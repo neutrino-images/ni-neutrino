@@ -78,7 +78,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersNew(PyTypeObject *type, PyObject *a
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstFileHelpers::FileHelpersNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (filehelpers_type == NULL)
 	{
@@ -97,7 +97,7 @@ void CPythonInstFileHelpers::FileHelpersDelete(PyObject *self)
 }
 
 /* f.cp(from, to, flags="") */
-PyObject *CPythonInstFileHelpers::FileHelpersCp(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersCp(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "from", "to", "flags", NULL };
 	const char *from = NULL;
@@ -126,7 +126,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersCp(PyObject *self, PyObject *args, 
 /* f.chmod(file, mode): the mode is the number a script writes, read as the
  * octal digits it looks like; that rule stands in the script API, where the
  * Lua binding reads it the same way. */
-PyObject *CPythonInstFileHelpers::FileHelpersChmod(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersChmod(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "file", "mode", NULL };
 	const char *file = NULL;
@@ -144,7 +144,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersChmod(PyObject *self, PyObject *arg
 }
 
 /* f.touch(file, time=now) */
-PyObject *CPythonInstFileHelpers::FileHelpersTouch(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersTouch(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "file", "time", NULL };
 	const char *file = NULL;
@@ -187,7 +187,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersTouch(PyObject *self, PyObject *arg
 }
 
 /* f.rmdir(dir) */
-PyObject *CPythonInstFileHelpers::FileHelpersRmdir(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersRmdir(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "dir", NULL };
 	const char *dir = NULL;
@@ -209,7 +209,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersRmdir(PyObject *self, PyObject *arg
 }
 
 /* f.mkdir(dir, mode=0755) */
-PyObject *CPythonInstFileHelpers::FileHelpersMkdir(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersMkdir(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "dir", "mode", NULL };
 	const char *dir = NULL;
@@ -245,7 +245,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersMkdir(PyObject *self, PyObject *arg
 
 /* f.readlink(link): what the link points at, or None where it cannot be
  * read, which is what the Lua binding answers. */
-PyObject *CPythonInstFileHelpers::FileHelpersReadlink(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersReadlink(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "link", NULL };
 	const char *link = NULL;
@@ -265,7 +265,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersReadlink(PyObject *self, PyObject *
 }
 
 /* f.ln(src, link, flags="s"): a symlink, and with 'f' over an existing one */
-PyObject *CPythonInstFileHelpers::FileHelpersLn(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersLn(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "src", "link", "flags", NULL };
 	const char *src = NULL;
@@ -304,7 +304,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersLn(PyObject *self, PyObject *args, 
 
 /* f.exist(file, flags): 'f' a regular file, 'l' a symlink, 'd' a directory.
  * None where the flags are unknown, as the Lua binding answers. */
-PyObject *CPythonInstFileHelpers::FileHelpersExist(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersExist(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "file", "flags", NULL };
 	const char *file = NULL;
@@ -359,7 +359,7 @@ PyObject *CPythonInstFileHelpers::FileHelpersExist(PyObject *self, PyObject *arg
 
 /* f.empty(file): whether a regular file holds nothing, following a symlink.
  * None where the name is not one, as the Lua binding answers. */
-PyObject *CPythonInstFileHelpers::FileHelpersIsEmpty(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstFileHelpers::FileHelpersIsEmpty(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "file", NULL };
 	const char *file = NULL;

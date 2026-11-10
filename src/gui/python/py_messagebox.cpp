@@ -49,7 +49,7 @@ CPythonInstMessagebox *CPythonInstMessagebox::getInstance()
  * The keys are the ones the Lua binding reads out of its table, so a
  * script that is carried over needs the quotes around the names changed
  * and nothing else. */
-PyObject *CPythonInstMessagebox::MessageboxExec(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMessagebox::MessageboxExec(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (args != NULL && PyTuple_GET_SIZE(args) > 0)
 	{

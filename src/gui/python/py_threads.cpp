@@ -145,7 +145,7 @@ PyObject *CPythonInstThreads::ThreadNew(PyTypeObject *type, PyObject *args, PyOb
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstThreads::ThreadNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (thread_type == NULL)
 	{
@@ -266,7 +266,7 @@ void *CPythonInstThreads::runThread(void *arg)
 }
 
 /* t.start(detached=False, joinable=True) */
-PyObject *CPythonInstThreads::ThreadStart(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadStart(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyThread *T = threadOf(self);
 	if (T == NULL)
@@ -385,7 +385,7 @@ PyObject *CPythonInstThreads::ThreadJoin(PyObject *self, PyObject *args, PyObjec
 
 /* t.cancel(): the thread is asked to stop, the way abortScript asks a script
  * to stop: something is raised in it rather than the thread torn down. */
-PyObject *CPythonInstThreads::ThreadCancel(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadCancel(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyThread *T = threadOf(self);
 	if (T == NULL)
@@ -404,7 +404,7 @@ PyObject *CPythonInstThreads::ThreadCancel(PyObject *self, PyObject *args, PyObj
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstThreads::ThreadDetach(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadDetach(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyThread *T = threadOf(self);
 	if (T == NULL)
@@ -420,7 +420,7 @@ PyObject *CPythonInstThreads::ThreadDetach(PyObject *self, PyObject *args, PyObj
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstThreads::ThreadAlive(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadAlive(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyThread *T = threadOf(self);
 	if (T == NULL)
@@ -429,7 +429,7 @@ PyObject *CPythonInstThreads::ThreadAlive(PyObject *self, PyObject *args, PyObje
 	return PyBool_FromLong(T->alive ? 1 : 0);
 }
 
-PyObject *CPythonInstThreads::ThreadStarted(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadStarted(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyThread *T = threadOf(self);
 	if (T == NULL)
@@ -438,7 +438,7 @@ PyObject *CPythonInstThreads::ThreadStarted(PyObject *self, PyObject *args, PyOb
 	return PyBool_FromLong(T->started ? 1 : 0);
 }
 
-PyObject *CPythonInstThreads::ThreadDetached(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadDetached(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyThread *T = threadOf(self);
 	if (T == NULL)
@@ -447,7 +447,7 @@ PyObject *CPythonInstThreads::ThreadDetached(PyObject *self, PyObject *args, PyO
 	return PyBool_FromLong(T->detached ? 1 : 0);
 }
 
-PyObject *CPythonInstThreads::ThreadJoinable(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadJoinable(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyThread *T = threadOf(self);
 	if (T == NULL)
@@ -478,7 +478,7 @@ PyObject *CPythonInstThreads::ThreadSetLogger(PyObject *self, PyObject *args, Py
 }
 
 /* t.result(): what the code left in 'result' */
-PyObject *CPythonInstThreads::ThreadResult(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstThreads::ThreadResult(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyThread *T = threadOf(self);
 	if (T == NULL || T->result == NULL)

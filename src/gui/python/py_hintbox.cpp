@@ -90,7 +90,7 @@ PyObject *CPythonInstHintbox::HintboxNew(PyTypeObject *type, PyObject *args, PyO
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstHintbox::HintboxNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHintbox::HintboxNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (hintbox_type == NULL)
 	{
@@ -108,7 +108,7 @@ void CPythonInstHintbox::HintboxDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstHintbox::HintboxPaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHintbox::HintboxPaint(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyHintbox *D = hintboxOf(self);
 	if (D != NULL)
@@ -116,7 +116,7 @@ PyObject *CPythonInstHintbox::HintboxPaint(PyObject *self, PyObject *args, PyObj
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstHintbox::HintboxHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHintbox::HintboxHide(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyHintbox *D = hintboxOf(self);
 	if (D != NULL)

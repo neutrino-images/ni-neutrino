@@ -122,7 +122,7 @@ PyObject *CPythonInstCCPicture::CCPictureNew(PyTypeObject *type, PyObject *args,
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstCCPicture::CCPictureNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCPicture::CCPictureNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (ccpicture_type == NULL)
 	{
@@ -140,7 +140,7 @@ void CPythonInstCCPicture::CCPictureDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstCCPicture::CCPicturePaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCPicture::CCPicturePaint(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCPicture *D = ccPictureOf(self);
 	if (D == NULL || D->cp == NULL)
@@ -153,7 +153,7 @@ PyObject *CPythonInstCCPicture::CCPicturePaint(PyObject *self, PyObject *args, P
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCPicture::CCPictureHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCPicture::CCPictureHide(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCPicture *D = ccPictureOf(self);
 	if (D == NULL || D->cp == NULL)
@@ -175,7 +175,7 @@ PyObject *CPythonInstCCPicture::CCPictureHide(PyObject *self, PyObject *args, Py
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCPicture::CCPictureSetPicture(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCPicture::CCPictureSetPicture(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCPicture *D = ccPictureOf(self);
 	if (D == NULL || D->cp == NULL)
@@ -188,7 +188,7 @@ PyObject *CPythonInstCCPicture::CCPictureSetPicture(PyObject *self, PyObject *ar
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCPicture::CCPictureSetCenterPos(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCPicture::CCPictureSetCenterPos(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCPicture *D = ccPictureOf(self);
 	if (D == NULL || D->cp == NULL)
@@ -205,7 +205,7 @@ PyObject *CPythonInstCCPicture::CCPictureSetCenterPos(PyObject *self, PyObject *
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCPicture::CCPictureGetHeight(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCPicture::CCPictureGetHeight(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyCCPicture *D = ccPictureOf(self);
 	if (D == NULL || D->cp == NULL)
@@ -214,7 +214,7 @@ PyObject *CPythonInstCCPicture::CCPictureGetHeight(PyObject *self, PyObject *arg
 	return PyLong_FromLong(D->cp->getHeight());
 }
 
-PyObject *CPythonInstCCPicture::CCPictureGetWidth(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCPicture::CCPictureGetWidth(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyCCPicture *D = ccPictureOf(self);
 	if (D == NULL || D->cp == NULL)
@@ -224,7 +224,7 @@ PyObject *CPythonInstCCPicture::CCPictureGetWidth(PyObject *self, PyObject *args
 }
 
 /* p.doPaintBg(paint_bg=False) */
-PyObject *CPythonInstCCPicture::CCPictureSetDoPaintBG(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCPicture::CCPictureSetDoPaintBG(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCPicture *D = ccPictureOf(self);
 	if (D == NULL || D->cp == NULL)

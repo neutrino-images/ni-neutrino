@@ -112,7 +112,7 @@ PyObject *CPythonInstCCHeader::CCHeaderNew(PyTypeObject *type, PyObject *args, P
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstCCHeader::CCHeaderNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCHeader::CCHeaderNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (ccheader_type == NULL)
 	{
@@ -130,7 +130,7 @@ void CPythonInstCCHeader::CCHeaderDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstCCHeader::CCHeaderPaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCHeader::CCHeaderPaint(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCHeader *D = ccHeaderOf(self);
 	if (D == NULL || D->ch == NULL)
@@ -143,7 +143,7 @@ PyObject *CPythonInstCCHeader::CCHeaderPaint(PyObject *self, PyObject *args, PyO
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCHeader::CCHeaderHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCHeader::CCHeaderHide(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyCCHeader *D = ccHeaderOf(self);
 	if (D == NULL || D->ch == NULL)

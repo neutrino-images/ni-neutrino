@@ -79,7 +79,7 @@ PyObject *CPythonInstVideo::VideoNew(PyTypeObject *type, PyObject *args, PyObjec
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstVideo::VideoNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstVideo::VideoNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (video_type == NULL)
 	{
@@ -98,7 +98,7 @@ void CPythonInstVideo::VideoDelete(PyObject *self)
 }
 
 /* v.setBlank(enable=True) */
-PyObject *CPythonInstVideo::SetBlank(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstVideo::SetBlank(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "enable", NULL };
 	int enable = 1;
@@ -111,7 +111,7 @@ PyObject *CPythonInstVideo::SetBlank(PyObject *self, PyObject *args, PyObject *k
 }
 
 /* v.ShowPicture(fname) */
-PyObject *CPythonInstVideo::ShowPicture(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstVideo::ShowPicture(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "fname", NULL };
 	const char *fname = "";
@@ -123,7 +123,7 @@ PyObject *CPythonInstVideo::ShowPicture(PyObject *self, PyObject *args, PyObject
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstVideo::StopPicture(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstVideo::StopPicture(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CFrameBuffer::getInstance()->stopFrame();
 	Py_RETURN_NONE;
@@ -238,7 +238,7 @@ PyObject *CPythonInstVideo::PlayFile(PyObject *self, PyObject *args, PyObject *k
 }
 
 /* v.zapitStopPlayBack(stop=True) */
-PyObject *CPythonInstVideo::ZapitStopPlayBack(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstVideo::ZapitStopPlayBack(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "stop", NULL };
 	int stop = 1;
@@ -257,7 +257,7 @@ PyObject *CPythonInstVideo::ZapitStopPlayBack(PyObject *self, PyObject *args, Py
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstVideo::ChannelRezap(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstVideo::ChannelRezap(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CNeutrinoApp::getInstance()->channelRezap();
 	if (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_radio)
@@ -267,7 +267,7 @@ PyObject *CPythonInstVideo::ChannelRezap(PyObject *self, PyObject *args, PyObjec
 
 /* v.createChannelIDfromUrl(url): the channel id of the url, as the text the
  * Lua binding answers. */
-PyObject *CPythonInstVideo::CreateChannelIDfromUrl(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstVideo::CreateChannelIDfromUrl(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "url", NULL };
 	const char *url = "";
@@ -284,7 +284,7 @@ PyObject *CPythonInstVideo::CreateChannelIDfromUrl(PyObject *self, PyObject *arg
 	return PyUnicode_FromString(id_str);
 }
 
-PyObject *CPythonInstVideo::GetNeutrinoMode(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstVideo::GetNeutrinoMode(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	return PyLong_FromLong((long)CNeutrinoApp::getInstance()->getMode());
 }

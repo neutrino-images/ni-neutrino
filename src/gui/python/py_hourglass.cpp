@@ -110,7 +110,7 @@ PyObject *CPythonInstHourGlass::HourGlassNew(PyTypeObject *type, PyObject *args,
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstHourGlass::HourGlassNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHourGlass::HourGlassNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (hourglass_type == NULL)
 	{
@@ -130,7 +130,7 @@ void CPythonInstHourGlass::HourGlassDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstHourGlass::HourGlassPaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHourGlass::HourGlassPaint(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	PyHourGlassObject *o = (PyHourGlassObject *)self;
 	if (o->d == NULL || o->d->h == NULL)
@@ -143,7 +143,7 @@ PyObject *CPythonInstHourGlass::HourGlassPaint(PyObject *self, PyObject *args, P
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstHourGlass::HourGlassHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHourGlass::HourGlassHide(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	PyHourGlassObject *o = (PyHourGlassObject *)self;
 	if (o->d == NULL || o->d->h == NULL)

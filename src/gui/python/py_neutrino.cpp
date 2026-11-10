@@ -128,7 +128,7 @@ PyObject *CPythonInstNeutrino::WindowNew(PyTypeObject *type, PyObject *args, PyO
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstNeutrino::WindowNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstNeutrino::WindowNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (window_type == NULL)
 	{
@@ -185,12 +185,12 @@ PyObject *CPythonInstNeutrino::GetInput(PyObject *self, PyObject *args, PyObject
 }
 
 /* w.Blit(): the Lua binding answers nothing here, and neither does this. */
-PyObject *CPythonInstNeutrino::Blit(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstNeutrino::Blit(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstNeutrino::GetLanguage(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstNeutrino::GetLanguage(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	// copied under the lock: a script can run on a thread of its own
 	const std::string lang = settingsText(g_settings.language);
@@ -264,7 +264,7 @@ PyObject *CPythonInstNeutrino::PaintVLineRel(PyObject *self, PyObject *args, PyO
 /* w.RenderString(font, text, x, y[, color, w, boxh, center]), and with a
  * True in front of the font number where it names a dynamic font of this
  * window. Answers the width the text takes, as the Lua binding answers. */
-PyObject *CPythonInstNeutrino::RenderString(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstNeutrino::RenderString(PyObject *self, PyObject *args, PyObject * /*kwds*/)
 {
 	CPyWindowData *W = windowOf(self);
 	if (W == NULL || W->fbwin == NULL)
@@ -334,7 +334,7 @@ PyObject *CPythonInstNeutrino::RenderString(PyObject *self, PyObject *args, PyOb
 
 /* w.getRenderWidth(font, text), with the same True in front of a dynamic
  * font number. */
-PyObject *CPythonInstNeutrino::GetRenderWidth(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstNeutrino::GetRenderWidth(PyObject *self, PyObject *args, PyObject * /*kwds*/)
 {
 	CPyWindowData *W = windowOf(self);
 	if (W == NULL || W->fbwin == NULL)
@@ -374,7 +374,7 @@ PyObject *CPythonInstNeutrino::GetRenderWidth(PyObject *self, PyObject *args, Py
 }
 
 /* w.FontHeight(font), with the same True in front of a dynamic font. */
-PyObject *CPythonInstNeutrino::FontHeight(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstNeutrino::FontHeight(PyObject *self, PyObject *args, PyObject * /*kwds*/)
 {
 	CPyWindowData *W = windowOf(self);
 	if (W == NULL || W->fbwin == NULL)
@@ -409,7 +409,7 @@ PyObject *CPythonInstNeutrino::FontHeight(PyObject *self, PyObject *args, PyObje
 /* w.getDynFont(dx, dy[, text, style]): the number of a font this window
  * makes, and whether it could be made, as the Lua binding answers two
  * values. */
-PyObject *CPythonInstNeutrino::GetDynFont(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstNeutrino::GetDynFont(PyObject *self, PyObject *args, PyObject * /*kwds*/)
 {
 	CPyWindowData *W = windowOf(self);
 	if (W == NULL || W->fbwin == NULL)

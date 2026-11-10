@@ -103,7 +103,7 @@ PyObject *CPythonInstHint::HintNew(PyTypeObject *type, PyObject *args, PyObject 
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstHint::HintNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHint::HintNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (hint_type == NULL)
 	{
@@ -121,7 +121,7 @@ void CPythonInstHint::HintDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstHint::HintPaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHint::HintPaint(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CHint *h = hintOf(self);
 	if (h == NULL)
@@ -134,7 +134,7 @@ PyObject *CPythonInstHint::HintPaint(PyObject *self, PyObject *args, PyObject *k
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstHint::HintHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstHint::HintHide(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CHint *h = hintOf(self);
 	if (h == NULL)

@@ -95,7 +95,7 @@ PyObject *CPythonInstCCSignalbox::CCSignalBoxNew(PyTypeObject *type, PyObject *a
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstCCSignalbox::CCSignalBoxNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCSignalbox::CCSignalBoxNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (ccsignalbox_type == NULL)
 	{
@@ -113,7 +113,7 @@ void CPythonInstCCSignalbox::CCSignalBoxDelete(PyObject *self)
 	Py_TYPE(self)->tp_free(self);
 }
 
-PyObject *CPythonInstCCSignalbox::CCSignalBoxPaint(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCSignalbox::CCSignalBoxPaint(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCSignalBox *D = ccSignalBoxOf(self);
 	if (D == NULL || D->s == NULL)
@@ -126,7 +126,7 @@ PyObject *CPythonInstCCSignalbox::CCSignalBoxPaint(PyObject *self, PyObject *arg
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstCCSignalbox::CCSignalBoxSetCenterPos(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstCCSignalbox::CCSignalBoxSetCenterPos(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyCCSignalBox *D = ccSignalBoxOf(self);
 	if (D == NULL || D->s == NULL)

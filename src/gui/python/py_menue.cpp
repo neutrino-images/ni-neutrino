@@ -200,7 +200,7 @@ PyObject *CPythonInstMenu::MenuNew(PyTypeObject *type, PyObject *args, PyObject 
 	return (PyObject *)self;
 }
 
-PyObject *CPythonInstMenu::MenuNewModule(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)
 {
 	if (menu_type == NULL)
 	{
@@ -415,7 +415,7 @@ bool CPyMenuObserver::changeNotify(const std::string &optionName, void *data)
 /* m.addKey(action=callable, id="", directkey=RC[...]), where a direct key is
  * one of the keys the RC table names; the row is made without one, which is
  * what the Lua binding's RC_nokey default is, where none is given. */
-PyObject *CPythonInstMenu::MenuAddKey(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuAddKey(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL)
@@ -585,7 +585,7 @@ PyObject *CPythonInstMenu::MenuAddItem(PyObject *self, PyObject *args, PyObject 
 }
 
 /* m.exec(): shows the menu and waits, as the Lua binding runs it. */
-PyObject *CPythonInstMenu::MenuExec(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuExec(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL || D->m == NULL)
@@ -602,7 +602,7 @@ PyObject *CPythonInstMenu::MenuExec(PyObject *self, PyObject *args, PyObject *kw
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstMenu::MenuHide(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuHide(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL || D->m == NULL)
@@ -613,7 +613,7 @@ PyObject *CPythonInstMenu::MenuHide(PyObject *self, PyObject *args, PyObject *kw
 }
 
 /* m.setActive(item=id, activ=True) */
-PyObject *CPythonInstMenu::MenuSetActive(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuSetActive(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL)
@@ -635,7 +635,7 @@ PyObject *CPythonInstMenu::MenuSetActive(PyObject *self, PyObject *args, PyObjec
 }
 
 /* m.setName(item=id, name="...") */
-PyObject *CPythonInstMenu::MenuSetName(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuSetName(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL)
@@ -657,7 +657,7 @@ PyObject *CPythonInstMenu::MenuSetName(PyObject *self, PyObject *args, PyObject 
 }
 
 /* m.setSelected(preselected=...) */
-PyObject *CPythonInstMenu::MenuSetSelected(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuSetSelected(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL || D->m == NULL)
@@ -673,7 +673,7 @@ PyObject *CPythonInstMenu::MenuSetSelected(PyObject *self, PyObject *args, PyObj
 	Py_RETURN_NONE;
 }
 
-PyObject *CPythonInstMenu::MenuGetSelected(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuGetSelected(PyObject *self, PyObject * /*args*/, PyObject * /*kwds*/)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL || D->m == NULL)
@@ -684,7 +684,7 @@ PyObject *CPythonInstMenu::MenuGetSelected(PyObject *self, PyObject *args, PyObj
 
 /* m.setValue(item=id, value="..."): what the row shows, without telling the
  * script, which is what the Lua binding does with it. */
-PyObject *CPythonInstMenu::MenuSetValue(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuSetValue(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL)
@@ -746,7 +746,7 @@ PyObject *CPythonInstMenu::MenuSetValue(PyObject *self, PyObject *args, PyObject
 }
 
 /* m.paintItem(item=id): the row is painted again where it stands. */
-PyObject *CPythonInstMenu::MenuPaintItem(PyObject *self, PyObject *args, PyObject *kwds)
+PyObject *CPythonInstMenu::MenuPaintItem(PyObject *self, PyObject * /*args*/, PyObject *kwds)
 {
 	CPyMenu *D = menuOf(self);
 	if (D == NULL)
