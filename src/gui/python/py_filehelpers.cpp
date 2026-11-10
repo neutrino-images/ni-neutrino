@@ -120,8 +120,12 @@ PyObject *CPythonInstFileHelpers::FileHelpersCp(PyObject *self, PyObject *args, 
 	return PyBool_FromLong(ret ? 1 : 0);
 }
 
+/* the layer this file now reads: scriptapi/script_filehelpers.h */
+#include "../scriptapi/script_filehelpers.h"
+
 /* f.chmod(file, mode): the mode is the number a script writes, read as the
- * octal digits it looks like, which is what the Lua binding does with it. */
+ * octal digits it looks like; that rule stands in the script API, where the
+ * Lua binding reads it the same way. */
 PyObject *CPythonInstFileHelpers::FileHelpersChmod(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	static const char *kwlist[] = { "file", "mode", NULL };
@@ -131,15 +135,10 @@ PyObject *CPythonInstFileHelpers::FileHelpersChmod(PyObject *self, PyObject *arg
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "si", (char **)kwlist, &file, &mode_i))
 		return NULL;
 
-	std::string mode_s = itoa(mode_i, 10);
-	mode_t mode = (mode_t)(strtol(mode_s.c_str(), (char **)NULL, 8) & 0x0FFF);
-
-	bool ret = true;
-	if (chmod(file, mode) != 0)
-	{
-		ret = false;
-		fileHelpersError(strerror(errno), __path_file__, __LINE__);
-	}
+	std::string error = "";
+	bool ret = ScriptFileHelpers::Chmod(file, mode_i, error);
+	if (!ret)
+		fileHelpersError(error.c_str(), __path_file__, __LINE__);
 
 	return PyBool_FromLong(ret ? 1 : 0);
 }
