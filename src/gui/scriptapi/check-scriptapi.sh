@@ -19,9 +19,10 @@
 # one whose work already stands in a class of the box, and one that is the
 # language itself.
 #
-# Run from the top of the tree:  sh src/gui/check-scriptapi.sh
-# Or from anywhere, with the top of the tree named:
-#	sh src/gui/check-scriptapi.sh /path/to/tangos-ni
+# This script lies in the layer it watches: src/gui/scriptapi/check-scriptapi.sh.
+# Or with the top of the tree named, as the build calls it; a call without a
+# name reads the top from where this file lies, three levels up:
+#	sh src/gui/scriptapi/check-scriptapi.sh /path/to/tangos-ni
 # The build calls it the second way, as src/coreapi/Makefile.am calls its own
 # check-layering.sh.
 #
@@ -29,7 +30,12 @@
 # of the tree; this one watches the split between the bindings and the layer
 # both of them read.
 
-top=${1:-.}
+# Named, or read from this file's own place: three levels up from scriptapi/ is
+# the top of the tree, and both a call from inside the tree and one from a build
+# outside it land on the same tree that way.
+here=$(dirname "$0")
+
+top=${1:-$here/../../..}
 status=0
 lua=$top/src/gui/lua
 python=$top/src/gui/python

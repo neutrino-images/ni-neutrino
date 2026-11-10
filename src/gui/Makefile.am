@@ -44,13 +44,13 @@ FORCE:
 #
 # A build that does not read these makefiles has to be told to run it, and
 # ni-buildsystem is one of those:
-#	sh src/gui/check-scriptapi.sh <top of the tree>
+#	sh src/gui/scriptapi/check-scriptapi.sh <top of the tree>
 # Hence the top of the tree as an argument: the check reads both bindings and
 # the layer, wherever the tree stands.
-EXTRA_DIST = check-scriptapi.sh
+EXTRA_DIST = scriptapi/check-scriptapi.sh
 
 check-scriptapi:
-	@$(SHELL) $(srcdir)/check-scriptapi.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/scriptapi/check-scriptapi.sh $(top_srcdir)
 
 .PHONY: check-scriptapi
 
