@@ -148,6 +148,7 @@ echo "  $on_api of $count"
 todo=""
 shared=""
 language=""
+answers=""
 pairs=0
 for f in $lua/lua_*.cpp; do
 	name=$(basename $f .cpp | sed 's/^lua_//')
@@ -159,6 +160,31 @@ for f in $lua/lua_*.cpp; do
 	in_python=no
 	on_the_layer $f $lua/lua_$name.h && in_lua=yes
 	on_the_layer $twin $python/py_$name.h && in_python=yes
+
+	# What this pair answers in the layer, and whether it is there. The file is
+	# read out of the pair, not guessed from the name, so a pair that reads
+	# script_window.h has to find it - a name that no longer answers is a fault.
+	# The header of a class needs its source beside it, or it is a promise and
+	# not an implementation. A pair that answers nothing is said below: either
+	# the work is still to come, or the pair rests on a class of the box.
+	answers_of=$(grep -ho "scriptapi/script_[a-z_]*\.h" $f $lua/lua_$name.h $twin $python/py_$name.h 2>/dev/null | sed 's|scriptapi/||' | sort -u)
+	if [ -z "$answers_of" ]; then
+		answers="$answers $name:"
+	else
+		for l_file in $answers_of; do
+			if [ ! -f "$layer/$l_file" ]; then
+				echo "FAIL: $name reads $l_file, and the script API does not hold it"
+				status=1
+			elif grep -q '^class Script' "$layer/$l_file" 2>/dev/null; then
+				l_stem=$(echo $l_file | sed 's/\.h$//')
+				if [ ! -f "$layer/$l_stem.cpp" ]; then
+					echo "FAIL: $l_file holds a class, and $l_stem.cpp is not beside it"
+					status=1
+				fi
+			fi
+		done
+		answers="$answers $name:$(echo $answers_of | tr ' ' ',')"
+	fi
 
 	if [ "$in_lua" != "$in_python" ]; then
 		echo "FAIL: $name is read from the script API on one side only (lua: $in_lua, python: $in_python)"
@@ -197,6 +223,34 @@ if [ -n "$language" ]; then
 	echo "  a pair of both bindings that is the language itself, and no work left over:"
 	for name in $language; do
 		echo "    $name - its two sides hold different things, which is the point"
+	done
+fi
+
+# ---------------------------------------------------------------------------
+# The correspondence itself, in one column: what a pair answers in the script
+# API, and what of it is read by nobody. A pair whose class stands on the layer
+# is held to it by the first check, which wants both bindings to build on it;
+# this one shows that the file it reads is the file it answers, and that no
+# file of the layer has quietly stopped being read.
+# ---------------------------------------------------------------------------
+
+if [ -n "$answers" ]; then
+	echo "  what a pair of the two bindings answers in the script API ($pairs pairs looked at):"
+	for entry in $answers; do
+		echo "    $(echo $entry | sed 's/:$/: nothing yet/;s/:/ -> /')"
+	done
+fi
+
+never_read=""
+for l_file in $layer/script_*.h; do
+	[ -f "$l_file" ] || continue
+	l_base=$(basename $l_file)
+	grep -rq "scriptapi/$l_base" $lua $python 2>/dev/null || never_read="$never_read $l_base"
+done
+if [ -n "$never_read" ]; then
+	echo "  a header of the script API that no binding reads, so it answers nobody:"
+	for l_base in $never_read; do
+		echo "    $l_base"
 	done
 fi
 
