@@ -39,6 +39,8 @@
 #include <driver/fb_generic.h>
 #include <driver/fb_window.h>
 
+#include "../scriptapi/script_neutrino.h"
+
 class CRCInput;
 class Font;
 

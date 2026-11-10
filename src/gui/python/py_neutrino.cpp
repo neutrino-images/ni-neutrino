@@ -251,17 +251,7 @@ PyObject *CPythonInstNeutrino::PaintBox(PyObject *self, PyObject *args, PyObject
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiiik|ii", (char **)kwlist, &x, &y, &w, &h, &c, &radius, &corner))
 		return NULL;
 
-	/* those checks should be done in CFBWindow instead... */
-	if (x < 0)
-		x = 0;
-	if (y < 0)
-		y = 0;
-	if (w < 0 || x + w > W->fbwin->dx)
-		w = W->fbwin->dx - x;
-	if (h < 0 || y + h > W->fbwin->dy)
-		h = W->fbwin->dy - y;
-	c = ScriptColorResolve((unsigned int)c);
-	W->fbwin->paintBoxRel((int)x, (int)y, (int)w, (int)h, (fb_pixel_t)c, (int)radius, (int)corner);
+	ScriptNeutrino::PaintBox(W->fbwin, (int)x, (int)y, (int)w, (int)h, c, (int)radius, (int)corner);
 
 	Py_RETURN_NONE;
 }
@@ -282,14 +272,7 @@ PyObject *CPythonInstNeutrino::PaintHLineRel(PyObject *self, PyObject *args, PyO
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiik", (char **)kwlist, &x, &dx, &y, &c))
 		return NULL;
 
-	if (x < 0)
-		x = 0;
-	if (y < 0)
-		y = 0;
-	if (dx < 0 || x + dx > W->fbwin->dx)
-		dx = W->fbwin->dx - x;
-	c = ScriptColorResolve((unsigned int)c);
-	W->fbwin->paintHLineRel((int)x, (int)dx, (int)y, (fb_pixel_t)c);
+	ScriptNeutrino::PaintHLineRel(W->fbwin, (int)x, (int)dx, (int)y, c);
 
 	Py_RETURN_NONE;
 }
@@ -310,14 +293,7 @@ PyObject *CPythonInstNeutrino::PaintVLineRel(PyObject *self, PyObject *args, PyO
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiik", (char **)kwlist, &x, &y, &dy, &c))
 		return NULL;
 
-	if (x < 0)
-		x = 0;
-	if (y < 0)
-		y = 0;
-	if (dy < 0 || y + dy > W->fbwin->dy)
-		dy = W->fbwin->dy - y;
-	c = ScriptColorResolve((unsigned int)c);
-	W->fbwin->paintVLineRel((int)x, (int)y, (int)dy, (fb_pixel_t)c);
+	ScriptNeutrino::PaintVLineRel(W->fbwin, (int)x, (int)y, (int)dy, c);
 
 	Py_RETURN_NONE;
 }

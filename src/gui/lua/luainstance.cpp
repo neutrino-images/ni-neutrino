@@ -47,6 +47,7 @@
 #include "lua_cc_text.h"
 #include "lua_cc_window.h"
 #include "lua_configfile.h"
+#include "../scriptapi/script_neutrino.h"
 #include "lua_curl.h"
 #include "lua_filehelpers.h"
 #include "lua_hint.h"
@@ -1058,17 +1059,8 @@ int CLuaInstance::PaintBox(lua_State *L)
 		radius = luaL_checkint(L, 7);
 	if (count > 7)
 		corner = luaL_checkint(L, 8);
-	/* those checks should be done in CFBWindow instead... */
-	if (x < 0)
-		x = 0;
-	if (y < 0)
-		y = 0;
-	if (w < 0 || x + w > W->fbwin->dx)
-		w = W->fbwin->dx - x;
-	if (h < 0 || y + h > W->fbwin->dy)
-		h = W->fbwin->dy - y;
-	c = ScriptColorResolve(c);
-	W->fbwin->paintBoxRel(x, y, w, h, c, radius, corner);
+
+	ScriptNeutrino::PaintBox(W->fbwin, x, y, w, h, c, radius, corner);
 	return 0;
 }
 
@@ -1085,14 +1077,8 @@ int CLuaInstance::paintHLineRel(lua_State *L)
 	y  = luaL_checkint(L, 4);
 
 	c = luaL_checkunsigned(L, 5);
-	if (x < 0)
-		x = 0;
-	if (y < 0)
-		y = 0;
-	if (dx < 0 || x + dx > W->fbwin->dx)
-		dx = W->fbwin->dx - x;
-	c = ScriptColorResolve(c);
-	W->fbwin->paintHLineRel(x, dx, y, c);
+
+	ScriptNeutrino::PaintHLineRel(W->fbwin, x, dx, y, c);
 	return 0;
 }
 
@@ -1109,14 +1095,8 @@ int CLuaInstance::paintVLineRel(lua_State *L)
 	dy = luaL_checkint(L, 4);
 
 	c = luaL_checkunsigned(L, 5);
-	if (x < 0)
-		x = 0;
-	if (y < 0)
-		y = 0;
-	if (dy < 0 || y + dy > W->fbwin->dy)
-		dy = W->fbwin->dy - y;
-	c = ScriptColorResolve(c);
-	W->fbwin->paintVLineRel(x, y, dy, c);
+
+	ScriptNeutrino::PaintVLineRel(W->fbwin, x, y, dy, c);
 	return 0;
 }
 
