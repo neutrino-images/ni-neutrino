@@ -1239,47 +1239,30 @@ int CLuaInstance::getDynFont(lua_State *L)
 		return 0;
 	}
 
-	lua_Integer fontID = W->fontmap.size();
-	if (fontID >= CNeutrinoFonts::DYNFONTEXT_MAX)
-	{
-		lua_pushnil(L);
-		lua_pushinteger(L, DYNFONT_MAXIMUM_FONTS);
-		return 2;
-	}
-
 	int dx = 0, dy = 0;
-	lua_Integer style = CNeutrinoFonts::FONT_STYLE_REGULAR;
+	int style = CNeutrinoFonts::FONT_STYLE_REGULAR;
 	std::string text = "";
 
 	dx = luaL_checkint(L, 2);
-	if (dx > (lua_Integer)CFrameBuffer::getInstance()->getScreenWidth(true))
-	{
-		lua_pushnil(L);
-		lua_pushinteger(L, DYNFONT_TOO_WIDE);
-		return 2;
-	}
 	dy = luaL_checkint(L, 3);
-	if (dy > 100)
-	{
-		lua_pushnil(L);
-		lua_pushinteger(L, DYNFONT_TOO_HIGH);
-		return 2;
-	}
 	if (numargs > 3)
 		text = luaL_checkstring(L, 4);
 	if (numargs > 4)
-	{
 		style = luaL_checkint(L, 5);
-		if (style > CNeutrinoFonts::FONT_STYLE_ITALIC)
-			style = CNeutrinoFonts::FONT_STYLE_REGULAR;
+
+	ScriptNeutrino::DynFontStatus status = ScriptNeutrino::DynFontOk;
+	Font *f = ScriptNeutrino::GetDynFont(dx, dy, (int)W->fontmap.size(), text, style, status);
+	if (f == NULL)
+	{
+		lua_pushnil(L);
+		lua_pushinteger(L, status);
+		return 2;
 	}
 
-	Font *f = CNeutrinoFonts::getInstance()->getDynFontExt(dx, dy, fontID, text, style);
-
-	lua_Integer id = fontID + 1;
+	lua_Integer id = (lua_Integer)W->fontmap.size() + 1;
 	W->fontmap.insert(fontmap_pair_t(id, f));
 	lua_pushinteger(L, id);
-	lua_pushinteger(L, DYNFONT_NO_ERROR);
+	lua_pushinteger(L, ScriptNeutrino::DynFontOk);
 	return 2;
 }
 

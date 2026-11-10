@@ -451,10 +451,6 @@ PyObject *CPythonInstNeutrino::GetDynFont(PyObject *self, PyObject *args, PyObje
 		return NULL;
 	}
 
-	long fontID = (long)W->fontmap.size();
-	if (fontID >= CNeutrinoFonts::DYNFONTEXT_MAX)
-		return Py_BuildValue("(Oi)", Py_None, CPythonInstance::DYNFONT_MAXIMUM_FONTS);
-
 	long dx = 0, dy = 0, style = CNeutrinoFonts::FONT_STYLE_REGULAR;
 	std::string text = "";
 
@@ -463,33 +459,26 @@ PyObject *CPythonInstNeutrino::GetDynFont(PyObject *self, PyObject *args, PyObje
 		PyErr_SetString(PyExc_TypeError, "getDynFont() takes a width");
 		return NULL;
 	}
-	if (dx > (long)CFrameBuffer::getInstance()->getScreenWidth(true))
-		return Py_BuildValue("(Oi)", Py_None, CPythonInstance::DYNFONT_TOO_WIDE);
-
 	if (!pyArgLong(PyTuple_GET_ITEM(args, 1), dy))
 	{
 		PyErr_SetString(PyExc_TypeError, "getDynFont() takes a height");
 		return NULL;
 	}
-	if (dy > 100)
-		return Py_BuildValue("(Oi)", Py_None, CPythonInstance::DYNFONT_TOO_HIGH);
-
 	if (numargs > 2)
 		pyArgString(PyTuple_GET_ITEM(args, 2), text);
 	if (numargs > 3)
-	{
 		pyArgLong(PyTuple_GET_ITEM(args, 3), style);
-		if (style > CNeutrinoFonts::FONT_STYLE_ITALIC)
-			style = CNeutrinoFonts::FONT_STYLE_REGULAR;
-	}
 
-	int dx_i = (int)dx, dy_i = (int)dy, font_i = (int)fontID, style_i = (int)style;
-	Font *f = CNeutrinoFonts::getInstance()->getDynFontExt(dx_i, dy_i, font_i, text, style_i);
+	ScriptNeutrino::DynFontStatus status = ScriptNeutrino::DynFontOk;
+	Font *f = ScriptNeutrino::GetDynFont((int)dx, (int)dy, (int)W->fontmap.size(),
+			text, (int)style, status);
+	if (f == NULL)
+		return Py_BuildValue("(Oi)", Py_None, (int)status);
 
-	long id = fontID + 1;
+	long id = (long)W->fontmap.size() + 1;
 	W->fontmap.insert(pyfontmap_pair_t(id, f));
 
-	return Py_BuildValue("(ii)", (int)id, CPythonInstance::DYNFONT_NO_ERROR);
+	return Py_BuildValue("(ii)", (int)id, (int)ScriptNeutrino::DynFontOk);
 }
 
 /* w.PaintIcon(fname, x, y, h, o) */

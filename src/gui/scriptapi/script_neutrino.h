@@ -35,8 +35,10 @@
 
 #include <cstdio>
 #include <map>
+#include <string>
 
 #include <global.h>
+#include <neutrino.h>
 #include <system/settings.h>
 
 #include <driver/fb_generic.h>
@@ -52,6 +54,22 @@ typedef std::map<long, Font *> ScriptFontMap;
 class ScriptNeutrino
 {
 	public:
+		/* The four answers a dynamic font can come back with: the numbers the
+		 * DYNFONT table of both bindings hands to a script. */
+		enum DynFontStatus {
+			DynFontOk      = 0,	/* DYNFONT_NO_ERROR */
+			DynFontNoRoom  = 1,	/* DYNFONT_MAXIMUM_FONTS */
+			DynFontTooWide = 2,	/* DYNFONT_TOO_WIDE */
+			DynFontTooHigh = 3	/* DYNFONT_TOO_HIGH */
+		};
+
+		/* w.getDynFont(dx, dy[, text, style]): the font this window makes, or
+		 * NULL with the reason why not. fontID is the place in the window's own
+		 * map the font gets - the binding hands it in, because that map is the
+		 * one thing here whose shape belongs to the binding. */
+		static Font *GetDynFont(int dx, int dy, int fontID, const std::string &text,
+				int style, DynFontStatus &status);
+
 		/* The font a call names: a number into the box's own fonts, or, where
 		 * the call said so, one of this window's dynamic fonts. Where the
 		 * window has no such font, found comes back false and the call is

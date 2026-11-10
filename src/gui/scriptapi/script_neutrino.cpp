@@ -27,8 +27,34 @@
 #include "script_color.h"
 #include "script_neutrino.h"
 
-/* The font a call names stands in script_neutrino.h, as a template: the two
- * bindings keep the map of a window's dynamic fonts under different keys. */
+/* The dynamic font a script asks this window for. Both bindings asked the same
+ * three questions and called the same one; only reading the numbers of their
+ * own syntax was theirs. */
+Font *ScriptNeutrino::GetDynFont(int dx, int dy, int fontID, const std::string &text,
+		int style, DynFontStatus &status)
+{
+	status = DynFontOk;
+
+	if (fontID >= CNeutrinoFonts::DYNFONTEXT_MAX)
+	{
+		status = DynFontNoRoom;
+		return NULL;
+	}
+	if (dx > (int)CFrameBuffer::getInstance()->getScreenWidth(true))
+	{
+		status = DynFontTooWide;
+		return NULL;
+	}
+	if (dy > 100)
+	{
+		status = DynFontTooHigh;
+		return NULL;
+	}
+	if (style > CNeutrinoFonts::FONT_STYLE_ITALIC)
+		style = CNeutrinoFonts::FONT_STYLE_REGULAR;
+
+	return CNeutrinoFonts::getInstance()->getDynFontExt(dx, dy, fontID, text, style);
+}
 
 /* The three notes below are the ones both bindings carried: the numbers a
  * script gives are clamped to the framebuffer window, and the comment that
