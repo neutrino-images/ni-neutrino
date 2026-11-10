@@ -31,18 +31,13 @@
 
 #include "pyinstance_helpers.h"
 
-#include <curl/curl.h>
+#include "../scriptapi/script_curl.h"
 
-class CPyCurl
+class CPyCurl : public ScriptCurl
 {
 	public:
 		CPyCurl() {};
 		~CPyCurl() {};
-};
-
-struct progressData {
-	CURL *curl;
-	curl_off_t last_dlnow;
 };
 
 class CPythonInstCurl
@@ -58,12 +53,6 @@ class CPythonInstCurl
 		static PyObject *CurlNew(PyTypeObject *type, PyObject *args, PyObject *kwds);
 		static PyObject *CurlNewModule(PyObject *self, PyObject *args, PyObject *kwds);
 		static void CurlDelete(PyObject *self);
-
-		static size_t CurlWriteToString(void *ptr, size_t size, size_t nmemb, void *data);
-#if !CURL_AT_LEAST_VERSION( 7,32,0 )
-		static int CurlProgressFuncOld(void *p, double dltotal, double dlnow, double ultotal, double ulnow);
-#endif
-		static int CurlProgressFunc(void *p, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
 		static PyObject *CurlDownload(PyObject *self, PyObject *args, PyObject *kwds);
 		static PyObject *CurlEncodeUri(PyObject *self, PyObject *args, PyObject *kwds);

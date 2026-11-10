@@ -20,6 +20,7 @@ BUILT_SOURCES = $(VERSION_H)
 noinst_HEADERS = \
 	$(VERSION_H) \
 	scriptapi/script_color.h \
+	scriptapi/script_curl.h \
 	scriptapi/script_hintbox.h \
 	scriptapi/script_menu.h \
 	scriptapi/script_progresswindow.h \
@@ -240,7 +241,8 @@ libneutrino_gui_scriptapi_a_SOURCES = \
 	scriptapi/script_stringinput.cpp \
 	scriptapi/script_hint.cpp \
 	scriptapi/script_messagebox.cpp \
-	scriptapi/script_misc.cpp
+	scriptapi/script_misc.cpp \
+	scriptapi/script_curl.cpp
 
 libtimerlist_a_SOURCES = \
 	timerlist.cpp
