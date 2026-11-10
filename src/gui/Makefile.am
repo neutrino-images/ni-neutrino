@@ -18,24 +18,7 @@ $(VERSION_H): FORCE
 
 BUILT_SOURCES = $(VERSION_H)
 noinst_HEADERS = \
-	$(VERSION_H) \
-	scriptapi/script_color.h \
-	scriptapi/script_curl.h \
-	scriptapi/script_filehelpers.h \
-	scriptapi/script_neutrino.h \
-	scriptapi/script_hintbox.h \
-	scriptapi/script_menu.h \
-	scriptapi/script_progresswindow.h \
-	scriptapi/script_window.h \
-	scriptapi/script_text.h \
-	scriptapi/script_picture.h \
-	scriptapi/script_header.h \
-	scriptapi/script_signalbox.h \
-	scriptapi/script_hourglass.h \
-	scriptapi/script_stringinput.h \
-	scriptapi/script_hint.h \
-	scriptapi/script_messagebox.h \
-	scriptapi/script_misc.h
+	$(VERSION_H) 
 
 FORCE:
 
@@ -46,13 +29,13 @@ FORCE:
 #
 # A build that does not read these makefiles has to be told to run it, and
 # ni-buildsystem is one of those:
-#	sh src/gui/scriptapi/check-scriptapi.sh <top of the tree>
+#	sh src/scriptapi/check-scriptapi.sh <top of the tree>
 # Hence the top of the tree as an argument: the check reads both bindings and
 # the layer, wherever the tree stands.
-EXTRA_DIST = scriptapi/check-scriptapi.sh
+EXTRA_DIST = ../scriptapi/check-scriptapi.sh
 
 check-scriptapi:
-	@$(SHELL) $(srcdir)/scriptapi/check-scriptapi.sh $(top_srcdir)
+	@$(SHELL) $(srcdir)/../scriptapi/check-scriptapi.sh $(top_srcdir)
 
 .PHONY: check-scriptapi
 
@@ -90,7 +73,7 @@ AM_CPPFLAGS += \
 	@PYTHON_CFLAGS@ \
 	@HWLIB_CFLAGS@
 
-noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a libneutrino_gui_scriptapi.a
+noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a
 
 libneutrino_gui_a_SOURCES = \
 	adzap.cpp \
@@ -249,23 +232,6 @@ endif
 # bindings on the link line: an archive answers only what something on the line
 # has asked for already, and the bindings ask after the gui archive has been
 # passed, so a part of it would be drawn in one pass too late.
-libneutrino_gui_scriptapi_a_SOURCES = \
-	scriptapi/script_hintbox.cpp \
-	scriptapi/script_menu.cpp \
-	scriptapi/script_progresswindow.cpp \
-	scriptapi/script_window.cpp \
-	scriptapi/script_text.cpp \
-	scriptapi/script_picture.cpp \
-	scriptapi/script_header.cpp \
-	scriptapi/script_signalbox.cpp \
-	scriptapi/script_hourglass.cpp \
-	scriptapi/script_stringinput.cpp \
-	scriptapi/script_hint.cpp \
-	scriptapi/script_messagebox.cpp \
-	scriptapi/script_misc.cpp \
-	scriptapi/script_curl.cpp \
-	scriptapi/script_filehelpers.cpp \
-	scriptapi/script_neutrino.cpp
 
 libtimerlist_a_SOURCES = \
 	timerlist.cpp

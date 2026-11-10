@@ -3,7 +3,7 @@
 # Is everything a script is given in the script API, and no longer in the
 # bindings?
 #
-# The script API is src/gui/scriptapi/. A binding reads its own syntax and hands
+# The script API is src/scriptapi/. A binding reads its own syntax and hands
 # the parameters over: the widget itself, the rule that resolves a colour a
 # script names as one of the box's own, and the magic that marks such a colour
 # are built in one place. This script holds that.
@@ -19,10 +19,10 @@
 # one whose work already stands in a class of the box, and one that is the
 # language itself.
 #
-# This script lies in the layer it watches: src/gui/scriptapi/check-scriptapi.sh.
+# This script lies in the layer it watches: src/scriptapi/check-scriptapi.sh.
 # Or with the top of the tree named, as the build calls it; a call without a
 # name reads the top from where this file lies, three levels up:
-#	sh src/gui/scriptapi/check-scriptapi.sh /path/to/tangos-ni
+#	sh src/scriptapi/check-scriptapi.sh /path/to/tangos-ni
 # The build calls it the second way, as src/coreapi/Makefile.am calls its own
 # check-layering.sh.
 #
@@ -39,7 +39,7 @@ top=${1:-$here/../../..}
 status=0
 lua=$top/src/gui/lua
 python=$top/src/gui/python
-layer=$top/src/gui/scriptapi
+layer=$top/src/scriptapi
 
 # How many handles one binding builds for a class of the script API: it either
 # derives from it, or it holds one. Only the headers are looked at, because the

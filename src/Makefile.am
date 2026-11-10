@@ -130,7 +130,7 @@ neutrino_LDADD = \
 	gui/components/libneutrino_gui_components.a \
 	$(LUALIBS) \
 	$(PYTHONLIBS) \
-	gui/libneutrino_gui_scriptapi.a \
+	libneutrino_scriptapi.a \
 	eitd/libsectionsd.a \
 	gui/volumebar.o \
 	driver/libneutrino_driver.a \
@@ -271,3 +271,22 @@ all-local: check-mcp-absent
 endif
 
 EXTRA_DIST = check-mcp-absent.sh
+
+noinst_LIBRARIES = libneutrino_scriptapi.a
+libneutrino_scriptapi_a_SOURCES = \
+	scriptapi/script_curl.cpp \
+	scriptapi/script_filehelpers.cpp \
+	scriptapi/script_header.cpp \
+	scriptapi/script_hint.cpp \
+	scriptapi/script_hintbox.cpp \
+	scriptapi/script_hourglass.cpp \
+	scriptapi/script_menu.cpp \
+	scriptapi/script_messagebox.cpp \
+	scriptapi/script_misc.cpp \
+	scriptapi/script_neutrino.cpp \
+	scriptapi/script_picture.cpp \
+	scriptapi/script_progresswindow.cpp \
+	scriptapi/script_signalbox.cpp \
+	scriptapi/script_stringinput.cpp \
+	scriptapi/script_text.cpp \
+	scriptapi/script_window.cpp

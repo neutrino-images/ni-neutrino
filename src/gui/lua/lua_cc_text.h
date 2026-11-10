@@ -23,7 +23,7 @@
 #ifndef _LUACCTEXT_H
 #define _LUACCTEXT_H
 
-#include <gui/scriptapi/script_text.h>
+#include <scriptapi/script_text.h>
 
 /* The text a script made, held as the shared ScriptText: what is done with it
  * is the same for every interpreter, and this binding only fills its

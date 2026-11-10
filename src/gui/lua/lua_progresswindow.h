@@ -18,7 +18,7 @@
 #ifndef _LUAPROGRESSWINDOW_H_
 #define _LUAPROGRESSWINDOW_H_
 
-#include <gui/scriptapi/script_progresswindow.h>
+#include <scriptapi/script_progresswindow.h>
 
 /* The window a script made, held as the shared ScriptProgressWindow: what is
  * done with it is the same for every interpreter, and this binding only fills

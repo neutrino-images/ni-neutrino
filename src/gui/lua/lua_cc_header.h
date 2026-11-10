@@ -20,7 +20,7 @@
 #ifndef _LUACCHEADER_H
 #define _LUACCHEADER_H
 
-#include <gui/scriptapi/script_header.h>
+#include <scriptapi/script_header.h>
 
 /* The header a script made, held as the shared ScriptHeader: what is done with
  * it is the same for every interpreter, and this binding only fills its

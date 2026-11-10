@@ -31,7 +31,7 @@
 
 #include "luainstance.h"
 #include "lua_stringinput.h"
-#include <gui/scriptapi/script_stringinput.h>
+#include <scriptapi/script_stringinput.h>
 
 CLuaInstStringInput* CLuaInstStringInput::getInstance()
 {

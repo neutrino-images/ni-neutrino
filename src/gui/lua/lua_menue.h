@@ -23,7 +23,7 @@
 #ifndef _LUAMENUE_H
 #define _LUAMENUE_H
 
-#include <gui/scriptapi/script_menu.h>
+#include <scriptapi/script_menu.h>
 
 class CLuaMenuChangeObserver : public CChangeObserver
 {

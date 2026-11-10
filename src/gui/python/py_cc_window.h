@@ -33,7 +33,7 @@
 
 #include <gui/components/cc.h>
 #include <gui/components/cc_frm_header.h>
-#include <gui/scriptapi/script_window.h>
+#include <scriptapi/script_window.h>
 
 /* The window a script made, held as the shared ScriptWindow: what is done
  * with it is the same for every interpreter, and this binding only fills its

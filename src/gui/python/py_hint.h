@@ -28,7 +28,7 @@
 #include "pyinstance_helpers.h"
 
 #include <gui/widget/hintbox.h>
-#include <gui/scriptapi/script_hint.h>
+#include <scriptapi/script_hint.h>
 
 /* The hint a script made, held as the shared ScriptHint: what is done with it
  * is the same for every interpreter, and this binding only fills its
