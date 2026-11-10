@@ -6,6 +6,12 @@
  * Every name begins with files- so that a class of this destination and a class
  * of another one cannot mean two things at once. */
 
+/* The whole screen ends where the content of every screen ends, and what is
+   inside it, a sentence, a panel or the table, no wider than that. */
+.files-list {
+	max-width: var(--content-width);
+}
+
 .files-bar {
 	display: flex;
 	flex-wrap: wrap;
@@ -52,10 +58,10 @@
 	color: var(--text);
 }
 
-/* A sentence the person is meant to read before acting, so it sits in the
-   reading column and not in the middle of the screen the way a state does. */
+/* A sentence the person is meant to read before acting, so it sits with what
+   it belongs to and not in the middle of the screen the way a state does. As
+   wide as the screen around it, which stops at the content width. */
 .files-hint {
-	max-width: 68ch;
 	margin: 0 0 var(--gap-4);
 	color: var(--text-dim);
 }
@@ -156,6 +162,21 @@
 .files-drop[data-over] .files-drop-what { color: var(--accent); }
 .files-drop-name { font-family: var(--font-mono); }
 .files-drop-size { margin-left: var(--gap-2); color: var(--text-dim); font-size: var(--fs-s); white-space: nowrap; }
+
+/* What the upload has to say once the field and the button are used: that it
+   runs, that a file is too large or its name taken, or why it failed. Apart
+   from the line above it, so it does not read as a caption of the button. */
+.files-upload-note { margin-top: var(--gap-3); }
+.files-hint.files-upload-note,
+.files-upload-note .files-hint { margin-bottom: 0; }
+
+/* Replace what is there, or let the chosen file go again. */
+.files-upload-choice {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--gap-2);
+	margin-top: var(--gap-2);
+}
 
 .files-starts {
 	margin: var(--gap-3) 0 0;

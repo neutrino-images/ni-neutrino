@@ -220,15 +220,18 @@ export function Upload(props) {
 					onClick=${function () { send(false); }}>${t(text, 'files.upload.send')}<//>`}
 		</div>
 		${sending && chosen
-			? html`<p class="files-hint" role="status">${t(text, 'files.upload.running', { name: chosen.name })}</p>`
+			? html`<p class="files-hint files-upload-note" role="status">${t(text, 'files.upload.running', { name: chosen.name })}</p>`
 			: null}
-		${refused ? html`<p class="files-hint" role="alert">${refused}</p>` : null}
+		${refused ? html`<p class="files-hint files-upload-note" role="alert">${refused}</p>` : null}
 		${taken
-			? html`<p class="files-hint" role="alert">
-				${taken}${' '}
-				<${Button} class="files-upload-replace" onClick=${function () { send(true); }}>${t(text, 'files.upload.replace')}<//>
-			</p>`
+			? html`<div class="files-upload-note" role="alert">
+				<p class="files-hint">${taken}</p>
+				<div class="files-upload-choice">
+					<${Button} class="files-upload-replace" onClick=${function () { send(true); }}>${t(text, 'files.upload.replace')}<//>
+					<${Button} class="files-upload-drop" onClick=${forget}>${t(text, 'files.upload.cancel')}<//>
+				</div>
+			</div>`
 			: null}
-		${problem ? html`<p class="files-hint" role="alert">${problem}</p>` : null}
+		${problem ? html`<p class="files-hint files-upload-note" role="alert">${problem}</p>` : null}
 	</div>`;
 }
