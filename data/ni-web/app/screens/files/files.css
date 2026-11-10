@@ -98,6 +98,65 @@
 	font-family: var(--font-mono);
 }
 
+/* THE FILE PICKER, DRAWN BY THE PAGE AND NOT BY THE BROWSER.
+
+   The browser's own field is a grey system button and a monospaced line in the
+   middle of a panel that is neither, so it is kept for what only it can do,
+   opening the system's chooser and being reached by the keyboard, and drawn
+   by nothing. What shows is the label around it: a dashed place to drop a file
+   on, the page's own button, and the name and size of what was chosen. */
+.files-upload-form { align-items: center; }
+
+.files-form .files-drop { flex: 1 1 30ch; }
+
+.files-drop {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap-2) var(--gap-3);
+	min-width: 0;
+	padding: var(--gap-3);
+	background: var(--ground-0);
+	border: 1px dashed var(--line);
+	border-radius: var(--radius);
+	cursor: pointer;
+}
+
+@media (hover: hover) {
+	.files-drop:hover { border-color: var(--text-dim); }
+}
+
+/* A file on the way in, and a file chosen: the frame's accent for the first,
+   because it is the moment something is about to happen, and a solid edge
+   for the second, because the place is no longer empty. */
+.files-drop[data-over] { border-color: var(--accent-edge); background: var(--accent-wash); }
+/* While a file hangs over it, the button and the line inside take no pointer,
+   so moving across them is not leaving the field and the line does not flicker. */
+.files-drop[data-over] > * { pointer-events: none; }
+.files-drop[data-chosen] { border-style: solid; }
+.files-drop[data-busy] { opacity: 0.6; cursor: progress; }
+
+/* There for the keyboard and the chooser, and taking no room. */
+.files-drop-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	opacity: 0;
+}
+
+/* The ring the hidden field would wear goes to the button that stands for it. */
+.files-drop-input:focus-visible + .files-drop-btn { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+.files-drop-what { flex: 1 1 22ch; min-width: 0; color: var(--text-dim); overflow-wrap: anywhere; }
+.files-drop[data-chosen] .files-drop-what { color: var(--text); }
+.files-drop[data-over] .files-drop-what { color: var(--accent); }
+.files-drop-name { font-family: var(--font-mono); }
+.files-drop-size { margin-left: var(--gap-2); color: var(--text-dim); font-size: var(--fs-s); white-space: nowrap; }
+
 .files-starts {
 	margin: var(--gap-3) 0 0;
 	padding: 0;

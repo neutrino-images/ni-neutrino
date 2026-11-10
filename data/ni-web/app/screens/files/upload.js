@@ -52,6 +52,8 @@ export function Upload(props) {
 	const [refused, setRefused] = useState('');
 	const [taken, setTaken] = useState('');
 	const [problem, setProblem] = useState(/** @type {string} */ (''));
+	// Whether a file is being dragged over the field right now.
+	const [over, setOver] = useState(false);
 	const control = useRef(/** @type {AbortController | null} */ (null));
 	const field = useRef(/** @type {HTMLInputElement | null} */ (null));
 
@@ -67,11 +69,8 @@ export function Upload(props) {
 		}
 	}
 
-	/** @param {Event} event */
-	function pick(event) {
-		const input = /** @type {HTMLInputElement} */ (event.currentTarget);
-		const list = input.files;
-		const file = (list && list.length > 0) ? list[0] : null;
+	/** @param {File | null} file */
+	function take(file) {
 		setTaken('');
 		setProblem('');
 		if (!file) {
@@ -92,6 +91,42 @@ export function Upload(props) {
 		}
 		setChosen(file);
 		setRefused('');
+	}
+
+	/** @param {Event} event */
+	function pick(event) {
+		const input = /** @type {HTMLInputElement} */ (event.currentTarget);
+		const list = input.files;
+		take((list && list.length > 0) ? list.item(0) : null);
+	}
+
+	/* A file dragged onto the field is taken as if it had been picked. One
+	   file, as the picker offers: of several dropped at once the first. The
+	   browser's own answer to a drop, opening the file in place of this page,
+	   is what preventDefault holds back, on the way over as much as on the
+	   drop, or the drop never arrives. */
+	/** @param {DragEvent} event */
+	function dragOver(event) {
+		event.preventDefault();
+		if (event.dataTransfer)
+			event.dataTransfer.dropEffect = sending ? 'none' : 'copy';
+		if (!sending)
+			setOver(true);
+	}
+
+	/** @param {DragEvent} event */
+	function drop(event) {
+		event.preventDefault();
+		setOver(false);
+		if (sending)
+			return;
+		const list = event.dataTransfer ? event.dataTransfer.files : null;
+		if (!list || list.length === 0)
+			return;
+		// What the picker shows is what is chosen, so a drop clears it.
+		if (field.current)
+			field.current.value = '';
+		take(list.item(0));
 	}
 
 	/** @param {boolean} replace */
@@ -150,15 +185,31 @@ export function Upload(props) {
 	return html`<div class="files-panel">
 		<h2>${t(text, 'files.upload.title')}</h2>
 		<p class="files-hint" id="files-upload-ceiling">${t(text, 'files.upload.ceiling', { limit: limit })}</p>
-		<div class="files-form">
-			<label class="field">
-				<span class="label">${t(text, 'files.upload.label')}</span>
+		<div class="files-form files-upload-form">
+			<label
+				class="files-drop"
+				data-over=${over ? '' : undefined}
+				data-chosen=${chosen ? '' : undefined}
+				data-busy=${sending ? '' : undefined}
+				onDragOver=${dragOver}
+				onDragLeave=${function () { setOver(false); }}
+				onDrop=${drop}>
 				<input
 					type="file"
+					class="files-drop-input"
 					ref=${field}
 					disabled=${sending}
-					aria-describedby="files-upload-ceiling"
+					aria-label=${t(text, 'files.upload.label')}
+					aria-describedby="files-upload-what files-upload-ceiling"
 					onChange=${pick} />
+				<span class="btn files-drop-btn" aria-hidden="true">${t(text, 'files.upload.choose')}</span>
+				<span class="files-drop-what" id="files-upload-what">
+					${over
+						? t(text, 'files.upload.release')
+						: chosen
+							? html`<span class="files-drop-name">${chosen.name}</span><span class="files-drop-size">${bytes(chosen.size)}</span>`
+							: t(text, 'files.upload.none')}
+				</span>
 			</label>
 			${sending
 				? html`<${Button} class="files-upload-stop" onClick=${stop}>${t(text, 'files.upload.cancel')}<//>`
