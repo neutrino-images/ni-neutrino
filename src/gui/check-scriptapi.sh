@@ -213,10 +213,16 @@ if [ -n "$todo" ]; then
 fi
 
 if [ -n "$shared" ]; then
-	echo "  a pair of both bindings whose work already stands in a class of the box, so nothing is left to move ($pairs pairs looked at):"
+	echo "  a pair of both bindings whose work already stands in a class of the box ($pairs pairs looked at):"
 	for entry in $shared; do
 		echo "    $entry"
 	done
+	echo "  what this script sees of them is only that both bindings name that class. What"
+	echo "  they do around the call was looked at by the eye and not here: filehelpers and"
+	echo "  configfile are wiring, one call of the box class each, and video is too - but"
+	echo "  for one short sequence both write out themselves, blocked from plugin, SetFile,"
+	echo "  exec, getKeyPressed. To move that, the layer would need a way back into the"
+	echo "  binding for the info callback, which is why it is named here and not half done."
 fi
 
 if [ -n "$language" ]; then
