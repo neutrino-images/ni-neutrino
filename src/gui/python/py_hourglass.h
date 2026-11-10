@@ -29,12 +29,15 @@
 
 #include <gui/widget/hourglass.h>
 
-class CPyHourGlass
+#include <gui/scriptapi/scripthourglass.h>
+
+/* The hourglass a script made, held as the shared ScriptHourglass: what is done
+ * with it is the same for every interpreter, and this binding only fills its
+ * parameters out of a keyword table. */
+class CPyHourGlass : public ScriptHourglass
 {
 	public:
-		CHourGlass *h;
-		CPyHourGlass() { h = NULL; }
-		~CPyHourGlass() { delete h; }
+		explicit CPyHourGlass(const params_t &pars) : ScriptHourglass(pars) {}
 };
 
 class CPythonInstHourGlass

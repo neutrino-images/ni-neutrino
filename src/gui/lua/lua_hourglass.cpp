@@ -86,12 +86,23 @@ int CLuaInstHourGlass::HourGlassNew(lua_State *L)
 	tableLookup(L, "color_background", color_background);
 	tableLookup(L, "color_shadow",     color_shadow);
 
-	CComponentsForm *parent_container = (parent && parent->sw) ? parent->sw->body() : NULL;
+	/* The colours, the agent behind it and who deletes the hourglass are the
+	 * script api's; this binding reads them and hands them over. */
+	ScriptHourglass::params_t pars;
+	pars.parent         = (parent && parent->sw) ? parent->sw->body() : NULL;
+	pars.x              = (int)x;
+	pars.y              = (int)y;
+	pars.dx             = (int)dx;
+	pars.dy             = (int)dy;
+	pars.image_basename = image_basename;
+	pars.interval       = (int64_t)interval;
+	pars.shadow_mode    = (int)shadow_mode;
+	pars.color_frame    = (unsigned long)color_frame;
+	pars.color_background = (unsigned long)color_background;
+	pars.color_shadow   = (unsigned long)color_shadow;
 
 	CLuaHourGlass **udata = (CLuaHourGlass **) lua_newuserdata(L, sizeof(CLuaHourGlass *));
-	*udata = new CLuaHourGlass();
-
-	(*udata)->h = new CHourGlass(x, y, dx, dy, image_basename, (int64_t)interval, parent_container, shadow_mode, (fb_pixel_t)color_frame, (fb_pixel_t)color_background, (fb_pixel_t)color_shadow);
+	*udata = new CLuaHourGlass(pars);
 
 	luaL_getmetatable(L, "hourglass");
 	lua_setmetatable(L, -2);

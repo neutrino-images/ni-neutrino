@@ -84,6 +84,21 @@ PyObject *CPythonInstHourGlass::HourGlassNew(PyTypeObject *type, PyObject *args,
 	pyLookupUnsigned(kwds, "color_background", color_background);
 	pyLookupUnsigned(kwds, "color_shadow", color_shadow);
 
+	/* The colours, the agent behind it and who deletes the hourglass are the
+	 * script api's; this binding reads them and hands them over. */
+	ScriptHourglass::params_t pars;
+	pars.parent         = parent_container;
+	pars.x              = (int)x;
+	pars.y              = (int)y;
+	pars.dx             = (int)dx;
+	pars.dy             = (int)dy;
+	pars.image_basename = image_basename;
+	pars.interval       = (int64_t)interval;
+	pars.shadow_mode    = (int)shadow_mode;
+	pars.color_frame    = color_frame;
+	pars.color_background = color_background;
+	pars.color_shadow   = color_shadow;
+
 	PyHourGlassObject *self = (PyHourGlassObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
 	{
@@ -91,13 +106,7 @@ PyObject *CPythonInstHourGlass::HourGlassNew(PyTypeObject *type, PyObject *args,
 		return NULL;
 	}
 
-	self->d = new CPyHourGlass();
-	self->d->h = new CHourGlass((int)x, (int)y, (int)dx, (int)dy, image_basename,
-			(int64_t)interval, parent_container, (int)shadow_mode,
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_frame),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_background),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_shadow));
-
+	self->d = new CPyHourGlass(pars);
 	return (PyObject *)self;
 }
 
