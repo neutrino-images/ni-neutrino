@@ -946,36 +946,11 @@ int CLuaInstance::GCWindow(lua_State *L)
 	LUA_DEBUG("CLuaInstance::%s %d\n", __func__, lua_gettop(L));
 	CLuaData *w = (CLuaData *)lua_unboxpointer(L, 1);
 
-	if (w && w->fbwin)
-	{
-		for (screenmap_iterator_t it = w->screenmap.begin(); it != w->screenmap.end(); ++it)
-		{
-			if (it->second != NULL)
-				delete[] it->second;
-		}
-		LUA_DEBUG("CLuaInstance::%s delete screenmap\n", __func__);
-		w->screenmap.clear();
-		w->fontmap.clear();
-	}
-	CNeutrinoFonts::getInstance()->deleteDynFontExtAll();
-
-	/* restoreNeutrino at plugin closing, when blocked from plugin */
-	bool block = CMoviePlayerGui::getInstance().getBlockedFromPlugin();
-	bool play  = CMoviePlayerGui::getInstance().Playing();
-	LUA_DEBUG(">>>>[%s:%d] (restoreNeutrino()) BlockedFromPlugin: %d, Playing: %d\n", __func__, __LINE__, block, play);
-	if (block && play)
-	{
-		CMoviePlayerGui::getInstance().setBlockedFromPlugin(false);
-		CMoviePlayerGui::getInstance().restoreNeutrino();
-	}
-	else if (videoDecoder->getBlank())
-		CLuaInstVideo::getInstance()->channelRezap(L);
-
 	if (w)
 	{
-		if (w->fbwin)
-			delete w->fbwin;
-		w->rcinput = NULL;
+		bool restored = ScriptNeutrino::WindowDrop(w->fbwin, w->rcinput, w->screenmap, w->fontmap);
+		if (!restored && videoDecoder->getBlank())
+			CLuaInstVideo::getInstance()->channelRezap(L);
 		delete w;
 	}
 	return 0;

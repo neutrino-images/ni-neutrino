@@ -53,6 +53,9 @@
 
 #include <driver/fb_generic.h>
 #include <driver/fb_window.h>
+#include <driver/neutrinofonts.h>
+
+#include <gui/movieplayer.h>
 
 class CRCInput;
 class Font;
@@ -65,6 +68,45 @@ typedef std::map<long, Font *> ScriptFontMap;
 class ScriptNeutrino
 {
 	public:
+		/* The end of a window of the API, the same in both bindings down to the
+		 * order: the screens it saved are freed, its two maps are let go of, the
+		 * box's dynamic fonts are dropped, and a movie the script left playing
+		 * behind it is taken up again. The window and its input go last.
+		 *
+		 * It answers whether that movie was taken up, because one binding has
+		 * an older way of its own beside it - a channel that is rezapped where
+		 * the video had gone blank - and only that binding can follow it.
+		 *
+		 * A template for the same reason the others are: the two maps belong to
+		 * the binding and keep their keys under types of its own. */
+		template <typename ScreenMapT, typename FontMapT>
+		static bool WindowDrop(CFBWindow *&fbwin, CRCInput *&rcinput, ScreenMapT &screenmap, FontMapT &fontmap)
+		{
+			for (typename ScreenMapT::iterator it = screenmap.begin(); it != screenmap.end(); ++it)
+				if (it->second != NULL)
+					delete[] it->second;
+			screenmap.clear();
+			fontmap.clear();
+
+			CNeutrinoFonts::getInstance()->deleteDynFontExtAll();
+
+			/* restoreNeutrino at plugin closing, when blocked from plugin */
+			bool restored = false;
+			if (CMoviePlayerGui::getInstance().getBlockedFromPlugin() &&
+			    CMoviePlayerGui::getInstance().Playing())
+			{
+				CMoviePlayerGui::getInstance().setBlockedFromPlugin(false);
+				CMoviePlayerGui::getInstance().restoreNeutrino();
+				restored = true;
+			}
+
+			delete fbwin;
+			fbwin = NULL;
+			rcinput = NULL;
+
+			return restored;
+		}
+
 		/* w.GetInput(timeout): one message out of the window's input, and where
 		 * that message is one of the bigger ones, handed on to the box - both
 		 * bindings did that, with the same doubt written beside it. Answers

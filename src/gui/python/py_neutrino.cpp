@@ -146,30 +146,12 @@ void CPythonInstNeutrino::WindowDelete(PyObject *self)
 	PyWindowObject *o = (PyWindowObject *)self;
 	CPyWindowData *W = o->d;
 
-	if (W != NULL && W->fbwin != NULL)
-	{
-		for (pyscreenmap_iterator_t it = W->screenmap.begin(); it != W->screenmap.end(); ++it)
-			if (it->second != NULL)
-				delete[] it->second;
-		W->screenmap.clear();
-		W->fontmap.clear();
-	}
-	CNeutrinoFonts::getInstance()->deleteDynFontExtAll();
-
-	bool block = CMoviePlayerGui::getInstance().getBlockedFromPlugin();
-	bool play = CMoviePlayerGui::getInstance().Playing();
-	if (block && play)
-	{
-		CMoviePlayerGui::getInstance().setBlockedFromPlugin(false);
-		CMoviePlayerGui::getInstance().restoreNeutrino();
-	}
-	/* Where the Lua binding also rezaps the channel on a blank video, the
-	 * video binding does it; that one is not here yet. */
-
 	if (W != NULL)
 	{
-		delete W->fbwin;
-		W->rcinput = NULL;
+		/* Where the Lua binding also rezaps the channel on a blank video, the
+		 * video binding does it; that one is not here yet, so whether a movie
+		 * was taken up again is not asked here. */
+		ScriptNeutrino::WindowDrop(W->fbwin, W->rcinput, W->screenmap, W->fontmap);
 		delete W;
 	}
 	o->d = NULL;
