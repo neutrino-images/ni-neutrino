@@ -332,29 +332,29 @@ PyObject *CPythonInstNeutrino::RenderString(PyObject *self, PyObject *args, PyOb
 		PyErr_SetString(PyExc_TypeError, "RenderString() takes a text, an x and a y");
 		return NULL;
 	}
+	bool sized = false;
 	if (numargs > 4 + step)
 		pyArgUnsigned(PyTuple_GET_ITEM(args, 4 + step), c);
 	if (numargs > 5 + step)
+	{
 		pyArgLong(PyTuple_GET_ITEM(args, 5 + step), w);
-	else
-		w = W->fbwin->dx - x;
+		sized = true;
+	}
 	if (numargs > 6 + step)
 		pyArgLong(PyTuple_GET_ITEM(args, 6 + step), boxh);
 	if (numargs > 7 + step)
 		pyArgLong(PyTuple_GET_ITEM(args, 7 + step), center);
 
-	int rwidth = font->getRenderWidth(text);
+	ScriptNeutrino::RenderText params;
+	params.x = (int)x;
+	params.y = (int)y;
+	params.w = (int)w;
+	params.boxh = (int)boxh;
+	params.center = (int)center;
+	params.color = c;
+	params.sized = sized;
 
-	if (center) /* center the text inside the box */
-	{
-		if (rwidth < w)
-			x += (w - rwidth) / 2;
-	}
-	c = ScriptColorResolve((unsigned int)c);
-	if (boxh > -1) /* if boxh < 0, don't paint string */
-		W->fbwin->RenderString(font, (int)x, (int)y, (int)w, text.c_str(), (fb_pixel_t)c, (int)boxh);
-
-	return PyLong_FromLong(rwidth);
+	return PyLong_FromLong(ScriptNeutrino::RenderString(W->fbwin, font, text, params));
 }
 
 /* w.getRenderWidth(font, text), with the same True in front of a dynamic

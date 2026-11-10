@@ -24,8 +24,39 @@
 #include <global.h>
 #include <system/settings.h>
 
+#include <driver/fontrenderer.h>
+
 #include "script_color.h"
 #include "script_neutrino.h"
+
+/* The text of RenderString: where it goes, how wide the box is that it is
+ * centred in, and the note that a negative boxh means no string at all. */
+ScriptNeutrino::RenderText::RenderText()
+	: x(0), y(0), w(0), boxh(0), center(0), color(0), sized(false)
+{
+}
+
+int ScriptNeutrino::RenderString(CFBWindow *fbwin, Font *font, const std::string &text,
+		const RenderText &params)
+{
+	if (!fbwin || !font)
+		return 0;
+
+	int x = params.x;
+	int w = params.sized ? params.w : fbwin->dx - params.x;
+	const int rwidth = font->getRenderWidth(text.c_str());
+
+	if (params.center) /* center the text inside the box */
+	{
+		if (rwidth < w)
+			x += (w - rwidth) / 2;
+	}
+	unsigned long c = ScriptColorResolve(params.color);
+	if (params.boxh > -1) /* if boxh < 0, don't paint string */
+		fbwin->RenderString(font, x, params.y, w, text.c_str(), (fb_pixel_t)c, params.boxh);
+
+	return rwidth;
+}
 
 /* The dynamic font a script asks this window for. Both bindings asked the same
  * three questions and called the same one; only reading the numbers of their

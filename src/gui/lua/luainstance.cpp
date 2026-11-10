@@ -1111,6 +1111,7 @@ int CLuaInstance::RenderString(lua_State *L)
 	int numargs = lua_gettop(L);
 	LUA_DEBUG("CLuaInstance::%s %d\n", __func__, numargs);
 	c = COL_MENUCONTENT_TEXT;
+	w = 0;
 	boxh = 0;
 	center = 0;
 
@@ -1140,26 +1141,27 @@ int CLuaInstance::RenderString(lua_State *L)
 	y = luaL_checkint(L, 5 + step);
 	if (numargs > 5 + step)
 		c = luaL_checkunsigned(L, 6 + step);
+	bool sized = false;
 	if (numargs > 6 + step)
+	{
 		w = luaL_checkint(L, 7 + step);
-	else
-		w = W->fbwin->dx - x;
+		sized = true;
+	}
 	if (numargs > 7 + step)
 		boxh = luaL_checkint(L, 8 + step);
 	if (numargs > 8 + step)
 		center = luaL_checkint(L, 9 + step);
 
-	int rwidth = font->getRenderWidth(text);
+	ScriptNeutrino::RenderText params;
+	params.x = x;
+	params.y = y;
+	params.w = w;
+	params.boxh = boxh;
+	params.center = center;
+	params.color = c;
+	params.sized = sized;
 
-	if (center) /* center the text inside the box */
-	{
-		if (rwidth < w)
-			x += (w - rwidth) / 2;
-	}
-	c = ScriptColorResolve(c);
-	if (boxh > -1) /* if boxh < 0, don't paint string */
-		W->fbwin->RenderString(font, x, y, w, text, c, boxh);
-	lua_pushinteger(L, rwidth); /* return renderwidth */
+	lua_pushinteger(L, ScriptNeutrino::RenderString(W->fbwin, font, text, params));
 	return 1;
 }
 

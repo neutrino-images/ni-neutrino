@@ -70,6 +70,26 @@ class ScriptNeutrino
 		static Font *GetDynFont(int dx, int dy, int fontID, const std::string &text,
 				int style, DynFontStatus &status);
 
+		/* w.RenderString(font, text, x, y[, color, w, boxh, center]): the width
+		 * the text takes, the centring in the box the script named, and the
+		 * drawing itself. Reading the numbers stays with the binding - and with
+		 * them whether a width was named at all, which the two calls tell apart
+		 * in different ways. */
+		struct RenderText {
+			int x;
+			int y;
+			int w;
+			int boxh;
+			int center;
+			unsigned long color;
+			bool sized;	/* a width was named; else the rest of the window */
+			RenderText();
+		};
+
+		/* Answers the width the text takes. */
+		static int RenderString(CFBWindow *fbwin, Font *font, const std::string &text,
+				const RenderText &params);
+
 		/* The font a call names: a number into the box's own fonts, or, where
 		 * the call said so, one of this window's dynamic fonts. Where the
 		 * window has no such font, found comes back false and the call is
