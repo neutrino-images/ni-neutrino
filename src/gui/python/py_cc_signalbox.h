@@ -29,13 +29,15 @@
 
 #include <gui/components/cc.h>
 
-class CPyCCSignalBox
+#include <gui/scriptapi/scriptsignalbox.h>
+
+/* The box a script made, held as the shared ScriptSignalbox: what is done with
+ * it is the same for every interpreter, and this binding only fills its
+ * parameters out of a keyword table. */
+class CPyCCSignalBox : public ScriptSignalbox
 {
 	public:
-		CSignalBox *s;
-		CComponentsForm *parent;
-		CPyCCSignalBox() { s = NULL; parent = NULL; }
-		~CPyCCSignalBox() { if (parent == NULL) delete s; }
+		explicit CPyCCSignalBox(const params_t &pars) : ScriptSignalbox(pars) {}
 };
 
 class CPythonInstCCSignalbox

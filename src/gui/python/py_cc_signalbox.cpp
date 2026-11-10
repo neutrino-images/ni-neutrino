@@ -74,6 +74,16 @@ PyObject *CPythonInstCCSignalbox::CCSignalBoxNew(PyTypeObject *type, PyObject *a
 	pyLookupInt(kwds, "dy", dy);
 	pyLookupBoolCompat(kwds, "vertical", vertical);
 
+	/* The form it goes into and who deletes the box are the script api's;
+	 * this binding reads them and hands them over. */
+	ScriptSignalbox::params_t pars;
+	pars.parent   = pw;
+	pars.x        = (int)x;
+	pars.y        = (int)y;
+	pars.dx       = (int)dx;
+	pars.dy       = (int)dy;
+	pars.vertical = vertical;
+
 	PyCCSignalBoxObject *self = (PyCCSignalBoxObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
 	{
@@ -81,10 +91,7 @@ PyObject *CPythonInstCCSignalbox::CCSignalBoxNew(PyTypeObject *type, PyObject *a
 		return NULL;
 	}
 
-	self->d = new CPyCCSignalBox();
-	self->d->s = new CSignalBox((int)x, (int)y, (int)dx, (int)dy,
-			CFEManager::getInstance()->getLiveFE(), vertical ? true : false, pw);
-	self->d->parent = pw;
+	self->d = new CPyCCSignalBox(pars);
 	return (PyObject *)self;
 }
 
