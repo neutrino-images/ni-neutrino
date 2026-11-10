@@ -679,16 +679,16 @@ bool CPythonInstNeutrino::NeutrinoRegister(PyObject *module)
 		return false;
 	}
 
-	PyObject *newfunc = PyCFunction_New(&new_def, NULL);
-	if (newfunc == NULL)
+	PyObject *new_function = PyCFunction_New(&new_def, NULL);
+	if (new_function == NULL)
 	{
 		PyErr_Clear();
 		return false;
 	}
-	if (PyModule_AddObject(module, "new", newfunc) < 0)
+	if (PyModule_AddObject(module, "new", new_function) < 0)
 	{
 		PyErr_Clear();
-		Py_DECREF(newfunc);
+		Py_DECREF(new_function);
 		return false;
 	}
 

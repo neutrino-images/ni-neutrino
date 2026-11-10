@@ -272,9 +272,9 @@ bool CComponentsText::setText(const char* ctext, const int mode, Font* font_text
 	return setText((string)ctext, mode, font_text, color_text, style);
 }
 
-bool CComponentsText::setText(const int digit, const int mode, Font* font_text, const fb_pixel_t& color_text, const int& style)
+bool CComponentsText::setText(const int digit_value, const int mode, Font* font_text, const fb_pixel_t& color_text, const int& style)
 {
-	string s_digit = iToString(digit);
+	string s_digit = iToString(digit_value);
 	return setText(s_digit, mode, font_text, color_text, style);
 }
 
