@@ -2675,20 +2675,22 @@ void CChannelList::paint_events()
 void CChannelList::paint_events(CChannelEventList &evtlist)
 {
 	/* This runs in its own thread, so it cannot see what the GUI thread has put
-	 * on screen meanwhile. If an overlay saved the pixels underneath itself here
-	 * - a hint box while a WebTV stream is being resolved, for instance - then
-	 * everything we paint now is thrown away again when that overlay restores
-	 * its background, and the infozone is left showing the previous channel's
-	 * EPG. Skip the paint and let the list loop make up for it once the overlay
-	 * is gone.
+	 * on screen meanwhile. If something saved the pixels underneath itself here
+	 * - a hint box while a WebTV stream is being resolved, or an infobar box
+	 * that is up for as long as a recording runs - then what we paint now can
+	 * be thrown away when that background is restored, and the infozone shows
+	 * the previous channel's EPG. The paint is made provisional in that case
+	 * instead of being refused: it is done, and the note tells the list loop to
+	 * look at the area again. Refusing it cannot be right, because a claim can
+	 * be held for as long as the recording lasts - the infozone would stay
+	 * empty for that whole time, which is worse than a paint that may be lost.
 	 * The check and the painting below share one lock with the overlay side, so
 	 * an overlay cannot appear in between and snapshot a half-painted infozone. */
 	std::lock_guard<std::recursive_mutex> lock(frameBuffer->overlay_paint_mutex);
 
 	if (frameBuffer->isObscured(x + width, y + theight + pig_height, infozone_width, infozone_height)) {
 		paint_events_deferred = true;
-		dprintf(DEBUG_INFO, "[CChannelList] %s: infozone is covered, skipping EPG paint\n", __func__);
-		return;
+		dprintf(DEBUG_INFO, "[CChannelList] %s: infozone is covered, painting provisionally\n", __func__);
 	}
 
 	ffheight = g_Font[eventFont]->getHeight();
@@ -2839,8 +2841,7 @@ void CChannelList::showdescription(int index)
 
 	if (frameBuffer->isObscured(x + width, y + theight + pig_height, infozone_width, infozone_height)) {
 		paint_events_deferred = true;
-		dprintf(DEBUG_INFO, "[CChannelList] %s: infozone is covered, skipping description paint\n", __func__);
-		return;
+		dprintf(DEBUG_INFO, "[CChannelList] %s: infozone is covered, painting provisionally\n", __func__);
 	}
 
 	frameBuffer->paintBoxRel(x+ width,y+ theight+pig_height, infozone_width, infozone_height,COL_MENUCONTENT_PLUS_0);
