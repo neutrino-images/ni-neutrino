@@ -700,6 +700,9 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		void addKey(neutrino_msg_t key, CMenuTarget *menue, const std::string &action);
 		void setFooter(const struct button_label *_fbutton_label, const int _fbutton_count, bool repaint = false);
 		void setLuaFooter(const std::vector<button_label_cc> &buttons, bool repaint = false);
+		/* The same footer under the name a binding of another language
+		   reads: the labels are owned either way. */
+		void setFooterButtons(const std::vector<button_label_cc> &buttons, bool repaint = false) { setLuaFooter(buttons, repaint); };
 
 		void setNextShortcut(int sc) { nextShortcut = sc; };
 		int getNextShortcut() { return nextShortcut; };

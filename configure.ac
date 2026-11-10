@@ -651,6 +651,28 @@ if test "$enable_lua" = "yes"; then
 fi
 AM_CONDITIONAL(ENABLE_LUA, test "$enable_lua" = "yes")
 
+# Python support is off unless it is asked for: the interpreter has to be on
+# the box for the bindings to have anything to run in, and a build that
+# turns it on against a box without one produces a program that will not
+# start. A build that wants it says so, and is then held to it.
+AC_ARG_ENABLE(python,
+	AS_HELP_STRING([--enable-python], [enable Python support @<:@default=no@:>@]),
+	[enable_python="$enableval"],
+	[enable_python="no"])
+
+PYTHON_CFLAGS=""
+PYTHON_LIBS=""
+
+if test "$enable_python" = "yes"; then
+	AC_DEFINE(ENABLE_PYTHON, 1, [include Python support])
+	PKG_CHECK_MODULES(PYTHON, python3-embed, HPYTHON="yes", HPYTHON="no")
+	if test "x$HPYTHON" != "xyes"; then
+		AC_MSG_ERROR([requested Python support, but python3-embed was not found])
+	fi
+	AC_MSG_NOTICE([Using Python provider: $HPYTHON_PROVIDER])
+fi
+AM_CONDITIONAL(ENABLE_PYTHON, test "$enable_python" = "yes")
+
 AC_ARG_ENABLE(cleanup,
 	AS_HELP_STRING([--enable-cleanup], [enable cleanup on exit @<:@default=no@:>@]),
 	AC_DEFINE(EXIT_CLEANUP, 1, [enable cleanup on exit]))
@@ -817,6 +839,8 @@ AC_SUBST(STB_HAL_INC)
 AC_SUBST(STB_HAL_LIB)
 AC_SUBST(LUA_CFLAGS)
 AC_SUBST(LUA_LIBS)
+AC_SUBST(PYTHON_CFLAGS)
+AC_SUBST(PYTHON_LIBS)
 AC_SUBST(BLURAY_LIBS)
 AC_SUBST(LIBCOOLSTREAM_STATIC_DIR)
 
@@ -857,6 +881,7 @@ data/logos/Makefile
 data/license/Makefile
 data/locale/Makefile
 data/luaplugins/Makefile
+data/pythonplugins/Makefile
 data/oled/Makefile
 data/oled/fonts/Makefile
 data/oled/icons/Makefile
@@ -879,6 +904,8 @@ data/pictures/screensaver/Makefile
 data/policy/Makefile
 data/scripts/Makefile
 data/themes/Makefile
+data/themes/Diana/Makefile
+data/themes/Diana/icons/Makefile
 data/themes/Grey-3.0/Makefile
 data/themes/Grey-3.0/icons/Makefile
 data/themes/Grey-3.0/icons/buttons/Makefile
@@ -912,6 +939,7 @@ lib/libnet/Makefile
 lib/libtuxtxt/Makefile
 lib/libupnpclient/Makefile
 lib/luaclient/Makefile
+lib/pyclient/Makefile
 lib/sectionsdclient/Makefile
 lib/timerdclient/Makefile
 lib/xmltree/Makefile
@@ -928,6 +956,7 @@ src/gui/Makefile
 src/gui/bedit/Makefile
 src/gui/components/Makefile
 src/gui/lua/Makefile
+src/gui/python/Makefile
 src/gui/moviedb/Makefile
 src/gui/moviebrowser/Makefile
 src/gui/widget/Makefile

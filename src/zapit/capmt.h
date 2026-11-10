@@ -95,6 +95,11 @@ class CCamManager
 		};
 	private:
 		cammap_t		channel_map;
+		/* How many users each mode of a channel has. Two recordings of one
+		 * channel are one demux and one mode between them, and the cam is
+		 * one: the one that stops first must leave it as it is for the
+		 * other. */
+		std::map<t_channel_id, std::map<int, int> > usecount;
 		OpenThreads::Mutex	mutex;
 		int			tunerno;
 		bool			filter_channels;

@@ -1029,6 +1029,7 @@ const TextRuleExpectation kTextRules[] = {
 	{ "plugins_disabled", TextKind::PathList, 0, 0, NULL, MustExist::No, NULL, false },
 	{ "plugins_game", TextKind::PathList, 0, 0, NULL, MustExist::No, NULL, false },
 	{ "plugins_lua", TextKind::PathList, 0, 0, NULL, MustExist::No, NULL, false },
+	{ "plugins_python", TextKind::PathList, 0, 0, NULL, MustExist::No, NULL, false },
 	{ "plugins_script", TextKind::PathList, 0, 0, NULL, MustExist::No, NULL, false },
 	{ "plugins_tool", TextKind::PathList, 0, 0, NULL, MustExist::No, NULL, false },
 	{ "backup_dir", TextKind::Directory, 0, 0, NULL, MustExist::No, NULL, false },

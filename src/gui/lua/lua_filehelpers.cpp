@@ -138,6 +138,9 @@ int CLuaInstFileHelpers::FileHelpersCp(lua_State *L)
 	return 1;
 }
 
+/* the rule this call shares with the Python binding: scriptapi/script_filehelpers.h */
+#include "../scriptapi/script_filehelpers.h"
+
 int CLuaInstFileHelpers::FileHelpersChmod(lua_State *L)
 {
 	CLuaFileHelpers *D = FileHelpersCheckData(L, 1);
@@ -158,20 +161,15 @@ int CLuaInstFileHelpers::FileHelpersChmod(lua_State *L)
 	const char *file = luaL_checkstring(L, 2);
 
 	int mode_i = luaL_checkint(L, 3);
-	/* Hack for convert lua number to octal */
-	std::string mode_s = itoa(mode_i, 10);
-	mode_t mode = (mode_t)(strtol(mode_s.c_str(), (char **)NULL, 8) & 0x0FFF);
-	//printf("\n##### [%s:%d] str: %s, okt: %o \n \n", __func__, __LINE__, mode_s.c_str(), (int)mode);
 
-	bool ret = true;
-	if (chmod(file, mode) != 0) {
-		ret = false;
+	std::string error = "";
+	bool ret = ScriptFileHelpers::Chmod(file, mode_i, error);
+	if (!ret) {
 		lua_Debug ar;
 		lua_getstack(L, 1, &ar);
 		lua_getinfo(L, "Sl", &ar);
-		const char* s = strerror(errno);
 		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, s, __path_file__, __LINE__);
+		       ar.short_src, ar.currentline, error.c_str(), __path_file__, __LINE__);
 	}
 
 	lua_pushboolean(L, ret);

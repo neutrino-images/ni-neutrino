@@ -21,13 +21,15 @@
 #ifndef _LUACCSIGNALBOX_H
 #define _LUACCSIGNALBOX_H
 
-class CLuaCCSignalBox
+#include <scriptapi/script_signalbox.h>
+
+/* The box a script made, held as the shared ScriptSignalbox: what is done with
+ * it is the same for every interpreter, and this binding only fills its
+ * parameters out of a lua table. */
+class CLuaCCSignalBox : public ScriptSignalbox
 {
 	public:
-		CSignalBox *s;
-		CComponentsForm *parent;
-		CLuaCCSignalBox() { s = NULL; parent = NULL;}
-		~CLuaCCSignalBox() { if (parent == NULL) delete s; }
+		explicit CLuaCCSignalBox(const params_t &pars) : ScriptSignalbox(pars) {}
 };
 
 class CLuaInstCCSignalbox

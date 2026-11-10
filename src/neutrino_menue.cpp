@@ -216,6 +216,14 @@ void CNeutrinoApp::InitMenuMain()
 	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_LUA]);
 #endif
 
+#ifdef ENABLE_PYTHON
+	// python
+	bool show_python = g_Plugins->hasPlugin(CPlugins::P_TYPE_PYTHON);
+	mf = new CMenuForwarder(LOCALE_MAINMENU_PYTHON, show_python, NULL, new CPluginList(LOCALE_MAINMENU_PYTHON, CPlugins::P_TYPE_PYTHON));
+	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PYTHON);
+	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_PYTHON]);
+#endif
+
 	// separator
 	personalize.addSeparator(MENU_MAIN);
 

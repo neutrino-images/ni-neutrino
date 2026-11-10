@@ -23,18 +23,7 @@
 #ifndef _LUAMENUE_H
 #define _LUAMENUE_H
 
-/* key and displayed text of one option of a "chooser" item */
-typedef std::pair<int, std::string> luamenu_option_t;
-
-struct CLuaMenuItem {
-	int int_val;
-	std::string str_val;
-	std::string name;
-	std::string type;			/* item type as named by the script */
-	std::vector<luamenu_option_t> options;	/* "chooser" only */
-	bool masked;				/* "keyboardinput" only: its value is never shown */
-	CMenuItem *mi;
-};
+#include <scriptapi/script_menu.h>
 
 class CLuaMenuChangeObserver : public CChangeObserver
 {
@@ -42,21 +31,35 @@ class CLuaMenuChangeObserver : public CChangeObserver
 		bool changeNotify(lua_State *, const std::string &, const std::string &, void *);
 };
 
-typedef std::pair<lua_Integer, CLuaMenuItem*> itemmap_pair_t;
-typedef std::map<lua_Integer, CLuaMenuItem*> itemmap_t;
-typedef itemmap_t::iterator itemmap_iterator_t;
+/* What the lua binding carries through with an item and no other binding has:
+ * the state it calls the script with, the name of the function a row calls, and
+ * the filters of a filebrowser. */
+struct lua_item_params : ScriptMenuItemParams
+{
+	lua_State			*L;
+	std::string			action;
+	std::vector<std::string>	filters;
+};
 
-class CLuaMenu
+/* What a row of this menu hands on when it is picked, which is the one thing
+ * about a menu that cannot be said without knowing the interpreter. The rest of
+ * the menu, and the rows themselves, is the script API. The menu is its own
+ * factory, so that what a row needs is made where the rows are kept and goes
+ * with them. */
+class CLuaMenu : public ScriptMenu, public ScriptMenu::factory
 {
 	public:
-		CMenuWidget *m;
 		CLuaMenuChangeObserver *observ;
-		std::list<CLuaMenuItem> items;
 		std::list<CMenuTarget *> targets;
-		std::list<void *> tofree;
-		itemmap_t itemmap;
-		CLuaMenu();
+		CLuaMenu(const params_t &pars);
 		~CLuaMenu();
+
+		CMenuTarget	*forwarder(const ScriptMenuItemParams &pars);
+		CMenuTarget	*stringinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char *icon);
+		CMenuTarget	*keyboardinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char *icon);
+		CMenuTarget	*filebrowser(const ScriptMenuItemParams &pars, ScriptMenuItem *item);
+		void		setMaskedRow(CMenuTarget *target, CMenuForwarder *row);
+		CChangeObserver	*observer(const ScriptMenuItemParams &pars);
 };
 
 class CLuaMenuForwarder : public CMenuTarget
@@ -70,8 +73,6 @@ class CLuaMenuForwarder : public CMenuTarget
 		CLuaMenuForwarder(lua_State *L, std::string _luaAction, std::string _luaId);
 		~CLuaMenuForwarder();
 		int exec(CMenuTarget* parent=NULL, const std::string & actionKey="");
-		// what the menu row shows while it has no text of its own
-		void showValue(std::string *_value) { valueString = _value; }
 };
 
 class CLuaMenuFilebrowser : public CLuaMenuForwarder

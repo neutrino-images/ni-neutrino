@@ -92,7 +92,6 @@ int CLuaInstCCText::CCTextNew(lua_State *L)
 	lua_Integer x=OFFSET_INNER_MID, y=OFFSET_INNER_SMALL, dx=-1, dy=-1;
 	std::string text = "";
 	std::string tmpMode       = "";
-	lua_Integer mode          = CTextBox::AUTO_WIDTH;
 	lua_Integer font_text     = SNeutrinoSettings::FONT_TYPE_MENU;
 	lua_Unsigned color_text   = (lua_Unsigned)COL_MENUCONTENT_TEXT;
 	lua_Unsigned color_frame  = (lua_Unsigned)COL_FRAME_PLUS_0;
@@ -109,8 +108,6 @@ int CLuaInstCCText::CCTextNew(lua_State *L)
 	tableLookup(L, "text_mode", tmpMode);
 	tableLookup(L, "mode",      tmpMode); //NOTE: parameter 'mode' deprecated, but still available for downward compatibility
 	tableLookup(L, "font_text", font_text);
-	if (font_text >= SNeutrinoSettings::FONT_TYPE_COUNT || font_text < 0)
-		font_text = SNeutrinoSettings::FONT_TYPE_MENU;
 
 	lua_Integer shadow_mode = CC_SHADOW_OFF;
 	if (!tableLookup(L, "has_shadow", shadow_mode)) {
@@ -125,51 +122,25 @@ int CLuaInstCCText::CCTextNew(lua_State *L)
 	tableLookup(L, "color_body",   color_body);
 	tableLookup(L, "color_shadow", color_shadow);
 
-	color_text   = checkMagicMask(color_text);
-	color_frame  = checkMagicMask(color_frame);
-	color_body   = checkMagicMask(color_body);
-	color_shadow = checkMagicMask(color_shadow);
-
-	if (!tmpMode.empty()) {
-		table_key txt_align[] = {
-			{ "ALIGN_AUTO_WIDTH",		CTextBox::AUTO_WIDTH },
-			{ "ALIGN_AUTO_HIGH",		CTextBox::AUTO_HIGH },
-			{ "ALIGN_SCROLL",		CTextBox::SCROLL },
-			{ "ALIGN_CENTER",		CTextBox::CENTER },
-			{ "ALIGN_RIGHT",		CTextBox::RIGHT },
-			{ "ALIGN_TOP",			CTextBox::TOP },
-			{ "ALIGN_BOTTOM",		CTextBox::BOTTOM },
-			{ "ALIGN_NO_AUTO_LINEBREAK",	CTextBox::NO_AUTO_LINEBREAK },
-			{ "DECODE_HTML",		0 },
-			{ NULL,				0 }
-		};
-		mode = 0;
-		for (int i = 0; txt_align[i].name; i++) {
-			if (tmpMode.find(txt_align[i].name) != std::string::npos)
-				mode |= txt_align[i].code;
-		}
-		if (tmpMode.find("DECODE_HTML") != std::string::npos)
-			htmlEntityDecode(text);
-	}
-
-	CComponentsForm* pw = (parent && parent->w) ? parent->w->getBodyObject() : NULL;
-	if(pw){
-		if(dy < 1)
-			dy = pw->getHeight();
-		if(dx < 1)
-			dx = pw->getWidth();
-	}
-	if(dx < 1)
-		dx = 100;
-	if(dy < 1)
-		dy = 100;
+	/* The mode, the font, the size, the colours and who deletes the text are
+	 * the script api's; this binding reads them and hands them over. */
+	ScriptText::params_t pars;
+	pars.parent       = (parent && parent->sw) ? parent->sw->body() : NULL;
+	pars.x            = (int)x;
+	pars.y            = (int)y;
+	pars.dx           = (int)dx;
+	pars.dy           = (int)dy;
+	pars.text         = text;
+	pars.mode         = tmpMode;
+	pars.font_text    = (int)font_text;
+	pars.shadow_mode  = (int)shadow_mode;
+	pars.color_text   = (unsigned long)color_text;
+	pars.color_frame  = (unsigned long)color_frame;
+	pars.color_body   = (unsigned long)color_body;
+	pars.color_shadow = (unsigned long)color_shadow;
 
 	CLuaCCText **udata = (CLuaCCText **) lua_newuserdata(L, sizeof(CLuaCCText *));
-	*udata = new CLuaCCText();
-	(*udata)->ct = new CComponentsText(x, y, dx, dy, text, mode, g_Font[font_text], 0 /*TODO: style not passed*/, pw, shadow_mode, (fb_pixel_t)color_text, (fb_pixel_t)color_frame, (fb_pixel_t)color_body, (fb_pixel_t)color_shadow);
-	(*udata)->parent = pw;
-	(*udata)->mode = mode;
-	(*udata)->font_text = font_text;
+	*udata = new CLuaCCText(pars);
 	luaL_getmetatable(L, "ctext");
 	lua_setmetatable(L, -2);
 	return 1;

@@ -119,6 +119,8 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen, CCHeaderT
 		int cch_clock_w;
 		///property: internal x-position for caption object
 		int cch_text_x;
+		///property: internal max width for caption object, see also setCaptionMaxWidth()
+		int cch_text_max_w;
 		///property: internal x-position for progressbar object
 		int cch_pb_x;
 		///property: internal width for progressbar object
@@ -229,6 +231,9 @@ class CComponentsHeader : public CComponentsForm, public CCTextScreen, CCHeaderT
 
 		///set alignment of caption within header, possible paramters are CComponentsHeader::CC_TITLE_LEFT, CComponentsHeader::CC_TITLE_RIGHT, CComponentsHeader::CC_TITLE_CENTER
 		void setCaptionAlignment(const cc_title_alignment_t& align_mode){cch_caption_align = align_mode;}
+
+		///set max width for caption text within header, see also setCaption()
+		virtual void setCaptionMaxWidth(int max_width){cch_text_max_w = max_width;}
 
 		/**Set text font for title.
 		 * Internal default font is g_Font[SNeutrinoSettings::FONT_TYPE_MENU_TITLE] and

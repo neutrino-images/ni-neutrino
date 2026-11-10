@@ -455,27 +455,28 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 	int res = pMenu->exec(NULL, "");
 	if (show_pluginmenu) {
 		// Only the plugins whose type was changed in this menu are rewritten, so a change made elsewhere stays.
-		static const char *const kKeys[] = { "plugins_disabled", "plugins_game", "plugins_tool", "plugins_script", "plugins_lua" };
-		static const int kTypes[] = { CPlugins::P_TYPE_DISABLED, CPlugins::P_TYPE_GAME, CPlugins::P_TYPE_TOOL, CPlugins::P_TYPE_SCRIPT, CPlugins::P_TYPE_LUA };
-		std::vector<std::string> lists[5];
-		bool changed[5] = { false, false, false, false, false };
+		static const char *const kKeys[] = { "plugins_disabled", "plugins_game", "plugins_tool", "plugins_script", "plugins_lua", "plugins_python" };
+		static const int kTypes[] = { CPlugins::P_TYPE_DISABLED, CPlugins::P_TYPE_GAME, CPlugins::P_TYPE_TOOL, CPlugins::P_TYPE_SCRIPT, CPlugins::P_TYPE_LUA, CPlugins::P_TYPE_PYTHON };
+		static const size_t kListCount = sizeof(kKeys) / sizeof(kKeys[0]);
+		std::vector<std::string> lists[kListCount];
+		bool changed[kListCount] = { false, false, false, false, false, false };
 		bool read = false;
 		for (int i = 0; i < pcount; i++) {
 			if (pltype[i] == plopened[i] || plfile[i].empty())
 				continue;
 			if (!read) {
-				for (size_t t = 0; t < 5; t++)
+				for (size_t t = 0; t < kListCount; t++)
 					lists[t] = pluginList(kKeys[t]);
 				read = true;
 			}
-			for (size_t t = 0; t < 5; t++) {
+			for (size_t t = 0; t < kListCount; t++) {
 				std::vector<std::string>::iterator it = std::find(lists[t].begin(), lists[t].end(), plfile[i]);
 				if (it != lists[t].end()) {
 					lists[t].erase(it);
 					changed[t] = true;
 				}
 			}
-			for (size_t t = 0; t < 5; t++) {
+			for (size_t t = 0; t < kListCount; t++) {
 				if (!(pltype[i] & kTypes[t]))
 					continue;
 				lists[t].push_back(plfile[i]);
@@ -484,7 +485,7 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 			}
 		}
 		std::vector<std::pair<std::string, std::string> > members;
-		for (size_t t = 0; t < 5; t++) {
+		for (size_t t = 0; t < kListCount; t++) {
 			if (!changed[t])
 				continue;
 			members.push_back(std::make_pair(std::string(kKeys[t]), commaList(lists[t])));
@@ -575,6 +576,9 @@ void CPersonalizeGui::ShowUserMenu()
 	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_lua");
 	if (oc)
 		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_LUA);
+	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_python");
+	if (oc)
+		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_PYTHON);
 
 	uMenu->addItem(new CMenuDForwarder(LOCALE_PERSONALIZE_USERMENU_PLUGIN_TYPES, true, NULL, pluginSelectionMenu, NULL, CRCInput::convertDigitToKey(uMenu_shortcut++)));
 
@@ -595,14 +599,15 @@ void CPersonalizeGui::ShowUserMenu()
 	uMenu->addKey(CRCInput::RC_green, this, ">a");
 }
 
-#define PERSONALIZE_PLUGINTYPE_MAX 5
+#define PERSONALIZE_PLUGINTYPE_MAX 6
 const CMenuOptionChooser::keyval PERSONALIZE_PLUGINTYPE_OPTIONS[PERSONALIZE_PLUGINTYPE_MAX] =
 {
 	{ CPlugins::P_TYPE_DISABLED, LOCALE_PLUGINTYPE_DISABLED },
 	{ CPlugins::P_TYPE_GAME, LOCALE_PLUGINTYPE_GAME },
 	{ CPlugins::P_TYPE_TOOL, LOCALE_PLUGINTYPE_TOOL },
 	{ CPlugins::P_TYPE_SCRIPT, LOCALE_PLUGINTYPE_SCRIPT },
-	{ CPlugins::P_TYPE_LUA, LOCALE_PLUGINTYPE_LUA }
+	{ CPlugins::P_TYPE_LUA, LOCALE_PLUGINTYPE_LUA },
+	{ CPlugins::P_TYPE_PYTHON, LOCALE_PLUGINTYPE_PYTHON }
 };
 
 //init plugin settings

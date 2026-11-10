@@ -107,12 +107,12 @@ struct KeptPluginSettings
 
 } // namespace
 
-TEST_CASE("the plugin folder and the five type lists are one group that runs once the list exists", "[apply][plugins]")
+TEST_CASE("the plugin folder and the six type lists are one group that runs once the list exists", "[apply][plugins]")
 {
 	Fresh fresh;
 	registerApplyGroups();
 	const char *const keys[] = { "plugin_hdd_dir", "plugins_disabled", "plugins_game", "plugins_lua",
-				     "plugins_script", "plugins_tool" };
+				     "plugins_python", "plugins_script", "plugins_tool" };
 	for (size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); ++i)
 	{
 		INFO(keys[i]);
@@ -190,6 +190,7 @@ TEST_CASE("the five plugin lists written as one answer read the list once and st
 	members.push_back(std::make_pair(std::string("plugins_tool"), std::string("chess.cfg")));
 	members.push_back(std::make_pair(std::string("plugins_script"), std::string()));
 	members.push_back(std::make_pair(std::string("plugins_lua"), std::string()));
+	members.push_back(std::make_pair(std::string("plugins_python"), std::string()));
 	settings::Refusals failed;
 	settings::writeBatch(members, failed, true);
 

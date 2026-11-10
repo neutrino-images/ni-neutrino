@@ -37,6 +37,7 @@
 
 #include "luainstance.h"
 #include "lua_menue.h"
+#include <scriptapi/script_stringinput.h>
 
 CLuaInstMenu* CLuaInstMenu::getInstance()
 {
@@ -104,24 +105,75 @@ CLuaMenu *CLuaInstMenu::MenuCheck(lua_State *L, int n)
 	return *(CLuaMenu **) luaL_checkudata(L, n, "menu");
 }
 
-/* Items are keyed by the id MenuAddItem handed out to the script. */
-static CLuaMenuItem *getMenuItem(CLuaMenu *D, lua_Integer id)
+CLuaMenu::CLuaMenu(const params_t &pars) : ScriptMenu(pars)
 {
-	itemmap_iterator_t it = D->itemmap.find(id);
-	return (it == D->itemmap.end()) ? NULL : it->second;
-}
-
-CLuaMenu::CLuaMenu()
-{
-	m      = NULL;
 	observ = new CLuaMenuChangeObserver();
 }
 
 CLuaMenu::~CLuaMenu()
 {
-	itemmap.clear();
-	delete m;
+	/* The widget and the items are the script API's and go with it. The rows
+	 * that call the script are this binding's; they are let go of by
+	 * MenuDelete, which is where a menu of a script ends. */
 	delete observ;
+}
+
+/* What a row of this menu hands on when it is picked, and what a chooser tells
+ * the script. The menu is its own factory, so a row is made where the rows are
+ * kept, and is let go of with them. */
+CMenuTarget *CLuaMenu::forwarder(const ScriptMenuItemParams &pars)
+{
+	const lua_item_params &lp = (const lua_item_params &)pars;
+	CLuaMenuForwarder *forwarder = new CLuaMenuForwarder(lp.L, lp.action, pars.id);
+	targets.push_back(forwarder);
+	return forwarder;
+}
+
+CMenuTarget *CLuaMenu::stringinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char *icon)
+{
+	const lua_item_params &lp = (const lua_item_params &)pars;
+	/* "sms" asked for the multi-tap letters on the digit keys; the input
+	 * dialog brings an on-screen keyboard for letters instead. */
+	CLuaMenuStringinput *stringinput = new CLuaMenuStringinput(lp.L, lp.action, pars.id,
+			item->name.c_str(), &item->str_val, pars.size, pars.valid_chars, observ,
+			icon, pars.sms);
+	targets.push_back(stringinput);
+	return stringinput;
+}
+
+CMenuTarget *CLuaMenu::keyboardinput(const ScriptMenuItemParams &pars, ScriptMenuItem *item, const char *icon)
+{
+	const lua_item_params &lp = (const lua_item_params &)pars;
+	CLuaMenuKeyboardinput *keyboardinput = new CLuaMenuKeyboardinput(lp.L, lp.action, pars.id,
+			item->name.c_str(), &item->str_val, pars.size, observ, icon,
+			pars.help, pars.help2, pars.masked);
+	targets.push_back(keyboardinput);
+	return keyboardinput;
+}
+
+CMenuTarget *CLuaMenu::filebrowser(const ScriptMenuItemParams &pars, ScriptMenuItem *item)
+{
+	const lua_item_params &lp = (const lua_item_params &)pars;
+	CLuaMenuFilebrowser *filebrowser = new CLuaMenuFilebrowser(lp.L, lp.action, pars.id,
+			&item->str_val, pars.dir_mode);
+	for (unsigned int i = 0; i < lp.filters.size(); i++)
+		filebrowser->addFilter(lp.filters[i]);
+	targets.push_back(filebrowser);
+	return filebrowser;
+}
+
+/* A masked entry is told which row shows it, so that it can say after an input
+ * whether a value is set. Only this binding's keyboardinput has that. */
+void CLuaMenu::setMaskedRow(CMenuTarget *target, CMenuForwarder *row)
+{
+	((CLuaMenuKeyboardinput *)target)->setRow(row);
+}
+
+/* One observer for the whole menu: the state a chooser is told in is the
+ * item's, and is put on the row when it is made. */
+CChangeObserver *CLuaMenu::observer(const ScriptMenuItemParams & /*pars*/)
+{
+	return observ;
 }
 
 CLuaMenuForwarder::CLuaMenuForwarder(lua_State *_L, std::string _luaAction, std::string _luaId)
@@ -171,7 +223,7 @@ void CLuaMenuFilebrowser::Init(std::string *_value, bool _dirMode)
 {
 	value   = _value;
 	dirMode = _dirMode;
-	showValue(value);
+	setValue(value);
 }
 
 int CLuaMenuFilebrowser::exec(CMenuTarget* /*parent*/, const std::string& /*actionKey*/)
@@ -224,7 +276,7 @@ void CLuaMenuStringinput::Init(const char *_name, std::string *_value, int _size
 	icon        = _icon;
 	observ      = _observ;
 	sms         = _sms;
-	showValue(value);
+	setValue(value);
 }
 
 int CLuaMenuStringinput::exec(CMenuTarget* /*parent*/, const std::string & /*actionKey*/)
@@ -232,10 +284,14 @@ int CLuaMenuStringinput::exec(CMenuTarget* /*parent*/, const std::string & /*act
 	int res = menu_return::RETURN_REPAINT;
 	/* "sms" asked for the multi-tap letters on the digit keys; the input
 	   dialog brings an on-screen keyboard for letters instead. */
-	CStringInput *i = new CStringInput((char *)name, value, size,
-			NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), observ, icon);
-	i->exec(NULL, "");
-	delete i;
+	ScriptStringinput::params_t pars;
+	pars.name        = name;
+	pars.value       = *value;
+	pars.size        = size;
+	pars.valid_chars = valid_chars;
+	pars.icon        = icon;
+	pars.observ      = observ;
+	*value = ScriptStringinput::exec(pars);
 	if (!luaAction.empty()) {
 		lua_pushglobaltable(L);
 		lua_getfield(L, -1, luaAction.c_str());
@@ -256,12 +312,6 @@ int CLuaMenuStringinput::exec(CMenuTarget* /*parent*/, const std::string & /*act
 	return res;
 }
 
-/* What the row of a masked entry shows: whether a value is set, not the value. */
-static std::string maskedText(const std::string &value)
-{
-	return value.empty() ? "" : "********";
-}
-
 CLuaMenuKeyboardinput::CLuaMenuKeyboardinput(lua_State *_L, std::string _luaAction, std::string _luaId, const char *_name, std::string *_value, int _size, CChangeObserver *_observ, const char *_icon, std::string _help, std::string _help2, bool _masked) : CLuaMenuForwarder(_L, _luaAction, _luaId)
 {
 	Init(_name, _value, _size, _observ, _icon, _help, _help2, _masked);
@@ -280,7 +330,7 @@ void CLuaMenuKeyboardinput::Init(const char *_name, std::string *_value, int _si
 	help2  = _help2;
 	// a masked row never falls back to the value, it is told what to show
 	if (!masked)
-		showValue(value);
+		setValue(value);
 }
 
 int CLuaMenuKeyboardinput::exec(CMenuTarget* /*parent*/, const std::string & /*actionKey*/)
@@ -292,7 +342,7 @@ int CLuaMenuKeyboardinput::exec(CMenuTarget* /*parent*/, const std::string & /*a
 	i->exec(NULL, "");
 	delete i;
 	if (masked && row)
-		row->setOption(maskedText(*value));
+		row->setOption(ScriptMenu::maskedText(*value));
 	if (!luaAction.empty()) {
 		lua_pushglobaltable(L);
 		lua_getfield(L, -1, luaAction.c_str());
@@ -315,54 +365,46 @@ int CLuaMenuKeyboardinput::exec(CMenuTarget* /*parent*/, const std::string & /*a
 
 int CLuaInstMenu::MenuNew(lua_State *L)
 {
-	CMenuWidget *m;
+	/* The parameters a script names in its table. What is done with them is
+	 * done by the script API, so that both bindings ask for one menu and
+	 * cannot come to differ. */
+	ScriptMenu::params_t pars;
+	pars.width_given = false;
+	pars.width = 0;
 
 	if (lua_istable(L, 1)) {
-		std::string name; tableLookup(L, "name", name) || tableLookup(L, "title", name);
-		std::string icon; tableLookup(L, "icon", icon);
-		lua_Integer mwidth;
-		if (tableLookup(L, "mwidth", mwidth))
-			m = new CMenuWidget(name.c_str(), icon.c_str(), mwidth);
-		else
-			m = new CMenuWidget(name.c_str(), icon.c_str());
+		tableLookup(L, "name", pars.name) || tableLookup(L, "title", pars.name);
+		tableLookup(L, "icon", pars.icon);
 
-		std::vector<button_label_cc> buttons;
-		std::string label;
-		if (tableLookup(L, "btnRed", label) && !label.empty()) {
-			button_label_cc b;
-			b.button = NEUTRINO_ICON_BUTTON_RED;
-			b.text = label;
-			buttons.push_back(b);
+		lua_Integer mwidth;
+		if (tableLookup(L, "mwidth", mwidth)) {
+			pars.width_given = true;
+			pars.width = (int)mwidth;
 		}
-		label.clear();
-		if (tableLookup(L, "btnGreen", label) && !label.empty()) {
+
+		/* The footer's buttons, each with the icon of the key it belongs
+		 * to, in the order the footer shows them. */
+		static const struct { const char *key; const char *icon; } btn_keys[] = {
+			{ "btnRed",    NEUTRINO_ICON_BUTTON_RED },
+			{ "btnGreen",  NEUTRINO_ICON_BUTTON_GREEN },
+			{ "btnYellow", NEUTRINO_ICON_BUTTON_YELLOW },
+			{ "btnBlue",   NEUTRINO_ICON_BUTTON_BLUE },
+			{ NULL, NULL }
+		};
+
+		for (int i = 0; btn_keys[i].key != NULL; i++) {
+			std::string label = "";
+			if (!tableLookup(L, btn_keys[i].key, label) || label.empty())
+				continue;
 			button_label_cc b;
-			b.button = NEUTRINO_ICON_BUTTON_GREEN;
+			b.button = btn_keys[i].icon;
 			b.text = label;
-			buttons.push_back(b);
+			pars.buttons.push_back(b);
 		}
-		label.clear();
-		if (tableLookup(L, "btnYellow", label) && !label.empty()) {
-			button_label_cc b;
-			b.button = NEUTRINO_ICON_BUTTON_YELLOW;
-			b.text = label;
-			buttons.push_back(b);
-		}
-		label.clear();
-		if (tableLookup(L, "btnBlue", label) && !label.empty()) {
-			button_label_cc b;
-			b.button = NEUTRINO_ICON_BUTTON_BLUE;
-			b.text = label;
-			buttons.push_back(b);
-		}
-		if (!buttons.empty())
-			m->setLuaFooter(buttons);
-	} else
-		m = new CMenuWidget();
+	}
 
 	CLuaMenu **udata = (CLuaMenu **) lua_newuserdata(L, sizeof(CLuaMenu *));
-	*udata = new CLuaMenu();
-	(*udata)->m = m;
+	*udata = new CLuaMenu(pars);
 	luaL_getmetatable(L, "menu");
 	lua_setmetatable(L, -2);
 	return 1;
@@ -395,181 +437,112 @@ int CLuaInstMenu::MenuAddItem(lua_State *L)
 	lua_assert(lua_istable(L, 2));
 
 	CMenuItem *mi = NULL;
-	CLuaMenuItem i = {};
-	D->items.push_back(i);
-	CLuaMenuItem *b = &D->items.back();
+	ScriptMenuItem *b = D->add();
 
 	tableLookup(L, "name", b->name);
 	std::string type; tableLookup(L, "type", type);
 	b->type = type;
-	if (type == "back") {
-		D->m->addItem(GenericMenuBack);
-	} else if (type == "next") {
-		D->m->addItem(GenericMenuNext);
-	} else if (type == "cancel") {
-		D->m->addItem(GenericMenuCancel);
-	} else if (type == "separator") {
-		D->m->addItem(GenericMenuSeparator);
-	} else if ((type == "separatorline") || (type == "subhead")) {
-		if (!b->name.empty()) {
-			int flag = (type == "separatorline") ? CMenuSeparator::LINE : CMenuSeparator::SUB_HEAD;
-			D->m->addItem(new CMenuSeparator(CMenuSeparator::STRING | flag, b->name.c_str(), NONEXISTANT_LOCALE));
-		} else
-			D->m->addItem(GenericMenuSeparatorLine);
-	} else {
-		std::string right_icon_str;	tableLookup(L, "right_icon", right_icon_str);
-		std::string action;		tableLookup(L, "action", action);
-		std::string value;		tableLookup(L, "value", value);
-		std::string hint;		tableLookup(L, "hint", hint);
-		std::string hint_icon_str;	tableLookup(L, "hint_icon", hint_icon_str);
-		std::string icon_str;		tableLookup(L, "icon", icon_str);
-		std::string id;			tableLookup(L, "id", id);
-		std::string tmp;
-		char *right_icon = NULL;
-		if (!right_icon_str.empty()) {
-			right_icon = strdup(right_icon_str.c_str());
-			D->tofree.push_back(right_icon);
-		}
-		char *hint_icon = NULL;
-		if (!hint_icon_str.empty()) {
-			hint_icon = strdup(hint_icon_str.c_str());
-			D->tofree.push_back(hint_icon);
-		}
-		char *icon = NULL;
-		if (!icon_str.empty()) {
-			icon = strdup(icon_str.c_str());
-			D->tofree.push_back(icon);
-		}
 
-		lua_Unsigned directkey = CRCInput::RC_nokey;	tableLookup(L, "directkey", directkey);
-		lua_Integer pulldown = false;			tableLookup(L, "pulldown", pulldown);
+	/* The types that are the menu's own are the same for both bindings and
+	 * are built where the menu is; what is left here is the item a script
+	 * names of its own. */
+	int row_id = 0;
+	if (!D->addIfPlain(type, b->name)) {
+		/* What a script names of its own, read out of its table. The list a
+		 * chooser is built from is read into the item; the row itself is
+		 * built where the menu is, out of what is read here. */
+		lua_item_params pars;
+		pars.L = L;
+		tableLookup(L, "id", pars.id);
+		tableLookup(L, "action", pars.action);
+		tableLookup(L, "value", pars.value);
+		tableLookup(L, "icon", pars.icon);
+		tableLookup(L, "right_icon", pars.right_icon);
+		tableLookup(L, "hint", pars.hint);
+		tableLookup(L, "hint_icon", pars.hint_icon);
+		tableLookup(L, "range", pars.range);
+		tableLookup(L, "help", pars.help);
+		tableLookup(L, "help2", pars.help2);
 
-		bool enabled = true;
-		if (!(tableLookup(L, "enabled", enabled) || tableLookup(L, "active", enabled))) {
-			tmp = "true";
+		/* the characters a stringinput takes, unless a script narrows them */
+		std::string valid_chars = "abcdefghijklmnopqrstuvwxyz0123456789!\"Ã‚Â§$%&/()=?-.@,_: ";
+		tableLookup(L, "valid_chars", valid_chars);
+		pars.valid_chars = valid_chars;
+
+		pars.enabled = true;
+		if (!(tableLookup(L, "enabled", pars.enabled) || tableLookup(L, "active", pars.enabled))) {
+			std::string tmp = "true";
 			if (tableLookup(L, "enabled", tmp) || tableLookup(L, "active", tmp))
 				paramBoolDeprecated(L, tmp.c_str());
-			enabled = (tmp == "true" || tmp == "1" || tmp == "yes");
+			pars.enabled = (tmp == "true" || tmp == "1" || tmp == "yes");
 		}
 
-		tableLookup(L, "range", tmp);
-		int range_from = 0, range_to = 99;
-		sscanf(tmp.c_str(), "%d,%d", &range_from, &range_to);
+		lua_Unsigned directkey = CRCInput::RC_nokey;
+		tableLookup(L, "directkey", directkey);
+		pars.directkey = directkey;
 
-		if (type == "forwarder") {
-			b->str_val = value;
-			CLuaMenuForwarder *forwarder = new CLuaMenuForwarder(L, action, id);
-			forwarder->showValue(&b->str_val);
-			mi = new CMenuForwarder(b->name, enabled, b->str_val, forwarder, NULL/*ActionKey*/, directkey, icon, right_icon);
-			if (!hint.empty() || hint_icon)
-				mi->setHint(hint_icon, hint);
-			D->targets.push_back(forwarder);
-		} else if (type == "chooser") {
-			int options_count = 0;
+		lua_Integer pulldown = 0;
+		tableLookup(L, "pulldown", pulldown);
+		pars.pulldown = (pulldown != 0);
+
+		lua_Integer size = (type == "stringinput") ? 30 : 0;
+		tableLookup(L, "size", size);
+		pars.size = (int)size;
+
+		lua_Integer sms = 0;
+		tableLookup(L, "sms", sms);
+		pars.sms = (sms != 0);
+
+		lua_Integer masked = 0;
+		if (tableLookup(L, "masked", masked))
+			pars.masked = (masked != 0);
+		else
+			tableLookup(L, "masked", pars.masked);
+
+		lua_Integer dir_mode = 0;
+		tableLookup(L, "dir_mode", dir_mode);
+		pars.dir_mode = (dir_mode != 0);
+
+		if (type == "chooser") {
+			/* the choices the script wrote: a value to each text */
 			lua_pushstring(L, "options");
 			lua_gettable(L, -2);
-			if (lua_istable(L, -1))
-				for (lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)) {
-					lua_pushvalue(L, -2);
-					options_count++;
-				}
-			lua_pop(L, 1);
-			if (options_count == 0) {
-				D->m->addItem(new CMenuSeparator(CMenuSeparator::STRING | CMenuSeparator::LINE, "ERROR! (options_count)", NONEXISTANT_LOCALE));
-				lua_pushnil(L);
-				return 1;
-			}
-
-			CMenuOptionChooser::keyval_ext *kext = (CMenuOptionChooser::keyval_ext *)calloc(options_count, sizeof(CMenuOptionChooser::keyval_ext));
-			D->tofree.push_back(kext);
-			lua_pushstring(L, "options");
-			lua_gettable(L, -2);
-			b->int_val = 0;
 			if (lua_istable(L, -1)) {
-				int j = 0;
 				for (lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)) {
 					lua_pushvalue(L, -2);
 					const char *key = lua_tostring(L, -1);
 					const char *val = lua_tostring(L, -2);
-					kext[j].key = atoi(key);
-					kext[j].value = NONEXISTANT_LOCALE;
-					kext[j].valname = strdup(val?val:"ERROR");
-					D->tofree.push_back((void *)kext[j].valname);
-					b->options.push_back(luamenu_option_t(kext[j].key, kext[j].valname));
-					if (!strcmp(value.c_str(), kext[j].valname))
-						b->int_val = kext[j].key;
-					j++;
+					b->options.push_back(std::pair<int, std::string>(atoi(key), val ? val : "ERROR"));
 				}
 			}
 			lua_pop(L, 1);
-			mi = new CMenuOptionChooser(b->name.c_str(), &b->int_val, kext, options_count, enabled, D->observ, directkey, icon, pulldown);
-		} else if (type == "numeric") {
-			b->int_val = range_from;
-			sscanf(value.c_str(), "%d", &b->int_val);
-			mi = new CMenuOptionNumberChooser(b->name, &b->int_val, enabled, range_from, range_to, D->observ, 0, 0, NONEXISTANT_LOCALE, pulldown);
-		} else if (type == "string") {
-			b->str_val = value;
-			mi = new CMenuOptionStringChooser(b->name.c_str(), &b->str_val, enabled, D->observ, directkey, icon, pulldown);
-		} else if (type == "stringinput") {
-			b->str_val = value;
-			std::string valid_chars = "abcdefghijklmnopqrstuvwxyz0123456789!\"§$%&/()=?-.@,_: ";
-			tableLookup(L, "valid_chars", valid_chars);
-			lua_Integer sms = 0;	tableLookup(L, "sms", sms);
-			lua_Integer size = 30;	tableLookup(L, "size", size);
-			CLuaMenuStringinput *stringinput = new CLuaMenuStringinput(L, action, id, b->name.c_str(), &b->str_val, size, valid_chars, D->observ, icon, sms);
-			mi = new CMenuForwarder(b->name, enabled, b->str_val, stringinput, NULL/*ActionKey*/, directkey, icon, right_icon);
-			D->targets.push_back(stringinput);
-		} else if (type == "keyboardinput") {
-			b->str_val = value;
-			lua_Integer size = 0;	tableLookup(L, "size", size);
-			std::string help = "";	tableLookup(L, "help", help);
-			std::string help2 = "";	tableLookup(L, "help2", help2);
-			// masked=1, or masked=true
-			lua_Integer masked_n = 0;
-			b->masked = false;
-			if (tableLookup(L, "masked", masked_n))
-				b->masked = masked_n != 0;
-			else
-				tableLookup(L, "masked", b->masked);
-			CLuaMenuKeyboardinput *keyboardinput = new CLuaMenuKeyboardinput(L, action, id, b->name.c_str(), &b->str_val, size, D->observ, icon, help, help2, b->masked);
-			CMenuForwarder *row = new CMenuForwarder(b->name, enabled, b->str_val, keyboardinput, NULL/*ActionKey*/, directkey, icon, right_icon);
-			if (b->masked) {
-				row->setOption(maskedText(b->str_val));
-				keyboardinput->setRow(row);
-			}
-			mi = row;
-			D->targets.push_back(keyboardinput);
 		} else if (type == "filebrowser") {
-			b->str_val = value;
-			lua_Integer dirMode = 0; tableLookup(L, "dir_mode", dirMode);
-			CLuaMenuFilebrowser *filebrowser = new CLuaMenuFilebrowser(L, action, id, &b->str_val, dirMode);
+			/* and the names it takes, where it named any */
 			lua_pushstring(L, "filter");
 			lua_gettable(L, -2);
-			if (lua_istable(L, -1))
+			if (lua_istable(L, -1)) {
 				for (lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)) {
 					lua_pushvalue(L, -2);
 					const char *val = lua_tostring(L, -2);
-					filebrowser->addFilter(val);
+					if (val)
+						pars.filters.push_back(val);
 				}
+			}
 			lua_pop(L, 1);
+		}
 
-			mi = new CMenuForwarder(b->name, enabled, b->str_val, filebrowser, NULL/*ActionKey*/, directkey, icon, right_icon);
-			D->targets.push_back(filebrowser);
-		}
-		if (mi) {
-			mi->setLua(L, action, id);
-			if (!hint.empty() || hint_icon)
-				mi->setHint(hint_icon, hint);
-			D->m->addItem(mi);
-		}
+		mi = D->makeRow(b, pars, D);
+
+		/* What a row of this menu is told of the script, which is the one
+		 * thing the script API cannot say for it. */
+		if (mi)
+			mi->setLua(L, pars.action, pars.id);
+
+		row_id = D->addRow(b, mi, pars);
 	}
-
-	if (mi) {
-		lua_Integer id = D->itemmap.size() + 1;
-		b->mi = mi;
-		D->itemmap.insert(itemmap_pair_t(id, b));
-		lua_pushinteger(L, id);
-	} else
+	if (row_id > 0)
+		lua_pushinteger(L, row_id);
+	else
 		lua_pushnil(L);
 
 	return 1;
@@ -603,7 +576,7 @@ int CLuaInstMenu::MenuSetActive(lua_State *L)
 	lua_Integer id;	tableLookup(L, "item", id);
 	bool activ;	tableLookup(L, "activ", activ);
 
-	CLuaMenuItem *item = getMenuItem(D, id);
+	ScriptMenuItem *item = D->item((int)id);
 	if (item)
 		item->mi->setActive(activ);
 	return 0;
@@ -618,7 +591,7 @@ int CLuaInstMenu::MenuSetName(lua_State *L)
 	lua_Integer id;		tableLookup(L, "item", id);
 	std::string name;	tableLookup(L, "name", name);
 
-	CLuaMenuItem *item = getMenuItem(D, id);
+	ScriptMenuItem *item = D->item((int)id);
 	if (item)
 		item->mi->setName(name);
 	return 0;
@@ -632,10 +605,6 @@ int CLuaInstMenu::MenuDelete(lua_State *L)
 	while (!D->targets.empty()) {
 		delete D->targets.back();
 		D->targets.pop_back();
-	}
-	while (!D->tofree.empty()) {
-		free(D->tofree.back());
-		D->tofree.pop_back();
 	}
 
 	delete D;
@@ -676,7 +645,7 @@ int CLuaInstMenu::MenuSetValue(lua_State *L)
 	lua_Integer id;		tableLookup(L, "item", id);
 	std::string value;	tableLookup(L, "value", value);
 
-	CLuaMenuItem *item = getMenuItem(D, id);
+	ScriptMenuItem *item = D->item((int)id);
 	if (!item)
 		return 0;
 
@@ -695,7 +664,7 @@ int CLuaInstMenu::MenuSetValue(lua_State *L)
 		 * told whether a value is set, never the value.
 		 */
 		item->str_val = value;
-		static_cast<CMenuForwarder*>(item->mi)->setOption(item->masked ? maskedText(value) : "");
+		static_cast<CMenuForwarder*>(item->mi)->setOption(item->masked ? ScriptMenu::maskedText(value) : "");
 		return 0;
 	}
 
@@ -732,7 +701,7 @@ int CLuaInstMenu::MenuPaintItem(lua_State *L)
 
 	lua_Integer id;		tableLookup(L, "item", id);
 
-	CLuaMenuItem *item = getMenuItem(D, id);
+	ScriptMenuItem *item = D->item((int)id);
 	if (item)
 		item->mi->paint();
 	return 0;

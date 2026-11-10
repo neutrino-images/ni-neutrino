@@ -798,6 +798,7 @@ struct SNeutrinoSettings
 #endif
 		P_MAIN_SCRIPTS,
 		P_MAIN_LUA,
+		P_MAIN_PYTHON,
 		P_MAIN_SETTINGS,
 		P_MAIN_SERVICE,
 		P_MAIN_SLEEPTIMER,
@@ -866,6 +867,7 @@ struct SNeutrinoSettings
 		P_UMENU_PLUGIN_TYPE_TOOLS,
 		P_UMENU_PLUGIN_TYPE_SCRIPTS,
 		P_UMENU_PLUGIN_TYPE_LUA,
+		P_UMENU_PLUGIN_TYPE_PYTHON,
 
 		P_SETTINGS_MAX
 	};
@@ -900,6 +902,7 @@ struct SNeutrinoSettings
 	std::string plugins_disabled;
 	std::string plugins_game;
 	std::string plugins_lua;
+	std::string plugins_python;
 	std::string plugins_script;
 	std::string plugins_tool;
 
@@ -1195,6 +1198,7 @@ struct SNeutrinoSettings
 	int infobar_casystem_display;
 	int infobar_casystem_dotmatrix;
 	int infobar_casystem_frame;
+	int infobar_evo_infoviewer;
 	int infobar_progressbar;
 	int infobar_sat_display;
 	int infobar_show;
@@ -1305,6 +1309,7 @@ struct SNeutrinoSettings
 		ITEM_FILEPLAY_AUDIO = 38,
 		ITEM_TIMESHIFT = 39,
 		ITEM_LCD4LINUX = 40,
+		ITEM_PYTHON = 41,
 
 		ITEM_MAX // MUST be always the last in the list
 	} USER_ITEM;
@@ -1420,7 +1425,9 @@ struct SNeutrinoSettings
 	int mode_left_right_key_tv;
 };
 
-extern const struct personalize_settings_t personalize_settings[SNeutrinoSettings::P_SETTINGS_MAX];
+/* Sized by the enum, so an entry left out is a compile error rather than a
+   row whose name is NULL, which the loop that reads it would hand on. */
+extern const struct personalize_settings_t personalize_settings[];
 
 //#define FILESYSTEM_ENCODING_TO_UTF8(a) (g_settings.filesystem_is_utf8 ? (a) : ZapitTools::Latin1_to_UTF8(a).c_str())
 #define FILESYSTEM_ENCODING_TO_UTF8(a) (isUTF8(a) ? (a) : ZapitTools::Latin1_to_UTF8(a).c_str())

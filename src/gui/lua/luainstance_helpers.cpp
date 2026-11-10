@@ -29,6 +29,7 @@
 #include <neutrino.h>
 
 #include "luainstance.h"
+#include <scriptapi/script_color.h>
 
 /* Ported by Benny Chen, http://www.bennychen.cn/tag/lual_checkbool/ */
 bool _luaL_checkbool(lua_State *L, int numArg)
@@ -92,13 +93,10 @@ void obsoleteHideParameter(lua_State *L)
 	printf("\33[1;31m[Lua script warning]\33[0m %s:%d: Obsolete parameter for hide() in use, please remove!\n", ar.short_src, ar.currentline);
 }
 
-lua_Unsigned checkMagicMask(lua_Unsigned col)
-{
-	if ((col & MAGIC_MASK) == MAGIC_COLOR)
-		col = CFrameBuffer::getInstance()->realcolor[col & 0x000000ff];
-	return col;
-}
 
+/* A colour a script named as one of the box's own is resolved where the window
+ * of a script resolves it, so that a window and a widget of a script cannot
+ * come to resolve one differently. */
 bool tableLookup(lua_State *L, const char *what, std::string &value)
 {
 	lua_pushstring(L, what);

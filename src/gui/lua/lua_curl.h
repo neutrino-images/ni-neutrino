@@ -20,27 +20,26 @@
 #ifndef _LUACURL_H
 #define _LUACURL_H
 
-class CLuaCurl
+#include "../scriptapi/script_curl.h"
+
+class CLuaCurl : public ScriptCurl
 {
 	public:
 		CLuaCurl() {};
 		~CLuaCurl() {};
 };
 
-struct progressData {
-	CURL *curl;
-	curl_off_t last_dlnow;
-};
-
 class CLuaInstCurl
 {
 	public:
+		/* the codes luainstance.cpp hands to the scripts, under the names they
+		 * had before the download moved into the script API */
 		enum {
-			LUA_CURL_OK              = 0,
-			LUA_CURL_ERR_HANDLE      = 1,
-			LUA_CURL_ERR_NO_URL      = 2,
-			LUA_CURL_ERR_CREATE_FILE = 3,
-			LUA_CURL_ERR_CURL        = 4
+			LUA_CURL_OK              = ScriptCurl::OK,
+			LUA_CURL_ERR_HANDLE      = ScriptCurl::ERR_HANDLE,
+			LUA_CURL_ERR_NO_URL      = ScriptCurl::ERR_NO_URL,
+			LUA_CURL_ERR_CREATE_FILE = ScriptCurl::ERR_CREATE_FILE,
+			LUA_CURL_ERR_CURL        = ScriptCurl::ERR_CURL
 		};
 
 		CLuaInstCurl() {};
@@ -52,11 +51,6 @@ class CLuaInstCurl
 	private:
 		static CLuaCurl *CurlCheckData(lua_State *L, int n);
 		static int CurlNew(lua_State *L);
-		static size_t CurlWriteToString(void *ptr, size_t size, size_t nmemb, void *data);
-#if !CURL_AT_LEAST_VERSION( 7,32,0 )
-		static int CurlProgressFunc_old(void *p, double dltotal, double dlnow, double ultotal, double ulnow);
-#endif
-		static int CurlProgressFunc(void *p, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 		static int CurlDownload(lua_State *L);
 		static int CurlEncodeUri(lua_State *L);
 		static int CurlDecodeUri(lua_State *L);

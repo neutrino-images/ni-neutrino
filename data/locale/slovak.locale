@@ -1325,6 +1325,7 @@ mainmenu.movieplayer Prehrávač filmov
 mainmenu.pausesectionsd Načítavanie EPG
 mainmenu.pictureviewer Prehliadač obrázkov
 mainmenu.poweroff_menu Vypnutie
+mainmenu.python Python doplnky
 mainmenu.radiomode Rádio
 mainmenu.reboot Reštartovať
 mainmenu.recording Nahrávanie
@@ -1529,6 +1530,7 @@ menu.hint_infobar_casys_dotmatrix zap: CA-Systém s bodmi v pozadí
 menu.hint_infobar_casys_frame zap: CA-Systém s rámom
 menu.hint_infobar_dd Zobrazenie DolbyDigital ikony
 menu.hint_infobar_ecminfo Zobrazenie ECM-infa počas zobrazovania infolišty
+menu.hint_infobar_evo_infoviewer Zap.: evo infolišta. Vyp.: klasická NI infolišta (nutný reštart)
 menu.hint_infobar_filesys Zobrazenie úrovne obsadenia pamäte a disku
 menu.hint_infobar_fonts Zmena veľkosti fontu informačnej lišty
 menu.hint_infobar_logo Zobrazenie loga, čísla kanálu a signálu; Voľby v [zátvorkách] budú zobrazené v malom informačnom okne
@@ -1643,6 +1645,7 @@ menu.hint_leds_tv Funkčný stav LED
 menu.hint_load Načítanie Neutrino-HD nastavení grafického užívateľského rozhrania (GUI) zo súboru
 menu.hint_longkeypress_duration Stlačenie klávesy bude vyhodnotené ako "dlhý stisk klávesy" ak bude stlačené dlhšie ako špecifikovaný čas.
 menu.hint_lua Spustenie Lua doplnkov
+menu.hint_python Spustenie Python doplnkov
 menu.hint_make_hdlist Automaticky vytvorí HD zoznam kanálov na základe\ntypu kanálu a názvu
 menu.hint_make_newlist Vytvorí zoznam nedávno pridaných kanálov
 menu.hint_make_removedlist Vytvorí zoznam nedávno odstránených kanálov
@@ -1751,6 +1754,7 @@ menu.hint_pictureviewer_slide_time Interval zmeny obrázka, v sekundách
 menu.hint_picview Sledovanie obrázkov
 menu.hint_plugin_type_games Zobrazí hry v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_lua Zobrazí doplnky v užívateľskom menu pri výbere 'Typy doplnkov'
+menu.hint_plugin_type_python Zobrazí Python doplnky v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_scripts Zobrazí skripty v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_tools Zobrazí nástroje v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugins_control Konfigurácia nainštalovaných doplnkov a služieb
@@ -2075,6 +2079,7 @@ miscsettings.infobar_disp_3 Logo, Názov kanálu [Signál]
 miscsettings.infobar_disp_4 Logo, Názov kanálu [Číslo kanálu]
 miscsettings.infobar_disp_5 Logo [Signál]
 miscsettings.infobar_disp_6 Číslo kanálu, Logo [Signál]
+miscsettings.infobar_evo_infoviewer Evo infolišta
 miscsettings.infobar_gradient_body Gradient stred
 miscsettings.infobar_gradient_bottom Gradient dole
 miscsettings.infobar_gradient_top Gradient hore
@@ -2639,6 +2644,7 @@ plugins.result Výstup doplnku
 plugintype.disabled Nepoužitý
 plugintype.game Hra
 plugintype.lua Lua doplnok
+plugintype.python Python doplnok
 plugintype.script Skript
 plugintype.tool Nástroj
 poweroff.rec_protected Nahrávky chránené

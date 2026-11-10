@@ -520,6 +520,13 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 				// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
 				break;
 			}
+			case SNeutrinoSettings::ITEM_PYTHON:
+			{
+				keyhelper.get(&key, &icon);
+				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PYTHON, g_Plugins->hasPlugin(CPlugins::P_TYPE_PYTHON), NULL, new CPluginList(LOCALE_MAINMENU_PYTHON, CPlugins::P_TYPE_PYTHON), "-1", key, icon);
+				// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+				break;
+			}
 			case SNeutrinoSettings::ITEM_PLUGIN_TYPES:
 			{
 				unsigned int number_of_plugins = (unsigned int) g_Plugins->getNumberOfPlugins();
@@ -540,6 +547,8 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_SCRIPT;
 					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_LUA])
 						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_LUA;
+					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_PYTHON])
+						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_PYTHON;
 
 					if (show && !g_Plugins->isHidden(count) && (g_Plugins->getIntegration(count) == PLUGIN_INTEGRATION_DISABLED))
 					{

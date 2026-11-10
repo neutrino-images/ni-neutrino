@@ -65,34 +65,27 @@ CLuaHintbox *CLuaInstHintbox::HintboxCheck(lua_State *L, int n)
 	return *(CLuaHintbox **) luaL_checkudata(L, n, "hintbox");
 }
 
-CLuaHintbox::CLuaHintbox()
-{
-	caption = NULL;
-	b = NULL;
-}
-
-CLuaHintbox::~CLuaHintbox()
-{
-	if (caption)
-		free(caption);
-	delete b;
-}
-
 int CLuaInstHintbox::HintboxNew(lua_State *L)
 {
 	lua_assert(lua_istable(L,1));
 
-	std::string name, text, icon = std::string(NEUTRINO_ICON_INFO);
-	tableLookup(L, "name", name) || tableLookup(L, "title", name) || tableLookup(L, "caption", name);
-	tableLookup(L, "text", text);
-	tableLookup(L, "icon", icon);
-	lua_Integer width = HINTBOX_MIN_WIDTH;
+	/* The parameters a script names in its table. What is done with them is
+	 * done by the script API, so that both bindings ask for one box and
+	 * cannot come to differ. */
+	ScriptHintbox::params_t pars;
+	pars.icon = std::string(NEUTRINO_ICON_INFO);
+	pars.width = HINTBOX_MIN_WIDTH;
+
+	tableLookup(L, "name", pars.name) || tableLookup(L, "title", pars.name) || tableLookup(L, "caption", pars.name);
+	tableLookup(L, "text", pars.text);
+	tableLookup(L, "icon", pars.icon);
+
+	lua_Integer width = (lua_Integer)pars.width;
 	tableLookup(L, "width", width);
+	pars.width = (int)width;
 
 	CLuaHintbox **udata = (CLuaHintbox **) lua_newuserdata(L, sizeof(CLuaHintbox *));
-	*udata = new CLuaHintbox();
-	(*udata)->caption = strdup(name.c_str());
-	(*udata)->b = new CHintBox((*udata)->caption, text.c_str(), width, icon.c_str());
+	*udata = new CLuaHintbox(pars);
 	luaL_getmetatable(L, "hintbox");
 	lua_setmetatable(L, -2);
 	return 1;
@@ -110,7 +103,7 @@ int CLuaInstHintbox::HintboxPaint(lua_State *L)
 {
 	CLuaHintbox *D = HintboxCheck(L, 1);
 	if (!D) return 0;
-	D->b->paint();
+	D->paint();
 	return 0;
 }
 
@@ -118,7 +111,7 @@ int CLuaInstHintbox::HintboxHide(lua_State *L)
 {
 	CLuaHintbox *D = HintboxCheck(L, 1);
 	if (!D) return 0;
-	D->b->hide();
+	D->hide();
 	return 0;
 }
 
@@ -126,53 +119,13 @@ int CLuaInstHintbox::HintboxExec(lua_State *L)
 {
 	CLuaHintbox *D = HintboxCheck(L, 1);
 	if (!D) return 0;
+
 	int timeout = -1;
 	if (lua_isnumber(L, -1))
 		timeout = (int) lua_tonumber(L, -1);
+
 	CLuaInstance::scriptUiOpen();
-	D->b->paint();
-
-	// copied from gui/widget/hintbox.cpp
-	neutrino_msg_t msg;
-	neutrino_msg_data_t data;
-	if ( timeout == -1 )
-		timeout = 5; /// default timeout 5 sec
-	//timeout = g_settings.handling_infobar[SNeutrinoSettings::HANDLING_INFOBAR];
-
-	uint64_t timeoutEnd = CRCInput::calcTimeoutEnd(timeout);
-
-	int res = messages_return::none;
-
-	while ( ! ( res & ( messages_return::cancel_info | messages_return::cancel_all ) ) ) {
-		g_RCInput->getMsgAbsoluteTimeout( &msg, &data, &timeoutEnd );
-
-		if ((msg == CRCInput::RC_timeout) || (msg == CRCInput::RC_ok))
-			res = messages_return::cancel_info;
-		else if (CNeutrinoApp::getInstance()->backKey(msg))
-			res = messages_return::cancel_all;
-		else if (/*(D->b->has_scrollbar()) &&*/ ((msg == CRCInput::RC_up) || (msg == CRCInput::RC_down))) {
-			if (msg == CRCInput::RC_up)
-				D->b->scroll_up();
-			else
-				D->b->scroll_down();
-		} else if (CNeutrinoApp::getInstance()->listModeKey(msg)) {
-			// do nothing
-		} else if (msg == CRCInput::RC_mode) {
-			break;
-		} else if ((msg == CRCInput::RC_next) || (msg == CRCInput::RC_prev)) {
-			res = messages_return::cancel_all;
-			g_RCInput->postMsg(msg, data);
-		} else {
-			res = CNeutrinoApp::getInstance()->handleMsg(msg, data);
-			if (res & messages_return::unhandled) {
-
-				// leave here and handle above...
-				g_RCInput->postMsg(msg, data);
-				res = messages_return::cancel_all;
-			}
-		}
-	}
-	D->b->hide();
+	D->exec(timeout);
 	CLuaInstance::scriptUiClose();
 	return 0;
 }

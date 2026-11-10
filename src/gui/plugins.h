@@ -44,7 +44,8 @@ class CPlugins
 			P_TYPE_TOOL	= 0x4,
 			P_TYPE_SCRIPT	= 0x8,
 			P_TYPE_LUA	= 0x10,
-			P_TYPE_NO_GAME	= P_TYPE_TOOL | P_TYPE_SCRIPT | P_TYPE_LUA
+			P_TYPE_PYTHON	= 0x20,
+			P_TYPE_NO_GAME	= P_TYPE_TOOL | P_TYPE_SCRIPT | P_TYPE_LUA | P_TYPE_PYTHON
 		}
 		p_type_t;
 
@@ -150,6 +151,7 @@ class CPlugins
 		int startScriptPlugin(int number);
 		int popenScriptPlugin(int number, const char *script);
 		int startLuaPlugin(int number);
+		int startPythonPlugin(int number);
 		bool hasPlugin(CPlugins::p_type_t type);
 
 		const std::string &getScriptOutput() const;

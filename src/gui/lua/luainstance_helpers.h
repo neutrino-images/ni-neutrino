@@ -61,9 +61,9 @@ lua_Unsigned luaL_checkunsigned (lua_State *L, int i);
 #define LUA_WIKI "https://wiki.tuxbox-neutrino.org/wiki"
 //#define LUA_WIKI "https://wiki.slknet.de/wiki"
 
-/* the magic color that tells us we are using one of the palette colors */
-#define MAGIC_COLOR 0x42424200
-#define MAGIC_MASK  0xFFFFFF00
+/* the magic colour a script names as one of the box own, and the rule
+ * that resolves it, are held once for both bindings: */
+#include "../scriptapi/script_color.h"
 
 #define lua_boxpointer(L, u) \
 	(*(void **)(lua_newuserdata(L, sizeof(void *))) = (u))
@@ -126,7 +126,6 @@ void paramBoolDeprecated(lua_State *L, const char* val);
 void paramDeprecated(lua_State *L, const char* oldParam, const char* newParam);
 void functionDeprecated(lua_State *L, const char* oldFunc, const char* newFunc);
 void obsoleteHideParameter(lua_State *L);
-lua_Unsigned checkMagicMask(lua_Unsigned col);
 
 bool tableLookup(lua_State*, const char*, std::string&);
 bool tableLookup(lua_State*, const char*, lua_Integer&);

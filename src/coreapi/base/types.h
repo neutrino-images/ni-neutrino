@@ -586,7 +586,8 @@ enum class PluginKind
 	Game,
 	Tool,
 	Script,
-	Lua
+	Lua,
+	Python
 };
 
 /* Two names, because the box starts a plugin by the name of its files and what

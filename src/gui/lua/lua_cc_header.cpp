@@ -86,22 +86,29 @@ int CLuaInstCCHeader::CCHeaderNew(lua_State *L)
 	tableLookup(L, "caption",      caption);
 	tableLookup(L, "icon",         icon);
 	tableLookup(L, "shadow_mode",  shadow_mode);
+	tableLookup(L, "buttons",      buttons);
 	tableLookup(L, "color_frame",  color_frame);
 	tableLookup(L, "color_body" ,  color_body);
 	tableLookup(L, "color_shadow", color_shadow);
 
-	color_frame  = checkMagicMask(color_frame);
-	color_body   = checkMagicMask(color_body);
-	color_shadow = checkMagicMask(color_shadow);
+	/* The colours, the form it hangs on and who deletes the header are the
+	 * script api's; this binding reads them and hands them over. */
+	ScriptHeader::params_t pars;
+	pars.parent       = (parent && parent->sw) ? parent->sw->body() : NULL;
+	pars.x            = (int)x;
+	pars.y            = (int)y;
+	pars.dx           = (int)dx;
+	pars.dy           = (int)dy;
+	pars.caption      = caption;
+	pars.icon         = icon;
+	pars.buttons      = (int)buttons;
+	pars.shadow_mode  = (int)shadow_mode;
+	pars.color_frame  = (unsigned long)color_frame;
+	pars.color_body   = (unsigned long)color_body;
+	pars.color_shadow = (unsigned long)color_shadow;
 
-	CComponentsForm* pw = (parent && parent->w) ? parent->w->getBodyObject() : NULL;
 	CLuaCCHeader **udata = (CLuaCCHeader **) lua_newuserdata(L, sizeof(CLuaCCHeader *));
-	*udata = new CLuaCCHeader();
-	(*udata)->ch = new CComponentsHeader((const int&)x, (const int&)y, (const int&)dx, (const int&)dy,
-					     caption, (std::string)"", (const int&)buttons,
-					     (CComponentsForm*)parent, (int)shadow_mode,
-					     (fb_pixel_t)color_frame, (fb_pixel_t)color_body, (fb_pixel_t)color_shadow);
-	(*udata)->parent = pw;
+	*udata = new CLuaCCHeader(pars);
 	luaL_getmetatable(L, LUA_HEADER_CLASSNAME);
 	lua_setmetatable(L, -2);
 	return 1;

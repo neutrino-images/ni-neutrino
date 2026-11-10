@@ -17,14 +17,38 @@ $(VERSION_H): FORCE
 	fi
 
 BUILT_SOURCES = $(VERSION_H)
-noinst_HEADERS = $(VERSION_H)
+noinst_HEADERS = \
+	$(VERSION_H) 
 
 FORCE:
+
+# The layer under scriptapi/ stands between the two bindings and the components
+# they drive, and the check below keeps the three in step. It hangs on "all"
+# here exactly as src/coreapi/check-layering.sh hangs on "all" in its own
+# Makefile.am - the autotools way in, and silent when it passes.
+#
+# A build that does not read these makefiles has to be told to run it, and
+# ni-buildsystem is one of those:
+#	sh src/scriptapi/check-scriptapi.sh <top of the tree>
+# Hence the top of the tree as an argument: the check reads both bindings and
+# the layer, wherever the tree stands.
+EXTRA_DIST = ../scriptapi/check-scriptapi.sh
+
+check-scriptapi:
+	@$(SHELL) $(srcdir)/../scriptapi/check-scriptapi.sh $(top_srcdir)
+
+.PHONY: check-scriptapi
+
+all-local: check-scriptapi
 
 SUBDIRS = bedit components moviebrowser moviedb widget
 
 if ENABLE_LUA
 SUBDIRS += lua
+endif
+
+if ENABLE_PYTHON
+SUBDIRS += python
 endif
 
 AM_CPPFLAGS += \
@@ -46,6 +70,7 @@ AM_CPPFLAGS += \
 	@AVFORMAT_CFLAGS@ \
 	@AVUTIL_CFLAGS@ \
 	@LUA_CFLAGS@ \
+	@PYTHON_CFLAGS@ \
 	@HWLIB_CFLAGS@
 
 noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a
@@ -74,6 +99,8 @@ libneutrino_gui_a_SOURCES = \
 	imageinfo_ni.cpp \
 	info_menue.cpp \
 	infoviewer.cpp \
+	infoviewer_base.cpp \
+	infoviewer_evo.cpp \
 	infoviewer_bb.cpp \
 	zap_failure_message.cpp \
 	keybind_setup.cpp \
@@ -199,6 +226,12 @@ if ENABLE_UPNP
 libneutrino_gui2_a_SOURCES += \
 	upnpbrowser.cpp
 endif
+
+# The script API both bindings build their windows with. A library of its own,
+# and not a part of libneutrino_gui.a, because it has to stand behind the
+# bindings on the link line: an archive answers only what something on the line
+# has asked for already, and the bindings ask after the gui archive has been
+# passed, so a part of it would be drawn in one pass too late.
 
 libtimerlist_a_SOURCES = \
 	timerlist.cpp

@@ -366,6 +366,8 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/check-channellist-invalidation.sh \
 	scan/check-bouquet-rename.sh scan/check-zapit-write-checked.sh \
 	scan/check-locale-catalog.sh \
+	scan/check-python-module-surface.sh scan/fixtures/python-import-unknown.py \
+	scan/fixtures/python-import-unknown-bracketed.py \
 	scan/check-bouquet-save-atomic.sh \
 	support/nothreads.h \
 	scan/check-access-store.sh \
@@ -569,7 +571,8 @@ SCAN_CHECKS = \
 	scan-menu-busy \
 	scan-settings-replaced \
 	scan-loader-box-default \
-	scan-personalize-batch
+	scan-personalize-batch \
+	scan-python-module-surface
 
 check-local: $(SCAN_CHECKS)
 $(SCAN_CHECKS): check-TESTS
@@ -827,6 +830,16 @@ scan-personalize-batch:
 	@$(SHELL) $(srcdir)/scan/check-personalize-batch.sh $(top_srcdir)
 	@if $(SHELL) $(srcdir)/scan/check-personalize-batch.sh $(top_srcdir) $(srcdir)/scan/fixtures/personalize-lists-direct.cpp >/dev/null 2>&1; then \
 		echo "check-personalize-batch.sh passes a menu that writes the plugin lists itself" >&2; exit 1; fi
+
+# The scan reads the module's own names and the names the plugins import from it,
+# and then it is shown to go red over a plugin importing a name the module does
+# not carry, once with the list on one line and once with it inside brackets.
+scan-python-module-surface:
+	@$(SHELL) $(srcdir)/scan/check-python-module-surface.sh $(top_srcdir)
+	@if $(SHELL) $(srcdir)/scan/check-python-module-surface.sh $(top_srcdir) $(srcdir)/scan/fixtures/python-import-unknown.py >/dev/null 2>&1; then \
+		echo "check-python-module-surface.sh passes a plugin importing a name the module does not carry" >&2; exit 1; fi
+	@if $(SHELL) $(srcdir)/scan/check-python-module-surface.sh $(top_srcdir) $(srcdir)/scan/fixtures/python-import-unknown-bracketed.py >/dev/null 2>&1; then \
+		echo "check-python-module-surface.sh passes a name the module does not carry, written inside brackets" >&2; exit 1; fi
 
 scan-menu-busy:
 	@$(SHELL) $(srcdir)/scan/check-menu-busy.sh $(top_srcdir)

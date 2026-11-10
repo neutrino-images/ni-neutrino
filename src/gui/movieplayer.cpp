@@ -51,6 +51,9 @@
 #include <gui/widget/settingitem.h>
 #include <gui/lua/luainstance.h>
 #include <gui/lua/lua_video.h>
+#ifdef ENABLE_PYTHON
+#include <gui/python/py_video.h>
+#endif
 #include <gui/screensaver.h>
 #include <gui/widget/menue_options.h>
 #include <driver/screenshot.h>
@@ -1026,6 +1029,7 @@ void CMoviePlayerGui::Init(void)
 	keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_NORMAL;
 	isLuaPlay = false;
 	haveLuaInfoFunc = false;
+	havePythonInfoFunc = false;
 	blockedFromPlugin = false;
 
 	CScreenSaver::getInstance()->resetIdleTime();
@@ -3891,6 +3895,20 @@ void CMoviePlayerGui::showMovieInfo()
 		}
 		CLuaInstVideo::getInstance()->execLuaInfoFunc(luaState, xres, yres, aspectRatio, framerate);
 	}
+#ifdef ENABLE_PYTHON
+	else if (havePythonInfoFunc)
+	{
+		int xres = 0, yres = 0, aspectRatio = 0, framerate = -1;
+		if (!videoDecoder->getBlank())
+		{
+			videoDecoder->getPictureInfo(xres, yres, framerate);
+			if (yres == 1088)
+				yres = 1080;
+			aspectRatio = videoDecoder->getAspectRatio();
+		}
+		CPythonInstVideo::getInstance()->execPythonInfoFunc(pythonState, xres, yres, aspectRatio, framerate);
+	}
+#endif
 	else
 #endif
 		g_EpgData->show_mp(p_movie_info,GetPosition(),GetDuration());

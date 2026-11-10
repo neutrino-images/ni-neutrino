@@ -9,7 +9,8 @@ enum
 	PLUGIN_TYPE_GAME	= 1,
 	PLUGIN_TYPE_TOOL	= 2,
 	PLUGIN_TYPE_SCRIPT	= 3,
-	PLUGIN_TYPE_LUA		= 4
+	PLUGIN_TYPE_LUA		= 4,
+	PLUGIN_TYPE_PYTHON	= 5
 };
 
 // plugin integration as defined in plugin's cfg

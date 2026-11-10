@@ -346,6 +346,21 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 		StopCam(channel_id, cam);
 		return false;
 	}
+
+	/* A channel held more than once - two recordings of it, or a recording
+	 * and a stream - is one mode and one demux between them, and the cam is
+	 * one. The one that stops first leaves it alone for the others, which is
+	 * what an overlapping pair of timers on one channel needs: without this
+	 * the first of them to end takes the keys away from the second, which
+	 * goes on writing a picture it cannot descramble. */
+	if (start)
+		usecount[channel_id][mode]++;
+	else if (usecount[channel_id][mode] > 0 && --usecount[channel_id][mode] > 0)
+	{
+		INFO("channel %" PRIx64 " mode %d still held, leaving cam alone",
+				channel_id, mode);
+		return true;
+	}
 	//INFO("channel %llx [%s] mode %d %s update %d", channel_id, channel->getName().c_str(), mode, start ? "START" : "STOP", force_update);
 
 	/* FIXME until proper demux management */

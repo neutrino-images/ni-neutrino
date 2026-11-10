@@ -51,6 +51,9 @@
 #ifdef ENABLE_LUA
 #include <gui/lua/lua_api_version.h>
 #endif
+#ifdef ENABLE_PYTHON
+#include <gui/python/python_api_version.h>
+#endif
 #include <coreapi/base/version.h>
 #include <system/supportinfo.h>
 #include <ctype.h>
@@ -444,6 +447,10 @@ void CImageInfo::initAPIVersions()
 	string s_api;
 	#ifdef ENABLE_LUA
 	s_api	+= "LUA " + to_string(LUA_API_VERSION_MAJOR) + "." + to_string(LUA_API_VERSION_MINOR);
+	s_api	+= ", ";
+	#endif
+	#ifdef ENABLE_PYTHON
+	s_api	+= "PYTHON " + to_string(PYTHON_API_VERSION_MAJOR) + "." + to_string(PYTHON_API_VERSION_MINOR);
 	s_api	+= ", ";
 	#endif
 	/* The web interface ships inside the image and keeps no version file of

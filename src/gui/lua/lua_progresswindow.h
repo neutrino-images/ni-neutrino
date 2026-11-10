@@ -18,12 +18,15 @@
 #ifndef _LUAPROGRESSWINDOW_H_
 #define _LUAPROGRESSWINDOW_H_
 
-class CLuaCProgressWindow
+#include <scriptapi/script_progresswindow.h>
+
+/* The window a script made, held as the shared ScriptProgressWindow: what is
+ * done with it is the same for every interpreter, and this binding only fills
+ * its parameters out of a lua table. */
+class CLuaCProgressWindow : public ScriptProgressWindow
 {
 	public:
-		CProgressWindow *w;
-		CLuaCProgressWindow() { w = NULL; }
-		~CLuaCProgressWindow() { delete w; }
+		CLuaCProgressWindow(const params_t &pars) : ScriptProgressWindow(pars) {}
 };
 
 class CLuaInstProgressWindow

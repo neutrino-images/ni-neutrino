@@ -21,6 +21,7 @@ AM_CPPFLAGS = \
 	@FREETYPE_CFLAGS@ \
 	@AVFORMAT_CFLAGS@ \
 	@LUA_CFLAGS@ \
+	@PYTHON_CFLAGS@ \
 	@HWLIB_CFLAGS@
 
 noinst_LIBRARIES = libneutrino_system.a
@@ -34,6 +35,7 @@ libneutrino_system_a_SOURCES = \
 	httptool.cpp \
 	lastchannel.cpp \
 	luaserver.cpp \
+	pyserver.cpp \
 	localize.cpp \
 	zap_failure_analyzer.cpp \
 	helpers.cpp \

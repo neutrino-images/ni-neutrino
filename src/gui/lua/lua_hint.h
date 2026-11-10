@@ -19,13 +19,15 @@
 #define _LUAHINT_H_
 
 #include <gui/widget/hintbox.h>
+#include <scriptapi/script_hint.h>
 
-class CLuaHint
+/* The hint a script made, held as the shared ScriptHint: what is done with it
+ * is the same for every interpreter, and this binding only fills its
+ * parameters out of a lua table. */
+class CLuaHint : public ScriptHint
 {
 	public:
-		CHint *h;
-		CLuaHint() { h = NULL; }
-		~CLuaHint() { delete h; }
+		explicit CLuaHint(const params_t &pars) : ScriptHint(pars) {}
 };
 
 class CLuaInstHint

@@ -771,6 +771,11 @@ constexpr Descriptor kMisc[] =
 		.defaultValue("")
 		.text(kRulePathList)
 		.field(COREAPI_TEXT_FIELD(plugins_lua)),
+	textRow("plugins_python")
+		.section("misc")
+		.defaultValue("")
+		.text(kRulePathList)
+		.field(COREAPI_TEXT_FIELD(plugins_python)),
 	textRow("plugins_script")
 		.section("misc")
 		.defaultValue("")

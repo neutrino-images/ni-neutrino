@@ -62,6 +62,9 @@ extern cVideo *videoDecoder;
 
 #include <daemonc/remotecontrol.h>
 #include <gui/lua/luainstance.h>
+#ifdef ENABLE_PYTHON
+#include <gui/python/pyinstance.h>
+#endif
 
 extern CPlugins *g_Plugins;
 extern CRemoteControl *g_RemoteControl;
@@ -121,6 +124,8 @@ void CPlugins::scanDir(const char *dir)
 					new_plugin.pluginfile.append(".sh");
 				else if (new_plugin.type == CPlugins::P_TYPE_LUA)
 					new_plugin.pluginfile.append(".lua");
+				else if (new_plugin.type == CPlugins::P_TYPE_PYTHON)
+					new_plugin.pluginfile.append(".py");
 				else // CPlugins::P_TYPE_GAME or CPlugins::P_TYPE_TOOL
 					new_plugin.pluginfile.append(".so");
 				// We do not check if new_plugin.pluginfile exists since .cfg in
@@ -309,7 +314,8 @@ bool CPlugins::parseCfg(plugin *plugin_data)
 	overrideType(plugin_data, settingsText(g_settings.plugins_game), P_TYPE_GAME) ||
 	overrideType(plugin_data, settingsText(g_settings.plugins_tool), P_TYPE_TOOL) ||
 	overrideType(plugin_data, settingsText(g_settings.plugins_script), P_TYPE_SCRIPT) ||
-	overrideType(plugin_data, settingsText(g_settings.plugins_lua), P_TYPE_LUA);
+	overrideType(plugin_data, settingsText(g_settings.plugins_lua), P_TYPE_LUA) ||
+	overrideType(plugin_data, settingsText(g_settings.plugins_python), P_TYPE_PYTHON);
 
 	return !reject;
 }
@@ -416,6 +422,34 @@ int CPlugins::startLuaPlugin(int number)
 	return plugin_list[number].menu_return;
 }
 
+int CPlugins::startPythonPlugin(int number)
+{
+	const char *script = plugin_list[number].pluginfile.c_str();
+	printf("[CPlugins] executing python script %s\n", script);
+	if (!file_exists(script))
+	{
+		printf("[CPlugins] could not find %s,\nperhaps wrong plugin type in %s\n",
+			script, plugin_list[number].cfgfile.c_str());
+		return menu_return::RETURN_REPAINT;
+	}
+#ifdef ENABLE_PYTHON
+	CPythonInstance *python = new CPythonInstance();
+	// FIXME: runScript() should return the exit-code from script
+	python->runScript(script);
+	delete python;
+#endif
+	std::string keep_bg_flag = "/tmp/.keep_background";
+	if (!file_exists(keep_bg_flag))
+	{
+		videoDecoder->Pig(-1, -1, -1, -1);
+		frameBuffer->paintBackground();
+	}
+	else
+		remove(keep_bg_flag.c_str());
+
+	return plugin_list[number].menu_return;
+}
+
 int CPlugins::startPlugin(int number)
 {
 	running++;
@@ -467,6 +501,10 @@ int CPlugins::runPlugin(int number)
 	if (plugin_list[number].type == CPlugins::P_TYPE_LUA)
 	{
 		return startLuaPlugin(number);
+	}
+	if (plugin_list[number].type == CPlugins::P_TYPE_PYTHON)
+	{
+		return startPythonPlugin(number);
 	}
 	if (!file_exists(plugin_list[number].pluginfile.c_str()))
 	{
@@ -538,6 +576,8 @@ CPlugins::p_type_t CPlugins::getPluginType(int type)
 			break;
 		case PLUGIN_TYPE_LUA:
 			return P_TYPE_LUA;
+		case PLUGIN_TYPE_PYTHON:
+			return P_TYPE_PYTHON;
 		default:
 			return P_TYPE_DISABLED;
 	}

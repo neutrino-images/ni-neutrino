@@ -1325,6 +1325,7 @@ mainmenu.movieplayer Videospeler
 mainmenu.pausesectionsd Lees EPG
 mainmenu.pictureviewer Afbeeldingen
 mainmenu.poweroff_menu (((T))) Ausschalten
+mainmenu.python Python Plugins
 mainmenu.radiomode Radio mode
 mainmenu.reboot Herstart systeem
 mainmenu.recording Opnemen
@@ -1529,6 +1530,7 @@ menu.hint_infobar_casys_dotmatrix (((T))) ein: CA-Systemanzeige mit Punktematrix
 menu.hint_infobar_casys_frame (((T))) ein: CA-Systemanzeige mit Rahmen
 menu.hint_infobar_dd Dolbydigital icoon weergeven
 menu.hint_infobar_ecminfo (((T))) Anzeigen der ECM-Info, während die Infobar eingeblendet ist
+menu.hint_infobar_evo_infoviewer Aan: de evo-infobalk. Uit: de klassieke NI-infobalk (herstart nodig)
 menu.hint_infobar_filesys Gebruikte schijfruimte van Flashgeheugen en HDD weergeven
 menu.hint_infobar_fonts Wijzig lettertype grote van de infobalk
 menu.hint_infobar_logo Logo / signaal opties
@@ -1643,6 +1645,7 @@ menu.hint_leds_tv LEDs status indien de ontvanger in werking is
 menu.hint_load Laad gebruikersinterface \ninstellingen van back-up bestand
 menu.hint_longkeypress_duration Een toets-indruk wordt gezien als "lange toets indruk" wanneer deze langer is ingedrukt dan de gespecificeerde tijd.
 menu.hint_lua Start Lua Plugins
+menu.hint_python Start Python Plugins
 menu.hint_make_hdlist Automatisch HD kanalenlijst maken \ngebaseerd op kanaaltype en naam
 menu.hint_make_newlist Kanalenlijst aanmaken met recent toegevoegde kanalen
 menu.hint_make_removedlist Kanalenlijst aanmaken met recent verwijderde kanalen
@@ -1751,6 +1754,7 @@ menu.hint_pictureviewer_slide_time Slideshow interval, in seconden
 menu.hint_picview Bekijk afbeeldingen
 menu.hint_plugin_type_games Toon games in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_lua Toon plugins in usermenu bij selectie 'Plugin types'
+menu.hint_plugin_type_python Toon Python plugins in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_scripts Toon scripts in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_tools Toon tools in usermenu bij selectie 'Plugin types'
 menu.hint_plugins_control (((T))) Plugin-Einstellungen und Verwaltung von installierten Plugins
@@ -2075,6 +2079,7 @@ miscsettings.infobar_disp_3 Logo, Kanaalnaam [Signaal]
 miscsettings.infobar_disp_4 Logo, Kanaalnaam [Kanaalnummer]
 miscsettings.infobar_disp_5 Logo [Signaal]
 miscsettings.infobar_disp_6 Kanaalnummer, Logo [Signaal]
+miscsettings.infobar_evo_infoviewer Evo infobalk
 miscsettings.infobar_gradient_body Gradient EPG-area
 miscsettings.infobar_gradient_bottom Gradient knoppenbalk beschikbaar
 miscsettings.infobar_gradient_top Gradient top
@@ -2639,6 +2644,7 @@ plugins.result plugin output
 plugintype.disabled Uitgeschakeld
 plugintype.game Game
 plugintype.lua Lua plugin
+plugintype.python Python plugin
 plugintype.script Script
 plugintype.tool Tool
 poweroff.rec_protected Opnames beschermd

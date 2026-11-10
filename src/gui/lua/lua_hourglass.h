@@ -20,12 +20,15 @@
 
 #include <gui/widget/hourglass.h>
 
-class CLuaHourGlass
+#include <scriptapi/script_hourglass.h>
+
+/* The hourglass a script made, held as the shared ScriptHourglass: what is done
+ * with it is the same for every interpreter, and this binding only fills its
+ * parameters out of a lua table. */
+class CLuaHourGlass : public ScriptHourglass
 {
 	public:
-		CHourGlass *h;
-		CLuaHourGlass() { h = NULL; }
-		~CLuaHourGlass() { delete h; }
+		explicit CLuaHourGlass(const params_t &pars) : ScriptHourglass(pars) {}
 };
 
 class CLuaInstHourGlass

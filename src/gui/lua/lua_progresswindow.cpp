@@ -64,19 +64,14 @@ int CLuaInstProgressWindow::CProgressWindowNew(lua_State *L)
 {
 	lua_assert(lua_istable(L,1));
 
-	std::string name = "";
-	tableLookup(L, "name", name) || tableLookup(L, "title", name) || tableLookup(L, "caption", name);
+	/* The parameters a script names in its table. What is done with them is
+	 * done by the script API, so that both bindings ask for one window and
+	 * cannot come to differ. */
+	ScriptProgressWindow::params_t pars;
+	tableLookup(L, "name", pars.name) || tableLookup(L, "title", pars.name) || tableLookup(L, "caption", pars.name);
 
 	CLuaCProgressWindow **udata = (CLuaCProgressWindow **) lua_newuserdata(L, sizeof(CLuaCProgressWindow *));
-	*udata = new CLuaCProgressWindow();
-
-#if 0
-	/* Enable when pu/fb-setmode branch is merged in master */
-	(*udata)->w = new CProgressWindow(name);
-#else
-	(*udata)->w = new CProgressWindow();
-	(*udata)->w->setTitle(name);
-#endif
+	*udata = new CLuaCProgressWindow(pars);
 
 	luaL_getmetatable(L, "cprogresswindow");
 	lua_setmetatable(L, -2);
@@ -101,7 +96,7 @@ int CLuaInstProgressWindow::CProgressWindowPaint(lua_State *L)
 			paramBoolDeprecated(L, tmp.c_str());
 		do_save_bg = (tmp == "true" || tmp == "1" || tmp == "yes");
 	}
-	D->w->paint(do_save_bg);
+	D->paint(do_save_bg);
 	return 0;
 }
 
@@ -116,7 +111,7 @@ int CLuaInstProgressWindow::CProgressWindowHide(lua_State *L)
 	if ((tableLookup(L, "no_restore", tmp1)) || (tableLookup(L, "no_restore", tmp2)))
 		obsoleteHideParameter(L);
 
-	D->w->hide();
+	D->hide();
 	return 0;
 }
 
@@ -129,7 +124,7 @@ int CLuaInstProgressWindow::CProgressWindowSetTitle(lua_State *L)
 	std::string name = "";
 	tableLookup(L, "name", name) || tableLookup(L, "title", name) || tableLookup(L, "caption", name);
 
-	D->w->setTitle(name);
+	D->setTitle(name);
 	return 0;
 }
 
@@ -147,10 +142,7 @@ int CLuaInstProgressWindow::CProgressWindowShowStatusInternal(lua_State *L, bool
 	tableLookup(L, "statusText", statusText);
 	tableLookup(L, "max", max);
 
-	if (local)
-		D->w->showLocalStatus(prog, max, statusText);
-	else
-		D->w->showGlobalStatus(prog, max, statusText);
+	D->showStatus(local, (unsigned int)prog, (unsigned int)max, statusText);
 
 	return 0;
 }

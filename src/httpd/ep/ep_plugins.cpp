@@ -67,6 +67,7 @@ const char *kindName(coreapi::PluginKind k)
 		case coreapi::PluginKind::Tool:     return "tool";
 		case coreapi::PluginKind::Script:   return "script";
 		case coreapi::PluginKind::Lua:      return "lua";
+		case coreapi::PluginKind::Python:   return "python";
 		case coreapi::PluginKind::Unknown:  break;
 	}
 	// A sort this box has and this server has no word for. Named rather than
@@ -82,13 +83,14 @@ const FieldDesc kPluginFields[] = {
 		"what the plugin calls itself, which is what a person reads and is not what starts it"),
 	HTTPD_MEMBER("description", FieldType::String,
 		"what the plugin says it does, empty for one that says nothing"),
-	HTTPD_MEMBER_OF_SET("kind", "disabled,game,tool,script,lua,unknown",
+	HTTPD_MEMBER_OF_SET("kind", "disabled,game,tool,script,lua,python,unknown",
 		"what sort of thing it is, and unknown for a sort this server has no word for",
 		"disabled: the box classifies it as disabled\n"
 		"game: a game plugin\n"
 		"tool: a plugin offered as a tool rather than a game\n"
 		"script: a shell script the box runs as the plugin\n"
 		"lua: a Lua script the box runs through its own Lua engine\n"
+		"python: a Python script the box runs through its own Python engine\n"
 		"unknown: the box reports a sort this server has no word for"),
 	HTTPD_MEMBER("hidden", FieldType::Bool,
 		"whether the box keeps it out of its own menus, which says nothing about whether it can be started"),

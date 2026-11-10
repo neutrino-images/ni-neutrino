@@ -182,7 +182,7 @@ class CComponentsText : public CCTextScreen, public CComponentsItem
 		///set text from locale, returns true if text was changed
 		bool setText(neutrino_locale_t locale_text, const int mode = ~CTextBox::AUTO_WIDTH, Font* font_text = NULL, const fb_pixel_t& color_text = 0, const int& style = FONT_STYLE_REGULAR);
 		///set text from digit, digit is integer, returns true if text was changed
-		bool setText(const int digit, const int mode = ~CTextBox::AUTO_WIDTH, Font* font_text = NULL, const fb_pixel_t& color_text = 0, const int& style = FONT_STYLE_REGULAR);
+		bool setText(const int digit_value, const int mode = ~CTextBox::AUTO_WIDTH, Font* font_text = NULL, const fb_pixel_t& color_text = 0, const int& style = FONT_STYLE_REGULAR);
 		///set text directly from a textfile, path as string is required, returns true if text was changed
 		bool setTextFromFile(const std::string& path_to_textfile, const int mode = ~CTextBox::AUTO_WIDTH, Font* font_text = NULL, const fb_pixel_t& color_text = 0, const int& style = FONT_STYLE_REGULAR);
 		///get text directly from a textfile, path as string is required

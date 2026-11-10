@@ -6,7 +6,8 @@ SUBDIRS = \
 	Grey-Blue/icons/buttons \
 	Meridian/icons/buttons \
 	Neutrino-3.0/icons/buttons \
-	Olive-3.0/icons/buttons
+	Olive-3.0/icons/buttons \
+	Diana/icons
 
 installdir = $(THEMESDIR)
 
@@ -19,6 +20,7 @@ install_DATA = \
 	DarkBlue.theme \
 	DarkBrown.theme \
 	DarkOrange.theme \
+	Diana.theme \
 	Grey.theme \
 	Grey-3.0.theme \
 	Grey-Blue.theme \

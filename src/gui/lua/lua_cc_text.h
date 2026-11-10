@@ -23,14 +23,15 @@
 #ifndef _LUACCTEXT_H
 #define _LUACCTEXT_H
 
-class CLuaCCText
+#include <scriptapi/script_text.h>
+
+/* The text a script made, held as the shared ScriptText: what is done with it
+ * is the same for every interpreter, and this binding only fills its
+ * parameters out of a lua table. */
+class CLuaCCText : public ScriptText
 {
 	public:
-		CComponentsText *ct;
-		CComponentsForm *parent;
-		int mode, font_text;
-		CLuaCCText() { ct = NULL; parent = NULL; mode = 0; font_text = 0;}
-		~CLuaCCText() { if (parent == NULL) delete ct; }
+		explicit CLuaCCText(const params_t &pars) : ScriptText(pars) {}
 };
 
 class CLuaInstCCText

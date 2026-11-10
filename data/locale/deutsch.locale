@@ -1326,6 +1326,7 @@ mainmenu.movieplayer Movieplayer
 mainmenu.pausesectionsd EPG auslesen
 mainmenu.pictureviewer Bildbetrachter
 mainmenu.poweroff_menu Ausschalten
+mainmenu.python Python-Plugins
 mainmenu.radiomode Radio-Modus
 mainmenu.reboot Neustart
 mainmenu.recording Aufnehmen
@@ -1530,6 +1531,7 @@ menu.hint_infobar_casys_dotmatrix ein: CA-Systemanzeige mit Punktematrix im Hint
 menu.hint_infobar_casys_frame ein: CA-Systemanzeige mit Rahmen
 menu.hint_infobar_dd Zeigt ein Dolby Digital Icon bei Verfügbarkeit
 menu.hint_infobar_ecminfo Anzeigen der ECM-Info, während die Infobar eingeblendet ist
+menu.hint_infobar_evo_infoviewer Ein: die evo-Infobar. Aus: die klassische NI-Infobar (Neustart noetig)
 menu.hint_infobar_filesys Zeigen den vom Flash- und einer HDD verwendeten Speicherplatz
 menu.hint_infobar_fonts Ändern Sie die Schriftgrößen in der Infobar
 menu.hint_infobar_logo Logo-, Kanalnummer- und Signal-Anzeige; Optionen in [Klammern] erscheinen in der kleinen Infobox
@@ -1644,6 +1646,7 @@ menu.hint_leds_tv Definiert den Status der Power-LEDs im TV-Modus
 menu.hint_load Laden der Einstellungen aus einer Datei
 menu.hint_longkeypress_duration Tasten, die länger als die angegebene Zeit betätigt werden, werden als "langer Tastendruck" behandelt.
 menu.hint_lua Plugins ausführen
+menu.hint_python Python-Plugins ausführen
 menu.hint_make_hdlist Bei aktiver Option werden Bouquets namens 'HD' und 'UHD' erzeugt, in denen alle HD- bzw. UHD-Sender zusammengefasst sind
 menu.hint_make_newlist Nach einer Kanalsuche wird ein Bouquet namens 'neue Kanäle' erzeugt
 menu.hint_make_removedlist Nach einer Kanalsuche wird ein Bouquet namens 'gelöschte Kanäle' erzeugt
@@ -1752,6 +1755,7 @@ menu.hint_pictureviewer_slide_time Ändern Sie den Diashow-Intervall.\nStandardm
 menu.hint_picview Bilder anzeigen
 menu.hint_plugin_type_games Legt fest, ob Spiele im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_lua Legt fest, ob Plugins im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
+menu.hint_plugin_type_python Legt fest, ob Python-Plugins im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_scripts Legt fest, ob Skripte im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugin_type_tools Legt fest, ob Werkzeuge im Benutzermenü unter der Rubrik 'Plugin-Typen' gezeigt werden sollen
 menu.hint_plugins_control Plugin-Einstellungen und Verwaltung von installierten Plugins
@@ -2076,6 +2080,7 @@ miscsettings.infobar_disp_3 Logo, Kanalname [Signalbalken]
 miscsettings.infobar_disp_4 Logo, Kanalname [Kanalnummer]
 miscsettings.infobar_disp_5 Logo [Signalbalken]
 miscsettings.infobar_disp_6 Kanalnummer, Logo [Signalbalken]
+miscsettings.infobar_evo_infoviewer Evo-Infobar
 miscsettings.infobar_gradient_body Farbverlauf EPG-Bereich
 miscsettings.infobar_gradient_bottom Farbverlauf unten
 miscsettings.infobar_gradient_top Farbverlauf oben
@@ -2646,6 +2651,7 @@ plugins.result Pluginausgabe
 plugintype.disabled Deaktiviert
 plugintype.game Spiel
 plugintype.lua Lua-Plugin
+plugintype.python Python-Plugin
 plugintype.script Skript
 plugintype.tool Werkzeug
 poweroff.rec_protected Aufnahmen geschützt

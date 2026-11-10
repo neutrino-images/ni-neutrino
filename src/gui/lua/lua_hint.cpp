@@ -71,10 +71,12 @@ int CLuaInstHint::HintNew(lua_State *L)
 		show_background = (tmp == "true" || tmp == "1" || tmp == "yes");
 	}
 
-	CLuaHint **udata = (CLuaHint **) lua_newuserdata(L, sizeof(CLuaHint *));
-	*udata = new CLuaHint();
+	ScriptHint::params_t pars;
+	pars.text            = text;
+	pars.show_background = show_background;
 
-	(*udata)->h = new CHint(text.c_str(), show_background);
+	CLuaHint **udata = (CLuaHint **) lua_newuserdata(L, sizeof(CLuaHint *));
+	*udata = new CLuaHint(pars);
 
 	luaL_getmetatable(L, "hint");
 	lua_setmetatable(L, -2);

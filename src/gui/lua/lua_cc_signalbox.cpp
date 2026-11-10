@@ -81,11 +81,18 @@ int CLuaInstCCSignalbox::CCSignalBoxNew(lua_State *L)
 	tableLookup(L, "vertical", vertical);
 	tableLookup(L, "parent", (void**)&parent);
 
-	CComponentsForm* pw = (parent && parent->w) ? parent->w->getBodyObject() : NULL;
+	/* The form it goes into and who deletes the box are the script api's;
+	 * this binding reads them and hands them over. */
+	ScriptSignalbox::params_t pars;
+	pars.parent   = (parent && parent->sw) ? parent->sw->body() : NULL;
+	pars.x        = (int)x;
+	pars.y        = (int)y;
+	pars.dx       = (int)dx;
+	pars.dy       = (int)dy;
+	pars.vertical = (vertical != 0);
+
 	CLuaCCSignalBox **udata = (CLuaCCSignalBox **) lua_newuserdata(L, sizeof(CLuaCCSignalBox *));
-	*udata = new CLuaCCSignalBox();
-	(*udata)->s = new CSignalBox(x, y, dx, dy, CFEManager::getInstance()->getLiveFE(), (vertical!=0)?true:false, pw);
-	(*udata)->parent = pw;
+	*udata = new CLuaCCSignalBox(pars);
 	luaL_getmetatable(L, "signalbox");
 	lua_setmetatable(L, -2);
 	return 1;

@@ -200,6 +200,9 @@
 #ifdef ENABLE_LUA
 #include <system/luaserver.h>
 #endif
+#ifdef ENABLE_PYTHON
+#include <system/pyserver.h>
+#endif
 int old_b_id = -1;
 
 CInfoClock      *InfoClock;
@@ -1087,6 +1090,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	setSettingsText(g_settings.plugins_disabled, configfile.getString("plugins_disabled", ""));
 	setSettingsText(g_settings.plugins_game, configfile.getString("plugins_game", ""));
 	setSettingsText(g_settings.plugins_lua, configfile.getString("plugins_lua", ""));
+	setSettingsText(g_settings.plugins_python, configfile.getString("plugins_python", ""));
 	setSettingsText(g_settings.plugins_script, configfile.getString("plugins_script", ""));
 	setSettingsText(g_settings.plugins_tool, configfile.getString("plugins_tool", ""));
 
@@ -1373,6 +1377,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.infobar_casystem_display = configfile.getInt32("infobar_casystem_display", 0);
 	g_settings.infobar_casystem_dotmatrix = configfile.getInt32("infobar_casystem_dotmatrix", 0);
 	g_settings.infobar_casystem_frame = configfile.getInt32("infobar_casystem_frame", 0);
+	g_settings.infobar_evo_infoviewer = configfile.getInt32("infobar_evo_infoviewer", 1);
 	g_settings.infobar_progressbar = configfile.getInt32("infobar_progressbar", 2);
 	g_settings.infobar_sat_display = configfile.getBool("infobar_sat_display", true);
 	g_settings.infobar_show = configfile.getInt32("infobar_show", 0);
@@ -2062,6 +2067,7 @@ void CNeutrinoApp::saveSetup(const char *fname)
 	configfile.setString("plugins_disabled", g_settings.plugins_disabled);
 	configfile.setString("plugins_game", g_settings.plugins_game);
 	configfile.setString("plugins_lua", g_settings.plugins_lua);
+	configfile.setString("plugins_python", g_settings.plugins_python);
 	configfile.setString("plugins_script", g_settings.plugins_script);
 	configfile.setString("plugins_tool", g_settings.plugins_tool);
 
@@ -2284,6 +2290,7 @@ void CNeutrinoApp::saveSetup(const char *fname)
 	configfile.setInt32("infobar_casystem_display", g_settings.infobar_casystem_display);
 	configfile.setInt32("infobar_casystem_dotmatrix", g_settings.infobar_casystem_dotmatrix);
 	configfile.setInt32("infobar_casystem_frame", g_settings.infobar_casystem_frame);
+	configfile.setInt32("infobar_evo_infoviewer", g_settings.infobar_evo_infoviewer);
 	configfile.setInt32("infobar_progressbar", g_settings.infobar_progressbar);
 	configfile.setBool("infobar_sat_display", g_settings.infobar_sat_display);
 	configfile.setInt32("infobar_show", g_settings.infobar_show);
@@ -3482,7 +3489,7 @@ TIMER_START();
 	if(g_settings.mode_icons)
 		InfoIcons->StartIcons();
 	FileTimeOSD = CTimeOSD::getInstance();
-	g_InfoViewer = new CInfoViewer;
+	g_InfoViewer = CInfoViewerBase::create();
 	g_EventList = new CEventList;
 
 	g_CamHandler = new CCAMMenuHandler();
@@ -3603,6 +3610,7 @@ TIMER_START();
 	CFileHelpers::createDir(THEMESDIR_VAR);
 	CFileHelpers::createDir(PLUGINDIR_VAR);
 	CFileHelpers::createDir(LUAPLUGINDIR_VAR);
+	CFileHelpers::createDir(PYTHONPLUGINDIR_VAR);
 	CFileHelpers::createDir(WEBRADIODIR_VAR);
 	CFileHelpers::createDir(WEBTVDIR_VAR);
 	CFileHelpers::createDir(PUBLIC_HTTPDDIR);
@@ -3703,6 +3711,9 @@ void CNeutrinoApp::RealRun()
 #ifdef ENABLE_LUA
 	CLuaServer *luaServer = CLuaServer::getInstance();
 #endif
+#ifdef ENABLE_PYTHON
+	CPythonServer *pyServer = CPythonServer::getInstance();
+#endif
 	g_Plugins->startPlugin("startup");
 	if (!g_Plugins->getScriptOutput().empty()) {
 		ShowMsg(LOCALE_PLUGINS_RESULT, g_Plugins->getScriptOutput(), CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_SHELL);
@@ -3721,9 +3732,16 @@ void CNeutrinoApp::RealRun()
 #ifdef ENABLE_LUA
 		luaServer->UnBlock();
 #endif
+#ifdef ENABLE_PYTHON
+		pyServer->UnBlock();
+#endif
 		g_RCInput->getMsg(&msg, &data, 100, ((g_settings.mode_left_right_key_tv == SNeutrinoSettings::VOLUME) && (g_RemoteControl->subChannels.size() < 1)) ? true : false);	// 10 secs..
 #ifdef ENABLE_LUA
 		if (luaServer->Block(msg, data))
+			continue;
+#endif
+#ifdef ENABLE_PYTHON
+		if (pyServer->Block(msg, data))
 			continue;
 #endif
 
@@ -4487,6 +4505,7 @@ coreapi::Status coreapi::boxPlugins(coreapi::PluginList &out)
 			case CPlugins::P_TYPE_TOOL:     one.kind = coreapi::PluginKind::Tool; break;
 			case CPlugins::P_TYPE_SCRIPT:   one.kind = coreapi::PluginKind::Script; break;
 			case CPlugins::P_TYPE_LUA:      one.kind = coreapi::PluginKind::Lua; break;
+			case CPlugins::P_TYPE_PYTHON:   one.kind = coreapi::PluginKind::Python; break;
 			default:                        one.kind = coreapi::PluginKind::Unknown; break;
 		}
 		one.hidden = g_Plugins->isHidden(i);
