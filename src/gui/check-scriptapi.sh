@@ -9,10 +9,12 @@
 # are built in one place. This script holds that.
 #
 # It derives what it checks from the layer itself, so that it cannot go stale
-# when a widget is added to it: every class the script API holds has to be the
+# when something is added to it: every class the script API holds has to be the
 # one the bindings build their handle on - in both of them, or one of them is
-# not migrated yet. Where something must hold it fails; what a reader should
-# look at, it only reports.
+# not migrated yet. Whole modules the two bindings carry as a pair are looked at
+# the same way, so that a module migrated on one side only cannot slip through.
+# Where something must hold it fails; what a reader should look at, or what is
+# still to come, it only reports.
 #
 # Run from the top of the tree:  sh src/gui/check-scriptapi.sh
 #
@@ -36,6 +38,13 @@ handles_in()
 		grep -rl "public $class" $dir/*.h 2>/dev/null
 		grep -rlF "$class *" $dir/*.h 2>/dev/null
 	} | sort -u | wc -l
+}
+
+# Is a module of a binding read from the script API? Its handle header, or the
+# file itself, names something of the layer then.
+on_the_layer()
+{
+	grep -q 'scriptapi/' "$@" 2>/dev/null
 }
 
 # ---------------------------------------------------------------------------
@@ -69,6 +78,40 @@ for class in $classes; do
 	fi
 done
 echo "  $on_api of $count"
+
+# ---------------------------------------------------------------------------
+# Every module the two bindings carry as a pair - a lua_<name> and a py_<name> -
+# has to be read from the script API on both sides, or on neither. The one is a
+# half-done migration and a fault; the other is work not begun and a note.
+# ---------------------------------------------------------------------------
+
+todo=""
+pairs=0
+for f in $lua/lua_*.cpp; do
+	name=$(basename $f .cpp | sed 's/^lua_//')
+	twin=$python/py_$name.cpp
+	[ -f "$twin" ] || continue
+
+	pairs=$((pairs + 1))
+	in_lua=no
+	in_python=no
+	on_the_layer $f $lua/lua_$name.h && in_lua=yes
+	on_the_layer $twin $python/py_$name.h && in_python=yes
+
+	if [ "$in_lua" != "$in_python" ]; then
+		echo "FAIL: $name is read from the script API on one side only (lua: $in_lua, python: $in_python)"
+		status=1
+	elif [ "$in_lua" = "no" ]; then
+		todo="$todo $name"
+	fi
+done
+
+if [ -n "$todo" ]; then
+	echo "  a pair of both bindings, still to come, not on the script API yet ($pairs pairs looked at):"
+	for name in $todo; do
+		echo "    $name"
+	done
+fi
 
 # ---------------------------------------------------------------------------
 # What must hold: the magic a colour of a script carries, and the rule that
