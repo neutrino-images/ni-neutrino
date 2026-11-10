@@ -91,8 +91,19 @@ echo "  $on_api of $count"
 # tragen die Sprache noch in sich; sie fallen, wenn das letzte Widget umgestellt
 # ist.
 for what in 'define MAGIC_COLOR' 'checkMagicMask' 'pyCheckMagicMask' 'setLuaFooter' 'showValue'; do
-	echo "  still to be settled: $what"
+	echo "  a name that still carries a language: $what"
 	grep -rln "$what" src/gui/lua src/gui/python src/gui/widget 2>/dev/null | sed 's/^/    /'
+done
+
+# Und wo die Regel doch ein zweites Mal steht, ist etwas nicht umgestellt. Ein
+# Name, der noch die Sprache traegt, ist es nicht: checkMagicMask ruft die Regel
+# der Schicht, es schreibt sie nicht selbst.
+for def in 'src/gui/lua/luainstance_helpers.cpp:checkMagicMask' 'src/gui/python/pyinstance_helpers.cpp:pyCheckMagicMask'; do
+	f=${def%%:*}
+	fn=${def##*:}
+	if [ -f "$f" ] && ! grep -A4 "$fn" "$f" 2>/dev/null | grep -q ScriptColorResolve; then
+		echo "note: $f has a $fn that does not call ScriptColorResolve - the rule may stand a second time there"
+	fi
 done
 
 exit $status
