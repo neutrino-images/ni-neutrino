@@ -79,7 +79,7 @@ on_the_layer()
 # that would be a step of its own, not a binding migration.
 # ---------------------------------------------------------------------------
 
-ALREADY_SHARED=""
+ALREADY_SHARED="configfile:CConfigFile filehelpers:CFileHelpers video:CMoviePlayerGui"
 LANGUAGE_ONLY="threads"
 
 # The class of the box a module of a binding is said to rest on, if it is.
