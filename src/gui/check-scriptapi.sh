@@ -90,7 +90,7 @@ echo "  $on_api of $count"
 # Der Name einer Farbe und der Name, unter dem eine Bindung die Auflösung kennt,
 # tragen die Sprache noch in sich; sie fallen, wenn das letzte Widget umgestellt
 # ist.
-for what in 'define MAGIC_COLOR' 'setLuaFooter' 'showValue'; do
+for what in 'define MAGIC_COLOR' 'setLuaFooter'; do
 	echo "  a name that still carries a language: $what"
 	grep -rln "$what" src/gui/lua src/gui/python src/gui/widget 2>/dev/null | sed 's/^/    /'
 done

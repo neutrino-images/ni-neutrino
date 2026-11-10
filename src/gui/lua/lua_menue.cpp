@@ -222,7 +222,7 @@ void CLuaMenuFilebrowser::Init(std::string *_value, bool _dirMode)
 {
 	value   = _value;
 	dirMode = _dirMode;
-	showValue(value);
+	setValue(value);
 }
 
 int CLuaMenuFilebrowser::exec(CMenuTarget* /*parent*/, const std::string& /*actionKey*/)
@@ -275,7 +275,7 @@ void CLuaMenuStringinput::Init(const char *_name, std::string *_value, int _size
 	icon        = _icon;
 	observ      = _observ;
 	sms         = _sms;
-	showValue(value);
+	setValue(value);
 }
 
 int CLuaMenuStringinput::exec(CMenuTarget* /*parent*/, const std::string & /*actionKey*/)
@@ -325,7 +325,7 @@ void CLuaMenuKeyboardinput::Init(const char *_name, std::string *_value, int _si
 	help2  = _help2;
 	// a masked row never falls back to the value, it is told what to show
 	if (!masked)
-		showValue(value);
+		setValue(value);
 }
 
 int CLuaMenuKeyboardinput::exec(CMenuTarget* /*parent*/, const std::string & /*actionKey*/)

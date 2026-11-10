@@ -57,8 +57,6 @@ class CPyMenuTarget : public CMenuTarget
 		virtual ~CPyMenuTarget() { Py_XDECREF(action); }
 		virtual int exec(CMenuTarget *parent = NULL, const std::string &actionKey = "");
 
-		/* what the menu row shows while it has no text of its own */
-		void showValue(std::string *_value) { setValue(_value); }
 
 	protected:
 		/* Calls the script's callable with the id, and with the value where
@@ -84,7 +82,7 @@ class CPyMenuStringinput : public CPyMenuTarget
 		{
 			name = _name; value = _value; size = _size;
 			valid_chars = _valid_chars; icon = _icon; sms = _sms;
-			showValue(value);
+			setValue(value);
 		}
 		int exec(CMenuTarget *parent = NULL, const std::string &actionKey = "");
 };
@@ -109,7 +107,7 @@ class CPyMenuKeyboardinput : public CPyMenuTarget
 			row = NULL; icon = _icon; help = _help; help2 = _help2;
 			// a masked row never falls back to the value, it is told what to show
 			if (!masked)
-				showValue(value);
+				setValue(value);
 		}
 		void setRow(CMenuForwarder *_row) { row = _row; }
 		int exec(CMenuTarget *parent = NULL, const std::string &actionKey = "");
@@ -126,7 +124,7 @@ class CPyMenuFilebrowser : public CPyMenuTarget
 			: CPyMenuTarget(a, i)
 		{
 			value = _value; dirMode = _dirMode;
-			showValue(value);
+			setValue(value);
 		}
 		void addFilter(const std::string &s) { filter.push_back(s); }
 		int exec(CMenuTarget *parent = NULL, const std::string &actionKey = "");
