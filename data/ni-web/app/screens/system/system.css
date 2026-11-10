@@ -17,7 +17,7 @@
 
 /* A sentence that stands in front of a table or a set of controls and explains
    it, rather than a hint hanging off one control. */
-.sys-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: 72ch; }
+.sys-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: var(--content-width); }
 
 /* Why a control is out. One per screen and tied to every control it is about,
    which is what keeps fifty seven buttons from carrying fifty seven copies of
@@ -26,7 +26,7 @@
 
 /* What the box last answered about something that was asked of it. Polite, not
    alarming: it is a report and not a question, or it would be a dialog. */
-.sys-said { margin: var(--gap-3) 0 0; max-width: 72ch; }
+.sys-said { margin: var(--gap-3) 0 0; max-width: var(--content-width); }
 
 /* Controls beside each other, wrapping rather than pushing the page sideways:
    five commands do not fit across three hundred and sixty pixels and must not
