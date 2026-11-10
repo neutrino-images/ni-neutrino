@@ -28,13 +28,15 @@
 #include "pyinstance_helpers.h"
 
 #include <gui/widget/hintbox.h>
+#include <gui/scriptapi/scripthint.h>
 
-class CPyHint
+/* The hint a script made, held as the shared ScriptHint: what is done with it
+ * is the same for every interpreter, and this binding only fills its
+ * parameters out of a keyword table. */
+class CPyHint : public ScriptHint
 {
 	public:
-		CHint *h;
-		CPyHint() { h = NULL; }
-		~CPyHint() { delete h; }
+		explicit CPyHint(const params_t &pars) : ScriptHint(pars) {}
 };
 
 class CPythonInstHint

@@ -54,6 +54,7 @@ static CHint *hintOf(PyObject *self)
 }
 
 /* hint.new(text="text", show_background=True) */
+/* hint.new(text="text", show_background=True) */
 PyObject *CPythonInstHint::HintNew(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
 	std::string text = "";
@@ -85,6 +86,12 @@ PyObject *CPythonInstHint::HintNew(PyTypeObject *type, PyObject *args, PyObject 
 	pyLookupString(kwds, "text", text);
 	pyLookupBoolCompat(kwds, "show_background", show_background);
 
+	/* the hint itself is the script api's; this binding reads its two
+	 * parameters and hands them over */
+	ScriptHint::params_t pars;
+	pars.text            = text;
+	pars.show_background = show_background;
+
 	PyHintObject *self = (PyHintObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
 	{
@@ -92,8 +99,7 @@ PyObject *CPythonInstHint::HintNew(PyTypeObject *type, PyObject *args, PyObject 
 		return NULL;
 	}
 
-	self->d = new CPyHint();
-	self->d->h = new CHint(text.c_str(), show_background);
+	self->d = new CPyHint(pars);
 	return (PyObject *)self;
 }
 
