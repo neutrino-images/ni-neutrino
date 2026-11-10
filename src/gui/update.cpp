@@ -176,7 +176,7 @@ void CFlashUpdate::update_php(std::string &url, const char *type)
 	}
 }
 
-bool CFlashUpdate::checkOnlineVersion() {
+bool CFlashUpdate::checkOnlineVersion(coreapi::update::Online *out) {
 	/* Copied under the lock: the update check runs this on a thread of its
 	   own, while the box's loop may assign the setting from a screen. */
 	const std::string url_file = settingsText(g_settings.softupdate_url_file);
@@ -199,6 +199,10 @@ bool CFlashUpdate::checkOnlineVersion() {
 	CFlashVersionInfo curInfo(versionString.c_str());
 	curVer = curInfo.getVersion();
 	dprintf(DEBUG_NORMAL, "[update] current flash-version: %s (%d) date %s (%" PRId64 ")\n", versionString.c_str(), curInfo.getVersion(), curInfo.getDate(), static_cast<int64_t>(curInfo.getDateTime()));
+	if (out) {
+		out->running.release = curInfo.getVersionString();
+		out->running.built = curInfo.getDateTime();
+	}
 
 	std::ifstream urlFile(url_file.c_str());
 	if (urlFile >> url)
@@ -228,6 +232,8 @@ bool CFlashUpdate::checkOnlineVersion() {
 			return false;
 		if (httpTool.downloadFile(url, gTmpPath LIST_OF_UPDATES_LOCAL_FILENAME, UPDATE_PROGRESS_LIST))
 		{
+			if (out)
+				out->reached = true;
 			std::ifstream in(gTmpPath LIST_OF_UPDATES_LOCAL_FILENAME);
 			while (in >> url >> version >> md5 >> std::ws)
 			{
@@ -239,6 +245,12 @@ bool CFlashUpdate::checkOnlineVersion() {
 				{
 					newfound = true;
 					dprintf(DEBUG_NORMAL, "[update] found new image\n");
+					if (out) {
+						out->newer = true;
+						out->found.release = versionInfo.getVersionString();
+						out->found.built = versionInfo.getDateTime();
+						out->name = name;
+					}
 					break;
 				}
 			}

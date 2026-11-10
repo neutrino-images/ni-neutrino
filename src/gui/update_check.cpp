@@ -38,6 +38,7 @@
 #include "update_check.h"
 
 #include <coreapi/box/apply_update.h>
+#include <coreapi/update.h>
 
 #define C4U_SLEEP (6 * 60 * 60) // 6 hours
 #define C4U_FLAGFILE FLAGDIR "/.update"
@@ -68,6 +69,18 @@ coreapi::Status coreapi::applicationFlashCheck(bool on)
 	else
 		CFlashUpdateCheck::getInstance()->stopThread();
 	return coreapi::Status::Ok;
+}
+
+/* The web interface's question, answered by the same check the thread below
+   runs, on whichever thread asks; neither touches the screen. Both download
+   the list to the same file, so the two meeting in the same second may read
+   it half written, and find nothing newer that one time. */
+coreapi::update::Online coreapi::update::applicationOnlineCheck()
+{
+	coreapi::update::Online out;
+	CFlashUpdate flashupdate;
+	flashupdate.checkOnlineVersion(&out);
+	return out;
 }
 
 void CFlashUpdateCheck::startThread()

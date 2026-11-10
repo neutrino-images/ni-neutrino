@@ -98,6 +98,9 @@ enum class ErrorCode
 	   ended. Not a no-such-something: nothing was named, the shift is a single
 	   thing the box either keeps or does not. */
 	NoTimeshift,
+	/* Nothing on the box can ask the update server whether it has a newer
+	   image: a build that is not the box's own program. */
+	NoUpdateCheck,
 
 	// The request itself is wrong.
 	EmptyWindow,
@@ -469,6 +472,7 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::NoCurrentEvent: return "no-current-event";
 		case ErrorCode::NoTuner: return "no-tuner";
 		case ErrorCode::NoTimeshift: return "no-timeshift";
+		case ErrorCode::NoUpdateCheck: return "no-update-check";
 		case ErrorCode::EmptyWindow: return "empty-window";
 		case ErrorCode::QueryTooShort: return "query-too-short";
 		case ErrorCode::NoRoomForAResult: return "no-room-for-a-result";

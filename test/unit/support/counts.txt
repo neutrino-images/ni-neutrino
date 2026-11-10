@@ -23,7 +23,7 @@ defaults compared against this build's own load	256
 element defaults compared against the load	149
 element rows compared against the load	163
 elements of arrays held to a row	163
-error codes the header declares	166
+error codes the header declares	167
 fields the bound scan read	5
 fields the chooser scan read	8
 fields with a stated label	1
@@ -44,20 +44,20 @@ lists and lists of records held to a read of the load	5
 locale names the program has	3247
 memory backed folders tried	1
 number elements written and read back among their neighbours	145
-parameters the document describes	154
-refusals the document states against a route	875
+parameters the document describes	155
+refusals the document states against a route	883
 refusals the header names	13
-refusals the routes declare of their own	143
-refusals the shipped routes were seen to give	220
-routes the document describes	110
+refusals the routes declare of their own	144
+refusals the shipped routes were seen to give	221
+routes the document describes	111
 rows compared against the load and save pass	394
 rows of the theme struct	26
 rows this build links	611
 rows whose value is not in the settings file	46
 rule refusals the document states	16
-shapes the document files against a route	53
+shapes the document files against a route	54
 statuses the enum declares	8
-success codes the document states	122
+success codes the document states	123
 table entries of the load with a row	89
 text elements written and read back among their neighbours	18
 text rules compared against a screen	45

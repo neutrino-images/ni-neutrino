@@ -485,3 +485,151 @@ TEST_CASE("the install route says why it refuses", "[update]")
 
 	REQUIRE(deps.commands.posted.empty());
 }
+
+/* The question to the update server: answered by a source the case sets, kept for
+   a while, and asked again only where that is wanted. */
+
+namespace
+{
+
+struct FakeOnline : update::OnlineSource
+{
+	update::Online answer;
+	int            asked;
+
+	FakeOnline() : asked(0) {}
+	update::Online check() { asked++; return answer; }
+};
+
+struct OnlineFixture
+{
+	FakeOnline source;
+
+	OnlineFixture()
+	{
+		source.answer.reached = true;
+		source.answer.running.release = "2026.10";
+		source.answer.running.built = 1790877600;
+		update::setOnlineSource(&source);
+	}
+	~OnlineFixture() { update::setOnlineSource(NULL); }
+
+	private:
+		OnlineFixture(const OnlineFixture &);
+		OnlineFixture &operator=(const OnlineFixture &);
+};
+
+} // namespace
+
+TEST_CASE("a box that cannot ask the server says so", "[update]")
+{
+	update::setOnlineSource(NULL);
+	const Result<update::Online> r = update::online(false);
+	REQUIRE_FALSE(r.ok());
+	REQUIRE(r.error().status == Status::NotSupported);
+	REQUIRE(r.error().code == ErrorCode::NoUpdateCheck);
+}
+
+TEST_CASE("what the check found is passed on, with when it was asked", "[update]")
+{
+	OnlineFixture fx;
+	fx.source.answer.newer = true;
+	fx.source.answer.found.release = "2026.11";
+	fx.source.answer.found.built = 1794266100;
+	fx.source.answer.name = "Image 2026.11 Release";
+
+	const time_t before = time(NULL);
+	const Result<update::Online> r = update::online(false);
+	REQUIRE(r.ok());
+	REQUIRE(r.value().reached);
+	REQUIRE(r.value().newer);
+	REQUIRE(r.value().running.release == "2026.10");
+	REQUIRE(r.value().found.release == "2026.11");
+	REQUIRE(r.value().found.built == 1794266100);
+	REQUIRE(r.value().name == "Image 2026.11 Release");
+	REQUIRE(r.value().checked >= before);
+}
+
+TEST_CASE("a server that was not reached is an answer and not a refusal", "[update]")
+{
+	OnlineFixture fx;
+	fx.source.answer.reached = false;
+
+	const Result<update::Online> r = update::online(false);
+	REQUIRE(r.ok());
+	REQUIRE_FALSE(r.value().reached);
+	REQUIRE_FALSE(r.value().newer);
+	REQUIRE(r.value().running.release == "2026.10");
+}
+
+TEST_CASE("an answer is kept, and a fresh one asked for is asked", "[update]")
+{
+	OnlineFixture fx;
+
+	REQUIRE(update::online(false).ok());
+	REQUIRE(update::online(false).ok());
+	REQUIRE(fx.source.asked == 1);
+
+	REQUIRE(update::online(true).ok());
+	REQUIRE(fx.source.asked == 2);
+
+	// What the fresh check found is what is kept from then on.
+	fx.source.answer.newer = true;
+	REQUIRE_FALSE(update::online(false).value().newer);
+	update::forgetOnline();
+	REQUIRE(update::online(false).value().newer);
+	REQUIRE(fx.source.asked == 3);
+}
+
+TEST_CASE("another source does not answer with what the last one found", "[update]")
+{
+	OnlineFixture fx;
+	REQUIRE(update::online(false).ok());
+
+	FakeOnline other;
+	other.answer.running.release = "2099.12";
+	update::setOnlineSource(&other);
+	REQUIRE(update::online(false).value().running.release == "2099.12");
+	REQUIRE(other.asked == 1);
+	update::setOnlineSource(&fx.source);
+}
+
+TEST_CASE("the online route answers a reader, with found only where there is a newer one", "[update]")
+{
+	ShippedRoutes shipped;
+	InstalledDependencies deps;
+	OnlineFixture fx;
+
+	const httpd::Response none = ask(httpd::Get, "/api/v1/update/online", "",
+					 httpd::AuthLevel::Read, "192.168.1.9");
+	REQUIRE(none.code == 200);
+	REQUIRE(has(none.body, "\"reached\":true,\"newer\":false,\"checked\":"));
+	REQUIRE(has(none.body, "\"running\":{\"release\":\"2026.10\",\"built\":1790877600}"));
+	REQUIRE_FALSE(has(none.body, "\"found\""));
+
+	fx.source.answer.newer = true;
+	fx.source.answer.found.release = "2026.11";
+	fx.source.answer.found.built = 1794266100;
+	fx.source.answer.name = "Image 2026.11";
+
+	// Kept: the same answer once more, until asked for a fresh one.
+	REQUIRE_FALSE(has(ask(httpd::Get, "/api/v1/update/online", "", httpd::AuthLevel::Read, "192.168.1.9").body, "\"found\""));
+	const httpd::Response found = httpd::dispatch(httpd::Get, "/api/v1/update/online", "fresh=true", "",
+						      "192.168.1.9", httpd::AuthLevel::Read);
+	REQUIRE(found.code == 200);
+	REQUIRE(has(found.body, "\"newer\":true"));
+	REQUIRE(has(found.body, "\"found\":{\"release\":\"2026.11\",\"built\":1794266100,\"name\":\"Image 2026.11\"}"));
+	REQUIRE(fx.source.asked == 2);
+}
+
+TEST_CASE("the online route says when the box cannot ask", "[update]")
+{
+	ShippedRoutes shipped;
+	InstalledDependencies deps;
+	update::setOnlineSource(NULL);
+
+	const httpd::Response r = ask(httpd::Get, "/api/v1/update/online", "",
+				      httpd::AuthLevel::Read, "192.168.1.9");
+	REQUIRE(r.code == 501);
+	REQUIRE(has(r.body, "no-update-check"));
+}

@@ -84,6 +84,7 @@ const Walked kWalked[] = {
 	CODE(NoCurrentEvent),
 	CODE(NoTuner),
 	CODE(NoTimeshift),
+	CODE(NoUpdateCheck),
 	CODE(EmptyWindow),
 	CODE(QueryTooShort),
 	CODE(NoRoomForAResult),

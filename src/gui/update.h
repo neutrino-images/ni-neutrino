@@ -44,6 +44,8 @@
 
 #include <string>
 
+namespace coreapi { namespace update { struct Online; } }
+
 class CFlashUpdate : public CProgressWindow
 {
 	private:
@@ -68,7 +70,9 @@ class CFlashUpdate : public CProgressWindow
 	public:
 		CFlashUpdate();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
-		bool checkOnlineVersion();
+		/* Whether the server's list holds an image newer than the running
+		   one. With out, also what was found, for the web interface's note. */
+		bool checkOnlineVersion(coreapi::update::Online *out = NULL);
 		void enableNotify(bool enable) { notify = enable; }
 };
 

@@ -3377,6 +3377,8 @@ TIMER_START();
 	// them in the settings are the setup screen's own buffer, so nothing but
 	// this answers what a recording really starts and stops on.
 	coreapi::installRealRecordingSafetySource();
+	// The update server, asked by the same check the menu and the background run.
+	coreapi::update::installRealOnlineSource();
 	// The size the box draws at, which is kept beside the settings rather than
 	// in them: the save writes that copy and not the member.
 	installOsdResolutionSource();

@@ -249,5 +249,108 @@ int install(const std::string &dir, const std::string &file)
 	return run(dir, file);
 }
 
+namespace
+{
+
+const time_t kOnlineKept = 15 * 60;
+
+struct OnlineState
+{
+	OpenThreads::Mutex  lock;    // the fields below
+	OpenThreads::Mutex  running; // held for as long as a check runs
+	OnlineSource       *source;
+	Online              kept;
+	bool                have;
+	// Counts the checks that ended, so a waiter can tell one ended while it waited.
+	unsigned long       done;
+
+	OnlineState() : source(NULL), have(false), done(0) {}
+};
+
+OnlineState &onlineState()
+{
+	static OnlineState s;
+	return s;
+}
+
+/* The kept answer if there is one young enough. A clock set back since makes
+   it look older than a quarter of an hour ahead, never younger. */
+bool keptAnswer(Online &out)
+{
+	OnlineState &st = onlineState();
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(st.lock);
+	if (!st.have)
+		return false;
+	const time_t now = time(NULL);
+	if (now < st.kept.checked || now - st.kept.checked >= kOnlineKept)
+		return false;
+	out = st.kept;
+	return true;
+}
+
+} // namespace
+
+void setOnlineSource(OnlineSource *s)
+{
+	OnlineState &st = onlineState();
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(st.lock);
+	st.source = s;
+	st.have = false;
+}
+
+void forgetOnline()
+{
+	OnlineState &st = onlineState();
+	OpenThreads::ScopedLock<OpenThreads::Mutex> lock(st.lock);
+	st.have = false;
+}
+
+Result<Online> online(bool fresh)
+{
+	OnlineState &st = onlineState();
+	Online out;
+	if (!fresh && keptAnswer(out))
+		return ok(std::move(out));
+
+	/* One check at a time. Whoever waited here for another one takes its
+	   answer, fresh or not: it is seconds old. Told apart by a count and not
+	   by the clock, which within one second cannot say which came first. */
+	unsigned long before;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> lock(st.lock);
+		before = st.done;
+	}
+	OpenThreads::ScopedLock<OpenThreads::Mutex> one(st.running);
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> lock(st.lock);
+		if (st.have && st.done != before)
+		{
+			out = st.kept;
+			return ok(std::move(out));
+		}
+	}
+	if (!fresh && keptAnswer(out))
+		return ok(std::move(out));
+
+	OnlineSource *source;
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> lock(st.lock);
+		source = st.source;
+	}
+	if (source == NULL)
+		return fail(Status::NotSupported, ErrorCode::NoUpdateCheck,
+			    "nothing on this box can ask the update server");
+
+	out = source->check();
+	out.checked = time(NULL);
+	{
+		OpenThreads::ScopedLock<OpenThreads::Mutex> lock(st.lock);
+		st.kept = out;
+		st.have = true;
+		st.done++;
+	}
+	return ok(std::move(out));
+}
+
 } // namespace update
 } // namespace coreapi

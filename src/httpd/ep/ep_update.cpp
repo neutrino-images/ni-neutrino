@@ -40,12 +40,14 @@ namespace httpd
 namespace
 {
 
-/* One address, read and written, for the one thing there is to do here:
-   install an image update (.bin) that already lies on the box.
+/* Two addresses. One, read and written, to install an image update (.bin)
+   that already lies on the box; one, read only, to ask whether the update server
+   has a newer image.
 
-   LOCAL IN THE PATH, because the menu this stands in for has two updates and
-   this is one of them. The other one fetches from a server and will want an
-   address beside this one rather than a flag on it.
+   LOCAL AND ONLINE IN THE PATH, because the menu this stands in for has two
+   updates, one out of a file on the box and one from a server. Of the second
+   only the question is here, whether there is something newer: fetching and
+   writing an image is the menu's.
 
    NO WHOLE IMAGE. Writing a complete system is left to the menu, in front of
    the television.
@@ -116,6 +118,89 @@ Response startLocalUpdate(const Request &r)
 	return accepted();
 }
 
+const FieldDesc kUpdateImageFields[] = {
+	HTTPD_MEMBER("release", FieldType::String,
+		"the version as the box shows it, e.g. `2026.10`; empty where it could not be read"),
+	HTTPD_MEMBER("built", FieldType::Time, "when the image was built; 0 where that could not be read"),
+};
+
+const Schema kUpdateImageSchema = { "update-image", HTTPD_FIELDS(kUpdateImageFields) };
+
+const FieldDesc kUpdateFoundFields[] = {
+	HTTPD_MEMBER("release", FieldType::String,
+		"the version as the box shows it, e.g. `2026.11`; empty where it could not be read"),
+	HTTPD_MEMBER("built", FieldType::Time, "when the image was built; 0 where that could not be read"),
+	HTTPD_MEMBER("name", FieldType::String, "the name the server's list gives the image"),
+};
+
+const Schema kUpdateFoundSchema = { "update-found", HTTPD_FIELDS(kUpdateFoundFields) };
+
+const FieldDesc kOnlineUpdateFields[] = {
+	HTTPD_MEMBER("reached", FieldType::Bool,
+		"whether the server's list of images was read; false: the server was not reachable, and `newer` says nothing"),
+	HTTPD_MEMBER("newer", FieldType::Bool,
+		"whether the list holds an image newer than the running one"),
+	HTTPD_MEMBER("checked", FieldType::Time, "when the server was asked"),
+	HTTPD_OBJECT("running", &kUpdateImageSchema, "the image the box runs"),
+	HTTPD_OBJECT_OPTIONAL("found", &kUpdateFoundSchema,
+		"the first newer image in the list; only there where `newer` is true"),
+};
+
+const Schema kOnlineUpdateSchema = { "online-update", HTTPD_FIELDS(kOnlineUpdateFields) };
+
+void writeImage(Json &j, const coreapi::update::Image &image)
+{
+	j.key("release");
+	j.value(image.release);
+	j.key("built");
+	j.value((long long) image.built);
+}
+
+Response onlineUpdate(const Request &r)
+{
+	const bool fresh = r.has("fresh") && r.asBool("fresh");
+	coreapi::Result<coreapi::update::Online> got = coreapi::update::online(fresh);
+	if (!got.ok())
+		return problemFor(got.error());
+
+	const coreapi::update::Online on = std::move(got).value();
+
+	Response out = okJson();
+	Json j(out.body, 256 + on.name.size());
+	j.beginObject();
+	j.key("reached");
+	j.value(on.reached);
+	j.key("newer");
+	j.value(on.newer);
+	j.key("checked");
+	j.value((long long) on.checked);
+	j.key("running");
+	j.beginObject();
+	writeImage(j, on.running);
+	j.endObject();
+	if (on.newer)
+	{
+		j.key("found");
+		j.beginObject();
+		writeImage(j, on.found);
+		j.key("name");
+		j.value(on.name);
+		j.endObject();
+	}
+	j.endObject();
+	return out;
+}
+
+const Param kOnlineParams[] = {
+	HTTPD_QUERY("fresh", ParamType::Bool,
+		"ask the server now even where an answer of the last quarter of an hour is kept, false by default"),
+};
+
+const RouteRefusal kOnlineRefusals[] = {
+	HTTPD_REFUSES(NotSupported, NoUpdateCheck,
+		"nothing on this box can ask the update server"),
+};
+
 const Param kStartParams[] = {
 	HTTPD_BODY_REQUIRED_TEXT("name",
 		"the name field of one file GET /api/v1/update/local lists: a bare file name ending in `.bin`, never a path", 255),
@@ -163,6 +248,23 @@ const Endpoint kUpdateEndpoints[] = {
 	  "**Related:** `GET /api/v1/update/local`, `POST /api/v1/system/reboot`.",
 	  HTTPD_PARAMS(kStartParams), NULL, &startLocalUpdate, false,
 	  Answers202, HTTPD_REFUSALS(kStartRefusals) },
+	{ Method::Get, "/api/v1/update/online", AuthLevel::Read,
+	  "whether the update server has a newer image",
+	  "Asks the update server the box is set to, through the same check the box's menu "
+	  "and its background check run: the server's list of images for this box is read and "
+	  "searched for one newer than the running image. Nothing beyond the list is fetched "
+	  "and nothing is installed; a newer image is installed from the box's own menu.\n\n"
+	  "The answer is kept for a quarter of an hour and given again within it, so opening "
+	  "a page twice does not ask the server twice; `fresh=true` asks now. Takes as long "
+	  "as a ping and the download of a short list, longer where the server does not "
+	  "answer.\n\n"
+	  "A server that cannot be reached is an answer and not a refusal: `reached` is "
+	  "false.\n\n"
+	  "**Refusals:**\n"
+	  "- `501 no-update-check`: nothing on this box can ask the update server.\n\n"
+	  "**Related:** `GET /api/v1/update/local`.",
+	  HTTPD_PARAMS(kOnlineParams), &kOnlineUpdateSchema, &onlineUpdate, false,
+	  Answers200, HTTPD_REFUSALS(kOnlineRefusals) },
 };
 
 } // namespace

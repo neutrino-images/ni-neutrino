@@ -105,3 +105,27 @@
 /* The save bar of the server's screen, as wide as the blocks above it, as it is
    on the settings and the AI pages. */
 .sys > .save-bar { max-width: var(--content-width); }
+
+/* The note about the update server at the top of the update screen, and the line
+   under it with the button that asks now and when the box last asked. */
+.sys-online .callout { margin: 0; }
+/* Up to date is the quiet one of the four: the green a running service wears,
+   where a newer image keeps the accent and a heading of its own. */
+.sys-online .callout.sys-online-ok { border-left-color: var(--state-running); }
+.sys-online-new p { margin: 0; }
+/* Two classes, so this beats the zero margin of the paragraphs above. */
+.sys-online-new.callout > * + * { margin-top: var(--gap-2); }
+.sys-online-new > p:last-child { color: var(--text-dim); }
+/* The two images under each other, the label in one column and the version
+   with its build time in the next, in mono, so equal places stand over each
+   other and a difference shows where it is. */
+.sys-online-versions {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: var(--gap-1) var(--gap-3);
+	margin: 0;
+}
+.sys-online-versions dt { color: var(--text-dim); }
+.sys-online-versions dd { margin: 0; font-family: var(--font-mono); white-space: pre-wrap; }
+.sys-online-tools { margin-top: var(--gap-3); }
+.sys-online-when { color: var(--text-dim); font-size: var(--fs-s); }

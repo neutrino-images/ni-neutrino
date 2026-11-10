@@ -130,6 +130,72 @@ std::string updateRoot();
 typedef int (*Runner)(const std::string &dir, const std::string &file);
 void setRunner(Runner r);
 
+/* WHETHER THE UPDATE SERVER HAS A NEWER IMAGE.
+
+   The question the menu's online update asks before it offers anything, and
+   the one the background check asks every six hours: read the list of
+   images the server publishes for this box, and look for one newer than the
+   running one. Asked here, it is answered and nothing more. Nothing is
+   fetched beyond the list, and nothing is installed; that stays with the
+   menu, in front of the television.
+
+   ONE ANSWER FOR A WHILE. The answer is kept for a quarter of an hour, so a
+   page that is opened again does not ask the server again, and two askers
+   at once wait for one check rather than running two. */
+
+struct Image
+{
+	/* As the box shows it: year and month of a calendar version, e.g.
+	   "2026.11", the day being in built. Empty where it could not be read. */
+	std::string release;
+	// When it was built; 0 where that could not be read.
+	time_t      built;
+
+	Image() : built(0) {}
+};
+
+struct Online
+{
+	// Whether the server's list was read. false: none of the rest but running is known.
+	bool        reached;
+	Image       running;
+	// Whether the list holds an image newer than the running one.
+	bool        newer;
+	// The first newer one in the list, and the name the list gives it.
+	Image       found;
+	std::string name;
+	// When this answer was made.
+	time_t      checked;
+
+	Online() : reached(false), newer(false), checked(0) {}
+};
+
+/* The answer, from the last quarter of an hour where there is one and fresh
+   is false, or from a check run now. Blocks for as long as the check takes,
+   which is a ping and the download of a short list. NotSupported where
+   nothing can check, which is the case in a build without the box. */
+Result<Online> online(bool fresh);
+
+// Forgets the kept answer, for a case that needs the next call to check.
+void forgetOnline();
+
+/* What runs the check. The box's runs the check of the menu
+   (CFlashUpdate::checkOnlineVersion); settable so that the suite answers
+   without a network. NULL: there is nothing to check with. */
+struct OnlineSource
+{
+	virtual ~OnlineSource() {}
+	virtual Online check() = 0;
+};
+void setOnlineSource(OnlineSource *s);
+
+// Binds the source above to the program's check.
+void installRealOnlineSource();
+
+/* Defined by the application, which owns the check: runs it once and says
+   what it found. Any thread; the background check runs the same on its own. */
+Online applicationOnlineCheck();
+
 } // namespace update
 } // namespace coreapi
 

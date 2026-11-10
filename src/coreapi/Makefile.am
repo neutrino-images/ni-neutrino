@@ -118,6 +118,7 @@ libcoreapi_a_SOURCES = \
 	box/servicecontrol_real.cpp \
 	box/apply_update.cpp \
 	box/updatecheck_real.cpp \
+	box/onlinesource_real.cpp \
 	box/apply_plugins.cpp \
 	box/pluginloader_real.cpp \
 	box/apply_weather.cpp \
