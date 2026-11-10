@@ -16,6 +16,16 @@
  * the rest live where they always did, and are handed in here, so that this
  * file does not carry a second set of them.
  *
+ * What is not here, and why: PaintIcon, DisplayImage, GetSize and scale2Res
+ * are one call each into the box - fbwin->paintIcon, g_PicViewer->getSize,
+ * CFrameBuffer::scale2Res - and the ten to fifteen lines around them are the
+ * reading of the binding's own syntax. A wrapper over one call would be
+ * forwarding and nothing else, so both bindings keep them as they are.
+ *
+ * What is left of this side is the map of saved screens: saveScreen,
+ * restoreScreen and deleteSavedScreen walk it in both bindings - look a screen
+ * up by the number it was given, hand it out, forget it, or free it.
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
