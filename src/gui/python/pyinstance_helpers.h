@@ -45,8 +45,8 @@
 #define PY_WIKI "https://wiki.tuxbox-neutrino.org/wiki"
 
 /* the magic color that tells us we are using one of the palette colors */
-#define MAGIC_COLOR 0x42424200
-#define MAGIC_MASK  0xFFFFFF00
+/* The colour a script names as one of the box's own is resolved in the script
+ * API, where the constant it carries is: see scriptcolor.h. */
 
 /* The statuses the curl binding answers with, the ones the Lua bindings
  * answer with. */
