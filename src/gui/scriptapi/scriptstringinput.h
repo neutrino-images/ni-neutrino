@@ -34,6 +34,8 @@
 
 #include <string>
 
+class CChangeObserver;
+
 /* The dialog a script asks a value in. */
 class ScriptStringinput
 {
@@ -50,6 +52,7 @@ class ScriptStringinput
 			std::string	icon;
 			bool		sms;		/* read, and of no use: the dialog brings its own keyboard */
 			bool		pin;		/* the pin input is a dialog of its own */
+			CChangeObserver	*observ;		/* what a menu row tells when the value changes */
 			params(void);
 		} params_t;
 

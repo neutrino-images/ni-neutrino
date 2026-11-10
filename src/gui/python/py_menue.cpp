@@ -36,6 +36,7 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
+#include <gui/scriptapi/scriptstringinput.h>
 
 typedef struct
 {
@@ -292,10 +293,13 @@ int CPyMenuStringinput::exec(CMenuTarget * /*parent*/, const std::string & /*act
 {
 	/* "sms" asked for the multi-tap letters on the digit keys; the input
 	 * dialog brings an on-screen keyboard for letters instead. */
-	CStringInput *i = new CStringInput((char *)name.c_str(), value, size,
-			NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
-	i->exec(NULL, "");
-	delete i;
+	ScriptStringinput::params_t pars;
+	pars.name        = name;
+	pars.value       = *value;
+	pars.size        = size;
+	pars.valid_chars = valid_chars;
+	pars.icon        = icon;
+	*value = ScriptStringinput::exec(pars);
 
 	PyGILState_STATE gstate = PyGILState_Ensure();
 	PyObject *val = PyUnicode_FromString(value->c_str());

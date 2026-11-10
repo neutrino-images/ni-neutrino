@@ -37,6 +37,7 @@
 
 #include "luainstance.h"
 #include "lua_menue.h"
+#include <gui/scriptapi/scriptstringinput.h>
 
 CLuaInstMenu* CLuaInstMenu::getInstance()
 {
@@ -283,10 +284,14 @@ int CLuaMenuStringinput::exec(CMenuTarget* /*parent*/, const std::string & /*act
 	int res = menu_return::RETURN_REPAINT;
 	/* "sms" asked for the multi-tap letters on the digit keys; the input
 	   dialog brings an on-screen keyboard for letters instead. */
-	CStringInput *i = new CStringInput((char *)name, value, size,
-			NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), observ, icon);
-	i->exec(NULL, "");
-	delete i;
+	ScriptStringinput::params_t pars;
+	pars.name        = name;
+	pars.value       = *value;
+	pars.size        = size;
+	pars.valid_chars = valid_chars;
+	pars.icon        = icon;
+	pars.observ      = observ;
+	*value = ScriptStringinput::exec(pars);
 	if (!luaAction.empty()) {
 		lua_pushglobaltable(L);
 		lua_getfield(L, -1, luaAction.c_str());

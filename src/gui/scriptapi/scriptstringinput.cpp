@@ -44,6 +44,7 @@ ScriptStringinput::params::params(void)
 	icon = std::string(NEUTRINO_ICON_INFO);
 	sms = false;
 	pin = false;
+	observ = NULL;
 }
 
 std::string ScriptStringinput::exec(const params_t &pars)
@@ -60,7 +61,7 @@ std::string ScriptStringinput::exec(const params_t &pars)
 			NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, pars.valid_chars.c_str(), NULL);
 	else
 		i = new CStringInput(pars.name, &value, pars.size,
-			NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, pars.valid_chars.c_str(), NULL, pars.icon.c_str());
+			NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, pars.valid_chars.c_str(), pars.observ, pars.icon.c_str());
 	i->exec(NULL, "");
 	delete i;
 
