@@ -14,7 +14,10 @@
 # not migrated yet. Whole modules the two bindings carry as a pair are looked at
 # the same way, so that a module migrated on one side only cannot slip through.
 # Where something must hold it fails; what a reader should look at, or what is
-# still to come, it only reports.
+# still to come, it only reports. Two kinds of pair are not work left over, and
+# both are written down below rather than migrated for the sake of the count:
+# one whose work already stands in a class of the box, and one that is the
+# language itself.
 #
 # Run from the top of the tree:  sh src/gui/check-scriptapi.sh
 #
@@ -46,6 +49,62 @@ uses_in()
 on_the_layer()
 {
 	grep -q 'scriptapi/' "$@" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
+# The two kinds of pair that are not open work.
+#
+# A pair whose work already stands in a class of the box: both bindings read
+# that class and hold nothing but their own syntax - the handle of a script's
+# config file, the argument reading, the answer in the shape of the language.
+# There is nothing left to move into the script API, and a wrapper over the
+# core would be forwarding and nothing else. The class after the colon must be
+# read by both sides and must stand outside the bindings, or this note has gone stale and it fails.
+#
+# A pair that is the language itself: the two sides hold different things -
+# one a lua_State it creates and copies values between, the other python
+# objects and their GIL - and what looks alike is the syntax of that language.
+# What both do the same way is holding a thread and its five operations, and
+# that would be a step of its own, not a binding migration.
+# ---------------------------------------------------------------------------
+
+ALREADY_SHARED="configfile:CConfigFile filehelpers:CFileHelpers video:CMoviePlayerGui"
+LANGUAGE_ONLY="threads"
+
+# The class of the box a module of a binding is said to rest on, if it is.
+shared_core()
+{
+	for l_entry in $ALREADY_SHARED; do
+		if [ "$(echo $l_entry | cut -d: -f1)" = "$1" ]; then
+			echo "$(echo $l_entry | cut -d: -f2)"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Does such a note still hold? Both bindings have to read the class it names.
+note_holds()
+{
+	core=$(shared_core $1) || return 1
+	for l_side in $lua/lua_$1.cpp $python/py_$1.cpp; do
+		grep -q "$core" $l_side 2>/dev/null || return 1
+	done
+	# And the class itself has to stand outside the bindings: one both of them
+	# only write for themselves is work written twice, not a core - the download
+	# and its callbacks of the curl pair were exactly that.
+	if grep -rq "::$core(" $lua $python 2>/dev/null; then
+		return 1
+	fi
+	return 0
+}
+
+is_language_only()
+{
+	for l_only in $LANGUAGE_ONLY; do
+		[ "$l_only" = "$1" ] && return 0
+	done
+	return 1
 }
 
 # ---------------------------------------------------------------------------
@@ -87,6 +146,8 @@ echo "  $on_api of $count"
 # ---------------------------------------------------------------------------
 
 todo=""
+shared=""
+language=""
 pairs=0
 for f in $lua/lua_*.cpp; do
 	name=$(basename $f .cpp | sed 's/^lua_//')
@@ -103,7 +164,18 @@ for f in $lua/lua_*.cpp; do
 		echo "FAIL: $name is read from the script API on one side only (lua: $in_lua, python: $in_python)"
 		status=1
 	elif [ "$in_lua" = "no" ]; then
-		todo="$todo $name"
+		if is_language_only $name; then
+			language="$language $name"
+		elif core=$(shared_core $name); then
+			if note_holds $name; then
+				shared="$shared $name($core)"
+			else
+				echo "FAIL: $name is said to rest on $core, and a binding does not read it"
+				status=1
+			fi
+		else
+			todo="$todo $name"
+		fi
 	fi
 done
 
@@ -111,6 +183,20 @@ if [ -n "$todo" ]; then
 	echo "  a pair of both bindings, still to come, not on the script API yet ($pairs pairs looked at):"
 	for name in $todo; do
 		echo "    $name"
+	done
+fi
+
+if [ -n "$shared" ]; then
+	echo "  a pair of both bindings whose work already stands in a class of the box, so nothing is left to move ($pairs pairs looked at):"
+	for entry in $shared; do
+		echo "    $entry"
+	done
+fi
+
+if [ -n "$language" ]; then
+	echo "  a pair of both bindings that is the language itself, and no work left over:"
+	for name in $language; do
+		echo "    $name - its two sides hold different things, which is the point"
 	done
 fi
 
