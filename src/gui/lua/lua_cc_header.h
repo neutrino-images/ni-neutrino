@@ -20,13 +20,15 @@
 #ifndef _LUACCHEADER_H
 #define _LUACCHEADER_H
 
-class CLuaCCHeader
+#include <gui/scriptapi/scriptheader.h>
+
+/* The header a script made, held as the shared ScriptHeader: what is done with
+ * it is the same for every interpreter, and this binding only fills its
+ * parameters out of a lua table. */
+class CLuaCCHeader : public ScriptHeader
 {
 	public:
-		CComponentsHeader *ch;
-		CComponentsForm *parent;
-		CLuaCCHeader() { ch = NULL; parent = NULL; }
-		~CLuaCCHeader() { if (parent == NULL) delete ch; }
+		explicit CLuaCCHeader(const params_t &pars) : ScriptHeader(pars) {}
 };
 
 class CLuaInstCCHeader

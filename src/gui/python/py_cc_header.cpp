@@ -85,6 +85,22 @@ PyObject *CPythonInstCCHeader::CCHeaderNew(PyTypeObject *type, PyObject *args, P
 	pyLookupUnsigned(kwds, "color_body", color_body);
 	pyLookupUnsigned(kwds, "color_shadow", color_shadow);
 
+	/* The colours, the form it hangs on and who deletes the header are the
+	 * script api's; this binding reads them and hands them over. */
+	ScriptHeader::params_t pars;
+	pars.parent       = pw;
+	pars.x            = (int)x;
+	pars.y            = (int)y;
+	pars.dx           = (int)dx;
+	pars.dy           = (int)dy;
+	pars.caption      = caption;
+	pars.icon         = icon;
+	pars.buttons      = (int)buttons;
+	pars.shadow_mode  = (int)shadow_mode;
+	pars.color_frame  = color_frame;
+	pars.color_body   = color_body;
+	pars.color_shadow = color_shadow;
+
 	PyCCHeaderObject *self = (PyCCHeaderObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
 	{
@@ -92,14 +108,7 @@ PyObject *CPythonInstCCHeader::CCHeaderNew(PyTypeObject *type, PyObject *args, P
 		return NULL;
 	}
 
-	self->d = new CPyCCHeader();
-	self->d->ch = new CComponentsHeader((int)x, (int)y, (int)dx, (int)dy,
-			caption, icon, (int)buttons,
-			pw, (int)shadow_mode,
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_frame),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_body),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_shadow));
-	self->d->parent = pw;
+	self->d = new CPyCCHeader(pars);
 	return (PyObject *)self;
 }
 

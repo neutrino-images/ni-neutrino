@@ -29,13 +29,15 @@
 
 #include <gui/components/cc.h>
 
-class CPyCCHeader
+#include <gui/scriptapi/scriptheader.h>
+
+/* The header a script made, held as the shared ScriptHeader: what is done with
+ * it is the same for every interpreter, and this binding only fills its
+ * parameters out of a keyword table. */
+class CPyCCHeader : public ScriptHeader
 {
 	public:
-		CComponentsHeader *ch;
-		CComponentsForm *parent;
-		CPyCCHeader() { ch = NULL; parent = NULL; }
-		~CPyCCHeader() { if (parent == NULL) delete ch; }
+		explicit CPyCCHeader(const params_t &pars) : ScriptHeader(pars) {}
 };
 
 class CPythonInstCCHeader
