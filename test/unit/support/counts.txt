@@ -12,7 +12,7 @@
 answer members narrower than free text	47
 arrays held to a row for every element	14
 body examples their routes accepted	27
-body members the examples carry	26
+body members the examples carry	30
 choice value names compared	586
 choices compared against a screen	0
 chooser call sites read	478
@@ -23,12 +23,12 @@ defaults compared against this build's own load	256
 element defaults compared against the load	149
 element rows compared against the load	163
 elements of arrays held to a row	163
-error codes the header declares	165
+error codes the header declares	166
 fields the bound scan read	5
 fields the chooser scan read	8
 fields with a stated label	1
 flags compared against a screen	8
-groups the document declares	20
+groups the document declares	21
 key code defaults compared against this build's own load	50
 key to field pairs read out of the program	608
 keys compared against what the program reads	397
@@ -44,20 +44,20 @@ lists and lists of records held to a read of the load	5
 locale names the program has	3247
 memory backed folders tried	1
 number elements written and read back among their neighbours	145
-parameters the document describes	153
-refusals the document states against a route	860
+parameters the document describes	154
+refusals the document states against a route	875
 refusals the header names	13
-refusals the routes declare of their own	140
-refusals the shipped routes were seen to give	215
-routes the document describes	108
+refusals the routes declare of their own	143
+refusals the shipped routes were seen to give	220
+routes the document describes	110
 rows compared against the load and save pass	394
 rows of the theme struct	26
 rows this build links	611
 rows whose value is not in the settings file	46
 rule refusals the document states	16
-shapes the document files against a route	52
+shapes the document files against a route	53
 statuses the enum declares	8
-success codes the document states	120
+success codes the document states	122
 table entries of the load with a row	89
 text elements written and read back among their neighbours	18
 text rules compared against a screen	45

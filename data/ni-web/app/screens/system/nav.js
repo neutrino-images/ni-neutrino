@@ -6,6 +6,7 @@ export default {
 	ic: '⚙︎',
 	items: [
 		{ id: 'box', text: 'nav.system.box', load: () => import('./box.js') },
+		{ id: 'update', text: 'nav.system.update', load: () => import('./update.js') },
 		{ id: 'daemons', text: 'nav.system.daemons', load: () => import('./daemons.js') },
 		{ id: 'plugins', text: 'nav.system.plugins', load: () => import('./plugins.js') },
 		{ id: 'config', text: 'nav.system.config', load: () => import('./config.js') },

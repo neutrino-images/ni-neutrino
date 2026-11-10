@@ -279,6 +279,7 @@ const NamedNever kPinnedNever[] = {
 	{ Method::Post,   "/api/v1/daemons/{name}/start" },
 	{ Method::Post,   "/api/v1/daemons/{name}/stop" },
 	{ Method::Post,   "/api/v1/daemons/{name}/restart" },
+	{ Method::Post,   "/api/v1/update/local" },
 	{ Method::Post,   "/api/v1/system/reload-setup" },
 	{ Method::Post,   "/api/v1/tuner/reset" },
 	{ Method::Post,   "/api/v1/settings/secret/clear" },

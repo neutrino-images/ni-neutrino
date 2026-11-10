@@ -174,6 +174,7 @@ coreapi_tests_SOURCES = \
 	coreapi/test_storagedisks.cpp \
 	coreapi/test_shelltable.cpp \
 	coreapi/test_daemons.cpp \
+	coreapi/test_update.cpp \
 	coreapi/test_settingssource.cpp \
 	coreapi/test_settings.cpp \
 	coreapi/test_couple.cpp \

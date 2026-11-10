@@ -57,6 +57,8 @@
 #include <system/helpers.h>
 #include <system/debug.h>
 
+#include <coreapi/update.h>
+
 #include <lib/libnet/libnet.h>
 
 #include <curl/curl.h>
@@ -781,10 +783,9 @@ int CFlashUpdate::exec(CMenuTarget *parent, const std::string &actionKey)
 		showGlobalStatus(UPDATE_PROGRESS_INSTALL);
 		showStatusMessageUTF(g_Locale->getText(LOCALE_FLASHUPDATE_INSTALL));
 
-		std::string install_sh = find_executable("install.sh");
-		dprintf(DEBUG_NORMAL, "[update] calling %s %s %s\n", install_sh.c_str(), g_settings.update_dir.c_str(), filename.c_str());
+		// The same call the web interface's image update makes, which says what it runs.
 #ifndef DRYRUN
-		my_system(3, install_sh.c_str(), g_settings.update_dir.c_str(), filename.c_str());
+		coreapi::update::install(g_settings.update_dir, filename);
 #endif
 		showGlobalStatus(UPDATE_PROGRESS_DONE);
 		ShowHint(LOCALE_MESSAGEBOX_INFO, LOCALE_FLASHUPDATE_READY);

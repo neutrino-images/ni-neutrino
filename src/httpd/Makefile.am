@@ -221,6 +221,7 @@ libhttpd_a_SOURCES = \
 	ep/ep_channels.cpp \
 	ep/ep_config.cpp \
 	ep/ep_daemons.cpp \
+	ep/ep_update.cpp \
 	ep/ep_epg.cpp \
 	ep/ep_netfs.cpp \
 	ep/ep_osd.cpp \

@@ -68,6 +68,7 @@
 #include <coreapi/channels.h>
 #include <coreapi/streaming.h>
 #include <coreapi/system.h>
+#include <coreapi/update.h>
 #include <coreapi/box/applyworker.h>
 #include <coreapi/settings/settings.h>
 #include <coreapi/base/apply.h>
@@ -5429,6 +5430,26 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		}
 
 		delete[] (unsigned char*) data;
+		return messages_return::handled;
+	}
+	else if (msg == NeutrinoMessages::EVT_LOCAL_UPDATE) {
+		/* An image update sent from the web interface: install.sh with the file,
+		 * as the menu's local update runs it, and nothing on the screen, so a box
+		 * in standby stays there. Asked whether the box records once more here:
+		 * what sent this asked on another thread, and a timer may have started a
+		 * recording since. */
+		const coreapi::update::Asked asked = coreapi::update::asked((const char *) data);
+		delete[] (unsigned char *) data;
+		if (!asked.valid || mode == NeutrinoModes::mode_unknown
+		    || CRecordManager::getInstance()->RecordingStatus()) {
+			printf("[neutrino] image update not installed: %s\n",
+				!asked.valid ? "request not understood"
+				: mode == NeutrinoModes::mode_unknown ? "the box is still starting" : "the box is recording");
+			return messages_return::handled;
+		}
+		printf("[neutrino] installing image update %s\n", asked.path.c_str());
+		const int rc = coreapi::update::install(asked);
+		printf("[neutrino] image update %s done: %d\n", asked.path.c_str(), rc);
 		return messages_return::handled;
 	}
 	else if (msg == NeutrinoMessages::EVT_PLAY_RECORDING) {

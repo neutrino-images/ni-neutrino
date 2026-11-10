@@ -764,7 +764,7 @@ TEST_CASE("the groups are declared in the order somebody meets this box in", "[o
 #ifdef ENABLE_MCP
 		"ai",
 #endif
-		"daemons", "storage", "netfs", "tuner", "plugins",
+		"daemons", "update", "storage", "netfs", "tuner", "plugins",
 		"stream", "webtv", "config", "events", "openapi"
 	};
 	const size_t meant = sizeof(kMeant) / sizeof(kMeant[0]);

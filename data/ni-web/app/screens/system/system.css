@@ -54,13 +54,22 @@
 	background: var(--ground-0); border: 1px solid var(--line); border-radius: var(--radius);
 	font-size: var(--fs-s); }
 
-/* The first column of these three tables is a name and stays readable; the
+/* The first column of these four tables is a name and stays readable; the
    cells around it may wrap, since a plugin's own sentence about itself is a
    sentence and not a value. */
-.sys-box th[scope="row"], .sys-daemons th[scope="row"], .sys-plugins th[scope="row"] {
+.sys-box th[scope="row"], .sys-daemons th[scope="row"], .sys-plugins th[scope="row"],
+.sys-update th[scope="row"] {
 	color: var(--text); font-weight: 600; text-align: left; }
 .sys-plugins td, .sys-plugins th[scope="row"] { white-space: normal; }
 .sys-plugins th[scope="row"] { min-width: 16ch; }
+/* The name of an update file is as long as its builder made it, and it is the
+   one cell that gives way: it breaks after a hyphen, or anywhere in a name
+   that has none, so the size, the date and the button stay in view without
+   the table being pushed sideways. */
+.sys-update th[scope="row"] { white-space: normal; overflow-wrap: anywhere; }
+/* The button over the list stands apart from it, as the sentence over it does:
+   pressed up against the head of the table it reads as one of its columns. */
+.sys-update-tools { margin-bottom: var(--gap-3); }
 
 /* The three commands of a row: they wrap under each other at the narrow width
    rather than making the table wider than a hand. */

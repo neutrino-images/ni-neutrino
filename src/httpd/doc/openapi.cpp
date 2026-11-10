@@ -1564,6 +1564,9 @@ const TagDoc kTags[] = {
 	{ "daemons",
 	  "Starting, stopping and restarting one of the programs beside the one answering here. What "
 	  "they are and how they are doing is under system." },
+	{ "update",
+	  "The image updates lying on this box, and handing one of them to the box's own install "
+	  "script." },
 	{ "storage",
 	  "The places this box writes to and the files on them: the mounts it knows, a directory, and "
 	  "one file read or written whole." },

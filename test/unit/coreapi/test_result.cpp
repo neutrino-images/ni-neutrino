@@ -78,6 +78,7 @@ const Walked kWalked[] = {
 	CODE(NoSuchRecording),
 	CODE(NoSuchTool),
 	CODE(NoSuchPart),
+	CODE(NoSuchUpdateFile),
 	CODE(NoRunningChannel),
 	CODE(NoMode),
 	CODE(NoCurrentEvent),
@@ -406,7 +407,8 @@ TEST_CASE("everything a lookup did not find is spelt the same way", "[result]")
 		ErrorCode::NoSuchRoute, ErrorCode::NoSuchMethod,
 		ErrorCode::NoSuchParameter, ErrorCode::NoSuchTimerType, ErrorCode::NoSuchName,
 		ErrorCode::NoSuchParent, ErrorCode::NoSuchFilesystem,
-		ErrorCode::UnknownSetting, ErrorCode::NoSuchRecording, ErrorCode::NoSuchTool
+		ErrorCode::UnknownSetting, ErrorCode::NoSuchRecording, ErrorCode::NoSuchTool,
+		ErrorCode::NoSuchUpdateFile
 	};
 	for (size_t i = 0; i < sizeof(absent) / sizeof(absent[0]); i++)
 	{

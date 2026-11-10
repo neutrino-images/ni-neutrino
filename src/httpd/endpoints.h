@@ -208,6 +208,8 @@ extern const RouteTable authTable;
 extern const RouteTable timersTable;
 extern const RouteTable osdTable;
 extern const RouteTable daemonsTable;
+// The image updates lying on the box, and installing one of them.
+extern const RouteTable updateTable;
 extern const RouteTable tunerTable;
 extern const RouteTable pluginsTable;
 // The routes that hand out the box's own configuration documents, and the one

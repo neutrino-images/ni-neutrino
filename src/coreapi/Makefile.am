@@ -154,6 +154,7 @@ libcoreapi_a_SOURCES = \
 	box/storage_disks.cpp \
 	netfs.cpp \
 	daemons.cpp \
+	update.cpp \
 	base/eventbus.cpp \
 	base/messagebridge.cpp
 
@@ -227,6 +228,7 @@ noinst_HEADERS = \
 	box/storage_disks.h \
 	netfs.h \
 	daemons.h \
+	update.h \
 	base/eventbus.h \
 	base/messagebridge.h
 
