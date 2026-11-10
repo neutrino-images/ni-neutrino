@@ -37,6 +37,25 @@ noinst_HEADERS = \
 
 FORCE:
 
+# The layer under scriptapi/ stands between the two bindings and the components
+# they drive, and the check below keeps the three in step. It hangs on "all"
+# here exactly as src/coreapi/check-layering.sh hangs on "all" in its own
+# Makefile.am - the autotools way in, and silent when it passes.
+#
+# A build that does not read these makefiles has to be told to run it, and
+# ni-buildsystem is one of those:
+#	sh src/gui/check-scriptapi.sh <top of the tree>
+# Hence the top of the tree as an argument: the check reads both bindings and
+# the layer, wherever the tree stands.
+EXTRA_DIST = check-scriptapi.sh
+
+check-scriptapi:
+	@$(SHELL) $(srcdir)/check-scriptapi.sh $(top_srcdir)
+
+.PHONY: check-scriptapi
+
+all-local: check-scriptapi
+
 SUBDIRS = bedit components moviebrowser moviedb widget
 
 if ENABLE_LUA

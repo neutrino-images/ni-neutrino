@@ -20,15 +20,20 @@
 # language itself.
 #
 # Run from the top of the tree:  sh src/gui/check-scriptapi.sh
+# Or from anywhere, with the top of the tree named:
+#	sh src/gui/check-scriptapi.sh /path/to/tangos-ni
+# The build calls it the second way, as src/coreapi/Makefile.am calls its own
+# check-layering.sh.
 #
 # It is the brother of src/coreapi/check-layering.sh, which watches the layers
 # of the tree; this one watches the split between the bindings and the layer
 # both of them read.
 
+top=${1:-.}
 status=0
-lua=src/gui/lua
-python=src/gui/python
-layer=src/gui/scriptapi
+lua=$top/src/gui/lua
+python=$top/src/gui/python
+layer=$top/src/gui/scriptapi
 
 # How many handles one binding builds for a class of the script API: it either
 # derives from it, or it holds one. Only the headers are looked at, because the
