@@ -161,6 +161,7 @@ CInfoViewerEvo::CInfoViewerEvo ()
 	ca_bar			= NULL;
 	recordsbox = NULL;
 	recordsblink = NULL;
+	screen_covered = false;
 	showBBIcons_width = 0;
 	weather = CWeather::getInstance();
 	Init();
@@ -303,8 +304,30 @@ void CInfoViewerEvo::start ()
 	getIconInfo();
 }
 
+void CInfoViewerEvo::setScreenCovered(bool covered)
+{
+	screen_covered = covered;
+
+	/* The record box is as wide as the recording's title and keeps its area
+	   reserved for as long as the recordings run; with the channel list open it
+	   reaches into the list's infozone and would keep the EPG out of it. The
+	   box is behind the list then and cannot be seen anyway, so it goes away
+	   and gives the area back - the next showRecords() builds it again. */
+	if (covered && recordsbox)
+	{
+		recordsbox->kill();
+		delete recordsbox;
+		recordsbox = NULL;
+	}
+}
+
 void CInfoViewerEvo::showRecords()
 {
+	/* While the channel list owns the screen the box would only hold area it
+	   cannot use, see setScreenCovered(). */
+	if (screen_covered)
+		return;
+
 	CRecordManager * crm	= CRecordManager::getInstance();
 
 	int box_posX = BoxStartX;

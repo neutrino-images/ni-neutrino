@@ -98,6 +98,13 @@ public:
 	virtual void	ResetModules(bool kill = false) = 0;
 	virtual void	setUpdateTimer(uint64_t interval) = 0;
 
+	/* Told by the caller that owns the screen for a while - the channel list.
+	   The bar is behind it then, and the parts of it that hold screen area for
+	   as long as they are up (the box it keeps for running recordings) are
+	   taken down for that time; they come back with the bar's next update.
+	   Nothing to do for the classic bar, which has no such part. */
+	virtual void	setScreenCovered(bool /*covered*/) {}
+
 	virtual void	ecmInfoBox_hide() = 0;
 	virtual void	ecmInfoBox_show(const char * txt, int w, int h, Font * font) = 0;
 

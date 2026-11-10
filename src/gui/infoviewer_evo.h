@@ -73,6 +73,9 @@ private:
 	CComponentsWindowMax *CoverBox;
 	CComponentsForm *recordsbox;
 	CComponentsTimer *recordsblink;
+	/* set while the channel list owns the screen; keeps the record box out
+	   of the way, see setScreenCovered() */
+	bool screen_covered;
 
 	CWeather *weather;
 
@@ -265,6 +268,7 @@ public:
 		ResetModules(true);
 	};
 	bool 	hasTimeout() override;
+	void	setScreenCovered(bool covered) override;
 
 	int bottom_bar_offset, InfoHeightY_Info, showBBIcons_width;
 
