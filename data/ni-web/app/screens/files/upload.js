@@ -1,10 +1,11 @@
 /* Putting one file on the box.
  *
  * The ceiling is said before a file is picked and not after one is refused. The body
- * of a request reaches this server whole, so how large one may be is the transport's
- * ceiling on a body and there is no larger one behind it. A person who reaches for a
- * recording has to read that this is not the way recordings travel, and reading it
- * after a minute of sending is reading it too late.
+ * of a request reaches this server whole, so how large one may be is what the route
+ * takes, five mebibytes, enough for an image update (*.bin) and more than any other
+ * route takes. A person who reaches for a recording has to read that this is not the
+ * way recordings travel, and reading it after a minute of sending is reading it too
+ * late.
  *
  * The number is written here because nothing the box answers states it, and it is
  * written once, beside the one call that runs into it. The box stays the authority: a
@@ -23,8 +24,8 @@
  * way a browser reports how much of a body has gone out is XMLHttpRequest, every call
  * this page places goes through one file, and a check refuses that name anywhere in
  * the application because the second token, the one retry and the shape of a refusal
- * all live in that one file. What is left is a ceiling of a mebibyte and a way to
- * stop it. */
+ * all live in that one file. What is left is a ceiling of five mebibytes and a way
+ * to stop it. */
 
 import { html, useState, useRef } from '../../runtime.js';
 import { api } from '../../api.js';
@@ -36,8 +37,8 @@ import text from './files.text.js';
 import { joinPath } from './paths.js';
 import { problemOf } from './answer.js';
 
-// What the transport takes, one mebibyte, as server.cpp sets it.
-const CEILING = 1024 * 1024;
+// What the route takes, five mebibytes, as bodyCeilingFor() in ep_storage.cpp sets it.
+const CEILING = 5 * 1024 * 1024;
 
 /**
  * @param {{ dir: string, onDone: () => void }} props

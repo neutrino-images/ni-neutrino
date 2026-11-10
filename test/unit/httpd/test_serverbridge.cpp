@@ -24,6 +24,7 @@
 #include "httpd/auth.h"
 #include "httpd/credentials.h"
 #include "httpd/endpoint.h"
+#include "httpd/endpoints.h"
 #include "httpd/doc/openapi.h"
 #include "httpd/router.h"
 #include "httpd/server.h"
@@ -226,6 +227,15 @@ const Endpoint wired_endpoints[] = {
 };
 
 const RouteTable wired_table = { HTTPD_TABLE("wired", wired_endpoints) };
+
+// The address that puts a file on the box, which takes a larger body than the rest,
+// beside one that keeps the general ceiling.
+const Endpoint upload_endpoints[] = {
+	{ Method::Put,  "/api/v1/storage/file", AuthLevel::Write, "takes a file", NULL, NULL, 0, NULL, &echo, false, Answers200, HTTPD_NO_REFUSALS },
+	{ Method::Post, "/api/v1/echo",         AuthLevel::Write, "hands back",   NULL, NULL, 0, NULL, &echo, false, Answers200, HTTPD_NO_REFUSALS },
+};
+
+const RouteTable upload_table = { HTTPD_TABLE("upload", upload_endpoints) };
 
 // Two routes that answer one request equally well, which is what the table
 // check refuses and what the daemon must refuse to start on.
@@ -1300,4 +1310,82 @@ TEST_CASE("an IPv4 client on a socket that takes both families is answered its o
 	four.sin_port = htons(80);
 	REQUIRE(inet_pton(AF_INET, "10.0.0.3", &four.sin_addr) == 1);
 	REQUIRE(authorityOf((const struct sockaddr *) &four) == "10.0.0.3:80");
+}
+
+TEST_CASE("only the file route takes a body over the general ceiling", "[bridge]")
+{
+	REQUIRE(bodyCeilingFor(Method::Put, "/api/v1/storage/file") == (5u << 20));
+	// Another method on the same address, and the same method elsewhere, keep the general one.
+	REQUIRE(bodyCeilingFor(Method::Post, "/api/v1/storage/file") == 0);
+	REQUIRE(bodyCeilingFor(Method::Get, "/api/v1/storage/file") == 0);
+	REQUIRE(bodyCeilingFor(Method::Put, "/api/v1/storage/files") == 0);
+	REQUIRE(bodyCeilingFor(Method::Put, "/api/v1/echo") == 0);
+}
+
+TEST_CASE("a body the general ceiling refuses reaches the file route whole", "[bridge]")
+{
+	Serving guard;
+	ServerConfig c = loopback();
+	c.max_body_bytes = 1024;
+	setRoutesForTest(&upload_table);
+	REQUIRE(start(c));
+
+	const std::string file(4096, 'f');
+	testhttp::Reply put = testhttp::request(boundPort(), "PUT", "/api/v1/storage/file",
+						jsonHeadersThatMayWrite(), file);
+	REQUIRE(put.transport_ok);
+	REQUIRE(put.code == 200);
+	REQUIRE(put.body == file);
+
+	handler_ran = false;
+	testhttp::Reply other = testhttp::request(boundPort(), "POST", "/api/v1/echo", jsonHeadersThatMayWrite(), file);
+	REQUIRE(other.transport_ok);
+	REQUIRE(other.code == 413);
+	REQUIRE_FALSE(handler_ran);
+}
+
+namespace
+{
+
+// What the server answers a caller that announces a body for the file route and waits.
+std::string announceFileBody(int port, unsigned length)
+{
+	Held s(connectLoopback(port));
+	if (s.fd < 0)
+		return std::string();
+	char number[32];
+	snprintf(number, sizeof(number), "%u", length);
+	std::string req = "PUT /api/v1/storage/file?path=%2Ftmp%2Fx.bin HTTP/1.1\r\n";
+	req += "Host: 127.0.0.1\r\n";
+	req += writeHeaderLine();
+	req += "Content-Type: application/octet-stream\r\n";
+	req += std::string("Content-Length: ") + number + "\r\n";
+	req += "Expect: 100-continue\r\n";
+	req += "Connection: close\r\n\r\n";
+	if (!sendAll(s.fd, req))
+		return std::string();
+	// No body follows: the first answer is the one to a caller still waiting.
+	return readAtLeast(s.fd, 12);
+}
+
+} // namespace
+
+TEST_CASE("the file route's own ceiling holds from both sides", "[bridge]")
+{
+	// The general ceiling as shipped, so five mebibytes is far above it.
+	Serving guard;
+	ServerConfig c = loopback();
+	setRoutesForTest(&upload_table);
+	REQUIRE(start(c));
+
+	handler_ran = false;
+	const std::string at = announceFileBody(boundPort(), 5u << 20);
+	INFO(at.substr(0, 200));
+	REQUIRE(at.compare(0, 12, "HTTP/1.1 100") == 0);
+
+	const std::string over = announceFileBody(boundPort(), (5u << 20) + 1);
+	INFO(over.substr(0, 200));
+	REQUIRE(over.compare(0, 12, "HTTP/1.1 413") == 0);
+	REQUIRE(over.find("body-too-large") != std::string::npos);
+	REQUIRE_FALSE(handler_ran);
 }
