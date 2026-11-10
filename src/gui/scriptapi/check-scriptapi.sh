@@ -79,7 +79,7 @@ on_the_layer()
 # that would be a step of its own, not a binding migration.
 # ---------------------------------------------------------------------------
 
-ALREADY_SHARED="configfile:CConfigFile filehelpers:CFileHelpers video:CMoviePlayerGui"
+ALREADY_SHARED="configfile:CConfigFile video:CMoviePlayerGui"
 LANGUAGE_ONLY="threads"
 
 # The class of the box a module of a binding is said to rest on, if it is.
@@ -229,11 +229,16 @@ if [ -n "$shared" ]; then
 		echo "    $entry"
 	done
 	echo "  what this script sees of them is only that both bindings name that class. What"
-	echo "  they do around the call was looked at by the eye and not here: filehelpers and"
-	echo "  configfile are wiring, one call of the box class each, and video is too - but"
-	echo "  for one short sequence both write out themselves, blocked from plugin, SetFile,"
-	echo "  exec, getKeyPressed. To move that, the layer would need a way back into the"
-	echo "  binding for the info callback, which is why it is named here and not half done."
+	echo "  they do around the call was looked at and stands here as it is:"
+	echo "    configfile - wiring, the same eight calls of CConfigFile on both sides."
+	echo "    video      - the box calls match too, but one short sequence both write out"
+	echo "                 themselves: blocked from plugin, SetFile, exec, getKeyPressed."
+	echo "                 To move that, the layer would need a way back into the binding"
+	echo "                 for the info callback, which is why it is named and not done."
+	echo "  filehelpers was named here once as well and is not any more: only cp goes"
+	echo "  through CFileHelpers, while chmod, touch, rmdir, mkdir, readlink, ln, exist"
+	echo "  and isEmpty call the system in both bindings. It stands above as work not yet"
+	echo "  begun, which is what it is."
 fi
 
 if [ -n "$language" ]; then
