@@ -28,15 +28,15 @@
 #include "pyinstance_helpers.h"
 
 #include <gui/components/cc.h>
+#include <gui/scriptapi/scripttext.h>
 
-class CPyCCText
+/* The text a script made, held as the shared ScriptText: what is done with it
+ * is the same for every interpreter, and this binding only fills its
+ * parameters out of a keyword table. */
+class CPyCCText : public ScriptText
 {
 	public:
-		CComponentsText *ct;
-		CComponentsForm *parent;
-		int mode, font_text;
-		CPyCCText() { ct = NULL; parent = NULL; mode = 0; font_text = 0; }
-		~CPyCCText() { if (parent == NULL) delete ct; }
+		explicit CPyCCText(const params_t &pars) : ScriptText(pars) {}
 };
 
 class CPythonInstCCText

@@ -57,33 +57,6 @@ static CPyCCText *ccTextOf(PyObject *self)
 	return o->d;
 }
 
-/* The mode a script names in words, as the Lua binding reads it out of
- * 'text_mode' (or the older 'mode'), including the DECODE_HTML marker,
- * which is not a mode but a request to decode the text. */
-static long ccTextMode(const std::string &tmpMode, std::string &text)
-{
-	static const struct { const char *name; long code; } txt_align[] = {
-		{ "ALIGN_AUTO_WIDTH",        CTextBox::AUTO_WIDTH },
-		{ "ALIGN_AUTO_HIGH",         CTextBox::AUTO_HIGH },
-		{ "ALIGN_SCROLL",            CTextBox::SCROLL },
-		{ "ALIGN_CENTER",            CTextBox::CENTER },
-		{ "ALIGN_RIGHT",             CTextBox::RIGHT },
-		{ "ALIGN_TOP",               CTextBox::TOP },
-		{ "ALIGN_BOTTOM",            CTextBox::BOTTOM },
-		{ "ALIGN_NO_AUTO_LINEBREAK", CTextBox::NO_AUTO_LINEBREAK },
-		{ "DECODE_HTML",             0 },
-		{ NULL, 0 }
-	};
-
-	long mode = 0;
-	for (int i = 0; txt_align[i].name; i++)
-		if (tmpMode.find(txt_align[i].name) != std::string::npos)
-			mode |= txt_align[i].code;
-	if (tmpMode.find("DECODE_HTML") != std::string::npos)
-		htmlEntityDecode(text);
-	return mode;
-}
-
 /* ctext.new(parent=None, x=OFFSET["INNER_MID"], y=OFFSET["INNER_SMALL"],
  *	dx=-1, dy=-1, text="", text_mode="", font_text=FONT["MENU"],
  *	has_shadow=False, color_text=COL["MENUCONTENT_TEXT"],
@@ -102,7 +75,6 @@ PyObject *CPythonInstCCText::CCTextNew(PyTypeObject *type, PyObject *args, PyObj
 	long x = OFFSET_INNER_MID, y = OFFSET_INNER_SMALL, dx = -1, dy = -1;
 	std::string text = "";
 	std::string tmpMode = "";
-	long mode = CTextBox::AUTO_WIDTH;
 	long font_text = SNeutrinoSettings::FONT_TYPE_MENU;
 	unsigned long color_text = (unsigned long)COL_MENUCONTENT_TEXT;
 	unsigned long color_frame = (unsigned long)COL_FRAME_PLUS_0;
@@ -119,8 +91,6 @@ PyObject *CPythonInstCCText::CCTextNew(PyTypeObject *type, PyObject *args, PyObj
 	pyLookupString(kwds, "text_mode", tmpMode);
 	pyLookupString(kwds, "mode", tmpMode);
 	pyLookupInt(kwds, "font_text", font_text);
-	if (font_text >= SNeutrinoSettings::FONT_TYPE_COUNT || font_text < 0)
-		font_text = SNeutrinoSettings::FONT_TYPE_MENU;
 
 	long shadow_mode = CC_SHADOW_OFF;
 	bool shadow = false;
@@ -132,20 +102,22 @@ PyObject *CPythonInstCCText::CCTextNew(PyTypeObject *type, PyObject *args, PyObj
 	pyLookupUnsigned(kwds, "color_body", color_body);
 	pyLookupUnsigned(kwds, "color_shadow", color_shadow);
 
-	if (!tmpMode.empty())
-		mode = ccTextMode(tmpMode, text);
-
-	if (pw)
-	{
-		if (dy < 1)
-			dy = pw->getHeight();
-		if (dx < 1)
-			dx = pw->getWidth();
-	}
-	if (dx < 1)
-		dx = 100;
-	if (dy < 1)
-		dy = 100;
+	/* The mode, the font, the size, the colours and who deletes the text are
+	 * the script api's; this binding reads them and hands them over. */
+	ScriptText::params_t pars;
+	pars.parent       = pw;
+	pars.x            = (int)x;
+	pars.y            = (int)y;
+	pars.dx           = (int)dx;
+	pars.dy           = (int)dy;
+	pars.text         = text;
+	pars.mode         = tmpMode;
+	pars.font_text    = (int)font_text;
+	pars.shadow_mode  = (int)shadow_mode;
+	pars.color_text   = color_text;
+	pars.color_frame  = color_frame;
+	pars.color_body   = color_body;
+	pars.color_shadow = color_shadow;
 
 	PyCCTextObject *self = (PyCCTextObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
@@ -154,16 +126,7 @@ PyObject *CPythonInstCCText::CCTextNew(PyTypeObject *type, PyObject *args, PyObj
 		return NULL;
 	}
 
-	self->d = new CPyCCText();
-	self->d->ct = new CComponentsText((int)x, (int)y, (int)dx, (int)dy, text, (int)mode,
-			g_Font[font_text], 0 /* style not passed */, pw, (int)shadow_mode,
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_text),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_frame),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_body),
-			(fb_pixel_t)pyCheckMagicMask((unsigned int)color_shadow));
-	self->d->parent = pw;
-	self->d->mode = (int)mode;
-	self->d->font_text = (int)font_text;
+	self->d = new CPyCCText(pars);
 	return (PyObject *)self;
 }
 
