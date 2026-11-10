@@ -26,6 +26,11 @@
  * restoreScreen and deleteSavedScreen walk it in both bindings - look a screen
  * up by the number it was given, hand it out, forget it, or free it.
  *
+ * The making of a window itself stays with the bindings as well, and for the
+ * same reason: new CFBWindow over the box's own screen, and rcinput = g_RCInput
+ * - two lines, with the defaults out of g_settings and the reading of what the
+ * script named around them, which belongs to the call of each language.
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
