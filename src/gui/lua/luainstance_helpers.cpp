@@ -97,11 +97,6 @@ void obsoleteHideParameter(lua_State *L)
 /* A colour a script named as one of the box's own is resolved where the window
  * of a script resolves it, so that a window and a widget of a script cannot
  * come to resolve one differently. */
-lua_Unsigned checkMagicMask(lua_Unsigned col)
-{
-	return (lua_Unsigned)ScriptColorResolve(col);
-}
-
 bool tableLookup(lua_State *L, const char *what, std::string &value)
 {
 	lua_pushstring(L, what);

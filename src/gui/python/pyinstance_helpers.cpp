@@ -255,11 +255,6 @@ std::string pyScriptWhere(void)
 /* A colour a script named as one of the box's own is resolved where the window
  * of a script resolves it, so that a window and a widget of a script cannot
  * come to resolve one differently. */
-unsigned int pyCheckMagicMask(unsigned int col)
-{
-	return (unsigned int)ScriptColorResolve(col);
-}
-
 CComponentsForm *pyLookupParentForm(PyObject *kw, const char *what)
 {
 	PyObject *item = NULL;

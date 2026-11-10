@@ -38,6 +38,9 @@
 
 #include "pyinstance.h"
 
+/* a colour a script names as one of the box own */
+#include "../scriptapi/scriptcolor.h"
+
 extern CPictureViewer *g_PicViewer;
 
 typedef struct
@@ -257,7 +260,7 @@ PyObject *CPythonInstNeutrino::PaintBox(PyObject *self, PyObject *args, PyObject
 		w = W->fbwin->dx - x;
 	if (h < 0 || y + h > W->fbwin->dy)
 		h = W->fbwin->dy - y;
-	c = pyCheckMagicMask((unsigned int)c);
+	c = ScriptColorResolve((unsigned int)c);
 	W->fbwin->paintBoxRel((int)x, (int)y, (int)w, (int)h, (fb_pixel_t)c, (int)radius, (int)corner);
 
 	Py_RETURN_NONE;
@@ -285,7 +288,7 @@ PyObject *CPythonInstNeutrino::PaintHLineRel(PyObject *self, PyObject *args, PyO
 		y = 0;
 	if (dx < 0 || x + dx > W->fbwin->dx)
 		dx = W->fbwin->dx - x;
-	c = pyCheckMagicMask((unsigned int)c);
+	c = ScriptColorResolve((unsigned int)c);
 	W->fbwin->paintHLineRel((int)x, (int)dx, (int)y, (fb_pixel_t)c);
 
 	Py_RETURN_NONE;
@@ -313,7 +316,7 @@ PyObject *CPythonInstNeutrino::PaintVLineRel(PyObject *self, PyObject *args, PyO
 		y = 0;
 	if (dy < 0 || y + dy > W->fbwin->dy)
 		dy = W->fbwin->dy - y;
-	c = pyCheckMagicMask((unsigned int)c);
+	c = ScriptColorResolve((unsigned int)c);
 	W->fbwin->paintVLineRel((int)x, (int)y, (int)dy, (fb_pixel_t)c);
 
 	Py_RETURN_NONE;
@@ -384,7 +387,7 @@ PyObject *CPythonInstNeutrino::RenderString(PyObject *self, PyObject *args, PyOb
 		if (rwidth < w)
 			x += (w - rwidth) / 2;
 	}
-	c = pyCheckMagicMask((unsigned int)c);
+	c = ScriptColorResolve((unsigned int)c);
 	if (boxh > -1) /* if boxh < 0, don't paint string */
 		W->fbwin->RenderString(font, (int)x, (int)y, (int)w, text.c_str(), (fb_pixel_t)c, (int)boxh);
 

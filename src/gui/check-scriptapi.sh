@@ -90,20 +90,17 @@ echo "  $on_api of $count"
 # Der Name einer Farbe und der Name, unter dem eine Bindung die Auflösung kennt,
 # tragen die Sprache noch in sich; sie fallen, wenn das letzte Widget umgestellt
 # ist.
-for what in 'define MAGIC_COLOR' 'checkMagicMask' 'pyCheckMagicMask' 'setLuaFooter' 'showValue'; do
+for what in 'define MAGIC_COLOR' 'setLuaFooter' 'showValue'; do
 	echo "  a name that still carries a language: $what"
 	grep -rln "$what" src/gui/lua src/gui/python src/gui/widget 2>/dev/null | sed 's/^/    /'
 done
 
-# Und wo die Regel doch ein zweites Mal steht, ist etwas nicht umgestellt. Ein
-# Name, der noch die Sprache traegt, ist es nicht: checkMagicMask ruft die Regel
-# der Schicht, es schreibt sie nicht selbst.
-for def in 'src/gui/lua/luainstance_helpers.cpp:checkMagicMask' 'src/gui/python/pyinstance_helpers.cpp:pyCheckMagicMask'; do
-	f=${def%%:*}
-	fn=${def##*:}
-	if [ -f "$f" ] && ! grep -A4 "$fn" "$f" 2>/dev/null | grep -q ScriptColorResolve; then
-		echo "note: $f has a $fn that does not call ScriptColorResolve - the rule may stand a second time there"
-	fi
-done
+# Und wo eine Bindung die Regel doch selbst schreibt, ist etwas nicht
+# umgestellt: die Aufloesung einer Skript-Farbe steht in der Schicht.
+other=$(grep -rl 'realcolor\[' src/gui/lua src/gui/python 2>/dev/null || true)
+if [ -n "$other" ]; then
+	echo "note: a colour of a script is resolved outside the script API here:"
+	echo "$other"
+fi
 
 exit $status

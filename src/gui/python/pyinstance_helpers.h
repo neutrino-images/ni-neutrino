@@ -96,7 +96,6 @@ void pyParamDeprecated(const char *oldParam, const char *newParam);
 void pyFunctionDeprecated(const char *oldFunc, const char *newFunc);
 void pyObsoleteHideParameter(void);
 
-unsigned int pyCheckMagicMask(unsigned int col);
 
 class CComponentsForm;
 
