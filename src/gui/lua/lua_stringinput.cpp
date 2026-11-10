@@ -31,6 +31,7 @@
 
 #include "luainstance.h"
 #include "lua_stringinput.h"
+#include <gui/scriptapi/scriptstringinput.h>
 
 CLuaInstStringInput* CLuaInstStringInput::getInstance()
 {
@@ -68,46 +69,45 @@ int CLuaInstStringInput::StringInputExec(lua_State *L)
 {
 	lua_assert(lua_istable(L,1));
 
+	/* the size, the characters a value may hold and the icon a script did not
+	 * name come from the script api */
+	ScriptStringinput::params_t pars;
+
 	std::string name;
 	tableLookup(L, "name", name) || tableLookup(L, "title", name) || tableLookup(L, "caption", name);
+	pars.name = name;
 
 	std::string value;
 	tableLookup(L, "value", value);
+	pars.value = value;
 
-	lua_Integer size = 30;
-	tableLookup(L, "size", size);
+	lua_Integer size;
+	if (tableLookup(L, "size", size))
+		pars.size = (int)size;
 
 	// TODO: Locales?
 
-	std::string valid_chars = "abcdefghijklmnopqrstuvwxyz0123456789!\"§$%&/()=?-.@,_: ";
-	tableLookup(L, "valid_chars", valid_chars);
+	std::string valid_chars;
+	if (tableLookup(L, "valid_chars", valid_chars))
+		pars.valid_chars = valid_chars;
 
 	// TODO: CChangeObserver?
 
-	std::string icon = std::string(NEUTRINO_ICON_INFO);
-	tableLookup(L, "icon", icon);
+	std::string icon;
+	if (tableLookup(L, "icon", icon))
+		pars.icon = icon;
 
 	lua_Integer sms = 0;
 	tableLookup(L, "sms", sms);
+	pars.sms = (sms != 0);
 
 	lua_Integer pin = 0;
 	tableLookup(L, "pin", pin);
+	pars.pin = (pin != 0);
 
-	if (sms && pin)
-		dprintf(DEBUG_NORMAL, "[CLuaInstance][%s - %d]: 'sms' AND 'pin' is defined! 'pin' will be prefered.\n", __func__, __LINE__);
+	std::string value_out = ScriptStringinput::exec(pars);
 
-	/* The PIN input is a dialog of its own now, no string input */
-	CMenuTarget *i;
-	if (pin)
-		i = new CPINInput(name, &value, size,
-				     NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL);
-	else
-		i = new CStringInput(name, &value, size,
-				     NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
-	i->exec(NULL, "");
-	delete i;
-
-	lua_pushstring(L, value.c_str());
+	lua_pushstring(L, value_out.c_str());
 
 	return 1;
 }

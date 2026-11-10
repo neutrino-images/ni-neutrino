@@ -16,6 +16,7 @@
  */
 
 #include "py_stringinput.h"
+#include <gui/scriptapi/scriptstringinput.h>
 
 #include <config.h>
 #include <cstdio>
@@ -51,40 +52,35 @@ PyObject *CPythonInstStringInput::StringInputExec(PyObject *self, PyObject *args
 		return NULL;
 	}
 
+	/* the size, the characters a value may hold and the icon a script did not
+	 * name come from the script api */
+	ScriptStringinput::params_t pars;
+
 	std::string name;
 	pyLookupString(kwds, "name", name) || pyLookupString(kwds, "title", name) || pyLookupString(kwds, "caption", name);
+	pars.name = name;
 
-	std::string value;
-	pyLookupString(kwds, "value", value);
+	pyLookupString(kwds, "value", pars.value);
 
-	long size = 30;
-	pyLookupInt(kwds, "size", size);
+	long size;
+	if (pyLookupInt(kwds, "size", size))
+		pars.size = (int)size;
 
-	std::string valid_chars = "abcdefghijklmnopqrstuvwxyz0123456789!\"$%&/()=?-.@,_: ";
-	pyLookupString(kwds, "valid_chars", valid_chars);
+	std::string valid_chars;
+	if (pyLookupString(kwds, "valid_chars", valid_chars))
+		pars.valid_chars = valid_chars;
 
-	std::string icon = std::string(NEUTRINO_ICON_INFO);
-	pyLookupString(kwds, "icon", icon);
+	std::string icon;
+	if (pyLookupString(kwds, "icon", icon))
+		pars.icon = icon;
 
 	bool sms = false, pin = false;
 	pyLookupBool(kwds, "sms", sms);
 	pyLookupBool(kwds, "pin", pin);
+	pars.sms = sms;
+	pars.pin = pin;
 
-	if (sms && pin)
-		dprintf(DEBUG_NORMAL, "[CPythonInstance][%s - %d]: 'sms' AND 'pin' is defined! 'pin' will be prefered.\n", __func__, __LINE__);
-
-	/* The PIN input is a dialog of its own now, no string input, and the
-	 * sms multi-tap input is gone with it: the dialog brings an on-screen
-	 * keyboard for letters instead, so "sms" is read and does nothing. */
-	CMenuTarget *i;
-	if (pin)
-		i = new CPINInput(name, &value, (int)size,
-				NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL);
-	else
-		i = new CStringInput(name, &value, (int)size,
-				NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, valid_chars.c_str(), NULL, icon.c_str());
-	i->exec(NULL, "");
-	delete i;
+	std::string value = ScriptStringinput::exec(pars);
 
 	return PyUnicode_FromStringAndSize(value.c_str(), (Py_ssize_t)value.length());
 }
