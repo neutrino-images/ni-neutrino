@@ -31,7 +31,8 @@ noinst_HEADERS = \
 	scriptapi/scripthourglass.h \
 	scriptapi/scriptstringinput.h \
 	scriptapi/scripthint.h \
-	scriptapi/scriptmessagebox.h
+	scriptapi/scriptmessagebox.h \
+	scriptapi/scriptmisc.h
 
 FORCE:
 
@@ -238,7 +239,8 @@ libneutrino_gui_scriptapi_a_SOURCES = \
 	scriptapi/scripthourglass.cpp \
 	scriptapi/scriptstringinput.cpp \
 	scriptapi/scripthint.cpp \
-	scriptapi/scriptmessagebox.cpp
+	scriptapi/scriptmessagebox.cpp \
+	scriptapi/scriptmisc.cpp
 
 libtimerlist_a_SOURCES = \
 	timerlist.cpp
