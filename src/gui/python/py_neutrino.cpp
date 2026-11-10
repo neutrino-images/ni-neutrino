@@ -88,20 +88,7 @@ Font *CPythonInstNeutrino::fontFromArgs(PyObject *self, PyObject *args, Py_ssize
 		return NULL;
 	}
 
-	if (!isDynFont)
-	{
-		if (value >= SNeutrinoSettings::FONT_TYPE_COUNT || value < 0)
-			value = SNeutrinoSettings::FONT_TYPE_MENU;
-		return g_Font[value];
-	}
-
-	for (pyfontmap_iterator_t it = W->fontmap.begin(); it != W->fontmap.end(); ++it)
-		if (it->first == value)
-			return it->second;
-
-	printf("[CPythonInstNeutrino::%s] no font found\n", __func__);
-	found = false;
-	return NULL;
+	return ScriptNeutrino::FontOf(W->fontmap, value, isDynFont, found);
 }
 
 /* neutrino.new(x=SCREEN["OFF_X"], y=SCREEN["OFF_Y"],

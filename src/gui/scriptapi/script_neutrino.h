@@ -33,12 +33,55 @@
 #ifndef _SCRIPT_NEUTRINO_H
 #define _SCRIPT_NEUTRINO_H
 
+#include <cstdio>
+#include <map>
+
+#include <global.h>
+#include <system/settings.h>
+
 #include <driver/fb_generic.h>
 #include <driver/fb_window.h>
+
+class Font;
+
+/* The dynamic fonts one window of the API owns, under the numbers the script
+ * made them with. Both bindings hold one of these in the handle of their
+ * window, and hand it over here. */
+typedef std::map<long, Font *> ScriptFontMap;
 
 class ScriptNeutrino
 {
 	public:
+		/* The font a call names: a number into the box's own fonts, or, where
+		 * the call said so, one of this window's dynamic fonts. Where the
+		 * window has no such font, found comes back false and the call is
+		 * answered as the bindings answered it.
+		 *
+		 * A template, because the two bindings keep that map under different
+		 * keys - int in the Lua one, long in the Python one - and the question
+		 * asked of it is the same either way. */
+		template <typename MapT>
+		static Font *FontOf(const MapT &fontmap, long value, bool isDynFont, bool &found)
+		{
+			found = true;
+
+			if (!isDynFont)
+			{
+				/* font number, use FONT_TYPE_XXX in the script */
+				if (value >= SNeutrinoSettings::FONT_TYPE_COUNT || value < 0)
+					value = SNeutrinoSettings::FONT_TYPE_MENU;
+				return g_Font[value];
+			}
+
+			for (typename MapT::const_iterator it = fontmap.begin(); it != fontmap.end(); ++it)
+				if (it->first == value)
+					return it->second;
+
+			printf("[ScriptNeutrino::%s] no font found\n", __func__);
+			found = false;
+			return NULL;
+		}
+
 		/* w.PaintBox(x, y, w, h, color[, radius[, corner]]) */
 		static void PaintBox(CFBWindow *fbwin, int x, int y, int w, int h,
 				unsigned long color, int radius, int corner);

@@ -19,9 +19,16 @@
  */
 
 #include <config.h>
+#include <cstdio>
+
+#include <global.h>
+#include <system/settings.h>
 
 #include "script_color.h"
 #include "script_neutrino.h"
+
+/* The font a call names stands in script_neutrino.h, as a template: the two
+ * bindings keep the map of a window's dynamic fonts under different keys. */
 
 /* The three notes below are the ones both bindings carried: the numbers a
  * script gives are clamped to the framebuffer window, and the comment that

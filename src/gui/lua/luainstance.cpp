@@ -1127,30 +1127,12 @@ int CLuaInstance::RenderString(lua_State *L)
 		step = 1;
 	}
 
-	if (!isDynFont)
+	bool found = true;
+	font = ScriptNeutrino::FontOf(W->fontmap, luaL_checkint(L, 2 + step), isDynFont, found);
+	if (!found)
 	{
-		int f = luaL_checkint(L, 2 + step);	/* font number, use FONT_TYPE_XXX in the script */
-		if (f >= SNeutrinoSettings::FONT_TYPE_COUNT || f < 0)
-			f = SNeutrinoSettings::FONT_TYPE_MENU;
-		font = g_Font[f];
-	}
-	else
-	{
-		int id = luaL_checkint(L, 2 + step);	/* dynfont */
-		for (fontmap_iterator_t it = W->fontmap.begin(); it != W->fontmap.end(); ++it)
-		{
-			if (it->first == id)
-			{
-				font = it->second;
-				break;
-			}
-		}
-		if (font == NULL)
-		{
-			printf("[CLuaInstance::%s:%d] no font found\n", __func__, __LINE__);
-			lua_pushinteger(L, 0); /* no font found */
-			return 1;
-		}
+		lua_pushinteger(L, 0); /* no font found */
+		return 1;
 	}
 
 	text = luaL_checkstring(L, 3 + step);	/* text */
@@ -1200,30 +1182,12 @@ int CLuaInstance::getRenderWidth(lua_State *L)
 		step = 1;
 	}
 
-	if (!isDynFont)
+	bool found = true;
+	font = ScriptNeutrino::FontOf(W->fontmap, luaL_checkint(L, 2 + step), isDynFont, found);
+	if (!found)
 	{
-		int f = luaL_checkint(L, 2 + step);	/* font number, use FONT_TYPE_XXX in the script */
-		if (f >= SNeutrinoSettings::FONT_TYPE_COUNT || f < 0)
-			f = SNeutrinoSettings::FONT_TYPE_MENU;
-		font = g_Font[f];
-	}
-	else
-	{
-		int id = luaL_checkint(L, 2 + step);	/* dynfont */
-		for (fontmap_iterator_t it = W->fontmap.begin(); it != W->fontmap.end(); ++it)
-		{
-			if (it->first == id)
-			{
-				font = it->second;
-				break;
-			}
-		}
-		if (font == NULL)
-		{
-			printf("[CLuaInstance::%s:%d] no font found\n", __func__, __LINE__);
-			lua_pushinteger(L, 0); /* no font found */
-			return 1;
-		}
+		lua_pushinteger(L, 0); /* no font found */
+		return 1;
 	}
 
 	text = luaL_checkstring(L, 3 + step);	/* text */
@@ -1250,30 +1214,12 @@ int CLuaInstance::FontHeight(lua_State *L)
 		step = 1;
 	}
 
-	if (!isDynFont)
+	bool found = true;
+	font = ScriptNeutrino::FontOf(W->fontmap, luaL_checkint(L, 2 + step), isDynFont, found);
+	if (!found)
 	{
-		int f = luaL_checkint(L, 2 + step);	/* font number, use FONT_TYPE_XXX in the script */
-		if (f >= SNeutrinoSettings::FONT_TYPE_COUNT || f < 0)
-			f = SNeutrinoSettings::FONT_TYPE_MENU;
-		font = g_Font[f];
-	}
-	else
-	{
-		int id = luaL_checkint(L, 2 + step);	/* dynfont */
-		for (fontmap_iterator_t it = W->fontmap.begin(); it != W->fontmap.end(); ++it)
-		{
-			if (it->first == id)
-			{
-				font = it->second;
-				break;
-			}
-		}
-		if (font == NULL)
-		{
-			printf("[CLuaInstance::%s:%d] no font found\n", __func__, __LINE__);
-			lua_pushinteger(L, 0); /* no font found */
-			return 1;
-		}
+		lua_pushinteger(L, 0); /* no font found */
+		return 1;
 	}
 
 	lua_pushinteger(L, (int)font->getHeight());
