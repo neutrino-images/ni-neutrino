@@ -33,6 +33,7 @@
 
 #include "luainstance.h"
 #include "lua_messagebox.h"
+#include <gui/scriptapi/scriptmessagebox.h>
 
 CLuaInstMessagebox* CLuaInstMessagebox::getInstance()
 {
@@ -63,31 +64,25 @@ int CLuaInstMessagebox::MessageboxExec(lua_State *L)
 {
 	lua_assert(lua_istable(L,1));
 
-	std::string name, text, icon = std::string(NEUTRINO_ICON_INFO), txtMode = "";
-	tableLookup(L, "name", name) || tableLookup(L, "title", name) || tableLookup(L, "caption", name);
-	tableLookup(L, "text", text);
-	tableLookup(L, "icon", icon);
-	lua_Integer timeout = -1, width = MSGBOX_MIN_WIDTH, return_default_on_timeout = 0, show_buttons = 0, default_button = 0, text_mode = 0;
+	ScriptMessagebox::params_t pars;
+	pars.icon = std::string(NEUTRINO_ICON_INFO);
+	pars.width = MSGBOX_MIN_WIDTH;
+	pars.timeout = -1;
+	pars.return_default_on_timeout = 0;
+
+	lua_Integer timeout = pars.timeout, width = pars.width, return_default_on_timeout = pars.return_default_on_timeout;
+	tableLookup(L, "name", pars.name) || tableLookup(L, "title", pars.name) || tableLookup(L, "caption", pars.name);
+	tableLookup(L, "text", pars.text);
+	tableLookup(L, "icon", pars.icon);
 	tableLookup(L, "timeout", timeout);
 	tableLookup(L, "width", width);
 	tableLookup(L, "return_default_on_timeout", return_default_on_timeout);
-	tableLookup(L, "text_mode", txtMode);
-
-	std::string tmp;
-	if (tableLookup(L, "align", tmp)) {
-		table_key mb[] = {
-			{ "center1",	CMsgBox::mbBtnAlignCenter1 },
-			{ "center2",	CMsgBox::mbBtnAlignCenter2 },
-			{ "left",	CMsgBox::mbBtnAlignLeft },
-			{ "right",	CMsgBox::mbBtnAlignRight },
-			{ NULL,		0 }
-		};
-		for (int i = 0; mb[i].name; i++)
-			if (!strcmp(mb[i].name, tmp.c_str())) {
-				show_buttons |= mb[i].code;
-				break;
-			}
-	}
+	tableLookup(L, "text_mode", pars.text_mode);
+	tableLookup(L, "align", pars.align);
+	tableLookup(L, "default", pars.default_button);
+	pars.timeout = (int)timeout;
+	pars.width = (int)width;
+	pars.return_default_on_timeout = (int)return_default_on_timeout;
 
 	lua_pushstring(L, "buttons");
 	lua_gettable(L, -2);
@@ -96,78 +91,18 @@ int CLuaInstMessagebox::MessageboxExec(lua_State *L)
 		for (lua_pushnil(L); lua_next(L, -2); lua_pop(L, 2)) {
 			lua_pushvalue(L, -2);
 			const char *val = lua_tostring(L, -2);
-			if (val == NULL)
-				continue;
-			table_key mb[] = {
-				{ "yes",	CMsgBox::mbYes },
-				{ "no",		CMsgBox::mbNo },
-				{ "cancel",	CMsgBox::mbCancel },
-				{ "all",	CMsgBox::mbAll },
-				{ "back",	CMsgBox::mbBack },
-				{ "ok",		CMsgBox::mbOk },
-				{ NULL,		0 }
-			};
-			for (int i = 0; mb[i].name; i++)
-				if (!strcmp(mb[i].name, val)) {
-					show_buttons |= mb[i].code;
-					break;
-				}
+			if (val != NULL)
+				pars.buttons.push_back(val);
 		}
 	lua_pop(L, 1);
-	if ((show_buttons & 0xFF) == 0)
-		show_buttons |= CMsgBox::mbAll;
 
-	table_key mbr[] = {
-		{ "yes",	CMsgBox::mbrYes },
-		{ "no",		CMsgBox::mbrNo },
-		{ "cancel",	CMsgBox::mbrCancel },
-		{ "back",	CMsgBox::mbrBack },
-		{ "ok",		CMsgBox::mbrOk },
-		{ NULL,		0 }
-	};
-	if (tableLookup(L, "default", tmp)) {
-		for (int i = 0; mbr[i].name; i++)
-			if (!strcmp(mbr[i].name, tmp.c_str())) {
-				default_button = mbr[i].code;
-				break;
-			}
-	}
-
-	if (!txtMode.empty()) {
-		table_key txt_align[] = {
-			{ "ALIGN_AUTO_WIDTH",		CTextBox::AUTO_WIDTH },
-			{ "ALIGN_AUTO_HIGH",		CTextBox::AUTO_HIGH },
-			{ "ALIGN_SCROLL",		CTextBox::SCROLL },
-			{ "ALIGN_CENTER",		CTextBox::CENTER },
-			{ "ALIGN_RIGHT",		CTextBox::RIGHT },
-			{ "ALIGN_TOP",			CTextBox::TOP },
-			{ "ALIGN_BOTTOM",		CTextBox::BOTTOM },
-			{ "ALIGN_NO_AUTO_LINEBREAK",	CTextBox::NO_AUTO_LINEBREAK },
-			{ "DECODE_HTML",		0 },
-			{ NULL,				0 }
-		};
-		for (int i = 0; txt_align[i].name; i++) {
-			if (txtMode.find(txt_align[i].name) != std::string::npos){
-				text_mode |= txt_align[i].code;
-			}
-		}
-		if (txtMode.find("DECODE_HTML") != std::string::npos)
-			htmlEntityDecode(text);
-	}
-	else
-		text_mode = DEFAULT_MSGBOX_TEXT_MODE;
-
+	/* the words of the buttons, of the alignment and of the text mode are
+	 * the script api's; this binding reads them and hands them over */
 	CLuaInstance::scriptUiOpen();
-	int res = ShowMsg(name, text, (CMsgBox::msg_result_t) default_button, (CMsgBox::button_define_t) show_buttons, icon.empty() ? NULL : icon.c_str(), width, timeout, return_default_on_timeout, text_mode);
+	std::string answer = ScriptMessagebox::exec(pars);
 	CLuaInstance::scriptUiClose();
 
-	tmp = "cancel";
-	for (int i = 0; mbr[i].name; i++)
-		if (res == mbr[i].code) {
-			tmp = mbr[i].name;
-			break;
-		}
-	lua_pushstring(L, tmp.c_str());
+	lua_pushstring(L, answer.c_str());
 
 	return 1;
 }

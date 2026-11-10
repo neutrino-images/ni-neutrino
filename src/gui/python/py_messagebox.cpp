@@ -30,6 +30,7 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
+#include <gui/scriptapi/scriptmessagebox.h>
 
 CPythonInstMessagebox *CPythonInstMessagebox::getInstance()
 {
@@ -56,49 +57,29 @@ PyObject *CPythonInstMessagebox::MessageboxExec(PyObject *self, PyObject *args, 
 		return NULL;
 	}
 
-	std::string name, text, icon = std::string(NEUTRINO_ICON_INFO), txtMode = "";
-	pyLookupString(kwds, "name", name) || pyLookupString(kwds, "title", name) || pyLookupString(kwds, "caption", name);
-	pyLookupString(kwds, "text", text);
-	pyLookupString(kwds, "icon", icon);
+	ScriptMessagebox::params_t pars;
+	pars.icon = std::string(NEUTRINO_ICON_INFO);
+	pars.width = MSGBOX_MIN_WIDTH;
+	pars.timeout = -1;
+	pars.return_default_on_timeout = 0;
 
-	long timeout = -1, width = MSGBOX_MIN_WIDTH, return_default_on_timeout = 0;
-	long show_buttons = 0, default_button = 0, text_mode = 0;
+	long timeout = pars.timeout, width = pars.width, return_default_on_timeout = pars.return_default_on_timeout;
+	pyLookupString(kwds, "name", pars.name) || pyLookupString(kwds, "title", pars.name) || pyLookupString(kwds, "caption", pars.name);
+	pyLookupString(kwds, "text", pars.text);
+	pyLookupString(kwds, "icon", pars.icon);
 	pyLookupInt(kwds, "timeout", timeout);
 	pyLookupInt(kwds, "width", width);
 	pyLookupInt(kwds, "return_default_on_timeout", return_default_on_timeout);
-	pyLookupString(kwds, "text_mode", txtMode);
-
-	std::string tmp;
-	if (pyLookupString(kwds, "align", tmp))
-	{
-		static const struct { const char *name; long code; } mb[] = {
-			{ "center1", CMsgBox::mbBtnAlignCenter1 },
-			{ "center2", CMsgBox::mbBtnAlignCenter2 },
-			{ "left",    CMsgBox::mbBtnAlignLeft },
-			{ "right",   CMsgBox::mbBtnAlignRight },
-			{ NULL, 0 }
-		};
-		for (int i = 0; mb[i].name; i++)
-			if (!strcmp(mb[i].name, tmp.c_str()))
-			{
-				show_buttons |= mb[i].code;
-				break;
-			}
-	}
+	pyLookupString(kwds, "text_mode", pars.text_mode);
+	pyLookupString(kwds, "align", pars.align);
+	pyLookupString(kwds, "default", pars.default_button);
+	pars.timeout = (int)timeout;
+	pars.width = (int)width;
+	pars.return_default_on_timeout = (int)return_default_on_timeout;
 
 	PyObject *buttons = NULL;
 	if (pyLookupList(kwds, "buttons", &buttons))
 	{
-		static const struct { const char *name; long code; } mb[] = {
-			{ "yes",    CMsgBox::mbYes },
-			{ "no",     CMsgBox::mbNo },
-			{ "cancel", CMsgBox::mbCancel },
-			{ "all",    CMsgBox::mbAll },
-			{ "back",   CMsgBox::mbBack },
-			{ "ok",     CMsgBox::mbOk },
-			{ NULL, 0 }
-		};
-
 		Py_ssize_t count = PySequence_Size(buttons);
 		for (Py_ssize_t i = 0; i < count; i++)
 		{
@@ -112,75 +93,18 @@ PyObject *CPythonInstMessagebox::MessageboxExec(PyObject *self, PyObject *args, 
 			if (val == NULL)
 				PyErr_Clear();
 			else
-				for (int j = 0; mb[j].name; j++)
-					if (!strcmp(mb[j].name, val))
-					{
-						show_buttons |= mb[j].code;
-						break;
-					}
+				pars.buttons.push_back(val);
 			Py_DECREF(item);
 		}
 	}
-	if ((show_buttons & 0xFF) == 0)
-		show_buttons |= CMsgBox::mbAll;
 
-	static const struct { const char *name; long code; } mbr[] = {
-		{ "yes",    CMsgBox::mbrYes },
-		{ "no",     CMsgBox::mbrNo },
-		{ "cancel", CMsgBox::mbrCancel },
-		{ "back",   CMsgBox::mbrBack },
-		{ "ok",     CMsgBox::mbrOk },
-		{ NULL, 0 }
-	};
-	if (pyLookupString(kwds, "default", tmp))
-	{
-		for (int i = 0; mbr[i].name; i++)
-			if (!strcmp(mbr[i].name, tmp.c_str()))
-			{
-				default_button = mbr[i].code;
-				break;
-			}
-	}
-
-	if (!txtMode.empty())
-	{
-		static const struct { const char *name; long code; } txt_align[] = {
-			{ "ALIGN_AUTO_WIDTH",        CTextBox::AUTO_WIDTH },
-			{ "ALIGN_AUTO_HIGH",         CTextBox::AUTO_HIGH },
-			{ "ALIGN_SCROLL",            CTextBox::SCROLL },
-			{ "ALIGN_CENTER",            CTextBox::CENTER },
-			{ "ALIGN_RIGHT",             CTextBox::RIGHT },
-			{ "ALIGN_TOP",               CTextBox::TOP },
-			{ "ALIGN_BOTTOM",            CTextBox::BOTTOM },
-			{ "ALIGN_NO_AUTO_LINEBREAK", CTextBox::NO_AUTO_LINEBREAK },
-			{ "DECODE_HTML",             0 },
-			{ NULL, 0 }
-		};
-		for (int i = 0; txt_align[i].name; i++)
-			if (txtMode.find(txt_align[i].name) != std::string::npos)
-				text_mode |= txt_align[i].code;
-		if (txtMode.find("DECODE_HTML") != std::string::npos)
-			htmlEntityDecode(text);
-	}
-	else
-		text_mode = DEFAULT_MSGBOX_TEXT_MODE;
-
+	/* the words of the buttons, of the alignment and of the text mode are
+	 * the script api's; this binding reads them and hands them over */
 	CPythonInstance::scriptUiOpen();
-	int res = ShowMsg(name, text, (CMsgBox::msg_result_t)default_button,
-			(CMsgBox::button_define_t)show_buttons,
-			icon.empty() ? NULL : icon.c_str(),
-			(int)width, (int)timeout, (int)return_default_on_timeout, (int)text_mode);
+	std::string answer = ScriptMessagebox::exec(pars);
 	CPythonInstance::scriptUiClose();
 
-	tmp = "cancel";
-	for (int i = 0; mbr[i].name; i++)
-		if (res == mbr[i].code)
-		{
-			tmp = mbr[i].name;
-			break;
-		}
-
-	return PyUnicode_FromString(tmp.c_str());
+	return PyUnicode_FromString(answer.c_str());
 }
 
 bool CPythonInstMessagebox::MessageboxRegister(PyObject *module)
