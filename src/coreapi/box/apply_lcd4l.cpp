@@ -65,6 +65,17 @@ SentFlags g_flags;
 const unsigned kModeSent = 1;
 const unsigned kLookSent = 2;
 
+/* The Samsung panels (types 1 to 3) have no backlight to set: their driver in
+   lcd4linux darkens the picture itself and reads the brightness file again on
+   every update of the panel. The service's thread writes that file on its next
+   pass, as it does the standby brightness, so nothing has to be rewritten and the
+   daemon is not restarted. The Pearl panel's driver reads the file only as it
+   starts. */
+bool panelReadsBrightnessLive(int display_type)
+{
+	return display_type >= 1 && display_type <= 3;
+}
+
 Status runLcd4l()
 {
 	Lcd4lControl &c = lcd4lControl();
@@ -77,7 +88,8 @@ Status runLcd4l()
 	mode = g_settings.lcd4l_support;
 	look[0] = g_settings.lcd4l_display_type;
 	look[1] = g_settings.lcd4l_skin;
-	look[2] = g_settings.lcd4l_brightness;
+	// Left out where the panel follows the file by itself, so a new value there is no change of the look.
+	look[2] = panelReadsBrightnessLive(g_settings.lcd4l_display_type) ? 0 : g_settings.lcd4l_brightness;
 	look[3] = g_settings.lcd4l_screenshots;
 #endif
 

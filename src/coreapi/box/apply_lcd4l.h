@@ -36,7 +36,9 @@ struct Lcd4lControl
 
 	// Stops the service, and starts it again when the mode is not nought.
 	virtual Status restartService(int mode) = 0;
-	// Writes every file again, for a panel, a skin or a brightness that changed.
+	/* Writes every file again, for a panel, a skin or a brightness that changed.
+	   The daemon is restarted by it. Not called for the brightness of a Samsung
+	   panel, whose driver reads the file as it runs. */
 	virtual Status reinit() = 0;
 	// Tells the automatic mode not to wait for the daemon to show up.
 	virtual Status forceRun() = 0;
@@ -65,7 +67,9 @@ void resetSentLcd4l();
    screenshot switch. The application starts the service itself at the end of
    its startup, since the thread reads objects that exist only then, so the first
    run only learns the mode and sends nothing; every later run starts, stops or
-   rewrites what differs from what the last one saw, on the apply worker. */
+   rewrites what differs from what the last one saw, on the apply worker. The
+   brightness of a Samsung panel rewrites nothing: the service's thread writes
+   it on its next pass and the panel's driver reads it as it runs. */
 extern const ApplyGroup kLcd4lApplyGroup;
 
 } // namespace coreapi
