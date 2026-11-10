@@ -22,13 +22,15 @@
 #ifndef _LUACCPICTURE_H
 #define _LUACCPICTURE_H
 
-class CLuaCCPicture
+#include <gui/scriptapi/scriptpicture.h>
+
+/* The picture a script made, held as the shared ScriptPicture: what is done
+ * with it is the same for every interpreter, and this binding only fills its
+ * parameters out of a lua table. */
+class CLuaCCPicture : public ScriptPicture
 {
 	public:
-		CComponentsPicture *cp;
-		CComponentsForm *parent;
-		CLuaCCPicture() { cp = NULL; parent = NULL; }
-		~CLuaCCPicture() { if (parent == NULL) delete cp; }
+		explicit CLuaCCPicture(const params_t &pars) : ScriptPicture(pars) {}
 };
 
 class CLuaInstCCPicture

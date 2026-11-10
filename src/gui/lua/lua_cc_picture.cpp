@@ -113,22 +113,23 @@ int CLuaInstCCPicture::CCPictureNew(lua_State *L)
 	tableLookup(L, "color_shadow",     color_shadow);
 	tableLookup(L, "transparency",     transparency);
 
-	color_frame      = checkMagicMask(color_frame);
-	color_background = checkMagicMask(color_background);
-	color_shadow     = checkMagicMask(color_shadow);
-
-	CComponentsForm* pw = (parent && parent->sw) ? parent->sw->body() : NULL;
+	/* The size, the colours and who deletes the picture are the script api's;
+	 * this binding reads them and hands them over. */
+	ScriptPicture::params_t pars;
+	pars.parent           = (parent && parent->sw) ? parent->sw->body() : NULL;
+	pars.x                = (int)x;
+	pars.y                = (int)y;
+	pars.dx               = (int)dx;
+	pars.dy               = (int)dy;
+	pars.image            = image_name;
+	pars.has_shadow       = has_shadow;
+	pars.transparency     = (int)transparency;
+	pars.color_frame      = (unsigned long)color_frame;
+	pars.color_background = (unsigned long)color_background;
+	pars.color_shadow     = (unsigned long)color_shadow;
 
 	CLuaCCPicture **udata = (CLuaCCPicture **) lua_newuserdata(L, sizeof(CLuaCCPicture *));
-	*udata = new CLuaCCPicture();
-	if (dx == 0 && dy == 0) /* NO_SCALE */
-		(*udata)->cp = new CComponentsPicture(x, y, image_name, pw, has_shadow, (fb_pixel_t)color_frame, (fb_pixel_t)color_background, (fb_pixel_t)color_shadow, transparency);
-	else
-		(*udata)->cp = new CComponentsPicture(x, y, dx, dy, image_name, pw, has_shadow, (fb_pixel_t)color_frame, (fb_pixel_t)color_background, (fb_pixel_t)color_shadow, transparency);
-
-	(*udata)->cp->doPaintBg(true);
-	(*udata)->cp->setCornerType(CORNER_NONE);
-	(*udata)->parent = pw;
+	*udata = new CLuaCCPicture(pars);
 	luaL_getmetatable(L, LUA_CPICTURE);
 	lua_setmetatable(L, -2);
 	return 1;

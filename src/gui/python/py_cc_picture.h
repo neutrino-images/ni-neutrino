@@ -29,13 +29,15 @@
 
 #include <gui/components/cc.h>
 
-class CPyCCPicture
+#include <gui/scriptapi/scriptpicture.h>
+
+/* The picture a script made, held as the shared ScriptPicture: what is done
+ * with it is the same for every interpreter, and this binding only fills its
+ * parameters out of a keyword table. */
+class CPyCCPicture : public ScriptPicture
 {
 	public:
-		CComponentsPicture *cp;
-		CComponentsForm *parent;
-		CPyCCPicture() { cp = NULL; parent = NULL; }
-		~CPyCCPicture() { if (parent == NULL) delete cp; }
+		explicit CPyCCPicture(const params_t &pars) : ScriptPicture(pars) {}
 };
 
 class CPythonInstCCPicture

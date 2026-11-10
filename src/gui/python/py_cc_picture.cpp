@@ -96,6 +96,21 @@ PyObject *CPythonInstCCPicture::CCPictureNew(PyTypeObject *type, PyObject *args,
 	pyLookupUnsigned(kwds, "color_shadow", color_shadow);
 	pyLookupInt(kwds, "transparency", transparency);
 
+	/* The size, the colours and who deletes the picture are the script api's;
+	 * this binding reads them and hands them over. */
+	ScriptPicture::params_t pars;
+	pars.parent           = pw;
+	pars.x                = (int)x;
+	pars.y                = (int)y;
+	pars.dx               = (int)dx;
+	pars.dy               = (int)dy;
+	pars.image            = image_name;
+	pars.has_shadow       = has_shadow;
+	pars.transparency     = (int)transparency;
+	pars.color_frame      = color_frame;
+	pars.color_background = color_background;
+	pars.color_shadow     = color_shadow;
+
 	PyCCPictureObject *self = (PyCCPictureObject *)type->tp_alloc(type, 0);
 	if (self == NULL)
 	{
@@ -103,23 +118,7 @@ PyObject *CPythonInstCCPicture::CCPictureNew(PyTypeObject *type, PyObject *args,
 		return NULL;
 	}
 
-	self->d = new CPyCCPicture();
-	if (dx == 0 && dy == 0) /* NO_SCALE */
-		self->d->cp = new CComponentsPicture((int)x, (int)y, image_name, pw, has_shadow,
-				(fb_pixel_t)pyCheckMagicMask((unsigned int)color_frame),
-				(fb_pixel_t)pyCheckMagicMask((unsigned int)color_background),
-				(fb_pixel_t)pyCheckMagicMask((unsigned int)color_shadow),
-				(int)transparency);
-	else
-		self->d->cp = new CComponentsPicture((int)x, (int)y, (int)dx, (int)dy, image_name, pw, has_shadow,
-				(fb_pixel_t)pyCheckMagicMask((unsigned int)color_frame),
-				(fb_pixel_t)pyCheckMagicMask((unsigned int)color_background),
-				(fb_pixel_t)pyCheckMagicMask((unsigned int)color_shadow),
-				(int)transparency);
-
-	self->d->cp->doPaintBg(true);
-	self->d->cp->setCornerType(CORNER_NONE);
-	self->d->parent = pw;
+	self->d = new CPyCCPicture(pars);
 	return (PyObject *)self;
 }
 
