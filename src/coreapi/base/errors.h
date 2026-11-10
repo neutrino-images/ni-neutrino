@@ -82,6 +82,9 @@ enum class ErrorCode
 	/* Nothing was minted under that token, or what was is older than a minted
 	   address is kept for. Either way the caller reads the playlist again. */
 	NoSuchPart,
+	/* The update directory holds no plain file under that name. It was taken away
+	   between the listing and the act built on it, or it never was there. */
+	NoSuchUpdateFile,
 
 	// Nothing to answer with, though the thing asked about is known.
 	NoRunningChannel,
@@ -95,6 +98,9 @@ enum class ErrorCode
 	   ended. Not a no-such-something: nothing was named, the shift is a single
 	   thing the box either keeps or does not. */
 	NoTimeshift,
+	/* Nothing on the box can ask the update server whether it has a newer
+	   image: a build that is not the box's own program. */
+	NoUpdateCheck,
 
 	// The request itself is wrong.
 	EmptyWindow,
@@ -460,11 +466,13 @@ inline const char *codeString(ErrorCode c)
 		case ErrorCode::NoSuchRecording: return "no-such-recording";
 		case ErrorCode::NoSuchTool: return "no-such-tool";
 		case ErrorCode::NoSuchPart: return "no-such-part";
+		case ErrorCode::NoSuchUpdateFile: return "no-such-update-file";
 		case ErrorCode::NoRunningChannel: return "no-running-channel";
 		case ErrorCode::NoMode: return "no-mode";
 		case ErrorCode::NoCurrentEvent: return "no-current-event";
 		case ErrorCode::NoTuner: return "no-tuner";
 		case ErrorCode::NoTimeshift: return "no-timeshift";
+		case ErrorCode::NoUpdateCheck: return "no-update-check";
 		case ErrorCode::EmptyWindow: return "empty-window";
 		case ErrorCode::QueryTooShort: return "query-too-short";
 		case ErrorCode::NoRoomForAResult: return "no-room-for-a-result";

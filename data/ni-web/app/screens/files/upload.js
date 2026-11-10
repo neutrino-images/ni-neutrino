@@ -1,10 +1,11 @@
 /* Putting one file on the box.
  *
  * The ceiling is said before a file is picked and not after one is refused. The body
- * of a request reaches this server whole, so how large one may be is the transport's
- * ceiling on a body and there is no larger one behind it. A person who reaches for a
- * recording has to read that this is not the way recordings travel, and reading it
- * after a minute of sending is reading it too late.
+ * of a request reaches this server whole, so how large one may be is what the route
+ * takes, five mebibytes, enough for an image update (*.bin) and more than any other
+ * route takes. A person who reaches for a recording has to read that this is not the
+ * way recordings travel, and reading it after a minute of sending is reading it too
+ * late.
  *
  * The number is written here because nothing the box answers states it, and it is
  * written once, beside the one call that runs into it. The box stays the authority: a
@@ -23,8 +24,8 @@
  * way a browser reports how much of a body has gone out is XMLHttpRequest, every call
  * this page places goes through one file, and a check refuses that name anywhere in
  * the application because the second token, the one retry and the shape of a refusal
- * all live in that one file. What is left is a ceiling of a mebibyte and a way to
- * stop it. */
+ * all live in that one file. What is left is a ceiling of five mebibytes and a way
+ * to stop it. */
 
 import { html, useState, useRef } from '../../runtime.js';
 import { api } from '../../api.js';
@@ -36,8 +37,8 @@ import text from './files.text.js';
 import { joinPath } from './paths.js';
 import { problemOf } from './answer.js';
 
-// What the transport takes, one mebibyte, as server.cpp sets it.
-const CEILING = 1024 * 1024;
+// What the route takes, five mebibytes, as bodyCeilingFor() in ep_storage.cpp sets it.
+const CEILING = 5 * 1024 * 1024;
 
 /**
  * @param {{ dir: string, onDone: () => void }} props
@@ -52,6 +53,8 @@ export function Upload(props) {
 	const [refused, setRefused] = useState('');
 	const [taken, setTaken] = useState('');
 	const [problem, setProblem] = useState(/** @type {string} */ (''));
+	// Whether a file is being dragged over the field right now.
+	const [over, setOver] = useState(false);
 	const control = useRef(/** @type {AbortController | null} */ (null));
 	const field = useRef(/** @type {HTMLInputElement | null} */ (null));
 
@@ -67,11 +70,8 @@ export function Upload(props) {
 		}
 	}
 
-	/** @param {Event} event */
-	function pick(event) {
-		const input = /** @type {HTMLInputElement} */ (event.currentTarget);
-		const list = input.files;
-		const file = (list && list.length > 0) ? list[0] : null;
+	/** @param {File | null} file */
+	function take(file) {
 		setTaken('');
 		setProblem('');
 		if (!file) {
@@ -92,6 +92,42 @@ export function Upload(props) {
 		}
 		setChosen(file);
 		setRefused('');
+	}
+
+	/** @param {Event} event */
+	function pick(event) {
+		const input = /** @type {HTMLInputElement} */ (event.currentTarget);
+		const list = input.files;
+		take((list && list.length > 0) ? list.item(0) : null);
+	}
+
+	/* A file dragged onto the field is taken as if it had been picked. One
+	   file, as the picker offers: of several dropped at once the first. The
+	   browser's own answer to a drop, opening the file in place of this page,
+	   is what preventDefault holds back, on the way over as much as on the
+	   drop, or the drop never arrives. */
+	/** @param {DragEvent} event */
+	function dragOver(event) {
+		event.preventDefault();
+		if (event.dataTransfer)
+			event.dataTransfer.dropEffect = sending ? 'none' : 'copy';
+		if (!sending)
+			setOver(true);
+	}
+
+	/** @param {DragEvent} event */
+	function drop(event) {
+		event.preventDefault();
+		setOver(false);
+		if (sending)
+			return;
+		const list = event.dataTransfer ? event.dataTransfer.files : null;
+		if (!list || list.length === 0)
+			return;
+		// What the picker shows is what is chosen, so a drop clears it.
+		if (field.current)
+			field.current.value = '';
+		take(list.item(0));
 	}
 
 	/** @param {boolean} replace */
@@ -150,15 +186,31 @@ export function Upload(props) {
 	return html`<div class="files-panel">
 		<h2>${t(text, 'files.upload.title')}</h2>
 		<p class="files-hint" id="files-upload-ceiling">${t(text, 'files.upload.ceiling', { limit: limit })}</p>
-		<div class="files-form">
-			<label class="field">
-				<span class="label">${t(text, 'files.upload.label')}</span>
+		<div class="files-form files-upload-form">
+			<label
+				class="files-drop"
+				data-over=${over ? '' : undefined}
+				data-chosen=${chosen ? '' : undefined}
+				data-busy=${sending ? '' : undefined}
+				onDragOver=${dragOver}
+				onDragLeave=${function () { setOver(false); }}
+				onDrop=${drop}>
 				<input
 					type="file"
+					class="files-drop-input"
 					ref=${field}
 					disabled=${sending}
-					aria-describedby="files-upload-ceiling"
+					aria-label=${t(text, 'files.upload.label')}
+					aria-describedby="files-upload-what files-upload-ceiling"
 					onChange=${pick} />
+				<span class="btn files-drop-btn" aria-hidden="true">${t(text, 'files.upload.choose')}</span>
+				<span class="files-drop-what" id="files-upload-what">
+					${over
+						? t(text, 'files.upload.release')
+						: chosen
+							? html`<span class="files-drop-name">${chosen.name}</span><span class="files-drop-size">${bytes(chosen.size)}</span>`
+							: t(text, 'files.upload.none')}
+				</span>
 			</label>
 			${sending
 				? html`<${Button} class="files-upload-stop" onClick=${stop}>${t(text, 'files.upload.cancel')}<//>`
@@ -169,15 +221,18 @@ export function Upload(props) {
 					onClick=${function () { send(false); }}>${t(text, 'files.upload.send')}<//>`}
 		</div>
 		${sending && chosen
-			? html`<p class="files-hint" role="status">${t(text, 'files.upload.running', { name: chosen.name })}</p>`
+			? html`<p class="files-hint files-upload-note" role="status">${t(text, 'files.upload.running', { name: chosen.name })}</p>`
 			: null}
-		${refused ? html`<p class="files-hint" role="alert">${refused}</p>` : null}
+		${refused ? html`<p class="files-hint files-upload-note" role="alert">${refused}</p>` : null}
 		${taken
-			? html`<p class="files-hint" role="alert">
-				${taken}${' '}
-				<${Button} class="files-upload-replace" onClick=${function () { send(true); }}>${t(text, 'files.upload.replace')}<//>
-			</p>`
+			? html`<div class="files-upload-note" role="alert">
+				<p class="files-hint">${taken}</p>
+				<div class="files-upload-choice">
+					<${Button} class="files-upload-replace" onClick=${function () { send(true); }}>${t(text, 'files.upload.replace')}<//>
+					<${Button} class="files-upload-drop" onClick=${forget}>${t(text, 'files.upload.cancel')}<//>
+				</div>
+			</div>`
 			: null}
-		${problem ? html`<p class="files-hint" role="alert">${problem}</p>` : null}
+		${problem ? html`<p class="files-hint files-upload-note" role="alert">${problem}</p>` : null}
 	</div>`;
 }

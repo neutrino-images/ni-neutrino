@@ -83,6 +83,7 @@ const RouteTable *const kTables[] = {
 	&timersTable,
 	&osdTable,
 	&daemonsTable,
+	&updateTable,
 	&tunerTable,
 	&pluginsTable,
 	&configTable,

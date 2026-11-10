@@ -38,6 +38,10 @@ QRCODE_GENERATOR_VERSION=2.0.4
 # Pinned rather than taken from the machine, because a check whose strictness
 # depends on whoever last ran npm is not a check.
 TYPESCRIPT_VERSION=5.9.3
+# version ni-buildsystem's package/esbuild/esbuild.mk builds as host-esbuild;
+# check-web-strip.sh runs it over the pages the way --enable-web-strip does.
+# A binary per platform, from the registry and run without node.
+ESBUILD_VERSION=0.28.2
 
 REGISTRY="${NI_WEB_REGISTRY:-https://registry.npmjs.org}"
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -76,6 +80,26 @@ grab preact-router "$PREACT_ROUTER_VERSION"
 grab qrcode-generator "$QRCODE_GENERATOR_VERSION"
 grab typescript "$TYPESCRIPT_VERSION"
 
+case "$(uname -s)-$(uname -m)" in
+Linux-x86_64) ESBUILD_PLATFORM=linux-x64;;
+Linux-aarch64|Linux-arm64) ESBUILD_PLATFORM=linux-arm64;;
+Linux-armv7l|Linux-armv6l) ESBUILD_PLATFORM=linux-arm;;
+Linux-i?86) ESBUILD_PLATFORM=linux-ia32;;
+Darwin-arm64) ESBUILD_PLATFORM=darwin-arm64;;
+Darwin-x86_64) ESBUILD_PLATFORM=darwin-x64;;
+*) ESBUILD_PLATFORM=;;
+esac
+if [ -n "$ESBUILD_PLATFORM" ]; then
+	get "$REGISTRY/@esbuild/$ESBUILD_PLATFORM/-/$ESBUILD_PLATFORM-$ESBUILD_VERSION.tgz" "$WORK/esbuild.tgz"
+	mkdir -p "$WORK/esbuild"
+	tar xzf "$WORK/esbuild.tgz" -C "$WORK/esbuild"
+	rm -rf "$DEST/esbuild"
+	mv "$WORK/esbuild/package" "$DEST/esbuild"
+	chmod +x "$DEST/esbuild/bin/esbuild"
+else
+	echo "fetch-types.sh: no esbuild binary for $(uname -s)-$(uname -m); set NI_WEB_ESBUILD for check-web-strip.sh" >&2
+fi
+
 # The four files jsconfig.json and the check name. Said here rather than left
 # to the unpacking, so an archive that moved one of them fails now with the
 # name of the file instead of later with a type error nobody can place.
@@ -91,4 +115,4 @@ for f in preact/src/index.d.ts \
 	}
 done
 
-echo "fetch-types.sh: preact $PREACT_VERSION, htm $HTM_VERSION, preact-router $PREACT_ROUTER_VERSION, qrcode-generator $QRCODE_GENERATOR_VERSION and typescript $TYPESCRIPT_VERSION are under test/web/node_modules"
+echo "fetch-types.sh: preact $PREACT_VERSION, htm $HTM_VERSION, preact-router $PREACT_ROUTER_VERSION, qrcode-generator $QRCODE_GENERATOR_VERSION, typescript $TYPESCRIPT_VERSION${ESBUILD_PLATFORM:+ and esbuild $ESBUILD_VERSION} are under test/web/node_modules"

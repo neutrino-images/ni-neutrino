@@ -44,6 +44,8 @@
 
 #include <string>
 
+namespace coreapi { namespace update { struct Online; } }
+
 class CFlashUpdate : public CProgressWindow
 {
 	private:
@@ -56,18 +58,21 @@ class CFlashUpdate : public CProgressWindow
 		bool notify;
 
 		std::string newVersion;
+		std::string newVersionDescription;
 		int menu_ret;
 		int softupdate_mode;
 
 		void update_php(std::string &url, const char *type);
 		bool selectHttpImage(void);
-		bool getUpdateImage(const std::string &version);
+		bool getUpdateImage(const std::string &description);
 		bool checkVersion4Update();
 
 	public:
 		CFlashUpdate();
 		int exec(CMenuTarget *parent, const std::string &actionKey);
-		bool checkOnlineVersion();
+		/* Whether the server's list holds an image newer than the running
+		   one. With out, also what was found, for the web interface's note. */
+		bool checkOnlineVersion(coreapi::update::Online *out = NULL);
 		void enableNotify(bool enable) { notify = enable; }
 };
 

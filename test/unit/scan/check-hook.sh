@@ -107,6 +107,7 @@ coreapi::installRealSettingsSource
 coreapi::installRealPluginSource
 coreapi::installRealLocaleSource
 coreapi::installRealRecordingSafetySource
+coreapi::update::installRealOnlineSource
 installOsdResolutionSource
 "
 # The web server is started from the same object and is out of reach of a case for the

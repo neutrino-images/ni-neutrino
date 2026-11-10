@@ -57,6 +57,8 @@
 #include <system/helpers.h>
 #include <system/debug.h>
 
+#include <coreapi/update.h>
+
 #include <lib/libnet/libnet.h>
 
 #include <curl/curl.h>
@@ -174,7 +176,7 @@ void CFlashUpdate::update_php(std::string &url, const char *type)
 	}
 }
 
-bool CFlashUpdate::checkOnlineVersion() {
+bool CFlashUpdate::checkOnlineVersion(coreapi::update::Online *out) {
 	/* Copied under the lock: the update check runs this on a thread of its
 	   own, while the box's loop may assign the setting from a screen. */
 	const std::string url_file = settingsText(g_settings.softupdate_url_file);
@@ -197,6 +199,10 @@ bool CFlashUpdate::checkOnlineVersion() {
 	CFlashVersionInfo curInfo(versionString.c_str());
 	curVer = curInfo.getVersion();
 	dprintf(DEBUG_NORMAL, "[update] current flash-version: %s (%d) date %s (%" PRId64 ")\n", versionString.c_str(), curInfo.getVersion(), curInfo.getDate(), static_cast<int64_t>(curInfo.getDateTime()));
+	if (out) {
+		out->running.release = curInfo.getVersionString();
+		out->running.built = curInfo.getDateTime();
+	}
 
 	std::ifstream urlFile(url_file.c_str());
 	if (urlFile >> url)
@@ -226,6 +232,8 @@ bool CFlashUpdate::checkOnlineVersion() {
 			return false;
 		if (httpTool.downloadFile(url, gTmpPath LIST_OF_UPDATES_LOCAL_FILENAME, UPDATE_PROGRESS_LIST))
 		{
+			if (out)
+				out->reached = true;
 			std::ifstream in(gTmpPath LIST_OF_UPDATES_LOCAL_FILENAME);
 			while (in >> url >> version >> md5 >> std::ws)
 			{
@@ -237,6 +245,12 @@ bool CFlashUpdate::checkOnlineVersion() {
 				{
 					newfound = true;
 					dprintf(DEBUG_NORMAL, "[update] found new image\n");
+					if (out) {
+						out->newer = true;
+						out->found.release = versionInfo.getVersionString();
+						out->found.built = versionInfo.getDateTime();
+						out->name = name;
+					}
 					break;
 				}
 			}
@@ -381,6 +395,7 @@ bool CFlashUpdate::selectHttpImage(void)
 
 	filename = urls[selected];
 	newVersion = versions[selected];
+	newVersionDescription = descriptions[selected];
 	file_md5 = md5s[selected];
 	fileType = fileTypes[selected];
 	gotImage = (fileType <= '9');
@@ -408,7 +423,7 @@ bool CFlashUpdate::selectHttpImage(void)
 	return true;
 }
 
-bool CFlashUpdate::getUpdateImage(const std::string &version)
+bool CFlashUpdate::getUpdateImage(const std::string &description)
 {
 	CHTTPTool httpTool;
 	char const *fname;
@@ -422,7 +437,7 @@ bool CFlashUpdate::getUpdateImage(const std::string &version)
 		return false;
 
 	sprintf(dest_name, "%s/%s", g_settings.update_dir.c_str(), fname);
-	showStatusMessageUTF(std::string(g_Locale->getText(LOCALE_FLASHUPDATE_GETUPDATEFILE)) + ' ' + version);
+	showStatusMessageUTF(std::string(g_Locale->getText(LOCALE_FLASHUPDATE_GETUPDATEFILE)) + ": " + description);
 
 	dprintf(DEBUG_NORMAL, "[update] get update (url): %s - %s\n", filename.c_str(), dest_name);
 	return httpTool.downloadFile(filename, dest_name, UPDATE_PROGRESS_IMAGE);
@@ -561,7 +576,7 @@ int CFlashUpdate::exec(CMenuTarget *parent, const std::string &actionKey)
 		char const *fname = rindex(filename.c_str(), '/') + 1;
 		char fullname[255];
 
-		if (!getUpdateImage(newVersion))
+		if (!getUpdateImage(newVersionDescription))
 		{
 			hide();
 			DisplayErrorMessage(g_Locale->getText(LOCALE_FLASHUPDATE_GETUPDATEFILEERROR));
@@ -780,10 +795,9 @@ int CFlashUpdate::exec(CMenuTarget *parent, const std::string &actionKey)
 		showGlobalStatus(UPDATE_PROGRESS_INSTALL);
 		showStatusMessageUTF(g_Locale->getText(LOCALE_FLASHUPDATE_INSTALL));
 
-		std::string install_sh = find_executable("install.sh");
-		dprintf(DEBUG_NORMAL, "[update] calling %s %s %s\n", install_sh.c_str(), g_settings.update_dir.c_str(), filename.c_str());
+		// The same call the web interface's image update makes, which says what it runs.
 #ifndef DRYRUN
-		my_system(3, install_sh.c_str(), g_settings.update_dir.c_str(), filename.c_str());
+		coreapi::update::install(g_settings.update_dir, filename);
 #endif
 		showGlobalStatus(UPDATE_PROGRESS_DONE);
 		ShowHint(LOCALE_MESSAGEBOX_INFO, LOCALE_FLASHUPDATE_READY);

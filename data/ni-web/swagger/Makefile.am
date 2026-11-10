@@ -1,4 +1,4 @@
-installdir = $(PRIVATE_HTTPDDIR)/ni-web/swagger
+installdir = $(PRIVATE_HTTPDDIR)/swagger
 
 # The Swagger UI page this server's own default docroot points at (see
 # src/httpd/webconfig.cpp), reached as /swagger/ and not at the root: the
@@ -12,6 +12,7 @@ install_DATA = index.html
 # stored form for a caller that did not ask for it (src/httpd/static.cpp), so
 # a plain copy beside it would only be flash nothing ever reads.
 install-data-hook:
+	$(WEB_STRIP) $(srcdir)/index.html $(DESTDIR)$(installdir)/index.html
 	cd $(DESTDIR)$(installdir); \
 		gzip -9 -nf index.html
 

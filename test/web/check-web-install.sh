@@ -47,6 +47,16 @@ grep -qE 'gzip -9 -nf .*\<index\.html\>' "$WEBMK" || {
 	echo "check-web-install.sh: $WEBMK does not store index.html compressed" >&2
 	exit 1
 }
+# The document goes through the stripper like everything the walks install,
+# and user.css does not: its comments are the example it ships as.
+grep -qE '^[[:blank:]]*\$\(WEB_STRIP\) \$\(srcdir\)/index\.html ' "$WEBMK" || {
+	echo "check-web-install.sh: $WEBMK does not run index.html through \$(WEB_STRIP)" >&2
+	exit 1
+}
+grep -qE 'WEB_STRIP.*user\.css' "$WEBMK" && {
+	echo "check-web-install.sh: $WEBMK strips user.css, whose comments are the example" >&2
+	exit 1
+}
 # The licence is in the tree and not on the box, so a makefile that installs it
 # is a makefile that grew seven kilobytes of flash nobody opens.
 grep -qE '^install_DATA[[:blank:]]*=.*\<LICENSE\>' "$WEBMK" && {
@@ -159,6 +169,12 @@ for one in $WALKED; do
 	# Read as a set and not as a spelling: which order the tests of the walk are
 	# written in is the author's business, and a check that reads one order holds
 	# the file to a habit rather than to what it does.
+	# Each file through $(WEB_STRIP) before gzip, so it can be minified.
+	printf '%s\n' "$walk" | grep -qE '\$\(WEB_STRIP\) "\$\$f" "\$\(DESTDIR\)\$\(installdir\)/\$\$f".*gzip -9 -nf "\$\(DESTDIR\)\$\(installdir\)/\$\$f"' || {
+		echo "check-web-install.sh: the walk in $MK does not run each file through" >&2
+		echo "  \$(WEB_STRIP) before gzip, so --enable-web-strip changes nothing" >&2
+		exit 1
+	}
 	printf '%s\n' "$walk" | grep -qE 'find \. [^|]*-type f' || {
 		echo "check-web-install.sh: the walk in $MK does not ask for files," >&2
 		echo "  so it would hand a directory to the compressor" >&2

@@ -326,11 +326,11 @@ TEST_CASE("a daemon with no branch for a verb says so and starts nothing", "[dae
 {
 	Fixture fx;
 	REQUIRE_FALSE(fx.dir.empty());
-	REQUIRE(writeBytes(fx.at("Y_Plugins.sh"),
+	REQUIRE(writeBytes(fx.at("services.sh"),
 			   "#!/bin/sh\nprintf 'ran\\n'\n", 25, 0700));
 	shell::setScriptRoot(fx.dir);
 
-	// The plugin scripts have a start and a stop and nothing that restarts.
+	// The services have a start and a stop and nothing that restarts.
 	Result<void> r = daemons::restart("dropbear");
 	REQUIRE_FALSE(r.ok());
 	REQUIRE(r.error().status == Status::NotSupported);
@@ -350,10 +350,10 @@ TEST_CASE("starting a daemon runs the branch the table names", "[daemons]")
 	// ran and not only which branch was asked for.
 	const std::string camds =
 		"#!/bin/sh\nprintf 'camds %s\\n' \"$1\" >> " + fx.at("argv") + "\nprintf 'ok\\n'\n";
-	REQUIRE(writeBytes(fx.at("Y_Camds.sh"), camds.data(), camds.size(), 0700));
-	const std::string plugins =
-		"#!/bin/sh\nprintf 'plugins %s\\n' \"$1\" >> " + fx.at("argv") + "\nprintf 'ok\\n'\n";
-	REQUIRE(writeBytes(fx.at("Y_Plugins.sh"), plugins.data(), plugins.size(), 0700));
+	REQUIRE(writeBytes(fx.at("camds.sh"), camds.data(), camds.size(), 0700));
+	const std::string services =
+		"#!/bin/sh\nprintf 'services %s\\n' \"$1\" >> " + fx.at("argv") + "\nprintf 'ok\\n'\n";
+	REQUIRE(writeBytes(fx.at("services.sh"), services.data(), services.size(), 0700));
 	shell::setScriptRoot(fx.dir);
 
 	REQUIRE(daemons::start("oscam").ok());
@@ -366,15 +366,15 @@ TEST_CASE("starting a daemon runs the branch the table names", "[daemons]")
 		"camds oscam_start\n"
 		"camds cccam_stop\n"
 		"camds mgcamd_reset\n"
-		"plugins dropbear_start\n"
-		"plugins minidlna_stop\n");
+		"services dropbear_start\n"
+		"services minidlna_stop\n");
 }
 
 TEST_CASE("a script that failed is carried up rather than read as success", "[daemons]")
 {
 	Fixture fx;
 	REQUIRE_FALSE(fx.dir.empty());
-	REQUIRE(writeBytes(fx.at("Y_Camds.sh"), "#!/bin/sh\nexit 3\n", 17, 0700));
+	REQUIRE(writeBytes(fx.at("camds.sh"), "#!/bin/sh\nexit 3\n", 17, 0700));
 	shell::setScriptRoot(fx.dir);
 
 	Result<void> r = daemons::start("oscam");

@@ -488,9 +488,9 @@ export function Topbar(props) {
 
 	return html`<header class="topbar">
 		<div class="topbar-main">
-			<span class="brand">
+			<${Link} class="brand" href="/">
 				<${Mark} carrying=${!!(status && status.carrying)} />${t(text, 'shell.brand')}
-			</span>
+			<//>
 			<${AreaTabs}
 				areas=${props.areas}
 				activeArea=${props.activeArea}

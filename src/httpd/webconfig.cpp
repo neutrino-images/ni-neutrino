@@ -1806,14 +1806,14 @@ WebConfig defaultWebConfig()
 	c.lan_read = defaultLanPrefixes();
 	c.trusted_proxies.clear();
 	c.trusted_proxies_named = false;
-	/* This server's own directory, under its own name rather than at
-	   PRIVATE_HTTPDDIR itself: that directory is also where the old server's
-	   pages land, and naming it here would serve those out of this one as
-	   well, which nobody asked this server to do. The docs page installs
-	   into "swagger" under it and answers at /swagger/, not at the root: the
-	   root is where the WebIf this docroot is also meant for lands later,
-	   and a docs page sitting there would have to move the day it does. */
-	c.docroot = PRIVATE_HTTPDDIR "/ni-web";
+	/* PRIVATE_HTTPDDIR itself. It once held the old server's pages, which is
+	   why this server kept a directory of its own beneath it; those pages are
+	   no longer built, and the page this server answers with is installed
+	   there directly. The one other thing in it is scripts/, the service
+	   control's two scripts, which serveStatic refuses to hand out (static.h).
+	   The docs page answers at /swagger/ and not at the root, which is the
+	   page's. */
+	c.docroot = PRIVATE_HTTPDDIR;
 	c.session_lifetime_s = kSessionLifetimeDefault;
 	c.sse_max_streams = kSseMaxStreamsDefault;
 	c.legacy_enabled = true;

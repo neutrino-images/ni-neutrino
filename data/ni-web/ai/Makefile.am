@@ -1,4 +1,4 @@
-installdir = $(PRIVATE_HTTPDDIR)/ni-web/ai
+installdir = $(PRIVATE_HTTPDDIR)/ai
 
 include $(srcdir)/../exclude.am
 
@@ -7,7 +7,8 @@ install-data-local:
 	find . -type f $$ex -print \
 	| sed 's|^\./||' | while read f; do \
 		$(MKDIR_P) "$(DESTDIR)$(installdir)/`dirname $$f`" || exit 1; \
-		gzip -9 -n -c "$$f" > "$(DESTDIR)$(installdir)/$$f.gz" || exit 1; \
+		$(WEB_STRIP) "$$f" "$(DESTDIR)$(installdir)/$$f" || exit 1; \
+		gzip -9 -nf "$(DESTDIR)$(installdir)/$$f" || exit 1; \
 	done
 
 dist-hook:

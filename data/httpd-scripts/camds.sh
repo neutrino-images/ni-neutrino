@@ -1,8 +1,5 @@
 #!/bin/sh
 
-. %(PRIVATE_HTTPDDIR)/scripts/_Y_Globals.sh
-. %(PRIVATE_HTTPDDIR)/scripts/_Y_Library.sh
-
 BNAME=${0##*/}
 
 case "$1" in

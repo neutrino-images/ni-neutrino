@@ -45,6 +45,7 @@ const NeverExposed kNever[] = {
 	{ Post,   "/api/v1/daemons/{name}/start" },
 	{ Post,   "/api/v1/daemons/{name}/stop" },
 	{ Post,   "/api/v1/daemons/{name}/restart" },
+	{ Post,   "/api/v1/update/local" },
 	{ Post,   "/api/v1/system/reload-setup" },
 	{ Post,   "/api/v1/tuner/reset" },
 	{ Post,   "/api/v1/osd/remote/key" },

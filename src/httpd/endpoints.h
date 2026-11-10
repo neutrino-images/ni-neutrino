@@ -208,11 +208,21 @@ extern const RouteTable authTable;
 extern const RouteTable timersTable;
 extern const RouteTable osdTable;
 extern const RouteTable daemonsTable;
+// The image updates lying on the box, and installing one of them.
+extern const RouteTable updateTable;
 extern const RouteTable tunerTable;
 extern const RouteTable pluginsTable;
 // The routes that hand out the box's own configuration documents, and the one
 // that asks the box to read them again.
 extern const RouteTable configTable;
+
+/* A ceiling on the body of one route that is above the server's general one,
+   and 0 for every route that keeps the general one. Asked off the head of a
+   request, before any of its body is read. Today only the route that puts a
+   file on the box has one (5 MiB, src/httpd/ep/ep_storage.cpp), so that an
+   image update fits. The path is the one the request names, without its
+   query. */
+size_t bodyCeilingFor(Method m, const std::string &path);
 
 /* The server that is answering, as something it can be asked about and told.
    Its own table and not part of the one above it: what those answer out of is

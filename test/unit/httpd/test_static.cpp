@@ -239,6 +239,29 @@ TEST_CASE("a name written with an escape reaches the file it names", "[static]")
 	REQUIRE(r.content_type == "text/css");
 }
 
+TEST_CASE("nothing under scripts/ is served, however the name is spelled", "[static]")
+{
+	/* The service control's scripts are installed beside the pages, and a
+	   browser has no business reading them. Each target below names the file
+	   or its directory, and each is the 404 a missing file gets. */
+	Docroot tree;
+	REQUIRE(::mkdir((std::string(kRoot) + "/scripts").c_str(), 0755) == 0);
+	writeFile(std::string(kRoot) + "/scripts/camds.sh", "#!/bin/sh\n");
+	writeFile(std::string(kRoot) + "/scripts/index.html", kPage);
+
+	REQUIRE(serveStatic("/scripts/camds.sh", "", "").code == 404);
+	REQUIRE(serveStatic("/%73cripts/camds.sh", "", "").code == 404);
+	REQUIRE(serveStatic("/scripts/", "", "").code == 404);
+	REQUIRE(serveStatic("/scripts/index.html", "", "").code == 404);
+
+	// A refusal of another kind keeps its own answer rather than becoming this one.
+	REQUIRE(serveStatic("/scripts/../index.html", "", "").code == 400);
+
+	// And only that directory: a name that merely begins the same way is served.
+	writeFile(std::string(kRoot) + "/scripts.txt", "hi\n");
+	REQUIRE(serveStatic("/scripts.txt", "", "").code == 200);
+}
+
 TEST_CASE("a target this server cannot read is refused rather than guessed at", "[static]")
 {
 	Docroot tree;
@@ -668,7 +691,7 @@ TEST_CASE("the default docroot names this server's own directory, and the docs p
 	   this is the docroot every box this tree builds actually serves from
 	   until then. A default still naming the empty string would leave that
 	   box answering 404 for a page this tree installs onto it. */
-	REQUIRE(defaultWebConfig().docroot == std::string(PRIVATE_HTTPDDIR) + "/ni-web");
+	REQUIRE(defaultWebConfig().docroot == std::string(PRIVATE_HTTPDDIR));
 
 	/* Shaped the way installation leaves it and not the way a plain test fixture
 	   would: only the stored form on disk, because that is what the package ships to

@@ -202,7 +202,12 @@ struct NeutrinoMessages
 
 		/* from the settings layer once written settings have landed and been
 		   applied: the keys, one to a line, NUL terminated */
-		EVT_SETTINGS_WRITTEN			= CRCInput::RC_WithData + 33
+		EVT_SETTINGS_WRITTEN			= CRCInput::RC_WithData + 33,
+
+		/* from coreapi::update::start(), for the web server's update route: an
+		   image update (.bin) out of the update directory to install as the
+		   menu's local update would, data: the absolute path, NUL terminated */
+		EVT_LOCAL_UPDATE			= CRCInput::RC_WithData + 34
 	};
 };
 

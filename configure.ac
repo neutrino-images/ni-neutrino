@@ -175,6 +175,27 @@ fi
 # between fitting and not.
 AM_CONDITIONAL(ENABLE_API_DOC, test "$enable_api_doc" = "yes")
 
+# On, the JavaScript and CSS of the web pages go onto the box minified; the
+# tree keeps its prose and its layout. Done on the build host by esbuild
+# (data/ni-web/minify.sh), which has to be found there; ni-buildsystem builds
+# it as host-esbuild. Saves about 280 KB of flash, worth it on a box with
+# little.
+# Off by default: the pages are installed as they are in the tree, which is
+# easier to read on a box while debugging.
+AC_ARG_ENABLE(web-strip,
+	AS_HELP_STRING([--enable-web-strip], [install the web pages minified @<:@default=no@:>@]),
+	[enable_web_strip="$enableval"],
+	[enable_web_strip="no"])
+AC_ARG_VAR([ESBUILD], [esbuild on the build host, to minify the web pages])
+if test "$enable_web_strip" = "yes"; then
+	AC_PATH_PROGS([ESBUILD], [esbuild])
+	test -n "$ESBUILD" || AC_MSG_ERROR([esbuild is needed to minify the web pages; install it, set ESBUILD or configure without --enable-web-strip])
+	WEB_STRIP='$(SHELL) $(abs_top_srcdir)/data/ni-web/minify.sh $(ESBUILD)'
+else
+	WEB_STRIP=cp
+fi
+AC_SUBST(WEB_STRIP)
+
 # The copied control API, the seventy-four handlers under /control/ that the
 # old web server used to answer alone (see src/httpd/compat/). A size lever
 # for a box like nevis, which nothing still calling that surface runs on: off

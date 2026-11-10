@@ -1,0 +1,46 @@
+/* user.css - a look of your own for NI-Web
+
+   The page loads this file after its own stylesheets, out of the directory the
+   box may write into, so whatever is set here wins over the page's colours.
+   It ships switched off: everything below is inside a comment, and the page
+   looks as it always does.
+
+   The example is a dark theme called "Midnight": ink blue grounds instead of
+   black, a light cornflower blue as the accent, and state colours that stand
+   apart from the accent and from each other. Text, accent and every state
+   colour used as text reach at least 4.5:1 on all three grounds (WCAG AA),
+   field borders and state dots at least 3:1.
+
+	--accent            cornflower blue, lightened
+	--ground-0          ink, the ground of the page
+	--ground-1          night blue, cards and bars
+	--ground-2          slate, hover and raised areas
+	--shade             nearly black with a touch of blue, the colour of the
+	                    scrim behind a sheet and of the shadow under a window
+
+   The selector is as strong as the rules of the light theme in tokens.css, so
+   this wins whichever theme is chosen in the browser.
+
+   To switch it on, delete the two lines that read "remove to enable" and
+   reload the page. */
+
+/* remove to enable
+:root:is([data-theme], :not([data-theme])) {
+	--accent: #8ea6ff;
+	--accent-dim: #6f89ea;
+	--accent-ink: #0b1020;
+	--ground-0: #0e1220;
+	--ground-1: #171c2e;
+	--ground-2: #232a40;
+	--line: #2c3450;
+	--line-strong: #6b78a4;
+	--text: #dde3f2;
+	--text-dim: #9aa4c2;
+	--state-recording: #ff6b6b;
+	--state-running: #5dca8c;
+	--state-warning: #f2c94c;
+	--session-open: #a6d672;
+	--failure: #ff7a7a;
+	--shade: #04060c;
+}
+remove to enable */

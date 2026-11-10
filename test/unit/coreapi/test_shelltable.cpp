@@ -185,7 +185,7 @@ TEST_CASE("the entry's tail is joined to the root that is set now", "[shelltable
 	Fixture fx;
 	REQUIRE_FALSE(fx.dir.empty());
 
-	REQUIRE(writeScript(fx.at("Y_Camds.sh"),
+	REQUIRE(writeScript(fx.at("camds.sh"),
 			    "#!/bin/sh\nprintf '%s|%s\\n' \"$#\" \"$1\" > " + fx.at("argv") + "\n"
 			    "printf 'done\\n'\n"));
 	shell::setScriptRoot(fx.dir);
@@ -219,7 +219,7 @@ TEST_CASE("a name the table does not declare is refused before the script runs",
 	Fixture fx;
 	REQUIRE_FALSE(fx.dir.empty());
 
-	REQUIRE(writeScript(fx.at("Y_Camds.sh"),
+	REQUIRE(writeScript(fx.at("camds.sh"),
 			    "#!/bin/sh\nprintf 'ran\\n' > " + fx.at("marker") + "\n"));
 	shell::setScriptRoot(fx.dir);
 
@@ -269,7 +269,7 @@ TEST_CASE("an entry's verb is the one its name promises", "[shelltable]")
 		// having a restart is what says which of the two scripts a daemon
 		// belongs to, and all of its verbs have to be in that one.
 		const bool is_camd = (shell::find(daemon + ".restart") != NULL);
-		REQUIRE(std::string(e->script) == (is_camd ? "/Y_Camds.sh" : "/Y_Plugins.sh"));
+		REQUIRE(std::string(e->script) == (is_camd ? "/camds.sh" : "/services.sh"));
 	}
 }
 

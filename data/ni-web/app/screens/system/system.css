@@ -17,7 +17,7 @@
 
 /* A sentence that stands in front of a table or a set of controls and explains
    it, rather than a hint hanging off one control. */
-.sys-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: 72ch; }
+.sys-lead { margin: 0 0 var(--gap-3); color: var(--text-dim); max-width: var(--content-width); }
 
 /* Why a control is out. One per screen and tied to every control it is about,
    which is what keeps fifty seven buttons from carrying fifty seven copies of
@@ -26,7 +26,7 @@
 
 /* What the box last answered about something that was asked of it. Polite, not
    alarming: it is a report and not a question, or it would be a dialog. */
-.sys-said { margin: var(--gap-3) 0 0; max-width: 72ch; }
+.sys-said { margin: var(--gap-3) 0 0; max-width: var(--content-width); }
 
 /* Controls beside each other, wrapping rather than pushing the page sideways:
    five commands do not fit across three hundred and sixty pixels and must not
@@ -54,13 +54,22 @@
 	background: var(--ground-0); border: 1px solid var(--line); border-radius: var(--radius);
 	font-size: var(--fs-s); }
 
-/* The first column of these three tables is a name and stays readable; the
+/* The first column of these four tables is a name and stays readable; the
    cells around it may wrap, since a plugin's own sentence about itself is a
    sentence and not a value. */
-.sys-box th[scope="row"], .sys-daemons th[scope="row"], .sys-plugins th[scope="row"] {
+.sys-box th[scope="row"], .sys-daemons th[scope="row"], .sys-plugins th[scope="row"],
+.sys-update th[scope="row"] {
 	color: var(--text); font-weight: 600; text-align: left; }
 .sys-plugins td, .sys-plugins th[scope="row"] { white-space: normal; }
 .sys-plugins th[scope="row"] { min-width: 16ch; }
+/* The name of an update file is as long as its builder made it, and it is the
+   one cell that gives way: it breaks after a hyphen, or anywhere in a name
+   that has none, so the size, the date and the button stay in view without
+   the table being pushed sideways. */
+.sys-update th[scope="row"] { white-space: normal; overflow-wrap: anywhere; }
+/* The button over the list stands apart from it, as the sentence over it does:
+   pressed up against the head of the table it reads as one of its columns. */
+.sys-update-tools { margin-bottom: var(--gap-3); }
 
 /* The three commands of a row: they wrap under each other at the narrow width
    rather than making the table wider than a hand. */
@@ -96,3 +105,27 @@
 /* The save bar of the server's screen, as wide as the blocks above it, as it is
    on the settings and the AI pages. */
 .sys > .save-bar { max-width: var(--content-width); }
+
+/* The note about the update server at the top of the update screen, and the line
+   under it with the button that asks now and when the box last asked. */
+.sys-online .callout { margin: 0; }
+/* Up to date is the quiet one of the four: the green a running service wears,
+   where a newer image keeps the accent and a heading of its own. */
+.sys-online .callout.sys-online-ok { border-left-color: var(--state-running); }
+.sys-online-new p { margin: 0; }
+/* Two classes, so this beats the zero margin of the paragraphs above. */
+.sys-online-new.callout > * + * { margin-top: var(--gap-2); }
+.sys-online-new > p:last-child { color: var(--text-dim); }
+/* The two images under each other, the label in one column and the version
+   with its build time in the next, in mono, so equal places stand over each
+   other and a difference shows where it is. */
+.sys-online-versions {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: var(--gap-1) var(--gap-3);
+	margin: 0;
+}
+.sys-online-versions dt { color: var(--text-dim); }
+.sys-online-versions dd { margin: 0; font-family: var(--font-mono); white-space: pre-wrap; }
+.sys-online-tools { margin-top: var(--gap-3); }
+.sys-online-when { color: var(--text-dim); font-size: var(--fs-s); }

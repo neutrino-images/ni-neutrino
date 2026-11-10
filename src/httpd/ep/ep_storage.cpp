@@ -481,13 +481,15 @@ Response readFile(const Request &r)
 /* One file, put where the caller named. The body is the file and nothing else: no form,
    no wrapper and no encoding, so the bytes that arrive are the bytes that are written.
 
-   HOW LARGE ONE MAY BE IS THE TRANSPORT'S CEILING ON A BODY AND NOT A NUMBER OF ITS OWN.
-   A body reaches a handler whole, so the whole of it is in this process before this line
-   runs, and a second, larger ceiling here would be this route asking the box to hold more
-   memory than the box was configured to hold. What that buys is a route for the files a
-   box is actually given through a browser, which are its configuration, its lists and its
-   pictures; a firmware image and a recording go the other way, and the route above sends
-   those without holding any of one.
+   HOW LARGE ONE MAY BE: FIVE MEBIBYTES, MORE THAN ANY OTHER BODY THIS SERVER TAKES. A body
+   reaches a handler whole, so the whole of it is in this process before this line runs,
+   and every other route keeps the server's general ceiling of one. This one is given more
+   because of what a person puts on the box through a browser: besides its configuration,
+   its lists and its pictures, an image update (*.bin) for the update screen, and those run
+   to a few mebibytes. Only a caller this route answers has a body kept at all, which is
+   one at the system level, so the larger ceiling is memory spent on the owner of the box
+   and not on whoever reaches it. A complete image and a recording still go the other way:
+   the route above sends those without holding any of one. See bodyCeilingFor().
 
    WHAT A TRANSFER THAT BREAKS OFF LEAVES. Nothing at all, in either of the two places it
    can break. A body that stops early never reaches this line, because the request is not
@@ -514,6 +516,8 @@ Response writeFile(const Request &r)
 		return created();
 	return noContent();
 }
+
+const size_t kFileBodyCeiling = 5u << 20;
 
 const Param kFileParams[] = {
 	/* No ceiling of its own on the length. What one is depends on the system the name is
@@ -734,9 +738,10 @@ const Endpoint kStorageEndpoints[] = {
 	  "encoding. `201` means a new name was created; `204` means an existing name was replaced. "
 	  "The write is atomic: the bytes are written beside the final name first and put in its "
 	  "place in one step, so a transfer that breaks off leaves either the file that was there "
-	  "before or nothing at all, never a half written file. There is no ceiling of its own on "
-	  "the size beyond this server's general body ceiling, so this route suits configuration, "
-	  "lists and pictures rather than a recording or a firmware image.\n\n"
+	  "before or nothing at all, never a half written file. The body may be up to 5 MiB, more "
+	  "than this server takes on any other route, so that an image update (`*.bin`) fits; the "
+	  "route suits configuration, lists, pictures and such updates rather than a recording or "
+	  "a complete image. A longer body is answered `413` before any of it is kept.\n\n"
 	  "**Preconditions:** `path` has to resolve inside one of the roots, its directory has to "
 	  "exist already, and it must not be the web server's own access store. Replacing an "
 	  "existing name needs `overwrite: true`; without it, an existing name is left alone. What "
@@ -760,6 +765,13 @@ const ToolFlag kStorageTools[] = {
 };
 
 } // namespace
+
+size_t bodyCeilingFor(Method m, const std::string &path)
+{
+	if (m == Method::Put && path == "/api/v1/storage/file")
+		return kFileBodyCeiling;
+	return 0;
+}
 
 /* What the file is called, as a header a file name cannot write into.
 

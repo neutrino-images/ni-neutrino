@@ -1017,9 +1017,9 @@ TEST_CASE("every route that changes something asks for more than a read", "[writ
 	// A walk that found nothing would pass this whatever the tables held, and a
 	// route added at a level below a write has to move this number by hand.
 #ifdef ENABLE_MCP
-	REQUIRE(changing == 58);
+	REQUIRE(changing == 59);
 #else
-	REQUIRE(changing == 50);
+	REQUIRE(changing == 51);
 #endif
 }
 

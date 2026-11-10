@@ -284,7 +284,7 @@ export default function Files() {
 	}
 
 	if (dir === '' || !mayList) {
-		return html`<div>
+		return html`<div class="files-list">
 			<div class="files-panel">
 				<h2>${t(text, 'files.where.title')}</h2>
 				<p class="files-hint">${t(text, 'files.where.body')}</p>
@@ -398,7 +398,7 @@ export default function Files() {
 	   per document is what a reader looks for, and a second one would turn the
 	   one question the behaviour net asks about that bar into an answer about
 	   this trail instead. */
-	return html`<div>
+	return html`<div class="files-list">
 		<ol class="files-crumbs">
 			<li><${Link} href=${listHref('')}>${t(text, 'files.root')}<//></li>
 			${crumbsOf(dir).map(function (crumb) {

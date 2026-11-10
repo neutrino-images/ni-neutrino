@@ -10,7 +10,7 @@
 # are compressed streams already. The licence is installed, unlike the one
 # beside index.html, because the Ubuntu Font Licence wants it with every copy
 # of the font (condition 1).
-installdir = $(PRIVATE_HTTPDDIR)/ni-web/fonts
+installdir = $(PRIVATE_HTTPDDIR)/fonts
 
 dist_install_DATA = \
 	ubuntu.css \
@@ -20,6 +20,7 @@ dist_install_DATA = \
 	LICENCE.txt
 
 install-data-hook:
+	$(WEB_STRIP) $(srcdir)/ubuntu.css $(DESTDIR)$(installdir)/ubuntu.css
 	cd $(DESTDIR)$(installdir); \
 		gzip -9 -nf ubuntu.css LICENCE.txt
 

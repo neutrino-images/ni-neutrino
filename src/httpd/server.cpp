@@ -35,6 +35,7 @@
 #include "oauth/surface.h"
 #endif
 #include "endpoint.h"
+#include "endpoints.h"
 #include "events.h"
 #ifdef ENABLE_MCP
 #include "mcp/exposure.h"
@@ -1187,6 +1188,16 @@ MHD_Result serve(struct MHD_Connection *connection, const char *method,
 			}
 		}
 #endif
+
+		/* A route that takes a larger body than the rest says so here, off the
+		   head and before any of the body is read. Raised and never lowered:
+		   lowering is the MCP mount's own business, just below. */
+		{
+			const size_t route_ceiling = bodyCeilingFor(methodFromString(method != NULL ? method : ""),
+				st->target.substr(0, st->target.find('?')));
+			if (route_ceiling > st->ceiling)
+				st->ceiling = route_ceiling;
+		}
 
 #ifdef ENABLE_MCP
 		st->for_mcp = mcp::handles(st->target.substr(0, st->target.find('?')));
