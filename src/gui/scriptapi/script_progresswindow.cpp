@@ -1,7 +1,7 @@
 /*
  * script progress window
  *
- * See scriptprogresswindow.h for what this is for.
+ * See script_progresswindow.h for what this is for.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scriptprogresswindow.h"
+#include "script_progresswindow.h"
 
 ScriptProgressWindow::ScriptProgressWindow(const params_t &pars)
 {

@@ -36,7 +36,7 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
-#include <gui/scriptapi/scriptstringinput.h>
+#include <gui/scriptapi/script_stringinput.h>
 
 typedef struct
 {

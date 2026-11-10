@@ -22,7 +22,7 @@
 #ifndef _LUACCPICTURE_H
 #define _LUACCPICTURE_H
 
-#include <gui/scriptapi/scriptpicture.h>
+#include <gui/scriptapi/script_picture.h>
 
 /* The picture a script made, held as the shared ScriptPicture: what is done
  * with it is the same for every interpreter, and this binding only fills its

@@ -1,7 +1,7 @@
 /*
  * script signal box
  *
- * The box a script shows, made here for both bindings: scriptsignalbox.h says
+ * The box a script shows, made here for both bindings: script_signalbox.h says
  * what of it is shared and what a binding still reads itself.
  *
  * This program is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scriptsignalbox.h"
+#include "script_signalbox.h"
 
 #include <config.h>
 #include <global.h>

@@ -64,7 +64,7 @@
 #include "lua_api_version.h"
 
 /* a colour a script names as one of the box own */
-#include "../scriptapi/scriptcolor.h"
+#include "../scriptapi/script_color.h"
 
 #if LUA_VERSION_NUM >= 503 /* Lua 5.3 */
 

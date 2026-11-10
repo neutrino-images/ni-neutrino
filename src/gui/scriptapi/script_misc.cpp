@@ -2,7 +2,7 @@
  * script misc
  *
  * The two calls of the misc module that carry work of their own, written here
- * for both bindings: scriptmisc.h says what of it is shared and what a binding
+ * for both bindings: script_misc.h says what of it is shared and what a binding
  * still reads itself.
  *
  * This program is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scriptmisc.h"
+#include "script_misc.h"
 
 #include <config.h>
 

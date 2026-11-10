@@ -33,7 +33,7 @@
 
 #include "luainstance.h"
 #include "lua_messagebox.h"
-#include <gui/scriptapi/scriptmessagebox.h>
+#include <gui/scriptapi/script_messagebox.h>
 
 CLuaInstMessagebox* CLuaInstMessagebox::getInstance()
 {

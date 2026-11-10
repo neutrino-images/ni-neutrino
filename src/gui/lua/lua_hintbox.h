@@ -22,7 +22,7 @@
 #ifndef _LUAHINTBOX_H
 #define _LUAHINTBOX_H
 
-#include <gui/scriptapi/scripthintbox.h>
+#include <gui/scriptapi/script_hintbox.h>
 
 /* The box a script made, held as the shared ScriptHintbox: what is done with it
  * is the same for every interpreter, and this binding only fills its parameters

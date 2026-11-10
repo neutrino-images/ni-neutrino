@@ -1,7 +1,7 @@
 /*
  * script message box
  *
- * The box a script shows, shown here for both bindings: scriptmessagebox.h says
+ * The box a script shows, shown here for both bindings: script_messagebox.h says
  * what of it is shared and what a binding still reads itself.
  *
  * This program is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scriptmessagebox.h"
+#include "script_messagebox.h"
 
 #include <config.h>
 #include <cstring>
@@ -26,7 +26,7 @@
 #include <system/helpers.h>
 #include <gui/widget/msgbox.h>
 
-#include "scripttext.h"
+#include "script_text.h"
 
 /* the words a script names its buttons by */
 static long buttonMask(const std::vector<std::string> &buttons)

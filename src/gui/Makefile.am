@@ -19,20 +19,20 @@ $(VERSION_H): FORCE
 BUILT_SOURCES = $(VERSION_H)
 noinst_HEADERS = \
 	$(VERSION_H) \
-	scriptapi/scriptcolor.h \
-	scriptapi/scripthintbox.h \
-	scriptapi/scriptmenu.h \
-	scriptapi/scriptprogresswindow.h \
-	scriptapi/scriptwindow.h \
-	scriptapi/scripttext.h \
-	scriptapi/scriptpicture.h \
-	scriptapi/scriptheader.h \
-	scriptapi/scriptsignalbox.h \
-	scriptapi/scripthourglass.h \
-	scriptapi/scriptstringinput.h \
-	scriptapi/scripthint.h \
-	scriptapi/scriptmessagebox.h \
-	scriptapi/scriptmisc.h
+	scriptapi/script_color.h \
+	scriptapi/script_hintbox.h \
+	scriptapi/script_menu.h \
+	scriptapi/script_progresswindow.h \
+	scriptapi/script_window.h \
+	scriptapi/script_text.h \
+	scriptapi/script_picture.h \
+	scriptapi/script_header.h \
+	scriptapi/script_signalbox.h \
+	scriptapi/script_hourglass.h \
+	scriptapi/script_stringinput.h \
+	scriptapi/script_hint.h \
+	scriptapi/script_messagebox.h \
+	scriptapi/script_misc.h
 
 FORCE:
 
@@ -228,19 +228,19 @@ endif
 # has asked for already, and the bindings ask after the gui archive has been
 # passed, so a part of it would be drawn in one pass too late.
 libneutrino_gui_scriptapi_a_SOURCES = \
-	scriptapi/scripthintbox.cpp \
-	scriptapi/scriptmenu.cpp \
-	scriptapi/scriptprogresswindow.cpp \
-	scriptapi/scriptwindow.cpp \
-	scriptapi/scripttext.cpp \
-	scriptapi/scriptpicture.cpp \
-	scriptapi/scriptheader.cpp \
-	scriptapi/scriptsignalbox.cpp \
-	scriptapi/scripthourglass.cpp \
-	scriptapi/scriptstringinput.cpp \
-	scriptapi/scripthint.cpp \
-	scriptapi/scriptmessagebox.cpp \
-	scriptapi/scriptmisc.cpp
+	scriptapi/script_hintbox.cpp \
+	scriptapi/script_menu.cpp \
+	scriptapi/script_progresswindow.cpp \
+	scriptapi/script_window.cpp \
+	scriptapi/script_text.cpp \
+	scriptapi/script_picture.cpp \
+	scriptapi/script_header.cpp \
+	scriptapi/script_signalbox.cpp \
+	scriptapi/script_hourglass.cpp \
+	scriptapi/script_stringinput.cpp \
+	scriptapi/script_hint.cpp \
+	scriptapi/script_messagebox.cpp \
+	scriptapi/script_misc.cpp
 
 libtimerlist_a_SOURCES = \
 	timerlist.cpp

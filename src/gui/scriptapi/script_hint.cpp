@@ -1,7 +1,7 @@
 /*
  * script hint
  *
- * The hint a script shows, made here for both bindings: scripthint.h says what
+ * The hint a script shows, made here for both bindings: script_hint.h says what
  * of it is shared and what a binding still reads itself.
  *
  * This program is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scripthint.h"
+#include "script_hint.h"
 
 #include <config.h>
 

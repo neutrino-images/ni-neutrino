@@ -1,7 +1,7 @@
 /*
  * script picture
  *
- * The picture a script shows, made here for both bindings: scriptpicture.h says
+ * The picture a script shows, made here for both bindings: script_picture.h says
  * what of it is shared and what a binding still reads itself.
  *
  * This program is free software; you can redistribute it and/or
@@ -18,11 +18,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scriptpicture.h"
+#include "script_picture.h"
 
 #include <config.h>
 
-#include "scriptcolor.h"
+#include "script_color.h"
 
 ScriptPicture::ScriptPicture(const params_t &pars)
 {

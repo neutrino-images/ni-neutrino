@@ -1,7 +1,7 @@
 /*
  * script components window
  *
- * See scriptwindow.h for what this is for.
+ * See script_window.h for what this is for.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scriptwindow.h"
+#include "script_window.h"
 
 #include <global.h>
 #include <driver/framebuffer.h>
 #include <neutrino.h>
 
-#include "scriptcolor.h"
+#include "script_color.h"
 
 ScriptWindow::ScriptWindow(const params_t &pars)
 {

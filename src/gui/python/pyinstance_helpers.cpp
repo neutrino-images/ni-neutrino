@@ -26,7 +26,7 @@
 #include <system/debug.h>
 #include <gui/components/cc.h>
 #include <neutrino.h>
-#include <gui/scriptapi/scriptcolor.h>
+#include <gui/scriptapi/script_color.h>
 
 bool pyHaveKeywords(PyObject *kw)
 {

@@ -39,7 +39,7 @@
 #include "pyinstance.h"
 
 /* a colour a script names as one of the box own */
-#include "../scriptapi/scriptcolor.h"
+#include "../scriptapi/script_color.h"
 
 extern CPictureViewer *g_PicViewer;
 

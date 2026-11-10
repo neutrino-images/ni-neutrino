@@ -63,7 +63,7 @@ lua_Unsigned luaL_checkunsigned (lua_State *L, int i);
 
 /* the magic colour a script names as one of the box own, and the rule
  * that resolves it, are held once for both bindings: */
-#include "../scriptapi/scriptcolor.h"
+#include "../scriptapi/script_color.h"
 
 #define lua_boxpointer(L, u) \
 	(*(void **)(lua_newuserdata(L, sizeof(void *))) = (u))

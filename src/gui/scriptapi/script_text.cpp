@@ -1,7 +1,7 @@
 /*
  * script text
  *
- * The text a script shows, made here for both bindings: scripttext.h says what
+ * The text a script shows, made here for both bindings: script_text.h says what
  * of it is shared and what a binding still reads itself.
  *
  * This program is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scripttext.h"
+#include "script_text.h"
 
 #include <config.h>
 #include <global.h>
@@ -27,7 +27,7 @@
 #include <system/helpers.h>
 #include <neutrino.h>
 
-#include "scriptcolor.h"
+#include "script_color.h"
 
 /* A text that names no size and stands in no form gets one, as both bindings
  * gave it one. */

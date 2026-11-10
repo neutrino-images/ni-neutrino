@@ -21,7 +21,7 @@
 #ifndef _LUACCSIGNALBOX_H
 #define _LUACCSIGNALBOX_H
 
-#include <gui/scriptapi/scriptsignalbox.h>
+#include <gui/scriptapi/script_signalbox.h>
 
 /* The box a script made, held as the shared ScriptSignalbox: what is done with
  * it is the same for every interpreter, and this binding only fills its

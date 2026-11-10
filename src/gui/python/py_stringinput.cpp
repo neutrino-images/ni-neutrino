@@ -16,7 +16,7 @@
  */
 
 #include "py_stringinput.h"
-#include <gui/scriptapi/scriptstringinput.h>
+#include <gui/scriptapi/script_stringinput.h>
 
 #include <config.h>
 #include <cstdio>

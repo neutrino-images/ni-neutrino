@@ -7,7 +7,7 @@
  * item, and hands them over; what happens from there on is one implementation,
  * so that two interpreters cannot come to different behaviour.
  *
- * It is the same layer as the window a script draws in (scriptwindow.h) and it
+ * It is the same layer as the window a script draws in (script_window.h) and it
  * sits in the same place: below the bindings and above the components, with the
  * coreapi deliberately not involved.
  *

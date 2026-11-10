@@ -37,7 +37,7 @@
 
 #include "luainstance.h"
 #include "lua_menue.h"
-#include <gui/scriptapi/scriptstringinput.h>
+#include <gui/scriptapi/script_stringinput.h>
 
 CLuaInstMenu* CLuaInstMenu::getInstance()
 {

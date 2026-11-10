@@ -1,7 +1,7 @@
 /*
  * script menu
  *
- * See scriptmenu.h for what this is for.
+ * See script_menu.h for what this is for.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "scriptmenu.h"
+#include "script_menu.h"
 
 #include <cstdlib>
 #include <cstring>

@@ -29,7 +29,7 @@
 
 #include <gui/widget/hourglass.h>
 
-#include <gui/scriptapi/scripthourglass.h>
+#include <gui/scriptapi/script_hourglass.h>
 
 /* The hourglass a script made, held as the shared ScriptHourglass: what is done
  * with it is the same for every interpreter, and this binding only fills its

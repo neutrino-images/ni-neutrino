@@ -46,7 +46,7 @@
 
 /* the magic color that tells us we are using one of the palette colors */
 /* The colour a script names as one of the box's own is resolved in the script
- * API, where the constant it carries is: see scriptcolor.h. */
+ * API, where the constant it carries is: see script_color.h. */
 
 /* The statuses the curl binding answers with, the ones the Lua bindings
  * answer with. */

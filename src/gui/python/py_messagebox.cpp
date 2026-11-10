@@ -30,7 +30,7 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
-#include <gui/scriptapi/scriptmessagebox.h>
+#include <gui/scriptapi/script_messagebox.h>
 
 CPythonInstMessagebox *CPythonInstMessagebox::getInstance()
 {

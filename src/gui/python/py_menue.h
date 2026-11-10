@@ -43,7 +43,7 @@
 #include <string>
 #include <vector>
 
-#include <gui/scriptapi/scriptmenu.h>
+#include <gui/scriptapi/script_menu.h>
 #include <gui/widget/menue.h>
 
 /* A row that calls back into the script, where the Lua binding has its

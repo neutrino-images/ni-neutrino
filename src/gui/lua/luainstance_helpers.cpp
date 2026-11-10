@@ -29,7 +29,7 @@
 #include <neutrino.h>
 
 #include "luainstance.h"
-#include <gui/scriptapi/scriptcolor.h>
+#include <gui/scriptapi/script_color.h>
 
 /* Ported by Benny Chen, http://www.bennychen.cn/tag/lual_checkbool/ */
 bool _luaL_checkbool(lua_State *L, int numArg)
