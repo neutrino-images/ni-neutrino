@@ -581,16 +581,7 @@ PyObject *CPythonInstNeutrino::RestoreScreen(PyObject *self, PyObject *args, PyO
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiiiip", (char **)kwlist, &x, &y, &w, &h, &id, &del))
 		return NULL;
 
-	for (pyscreenmap_iterator_t it = W->screenmap.begin(); it != W->screenmap.end(); ++it)
-	{
-		if (it->first == id)
-		{
-			buf = it->second;
-			if (del)
-				it->second = NULL;
-			break;
-		}
-	}
+	buf = ScriptNeutrino::ScreenTake(W->screenmap, id, del ? true : false);
 	if (buf != NULL)
 		W->fbwin->restoreScreen((int)x, (int)y, (int)w, (int)h, buf, del ? true : false);
 
@@ -612,18 +603,7 @@ PyObject *CPythonInstNeutrino::DeleteSavedScreen(PyObject *self, PyObject *args,
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "i", (char **)kwlist, &id))
 		return NULL;
 
-	for (pyscreenmap_iterator_t it = W->screenmap.begin(); it != W->screenmap.end(); ++it)
-	{
-		if (it->first == id)
-		{
-			if (it->second != NULL)
-			{
-				delete[] it->second;
-				it->second = NULL;
-			}
-			break;
-		}
-	}
+	ScriptNeutrino::ScreenDrop(W->screenmap, id);
 
 	Py_RETURN_NONE;
 }

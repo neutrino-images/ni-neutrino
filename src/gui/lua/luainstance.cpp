@@ -1363,16 +1363,7 @@ int CLuaInstance::restoreScreen(lua_State *L)
 	id = luaL_checkint(L, 6);
 	del = _luaL_checkbool(L, 7);
 
-	for (screenmap_iterator_t it = W->screenmap.begin(); it != W->screenmap.end(); ++it)
-	{
-		if (it->first == id)
-		{
-			buf = it->second;
-			if (del)
-				it->second = NULL;
-			break;
-		}
-	}
+	buf = ScriptNeutrino::ScreenTake(W->screenmap, id, del);
 	if (buf != NULL)
 		W->fbwin->restoreScreen(x, y, w, h, buf, del);
 	return 0;
@@ -1386,18 +1377,7 @@ int CLuaInstance::deleteSavedScreen(lua_State *L)
 		return 0;
 	id = luaL_checkint(L, 2);
 
-	for (screenmap_iterator_t it = W->screenmap.begin(); it != W->screenmap.end(); ++it)
-	{
-		if (it->first == id)
-		{
-			if (it->second != NULL)
-			{
-				delete[] it->second;
-				it->second = NULL;
-			}
-			break;
-		}
-	}
+	ScriptNeutrino::ScreenDrop(W->screenmap, id);
 	return 0;
 }
 

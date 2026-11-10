@@ -64,6 +64,47 @@ typedef std::map<long, Font *> ScriptFontMap;
 class ScriptNeutrino
 {
 	public:
+		/* The map of screens a window has saved, walked the same way in both
+		 * bindings: a screen is looked up by the number it was given, and then
+		 * either handed out as it is, handed out and forgotten, or freed. The
+		 * buffer came from the framebuffer window, so it is freed where the
+		 * same shape is written down, not in two places.
+		 *
+		 * A template for the same reason FontOf is one: the Lua map and the
+		 * Python one keep their numbers under keys of different types. */
+		template <typename MapT>
+		static fb_pixel_t *ScreenTake(MapT &screenmap, long id, bool forget)
+		{
+			for (typename MapT::iterator it = screenmap.begin(); it != screenmap.end(); ++it)
+			{
+				if (it->first == id)
+				{
+					fb_pixel_t *buf = it->second;
+					if (forget)
+						it->second = NULL;
+					return buf;
+				}
+			}
+			return NULL;
+		}
+
+		template <typename MapT>
+		static void ScreenDrop(MapT &screenmap, long id)
+		{
+			for (typename MapT::iterator it = screenmap.begin(); it != screenmap.end(); ++it)
+			{
+				if (it->first == id)
+				{
+					if (it->second != NULL)
+					{
+						delete[] it->second;
+						it->second = NULL;
+					}
+					return;
+				}
+			}
+		}
+
 		/* The four answers a dynamic font can come back with: the numbers the
 		 * DYNFONT table of both bindings hands to a script. */
 		enum DynFontStatus {
