@@ -965,6 +965,7 @@ src/gui/moviebrowser/Makefile
 src/gui/widget/Makefile
 src/gui/widget/yaft/Makefile
 src/httpd/Makefile
+src/scriptapi/Makefile
 src/system/Makefile
 src/system/mtdutils/Makefile
 src/system/mtdutils/lib/Makefile
