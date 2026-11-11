@@ -635,7 +635,91 @@ TEST_CASE("the Pearl panel takes brightness up to seven and the Samsung panels u
 	CHECK(settings::lcd4lBrightnessCeiling(9) == 7);
 }
 
+// Zero is the lowest step of a Samsung panel's backlight; the Pearl panel stays as it was.
+TEST_CASE("the Samsung panels take a brightness of zero and the Pearl panel starts at one", "[couple][lcd4l]")
+{
+	CHECK(settings::lcd4lBrightnessFloor(0) == 1);
+	CHECK(settings::lcd4lBrightnessFloor(1) == 0);
+	CHECK(settings::lcd4lBrightnessFloor(2) == 0);
+	CHECK(settings::lcd4lBrightnessFloor(3) == 0);
+	// A type nobody knows gets the higher floor, as every panel had it.
+	CHECK(settings::lcd4lBrightnessFloor(9) == 1);
+}
+
 #ifdef ENABLE_LCD4LINUX
+TEST_CASE("a brightness of zero is kept on a Samsung panel and refused on the Pearl one", "[couple][lcd4l]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["lcd4l_skin"] = 0;
+	s.ints["lcd4l_brightness"] = 5;
+	s.ints["lcd4l_brightness_standby"] = 3;
+	// The standby brightness is only changeable while the box does not shut down for real.
+	s.ints["shutdown_real"] = 0;
+	const char *const keys[] = { "lcd4l_brightness", "lcd4l_brightness_standby" };
+
+	for (int type = 1; type <= 3; ++type)
+	{
+		s.ints["lcd4l_display_type"] = type;
+		for (size_t i = 0; i < 2; ++i)
+		{
+			INFO(type << " " << keys[i]);
+			BatchOverlay zero = batchOf(keys[i], "0");
+			Refusals refused;
+			settings::settleBatch(zero, refused, true);
+			CHECK(refused.empty());
+			REQUIRE(valueOf(zero, keys[i]) != NULL);
+			CHECK(*valueOf(zero, keys[i]) == "0");
+		}
+	}
+
+	s.ints["lcd4l_display_type"] = 0;
+	for (size_t i = 0; i < 2; ++i)
+	{
+		INFO(keys[i]);
+		BatchOverlay zero = batchOf(keys[i], "0");
+		Refusals refused;
+		settings::settleBatch(zero, refused, true);
+		REQUIRE(refused.size() == 1);
+		CHECK(refused[0].first == keys[i]);
+		CHECK(valueOf(zero, keys[i]) == NULL);
+
+		// One is the Pearl panel's lowest, as before.
+		BatchOverlay one = batchOf(keys[i], "1");
+		refused.clear();
+		settings::settleBatch(one, refused, true);
+		CHECK(refused.empty());
+	}
+}
+
+TEST_CASE("a change to the Pearl panel brings a brightness of zero up to one", "[couple][lcd4l]")
+{
+	FakeSettingsSource s;
+	InstalledSettingsSource installed(&s);
+	s.ints["lcd4l_display_type"] = 1;
+	s.ints["lcd4l_skin"] = 0;
+	s.ints["lcd4l_brightness"] = 0;
+	s.ints["lcd4l_brightness_standby"] = 0;
+	s.ints["shutdown_real"] = 0;
+
+	BatchOverlay pearl = batchOf("lcd4l_display_type", "0");
+	Refusals refused;
+	settings::settleBatch(pearl, refused, true);
+	CHECK(refused.empty());
+	REQUIRE(valueOf(pearl, "lcd4l_brightness") != NULL);
+	CHECK(*valueOf(pearl, "lcd4l_brightness") == "1");
+	REQUIRE(valueOf(pearl, "lcd4l_brightness_standby") != NULL);
+	CHECK(*valueOf(pearl, "lcd4l_brightness_standby") == "1");
+
+	// Between two Samsung panels the zero stays.
+	BatchOverlay samsung = batchOf("lcd4l_display_type", "2");
+	refused.clear();
+	settings::settleBatch(samsung, refused, true);
+	CHECK(refused.empty());
+	CHECK(valueOf(samsung, "lcd4l_brightness") == NULL);
+	CHECK(valueOf(samsung, "lcd4l_brightness_standby") == NULL);
+}
+
 TEST_CASE("only the Pearl panel has the skins one to three", "[couple][lcd4l]")
 {
 	CHECK(settings::lcd4lSkinOffered(0, 2));

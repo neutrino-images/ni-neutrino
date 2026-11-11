@@ -29,6 +29,13 @@ namespace coreapi
 namespace settings
 {
 
+long lcd4lBrightnessFloor(long display_type)
+{
+	/* The Samsung panels take zero, the lowest step of their backlight, on which the
+	   picture is still seen; the Pearl one, and any type not known, starts at one. */
+	return (display_type >= 1 && display_type <= 3) ? 0 : 1;
+}
+
 long lcd4lBrightnessCeiling(long display_type)
 {
 	// The Samsung panels take ten; the Pearl one, and any type not known, seven.
@@ -85,16 +92,21 @@ bool valueAfter(CoupledBatch &b, const char *key, long &out)
 void keepBrightness(CoupledBatch &b, const char *key, long type, bool moved)
 {
 	long value = 0;
-	if (!valueAfter(b, key, value) || value <= lcd4lBrightnessCeiling(type))
+	if (!valueAfter(b, key, value))
 		return;
+	const long floor = lcd4lBrightnessFloor(type);
+	const long ceiling = lcd4lBrightnessCeiling(type);
+	if (value >= floor && value <= ceiling)
+		return;
+	const bool low = value < floor;
 	if (moved)
 	{
 		char fix[16];
-		std::snprintf(fix, sizeof(fix), "%ld", lcd4lBrightnessCeiling(type));
+		std::snprintf(fix, sizeof(fix), "%ld", low ? floor : ceiling);
 		b.imply(key, fix, "lcd4l_display_type");
 		return;
 	}
-	b.refuse(key, "the panel takes a lower brightness", "lcd4l_display_type");
+	b.refuse(key, low ? "the panel takes a higher brightness" : "the panel takes a lower brightness", "lcd4l_display_type");
 }
 
 }

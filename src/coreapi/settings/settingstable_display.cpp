@@ -123,6 +123,18 @@ long lcd4lBrightnessMax(const ValueLookup *now)
 		return 10;
 	return settings::lcd4lBrightnessCeiling(type);
 }
+
+/* The panel's floor, read the same way: zero for the Samsung panels and one for the Pearl
+   one. Where the panel cannot be read the floor stays one, as it was for every panel. */
+long lcd4lBrightnessMin(const ValueLookup *now)
+{
+	long type = 0;
+	const bool read = now != NULL ? now->read("lcd4l_display_type", &type, now->context)
+	                              : settingsSource().readInt("lcd4l_display_type", type) == Status::Ok;
+	if (!read)
+		return 1;
+	return settings::lcd4lBrightnessFloor(type);
+}
 #endif
 
 #if defined(ENABLE_GRAPHLCD) || defined(ENABLE_LCD4LINUX)
@@ -403,15 +415,16 @@ constexpr Descriptor kSettings[] =
 		.hint("menu.hint_lcd4l_skin_radio")
 		.defaultValue(0)
 		.field(COREAPI_NUMBER_FIELD(lcd4l_skin_radio)),
-	/* The ceiling is the panel's and the box asks it at run time: seven for the
-	   Pearl panel and ten for the three Samsung ones. Ten is the wider and holds
-	   every value either offers. */
+	/* The bounds are the panel's and the box asks them at run time: one to seven
+	   for the Pearl panel and zero to ten for the three Samsung ones. Zero to ten
+	   is the wider and holds every value either offers. */
 	intRow("lcd4l_brightness")
 		.section("display")
 		.group(&kDisplayLcd4l)
 		.label("lcd4l_brightness")
 		.hint("menu.hint_lcd4l_brightness")
-		.range(1, 10)
+		.range(0, 10)
+		.minNow(lcd4lBrightnessMin)
 		.maxNow(lcd4lBrightnessMax)
 		.defaultValue(7)
 		.field(COREAPI_NUMBER_FIELD(lcd4l_brightness)),
@@ -420,7 +433,8 @@ constexpr Descriptor kSettings[] =
 		.group(&kDisplayLcd4l)
 		.label("lcd4l_brightness_standby")
 		.hint("menu.hint_lcd4l_brightness_standby")
-		.range(1, 10)
+		.range(0, 10)
+		.minNow(lcd4lBrightnessMin)
 		.maxNow(lcd4lBrightnessMax)
 		.defaultValue(3)
 		.changeableWhen(kNotRealShutdown)
