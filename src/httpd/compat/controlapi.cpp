@@ -2427,13 +2427,16 @@ void CControlAPI::GlcdScreenshotCGI(CyhookHandler *hh)
 
 	filename = "/tmp/" + filename + ".png";
 
-	cGLCD *cglcd = cGLCD::getInstance();
-	if (cglcd) {
-		if (cglcd->dumpBuffer((uint32_t*)cglcd->bitmap->Data(), cGLCD::PNG, filename.c_str()))
-			hh->SendOk();
-		else
-			hh->SendError();
+	/* Never made by a request, and written by the display's own call, which
+	   keeps it from being deleted meanwhile. */
+	if (!cGLCD::displayReady()) {
+		hh->SendError();
+		return;
 	}
+	if (cGLCD::dumpDisplay(cGLCD::PNG, filename.c_str()))
+		hh->SendOk();
+	else
+		hh->SendError();
 }
 #endif
 

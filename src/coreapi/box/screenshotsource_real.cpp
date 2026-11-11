@@ -100,10 +100,7 @@ class RealScreenshotSource : public ScreenshotSource
 			// Looked up and never made: a request must not start a display, and
 			// a Respawn in progress has none to find.
 			if (name == "graphlcd")
-			{
-				cGLCD *display = cGLCD::peekInstance();
-				return display != NULL && display->bitmap != NULL;
-			}
+				return cGLCD::displayReady();
 #endif
 			return false;
 		}
@@ -115,11 +112,11 @@ class RealScreenshotSource : public ScreenshotSource
 #ifdef ENABLE_GRAPHLCD
 			if (name == "graphlcd")
 			{
-				cGLCD *display = cGLCD::peekInstance();
-				if (display == NULL || display->bitmap == NULL)
+				if (!cGLCD::displayReady())
 					return Status::NotSupported;
-				return display->dumpBuffer((fb_pixel_t *) display->bitmap->Data(),
-							   cGLCD::PNG, path.c_str())
+				// Written by the display's own call, which keeps it from
+				// being deleted meanwhile.
+				return cGLCD::dumpDisplay(cGLCD::PNG, path.c_str())
 					? Status::Ok : Status::Internal;
 			}
 #endif
