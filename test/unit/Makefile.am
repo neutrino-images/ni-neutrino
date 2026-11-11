@@ -451,6 +451,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/check-timer-epgid.sh \
 	scan/check-timer-stop-saved.sh \
 	scan/check-record-shutdown.sh \
+	scan/check-record-readers.sh \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
 	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk \
 	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp scan/fixtures/addsetting-array.cpp scan/fixtures/display/display.cpp \
@@ -640,6 +641,7 @@ SCAN_CHECKS = \
 	scan-fesearch-fbc \
 	scan-record-shutdown \
 	scan-timer-stop-saved \
+	scan-record-readers \
 	scan-timerlist-event \
 	scan-menu-busy \
 	scan-settings-replaced \
@@ -908,6 +910,9 @@ scan-record-shutdown:
 
 scan-timer-stop-saved:
 	@$(SHELL) $(srcdir)/scan/check-timer-stop-saved.sh $(top_srcdir)
+
+scan-record-readers:
+	@$(SHELL) $(srcdir)/scan/check-record-readers.sh $(top_srcdir)
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)
