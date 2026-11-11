@@ -758,9 +758,10 @@ streamsetup::Outcome CStreamManager::AddClient(int connfd)
 	return streamsetup::run(connfd, gate, ops);
 }
 
-void CStreamManager::RemoveClient(int fd)
+bool CStreamManager::RemoveClient(int fd)
 {
 	CStreamInstance *stream_to_stop = NULL;
+	bool idle = false;
 	{
 		OpenThreads::ScopedLock<OpenThreads::Mutex> m_lock(mutex);
 		for (streammap_iterator_t it = streams.begin(); it != streams.end(); ++it) {
@@ -770,6 +771,7 @@ void CStreamManager::RemoveClient(int fd)
 				if (stream->GetFdCount() == 0) {
 					stream_to_stop = stream;
 					streams.erase(stream->GetChannelId());
+					idle = streams.empty() && gate.pendingLocked() == 0;
 				}
 				break;
 			}
@@ -779,6 +781,7 @@ void CStreamManager::RemoveClient(int fd)
 		stream_to_stop->Stop();
 		delete stream_to_stop;
 	}
+	return idle;
 }
 
 void CStreamManager::run()
@@ -858,8 +861,11 @@ void CStreamManager::run()
 				} else {
 					if (pfd[i].revents & (POLLHUP | POLLRDHUP)) {
 						printf("CStreamManager::run(): POLLHUP, fd %d\n", pfd[i].fd);
-						RemoveClient(pfd[i].fd);
-						if (streams.empty()) {
+						/* Announced once, by the hang-up that ended the
+						   last stream: a stale entry of a stream stopped
+						   meanwhile, for a recording or by another
+						   hang-up, ends nothing. */
+						if (RemoveClient(pfd[i].fd)) {
 							poll_timeout = 2000;
 							g_RCInput->postMsg(NeutrinoMessages::EVT_STREAM_STOP, 0);
 						}
