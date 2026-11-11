@@ -909,8 +909,6 @@ data/pictures/screensaver/Makefile
 data/policy/Makefile
 data/scripts/Makefile
 data/themes/Makefile
-data/themes/Diana/Makefile
-data/themes/Diana/icons/Makefile
 data/themes/Grey-3.0/Makefile
 data/themes/Grey-3.0/icons/Makefile
 data/themes/Grey-3.0/icons/buttons/Makefile
