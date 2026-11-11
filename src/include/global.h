@@ -103,8 +103,8 @@ NEUTRINO_CPP CRCInput *g_RCInput;
 class CEpgData;
 NEUTRINO_CPP CEpgData *g_EpgData;
 
-class CInfoViewerBase;
-NEUTRINO_CPP CInfoViewerBase *g_InfoViewer;
+class CInfoViewer;
+NEUTRINO_CPP CInfoViewer *g_InfoViewer;
 
 class CEventList;
 NEUTRINO_CPP CEventList *g_EventList;

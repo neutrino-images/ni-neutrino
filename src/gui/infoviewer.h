@@ -35,8 +35,6 @@
 
 #include <sectionsdclient/sectionsdclient.h>
 
-#include "infoviewer_base.h"
-
 #include <driver/neutrino_msg_t.h>
 #include <system/settings.h>
 #include <string>
@@ -48,7 +46,7 @@
 class CFrameBuffer;
 class COSDFader;
 class CInfoViewerBB;
-class CInfoViewer : public CInfoViewerBase
+class CInfoViewer : public sigc::trackable
 {
  private:
 
@@ -90,7 +88,9 @@ class CInfoViewer : public CInfoViewerBase
 	int            analogclock_offset;
 	fb_pixel_t*    analogclock_buf;
 
+	CSectionsdClient::CurrentNextInfo info_CurrentNext;
 	CSectionsdClient::CurrentNextInfo oldinfo;
+        t_channel_id   current_channel_id;
         t_channel_id   current_epg_id;
 
 	COSDFader	fader;
@@ -114,6 +114,10 @@ class CInfoViewer : public CInfoViewerBase
 
 	bool casysChange;
 	bool channellogoChange;
+	uint32_t lcdUpdateTimer;
+	int	 zap_mode;
+	std::string _livestreamInfo1;
+	std::string _livestreamInfo2;
 
 	void paintBackground(int col_Numbox);
 	void paintHead();
@@ -147,43 +151,85 @@ class CInfoViewer : public CInfoViewerBase
 	void reset_allScala();
 	void check_channellogo_ca_SettingsChange();
 	void sendNoEpg(const t_channel_id channel_id);
+	void initLiveStreamInfo();
 	bool showLivestreamInfo();
 
 	CComponentsWindowMax *ecmInfoBox;
 
  public:
-	void ecmInfoBox_hide() override;
-	void ecmInfoBox_show(const char * txt, int w, int h, Font * font) override;
+	bool     chanready;
+	bool	 is_visible;
+
+	char     aspectRatio;
+	uint32_t sec_timer_id;
+
+	int	BoxStartX;
+	int	BoxStartY;
+	int      BoxEndX;
+	int      BoxEndY;
+	int      ChanInfoX;
+	bool     showButtonBar;
+	bool     isVolscale;
+
+	std::string	md5_ecmInfo;
+	void ecmInfoBox_hide();
+	void ecmInfoBox_show(const char * txt, int w, int h, Font * font);
 
 	CInfoViewer();
-	virtual ~CInfoViewer();
+	~CInfoViewer();
 
-	void	start() override;
-	void	showEpgInfo() override;
-	void	showTitle(CZapitChannel * channel, const bool calledFromNumZap = false, int epgpos = 0, bool forcePaintButtonBar = false) override;
-	void	showTitle(t_channel_id channel_id, const bool calledFromNumZap = false, int epgpos = 0, bool forcePaintButtonBar = false) override;
+	void	start();
+	void	showEpgInfo();
+	void	showTitle(CZapitChannel * channel, const bool calledFromNumZap = false, int epgpos = 0, bool forcePaintButtonBar = false);
+	void	showTitle(t_channel_id channel_id, const bool calledFromNumZap = false, int epgpos = 0, bool forcePaintButtonBar = false);
 	void	showMovieTitle(const int playState, const t_channel_id &channel_id, const std::string &title,
 				const std::string &g_file_epg, const std::string &g_file_epg1,
-				const int duration, const int curr_pos, const int repeat_mode, const int _zap_mode = IV_MODE_DEFAULT) override;
+				const int duration, const int curr_pos, const int repeat_mode, const int _zap_mode = IV_MODE_DEFAULT);
 	void lookAheadEPG(const int ChanNum, const std::string & Channel, const t_channel_id new_channel_id = 0, const bool calledFromNumZap = false); //alpha: fix for nvod subchannel update
-	void	killTitle() override;
-	void	getEPG(const t_channel_id for_channel_id, CSectionsdClient::CurrentNextInfo &info) override;
-
-	void	showSubchan() override;
+	void	killTitle();
+	void	getEPG(const t_channel_id for_channel_id, CSectionsdClient::CurrentNextInfo &info);
+	CSectionsdClient::CurrentNextInfo getCurrentNextInfo() const { return info_CurrentNext; }
+	
+	void	showSubchan();
 	//void	Set_CA_Status(int Status);
+	
+	int     handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t data);
 
-	int     handleMsg(const neutrino_msg_t msg, neutrino_msg_data_t data) override;
+	enum{
+		IV_MODE_DEFAULT		= 0,
+		IV_MODE_VIRTUAL_ZAP 	= 1,
+		IV_MODE_NUMBER_ZAP	= 2
+	};/*iv_switch_mode_t*/
+	/**sets mode for infoviewer.
+	* @param[in]  mode
+	* 	@li IV_MODE_DEFAULT
+	* 	@li IV_MODE_VIRTUAL_ZAP 	means the virtual zap mode, user is typing keys for virtual channel switch
+	* 	@li IV_MODE_NUMBER_ZAP 		means number mode, user is typing number keys into screen
+	* @return
+	*	void
+	* @see
+	* 	resetSwitchMode()
+	* 	getSwitchMode()
+	*/
+	void	setSwitchMode(const int& mode) {zap_mode = mode;}
+	int	getSwitchMode() {return zap_mode;}
+	void    resetSwitchMode() {setSwitchMode(IV_MODE_DEFAULT);}
 
-	void    changePB() override;
+	void init_livestreamInfo() { initLiveStreamInfo(); }
+	std::string get_livestreamInfo1() { return _livestreamInfo1; }
+	std::string get_livestreamInfo2() { return _livestreamInfo2; }
+
+	void    changePB();
 	void 	ResetPB();
-	void    showSNR() override;
+	void    showSNR();
 	void    Init(void);
-	void	setUpdateTimer(uint64_t interval) override;
-	void 	ResetModules(bool kill = false) override;
-	bool 	hasTimeout() override;
-
-protected:
-	//NI: fills _livestreamInfo1/_livestreamInfo2 without painting, see init_livestreamInfo()
-	void initLiveStreamInfo() override;
+	bool    SDT_freq_update;
+	void	setUpdateTimer(uint64_t interval);
+	uint32_t getUpdateTimer(void) { return lcdUpdateTimer; }
+	inline t_channel_id get_current_channel_id(void) { return current_channel_id; }
+	void 	ResetModules();
+	bool 	hasTimeout();
+	sigc::signal<void> OnAfterKillTitle;
+	sigc::signal<void> OnEnableRadiotext;
 };
 #endif

@@ -99,8 +99,6 @@ libneutrino_gui_a_SOURCES = \
 	imageinfo_ni.cpp \
 	info_menue.cpp \
 	infoviewer.cpp \
-	infoviewer_base.cpp \
-	infoviewer_evo.cpp \
 	infoviewer_bb.cpp \
 	zap_failure_message.cpp \
 	keybind_setup.cpp \

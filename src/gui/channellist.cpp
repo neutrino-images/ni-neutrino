@@ -652,10 +652,6 @@ int CChannelList::show()
 	COSDFader fader(g_settings.theme.menu_Content_alpha);
 	fader.StartFadeIn();
 	CInfoClock::getInstance()->ClearDisplay();
-	/* While this list is up the bar is behind it. Anything of the bar that
-	 * holds screen area for as long as it stands - the box it keeps for running
-	 * recordings - would keep the infozone below from ever being painted. */
-	g_InfoViewer->setScreenCovered(true);
 	/* Before paint(), not after: paint() already wakes the EPG thread, and if
 	 * that thread has to skip its paint we must not drop the note it leaves. */
 	{
@@ -1097,9 +1093,6 @@ void CChannelList::hide()
 		dline->kill();
 
 	CInfoClock::getInstance()->enableInfoClock(!CInfoClock::getInstance()->isBlocked());
-
-	/* The bar may hold its area again; it takes it back with its next update. */
-	g_InfoViewer->setScreenCovered(false);
 }
 
 bool CChannelList::showInfo(int number, int epgpos)

@@ -31,12 +31,6 @@
 #define NEUTRINO_ICON_BUTTON_RED	"btn_red"
 #define NEUTRINO_ICON_BUTTON_YELLOW	"btn_yellow"
 
-/* infobar button bar icons, ported from evo */
-#define NEUTRINO_ICON_INFO_BLUE		"info_blue"
-#define NEUTRINO_ICON_INFO_GREEN	"info_green"
-#define NEUTRINO_ICON_INFO_RED		"info_red"
-#define NEUTRINO_ICON_INFO_YELLOW	"info_yellow"
-
 #define NEUTRINO_ICON_BUTTON_MENU	"menu"
 #define NEUTRINO_ICON_BUTTON_MENU_SMALL	"menu_small"
 #define NEUTRINO_ICON_BUTTON_HELP	"help"

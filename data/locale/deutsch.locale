@@ -1531,7 +1531,6 @@ menu.hint_infobar_casys_dotmatrix ein: CA-Systemanzeige mit Punktematrix im Hint
 menu.hint_infobar_casys_frame ein: CA-Systemanzeige mit Rahmen
 menu.hint_infobar_dd Zeigt ein Dolby Digital Icon bei Verfügbarkeit
 menu.hint_infobar_ecminfo Anzeigen der ECM-Info, während die Infobar eingeblendet ist
-menu.hint_infobar_evo_infoviewer Ein: die evo-Infobar. Aus: die klassische NI-Infobar (Neustart noetig)
 menu.hint_infobar_filesys Zeigen den vom Flash- und einer HDD verwendeten Speicherplatz
 menu.hint_infobar_fonts Ändern Sie die Schriftgrößen in der Infobar
 menu.hint_infobar_logo Logo-, Kanalnummer- und Signal-Anzeige; Optionen in [Klammern] erscheinen in der kleinen Infobox
@@ -2080,7 +2079,6 @@ miscsettings.infobar_disp_3 Logo, Kanalname [Signalbalken]
 miscsettings.infobar_disp_4 Logo, Kanalname [Kanalnummer]
 miscsettings.infobar_disp_5 Logo [Signalbalken]
 miscsettings.infobar_disp_6 Kanalnummer, Logo [Signalbalken]
-miscsettings.infobar_evo_infoviewer Evo-Infobar
 miscsettings.infobar_gradient_body Farbverlauf EPG-Bereich
 miscsettings.infobar_gradient_bottom Farbverlauf unten
 miscsettings.infobar_gradient_top Farbverlauf oben

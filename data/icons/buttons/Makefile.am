@@ -37,11 +37,7 @@ install_DATA = \
 	help_small.png \
 	home.png \
 	info.png \
-	info_blue.png \
-	info_green.png \
-	info_red.png \
 	info_small.png \
-	info_yellow.png \
 	left.png \
 	longpress.png \
 	menu.png \

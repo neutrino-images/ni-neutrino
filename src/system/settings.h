@@ -1198,7 +1198,6 @@ struct SNeutrinoSettings
 	int infobar_casystem_display;
 	int infobar_casystem_dotmatrix;
 	int infobar_casystem_frame;
-	int infobar_evo_infoviewer;
 	int infobar_progressbar;
 	int infobar_sat_display;
 	int infobar_show;
