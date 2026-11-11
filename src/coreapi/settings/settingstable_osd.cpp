@@ -464,7 +464,7 @@ constexpr Descriptor kOsd[] =
 		.section("osd")
 		.label("miscsettings.infobar_evo_infoviewer")
 		.hint("menu.hint_infobar_evo_infoviewer")
-		.defaultValue(1)
+		.defaultValue(0)
 		.needsRestart()
 		.field(COREAPI_NUMBER_FIELD(infobar_evo_infoviewer)),
 	enumRow("infobar_show_channellogo")

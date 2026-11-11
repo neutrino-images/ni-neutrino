@@ -1377,7 +1377,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	g_settings.infobar_casystem_display = configfile.getInt32("infobar_casystem_display", 0);
 	g_settings.infobar_casystem_dotmatrix = configfile.getInt32("infobar_casystem_dotmatrix", 0);
 	g_settings.infobar_casystem_frame = configfile.getInt32("infobar_casystem_frame", 0);
-	g_settings.infobar_evo_infoviewer = configfile.getInt32("infobar_evo_infoviewer", 1);
+	g_settings.infobar_evo_infoviewer = configfile.getInt32("infobar_evo_infoviewer", 0);
 	g_settings.infobar_progressbar = configfile.getInt32("infobar_progressbar", 2);
 	g_settings.infobar_sat_display = configfile.getBool("infobar_sat_display", true);
 	g_settings.infobar_show = configfile.getInt32("infobar_show", 0);
