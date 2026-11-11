@@ -16,6 +16,7 @@
 #include <neutrino.h>
 
 #include "cc_numeric_input_dialog.h"
+#include "cc_numeric_input_step.h"
 
 #include <driver/rcinput.h>
 
@@ -276,16 +277,23 @@ void CCNumericInputDialog::setMarked(bool marked)
 		resetFieldColors();
 }
 
-void CCNumericInputDialog::stepValue(int delta)
+void CCNumericInputDialog::getStepLimits(long long &lowest, long long &highest) const
 {
-	long long lowest = cnd_has_range ? cnd_min :
+	lowest = cnd_has_range ? cnd_min :
 		(cnd_allow_negative ? -largestWithDigits(cnd_max_digits) : 0);
-	long long highest = cnd_has_range ? cnd_max : largestWithDigits(cnd_max_digits);
+	highest = cnd_has_range ? cnd_max : largestWithDigits(cnd_max_digits);
 	if (cnd_int_target)
 	{
 		lowest = std::max(lowest, (long long) INT_MIN);
 		highest = std::min(highest, (long long) INT_MAX);
 	}
+}
+
+void CCNumericInputDialog::stepValue(int delta)
+{
+	long long lowest = 0;
+	long long highest = 0;
+	getStepLimits(lowest, highest);
 
 	long long value = 0;
 	if (!parse(getBuffer().getText(), value))
@@ -298,6 +306,31 @@ void CCNumericInputDialog::stepValue(int delta)
 
 	getBuffer().setText(std::to_string(value));
 	getBuffer().moveEnd();
+}
+
+bool CCNumericInputDialog::stepDigit(bool up)
+{
+	long long lowest = 0;
+	long long highest = 0;
+	getStepLimits(lowest, highest);
+
+	/* Stepped only when all of it is digits behind a minus: one byte a glyph. */
+	std::string text = getBuffer().getText();
+	size_t cursor = getBuffer().getCursor();
+
+	switch (ccStepDigit(text, cursor, up, lowest, highest))
+	{
+		case CC_DIGIT_STEP_NONE:
+			return false;
+		case CC_DIGIT_STEP_DONE:
+			getBuffer().setText(text);
+			getBuffer().setCursor(cursor);
+			break;
+		default:
+			break;
+	}
+
+	return true;
 }
 
 void CCNumericInputDialog::toggleSign()
@@ -332,7 +365,12 @@ std::string CCNumericInputDialog::prepareInitialText(const std::string &raw)
 	/* Here and not at setTextMode(): the field is built at the first
 	 * open, after the mode may already have been chosen. */
 	if (getField())
+	{
 		getField()->enableCapCentering(!cnd_text_mode);
+		/* Left of the end the cursor stands on a digit, the one up and
+		 * down count: the field marks that digit, not a gap beside it. */
+		getField()->enableCellCaret(!cnd_text_mode);
+	}
 
 	if (cnd_text_mode)
 	{
@@ -358,7 +396,10 @@ int CCNumericInputDialog::onDialogMsg(neutrino_msg_t msg, neutrino_msg_data_t /*
 
 	if (msg == CRCInput::RC_up || msg == CRCInput::RC_down)
 	{
-		stepValue(msg == CRCInput::RC_up ? 1 : -1);
+		/* On a digit, that digit; at the end, as the value opens, the
+		 * number as a whole. */
+		if (!stepDigit(msg == CRCInput::RC_up))
+			stepValue(msg == CRCInput::RC_up ? 1 : -1);
 		return HOOK_REFRESH;
 	}
 

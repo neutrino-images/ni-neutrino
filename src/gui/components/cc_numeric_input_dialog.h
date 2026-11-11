@@ -20,7 +20,8 @@
  * opens marked, so the first digit replaces it as a whole - typing a new
  * number is what this dialog is opened for. After that, digits append,
  * green deletes backwards, left and right move the cursor. Up and down
- * count by one.
+ * count by one; with the cursor on a digit they count that digit, so the
+ * tens step by ten.
  *
  * A range, once set, is named below the hint and checked on save. A value
  * outside it is refused with that line in red; it is never clamped behind
@@ -51,7 +52,10 @@ class CCNumericInputDialog : public CCTextInputDialog
 		bool validate(const std::string &text, std::string &reason);
 		std::string getRangeText() const;
 		void setMarked(bool marked);
+		void getStepLimits(long long &lowest, long long &highest) const;
 		void stepValue(int delta);
+		///false when no digit is under the cursor
+		bool stepDigit(bool up);
 		void toggleSign();
 
 	protected:
