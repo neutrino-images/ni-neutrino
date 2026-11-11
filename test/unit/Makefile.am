@@ -449,6 +449,7 @@ EXTRA_DIST = support/catch.hpp support/fakes.h support/phaseenv.h support/phasef
 	scan/check-stream-send.sh \
 	scan/check-live-displaced.sh \
 	scan/check-timer-epgid.sh \
+	scan/check-record-shutdown.sh \
 	scan/strip-comments.awk scan/blank-if0.awk scan/bounds.awk scan/pairs.awk scan/fields.awk \
 	scan/keyvals.awk scan/choices.awk scan/enums.awk scan/labels.awk \
 	scan/settingstext.awk scan/addsetting.awk scan/rows.awk scan/fixtures/addsetting.cpp scan/fixtures/addsetting-array.cpp scan/fixtures/display/display.cpp \
@@ -636,6 +637,7 @@ SCAN_CHECKS = \
 	scan-live-displaced \
 	scan-timer-epgid \
 	scan-fesearch-fbc \
+	scan-record-shutdown \
 	scan-timerlist-event \
 	scan-menu-busy \
 	scan-settings-replaced \
@@ -898,6 +900,9 @@ scan-timer-epgid:
 
 scan-fesearch-fbc:
 	@$(SHELL) $(srcdir)/scan/check-fesearch-fbc.sh $(top_srcdir)
+
+scan-record-shutdown:
+	@$(SHELL) $(srcdir)/scan/check-record-shutdown.sh $(top_srcdir)
 
 scan-timerlist-event:
 	@$(SHELL) $(srcdir)/scan/check-timerlist-event.sh $(top_srcdir)
