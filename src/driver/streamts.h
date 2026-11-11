@@ -89,6 +89,12 @@ class CStreamInstance : public OpenThreads::Thread
 		void GetFdsCopy(stream_fds_t &out);
 		size_t GetFdCount();
 		t_channel_id GetChannelId() { return channel_id; }
+		/* Whether the box descrambles the stream: not for an e2 stream with
+		   streaming_decryptmode off. Decided once, before the hold zapit is
+		   told it with, so the CA is started and stopped on what zapit
+		   admitted. */
+		bool uses_ca;
+		/* An e2 stream asked for by its pids: the SoftCSA path is not taken for it. */
 		bool is_e2_stream;
 };
 
