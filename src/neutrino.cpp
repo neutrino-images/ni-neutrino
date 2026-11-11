@@ -6486,86 +6486,6 @@ void CNeutrinoApp::StopAVInputPiP()
 #endif
 #endif
 
-/*
- * Restart the program in place.
- *
- * The menu's restart was handed to the start script: the process ended with the
- * restart action and the script started a fresh one, with the box not rebooted.
- * What such a second start meets is whatever the first one has not given up yet,
- * and the tuner, the display and the front processor are the parts that take it
- * badly - no tuner, or a start that never finishes painting. Doing it in place
- * takes that window out: one process, replaced image, the hardware let go of and
- * taken again by the same program. The reference restarts this way (execvp of
- * the own image), and the start script needs nothing for it: it waits on the
- * same process it started.
- *
- * A running recording is the only thing that stops this, and only then does this
- * return. The image not being executable is the other way out: what ran above has
- * already taken the box too far apart to hand it back to the menu, so the start
- * script is asked for the restart the process can no longer do itself.
- */
-static void restartInPlace(void)
-{
-	if (CRecordManager::getInstance()->RecordingStatus())
-	{
-		DisplayErrorMessage(g_Locale->getText(LOCALE_SERVICEMENU_RESTART_REFUSED_RECORDING));
-		return;
-	}
-
-	videoDecoder->SetCECMode((VIDEO_HDMI_CEC_MODE)0);
-
-	/* The GUI's own helper threads first: nothing of them may touch what is
-	   deleted below. */
-	CNeutrinoApp::getInstance()->OnBeforeRestart();
-
-	//cleanup progress bar cache
-	CProgressBarCache::pbcClear();
-
-	CHint *hint = new CHint(LOCALE_SERVICEMENU_RESTART_HINT);
-	hint->paint();
-
-	/* A setting a helper still owes would otherwise meet the file the image that
-	   follows reads. */
-	coreapi::applyWorker().close();
-	CNeutrinoApp::getInstance()->carryWaitingSettings();
-	CNeutrinoApp::getInstance()->saveSetup(NEUTRINO_SETTINGS_FILE);
-
-#ifdef ENABLE_LCD4LINUX
-	CLCD4l::getInstance()->Shutdown(g_settings.lcd4l_support != 0);
-#endif
-
-	delete hint;
-
-	/* Daemons and hardware. g_RCInput stays alive through this call: what
-	   stop_daemons() ends can still post on it. */
-	stop_daemons(true);
-
-	delete g_RCInput;
-	delete g_Sectionsd;
-	delete g_RemoteControl;
-	delete g_fontRenderer;
-	delete g_fixedFontRenderer;
-	delete g_dynFontRenderer;
-	delete g_shellFontRenderer;
-	delete g_iconFontRenderer;
-
-	delete CVFD::getInstance();
-	delete SHTDCNT::getInstance();
-	stop_video();
-	delete g_Timerd;
-	delete g_Zapit; //do we really need this?
-
-	for (int i = 3; i < 256; i++)
-		close(i);
-
-	execvp(global_argv[0], global_argv); // no return if successful
-
-	perror("restart: execvp");
-	write_exit_action(CNeutrinoApp::EXIT_RESTART);
-	fflush(NULL);
-	_exit(CNeutrinoApp::EXIT_RESTART);
-}
-
 /**************************************************************************************
 *          CNeutrinoApp -  exec, menuitem callback (shutdown)                         *
 **************************************************************************************/
@@ -6595,9 +6515,9 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 	}
 	else if (actionKey=="restart")
 	{
-		/* Only a running recording brings this back here; otherwise the program
-		   replaces its own image and the menu is gone with it. */
-		restartInPlace();
+		videoDecoder->SetCECMode((VIDEO_HDMI_CEC_MODE)0);
+		ExitRun(CNeutrinoApp::EXIT_RESTART);
+		returnval = menu_return::RETURN_NONE;
 	}
 	else if (actionKey=="clock_switch")
 	{
@@ -6740,9 +6660,57 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		media->exec(NULL, actionKey);
 		return menu_return::RETURN_EXIT_ALL;
 	}
-	/* A second branch for this key stood here and could not be reached: the one
-	   above already answers "restart". What it did is what restartInPlace()
-	   does now, on the way the reference takes. */
+	else if (actionKey=="restart") {
+		//usage of slots from any classes
+		OnBeforeRestart();
+
+		//cleanup progress bar cache
+		CProgressBarCache::pbcClear();
+
+		if (recordingstatus)
+			DisplayErrorMessage(g_Locale->getText(LOCALE_SERVICEMENU_RESTART_REFUSED_RECORDING));
+		else {
+			CHint * hint = new CHint(LOCALE_SERVICEMENU_RESTART_HINT);
+			hint->paint();
+
+			coreapi::applyWorker().close();
+
+#ifdef ENABLE_LCD4LINUX
+			CLCD4l::getInstance()->Shutdown(g_settings.lcd4l_support != 0);
+#endif
+
+			// A restart does not come back to the main loop either.
+			carryWaitingSettings();
+			saveSetup(NEUTRINO_SETTINGS_FILE);
+
+			/* this is an ugly mess :-( */
+			delete g_RCInput;
+			delete g_Sectionsd;
+			delete g_RemoteControl;
+			delete g_fontRenderer;
+			delete g_fixedFontRenderer;
+			delete g_dynFontRenderer;
+			delete g_shellFontRenderer;
+			delete g_iconFontRenderer;
+
+			delete hint;
+
+			stop_daemons(true);
+			delete CVFD::getInstance();
+			delete SHTDCNT::getInstance();
+			stop_video();
+			/* g_Timerd, g_Zapit and CVFD are used in stop_daemons */
+			delete g_Timerd;
+			delete g_Zapit; //do we really need this?
+
+			for(int i = 3; i < 256; i++)
+				close(i);
+
+			execvp(global_argv[0], global_argv); // no return if successful
+
+			exit(CNeutrinoApp::EXIT_REBOOT); // should never be reached
+		}
+	}
 	else if (actionKey == "moviedir") {
 		parent->hide();
 
