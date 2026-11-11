@@ -161,6 +161,7 @@ coreapi_tests_SOURCES = \
 	driver/test_recordtuner.cpp \
 	driver/test_scanpause.cpp \
 	driver/test_tsgrid.cpp \
+	driver/test_keyrepeat.cpp \
 	driver/test_tsaudiotype.cpp \
 	coreapi/test_eventbus.cpp \
 	coreapi/test_messagebridge.cpp \
