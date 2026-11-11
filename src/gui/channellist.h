@@ -123,6 +123,9 @@ private:
 	 * covering the infozone, read by the list loop to make up for it. Both
 	 * sides hold CFrameBuffer::overlay_paint_mutex while touching it. */
 	bool			paint_events_deferred;
+	/* a one-shot timer that makes the list look again while a paint is deferred;
+	 * see the loop in show(). 0 while none is armed. */
+	uint32_t		paint_events_retry_timer;
 	sem_t			paint_events_sem;
 	pthread_t		paint_events_thr;
 	pthread_mutex_t		paint_events_mutex;

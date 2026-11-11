@@ -40,9 +40,9 @@ if [ -n "$PLUGIN" ]; then
 	[ -r "$PLUGIN" ] || { echo "check-python-module-surface.sh: cannot read $PLUGIN" >&2; exit 1; }
 	set -- "$PLUGIN"
 else
-	set -- "$SRC"/data/pythonplugins/*.py
+	set -- "$SRC"/data/plugins/python/*/*.py
 	for f in "$@"; do
-		[ -r "$f" ] || { echo "check-python-module-surface.sh: no python plugin to read in $SRC/data/pythonplugins" >&2; exit 1; }
+		[ -r "$f" ] || { echo "check-python-module-surface.sh: no python plugin to read in $SRC/data/plugins/python" >&2; exit 1; }
 	done
 fi
 

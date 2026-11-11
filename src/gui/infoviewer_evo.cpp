@@ -161,6 +161,7 @@ CInfoViewerEvo::CInfoViewerEvo ()
 	ca_bar			= NULL;
 	recordsbox = NULL;
 	recordsblink = NULL;
+	screen_covered = false;
 	showBBIcons_width = 0;
 	weather = CWeather::getInstance();
 	Init();
@@ -303,8 +304,30 @@ void CInfoViewerEvo::start ()
 	getIconInfo();
 }
 
+void CInfoViewerEvo::setScreenCovered(bool covered)
+{
+	screen_covered = covered;
+
+	/* The record box is as wide as the recording's title and keeps its area
+	   reserved for as long as the recordings run; with the channel list open it
+	   reaches into the list's infozone and would keep the EPG out of it. The
+	   box is behind the list then and cannot be seen anyway, so it goes away
+	   and gives the area back - the next showRecords() builds it again. */
+	if (covered && recordsbox)
+	{
+		recordsbox->kill();
+		delete recordsbox;
+		recordsbox = NULL;
+	}
+}
+
 void CInfoViewerEvo::showRecords()
 {
+	/* While the channel list owns the screen the box would only hold area it
+	   cannot use, see setScreenCovered(). */
+	if (screen_covered)
+		return;
+
 	CRecordManager * crm	= CRecordManager::getInstance();
 
 	int box_posX = BoxStartX;
@@ -425,7 +448,17 @@ void CInfoViewerEvo::paintHead(t_channel_id channel_id,std::string channel_name)
 	header->setCaptionMaxWidth(std::max(0, header->getWidth() - time_width - 3*OFFSET_INNER_MID - showBBIcons_width));
 
 	if (!header->getChannelLogoObject()->hasLogo())
+	{
+		/* NI: the field at the left edge of the header is reserved for the channel logo.
+		   If the channel has none, nothing may be painted there: the logo object keeps
+		   its blank picture and its black body, which used to cover the beginning of the
+		   channel name (the name is drawn from the very edge of the header). So drop the
+		   logo, wipe what a previous channel left behind and use the full width. */
+		header->setChannelLogo(0, std::string());
+		header->getChannelLogoObject()->kill(g_settings.theme.infobar_gradient_top ? COL_MENUHEAD_PLUS_0 : COL_INFOBAR_PLUS_0, -1, ~CC_FBDATA_TYPES);
+		header->getChannelLogoObject()->hide();
 		header->setCaption(channel_name);
+	}
 	else
 		header->setCaption("");
 

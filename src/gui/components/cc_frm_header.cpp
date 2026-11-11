@@ -309,6 +309,9 @@ void CComponentsHeader::initLogo()
 	if (cch_logo_obj->hasLogo())
 	{
 		int dx_tmp = 0, dy_tmp = 0;
+		/* NI: a logo may come back after a channel without one, so the item is shown and
+		   unlocked again here - the else branch below hides and locks it. */
+		cch_logo_obj->allowPaint(true);
 		cch_logo_obj->getRealSize(&dx_tmp, &dy_tmp);
 		cch_logo_obj->setHeight(min(h_logo, dy_tmp), true);
 
@@ -392,6 +395,7 @@ void CComponentsHeader::initLogo()
 	else
 	{
 		cch_logo_obj->hide();
+		/* NI: a hidden item must not keep painting its empty body over the content below it. */ 		cch_logo_obj->allowPaint(false);
 		cch_logo_obj->clearFbData();
 	}
 }
