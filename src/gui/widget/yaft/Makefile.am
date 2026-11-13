@@ -3,16 +3,16 @@ AUTOMAKE_OPTIONS = subdir-objects
 AM_CPPFLAGS = -fno-rtti -fno-exceptions -D__STDC_FORMAT_MACROS
 
 AM_CPPFLAGS += \
+	-I$(srcdir) \
 	-I$(top_builddir) \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/src \
-	-I$(top_srcdir)/src/include \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/lib/libconfigfile \
-	-I$(srcdir) \
-	@SIGC_CFLAGS@ \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/src/include \
 	@FREETYPE_CFLAGS@ \
-	@HWLIB_CFLAGS@
+	@HWLIB_CFLAGS@ \
+	@SIGC_CFLAGS@
 
 noinst_LIBRARIES = libneutrino_gui_terminal.a
 

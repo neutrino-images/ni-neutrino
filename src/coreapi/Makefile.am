@@ -9,12 +9,12 @@ AM_CXXFLAGS = -std=c++11 -fno-rtti -fexceptions -Wall -Wextra -Werror=missing-fi
 AM_CPPFLAGS = \
 	-I$(top_builddir) \
 	-I$(top_srcdir)/lib \
+	-I$(top_srcdir)/lib/connection \
+	-I$(top_srcdir)/lib/libconfigfile \
+	-I$(top_srcdir)/lib/libeventserver \
+	-I$(top_srcdir)/lib/xmltree \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \
-	-I$(top_srcdir)/lib/connection \
-	-I$(top_srcdir)/lib/xmltree \
-	-I$(top_srcdir)/lib/libeventserver \
-	-I$(top_srcdir)/lib/libconfigfile \
 	@HWLIB_CFLAGS@
 
 # The table of key names is generated beside the tool that first needed it, out

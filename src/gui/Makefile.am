@@ -54,24 +54,24 @@ endif
 AM_CPPFLAGS += \
 	-I$(top_builddir) \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/src \
-	-I$(top_srcdir)/src/include \
 	-I$(top_srcdir)/lib \
+	-I$(top_srcdir)/lib/connection \
+	-I$(top_srcdir)/lib/jsoncpp \
+	-I$(top_srcdir)/lib/libconfigfile \
 	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/lib/libnet \
-	-I$(top_srcdir)/lib/libconfigfile \
-	-I$(top_srcdir)/lib/connection \
-	-I$(top_srcdir)/lib/xmltree \
 	-I$(top_srcdir)/lib/libupnpclient \
-	-I$(top_srcdir)/lib/jsoncpp \
-	@SIGC_CFLAGS@ \
-	@CURL_CFLAGS@ \
-	@FREETYPE_CFLAGS@ \
+	-I$(top_srcdir)/lib/xmltree \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/src/include \
 	@AVFORMAT_CFLAGS@ \
 	@AVUTIL_CFLAGS@ \
+	@CURL_CFLAGS@ \
+	@FREETYPE_CFLAGS@ \
+	@HWLIB_CFLAGS@ \
 	@LUA_CFLAGS@ \
 	@PYTHON_CFLAGS@ \
-	@HWLIB_CFLAGS@
+	@SIGC_CFLAGS@
 
 noinst_LIBRARIES = libtimerlist.a libneutrino_gui.a libneutrino_gui2.a
 

@@ -33,15 +33,15 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/lib/libconfigfile \
+	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \
-	@MHD_CFLAGS@ \
-	@HWLIB_CFLAGS@ \
-	-I$(top_srcdir)/lib/libeventserver \
-	@SIGC_CFLAGS@ \
-	@FREETYPE_CFLAGS@ \
 	@AVFORMAT_CFLAGS@ \
-	@LUA_CFLAGS@
+	@FREETYPE_CFLAGS@ \
+	@HWLIB_CFLAGS@ \
+	@LUA_CFLAGS@ \
+	@MHD_CFLAGS@ \
+	@SIGC_CFLAGS@
 
 # The compatibility layer is a subdirectory of this one and not a library of
 # its own: it is built with the flags above, and a second archive would be a

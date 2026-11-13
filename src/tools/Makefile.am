@@ -28,8 +28,8 @@ streamprobe_SOURCES = streamprobe.c streamprobe_version.h
 # @HWLIB_CFLAGS@ inside it is what finds streaminput.h.
 streamprobe_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
-	@AVFORMAT_CFLAGS@ \
 	@AVCODEC_CFLAGS@ \
+	@AVFORMAT_CFLAGS@ \
 	@AVUTIL_CFLAGS@
 streamprobe_LDADD = \
 	-lstb-hal \

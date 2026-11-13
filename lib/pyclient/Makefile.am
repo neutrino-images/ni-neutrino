@@ -1,6 +1,6 @@
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/lib/pyclient \
-	-I$(top_srcdir)/lib/connection
+	-I$(top_srcdir)/lib/connection \
+	-I$(top_srcdir)/lib/pyclient
 
 AM_CPPFLAGS += -fno-rtti -fno-exceptions
 
