@@ -7,9 +7,7 @@
 AM_CXXFLAGS = -std=c++11 -fno-rtti -fexceptions -Wall -Wextra -Werror=missing-field-initializers -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 
 AM_CPPFLAGS = \
-	-I$(srcdir) \
 	-I$(top_builddir) \
-	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \
@@ -17,8 +15,6 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib/xmltree \
 	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/lib/libconfigfile \
-	-I$(top_srcdir)/lib/timerdclient \
-	-I$(top_srcdir)/lib/sectionsdclient \
 	@HWLIB_CFLAGS@
 
 # The table of key names is generated beside the tool that first needed it, out

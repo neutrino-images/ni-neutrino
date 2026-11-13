@@ -30,7 +30,6 @@ AM_CXXFLAGS = -std=c++11 -fno-rtti -fexceptions -Wall -Wextra -Werror=missing-fi
 # through them.
 AM_CPPFLAGS = \
 	-I$(top_builddir) \
-	-I$(srcdir) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/lib/libconfigfile \
@@ -38,9 +37,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src/include \
 	@MHD_CFLAGS@ \
 	@HWLIB_CFLAGS@ \
-	-I$(top_srcdir)/lib/connection \
 	-I$(top_srcdir)/lib/libeventserver \
-	-I$(top_srcdir)/lib/xmltree \
 	@SIGC_CFLAGS@ \
 	@FREETYPE_CFLAGS@ \
 	@AVFORMAT_CFLAGS@ \

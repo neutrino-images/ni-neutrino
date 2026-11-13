@@ -8,12 +8,10 @@ AM_CPPFLAGS += \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \
 	-I$(top_srcdir)/lib \
-	-I$(top_srcdir)/lib/libnet \
 	-I$(top_srcdir)/lib/libconfigfile \
 	-I$(srcdir) \
 	@SIGC_CFLAGS@ \
 	@FREETYPE_CFLAGS@ \
-	@LUA_CFLAGS@ \
 	@HWLIB_CFLAGS@
 
 noinst_LIBRARIES = libneutrino_gui_terminal.a

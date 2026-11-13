@@ -8,10 +8,8 @@ AM_CPPFLAGS += \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/lib/libconfigfile \
-	-I$(top_srcdir)/lib/xmltree \
 	-I$(top_srcdir)/lib/jsoncpp \
 	@SIGC_CFLAGS@ \
-	@FREETYPE_CFLAGS@ \
 	@LUA_CFLAGS@ \
 	@HWLIB_CFLAGS@
 

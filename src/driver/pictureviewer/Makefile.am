@@ -9,7 +9,6 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/lib/libconfigfile \
 	-I$(top_srcdir)/lib/libeventserver \
 	@SIGC_CFLAGS@ \
-	@FREETYPE_CFLAGS@ \
 	@LUA_CFLAGS@ \
 	@HWLIB_CFLAGS@
 

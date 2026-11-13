@@ -1,10 +1,7 @@
 AM_CXXFLAGS = -fno-rtti -fno-exceptions -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 
 AM_CPPFLAGS = \
-	-I$(srcdir) \
 	-I$(top_builddir) \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \

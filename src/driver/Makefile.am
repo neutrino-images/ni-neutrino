@@ -17,7 +17,6 @@ AM_CPPFLAGS += \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \
 	-I$(top_srcdir)/lib \
-	-I$(top_srcdir)/lib/libnet \
 	-I$(top_srcdir)/lib/libconfigfile \
 	-I$(top_srcdir)/lib/connection \
 	-I$(top_srcdir)/lib/libeventserver \
@@ -57,10 +56,6 @@ libneutrino_driver_a_SOURCES = \
 	streamts.cpp \
 	tsaudiotype.cpp \
 	volume.cpp
-
-if ENABLE_LCD
-AM_CPPFLAGS += -I$(top_srcdir)/lib/liblcddisplay
-endif
 
 if ENABLE_LCD4LINUX
 libneutrino_driver_a_SOURCES += \
