@@ -41,6 +41,7 @@
 #include <sys/mount.h>
 #include <dirent.h>
 
+#include <algorithm>
 #include <fstream>
 
 #include "global.h"
@@ -1010,11 +1011,10 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	else
 	{
 		std::string webtv_xml = configfile.getString("webtv_xml", WEBTV_XML);
+		CSettingsTextGuard lock;
 		if (file_size(webtv_xml.c_str()))
-		{
-			CSettingsTextGuard lock;
 			g_settings.webtv_xml.push_back(webtv_xml);
-		}
+		g_settings.webtv_xml.push_back(WEBTV_XML_MEDIATHEK);
 	}
 	setSettingsText(g_settings.last_webtv_dir, configfile.getString("last_webtv_dir", WEBTVDIR_VAR));
 
@@ -1614,6 +1614,13 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	if (g_settings.version_pseudo < "20260704120000")
 	{
 		g_settings.power_off_selected = g_settings.shutdown_real ? 1 : 0;
+	}
+	if (g_settings.version_pseudo < "20261114230000")
+	{
+		// livestreams of the mediathek backend, once, for setups that had a list before
+		CSettingsTextGuard lock;
+		if (std::find(g_settings.webtv_xml.begin(), g_settings.webtv_xml.end(), WEBTV_XML_MEDIATHEK) == g_settings.webtv_xml.end())
+			g_settings.webtv_xml.push_back(WEBTV_XML_MEDIATHEK);
 	}
 
 	setSettingsText(g_settings.version_pseudo, NEUTRINO_VERSION_PSEUDO);
