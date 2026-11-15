@@ -27,6 +27,7 @@ AM_CPPFLAGS += -D_FILE_OFFSET_BITS=64
 noinst_LIBRARIES = libneutrino_scriptapi.a
 
 libneutrino_scriptapi_a_SOURCES = \
+	script_constants.cpp \
 	script_curl.cpp \
 	script_filehelpers.cpp \
 	script_header.cpp \

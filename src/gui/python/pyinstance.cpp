@@ -59,6 +59,7 @@
 #include "py_stringinput.h"
 #include "py_threads.h"
 #include <scriptapi/script_color.h>
+#include <scriptapi/script_constants.h>
 #include <scriptapi/script_video.h>
 #include "py_video.h"
 
@@ -507,65 +508,25 @@ void CPythonInstance::abortScript()
 }
 
 
-/* One constant, the way the Lua bindings write one: a name and a number.
- * The Lua bindings export theirs as tables a script indexes, COL['WHITE'],
- * so the dictionaries here are of the same names and are read the same
- * way. */
-struct py_const {
-	const char *name;
-	long long code;
-};
-
-struct py_const_s {
-	const char *name;
-	const char *code;
-};
-
-static void addConstTable(PyObject *module, const char *name, const py_const *table)
+/* One constant of a table: the value is ours to let go of, whether or not
+ * the dictionary took it. */
+static void addConst(PyObject *dict, const char *name, PyObject *value)
 {
-	PyObject *dict = PyDict_New();
-	if (dict == NULL) {
+	if (value == NULL)
+	{
 		PyErr_Clear();
 		return;
 	}
-
-	for (int i = 0; table[i].name != NULL; i++) {
-		PyObject *value = PyLong_FromLongLong(table[i].code);
-		if (value == NULL) {
-			PyErr_Clear();
-			continue;
-		}
-		if (PyDict_SetItemString(dict, table[i].name, value) < 0)
-			PyErr_Clear();
-		Py_DECREF(value);
-	}
-
-	if (PyModule_AddObject(module, name, dict) < 0) {
+	if (PyDict_SetItemString(dict, name, value) < 0)
 		PyErr_Clear();
-		Py_DECREF(dict);
-	}
+	Py_DECREF(value);
 }
 
-static void addConstTableStrings(PyObject *module, const char *name, const py_const_s *table)
+/* And the table itself, under the name a script reads it by. */
+static void addConstTable(PyObject *module, const char *name, PyObject *dict)
 {
-	PyObject *dict = PyDict_New();
-	if (dict == NULL) {
-		PyErr_Clear();
-		return;
-	}
-
-	for (int i = 0; table[i].name != NULL; i++) {
-		PyObject *value = PyUnicode_FromString(table[i].code);
-		if (value == NULL) {
-			PyErr_Clear();
-			continue;
-		}
-		if (PyDict_SetItemString(dict, table[i].name, value) < 0)
-			PyErr_Clear();
-		Py_DECREF(value);
-	}
-
-	if (PyModule_AddObject(module, name, dict) < 0) {
+	if (PyModule_AddObject(module, name, dict) < 0)
+	{
 		PyErr_Clear();
 		Py_DECREF(dict);
 	}
@@ -573,410 +534,50 @@ static void addConstTableStrings(PyObject *module, const char *name, const py_co
 
 static void setPythonVariables(PyObject *module)
 {
-	/* remote control keys, read as RC['ok'], the way the Lua bindings
-	 * export them */
-	static py_const keyname[] =
+	/* The tables stand in the script API, where the Lua binding reads the
+	 * same ones: scriptapi/script_constants.h. Each becomes a dictionary a
+	 * script indexes, COL['WHITE'], as the Lua tables are indexed. */
+	std::vector<ScriptConstants::Table> tables;
+	ScriptConstants::numbers(tables);
+	for (size_t i = 0; i < tables.size(); i++)
 	{
-		{ "0",			CRCInput::RC_0 },
-		{ "1",			CRCInput::RC_1 },
-		{ "2",			CRCInput::RC_2 },
-		{ "3",			CRCInput::RC_3 },
-		{ "4",			CRCInput::RC_4 },
-		{ "5",			CRCInput::RC_5 },
-		{ "6",			CRCInput::RC_6 },
-		{ "7",			CRCInput::RC_7 },
-		{ "8",			CRCInput::RC_8 },
-		{ "9",			CRCInput::RC_9 },
-		{ "backspace",		CRCInput::RC_backspace },
-		{ "up",			CRCInput::RC_up },
-		{ "left",		CRCInput::RC_left },
-		{ "right",		CRCInput::RC_right },
-		{ "down",		CRCInput::RC_down },
-		{ "spkr",		CRCInput::RC_spkr },
-		{ "minus",		CRCInput::RC_minus },
-		{ "plus",		CRCInput::RC_plus },
-		{ "standby",		CRCInput::RC_standby },
-		{ "help",		CRCInput::RC_help },
-		{ "home",		CRCInput::RC_home },
-		{ "back",		CRCInput::RC_back },
-		{ "setup",		CRCInput::RC_setup },
-		{ "topleft",		CRCInput::RC_topleft },
-		{ "topright",		CRCInput::RC_topright },
-		{ "page_up",		CRCInput::RC_page_up },
-		{ "page_down",		CRCInput::RC_page_down },
-		{ "ok",			CRCInput::RC_ok },
-		{ "red",		CRCInput::RC_red },
-		{ "green",		CRCInput::RC_green },
-		{ "yellow",		CRCInput::RC_yellow },
-		{ "blue",		CRCInput::RC_blue },
-		{ "top_left",		CRCInput::RC_top_left },
-		{ "top_right",		CRCInput::RC_top_right },
-		{ "bottom_left",	CRCInput::RC_bottom_left },
-		{ "bottom_right",	CRCInput::RC_bottom_right },
-		{ "audio",		CRCInput::RC_audio },
-		{ "video",		CRCInput::RC_video },
-		{ "tv",			CRCInput::RC_tv },
-		{ "radio",		CRCInput::RC_radio },
-		{ "text",		CRCInput::RC_text },
-		{ "info",		CRCInput::RC_info },
-		{ "epg",		CRCInput::RC_epg },
-		{ "recall",		CRCInput::RC_recall },
-		{ "favorites",		CRCInput::RC_favorites },
-		{ "sat",		CRCInput::RC_sat },
-		{ "sat2",		CRCInput::RC_sat2 },
-		{ "record",		CRCInput::RC_record },
-		{ "play",		CRCInput::RC_play },
-		{ "playpause",		CRCInput::RC_playpause },
-		{ "pause",		CRCInput::RC_pause },
-		{ "forward",		CRCInput::RC_forward },
-		{ "rewind",		CRCInput::RC_rewind },
-		{ "stop",		CRCInput::RC_stop },
-		{ "timeshift",		CRCInput::RC_timeshift },
-		{ "mode",		CRCInput::RC_mode },
-		{ "games",		CRCInput::RC_games },
-		{ "next",		CRCInput::RC_next },
-		{ "prev",		CRCInput::RC_prev },
-		{ "www",		CRCInput::RC_www },
-		{ "sub",		CRCInput::RC_sub },
-		{ "pos",		CRCInput::RC_pos },
-		{ "sleep",		CRCInput::RC_sleep },
-		{ "nextsong",		CRCInput::RC_nextsong },
-		{ "previoussong",	CRCInput::RC_previoussong },
-		{ "bookmarks",		CRCInput::RC_bookmarks },
-		{ "program",		CRCInput::RC_program },
-		{ "power_on",		CRCInput::RC_power_on },
-		{ "power_off",		CRCInput::RC_power_off },
-		{ "standby_on",		CRCInput::RC_standby_on },
-		{ "standby_off",	CRCInput::RC_standby_off },
-		{ "mute_on",		CRCInput::RC_mute_on },
-		{ "mute_off",		CRCInput::RC_mute_off },
-		{ "analog_on",		CRCInput::RC_analog_on },
-		{ "analog_off",		CRCInput::RC_analog_off },
-		{ "timeout",		(long long)CRCInput::RC_timeout },
-		/* to check if it is in our range */
-		{ "MaxRC",		CRCInput::RC_MaxRC },
-		{ NULL, 0 }
-	};
+		PyObject *dict = PyDict_New();
+		if (dict == NULL)
+		{
+			PyErr_Clear();
+			continue;
+		}
+		for (size_t j = 0; j < tables[i].entries.size(); j++)
+			addConst(dict, tables[i].entries[j].name, PyLong_FromLongLong(tables[i].entries[j].value));
+		addConstTable(module, tables[i].name, dict);
+	}
 
-
-	/* screen offsets, read as SCREEN['END_X'] */
-	long long xRes = (long long)CFrameBuffer::getInstance()->getScreenWidth(true);
-	long long yRes = (long long)CFrameBuffer::getInstance()->getScreenHeight(true);
-	py_const screenopts[] =
+	/* the version of this binding, which is its own */
+	PyObject *apiversion = PyDict_New();
+	if (apiversion != NULL)
 	{
-		{ "OFF_X", g_settings.screen_StartX },
-		{ "OFF_Y", g_settings.screen_StartY },
-		{ "END_X", g_settings.screen_EndX },
-		{ "END_Y", g_settings.screen_EndY },
-		{ "X_RES", xRes },
-		{ "Y_RES", yRes },
-		{ NULL, 0 }
-	};
+		addConst(apiversion, "MAJOR", PyLong_FromLong(PYTHON_API_VERSION_MAJOR));
+		addConst(apiversion, "MINOR", PyLong_FromLong(PYTHON_API_VERSION_MINOR));
+		addConstTable(module, "APIVERSION", apiversion);
+	}
+	else
+		PyErr_Clear();
 
-	/* the _TYPE_ in these names is redundant, read as FONT['MENU'] */
-	py_const fontlist[] =
+	/* The directories, read as DIR['CONFIGDIR'], and with them the two a
+	 * python plugin lies in. */
+	std::vector<ScriptConstants::Text> directories;
+	ScriptConstants::directories(directories);
+	PyObject *dirs = PyDict_New();
+	if (dirs != NULL)
 	{
-		{ "MENU",			SNeutrinoSettings::FONT_TYPE_MENU },
-		{ "MENU_TITLE",			SNeutrinoSettings::FONT_TYPE_MENU_TITLE },
-		{ "MENU_INFO",			SNeutrinoSettings::FONT_TYPE_MENU_INFO },
-		{ "MENU_FOOT",			SNeutrinoSettings::FONT_TYPE_MENU_FOOT },
-		{ "EPG_TITLE",			SNeutrinoSettings::FONT_TYPE_EPG_TITLE },
-		{ "EPG_INFO1",			SNeutrinoSettings::FONT_TYPE_EPG_INFO1 },
-		{ "EPG_INFO2",			SNeutrinoSettings::FONT_TYPE_EPG_INFO2 },
-		{ "EPG_DATE",			SNeutrinoSettings::FONT_TYPE_EPG_DATE },
-		{ "EPGPLUS_ITEM",		SNeutrinoSettings::FONT_TYPE_EPGPLUS_ITEM },
-		{ "EVENTLIST_TITLE",		SNeutrinoSettings::FONT_TYPE_EVENTLIST_TITLE },
-		{ "EVENTLIST_ITEMLARGE",	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMLARGE },
-		{ "EVENTLIST_ITEMSMALL",	SNeutrinoSettings::FONT_TYPE_EVENTLIST_ITEMSMALL },
-		{ "EVENTLIST_DATETIME",		SNeutrinoSettings::FONT_TYPE_EVENTLIST_DATETIME },
-		{ "EVENTLIST_EVENT",		SNeutrinoSettings::FONT_TYPE_EVENTLIST_EVENT },
-		{ "CHANNELLIST",		SNeutrinoSettings::FONT_TYPE_CHANNELLIST },
-		{ "CHANNELLIST_DESCR",		SNeutrinoSettings::FONT_TYPE_CHANNELLIST_DESCR },
-		{ "CHANNELLIST_NUMBER",		SNeutrinoSettings::FONT_TYPE_CHANNELLIST_NUMBER },
-		{ "CHANNELLIST_EVENT",		SNeutrinoSettings::FONT_TYPE_CHANNELLIST_EVENT },
-		{ "CHANNEL_NUM_ZAP",		SNeutrinoSettings::FONT_TYPE_CHANNEL_NUM_ZAP },
-		{ "INFOBAR_NUMBER",		SNeutrinoSettings::FONT_TYPE_INFOBAR_NUMBER },
-		{ "INFOBAR_CHANNAME",		SNeutrinoSettings::FONT_TYPE_INFOBAR_CHANNAME },
-		{ "INFOBAR_INFO",		SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO },
-		{ "INFOBAR_SMALL",		SNeutrinoSettings::FONT_TYPE_INFOBAR_SMALL },
-		{ "FILEBROWSER_ITEM",		SNeutrinoSettings::FONT_TYPE_FILEBROWSER_ITEM },
-		{ "MENU_HINT",			SNeutrinoSettings::FONT_TYPE_MENU_HINT },
-		{ "MOVIEBROWSER_HEAD",		SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_HEAD },
-		{ "MOVIEBROWSER_LIST",		SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_LIST },
-		{ "MOVIEBROWSER_INFO",		SNeutrinoSettings::FONT_TYPE_MOVIEBROWSER_INFO },
-		{ "SUBTITLES",			SNeutrinoSettings::FONT_TYPE_SUBTITLES },
-		{ "MESSAGE_TEXT",		SNeutrinoSettings::FONT_TYPE_MESSAGE_TEXT },
-		{ "BUTTON_TEXT",		SNeutrinoSettings::FONT_TYPE_BUTTON_TEXT },
-		{ "WINDOW_GENERAL",		SNeutrinoSettings::FONT_TYPE_WINDOW_GENERAL },
-		{ "RADIOTEXT_TITLE",		SNeutrinoSettings::FONT_TYPE_WINDOW_RADIOTEXT_TITLE },
-		{ "WINDOW_RADIOTEXT_DESC",	SNeutrinoSettings::FONT_TYPE_WINDOW_RADIOTEXT_DESC },
-		{ NULL, 0 }
-	};
-
-	py_const corners[] =
-	{
-		{ "TOP_LEFT",		CORNER_TOP_LEFT },
-		{ "TOP_RIGHT",		CORNER_TOP_RIGHT },
-		{ "BOTTOM_LEFT",	CORNER_BOTTOM_LEFT },
-		{ "BOTTOM_RIGHT",	CORNER_BOTTOM_RIGHT },
-		/* those depend on g_settings.theme.rounded_corners */
-		{ "RADIUS_LARGE",	RADIUS_LARGE },
-		{ "RADIUS_MID",		RADIUS_MID },
-		{ "RADIUS_SMALL",	RADIUS_SMALL },
-		{ "RADIUS_MIN",		RADIUS_MIN },
-		{ "RADIUS_NONE",	RADIUS_NONE },
-		{ NULL, 0 }
-	};
-
-	/* offsets, read as OFFSET['SHADOW'] */
-	py_const offsets[] =
-	{
-		{ "SHADOW",		OFFSET_SHADOW },
-		{ "INTER",		OFFSET_INTER },
-		{ "INNER_LARGE",	OFFSET_INNER_LARGE },
-		{ "INNER_MID",		OFFSET_INNER_MID },
-		{ "INNER_SMALL",	OFFSET_INNER_SMALL },
-		{ "INNER_MIN",		OFFSET_INNER_MIN },
-		{ "INNER_NONE",		OFFSET_INNER_NONE },
-		{ NULL, 0 }
-	};
-
-	py_const menureturn[] =
-	{
-		{ "NONE",		menu_return::RETURN_NONE },
-		{ "REPAINT",		menu_return::RETURN_REPAINT },
-		{ "EXIT",		menu_return::RETURN_EXIT },
-		{ "EXIT_ALL",		menu_return::RETURN_EXIT_ALL },
-		{ "EXIT_REPAINT",	menu_return::RETURN_EXIT_REPAINT },
-		{ NULL, 0 }
-	};
-
-	py_const apiversion[] =
-	{
-		{ "MAJOR", PYTHON_API_VERSION_MAJOR },
-		{ "MINOR", PYTHON_API_VERSION_MINOR },
-		{ NULL, 0 }
-	};
-
-
-	py_const playstate[] =
-	{
-		{ "NORMAL",		CMoviePlayerGui::PLUGIN_PLAYSTATE_NORMAL },
-		{ "STOP",		CMoviePlayerGui::PLUGIN_PLAYSTATE_STOP },
-		{ "NEXT",		CMoviePlayerGui::PLUGIN_PLAYSTATE_NEXT },
-		{ "PREV",		CMoviePlayerGui::PLUGIN_PLAYSTATE_PREV },
-		{ "LEAVE_ALL",		CMoviePlayerGui::PLUGIN_PLAYSTATE_LEAVE_ALL },
-		{ NULL, 0 }
-	};
-
-	py_const ccomponents[] =
-	{
-		{ "SHADOW_OFF",		(long long)CC_SHADOW_OFF },
-		{ "SHADOW_ON",		(long long)CC_SHADOW_ON },
-		{ "SAVE_SCREEN_YES",	(long long)CC_SAVE_SCREEN_YES },
-		{ "SAVE_SCREEN_NO",	(long long)CC_SAVE_SCREEN_NO },
-		{ NULL, 0 }
-	};
-
-	py_const dynfont[] =
-	{
-		{ "STYLE_REGULAR",	(long long)CNeutrinoFonts::FONT_STYLE_REGULAR },
-		{ "STYLE_BOLD",		(long long)CNeutrinoFonts::FONT_STYLE_BOLD },
-		{ "STYLE_ITALIC",	(long long)CNeutrinoFonts::FONT_STYLE_ITALIC },
-		{ "MAX",		(long long)CNeutrinoFonts::DYNFONTEXT_MAX },
-		{ "MAXIMUM_FONTS",	(long long)CPythonInstance::DYNFONT_MAXIMUM_FONTS },
-		{ "TO_WIDE",		(long long)CPythonInstance::DYNFONT_TOO_WIDE },
-		{ "TOO_WIDE",		(long long)CPythonInstance::DYNFONT_TOO_WIDE },
-		{ "TOO_HIGH",		(long long)CPythonInstance::DYNFONT_TOO_HIGH },
-		{ NULL, 0 }
-	};
-
-	py_const curl_status[] =
-	{
-		{ "OK",			PY_CURL_OK },
-		{ "ERR_HANDLE",		PY_CURL_ERR_HANDLE },
-		{ "ERR_NO_URL",		PY_CURL_ERR_NO_URL },
-		{ "ERR_CREATE_FILE",	PY_CURL_ERR_CREATE_FILE },
-		{ "ERR_CURL",		PY_CURL_ERR_CURL },
-		{ NULL, 0 }
-	};
-
-	py_const neutrino_mode[] =
-	{
-		{ "UNKNOWN",	(long long)NeutrinoModes::mode_unknown },
-		{ "TV",		(long long)NeutrinoModes::mode_tv },
-		{ "RADIO",	(long long)NeutrinoModes::mode_radio },
-		{ "AVINPUT",	(long long)NeutrinoModes::mode_avinput },
-		{ "STANDBY",	(long long)NeutrinoModes::mode_standby },
-		{ "AUDIO",	(long long)NeutrinoModes::mode_audio },
-		{ "PIC",	(long long)NeutrinoModes::mode_pic },
-		{ "TS",		(long long)NeutrinoModes::mode_ts },
-		{ "OFF",	(long long)NeutrinoModes::mode_off },
-		{ "WEBTV",	(long long)NeutrinoModes::mode_webtv },
-		{ "WEBRADIO",	(long long)NeutrinoModes::mode_webradio },
-		{ "MASK",	(long long)NeutrinoModes::mode_mask },
-		{ "NOREZAP",	(long long)NeutrinoModes::norezap },
-		{ NULL, 0 }
-	};
-
-	py_const post_msg[] =
-	{
-		{ "STANDBY_ON",	(long long)CPythonInstMisc::POSTMSG_STANDBY_ON },
-		{ NULL, 0 }
-	};
-
-	/* possible text alignment modes usable for window header caption */
-	py_const text_alignment[] =
-	{
-		{ "DEFAULT",	(long long)CTextBox::NO_AUTO_LINEBREAK },
-		{ "CENTER",	(long long)CTextBox::CENTER },
-		{ "RIGHT",	(long long)CTextBox::RIGHT },
-		{ NULL, 0 }
-	};
-
-
-	/* list of colors, read as COL['INFOBAR_SHADOW'] */
-	py_const colorlist[] =
-	{
-		{ "WHITE",			(long long)(COL_WHITE) },
-		{ "BLACK",			(long long)(COL_BLACK) },
-		{ "DARK_RED",			(long long)(COL_DARK_RED) },
-		{ "RED",			(long long)(COL_RED) },
-		{ "LIGHT_RED",			(long long)(COL_LIGHT_RED) },
-		{ "DARK_GREEN",			(long long)(COL_DARK_GREEN) },
-		{ "GREEN",			(long long)(COL_GREEN) },
-		{ "LIGHT_GREEN",		(long long)(COL_LIGHT_GREEN) },
-		{ "DARK_YELLOW",		(long long)(COL_DARK_YELLOW) },
-		{ "YELLOW",			(long long)(COL_YELLOW) },
-		{ "LIGHT_YELLOW",		(long long)(COL_LIGHT_YELLOW) },
-		{ "DARK_BLUE",			(long long)(COL_DARK_BLUE) },
-		{ "BLUE",			(long long)(COL_BLUE) },
-		{ "LIGHT_BLUE",			(long long)(COL_LIGHT_BLUE) },
-		{ "DARK_GRAY",			(long long)(COL_DARK_GRAY) },
-		{ "GRAY",			(long long)(COL_GRAY) },
-		{ "LIGHT_GRAY",			(long long)(COL_LIGHT_GRAY) },
-
-		{ "COLORED_EVENTS_CHANNELLIST",	(long long)(MAGIC_COLOR | (COL_COLORED_EVENTS_CHANNELLIST)) },
-		{ "COLORED_EVENTS_INFOBAR",	(long long)(MAGIC_COLOR | (COL_COLORED_EVENTS_INFOBAR)) },
-		{ "SHADOW",			(long long)(MAGIC_COLOR | (COL_SHADOW)) },
-		/* obsolete */
-		{ "INFOBAR_SHADOW",		(long long)(MAGIC_COLOR | (COL_SHADOW)) },
-		{ "INFOBAR",			(long long)(MAGIC_COLOR | (COL_INFOBAR)) },
-		{ "MENUHEAD",			(long long)(MAGIC_COLOR | (COL_MENUHEAD)) },
-		{ "MENUCONTENT",		(long long)(MAGIC_COLOR | (COL_MENUCONTENT)) },
-		{ "MENUCONTENTDARK",		(long long)(MAGIC_COLOR | (COL_MENUCONTENTDARK)) },
-		{ "MENUCONTENTSELECTED",	(long long)(MAGIC_COLOR | (COL_MENUCONTENTSELECTED)) },
-		{ "MENUCONTENTINACTIVE",	(long long)(MAGIC_COLOR | (COL_MENUCONTENTINACTIVE)) },
-		{ "MENUFOOT",			(long long)(MAGIC_COLOR | (COL_MENUFOOT)) },
-		{ "FRAME",			(long long)(MAGIC_COLOR | (COL_FRAME)) },
-		{ "SCROLLBAR",			(long long)(MAGIC_COLOR | (COL_SCROLLBAR)) },
-		{ "SCROLLBAR_ACTIVE",		(long long)(MAGIC_COLOR | (COL_SCROLLBAR_ACTIVE)) },
-		{ "SCROLLBAR_PASSIVE",		(long long)(MAGIC_COLOR | (COL_SCROLLBAR_PASSIVE)) },
-		{ "PROGRESSBAR_ACTIVE",		(long long)(MAGIC_COLOR | (COL_PROGRESSBAR_ACTIVE_PLUS_0)) },
-		{ "PROGRESSBAR_PASSIVE",	(long long)(MAGIC_COLOR | (COL_PROGRESSBAR_PASSIVE_PLUS_0)) },
-		{ "BACKGROUND",			(long long)(MAGIC_COLOR | (COL_BACKGROUND)) },
-
-		{ "COLORED_EVENTS_TEXT",	(long long)(COL_COLORED_EVENTS_TEXT) },
-		{ "INFOBAR_TEXT",		(long long)(COL_INFOBAR_TEXT) },
-		/* obsolete */
-		{ "INFOBAR_SHADOW_TEXT",	(long long)(COL_MENUFOOT_TEXT) },
-		{ "MENUHEAD_TEXT",		(long long)(COL_MENUHEAD_TEXT) },
-		{ "MENUCONTENT_TEXT",		(long long)(COL_MENUCONTENT_TEXT) },
-		{ "MENUCONTENT_TEXT_PLUS_1",	(long long)(COL_MENUCONTENT_TEXT_PLUS_1) },
-		{ "MENUCONTENT_TEXT_PLUS_2",	(long long)(COL_MENUCONTENT_TEXT_PLUS_2) },
-		{ "MENUCONTENT_TEXT_PLUS_3",	(long long)(COL_MENUCONTENT_TEXT_PLUS_3) },
-		{ "MENUCONTENTDARK_TEXT",	(long long)(COL_MENUCONTENTDARK_TEXT) },
-		{ "MENUCONTENTDARK_TEXT_PLUS_1",(long long)(COL_MENUCONTENTDARK_TEXT_PLUS_1) },
-		{ "MENUCONTENTDARK_TEXT_PLUS_2",(long long)(COL_MENUCONTENTDARK_TEXT_PLUS_2) },
-		{ "MENUCONTENTSELECTED_TEXT",	(long long)(COL_MENUCONTENTSELECTED_TEXT) },
-		{ "MENUCONTENTSELECTED_TEXT_PLUS_1",	(long long)(COL_MENUCONTENTSELECTED_TEXT_PLUS_1) },
-		{ "MENUCONTENTSELECTED_TEXT_PLUS_2",	(long long)(COL_MENUCONTENTSELECTED_TEXT_PLUS_2) },
-		{ "MENUCONTENTINACTIVE_TEXT",	(long long)(COL_MENUCONTENTINACTIVE_TEXT) },
-		{ "MENUFOOT_TEXT",		(long long)(COL_MENUFOOT_TEXT) },
-		{ "SHADOW_PLUS_0",		(long long)(COL_SHADOW_PLUS_0) },
-		{ "MENUHEAD_PLUS_0",		(long long)(COL_MENUHEAD_PLUS_0) },
-		{ "MENUCONTENT_PLUS_0",		(long long)(COL_MENUCONTENT_PLUS_0) },
-		{ "MENUCONTENT_PLUS_1",		(long long)(COL_MENUCONTENT_PLUS_1) },
-		{ "MENUCONTENT_PLUS_2",		(long long)(COL_MENUCONTENT_PLUS_2) },
-		{ "MENUCONTENT_PLUS_3",		(long long)(COL_MENUCONTENT_PLUS_3) },
-		{ "MENUCONTENT_PLUS_4",		(long long)(COL_MENUCONTENT_PLUS_4) },
-		{ "MENUCONTENT_PLUS_5",		(long long)(COL_MENUCONTENT_PLUS_5) },
-		{ "MENUCONTENT_PLUS_6",		(long long)(COL_MENUCONTENT_PLUS_6) },
-		{ "MENUCONTENT_PLUS_7",		(long long)(COL_MENUCONTENT_PLUS_7) },
-		{ "MENUCONTENTDARK_PLUS_0",	(long long)(COL_MENUCONTENTDARK_PLUS_0) },
-		{ "MENUCONTENTDARK_PLUS_2",	(long long)(COL_MENUCONTENTDARK_PLUS_2) },
-		{ "MENUCONTENTSELECTED_PLUS_0",	(long long)(COL_MENUCONTENTSELECTED_PLUS_0) },
-		{ "MENUCONTENTSELECTED_PLUS_2",	(long long)(COL_MENUCONTENTSELECTED_PLUS_2) },
-		{ "MENUCONTENTINACTIVE_PLUS_0",	(long long)(COL_MENUCONTENTINACTIVE_PLUS_0) },
-		{ "MENUFOOT_PLUS_0",		(long long)(COL_MENUFOOT_PLUS_0) },
-		{ "FRAME_PLUS_0",		(long long)(COL_FRAME_PLUS_0) },
-		{ "SCROLLBAR_PLUS_0",		(long long)(COL_SCROLLBAR_PLUS_0) },
-		{ "SCROLLBAR_ACTIVE_PLUS_0",	(long long)(COL_SCROLLBAR_ACTIVE_PLUS_0) },
-		{ "SCROLLBAR_PASSIVE_PLUS_0",	(long long)(COL_SCROLLBAR_PASSIVE_PLUS_0) },
-		{ "PROGRESSBAR_ACTIVE_PLUS_0",	(long long)(COL_PROGRESSBAR_ACTIVE_PLUS_0) },
-		{ "PROGRESSBAR_PASSIVE_PLUS_0",	(long long)(COL_PROGRESSBAR_PASSIVE_PLUS_0) },
-		{ NULL, 0 }
-	};
-
-
-	/* directories, read as DIR['CONFIGDIR'] */
-	py_const_s directories[] =
-	{
-		{ "CONFIGDIR",		CONFIGDIR },
-		{ "ZAPITDIR",		ZAPITDIR },
-		{ "DATADIR",		DATADIR },
-		{ "DATADIR_VAR",	DATADIR_VAR },
-		{ "CONTROLDIR",		CONTROLDIR },
-		{ "CONTROLDIR_VAR",	CONTROLDIR_VAR },
-		{ "FONTDIR",		FONTDIR },
-		{ "FONTDIR_VAR",	FONTDIR_VAR },
-		{ "LIBDIR",		LIBDIR },
-		{ "GAMESDIR",		GAMESDIR },
-		{ "ICONSDIR",		ICONSDIR },
-		{ "ICONSDIR_VAR",	ICONSDIR_VAR },
-		{ "LOCALEDIR",		LOCALEDIR },
-		{ "LOCALEDIR_VAR",	LOCALEDIR_VAR },
-		{ "PLUGINDIR",		PLUGINDIR },
-		{ "PLUGINDIR_MNT",	PLUGINDIR_MNT },
-		{ "PLUGINDIR_VAR",	PLUGINDIR_VAR },
-		{ "LUAPLUGINDIR",	LUAPLUGINDIR },
-		{ "LUAPLUGINDIR_VAR",	LUAPLUGINDIR_VAR },
-		{ "PYTHONPLUGINDIR",	PYTHONPLUGINDIR },
-		{ "PYTHONPLUGINDIR_VAR", PYTHONPLUGINDIR_VAR },
-		{ "THEMESDIR",		THEMESDIR },
-		{ "THEMESDIR_VAR",	THEMESDIR_VAR },
-		{ "WEBRADIODIR",	WEBRADIODIR },
-		{ "WEBRADIODIR_VAR",	WEBRADIODIR_VAR },
-		{ "WEBTVDIR",		WEBTVDIR },
-		{ "WEBTVDIR_VAR",	WEBTVDIR_VAR },
-		{ "LOGODIR",		LOGODIR },
-		{ "LOGODIR_VAR",	LOGODIR_VAR },
-		{ "PRIVATE_HTTPDDIR",	PRIVATE_HTTPDDIR },
-		{ "PUBLIC_HTTPDDIR",	PUBLIC_HTTPDDIR },
-		{ "HOSTED_HTTPDDIR",	HOSTED_HTTPDDIR },
-		{ "FLAGDIR",		FLAGDIR },
-		{ NULL, NULL }
-	};
-
-	addConstTable(module, "RC", keyname);
-	addConstTable(module, "SCREEN", screenopts);
-	addConstTable(module, "FONT", fontlist);
-	addConstTable(module, "CORNER", corners);
-	addConstTable(module, "OFFSET", offsets);
-	addConstTable(module, "MENU_RETURN", menureturn);
-	addConstTable(module, "APIVERSION", apiversion);
-	addConstTable(module, "PLAYSTATE", playstate);
-	addConstTable(module, "CC", ccomponents);
-	addConstTable(module, "DYNFONT", dynfont);
-	addConstTable(module, "CURL", curl_status);
-	addConstTable(module, "NMODE", neutrino_mode);
-	addConstTable(module, "POSTMSG", post_msg);
-	addConstTable(module, "TEXT_ALIGNMENT", text_alignment);
-	addConstTable(module, "COL", colorlist);
-
-	/* The directories, read as DIR['CONFIGDIR']. */
-	addConstTableStrings(module, "DIR", directories);
-	addConstTableStrings(module, "DIR", directories);
+		for (size_t i = 0; i < directories.size(); i++)
+			addConst(dirs, directories[i].name, PyUnicode_FromString(directories[i].value));
+		addConst(dirs, "PYTHONPLUGINDIR", PyUnicode_FromString(PYTHONPLUGINDIR));
+		addConst(dirs, "PYTHONPLUGINDIR_VAR", PyUnicode_FromString(PYTHONPLUGINDIR_VAR));
+		addConstTable(module, "DIR", dirs);
+	}
+	else
+		PyErr_Clear();
 }
 
 /* Every binding this directory holds, registered under the name a script
