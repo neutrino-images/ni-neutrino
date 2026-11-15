@@ -30,7 +30,8 @@
 class CLuaCCPicture : public ScriptPicture
 {
 	public:
-		explicit CLuaCCPicture(const params_t &pars) : ScriptPicture(pars) {}
+		int parent_ref;
+		explicit CLuaCCPicture(const params_t &pars) : ScriptPicture(pars), parent_ref(LUA_NOREF) {}
 };
 
 class CLuaInstCCPicture

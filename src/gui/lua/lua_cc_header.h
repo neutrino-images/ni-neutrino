@@ -28,7 +28,8 @@
 class CLuaCCHeader : public ScriptHeader
 {
 	public:
-		explicit CLuaCCHeader(const params_t &pars) : ScriptHeader(pars) {}
+		int parent_ref;
+		explicit CLuaCCHeader(const params_t &pars) : ScriptHeader(pars), parent_ref(LUA_NOREF) {}
 };
 
 class CLuaInstCCHeader

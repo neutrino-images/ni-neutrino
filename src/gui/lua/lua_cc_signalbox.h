@@ -29,7 +29,8 @@
 class CLuaCCSignalBox : public ScriptSignalbox
 {
 	public:
-		explicit CLuaCCSignalBox(const params_t &pars) : ScriptSignalbox(pars) {}
+		int parent_ref;
+		explicit CLuaCCSignalBox(const params_t &pars) : ScriptSignalbox(pars), parent_ref(LUA_NOREF) {}
 };
 
 class CLuaInstCCSignalbox

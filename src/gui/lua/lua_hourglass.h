@@ -28,7 +28,8 @@
 class CLuaHourGlass : public ScriptHourglass
 {
 	public:
-		explicit CLuaHourGlass(const params_t &pars) : ScriptHourglass(pars) {}
+		int parent_ref;
+		explicit CLuaHourGlass(const params_t &pars) : ScriptHourglass(pars), parent_ref(LUA_NOREF) {}
 };
 
 class CLuaInstHourGlass

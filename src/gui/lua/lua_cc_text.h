@@ -31,7 +31,8 @@
 class CLuaCCText : public ScriptText
 {
 	public:
-		explicit CLuaCCText(const params_t &pars) : ScriptText(pars) {}
+		int parent_ref;
+		explicit CLuaCCText(const params_t &pars) : ScriptText(pars), parent_ref(LUA_NOREF) {}
 };
 
 class CLuaInstCCText
