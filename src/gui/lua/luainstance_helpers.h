@@ -81,36 +81,6 @@ typedef std::pair<lua_Integer, fb_pixel_t*> screenmap_pair_t;
 typedef std::map<lua_Integer, fb_pixel_t*> screenmap_t;
 typedef screenmap_t::iterator screenmap_iterator_t;
 
-struct table_key {
-	const char *name;
-	lua_Integer code;
-};
-
-struct table_key_u {
-	const char *name;
-	lua_Unsigned code;
-};
-
-struct table_key_s {
-	const char *name;
-	const char *code;
-};
-
-struct lua_envexport {
-	const char *name;
-	table_key *t;
-};
-
-struct lua_envexport_u {
-	const char *name;
-	table_key_u *t;
-};
-
-struct lua_envexport_s {
-	const char *name;
-	table_key_s *t;
-};
-
 /* this is stored as userdata in the lua_State */
 struct CLuaData
 {
