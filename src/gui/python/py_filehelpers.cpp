@@ -32,6 +32,8 @@
 #include <neutrino.h>
 #include <gui/widget/msgbox.h>
 
+#include <scriptapi/script_filehelpers.h>
+
 #include "pyinstance.h"
 
 typedef struct
@@ -58,6 +60,13 @@ static void fileHelpersError(const char *msg, const char *file, int line)
 	std::string where = pyScriptWhere();
 	printf(">>> Python script error [%s] %s\n    (error from neutrino: [%s:%d])\n",
 	       where.c_str(), msg, file, line);
+}
+
+/* The same for a call the script API made: the work stands there
+ * (scriptapi/script_filehelpers.h), where the Lua binding reads it too. */
+static void fileHelpersError(const ScriptFileHelpers::Error &error)
+{
+	fileHelpersError(error.msg.c_str(), error.file.c_str(), error.line);
 }
 
 PyObject *CPythonInstFileHelpers::FileHelpersNew(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -107,21 +116,13 @@ PyObject *CPythonInstFileHelpers::FileHelpersCp(PyObject * /*self*/, PyObject *a
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss|s", (char **)kwlist, &from, &to, &flags))
 		return NULL;
 
-	CFileHelpers fh;
-	fh.setConsoleQuiet(true);
-	bool ret = fh.cp(from, to, flags);
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Cp(from, to, flags, error);
 	if (!ret)
-	{
-		helpersDebugInfo di;
-		fh.readDebugInfo(&di);
-		fileHelpersError(di.msg.c_str(), di.file.c_str(), di.line);
-	}
+		fileHelpersError(error);
 
 	return PyBool_FromLong(ret ? 1 : 0);
 }
-
-/* the layer this file now reads: scriptapi/script_filehelpers.h */
-#include "../scriptapi/script_filehelpers.h"
 
 /* f.chmod(file, mode): the mode is the number a script writes, read as the
  * octal digits it looks like; that rule stands in the script API, where the
@@ -158,30 +159,10 @@ PyObject *CPythonInstFileHelpers::FileHelpersTouch(PyObject * /*self*/, PyObject
 	if (args != NULL && PyTuple_GET_SIZE(args) > 1)
 		haveTime = true;
 
-	if (!file_exists(file))
-	{
-		FILE *f = fopen(file, "w");
-		if (f == NULL)
-		{
-			fileHelpersError(strerror(errno), __path_file__, __LINE__);
-			return PyBool_FromLong(0);
-		}
-		fclose(f);
-		if (!haveTime)
-			return PyBool_FromLong(1);
-	}
-
-	time_t modTime = haveTime ? (time_t)newTime : time(NULL);
-
-	utimbuf utb;
-	utb.actime = modTime;
-	utb.modtime = modTime;
-	bool ret = true;
-	if (utime(file, &utb) != 0)
-	{
-		ret = false;
-		fileHelpersError(strerror(errno), __path_file__, __LINE__);
-	}
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Touch(file, haveTime, (time_t)newTime, error);
+	if (!ret)
+		fileHelpersError(error);
 
 	return PyBool_FromLong(ret ? 1 : 0);
 }
@@ -195,15 +176,10 @@ PyObject *CPythonInstFileHelpers::FileHelpersRmdir(PyObject * /*self*/, PyObject
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", (char **)kwlist, &dir))
 		return NULL;
 
-	CFileHelpers *fh = CFileHelpers::getInstance();
-	fh->setConsoleQuiet(true);
-	bool ret = fh->removeDir(dir);
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Rmdir(dir, error);
 	if (!ret)
-	{
-		helpersDebugInfo di;
-		fh->readDebugInfo(&di);
-		fileHelpersError(di.msg.c_str(), di.file.c_str(), di.line);
-	}
+		fileHelpersError(error);
 
 	return PyBool_FromLong(ret ? 1 : 0);
 }
@@ -223,22 +199,10 @@ PyObject *CPythonInstFileHelpers::FileHelpersMkdir(PyObject * /*self*/, PyObject
 	if (args != NULL && PyTuple_GET_SIZE(args) > 1)
 		haveMode = true;
 
-	mode_t mode = 0755;
-	if (haveMode)
-	{
-		std::string mode_s = itoa(mode_i, 10);
-		mode = (mode_t)(strtol(mode_s.c_str(), (char **)NULL, 8) & 0x0FFF);
-	}
-
-	CFileHelpers *fh = CFileHelpers::getInstance();
-	fh->setConsoleQuiet(true);
-	bool ret = fh->createDir(dir, mode);
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Mkdir(dir, haveMode, mode_i, error);
 	if (!ret)
-	{
-		helpersDebugInfo di;
-		fh->readDebugInfo(&di);
-		fileHelpersError(di.msg.c_str(), di.file.c_str(), di.line);
-	}
+		fileHelpersError(error);
 
 	return PyBool_FromLong(ret ? 1 : 0);
 }
@@ -253,15 +217,15 @@ PyObject *CPythonInstFileHelpers::FileHelpersReadlink(PyObject * /*self*/, PyObj
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", (char **)kwlist, &link))
 		return NULL;
 
-	char buf[PATH_MAX];
-	memset(buf, '\0', sizeof(buf));
-	if (readlink(link, buf, sizeof(buf) - 1) == -1)
+	std::string target;
+	ScriptFileHelpers::Error error;
+	if (!ScriptFileHelpers::Readlink(link, target, error))
 	{
-		fileHelpersError(strerror(errno), __path_file__, __LINE__);
+		fileHelpersError(error);
 		Py_RETURN_NONE;
 	}
 
-	return PyUnicode_FromString(buf);
+	return PyUnicode_FromString(target.c_str());
 }
 
 /* f.ln(src, link, flags="s"): a symlink, and with 'f' over an existing one */
@@ -275,32 +239,13 @@ PyObject *CPythonInstFileHelpers::FileHelpersLn(PyObject * /*self*/, PyObject *a
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss|s", (char **)kwlist, &src, &link, &flags))
 		return NULL;
 
-	bool symlnk = (strchr(flags, 's') != NULL);
-	bool force = (strchr(flags, 'f') != NULL);
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Ln(src, link, flags, error);
+	if (!ret)
+		fileHelpersError(error);
 
-	if (!symlnk)
-	{
-		fileHelpersError("Currently only supports symlinks.", __path_file__, __LINE__);
-		return PyBool_FromLong(0);
-	}
-
-	if (symlink(src, link) != 0)
-	{
-		if (force && (errno == EEXIST))
-		{
-			if (unlink(link) == 0)
-			{
-				if (symlink(src, link) == 0)
-					return PyBool_FromLong(1);
-			}
-		}
-		fileHelpersError(strerror(errno), __path_file__, __LINE__);
-		return PyBool_FromLong(0);
-	}
-
-	return PyBool_FromLong(1);
+	return PyBool_FromLong(ret ? 1 : 0);
 }
-
 
 /* f.exist(file, flags): 'f' a regular file, 'l' a symlink, 'd' a directory.
  * None where the flags are unknown, as the Lua binding answers. */
@@ -314,43 +259,10 @@ PyObject *CPythonInstFileHelpers::FileHelpersExist(PyObject * /*self*/, PyObject
 		return NULL;
 
 	bool ret = false;
-	bool err = false;
-	std::string errMsg = "";
-
-	if (file_exists(file))
+	ScriptFileHelpers::Error error;
+	if (!ScriptFileHelpers::Exist(file, flags, ret, error))
 	{
-		struct stat FileInfo;
-		if (lstat(file, &FileInfo) == -1)
-		{
-			err = true;
-			errMsg = (std::string)strerror(errno);
-		}
-		else if (strchr(flags, 'f') != NULL)
-		{
-			if (S_ISREG(FileInfo.st_mode))
-				ret = true;
-		}
-		else if (strchr(flags, 'l') != NULL)
-		{
-			if (S_ISLNK(FileInfo.st_mode))
-				ret = true;
-		}
-		else if (strchr(flags, 'd') != NULL)
-		{
-			if (S_ISDIR(FileInfo.st_mode))
-				ret = true;
-		}
-		else
-		{
-			err = true;
-			errMsg = (strlen(flags) == 0) ? "no" : "unknown";
-			errMsg += " flag given.";
-		}
-	}
-
-	if (err)
-	{
-		fileHelpersError(errMsg.c_str(), __path_file__, __LINE__);
+		fileHelpersError(error);
 		Py_RETURN_NONE;
 	}
 
@@ -368,55 +280,11 @@ PyObject *CPythonInstFileHelpers::FileHelpersIsEmpty(PyObject * /*self*/, PyObje
 		return NULL;
 
 	bool ret = false;
-	bool err = false;
-	std::string errMsg = "";
-
-	if (file_exists(file))
+	ScriptFileHelpers::Error error;
+	if (!ScriptFileHelpers::IsEmpty(file, ret, error))
 	{
-		struct stat FileInfo;
-		if (lstat(file, &FileInfo) == -1)
-		{
-			err = true;
-			errMsg = (std::string)strerror(errno);
-		}
-		else if (S_ISLNK(FileInfo.st_mode))
-		{
-			printf("Following symlink: %s\n", file);
-			if (stat(file, &FileInfo) == -1)
-			{
-				err = true;
-				errMsg = "Symlink target does not exist: " + std::string(strerror(errno));
-			}
-			else if (S_ISREG(FileInfo.st_mode))
-			{
-				ret = (FileInfo.st_size == 0);
-			}
-			else
-			{
-				err = true;
-				errMsg = "Target of symlink is not a regular file.";
-			}
-		}
-		else if (S_ISREG(FileInfo.st_mode))
-		{
-			ret = (FileInfo.st_size == 0);
-		}
-		else
-		{
-			err = true;
-			errMsg = std::string(file) + " is not a regular file.";
-		}
-	}
-	else
-	{
-		err = true;
-		errMsg = std::string(file) + " does not exist.";
-	}
-
-	if (err)
-	{
-		fileHelpersError(errMsg.c_str(), __path_file__, __LINE__);
-		DisplayErrorMessage(errMsg.c_str(), "Python Script Error:");
+		fileHelpersError(error);
+		DisplayErrorMessage(error.msg.c_str(), "Python Script Error:");
 		Py_RETURN_NONE;
 	}
 
