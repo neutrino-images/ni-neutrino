@@ -60,6 +60,21 @@ class ScriptText
 		 * it had. */
 		static int	readMode(const std::string &words, std::string &text);
 
+		/* t.setText(): a new text, in the mode and the font the call names.
+		 * A font the settings do not hold is the menu's, as it is for the
+		 * text a script makes. */
+		void		setText(const std::string &text, int text_mode, int font);
+
+		/* t.hide(): a text in a form cannot take itself off the screen
+		 * without the form, so it is emptied and painted; one of its own is
+		 * hidden. */
+		void		hide();
+
+		/* t.setDimensionsAll(x, y, w, h): held to the screen - no wider and
+		 * no higher than it, and a position beyond that size is the origin.
+		 * Numbers that name no box are dropped. */
+		void		setDimensionsAll(int x, int y, int w, int h);
+
 		/* the text itself, for a binding that has a call of its own on it */
 		CComponentsText	*ct;
 		/* the form it went into: a form deletes what it holds, so a text
