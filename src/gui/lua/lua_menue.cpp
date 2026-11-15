@@ -38,6 +38,7 @@
 #include "luainstance.h"
 #include "lua_menue.h"
 #include <scriptapi/script_stringinput.h>
+#include <scriptapi/script_ui.h>
 
 CLuaInstMenu* CLuaInstMenu::getInstance()
 {
@@ -552,10 +553,10 @@ int CLuaInstMenu::MenuExec(lua_State *L)
 {
 	CLuaMenu *D = MenuCheck(L, 1);
 	if (!D) return 0;
-	CLuaInstance::scriptUiOpen();
+	ScriptUi::open();
 	D->m->exec(NULL, "");
 	D->m->hide();
-	CLuaInstance::scriptUiClose();
+	ScriptUi::close();
 	return 0;
 }
 

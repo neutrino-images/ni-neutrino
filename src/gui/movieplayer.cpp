@@ -51,6 +51,7 @@
 #include <gui/widget/settingitem.h>
 #include <gui/lua/luainstance.h>
 #include <gui/lua/lua_video.h>
+#include <scriptapi/script_ui.h>
 #ifdef ENABLE_PYTHON
 #include <gui/python/py_video.h>
 #endif
@@ -2294,7 +2295,7 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 	/* the hint covers the data fetch only: while the script shows a
 	 * menu or message of its own, the hint and its loader animation
 	 * would otherwise keep painting over it */
-	CLuaInstance::setScriptUiListener(&CMoviePlayerGui::liveUrlHintToggle, box);
+	ScriptUi::setListener(&CMoviePlayerGui::liveUrlHintToggle, box);
 
 	std::string result_code = "";
 	std::string result_string = "";
@@ -2308,7 +2309,7 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 	lua->runScript(lua_script.c_str(), &args, &result_code, &result_string, &lua_error);
 	delete lua;
 #endif
-	CLuaInstance::setScriptUiListener(NULL, NULL);
+	ScriptUi::setListener(NULL, NULL);
 	if ((result_code != "0") || result_string.empty()) {
 		if (error_string) {
 			if (!lua_error.empty())
