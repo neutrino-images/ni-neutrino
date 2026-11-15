@@ -120,13 +120,25 @@ class ScriptNeutrino
 				neutrino_msg_t &msg, neutrino_msg_data_t &data);
 
 		/* The map of screens a window has saved, walked the same way in both
-		 * bindings: a screen is looked up by the number it was given, and then
-		 * either handed out as it is, handed out and forgotten, or freed. The
+		 * bindings: a screen is saved under the next number, looked up by the
+		 * number it was given, and then either handed out as it is, handed out
+		 * and forgotten, or freed. The
 		 * buffer came from the framebuffer window, so it is freed where the
 		 * same shape is written down, not in two places.
 		 *
 		 * A template for the same reason FontOf is one: the Lua map and the
 		 * Python one keep their numbers under keys of different types. */
+		template <typename MapT>
+		static long ScreenSave(CFBWindow *fbwin, MapT &screenmap, int x, int y, int w, int h)
+		{
+			/* w.saveScreen(x, y, w, h): the screen is kept under the next
+			 * number of this window, which is what the script gets. */
+			fb_pixel_t *buf = fbwin->saveScreen(x, y, w, h);
+			long id = (long)screenmap.size() + 1;
+			screenmap.insert(typename MapT::value_type(id, buf));
+			return id;
+		}
+
 		template <typename MapT>
 		static fb_pixel_t *ScreenTake(MapT &screenmap, long id, bool forget)
 		{
