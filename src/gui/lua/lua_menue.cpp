@@ -27,10 +27,8 @@
 #include <unistd.h>
 
 #include <global.h>
-#include <gui/widget/keyboard_input.h>
 #include <gui/widget/stringinput.h>
 #include <gui/widget/msgbox.h>
-#include <gui/filebrowser.h>
 #include <system/debug.h>
 #include <system/helpers.h>
 #include <neutrino.h>
@@ -230,19 +228,7 @@ void CLuaMenuFilebrowser::Init(std::string *_value, bool _dirMode)
 int CLuaMenuFilebrowser::exec(CMenuTarget* /*parent*/, const std::string& /*actionKey*/)
 {
 	int res = menu_return::RETURN_REPAINT;
-	CFileBrowser fileBrowser;
-	fileBrowser.Dir_Mode = dirMode;
-
-	CFileFilter fileFilter;
-	for (std::vector<std::string>::iterator it = filter.begin(); it != filter.end(); ++it)
-		fileFilter.addFilter(*it);
-	if (!filter.empty())
-		fileBrowser.Filter = &fileFilter;
-
-	std::string tmpValue = (dirMode) ? *value : getPathName(*value);
-	if (fileBrowser.exec(tmpValue.c_str()) == true)
-		*value = fileBrowser.getSelectedFile()->Name;
-
+	ScriptMenu::browse(value, dirMode, filter);
 	if (!luaAction.empty()) {
 		lua_pushglobaltable(L);
 		lua_getfield(L, -1, luaAction.c_str());
@@ -337,13 +323,7 @@ void CLuaMenuKeyboardinput::Init(const char *_name, std::string *_value, int _si
 int CLuaMenuKeyboardinput::exec(CMenuTarget* /*parent*/, const std::string & /*actionKey*/)
 {
 	int res = menu_return::RETURN_REPAINT;
-	CKeyboardInput *i;
-	i = new CKeyboardInput((char *)name, value, size, observ, icon, help, help2);
-	i->setMasked(masked);
-	i->exec(NULL, "");
-	delete i;
-	if (masked && row)
-		row->setOption(ScriptMenu::maskedText(*value));
+	ScriptMenu::keyboardInput(name, value, size, observ, icon, help, help2, masked, row);
 	if (!luaAction.empty()) {
 		lua_pushglobaltable(L);
 		lua_getfield(L, -1, luaAction.c_str());

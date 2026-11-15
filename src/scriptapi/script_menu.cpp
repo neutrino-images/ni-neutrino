@@ -23,6 +23,9 @@
 #include <cstring>
 
 #include <neutrino.h>
+#include <gui/filebrowser.h>
+#include <gui/widget/keyboard_input.h>
+#include <system/helpers.h>
 
 ScriptMenu::ScriptMenu(const params_t &pars)
 {
@@ -71,6 +74,36 @@ void ScriptMenu::keep(int id, ScriptMenuItem *item)
 std::string ScriptMenu::maskedText(const std::string &value)
 {
 	return value.empty() ? "" : "********";
+}
+
+void ScriptMenu::keyboardInput(const std::string &name, std::string *value, int size,
+		CChangeObserver *observ, const char *icon,
+		const std::string &help, const std::string &help2,
+		bool masked, CMenuForwarder *row)
+{
+	CKeyboardInput input(name, value, size, observ, icon, help, help2);
+	input.setMasked(masked);
+	input.exec(NULL, "");
+
+	/* a masked row shows whether a value is set, never the value */
+	if (masked && row)
+		row->setOption(maskedText(*value));
+}
+
+void ScriptMenu::browse(std::string *value, bool dirMode, const std::vector<std::string> &filter)
+{
+	CFileBrowser fileBrowser;
+	fileBrowser.Dir_Mode = dirMode;
+
+	CFileFilter fileFilter;
+	for (std::vector<std::string>::const_iterator it = filter.begin(); it != filter.end(); ++it)
+		fileFilter.addFilter(*it);
+	if (!filter.empty())
+		fileBrowser.Filter = &fileFilter;
+
+	std::string tmpValue = (dirMode) ? *value : getPathName(*value);
+	if (fileBrowser.exec(tmpValue.c_str()) == true)
+		*value = fileBrowser.getSelectedFile()->Name;
 }
 
 /* A chooser without options is a script that asked for something the menu
