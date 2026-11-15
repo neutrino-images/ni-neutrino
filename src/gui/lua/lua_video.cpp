@@ -28,10 +28,10 @@
 #include <system/debug.h>
 #include <gui/movieplayer.h>
 #include <gui/widget/msgbox.h>
-#include <zapit/zapit.h>
 #include <hardware/video.h>
 #include <neutrino.h>
-#include <driver/screenshot.h>
+
+#include <scriptapi/script_video.h>
 
 #include "luainstance.h"
 #include "lua_video.h"
@@ -140,6 +140,24 @@ int CLuaInstVideo::StopPicture(lua_State *L)
 	return 0;
 }
 
+/* The info function of a script is a name in its lua_State, so the player is
+ * told here; the play itself stands in the script API. */
+class CLuaPlayHook : public ScriptVideo::PlayHook
+{
+	public:
+		lua_State *L;
+		bool haveFunc;
+		CLuaPlayHook(lua_State *_L, bool _haveFunc) : L(_L), haveFunc(_haveFunc) {}
+		void infoFunc(bool on)
+		{
+			if (on) {
+				if (haveFunc)
+					CMoviePlayerGui::getInstance().setLuaInfoFunc(L, true);
+			} else
+				CMoviePlayerGui::getInstance().setLuaInfoFunc(L, false);
+		}
+};
+
 int CLuaInstVideo::PlayFile(lua_State *L)
 {
 	/* workaround for deprecated functions */
@@ -179,9 +197,6 @@ int CLuaInstVideo::PlayFile(lua_State *L)
 	if (luaL_testudata(L, 1, LUA_CLASSNAME) == NULL)
 		if (D)
 			sp = D->singlePlay;
-	if ((sp == false) && (CMoviePlayerGui::getInstance().getBlockedFromPlugin() == false))
-		CMoviePlayerGui::getInstance().setBlockedFromPlugin(true);
-
 	const char *title;
 	const char *info1 = "";
 	const char *info2 = "";
@@ -197,19 +212,10 @@ int CLuaInstVideo::PlayFile(lua_State *L)
 	if (numargs > 5)
 		fname2 = luaL_checkstring(L, 6);
 	printf("CLuaInstVideo::%s: title %s file %s\n", __func__, title, fname);
-	std::string st(title);
-	std::string si1(info1);
-	std::string si2(info2);
-	std::string sf(fname);
-	std::string sf2(fname2);
-	if (D != NULL && !D->infoFunc.empty())
-		CMoviePlayerGui::getInstance().setLuaInfoFunc(L, true);
-	CMoviePlayerGui::getInstance().SetFile(st, sf, si1, si2,sf2);
-	CMoviePlayerGui::getInstance().exec(NULL, "http_lua");
-	CMoviePlayerGui::getInstance().setLuaInfoFunc(L, false);
+	CLuaPlayHook hook(L, D != NULL && !D->infoFunc.empty());
+	int ret = ScriptVideo::playFile(sp, title, fname, info1, info2, fname2, &hook);
 	if (D != NULL && !D->infoFunc.empty())
 		D->infoFunc = "";
-	int ret = CMoviePlayerGui::getInstance().getKeyPressed();
 	lua_pushinteger(L, ret);
 	return 1;
 }
@@ -270,12 +276,7 @@ int CLuaInstVideo::zapitStopPlayBack(lua_State *L)
 	int numargs = lua_gettop(L);
 	if (numargs > 1)
 		stop = _luaL_checkbool(L, 2);
-	if (stop) {
-		CMoviePlayerGui::getInstance().stopPlayBack();
-		g_Zapit->stopPlayBack();
-	}
-	else
-		g_Zapit->startPlayBack();
+	ScriptVideo::stopPlayBack(stop);
 	return 0;
 }
 
@@ -289,9 +290,7 @@ int CLuaInstVideo::channelRezap(lua_State *L)
 	}
 	/* CLuaVideo *D = VideoCheckData(L, 1);
 	if (!D) return 0; */
-	CNeutrinoApp::getInstance()->channelRezap();
-	if (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_radio)
-		CFrameBuffer::getInstance()->showFrame("radiomode.jpg");
+	ScriptVideo::channelRezap();
 	return 0;
 }
 
@@ -318,11 +317,7 @@ int CLuaInstVideo::createChannelIDfromUrl(lua_State *L)
 		return 1;
 	}
 
-	t_channel_id id = CREATE_CHANNEL_ID(0, 0, 0, url);
-	char id_str[17];
-	snprintf(id_str, sizeof(id_str), "%" PRIx64, id);
-
-	lua_pushstring(L, id_str);
+	lua_pushstring(L, ScriptVideo::channelIdOfUrl(url).c_str());
 	return 1;
 }
 
@@ -373,15 +368,8 @@ int CLuaInstVideo::Screenshot(lua_State *L)
 	tableLookup(L, "name", filename);
 	tableLookup(L, "osd", enableOSD);
 	tableLookup(L, "video", enableVideo);
-	CScreenShot * screenshot = new CScreenShot("/tmp/" + filename + ".png", (CScreenShot::screenshot_format_t)0 /*PNG*/);
-	if(screenshot){
-		screenshot->EnableOSD(enableOSD);
-		screenshot->EnableVideo(enableVideo);
-		if (!screenshot->StartSync()){
-			printf("CLuaInstVideo::%s: Error\n", __func__);
-		}
-		delete screenshot;
-	}
+	if (!ScriptVideo::screenshot(filename, enableOSD, enableVideo))
+		printf("CLuaInstVideo::%s: Error\n", __func__);
 	return 0;
 }
 #endif

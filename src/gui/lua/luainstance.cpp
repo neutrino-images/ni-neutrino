@@ -48,6 +48,7 @@
 #include "lua_cc_window.h"
 #include "lua_configfile.h"
 #include "../scriptapi/script_neutrino.h"
+#include "../scriptapi/script_video.h"
 #include "lua_curl.h"
 #include "lua_filehelpers.h"
 #include "lua_hint.h"
@@ -730,21 +731,12 @@ void CLuaInstance::runScript(const char *fileName, std::vector<std::string> *arg
 		if (error_string)
 			*error_string = std::string(lua_tostring(lua, -1));
 		/* restoreNeutrino at plugin crash, when blocked from plugin */
-		if (CMoviePlayerGui::getInstance().getBlockedFromPlugin())
-		{
-			CMoviePlayerGui::getInstance().setBlockedFromPlugin(false);
-			CMoviePlayerGui::getInstance().restoreNeutrino();
-		}
-		else if (videoDecoder->getBlank())
+		if (!ScriptVideo::restoreAfterScript() && videoDecoder->getBlank())
 			CLuaInstVideo::getInstance()->channelRezap(lua);
 	}
 	else
 	{
-		if (CLuaInstVideo::getInstance() && CMoviePlayerGui::getInstance().getBlockedFromPlugin())
-		{
-			CMoviePlayerGui::getInstance().setBlockedFromPlugin(false);
-			CMoviePlayerGui::getInstance().restoreNeutrino();
-		}
+		ScriptVideo::restoreAfterScript();
 	}
 }
 

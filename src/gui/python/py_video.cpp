@@ -31,8 +31,8 @@
 #include <driver/framebuffer.h>
 #include <hardware/video.h>
 #include <neutrino.h>
-#include <zapit/zapit.h>
-#include <zapit/getservices.h>
+
+#include <scriptapi/script_video.h>
 
 #include "pyinstance.h"
 
@@ -198,6 +198,26 @@ bool CPythonInstVideo::execPythonInfoFunc(PyObject *video, int xres, int yres, i
 	return true;
 }
 
+/* The info function of a script is a python object, so the player is told
+ * here; the play itself stands in the script API. */
+class CPyPlayHook : public ScriptVideo::PlayHook
+{
+	public:
+		PyObject *video;
+		bool haveFunc;
+		CPyPlayHook(PyObject *_video, bool _haveFunc) : video(_video), haveFunc(_haveFunc) {}
+		void infoFunc(bool on)
+		{
+			if (on)
+			{
+				if (haveFunc)
+					CMoviePlayerGui::getInstance().setPythonInfoFunc(video, true);
+			}
+			else
+				CMoviePlayerGui::getInstance().setPythonInfoFunc(NULL, false);
+		}
+};
+
 /* v.PlayFile(title, file, info1="", info2="", file2=""), answering the key
  * the play ended on, as the Lua binding answers. */
 PyObject *CPythonInstVideo::PlayFile(PyObject *self, PyObject *args, PyObject *kwds)
@@ -220,20 +240,14 @@ PyObject *CPythonInstVideo::PlayFile(PyObject *self, PyObject *args, PyObject *k
 		return NULL;
 	title = p_title, file = p_file, info1 = p_info1, info2 = p_info2, file2 = p_file2;
 
-	if ((D->singlePlay == false) && (CMoviePlayerGui::getInstance().getBlockedFromPlugin() == false))
-		CMoviePlayerGui::getInstance().setBlockedFromPlugin(true);
-
 	printf("CPythonInstVideo::%s: title %s file %s\n", __func__, title.c_str(), file.c_str());
 
-	if (D->infoFunc != NULL && D->infoFunc != Py_None)
-		CMoviePlayerGui::getInstance().setPythonInfoFunc((PyObject *)self, true);
-	CMoviePlayerGui::getInstance().SetFile(title, file, info1, info2, file2);
-	CMoviePlayerGui::getInstance().exec(NULL, "http_lua");
-	CMoviePlayerGui::getInstance().setPythonInfoFunc(NULL, false);
+	bool haveFunc = (D->infoFunc != NULL && D->infoFunc != Py_None);
+	CPyPlayHook hook((PyObject *)self, haveFunc);
+	int ret = ScriptVideo::playFile(D->singlePlay, title, file, info1, info2, file2, &hook);
 	if (D->infoFunc != NULL && D->infoFunc != Py_None)
 		Py_CLEAR(D->infoFunc);
 
-	int ret = CMoviePlayerGui::getInstance().getKeyPressed();
 	return PyLong_FromLong(ret);
 }
 
@@ -246,22 +260,13 @@ PyObject *CPythonInstVideo::ZapitStopPlayBack(PyObject * /*self*/, PyObject *arg
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "|p", (char **)kwlist, &stop))
 		return NULL;
 
-	if (stop)
-	{
-		CMoviePlayerGui::getInstance().stopPlayBack();
-		g_Zapit->stopPlayBack();
-	}
-	else
-		g_Zapit->startPlayBack();
-
+	ScriptVideo::stopPlayBack(stop ? true : false);
 	Py_RETURN_NONE;
 }
 
 PyObject *CPythonInstVideo::ChannelRezap(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
 {
-	CNeutrinoApp::getInstance()->channelRezap();
-	if (CNeutrinoApp::getInstance()->getMode() == NeutrinoModes::mode_radio)
-		CFrameBuffer::getInstance()->showFrame("radiomode.jpg");
+	ScriptVideo::channelRezap();
 	Py_RETURN_NONE;
 }
 
@@ -277,11 +282,7 @@ PyObject *CPythonInstVideo::CreateChannelIDfromUrl(PyObject * /*self*/, PyObject
 	if (!*url)
 		Py_RETURN_NONE;
 
-	t_channel_id id = CREATE_CHANNEL_ID(0, 0, 0, url);
-	char id_str[17];
-	snprintf(id_str, sizeof(id_str), "%" PRIx64, id);
-
-	return PyUnicode_FromString(id_str);
+	return PyUnicode_FromString(ScriptVideo::channelIdOfUrl(url).c_str());
 }
 
 PyObject *CPythonInstVideo::GetNeutrinoMode(PyObject * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
