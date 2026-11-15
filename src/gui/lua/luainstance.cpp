@@ -1265,7 +1265,6 @@ int CLuaInstance::GetSize(lua_State *L)
 int CLuaInstance::saveScreen(lua_State *L)
 {
 	int x, y, w, h;
-	fb_pixel_t *buf;
 	CLuaData *W = CheckData(L, 1);
 	if (!W || !W->fbwin)
 		return 0;
@@ -1274,11 +1273,7 @@ int CLuaInstance::saveScreen(lua_State *L)
 	w = luaL_checkint(L, 4);
 	h = luaL_checkint(L, 5);
 
-	buf = W->fbwin->saveScreen(x, y, w, h);
-
-	lua_Integer id = W->screenmap.size() + 1;
-	W->screenmap.insert(screenmap_pair_t(id, buf));
-	lua_pushinteger(L, id);
+	lua_pushinteger(L, (lua_Integer)ScriptNeutrino::ScreenSave(W->fbwin, W->screenmap, x, y, w, h));
 	return 1;
 }
 

@@ -532,9 +532,7 @@ PyObject *CPythonInstNeutrino::SaveScreen(PyObject *self, PyObject *args, PyObje
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiii", (char **)kwlist, &x, &y, &w, &h))
 		return NULL;
 
-	fb_pixel_t *buf = W->fbwin->saveScreen((int)x, (int)y, (int)w, (int)h);
-	long id = (long)W->screenmap.size() + 1;
-	W->screenmap.insert(pyscreenmap_pair_t(id, buf));
+	long id = ScriptNeutrino::ScreenSave(W->fbwin, W->screenmap, (int)x, (int)y, (int)w, (int)h);
 
 	return PyLong_FromLong(id);
 }
