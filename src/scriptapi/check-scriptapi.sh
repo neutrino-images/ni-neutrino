@@ -79,7 +79,7 @@ on_the_layer()
 # that would be a step of its own, not a binding migration.
 # ---------------------------------------------------------------------------
 
-ALREADY_SHARED="configfile:CConfigFile video:CMoviePlayerGui"
+ALREADY_SHARED="configfile:CConfigFile"
 LANGUAGE_ONLY="threads"
 
 # The class of the box a module of a binding is said to rest on, if it is.
@@ -231,12 +231,9 @@ if [ -n "$shared" ]; then
 	echo "  what this script sees of them is only that both bindings name that class. What"
 	echo "  they do around the call was looked at and stands here as it is:"
 	echo "    configfile - wiring, the same eight calls of CConfigFile on both sides."
-	echo "    video      - the box calls match too, but one short sequence both write out"
-	echo "                 themselves: blocked from plugin, SetFile, exec, getKeyPressed."
-	echo "                 To move that, the layer would need a way back into the binding"
-	echo "                 for the info callback, which is why it is named and not done."
-	echo "  filehelpers was named here once as well and is not any more: all of its"
-	echo "  calls stand in ScriptFileHelpers now, and both bindings read them there."
+	echo "  filehelpers and video were named here once as well and are not any more:"
+	echo "  their calls stand in ScriptFileHelpers and ScriptVideo now, the play of a"
+	echo "  file with a hook back into the binding for the info function of a script."
 fi
 
 if [ -n "$language" ]; then

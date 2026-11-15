@@ -42,4 +42,5 @@ libneutrino_scriptapi_a_SOURCES = \
 	script_signalbox.cpp \
 	script_stringinput.cpp \
 	script_text.cpp \
+	script_video.cpp \
 	script_window.cpp
