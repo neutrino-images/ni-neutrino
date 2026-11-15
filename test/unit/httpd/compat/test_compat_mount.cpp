@@ -502,7 +502,8 @@ TEST_CASE("a method the legacy side never had a name for answers 501 before a di
 
 TEST_CASE("a multipart POST answers 501 before a dispatcher is ever asked", "[compat][mount]")
 {
-	// data/y-web/Y_Settings_Backup.yhtm and Y_Tools_Installer.yhtm both post this to
+	// The old yWeb's Y_Settings_Backup.yhtm and Y_Tools_Installer.yhtm (once in
+	// data/y-web) both post this to
 	// /control/exec, with their real arguments in the query and only the uploaded file
 	// in the part bodyIsMultipart cannot take apart. A dispatcher that never ran is
 	// the proof this does not run that query's own script blind.
@@ -1280,7 +1281,7 @@ TEST_CASE("a body on a method the old server never reads one for is not read her
 
 TEST_CASE("the form that costs a box its lists arrives whole", "[compat][mount]")
 {
-	/* data/y-web/Y_Settings_xmltv.yhtm:17 posts these three names to
+	/* The old yWeb's Y_Settings_xmltv.yhtm (once in data/y-web) posts these three names to
 	   /control/xmltvlist, and xmltvlistCGI (controlapi.cpp:3736-3788) has an else
 	   branch for each one that clears the list when the parameter is empty. Reaching
 	   that handler with an empty list is not a request that fails, it is the box's

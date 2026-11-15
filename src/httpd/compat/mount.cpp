@@ -69,7 +69,8 @@ bool bodyIsForm(const std::string &content_type)
    it, real state on a real filesystem this layer has never needed a second
    body parser and a second file writer to reproduce, because nothing asked
    it to until now. Both of this prefix's live callers
-   (data/y-web/Y_Settings_Backup.yhtm, Y_Tools_Installer.yhtm) carry their
+   (the old yWeb's Y_Settings_Backup.yhtm and Y_Tools_Installer.yhtm, once
+   in data/y-web) carry their
    real arguments in the query string and only the file itself in the part
    this cannot read, so letting such a request reach a dispatcher would run
    that query's own script for real, against whatever an earlier upload left

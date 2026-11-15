@@ -6,7 +6,7 @@
 # the files to each other, and both faults below are ones the old catalogue has today
 # and nothing ever reported.
 #
-# The first is a key in one language and not in the other. data/y-web's two
+# The first is a key in one language and not in the other. The old yWeb's two
 # catalogues have 498 keys each and disagree about two of them, which on screen is a
 # word in the wrong language for whoever picked that language.
 #
