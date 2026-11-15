@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Neutrino Bildbetrachter</title>
+</head>
+<body>
+<h1>Neutrino Bildbetrachter</h1>
+
+<p>Der Bildbetrachter wird im Men&uuml; &bdquo;Multimedia&ldquo; aufgerufen. Er
+zeigt Bilder in den Formaten JPEG, PNG, BMP, GIF und CRW (Canon-Rohdaten) an.
+Die Bilder werden im Dateibrowser zu einer Liste zusammengestellt, die nach
+Dateiname oder Datum sortiert wird.</p>
+
+<p>Der Bildbetrachter kennt drei Modi: die Liste (Men&uuml;-Modus), die Anzeige
+eines einzelnen Bildes (Anzeige-Modus) und die Diaschau.</p>
+
+<h2>Tasten im Men&uuml;-Modus</h2>
+<dl>
+<dt>Gr&uuml;n</dt>
+<dd>Bilder oder ganze Verzeichnisse im Dateibrowser ausw&auml;hlen und zur Liste
+hinzuf&uuml;gen.</dd>
+<dt>Rot</dt>
+<dd>Das gew&auml;hlte Bild aus der Liste entfernen.</dd>
+<dt>Gelb</dt>
+<dd>Alle Bilder aus der Liste entfernen.</dd>
+<dt>Blau</dt>
+<dd>Diaschau ab dem gew&auml;hlten Bild starten.</dd>
+<dt>OK</dt>
+<dd>Das gew&auml;hlte Bild anzeigen.</dd>
+<dt>0</dt>
+<dd>Das gew&auml;hlte Bild in voller Gr&ouml;&szlig;e unskaliert anzeigen (kann
+dauern).</dd>
+<dt>5</dt>
+<dd>Sortierung zwischen Dateiname und Datum wechseln.</dd>
+<dt>Pfeil hoch / runter</dt>
+<dd>Ein Bild nach oben bzw. unten.</dd>
+<dt>Pfeil links / rechts</dt>
+<dd>Eine Seite zur&uuml;ck bzw. weiter.</dd>
+<dt>Stumm</dt>
+<dd>Die Datei des gew&auml;hlten Bildes nach einer R&uuml;ckfrage
+l&ouml;schen.</dd>
+<dt>Hilfe</dt>
+<dd>Die Tastenhilfe anzeigen.</dd>
+<dt>Home / Zur&uuml;ck</dt>
+<dd>Den Bildbetrachter verlassen.</dd>
+</dl>
+
+<h2>Tasten im Anzeige-Modus</h2>
+<dl>
+<dt>Pfeil links / rechts</dt>
+<dd>Vorheriges bzw. n&auml;chstes Bild. Nach dem letzten Bild folgt wieder das
+erste.</dd>
+<dt>1 / 3</dt>
+<dd>Verkleinern bzw. vergr&ouml;&szlig;ern.</dd>
+<dt>2, 4, 6, 8</dt>
+<dd>Den Bildausschnitt nach oben, links, rechts bzw. unten verschieben.</dd>
+<dt>OK</dt>
+<dd>Das Bild neu einlesen.</dd>
+<dt>0</dt>
+<dd>Das Bild in voller Gr&ouml;&szlig;e unskaliert einlesen (kann dauern).</dd>
+<dt>Blau</dt>
+<dd>Diaschau ab diesem Bild starten.</dd>
+<dt>Stumm</dt>
+<dd>Die Datei des Bildes nach einer R&uuml;ckfrage l&ouml;schen.</dd>
+<dt>Home / Zur&uuml;ck</dt>
+<dd>Zur&uuml;ck zur Liste.</dd>
+</dl>
+
+<h2>Diaschau</h2>
+<p>In der Diaschau wird nach der eingestellten Anzeigedauer automatisch das
+n&auml;chste Bild gezeigt; nach dem letzten Bild beginnt sie wieder beim ersten.
+Es gelten dieselben Tasten wie im Anzeige-Modus. Blau h&auml;lt die Diaschau an
+und wechselt in den Anzeige-Modus, ein weiteres Blau setzt sie fort.</p>
+
+<h2>Anmerkung zum Zoomen</h2>
+<p>Zum Zoomen wird das Bild unkomprimiert im Speicher neu berechnet. Reicht der
+Speicher daf&uuml;r nicht, bleibt das Bild unver&auml;ndert. Dann zum
+n&auml;chsten Bild schalten oder den Anzeige-Modus verlassen.</p>
+
+<h2>Einstellungen</h2>
+<dl>
+<dt>Skalierung</dt>
+<dd>Wie Bilder auf Bildschirmgr&ouml;&szlig;e gebracht werden: einfach,
+aufw&auml;ndig (Farbmittelung) oder keine.</dd>
+<dt>Diaschau-Anzeigedauer</dt>
+<dd>Anzeigedauer eines Bildes in der Diaschau, in Sekunden (Standard: 10).</dd>
+<dt>Start-Verzeichnis</dt>
+<dd>Das Verzeichnis, in dem der Dateibrowser beginnt (Standard:
+/media/sda1/pictures). Beim Start des Bildbetrachters wird die zugeh&ouml;rige
+Festplatte geweckt.</dd>
+</dl>
+
+<h2>Steuerskripte</h2>
+<p>Beim Start und beim Verlassen des Bildbetrachters werden die Skripte
+<code>pictureviewer.start</code> und <code>pictureviewer.end</code>
+ausgef&uuml;hrt. Liegt ein ausf&uuml;hrbares Skript dieses Namens in
+<code>/var/tuxbox/control</code>, wird es statt des mitgelieferten
+verwendet.</p>
+
+<p>Startet eine Aufnahme oder schaltet ein Timer um, in den Standby oder die Box
+ab, wird der Bildbetrachter beendet.</p>
+</body>
+</html>
