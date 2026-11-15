@@ -29,6 +29,7 @@ noinst_LIBRARIES = libneutrino_scriptapi.a
 libneutrino_scriptapi_a_SOURCES = \
 	script_constants.cpp \
 	script_curl.cpp \
+	script_deprecated.cpp \
 	script_filehelpers.cpp \
 	script_header.cpp \
 	script_hint.cpp \
