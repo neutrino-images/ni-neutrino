@@ -161,24 +161,30 @@ shared=""
 language=""
 answers=""
 pairs=0
-for f in $lua/lua_*.cpp; do
-	name=$(basename $f .cpp | sed 's/^lua_//')
-	twin=$python/py_$name.cpp
-	[ -f "$twin" ] || continue
+# One pair is looked at: the files of the lua side, and the files of the python
+# side. Most pairs are a lua_<name> and a py_<name>; the instance of a binding
+# and its helpers are a pair as well, under names of their own, and are named
+# below the loop so that what they read of the layer is shown with the rest.
+look_at()
+{
+	name=$1
+	l_lua=$2
+	l_python=$3
 
 	pairs=$((pairs + 1))
 	in_lua=no
 	in_python=no
-	on_the_layer $f $lua/lua_$name.h && in_lua=yes
-	on_the_layer $twin $python/py_$name.h && in_python=yes
+	on_the_layer $l_lua && in_lua=yes
+	on_the_layer $l_python && in_python=yes
 
 	# What this pair answers in the layer, and whether it is there. The file is
 	# read out of the pair, not guessed from the name, so a pair that reads
 	# script_window.h has to find it - a name that no longer answers is a fault.
 	# The header of a class needs its source beside it, or it is a promise and
-	# not an implementation. A pair that answers nothing is said below: either
-	# the work is still to come, or the pair rests on a class of the box.
-	answers_of=$(grep -ho "scriptapi/script_[a-z_]*\.h" $f $lua/lua_$name.h $twin $python/py_$name.h 2>/dev/null | sed 's|scriptapi/||' | sort -u)
+	# not an implementation. A pair that answers nothing is said below, with the
+	# reason: it rests on a class of the box, it is the language itself, or the
+	# work is still to come.
+	answers_of=$(grep -ho "scriptapi/script_[a-z_]*\.h" $l_lua $l_python 2>/dev/null | sed 's|scriptapi/||' | sort -u)
 	if [ -z "$answers_of" ]; then
 		answers="$answers $name:"
 	else
@@ -214,7 +220,23 @@ for f in $lua/lua_*.cpp; do
 			todo="$todo $name"
 		fi
 	fi
+}
+
+for f in $lua/lua_*.cpp; do
+	name=$(basename $f .cpp | sed 's/^lua_//')
+	twin=$python/py_$name.cpp
+	[ -f "$twin" ] || continue
+
+	look_at $name "$f $lua/lua_$name.h" "$twin $python/py_$name.h"
 done
+
+# The instance of a binding: the interpreter, the window a script draws in and
+# the tables of constants. The python side keeps its window in a file of its
+# own, py_neutrino, which has no lua_neutrino beside it.
+look_at instance "$lua/luainstance.cpp $lua/luainstance.h" \
+	"$python/pyinstance.cpp $python/pyinstance.h $python/py_neutrino.cpp $python/py_neutrino.h"
+look_at instance_helpers "$lua/luainstance_helpers.cpp $lua/luainstance_helpers.h" \
+	"$python/pyinstance_helpers.cpp $python/pyinstance_helpers.h"
 
 if [ -n "$todo" ]; then
 	echo "  a pair of both bindings, still to come, not on the script API yet ($pairs pairs looked at):"
@@ -231,9 +253,6 @@ if [ -n "$shared" ]; then
 	echo "  what this script sees of them is only that both bindings name that class. What"
 	echo "  they do around the call was looked at and stands here as it is:"
 	echo "    configfile - wiring, the same eight calls of CConfigFile on both sides."
-	echo "  filehelpers and video were named here once as well and are not any more:"
-	echo "  their calls stand in ScriptFileHelpers and ScriptVideo now, the play of a"
-	echo "  file with a hook back into the binding for the info function of a script."
 fi
 
 if [ -n "$language" ]; then
@@ -254,7 +273,17 @@ fi
 if [ -n "$answers" ]; then
 	echo "  what a pair of the two bindings answers in the script API ($pairs pairs looked at):"
 	for entry in $answers; do
-		echo "    $(echo $entry | sed 's/:$/: nothing yet/;s/:/ -> /')"
+		l_name=$(echo $entry | cut -d: -f1)
+		l_reads=$(echo $entry | cut -d: -f2)
+		if [ -n "$l_reads" ]; then
+			echo "    $l_name -> $l_reads"
+		elif is_language_only $l_name; then
+			echo "    $l_name -> nothing: it is the language itself"
+		elif l_core=$(shared_core $l_name); then
+			echo "    $l_name -> nothing: it rests on $l_core, a class of the box"
+		else
+			echo "    $l_name -> nothing yet"
+		fi
 	done
 fi
 
