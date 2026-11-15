@@ -28,6 +28,7 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
+#include <scriptapi/script_ui.h>
 
 typedef struct
 {
@@ -140,9 +141,9 @@ PyObject *CPythonInstHintbox::HintboxExec(PyObject *self, PyObject *args, PyObje
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", (char **)kwlist, &timeout))
 		return NULL;
 
-	CPythonInstance::scriptUiOpen();
+	ScriptUi::open();
 	D->exec(timeout);
-	CPythonInstance::scriptUiClose();
+	ScriptUi::close();
 	Py_RETURN_NONE;
 }
 

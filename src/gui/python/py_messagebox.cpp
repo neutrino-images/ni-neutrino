@@ -31,6 +31,7 @@
 
 #include "pyinstance.h"
 #include <scriptapi/script_messagebox.h>
+#include <scriptapi/script_ui.h>
 
 CPythonInstMessagebox *CPythonInstMessagebox::getInstance()
 {
@@ -100,9 +101,9 @@ PyObject *CPythonInstMessagebox::MessageboxExec(PyObject * /*self*/, PyObject *a
 
 	/* the words of the buttons, of the alignment and of the text mode are
 	 * the script api's; this binding reads them and hands them over */
-	CPythonInstance::scriptUiOpen();
+	ScriptUi::open();
 	std::string answer = ScriptMessagebox::exec(pars);
-	CPythonInstance::scriptUiClose();
+	ScriptUi::close();
 
 	return PyUnicode_FromString(answer.c_str());
 }

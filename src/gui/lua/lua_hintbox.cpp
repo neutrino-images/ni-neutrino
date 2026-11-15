@@ -32,6 +32,7 @@
 
 #include "luainstance.h"
 #include "lua_hintbox.h"
+#include <scriptapi/script_ui.h>
 
 CLuaInstHintbox* CLuaInstHintbox::getInstance()
 {
@@ -124,8 +125,8 @@ int CLuaInstHintbox::HintboxExec(lua_State *L)
 	if (lua_isnumber(L, -1))
 		timeout = (int) lua_tonumber(L, -1);
 
-	CLuaInstance::scriptUiOpen();
+	ScriptUi::open();
 	D->exec(timeout);
-	CLuaInstance::scriptUiClose();
+	ScriptUi::close();
 	return 0;
 }

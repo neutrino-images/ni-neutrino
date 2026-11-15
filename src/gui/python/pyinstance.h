@@ -81,17 +81,6 @@ class CPythonInstance
 		//	The last parameter to NULL is imperative.
 		void runScript(const char *fileName, const char *arg0, ...);
 
-		/* A script may open its own OSD (menu, messagebox, hintbox) while
-		 * the caller of runScript() still shows a hint of its own, such as
-		 * the "reading data" box of a WebTV resolve. The caller registers a
-		 * listener on its own thread; the bindings report the outermost
-		 * open/close transition (nested dialogs are counted), and the
-		 * callback runs only on the registering thread, so a script started
-		 * elsewhere in the meantime cannot touch the caller's objects. */
-		static void setScriptUiListener(void (*cb)(bool open, void *data), void *data);
-		static void scriptUiOpen();
-		static void scriptUiClose();
-
 	private:
 		/* The namespace the script of this instance runs in, so that two
 		 * scripts run one after the other do not see each other's names,

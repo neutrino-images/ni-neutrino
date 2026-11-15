@@ -37,6 +37,7 @@
 
 #include "pyinstance.h"
 #include <scriptapi/script_stringinput.h>
+#include <scriptapi/script_ui.h>
 
 typedef struct
 {
@@ -594,10 +595,10 @@ PyObject *CPythonInstMenu::MenuExec(PyObject *self, PyObject * /*args*/, PyObjec
 		return NULL;
 	}
 
-	CPythonInstance::scriptUiOpen();
+	ScriptUi::open();
 	D->m->exec(NULL, "");
 	D->m->hide();
-	CPythonInstance::scriptUiClose();
+	ScriptUi::close();
 
 	Py_RETURN_NONE;
 }

@@ -328,35 +328,6 @@ static std::string reportScriptError(std::string *error_string)
 	return msg;
 }
 
-static void (*script_ui_cb)(bool, void *) = NULL;
-static void *script_ui_cb_data = NULL;
-static pthread_t script_ui_thread;
-static int script_ui_depth = 0;
-
-void CPythonInstance::setScriptUiListener(void (*cb)(bool open, void *data), void *data)
-{
-	script_ui_cb = cb;
-	script_ui_cb_data = data;
-	script_ui_thread = pthread_self();
-	script_ui_depth = 0;
-}
-
-void CPythonInstance::scriptUiOpen()
-{
-	if (!script_ui_cb || !pthread_equal(pthread_self(), script_ui_thread))
-		return;
-	if (script_ui_depth++ == 0)
-		script_ui_cb(true, script_ui_cb_data);
-}
-
-void CPythonInstance::scriptUiClose()
-{
-	if (!script_ui_cb || !pthread_equal(pthread_self(), script_ui_thread))
-		return;
-	if (script_ui_depth > 0 && --script_ui_depth == 0)
-		script_ui_cb(false, script_ui_cb_data);
-}
-
 const char CPythonInstance::className[] = PY_CLASSNAME;
 
 CPythonInstance::CPythonInstance()

@@ -34,6 +34,7 @@
 #include "luainstance.h"
 #include "lua_messagebox.h"
 #include <scriptapi/script_messagebox.h>
+#include <scriptapi/script_ui.h>
 
 CLuaInstMessagebox* CLuaInstMessagebox::getInstance()
 {
@@ -98,9 +99,9 @@ int CLuaInstMessagebox::MessageboxExec(lua_State *L)
 
 	/* the words of the buttons, of the alignment and of the text mode are
 	 * the script api's; this binding reads them and hands them over */
-	CLuaInstance::scriptUiOpen();
+	ScriptUi::open();
 	std::string answer = ScriptMessagebox::exec(pars);
-	CLuaInstance::scriptUiClose();
+	ScriptUi::close();
 
 	lua_pushstring(L, answer.c_str());
 
