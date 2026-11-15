@@ -43,6 +43,35 @@ class ScriptMisc
 		 * is all that follows from pos. A position outside the text answers
 		 * nothing - it does not end the program. */
 		static std::string	strSub(const std::string &text, int pos, int len);
+
+		/* The messages a script may post to the box, by the number it names
+		 * them with. Both bindings hand this number out as POSTMSG.STANDBY_ON. */
+		enum
+		{
+			POSTMSG_STANDBY_ON = 1
+		};
+
+		/* Sets the volume, held between 0 and 100. Nothing happens where the
+		 * volume belongs to the HDMI CEC device. */
+		static void		setVolume(int vol);
+
+		/* The revision of the box, and its hardware as vendor_name. */
+		static unsigned int	getRevision(std::string &hw);
+
+		/* Whether the API of a binding - apiMajor.apiMinor - is new enough
+		 * for the version a script asks for. Where it is not, msg holds what
+		 * the binding shows the user, in the language of the box. */
+		static bool		versionOk(int major, int minor, int apiMajor, int apiMinor, std::string &msg);
+
+		/* Posts one of the messages above; a number that names none is
+		 * dropped, and the answer says so. */
+		static bool		postMsg(int msg);
+
+		/* The time of day in seconds, with its fraction. */
+		static double		getTimeOfDay();
+
+		/* Runs the flash update in the mode named. */
+		static void		flashUpdate(const char *mode);
 };
 
 #endif /* _SCRIPTMISC_H */
