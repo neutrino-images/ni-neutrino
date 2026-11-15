@@ -151,6 +151,22 @@ class ScriptMenu
 		 * never the value itself. */
 		static std::string	maskedText(const std::string &value);
 
+		/* What the two rows that open a dialog of the box do when they are
+		 * picked, up to the point where the answer goes to the script - that
+		 * last step is the binding's, as with every row.
+		 *
+		 * The keyboard a keyboardinput opens: the value is written where
+		 * the row keeps it, and a masked row is told what to show. */
+		static void	keyboardInput(const std::string &name, std::string *value, int size,
+					CChangeObserver *observ, const char *icon,
+					const std::string &help, const std::string &help2,
+					bool masked, CMenuForwarder *row);
+		/* The browser a filebrowser opens, on the directory the value lies
+		 * in and with the filters the script named; the value is written
+		 * only where something was picked. */
+		static void	browse(std::string *value, bool dirMode,
+					const std::vector<std::string> &filter);
+
 		/* The line a chooser that named no options leaves behind. */
 		void		optionError(void);
 

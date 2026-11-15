@@ -27,10 +27,8 @@
 #include <system/debug.h>
 #include <system/helpers.h>
 #include <gui/widget/menue.h>
-#include <gui/widget/keyboard_input.h>
 #include <gui/widget/msgbox.h>
 #include <gui/widget/stringinput.h>
-#include <gui/filebrowser.h>
 #include <gui/components/cc.h>
 #include <driver/rcinput.h>
 #include <neutrino.h>
@@ -312,15 +310,7 @@ int CPyMenuStringinput::exec(CMenuTarget * /*parent*/, const std::string & /*act
 
 int CPyMenuKeyboardinput::exec(CMenuTarget * /*parent*/, const std::string & /*actionKey*/)
 {
-	CKeyboardInput *i;
-	i = new CKeyboardInput((char *)name.c_str(), value, size, NULL, icon.c_str(), help, help2);
-	i->setMasked(masked);
-	i->exec(NULL, "");
-	delete i;
-
-	/* a masked row shows whether a value is set, never the value */
-	if (masked && row)
-		row->setOption(ScriptMenu::maskedText(*value));
+	ScriptMenu::keyboardInput(name, value, size, NULL, icon.c_str(), help, help2, masked, row);
 
 	PyGILState_STATE gstate = PyGILState_Ensure();
 	PyObject *val = PyUnicode_FromString(value->c_str());
@@ -332,18 +322,7 @@ int CPyMenuKeyboardinput::exec(CMenuTarget * /*parent*/, const std::string & /*a
 
 int CPyMenuFilebrowser::exec(CMenuTarget * /*parent*/, const std::string & /*actionKey*/)
 {
-	CFileBrowser fileBrowser;
-	fileBrowser.Dir_Mode = dirMode;
-
-	CFileFilter fileFilter;
-	for (std::vector<std::string>::iterator it = filter.begin(); it != filter.end(); ++it)
-		fileFilter.addFilter(*it);
-	if (!filter.empty())
-		fileBrowser.Filter = &fileFilter;
-
-	std::string tmpValue = (dirMode) ? *value : getPathName(*value);
-	if (fileBrowser.exec(tmpValue.c_str()) == true)
-		*value = fileBrowser.getSelectedFile()->Name;
+	ScriptMenu::browse(value, dirMode, filter);
 
 	PyGILState_STATE gstate = PyGILState_Ensure();
 	PyObject *val = PyUnicode_FromString(value->c_str());
