@@ -1,125 +1,131 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
+<!DOCTYPE html>
+<html lang="de">
 <head>
-  <title>Neutrino Timer Doku</title>
-  <meta http-equiv="content-type"
- content="text/html; charset=ISO-8859-15">
+<meta charset="utf-8">
+<title>Neutrino Timer-&Uuml;bersicht</title>
 </head>
 <body>
-<div align="center">
-<h1><b>Neutrino Timer Übersicht</b></h1>
-<div align="left">Dieses Dokument soll eine kleine Übersicht über die derzeit
-in Neutrino implementierten Timer geben. Alle Timer werden im nicht flüchtigen
-Speicher gesichert, d.h. sie Überleben runterfahren, reset, Stromausfall,...
-Timer können entweder über die Timerliste in Neutrino oder über das Web-Interface
-neu erstellt, geändert und gelöscht werden. Record (Aufnahme) und Zapit(Umschalt)
-- Timer können ebenfalls in der EPG-Anzeige EPG bezogen erstellt werden.
-<h3>Folgende Timertypen gibt es:</h3>
-</div>
-<div align="left"><b>ZAPTO </b>(Umschalt-Timer):<br>
-Die Box schaltet zur Alarmzeit auf einen bestimmten Sender um.<br>
-1 min. vor Umschalten kommt ein Hinweis.<br>
-Ein Zapto Timer holt die Box auch aus dem Deep Standby (ca.3 min vor Beginn).
-Die Box bleibt nach dem Umschalten an.<br>
-<br>
-<b>RECORD</b> (Aufnahme-Timer):<br>
-Wie der Name schon sagt dient dieser Timer zur Zeitgesteuerten Aufnahme.
-Dabei hängt es vom konfigurierten Aufnahme-Device (derzeit VCR und Streamingserver)
-ab, was die Box genau tut. Auf jeden Fall wird der Kanal zur Aufnahmezeit
-umgeschalten. Bei Aufnahme-Timern ist es jetzt auch möglich eine APID (Kennung
-eines Audiokanals) anzugeben (-&gt;Timer bearbeiten). <br>
-<br>
-Bei Streamingserver-Aufnahme bleibt die Box im Standby, wenn sie das vorher
-war. War sie sich nicht im Standby befindet, ist während der Aufnahme nur das Umschalten
-auf andere Känale auf dem selben Transponder möglich.<br>
-<br>
-Bei VCR Aufnahme kommt die Box immer aus dem Standby. Während der Aufnahme
-wird in den SCART-Modus geschalten. Dies hat mehrere Gründer:<br>
-- Kontrolle der Aufnahme am Fernseher (man sieht am TV was der VCR wirklich
-aufnimmt)<br>
-- Unterdückung der Einblendungen<br>
-- Versehentliches Umschalten ist nicht möglich<br>
-Der Scart-Mode und auch die Aufnahme können über die HOME-Taste abgebrochen
-werden. Der Timer verweilt dann noch bis zum Timer-Ende in der Timerliste
-und wird dann gelöscht, bzw. neu gestellt (periodische Timer)<br>
-<br>
-Einige Minuten vor Aufnahmebeginn erfolgt eine visuelle Erinnerung.<br>
-Ein Record-Timer holt die Box aus dem Deep-Standby. Wennd er Record-Timer
-die Box aus dem Deep-Standby geholt hat, programmiert er nach Aufnahmeende
-automatisch einen Shutdown-Timer, wenn in den nächsten 10 min keine weitere
-Aufnahme(Record) oder ein Umschalten (Zapto) ansteht. <br>
-<br>
-<b>SHUTDOWN</b> (Herunterfahren):<br>
-Dieser Timer fährt die Box in den Deep-Standby.<br>
-1 min. vor dem Runterfahren erfolgt eine Einblendung, die es auch ermöglicht
-den Shutdown abzubrechen.<br>
-<br>
-<b>STANDBY</b>:<br>
-Je nach Konfiguration des Timers fährt er die Box in den "normalen" Standby
-bzw. holt sie aus dem normalen Standby raus. (nicht deep standby).<br>
-1 min. vor dem Runterfahren erfolgt eine Einblendung, die es auch ermöglicht
-den Shutdown abzubrechen.<br>
-<br>
-<b>SLEEPTIMER:<br>
-</b>Der Sleeptimer fährt die Box je nach Einstellung in den Standby oder
-Deep-Standby.<br>
-1 min. vor dem Runterfahren erfolgt eine Einblendung,<br>
-Existiert die Datei /var/tuxbox/config/sleep.lirc so werden die darin enthaltenen 
-lirc-Kommandos gesendet (z.B. zum Auschalten des TV). Dazu muss lirc gestartet 
-und konfiguriert sein (siehe VCR Recording doku).
-Syntax der sleep.lirc Datei (pro Zeile ein Kommando, es sind mehrere Kommandos möglich):
-<PRE><device_name> <ir_code> (<dauer_in_ms>)
-device_name: Name der Fernsteuerung im lirc-config file
-ir_code: Name der Taste im lirc-config file
-dauer_in_ms: Dauer in ms (1/1000 sec), die das Signal gesendet werden soll, optional, 
-             falls nicht vorhanden, wird das Signal 1 mal gesendet
-Bsp.: sony_tv standby 500
-      grundig power</pre>
-<br>
-<b>REMINDER </b>(Erinnerung)<b>:</b><br>
-Dieser Timer blendet einen frei wählbaren Hinweistext auf dem Bildschirm
-ein. Ein Zeilenvorschub kann mittels des Zeichens "/" erreicht werden.
-<b>EXEC_PLUGIN </b>(Erinnerung)<b>:</b><br>
-Mit diesem Timer ist es möglich, ein Plugin ausführen zu lassen. Im Webinterface muss z.Zt. der Name
-von Hand eingegeben werden, er entspricht dem Dateinamen des Plugins ohne Erweiterung.<br>
-Bsp.: Dateiname des Plugins: myScript.sh -> Eingabe: myScript<br>
-In Neutrino wird ein Auswahlfenster bereitgestellt. 
+<h1>Neutrino Timer-&Uuml;bersicht</h1>
 
-<h3>Timer-Wiederholung:</h3>
-Alle Timer können auch periodisch programmiert werden. Folgende Wiederholungsmöglichkeiten
-gibt es:<br>
-<br>
-ONCE (Einmalig):<br>
-Timer wird einmal ausgeführt und danach gelöscht.<br>
-<br>
-DAILY (Täglich):<br>
-Der Timer wird jeden Tag zur selben Zeit ausgeführt.<br>
-<br>
-WEEKLY(Wöchentlich):<br>
-Der Timer wird immer am selben Wochentag zur selben Uhrzeit ausgeführt.<br>
-<br>
-BIWEEKLY (2-wöchentlich):<br>
-Der Timer wird alle 2 Wochen am selben Wochentag zur selben Zeit ausgeführt.<br>
-<br>
-FOURWEEKLY (4-wöchentlich):<br>
-Der Timer wird alle 4 Wochen am selben Wochentag zur selben Zeit ausgeführt.<br>
-<br>
-MONTHLY (Monatlich):<br>
-Der Timer wird jeden Monat am selben Tag des Monats zur selben Zeit ausgeführt,<br>
-<br>
-WEEKDAYS (an best. Wochentagen)<br>
-Der Timer wird an bestimmten, vorher konfigurierten Wochentagen zur selben
-Zeit ausgeführt. (Bsp. Mo-Fr 20.00 Uhr)<br>
-<br>
-<h3>Timer und "Deep-Standby":</h3>
-Die Box wacht 3 min. vor Record oder Zapto-Timer aus dem Deep-Standby auf.
-Nach der Aufnahme wird die Box dann über einen automatisch programmierten
-Shutdown-Timer wieder runtergefahren, wenn in den nächsten 10 min. keine
-weiter Aufnahme ansteht.<br>
-<br>
-<br>
-<br>
-</div>
-</div>
+<p>Dieses Dokument gibt eine kleine &Uuml;bersicht &uuml;ber die Timer, die der
+Timer-Daemon (timerd) von Neutrino kennt. Timer werden in der Timerliste von
+Neutrino, im Web-Interface oder aus der EPG-Anzeige heraus angelegt,
+ge&auml;ndert und gel&ouml;scht. Aufnahme- und Umschalt-Timer lassen sich in der
+EPG-Anzeige direkt zu einer Sendung anlegen.</p>
+
+<p>Alle Timer werden in <code>/var/tuxbox/config/timerd.conf</code> gespeichert
+und &uuml;berstehen so Neustart, Deep-Standby und Stromausfall. Der timerd
+arbeitet erst, wenn die Uhrzeit der Box gestellt ist. Ein einmaliger Timer,
+dessen Zeit verstrichen ist, w&auml;hrend die Box aus war, wird beim Laden
+gel&ouml;scht; ein periodischer Timer wird auf seinen n&auml;chsten Termin
+gestellt.</p>
+
+<h2>Timertypen</h2>
+
+<h3>Umschalten (ZAPTO)</h3>
+<p>Die Box schaltet zur eingestellten Zeit auf einen bestimmten Sender um. Eine
+Minute vorher holt die Box sich aus dem Standby und zeigt einen Hinweis. Nach
+dem Umschalten bleibt die Box an. Ein Umschalt-Timer holt die Box auch aus dem
+Deep-Standby.</p>
+<p>Wird der Timer in der EPG-Anzeige angelegt, beginnt er um die
+&bdquo;Umschalt-Timer-Vorlaufzeit&ldquo; (Minuten) vor der Sendung.</p>
+
+<h3>Aufnahme (RECORD)</h3>
+<p>Nimmt einen Sender zur eingestellten Zeit in das Aufnahmeverzeichnis des
+Timers auf. F&uuml;r jeden Aufnahme-Timer lassen sich das Aufnahmeverzeichnis
+und die aufzunehmenden Tonspuren (Audio-PIDs) einstellen (&bdquo;Timer
+bearbeiten&ldquo;).</p>
+<p>Einige Minuten vor Beginn (aus der Timerliste: 3 Minuten) wird die Aufnahme
+angek&uuml;ndigt. Dabei</p>
+<ul>
+<li>wird das Steuerskript f&uuml;r Aufnahme-Timer ausgef&uuml;hrt,</li>
+<li>werden die Festplatte bzw. der NFS-Server des Aufnahmeverzeichnisses
+geweckt,</li>
+<li>schaltet die Box auf den Aufnahmesender um, wenn &bdquo;Umschalten bei
+Ank&uuml;ndigung&ldquo; eingeschaltet ist,</li>
+<li>erscheint ein Hinweis, wenn &bdquo;Meldung bei Aufnahme Start/Ende&ldquo;
+eingeschaltet ist und die Box nicht im Standby ist.</li>
+</ul>
+<p>Ist die Box im Standby, bleibt sie w&auml;hrend der Aufnahme im Standby.</p>
+<p>Bei Timern aus der EPG-Anzeige werden &bdquo;Aufnahmestart-Korrektur&ldquo;
+und &bdquo;Aufnahmeende-Korrektur&ldquo; als Vor- und Nachlauf hinzugerechnet.
+Gibt es die Datei <code>/var/tuxbox/config/.adjust</code>, passt der timerd
+solche Timer an ge&auml;nderte EPG-Zeiten der Sendung an.</p>
+<p>Ein Aufnahme-Timer holt die Box aus dem Deep-Standby. Hat ein Aufnahme-Timer
+die Box geweckt, programmiert sie nach dem Aufnahmeende selbst einen
+Shutdown-Timer (in 3 Minuten), wenn in den n&auml;chsten 10 Minuten keine
+weitere Aufnahme, kein Umschalt- und kein Plugin-Timer ansteht.</p>
+
+<h3>Shutdown (SHUTDOWN)</h3>
+<p>F&auml;hrt die Box in den Deep-Standby. Eine Minute vorher erscheint eine
+Abfrage, mit der sich der Shutdown abbrechen l&auml;sst. L&auml;uft gerade ein
+Stream, wird der Shutdown &uuml;bersprungen. Ist &bdquo;Aufnahmen vor
+Deep-Standby sch&uuml;tzen&ldquo; eingeschaltet und l&auml;uft eine Aufnahme
+oder steht ein Aufnahme-Timer an, geht die Box zun&auml;chst nur in den Standby
+und erst in den Deep-Standby, wenn keine Aufnahme mehr ansteht.</p>
+
+<h3>Standby (STANDBY)</h3>
+<p>Je nach Einstellung &bdquo;Aktion&ldquo; schickt der Timer die Box in den
+(normalen) Standby (&bdquo;In Standby gehen&ldquo;) oder holt sie aus dem
+Standby (&bdquo;Aufwachen aus Standby&ldquo;). Den Deep-Standby betrifft das
+nicht. Es gibt keine Ank&uuml;ndigung.</p>
+
+<h3>Sleeptimer (SLEEPTIMER)</h3>
+<p>Schickt die Box je nach Einstellung &bdquo;Standby-Modus&ldquo; (Men&uuml;
+Energieverbrauch) in den Standby oder in den Deep-Standby. Eine Minute vorher
+erscheint eine Abfrage, mit der sich der Sleeptimer abbrechen l&auml;sst.</p>
+
+<h3>Erinnerung (REMIND)</h3>
+<p>Blendet einen frei w&auml;hlbaren Text auf dem Bildschirm ein. Das Zeichen
+<code>/</code> im Text erzeugt einen Zeilenumbruch.</p>
+
+<h3>Plugin ausf&uuml;hren (EXEC_PLUGIN)</h3>
+<p>Startet zur eingestellten Zeit ein Plugin. In Neutrino wird das Plugin aus
+einer Liste gew&auml;hlt. Im Web-Interface wird sein Name angegeben; das ist der
+Dateiname des Plugins ohne Endung.</p>
+<pre>Dateiname des Plugins: myScript.sh  -&gt;  Eingabe: myScript</pre>
+<p>L&auml;uft zu dieser Zeit schon ein anderes Plugin, wird das Plugin nicht
+gestartet. Ein Plugin-Timer holt die Box auch aus dem Deep-Standby.</p>
+
+<h3>Remote-Aufnahme</h3>
+<p>Die Timerliste zeigt auch Aufnahme-Timer, die auf einer anderen Box angelegt
+wurden. Sie liegen auf jener Box und nicht im timerd dieser Box.</p>
+
+<h2>Timer-Wiederholung</h2>
+<p>Alle Timer k&ouml;nnen auch periodisch programmiert werden:</p>
+<dl>
+<dt>einmalig (ONCE)</dt>
+<dd>Der Timer wird einmal ausgef&uuml;hrt und danach gel&ouml;scht.</dd>
+<dt>t&auml;glich (DAILY)</dt>
+<dd>Der Timer wird jeden Tag zur selben Zeit ausgef&uuml;hrt.</dd>
+<dt>w&ouml;chentlich (WEEKLY)</dt>
+<dd>Der Timer wird immer am selben Wochentag zur selben Zeit
+ausgef&uuml;hrt.</dd>
+<dt>2-w&ouml;chentlich (BIWEEKLY)</dt>
+<dd>Der Timer wird alle 2 Wochen am selben Wochentag zur selben Zeit
+ausgef&uuml;hrt.</dd>
+<dt>4-w&ouml;chentlich (FOURWEEKLY)</dt>
+<dd>Der Timer wird alle 4 Wochen am selben Wochentag zur selben Zeit
+ausgef&uuml;hrt.</dd>
+<dt>monatlich (MONTHLY)</dt>
+<dd>Der Timer wird jeden Monat am selben Tag zur selben Zeit
+ausgef&uuml;hrt.</dd>
+<dt>an Wochentagen (WEEKDAYS)</dt>
+<dd>Der Timer wird an den gew&auml;hlten Wochentagen zur selben Zeit
+ausgef&uuml;hrt (z.&nbsp;B. Mo&ndash;Fr 20:00 Uhr). Ist kein Wochentag
+gew&auml;hlt, gilt der Timer als einmalig.</dd>
+</dl>
+<p>Mit &bdquo;Wiederholungen&ldquo; l&auml;sst sich festlegen, wie oft ein
+periodischer Timer ausgef&uuml;hrt wird; 0 bedeutet unbegrenzt.</p>
+
+<h2>Timer und Deep-Standby</h2>
+<p>Vor dem Herunterfahren stellt die Box ihre Weckzeit auf den n&auml;chsten
+Aufnahme-, Umschalt- oder Plugin-Timer bzw. Standby-Timer der Art &bdquo;In
+Standby gehen&ldquo;. Sie wacht 3 Minuten vor dessen Ank&uuml;ndigung auf, also
+bei Aufnahmen aus der Timerliste etwa 6 Minuten und bei den anderen etwa 4
+Minuten vor Beginn.</p>
+<p>Nach einer Aufnahme, f&uuml;r die die Box geweckt wurde, f&auml;hrt sie
+&uuml;ber einen automatisch programmierten Shutdown-Timer wieder herunter, wenn
+in den n&auml;chsten 10 Minuten nichts weiter ansteht (siehe Aufnahme).</p>
 </body>
 </html>
