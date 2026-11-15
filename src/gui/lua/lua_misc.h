@@ -21,6 +21,8 @@
 #ifndef _LUAMISCFUNCS_H
 #define _LUAMISCFUNCS_H
 
+#include <scriptapi/script_misc.h>
+
 class CLuaMisc
 {
 	public:
@@ -32,7 +34,7 @@ class CLuaInstMisc
 {
 	public:
 		enum {
-			POSTMSG_STANDBY_ON = 1
+			POSTMSG_STANDBY_ON = ScriptMisc::POSTMSG_STANDBY_ON
 		};
 
 		CLuaInstMisc() {};

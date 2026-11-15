@@ -26,6 +26,7 @@
 #define _PYMISCFUNCS_H
 
 #include "pyinstance_helpers.h"
+#include <scriptapi/script_misc.h>
 
 class CPyMisc
 {
@@ -38,7 +39,7 @@ class CPythonInstMisc
 {
 	public:
 		enum {
-			POSTMSG_STANDBY_ON = 1
+			POSTMSG_STANDBY_ON = ScriptMisc::POSTMSG_STANDBY_ON
 		};
 
 		CPythonInstMisc() {};

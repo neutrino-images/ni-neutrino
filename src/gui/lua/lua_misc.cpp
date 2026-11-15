@@ -28,11 +28,8 @@
 #include <system/debug.h>
 #include <gui/widget/menue.h>
 #include <gui/widget/msgbox.h>
-#include <gui/update.h>
-#include <driver/volume.h>
 #include <gui/audiomute.h>
 #include <gui/infoclock.h>
-#include <cs_api.h>
 #include <neutrino.h>
 
 #include "luainstance.h"
@@ -49,8 +46,6 @@
 #endif
 
 #endif /* Lua 5.3 */
-
-extern CVolume* g_volume;
 
 CLuaInstMisc* CLuaInstMisc::getInstance()
 {
@@ -206,11 +201,7 @@ int CLuaInstMisc::setVolume(lua_State *L)
 	if (g_settings.hdmi_cec_volume) return 0;
 	CLuaMisc *D = MiscCheckData(L, 1);
 	if (!D) return 0;
-	lua_Integer vol = luaL_checkint(L, 2);
-	if (vol < 0) vol = 0;
-	if (vol > 100) vol = 100;
-	g_settings.current_volume = vol;
-	g_volume->setvol(vol);
+	ScriptMisc::setVolume((int)luaL_checkint(L, 2));
 	return 0;
 }
 
@@ -286,16 +277,9 @@ int CLuaInstMisc::GetRevision(lua_State *L)
 	}
 	/* CLuaMisc *D = MiscCheckData(L, 1);
 	if (!D) return 0; */
-	unsigned int rev = 0;
-	std::string hw   = "";
-#if HAVE_CST_HARDWARE
-	hw = "Coolstream";
-#else
-	hw = g_info.hw_caps->boxvendor;
-	hw += "_";
-	hw += g_info.hw_caps->boxname;
-#endif
-	rev = cs_get_revision();
+	std::string hw = "";
+	unsigned int rev = ScriptMisc::getRevision(hw);
+
 	lua_pushinteger(L, rev);
 	lua_pushstring(L, hw.c_str());
 	return 2;
@@ -320,14 +304,9 @@ int CLuaInstMisc::checkVersion(lua_State *L)
 	int major=0, minor=0;
 	major = luaL_checkint(L, 2);
 	minor = luaL_checkint(L, 3);
-	if ((major > LUA_API_VERSION_MAJOR) || ((major == LUA_API_VERSION_MAJOR) && (minor > LUA_API_VERSION_MINOR))) {
-		char msg[1024];
-		snprintf(msg, sizeof(msg)-1, "%s (v%d.%d)\n%s v%d.%d",
-				g_Locale->getText(LOCALE_LUA_VERSIONSCHECK1),
-				LUA_API_VERSION_MAJOR, LUA_API_VERSION_MINOR,
-				g_Locale->getText(LOCALE_LUA_VERSIONSCHECK2),
-				major, minor);
-		DisplayErrorMessage(msg, "Lua Script Error:");
+	std::string msg;
+	if (!ScriptMisc::versionOk(major, minor, LUA_API_VERSION_MAJOR, LUA_API_VERSION_MINOR, msg)) {
+		DisplayErrorMessage(msg.c_str(), "Lua Script Error:");
 		/* the script is no longer stopped here, so tell it */
 		lua_pushinteger(L, 0);
 		return 1;
@@ -340,17 +319,7 @@ int CLuaInstMisc::postMsg(lua_State *L)
 {
 	CLuaMisc *D = MiscCheckData(L, 1);
 	if (!D) return 0;
-	lua_Integer msg = 0;
-	neutrino_msg_t post_msg = 0;
-	msg = luaL_checkint(L, 2);
-	switch (msg) {
-		case POSTMSG_STANDBY_ON:
-			post_msg = NeutrinoMessages::STANDBY_ON;
-			break;
-		default:
-			return 0;
-	}
-	g_RCInput->postMsg(post_msg, 0);
+	ScriptMisc::postMsg((int)luaL_checkint(L, 2));
 	return 0;
 }
 
@@ -359,12 +328,7 @@ int CLuaInstMisc::getTimeOfDay(lua_State *L)
 	CLuaMisc *D = MiscCheckData(L, 1);
 	if (!D) return 0;
 
-	struct timeval t1;
-	double dt;
-	gettimeofday(&t1, NULL);
-	dt = (double)t1.tv_sec + ((double)t1.tv_usec)/1000000ULL;
-
-	lua_pushnumber(L, (lua_Number)dt);
+	lua_pushnumber(L, (lua_Number)ScriptMisc::getTimeOfDay());
 	return 1;
 }
 
@@ -375,9 +339,7 @@ int CLuaInstMisc::FlashUpdate(lua_State *L)
 
 	const char *mode = luaL_checkstring(L, 2);
 
-	CFlashUpdate flash;
-	flash.exec(NULL, mode);
-
+	ScriptMisc::flashUpdate(mode);
 	return 0;
 }
 
