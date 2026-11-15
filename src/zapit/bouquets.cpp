@@ -1159,6 +1159,12 @@ static void buildWebchannelSources(int mode, std::list<std::string> &sources)
 		sources.insert(sources.end(), configured.begin(), configured.end());
 	}
 
+	/* The livestreams of the mediathek, while they are switched on. A list
+	   that names them itself has them loaded once. */
+	if (!radio && g_settings.webtv_xml_mediathek &&
+	    std::find(sources.begin(), sources.end(), std::string(WEBTV_XML_MEDIATHEK)) == sources.end())
+		sources.push_back(WEBTV_XML_MEDIATHEK);
+
 	if (!auto_enabled)
 		return;
 

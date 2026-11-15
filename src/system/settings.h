@@ -880,6 +880,7 @@ struct SNeutrinoSettings
 
 	// webtv
 	int webtv_xml_auto;
+	int webtv_xml_mediathek;
 	int webtv_stream_restart_attempts;
 	int webtv_dns_diagnostics;
 	std::list<std::string> webtv_xml;

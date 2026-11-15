@@ -2000,6 +2000,7 @@ menu.hint_webradio_setup Hier konfigurierte WebRadio-Kanäle finden Sie in der K
 menu.hint_webradio_xml_auto Lädt automatisch alle WebRadio-Dateien aus %s/ und %s/
 menu.hint_webtv_setup Hier konfigurierte WebTV-Kanäle finden Sie in der Kanalverwaltung.
 menu.hint_webtv_xml_auto Lädt automatisch alle WebTV-Dateien aus %s/ und %s/
+menu.hint_webtv_xml_mediathek Lädt die Livestreams der Mediathek als WebTV-Liste, ohne das Plugin zu starten
 menu.hint_window_size Kanalliste, EPG-Infos und einige andere Fenster werden mit diesem Faktor skaliert
 menu.hint_xmltv_setup Hier konfigurieren Sie XMLTV-Dateien, die EPG-Daten enthalten
 menu.hint_youtube_api_key Geben Sie den YouTube API Schlüssel ein. Eine leere Eingabe schaltet die YouTube-Unterstützung aus
@@ -3219,6 +3220,7 @@ webtv.head WebTV
 webtv.stream_restart_attempts Stream-Neustarts nach Verbindungsabbruch
 webtv.xml WebTV-Dateien
 webtv.xml.auto WebTV-Dateien automatisch laden
+webtv.xml.mediathek Mediathek-Livestreams
 window_size Fenstergröße in %
 window_size_height Fensterhöhe in %
 window_size_width Fensterbreite in %

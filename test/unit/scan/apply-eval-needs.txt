@@ -71,4 +71,5 @@ weather_city
 weather_location
 webradio_xml_auto
 webtv_xml_auto
+webtv_xml_mediathek
 zappingmode

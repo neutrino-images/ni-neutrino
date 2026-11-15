@@ -52,7 +52,8 @@ Sent<int> g_size;
 
 Status runWebChannels()
 {
-	const int now = (g_settings.webtv_xml_auto ? 1 : 0) | (g_settings.webradio_xml_auto ? 2 : 0);
+	const int now = (g_settings.webtv_xml_auto ? 1 : 0) | (g_settings.webradio_xml_auto ? 2 : 0) |
+			(g_settings.webtv_xml_mediathek ? 4 : 0);
 	if (!g_lists.known)
 	{
 		g_lists.known = true;
@@ -89,6 +90,7 @@ Status runLivestream()
 const char *const kWebChannelsKeys[] =
 {
 	"webtv_xml_auto",
+	"webtv_xml_mediathek",
 	"webradio_xml_auto"
 };
 
