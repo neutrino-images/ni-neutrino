@@ -298,6 +298,9 @@ int CWebChannelsSetup::Show()
 	}
 	if (oc)
 		oc->setHint("", hint_text);
+	// the livestreams of the mediathek, loaded beside the list while switched on
+	if (!webradio)
+		addSetting(m, "webtv_xml_mediathek", true, NULL, CRCInput::convertDigitToKey(shortcut++));
 	m->addItem(GenericMenuSeparator);
 
 	item_offset = m->getItemsCount();

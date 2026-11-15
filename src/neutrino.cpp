@@ -41,7 +41,6 @@
 #include <sys/mount.h>
 #include <dirent.h>
 
-#include <algorithm>
 #include <fstream>
 
 #include "global.h"
@@ -980,6 +979,7 @@ int CNeutrinoApp::loadSetup(const char *fname)
 
 	// webtv
 	g_settings.webtv_xml_auto = configfile.getInt32("webtv_xml_auto", 1);
+	g_settings.webtv_xml_mediathek = configfile.getInt32("webtv_xml_mediathek", 0) ? 1 : 0;
 	g_settings.webtv_stream_restart_attempts = configfile.getInt32("webtv_stream_restart_attempts", 1);
 	if (g_settings.webtv_stream_restart_attempts < 0)
 		g_settings.webtv_stream_restart_attempts = 0;
@@ -1011,10 +1011,11 @@ int CNeutrinoApp::loadSetup(const char *fname)
 	else
 	{
 		std::string webtv_xml = configfile.getString("webtv_xml", WEBTV_XML);
-		CSettingsTextGuard lock;
 		if (file_size(webtv_xml.c_str()))
+		{
+			CSettingsTextGuard lock;
 			g_settings.webtv_xml.push_back(webtv_xml);
-		g_settings.webtv_xml.push_back(WEBTV_XML_MEDIATHEK);
+		}
 	}
 	setSettingsText(g_settings.last_webtv_dir, configfile.getString("last_webtv_dir", WEBTVDIR_VAR));
 
@@ -1616,13 +1617,10 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 	{
 		g_settings.power_off_selected = g_settings.shutdown_real ? 1 : 0;
 	}
-	if (g_settings.version_pseudo < "20261114230000")
-	{
-		// livestreams of the mediathek backend, once, for setups that had a list before
-		CSettingsTextGuard lock;
-		if (std::find(g_settings.webtv_xml.begin(), g_settings.webtv_xml.end(), WEBTV_XML_MEDIATHEK) == g_settings.webtv_xml.end())
-			g_settings.webtv_xml.push_back(WEBTV_XML_MEDIATHEK);
-	}
+	/* The step of 20261114230000 put the livestreams of the mediathek into
+	   every list of WebTV sources. They are a switch of their own here,
+	   webtv_xml_mediathek, and off unless it is set; the list stays what
+	   the user entered. */
 
 	setSettingsText(g_settings.version_pseudo, NEUTRINO_VERSION_PSEUDO);
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
@@ -2027,6 +2025,7 @@ void CNeutrinoApp::saveSetup(const char *fname)
 
 	// webtv
 	configfile.setInt32("webtv_xml_auto", g_settings.webtv_xml_auto);
+	configfile.setInt32("webtv_xml_mediathek", g_settings.webtv_xml_mediathek);
 	configfile.setInt32("webtv_stream_restart_attempts", g_settings.webtv_stream_restart_attempts);
 	configfile.setInt32("webtv_dns_diagnostics", g_settings.webtv_dns_diagnostics);
 	int webtv_count = 0;

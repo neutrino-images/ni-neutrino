@@ -181,6 +181,13 @@ constexpr Descriptor kChannel[] =
 		.label("webtv.xml.auto")
 		.defaultValue(1)
 		.field(COREAPI_NUMBER_FIELD(webtv_xml_auto)),
+	boolRow("webtv_xml_mediathek")
+		.section("channel")
+		.group(&kChannelWebTv)
+		.label("webtv.xml.mediathek")
+		.hint("menu.hint_webtv_xml_mediathek")
+		.defaultValue(0)
+		.field(COREAPI_NUMBER_FIELD(webtv_xml_mediathek)),
 	boolRow("webradio_xml_auto")
 		.section("channel")
 		.group(&kChannelWebRadio)

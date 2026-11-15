@@ -31,8 +31,6 @@
 #include <gui/widget/menue.h>
 
 #define WEBTV_XML	WEBTVDIR_VAR "/webtv_usr.xml"
-/* livestreams of the mediathek backend, as WebTV list (no plugin needed) */
-#define WEBTV_XML_MEDIATHEK	"https://mt-api.neutrino-images.de/livestreams.xml"
 #define WEBRADIO_XML	WEBRADIODIR_VAR "/webradio_usr.xml"
 
 class CWebChannelsSetup : public CMenuTarget

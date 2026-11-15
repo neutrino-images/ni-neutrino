@@ -26,6 +26,11 @@
 #include <string>
 #include <vector>
 
+/* The livestreams of the mediathek backend, as WebTV list (no plugin needed).
+   No entry of the list of sources: it is loaded beside them while
+   g_settings.webtv_xml_mediathek is on, which it is not unless set. */
+#define WEBTV_XML_MEDIATHEK	"https://mt-api.neutrino-images.de/livestreams.xml"
+
 namespace coreapi
 {
 namespace webchannels
