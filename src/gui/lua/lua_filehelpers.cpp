@@ -32,6 +32,8 @@
 #include <neutrino.h>
 #include <gui/widget/msgbox.h>
 
+#include <scriptapi/script_filehelpers.h>
+
 #include "luainstance.h"
 #include "lua_filehelpers.h"
 
@@ -55,6 +57,18 @@ CLuaInstFileHelpers* CLuaInstFileHelpers::getInstance()
 CLuaFileHelpers *CLuaInstFileHelpers::FileHelpersCheckData(lua_State *L, int n)
 {
 	return *(CLuaFileHelpers **) luaL_checkudata(L, n, LUA_FILEHELPER_CLASSNAME);
+}
+
+/* What a failed call prints: where the script stands, what went wrong, and
+ * where in neutrino it was noticed. The work itself stands in the script API
+ * (scriptapi/script_filehelpers.h), where the Python binding reads it too. */
+static void fileHelpersError(lua_State *L, const ScriptFileHelpers::Error &error)
+{
+	lua_Debug ar;
+	lua_getstack(L, 1, &ar);
+	lua_getinfo(L, "Sl", &ar);
+	printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
+	       ar.short_src, ar.currentline, error.msg.c_str(), error.file.c_str(), error.line);
 }
 
 void CLuaInstFileHelpers::LuaFileHelpersRegister(lua_State *L)
@@ -120,26 +134,14 @@ int CLuaInstFileHelpers::FileHelpersCp(lua_State *L)
 		}
 		flags = luaL_checkstring(L, 4);
 	}
-	bool ret = false;
-	CFileHelpers fh;
-	fh.setConsoleQuiet(true);
-	ret = fh.cp(from, to, flags);
-	if (ret == false) {
-		helpersDebugInfo di;
-		fh.readDebugInfo(&di);
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, di.msg.c_str(), di.file.c_str(), di.line);
-	}
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Cp(from, to, flags, error);
+	if (!ret)
+		fileHelpersError(L, error);
 
 	lua_pushboolean(L, ret);
 	return 1;
 }
-
-/* the rule this call shares with the Python binding: scriptapi/script_filehelpers.h */
-#include "../scriptapi/script_filehelpers.h"
 
 int CLuaInstFileHelpers::FileHelpersChmod(lua_State *L)
 {
@@ -195,47 +197,13 @@ int CLuaInstFileHelpers::FileHelpersTouch(lua_State *L)
 	}
 	const char *file = luaL_checkstring(L, 2);
 
-	bool ret = true;
-	lua_Debug ar;
+	bool haveTime = (numargs > min_numargs);
+	time_t newTime = haveTime ? (time_t)luaL_checkint(L, 3) : 0;
 
-	if (!file_exists(file)) {
-		FILE *f = fopen(file, "w");
-		if (f == NULL) {
-			ret = false;
-			lua_getstack(L, 1, &ar);
-			lua_getinfo(L, "Sl", &ar);
-			const char* s = strerror(errno);
-			printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-			       ar.short_src, ar.currentline, s, __path_file__, __LINE__);
-			lua_pushboolean(L, ret);
-			return 1;
-		}
-		fclose(f);
-		if (numargs == min_numargs) {
-			lua_pushboolean(L, ret);
-			return 1;
-		}
-	}
-
-	time_t modTime;
-	if (numargs == min_numargs)
-		/* current time */
-		modTime = time(NULL);
-	else
-		/* new time */
-		modTime = (time_t)luaL_checkint(L, 3);
-
-	utimbuf utb;
-	utb.actime  = modTime;
-	utb.modtime = modTime;
-	if (utime(file, &utb) != 0) {
-		ret = false;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		const char* s = strerror(errno);
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, s, __path_file__, __LINE__);
-	}
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Touch(file, haveTime, newTime, error);
+	if (!ret)
+		fileHelpersError(L, error);
 
 	lua_pushboolean(L, ret);
 	return 1;
@@ -260,19 +228,10 @@ int CLuaInstFileHelpers::FileHelpersRmdir(lua_State *L)
 	}
 	const char *dir = luaL_checkstring(L, 2);
 
-	bool ret = false;
-	CFileHelpers* fh = CFileHelpers::getInstance();
-	fh->setConsoleQuiet(true);
-	ret = fh->removeDir(dir);
-	if (ret == false) {
-		helpersDebugInfo di;
-		fh->readDebugInfo(&di);
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, di.msg.c_str(), di.file.c_str(), di.line);
-	}
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Rmdir(dir, error);
+	if (!ret)
+		fileHelpersError(L, error);
 
 	lua_pushboolean(L, ret);
 	return 1;
@@ -297,28 +256,13 @@ int CLuaInstFileHelpers::FileHelpersMkdir(lua_State *L)
 	}
 	const char *dir = luaL_checkstring(L, 2);
 
-	mode_t mode = 0755;
-	if (numargs > min_numargs) {
-		int mode_i = luaL_checkint(L, 3);
-		/* Hack for convert lua number to octal */
-		std::string mode_s = itoa(mode_i, 10);
-		mode = (mode_t)(strtol(mode_s.c_str(), (char **)NULL, 8) & 0x0FFF);
-		//printf("\n##### [%s:%d] str: %s, okt: %o \n \n", __func__, __LINE__, mode_s.c_str(), (int)mode);
-	}
+	bool haveMode = (numargs > min_numargs);
+	int mode_i = haveMode ? luaL_checkint(L, 3) : 0;
 
-	bool ret = false;
-	CFileHelpers* fh = CFileHelpers::getInstance();
-	fh->setConsoleQuiet(true);
-	ret = fh->createDir(dir, mode);
-	if (ret == false) {
-		helpersDebugInfo di;
-		fh->readDebugInfo(&di);
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, di.msg.c_str(), di.file.c_str(), di.line);
-	}
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Mkdir(dir, haveMode, mode_i, error);
+	if (!ret)
+		fileHelpersError(L, error);
 
 	lua_pushboolean(L, ret);
 	return 1;
@@ -343,21 +287,15 @@ int CLuaInstFileHelpers::FileHelpersReadlink(lua_State *L)
 	}
 	const char *link = luaL_checkstring(L, 2);
 
-	char buf[PATH_MAX];
-	memset(buf, '\0', sizeof(buf));
-	if (readlink(link, buf, sizeof(buf)-1) == -1) {
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		const char* s = strerror(errno);
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, s, __path_file__, __LINE__);
-
+	std::string target;
+	ScriptFileHelpers::Error error;
+	if (!ScriptFileHelpers::Readlink(link, target, error)) {
+		fileHelpersError(L, error);
 		lua_pushnil(L);
 		return 1;
 	}
 
-	lua_pushstring(L, buf);
+	lua_pushstring(L, target.c_str());
 	return 1;
 }
 
@@ -390,38 +328,10 @@ int CLuaInstFileHelpers::FileHelpersLn(lua_State *L)
 		}
 		flags = luaL_checkstring(L, 4);
 	}
-	bool symlnk = (strchr(flags, 's') != NULL);
-	bool force  = (strchr(flags, 'f') != NULL);
-	lua_Debug ar;
-
-	if (!symlnk) {
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		const char* s = "Currently only supports symlinks.";
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, s, __path_file__, __LINE__);
-		lua_pushboolean(L, false);
-		return 1;
-	}
-
-	bool ret = true;
-	if (symlink(src, link) != 0) {
-		if (force && (errno == EEXIST)) {
-			if (unlink(link) == 0) {
-				if (symlink(src, link) == 0) {
-					lua_pushboolean(L, ret);
-					return 1;
-				}
-			}
-		}
-		ret = false;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		const char* s = strerror(errno);
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, s, __path_file__, __LINE__);
-
-	}
+	ScriptFileHelpers::Error error;
+	bool ret = ScriptFileHelpers::Ln(src, link, flags, error);
+	if (!ret)
+		fileHelpersError(L, error);
 
 	lua_pushboolean(L, ret);
 	return 1;
@@ -445,47 +355,13 @@ int CLuaInstFileHelpers::FileHelpersExist(lua_State *L)
 		lua_pushboolean(L, false);
 		return 1;
 	}
-	bool ret = false;
-	bool err = false;
-	int errLine = 0;
-	std::string errMsg = "";
-
 	const char *file = luaL_checkstring(L, 2);
 	const char *flag = luaL_checkstring(L, 3);
 
-	if (file_exists(file)) {
-		struct stat FileInfo;
-		if (lstat(file, &FileInfo) == -1) {
-			err = true;
-			errLine = __LINE__;
-			errMsg = (std::string)strerror(errno);
-		}
-		else if (strchr(flag, 'f') != NULL) {
-			if (S_ISREG(FileInfo.st_mode))
-				ret = true;
-		}
-		else if (strchr(flag, 'l') != NULL) {
-			if (S_ISLNK(FileInfo.st_mode))
-				ret = true;
-		}
-		else if (strchr(flag, 'd') != NULL) {
-			if (S_ISDIR(FileInfo.st_mode))
-				ret = true;
-		}
-		else {
-			err = true;
-			errLine = __LINE__;
-			errMsg = (strlen(flag) == 0) ? "no" : "unknown";
-			errMsg += " flag given.";
-		}
-	}
-
-	if (err) {
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-		       ar.short_src, ar.currentline, errMsg.c_str(), __path_file__, errLine);
+	bool ret = false;
+	ScriptFileHelpers::Error error;
+	if (!ScriptFileHelpers::Exist(file, flag, ret, error)) {
+		fileHelpersError(L, error);
 		lua_pushnil(L);
 		return 1;
 	}
@@ -513,52 +389,13 @@ int CLuaInstFileHelpers::FileHelpersIsEmpty(lua_State *L)
 		return 1;
 	}
 
-	bool ret = false;
-	bool err = false;
-	int errLine = 0;
-	std::string errMsg = "";
-
 	const char *file = luaL_checkstring(L, 2);
 
-	if (file_exists(file)) {
-		struct stat FileInfo;
-		if (lstat(file, &FileInfo) == -1) {
-			err = true;
-			errLine = __LINE__;
-			errMsg = (std::string)strerror(errno);
-		} else if (S_ISLNK(FileInfo.st_mode)) {
-			printf("Following symlink: %s\n", file);
-			if (stat(file, &FileInfo) == -1) {
-				err = true;
-				errLine = __LINE__;
-				errMsg = "Symlink target does not exist: " + std::string(strerror(errno));
-			} else if (S_ISREG(FileInfo.st_mode)) {
-				ret = (FileInfo.st_size == 0);
-			} else {
-				err = true;
-				errLine = __LINE__;
-				errMsg = "Target of symlink is not a regular file.";
-			}
-		} else if (S_ISREG(FileInfo.st_mode)) {
-			ret = (FileInfo.st_size == 0);
-		} else {
-			err = true;
-			errLine = __LINE__;
-			errMsg = std::string(file) + " is not a regular file.";
-		}
-	} else {
-		err = true;
-		errLine = __LINE__;
-		errMsg = std::string(file) + " does not exist.";
-	}
-
-	if (err) {
-		lua_Debug ar;
-		lua_getstack(L, 1, &ar);
-		lua_getinfo(L, "Sl", &ar);
-		printf(">>> Lua script error [%s:%d] %s\n    (error from neutrino: [%s:%d])\n",
-				ar.short_src, ar.currentline, errMsg.c_str(), __path_file__, errLine);
-		DisplayErrorMessage(errMsg.c_str(), "Lua Script Error:");
+	bool ret = false;
+	ScriptFileHelpers::Error error;
+	if (!ScriptFileHelpers::IsEmpty(file, ret, error)) {
+		fileHelpersError(L, error);
+		DisplayErrorMessage(error.msg.c_str(), "Lua Script Error:");
 		lua_pushnil(L);
 		return 1;
 	}

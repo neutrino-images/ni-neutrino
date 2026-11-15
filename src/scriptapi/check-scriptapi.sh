@@ -235,10 +235,8 @@ if [ -n "$shared" ]; then
 	echo "                 themselves: blocked from plugin, SetFile, exec, getKeyPressed."
 	echo "                 To move that, the layer would need a way back into the binding"
 	echo "                 for the info callback, which is why it is named and not done."
-	echo "  filehelpers was named here once as well and is not any more: only cp goes"
-	echo "  through CFileHelpers, while chmod, touch, rmdir, mkdir, readlink, ln, exist"
-	echo "  and isEmpty call the system in both bindings. It stands above as work not yet"
-	echo "  begun, which is what it is."
+	echo "  filehelpers was named here once as well and is not any more: all of its"
+	echo "  calls stand in ScriptFileHelpers now, and both bindings read them there."
 fi
 
 if [ -n "$language" ]; then
