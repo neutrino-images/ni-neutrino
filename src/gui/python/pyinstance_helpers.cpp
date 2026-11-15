@@ -27,6 +27,7 @@
 #include <gui/components/cc.h>
 #include <neutrino.h>
 #include <scriptapi/script_color.h>
+#include <scriptapi/script_deprecated.h>
 
 bool pyHaveKeywords(PyObject *kw)
 {
@@ -279,46 +280,26 @@ CComponentsForm *pyLookupParentForm(PyObject *kw, const char *what)
 
 
 
-/* The three notices below say what the Lua bindings say, out of the same
- * locale strings: a script being carried over from one language to the
- * other is told the same things about what to write instead. */
+/* The notices below say what the Lua bindings say, out of the same locale
+ * strings: a script being carried over from one language to the other is
+ * told the same things about what to write instead. The sentences stand in
+ * the script API, scriptapi/script_deprecated.h. */
 void pyParamBoolDeprecated(const char *val)
 {
-	std::string where = pyScriptWhere();
-	printf("[Python Script] \33[1;31m%s\33[0m %s (\33[31m\"%s\"\33[0m)\n"
-	       "                      %s \33[32mTrue\33[0m.\n"
-	       "                      (%s)\n",
-	       g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED1),
-	       g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED2), val,
-	       g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED3),
-	       where.c_str());
+	ScriptDeprecated::paramBool("Python", pyScriptWhere(), val, "True");
 }
 
 void pyParamDeprecated(const char *oldParam, const char *newParam)
 {
-	std::string where = pyScriptWhere();
-	printf("[Python Script] \33[1;31m%s\33[0m %s \33[33m%s\33[0m %s \33[1;33m%s\33[0m.\n"
-	       "                      (%s)\n",
-	       g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED1),
-	       g_Locale->getText(LOCALE_LUA_PARAMETER_DEPRECATED2), oldParam,
-	       g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED3), newParam,
-	       where.c_str());
+	ScriptDeprecated::param("Python", pyScriptWhere(), oldParam, newParam);
 }
 
 void pyFunctionDeprecated(const char *oldFunc, const char *newFunc)
 {
-	std::string where = pyScriptWhere();
-	printf("[Python Script] \33[1;31m%s\33[0m %s \33[33m%s\33[0m %s \33[1;33m%s\33[0m.\n"
-	       "                      (%s)\n",
-	       g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED1),
-	       g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED2), oldFunc,
-	       g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED3), newFunc,
-	       where.c_str());
+	ScriptDeprecated::function("Python", pyScriptWhere(), oldFunc, newFunc);
 }
 
 void pyObsoleteHideParameter(void)
 {
-	std::string where = pyScriptWhere();
-	printf("\33[1;31m[Python script warning]\33[0m %s: Obsolete parameter for hide() in use, please remove!\n",
-	       where.c_str());
+	ScriptDeprecated::hideParameter("Python", pyScriptWhere());
 }

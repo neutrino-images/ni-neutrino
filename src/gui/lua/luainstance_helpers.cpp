@@ -26,10 +26,12 @@
 
 #include <global.h>
 #include <system/debug.h>
+#include <system/helpers.h>
 #include <neutrino.h>
 
 #include "luainstance.h"
 #include <scriptapi/script_color.h>
+#include <scriptapi/script_deprecated.h>
 
 /* Ported by Benny Chen, http://www.bennychen.cn/tag/lual_checkbool/ */
 bool _luaL_checkbool(lua_State *L, int numArg)
@@ -49,48 +51,35 @@ bool _luaL_checkbool(lua_State *L, int numArg)
 	return b;
 }
 
-void paramBoolDeprecated(lua_State *L, const char* val)
+/* Where the script stands, as the notices below name it. The sentences
+ * themselves stand in the script API, where the Python binding reads the same
+ * ones: scriptapi/script_deprecated.h. */
+static std::string luaScriptWhere(lua_State *L)
 {
 	lua_Debug ar;
 	lua_getstack(L, 1, &ar);
 	lua_getinfo(L, "Sl", &ar);
-	printf("[Lua Script] \33[1;31m%s\33[0m %s (\33[31m\"%s\"\33[0m)\n                      %s \33[32mtrue\33[0m.\n                      (%s:%d)\n",
-					g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED1),
-					g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED2), val,
-					g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED3),
-					ar.short_src, ar.currentline);
+	return std::string(ar.short_src) + ":" + to_string(ar.currentline);
+}
+
+void paramBoolDeprecated(lua_State *L, const char* val)
+{
+	ScriptDeprecated::paramBool("Lua", luaScriptWhere(L), val, "true");
 }
 
 void paramDeprecated(lua_State *L, const char* oldParam, const char* newParam)
 {
-	lua_Debug ar;
-	lua_getstack(L, 1, &ar);
-	lua_getinfo(L, "Sl", &ar);
-	printf("[Lua Script] \33[1;31m%s\33[0m %s \33[33m%s\33[0m %s \33[1;33m%s\33[0m.\n                      (%s:%d)\n",
-					g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED1),
-					g_Locale->getText(LOCALE_LUA_PARAMETER_DEPRECATED2), oldParam,
-					g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED3), newParam,
-					ar.short_src, ar.currentline);
+	ScriptDeprecated::param("Lua", luaScriptWhere(L), oldParam, newParam);
 }
 
 void functionDeprecated(lua_State *L, const char* oldFunc, const char* newFunc)
 {
-	lua_Debug ar;
-	lua_getstack(L, 1, &ar);
-	lua_getinfo(L, "Sl", &ar);
-	printf("[Lua Script] \33[1;31m%s\33[0m %s \33[33m%s\33[0m %s \33[1;33m%s\33[0m.\n                      (%s:%d)\n",
-					g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED1),
-					g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED2), oldFunc,
-					g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED3), newFunc,
-					ar.short_src, ar.currentline);
+	ScriptDeprecated::function("Lua", luaScriptWhere(L), oldFunc, newFunc);
 }
 
 void obsoleteHideParameter(lua_State *L)
 {
-	lua_Debug ar;
-	lua_getstack(L, 1, &ar);
-	lua_getinfo(L, "Sl", &ar);
-	printf("\33[1;31m[Lua script warning]\33[0m %s:%d: Obsolete parameter for hide() in use, please remove!\n", ar.short_src, ar.currentline);
+	ScriptDeprecated::hideParameter("Lua", luaScriptWhere(L));
 }
 
 
