@@ -346,6 +346,26 @@ answers['/api/v1/osd/remote'] = [200, { locked: false }];
 	unmount('s:remote');
 }
 
+// the letters under the digits of the remote
+{
+	const mod = await import('../../data/ni-web/app/screens/now/remote.js');
+	same(['KEY_1', 'KEY_2', 'KEY_7', 'KEY_9', 'KEY_0', 'KEY_OK'].map(mod.lettersFor), ['', 'ABC', 'PQRS', 'WXYZ', '', ''],
+		'the digits two to nine carry the letters the box goes through, one, nought and the rest none');
+	store.clear();
+	answers['/api/v1/osd/remote/keys'] = [200, { items: ['KEY_1', 'KEY_2', 'KEY_9', 'KEY_0', 'KEY_OK'] }];
+	const tree = await drawn('s:remote', mod.default, {});
+	/** @param {string} name */
+	function under(name) {
+		const key = nodes(tree, function (n) { return n.type === 'button' && String(n.props.class).indexOf('now-key-' + name) !== -1; })[0];
+		const letters = key ? nodes(key, function (n) { return n.type === 'span' && n.props.class === 'now-key-letters'; }) : [];
+		return letters.map(function (n) { return [n.props['aria-hidden'], [].concat(n.children).join('')]; });
+	}
+	same([under('KEY_1'), under('KEY_2'), under('KEY_9'), under('KEY_0'), under('KEY_OK')],
+		[[['true', '']], [['true', 'ABC']], [['true', 'WXYZ']], [['true', '']], []],
+		'the letters stand under their digit, out of what is read aloud, and one and nought keep the line empty');
+	unmount('s:remote');
+}
+
 // standby and the television, in the header, on the box card and on the remote
 {
 	const power = await import('../../data/ni-web/app/ui/power.js');

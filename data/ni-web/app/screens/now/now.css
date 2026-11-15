@@ -529,6 +529,19 @@
 }
 /* A name is one line or it is not the name of a key. */
 .now-key-label { white-space: nowrap; }
+/* THE LETTERS UNDER A DIGIT, small and on a line of their own, as a handset
+   prints them. In proportion to the lettering of the keys, so the fitting in
+   remote.js takes them down with the names; and on a line height of one, so
+   the two lines together stay inside the height of a key and the row of
+   digits is as tall as it was. */
+.now-key-letters {
+	display: block; white-space: nowrap;
+	font-size: 0.7em; line-height: 1; letter-spacing: 0.05em;
+	color: var(--text-dim);
+}
+/* Empty under one and nought, and as tall as a line of letters all the same,
+   so the digit is lifted as far as it is on the keys beside them. */
+.now-key-letters:empty::before { content: '\a0'; }
 /* THE KEYS IN A ROW ARE AS WIDE AS THEIR COLUMN AND NO WIDER. A row's columns
    share out the width the card has, but a key that insists on its own least
    width holds its column open, and eight of them at 44 are 408 pixels where a
