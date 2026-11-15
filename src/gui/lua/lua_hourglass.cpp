@@ -155,7 +155,11 @@ int CLuaInstHourGlass::HourGlassDelete(lua_State *L)
 	CLuaHourGlass *D = HourGlassCheck(L, 1);
 	if (!D)
 		return 0;
-	D->h->kill();
+	/* An hourglass in a window belongs to the window's form, which deletes
+	   it, possibly before this handle is collected: only one without a form
+	   is taken off the screen and deleted here. */
+	if (D->parent == NULL)
+		D->h->kill();
 	delete D;
 	return 0;
 }
