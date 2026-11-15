@@ -26,6 +26,7 @@
 #include <system/settings.h>
 #include <system/helpers.h>
 #include <neutrino.h>
+#include <driver/framebuffer.h>
 
 #include "script_color.h"
 
@@ -34,14 +35,19 @@
 #define SCRIPT_TEXT_WIDTH	100
 #define SCRIPT_TEXT_HEIGHT	100
 
+/* a font the settings do not hold is the menu's */
+static int fontOf(int font)
+{
+	if (font >= SNeutrinoSettings::FONT_TYPE_COUNT || font < 0)
+		return SNeutrinoSettings::FONT_TYPE_MENU;
+	return font;
+}
+
 ScriptText::ScriptText(const params_t &pars)
 {
 	parent = pars.parent;
 
-	/* a font the settings do not hold is the menu's */
-	font_text = pars.font_text;
-	if (font_text >= SNeutrinoSettings::FONT_TYPE_COUNT || font_text < 0)
-		font_text = SNeutrinoSettings::FONT_TYPE_MENU;
+	font_text = fontOf(pars.font_text);
 
 	/* the mode as words, or the width the text asks for by itself */
 	std::string text = pars.text;
@@ -75,6 +81,41 @@ ScriptText::~ScriptText()
 	 * it holds; only one without a parent is ours to delete. */
 	if (parent == NULL)
 		delete ct;
+}
+
+void ScriptText::setText(const std::string &text, int text_mode, int font)
+{
+	ct->setText(text, text_mode, g_Font[fontOf(font)]);
+}
+
+void ScriptText::hide()
+{
+	if (parent)
+	{
+		ct->setText("", mode, g_Font[font_text]);
+		ct->paint();
+	}
+	else
+		ct->hide();
+}
+
+void ScriptText::setDimensionsAll(int x, int y, int w, int h)
+{
+	if (!(x > -1 && y > -1 && w > 1 && h > 1))
+		return;
+
+	int screen_w = (int)CFrameBuffer::getInstance()->getScreenWidth();
+	int screen_h = (int)CFrameBuffer::getInstance()->getScreenHeight();
+	if (h > screen_h)
+		h = screen_h;
+	if (w > screen_w)
+		w = screen_w;
+	if (x > w)
+		x = 0;
+	if (y > h)
+		y = 0;
+
+	ct->setDimensionsAll(x, y, w, h);
 }
 
 int ScriptText::readMode(const std::string &words, std::string &text)

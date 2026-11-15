@@ -174,11 +174,7 @@ int CLuaInstCCText::CCTextHide(lua_State *L)
 	if ((tableLookup(L, "no_restore", tmp1)) || (tableLookup(L, "no_restore", tmp2)))
 		obsoleteHideParameter(L);
 
-	if (D->parent) {
-		D->ct->setText("", D->mode, g_Font[D->font_text]);
-		D->ct->paint();
-	} else
-		D->ct->hide();
+	D->hide();
 	return 0;
 }
 
@@ -213,7 +209,7 @@ int CLuaInstCCText::CCTextSetText(lua_State *L)
 		tableLookup(L, "mode", mode);
 		tableLookup(L, "font_text", font_text);
 	}
-	D->ct->setText(text, mode, g_Font[font_text]);
+	D->setText(text, (int)mode, (int)font_text);
 	return 0;
 }
 
@@ -305,17 +301,7 @@ int CLuaInstCCText::CCTextSetDimensionsAll(lua_State *L)
 	lua_Integer y = luaL_checkint(L, 3);
 	lua_Integer w = luaL_checkint(L, 4);
 	lua_Integer h = luaL_checkint(L, 5);
-	if(x>-1 && y > -1 && w > 1 && h > 1){
-		if (h > (lua_Integer)CFrameBuffer::getInstance()->getScreenHeight())
-			h = (lua_Integer)CFrameBuffer::getInstance()->getScreenHeight();
-		if (w > (lua_Integer)CFrameBuffer::getInstance()->getScreenWidth())
-			w = (lua_Integer)CFrameBuffer::getInstance()->getScreenWidth();
-		if(x > w)
-			x = 0;
-		if(y > h)
-			y = 0;
-		D->ct->setDimensionsAll(x,y,w,h);
-	}
+	D->setDimensionsAll((int)x, (int)y, (int)w, (int)h);
 	return 0;
 }
 

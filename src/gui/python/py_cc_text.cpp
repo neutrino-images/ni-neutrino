@@ -172,13 +172,7 @@ PyObject *CPythonInstCCText::CCTextHide(PyObject *self, PyObject * /*args*/, PyO
 	if (pyLookupBool(kwds, "no_restore", tmp1) || pyLookupString(kwds, "no_restore", tmp2))
 		pyObsoleteHideParameter();
 
-	if (D->parent)
-	{
-		D->ct->setText("", D->mode, g_Font[D->font_text]);
-		D->ct->paint();
-	}
-	else
-		D->ct->hide();
+	D->hide();
 
 	Py_RETURN_NONE;
 }
@@ -211,7 +205,7 @@ PyObject *CPythonInstCCText::CCTextSetText(PyObject *self, PyObject * /*args*/, 
 	pyLookupInt(kwds, "mode", mode);
 	pyLookupInt(kwds, "font_text", font_text);
 
-	D->ct->setText(text, (int)mode, g_Font[font_text]);
+	D->setText(text, (int)mode, (int)font_text);
 	Py_RETURN_NONE;
 }
 
@@ -325,18 +319,7 @@ PyObject *CPythonInstCCText::CCTextSetDimensionsAll(PyObject *self, PyObject *ar
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiii", (char **)kwlist, &x, &y, &dw, &dh))
 		return NULL;
 
-	if (x > -1 && y > -1 && dw > 1 && dh > 1)
-	{
-		if (dh > (int)CFrameBuffer::getInstance()->getScreenHeight())
-			dh = (int)CFrameBuffer::getInstance()->getScreenHeight();
-		if (dw > (int)CFrameBuffer::getInstance()->getScreenWidth())
-			dw = (int)CFrameBuffer::getInstance()->getScreenWidth();
-		if (x > dw)
-			x = 0;
-		if (y > dh)
-			y = 0;
-		D->ct->setDimensionsAll(x, y, dw, dh);
-	}
+	D->setDimensionsAll(x, y, dw, dh);
 
 	Py_RETURN_NONE;
 }
