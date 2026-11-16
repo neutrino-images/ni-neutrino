@@ -1,8 +1,7 @@
 noinst_LIBRARIES = libmd5sum.a
 
 AM_CPPFLAGS = \
-	-I$(top_builddir) \
-	-I$(top_srcdir)
+	-I$(top_builddir)
 
 #not allowed cppflags for c files - fix your code to re-enable
 #AM_CPPFLAGS += -fno-rtti -fno-exceptions

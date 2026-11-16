@@ -208,6 +208,31 @@ export function labelFor(name) {
 	return name.indexOf('KEY_') === 0 ? name.slice(4) : name;
 }
 
+/* THE LETTERS ON THE DIGITS, AS A HANDSET PRINTS THEM UNDER THE NUMBER. The box
+   reads a digit as letters wherever it asks for a name (a bookmark, a file to
+   jump to), pressed once for the first letter and again for the next, and
+   somebody typing that from here has no handset in front of them to read the
+   letters off. These are the ones the box goes through, the telephone's own
+   (src/gui/filebrowser.cpp); one and nought carry none there, so none here.
+   They still get the line, empty, so their digit stands as high as the
+   digits beside it rather than in the middle of the key. */
+/** @type {Record<string, string | undefined>} */
+const LETTERS = {
+	KEY_1: '', KEY_0: '',
+	KEY_2: 'ABC', KEY_3: 'DEF', KEY_4: 'GHI', KEY_5: 'JKL',
+	KEY_6: 'MNO', KEY_7: 'PQRS', KEY_8: 'TUV', KEY_9: 'WXYZ',
+};
+
+/**
+ * The letters printed small under a key's name, or nothing where it has none.
+ *
+ * @param {string} name
+ * @returns {string}
+ */
+export function lettersFor(name) {
+	return LETTERS[name] || '';
+}
+
 /**
  * What a key is displayed on screen: the icon this page has for it, or nothing
  * where it has none, and then the caller writes the key's name instead.
@@ -232,13 +257,19 @@ function keysOf(group, onPress, also) {
 	return html`<div class=${group.shape === '' ? 'now-keyset' : 'now-keyset ' + group.shape}>
 		${also || null}
 		${group.keys.map(function (name) {
+			const letters = lettersFor(name);
+			/* Out of what is read aloud: the key is "2" to a screen reader, as
+			   it is to the box. */
+			const under = !(name in LETTERS)
+				? null
+				: html`<span class="now-key-letters" aria-hidden="true">${letters || null}</span>`;
 			return html`<button
 				key=${name}
 				type="button"
 				class=${'now-key now-key-' + name}
 				title=${name}
 				aria-label=${labelFor(name)}
-				onClick=${function () { onPress(name); }}>${iconFor(name) || html`<span class="now-key-label">${labelFor(name)}</span>`}</button>`;
+				onClick=${function () { onPress(name); }}>${iconFor(name) || html`<span class="now-key-label">${labelFor(name)}</span>${under}`}</button>`;
 		})}
 	</div>`;
 }

@@ -2024,8 +2024,15 @@ bool CMoviePlayerGui::StartWebtv(void)
 	/* cutNeutrino() runs in PlayBackgroundStart() on the GUI thread now -
 	 * mode changes are app logic and must not come from this thread */
 	clearSubtitle();
+#if BOXMODEL_VUPLUS_ARM
+	/* VU+ ARM: setBlank(false) sends VIDEO_PLAY while no video PID is set
+	 * yet, and the driver oopses in NEXUS_P_HwPidChannel_GetStatus.
+	 * The player starts the decoder itself. */
+	printf("[movieplayer] %s: VU+ ARM, setBlank(false) skipped\n", __func__);
+#else
 	if (videoDecoder->getBlank())
 		videoDecoder->setBlank(false);
+#endif
 
 	mutex.lock();
 	bool res = false;
@@ -3002,8 +3009,13 @@ bool CMoviePlayerGui::PlayFileStart(void)
 	if (isWebChannel)
 		videoDecoder->setBlank(true);
 #endif
+#if BOXMODEL_VUPLUS_ARM
+	/* see StartWebtv() */
+	printf("[movieplayer] %s: VU+ ARM, setBlank(false) skipped\n", __func__);
+#else
 	if (is_file_player && videoDecoder->getBlank())
 		videoDecoder->setBlank(false);
+#endif
 
 	printf("IS FILE PLAYER: %s\n", is_file_player ?  "true": "false" );
 	mutex.lock();

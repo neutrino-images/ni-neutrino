@@ -14,19 +14,18 @@ endif
 AM_CPPFLAGS += \
 	-I$(top_builddir) \
 	-I$(top_srcdir) \
+	-I$(top_srcdir)/lib \
+	-I$(top_srcdir)/lib/connection \
+	-I$(top_srcdir)/lib/libconfigfile \
+	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \
-	-I$(top_srcdir)/lib \
-	-I$(top_srcdir)/lib/libnet \
-	-I$(top_srcdir)/lib/libconfigfile \
-	-I$(top_srcdir)/lib/connection \
-	-I$(top_srcdir)/lib/libeventserver \
-	@SIGC_CFLAGS@ \
-	@FREETYPE_CFLAGS@ \
 	@AVFORMAT_CFLAGS@ \
 	@AVUTIL_CFLAGS@ \
+	@FREETYPE_CFLAGS@ \
+	@HWLIB_CFLAGS@ \
 	@LUA_CFLAGS@ \
-	@HWLIB_CFLAGS@
+	@SIGC_CFLAGS@
 
 noinst_LIBRARIES = libneutrino_driver.a libneutrino_driver_netfile.a
 
@@ -57,10 +56,6 @@ libneutrino_driver_a_SOURCES = \
 	streamts.cpp \
 	tsaudiotype.cpp \
 	volume.cpp
-
-if ENABLE_LCD
-AM_CPPFLAGS += -I$(top_srcdir)/lib/liblcddisplay
-endif
 
 if ENABLE_LCD4LINUX
 libneutrino_driver_a_SOURCES += \

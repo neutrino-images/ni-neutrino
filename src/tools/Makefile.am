@@ -1,10 +1,7 @@
 AM_CXXFLAGS = -fno-rtti -fno-exceptions -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 
 AM_CPPFLAGS = \
-	-I$(srcdir) \
 	-I$(top_builddir) \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/lib/libeventserver \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/include \
@@ -31,8 +28,8 @@ streamprobe_SOURCES = streamprobe.c streamprobe_version.h
 # @HWLIB_CFLAGS@ inside it is what finds streaminput.h.
 streamprobe_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
-	@AVFORMAT_CFLAGS@ \
 	@AVCODEC_CFLAGS@ \
+	@AVFORMAT_CFLAGS@ \
 	@AVUTIL_CFLAGS@
 streamprobe_LDADD = \
 	-lstb-hal \

@@ -1,7 +1,5 @@
 AM_CPPFLAGS = \
-	-I$(top_builddir) \
-	-I$(top_srcdir) \
-	-I$(srcdir)/include
+	-I$(top_builddir)
 
 AM_CXXFLAGS = -fno-rtti
 

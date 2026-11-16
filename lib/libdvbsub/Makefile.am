@@ -1,11 +1,10 @@
 AM_CPPFLAGS = \
 	-I$(top_builddir) \
-	-I$(top_srcdir) \
 	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/src \
 	@AVFORMAT_CFLAGS@ \
-	@SIGC_CFLAGS@ \
-	@HWLIB_CFLAGS@
+	@HWLIB_CFLAGS@ \
+	@SIGC_CFLAGS@
 
 AM_CPPFLAGS += -fno-rtti -fno-exceptions -D__STDC_LIMIT_MACROS
 
