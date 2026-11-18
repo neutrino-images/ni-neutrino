@@ -2492,13 +2492,7 @@ bool CMoviePlayerGui::selectLivestream(std::vector<livestream_info_t> &streamLis
 		for (i = 0; i < streamList.size(); ++i) {
 			_info = &(streamList[i]);
 			if (_info->res1 == _res) {
-				info->url        = _info->url;
-				info->url2        = _info->url2;
-				info->name       = _info->name;
-				info->header     = _info->header;
-				info->resolution = _info->resolution;
-				info->res1       = _info->res1;
-				info->bandwidth  = _info->bandwidth;
+				*info = *_info; /* all fields, incl. url2, header, decryption_keys */
 				return true;
 			}
 		}
