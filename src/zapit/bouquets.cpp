@@ -56,6 +56,8 @@
 #include <xmlinterface.h>
 #include <coreapi/webchannels.h>
 
+static std::string kodiClearKeys(const std::string &license_type, const std::string &license_key);
+
 #define M3U_START_MARKER	"#EXTM3U"
 #define M3U_INFO_MARKER		"#EXTINF"
 
@@ -1405,6 +1407,8 @@ void CBouquetManager::loadWebchannels(int mode)
 				std::string epgid = "";
 				std::string alogo = "";
 				std::string script = "";
+				std::string license_type = "";
+				std::string license_key = "";
 				CZapitBouquet* pbouquet = NULL;
 
 				infile.open(tmp_name.c_str(), std::ifstream::in);
@@ -1455,6 +1459,7 @@ void CBouquetManager::loadWebchannels(int mode)
 						epgid = "";
 						alogo = "";
 						script = "";
+						/* license_* not reset here: #KODIPROP may precede #EXTINF */
 
 						if (iColon >= 0 && iComma >= 0 && iComma > iColon)
 						{
@@ -1476,6 +1481,19 @@ void CBouquetManager::loadWebchannels(int mode)
 						else
 							pbouquet->bWebradio = true;
 
+					}
+					else if (strLine.compare(0, 10, "#KODIPROP:") == 0)
+					{
+						std::string prop = strLine.substr(10);
+						size_t eq = prop.find('=');
+						if (eq != std::string::npos)
+						{
+							std::string name = prop.substr(0, eq);
+							if (name == "inputstream.adaptive.license_type")
+								license_type = prop.substr(eq + 1);
+							else if (name == "inputstream.adaptive.license_key")
+								license_key = prop.substr(eq + 1);
+						}
 					}
 					else if (strLine[0] != '#')
 					{
@@ -1508,7 +1526,15 @@ void CBouquetManager::loadWebchannels(int mode)
 								}
 
 								t_channel_id chid = create_channel_id64(0, 0, 0, 0, 0, url);
-								CZapitChannel * channel = new CZapitChannel(title.c_str(), chid, url, desc.c_str(), chid, script.c_str(), mode);
+								/* ClearKey keys travel with the url to the movieplayer/libstb-hal,
+								 * the channel id stays the one of the plain url */
+								std::string channel_url = url;
+								std::string clear_keys = kodiClearKeys(license_type, license_key);
+								if (!clear_keys.empty())
+									channel_url += std::string(channel_url.find('#') == std::string::npos ? "#" : "&") + "decryption_keys=" + clear_keys;
+								license_type = "";
+								license_key = "";
+								CZapitChannel * channel = new CZapitChannel(title.c_str(), chid, channel_url.c_str(), desc.c_str(), chid, script.c_str(), mode);
 								CServiceManager::getInstance()->AddChannel(channel);
 								source_channels++;
 								if (!epgid.empty()) {
@@ -1976,6 +2002,75 @@ void CBouquetManager::dump_EPGMapping(std::string mapfile_out)
 	}
 	fprintf(outfile, "</zapit>\n");
 	fclose(outfile);
+}
+
+/*
+ * #KODIPROP:inputstream.adaptive.license_key of a ClearKey stream:
+ * "kid:key[,kid:key...]", {"kid":"key",...} or the ClearKey JSON
+ * {"keys":[{"kty":"oct","kid":"...","k":"..."}]} (base64url).
+ * Returns "kid:key,..." for the movieplayer or "" if not usable.
+ */
+static std::string kodiClearKeys(const std::string &license_type, const std::string &license_key)
+{
+	std::string keys;
+
+	if (license_key.empty())
+		return keys;
+	if (!license_type.empty() && license_type.find("clearkey") == std::string::npos)
+		return keys; /* widevine, playready ... need a license server */
+	if (license_key.compare(0, 4, "http") == 0)
+		return keys; /* license server url, not supported */
+
+	if (license_key[0] != '{')
+		return license_key;
+
+	/* JSON: collect the string literals, values are plain hex/base64url */
+	std::vector<std::string> tok;
+	for (size_t pos = license_key.find('"'); pos != std::string::npos; pos = license_key.find('"', pos))
+	{
+		size_t end = license_key.find('"', pos + 1);
+		if (end == std::string::npos)
+			break;
+		tok.push_back(license_key.substr(pos + 1, end - pos - 1));
+		pos = end + 1;
+	}
+
+	bool clearkey_form = false;
+	for (size_t i = 0; i < tok.size(); i++)
+		if (tok[i] == "kid" || tok[i] == "keys")
+			clearkey_form = true;
+
+	if (clearkey_form)
+	{
+		/* {"keys":[{"kty":"oct","kid":"...","k":"..."},...]} */
+		std::string kid, k;
+		for (size_t i = 0; i + 1 < tok.size(); i++)
+		{
+			if (tok[i] == "kid")
+				kid = tok[++i];
+			else if (tok[i] == "k")
+				k = tok[++i];
+			if (!kid.empty() && !k.empty())
+			{
+				if (!keys.empty())
+					keys += ",";
+				keys += kid + ":" + k;
+				kid.clear();
+				k.clear();
+			}
+		}
+	}
+	else
+	{
+		/* {"kid":"key",...} */
+		for (size_t i = 0; i + 1 < tok.size(); i += 2)
+		{
+			if (!keys.empty())
+				keys += ",";
+			keys += tok[i] + ":" + tok[i + 1];
+		}
+	}
+	return keys;
 }
 
 std::string CBouquetManager::ReadMarkerValue(std::string strLine, const char* strMarkerName)

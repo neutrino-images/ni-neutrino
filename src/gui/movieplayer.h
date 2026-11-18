@@ -108,6 +108,7 @@ class CMoviePlayerGui : public CMenuTarget
 		std::string name;
 		std::string resolution;
 		std::string header;//cookie
+		std::string decryption_keys;//CENC/ClearKey kid:key[,kid:key...]
 		int res1;
 		int bandwidth;
 	} livestream_info_struct_t;
@@ -189,6 +190,7 @@ class CMoviePlayerGui : public CMenuTarget
 #endif
 
 	std::string	cookie_header;
+	std::string	decryption_keys;
 	std::string	info_1, info_2;
 	std::string    	currentaudioname;
 	bool		playing;
@@ -347,7 +349,7 @@ class CMoviePlayerGui : public CMenuTarget
 	static bool classifyWebtvDnsErrorText(const std::string &text, const std::string &source_url, webtv_error_reason_t &reason, std::string &host);
 	bool selectLivestream(std::vector<livestream_info_t> &streamList, int res, livestream_info_t* info);
 	bool luaGetUrl(const std::string &script, const std::string &file, std::vector<livestream_info_t> &streamList, std::string *error_string = NULL, const std::string &display_name = std::string());
-	bool getLiveUrlDetailed(const std::string &url, const std::string &script, std::string &realUrl, std::string &_pretty_name, std::string &info1, std::string &info2, std::string &header, std::string &url2, webtv_error_reason_t *failure_reason = NULL, std::string *failure_host = NULL, std::string *failure_message = NULL);
+	bool getLiveUrlDetailed(const std::string &url, const std::string &script, std::string &realUrl, std::string &_pretty_name, std::string &info1, std::string &info2, std::string &header, std::string &url2, webtv_error_reason_t *failure_reason = NULL, std::string *failure_host = NULL, std::string *failure_message = NULL, std::string *keys_out = NULL);
 #if HAVE_CST_HARDWARE
 	bool fh_mediafile_id(const char *fname);
 #endif

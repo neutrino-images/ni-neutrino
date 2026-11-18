@@ -1655,6 +1655,7 @@ bool CMoviePlayerGui::SelectFile()
 	pretty_name.clear();
 	file_name.clear();
 	cookie_header.clear();
+	decryption_keys.clear();
 	//reinit Path_local for webif reloadsetup
 	Path_local = "/";
 	if (is_audio_playing)
@@ -2045,6 +2046,9 @@ bool CMoviePlayerGui::StartWebtv(void)
 	 * releasing the mutex keeps the GUI responsive and allows
 	 * RequestAbort() from other threads. */
 	if (playback) {
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+		playback->SetDecryptionKeys(decryption_keys);
+#endif
 #if HAVE_ARM_HARDWARE
 		res = playback->Start(file_name, cookie_header, second_file_name);
 #else
@@ -2289,6 +2293,33 @@ bool CMoviePlayerGui::sortStreamList(livestream_info_t info1, livestream_info_t 
 	return (info1.res1 < info2.res1);
 }
 
+/* "decryption_keys" of a livestream script: "kid:key,..." string,
+ * {"kid":"key",...} object or ["kid:key",...] array */
+static std::string jsonDecryptionKeys(const Json::Value &v)
+{
+	std::string keys;
+	if (v.isString())
+		return v.asString();
+	if (v.isObject()) {
+		for (Json::Value::const_iterator it = v.begin(); it != v.end(); ++it) {
+			if (!(*it).isString())
+				continue;
+			if (!keys.empty())
+				keys += ",";
+			keys += it.name() + ":" + (*it).asString();
+		}
+	} else if (v.isArray()) {
+		for (Json::Value::const_iterator it = v.begin(); it != v.end(); ++it) {
+			if (!(*it).isString())
+				continue;
+			if (!keys.empty())
+				keys += ",";
+			keys += (*it).asString();
+		}
+	}
+	return keys;
+}
+
 bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &file, std::vector<livestream_info_t> &streamList, std::string *error_string, const std::string &display_name)
 {
 	std::string hint_text = g_Locale->getText(LOCALE_LIVESTREAM_READ_DATA);
@@ -2353,7 +2384,7 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 	bool haveurl = false;
 	if ( !root.isObject() ) {
 		for (Json::Value::iterator it = root.begin(); it != root.end(); ++it) {
-			info.url=""; info.url2=""; info.name=""; info.header=""; info.bandwidth = 1; info.resolution=""; info.res1 = 1;
+			info.url=""; info.url2=""; info.name=""; info.header=""; info.decryption_keys=""; info.bandwidth = 1; info.resolution=""; info.res1 = 1;
 			tmp = "0";
 			Json::Value object_it = *it;
 			for (Json::Value::iterator iti = object_it.begin(); iti != object_it.end(); iti++) {
@@ -2369,6 +2400,9 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 				}
 				else if (name=="header") {
 					info.header = (*iti).asString();
+				}
+				else if (name=="decryption_keys" || name=="license_key" || name=="kid_key") {
+					info.decryption_keys = jsonDecryptionKeys(*iti);
 				}
 				else if (name=="band") {
 					info.bandwidth  = atoi((*iti).asString().c_str());
@@ -2388,7 +2422,7 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 	}
 	if (root.isObject()) {
 		for (Json::Value::iterator it = root.begin(); it != root.end(); ++it) {
-			info.url=""; info.url2=""; info.name=""; info.header=""; info.bandwidth = 1; info.resolution=""; info.res1 = 1;
+			info.url=""; info.url2=""; info.name=""; info.header=""; info.decryption_keys=""; info.bandwidth = 1; info.resolution=""; info.res1 = 1;
 			tmp = "0";
 			std::string name = it.name();
 			if (name=="url") {
@@ -2401,6 +2435,8 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 				info.name = (*it).asString();
 			} else if (name=="header") {
 					info.header = (*it).asString();
+			} else if (name=="decryption_keys" || name=="license_key" || name=="kid_key") {
+				info.decryption_keys = jsonDecryptionKeys(*it);
 			} else if (name=="band") {
 				info.bandwidth  = atoi((*it).asString().c_str());
 			} else if (name=="res1") {
@@ -2489,7 +2525,7 @@ bool CMoviePlayerGui::selectLivestream(std::vector<livestream_info_t> &streamLis
 	return false;
 }
 
-bool CMoviePlayerGui::getLiveUrlDetailed(const std::string &url, const std::string &script, std::string &realUrl, std::string &_pretty_name, std::string &info1, std::string &info2, std::string &header, std::string &url2, webtv_error_reason_t *failure_reason, std::string *failure_host, std::string *failure_message)
+bool CMoviePlayerGui::getLiveUrlDetailed(const std::string &url, const std::string &script, std::string &realUrl, std::string &_pretty_name, std::string &info1, std::string &info2, std::string &header, std::string &url2, webtv_error_reason_t *failure_reason, std::string *failure_host, std::string *failure_message, std::string *keys_out)
 {
 	std::vector<livestream_info_t> liveStreamList;
 	livestream_info_t info;
@@ -2501,6 +2537,8 @@ bool CMoviePlayerGui::getLiveUrlDetailed(const std::string &url, const std::stri
 		failure_host->clear();
 	if (failure_message)
 		failure_message->clear();
+	if (keys_out)
+		keys_out->clear();
 
 	if (script.empty()) {
 		realUrl = url;
@@ -2589,6 +2627,9 @@ bool CMoviePlayerGui::getLiveUrlDetailed(const std::string &url, const std::stri
 	}
 	if (!info.url2.empty()) {
 		url2 = info.url2;
+	}
+	if (keys_out && !info.decryption_keys.empty()) {
+		*keys_out = info.decryption_keys;
 	}
 
 #if 0
@@ -2699,8 +2740,9 @@ bool CMoviePlayerGui::PlayBackgroundStart(const std::string &file, const std::st
 	std::string liveurl_failure_message;
 	cookie_header.clear();
 	second_file_name.clear();
+	std::string _decryption_keys;
 	if (!getLiveUrlDetailed(file, script, realUrl, _pretty_name, livestreamInfo1, livestreamInfo2, cookie_header, Url2,
-		&liveurl_failure_reason, &liveurl_failure_host, &liveurl_failure_message)) {
+		&liveurl_failure_reason, &liveurl_failure_host, &liveurl_failure_message, &_decryption_keys)) {
 		if (handleStaleWebtvStart(chan, request_generation, "resolve_failed"))
 			return true;
 		mutex.lock();
@@ -2738,6 +2780,7 @@ bool CMoviePlayerGui::PlayBackgroundStart(const std::string &file, const std::st
 	instance_bg->second_file_name = Url2;
 	instance_bg->pretty_name = _pretty_name;
 	instance_bg->cookie_header = cookie_header;
+	instance_bg->decryption_keys = _decryption_keys;
 
 	instance_bg->movie_info.epgTitle = name;
 	instance_bg->movie_info.channelName = realUrl;
@@ -3062,6 +3105,10 @@ bool CMoviePlayerGui::PlayFileStart(void)
 	 * releasing the mutex allows ShowStartHint thread to call
 	 * RequestAbort() when the user presses Back/Stop. */
 	bool res = false;
+#if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
+	if (playback)
+		playback->SetDecryptionKeys(decryption_keys);
+#endif
 #if HAVE_ARM_HARDWARE
 	if (playback)
 		 res = playback->Start((char *) file_name.c_str(), vpid, vtype, currentapid, currentac3, duration,"",second_file_name);
