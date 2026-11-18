@@ -2048,6 +2048,8 @@ bool CMoviePlayerGui::StartWebtv(void)
 	if (playback) {
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
 		playback->SetDecryptionKeys(decryption_keys);
+		/* HLS/DASH: best variant up to the WebTV resolution setting (a width) */
+		playback->SetMaxVideoResolution(g_settings.livestreamResolution);
 #endif
 #if HAVE_ARM_HARDWARE
 		res = playback->Start(file_name, cookie_header, second_file_name);
@@ -3100,8 +3102,11 @@ bool CMoviePlayerGui::PlayFileStart(void)
 	 * RequestAbort() when the user presses Back/Stop. */
 	bool res = false;
 #if HAVE_ARM_HARDWARE || HAVE_MIPS_HARDWARE
-	if (playback)
+	if (playback) {
 		playback->SetDecryptionKeys(decryption_keys);
+		/* HLS/DASH: best variant up to the WebTV resolution setting (a width) */
+		playback->SetMaxVideoResolution(g_settings.livestreamResolution);
+	}
 #endif
 #if HAVE_ARM_HARDWARE
 	if (playback)
