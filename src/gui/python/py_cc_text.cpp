@@ -33,11 +33,15 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
+#include "py_cc_window.h"
 
 typedef struct
 {
 	PyObject_HEAD
 	CPyCCText *d;
+	/* The window it is in, held for as long as it lives: the window
+	 * deletes it when it goes. */
+	PyObject *parent_window;
 } PyCCTextObject;
 
 static PyTypeObject *cctext_type = NULL;
@@ -70,7 +74,10 @@ PyObject *CPythonInstCCText::CCTextNew(PyTypeObject *type, PyObject *args, PyObj
 		return NULL;
 	}
 
-	CComponentsForm *pw = pyLookupParentForm(kwds, "parent");
+	PyObject *parent_window = NULL;
+	CComponentsForm *pw = NULL;
+	if (!CPythonInstCCWindow::ParentLookup(kwds, "parent", &parent_window, &pw))
+		return NULL;
 
 	long x = OFFSET_INNER_MID, y = OFFSET_INNER_SMALL, dx = -1, dy = -1;
 	std::string text = "";
@@ -123,10 +130,12 @@ PyObject *CPythonInstCCText::CCTextNew(PyTypeObject *type, PyObject *args, PyObj
 	if (self == NULL)
 	{
 		PyErr_Clear();
+		Py_XDECREF(parent_window);
 		return NULL;
 	}
 
 	self->d = new CPyCCText(pars);
+	self->parent_window = parent_window;
 	return (PyObject *)self;
 }
 
@@ -145,6 +154,8 @@ void CPythonInstCCText::CCTextDelete(PyObject *self)
 	PyCCTextObject *o = (PyCCTextObject *)self;
 	delete o->d;
 	o->d = NULL;
+	/* Only now that the widget is gone may the window go. */
+	Py_CLEAR(o->parent_window);
 	Py_TYPE(self)->tp_free(self);
 }
 

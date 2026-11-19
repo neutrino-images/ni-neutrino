@@ -29,11 +29,15 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
+#include "py_cc_window.h"
 
 typedef struct
 {
 	PyObject_HEAD
 	CPyHourGlass *d;
+	/* The window it is in, held for as long as it lives: the window
+	 * deletes it when it goes. */
+	PyObject *parent_window;
 } PyHourGlassObject;
 
 static PyTypeObject *hourglass_type = NULL;
@@ -72,7 +76,10 @@ PyObject *CPythonInstHourGlass::HourGlassNew(PyTypeObject *type, PyObject *args,
 	long interval = HG_AUTO_PAINT_INTERVAL;
 	pyLookupInt(kwds, "interval", interval);
 
-	CComponentsForm *parent_container = pyLookupParentForm(kwds, "parent");
+	PyObject *parent_window = NULL;
+	CComponentsForm *parent_container = NULL;
+	if (!CPythonInstCCWindow::ParentLookup(kwds, "parent", &parent_window, &parent_container))
+		return NULL;
 
 	long shadow_mode = CC_SHADOW_OFF;
 	pyLookupInt(kwds, "shadow_mode", shadow_mode);
@@ -103,10 +110,12 @@ PyObject *CPythonInstHourGlass::HourGlassNew(PyTypeObject *type, PyObject *args,
 	if (self == NULL)
 	{
 		PyErr_Clear();
+		Py_XDECREF(parent_window);
 		return NULL;
 	}
 
 	self->d = new CPyHourGlass(pars);
+	self->parent_window = parent_window;
 	return (PyObject *)self;
 }
 
@@ -123,10 +132,14 @@ PyObject *CPythonInstHourGlass::HourGlassNewModule(PyObject * /*self*/, PyObject
 void CPythonInstHourGlass::HourGlassDelete(PyObject *self)
 {
 	PyHourGlassObject *o = (PyHourGlassObject *)self;
-	if (o->d != NULL && o->d->h != NULL)
+	/* An hourglass in a window belongs to the window's form: only one
+	 * without a form is taken off the screen here, as in the Lua binding. */
+	if (o->d != NULL && o->d->h != NULL && o->d->parent == NULL)
 		o->d->h->kill();
 	delete o->d;
 	o->d = NULL;
+	/* Only now that the widget is gone may the window go. */
+	Py_CLEAR(o->parent_window);
 	Py_TYPE(self)->tp_free(self);
 }
 

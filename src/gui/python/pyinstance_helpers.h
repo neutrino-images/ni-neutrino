@@ -65,12 +65,6 @@
 /* The **kwargs of a call, as the Lua bindings see the table of a call. A
  * call that was given none is handed as NULL, which every lookup answers
  * with "not there". */
-/* A binding object that stands for an OSD container hands its form on
- * through this attribute, so that another binding can take the object as
- * its parent, the way a Lua binding hands on its userdata. */
-#define PY_FORM_ATTRIBUTE "_cc_form"
-#define PY_FORM_CAPSULE   "neutrino.cc_form"
-
 bool pyHaveKeywords(PyObject *kw);
 
 bool pyLookupString(PyObject *kw, const char *what, std::string &value);
@@ -97,13 +91,6 @@ void pyParamDeprecated(const char *oldParam, const char *newParam);
 void pyFunctionDeprecated(const char *oldFunc, const char *newFunc);
 void pyObsoleteHideParameter(void);
 
-
-class CComponentsForm;
-
-/* The OSD form a binding object stands for, handed on so that another
- * binding can take the object as its parent, where a Lua binding hands on
- * its userdata. NULL where the object stands for none. */
-CComponentsForm *pyLookupParentForm(PyObject *kw, const char *what);
 
 /* Where the running script stands, "file:line", as the Lua bindings name
  * it for a notice. Answers "" when there is nothing to name. */

@@ -151,20 +151,36 @@ PyObject *CPythonInstCCWindow::CCWindowNew(PyTypeObject *type, PyObject *args, P
 
 	self->d = new CPyCCWindow();
 	self->d->sw = new ScriptWindow(pars);
-
-	/* So that another binding can take this window as its parent, where a
-	 * Lua binding hands on its userdata. */
-	PyObject *capsule = PyCapsule_New(self->d->sw->body(), PY_FORM_CAPSULE, NULL);
-	if (capsule != NULL)
-	{
-		if (PyObject_SetAttrString((PyObject *)self, PY_FORM_ATTRIBUTE, capsule) < 0)
-			PyErr_Clear();
-		Py_DECREF(capsule);
-	}
-	else
-		PyErr_Clear();
-
 	return (PyObject *)self;
+}
+
+bool CPythonInstCCWindow::ParentLookup(PyObject *kw, const char *what,
+				       PyObject **window, CComponentsForm **form)
+{
+	*window = NULL;
+	*form = NULL;
+
+	PyObject *item = NULL;
+	if (!pyLookupObject(kw, what, &item))
+		return true;
+
+	/* Known by its type, as the Lua binding knows a cwindow by its
+	 * metatable: the object has no room for an attribute to hand its form
+	 * on with. */
+	if (ccwindow_type == NULL || !PyObject_TypeCheck(item, ccwindow_type))
+	{
+		PyErr_Format(PyExc_TypeError, "%s: a cwindow expected", what);
+		return false;
+	}
+
+	ScriptWindow *sw = scriptWindowOf(item);
+	if (sw == NULL)
+		return true;
+
+	Py_INCREF(item);
+	*window = item;
+	*form = sw->body();
+	return true;
 }
 
 PyObject *CPythonInstCCWindow::CCWindowNewModule(PyObject * /*self*/, PyObject *args, PyObject *kwds)

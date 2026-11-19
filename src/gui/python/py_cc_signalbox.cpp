@@ -31,11 +31,15 @@
 #include <zapit/femanager.h>
 
 #include "pyinstance.h"
+#include "py_cc_window.h"
 
 typedef struct
 {
 	PyObject_HEAD
 	CPyCCSignalBox *d;
+	/* The window it is in, held for as long as it lives: the window
+	 * deletes it when it goes. */
+	PyObject *parent_window;
 } PyCCSignalBoxObject;
 
 static PyTypeObject *ccsignalbox_type = NULL;
@@ -64,7 +68,10 @@ PyObject *CPythonInstCCSignalbox::CCSignalBoxNew(PyTypeObject *type, PyObject *a
 		return NULL;
 	}
 
-	CComponentsForm *pw = pyLookupParentForm(kwds, "parent");
+	PyObject *parent_window = NULL;
+	CComponentsForm *pw = NULL;
+	if (!CPythonInstCCWindow::ParentLookup(kwds, "parent", &parent_window, &pw))
+		return NULL;
 
 	long x = 110, y = 150, dx = 430, dy = 150;
 	bool vertical = true;
@@ -88,10 +95,12 @@ PyObject *CPythonInstCCSignalbox::CCSignalBoxNew(PyTypeObject *type, PyObject *a
 	if (self == NULL)
 	{
 		PyErr_Clear();
+		Py_XDECREF(parent_window);
 		return NULL;
 	}
 
 	self->d = new CPyCCSignalBox(pars);
+	self->parent_window = parent_window;
 	return (PyObject *)self;
 }
 
@@ -110,6 +119,8 @@ void CPythonInstCCSignalbox::CCSignalBoxDelete(PyObject *self)
 	PyCCSignalBoxObject *o = (PyCCSignalBoxObject *)self;
 	delete o->d;
 	o->d = NULL;
+	/* Only now that the widget is gone may the window go. */
+	Py_CLEAR(o->parent_window);
 	Py_TYPE(self)->tp_free(self);
 }
 

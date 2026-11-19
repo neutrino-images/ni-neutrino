@@ -29,11 +29,15 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
+#include "py_cc_window.h"
 
 typedef struct
 {
 	PyObject_HEAD
 	CPyCCHeader *d;
+	/* The window it is in, held for as long as it lives: the window
+	 * deletes it when it goes. */
+	PyObject *parent_window;
 } PyCCHeaderObject;
 
 static PyTypeObject *ccheader_type = NULL;
@@ -64,7 +68,10 @@ PyObject *CPythonInstCCHeader::CCHeaderNew(PyTypeObject *type, PyObject *args, P
 		return NULL;
 	}
 
-	CComponentsForm *pw = pyLookupParentForm(kwds, "parent");
+	PyObject *parent_window = NULL;
+	CComponentsForm *pw = NULL;
+	if (!CPythonInstCCWindow::ParentLookup(kwds, "parent", &parent_window, &pw))
+		return NULL;
 
 	long x = 10, y = 10, dx = 100, dy = 100, buttons = 0;
 	long shadow_mode = CC_SHADOW_OFF;
@@ -105,10 +112,12 @@ PyObject *CPythonInstCCHeader::CCHeaderNew(PyTypeObject *type, PyObject *args, P
 	if (self == NULL)
 	{
 		PyErr_Clear();
+		Py_XDECREF(parent_window);
 		return NULL;
 	}
 
 	self->d = new CPyCCHeader(pars);
+	self->parent_window = parent_window;
 	return (PyObject *)self;
 }
 
@@ -127,6 +136,8 @@ void CPythonInstCCHeader::CCHeaderDelete(PyObject *self)
 	PyCCHeaderObject *o = (PyCCHeaderObject *)self;
 	delete o->d;
 	o->d = NULL;
+	/* Only now that the widget is gone may the window go. */
+	Py_CLEAR(o->parent_window);
 	Py_TYPE(self)->tp_free(self);
 }
 

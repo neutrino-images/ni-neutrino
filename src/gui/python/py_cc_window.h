@@ -53,6 +53,15 @@ class CPythonInstCCWindow
 		~CPythonInstCCWindow() {};
 		static CPythonInstCCWindow *getInstance();
 		static bool CCWindowRegister(PyObject *module);
+		/* The window a widget's keywords name under what: None or no such
+		 * key gives no window, a cwindow gives that window, and anything else
+		 * is a TypeError, for which false is answered. *window gets a new
+		 * reference to the window object, which the widget keeps for as long
+		 * as it lives: a window deletes the widgets in its body when it goes,
+		 * so it has to outlive them. *form is the window's body, the form the
+		 * widget joins. Both are NULL where there is no window. */
+		static bool ParentLookup(PyObject *kw, const char *what,
+					 PyObject **window, CComponentsForm **form);
 
 	private:
 		static PyObject *CCWindowNew(PyTypeObject *type, PyObject *args, PyObject *kwds);

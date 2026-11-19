@@ -29,11 +29,15 @@
 #include <neutrino.h>
 
 #include "pyinstance.h"
+#include "py_cc_window.h"
 
 typedef struct
 {
 	PyObject_HEAD
 	CPyCCPicture *d;
+	/* The window it is in, held for as long as it lives: the window
+	 * deletes it when it goes. */
+	PyObject *parent_window;
 } PyCCPictureObject;
 
 static PyTypeObject *ccpicture_type = NULL;
@@ -69,7 +73,10 @@ PyObject *CPythonInstCCPicture::CCPictureNew(PyTypeObject *type, PyObject *args,
 		return NULL;
 	}
 
-	CComponentsForm *pw = pyLookupParentForm(kwds, "parent");
+	PyObject *parent_window = NULL;
+	CComponentsForm *pw = NULL;
+	if (!CPythonInstCCWindow::ParentLookup(kwds, "parent", &parent_window, &pw))
+		return NULL;
 
 	long x = 10, y = 10, dx = 100, dy = 100;
 	std::string image_name = "";
@@ -115,10 +122,12 @@ PyObject *CPythonInstCCPicture::CCPictureNew(PyTypeObject *type, PyObject *args,
 	if (self == NULL)
 	{
 		PyErr_Clear();
+		Py_XDECREF(parent_window);
 		return NULL;
 	}
 
 	self->d = new CPyCCPicture(pars);
+	self->parent_window = parent_window;
 	return (PyObject *)self;
 }
 
@@ -137,6 +146,8 @@ void CPythonInstCCPicture::CCPictureDelete(PyObject *self)
 	PyCCPictureObject *o = (PyCCPictureObject *)self;
 	delete o->d;
 	o->d = NULL;
+	/* Only now that the widget is gone may the window go. */
+	Py_CLEAR(o->parent_window);
 	Py_TYPE(self)->tp_free(self);
 }
 

@@ -28,6 +28,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import sys
 import time
 
 from neutrino import APIVERSION, CC, COL, CORNER, CURL, DIR, DYNFONT, FONT, MENU_RETURN, NMODE, OFFSET, PLAYSTATE, POSTMSG, RC, SCREEN, TEXT_ALIGNMENT, configfile, cprogresswindow, cpicture, ctext, curl, cwindow, filehelpers, header, hint, hintbox, hourglass, menu, messagebox, misc, signalbox, stringinput, threads, video, window
@@ -60,6 +61,21 @@ def check_screen(area, what, call):
 		return None
 	results.append((area, what, True, "" if answer is None else str(answer)))
 	return answer
+
+
+def expect(condition, failure):
+	"""Raises what a check writes down where the condition does not hold."""
+	if not condition:
+		raise AssertionError(failure)
+
+
+def expect_raises(kind, call):
+	"""Raises where the call does not raise an exception of the kind."""
+	try:
+		call()
+	except kind:
+		return
+	raise AssertionError("no %s" % kind.__name__)
 
 
 def scratch():
@@ -427,7 +443,29 @@ def test_widgets():
 	check_screen("ctext", "enableUTF8", lambda: t.enableUTF8(enable=True))
 	check_screen("ctext", "paint()", lambda: t.paint())
 	check_screen("ctext", "hide()", lambda: t.hide())
+
+	# A widget made in a window holds it, one reference more on the window
+	# for each: the window deletes its widgets when it goes, so it has to go
+	# after them. A parent that is no window is refused.
+	refs = sys.getrefcount(w)
+	held = ctext.new(parent=w, text="held", x=20, y=20, dx=100, dy=30)
+	check("ctext", "new(parent=…) holds the window",
+	      lambda: expect(sys.getrefcount(w) == refs + 1, "the window has no reference more"))
+	del held
+	check("ctext", "a widget gone lets its window go",
+	      lambda: expect(sys.getrefcount(w) == refs, "the window keeps a reference"))
+	check("ctext", "new(parent=…) refuses what is no window",
+	      lambda: expect_raises(TypeError, lambda: ctext.new(parent="no window", text="x")))
 	check_screen("cwindow", "hide()", lambda: w.hide())
+
+	# The name of a window dropped while a widget in it is still used: the
+	# widget keeps the window, and with it itself.
+	gone = cwindow.new(name="dropped", x=80, y=60, dx=300, dy=150)
+	kept = ctext.new(parent=gone, text="kept", x=10, y=10, dx=200, dy=30)
+	del gone
+	check_screen("ctext", "a widget outlives the name of its window",
+		     lambda: (kept.setText(text="still here"), kept.hide()))
+	del kept
 
 
 def test_window():

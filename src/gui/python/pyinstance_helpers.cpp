@@ -252,34 +252,6 @@ std::string pyScriptWhere(void)
 	return file + buf;
 }
 
-
-/* A colour a script named as one of the box's own is resolved where the window
- * of a script resolves it, so that a window and a widget of a script cannot
- * come to resolve one differently. */
-CComponentsForm *pyLookupParentForm(PyObject *kw, const char *what)
-{
-	PyObject *item = NULL;
-	if (!pyLookupObject(kw, what, &item))
-		return NULL;
-
-	PyObject *capsule = PyObject_GetAttrString(item, PY_FORM_ATTRIBUTE);
-	if (capsule == NULL)
-	{
-		PyErr_Clear();
-		return NULL;
-	}
-
-	CComponentsForm *form = NULL;
-	if (PyCapsule_CheckExact(capsule))
-		form = (CComponentsForm *)PyCapsule_GetPointer(capsule, PY_FORM_CAPSULE);
-	if (form == NULL)
-		PyErr_Clear();
-	Py_DECREF(capsule);
-	return form;
-}
-
-
-
 /* The notices below say what the Lua bindings say, out of the same locale
  * strings: a script being carried over from one language to the other is
  * told the same things about what to write instead. The sentences stand in
