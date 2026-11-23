@@ -884,6 +884,7 @@ data/plugins/Makefile
 data/plugins/luaplugins/Makefile
 data/plugins/luaplugins/nlab/Makefile
 data/plugins/pythonplugins/Makefile
+data/plugins/pythonplugins/npab/Makefile
 data/oled/Makefile
 data/oled/fonts/Makefile
 data/oled/icons/Makefile

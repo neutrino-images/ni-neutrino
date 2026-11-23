@@ -34,6 +34,8 @@ SRC="$1"
 HERE=`dirname "$0"`
 PYDIR="$SRC/src/gui/python"
 [ -d "$PYDIR" ] || { echo "check-python-module-surface.sh: cannot read $PYDIR" >&2; exit 1; }
+CONSTANTS="$SRC/src/scriptapi/script_constants.cpp"
+[ -r "$CONSTANTS" ] || { echo "check-python-module-surface.sh: cannot read $CONSTANTS" >&2; exit 1; }
 
 PLUGIN="${2:-}"
 if [ -n "$PLUGIN" ]; then
@@ -54,11 +56,14 @@ tmp=`mktemp -d`
 trap 'rm -rf "$tmp"' EXIT
 
 # What the module carries: the name a binding adds its submodule under, the name
-# the menu adds its alias under, and the name of every constant table.
+# the menu adds its alias under, and the name of every constant table - those the
+# bindings add themselves and those setPythonVariables() takes over from the
+# script API (RC, SCREEN, POSTMSG, ...).
 {
 	grep -h -o 'PythonInstAddSubmodule(module, "[A-Za-z_][A-Za-z0-9_]*"' "$PYDIR"/*.cpp
 	grep -h -o 'PyModule_AddObject(module, "[A-Za-z_][A-Za-z0-9_]*"' "$PYDIR"/*.cpp
 	grep -h -o 'addConstTable[A-Za-z]*(module, "[A-Za-z_][A-Za-z0-9_]*"' "$PYDIR"/*.cpp
+	grep -h -o 'add(out, "[A-Za-z_][A-Za-z0-9_]*"' "$CONSTANTS"
 } | sed 's/^[^"]*"//; s/"$//' | LC_ALL=C sort -u > "$tmp/registered"
 
 rn=`wc -l < "$tmp/registered"`
