@@ -41,8 +41,12 @@ if [ -n "$PLUGIN" ]; then
 	set -- "$PLUGIN"
 else
 	set -- "$SRC"/data/plugins/python/*/*.py
+	# No python script shipped is nothing to hold to the module, not a fault:
+	# the glob then stands for itself and is dropped. The module itself is
+	# still checked below.
+	[ -e "$1" ] || set --
 	for f in "$@"; do
-		[ -r "$f" ] || { echo "check-python-module-surface.sh: no python plugin to read in $SRC/data/plugins/python" >&2; exit 1; }
+		[ -r "$f" ] || { echo "check-python-module-surface.sh: cannot read $f" >&2; exit 1; }
 	done
 fi
 
@@ -88,9 +92,9 @@ awk '
 			if (parts[i] != "")
 				printf "%s\t%s:%d\n", parts[i], FILENAME, first
 	}
-' "$@" > "$tmp/imported"
+' "$@" < /dev/null > "$tmp/imported"
 
-if [ -z "$PLUGIN" ]; then
+if [ -z "$PLUGIN" ] && [ $# -gt 0 ]; then
 	im=`wc -l < "$tmp/imported"`
 	if [ "$im" -lt 2 ]; then
 		echo "check-python-module-surface.sh: $im imported names read out of the shipped plugins, the scan has stopped matching that shape" >&2
