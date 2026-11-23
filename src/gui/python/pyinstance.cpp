@@ -437,6 +437,19 @@ void CPythonInstance::runScript(const char *fileName, std::vector<std::string> *
 					*result_string = s;
 				else
 					PyErr_Clear();
+			} else if (ret != NULL && (PyDict_Check(ret) || PyList_Check(ret) || PyTuple_Check(ret))) {
+				/* A dict or a list is handed back as the JSON a Lua script
+				 * builds by hand, so that a livestream script can simply
+				 * leave result = {"url": ...}. */
+				PyObject *json = PyImport_ImportModule("json");
+				PyObject *dumped = json ? PyObject_CallMethod(json, "dumps", "O", ret) : NULL;
+				const char *s = (dumped && PyUnicode_Check(dumped)) ? PyUnicode_AsUTF8(dumped) : NULL;
+				if (s != NULL)
+					*result_string = s;
+				else
+					PyErr_Clear();
+				Py_XDECREF(dumped);
+				Py_XDECREF(json);
 			}
 		} else
 			*result_string = msg;

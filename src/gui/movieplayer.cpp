@@ -54,6 +54,7 @@
 #include <scriptapi/script_ui.h>
 #ifdef ENABLE_PYTHON
 #include <gui/python/py_video.h>
+#include <gui/python/pyinstance.h>
 #endif
 #include <gui/screensaver.h>
 #include <gui/widget/menue_options.h>
@@ -2322,7 +2323,22 @@ static std::string jsonDecryptionKeys(const Json::Value &v)
 	return keys;
 }
 
-bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &file, std::vector<livestream_info_t> &streamList, std::string *error_string, const std::string &display_name)
+/* The language of a livestream script, told by its extension. */
+CMoviePlayerGui::livestream_script_t CMoviePlayerGui::livestreamScriptType(const std::string &script)
+{
+	static const struct { const char *ext; livestream_script_t type; } exts[] = {
+		{ ".lua", LIVESTREAM_SCRIPT_LUA },
+		{ ".py",  LIVESTREAM_SCRIPT_PYTHON },
+	};
+	for (size_t i = 0; i < sizeof(exts) / sizeof(exts[0]); i++) {
+		size_t len = strlen(exts[i].ext);
+		if (script.length() > len && script.compare(script.length() - len, len, exts[i].ext) == 0)
+			return exts[i].type;
+	}
+	return LIVESTREAM_SCRIPT_NONE;
+}
+
+bool CMoviePlayerGui::scriptGetUrl(const std::string &script, const std::string &file, std::vector<livestream_info_t> &streamList, std::string *error_string, const std::string &display_name)
 {
 	std::string hint_text = g_Locale->getText(LOCALE_LIVESTREAM_READ_DATA);
 	if (!display_name.empty()) {
@@ -2339,21 +2355,45 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 
 	std::string result_code = "";
 	std::string result_string = "";
-	std::string lua_error = "";
-	std::string lua_script = script;
+	std::string run_error = "";
 
+	/* Both languages get the stream URL as their first argument (Lua:
+	 * arg[1], Python: sys.argv[1]) and hand back the same JSON: a Lua
+	 * script returns it, a Python script leaves it in 'result'. */
 	std::vector<std::string> args;
 	args.push_back(file);
+	switch (livestreamScriptType(script)) {
+	case LIVESTREAM_SCRIPT_LUA:
 #ifdef ENABLE_LUA
-	CLuaInstance *lua = new CLuaInstance();
-	lua->runScript(lua_script.c_str(), &args, &result_code, &result_string, &lua_error);
-	delete lua;
+	{
+		CLuaInstance *lua = new CLuaInstance();
+		lua->runScript(script.c_str(), &args, &result_code, &result_string, &run_error);
+		delete lua;
+	}
+#else
+		run_error = "Lua support is not built in";
 #endif
+		break;
+	case LIVESTREAM_SCRIPT_PYTHON:
+#ifdef ENABLE_PYTHON
+	{
+		CPythonInstance *python = new CPythonInstance();
+		python->runScript(script.c_str(), &args, &result_code, &result_string, &run_error);
+		delete python;
+	}
+#else
+		run_error = "Python support is not built in";
+#endif
+		break;
+	default:
+		run_error = "unknown script type";
+		break;
+	}
 	ScriptUi::setListener(NULL, NULL);
 	if ((result_code != "0") || result_string.empty()) {
 		if (error_string) {
-			if (!lua_error.empty())
-				*error_string = lua_error;
+			if (!run_error.empty())
+				*error_string = run_error;
 			else if (!result_string.empty())
 				*error_string = result_string;
 			else
@@ -2584,13 +2624,12 @@ bool CMoviePlayerGui::getLiveUrlDetailed(const std::string &url, const std::stri
 			return false;
 		}
 	}
-	size_t pos = _script.find(".lua");
-	if (!file_exists(_script.c_str()) || (pos == std::string::npos) || (_script.length()-pos != 4)) {
-		printf(">>>>> [%s:%s:%d] script error\n", __file__, __func__, __LINE__);
+	if (!file_exists(_script.c_str()) || livestreamScriptType(_script) == LIVESTREAM_SCRIPT_NONE) {
+		printf(">>>>> [%s:%s:%d] script error (expected .lua or .py): %s\n", __file__, __func__, __LINE__, _script.c_str());
 		return false;
 	}
-	if (!luaGetUrl(_script, url, liveStreamList, &script_error, _pretty_name)) {
-		printf(">>>>> [%s:%s:%d] lua script error\n", __file__, __func__, __LINE__);
+	if (!scriptGetUrl(_script, url, liveStreamList, &script_error, _pretty_name)) {
+		printf(">>>>> [%s:%s:%d] livestream script error\n", __file__, __func__, __LINE__);
 		if (!script_error.empty()) {
 			webtv_error_reason_t script_reason = WEBTV_ERROR_NONE;
 			std::string script_host;
