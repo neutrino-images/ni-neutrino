@@ -592,8 +592,8 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		int			footer_height;
 		int			fbutton_count;
 		const struct button_label	*fbutton_labels;
-		std::vector<button_label_cc> lua_footer_buttons;
-		bool lua_footer_enabled;
+		std::vector<button_label_cc> script_footer_buttons;
+		bool script_footer_enabled;
 
 		unsigned int		item_start_y;
 		unsigned int		current_page;
@@ -699,10 +699,9 @@ class CMenuWidget : public CMenuTarget, public CComponentsSignals
 		static_assert(MENU_POS_CUSTOM == 5, "MENU_POS_CUSTOM must keep its value");
 		void addKey(neutrino_msg_t key, CMenuTarget *menue, const std::string &action);
 		void setFooter(const struct button_label *_fbutton_label, const int _fbutton_count, bool repaint = false);
-		void setLuaFooter(const std::vector<button_label_cc> &buttons, bool repaint = false);
-		/* The same footer under the name a binding of another language
-		   reads: the labels are owned either way. */
-		void setFooterButtons(const std::vector<button_label_cc> &buttons, bool repaint = false) { setLuaFooter(buttons, repaint); };
+		/* A footer of labels the menu owns a copy of, for the strings a
+		   script hands over. */
+		void setFooterButtons(const std::vector<button_label_cc> &buttons, bool repaint = false);
 
 		void setNextShortcut(int sc) { nextShortcut = sc; };
 		int getNextShortcut() { return nextShortcut; };
