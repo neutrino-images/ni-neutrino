@@ -49,7 +49,7 @@ int ScriptVideo::playFile(bool singlePlay, const std::string &title, const std::
 	if (hook)
 		hook->infoFunc(true);
 	player.SetFile(name, fname, info1, info2, file2);
-	player.exec(NULL, "http_lua");
+	player.exec(NULL, "http_script");
 	if (hook)
 		hook->infoFunc(false);
 

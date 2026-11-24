@@ -1029,7 +1029,7 @@ void CMoviePlayerGui::Init(void)
 	vzap_it = filelist_it;
 	fromInfoviewer = false;
 	keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_NORMAL;
-	isLuaPlay = false;
+	isScriptPlay = false;
 	haveLuaInfoFunc = false;
 	havePythonInfoFunc = false;
 	blockedFromPlugin = false;
@@ -1244,9 +1244,9 @@ int CMoviePlayerGui::exec(CMenuTarget * parent, const std::string & actionKey)
 		is_file_player = true;
 		PlayFile();
 	}
-	else if (actionKey == "http_lua") {
+	else if (actionKey == "http_script") {
 		isHTTP = true;
-		isLuaPlay = true;
+		isScriptPlay = true;
 		is_file_player = true;
 		PlayFile();
 		haveLuaInfoFunc = false;
@@ -1526,7 +1526,7 @@ void CMoviePlayerGui::ClearFlags()
 	isMovieBrowser = false;
 	isBookmark = false;
 	isHTTP = false;
-	isLuaPlay = false;
+	isScriptPlay = false;
 	isUPNP = false;
 	isWebChannel = false;
 	is_file_player = false;
@@ -2338,7 +2338,7 @@ static bool isPythonScript(const std::string &script)
 	return hasSuffix(script, ".py");
 }
 
-bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &file, std::vector<livestream_info_t> &streamList, std::string *error_string, const std::string &display_name)
+bool CMoviePlayerGui::scriptGetUrl(const std::string &script, const std::string &file, std::vector<livestream_info_t> &streamList, std::string *error_string, const std::string &display_name)
 {
 	std::string hint_text = g_Locale->getText(LOCALE_LIVESTREAM_READ_DATA);
 	if (!display_name.empty()) {
@@ -2355,34 +2355,34 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 
 	std::string result_code = "";
 	std::string result_string = "";
-	std::string lua_error = "";
-	std::string lua_script = script;
+	std::string script_error_text = "";
+	std::string script_file = script;
 
 	std::vector<std::string> args;
 	args.push_back(file);
-	if (isPythonScript(lua_script)) {
+	if (isPythonScript(script_file)) {
 #ifdef ENABLE_PYTHON
 		/* a Python script hands back the same JSON string a Lua script
 		 * returns, as the name 'result' in its own namespace */
 		CPythonInstance *py = new CPythonInstance();
-		py->runScript(lua_script.c_str(), &args, &result_code, &result_string, &lua_error);
+		py->runScript(script_file.c_str(), &args, &result_code, &result_string, &script_error_text);
 		delete py;
 #else
-		lua_error = "Python livestream scripts need Neutrino built with --enable-python";
-		printf(">>>>> [%s:%s:%d] %s: %s\n", __file__, __func__, __LINE__, lua_error.c_str(), lua_script.c_str());
+		script_error_text = "Python livestream scripts need Neutrino built with --enable-python";
+		printf(">>>>> [%s:%s:%d] %s: %s\n", __file__, __func__, __LINE__, script_error_text.c_str(), script_file.c_str());
 #endif
 	} else {
 #ifdef ENABLE_LUA
 		CLuaInstance *lua = new CLuaInstance();
-		lua->runScript(lua_script.c_str(), &args, &result_code, &result_string, &lua_error);
+		lua->runScript(script_file.c_str(), &args, &result_code, &result_string, &script_error_text);
 		delete lua;
 #endif
 	}
 	ScriptUi::setListener(NULL, NULL);
 	if ((result_code != "0") || result_string.empty()) {
 		if (error_string) {
-			if (!lua_error.empty())
-				*error_string = lua_error;
+			if (!script_error_text.empty())
+				*error_string = script_error_text;
 			else if (!result_string.empty())
 				*error_string = result_string;
 			else
@@ -2621,7 +2621,7 @@ bool CMoviePlayerGui::getLiveUrlDetailed(const std::string &url, const std::stri
 		printf(">>>>> [%s:%s:%d] script error: %s is neither a .lua nor a .py file\n", __file__, __func__, __LINE__, _script.c_str());
 		return false;
 	}
-	if (!luaGetUrl(_script, url, liveStreamList, &script_error, _pretty_name)) {
+	if (!scriptGetUrl(_script, url, liveStreamList, &script_error, _pretty_name)) {
 		printf(">>>>> [%s:%s:%d] %s script error\n", __file__, __func__, __LINE__, isPythonScript(_script) ? "python" : "lua");
 		if (!script_error.empty()) {
 			webtv_error_reason_t script_reason = WEBTV_ERROR_NONE;
@@ -3051,7 +3051,7 @@ void CMoviePlayerGui::PlayFile(void)
 	PlayFileStart();
 	PlayFileLoop();
 	bool repeat = (repeat_mode == REPEAT_OFF);
-	if (isLuaPlay)
+	if (isScriptPlay)
 		repeat = (!blockedFromPlugin);
 	PlayFileEnd(repeat);
 }
@@ -3261,7 +3261,7 @@ void CMoviePlayerGui::quickZap(neutrino_msg_t msg)
 	if (msg == CRCInput::RC_right || msg == CRCInput::RC_nextsong || msg == (neutrino_msg_t) g_settings.key_quickzap_up)
 	{
 		//printf("CMoviePlayerGui::%s: CRCInput::RC_right or g_settings.key_quickzap_up\n", __func__);
-		if (isLuaPlay || isUPNP)
+		if (isScriptPlay || isUPNP)
 		{
 			playstate = CMoviePlayerGui::STOPPED;
 			keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_NEXT;
@@ -3293,7 +3293,7 @@ void CMoviePlayerGui::quickZap(neutrino_msg_t msg)
 	else if (msg == CRCInput::RC_left || msg == CRCInput::RC_previoussong || msg == (neutrino_msg_t) g_settings.key_quickzap_down)
 	{
 		//printf("CMoviePlayerGui::%s: CRCInput::RC_left or g_settings.key_quickzap_down\n", __func__);
-		if (isLuaPlay || isUPNP)
+		if (isScriptPlay || isUPNP)
 		{
 			playstate = CMoviePlayerGui::STOPPED;
 			keyPressed = CMoviePlayerGui::PLUGIN_PLAYSTATE_PREV;
@@ -3974,7 +3974,7 @@ void CMoviePlayerGui::showMovieInfo()
 		updateLcd(false); // force title
 
 #ifdef ENABLE_LUA
-	if (isLuaPlay && haveLuaInfoFunc)
+	if (isScriptPlay && haveLuaInfoFunc)
 	{
 		int xres = 0, yres = 0, aspectRatio = 0, framerate = -1;
 		if (!videoDecoder->getBlank())
