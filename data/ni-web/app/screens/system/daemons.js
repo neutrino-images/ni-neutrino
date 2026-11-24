@@ -6,7 +6,7 @@
    They are on one list because one layer starts them; they are two groups here because
    they answer two different questions. The surface this replaces put them on one page
    under a heading that said Plugin-Steuerung, which is where the belief that Samba is a
-   Neutrino plugin comes from. Neutrino's own plugins are Lua and scripts the box lists
+   Neutrino plugin comes from. Neutrino's own plugins are Lua, Python and scripts the box lists
    in its menus, they are next door, and each of the two pages says where the other is.
 
    WHAT IS NOT ON THIS PAGE, and would be if the list were written here rather than
