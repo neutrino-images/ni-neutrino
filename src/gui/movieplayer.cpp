@@ -1250,6 +1250,7 @@ int CMoviePlayerGui::exec(CMenuTarget * parent, const std::string & actionKey)
 		is_file_player = true;
 		PlayFile();
 		haveLuaInfoFunc = false;
+		havePythonInfoFunc = false;
 	}
 	else {
 		return menu_return::RETURN_REPAINT;
@@ -3973,33 +3974,37 @@ void CMoviePlayerGui::showMovieInfo()
 	if (g_settings.movieplayer_display_playtime)
 		updateLcd(false); // force title
 
+#if defined(ENABLE_LUA) || defined(ENABLE_PYTHON)
+	/* a script that plays a file can hand over an info function of its
+	 * own; each binding is asked only where it is built in */
+	bool luaInfo = false;
+	bool pythonInfo = false;
 #ifdef ENABLE_LUA
-	if (isScriptPlay && haveLuaInfoFunc)
-	{
-		int xres = 0, yres = 0, aspectRatio = 0, framerate = -1;
-		if (!videoDecoder->getBlank())
-		{
-			videoDecoder->getPictureInfo(xres, yres, framerate);
-			if (yres == 1088)
-				yres = 1080;
-			aspectRatio = videoDecoder->getAspectRatio();
-		}
-		CLuaInstVideo::getInstance()->execLuaInfoFunc(luaState, xres, yres, aspectRatio, framerate);
-	}
-#ifdef ENABLE_PYTHON
-	else if (havePythonInfoFunc)
-	{
-		int xres = 0, yres = 0, aspectRatio = 0, framerate = -1;
-		if (!videoDecoder->getBlank())
-		{
-			videoDecoder->getPictureInfo(xres, yres, framerate);
-			if (yres == 1088)
-				yres = 1080;
-			aspectRatio = videoDecoder->getAspectRatio();
-		}
-		CPythonInstVideo::getInstance()->execPythonInfoFunc(pythonState, xres, yres, aspectRatio, framerate);
-	}
+	luaInfo = isScriptPlay && haveLuaInfoFunc;
 #endif
+#ifdef ENABLE_PYTHON
+	pythonInfo = isScriptPlay && havePythonInfoFunc && !luaInfo;
+#endif
+
+	if (luaInfo || pythonInfo)
+	{
+		int xres = 0, yres = 0, aspectRatio = 0, framerate = -1;
+		if (!videoDecoder->getBlank())
+		{
+			videoDecoder->getPictureInfo(xres, yres, framerate);
+			if (yres == 1088)
+				yres = 1080;
+			aspectRatio = videoDecoder->getAspectRatio();
+		}
+#ifdef ENABLE_LUA
+		if (luaInfo)
+			CLuaInstVideo::getInstance()->execLuaInfoFunc(luaState, xres, yres, aspectRatio, framerate);
+#endif
+#ifdef ENABLE_PYTHON
+		if (pythonInfo)
+			CPythonInstVideo::getInstance()->execPythonInfoFunc(pythonState, xres, yres, aspectRatio, framerate);
+#endif
+	}
 	else
 #endif
 		g_EpgData->show_mp(p_movie_info,GetPosition(),GetDuration());
