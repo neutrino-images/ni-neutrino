@@ -7,7 +7,7 @@
 ]]
 
 nlab = "Neutrino Lua API bridge"
-version = "0.02"
+version = "0.03"
 
 a = {}
 r = ""
@@ -21,7 +21,8 @@ for i, v in ipairs(arg) do
 end
 
 if a[2] == "get" then
-	-- see src/gui/lua/luainstance.cpp
+	-- APIVERSION: see src/gui/lua/luainstance.cpp
+	-- DIR and SCREEN: see src/scriptapi/script_constants.cpp
 
 	if a[3] == "apiversion" then
 		r = APIVERSION.MAJOR .. "." .. APIVERSION.MINOR
@@ -29,87 +30,14 @@ if a[2] == "get" then
 		r = APIVERSION.MAJOR
 	elseif a[3] == "apiversion.minor" then
 		r = APIVERSION.MINOR
-
-	elseif a[3] == "dir.configdir" then
-		r = DIR.CONFIGDIR
-	elseif a[3] == "dir.zapitdir" then
-		r = DIR.ZAPITDIR
-	elseif a[3] == "dir.datadir" then
-		r = DIR.DATADIR
-	elseif a[3] == "dir.datadir_var" then
-		r = DIR.DATADIR_VAR
-	elseif a[3] == "dir.controldir" then
-		r = DIR.CONTROLDIR
-	elseif a[3] == "dir.controldir_var" then
-		r = DIR.CONTROLDIR_VAR
-	elseif a[3] == "dir.fontdir" then
-		r = DIR.FONTDIR
-	elseif a[3] == "dir.fontdir_var" then
-		r = DIR.FONTDIR_VAR
-	elseif a[3] == "dir.libdir" then
-		r = DIR.LIBDIR
-	elseif a[3] == "dir.gamesdir" then
-		r = DIR.GAMESDIR
-	elseif a[3] == "dir.iconsdir" then
-		r = DIR.ICONSDIR
-	elseif a[3] == "dir.iconsdir_var" then
-		r = DIR.ICONSDIR_VAR
-	elseif a[3] == "dir.localedir" then
-		r = DIR.LOCALEDIR
-	elseif a[3] == "dir.localedir_var" then
-		r = DIR.LOCALEDIR_VAR
-	elseif a[3] == "dir.plugindir" then
-		r = DIR.PLUGINDIR
-	elseif a[3] == "dir.plugindir_mnt" then
-		r = DIR.PLUGINDIR_MNT
-	elseif a[3] == "dir.plugindir_var" then
-		r = DIR.PLUGINDIR_VAR
-	elseif a[3] == "dir.luaplugindir" then
-		r = DIR.LUAPLUGINDIR
-	elseif a[3] == "dir.luaplugindir_var" then
-		r = DIR.LUAPLUGINDIR_VAR
-	elseif a[3] == "dir.pythonplugindir" then
-		r = DIR.PYTHONPLUGINDIR
-	elseif a[3] == "dir.pythonplugindir_var" then
-		r = DIR.PYTHONPLUGINDIR_VAR
-	elseif a[3] == "dir.themesdir" then
-		r = DIR.THEMESDIR
-	elseif a[3] == "dir.themesdir_var" then
-		r = DIR.THEMESDIR_VAR
-	elseif a[3] == "dir.webradiodir" then
-		r = DIR.WEBRADIODIR
-	elseif a[3] == "dir.webradiodir_var" then
-		r = DIR.WEBRADIODIR_VAR
-	elseif a[3] == "dir.webtvdir" then
-		r = DIR.WEBTVDIR
-	elseif a[3] == "dir.webtvdir_var" then
-		r = DIR.WEBTVDIR_VAR
-	elseif a[3] == "dir.logodir" then
-		r = DIR.LOGODIR
-	elseif a[3] == "dir.logodir_var" then
-		r = DIR.LOGODIR_VAR
-	elseif a[3] == "dir.private_httpddir" then
-		r = DIR.PRIVATE_HTTPDDIR
-	elseif a[3] == "dir.public_httpddir" then
-		r = DIR.PUBLIC_HTTPDDIR
-	elseif a[3] == "dir.hosted_httpddir" then
-		r = DIR.HOSTED_HTTPDDIR
-	elseif a[3] == "dir.flagdir" then
-		r = DIR.FLAGDIR
-
-	elseif a[3] == "screen.off_x" then
-		r = SCREEN.OFF_X
-	elseif a[3] == "screen.off_y" then
-		r = SCREEN.OFF_Y
-	elseif a[3] == "screen.end_x" then
-		r = SCREEN.END_X
-	elseif a[3] == "screen.end_y" then
-		r = SCREEN.END_Y
-	elseif a[3] == "screen.x_res" then
-		r = SCREEN.X_RES
-	elseif a[3] == "screen.y_res" then
-		r = SCREEN.Y_RES
-
+	elseif a[3] ~= nil then
+		-- dir.<name> and screen.<name> answer any entry of DIR and SCREEN,
+		-- so a directory added there needs no line here
+		for prefix, tbl in pairs({ ["dir."] = DIR, ["screen."] = SCREEN }) do
+			if a[3]:sub(1, #prefix) == prefix then
+				r = tbl[a[3]:sub(#prefix + 1):upper()]
+			end
+		end
 	end
 
 elseif a[2] == "misc" then

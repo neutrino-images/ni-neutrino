@@ -19,7 +19,7 @@ import sys
 from neutrino import APIVERSION, DIR, SCREEN, POSTMSG, misc, video
 
 npab = "Neutrino Python API bridge"
-version = "0.01"
+version = "0.02"
 
 # sys.argv[0] is the script, sys.argv[1] the name pyclient was called by,
 # the arguments follow - the same layout nlab.lua finds in 'arg'.
@@ -32,7 +32,8 @@ def argument(i):
 
 
 def get(key):
-	# see src/gui/python/pyinstance.cpp
+	# APIVERSION: see src/gui/python/pyinstance.cpp
+	# DIR and SCREEN: see src/scriptapi/script_constants.cpp
 
 	if key == "apiversion":
 		return "%d.%d" % (APIVERSION["MAJOR"], APIVERSION["MINOR"])
