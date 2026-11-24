@@ -1302,15 +1302,6 @@ livestream.head (((T))) Livestreams
 livestream.read_data (((T))) Lese Daten ...
 livestream.resolution (((T))) Auflösung
 livestream.scriptpath (((T))) Script Verzeichnis
-lua.boolparam_deprecated1 Waarschuwing!
-lua.boolparam_deprecated2 Het gebruik van nummer of string
-lua.boolparam_deprecated3 for a Boolean parameter is deprecated.\n                      Please use native bool values eg.
-lua.function_deprecated1 Waarschuwing!
-lua.function_deprecated2 Functie
-lua.function_deprecated3 is deprecated,\n                      please use
-lua.parameter_deprecated2 (((T))) Der Parameter
-lua.versionscheck1 (((T))) Ihre Lua API Version ist zu alt
-lua.versionscheck2 (((T))) Erforderlich ist mindestens
 mainmenu.audioplayer Audiospeler
 mainmenu.avinputmode (((T))) HDMI-Eingang (Modus)
 mainmenu.avinputmode_pip (((T))) HDMI-Eingang (PiP)
@@ -1644,7 +1635,6 @@ menu.hint_leds_tv LEDs status indien de ontvanger in werking is
 menu.hint_load Laad gebruikersinterface \ninstellingen van back-up bestand
 menu.hint_longkeypress_duration Een toets-indruk wordt gezien als "lange toets indruk" wanneer deze langer is ingedrukt dan de gespecificeerde tijd.
 menu.hint_lua Start Lua Plugins
-menu.hint_python Start Python Plugins
 menu.hint_make_hdlist Automatisch HD kanalenlijst maken \ngebaseerd op kanaaltype en naam
 menu.hint_make_newlist Kanalenlijst aanmaken met recent toegevoegde kanalen
 menu.hint_make_removedlist Kanalenlijst aanmaken met recent verwijderde kanalen
@@ -1775,6 +1765,7 @@ menu.hint_progressbar_timescale_invert Selecteer het gewenste kleur verloop
 menu.hint_progressbar_timescale_red Selecteer het rode deel van gekleurde voortgangsbalks
 menu.hint_progressbar_timescale_yellow Selecteer het gele deel van gekleurde voortgangsbalks
 menu.hint_protection Bescherm content met een pincode\nDe standaard pincode is 0000.
+menu.hint_python Start Python Plugins
 menu.hint_quadpip (((T))) QuadPiP aktivieren
 menu.hint_radiomode Schakel de ontvanger in radio modus.
 menu.hint_reboot Herstart de ontvanger \n zonder bevestiging.
@@ -2863,6 +2854,15 @@ screenshot.res Resolutie
 screenshot.scale Schalen
 screenshot.tv TV resolutie
 screenshot.video Video in de achtergrond
+scriptapi.boolparam_deprecated1 Waarschuwing!
+scriptapi.boolparam_deprecated2 Het gebruik van nummer of string
+scriptapi.boolparam_deprecated3 for a Boolean parameter is deprecated.\n                      Please use native bool values eg.
+scriptapi.function_deprecated1 Waarschuwing!
+scriptapi.function_deprecated2 Functie
+scriptapi.function_deprecated3 is deprecated,\n                      please use
+scriptapi.parameter_deprecated2 (((T))) Der Parameter
+scriptapi.versionscheck1 (((T))) Die API-Version des Scripts ist zu alt
+scriptapi.versionscheck2 (((T))) Erforderlich ist mindestens
 servicemenu.getplugins Herlaad plugins
 servicemenu.getplugins_hint Plugins worden geladen,\nmoment geduld alstublieft.
 servicemenu.head Installatie / Software update

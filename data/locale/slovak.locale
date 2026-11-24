@@ -1302,15 +1302,6 @@ livestream.head Online data
 livestream.read_data Načítava sa stream ...
 livestream.resolution Rozlíšenie
 livestream.scriptpath Script path
-lua.boolparam_deprecated1 Upozornenie!
-lua.boolparam_deprecated2 Použité číslo alebo reťazec
-lua.boolparam_deprecated3 pre Boolean parameter je zastarané.\n                      Prosím použiť prirodzenú bool hodnotu napr.
-lua.function_deprecated1 Upozornenie!
-lua.function_deprecated2 Funkcia
-lua.function_deprecated3 je kritická,\n                      prosím použiť
-lua.parameter_deprecated2 Parameter
-lua.versionscheck1 Verzia API je príliš stará
-lua.versionscheck2 Je potrebná minimálne
 mainmenu.audioplayer Prehrávač hudby
 mainmenu.avinputmode HDMI vstup (Režim)
 mainmenu.avinputmode_pip HDMI vstup (PiP)
@@ -1644,7 +1635,6 @@ menu.hint_leds_tv Funkčný stav LED
 menu.hint_load Načítanie Neutrino-HD nastavení grafického užívateľského rozhrania (GUI) zo súboru
 menu.hint_longkeypress_duration Stlačenie klávesy bude vyhodnotené ako "dlhý stisk klávesy" ak bude stlačené dlhšie ako špecifikovaný čas.
 menu.hint_lua Spustenie Lua doplnkov
-menu.hint_python Spustenie Python doplnkov
 menu.hint_make_hdlist Automaticky vytvorí HD zoznam kanálov na základe\ntypu kanálu a názvu
 menu.hint_make_newlist Vytvorí zoznam nedávno pridaných kanálov
 menu.hint_make_removedlist Vytvorí zoznam nedávno odstránených kanálov
@@ -1775,6 +1765,7 @@ menu.hint_progressbar_timescale_invert Výber preferovaného farebného prechodu
 menu.hint_progressbar_timescale_red Výber množstva červenej vo farebnosti infobaru
 menu.hint_progressbar_timescale_yellow Výber množstva žltej vo farebnosti infobaru
 menu.hint_protection Ochrana obsahu PIN kódom\nVýchodzí PIN 0000
+menu.hint_python Spustenie Python doplnkov
 menu.hint_quadpip Aktivácia QuadPiP
 menu.hint_radiomode Prepne prijímač do režimu Rádio
 menu.hint_reboot Reštartovanie zariadenia - bez potvrdzovania
@@ -2863,6 +2854,15 @@ screenshot.res Rozlíšenie
 screenshot.scale Pomer
 screenshot.tv TV rozlíšenie
 screenshot.video Obraz na pozadí
+scriptapi.boolparam_deprecated1 Upozornenie!
+scriptapi.boolparam_deprecated2 Použité číslo alebo reťazec
+scriptapi.boolparam_deprecated3 pre Boolean parameter je zastarané.\n                      Prosím použiť prirodzenú bool hodnotu napr.
+scriptapi.function_deprecated1 Upozornenie!
+scriptapi.function_deprecated2 Funkcia
+scriptapi.function_deprecated3 je kritická,\n                      prosím použiť
+scriptapi.parameter_deprecated2 Parameter
+scriptapi.versionscheck1 Verzia API je príliš stará
+scriptapi.versionscheck2 Je potrebná minimálne
 servicemenu.getplugins Načítanie doplnkov
 servicemenu.getplugins_hint Načítavanie doplnkov,\nčakajte prosím...
 servicemenu.head Inštalácia / služby

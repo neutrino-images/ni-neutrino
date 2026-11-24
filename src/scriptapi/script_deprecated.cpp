@@ -33,9 +33,9 @@ void ScriptDeprecated::paramBool(const char *language, const std::string &where,
 	       "                      %s \33[32m%s\33[0m.\n"
 	       "                      (%s)\n",
 	       language,
-	       g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED1),
-	       g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED2), val,
-	       g_Locale->getText(LOCALE_LUA_BOOLPARAM_DEPRECATED3), trueWord,
+	       g_Locale->getText(LOCALE_SCRIPTAPI_BOOLPARAM_DEPRECATED1),
+	       g_Locale->getText(LOCALE_SCRIPTAPI_BOOLPARAM_DEPRECATED2), val,
+	       g_Locale->getText(LOCALE_SCRIPTAPI_BOOLPARAM_DEPRECATED3), trueWord,
 	       where.c_str());
 }
 
@@ -46,22 +46,22 @@ static void renamed(const char *language, const std::string &where,
 	printf("[%s Script] \33[1;31m%s\33[0m %s \33[33m%s\33[0m %s \33[1;33m%s\33[0m.\n"
 	       "                      (%s)\n",
 	       language,
-	       g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED1),
+	       g_Locale->getText(LOCALE_SCRIPTAPI_FUNCTION_DEPRECATED1),
 	       g_Locale->getText(what), oldName,
-	       g_Locale->getText(LOCALE_LUA_FUNCTION_DEPRECATED3), newName,
+	       g_Locale->getText(LOCALE_SCRIPTAPI_FUNCTION_DEPRECATED3), newName,
 	       where.c_str());
 }
 
 void ScriptDeprecated::param(const char *language, const std::string &where,
 		const char *oldParam, const char *newParam)
 {
-	renamed(language, where, LOCALE_LUA_PARAMETER_DEPRECATED2, oldParam, newParam);
+	renamed(language, where, LOCALE_SCRIPTAPI_PARAMETER_DEPRECATED2, oldParam, newParam);
 }
 
 void ScriptDeprecated::function(const char *language, const std::string &where,
 		const char *oldFunc, const char *newFunc)
 {
-	renamed(language, where, LOCALE_LUA_FUNCTION_DEPRECATED2, oldFunc, newFunc);
+	renamed(language, where, LOCALE_SCRIPTAPI_FUNCTION_DEPRECATED2, oldFunc, newFunc);
 }
 
 void ScriptDeprecated::hideParameter(const char *language, const std::string &where)

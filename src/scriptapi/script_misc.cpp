@@ -85,9 +85,9 @@ bool ScriptMisc::versionOk(int major, int minor, int apiMajor, int apiMinor, std
 	{
 		char buf[1024];
 		snprintf(buf, sizeof(buf) - 1, "%s (v%d.%d)\n%s v%d.%d",
-			g_Locale->getText(LOCALE_LUA_VERSIONSCHECK1),
+			g_Locale->getText(LOCALE_SCRIPTAPI_VERSIONSCHECK1),
 			apiMajor, apiMinor,
-			g_Locale->getText(LOCALE_LUA_VERSIONSCHECK2),
+			g_Locale->getText(LOCALE_SCRIPTAPI_VERSIONSCHECK2),
 			major, minor);
 		msg = buf;
 		return false;

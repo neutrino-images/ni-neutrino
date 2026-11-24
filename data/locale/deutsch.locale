@@ -1303,15 +1303,6 @@ livestream.head Livestreams
 livestream.read_data Stream wird geladen ...
 livestream.resolution Auflösung
 livestream.scriptpath Script Verzeichnis
-lua.boolparam_deprecated1 Achtung!
-lua.boolparam_deprecated2 Die Verwendung von Zahl oder String
-lua.boolparam_deprecated3 für einen Boolean Parameter ist veraltet.\n                      Bitte nutzen Sie native Bool Werte zB:
-lua.function_deprecated1 Achtung!
-lua.function_deprecated2 Die Funktion
-lua.function_deprecated3 ist veraltet,\n                      bitte nutzen Sie
-lua.parameter_deprecated2 Der Parameter
-lua.versionscheck1 Ihre Lua API Version ist zu alt
-lua.versionscheck2 Erforderlich ist mindestens
 mainmenu.audioplayer Audioplayer
 mainmenu.avinputmode HDMI-Eingang (Modus)
 mainmenu.avinputmode_pip HDMI-Eingang (PiP)
@@ -1645,7 +1636,6 @@ menu.hint_leds_tv Definiert den Status der Power-LEDs im TV-Modus
 menu.hint_load Laden der Einstellungen aus einer Datei
 menu.hint_longkeypress_duration Tasten, die länger als die angegebene Zeit betätigt werden, werden als "langer Tastendruck" behandelt.
 menu.hint_lua Plugins ausführen
-menu.hint_python Python-Plugins ausführen
 menu.hint_make_hdlist Bei aktiver Option werden Bouquets namens 'HD' und 'UHD' erzeugt, in denen alle HD- bzw. UHD-Sender zusammengefasst sind
 menu.hint_make_newlist Nach einer Kanalsuche wird ein Bouquet namens 'neue Kanäle' erzeugt
 menu.hint_make_removedlist Nach einer Kanalsuche wird ein Bouquet namens 'gelöschte Kanäle' erzeugt
@@ -1776,6 +1766,7 @@ menu.hint_progressbar_timescale_invert Wählen Sie den Farbverlauf
 menu.hint_progressbar_timescale_red Hier können Sie den roten Farbanteil bunter Fortschrittsbalken anpassen
 menu.hint_progressbar_timescale_yellow Hier können Sie den gelben Farbanteil bunter Fortschrittsbalken anpassen
 menu.hint_protection Schützen Sie Inhalte per PIN-Code\nStandard-PIN ist 0000
+menu.hint_python Python-Plugins ausführen
 menu.hint_quadpip QuadPiP aktivieren
 menu.hint_radiomode Schaltet zum Radio-Modus
 menu.hint_reboot Startet die Box neu\nDer Neustart erfolgt ohne Bestätigung!
@@ -2873,6 +2864,15 @@ screenshot.res Auflösung
 screenshot.scale Skalierung
 screenshot.tv TV-Auflösung
 screenshot.video Video im Hintergrund
+scriptapi.boolparam_deprecated1 Achtung!
+scriptapi.boolparam_deprecated2 Die Verwendung von Zahl oder String
+scriptapi.boolparam_deprecated3 für einen Boolean Parameter ist veraltet.\n                      Bitte nutzen Sie native Bool Werte zB:
+scriptapi.function_deprecated1 Achtung!
+scriptapi.function_deprecated2 Die Funktion
+scriptapi.function_deprecated3 ist veraltet,\n                      bitte nutzen Sie
+scriptapi.parameter_deprecated2 Der Parameter
+scriptapi.versionscheck1 Die API-Version des Scripts ist zu alt
+scriptapi.versionscheck2 Erforderlich ist mindestens
 servicemenu.getplugins Plugins neu laden
 servicemenu.getplugins_hint Plugins werden neu geladen,\nbitte warten ...
 servicemenu.head Service

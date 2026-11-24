@@ -1303,15 +1303,6 @@ livestream.head Live streams
 livestream.read_data Loading stream ...
 livestream.resolution Resolution
 livestream.scriptpath Script path
-lua.boolparam_deprecated1 Caution!
-lua.boolparam_deprecated2 The use of number or string
-lua.boolparam_deprecated3 for a Boolean parameter is deprecated.\n                      Please use native bool values eg.
-lua.function_deprecated1 Caution!
-lua.function_deprecated2 Function
-lua.function_deprecated3 is deprecated,\n                      please use
-lua.parameter_deprecated2 Parameter
-lua.versionscheck1 Your Lua API version is too old
-lua.versionscheck2 This requires at least
 mainmenu.audioplayer Audioplayer
 mainmenu.avinputmode HDMI Input (Mode)
 mainmenu.avinputmode_pip HDMI Input (PiP)
@@ -1645,7 +1636,6 @@ menu.hint_leds_tv Working LEDs state
 menu.hint_load Load GUI settings from file
 menu.hint_longkeypress_duration A key press will be considered as "long key press" if it's pressed longer than the specified time.
 menu.hint_lua Run Lua Plugins
-menu.hint_python Run Python Plugins
 menu.hint_make_hdlist Auto-create HD and UHD channel lists based on\nchannel type and name
 menu.hint_make_newlist Create list of recently added channels
 menu.hint_make_removedlist Create list of recently removed channels
@@ -1776,6 +1766,7 @@ menu.hint_progressbar_timescale_invert Select your preferred color gradient
 menu.hint_progressbar_timescale_red Choose the red portion of colored progressbars
 menu.hint_progressbar_timescale_yellow Choose the yellow portion of colored progressbars
 menu.hint_protection Protect content by PIN code\nDefault PIN 0000
+menu.hint_python Run Python Plugins
 menu.hint_quadpip Activate QuadPiP
 menu.hint_radiomode Switch box to radio mode
 menu.hint_reboot Reboot box\nNo confirmation
@@ -2873,6 +2864,15 @@ screenshot.res Resolution
 screenshot.scale Scale
 screenshot.tv TV resolution
 screenshot.video Video in the background
+scriptapi.boolparam_deprecated1 Caution!
+scriptapi.boolparam_deprecated2 The use of number or string
+scriptapi.boolparam_deprecated3 for a Boolean parameter is deprecated.\n                      Please use native bool values eg.
+scriptapi.function_deprecated1 Caution!
+scriptapi.function_deprecated2 Function
+scriptapi.function_deprecated3 is deprecated,\n                      please use
+scriptapi.parameter_deprecated2 Parameter
+scriptapi.versionscheck1 The script's API version is too old
+scriptapi.versionscheck2 This requires at least
 servicemenu.getplugins Reload plugins
 servicemenu.getplugins_hint Reloading plugins,\nplease be patient.
 servicemenu.head Service
