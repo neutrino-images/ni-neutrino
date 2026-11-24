@@ -54,6 +54,7 @@
 #include <scriptapi/script_ui.h>
 #ifdef ENABLE_PYTHON
 #include <gui/python/py_video.h>
+#include <gui/python/pyinstance.h>
 #endif
 #include <gui/screensaver.h>
 #include <gui/widget/menue_options.h>
@@ -2322,6 +2323,21 @@ static std::string jsonDecryptionKeys(const Json::Value &v)
 	return keys;
 }
 
+static bool hasSuffix(const std::string &s, const std::string &suffix)
+{
+	return s.length() > suffix.length() && s.compare(s.length() - suffix.length(), suffix.length(), suffix) == 0;
+}
+
+static bool isLuaScript(const std::string &script)
+{
+	return hasSuffix(script, ".lua");
+}
+
+static bool isPythonScript(const std::string &script)
+{
+	return hasSuffix(script, ".py");
+}
+
 bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &file, std::vector<livestream_info_t> &streamList, std::string *error_string, const std::string &display_name)
 {
 	std::string hint_text = g_Locale->getText(LOCALE_LIVESTREAM_READ_DATA);
@@ -2344,11 +2360,24 @@ bool CMoviePlayerGui::luaGetUrl(const std::string &script, const std::string &fi
 
 	std::vector<std::string> args;
 	args.push_back(file);
-#ifdef ENABLE_LUA
-	CLuaInstance *lua = new CLuaInstance();
-	lua->runScript(lua_script.c_str(), &args, &result_code, &result_string, &lua_error);
-	delete lua;
+	if (isPythonScript(lua_script)) {
+#ifdef ENABLE_PYTHON
+		/* a Python script hands back the same JSON string a Lua script
+		 * returns, as the name 'result' in its own namespace */
+		CPythonInstance *py = new CPythonInstance();
+		py->runScript(lua_script.c_str(), &args, &result_code, &result_string, &lua_error);
+		delete py;
+#else
+		lua_error = "Python livestream scripts need Neutrino built with --enable-python";
+		printf(">>>>> [%s:%s:%d] %s: %s\n", __file__, __func__, __LINE__, lua_error.c_str(), lua_script.c_str());
 #endif
+	} else {
+#ifdef ENABLE_LUA
+		CLuaInstance *lua = new CLuaInstance();
+		lua->runScript(lua_script.c_str(), &args, &result_code, &result_string, &lua_error);
+		delete lua;
+#endif
+	}
 	ScriptUi::setListener(NULL, NULL);
 	if ((result_code != "0") || result_string.empty()) {
 		if (error_string) {
@@ -2584,13 +2613,16 @@ bool CMoviePlayerGui::getLiveUrlDetailed(const std::string &url, const std::stri
 			return false;
 		}
 	}
-	size_t pos = _script.find(".lua");
-	if (!file_exists(_script.c_str()) || (pos == std::string::npos) || (_script.length()-pos != 4)) {
-		printf(">>>>> [%s:%s:%d] script error\n", __file__, __func__, __LINE__);
+	if (!file_exists(_script.c_str())) {
+		printf(">>>>> [%s:%s:%d] script error: %s not found\n", __file__, __func__, __LINE__, _script.c_str());
+		return false;
+	}
+	if (!isLuaScript(_script) && !isPythonScript(_script)) {
+		printf(">>>>> [%s:%s:%d] script error: %s is neither a .lua nor a .py file\n", __file__, __func__, __LINE__, _script.c_str());
 		return false;
 	}
 	if (!luaGetUrl(_script, url, liveStreamList, &script_error, _pretty_name)) {
-		printf(">>>>> [%s:%s:%d] lua script error\n", __file__, __func__, __LINE__);
+		printf(">>>>> [%s:%s:%d] %s script error\n", __file__, __func__, __LINE__, isPythonScript(_script) ? "python" : "lua");
 		if (!script_error.empty()) {
 			webtv_error_reason_t script_reason = WEBTV_ERROR_NONE;
 			std::string script_host;
