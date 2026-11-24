@@ -7,7 +7,7 @@
 ]]
 
 nlab = "Neutrino Lua API bridge"
-version = "0.01"
+version = "0.02"
 
 a = {}
 r = ""
@@ -68,6 +68,10 @@ if a[2] == "get" then
 		r = DIR.LUAPLUGINDIR
 	elseif a[3] == "dir.luaplugindir_var" then
 		r = DIR.LUAPLUGINDIR_VAR
+	elseif a[3] == "dir.pythonplugindir" then
+		r = DIR.PYTHONPLUGINDIR
+	elseif a[3] == "dir.pythonplugindir_var" then
+		r = DIR.PYTHONPLUGINDIR_VAR
 	elseif a[3] == "dir.themesdir" then
 		r = DIR.THEMESDIR
 	elseif a[3] == "dir.themesdir_var" then
