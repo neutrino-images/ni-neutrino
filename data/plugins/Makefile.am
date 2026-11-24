@@ -3,12 +3,12 @@
 # files, see its Makefile.am.
 SUBDIRS =
 
-if ENABLE_PYTHON
-SUBDIRS += \
-	pythonplugins
-endif
-
 if ENABLE_LUA
 SUBDIRS += \
 	luaplugins
+endif
+
+if ENABLE_PYTHON
+SUBDIRS += \
+	pythonplugins
 endif
