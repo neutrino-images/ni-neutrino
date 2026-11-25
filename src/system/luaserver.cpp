@@ -21,7 +21,7 @@
 #if 0
 For testing try:
 
-cat <<EOT > /usr/share/tuxbox/neutrino/luaplugins/test.lua
+cat <<EOT > /usr/share/tuxbox/neutrino/client-scripts/luaclient/test.lua
 #!/usr/bin/luaclient
 
 for i,v in ipairs(arg) do
@@ -30,9 +30,9 @@ end
 return "ok"
 EOT
 
-chmod +x /usr/share/tuxbox/neutrino/luaplugins/test.lua
+chmod +x /usr/share/tuxbox/neutrino/client-scripts/luaclient/test.lua
 
-/usr/share/tuxbox/neutrino/luaplugins/test.lua a b c d
+/usr/share/tuxbox/neutrino/client-scripts/luaclient/test.lua a b c d
 #endif
 
 #include <config.h>
@@ -239,7 +239,7 @@ bool CLuaServer::luaserver_parse_command(CBasicMessage::Header &rmsg __attribute
 	std::string luascript;
 	if (data[0] == '/')
 		luascript = data;
-	const char * path[2] = { LUAPLUGINDIR_VAR, LUAPLUGINDIR };
+	const char * path[2] = { LUACLIENTSCRIPTDIR_VAR, LUACLIENTSCRIPTDIR };
 	for (unsigned int i = 0; i < 2; i++)
 	{
 		std::string filename = path[i];

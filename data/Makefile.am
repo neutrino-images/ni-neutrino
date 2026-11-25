@@ -1,4 +1,5 @@
 SUBDIRS = \
+	client-scripts \
 	config \
 	control \
 	fonts \
@@ -11,7 +12,6 @@ SUBDIRS = \
 	locale \
 	logos \
 	pictures \
-	plugins \
 	policy \
 	scripts \
 	themes \

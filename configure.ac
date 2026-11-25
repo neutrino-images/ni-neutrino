@@ -848,6 +848,11 @@ AC_SUBST(LIBCOOLSTREAM_STATIC_DIR)
 AC_CONFIG_FILES([
 Makefile
 data/Makefile
+data/client-scripts/Makefile
+data/client-scripts/luaclient/Makefile
+data/client-scripts/luaclient/nlab/Makefile
+data/client-scripts/pyclient/Makefile
+data/client-scripts/pyclient/npab/Makefile
 data/config/Makefile
 data/control/Makefile
 data/fonts/Makefile
@@ -880,11 +885,6 @@ data/lcd/icons/Makefile
 data/logos/Makefile
 data/license/Makefile
 data/locale/Makefile
-data/plugins/Makefile
-data/plugins/luaplugins/Makefile
-data/plugins/luaplugins/nlab/Makefile
-data/plugins/pythonplugins/Makefile
-data/plugins/pythonplugins/npab/Makefile
 data/oled/Makefile
 data/oled/fonts/Makefile
 data/oled/icons/Makefile

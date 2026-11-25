@@ -572,8 +572,8 @@ static void setPythonVariables(PyObject *module)
 	{
 		for (size_t i = 0; i < directories.size(); i++)
 			addConst(dirs, directories[i].name, PyUnicode_FromString(directories[i].value));
-		addConst(dirs, "PYTHONPLUGINDIR", PyUnicode_FromString(PYTHONPLUGINDIR));
-		addConst(dirs, "PYTHONPLUGINDIR_VAR", PyUnicode_FromString(PYTHONPLUGINDIR_VAR));
+		addConst(dirs, "PYCLIENTSCRIPTDIR", PyUnicode_FromString(PYCLIENTSCRIPTDIR));
+		addConst(dirs, "PYCLIENTSCRIPTDIR_VAR", PyUnicode_FromString(PYCLIENTSCRIPTDIR_VAR));
 		addConstTable(module, "DIR", dirs);
 	}
 	else

@@ -5,10 +5,10 @@ SUBDIRS =
 
 if ENABLE_LUA
 SUBDIRS += \
-	luaplugins
+	luaclient
 endif
 
 if ENABLE_PYTHON
 SUBDIRS += \
-	pythonplugins
+	pyclient
 endif

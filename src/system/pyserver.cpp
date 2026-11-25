@@ -234,7 +234,7 @@ bool CPythonServer::pyserver_parse_command(CBasicMessage::Header &rmsg __attribu
 	std::string pyscript;
 	if (data[0] == '/')
 		pyscript = data;
-	const char * path[2] = { PYTHONPLUGINDIR_VAR, PYTHONPLUGINDIR };
+	const char * path[2] = { PYCLIENTSCRIPTDIR_VAR, PYCLIENTSCRIPTDIR };
 	for (unsigned int i = 0; i < 2; i++)
 	{
 		std::string filename = path[i];

@@ -61,8 +61,8 @@ const char *mounts_path = "/proc/self/mounts";
 const char kShippedRoots[] =
 	"/media:/mnt:/var:/tmp:/hdd:"
 	PLUGINDIR ":" PLUGINDIR_VAR ":" PLUGINDIR_MNT ":"
-	LUAPLUGINDIR ":" LUAPLUGINDIR_VAR ":"
-	PYTHONPLUGINDIR ":" PYTHONPLUGINDIR_VAR;
+	LUACLIENTSCRIPTDIR ":" LUACLIENTSCRIPTDIR_VAR ":"
+	PYCLIENTSCRIPTDIR ":" PYCLIENTSCRIPTDIR_VAR;
 
 const char *default_roots = kShippedRoots;
 

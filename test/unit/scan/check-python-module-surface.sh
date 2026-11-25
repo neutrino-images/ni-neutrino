@@ -42,7 +42,7 @@ if [ -n "$PLUGIN" ]; then
 	[ -r "$PLUGIN" ] || { echo "check-python-module-surface.sh: cannot read $PLUGIN" >&2; exit 1; }
 	set -- "$PLUGIN"
 else
-	set -- "$SRC"/data/plugins/pythonplugins/*/*.py
+	set -- "$SRC"/data/client-scripts/pyclient/*/*.py
 	# No python script shipped is nothing to hold to the module, not a fault:
 	# the glob then stands for itself and is dropped. The module itself is
 	# still checked below.

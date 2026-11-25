@@ -5,7 +5,7 @@
 
 	Copyright (C) 2026 Sven Hoefer <svenhoefer@svenhoefer.com>
 
-	The Python counterpart of nlab.lua (data/plugins/luaplugins/nlab): called
+	The Python counterpart of nlab.lua (data/client-scripts/luaclient/nlab): called
 	through pyclient, it hands values of the Neutrino Python API to the
 	shell.
 
