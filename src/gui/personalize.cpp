@@ -455,8 +455,8 @@ int CPersonalizeGui::ShowPersonalizationMenu()
 	int res = pMenu->exec(NULL, "");
 	if (show_pluginmenu) {
 		// Only the plugins whose type was changed in this menu are rewritten, so a change made elsewhere stays.
-		static const char *const kKeys[] = { "plugins_disabled", "plugins_game", "plugins_tool", "plugins_script", "plugins_lua", "plugins_python" };
-		static const int kTypes[] = { CPlugins::P_TYPE_DISABLED, CPlugins::P_TYPE_GAME, CPlugins::P_TYPE_TOOL, CPlugins::P_TYPE_SCRIPT, CPlugins::P_TYPE_LUA, CPlugins::P_TYPE_PYTHON };
+		static const char *const kKeys[] = { "plugins_disabled", "plugins_game", "plugins_tool", "plugins_shell", "plugins_lua", "plugins_python" };
+		static const int kTypes[] = { CPlugins::P_TYPE_DISABLED, CPlugins::P_TYPE_GAME, CPlugins::P_TYPE_TOOL, CPlugins::P_TYPE_SHELL, CPlugins::P_TYPE_LUA, CPlugins::P_TYPE_PYTHON };
 		static const size_t kListCount = sizeof(kKeys) / sizeof(kKeys[0]);
 		std::vector<std::string> lists[kListCount];
 		bool changed[kListCount] = { false, false, false, false, false, false };
@@ -605,7 +605,7 @@ const CMenuOptionChooser::keyval PERSONALIZE_PLUGINTYPE_OPTIONS[PERSONALIZE_PLUG
 	{ CPlugins::P_TYPE_DISABLED, LOCALE_PLUGINTYPE_DISABLED },
 	{ CPlugins::P_TYPE_GAME, LOCALE_PLUGINTYPE_GAME },
 	{ CPlugins::P_TYPE_TOOL, LOCALE_PLUGINTYPE_TOOL },
-	{ CPlugins::P_TYPE_SCRIPT, LOCALE_PLUGINTYPE_SCRIPT },
+	{ CPlugins::P_TYPE_SHELL, LOCALE_PLUGINTYPE_SHELL },
 	{ CPlugins::P_TYPE_LUA, LOCALE_PLUGINTYPE_LUA },
 	{ CPlugins::P_TYPE_PYTHON, LOCALE_PLUGINTYPE_PYTHON }
 };

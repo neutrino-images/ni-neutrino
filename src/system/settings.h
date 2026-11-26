@@ -904,7 +904,7 @@ struct SNeutrinoSettings
 	std::string plugins_game;
 	std::string plugins_lua;
 	std::string plugins_python;
-	std::string plugins_script;
+	std::string plugins_shell;
 	std::string plugins_tool;
 
 	// default plugin for movieplayer
@@ -1289,14 +1289,14 @@ struct SNeutrinoSettings
 		ITEM_BOXINFO = 17,
 		ITEM_CAM = 18,
 		ITEM_CLOCK = 19,
-		ITEM_GAMES = 20,
-		ITEM_SCRIPTS = 21,
+		ITEM_PLUGINS_GAMES = 20,
+		ITEM_PLUGINS_SHELL = 21,
 		ITEM_ECMINFO = 22,
 		ITEM_CAMD_RESET = 23,
 		ITEM_INFOICONS = 24,
 		ITEM_FILEPLAY_VIDEO = 26,
-		ITEM_TOOLS = 27,
-		ITEM_LUA = 28,
+		ITEM_PLUGINS_TOOLS = 27,
+		ITEM_PLUGINS_LUA = 28,
 		ITEM_TUNER_RESTART = 29,
 		ITEM_HDDMENU = 30,
 		ITEM_AUDIOPLAYER = 31,
@@ -1309,7 +1309,9 @@ struct SNeutrinoSettings
 		ITEM_FILEPLAY_AUDIO = 38,
 		ITEM_TIMESHIFT = 39,
 		ITEM_LCD4LINUX = 40,
-		ITEM_PYTHON = 41,
+		ITEM_PLUGINS_PYTHON = 41,
+		ITEM_PLUGINS = 42, // tools, scripts, Lua and Python plugins in one list, as in the main menu
+		ITEM_PLUGINS_SCRIPTAPI = 43, // Lua and Python plugins, what the script API serves, in one list
 
 		ITEM_MAX // MUST be always the last in the list
 	} USER_ITEM;

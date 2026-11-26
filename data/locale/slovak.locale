@@ -1307,28 +1307,30 @@ mainmenu.avinputmode HDMI vstup (Režim)
 mainmenu.avinputmode_pip HDMI vstup (PiP)
 mainmenu.channels Zoznam kanálov
 mainmenu.clearsectionsd Vyčistenie uloženého EPG
-mainmenu.games Hry
 mainmenu.head Hlavné menu
-mainmenu.lua Lua doplnky
 mainmenu.media Média
 mainmenu.mediaplayer Prehrávač medií
 mainmenu.movieplayer Prehrávač filmov
 mainmenu.pausesectionsd Načítavanie EPG
 mainmenu.pictureviewer Prehliadač obrázkov
+mainmenu.plugins Doplnky
+mainmenu.plugins_games Hry
+mainmenu.plugins_lua Doplnky (Lua)
+mainmenu.plugins_python Doplnky (Python)
+mainmenu.plugins_scriptapi Doplnky (Lua/Python)
+mainmenu.plugins_shell Skripty
+mainmenu.plugins_tools Nástroje
 mainmenu.poweroff_menu Vypnutie
-mainmenu.python Python doplnky
 mainmenu.radiomode Rádio
 mainmenu.reboot Reštartovať
 mainmenu.recording Nahrávanie
 mainmenu.recording_start Spustiť
 mainmenu.recording_stop Zastaviť
-mainmenu.scripts Skripty
 mainmenu.service Inštalácia / služby
 mainmenu.settings Nastavenia
 mainmenu.shutdown Vypnúť
 mainmenu.sleeptimer Časovač vypnutia
 mainmenu.standby Pohotovostný režim
-mainmenu.tools Nástroje
 mainmenu.tvmode TV mód
 mainmenu.tvradio_switch Prepnutie TV / Rádio
 mainsettings.audio Zvuk
@@ -1485,7 +1487,6 @@ menu.hint_font_ttx Výber písma pre teletext
 menu.hint_fonts Konfigurácia písma GUI
 menu.hint_foot_back Zmena podkladovej farby päty GUI
 menu.hint_foot_textcolor Zmena farby textu okna päty GUI
-menu.hint_games Zobrazenie zoznamu inštalovaných hier
 menu.hint_glcd_support Aktivácia/deaktivácia grafického LCD
 menu.hint_hdd Formátovanie/kontrola pevného disku
 menu.hint_hdd_allow_set_recdir Nastaviť novo pripojené zariadenia ako nahrávacie médiá
@@ -1634,7 +1635,6 @@ menu.hint_leds_standby Stav LED v pohotovostnom režime
 menu.hint_leds_tv Funkčný stav LED
 menu.hint_load Načítanie Neutrino-HD nastavení grafického užívateľského rozhrania (GUI) zo súboru
 menu.hint_longkeypress_duration Stlačenie klávesy bude vyhodnotené ako "dlhý stisk klávesy" ak bude stlačené dlhšie ako špecifikovaný čas.
-menu.hint_lua Spustenie Lua doplnkov
 menu.hint_make_hdlist Automaticky vytvorí HD zoznam kanálov na základe\ntypu kanálu a názvu
 menu.hint_make_newlist Vytvorí zoznam nedávno pridaných kanálov
 menu.hint_make_removedlist Vytvorí zoznam nedávno odstránených kanálov
@@ -1746,9 +1746,16 @@ menu.hint_plugin_type_lua Zobrazí doplnky v užívateľskom menu pri výbere 'T
 menu.hint_plugin_type_python Zobrazí Python doplnky v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_scripts Zobrazí skripty v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_tools Zobrazí nástroje v užívateľskom menu pri výbere 'Typy doplnkov'
+menu.hint_plugins Spustenie doplnkov
 menu.hint_plugins_control Konfigurácia nainštalovaných doplnkov a služieb
+menu.hint_plugins_games Zobrazenie zoznamu inštalovaných hier
 menu.hint_plugins_hdd_dir Výber priečinka pre načítanie doplnkov
 menu.hint_plugins_hide Skryť alebo zobraziť integrovaných doplnkov alebo doplnkov v užívateľskom menu
+menu.hint_plugins_lua Spustenie Lua doplnkov
+menu.hint_plugins_python Spustenie Python doplnkov
+menu.hint_plugins_scriptapi Spustenie Lua a Python doplnkov
+menu.hint_plugins_shell Spustenie zadania
+menu.hint_plugins_tools Spustenie nástrojov
 menu.hint_power_leds Konfigurácia správania LED podsvietenia tlačidla napájania
 menu.hint_poweroff_menu Otvorí podponuku s možnosťami napájania: vypnutie, pohotovostný režim, reštart, časovač vypnutia, nastavenia napájania a doplnky.
 menu.hint_pref_lang Výber preferovaných jayzkov zvuku a EPG\nvýber 'none' pre nepoužitie
@@ -1765,7 +1772,6 @@ menu.hint_progressbar_timescale_invert Výber preferovaného farebného prechodu
 menu.hint_progressbar_timescale_red Výber množstva červenej vo farebnosti infobaru
 menu.hint_progressbar_timescale_yellow Výber množstva žltej vo farebnosti infobaru
 menu.hint_protection Ochrana obsahu PIN kódom\nVýchodzí PIN 0000
-menu.hint_python Spustenie Python doplnkov
 menu.hint_quadpip Aktivácia QuadPiP
 menu.hint_radiomode Prepne prijímač do režimu Rádio
 menu.hint_reboot Reštartovanie zariadenia - bez potvrdzovania
@@ -1901,7 +1907,6 @@ menu.hint_screenshot_res Veľkosť zosnímania: veľkosť obrazového rozmeru ak
 menu.hint_screenshot_scale Pre obraz+OSD zosnímanie, mierka z obrazového rozlíšenia
 menu.hint_screenshot_setup Konfigurácia volieb zosnímania obrázku
 menu.hint_screenshot_video Vrátane živého obrazu v zosnímanom obrázku
-menu.hint_scripts Spustenie zadania
 menu.hint_selected_back Zmena farby podkladu označenej položky
 menu.hint_selected_text Zmena farby textu označenej položky
 menu.hint_service Nastavenie tuneru, vyhľadanie služieb,\núprava buketov, aktualizácia softvéru
@@ -1940,7 +1945,6 @@ menu.hint_timers Pridanie/Odstránenie/Upravenie plánovaného\nnahrávania, pri
 menu.hint_timezone Výber časového pásma
 menu.hint_tmdb_api_key Zadajte váš TMDb API kľúč. Prázdne zadanie vypína podporu TMDb
 menu.hint_tmdb_enabled Povolenie alebo zakázanie podpory TMDb (themoviedb.org)
-menu.hint_tools Spustenie nástrojov
 menu.hint_tvmode Prepne prijímač do režimu TV
 menu.hint_tvradio_switch Prepínanie medzi TV a Rádio režimom
 menu.hint_uni_setup Konfigurácia unicable frekvencie, uživateľského pásma a PINu
@@ -2634,7 +2638,7 @@ plugintype.disabled Nepoužitý
 plugintype.game Hra
 plugintype.lua Lua doplnok
 plugintype.python Python doplnok
-plugintype.script Skript
+plugintype.shell Skript
 plugintype.tool Nástroj
 poweroff.rec_protected Nahrávky chránené
 quadpip QuadPiP

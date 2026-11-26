@@ -492,39 +492,53 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 				// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
 				break;
 			}
-			case SNeutrinoSettings::ITEM_GAMES:
+			case SNeutrinoSettings::ITEM_PLUGINS_GAMES:
 			{
 				keyhelper.get(&key, &icon);
-				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_GAMES, g_Plugins->hasPlugin(CPlugins::P_TYPE_GAME), NULL, new CPluginList(LOCALE_MAINMENU_GAMES, CPlugins::P_TYPE_GAME), "-1", key, icon);
-				menu_item->setHint(NEUTRINO_ICON_HINT_GAMES, LOCALE_MENU_HINT_GAMES);
+				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PLUGINS_GAMES, g_Plugins->hasPlugin(CPlugins::P_TYPE_GAME), NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_GAMES, CPlugins::P_TYPE_GAME), "-1", key, icon);
+				menu_item->setHint(NEUTRINO_ICON_HINT_GAMES, LOCALE_MENU_HINT_PLUGINS_GAMES);
 				break;
 			}
-			case SNeutrinoSettings::ITEM_TOOLS:
+			case SNeutrinoSettings::ITEM_PLUGINS_TOOLS:
 			{
 				keyhelper.get(&key, &icon);
-				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_TOOLS, g_Plugins->hasPlugin(CPlugins::P_TYPE_TOOL), NULL, new CPluginList(LOCALE_MAINMENU_TOOLS, CPlugins::P_TYPE_TOOL), "-1", key, icon);
-				// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PLUGINS_TOOLS, g_Plugins->hasPlugin(CPlugins::P_TYPE_TOOL), NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_TOOLS, CPlugins::P_TYPE_TOOL), "-1", key, icon);
+				menu_item->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_TOOLS);
 				break;
 			}
-			case SNeutrinoSettings::ITEM_SCRIPTS:
+			case SNeutrinoSettings::ITEM_PLUGINS_SHELL:
 			{
 				keyhelper.get(&key, &icon);
-				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_SCRIPTS, g_Plugins->hasPlugin(CPlugins::P_TYPE_SCRIPT), NULL, new CPluginList(LOCALE_MAINMENU_SCRIPTS, CPlugins::P_TYPE_SCRIPT), "-1", key, icon);
-				menu_item->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_SCRIPTS);
+				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PLUGINS_SHELL, g_Plugins->hasPlugin(CPlugins::P_TYPE_SHELL), NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_SHELL, CPlugins::P_TYPE_SHELL), "-1", key, icon);
+				menu_item->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_SHELL);
 				break;
 			}
-			case SNeutrinoSettings::ITEM_LUA:
+			case SNeutrinoSettings::ITEM_PLUGINS_LUA:
 			{
 				keyhelper.get(&key, &icon);
-				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_LUA, g_Plugins->hasPlugin(CPlugins::P_TYPE_LUA), NULL, new CPluginList(LOCALE_MAINMENU_LUA, CPlugins::P_TYPE_LUA), "-1", key, icon);
-				// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PLUGINS_LUA, g_Plugins->hasPlugin(CPlugins::P_TYPE_LUA), NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_LUA, CPlugins::P_TYPE_LUA), "-1", key, icon);
+				menu_item->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_LUA);
 				break;
 			}
-			case SNeutrinoSettings::ITEM_PYTHON:
+			case SNeutrinoSettings::ITEM_PLUGINS_PYTHON:
 			{
 				keyhelper.get(&key, &icon);
-				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PYTHON, g_Plugins->hasPlugin(CPlugins::P_TYPE_PYTHON), NULL, new CPluginList(LOCALE_MAINMENU_PYTHON, CPlugins::P_TYPE_PYTHON), "-1", key, icon);
-				// FIXME menu_item->setHint("", NONEXISTANT_LOCALE);
+				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PLUGINS_PYTHON, g_Plugins->hasPlugin(CPlugins::P_TYPE_PYTHON), NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_PYTHON, CPlugins::P_TYPE_PYTHON), "-1", key, icon);
+				menu_item->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_PYTHON);
+				break;
+			}
+			case SNeutrinoSettings::ITEM_PLUGINS:
+			{
+				keyhelper.get(&key, &icon);
+				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PLUGINS, g_Plugins->hasPlugin(CPlugins::P_TYPE_NO_GAME), NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS, CPlugins::P_TYPE_NO_GAME), "-1", key, icon);
+				menu_item->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS);
+				break;
+			}
+			case SNeutrinoSettings::ITEM_PLUGINS_SCRIPTAPI:
+			{
+				keyhelper.get(&key, &icon);
+				menu_item = new CMenuDForwarder(LOCALE_MAINMENU_PLUGINS_SCRIPTAPI, g_Plugins->hasPlugin(CPlugins::P_TYPE_SCRIPTAPI), NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_SCRIPTAPI, CPlugins::P_TYPE_SCRIPTAPI), "-1", key, icon);
+				menu_item->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_SCRIPTAPI);
 				break;
 			}
 			case SNeutrinoSettings::ITEM_PLUGIN_TYPES:
@@ -544,7 +558,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_TOOLS])
 						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_TOOL;
 					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_SCRIPTS])
-						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_SCRIPT;
+						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_SHELL;
 					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_LUA])
 						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_LUA;
 					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_PYTHON])

@@ -186,43 +186,43 @@ void CNeutrinoApp::InitMenuMain()
 
 	// games
 	bool show_games = g_Plugins->hasPlugin(CPlugins::P_TYPE_GAME);
-	mf = new CMenuForwarder(LOCALE_MAINMENU_GAMES, show_games, NULL, new CPluginList(LOCALE_MAINMENU_GAMES, CPlugins::P_TYPE_GAME));
-	mf->setHint(NEUTRINO_ICON_HINT_GAMES, LOCALE_MENU_HINT_GAMES);
+	mf = new CMenuForwarder(LOCALE_MAINMENU_PLUGINS_GAMES, show_games, NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_GAMES, CPlugins::P_TYPE_GAME));
+	mf->setHint(NEUTRINO_ICON_HINT_GAMES, LOCALE_MENU_HINT_PLUGINS_GAMES);
 	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_GAMES]);
 
 #if 0
 	// tools
 	bool show_tools = g_Plugins->hasPlugin(CPlugins::P_TYPE_TOOL);
-	mf = new CMenuForwarder(LOCALE_MAINMENU_TOOLS, show_tools, NULL, new CPluginList(LOCALE_MAINMENU_TOOLS, CPlugins::P_TYPE_TOOL));
-	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_TOOLS);
+	mf = new CMenuForwarder(LOCALE_MAINMENU_PLUGINS_TOOLS, show_tools, NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_TOOLS, CPlugins::P_TYPE_TOOL));
+	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_TOOLS);
 	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_TOOLS]);
 
 	// scripts
-	bool show_scripts = g_Plugins->hasPlugin(CPlugins::P_TYPE_SCRIPT);
-	mf = new CMenuForwarder(LOCALE_MAINMENU_SCRIPTS, show_scripts, NULL, new CPluginList(LOCALE_MAINMENU_SCRIPTS, CPlugins::P_TYPE_SCRIPT));
-	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_SCRIPTS);
+	bool show_scripts = g_Plugins->hasPlugin(CPlugins::P_TYPE_SHELL);
+	mf = new CMenuForwarder(LOCALE_MAINMENU_PLUGINS_SHELL, show_scripts, NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_SHELL, CPlugins::P_TYPE_SHELL));
+	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_SHELL);
 	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SCRIPTS]);
 
 #ifdef ENABLE_LUA
 	// lua
 	bool show_lua = g_Plugins->hasPlugin(CPlugins::P_TYPE_LUA);
-	mf = new CMenuForwarder(LOCALE_MAINMENU_LUA, show_lua, NULL, new CPluginList(LOCALE_MAINMENU_LUA, CPlugins::P_TYPE_LUA));
-	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_LUA);
+	mf = new CMenuForwarder(LOCALE_MAINMENU_PLUGINS_LUA, show_lua, NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_LUA, CPlugins::P_TYPE_LUA));
+	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_LUA);
 	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_LUA]);
 #endif
 
 #ifdef ENABLE_PYTHON
 	// python
 	bool show_python = g_Plugins->hasPlugin(CPlugins::P_TYPE_PYTHON);
-	mf = new CMenuForwarder(LOCALE_MAINMENU_PYTHON, show_python, NULL, new CPluginList(LOCALE_MAINMENU_PYTHON, CPlugins::P_TYPE_PYTHON));
-	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PYTHON);
+	mf = new CMenuForwarder(LOCALE_MAINMENU_PLUGINS_PYTHON, show_python, NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_PYTHON, CPlugins::P_TYPE_PYTHON));
+	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_PYTHON);
 	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_PYTHON]);
 #endif
 #else
 	// plugins
 	bool show_plugins = g_Plugins->hasPlugin(CPlugins::P_TYPE_NO_GAME);
-	mf = new CMenuForwarder(LOCALE_MAINMENU_LUA, show_plugins, NULL, new CPluginList(LOCALE_MAINMENU_LUA, CPlugins::P_TYPE_NO_GAME));
-	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_LUA);
+	mf = new CMenuForwarder(LOCALE_MAINMENU_PLUGINS, show_plugins, NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS, CPlugins::P_TYPE_NO_GAME));
+	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS);
 	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_LUA]);
 #endif
 

@@ -776,11 +776,11 @@ constexpr Descriptor kMisc[] =
 		.defaultValue("")
 		.text(kRulePathList)
 		.field(COREAPI_TEXT_FIELD(plugins_python)),
-	textRow("plugins_script")
+	textRow("plugins_shell")
 		.section("misc")
 		.defaultValue("")
 		.text(kRulePathList)
-		.field(COREAPI_TEXT_FIELD(plugins_script)),
+		.field(COREAPI_TEXT_FIELD(plugins_shell)),
 	textRow("plugins_tool")
 		.section("misc")
 		.defaultValue("")

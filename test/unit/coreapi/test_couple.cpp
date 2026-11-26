@@ -293,11 +293,11 @@ TEST_CASE("the five plugin lists stay one partition", "[couple]")
 	REQUIRE(valueOf(moved, "plugins_tool") != NULL);
 	CHECK(*valueOf(moved, "plugins_tool") == "c");
 	CHECK(valueOf(moved, "plugins_lua") == NULL);
-	CHECK(valueOf(moved, "plugins_script") == NULL);
+	CHECK(valueOf(moved, "plugins_shell") == NULL);
 	CHECK(*valueOf(moved, "plugins_game") == "a,b");
 
 	// A list that is emptied by the move is written as empty and not left out.
-	BatchOverlay empty = batchOf("plugins_script", "c,b");
+	BatchOverlay empty = batchOf("plugins_shell", "c,b");
 	settings::settleBatch(empty, refused);
 	REQUIRE(valueOf(empty, "plugins_tool") != NULL);
 	CHECK(valueOf(empty, "plugins_tool")->empty());
@@ -309,13 +309,13 @@ TEST_CASE("the five plugin lists stay one partition", "[couple]")
 
 	// Two lists written together naming one plugin have no answer, so neither is taken.
 	refused.clear();
-	BatchOverlay clash = batchOf("plugins_game", "a,x", "plugins_script", "x,y", "plugins_lua", "z");
+	BatchOverlay clash = batchOf("plugins_game", "a,x", "plugins_shell", "x,y", "plugins_lua", "z");
 	settings::settleBatch(clash, refused);
 	CHECK(refusedAs(refused, "plugins_game", ErrorCode::SettingConditionNotMet));
-	CHECK(refusedAs(refused, "plugins_script", ErrorCode::SettingConditionNotMet));
+	CHECK(refusedAs(refused, "plugins_shell", ErrorCode::SettingConditionNotMet));
 	CHECK(refused.size() == 2);
 	CHECK(valueOf(clash, "plugins_game") == NULL);
-	CHECK(valueOf(clash, "plugins_script") == NULL);
+	CHECK(valueOf(clash, "plugins_shell") == NULL);
 	REQUIRE(valueOf(clash, "plugins_lua") != NULL);
 	// The refused lists leave the others alone: nothing was moved on their account.
 	CHECK(valueOf(clash, "plugins_tool") == NULL);
@@ -454,7 +454,7 @@ const Descriptor kPluginsGated[] =
 	textRow("plugins_disabled").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
 	textRow("plugins_game").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
 	textRow("plugins_tool").section("fx").defaultValue("").changeableWhen(kGateOpen).field(COREAPI_NO_FIELD),
-	textRow("plugins_script").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
+	textRow("plugins_shell").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
 	textRow("plugins_lua").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
 	textRow("plugins_python").section("fx").defaultValue("").field(COREAPI_NO_FIELD),
 	intRow("fx_gate").section("fx").range(0, 1).defaultValue(0).field(COREAPI_NO_FIELD)

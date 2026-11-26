@@ -120,7 +120,7 @@ void CPlugins::scanDir(const char *dir)
 			if (plugin_ok)
 			{
 				new_plugin.pluginfile = fname;
-				if (new_plugin.type == CPlugins::P_TYPE_SCRIPT)
+				if (new_plugin.type == CPlugins::P_TYPE_SHELL)
 					new_plugin.pluginfile.append(".sh");
 				else if (new_plugin.type == CPlugins::P_TYPE_LUA)
 					new_plugin.pluginfile.append(".lua");
@@ -313,7 +313,7 @@ bool CPlugins::parseCfg(plugin *plugin_data)
 	overrideType(plugin_data, settingsText(g_settings.plugins_disabled), P_TYPE_DISABLED) ||
 	overrideType(plugin_data, settingsText(g_settings.plugins_game), P_TYPE_GAME) ||
 	overrideType(plugin_data, settingsText(g_settings.plugins_tool), P_TYPE_TOOL) ||
-	overrideType(plugin_data, settingsText(g_settings.plugins_script), P_TYPE_SCRIPT) ||
+	overrideType(plugin_data, settingsText(g_settings.plugins_shell), P_TYPE_SHELL) ||
 	overrideType(plugin_data, settingsText(g_settings.plugins_lua), P_TYPE_LUA) ||
 	overrideType(plugin_data, settingsText(g_settings.plugins_python), P_TYPE_PYTHON);
 
@@ -494,7 +494,7 @@ int CPlugins::runPlugin(int number)
 	if (ispip && !g_RemoteControl->is_video_started)
 		return menu_return::RETURN_REPAINT;
 
-	if (plugin_list[number].type == CPlugins::P_TYPE_SCRIPT)
+	if (plugin_list[number].type == CPlugins::P_TYPE_SHELL)
 	{
 		return startScriptPlugin(number);
 	}
@@ -538,11 +538,17 @@ int CPlugins::runPlugin(int number)
 	return plugin_list[number].menu_return;
 }
 
+/*
+ * Whether a CPluginList of this type has anything to show, and so whether the
+ * menu entry that opens it can be selected. The test is the list's own
+ * (pluginlist.cpp): a plugin integrated into another menu is shown there and
+ * not in the list, and counting it here left an entry that opens empty.
+ */
 bool CPlugins::hasPlugin(CPlugins::p_type_t type)
 {
 	for (std::vector<plugin>::iterator it = plugin_list.begin(); it != plugin_list.end(); ++it)
 	{
-		if ((it->type & type) && !it->hide)
+		if ((it->type & type) && !it->hide && it->integration == PLUGIN_INTEGRATION_DISABLED)
 			return true;
 	}
 	return false;
@@ -571,8 +577,8 @@ CPlugins::p_type_t CPlugins::getPluginType(int type)
 		case PLUGIN_TYPE_TOOL:
 			return P_TYPE_TOOL;
 			break;
-		case PLUGIN_TYPE_SCRIPT:
-			return P_TYPE_SCRIPT;
+		case PLUGIN_TYPE_SHELL:
+			return P_TYPE_SHELL;
 			break;
 		case PLUGIN_TYPE_LUA:
 			return P_TYPE_LUA;

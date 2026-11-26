@@ -52,7 +52,7 @@ const char *const kPluginsKeys[] =
 	"plugins_game",
 	"plugins_lua",
 	"plugins_python",
-	"plugins_script",
+	"plugins_shell",
 	"plugins_tool"
 };
 

@@ -34,7 +34,7 @@ const size_t kLists = 6;
 
 const char *const kListKeys[kLists] =
 {
-	"plugins_disabled", "plugins_game", "plugins_tool", "plugins_script", "plugins_lua", "plugins_python"
+	"plugins_disabled", "plugins_game", "plugins_tool", "plugins_shell", "plugins_lua", "plugins_python"
 };
 
 // The names of a list in the order written, each once and none empty.

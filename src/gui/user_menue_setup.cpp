@@ -108,11 +108,13 @@ static keyvals usermenu_items[] =
 	{ SNeutrinoSettings::ITEM_LIVESTREAM_RESOLUTION, LOCALE_LIVESTREAM_RESOLUTION,		usermenu_show },
 	{ SNeutrinoSettings::ITEM_ADZAP,		LOCALE_USERMENU_ITEM_ADZAP,		usermenu_show },
 	{ SNeutrinoSettings::ITEM_TESTMENU,		LOCALE_TESTMENU,			usermenu_show },
-	{ SNeutrinoSettings::ITEM_GAMES,		LOCALE_MAINMENU_GAMES,			usermenu_show },
-	{ SNeutrinoSettings::ITEM_TOOLS,		LOCALE_MAINMENU_TOOLS,			usermenu_show },
-	{ SNeutrinoSettings::ITEM_SCRIPTS,		LOCALE_MAINMENU_SCRIPTS,		usermenu_show },
-	{ SNeutrinoSettings::ITEM_LUA,			LOCALE_MAINMENU_LUA,			usermenu_show },
-	{ SNeutrinoSettings::ITEM_PYTHON,		LOCALE_MAINMENU_PYTHON,			usermenu_show },
+	{ SNeutrinoSettings::ITEM_PLUGINS_GAMES,	LOCALE_MAINMENU_PLUGINS_GAMES,		usermenu_show },
+	{ SNeutrinoSettings::ITEM_PLUGINS_TOOLS,	LOCALE_MAINMENU_PLUGINS_TOOLS,		usermenu_show },
+	{ SNeutrinoSettings::ITEM_PLUGINS_SHELL,	LOCALE_MAINMENU_PLUGINS_SHELL,		usermenu_show },
+	{ SNeutrinoSettings::ITEM_PLUGINS_LUA,		LOCALE_MAINMENU_PLUGINS_LUA,		usermenu_show },
+	{ SNeutrinoSettings::ITEM_PLUGINS_PYTHON,	LOCALE_MAINMENU_PLUGINS_PYTHON,		usermenu_show },
+	{ SNeutrinoSettings::ITEM_PLUGINS,		LOCALE_MAINMENU_PLUGINS,		usermenu_show },
+	{ SNeutrinoSettings::ITEM_PLUGINS_SCRIPTAPI,	LOCALE_MAINMENU_PLUGINS_SCRIPTAPI,	usermenu_show },
 	{ SNeutrinoSettings::ITEM_PLUGIN_TYPES,		LOCALE_USERMENU_ITEM_PLUGIN_TYPES,	usermenu_show },
 	{ SNeutrinoSettings::ITEM_MAX,			NONEXISTANT_LOCALE,			usermenu_show }
 };

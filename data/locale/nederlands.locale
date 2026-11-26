@@ -1307,28 +1307,30 @@ mainmenu.avinputmode (((T))) HDMI-Eingang (Modus)
 mainmenu.avinputmode_pip (((T))) HDMI-Eingang (PiP)
 mainmenu.channels zenders
 mainmenu.clearsectionsd EPG geheugen opschonen
-mainmenu.games Spelletjes
 mainmenu.head Hoofdmenu
-mainmenu.lua Lua Plugins
 mainmenu.media Media
 mainmenu.mediaplayer (((T))) Mediaplayer
 mainmenu.movieplayer Videospeler
 mainmenu.pausesectionsd Lees EPG
 mainmenu.pictureviewer Afbeeldingen
+mainmenu.plugins Plugins
+mainmenu.plugins_games Spelletjes
+mainmenu.plugins_lua Plugins (Lua)
+mainmenu.plugins_python Plugins (Python)
+mainmenu.plugins_scriptapi Plugins (Lua/Python)
+mainmenu.plugins_shell Scripts
+mainmenu.plugins_tools Tools
 mainmenu.poweroff_menu (((T))) Ausschalten
-mainmenu.python Python Plugins
 mainmenu.radiomode Radio mode
 mainmenu.reboot Herstart systeem
 mainmenu.recording Opnemen
 mainmenu.recording_start Start
 mainmenu.recording_stop Stopt
-mainmenu.scripts Scripts
 mainmenu.service Installatie
 mainmenu.settings Systeem Instellingen
 mainmenu.shutdown Uitschakelen
 mainmenu.sleeptimer Slaaptimer
 mainmenu.standby Standby
-mainmenu.tools Tools
 mainmenu.tvmode TV mode
 mainmenu.tvradio_switch TV-Radio Schakelaar
 mainsettings.audio Audio
@@ -1485,7 +1487,6 @@ menu.hint_font_ttx Selecteer het lettertype dat u wenst te gebruiken voor telete
 menu.hint_fonts Configureer lettertypes gebruikersinterface
 menu.hint_foot_back (((T))) Ändern Sie die Fußleisten-Hintergrundfarbe
 menu.hint_foot_textcolor (((T))) Ändern Sie die Fußleisten-Textfarbe
-menu.hint_games Lijst met geïnstalleerde games weergeven.
 menu.hint_glcd_support (((T))) GraphLCD aktivieren/deaktivieren
 menu.hint_hdd Formatteer / check harde schijf
 menu.hint_hdd_allow_set_recdir (((T))) Erlaubt das sofortige Einstellen des neuen Datenträgers als Aufnahmemedium
@@ -1634,7 +1635,6 @@ menu.hint_leds_standby LEDs status in soft-standby mode
 menu.hint_leds_tv LEDs status indien de ontvanger in werking is
 menu.hint_load Laad gebruikersinterface \ninstellingen van back-up bestand
 menu.hint_longkeypress_duration Een toets-indruk wordt gezien als "lange toets indruk" wanneer deze langer is ingedrukt dan de gespecificeerde tijd.
-menu.hint_lua Start Lua Plugins
 menu.hint_make_hdlist Automatisch HD kanalenlijst maken \ngebaseerd op kanaaltype en naam
 menu.hint_make_newlist Kanalenlijst aanmaken met recent toegevoegde kanalen
 menu.hint_make_removedlist Kanalenlijst aanmaken met recent verwijderde kanalen
@@ -1746,9 +1746,16 @@ menu.hint_plugin_type_lua Toon plugins in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_python Toon Python plugins in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_scripts Toon scripts in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_tools Toon tools in usermenu bij selectie 'Plugin types'
+menu.hint_plugins Start plugins
 menu.hint_plugins_control (((T))) Plugin-Einstellungen und Verwaltung von installierten Plugins
+menu.hint_plugins_games Lijst met geïnstalleerde games weergeven.
 menu.hint_plugins_hdd_dir Selecteer plugin directory
 menu.hint_plugins_hide (((T))) Integrierte Plugins oder Plugins in den Benutzermenüs verstecken oder anzeigen
+menu.hint_plugins_lua Start Lua Plugins
+menu.hint_plugins_python Start Python Plugins
+menu.hint_plugins_scriptapi Lua- en Python-plugins starten
+menu.hint_plugins_shell Scripts uitvoeren
+menu.hint_plugins_tools Start tools
 menu.hint_power_leds Configureer LED power-button
 menu.hint_poweroff_menu (((T))) Öffnet ein Untermenü mit Energie-Optionen: Herunterfahren, Standby, Neustart, SleepTimer, Energieverbrauch und Plugins.
 menu.hint_pref_lang Selecteer de gewenste audio en EPG taal.\nSelecteer 'geen' om geen voorkeurstaal in te stellen.
@@ -1765,7 +1772,6 @@ menu.hint_progressbar_timescale_invert Selecteer het gewenste kleur verloop
 menu.hint_progressbar_timescale_red Selecteer het rode deel van gekleurde voortgangsbalks
 menu.hint_progressbar_timescale_yellow Selecteer het gele deel van gekleurde voortgangsbalks
 menu.hint_protection Bescherm content met een pincode\nDe standaard pincode is 0000.
-menu.hint_python Start Python Plugins
 menu.hint_quadpip (((T))) QuadPiP aktivieren
 menu.hint_radiomode Schakel de ontvanger in radio modus.
 menu.hint_reboot Herstart de ontvanger \n zonder bevestiging.
@@ -1901,7 +1907,6 @@ menu.hint_screenshot_res Screenshot afmeting: Afmeting van huidig video kanaal\n
 menu.hint_screenshot_scale Voor video+OSD screenshots, schaal naar video afmeting
 menu.hint_screenshot_setup Configureer screenshots opties
 menu.hint_screenshot_video Live video invoegen in screenshot
-menu.hint_scripts Scripts uitvoeren
 menu.hint_selected_back Wijzig achtergrond kleur van het geselecteerde item
 menu.hint_selected_text Wijzig test kleur van het geselecteerde item
 menu.hint_service Tuner instellingen, service scan,\nfavorietenlijst editor, software update
@@ -1940,7 +1945,6 @@ menu.hint_timers Toevoegen/Verplaats/Bewerk \ngeplande opnames of timers etc.
 menu.hint_timezone Selecteer uw tijdzone
 menu.hint_tmdb_api_key (((T))) Geben Sie den TMDb API Schlüssel ein. Eine leere Eingabe schaltet die TMDb-Unterstützung aus
 menu.hint_tmdb_enabled (((T))) Schaltet die TMDb-Unterstützung (themoviedb.org) ein bzw. aus
-menu.hint_tools Start tools
 menu.hint_tvmode Schakel ontvanger in TV modus
 menu.hint_tvradio_switch Schakelen tussen TV en Radio modus
 menu.hint_uni_setup (((T))) Konfiguration Unikabel Frequenz, Userband und Pin
@@ -2634,7 +2638,7 @@ plugintype.disabled Uitgeschakeld
 plugintype.game Game
 plugintype.lua Lua plugin
 plugintype.python Python plugin
-plugintype.script Script
+plugintype.shell Script
 plugintype.tool Tool
 poweroff.rec_protected Opnames beschermd
 quadpip (((T))) QuadPiP
