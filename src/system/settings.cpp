@@ -56,7 +56,7 @@ const struct personalize_settings_t personalize_settings[] =
 #if ENABLE_PIP
 	{"personalize_avinput_pip"		, CPersonalizeGui::PERSONALIZE_MODE_VISIBLE},
 #endif
-	{"personalize_scripts"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
+	{"personalize_shell"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
 	{"personalize_lua"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
 	{"personalize_python"			, CPersonalizeGui::PERSONALIZE_MODE_NOTVISIBLE},
 	{"personalize_settings"			, CPersonalizeGui::PERSONALIZE_PROTECT_MODE_NOT_PROTECTED},
@@ -125,7 +125,7 @@ const struct personalize_settings_t personalize_settings[] =
 	//plugin types
 	{"personalize_usermenu_plugin_type_games"	, false},
 	{"personalize_usermenu_plugin_type_tools"	, true},
-	{"personalize_usermenu_plugin_type_scripts"	, false},
+	{"personalize_usermenu_plugin_type_shell"	, false},
 	{"personalize_usermenu_plugin_type_lua"		, true},
 	{"personalize_usermenu_plugin_type_python"	, true},
 };

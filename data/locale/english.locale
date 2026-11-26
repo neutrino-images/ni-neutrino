@@ -1319,7 +1319,7 @@ mainmenu.plugins_games Games
 mainmenu.plugins_lua Plugins (Lua)
 mainmenu.plugins_python Plugins (Python)
 mainmenu.plugins_scriptapi Plugins (Lua/Python)
-mainmenu.plugins_shell Scripts
+mainmenu.plugins_shell Shell scripts
 mainmenu.plugins_tools Tools
 mainmenu.poweroff_menu Power off
 mainmenu.radiomode Radio mode
@@ -1745,7 +1745,7 @@ menu.hint_picview View pictures
 menu.hint_plugin_type_games Show games in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_lua Show plugins in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_python Show Python plugins in usermenu at selection 'Plugin types'
-menu.hint_plugin_type_scripts Show scripts in usermenu at selection 'Plugin types'
+menu.hint_plugin_type_shell Show shell scripts in usermenu at selection 'Plugin types'
 menu.hint_plugin_type_tools Show tools in usermenu at selection 'Plugin types'
 menu.hint_plugins Run plugins
 menu.hint_plugins_control Plugin settings and management of installed plugins
@@ -1755,7 +1755,7 @@ menu.hint_plugins_hide Hide or show integrated plugins or plugins in user menus
 menu.hint_plugins_lua Run Lua Plugins
 menu.hint_plugins_python Run Python Plugins
 menu.hint_plugins_scriptapi Run Lua and Python plugins
-menu.hint_plugins_shell Run scripts
+menu.hint_plugins_shell Run shell scripts
 menu.hint_plugins_tools Run tools
 menu.hint_power_leds Configure power-button LEDs behavior
 menu.hint_poweroff_menu Opens a submenu with power options: shutdown, standby, reboot, sleeptimer, energy settings and plugins.
@@ -2646,7 +2646,7 @@ plugintype.disabled Disabled
 plugintype.game Game
 plugintype.lua Lua plugin
 plugintype.python Python plugin
-plugintype.shell Script
+plugintype.shell Shell script
 plugintype.tool Tool
 poweroff.rec_protected Recordings protected
 quadpip QuadPiP

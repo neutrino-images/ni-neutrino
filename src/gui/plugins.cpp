@@ -342,7 +342,7 @@ int CPlugins::startPlugin(const char *const filename)
 	return menu_return::RETURN_REPAINT;
 }
 
-int CPlugins::popenScriptPlugin(int number, const char *script)
+int CPlugins::popenShellPlugin(int number, const char *script)
 {
 	pid_t pid = 0;
 	FILE *f = my_popen(pid, script, "r");
@@ -351,7 +351,7 @@ int CPlugins::popenScriptPlugin(int number, const char *script)
 		char *output = NULL;
 		size_t len = 0;
 		while ((getline(&output, &len, f)) != -1)
-			scriptOutput += output;
+			shellOutput += output;
 		pclose(f);
 		int s;
 		while (waitpid(pid, &s, WNOHANG) > 0);
@@ -365,10 +365,10 @@ int CPlugins::popenScriptPlugin(int number, const char *script)
 	return plugin_list[number].menu_return;
 }
 
-int CPlugins::startScriptPlugin(int number)
+int CPlugins::startShellPlugin(int number)
 {
 	const char *script = plugin_list[number].pluginfile.c_str();
-	printf("[CPlugins] executing script %s\n", script);
+	printf("[CPlugins] executing shell script %s\n", script);
 	if (!file_exists(script))
 	{
 		printf("[CPlugins] could not find %s,\nperhaps wrong plugin type in %s\n",
@@ -383,10 +383,10 @@ int CPlugins::startScriptPlugin(int number)
 	{
 		int res = 0;
 		CShellWindow(script, CShellWindow::VERBOSE | CShellWindow::ACKNOWLEDGE, &res);
-		scriptOutput = "";
+		shellOutput = "";
 	}
 	else
-		return popenScriptPlugin(number, script);
+		return popenShellPlugin(number, script);
 
 	return plugin_list[number].menu_return;
 }
@@ -477,7 +477,7 @@ bool CPlugins::startPluginIfIdle(const char *const filename)
 int CPlugins::runPlugin(int number)
 {
 	// always delete old output
-	delScriptOutput();
+	delShellOutput();
 	/* export neutrino settings to the environment */
 	char tmp[32];
 	sprintf(tmp, "%d", g_settings.screen_StartX);
@@ -496,7 +496,7 @@ int CPlugins::runPlugin(int number)
 
 	if (plugin_list[number].type == CPlugins::P_TYPE_SHELL)
 	{
-		return startScriptPlugin(number);
+		return startShellPlugin(number);
 	}
 	if (plugin_list[number].type == CPlugins::P_TYPE_LUA)
 	{
@@ -554,14 +554,14 @@ bool CPlugins::hasPlugin(CPlugins::p_type_t type)
 	return false;
 }
 
-const std::string &CPlugins::getScriptOutput() const
+const std::string &CPlugins::getShellOutput() const
 {
-	return scriptOutput;
+	return shellOutput;
 }
 
-void CPlugins::delScriptOutput()
+void CPlugins::delShellOutput()
 {
-	scriptOutput.clear();
+	shellOutput.clear();
 }
 
 CPlugins::p_type_t CPlugins::getPluginType(int type)

@@ -796,7 +796,7 @@ struct SNeutrinoSettings
 #if ENABLE_PIP
 		P_MAIN_AVINPUT_PIP,
 #endif
-		P_MAIN_SCRIPTS,
+		P_MAIN_SHELL,
 		P_MAIN_LUA,
 		P_MAIN_PYTHON,
 		P_MAIN_SETTINGS,
@@ -865,7 +865,7 @@ struct SNeutrinoSettings
 		// plugins types
 		P_UMENU_PLUGIN_TYPE_GAMES,
 		P_UMENU_PLUGIN_TYPE_TOOLS,
-		P_UMENU_PLUGIN_TYPE_SCRIPTS,
+		P_UMENU_PLUGIN_TYPE_SHELL,
 		P_UMENU_PLUGIN_TYPE_LUA,
 		P_UMENU_PLUGIN_TYPE_PYTHON,
 
@@ -1310,7 +1310,7 @@ struct SNeutrinoSettings
 		ITEM_TIMESHIFT = 39,
 		ITEM_LCD4LINUX = 40,
 		ITEM_PLUGINS_PYTHON = 41,
-		ITEM_PLUGINS = 42, // tools, scripts, Lua and Python plugins in one list, as in the main menu
+		ITEM_PLUGINS = 42, // tools, shell scripts, Lua and Python plugins in one list, as in the main menu
 		ITEM_PLUGINS_SCRIPTAPI = 43, // Lua and Python plugins, what the script API serves, in one list
 
 		ITEM_MAX // MUST be always the last in the list

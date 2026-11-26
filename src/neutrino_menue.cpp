@@ -197,11 +197,11 @@ void CNeutrinoApp::InitMenuMain()
 	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_TOOLS);
 	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_TOOLS]);
 
-	// scripts
-	bool show_scripts = g_Plugins->hasPlugin(CPlugins::P_TYPE_SHELL);
-	mf = new CMenuForwarder(LOCALE_MAINMENU_PLUGINS_SHELL, show_scripts, NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_SHELL, CPlugins::P_TYPE_SHELL));
+	// shell scripts
+	bool show_shell = g_Plugins->hasPlugin(CPlugins::P_TYPE_SHELL);
+	mf = new CMenuForwarder(LOCALE_MAINMENU_PLUGINS_SHELL, show_shell, NULL, new CPluginList(LOCALE_MAINMENU_PLUGINS_SHELL, CPlugins::P_TYPE_SHELL));
 	mf->setHint(NEUTRINO_ICON_HINT_SCRIPTS, LOCALE_MENU_HINT_PLUGINS_SHELL);
-	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SCRIPTS]);
+	personalize.addItem(MENU_MAIN, mf, &g_settings.personalize[SNeutrinoSettings::P_MAIN_SHELL]);
 
 #ifdef ENABLE_LUA
 	// lua

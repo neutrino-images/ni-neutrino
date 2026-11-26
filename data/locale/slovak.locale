@@ -1318,7 +1318,7 @@ mainmenu.plugins_games Hry
 mainmenu.plugins_lua Doplnky (Lua)
 mainmenu.plugins_python Doplnky (Python)
 mainmenu.plugins_scriptapi Doplnky (Lua/Python)
-mainmenu.plugins_shell Skripty
+mainmenu.plugins_shell Shell skripty
 mainmenu.plugins_tools Nástroje
 mainmenu.poweroff_menu Vypnutie
 mainmenu.radiomode Rádio
@@ -1744,7 +1744,7 @@ menu.hint_picview Sledovanie obrázkov
 menu.hint_plugin_type_games Zobrazí hry v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_lua Zobrazí doplnky v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_python Zobrazí Python doplnky v užívateľskom menu pri výbere 'Typy doplnkov'
-menu.hint_plugin_type_scripts Zobrazí skripty v užívateľskom menu pri výbere 'Typy doplnkov'
+menu.hint_plugin_type_shell Zobrazí shell skripty v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugin_type_tools Zobrazí nástroje v užívateľskom menu pri výbere 'Typy doplnkov'
 menu.hint_plugins Spustenie doplnkov
 menu.hint_plugins_control Konfigurácia nainštalovaných doplnkov a služieb
@@ -1754,7 +1754,7 @@ menu.hint_plugins_hide Skryť alebo zobraziť integrovaných doplnkov alebo dopl
 menu.hint_plugins_lua Spustenie Lua doplnkov
 menu.hint_plugins_python Spustenie Python doplnkov
 menu.hint_plugins_scriptapi Spustenie Lua a Python doplnkov
-menu.hint_plugins_shell Spustenie zadania
+menu.hint_plugins_shell Spustenie shell skriptov
 menu.hint_plugins_tools Spustenie nástrojov
 menu.hint_power_leds Konfigurácia správania LED podsvietenia tlačidla napájania
 menu.hint_poweroff_menu Otvorí podponuku s možnosťami napájania: vypnutie, pohotovostný režim, reštart, časovač vypnutia, nastavenia napájania a doplnky.
@@ -2638,7 +2638,7 @@ plugintype.disabled Nepoužitý
 plugintype.game Hra
 plugintype.lua Lua doplnok
 plugintype.python Python doplnok
-plugintype.shell Skript
+plugintype.shell Shell skript
 plugintype.tool Nástroj
 poweroff.rec_protected Nahrávky chránené
 quadpip QuadPiP

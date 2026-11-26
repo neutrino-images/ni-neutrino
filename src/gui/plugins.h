@@ -85,7 +85,7 @@ class CPlugins
 		 * pointer into a string it holds. */
 		OpenThreads::Mutex plugin_list_mutex;
 		std::string plugin_dir;
-		std::string scriptOutput;
+		std::string shellOutput;
 		std::atomic<int> running;	// plugins started and not returned yet
 
 		int runPlugin(int number);
@@ -149,14 +149,14 @@ class CPlugins
 		bool startPluginIfIdle(const char *const filename);
 		int startPlugin(const char *const filename);		// start plugins by filename
 		int startPlugin_by_name(const std::string &name);	// start plugins by "name=" in .cfg
-		int startScriptPlugin(int number);
-		int popenScriptPlugin(int number, const char *script);
+		int startShellPlugin(int number);
+		int popenShellPlugin(int number, const char *script);
 		int startLuaPlugin(int number);
 		int startPythonPlugin(int number);
 		bool hasPlugin(CPlugins::p_type_t type);
 
-		const std::string &getScriptOutput() const;
-		void delScriptOutput();
+		const std::string &getShellOutput() const;
+		void delShellOutput();
 };
 
 #endif

@@ -1625,6 +1625,13 @@ void CNeutrinoApp::upgradeSetup(const char * fname)
 		setSettingsText(g_settings.plugins_shell, configfile.getString("plugins_script", g_settings.plugins_shell));
 		configfile.deleteKey("plugins_script");
 	}
+	if (g_settings.version_pseudo < "20261126223000")
+	{
+		g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_SHELL] = configfile.getInt32("personalize_usermenu_plugin_type_scripts", g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_SHELL]);
+		configfile.deleteKey("personalize_usermenu_plugin_type_scripts");
+		g_settings.personalize[SNeutrinoSettings::P_MAIN_SHELL] = configfile.getInt32("personalize_scripts", g_settings.personalize[SNeutrinoSettings::P_MAIN_SHELL]);
+		configfile.deleteKey("personalize_scripts");
+	}
 
 	setSettingsText(g_settings.version_pseudo, NEUTRINO_VERSION_PSEUDO);
 	configfile.setString("version_pseudo", g_settings.version_pseudo);
@@ -3724,8 +3731,8 @@ void CNeutrinoApp::RealRun()
 	CPythonServer *pyServer = CPythonServer::getInstance();
 #endif
 	g_Plugins->startPlugin("startup");
-	if (!g_Plugins->getScriptOutput().empty()) {
-		ShowMsg(LOCALE_PLUGINS_RESULT, g_Plugins->getScriptOutput(), CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_SHELL);
+	if (!g_Plugins->getShellOutput().empty()) {
+		ShowMsg(LOCALE_PLUGINS_RESULT, g_Plugins->getShellOutput(), CMsgBox::mbrBack, CMsgBox::mbBack, NEUTRINO_ICON_SHELL);
 	}
 	g_RCInput->clearRCMsg();
 
@@ -5455,8 +5462,8 @@ int CNeutrinoApp::handleMsg(const neutrino_msg_t _msg, neutrino_msg_data_t data)
 		 * nested like that can hang the box, so the request is dropped. */
 		if (!g_Plugins->startPluginIfIdle((const char *)data))
 			printf("[neutrino] plugin %s not started: another plugin is running\n", (const char *)data);
-		else if (!g_Plugins->getScriptOutput().empty()) {
-			ShowMsg(LOCALE_PLUGINS_RESULT, g_Plugins->getScriptOutput(), CMsgBox::mbrBack,CMsgBox::mbBack,NEUTRINO_ICON_SHELL);
+		else if (!g_Plugins->getShellOutput().empty()) {
+			ShowMsg(LOCALE_PLUGINS_RESULT, g_Plugins->getShellOutput(), CMsgBox::mbrBack,CMsgBox::mbBack,NEUTRINO_ICON_SHELL);
 		}
 
 		delete[] (unsigned char*) data;

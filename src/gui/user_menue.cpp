@@ -557,7 +557,7 @@ bool CUserMenu::showUserMenu(neutrino_msg_t msg)
 						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_GAME;
 					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_TOOLS])
 						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_TOOL;
-					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_SCRIPTS])
+					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_SHELL])
 						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_SHELL;
 					if (g_settings.personalize[SNeutrinoSettings::P_UMENU_PLUGIN_TYPE_LUA])
 						show = show || g_Plugins->getType(count) == CPlugins::P_TYPE_LUA;

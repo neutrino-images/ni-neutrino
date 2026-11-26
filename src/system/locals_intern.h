@@ -1772,7 +1772,7 @@ const char * locale_real_names[] =
 	"menu.hint_plugin_type_games",
 	"menu.hint_plugin_type_lua",
 	"menu.hint_plugin_type_python",
-	"menu.hint_plugin_type_scripts",
+	"menu.hint_plugin_type_shell",
 	"menu.hint_plugin_type_tools",
 	"menu.hint_plugins",
 	"menu.hint_plugins_control",

@@ -1318,7 +1318,7 @@ mainmenu.plugins_games Spelletjes
 mainmenu.plugins_lua Plugins (Lua)
 mainmenu.plugins_python Plugins (Python)
 mainmenu.plugins_scriptapi Plugins (Lua/Python)
-mainmenu.plugins_shell Scripts
+mainmenu.plugins_shell Shell-scripts
 mainmenu.plugins_tools Tools
 mainmenu.poweroff_menu (((T))) Ausschalten
 mainmenu.radiomode Radio mode
@@ -1744,7 +1744,7 @@ menu.hint_picview Bekijk afbeeldingen
 menu.hint_plugin_type_games Toon games in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_lua Toon plugins in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_python Toon Python plugins in usermenu bij selectie 'Plugin types'
-menu.hint_plugin_type_scripts Toon scripts in usermenu bij selectie 'Plugin types'
+menu.hint_plugin_type_shell Toon shell-scripts in usermenu bij selectie 'Plugin types'
 menu.hint_plugin_type_tools Toon tools in usermenu bij selectie 'Plugin types'
 menu.hint_plugins Start plugins
 menu.hint_plugins_control (((T))) Plugin-Einstellungen und Verwaltung von installierten Plugins
@@ -1754,7 +1754,7 @@ menu.hint_plugins_hide (((T))) Integrierte Plugins oder Plugins in den Benutzerm
 menu.hint_plugins_lua Start Lua Plugins
 menu.hint_plugins_python Start Python Plugins
 menu.hint_plugins_scriptapi Lua- en Python-plugins starten
-menu.hint_plugins_shell Scripts uitvoeren
+menu.hint_plugins_shell Shell-scripts uitvoeren
 menu.hint_plugins_tools Start tools
 menu.hint_power_leds Configureer LED power-button
 menu.hint_poweroff_menu (((T))) Öffnet ein Untermenü mit Energie-Optionen: Herunterfahren, Standby, Neustart, SleepTimer, Energieverbrauch und Plugins.
@@ -2638,7 +2638,7 @@ plugintype.disabled Uitgeschakeld
 plugintype.game Game
 plugintype.lua Lua plugin
 plugintype.python Python plugin
-plugintype.shell Script
+plugintype.shell Shell-script
 plugintype.tool Tool
 poweroff.rec_protected Opnames beschermd
 quadpip (((T))) QuadPiP

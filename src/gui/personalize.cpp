@@ -570,9 +570,9 @@ void CPersonalizeGui::ShowUserMenu()
 	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_tools");
 	if (oc)
 		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_TOOLS);
-	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_scripts");
+	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_shell");
 	if (oc)
-		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_SCRIPTS);
+		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_SHELL);
 	oc = addSetting(pluginSelectionMenu, "personalize_usermenu_plugin_type_lua");
 	if (oc)
 		oc->setHint(NEUTRINO_ICON_HINT_PERSONALIZE, LOCALE_MENU_HINT_PLUGIN_TYPE_LUA);
