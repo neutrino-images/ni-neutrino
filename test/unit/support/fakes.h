@@ -1574,7 +1574,7 @@ struct FakePluginSource : public coreapi::PluginSource
 		coreapi::PluginInfo one;
 		one.name = name;
 		one.title = title;
-		one.kind = coreapi::PluginKind::Script;
+		one.kind = coreapi::PluginKind::Shell;
 		plugins.push_back(one);
 	}
 

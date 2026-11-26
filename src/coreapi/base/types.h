@@ -585,7 +585,7 @@ enum class PluginKind
 	Disabled,
 	Game,
 	Tool,
-	Script,
+	Shell,
 	Lua,
 	Python
 };

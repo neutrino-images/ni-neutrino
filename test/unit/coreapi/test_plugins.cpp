@@ -766,7 +766,7 @@ TEST_CASE("the plugins of the box are answered as a document", "[plugins]")
 	REQUIRE(r.body.find("\"name\":\"tuxtxt\"") != std::string::npos);
 	REQUIRE(r.body.find("\"title\":\"Teletext\"") != std::string::npos);
 	// The sort as a word and not as the number the box sorts by.
-	REQUIRE(r.body.find("\"kind\":\"script\"") != std::string::npos);
+	REQUIRE(r.body.find("\"kind\":\"shell\"") != std::string::npos);
 	REQUIRE(deps.plugins.reads == 1);
 }
 

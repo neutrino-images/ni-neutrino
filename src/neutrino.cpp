@@ -4512,7 +4512,7 @@ coreapi::Status coreapi::boxPlugins(coreapi::PluginList &out)
 			case CPlugins::P_TYPE_DISABLED: one.kind = coreapi::PluginKind::Disabled; break;
 			case CPlugins::P_TYPE_GAME:     one.kind = coreapi::PluginKind::Game; break;
 			case CPlugins::P_TYPE_TOOL:     one.kind = coreapi::PluginKind::Tool; break;
-			case CPlugins::P_TYPE_SHELL:    one.kind = coreapi::PluginKind::Script; break;
+			case CPlugins::P_TYPE_SHELL:    one.kind = coreapi::PluginKind::Shell; break;
 			case CPlugins::P_TYPE_LUA:      one.kind = coreapi::PluginKind::Lua; break;
 			case CPlugins::P_TYPE_PYTHON:   one.kind = coreapi::PluginKind::Python; break;
 			default:                        one.kind = coreapi::PluginKind::Unknown; break;
